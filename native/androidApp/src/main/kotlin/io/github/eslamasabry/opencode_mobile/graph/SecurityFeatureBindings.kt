@@ -126,5 +126,16 @@ object SecurityFeatureBindings {
             // (moved here from PreviewRuntime's local scope).
             SavedStateFormDrafts.registerKeys(this)
             NativeSessionReads.shapes.forEach { register(it) }
+            // 40-PORT-SCREENS-3: the unit's per-profile keys, swept by the same deletion
+            // (duplicate prefixes only add a second identical shape).
+            NativeProfileMonitoring.register(this)
+            AndroidProjectStorageAccess.register(this)
+            NativePhraseSuggestions.register(this)
+            NativeReadStateConsent.register(this)
+            NativePermissionInvitations.register(this)
+            NativeConnectionForms.register(this)
+            NativeServerDefaults.register(this)
+            AndroidPlansReaders.register(this)
+            PlansLegacyCollectors.register(this)
         }
 }

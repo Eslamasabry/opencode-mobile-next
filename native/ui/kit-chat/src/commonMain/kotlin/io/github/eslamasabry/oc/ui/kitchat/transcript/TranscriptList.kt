@@ -15,9 +15,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -37,9 +34,15 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
 import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.ui.kit.foundation.kitTrack
 import io.github.eslamasabry.oc.ui.kit.frame.kitScreenChromePadding
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
 import kotlinx.coroutines.launch
 
@@ -139,7 +142,19 @@ public fun KitTranscriptList(
             state = state.lazy,
             reverseLayout = true,
             contentPadding = insetPadding,
-            modifier = Modifier.fillMaxSize().testTag("transcript-list"),
+            modifier =
+                Modifier.fillMaxSize()
+                    .then(
+                        if (LocalKitAppearance.current.style == KitSurfaceStyle.Signal)
+                            Modifier.kitTrack(
+                                (LocalKitTokens.current.gutter +
+                                        LocalKitTokens.current.iconTile / 2f)
+                                    .dp,
+                                live = false,
+                            )
+                        else Modifier
+                    )
+                    .testTag("transcript-list"),
             content = content,
         )
         KitJumpToLatest(
@@ -176,7 +191,8 @@ private fun KitJumpToLatest(
                 (if (full) slideOutVertically(tween(MotionTokens.QUICK)) { it / 4 } else fadeOut()),
         modifier = modifier,
     ) {
-        Surface(
+        KitButton(
+            label = label,
             onClick = {
                 state.following = true
                 scope.launch {
@@ -194,16 +210,8 @@ private fun KitJumpToLatest(
                     }
                 }
             },
-            shape = MaterialTheme.shapes.extraLarge,
-            color = MaterialTheme.colorScheme.secondaryContainer,
-            tonalElevation = 2.dp,
+            role = KitButtonRole.Secondary,
             modifier = Modifier.testTag("jump-to-latest"),
-        ) {
-            Text(
-                label,
-                style = MaterialTheme.typography.labelLarge,
-                modifier = Modifier.padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
-            )
-        }
+        )
     }
 }

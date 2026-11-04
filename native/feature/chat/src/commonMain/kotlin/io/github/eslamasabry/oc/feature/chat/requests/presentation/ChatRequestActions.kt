@@ -46,6 +46,9 @@ public interface ChatRequestActions {
     /** Cancel or dismissal of the confirm: nothing is sent. */
     public fun cancelAlwaysAllow()
 
+    /** Declines only the repeated invitation; the request keeps waiting for its ordinary answer. */
+    public fun keepAsking(id: RequestId) {}
+
     /** A one-answer question: the tapped option answers it. */
     public fun choose(id: RequestId, option: String)
 

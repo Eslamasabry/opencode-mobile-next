@@ -33,6 +33,9 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import io.github.eslamasabry.oc.ui.design.effects.GlowStyle
+import kotlin.math.roundToInt
 
 /**
  * The two hues of the glow (plan 08 §5.3, Flutter `_glowHues`): the theme's accent and a lighter shade of it — deeper
@@ -103,21 +106,26 @@ public object KitComposerGlowDefaults {
 public fun KitComposerGlow(
     active: Boolean,
     modifier: Modifier = Modifier,
-    choice: KitGlowChoice = KitGlowChoice.Classic,
+    choice: KitGlowChoice? = null,
     corner: Dp = KitComposerGlowDefaults.Corner,
     content: @Composable () -> Unit,
 ) {
     val motion = KitMotion.state
     val colors = LocalKitColors.current
-    val saver = LocalKitAppearance.current.saver
-    val plan = glowPlan(choice, motion.level, saver, motion.stillFrame)
+    val appearance = LocalKitAppearance.current
+    val style = LocalKitStyle.current
+    val saver = appearance.saver
+    val selected = choice ?: KitGlowChoice.of(appearance.activityGlow, appearance.glowStyle == GlowStyle.SoftRing)
+    val raw = glowPlan(selected, motion.level, saver, motion.stillFrame)
+    val plan = raw.copy(halo = raw.halo && style.glowHalo, lineWidth = style.glowWidth)
+    val styledCorner = style.corner(corner.value.roundToInt()).dp
     val colours = remember(colors.accent, colors.text1, colors.dark) { glowColours(colors.accent, colors.text1, colors.dark) }
     val target = if (active && plan.draw != GlowDraw.None) plan.strength else 0f
     val strength = rememberGlowStrength(target, motion)
     val lit by remember { derivedStateOf { strength.floatValue > 0f } }
     val travelling = plan.draw == GlowDraw.Travel && plan.loops && (active || lit)
     val phase = rememberLoopPhase(travelling, plan.lapMillis, speed = 1f, still = plan.framePhase)
-    val shape = remember(corner) { RoundedCornerShape(corner) }
+    val shape = remember(styledCorner) { RoundedCornerShape(styledCorner) }
     val drawn = plan.draw != GlowDraw.None && (active || lit)
     Box(modifier) {
         if (drawn && plan.halo && plan.draw != GlowDraw.Hairline) {
@@ -129,12 +137,12 @@ public fun KitComposerGlow(
                 modifier = Modifier.matchParentSize(),
             )
         }
-        if (drawn && plan.soft && plan.draw != GlowDraw.Hairline) {
-            SoftWash({ strength.floatValue }, { phase.floatValue }, colours, corner, Modifier.matchParentSize())
+        if (drawn && plan.soft && plan.halo && plan.draw != GlowDraw.Hairline) {
+            SoftWash({ strength.floatValue }, { phase.floatValue }, colours, styledCorner, Modifier.matchParentSize())
         }
         Box(
             if (drawn) {
-                Modifier.testTag(GLOW_TAG).composerRing({ strength.floatValue }, { phase.floatValue }, plan, colours, corner)
+                Modifier.testTag(GLOW_TAG).composerRing({ strength.floatValue }, { phase.floatValue }, plan, colours, styledCorner)
             } else {
                 Modifier
             },
@@ -230,9 +238,9 @@ internal fun Modifier.composerRing(
     drawWithCache {
         val r = corner.toPx()
         val hairline = GlowGeometry.HAIRLINE_DP.dp.toPx()
-        val classic = GlowGeometry.CLASSIC_STROKE_DP.dp.toPx()
+        val classic = (plan.lineWidth ?: GlowGeometry.CLASSIC_STROKE_DP).dp.toPx()
         val classicBand = ringBand(size, r, classic, Offset.Zero, inside = true)
-        val softBand = ringBand(size, r, GlowGeometry.SOFT_LINE_DP.dp.toPx(), Offset.Zero)
+        val softBand = ringBand(size, r, (plan.lineWidth ?: GlowGeometry.SOFT_LINE_DP).dp.toPx(), Offset.Zero)
         val classicSweep = Brush.sweepGradient(*colours.classicStops, center = Offset(size.width / 2f, size.height / 2f))
         val softSweep = Brush.sweepGradient(*colours.softStops(1f), center = Offset(size.width / 2f, size.height / 2f))
         val radius = size.maxDimension

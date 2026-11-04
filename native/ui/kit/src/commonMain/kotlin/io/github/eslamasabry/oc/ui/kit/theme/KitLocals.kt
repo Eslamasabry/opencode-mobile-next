@@ -6,6 +6,10 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceDecoration as EffectsSurfaceDecoration
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRequest as EffectsSurfaceRequest
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceStyle
+import io.github.eslamasabry.oc.ui.design.effects.StyleSpec as EffectsStyleSpec
 import io.github.eslamasabry.oc.ui.design.color.Roles
 import io.github.eslamasabry.oc.ui.design.layout.WindowClass
 import io.github.eslamasabry.oc.ui.design.style.Knobs
@@ -59,11 +63,51 @@ public val LocalKitWindow: ProvidableCompositionLocal<KitWindowInfo> = compositi
  * applied, so a part reads one answer. Kit parts only.
  */
 @Immutable
-public data class KitStyleState(val style: Style, val spec: StyleSpec, val knobs: Knobs) {
+public data class KitStyleState(
+    val style: Style,
+    val spec: StyleSpec,
+    val knobs: Knobs,
+    val highContrast: Boolean = false,
+    /**
+     * The same style and knobs as the port-kit surface rules (`design.effects.StyleSpec`): the parts ported with the
+     * screen units read its policy flags and resolve through it. Derived from [style] and [knobs] by default.
+     */
+    val effects: EffectsStyleSpec = effectsSpecOf(style, knobs, highContrast),
+) {
+    // The port-kit `StyleSpec` reads, so `LocalKitStyle.current.track` and the rest keep working.
+    public val corners: io.github.eslamasabry.oc.ui.design.effects.Corners get() = effects.corners
+    public val density: io.github.eslamasabry.oc.ui.design.tokens.Density get() = effects.density
+    public val sharpRadius: Int get() = effects.sharpRadius
+    public val flatLists: Boolean get() = effects.flatLists
+    public val firmType: Boolean get() = effects.firmType
+    public val monoLabels: Boolean get() = effects.monoLabels
+    public val engravedLabels: Boolean get() = effects.engravedLabels
+    public val track: Boolean get() = effects.track
+    public val glowHalo: Boolean get() = effects.glowHalo
+    public val glowWidth: Float? get() = effects.glowWidth
+    public val raised: Boolean get() = effects.raised
+
+    /** Stadiums and circles are resolved by their own shape, never passed here. */
+    public fun corner(round: Int): Int = effects.corner(round)
+
+    public fun adjustRoles(roles: Roles): Roles = effects.adjustRoles(roles)
+
+    public fun resolve(r: EffectsSurfaceRequest, roles: Roles, solid: EffectsSurfaceDecoration): EffectsSurfaceDecoration =
+        effects.resolve(r, roles, solid)
+
     public companion object {
         public val Solid: KitStyleState = KitStyleState(Style.Solid, SolidSpec, Knobs())
     }
 }
+
+/** The port-kit spec for the style and knobs in force (by name, so the two enums need not be one type). */
+public fun effectsSpecOf(style: Style, knobs: Knobs, highContrast: Boolean = false): EffectsStyleSpec =
+    EffectsStyleSpec(
+        enumValues<SurfaceStyle>().first { it.name == style.name },
+        enumValues<io.github.eslamasabry.oc.ui.design.effects.Corners>().first { it.name == knobs.corners.name },
+        knobs.density,
+        highContrast,
+    )
 
 public val LocalKitStyle: ProvidableCompositionLocal<KitStyleState> = staticCompositionLocalOf { KitStyleState.Solid }
 

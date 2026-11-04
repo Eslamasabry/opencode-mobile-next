@@ -43,6 +43,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.LongTable
 import io.github.eslamasabry.oc.feature.chat.presentation.ReceiptCheckResult
 import io.github.eslamasabry.oc.feature.chat.presentation.ReceiptCheckUi
 import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFailureKind
+import io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
@@ -72,9 +73,11 @@ import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
 import io.github.eslamasabry.oc.ui.kitchat.stream.RevealRegistry
 import io.github.eslamasabry.oc.ui.kitchat.stream.kitPromptLift
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitBlockKind
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitMessageTimestamp
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitPromptBubble
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitQuietLine
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyBlock
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitThoughtBlock
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptList
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -252,6 +255,7 @@ internal fun ChatTranscriptList(
     onCompactAgain: (() -> Unit)? = null,
     receiptChecks: ImmutableMap<Long, ReceiptCheckUi> = persistentMapOf(),
     onCheckReceipt: ((Long) -> Unit)? = null,
+    display: TranscriptDisplayChoices = TranscriptDisplayChoices(),
 ) {
     val folds = rememberTranscriptFolds()
     val currentRows by rememberUpdatedState(rows)
@@ -347,13 +351,32 @@ internal fun ChatTranscriptList(
                     else -> null
                 }
             if (source in facts.reading.hiddenPartKeys) return@items
-            // A table longer than one chunk is drawn whole by its first chunk; its later chunks
-            // draw nothing.
-            if (reply != null && row is BlockRow && row.key in tables) {
-                val whole = tables[row.key]
-                if (whole != null)
+            Column {
+                // A table longer than one chunk is drawn whole by its first chunk; its later chunks
+                // draw nothing.
+                if (reply != null && row is BlockRow && row.key in tables) {
+                    val whole = tables[row.key]
+                    if (whole != null)
+                        ChatRow(
+                            row.copy(text = whole, continues = false),
+                            words,
+                            listWords,
+                            reveal,
+                            motion,
+                            onOpenMenu,
+                            facts,
+                            folds,
+                            onOpenSession,
+                            reply,
+                            copyCode,
+                            onOpenFile,
+                            reasoningExpanded,
+                            onCompactAgain,
+                            display,
+                        )
+                } else {
                     ChatRow(
-                        row.copy(text = whole, continues = false),
+                        row,
                         words,
                         listWords,
                         reveal,
@@ -367,24 +390,18 @@ internal fun ChatTranscriptList(
                         onOpenFile,
                         reasoningExpanded,
                         onCompactAgain,
+                        display,
                     )
-            } else {
-                ChatRow(
-                    row,
-                    words,
-                    listWords,
-                    reveal,
-                    motion,
-                    onOpenMenu,
-                    facts,
-                    folds,
-                    onOpenSession,
-                    reply,
-                    copyCode,
-                    onOpenFile,
-                    reasoningExpanded,
-                    onCompactAgain,
-                )
+                }
+                if (display.timestampsVisible) {
+                    val created =
+                        when (row) {
+                            is PromptRow -> row.createdMs
+                            is FooterRow -> row.createdMs
+                            else -> null
+                        }
+                    if (created != null) KitMessageTimestamp(created, facts.nowMs)
+                }
             }
         }
     }
@@ -497,6 +514,7 @@ private fun ChatRow(
         null,
     reasoningExpanded: Boolean = false,
     onCompactAgain: (() -> Unit)? = null,
+    display: TranscriptDisplayChoices = TranscriptDisplayChoices(),
 ) {
     when (row) {
         is BlockRow ->
@@ -536,17 +554,43 @@ private fun ChatRow(
                     facts.reading.endNotes[row.turnId]?.let { TurnEndNote(it) }
             }
         is ThoughtRow -> {
+            // The session's "expand reasoning" toggle and the saved display preference both open
+            // reasoning by default; a fold the person changed keeps its own state.
+            val openByDefault = reasoningExpanded || display.reasoningExpanded
             val detail = facts.reading.details[row.key]
             if (detail != null && folds != null)
                 TranscriptDetail(
                     detail,
                     folds,
-                    reasoningExpanded,
+                    openByDefault,
                     reply,
                     onCompactAgain,
                     onOpenSession,
                 )
-            else KitQuietLine(words.thought(row.firstLine))
+            else {
+                val key = "reasoning:${row.key}"
+                val expanded =
+                    if (folds != null && folds.open["$key@default"] == openByDefault)
+                        folds.open[key] ?: openByDefault
+                    else openByDefault
+                val preview =
+                    row.firstLine.replace(Regex("[*_`#]+"), "").trim().let {
+                        if (it.length <= 80) it else it.take(80).trimEnd() + "…"
+                    }
+                KitThoughtBlock(
+                    key = row.key,
+                    title = words.thought(if (row.live) "" else preview),
+                    text = row.text,
+                    live = row.live,
+                    expanded = expanded,
+                    onExpandedChange = { open ->
+                        folds?.open?.set(key, open)
+                        folds?.open?.set("$key@default", openByDefault)
+                    },
+                    actions = reply?.markdown ?: KitMarkdownActions(onLink = {}),
+                    modifier = Modifier.testTag("chat-reasoning"),
+                )
+            }
         }
         is WorkLineRow ->
             // P12-CHAT-CARDS: a turn's agent cards stand right under its work line, in the reply

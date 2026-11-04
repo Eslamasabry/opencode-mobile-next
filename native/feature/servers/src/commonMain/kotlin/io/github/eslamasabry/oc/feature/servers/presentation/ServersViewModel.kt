@@ -14,12 +14,12 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.connection.ServerConnections
 import io.github.eslamasabry.oc.feature.servers.pairing.NoPairingProbe
-import io.github.eslamasabry.oc.feature.servers.pairing.PairingChoice
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingFill
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingInbox
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingProbe
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingRead
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingText
+import io.github.eslamasabry.oc.ui.routes.AgentAccountRoute
 import io.github.eslamasabry.oc.ui.routes.AgentsRoute
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
@@ -27,9 +27,11 @@ import io.github.eslamasabry.oc.ui.routes.McpCatalogRoute
 import io.github.eslamasabry.oc.ui.routes.PairingRoute
 import io.github.eslamasabry.oc.ui.routes.PlansRoute
 import io.github.eslamasabry.oc.ui.routes.SchedulesRoute
+import io.github.eslamasabry.oc.ui.routes.ServerSettingsRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.ui.routes.SetupReviewRoute
 import io.github.eslamasabry.oc.ui.routes.UsageRoute
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -56,6 +58,8 @@ public class ServersViewModel(
     private val imported: ImportedProviderReview? = null,
     private val connectionChecks: Set<ServerConnectionCheck> = emptySet(),
     private val readSharing: Set<ServerReadSharing> = emptySet(),
+    /** Per-row facts (waiting/working/queued, backend); last so positional callers keep working. */
+    private val rows: ServerRowsPort = NoServerRows,
 ) : ViewModel(), ServersActions, ServerDisconnectActions {
     private val local =
         MutableStateFlow(
@@ -65,9 +69,34 @@ public class ServersViewModel(
             )
         )
     public val state: StateFlow<ServersUi> =
-        combine(local, connections.servers, connections.busy) { own, servers, busy ->
+        combine(local, connections.servers, connections.busy, rows.state) {
+                own,
+                servers,
+                busy,
+                facts ->
+                // Rows that need the person (waiting, then working) come first; ties keep saved
+                // order.
+                val ordered =
+                    servers
+                        .withIndex()
+                        .sortedWith(
+                            compareBy(
+                                { indexed ->
+                                    val row = facts.facts[indexed.value.id]
+                                    when {
+                                        (row?.waiting ?: 0) > 0 -> 0
+                                        (row?.running ?: 0) > 0 -> 1
+                                        else -> 2
+                                    }
+                                },
+                                { it.index },
+                            )
+                        )
+                        .map { it.value }
+                        .toImmutableList()
                 own.copy(
-                    servers = servers,
+                    servers = ordered,
+                    rows = facts,
                     busy = own.busy || busy,
                     importedSignIns =
                         own.importedSignIns?.takeIf { review ->
@@ -132,16 +161,18 @@ public class ServersViewModel(
     }
 
     private fun choose(fill: PairingFill) {
-        val generation = ++choosing
-        if (probe === NoPairingProbe || fill.fromLink) return publish(fill)
-        viewModelScope.launch {
-            val checks = PairingChoice.inspect(fill.candidates, probe, fill.credentials())
-            if (generation == choosing) {
-                local.update { it.copy(pairingChecks = checks.outcomes) }
-                val chosen = checks.chosen
-                publish(if (chosen == null || chosen == fill.address) fill else fill.at(chosen))
-            }
-        }
+        pairing.recipient = "server-editor"
+        pairing.put(fill)
+        nav.open(ServersRoute.Edit(newConversation = route != null))
+    }
+
+    /**
+     * A reviewed private-network address (Tailscale sheet) opens the checked editor at it, like a
+     * share link: an address only, never a credential.
+     */
+    override fun addServerAt(address: String) {
+        if (address.isBlank()) return
+        choose(PairingFill(address, null, null, 1, fromLink = true))
     }
 
     private fun publish(fill: PairingFill) {
@@ -197,16 +228,24 @@ public class ServersViewModel(
         }
     }
 
+    override fun openAccount(id: ProfileId) {
+        nav.open(AgentAccountRoute(id))
+    }
+
+    override fun moveQueued(id: ProfileId) {
+        nav.open(ServersRoute.MoveQueued(id))
+    }
+
+    override fun edit(id: ProfileId?) {
+        nav.open(ServersRoute.Edit(id, newConversation = route != null))
+    }
+
+    override fun settings(id: ProfileId) {
+        nav.open(ServerSettingsRoute(id))
+    }
+
     override fun monitor(id: ProfileId, enabled: Boolean) = monitorOperation {
         it.enabled(id, enabled)
-    }
-
-    override fun monitorWifi(id: ProfileId, enabled: Boolean) = monitorOperation {
-        it.wifiOnly(id, enabled)
-    }
-
-    override fun monitorCheckIn(id: ProfileId, minutes: Int?) = monitorOperation {
-        it.checkIn(id, minutes)
     }
 
     private fun monitorOperation(change: suspend (ServerMonitoring) -> Outcome<Unit>) {
@@ -394,14 +433,14 @@ public class ServersViewModel(
         }
     }
 
-    override fun remove(id: ProfileId) = operation {
-        when (val result = connections.remove(id)) {
-            is Outcome.Ok -> Unit
-            is Outcome.Failed -> failed(ServerIssue.RemoveFailed, result.failure)
-        }
+    override fun remove(id: ProfileId) {
+        nav.open(ServersRoute.Remove(id))
     }
 
-    override fun scanPairing(): Unit = nav.open(PairingRoute.Scanner)
+    override fun scanPairing() {
+        pairing.recipient = null
+        nav.open(PairingRoute.Scanner)
+    }
 
     override fun pastePairing(text: String?) {
         val read = PairingText.read(text.orEmpty())
@@ -467,4 +506,9 @@ public class ServersViewModel(
     public fun interface Factory : ManualViewModelAssistedFactory {
         public fun create(@Assisted route: ChatsRoute.New?): ServersViewModel
     }
+}
+
+/** No row facts: rows keep saved order and show only what the saved server says. */
+private object NoServerRows : ServerRowsPort {
+    override val state: StateFlow<ServerRowsState> = MutableStateFlow(ServerRowsState())
 }

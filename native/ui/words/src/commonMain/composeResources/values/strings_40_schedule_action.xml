@@ -1,0 +1,4 @@
+<resources>
+    <string name="scheduleActionWhen">Schedule for %1$s</string>
+    <string name="scheduleActionHours">Schedule every %1$d hours</string>
+</resources>

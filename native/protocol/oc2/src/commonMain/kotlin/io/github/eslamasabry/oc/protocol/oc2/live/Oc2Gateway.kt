@@ -73,7 +73,12 @@ internal class Oc2Gateway(
     ApiRouteGateway,
     SessionCreationGateway,
     WorktreeInspectionGateway,
-    ConfigurationGateway {
+    ConfigurationGateway,
+    FencedSessionReadStateGateway,
+    FencedSlashCommandGateway,
+    FencedNewSessionPromptGateway,
+    PromptRunIdentityGateway,
+    ServerInspectionGateway {
     // AGENT-2: worktree inspection reads (WorktreeInspectionGateway). Its MCP calls are served once
     // by PROTO's Oc2Library and SEC-2's integrations below.
     private val inspection = Oc2WorktreeInspection(this)
@@ -918,17 +923,36 @@ internal class Oc2Gateway(
             buildJsonObject { put("agent", agent) },
         )
 
-    override suspend fun viewSession(session: SessionId, idleMs: Long): Outcome<Unit> {
-        if (idleMs <= 0) return Failure.Refused(RefusalReason.StaleScope).failed()
-        return unit(
-            "/session/${sid(session)}/view",
-            HttpMethod.Post,
-            buildJsonObject { put("idle", idleMs) },
-        )
-    }
-
     override suspend fun renameSession(id: SessionId, title: String): Outcome<Unit> =
         unit("/session/${sid(id)}/rename", HttpMethod.Post, buildJsonObject { put("title", title) })
+
+    override suspend fun viewSession(session: SessionId, idleMs: Long): Outcome<Unit> =
+        viewSession(session, idleMs) { true }
+
+    override suspend fun viewSession(
+        session: SessionId,
+        idleMs: Long,
+        beforeSend: () -> Boolean,
+    ): Outcome<Unit> {
+        val at = location.value
+        if (idleMs <= 0 || !beforeSend()) return Failure.Refused(RefusalReason.StaleScope).failed()
+        if (dialect.value == null) {
+            when (val checked = health()) {
+                is Outcome.Failed -> return checked
+                is Outcome.Ok ->
+                    if (!checked.value.healthy) return Failure.UnreadableReply().failed()
+            }
+        }
+        if (location.value != at || !beforeSend())
+            return Failure.Refused(RefusalReason.StaleScope).failed()
+        return json(
+                "/session/${session.raw.encodeURLPathPart()}/view",
+                HttpMethod.Post,
+                buildJsonObject { put("idle", idleMs) },
+                locationQuery(at),
+            )
+            .map { Unit }
+    }
 
     override suspend fun deleteSession(id: SessionId): Outcome<Unit> =
         unit("/session/${sid(id)}", HttpMethod.Delete)
@@ -949,6 +973,9 @@ internal class Oc2Gateway(
             }
             output.toImmutableMap()
         }
+
+    override suspend fun lastPromptIdentity(session: SessionId): Outcome<PromptRunIdentity?> =
+        messagePage(session, limit = 100).map { lastPromptIdentity(it.items) }
 
     override suspend fun messagePage(
         id: SessionId,
@@ -985,6 +1012,13 @@ internal class Oc2Gateway(
         }
 
     override suspend fun promptWithMessageId(
+        session: SessionId,
+        messageId: MessageId,
+        prompt: OutgoingPrompt,
+        beforeSend: () -> Boolean,
+    ): Outcome<PromptAdmission> = sendPrompt(session, prompt, messageId.raw, beforeSend)
+
+    override suspend fun promptNewSessionWithMessageId(
         session: SessionId,
         messageId: MessageId,
         prompt: OutgoingPrompt,
@@ -1154,17 +1188,32 @@ internal class Oc2Gateway(
         command: String,
         args: String,
         model: ModelSelection?,
+    ): Outcome<Unit> = slashCommandFenced(session, command, args) { true }
+
+    override suspend fun slashCommandFenced(
+        session: SessionId,
+        command: String,
+        args: String,
+        beforeSend: () -> Boolean,
     ): Outcome<Unit> {
-        return admitted(session) { sendPreparedCommand(session, command, args) }
+        val at = location.value
+        if (!beforeSend()) return Failure.Refused(RefusalReason.StaleScope).failed()
+        return admitted(session) { sendPreparedCommand(session, command, args, at, beforeSend) }
     }
 
     private suspend fun sendPreparedCommand(
         session: SessionId,
         command: String,
         args: String,
+        at: ServerLocation,
+        beforeSend: () -> Boolean,
     ): Outcome<Unit> {
         val prepared = preparePermissions(session)
         if (prepared is Outcome.Failed) return prepared
+        // Preparation negotiates the dialect and may suspend for policy installation/readback.
+        // The destination and the caller's admission must still be the captured ones afterwards.
+        if (location.value != at || !beforeSend())
+            return Failure.Refused(RefusalReason.StaleScope).failed()
         return unit(
             "/session/${sid(session)}/command",
             HttpMethod.Post,
@@ -1855,10 +1904,23 @@ internal class Oc2Gateway(
         }
     }
 
+    override suspend fun savedPermissions(): Outcome<ImmutableList<SavedPermission>> = savedGrants()
+
+    override suspend fun removeSavedPermission(id: String): Outcome<Unit> = revokeGrant(id)
+
     // ---- Stable-line features and operations (new files Oc2Operations / Oc2WebSearch /
     // Oc2HistoryMigration /
     // Oc2Terminal; Flutter lib/api2/gateway_operations). Each delegates; the request shapes live
     // there.
+
+    override suspend fun readSetupConfig(location: ServerLocation): Outcome<JsonElement> =
+        inspectConfig(location, redactor)
+
+    override suspend fun readSetupMcp(location: ServerLocation): Outcome<JsonElement> =
+        inspectMcp(location)
+
+    override suspend fun readPluginInventory(location: ServerLocation): Outcome<JsonElement> =
+        inspectPlugins(location)
 
     override suspend fun webSearchProviders(): Outcome<ImmutableList<WebSearchProvider>> =
         searchProviders()
@@ -1992,7 +2054,7 @@ internal class Oc2Gateway(
                 sessionCompact = false,
                 persistentPermissionGrants = false,
                 permissionRequests = true,
-                savedPermissionList = false,
+                savedPermissionList = true,
                 messageCompletionEndsRun = false,
                 sessionRevert = true,
                 sessionImportExport = true,

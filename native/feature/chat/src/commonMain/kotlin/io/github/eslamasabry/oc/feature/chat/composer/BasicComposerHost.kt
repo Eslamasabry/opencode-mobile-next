@@ -31,6 +31,7 @@ import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.platform.PromptFilePicker
+import io.github.eslamasabry.oc.engine.composer.phrases.PhraseMoment
 import io.github.eslamasabry.oc.feature.chat.composer.history.ComposerHistorySheet
 import io.github.eslamasabry.oc.feature.chat.composer.history.ComposerHistoryUi
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.AttachKind
@@ -39,6 +40,7 @@ import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposer
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposerViewModel
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.ComposerQuery
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.ModelPicker
+import io.github.eslamasabry.oc.feature.chat.composer.presentation.PhraseSuggestionsViewModel
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModel
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
@@ -72,11 +74,15 @@ import io.github.eslamasabry.oc.ui.kitchat.composer.KitGlowChoice
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitTrayAction
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitTrayKind
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitVoiceField
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerGlow
 import io.github.eslamasabry.oc.ui.kitchat.stream.LocalKitPromptLift
 import io.github.eslamasabry.oc.ui.kitchat.stream.kitPromptOrigin
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.chatCycleNext
 import io.github.eslamasabry.oc.ui.words.res.chatCyclePrevious
+import io.github.eslamasabry.oc.ui.words.res.composerKeptMissingFiles
+import io.github.eslamasabry.oc.ui.words.res.composerKeptRestoreRefused
+import io.github.eslamasabry.oc.ui.words.res.composerKeptRestoreTitle
 import io.github.eslamasabry.oc.ui.words.res.chatDraftAlreadySent
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatAction
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatBody
@@ -156,6 +162,17 @@ public class BasicComposerHost(private val voices: Set<KitComposerVoice>) : Comp
             }
         val state by vm.state.collectAsStateWithLifecycle()
         val history by vm.history.collectAsStateWithLifecycle()
+        val phrases =
+            assistedMetroViewModel<
+                PhraseSuggestionsViewModel,
+                PhraseSuggestionsViewModel.Factory,
+            >(
+                key = "phrase-suggestions:${target.profileId}:${target.sessionId}"
+            ) {
+                create(target)
+            }
+        val phraseState by phrases.state.collectAsStateWithLifecycle()
+        val capturedMoment = if (chrome.busy()) PhraseMoment.Working else phraseState.moment
         BasicComposer(
             state,
             vm,
@@ -168,6 +185,10 @@ public class BasicComposerHost(private val voices: Set<KitComposerVoice>) : Comp
                 },
             history = history,
             refreshHistory = vm::loadHistory,
+            phraseSlot = { insert -> PhraseSuggestionsRow(phraseState, phrases, insert) },
+            onAcknowledgedPhrase = { text, attachments ->
+                phrases.acknowledged(text, attachments, capturedMoment)
+            },
         )
     }
 }
@@ -193,6 +214,8 @@ public fun BasicComposer(
     conversationRef: ConversationRef? = null,
     history: ComposerHistoryUi = ComposerHistoryUi(),
     refreshHistory: (() -> Unit)? = null,
+    phraseSlot: (@Composable ((String) -> Unit) -> Unit)? = null,
+    onAcknowledgedPhrase: ((String, Boolean) -> Unit)? = null,
 ) {
     if (state.readOnly != null) {
         Column(modifier) {
@@ -256,24 +279,44 @@ public fun BasicComposer(
     // (P12-CHAT-FEEL, [InsertRequest.replace]): the prompt's words replace the field, focused,
     // ready to change and send.
     // Reported as the person's own edit so the draft owner keeps it.
+    var insertRefused by remember(state.targetKey) { mutableStateOf(false) }
+    var missingInsertFiles by remember(state.targetKey) { mutableStateOf<List<String>>(emptyList()) }
     val insert = chrome.pendingInsert()
     LaunchedEffect(insert, editorReady, state.draft.ready) {
         val request = insert ?: return@LaunchedEffect
         if (!editorReady || !state.draft.ready) return@LaunchedEffect
+        insertRefused = false
+        missingInsertFiles = emptyList()
+        // A kept record is never consumed. A stale source or refused destination clears only this transient offer,
+        // so choosing Restore again is always an explicit action and cannot duplicate appended words.
+        if (!request.stillCurrent() || (request.attachments.isNotEmpty() && !actions.restoreAttachments(request.attachments, request.stillCurrent))) {
+            insertRefused = true
+            chrome.insertDone(request.id)
+            return@LaunchedEffect
+        }
+        if (!request.stillCurrent()) {
+            insertRefused = true
+            chrome.insertDone(request.id)
+            return@LaunchedEffect
+        }
         val current = field.text.toString()
         if (request.onlyIfEmpty && (current.isNotBlank() || state.draft.attachments.isNotEmpty())) {
             chrome.insertDone(request.id)
             return@LaunchedEffect
         }
         val next =
-            if (request.replace || current.isBlank()) request.text
-            else current.trimEnd() + "\n" + request.text
+            when {
+                request.text.isEmpty() -> current
+                request.replace || current.isBlank() -> request.text
+                else -> current.trimEnd() + "\n" + request.text
+            }
         field.edit { replace(0, length, next) }
         editor.userEditSerial += 1
         editor.lastReported = next
         repeatRevision = null
         actions.draftChanged(next)
-        if (request.replace) focus.requestFocus()
+        missingInsertFiles = request.missingAttachments
+        if (request.replace || request.attachments.isNotEmpty()) focus.requestFocus()
         chrome.insertDone(request.id)
     }
     val busy = chrome.busy()
@@ -282,8 +325,12 @@ public fun BasicComposer(
     val send: () -> Unit = {
         val text = field.text.toString()
         val liftId = lift?.offer(text)
+        // The prior moment is captured before dispatch, never after the reply moves.
+        val learn = onAcknowledgedPhrase
+        val hasAttachments = state.draft.attachments.isNotEmpty()
         scope.launch {
             if (actions.send(text)) {
+                learn?.invoke(text, hasAttachments)
                 // A local admission is not a server acknowledgement. The draft owner publishes its
                 // clear revision.
                 chrome.onSent()
@@ -344,6 +391,24 @@ public fun BasicComposer(
                     ),
                 modifier = Modifier.testTag("prompt-history-save-failed"),
             )
+        if (insertRefused) {
+            KitNotice(
+                title = stringResource(Res.string.composerKeptRestoreTitle),
+                message = stringResource(Res.string.composerKeptRestoreRefused),
+                tone = StatusTone.Attention,
+            )
+        }
+        if (missingInsertFiles.isNotEmpty()) {
+            KitNotice(
+                title = stringResource(Res.string.composerKeptRestoreTitle),
+                message =
+                    stringResource(
+                        Res.string.composerKeptMissingFiles,
+                        missingInsertFiles.joinToString(", "),
+                    ),
+                tone = StatusTone.Attention,
+            )
+        }
         if (state.draft.failure != null || state.draft.sendBlocked) {
             KitErrorNotice(
                 message =
@@ -555,11 +620,26 @@ public fun BasicComposer(
                 }
             }
         }
+        if (state.available && editorReady && state.draft.ready && !state.sending && !busy && !chrome.requestWaiting() && field.text.isBlank() && state.draft.attachments.isEmpty()) {
+            phraseSlot?.invoke { phrase ->
+                val current = field.text.toString()
+                val next = if (current.isBlank()) phrase else current.trimEnd() + " " + phrase
+                field.edit { replace(0, length, next); placeCursorBeforeCharAt(length) }
+                editor.userEditSerial += 1
+                editor.lastReported = next
+                repeatRevision = null
+                actions.draftChanged(next)
+                focus.requestFocus()
+            }
+        }
         // B8 (QA wave 1): while a reply runs, Stop and "Add to this turn" sit on their own row
         // under a full-width
         // field, so the message box never shrinks to a sliver.
         val stopShown = busy || chrome.requestWaiting()
         val fieldPart: @Composable (Modifier) -> Unit = { fieldModifier ->
+            // This is the production ComposerHost. The kit reads the acknowledged Appearance glow/style and
+            // applies reduced motion, Saver and the Style's line/halo policy in the same place it paints them.
+            KitComposerGlow(active = busy && !chrome.requestWaiting(), modifier = fieldModifier, corner = 9.dp) {
             KitField(
                 state = field,
                 // While a reply runs on a steering server the words join it (B-PROTO-025).
@@ -584,8 +664,9 @@ public fun BasicComposer(
                     repeatRevision = null
                     actions.draftChanged(accepted)
                 },
-                modifier = fieldModifier.kitPromptOrigin().testTag("chat-composer-field"),
+                modifier = Modifier.fillMaxWidth().kitPromptOrigin().testTag("chat-composer-field"),
             )
+            }
         }
         val stopPart: @Composable () -> Unit = {
             KitButton(

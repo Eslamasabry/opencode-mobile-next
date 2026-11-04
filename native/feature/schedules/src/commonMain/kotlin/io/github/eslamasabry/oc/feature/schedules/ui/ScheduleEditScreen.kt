@@ -46,19 +46,24 @@ import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.words.res.*
+import io.github.eslamasabry.oc.ui.words.res.scheduleNeedFuture
+import io.github.eslamasabry.oc.ui.words.res.scheduleThisConversation
 import kotlinx.coroutines.flow.drop
+import org.jetbrains.compose.resources.stringResource
 
 /**
- * K02 as a page: the prompt, project, repeat, time, missed-run choice and model, with one main action. The typed
- * fields are reported to the view model as they change (rotation keeps them; the prompt is kept as a draft).
- * TODO(kit): the K4 date and time wheels do not exist yet; time and date are typed fields with plain examples.
+ * K02 as a page: the prompt, project, repeat, time, missed-run choice and model, with one main
+ * action. The typed fields are reported to the view model as they change (rotation keeps them; the
+ * prompt is kept as a draft).
  */
 @Composable
 public fun ScheduleEditScreen(state: ScheduleEditUi, actions: ScheduleEditActions) {
     val words = scheduleWords()
     // Re-seeded only when the view model loads new starting values, never on recomposition.
     val draft = remember(state.seed) { EditorDraft(state.fields) }
-    // Every change goes to the view model, so rotation or leaving the editor never loses it (B-STATE-024).
+    // Every change goes to the view model, so rotation or leaving the editor never loses it
+    // (B-STATE-024).
     LaunchedEffect(draft) { snapshotFlow { draft.fields() }.drop(1).collect(actions::edited) }
     KitScreen(
         topBar = {
@@ -74,26 +79,41 @@ public fun ScheduleEditScreen(state: ScheduleEditUi, actions: ScheduleEditAction
         // The one main action stays at the thumb, visible without scrolling (screen standard).
         bottom =
             if (state.phase != EditPhase.Ready) null
-            else ({
-                KitButton(
-                    if (state.saving) words.saving else words.save,
-                    { actions.save(draft.fields()) },
-                    Modifier.fillMaxWidth().padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S2.dp),
-                    enabled = if (state.saving) KitEnabled.Disabled(words.saving) else KitEnabled.Enabled,
-                    working = state.saving,
-                )
-            }),
+            else
+                ({
+                    KitButton(
+                        if (state.saving) words.saving
+                        else scheduleActionLabel(draft.fields(), state.nowMs, words),
+                        { actions.save(draft.fields()) },
+                        Modifier.fillMaxWidth()
+                            .padding(
+                                horizontal = LocalKitTokens.current.gutter.dp,
+                                vertical = Space.S2.dp,
+                            ),
+                        enabled =
+                            if (state.saving) KitEnabled.Disabled(words.saving)
+                            else KitEnabled.Enabled,
+                        working = state.saving,
+                    )
+                }),
         width = KitScreenWidth.Reading,
     ) {
         when (state.phase) {
             EditPhase.Loading -> KitStateView(KitStateKind.Loading, words.loading)
-            EditPhase.Unavailable -> KitStateView(KitStateKind.Missing, if (state.editing) words.unavailableEdit else words.unavailableServer)
+            EditPhase.Unavailable ->
+                KitStateView(
+                    KitStateKind.Missing,
+                    if (state.editing) words.unavailableEdit else words.unavailableServer,
+                )
             EditPhase.Ready -> EditorForm(state, draft, words)
         }
     }
 }
 
-/** The typed fields of one editor visit; they live only in this composition and survive a refused save. */
+/**
+ * The typed fields of one editor visit; they live only in this composition and survive a refused
+ * save.
+ */
 private class EditorDraft(start: EditorFields) {
     val prompt = TextFieldState(start.prompt)
     val project = TextFieldState(start.project)
@@ -103,6 +123,7 @@ private class EditorDraft(start: EditorFields) {
     var kind by mutableStateOf(start.kind)
     var missed by mutableStateOf(start.missed)
     var model by mutableStateOf(start.model)
+    var thisConversation by mutableStateOf(start.thisConversation)
 
     fun fields(): EditorFields =
         EditorFields(
@@ -114,6 +135,7 @@ private class EditorDraft(start: EditorFields) {
             hours = hours.text.toString(),
             missed = missed,
             model = model,
+            thisConversation = thisConversation,
         )
 }
 
@@ -167,14 +189,15 @@ private fun EditorForm(state: ScheduleEditUi, draft: EditorDraft, words: Schedul
                 enabled = enabled,
             )
         }
-        KitField(
-            draft.time,
-            words.time,
-            kind = KitFieldKind.Mono,
-            helper = if (draft.kind == RecurrenceKind.Interval) words.firstAt else null,
-            error = if (state.issue == EditIssue.TimeInvalid) words.issueTime else null,
-            enabled = enabled,
-        )
+        if (draft.kind != RecurrenceKind.Interval) {
+            KitField(
+                draft.time,
+                words.time,
+                kind = KitFieldKind.Mono,
+                error = if (state.issue == EditIssue.TimeInvalid) words.issueTime else null,
+                enabled = enabled,
+            )
+        }
         if (draft.kind == RecurrenceKind.Interval) {
             KitField(
                 draft.hours,
@@ -186,7 +209,10 @@ private fun EditorForm(state: ScheduleEditUi, draft: EditorDraft, words: Schedul
         }
         KitSectionLabel(words.missed)
         KitChoiceList(
-            listOf(KitChoice(MissedRunPolicy.CatchUp, words.missedCatchUp), KitChoice(MissedRunPolicy.Skip, words.missedSkip)),
+            listOf(
+                KitChoice(MissedRunPolicy.CatchUp, words.missedCatchUp),
+                KitChoice(MissedRunPolicy.Skip, words.missedSkip),
+            ),
             selected = draft.missed,
             semanticsLabel = words.missed,
             onSelect = { draft.missed = it },
@@ -195,11 +221,70 @@ private fun EditorForm(state: ScheduleEditUi, draft: EditorDraft, words: Schedul
             KitSectionLabel(words.model)
             val choices =
                 listOf(KitChoice<ModelChoice?>(null, words.modelDefault)) +
-                    (state.models + listOfNotNull(draft.model).filter { it !in state.models }).map { KitChoice<ModelChoice?>(it, it.label) }
-            KitChoiceList(choices, selected = draft.model, semanticsLabel = words.model, onSelect = { draft.model = it })
+                    (state.models + listOfNotNull(draft.model).filter { it !in state.models }).map {
+                        KitChoice<ModelChoice?>(it, it.label)
+                    }
+            KitChoiceList(
+                choices,
+                selected = draft.model,
+                semanticsLabel = words.model,
+                onSelect = { draft.model = it },
+            )
         }
         KitRowGroup(label = words.conversation) {
-            KitRow(if (state.continuesConversation) words.continuesTitle(state.conversationTitle) else words.newEachTime)
+            if (state.canChooseConversation) {
+                KitChoiceList(
+                    choices =
+                        listOf(
+                            KitChoice(
+                                true,
+                                org.jetbrains.compose.resources.stringResource(
+                                    io.github.eslamasabry.oc.ui.words.res.Res.string
+                                        .scheduleThisConversation
+                                ),
+                            ),
+                            KitChoice(false, words.newEachTime),
+                        ),
+                    selected = draft.thisConversation,
+                    semanticsLabel = words.conversation,
+                    onSelect = { draft.thisConversation = it },
+                )
+            } else KitRow(words.newEachTime)
         }
+        if (state.issue == EditIssue.FutureRequired) {
+            io.github.eslamasabry.oc.ui.kit.KitText(
+                org.jetbrains.compose.resources.stringResource(
+                    io.github.eslamasabry.oc.ui.words.res.Res.string.scheduleNeedFuture
+                )
+            )
+        }
+        io.github.eslamasabry.oc.ui.kit.KitText(
+            org.jetbrains.compose.resources.stringResource(
+                io.github.eslamasabry.oc.ui.words.res.Res.string.scheduleClosedNote
+            )
+        )
     }
+}
+
+@Composable
+private fun scheduleActionLabel(fields: EditorFields, nowMs: Long, words: ScheduleWords): String {
+    if (fields.kind == RecurrenceKind.Interval) {
+        val hours = fields.hours.toIntOrNull() ?: return words.save
+        return stringResource(Res.string.scheduleActionHours, hours)
+    }
+    val time =
+        io.github.eslamasabry.oc.feature.schedules.presentation.EditorRules.time(fields.time)
+            ?: return words.save
+    val clock =
+        "${time.first.toString().padStart(2, '0')}:${time.second.toString().padStart(2, '0')}"
+    val whenText =
+        if (fields.kind == RecurrenceKind.Once) {
+            io.github.eslamasabry.oc.engine.schedules.ScheduleTime.at(
+                    fields.date,
+                    time.first,
+                    time.second,
+                )
+                ?.let { moment(it, nowMs, words) } ?: return words.save
+        } else clock
+    return stringResource(Res.string.scheduleActionWhen, whenText)
 }

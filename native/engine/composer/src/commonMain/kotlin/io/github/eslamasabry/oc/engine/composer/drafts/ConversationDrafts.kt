@@ -14,9 +14,11 @@ import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.model.PromptAttachment
 import io.github.eslamasabry.oc.engine.composer.vault.schemeOf
 import kotlin.concurrent.atomics.AtomicReference
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalForInheritanceCoroutinesApi
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -70,6 +72,56 @@ public class ConversationDrafts(
     private val sessions = AtomicReference<Map<ConversationRef, DraftSession>>(emptyMap())
     private val fences = AtomicReference<Map<ProfileId, ProfileFence>>(emptyMap())
     private val lifecycle = Mutex()
+    private val privacy = AtomicReference<CompletableDeferred<Unit>?>(null)
+
+    internal suspend fun awaitPrivacy() {
+        privacy.load()?.await()
+    }
+
+    internal val clearingPrivacy: Boolean
+        get() = privacy.load() != null
+
+    public suspend fun storageFacts(): Outcome<DraftStorageFacts> =
+        withContext(serial) {
+            awaitPrivacy()
+            attempt({ Failure.StorageRefused() }) { drafts.storageFacts() }.flatMap { it }
+        }
+
+    /**
+     * Pauses every open writer, invalidates only the acknowledged deleted baseline, and keeps newer
+     * typing.
+     */
+    public suspend fun discardAll(expected: Map<String, String?>): Outcome<DraftDiscardResult> =
+        withContext(serial + NonCancellable) {
+            lifecycle.withLock {
+                val gate = CompletableDeferred<Unit>()
+                if (!privacy.compareAndSet(null, gate))
+                    return@withLock Failure.StorageRefused().failed()
+                var committed = false
+                val paused = ArrayList<DraftSession>()
+                try {
+                    for (session in sessions.load().values) {
+                        if (!session.pausePrivacy())
+                            return@withLock Failure.Refused(RefusalReason.DispatchUncertain)
+                                .failed()
+                        paused += session
+                    }
+                    suspend fun locked(index: Int): Outcome<DraftDiscardResult> =
+                        if (index == paused.size)
+                            attempt({ Failure.StorageRefused() }) { drafts.discardAll(expected) }
+                                .flatMap { it }
+                        else paused[index].privacyWriter { locked(index + 1) }
+                    val result = locked(0)
+                    committed = result is Outcome.Ok
+                    result
+                } finally {
+                    // New sessions opened while the gate was held have not restored anything yet.
+                    sessions.load().values.forEach { it.finishPrivacy(committed) }
+                    privacy.compareAndSet(gate, null)
+                    gate.complete(Unit)
+                }
+            }
+        }
 
     public fun open(ref: ConversationRef): DraftSession {
         while (true) {
@@ -180,7 +232,10 @@ private data class SessionSnapshot(
     val retired: Boolean = false,
     val clearPending: Boolean = false,
     val fileCommitPending: Boolean = false,
+    val privacyRevision: Long? = null,
+    val privacyBaseline: DraftState? = null,
     val submissions: List<DraftSubmission> = emptyList(),
+    val privacySubmissions: List<DraftSubmission> = emptyList(),
     /** Where this conversation lives; null until its connection names it. */
     val location: DraftLocation? = null,
     /** Restoration waits for [location]: the saved draft holds a `file:` reference. */
@@ -236,7 +291,10 @@ internal constructor(
             .apply {
                 onAcknowledged = ::acknowledged
                 canWriteRevision = {
-                    !snapshots.value.fenced && owner.active(ref.profileId, generation)
+                    !snapshots.value.fenced &&
+                        snapshots.value.privacyRevision == null &&
+                        !owner.clearingPrivacy &&
+                        owner.active(ref.profileId, generation)
                 }
                 currentAttachments = { snapshots.value.public.attachments }
             }
@@ -283,6 +341,7 @@ internal constructor(
     private fun unavailable(): Outcome.Failed = Outcome.Failed(Failure.StorageRefused())
 
     private suspend fun restore(): Outcome<Unit> {
+        owner.awaitPrivacy()
         if (!owner.active(ref.profileId, generation) || snapshots.value.fenced) {
             fenceProfile()
             return deleted()
@@ -330,7 +389,8 @@ internal constructor(
                 before.fenced ||
                     !owner.active(ref.profileId, generation) ||
                     before.public.ready ||
-                    before.clearPending
+                    before.clearPending ||
+                    before.privacyRevision != null
             )
                 before
             else
@@ -433,6 +493,8 @@ internal constructor(
             val current = snapshots.value
             if (
                 !current.fenced &&
+                    current.privacyRevision == null &&
+                    !owner.clearingPrivacy &&
                     !current.closed &&
                     current.public.ready &&
                     owner.active(ref.profileId, generation) &&
@@ -448,6 +510,7 @@ internal constructor(
         snapshots.update { before ->
             if (
                 before.fenced ||
+                    before.privacyRevision != null ||
                     !owner.active(ref.profileId, generation) ||
                     revision > before.revision
             )
@@ -475,6 +538,7 @@ internal constructor(
 
     public suspend fun flush(): Outcome<Unit> =
         withContext(serial) {
+            owner.awaitPrivacy()
             if (!owner.active(ref.profileId, generation) || snapshots.value.fenced)
                 return@withContext deleted()
             if (
@@ -515,7 +579,10 @@ internal constructor(
      */
     public suspend fun replaceAttachments(files: List<PromptAttachment>): Outcome<Unit> {
         val requested = files.toList()
+        if (owner.clearingPrivacy) return unavailable()
         return withContext(serial) {
+            if (owner.clearingPrivacy || snapshots.value.privacyRevision != null)
+                return@withContext unavailable()
             if (!owner.active(ref.profileId, generation) || snapshots.value.fenced)
                 return@withContext deleted()
             if (!snapshots.value.public.ready && !snapshots.value.clearPending) {
@@ -536,6 +603,8 @@ internal constructor(
      */
     private suspend fun commitAttachments(requested: List<PromptAttachment>): Outcome<Unit> =
         autosave.exclusive {
+            if (owner.clearingPrivacy || snapshots.value.privacyRevision != null)
+                return@exclusive unavailable()
             if (!owner.active(ref.profileId, generation) || snapshots.value.fenced)
                 return@exclusive deleted()
             val before = snapshots.value
@@ -600,6 +669,8 @@ internal constructor(
                     before.public.failure != null ||
                     before.closed ||
                     before.fenced ||
+                    before.privacyRevision != null ||
+                    owner.clearingPrivacy ||
                     before.clearPending ||
                     !owner.active(ref.profileId, generation) ||
                     (before.public.text.isEmpty() && before.public.attachments.isEmpty())
@@ -619,15 +690,32 @@ internal constructor(
             if (
                 snapshots.compareAndSet(
                     before,
-                    before.copy(submissions = before.submissions + token),
+                    before.copy(
+                        submissions = before.submissions + token,
+                        privacySubmissions = before.privacySubmissions + token,
+                    ),
                 )
             )
                 return token
         }
     }
 
+    /**
+     * The delivery caller releases after its result is durable; it does not authorize any resend or
+     * clear.
+     */
+    public fun releaseSubmission(submission: DraftSubmission) {
+        snapshots.update {
+            it.copy(
+                privacySubmissions =
+                    it.privacySubmissions.filterNot { token -> token === submission }
+            )
+        }
+    }
+
     public suspend fun clearAfterSend(submission: DraftSubmission): Outcome<Unit> =
         withContext(serial) {
+            releaseSubmission(submission)
             if (!owner.active(ref.profileId, generation) || snapshots.value.fenced)
                 return@withContext deleted()
             autosave.exclusive {
@@ -727,6 +815,75 @@ internal constructor(
         }
         owner.releaseEmpty(ref, this)
         return result
+    }
+
+    internal fun pausePrivacy(): Boolean {
+        while (true) {
+            val before = snapshots.value
+            if (
+                before.privacySubmissions.isNotEmpty() ||
+                    before.clearPending ||
+                    before.fileCommitPending
+            )
+                return false
+            if (
+                snapshots.compareAndSet(
+                    before,
+                    before.copy(privacyRevision = before.revision, privacyBaseline = before.public),
+                )
+            )
+                return true
+        }
+    }
+
+    internal suspend fun <T> privacyWriter(block: suspend () -> T): T = autosave.exclusive {
+        autosave.cancelPending()
+        block()
+    }
+
+    internal fun finishPrivacy(committed: Boolean) {
+        snapshots.update { before ->
+            val baseline = before.privacyRevision
+            if (baseline == null && !committed) before
+            else if (before.fenced) before.copy(privacyRevision = null, privacyBaseline = null)
+            else if (!committed) before.copy(privacyRevision = null, privacyBaseline = null)
+            else {
+                val newerWords =
+                    baseline != null && before.public.text != before.privacyBaseline?.text
+                before.copy(
+                    public =
+                        before.public.copy(
+                            text = if (newerWords) before.public.text else "",
+                            saved = "",
+                            attachments = emptyList(),
+                            savedAttachments = emptyList(),
+                            ready = true,
+                            failure = null,
+                            editRevision = before.revision + 1,
+                            restoreRevision =
+                                before.public.restoreRevision + if (newerWords) 0 else 1,
+                        ),
+                    revision = before.revision + 1,
+                    clearPending = false,
+                    fileCommitPending = false,
+                    privacyRevision = null,
+                    privacyBaseline = null,
+                    awaitingLocation = false,
+                    submissions = emptyList(),
+                    privacySubmissions = emptyList(),
+                )
+            }
+        }
+        scope.launch(serial) {
+            owner.awaitPrivacy()
+            val current = snapshots.value
+            if (
+                !current.fenced &&
+                    current.public.ready &&
+                    current.public.text != current.public.saved
+            )
+                autosave.changedRevision(current.public.text, current.revision)
+        }
     }
 
     internal fun fenceProfile() {

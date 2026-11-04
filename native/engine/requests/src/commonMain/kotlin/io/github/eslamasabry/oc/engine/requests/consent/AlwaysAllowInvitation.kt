@@ -6,9 +6,10 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /**
- * The exact scope an "Always allow" grant would cover (port of Dart `PermissionConsentScope`): the permission, its
- * exact patterns and its `always` patterns. Pattern order does not matter; the conversation does not either (the
- * third identical ask counts across conversations), but the same request seen twice counts once.
+ * The exact scope an "Always allow" grant would cover (port of Dart `PermissionConsentScope`): the
+ * permission, its exact patterns and its `always` patterns. Pattern order does not matter; the
+ * conversation does not either (the third identical ask counts across conversations), but the same
+ * request seen twice counts once.
  */
 public data class ConsentScope(
     val sessionId: String,
@@ -16,21 +17,33 @@ public data class ConsentScope(
     val patterns: List<String>,
     val alwaysPatterns: List<String> = emptyList(),
 ) {
-    internal val key: String get() = digest(listOf(permission, patterns.sorted(), alwaysPatterns.sorted()))
+    internal val key: String
+        get() = digest(listOf(permission, patterns.sorted(), alwaysPatterns.sorted()))
 }
 
-public enum class OfferDecision { NotOffered, Offered, Accepted, Declined }
+public enum class OfferDecision {
+    NotOffered,
+    Offered,
+    Accepted,
+    Declined,
+}
 
 public data class ConsentStatus(
-    /** True exactly once: on the third distinct ask of this scope. Show the one-line invitation under the card. */
+    /**
+     * True exactly once: on the third distinct ask of this scope. Show the one-line invitation
+     * under the card.
+     */
     val offerAlwaysAllow: Boolean = false,
     val distinctAsks: Int = 0,
     val decision: OfferDecision = OfferDecision.NotOffered,
-    /** False when the record is corrupt, full or unwritable: offers are suppressed, never guessed. */
+    /**
+     * False when the record is corrupt, full or unwritable: offers are suppressed, never guessed.
+     */
     val storageAvailable: Boolean = true,
 ) {
     /** A declined invitation is explained once in Settings › Always allowed actions. */
-    val explainDeclinedInSettings: Boolean get() = decision == OfferDecision.Declined
+    val explainDeclinedInSettings: Boolean
+        get() = decision == OfferDecision.Declined
 }
 
 /** The `oc.permissionConsent.<profileId>` string (05 Appendix A; format unchanged from Flutter). */
@@ -42,11 +55,13 @@ public interface ConsentStorage {
 
 /**
  * The "Always allow" invitation (plan 09 §5.3, map CHAT-GENUI-46, B-SEC-147; port of Dart
- * `repeated_permission_consent.dart`): the third distinct identical ask offers "Always allow" once per server and scope,
- * only where the server keeps grants, never while the conversation auto-approves. The claim is written before the
- * offer is returned, so a replay or a restart can never offer it again; it is recorded as accepted only after the
- * server took the `always` reply ([recordDecision] after the reply). Only digests are stored — never a command, path or
- * pattern. 256 scopes / 128 KiB; a corrupt, oversized or unwritable record suppresses every offer until restart.
+ * `repeated_permission_consent.dart`): the third distinct identical ask offers "Always allow" once
+ * per server and scope, only where the server keeps grants, never while the conversation
+ * auto-approves. The claim is written before the offer is returned, so a replay or a restart can
+ * never offer it again; it is recorded as accepted only after the server took the `always` reply
+ * ([recordDecision] after the reply). Only digests are stored — never a command, path or pattern.
+ * 256 scopes / 128 KiB; a corrupt, oversized or unwritable record suppresses every offer until
+ * restart.
  *
  * One instance per profile, owned by the requests engine; every call is serialized.
  */
@@ -54,37 +69,47 @@ public class AlwaysAllowInvitation(private val storage: ConsentStorage) {
     private val lane = Mutex()
     private var blocked = false
 
+    /** Profile removal waits for an in-flight consent read/write without clearing its history. */
+    public suspend fun awaitIdle(): Unit = lane.withLock {}
+
     public suspend fun observe(
         scope: ConsentScope,
         requestId: String,
         supportsPersistentGrants: Boolean,
         autoApproving: Boolean,
-    ): ConsentStatus =
-        serialized {
-            if (!supportsPersistentGrants || autoApproving || requestId.isEmpty() || scope.sessionId.isEmpty() ||
+    ): ConsentStatus = serialized {
+        if (
+            !supportsPersistentGrants ||
+                autoApproving ||
+                requestId.isEmpty() ||
+                scope.sessionId.isEmpty() ||
                 scope.permission.isEmpty()
-            ) {
-                return@serialized ConsentStatus()
-            }
-            val entries = read() ?: return@serialized UNAVAILABLE
-            val key = scope.key
-            val entry = entries[key] ?: Entry(mutableListOf(), OfferDecision.NotOffered)
-            if (entry.decision != OfferDecision.NotOffered) return@serialized entry.status()
-            val request = digest(listOf(scope.sessionId, requestId))
-            if (request in entry.requests) return@serialized entry.status()
-            if (key !in entries && entries.size >= LIMIT) return@serialized UNAVAILABLE
-            entry.requests += request
-            val offer = entry.requests.size == OFFER_AT
-            if (offer) entry.decision = OfferDecision.Offered
-            entries[key] = entry
-            if (!write(entries)) return@serialized UNAVAILABLE
-            entry.status(offer)
+        ) {
+            return@serialized ConsentStatus()
         }
+        val entries = read() ?: return@serialized UNAVAILABLE
+        val key = scope.key
+        val entry = entries[key] ?: Entry(mutableListOf(), OfferDecision.NotOffered)
+        if (entry.decision != OfferDecision.NotOffered) return@serialized entry.status()
+        val request = digest(listOf(scope.sessionId, requestId))
+        if (request in entry.requests) return@serialized entry.status()
+        if (key !in entries && entries.size >= LIMIT) return@serialized UNAVAILABLE
+        entry.requests += request
+        val offer = entry.requests.size == OFFER_AT
+        if (offer) entry.decision = OfferDecision.Offered
+        entries[key] = entry
+        if (!write(entries)) return@serialized UNAVAILABLE
+        entry.status(offer)
+    }
 
-    public suspend fun status(scope: ConsentScope): ConsentStatus =
-        serialized { read()?.get(scope.key)?.status() ?: if (blocked) UNAVAILABLE else ConsentStatus() }
+    public suspend fun status(scope: ConsentScope): ConsentStatus = serialized {
+        read()?.get(scope.key)?.status() ?: if (blocked) UNAVAILABLE else ConsentStatus()
+    }
 
-    /** After the server took "always" ([accepted]) or the person chose "Keep asking". Only an open offer changes. */
+    /**
+     * After the server took "always" ([accepted]) or the person chose "Keep asking". Only an open
+     * offer changes.
+     */
     public suspend fun recordDecision(scope: ConsentScope, accepted: Boolean): ConsentStatus =
         serialized {
             val entries = read() ?: return@serialized UNAVAILABLE
@@ -95,19 +120,23 @@ public class AlwaysAllowInvitation(private val storage: ConsentStorage) {
             entry.status()
         }
 
-    /** Scopes offered or declined but never accepted (Settings counts them); null when unreadable. */
-    public suspend fun declinedCount(): Int? =
-        lane.withLock { read()?.values?.count { it.notAccepted } }
+    /**
+     * Scopes offered or declined but never accepted (Settings counts them); null when unreadable.
+     */
+    public suspend fun declinedCount(): Int? = lane.withLock {
+        read()?.values?.count { it.notAccepted }
+    }
 
-    public suspend fun forgetDeclined(): Boolean =
-        lane.withLock {
-            val entries = read() ?: return@withLock false
-            entries.values.removeAll { it.notAccepted }
-            write(entries)
-        }
+    public suspend fun forgetDeclined(): Boolean = lane.withLock {
+        val entries = read() ?: return@withLock false
+        entries.values.removeAll { it.notAccepted }
+        write(entries)
+    }
 
     private suspend fun serialized(block: suspend () -> ConsentStatus): ConsentStatus =
-        lane.withLock { if (blocked) UNAVAILABLE else block() }
+        lane.withLock {
+            if (blocked) UNAVAILABLE else block()
+        }
 
     private suspend fun read(): LinkedHashMap<String, Entry>? {
         if (blocked) return null
@@ -131,11 +160,17 @@ public class AlwaysAllowInvitation(private val storage: ConsentStorage) {
         for ((key, value) in rows) {
             if (!isDigest(key)) return null
             val row = value as? Map<String, Any?> ?: return null
-            val requests = (row["requests"] as? List<Any?>)?.map { it as? String ?: return null } ?: return null
-            val decision = OfferDecision.entries.firstOrNull { it.wire == row["decision"] } ?: return null
-            if (requests.isEmpty() || requests.size > OFFER_AT || requests.any { !isDigest(it) } ||
-                requests.toSet().size != requests.size ||
-                (requests.size == OFFER_AT) != (decision != OfferDecision.NotOffered)
+            val requests =
+                (row["requests"] as? List<Any?>)?.map { it as? String ?: return null }
+                    ?: return null
+            val decision =
+                OfferDecision.entries.firstOrNull { it.wire == row["decision"] } ?: return null
+            if (
+                requests.isEmpty() ||
+                    requests.size > OFFER_AT ||
+                    requests.any { !isDigest(it) } ||
+                    requests.toSet().size != requests.size ||
+                    (requests.size == OFFER_AT) != (decision != OfferDecision.NotOffered)
             ) {
                 return null
             }
@@ -149,8 +184,11 @@ public class AlwaysAllowInvitation(private val storage: ConsentStorage) {
             DartJson.encode(
                 linkedMapOf(
                     "version" to 1,
-                    "entries" to entries.mapValues { (_, e) -> linkedMapOf("requests" to e.requests, "decision" to e.decision.wire) },
-                ),
+                    "entries" to
+                        entries.mapValues { (_, e) ->
+                            linkedMapOf("requests" to e.requests, "decision" to e.decision.wire)
+                        },
+                )
             )
         if (storage.write(encoded) is Outcome.Ok) return true
         blocked = true
@@ -163,9 +201,15 @@ public class AlwaysAllowInvitation(private val storage: ConsentStorage) {
     }
 
     private class Entry(val requests: MutableList<String>, var decision: OfferDecision) {
-        val notAccepted: Boolean get() = decision == OfferDecision.Declined || decision == OfferDecision.Offered
+        val notAccepted: Boolean
+            get() = decision == OfferDecision.Declined || decision == OfferDecision.Offered
 
-        fun status(offer: Boolean = false) = ConsentStatus(offerAlwaysAllow = offer, distinctAsks = requests.size, decision = decision)
+        fun status(offer: Boolean = false) =
+            ConsentStatus(
+                offerAlwaysAllow = offer,
+                distinctAsks = requests.size,
+                decision = decision,
+            )
     }
 
     public companion object {
@@ -184,7 +228,8 @@ public class AlwaysAllowInvitation(private val storage: ConsentStorage) {
 }
 
 /** Dart enum `.name`. */
-private val OfferDecision.wire: String get() = name.replaceFirstChar { it.lowercase() }
+private val OfferDecision.wire: String
+    get() = name.replaceFirstChar { it.lowercase() }
 
 private fun digest(value: Any): String = DartJson.sha256Hex(DartJson.encode(value))
 

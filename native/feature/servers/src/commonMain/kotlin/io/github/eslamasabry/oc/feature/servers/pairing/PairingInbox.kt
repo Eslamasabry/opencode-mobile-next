@@ -75,6 +75,8 @@ public class PairingFill(
 @Inject
 public class PairingInbox {
     private var held: PairingFill? = null
+    /** Which live form opened the scanner; never saved and never a credential. */
+    public var recipient: String? = null
     private val counter = MutableStateFlow(0)
 
     /** Ticks whenever something new arrives; the form then calls [take]. */
@@ -85,5 +87,11 @@ public class PairingInbox {
         counter.update { it + 1 }
     }
 
-    public fun take(): PairingFill? = held.also { held = null }
+    public fun take(forRecipient: String? = null): PairingFill? =
+        if (recipient != forRecipient) null
+        else
+            held.also {
+                held = null
+                recipient = null
+            }
 }

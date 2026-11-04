@@ -1,13 +1,16 @@
 package io.github.eslamasabry.oc.ui.kit.content.terminal
 
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
@@ -18,12 +21,26 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
+/**
+ * One terminal key. Two shapes share it: a key that runs [onClick] (`KitTerminalKey(label, latched) { … }`, read by
+ * [KitTerminalKeyBar]) and a key named by protocol [id] (`KitTerminalKey(id, label, selected)`, read by
+ * [KitTerminalKeybar], which hands the id to its `onKey`). A key name is protocol data; its face and accessible name
+ * come from native string resources.
+ */
+@Immutable
 public data class KitTerminalKey(
     val label: String,
     val latched: Boolean? = null,
     val testTag: String? = null,
-    val onClick: () -> Unit,
-)
+    val id: String = label,
+    val onClick: () -> Unit = {},
+) {
+    /** A key named by protocol [id]; [selected] marks a latched modifier. */
+    public constructor(id: String, label: String, selected: Boolean? = null) : this(label = label, latched = selected, id = id)
+
+    /** The latched state under its id-keyed name. */
+    val selected: Boolean? get() = latched
+}
 
 /** A visible, horizontally scrollable key bar shared by local and server terminals. */
 @Composable
@@ -101,3 +118,30 @@ private fun controlKeys(
             onClick = { onSend(TerminalText.keyBytes(key)) },
         )
     }
+
+/**
+ * The single terminal key row keyed by protocol id: minimum kit targets, one shared horizontal scroll, labelled
+ * modifier selection. Each tap hands the key's [KitTerminalKey.id] to [onKey].
+ */
+@Composable
+public fun KitTerminalKeybar(
+    keys: List<KitTerminalKey>,
+    enabled: KitEnabled,
+    onKey: (String) -> Unit,
+) {
+    Row(
+        Modifier.horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        keys.forEach { key ->
+            KitButton(
+                label = key.label,
+                onClick = { onKey(key.id) },
+                modifier = Modifier.semantics { key.selected?.let { selected = it } },
+                role =
+                    if (key.selected == true) KitButtonRole.Secondary else KitButtonRole.Tertiary,
+                enabled = enabled,
+            )
+        }
+    }
+}

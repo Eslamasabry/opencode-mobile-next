@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings40_style_default">Style default</string>
+    <string name="settings40_reset_question">Reset Appearance?</string>
+    <string name="settings40_reset_body">Reset colours, style, shape, glass, text size, motion and reply glow. Your conversations, language and notification choices stay as they are.</string>
+    <string name="settings40_local_work">Unsent work on this phone</string>
+    <string name="settings40_queue_title">Queued prompts</string>
+    <string name="settings40_drafts_title">Conversation drafts</string>
+    <string name="settings40_storage_size">%1$d items · %2$s</string>
+    <string name="settings40_storage_unknown">Cannot read this storage. Everything is kept.</string>
+    <string name="settings40_storage_reading">Reading local storage…</string>
+    <string name="settings40_discard_queue">Delete unsent queued prompts</string>
+    <string name="settings40_discard_drafts">Delete conversation drafts</string>
+    <string name="settings40_queue_keeps">Deletes prompts that have never been sent. Prompts with a dispatch marker or a command receipt stay for review.</string>
+    <string name="settings40_queue_empty">No queued prompts to delete.</string>
+    <string name="settings40_drafts_empty">No saved drafts to delete.</string>
+    <string name="settings40_discard_working">Deleting local content…</string>
+    <string name="settings40_queue_question">Delete unsent queued prompts?</string>
+    <string name="settings40_drafts_question">Delete conversation drafts?</string>
+    <string name="settings40_drafts_body">Deletes saved words and draft attachments on this phone. Open conversations update too. Work still being sent or checked prevents deletion. This cannot be undone.</string>
+    <string name="settings40_discard_failed">Could not finish deleting. Work being sent, uncertain work, unreadable storage or a change while saving can prevent deletion. Check the counts and try again.</string>
+    <string name="settings40_discard_done">Deleted %1$d items.</string>
+    <string name="settings40_discard_kept">Deleted %1$d items. Kept %2$d prompts that need review.</string>
+    <string name="settings40_discard_cleanup">Deleted %1$d drafts. Some attachment files could not be removed. Try deleting drafts again to finish.</string>
+    <string name="settings40_no_answers">No questions on this server need an answer yet.</string>
+    <string name="settings40_answer_failed">This step did not finish. Your saved answer and Android settings may differ. Check Notifications or Keep running, then try again.</string>
+</resources>

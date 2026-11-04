@@ -26,6 +26,8 @@ public sealed interface SettingsPage {
 
     public data class Group(val id: SettingsGroupId) : SettingsPage
 
+    public data class ByServer(val section: SettingsOutside) : SettingsPage
+
     public data object Appearance : SettingsPage
 
     public data object Voice : SettingsPage
@@ -39,7 +41,10 @@ public sealed interface SettingsPage {
     public data object Notices : SettingsPage
 
     public data object PhraseChips : SettingsPage
+
     public data object WhatsNew : SettingsPage
+
+    public data object Tips : SettingsPage
 
     public data object Privacy : SettingsPage
 
@@ -95,10 +100,13 @@ public enum class SettingsOutside {
     UsageAlerts,
     QuietHours,
     ReleaseNotes,
+    Updates,
     // BUILD-DIAGNOSTICS-ATTENTION: Report a problem's GitHub form and Everything this phone kept
     // (:feature:diagnostics).
     ReportOnGitHub,
     KeptDiagnostics,
+    KeptPrompts,
+    ReadState,
 }
 
 /** Opens a place another feature owns. */

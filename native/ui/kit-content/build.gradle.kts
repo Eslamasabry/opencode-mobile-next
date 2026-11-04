@@ -27,6 +27,10 @@ kotlin {
         implementation("io.coil-kt.coil3:coil-svg:${libs.versions.coil.get()}")
         implementation(libs.compose.material3) // kit modules only (ExternalRules)
     }
+    sourceSets.androidMain.dependencies {
+        implementation("com.github.termux.termux-app:terminal-emulator:v0.118.3")
+        implementation("com.github.termux.termux-app:terminal-view:v0.118.3")
+    }
     sourceSets.getByName("desktopTest").dependencies {
         implementation(
             project(":core:security")

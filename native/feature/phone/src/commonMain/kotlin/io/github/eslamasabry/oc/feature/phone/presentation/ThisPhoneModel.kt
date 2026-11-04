@@ -1,9 +1,11 @@
 package io.github.eslamasabry.oc.feature.phone.presentation
 
-import io.github.eslamasabry.oc.engine.runtime.storage.HostStorageAvailability
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.pace.Pacer
 import io.github.eslamasabry.oc.engine.runtime.budget.ProcessBudget
+import io.github.eslamasabry.oc.engine.runtime.storage.HostStorageAvailability
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.collections.immutable.persistentListOf
@@ -15,7 +17,11 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -35,6 +41,7 @@ public class ThisPhoneModel(
     private val phoneStorage: PhoneStorageReadings? = null,
     private val exits: PhoneExitNotices = PhoneExitNotices.Absent,
     private val processes: PhoneProcessSource? = null,
+    private val phoneDetails: PhoneDetailsSource? = null,
 ) : ThisPhoneActions {
     private data class Local(
         val working: PhoneOp? = null,
@@ -50,36 +57,59 @@ public class ThisPhoneModel(
         val phoneStorage: io.github.eslamasabry.oc.engine.runtime.storage.PhoneStorageSnapshot? =
             null,
         val measuringStorage: Boolean = false,
+        val detailsOpen: Boolean = false,
+        val installedOpen: Boolean = false,
     )
 
     private val local = MutableStateFlow(Local(now = clock.now()))
     private val visible = MutableStateFlow(false)
 
     public val state: StateFlow<ThisPhoneUi> =
-        combine(source.facts, local, exits.notice, ::build)
+        combine(
+                source.facts,
+                local,
+                exits.notice,
+                phoneDetails?.state ?: flowOf(PhoneDetailsUi()),
+                ::build,
+            )
             .stateIn(
                 scope,
                 SharingStarted.Eagerly,
-                build(source.facts.value, local.value, exits.notice.value),
+                build(
+                    source.facts.value,
+                    local.value,
+                    exits.notice.value,
+                    phoneDetails?.state?.value ?: PhoneDetailsUi(),
+                ),
             )
 
     private fun build(
         facts: PhoneServerFacts,
         l: Local,
         exitNotice: PhoneExitNotice?,
+        reading: PhoneDetailsUi,
     ): ThisPhoneUi {
         val shownFacts =
             if (l.working == PhoneOp.Start || l.working == PhoneOp.Restart)
                 facts.copy(starting = true)
             else facts
         val server = PhoneServerState.of(shownFacts)
-        val answer =
+        val baseAnswer =
             ThisPhoneAnswers.of(
                 server,
                 shownFacts,
                 now = l.now,
                 stopping = l.working == PhoneOp.Stop,
             )
+        val answer =
+            if (server == PhoneServerState.Running && l.working != PhoneOp.Stop) {
+                baseAnswer.copy(
+                    line =
+                        reading.history?.let { AnswerLine.History(it) }
+                            ?: reading.memoryBytes?.let { AnswerLine.Memory(it) }
+                            ?: baseAnswer.line
+                )
+            } else baseAnswer
         val serverRows =
             when (server) {
                 PhoneServerState.Running,
@@ -112,6 +142,10 @@ public class ThisPhoneModel(
             measuringStorage = l.measuringStorage,
             exitNotice = exitNotice,
             leftover = l.processReading?.leftover?.takeIf { it.identity != l.dismissedLeftover },
+            details =
+                reading.copy(canConnect = reading.canConnect && server == PhoneServerState.Running),
+            detailsOpen = l.detailsOpen,
+            installedOpen = l.installedOpen,
         )
     }
 
@@ -260,11 +294,13 @@ public class ThisPhoneModel(
         // hidden).
         scope.launch {
             visible.collectLatest { shown ->
+                phoneDetails?.shown(shown)
                 if (!shown) return@collectLatest
                 source.refresh()
                 details.singleOrNull()?.refresh()
                 refreshStorage()
                 readStorage(includeBuiltinHost = false)
+                launch { phoneDetails?.refresh() }
                 local.update { it.copy(now = clock.now()) }
                 coroutineScope {
                     if (processes != null)
@@ -278,6 +314,54 @@ public class ThisPhoneModel(
                 }
             }
         }
+        scope.launch {
+            combine(visible, local) { shown, value -> shown && value.detailsOpen }
+                .distinctUntilChanged()
+                .collectLatest { reading ->
+                    if (!reading) return@collectLatest
+                    phoneDetails?.refreshLog()
+                    pacer.ticks(PhoneTimers.detailsLog).collect {
+                        if (source.facts.value.status?.serverRunning == true) phoneDetails?.refreshLog()
+                    }
+                }
+        }
+    }
+
+    init {
+        scope.launch {
+            combine(visible, phoneDetails?.state ?: flowOf(PhoneDetailsUi())) { shown, reading ->
+                    shown && reading.history?.phase == PhoneHistoryPhase.Moving
+                }
+                .distinctUntilChanged()
+                .collectLatest { pending ->
+                    if (!pending) return@collectLatest
+                    // Flutter's bounded import loop: one initial read plus at most 149 follow-ups.
+                    pacer
+                        .ticks(PhoneTimers.historyImport)
+                        .take(149)
+                        .takeWhile {
+                            phoneDetails?.refreshHistory() == true
+                        }
+                        .collect {}
+                }
+        }
+    }
+
+    override fun connect(): Unit =
+        run(PhoneOp.Connect) {
+            phoneDetails?.connect() ?: Outcome.Failed(Failure.Unavailable(FeatureId("builtinLinux")))
+        }
+
+    override fun refreshDetails() {
+        scope.launch { phoneDetails?.refresh() }
+    }
+
+    override fun showDetails(expanded: Boolean) {
+        local.update { it.copy(detailsOpen = expanded) }
+    }
+
+    override fun showInstalled(expanded: Boolean) {
+        local.update { it.copy(installedOpen = expanded) }
     }
 
     private suspend fun readProcesses() {
@@ -305,6 +389,7 @@ public class ThisPhoneModel(
                     notice = if (outcome is Outcome.Failed) ThisPhoneNotice.Failed(op) else null,
                 )
             }
+            if (visible.value) phoneDetails?.refresh()
         }
     }
 

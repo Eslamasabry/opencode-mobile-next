@@ -97,6 +97,7 @@ import io.github.eslamasabry.oc.ui.words.res.settingsHubShowReasoning
 import io.github.eslamasabry.oc.ui.words.res.settingsHubShowTimestamps
 import io.github.eslamasabry.oc.ui.words.res.settingsHubToolsRow
 import io.github.eslamasabry.oc.ui.words.res.settingsHubVoice
+import io.github.eslamasabry.oc.ui.words.res.settingsPhraseChipsTitle
 import io.github.eslamasabry.oc.ui.words.res.settingsV3AgentsOnPhone
 import io.github.eslamasabry.oc.ui.words.res.settingsV3Background
 import io.github.eslamasabry.oc.ui.words.res.settingsV3Language

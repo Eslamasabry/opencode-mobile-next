@@ -258,13 +258,19 @@ public class SignInTerminalPresenter(
         }
     }
 
-    /** Host-owned cleanup survives a ViewModel being removed while native admission is pending. */
-    public suspend fun close(): io.github.eslamasabry.oc.core.common.Outcome<Unit> {
+    /**
+     * Host-owned cleanup: survives a ViewModel being removed while native admission is pending, and
+     * is also called by the app owner after its route is torn down or its profile is deleted.
+     */
+    public suspend fun drain(): Outcome<Unit> {
         dismissSignInPage()
         stop(sessionWatchers)
         stop(terminalWatchers)
-        return session?.end() ?: io.github.eslamasabry.oc.core.common.Outcome.Ok(Unit)
+        return session?.end() ?: Outcome.Ok(Unit)
     }
+
+    /** The route ViewModel's name for [drain]. */
+    public suspend fun close(): Outcome<Unit> = drain()
 
     private fun cleared(now: SignInTerminalUi): SignInTerminalUi {
         pendingPage = null

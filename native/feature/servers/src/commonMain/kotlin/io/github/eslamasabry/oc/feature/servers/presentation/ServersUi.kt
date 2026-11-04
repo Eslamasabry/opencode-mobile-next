@@ -12,6 +12,7 @@ import kotlinx.collections.immutable.persistentListOf
 /** Credentials and editable field values deliberately never enter observable screen state. */
 public data class ServersUi(
     val servers: ImmutableList<SavedServer> = persistentListOf(),
+    val rows: ServerRowsState = ServerRowsState(),
     val busy: Boolean = false,
     val connectionCheckAvailable: Boolean = false,
     val connectionCheck: ConnectionCheckUi? = null,
@@ -50,11 +51,22 @@ public interface ServersActions {
 
     public fun closeConnectionCheck() {}
 
+    public fun openAccount(id: ProfileId) {}
+
+    public fun moveQueued(id: ProfileId) {}
+
+    public fun edit(id: ProfileId?) {}
+
+    /** Opens the checked editor at a reviewed address (an address only, no credential). */
+    public fun addServerAt(address: String) {}
+
+    public fun settings(id: ProfileId) {}
+
+    /**
+     * Opt in to background monitoring from the server row (ANDR-2). Wi-Fi only and check-in are
+     * shared rules in Settings › Notifications, as in Flutter (`SharedNotifyRules.applyTo`).
+     */
     public fun monitor(id: ProfileId, enabled: Boolean) {}
-
-    public fun monitorWifi(id: ProfileId, enabled: Boolean) {}
-
-    public fun monitorCheckIn(id: ProfileId, minutes: Int?) {}
 
     public fun back()
 

@@ -90,6 +90,7 @@ import io.github.eslamasabry.oc.ui.words.res.setupProgressViewFailedUnknown
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewGettingStarted
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewInterrupted
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewOverallLabel
+import io.github.eslamasabry.oc.ui.words.res.voiceComponentTitle
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.seconds
 import org.jetbrains.compose.resources.stringResource
@@ -326,6 +327,7 @@ internal fun itemTitle(id: String, fallback: String): String =
         SetupComponentIds.LINUX -> stringResource(Res.string.phoneSetupLinuxTitle)
         SetupComponentIds.ESSENTIALS -> stringResource(Res.string.phoneSetupEssentialsTitle)
         SetupComponentIds.START -> stringResource(Res.string.phoneSetupStartTitle)
+        SetupComponentIds.VOICE -> stringResource(Res.string.voiceComponentTitle)
         else -> fallback
     }
 

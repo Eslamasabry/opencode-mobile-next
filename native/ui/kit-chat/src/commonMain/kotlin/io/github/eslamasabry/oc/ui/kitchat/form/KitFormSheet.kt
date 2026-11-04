@@ -1,25 +1,20 @@
 package io.github.eslamasabry.oc.ui.kitchat.form
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
@@ -28,9 +23,8 @@ import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
-import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.state.KitRequestSurface
 
 /**
  * The form sheet's body (plan 09 §5.4–§5.5, map CHAT-GENUI-47/48): [title], an optional [description], the fields
@@ -115,19 +109,7 @@ public fun KitFormCard(
     status: String? = null,
     error: String? = null,
 ) {
-    val colors = LocalKitColors.current
-    val shape = KitShapeId.Card.shape()
-    Column(
-        modifier
-            .widthIn(max = 700.dp)
-            .fillMaxWidth()
-            .clip(shape)
-            .background(colors.surface1)
-            .background(colors.attentionSurface)
-            .border(1.dp, colors.attentionLine, shape)
-            .padding(Space.S4.dp),
-        verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
-    ) {
+    KitRequestSurface(modifier.widthIn(max = 700.dp).fillMaxWidth()) {
         KitText(
             title,
             Modifier.semantics {

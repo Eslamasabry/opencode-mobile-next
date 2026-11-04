@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="monitorInboxTitle">الوارد</string>
+    <string name="monitorInboxEmpty">لا توجد طلبات أو تذكيرات من الخوادم التي تتابعها الآن.</string>
+    <string name="monitorInboxFailedRun">تنفيذ يحتاج إلى انتباه</string>
+    <string name="monitorInboxOpening">جارٍ فتح الطلب…</string>
+    <string name="monitorInboxSettings">اختر الخوادم المحفوظة التي تريد متابعتها في الإشعارات.</string>
+    <string name="monitorInboxSwitchBody">افتح الطلب على هذا الخادم. يستمر العمل الجاري على خوادمك الأخرى.</string>
+</resources>

@@ -46,6 +46,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.teaching.KitTip
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.addServerCheckFailedPlain
@@ -127,6 +128,7 @@ import io.github.eslamasabry.oc.ui.words.res.serversCreate
 import io.github.eslamasabry.oc.ui.words.res.serversName
 import io.github.eslamasabry.oc.ui.words.res.serversSave
 import io.github.eslamasabry.oc.ui.words.res.serversWorking
+import io.github.eslamasabry.oc.ui.words.res.whatsNewShowAgents
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -141,6 +143,8 @@ public fun AgentsScreen(
     actions: AgentsActions,
     hub: AgentsHubControlsUi? = null,
     hubActions: AgentsHubActions? = null,
+    showArrival: Boolean = false,
+    dismissArrival: () -> Unit = {},
 ) {
     if (state.draftSource != null) {
         AgentDraftPanel(state, actions)
@@ -193,7 +197,9 @@ public fun AgentsScreen(
             val gutter = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
             state.issue?.let { IssueNotice(it, gutter) }
 
-            KitSectionLabel(stringResource(Res.string.agentsHubOnPhone))
+            KitTip(stringResource(Res.string.whatsNewShowAgents), showArrival, dismissArrival) {
+                KitSectionLabel(stringResource(Res.string.agentsHubOnPhone))
+            }
             if (state.phone.needsRestart) {
                 KitNotice(stringResource(Res.string.agentsRestartAfterReset), gutter)
             }

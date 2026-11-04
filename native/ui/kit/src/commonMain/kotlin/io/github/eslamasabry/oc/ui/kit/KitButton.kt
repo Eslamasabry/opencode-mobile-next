@@ -1,7 +1,11 @@
 package io.github.eslamasabry.oc.ui.kit
 
+import io.github.eslamasabry.oc.ui.kit.foundation.LocalKitSignalSlip
+import io.github.eslamasabry.oc.ui.design.color.SignalPalette
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
@@ -9,11 +13,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
@@ -109,6 +115,7 @@ public fun KitButton(
         when {
             role == KitButtonRole.Tertiary -> Color.Transparent
             !on -> colors.surface3
+            role == KitButtonRole.Secondary && LocalKitSignalSlip.current -> Color(SignalPalette.of(colors.dark).key.v)
             role == KitButtonRole.Secondary -> colors.surface3
             destructive -> colors.text1
             else -> colors.accent
@@ -122,6 +129,8 @@ public fun KitButton(
         }
     val easedFill by animateColorAsState(fill, specs.quick(), label = "kit-button-fill")
     val easedWords by animateColorAsState(words, specs.quick(), label = "kit-button-words")
+    val interactions = remember { MutableInteractionSource() }
+    val pressed by interactions.collectIsPressedAsState()
     val ink = if (role == KitButtonRole.Primary && !destructive) TextTone.OnAccent else TextTone.Primary
     // The style decides the face (B-KIT-043..045); Solid keeps the fill above. A tertiary button has no face.
     val look =
@@ -134,7 +143,9 @@ public fun KitButton(
                     shape = KitShapeId.Button,
                     level = SurfaceLevel.Surface3,
                     ownFill = easedFill,
-                    color = if (role == KitButtonRole.Primary && on) easedFill else null,
+                    // A secondary key in a signal slip keeps its own key fill (port kit), like a primary.
+                    color = if ((role == KitButtonRole.Primary || (role == KitButtonRole.Secondary && LocalKitSignalSlip.current)) && on) easedFill else null,
+                    pressed = pressed,
                     disabled = !on,
                     action = true,
                 ),
@@ -154,6 +165,7 @@ public fun KitButton(
                     haptic = if (working) null else haptic,
                     shape = KitShapeId.Button,
                     ink = ink,
+                    interactionSource = interactions,
                 )
                 .semantics {
                     if (working) disabled()

@@ -97,6 +97,26 @@ public interface VoiceModels {
 
     public suspend fun cancelDownload()
 
+    /**
+     * Capability-neutral default: only the real shared model manager supports owned setup
+     * downloads.
+     */
+    public suspend fun downloadOwned(pack: PackId, owner: String): Outcome<Unit> =
+        Outcome.Failed(
+            io.github.eslamasabry.oc.core.common.Failure.Unavailable(
+                io.github.eslamasabry.oc.core.common.FeatureId("voice")
+            )
+        )
+
+    public suspend fun ownsDownload(owner: String): Boolean = false
+
+    public suspend fun cancelOwned(owner: String): Outcome<Unit> =
+        Outcome.Failed(
+            io.github.eslamasabry.oc.core.common.Failure.Unavailable(
+                io.github.eslamasabry.oc.core.common.FeatureId("voice")
+            )
+        )
+
     public suspend fun remove(pack: PackId): Outcome<Unit>
 
     public suspend fun discardPartial(pack: PackId): Outcome<Unit>
@@ -130,6 +150,16 @@ public fun ModelPacks.asVoiceModels(): VoiceModels =
             packs.download(pack, replaceExisting).map {}
 
         override suspend fun cancelDownload() = packs.cancelDownload()
+
+        override suspend fun downloadOwned(pack: PackId, owner: String): Outcome<Unit> =
+            packs.downloadOwned(pack, owner).map {}
+
+        override suspend fun ownsDownload(owner: String): Boolean = packs.ownsDownload(owner)
+
+        override suspend fun cancelOwned(owner: String): Outcome<Unit> {
+            packs.cancelOwned(owner)
+            return Outcome.Ok(Unit)
+        }
 
         override suspend fun remove(pack: PackId): Outcome<Unit> = packs.remove(pack)
 

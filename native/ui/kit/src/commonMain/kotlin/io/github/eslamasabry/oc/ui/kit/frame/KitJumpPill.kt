@@ -1,4 +1,9 @@
 package io.github.eslamasabry.oc.ui.kit.frame
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRequest
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterExitState
@@ -133,8 +138,7 @@ private fun PillFace(label: String, onClick: () -> Unit, modifier: Modifier, edg
             .heightIn(min = tokens.minTarget.dp)
             .kitTappable(onClick = onClick, shape = KitShapeId.Pill)
             .semantics(mergeDescendants = true) { contentDescription = label }
-            .background(colors.surface3, shape)
-            .border(1.dp, colors.hairline, shape)
+            .kitSurface(kitSurfaceLook(SurfaceRequest(SurfaceRole.Floating, SurfaceLevel.Surface3), colors.surface3, colors.hairline, 1f), shape)
             .padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),

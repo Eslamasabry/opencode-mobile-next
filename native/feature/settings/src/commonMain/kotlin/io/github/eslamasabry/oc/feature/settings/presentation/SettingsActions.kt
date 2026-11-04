@@ -29,6 +29,49 @@ public interface SettingsActions {
 
     public fun onWhatsNewShowMe() {}
 
+    /** Conversations › Phrase suggestions: bring back the active server's hidden phrases. */
+    public fun onShowHiddenPhrases() {}
+
+    /** Privacy › Local data: ask before discarding [kind]. */
+    public fun onAskDiscard(kind: LocalDataKind) {}
+
+    public fun onConfirmDiscard() {}
+
+    public fun onCancelDiscard() {}
+
+    /** A server-scoped row with several saved servers: open [section] for [profile]. */
+    public fun onSavedServer(
+        profile: io.github.eslamasabry.oc.core.common.ids.ProfileId,
+        section: SettingsOutside?,
+    ) {}
+
+    /**
+     * The appearance guide by step (0 colours, 1 style, 2 comfort, 3 glow); [done] ends it, step 0
+     * and not done starts it again.
+     */
+    public fun onAppearanceGuide(step: Int, done: Boolean) {}
+
+    /** Help › Tips › Show tips again: every tip and the appearance guide can show again. */
+    public fun onShowTipsAgain() {}
+
+    /** What's new: go to step [index]. */
+    public fun onNewsStep(index: Int) {}
+
+    /** What's new: Show me for the step on screen. */
+    public fun onNewsShow() {}
+
+    /** Appearance › Glass: the frost strength. */
+    public fun onFrost(strength: io.github.eslamasabry.oc.ui.design.effects.FrostStrength) {}
+
+    /** Appearance › Corners and Spacing in one write; null puts the style's own back. */
+    public fun onShape(corners: Corners?, density: Density?) {}
+
+    /** Appearance › Glow: null turns the activity glow off, a style turns it on with that look. */
+    public fun onGlow(style: io.github.eslamasabry.oc.engine.settings.prefs.GlowStyle?) {}
+
+    /** Appearance › Reset: every appearance choice back to its default in one write. */
+    public fun onResetAppearance() {}
+
     public fun onOpen(page: SettingsPage)
 
     /**

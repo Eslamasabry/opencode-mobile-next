@@ -34,6 +34,14 @@ object WidgetV2Style {
 
     fun palette(context: Context, widgetId: Int, snapshot: JSONObject?): Palette {
         val style = savedStyle(context, widgetId, snapshot?.optString("profileID").orEmpty())
+        return paletteForStyle(context, style, snapshot)
+    }
+
+    /** The editor previews exactly the colours the RemoteViews renderer will use after saving. */
+    fun previewPalette(context: Context, background: String, accent: String, snapshot: JSONObject?): Palette =
+        paletteForStyle(context, JSONObject().put("background", background).put("accent", accent), snapshot)
+
+    private fun paletteForStyle(context: Context, style: JSONObject, snapshot: JSONObject?): Palette {
         val theme = snapshot?.optJSONObject("appTheme")
         val dark =
             context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==

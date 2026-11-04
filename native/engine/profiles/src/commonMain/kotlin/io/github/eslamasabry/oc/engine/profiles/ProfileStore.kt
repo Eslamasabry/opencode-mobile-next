@@ -43,7 +43,10 @@ public sealed interface SecretEdit {
     public data object Clear : SecretEdit
 }
 
-/** Transient, never stored: "enter it again" (Flutter `requiresPasswordReentry` / `requiresCodexTokenReentry`). */
+/**
+ * Transient, never stored: "enter it again" (Flutter `requiresPasswordReentry` /
+ * `requiresCodexTokenReentry`).
+ */
 public data class SecretReentry(val password: Boolean, val agentToken: Boolean) {
     public companion object {
         public val None: SecretReentry = SecretReentry(password = false, agentToken = false)
@@ -59,13 +62,21 @@ public data class LoadedProfile(
     val hasSecret: Boolean,
     /** `oc.tailscale.<id>`: the Tailscale guidance belongs to this profile (B-AGENT-244). */
     val tailscale: Boolean,
+    /**
+     * Memory-only publication identity; a secret-only write must invalidate saved edit snapshots
+     * too.
+     */
+    val revision: Long = 0,
 ) {
-    val id: ProfileId get() = profile.id
+    val id: ProfileId
+        get() = profile.id
 
     /** Plain HTTP to a non-loopback address the person has not confirmed for this exact address. */
     val cleartextUnconfirmed: Boolean
-        get() = !profile.usesAgentSocket && ProfileOrigins.needsCleartextConsent(profile.baseUrl) &&
-            trust.cleartext?.origin != ProfileOrigins.trustOrigin(profile.baseUrl)
+        get() =
+            !profile.usesAgentSocket &&
+                ProfileOrigins.needsCleartextConsent(profile.baseUrl) &&
+                trust.cleartext?.origin != ProfileOrigins.trustOrigin(profile.baseUrl)
 
     /** The `:core:model` connection shape, or null when the address is not usable. */
     public fun toServerProfile(managedOnPhone: Boolean = false): ServerProfile? {
@@ -84,13 +95,14 @@ public data class LoadedProfile(
 }
 
 /**
- * The profile store (plan 03 §11.2 `profiles`): `oc.profiles` metadata through the [KeyValueStore], connection secrets
- * in the [SecretStore] only, trust under its own keys. One serial lane ([mutex]); writes go through the app
- * [WriterLanes.app] lane.
+ * The profile store (plan 03 §11.2 `profiles`): `oc.profiles` metadata through the [KeyValueStore],
+ * connection secrets in the [SecretStore] only, trust under its own keys. One serial lane
+ * ([mutex]); writes go through the app [WriterLanes.app] lane.
  *
- * Ported from Flutter `ProfileStore` (`lib/state/profiles.dart`): metadata is kept when a secret is unreadable
- * (B-STATE-065), a failed secret write or delete leaves metadata and the published list unchanged (B-STATE-098,
- * B-SEC-135), and an origin change drops pin and consent in the same commit as the new address (plan 03 §10.3).
+ * Ported from Flutter `ProfileStore` (`lib/state/profiles.dart`): metadata is kept when a secret is
+ * unreadable (B-STATE-065), a failed secret write or delete leaves metadata and the published list
+ * unchanged (B-STATE-098, B-SEC-135), and an origin change drops pin and consent in the same commit
+ * as the new address (plan 03 §10.3).
  */
 public class ProfileStore(
     private val kv: KeyValueStore,
@@ -102,20 +114,27 @@ public class ProfileStore(
     private val log = AppLog.tagged("profiles")
     private val mutex = Mutex()
     private val transactions = ProfileTransactions(kv, secrets, lanes)
-    private val mutableProfiles = MutableStateFlow<PersistentList<LoadedProfile>>(persistentListOf())
+    private val mutableProfiles =
+        MutableStateFlow<PersistentList<LoadedProfile>>(persistentListOf())
     private val mutableActive = MutableStateFlow<ProfileId?>(null)
     private val deleting = MutableStateFlow<Set<String>>(emptySet())
+    private var revision = 0L
 
     public val profiles: StateFlow<ImmutableList<LoadedProfile>> = mutableProfiles.asStateFlow()
     public val activeId: StateFlow<ProfileId?> = mutableActive.asStateFlow()
 
-    public fun profile(id: ProfileId): LoadedProfile? = mutableProfiles.value.firstOrNull { it.id == id }
+    public fun profile(id: ProfileId): LoadedProfile? =
+        mutableProfiles.value.firstOrNull { it.id == id }
 
     /** The trust that applies to [id] at its current address. */
     public fun trust(id: ProfileId): ProfileTrustRecord =
-        profile(id)?.let { it.trust.forOrigin(ProfileOrigins.trustOrigin(it.profile.baseUrl)) } ?: ProfileTrustRecord.None
+        profile(id)?.let { it.trust.forOrigin(ProfileOrigins.trustOrigin(it.profile.baseUrl)) }
+            ?: ProfileTrustRecord.None
 
-    /** Repairs interrupted transactions, then loads saved profiles. Unreadable secrets ask for re-entry. */
+    /**
+     * Repairs interrupted transactions, then loads saved profiles. Unreadable secrets ask for
+     * re-entry.
+     */
     public suspend fun load(): Outcome<ImmutableList<LoadedProfile>> = mutex.withLock {
         val recovered = transactions.recover()
         if (recovered is Outcome.Failed) return recovered
@@ -127,19 +146,27 @@ public class ProfileStore(
     }
 
     /**
-     * Saves [profile]: metadata and trust in ONE commit, then the secret. A refused secret write restores the
-     * previous metadata and trust and publishes nothing (B-STATE-098). A transient transport lease is refused before
-     * anything is written (B-SEC-136).
+     * Saves [profile]: metadata and trust in ONE commit, then the secret. A refused secret write
+     * restores the previous metadata and trust and publishes nothing (B-STATE-098). A transient
+     * transport lease is refused before anything is written (B-SEC-136).
      */
     public suspend fun upsert(
         profile: StoredProfile,
         secret: SecretEdit = SecretEdit.Keep,
         trust: TrustInput = TrustInput(),
+        /** Existing editor snapshot: a deletion or concurrent edit invalidates this identity. */
+        expected: LoadedProfile? = null,
     ): Outcome<LoadedProfile> = mutex.withLock {
         // B-STATE-098: admitted metadata, secret, compensation and publication finish together.
         withContext(NonCancellable) {
-            if (profile.id.raw in deleting.value) return@withContext Failure.Refused(RefusalReason.ProfileClosing).failed()
-            trust.pin?.let { if (!TrustCodec.validPin(it.leafSha256)) return@withContext Failure.Refused(RefusalReason.InvalidAddress).failed() }
+            if (profile.id.raw in deleting.value)
+                return@withContext Failure.Refused(RefusalReason.ProfileClosing).failed()
+            if (expected != null && (expected.id != profile.id || profile(profile.id) !== expected))
+                return@withContext Failure.Refused(RefusalReason.StaleScope).failed()
+            trust.pin?.let {
+                if (!TrustCodec.validPin(it.leafSha256))
+                    return@withContext Failure.Refused(RefusalReason.InvalidAddress).failed()
+            }
             if (profile.transientTransport) return@withContext Failure.StorageRefused().failed()
             if (secret is SecretEdit.Set) redactor.registerSecret(secret.value)
 
@@ -150,32 +177,44 @@ public class ProfileStore(
             val rows = StoredProfileJson.rows(previous.profiles).orEmpty()
             val index = rows.indexOfFirst { (it as? Map<*, *>)?.get("id") == id.raw }
             val row = StoredProfileJson.encode(profile, rows.getOrNull(index) as? Map<*, *>)
-            val nextRows = rows.toMutableList().apply { if (index >= 0) set(index, row) else add(row) }
-            val storedTrust = ProfileTrustRecord(TrustCodec.decodePin(previous.pin), previous.cleartext?.let(::CleartextOkRecord))
+            val nextRows =
+                rows.toMutableList().apply { if (index >= 0) set(index, row) else add(row) }
+            val storedTrust =
+                ProfileTrustRecord(
+                    TrustCodec.decodePin(previous.pin),
+                    previous.cleartext?.let(::CleartextOkRecord),
+                )
             val nextTrust = TrustCodec.next(profile, trust, storedTrust)
 
             if (secret !is SecretEdit.Keep) {
                 val started = transactions.beginSave(id, profile.secretName)
                 if (started is Outcome.Failed) return@withContext started
             }
-            val committed = kv.commit(lanes.app) {
-                putString(ProfileKeys.PROFILES, StoredProfileJson.encodeRows(nextRows))
-                putOrRemove(ProfileKeys.cleartextOk(id), nextTrust.cleartext?.origin)
-                putOrRemove(ProfileKeys.certificatePin(id), nextTrust.pin?.let(TrustCodec::encodePin))
-            }
+            val committed =
+                kv.commit(lanes.app) {
+                    putString(ProfileKeys.PROFILES, StoredProfileJson.encodeRows(nextRows))
+                    putOrRemove(ProfileKeys.cleartextOk(id), nextTrust.cleartext?.origin)
+                    putOrRemove(
+                        ProfileKeys.certificatePin(id),
+                        nextTrust.pin?.let(TrustCodec::encodePin),
+                    )
+                }
             if (committed is Outcome.Failed) {
                 if (secret !is SecretEdit.Keep) transactions.finish(id, rollback = true)
                 return@withContext committed
             }
 
-            val secretResult = when (secret) {
-                SecretEdit.Keep -> Unit.ok()
-                is SecretEdit.Set -> secrets.write(profile.secretName, secret.value)
-                SecretEdit.Clear -> secrets.delete(profile.secretName)
-            }
+            val secretResult =
+                when (secret) {
+                    SecretEdit.Keep -> Unit.ok()
+                    is SecretEdit.Set -> secrets.write(profile.secretName, secret.value)
+                    SecretEdit.Clear -> secrets.delete(profile.secretName)
+                }
             if (secretResult is Outcome.Failed) {
                 transactions.finish(id, rollback = true)
-                log.w { "profile save refused by secure storage; recovery retained until compensation completes" }
+                log.w {
+                    "profile save refused by secure storage; recovery retained until compensation completes"
+                }
                 return@withContext Failure.SecretUnavailable().failed()
             }
             if (secret !is SecretEdit.Keep) {
@@ -185,20 +224,38 @@ public class ProfileStore(
                     return@withContext finished
                 }
             }
-            if (secret is SecretEdit.Set) clearReentryFlag(id, if (profile.usesAgentSocket) "codexToken" else "pw")
+            if (secret is SecretEdit.Set)
+                clearReentryFlag(id, if (profile.usesAgentSocket) "codexToken" else "pw")
 
             val old = profile(id)
-            val hasSecret = when (secret) {
-                SecretEdit.Keep -> old?.hasSecret == true && old.profile.secretName == profile.secretName
-                is SecretEdit.Set -> secret.value.isNotEmpty()
-                SecretEdit.Clear -> false
-            }
-            val reentry = if (secret is SecretEdit.Keep && old != null && old.profile.secretName == profile.secretName) {
-                old.reentry
-            } else {
-                SecretReentry.None // Flutter upsert clears both flags; a later load flags a missing Codex token again
-            }
-            val loaded = LoadedProfile(profile, nextTrust, reentry, hasSecret, kv.bool(ProfileKeys.tailscale(id)) == true)
+            val hasSecret =
+                when (secret) {
+                    SecretEdit.Keep ->
+                        old?.hasSecret == true && old.profile.secretName == profile.secretName
+                    is SecretEdit.Set -> secret.value.isNotEmpty()
+                    SecretEdit.Clear -> false
+                }
+            val reentry =
+                if (
+                    secret is SecretEdit.Keep &&
+                        old != null &&
+                        old.profile.secretName == profile.secretName
+                ) {
+                    old.reentry
+                } else {
+                    SecretReentry
+                        .None // Flutter upsert clears both flags; a later load flags a missing
+                    // Codex token again
+                }
+            val loaded =
+                LoadedProfile(
+                    profile,
+                    nextTrust,
+                    reentry,
+                    hasSecret,
+                    kv.bool(ProfileKeys.tailscale(id)) == true,
+                    revision = ++revision,
+                )
             mutableProfiles.update { list ->
                 val i = list.indexOfFirst { it.id == id }
                 if (i >= 0) list.replacingAt(i, loaded) else list.adding(loaded)
@@ -211,32 +268,44 @@ public class ProfileStore(
     public suspend fun setActive(id: ProfileId?): Outcome<Unit> = mutex.withLock {
         val recovered = transactions.recover()
         if (recovered is Outcome.Failed) return recovered
-        if (id != null && id.raw in deleting.value) return Failure.Refused(RefusalReason.ProfileClosing).failed()
+        if (id != null && id.raw in deleting.value)
+            return Failure.Refused(RefusalReason.ProfileClosing).failed()
         val result = kv.commit(lanes.app) { putOrRemove(ProfileKeys.ACTIVE, id?.raw) }
         if (result is Outcome.Ok) mutableActive.value = id
         result
     }
 
     /** The profile's connection secret for the transport, read through (never cached here). */
-    public suspend fun secret(id: ProfileId): Outcome<String?> = mutex.withLock {
-        val profile = profile(id)?.profile ?: return null.ok()
-        val read = secrets.read(profile.secretName)
-        if (read is Outcome.Ok) read.value?.let(redactor::registerSecret)
-        return read
-    }
-
-    /** Records (or drops) the Tailscale guidance for [id] in the profile's own lane (B-AGENT-244). */
-    public suspend fun setTailscaleGuidance(id: ProfileId, shown: Boolean): Outcome<Unit> {
-        val result = kv.commit(lanes.forProfile(id)) {
-            if (shown) putBool(ProfileKeys.tailscale(id), true) else remove(ProfileKeys.tailscale(id))
+    public suspend fun secret(id: ProfileId, expected: LoadedProfile? = null): Outcome<String?> =
+        mutex.withLock {
+            if (expected != null && (expected.id != id || profile(id) !== expected))
+                return Failure.Refused(RefusalReason.StaleScope).failed()
+            val profile = profile(id)?.profile ?: return null.ok()
+            val read = secrets.read(profile.secretName)
+            if (read is Outcome.Ok) read.value?.let(redactor::registerSecret)
+            return read
         }
-        if (result is Outcome.Ok) mutableProfiles.update { list -> list.map { if (it.id == id) it.copy(tailscale = shown) else it }.toPersistentList() }
+
+    /**
+     * Records (or drops) the Tailscale guidance for [id] in the profile's own lane (B-AGENT-244).
+     */
+    public suspend fun setTailscaleGuidance(id: ProfileId, shown: Boolean): Outcome<Unit> {
+        val result =
+            kv.commit(lanes.forProfile(id)) {
+                if (shown) putBool(ProfileKeys.tailscale(id), true)
+                else remove(ProfileKeys.tailscale(id))
+            }
+        if (result is Outcome.Ok)
+            mutableProfiles.update { list ->
+                list.map { if (it.id == id) it.copy(tailscale = shown) else it }.toPersistentList()
+            }
         return result
     }
 
     /**
-     * Null when secure storage answers; otherwise why a typed password could not be kept. Only a Linux desktop is
-     * probed (Flutter `secureStorageProblem`, B-SEC-134); the wording lives in `:ui:words`.
+     * Null when secure storage answers; otherwise why a typed password could not be kept. Only a
+     * Linux desktop is probed (Flutter `secureStorageProblem`, B-SEC-134); the wording lives in
+     * `:ui:words`.
      */
     public suspend fun secureStorageProblem(): SecureStorageProblem? {
         if (platform != SecretPlatform.LinuxDesktop) return null
@@ -247,7 +316,8 @@ public class ProfileStore(
     }
 
     /** The plain-words kind of a secret-storage failure on this platform (B-SEC-134). */
-    public fun problemOf(failure: Failure): SecureStorageProblem? = SecureStorageProblem.of(failure, platform)
+    public fun problemOf(failure: Failure): SecureStorageProblem? =
+        SecureStorageProblem.of(failure, platform)
 
     // ---- deletion and reset hooks (same module)
 
@@ -256,21 +326,40 @@ public class ProfileStore(
         deleting.update { it + id.raw }
     }
 
-    /** B-STATE-063 eng-2: drain the admitted app-lane saves before any sweep or secret enumeration. */
+    /**
+     * B-STATE-063 eng-2: drain the admitted app-lane saves before any sweep or secret enumeration.
+     */
     internal suspend fun drainMutations(): Outcome<Unit> = mutex.withLock { transactions.recover() }
 
-    /** A failed deletion keeps the profile: saves are admitted again and trust/flags are re-read. */
+    /**
+     * A failed deletion keeps the profile: saves are admitted again and trust/flags are re-read.
+     */
     internal suspend fun cancelDeletion(id: ProfileId) {
         deleting.update { it - id.raw }
         mutex.withLock {
-            val current = StoredProfileJson.decodeList(kv.string(ProfileKeys.PROFILES)).firstOrNull { it.id == id } ?: return
+            val current =
+                StoredProfileJson.decodeList(kv.string(ProfileKeys.PROFILES)).firstOrNull {
+                    it.id == id
+                } ?: return
             val old = profile(id)
-            val trustNow = TrustCodec.restored(current, kv.string(ProfileKeys.certificatePin(id)), kv.string(ProfileKeys.cleartextOk(id)))
-            val refreshed = LoadedProfile(
-                current, trustNow, old?.reentry ?: SecretReentry.None, old?.hasSecret == true,
-                kv.bool(ProfileKeys.tailscale(id)) == true,
-            )
-            mutableProfiles.update { list -> list.map { if (it.id == id) refreshed else it }.toPersistentList() }
+            val trustNow =
+                TrustCodec.restored(
+                    current,
+                    kv.string(ProfileKeys.certificatePin(id)),
+                    kv.string(ProfileKeys.cleartextOk(id)),
+                )
+            val refreshed =
+                LoadedProfile(
+                    current,
+                    trustNow,
+                    old?.reentry ?: SecretReentry.None,
+                    old?.hasSecret == true,
+                    kv.bool(ProfileKeys.tailscale(id)) == true,
+                    revision = ++revision,
+                )
+            mutableProfiles.update { list ->
+                list.map { if (it.id == id) refreshed else it }.toPersistentList()
+            }
         }
     }
 
@@ -280,40 +369,49 @@ public class ProfileStore(
     }
 
     /**
-     * Plan 05 §3.5 step 9: the profile row and its secrets as one unit. Writes the new `oc.profiles` (and clears
-     * `oc.activeProfile` if it names [id]) in one commit, enumerates secrets under the store mutex, deletes them in order, then verifies none is left.
-     * Any failure restores the previous `oc.profiles` and active pointer and publishes nothing.
+     * Plan 05 §3.5 step 9: the profile row and its secrets as one unit. Writes the new
+     * `oc.profiles` (and clears `oc.activeProfile` if it names [id]) in one commit, enumerates
+     * secrets under the store mutex, deletes them in order, then verifies none is left. Any failure
+     * restores the previous `oc.profiles` and active pointer and publishes nothing.
      */
-    internal suspend fun removeRowAndSecrets(id: ProfileId, enumerate: suspend () -> Outcome<List<String>>): Outcome<Unit> = mutex.withLock {
+    internal suspend fun removeRowAndSecrets(
+        id: ProfileId,
+        enumerate: suspend () -> Outcome<List<String>>,
+    ): Outcome<Unit> = mutex.withLock {
         // B-STATE-098: row removal and its compensation are an admitted completion.
         withContext(NonCancellable) {
-            val secretNames = when (val names = enumerate()) {
-                is Outcome.Failed -> return@withContext names
-                is Outcome.Ok -> names.value
-            }
+            val secretNames =
+                when (val names = enumerate()) {
+                    is Outcome.Failed -> return@withContext names
+                    is Outcome.Ok -> names.value
+                }
             val started = transactions.beginDelete(id, secretNames)
             if (started is Outcome.Failed) return@withContext started
             val previousRaw = kv.string(ProfileKeys.PROFILES)
             val previousActive = kv.string(ProfileKeys.ACTIVE)
             val rows = StoredProfileJson.rows(previousRaw)
             val nextRows = rows?.filterNot { (it as? Map<*, *>)?.get("id") == id.raw }
-            val removed = kv.commit(lanes.app) {
-                if (nextRows != null) putString(ProfileKeys.PROFILES, StoredProfileJson.encodeRows(nextRows))
-                if (previousActive == id.raw) remove(ProfileKeys.ACTIVE)
-            }
+            val removed =
+                kv.commit(lanes.app) {
+                    if (nextRows != null)
+                        putString(ProfileKeys.PROFILES, StoredProfileJson.encodeRows(nextRows))
+                    if (previousActive == id.raw) remove(ProfileKeys.ACTIVE)
+                }
             if (removed is Outcome.Failed) {
                 transactions.abandon(id)
                 return@withContext removed
             }
 
-            suspend fun restoreRow(): Outcome<Unit> = kv.commit(lanes.app) {
-                putOrRemove(ProfileKeys.PROFILES, previousRaw)
-                if (previousActive == id.raw) putString(ProfileKeys.ACTIVE, previousActive)
-            }
+            suspend fun restoreRow(): Outcome<Unit> =
+                kv.commit(lanes.app) {
+                    putOrRemove(ProfileKeys.PROFILES, previousRaw)
+                    if (previousActive == id.raw) putString(ProfileKeys.ACTIVE, previousActive)
+                }
             val secretsGone = deleteAndVerify(secretNames)
             if (secretsGone is Outcome.Failed) {
                 val restored = restoreRow()
-                if (restored is Outcome.Failed) log.e { "profile row could not be restored after a refused secret delete" }
+                if (restored is Outcome.Failed)
+                    log.e { "profile row could not be restored after a refused secret delete" }
                 else transactions.abandon(id)
                 return@withContext Failure.SecretUnavailable().failed()
             }
@@ -329,25 +427,34 @@ public class ProfileStore(
     }
 
     /**
-     * "Reset saved sign-ins" (Flutter `resetSavedSignIns`, first lines): every cached profile loses its secret and is
-     * flagged for re-entry, metadata kept, before storage is touched.
+     * "Reset saved sign-ins" (Flutter `resetSavedSignIns`, first lines): every cached profile loses
+     * its secret and is flagged for re-entry, metadata kept, before storage is touched.
      */
-    internal suspend fun <T> exclusiveSignInReset(block: suspend () -> Outcome<T>): Outcome<T> = mutex.withLock {
-        // B-STATE-098: reset invalidates recovery and removes staging secrets in the same admitted lane as saves.
-        withContext(NonCancellable) { block() }
-    }
+    internal suspend fun <T> exclusiveSignInReset(block: suspend () -> Outcome<T>): Outcome<T> =
+        mutex.withLock {
+            // B-STATE-098: reset invalidates recovery and removes staging secrets in the same
+            // admitted lane as saves.
+            withContext(NonCancellable) { block() }
+        }
 
     internal fun dropCachedSecrets() {
         mutableProfiles.update { list ->
-            list.map { loaded ->
-                val p = loaded.profile
-                val reentry = SecretReentry(
-                    password = !p.usesAgentSocket && (loaded.hasSecret || loaded.reentry.password),
-                    agentToken = p.usesAgentSocket &&
-                        (p.agentSocketSecretRequired || loaded.hasSecret || loaded.reentry.agentToken),
-                )
-                loaded.copy(hasSecret = false, reentry = reentry)
-            }.toPersistentList()
+            list
+                .map { loaded ->
+                    val p = loaded.profile
+                    val reentry =
+                        SecretReentry(
+                            password =
+                                !p.usesAgentSocket && (loaded.hasSecret || loaded.reentry.password),
+                            agentToken =
+                                p.usesAgentSocket &&
+                                    (p.agentSocketSecretRequired ||
+                                        loaded.hasSecret ||
+                                        loaded.reentry.agentToken),
+                        )
+                    loaded.copy(hasSecret = false, reentry = reentry)
+                }
+                .toPersistentList()
         }
     }
 
@@ -359,31 +466,57 @@ public class ProfileStore(
 
     private suspend fun readProfile(p: StoredProfile): LoadedProfile {
         val id = p.id
-        val trust = TrustCodec.restored(p, kv.string(ProfileKeys.certificatePin(id)), kv.string(ProfileKeys.cleartextOk(id)))
+        val trust =
+            TrustCodec.restored(
+                p,
+                kv.string(ProfileKeys.certificatePin(id)),
+                kv.string(ProfileKeys.cleartextOk(id)),
+            )
         val flagged = reentryFlags(id)
         val read = secrets.read(p.secretName)
-        val (hasSecret, reentry) = when (read) {
-            is Outcome.Ok -> {
-                read.value?.let(redactor::registerSecret)
-                val has = !read.value.isNullOrEmpty()
-                val flag = if (p.usesAgentSocket) "codexToken" in flagged else "pw" in flagged
-                has to if (p.usesAgentSocket) {
-                    SecretReentry(password = false, agentToken = !has && (p.agentSocketSecretRequired || flag))
-                } else {
-                    SecretReentry(password = !has && flag, agentToken = false)
+        val (hasSecret, reentry) =
+            when (read) {
+                is Outcome.Ok -> {
+                    read.value?.let(redactor::registerSecret)
+                    val has = !read.value.isNullOrEmpty()
+                    val flag = if (p.usesAgentSocket) "codexToken" in flagged else "pw" in flagged
+                    has to
+                        if (p.usesAgentSocket) {
+                            SecretReentry(
+                                password = false,
+                                agentToken = !has && (p.agentSocketSecretRequired || flag),
+                            )
+                        } else {
+                            SecretReentry(password = !has && flag, agentToken = false)
+                        }
                 }
+                // Keystore entries become unreadable after a restore or a lock-screen change: keep
+                // the profile usable so
+                // the person can enter the secret again (B-STATE-065). A flagged secret is never an
+                // empty password.
+                is Outcome.Failed ->
+                    false to
+                        SecretReentry(password = !p.usesAgentSocket, agentToken = p.usesAgentSocket)
             }
-            // Keystore entries become unreadable after a restore or a lock-screen change: keep the profile usable so
-            // the person can enter the secret again (B-STATE-065). A flagged secret is never an empty password.
-            is Outcome.Failed -> false to SecretReentry(password = !p.usesAgentSocket, agentToken = p.usesAgentSocket)
-        }
-        return LoadedProfile(p, trust, reentry, hasSecret, kv.bool(ProfileKeys.tailscale(id)) == true)
+        return LoadedProfile(
+            p,
+            trust,
+            reentry,
+            hasSecret,
+            kv.bool(ProfileKeys.tailscale(id)) == true,
+            revision = ++revision,
+        )
     }
 
-    /** `oc.secretReentry.<id>` = `{"v":1,"names":["pw"],...}` written by migration step M2 (plan 05 §7.4). */
+    /**
+     * `oc.secretReentry.<id>` = `{"v":1,"names":["pw"],...}` written by migration step M2 (plan 05
+     * §7.4).
+     */
     private fun reentryFlags(id: ProfileId): Set<String> {
         val raw = kv.string(ProfileKeys.secretReentry(id)) ?: return emptySet()
-        val names = (DartJson.decodeOrNull(raw) as? Map<*, *>)?.get("names") as? List<*> ?: return emptySet()
+        val names =
+            (DartJson.decodeOrNull(raw) as? Map<*, *>)?.get("names") as? List<*>
+                ?: return emptySet()
         return names.filterIsInstance<String>().toSet()
     }
 
@@ -394,7 +527,9 @@ public class ProfileStore(
         val names = (value?.get("names") as? List<*>)?.filterIsInstance<String>()
         if (value != null && names != null && name !in names) return
         val left = names.orEmpty() - name
-        val next = if (value == null || left.isEmpty()) null else DartJson.encode(LinkedHashMap(value).apply { put("names", left) })
+        val next =
+            if (value == null || left.isEmpty()) null
+            else DartJson.encode(LinkedHashMap(value).apply { put("names", left) })
         // Best effort: the flag only asks for re-entry; the new secret is already stored.
         kv.commit(lanes.forProfile(id)) { putOrRemove(key, next) }
     }
@@ -415,11 +550,12 @@ public class ProfileStore(
 
     private class Snapshot(val profiles: String?, val cleartext: String?, val pin: String?) {
         companion object {
-            fun of(kv: KeyValueStore, id: ProfileId) = Snapshot(
-                kv.string(ProfileKeys.PROFILES),
-                kv.string(ProfileKeys.cleartextOk(id)),
-                kv.string(ProfileKeys.certificatePin(id)),
-            )
+            fun of(kv: KeyValueStore, id: ProfileId) =
+                Snapshot(
+                    kv.string(ProfileKeys.PROFILES),
+                    kv.string(ProfileKeys.cleartextOk(id)),
+                    kv.string(ProfileKeys.certificatePin(id)),
+                )
         }
     }
 }

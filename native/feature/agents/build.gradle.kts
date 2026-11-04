@@ -17,5 +17,6 @@ kotlin {
             project(":ui:kit-content")
         ) // KitTerminalView (.live + .accessible, plan 06 §7.7)
         implementation(project(":engine:agents"))
+        implementation(project(":engine:settings"))
     }
 }

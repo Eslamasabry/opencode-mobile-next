@@ -81,6 +81,7 @@ import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceJustNow
 import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceMinutesAgo
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarSearch
 import io.github.eslamasabry.oc.ui.words.res.librarySettingsTitle
+import io.github.eslamasabry.oc.ui.words.res.monitorInboxTitle
 import io.github.eslamasabry.oc.ui.words.res.notifStatusNeedsYou
 import io.github.eslamasabry.oc.ui.words.res.p12ProjectsTitle
 import io.github.eslamasabry.oc.ui.words.res.p12SearchTitle
@@ -213,6 +214,13 @@ public fun ChatsScreen(
                 }
             }
             if (state.phase != ChatsPhase.Opening) {
+                item(key = "inbox") {
+                    KitButton(
+                        label = stringResource(Res.string.monitorInboxTitle),
+                        onClick = actions::openInbox,
+                        role = KitButtonRole.Tertiary,
+                    )
+                }
                 // The visible way to the full list (All conversations, B12) besides Search.
                 item(key = "show-all") {
                     KitButton(

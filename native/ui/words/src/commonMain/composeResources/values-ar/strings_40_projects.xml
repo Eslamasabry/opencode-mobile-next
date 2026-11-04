@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="r40RelationsTitle">المحادثات المرتبطة</string>
+    <string name="r40RelationsRefresh">تحديث المحادثات المرتبطة</string>
+    <string name="r40RelationsStale">تغيّر موقع هذه المحادثة. ارجع وافتح المحادثات المرتبطة من جديد.</string>
+    <string name="r40RelationsFailure">تعذّر إكمال العملية. حاول مجددًا، أو ارجع وافتح المحادثات المرتبطة من جديد.</string>
+    <string name="r40RelationsParent">بدأت من</string>
+    <string name="r40RelationsEmpty">لا توجد محادثات لوكلاء فرعيين بعد</string>
+    <string name="r40RelationsEmptyBody">يظهر العمل المفوّض هنا دون مزجه بمحادثتك.</string>
+    <string name="r40RelationsChildren">محادثات الوكلاء الفرعيين · %1$s</string>
+    <string name="r40RelationsUntitled">محادثة بلا عنوان</string>
+    <string name="r40RelationsNeedsYou">بحاجة إليك · افتح للإجابة</string>
+    <string name="r40RelationsWorking">يعمل</string>
+    <string name="r40RelationsIdle">غير نشط</string>
+    <string name="r40RelationsDone">مكتمل</string>
+    <string name="r40RelationsCurrent">هذه المحادثة</string>
+    <string name="r40RelationsPinned">مثبّتة</string>
+    <string name="r40RelationsActions">إجراءات</string>
+    <string name="r40RelationsOpening">جارٍ التنفيذ…</string>
+    <string name="r40RelationsOpen">فتح المحادثة</string>
+    <string name="r40RelationsResume">المتابعة على الكمبيوتر</string>
+    <string name="r40RelationsPin">تثبيت المحادثة</string>
+    <string name="r40RelationsUnpin">إلغاء تثبيت المحادثة</string>
+    <string name="r40RelationsStop">إيقاف الوكيل الفرعي</string>
+    <string name="r40RelationsStopTitle">إيقاف %1$s؟</string>
+    <string name="r40RelationsStopBody">يتوقف عمله الحالي. تبقى المحادثة والعمل المكتمل.</string>
+    <string name="r40RelationsKeepRunning">إبقاء التشغيل</string>
+    <string name="r40RelationsResumeBody">شغّل هذا الأمر على الكمبيوتر الذي يستضيف هذا الخادم، في المشروع نفسه. النسخ لا يرسل شيئًا.</string>
+    <string name="r40RelationsCopy">نسخ الأمر</string>
+    <string name="r40RelationsJustNow">الآن</string>
+    <string name="r40RelationsMinutes">منذ %1$s دقيقة</string>
+    <string name="r40RelationsHours">منذ %1$s ساعة</string>
+    <string name="r40RelationsDays">منذ %1$s يوم</string>
+</resources>

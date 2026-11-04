@@ -109,6 +109,7 @@ public class SavedPromptsViewModel(
     override fun editPrompt(id: String) {
         if (local.value.busy) return
         val prompt = local.value.prompts.firstOrNull { it.id == id } ?: return
+        if (prompt.kept) return
         generation += 1
         local.update {
             it.copy(editor = PromptEditor(id, prompt.text, generation), issue = null, note = null)
@@ -146,6 +147,34 @@ public class SavedPromptsViewModel(
         val current = local.value
         if (current.busy || current.editor != null) return
         val prompt = current.prompts.firstOrNull { it.id == id } ?: return
+        if (prompt.kept) {
+            val restorer = store as? KeptPromptRestorer
+            if (restorer == null) {
+                failed(SavedPromptsIssue.RestoreFailed, null)
+                return
+            }
+            operation {
+                when (val result = restorer.restoreKept(id, route.ref)) {
+                    is Outcome.Failed -> failed(SavedPromptsIssue.RestoreFailed, result.failure)
+                    is Outcome.Ok -> {
+                        val draft = result.value
+                        if (!draft.stillCurrent()) {
+                            failed(SavedPromptsIssue.RestoreFailed, null)
+                            return@operation
+                        }
+                        inbox.offer(
+                            ComposerInbox.target(profile, route.ref.sessionId.raw),
+                            draft.text,
+                            attachments = draft.attachments,
+                            missingAttachments = draft.unavailable,
+                            stillCurrent = draft.stillCurrent,
+                        )
+                        nav.returnToChat()
+                    }
+                }
+            }
+            return
+        }
         if (prompt.attachments > 0 || prompt.references > 0) {
             // The composer takes words only for now: never drop the files silently (Codex prompts
             // #2).
@@ -168,6 +197,32 @@ public class SavedPromptsViewModel(
         if (current.busy || current.editor != null) return
         val prompt = current.prompts.firstOrNull { it.id == id } ?: return
         if (prompt.text.isBlank()) return
+        if (prompt.kept) {
+            val restorer = store as? KeptPromptRestorer
+            if (restorer == null) {
+                failed(SavedPromptsIssue.RestoreFailed, null)
+                return
+            }
+            operation {
+                when (val result = restorer.restoreKept(id, route.ref)) {
+                    is Outcome.Failed -> failed(SavedPromptsIssue.RestoreFailed, result.failure)
+                    is Outcome.Ok -> {
+                        val draft = result.value
+                        if (!draft.stillCurrent()) {
+                            failed(SavedPromptsIssue.RestoreFailed, null)
+                            return@operation
+                        }
+                        inbox.offer(
+                            ComposerInbox.target(profile, route.ref.sessionId.raw),
+                            draft.text,
+                            stillCurrent = draft.stillCurrent,
+                        )
+                        nav.returnToChat()
+                    }
+                }
+            }
+            return
+        }
         local.update { it.copy(issue = null, wordsOnly = null) }
         inbox.offer(ComposerInbox.target(profile, route.ref.sessionId.raw), prompt.text)
         nav.returnToChat()

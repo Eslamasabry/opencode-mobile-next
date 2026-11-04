@@ -13,4 +13,13 @@ public sealed interface ServersRoute : AppRoute {
 
     /** SEC-2: the setup assistant (consented config edits with audit) for one saved server. */
     @Serializable public data class SetupAssist(val profileId: ProfileId) : ServersRoute
+    @Serializable public data class Remove(val profile: ProfileId) : ServersRoute
+
+    @Serializable public data class MoveQueued(val source: ProfileId) : ServersRoute
+
+    @Serializable public data class Permissions(val profile: ProfileId) : ServersRoute
+
+    @Serializable
+    public data class Edit(val profile: ProfileId? = null, val newConversation: Boolean = false) :
+        ServersRoute
 }

@@ -21,6 +21,9 @@ import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.sin
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSignalHead
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSignalAspect
 
 /** What a step node shows: no light ([Idle]: done, failed, stopped, waiting) or a running lap. */
 public enum class KitStepLightState { Idle, Working, Background }
@@ -140,6 +143,10 @@ public object KitStepLightLap {
 @Composable
 public fun KitStepLight(state: KitStepLightState, color: Color, size: Dp, animate: Boolean, modifier: Modifier = Modifier) {
     val lap = KitStepLightLap.lapMs(state) ?: return
+    if (LocalKitStyle.current.track) {
+        KitSignalHead(KitSignalAspect.Go, modifier, size)
+        return
+    }
     val p =
         if (animate) {
             rememberInfiniteTransition(label = "stepLight")

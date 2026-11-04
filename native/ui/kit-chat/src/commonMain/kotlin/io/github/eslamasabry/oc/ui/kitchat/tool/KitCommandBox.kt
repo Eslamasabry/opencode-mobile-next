@@ -1,4 +1,9 @@
 package io.github.eslamasabry.oc.ui.kitchat.tool
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRequest
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -90,9 +95,7 @@ public fun KitCommandBox(
     Column(
         modifier
             .fillMaxWidth()
-            .clip(shape)
-            .background(colors.surface1)
-            .border(1.dp, colors.hairline, shape)
+            .kitSurface(kitSurfaceLook(SurfaceRequest(SurfaceRole.Code), colors.surface1, colors.hairline, 1f), shape)
             .padding(horizontal = Space.S3.dp, vertical = Space.S2.dp),
         verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
     ) {

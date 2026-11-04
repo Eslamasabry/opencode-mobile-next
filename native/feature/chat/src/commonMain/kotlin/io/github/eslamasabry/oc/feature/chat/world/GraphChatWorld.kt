@@ -119,6 +119,7 @@ public class GraphChatWorlds(
         Set<io.github.eslamasabry.oc.feature.chat.composer.history.ComposerHistory> =
         emptySet(),
     private val readRecorders: Set<SessionReadRecorder> = emptySet(),
+    private val readSharing: Set<ChatReadSharing> = emptySet(),
 ) : ChatWorlds {
     /**
      * B3: shared by every conversation of the app run; B-STATE-032: saved per server (8 newest)
@@ -148,6 +149,7 @@ public class GraphChatWorlds(
                     phrases.singleOrNull(),
                     clock,
                     readRecorders.singleOrNull(),
+                    readSharing.singleOrNull(),
                 ) to 0)
         open[ref] = world to holders + 1
         if (holders == 0) world.attach()
@@ -187,6 +189,7 @@ internal class GraphChatWorld(
         null,
     private val clock: kotlin.time.Clock? = null,
     private val readRecorder: SessionReadRecorder? = null,
+    private val readSharing: ChatReadSharing? = null,
 ) : ChatWorld, TurnFeedSource, VoiceConversationSession {
     // CHAT-TRANSCRIPT: full messages, run and retry facts for the turn facts (steps, results,
     // context).
@@ -1525,12 +1528,17 @@ internal class GraphChatWorld(
         if (draft.sendBlocked)
             return Outcome.Failed(Failure.Refused(RefusalReason.DispatchUncertain))
         // The session captures text and files as one revision; the dispatch carries that snapshot.
-        val submission =
-            if (!draftFiles) null
-            else draftSession?.captureSubmission()?.takeIf { it.text.trim() == text.trim() }
-        val files = if (!draftFiles) emptyList() else submission?.attachments ?: draft.attachments
-        if (text.isBlank() && files.isEmpty())
+        val submissionOwner = draftSession
+        val captured = if (draftFiles) submissionOwner?.captureSubmission() else null
+        val submission = captured?.takeIf { it.text.trim() == text.trim() }
+        if (captured != null && submission == null) submissionOwner?.releaseSubmission(captured)
+        if (draftFiles && submission == null)
+            return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+        val files = if (!draftFiles) emptyList() else submission!!.attachments
+        if (text.isBlank() && files.isEmpty()) {
+            if (submission != null) submissionOwner?.releaseSubmission(submission)
             return Outcome.Failed(Failure.Refused(RefusalReason.DispatchUncertain))
+        }
         submission?.let { draftSubmissions[id] = it }
         val selection =
             models.value.selected
@@ -1560,7 +1568,11 @@ internal class GraphChatWorld(
         // of the message stays on screen and only one can be sent.
         retireFailedTwins(id)
         refreshDraftProtection()
-        return dispatch(id, text, snapshot, expected)
+        return try {
+            dispatch(id, text, snapshot, expected)
+        } finally {
+            if (submission != null) submissionOwner?.releaseSubmission(submission)
+        }
     }
 
     override suspend fun sendRepeated(text: String, expectedRevision: Long): Outcome<Unit> {
@@ -2023,6 +2035,8 @@ internal class GraphChatWorld(
         return Outcome.Ok(nodes.any { !it.isDir && it.name == name })
     }
 
+    private var acknowledgingRead = false
+
     override fun markRead() = markReadIfVisible { true }
 
     override fun markReadIfVisible(stillVisible: () -> Boolean) {
@@ -2035,17 +2049,36 @@ internal class GraphChatWorld(
                 !mutableTranscript.value.run.busy &&
                 mutableTranscript.value === displayed &&
                 turnFeed.value.runStartedAtMs == displayedRun &&
-                stillVisible()
-        if (!visible()) return
+                stillVisible() &&
+                (readSharing?.visible(ref) ?: true)
+        if (acknowledgingRead || !visible()) return
+        acknowledgingRead = true
         a.graph.scope.launch(registry.mainContext) {
-            if (!visible()) return@launch
-            val session =
-                (a.graph.session.reads.session(sid) as? Outcome.Ok)?.value ?: return@launch
-            if (currentAttached() !== a || !visible()) return@launch
-            val owner = a.graph.session.readState
-            owner.observe(session)
-            session.time?.idleMs?.let { owner.markRead(sid, it) }
-            readRecorder?.viewed(a.graph, session, ::visible)
+            try {
+                if (!visible()) return@launch
+                // Capture idle before the bounded history read: a newer, unseen reply changes the
+                // displayed transcript and is never acknowledged.
+                val session =
+                    (a.graph.session.reads.session(sid) as? Outcome.Ok)?.value ?: return@launch
+                val idle = session.time?.idleMs?.takeIf { it > 0 }
+                if (currentAttached() !== a || !visible()) return@launch
+                if (
+                    readHistory(a.gateway, a.handle, P3Bridge(sid.raw)) !is Outcome.Ok ||
+                        !visible()
+                )
+                    return@launch
+                val shared = readSharing?.shared(ref) == true
+                if (!visible()) return@launch
+                val owner = a.graph.session.readState
+                owner.observe(session, shared)
+                if (idle != null) {
+                    owner.markRead(sid, idle)
+                    readSharing?.publish(ref, a.gateway, idle, ::visible)
+                }
+                readRecorder?.viewed(a.graph, session, ::visible)
+            } finally {
+                acknowledgingRead = false
+            }
         }
     }
 

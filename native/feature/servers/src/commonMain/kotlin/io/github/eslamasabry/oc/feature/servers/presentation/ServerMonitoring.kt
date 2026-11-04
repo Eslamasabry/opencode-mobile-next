@@ -18,8 +18,6 @@ public enum class ServerMonitorStatus {
 public data class ServerMonitorUi(
     val enabled: Boolean = false,
     val available: Boolean = true,
-    val wifiOnly: Boolean = false,
-    val checkInMinutes: Int? = null,
     val status: ServerMonitorStatus = ServerMonitorStatus.Waiting,
     val pending: Int? = null,
 )
@@ -31,10 +29,6 @@ public interface ServerMonitoring {
     public val rows: StateFlow<Map<ProfileId, ServerMonitorUi>>
 
     public suspend fun enabled(profile: ProfileId, enabled: Boolean): Outcome<Unit>
-
-    public suspend fun wifiOnly(profile: ProfileId, enabled: Boolean): Outcome<Unit>
-
-    public suspend fun checkIn(profile: ProfileId, minutes: Int?): Outcome<Unit>
 }
 
 @ContributesTo(AppScope::class)

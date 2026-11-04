@@ -32,6 +32,12 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRequest
+import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.design.effects.Corners
+import io.github.eslamasabry.oc.ui.design.color.Argb
+import androidx.compose.ui.graphics.toArgb
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitButton
@@ -41,6 +47,10 @@ import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.choice.kitSelectTap
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
+import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
@@ -186,7 +196,13 @@ internal fun KitSwitchTrack(checked: Boolean, active: Boolean) {
     )
     val thumbColor = if (checked) colors.onAccent else if (active) colors.text2 else colors.text3
     val x by animateDpAsState(if (checked) (TRACK_W - THUMB - 4).dp else 4.dp, specs.quick(), label = "switch-thumb")
-    Box(Modifier.size(TRACK_W.dp, TRACK_H.dp).clip(KitShapeId.Pill.shape()).background(track)) {
-        Box(Modifier.offset(x = x, y = ((TRACK_H - THUMB) / 2).dp).size(THUMB.dp).clip(KitShapeId.Circle.shape()).background(thumbColor))
+    val style = LocalKitStyle.current
+    val square = style.corners == Corners.Sharp && (style.style == Style.Paper || style.style == Style.Signal)
+    val trackShape = (if (square) KitShapeId.Button else KitShapeId.Pill).toShape()
+    val thumbShape = (if (square) KitShapeId.Button else KitShapeId.Circle).toShape()
+    val look = kitSurfaceLook(SurfaceRequest(SurfaceRole.Toggle, fill = if (checked) Argb(track.toArgb()) else null, selected = checked, disabled = !active), track)
+    Box(Modifier.size(TRACK_W.dp, TRACK_H.dp).kitSurface(look, trackShape)) {
+        val thumb = kitSurfaceLook(SurfaceRequest(SurfaceRole.Control, fill = Argb(thumbColor.toArgb()), circle = !square), thumbColor)
+        Box(Modifier.offset(x = x, y = ((TRACK_H - THUMB) / 2).dp).size(THUMB.dp).kitSurface(thumb, thumbShape))
     }
 }

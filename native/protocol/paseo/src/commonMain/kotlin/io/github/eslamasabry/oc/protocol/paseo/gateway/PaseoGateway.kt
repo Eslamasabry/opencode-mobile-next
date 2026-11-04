@@ -17,10 +17,13 @@ import io.github.eslamasabry.oc.core.domain.HostDaemonUpdateGateway
 import io.github.eslamasabry.oc.core.domain.LocatedFileGateway
 import io.github.eslamasabry.oc.core.domain.LocatedProjectGateway
 import io.github.eslamasabry.oc.core.domain.LocatedVcsGateway
+import io.github.eslamasabry.oc.core.domain.FencedNewSessionPromptGateway
 import io.github.eslamasabry.oc.core.domain.MidTurnPromptGateway
 import io.github.eslamasabry.oc.core.domain.ProviderConversationImportGateway
 import io.github.eslamasabry.oc.core.domain.ProviderUsageGateway
 import io.github.eslamasabry.oc.core.domain.ReadOnlySessionsGateway
+import io.github.eslamasabry.oc.core.domain.PromptRunIdentity
+import io.github.eslamasabry.oc.core.domain.PromptRunIdentityGateway
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
 import io.github.eslamasabry.oc.core.domain.SessionSelectionGateway
@@ -32,6 +35,7 @@ import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvents
 import io.github.eslamasabry.oc.core.domain.events.HintKind
 import io.github.eslamasabry.oc.core.domain.events.RunOutcome
+import io.github.eslamasabry.oc.core.domain.lastPromptIdentity
 import io.github.eslamasabry.oc.core.domain.unavailable
 import io.github.eslamasabry.oc.core.model.AgentFeature
 import io.github.eslamasabry.oc.core.model.AgentInfo
@@ -201,7 +205,9 @@ public class PaseoGateway(
     ReadOnlySessionsGateway,
     HostDaemonUpdateGateway,
     CachedAgentRecoveryGateway,
-    AgentHandoffGateway {
+    AgentHandoffGateway,
+    FencedNewSessionPromptGateway,
+    PromptRunIdentityGateway {
     private val payloadGeneration = MutableStateFlow(0)
     private val job = SupervisorJob(scope.coroutineContext[Job])
     internal val scope: CoroutineScope = CoroutineScope(scope.coroutineContext + job + lane)
@@ -304,7 +310,10 @@ public class PaseoGateway(
     internal val draftModels = HashMap<String, ModelRef>()
     internal val draftVariants = HashMap<String, String>()
 
-    /** Switches chosen before a draft's first prompt, sent with its creation (B-AGENT-146, PaseoAgentFeatures.kt). */
+    /**
+     * Switches chosen before a draft's first prompt, sent with its creation (B-AGENT-146,
+     * PaseoAgentFeatures.kt).
+     */
     internal val draftFeatureValues = HashMap<String, Map<String, JsonElement>>()
     internal val liveAgentSessions = HashSet<String>()
     internal val uncertain = HashSet<String>()
@@ -341,10 +350,10 @@ public class PaseoGateway(
     public var savedTitle: ((String) -> String?)? = null
 
     /**
-     * Payload-use admission (B-AGENT-173, PaseoPayloadUse.kt): a trusted phone host leases its installed payloads across
-     * daemon work. [beforePayloadUse] runs before any request of a send; a Failed answer refuses it and nothing is
-     * dispatched. [afterPayloadUse] runs once after an admitted send settles, however it ended. Remote gateways leave
-     * both null.
+     * Payload-use admission (B-AGENT-173, PaseoPayloadUse.kt): a trusted phone host leases its
+     * installed payloads across daemon work. [beforePayloadUse] runs before any request of a send;
+     * a Failed answer refuses it and nothing is dispatched. [afterPayloadUse] runs once after an
+     * admitted send settles, however it ended. Remote gateways leave both null.
      */
     public var beforePayloadUse: (suspend () -> Outcome<Unit>)? = null
     public var afterPayloadUse: (() -> Unit)? = null
@@ -699,6 +708,7 @@ public class PaseoGateway(
             if (model != null && isPaseoProviderId(model.providerId)) {
                 draftModels[draft.id.raw] = model
                 draftProviders[draft.id.raw] = model.providerId
+                draftVariants[draft.id.raw] = defaults.variant
             }
             val session =
                 draft.copy(
@@ -772,6 +782,46 @@ public class PaseoGateway(
     }
 
     // ---- history
+
+    override suspend fun lastPromptIdentity(session: SessionId): Outcome<PromptRunIdentity?> =
+        call {
+            val id = paseoString(session.raw, max = 256)
+            if (id in drafts && !draftStarted(id)) return@call null
+            if (isSubagent(id)) paseoFail(PaseoFailureKind.Unavailable)
+            val directory = scopeDir
+            val epoch = locationEpoch
+            val socketEpoch = transport.epoch
+            val read =
+                transport.request(
+                    "fetch_agent_request",
+                    jsonOf("agentId" to real(id)),
+                    expectedEpoch = socketEpoch,
+                    beforeSend = { checkLocation(directory, epoch) },
+                )
+            checkLocation(directory, epoch)
+            val agent = read.obj("agent") ?: paseoFail(PaseoFailureKind.NotFound)
+            if (agent.str("id") != real(id)) paseoFail(PaseoFailureKind.InvalidResponse)
+            if (
+                paseoSession(agent).directory != directory ||
+                    agent["archivedAt"].stringOrNull() != null
+            )
+                paseoFail(PaseoFailureKind.ScopeMismatch)
+            val timeline =
+                transport.request(
+                    "fetch_agent_timeline_request",
+                    jsonOf(
+                        "agentId" to real(id),
+                        "direction" to "tail",
+                        "limit" to 200,
+                        "projection" to "projected",
+                    ),
+                    timeoutMs = HISTORY_TIMEOUT_MS,
+                    expectedEpoch = socketEpoch,
+                    beforeSend = { checkLocation(directory, epoch) },
+                )
+            checkLocation(directory, epoch)
+            lastPromptIdentity(paseoTimeline(id, timeline, busy = false).messages)
+        }
 
     override suspend fun messagePage(
         id: SessionId,
@@ -849,7 +899,8 @@ public class PaseoGateway(
             result.obj("endCursor")?.get("seq")?.longOrNull()?.let { state.lastSeq = it }
             uncertain.remove(id)
             backgroundTasks.replace(real(id), timeline.messages)
-            // Its sub-agents (an old conversation's too), read beside the history: their cards link when it arrives.
+            // Its sub-agents (an old conversation's too), read beside the history: their cards link
+            // when it arrives.
             loadSubagents(id)
             linkMessages(timeline.messages)
         }
@@ -911,7 +962,9 @@ public class PaseoGateway(
         Outcome.Ok(persistentListOf())
 
     /** What the agent changed: the uncommitted work in the folder it runs in (B-AGENT-157). */
-    override suspend fun diff(id: SessionId): Outcome<ImmutableList<FileDiff>> = call { readSessionDiff(id.raw) }
+    override suspend fun diff(id: SessionId): Outcome<ImmutableList<FileDiff>> = call {
+        readSessionDiff(id.raw)
+    }
 
     /** AGENT-2: the same operations at another folder of this daemon (a worktree, say). */
     internal val workspaceOperations = PaseoWorkspaceOperations(this)
@@ -949,6 +1002,14 @@ public class PaseoGateway(
         beforeSend: () -> Boolean,
     ): Outcome<PromptAdmission> =
         send(session.raw, messageId.raw, prompt, existingOnly = true, beforeSend = beforeSend)
+
+    override suspend fun promptNewSessionWithMessageId(
+        session: SessionId,
+        messageId: MessageId,
+        prompt: OutgoingPrompt,
+        beforeSend: () -> Boolean,
+    ): Outcome<PromptAdmission> =
+        send(session.raw, messageId.raw, prompt, existingOnly = false, beforeSend = beforeSend)
 
     private suspend fun send(
         sessionId: String,
@@ -1742,11 +1803,17 @@ public class PaseoGateway(
 
     // ---- files (PaseoWorkspace.kt, B-AGENT-156)
 
-    override suspend fun listFiles(path: String): Outcome<ImmutableList<FileNode>> = call { readFileList(path) }
+    override suspend fun listFiles(path: String): Outcome<ImmutableList<FileNode>> = call {
+        readFileList(path)
+    }
 
-    override suspend fun fileContent(path: String): Outcome<FileContent> = call { readFileContent(path) }
+    override suspend fun fileContent(path: String): Outcome<FileContent> = call {
+        readFileContent(path)
+    }
 
-    override suspend fun findFile(query: String): Outcome<ImmutableList<String>> = call { findFileByName(query) }
+    override suspend fun findFile(query: String): Outcome<ImmutableList<String>> = call {
+        findFileByName(query)
+    }
 
     override suspend fun findText(pattern: String): Outcome<ImmutableList<FindMatch>> =
         unavailable("textSearch")
@@ -1784,9 +1851,17 @@ public class PaseoGateway(
         val id0 = agent.str("id")
         // A reloaded record can come back without its title: the known one stays.
         val known = id0?.let { agents[it]?.str("title") ?: titleHints[it] }
-        agent = io.github.eslamasabry.oc.protocol.paseo.feed.PaseoTitles.withTitle(agent, known, savedTitle)
-        // A runtime's long model id (an alias, or "kilo/<id>") is shown as the model list's own id (B-AGENT-146, 182).
-        canonicalModelId(agent.str("provider"), agent.str("model"))?.let { if (it != agent.str("model")) agent = agent.with("model", JsonPrimitive(it)) }
+        agent =
+            io.github.eslamasabry.oc.protocol.paseo.feed.PaseoTitles.withTitle(
+                agent,
+                known,
+                savedTitle,
+            )
+        // A runtime's long model id (an alias, or "kilo/<id>") is shown as the model list's own id
+        // (B-AGENT-146, 182).
+        canonicalModelId(agent.str("provider"), agent.str("model"))?.let {
+            if (it != agent.str("model")) agent = agent.with("model", JsonPrimitive(it))
+        }
         val session = paseoReply("agent") { paseoSession(agent) }
         if (session.directory != directoryValue || agent["archivedAt"].stringOrNull() != null)
             return null
@@ -1941,8 +2016,10 @@ public class PaseoGateway(
                     if (agentId != null && agentId in sessions && request != null)
                         requests.onPermissionRequest(agentId, request)
                 }
-                "agent_permission_resolved" -> p.str("requestId")?.let { requests.onPermissionResolved(it) }
-                "agent_deleted", "agent_archived" -> removed(agentId)
+                "agent_permission_resolved" ->
+                    p.str("requestId")?.let { requests.onPermissionResolved(it) }
+                "agent_deleted",
+                "agent_archived" -> removed(agentId)
                 "agent.provider_subagents.update" -> onSubagentUpdate(p)
                 "providers_snapshot_update" -> {
                     providerRevision++

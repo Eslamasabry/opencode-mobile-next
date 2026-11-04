@@ -13,6 +13,8 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,6 +22,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
@@ -34,8 +37,9 @@ import kotlinx.coroutines.withTimeoutOrNull
  * second [run] while one is starting returns at once (Flutter's `_starting`), and [cancel] never
  * waits for a start that is still checking.
  *
- * Not ported here: the Termux host's uncertain hand-over, and the process budget wait
- * (`:engine:runtime` budget owns it; the binding admits before calling [run]).
+ * The app-component port runs real app-side steps (the voice model). The Termux host's uncertain
+ * hand-over and process budget wait (`:engine:runtime` budget owns it; the binding admits before
+ * calling [run]).
  */
 public class SetupEngine(
     private val host: SetupJobHost,
@@ -54,6 +58,8 @@ public class SetupEngine(
     private val foreground: () -> Boolean = { true },
     /** Receives only fixed timing names, component ids and states, never output or credentials. */
     private val timing: ((SetupTiming) -> Unit)? = null,
+    private val appComponents: SetupAppComponents? = null,
+    private val watchIdle: Boolean = true,
 ) {
     public val hostKind: SetupHostKind = SetupHostKind.Builtin
 
@@ -81,12 +87,18 @@ public class SetupEngine(
     private var localAdding: List<String> = emptyList()
     private var handedOver: String? = null
     private var finishing: String? = null
-    private var appStep: Job? = null
-    private var appStepKey: String? = null
-    private var appProgress: Pair<String, SetupAppProgress>? = null
     private var poll: Job? = null
     private var pollIdle = false
     private var disposed = false
+
+    private class AppRun(val jobId: String, val id: String) {
+        var job: Job? = null
+        var live: SetupAppProgress? = null
+        var lastShownMs: Long? = null
+    }
+
+    private var appRun: AppRun? = null
+    private val appStarted = mutableSetOf<String>()
     private val watcher: Job
     private val traced = mutableSetOf<String>()
 
@@ -104,7 +116,7 @@ public class SetupEngine(
                 .map { it > 0 }
                 .distinctUntilChanged()
                 .collect { watched ->
-                    if (watched) {
+                    if (watched && (jobRunning || watchIdle)) {
                         ensurePolling()
                     } else if (pollIdle) {
                         // The last page stopped watching: an idle wait has nothing left to show.
@@ -184,11 +196,7 @@ public class SetupEngine(
     /** Stops the running job; finished components stay installed. */
     public suspend fun cancel() {
         cancelRequested = true
-        jobComponents.mapNotNull { it.app }.forEach { it.cancel() }
-        appStep?.cancel()
-        appStep = null
-        appStepKey = null
-        appProgress = null
+        stopAppRun()
         // Still checking: nothing native runs yet, and start stops on the flag.
         if (starting && handedOver != _progress.value.jobId) return
         if (_progress.value.state != SetupState.Running) return
@@ -253,8 +261,8 @@ public class SetupEngine(
     public fun dispose() {
         disposed = true
         poll?.cancel()
-        appStep?.cancel()
         watcher.cancel()
+        scope.launch { stopAppRun() }
     }
 
     // ---- start
@@ -374,7 +382,7 @@ public class SetupEngine(
             SetupStepSpec(id = component.id, weight = component.estimatedSeconds, data = data)
         return when {
             check?.ok == true -> base.copy(skipped = true, version = check.version)
-            component.app != null -> base.copy(step = true, data = data + ("waitMinutes" to "240"))
+            component.app -> base.copy(step = true, data = data + ("waitMinutes" to "240"))
             component.jobStep ->
                 base.copy(
                     step = true,
@@ -439,10 +447,13 @@ public class SetupEngine(
     ): Checks {
         val results = LinkedHashMap<String, SetupCheckResult>()
         // App data is independent of Ubuntu, so probe it even on a fresh phone.
-        for (component in job.filter { it.app != null }) {
-            when (val status = guarded { component.app!!.installed() }) {
-                is Outcome.Failed -> return Checks.Failed(hostError(status.failure))
-                is Outcome.Ok -> results[component.id] = SetupCheckResult(status.value, null)
+        for (component in job.filter { it.app }) {
+            val apps = appComponents ?: return Checks.Failed(SetupError.ToolsUncheckable)
+            when (
+                val result = withTimeoutOrNull(readTimeout) { guarded { apps.check(component.id) } }
+            ) {
+                is Outcome.Ok -> results[component.id] = result.value
+                else -> return Checks.Failed(SetupError.ToolsUncheckable)
             }
         }
         val installed =
@@ -456,7 +467,8 @@ public class SetupEngine(
             val scripts = LinkedHashMap<String, String>()
             for (component in job) {
                 if (
-                    !component.jobStep &&
+                    !component.app &&
+                        !component.jobStep &&
                         component.agentUser == agentUser &&
                         component.checkScript.isNotBlank()
                 ) {
@@ -558,7 +570,7 @@ public class SetupEngine(
                 if (disposed) break
                 if (jobRunning) {
                     delay(pollInterval)
-                } else if (_progress.subscriptionCount.value > 0) {
+                } else if (watchIdle && _progress.subscriptionCount.value > 0) {
                     // Nothing runs: a page merely shows the last job.
                     pollIdle = true
                     delay(idlePollInterval)
@@ -577,44 +589,18 @@ public class SetupEngine(
     }
 
     private suspend fun refresh() {
-        val current = (read() as? Outcome.Ok)?.value ?: return
-        if (startingJobId != null && current.jobId != startingJobId) return
-        show(current)
-        if (current.state == "running") {
-            val component = jobComponents.firstOrNull { it.id == current.current }
-            val app = component?.app
-            val row = component?.let { current.component(it.id) }
-            if (component != null && app != null && row?.state == "running" && !cancelRequested) {
-                val key = "${current.jobId}/${component.id}"
-                if (appStepKey != key) {
-                    appStepKey = key
-                    appStep = scope.launch {
-                        val result = guarded {
-                            app.install { value ->
-                                if (appStepKey == key && !cancelRequested) {
-                                    appProgress = component.id to value
-                                    show(current)
-                                }
-                            }
-                        }
-                        if (cancelRequested || appStepKey != key) return@launch
-                        val error = (result as? Outcome.Failed)?.failure?.let(::appFailureCode)
-                        val completed = guarded {
-                            host.completeStep(
-                                current.jobId,
-                                component.id,
-                                error == null,
-                                error,
-                                null,
-                            )
-                        }
-                        appProgress = null
-                        if (completed is Outcome.Failed) appStepKey = null
-                        refresh()
-                    }
-                }
-            }
+        val result = read()
+        if (result is Outcome.Failed) return
+        val current = (result as Outcome.Ok).value
+        if (current == null) {
+            stopAppRun()
+            record = null
+            if (!starting) _progress.value = SetupProgress.Idle
+            return
         }
+        if (startingJobId != null && current.jobId != startingJobId) return
+        followApp(current)
+        show(current)
         if (
             current.state == "running" &&
                 current.current == SetupComponentIds.START &&
@@ -626,6 +612,106 @@ public class SetupEngine(
                 scope.launch { finish(current, step) }
             }
         }
+    }
+
+    private suspend fun stopAppRun() {
+        val previous = appRun ?: return
+        appRun = null
+        previous.job?.cancelAndJoin()
+    }
+
+    private suspend fun followApp(current: SetupJobRecord) {
+        val previous = appRun
+        if (
+            previous != null &&
+                (previous.jobId != current.jobId ||
+                    current.state != "running" ||
+                    current.current != previous.id)
+        )
+            stopAppRun()
+        val id = current.current ?: return
+        if (
+            disposed ||
+                cancelRequested ||
+                current.state != "running" ||
+                current.component(id)?.state != "running"
+        )
+            return
+        val component =
+            registryPort.components(current.params).firstOrNull { it.id == id && it.app } ?: return
+        if (!appStarted.add("${current.jobId}/$id")) return
+        val run = AppRun(current.jobId, component.id)
+        appRun = run
+        run.job = scope.launch { installApp(run) }
+    }
+
+    private fun stillWaiting(saved: SetupJobRecord?, run: AppRun): Boolean =
+        saved?.jobId == run.jobId &&
+            saved.state == "running" &&
+            saved.current == run.id &&
+            saved.component(run.id)?.state == "running"
+
+    private suspend fun installApp(run: AppRun) {
+        var acknowledged = false
+        try {
+            val apps = appComponents
+            val initial = (read() as? Outcome.Ok)?.value
+            if (disposed || cancelRequested || appRun !== run || !stillWaiting(initial, run)) return
+            val result =
+                if (apps == null) Failure.Runtime(RuntimeProblem.Generic).failed()
+                else
+                    guarded {
+                        apps.install(run.id) { update ->
+                            scope.launch {
+                                if (appRun !== run || disposed) return@launch
+                                val prior = run.live
+                                run.live =
+                                    update.copy(
+                                        bytesDone = update.bytesDone?.coerceAtLeast(0),
+                                        bytesTotal = update.bytesTotal?.takeIf { it > 0 },
+                                    )
+                                val now = clock.now().toEpochMilliseconds()
+                                if (
+                                    prior?.stage != update.stage ||
+                                        run.lastShownMs == null ||
+                                        now - run.lastShownMs!! >= 250
+                                ) {
+                                    run.lastShownMs = now
+                                    record?.takeIf { stillWaiting(it, run) }?.let(::show)
+                                }
+                            }
+                        }
+                    }
+            val latest = (read() as? Outcome.Ok)?.value
+            if (disposed || cancelRequested || appRun !== run || !stillWaiting(latest, run)) return
+            // Only this exact persisted waiting step may be acknowledged. The runner also checks
+            // job/id atomically.
+            val completion = guarded {
+                host.completeStep(
+                    run.jobId,
+                    run.id,
+                    result is Outcome.Ok,
+                    (result as? Outcome.Failed)?.failure?.let(::appFailureCode),
+                    null,
+                )
+            }
+            acknowledged = completion is Outcome.Ok
+            if (!acknowledged) appStarted.remove("${run.jobId}/${run.id}")
+        } finally {
+            if (!acknowledged) {
+                appStarted.remove("${run.jobId}/${run.id}")
+                withContext(NonCancellable) {
+                    withTimeoutOrNull(readTimeout) {
+                        guarded {
+                            appComponents?.cancel(run.id)
+                            Outcome.Ok(Unit)
+                        }
+                    }
+                }
+            }
+            if (appRun === run) appRun = null
+        }
+        if (!disposed) refresh()
     }
 
     private suspend fun finish(job: SetupJobRecord, step: SetupJobComponent) {
@@ -715,30 +801,31 @@ public class SetupEngine(
         }
         resetFloors(saved.jobId)
         traceFinished(saved)
-        val base =
+        val liveRun = appRun
+        val live = liveRun?.live
+        val displayed =
+            if (liveRun != null && live != null && stillWaiting(saved, liveRun))
+                saved.copy(
+                    components =
+                        saved.components.map { row ->
+                            if (row.id == liveRun.id)
+                                row.copy(
+                                    stage = live.stage,
+                                    done = live.bytesDone,
+                                    total = live.bytesTotal,
+                                )
+                            else row
+                        }
+                )
+            else saved
+        publish(
             SetupPlanning.progressFromRecord(
-                saved,
+                displayed,
                 jobComponents,
                 clock.now().toEpochMilliseconds(),
                 redact,
                 floors,
             )
-        val app = appProgress
-        publish(
-            if (app == null || saved.state != "running") base
-            else
-                base.copy(
-                    components =
-                        base.components.map {
-                            if (it.id == app.first && it.state == ComponentState.Running)
-                                it.copy(
-                                    stage = app.second.stage,
-                                    bytesDone = app.second.bytesDone,
-                                    bytesTotal = app.second.bytesTotal,
-                                )
-                            else it
-                        }
-                )
         )
     }
 

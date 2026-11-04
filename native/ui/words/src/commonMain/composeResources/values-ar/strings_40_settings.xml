@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings40_style_default">إعداد النمط الافتراضي</string>
+    <string name="settings40_reset_question">إعادة ضبط المظهر؟</string>
+    <string name="settings40_reset_body">إعادة ضبط الألوان والنمط والشكل والزجاج وحجم النص والحركة وتوهج الرد. تبقى محادثاتك ولغتك وخيارات الإشعارات كما هي.</string>
+    <string name="settings40_local_work">العمل غير المرسل على هذا الهاتف</string>
+    <string name="settings40_queue_title">المطالبات في الانتظار</string>
+    <string name="settings40_drafts_title">مسودات المحادثات</string>
+    <string name="settings40_storage_size">%1$d عناصر · %2$s</string>
+    <string name="settings40_storage_unknown">تعذّر قراءة هذا التخزين. تم الاحتفاظ بكل شيء.</string>
+    <string name="settings40_storage_reading">جارٍ قراءة التخزين المحلي…</string>
+    <string name="settings40_discard_queue">حذف المطالبات المنتظرة غير المرسلة</string>
+    <string name="settings40_discard_drafts">حذف مسودات المحادثات</string>
+    <string name="settings40_queue_keeps">يحذف المطالبات التي لم تُرسل مطلقًا. تبقى المطالبات التي تحمل علامة إرسال أو إيصال أمر للمراجعة.</string>
+    <string name="settings40_queue_empty">لا توجد مطالبات منتظرة لحذفها.</string>
+    <string name="settings40_drafts_empty">لا توجد مسودات محفوظة لحذفها.</string>
+    <string name="settings40_discard_working">جارٍ حذف المحتوى المحلي…</string>
+    <string name="settings40_queue_question">حذف المطالبات المنتظرة غير المرسلة؟</string>
+    <string name="settings40_drafts_question">حذف مسودات المحادثات؟</string>
+    <string name="settings40_drafts_body">يحذف الكلمات المحفوظة ومرفقات المسودات على هذا الهاتف. تُحدَّث المحادثات المفتوحة أيضًا. يمنع العمل الذي لا يزال يُرسل أو يُفحص الحذف. لا يمكن التراجع عن هذا.</string>
+    <string name="settings40_discard_failed">تعذّر إتمام الحذف. قد يمنع الحذفَ عملٌ جارٍ إرساله أو عملٌ غير مؤكد أو تخزين غير مقروء أو تغيير أثناء الحفظ. راجع الأعداد وحاول مجددًا.</string>
+    <string name="settings40_discard_done">تم حذف %1$d عناصر.</string>
+    <string name="settings40_discard_kept">تم حذف %1$d عناصر. تم الاحتفاظ بـ %2$d مطالبات تحتاج إلى مراجعة.</string>
+    <string name="settings40_discard_cleanup">تم حذف %1$d مسودات. تعذّر حذف بعض ملفات المرفقات. حاول حذف المسودات مجددًا للإكمال.</string>
+    <string name="settings40_no_answers">لا توجد أسئلة على هذا الخادم تحتاج إلى إجابة بعد.</string>
+    <string name="settings40_answer_failed">لم تكتمل هذه الخطوة. قد تختلف إجابتك المحفوظة عن إعدادات أندرويد. راجع الإشعارات أو الاستمرار في التشغيل، ثم أعد المحاولة.</string>
+</resources>

@@ -98,6 +98,8 @@ dependencies {
             ":engine:composer",
             ":engine:media",
             ":android:media",
+            ":android:platform", // server editor: fixed-package Tailscale handoff and package
+            // visibility
             ":engine:agents",
             ":engine:delivery",
             ":engine:requests",
@@ -155,9 +157,11 @@ dependencies {
             ":engine:voice",
             ":android:voice",
             ":feature:voice",
-            ":android:linux", // P12-FIX-LINUX-VOICE: the real built-in Linux (proot runtime + libs)
+            ":android:linux", // P12-FIX-LINUX-VOICE: the real built-in Linux (proot runtime + its
+            // native libraries)
             ":engine:linuxsetup", // P12-BUILD-RUNTIME-C: the phone setup engine
-            ":engine:setupscripts", // P12-BUILD-RUNTIME-C: the setup prelude the job scripts use
+            ":engine:setupscripts", // P12-BUILD-RUNTIME-C: the setup prelude the job scripts run
+            // under
             ":engine:lifecycle", // P12-BUILD-RUNTIME-C: this-phone mark and lifecycle rules
             ":feature:phonesetup", // P12-BUILD-RUNTIME-C: Set up OpenCode on this phone
             ":feature:diagnostics", // BUILD-DIAGNOSTICS-ATTENTION

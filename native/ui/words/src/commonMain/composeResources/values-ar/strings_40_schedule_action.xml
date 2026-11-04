@@ -1,0 +1,4 @@
+<resources>
+    <string name="scheduleActionWhen">جدوِل في %1$s</string>
+    <string name="scheduleActionHours">جدوِل كل %1$d ساعات</string>
+</resources>

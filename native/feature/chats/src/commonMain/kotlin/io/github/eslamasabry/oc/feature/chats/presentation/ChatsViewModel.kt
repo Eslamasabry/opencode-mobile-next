@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.engine.agents.feed.FeedDay
 import io.github.eslamasabry.oc.engine.agents.feed.ReturnBrief
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
+import io.github.eslamasabry.oc.ui.routes.MonitorInboxRoute
 import io.github.eslamasabry.oc.ui.routes.ProjectsRoute
 import io.github.eslamasabry.oc.ui.routes.SearchRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
@@ -157,6 +158,11 @@ public class ChatsViewModel(
     override fun showAll(): Unit = nav.open(ChatsRoute.All(filter = null))
 
     override fun openSearch(): Unit = nav.open(SearchRoute.Conversations())
+
+    override fun openInbox() {
+        sheet.value = null
+        nav.open(MonitorInboxRoute())
+    }
 
     override fun openAttention() {
         sheet.value = null

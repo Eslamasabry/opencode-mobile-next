@@ -46,6 +46,7 @@ public data class TipDefinition(
 )
 
 public object TeachingIds {
+    public val TerminalSelection: TipId = TipId("terminal-selection")
     public val StopAfterStep: TipId = TipId("stop-after-step")
     public val SendLater: TipId = TipId("send-later")
     public val HoldMic: TipId = TipId("hold-mic")
@@ -132,6 +133,17 @@ public class TeachingRegistry(tips: Iterable<TipDefinition>) {
                         anchors = persistentListOf("terminal-output"),
                         trigger =
                             "the live terminal first contains a detected link, while the keyboard is clear; done when a link is opened",
+                        maxCount = 2,
+                    ),
+                    TipDefinition(
+                        id = TeachingIds.TerminalSelection,
+                        kind = TeachingKind.Tip,
+                        titleKey = "terminal40TipTitle",
+                        messageKey = "terminal40Tip",
+                        copyKeys = persistentListOf("terminal40TipTitle", "terminal40Tip"),
+                        anchors = persistentListOf("terminal-live"),
+                        trigger =
+                            "a connected terminal grid is visible, with no question open; used when Select text is chosen",
                         maxCount = 2,
                     ),
                     TipDefinition(

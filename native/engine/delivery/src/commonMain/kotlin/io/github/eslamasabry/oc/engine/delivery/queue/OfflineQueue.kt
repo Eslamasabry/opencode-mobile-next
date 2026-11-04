@@ -33,6 +33,7 @@ import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -138,7 +139,10 @@ public class OfflineQueue(
     internal val lane = dispatchers.serial("delivery")
     private val changes = Mutex()
     private var cache: List<QueuedPrompt>? = null
-    private var cacheStamp: io.github.eslamasabry.oc.core.data.kv.PrefValue? = null
+    private var cacheVersion: io.github.eslamasabry.oc.core.data.kv.PrefValue? = null
+    // Only serializedChange owns write authority; synchronous readers cannot rebind it.
+    private var mutationVersion: io.github.eslamasabry.oc.core.data.kv.PrefValue? = null
+    private var mutationProfilesVersion: io.github.eslamasabry.oc.core.data.kv.PrefValue? = null
     private var lastReadable = true
     private var inFlight: String? = null
     private val onlineInFlight = LinkedHashSet<String>()
@@ -155,6 +159,23 @@ public class OfflineQueue(
     private val mutableState = MutableStateFlow(QueueState())
     public val state: StateFlow<QueueState> = mutableState
 
+    init {
+        scope.launch(lane) {
+            refreshAfterExternalEdit()
+            store.updates.conflate().collect { refreshAfterExternalEdit() }
+        }
+    }
+
+    private suspend fun <T> serializedChange(block: suspend () -> T): T = changes.withLock {
+        mutationVersion = store.version()
+        mutationProfilesVersion = store.profilesVersion()
+        block()
+    }
+
+    /** Synchronous callers see acknowledged storage and never mutate the delivery actor's cache. */
+    private fun visibleEntries(): List<QueuedPrompt> =
+        (store.load() as? QueueRead.Readable)?.entries.orEmpty()
+
     // ---------------------------------------------------------------- reads
 
     /**
@@ -162,22 +183,47 @@ public class OfflineQueue(
      * (B-STATE-046).
      */
     private fun queue(): List<QueuedPrompt> {
-        cache?.let { if (cacheStamp == store.stamp()) return it }
+        cache
+            ?.takeIf { cacheVersion == store.version() }
+            ?.let {
+                return it
+            }
+        cacheVersion = store.version()
         val read = store.load()
         lastReadable = read is QueueRead.Readable
         val loaded = (read as? QueueRead.Readable)?.entries.orEmpty()
         val limited = QueueLimits.enforce(loaded, clock.now().toEpochMilliseconds())
         cache = limited.kept
-        cacheStamp = store.loadedStamp
         if (limited.removed > 0) {
             eviction = limited
-            scope.launch(lane) { changes.withLock { store.save(queue()) } }
+            scope.launch(lane) { serializedChange { persist(queue()) } }
         }
         publish()
         return limited.kept
     }
 
-    public fun entries(): List<QueuedPrompt> = queue()
+    private suspend fun persist(entries: List<QueuedPrompt>): Boolean {
+        val saved = store.saveIfUnchanged(entries, mutationVersion, mutationProfilesVersion)
+        if (saved) {
+            mutationVersion = store.encodedVersion(entries)
+            cacheVersion = mutationVersion
+        } else cache = null
+        return saved
+    }
+
+    /**
+     * Refresh an open display after an app-wide confirmed discard; no send or replay is started.
+     */
+    public suspend fun refreshAfterExternalEdit(): Unit =
+        withContext(lane) {
+            serializedChange {
+                cache = null
+                queue()
+                publish()
+            }
+        }
+
+    public fun entries(): List<QueuedPrompt> = visibleEntries()
 
     public fun sending(id: String): Boolean = inFlight == id || id in onlineInFlight
 
@@ -187,16 +233,19 @@ public class OfflineQueue(
      * Queued prompts of [profile] (shown or not). Throws nothing: an unreadable queue is
      * [QueueState.readable] false.
      */
-    public fun countForProfile(profile: ProfileId): Int = queue().count { it.profileId == profile }
+    public fun countForProfile(profile: ProfileId): Int =
+        visibleEntries().count { it.profileId == profile }
 
     public fun reviewCount(profile: ProfileId): Int =
-        queue().count { it.profileId == profile && it.dispatched && it.id !in onlineInFlight }
+        visibleEntries().count {
+            it.profileId == profile && it.dispatched && it.id !in onlineInFlight
+        }
 
     public fun countForOtherProfiles(profile: ProfileId?): Int =
-        queue().count { it.profileId != profile }
+        visibleEntries().count { it.profileId != profile }
 
     public fun queuedFor(ref: ConversationRef): List<QueuedPrompt> =
-        mutableState.value.queuedFor(ref, onlineInFlight).also { queue() }
+        visibleEntries().filter { it.ref == ref && it.id !in onlineInFlight }
 
     /** Reads and clears the pending eviction (shown once). */
     public fun takeEviction(): QueueEviction? = eviction.also {
@@ -217,26 +266,27 @@ public class OfflineQueue(
         withContext(lane) { queuePromptOnLane(prompt) }
 
     private suspend fun queuePromptOnLane(prompt: QueuedPrompt): Outcome<QueueRefusal?> =
-        changes.withLock {
-            if (prompt.profileId in closedProfiles) return@withLock QueueRefusal.Closed.ok()
+        serializedChange {
+            if (prompt.profileId in closedProfiles) return@serializedChange QueueRefusal.Closed.ok()
             if (prompt.payloadBytes > QueueLimits.MAX_ENTRY_BYTES)
-                return@withLock QueueRefusal.TooLarge.ok()
+                return@serializedChange QueueRefusal.TooLarge.ok()
             val current = queue()
-            if (current.any { it.id == prompt.id }) return@withLock QueueRefusal.DuplicateId.ok()
+            if (current.any { it.id == prompt.id })
+                return@serializedChange QueueRefusal.DuplicateId.ok()
             when (val used = commandIdUsed(prompt)) {
-                is Outcome.Failed -> return@withLock used
-                is Outcome.Ok -> if (used.value) return@withLock QueueRefusal.DuplicateId.ok()
+                is Outcome.Failed -> return@serializedChange used
+                is Outcome.Ok ->
+                    if (used.value) return@serializedChange QueueRefusal.DuplicateId.ok()
             }
             val limited = QueueLimits.enforce(current + prompt, clock.now().toEpochMilliseconds())
             // The new entry losing its own eviction pass, or an entry on the wire being evicted,
             // means no room.
             val keptIds = limited.kept.mapTo(HashSet()) { it.id }
             if (prompt.id !in keptIds || current.any { sending(it.id) && it.id !in keptIds }) {
-                return@withLock QueueRefusal.NoRoom.ok()
+                return@serializedChange QueueRefusal.NoRoom.ok()
             }
-            if (!store.save(limited.kept)) return@withLock Failure.StorageRefused().failed()
+            if (!persist(limited.kept)) return@serializedChange Failure.StorageRefused().failed()
             cache = limited.kept
-            cacheStamp = store.loadedStamp
             if (limited.removed > 0) eviction = limited
             publish()
             null.ok()
@@ -248,18 +298,198 @@ public class OfflineQueue(
      */
     public suspend fun remove(id: String): Outcome<Boolean> = withContext(lane) { removeOnLane(id) }
 
-    private suspend fun removeOnLane(id: String): Outcome<Boolean> = changes.withLock {
-        if (sending(id)) return@withLock false.ok()
+    private suspend fun removeOnLane(id: String): Outcome<Boolean> = serializedChange {
+        if (sending(id)) return@serializedChange false.ok()
         val kept = queue().filter { it.id != id }
-        if (kept.size == queue().size) return@withLock true.ok()
-        if (!store.save(kept)) return@withLock Failure.StorageRefused().failed()
+        if (kept.size == queue().size) return@serializedChange true.ok()
+        if (!persist(kept)) return@serializedChange Failure.StorageRefused().failed()
         cache = kept
-        cacheStamp = store.loadedStamp
         acceptedUnrecorded -= id
         explicitResends -= id
         publish()
         true.ok()
     }
+
+    /** Target-pinned move of reviewed, still-unsent rows; neither move nor Undo starts a flush. */
+    public suspend fun move(
+        source: ProfileId,
+        destination: ConversationRef,
+        ids: Set<String>,
+        expected: List<QueuedPrompt>,
+        admitted: () -> Boolean,
+        keepsSelection: (QueuedPrompt) -> Boolean,
+        redact: (String) -> String,
+    ): Outcome<QueueMoveResult> =
+        withContext(lane) {
+            serializedChange {
+                if (
+                    !admitted() ||
+                        source == destination.profileId ||
+                        source in closedProfiles ||
+                        destination.profileId in closedProfiles
+                )
+                    return@serializedChange Failure.Refused(RefusalReason.StaleScope).failed()
+                val current = queue()
+                val durable =
+                    store.load() as? QueueRead.Readable
+                        ?: return@serializedChange Failure.StorageRefused().failed()
+                fun same(a: List<QueuedPrompt>, b: List<QueuedPrompt>): Boolean =
+                    a.size == b.size &&
+                        a.map { it.id }.toSet().size == a.size &&
+                        a.associateBy { it.id } == b.associateBy { it.id }
+                if (!same(current, expected) || !same(current, durable.entries))
+                    return@serializedChange Failure.StorageRefused().failed()
+                val originals = ArrayList<QueuedPrompt>()
+                var reset = 0
+                val next = ArrayList<QueuedPrompt>()
+                for (entry in current) {
+                    if (entry.id !in ids || entry.profileId != source) {
+                        next += entry
+                        continue
+                    }
+                    val masked = redact(entry.text)
+                    val blocked =
+                        entry.dispatched ||
+                            sending(entry.id) ||
+                            entry.id in acceptedUnrecorded ||
+                            entry.attachments.any {
+                                it.url.substringBefore(':', "").lowercase() !in
+                                    setOf("data", "http", "https")
+                            } ||
+                            (entry.mentions.isNotEmpty() && masked != entry.text)
+                    if (blocked) {
+                        next += entry
+                        continue
+                    }
+                    when (val used = commandIdUsed(entry)) {
+                        is Outcome.Failed -> return@serializedChange used
+                        is Outcome.Ok ->
+                            if (used.value) {
+                                next += entry
+                                continue
+                            }
+                    }
+                    val candidate =
+                        entry.copy(
+                            profileId = destination.profileId,
+                            sessionId = destination.sessionId,
+                            error = null,
+                            dispatchedAt = null,
+                        )
+                    fun sanitize(value: Any?): Any? =
+                        when (value) {
+                            is String -> redact(value)
+                            is List<*> -> value.map(::sanitize)
+                            is Map<*, *> -> value.entries.associate { it.key to sanitize(it.value) }
+                            else -> value
+                        }
+                    val sanitized =
+                        try {
+                            QueuedPromptCodec.fromJson(
+                                sanitize(QueuedPromptCodec.toJson(candidate))
+                            )
+                        } catch (_: QueueFormatException) {
+                            null
+                        }
+                            ?: return@serializedChange Failure.Refused(RefusalReason.StaleScope)
+                                .failed()
+                    // Redaction may not turn a safe payload into a different routing identity.
+                    if (
+                        sanitized.id != entry.id ||
+                            sanitized.ref != destination ||
+                            sanitized.attachments.any {
+                                it.url.substringBefore(':', "").lowercase() !in
+                                    setOf("data", "http", "https")
+                            } ||
+                            (entry.mentions.isNotEmpty() && sanitized.text != entry.text)
+                    )
+                        return@serializedChange Failure.Refused(RefusalReason.StaleScope).failed()
+                    val keep = keepsSelection(sanitized)
+                    val moved =
+                        if (keep) sanitized
+                        else
+                            QueuedPrompt(
+                                sanitized.id,
+                                sanitized.profileId,
+                                sanitized.sessionId,
+                                sanitized.text,
+                                sanitized.attachments,
+                                sanitized.mentions,
+                                createdAt = sanitized.createdAt,
+                            )
+                    when (val used = commandIdUsed(moved)) {
+                        is Outcome.Failed -> return@serializedChange used
+                        is Outcome.Ok ->
+                            if (used.value) {
+                                next += entry
+                                continue
+                            }
+                    }
+                    if (!keep) reset++
+                    originals += entry
+                    next += moved
+                }
+                if (originals.isEmpty())
+                    return@serializedChange Failure.Refused(RefusalReason.StaleScope).failed()
+                if (!admitted() || !persist(next))
+                    return@serializedChange Failure.StorageRefused().failed()
+                cache = next
+                publish()
+                QueueMoveResult(
+                        source,
+                        destination,
+                        originals.toImmutableList(),
+                        ids.size - originals.size,
+                        reset,
+                    )
+                    .ok()
+            }
+        }
+
+    public suspend fun undoMove(result: QueueMoveResult, admitted: () -> Boolean): Outcome<Int> =
+        withContext(lane) {
+            serializedChange {
+                if (!admitted() || result.source in closedProfiles)
+                    return@serializedChange Failure.Refused(RefusalReason.StaleScope).failed()
+                val originals = result.originals.associateBy { it.id }
+                var restored = 0
+                val next = ArrayList<QueuedPrompt>()
+                for (entry in queue()) {
+                    val original = originals[entry.id]
+                    if (
+                        original != null &&
+                            entry.ref == result.destination &&
+                            !entry.dispatched &&
+                            !sending(entry.id) &&
+                            entry.id !in acceptedUnrecorded
+                    ) {
+                        when (val used = commandIdUsed(entry)) {
+                            is Outcome.Failed -> return@serializedChange used
+                            is Outcome.Ok ->
+                                if (used.value) {
+                                    next += entry
+                                    continue
+                                }
+                        }
+                        when (val used = commandIdUsed(original)) {
+                            is Outcome.Failed -> return@serializedChange used
+                            is Outcome.Ok ->
+                                if (used.value) {
+                                    next += entry
+                                    continue
+                                }
+                        }
+                        next += original
+                        restored++
+                    } else next += entry
+                }
+                if (!admitted() || !persist(next))
+                    return@serializedChange Failure.StorageRefused().failed()
+                cache = next
+                publish()
+                restored.ok()
+            }
+        }
 
     /**
      * Moves only an unsent record. The destination's current catalog is supplied after a real read;
@@ -274,15 +504,15 @@ public class OfflineQueue(
         redactor: io.github.eslamasabry.oc.core.security.Redactor,
     ): Outcome<Boolean> =
         withContext(lane) {
-            changes.withLock {
+            serializedChange {
                 if (
                     expectedSource.profileId in closedProfiles ||
                         destination.profileId in closedProfiles
                 )
-                    return@withLock Failure.Refused(RefusalReason.ProfileClosing).failed()
+                    return@serializedChange Failure.Refused(RefusalReason.ProfileClosing).failed()
                 val current = queue()
                 val index = current.indexOfFirst { it.id == id && it.ref == expectedSource }
-                if (index < 0) return@withLock false.ok()
+                if (index < 0) return@serializedChange false.ok()
                 val original = current[index]
                 if (
                     original.attachments.any {
@@ -290,26 +520,25 @@ public class OfflineQueue(
                             setOf("data", "https", "http")
                     }
                 )
-                    return@withLock false.ok()
+                    return@serializedChange false.ok()
                 val safeText = redactor.redact(original.text)
                 if (safeText != original.text && original.mentions.isNotEmpty())
-                    return@withLock false.ok()
+                    return@serializedChange false.ok()
                 if (sending(id) || original.dispatched || id in acceptedUnrecorded)
-                    return@withLock false.ok()
+                    return@serializedChange false.ok()
                 when (val used = commandIdUsed(original)) {
-                    is Outcome.Failed -> return@withLock used
-                    is Outcome.Ok -> if (used.value) return@withLock false.ok()
+                    is Outcome.Failed -> return@serializedChange used
+                    is Outcome.Ok -> if (used.value) return@serializedChange false.ok()
                 }
                 val destinationRecord =
                     original.movedTo(destination, availableModels, availableAgents, safeText)
                 when (val used = commandIdUsed(destinationRecord)) {
-                    is Outcome.Failed -> return@withLock used
-                    is Outcome.Ok -> if (used.value) return@withLock false.ok()
+                    is Outcome.Failed -> return@serializedChange used
+                    is Outcome.Ok -> if (used.value) return@serializedChange false.ok()
                 }
                 val next = current.toMutableList().also { it[index] = destinationRecord }
-                if (!store.save(next)) return@withLock Failure.StorageRefused().failed()
+                if (!persist(next)) return@serializedChange Failure.StorageRefused().failed()
                 cache = next
-                cacheStamp = store.loadedStamp
                 explicitResends -= id
                 publish()
                 true.ok()
@@ -317,23 +546,16 @@ public class OfflineQueue(
         }
 
     /** A second live connection can observe a move without rebuilding its owner. */
-    public suspend fun reloadFromStorage(): Unit =
-        withContext(lane) {
-            changes.withLock {
-                queue()
-                publish()
-            }
-        }
+    public suspend fun reloadFromStorage(): Unit = refreshAfterExternalEdit()
 
     /** The person's clear of every queued prompt. Refused while any send is in flight. */
     public suspend fun clearAll(): Boolean = withContext(lane) { clearAllOnLane() }
 
-    private suspend fun clearAllOnLane(): Boolean = changes.withLock {
-        if (inFlight != null || onlineInFlight.isNotEmpty()) return@withLock false
-        if (queue().isEmpty() && store.readable) return@withLock true
-        if (!store.save(emptyList())) return@withLock false
+    private suspend fun clearAllOnLane(): Boolean = serializedChange {
+        if (inFlight != null || onlineInFlight.isNotEmpty()) return@serializedChange false
+        if (queue().isEmpty() && store.readable) return@serializedChange true
+        if (!persist(emptyList())) return@serializedChange false
         cache = emptyList()
-        cacheStamp = store.loadedStamp
         lastReadable = true
         acceptedUnrecorded.clear()
         publish()
@@ -360,15 +582,14 @@ public class OfflineQueue(
         ) {
             return checkReceipt(id).ok()
         }
-        val cleared = changes.withLock {
-            if (sending(id) || id in acceptedUnrecorded) return@withLock false.ok()
+        val cleared = serializedChange {
+            if (sending(id) || id in acceptedUnrecorded) return@serializedChange false.ok()
             val q = queue()
             val index = q.indexOfFirst { it.id == id }
-            if (index < 0 || !q[index].dispatched) return@withLock false.ok()
+            if (index < 0 || !q[index].dispatched) return@serializedChange false.ok()
             val next = q.toMutableList().also { it[index] = q[index].withDispatchedAt(null) }
-            if (!store.save(next)) return@withLock Failure.StorageRefused().failed()
+            if (!persist(next)) return@serializedChange Failure.StorageRefused().failed()
             cache = next
-            cacheStamp = store.loadedStamp
             explicitResends += id
             publish()
             true.ok()
@@ -419,35 +640,34 @@ public class OfflineQueue(
     public suspend fun holdOnline(prompt: QueuedPrompt): Boolean =
         withContext(lane) { holdOnlineOnLane(prompt) }
 
-    private suspend fun holdOnlineOnLane(prompt: QueuedPrompt): Boolean = changes.withLock {
+    private suspend fun holdOnlineOnLane(prompt: QueuedPrompt): Boolean = serializedChange {
         if (
             !prompt.dispatched ||
                 prompt.profileId in closedProfiles ||
                 prompt.payloadBytes > QueueLimits.MAX_ENTRY_BYTES
         ) {
-            return@withLock false
+            return@serializedChange false
         }
         val q = queue()
         val existing = q.indexOfFirst { it.id == prompt.id }
         if (existing < 0 && (commandIdUsed(prompt) as? Outcome.Ok)?.value != false)
-            return@withLock false
+            return@serializedChange false
         if (
             existing >= 0 &&
                 (prompt.id !in onlineInFlight ||
                     q[existing].profileId != prompt.profileId ||
                     q[existing].sessionId != prompt.sessionId)
         ) {
-            return@withLock false
+            return@serializedChange false
         }
         val next =
             q.toMutableList().also { if (existing < 0) it += prompt else it[existing] = prompt }
         // Online journal admission must never evict somebody else's work.
         if (QueueLimits.enforce(next, clock.now().toEpochMilliseconds()).removed > 0)
-            return@withLock false
-        if (!store.save(next)) return@withLock false
+            return@serializedChange false
+        if (!persist(next)) return@serializedChange false
         onlineInFlight += prompt.id
         cache = next
-        cacheStamp = store.loadedStamp
         publish()
         true
     }
@@ -455,7 +675,7 @@ public class OfflineQueue(
     /** Re-checks the deletion fence immediately before the network write. */
     public fun canDispatchOnline(id: String): Boolean =
         id in onlineInFlight &&
-            queue().any {
+            visibleEntries().any {
                 it.id == id &&
                     it.profileId == connection.activeProfile.value &&
                     it.profileId !in closedProfiles
@@ -478,20 +698,19 @@ public class OfflineQueue(
         accepted: Boolean,
         error: String?,
     ) {
-        changes.withLock {
+        serializedChange {
             try {
-                if (id !in onlineInFlight) return@withLock
+                if (id !in onlineInFlight) return@serializedChange
                 if (accepted || !dispatched) {
                     val next = queue().filter { it.id != id }
-                    if (store.save(next)) {
+                    if (persist(next)) {
                         cache = next
-                        cacheStamp = store.loadedStamp
                     } else if (accepted) {
                         acceptedUnrecorded += id
                     }
                 } else if (error != null) {
                     val next = queue().map { if (it.id == id) it.withError(error) else it }
-                    if (store.save(next)) cache = next
+                    if (persist(next)) cache = next
                 }
             } finally {
                 onlineInFlight -= id
@@ -513,7 +732,7 @@ public class OfflineQueue(
     private suspend fun closeProfileOnLane(profile: ProfileId) {
         closedProfiles += profile
         journals.closeProfile(profile)
-        changes.withLock {}
+        serializedChange {}
     }
 
     /**
@@ -531,17 +750,16 @@ public class OfflineQueue(
     public suspend fun sweepProfile(profile: ProfileId): Outcome<Int> =
         withContext(lane) { sweepProfileOnLane(profile) }
 
-    private suspend fun sweepProfileOnLane(profile: ProfileId): Outcome<Int> = changes.withLock {
-        if (!store.readable) return@withLock Failure.StorageRefused().failed()
+    private suspend fun sweepProfileOnLane(profile: ProfileId): Outcome<Int> = serializedChange {
+        if (!store.readable) return@serializedChange Failure.StorageRefused().failed()
         val q = queue()
         if (q.any { it.profileId == profile && sending(it.id) })
-            return@withLock Failure.Refused(RefusalReason.DispatchUncertain).failed()
+            return@serializedChange Failure.Refused(RefusalReason.DispatchUncertain).failed()
         val kept = q.filter { it.profileId != profile }
         val removed = q.size - kept.size
-        if (removed == 0) return@withLock 0.ok()
-        if (!store.save(kept)) return@withLock Failure.StorageRefused().failed()
+        if (removed == 0) return@serializedChange 0.ok()
+        if (!persist(kept)) return@serializedChange Failure.StorageRefused().failed()
         cache = kept
-        cacheStamp = store.loadedStamp
         publish()
         removed.ok()
     }
@@ -574,8 +792,8 @@ public class OfflineQueue(
             }
         val receipt = (checked as? Outcome.Ok)?.value ?: return false
         if (!same() || receipt.state != CommandReceiptState.Confirmed) return false
-        val removed = changes.withLock {
-            if (!same()) return@withLock false
+        val removed = serializedChange {
+            if (!same()) return@serializedChange false
             val q = queue()
             val kept = q.filter {
                 it.id != id ||
@@ -583,9 +801,8 @@ public class OfflineQueue(
                     it.sessionId.raw != receipt.sessionId ||
                     !it.dispatched
             }
-            if (kept.size == q.size || !store.save(kept)) return@withLock false
+            if (kept.size == q.size || !persist(kept)) return@serializedChange false
             cache = kept
-            cacheStamp = store.loadedStamp
             publish()
             true
         }
@@ -644,7 +861,7 @@ public class OfflineQueue(
                         (explicit || policy.allowsQueuedSends(profile))
                 if (!allowed()) break
                 val transport = link.awaitActionTransport()
-                changes.withLock {}
+                serializedChange {}
                 if (!allowed() || transport is Outcome.Failed || !link.connected) break
                 if (queue().none { it.id == entry.id && !it.dispatched }) continue
                 when (sendOne(link, entry, explicit, ::allowed)) {
@@ -716,18 +933,17 @@ public class OfflineQueue(
         }
         // 3. The durable dispatch marker. Removal and resend refuse this id from the moment this
         // write begins.
-        val marked = changes.withLock {
+        val marked = serializedChange {
             val q = queue()
             val index = q.indexOfFirst { it === entry && !it.dispatched }
-            if (index < 0 || !allowed()) return@withLock null
+            if (index < 0 || !allowed()) return@serializedChange null
             inFlight = entry.id
             val next =
                 q.toMutableList().also {
                     it[index] = entry.withDispatchedAt(clock.now().toEpochMilliseconds())
                 }
-            if (!store.save(next)) return@withLock false
+            if (!persist(next)) return@serializedChange false
             cache = next
-            cacheStamp = store.loadedStamp
             publish()
             true
         }
@@ -867,14 +1083,13 @@ public class OfflineQueue(
      * when persisted.
      */
     private suspend fun replace(id: String, update: (QueuedPrompt) -> QueuedPrompt): Boolean? =
-        changes.withLock {
+        serializedChange {
             val q = queue()
             val index = q.indexOfFirst { it.id == id }
-            if (index < 0) return@withLock null
+            if (index < 0) return@serializedChange null
             val next = q.toMutableList().also { it[index] = update(q[index]) }
-            if (!store.save(next)) return@withLock false
+            if (!persist(next)) return@serializedChange false
             cache = next
-            cacheStamp = store.loadedStamp
             publish()
             true
         }
@@ -883,13 +1098,12 @@ public class OfflineQueue(
      * A stale in-memory removal is never applied over a persisted entry: it would resend after a
      * restart.
      */
-    private suspend fun persistRemoval(id: String): Boolean = changes.withLock {
+    private suspend fun persistRemoval(id: String): Boolean = serializedChange {
         val q = queue()
         val kept = q.filter { it.id != id }
-        if (kept.size == q.size) return@withLock true
-        if (!store.save(kept)) return@withLock false
+        if (kept.size == q.size) return@serializedChange true
+        if (!persist(kept)) return@serializedChange false
         cache = kept
-        cacheStamp = store.loadedStamp
         publish()
         true
     }
@@ -916,5 +1130,19 @@ public class OfflineQueue(
 
     /** Dispatched, not confirmed: the draft never restores one of these (09 §10.8). */
     public fun unconfirmedTexts(ref: ConversationRef): Set<String> =
-        queue().filter { it.ref == ref && it.dispatched }.mapTo(LinkedHashSet()) { it.text }
+        visibleEntries()
+            .filter { it.ref == ref && it.dispatched }
+            .mapTo(LinkedHashSet()) { it.text }
+}
+
+/** Originals remain in memory only for the person's Undo, never diagnostic output. */
+public class QueueMoveResult(
+    public val source: ProfileId,
+    public val destination: ConversationRef,
+    public val originals: ImmutableList<QueuedPrompt>,
+    public val skipped: Int,
+    public val selectionsReset: Int,
+) {
+    override fun toString(): String =
+        "QueueMoveResult(moved=${originals.size}, skipped=$skipped, selectionsReset=$selectionsReset)"
 }

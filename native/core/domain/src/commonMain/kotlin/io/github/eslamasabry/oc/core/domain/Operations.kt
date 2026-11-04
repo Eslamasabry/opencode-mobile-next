@@ -244,6 +244,7 @@ public interface TerminalGateway {
         unavailable("terminal")
 
     /**
+     * A fresh process for one explicit command; never writes into a person's existing terminal.
      * App-owned one-shot readers keep the executable and arguments separate; no shell
      * interpolation.
      */

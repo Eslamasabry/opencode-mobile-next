@@ -1,4 +1,11 @@
 package io.github.eslamasabry.oc.ui.kitchat.transcript
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRequest
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
+import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -187,10 +194,7 @@ public fun KitPromptBubble(text: String, modifier: Modifier = Modifier) {
                 ),
             modifier =
                 Modifier.fillMaxWidth(0.85f)
-                    .background(
-                        MaterialTheme.colorScheme.primaryContainer,
-                        RoundedCornerShape(16.dp),
-                    )
+                    .kitSurface(kitSurfaceLook(SurfaceRequest(SurfaceRole.Content, SurfaceLevel.Surface2), MaterialTheme.colorScheme.primaryContainer), KitShapeId.Panel.toShape())
                     .padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
         )
     }

@@ -4,6 +4,8 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.data.lane.WriterLane
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -34,8 +36,6 @@ public class OfflineQueueStore(private val store: KeyValueStore, private val lan
     public var loadedStamp: PrefValue? = null
         private set
 
-    public fun stamp(): PrefValue? = store.get(KEY)
-
     public fun load(): QueueRead {
         val value = store.get(KEY)
         loadedStamp = value
@@ -51,6 +51,70 @@ public class OfflineQueueStore(private val store: KeyValueStore, private val lan
 
     public val readable: Boolean
         get() = load() is QueueRead.Readable
+
+    /**
+     * A private comparison value (the stored blob as it is now), never logged. Every connection
+     * queue observes external acknowledged edits.
+     */
+    public fun version(): PrefValue? = store.get(KEY)
+
+    public fun profilesVersion(): PrefValue? = store.get("oc.profiles")
+
+    public val updates: Flow<Set<String>> = store.changes.filter { KEY in it }
+
+    public fun encodedVersion(entries: List<QueuedPrompt>): PrefValue? =
+        if (entries.isEmpty()) null else PrefValue.Str(QueuedPromptCodec.encodeQueue(entries))
+
+    /**
+     * A stale connection cache may not reintroduce entries removed by Settings or another
+     * connection.
+     */
+    public suspend fun saveIfUnchanged(
+        entries: List<QueuedPrompt>,
+        expected: PrefValue?,
+        expectedProfiles: PrefValue?,
+    ): Boolean {
+        if (!readable) return false
+        val next = encodedVersion(entries)
+        val written =
+            store
+                .compareAndCommit(lane, mapOf(KEY to expected, "oc.profiles" to expectedProfiles)) {
+                    if (next == null) remove(KEY) else putString(KEY, (next as PrefValue.Str).value)
+                }
+                .let { it is Outcome.Ok && it.value }
+        if (written) loadedStamp = next
+        return written
+    }
+
+    /**
+     * Delete only unsent work; dispatched and journal-bearing entries remain reviewable. Unknown
+     * storage refuses.
+     */
+    public suspend fun discardUnsent(
+        expectedJournals: Map<String, PrefValue?>,
+        protectedIds: Set<String>,
+    ): Outcome<Int> = order.withLock {
+        val before = version()
+        val read =
+            load() as? QueueRead.Readable
+                ?: return@withLock Outcome.Failed(
+                    io.github.eslamasabry.oc.core.common.Failure.StorageRefused()
+                )
+        val kept = read.entries.filter { it.dispatched || it.id in protectedIds }
+        val removed = read.entries.size - kept.size
+        val next = encodedVersion(kept)
+        when (
+            val result =
+                store.compareAndCommit(lane, expectedJournals + (KEY to before)) {
+                    if (next == null) remove(KEY) else putString(KEY, (next as PrefValue.Str).value)
+                }
+        ) {
+            is Outcome.Failed -> result
+            is Outcome.Ok ->
+                if (result.value) Outcome.Ok(removed).also { loadedStamp = next }
+                else Outcome.Failed(io.github.eslamasabry.oc.core.common.Failure.StorageRefused())
+        }
+    }
 
     /**
      * Characters the stored blob holds, for the settings readout (Dart `storedBytes`); 0 when

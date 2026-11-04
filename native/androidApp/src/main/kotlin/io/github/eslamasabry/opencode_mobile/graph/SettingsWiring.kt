@@ -94,6 +94,7 @@ import io.github.eslamasabry.oc.ui.words.res.shareAppMessage
 import java.io.File
 import java.util.Locale
 import kotlin.time.Clock
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -210,6 +211,11 @@ class AndroidSettingsHost(
     updateSettings:
         AppUpdateSettings, // P12-FIX-PLATFORM-GIT: Settings › Updates on the real updater
     private val voiceSettings: AndroidVoiceSettings,
+    private val journey: SettingsJourney,
+    private val monitoring: NativeProfileMonitoring,
+    private val notificationSettings: AndroidNotificationSettings,
+    private val privacyData: SettingsPrivacy,
+    private val phraseSettings: AndroidPhraseSettings,
     private val activities: ResumedActivities,
     private val gitHubReports: GitHubProblemReporter, // BUILD-DIAGNOSTICS-ATTENTION
     private val migrationMemory: NativeSettingsMemory,
@@ -219,7 +225,7 @@ class AndroidSettingsHost(
     /** Rows whose page or engine is not in this build are absent (02 §3.7), never dead. */
     private val shipped =
         platform.copy(
-            builtinLinux = false,
+            builtinLinux = platform.builtinLinux,
             voice = voiceSettings.offered,
             readAloud = false,
             backgroundService = true,
@@ -244,30 +250,58 @@ class AndroidSettingsHost(
                     ?.capabilities ?: kotlinx.coroutines.flow.flowOf(null)
             }
 
+    /** The selected server's capabilities and the phrase store's facts, as one flow (combine takes five). */
+    private val serverAndPhrases =
+        combine(selectedCapabilities, phraseSettings.facts) { capabilities, phraseFacts ->
+            capabilities to phraseFacts
+        }
+
+    private fun onPhone(id: io.github.eslamasabry.oc.core.common.ids.ProfileId): Boolean =
+        try {
+            val owner = (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value
+            owner == id.raw &&
+                stores.profiles.profile(id)?.profile?.baseUrl?.trimEnd('/') ==
+                    io.github.eslamasabry.oc.engine.lifecycle.PhoneOwnServers.IN_APP_URL
+        } catch (_: io.github.eslamasabry.oc.core.data.kv.GateNotOpen) {
+            false
+        }
+
     override val facts: StateFlow<SettingsFacts> =
         combine(
                 connections.servers,
                 stores.profiles.activeId,
                 motion.animatorScale,
                 configurationInspection.available,
-                selectedCapabilities,
-            ) { servers, active, scale, configAvailable, capabilities ->
+                serverAndPhrases,
+            ) { servers, active, scale, configAvailable, (capabilities, phraseFacts) ->
                 val live =
                     servers.firstOrNull { it.id == active && it.connected }
                         ?: servers.firstOrNull { it.connected }
                 SettingsFacts(
                     platform = shipped,
-                    server = live?.let { ServerLine(it.name, onPhone = false) },
+                    server = live?.let { ServerLine(it.name, onPhone = onPhone(it.id)) },
                     serverCapabilities = capabilities,
                     usageStatistics = live != null,
+                    savedServers =
+                        servers
+                            .map {
+                                io.github.eslamasabry.oc.feature.settings.presentation
+                                    .SettingsSavedServer(
+                                        it.id,
+                                        it.name,
+                                        it.connected,
+                                        onPhone(it.id),
+                                    )
+                            }
+                            .toImmutableList(),
                     dynamicColour = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
                     systemMotionOff = scale == 0f,
                     diagnostics = true,
                     configurationInspection = configAvailable,
                     opens = OPENS,
                     surfaceStyles = true,
-                    phraseChips = true,
-                    transcriptDisplay = false,
+                    phraseChips = phraseFacts?.available != false,
+                    transcriptDisplay = true,
                 )
             }
             .stateIn(
@@ -280,14 +314,59 @@ class AndroidSettingsHost(
                     opens = OPENS,
                     surfaceStyles = true,
                     phraseChips = true,
-                    transcriptDisplay = false,
+                    transcriptDisplay = true,
                 ),
             )
 
     override val phrases: io.github.eslamasabry.oc.feature.settings.presentation.PhraseSettings =
-        AndroidPhraseSettings(stores, scope)
+        phraseSettings
     override val appearanceGuide: AppearanceGuideMemory
         get() = migrationMemory.appearanceGuide
+
+    override val serverPage =
+        io.github.eslamasabry.oc.feature.settings.presentation.SettingsServerDoor { profile, section
+            ->
+            if (stores.profiles.profile(profile) != null)
+                when (section) {
+                    SettingsOutside.Permissions -> nav.open(SettingsRoute.Permissions(profile))
+                    SettingsOutside.Providers ->
+                        nav.open(
+                            io.github.eslamasabry.oc.ui.routes.ServerIntegrationRoute(
+                                profile,
+                                io.github.eslamasabry.oc.ui.routes.ServerIntegrationPage.Providers,
+                            )
+                        )
+                    SettingsOutside.Tools ->
+                        nav.open(
+                            io.github.eslamasabry.oc.ui.routes.ServerIntegrationRoute(
+                                profile,
+                                io.github.eslamasabry.oc.ui.routes.ServerIntegrationPage.Tools,
+                            )
+                        )
+                    else ->
+                        nav.open(
+                            io.github.eslamasabry.oc.ui.routes.ServerSettingsRoute(
+                                profile,
+                                when (section) {
+                                    SettingsOutside.DefaultShell ->
+                                        io.github.eslamasabry.oc.ui.routes.ServerSettingsPage.Shell
+                                    SettingsOutside.ModelAndMode ->
+                                        io.github.eslamasabry.oc.ui.routes.ServerSettingsPage.Model
+                                    else ->
+                                        io.github.eslamasabry.oc.ui.routes.ServerSettingsPage.Home
+                                },
+                            )
+                        )
+                }
+        }
+
+    override val localData:
+        io.github.eslamasabry.oc.feature.settings.presentation.LocalDataSettings =
+        privacyData
+
+    override val appearanceHelp:
+        io.github.eslamasabry.oc.feature.settings.presentation.AppearanceHelp =
+        journey
 
     override val choices: PersonalChoices =
         PreferencesChoices(prefs::preferences, prefs.value, scope)
@@ -323,6 +402,23 @@ class AndroidSettingsHost(
                 }
             }
             SettingsOutside.Agents -> nav.open(AgentsRoute.Home)
+            SettingsOutside.ThisPhone ->
+                nav.open(io.github.eslamasabry.oc.ui.routes.PhoneRoute.ThisPhone)
+            SettingsOutside.UsageAlerts ->
+                nav.open(io.github.eslamasabry.oc.ui.routes.PlansAlertsRoute)
+            SettingsOutside.Updates ->
+                nav.open(io.github.eslamasabry.oc.ui.routes.UpdatesRoute.Home)
+            SettingsOutside.Guide ->
+                nav.open(io.github.eslamasabry.oc.ui.routes.OnboardingRoute.Welcome)
+            SettingsOutside.DefaultShell ->
+                stores.profiles.activeId.value?.let { id ->
+                    nav.open(
+                        io.github.eslamasabry.oc.ui.routes.ServerSettingsRoute(
+                            id,
+                            io.github.eslamasabry.oc.ui.routes.ServerSettingsPage.Shell,
+                        )
+                    )
+                } ?: nav.open(ServersRoute.Home)
             SettingsOutside.StarOnGitHub -> application.view(REPO)
             SettingsOutside.WhatsNew -> nav.open(SettingsRoute.WhatsNew)
             SettingsOutside.ReleaseNotes -> application.view("$REPO/releases")
@@ -339,6 +435,16 @@ class AndroidSettingsHost(
                 nav.open(BackgroundRoute.Home) // BUILD-ANDROID-BG-PLATFORM
             SettingsOutside.VoiceNotices ->
                 application.view("$REPO/blob/master/THIRD_PARTY_NOTICES.md")
+            SettingsOutside.Permissions -> {
+                val profile =
+                    stores.profiles.activeId.value
+                        ?: stores.profiles.profiles.value.singleOrNull()?.id
+                if (profile != null) nav.open(SettingsRoute.Permissions(profile))
+                else nav.open(ServersRoute.Home)
+            }
+            SettingsOutside.ReadState -> nav.open(ServersRoute.Home)
+            SettingsOutside.KeptPrompts ->
+                nav.open(io.github.eslamasabry.oc.ui.routes.KeptPromptsRoute)
             SettingsOutside.KeptDiagnostics -> nav.open(DiagnosticsRoute.Kept)
             SettingsOutside.ReportOnGitHub ->
                 gitHubReports.send(
@@ -352,8 +458,7 @@ class AndroidSettingsHost(
 
     override val analytics: AnalyticsChoices = EngineAnalyticsChoices(analyticsEngine)
     override val voice: VoiceSettings? = voiceSettings.takeIf { it.offered }
-    override val notifications: NotificationSettings =
-        AndroidNotificationSettings(application, stores, prefs, scope)
+    override val notifications: NotificationSettings = notificationSettings
     override val updates: UpdateSettings? = updateSettings
     override val about: AboutFacts =
         AboutFacts(
@@ -497,6 +602,7 @@ class AndroidSettingsHost(
                 SettingsOutside.Servers,
                 SettingsOutside.Usage,
                 SettingsOutside.Agents,
+                SettingsOutside.Permissions,
                 SettingsOutside.StarOnGitHub,
                 SettingsOutside.WhatsNew,
                 SettingsOutside.ReleaseNotes,
@@ -507,9 +613,13 @@ class AndroidSettingsHost(
                 SettingsOutside.VoiceNotices,
                 SettingsOutside.ReportOnGitHub,
                 SettingsOutside.KeptDiagnostics,
+                SettingsOutside.KeptPrompts,
                 SettingsOutside.KeepRunning,
-                SettingsOutside.Tools,
-                SettingsOutside.Providers,
+                SettingsOutside.ThisPhone,
+                SettingsOutside.UsageAlerts,
+                SettingsOutside.Updates,
+                SettingsOutside.Guide,
+                SettingsOutside.DefaultShell,
                 SettingsOutside.Tips,
             )
     }
@@ -526,11 +636,18 @@ class AndroidNotificationSettings(
     private val stores: PreviewStores,
     private val prefs: AppPreferences,
     scope: CoroutineScope,
+    private val monitoring: NativeProfileMonitoring,
 ) : NotificationSettings {
     private val manager = application.getSystemService(NotificationManager::class.java)
     private val words = NotifyWords(application) { prefs.localeTag.value }
     private val mutable = MutableStateFlow(read())
-    override val facts: StateFlow<NotificationFacts> = mutable.asStateFlow()
+    override val facts: StateFlow<NotificationFacts> =
+        combine(mutable, monitoring.profileSettings) { n, profiles -> n.copy(profiles = profiles) }
+            .stateIn(
+                scope,
+                SharingStarted.Eagerly,
+                mutable.value.copy(profiles = monitoring.profileSettings.value),
+            )
 
     init {
         scope.launch {
@@ -553,6 +670,9 @@ class AndroidNotificationSettings(
         }
         return NotificationFacts(
             blocked = !manager.areNotificationsEnabled(),
+            usageAlertsShown = true,
+            checkInMinutes =
+                minute("oc.notify.checkInAfterMinutes")?.takeIf { it in 1..1440 }?.toInt(),
             finishedWork = flag(NotificationKeys.FINISHED, true),
             questions = flag(NotificationKeys.REQUESTS, true),
             quietHours =
@@ -572,9 +692,26 @@ class AndroidNotificationSettings(
     }
 
     override suspend fun set(change: NotificationChange): Outcome<Unit> {
+        if (change is NotificationChange.ProfileWatch)
+            return monitoring.setEnabled(change.profile, change.on)
+        if (change is NotificationChange.ProfileNotifications)
+            return monitoring.setNotifications(change.profile, change.on)
+        if (
+            change is NotificationChange.CheckIn &&
+                change.minutes != null &&
+                change.minutes !in 1..1440
+        )
+            return Failure.StorageRefused().failed()
         val result =
             stores.prefs.commit(stores.lanes.app) {
                 when (change) {
+                    is NotificationChange.ProfileWatch,
+                    is NotificationChange.ProfileNotifications -> Unit
+                    is NotificationChange.CheckIn -> {
+                        val minutes = change.minutes
+                        if (minutes == null) remove("oc.notify.checkInAfterMinutes")
+                        else putLong("oc.notify.checkInAfterMinutes", minutes.toLong())
+                    }
                     is NotificationChange.FinishedWork ->
                         putBool(NotificationKeys.FINISHED, change.on)
                     is NotificationChange.Questions -> putBool(NotificationKeys.REQUESTS, change.on)
@@ -592,6 +729,8 @@ class AndroidNotificationSettings(
                 }
             }
         mutable.value = read()
+        if (result is Outcome.Ok)
+            monitoring.sharedRulesChanged(change is NotificationChange.CheckIn)
         return result
     }
 

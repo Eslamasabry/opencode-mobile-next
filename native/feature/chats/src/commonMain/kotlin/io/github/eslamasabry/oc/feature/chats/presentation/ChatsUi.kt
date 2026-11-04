@@ -142,6 +142,9 @@ public data class ChatsUi(
 public interface ChatsActions {
     public fun answerPermission(row: ConversationRowUi, allow: Boolean) {}
 
+    /** The monitor Inbox page (needs-you items across watched servers). */
+    public fun openInbox() {}
+
     public fun openConversation(ref: ConversationRef)
 
     public fun newConversation()
@@ -171,12 +174,12 @@ public interface ChatsActions {
     /** Search conversations across the server (unit P12-SEARCH-USAGE). */
     public fun openSearch() {}
 
+    public fun openAttention() {}
+
     /**
      * The Projects page (P12): New project, Open a folder, Opened before, then the server's
      * projects.
      */
-    public fun openAttention() {}
-
     public fun openProjects()
 
     public fun showProjectChoices() {}

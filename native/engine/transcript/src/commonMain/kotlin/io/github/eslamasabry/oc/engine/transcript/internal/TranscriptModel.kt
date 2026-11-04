@@ -522,7 +522,7 @@ internal class TranscriptModel(
                 when (p.type) {
                     PartType.Text ->
                         if (m.info.role == Role.User) {
-                            rows += promptRowOf(pe, m.info.id, turnId)
+                            rows += promptRowOf(pe, m.info.id, turnId, m.info.createdMs)
                         } else {
                             addBlocks(rows, turnId, pe, live = !p.ended && !finished)
                         }
@@ -531,7 +531,13 @@ internal class TranscriptModel(
                         val first = text.lineSequence().firstOrNull { it.isNotBlank() } ?: continue
                         rows +=
                             reuse(
-                                ThoughtRow("thought:${p.messageId}/${p.id}", turnId, first.trim())
+                                ThoughtRow(
+                                    "thought:${p.messageId}/${p.id}",
+                                    turnId,
+                                    first.trim(),
+                                    text = text.toString(),
+                                    live = !p.ended && !finished,
+                                )
                             )
                     }
                     PartType.Tool -> {
@@ -577,19 +583,36 @@ internal class TranscriptModel(
                         failed,
                         reason,
                         stopped = stopped && !failed,
+                        createdMs =
+                            members.lastOrNull { it.info.role == Role.Assistant }?.info?.createdMs,
                     )
                 )
         }
         return TurnEntry(turnId, members, LongArray(members.size) { members[it].version }, rows)
     }
 
-    private fun promptRowOf(pe: PartEntry, messageId: String, turnId: String): PromptRow {
+    private fun promptRowOf(
+        pe: PartEntry,
+        messageId: String,
+        turnId: String,
+        createdMs: Long?,
+    ): PromptRow {
         val cached = pe.promptRow
-        if (cached != null && pe.promptVersion == pe.version && cached.turnId == turnId)
+        if (
+            cached != null &&
+                pe.promptVersion == pe.version &&
+                cached.turnId == turnId &&
+                cached.createdMs == createdMs
+        )
             return cached
         val row =
             reuse(
-                PromptRow("prompt:$messageId", turnId, pe.blocks?.text?.toString() ?: pe.part.text)
+                PromptRow(
+                    "prompt:$messageId",
+                    turnId,
+                    pe.blocks?.text?.toString() ?: pe.part.text,
+                    createdMs,
+                )
             )
         pe.promptRow = row
         pe.promptVersion = pe.version

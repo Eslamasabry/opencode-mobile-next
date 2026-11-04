@@ -26,6 +26,8 @@ public data class SettingsUi(
     val about: AboutFacts = AboutFacts(),
     val whatsNew: WhatsNewUi? = null,
     val privacy: PrivacyUi? = null,
+    val localData: LocalDataUi? = null,
+    val phrases: PhraseSettingsFacts? = null,
     /** The language in use (acknowledged), for the Language page and its row. */
     val language: AppLanguage = AppLanguage.System,
     val capabilities: ServerCapabilitiesUi? = null,
@@ -38,6 +40,8 @@ public data class SettingsUi(
     val crash: CrashUi? = null,
     /** One plain line about the last save that did not stick, if any. */
     val note: SettingsNote? = null,
+    /** The What's new step on screen (the same index as [whatsNew]). */
+    val newsStep: Int = 0,
 ) {
     val page: SettingsPage
         get() = stack.last()
@@ -51,6 +55,7 @@ public data class HubUi(
     val results: ImmutableList<SettingsRowId> = persistentListOf(),
     /** Every row that exists now: the screen builds the search entries from these. */
     val searchable: ImmutableList<SettingsRowId> = persistentListOf(),
+    val savedServers: ImmutableList<SettingsSavedServer> = persistentListOf(),
 )
 
 public data class GroupUi(val id: SettingsGroupId, val rows: ImmutableList<SettingsRowUi>)
@@ -90,6 +95,13 @@ public data class AppearanceUi(
     val guide: AppearanceGuideRecord? = null,
     val question: AppearanceQuestion? = null,
     val questions: List<AppearanceQuestion> = emptyList(),
+    /** `oc.glass`: how much frost the floating surfaces show. */
+    val frost: io.github.eslamasabry.oc.ui.design.effects.FrostStrength =
+        io.github.eslamasabry.oc.ui.design.effects.FrostStrength.Balanced,
+    /** The activity glow is on; [glowStyle] is its look. */
+    val activityGlow: Boolean = true,
+    val glowStyle: io.github.eslamasabry.oc.engine.settings.prefs.GlowStyle =
+        io.github.eslamasabry.oc.engine.settings.prefs.GlowStyle.Classic,
 )
 
 public sealed interface SpeechModel {
@@ -140,18 +152,40 @@ public enum class BackgroundState {
     StoppedByAndroid,
 }
 
+public data class NotificationProfile(
+    val id: io.github.eslamasabry.oc.core.common.ids.ProfileId,
+    val name: String,
+    val enabled: Boolean,
+    val notifications: Boolean,
+    val supported: Boolean = true,
+)
+
 public data class NotificationFacts(
     /** Android does not let the app notify: the page leads with the fix. */
     val blocked: Boolean = false,
     val finishedWork: Boolean = true,
     val questions: Boolean = true,
     val usageAlertsShown: Boolean = false,
+    val profiles: ImmutableList<NotificationProfile> = persistentListOf(),
+    val checkInMinutes: Int? = null,
     val quietHours: QuietHours? = null,
     val wifiOnly: Boolean = false,
     val background: BackgroundState? = null,
 )
 
 public sealed interface NotificationChange {
+    public data class ProfileWatch(
+        val profile: io.github.eslamasabry.oc.core.common.ids.ProfileId,
+        val on: Boolean,
+    ) : NotificationChange
+
+    public data class ProfileNotifications(
+        val profile: io.github.eslamasabry.oc.core.common.ids.ProfileId,
+        val on: Boolean,
+    ) : NotificationChange
+
+    public data class CheckIn(val minutes: Int?) : NotificationChange
+
     public data class FinishedWork(val on: Boolean) : NotificationChange
 
     public data class Questions(val on: Boolean) : NotificationChange

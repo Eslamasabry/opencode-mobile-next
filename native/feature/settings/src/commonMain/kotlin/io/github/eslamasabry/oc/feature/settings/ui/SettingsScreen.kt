@@ -50,6 +50,8 @@ import io.github.eslamasabry.oc.ui.words.res.settingsHubPrivacyRow
 import io.github.eslamasabry.oc.ui.words.res.settingsHubVoice
 import io.github.eslamasabry.oc.ui.words.res.settingsV3Language
 import io.github.eslamasabry.oc.ui.words.res.settingsV3Notifications
+import io.github.eslamasabry.oc.ui.words.res.shareSessionViewsTitle
+import io.github.eslamasabry.oc.ui.words.res.tipsTitle
 import io.github.eslamasabry.oc.ui.words.res.whatsNewTitle
 import org.jetbrains.compose.resources.stringResource
 
@@ -65,6 +67,8 @@ public fun SettingsScreen(
     modifier: Modifier = Modifier,
     onExit: (() -> Unit)? = null,
     monitoring: (@Composable ColumnScope.() -> Unit)? = null,
+    showAppearanceArrival: Boolean = false,
+    dismissAppearanceArrival: () -> Unit = {},
 ) {
     val back: () -> Unit = { actions.onBack() }
     // Back from Android's notification settings: the blocked notice must say what is true now
@@ -76,6 +80,45 @@ public fun SettingsScreen(
     when (val page = state.page) {
         SettingsPage.Hub -> HubPage(state, actions, modifier, onExit)
         is SettingsPage.Group -> GroupPage(state, actions, page, modifier)
+        is SettingsPage.ByServer ->
+            SettingsFrame(
+                if (
+                    page.section ==
+                        io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
+                            .ReadState
+                )
+                    stringResource(Res.string.shareSessionViewsTitle)
+                else
+                    rowWords(
+                        when (page.section) {
+                            io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
+                                .Permissions ->
+                                io.github.eslamasabry.oc.feature.settings.presentation.SettingsRowId
+                                    .Permissions
+                            io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
+                                .ModelAndMode ->
+                                io.github.eslamasabry.oc.feature.settings.presentation.SettingsRowId
+                                    .ModelAndMode
+                            io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
+                                .Providers ->
+                                io.github.eslamasabry.oc.feature.settings.presentation.SettingsRowId
+                                    .Providers
+                            io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
+                                .Tools ->
+                                io.github.eslamasabry.oc.feature.settings.presentation.SettingsRowId
+                                    .Tools
+                            else ->
+                                io.github.eslamasabry.oc.feature.settings.presentation.SettingsRowId
+                                    .DefaultShell
+                        }
+                    ),
+                back,
+                state,
+                actions,
+                modifier,
+            ) {
+                SavedServersBody(state, actions, page.section)
+            }
         SettingsPage.Appearance ->
             SettingsFrame(
                 stringResource(Res.string.e7AppearanceTitle),
@@ -84,7 +127,12 @@ public fun SettingsScreen(
                 actions,
                 modifier,
             ) {
-                AppearanceBody(state.appearance, actions)
+                AppearanceBody(
+                    state.appearance,
+                    actions,
+                    showAppearanceArrival,
+                    dismissAppearanceArrival,
+                )
             }
         SettingsPage.Voice ->
             SettingsFrame(
@@ -153,6 +201,10 @@ public fun SettingsScreen(
             ) {
                 state.whatsNew?.let { WhatsNewBody(it, actions) }
             }
+        SettingsPage.Tips ->
+            SettingsFrame(stringResource(Res.string.tipsTitle), back, state, actions, modifier) {
+                TipsBody(actions)
+            }
         SettingsPage.About ->
             SettingsFrame(stringResource(Res.string.aboutTitle), back, state, actions, modifier) {
                 AboutBody(state.about, actions)
@@ -179,6 +231,7 @@ public fun SettingsScreen(
                 modifier,
             ) {
                 PrivacyBody(state.privacy, actions)
+                state.localData?.let { LocalDataBody(it, actions) }
             }
         SettingsPage.WhatWeCollect ->
             SettingsFrame(PendingWords.WHAT_WE_COLLECT, back, state, actions, modifier) {

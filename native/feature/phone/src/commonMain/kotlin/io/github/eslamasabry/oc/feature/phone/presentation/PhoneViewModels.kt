@@ -35,6 +35,8 @@ public class ThisPhoneViewModel(
     exits: PhoneExitNotices,
     processes: PhoneProcessSource,
     private val migration: PhoneTermuxMigration,
+    /** The details readings (memory, history import, installed tools, log); not [details]. */
+    phoneDetails: PhoneDetailsSource,
 ) : ViewModel(), ThisPhoneActions, ThisPhoneMigrationActions {
     private val model =
         ThisPhoneModel(
@@ -48,6 +50,7 @@ public class ThisPhoneViewModel(
             phoneStorage = phoneStorage,
             exits = exits,
             processes = processes,
+            phoneDetails = phoneDetails,
         )
     public val state: StateFlow<ThisPhoneUi> =
         combine(model.state, migration.migration) { ui, offers ->
@@ -92,6 +95,14 @@ public class ThisPhoneViewModel(
     override fun openLinux(): Unit = model.openLinux()
 
     override fun openTerminal(): Unit = model.openTerminal()
+
+    override fun connect(): Unit = model.connect()
+
+    override fun refreshDetails(): Unit = model.refreshDetails()
+
+    override fun showDetails(expanded: Boolean): Unit = model.showDetails(expanded)
+
+    override fun showInstalled(expanded: Boolean): Unit = model.showInstalled(expanded)
 
     override fun back(): Unit = model.back()
 

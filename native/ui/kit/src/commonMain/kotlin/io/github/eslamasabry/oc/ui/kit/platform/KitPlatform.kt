@@ -87,6 +87,9 @@ public interface KitPlatform {
      */
     @Composable public fun SystemBars(darkContent: Boolean, ground: Color) {}
 
+    /** The platform's short local date/time; omit the date for a message from the same local day. */
+    public fun messageTime(createdMs: Long, nowMs: Long): String? = null
+
     /**
      * The density frame text renders with: [base]'s font scale capped at [cap], on the platform's
      * own curve.

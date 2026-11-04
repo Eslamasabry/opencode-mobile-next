@@ -79,6 +79,8 @@ public data class GatewaySpec(
      * MAJOR 7). Default: always allowed.
      */
     val reconnectAllowed: StateFlow<Boolean> = AlwaysAllowed,
+    /** Bounded read clients (the profile monitor) need no event subscription. */
+    val observeEvents: Boolean = true,
 )
 
 private val AlwaysAllowed: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()

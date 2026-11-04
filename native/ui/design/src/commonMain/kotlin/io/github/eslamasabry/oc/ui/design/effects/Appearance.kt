@@ -24,6 +24,16 @@ public enum class AppearanceMode {
 public typealias KitSurfaceStyle = Style
 
 /**
+ * The unit's effects-resolver names for the same identities: one enum each serves both callers
+ * ([Style] stores the style, [io.github.eslamasabry.oc.ui.design.style.Corners] the corner knob).
+ */
+public typealias SurfaceStyle = Style
+
+public typealias Corners = io.github.eslamasabry.oc.ui.design.style.Corners
+
+public enum class GlowStyle { Classic, SoftRing }
+
+/**
  * Everything `KitTheme` needs (plan 06 §5.2), from acknowledged preferences. Pack, Accent, Style, Fine-tune and the
  * activity glow live here; deferred live backgrounds retain their stored choices outside the render contract.
  */
@@ -51,6 +61,14 @@ public data class KitAppearance(
 ) {
     public val saver: Boolean
         get() = mode == AppearanceMode.Saver
+
+    /** The corner fine-tune; null = the style's own (effects resolver name for [fineTune]). */
+    public val corners: Corners?
+        get() = fineTune.corners
+
+    /** The glow look (effects resolver name for [softGlow]). */
+    public val glowStyle: GlowStyle
+        get() = if (softGlow) GlowStyle.SoftRing else GlowStyle.Classic
 
     public companion object {
         public val Default: KitAppearance = KitAppearance()

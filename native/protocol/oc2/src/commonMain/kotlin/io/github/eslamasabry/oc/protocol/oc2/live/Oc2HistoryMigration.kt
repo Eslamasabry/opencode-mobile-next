@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.protocol.oc2.live
 
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ok
+import io.github.eslamasabry.oc.core.domain.ServerGateway
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -122,3 +123,12 @@ internal suspend fun Oc2Gateway.historyMigrationStatusRead(): Outcome<HistoryMig
         is Outcome.Failed -> null.ok()
         is Outcome.Ok -> HistoryMigrationStatus.fromJson(reply.value).ok()
     }
+
+/**
+ * Reads the optional history status through a neutral gateway without exposing the internal OC2
+ * implementation.
+ */
+public suspend fun readHistoryMigrationStatus(
+    gateway: ServerGateway
+): Outcome<HistoryMigrationStatus?> =
+    if (gateway is Oc2Gateway) gateway.historyMigrationStatus() else null.ok()

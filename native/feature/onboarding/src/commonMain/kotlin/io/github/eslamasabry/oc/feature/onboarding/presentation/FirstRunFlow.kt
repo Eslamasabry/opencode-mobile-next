@@ -5,6 +5,7 @@ import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.AppRoute
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.OnboardingRoute
+import io.github.eslamasabry.oc.ui.routes.PhoneSetupRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 
 /**
@@ -51,7 +52,7 @@ public class FirstRunFlow(private val firstRun: FirstRun, private val nav: AppNa
     public suspend fun onConnected(top: AppRoute?) {
         if (top == OnboardingRoute.ManagedMove) return
         if (!firstRun.landingPending()) return
-        if (top !is OnboardingRoute && top !is ServersRoute) return
+        if (top !is OnboardingRoute && top !is ServersRoute && top !is PhoneSetupRoute) return
         firstRun.markLanded()
         nav.land()
     }

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="m40UsageAlerts">Alerts</string>
+    <string name="m40UsageWidget">Home-screen widget</string>
+    <string name="m40UsageReadFrom">Read usage</string>
+    <string name="m40UsageAdd">Add a subscription</string>
+    <string name="m40UsageSaveFailed">That change could not be saved. Try again.</string>
+    <string name="m40UsageAlertsWatch">Watch my plans</string>
+    <string name="m40UsageAlertsEvery">Watch every subscription whose limits can be read.</string>
+    <string name="m40UsageTellMe">Tell me when</string>
+    <string name="m40UsageReset">A used-up plan is available again</string>
+    <string name="m40UsageDifferent">Different for these plans</string>
+    <string name="m40UsageWhen">When to notify me</string>
+    <string name="m40UsageQuiet">Quiet hours</string>
+    <string name="m40UsageQuietShared">The same quiet hours as other notifications.</string>
+    <string name="m40UsageQuietStart">Start</string>
+    <string name="m40UsageQuietEnd">End</string>
+    <string name="m40UsageQuietAllDay">These times silence alerts all day.</string>
+    <string name="m40UsageWifi">Wi-Fi only</string>
+    <string name="m40UsageNothingToWatch">There are no readable plans to watch yet.</string>
+    <string name="m40UsageDownTo">When a plan is down to</string>
+    <string name="m40UsageSameAsOthers">Same as the others: %1$d%% left</string>
+    <string name="m40UsageWidgetPlans">Plans on the widget</string>
+    <string name="m40UsageWidgetSetup">Show plans that need setup</string>
+    <string name="m40UsageWidgetWindows">Windows to show</string>
+    <string name="m40UsageBoth">5 hours and this week</string>
+    <string name="m40UsageReaderGone">This saved connection is no longer available.</string>
+    <string name="m40UsageReadPhoneBody">Set up a reader in In-app Ubuntu to read your signed-in plan limits. Provider keys stay on the host.</string>
+    <string name="m40UsageReadComputerBody">Allow a short, read-only check through this server when usage is refreshed. It looks for signed-in plan limits on this computer. You can turn it off here.</string>
+    <string name="m40UsageWhatRuns">What runs on the computer</string>
+    <string name="m40UsageReadCommand">node --input-type=module -e &lt;check&gt;</string>
+    <string name="m40UsageReadPrivacy">The check reads provider sign-ins locally and returns only plan limits and an opaque account reference. Keys and tokens never return to the app.</string>
+    <string name="m40UsageCopying">Copying the reader</string>
+    <string name="m40UsageCheckingSignIns">Checking sign-ins</string>
+    <string name="m40UsageStarting">Starting the reader</string>
+    <string name="m40UsageReading">Reading plan limits</string>
+    <string name="m40UsageChecking">Checking the connection</string>
+    <string name="m40UsageNeedsNode">This computer needs Node 20 or later to read plan limits.</string>
+    <string name="m40UsageLinuxNotReady">Set up In-app Ubuntu first, then try again.</string>
+    <string name="m40UsageServerTooOld">Update this server to read usage through a command terminal.</string>
+    <string name="m40UsagePrepareFailed">The reader could not be prepared. Try again.</string>
+    <string name="m40UsageStartFailed">The reader did not start. Try again.</string>
+    <string name="m40UsageRemoveFailed">The reader could not be removed. Try again.</string>
+    <string name="m40UsageUnreachable">This computer could not be reached. Check the connection and try again.</string>
+    <string name="m40UsageNoAnswer">The check did not return a readable answer. Try again.</string>
+    <string name="m40UsageFoundNone">The check found no signed-in plans whose limits it can read.</string>
+    <string name="m40UsageFound">Found: %1$s</string>
+    <string name="m40UsageReadNow">Read now</string>
+    <string name="m40UsageTurnOn">Turn on reading</string>
+    <string name="m40UsageTurnOff">Turn off reading</string>
+    <string name="m40UsageThreshold">Alert level for this plan</string>
+    <string name="m40UsageResetHelp">Tell me when this plan is available again.</string>
+    <string name="m40UsageReadOff">Turn off reading from %1$s</string>
+    <string name="m40UsageChooseSignIn">Choose where to sign in</string>
+</resources>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keptPromptsTitle">الطلبات المحفوظة</string>
+    <string name="keptPromptsBody">طلبات حُفظت عند إزالة خادم. أعد أحدها إلى مسودة محادثة لمراجعته قبل الإرسال.</string>
+    <string name="keptPromptsEmpty">لا توجد طلبات محفوظة</string>
+    <string name="keptPromptsChoose">اختر محادثة</string>
+    <string name="keptPromptsChooseBody">اختر محادثة على خادم متصل. ستُملأ مسودتها فقط.</string>
+    <string name="keptPromptsNoTargets">لا توجد محادثات متصلة</string>
+    <string name="keptPromptsNoTargetsBody">اتصل بخادم محفوظ أو افتح محادثة، ثم حاول مرة أخرى.</string>
+    <string name="keptPromptsConnect">الاتصال بخادم</string>
+    <string name="keptPromptsUncertain">قد يكون هذا الطلب قد أُرسل بالفعل. راجع محادثته الأصلية قبل إرساله مرة أخرى.</string>
+    <string name="keptPromptsFailed">تعذّرت قراءة الطلبات المحفوظة أو تغييرها. حاول مجددًا.</string>
+    <string name="keptPromptsKeptFrom">محفوظ من خادم أُزيل</string>
+    <string name="keptPromptsRestoreFailed">تغيّر الطلب المحفوظ أو المحادثة. أعد فتح الطلبات المحفوظة في المحادثة وحاول مرة أخرى.</string>
+    <string name="keptConversation">محادثة</string>
+</resources>

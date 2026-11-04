@@ -76,6 +76,9 @@ public object PreferenceMapping {
             timestamps = p.timestampsVisible,
             textSize = textSize(p.textSize),
             language = language(p.locale),
+            frost = KitFrost.fromStorage(p.frost.wire),
+            activityGlow = p.effects.activityGlow,
+            glowStyle = p.effects.glowStyle,
         )
 
     /**
@@ -84,6 +87,30 @@ public object PreferenceMapping {
      */
     public fun change(change: PersonalChange, current: DevicePreferences): PreferenceChange =
         when (change) {
+            is PersonalChange.Frost ->
+                PreferenceChange.Frost(
+                    io.github.eslamasabry.oc.engine.settings.prefs.FrostStrength.entries.first {
+                        it.wire == change.strength.storageName
+                    }
+                )
+            is PersonalChange.Shape ->
+                PreferenceChange.SetEffects(
+                    current.effects.copy(
+                        fineTune =
+                            io.github.eslamasabry.oc.engine.settings.prefs.FineTune(
+                                change.corners?.let { c -> StoredCorners.entries.first { it.name == c.name } },
+                                change.density?.let { d -> StoredDensity.entries.first { it.name == d.name } },
+                            )
+                    )
+                )
+            is PersonalChange.Glow ->
+                PreferenceChange.SetEffects(
+                    current.effects.copy(
+                        activityGlow = change.style != null,
+                        glowStyle = change.style ?: current.effects.glowStyle,
+                    )
+                )
+            PersonalChange.ResetAppearance -> PreferenceChange.ResetAppearance
             is PersonalChange.Mode ->
                 PreferenceChange.Appearance(
                     AppearanceChoice.entries.first { it.name == change.mode.name }

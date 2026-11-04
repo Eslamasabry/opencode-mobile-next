@@ -4,6 +4,7 @@ import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -35,6 +36,8 @@ open class WidgetOverlayActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setResult(RESULT_CANCELED)
+        // Typed and dictated widget text never appears in screenshots or the recents preview.
+        window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         val app = applicationContext
         val widgetId =
             intent.getIntExtra(

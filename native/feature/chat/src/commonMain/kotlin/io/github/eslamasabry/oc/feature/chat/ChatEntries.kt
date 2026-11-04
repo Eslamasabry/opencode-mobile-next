@@ -29,6 +29,10 @@ import io.github.eslamasabry.oc.feature.chat.handoff.StateHandoffSheet
 import io.github.eslamasabry.oc.feature.chat.handoff.StateHandoffViewModel
 import io.github.eslamasabry.oc.feature.chat.forms.ChatFormSlot
 import io.github.eslamasabry.oc.feature.chat.forms.ChatForms
+import io.github.eslamasabry.oc.feature.chat.forms.ConnectionFormViewModel
+import io.github.eslamasabry.oc.feature.chat.forms.ConnectionFormScreen
+import io.github.eslamasabry.oc.feature.chat.forms.ConnectionForms
+import io.github.eslamasabry.oc.feature.chat.forms.MonitoredFormCard
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderViewModel
 import io.github.eslamasabry.oc.feature.chat.header.ui.ApprovalChipSlot
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
@@ -42,6 +46,8 @@ import io.github.eslamasabry.oc.feature.chat.queuemove.QueueMoveViewModel
 import io.github.eslamasabry.oc.feature.chat.sessiontransfer.presentation.SessionTransferViewModel
 import io.github.eslamasabry.oc.feature.chat.sessiontransfer.ui.SessionTransferSheet
 import io.github.eslamasabry.oc.feature.chat.start.presentation.ChatStartViewModel
+import io.github.eslamasabry.oc.feature.chat.relations.presentation.SessionRelationsViewModel
+import io.github.eslamasabry.oc.feature.chat.relations.ui.SessionRelationsScreen
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -55,10 +61,12 @@ import io.github.eslamasabry.oc.ui.kitchat.composer.KitReplyReader
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.CardsSettingsRoute
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
+import io.github.eslamasabry.oc.ui.routes.ConnectionFormRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.PreviewRoute
 import io.github.eslamasabry.oc.ui.routes.ToolsRoute
 import io.github.eslamasabry.oc.ui.routes.WebSourcesRoute
+import io.github.eslamasabry.oc.ui.routes.SessionRelationsRoute
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.activeContextTitle
 import io.github.eslamasabry.oc.ui.words.res.chatQueueMoveTitle
@@ -72,6 +80,7 @@ import io.github.eslamasabry.oc.ui.words.res.sessionTransferTitle
 import io.github.eslamasabry.oc.ui.words.res.stateHandoffTitle
 import io.github.eslamasabry.oc.ui.words.res.webSourcesTitle
 import org.jetbrains.compose.resources.pluralStringResource
+import io.github.eslamasabry.oc.ui.words.res.r40RelationsTitle
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -95,8 +104,31 @@ public class ChatEntries(
     private val forms: ChatForms,
     private val navigator: AppNavigator,
     private val readers: Set<KitReplyReader>,
+    private val connectionForms: ConnectionForms,
+    private val transcriptPreferences:
+        Set<io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayPreferences> =
+        emptySet(),
 ) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
+        entry<ConnectionFormRoute> { route ->
+            val vm =
+                assistedMetroViewModel<ConnectionFormViewModel, ConnectionFormViewModel.Factory> {
+                    create(route)
+                }
+            val state by vm.state.collectAsStateWithLifecycle()
+            ConnectionFormScreen(state, vm)
+        }
+        entry<SessionRelationsRoute> { route ->
+            val vm =
+                assistedMetroViewModel<
+                    SessionRelationsViewModel,
+                    SessionRelationsViewModel.Factory,
+                > {
+                    create(route)
+                }
+            val state by vm.state.collectAsStateWithLifecycle()
+            SessionRelationsScreen(state, vm)
+        }
         entry<ChatRoute> { route ->
             val vm = assistedMetroViewModel<ChatViewModel, ChatViewModel.Factory> { create(route) }
             val state by vm.state.collectAsStateWithLifecycle()
@@ -169,6 +201,9 @@ public class ChatEntries(
                 requests?.state?.collectAsStateWithLifecycle()?.value
                     ?: io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi()
             val facts by vm.facts.collectAsStateWithLifecycle()
+            val display =
+                transcriptPreferences.singleOrNull()?.value?.collectAsStateWithLifecycle()?.value
+                    ?: io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices()
             val headerVm =
                 assistedMetroViewModel<ChatHeaderViewModel, ChatHeaderViewModel.Factory> {
                     create(route)
@@ -236,6 +271,17 @@ public class ChatEntries(
             val formModel = remember(route.ref) { forms.open(route.ref) }
             val formState by formModel.state.collectAsStateWithLifecycle()
             DisposableEffect(formModel) { onDispose { formModel.close() } }
+            // A notification can land on one exact request: its monitored card opens the full
+            // form screen unless the inline form slot already shows that same form.
+            val formTarget =
+                remember(route.ref, route.requestId) {
+                    route.requestId?.let {
+                        ConnectionFormRoute(route.ref.profileId, it, route.ref.sessionId.raw)
+                    }
+                }
+            val formLanding = remember(formTarget) { formTarget?.let(connectionForms::open) }
+            DisposableEffect(formLanding) { onDispose { formLanding?.close() } }
+            val landingState = formLanding?.state?.collectAsStateWithLifecycle()?.value
             val prompts = remember(route.ref) { ChatPromptsDoor(route.ref, inbox, navigator) }
             // P12-CHAT-CARDS: the conversation's agent cards, read by the transcript's card slot.
             val cardModel = remember(route.ref) { cards.open(route.ref) }
@@ -264,6 +310,12 @@ public class ChatEntries(
                             },
                             extraActions =
                                 listOfNotNull(
+                                    KitLineAction(
+                                            stringResource(Res.string.r40RelationsTitle),
+                                            { navigator.open(SessionRelationsRoute(route.ref)) },
+                                            testTag = "session-relations-open",
+                                        )
+                                        .takeIf { serverCapabilities?.subagentSessions == true },
                                     preview,
                                     inspect.takeIf { activeContext.available() },
                                     transferAction,
@@ -294,6 +346,7 @@ public class ChatEntries(
                             activeContext = activeContext,
                             prompts = prompts,
                             facts = facts,
+                            transcriptDisplay = display,
                             onOpenSession = vm::openSession,
                             header =
                                 ChatHeaderSlot(
@@ -304,6 +357,18 @@ public class ChatEntries(
                                     noteVm,
                                 ),
                             replyReader = readers.firstOrNull(),
+                            monitoredForm =
+                                if (
+                                    landingState?.form != null &&
+                                        formTarget != null &&
+                                        landingState.form.id != formState.form?.id
+                                )
+                                    ({
+                                        MonitoredFormCard(landingState) {
+                                            navigator.open(formTarget)
+                                        }
+                                    })
+                                else null,
                             start = start,
                             startActions = startVm,
                             appStatus = appStatus,

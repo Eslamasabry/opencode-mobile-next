@@ -55,6 +55,12 @@ public class SettingsPresenter(
     private val phrases: PhraseSettings? = null,
     private val appearanceGuide: AppearanceGuideMemory? = null,
     private val exitWhatsNew: () -> Unit = {},
+    /** Show tips again (every tip, then the guide); the guide itself is [appearanceGuide]'s. */
+    private val appearanceHelp: AppearanceHelp? = null,
+    private val serverPage: SettingsServerDoor? = null,
+    private val localData: LocalDataSettings? = null,
+    /** What's new › Show me highlights the place it opens, through the teaching slot. */
+    private val arrivals: io.github.eslamasabry.oc.engine.settings.teaching.ShowMeTargets? = null,
 ) : SettingsActions {
     private data class Local(
         val stack: ImmutableList<SettingsPage> = persistentListOf(SettingsPage.Hub),
@@ -72,6 +78,10 @@ public class SettingsPresenter(
         val appearanceQuestion: AppearanceQuestion? = null,
         val whatsNewIndex: Int = 0,
         val standaloneWhatsNew: Boolean = false,
+        val discardBusy: Boolean = false,
+        val discardConfirm: LocalDataKind? = null,
+        val discardResult: LocalDeleteResult? = null,
+        val discardFailed: Boolean = false,
     )
 
     private data class Engines(
@@ -79,11 +89,20 @@ public class SettingsPresenter(
         val voice: VoiceFacts?,
         val notifications: NotificationFacts?,
         val updates: UpdateFacts?,
+        val data: LocalDataFacts?,
+        val phrases: PhraseSettingsFacts?,
     )
 
     private val local = MutableStateFlow(Local())
     private val currentFacts = facts
     private val prefs = choices.value
+
+    private data class Extra(val data: LocalDataFacts?, val phrases: PhraseSettingsFacts?)
+
+    private val extra =
+        combine(localData?.facts ?: flowOf(null), phrases?.facts ?: flowOf(null)) { d, p ->
+            Extra(d, p)
+        }
 
     private val engines =
         combine(
@@ -91,8 +110,9 @@ public class SettingsPresenter(
             voice?.facts ?: flowOf(null),
             notifications?.facts ?: flowOf(null),
             updates?.facts ?: flowOf(null),
-        ) { c, v, n, u ->
-            Engines(c, v, n, u)
+            extra,
+        ) { c, v, n, u, x ->
+            Engines(c, v, n, u, x.data, x.phrases)
         }
 
     private fun engineNow() =
@@ -101,6 +121,8 @@ public class SettingsPresenter(
             voice?.facts?.value,
             notifications?.facts?.value,
             updates?.facts?.value,
+            localData?.facts?.value,
+            phrases?.facts?.value,
         )
 
     public val state: StateFlow<SettingsUi> =
@@ -200,6 +222,47 @@ public class SettingsPresenter(
         }
     }
 
+    override fun onShowHiddenPhrases() {
+        val port = phrases ?: return
+        val id = port.facts.value?.profile ?: return
+        run(SettingsNote.ChoiceNotSaved) { port.showHidden(id) }
+    }
+
+    override fun onAskDiscard(kind: LocalDataKind) {
+        if (!local.value.discardBusy && localData != null)
+            local.update {
+                it.copy(discardConfirm = kind, discardFailed = false, discardResult = null)
+            }
+    }
+
+    override fun onCancelDiscard() {
+        local.update { it.copy(discardConfirm = null) }
+    }
+
+    override fun onConfirmDiscard() {
+        val kind = local.value.discardConfirm ?: return
+        val port = localData ?: return
+        if (local.value.discardBusy) return
+        local.update {
+            it.copy(
+                discardBusy = true,
+                discardConfirm = null,
+                discardResult = null,
+                discardFailed = false,
+            )
+        }
+        scope.launch {
+            val result = port.discard(kind)
+            local.update {
+                it.copy(
+                    discardBusy = false,
+                    discardResult = (result as? Outcome.Ok)?.value,
+                    discardFailed = result is Outcome.Failed,
+                )
+            }
+        }
+    }
+
     override fun onSearchEntries(entries: List<SettingsSearchEntry>) {
         local.update { it.copy(entries = entries) }
     }
@@ -221,7 +284,15 @@ public class SettingsPresenter(
             }
         return SettingsUi(
             stack = l.stack,
-            hub = HubUi(SettingsStructure.groups(f), f.server, l.query, results, searchable),
+            hub =
+                HubUi(
+                    SettingsStructure.groups(f),
+                    f.server,
+                    l.query,
+                    results,
+                    searchable,
+                    f.savedServers,
+                ),
             group = group,
             appearance =
                 appearance(p, f, l.allPacks)
@@ -235,6 +306,17 @@ public class SettingsPresenter(
             about = about,
             whatsNew = whatsNew(l, f),
             privacy = e.collect?.let { PrivacyUi(it, l.consentSaving) },
+            localData =
+                localData?.let {
+                    LocalDataUi(
+                        e.data,
+                        l.discardBusy,
+                        l.discardConfirm,
+                        l.discardResult,
+                        l.discardFailed,
+                    )
+                },
+            phrases = e.phrases,
             language = p.language,
             capabilities =
                 f.server?.let {
@@ -254,6 +336,7 @@ public class SettingsPresenter(
             focusedAnchor = l.focusedAnchor,
             crash = l.crash,
             note = l.note,
+            newsStep = l.whatsNewIndex,
         )
     }
 
@@ -281,6 +364,9 @@ public class SettingsPresenter(
             heldBySaver = p.saver,
             systemMotionOff = f.systemMotionOff,
             questions = appearanceQuestions(f),
+            frost = p.frost,
+            activityGlow = p.activityGlow,
+            glowStyle = p.glowStyle,
         )
     }
 
@@ -288,8 +374,11 @@ public class SettingsPresenter(
         add(AppearanceQuestion.Mode)
         add(AppearanceQuestion.Theme)
         if (f.surfaceStyles) add(AppearanceQuestion.Style)
+        // The page draws Glass and Glow too, so the guide offers them (in Flutter's order).
+        add(AppearanceQuestion.Strength)
         add(AppearanceQuestion.Text)
         add(AppearanceQuestion.Motion)
+        add(AppearanceQuestion.Glow)
     }
 
     override fun onAppearanceQuestion(question: AppearanceQuestion?) {
@@ -352,6 +441,35 @@ public class SettingsPresenter(
         }
     }
 
+    override fun onAppearanceGuide(step: Int, done: Boolean) {
+        val guide = appearanceGuide
+        if (guide == null) {
+            val port = appearanceHelp ?: return
+            run(SettingsNote.ChoiceNotSaved) { port.save(step.coerceIn(0, 3), done) }
+            return
+        }
+        when {
+            done -> onAppearanceSkip()
+            step <= 0 -> onAppearanceAgain()
+            step == 1 -> onAppearanceGroup(AppearanceGroup.Style)
+            step == 2 -> onAppearanceQuestion(AppearanceQuestion.Text)
+            else -> onAppearanceQuestion(AppearanceQuestion.Glow)
+        }
+    }
+
+    override fun onShowTipsAgain() {
+        run(SettingsNote.ChoiceNotSaved) {
+            val tips = appearanceHelp?.resetTips() ?: Outcome.Ok(Unit)
+            if (tips is Outcome.Failed) tips
+            else {
+                local.update { it.copy(appearanceQuestion = null) }
+                appearanceGuide?.update {
+                    AppearanceGuideRecord(lastIn = it.lastIn, last = it.last)
+                } ?: Outcome.Ok(Unit)
+            }
+        }
+    }
+
     private fun changedAppearance(question: AppearanceQuestion) {
         scope.launch { appearanceGuide?.update { it.copy(last = question) } }
     }
@@ -394,8 +512,27 @@ public class SettingsPresenter(
         onBack()
     }
 
+    override fun onNewsStep(index: Int) {
+        val notes = state.value.whatsNew ?: return
+        if (index in notes.changes.indices) local.update { it.copy(whatsNewIndex = index) }
+    }
+
+    override fun onNewsShow() {
+        onWhatsNewShowMe()
+    }
+
     override fun onWhatsNewShowMe() {
         val notes = state.value.whatsNew?.takeIf { it.canShow } ?: return
+        when (notes.change.target) {
+            WhatsNewTarget.Updates ->
+                io.github.eslamasabry.oc.engine.settings.teaching.ShowMeTarget.Updates
+            WhatsNewTarget.Agents ->
+                io.github.eslamasabry.oc.engine.settings.teaching.ShowMeTarget.Agents
+            WhatsNewTarget.AppearanceText ->
+                io.github.eslamasabry.oc.engine.settings.teaching.ShowMeTarget.AppearanceText
+            WhatsNewTarget.PasteImage,
+            WhatsNewTarget.HoldToTalk -> null
+        }?.let { arrivals?.request(it) }
         when (notes.change.target) {
             WhatsNewTarget.Updates,
             WhatsNewTarget.AppearanceText -> {
@@ -428,6 +565,7 @@ public class SettingsPresenter(
         }
         if (page == SettingsPage.ReportProblem) loadReport()
         if (page == SettingsPage.Notifications) notifications?.refresh()
+        if (page == SettingsPage.Privacy) localData?.refresh()
     }
 
     override fun onResume() {
@@ -472,6 +610,23 @@ public class SettingsPresenter(
     }
 
     override fun onRow(row: SettingsRowId) {
+        // With several saved servers a server-scoped row first asks which server (one page, no
+        // new level).
+        val serverSection =
+            when (row) {
+                SettingsRowId.DefaultShell -> SettingsOutside.DefaultShell
+                SettingsRowId.Permissions -> SettingsOutside.Permissions
+                SettingsRowId.ModelAndMode -> SettingsOutside.ModelAndMode
+                SettingsRowId.Providers -> SettingsOutside.Providers
+                SettingsRowId.Tools -> SettingsOutside.Tools
+                else -> null
+            }
+        if (
+            serverSection != null && currentFacts.value.savedServers.size > 1 && serverPage != null
+        ) {
+            onOpen(SettingsPage.ByServer(serverSection))
+            return
+        }
         val p = prefs.value
         val door =
             SettingsStructure.rows(row.group, currentFacts.value, p.reasoning, p.timestamps)
@@ -526,7 +681,20 @@ public class SettingsPresenter(
             onOpen(SettingsPage.PrivacyPolicy)
             return
         }
+        // A host without the Tips screen still has this module's own Tips page.
+        if (place == SettingsOutside.Tips && !currentFacts.value.canOpen(SettingsOutside.Tips)) {
+            onOpen(SettingsPage.Tips)
+            return
+        }
         if (place == SettingsOutside.WhatsNew) showWhatsNew() else openers.open(place)
+    }
+
+    override fun onSavedServer(
+        profile: io.github.eslamasabry.oc.core.common.ids.ProfileId,
+        section: SettingsOutside?,
+    ) {
+        if (currentFacts.value.savedServers.any { it.id == profile })
+            serverPage?.open(profile, section)
     }
 
     override fun onMode(mode: AppearanceMode) {
@@ -574,6 +742,24 @@ public class SettingsPresenter(
             write(PersonalChange.Accent(id), SettingsNote.AppearanceNotSaved)
     }
 
+    override fun onFrost(strength: io.github.eslamasabry.oc.ui.design.effects.FrostStrength) {
+        if (prefs.value.frost != strength)
+            write(PersonalChange.Frost(strength), SettingsNote.AppearanceNotSaved)
+    }
+
+    override fun onShape(corners: Corners?, density: Density?) {
+        if (!prefs.value.saver)
+            write(PersonalChange.Shape(corners, density), SettingsNote.AppearanceNotSaved)
+    }
+
+    override fun onGlow(style: io.github.eslamasabry.oc.engine.settings.prefs.GlowStyle?) {
+        write(PersonalChange.Glow(style), SettingsNote.AppearanceNotSaved)
+    }
+
+    override fun onResetAppearance() {
+        write(PersonalChange.ResetAppearance, SettingsNote.AppearanceNotSaved)
+    }
+
     private fun ownKnobs(p: PersonalPrefs) =
         StyleResolver.spec(Style.entries.first { it.name == p.style.name }).tokens.defaults
 
@@ -590,6 +776,13 @@ public class SettingsPresenter(
 
     override fun onNotification(change: NotificationChange) {
         val port = notifications ?: return
+        // Android blocks the app's notifications: those two switches lead with the fix instead.
+        if (
+            port.facts.value.blocked &&
+                (change is NotificationChange.FinishedWork ||
+                    change is NotificationChange.Questions)
+        )
+            return
         run(SettingsNote.ChoiceNotSaved) { port.set(change) }
     }
 
@@ -709,6 +902,8 @@ public class SettingsPresenter(
                     is PersonalChange.Style -> AppearanceQuestion.Style
                     is PersonalChange.Motion -> AppearanceQuestion.Motion
                     is PersonalChange.TextSize -> AppearanceQuestion.Text
+                    is PersonalChange.Frost -> AppearanceQuestion.Strength
+                    is PersonalChange.Glow -> AppearanceQuestion.Glow
                     else -> null
                 }?.let(::changedAppearance)
                 Unit

@@ -312,7 +312,8 @@ class PlatformHub(
     private val navigator: AppNavigator,
     private val draftOwners: Set<ConversationDrafts>,
     private val appPreferences: AppPreferences,
-    private val monitoring: AndroidProfileMonitoring,
+    private val widgetActions: NativeWidgetActions,
+    private val monitored: NativeMonitorInbox,
     private val sharedProjectFolders: NativeSharedProjectFolders,
     private val widgetRunner: NativeWidgetRunner,
     private val widgetPersistence: WidgetPersistence,
@@ -367,6 +368,9 @@ class PlatformHub(
     private var widgetScopeProfile: ProfileId? = null
     private var widgetScope = ""
     private var widgetStampMs = 0L
+    private var widgetActionStamp = -1L
+    private var widgetPublishedScope: String? = null
+    private var widgetPublishedTarget: String? = null
     private val serverSince = mutableMapOf<String, Pair<Boolean, Long>>()
     private var publishedPins: Pair<String, List<PinnedSession>>? = null
 
@@ -433,8 +437,8 @@ class PlatformHub(
         if (started++ > 0) return
         WidgetFeed.persistence = widgetPersistence
         WidgetFeed.backgroundRunner = widgetRunner
+        widgetActions.start()
         sharedProjectFolders.start()
-        monitoring.start()
         channels.ensure()
         // B-L10N-002: channel names follow an acknowledged language save (the stored value, never
         // an attempt).
@@ -488,7 +492,8 @@ class PlatformHub(
             appScope.launch { if (quotaTargets.accepts(profile, token)) navigator.open(PlansRoute) }
             return
         }
-        if (monitoring.route(intent)) return
+        if (monitored.handleIntent(intent)) return
+        if (usageAlertTap(intent)) return
         if (intent.action == Intent.ACTION_VIEW && intent.data != null) {
             // B-ANDR-072: the one VIEW filter. Consumed once; route identifiers only.
             val raw = intent.dataString
@@ -535,17 +540,55 @@ class PlatformHub(
                     SetupTap.NotSetup -> navigator.land()
                 }
             LaunchAction.Linux -> navigator.open(io.github.eslamasabry.oc.ui.routes.LinuxRoute.Home)
+            LaunchAction.Usage ->
+                navigator.open(io.github.eslamasabry.oc.ui.routes.UsageRoute.Hub())
+            LaunchAction.UsageSettings ->
+                navigator.open(
+                    io.github.eslamasabry.oc.ui.routes.UsageRoute.Hub(widgetSettings = true)
+                )
+            is LaunchAction.UsageTarget ->
+                navigator.open(
+                    io.github.eslamasabry.oc.ui.routes.UsageRoute.Hub(
+                        fixProvider = action.provider,
+                        fixConnection = action.target,
+                        readFrom = action.step == "set_up",
+                        confirmFix = true,
+                    )
+                )
             LaunchAction.Connect -> navigator.open(ServersRoute.Home)
             LaunchAction.NewTask ->
                 navigator.open(ChatsRoute.New(profile = stores.profiles.activeId.value))
-            LaunchAction.Usage,
-            LaunchAction.UsageSettings,
-            is LaunchAction.UsageTarget -> navigator.open(PlansRoute)
             null -> Unit
             // Activity, background and the other Flutter actions land on Conversations (needs-you
             // rows lead).
             else -> navigator.land()
         }
+    }
+
+    private fun usageAlertTap(intent: Intent): Boolean {
+        val kind = intent.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_KIND)
+        if (kind != "quota" && kind != "quota_reset") return false
+        val token = intent.getStringExtra(FrozenExtras.EXTRA_MONITOR_TOKEN)
+        val key = intent.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_KEY)
+        val profile = intent.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_PROFILE_ID)
+        for (extra in
+            listOf(
+                FrozenExtras.EXTRA_CODING_ALERT_KIND,
+                FrozenExtras.EXTRA_CODING_ALERT_SESSION_ID,
+                FrozenExtras.EXTRA_CODING_ALERT_PROFILE_ID,
+                FrozenExtras.EXTRA_CODING_ALERT_REQUEST_ID,
+                FrozenExtras.EXTRA_CODING_ALERT_KEY,
+                FrozenExtras.EXTRA_MONITOR_TOKEN,
+            )) intent.removeExtra(extra)
+        if (key != null && Regex("^quota-(sub|reset)\\|[a-f0-9]{16}$").matches(key))
+            shade.dismiss(key)
+        navigator.open(
+            io.github.eslamasabry.oc.ui.routes.UsageRoute.Hub(
+                alertProfile = profile,
+                alertToken = token?.takeIf { Regex("^[a-f0-9]{64}$").matches(it) } ?: "invalid",
+            )
+        )
+        return true
     }
 
     /**
@@ -594,12 +637,10 @@ class PlatformHub(
         override fun onActivityStarted(activity: Activity) {
             visible.value += 1
             retireRequestTokens()
-            monitoring.visible(visible.value > 0)
         }
 
         override fun onActivityStopped(activity: Activity) {
             visible.value = (visible.value - 1).coerceAtLeast(0)
-            monitoring.visible(visible.value > 0)
         }
 
         override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = Unit
@@ -662,7 +703,11 @@ class PlatformHub(
         (graph as? ChatGraphAccessors)?.chatRequests?.engine?.pending
 
     private suspend fun watchFeed() {
-        combine(runtime.snapshot, pendingEverywhere(), visible) { feed, waiting, shown ->
+        combine(runtime.snapshot, pendingEverywhere(), visible, widgetActions.revision) {
+                feed,
+                waiting,
+                shown,
+                _ ->
                 Triple(feed, waiting, shown > 0)
             }
             .conflate()
@@ -871,12 +916,17 @@ class PlatformHub(
                 .put("fingerprint", fingerprint)
         location.directory?.let { target.put("directory", it) }
         location.workspace?.let { target.put("workspace", it) }
+        // The live action boundary (NativeWidgetActions) changes its scope, proofs and theme on
+        // its own revision.
+        val actionStamp = widgetActions.stamp()
         // Unchanged content is not rewritten or redrawn: clock stamps move only when the content
         // does (B-ANDR-117).
         if (
             base == widgetBaseModel &&
                 detailRevision == widgetPublishedRevision &&
-                stores.prefs.string("oc.widgetTarget.${profile.raw}") == target.toString()
+                actionStamp == widgetActionStamp &&
+                widgetPublishedScope == target.toString() &&
+                stores.prefs.string("oc.widgetTarget.${profile.raw}") == widgetPublishedTarget
         )
             return
         val graph = registry.live.value[profile]
@@ -1012,11 +1062,25 @@ class PlatformHub(
         )
             return
         val now = clock.now().toEpochMilliseconds()
+        val raw = widgetJson(model, now, details)
+        // A live, exact target (NativeWidgetActions) owns the scope token, project id and run
+        // proofs the live dispatcher checks. Without one, the on-demand runner's scope is used.
+        val publication = widgetActions.decorate(raw, feed)
+        val liveTarget = publication.target
+        val decorated = JSONObject(publication.snapshot)
         val json =
-            JSONObject(widgetJson(model, now, details))
-                .put("scopeToken", scopeToken)
-                .apply { if (!location.directory.isNullOrBlank()) put("lastProjectID", scopeToken) }
-                .put("onDemand", JSONObject().put("fingerprint", fingerprint))
+            if (liveTarget != null) decorated
+            else
+                JSONObject(raw)
+                    .put("scopeToken", scopeToken)
+                    .apply {
+                        if (!location.directory.isNullOrBlank()) put("lastProjectID", scopeToken)
+                        put("connected", false)
+                        decorated.optJSONObject("appTheme")?.let { put("appTheme", it) }
+                    }
+        // The headless on-demand runner (NativeWidgetRunner) still serves this exact profile.
+        json.put("onDemand", JSONObject().put("fingerprint", fingerprint))
+        val publishedTarget = liveTarget ?: target.toString()
         val jsonRows = json.getJSONArray("sessions")
         for (i in 0 until jsonRows.length()) {
             val row = jsonRows.getJSONObject(i)
@@ -1141,12 +1205,15 @@ class PlatformHub(
         )
             return
         if (
-            widgets.publish(json.toString(), profile.raw, target.toString()) !=
+            widgets.publish(json.toString(), profile.raw, publishedTarget) !=
                 io.github.eslamasabry.oc.android.widgets.PublishResult.Refused
         ) {
             widgetBaseModel = base
             widgetPublishedRevision = detailRevision
+            widgetPublishedScope = target.toString()
+            widgetPublishedTarget = publishedTarget
             widgetModel = model
+            widgetActionStamp = actionStamp
             widgetStampMs = now
         }
     }
@@ -1252,6 +1319,9 @@ class PlatformHub(
                     .put("updatedAt", row.updatedAt)
                     .apply {
                         val detail = details[row.profile to row.id]
+                        // decorate() strips the request from rows outside the widget's own
+                        // target; the actions need it on the rows inside.
+                        if (row.requestId.isNotEmpty()) put("requestID", row.requestId)
                         if (detail != null) {
                             if (detail.preview.isNotEmpty()) put("preview", detail.preview)
                             if (detail.modelName.isNotEmpty()) put("modelName", detail.modelName)
@@ -1267,6 +1337,8 @@ class PlatformHub(
             )
         }
         val servers = JSONArray()
+        // A deleted server leaves no remembered online/offline stamp behind.
+        serverSince.keys.retainAll(model.servers.map { it.id }.toSet())
         for (server in model.servers) {
             val since = serverSince[server.id]?.takeIf { it.first == server.online }?.second ?: now
             serverSince[server.id] = server.online to since

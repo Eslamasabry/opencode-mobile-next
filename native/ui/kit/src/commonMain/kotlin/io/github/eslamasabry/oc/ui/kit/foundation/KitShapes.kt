@@ -14,8 +14,12 @@ import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Shapes
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 
-/** A named shape as a Compose shape at the baseline radii. The sheet rounds its top corners only. */
-public fun KitShapeId.toShape(): Shape = toShape(Corners.Round, 2f)
+/**
+ * A named shape as a Compose shape under the Corners knob in force (the same answer as [shape]). The sheet rounds its
+ * top corners only. Outside composition use [toShape] with explicit corners.
+ */
+@Composable
+public fun KitShapeId.toShape(): Shape = shape()
 
 /**
  * A named shape under the Corners knob (plan 06 §4.3, B-KIT-005): Round keeps the token, Soft takes about 60 %, Sharp
@@ -29,6 +33,9 @@ public fun KitShapeId.toShape(corners: Corners, sharpDp: Float): Shape =
         KitShapeId.Sheet -> radius(corners, sharpDp).let { RoundedCornerShape(topStart = it, topEnd = it) }
         else -> RoundedCornerShape(radius(corners, sharpDp))
     }
+
+/** A named shape at the baseline radii (Corners Round), for code outside composition. */
+public fun KitShapeId.baselineShape(): Shape = toShape(Corners.Round, 2f)
 
 private fun KitShapeId.radius(corners: Corners, sharpDp: Float): Dp =
     StyleResolver.corner((Shapes.of(this) as Corner.Radius).dp.toFloat(), corners, sharpDp).dp

@@ -10,7 +10,6 @@ import io.github.eslamasabry.oc.core.domain.SessionReadStateGateway
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.domain.facet
 import io.github.eslamasabry.oc.core.domain.events.RunOutcome
-import io.github.eslamasabry.oc.core.model.NewSession
 import io.github.eslamasabry.oc.core.model.transcript.ToolStatus
 import io.github.eslamasabry.oc.core.model.SessionStatus
 import io.github.eslamasabry.oc.core.model.StreamStatus
@@ -63,6 +62,8 @@ class PreviewRuntime(
     private val deliveryStores: Set<DeliveryStorage>,
     private val profileClosers: Set<ProfileCloser>,
     private val clock: Clock,
+    // 40-port-screens-3: new conversations use the server's saved model/variant defaults.
+    private val defaults: NativeServerDefaults,
 ) : ServerConnections, ServerDisconnects {
     val profiles: ProfileStore = stores.profiles
     private val lane = dispatchers.serial("preview-runtime")
@@ -91,6 +92,8 @@ class PreviewRuntime(
     private val sessionSignals = mutableMapOf<ProfileId, MutableMap<SessionId, Long>>()
     private val runSignals = mutableMapOf<ProfileId, MutableMap<SessionId, Long>>()
     private val requests = mutableMapOf<ProfileId, MutableMap<Pair<String, String>, SessionId>>()
+    // The exact graph each listing follows; a replaced or closed graph detaches its listing.
+    private val listingGraphs = mutableMapOf<ProfileId, ConnectionGraph>()
     // Retained only for a saved profile whose deletion reached the draft fence.
     private val draftRecovery = mutableSetOf<ProfileId>()
     private val restoreRequested = AtomicBoolean(false)
@@ -135,6 +138,34 @@ class PreviewRuntime(
                     }
                 }
         }
+        scope.launch {
+            if (ready.await() is Outcome.Failed) return@launch
+            registry.live.collect {
+                order.withLock {
+                    val live = registry.live.value
+                    val gone = listings.keys.filter { listingGraphs[it] !== live[it] }
+                    gone.forEach(::detachListing)
+                    if (gone.isNotEmpty()) rebuildFeed()
+                    publishServers()
+                }
+            }
+        }
+    }
+
+    /** Drops every per-connection record of [id]'s listing; the saved server stays. */
+    private fun detachListing(id: ProfileId) {
+        eventJobs.remove(id)?.cancel()
+        refreshJobs.remove(id)?.cancel()
+        refreshRevision.remove(id)
+        requestRevision.remove(id)
+        runRevision.remove(id)
+        runSignals.remove(id)
+        sessionSignals.remove(id)
+        failedRuns.remove(id)
+        requests.remove(id)
+        listings.remove(id)
+        listingGraphs.remove(id)
+        loadedSources.update { it - id }
     }
 
     /**
@@ -306,8 +337,7 @@ class PreviewRuntime(
     internal suspend fun disconnectForRuntimeSwitch(ids: Set<ProfileId>): Outcome<Unit> = command {
         for (id in ids) {
             registry.close(id)
-            eventJobs.remove(id)?.cancel()
-            listings.remove(id)
+            detachListing(id)
         }
         rebuildFeed()
         Unit.ok()
@@ -405,7 +435,9 @@ class PreviewRuntime(
                 val saved = if (makeActive) profiles.setActive(id) else Unit.ok()
                 if (saved is Outcome.Failed) return saved.atStage(ConnectionStage.SaveActiveProfile)
                 val graph = opened.value
+                if (listingGraphs[id] !== graph) detachListing(id)
                 if (!listings.containsKey(id)) {
+                    listingGraphs[id] = graph
                     listings[id] = MutableStateFlow(OpenCodeListing(loading = true))
                     rebuildFeed()
                     eventJobs[id] = scope.launch {
@@ -853,18 +885,16 @@ class PreviewRuntime(
     }
 
     override suspend fun disconnect(id: ProfileId): Outcome<Unit> = command {
+        val graph = registry.live.value[id]
+        if (graph != null) {
+            // Fence the graph's delivery owner (its app-lane online-marker writes) before closing.
+            val delivery =
+                (graph as? ChatGraphAccessors)?.chatDelivery?.queue
+                    ?: return@command Failure.StorageRefused().failed()
+            delivery.closeProfile(id)
+        }
         registry.close(id)
-        eventJobs.remove(id)?.cancel()
-        refreshJobs.remove(id)?.cancel()
-        refreshRevision.remove(id)
-        requestRevision.remove(id)
-        runRevision.remove(id)
-        runSignals.remove(id)
-        sessionSignals.remove(id)
-        failedRuns.remove(id)
-        requests.remove(id)
-        listings.remove(id)
-        loadedSources.update { it - id }
+        detachListing(id)
         rebuildFeed()
         application.platformHub.onExplicitDisconnect(id)
         // Flutter disconnect(keepActive: true): the server stays the chosen one, just offline.
@@ -909,7 +939,7 @@ class PreviewRuntime(
             // An ordinary backend without client-selected ids has no receipt owner.
             if (previousOwner != null)
                 return@command Failure.Refused(RefusalReason.StaleScope).failed()
-            return@command when (val created = gateway.createSession(NewSession())) {
+            return@command when (val created = defaults.create(graph)) {
                 is Outcome.Failed -> created
                 is Outcome.Ok -> {
                     if (
@@ -1020,13 +1050,38 @@ class PreviewRuntime(
     ): io.github.eslamasabry.oc.core.model.ServerLocation? =
         registry.live.value[profile]?.session?.server?.location?.value
 
-    override suspend fun remove(id: ProfileId): Outcome<Unit> {
+    override suspend fun remove(id: ProfileId): Outcome<Unit> =
+        removeConfirmed(id, DeletionOptions())
+
+    /**
+     * [options] carries the person's confirmed queued-prompt plan (ServerRemovalWiring): a queue
+     * that changed since the confirmation refuses; queued prompts without one still block removal.
+     */
+    internal suspend fun removeConfirmed(id: ProfileId, options: DeletionOptions): Outcome<Unit> {
+        fun confirmedQueue(): Outcome<Unit> {
+            val queued = OfflineQueueStore(stores.prefs, stores.lanes.app).load()
+            if (queued !is QueueRead.Readable) return Failure.StorageRefused().failed()
+            val actual =
+                QueuedPromptRemovalPlan.fromSnapshot(
+                    id,
+                    (stores.prefs.get(OfflineQueueStore.KEY)
+                            as? io.github.eslamasabry.oc.core.data.kv.PrefValue.Str)
+                        ?.value,
+                )
+            if (actual is Outcome.Failed) return actual
+            if (
+                options.confirmedQueue != null &&
+                    options.confirmedQueue != (actual as Outcome.Ok).value
+            )
+                return Failure.Refused(RefusalReason.StaleScope).failed()
+            if (queued.entries.any { it.profileId == id } && options.confirmedQueue == null)
+                return Failure.Refused(RefusalReason.DispatchUncertain).failed()
+            return Unit.ok()
+        }
         val result = command {
-            when (val queued = OfflineQueueStore(stores.prefs, stores.lanes.app).load()) {
-                QueueRead.Unreadable -> return@command Failure.StorageRefused().failed()
-                is QueueRead.Readable ->
-                    if (queued.entries.any { it.profileId == id })
-                        return@command Failure.Refused(RefusalReason.DispatchUncertain).failed()
+            when (val queue = confirmedQueue()) {
+                is Outcome.Failed -> return@command queue
+                is Outcome.Ok -> Unit
             }
             val graph = registry.live.value[id]
             if (graph != null) {
@@ -1038,9 +1093,7 @@ class PreviewRuntime(
                 delivery.closeProfile(id)
             }
             registry.close(id)
-            eventJobs.remove(id)?.cancel()
-            listings.remove(id)
-            loadedSources.update { it - id }
+            detachListing(id)
             mutableSourceFailures.update { it - id }
             rebuildFeed()
             // Queue admission is fenced above and close joins connection work. A send may have
@@ -1048,11 +1101,9 @@ class PreviewRuntime(
             // its marker
             // after the optimistic check above; inspect again only after that drain, before
             // sweeping either metadata or secrets. A refusal keeps the saved server intact.
-            when (val queued = OfflineQueueStore(stores.prefs, stores.lanes.app).load()) {
-                QueueRead.Unreadable -> return@command Failure.StorageRefused().failed()
-                is QueueRead.Readable ->
-                    if (queued.entries.any { it.profileId == id })
-                        return@command Failure.Refused(RefusalReason.DispatchUncertain).failed()
+            when (val queue = confirmedQueue()) {
+                is Outcome.Failed -> return@command queue
+                is Outcome.Ok -> Unit
             }
             val journals =
                 deliveryStores.singleOrNull()?.journals
@@ -1082,7 +1133,7 @@ class PreviewRuntime(
                             closers = profileClosers,
                             cleaners = cleaners,
                         )
-                        .delete(id)
+                        .delete(id, options)
             ) {
                 is Outcome.Failed -> result
                 is Outcome.Ok ->

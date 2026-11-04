@@ -5,7 +5,9 @@ import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Corners
 import io.github.eslamasabry.oc.ui.design.text.AppTextSize
+import io.github.eslamasabry.oc.ui.design.effects.FrostStrength
 import io.github.eslamasabry.oc.ui.design.tokens.Density
+import io.github.eslamasabry.oc.engine.settings.prefs.GlowStyle
 
 /** The five styles (B-KIT-037), in picker order; stored as `oc.effectsSurfaceStyle` by `:engine:settings`. */
 public enum class SurfaceStyle { Solid, Soft, Brutal, Paper, Signal }
@@ -33,12 +35,32 @@ public data class PersonalPrefs(
     val textSize: AppTextSize = AppTextSize.Normal,
     /** The app language (`oc.appLocale`); [AppLanguage.System] follows the phone (B-L10N-001). */
     val language: AppLanguage = AppLanguage.System,
+    /** `oc.frostStrength`: how much glass the floating surfaces show. */
+    val frost: FrostStrength = FrostStrength.Balanced,
+    /** `oc.activityGlow`: the composer's working glow is on. */
+    val activityGlow: Boolean = true,
+    /** `oc.glowStyle`: the glow's look while [activityGlow] is on. */
+    val glowStyle: GlowStyle = GlowStyle.Classic,
 ) {
     public val saver: Boolean get() = mode == AppearanceMode.Saver
+
+    /** The Spacing fine-tune under the shape picker's name (same value as [spacing]). */
+    public val density: Density? get() = spacing
 }
 
 /** One personal change; each is one all-or-nothing write in the engine. */
 public sealed interface PersonalChange {
+    public data class Frost(val strength: FrostStrength) : PersonalChange
+
+    /** Both fine-tune knobs in one write; null puts the style's own back. */
+    public data class Shape(val corners: Corners?, val density: Density?) : PersonalChange
+
+    /** The activity glow; null turns it off, a style turns it on with that look. */
+    public data class Glow(val style: GlowStyle?) : PersonalChange
+
+    /** Every appearance choice back to its default in one write. */
+    public data object ResetAppearance : PersonalChange
+
     public data class Mode(val mode: AppearanceMode) : PersonalChange
 
     public data class Pack(val pack: PackId) : PersonalChange

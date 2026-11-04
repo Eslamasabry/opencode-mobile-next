@@ -14,11 +14,19 @@ import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
+import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.discoverShowTipsAgain
+import io.github.eslamasabry.oc.ui.words.res.discoverShowTipsSubtitle
 import io.github.eslamasabry.oc.ui.words.res.kitTourNext
 import io.github.eslamasabry.oc.ui.words.res.kitTourSkip
 import io.github.eslamasabry.oc.ui.words.res.kitTourStep
+import io.github.eslamasabry.oc.ui.words.res.terminal40Tip
+import io.github.eslamasabry.oc.ui.words.res.terminal40TipTitle
+import io.github.eslamasabry.oc.ui.words.res.tipsToursLabel
+import io.github.eslamasabry.oc.ui.words.res.tourMakeItYoursTitle
 import io.github.eslamasabry.oc.ui.words.res.whatsNew220Agents
 import io.github.eslamasabry.oc.ui.words.res.whatsNew220LargeText
 import io.github.eslamasabry.oc.ui.words.res.whatsNew220PasteImages
@@ -28,6 +36,7 @@ import io.github.eslamasabry.oc.ui.words.res.whatsNewBack
 import io.github.eslamasabry.oc.ui.words.res.whatsNewClose
 import io.github.eslamasabry.oc.ui.words.res.whatsNewShare
 import io.github.eslamasabry.oc.ui.words.res.whatsNewShowMe
+import io.github.eslamasabry.oc.ui.words.res.whatsNewTipsTitle
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -78,4 +87,38 @@ internal fun ColumnScope.WhatsNewBody(ui: WhatsNewUi, actions: SettingsActions) 
             gutter,
             role = KitButtonRole.Tertiary,
         )
+}
+
+/** The module's own Tips page, for a host without the Tips screen (Help › Tips). */
+@Composable
+internal fun ColumnScope.TipsBody(actions: SettingsActions) {
+    KitRowGroup(label = stringResource(Res.string.tipsToursLabel)) {
+        KitRow(
+            title = stringResource(Res.string.tourMakeItYoursTitle),
+            onClick = {
+                actions.onAppearanceGuide(0, false)
+                actions.onOpen(
+                    io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage.Appearance
+                )
+            },
+        )
+        KitRow(
+            title = stringResource(Res.string.whatsNewTipsTitle),
+            onClick = {
+                actions.onOpen(
+                    io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage.WhatsNew
+                )
+            },
+        )
+    }
+    KitRow(
+        title = stringResource(Res.string.terminal40TipTitle),
+        supporting = stringResource(Res.string.terminal40Tip),
+        supportingMaxLines = 4,
+    )
+    KitRow(
+        title = stringResource(Res.string.discoverShowTipsAgain),
+        supporting = stringResource(Res.string.discoverShowTipsSubtitle),
+        onClick = actions::onShowTipsAgain,
+    )
 }

@@ -151,7 +151,6 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Composable
 public fun UsageScreen(state: UsageUi, actions: UsageActions) {
-    val gutter = LocalKitTokens.current.gutter
     KitSheetHost {
         KitScreen(
             topBar = {
@@ -178,40 +177,50 @@ public fun UsageScreen(state: UsageUi, actions: UsageActions) {
             loadingLabel = stringResource(Res.string.usageLoading),
             width = KitScreenWidth.Reading,
         ) {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-                if (state.phase == UsagePhase.NoServer) {
-                    item(key = "no-server") {
-                        KitStateView(
-                            kind = KitStateKind.Missing,
-                            title = stringResource(Res.string.p12SearchNoServerTitle),
-                            body = stringResource(Res.string.p12UsageNoServerBody),
-                            primary =
-                                KitAction(
-                                    stringResource(Res.string.p12SearchOpenServers),
-                                    actions::openServers,
-                                ),
-                        )
-                    }
-                    return@LazyColumn
-                }
-                state.report?.let { report ->
-                    item(key = "total") { Total(report, state.range, state.timezone) }
-                }
-                item(key = "filters") { Filters(state, actions) }
-                item(key = "status") { Status(state, actions) }
-                if (state.budgetsAvailable) item(key = "budgets") { Budgets(state, actions) }
-                state.report?.let { report -> breakdowns(report) }
-                item(key = "disclosure") {
-                    KitText(
-                        stringResource(Res.string.usageCostDisclosure),
-                        role = KitTextRole.Supporting,
-                        modifier = Modifier.padding(horizontal = gutter.dp, vertical = Space.S3.dp),
-                    )
-                }
-            }
+            UsageContent(state, actions)
         }
-        BudgetEditor(state, actions)
     }
+}
+
+/**
+ * The Spending body under the app-owned Usage hub, and the body of [UsageScreen]. The budget editor
+ * sheet rides along; the nearest kit sheet host (the screen's own, or a [KitScreen]'s) shows it.
+ */
+@Composable
+public fun UsageContent(state: UsageUi, actions: UsageActions) {
+    val gutter = LocalKitTokens.current.gutter
+    LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+        if (state.phase == UsagePhase.NoServer) {
+            item(key = "no-server") {
+                KitStateView(
+                    kind = KitStateKind.Missing,
+                    title = stringResource(Res.string.p12SearchNoServerTitle),
+                    body = stringResource(Res.string.p12UsageNoServerBody),
+                    primary =
+                        KitAction(
+                            stringResource(Res.string.p12SearchOpenServers),
+                            actions::openServers,
+                        ),
+                )
+            }
+            return@LazyColumn
+        }
+        state.report?.let { report ->
+            item(key = "total") { Total(report, state.range, state.timezone) }
+        }
+        item(key = "filters") { Filters(state, actions) }
+        item(key = "status") { Status(state, actions) }
+        if (state.budgetsAvailable) item(key = "budgets") { Budgets(state, actions) }
+        state.report?.let { report -> breakdowns(report) }
+        item(key = "disclosure") {
+            KitText(
+                stringResource(Res.string.usageCostDisclosure),
+                role = KitTextRole.Supporting,
+                modifier = Modifier.padding(horizontal = gutter.dp, vertical = Space.S3.dp),
+            )
+        }
+    }
+    BudgetEditor(state, actions)
 }
 
 @Composable

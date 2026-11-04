@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.projects
 
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
@@ -10,14 +11,18 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectPageViewModel
+import io.github.eslamasabry.oc.feature.projects.presentation.ProjectStorageStatus
+import io.github.eslamasabry.oc.feature.projects.presentation.ProjectStorageViewModel
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectsPickerViewModel
 import io.github.eslamasabry.oc.feature.projects.ui.ProjectPageScreen
+import io.github.eslamasabry.oc.feature.projects.ui.ProjectStorageScreen
 import io.github.eslamasabry.oc.feature.projects.ui.ProjectsPickerScreen
 import io.github.eslamasabry.oc.ui.kitchat.KitChatEnvironment
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.DevServicesRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.ProjectsRoute
+import io.github.eslamasabry.oc.ui.routes.TerminalRoute
 
 /**
  * The EntryInstaller; the ONLY file in the module that imports androidx.navigation3.runtime
@@ -39,15 +44,35 @@ public class ProjectsEntries(
             ProjectsPickerScreen(state, vm)
         }
         entry<ProjectsRoute.Project> { route ->
+            val access =
+                assistedMetroViewModel<ProjectStorageViewModel, ProjectStorageViewModel.Factory> {
+                    create(route)
+                }
+            LifecycleStartEffect(access) {
+                access.shown()
+                onStopOrDispose {}
+            }
+            val storage by access.state.collectAsStateWithLifecycle()
+            if (storage.status != ProjectStorageStatus.Allowed || storage.failure != null) {
+                ProjectStorageScreen(storage, access)
+                return@entry
+            }
             val vm =
                 assistedMetroViewModel<ProjectPageViewModel, ProjectPageViewModel.Factory> {
                     create(route)
                 }
             val state by vm.state.collectAsStateWithLifecycle()
             chatEnvironment.Provide {
-                ProjectPageScreen(state, vm) {
-                    navigator.open(DevServicesRoute.Home(route.profile, route.directory))
-                }
+                ProjectPageScreen(
+                    state,
+                    vm,
+                    onDevServices = {
+                        navigator.open(DevServicesRoute.Home(route.profile, route.directory))
+                    },
+                    onTerminal = {
+                        navigator.open(TerminalRoute.Home(route.profile, route.directory))
+                    },
+                )
             }
         }
     }

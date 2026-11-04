@@ -1,0 +1,30 @@
+<resources>
+    <string name="monitor40FormTitle">Answer this request</string>
+    <string name="monitor40FormGone">This request has changed or is no longer available. Open it again from the inbox.</string>
+    <string name="monitor40FormSent">Your response was sent.</string>
+    <string name="monitor40FormElsewhere">This request was answered elsewhere.</string>
+    <string name="monitor40FormHeld">Your response will send shortly.</string>
+    <string name="monitor40Undo">Undo</string>
+    <string name="monitor40FormFailed">Your response could not be sent.</string>
+    <string name="monitor40Other">Something else</string>
+    <string name="monitor40OpenLink">Open page</string>
+    <string name="monitor40Send">Send answers</string>
+    <string name="monitor40Decline">Decline request</string>
+    <string name="monitor40FixFields">Check the marked answers before sending.</string>
+    <string name="monitor40NotConfirmed">Not confirmed yet</string>
+    <string name="monitor40Sending">Sending your response</string>
+    <string name="monitor40DeclineQuestion">Decline this request?</string>
+    <string name="monitor40DeclineBody">The request will close without your answers.</string>
+    <string name="monitor40LinkQuestion">Open this page?</string>
+    <string name="monitor40Required">Enter an answer.</string>
+    <string name="monitor40Number">Enter a number.</string>
+    <string name="monitor40Integer">Enter a whole number.</string>
+    <string name="monitor40NotOffered">Choose an offered answer or enter a value the form accepts.</string>
+    <string name="monitor40MinLength">Enter at least %1$d characters.</string>
+    <string name="monitor40MaxLength">Use at most %1$d characters.</string>
+    <string name="monitor40Range">Enter a value within the allowed bounds: %1$s to %2$s.</string>
+    <string name="monitor40MinItems">Choose at least %1$d answers.</string>
+    <string name="monitor40MaxItems">Choose at most %1$d answers.</string>
+    <string name="monitor40QuestionCount">Questions: %1$d</string>
+    <string name="monitor40Answer">Answer</string>
+</resources>

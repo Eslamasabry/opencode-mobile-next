@@ -21,7 +21,11 @@ public interface ComposerPrefs {
     /** True when every write landed; false when refused, and then nothing changed. */
     public suspend fun commit(edit: PrefsEdit): Boolean
 
-    /** Refuses when any acknowledged source value changed while a migration copied its files. */
+    /**
+     * Atomic guarded metadata edit: refuses when any acknowledged source value changed (for example
+     * while a migration copied its files). Unsupported hosts refuse; no clear may race a
+     * pending-command claim.
+     */
     public suspend fun compareAndCommit(expected: Map<String, String?>, edit: PrefsEdit): Boolean =
         false
 }

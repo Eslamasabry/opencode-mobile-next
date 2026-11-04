@@ -66,6 +66,7 @@ import io.github.eslamasabry.oc.ui.words.res.stateStorageAppTitle
 import io.github.eslamasabry.oc.ui.words.res.stateStorageTermuxAction
 import io.github.eslamasabry.oc.ui.words.res.stateStorageTermuxBody
 import io.github.eslamasabry.oc.ui.words.res.stateStorageTermuxTitle
+import io.github.eslamasabry.oc.ui.words.res.terminal40Title
 import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
 import org.jetbrains.compose.resources.stringResource
 
@@ -78,6 +79,7 @@ public fun ProjectPageScreen(
     state: ProjectPageUi,
     actions: ProjectPageActions,
     onDevServices: (() -> Unit)? = null,
+    onTerminal: (() -> Unit)? = null,
 ) {
     LifecycleResumeEffect(actions) {
         actions.onResume()
@@ -170,6 +172,14 @@ public fun ProjectPageScreen(
                     )
                 }
             }
+            if (onTerminal != null)
+                item(key = "terminal") {
+                    KitRow(
+                        title = stringResource(Res.string.terminal40Title),
+                        trailing = KitRowTrailing.Chevron,
+                        onClick = onTerminal,
+                    )
+                }
             item(key = "development-services") {
                 KitRow(
                     title = stringResource(Res.string.linuxSvcTitle),

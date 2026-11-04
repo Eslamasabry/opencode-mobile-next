@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.feature.computer
 
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import kotlinx.coroutines.CoroutineScope
@@ -62,9 +63,9 @@ public interface ComputerActions {
 }
 
 /**
- * The computer page's logic. Updating needs a confirmation and admits one run; progress never ends the request
- * (B-AGENT-167); a refused update is a plain line, never a thrown failure. Importing opens the conversation it made;
- * a refusal stays a failure and opens nothing (B-AGENT-174).
+ * The computer page's logic. Updating needs a confirmation and admits one run; progress never ends
+ * the request (B-AGENT-167); a refused update is a plain line, never a thrown failure. Importing
+ * opens the conversation it made; a refusal stays a failure and opens nothing (B-AGENT-174).
  */
 public class ComputerPresenter(
     private val scope: CoroutineScope,
@@ -101,7 +102,9 @@ public class ComputerPresenter(
 
     override fun confirmUpdate() {
         if (local.value.updating) return
-        local.update { it.copy(confirming = false, updating = true, step = UpdateStep.Starting, update = null) }
+        local.update {
+            it.copy(confirming = false, updating = true, step = UpdateStep.Starting, update = null)
+        }
         scope.launch {
             val answer = tools.update(profile) { step -> local.update { it.copy(step = step) } }
             val line =
@@ -113,12 +116,26 @@ public class ComputerPresenter(
                             UpdateAnswer.Refused -> UpdateLine.Failed(null)
                         }
                     is Outcome.Failed ->
-                        if (answer.failure is Failure.Network) UpdateLine.Dropped else UpdateLine.Failed(answer.failure)
+                        if (
+                            answer.failure is Failure.Network ||
+                                answer.failure is Failure.TimedOut ||
+                                ((answer.failure as? Failure.Refused)?.reason ==
+                                    RefusalReason.DispatchUncertain)
+                        )
+                            UpdateLine.Dropped
+                        else UpdateLine.Failed(answer.failure)
                 }
             val version = (line as? UpdateLine.Done)?.version
             local.update {
-                it.copy(updating = false, step = null, update = line, version = version ?: it.version)
+                it.copy(
+                    updating = false,
+                    step = null,
+                    update = line,
+                    version = version ?: it.version,
+                )
             }
+            // Read the helper's actual post-restart version; a dropped update remains uncertain.
+            readVersion()
         }
     }
 
@@ -137,11 +154,15 @@ public class ComputerPresenter(
 
     override fun import(key: String) {
         if (local.value.importing != null) return
-        val item = (local.value.imports as? ImportPhase.Ready)?.list?.items?.firstOrNull { it.key == key } ?: return
+        val item =
+            (local.value.imports as? ImportPhase.Ready)?.list?.items?.firstOrNull { it.key == key }
+                ?: return
         local.update { it.copy(importing = key, importFailed = null) }
         scope.launch {
             val made = tools.import(profile, item)
-            local.update { it.copy(importing = null, importFailed = (made as? Outcome.Failed)?.failure) }
+            local.update {
+                it.copy(importing = null, importFailed = (made as? Outcome.Failed)?.failure)
+            }
             if (made is Outcome.Ok) openChat(made.value)
         }
     }

@@ -1,4 +1,10 @@
 package io.github.eslamasabry.oc.ui.kit.modal
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRequest
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
+import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
@@ -165,7 +171,7 @@ public fun KitSideSheet(
                         }
                     },
                 )
-                .background(colors.surface1)
+                .kitSurface(SurfaceRole.Sheet, KitShapeId.Square, colors.surface1)
                 .semantics { dismiss { dismiss(); true } },
         ) { content() }
     }

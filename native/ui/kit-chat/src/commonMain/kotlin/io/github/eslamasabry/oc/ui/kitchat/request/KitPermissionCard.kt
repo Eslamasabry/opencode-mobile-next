@@ -1,13 +1,11 @@
 package io.github.eslamasabry.oc.ui.kitchat.request
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -26,13 +24,13 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
-import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitMonoLtr
 
 /** Plan 09 R13 / plan 06 §8: the card height share grows at very large text. */
@@ -161,7 +159,6 @@ private fun Answers(
 
 /**
  * A secondary answer: the card's own face with a hairline, primary words; never the accent fill.
- * (`:ui:kit` has no secondary button yet; when it lands this becomes it.)
  */
 @Composable
 private fun SecondaryAnswer(
@@ -171,29 +168,13 @@ private fun SecondaryAnswer(
     reason: String?,
     modifier: Modifier,
 ) {
-    val colors = LocalKitColors.current
-    val tokens = LocalKitTokens.current
-    val shape = KitShapeId.Button.shape()
-    KitTappable(
+    KitButton(
+        label = label,
         onClick = onClick,
-        modifier =
-            modifier
-                .heightIn(min = tokens.buttonHeight.dp)
-                .border(1.dp, colors.hairline, shape)
-                .background(colors.surface2, shape),
-        enabled = enabled,
-        disabledReason = reason,
-        shape = KitShapeId.Button,
-    ) {
-        KitText(
-            label,
-            Modifier.padding(horizontal = Space.S4.dp),
-            role = TypeRole.Button,
-            tone = if (enabled) TextTone.Primary else TextTone.Tertiary,
-            kind = KitTextKind.Frame,
-            maxLines = 2,
-        )
-    }
+        modifier = modifier,
+        role = KitButtonRole.Secondary,
+        enabled = KitEnabled.of(enabled, reason),
+    )
 }
 
 /**

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="m40UsageAlerts">التنبيهات</string>
+    <string name="m40UsageWidget">أداة الشاشة الرئيسية</string>
+    <string name="m40UsageReadFrom">قراءة الاستخدام</string>
+    <string name="m40UsageAdd">إضافة اشتراك</string>
+    <string name="m40UsageSaveFailed">تعذّر حفظ التغيير. حاول مرة أخرى.</string>
+    <string name="m40UsageAlertsWatch">راقب خططي</string>
+    <string name="m40UsageAlertsEvery">راقب كل اشتراك يمكن قراءة حدوده.</string>
+    <string name="m40UsageTellMe">أخبرني عندما</string>
+    <string name="m40UsageReset">تتاح خطة نفدت من جديد</string>
+    <string name="m40UsageDifferent">مختلف لهذه الخطط</string>
+    <string name="m40UsageWhen">متى يصلني التنبيه</string>
+    <string name="m40UsageQuiet">ساعات الهدوء</string>
+    <string name="m40UsageQuietShared">ساعات الهدوء نفسها لبقية التنبيهات.</string>
+    <string name="m40UsageQuietStart">البداية</string>
+    <string name="m40UsageQuietEnd">النهاية</string>
+    <string name="m40UsageQuietAllDay">هذان الوقتان يُسكتان التنبيهات طوال اليوم.</string>
+    <string name="m40UsageWifi">عبر Wi-Fi فقط</string>
+    <string name="m40UsageNothingToWatch">لا توجد خطط قابلة للقراءة لمراقبتها بعد.</string>
+    <string name="m40UsageDownTo">عندما يتبقّى من الخطة</string>
+    <string name="m40UsageSameAsOthers">مثل البقية: متبقٍّ %1$d%%</string>
+    <string name="m40UsageWidgetPlans">الخطط في الأداة</string>
+    <string name="m40UsageWidgetSetup">إظهار الخطط التي تحتاج إلى إعداد</string>
+    <string name="m40UsageWidgetWindows">الفترات المعروضة</string>
+    <string name="m40UsageBoth">5 ساعات وهذا الأسبوع</string>
+    <string name="m40UsageReaderGone">لم يعد هذا الاتصال المحفوظ متاحًا.</string>
+    <string name="m40UsageReadPhoneBody">أعدّ قارئًا في Ubuntu داخل التطبيق لقراءة حدود خططك المسجّلة. تبقى مفاتيح الموفّرين على المضيف.</string>
+    <string name="m40UsageReadComputerBody">اسمح بفحص قصير للقراءة فقط عبر هذا الخادم عند تحديث الاستخدام. يبحث عن حدود الخطط المسجّلة على هذا الكمبيوتر. يمكنك إيقافه هنا.</string>
+    <string name="m40UsageWhatRuns">ما يعمل على الكمبيوتر</string>
+    <string name="m40UsageReadCommand">node --input-type=module -e &lt;check&gt;</string>
+    <string name="m40UsageReadPrivacy">يقرأ الفحص تسجيلات الموفّرين محليًا ويعيد حدود الخطط ومرجع حساب مبهم فقط. لا تعود المفاتيح والرموز إلى التطبيق.</string>
+    <string name="m40UsageCopying">جارٍ نسخ القارئ</string>
+    <string name="m40UsageCheckingSignIns">جارٍ فحص تسجيلات الدخول</string>
+    <string name="m40UsageStarting">جارٍ تشغيل القارئ</string>
+    <string name="m40UsageReading">جارٍ قراءة حدود الخطط</string>
+    <string name="m40UsageChecking">جارٍ فحص الاتصال</string>
+    <string name="m40UsageNeedsNode">يحتاج هذا الكمبيوتر إلى Node 20 أو أحدث لقراءة حدود الخطط.</string>
+    <string name="m40UsageLinuxNotReady">أعدّ Ubuntu داخل التطبيق أولًا، ثم حاول مرة أخرى.</string>
+    <string name="m40UsageServerTooOld">حدّث هذا الخادم لقراءة الاستخدام عبر طرفية أوامر.</string>
+    <string name="m40UsagePrepareFailed">تعذّر إعداد القارئ. حاول مرة أخرى.</string>
+    <string name="m40UsageStartFailed">لم يبدأ القارئ. حاول مرة أخرى.</string>
+    <string name="m40UsageRemoveFailed">تعذّرت إزالة القارئ. حاول مرة أخرى.</string>
+    <string name="m40UsageUnreachable">تعذّر الوصول إلى هذا الكمبيوتر. تحقّق من الاتصال وحاول مرة أخرى.</string>
+    <string name="m40UsageNoAnswer">لم يُعد الفحص جوابًا قابلًا للقراءة. حاول مرة أخرى.</string>
+    <string name="m40UsageFoundNone">لم يجد الفحص خططًا مسجّلة يمكن قراءة حدودها.</string>
+    <string name="m40UsageFound">عُثر على: %1$s</string>
+    <string name="m40UsageReadNow">اقرأ الآن</string>
+    <string name="m40UsageTurnOn">تشغيل القراءة</string>
+    <string name="m40UsageTurnOff">إيقاف القراءة</string>
+    <string name="m40UsageThreshold">مستوى تنبيه هذه الخطة</string>
+    <string name="m40UsageResetHelp">أخبرني عندما تتاح هذه الخطة من جديد.</string>
+    <string name="m40UsageReadOff">إيقاف القراءة من %1$s</string>
+    <string name="m40UsageChooseSignIn">اختر مكان تسجيل الدخول</string>
+</resources>

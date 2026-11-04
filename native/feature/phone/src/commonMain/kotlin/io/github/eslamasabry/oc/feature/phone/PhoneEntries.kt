@@ -19,8 +19,10 @@ import io.github.eslamasabry.oc.feature.phone.storage.SharedFoldersViewModel
 import io.github.eslamasabry.oc.feature.phone.ui.KeepRunningScreen
 import io.github.eslamasabry.oc.feature.phone.ui.RunningScreen
 import io.github.eslamasabry.oc.feature.phone.ui.ThisPhoneScreen
+import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.PhoneRoute
+import io.github.eslamasabry.oc.ui.routes.PhoneSetupRoute
 
 /**
  * The EntryInstaller (S3-PHONEUI request R1); the ONLY file in the module that imports
@@ -28,7 +30,7 @@ import io.github.eslamasabry.oc.ui.routes.PhoneRoute
  */
 @Inject
 @ContributesIntoSet(AppScope::class, binding = binding<EntryInstaller>())
-public class PhoneEntries : EntryInstaller {
+public class PhoneEntries(private val nav: AppNavigator) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
         entry<PhoneRoute.SharedFolders> {
             val vm = metroViewModel<SharedFoldersViewModel>()
@@ -48,7 +50,11 @@ public class PhoneEntries : EntryInstaller {
         entry<PhoneRoute.ThisPhone> {
             val vm = metroViewModel<ThisPhoneViewModel>()
             val state by vm.state.collectAsStateWithLifecycle()
-            ThisPhoneScreen(state, vm)
+            ThisPhoneScreen(
+                state,
+                vm,
+                onAddTools = { nav.open(PhoneSetupRoute.Customize(adding = true)) },
+            )
         }
         entry<PhoneRoute.Running> {
             val vm = metroViewModel<RunningViewModel>()

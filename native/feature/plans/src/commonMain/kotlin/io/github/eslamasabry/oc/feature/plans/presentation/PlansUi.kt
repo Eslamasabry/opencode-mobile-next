@@ -156,6 +156,7 @@ public data class PlanWindowUi(
     val label: String,
     val leftPercent: Int,
     val resetsAtMs: Long?,
+    val id: String = "",
 )
 
 public data class PlanSignInUi(
@@ -182,6 +183,10 @@ public data class PlanCardUi(
     val alertThreshold: Int,
     val canFix: Boolean = false,
     val widgetVisible: Boolean = true,
+    val checkedAtMs: Long? = null,
+    val readFrom: PlanConnectionUi? = null,
+    val hasAlertOverride: Boolean = false,
+    val notifyReset: Boolean = false,
 )
 
 public data class PlanKeyUi(
@@ -278,7 +283,13 @@ private fun UsageConnection.ui(): PlanConnectionUi =
 /** Pure: the engine snapshot as screen state. */
 public fun plansUi(snapshot: UsageSnapshot, refreshing: Boolean, nowMs: Long): PlansUi {
     val cards =
-        snapshot.subscriptions.map { s ->
+        snapshot.subscriptions
+            .sortedBy { s ->
+                val windows = listOfNotNull(s.fiveHour, s.weekly).ifEmpty { s.windows.take(2) }
+                if (windows.isEmpty()) 101.0
+                else windows.filter { it.leftPercent > 0 }.minOfOrNull { it.leftPercent } ?: 0.0
+            }
+            .map { s ->
             PlanCardUi(
                 key = s.key,
                 providerId = s.providerId,
@@ -297,6 +308,7 @@ public fun plansUi(snapshot: UsageSnapshot, refreshing: Boolean, nowMs: Long): P
                                 w.label,
                                 w.leftPercent.roundToInt().coerceIn(0, 100),
                                 w.resetsAt?.toEpochMilliseconds(),
+                                w.id,
                             )
                         }
                         .toImmutableList(),
@@ -311,6 +323,10 @@ public fun plansUi(snapshot: UsageSnapshot, refreshing: Boolean, nowMs: Long): P
                 resetSince = s.resetSinceLastReading,
                 fetchedAtMs = s.fetchedAt?.toEpochMilliseconds(),
                 alertThreshold = s.alertThreshold.roundToInt(),
+                checkedAtMs = s.checkedAt?.toEpochMilliseconds(),
+                readFrom = s.readFrom?.ui(),
+                hasAlertOverride = s.hasAlertOverride,
+                notifyReset = s.notifyOnReset,
             )
         }
     val keys =
@@ -331,4 +347,14 @@ public fun plansUi(snapshot: UsageSnapshot, refreshing: Boolean, nowMs: Long): P
         refreshing,
         nowMs,
     )
+}
+
+/** Compact cards favour the five-hour and weekly limits, then the first two reported limits. */
+public fun PlanCardUi.cardWindows(): List<PlanWindowUi> {
+    val known =
+        listOfNotNull(
+            windows.firstOrNull { it.kind == UsageWindowKind.FiveHour },
+            windows.firstOrNull { it.kind == UsageWindowKind.Weekly },
+        )
+    return known.ifEmpty { windows.take(2) }
 }

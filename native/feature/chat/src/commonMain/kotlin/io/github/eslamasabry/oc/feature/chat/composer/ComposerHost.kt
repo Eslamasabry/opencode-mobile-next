@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.chat.composer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
+import io.github.eslamasabry.oc.core.model.PromptAttachment
 
 /*
  * The composer slot (plan 09 §6.3, conflict C2). Its home is `:ui:kit-chat` `…host` (a chat-lead file there); it sits
@@ -35,7 +36,15 @@ public data class InsertRequest(
      * typing.
      */
     val onlyIfEmpty: Boolean = false,
-)
+    val attachments: List<PromptAttachment> = emptyList(),
+    val missingAttachments: List<String> = emptyList(),
+    val stillCurrent: () -> Boolean = { true },
+) {
+    override fun toString(): String =
+        "InsertRequest(id=$id, textChars=${text.length}, replace=$replace, " +
+            "onlyIfEmpty=$onlyIfEmpty, attachments=${attachments.size}, " +
+            "missing=${missingAttachments.size})"
+}
 
 /**
  * What the chat hands the composer. Every getter is read in draw, layout or an effect, so a change

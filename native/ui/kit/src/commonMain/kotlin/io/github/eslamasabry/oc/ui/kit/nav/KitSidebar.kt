@@ -1,4 +1,9 @@
 package io.github.eslamasabry.oc.ui.kit.nav
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRequest
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceContent
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -82,6 +87,8 @@ public fun KitSidebar(
 private fun SidebarItem(d: KitNavDestination, chosen: Boolean, onClick: () -> Unit) {
     val colors = LocalKitColors.current
     val tone = if (chosen) TextTone.Accent else TextTone.Primary
+    val look = kitSurfaceLook(SurfaceRequest(SurfaceRole.Control, selected = chosen), if (chosen) colors.surface3 else androidx.compose.ui.graphics.Color.Transparent)
+    KitSurfaceContent(look) {
     KitTappable(
         onClick = onClick,
         modifier =
@@ -99,7 +106,7 @@ private fun SidebarItem(d: KitNavDestination, chosen: Boolean, onClick: () -> Un
             Modifier
                 .fillMaxWidth()
                 .heightIn(min = LocalKitTokens.current.minTarget.dp)
-                .then(if (chosen) Modifier.background(colors.surface3, KitShapeId.Button.shape()) else Modifier)
+                .then(if (chosen) Modifier.kitSurface(look, KitShapeId.Button.shape()) else Modifier)
                 .padding(horizontal = Space.S3.dp, vertical = Space.S2.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
@@ -109,4 +116,5 @@ private fun SidebarItem(d: KitNavDestination, chosen: Boolean, onClick: () -> Un
             if (d.needsYou > 0) NavNeedsYouBadge(d.needsYou)
         }
     }
+}
 }

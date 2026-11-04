@@ -1,4 +1,5 @@
 package io.github.eslamasabry.oc.ui.kit.modal
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn

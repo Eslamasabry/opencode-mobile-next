@@ -4,9 +4,12 @@ import android.app.Activity
 import android.app.Application
 import android.os.Bundle
 import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.ContributesIntoSet
+import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metro.binding
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
@@ -23,6 +26,8 @@ import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.common.supervisedContext
 import io.github.eslamasabry.oc.core.data.kv.bool
+import io.github.eslamasabry.oc.core.data.kv.long
+import io.github.eslamasabry.oc.core.data.kv.string
 import io.github.eslamasabry.oc.core.domain.GatewayFactory
 import io.github.eslamasabry.oc.core.domain.GatewaySpec
 import io.github.eslamasabry.oc.core.domain.ProviderUsageGateway
@@ -57,9 +62,12 @@ import io.github.eslamasabry.oc.engine.profiles.DeletionStep
 import io.github.eslamasabry.oc.engine.profiles.ProfileResourceCleaner
 import io.github.eslamasabry.oc.feature.plans.presentation.CollectorTarget
 import io.github.eslamasabry.oc.feature.plans.presentation.ComputerReaderUi
+import io.github.eslamasabry.oc.feature.plans.presentation.PlanAlertPreferences
 import io.github.eslamasabry.oc.feature.plans.presentation.PlanCollectorUi
+import io.github.eslamasabry.oc.feature.plans.presentation.PlansPreferences
 import io.github.eslamasabry.oc.feature.plans.presentation.PlansSource
 import io.github.eslamasabry.opencode_mobile.UsageWidgetProvider
+import kotlin.math.roundToInt
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.CoroutineScope
@@ -91,6 +99,11 @@ import kotlinx.coroutines.withTimeoutOrNull
  * connection or obtain credentials from provider configuration.
  * Provider-usage facets feed connected daemon readings without switching the current server or starting a host.
  * The quota collector and alert delivery have separate platform owners.
+ *
+ * It is also the Usage hub's acknowledged alert and widget choices ([PlansPreferences]): every
+ * choice is written through the engine or the shared `oc.notify.*` preferences before it shows, and
+ * the one subscription-alert owner (AndroidSubscriptionAlerts) reads the same quiet hours and
+ * Wi-Fi choice.
  */
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class, binding = binding<PlansSource>())
@@ -116,10 +129,12 @@ class AndroidPlansSource(
     private val codexReads: AppCodexReads,
     private val subscriptionAlerts: AndroidSubscriptionAlerts,
     private val quotaPolicy: QuotaCollectionPolicy,
-) : PlansSource, ProviderUsageMonitorSettings {
+) : PlansSource, ProviderUsageMonitorSettings, PlansPreferences {
     private val scope = CoroutineScope(appScope.coroutineContext)
     private val state = MutableStateFlow(UsageSnapshot())
     override val snapshot: StateFlow<UsageSnapshot> = state.asStateFlow()
+    private val mutablePreferences = MutableStateFlow(PlanAlertPreferences())
+    override val preferences: StateFlow<PlanAlertPreferences> = mutablePreferences.asStateFlow()
     private val creating = Mutex()
     private var engine: UsageSubscriptionsEngine? = null
     private var quota: PlansQuotaSource? = null
@@ -145,7 +160,40 @@ class AndroidPlansSource(
     init {
         // Loading saved monitor choices never reads a daemon. Only an explicit opt-in admits its
         // timer reads.
-        scope.launch { engine() }
+        scope.launch {
+            val e = engine() ?: return@launch
+            // An edited server's old numbers go (its record stays in the feed: not a deletion).
+            launch {
+                var known = stores.profiles.profiles.value.associateBy { it.id }
+                stores.profiles.profiles.collect { profiles ->
+                    val next = profiles.associateBy { it.id }
+                    for ((id, before) in known) {
+                        val now = next[id]
+                        if (now != null && now != before) e.removeProfile(id.raw, deleted = false)
+                    }
+                    known = next
+                }
+            }
+            launch {
+                var phoneOwner = stores.prefs.string("oc.builtinServerOwner")
+                stores.prefs.changes.collect { keys ->
+                    if ("oc.builtinServerOwner" in keys) {
+                        val next = stores.prefs.string("oc.builtinServerOwner")
+                        if (next != phoneOwner)
+                            e.removeProfile(UsageConnection.PHONE_ID, deleted = false)
+                        phoneOwner = next
+                    }
+                    if (
+                        keys.any {
+                            it.startsWith("oc.notify.") ||
+                                it == UsageSubscriptionsEngine.ALERTS_KEY ||
+                                it == UsageWidgetSettings.KEY
+                        }
+                    )
+                        project(e)
+                }
+            }
+        }
         application.registerActivityLifecycleCallbacks(
             object : Application.ActivityLifecycleCallbacks {
                 override fun onActivityStarted(activity: Activity) {
@@ -536,6 +584,7 @@ class AndroidPlansSource(
             .also { created ->
                 created.setForeground(quotaPolicy.foreground.value)
                 engine = created
+                project(created)
                 scope.launch { created.snapshot.collect { state.value = it } }
             }
     }
@@ -570,6 +619,75 @@ class AndroidPlansSource(
             owner.refresh(force)
         }
         publishReaders()
+    }
+
+    private fun project(e: UsageSubscriptionsEngine) {
+        mutablePreferences.value =
+            PlanAlertPreferences(
+                enabled = e.alertsOn,
+                threshold = e.defaultThreshold.roundToInt(),
+                notifyReset = e.notifyOnResetDefault,
+                quietStart =
+                    stores.prefs.long(QUIET_START)?.takeIf { it in 0..1439 }?.toInt(),
+                quietEnd = stores.prefs.long(QUIET_END)?.takeIf { it in 0..1439 }?.toInt(),
+                wifiOnly = stores.prefs.bool(WIFI) == true,
+                widget = e.widgetSettings,
+            )
+    }
+
+    private suspend fun save(write: suspend (UsageSubscriptionsEngine) -> Boolean): Outcome<Unit> {
+        val e = engine() ?: return Failure.StorageRefused().failed()
+        val saved = write(e)
+        project(e)
+        return if (saved) Unit.ok() else Failure.StorageRefused().failed()
+    }
+
+    override suspend fun setAlerts(on: Boolean): Outcome<Unit> = save { e ->
+        e.setAlertsOn(on)
+        e.alertsOn == on
+    }
+
+    override suspend fun setDefaultThreshold(level: Int): Outcome<Unit> = save {
+        it.setDefaultThreshold(level.toDouble())
+    }
+
+    override suspend fun setDefaultReset(on: Boolean): Outcome<Unit> = save {
+        it.setNotifyOnResetDefault(on)
+    }
+
+    override suspend fun setThreshold(key: String, level: Int?): Outcome<Unit> = save {
+        if (it.subscription(key) == null) false else it.setThresholdFor(key, level?.toDouble())
+    }
+
+    override suspend fun setReset(key: String, on: Boolean): Outcome<Unit> = save {
+        if (it.subscription(key) == null) false else it.setNotifyOnReset(key, on)
+    }
+
+    override suspend fun setQuiet(start: Int?, end: Int?): Outcome<Unit> = save {
+        if (
+            (start == null) != (end == null) ||
+                (start != null && start !in 0..1439) ||
+                (end != null && end !in 0..1439)
+        )
+            false
+        else
+            stores.prefs.commit(stores.lanes.app) {
+                if (start == null || end == null) {
+                    remove(QUIET_START)
+                    remove(QUIET_END)
+                } else {
+                    putLong(QUIET_START, start.toLong())
+                    putLong(QUIET_END, end.toLong())
+                }
+            } is Outcome.Ok
+    }
+
+    override suspend fun setWifiOnly(on: Boolean): Outcome<Unit> = save {
+        stores.prefs.commit(stores.lanes.app) { putBool(WIFI, on) } is Outcome.Ok
+    }
+
+    override suspend fun setWidget(settings: UsageWidgetSettings): Outcome<Unit> = save {
+        it.setWidgetSettings(settings)
     }
 
     override suspend fun collectors(): List<CollectorTarget> {
@@ -778,8 +896,27 @@ class AndroidPlansSource(
         reader?.forget(profile.raw)
         val removed = e.removeProfile(profile.raw)
         publishReaders()
+        project(e)
         return removed
     }
+
+    private companion object {
+        // The shared notification choices; QuotaCollectionPolicy reads the same keys.
+        const val QUIET_START = "oc.notify.quietStart"
+        const val QUIET_END = "oc.notify.quietEnd"
+        const val WIFI = "oc.notify.wifiOnly"
+    }
+}
+
+@BindingContainer
+@ContributesTo(AppScope::class)
+object PlansPreferenceBindings {
+    @Provides fun preferences(source: AndroidPlansSource): PlansPreferences = source
+}
+
+@ContributesTo(AppScope::class)
+interface PlansGraph {
+    val plansSource: AndroidPlansSource
 }
 
 /**

@@ -4,6 +4,7 @@ kotlin {
     sourceSets.commonMain.dependencies {
         implementation(project(":core:common"))
         implementation(project(":ui:kit"))
+        implementation(project(":ui:words"))
         implementation(project(":ui:routes"))
         implementation(libs.navigation3.ui)
         implementation(libs.lifecycle.viewmodel.navigation3)

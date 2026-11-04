@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="m40AuthTitle">Sign in to %1$s</string>
+    <string name="m40AuthBack">Back</string>
+    <string name="m40AuthWorking">Working…</string>
+    <string name="m40AuthPlaces">Where would you like to sign in?</string>
+    <string name="m40AuthBest">Usage is ready to read here.</string>
+    <string name="m40AuthServer">The sign-in is saved on this server.</string>
+    <string name="m40AuthPhone">This phone</string>
+    <string name="m40AuthMethods">Choose how to sign in</string>
+    <string name="m40AuthNoPlace">No place to sign in</string>
+    <string name="m40AuthNoPlaceBody">Add an OpenCode server or install this provider’s agent on this phone.</string>
+    <string name="m40AuthUnavailable">Sign-in is not available here</string>
+    <string name="m40AuthUnavailableBody">This connection does not offer a supported sign-in method for this provider.</string>
+    <string name="m40AuthKey">API key</string>
+    <string name="m40AuthKeyHelp">Your key is sent to this connection and saved there.</string>
+    <string name="m40AuthSaveKey">Save key</string>
+    <string name="m40AuthContinue">Continue</string>
+    <string name="m40AuthEnterValue">Enter a value.</string>
+    <string name="m40AuthSelectValue">Choose an option.</string>
+    <string name="m40AuthOpenPage">Open sign-in page</string>
+    <string name="m40AuthAskPage">Open %1$s in your browser?</string>
+    <string name="m40AuthOpenBrowser">Open in browser</string>
+    <string name="m40AuthCheck">Check sign-in</string>
+    <string name="m40AuthWaiting">Finish signing in, then check here.</string>
+    <string name="m40AuthCommandWaiting">The connection is running its sign-in. Check here when it finishes.</string>
+    <string name="m40AuthCode">Sign-in code or callback URL</string>
+    <string name="m40AuthFinish">Finish sign-in</string>
+    <string name="m40AuthDone">Done</string>
+    <string name="m40AuthComplete">Signed in</string>
+    <string name="m40AuthCompleteBody">The plans list has been refreshed.</string>
+    <string name="m40AuthFailed">Could not finish this step. Try again.</string>
+    <string name="m40AuthReenter">Enter this server’s password again in Servers, then return here.</string>
+    <string name="m40AuthDetails">Details</string>
+    <string name="m40AuthCopyDetails">Copy details</string>
+    <string name="m40AuthDeviceCode">Use code %1$s on the sign-in page.</string>
+    <string name="m40AuthCopyCode">Copy code</string>
+    <string name="m40AuthCopied">Code copied</string>
+    <string name="m40AuthBrowserHint">This method must finish in a browser on the machine running this server.</string>
+    <string name="m40AuthDeviceHint">Sign in using the device code.</string>
+    <string name="m40AuthAccountHint">Sign in with your provider account.</string>
+    <string name="m40AuthCommandHint">The connection runs this sign-in; the phone runs no command.</string>
+    <string name="m40AuthPhoneHint">Use this provider’s installed agent on this phone.</string>
+</resources>

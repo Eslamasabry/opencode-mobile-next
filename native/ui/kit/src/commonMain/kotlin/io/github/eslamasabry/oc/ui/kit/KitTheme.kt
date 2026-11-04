@@ -21,6 +21,7 @@ import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.unit.LayoutDirection
 import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.color.ThemeResolver
+import io.github.eslamasabry.oc.ui.design.color.withAccent
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionSignals
@@ -37,11 +38,11 @@ import io.github.eslamasabry.oc.ui.kit.theme.KitTypography
 import io.github.eslamasabry.oc.ui.kit.theme.KitWindowInfo
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.KitStyleState
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
@@ -96,10 +97,13 @@ public fun KitTheme(
                 style,
                 StyleResolver.spec(style),
                 StyleResolver.knobsFor(appearance.style, tune, signals.highContrast, appearance.saver),
+                highContrast = signals.highContrast,
             )
         }
     // Parts that read `LocalKitAppearance.current.style` see the style actually drawn.
     val effectiveAppearance = appearance.copy(style = styleState.style)
+    // The port-kit surface rules for the same style and knobs (typography, M3 shapes, ported parts).
+    val style = styleState.effects
     val roles =
         remember(appearance.pack, appearance.accent, dark, appearance.saver, dynamic, styleState.style) {
             // The style's own role adjustment (Signal's signal-box palette among them; hook H6).
@@ -111,7 +115,7 @@ public fun KitTheme(
     val colors = remember(roles) { roles.toKitColors() }
     val arabic = isArabic(localeTag)
     val fonts = rememberKitFonts(arabic)
-    val typography = remember(fonts, arabic) { KitTypography(fonts, arabic) }
+    val typography = remember(fonts, arabic, style) { KitTypography(fonts, arabic, style) }
     // Saver makes the effective knobs none (Dart KitEffects.underSaver).
     val tokens = Tokens.of(styleState.knobs.density)
     val level =
@@ -156,7 +160,7 @@ public fun KitTheme(
         LocalRippleConfiguration provides ripple,
         LocalTextSelectionColors provides selection,
     ) {
-        MaterialTheme(colorScheme = scheme, shapes = MaterialBridge.shapes, content = content)
+        MaterialTheme(colorScheme = scheme, shapes = MaterialBridge.shapes(style), content = content)
     }
 }
 

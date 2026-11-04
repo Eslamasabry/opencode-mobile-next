@@ -9,10 +9,10 @@ import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
+import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.engine.transcript.ledger.latest
-import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.feature.chat.world.ChatWorlds
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeed
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeedSource
@@ -47,14 +47,26 @@ public class ChatViewModel(
             nav,
             { block -> viewModelScope.launch { block() } },
             focusComposer = route.focusComposer,
+            landOnFailure = route.landOnFailure,
             outside = outside,
             clock = clock,
         )
 
+    public val serverCapabilities = world.capabilities
     public val requests = world.requests
 
     public val state: StateFlow<ChatUi> =
         presenter.states(viewModelScope, world.work, SharingStarted.WhileSubscribed(STOP_AFTER_MS))
+
+    init {
+        route.requestId?.let { id ->
+            viewModelScope.launch {
+                world.requests.collect { model ->
+                    model?.focus(io.github.eslamasabry.oc.core.common.ids.RequestId(id))
+                }
+            }
+        }
+    }
 
     /**
      * CHAT-TRANSCRIPT: steps, results, context, retry and stall beside the rows (side tables, never

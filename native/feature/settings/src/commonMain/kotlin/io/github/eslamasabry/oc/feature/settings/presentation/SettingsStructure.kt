@@ -55,10 +55,19 @@ public data class ServerLine(val name: String, val onPhone: Boolean)
  * The facts the structure reads. Gates are [PlatformCapabilities] flags and whether a server is
  * connected — never the backend kind (rule 10).
  */
+public data class SettingsSavedServer(
+    val id: io.github.eslamasabry.oc.core.common.ids.ProfileId,
+    val name: String,
+    val connected: Boolean,
+    val onPhone: Boolean = false,
+)
+
 public data class SettingsFacts(
     val platform: PlatformCapabilities,
     /** Null: no server is set up yet. */
     val server: ServerLine? = null,
+    val savedServers: ImmutableList<SettingsSavedServer> =
+        kotlinx.collections.immutable.persistentListOf(),
     /** Material You needs the platform's tones (API 31+). */
     val dynamicColour: Boolean = false,
     /** The phone's "Remove animations" is on: nothing moves whatever Motion says. */
@@ -87,6 +96,7 @@ public data class SettingsFacts(
      * then.
      */
     val transcriptDisplay: Boolean = true,
+    /** Phrase suggestions are served here (the store is open): the row exists only then. */
     val phraseChips: Boolean = false,
 ) {
     public fun canOpen(place: SettingsOutside): Boolean = opens?.contains(place) ?: true
@@ -141,7 +151,9 @@ public object SettingsStructure {
                         SettingsRowId.Voice ->
                             SettingsDoor.Page(SettingsPage.Voice).takeIf { p.voice || p.readAloud }
                         SettingsRowId.Permissions ->
-                            SettingsDoor.Outside(SettingsOutside.Permissions)
+                            SettingsDoor.Outside(SettingsOutside.Permissions).takeIf {
+                                facts.savedServers.isNotEmpty()
+                            }
                         SettingsRowId.Notifications ->
                             SettingsDoor.Page(SettingsPage.Notifications).takeIf { p.notifications }
                         SettingsRowId.Background ->
@@ -152,9 +164,12 @@ public object SettingsStructure {
                         SettingsRowId.Language -> SettingsDoor.Page(SettingsPage.Language)
                         SettingsRowId.Privacy -> SettingsDoor.Page(SettingsPage.Privacy)
                         SettingsRowId.Updates ->
-                            SettingsDoor.Page(SettingsPage.Updates).takeIf {
-                                p.inAppUpdater || p.desktopReleaseCheck
-                            }
+                            // A host that routes the Updates screen opens it; otherwise this
+                            // module's own Updates page answers.
+                            (if (facts.opens?.contains(SettingsOutside.Updates) == true)
+                                    SettingsDoor.Outside(SettingsOutside.Updates)
+                                else SettingsDoor.Page(SettingsPage.Updates))
+                                .takeIf { p.inAppUpdater || p.desktopReleaseCheck }
                         SettingsRowId.Guide -> SettingsDoor.Outside(SettingsOutside.Guide)
                         SettingsRowId.Capabilities ->
                             SettingsDoor.Outside(SettingsOutside.Capabilities)

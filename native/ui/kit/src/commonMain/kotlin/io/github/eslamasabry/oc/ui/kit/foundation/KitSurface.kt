@@ -32,6 +32,24 @@ import io.github.eslamasabry.oc.ui.design.tokens.Shapes
 import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.border
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.dropShadow
+import androidx.compose.ui.draw.innerShadow
+import androidx.compose.ui.graphics.shadow.Shadow as ComposeShadow
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.DpOffset
+import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceDecoration as EffectsSurfaceDecoration
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRequest as EffectsSurfaceRequest
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRole as EffectsSurfaceRole
+import io.github.eslamasabry.oc.ui.design.style.Style
 
 /**
  * What the style in force says about one surface (plan 06 §4.3, hooks H1-H11): [modifier] paints the style's fill, edge
@@ -56,7 +74,7 @@ public data class KitSurfaceInput(
     val withinGroup: Boolean = false,
 )
 
-private fun Color.toArgb(): Argb = Argb(
+private fun Color.toKitArgb(): Argb = Argb(
     ((alpha * 255f + .5f).toInt() shl 24) or ((red * 255f + .5f).toInt() shl 16) or ((green * 255f + .5f).toInt() shl 8) or (blue * 255f + .5f).toInt(),
 )
 
@@ -87,7 +105,7 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
             level = input.level,
             radii = radii,
             circle = input.shape == KitShapeId.Circle,
-            color = input.color?.toArgb(),
+            color = input.color?.toKitArgb(),
             selected = input.selected,
             pressed = input.pressed,
             disabled = input.disabled,
@@ -170,4 +188,82 @@ private fun DrawScope.drawGrown(shape: Shape, grow: Float, color: Color) {
     translate(-grow, -grow) {
         drawOutline(shape.createOutline(androidx.compose.ui.geometry.Size(w, h), layoutDirection, this), color)
     }
+}
+
+// ---- Port-kit surface rules (design.effects): the parts ported with the screen units paint through these. ----
+/** Resolve one real part's Solid paint through the chosen style (Flutter KitSurfaceLook). */
+@Composable
+public fun kitSurfaceLook(
+    request: EffectsSurfaceRequest,
+    fill: Color,
+    edge: Color = Color.Transparent,
+    edgeWidth: Float = 0f,
+): EffectsSurfaceDecoration {
+    val style = LocalKitStyle.current
+    val roles = LocalKitRoles.current
+    val solid = EffectsSurfaceDecoration(Argb(fill.toArgb()), Argb(edge.toArgb()), edgeWidth = edgeWidth)
+    val nested = LocalSurfaceDepth.current > 0
+    return remember(style, roles, request, solid, nested) {
+        if (nested && request.role == EffectsSurfaceRole.Content && style.style != Style.Solid) EffectsSurfaceDecoration(Argb(0))
+        else style.resolve(request, roles, solid).let { look ->
+            if (nested && style.style == Style.Brutal) look.copy(hardOffset = 0f, faceShift = 0f) else look
+        }
+    }
+}
+
+/**
+ * Fill, own-shape shadows, inset wells and the lit/ink edge. The hard shadow falls toward the reading end; the
+ * face and its content sink into it while pressed. No platform elevation or Material tonal overlay is involved.
+ */
+@Composable
+public fun Modifier.kitSurface(look: EffectsSurfaceDecoration, shape: Shape, clip: Boolean = true): Modifier {
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val motion = KitMotion.specs
+    val fill by animateColorAsState(Color(look.fill.v), motion.surface(), label = "kit-surface-fill")
+    val edge by animateColorAsState(Color(look.edge.v), motion.surface(), label = "kit-surface-edge")
+    val end by animateColorAsState(Color(look.edgeEnd.v), motion.surface(), label = "kit-surface-edge-end")
+    var result = this
+    if (look.hardOffset > 0f && look.hardShadow.alpha > 0) result = result.dropShadow(
+        shape,
+        ComposeShadow(radius = 0.dp, color = Color(look.hardShadow.v), offset = DpOffset((if (rtl) -look.hardOffset else look.hardOffset).dp, look.hardOffset.dp)),
+    )
+    look.shadows.filter { !it.inset }.forEach { shadow ->
+        result = result.dropShadow(shape, ComposeShadow(radius = shadow.blur.dp, spread = shadow.spread.dp, color = Color(shadow.color.v), offset = DpOffset(shadow.dx.dp, shadow.dy.dp)))
+    }
+    if (look.faceShift != 0f) result = result.graphicsLayer {
+        translationX = if (rtl) -look.faceShift.dp.toPx() else look.faceShift.dp.toPx()
+        translationY = look.faceShift.dp.toPx()
+    }
+    result = result.background(fill, shape)
+    look.shadows.filter { it.inset }.forEach { shadow ->
+        result = result.innerShadow(shape, ComposeShadow(radius = shadow.blur.dp, spread = shadow.spread.dp, color = Color(shadow.color.v), offset = DpOffset(shadow.dx.dp, shadow.dy.dp)))
+    }
+    if (look.edgeWidth > 0f) result = result.border(look.edgeWidth.dp, Brush.linearGradient(listOf(edge, end)), shape)
+    return if (clip) result.clip(shape) else result
+}
+
+@Composable
+public fun Modifier.kitSurface(
+    role: EffectsSurfaceRole,
+    shape: KitShapeId,
+    fill: Color,
+    edge: Color = Color.Transparent,
+    edgeWidth: Float = 0f,
+    request: EffectsSurfaceRequest = EffectsSurfaceRequest(role),
+): Modifier = kitSurface(kitSurfaceLook(request, fill, edge, edgeWidth), shape.toShape())
+
+/** Words on an inverted/raised face follow the spec while attention keeps its own meaning. */
+@Composable
+public fun KitSurfaceContent(look: EffectsSurfaceDecoration, content: @Composable () -> Unit) {
+    val colors = LocalKitColors.current
+    val ink = look.words?.let { Color(it.v) }
+    if (ink == null) content() else CompositionLocalProvider(LocalKitColors provides colors.copy(text1 = ink, text2 = ink, accent = ink, onAccent = ink)) { content() }
+}
+
+private val LocalSurfaceDepth = staticCompositionLocalOf { 0 }
+
+/** Non-Solid content nested in a pane shares its parent's face; only the outer Brutal surface casts. */
+@Composable
+public fun KitSurfaceScope(content: @Composable () -> Unit) {
+    CompositionLocalProvider(LocalSurfaceDepth provides LocalSurfaceDepth.current + 1) { content() }
 }

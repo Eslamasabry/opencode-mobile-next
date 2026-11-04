@@ -23,6 +23,9 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSignalHead
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSignalAspect
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitNeedsYouReasonBlocked
 import io.github.eslamasabry.oc.ui.words.res.kitNeedsYouReasonConsent
@@ -56,6 +59,14 @@ public fun KitNeedsYou(reason: KitNeedsYouReason, modifier: Modifier = Modifier,
             KitNeedsYouReason.Consent -> stringResource(Res.string.kitNeedsYouReasonConsent)
         }
     val shape = KitShapeId.Pill.shape()
+    if (LocalKitStyle.current.track) {
+        Row(modifier.semantics(mergeDescendants = true) {}, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+            KitSignalHead(KitSignalAspect.Stop)
+            KitText(words, role = TypeRole.Caption, kind = KitTextKind.Frame)
+            waiting?.let { KitText(stringResource(Res.string.kitNeedsYouWaiting, it), role = TypeRole.Caption, tone = TextTone.Secondary, kind = KitTextKind.Frame) }
+        }
+        return
+    }
     Row(
         modifier
             .heightIn(min = 24.dp)

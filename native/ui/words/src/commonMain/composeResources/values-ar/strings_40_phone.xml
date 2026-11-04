@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="r40PhoneConnect">استخدام خادم هذا الهاتف</string>
+    <string name="r40PhoneConnectFailed">تعذّر الاتصال بخادم هذا الهاتف. حاول مجددًا.</string>
+    <string name="r40PhoneMemory">يستخدم %1$s من الذاكرة</string>
+    <string name="r40PhoneHistoryMoving">جارٍ نقل محادثاتك السابقة…</string>
+    <string name="r40PhoneHistoryCount">جارٍ نقل محادثاتك السابقة (%1$s من %2$s)…</string>
+    <string name="r40PhoneHistoryFailed">تعذّر نقل المحادثات السابقة. لا تزال بياناتك الأصلية على هذا الهاتف دون تغيير.</string>
+    <string name="r40PhoneReplySpeed">سرعة الرد الأخير</string>
+    <string name="r40PhoneReplyNoWords">انتهى خلال %1$s دون كلمات</string>
+    <string name="r40PhoneReplyLast">أول كلمات خلال %1$s · انتهى خلال %2$s</string>
+    <string name="r40PhoneInstalled">المثبّت على هذا الهاتف</string>
+    <string name="r40PhoneChecking">جارٍ التحقق…</string>
+    <string name="r40PhoneInstalledMark">مثبّت</string>
+    <string name="r40PhoneInventoryFailed">تعذّر التحقق مما هو مثبّت. احتُفظ بالقائمة السابقة. حاول مجددًا.</string>
+    <string name="r40PhoneLinuxMode">وضع لينكس</string>
+    <string name="r40PhoneLinuxFast">سريع (seccomp)</string>
+    <string name="r40PhoneLinuxSlow">أبطأ (ptrace)</string>
+    <string name="r40PhoneUnknown">غير مُبلّغ عنه</string>
+    <string name="r40PhoneAwake">إبقاء الهاتف مستيقظًا</string>
+    <string name="r40PhoneAwakeNow">مستيقظ للعمل الآن</string>
+    <string name="r40PhoneAwakeWhenWorking">عندما يحتاج العمل إلى ذلك فقط</string>
+    <string name="r40PhoneFirstWords">انتظار أول كلمات</string>
+    <string name="r40PhoneFirstSplit">%1$s في التطبيق · %2$s على الخادم</string>
+    <string name="r40PhoneRefresh">تحديث تفاصيل الهاتف</string>
+    <string name="r40PhoneModel">نموذج الرد الأخير</string>
+    <string name="r40PhoneRuntimeDetails">تفاصيل بيئة التشغيل</string>
+    <string name="r40PhoneHistoryDetails">تفاصيل استيراد المحادثات</string>
+    <string name="r40PhoneLogFailed">تعذّرت قراءة سجل الخادم. حاول مجددًا.</string>
+    <string name="r40PhoneLogEmpty">لم يكتب الخادم سجلًا بعد.</string>
+    <string name="r40PhoneLog">سجل خادم OpenCode</string>
+    <string name="r40PhoneSeconds">%1$s ث</string>
+</resources>

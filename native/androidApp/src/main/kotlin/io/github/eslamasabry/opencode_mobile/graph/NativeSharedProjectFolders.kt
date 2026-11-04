@@ -21,6 +21,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 /**
@@ -37,10 +39,13 @@ class NativeSharedProjectFolders(
     private val dispatchers: AppDispatchers,
     appScope: AppCoroutineScope,
 ) {
-    private val lane = dispatchers.serial("shared-project-folders")
-    private val scope = CoroutineScope(appScope.coroutineContext + lane)
+    private val serial = dispatchers.serial("shared-project-folders")
+    private val scope = CoroutineScope(appScope.coroutineContext + serial)
     private var started = false
     private var published: List<String>? = null
+
+    /** Held across the whole read-and-write, so no two rebuilds interleave at the io hop. */
+    private val lane = Mutex()
 
     fun start() {
         if (started) return
@@ -52,26 +57,34 @@ class NativeSharedProjectFolders(
                     stores.prefs.changes.map { Unit },
                 )
                 .onStart { emit(Unit) }
-                .collect { synchronize() }
+                .collect { lane.withLock { synchronize() } }
         }
     }
 
     /**
-     * Rewrites the runtime's list now (a Files grant or a profile deletion) and says whether it
-     * landed. The one writer of the shared-roots file, so grants and the opened-project union never
-     * overwrite each other.
+     * The only writer of the runtime's list: a Files grant, the storage-access flow and profile
+     * deletion publish through here, so a second formula can never race this one and drop a bound
+     * folder. Rewrites the list now (even when unchanged) and says whether it landed; [excluding]
+     * is a profile being deleted, whose folders no longer count.
      */
-    suspend fun syncNow(): Outcome<Unit> =
-        withContext(lane) {
+    suspend fun publish(excluding: ProfileId? = null): Outcome<Unit> =
+        withContext(serial) {
             if (stores.warm() is Outcome.Failed) return@withContext Failure.StorageRefused().failed()
-            published = null
-            synchronize()
+            lane.withLock { synchronize(excluding, force = true) }
         }
 
-    private suspend fun synchronize(): Outcome<Unit> {
+    /** [publish] with nothing excluded (a Files grant or a finished profile deletion). */
+    suspend fun syncNow(): Outcome<Unit> = publish()
+
+    private suspend fun synchronize(
+        excluding: ProfileId? = null,
+        force: Boolean = false,
+    ): Outcome<Unit> {
         val owner = stores.prefs.string("oc.builtinServerOwner")
         val profile =
-            owner?.takeIf { it.isNotEmpty() }?.let { stores.profiles.profile(ProfileId(it)) }
+            owner
+                ?.takeIf { it.isNotEmpty() && it != excluding?.raw }
+                ?.let { stores.profiles.profile(ProfileId(it)) }
         // Folders a Flutter build already granted (`oc.sharedProjects.<profileId>`, migrated as
         // is) stay bound like Flutter's union, but only for saved phone profiles: a deleted or
         // remote server's list grants nothing.
@@ -79,6 +92,7 @@ class NativeSharedProjectFolders(
             stores.prefs
                 .keys(SHARED_PROJECTS)
                 .filter { key ->
+                    key.removePrefix(SHARED_PROJECTS) != excluding?.raw &&
                     stores.profiles
                         .profile(ProfileId(key.removePrefix(SHARED_PROJECTS)))
                         ?.let { localPhone(it.profile.baseUrl) } == true
@@ -94,7 +108,7 @@ class NativeSharedProjectFolders(
                 .mapNotNull(SharedStoragePath::projectRoot)
                 .distinct()
                 .sorted()
-        if (published == roots) return Outcome.Ok(Unit)
+        if (!force && published == roots) return Outcome.Ok(Unit)
         // The copied runtime writes atomically. A failed replacement leaves the previous
         // file intact; the next acknowledged preference/profile change attempts it again.
         val written =

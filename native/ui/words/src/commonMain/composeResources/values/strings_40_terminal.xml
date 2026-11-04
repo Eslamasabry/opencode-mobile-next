@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="terminal40Title">Terminal</string>
+    <string name="terminal40InputOff">Input is unavailable while disconnected.</string>
+    <string name="terminal40Working">Working…</string>
+    <string name="terminal40Refresh">Refresh</string>
+    <string name="terminal40Stale">The project changed. Open its terminal again.</string>
+    <string name="terminal40Unavailable">This server does not share a terminal.</string>
+    <string name="terminal40Failed">The terminal could not finish that action. Try again.</string>
+    <string name="terminal40ClipboardFailed">The clipboard is unavailable.</string>
+    <string name="terminal40EndedTab">%1$s · Ended</string>
+    <string name="terminal40Sessions">Terminal sessions</string>
+    <string name="terminal40New">New terminal</string>
+    <string name="terminal40Copy">Copy selected text or output</string>
+    <string name="terminal40Paste">Paste into terminal</string>
+    <string name="terminal40Reconnect">Reconnect</string>
+    <string name="terminal40Rename">Rename terminal</string>
+    <string name="terminal40Name">Terminal name</string>
+    <string name="terminal40Stop">Stop terminal</string>
+    <string name="terminal40Remove">Remove terminal</string>
+    <string name="terminal40RemoveEnded">Remove ended terminals</string>
+    <string name="terminal40Actions">Terminal actions</string>
+    <string name="terminal40Empty">No terminals are running. Choose New terminal.</string>
+    <string name="terminal40Connecting">Connecting to the terminal…</string>
+    <string name="terminal40Paused">Terminal connection is paused while the app is away.</string>
+    <string name="terminal40Closed">The terminal connection closed. Reconnect to continue.</string>
+    <string name="terminal40Readable">Readable text</string>
+    <string name="terminal40Transcript">Terminal output</string>
+    <string name="terminal40NoOutput">No terminal output yet.</string>
+    <string name="terminal40Command">Send to terminal</string>
+    <string name="terminal40Send">Send command</string>
+    <string name="terminal40RemoveQuestion">Remove these terminals?</string>
+    <string name="terminal40RemoveBody">%1$s
+Running programs in these terminals will stop.</string>
+    <string name="terminal40Details">Command: %1$s
+Folder: %2$s
+Process: %3$d
+Exit code: %4$s</string>
+    <string name="terminal40Select">Select text in the grid</string>
+    <string name="terminal40Ctrl">Ctrl</string>
+    <string name="terminal40Alt">Alt</string>
+    <string name="terminal40Escape">Esc</string>
+    <string name="terminal40Tab">Tab</string>
+    <string name="terminal40Up">Up</string>
+    <string name="terminal40Down">Down</string>
+    <string name="terminal40Left">Left</string>
+    <string name="terminal40Right">Right</string>
+    <string name="terminal40TipTitle">Selecting terminal text</string>
+    <string name="terminal40Tip">Hold the output to select text, or choose Select text in Terminal actions, then Copy.</string>
+    <string name="terminal40CommandLabel">Command</string>
+    <string name="terminal40FolderLabel">Folder</string>
+    <string name="terminal40PidLabel">Process</string>
+    <string name="terminal40ExitLabel">Exit code</string>
+    <string name="terminal40Pipe">|</string>
+    <string name="terminal40Tilde">~</string>
+    <string name="terminal40Slash">/</string>
+    <string name="terminal40Dash">-</string>
+    <string name="terminal40Home">Home</string>
+    <string name="terminal40End">End</string>
+    <string name="terminal40PageUp">PgUp</string>
+    <string name="terminal40PageDown">PgDn</string>
+    <string name="terminal40Interrupt">Ctrl+C</string>
+    <string name="terminal40Eof">Ctrl+D</string>
+    <string name="terminal40OpenPageQuestion">Open the sign-in page?</string>
+    <string name="terminal40OpenPageBody">This page belongs to %1$s. Open it in your browser?</string>
+</resources>

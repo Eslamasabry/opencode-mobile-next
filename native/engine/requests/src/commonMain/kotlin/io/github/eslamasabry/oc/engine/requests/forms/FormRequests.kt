@@ -127,6 +127,12 @@ public class FormRequests(
         _pending.value.filter { it.sessionId == session }.toImmutableList()
 
     public fun onEvent(event: GatewayEvent) {
+        if (
+            event is GatewayEvent.FormCreated ||
+                event is GatewayEvent.FormSettled ||
+                event is GatewayEvent.SessionDeleted
+        )
+            revision++
         when (event) {
             is GatewayEvent.FormCreated -> {
                 settled.remove(event.form.id)

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hub40Changed">That usage entry has changed. Refresh Plans to see the current accounts.</string>
+    <string name="hub40ContinueOn">Continue on %1$s?</string>
+    <string name="hub40ContinueBody">This shortcut asks to open the saved connection for provider sign-in. Nothing is sent until you continue.</string>
+    <string name="hub40Continue">Continue</string>
+</resources>

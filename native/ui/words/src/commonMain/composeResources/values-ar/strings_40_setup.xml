@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="r40SetupVoiceDownloading">جارٍ تنزيل الكتابة بالصوت</string>
+    <string name="r40SetupVoiceVerifying">جارٍ التحقق من ملفات الكتابة بالصوت</string>
+
+    <string name="r40SetupRequired">مطلوب</string>
+    <string name="r40SetupWorking">انتظر اكتمال الإجراء الحالي.</string>
+    <string name="r40SetupTotals">%1$s · حوالي %2$s د</string>
+    <string name="r40SetupCouldNotCheck">تعذّر التحقق من الأدوات المثبّتة أو الإعداد. حاول مجدداً.</string>
+    <string name="r40SetupRetry">حاول مجدداً</string>
+    <string name="r40SetupActionFailed">لم يكتمل الإجراء. حاول مجدداً.</string>
+    <string name="r40SetupCheckDevice">عالج متطلبات الهاتف أعلاه قبل البدء.</string>
+    <string name="r40SetupStorageUnopened">تعذّر فتح إعدادات التخزين. حرّر مساحة من إعدادات هاتفك، ثم حاول مجدداً.</string>
+    <string name="r40SetupRemoveVoiceTitle">إزالة الكتابة بالصوت؟</string>
+    <string name="r40SetupRemoveVoiceBody">ستُحذف نماذج الكلام المحمّلة من هذا التطبيق. ستبقى محادثاتك، ويمكنك تنزيل الكتابة بالصوت مجدداً لاحقاً.</string>
+    <string name="r40SetupRemoveVoice">إزالة الكتابة بالصوت</string>
+    <string name="r40SetupKeepVoice">إبقاء الكتابة بالصوت</string>
+    <string name="r40SetupRemoveVoiceFailed">تعذّرت إزالة الكتابة بالصوت. أنهِ التسجيل أو التنزيل الجاري، ثم حاول مجدداً.</string>
+    <string name="r40SetupPercent">%1$s٪</string>
+    <string name="r40SetupComponentDone">اكتمل</string>
+    <string name="r40SetupComponentInstalled">مثبّت بالفعل</string>
+    <string name="r40SetupComponentChecking">جارٍ التحقق…</string>
+    <string name="r40SetupComponentRunning">جارٍ التثبيت…</string>
+    <string name="r40SetupComponentFailed">لم يكتمل</string>
+    <string name="r40SetupComponentPending">في الانتظار</string>
+    <string name="r40WelcomePhone">على هذا الهاتف</string>
+    <string name="r40WelcomePhoneBody">شغّل OpenCode هنا دون الحاجة إلى حاسوب.</string>
+    <string name="r40WelcomeComputer">على حاسوبي</string>
+    <string name="r40WelcomeComputerBody">اتصل بحاسوب يعمل عليه OpenCode.</string>
+    <string name="r40WelcomeRunning">اكتمل %1$s٪ من الإعداد</string>
+    <string name="r40WelcomeStopped">توقّف الإعداد عند %1$s٪</string>
+    <string name="r40WelcomeSetupBody">ينزّل مساحة Linux خاصة وأدوات OpenCode. يمكنك اختيار ما تريد تثبيته قبل البدء.</string>
+    <string name="r40WelcomeViewProgress">عرض تقدّم الإعداد</string>
+</resources>

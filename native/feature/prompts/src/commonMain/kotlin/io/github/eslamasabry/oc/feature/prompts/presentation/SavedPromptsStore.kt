@@ -10,6 +10,9 @@ public data class SavedPromptItem(
     val attachments: Int = 0,
     val references: Int = 0,
     val unavailable: List<String> = emptyList(),
+    /** This record is app-owned and survives removal of its original server. */
+    val kept: Boolean = false,
+    val uncertain: Boolean = false,
 ) {
     override fun toString(): String =
         "SavedPromptItem(id=$id, chars=${text.length}, attachments=$attachments)"
