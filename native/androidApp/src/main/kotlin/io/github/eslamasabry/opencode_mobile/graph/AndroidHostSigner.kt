@@ -112,10 +112,10 @@ internal class AndroidHostSigner(context: Context) {
                 val user = arguments["user"] ?: ""
                 require(user.matches(Regex("[A-Za-z_][A-Za-z0-9_.-]{0,63}")))
                 val path = arguments["socketPath"] ?: ""
-                val root = File(app.filesDir, "linux/ubuntu/tmp")
-                require(
-                    root.canonicalFile == File(app.filesDir.canonicalFile, "linux/ubuntu/tmp")
-                ) // No symlinks below app files.
+                // AndroidHostFiles hands the runner the canonical files root (/data/user/0 is a
+                // link to /data/data on many devices), so the socket path is canonical too.
+                val root = File(app.filesDir.canonicalFile, "linux/ubuntu/tmp")
+                require(root.canonicalFile == root) // No symlinks below app files.
                 val suffix = path.removePrefix(root.path + "/")
                 require(path == root.path + "/" + suffix)
                 require(suffix.matches(Regex("\\.oa-[a-f0-9]{16}/s")))

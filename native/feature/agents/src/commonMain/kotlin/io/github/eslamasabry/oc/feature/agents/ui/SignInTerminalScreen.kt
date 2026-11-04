@@ -239,7 +239,8 @@ private fun Running(state: SignInTerminalUi, actions: SignInTerminalActions, mod
     KitButton(stringResource(Res.string.agentsDone), actions::finish, role = KitButtonRole.Tertiary)
 }
 
-// them the Flutter terminal's own strings stand in (S3-TERMMIN report, words requests).
+// The Flutter terminal's own strings name the readable-mode switch and the input field (plan 06
+// §7.7; S3-TERMMIN report, words requests).
 @Composable
 private fun terminalWords(): KitTerminalWords =
     KitTerminalWords(
