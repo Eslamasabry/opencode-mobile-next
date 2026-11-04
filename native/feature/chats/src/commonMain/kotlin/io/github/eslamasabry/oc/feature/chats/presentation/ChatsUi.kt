@@ -144,6 +144,7 @@ public data class ChatsUi(
 /** Methods are intents, never widget names (ADR §9.1). */
 public interface ChatsActions {
     public fun answerPermission(row: ConversationRowUi, allow: Boolean) {}
+    public fun openInbox() {}
 
     public fun openConversation(ref: ConversationRef)
 

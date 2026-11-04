@@ -22,4 +22,10 @@ public sealed interface SettingsRoute : AppRoute {
         val profile: io.github.eslamasabry.oc.core.common.ids.ProfileId? = null
     ) : SettingsRoute
     @Serializable public data object WhatsNew : SettingsRoute
+
+    @Serializable
+    public data class Permissions(val profile: io.github.eslamasabry.oc.core.common.ids.ProfileId) :
+        SettingsRoute
+
+    @Serializable public data object Notifications : SettingsRoute
 }

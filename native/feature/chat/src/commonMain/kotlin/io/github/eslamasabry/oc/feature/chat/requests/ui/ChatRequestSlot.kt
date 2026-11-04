@@ -34,11 +34,14 @@ import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceMark
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceRow
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
+import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
+import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitReceipt
 import io.github.eslamasabry.oc.ui.kit.state.KitReceiptState
 import io.github.eslamasabry.oc.ui.kitchat.request.KitPermissionCard
@@ -53,6 +56,9 @@ import io.github.eslamasabry.oc.ui.words.res.chatRequestOtherAnswer
 import io.github.eslamasabry.oc.ui.words.res.chatRequestOtherField
 import io.github.eslamasabry.oc.ui.words.res.chatStopAfterStepUndo
 import io.github.eslamasabry.oc.ui.words.res.chatUiAlwaysAllow
+import io.github.eslamasabry.oc.ui.words.res.invitation40KeepAsking
+import io.github.eslamasabry.oc.ui.words.res.invitation40Question
+import io.github.eslamasabry.oc.ui.words.res.invitation40SaveFailed
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmCancel
 import io.github.eslamasabry.oc.ui.words.res.kitRequestAllowOnce
 import io.github.eslamasabry.oc.ui.words.res.kitRequestAnswer
@@ -94,8 +100,35 @@ public fun ChatRequestSlot(
                             if (nowMs != null && since != null) waitedWords(nowMs - since) else null
                     )
                     when (card) {
-                        is RequestCardUi.Permission ->
+                        is RequestCardUi.Permission -> {
                             PermissionWaiting(card, state.moreWaiting, actions)
+                            state.invitationFailure?.let {
+                                KitErrorNotice(
+                                    stringResource(Res.string.invitation40SaveFailed),
+                                    failure = it,
+                                )
+                            }
+                            if (card.invitation)
+                                KitNotice(
+                                    message = stringResource(Res.string.invitation40Question),
+                                    actions =
+                                        listOf(
+                                            KitLineAction(
+                                                stringResource(Res.string.chatUiAlwaysAllow),
+                                                {
+                                                    actions.performReviewed(
+                                                        card,
+                                                        ReviewedRequestAction.AskAlways,
+                                                    )
+                                                },
+                                            ),
+                                            KitLineAction(
+                                                stringResource(Res.string.invitation40KeepAsking),
+                                                { actions.keepAsking(card.id) },
+                                            ),
+                                        ),
+                                )
+                        }
                         is RequestCardUi.Question ->
                             QuestionWaiting(card, state.moreWaiting, actions)
                     }
@@ -151,11 +184,12 @@ private fun PermissionWaiting(
                 )
             },
         allowOnceLabel = stringResource(Res.string.kitRequestAllowOnce),
-        alwaysLabel = if (card.canAlwaysAllow) alwaysLabel(card.ask.always) else null,
+        alwaysLabel =
+            if (card.canAlwaysAllow && !card.invitation) alwaysLabel(card.ask.always) else null,
         denyLabel = stringResource(Res.string.kitRequestReject),
         onAllowOnce = { actions.performReviewed(card, ReviewedRequestAction.AllowOnce) },
         onAlways =
-            if (card.canAlwaysAllow)
+            if (card.canAlwaysAllow && !card.invitation)
                 ({ actions.performReviewed(card, ReviewedRequestAction.AskAlways) })
             else null,
         onDeny = { actions.performReviewed(card, ReviewedRequestAction.Reject) },

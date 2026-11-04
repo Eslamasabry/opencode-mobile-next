@@ -1,24 +1,9 @@
 package io.github.eslamasabry.oc.feature.servers.ui
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
@@ -37,10 +22,9 @@ import io.github.eslamasabry.oc.feature.servers.presentation.ServerMonitorStatus
 import io.github.eslamasabry.oc.feature.servers.presentation.ServersActions
 import io.github.eslamasabry.oc.feature.servers.presentation.ServersUi
 import io.github.eslamasabry.oc.feature.servers.presentation.serverFailureKind
+import io.github.eslamasabry.oc.feature.servers.presentation.*
 import io.github.eslamasabry.oc.ui.design.tokens.Space
-import io.github.eslamasabry.oc.ui.kit.KitButton
-import io.github.eslamasabry.oc.ui.kit.KitButtonRole
-import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.*
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
@@ -56,6 +40,9 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.frame.*
+import io.github.eslamasabry.oc.ui.kit.row.*
+import io.github.eslamasabry.oc.ui.kit.state.*
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.addServerScan
@@ -147,20 +134,16 @@ import io.github.eslamasabry.oc.ui.words.res.stateShareViewedTitle
 import io.github.eslamasabry.oc.ui.words.res.usageTabPlans
 import io.github.eslamasabry.oc.ui.words.res.usageTitle
 import kotlinx.coroutines.flow.drop
+import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * Every visual control is an existing kit part. Editable secrets stay in an unsaved secure text
- * field.
+ * The list has one add door. Every new profile goes through the checked editor, including New chat.
  */
 @Composable
 public fun ServersScreen(
     state: ServersUi,
     actions: ServersActions,
-    /**
-     * Opens This phone (the phone's own server and Linux); null where the platform has no built-in
-     * Linux.
-     */
     onThisPhone: (() -> Unit)? = null,
     onInspectSetup: ((ProfileId) -> Unit)? = null,
     onTerminal: ((ProfileId) -> Unit)? = null,
@@ -251,11 +234,17 @@ public fun ServersScreen(
                 onExit = actions::back,
             )
         },
+        bottom = {
+            KitButton(
+                stringResource(Res.string.serversAdd),
+                { actions.edit(null) },
+                enabled = enabled,
+            )
+        },
         width = KitScreenWidth.Reading,
     ) {
         Column(
             Modifier.fillMaxSize()
-                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S3.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
@@ -271,16 +260,15 @@ public fun ServersScreen(
                     KitNotice(words)
                 } else {
                     KitErrorNotice(
-                        words,
+                        issueWords(issue, state.failure),
                         failure = state.failure,
                         detailsLabel = stringResource(Res.string.kitDetails),
                         copyLabel = stringResource(Res.string.kitCopyDetails),
                     )
-                }
             }
             onThisPhone?.let {
                 KitRow(
-                    title = stringResource(Res.string.settingsV3ThisPhone),
+                    stringResource(Res.string.settingsV3ThisPhone),
                     supporting = stringResource(Res.string.linuxMgrRowDetail),
                     supportingMaxLines = 2,
                     trailing = KitRowTrailing.Chevron,
@@ -288,7 +276,7 @@ public fun ServersScreen(
                 )
             }
             KitRow(
-                title = stringResource(Res.string.linuxHostSetupTitle),
+                stringResource(Res.string.linuxHostSetupTitle),
                 trailing = KitRowTrailing.Chevron,
                 onClick = { hostSetup = true },
             )
@@ -346,7 +334,49 @@ public fun ServersScreen(
                         KitText(stringResource(Res.string.settingsV3ThisPhone))
                     }
                     if (server.connected) KitText(stringResource(Res.string.serversConnected))
+                    // 40-port-screens-3: what waits on this server (Flutter saved rows).
+                    val facts = state.rows.facts[server.id]
+                    val waitingLines = buildList {
+                        if ((facts?.waiting ?: 0) > 0)
+                            add(stringResource(Res.string.rows40Waiting, facts!!.waiting!!))
+                        if ((facts?.running ?: 0) > 0)
+                            add(stringResource(Res.string.rows40Working, facts!!.running!!))
+                        if (facts?.needsSecret == true) add(stringResource(Res.string.rows40Secret))
+                        if ((facts?.queued ?: 0) > 0)
+                            add(stringResource(Res.string.rows40Queued, facts!!.queued))
+                    }
+                    if (waitingLines.isNotEmpty()) KitText(waitingLines.joinToString(" · "))
+                    if (facts?.account == true)
+                        KitButton(
+                            stringResource(Res.string.account40Title),
+                            { actions.openAccount(server.id) },
+                            role = KitButtonRole.Tertiary,
+                            enabled = enabled,
+                        )
+                    val destination =
+                        state.rows.moveDestination
+                            ?.takeIf { it != server.id }
+                            ?.let { id -> state.servers.firstOrNull { it.id == id } }
+                    if ((facts?.queued ?: 0) > 0 && destination != null)
+                        KitButton(
+                            stringResource(Res.string.rows40Move, facts!!.queued, destination.name),
+                            { actions.moveQueued(server.id) },
+                            role = KitButtonRole.Tertiary,
+                            enabled = enabled,
+                        )
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+                        KitButton(
+                            stringResource(Res.string.editor40Edit),
+                            { actions.edit(server.id) },
+                            role = KitButtonRole.Tertiary,
+                            enabled = enabled,
+                        )
+                        KitButton(
+                            stringResource(Res.string.serverSettingsTitle),
+                            { actions.settings(server.id) },
+                            role = KitButtonRole.Tertiary,
+                            enabled = enabled,
+                        )
                         if (state.connectionCheckAvailable) {
                             KitButton(
                                 stringResource(Res.string.connectionCheckAction),

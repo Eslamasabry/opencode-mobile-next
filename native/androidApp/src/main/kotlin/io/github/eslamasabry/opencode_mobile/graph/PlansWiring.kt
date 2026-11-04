@@ -96,7 +96,6 @@ import kotlinx.coroutines.withTimeoutOrNull
 @ContributesBinding(AppScope::class, binding = binding<PlansSource>())
 @Inject
 class AndroidPlansSource(
-    private val registry: ConnectionRegistry,
     private val stores: PreviewStores,
     private val application: Application,
     private val clock: Clock,

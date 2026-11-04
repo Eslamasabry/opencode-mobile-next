@@ -10,6 +10,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import io.github.eslamasabry.oc.ui.kit.content.terminal.AndroidKitTerminalSlot
+import io.github.eslamasabry.oc.ui.kit.content.terminal.LocalKitTerminalSlot
 import androidx.compose.runtime.withFrameNanos
 import io.github.eslamasabry.oc.ui.kit.content.terminal.AndroidKitTerminalSlot
 import io.github.eslamasabry.oc.ui.kit.content.terminal.LocalKitTerminalSlot

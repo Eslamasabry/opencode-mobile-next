@@ -1,0 +1,5 @@
+<resources>
+    <string name="composerKeptRestoreTitle">Kept prompt</string>
+    <string name="composerKeptRestoreRefused">This prompt could not be restored. It is still in Kept prompts. Open it again to restore it.</string>
+    <string name="composerKeptMissingFiles">These files could not be restored: %1$s. Their kept prompt is unchanged.</string>
+</resources>

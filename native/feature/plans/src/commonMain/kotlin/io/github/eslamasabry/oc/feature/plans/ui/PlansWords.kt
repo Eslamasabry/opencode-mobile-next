@@ -1,123 +1,155 @@
 package io.github.eslamasabry.oc.feature.plans.ui
 
 import androidx.compose.runtime.Composable
-import io.github.eslamasabry.oc.engine.integrations.usage.ComputerUsageProblem
 import io.github.eslamasabry.oc.engine.integrations.usage.SignInState
 import io.github.eslamasabry.oc.engine.integrations.usage.SubscriptionState
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageFix
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageWindowKind
+import io.github.eslamasabry.oc.feature.plans.presentation.PlanCardUi
 import io.github.eslamasabry.oc.feature.plans.presentation.PlanConnectionUi
+import io.github.eslamasabry.oc.feature.plans.presentation.PlanWindowUi
+import io.github.eslamasabry.oc.feature.plans.presentation.cardWindows
 import io.github.eslamasabry.oc.ui.words.res.*
+import kotlin.time.Instant
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 
-/** Native resource copy for Usage plans; formatting stays in the UI layer. */
-public class PlansWords
-internal constructor(
-    private val strings: List<String>,
-    /** AGENT-1: the computer usage readers' copy, by key. */
-    private val readerWords: Map<String, String> = emptyMap(),
-) {
-    private fun r(key: String, vararg args: Any): String {
-        var value = readerWords[key].orEmpty()
-        args.forEachIndexed { index, arg ->
-            value = value.replace("%${index + 1}\$s", arg.toString())
-        }
-        return value.replace("%%", "%")
-    }
-
-    private fun t(index: Int, vararg values: Any?): String {
-        var value = strings[index]
-        for ((i, part) in values.withIndex()) value =
-            value.replace("%" + (i + 1) + "$" + "s", part.toString())
-        return value
-    }
-
+/** Resource-backed plan copy shared by the compact reading and its full details. */
+public class PlansWords internal constructor() {
     val title: String
-        get() = t(0)
+        @Composable get() = stringResource(Res.string.m40PlansTitle)
 
     val back: String
-        get() = t(1)
+        @Composable get() = stringResource(Res.string.m40PlansBack)
 
     val loading: String
-        get() = t(2)
+        @Composable get() = stringResource(Res.string.m40PlansLoading)
 
     val refresh: String
-        get() = t(3)
+        @Composable get() = stringResource(Res.string.m40PlansRefresh)
 
     val refreshing: String
-        get() = t(4)
+        @Composable get() = stringResource(Res.string.m40PlansRefreshing)
 
     val emptyTitle: String
-        get() = t(5)
+        @Composable get() = stringResource(Res.string.m40PlansEmptyTitle)
 
     val emptyBody: String
-        get() = t(6)
+        @Composable get() = stringResource(Res.string.m40PlansEmptyBody)
 
     val keysLabel: String
-        get() = t(7)
+        @Composable get() = stringResource(Res.string.m40PlansKeys)
 
     val addLabel: String
-        get() = t(8)
+        @Composable get() = stringResource(Res.string.m40PlansAdd)
 
     val thisPhone: String
-        get() = t(9)
+        @Composable get() = stringResource(Res.string.m40PlansPhone)
 
+    val resetSince: String
+        @Composable get() = stringResource(Res.string.m40PlansResetSince)
+
+    val viaOpenCode: String
+        @Composable get() = stringResource(Res.string.m40PlansViaOpenCode)
+
+    val needsSetup: String
+        @Composable get() = stringResource(Res.string.m40PlansNeedsSetup)
+
+    val details: String
+        @Composable get() = stringResource(Res.string.m40PlansDetails)
+
+    val copyDetails: String
+        @Composable get() = stringResource(Res.string.m40PlansCopyDetails)
+
+    @Composable
     fun connection(c: PlanConnectionUi): String =
         if (c.isPhone || c.name.isBlank()) thisPhone else c.name
 
+    @Composable
     fun cardTitle(name: String, connection: PlanConnectionUi?): String =
         if (connection == null) name else "$name · ${connection(connection)}"
 
-    fun state(s: SubscriptionState): String =
-        when (s) {
-            SubscriptionState.Ok -> t(10)
-            SubscriptionState.NearLimit -> t(11)
-            SubscriptionState.Exhausted -> t(12)
-            SubscriptionState.CantReadYet -> t(13)
-            SubscriptionState.SignInExpired -> t(14)
-            SubscriptionState.NotSignedIn -> t(15)
-            SubscriptionState.ReaderBroken -> t(16)
-            SubscriptionState.OfflineStale -> t(17)
-            SubscriptionState.NoLimits -> t(18)
-            SubscriptionState.ApiKeyOnly -> t(19)
-        }
+    @Composable
+    fun state(s: SubscriptionState, provider: String = ""): String =
+        stringResource(
+            when (s) {
+                SubscriptionState.Ok -> Res.string.m40PlansOk
+                SubscriptionState.NearLimit -> Res.string.m40PlansNear
+                SubscriptionState.Exhausted -> Res.string.m40PlansExhausted
+                SubscriptionState.CantReadYet -> Res.string.m40PlansCantRead
+                SubscriptionState.SignInExpired -> Res.string.m40PlansExpired
+                SubscriptionState.NotSignedIn ->
+                    if (provider == "glm" || provider == "minimax") Res.string.m40PlansNoKey
+                    else Res.string.m40PlansNotSignedIn
+                SubscriptionState.ReaderBroken -> Res.string.m40PlansBroken
+                SubscriptionState.OfflineStale -> Res.string.m40PlansOffline
+                SubscriptionState.NoLimits -> Res.string.m40PlansNoLimits
+                SubscriptionState.ApiKeyOnly -> Res.string.m40PlansApiKey
+            }
+        )
 
+    @Composable
     fun fix(fix: UsageFix, where: PlanConnectionUi?): String? {
         val place = where?.let { connection(it) }
         return when (fix) {
             UsageFix.None -> null
-            UsageFix.SignIn -> if (place == null) t(20) else t(21, place)
-            UsageFix.AddKey -> if (place == null) t(22) else t(23, place)
-            UsageFix.SetUp -> if (place == null) t(24) else t(25, place)
-            UsageFix.TryAgain -> t(26)
+            UsageFix.SignIn ->
+                if (place == null) stringResource(Res.string.m40PlansSignIn)
+                else stringResource(Res.string.m40PlansSignInOn, place)
+            UsageFix.AddKey ->
+                if (place == null) stringResource(Res.string.m40PlansAddKey)
+                else stringResource(Res.string.m40PlansAddKeyOn, place)
+            UsageFix.SetUp ->
+                if (place == null) stringResource(Res.string.m40PlansSetUp)
+                else stringResource(Res.string.m40PlansSetUpOn, place)
+            UsageFix.TryAgain -> stringResource(Res.string.m40PlansTryAgain)
         }
     }
 
-    fun window(kind: UsageWindowKind, label: String): String =
+    @Composable
+    fun window(kind: UsageWindowKind, label: String, id: String = ""): String =
         when (kind) {
-            UsageWindowKind.FiveHour -> t(27)
-            UsageWindowKind.Weekly -> t(28)
-            UsageWindowKind.Monthly -> t(29)
-            UsageWindowKind.Other -> label.ifBlank { t(30) }
+            UsageWindowKind.FiveHour -> stringResource(Res.string.m40PlansFiveHours)
+            UsageWindowKind.Weekly -> stringResource(Res.string.m40PlansWeek)
+            UsageWindowKind.Monthly -> stringResource(Res.string.m40PlansMonth)
+            UsageWindowKind.Other -> {
+                val raw = id.trim().lowercase()
+                if (raw == "mcp" || raw.startsWith("mcp.") || raw.startsWith("mcp_"))
+                    stringResource(Res.string.m40PlansTools)
+                else
+                    label
+                        .ifBlank { id }
+                        .replace(Regex("[_.\\-]+"), " ")
+                        .split(Regex("\\s+"))
+                        .filter { it.isNotBlank() }
+                        .joinToString(" ") {
+                            it.lowercase().replaceFirstChar { c -> c.titlecase() }
+                        }
+                        .ifBlank { stringResource(Res.string.m40PlansLimit) }
+            }
         }
 
-    fun left(percent: Int): String = t(31, percent)
+    @Composable fun left(percent: Int): String = stringResource(Res.string.m40PlansLeft, percent)
 
+    @Composable
     fun resetsIn(minutes: Long): String =
         when {
-            minutes <= 0 -> t(32)
-            minutes < 60 -> t(33, minutes)
-            minutes < 48 * 60 -> t(34, minutes / 60)
-            else -> t(35, minutes / (24 * 60))
+            minutes <= 0 -> stringResource(Res.string.m40PlansResetNow)
+            minutes < 60 -> stringResource(Res.string.m40PlansResetMinutes, minutes)
+            minutes < 48 * 60 -> stringResource(Res.string.m40PlansResetHours, minutes / 60)
+            else -> stringResource(Res.string.m40PlansResetDays, minutes / (24 * 60))
         }
 
-    val resetSince: String
-        get() = t(36)
+    @Composable
+    fun plan(name: String): String =
+        stringResource(Res.string.m40PlansPlan, name.trim().replaceFirstChar { it.titlecase() })
 
-    fun plan(name: String): String = t(37, name)
+    @Composable
+    fun alertAt(percent: Int): String = stringResource(Res.string.m40PlansAlertAt, percent)
 
-    fun alertAt(percent: Int): String = t(38, percent)
-
+    @Composable
     fun signedIn(
         connection: PlanConnectionUi,
         state: SignInState,
@@ -126,13 +158,16 @@ internal constructor(
     ): String {
         val place = connection(connection)
         val what =
-            when {
-                !online -> t(39)
-                state == SignInState.Expired -> t(40)
-                state == SignInState.NotSignedIn -> t(41)
-                readsHere -> t(42)
-                else -> t(43)
-            }
+            stringResource(
+                when {
+                    !online && connection.isPhone -> Res.string.m40PlansPhoneStopped
+                    !online -> Res.string.m40PlansOfflineShort
+                    state == SignInState.Expired -> Res.string.m40PlansExpiredShort
+                    state == SignInState.NotSignedIn -> Res.string.m40PlansNotSignedInShort
+                    readsHere -> Res.string.m40PlansReadsHere
+                    else -> Res.string.m40PlansSignedIn
+                }
+            )
         return "$place: $what"
     }
 
@@ -145,105 +180,95 @@ internal constructor(
             else -> id
         }
 
-    val viaOpenCode: String
-        get() = t(44)
+    @Composable
+    fun duration(ms: Long): String {
+        val minutes = (ms / 60_000).coerceAtLeast(1)
+        val hours = minutes / 60
+        return when {
+            hours == 0L -> stringResource(Res.string.m40PlansDurationMinutes, minutes)
+            hours < 24 && minutes % 60 == 0L ->
+                stringResource(Res.string.m40PlansDurationHours, hours)
+            hours < 24 ->
+                stringResource(Res.string.m40PlansDurationHoursMinutes, hours, minutes % 60)
+            hours % 24 == 0L -> stringResource(Res.string.m40PlansDurationDays, hours / 24)
+            else -> stringResource(Res.string.m40PlansDurationDaysHours, hours / 24, hours % 24)
+        }
+    }
 
-    // ---- AGENT-1: explicit computer usage readers.
+    /** The device's local clock; a future reset within six days names its weekday. */
+    @Composable
+    fun whenAt(at: Long, now: Long): String {
+        val zone = TimeZone.currentSystemDefault()
+        val local = Instant.fromEpochMilliseconds(at).toLocalDateTime(zone)
+        val today = Instant.fromEpochMilliseconds(now).toLocalDateTime(zone).date
+        val clock =
+            "${local.hour.toString().padStart(2, '0')}:${local.minute.toString().padStart(2, '0')}"
+        if (local.date == today) return clock
+        if (at > now && at - now < 6 * 86_400_000L) {
+            val weekday =
+                stringResource(
+                    when (local.dayOfWeek) {
+                        DayOfWeek.MONDAY -> Res.string.m40PlansMonday
+                        DayOfWeek.TUESDAY -> Res.string.m40PlansTuesday
+                        DayOfWeek.WEDNESDAY -> Res.string.m40PlansWednesday
+                        DayOfWeek.THURSDAY -> Res.string.m40PlansThursday
+                        DayOfWeek.FRIDAY -> Res.string.m40PlansFriday
+                        DayOfWeek.SATURDAY -> Res.string.m40PlansSaturday
+                        DayOfWeek.SUNDAY -> Res.string.m40PlansSunday
+                    }
+                )
+            return "$weekday $clock"
+        }
+        return "${local.date} $clock"
+    }
 
-    val readers: String
-        get() = r("Readers")
+    @Composable
+    fun summary(card: PlanCardUi, now: Long): String? {
+        val windows = card.cardWindows()
+        if (windows.isEmpty()) return null
+        if (card.state == SubscriptionState.Exhausted) {
+            val at =
+                card.windows.filter { it.leftPercent == 0 }.mapNotNull { it.resetsAtMs }.maxOrNull()
+            return if (at == null) left(0)
+            else stringResource(Res.string.m40PlansBackAt, whenAt(at, now))
+        }
+        return left(windows.minOf { it.leftPercent })
+    }
 
-    val readerExplanation: String
-        get() = r("ReaderExplanation")
+    @Composable
+    fun resetDetail(window: PlanWindowUi, now: Long): String? =
+        window.resetsAtMs?.let { at ->
+            if (at <= now) stringResource(Res.string.m40PlansResetPassed)
+            else
+                stringResource(Res.string.m40PlansResetsAt, whenAt(at, now)) +
+                    " · " +
+                    duration(at - now)
+        }
 
-    val readerOn: String
-        get() = r("ReaderOn")
+    @Composable
+    fun checked(card: PlanCardUi, now: Long): String? {
+        val fetched = card.fetchedAtMs ?: return null
+        val checked = card.checkedAtMs ?: return null
+        return if (checked - fetched < 600_000) null
+        else stringResource(Res.string.m40PlansCheckedAgo, duration(now - checked))
+    }
 
-    val readerOff: String
-        get() = r("ReaderOff")
-
-    val reading: String
-        get() = r("Reading")
-
-    val readerFailed: String
-        get() = r("ReaderFailed")
-
-    fun readerAction(name: String, enabled: Boolean): String =
-        r(if (enabled) "DisableReader" else "EnableReader", name)
-
-    fun readNow(name: String): String = r("ReadNow", name)
-
-    fun readerProblem(problem: ComputerUsageProblem): String = r(problem.name)
-
-    fun found(providers: List<String>): String =
-        r("Found", providers.joinToString(", ") { providerName(it) })
+    @Composable
+    fun facts(card: PlanCardUi, now: Long): List<String> = buildList {
+        card.readFrom?.let { add(stringResource(Res.string.m40PlansReadFrom, connection(it))) }
+        card.fetchedAtMs?.let { add(stringResource(Res.string.m40PlansReadTime, whenAt(it, now))) }
+        card.checkedAtMs?.let {
+            add(stringResource(Res.string.m40PlansCheckedTime, whenAt(it, now)))
+        }
+        for (window in card.windows) add(
+            listOfNotNull(
+                    window(window.kind, window.label, window.id),
+                    left(window.leftPercent),
+                    resetDetail(window, now),
+                )
+                .joinToString(" · ")
+        )
+    }
 }
 
-@Composable
-public fun plansWords(): PlansWords =
-    PlansWords(
-        listOf(
-            stringResource(Res.string.statePlansCopy0),
-            stringResource(Res.string.statePlansCopy1),
-            stringResource(Res.string.statePlansCopy2),
-            stringResource(Res.string.statePlansCopy3),
-            stringResource(Res.string.statePlansCopy4),
-            stringResource(Res.string.statePlansCopy5),
-            stringResource(Res.string.statePlansCopy6),
-            stringResource(Res.string.statePlansCopy7),
-            stringResource(Res.string.statePlansCopy8),
-            stringResource(Res.string.statePlansCopy9),
-            stringResource(Res.string.statePlansCopy10),
-            stringResource(Res.string.statePlansCopy11),
-            stringResource(Res.string.statePlansCopy12),
-            stringResource(Res.string.statePlansCopy13),
-            stringResource(Res.string.statePlansCopy14),
-            stringResource(Res.string.statePlansCopy15),
-            stringResource(Res.string.statePlansCopy16),
-            stringResource(Res.string.statePlansCopy17),
-            stringResource(Res.string.statePlansCopy18),
-            stringResource(Res.string.statePlansCopy19),
-            stringResource(Res.string.statePlansCopy20),
-            stringResource(Res.string.statePlansCopy21),
-            stringResource(Res.string.statePlansCopy22),
-            stringResource(Res.string.statePlansCopy23),
-            stringResource(Res.string.statePlansCopy24),
-            stringResource(Res.string.statePlansCopy25),
-            stringResource(Res.string.statePlansCopy26),
-            stringResource(Res.string.statePlansCopy27),
-            stringResource(Res.string.statePlansCopy28),
-            stringResource(Res.string.statePlansCopy29),
-            stringResource(Res.string.statePlansCopy30),
-            stringResource(Res.string.statePlansCopy31),
-            stringResource(Res.string.statePlansCopy32),
-            stringResource(Res.string.statePlansCopy33),
-            stringResource(Res.string.statePlansCopy34),
-            stringResource(Res.string.statePlansCopy35),
-            stringResource(Res.string.statePlansCopy36),
-            stringResource(Res.string.statePlansCopy37),
-            stringResource(Res.string.statePlansCopy38),
-            stringResource(Res.string.statePlansCopy39),
-            stringResource(Res.string.statePlansCopy40),
-            stringResource(Res.string.statePlansCopy41),
-            stringResource(Res.string.statePlansCopy42),
-            stringResource(Res.string.statePlansCopy43),
-            stringResource(Res.string.statePlansCopy44),
-        ),
-        mapOf(
-            "Readers" to stringResource(Res.string.p12PlansReaders),
-            "ReaderExplanation" to stringResource(Res.string.p12PlansReaderExplanation),
-            "ReaderOn" to stringResource(Res.string.p12PlansReaderOn),
-            "ReaderOff" to stringResource(Res.string.p12PlansReaderOff),
-            "EnableReader" to stringResource(Res.string.p12PlansEnableReader),
-            "DisableReader" to stringResource(Res.string.p12PlansDisableReader),
-            "ReadNow" to stringResource(Res.string.p12PlansReadNow),
-            "Reading" to stringResource(Res.string.p12PlansReading),
-            "ReaderFailed" to stringResource(Res.string.p12PlansReaderFailed),
-            "NodeMissing" to stringResource(Res.string.p12PlansNodeMissing),
-            "NodeTooOld" to stringResource(Res.string.p12PlansNodeTooOld),
-            "ServerTooOld" to stringResource(Res.string.p12PlansServerTooOld),
-            "Unreachable" to stringResource(Res.string.p12PlansUnreachable),
-            "NoAnswer" to stringResource(Res.string.p12PlansNoAnswer),
-            "Found" to stringResource(Res.string.p12PlansFound),
-        ),
-    )
+@Composable public fun plansWords(): PlansWords = PlansWords()

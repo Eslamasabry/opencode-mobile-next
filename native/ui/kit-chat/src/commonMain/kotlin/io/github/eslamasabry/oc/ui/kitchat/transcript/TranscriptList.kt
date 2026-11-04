@@ -15,9 +15,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -42,6 +39,8 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.frame.kitScreenChromePadding
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
 import kotlinx.coroutines.launch
+import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 
 /**
  * The transcript list's scroll state (plan 09 §7.3, plan 08 §5.1 follow-scroll). Hoisted per chat
@@ -176,7 +175,8 @@ private fun KitJumpToLatest(
                 (if (full) slideOutVertically(tween(MotionTokens.QUICK)) { it / 4 } else fadeOut()),
         modifier = modifier,
     ) {
-        Surface(
+        KitButton(
+            label = label,
             onClick = {
                 state.following = true
                 scope.launch {
@@ -194,16 +194,8 @@ private fun KitJumpToLatest(
                     }
                 }
             },
-            shape = MaterialTheme.shapes.extraLarge,
-            color = MaterialTheme.colorScheme.secondaryContainer,
-            tonalElevation = 2.dp,
+            role = KitButtonRole.Secondary,
             modifier = Modifier.testTag("jump-to-latest"),
-        ) {
-            Text(
-                label,
-                style = MaterialTheme.typography.labelLarge,
-                modifier = Modifier.padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
-            )
-        }
+        )
     }
 }

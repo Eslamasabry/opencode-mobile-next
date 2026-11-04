@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat.requests.presentation
 
+import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -65,17 +66,23 @@ public class ChatRequestsModel(
         val drafts: PersistentMap<QuestionDraftKey, String> = persistentMapOf(),
         val sheet: PendingRequest.Question? = null,
         val questionDrafts: Map<QuestionDraftKey, ImmutableList<PromptDraft>> = emptyMap(),
+        /** Display-only deep-link focus (monitor): one exact waiting card; it never answers it. */
+        val focused: RequestId? = null,
+        val confirmInvitation: Boolean = false,
+        val invitationFailure: Failure? = null,
+        val invitationFailureFor: RequestId? = null,
     )
 
     private val local = MutableStateFlow(Local())
 
     public val state: StateFlow<RequestSlotUi> =
-        combine(engine.forSession(session), capabilities, place, local) {
-                requests,
+        combine(engine.pending, capabilities, place, local, engine.invitationOffers) {
+                all,
                 caps,
                 where,
-                mine ->
-                slot(requests, caps, where, mine)
+                mine,
+                _ ->
+                slot(selected(all, mine.focused), caps, where, mine)
             }
             .stateIn(scope, SharingStarted.Eagerly, current())
 
@@ -131,11 +138,35 @@ public class ChatRequestsModel(
         )
             return
         local.update { it.copy(confirm = null) }
-        engine.answer(reviewed.id, RequestAnswer.Permission(PermissionReply.Always), reviewed)
+        if (confirm.invitation)
+            scope.launch {
+                val result = engine.acceptInvitation(reviewed.id)
+                local.update {
+                    it.copy(
+                        invitationFailure = (result as? Outcome.Failed)?.failure,
+                        invitationFailureFor = reviewed.id,
+                    )
+                }
+            }
+        else engine.answer(reviewed.id, RequestAnswer.Permission(PermissionReply.Always), reviewed)
     }
 
     override fun cancelAlwaysAllow() {
         local.update { it.copy(confirm = null) }
+    }
+
+    override fun keepAsking(id: RequestId) {
+        val card = permissionCard(id) ?: return
+        if (!card.invitation || card.state != CardState.Waiting) return
+        scope.launch {
+            val result = engine.keepAsking(id)
+            local.update {
+                it.copy(
+                    invitationFailure = (result as? Outcome.Failed)?.failure,
+                    invitationFailureFor = id,
+                )
+            }
+        }
     }
 
     override fun choose(id: RequestId, option: String) {
@@ -264,7 +295,13 @@ public class ChatRequestsModel(
                         card.canAlwaysAllow &&
                         card.state == CardState.Waiting
                 ) {
-                    local.update { it.copy(confirm = reviewed) }
+                    local.update {
+                        it.copy(
+                            confirm = reviewed,
+                            confirmInvitation = card.invitation,
+                            invitationFailure = null,
+                        )
+                    }
                 }
             is ReviewedRequestAction.Choose ->
                 if (
@@ -328,11 +365,24 @@ public class ChatRequestsModel(
     /** The slot as of now (actions decide on this, never on a frame that may be behind). */
     private fun current(): RequestSlotUi =
         slot(
-            SessionRequests.of(engine.pending.value, session),
+            selected(engine.pending.value, local.value.focused),
             capabilities.value,
             place.value,
             local.value,
         )
+
+    /**
+     * A monitor/deep link chooses one exact waiting card. This is display-only and never answers
+     * it.
+     */
+    public fun focus(id: RequestId): Unit = local.update { it.copy(focused = id) }
+
+    private fun selected(all: List<PendingRequest>, focused: RequestId?): SessionRequests {
+        val normal = SessionRequests.of(all, session)
+        val mine = all.filter { it.sessionId == session }
+        val chosen = mine.firstOrNull { it.id == focused } ?: return normal
+        return SessionRequests(chosen, mine.size - 1)
+    }
 
     private fun permissionCard(id: RequestId): RequestCardUi.Permission? =
         (current().card as? RequestCardUi.Permission)?.takeIf { it.id == id }
@@ -366,6 +416,7 @@ public class ChatRequestsModel(
                         canAlwaysAllow =
                             caps.persistentPermissionGrants && request.request.canAlwaysAllow,
                         captured = request.copy(phase = AnswerPhase.Waiting),
+                        invitation = engine.isInvited(request.id),
                     )
                 is PendingRequest.Question -> {
                     val prompt = request.question.prompts.firstOrNull()
@@ -402,9 +453,17 @@ public class ChatRequestsModel(
                     mine.confirm?.request === it.captured?.request &&
                         mine.confirm != null &&
                         it.canAlwaysAllow &&
-                        it.state == CardState.Waiting
+                        it.state == CardState.Waiting &&
+                        (!mine.confirmInvitation || it.invitation)
                 }
-                ?.let { AlwaysConfirmUi(it.id, it.ask.always, it.captured) }
+                ?.let {
+                    AlwaysConfirmUi(
+                        it.id,
+                        it.ask.always,
+                        it.captured,
+                        invitation = mine.confirmInvitation,
+                    )
+                }
         val sheet =
             (request as? PendingRequest.Question)
                 ?.takeIf { mine.sheet?.question === it.question && state == CardState.Waiting }
@@ -419,7 +478,13 @@ public class ChatRequestsModel(
                         QuestionSheet.block(it.question, drafts) == null,
                     )
                 }
-        return RequestSlotUi(card, requests.moreWaiting, confirm, sheet)
+        return RequestSlotUi(
+            card,
+            requests.moreWaiting,
+            confirm,
+            sheet,
+            invitationFailure = mine.invitationFailure.takeIf { mine.invitationFailureFor == request.id },
+        )
     }
 
     private fun cardState(phase: AnswerPhase): CardState =

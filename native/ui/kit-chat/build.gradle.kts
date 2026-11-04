@@ -22,6 +22,7 @@ val syntaxmp =
 kotlin {
     sourceSets.commonMain.dependencies {
         implementation(project(":core:common"))
+        implementation(project(":core:model"))
         implementation(
             project(":core:security")
         ) // mono surfaces display Redactor.redact(source) (plan 09 §9.2, R18)

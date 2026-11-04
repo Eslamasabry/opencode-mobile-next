@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="terminal40Title">الطرفية</string>
+    <string name="terminal40InputOff">الإدخال غير متاح أثناء انقطاع الاتصال.</string>
+    <string name="terminal40Working">جارٍ التنفيذ…</string>
+    <string name="terminal40Refresh">تحديث</string>
+    <string name="terminal40Stale">تغيّر المشروع. افتح طرفيته من جديد.</string>
+    <string name="terminal40Unavailable">هذا الخادم لا يتيح طرفية.</string>
+    <string name="terminal40Failed">تعذّر إكمال هذا الإجراء في الطرفية. حاول مجددًا.</string>
+    <string name="terminal40ClipboardFailed">الحافظة غير متاحة.</string>
+    <string name="terminal40EndedTab">%1$s · انتهت</string>
+    <string name="terminal40Sessions">جلسات الطرفية</string>
+    <string name="terminal40New">طرفية جديدة</string>
+    <string name="terminal40Copy">نسخ النص المحدد أو المخرجات</string>
+    <string name="terminal40Paste">لصق في الطرفية</string>
+    <string name="terminal40Reconnect">إعادة الاتصال</string>
+    <string name="terminal40Rename">إعادة تسمية الطرفية</string>
+    <string name="terminal40Name">اسم الطرفية</string>
+    <string name="terminal40Stop">إيقاف الطرفية</string>
+    <string name="terminal40Remove">إزالة الطرفية</string>
+    <string name="terminal40RemoveEnded">إزالة الطرفيات المنتهية</string>
+    <string name="terminal40Actions">إجراءات الطرفية</string>
+    <string name="terminal40Empty">لا توجد طرفيات قيد التشغيل. اختر طرفية جديدة.</string>
+    <string name="terminal40Connecting">جارٍ الاتصال بالطرفية…</string>
+    <string name="terminal40Paused">اتصال الطرفية متوقف مؤقتًا أثناء غياب التطبيق.</string>
+    <string name="terminal40Closed">أُغلق اتصال الطرفية. أعد الاتصال للمتابعة.</string>
+    <string name="terminal40Readable">نص قابل للقراءة</string>
+    <string name="terminal40Transcript">مخرجات الطرفية</string>
+    <string name="terminal40NoOutput">لا توجد مخرجات للطرفية بعد.</string>
+    <string name="terminal40Command">إرسال إلى الطرفية</string>
+    <string name="terminal40Send">إرسال الأمر</string>
+    <string name="terminal40RemoveQuestion">هل تريد إزالة هذه الطرفيات؟</string>
+    <string name="terminal40RemoveBody">%1$s
+ستتوقف البرامج قيد التشغيل في هذه الطرفيات.</string>
+    <string name="terminal40Details">الأمر: %1$s
+المجلد: %2$s
+العملية: %3$d
+رمز الخروج: %4$s</string>
+    <string name="terminal40Select">تحديد نص في شبكة الطرفية</string>
+    <string name="terminal40Ctrl">Ctrl</string>
+    <string name="terminal40Alt">Alt</string>
+    <string name="terminal40Escape">Esc</string>
+    <string name="terminal40Tab">Tab</string>
+    <string name="terminal40Up">أعلى</string>
+    <string name="terminal40Down">أسفل</string>
+    <string name="terminal40Left">يسار</string>
+    <string name="terminal40Right">يمين</string>
+    <string name="terminal40TipTitle">تحديد نص الطرفية</string>
+    <string name="terminal40Tip">اضغط مطولًا على المخرجات لتحديد النص، أو اختر تحديد النص من إجراءات الطرفية، ثم نسخ.</string>
+    <string name="terminal40CommandLabel">الأمر</string>
+    <string name="terminal40FolderLabel">المجلد</string>
+    <string name="terminal40PidLabel">العملية</string>
+    <string name="terminal40ExitLabel">رمز الخروج</string>
+    <string name="terminal40Pipe">|</string>
+    <string name="terminal40Tilde">~</string>
+    <string name="terminal40Slash">/</string>
+    <string name="terminal40Dash">-</string>
+    <string name="terminal40Home">Home</string>
+    <string name="terminal40End">End</string>
+    <string name="terminal40PageUp">PgUp</string>
+    <string name="terminal40PageDown">PgDn</string>
+    <string name="terminal40Interrupt">Ctrl+C</string>
+    <string name="terminal40Eof">Ctrl+D</string>
+    <string name="terminal40OpenPageQuestion">هل تريد فتح صفحة تسجيل الدخول؟</string>
+    <string name="terminal40OpenPageBody">تتبع هذه الصفحة %1$s. هل تريد فتحها في المتصفح؟</string>
+</resources>

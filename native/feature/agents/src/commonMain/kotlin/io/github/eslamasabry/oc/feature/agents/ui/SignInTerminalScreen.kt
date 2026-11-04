@@ -79,6 +79,7 @@ public fun SignInTerminalScreen(
     state: SignInTerminalUi,
     actions: SignInTerminalActions,
     modifier: Modifier = Modifier,
+    pageApproval: @Composable () -> Unit = {},
 ) {
     KitScreen(
         modifier = modifier,
@@ -169,6 +170,7 @@ public fun SignInTerminalScreen(
                     )
             }
         }
+        pageApproval()
     }
     KitConfirm(
         state.linkPrompt?.let { prompt ->

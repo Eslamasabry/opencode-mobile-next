@@ -164,6 +164,7 @@ public fun KitTopBar(
                         role = TypeRole.Headline,
                         kind = KitTextKind.Frame,
                         maxLines = if (large) 2 else 1,
+                        pageTitle = true,
                     )
                     if (onTitleTap != null) KitExitGlyph(ExitGlyph.Chevron, colors.text2)
                 }

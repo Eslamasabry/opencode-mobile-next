@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.engine.voice.state.PackId
 import io.github.eslamasabry.oc.engine.voice.state.PackJob
 import io.github.eslamasabry.oc.engine.voice.state.PackJobPhase
 import io.github.eslamasabry.oc.engine.voice.state.PackStatus
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -25,12 +26,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlin.coroutines.cancellation.CancellationException
 
 /**
- * The model manager (plan 10 §4.6 `ModelPacks`, Dart `VoiceModelManager` + `NaturalVoiceController`). One job at a
- * time; a download keeps running in [scope] when the page or sheet that started it closes. Work that a later delete,
- * selection, download, cancel or [close] supersedes never publishes (B-MEDIA-030).
+ * The model manager (plan 10 §4.6 `ModelPacks`, Dart `VoiceModelManager` +
+ * `NaturalVoiceController`). One job at a time; a download keeps running in [scope] when the page
+ * or sheet that started it closes. Work that a later delete, selection, download, cancel or [close]
+ * supersedes never publishes (B-MEDIA-030).
  */
 public class ModelPacks(
     private val installer: PackInstaller,
@@ -46,7 +47,7 @@ public class ModelPacks(
                 language = VoiceLanguage.fromStoredId(prefs.language()),
                 autoSend = prefs.autoSend(),
                 naturalVoice = prefs.readAloudNatural(),
-            ),
+            )
         )
     public val state: StateFlow<ModelPacksState> = mutableState.asStateFlow()
 
@@ -56,12 +57,18 @@ public class ModelPacks(
     private var device: DeviceProbeResult? = null
     private var running: Running? = null
 
-    private class Running(val pack: PackId, val deferred: Deferred<Outcome<InstalledPack>>)
+    private class Running(
+        val pack: PackId,
+        val deferred: Deferred<Outcome<InstalledPack>>,
+        val owner: String? = null,
+    )
 
-    public val speechPacks: List<ModelPackSpec> get() = catalog.filter { it.kind == PackKind.Speech }
+    public val speechPacks: List<ModelPackSpec>
+        get() = catalog.filter { it.kind == PackKind.Speech }
 
     /** Bytes already in the pack's kept `.part` files. */
-    public suspend fun partialBytes(pack: PackId): Long = specOf(pack)?.let { installer.partialBytes(it) } ?: 0L
+    public suspend fun partialBytes(pack: PackId): Long =
+        specOf(pack)?.let { installer.partialBytes(it) } ?: 0L
 
     public val selectedSpeech: ModelPackSpec
         get() {
@@ -69,9 +76,14 @@ public class ModelPacks(
             return speech.firstOrNull { it.id == mutableState.value.selected } ?: speech.first()
         }
 
-    /** The device facts, probed once per manager (re-probed by [refresh]). Stale probes never publish. */
+    /**
+     * The device facts, probed once per manager (re-probed by [refresh]). Stale probes never
+     * publish.
+     */
     public suspend fun device(): DeviceProbeResult {
-        device?.let { return it }
+        device?.let {
+            return it
+        }
         val started = lane.withLock { generation }
         val probed = probe.probe()
         lane.withLock { if (generation == started && !closed) device = probed }
@@ -86,21 +98,28 @@ public class ModelPacks(
         lane.withLock {
             if (generation != started || closed) return
             device = probed
-            mutableState.update { it.copy(packs = it.packs.toMutableMap().apply { putAll(rows) }.toImmutableMap()) }
+            mutableState.update {
+                it.copy(packs = it.packs.toMutableMap().apply { putAll(rows) }.toImmutableMap())
+            }
         }
     }
 
     private suspend fun statusOf(pack: ModelPackSpec, device: DeviceProbeResult): PackStatus {
         if (installer.installed(pack) != null) return PackStatus.Installed
         val partial = installer.partialBytes(pack)
-        val support = PackSupport.supportFor(pack, device, installed = false, partialBytes = partial)
-        if (support is Support.Blocked && support.block != PackBlock.Storage) return PackStatus.Unsupported(support.block.problem)
+        val support =
+            PackSupport.supportFor(pack, device, installed = false, partialBytes = partial)
+        if (support is Support.Blocked && support.block != PackBlock.Storage)
+            return PackStatus.Unsupported(support.block.problem)
         if (partial > 0) return PackStatus.Partial(partial, pack.totalBytes)
         if (support is Support.Blocked) return PackStatus.Unsupported(support.block.problem)
         return PackStatus.Missing
     }
 
-    /** The selected speech pack when it is installed and this phone's RAM allows it; null → setup is needed. */
+    /**
+     * The selected speech pack when it is installed and this phone's RAM allows it; null → setup is
+     * needed.
+     */
     public suspend fun readySpeechPack(): InstalledPack? {
         val pack = selectedSpeech
         val support = PackSupport.supportFor(pack, device(), installed = true)
@@ -108,7 +127,8 @@ public class ModelPacks(
         return installer.installed(pack)
     }
 
-    public suspend fun installed(pack: PackId): InstalledPack? = specOf(pack)?.let { installer.installed(it) }
+    public suspend fun installed(pack: PackId): InstalledPack? =
+        specOf(pack)?.let { installer.installed(it) }
 
     /** Full SHA-256 check after a recognizer load failure; a mismatch makes the pack Missing. */
     public suspend fun verifyFully(pack: PackId): Boolean {
@@ -119,14 +139,13 @@ public class ModelPacks(
     }
 
     /** Refused while a download, verification or load runs (Dart `selectPack` returns early). */
-    public suspend fun select(pack: PackId): Outcome<Unit> =
-        lane.withLock {
-            if (running != null) return@withLock busy()
-            val spec = specOf(pack)?.takeIf { it.kind == PackKind.Speech } ?: return@withLock busy()
-            generation++
-            mutableState.update { it.copy(selected = spec.id) }
-            prefs.setSelectedPack(spec.id.raw)
-        }
+    public suspend fun select(pack: PackId): Outcome<Unit> = lane.withLock {
+        if (running != null) return@withLock busy()
+        val spec = specOf(pack)?.takeIf { it.kind == PackKind.Speech } ?: return@withLock busy()
+        generation++
+        mutableState.update { it.copy(selected = spec.id) }
+        prefs.setSelectedPack(spec.id.raw)
+    }
 
     public suspend fun setLanguage(choice: VoiceLanguage): Outcome<Unit> {
         mutableState.update { it.copy(language = choice) }
@@ -140,9 +159,10 @@ public class ModelPacks(
     }
 
     /**
-     * Read-aloud voice (plan 10 §7.8 item 9). Phone's voice (false) cancels a running natural-voice download (the
-     * `.part` files stay). Natural (true) is stored only once the files are installed: when missing, it downloads
-     * first, with no metered-data question (the row names the size).
+     * Read-aloud voice (plan 10 §7.8 item 9). Phone's voice (false) cancels a running natural-voice
+     * download (the `.part` files stay). Natural (true) is stored only once the files are
+     * installed: when missing, it downloads first, with no metered-data question (the row names the
+     * size).
      */
     public suspend fun setNaturalVoice(on: Boolean): Outcome<Unit> {
         val natural = ModelCatalog.kokoroEn
@@ -162,10 +182,25 @@ public class ModelPacks(
     }
 
     /**
-     * Downloads and verifies [pack] (idempotent when installed). The caller may stop waiting; the download goes on until
-     * [cancelDownload]. A second download while one runs is `DownloadBusy`.
+     * Downloads and verifies [pack] (idempotent when installed). The caller may stop waiting; the
+     * download goes on until [cancelDownload]. A second download while one runs is `DownloadBusy`.
      */
-    public suspend fun download(pack: PackId, replaceExisting: Boolean = false): Outcome<InstalledPack> {
+    public suspend fun download(
+        pack: PackId,
+        replaceExisting: Boolean = false,
+    ): Outcome<InstalledPack> = downloadFor(pack, replaceExisting, null)
+
+    /** A caller may cancel only the download it admitted with this opaque owner id. */
+    public suspend fun downloadOwned(pack: PackId, owner: String): Outcome<InstalledPack> {
+        if (owner.isBlank()) return busy()
+        return downloadFor(pack, false, owner)
+    }
+
+    private suspend fun downloadFor(
+        pack: PackId,
+        replaceExisting: Boolean,
+        owner: String?,
+    ): Outcome<InstalledPack> {
         val spec = specOf(pack) ?: return busy()
         val probed = device()
         val job =
@@ -174,29 +209,38 @@ public class ModelPacks(
                 if (running != null) return busy()
                 val partial = installer.partialBytes(spec)
                 val installedNow = installer.installed(spec) != null
-                val support = PackSupport.supportFor(spec, probed, installedNow, partial, replaceExisting)
+                val support =
+                    PackSupport.supportFor(spec, probed, installedNow, partial, replaceExisting)
                 if (support is Support.Blocked) {
                     val problem = support.block.problem
                     mutableState.update { it.copy(lastProblem = problem) }
-                    return if (problem == null) Failure.Unavailable(FeatureId("voice")).failed() else Failure.Media(problem).failed()
+                    return if (problem == null) Failure.Unavailable(FeatureId("voice")).failed()
+                    else Failure.Media(problem).failed()
                 }
                 generation++
                 mutableState.update {
-                    it.copy(job = PackJob(spec.id, PackJobPhase.Downloading(partial, spec.totalBytes)), lastProblem = null)
+                    it.copy(
+                        job = PackJob(spec.id, PackJobPhase.Downloading(partial, spec.totalBytes)),
+                        lastProblem = null,
+                    )
                 }
                 val deferred = scope.async { runInstall(spec, replaceExisting) }
-                Running(spec.id, deferred).also { running = it }
+                Running(spec.id, deferred, owner).also { running = it }
             } ?: return Failure.Unavailable(FeatureId("voice")).failed()
         return job.deferred.await()
     }
 
-    private suspend fun runInstall(spec: ModelPackSpec, replaceExisting: Boolean): Outcome<InstalledPack> {
+    private suspend fun runInstall(
+        spec: ModelPackSpec,
+        replaceExisting: Boolean,
+    ): Outcome<InstalledPack> {
         val result =
             try {
                 installer.install(spec, replaceExisting) { progress ->
                     val phase =
                         when (progress) {
-                            is InstallProgress.Downloading -> PackJobPhase.Downloading(progress.received, progress.total)
+                            is InstallProgress.Downloading ->
+                                PackJobPhase.Downloading(progress.received, progress.total)
                             InstallProgress.Verifying -> PackJobPhase.Verifying
                         }
                     mutableState.update { it.copy(job = PackJob(spec.id, phase)) }
@@ -204,10 +248,14 @@ public class ModelPacks(
             } catch (e: CancellationException) {
                 withContext(NonCancellable) {
                     val partial = installer.partialBytes(spec)
-                    val status = if (partial > 0) PackStatus.Partial(partial, spec.totalBytes) else PackStatus.Missing
+                    val status =
+                        if (partial > 0) PackStatus.Partial(partial, spec.totalBytes)
+                        else PackStatus.Missing
                     lane.withLock {
                         running = null
-                        mutableState.update { it.copy(job = null, packs = it.packs.with(spec.id, status)) }
+                        mutableState.update {
+                            it.copy(job = null, packs = it.packs.with(spec.id, status))
+                        }
                     }
                 }
                 throw e
@@ -216,7 +264,9 @@ public class ModelPacks(
             running = null
             when (result) {
                 is Outcome.Ok -> {
-                    mutableState.update { it.copy(job = null, packs = it.packs.with(spec.id, PackStatus.Installed)) }
+                    mutableState.update {
+                        it.copy(job = null, packs = it.packs.with(spec.id, PackStatus.Installed))
+                    }
                     if (spec.kind == PackKind.NaturalVoice) {
                         mutableState.update { it.copy(naturalVoice = true) }
                         prefs.setReadAloudNatural(true)
@@ -229,7 +279,12 @@ public class ModelPacks(
                         it.copy(
                             job = null,
                             lastProblem = problem,
-                            packs = it.packs.with(spec.id, if (partial > 0) PackStatus.Partial(partial, spec.totalBytes) else PackStatus.Missing),
+                            packs =
+                                it.packs.with(
+                                    spec.id,
+                                    if (partial > 0) PackStatus.Partial(partial, spec.totalBytes)
+                                    else PackStatus.Missing,
+                                ),
                         )
                     }
                 }
@@ -245,7 +300,25 @@ public class ModelPacks(
         job.deferred.join()
     }
 
-    /** Deletes every file of the pack, partials included; refused while that pack downloads (B-MEDIA-013). */
+    public suspend fun ownsDownload(owner: String): Boolean = lane.withLock {
+        running?.owner == owner
+    }
+
+    /**
+     * Setup never cancels a download admitted by another screen or by a previous process
+     * invocation.
+     */
+    public suspend fun cancelOwned(owner: String) {
+        val job =
+            lane.withLock { running?.takeIf { it.owner == owner }?.also { generation++ } } ?: return
+        job.deferred.cancel()
+        job.deferred.join()
+    }
+
+    /**
+     * Deletes every file of the pack, partials included; refused while that pack downloads
+     * (B-MEDIA-013).
+     */
     public suspend fun remove(pack: PackId): Outcome<Unit> {
         val spec = specOf(pack) ?: return Unit.ok()
         lane.withLock {
@@ -263,7 +336,9 @@ public class ModelPacks(
         return result
     }
 
-    /** Deletes only the kept `.part` files ("Discard 120 MB"); refused while that pack downloads. */
+    /**
+     * Deletes only the kept `.part` files ("Discard 120 MB"); refused while that pack downloads.
+     */
     public suspend fun discardPartial(pack: PackId): Outcome<Unit> {
         val spec = specOf(pack) ?: return Unit.ok()
         lane.withLock {
@@ -271,20 +346,24 @@ public class ModelPacks(
             generation++
         }
         val result = installer.discardPartial(spec)
-        if (result is Outcome.Ok && mutableState.value.packs[pack] is PackStatus.Partial) setStatus(pack, PackStatus.Missing)
+        if (result is Outcome.Ok && mutableState.value.packs[pack] is PackStatus.Partial)
+            setStatus(pack, PackStatus.Missing)
         return result
     }
 
-    public val downloading: PackId? get() = running?.pack
+    public val downloading: PackId?
+        get() = running?.pack
 
-    /** Dispose: in-flight readiness and device work never publish afterwards. Running downloads are cancelled. */
+    /**
+     * Dispose: in-flight readiness and device work never publish afterwards. Running downloads are
+     * cancelled.
+     */
     public suspend fun close() {
-        val job =
-            lane.withLock {
-                closed = true
-                generation++
-                running
-            }
+        val job = lane.withLock {
+            closed = true
+            generation++
+            running
+        }
         job?.deferred?.cancel()
     }
 

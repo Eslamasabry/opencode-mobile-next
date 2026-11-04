@@ -14,6 +14,10 @@ import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.common.pace.Pacer
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.model.PermissionReply
+import io.github.eslamasabry.oc.core.model.PermissionRequest
+import io.github.eslamasabry.oc.engine.requests.consent.AlwaysAllowInvitation
+import io.github.eslamasabry.oc.engine.requests.consent.ConsentScope
+import io.github.eslamasabry.oc.engine.requests.consent.OfferDecision
 import kotlin.concurrent.atomics.AtomicLong
 import kotlin.concurrent.atomics.incrementAndFetch
 import kotlin.time.Clock
@@ -66,6 +70,130 @@ public class RequestsEngine(
     private val log = AppLog.tagged("requests")
     private val state = MutableStateFlow(NoRequests)
     private val tokens = AtomicLong(0)
+
+    private data class Invitation(
+        val request: PermissionRequest,
+        val owner: AlwaysAllowInvitation,
+    ) {
+        val consent: ConsentScope
+            get() =
+                ConsentScope(
+                    request.sessionId.raw,
+                    request.permission,
+                    request.patterns,
+                    request.always,
+                )
+    }
+
+    private val offered = MutableStateFlow<Map<RequestId, Invitation>>(emptyMap())
+    private val confirmedInvitations = MutableStateFlow<Map<RequestId, Invitation>>(emptyMap())
+    /** Only the exact third displayed, distinct ask owns an invitation for this connection. */
+    public val invitationOffers: Flow<Set<RequestId>> =
+        offered.map { it.keys }.distinctUntilChanged()
+
+    public fun isInvited(id: RequestId): Boolean {
+        val invite = offered.value[id] ?: return false
+        val pending =
+            state.value.firstOrNull { it.id == id } as? PendingRequest.Permission ?: return false
+        return pending.phase == AnswerPhase.Waiting &&
+            pending.request == invite.request &&
+            port.capabilities.value.persistentPermissionGrants &&
+            pending.request.canAlwaysAllow
+    }
+
+    /** Called by the same connection owner that resolves automatic approval, before its sweep. */
+    public suspend fun observeInvitations(
+        owner: AlwaysAllowInvitation?,
+        automatic: (SessionId) -> Boolean,
+    ) {
+        withContext(lane) {
+            val current = state.value.filterIsInstance<PendingRequest.Permission>()
+            offered.update { all ->
+                all.filter { (id, invite) ->
+                    current.any {
+                        it.id == id && it.request == invite.request && !automatic(it.sessionId)
+                    }
+                }
+            }
+            if (owner == null) {
+                offered.value = emptyMap()
+                return@withContext
+            }
+            for (entry in current) {
+                if (
+                    entry.phase != AnswerPhase.Waiting ||
+                        entry.firstShownAtMs == null ||
+                        !entry.request.canAlwaysAllow ||
+                        automatic(entry.sessionId)
+                )
+                    continue
+                val invite = Invitation(entry.request, owner)
+                val status =
+                    owner.observe(
+                        invite.consent,
+                        entry.id.raw,
+                        port.capabilities.value.persistentPermissionGrants,
+                        autoApproving = false,
+                    )
+                val exact =
+                    state.value.firstOrNull { it.id == entry.id } as? PendingRequest.Permission
+                if (
+                    status.offerAlwaysAllow &&
+                        exact != null &&
+                        exact.request == entry.request &&
+                        exact.phase == AnswerPhase.Waiting &&
+                        !automatic(entry.sessionId)
+                ) {
+                    offered.update { it + (entry.id to invite) }
+                } else if (!status.storageAvailable || status.decision != OfferDecision.Offered) {
+                    offered.update { it - entry.id }
+                }
+            }
+        }
+    }
+
+    /** Keep asking changes only this consent record; it never answers the permission request. */
+    public suspend fun keepAsking(id: RequestId): Outcome<Unit> =
+        withContext(lane) {
+            val invite =
+                offered.value[id]
+                    ?: return@withContext Failure.Refused(RefusalReason.StaleScope).failed()
+            if (!isInvited(id))
+                return@withContext Failure.Refused(RefusalReason.StaleScope).failed()
+            val status = invite.owner.status(invite.consent)
+            if (!status.storageAvailable || status.decision != OfferDecision.Offered)
+                return@withContext Failure.Refused(RefusalReason.StaleScope).failed()
+            if (!isInvited(id))
+                return@withContext Failure.Refused(RefusalReason.StaleScope).failed()
+            val saved = invite.owner.recordDecision(invite.consent, accepted = false)
+            if (!saved.storageAvailable) return@withContext Failure.StorageRefused().failed()
+            offered.update { it - id }
+            Unit.ok()
+        }
+
+    /** The invitation's confirmation uses the ordinary held, exactly-once permission reply path. */
+    public suspend fun acceptInvitation(id: RequestId): Outcome<Unit> =
+        withContext(lane) {
+            val invite =
+                offered.value[id]
+                    ?: return@withContext Failure.Refused(RefusalReason.StaleScope).failed()
+            if (!isInvited(id))
+                return@withContext Failure.Refused(RefusalReason.StaleScope).failed()
+            val status = invite.owner.status(invite.consent)
+            if (!status.storageAvailable || status.decision != OfferDecision.Offered)
+                return@withContext Failure.Refused(RefusalReason.StaleScope).failed()
+            if (!isInvited(id))
+                return@withContext Failure.Refused(RefusalReason.StaleScope).failed()
+            confirmedInvitations.update { it + (id to invite) }
+            answer(
+                    id,
+                    RequestAnswer.Permission(PermissionReply.Always),
+                    PendingRequest.Permission(invite.request),
+                )
+                .also {
+                if (it is Outcome.Failed) confirmedInvitations.update { all -> all - id }
+            }
+        }
 
     // Lane-confined bookkeeping.
     private var seq = 0L
@@ -192,6 +320,7 @@ public class RequestsEngine(
                 else entry
             }
         }
+        if (undone) confirmedInvitations.update { it - id }
         return undone
     }
 
@@ -388,10 +517,37 @@ public class RequestsEngine(
         return sending.result.await()
     }
 
-    private suspend fun reply(entry: PendingRequest, answer: RequestAnswer): Outcome<Unit> =
-        when (answer) {
-            is RequestAnswer.Permission ->
-                port.replyPermission(entry.sessionId, entry.id, answer.reply, answer.note)
+    private suspend fun reply(entry: PendingRequest, answer: RequestAnswer): Outcome<Unit> {
+        return when (answer) {
+            is RequestAnswer.Permission -> {
+                val invite =
+                    (confirmedInvitations.value[entry.id] ?: offered.value[entry.id])?.takeIf {
+                        answer.reply == PermissionReply.Always
+                    }
+                if (invite != null) {
+                    val consent = invite.owner.status(invite.consent)
+                    val current =
+                        state.value.firstOrNull { it.id == entry.id } as? PendingRequest.Permission
+                    if (
+                        current == null ||
+                            current.request != invite.request ||
+                            current.phase !== entry.phase ||
+                            !consent.storageAvailable ||
+                            consent.decision != OfferDecision.Offered
+                    )
+                        return Failure.Refused(RefusalReason.StaleScope).failed()
+                }
+                val result =
+                    port.replyPermission(entry.sessionId, entry.id, answer.reply, answer.note)
+                // Only the actual successful transport acknowledgement records acceptance. A 404,
+                // vanished request, cancelled graph or failed/uncertain write never does.
+                if (result is Outcome.Ok && invite != null) {
+                    invite.owner.recordDecision(invite.consent, accepted = true)
+                    offered.update { it - entry.id }
+                    confirmedInvitations.update { it - entry.id }
+                }
+                result
+            }
             is RequestAnswer.Question ->
                 port.answerQuestion(entry.sessionId, entry.id, answer.answers)
             RequestAnswer.Decline ->
@@ -406,6 +562,7 @@ public class RequestsEngine(
                     is PendingRequest.Question -> port.rejectQuestion(entry.sessionId, entry.id)
                 }
         }
+    }
 
     private suspend fun settleWrite(
         entry: PendingRequest,
@@ -530,6 +687,8 @@ public class RequestsEngine(
         settled.add(id)
         while (settled.size > SETTLED_KEPT) settled.remove(settled.first())
         addedAt.remove(id)
+        offered.update { it - id }
+        confirmedInvitations.update { it - id }
         state.update { list -> list.filterNot { it.id == id }.toImmutableList() }
     }
 

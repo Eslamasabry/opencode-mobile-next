@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="r40RelationsTitle">Related conversations</string>
+    <string name="r40RelationsRefresh">Refresh related conversations</string>
+    <string name="r40RelationsStale">This conversation’s location changed. Go back and reopen related conversations.</string>
+    <string name="r40RelationsFailure">Could not finish. Try again, or go back and reopen related conversations.</string>
+    <string name="r40RelationsParent">Started from</string>
+    <string name="r40RelationsEmpty">No subagent conversations yet</string>
+    <string name="r40RelationsEmptyBody">Delegated work appears here without mixing it into your conversation.</string>
+    <string name="r40RelationsChildren">Subagent conversations · %1$s</string>
+    <string name="r40RelationsUntitled">Untitled conversation</string>
+    <string name="r40RelationsNeedsYou">Needs you · Open to answer</string>
+    <string name="r40RelationsWorking">Working</string>
+    <string name="r40RelationsIdle">Idle</string>
+    <string name="r40RelationsDone">Done</string>
+    <string name="r40RelationsCurrent">This conversation</string>
+    <string name="r40RelationsPinned">Pinned</string>
+    <string name="r40RelationsActions">Actions</string>
+    <string name="r40RelationsOpening">Working…</string>
+    <string name="r40RelationsOpen">Open conversation</string>
+    <string name="r40RelationsResume">Continue on computer</string>
+    <string name="r40RelationsPin">Pin conversation</string>
+    <string name="r40RelationsUnpin">Unpin conversation</string>
+    <string name="r40RelationsStop">Stop subagent</string>
+    <string name="r40RelationsStopTitle">Stop %1$s?</string>
+    <string name="r40RelationsStopBody">This stops its current work. The conversation and its completed work stay.</string>
+    <string name="r40RelationsKeepRunning">Keep running</string>
+    <string name="r40RelationsResumeBody">Run this command on the computer that hosts this server, in the same project. Copying does not send anything.</string>
+    <string name="r40RelationsCopy">Copy command</string>
+    <string name="r40RelationsJustNow">Just now</string>
+    <string name="r40RelationsMinutes">%1$s min ago</string>
+    <string name="r40RelationsHours">%1$s h ago</string>
+    <string name="r40RelationsDays">%1$s d ago</string>
+</resources>

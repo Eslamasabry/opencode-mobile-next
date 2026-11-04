@@ -18,7 +18,7 @@ import io.github.eslamasabry.oc.ui.routes.TerminalRoute
 @ContributesIntoSet(AppScope::class, binding = binding<EntryInstaller>())
 public class TerminalEntries : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
-        entry<TerminalRoute> { route ->
+        entry<TerminalRoute.Conversation> { route ->
             val vm =
                 assistedMetroViewModel<TerminalViewModel, TerminalViewModel.Factory> {
                     create(route)

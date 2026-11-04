@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.engine.agents.feed.FeedDay
 import io.github.eslamasabry.oc.engine.agents.feed.ReturnBrief
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
+import io.github.eslamasabry.oc.ui.routes.MonitorInboxRoute
 import io.github.eslamasabry.oc.ui.routes.ProjectsRoute
 import io.github.eslamasabry.oc.ui.routes.SearchRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
@@ -44,6 +45,8 @@ public class ChatsViewModel(
     private val home: ChatsHomeExtras = NoChatsHomeExtras(),
     private val permissionAnswers: Set<HomePermissionAnswers> = emptySet(),
 ) : ViewModel(), ChatsActions {
+    override fun openInbox(): Unit = nav.open(MonitorInboxRoute())
+
     private val filters = MutableStateFlow(ChatsFilters())
     private val sheet = MutableStateFlow<ChatsHomeSheet?>(null)
     private val watchedSelection = MutableStateFlow<String?>(null)

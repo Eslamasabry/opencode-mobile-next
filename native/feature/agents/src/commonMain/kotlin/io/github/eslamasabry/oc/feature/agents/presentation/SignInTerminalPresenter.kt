@@ -266,6 +266,9 @@ public class SignInTerminalPresenter(
         return session?.end() ?: io.github.eslamasabry.oc.core.common.Outcome.Ok(Unit)
     }
 
+    /** App owner cleanup, also called after its route is torn down or its profile is deleted. */
+    public suspend fun drain(): io.github.eslamasabry.oc.core.common.Outcome<Unit> = close()
+
     private fun cleared(now: SignInTerminalUi): SignInTerminalUi {
         pendingPage = null
         return now.copy(

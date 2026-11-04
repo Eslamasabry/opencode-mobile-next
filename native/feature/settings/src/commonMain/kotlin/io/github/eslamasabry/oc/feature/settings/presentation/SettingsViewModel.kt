@@ -16,8 +16,18 @@ import kotlinx.coroutines.flow.StateFlow
  * engines behind the ports are app-wide, so one host serves every visit. A port the platform lacks
  * is null; its row is already absent.
  */
+public fun interface SettingsServerDoor {
+    public fun open(
+        profile: io.github.eslamasabry.oc.core.common.ids.ProfileId,
+        section: SettingsOutside?,
+    )
+}
+
 public interface SettingsHost {
     public val appearanceGuide: AppearanceGuideMemory?
+        get() = null
+
+    public val serverPage: SettingsServerDoor?
         get() = null
 
     public val facts: StateFlow<SettingsFacts>
@@ -41,6 +51,13 @@ public interface SettingsHost {
         get() = null
 
     public val licenses: VoiceLicenseSource?
+        get() = null
+
+    public val localData: LocalDataSettings?
+        get() = null
+
+    /** Bound by the host; this build's appearance guide is [appearanceGuide]. */
+    public val appearanceHelp: AppearanceHelp?
         get() = null
 
     public val diagnostics: DiagnosticsExport?
@@ -72,6 +89,8 @@ public class SettingsViewModel(host: SettingsHost, private val nav: AppNavigator
             nav::back,
             host.localModels,
             host.licenses,
+            serverPage = host.serverPage,
+            localData = host.localData,
         )
 
     public val state: StateFlow<SettingsUi> = presenter.state

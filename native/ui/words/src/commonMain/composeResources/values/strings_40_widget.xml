@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widgetPanelSaving">Saving…</string>
+    <string name="widgetPanelClose">Close</string>
+    <string name="widgetPanelPreview">Widget preview</string>
+    <string name="widgetPanelSquare">Square</string>
+    <string name="widgetPanelWide">Wide</string>
+    <string name="widgetPanelBackground">Background</string>
+    <string name="widgetPanelSolid">Solid</string>
+    <string name="widgetPanelTinted">Tinted</string>
+    <string name="widgetPanelTransparent">Transparent</string>
+    <string name="widgetPanelAccent">Accent</string>
+    <string name="widgetPanelActionUnavailable">This widget needs a live connection before it can send a message.</string>
+    <string name="widgetPanelSending">Sending…</string>
+    <string name="widgetPanelSent">Sent</string>
+    <string name="widgetPanelBusy">Another widget action is still running. Your message is still here.</string>
+    <string name="widgetPanelDictate">Dictate</string>
+</resources>

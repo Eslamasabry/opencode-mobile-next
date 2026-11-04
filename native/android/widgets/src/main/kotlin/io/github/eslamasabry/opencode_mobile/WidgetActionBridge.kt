@@ -7,7 +7,12 @@ import io.github.eslamasabry.oc.android.widgets.MainActivity
 import io.github.eslamasabry.oc.android.widgets.WidgetFeed
 import io.github.eslamasabry.opencode_mobile.WidgetV2Bridge.currentIdentity
 import java.util.UUID
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.sync.withLock
 import org.json.JSONArray
 import org.json.JSONObject
@@ -23,24 +28,30 @@ internal object WidgetActionBridge {
         done: (Map<String, Any?>) -> Unit,
     ) {
         val storage = WidgetFeed.persistence
-        if (storage == null) {
+        if (storage == null || !WidgetFeed.connectionActive || WidgetFeed.liveDispatcher == null) {
             done(result(payload, "rejected", "unavailable"))
             return
         }
-        storage.scope.launch { submitStored(context, payload, done) }
+        storage.scope.launch {
+            val settled = try {
+                withTimeoutOrNull(8000) { submitStored(context, payload) }
+                    ?: result(payload, "uncertain", "uncertainDelivery")
+            } catch (cancelled: CancellationException) {
+                done(result(payload, "uncertain", "uncertainDelivery"))
+                throw cancelled
+            } catch (_: Exception) {
+                result(payload, "uncertain", "uncertainDelivery")
+            }
+            // Admission, storage and the live callback share one bounded receiver lease. A timeout never replays.
+            done(settled)
+            if (settled["status"] == "uncertain") {
+                withTimeoutOrNull(500) { publishResult(context.applicationContext, payload, settled) }
+            }
+        }
     }
 
-    private suspend fun submitStored(
-        context: Context,
-        payload: Map<String, Any?>,
-        done: (Map<String, Any?>) -> Unit,
-    ) {
+    private suspend fun submitStored(context: Context, payload: Map<String, Any?>): Map<String, Any?> {
         val app = context.applicationContext
-        suspend fun rejected(error: String) {
-            val result = result(payload, "rejected", error)
-            publishResult(app, payload, result)
-            done(result)
-        }
         val error = submissionError(app, payload)
         if (error != null) {
             if (error == "busy") {
@@ -48,25 +59,29 @@ internal object WidgetActionBridge {
                 // was lost.
                 val uncertain = result(payload, "uncertain", "uncertainDelivery")
                 publishResult(app, payload, uncertain)
-                done(uncertain)
-                return
+                return uncertain
             }
-            rejected(error)
-            return
+            val refused = result(payload, "rejected", error)
+            publishResult(app, payload, refused)
+            return refused
         }
-        BackgroundConnectionService.dispatchWidgetAction(payload) { result ->
-            WidgetFeed.persistence?.scope?.launch {
-                if (result["status"] == "rejected") releaseClaim(app, payload)
-                if (result["status"] == "accepted")
-                    applyActionSnapshot(app, payload, result["snapshot"] as? Map<*, *>)
-                publishResult(app, payload, result)
-                done(result)
+        // A delayed durable claim must not dispatch after the outer admission deadline expired.
+        currentCoroutineContext().ensureActive()
+        val response = suspendCancellableCoroutine<Map<String, Any?>> { continuation ->
+            BackgroundConnectionService.dispatchWidgetAction(payload) { value ->
+                if (continuation.isActive) continuation.resumeWith(Result.success(value))
             }
         }
+        if (response["status"] == "rejected") releaseClaim(app, payload)
+        if (response["status"] == "accepted")
+            applyActionSnapshot(app, payload, response["snapshot"] as? Map<*, *>)
+        publishResult(app, payload, response)
+        return response
     }
 
     private suspend fun submissionError(context: Context, payload: Map<String, Any?>): String? {
-        if (context.getSystemService(KeyguardManager::class.java)?.isKeyguardLocked == true)
+        if (!WidgetFeed.connectionActive || WidgetFeed.liveDispatcher == null ||
+            context.getSystemService(KeyguardManager::class.java)?.isKeyguardLocked == true)
             return "unavailable"
         val validationError =
             WidgetActionPolicy.validate(payload, currentIdentity(context, payload))

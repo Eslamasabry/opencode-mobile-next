@@ -10,6 +10,7 @@ public enum class PhoneOp {
     Stop,
     Restart,
     Update,
+    Connect,
 }
 
 /** A server row under the answer; each names its object ("Stop OpenCode on this phone"). */
@@ -84,6 +85,9 @@ public data class ThisPhoneUi(
     val measuringStorage: Boolean = false,
     val exitNotice: PhoneExitNotice? = null,
     val leftover: io.github.eslamasabry.oc.engine.runtime.procs.RunawayNotice? = null,
+    val details: PhoneDetailsUi = PhoneDetailsUi(),
+    val detailsOpen: Boolean = false,
+    val installedOpen: Boolean = false,
 )
 
 /** Intents only (ADR §9.1). */
@@ -117,6 +121,13 @@ public interface ThisPhoneActions {
     public fun openLinux() {}
 
     public fun openTerminal() {}
+    public fun connect() {}
+
+    public fun refreshDetails() {}
+
+    public fun showDetails(expanded: Boolean) {}
+
+    public fun showInstalled(expanded: Boolean) {}
 
     public fun back()
 

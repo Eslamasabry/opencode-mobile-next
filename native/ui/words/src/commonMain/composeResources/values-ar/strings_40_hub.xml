@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hub40Changed">تغيّر إدخال الاستخدام هذا. حدّث الخطط لعرض الحسابات الحالية.</string>
+    <string name="hub40ContinueOn">هل تريد المتابعة على %1$s؟</string>
+    <string name="hub40ContinueBody">يطلب هذا الاختصار فتح الاتصال المحفوظ لتسجيل الدخول إلى المزوّد. لن يُرسل شيء حتى تختار المتابعة.</string>
+    <string name="hub40Continue">متابعة</string>
+</resources>

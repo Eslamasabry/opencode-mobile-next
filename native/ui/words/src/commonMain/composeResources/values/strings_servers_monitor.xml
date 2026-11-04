@@ -1,8 +1,5 @@
 <resources>
     <string name="monitorServerUnavailable">Could not check this server. Open the conversation to review requests.</string>
-    <string name="monitorServerWifi">Check on Wi-Fi only</string>
-    <string name="monitorServerCheckInOff">Long-running reminders: off · tap to change</string>
-    <string name="monitorServerCheckInMinutes">Remind after %1$d minutes · tap to change</string>
     <string name="monitorServerWaiting">Waiting for the next check.</string>
     <string name="monitorServerCurrent">Requests checked.</string>
     <string name="monitorServerPaused">Checks paused. Open the app or resume the background connection.</string>

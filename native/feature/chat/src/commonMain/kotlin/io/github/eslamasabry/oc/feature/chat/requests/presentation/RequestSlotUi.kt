@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat.requests.presentation
 
+import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.model.PendingQuestion
 import io.github.eslamasabry.oc.engine.requests.PendingRequest
@@ -20,6 +21,7 @@ public data class RequestSlotUi(
     val moreWaiting: Int = 0,
     val confirmAlways: AlwaysConfirmUi? = null,
     val sheet: QuestionSheetUi? = null,
+    val invitationFailure: Failure? = null,
 )
 
 /**
@@ -46,6 +48,7 @@ public sealed interface RequestCardUi {
         val ask: AskView,
         val canAlwaysAllow: Boolean,
         override val captured: PendingRequest.Permission? = null,
+        val invitation: Boolean = false,
     ) : RequestCardUi
 
     /**
@@ -115,6 +118,7 @@ public data class AlwaysConfirmUi(
     val id: RequestId,
     val grant: AlwaysGrant?,
     val captured: PendingRequest.Permission? = null,
+    val invitation: Boolean = false,
 )
 
 /**

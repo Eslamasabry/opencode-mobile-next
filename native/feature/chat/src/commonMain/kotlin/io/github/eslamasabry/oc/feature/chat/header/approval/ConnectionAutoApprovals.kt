@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.engine.requests.PendingRequest
 import io.github.eslamasabry.oc.engine.requests.RequestAnswer
 import io.github.eslamasabry.oc.engine.requests.consent.ApprovalModes
 import io.github.eslamasabry.oc.engine.requests.consent.AutoApprovalSweep
+import io.github.eslamasabry.oc.engine.requests.consent.PermissionInvitationAuthority
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import kotlin.time.Clock
 import kotlinx.coroutines.flow.Flow
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
@@ -37,6 +39,7 @@ public class ConnectionAutoApprovals(
     private val registry: ConnectionRegistry,
     private val store: ApprovalStore,
     private val clock: Clock,
+    private val invitations: PermissionInvitationAuthority? = null,
 ) {
     private var started = false
 
@@ -78,7 +81,14 @@ public class ConnectionAutoApprovals(
                 },
                 clock = clock,
             )
-        return combine(engine.pending, store.revision) { all, _ -> all }
+        return combine(
+                engine.pending,
+                store.revision,
+                gateway.capabilities,
+                invitations?.revision ?: flowOf(0L),
+            ) { all, _, _, _ ->
+                all
+            }
             .onEach { all ->
                 if (!gateway.capabilities.value.permissionRequests) return@onEach
                 val modeChanged = revision != store.revision.value
@@ -87,6 +97,7 @@ public class ConnectionAutoApprovals(
                     all.filterIsInstance<PendingRequest.Permission>()
                         .filter { it.phase == AnswerPhase.Waiting }
                         .map { it.request }
+                val unresolved = HashSet<SessionId>()
                 for (ask in asks) {
                     // A child inherits its parent's mode: its parents are read before the mode is
                     // decided.
@@ -99,6 +110,7 @@ public class ConnectionAutoApprovals(
                         current = read.value.parentId
                         depth++
                     }
+                    if (current != null && current !in parents.value) unresolved += ask.sessionId
                 }
                 if (modeChanged && modes != null) {
                     // Server-wide changes also reach running conversations with no currently
@@ -132,6 +144,16 @@ public class ConnectionAutoApprovals(
                             modes.syncSessionPermissions(session)
                         }
                     }
+                }
+                engine.observeInvitations(invitations?.forProfile(profile)) { session ->
+                    // If inheritance could not be read, omit the invitation rather than guess a
+                    // mode.
+                    session in unresolved ||
+                        session !in parents.value ||
+                        ApprovalModes.effective(store.settings(profile), session) {
+                                parents.value[it]
+                            }
+                            .automatic
                 }
                 sweep.sweep(asks)
             }

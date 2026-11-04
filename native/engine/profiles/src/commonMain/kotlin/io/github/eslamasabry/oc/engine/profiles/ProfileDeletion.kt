@@ -19,18 +19,27 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 /**
- * An engine that holds per-profile writers or caches (plan 03 §13.5 `Set<ProfileCloser>`): connection, runtime,
- * agents, schedule, composer, delivery, attention, and the `:engine:settings` stores (their `closeProfile`).
- * Profiles never imports them; they register this.
+ * An engine that holds per-profile writers or caches (plan 03 §13.5 `Set<ProfileCloser>`):
+ * connection, runtime, agents, schedule, composer, delivery, attention, and the `:engine:settings`
+ * stores (their `closeProfile`). Profiles never imports them; they register this.
  */
 public interface ProfileCloser {
+    /** Dependencies drain before their transports; ties retain deterministic module order. */
+    public val drainOrder: Int
+        get() = 0
+
     /** Module path, for the result. */
     public val owner: String
 
-    /** Step 1, synchronous: refuse new work for [profile] from now on. Must not suspend or throw. */
+    /**
+     * Step 1, synchronous: refuse new work for [profile] from now on. Must not suspend or throw.
+     */
     public fun stopAdmission(profile: ProfileId)
 
-    /** Step 1: wait for admitted work to finish (drain pending writes, stop the profile's connections). */
+    /**
+     * Step 1: wait for admitted work to finish (drain pending writes, stop the profile's
+     * connections).
+     */
     public suspend fun drain(profile: ProfileId): Outcome<Unit>
 
     /** Step 8: the deletion failed and the profile is kept: admit work again. */
@@ -38,19 +47,21 @@ public interface ProfileCloser {
 }
 
 /**
- * Data the generic key sweep does not reach (plan 05 §3.3): embedded records inside app-wide values, files, Keystore
- * aliases, widget/tile/shortcut state, the retained Flutter-era copies. [order] places it in the transaction
- * ([DeletionStep]); lower runs first. Contract: idempotent, removes only [profileId]'s data, never throws.
+ * Data the generic key sweep does not reach (plan 05 §3.3): embedded records inside app-wide
+ * values, files, Keystore aliases, widget/tile/shortcut state, the retained Flutter-era copies.
+ * [order] places it in the transaction ([DeletionStep]); lower runs first. Contract: idempotent,
+ * removes only [profileId]'s data, never throws.
  */
 public interface ProfileResourceCleaner {
     public val owner: String
     public val order: Int
 
     /**
-     * True for a cleaner whose failure must stop the generic sweep (the stash: the sweep would erase the owner marker
-     * that finds orphan files on the next launch, plan 05 §3.5 step 6).
+     * True for a cleaner whose failure must stop the generic sweep (the stash: the sweep would
+     * erase the owner marker that finds orphan files on the next launch, plan 05 §3.5 step 6).
      */
-    public val guardsSweep: Boolean get() = false
+    public val guardsSweep: Boolean
+        get() = false
 
     /** Clears [profileId]'s data; Ok(records removed, 0 = nothing to clear). */
     public suspend fun clear(profileId: ProfileId, options: DeletionOptions): Outcome<Int>
@@ -72,17 +83,26 @@ public object DeletionStep {
     /** Step 9, the profile row and secrets (reserved). */
     public const val ROW: Int = 900
 
-    /** Step 10 and later: data that may only go once the row is gone (plugin secrets, retained owner keys). */
+    /**
+     * Step 10 and later: data that may only go once the row is gone (plugin secrets, retained owner
+     * keys).
+     */
     public const val AFTER_ROW: Int = 1000
 }
 
 /** Keys kept through the sweep (plan 05 §3.5 step 2). */
 public fun interface RetainedKeys {
-    /** Keys of [profileId] the sweep must leave; [untilRow] = they go after the row commit, else they stay for good. */
+    /**
+     * Keys of [profileId] the sweep must leave; [untilRow] = they go after the row commit, else
+     * they stay for good.
+     */
     public fun retained(profileId: ProfileId, untilRow: Boolean): Set<String>
 
     public companion object {
-        /** Restore authority and tombstones: removed only once the row is gone (Flutter `retainedKeys`). */
+        /**
+         * Restore authority and tombstones: removed only once the row is gone (Flutter
+         * `retainedKeys`).
+         */
         public val Default: RetainedKeys = RetainedKeys { id, untilRow ->
             if (!untilRow) {
                 emptySet()
@@ -99,24 +119,26 @@ public fun interface RetainedKeys {
 }
 
 /**
- * [keepQueuedPromptsAsDrafts] moves the profile's queued prompts to Saved prompts; [confirmedQueue] is the person's
- * confirmed `QueuedPromptRemovalPlan` (opaque here; the delivery cleaner refuses when the live queue differs);
- * [linuxGone] = the in-app Linux was erased, so cleaners of what lived inside it have nothing to wait for.
+ * [keepQueuedPromptsAsDrafts] moves the profile's queued prompts to Saved prompts; [confirmedQueue]
+ * is the person's confirmed `QueuedPromptRemovalPlan` (opaque here; the delivery cleaner refuses
+ * when the live queue differs); [linuxGone] = the in-app Linux was erased, so cleaners of what
+ * lived inside it have nothing to wait for.
  */
 public data class DeletionOptions(
     val keepQueuedPromptsAsDrafts: Boolean = false,
     val confirmedQueue: QueuedPromptRemovalPlan? = null,
     val linuxGone: Boolean = false,
 ) {
-    val structuralPlan: StructuralPlan get() = StructuralPlan(keepQueuedPromptsAsDrafts)
+    val structuralPlan: StructuralPlan
+        get() = StructuralPlan(keepQueuedPromptsAsDrafts)
 }
 
 /** One owner that could not finish. [failure] never carries a value or a secret. */
 public data class OwnerFailure(val owner: String, val failure: Failure)
 
 /**
- * The truthful report (Flutter `DeleteProfileResult`). [removedProfile] false = the server was kept and
- * [failures] lists EVERY owner that refused, in transaction order (B-STATE-063).
+ * The truthful report (Flutter `DeleteProfileResult`). [removedProfile] false = the server was kept
+ * and [failures] lists EVERY owner that refused, in transaction order (B-STATE-063).
  */
 public data class DeleteProfileResult(
     val removedProfile: Boolean,
@@ -125,20 +147,25 @@ public data class DeleteProfileResult(
     val removedByOwner: Map<String, Int>,
     val sweptKeys: Int,
 ) {
-    val failedOwners: List<String> get() = failures.map { it.owner }
-    val complete: Boolean get() = removedProfile && failures.isEmpty()
+    val failedOwners: List<String>
+        get() = failures.map { it.owner }
+
+    val complete: Boolean
+        get() = removedProfile && failures.isEmpty()
 }
 
 /**
- * `ProfileDeletion.delete(id, options)` (plan 03 §10.5, plan 05 §3.5): the backwards transaction ported from
- * `connection/deletion.dart`.
+ * `ProfileDeletion.delete(id, options)` (plan 03 §10.5, plan 05 §3.5): the backwards transaction
+ * ported from `connection/deletion.dart`.
  *
- * 1. Close admission synchronously on the profile's lanes (`<id>` and `<id>.agents`) and every [ProfileCloser], then
- *    drain them. 2. Retained keys. 3–6. [ProfileResourceCleaner]s below [DeletionStep.SWEEP] in order. 7. The generic
- *    sweep minus retained keys (skipped when a sweep-guarding cleaner failed). Cleaners up to [DeletionStep.ROW].
- *    8. Any failure: keep the profile, reopen everything, report every failed owner. 9. Row and secrets as one unit
- *    (BYO identity first; a refusal restores the previous `oc.profiles`). 10. Retained keys, then cleaners after the
- *    row; their failures are reported, the server is already gone.
+ * 1. Close admission synchronously on the profile's lanes (`<id>` and `<id>.agents`) and every
+ *    [ProfileCloser], then drain them. 2. Retained keys. 3–6. [ProfileResourceCleaner]s below
+ *    [DeletionStep.SWEEP] in order. 7. The generic sweep minus retained keys (skipped when a
+ *    sweep-guarding cleaner failed). Cleaners up to [DeletionStep.ROW].
+ *     8. Any failure: keep the profile, reopen everything, report every failed owner. 9. Row and
+ *        secrets as one unit (BYO identity first; a refusal restores the previous
+ *        `oc.profiles`). 10. Retained keys, then cleaners after the row; their failures are
+ *        reported, the server is already gone.
  *
  * One deletion runs at a time; a second call for the same id while it runs gets the same result.
  */
@@ -155,10 +182,17 @@ public class ProfileDeletion(
     private val pendingLock = Mutex()
     private val pending = HashMap<String, CompletableDeferred<Outcome<DeleteProfileResult>>>()
 
-    public suspend fun delete(id: ProfileId, options: DeletionOptions = DeletionOptions()): Outcome<DeleteProfileResult> {
-        val (deferred, mine) = pendingLock.withLock {
-            pending[id.raw]?.let { it to false } ?: CompletableDeferred<Outcome<DeleteProfileResult>>().also { pending[id.raw] = it } to true
-        }
+    public suspend fun delete(
+        id: ProfileId,
+        options: DeletionOptions = DeletionOptions(),
+    ): Outcome<DeleteProfileResult> {
+        val (deferred, mine) =
+            pendingLock.withLock {
+                pending[id.raw]?.let { it to false }
+                    ?: CompletableDeferred<Outcome<DeleteProfileResult>>().also {
+                        pending[id.raw] = it
+                    } to true
+            }
         if (!mine) return deferred.await()
         try {
             val result = serial.withLock {
@@ -195,20 +229,24 @@ public class ProfileDeletion(
         }
         if (failures.isNotEmpty()) return reopen(id, laneIds, failures, removed, 0)
         laneIds.forEach { lanes.drainProfile(it) }
-        for (closer in closers) {
+        for (closer in
+            closers.sortedWith(compareBy<ProfileCloser> { it.drainOrder }.thenBy { it.owner })) {
             val drained = attempt(::unexpected) { closer.drain(id) }.flatten()
             if (drained is Outcome.Failed) failures += OwnerFailure(closer.owner, drained.failure)
         }
 
         // 2. Retained through the row commit, and for good.
-        val keptForGood = retainedKeys.flatMapTo(LinkedHashSet()) { it.retained(id, untilRow = false) }
-        val keptUntilRow = retainedKeys.flatMapTo(LinkedHashSet(keptForGood)) { it.retained(id, untilRow = true) }
+        val keptForGood =
+            retainedKeys.flatMapTo(LinkedHashSet()) { it.retained(id, untilRow = false) }
+        val keptUntilRow =
+            retainedKeys.flatMapTo(LinkedHashSet(keptForGood)) { it.retained(id, untilRow = true) }
 
         // 3–6. Cleaners before the sweep; every one runs and every refusal is reported.
         val ordered = cleaners.sortedBy { it.order }
         var sweepGuardFailed = false
         for (cleaner in ordered.filter { it.order < DeletionStep.SWEEP }) {
-            if (!runCleaner(cleaner, id, options, failures, removed) && cleaner.guardsSweep) sweepGuardFailed = true
+            if (!runCleaner(cleaner, id, options, failures, removed) && cleaner.guardsSweep)
+                sweepGuardFailed = true
         }
 
         // 7. The generic sweep, computed late (after the lanes drained).
@@ -217,12 +255,15 @@ public class ProfileDeletion(
             when (val sweep = scope.sweep(id, keptUntilRow)) {
                 is Outcome.Ok -> {
                     swept += sweep.value.removedKeys
-                    sweep.value.removedByOwner.forEach { (owner, n) -> removed[owner] = (removed[owner] ?: 0) + n }
+                    sweep.value.removedByOwner.forEach { (owner, n) ->
+                        removed[owner] = (removed[owner] ?: 0) + n
+                    }
                 }
                 is Outcome.Failed -> failures += OwnerFailure(SWEEP_OWNER, sweep.failure)
             }
         }
-        for (cleaner in ordered.filter { it.order > DeletionStep.SWEEP && it.order < DeletionStep.ROW }) {
+        for (cleaner in
+            ordered.filter { it.order > DeletionStep.SWEEP && it.order < DeletionStep.ROW }) {
             runCleaner(cleaner, id, options, failures, removed)
         }
 
@@ -231,27 +272,46 @@ public class ProfileDeletion(
 
         // 9. Row and secrets as one unit.
         var secretCount = 0
-        val row = store.removeRowAndSecrets(id) {
-            scope.ownedData(id).map { owned -> orderedSecretNames(owned.secretNames).also { secretCount = it.size } }
-        }
+        val row =
+            store.removeRowAndSecrets(id) {
+                scope.ownedData(id).map { owned ->
+                    orderedSecretNames(owned.secretNames).also { secretCount = it.size }
+                }
+            }
         if (row is Outcome.Failed) {
             failures += OwnerFailure(ProfileKeys.OWNER, row.failure)
             return reopen(id, laneIds, failures, removed, swept)
         }
         removed[ProfileKeys.OWNER] = (removed[ProfileKeys.OWNER] ?: 0) + 1 + secretCount
 
-        // 10. Retained keys last (everything but the keys kept for good), then cleaners that need the row gone.
+        // 10. Retained keys last (everything but the keys kept for good), then cleaners that need
+        // the row gone.
         when (val last = scope.sweep(id, keptForGood)) {
             is Outcome.Ok -> {
                 swept += last.value.removedKeys
-                last.value.removedByOwner.forEach { (owner, n) -> removed[owner] = (removed[owner] ?: 0) + n }
+                last.value.removedByOwner.forEach { (owner, n) ->
+                    removed[owner] = (removed[owner] ?: 0) + n
+                }
             }
             is Outcome.Failed -> failures += OwnerFailure(SWEEP_OWNER, last.failure)
         }
-        for (cleaner in ordered.filter { it.order > DeletionStep.ROW }) runCleaner(cleaner, id, options, failures, removed)
+        for (cleaner in ordered.filter { it.order > DeletionStep.ROW }) runCleaner(
+            cleaner,
+            id,
+            options,
+            failures,
+            removed,
+        )
         store.endDeletion(id)
-        if (failures.isNotEmpty()) log.w { "server removed; ${failures.size} owners could not finish after the row" }
-        return DeleteProfileResult(removedProfile = true, failures = failures.toList(), removedByOwner = removed, sweptKeys = swept).ok()
+        if (failures.isNotEmpty())
+            log.w { "server removed; ${failures.size} owners could not finish after the row" }
+        return DeleteProfileResult(
+                removedProfile = true,
+                failures = failures.toList(),
+                removedByOwner = removed,
+                sweptKeys = swept,
+            )
+            .ok()
     }
 
     private suspend fun runCleaner(
@@ -260,16 +320,18 @@ public class ProfileDeletion(
         options: DeletionOptions,
         failures: MutableList<OwnerFailure>,
         removed: MutableMap<String, Int>,
-    ): Boolean = when (val result = attempt(::unexpected) { cleaner.clear(id, options) }.flatten()) {
-        is Outcome.Ok -> {
-            if (result.value > 0) removed[cleaner.owner] = (removed[cleaner.owner] ?: 0) + result.value
-            true
+    ): Boolean =
+        when (val result = attempt(::unexpected) { cleaner.clear(id, options) }.flatten()) {
+            is Outcome.Ok -> {
+                if (result.value > 0)
+                    removed[cleaner.owner] = (removed[cleaner.owner] ?: 0) + result.value
+                true
+            }
+            is Outcome.Failed -> {
+                failures += OwnerFailure(cleaner.owner, result.failure)
+                false
+            }
         }
-        is Outcome.Failed -> {
-            failures += OwnerFailure(cleaner.owner, result.failure)
-            false
-        }
-    }
 
     private suspend fun reopen(
         id: ProfileId,
@@ -282,20 +344,33 @@ public class ProfileDeletion(
         closers.forEach { it.reopen(id) }
         store.cancelDeletion(id)
         log.w { "server kept: ${failures.size} owners refused" }
-        return DeleteProfileResult(removedProfile = false, failures = failures.toList(), removedByOwner = removed, sweptKeys = swept).ok()
+        return DeleteProfileResult(
+                removedProfile = false,
+                failures = failures.toList(),
+                removedByOwner = removed,
+                sweptKeys = swept,
+            )
+            .ok()
     }
 
     private suspend fun abortReopen(id: ProfileId) {
         if (store.profile(id) == null) return
-        listOf(id, ProfileId(id.raw + ProfileKeyRule.AGENT_BACKEND_SUFFIX)).forEach { lanes.forProfile(it).resumeAdmission() }
+        listOf(id, ProfileId(id.raw + ProfileKeyRule.AGENT_BACKEND_SUFFIX)).forEach {
+            lanes.forProfile(it).resumeAdmission()
+        }
         closers.forEach { it.reopen(id) }
         store.cancelDeletion(id)
     }
 
-    /** BYO identity first (its refusal keeps metadata for a retry), then the order of [ProfileKeys.SECRET_PREFIXES]. */
+    /**
+     * BYO identity first (its refusal keeps metadata for a retry), then the order of
+     * [ProfileKeys.SECRET_PREFIXES].
+     */
     private fun orderedSecretNames(names: Set<String>): List<String> {
         val prefixes = ProfileKeys.SECRET_PREFIXES.keys.toList()
-        return names.sortedBy { name -> prefixes.indexOfFirst { name.startsWith(it) }.let { if (it < 0) prefixes.size else it } }
+        return names.sortedBy { name ->
+            prefixes.indexOfFirst { name.startsWith(it) }.let { if (it < 0) prefixes.size else it }
+        }
     }
 
     public companion object {
@@ -306,7 +381,8 @@ public class ProfileDeletion(
 
 private fun unexpected(error: Throwable): Failure = Failure.Unexpected(Redacted.shape(error))
 
-private fun <T> Outcome<Outcome<T>>.flatten(): Outcome<T> = when (this) {
-    is Outcome.Ok -> value
-    is Outcome.Failed -> this
-}
+private fun <T> Outcome<Outcome<T>>.flatten(): Outcome<T> =
+    when (this) {
+        is Outcome.Ok -> value
+        is Outcome.Failed -> this
+    }

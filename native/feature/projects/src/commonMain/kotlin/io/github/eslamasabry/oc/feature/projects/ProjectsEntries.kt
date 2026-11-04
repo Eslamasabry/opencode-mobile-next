@@ -18,6 +18,7 @@ import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.DevServicesRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.ProjectsRoute
+import io.github.eslamasabry.oc.ui.routes.TerminalRoute
 
 /**
  * The EntryInstaller; the ONLY file in the module that imports androidx.navigation3.runtime
@@ -45,9 +46,16 @@ public class ProjectsEntries(
                 }
             val state by vm.state.collectAsStateWithLifecycle()
             chatEnvironment.Provide {
-                ProjectPageScreen(state, vm) {
-                    navigator.open(DevServicesRoute.Home(route.profile, route.directory))
-                }
+                ProjectPageScreen(
+                    state,
+                    vm,
+                    onDevServices = {
+                        navigator.open(DevServicesRoute.Home(route.profile, route.directory))
+                    },
+                    onTerminal = {
+                        navigator.open(TerminalRoute.Home(route.profile, route.directory))
+                    },
+                )
             }
         }
     }

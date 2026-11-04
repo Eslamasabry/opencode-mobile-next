@@ -246,6 +246,9 @@ public interface ChatWorld {
     public fun markReadIfVisible(stillVisible: () -> Boolean) {
         if (stillVisible()) markRead()
     }
+
+    /** Read on view, rechecking that this exact conversation display is still current. */
+    public fun observeRead(stillCurrent: () -> Boolean): Unit = markReadIfVisible(stillCurrent)
 }
 
 /**

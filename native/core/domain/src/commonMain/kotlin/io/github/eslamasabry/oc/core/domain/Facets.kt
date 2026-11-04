@@ -94,6 +94,17 @@ public interface SessionReadStateGateway {
 }
 
 /**
+ * Rechecks the visible conversation and consent after negotiation, immediately before the one POST.
+ */
+public interface FencedSessionReadStateGateway : SessionReadStateGateway {
+    public suspend fun viewSession(
+        session: SessionId,
+        idleMs: Long,
+        beforeSend: () -> Boolean,
+    ): Outcome<Unit>
+}
+
+/**
  * Runtime-only MCP removal; never deletes persistent configuration. Refetch inventory after
  * success.
  */

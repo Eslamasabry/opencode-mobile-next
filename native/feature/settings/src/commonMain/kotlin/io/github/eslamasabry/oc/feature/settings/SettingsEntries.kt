@@ -9,15 +9,18 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import io.github.eslamasabry.oc.feature.settings.automation.AutomationSection
 import io.github.eslamasabry.oc.feature.settings.automation.AutomationViewModel
 import io.github.eslamasabry.oc.feature.settings.monitor.MonitoringSection
 import io.github.eslamasabry.oc.feature.settings.monitor.MonitoringViewModel
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsHost
+import io.github.eslamasabry.oc.feature.settings.presentation.PermissionSettingsViewModel
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsViewModel
 import io.github.eslamasabry.oc.feature.settings.ui.SettingsCapabilityFlows
+import io.github.eslamasabry.oc.feature.settings.ui.PermissionSettingsScreen
 import io.github.eslamasabry.oc.feature.settings.ui.SettingsScreen
 import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
@@ -32,15 +35,23 @@ import io.github.eslamasabry.oc.ui.routes.SettingsRoute
 @ContributesIntoSet(AppScope::class, binding = binding<EntryInstaller>())
 public class SettingsEntries(private val host: SettingsHost) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
-        entry<SettingsRoute.WhatsNew> {
+        entry<SettingsRoute.Permissions> { route ->
+            val vm =
+                assistedMetroViewModel<
+                    PermissionSettingsViewModel,
+                    PermissionSettingsViewModel.Factory,
+                > {
+                    create(route)
+                }
+            val state by vm.state.collectAsStateWithLifecycle()
+            PermissionSettingsScreen(state, vm)
+        }
+        entry<SettingsRoute.Notifications> {
             val vm = metroViewModel<SettingsViewModel>()
             val state by vm.state.collectAsStateWithLifecycle()
-            LaunchedEffect(vm) { vm.showWhatsNew() }
-            KitBackGuard(
-                enabled = state.page != SettingsPage.Hub || state.hub.query.isNotEmpty(),
-                onBack = vm::back,
-            )
-            SettingsScreen(state, vm.actions, onExit = vm::exit)
+            LaunchedEffect(vm) { vm.actions.onOpen(SettingsPage.Notifications) }
+            KitBackGuard(enabled = state.page != SettingsPage.Hub, onBack = vm::back)
+            SettingsCapabilityFlows(host) { SettingsScreen(state, vm.actions, onExit = vm::exit) }
         }
         entry<SettingsRoute.WhatsNew> {
             val vm = metroViewModel<SettingsViewModel>()

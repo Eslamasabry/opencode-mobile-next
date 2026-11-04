@@ -107,6 +107,9 @@ import io.github.eslamasabry.oc.ui.words.res.composerFullSteerHint
 import io.github.eslamasabry.oc.ui.words.res.composerFullTakePhoto
 import io.github.eslamasabry.oc.ui.words.res.composerFullThinking
 import io.github.eslamasabry.oc.ui.words.res.composerFullThinkingDefault
+import io.github.eslamasabry.oc.ui.words.res.composerKeptMissingFiles
+import io.github.eslamasabry.oc.ui.words.res.composerKeptRestoreRefused
+import io.github.eslamasabry.oc.ui.words.res.composerKeptRestoreTitle
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachFile
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachmentDismiss
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachmentFailed
@@ -256,24 +259,44 @@ public fun BasicComposer(
     // (P12-CHAT-FEEL, [InsertRequest.replace]): the prompt's words replace the field, focused,
     // ready to change and send.
     // Reported as the person's own edit so the draft owner keeps it.
+    var insertRefused by remember(state.targetKey) { mutableStateOf(false) }
+    var missingInsertFiles by remember(state.targetKey) { mutableStateOf<List<String>>(emptyList()) }
     val insert = chrome.pendingInsert()
     LaunchedEffect(insert, editorReady, state.draft.ready) {
         val request = insert ?: return@LaunchedEffect
         if (!editorReady || !state.draft.ready) return@LaunchedEffect
+        insertRefused = false
+        missingInsertFiles = emptyList()
+        // A kept record is never consumed. A stale source or refused destination clears only this transient offer,
+        // so choosing Restore again is always an explicit action and cannot duplicate appended words.
+        if (!request.stillCurrent() || (request.attachments.isNotEmpty() && !actions.restoreAttachments(request.attachments, request.stillCurrent))) {
+            insertRefused = true
+            chrome.insertDone(request.id)
+            return@LaunchedEffect
+        }
+        if (!request.stillCurrent()) {
+            insertRefused = true
+            chrome.insertDone(request.id)
+            return@LaunchedEffect
+        }
         val current = field.text.toString()
         if (request.onlyIfEmpty && (current.isNotBlank() || state.draft.attachments.isNotEmpty())) {
             chrome.insertDone(request.id)
             return@LaunchedEffect
         }
         val next =
-            if (request.replace || current.isBlank()) request.text
-            else current.trimEnd() + "\n" + request.text
+            when {
+                request.text.isEmpty() -> current
+                request.replace || current.isBlank() -> request.text
+                else -> current.trimEnd() + "\n" + request.text
+            }
         field.edit { replace(0, length, next) }
         editor.userEditSerial += 1
         editor.lastReported = next
         repeatRevision = null
         actions.draftChanged(next)
-        if (request.replace) focus.requestFocus()
+        missingInsertFiles = request.missingAttachments
+        if (request.replace || request.attachments.isNotEmpty()) focus.requestFocus()
         chrome.insertDone(request.id)
     }
     val busy = chrome.busy()
@@ -344,6 +367,20 @@ public fun BasicComposer(
                     ),
                 modifier = Modifier.testTag("prompt-history-save-failed"),
             )
+        if (insertRefused) {
+            KitNotice(
+                title = stringResource(Res.string.composerKeptRestoreTitle),
+                message = stringResource(Res.string.composerKeptRestoreRefused),
+                tone = StatusTone.Attention,
+            )
+        }
+        if (missingInsertFiles.isNotEmpty()) {
+            KitNotice(
+                title = stringResource(Res.string.composerKeptRestoreTitle),
+                message = stringResource(Res.string.composerKeptMissingFiles, missingInsertFiles.joinToString(", ")),
+                tone = StatusTone.Attention,
+            )
+        }
         if (state.draft.failure != null || state.draft.sendBlocked) {
             KitErrorNotice(
                 message =
@@ -560,6 +597,9 @@ public fun BasicComposer(
         // field, so the message box never shrinks to a sliver.
         val stopShown = busy || chrome.requestWaiting()
         val fieldPart: @Composable (Modifier) -> Unit = { fieldModifier ->
+            // This is the production ComposerHost. The kit reads the acknowledged Appearance glow/style and
+            // applies reduced motion, Saver and the Style's line/halo policy in the same place it paints them.
+            KitComposerGlow(active = busy && !chrome.requestWaiting(), modifier = fieldModifier, corner = 9.dp) {
             KitField(
                 state = field,
                 // While a reply runs on a steering server the words join it (B-PROTO-025).
@@ -586,6 +626,7 @@ public fun BasicComposer(
                 },
                 modifier = fieldModifier.kitPromptOrigin().testTag("chat-composer-field"),
             )
+            }
         }
         val stopPart: @Composable () -> Unit = {
             KitButton(

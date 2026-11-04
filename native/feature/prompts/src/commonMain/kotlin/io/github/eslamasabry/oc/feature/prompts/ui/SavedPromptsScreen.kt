@@ -52,6 +52,9 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiTodos
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.composerToolSaveForLater
 import io.github.eslamasabry.oc.ui.words.res.fileSave
+import io.github.eslamasabry.oc.ui.words.res.keptPromptsKeptFrom
+import io.github.eslamasabry.oc.ui.words.res.keptPromptsRestoreFailed
+import io.github.eslamasabry.oc.ui.words.res.keptPromptsUncertain
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmCancel
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
@@ -204,6 +207,7 @@ private fun Issue(state: SavedPromptsUi, actions: SavedPromptsActions) {
                 SavedPromptsIssue.Full -> Res.string.promptStashFull
                 SavedPromptsIssue.UndoFailed -> Res.string.promptStashRestoreFailed
                 SavedPromptsIssue.FilesStay -> Res.string.promptFixFilesStay
+                SavedPromptsIssue.RestoreFailed -> Res.string.keptPromptsRestoreFailed
             }
         )
     if (issue == SavedPromptsIssue.Full) {
@@ -315,22 +319,36 @@ private fun PromptRow(
             enabled = !busy,
             disabledReason = if (busy) busyReason else null,
             onClickLabel = stringResource(Res.string.promptStashRestoreToDraft),
-            onClick = if (prompt.text.isBlank()) null else ({ actions.insert(prompt.id) }),
+            onClick =
+                if (prompt.text.isBlank() && !prompt.kept) null
+                else ({ actions.insert(prompt.id) }),
             modifier = Modifier.testTag("prompt-row-${prompt.id}"),
         )
+        if (prompt.kept) KitText(stringResource(Res.string.keptPromptsKeptFrom))
+        if (prompt.uncertain) KitNotice(stringResource(Res.string.keptPromptsUncertain))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
             KitButton(
                 stringResource(Res.string.promptStashRestoreToDraft),
                 { actions.insert(prompt.id) },
                 role = KitButtonRole.Secondary,
-                enabled = if (prompt.text.isBlank()) KitEnabled.Disabled(title) else enabled,
+                enabled =
+                    if (prompt.text.isBlank() && !prompt.kept) KitEnabled.Disabled(title)
+                    else enabled,
             )
-            KitButton(
-                stringResource(Res.string.chatUiEdit),
-                { actions.editPrompt(prompt.id) },
-                role = KitButtonRole.Tertiary,
-                enabled = enabled,
-            )
+            if (prompt.kept && prompt.attachments > 0 && prompt.text.isNotBlank())
+                KitButton(
+                    stringResource(Res.string.promptFixWordsOnly),
+                    { actions.insertWordsOnly(prompt.id) },
+                    role = KitButtonRole.Tertiary,
+                    enabled = enabled,
+                )
+            if (!prompt.kept)
+                KitButton(
+                    stringResource(Res.string.chatUiEdit),
+                    { actions.editPrompt(prompt.id) },
+                    role = KitButtonRole.Tertiary,
+                    enabled = enabled,
+                )
             KitButton(
                 stringResource(Res.string.promptStashDelete),
                 { actions.delete(prompt.id) },

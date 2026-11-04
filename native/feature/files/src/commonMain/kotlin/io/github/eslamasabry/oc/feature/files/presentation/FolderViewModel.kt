@@ -188,7 +188,7 @@ public class FolderViewModel(
     }
 
     override fun terminal() {
-        if (connections.canTerminal(route.from)) nav.open(TerminalRoute(route.from))
+        if (connections.canTerminal(route.from)) nav.open(TerminalRoute.Conversation(route.from))
     }
 
     override fun back(): Unit = nav.back()

@@ -164,6 +164,10 @@ public sealed interface AnswerLine {
 
     public data class Storage(val bytes: Long) : AnswerLine
 
+    public data class Memory(val bytes: Long) : AnswerLine
+
+    public data class History(val info: PhoneHistoryInfo) : AnswerLine
+
     /** Why it is restarting by itself (the Android or self stop that preceded it). */
     public data class Because(val headline: AnswerHeadline) : AnswerLine
 }

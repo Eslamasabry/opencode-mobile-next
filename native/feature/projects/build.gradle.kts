@@ -6,6 +6,7 @@ kotlin {
         implementation(project(":engine:runtime"))
         implementation(project(":ui:kit-chat"))
         implementation(project(":engine:attention"))
+        implementation(project(":ui:kit-content"))
         implementation(project(":engine:agents")) // FeedFolders: which folders are projects (P12)
         implementation(project(":engine:git"))
     }

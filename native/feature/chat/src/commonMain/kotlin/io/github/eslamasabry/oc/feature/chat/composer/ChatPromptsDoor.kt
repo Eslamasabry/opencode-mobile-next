@@ -19,7 +19,7 @@ public class ChatPromptsDoor(
     public fun open(): Unit = navigator.open(PromptsRoute.Saved(ref))
 
     /** Read while drawing: snapshot state, so a new offer redraws the composer. */
-    public fun pending(): InsertRequest? = inbox.pendingFor(target)?.let { InsertRequest(it.id, it.text) }
+    public fun pending(): InsertRequest? = inbox.pendingFor(target)?.let { InsertRequest(it.id, it.text, attachments = it.attachments, missingAttachments = it.missingAttachments, stillCurrent = it.stillCurrent) }
 
     public fun done(id: Long): Unit = inbox.done(id)
 }

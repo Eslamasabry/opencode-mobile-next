@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.agents
 
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
@@ -12,6 +13,8 @@ import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import io.github.eslamasabry.oc.feature.agents.hub.AgentComputerKind
+import io.github.eslamasabry.oc.engine.settings.teaching.ShowMeTarget
+import io.github.eslamasabry.oc.engine.settings.teaching.ShowMeTargets
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsViewModel
 import io.github.eslamasabry.oc.feature.agents.presentation.SignInTerminalViewModel
 import io.github.eslamasabry.oc.feature.agents.ui.AgentsScreen
@@ -27,7 +30,7 @@ import kotlinx.collections.immutable.toPersistentList
 /** The Agents hub and the agent-owned sign-in terminal. */
 @Inject
 @ContributesIntoSet(AppScope::class, binding = binding<EntryInstaller>())
-public class AgentsEntries : EntryInstaller {
+public class AgentsEntries(private val arrivals: ShowMeTargets) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
         entry<CapabilityAddComputerRoute> { route ->
             val vm = metroViewModel<AgentsViewModel>()
@@ -77,7 +80,16 @@ public class AgentsEntries : EntryInstaller {
             val vm = metroViewModel<AgentsViewModel>()
             val state by vm.state.collectAsStateWithLifecycle()
             val hubState by vm.hubState.collectAsStateWithLifecycle()
-            AgentsScreen(state, vm, hubState, vm)
+            val arrival by arrivals.active.collectAsStateWithLifecycle()
+            DisposableEffect(Unit) { onDispose { arrivals.dismiss(ShowMeTarget.Agents) } }
+            AgentsScreen(
+                state,
+                vm,
+                hubState,
+                vm,
+                showArrival = arrival == ShowMeTarget.Agents,
+                dismissArrival = { arrivals.dismiss(ShowMeTarget.Agents) },
+            )
         }
     }
 }

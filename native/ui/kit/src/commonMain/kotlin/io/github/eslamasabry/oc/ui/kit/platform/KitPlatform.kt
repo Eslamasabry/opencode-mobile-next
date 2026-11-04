@@ -80,6 +80,9 @@ public interface KitPlatform {
     /** A static SVG picture at a bounded tile size; no renderer may resolve external resources. */
     public fun svgPainter(text: String, pixels: Int): Painter? = null
 
+    /** The platform's short local date/time; omit the date for a message from the same local day. */
+    public fun messageTime(createdMs: Long, nowMs: Long): String? = null
+
     /**
      * System bars (plan 06 §5.6; Dart `KitSystemBars`): a transparent status bar whose icons
      * contrast with [ground] ([darkContent] = dark icons), and no navigation-bar contrast scrim.

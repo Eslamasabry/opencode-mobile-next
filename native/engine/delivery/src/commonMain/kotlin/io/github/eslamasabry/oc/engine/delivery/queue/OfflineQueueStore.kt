@@ -59,6 +59,42 @@ public class OfflineQueueStore(private val store: KeyValueStore, private val lan
     public fun storedBytes(): Long =
         ((store.get(KEY) as? PrefValue.Str)?.value?.length ?: 0).toLong()
 
+    /** A private comparison value, never logged. */
+    public fun version(): PrefValue? = store.get(KEY)
+
+    /**
+     * Delete only unsent work; dispatched and journal-bearing entries remain reviewable. Unknown
+     * storage refuses.
+     */
+    public suspend fun discardUnsent(
+        expectedJournals: Map<String, PrefValue?>,
+        protectedIds: Set<String>,
+    ): Outcome<Int> =
+        order.withLock {
+            val before = version()
+            val loadedEntries =
+                load() as? QueueRead.Readable
+                    ?: return@withLock Outcome.Failed(
+                        io.github.eslamasabry.oc.core.common.Failure.StorageRefused()
+                    )
+            val kept = loadedEntries.entries.filter { it.dispatched || it.id in protectedIds }
+            val removed = loadedEntries.entries.size - kept.size
+            val next = if (kept.isEmpty()) null else QueuedPromptCodec.encodeQueue(kept)
+            when (
+                val result =
+                    store.compareAndCommit(lane, expectedJournals + (KEY to before)) {
+                        if (next == null) remove(KEY) else putString(KEY, next)
+                    }
+            ) {
+                is Outcome.Failed -> result
+                is Outcome.Ok ->
+                    if (result.value) {
+                        loadedStamp = next?.let(PrefValue::Str)
+                        Outcome.Ok(removed)
+                    } else Outcome.Failed(io.github.eslamasabry.oc.core.common.Failure.StorageRefused())
+            }
+        }
+
     /** True only when storage acknowledged the write. */
     public suspend fun save(entries: List<QueuedPrompt>): Boolean {
         val snapshot = entries.toList()

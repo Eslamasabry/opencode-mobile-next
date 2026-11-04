@@ -254,6 +254,8 @@ public fun ChatScreen(
     replyOffer: (@Composable () -> Unit)? = null,
     formWaiting: Boolean = false,
     formSlot: (@Composable (Modifier) -> Unit)? = null,
+    monitoredForm: (@Composable () -> Unit)? = null,
+    transcriptDisplay: io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices = io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices(),
 ) {
     var contextOpen by remember { mutableStateOf(false) }
     var tasksOpen by remember(state.ref) { mutableStateOf(false) }
@@ -491,6 +493,7 @@ public fun ChatScreen(
                                 actions::readAloudDone,
                                 Modifier.padding(horizontal = Space.S4.dp),
                             )
+                            monitoredForm?.invoke()
                             if (requestActions != null)
                                 ChatRequestSlot(
                                     requests,
@@ -557,6 +560,7 @@ public fun ChatScreen(
                                         onCheckReceipt = actions::checkReceipt,
                                         modifier = Modifier.fillMaxSize(),
                                         facts = facts,
+                                        display = transcriptDisplay,
                                         onOpenSession = onOpenSession,
                                         reply = rememberReplyActions(actions, state.confirmedPaths),
                                         onOpenFile = { file -> openArtifact(actions, file) },
@@ -1120,7 +1124,7 @@ internal fun rememberChatWords(): ChatTranscriptWords {
 
             // QA wave 4 B15: the thinking line says what it is ("Thought · …"), not unlabeled grey
             // text.
-            override fun thought(firstLine: String): String = thoughtWord + separator + firstLine
+            override fun thought(firstLine: String): String = if (firstLine.isBlank()) thoughtWord else thoughtWord + separator + firstLine
         }
     }
 }

@@ -1,0 +1,30 @@
+<resources>
+    <string name="monitor40FormTitle">أجب عن هذا الطلب</string>
+    <string name="monitor40FormGone">تغيّر هذا الطلب أو لم يعد متاحًا. افتحه مجددًا من صندوق الوارد.</string>
+    <string name="monitor40FormSent">أُرسل ردك.</string>
+    <string name="monitor40FormElsewhere">أُجيب عن هذا الطلب من مكان آخر.</string>
+    <string name="monitor40FormHeld">سيُرسل ردك بعد قليل.</string>
+    <string name="monitor40Undo">تراجع</string>
+    <string name="monitor40FormFailed">تعذّر إرسال ردك.</string>
+    <string name="monitor40Other">إجابة أخرى</string>
+    <string name="monitor40OpenLink">فتح الصفحة</string>
+    <string name="monitor40Send">إرسال الإجابات</string>
+    <string name="monitor40Decline">رفض الطلب</string>
+    <string name="monitor40FixFields">راجع الإجابات المحددة قبل الإرسال.</string>
+    <string name="monitor40NotConfirmed">لم يتأكد الإرسال بعد</string>
+    <string name="monitor40Sending">جارٍ إرسال ردك</string>
+    <string name="monitor40DeclineQuestion">هل تريد رفض هذا الطلب؟</string>
+    <string name="monitor40DeclineBody">سيُغلق الطلب دون إجاباتك.</string>
+    <string name="monitor40LinkQuestion">هل تريد فتح هذه الصفحة؟</string>
+    <string name="monitor40Required">أدخل إجابة.</string>
+    <string name="monitor40Number">أدخل رقمًا.</string>
+    <string name="monitor40Integer">أدخل عددًا صحيحًا.</string>
+    <string name="monitor40NotOffered">اختر إجابة متاحة أو أدخل قيمة يقبلها النموذج.</string>
+    <string name="monitor40MinLength">أدخل %1$d أحرف على الأقل.</string>
+    <string name="monitor40MaxLength">استخدم %1$d أحرف على الأكثر.</string>
+    <string name="monitor40Range">أدخل قيمة ضمن الحدود المسموحة: من %1$s إلى %2$s.</string>
+    <string name="monitor40MinItems">اختر %1$d إجابات على الأقل.</string>
+    <string name="monitor40MaxItems">اختر %1$d إجابات على الأكثر.</string>
+    <string name="monitor40QuestionCount">عدد الأسئلة: %1$d</string>
+    <string name="monitor40Answer">إجابة</string>
+</resources>

@@ -364,7 +364,7 @@ public class ProfileMonitor(
     private suspend fun saveRoute(id: String, request: MonitoredRequest): String? {
         if (id in blocked) return null
         val p = profile(id) ?: return null
-        val token = Uuid.random().toHexString() + Uuid.random().toHexString().take(16)
+        val token = Uuid.random().toHexString() + Uuid.random().toHexString()
         val all = routes(id)
         while (all.size >= MAX_ROUTES) all.remove(all.keys.first())
         all[token] =
@@ -596,10 +596,11 @@ public class ProfileMonitor(
 
     /**
      * Runs one bounded read of every monitored server due now; a second call joins the read in
-     * flight.
+     * flight. [force] (a visible Check now) also advances bounded history rotation first.
      */
-    public suspend fun refresh() {
+    public suspend fun refresh(force: Boolean = false) {
         if (disposed || !runningAllowed) return
+        if (force) next.clear()
         inFlight?.let {
             it.await()
             return

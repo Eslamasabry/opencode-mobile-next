@@ -27,6 +27,7 @@ import io.github.eslamasabry.opencode_mobile.graph.LinuxAccessors
 import io.github.eslamasabry.opencode_mobile.graph.MonitorRuntimeAccessors
 import io.github.eslamasabry.opencode_mobile.graph.NativeExitAccessors
 import io.github.eslamasabry.opencode_mobile.graph.NativeHealingAccessors
+import io.github.eslamasabry.opencode_mobile.graph.PhoneDetailsAccessors
 import io.github.eslamasabry.opencode_mobile.graph.PlatformAccessors
 
 /**
@@ -98,6 +99,7 @@ class OcApplication : Application(), GraphOwner {
         (appGraph as AttentionRuntimeAccessors).attentionRuntime.start()
         (appGraph as MonitorRuntimeAccessors).monitorRuntime.start()
         appGraph.previewRuntime // Warm local stores. MainActivity restores the ordinary connection.
+        (appGraph as PhoneDetailsAccessors).nativePhoneDetails.start()
         (appGraph as io.github.eslamasabry.opencode_mobile.graph.AttentionStateAccessors)
             .attentionState
             .start()

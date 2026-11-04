@@ -29,6 +29,7 @@ import io.github.eslamasabry.oc.feature.chat.handoff.StateHandoffSheet
 import io.github.eslamasabry.oc.feature.chat.handoff.StateHandoffViewModel
 import io.github.eslamasabry.oc.feature.chat.forms.ChatFormSlot
 import io.github.eslamasabry.oc.feature.chat.forms.ChatForms
+import io.github.eslamasabry.oc.feature.chat.forms.*
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderViewModel
 import io.github.eslamasabry.oc.feature.chat.header.ui.ApprovalChipSlot
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
@@ -42,6 +43,8 @@ import io.github.eslamasabry.oc.feature.chat.queuemove.QueueMoveViewModel
 import io.github.eslamasabry.oc.feature.chat.sessiontransfer.presentation.SessionTransferViewModel
 import io.github.eslamasabry.oc.feature.chat.sessiontransfer.ui.SessionTransferSheet
 import io.github.eslamasabry.oc.feature.chat.start.presentation.ChatStartViewModel
+import io.github.eslamasabry.oc.feature.chat.relations.presentation.SessionRelationsViewModel
+import io.github.eslamasabry.oc.feature.chat.relations.ui.SessionRelationsScreen
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -55,10 +58,12 @@ import io.github.eslamasabry.oc.ui.kitchat.composer.KitReplyReader
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.CardsSettingsRoute
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
+import io.github.eslamasabry.oc.ui.routes.ConnectionFormRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.PreviewRoute
 import io.github.eslamasabry.oc.ui.routes.ToolsRoute
 import io.github.eslamasabry.oc.ui.routes.WebSourcesRoute
+import io.github.eslamasabry.oc.ui.routes.SessionRelationsRoute
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.activeContextTitle
 import io.github.eslamasabry.oc.ui.words.res.chatQueueMoveTitle
@@ -72,6 +77,7 @@ import io.github.eslamasabry.oc.ui.words.res.sessionTransferTitle
 import io.github.eslamasabry.oc.ui.words.res.stateHandoffTitle
 import io.github.eslamasabry.oc.ui.words.res.webSourcesTitle
 import org.jetbrains.compose.resources.pluralStringResource
+import io.github.eslamasabry.oc.ui.words.res.r40RelationsTitle
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -97,8 +103,28 @@ public class ChatEntries(
     private val readers: Set<KitReplyReader>,
     private val photoSources:
         Set<io.github.eslamasabry.oc.feature.chat.composer.presentation.ComposerAttachSource>,
+    private val transcriptPreferences: Set<io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayPreferences> = emptySet(),
 ) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
+        entry<ConnectionFormRoute> { route ->
+            val vm =
+                assistedMetroViewModel<ConnectionFormViewModel, ConnectionFormViewModel.Factory> {
+                    create(route)
+                }
+            val state by vm.state.collectAsStateWithLifecycle()
+            ConnectionFormScreen(state, vm)
+        }
+        entry<SessionRelationsRoute> { route ->
+            val vm =
+                assistedMetroViewModel<
+                    SessionRelationsViewModel,
+                    SessionRelationsViewModel.Factory,
+                > {
+                    create(route)
+                }
+            val state by vm.state.collectAsStateWithLifecycle()
+            SessionRelationsScreen(state, vm)
+        }
         entry<ChatRoute> { route ->
             val vm = assistedMetroViewModel<ChatViewModel, ChatViewModel.Factory> { create(route) }
             val state by vm.state.collectAsStateWithLifecycle()
@@ -171,6 +197,9 @@ public class ChatEntries(
                 requests?.state?.collectAsStateWithLifecycle()?.value
                     ?: io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi()
             val facts by vm.facts.collectAsStateWithLifecycle()
+            val display =
+                transcriptPreferences.singleOrNull()?.value?.collectAsStateWithLifecycle()?.value
+                    ?: io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices()
             val headerVm =
                 assistedMetroViewModel<ChatHeaderViewModel, ChatHeaderViewModel.Factory> {
                     create(route)
@@ -292,10 +321,17 @@ public class ChatEntries(
                                         stringResource(Res.string.stateHandoffTitle),
                                         handoffVm::open,
                                     ),
+                                    KitLineAction(
+                                            stringResource(Res.string.r40RelationsTitle),
+                                            { navigator.open(SessionRelationsRoute(route.ref)) },
+                                            testTag = "session-relations-open",
+                                        )
+                                        .takeIf { serverCapabilities?.subagentSessions == true },
                                 ),
                             activeContext = activeContext,
                             prompts = prompts,
                             facts = facts,
+                            transcriptDisplay = display,
                             onOpenSession = vm::openSession,
                             header =
                                 ChatHeaderSlot(

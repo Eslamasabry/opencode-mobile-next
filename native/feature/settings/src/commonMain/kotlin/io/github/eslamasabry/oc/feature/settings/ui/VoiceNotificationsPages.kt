@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.settings.presentation.NotificationChange
 import io.github.eslamasabry.oc.feature.settings.presentation.NotificationFacts
@@ -14,9 +15,9 @@ import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage
 import io.github.eslamasabry.oc.feature.settings.presentation.SpeechModel
 import io.github.eslamasabry.oc.feature.settings.presentation.VoiceFacts
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
-import androidx.compose.ui.platform.testTag
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoice
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceList
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
@@ -25,20 +26,21 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.e7SettingsUi25
 import io.github.eslamasabry.oc.ui.words.res.kitVoiceReadAloud
 import io.github.eslamasabry.oc.ui.words.res.monitorQuiet
 import io.github.eslamasabry.oc.ui.words.res.monitorQuietEnd
 import io.github.eslamasabry.oc.ui.words.res.monitorQuietStart
-import io.github.eslamasabry.oc.ui.words.res.notifyQuietAllDay
-import io.github.eslamasabry.oc.ui.words.res.notifyQuietEndPicker
-import io.github.eslamasabry.oc.ui.words.res.notifyQuietStartPicker
 import io.github.eslamasabry.oc.ui.words.res.notifyBlockedMessage
 import io.github.eslamasabry.oc.ui.words.res.notifyBlockedTitle
 import io.github.eslamasabry.oc.ui.words.res.notifyFinishedRuns
 import io.github.eslamasabry.oc.ui.words.res.notifyFinishedRunsDetail
+import io.github.eslamasabry.oc.ui.words.res.notifyQuietAllDay
 import io.github.eslamasabry.oc.ui.words.res.notifyQuietDetail
+import io.github.eslamasabry.oc.ui.words.res.notifyQuietEndPicker
+import io.github.eslamasabry.oc.ui.words.res.notifyQuietStartPicker
 import io.github.eslamasabry.oc.ui.words.res.notifyQuotaAlerts
 import io.github.eslamasabry.oc.ui.words.res.notifyQuotaAlertsDetail
 import io.github.eslamasabry.oc.ui.words.res.notifyRequests
@@ -55,9 +57,13 @@ import io.github.eslamasabry.oc.ui.words.res.voiceNoticesTitle
 import io.github.eslamasabry.oc.ui.words.res.voiceSetupDownloadingPack
 import io.github.eslamasabry.oc.ui.words.res.voiceSetupNotDownloaded
 import io.github.eslamasabry.oc.ui.words.res.voiceSetupSubtitle
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
-/** I11: voice typing (its speech model opens the setup sheet), read replies aloud where it exists, the licences. */
+/**
+ * I11: voice typing (its speech model opens the setup sheet), read replies aloud where it exists,
+ * the licences.
+ */
 @Composable
 internal fun ColumnScope.VoiceBody(voice: VoiceFacts, actions: SettingsActions) {
     KitRowGroup {
@@ -68,8 +74,10 @@ internal fun ColumnScope.VoiceBody(voice: VoiceFacts, actions: SettingsActions) 
                 supporting =
                     when (model) {
                         is SpeechModel.Ready -> model.name
-                        is SpeechModel.Downloading -> stringResource(Res.string.voiceSetupDownloadingPack, model.name)
-                        is SpeechModel.NotDownloaded -> stringResource(Res.string.voiceSetupNotDownloaded, model.size)
+                        is SpeechModel.Downloading ->
+                            stringResource(Res.string.voiceSetupDownloadingPack, model.name)
+                        is SpeechModel.NotDownloaded ->
+                            stringResource(Res.string.voiceSetupNotDownloaded, model.size)
                         SpeechModel.Unsupported -> null
                     },
                 trailing = KitRowTrailing.Chevron,
@@ -96,8 +104,9 @@ internal fun ColumnScope.VoiceBody(voice: VoiceFacts, actions: SettingsActions) 
 }
 
 /**
- * I05: when Android blocks notifications the page leads with the fix; then what notifies me, quiet hours and Wi-Fi
- * only (defined once for every server), the test, and the background summary row that opens Keep running.
+ * I05: when Android blocks notifications the page leads with the fix; then what notifies me, quiet
+ * hours and Wi-Fi only (defined once for every server), the test, and the background summary row
+ * that opens Keep running.
  */
 @Composable
 internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: SettingsActions) {
@@ -109,7 +118,10 @@ internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: Settin
             tone = StatusTone.Neutral,
             actions =
                 listOf(
-                    KitLineAction(stringResource(Res.string.notifyTurnOnInAndroid), { actions.onOutside(SettingsOutside.AndroidNotificationSettings) }),
+                    KitLineAction(
+                        stringResource(Res.string.notifyTurnOnInAndroid),
+                        { actions.onOutside(SettingsOutside.AndroidNotificationSettings) },
+                    )
                 ),
         )
     }
@@ -118,12 +130,22 @@ internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: Settin
             title = stringResource(Res.string.notifyFinishedRuns),
             checked = n.finishedWork,
             supporting = stringResource(Res.string.notifyFinishedRunsDetail),
-        ) { actions.onNotification(NotificationChange.FinishedWork(it)) }
+            enabled =
+                if (n.blocked) KitEnabled.Disabled(stringResource(Res.string.notifyBlockedMessage))
+                else KitEnabled.Enabled,
+        ) {
+            actions.onNotification(NotificationChange.FinishedWork(it))
+        }
         KitSwitchRow(
             title = stringResource(Res.string.notifyRequests),
             checked = n.questions,
             supporting = stringResource(Res.string.notifyRequestsDetail),
-        ) { actions.onNotification(NotificationChange.Questions(it)) }
+            enabled =
+                if (n.blocked) KitEnabled.Disabled(stringResource(Res.string.notifyBlockedMessage))
+                else KitEnabled.Enabled,
+        ) {
+            actions.onNotification(NotificationChange.Questions(it))
+        }
         if (n.usageAlertsShown) {
             KitRow(
                 title = stringResource(Res.string.notifyQuotaAlerts),
@@ -133,14 +155,73 @@ internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: Settin
             )
         }
     }
-    // Flutter `_quietHours`: one switch that names itself; when on, its start and end (each opens its time page).
+    KitRowGroup {
+        KitSwitchRow(
+            title = stringResource(Res.string.monitorCheckIn),
+            checked = n.checkInMinutes != null,
+            supporting = stringResource(Res.string.monitorCheckInDetail),
+        ) {
+            actions.onNotification(NotificationChange.CheckIn(if (it) 30 else null))
+        }
+        n.checkInMinutes?.let { minutes ->
+            KitChoiceList(
+                choices =
+                    ((listOf(15, 30, 60, 120) + minutes).distinct().sorted()).map {
+                        KitChoice(it, pluralStringResource(Res.plurals.monitorMinutes, it, it))
+                    },
+                selected = minutes,
+                semanticsLabel = stringResource(Res.string.monitorCheckInAfter),
+                onSelect = { actions.onNotification(NotificationChange.CheckIn(it)) },
+            )
+        }
+    }
+    if (n.profiles.isNotEmpty())
+        KitRowGroup(label = stringResource(Res.string.notifySectionServers)) {
+            n.profiles.forEach { profile ->
+                KitSwitchRow(
+                    title = profile.name,
+                    checked = profile.enabled,
+                    supporting = stringResource(Res.string.monitorOptIn),
+                    enabled =
+                        if (profile.supported) KitEnabled.Enabled
+                        else
+                            KitEnabled.Disabled(
+                                stringResource(Res.string.e7ProjectMonitorUnsupported)
+                            ),
+                ) {
+                    actions.onNotification(NotificationChange.ProfileWatch(profile.id, it))
+                }
+                if (profile.supported && profile.enabled)
+                    KitSwitchRow(
+                        title = stringResource(Res.string.monitorNotifications),
+                        checked = profile.notifications,
+                    ) {
+                        actions.onNotification(
+                            NotificationChange.ProfileNotifications(profile.id, it)
+                        )
+                    }
+            }
+        }
+    else
+        // Flutter `_savedServers`: nothing to watch yet is said, rather than an empty section.
+        KitRowGroup(label = stringResource(Res.string.notifySectionServers)) {
+            KitRow(
+                title = stringResource(Res.string.notifyNoServersTitle),
+                supporting = stringResource(Res.string.notifyNoServersDetail),
+                supportingMaxLines = 2,
+            )
+        }
+    // Flutter `_quietHours`: one switch that names itself; when on, its start and end (each opens
+    // its time page).
     KitRowGroup {
         val quiet = n.quietHours
         KitSwitchRow(
             title = stringResource(Res.string.monitorQuiet),
             checked = quiet != null,
             supporting = stringResource(Res.string.notifyQuietDetail),
-        ) { actions.onQuietHours(it) }
+        ) {
+            actions.onQuietHours(it)
+        }
         if (quiet != null) {
             KitRow(
                 title = stringResource(Res.string.monitorQuietStart),
@@ -149,13 +230,18 @@ internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: Settin
             )
             KitRow(
                 title = stringResource(Res.string.monitorQuietEnd),
-                supporting = if (quiet.allDay) stringResource(Res.string.notifyQuietAllDay) else null,
+                supporting =
+                    if (quiet.allDay) stringResource(Res.string.notifyQuietAllDay) else null,
                 supportingMaxLines = 2,
                 trailing = KitRowTrailing.Value(clock(quiet.end)),
                 onClick = { actions.onOpen(SettingsPage.QuietTime(start = false)) },
             )
         }
-        KitSwitchRow(title = stringResource(Res.string.notifyWifiOnly), checked = n.wifiOnly) {
+        KitSwitchRow(
+            title = stringResource(Res.string.notifyWifiOnly),
+            checked = n.wifiOnly,
+            supporting = stringResource(Res.string.monitorWifiDetail),
+        ) {
             actions.onNotification(NotificationChange.WifiOnly(it))
         }
         KitRow(
@@ -177,23 +263,33 @@ internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: Settin
 }
 
 /**
- * Notifications › Quiet hours start or end (Flutter's time picker, as a kit check-mark list): every half hour, plus
- * the saved time when it is between them. One tap saves and returns.
+ * Notifications › Quiet hours start or end (Flutter's time picker, as a kit check-mark list): every
+ * half hour, plus the saved time when it is between them. One tap saves and returns.
  */
 @Composable
-internal fun ColumnScope.QuietTimeBody(start: Boolean, n: NotificationFacts?, actions: SettingsActions) {
+internal fun ColumnScope.QuietTimeBody(
+    start: Boolean,
+    n: NotificationFacts?,
+    actions: SettingsActions,
+) {
     val quiet = n?.quietHours ?: QuietHours.Default
     val current = if (start) quiet.start else quiet.end
     KitChoiceList(
         choices = QuietHours.choices(current).map { KitChoice(it, clock(it)) },
         selected = current,
-        semanticsLabel = stringResource(if (start) Res.string.notifyQuietStartPicker else Res.string.notifyQuietEndPicker),
+        semanticsLabel =
+            stringResource(
+                if (start) Res.string.notifyQuietStartPicker else Res.string.notifyQuietEndPicker
+            ),
         modifier = Modifier.testTag("quiet-time-choices"),
         onSelect = { actions.onQuietTime(start, it) },
     )
 }
 
-/** 24-hour "22:00–08:00": numbers, not copy (the platform's time format arrives with the quiet-hours sheet). */
+/**
+ * 24-hour "22:00–08:00": numbers, not copy (the platform's time format arrives with the quiet-hours
+ * sheet).
+ */
 internal fun quietText(q: QuietHours): String = "${clock(q.start)}–${clock(q.end)}"
 
 internal fun clock(minutes: Int): String =

@@ -38,6 +38,7 @@ import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
+import kotlinx.collections.immutable.toImmutableList
 import io.github.eslamasabry.oc.core.domain.capabilities.PlatformCapabilities
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.analytics.AnalyticsEngine
@@ -213,6 +214,8 @@ class AndroidSettingsHost(
     updateSettings:
         AppUpdateSettings, // P12-FIX-PLATFORM-GIT: Settings › Updates on the real updater
     private val voiceSettings: AndroidVoiceSettings,
+    private val journey: SettingsJourney,
+    private val privacyData: SettingsPrivacy,
     private val activities: ResumedActivities,
     override val localModels: AndroidLocalModelStorage,
     private val gitHubReports: GitHubProblemReporter, // BUILD-DIAGNOSTICS-ATTENTION
@@ -261,7 +264,19 @@ class AndroidSettingsHost(
                         ?: servers.firstOrNull { it.connected }
                 SettingsFacts(
                     platform = shipped,
-                    server = live?.let { ServerLine(it.name, onPhone = false) },
+                    server = live?.let { ServerLine(it.name, onPhone = onPhone(it.id)) },
+                    savedServers =
+                        servers
+                            .map {
+                                io.github.eslamasabry.oc.feature.settings.presentation
+                                    .SettingsSavedServer(
+                                        it.id,
+                                        it.name,
+                                        it.connected,
+                                        onPhone(it.id),
+                                    )
+                            }
+                            .toImmutableList(),
                     serverCapabilities = capabilities,
                     usageStatistics = live != null,
                     dynamicColour = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
@@ -290,8 +305,64 @@ class AndroidSettingsHost(
                 ),
             )
 
+    /** The phone's own server: the built-in owner marker plus the in-app address (screens-3). */
+    private fun onPhone(id: io.github.eslamasabry.oc.core.common.ids.ProfileId): Boolean =
+        try {
+            val owner = (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value
+            owner == id.raw &&
+                stores.profiles.profile(id)?.profile?.baseUrl?.trimEnd('/') ==
+                    io.github.eslamasabry.oc.engine.lifecycle.PhoneOwnServers.IN_APP_URL
+        } catch (_: io.github.eslamasabry.oc.core.data.kv.GateNotOpen) {
+            false
+        }
+
     override val phrases: io.github.eslamasabry.oc.feature.settings.presentation.PhraseSettings =
         AndroidPhraseSettings(stores, scope)
+
+    override val serverPage =
+        io.github.eslamasabry.oc.feature.settings.presentation.SettingsServerDoor { profile, section
+            ->
+            if (stores.profiles.profile(profile) != null)
+                when (section) {
+                    SettingsOutside.Permissions -> nav.open(SettingsRoute.Permissions(profile))
+                    SettingsOutside.Providers ->
+                        nav.open(
+                            io.github.eslamasabry.oc.ui.routes.ServerIntegrationRoute(
+                                profile,
+                                io.github.eslamasabry.oc.ui.routes.ServerIntegrationPage.Providers,
+                            )
+                        )
+                    SettingsOutside.Tools ->
+                        nav.open(
+                            io.github.eslamasabry.oc.ui.routes.ServerIntegrationRoute(
+                                profile,
+                                io.github.eslamasabry.oc.ui.routes.ServerIntegrationPage.Tools,
+                            )
+                        )
+                    else ->
+                        nav.open(
+                            io.github.eslamasabry.oc.ui.routes.ServerSettingsRoute(
+                                profile,
+                                when (section) {
+                                    SettingsOutside.DefaultShell ->
+                                        io.github.eslamasabry.oc.ui.routes.ServerSettingsPage.Shell
+                                    SettingsOutside.ModelAndMode ->
+                                        io.github.eslamasabry.oc.ui.routes.ServerSettingsPage.Model
+                                    else ->
+                                        io.github.eslamasabry.oc.ui.routes.ServerSettingsPage.Home
+                                },
+                            )
+                        )
+                }
+        }
+
+    override val localData:
+        io.github.eslamasabry.oc.feature.settings.presentation.LocalDataSettings =
+        privacyData
+
+    override val appearanceHelp:
+        io.github.eslamasabry.oc.feature.settings.presentation.AppearanceHelp =
+        journey
     override val appearanceGuide: AppearanceGuideMemory
         get() = migrationMemory.appearanceGuide
 
@@ -352,6 +423,9 @@ class AndroidSettingsHost(
                         .count { it.connected }
                         .let { if (it > 0) "Connected to a server" else "Not connected" }
                 )
+            SettingsOutside.KeptPrompts ->
+                nav.open(io.github.eslamasabry.oc.ui.routes.KeptPromptsRoute)
+            SettingsOutside.ReadState -> nav.open(ServersRoute.Home)
             else -> Unit // Absent rows: OPENS keeps them off screen.
         }
     }
@@ -522,6 +596,8 @@ class AndroidSettingsHost(
     private companion object {
         val OPENS: Set<SettingsOutside> =
             setOf(
+                SettingsOutside.KeptPrompts,
+                SettingsOutside.ReadState,
                 SettingsOutside.ModelAndMode,
                 SettingsOutside.Capabilities,
                 SettingsOutside.Tools,

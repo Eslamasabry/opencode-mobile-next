@@ -260,6 +260,8 @@ class NativePhoneSetup(
         val python = getString(Res.string.linuxRuntimePythonTitle)
         val node = getString(Res.string.linuxRuntimeNodeTitle)
         val openCode = getString(Res.string.linuxRuntimeOpenCodeTitle)
+        val getVoiceTitle = getString(Res.string.voiceComponentTitle)
+        val getVoiceSummary = getString(Res.string.voiceComponentSummary)
         val adding = getString(Res.string.aiteamComponentAddingTitle, "{names}")
         val separator = getString(Res.string.phoneSetupStartListSeparator)
         val words =
@@ -393,6 +395,86 @@ class NativePhoneSetup(
             }
     }
 
+    /** The setup journey's choices (screens-3): every component, with the voice pack sized first. */
+    suspend fun setupComponents(): Outcome<List<SetupComponent>> =
+        withContext(serial) {
+            lane.withLock {
+                when (val warm = stores.warm()) {
+                    is Outcome.Failed -> warm
+                    is Outcome.Ok -> {
+                        voice.prepare()
+                        Outcome.Ok(get().registry)
+                    }
+                }
+            }
+        }
+
+    suspend fun optionalIds(): Outcome<Set<String>> =
+        withContext(serial) {
+            lane.withLock {
+                when (val warm = stores.warm()) {
+                    is Outcome.Failed -> warm
+                    is Outcome.Ok -> get().installedOptional()
+                }
+            }
+        }
+
+    suspend fun runSelection(ids: Set<String>, adding: Boolean): Outcome<Unit> {
+        val voiceParams =
+            if (SetupComponentIds.VOICE in ids)
+                mapOf(SetupComponentIds.VOICE to mapOf("selected" to "1"))
+            else emptyMap()
+        val params = if (adding) SetupJobParams.adding(ids.toList()) else SetupJobParams.firstSetup
+        return command { it.run(ids, params + RUNTIME_PARAMS + voiceParams) }
+    }
+
+    /** Finished: run the same choice again; otherwise continue the saved job. */
+    suspend fun continueSelection(): Outcome<Unit> = command {
+        val progress = it.progress.value
+        if (progress.state == SetupState.Done) {
+            val ids = progress.components.map { c -> c.id }.toSet()
+            val voiceParams =
+                if (SetupComponentIds.VOICE in ids)
+                    mapOf(SetupComponentIds.VOICE to mapOf("selected" to "1"))
+                else emptyMap()
+            it.run(ids, SetupJobParams.adding(ids.toList()) + RUNTIME_PARAMS + voiceParams)
+        } else it.resume()
+    }
+
+    suspend fun removeVoice(): Outcome<Unit> =
+        try {
+            voice.remove()
+        } finally {
+            changed.value++
+        }
+
+    /**
+     * Reads the actual setup inventory (This phone > Details); incomplete checks fail and never remove a
+     * previously shown tool (screens-3 port, on the head's setup engine).
+     */
+    suspend fun installedInventory(): Outcome<List<String>> =
+        withContext(serial) {
+            lane.withLock {
+                when (val warm = stores.warm()) {
+                    is Outcome.Failed -> warm
+                    is Outcome.Ok -> {
+                        val setup = get()
+                        when (val installed = setup.installedOptional()) {
+                            is Outcome.Failed -> installed
+                            is Outcome.Ok ->
+                                Outcome.Ok(
+                                    setup.registry
+                                        .filter {
+                                            !it.jobStep && (it.required || it.id in installed.value)
+                                        }
+                                        .map { it.shortTitle }
+                                )
+                        }
+                    }
+                }
+            }
+        }
+
     private suspend fun command(
         prepareMigration: Boolean = true,
         action: suspend (SetupEngine) -> Unit,
@@ -495,6 +577,28 @@ class NativePhoneSetup(
     internal fun toolsInvalidated() {
         engine?.invalidateTools()
     }
+
+    suspend fun cancelExpected(jobId: String): Outcome<Unit> =
+        withContext(serial) {
+            lane.withLock {
+                when (val warm = stores.warm()) {
+                    is Outcome.Failed -> warm
+                    is Outcome.Ok -> {
+                        val setup = get()
+                        val read = setup.restore()
+                        if (read is Outcome.Failed) return@withLock read
+                        val current = setup.progress.value
+                        if (current.jobId != jobId || current.state != SetupState.Running)
+                            Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy))
+                        else {
+                            setup.cancel()
+                            shown.value = setup.progress.value
+                            Outcome.Ok(Unit)
+                        }
+                    }
+                }
+            }
+        }
 
     suspend fun update(): Outcome<Unit> {
         if (!runtime.mayUpdate()) return Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy))

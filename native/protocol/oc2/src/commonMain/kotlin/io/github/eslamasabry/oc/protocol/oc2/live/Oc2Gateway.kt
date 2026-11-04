@@ -57,6 +57,10 @@ internal class Oc2Gateway(
     SessionSelectionGateway,
     StagedRevertGateway,
     SessionReadStateGateway,
+    FencedSessionReadStateGateway,
+    FencedSlashCommandGateway,
+    FencedNewSessionPromptGateway,
+    PromptRunIdentityGateway,
     LocatedFileGateway,
     LocatedVcsGateway,
     LocatedManagedShellGateway,
@@ -952,15 +956,6 @@ internal class Oc2Gateway(
             buildJsonObject { put("agent", agent) },
         )
 
-    override suspend fun viewSession(session: SessionId, idleMs: Long): Outcome<Unit> {
-        if (idleMs <= 0) return Failure.Refused(RefusalReason.StaleScope).failed()
-        return unit(
-            "/session/${sid(session)}/view",
-            HttpMethod.Post,
-            buildJsonObject { put("idle", idleMs) },
-        )
-    }
-
     /** The visible Fork action uses the server's own boundary contract; an anchored copy excludes its anchor. */
     override suspend fun forkSession(id: SessionId, from: MessageId?): Outcome<SessionId> {
         if (id.raw.isEmpty() || from?.raw?.isEmpty() == true) return Failure.Rejected(null).failed()
@@ -998,6 +993,34 @@ internal class Oc2Gateway(
     override suspend fun renameSession(id: SessionId, title: String): Outcome<Unit> =
         unit("/session/${sid(id)}/rename", HttpMethod.Post, buildJsonObject { put("title", title) })
 
+    override suspend fun viewSession(session: SessionId, idleMs: Long): Outcome<Unit> =
+        viewSession(session, idleMs) { true }
+
+    override suspend fun viewSession(
+        session: SessionId,
+        idleMs: Long,
+        beforeSend: () -> Boolean,
+    ): Outcome<Unit> {
+        val at = location.value
+        if (idleMs <= 0 || !beforeSend()) return Failure.Refused(RefusalReason.StaleScope).failed()
+        if (dialect.value == null) {
+            when (val checked = health()) {
+                is Outcome.Failed -> return checked
+                is Outcome.Ok ->
+                    if (!checked.value.healthy) return Failure.UnreadableReply().failed()
+            }
+        }
+        if (location.value != at || !beforeSend())
+            return Failure.Refused(RefusalReason.StaleScope).failed()
+        return json(
+                "/session/${session.raw.encodeURLPathPart()}/view",
+                HttpMethod.Post,
+                buildJsonObject { put("idle", idleMs) },
+                locationQuery(at),
+            )
+            .map { Unit }
+    }
+
     override suspend fun deleteSession(id: SessionId): Outcome<Unit> =
         unit("/session/${sid(id)}", HttpMethod.Delete)
 
@@ -1017,6 +1040,9 @@ internal class Oc2Gateway(
             }
             output.toImmutableMap()
         }
+
+    override suspend fun lastPromptIdentity(session: SessionId): Outcome<PromptRunIdentity?> =
+        messagePage(session, limit = 100).map { lastPromptIdentity(it.items) }
 
     override suspend fun messagePage(
         id: SessionId,
@@ -1157,6 +1183,13 @@ internal class Oc2Gateway(
         }
 
     override suspend fun promptWithMessageId(
+        session: SessionId,
+        messageId: MessageId,
+        prompt: OutgoingPrompt,
+        beforeSend: () -> Boolean,
+    ): Outcome<PromptAdmission> = sendPrompt(session, prompt, messageId.raw, beforeSend)
+
+    override suspend fun promptNewSessionWithMessageId(
         session: SessionId,
         messageId: MessageId,
         prompt: OutgoingPrompt,
@@ -1326,17 +1359,31 @@ internal class Oc2Gateway(
         command: String,
         args: String,
         model: ModelSelection?,
+    ): Outcome<Unit> = slashCommandFenced(session, command, args) { true }
+
+    override suspend fun slashCommandFenced(
+        session: SessionId,
+        command: String,
+        args: String,
+        beforeSend: () -> Boolean,
     ): Outcome<Unit> {
-        return admitted(session) { sendPreparedCommand(session, command, args) }
+        if (!beforeSend()) return Failure.Refused(RefusalReason.StaleScope).failed()
+        return admitted(session) { sendPreparedCommand(session, command, args, beforeSend) }
     }
 
     private suspend fun sendPreparedCommand(
         session: SessionId,
         command: String,
         args: String,
+        beforeSend: () -> Boolean,
     ): Outcome<Unit> {
+        val at = location.value
         val prepared = preparePermissions(session)
         if (prepared is Outcome.Failed) return prepared
+        // Preparation negotiates the dialect and may suspend for policy installation/readback.
+        // The destination and the caller's admission must still be the captured ones afterwards.
+        if (location.value != at || !beforeSend())
+            return Failure.Refused(RefusalReason.StaleScope).failed()
         return unit(
             "/session/${sid(session)}/command",
             HttpMethod.Post,

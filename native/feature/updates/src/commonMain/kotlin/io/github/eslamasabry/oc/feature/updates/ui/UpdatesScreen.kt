@@ -32,6 +32,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitProgress
 import io.github.eslamasabry.oc.ui.kit.state.KitProgressView
+import io.github.eslamasabry.oc.ui.kit.teaching.KitTip
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.appTitle
@@ -76,15 +77,22 @@ import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceMinutesAgo
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
+import io.github.eslamasabry.oc.ui.words.res.whatsNewShowUpdates
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * Settings › This app › Updates (Flutter `UpdatesScreen`): the version with its state line and the state's one main
- * action, the download's progress, a failure in plain words, Details (the build, and the technical text only after a
- * failure), the permission note, the switch that lets the app look, Check now, and What's new.
+ * Settings › This app › Updates (Flutter `UpdatesScreen`): the version with its state line and the
+ * state's one main action, the download's progress, a failure in plain words, Details (the build,
+ * and the technical text only after a failure), the permission note, the switch that lets the app
+ * look, Check now, and What's new.
  */
 @Composable
-public fun UpdatesScreen(state: UpdatesUi, actions: UpdatesActions) {
+public fun UpdatesScreen(
+    state: UpdatesUi,
+    actions: UpdatesActions,
+    showArrival: Boolean = false,
+    dismissArrival: () -> Unit = {},
+) {
     val gutter = LocalKitTokens.current.gutter.dp
     KitScreen(
         topBar = {
@@ -98,19 +106,24 @@ public fun UpdatesScreen(state: UpdatesUi, actions: UpdatesActions) {
         width = KitScreenWidth.Reading,
     ) {
         Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(vertical = Space.S3.dp),
+            Modifier.fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(vertical = Space.S3.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
             val line = lineWords(state)
             KitRowGroup {
                 KitRow(
                     title =
-                        state.version?.let { stringResource(Res.string.appUpdateCurrentVersion, it) }
-                            ?: stringResource(Res.string.appTitle),
+                        state.version?.let {
+                            stringResource(Res.string.appUpdateCurrentVersion, it)
+                        } ?: stringResource(Res.string.appTitle),
                     modifier = Modifier.testTag("updates-state"),
                     supporting = line,
                     supportingMaxLines = 3,
-                    trailing = state.action?.let { KitRowTrailing.Action(mainAction(it, actions)) } ?: KitRowTrailing.None,
+                    trailing =
+                        state.action?.let { KitRowTrailing.Action(mainAction(it, actions)) }
+                            ?: KitRowTrailing.None,
                 )
             }
             if (state.showProgress) {
@@ -119,7 +132,12 @@ public fun UpdatesScreen(state: UpdatesUi, actions: UpdatesActions) {
                 KitProgressView(
                     progress =
                         if (progress == null || percent == null) KitProgress.Waiting()
-                        else KitProgress.Known(progress, caption = stringResource(Res.string.appUpdatePercent, percent.toString())),
+                        else
+                            KitProgress.Known(
+                                progress,
+                                caption =
+                                    stringResource(Res.string.appUpdatePercent, percent.toString()),
+                            ),
                     modifier = Modifier.padding(horizontal = gutter),
                 )
             }
@@ -135,11 +153,18 @@ public fun UpdatesScreen(state: UpdatesUi, actions: UpdatesActions) {
                     label = stringResource(Res.string.kitDetails),
                     copyLabel = stringResource(Res.string.kitCopyDetails),
                     modifier = Modifier.padding(horizontal = gutter),
-                    notes = listOfNotNull("${stringResource(Res.string.appUpdateBuildLabel)} · $build", state.detail),
+                    notes =
+                        listOfNotNull(
+                            "${stringResource(Res.string.appUpdateBuildLabel)} · $build",
+                            state.detail,
+                        ),
                 )
             }
             if (state.needsPermission) {
-                KitNotice(stringResource(Res.string.appUpdatePermissionNeeded), Modifier.padding(horizontal = gutter))
+                KitNotice(
+                    stringResource(Res.string.appUpdatePermissionNeeded),
+                    Modifier.padding(horizontal = gutter),
+                )
             }
             if (state.supported) {
                 KitRowGroup {
@@ -149,20 +174,28 @@ public fun UpdatesScreen(state: UpdatesUi, actions: UpdatesActions) {
                         supporting = stringResource(Res.string.appUpdateCheckSwitchBody),
                         onCheckedChange = actions::onChecks,
                     )
-                    KitRow(
-                        title = stringResource(Res.string.appUpdateCheckNow),
-                        modifier = Modifier.testTag("updates-check-now"),
-                        enabled = state.checkNowEnabled,
-                        disabledReason = if (state.checkNowEnabled) null else line,
-                        onClick = actions::onCheckNow,
-                    )
+                    KitTip(
+                        stringResource(Res.string.whatsNewShowUpdates),
+                        showArrival,
+                        dismissArrival,
+                    ) {
+                        KitRow(
+                            title = stringResource(Res.string.appUpdateCheckNow),
+                            modifier = Modifier.testTag("updates-check-now"),
+                            enabled = state.checkNowEnabled,
+                            disabledReason = if (state.checkNowEnabled) null else line,
+                            onClick = actions::onCheckNow,
+                        )
+                    }
                 }
             }
             state.notes?.let { notes ->
                 Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
                     KitSectionLabel(stringResource(Res.string.appUpdateWhatsNew))
-                    // Plain reading text: the kit's Markdown renderer takes parsed blocks that a feature cannot build
-                    // (:core:markdown is out of reach), and a link in the notes must never open without the link policy.
+                    // Plain reading text: the kit's Markdown renderer takes parsed blocks that a
+                    // feature cannot build
+                    // (:core:markdown is out of reach), and a link in the notes must never open
+                    // without the link policy.
                     KitText(notes, Modifier.padding(horizontal = gutter).testTag("updates-notes"))
                 }
             }
@@ -173,13 +206,36 @@ public fun UpdatesScreen(state: UpdatesUi, actions: UpdatesActions) {
 @Composable
 private fun mainAction(action: UpdatesAction, actions: UpdatesActions): KitLineAction =
     when (action) {
-        UpdatesAction.Update -> KitLineAction(stringResource(Res.string.appUpdateUpdate), actions::onUpdate, testTag = "updates-update")
+        UpdatesAction.Update ->
+            KitLineAction(
+                stringResource(Res.string.appUpdateUpdate),
+                actions::onUpdate,
+                testTag = "updates-update",
+            )
         UpdatesAction.TryAgain ->
-            KitLineAction(stringResource(Res.string.appUpdateTryAgain), actions::onTryAgain, testTag = "updates-update")
+            KitLineAction(
+                stringResource(Res.string.appUpdateTryAgain),
+                actions::onTryAgain,
+                testTag = "updates-update",
+            )
         UpdatesAction.OpenRelease ->
-            KitLineAction(stringResource(Res.string.appUpdateOpenRelease), actions::onOpenRelease, testTag = "updates-update")
-        UpdatesAction.Cancel -> KitLineAction(stringResource(Res.string.appUpdateCancel), actions::onCancel, testTag = "updates-cancel")
-        UpdatesAction.Install -> KitLineAction(stringResource(Res.string.appUpdateInstall), actions::onInstall, testTag = "updates-install")
+            KitLineAction(
+                stringResource(Res.string.appUpdateOpenRelease),
+                actions::onOpenRelease,
+                testTag = "updates-update",
+            )
+        UpdatesAction.Cancel ->
+            KitLineAction(
+                stringResource(Res.string.appUpdateCancel),
+                actions::onCancel,
+                testTag = "updates-cancel",
+            )
+        UpdatesAction.Install ->
+            KitLineAction(
+                stringResource(Res.string.appUpdateInstall),
+                actions::onInstall,
+                testTag = "updates-install",
+            )
     }
 
 @Composable
@@ -191,11 +247,20 @@ private fun lineWords(state: UpdatesUi): String {
         UpdatesLine.Checking -> stringResource(Res.string.appUpdateChecking)
         UpdatesLine.CheckedJustNow -> stringResource(Res.string.appUpdateCheckedJustNow)
         UpdatesLine.CheckedMinutesAgo ->
-            stringResource(Res.string.appUpdateUpToDate, stringResource(Res.string.e7WorkspaceMinutesAgo, state.agoCount))
+            stringResource(
+                Res.string.appUpdateUpToDate,
+                stringResource(Res.string.e7WorkspaceMinutesAgo, state.agoCount),
+            )
         UpdatesLine.CheckedHoursAgo ->
-            stringResource(Res.string.appUpdateUpToDate, stringResource(Res.string.e7WorkspaceHoursAgo, state.agoCount))
+            stringResource(
+                Res.string.appUpdateUpToDate,
+                stringResource(Res.string.e7WorkspaceHoursAgo, state.agoCount),
+            )
         UpdatesLine.CheckedDaysAgo ->
-            stringResource(Res.string.appUpdateUpToDate, stringResource(Res.string.e7WorkspaceDaysAgo, state.agoCount))
+            stringResource(
+                Res.string.appUpdateUpToDate,
+                stringResource(Res.string.e7WorkspaceDaysAgo, state.agoCount),
+            )
         UpdatesLine.Available ->
             stringResource(
                 Res.string.appUpdateAvailableLine,

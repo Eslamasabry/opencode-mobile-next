@@ -34,6 +34,14 @@ public interface ServerConnections {
 
     public suspend fun connect(id: ProfileId): Outcome<Unit>
 
+    /** Ends only this live connection; saved metadata, drafts and queued prompts are retained. */
+    public suspend fun disconnect(id: ProfileId): Outcome<Unit> =
+        Outcome.Failed(
+            io.github.eslamasabry.oc.core.common.Failure.Unavailable(
+                io.github.eslamasabry.oc.core.common.FeatureId("server.disconnect")
+            )
+        )
+
     public suspend fun createConversation(profile: ProfileId?): Outcome<ConversationRef>
 
     /** Stable owner identities from the new-chat route; retries keep both values. */

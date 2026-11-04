@@ -49,12 +49,24 @@ public class ChatViewModel(
             focusComposer = route.focusComposer,
             outside = outside,
             clock = clock,
+            landOnFailure = route.landOnFailure,
         )
 
+    public val serverCapabilities = world.capabilities
     public val requests = world.requests
 
     public val state: StateFlow<ChatUi> =
         presenter.states(viewModelScope, world.work, SharingStarted.WhileSubscribed(STOP_AFTER_MS))
+
+    init {
+        route.requestId?.let { id ->
+            viewModelScope.launch {
+                world.requests.collect { model ->
+                    model?.focus(io.github.eslamasabry.oc.core.common.ids.RequestId(id))
+                }
+            }
+        }
+    }
 
     /**
      * CHAT-TRANSCRIPT: steps, results, context, retry and stall beside the rows (side tables, never

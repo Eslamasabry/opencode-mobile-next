@@ -53,6 +53,9 @@ public class KitMotionSpecs internal constructor(private val s: KitMotionState) 
     public fun <T> quick(): FiniteAnimationSpec<T> =
         if (s.reduced) snap() else tween(ms(MotionTokens.QUICK), easing = KitEasing.Enter)
 
+    /** The Style surface transition (Flutter kitSurfaceBox, state 120 ms). */
+    public fun <T> surface(): FiniteAnimationSpec<T> = if (s.reduced) snap() else tween(ms(120), easing = KitEasing.Enter)
+
     /** A part leaving uses QUICK on `Enter` (Flutter's exit curve is a reverse-slot curve). */
     public fun <T> exit(): FiniteAnimationSpec<T> = quick()
 

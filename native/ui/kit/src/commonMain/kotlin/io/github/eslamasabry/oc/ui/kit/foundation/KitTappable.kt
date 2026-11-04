@@ -77,6 +77,7 @@ internal fun Modifier.kitTappable(
     haptic: KitHaptic? = null,
     shape: KitShapeId = KitShapeId.Button,
     ink: TextTone = TextTone.Primary,
+    interactionSource: MutableInteractionSource? = null,
 ): Modifier {
     val platform = LocalKitPlatform.current
     val appearance = LocalKitAppearance.current
@@ -91,7 +92,7 @@ internal fun Modifier.kitTappable(
         remember(platform, inkColor, reduced) {
             if (reduced) KitFillIndication(inkColor) else platform.pressIndication(inkColor)
         }
-    val interactions = remember { MutableInteractionSource() }
+    val interactions = interactionSource ?: remember { MutableInteractionSource() }
     val hapticsOn = appearance.haptics
     return this
         .sizeIn(minWidth = tokens.minTarget.dp, minHeight = tokens.minTarget.dp)

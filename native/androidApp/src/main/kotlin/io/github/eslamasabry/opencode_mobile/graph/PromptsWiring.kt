@@ -27,6 +27,8 @@ import io.github.eslamasabry.oc.engine.profiles.DeletionOptions
 import io.github.eslamasabry.oc.engine.profiles.DeletionStep
 import io.github.eslamasabry.oc.engine.profiles.ProfileCloser
 import io.github.eslamasabry.oc.engine.profiles.ProfileResourceCleaner
+import io.github.eslamasabry.oc.feature.prompts.presentation.KeptAwareSavedPrompts
+import io.github.eslamasabry.oc.feature.prompts.presentation.KeptQueuedPrompts
 import io.github.eslamasabry.oc.feature.prompts.presentation.SavedPromptsStore
 import io.github.eslamasabry.oc.feature.prompts.presentation.ShelfReady
 import io.github.eslamasabry.oc.feature.prompts.presentation.ShelfSavedPrompts
@@ -77,11 +79,15 @@ object PromptsBindings {
         drafts: Drafts,
         redactor: Redactor,
         registry: ConnectionRegistry,
+        kept: KeptQueuedPrompts,
     ): SavedPromptsStore =
-        ShelfSavedPrompts(
-            shelf,
-            PreviewShelfReady(stores, shelf, files.store, drafts, redactor, registry),
-            clock,
+        KeptAwareSavedPrompts(
+            ShelfSavedPrompts(
+                shelf,
+                PreviewShelfReady(stores, shelf, files.store, drafts, redactor, registry),
+                clock,
+            ),
+            kept,
         )
 }
 

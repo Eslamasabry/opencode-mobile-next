@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widgetPanelSaving">جارٍ الحفظ…</string>
+    <string name="widgetPanelClose">إغلاق</string>
+    <string name="widgetPanelPreview">معاينة الأداة</string>
+    <string name="widgetPanelSquare">مربعة</string>
+    <string name="widgetPanelWide">عريضة</string>
+    <string name="widgetPanelBackground">الخلفية</string>
+    <string name="widgetPanelSolid">ثابتة</string>
+    <string name="widgetPanelTinted">ملوّنة</string>
+    <string name="widgetPanelTransparent">شفافة</string>
+    <string name="widgetPanelAccent">لون التمييز</string>
+    <string name="widgetPanelActionUnavailable">تحتاج هذه الأداة إلى اتصال مباشر قبل إرسال رسالة.</string>
+    <string name="widgetPanelSending">جارٍ الإرسال…</string>
+    <string name="widgetPanelSent">أُرسلت</string>
+    <string name="widgetPanelBusy">لا يزال إجراء آخر للأداة قيد التنفيذ. رسالتك ما زالت هنا.</string>
+    <string name="widgetPanelDictate">إملاء</string>
+</resources>

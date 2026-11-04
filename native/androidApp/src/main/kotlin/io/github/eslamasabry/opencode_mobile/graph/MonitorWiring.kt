@@ -1,13 +1,5 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
-import android.Manifest
-import android.app.Application
-import android.app.NotificationManager
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
-import android.os.Build
 import dev.zacsweers.metro.*
 import io.github.eslamasabry.oc.android.notifications.*
 import io.github.eslamasabry.oc.core.common.*
@@ -33,8 +25,11 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /**
- * Real saved-server enrollment, bounded private reads, opaque notification taps and deletion
- * admission.
+ * The Servers-list opt-in (ANDR-2) on the app's ONE attention monitor, [NativeProfileMonitoring].
+ * A second reader would poll every enrolled server twice and post every alert twice, so this port
+ * owns no engine, no transport and no keys of its own: enrollment, consent, deletion admission,
+ * opaque notification taps (NativeMonitorInbox) and the shared Wi-Fi / check-in rules
+ * (Settings › Notifications, as Flutter's `SharedNotifyRules`) all live there.
  */
 @SingleIn(AppScope::class)
 @ContributesIntoSet(AppScope::class, binding = binding<ServerMonitoring>())
@@ -56,6 +51,9 @@ class AndroidProfileMonitoring(
     private val main = CoroutineScope(appScope.coroutineContext + dispatchers.main)
     private val changes = MutableStateFlow<Map<ProfileId, ServerMonitorUi>>(emptyMap())
     override val rows: StateFlow<Map<ProfileId, ServerMonitorUi>> = changes.asStateFlow()
+    private val snapshotState = MutableStateFlow<Map<String, ProfileAttentionSnapshot>>(emptyMap())
+    /** The engine's latest per-profile attention readings (Servers rows read pending/running). */
+    val snapshots: StateFlow<Map<String, ProfileAttentionSnapshot>> = snapshotState.asStateFlow()
     private val prepared = CompletableDeferred<ProfileMonitor>()
     private var engine: ProfileMonitor? = null
     private var started = false
@@ -263,7 +261,12 @@ class AndroidProfileMonitoring(
             this@AndroidProfileMonitoring.engine = engine
             prepared.complete(engine)
             engine.setRuntime(inFront, background.live.value.active)
-            launch { engine.revision.collect { publish(engine) } }
+            launch {
+                engine.revision.collect {
+                    snapshotState.value = engine.snapshots()
+                    publish(engine)
+                }
+            }
             launch { background.live.collect { engine.setRuntime(inFront, it.active) } }
             launch {
                 stores.profiles.profiles.collect {

@@ -134,6 +134,9 @@ public data class DevicePreferences(
 
 /** One write to the device preferences. Every change is one atomic commit. */
 public sealed interface PreferenceChange {
+    /** Reset only Appearance; conversation and language choices are retained. */
+    public data object ResetAppearance : PreferenceChange
+
     public data class Appearance(val value: AppearanceChoice) : PreferenceChange
 
     public data class Theme(val value: ThemePack) : PreferenceChange

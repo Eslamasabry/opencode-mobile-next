@@ -358,7 +358,10 @@ public class UsageSubscriptionsEngine(
         get() = resetDefault
 
     public val alertOverrides: List<UsageSubscription>
-        get() = _snapshot.value.subscriptions.filter { it.hasAlertOverride }
+        get() =
+            _snapshot.value.subscriptions.filter {
+                it.hasAlertOverride || it.notifyOnReset != resetDefault
+            }
 
     public suspend fun setDefaultThreshold(percent: Double): Boolean {
         if (!validLevel(percent)) return false
@@ -576,6 +579,13 @@ public class UsageSubscriptionsEngine(
         val before = overrides.size
         overrides.keys.retainAll(alive)
         if (overrides.size != before && !saveAlerts()) return false
+        // The widget forgets hidden rows of the removed server's subscriptions too.
+        val retainedHidden = widgetSettings.hiddenKeys.intersect(alive)
+        if (
+            retainedHidden != widgetSettings.hiddenKeys &&
+                !setWidgetSettings(widgetSettings.copy(hiddenKeys = retainedHidden))
+        )
+            return false
         return widget?.publishSubscriptions(_snapshot.value, widgetSettings) ?: true
     }
 

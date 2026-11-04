@@ -29,6 +29,20 @@ public interface SettingsActions {
 
     public fun onWhatsNewShowMe() {}
 
+    public fun onShowHiddenPhrases() {}
+
+    public fun onAskDiscard(kind: LocalDataKind) {}
+
+    public fun onConfirmDiscard() {}
+
+    public fun onCancelDiscard() {}
+
+    public fun onSavedServer(
+        profile: io.github.eslamasabry.oc.core.common.ids.ProfileId,
+        section: SettingsOutside?,
+    ) {}
+
+
     public fun onOpen(page: SettingsPage)
 
     /**

@@ -18,10 +18,13 @@ import io.github.eslamasabry.oc.core.domain.HostDaemonUpdateGateway
 import io.github.eslamasabry.oc.core.domain.LocatedFileGateway
 import io.github.eslamasabry.oc.core.domain.LocatedProjectGateway
 import io.github.eslamasabry.oc.core.domain.LocatedVcsGateway
+import io.github.eslamasabry.oc.core.domain.FencedNewSessionPromptGateway
 import io.github.eslamasabry.oc.core.domain.MidTurnPromptGateway
 import io.github.eslamasabry.oc.core.domain.ProviderConversationImportGateway
 import io.github.eslamasabry.oc.core.domain.ProviderUsageGateway
 import io.github.eslamasabry.oc.core.domain.ReadOnlySessionsGateway
+import io.github.eslamasabry.oc.core.domain.PromptRunIdentity
+import io.github.eslamasabry.oc.core.domain.PromptRunIdentityGateway
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
 import io.github.eslamasabry.oc.core.domain.SessionSelectionGateway
@@ -33,6 +36,7 @@ import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvents
 import io.github.eslamasabry.oc.core.domain.events.HintKind
 import io.github.eslamasabry.oc.core.domain.events.RunOutcome
+import io.github.eslamasabry.oc.core.domain.lastPromptIdentity
 import io.github.eslamasabry.oc.core.domain.unavailable
 import io.github.eslamasabry.oc.core.model.AgentFeature
 import io.github.eslamasabry.oc.core.model.AgentInfo
@@ -204,7 +208,9 @@ public class PaseoGateway(
     HostDaemonUpdateGateway,
     CachedAgentRecoveryGateway,
     AgentHandoffGateway,
-    BoundedCardHistoryGateway {
+    BoundedCardHistoryGateway,
+    FencedNewSessionPromptGateway,
+    PromptRunIdentityGateway {
     private val payloadGeneration = MutableStateFlow(0)
     private val job = SupervisorJob(scope.coroutineContext[Job])
     internal val scope: CoroutineScope = CoroutineScope(scope.coroutineContext + job + lane)
@@ -369,15 +375,6 @@ public class PaseoGateway(
 
     /** Profile-owned card qualification, checked again at dispatch; absence never approves. */
     public var genUiShowAllowed: (() -> Boolean)? = null
-        set(value) {
-            field = value
-            scope.launch { requests.sweepCardApprovals() }
-        }
-
-    /** Recheck when the effective card qualification changes without replacing the gateway. */
-    public fun refreshCardApprovalQualification() {
-        scope.launch { requests.sweepCardApprovals() }
-    }
 
     internal var creating = 0
     internal val heldEvents = ArrayList<PaseoPush>()
@@ -806,6 +803,46 @@ public class PaseoGateway(
 
     // ---- history
 
+    override suspend fun lastPromptIdentity(session: SessionId): Outcome<PromptRunIdentity?> =
+        call {
+            val id = paseoString(session.raw, max = 256)
+            if (id in drafts && !draftStarted(id)) return@call null
+            if (isSubagent(id)) paseoFail(PaseoFailureKind.Unavailable)
+            val directory = scopeDir
+            val epoch = locationEpoch
+            val socketEpoch = transport.epoch
+            val read =
+                transport.request(
+                    "fetch_agent_request",
+                    jsonOf("agentId" to real(id)),
+                    expectedEpoch = socketEpoch,
+                    beforeSend = { checkLocation(directory, epoch) },
+                )
+            checkLocation(directory, epoch)
+            val agent = read.obj("agent") ?: paseoFail(PaseoFailureKind.NotFound)
+            if (agent.str("id") != real(id)) paseoFail(PaseoFailureKind.InvalidResponse)
+            if (
+                paseoSession(agent).directory != directory ||
+                    agent["archivedAt"].stringOrNull() != null
+            )
+                paseoFail(PaseoFailureKind.ScopeMismatch)
+            val timeline =
+                transport.request(
+                    "fetch_agent_timeline_request",
+                    jsonOf(
+                        "agentId" to real(id),
+                        "direction" to "tail",
+                        "limit" to 200,
+                        "projection" to "projected",
+                    ),
+                    timeoutMs = HISTORY_TIMEOUT_MS,
+                    expectedEpoch = socketEpoch,
+                    beforeSend = { checkLocation(directory, epoch) },
+                )
+            checkLocation(directory, epoch)
+            lastPromptIdentity(paseoTimeline(id, timeline, busy = false).messages)
+        }
+
     override suspend fun messagePage(
         id: SessionId,
         cursor: String?,
@@ -1000,6 +1037,14 @@ public class PaseoGateway(
         beforeSend: () -> Boolean,
     ): Outcome<PromptAdmission> =
         send(session.raw, messageId.raw, prompt, existingOnly = true, beforeSend = beforeSend)
+
+    override suspend fun promptNewSessionWithMessageId(
+        session: SessionId,
+        messageId: MessageId,
+        prompt: OutgoingPrompt,
+        beforeSend: () -> Boolean,
+    ): Outcome<PromptAdmission> =
+        send(session.raw, messageId.raw, prompt, existingOnly = false, beforeSend = beforeSend)
 
     private suspend fun send(
         sessionId: String,

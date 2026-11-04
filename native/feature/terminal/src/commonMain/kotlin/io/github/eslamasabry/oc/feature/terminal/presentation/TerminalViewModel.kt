@@ -40,7 +40,7 @@ public interface TerminalActions {
 
 @AssistedInject
 public class TerminalViewModel(
-    @Assisted route: TerminalRoute,
+    @Assisted route: TerminalRoute.Conversation,
     source: RemoteTerminalSource,
     dispatchers: AppDispatchers,
     private val nav: AppNavigator,
@@ -90,6 +90,6 @@ public class TerminalViewModel(
     @ManualViewModelAssistedFactoryKey
     @ContributesIntoMap(AppScope::class)
     public fun interface Factory : ManualViewModelAssistedFactory {
-        public fun create(@Assisted route: TerminalRoute): TerminalViewModel
+        public fun create(@Assisted route: TerminalRoute.Conversation): TerminalViewModel
     }
 }

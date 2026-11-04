@@ -17,6 +17,8 @@ public enum class SavedPromptsIssue {
      * (Codex #2).
      */
     FilesStay,
+    /** A kept record or the selected destination changed before insertion. */
+    RestoreFailed,
 }
 
 /** A short confirmation line after an action. */
@@ -54,7 +56,7 @@ public data class SavedPromptsUi(
         get() = SavedPromptsRules.filter(prompts, query)
 
     val full: Boolean
-        get() = prompts.size >= SavedPromptsFull
+        get() = prompts.count { !it.kept } >= SavedPromptsFull
 
     override fun toString(): String =
         "SavedPromptsUi(loading=$loading, prompts=${prompts.size}, issue=$issue, editor=$editor, busy=$busy)"

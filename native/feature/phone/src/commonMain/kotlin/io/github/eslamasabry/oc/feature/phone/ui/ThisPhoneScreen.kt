@@ -63,6 +63,8 @@ import io.github.eslamasabry.oc.ui.words.res.migrationRowBody
 import io.github.eslamasabry.oc.ui.words.res.migrationTermuxUnavailable
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardUpdate
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardVersion
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartAddTitle
+import io.github.eslamasabry.oc.ui.words.res.r40PhoneConnect
 import io.github.eslamasabry.oc.ui.words.res.runningPhoneRowIdle
 import io.github.eslamasabry.oc.ui.words.res.runningPhoneRowNearLimit
 import io.github.eslamasabry.oc.ui.words.res.runningPhoneTitle
@@ -123,7 +125,11 @@ private const val OPENCODE = "OpenCode"
  * running. Arranges kit parts only (K1).
  */
 @Composable
-public fun ThisPhoneScreen(state: ThisPhoneUi, actions: ThisPhoneActions) {
+public fun ThisPhoneScreen(
+    state: ThisPhoneUi,
+    actions: ThisPhoneActions,
+    onAddTools: (() -> Unit)? = null,
+) {
     LifecycleStartEffect(actions) {
         actions.shown(true)
         onStopOrDispose { actions.shown(false) }
@@ -288,6 +294,24 @@ public fun ThisPhoneScreen(state: ThisPhoneUi, actions: ThisPhoneActions) {
                             ),
                     )
                 }
+            if (state.details.canConnect) {
+                KitRow(
+                    title = stringResource(Res.string.r40PhoneConnect),
+                    trailing = KitRowTrailing.Chevron,
+                    enabled = !busy,
+                    disabledReason = busyWords,
+                    onClick = actions::connect,
+                )
+            }
+            if (onAddTools != null && (state.details.installed || state.version != null)) {
+                KitRow(
+                    title = stringResource(Res.string.phoneSetupStartAddTitle),
+                    trailing = KitRowTrailing.Chevron,
+                    enabled = !busy,
+                    disabledReason = busyWords,
+                    onClick = onAddTools,
+                )
+            }
             when (val notice = state.notice) {
                 null -> Unit
                 is ThisPhoneNotice.Failed -> PhoneNoticeLine(notice.op.failedWords(), actions)
@@ -528,6 +552,7 @@ public fun ThisPhoneScreen(state: ThisPhoneUi, actions: ThisPhoneActions) {
                     onClick = actions::openTerminal,
                 )
             }
+            PhoneDetailsPanel(state, actions)
         }
     }
     KitConfirm(

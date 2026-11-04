@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="r40PhoneConnect">Use this phone’s server</string>
+    <string name="r40PhoneConnectFailed">Could not connect to this phone’s server. Try again.</string>
+    <string name="r40PhoneMemory">Using %1$s of memory</string>
+    <string name="r40PhoneHistoryMoving">Bringing your earlier conversations across…</string>
+    <string name="r40PhoneHistoryCount">Bringing your earlier conversations across (%1$s of %2$s)…</string>
+    <string name="r40PhoneHistoryFailed">Earlier conversations could not be brought across. Your original data is still on this phone, untouched.</string>
+    <string name="r40PhoneReplySpeed">Last reply speed</string>
+    <string name="r40PhoneReplyNoWords">Finished in %1$s without words</string>
+    <string name="r40PhoneReplyLast">First words in %1$s · Finished in %2$s</string>
+    <string name="r40PhoneInstalled">Installed on this phone</string>
+    <string name="r40PhoneChecking">Checking…</string>
+    <string name="r40PhoneInstalledMark">Installed</string>
+    <string name="r40PhoneInventoryFailed">Could not check what is installed. The previous list is kept. Try again.</string>
+    <string name="r40PhoneLinuxMode">Linux mode</string>
+    <string name="r40PhoneLinuxFast">Fast (seccomp)</string>
+    <string name="r40PhoneLinuxSlow">Slower (ptrace)</string>
+    <string name="r40PhoneUnknown">Not reported</string>
+    <string name="r40PhoneAwake">Keeping the phone awake</string>
+    <string name="r40PhoneAwakeNow">Awake for work now</string>
+    <string name="r40PhoneAwakeWhenWorking">Only while work needs it</string>
+    <string name="r40PhoneFirstWords">Wait for first words</string>
+    <string name="r40PhoneFirstSplit">%1$s in the app · %2$s on the server</string>
+    <string name="r40PhoneRefresh">Refresh phone details</string>
+    <string name="r40PhoneModel">Last reply’s model</string>
+    <string name="r40PhoneRuntimeDetails">Runtime details</string>
+    <string name="r40PhoneHistoryDetails">Conversation import details</string>
+    <string name="r40PhoneLogFailed">Could not read the server log. Try again.</string>
+    <string name="r40PhoneLogEmpty">The server has not written a log yet.</string>
+    <string name="r40PhoneLog">OpenCode server log</string>
+    <string name="r40PhoneSeconds">%1$s s</string>
+</resources>

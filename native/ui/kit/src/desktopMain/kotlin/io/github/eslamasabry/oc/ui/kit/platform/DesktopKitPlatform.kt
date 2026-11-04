@@ -28,6 +28,17 @@ public class DesktopKitPlatform : KitPlatform {
 
     override fun haptic(kind: KitHaptic): Unit = Unit // desktops have no haptics
 
+    override fun messageTime(createdMs: Long, nowMs: Long): String {
+        val created = java.util.Date(createdMs)
+        val a = java.util.Calendar.getInstance().apply { timeInMillis = createdMs }
+        val b = java.util.Calendar.getInstance().apply { timeInMillis = nowMs }
+        val sameDay = a.get(java.util.Calendar.ERA) == b.get(java.util.Calendar.ERA) &&
+            a.get(java.util.Calendar.YEAR) == b.get(java.util.Calendar.YEAR) &&
+            a.get(java.util.Calendar.DAY_OF_YEAR) == b.get(java.util.Calendar.DAY_OF_YEAR)
+        val time = java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT).format(created)
+        return if (sameDay) time else java.text.DateFormat.getDateInstance(java.text.DateFormat.SHORT).format(created) + ", " + time
+    }
+
     override fun frostEffect(spec: FrostSpec, density: Float): RenderEffect? = null
 
     @OptIn(ExperimentalResourceApi::class)

@@ -29,6 +29,10 @@ public class OnboardingEntries : EntryInstaller {
             val state by vm.state.collectAsStateWithLifecycle()
             ManagedMoveScreen(state, vm)
         }
-        entry<OnboardingRoute.Welcome> { WelcomeScreen(metroViewModel<WelcomeViewModel>()) }
+        entry<OnboardingRoute.Welcome> {
+            val vm = metroViewModel<WelcomeViewModel>()
+            val state by vm.state.collectAsStateWithLifecycle()
+            WelcomeScreen(state, vm)
+        }
     }
 }

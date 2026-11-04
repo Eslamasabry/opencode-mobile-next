@@ -1,0 +1,5 @@
+<resources>
+    <string name="phraseSuggestionsInsert">إدراج: %1$s</string>
+    <string name="phraseSuggestionsOptions">خيارات %1$s</string>
+    <string name="phraseSuggestionsChangeFailed">تعذّر إخفاء العبارة. حاول من قائمتها مرة أخرى.</string>
+</resources>

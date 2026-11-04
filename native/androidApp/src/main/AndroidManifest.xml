@@ -86,6 +86,14 @@
             android:theme="@style/NativeTrampolineTheme"
             tools:replace="android:theme" />
         <service android:name="io.github.eslamasabry.oc.android.termux.GitRepairResultService" android:exported="false" />
+        <activity android:name=".WidgetConfigureActivity" android:exported="true" android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+        <meta-data android:name="io.github.eslamasabry.opencode_mobile.WIDGET_OVERLAY_READY" android:value="true" />
+        <activity android:name=".WidgetRouteActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".WidgetOverlayActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
         <!-- Notification buttons (P12-PLATFORM); frozen Flutter FQCNs. Tiles, widgets and the update receiver merge
              from :android:tiles and :android:widgets. -->
         <receiver

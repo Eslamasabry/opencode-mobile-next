@@ -17,6 +17,7 @@ import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsDoor
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsGroupId
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage
+import io.github.eslamasabry.oc.feature.settings.presentation.SettingsRowId
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsSearchEntry
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsUi
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -29,13 +30,19 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitSearchNoMatch
 import io.github.eslamasabry.oc.ui.words.res.settingsHubSearch
 import io.github.eslamasabry.oc.ui.words.res.settingsHubServerLine
 import io.github.eslamasabry.oc.ui.words.res.settingsHubServerNone
 import io.github.eslamasabry.oc.ui.words.res.settingsHubServerOnPhone
+import io.github.eslamasabry.oc.ui.words.res.settingsPhraseChipsHiddenCount
+import io.github.eslamasabry.oc.ui.words.res.settingsPhraseChipsShowHidden
 import io.github.eslamasabry.oc.ui.words.res.settingsV3Connected
+import io.github.eslamasabry.oc.ui.words.res.settingsV3NotConnected
+import io.github.eslamasabry.oc.ui.words.res.settingsV3ServersBlock
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -153,11 +160,98 @@ internal fun GroupPage(
                             title = title,
                             modifier = rowModifier,
                             selected = focused,
+                            supporting = rowValue(row.id, state),
                             trailing = KitRowTrailing.Chevron,
                             onClick = { actions.onRow(row.id) },
                         )
                 }
             }
         }
+        if (page.id == SettingsGroupId.Conversations)
+            state.phrases
+                ?.takeIf { it.hiddenCount > 0 && it.profile != null }
+                ?.let { phrases ->
+                    KitRow(
+                        title = stringResource(Res.string.settingsPhraseChipsShowHidden),
+                        supporting =
+                            pluralStringResource(
+                                Res.plurals.settingsPhraseChipsHiddenCount,
+                                phrases.hiddenCount,
+                                phrases.hiddenCount,
+                            ),
+                        onClick = actions::onShowHiddenPhrases,
+                    )
+                }
+        if (page.id == SettingsGroupId.Server && state.hub.savedServers.size > 1) {
+            SavedServersBody(state, actions, null)
+        }
+    }
+}
+
+@Composable
+internal fun androidx.compose.foundation.layout.ColumnScope.SavedServersBody(
+    state: SettingsUi,
+    actions: SettingsActions,
+    section: io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside?,
+) {
+    KitRowGroup(label = stringResource(Res.string.settingsV3ServersBlock)) {
+        state.hub.savedServers.forEach { server ->
+            KitRow(
+                title = server.name,
+                supporting =
+                    stringResource(
+                        if (server.connected) Res.string.settingsV3Connected
+                        else Res.string.settingsV3NotConnected
+                    ),
+                trailing = KitRowTrailing.Chevron,
+                onClick = { actions.onSavedServer(server.id, section) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun rowValue(row: SettingsRowId, state: SettingsUi): String? {
+    val servers = state.hub.savedServers
+    return when (row) {
+        SettingsRowId.Servers ->
+            when {
+                servers.isEmpty() -> null
+                servers.size > 1 ->
+                    pluralStringResource(
+                        Res.plurals.settingsV3ServersCount,
+                        servers.size,
+                        servers.size,
+                    )
+                servers.single().connected ->
+                    stringResource(Res.string.settingsV3ServerConnected, servers.single().name)
+                else -> servers.single().name
+            }
+        SettingsRowId.ThisPhone ->
+            stringResource(
+                when {
+                    servers.any { it.onPhone && it.connected } -> Res.string.settingsV3PhoneRunning
+                    servers.any { it.onPhone } -> Res.string.settingsV3PhoneInstalled
+                    else -> Res.string.settingsV3PhoneSetUp
+                }
+            )
+        SettingsRowId.Notifications -> {
+            val notify = state.notifications ?: return null
+            val different = notify.profiles.count { it.enabled && !it.notifications }
+            if (different > 0)
+                pluralStringResource(Res.plurals.settingsV3DifferentOn, different, different)
+            else
+                stringResource(
+                    if (notify.questions || notify.finishedWork) Res.string.settingsV3On
+                    else Res.string.settingsV3Off
+                )
+        }
+        SettingsRowId.DefaultShell,
+        SettingsRowId.ModelAndMode,
+        SettingsRowId.Providers,
+        SettingsRowId.Tools,
+        SettingsRowId.Permissions ->
+            if (servers.size > 1) stringResource(Res.string.settingsV3ByServer) else null
+        else -> null
     }
 }

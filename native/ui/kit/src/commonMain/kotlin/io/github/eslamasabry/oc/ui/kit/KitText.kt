@@ -35,7 +35,10 @@ public fun KitText(
     kind: KitTextKind = KitTextKind.Reading,
     maxLines: Int = Int.MAX_VALUE,
     textAlign: TextAlign? = null,
+    pageTitle: Boolean = false,
+    sectionLabel: Boolean = false,
 ) {
+    // pageTitle / sectionLabel are role hints; the head typography resolves the role alone.
     val base = LocalKitTypography.current.style(role)
     val style =
         base.copy(

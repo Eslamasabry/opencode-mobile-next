@@ -57,6 +57,8 @@ public class SettingsPresenter(
     private val exitWhatsNew: () -> Unit = {},
     private val localModels: LocalModelStorage? = null,
     private val licenses: VoiceLicenseSource? = null,
+    private val serverPage: SettingsServerDoor? = null,
+    private val localData: LocalDataSettings? = null,
 ) : SettingsActions {
     private data class Local(
         val stack: ImmutableList<SettingsPage> = persistentListOf(SettingsPage.Hub),
@@ -76,6 +78,10 @@ public class SettingsPresenter(
         val standaloneWhatsNew: Boolean = false,
         val confirmLocalModels: Boolean = false,
         val license: LicenseUi? = null,
+        val discardBusy: Boolean = false,
+        val discardConfirm: LocalDataKind? = null,
+        val discardResult: LocalDeleteResult? = null,
+        val discardFailed: Boolean = false,
     )
 
     private data class Engines(
@@ -84,21 +90,37 @@ public class SettingsPresenter(
         val notifications: NotificationFacts?,
         val updates: UpdateFacts?,
         val localModels: LocalModelStorageFacts?,
+        val data: LocalDataFacts?,
+        val phrases: PhraseSettingsFacts?,
     )
 
     private val local = MutableStateFlow(Local())
     private val currentFacts = facts
     private val prefs = choices.value
 
+    private data class Extra(
+        val localModels: LocalModelStorageFacts?,
+        val data: LocalDataFacts?,
+        val phrases: PhraseSettingsFacts?,
+    )
+
+    private val extra =
+        combine(
+            localModels?.facts ?: flowOf(null),
+            localData?.facts ?: flowOf(null),
+            phrases?.facts ?: flowOf(null),
+        ) { m, d, p ->
+            Extra(m, d, p)
+        }
     private val engines =
         combine(
             analytics?.whatWeCollect ?: flowOf(null),
             voice?.facts ?: flowOf(null),
             notifications?.facts ?: flowOf(null),
             updates?.facts ?: flowOf(null),
-            localModels?.facts ?: flowOf(null),
-        ) { c, v, n, u, m ->
-            Engines(c, v, n, u, m)
+            extra,
+        ) { c, v, n, u, x ->
+            Engines(c, v, n, u, x.localModels, x.data, x.phrases)
         }
 
     private fun engineNow() =
@@ -108,6 +130,8 @@ public class SettingsPresenter(
             notifications?.facts?.value,
             updates?.facts?.value,
             localModels?.facts?.value,
+            localData?.facts?.value,
+            phrases?.facts?.value,
         )
 
     public val state: StateFlow<SettingsUi> =
@@ -207,6 +231,47 @@ public class SettingsPresenter(
         }
     }
 
+    override fun onShowHiddenPhrases() {
+        val port = phrases ?: return
+        val id = port.facts.value?.profile ?: return
+        run(SettingsNote.ChoiceNotSaved) { port.showHidden(id) }
+    }
+
+    override fun onAskDiscard(kind: LocalDataKind) {
+        if (!local.value.discardBusy && localData != null)
+            local.update {
+                it.copy(discardConfirm = kind, discardFailed = false, discardResult = null)
+            }
+    }
+
+    override fun onCancelDiscard() {
+        local.update { it.copy(discardConfirm = null) }
+    }
+
+    override fun onConfirmDiscard() {
+        val kind = local.value.discardConfirm ?: return
+        val port = localData ?: return
+        if (local.value.discardBusy) return
+        local.update {
+            it.copy(
+                discardBusy = true,
+                discardConfirm = null,
+                discardResult = null,
+                discardFailed = false,
+            )
+        }
+        scope.launch {
+            val result = port.discard(kind)
+            local.update {
+                it.copy(
+                    discardBusy = false,
+                    discardResult = (result as? Outcome.Ok)?.value,
+                    discardFailed = result is Outcome.Failed,
+                )
+            }
+        }
+    }
+
     override fun onSearchEntries(entries: List<SettingsSearchEntry>) {
         local.update { it.copy(entries = entries) }
     }
@@ -224,11 +289,28 @@ public class SettingsPresenter(
             else SettingsSearch.find(l.query, l.entries.filter { it.row in searchable })
         val group =
             (l.stack.last() as? SettingsPage.Group)?.let { g ->
-                GroupUi(g.id, SettingsStructure.rows(g.id, f, p.reasoning, p.timestamps))
+                GroupUi(
+                    g.id,
+                    SettingsStructure.rows(
+                        g.id,
+                        f,
+                        p.reasoning,
+                        p.timestamps,
+                        e.phrases?.enabled ?: true,
+                    ),
+                )
             }
         return SettingsUi(
             stack = l.stack,
-            hub = HubUi(SettingsStructure.groups(f), f.server, l.query, results, searchable),
+            hub =
+                HubUi(
+                    SettingsStructure.groups(f),
+                    f.server,
+                    l.query,
+                    results,
+                    searchable,
+                    f.savedServers,
+                ),
             group = group,
             appearance =
                 appearance(p, f, l.allPacks)
@@ -242,6 +324,17 @@ public class SettingsPresenter(
             about = about,
             whatsNew = whatsNew(l, f),
             privacy = e.collect?.let { PrivacyUi(it, l.consentSaving) },
+            localData =
+                localData?.let {
+                    LocalDataUi(
+                        e.data,
+                        l.discardBusy,
+                        l.discardConfirm,
+                        l.discardResult,
+                        l.discardFailed,
+                    )
+                },
+            phrases = e.phrases,
             language = p.language,
             capabilities =
                 f.server?.let {
@@ -440,6 +533,7 @@ public class SettingsPresenter(
         if (page == SettingsPage.ReportProblem) loadReport()
         if (page == SettingsPage.Storage) onRefreshLocalModels()
         if (page == SettingsPage.Notifications) notifications?.refresh()
+        if (page == SettingsPage.Privacy) localData?.refresh()
     }
 
     override fun onRefreshLocalModels() {
@@ -507,6 +601,21 @@ public class SettingsPresenter(
     }
 
     override fun onRow(row: SettingsRowId) {
+        val serverSection =
+            when (row) {
+                SettingsRowId.DefaultShell -> SettingsOutside.DefaultShell
+                SettingsRowId.Permissions -> SettingsOutside.Permissions
+                SettingsRowId.ModelAndMode -> SettingsOutside.ModelAndMode
+                SettingsRowId.Providers -> SettingsOutside.Providers
+                SettingsRowId.Tools -> SettingsOutside.Tools
+                else -> null
+            }
+        if (
+            serverSection != null && currentFacts.value.savedServers.size > 1 && serverPage != null
+        ) {
+            onOpen(SettingsPage.ByServer(serverSection))
+            return
+        }
         val p = prefs.value
         val door =
             SettingsStructure.rows(row.group, currentFacts.value, p.reasoning, p.timestamps)
@@ -570,6 +679,14 @@ public class SettingsPresenter(
         else openers.open(place)
     }
 
+    override fun onSavedServer(
+        profile: io.github.eslamasabry.oc.core.common.ids.ProfileId,
+        section: SettingsOutside?,
+    ) {
+        if (currentFacts.value.savedServers.any { it.id == profile })
+            serverPage?.open(profile, section)
+    }
+
     override fun onMode(mode: AppearanceMode) {
         if (prefs.value.mode != mode)
             write(PersonalChange.Mode(mode), SettingsNote.AppearanceNotSaved)
@@ -631,6 +748,12 @@ public class SettingsPresenter(
 
     override fun onNotification(change: NotificationChange) {
         val port = notifications ?: return
+        if (
+            port.facts.value.blocked &&
+                (change is NotificationChange.FinishedWork ||
+                    change is NotificationChange.Questions)
+        )
+            return
         run(SettingsNote.ChoiceNotSaved) { port.set(change) }
     }
 

@@ -77,6 +77,9 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.KitPromptBubble
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitQuietLine
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyBlock
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptList
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitThoughtBlock
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitMessageTimestamp
+import io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.chatHomeMinutes
@@ -254,6 +257,7 @@ internal fun ChatTranscriptList(
     onCompactAgain: (() -> Unit)? = null,
     receiptChecks: ImmutableMap<Long, ReceiptCheckUi> = persistentMapOf(),
     onCheckReceipt: ((Long) -> Unit)? = null,
+    display: TranscriptDisplayChoices = TranscriptDisplayChoices(),
 ) {
     val folds = rememberTranscriptFolds()
     val currentRows by rememberUpdatedState(rows)
@@ -339,23 +343,41 @@ internal fun ChatTranscriptList(
             }
         }
         items(unique, key = { it.key }, contentType = { it.kind }) { row ->
-            // Keep the engine's item indices: a folded source has an empty item, not a removed list
-            // position.
-            val source =
-                when (row) {
-                    is BlockRow -> row.key.removePrefix("b:").substringBeforeLast(':')
-                    is ThoughtRow -> row.key.removePrefix("thought:")
-                    is NoticeRow -> row.key.removePrefix("notice:")
-                    else -> null
-                }
-            if (source in facts.reading.hiddenPartKeys) return@items
-            // A table longer than one chunk is drawn whole by its first chunk; its later chunks
-            // draw nothing.
-            if (reply != null && row is BlockRow && row.key in tables) {
-                val whole = tables[row.key]
-                if (whole != null)
+            Column {
+                // Keep the engine's item indices: a folded source has an empty item, not a removed list
+                // position.
+                val source =
+                    when (row) {
+                        is BlockRow -> row.key.removePrefix("b:").substringBeforeLast(':')
+                        is ThoughtRow -> row.key.removePrefix("thought:")
+                        is NoticeRow -> row.key.removePrefix("notice:")
+                        else -> null
+                    }
+                if (source in facts.reading.hiddenPartKeys) return@items
+                // A table longer than one chunk is drawn whole by its first chunk; its later chunks
+                // draw nothing.
+                if (reply != null && row is BlockRow && row.key in tables) {
+                    val whole = tables[row.key]
+                    if (whole != null)
+                        ChatRow(
+                            row.copy(text = whole, continues = false),
+                            words,
+                            listWords,
+                            reveal,
+                            motion,
+                            onOpenMenu,
+                            facts,
+                            folds,
+                            onOpenSession,
+                            reply,
+                            copyCode,
+                            onOpenFile,
+                            reasoningExpanded,
+                            onCompactAgain,
+                        )
+                } else {
                     ChatRow(
-                        row.copy(text = whole, continues = false),
+                        row,
                         words,
                         listWords,
                         reveal,
@@ -370,23 +392,16 @@ internal fun ChatTranscriptList(
                         reasoningExpanded,
                         onCompactAgain,
                     )
-            } else {
-                ChatRow(
-                    row,
-                    words,
-                    listWords,
-                    reveal,
-                    motion,
-                    onOpenMenu,
-                    facts,
-                    folds,
-                    onOpenSession,
-                    reply,
-                    copyCode,
-                    onOpenFile,
-                    reasoningExpanded,
-                    onCompactAgain,
-                )
+                }
+                if (display.timestampsVisible) {
+                    val created =
+                        when (row) {
+                            is PromptRow -> row.createdMs
+                            is FooterRow -> row.createdMs
+                            else -> null
+                        }
+                    if (created != null) KitMessageTimestamp(created, facts.nowMs)
+                }
             }
         }
     }

@@ -221,7 +221,7 @@ public class ChatPresenter(
                 )
             }
         val arrival =
-            l.arrival?.let { a ->
+            l.arrival?.takeIf { !it.landOnFailure || i.load == ChatLoad.Live }?.let { a ->
                 val land =
                     (a.rowKey ?: if (a.landOnFailure) Landing.newestFailedKey(t.rows) else null)
                         ?.let(t::indexOf)

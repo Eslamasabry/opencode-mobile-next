@@ -57,10 +57,19 @@ public data class ServerLine(val name: String, val onPhone: Boolean)
  * The facts the structure reads. Gates are [PlatformCapabilities] flags and whether a server is
  * connected — never the backend kind (rule 10).
  */
+public data class SettingsSavedServer(
+    val id: io.github.eslamasabry.oc.core.common.ids.ProfileId,
+    val name: String,
+    val connected: Boolean,
+    val onPhone: Boolean = false,
+)
+
 public data class SettingsFacts(
     val platform: PlatformCapabilities,
     /** Null: no server is set up yet. */
     val server: ServerLine? = null,
+    val savedServers: ImmutableList<SettingsSavedServer> =
+        kotlinx.collections.immutable.persistentListOf(),
     /** Material You needs the platform's tones (API 31+). */
     val dynamicColour: Boolean = false,
     /** The phone's "Remove animations" is on: nothing moves whatever Motion says. */

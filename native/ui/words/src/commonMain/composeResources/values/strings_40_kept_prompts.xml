@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keptPromptsTitle">Kept prompts</string>
+    <string name="keptPromptsBody">Prompts kept when a server was removed. Restore one into a conversation to review it before sending.</string>
+    <string name="keptPromptsEmpty">No kept prompts</string>
+    <string name="keptPromptsChoose">Choose a conversation</string>
+    <string name="keptPromptsChooseBody">Choose a connected server’s conversation. This only fills its draft.</string>
+    <string name="keptPromptsNoTargets">No connected conversations</string>
+    <string name="keptPromptsNoTargetsBody">Connect a saved server or open a conversation, then try again.</string>
+    <string name="keptPromptsConnect">Connect a server</string>
+    <string name="keptPromptsUncertain">This prompt may already have been sent. Check its original conversation before sending it again.</string>
+    <string name="keptPromptsFailed">Could not read or change the kept prompts. Try again.</string>
+    <string name="keptPromptsKeptFrom">Kept from a removed server</string>
+    <string name="keptPromptsRestoreFailed">The saved prompt or conversation changed. Reopen Saved prompts in the conversation and try again.</string>
+    <string name="keptConversation">Conversation</string>
+</resources>
