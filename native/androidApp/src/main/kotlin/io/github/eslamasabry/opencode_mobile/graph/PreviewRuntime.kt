@@ -347,6 +347,18 @@ class PreviewRuntime(
         val scoped =
             DefaultProfileScope(stores.prefs, stores.secrets, stores.lanes.app).apply {
                 AndroidProfileMonitoring.registerKeys(this)
+                io.github.eslamasabry.oc.engine.settings.consent.ConsentKeys.shapes.forEach {
+                    register(it)
+                }
+                register(
+                    io.github.eslamasabry.oc.core.data.scope.KeyShape(
+                        "oc.modelLibrary.",
+                        io.github.eslamasabry.oc.core.data.scope.KeyScope.Profile,
+                        io.github.eslamasabry.oc.core.data.kv.PrefType.Str,
+                        ":engine:agents",
+                        "model favorites and recent choices",
+                    )
+                )
                 registerSecret("pw.", "profiles")
                 registerSecret("oc.codexToken.", "profiles")
             }

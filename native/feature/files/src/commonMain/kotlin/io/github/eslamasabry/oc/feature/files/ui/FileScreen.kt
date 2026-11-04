@@ -22,6 +22,13 @@ import io.github.eslamasabry.oc.feature.files.presentation.PdfPageUi
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.ui.kit.content.viewer.KitPdfPngPage
+import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerAction
+import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerBinaryBody
+import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerCodeBody
+import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerFrame
+import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerImageBody
+import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerTextBody
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
@@ -30,23 +37,13 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
-import io.github.eslamasabry.oc.ui.kit.content.viewer.KitPdfPngPage
-import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerAction
-import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerBinaryBody
-import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerCodeBody
-import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerFrame
-import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerImageBody
-import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerTextBody
 import io.github.eslamasabry.oc.ui.words.res.Res
-import io.github.eslamasabry.oc.ui.words.res.fileSave
-import io.github.eslamasabry.oc.ui.words.res.fileShareAction
-import io.github.eslamasabry.oc.ui.words.res.filesSaveFailed
-import io.github.eslamasabry.oc.ui.words.res.kitViewerPartial
-import io.github.eslamasabry.oc.ui.words.res.readerUiSavedDevice
 import io.github.eslamasabry.oc.ui.words.res.filePdfEncrypted
 import io.github.eslamasabry.oc.ui.words.res.filePdfFailed
 import io.github.eslamasabry.oc.ui.words.res.filePdfLimit
 import io.github.eslamasabry.oc.ui.words.res.filePdfUnavailable
+import io.github.eslamasabry.oc.ui.words.res.fileSave
+import io.github.eslamasabry.oc.ui.words.res.fileShareAction
 import io.github.eslamasabry.oc.ui.words.res.filesAskAboutFile
 import io.github.eslamasabry.oc.ui.words.res.filesMentionFailed
 import io.github.eslamasabry.oc.ui.words.res.filesNotConnected
@@ -54,16 +51,20 @@ import io.github.eslamasabry.oc.ui.words.res.filesOpenFailed
 import io.github.eslamasabry.oc.ui.words.res.filesOpenWith
 import io.github.eslamasabry.oc.ui.words.res.filesOpenWithFailed
 import io.github.eslamasabry.oc.ui.words.res.filesOpenWithNone
+import io.github.eslamasabry.oc.ui.words.res.filesSaveFailed
 import io.github.eslamasabry.oc.ui.words.res.filesUnavailable
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarClose
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
+import io.github.eslamasabry.oc.ui.words.res.kitViewerPartial
 import io.github.eslamasabry.oc.ui.words.res.readerUiPathLine
+import io.github.eslamasabry.oc.ui.words.res.readerUiSavedDevice
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * D03 (07 §5): the file viewer, a page. The kit's viewer frame (name, parent folder, Close) with the body for the
- * file's kind; at the thumb, Ask about this file (into this conversation's message) and Share on Wi-Fi; Open with is
- * a visible button under them. Nothing is long-press only.
+ * D03 (07 §5): the file viewer, a page. The kit's viewer frame (name, parent folder, Close) with
+ * the body for the file's kind; at the thumb, Ask about this file (into this conversation's
+ * message) and Share on Wi-Fi; Open with is a visible button under them. Nothing is long-press
+ * only.
  */
 @Composable
 public fun FileScreen(state: FileUi, actions: FileActions) {
@@ -80,11 +81,19 @@ public fun FileScreen(state: FileUi, actions: FileActions) {
                     path = state.path,
                     primary =
                         if (ready && !state.asking)
-                            KitViewerAction(stringResource(Res.string.filesAskAboutFile), actions::ask, "project-file-ask")
+                            KitViewerAction(
+                                stringResource(Res.string.filesAskAboutFile),
+                                actions::ask,
+                                "project-file-ask",
+                            )
                         else null,
                     secondary =
                         if (ready && state.canShare)
-                            KitViewerAction(stringResource(Res.string.fileShareAction), actions::shareOnWifi, "project-file-share-wifi")
+                            KitViewerAction(
+                                stringResource(Res.string.fileShareAction),
+                                actions::shareOnWifi,
+                                "project-file-share-wifi",
+                            )
                         else null,
                     onClose = actions::back,
                 ) {
@@ -94,14 +103,19 @@ public fun FileScreen(state: FileUi, actions: FileActions) {
                     KitNotice(
                         noticeWords(notice, state.name),
                         Modifier.padding(horizontal = Space.S4.dp),
-                        dismiss = KitLineAction(stringResource(Res.string.kitTopBarClose), actions::dismissNotice),
+                        dismiss =
+                            KitLineAction(
+                                stringResource(Res.string.kitTopBarClose),
+                                actions::dismissNotice,
+                            ),
                     )
                 }
                 if (ready && state.canOpenWith) {
                     KitButton(
                         stringResource(Res.string.filesOpenWith),
                         actions::openWith,
-                        Modifier.fillMaxWidth().padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
+                        Modifier.fillMaxWidth()
+                            .padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
                         role = KitButtonRole.Tertiary,
                         working = state.opening,
                         enabled = KitEnabled.Enabled,
@@ -111,7 +125,8 @@ public fun FileScreen(state: FileUi, actions: FileActions) {
                     KitButton(
                         stringResource(Res.string.fileSave),
                         actions::save,
-                        Modifier.fillMaxWidth().padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
+                        Modifier.fillMaxWidth()
+                            .padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
                         role = KitButtonRole.Tertiary,
                         working = state.saving,
                         enabled = KitEnabled.Enabled,
@@ -119,7 +134,7 @@ public fun FileScreen(state: FileUi, actions: FileActions) {
                 }
             }
         }
-        FileShareSheet(state.share, state.name, actions)
+        FileShareSheet(state.share, state.name, actions, state.sizeBytes)
     }
 }
 
@@ -134,7 +149,11 @@ private fun Body(state: FileUi, actions: FileActions) {
                 onRetry = actions::retry,
                 retryLabel = stringResource(Res.string.kitTryAgain),
             )
-        FilePhase.Unavailable -> KitStateView(kind = KitStateKind.Calm, title = stringResource(Res.string.filesUnavailable))
+        FilePhase.Unavailable ->
+            KitStateView(
+                kind = KitStateKind.Calm,
+                title = stringResource(Res.string.filesUnavailable),
+            )
         FilePhase.Failed ->
             KitStateView(
                 kind = KitStateKind.Error,
@@ -146,11 +165,19 @@ private fun Body(state: FileUi, actions: FileActions) {
         FilePhase.Ready ->
             when (val body = state.body) {
                 null -> KitSkeletonRows()
-                is FileBody.Text -> Partial(body.truncated) { KitViewerTextBody(body.text, wrap = true) }
-                is FileBody.Markdown -> Partial(body.truncated) { KitViewerTextBody(body.text, wrap = true) }
-                is FileBody.Code -> Partial(body.truncated) { KitViewerCodeBody(body.text, initialLine = body.line) }
+                is FileBody.Delimited -> DelimitedPreview(body)
+                is FileBody.Text ->
+                    Partial(body.truncated) { KitViewerTextBody(body.text, wrap = true) }
+                is FileBody.Markdown ->
+                    Partial(body.truncated) { KitViewerTextBody(body.text, wrap = true) }
+                is FileBody.Code ->
+                    Partial(body.truncated) {
+                        KitViewerCodeBody(body.text, initialLine = body.line)
+                    }
                 is FileBody.Image ->
-                    KitViewerImageBody(body.bytes, state.name) { Binary(state, actions, mime = null) }
+                    KitViewerImageBody(body.bytes, state.name) {
+                        Binary(state, actions, mime = null)
+                    }
                 is FileBody.Pdf -> Pdf(state, actions)
                 is FileBody.Binary -> Binary(state, actions, body.mime)
             }
@@ -165,7 +192,10 @@ private fun Partial(truncated: Boolean, body: @Composable () -> Unit) {
         return
     }
     Column(Modifier.fillMaxSize()) {
-        KitNotice(stringResource(Res.string.kitViewerPartial), Modifier.padding(horizontal = Space.S4.dp))
+        KitNotice(
+            stringResource(Res.string.kitViewerPartial),
+            Modifier.padding(horizontal = Space.S4.dp),
+        )
         Box(Modifier.weight(1f)) { body() }
     }
 }
@@ -176,7 +206,8 @@ private fun Binary(state: FileUi, actions: FileActions, mime: String?) {
         mimeType = mime,
         sizeBytes = state.sizeBytes,
         action =
-            if (state.canOpenWith) KitViewerAction(stringResource(Res.string.filesOpenWith), actions::openWith)
+            if (state.canOpenWith)
+                KitViewerAction(stringResource(Res.string.filesOpenWith), actions::openWith)
             else null,
     )
 }

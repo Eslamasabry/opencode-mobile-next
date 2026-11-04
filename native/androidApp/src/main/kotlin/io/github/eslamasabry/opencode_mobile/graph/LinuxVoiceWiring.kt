@@ -98,10 +98,22 @@ object LinuxRuntimeWiring {
         clock: Clock,
         acts: NativeRuntimeActs,
         leases: NativeChatLeases,
+        consents: NativePhoneFirstStartConsents,
     ): BuiltinRuntime =
-        BuiltinRuntime(app, dispatchers.io, appScope, profiles, stores, clock, acts, leases).also {
-            leases.start()
-        }
+        BuiltinRuntime(
+                app,
+                dispatchers.io,
+                appScope,
+                profiles,
+                stores,
+                clock,
+                acts,
+                leases,
+                consents,
+            )
+            .also {
+                leases.start()
+            }
 
     @Provides fun linuxHost(runtime: BuiltinRuntime): LinuxHost = runtime.host
 
@@ -315,8 +327,7 @@ internal fun classifyRuntime(e: Throwable): Failure {
             message == "ownershipUnknown" || message == "ownership_unknown" ->
                 RuntimeProblem.OwnershipUnknown
             // SetupRunner.start: the durable setup journal could not be written (B-LINUX-208).
-            e is SetupPersistenceException ->
-                RuntimeProblem.SetupPersistence
+            e is SetupPersistenceException -> RuntimeProblem.SetupPersistence
             message.startsWith("Another phone task") -> RuntimeProblem.SlotBusy
             message.startsWith("Ubuntu is not installed") -> RuntimeProblem.NotInstalled
             message.startsWith("Finish or cancel setup") -> RuntimeProblem.Installing
@@ -363,6 +374,7 @@ internal constructor(
     private val clock: Clock,
     private val acts: NativeRuntimeActs,
     private val leases: NativeChatLeases,
+    private val consents: NativePhoneFirstStartConsents,
 ) {
     private val linux: BuiltinLinux by lazy { BuiltinLinux.get(app) }
     private val filesDir: File
@@ -699,8 +711,10 @@ internal constructor(
                 if (confirmed is Outcome.Failed) return@withLock confirmed
             }
             publish()
-            if (failure == null) Outcome.Ok(Unit)
-            else
+            if (failure == null) {
+                consents.started(target.profile)
+                Outcome.Ok(Unit)
+            } else
                 Outcome.Failed(
                     Failure.Runtime(RuntimeProblem.ServerStartUnavailable, failure.details)
                 )
@@ -809,6 +823,7 @@ internal constructor(
             if (saved is Outcome.Failed) return@withLock saved
         }
         publish()
+        consents.started(id)
         Outcome.Ok(id)
     }
 
