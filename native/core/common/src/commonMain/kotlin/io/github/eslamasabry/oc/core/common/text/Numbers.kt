@@ -62,6 +62,15 @@ public object Numbers {
         return sign + whole + symbols.decimal + digits(fraction, symbols)
     }
 
+    /**
+     * A US-dollar amount: English writes "$12.50", Arabic puts the symbol after the amount ("12.50 $"). [symbolAfter]
+     * is the reading direction of the app language, so prices, usage and model labels agree.
+     */
+    public fun usd(value: Double, fractionDigits: Int, symbolAfter: Boolean, symbols: NumberSymbols = symbols()): String {
+        val amount = decimal(value, fractionDigits, symbols)
+        return if (symbolAfter) "$amount $" else "$$amount"
+    }
+
     /** Rewrites the ASCII digits of already-built text (a time "12:30", a version) in the phone's digits. */
     public fun digits(text: String, symbols: NumberSymbols = symbols()): String {
         if (symbols.zeroDigit == '0') return text

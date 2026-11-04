@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.usage.presentation
 
+import io.github.eslamasabry.oc.core.common.text.Numbers
 import kotlin.math.abs
 import kotlin.math.roundToLong
 
@@ -49,18 +50,18 @@ public object UsageFigures {
      * US-dollar estimate: two decimals from one cent, otherwise up to six (so small runs are not shown as $0.00),
      * thousands grouped. The caller handles [isTiny] and non-finite values.
      */
-    public fun money(cost: Double): String {
+    public fun money(cost: Double, symbolAfter: Boolean = false): String {
         if (!cost.isFinite()) return "—"
-        val negative = cost < 0
         val value = abs(cost)
+        val symbols = Numbers.symbols()
         val decimals = if (value >= 0.01 || value == 0.0) 2 else 6
-        var scale = 1L
-        repeat(decimals) { scale *= 10 }
-        val scaled = (value * scale).roundToLong()
-        val whole = scaled / scale
-        var fraction = (scaled % scale).toString().padStart(decimals, '0')
-        if (decimals > 2) fraction = fraction.trimEnd('0').padEnd(2, '0')
-        return (if (negative) "-" else "") + "$" + grouped(whole) + "." + fraction
+        var amount = Numbers.decimal(value, decimals, symbols)
+        if (decimals > 2) {
+            val keep = amount.indexOf(symbols.decimal) + 3
+            while (amount.length > keep && amount.last() == symbols.zeroDigit) amount = amount.dropLast(1)
+        }
+        val sign = if (cost < 0 && amount.any { it != symbols.zeroDigit && it != symbols.decimal }) symbols.minus.toString() else ""
+        return if (symbolAfter) "$sign$amount $" else "$sign$$amount"
     }
 
     /** A count with thousands grouped: 1234567 → "1,234,567". */
