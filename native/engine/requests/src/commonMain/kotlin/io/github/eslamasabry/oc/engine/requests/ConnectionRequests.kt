@@ -43,6 +43,8 @@ public class ConnectionRequests(
     private val formGateway = gateway
 
     init {
+        // The first Connected frame may precede this lazy graph accessor. Always hydrate once.
+        scope.launch { engine.refresh() }
         formScope.launch {
             gateway.events.project.collect { envelope ->
                 forms.onEvent(envelope.event)

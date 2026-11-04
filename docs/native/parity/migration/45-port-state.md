@@ -1,4 +1,4 @@
-Already there: 6 | Ported now: 6 | Not needed: 9 | Blocked: 41
+Already there: 7 | Ported now: 7 | Not needed: 10 | Blocked: 48
 
 # Migration step 4: Flutter state and connection logic
 
@@ -6,7 +6,7 @@ Base: `b6c30a59983a145a4d9cf0bcc3d1ec0295c0d6bc`; branch `p12x/45-port-state`.
 
 Finish line: read all 87 assigned Flutter sources, map reachable native behavior, port missing runnable slices, and identify prerequisites which still prevent full-file parity. Non-goals: tests, APKs, pushes, signing and releases. A dormant engine is not an implementation a person can use. A blocked row may contain a completed partial port; it stays blocked while other behavior in that source is missing.
 
-Checkpoint: 62/87 dispositions recorded; the remaining review reports are being integrated. Counts above cover recorded rows only. All Flutter source is read-only.
+Checkpoint: 72/87 dispositions recorded; the remaining review reports are being integrated. Counts above cover recorded rows only. All Flutter source is read-only.
 
 - `lib/state/connection/activity.dart` — blocked: AutomaticActivityRegistry has no production owner or Inbox history binding; confirmed-act recording/dismiss/undo cannot reach the person (native/engine/attention/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/attention/activity/AutomaticActivity.kt:430).
 - `lib/state/connection/agent_handoff.dart` — blocked: no production phone-agent target gateway/host lease/adoption binding exists; the standalone HandoffEngine cannot safely open or retain the target conversation.
@@ -66,7 +66,7 @@ Checkpoint: 62/87 dispositions recorded; the remaining review reports are being 
 - `lib/state/connection/monitors.dart` — blocked: profile monitoring is real (`native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/MonitorWiring.kt:43`), but `graph/PlansWiring.kt:46` explicitly documents absent quota collector, Paseo/phone usage adapters and alert bridge; UsageSubscriptionsEngine is bound only to connected OpenCode sign-in names, alertsOnRule=false.
 
 - `lib/state/connection/pending_reads.dart` — ported now: native/engine/requests/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/requests/RequestsEngine.kt:189 coalesces pending reads by stream epoch and rejects late old reads; graph-owned timers/reconnect events hydrate the same permission/question/form owners.
-- `lib/state/connection/permissions.dart` — blocked: graph request replies now fence held/sending decisions, refreshed snapshots and late completions against immutable request contents; a posted shade action still carries only the wire request id, so reviewed-notification identity across same-id replacement and the shared automatic-activity/history owner remain unimplemented.
+- `lib/state/connection/permissions.dart` — blocked: native card, held/sending, automatic-approval and shade decisions now retain exact reviewed request incarnations and source identity; the shared confirmed automatic-activity/history owner required by this source is still absent.
 - `lib/state/connection/phone_agents.dart` — blocked: native `AppPhoneAgents.kt:68` installs/removes payloads, but no production `PhoneAgentSessions`/live phone `AgentHost` binding owns helper startup, sign-in, agent selection and per-folder Paseo conversation feeds.
 - `lib/state/connection/phone_agents_auto_update.dart` — blocked: no production phone `AgentHost` self-check/update port exists to perform the pinned, idle-only, Wi-Fi-gated update with yielding; readiness helper rules alone are not runnable.
 - `lib/state/connection/phone_agents_backend.dart` — blocked: native saved remote Paseo profiles are wired (`AgentsWiring.kt:206`), but no owned transient phone Paseo connection/helper lifecycle is constructed for agent chats or recovery.
@@ -75,6 +75,17 @@ Checkpoint: 62/87 dispositions recorded; the remaining review reports are being 
 - `lib/state/connection/phone_agents_idle.dart` — blocked: native idle service receipts exist, but the phone-agent graph has no local-work truth/subscription or matching owned helper resume path; not replaceable with a lease deadline.
 - `lib/state/connection/phone_agents_routes.dart` — blocked: live phone-agent feeds/backend are absent, so captured-source resume/replacement/teardown paths cannot be safely routed; native install/remove covers only part of this source.
 - `lib/state/connection/phone_agents_saved.dart` — blocked: no phone-feed cache is integrated into first paint, folder-by-folder replacement, signed-out hints or process-to-conversation title mapping.
+
+- `lib/state/connection/phone_agents_startup.dart` — blocked: no phone helper start owner publishes launch acknowledgment separately from readiness, the bounded 30-second startup window and 3-second row reread cannot currently run.
+- `lib/state/connection/phone_chat.dart` — not needed: phone-engine admission/heartbeat is AI Team integration deferred by binding ADR plan/01 §12 D6; ordinary prompt busy/stop tracking already lives in `native/engine/delivery/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/delivery/ConnectionDelivery.kt:72` and `native/feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/world/GraphChatWorld.kt:432`.
+- `lib/state/connection/prompt_shelf.dart` — blocked: normal stash/history/migration/attachment/undo paths are reachable in native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/PromptsWiring.kt:117, but native kept-queue draft storage and Saved prompts controls are absent; queue preservation remains a prerequisite.
+- `lib/state/connection/questions.dart` — blocked: native open-chat question hydration, typed answer/reject and captured-card identity are live through ConnectionRequests/ChatRequestsModel, but source-bound cross-feed question routes and immutable posted-notification request occurrence are still absent.
+- `lib/state/connection/queue.dart` — blocked: durable queue, receipts/retry and deletion are real (`native/engine/delivery/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/delivery/ConnectionDelivery.kt:134`), but automatic flush is hardcoded off with `AutomationPolicy { false }`, and cross-server move/undo/kept-queue draft controls have no native production command/UI.
+- `lib/state/connection/quiet_reconnect.dart` — blocked: native live transport status is now propagated, but the 15-second quiet resume window, local helper-exit reread and successful-refetch retirement have no lifecycle/phone-helper coordinator.
+- `lib/state/connection/read_state.dart` — ported now: native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/NativeSessionReads.kt:52 persists exact Flutter device watermarks and return-brief dismissals, gates remote receipts on explicit per-server consent, registers/drains deletion ownership, and supplies the live feed; GraphChatWorld/ChatPresenter fence the rendered transcript, foreground visibility and live edge, and Servers exposes the EN/AR sharing switch.
+- `lib/state/connection/request_events.dart` — blocked: native typed permission events and graph-owned form events now reconcile real pending asks, but server inbox events still have no reachable cancellation/delivery projection owner.
+- `lib/state/connection/revert.dart` — already there: real review hub constructs `ConversationReview` per conversation at `native/feature/review/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/review/ReviewHub.kt:36`; stage/clear/commit perform fresh readback, scope/revision validation and uncertain-result reconciliation in `native/engine/review/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/review/ConversationReview.kt:233`.
+- `lib/state/connection/session_cache.dart` — blocked: no native persisted inventory preview/tail cache reader or writer is bound; GraphChatWorld hydrates authoritative remote pages but cannot paint saved text immediately after process restart or prefetch through shared reads.
 
 Compile checkpoint 1: requested command passed for Android and desktop, 592 actionable tasks, 0 test tasks, 14 seconds after the shared build lock became available. Log: `/tmp/45-port-state-compile-2.log`. The fresh-cache initial compile also passed (596 actionable tasks; 18m56s). No tests were written, modified or run; no APK was built.
 
@@ -87,3 +98,5 @@ Compile checkpoint 4: reviewed-card identity, identical-content request reincarn
 Compile checkpoint 5: unchanged native source snapshot passed both requested targets before the next ten-file ledger commit; 592 actionable tasks, 0 test tasks, 1 second; `/tmp/45-port-state-compile-8.log`.
 
 Compile checkpoint 6: both requested targets passed after adding the consent authority’s provenance/owner keys to the real deletion-scope registry; 592 actionable tasks, 0 test tasks, 10 seconds; `/tmp/45-port-state-compile-9.log`.
+
+Compile checkpoint 7: nonce-bound shade actions and guaranteed initial request hydration passed both requested targets; 592 actionable tasks, 0 test tasks, 20 seconds; `/tmp/45-port-state-compile-10.log`. Notification PendingIntent identity includes the per-post nonce, and the bounded in-memory ledger retains the exact saved owner, graph and request incarnation; resolved/replaced/deleted/process-dead actions cannot authorize a replacement ask. The shared automatic-activity/history dependency remains blocked separately.

@@ -22,6 +22,7 @@ import io.github.eslamasabry.oc.android.notifications.AlertKeys
 import io.github.eslamasabry.oc.android.notifications.AlertKind
 import io.github.eslamasabry.oc.android.notifications.AlertPolicy
 import io.github.eslamasabry.oc.android.notifications.AlertRoute
+import io.github.eslamasabry.oc.android.notifications.AlertShown
 import io.github.eslamasabry.oc.android.notifications.AndroidAlertShade
 import io.github.eslamasabry.oc.android.notifications.ChannelRegistry
 import io.github.eslamasabry.oc.android.notifications.CodingAlert
@@ -52,7 +53,6 @@ import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Failure
-import io.github.eslamasabry.oc.core.common.NetworkWhy
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
@@ -77,6 +77,7 @@ import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.entry.EntryLinkParser
 import io.github.eslamasabry.oc.engine.entry.ParsedLink
+import io.github.eslamasabry.oc.engine.profiles.LoadedProfile
 import io.github.eslamasabry.oc.engine.requests.PendingRequest
 import io.github.eslamasabry.oc.engine.updates.AppUpdateState
 import io.github.eslamasabry.oc.engine.updates.AppUpdates
@@ -97,6 +98,7 @@ import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.PlansRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.ui.routes.UpdatesRoute
+import java.util.UUID
 import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -246,6 +248,27 @@ class AppUpdateSettings(
 /** One pending request with where it came from. */
 internal data class Waiting(val profile: ProfileId, val request: PendingRequest)
 
+/** The exact graph, saved owner and raw ask whose words were posted. Never serialized. */
+private data class ReviewedShadeRequest(
+    val owner: LoadedProfile,
+    val graph: ConnectionGraph,
+    val request: PendingRequest,
+) {
+    fun sameAs(other: ReviewedShadeRequest): Boolean =
+        owner === other.owner &&
+            graph === other.graph &&
+            when {
+                request is PendingRequest.Permission &&
+                    other.request is PendingRequest.Permission ->
+                    request.request === other.request.request
+                request is PendingRequest.Question && other.request is PendingRequest.Question ->
+                    request.question === other.request.question
+                else -> false
+            }
+}
+
+private data class PostedShadeRequest(val key: String, val reviewed: ReviewedShadeRequest)
+
 @SingleIn(AppScope::class)
 @Inject
 class PlatformHub(
@@ -284,7 +307,9 @@ class PlatformHub(
 
     @Volatile private var started = 0
     private val visible = MutableStateFlow(0)
-    private val alerted = mutableMapOf<String, String>() // alert key -> request id (or turn marker)
+    private val alerted = mutableMapOf<String, ReviewedShadeRequest>()
+    private val requestTokenLock = Any()
+    private val requestTokens = LinkedHashMap<String, PostedShadeRequest>()
     private val running = mutableMapOf<ConversationRef, Boolean>()
     private var wasVisible = false
     private val statusPosted =
@@ -403,8 +428,8 @@ class PlatformHub(
     }
 
     /**
-     * Flutter `_openSessionForLink`: a saved server opens that exact session (connecting first);
-     * an unknown server, one that needs its secret again, or a failed connection shows Servers.
+     * Flutter `_openSessionForLink`: a saved server opens that exact session (connecting first); an
+     * unknown server, one that needs its secret again, or a failed connection shows Servers.
      * Nothing is sent, created or resumed.
      */
     private fun openSessionLink(link: ParsedLink.Session) {
@@ -464,6 +489,7 @@ class PlatformHub(
     private inner class Visibility : Application.ActivityLifecycleCallbacks {
         override fun onActivityStarted(activity: Activity) {
             visible.value += 1
+            retireRequestTokens()
             monitoring.visible(visible.value > 0)
         }
 
@@ -507,6 +533,7 @@ class PlatformHub(
      * Every alert this app put in the shade goes; requests already alerted are not posted again.
      */
     private fun clearShade() {
+        retireRequestTokens()
         for (key in alerted.keys) shade.dismiss(key)
         for (key in statusPosted) shade.dismiss(key)
         statusPosted.clear()
@@ -545,6 +572,7 @@ class PlatformHub(
 
     private suspend fun watchProfiles() {
         stores.profiles.profiles.collect { list ->
+            pruneRequestTokens()
             val now = list.map { it.id }.toSet()
             val gone = knownProfiles - now
             knownProfiles = now
@@ -742,6 +770,7 @@ class PlatformHub(
         // resume; B-ANDR-011/-040). The request ids stay remembered so the same request is not
         // posted again.
         if (PlatformRules.cameToForeground(wasVisible, appVisible)) clearShade()
+        pruneRequestTokens()
         wasVisible = appVisible
         val items = feed.items.associateBy { it.ref }
         val names = stores.profiles.profiles.value.associate { it.id to it.profile.name }
@@ -767,23 +796,31 @@ class PlatformHub(
             if (key !in current) current[key] = w
         }
         for ((key, w) in current) {
-            if (alerted[key] == w.request.id.raw) continue
+            val reviewed = reviewedRequest(w)
+            if (reviewed != null && alerted[key]?.sameAs(reviewed) == true) continue
+            retireRequestTokens(key)
+            if (alerted.containsKey(key)) shade.dismiss(key)
+            if (reviewed == null) continue
             val item = items[ConversationRef(w.profile, w.request.sessionId)]
-            val alert = requestAlert(key, w, item, names[w.profile])
+            val token = UUID.randomUUID().toString().replace("-", "")
+            val alert = requestAlert(key, w, item, names[w.profile]).copy(actionToken = token)
             val allowed =
                 facts.copy(
                     serverAlertsOn = PlatformRules.choiceAllows(alert.kind, requestsOn, finishedOn)
                 )
             when (val route = AlertPolicy.route(alert, allowed)) {
                 is AlertRoute.Post -> {
-                    shade.show(alert, route)
-                    alerted[key] = w.request.id.raw
+                    if (rememberRequestToken(token, key, reviewed)) {
+                        if (shade.show(alert, route) == AlertShown.Shown) alerted[key] = reviewed
+                        else retireRequestTokens(key)
+                    }
                 }
                 is AlertRoute.Skip -> Unit
             }
         }
         // Answered here or elsewhere: its alert goes.
         for (key in alerted.keys.filter { it.startsWith("input:") && it !in current }) {
+            retireRequestTokens(key)
             shade.dismiss(key)
             alerted.remove(key)
         }
@@ -897,22 +934,89 @@ class PlatformHub(
     // ---- Shade answers
     // --------------------------------------------------------------------------------------------
 
+    private fun reviewedRequest(waiting: Waiting): ReviewedShadeRequest? {
+        val owner = stores.profiles.profile(waiting.profile) ?: return null
+        val graph = registry.live.value[waiting.profile] ?: return null
+        val engine = (graph as? ChatGraphAccessors)?.chatRequests?.engine ?: return null
+        if (
+            owner.toServerProfile() != graph.profile ||
+                !stores.lanes.forProfile(waiting.profile).isAdmitting ||
+                !engine.isCurrent(waiting.request)
+        )
+            return null
+        return ReviewedShadeRequest(owner, graph, waiting.request)
+    }
+
+    private fun reviewedStillCurrent(reviewed: ReviewedShadeRequest): Boolean =
+        registry.live.value[reviewed.owner.id] === reviewed.graph &&
+            stores.profiles.profile(reviewed.owner.id) === reviewed.owner &&
+            stores.lanes.forProfile(reviewed.owner.id).isAdmitting &&
+            (reviewed.graph as? ChatGraphAccessors)
+                ?.chatRequests
+                ?.engine
+                ?.isCurrent(reviewed.request) == true
+
+    private fun rememberRequestToken(
+        token: String,
+        key: String,
+        reviewed: ReviewedShadeRequest,
+    ): Boolean =
+        synchronized(requestTokenLock) {
+            if (visible.value > 0 || !reviewedStillCurrent(reviewed)) return@synchronized false
+            requestTokens[token] = PostedShadeRequest(key, reviewed)
+            while (requestTokens.size > MAX_REQUEST_TOKENS) requestTokens.remove(
+                requestTokens.keys.first()
+            )
+            true
+        }
+
+    /**
+     * Clear only capabilities to answer; remembered display identities still prevent duplicate
+     * alerts.
+     */
+    private fun retireRequestTokens(key: String? = null) {
+        synchronized(requestTokenLock) {
+            if (key == null) requestTokens.clear()
+            else requestTokens.entries.removeAll { it.value.key == key }
+        }
+    }
+
+    private fun pruneRequestTokens() {
+        synchronized(requestTokenLock) {
+            requestTokens.entries.removeAll {
+                visible.value > 0 || !reviewedStillCurrent(it.value.reviewed)
+            }
+        }
+    }
+
     private suspend fun answer(answer: ShadeAnswer): Outcome<Unit> {
-        val graph =
-            registry.live.value[answer.profile]
-                ?: return Outcome.Failed(
-                    Failure.Network(NetworkWhy.Offline)
-                ) // reposted with Open only
-        val engine =
-            (graph as? ChatGraphAccessors)?.chatRequests?.engine
-                ?: return Outcome.Failed(Failure.Unexpected())
+        // A nonce authorizes exactly one attempt. Process-dead, legacy and replaced posts have no
+        // capability.
+        val posted =
+            synchronized(requestTokenLock) { requestTokens.remove(answer.actionToken) }
+                ?: return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+        val reviewed = posted.reviewed
+        val request = reviewed.request
+        val kind =
+            if (request is PendingRequest.Permission) AlertKind.Permission else AlertKind.Question
+        if (
+            visible.value > 0 ||
+                !reviewedStillCurrent(reviewed) ||
+                reviewed.owner.id != answer.profile ||
+                request.id != answer.request ||
+                request.sessionId != answer.session ||
+                answer.kind != kind
+        )
+            return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+        val engine = (reviewed.graph as ChatGraphAccessors).chatRequests.engine
         val reply = ShadeReplyAnswers.of(answer.kind, answer.reply) // B-PROTO-046 (BuildRestWiring)
-        val result = engine.answerNow(answer.request, reply)
+        val result = engine.answerNow(answer.request, reply, expectedRequest = request)
         log.i { "shade answer ${answer.kind} ${if (result is Outcome.Ok) "sent" else "not sent"}" }
         return result
     }
 
     private companion object {
+        const val MAX_REQUEST_TOKENS = 256
         const val ASKED_NOTIFY = "oc.notify.asked"
         const val REQUEST_NOTIFY = 4747
         const val EXCERPT_WAIT_MS = 5_000L

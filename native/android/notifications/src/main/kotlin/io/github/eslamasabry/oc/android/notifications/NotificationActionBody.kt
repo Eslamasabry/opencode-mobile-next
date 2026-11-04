@@ -7,24 +7,28 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
-import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * The body behind the `CodingActionReceiver` and `StatusActionReceiver` shells (plan 11 §10.6, ANDROID-PLATFORM-07;
- * 16 WP-16.8). The shells run it inside `goAsync` after the migration gate (plan 11 §2.2).
+ * The body behind the `CodingActionReceiver` and `StatusActionReceiver` shells (plan 11 §10.6,
+ * ANDROID-PLATFORM-07; 16 WP-16.8). The shells run it inside `goAsync` after the migration gate
+ * (plan 11 §2.2).
  *
  * Rules it keeps:
- * - A decision is bound to the **exact** `requestID`; an empty id refreshes the alert instead of answering any other
- *   request (B-AGENT-031, B-SEC-183). A stale id (the answerer says `StaleScope`) does the same (B-PROTO-046).
- * - On API 26–30 a decision that needs unlock (Allow once, legacy reply and options) answers nothing while the phone is
- *   locked and reposts the alert with Open only, whose tap opens the app at that request (CR16-7, B-SEC-184). On 31+
- *   Android itself asks for unlock (`setAuthenticationRequired`). Reject never asks.
+ * - A decision is bound to the **exact** `requestID`; an empty id refreshes the alert instead of
+ *   answering any other request (B-AGENT-031, B-SEC-183). A stale id (the answerer says
+ *   `StaleScope`) does the same (B-PROTO-046).
+ * - On API 26–30 a decision that needs unlock (Allow once, legacy reply and options) answers
+ *   nothing while the phone is locked and reposts the alert with Open only, whose tap opens the app
+ *   at that request (CR16-7, B-SEC-184). On 31+ Android itself asks for unlock
+ *   (`setAuthenticationRequired`). Reject never asks.
  * - An empty legacy reply is refused before any network call (B-AGENT-032).
- * - Two taps for one request send one answer (B-CHAT-074); an answer for a request that is already gone dismisses the
- *   alert quietly (B-CHAT-076).
- * - Any other failure, or no answer within [answerDeadline], reposts the alert in plain words with no buttons.
+ * - Two taps for one request send one answer (B-CHAT-074); an answer for a request that is already
+ *   gone dismisses the alert quietly (B-CHAT-076).
+ * - Any other failure, or no answer within [answerDeadline], reposts the alert in plain words with
+ *   no buttons.
  * - **No activity is ever started from here** (no trampoline; `NoTrampolineTest`).
  */
 public class NotificationActionBody(
@@ -45,15 +49,28 @@ public class NotificationActionBody(
     }
 
     public suspend fun onCodingAction(tap: ShadeTap): ShadeOutcome {
-        // Open buttons are activity PendingIntents; a stray "open" broadcast does nothing (and never starts one).
+        // Open buttons are activity PendingIntents; a stray "open" broadcast does nothing (and
+        // never starts one).
         if (tap.decision == ShadeDecision.Open) return ShadeOutcome.Ignored
         if (!tap.kind.isRequest) return ShadeOutcome.Ignored
         val reply = replyOf(tap) ?: return ShadeOutcome.Ignored
         if (tap.requestId.isBlank() || tap.profileId.isBlank()) return repost(tap)
-        if (tap.decision.needsUnlock && lock.sdkInt < Build.VERSION_CODES.S && lock.isLocked()) return repost(tap)
-        if (!claim(tap.requestId)) return ShadeOutcome.IgnoredDuplicate
+        if (tap.decision.needsUnlock && lock.sdkInt < Build.VERSION_CODES.S && lock.isLocked())
+            return repost(tap)
+        val identity =
+            listOf(tap.profileId, tap.sessionId, tap.requestId, tap.actionToken)
+                .joinToString("\u0000")
+        if (!claim(identity)) return ShadeOutcome.IgnoredDuplicate
         try {
-            val answer = ShadeAnswer(ProfileId(tap.profileId), SessionId(tap.sessionId), RequestId(tap.requestId), tap.kind, reply)
+            val answer =
+                ShadeAnswer(
+                    ProfileId(tap.profileId),
+                    SessionId(tap.sessionId),
+                    RequestId(tap.requestId),
+                    tap.kind,
+                    reply,
+                    tap.actionToken,
+                )
             val outcome = withTimeoutOrNull(answerDeadline) { answerer.answer(answer) }
             return when {
                 outcome is Outcome.Ok -> {
@@ -67,23 +84,32 @@ public class NotificationActionBody(
                 else -> repost(tap)
             }
         } finally {
-            release(tap.requestId)
+            release(identity)
         }
     }
 
-    /** **Stop the reply** on the status row (B-ANDR-040): stops exactly the chat the row named, ignores other actions. */
+    /**
+     * **Stop the reply** on the status row (B-ANDR-040): stops exactly the chat the row named,
+     * ignores other actions.
+     */
     public suspend fun onStatusAction(intent: Intent): ShadeOutcome {
         if (intent.action != FrozenExtras.ACTION_STATUS) return ShadeOutcome.Ignored
-        if (intent.getStringExtra(FrozenExtras.EXTRA_STATUS_ACTION) == StatusRenderer.DISMISSED_ACTION) {
+        if (
+            intent.getStringExtra(FrozenExtras.EXTRA_STATUS_ACTION) ==
+                StatusRenderer.DISMISSED_ACTION
+        ) {
             val run = intent.statusRun() ?: return ShadeOutcome.Ignored
             onRowDismissed(run)
             return ShadeOutcome.RowDismissed
         }
-        if (intent.getStringExtra(FrozenExtras.EXTRA_STATUS_ACTION) != StatusAction.StopReply.wire) return ShadeOutcome.Ignored
+        if (intent.getStringExtra(FrozenExtras.EXTRA_STATUS_ACTION) != StatusAction.StopReply.wire)
+            return ShadeOutcome.Ignored
         val conversation = intent.statusConversation() ?: return ShadeOutcome.Ignored
         val outcome = withTimeoutOrNull(answerDeadline) { stopper.stop(conversation) }
         // On failure the row stays; its content tap (an activity PendingIntent) opens that chat.
-        return if (outcome is Outcome.Ok || (outcome as? Outcome.Failed)?.failure is Failure.NotFound) {
+        return if (
+            outcome is Outcome.Ok || (outcome as? Outcome.Failed)?.failure is Failure.NotFound
+        ) {
             ShadeOutcome.StopSent
         } else {
             ShadeOutcome.StopFailed
@@ -92,9 +118,11 @@ public class NotificationActionBody(
 
     private fun replyOf(tap: ShadeTap): ShadeReply? =
         when (tap.decision) {
-            ShadeDecision.Allow -> if (tap.kind == AlertKind.Permission) ShadeReply.AllowOnce else null
+            ShadeDecision.Allow ->
+                if (tap.kind == AlertKind.Permission) ShadeReply.AllowOnce else null
             ShadeDecision.Deny -> ShadeReply.Reject
-            ShadeDecision.Reply, ShadeDecision.Option ->
+            ShadeDecision.Reply,
+            ShadeDecision.Option ->
                 tap.replyText?.trim()?.takeIf { it.isNotEmpty() }?.let { ShadeReply.Text(it) }
             ShadeDecision.Open -> null
         }
