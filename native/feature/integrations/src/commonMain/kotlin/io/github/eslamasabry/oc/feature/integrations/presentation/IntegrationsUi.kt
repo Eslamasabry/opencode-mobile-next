@@ -60,6 +60,13 @@ public interface IntegrationSession {
         headerValue: String,
     ): Outcome<Unit>
 
+    /** Connector sign-in: progress and failures arrive through [connector], never as text. */
+    public suspend fun startConnectorSignIn()
+
+    public suspend fun completeConnectorSignIn(input: String)
+
+    public suspend fun cancelConnectorSignIn()
+
     public suspend fun writeSkill(requirements: String): SkillDraftResult
 
     public fun close()
@@ -123,6 +130,14 @@ public interface IntegrationsActions {
     public fun dismissLink()
 
     public fun saveConnector(name: String, url: String, headerName: String, headerValue: String)
+
+    public fun startConnectorSignIn()
+
+    public fun openConnectorSignIn()
+
+    public fun completeConnectorSignIn(code: String)
+
+    public fun cancelConnectorSignIn()
 
     public fun writeSkill(requirements: String)
 

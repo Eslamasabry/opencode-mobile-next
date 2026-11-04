@@ -211,6 +211,47 @@ public fun IntegrationsScreen(state: IntegrationsUi, actions: IntegrationsAction
                                 }
                             )
                         )
+                        // A connector that needs sign-in gets a visible way through, like
+                        // provider sign-in: the server's link is confirmed before it opens.
+                        when (snapshot.phase) {
+                            McpChatPhase.NeedsAuthentication ->
+                                KitButton(
+                                    stringResource(Res.string.intConnectorSignIn),
+                                    actions::startConnectorSignIn,
+                                )
+                            McpChatPhase.Authorizing ->
+                                key(snapshot.authorizationUrl) {
+                                    val connectorCode = remember { TextFieldState() }
+                                    KitText(stringResource(Res.string.intSignInHelp))
+                                    if (snapshot.authorizationUrl != null)
+                                        KitButton(
+                                            stringResource(Res.string.intOpenSignIn),
+                                            actions::openConnectorSignIn,
+                                        )
+                                    if (snapshot.manualCodeRequired) {
+                                        KitField(
+                                            connectorCode,
+                                            stringResource(Res.string.intCode),
+                                            kind = KitFieldKind.Secret,
+                                            maxLength = 8192,
+                                        )
+                                        KitButton(
+                                            stringResource(Res.string.intCompleteSignIn),
+                                            {
+                                                actions.completeConnectorSignIn(
+                                                    connectorCode.text.toString()
+                                                )
+                                                connectorCode.edit { replace(0, length, "") }
+                                            },
+                                        )
+                                    }
+                                    KitButton(
+                                        stringResource(Res.string.intConnectorCancelSignIn),
+                                        actions::cancelConnectorSignIn,
+                                    )
+                                }
+                            else -> Unit
+                        }
                     }
                 }
                 key(state.server) {

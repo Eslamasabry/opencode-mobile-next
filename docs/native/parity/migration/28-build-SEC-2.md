@@ -78,3 +78,13 @@ Final coverage: **49 rows = 38 built now + 10 already there + 1 blocked**. B-SEC
 Final tracked plus new native input snapshot (sorted path + NUL + contents + NUL): `fd13d0fc22136e86239b05d259e3acc7a1376954e46ef4357b73a3a9c7d9f1a1`. Row references were checked for existing files and valid line numbers. No tests were written, run, weakened or deleted; no APK was built, and no push, signing, tag, deployment or release occurred. These are source and compilation results, without device/runtime or parity-proven claims.
 
 Local checkpoint commits before the final eight-row batch: `99bb4dcce`, `a095da867`, `9eecd30f7`, `efd9e2707`; every commit uses `[skip ci]` and the requested co-author trailer.
+
+## Final approval review (Opus 5.5, 2026-11-04)
+
+Merged the P12 integration head `cde0afb45` (no conflicts), then corrected three rows:
+
+- B-SEC-126: `DiagnosticsAttentionWiring.prepare` attached the newest kept error to every report, so its first line replaced the person's description as the title and an extra error block was added. Now, as in Flutter's `app_diagnostics_screen.dart` `_build`, only the surface's own error is attached; the newest kept error only titles a report that has neither an attachment nor a description (`fallbackTitle`).
+- B-SEC-100: a connector that needed sign-in was a dead end (only "use the server's setup page" text; `McpChatConnect.startOAuth/completeOAuth/cancelOAuth` were unreachable). `IntegrationSession`/`IntegrationsActions` now expose connector sign-in start, link (through `ExternalLinkPolicy` as server content, confirmed first), code/callback completion (registered with the redactor) and cancel. The Integrations screen shows them with kit parts and new English/Arabic strings. Dispose still releases only local OAuth state.
+- B-SEC-104: a `ProductErrorLine.Server` send failure dropped the HTTP status. It now uses `productErrorServer` with the status, the only number shown, and falls back to the status-free line.
+
+Compile only (`:androidApp:compilePreviewDebugKotlin compileKotlinDesktop`): BUILD SUCCESSFUL. No tests or APK were run, per the owner.

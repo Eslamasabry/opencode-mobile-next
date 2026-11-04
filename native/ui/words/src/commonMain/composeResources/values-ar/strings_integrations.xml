@@ -40,6 +40,8 @@
     <string name="intInsecure">هذا العنوان غير مشفّر.</string>
     <string name="intConnectorReady">متصل للرسالة التالية.</string>
     <string name="intConnectorUnknown">متصل. لم يتم تأكيد اكتشاف الأدوات.</string>
-    <string name="intConnectorAuth">يلزم تسجيل الدخول. استخدم صفحة إعداد الموصل على الخادم.</string>
+    <string name="intConnectorAuth">يحتاج هذا الموصل إلى تسجيل الدخول.</string>
     <string name="intConnecting">جارٍ الاتصال</string>
+    <string name="intConnectorSignIn">سجّل الدخول إلى هذا الموصل</string>
+    <string name="intConnectorCancelSignIn">إلغاء تسجيل الدخول</string>
 </resources>

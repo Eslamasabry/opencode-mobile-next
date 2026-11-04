@@ -40,6 +40,8 @@
     <string name="intInsecure">This address is not encrypted.</string>
     <string name="intConnectorReady">Connected for the next message.</string>
     <string name="intConnectorUnknown">Connected. Tool discovery has not been confirmed.</string>
-    <string name="intConnectorAuth">Sign-in is needed. Use the connector’s server setup page.</string>
+    <string name="intConnectorAuth">This connector needs you to sign in.</string>
     <string name="intConnecting">Connecting</string>
+    <string name="intConnectorSignIn">Sign in to this connector</string>
+    <string name="intConnectorCancelSignIn">Cancel sign-in</string>
 </resources>

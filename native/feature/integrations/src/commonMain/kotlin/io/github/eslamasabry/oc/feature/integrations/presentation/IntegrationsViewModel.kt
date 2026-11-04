@@ -183,6 +183,25 @@ public class IntegrationsViewModel(
             it.saveConnector(name, url, headerName, headerValue)
         }
 
+    override fun startConnectorSignIn() {
+        val pinned = session ?: return
+        viewModelScope.launch { pinned.startConnectorSignIn() }
+    }
+
+    override fun openConnectorSignIn() {
+        local.value.connector?.authorizationUrl?.let(::requestLink)
+    }
+
+    override fun completeConnectorSignIn(code: String) {
+        val pinned = session ?: return
+        viewModelScope.launch { pinned.completeConnectorSignIn(code) }
+    }
+
+    override fun cancelConnectorSignIn() {
+        val pinned = session ?: return
+        viewModelScope.launch { pinned.cancelConnectorSignIn() }
+    }
+
     override fun writeSkill(requirements: String) {
         val pinned = session ?: return
         if (local.value.busy || local.value.draft != null) return

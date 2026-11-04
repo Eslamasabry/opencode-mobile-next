@@ -38,5 +38,20 @@ internal fun rememberProductFailureWords(): (Failure) -> String {
                 }
             )
         }
-    return remember(words) { { failure -> words.getValue(productErrorText(failure).line) } }
+    // Like Flutter, a server failure names its HTTP status (the only number ever shown); the
+    // template is resolved once here because stringResource needs composition.
+    val withStatus = stringResource(Res.string.productErrorServer, STATUS_SLOT)
+    return remember(words, withStatus) {
+        { failure ->
+            val text = productErrorText(failure)
+            val status = text.status
+            if (text.line == ProductErrorLine.Server && status != null) {
+                withStatus.replace(STATUS_SLOT, status.toString())
+            } else {
+                words.getValue(text.line)
+            }
+        }
+    }
 }
+
+private const val STATUS_SLOT = "\u0000"

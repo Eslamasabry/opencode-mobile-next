@@ -360,15 +360,11 @@ class GitHubProblemReporter(
                         ?: ProblemReports.UNKNOWN_VERSION,
                 platform = "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})",
                 connection = connection,
-                error =
-                    attachment
-                        ?: latest?.let {
-                            AttachedError(
-                                title = it.message.lineSequence().firstOrNull().orEmpty(),
-                                details = it.message,
-                                source = it.source,
-                            )
-                        },
+                // Like Flutter: only the surface's own error is attached; the newest kept error
+                // only titles a report that has neither an attachment nor a description.
+                error = attachment,
+                fallbackTitle =
+                    if (attachment == null) latest?.message?.lineSequence()?.firstOrNull() else null,
                 events = events,
             )
         return Prepared(description, problem)

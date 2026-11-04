@@ -343,6 +343,20 @@ class AndroidIntegrationsSource(
             }
         }
 
+        override suspend fun startConnectorSignIn() {
+            if (!closed) controller?.startOAuth()
+        }
+
+        override suspend fun completeConnectorSignIn(input: String) {
+            if (closed || input.length > 8192) return
+            redactor.registerSecret(input)
+            controller?.completeOAuth(input)
+        }
+
+        override suspend fun cancelConnectorSignIn() {
+            if (!closed) controller?.cancelOAuth()
+        }
+
         override suspend fun writeSkill(requirements: String): SkillDraftResult {
             val result = skill.askAgentToWriteSkill(requirements)
             return SkillDraftResult(
