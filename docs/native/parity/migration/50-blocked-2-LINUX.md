@@ -40,3 +40,8 @@ Verification: the final native source snapshot passed the required Android and d
 cd native
 ./gradlew --console=plain -Dorg.gradle.workers.max=3 "-Dorg.gradle.jvmargs=-Xmx3g -XX:MaxMetaspaceSize=1g" :androidApp:compilePreviewDebugKotlin compileKotlinDesktop
 ```
+
+## Approval review fixes
+
+- B-LINUX-224: the key-bar backslash label is now the escaped `\\` resource form (Compose resources unescape `\\` to `\`), and the Arabic Control/Alt/Esc/Tab/Home/End labels keep the Latin key names Flutter's Arabic bar uses (`localTerminalKeyCtrl`/`Alt` stay "Control"/"Alt"); the earlier Arabic "خروج" for Esc read as "exit".
+- B-LINUX-236: the migration review's required/free figures (and per-item sizes) now follow Flutter `formatPhoneStorage` — one decimal above a kilobyte, in an LTR isolate — instead of truncating to whole KB/MB/GB.

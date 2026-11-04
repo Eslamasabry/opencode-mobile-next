@@ -142,16 +142,28 @@ public fun LinuxMigrationScreen(state: LinuxMigrationUi, actions: LinuxMigration
     )
 }
 
+/** Flutter formatPhoneStorage: one decimal above a kilobyte, Latin digits in an LTR isolate. */
 @Composable
-private fun migrationSize(bytes: Long): String =
-    when {
-        bytes >= 1024L * 1024 * 1024 ->
-            stringResource(Res.string.linuxMigrationGigabytes, "${bytes / (1024L * 1024 * 1024)}")
-        bytes >= 1024L * 1024 ->
-            stringResource(Res.string.linuxMigrationMegabytes, "${bytes / (1024L * 1024)}")
-        bytes >= 1024 -> stringResource(Res.string.linuxMigrationKilobytes, "${bytes / 1024}")
-        else -> stringResource(Res.string.linuxMigrationBytes, "$bytes")
+private fun migrationSize(bytes: Long): String {
+    val value = bytes.coerceAtLeast(0)
+    if (value < 1024)
+        return "⁦${stringResource(Res.string.linuxMigrationBytes, "$value")}⁩"
+    var scaled = value / 1024.0
+    var unit = 0
+    while (scaled >= 1024 && unit < 2) {
+        scaled /= 1024
+        unit++
     }
+    val tenths = kotlin.math.round(scaled * 10).toLong()
+    val number = "${tenths / 10}.${tenths % 10}"
+    val resource =
+        when (unit) {
+            0 -> Res.string.linuxMigrationKilobytes
+            1 -> Res.string.linuxMigrationMegabytes
+            else -> Res.string.linuxMigrationGigabytes
+        }
+    return "⁦${stringResource(resource, number)}⁩"
+}
 
 @Composable
 private fun migrationText(text: LinuxMigrationText): String {

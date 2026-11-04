@@ -18,7 +18,7 @@
     <string name="terminalKeyPageDown">Page down</string>
     <string name="terminalKeyPipe">|</string>
     <string name="terminalKeySlash">/</string>
-    <string name="terminalKeyBackslash">\</string>
+    <string name="terminalKeyBackslash">\\</string>
     <string name="terminalKeyTilde">~</string>
     <string name="terminalKeyMinus">−</string>
     <string name="terminalKeyUnderscore">_</string>
