@@ -28,9 +28,13 @@ class NativeServerRows(
     @OptIn(ExperimentalCoroutinesApi::class)
     private val requests =
         registry.live.flatMapLatest { graphs ->
+            // Capabilities arrive after the graph does; the account and queue-move facts read them.
             val flows =
-                graphs.values.mapNotNull {
-                    (it as? ChatGraphAccessors)?.chatRequests?.engine?.pending?.map { Unit }
+                graphs.values.flatMap { graph ->
+                    listOfNotNull(
+                        (graph as? ChatGraphAccessors)?.chatRequests?.engine?.pending?.map { Unit },
+                        graph.session.capabilities.map { Unit },
+                    )
                 }
             if (flows.isEmpty()) flowOf(Unit)
             else merge(*flows.toTypedArray()).onStart { emit(Unit) }

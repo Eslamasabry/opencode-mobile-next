@@ -27,6 +27,7 @@ import io.github.eslamasabry.oc.ui.kit.state.*
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeBlock
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeKind
+import io.github.eslamasabry.oc.ui.kitchat.header.KitClipboardEffect
 import io.github.eslamasabry.oc.ui.words.res.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -58,6 +59,16 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
     var trustQuestion by remember { mutableStateOf(false) }
     var commandsOpen by remember { mutableStateOf(false) }
     var moreOpen by remember { mutableStateOf(false) }
+    var clip by remember { mutableStateOf<String?>(null) }
+    var clipId by remember { mutableLongStateOf(0L) }
+    KitClipboardEffect(if (clip == null) null else clipId, clip) { clip = null }
+    val copyLabel = stringResource(Res.string.handoffCopyCommand)
+    val copiedLabel = stringResource(Res.string.kitCopied)
+    // App-authored commands with no credential; the block hands over its displayed source.
+    val copy: (String) -> Unit = {
+        clipId++
+        clip = it
+    }
     fun TextFieldState.fill(value: String) = edit { replace(0, length, value) }
     LaunchedEffect(state.record) {
         val record = state.record ?: return@LaunchedEffect
@@ -123,6 +134,9 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                 address.text.isNotEmpty() ||
                 password.text.isNotEmpty() ||
                 heldSecret != null)
+    // The effect outlives this composition's `state`; read the loaded address fresh, or the fill
+    // from a loaded record would look like an edit and drop its saved HTTP consent and pin.
+    val savedAddress by rememberUpdatedState(state.record?.address)
     LaunchedEffect(address) {
         snapshotFlow { address.text.toString() }
             .drop(1)
@@ -131,7 +145,7 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                     address.fill("")
                     actions.paste(text)
                 }
-                if (text != state.record?.address) {
+                if (text != savedAddress) {
                     confirmedOrigin = null
                     pin = null
                     pinOrigin = null
@@ -370,22 +384,34 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                 ServerEditorStep.Connect -> {
                     KitText(backendName(backend))
                     if (state.newServer) {
-                        KitCodeBlock(SetupCommands.startFor(backend), KitCodeKind.Command)
+                        EditorCommand(
+                            SetupCommands.startFor(backend),
+                            copyLabel,
+                            copiedLabel,
+                            copy,
+                        )
                         KitExpandRow(
                             stringResource(Res.string.editor40OtherCommands),
                             commandsOpen,
                             onExpandedChange = { commandsOpen = it },
                         ) {
-                            KitCodeBlock(
+                            EditorCommand(
                                 when (backend) {
                                     BackendKind.OpenCode2 -> SetupCommands.SERVE
                                     BackendKind.Paseo -> SetupCommands.PASEO_START_PRIVATE_NETWORK
                                     BackendKind.Codex -> SetupCommands.CODEX_USB
                                 },
-                                KitCodeKind.Command,
+                                copyLabel,
+                                copiedLabel,
+                                copy,
                             )
                             if (backend == BackendKind.Codex)
-                                KitCodeBlock(SetupCommands.CODEX_TOKEN, KitCodeKind.Command)
+                                EditorCommand(
+                                    SetupCommands.CODEX_TOKEN,
+                                    copyLabel,
+                                    copiedLabel,
+                                    copy,
+                                )
                         }
                     }
                     if (backend == BackendKind.OpenCode2 && !tailscale) {
@@ -503,9 +529,11 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                                 io.github.eslamasabry.oc.core.common.IncompatibleKind
                                     .LegacyOpenCode1
                         )
-                            KitCodeBlock(
-                                "npm uninstall -g opencode-ai && npm install -g @opencode/cli@2.2.5",
-                                KitCodeKind.Command,
+                            EditorCommand(
+                                SetupCommands.OPENCODE2_UPGRADE,
+                                copyLabel,
+                                copiedLabel,
+                                copy,
                             )
                     }
                     if (state.saved && state.failure != null)
@@ -550,6 +578,24 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
             }
         }
     }
+}
+
+/** One copyable setup command (Flutter `KitCodeBlock(copyLabel: handoffCopyCommand)`). */
+@Composable
+private fun EditorCommand(
+    source: String,
+    copyLabel: String,
+    copiedLabel: String,
+    onCopy: (String) -> Unit,
+) {
+    KitCodeBlock(
+        source = source,
+        kind = KitCodeKind.Command,
+        wrap = true,
+        copyLabel = copyLabel,
+        copiedLabel = copiedLabel,
+        onCopy = onCopy,
+    )
 }
 
 @Composable
