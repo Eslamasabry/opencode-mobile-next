@@ -497,6 +497,7 @@ class PlatformHub(
                     SetupTap.Land,
                     SetupTap.NotSetup -> navigator.land()
                 }
+            LaunchAction.Linux -> navigator.open(io.github.eslamasabry.oc.ui.routes.LinuxRoute.Home)
             LaunchAction.Connect -> navigator.open(ServersRoute.Home)
             LaunchAction.NewTask ->
                 navigator.open(ChatsRoute.New(profile = stores.profiles.activeId.value))

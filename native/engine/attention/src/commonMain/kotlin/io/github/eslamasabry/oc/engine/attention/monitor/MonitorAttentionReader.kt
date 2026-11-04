@@ -5,6 +5,10 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.core.common.getOrNull
 import io.github.eslamasabry.oc.core.security.Redactor
+import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -12,21 +16,28 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
-import kotlin.time.Clock
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
-import kotlin.time.TimeSource
 
 /** The phone project engine's bounded snapshot (only what attention needs). */
 public data class MonitorTeamWorkspace(val projects: List<MonitorTeamProject>)
 
-public data class MonitorTeamProject(val id: String, val tasks: List<MonitorTeamTask> = emptyList(), val requests: List<MonitorTeamRequest> = emptyList())
+public data class MonitorTeamProject(
+    val id: String,
+    val tasks: List<MonitorTeamTask> = emptyList(),
+    val requests: List<MonitorTeamRequest> = emptyList(),
+)
 
 public data class MonitorTeamTask(val id: String, val title: String? = null, val status: String)
 
-public data class MonitorTeamRequest(val id: String, val taskId: String = "", val title: String? = null, val answered: Boolean = false)
+public data class MonitorTeamRequest(
+    val id: String,
+    val taskId: String = "",
+    val title: String? = null,
+    val answered: Boolean = false,
+)
 
-/** The authenticated phone project engine client for one profile; it owns its probe and its read. */
+/**
+ * The authenticated phone project engine client for one profile; it owns its probe and its read.
+ */
 public interface MonitorPhoneEngine {
     /** The profile id the engine says it serves. */
     public suspend fun health(): Outcome<String>
@@ -40,9 +51,10 @@ public interface MonitorPhoneEngine {
 }
 
 /**
- * Bounded attention enrichment inside the monitor's polling lane (port of `MonitorAttentionReader`; B-AGENT-138/139).
- * Owns no watcher, timer or persistent state, never performs an act, and keeps one shared [timeout] deadline for all
- * of one read. A late engine client still belongs to the reader and is closed in [cleanupScope] when it arrives.
+ * Bounded attention enrichment inside the monitor's polling lane (port of `MonitorAttentionReader`;
+ * B-AGENT-138/139). Owns no watcher, timer or persistent state, never performs an act, and keeps
+ * one shared [timeout] deadline for all of one read. A late engine client still belongs to the
+ * reader and is closed in [cleanupScope] when it arrives.
  */
 public class MonitorAttentionReader(
     private val clock: Clock,
@@ -52,6 +64,11 @@ public class MonitorAttentionReader(
     private val phoneEngine: (suspend (MonitorProfile) -> MonitorPhoneEngine)? = null,
     private val timeSource: TimeSource = TimeSource.Monotonic,
     public val timeout: Duration = 8.seconds,
+    /**
+     * Production factories resolve secrets inside their bounded read, never in a synchronous
+     * profile list.
+     */
+    private val resolvePhoneCredentials: Boolean = false,
 ) : MonitorAttentionReading {
     private val cursors = LinkedHashMap<String, Pair<String, Int>>()
     private var disposed = false
@@ -78,7 +95,10 @@ public class MonitorAttentionReader(
         fun allowed(): Boolean = !disposed && current() && started.elapsedNow() < timeout
         suspend fun <T> call(action: suspend () -> Outcome<T>): T? {
             if (!allowed()) return null
-            val value = attempt({ Failure.Unexpected() }) { withTimeoutOrNull(remaining()) { action() } }.getOrNull()?.getOrNull()
+            val value =
+                attempt({ Failure.Unexpected() }) { withTimeoutOrNull(remaining()) { action() } }
+                    .getOrNull()
+                    ?.getOrNull()
             if (!allowed()) return null
             return value
         }
@@ -87,12 +107,15 @@ public class MonitorAttentionReader(
         val checked = mutableSetOf<String>()
         var historiesComplete = true
         var teamComplete = !profile.hasPhoneEngine
-        val location = JsonArray(listOf(gateway.directory, gateway.workspace).map { JsonPrimitive(it) }).toString()
+        val location =
+            JsonArray(listOf(gateway.directory, gateway.workspace).map { JsonPrimitive(it) })
+                .toString()
         val old = cursors[profile.id]
         val start = if (old?.first == location) old.second else 0
         val count = minOf(SESSION_LIMIT, sessions.size)
         if (allowed() && sessions.isNotEmpty()) {
-            if (cursors.size >= MAX_CURSORS && profile.id !in cursors) cursors.remove(cursors.keys.first())
+            if (cursors.size >= MAX_CURSORS && profile.id !in cursors)
+                cursors.remove(cursors.keys.first())
             cursors[profile.id] = location to (start + count) % sessions.size
         }
         var index = 0
@@ -128,12 +151,20 @@ public class MonitorAttentionReader(
         }
 
         val build = phoneEngine
-        if (profile.hasPhoneEngine && build != null && profile.teamEngineToken.isNotEmpty() && allowed()) {
+        if (
+            profile.hasPhoneEngine &&
+                build != null &&
+                (profile.teamEngineToken.isNotEmpty() || resolvePhoneCredentials) &&
+                allowed()
+        ) {
             // A late client result still belongs to this reader and must close.
             val pending = cleanupScope.async(start = CoroutineStart.UNDISPATCHED) { build(profile) }
-            val engine = withTimeoutOrNull(remaining().coerceAtLeast(Duration.ZERO)) { pending.await() }
+            val engine =
+                withTimeoutOrNull(remaining().coerceAtLeast(Duration.ZERO)) { pending.await() }
             if (engine == null) {
-                pending.invokeOnCompletion { cause -> if (cause == null) pending.getCompleted().close() }
+                pending.invokeOnCompletion { cause ->
+                    if (cause == null) pending.getCompleted().close()
+                }
                 teamComplete = false
             } else {
                 try {
@@ -146,13 +177,17 @@ public class MonitorAttentionReader(
                         if (snapshot == null) {
                             teamComplete = false
                         } else {
-                            val records = snapshot.projects.size + snapshot.projects.sumOf { it.tasks.size + it.requests.size }
-                            items += projectObservations(snapshot, gateway.directory, gateway.workspace)
+                            val records =
+                                snapshot.projects.size +
+                                    snapshot.projects.sumOf { it.tasks.size + it.requests.size }
+                            items +=
+                                projectObservations(snapshot, gateway.directory, gateway.workspace)
                             teamComplete = records <= TEAM_RECORD_LIMIT && allowed()
                         }
                     }
                 } finally {
-                    attempt({ Failure.Unexpected() }) { engine.close() }.let { if (it is Outcome.Failed) teamComplete = false }
+                    attempt({ Failure.Unexpected() }) { engine.close() }
+                        .let { if (it is Outcome.Failed) teamComplete = false }
                 }
             }
         } else if (profile.hasPhoneEngine) {
@@ -161,14 +196,26 @@ public class MonitorAttentionReader(
         }
         return MonitorAttentionDetails(
             items = items,
-            complete = allowed() && checked.size == sessions.size && sessions.size < 100 && historiesComplete && teamComplete,
+            complete =
+                allowed() &&
+                    checked.size == sessions.size &&
+                    sessions.size < 100 &&
+                    historiesComplete &&
+                    teamComplete,
             checkedSessionIds = checked,
             teamComplete = teamComplete,
         )
     }
 
-    /** Bounded projection of the authenticated phone engine's projects: open requests and failed/waiting tasks. */
-    internal fun projectObservations(snapshot: MonitorTeamWorkspace, directory: String?, workspace: String?): List<MonitorAttentionItem> {
+    /**
+     * Bounded projection of the authenticated phone engine's projects: open requests and
+     * failed/waiting tasks.
+     */
+    internal fun projectObservations(
+        snapshot: MonitorTeamWorkspace,
+        directory: String?,
+        workspace: String?,
+    ): List<MonitorAttentionItem> {
         val result = mutableListOf<MonitorAttentionItem>()
         var remaining = TEAM_RECORD_LIMIT
         val at = clock.now()
@@ -199,7 +246,9 @@ public class MonitorAttentionReader(
                 result +=
                     MonitorAttentionItem(
                         id = "team-project-task:${project.id}:${task.id}",
-                        kind = if (failed) MonitorAttentionKind.FailedRun else MonitorAttentionKind.TeamGate,
+                        kind =
+                            if (failed) MonitorAttentionKind.FailedRun
+                            else MonitorAttentionKind.TeamGate,
                         phase = if (failed) MonitorWorkPhase.Failed else MonitorWorkPhase.NeedsYou,
                         observedAt = at,
                         taskId = task.id,
@@ -224,10 +273,15 @@ public class MonitorAttentionReader(
         public const val TEAM_RECORD_LIMIT: Int = 256
         private const val MAX_CURSORS = 64
 
-        /** "interrupted" that cannot resume itself is presented as review, not a failure or request. */
+        /**
+         * "interrupted" that cannot resume itself is presented as review, not a failure or request.
+         */
         private val WAITING_TASK_STATES = setOf("failed", "needsYou", "waitingForYou")
 
-        /** The latest turn (from its user message) failed or was cut off. No user message is no turn. */
+        /**
+         * The latest turn (from its user message) failed or was cut off. No user message is no
+         * turn.
+         */
         internal fun lastTurnFailed(messages: List<MonitorMessage>): Boolean {
             val lastUser = messages.indexOfLast { it.role == "user" }
             if (lastUser < 0) return false

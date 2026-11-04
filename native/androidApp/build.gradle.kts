@@ -1,5 +1,7 @@
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.security.KeyStore
+import java.security.MessageDigest
 import java.util.zip.ZipFile
 
 plugins { id("oc.android.application") }
@@ -296,4 +298,40 @@ androidComponents.onVariants { variant ->
             apkDir.set(variant.artifacts.get(com.android.build.api.artifact.SingleArtifact.APK))
         }
     tasks.matching { it.name == "assemble$name" }.configureEach { finalizedBy(verify) }
+}
+
+// A production release may only keep one of the two existing populations' signing lineages.
+// This task runs only for Release packaging; compile-only migration work never opens a key store.
+val verifyProductionLineage by tasks.registering {
+    doLast {
+        val app = project.extensions.getByType<com.android.build.api.dsl.ApplicationExtension>()
+        val signing =
+            app.buildTypes.getByName("release").signingConfig
+                ?: error(
+                    "Production release signing must be configured with the existing installed lineage."
+                )
+        val file = signing.storeFile ?: error("Production signing store is missing.")
+        val store = KeyStore.getInstance(signing.storeType ?: "JKS")
+        file.inputStream().use { store.load(it, signing.storePassword?.toCharArray()) }
+        val certificate =
+            store.getCertificate(signing.keyAlias)
+                ?: error("Production signing certificate is missing.")
+        val digest =
+            MessageDigest.getInstance("SHA-256").digest(certificate.encoded).joinToString("") {
+                "%02X".format(it.toInt() and 255)
+            }
+        check(
+            digest in
+                setOf(
+                    "1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C",
+                    "842284B27AA297FB74CF831779FD16498517E1BC2104451459FEC2EA7AC11D1C",
+                )
+        ) {
+            "The production signing certificate must keep the existing installed lineage."
+        }
+    }
+}
+
+tasks.configureEach {
+    if (name.startsWith("package") && name.endsWith("Release")) dependsOn(verifyProductionLineage)
 }

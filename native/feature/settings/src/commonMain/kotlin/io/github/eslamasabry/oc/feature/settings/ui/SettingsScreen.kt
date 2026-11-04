@@ -16,6 +16,7 @@ import io.github.eslamasabry.oc.feature.settings.presentation.SettingsNote
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsUi
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
@@ -32,7 +33,9 @@ import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.librarySettingsTitle
 import io.github.eslamasabry.oc.ui.words.res.monitorQuietEnd
 import io.github.eslamasabry.oc.ui.words.res.monitorQuietStart
+import io.github.eslamasabry.oc.ui.words.res.nativeBundledPrivacy
 import io.github.eslamasabry.oc.ui.words.res.notifyDismiss
+import io.github.eslamasabry.oc.ui.words.res.privacyPolicyTitle
 import io.github.eslamasabry.oc.ui.words.res.settingsHubPrivacyRow
 import io.github.eslamasabry.oc.ui.words.res.settingsHubVoice
 import io.github.eslamasabry.oc.ui.words.res.settingsV3Language
@@ -106,6 +109,19 @@ public fun SettingsScreen(
         SettingsPage.About ->
             SettingsFrame(stringResource(Res.string.aboutTitle), back, state, actions, modifier) {
                 AboutBody(state.about, actions)
+            }
+        SettingsPage.PrivacyPolicy ->
+            SettingsFrame(
+                stringResource(Res.string.privacyPolicyTitle),
+                back,
+                state,
+                actions,
+                modifier,
+            ) {
+                KitText(
+                    stringResource(Res.string.nativeBundledPrivacy),
+                    Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
+                )
             }
         SettingsPage.Privacy ->
             SettingsFrame(

@@ -126,7 +126,8 @@ class MonitorRuntime(
                                         !loaded.reentry.agentToken &&
                                         loaded.toServerProfile() != null,
                                 boundDirectory = p.codexDirectory.takeIf { it.isNotBlank() },
-                                hasPhoneEngine = p.orchestration != null,
+                                hasPhoneEngine =
+                                    phoneMonitorConfig(p.orchestration?.encoded) != null,
                             )
                         }
 
@@ -286,7 +287,16 @@ class MonitorRuntime(
                             .atZone(ZoneId.systemDefault())
                             .let { it.hour * 60 + it.minute }
                     },
-                    readAttention = MonitorAttentionReader(clock, scope, redactor),
+                    readAttention =
+                        MonitorAttentionReader(
+                            clock,
+                            scope,
+                            redactor,
+                            phoneEngine = { profile ->
+                                AndroidMonitorPhoneEngine(profile.id, stores, dispatchers, redactor)
+                            },
+                            resolvePhoneCredentials = true,
+                        ),
                     sharedRules = shared,
                 )
             monitor = built
