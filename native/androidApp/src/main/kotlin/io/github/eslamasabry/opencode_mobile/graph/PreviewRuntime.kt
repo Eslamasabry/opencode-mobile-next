@@ -346,6 +346,18 @@ class PreviewRuntime(
         }
         val scoped =
             DefaultProfileScope(stores.prefs, stores.secrets, stores.lanes.app).apply {
+                register(
+                    io.github.eslamasabry.oc.core.data.scope.KeyShape(
+                        "oc.setupRegistry.",
+                        io.github.eslamasabry.oc.core.data.scope.KeyScope.Profile,
+                        io.github.eslamasabry.oc.core.data.kv.PrefType.Str,
+                        "engine:runtime",
+                        "Public setup registry consent and metadata",
+                    )
+                )
+                io.github.eslamasabry.oc.engine.integrations.quota.InAppQuotaCollector.register(
+                    this
+                )
                 registerSecret("pw.", "profiles")
                 registerSecret("oc.codexToken.", "profiles")
             }

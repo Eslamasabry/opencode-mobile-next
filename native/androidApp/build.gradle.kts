@@ -79,6 +79,7 @@ dependencies {
             ":core:model",
             ":core:domain",
             ":engine:connection",
+            ":engine:attention",
             ":engine:transcript",
             ":ui:design",
             ":ui:words",
@@ -106,6 +107,7 @@ dependencies {
             ":engine:analytics",
             ":engine:diagnostics",
             ":android:notifications",
+            ":android:platform",
             ":android:background", // BUILD-ANDROID-BG-PLATFORM: live mode, pause, sign-in lease
             ":android:migration",
             ":android:termux",
@@ -145,7 +147,9 @@ dependencies {
             ":android:linux", // P12-FIX-LINUX-VOICE: the real built-in Linux (proot runtime + its
             // native libraries)
             ":feature:devservices", // BUILD-RUNTIME-A: Development services (saved commands, dev
-                                    // servers found)
+            // servers found)
+            ":engine:integrations-catalog",
+            ":engine:integrations-quota",
             ":engine:integrations-usage", // P12-BUILD-INTEGRATIONS-B: Usage › Plans engine
             ":feature:plans", // P12-BUILD-INTEGRATIONS-B: Usage › Plans
         )

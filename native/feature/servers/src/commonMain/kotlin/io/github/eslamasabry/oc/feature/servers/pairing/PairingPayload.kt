@@ -8,7 +8,10 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
-/** Why a pairing code could not be read (Flutter `parsePairingPayload` failures; the words are `e7SetupPair*`). */
+/**
+ * Why a pairing code could not be read (Flutter `parsePairingPayload` failures; the words are
+ * `e7SetupPair*`).
+ */
 public enum class PairingProblem {
     Empty,
     TooLong,
@@ -26,11 +29,13 @@ public enum class PairingProblem {
 }
 
 /**
- * What `opencode2 pair` prints (B-PROTO-064, B-SEC-107): the server's addresses in its order, a username and a password.
- * The password is held carefully: [toString] never shows it or an untrusted username, addresses print without
- * credentials, paths or queries, and [consume] drops the reference once the form has it. [urls] cannot be changed.
+ * What `opencode2 pair` prints (B-PROTO-064, B-SEC-107): the server's addresses in its order, a
+ * username and a password. The password is held carefully: [toString] never shows it or an
+ * untrusted username, addresses print without credentials, paths or queries, and [consume] drops
+ * the reference once the form has it. [urls] cannot be changed.
  */
-public class PairingPayload internal constructor(urls: List<String>, public val username: String, password: String) {
+public class PairingPayload
+internal constructor(urls: List<String>, public val username: String, password: String) {
     public val urls: List<String> = urls.toImmutableList()
     private var secret: String? = password
 
@@ -67,13 +72,17 @@ public sealed interface PairingRead {
     public data class Problem(val problem: PairingProblem) : PairingRead
 }
 
-/** The pairing rules (B-PROTO-064…067). Pure: no I/O, no logging, and no failure ever echoes the input. */
+/**
+ * The pairing rules (B-PROTO-064…067). Pure: no I/O, no logging, and no failure ever echoes the
+ * input.
+ */
 public object PairingText {
     private val json = Json { isLenient = false }
 
     /**
-     * True for text that looks like a pairing code — including broken ones, so the app can explain them — and false for
-     * ordinary typed text or anything over [PairingPayload.MAX_LENGTH] (B-PROTO-066).
+     * True for text that looks like a pairing code — including broken ones, so the app can explain
+     * them — and false for ordinary typed text or anything over [PairingPayload.MAX_LENGTH]
+     * (B-PROTO-066).
      */
     public fun looksLikePayload(raw: String): Boolean {
         val trimmed = raw.trim()
@@ -82,9 +91,14 @@ public object PairingText {
         return "\"urls\"" in trimmed || "'urls'" in trimmed
     }
 
-    /** Reads pasted or scanned text: a pairing code, a share link, or a plain problem. A scan and a paste meet here. */
+    /**
+     * Reads pasted or scanned text: a pairing code, a share link, or a plain problem. A scan and a
+     * paste meet here.
+     */
     public fun read(raw: String): PairingRead {
-        ShareLink.origin(raw)?.let { return PairingRead.Link(it) }
+        ShareLink.origin(raw)?.let {
+            return PairingRead.Link(it)
+        }
         return parse(raw)
     }
 
@@ -93,7 +107,8 @@ public object PairingText {
         val trimmed = raw.trim()
         if (trimmed.isEmpty()) return problem(PairingProblem.Empty)
         if (trimmed.length > PairingPayload.MAX_LENGTH) return problem(PairingProblem.TooLong)
-        // The JSON reader recurses per level; a pasted wall of brackets must be refused before it can overflow the stack.
+        // The JSON reader recurses per level; a pasted wall of brackets must be refused before it
+        // can overflow the stack.
         if (nestingTooDeep(trimmed)) return problem(PairingProblem.NotJson)
         val decoded: JsonElement =
             try {
@@ -109,13 +124,17 @@ public object PairingText {
         if (rawUrls.size > PairingPayload.MAX_URLS) return problem(PairingProblem.TooMany)
         val urls = ArrayList<String>()
         for (entry in rawUrls) {
-            val text = (entry as? JsonPrimitive)?.takeIf { it.isString }?.content ?: return problem(PairingProblem.AddressType)
+            val text =
+                (entry as? JsonPrimitive)?.takeIf { it.isString }?.content
+                    ?: return problem(PairingProblem.AddressType)
             val url = text.trim()
             if (url.isEmpty()) continue
-            if (url.length > PairingPayload.MAX_URL_LENGTH) return problem(PairingProblem.AddressLong)
+            if (url.length > PairingPayload.MAX_URL_LENGTH)
+                return problem(PairingProblem.AddressLong)
             if (url !in urls) urls += url
         }
-        // The CLI prints `urls[0] ?? "(none)"`: a server can really send no address. Say what to do about it.
+        // The CLI prints `urls[0] ?? "(none)"`: a server can really send no address. Say what to do
+        // about it.
         if (urls.isEmpty()) return problem(PairingProblem.AddressMissing)
         val rawUsername = decoded["username"]
         val username =
@@ -129,29 +148,81 @@ public object PairingText {
             (decoded["password"] as? JsonPrimitive)?.takeIf { it.isString }?.content
                 ?: return problem(PairingProblem.PasswordType)
         return PairingRead.Code(
-            PairingPayload(urls, username?.takeIf { it.isNotEmpty() } ?: PairingPayload.DEFAULT_USERNAME, password),
+            PairingPayload(
+                urls,
+                username?.takeIf { it.isNotEmpty() } ?: PairingPayload.DEFAULT_USERNAME,
+                password,
+            )
         )
     }
 
     /**
-     * Which address to dial first (B-PROTO-067): a phone prefers routable addresses over the server's loopback, a desktop
-     * prefers loopback; order is kept within each group, and an address that cannot be read counts as routable.
+     * Which address to dial first (B-PROTO-067): a phone prefers routable addresses over the
+     * server's loopback, a desktop prefers loopback; order is kept within each group, and an
+     * address that cannot be read counts as routable.
      */
     public fun orderCandidates(urls: Iterable<String>, preferLoopback: Boolean): List<String> {
-        val (loopback, routable) = urls.partition { url -> hostOf(url)?.let(::isLoopbackHost) == true }
+        val (loopback, routable) =
+            urls.partition { url -> hostOf(url)?.let(::isLoopbackHost) == true }
         return if (preferLoopback) loopback + routable else routable + loopback
     }
 
+    /** Normalizes a bare host without repairing credentials, queries or non-server paths. */
+    public fun normalizeCandidate(raw: String): String? {
+        val text = raw.trim()
+        if (
+            text.isEmpty() ||
+                text.length > PairingPayload.MAX_URL_LENGTH ||
+                text.any { it.isWhitespace() }
+        )
+            return null
+        val url = if ("://" in text) text else "http://$text"
+        val match =
+            Regex("""^(https?)://([^/?#]+)(?:/api)?/?$""", RegexOption.IGNORE_CASE).matchEntire(url)
+                ?: return null
+        val authority = match.groupValues[2]
+        if ('@' in authority) return null
+        val hostPort =
+            if (authority.startsWith("[")) {
+                val end = authority.indexOf(']')
+                if (end < 2 || ':' !in authority.substring(1, end)) return null
+                val rest = authority.substring(end + 1)
+                if (rest.isNotEmpty() && !rest.startsWith(':')) return null
+                authority.substring(0, end + 1) to
+                    rest.removePrefix(":").takeIf { rest.isNotEmpty() }
+            } else {
+                if (authority.count { it == ':' } > 1) return null
+                val split = authority.split(':', limit = 2)
+                val host = split[0]
+                if (host.isEmpty() || host.any { !it.isLetterOrDigit() && it !in ".-" }) return null
+                host to split.getOrNull(1)
+            }
+        hostPort.second?.let { text ->
+            val port = text.toIntOrNull() ?: return null
+            if (port !in 1..65535) return null
+        }
+        return "${match.groupValues[1].lowercase()}://${authority.lowercase()}"
+    }
+
     /**
-     * True when dialing [url] needs nothing from the person first: HTTPS, or plain HTTP to this device's own loopback.
-     * Plain HTTP anywhere else waits for the per-address consent switch and is never probed (B-SEC-124).
+     * True when dialing [url] needs nothing from the person first: HTTPS, or plain HTTP to this
+     * device's own loopback. Plain HTTP anywhere else waits for the per-address consent switch and
+     * is never probed (B-SEC-124).
      */
     public fun mayProbe(url: String): Boolean {
-        val scheme = Regex("""^([A-Za-z][A-Za-z0-9+.-]*)://""").find(url.trim())?.groupValues?.get(1)?.lowercase()
+        val scheme =
+            Regex("""^([A-Za-z][A-Za-z0-9+.-]*)://""")
+                .find(url.trim())
+                ?.groupValues
+                ?.get(1)
+                ?.lowercase()
         return scheme == "https" || (scheme == "http" && hostOf(url)?.let(::isLoopbackHost) == true)
     }
 
-    /** `scheme://host:port` of [value] for display, or `<invalid address>`: never credentials, a path or a query. */
+    /**
+     * `scheme://host:port` of [value] for display, or `<invalid address>`: never credentials, a
+     * path or a query.
+     */
     public fun safeOrigin(value: String): String {
         val text = value.trim()
         if (text.isEmpty() || text.length > PairingPayload.MAX_URL_LENGTH) return INVALID
@@ -164,14 +235,21 @@ public object PairingText {
     }
 
     private fun hostOf(url: String): String? {
-        val authority = Regex("""^[A-Za-z][A-Za-z0-9+.-]*://([^/?#]*)""").find(url.trim())?.groupValues?.get(1) ?: return null
+        val authority =
+            Regex("""^[A-Za-z][A-Za-z0-9+.-]*://([^/?#]*)""").find(url.trim())?.groupValues?.get(1)
+                ?: return null
         val hostPort = authority.substringAfterLast('@')
-        return if (hostPort.startsWith("[")) hostPort.substringBefore(']') + "]" else hostPort.substringBefore(':')
+        return if (hostPort.startsWith("[")) hostPort.substringBefore(']') + "]"
+        else hostPort.substringBefore(':')
     }
 
     private fun isLoopbackHost(host: String): Boolean {
         val h = host.lowercase()
-        return h == "localhost" || h == "::1" || h == "[::1]" || h == "0.0.0.0" || h.startsWith("127.")
+        return h == "localhost" ||
+            h == "::1" ||
+            h == "[::1]" ||
+            h == "0.0.0.0" ||
+            h.startsWith("127.")
     }
 
     private fun problem(p: PairingProblem): PairingRead = PairingRead.Problem(p)
@@ -200,18 +278,22 @@ public object PairingText {
 }
 
 /**
- * The share link `opencode-mobile://session/v2?server=…&instance=…&session=…` (Flutter `SessionAddressLink`,
- * B-SEC-157): a credential-free locator. Strict envelope and keys, valid percent escapes decoded once, bounded ASCII;
- * only a full private (Tailscale `*.ts.net`) HTTPS origin is accepted; anything carrying a credential is refused, never
- * repaired. Only the origin is used: it fills the server address, and the person adds the password.
+ * The share link `opencode-mobile://session/v2?server=…&instance=…&session=…` (Flutter
+ * `SessionAddressLink`, B-SEC-157): a credential-free locator. Strict envelope and keys, valid
+ * percent escapes decoded once, bounded ASCII; only a full private (Tailscale `*.ts.net`) HTTPS
+ * origin is accepted; anything carrying a credential is refused, never repaired. Only the origin is
+ * used: it fills the server address, and the person adds the password.
  */
 public object ShareLink {
     private const val MAX_LENGTH = 1024
-    private val envelope = Regex("""^opencode-mobile://session/v2\?([^#]+)$""", RegexOption.IGNORE_CASE)
+    private val envelope =
+        Regex("""^opencode-mobile://session/v2\?([^#]+)$""", RegexOption.IGNORE_CASE)
     private val badEscape = Regex("""%(?![0-9a-fA-F]{2})""")
-    private val uuid = Regex("""^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$""")
+    private val uuid =
+        Regex("""^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$""")
     private val session = Regex("""^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$""")
-    private val origin = Regex("""^https://([A-Za-z0-9.-]+)(?::([0-9]{1,5}))?$""", RegexOption.IGNORE_CASE)
+    private val origin =
+        Regex("""^https://([A-Za-z0-9.-]+)(?::([0-9]{1,5}))?$""", RegexOption.IGNORE_CASE)
     private val label = Regex("""^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$""")
 
     /** The normalised server origin of a valid link, or null for anything else. */
@@ -231,7 +313,11 @@ public object ShareLink {
             fields[key] = value
         }
         if (fields.size != KEYS.size) return null
-        if (!uuid.matches(fields.getValue("instance")) || !session.matches(fields.getValue("session"))) return null
+        if (
+            !uuid.matches(fields.getValue("instance")) ||
+                !session.matches(fields.getValue("session"))
+        )
+            return null
         return normalizeOrigin(fields.getValue("server"))
     }
 
@@ -239,7 +325,8 @@ public object ShareLink {
         val match = origin.matchEntire(value) ?: return null
         val host = match.groupValues[1].lowercase()
         val labels = host.split('.')
-        if (host.length > 253 || labels.size != 4 || labels[2] != "ts" || labels[3] != "net") return null
+        if (host.length > 253 || labels.size != 4 || labels[2] != "ts" || labels[3] != "net")
+            return null
         if (labels.any { !label.matches(it) }) return null
         val port = match.groupValues[2].ifEmpty { "443" }.toInt()
         if (port !in 1..65535) return null
@@ -249,7 +336,10 @@ public object ShareLink {
     private fun boundedAscii(value: String): Boolean =
         value.isNotEmpty() && value.length <= MAX_LENGTH && value.all { it.code in 0x21..0x7e }
 
-    /** One `application/x-www-form-urlencoded` decode; null on a broken escape or bytes that are not ASCII. */
+    /**
+     * One `application/x-www-form-urlencoded` decode; null on a broken escape or bytes that are not
+     * ASCII.
+     */
     private fun decodeOnce(value: String): String? {
         val out = StringBuilder()
         var i = 0
