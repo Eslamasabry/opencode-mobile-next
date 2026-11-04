@@ -116,6 +116,9 @@ public class GatewaySendLink(
      * progress or an empty page; at most [MAX_PAGES] pages.
      */
     override suspend fun lookupAdmission(session: SessionId, messageId: MessageId): Outcome<Boolean> {
+        // B-PROTO-041: without the receipt capability, or on a closed (stopped) connection, nothing is read and nothing
+        // is confirmed.
+        if (!capabilities.commandReceipts || gateway.events.status.value is StreamStatus.Stopped) return false.ok()
         if (capabilities.inbox) {
             when (val inbox = gateway.inbox(session)) {
                 is Outcome.Failed -> return inbox
