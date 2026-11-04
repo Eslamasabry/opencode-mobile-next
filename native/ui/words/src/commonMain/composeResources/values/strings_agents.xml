@@ -489,4 +489,25 @@
     <string name="localAssistantStopped">Stopped. This is what was written so far.</string>
     <string name="localAssistantRunFailed">The summary could not be finished. Try again.</string>
     <string name="localAssistantStats">First words after %1$s s · %2$s words a second</string>
+    <string name="agentAccountsTitle">Host accounts</string>
+    <string name="agentAccountLoginCancelled">Sign-in cancelled.</string>
+    <string name="agentComputerPaseo">Paseo</string>
+    <string name="agentComputerCodex">Codex</string>
+    <string name="agentComputerCodexNote">Connect to the official Codex app server over WebSocket. Enter its address and the full project folder on that computer.</string>
+    <string name="agentErrorOpenSettings">Open settings</string>
+    <string name="agentDraftTitle">Conversation records</string>
+    <string name="agentDraftReadOnly">Review a record before copying it to another agent. This does not start, resume, or change a conversation.</string>
+    <string name="agentDraftGuide">1. Choose a conversation below.
+2. Review the record and any notice about omitted older turns.
+3. Copy it only when you are ready to share it.</string>
+    <string name="agentDraftLoading">Reading the conversation</string>
+    <string name="agentDraftFailed">The complete record could not be prepared. Check the connection and choose the conversation again.</string>
+    <string name="agentDraftReview">Review the record</string>
+    <string name="agentDraftOmitted">%1$d older messages were left out to fit the record. The newest turn is kept whole.</string>
+    <string name="agentDraftMasked">Credentials were masked. Check the record before sharing it.</string>
+    <string name="agentDraftCopy">Copy reviewed record</string>
+    <string name="agentDraftCopied">Record copied.</string>
+    <string name="agentDraftEmpty">There are no conversations in this project.</string>
+    <string name="agentDraftTooLarge">This conversation’s newest turn is too large to include without losing text.</string>
+    <string name="agentPhoneCheck">Check phone agents</string>
 </resources>

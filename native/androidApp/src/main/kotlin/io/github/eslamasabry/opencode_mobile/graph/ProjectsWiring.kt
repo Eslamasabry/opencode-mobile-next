@@ -102,9 +102,11 @@ class LiveProjectServers(
     registry: ConnectionRegistry,
     stores: PreviewStores,
     appScope: AppCoroutineScope,
+    attention: AppElsewhereAttention,
 ) : ProjectServers {
     override val servers: StateFlow<ImmutableList<ProjectServer>> =
-        combine(registry.live, stores.profiles.profiles) { live, saved ->
+        combine(registry.live, stores.profiles.profiles, attention.trackers) { live, saved, trackers
+                ->
                 liveRows(live, saved) { id, name, graph ->
                     ProjectServer(
                         id,
@@ -118,6 +120,7 @@ class LiveProjectServers(
                                 graph.profile.origin.toString().let {
                                     ManagedLocalServer.isTermux(it) || ManagedLocalServer.isBuiltin(it)
                                 },
+                        attention = trackers[id]?.state,
                     )
                 }
             }

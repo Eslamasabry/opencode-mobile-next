@@ -14,6 +14,7 @@ kotlin {
         implementation(project(":core:model"))
         api("io.ktor:ktor-client-core:$ktor")
         api("io.ktor:ktor-websockets:$ktor")
+        api("io.ktor:ktor-client-websockets:$ktor")
     }
     sourceSets.commonTest.dependencies {
         implementation("io.ktor:ktor-client-mock:$ktor")

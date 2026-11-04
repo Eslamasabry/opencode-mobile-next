@@ -110,6 +110,15 @@ public data class ProjectChatUi(
     val running: Boolean,
 )
 
+public data class ProjectAttentionUi(
+    val directory: String,
+    val name: String,
+    val waiting: Int,
+    val running: Int,
+    val failed: Int = 0,
+    val stale: Boolean = false,
+)
+
 public enum class ProjectPagePhase {
     Opening,
     NoServer,
@@ -128,6 +137,7 @@ public data class ProjectPageUi(
     val phase: ProjectPagePhase = ProjectPagePhase.Opening,
     val conversations: ImmutableList<ProjectChatUi> = persistentListOf(),
     val elsewhere: ImmutableList<ProjectChatUi> = persistentListOf(),
+    val elsewhereAttention: ImmutableList<ProjectAttentionUi> = persistentListOf(),
     val canLoadMore: Boolean = false,
     val loadingMore: Boolean = false,
     val loadMoreFailure: Failure? = null,
@@ -178,6 +188,9 @@ public interface ProjectPageActions : ProjectWorkspaceActions {
     public fun developmentServices()
 
     public fun back()
+
+    /** AGENT-1: open another project that needs attention ("In other projects"). */
+    public fun openOtherProject(directory: String) {}
 
     public fun newConversationHere()
 

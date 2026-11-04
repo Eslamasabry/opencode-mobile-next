@@ -9,6 +9,7 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
+import io.github.eslamasabry.oc.engine.attention.ElsewhereSnapshot
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -24,6 +25,7 @@ public class ProjectServer(
     public val operations: ServerOperationsGateway?,
     /** Capability to open shared folders on this phone for this connection. */
     public val phoneFolders: Boolean = false,
+    public val attention: StateFlow<ElsewhereSnapshot>? = null,
 )
 
 /** The live connections and the active one. The app binds the real one (ProjectsWiring). */

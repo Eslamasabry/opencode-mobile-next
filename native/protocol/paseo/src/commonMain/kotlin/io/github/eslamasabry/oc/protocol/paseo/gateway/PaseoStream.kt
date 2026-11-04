@@ -10,6 +10,8 @@ import io.github.eslamasabry.oc.core.domain.events.InterruptReason
 import io.github.eslamasabry.oc.core.domain.events.RunOutcome
 import io.github.eslamasabry.oc.core.model.SessionStatus
 import io.github.eslamasabry.oc.core.model.transcript.MsgTime
+import io.github.eslamasabry.oc.core.model.transcript.Part
+import io.github.eslamasabry.oc.core.model.transcript.PartType
 import io.github.eslamasabry.oc.core.model.transcript.Role
 import io.github.eslamasabry.oc.protocol.paseo.longOrNull
 import io.github.eslamasabry.oc.protocol.paseo.mappers.paseoItemId
@@ -154,6 +156,35 @@ internal fun PaseoGateway.onTimelineItem(
                 completedMs = null,
             )
             ?.let { backgroundTasks.observe(real(id), it) }
+        if (type == "assistant_message") {
+            val joined =
+                item.with("text", JsonPrimitive(text.substring(0, minOf(text.length, 2000))))
+            val mapped = paseoItemMessage(id, joined, messageId, provider, at ?: nowMs(), null)
+            if (mapped?.info?.errorText != null) {
+                state.turnErrorShown = true
+                state.failedBeforeLoad = true
+                state.open.remove(messageId)
+                emit(GatewayEvent.MessageUpserted(mapped.info))
+                // A prefix may already have arrived as text before it identified the failure line.
+                // Replace it
+                // with empty text so the provider error appears only in the failure's redacted
+                // Details.
+                emit(
+                    GatewayEvent.PartUpserted(
+                        Part(
+                            id = "$messageId:0",
+                            messageId = messageId,
+                            sessionId = id,
+                            type = PartType.Text,
+                            rawType = "text",
+                            text = "",
+                            ended = true,
+                        )
+                    )
+                )
+                return
+            }
+        }
         emit(
             GatewayEvent.PartDelta(
                 SessionId(id),
@@ -165,16 +196,26 @@ internal fun PaseoGateway.onTimelineItem(
         )
         return
     }
-    val message = paseoItemMessage(
-        agentId = id,
-        item = item,
-        id = messageId,
-        provider = provider,
-        createdMs = at ?: nowMs(),
-        completedMs = if (type == "user_message") at else null,
-    ) ?: return
+    val message =
+        paseoItemMessage(
+            agentId = id,
+            item = item,
+            id = messageId,
+            provider = provider,
+            createdMs = at ?: nowMs(),
+            completedMs = if (type == "user_message") at else null,
+        ) ?: return
     backgroundTasks.observe(real(id), message)
-    if (message.info.errorText != null) state.turnErrorShown = true
+    if (message.info.errorText != null) {
+        state.turnErrorShown = true
+        state.failedBeforeLoad = true
+    } else if (
+        message.info.role == Role.User ||
+            message.parts.any { it.type == PartType.Text && it.text.isNotBlank() }
+    ) {
+        // Flutter `turnFailedAfter`: a prompt or later reply words end the failure.
+        state.failedBeforeLoad = false
+    }
     if (text == null) {
         state.announced[messageId] = StringBuilder(if (streamed) paseoText(item["text"]) else "")
         while (state.announced.size > 4096) state.announced.remove(state.announced.keys.first())

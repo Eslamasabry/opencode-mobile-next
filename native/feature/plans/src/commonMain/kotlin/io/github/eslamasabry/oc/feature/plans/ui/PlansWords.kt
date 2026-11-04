@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.plans.ui
 
 import androidx.compose.runtime.Composable
+import io.github.eslamasabry.oc.engine.integrations.usage.ComputerUsageProblem
 import io.github.eslamasabry.oc.engine.integrations.usage.SignInState
 import io.github.eslamasabry.oc.engine.integrations.usage.SubscriptionState
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageFix
@@ -10,7 +11,20 @@ import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
 /** Native resource copy for Usage plans; formatting stays in the UI layer. */
-public class PlansWords internal constructor(private val strings: List<String>) {
+public class PlansWords
+internal constructor(
+    private val strings: List<String>,
+    /** AGENT-1: the computer usage readers' copy, by key. */
+    private val readerWords: Map<String, String> = emptyMap(),
+) {
+    private fun r(key: String, vararg args: Any): String {
+        var value = readerWords[key].orEmpty()
+        args.forEachIndexed { index, arg ->
+            value = value.replace("%${index + 1}\$s", arg.toString())
+        }
+        return value.replace("%%", "%")
+    }
+
     private fun t(index: Int, vararg values: Any?): String {
         var value = strings[index]
         for ((i, part) in values.withIndex()) value =
@@ -133,6 +147,36 @@ public class PlansWords internal constructor(private val strings: List<String>) 
 
     val viaOpenCode: String
         get() = t(44)
+
+    // ---- AGENT-1: explicit computer usage readers.
+
+    val readers: String
+        get() = r("Readers")
+
+    val readerExplanation: String
+        get() = r("ReaderExplanation")
+
+    val readerOn: String
+        get() = r("ReaderOn")
+
+    val readerOff: String
+        get() = r("ReaderOff")
+
+    val reading: String
+        get() = r("Reading")
+
+    val readerFailed: String
+        get() = r("ReaderFailed")
+
+    fun readerAction(name: String, enabled: Boolean): String =
+        r(if (enabled) "DisableReader" else "EnableReader", name)
+
+    fun readNow(name: String): String = r("ReadNow", name)
+
+    fun readerProblem(problem: ComputerUsageProblem): String = r(problem.name)
+
+    fun found(providers: List<String>): String =
+        r("Found", providers.joinToString(", ") { providerName(it) })
 }
 
 @Composable
@@ -184,5 +228,22 @@ public fun plansWords(): PlansWords =
             stringResource(Res.string.statePlansCopy42),
             stringResource(Res.string.statePlansCopy43),
             stringResource(Res.string.statePlansCopy44),
-        )
+        ),
+        mapOf(
+            "Readers" to stringResource(Res.string.p12PlansReaders),
+            "ReaderExplanation" to stringResource(Res.string.p12PlansReaderExplanation),
+            "ReaderOn" to stringResource(Res.string.p12PlansReaderOn),
+            "ReaderOff" to stringResource(Res.string.p12PlansReaderOff),
+            "EnableReader" to stringResource(Res.string.p12PlansEnableReader),
+            "DisableReader" to stringResource(Res.string.p12PlansDisableReader),
+            "ReadNow" to stringResource(Res.string.p12PlansReadNow),
+            "Reading" to stringResource(Res.string.p12PlansReading),
+            "ReaderFailed" to stringResource(Res.string.p12PlansReaderFailed),
+            "NodeMissing" to stringResource(Res.string.p12PlansNodeMissing),
+            "NodeTooOld" to stringResource(Res.string.p12PlansNodeTooOld),
+            "ServerTooOld" to stringResource(Res.string.p12PlansServerTooOld),
+            "Unreachable" to stringResource(Res.string.p12PlansUnreachable),
+            "NoAnswer" to stringResource(Res.string.p12PlansNoAnswer),
+            "Found" to stringResource(Res.string.p12PlansFound),
+        ),
     )

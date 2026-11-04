@@ -73,7 +73,11 @@ private class GatewayFeedPort(private val g: PaseoGateway) : PaseoFeedPort {
     override fun agentFailed(session: SessionId): Boolean =
         g.agents[session.raw]?.str("status") == "error" || lastTurnFailed(session)
 
-    /** The saved record failed before the helper loaded it, or the last turn read ended on the agent's own failure. */
+    /**
+     * The saved record failed before the helper loaded it, or a saved or observed turn failure that
+     * stays failed until a prompt, turn start or later reply text, or the last turn read ended on
+     * the agent's own failure.
+     */
     override fun lastTurnFailed(session: SessionId): Boolean =
         g.live[session.raw]?.failedBeforeLoad == true || g.lastTurnFailed(session)
 

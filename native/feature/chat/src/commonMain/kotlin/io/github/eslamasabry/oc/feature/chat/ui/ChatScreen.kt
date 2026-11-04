@@ -118,6 +118,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatFeelShare
 import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoAction
 import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoBody
 import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoTitle
+import io.github.eslamasabry.oc.ui.words.res.agentErrorOpenSettings
 import io.github.eslamasabry.oc.ui.words.res.chatLoadFailedBody
 import io.github.eslamasabry.oc.ui.words.res.chatLoadFailedTitle
 import io.github.eslamasabry.oc.ui.words.res.chatLoadingConversation
@@ -939,6 +940,8 @@ internal fun rememberReplyActions(
     val onServer = stringResource(Res.string.chatFeelPictureOnServer, "\u0000")
     val onWeb = stringResource(Res.string.chatFeelPictureOnWeb, "\u0000")
     val continueLabel = stringResource(Res.string.returnBriefContinue)
+    val signInSettings =
+        stringResource(io.github.eslamasabry.oc.ui.words.res.Res.string.agentErrorOpenSettings)
     return remember(
         actions,
         copy,
@@ -948,6 +951,7 @@ internal fun rememberReplyActions(
         onWeb,
         confirmedPaths,
         continueLabel,
+        signInSettings,
     ) {
         ReplyActions(
             copiedLabel = copied,
@@ -983,6 +987,8 @@ internal fun rememberReplyActions(
             checkPaths = actions::checkPaths,
             continueLabel = continueLabel,
             onContinue = actions::continueReply,
+            signInSettingsLabel = signInSettings,
+            onSignInSettings = actions::openSignInSettings,
         )
     }
 }

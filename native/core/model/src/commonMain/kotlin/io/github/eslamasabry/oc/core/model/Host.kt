@@ -3,7 +3,8 @@ package io.github.eslamasabry.oc.core.model
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.Flow
 
-// Projects, worktrees, workspaces, organizations, terminals and managed shells (value_types_core.dart,
+// Projects, worktrees, workspaces, organizations, terminals and managed shells
+// (value_types_core.dart,
 // managed_shell.dart).
 
 public data class WorkspaceProject(
@@ -27,7 +28,13 @@ public data class WorkspaceInfo(
 
 public data class WorkspaceAdapterInfo(val type: String, val name: String, val description: String)
 
-public data class WorktreeInfo(val name: String, val directory: String, val branch: String?, val ready: Boolean)
+public data class WorktreeInfo(
+    val name: String,
+    val directory: String,
+    val branch: String?,
+    val ready: Boolean,
+    val projectId: String? = null,
+)
 
 public data class ProjectDirectoryInfo(val directory: String, val strategy: String?)
 
@@ -56,7 +63,10 @@ public data class TerminalProcess(
 
 public data class TerminalShellOption(val path: String, val name: String, val acceptable: Boolean)
 
-public data class TerminalShellSettings(val selected: String, val options: ImmutableList<TerminalShellOption>)
+public data class TerminalShellSettings(
+    val selected: String,
+    val options: ImmutableList<TerminalShellOption>,
+)
 
 /** One interactive PTY connection. Cold until [output] is collected; [close] ends it. */
 public interface TerminalChannel {
@@ -70,7 +80,13 @@ public interface TerminalChannel {
 
 // ---- Managed shells
 
-public enum class ManagedShellStatus { Running, Exited, Timeout, Killed, Unknown }
+public enum class ManagedShellStatus {
+    Running,
+    Exited,
+    Timeout,
+    Killed,
+    Unknown,
+}
 
 public data class ManagedShell(
     val id: String,
@@ -87,4 +103,9 @@ public data class ManagedShell(
 
 public data class ManagedShellList(val supported: Boolean, val shells: ImmutableList<ManagedShell>)
 
-public data class ManagedShellOutput(val text: String, val cursor: Long, val size: Long, val truncated: Boolean)
+public data class ManagedShellOutput(
+    val text: String,
+    val cursor: Long,
+    val size: Long,
+    val truncated: Boolean,
+)

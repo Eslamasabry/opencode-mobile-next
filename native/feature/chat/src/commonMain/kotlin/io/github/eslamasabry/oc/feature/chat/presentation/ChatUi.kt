@@ -434,4 +434,7 @@ public interface ChatActions {
      * (Flutter `_continueTruncated`).
      */
     public fun continueReply(words: String) {}
+
+    /** Recovery for a missing/rejected provider credential; opens the visible settings path. */
+    public fun openSignInSettings() {}
 }

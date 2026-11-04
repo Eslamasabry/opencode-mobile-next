@@ -19,6 +19,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.UserAgent
+import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.prepareRequest
 import io.ktor.client.statement.HttpResponse
@@ -220,6 +221,7 @@ public class HttpClientFactory(
             HttpClient(engine) {
                 expectSuccess = false
                 followRedirects = false
+                install(WebSockets) { maxFrameSize = 1_048_576 }
                 install(HttpTimeout) {
                     connectTimeoutMillis = spec.connectTimeoutMs
                     // Inactivity only. requestTimeoutMillis stays unset: a long download or a slow

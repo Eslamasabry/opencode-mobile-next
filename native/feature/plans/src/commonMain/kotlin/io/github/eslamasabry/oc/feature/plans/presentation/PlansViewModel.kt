@@ -52,6 +52,9 @@ public class PlansViewModel(
 
     private val edits = MutableStateFlow(PlansUi())
     private val controls = MutableStateFlow(PlansControls())
+    // AGENT-1: explicit computer usage readers.
+    private val readerBusy = MutableStateFlow(false)
+    private val readerFailed = MutableStateFlow(false)
 
     public val state: StateFlow<PlansUi> =
         combine(source.snapshot, refreshing, collectors, confirmation, collectorFailed) {
@@ -112,6 +115,16 @@ public class PlansViewModel(
                     ask = control.ask,
                 )
             }
+            // AGENT-1: explicit computer usage readers and their one action at a time.
+            .combine(combine(source.computerReaders, readerBusy, readerFailed, ::Triple)) {
+                ui,
+                (readers, checking, failed) ->
+                ui.copy(
+                    computerReaders = readers.toImmutableList(),
+                    readerBusy = checking,
+                    readerFailed = failed,
+                )
+            }
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5_000),
@@ -119,7 +132,7 @@ public class PlansViewModel(
             )
 
     init {
-        refresh()
+        load(force = false)
     }
 
     override fun editThreshold(key: String?) {
@@ -173,6 +186,27 @@ public class PlansViewModel(
     }
 
     override fun back(): Unit = nav.back()
+
+    override fun setComputerReaderEnabled(id: String, enabled: Boolean) {
+        readerAction { source.setComputerReaderEnabled(id, enabled) }
+    }
+
+    override fun readComputerNow(id: String) {
+        readerAction { source.readComputerNow(id) }
+    }
+
+    private fun readerAction(command: suspend () -> Outcome<Unit>) {
+        if (readerBusy.value) return
+        readerBusy.value = true
+        readerFailed.value = false
+        viewModelScope.launch {
+            try {
+                readerFailed.value = command() is Outcome.Failed
+            } finally {
+                readerBusy.value = false
+            }
+        }
+    }
 
     override fun chooseCollector(target: CollectorTarget) {
         if (refreshing.value) return
@@ -232,12 +266,15 @@ public class PlansViewModel(
             )
     }
 
-    override fun refresh() {
+    /** The visible Refresh bypasses reader cadence (AGENT-1); opening the page does not. */
+    override fun refresh(): Unit = load(force = true)
+
+    private fun load(force: Boolean) {
         if (refreshing.value || controls.value.busy) return
         refreshing.value = true
         viewModelScope.launch {
             try {
-                source.refresh()
+                source.refresh(force)
                 collectors.value = source.collectors()
                 syncControls()
             } finally {

@@ -8,16 +8,23 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metro.binding
+import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
+import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
+import io.github.eslamasabry.oc.core.common.attempt
+import io.github.eslamasabry.oc.core.common.failed
+import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.auth.AuthProjectionJson
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentArchitecture
+import io.github.eslamasabry.oc.engine.agents.catalog.AgentAvailability
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentDescriptor
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentSignInMethod
@@ -62,6 +69,8 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -72,7 +81,8 @@ import org.json.JSONObject
 
 /**
  * The Agents hub reads the real shared payloads and removes only catalog-owned files, keeping
- * profile homes.
+ * profile homes. "Check phone agents" also runs the read-only sign-in probe for the runtime owner:
+ * no helper, sign-in or installer is started.
  */
 @SingleIn(AppScope::class)
 @Inject
@@ -161,6 +171,10 @@ class AppPhoneAgents(
             SecureBytes { count -> ByteArray(count).also(SecureRandom()::nextBytes) },
         )
 
+    /**
+     * "Check phone agents" (AGENT-1) re-reads the payloads; each installed agent's read-only
+     * sign-in probe runs inside the read ([signInStatus], keyed by the runtime owner).
+     */
     override suspend fun refresh(): Outcome<Unit> = lane.withLock { refreshLocked() }
 
     private suspend fun refreshLocked(): Outcome<Unit> {

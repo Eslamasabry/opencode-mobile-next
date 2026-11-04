@@ -211,7 +211,16 @@ internal class Oc2CoreProjection(private val redact: (String) -> Redacted) {
                     },
                 )
             is Oc2Adapted.ShellChanged -> GatewayEvent.ShellChanged(event.shellId)
-            is Oc2Adapted.WorktreeOutcome -> GatewayEvent.WorktreeOutcome(event.ready)
+            is Oc2Adapted.WorktreeOutcome ->
+                GatewayEvent.WorktreeOutcome(
+                    ready = event.ready,
+                    directory = event.directory,
+                    projectId = event.projectId,
+                    name = event.name,
+                    branch = event.branch,
+                    details = event.message?.let(redact),
+                    workspace = event.workspace,
+                )
         }
 
     private fun Oc2RunOutcome.toCore(): RunOutcome =

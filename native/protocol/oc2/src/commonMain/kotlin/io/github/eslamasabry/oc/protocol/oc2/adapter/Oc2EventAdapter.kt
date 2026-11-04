@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.protocol.oc2.wire.Oc2PermissionRequest
 import io.github.eslamasabry.oc.protocol.oc2.wire.Oc2Tokens
 import io.github.eslamasabry.oc.protocol.oc2.wire.Oc2ToolResultItem
 import io.github.eslamasabry.oc.protocol.oc2.wire.Oc2ToolState
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -339,9 +340,16 @@ internal sealed interface Oc2Adapted {
 
     public data class ShellChanged(public val shellId: String?) : Oc2Adapted
 
-    /** `worktree.ready|failed` and `workspace.ready|failed`: freshness hints only. */
-    public data class WorktreeOutcome(public val ready: Boolean, public val workspace: Boolean) :
-        Oc2Adapted
+    /** A copy setup outcome retains its project and directory for the isolated-task launch. */
+    public data class WorktreeOutcome(
+        public val ready: Boolean,
+        public val workspace: Boolean,
+        public val directory: String? = null,
+        public val projectId: String? = null,
+        public val name: String? = null,
+        public val branch: String? = null,
+        public val message: String? = null,
+    ) : Oc2Adapted
 }
 
 // ================================================================================================================
@@ -963,12 +971,58 @@ internal class Oc2EventAdapter(private val nowMs: () -> Long) {
             "pty.exited" -> listOf(Oc2Adapted.TerminalChanged(raw.idOf(), Oc2TerminalChange.Exited))
             "pty.deleted" ->
                 listOf(Oc2Adapted.TerminalChanged(raw.idOf(), Oc2TerminalChange.Deleted))
-            "worktree.ready" -> listOf(Oc2Adapted.WorktreeOutcome(ready = true, workspace = false))
+            "worktree.ready" ->
+                listOf(
+                    Oc2Adapted.WorktreeOutcome(
+                        ready = true,
+                        workspace = false,
+                        directory = raw["directory"].stringOrNull(),
+                        projectId =
+                            raw["projectID"].stringOrNull() ?: raw["project"].stringOrNull(),
+                        name = raw["name"].stringOrNull(),
+                        branch = raw["branch"].stringOrNull(),
+                        message = raw["message"].stringOrNull(),
+                    )
+                )
             "worktree.failed" ->
-                listOf(Oc2Adapted.WorktreeOutcome(ready = false, workspace = false))
-            "workspace.ready" -> listOf(Oc2Adapted.WorktreeOutcome(ready = true, workspace = true))
+                listOf(
+                    Oc2Adapted.WorktreeOutcome(
+                        ready = false,
+                        workspace = false,
+                        directory = raw["directory"].stringOrNull(),
+                        projectId =
+                            raw["projectID"].stringOrNull() ?: raw["project"].stringOrNull(),
+                        name = raw["name"].stringOrNull(),
+                        branch = raw["branch"].stringOrNull(),
+                        message = raw["message"].stringOrNull(),
+                    )
+                )
+            "workspace.ready" ->
+                listOf(
+                    Oc2Adapted.WorktreeOutcome(
+                        ready = true,
+                        workspace = true,
+                        directory = raw["directory"].stringOrNull(),
+                        projectId =
+                            raw["projectID"].stringOrNull() ?: raw["project"].stringOrNull(),
+                        name = raw["name"].stringOrNull(),
+                        branch = raw["branch"].stringOrNull(),
+                        message = raw["message"].stringOrNull(),
+                    )
+                )
             "workspace.failed" ->
-                listOf(Oc2Adapted.WorktreeOutcome(ready = false, workspace = true))
+                listOf(
+                    Oc2Adapted.WorktreeOutcome(
+                        ready = false,
+                        workspace = true,
+                        directory = raw["directory"].stringOrNull(),
+                        projectId =
+                            raw["projectID"].stringOrNull() ?: raw["project"].stringOrNull(),
+                        name = raw["name"].stringOrNull(),
+                        branch = raw["branch"].stringOrNull(),
+                        message = raw["message"].stringOrNull(),
+                    )
+                )
             else -> emptyList()
         }
     }
@@ -1054,3 +1108,6 @@ internal class Oc2EventAdapter(private val nowMs: () -> Long) {
         private val EmptyJson = JsonObject(emptyMap())
     }
 }
+
+private fun JsonElement?.stringOrNull(): String? =
+    (this as? JsonPrimitive)?.takeIf { it.isString }?.content?.takeIf { it.isNotBlank() }

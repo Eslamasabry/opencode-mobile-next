@@ -5,7 +5,8 @@ import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 /**
  * The Codex base (plan 04 §11.4), a port of Dart `codexServerCapabilities` (lib/codex/gateway.dart). Codex serves one
  * folder and none of the Project tab's tools (B-AGENT-068): files, changes, terminal, project health, worktrees,
- * development services, workspaces and search are all off.
+ * development services, workspaces and search are all off. Explicit allowlist (AGENT-1): no project tools,
+ * persistent grants, offline queue, agent picker or shell; projects are not treated as Git repositories.
  */
 public object CodexCapabilities {
     public val Base: ServerCapabilities = ServerCapabilities(
@@ -19,6 +20,7 @@ public object CodexCapabilities {
         offlinePromptQueue = false,
         fileBrowsing = false,
         terminal = false,
+        conversationShell = false,
         projectManagement = false,
         globalSessionSearch = false,
         sessionDiff = false,
@@ -31,6 +33,8 @@ public object CodexCapabilities {
         sessionImportExport = false,
         sessionNotes = false,
         serverCatalog = false,
+        sessionModelProviderSwitching = true,
+        agentSelection = false,
         slashCommands = false,
         profileAttentionPolling = false,
         managedWorkspaces = false,
@@ -71,5 +75,6 @@ public object CodexCapabilities {
         cliSessionResume = false,
         forms = false,
         inbox = false,
+        projectsAreGitRepositories = false,
     )
 }

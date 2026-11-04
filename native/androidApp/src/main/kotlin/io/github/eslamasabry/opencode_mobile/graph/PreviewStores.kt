@@ -43,6 +43,8 @@ class PreviewStores(
         migration.ledgered(AndroidDataStores.secrets(application, gate, redactor, dispatchers.io))
     val lanes = DefaultWriterLanes()
     val profiles = ProfileStore(prefs, secrets, lanes, redactor)
+    val profileScope =
+        io.github.eslamasabry.oc.core.data.scope.DefaultProfileScope(prefs, secrets, lanes.app)
     private val warming = Mutex()
     @Volatile private var prepared = false
 

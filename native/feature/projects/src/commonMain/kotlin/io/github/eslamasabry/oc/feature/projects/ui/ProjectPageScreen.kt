@@ -28,6 +28,8 @@ import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.agentElsewhereCounts
+import io.github.eslamasabry.oc.ui.words.res.agentElsewhereStale
 import io.github.eslamasabry.oc.ui.words.res.agentProjectWorkspace
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRunning
 import io.github.eslamasabry.oc.ui.words.res.globalSessionsLoadFailedTitle
@@ -216,9 +218,28 @@ public fun ProjectPageScreen(
                         }
                     }
                     if (state.canLoadMore) item(key = "more") { LoadMore(state, actions) }
-                    if (state.elsewhere.isNotEmpty()) {
+                    if (state.elsewhere.isNotEmpty() || state.elsewhereAttention.isNotEmpty()) {
                         item(key = "elsewhere") {
                             KitRowGroup(label = stringResource(Res.string.p12ElsewhereTitle)) {
+                                state.elsewhereAttention.forEach { project ->
+                                    KitRow(
+                                        title = project.name,
+                                        supporting =
+                                            stringResource(
+                                                Res.string.agentElsewhereCounts,
+                                                project.waiting,
+                                                project.running,
+                                                project.failed,
+                                            ) +
+                                                if (project.stale)
+                                                    " · " +
+                                                        stringResource(
+                                                            Res.string.agentElsewhereStale
+                                                        )
+                                                else "",
+                                        onClick = { actions.openOtherProject(project.directory) },
+                                    )
+                                }
                                 state.elsewhere.forEach {
                                     ChatRow(it, showProject = true, actions = actions)
                                 }

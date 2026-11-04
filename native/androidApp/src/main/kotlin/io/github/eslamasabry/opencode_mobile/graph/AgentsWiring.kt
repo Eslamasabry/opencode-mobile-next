@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.data.kv.GateNotOpen
 import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
@@ -35,6 +36,7 @@ import io.github.eslamasabry.oc.engine.profiles.ProfileStore
 import io.github.eslamasabry.oc.engine.profiles.SecretEdit
 import io.github.eslamasabry.oc.engine.profiles.StoredProfile
 import io.github.eslamasabry.oc.feature.agents.hub.AgentComputer
+import io.github.eslamasabry.oc.feature.agents.hub.AgentComputerKind
 import io.github.eslamasabry.oc.feature.agents.hub.AgentComputers
 import io.github.eslamasabry.oc.feature.agents.hub.ComputerCheck
 import io.github.eslamasabry.oc.protocol.paseo.PaseoEndpoint
@@ -320,12 +322,16 @@ class AppAgentComputers(
     private val connections: ServerConnections,
     private val registry: ConnectionRegistry,
     private val factory: AppPaseoGatewayFactory,
+    private val codexFactory: AgentCodexGatewayFactory,
     appScope: AppCoroutineScope,
 ) : AgentComputers {
     override val computers: StateFlow<ImmutableList<AgentComputer>> =
         combine(profiles.profiles, registry.live) { saved, live ->
                 saved
-                    .filter { it.profile.backend == BackendKind.Paseo }
+                    .filter {
+                        it.profile.backend == BackendKind.Paseo ||
+                            it.profile.backend == BackendKind.Codex
+                    }
                     .map {
                         AgentComputer(
                             id = it.id,
@@ -333,6 +339,9 @@ class AppAgentComputers(
                             address = it.profile.baseUrl,
                             folder = it.profile.codexDirectory,
                             connected = live.containsKey(it.id),
+                            kind =
+                                if (it.profile.backend == BackendKind.Codex) AgentComputerKind.Codex
+                                else AgentComputerKind.Paseo,
                         )
                     }
                     .toImmutableList()
@@ -387,6 +396,51 @@ class AppAgentComputers(
         if (saved is Outcome.Failed) return saved
         // Saved even when the computer is away right now: the person can connect later from the
         // list.
+        return when (val connected = connections.connect(id)) {
+            is Outcome.Ok -> id.ok()
+            is Outcome.Failed -> connected
+        }
+    }
+
+    override suspend fun check(
+        address: String,
+        password: String,
+        folder: String,
+        kind: AgentComputerKind,
+    ): Outcome<ComputerCheck> {
+        if (kind == AgentComputerKind.Paseo) return check(address, password, folder)
+        return codexFactory.codex.checkConnection(address, password, folder).map { result ->
+            ComputerCheck.Ready(null, kotlinx.collections.immutable.persistentListOf("Codex"))
+        }
+    }
+
+    override suspend fun add(
+        name: String,
+        address: String,
+        password: String,
+        folder: String,
+        kind: AgentComputerKind,
+    ): Outcome<ProfileId> {
+        if (kind == AgentComputerKind.Paseo) return add(name, address, password, folder)
+        if (
+            !io.github.eslamasabry.oc.protocol.codex.validCodexEndpoint(address.trim()) ||
+                !folder.startsWith("/")
+        )
+            return Failure.Refused(RefusalReason.InvalidAddress).failed()
+        val normalized = address.trim()
+        val id = ProfileId(UUID.randomUUID().toString())
+        val saved =
+            profiles.upsert(
+                StoredProfile(
+                    id = id,
+                    name = name.ifBlank { "Codex" },
+                    baseUrl = normalized,
+                    backend = BackendKind.Codex,
+                    codexDirectory = folder,
+                ),
+                if (password.isEmpty()) SecretEdit.Clear else SecretEdit.Set(password),
+            )
+        if (saved is Outcome.Failed) return saved
         return when (val connected = connections.connect(id)) {
             is Outcome.Ok -> id.ok()
             is Outcome.Failed -> connected

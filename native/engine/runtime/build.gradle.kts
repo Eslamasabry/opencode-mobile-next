@@ -11,5 +11,6 @@ kotlin {
         implementation(project(":core:data"))
         implementation(project(":core:domain"))
         implementation(project(":core:security"))
+        implementation(project(":core:model"))
     }
 }

@@ -32,9 +32,11 @@ import io.github.eslamasabry.oc.android.notifications.FrozenExtras
 import io.github.eslamasabry.oc.android.notifications.NotificationActionBody
 import io.github.eslamasabry.oc.android.notifications.NotificationText
 import io.github.eslamasabry.oc.android.notifications.NotifyWords
+import io.github.eslamasabry.oc.android.notifications.QuestionShape
 import io.github.eslamasabry.oc.android.notifications.ReplyStopper
 import io.github.eslamasabry.oc.android.notifications.ShadeAnswer
 import io.github.eslamasabry.oc.android.notifications.ShadeAnswerer
+import io.github.eslamasabry.oc.android.notifications.ShadeReply
 import io.github.eslamasabry.oc.android.tiles.AttentionTileCache
 import io.github.eslamasabry.oc.android.tiles.LaunchAction
 import io.github.eslamasabry.oc.android.tiles.LaunchActions
@@ -1430,7 +1432,24 @@ class PlatformHub(
                 else -> false
             }
         if (!matches) return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
-        val reply = ShadeReplyAnswers.of(answer.kind, answer.reply) // B-PROTO-046 (BuildRestWiring)
+        val typedReply = answer.reply as? ShadeReply.Text
+        if (pending is PendingRequest.Question && typedReply != null) {
+            val shape =
+                QuestionShape(
+                    pending.question.prompts.map { prompt ->
+                        QuestionShape.Prompt(
+                            prompt.choices.map { it.label },
+                            prompt.multiple,
+                            prompt.custom,
+                        )
+                    }
+                )
+            if (!shape.accepts(typedReply.text))
+                return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+        }
+        // Flutter trims the shade reply before sending; the accepted text is the trimmed text.
+        val shadeReply = typedReply?.let { ShadeReply.Text(it.text.trim()) } ?: answer.reply
+        val reply = ShadeReplyAnswers.of(answer.kind, shadeReply) // B-PROTO-046 (BuildRestWiring)
         val result = engine.answerNow(answer.request, reply)
         log.i { "shade answer ${answer.kind} ${if (result is Outcome.Ok) "sent" else "not sent"}" }
         return result

@@ -16,11 +16,13 @@ import io.github.eslamasabry.oc.core.model.NewSession
 import io.github.eslamasabry.oc.core.model.ServerLocation
 import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.engine.agents.feed.FeedFolders
+import io.github.eslamasabry.oc.engine.attention.AttentionKind
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.LinuxRoute
 import io.github.eslamasabry.oc.ui.routes.ProjectsRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -58,6 +60,7 @@ public class ProjectPageViewModel(
         null
     private var isolatedWatch: kotlinx.coroutines.Job? = null
     private val taskWrites = kotlinx.coroutines.sync.Mutex()
+    private var attentionWatch: Job? = null
     private val workspace =
         ProjectWorkspace(
             directory,
@@ -74,6 +77,51 @@ public class ProjectPageViewModel(
                 val next = live.firstOrNull { it.profile == route.profile }
                 if (!adopted || next?.gateway !== server?.gateway) {
                     adopted = true
+                    mutable.update {
+                        it.copy(elsewhereAttention = kotlinx.collections.immutable.persistentListOf())
+                    }
+                    attentionWatch?.cancel()
+                    attentionWatch =
+                        next?.attention?.let { attention ->
+                            viewModelScope.launch {
+                                attention.collect { observed ->
+                                    val activity =
+                                        observed.activity(except = directory).associateBy {
+                                            it.directory
+                                        }
+                                    val observations =
+                                        observed.observations(except = directory).groupBy {
+                                            it.target.directory
+                                        }
+                                    val folders =
+                                        (activity.keys + observations.keys).filter {
+                                            ProjectRules.normalize(it) != directory
+                                        }
+                                    mutable.update { ui ->
+                                        ui.copy(
+                                            elsewhereAttention =
+                                                folders
+                                                    .map { folder ->
+                                                        val rows = observations[folder].orEmpty()
+                                                        ProjectAttentionUi(
+                                                            folder,
+                                                            ProjectRules.name(folder),
+                                                            activity[folder]?.waiting?.size ?: 0,
+                                                            activity[folder]?.running?.size ?: 0,
+                                                            rows.count {
+                                                                it.target.kind ==
+                                                                    AttentionKind.FailedRun
+                                                            },
+                                                            rows.any { !it.isFresh } ||
+                                                                activity[folder]?.isFresh == false,
+                                                        )
+                                                    }
+                                                    .toImmutableList()
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     server = next
                     workspace.adopt(next)
                     load()
@@ -181,6 +229,10 @@ public class ProjectPageViewModel(
                 }
             }
         }
+    }
+
+    override fun openOtherProject(directory: String) {
+        nav.open(ProjectsRoute.Project(route.profile, directory))
     }
 
     override fun newConversationHere() {

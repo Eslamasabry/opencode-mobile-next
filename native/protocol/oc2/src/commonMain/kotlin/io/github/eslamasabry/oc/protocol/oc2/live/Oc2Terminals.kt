@@ -58,6 +58,37 @@ internal class Oc2Terminals(
         return parse(data((reply as Outcome.Ok).value))?.ok() ?: Failure.UnreadableReply().failed()
     }
 
+    /**
+     * App-owned one-shot readers (AGENT-1): the executable and its arguments stay separate, so
+     * nothing is interpolated by a shell.
+     */
+    override suspend fun createCommandTerminal(
+        command: String,
+        arguments: List<String>,
+        title: String,
+    ): Outcome<TerminalProcess> {
+        if (
+            command.isBlank() ||
+                '\u0000' in command ||
+                arguments.any { '\u0000' in it } ||
+                !validTitle(title)
+        )
+            return Failure.Rejected(400).failed()
+        val reply =
+            gateway.json(
+                "/pty",
+                HttpMethod.Post,
+                buildJsonObject {
+                    put("command", command)
+                    put("args", JsonArray(arguments.map(::JsonPrimitive)))
+                    put("title", title)
+                },
+                query,
+            )
+        if (reply is Outcome.Failed) return reply
+        return parse(data((reply as Outcome.Ok).value))?.ok() ?: Failure.UnreadableReply().failed()
+    }
+
     override suspend fun renameTerminal(id: String, title: String): Outcome<Unit> {
         if (!validId(id) || !validTitle(title)) return Failure.Rejected(400).failed()
         return gateway

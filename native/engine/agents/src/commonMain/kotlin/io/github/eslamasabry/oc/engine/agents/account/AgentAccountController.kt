@@ -4,19 +4,35 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.attempt
+import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlin.time.Clock
-import kotlin.time.Instant
 
-public enum class AccountPanelStatus { Loading, Ready, Unavailable, Error, Disconnected }
+public enum class AccountPanelStatus {
+    Loading,
+    Ready,
+    Unavailable,
+    Error,
+    Disconnected,
+}
 
-public enum class AccountLoginStatus { Idle, Starting, Waiting, Cancelling, Cancelled, Failed, Uncertain, Completed }
+public enum class AccountLoginStatus {
+    Idle,
+    Starting,
+    Waiting,
+    Cancelling,
+    Cancelled,
+    Failed,
+    Uncertain,
+    Completed,
+}
 
 /** What one open account panel shows. [deviceCode] is transient: never persisted or logged. */
 public data class AccountPanelState(
@@ -33,15 +49,17 @@ public data class AccountPanelState(
 )
 
 /**
- * Transient account state for one open panel (port of lib/state/agent_account.dart). No preference or credential
- * writes. Every command runs on [scope]'s serial lane; read and login revisions drop any answer that arrives after the
- * account changed, the session disconnected or the panel closed.
+ * Transient account state for one open panel (port of lib/state/agent_account.dart). No preference
+ * or credential writes. Every command runs on [scope]'s serial lane; read and login revisions drop
+ * any answer that arrives after the account changed, the session disconnected or the panel closed.
  *
- * - [refresh] never starts sign-in. Subscription metrics are read only for `chatgpt` accounts (API-key and other host
- *   auth cannot be labelled subscription usage), and each metric failing alone never erases the account read.
- * - A sign-in code is never shown late: a completion, cancel, account change, disconnect or [close] while the start is
- *   in flight suppresses it. A cancel the runtime could not confirm stays [AccountLoginStatus.Uncertain] until an
- *   explicit retry of Cancel; it never permits a new sign-in.
+ * - [refresh] never starts sign-in. Subscription metrics are read only for `chatgpt` accounts
+ *   (API-key and other host auth cannot be labelled subscription usage), and each metric failing
+ *   alone never erases the account read.
+ * - A sign-in code is never shown late: a completion, cancel, account change, disconnect or [close]
+ *   while the start is in flight suppresses it. A cancel the runtime could not confirm stays
+ *   [AccountLoginStatus.Uncertain] until an explicit retry of Cancel; it never permits a new
+ *   sign-in.
  */
 public class AgentAccountController(
     private val session: AgentAccountSession,
@@ -68,26 +86,45 @@ public class AgentAccountController(
     private val subscription: Job = scope.launch { session.events.collect(::onEvent) }
 
     public val loginPending: Boolean
-        get() = loginStatus == AccountLoginStatus.Starting || loginStatus == AccountLoginStatus.Waiting ||
-            loginStatus == AccountLoginStatus.Cancelling
+        get() =
+            loginStatus == AccountLoginStatus.Starting ||
+                loginStatus == AccountLoginStatus.Waiting ||
+                loginStatus == AccountLoginStatus.Cancelling
 
     public val canSignIn: Boolean
-        get() = session.active && session.supported && status == AccountPanelStatus.Ready &&
-            account?.signedIn == false && account?.requiresSignIn == true && !loginPending &&
-            loginStatus != AccountLoginStatus.Uncertain
+        get() =
+            session.active &&
+                session.supported &&
+                status == AccountPanelStatus.Ready &&
+                account?.signedIn == false &&
+                account?.requiresSignIn == true &&
+                !loginPending &&
+                loginStatus != AccountLoginStatus.Uncertain
 
     public val canCancel: Boolean
-        get() = session.active && (loginPending || loginStatus == AccountLoginStatus.Uncertain) &&
-            loginStatus != AccountLoginStatus.Cancelling
+        get() =
+            session.active &&
+                (loginPending || loginStatus == AccountLoginStatus.Uncertain) &&
+                loginStatus != AccountLoginStatus.Cancelling
 
     private fun publish() {
         if (disposed) return
         mutableState.value = snapshot()
     }
 
-    private fun snapshot() = AccountPanelState(
-        status, loginStatus, account, limits, usage, deviceCode, metricsLoading, updatedAt, canSignIn, canCancel,
-    )
+    private fun snapshot() =
+        AccountPanelState(
+            status,
+            loginStatus,
+            account,
+            limits,
+            usage,
+            deviceCode,
+            metricsLoading,
+            updatedAt,
+            canSignIn,
+            canCancel,
+        )
 
     private fun clearIdentity() {
         account = null
@@ -103,25 +140,35 @@ public class AgentAccountController(
             AccountEventKind.LoginCompleted -> {
                 ++loginRevision
                 deviceCode = null
-                loginStatus = if (event.success) AccountLoginStatus.Completed else AccountLoginStatus.Failed
+                loginStatus =
+                    if (event.success) AccountLoginStatus.Completed else AccountLoginStatus.Failed
                 queueRefresh()
             }
             AccountEventKind.LoginCancelled -> {
                 ++loginRevision
                 deviceCode = null
-                loginStatus = if (event.success) AccountLoginStatus.Cancelled else AccountLoginStatus.Uncertain
+                loginStatus =
+                    if (event.success) AccountLoginStatus.Cancelled
+                    else AccountLoginStatus.Uncertain
                 queueRefresh()
             }
             AccountEventKind.Changed -> {
-                // Another account: this session's attempt is cancelled (only this one) before the code can be used.
-                if (loginPending) scope.launch { cancel() }
+                // Another account: this session's attempt is cancelled (only this one) before the
+                // code can be used.
+                if (loginPending) {
+                    ++loginRevision
+                    deviceCode = null
+                    scope.launch { cancel() }
+                }
                 queueRefresh()
             }
             AccountEventKind.LimitsChanged -> queueRefresh()
         }
     }
 
-    /** Removes stale identity and metrics at once on an account notification, then re-reads once. */
+    /**
+     * Removes stale identity and metrics at once on an account notification, then re-reads once.
+     */
     private fun queueRefresh() {
         ++readRevision
         clearIdentity()
@@ -144,17 +191,20 @@ public class AgentAccountController(
         val revision = ++readRevision
         clearIdentity()
         metricsLoading = false
-        status = if (session.supported) AccountPanelStatus.Loading else AccountPanelStatus.Unavailable
+        status =
+            if (session.supported) AccountPanelStatus.Loading else AccountPanelStatus.Unavailable
         publish()
         if (!session.supported) return
         when (val read = guarded { session.read() }) {
             is Outcome.Failed -> {
                 if (!current(revision)) return
-                status = when (read.failure) {
-                    is Failure.Unavailable -> AccountPanelStatus.Unavailable
-                    is Failure.Network, is Failure.ComputerDidNotAnswer -> AccountPanelStatus.Disconnected
-                    else -> AccountPanelStatus.Error
-                }
+                status =
+                    when (read.failure) {
+                        is Failure.Unavailable -> AccountPanelStatus.Unavailable
+                        is Failure.Network,
+                        is Failure.ComputerDidNotAnswer -> AccountPanelStatus.Disconnected
+                        else -> AccountPanelStatus.Error
+                    }
                 publish()
             }
             is Outcome.Ok -> {
@@ -180,7 +230,8 @@ public class AgentAccountController(
         }
     }
 
-    private fun current(revision: Int): Boolean = !disposed && revision == readRevision && session.active
+    private fun current(revision: Int): Boolean =
+        !disposed && revision == readRevision && session.active
 
     public suspend fun signIn() {
         if (!canSignIn) return
@@ -197,11 +248,15 @@ public class AgentAccountController(
             is Outcome.Failed -> {
                 if (disposed || revision != loginRevision) return
                 val failure = started.failure
-                loginStatus = if (failure is Failure.Refused && failure.reason == RefusalReason.DispatchUncertain) {
-                    AccountLoginStatus.Uncertain
-                } else {
-                    AccountLoginStatus.Failed
-                }
+                loginStatus =
+                    if (
+                        failure is Failure.Refused &&
+                            failure.reason == RefusalReason.DispatchUncertain
+                    ) {
+                        AccountLoginStatus.Uncertain
+                    } else {
+                        AccountLoginStatus.Failed
+                    }
             }
         }
         publish()
@@ -246,10 +301,15 @@ public class AgentAccountController(
         mutableState.value = snapshot()
         disposed = true
         subscription.cancel()
-        scope.launch { session.close() }
+        // A ViewModel may already have cancelled its scope when onCleared runs. Ownership cleanup
+        // must still
+        // cancel this session's login handle; it never starts or repeats a login.
+        scope.launch(NonCancellable) { session.close() }
     }
 
-    private suspend inline fun <T> guarded(crossinline block: suspend () -> Outcome<T>): Outcome<T> =
+    private suspend inline fun <T> guarded(
+        crossinline block: suspend () -> Outcome<T>
+    ): Outcome<T> =
         when (val outcome = attempt({ Failure.Unexpected() }) { block() }) {
             is Outcome.Ok -> outcome.value
             is Outcome.Failed -> outcome

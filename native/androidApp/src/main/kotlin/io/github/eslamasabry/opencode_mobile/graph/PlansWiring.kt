@@ -28,10 +28,15 @@ import io.github.eslamasabry.oc.core.domain.GatewayFactory
 import io.github.eslamasabry.oc.core.domain.GatewaySpec
 import io.github.eslamasabry.oc.core.domain.ProviderUsageGateway
 import io.github.eslamasabry.oc.core.domain.ServerGateway
+import io.github.eslamasabry.oc.core.data.kv.PrefType
+import io.github.eslamasabry.oc.core.data.scope.KeyScope
+import io.github.eslamasabry.oc.core.data.scope.KeyShape
+import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
 import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.engine.connection.ConnectionCredentialSource
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
+import io.github.eslamasabry.oc.engine.integrations.usage.*
 import io.github.eslamasabry.oc.engine.integrations.usage.ConnectedProvider
 import io.github.eslamasabry.oc.engine.integrations.usage.OpenCodeSignInSource
 import io.github.eslamasabry.oc.engine.integrations.usage.PaseoUsageMonitor
@@ -55,6 +60,7 @@ import io.github.eslamasabry.oc.engine.profiles.DeletionStep
 import io.github.eslamasabry.oc.engine.profiles.ProfileResourceCleaner
 import io.github.eslamasabry.oc.feature.plans.presentation.CollectorTarget
 import io.github.eslamasabry.oc.feature.plans.presentation.PlanCollectorUi
+import io.github.eslamasabry.oc.feature.plans.presentation.ComputerReaderUi
 import io.github.eslamasabry.oc.feature.plans.presentation.PlansSource
 import io.github.eslamasabry.opencode_mobile.UsageWidgetProvider
 import kotlin.time.Clock
@@ -179,6 +185,96 @@ class AndroidPlansSource(
         }
     }
 
+    private var reader: ComputerUsageSource? = null
+    private val readers = MutableStateFlow<List<ComputerReaderUi>>(emptyList())
+    override val computerReaders: StateFlow<List<ComputerReaderUi>> = readers.asStateFlow()
+
+    private fun publishReaders() {
+        val source = reader ?: return
+        readers.value =
+            liveOpenCodeServers()
+                .filterValues { !it.profile.managedOnPhone }
+                .map { (id, graph) ->
+                    ComputerReaderUi(
+                        id.raw,
+                        graph.profile.name,
+                        source.enabled(id.raw),
+                        source.problemFor(id.raw),
+                        source.foundOn(id.raw),
+                    )
+                }
+    }
+
+    override suspend fun setComputerReaderEnabled(id: String, enabled: Boolean): Outcome<Unit> {
+        engine() ?: return Failure.Refused(RefusalReason.StaleScope).failed()
+        if (stores.profiles.profile(ProfileId(id)) == null)
+            return Failure.Refused(RefusalReason.ProfileDeleted).failed()
+        val result = reader!!.setEnabled(id, enabled)
+        if (result is Outcome.Ok) refresh()
+        publishReaders()
+        return result
+    }
+
+    override suspend fun readComputerNow(id: String): Outcome<Unit> {
+        engine() ?: return Failure.Refused(RefusalReason.StaleScope).failed()
+        val source = reader ?: return Failure.Refused(RefusalReason.StaleScope).failed()
+        if (!source.enabled(id)) return Failure.Refused(RefusalReason.StaleScope).failed()
+        source.readNow(id)
+        refresh()
+        return Unit.ok()
+    }
+
+    private fun terminalPort(server: ComputerUsageServer): ComputerTerminalPort {
+        val id = ProfileId(server.id)
+        val graph = registry.live.value[id]
+        val gateway = graph?.session?.server
+        val operations = gateway as? ServerOperationsGateway
+        val revision = gateway?.scopeRevision
+        var closed = false
+        fun current() =
+            !closed &&
+                graph != null &&
+                registry.live.value[id] === graph &&
+                graph.session.server === gateway &&
+                gateway.scopeRevision == revision
+        return object : ComputerTerminalPort {
+            override suspend fun start(
+                command: String,
+                arguments: List<String>,
+                title: String,
+            ): Outcome<String> {
+                if (!current()) return Failure.Refused(RefusalReason.StaleScope).failed()
+                return operations?.createCommandTerminal(command, arguments, title)?.map { it.id }
+                    ?: io.github.eslamasabry.oc.core.domain.unavailable("terminal")
+            }
+
+            override suspend fun connect(id: String): Outcome<ComputerUsageChannel> {
+                if (!current()) return Failure.Refused(RefusalReason.StaleScope).failed()
+                return operations?.connectTerminal(id)?.map { channel ->
+                    object : ComputerUsageChannel {
+                        override val output = channel.output
+
+                        override suspend fun close() = channel.close()
+                    }
+                } ?: io.github.eslamasabry.oc.core.domain.unavailable("terminal")
+            }
+
+            // B-AGENT-072: cleanup is not generation-gated. The exact PTY id goes back to the same
+            // gateway object that created it, so a reconnect or scope change mid-read cannot leak
+            // the temporary terminal on the computer.
+            override suspend fun remove(id: String): Outcome<Unit> =
+                operations?.removeTerminal(id)
+                    ?: io.github.eslamasabry.oc.core.domain.unavailable("terminal")
+
+            override fun close() {
+                closed = true
+            }
+        }
+    }
+
+    private fun liveOpenCodeServers() =
+        registry.live.value.filter { (_, graph) -> graph.profile.backend == BackendKind.OpenCode2 }
+
     private fun openCodeServers() =
         stores.profiles.profiles.value.filter { it.profile.backend == BackendKind.OpenCode2 }
 
@@ -192,6 +288,35 @@ class AndroidPlansSource(
         if (stores.warm() !is Outcome.Ok) return@withLock null
         // B-STATE-068: the retired Remaining-page quota budgets go on load.
         RetiredQuotaBudgets.dropAll(stores.prefs, stores.lanes.app)
+        // AGENT-1: explicit per-server computer usage readers (one-shot PTY reads; the consent key
+        // `oc.usageComputerReader.<id>` is registered in the shared ProfileScope).
+        val computer =
+            ComputerUsageSource(
+                stores.prefs,
+                stores.lanes.app,
+                servers = {
+                    liveOpenCodeServers().map { (id, graph) ->
+                        ComputerUsageServer(
+                            id.raw,
+                            graph.profile.name,
+                            inApp = graph.profile.managedOnPhone,
+                        )
+                    }
+                },
+                createPort = ::terminalPort,
+                loadSource = {
+                    kotlinx.coroutines.withContext(dispatchers.io) {
+                        application.assets.open("quota/read_once.mjs").bufferedReader().use {
+                            it.readText()
+                        }
+                    }
+                },
+                clock = { clock.now() },
+                laneFor = { stores.lanes.forProfile(ProfileId(it)) },
+                profileExists = { stores.profiles.profile(ProfileId(it)) != null },
+            )
+        reader = computer
+        publishReaders()
         val signIns =
             OpenCodeSignInSource(
                 servers = {
@@ -372,6 +497,8 @@ class AndroidPlansSource(
                         collectorUsage,
                         codexReads.usageSource,
                         PaseoUsageSource(daemonUsage) { usagePorts.paseoProfiles().map { it.id } },
+                        // AGENT-1: explicit computer usage readers.
+                        computer,
                     ),
                 alertBridge = additional.alertBridge,
                 alertsOnRule = { stores.prefs.bool("oc.notify.quotaAlerts") == true },
@@ -407,8 +534,9 @@ class AndroidPlansSource(
         else owner.setNotifyOnReset(key, value)
     }
 
-    override suspend fun refresh() {
-        engine()?.refresh()
+    override suspend fun refresh(force: Boolean) {
+        engine()?.refresh(force)
+        publishReaders()
     }
 
     override suspend fun collectors(): List<CollectorTarget> {
@@ -614,7 +742,10 @@ class AndroidPlansSource(
         paseoMonitor?.removeProfile(profile.raw)
         explicitMonitor?.removeProfile(profile.raw)
         monitorStates.value = monitorStates.value - profile
-        return e.removeProfile(profile.raw)
+        reader?.forget(profile.raw)
+        val removed = e.removeProfile(profile.raw)
+        publishReaders()
+        return removed
     }
 }
 

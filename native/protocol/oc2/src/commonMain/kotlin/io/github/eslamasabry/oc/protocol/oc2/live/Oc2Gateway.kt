@@ -179,6 +179,12 @@ internal class Oc2Gateway(
     override suspend fun createTerminal(title: String?): Outcome<TerminalProcess> =
         terminals().createTerminal(title)
 
+    override suspend fun createCommandTerminal(
+        command: String,
+        arguments: List<String>,
+        title: String,
+    ): Outcome<TerminalProcess> = terminals().createCommandTerminal(command, arguments, title)
+
     override suspend fun renameTerminal(id: String, title: String): Outcome<Unit> =
         terminals().renameTerminal(id, title)
 
@@ -334,7 +340,12 @@ internal class Oc2Gateway(
             }
         }
 
+    private var locationRevision = 0L
+    override val scopeRevision: Long
+        get() = (locationRevision shl 32) + connects.value
+
     override fun setLocation(location: ServerLocation) {
+        if (this.location.value != location) locationRevision++
         this.location.value = location
     }
 

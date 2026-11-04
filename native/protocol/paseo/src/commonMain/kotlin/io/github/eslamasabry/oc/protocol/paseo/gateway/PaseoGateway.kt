@@ -506,6 +506,9 @@ public class PaseoGateway(
     private suspend inline fun <T> call(crossinline block: suspend () -> T): Outcome<T> =
         withContext(lane) { paseoAttempt { block() } }
 
+    override val scopeRevision: Long
+        get() = (locationEpoch.toLong() shl 32) + transport.epoch
+
     // ---- location
 
     override fun setLocation(location: ServerLocation) {
@@ -829,6 +832,16 @@ public class PaseoGateway(
             state.runId = null
             state.runType = null
             for (message in timeline.messages) {
+                // Flutter `turnFailedAfter`: a prompt or later reply words end the failure.
+                if (message.info.errorText != null) state.failedBeforeLoad = true
+                else if (
+                    message.info.role == io.github.eslamasabry.oc.core.model.transcript.Role.User ||
+                        message.parts.any {
+                            it.type == io.github.eslamasabry.oc.core.model.transcript.PartType.Text &&
+                                it.text.isNotBlank()
+                        }
+                )
+                    state.failedBeforeLoad = false
                 state.announced[message.info.id] =
                     StringBuilder(message.parts.firstOrNull()?.text.orEmpty())
             }
@@ -1625,10 +1638,18 @@ public class PaseoGateway(
 
                 override fun emit(event: GatewayEvent) = this@PaseoGateway.emit(event)
 
-                // TODO(contract): GatewayEvent.QuestionAsked/QuestionSettled (plan 04 §8); a
-                // refresh hint until then.
-                override fun questionChanged(signal: PaseoQuestionSignal) =
+                // Typed question events for attention, plus a refresh hint for list readers.
+                override fun questionChanged(signal: PaseoQuestionSignal) {
+                    this@PaseoGateway.emit(
+                        when (signal) {
+                            is PaseoQuestionSignal.Asked ->
+                                GatewayEvent.QuestionAsked(signal.question)
+                            is PaseoQuestionSignal.Settled ->
+                                GatewayEvent.QuestionSettled(signal.sessionId, signal.requestId)
+                        }
+                    )
                     this@PaseoGateway.emit(GatewayEvent.RefreshHint(QUESTION_HINT))
+                }
             },
             tasks = this.scope,
         )
@@ -2146,7 +2167,7 @@ public class PaseoGateway(
         private val STEERING_PROVIDERS = setOf("claude", "codex", "opencode", "pi")
         private val DETAILS = Redactor()
 
-        /** Questions changed (until core has QuestionAsked/QuestionSettled). */
+        /** Questions changed; sent alongside the typed QuestionAsked/QuestionSettled events. */
         public val QUESTION_HINT: HintKind = HintKind("question")
     }
 }

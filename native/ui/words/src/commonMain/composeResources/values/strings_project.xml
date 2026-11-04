@@ -929,4 +929,23 @@
     <string name="fileShareNoWifi">This phone is not on Wi-Fi. Connect to Wi-Fi to share this file with a nearby device.</string>
     <string name="fileSharePrivate">This file can't be shared because it may hold keys or passwords.</string>
     <string name="fileShareUnavailable">Sharing could not start. Try again in a moment.</string>
+    <string name="agentIsolatedTitle">Task in a separate copy</string>
+    <string name="agentIsolatedStart">Start a task in a separate copy</string>
+    <string name="agentIsolatedIntro">1. Make a separate project copy. 2. Wait for setup, then open a new conversation there. Your original project stays in place.</string>
+    <string name="agentIsolatedCreating">Creating the copy…</string>
+    <string name="agentIsolatedPreparing">Waiting for the copy to finish setup…</string>
+    <string name="agentIsolatedReady">The copy is ready.</string>
+    <string name="agentIsolatedUnconfirmed">The copy exists, but setup has not been confirmed. Keep waiting or choose to open it anyway.</string>
+    <string name="agentIsolatedFailed">The task could not be started.</string>
+    <string name="agentIsolatedFailedBody">The copy is kept. Its setup failed; start there only if you accept that it may be incomplete.</string>
+    <string name="agentIsolatedOpening">Opening a conversation in the copy…</string>
+    <string name="agentIsolatedOpened">The conversation opened in the copy.</string>
+    <string name="agentIsolatedCancelled">Stopped waiting. Any copy the server created is kept.</string>
+    <string name="agentIsolatedOpen">Open the task</string>
+    <string name="agentIsolatedKeepWaiting">Keep waiting</string>
+    <string name="agentIsolatedOpenAnyway">Open anyway</string>
+    <string name="agentIsolatedStartAnyway">Start anyway</string>
+    <string name="agentIsolatedCancel">Stop waiting</string>
+    <string name="agentElsewhereCounts">%1$d waiting · %2$d running · %3$d failed</string>
+    <string name="agentElsewhereStale">Waiting for an update</string>
 </resources>

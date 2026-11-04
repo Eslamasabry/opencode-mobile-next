@@ -20,6 +20,7 @@ import io.github.eslamasabry.oc.feature.plans.presentation.PlansActions
 import io.github.eslamasabry.oc.feature.plans.presentation.PlansPhase
 import io.github.eslamasabry.oc.feature.plans.presentation.PlansUi
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
@@ -91,7 +92,12 @@ public fun PlansScreen(state: PlansUi, actions: PlansActions) {
                 UsageCollectorRows(state, actions)
                 if (state.phase == PlansPhase.Loading) KitStateView(KitStateKind.Loading, words.loading)
                 if (state.phase == PlansPhase.Empty)
-                    KitStateView(KitStateKind.Empty, words.emptyTitle, body = words.emptyBody)
+                    KitStateView(
+                        KitStateKind.Empty,
+                        words.emptyTitle,
+                        body = words.emptyBody,
+                        primary = KitAction(words.refresh, actions::refresh),
+                    )
                 // STATE: the alert threshold and the reset notice.
                 if (state.phase != PlansPhase.Loading) {
                     KitRowGroup(label = stringResource(Res.string.statePlansAlerts)) {
@@ -166,6 +172,43 @@ public fun PlansScreen(state: PlansUi, actions: PlansActions) {
                 }
                 if (state.collectorFailed)
                     KitNotice(stringResource(Res.string.plansCollectorFailed))
+                // AGENT-1: explicit computer usage readers.
+                if (state.computerReaders.isNotEmpty()) {
+                    KitRowGroup(label = words.readers) {
+                        KitRow(title = words.readerExplanation, supportingMaxLines = 3)
+                        for (reader in state.computerReaders) {
+                            KitRow(
+                                title = reader.name,
+                                supporting =
+                                    reader.problem?.let { words.readerProblem(it) }
+                                        ?: if (reader.enabled) words.readerOn else words.readerOff,
+                                supportingMaxLines = 3,
+                            )
+                            KitRow(
+                                title = words.readerAction(reader.name, reader.enabled),
+                                onClick =
+                                    if (state.readerBusy) null
+                                    else
+                                        ({
+                                            actions.setComputerReaderEnabled(reader.id, !reader.enabled)
+                                        }),
+                            )
+                            if (reader.enabled) {
+                                KitRow(
+                                    title = words.readNow(reader.name),
+                                    onClick =
+                                        if (state.readerBusy) null
+                                        else ({ actions.readComputerNow(reader.id) }),
+                                )
+                                if (reader.found.isNotEmpty())
+                                    KitRow(title = words.found(reader.found), supportingMaxLines = 2)
+                            }
+                        }
+                        if (state.readerBusy) KitRow(title = words.reading)
+                        if (state.readerFailed)
+                            KitRow(title = words.readerFailed, supportingMaxLines = 2)
+                    }
+                }
             }
     }
     val pending = state.confirmCollector

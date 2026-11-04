@@ -12,6 +12,7 @@ import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.model.EventLocation
 import io.github.eslamasabry.oc.core.model.FormSpec
 import io.github.eslamasabry.oc.core.model.ModelRef
+import io.github.eslamasabry.oc.core.model.PendingQuestion
 import io.github.eslamasabry.oc.core.model.PermissionRequest
 import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.core.model.StreamStatus
@@ -135,6 +136,15 @@ public sealed interface GatewayEvent {
     public data class PermissionSettled(val sessionId: SessionId, val requestId: RequestId) :
         GatewayEvent
 
+    /**
+     * Native agent question lifecycle; carries typed identities through the same location-stamped
+     * stream.
+     */
+    public data class QuestionAsked(val question: PendingQuestion) : GatewayEvent
+
+    public data class QuestionSettled(val sessionId: SessionId, val requestId: RequestId) :
+        GatewayEvent
+
     public data class FormCreated(val form: FormSpec) : GatewayEvent
 
     public data class FormSettled(
@@ -172,7 +182,16 @@ public sealed interface GatewayEvent {
      */
     public data class ShellChanged(val shellId: String?) : GatewayEvent
 
-    public data class WorktreeOutcome(val ready: Boolean) : GatewayEvent
+    /** A copy's setup result, correlated by project and directory; server prose is Details only. */
+    public data class WorktreeOutcome(
+        val ready: Boolean,
+        val directory: String? = null,
+        val projectId: String? = null,
+        val name: String? = null,
+        val branch: String? = null,
+        val details: Redacted? = null,
+        val workspace: Boolean = false,
+    ) : GatewayEvent
 }
 
 public sealed interface RunOutcome {

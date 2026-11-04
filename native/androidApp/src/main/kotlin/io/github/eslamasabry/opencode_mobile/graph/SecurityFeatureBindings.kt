@@ -33,6 +33,16 @@ object SecurityFeatureBindings {
             )
             InAppQuotaCollector.register(this)
             HandoffKeys.register(this)
+            // AGENT-1: explicit computer usage reader consent (`oc.usageComputerReader.<profileId>`).
+            register(
+                KeyShape(
+                    "oc.usageComputerReader.",
+                    KeyScope.Profile,
+                    PrefType.Bool,
+                    ":engine:integrations-usage",
+                    "Explicit computer usage reader consent",
+                )
+            )
             // PROTO: the public setup registry cache (`oc.setupRegistry.<profileId>`); SEC-2's setup assistant
             // registers the same prefix when it opens.
             register(

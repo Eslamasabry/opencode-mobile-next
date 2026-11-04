@@ -204,6 +204,8 @@ class AndroidSettingsHost(
     private val diagnosticsLog: Diagnostics,
     private val crashSettings: AppCrashDiagnostics,
     private val configurationInspection: AndroidConfigurationInspection,
+    private val reportRedactor: Redactor,
+    private val reportRegistry: io.github.eslamasabry.oc.engine.connection.ConnectionRegistry,
     updateSettings:
         AppUpdateSettings, // P12-FIX-PLATFORM-GIT: Settings › Updates on the real updater
     private val voiceSettings: AndroidVoiceSettings,
@@ -345,7 +347,67 @@ class AndroidSettingsHost(
             override suspend fun report(): Outcome<String> = report("")
 
             override suspend fun report(description: String): Outcome<String> =
-                gitHubReports.preview(connectionWords(), description).ok()
+                (listOf(gitHubReports.preview(connectionWords(), description)) +
+                        failureAttachments())
+                    .joinToString("\n\n")
+                    .ok()
+
+            /**
+             * AGENT-1: a failed phone setup and failed development services, redacted, as report
+             * attachments.
+             */
+            private suspend fun failureAttachments(): List<String> {
+                val setup =
+                    withContext(dispatchers.io) {
+                        val status =
+                            io.github.eslamasabry.opencode_mobile.SetupRunner.get(application)
+                                .status()
+                        io.github.eslamasabry.oc.engine.runtime.setup.SetupJobRecord.parse(
+                                status
+                            )
+                            ?.let {
+                                io.github.eslamasabry.oc.engine.runtime.setup.FailedSetupReport
+                                    .from(it, reportRedactor::redact)
+                                    ?.attachment()
+                            }
+                    }
+                val development = mutableListOf<String>()
+                for ((id, graph) in reportRegistry.live.value) {
+                    val gateway = graph.session.server
+                    val key =
+                        io.github.eslamasabry.oc.engine.runtime.services.DevelopmentServiceStore
+                            .keyFor(id.raw)
+                    val saved =
+                        (stores.prefs.get(key)
+                                as? io.github.eslamasabry.oc.core.data.kv.PrefValue.Str)
+                            ?.value
+                    if (saved == null) continue
+                    val reports =
+                        io.github.eslamasabry.oc.engine.runtime.services.DevelopmentFailureReports
+                            .capture(
+                                saved = saved,
+                                current = {
+                                    reportRegistry.live.value[id] === graph &&
+                                        stores.profiles.profile(id) != null &&
+                                        (stores.prefs.get(key)
+                                                as?
+                                                io.github.eslamasabry.oc.core.data.kv.PrefValue.Str)
+                                            ?.value == saved
+                                },
+                                inspect = { run, directory, workspace ->
+                                    io.github.eslamasabry.oc.protocol.oc2.live.Oc2ServiceReports
+                                        .inspect(gateway, run, directory, workspace)
+                                },
+                                output = { run, directory, workspace ->
+                                    io.github.eslamasabry.oc.protocol.oc2.live.Oc2ServiceReports
+                                        .output(gateway, run, directory, workspace)
+                                },
+                                redact = reportRedactor::redact,
+                            )
+                    development += reports.map { it.attachment() }
+                }
+                return listOfNotNull(setup) + development
+            }
 
             override fun endReport() = gitHubReports.clearAttachment()
 

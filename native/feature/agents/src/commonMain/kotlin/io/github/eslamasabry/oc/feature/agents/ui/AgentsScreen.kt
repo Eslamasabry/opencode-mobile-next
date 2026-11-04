@@ -16,6 +16,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.feature.agents.hub.AgentComputerKind
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsActions
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsHubActions
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsHubControlsUi
@@ -52,6 +53,12 @@ import io.github.eslamasabry.oc.ui.words.res.agentsConnectPhoneHelper
 import io.github.eslamasabry.oc.ui.words.res.agentsConnectPhoneHelperFailed
 import io.github.eslamasabry.oc.ui.words.res.agentsHelperMayHaveStopped
 import io.github.eslamasabry.oc.ui.words.res.agentsHelperStopped
+import io.github.eslamasabry.oc.ui.words.res.agentAccountsTitle
+import io.github.eslamasabry.oc.ui.words.res.agentComputerCodex
+import io.github.eslamasabry.oc.ui.words.res.agentComputerCodexNote
+import io.github.eslamasabry.oc.ui.words.res.agentComputerPaseo
+import io.github.eslamasabry.oc.ui.words.res.agentDraftTitle
+import io.github.eslamasabry.oc.ui.words.res.agentPhoneCheck
 import io.github.eslamasabry.oc.ui.words.res.agentsHubAddComputer
 import io.github.eslamasabry.oc.ui.words.res.agentsHubAddFailed
 import io.github.eslamasabry.oc.ui.words.res.agentsHubAdded
@@ -135,6 +142,14 @@ public fun AgentsScreen(
     hub: AgentsHubControlsUi? = null,
     hubActions: AgentsHubActions? = null,
 ) {
+    if (state.draftSource != null) {
+        AgentDraftPanel(state, actions)
+        return
+    }
+    if (state.accountTarget != null) {
+        AgentAccountPanel(state, actions)
+        return
+    }
     val name = remember { TextFieldState() }
     val address = remember { TextFieldState() }
     val folder = remember { TextFieldState() }
@@ -327,6 +342,29 @@ public fun AgentsScreen(
                 enabled = enabled,
             )
 
+            KitButton(
+                stringResource(Res.string.agentPhoneCheck),
+                actions::checkPhoneAgents,
+                gutter,
+                role = KitButtonRole.Secondary,
+                enabled = enabled,
+                working = state.busy,
+            )
+
+            if (state.draftSources.isNotEmpty()) {
+                KitSectionLabel(stringResource(Res.string.agentDraftTitle))
+                for (source in state.draftSources) {
+                    KitRow(title = source.name, onClick = { actions.openDrafts(source.id) })
+                }
+            }
+
+            if (state.accounts.isNotEmpty()) {
+                KitSectionLabel(stringResource(Res.string.agentAccountsTitle))
+                for (account in state.accounts) {
+                    KitRow(title = account.name, onClick = { actions.openAccount(account.id) })
+                }
+            }
+
             KitSectionLabel(stringResource(Res.string.agentsHubOnComputers))
             if (state.computers.isEmpty() && !state.adding) {
                 KitText(stringResource(Res.string.agentsHubComputersEmpty), gutter)
@@ -378,7 +416,29 @@ public fun AgentsScreen(
                 )
             } else {
                 Column(gutter, verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
-                    KitNotice(stringResource(Res.string.paseoSetupNotice))
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+                        for (kind in AgentComputerKind.entries) {
+                            KitButton(
+                                stringResource(
+                                    if (kind == AgentComputerKind.Paseo)
+                                        Res.string.agentComputerPaseo
+                                    else Res.string.agentComputerCodex
+                                ),
+                                { actions.selectComputerKind(kind) },
+                                role =
+                                    if (kind == state.computerKind) KitButtonRole.Primary
+                                    else KitButtonRole.Secondary,
+                                enabled = enabled,
+                            )
+                        }
+                    }
+                    KitNotice(
+                        stringResource(
+                            if (state.computerKind == AgentComputerKind.Paseo)
+                                Res.string.paseoSetupNotice
+                            else Res.string.agentComputerCodexNote
+                        )
+                    )
                     val invalid = state.check as? ComputerCheck.Invalid
                     KitField(
                         name,

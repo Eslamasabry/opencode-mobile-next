@@ -94,6 +94,9 @@ public class ChatViewModel(
 
     override fun openGit(): Unit = nav.open(GitRoute(route.ref))
 
+    override fun openSignInSettings(): Unit =
+        nav.open(io.github.eslamasabry.oc.ui.routes.SettingsRoute.Home)
+
     override fun confirmLeave(): Unit = presenter.confirmLeave()
 
     override fun dismissConfirm(): Unit = presenter.dismissConfirm()

@@ -21,6 +21,7 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import io.github.eslamasabry.oc.core.common.text.Numbers
+import io.github.eslamasabry.oc.engine.agents.errors.AgentErrorText
 import io.github.eslamasabry.oc.engine.transcript.state.BlockRow
 import io.github.eslamasabry.oc.engine.transcript.state.FooterRow
 import io.github.eslamasabry.oc.engine.transcript.state.NoticeKind
@@ -152,6 +153,8 @@ internal class ReplyActions(
      */
     val continueLabel: String? = null,
     val onContinue: (String) -> Unit = {},
+    val signInSettingsLabel: String? = null,
+    val onSignInSettings: () -> Unit = {},
 )
 
 /**
@@ -595,7 +598,19 @@ private fun ChatRow(
                             }
                         else KitQuietLine(words.footer(row.failed))
                         val kind = ReplyFailureKind.of(reason)
-                        KitQuietLine(listWords.replyFailed(kind))
+                        val (headline, hint) = agentFailureWords(reason)
+                        KitQuietLine(headline)
+                        KitQuietLine(hint)
+                        if (
+                            AgentErrorText.classify(reason)?.offersSignIn == true &&
+                                reply?.signInSettingsLabel != null
+                        ) {
+                            KitButton(
+                                reply.signInSettingsLabel,
+                                reply.onSignInSettings,
+                                role = KitButtonRole.Secondary,
+                            )
+                        }
                         // B-AGENT-024: a lost connection's next step is a visible Continue (the
                         // turn picks up there).
                         val continueLabel = reply?.continueLabel
