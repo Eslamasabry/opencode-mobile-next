@@ -1,6 +1,6 @@
 # Migration 47 — Flutter platform, Linux and protocol (part 2)
 
-Counts: **already there 0 · ported now 0 · not needed 10 · blocked 0** (10/78 reviewed).
+Counts: **already there 0 · ported now 0 · not needed 20 · blocked 0** (20/78 reviewed).
 
 Base: `b6c30a59983a145a4d9cf0bcc3d1ec0295c0d6bc`, branch `p12x/47-port-rest-2`.
 Implementation review only; no tests or device qualification. Binding design: `docs/design/native-rewrite-2026-11-01/plan/01-architecture-decision.md` and `03-architecture-modules.md`.
@@ -16,6 +16,19 @@ Implementation review only; no tests or device qualification. Binding design: `d
 - `lib/network/transport_failure_web.dart` — not needed: browser-only resolver opacity fallback; native JVM has typed resolver failures.
 - `lib/orchestration/adapters/fixture/project_fixture/advance.dart` — not needed: simulated task ticks, fabricated usage/diffs and simulated merge/promotion receipts belong to the AI Team demo; AI Team follows the switch under binding 01 §12 D6, and no fake runtime is ported.
 
+- `lib/termux/git_shell.dart` — not needed: External-Termux Git execution is deliberately retired with ADR 01 D7 migrate-out-only; the replacement phone Git shell runs in the built-in Ubuntu with real profile fencing at `native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/BuiltinGitShell.kt:27`, selected at `GitWiring.kt:174` (no Termux host management).
+- `lib/termux/scripts/aiteam_script.dart` — not needed: AI Team script installation, detached verbs, logs and projects belong to the deferred AI Team and retired Termux host paths (ADR 01 D6/D7); migrate-out never starts or installs a team.
+- `lib/termux/scripts/install_and_serve_script.dart` — not needed: Starts/repairs a managed Termux server and stores its credential there; ADR 01 D7 and plan 07 X1 retire that host-management journey while retaining migration only.
+- `lib/termux/scripts/local_agents_script.dart` — not needed: Installs, starts, signs into and removes Claude/Paseo inside external Termux Ubuntu; ADR 01 D7 retires Termux as runtime host, while phone agents use the built-in Linux host.
+- `lib/termux/scripts/project_scripts.dart` — not needed: Creates folders and arms recovery for a managed Termux server; ADR 01 D7/plan 07 X1 retire Termux host management, and migrate-out only reads existing folders.
+- `lib/termux/scripts/restart_script.dart` — not needed: Restarts/stops/reclaims ownership of a managed Termux server; ADR 01 D7/plan 07 X1 deliberately remove these management actions.
+- `lib/termux/scripts/script_support.dart` — not needed: Constants and shell quoting for the retired Termux host scripts; migration owns its separate transport and does not need the server-manager wrapper.
+- `lib/termux/scripts/setup_base_script.dart` — not needed: Bootstraps a new Termux Ubuntu container; ADR 01 D7/plan 07 X1 exclude new Termux installations, keeping read-only source inspection and migrate-out instead.
+- `lib/termux/scripts/status_scripts.dart` — not needed: Reports managed Termux installation/setup/storage/diagnostics state; ADR 01 D7 removes its setup and running pages, with migrate-out using its own inspection contract.
+- `lib/termux/scripts/tools_script.dart` — not needed: Storage scan/cache cleanup and process management target external Termux; those pages are explicitly dropped by plan 07 F17/X1 under ADR 01 D7, while built-in Linux tools remain separate.
+
 ## Compile-only checkpoints
 
 Batch 1: documentation only; Gradle skipped because this commit changes no Kotlin or Gradle file. No tests written or executed. No APK, push or release.
+
+Batch 2: ten retired Termux-path dispositions; documentation only, so Gradle skipped.
