@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="activityUndoRestart">Stop restarted server</string>
+    <string name="activityUndoing">Stopping restarted server…</string>
+    <string name="activityUndone">Restart undone.</string>
+    <string name="activityUndoFailed">Undo failed.</string>
+    <string name="activityUndoUnconfirmed">Undo outcome unknown. It will not be retried.</string>
+    <string name="activityUndoUnavailable">Undo unavailable.</string>
+</resources>

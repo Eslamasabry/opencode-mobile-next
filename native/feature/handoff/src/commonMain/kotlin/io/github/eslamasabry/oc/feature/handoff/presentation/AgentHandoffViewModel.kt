@@ -43,9 +43,22 @@ public class AgentHandoffViewModel(
         mutable.value = AgentHandoffUi()
         viewModelScope.launch {
             when (val opened = host.open(route.source)) {
-                is Outcome.Failed ->
+                is Outcome.Failed -> {
+                    val review = host.review(route.source)
                     if (run == generation)
-                        mutable.update { it.copy(loading = false, failure = opened.failure) }
+                        mutable.update {
+                            it.copy(
+                                loading = false,
+                                failure =
+                                    (review as? Outcome.Failed)?.failure
+                                        ?: opened.failure.takeIf {
+                                            (review as? Outcome.Ok)?.value == null
+                                        },
+                                sourceReview = (review as? Outcome.Ok)?.value,
+                                title = (review as? Outcome.Ok)?.value?.title.orEmpty(),
+                            )
+                        }
+                }
                 is Outcome.Ok -> {
                     val owner = opened.value
                     if (run != generation) {
@@ -100,6 +113,10 @@ public class AgentHandoffViewModel(
     }
 
     override fun editPrompt(value: String) {
+        state.value.sourceReview?.let { review ->
+            if (!state.value.busy) mutable.update { it.copy(prompt = review.sanitizePrompt(value)) }
+            return
+        }
         val owner = usable() ?: return
         if (state.value.busy || state.value.attempt.phase != HandoffPhase.Ready) return
         mutable.update { it.copy(prompt = owner.sanitizePrompt(value)) }

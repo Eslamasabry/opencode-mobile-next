@@ -37,6 +37,10 @@ public class AttentionViewModel(
         viewModelScope.launch { history.setMonitored(profile, enabled) }
     }
 
+    override fun undo(identity: HistoryIdentity) {
+        viewModelScope.launch { history.undo(identity) }
+    }
+
     override fun acknowledge() {
         // Capture the rendered ids before queuing the write: arrivals after this tap remain unread
         // (B-STATE-007).

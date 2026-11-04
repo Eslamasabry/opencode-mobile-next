@@ -17,6 +17,7 @@ public data class AgentHandoffUi(
     val attempt: HandoffState = HandoffState(),
     val prompt: String = "",
     val failure: Failure? = null,
+    val sourceReview: AgentHandoffReview? = null,
 )
 
 public interface AgentHandoffActions {

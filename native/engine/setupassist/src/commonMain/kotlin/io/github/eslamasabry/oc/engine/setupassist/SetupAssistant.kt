@@ -1,6 +1,8 @@
 package io.github.eslamasabry.oc.engine.setupassist
 
 import io.github.eslamasabry.oc.core.security.Redactor
+import kotlinx.collections.immutable.toPersistentList
+import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -20,9 +22,22 @@ public data class SetupSupport(
     val reason: String = "This server does not expose setup configuration APIs.",
 )
 
-public enum class SetupFailureCode { Offline, Unsupported, NeedsSignIn, Invalid, Conflict, Storage, Transport, Busy, Uncertain }
+public enum class SetupFailureCode {
+    Offline,
+    Unsupported,
+    NeedsSignIn,
+    Invalid,
+    Conflict,
+    Storage,
+    Transport,
+    Busy,
+    Uncertain,
+}
 
-/** An expected setup failure. [message] is adapter/controller-authored copy only; never a response body. */
+/**
+ * An expected setup failure. [message] is adapter/controller-authored copy only; never a response
+ * body.
+ */
 public data class SetupFailure(val code: SetupFailureCode, val message: String) {
     override fun toString(): String = "SetupFailure(${code.name})"
 }
@@ -38,7 +53,10 @@ public fun <T> SetupOutcome<T>.valueOrNull(): T? = (this as? SetupOutcome.Ok)?.v
 
 public fun SetupOutcome<*>.failureOrNull(): SetupFailure? = (this as? SetupOutcome.Failed)?.failure
 
-/** Raw transport boundary, for controllers only; UI uses [SetupController]. Never persist, log or show raw config. */
+/**
+ * Raw transport boundary, for controllers only; UI uses [SetupController]. Never persist, log or
+ * show raw config.
+ */
 public interface SetupConfigGateway {
     public val support: SetupSupport
 
@@ -50,28 +68,74 @@ public interface SetupConfigGateway {
 }
 
 /**
- * Optional host transaction contract. Never emulate this with GET plus PATCH. The host atomically compares `expected`
- * before committing all edits; Conflict means no write occurred. Restore consumes a host-owned handle.
+ * Optional host transaction contract. Never emulate this with GET plus PATCH. The host atomically
+ * compares `expected` before committing all edits; Conflict means no write occurred. Restore
+ * consumes a host-owned handle.
  */
 public interface SetupTransactionalConfigGateway : SetupConfigGateway {
     public suspend fun readSnapshot(): SetupOutcome<SetupConfigRevision>
 
-    public suspend fun commit(expected: SetupConfigRevision, edits: List<SetupEdit>, operationId: String): SetupOutcome<SetupConfigCommit>
+    public suspend fun commit(
+        expected: SetupConfigRevision,
+        edits: List<SetupEdit>,
+        operationId: String,
+    ): SetupOutcome<SetupConfigCommit>
 
-    public suspend fun restore(commit: SetupConfigCommit, operationId: String): SetupOutcome<SetupConfigCommit>
+    public suspend fun restore(
+        commit: SetupConfigCommit,
+        operationId: String,
+    ): SetupOutcome<SetupConfigCommit>
 }
 
 /** Raw controller-only source snapshot. Never expose to UI or persistence. */
-public data class SetupConfigRevision(val targetId: String, val revision: String, val config: JsonObject)
+public class SetupConfigRevision(
+    public val targetId: String,
+    public val revision: String,
+    config: JsonObject,
+) {
+    /** Detach even nested maps/lists supplied by a transport before comparison or exact restore. */
+    public val config: JsonObject = freezeSetupConfig(config) as JsonObject
+
+    override fun equals(other: Any?): Boolean =
+        other is SetupConfigRevision &&
+            targetId == other.targetId &&
+            revision == other.revision &&
+            config == other.config
+
+    override fun hashCode(): Int =
+        31 * (31 * targetId.hashCode() + revision.hashCode()) + config.hashCode()
+
+    override fun toString(): String = "SetupConfigRevision()"
+}
+
+private fun freezeSetupConfig(value: JsonElement): JsonElement =
+    when (value) {
+        is JsonObject ->
+            JsonObject(
+                value.mapValues { (_, nested) -> freezeSetupConfig(nested) }.toPersistentMap()
+            )
+        is JsonArray -> JsonArray(value.map(::freezeSetupConfig).toPersistentList())
+        else -> value
+    }
 
 /** Raw memory-only receipt. The opaque restore handle remains on this boundary. */
-public data class SetupConfigCommit(val before: SetupConfigRevision, val after: SetupConfigRevision, val undoHandle: String)
+public data class SetupConfigCommit(
+    val before: SetupConfigRevision,
+    val after: SetupConfigRevision,
+    val undoHandle: String,
+) {
+    override fun toString(): String = "SetupConfigCommit()"
+}
 
 /** connected/pending/disabled/failed/needs_auth/unknown. No error bodies. */
 public data class SetupMcpStatus(val name: String, val status: String)
 
 /** Input only. Never render this; render [SetupDiff]. A null [value] is Dart's null. */
-public data class SetupEdit(val path: List<String>, val value: JsonElement? = null, val remove: Boolean = false)
+public data class SetupEdit(
+    val path: List<String>,
+    val value: JsonElement? = null,
+    val remove: Boolean = false,
+)
 
 /** A redacted, UI-safe change line. Build with [SetupDiff.of]. */
 public data class SetupDiff(
@@ -103,13 +167,30 @@ public data class SetupDiff(
     }
 }
 
-public data class SetupProposal(val id: String, val changes: List<SetupDiff>, val canApply: Boolean, val reason: String?) {
+public data class SetupProposal(
+    val id: String,
+    val changes: List<SetupDiff>,
+    val canApply: Boolean,
+    val reason: String?,
+) {
     /** Any change may affect future sessions; never claim an automatic restart. */
-    val effect: String get() = "Runtime activation is not verified. Recheck server status after a change."
+    val effect: String
+        get() = "Runtime activation is not verified. Recheck server status after a change."
 }
 
 public enum class SetupPhase {
-    Idle, Loading, Applying, Verifying, Undoing, Uncertain, Ready, Empty, Offline, Unsupported, NeedsSignIn, Error,
+    Idle,
+    Loading,
+    Applying,
+    Verifying,
+    Undoing,
+    Uncertain,
+    Ready,
+    Empty,
+    Offline,
+    Unsupported,
+    NeedsSignIn,
+    Error,
 }
 
 public data class SetupSnapshot(
@@ -128,20 +209,28 @@ private val SENSITIVE_KEY =
     )
 
 /**
- * Structural redaction complementing the [Redactor]: arbitrary env/header values, provider credentials and free-form
- * executable/prompt bodies are hidden even when they do not resemble a known credential.
+ * Structural redaction complementing the [Redactor]: arbitrary env/header values, provider
+ * credentials and free-form executable/prompt bodies are hidden even when they do not resemble a
+ * known credential.
  */
 public fun setupRedact(redactor: Redactor, value: JsonElement?, key: String = ""): JsonElement? {
     if (SENSITIVE_KEY.containsMatchIn(key)) return JsonPrimitive(Redactor.MASK)
     return when (value) {
         null -> null
         is JsonNull -> value
-        is JsonObject -> JsonObject(value.entries.associate { (k, v) -> redactor.redact(k) to (setupRedact(redactor, v, k) ?: JsonNull) })
+        is JsonObject ->
+            JsonObject(
+                value.entries.associate { (k, v) ->
+                    redactor.redact(k) to (setupRedact(redactor, v, k) ?: JsonNull)
+                }
+            )
         is JsonArray -> JsonArray(value.map { setupRedact(redactor, it, key) ?: JsonNull })
-        is JsonPrimitive -> if (value.isString) JsonPrimitive(redactor.redact(value.content)) else value
+        is JsonPrimitive ->
+            if (value.isString) JsonPrimitive(redactor.redact(value.content)) else value
     }
 }
 
 /** The redacted form of a whole config object. */
 public fun setupRedactObject(redactor: Redactor, value: JsonObject?): JsonObject =
-    (setupRedact(redactor, value ?: JsonObject(emptyMap())) as? JsonObject) ?: JsonObject(emptyMap())
+    (setupRedact(redactor, value ?: JsonObject(emptyMap())) as? JsonObject)
+        ?: JsonObject(emptyMap())

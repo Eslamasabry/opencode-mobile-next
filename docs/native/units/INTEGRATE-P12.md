@@ -103,3 +103,5 @@ An unverified `p12v/projects` merge was in progress at hand-over; it was aborted
 - 2026-11-04 08:03 merged (compile green, no APK): job-20-build-LINUX-1
 - 2026-11-04 09:25 merged (compile green, no APK): runtime-c
 - 2026-11-04 11:24 merged (compile green, no APK): protocols
+- 2026-11-04 16:06 merged (compile green, no APK): job-29-build-ANDR-2 job-30-build-LINUX-3 job-32-build-REST-2 job-40-port-screens-2 mass-merge-1
+- 2026-11-04 16:44 merged (compile green, no APK): job-50-blocked-3-AGENT
