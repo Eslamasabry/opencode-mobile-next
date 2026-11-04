@@ -90,19 +90,16 @@ class RootManagedUpgrade(
             return refused()
         }
         shown.value = ManagedMoveUi()
-        when (admission(profile, checkWork = false)) {
-            Admission.Separate -> return fail(ManagedMoveProblem.SeparateHistory)
-            Admission.Unknown -> return fail(ManagedMoveProblem.NotReady)
-            Admission.Safe -> Unit
+        // Flutter ManagedMoveRunner: right after an update the phone server is often still
+        // starting, so a not-ready attempt is retried quietly (8 s, 20 s, 45 s) before failing.
+        var problem = pendingAttempt(profile)
+        for (pause in QUIET_RETRIES_MS) {
+            if (problem != ManagedMoveProblem.NotReady || !current(profile)) break
+            delay(pause)
+            if (!current(profile)) return fail(ManagedMoveProblem.NotReady)
+            problem = pendingAttempt(profile)
         }
-        if (!current(profile)) return fail(ManagedMoveProblem.NotReady)
-        val running = runtime.runtimeStatus()
-        if ((running as? Outcome.Ok)?.value?.serverRunning != true) {
-            val started = runtime.serverSource { Outcome.Ok(Unit) }.start()
-            if (started is Outcome.Failed) return fail(ManagedMoveProblem.NotReady)
-        }
-        val confirmed = withTimeoutOrNull(180_000) { confirm(profile) } ?: false
-        if (!confirmed) return fail(ManagedMoveProblem.NotConfirmed)
+        if (problem != null) return fail(problem)
         val latest =
             stores.profiles.profile(id)?.profile ?: return fail(ManagedMoveProblem.NotConfirmed)
         if (!current(profile) || latest.requiresOpenCode2Migration)
@@ -113,6 +110,23 @@ class RootManagedUpgrade(
             if (nav.top.value == OnboardingRoute.ManagedMove) nav.land()
         }
         return Outcome.Ok(Unit)
+    }
+
+    /** One history-pending attempt: read-only admission, server start, authenticated completion. */
+    private suspend fun pendingAttempt(profile: StoredProfile): ManagedMoveProblem? {
+        when (admission(profile, checkWork = false)) {
+            Admission.Separate -> return ManagedMoveProblem.SeparateHistory
+            Admission.Unknown -> return ManagedMoveProblem.NotReady
+            Admission.Safe -> Unit
+        }
+        if (!current(profile)) return ManagedMoveProblem.NotReady
+        val running = runtime.runtimeStatus()
+        if ((running as? Outcome.Ok)?.value?.serverRunning != true) {
+            val started = runtime.serverSource { Outcome.Ok(Unit) }.start()
+            if (started is Outcome.Failed) return ManagedMoveProblem.NotReady
+        }
+        val confirmed = withTimeoutOrNull(180_000) { confirm(profile) } ?: false
+        return if (confirmed) null else ManagedMoveProblem.NotConfirmed
     }
 
     private suspend fun install(profile: StoredProfile) {
@@ -290,5 +304,9 @@ class RootManagedUpgrade(
 
     override fun changeServer() {
         nav.open(ServersRoute.Home)
+    }
+
+    private companion object {
+        val QUIET_RETRIES_MS = listOf(8_000L, 20_000L, 45_000L)
     }
 }

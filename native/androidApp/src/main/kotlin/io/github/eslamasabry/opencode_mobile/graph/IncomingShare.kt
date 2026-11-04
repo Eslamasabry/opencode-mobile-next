@@ -54,6 +54,7 @@ internal class IncomingShare(
     private var target: ConversationRef? = null
     private var draft: DraftSession? = null
     private var prepared: String? = null
+    private var beforeDiscard = IncomingSharePhase.Failed
 
     init {
         scope.launch {
@@ -88,11 +89,18 @@ internal class IncomingShare(
     }
 
     fun discard() {
-        if (!opening && text != null) mutablePhase.value = IncomingSharePhase.Discarding
+        if (opening || text == null) return
+        val now = mutablePhase.value
+        if (now == IncomingSharePhase.Discarding || now == IncomingSharePhase.Empty) return
+        beforeDiscard = now
+        mutablePhase.value = IncomingSharePhase.Discarding
     }
 
+    /** Undo restores what was shown before Discard; it is not counted as another failure. */
     fun undoDiscard() {
-        if (mutablePhase.value == IncomingSharePhase.Discarding) failed()
+        if (mutablePhase.value != IncomingSharePhase.Discarding) return
+        mutablePhase.value = beforeDiscard
+        if (beforeDiscard == IncomingSharePhase.Waiting) openIfReady()
     }
 
     fun commitDiscard() {

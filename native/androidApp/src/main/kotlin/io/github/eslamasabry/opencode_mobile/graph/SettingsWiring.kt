@@ -316,7 +316,12 @@ class AndroidSettingsHost(
 
             override fun openWebsite(url: String) {
                 // Only the authored component URLs can reach the platform opener.
-                if (VoiceLicenseComponent.entries.any { it.website == url }) application.view(url)
+                if (VoiceLicenseComponent.entries.none { it.website == url }) return
+                try {
+                    application.view(url)
+                } catch (_: android.content.ActivityNotFoundException) {
+                    // No browser installed: nothing opens, the license text stays readable.
+                }
             }
         }
 

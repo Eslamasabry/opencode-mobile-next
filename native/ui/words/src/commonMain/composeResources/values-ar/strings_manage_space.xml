@@ -1,4 +1,3 @@
 <resources>
-    <string name="manageSpaceBytes">%1$d بايت</string>
     <string name="manageSpaceClearCacheQuestion">هل تريد مسح ذاكرة التطبيق المؤقتة؟</string>
 </resources>
