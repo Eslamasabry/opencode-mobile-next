@@ -48,6 +48,7 @@ internal class AndroidFilesStorageAccess(
     private val connections: FilesConnections,
     private val platform: AndroidProjectExport,
     private val dispatchers: AppDispatchers,
+    private val sharedRoots: NativeSharedProjectFolders,
 ) : FilesStorageAccess {
     private val lane = Mutex()
     private val linux
@@ -146,26 +147,11 @@ internal class AndroidFilesStorageAccess(
     }
 
     /**
-     * Rebuild the shared native blob after profile-key deletion; never retain a deleted profile's
-     * folder.
+     * Rebuild the shared native blob after a grant or profile-key deletion through the one writer
+     * ([NativeSharedProjectFolders]), so a deleted profile's folder is never retained and the
+     * opened-project union is never overwritten.
      */
-    suspend fun syncRoots(): Outcome<Unit> =
-        withContext(dispatchers.io) {
-            attempt({ Failure.StorageRefused() }) {
-                val roots =
-                    stores.prefs
-                        .keys(PREFIX)
-                        .flatMap { key ->
-                            val id = ProfileId(key.removePrefix(PREFIX))
-                            if (stores.profiles.profile(id) == null) emptyList()
-                            else stores.prefs.stringList(key).orEmpty()
-                        }
-                        .mapNotNull(SharedStoragePath::projectRoot)
-                        .distinct()
-                        .sorted()
-                linux.setSharedProjectRoots(roots)
-            }
-        }
+    suspend fun syncRoots(): Outcome<Unit> = sharedRoots.syncNow()
 
     private companion object {
         const val PREFIX = "oc.sharedProjects."
