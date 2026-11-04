@@ -1,0 +1,5 @@
+<resources>
+    <string name="chat_model_favorite_add">إضافة إلى المفضلة</string>
+    <string name="chat_model_favorite_remove">إزالة من المفضلة</string>
+    <string name="chat_model_favorites">المفضلة</string>
+</resources>

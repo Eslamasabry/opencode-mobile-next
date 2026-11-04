@@ -1,0 +1,37 @@
+<resources>
+    <string name="stateSetupTitle">Setup history and registry</string>
+    <string name="stateSetupNoWrites">Setup can be inspected here. Apply and Undo are unavailable because this server has no verified atomic restore endpoint.</string>
+    <string name="stateSetupUnsupported">Connect to a server that supports setup inspection to read its configuration sources.</string>
+    <string name="stateSetupSaveFailed">The change could not be saved. Try again.</string>
+    <string name="stateSetupReadFailed">Setup information could not be read. Try again.</string>
+    <string name="stateSetupOffline">Reconnect to refresh setup information.</string>
+    <string name="stateSetupSources">Configuration sources</string>
+    <string name="stateSetupMcp">Connected tools</string>
+    <string name="stateSetupRecordReview">Save that I reviewed this setup</string>
+    <string name="stateSetupRefresh">Refresh setup</string>
+    <string name="stateSetupHistory">Setup history</string>
+    <string name="stateSetupHistoryUnavailable">Saved history is unavailable. It has been kept for recovery.</string>
+    <string name="stateSetupHistoryEmpty">No setup reviews saved yet</string>
+    <string name="stateSetupRegistryConsent">Browse the public tool registry</string>
+    <string name="stateSetupRegistryPrivacy">Off by default. Refresh sends one public request. Search words go to the registry; your server credentials do not. Listings never run or install anything.</string>
+    <string name="stateSetupRegistrySearch">Search the registry</string>
+    <string name="stateSetupRegistryRefresh">Refresh registry</string>
+    <string name="stateSetupRegistrySaved">Show saved listings</string>
+    <string name="stateSetupRegistryClear">Forget registry consent and saved list</string>
+    <string name="stateSetupRegistryOffline">Offline. Showing the saved list.</string>
+    <string name="stateSetupRegistryFailed">The registry could not be loaded. Your saved list is kept.</string>
+    <string name="stateSetupRegistryEmpty">No listings to show. Refresh or try another search.</string>
+    <string name="stateSetupMcpConnected">Connected</string>
+    <string name="stateSetupMcpPending">Connecting</string>
+    <string name="stateSetupMcpDisabled">Off</string>
+    <string name="stateSetupMcpFailed">Could not connect</string>
+    <string name="stateSetupMcpSignIn">Sign-in needed</string>
+    <string name="stateSetupMcpUnknown">Status unknown</string>
+    <string name="stateSetupAuditProposed">Change proposed</string>
+    <string name="stateSetupAuditPending">Change pending</string>
+    <string name="stateSetupAuditAccepted">Change accepted</string>
+    <string name="stateSetupAuditVerified">Review verified</string>
+    <string name="stateSetupAuditUncertain">Result uncertain</string>
+    <string name="stateSetupAuditRejected">Change rejected</string>
+    <string name="stateServerSchedules">Scheduled prompts</string>
+</resources>

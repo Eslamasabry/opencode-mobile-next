@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stateDemoTryOffline">جرّب دون اتصال</string>
+    <string name="stateDemoTitle">تجربة دون اتصال</string>
+    <string name="stateDemoDisclosure">جلسة محاكاة. لا تتغير أي خوادم أو ملفات أو إعدادات محفوظة. تُنسى هذه التجربة عند مغادرتها.</string>
+    <string name="stateDemoPrompt">اجعل رسالة الترحيب أكثر ودًّا.</string>
+    <string name="stateDemoReply">هذا رد محاكاة. يمكن تغيير رسالة الترحيب النموذجية من «مرحبًا» إلى «أهلًا بك معنا!». اسمح بالتعديل التجريبي أدناه أو ارفضه. لن يُكتب أي ملف حقيقي.</string>
+    <string name="stateDemoAllowed">سمحت بالتعديل التجريبي. أصبح النص النموذجي «أهلًا بك معنا!». لم تتغير أي ملفات حقيقية.</string>
+    <string name="stateDemoDenied">رفضت التعديل التجريبي. لا يزال النص النموذجي «مرحبًا». لم تتغير أي ملفات حقيقية.</string>
+    <string name="stateDemoAllow">السماح بالتعديل التجريبي</string>
+    <string name="stateDemoDeny">رفض التعديل التجريبي</string>
+    <string name="stateDemoReset">إعادة التجربة</string>
+    <string name="stateDemoLeave">مغادرة التجربة</string>
+</resources>
