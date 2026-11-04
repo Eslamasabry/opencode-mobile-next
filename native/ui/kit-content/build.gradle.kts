@@ -19,6 +19,7 @@ val zxingCore = "com.google.zxing:core:3.5.4"
 
 kotlin {
     sourceSets.commonMain.dependencies {
+        implementation(project(":core:common"))
         implementation(project(":ui:design"))
         implementation(project(":ui:kit"))
         implementation(project(":ui:words")) // kit-internal words (strings_kit.xml), plan 06 §16.1

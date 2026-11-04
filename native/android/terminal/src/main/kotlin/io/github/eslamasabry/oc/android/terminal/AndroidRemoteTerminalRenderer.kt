@@ -61,7 +61,7 @@ class AndroidRemoteTerminalRenderer(
                     }
                 },
                 2000,
-                object : QuietSessionClient() {
+                object : QuietSessionClient({ grid }) {
                     override fun onTextChanged(session: TerminalSession) {
                         val raw =
                             redactor.redact(session.emulator?.screen?.transcriptText.orEmpty())
@@ -78,12 +78,13 @@ class AndroidRemoteTerminalRenderer(
                     }
                 },
             )
+        private val surface = TerminalSurfaceHost(app, grid)
         override val applicationCursor: Boolean
             get() = session.emulator?.isCursorKeysApplicationMode == true
 
         override val view =
             object : PlatformViewHandle {
-                override val native: Any = grid
+                override val native: Any = surface
             }
 
         init {

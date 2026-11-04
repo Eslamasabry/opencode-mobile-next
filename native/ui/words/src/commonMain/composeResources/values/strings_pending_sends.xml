@@ -1,0 +1,17 @@
+<resources>
+  <string name="nativePendingTitle">Waiting to send</string>
+  <string name="nativePendingReview">Review</string>
+  <string name="nativePendingFailed">Could not update this send. Check the connection and try again.</string>
+  <string name="nativePendingOffline">Sends when back online</string>
+  <string name="nativePendingAdmitted">Waiting on the server</string>
+  <string name="nativePendingJoining">Joining the running reply</string>
+  <string name="nativePendingUnconfirmed">May already have been sent</string>
+  <string name="nativePendingEdit">Bring back to edit</string>
+  <string name="nativePendingSteer">Join this reply</string>
+  <string name="nativePendingCheck">Check again</string>
+    <string name="nativePendingEmpty">No sends are waiting.</string>
+  <plurals name="nativePendingCount">
+    <item quantity="one">1 message is waiting to send.</item>
+    <item quantity="other">%1$s messages are waiting to send.</item>
+  </plurals>
+</resources>

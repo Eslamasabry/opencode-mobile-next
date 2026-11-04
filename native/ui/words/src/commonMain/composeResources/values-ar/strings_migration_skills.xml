@@ -1,0 +1,8 @@
+<resources>
+    <string name="migrationSkillUseNew">استخدام في محادثة جديدة</string>
+    <string name="migrationSkillReady">المهارة جاهزة في محادثة جديدة. لم يتم تشغيل الوكيل.</string>
+    <string name="migrationSkillChanged">تغيّر الاتصال. تم الاحتفاظ بأي محادثة أُنشئت بالفعل.</string>
+    <string name="migrationSkillInvalid">لا تحتوي هذه المهارة على معرّف مدعوم. حدّث قائمة المهارات.</string>
+    <string name="migrationSkillUncertain">ربما وصل الطلب إلى الخادم. تم الاحتفاظ بأي محادثة أُنشئت بالفعل. تحقّق منها قبل المحاولة مجددًا.</string>
+    <string name="migrationSkillOpen">فتح المحادثة</string>
+</resources>

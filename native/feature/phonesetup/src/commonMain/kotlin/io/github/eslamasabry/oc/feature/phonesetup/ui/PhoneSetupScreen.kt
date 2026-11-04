@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.engine.linuxsetup.SetupPreflightResult
 import io.github.eslamasabry.oc.engine.linuxsetup.SetupProblem
 import io.github.eslamasabry.oc.engine.linuxsetup.SetupProgress
 import io.github.eslamasabry.oc.engine.linuxsetup.SetupState
+import io.github.eslamasabry.oc.engine.runtime.messages.SetupMessages
 import io.github.eslamasabry.oc.feature.phonesetup.presentation.PhoneSetupActions
 import io.github.eslamasabry.oc.feature.phonesetup.presentation.PhoneSetupUi
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
@@ -240,7 +241,7 @@ private fun Job(progress: SetupProgress, state: PhoneSetupUi, actions: PhoneSetu
             },
     )
     KitText("${(progress.overall * 100).roundToInt().coerceIn(0, 100)}%")
-    stage?.let { KitText(it) }
+    stage?.let { KitText(setupMessageWords(it)) }
     when (progress.state) {
         SetupState.Running -> {
             for (component in progress.components) {
@@ -349,7 +350,9 @@ internal fun problemWords(problem: SetupProblem): String =
             stringResource(Res.string.phoneSetupErrorOpenCodeNoProgram)
         SetupProblem.OpenCodeWontRun -> stringResource(Res.string.phoneSetupErrorOpenCodeWontRun)
         SetupProblem.OpenCodeNoStart -> stringResource(Res.string.phoneSetupErrorOpenCodeNoStart)
-        is SetupProblem.StartFailed -> stringResource(Res.string.setupProgressViewFailedUnknown)
+        is SetupProblem.StartFailed ->
+            SetupMessages.plain(problem.details)?.let { setupMessageWords(it) }
+                ?: stringResource(Res.string.setupProgressViewFailedUnknown)
     }
 
 /** "~350 MB" / "1.2 GB" (decimal units, as the Flutter start screen). */

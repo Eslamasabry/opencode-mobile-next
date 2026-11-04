@@ -14,8 +14,10 @@ import io.github.eslamasabry.oc.feature.settings.automation.AutomationSection
 import io.github.eslamasabry.oc.feature.settings.automation.AutomationViewModel
 import io.github.eslamasabry.oc.feature.settings.monitor.MonitoringSection
 import io.github.eslamasabry.oc.feature.settings.monitor.MonitoringViewModel
+import io.github.eslamasabry.oc.feature.settings.presentation.SettingsHost
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsViewModel
+import io.github.eslamasabry.oc.feature.settings.ui.SettingsCapabilityFlows
 import io.github.eslamasabry.oc.feature.settings.ui.SettingsScreen
 import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
@@ -28,7 +30,7 @@ import io.github.eslamasabry.oc.ui.routes.SettingsRoute
  */
 @Inject
 @ContributesIntoSet(AppScope::class, binding = binding<EntryInstaller>())
-public class SettingsEntries : EntryInstaller {
+public class SettingsEntries(private val host: SettingsHost) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
         entry<SettingsRoute.Home> {
             val vm = metroViewModel<SettingsViewModel>()
@@ -41,15 +43,17 @@ public class SettingsEntries : EntryInstaller {
                 enabled = state.page != SettingsPage.Hub || state.hub.query.isNotEmpty(),
                 onBack = vm::back,
             )
-            SettingsScreen(
-                state,
-                vm.actions,
-                onExit = vm::exit,
-                monitoring = {
-                    MonitoringSection(monitoringState, monitoring)
-                    AutomationSection(automationState, automation)
-                },
-            )
+            SettingsCapabilityFlows(host) {
+                SettingsScreen(
+                    state,
+                    vm.actions,
+                    onExit = vm::exit,
+                    monitoring = {
+                        MonitoringSection(monitoringState, monitoring)
+                        AutomationSection(automationState, automation)
+                    },
+                )
+            }
         }
         entry<SettingsRoute.Target> { target ->
             val vm = metroViewModel<SettingsViewModel>()
@@ -60,12 +64,14 @@ public class SettingsEntries : EntryInstaller {
             val monitoring = metroViewModel<MonitoringViewModel>()
             val monitoringState by monitoring.state.collectAsStateWithLifecycle()
             KitBackGuard(enabled = state.page != SettingsPage.Hub, onBack = vm::back)
-            SettingsScreen(
-                state,
-                vm.actions,
-                onExit = vm::exit,
-                monitoring = { MonitoringSection(monitoringState, monitoring) },
-            )
+            SettingsCapabilityFlows(host) {
+                SettingsScreen(
+                    state,
+                    vm.actions,
+                    onExit = vm::exit,
+                    monitoring = { MonitoringSection(monitoringState, monitoring) },
+                )
+            }
         }
         entry<SettingsRoute.ReportProblem> {
             val vm = metroViewModel<SettingsViewModel>()
@@ -79,15 +85,17 @@ public class SettingsEntries : EntryInstaller {
                 enabled = state.page != SettingsPage.Hub || state.hub.query.isNotEmpty(),
                 onBack = vm::back,
             )
-            SettingsScreen(
-                state,
-                vm.actions,
-                onExit = vm::exit,
-                monitoring = {
-                    MonitoringSection(monitoringState, monitoring)
-                    AutomationSection(automationState, automation)
-                },
-            )
+            SettingsCapabilityFlows(host) {
+                SettingsScreen(
+                    state,
+                    vm.actions,
+                    onExit = vm::exit,
+                    monitoring = {
+                        MonitoringSection(monitoringState, monitoring)
+                        AutomationSection(automationState, automation)
+                    },
+                )
+            }
         }
     }
 }
