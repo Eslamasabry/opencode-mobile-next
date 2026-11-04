@@ -98,3 +98,7 @@ An unverified `p12v/projects` merge was in progress at hand-over; it was aborted
 | 7 | 2026-11-03 15:28 | `~/wt/p12-apks/p12-wave7-14b1245d3-preview-debug.apk` (90 MB) | chat-fix4 |
 - 2026-11-04 06:13 wave 8 (script integrator): merged inv-builtin-orch-paseo inv-domain inv-rest inv-state inv-ui-a inv-ui-c runtime-b inv-ui-b rest agents android-bg-platform job-10-file-ledger; gate green; APK p12-wave8-8f453ca86-preview-debug.apk
 - 2026-11-04 06:13 wave 9 (script integrator): merged android-bg-platform; gate green; APK p12-wave9-6d4e60d87-preview-debug.apk
+- 2026-11-04 06:42 wave 10 (script integrator): merged diagnostics-attention; gate green; APK p12-wave10-d4a607926-preview-debug.apk
+- 2026-11-04 07:07 merged (compile green, no APK): runtime-a
+- 2026-11-04 08:03 merged (compile green, no APK): job-20-build-LINUX-1
+- 2026-11-04 09:25 merged (compile green, no APK): runtime-c

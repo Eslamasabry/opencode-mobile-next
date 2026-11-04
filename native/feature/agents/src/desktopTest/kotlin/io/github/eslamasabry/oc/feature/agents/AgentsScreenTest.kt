@@ -72,6 +72,22 @@ class AgentsScreenTest {
         override fun readAgents(id: ProfileId) { calls += "agents:${id.raw}" }
 
         override fun newConversation(id: ProfileId) { calls += "new:${id.raw}" }
+
+        override fun refreshPhone() {
+            calls += "phone-refresh"
+        }
+
+        override fun requestRemoval(id: String) {
+            calls += "remove:$id"
+        }
+
+        override fun cancelRemoval() {
+            calls += "remove-cancel"
+        }
+
+        override fun confirmRemoval() {
+            calls += "remove-confirm"
+        }
     }
 
     @Composable

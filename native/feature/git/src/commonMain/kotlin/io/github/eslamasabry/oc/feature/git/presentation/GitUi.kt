@@ -27,6 +27,13 @@ public sealed interface GitConfirm {
     public data object SignOut : GitConfirm
 }
 
+public data class GitRepairUi(
+    val available: Boolean = false,
+    val running: Boolean = false,
+    val failed: Boolean = false,
+    val report: io.github.eslamasabry.oc.engine.git.GitLinkRepairReport? = null,
+)
+
 /**
  * Everything the Git screen draws. Words are chosen by the screen from these values; nothing here
  * is copy.
@@ -65,19 +72,24 @@ public data class GitUi(
     val confirm: GitConfirm? = null,
     /** Bumped when a write finished: the screen clears its message field once. */
     val generation: Int = 0,
+    val repair: GitRepairUi = GitRepairUi(),
 ) {
     val snapshot: GitSnapshot?
         get() = (view as? GitPageView.Ready)?.snapshot
 
     /** True while an action runs: every write button is held (one action at a time, B-NAV-020). */
     val working: Boolean
-        get() = busy != null
+        get() = busy != null || repair.running
 }
 
 public interface GitActions {
     public fun back()
 
     public fun refresh()
+
+    public fun repairObjects()
+
+    public fun openRepairSettings()
 
     /** Get latest (`git pull --ff-only`). */
     public fun pull()

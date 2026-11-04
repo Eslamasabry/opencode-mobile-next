@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <string name="linuxHostSetupTitle">إعداد حاسوب Linux</string>
+    <string name="linuxHostSetupIntro">انسخ الأمر والصقه في الطرفية على حاسوب Ubuntu أو Linux. لن ينفّذه التطبيق نيابةً عنك.</string>
+    <string name="linuxHostSetupSafety">يتحقق المثبّت من بصمة التنزيل المثبّت قبل التثبيت. يستمع OpenCode على هذا الحاسوب فقط؛ استخدم USB أو نفقًا موثّقًا للاتصال من هاتفك.</string>
+    <string name="linuxHostSetupInstall">تثبيت OpenCode وخدمته</string>
+    <string name="linuxHostSetupUpdate">تحديث OpenCode</string>
+    <string name="linuxHostSetupStart">بدء الخدمة</string>
+    <string name="linuxHostSetupStop">إيقاف الخدمة</string>
+    <string name="linuxHostSetupRestart">إعادة تشغيل الخدمة</string>
+    <string name="linuxHostSetupStatus">فحص الخدمة</string>
+    <string name="linuxHostSetupCopy">نسخ المثبّت والأمر</string>
+    <string name="linuxHostSetupCopyDetail">يشمل النسخ المثبّت الكامل المرفق بالتطبيق، ثم الأمر المحدد. يكتب ملف ubuntu-opencode.sh في المجلد الحالي. يُبقي التثبيت OpenCode 2 الموجود؛ ولا ينقل التحديث بيانات OpenCode 1 أو يخفض إصدارًا أحدث.</string>
+    <string name="linuxHostSetupUsb">بعد توصيل الهاتف عبر USB، نفّذ هذا الأمر على الحاسوب لتوجيه منفذ الخادم.</string>
+    <string name="linuxHostSetupCopyUsb">نسخ أمر USB</string>
+</resources>

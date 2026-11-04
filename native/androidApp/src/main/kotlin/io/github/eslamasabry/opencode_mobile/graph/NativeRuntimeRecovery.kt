@@ -1,0 +1,82 @@
+package io.github.eslamasabry.opencode_mobile.graph
+
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RuntimeProblem
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.data.kv.PrefValue
+import io.github.eslamasabry.opencode_mobile.BuiltinLinux
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
+
+/** Stages the old budget once, acknowledges the marker, and only then grants native authority. */
+internal class NativeRuntimeRecovery(
+    private val stores: PreviewStores,
+    private val linux: BuiltinLinux,
+    private val io: CoroutineDispatcher,
+) {
+    suspend fun bind(profile: ProfileId): Outcome<Unit> {
+        if (!Regex("[A-Za-z0-9_-]{1,80}").matches(profile.raw)) return unavailable()
+        val key = "oc.builtinRecovery.${profile.raw}"
+        val saved = stores.prefs.get(key)
+        if (saved != null && saved !is PrefValue.Str) return unavailable()
+        val raw = (saved as? PrefValue.Str)?.value
+        val record =
+            try {
+                raw?.let(::JSONObject)
+            } catch (_: Exception) {
+                return unavailable()
+            }
+        val migrated = record?.opt("version") == 2 && record.opt("nativeAuthority") == true
+        if (!migrated) {
+            if (record != null && record.opt("version") != 1) return unavailable()
+            val legacy =
+                record?.toMap() ?: mapOf("version" to 1, "attempts" to 0, "pending" to false)
+            val staged =
+                withContext(io) {
+                    try {
+                        linux.stageServerRecovery(profile.raw, legacy)
+                        Outcome.Ok(Unit)
+                    } catch (e: Exception) {
+                        Outcome.Failed(classifyRuntime(e))
+                    }
+                }
+            if (staged is Outcome.Failed) return staged
+            val marker =
+                stores.prefs.commit(stores.lanes.forProfile(profile)) {
+                    putString(key, "{\"version\":2,\"nativeAuthority\":true}")
+                }
+            if (marker is Outcome.Failed) return marker
+        }
+        return withContext(io) {
+            try {
+                linux.bindServerRecovery(profile.raw, null, policyAllows(profile.raw))
+                Outcome.Ok(Unit)
+            } catch (e: Exception) {
+                Outcome.Failed(classifyRuntime(e))
+            }
+        }
+    }
+
+    fun policyAllows(profile: String): Boolean {
+        val value = stores.prefs.get("oc.automation.$profile") ?: return true
+        if (value !is PrefValue.Str) return false
+        return try {
+            val policy = JSONObject(value.value)
+            policy.opt("version") == 1 &&
+                policy.opt("supervision") in listOf("high", "balanced", "autonomous") &&
+                policy.optJSONObject("behaviors")?.let {
+                    it.opt("restartPhoneServer") == true && it.opt("pollRestartHealth") == true
+                } == true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    private fun JSONObject.toMap(): Map<String, Any?> =
+        keys().asSequence().associateWith { key -> opt(key).takeUnless { it === JSONObject.NULL } }
+
+    private fun unavailable(): Outcome.Failed =
+        Outcome.Failed(Failure.Runtime(RuntimeProblem.RecoveryUnavailable))
+}

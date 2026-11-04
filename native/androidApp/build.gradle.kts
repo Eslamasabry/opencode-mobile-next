@@ -5,6 +5,15 @@ import java.util.zip.ZipFile
 plugins { id("oc.android.application") }
 
 android {
+    buildFeatures { buildConfig = true }
+    defaultConfig {
+        val requestedAgentFloor = providers.gradleProperty("ocQaAgentInstallMinFreeBytes").orNull
+        val agentInstallFloor =
+            requestedAgentFloor?.toLongOrNull()
+                ?: if (requestedAgentFloor?.matches(Regex("[+]?[0-9]+")) == true) Long.MAX_VALUE
+                else 0L
+        buildConfigField("long", "AGENT_INSTALL_MIN_FREE_BYTES", "${agentInstallFloor}L")
+    }
     // Slice-0 proofs P3 and start-up (native/proof-p3-2026-11-01): a release build that the shell
     // may profile, signed
     // with the debug key so Macrobenchmark can install it. R8 on, like the release the plan ships
@@ -100,6 +109,7 @@ dependencies {
             ":android:notifications",
             ":android:background", // BUILD-ANDROID-BG-PLATFORM: live mode, pause, sign-in lease
             ":android:migration",
+            ":android:termux",
             ":engine:migration",
             ":feature:gate",
             ":protocol:paseo",
@@ -134,6 +144,13 @@ dependencies {
             ":feature:voice",
             ":android:linux", // P12-FIX-LINUX-VOICE: the real built-in Linux (proot runtime + its
             // native libraries)
+            ":engine:linuxsetup", // P12-BUILD-RUNTIME-C: the phone setup engine
+            ":engine:setupscripts", // P12-BUILD-RUNTIME-C: the setup prelude the job scripts run under
+            ":engine:lifecycle", // P12-BUILD-RUNTIME-C: this-phone mark and lifecycle rules
+            ":feature:phonesetup", // P12-BUILD-RUNTIME-C: Set up OpenCode on this phone
+            ":feature:diagnostics", // BUILD-DIAGNOSTICS-ATTENTION
+            ":feature:devservices", // BUILD-RUNTIME-A: Development services (saved commands, dev
+                                    // servers found)
             ":engine:integrations-usage", // P12-BUILD-INTEGRATIONS-B: Usage › Plans engine
             ":feature:plans", // P12-BUILD-INTEGRATIONS-B: Usage › Plans
         )

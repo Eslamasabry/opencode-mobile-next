@@ -9,43 +9,12 @@ import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.engine.git.GitCredentialDrop
 import io.github.eslamasabry.oc.engine.git.GitSecretFile
-import io.github.eslamasabry.oc.engine.git.GitShell
-import io.github.eslamasabry.oc.engine.git.GitShellFailure
-import io.github.eslamasabry.oc.engine.git.GitShellReply
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import java.io.File
 import java.io.FileOutputStream
 import java.nio.file.Files
 import java.security.SecureRandom
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
-
-/** The runtime captures Git output without logging it; a command never leaves the app's Linux. */
-internal class BuiltinGitShell(
-    private val linux: BuiltinLinux,
-    private val dispatchers: AppDispatchers,
-    private val stillOwned: () -> Boolean,
-) : GitShell {
-    override suspend fun run(script: String, timeoutMs: Long): GitShellReply =
-        withContext(dispatchers.io) {
-            if (!stillOwned() || !linux.installed)
-                return@withContext GitShellReply.Failed(GitShellFailure.Unavailable)
-            try {
-                val reply =
-                    linux.run(
-                        script,
-                        timeoutSeconds = ((timeoutMs + 999) / 1000).coerceAtLeast(1),
-                        logOutput = false,
-                    )
-                if (reply.exitCode == -1) GitShellReply.Failed(GitShellFailure.TimedOut)
-                else GitShellReply.Output(reply.output)
-            } catch (cancelled: CancellationException) {
-                throw cancelled
-            } catch (_: Exception) {
-                GitShellReply.Failed(GitShellFailure.Unavailable)
-            }
-        }
-}
 
 /**
  * A new 0700 directory and 0600 file for each command. Empty file first, verified descriptor

@@ -80,6 +80,7 @@ import io.github.eslamasabry.oc.feature.settings.presentation.VoiceSettings
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.BackgroundRoute
+import io.github.eslamasabry.oc.ui.routes.DiagnosticsRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.ui.routes.SettingsRoute
 import io.github.eslamasabry.oc.ui.routes.VoiceRoute
@@ -202,6 +203,7 @@ class AndroidSettingsHost(
     updateSettings:
         AppUpdateSettings, // P12-FIX-PLATFORM-GIT: Settings › Updates on the real updater
     private val voiceSettings: AndroidVoiceSettings,
+    private val gitHubReports: GitHubProblemReporter, // BUILD-DIAGNOSTICS-ATTENTION
 ) : SettingsHost {
     private val scope = CoroutineScope(appScope.coroutineContext)
 
@@ -272,6 +274,13 @@ class AndroidSettingsHost(
                 nav.open(BackgroundRoute.Home) // BUILD-ANDROID-BG-PLATFORM
             SettingsOutside.VoiceNotices ->
                 application.view("$REPO/blob/master/THIRD_PARTY_NOTICES.md")
+            SettingsOutside.KeptDiagnostics -> nav.open(DiagnosticsRoute.Kept)
+            SettingsOutside.ReportOnGitHub ->
+                gitHubReports.send(
+                    connections.servers.value
+                        .count { it.connected }
+                        .let { if (it > 0) "Connected to a server" else "Not connected" }
+                )
             else -> Unit // Absent rows: OPENS keeps them off screen.
         }
     }
@@ -312,9 +321,17 @@ class AndroidSettingsHost(
                         savedServers = servers.size,
                         connectedServers = servers.count { it.connected },
                         errors =
-                            diagnosticsLog.errors.value.map {
-                                ReportError(it.at.toString(), it.source, it.message, it.occurrences)
-                            },
+                            gitHubReports.keptErrors()?.map { (at, source, message) ->
+                                ReportError(at, source, message)
+                            }
+                                ?: diagnosticsLog.errors.value.map {
+                                    ReportError(
+                                        it.at.toString(),
+                                        it.source,
+                                        it.message,
+                                        it.occurrences,
+                                    )
+                                },
                     )
                 return DiagnosticsReport.text(facts).ok()
             }
@@ -368,6 +385,8 @@ class AndroidSettingsHost(
                 SettingsOutside.AndroidNotificationSettings,
                 SettingsOutside.VoiceSetup,
                 SettingsOutside.VoiceNotices,
+                SettingsOutside.ReportOnGitHub,
+                SettingsOutside.KeptDiagnostics,
                 SettingsOutside.KeepRunning,
             )
     }

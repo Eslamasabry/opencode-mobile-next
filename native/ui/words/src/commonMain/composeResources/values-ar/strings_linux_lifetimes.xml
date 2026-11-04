@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="linuxLifetimeTitle">مدد تشغيل الخدمات</string>
+    <string name="linuxLifetimeRefresh">التحقق من مدد تشغيل الخدمات</string>
+    <string name="linuxLifetimeReading">جارٍ قراءة مدد تشغيل الخدمات…</string>
+    <string name="linuxLifetimeRunning">قيد التشغيل</string>
+    <string name="linuxLifetimeStopped">لا تعمل</string>
+    <string name="linuxLifetimeUptime">التشغيل الحالي: %1$d ملّي ثانية</string>
+    <string name="linuxLifetimeLastUptime">التشغيل السابق: %1$d ملّي ثانية</string>
+    <string name="linuxLifetimeExit">آخر رمز خروج: %1$d</string>
+    <string name="linuxLifetimeRestarts">مرات إعادة التشغيل: %1$d</string>
+    <string name="linuxLifetimeUnknown">سبب الخروج غير معروف</string>
+    <string name="linuxLifetimeExited">خرج البرنامج</string>
+    <string name="linuxLifetimeKilled">ضغط الذاكرة أو حد عمليات أندرويد</string>
+    <string name="linuxLifetimeFailed">تعذّرت قراءة مدد تشغيل الخدمات.</string>
+    <string name="linuxLifetimeEmpty">لا توجد قراءات متاحة لمدد تشغيل الخدمات.</string>
+</resources>

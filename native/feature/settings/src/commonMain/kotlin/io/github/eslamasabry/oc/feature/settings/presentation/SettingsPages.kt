@@ -85,6 +85,10 @@ public enum class SettingsOutside {
     UsageAlerts,
     QuietHours,
     ReleaseNotes,
+    // BUILD-DIAGNOSTICS-ATTENTION: Report a problem's GitHub form and Everything this phone kept
+    // (:feature:diagnostics).
+    ReportOnGitHub,
+    KeptDiagnostics,
 }
 
 /** Opens a place another feature owns. */

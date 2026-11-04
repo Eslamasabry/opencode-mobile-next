@@ -99,8 +99,8 @@ object GitWiring {
                         http,
                         credentialSources,
                         redactor,
+                        application,
                         stores,
-                        BuiltinLinux.get(application),
                         dispatchers,
                     ),
                 tokens = tokens,
@@ -152,8 +152,8 @@ private class ServerGitWorkspaces(
     private val http: HttpClientFactory,
     private val credentialSources: Set<ConnectionCredentialSource>,
     private val redactor: Redactor,
+    private val application: Application,
     private val stores: PreviewStores,
-    private val linux: BuiltinLinux,
     private val dispatchers: AppDispatchers,
 ) : GitWorkspaces {
     private val lock = Mutex()
@@ -183,6 +183,11 @@ private class ServerGitWorkspaces(
                 false
             }
         if (ownsLinux()) {
+            // The shell also re-checks the saved owner and that this app's server is the one
+            // running on that port before every command.
+            val native = BuiltinGitShell(application, stores, dispatchers, graph, registry, ref)
+            if (!native.current())
+                return GitWorkspaceResolution.Unavailable(GitUnavailableReason.NotConnected)
             val folder =
                 session.directory?.trim()?.takeIf { it.isNotEmpty() }
                     ?: return GitWorkspaceResolution.Unavailable(GitUnavailableReason.NoProject)
@@ -190,9 +195,14 @@ private class ServerGitWorkspaces(
                 GitWorkspace(
                     GitHost.BuiltinLinux,
                     folder,
-                    BuiltinGitShell(linux, dispatchers, ::ownsLinux),
+                    native,
                     placeName = profile.name,
-                    credentials = BuiltinGitCredentialDrop(linux, dispatchers, ::ownsLinux),
+                    credentials =
+                        BuiltinGitCredentialDrop(
+                            BuiltinLinux.get(application),
+                            dispatchers,
+                            ::ownsLinux,
+                        ),
                 )
             )
         }

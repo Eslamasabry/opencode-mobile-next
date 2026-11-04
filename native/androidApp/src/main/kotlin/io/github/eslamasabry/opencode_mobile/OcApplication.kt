@@ -13,9 +13,11 @@ import io.github.eslamasabry.oc.core.security.RedactingWriter
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.opencode_mobile.graph.AndroidAppGraph
 import io.github.eslamasabry.opencode_mobile.graph.CrashAccessors
+import io.github.eslamasabry.opencode_mobile.graph.DiagnosticsAttentionAccessors
 import io.github.eslamasabry.opencode_mobile.graph.DiagnosticsLogSink
 import io.github.eslamasabry.opencode_mobile.graph.GraphOwner
 import io.github.eslamasabry.opencode_mobile.graph.LinuxAccessors
+import io.github.eslamasabry.opencode_mobile.graph.NativeExitAccessors
 import io.github.eslamasabry.opencode_mobile.graph.PlatformAccessors
 
 /**
@@ -53,6 +55,9 @@ class OcApplication : Application(), GraphOwner {
             createGraphFactory<AndroidAppGraph.Factory>()
                 .create(this, buildInfo, redactor, LaunchMode.Normal)
         (appGraph as CrashAccessors).crashDiagnostics.start()
+        (appGraph as DiagnosticsAttentionAccessors)
+            .diagnosticsAttention
+            .start() // persisted report, crash store, exits
         appGraph.previewRuntime // warm stores, restore saved profile, connect
         (appGraph as PlatformAccessors)
             .platform
@@ -62,6 +67,7 @@ class OcApplication : Application(), GraphOwner {
         appGraph
             .builtinRuntime // P12-FIX-LINUX-VOICE: the built-in Linux follows the activity; phone
         // server comes back
+        (appGraph as NativeExitAccessors).nativeAppExitRecovery.start()
         (appGraph as LinuxAccessors)
             .linuxStartup
             .start() // P12-FIX: finish an interrupted Reset Linux (B-LINUX-093)
