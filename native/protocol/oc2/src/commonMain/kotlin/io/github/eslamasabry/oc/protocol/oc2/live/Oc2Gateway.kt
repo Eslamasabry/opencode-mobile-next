@@ -207,8 +207,34 @@ internal class Oc2Gateway(
 
     override suspend fun removeTerminal(id: String): Outcome<Unit> = terminals().removeTerminal(id)
 
-    override suspend fun connectTerminal(id: String, cursor: Long?): Outcome<TerminalChannel> =
-        terminals().connectTerminal(id, cursor)
+    override suspend fun connectTerminal(id: String, cursor: Long?): Outcome<TerminalChannel> {
+        val scope = terminalScope ?: return Failure.Unavailable(FeatureId("terminal")).failed()
+        val opened = terminals().connectTerminal(id, cursor)
+        if (opened is Outcome.Failed) return opened
+        val channel = (opened as Outcome.Ok).value
+        // A screen that closes its channel releases the gateway's hold on it too, so reconnects
+        // do not accumulate closed sockets for the connection's lifetime; close() ends the rest.
+        val tracked =
+            object : TerminalChannel by channel {
+                override suspend fun close() {
+                    terminalLane.withLock { terminalChannels.remove(this) }
+                    channel.close()
+                }
+            }
+        val admitted =
+            terminalLane.withLock {
+                if (terminalScope !== scope) false
+                else {
+                    terminalChannels.add(tracked)
+                    true
+                }
+            }
+        if (!admitted) {
+            channel.close()
+            return Failure.Refused(RefusalReason.StaleScope).failed()
+        }
+        return tracked.ok()
+    }
 
     internal fun terminalRedact(value: String): String = redactor.redact(value)
 
@@ -324,6 +350,8 @@ internal class Oc2Gateway(
     private val envelopes = MutableSharedFlow<GatewayEnvelope>()
     private var loop: EventStreamLoop? = null
     private var stream: Job? = null
+    private val terminalChannels = mutableSetOf<TerminalChannel>()
+    private val terminalLane = Mutex()
 
     init {
         credentials.secret?.let(redactor::registerSecret)
@@ -1935,7 +1963,13 @@ internal class Oc2Gateway(
         historyMigrationStatusRead()
 
     override suspend fun close() {
+        val channels = terminalLane.withLock {
+            terminalScope = null
+            terminalDispatchers = null
+            terminalChannels.toList().also { terminalChannels.clear() }
+        }
         try {
+            channels.forEach { channel -> channel.close() }
             stream?.cancelAndJoin()
         } finally {
             stream = null

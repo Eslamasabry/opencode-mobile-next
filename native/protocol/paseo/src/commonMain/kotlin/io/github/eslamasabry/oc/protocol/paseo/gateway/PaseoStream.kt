@@ -8,6 +8,7 @@ import io.github.eslamasabry.oc.core.domain.events.DeltaField
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.domain.events.InterruptReason
 import io.github.eslamasabry.oc.core.domain.events.RunOutcome
+import io.github.eslamasabry.oc.core.domain.events.UserPromptEcho
 import io.github.eslamasabry.oc.core.model.SessionStatus
 import io.github.eslamasabry.oc.core.model.transcript.MsgTime
 import io.github.eslamasabry.oc.core.model.transcript.Part
@@ -219,7 +220,17 @@ internal fun PaseoGateway.onTimelineItem(
     if (text == null) {
         state.announced[messageId] = StringBuilder(if (streamed) paseoText(item["text"]) else "")
         while (state.announced.size > 4096) state.announced.remove(state.announced.keys.first())
-        emit(GatewayEvent.MessageUpserted(message.info))
+        val correlation = item.str("clientMessageId") ?: item.str("messageId")
+        val echo =
+            if (
+                type == "user_message" &&
+                    correlation != null &&
+                    correlation.isNotEmpty() &&
+                    correlation.length <= 256
+            ) {
+                UserPromptEcho(MessageId(correlation), message.parts)
+            } else null
+        emit(GatewayEvent.MessageUpserted(message.info, echo))
         if (message.info.role == Role.Assistant && message.info.time?.completedMs == null)
             state.open[messageId] = message.info
     }

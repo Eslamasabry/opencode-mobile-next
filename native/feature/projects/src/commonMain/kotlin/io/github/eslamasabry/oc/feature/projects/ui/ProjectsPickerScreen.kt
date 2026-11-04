@@ -16,6 +16,7 @@ import io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderNameProblem
 import io.github.eslamasabry.oc.feature.projects.presentation.FolderRowUi
 import io.github.eslamasabry.oc.feature.projects.presentation.PathProblem
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectRules
+import io.github.eslamasabry.oc.feature.projects.presentation.ProjectStorageActions
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectsPhase
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectsPickerActions
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectsPickerUi
@@ -35,6 +36,8 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitInputDialog
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
@@ -86,6 +89,14 @@ import io.github.eslamasabry.oc.ui.words.res.stateFolderCreating
 import io.github.eslamasabry.oc.ui.words.res.stateFolderNameCharacters
 import io.github.eslamasabry.oc.ui.words.res.stateFolderNameEmpty
 import io.github.eslamasabry.oc.ui.words.res.stateFolderNameSegment
+import io.github.eslamasabry.oc.ui.words.res.storageAccessAllow
+import io.github.eslamasabry.oc.ui.words.res.storageAccessBody
+import io.github.eslamasabry.oc.ui.words.res.storageAccessRefusedBody
+import io.github.eslamasabry.oc.ui.words.res.storageAccessRefusedTitle
+import io.github.eslamasabry.oc.ui.words.res.storageAccessTitle
+import io.github.eslamasabry.oc.ui.words.res.storageAccessWhyAgent
+import io.github.eslamasabry.oc.ui.words.res.storageAccessWhyOff
+import io.github.eslamasabry.oc.ui.words.res.storageAccessWhyScope
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -152,6 +163,13 @@ public fun ProjectsPickerScreen(state: ProjectsPickerUi, actions: ProjectsPicker
                             }
                         }
                     }
+                    if (state.storageRefused)
+                        item(key = "storage-refused") {
+                            KitNotice(
+                                title = stringResource(Res.string.storageAccessRefusedTitle),
+                                message = stringResource(Res.string.storageAccessRefusedBody),
+                            )
+                        }
                     item(key = "start") { StartRows(state, actions) }
                     if (state.canFindPhoneProjects)
                         item(key = "find-phone") {
@@ -210,6 +228,26 @@ public fun ProjectsPickerScreen(state: ProjectsPickerUi, actions: ProjectsPicker
         PathDialog(state, actions)
         CreateDialog(state, actions)
         PhoneFolderSheet(state, actions)
+        val storage = actions as? ProjectStorageActions
+        if (storage != null)
+            KitConfirm(
+                spec =
+                    if (state.storageDirectory != null && !state.requestingStorage)
+                        KitConfirmSpec(
+                            title = stringResource(Res.string.storageAccessTitle),
+                            body = stringResource(Res.string.storageAccessBody),
+                            consequences =
+                                listOf(
+                                    stringResource(Res.string.storageAccessWhyScope),
+                                    stringResource(Res.string.storageAccessWhyAgent),
+                                    stringResource(Res.string.storageAccessWhyOff),
+                                ),
+                            confirmLabel = stringResource(Res.string.storageAccessAllow),
+                        )
+                    else null,
+                onConfirm = storage::allowStorage,
+                onCancel = storage::cancelStorage,
+            )
     }
 }
 

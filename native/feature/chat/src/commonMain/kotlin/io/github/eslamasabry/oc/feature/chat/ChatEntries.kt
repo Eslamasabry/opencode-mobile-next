@@ -19,6 +19,8 @@ import io.github.eslamasabry.oc.core.domain.platform.AppNotices
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.transcript.state.BlockRow
 import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
+import io.github.eslamasabry.oc.feature.chat.agentfeatures.presentation.AgentFeaturesViewModel
+import io.github.eslamasabry.oc.feature.chat.agentfeatures.ui.AgentFeaturesScreen
 import io.github.eslamasabry.oc.feature.chat.cards.ChatCards
 import io.github.eslamasabry.oc.feature.chat.cards.LocalChatCards
 import io.github.eslamasabry.oc.feature.chat.cards.ModelCardSlotHost
@@ -70,6 +72,7 @@ import io.github.eslamasabry.oc.ui.routes.SessionRelationsRoute
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.activeContextTitle
 import io.github.eslamasabry.oc.ui.words.res.chatQueueMoveTitle
+import io.github.eslamasabry.oc.ui.words.res.agentFeaturesTitle
 import io.github.eslamasabry.oc.ui.words.res.devPreviewMenu
 import io.github.eslamasabry.oc.ui.words.res.nativePendingCount
 import io.github.eslamasabry.oc.ui.words.res.nativePendingFailed
@@ -220,6 +223,17 @@ public class ChatEntries(
                 }
             val handoff by handoffVm.state.collectAsStateWithLifecycle()
             val approval by headerVm.approval.collectAsStateWithLifecycle()
+            val agentVm =
+                assistedMetroViewModel<AgentFeaturesViewModel, AgentFeaturesViewModel.Factory> {
+                    create(route)
+                }
+            val agentFeatures by agentVm.state.collectAsStateWithLifecycle()
+            val agentAction =
+                if (agentFeatures.available) {
+                    listOf(
+                        KitLineAction(stringResource(Res.string.agentFeaturesTitle), agentVm::open)
+                    )
+                } else emptyList()
             // PREVIEW-QR: the dev servers this conversation mentioned (rows are newest first; the
             // scan wants oldest first).
             val preview =
@@ -342,7 +356,7 @@ public class ChatEntries(
                                         stringResource(Res.string.stateHandoffTitle),
                                         handoffVm::open,
                                     ),
-                                ),
+                                ) + agentAction,
                             activeContext = activeContext,
                             prompts = prompts,
                             facts = facts,
@@ -417,6 +431,7 @@ public class ChatEntries(
                         QueueMoveScreen(queueMoveState, queueMove)
                         SessionTransferSheet(transferState, transfer)
                         StateHandoffSheet(handoff, handoffVm)
+                        AgentFeaturesScreen(agentFeatures, agentVm)
                     }
                 }
             }

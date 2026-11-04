@@ -16,13 +16,26 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import io.github.eslamasabry.oc.android.widgets.WidgetPanels
 import io.github.eslamasabry.oc.android.widgets.WidgetTextActions
+import io.github.eslamasabry.oc.core.data.migration.GateState
 import io.github.eslamasabry.oc.feature.widgetactions.presentation.*
 import io.github.eslamasabry.oc.feature.widgetactions.ui.WidgetActionEntries
 import io.github.eslamasabry.oc.feature.widgetactions.ui.WidgetPanelEntries
+import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitTheme
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
+import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
+import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.platform.AndroidKitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
+import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.kitTopBarClose
+import io.github.eslamasabry.oc.ui.words.res.widgetPanelOpenApp
+import io.github.eslamasabry.oc.ui.words.res.widgetPanelOpenAppForUpdate
+import io.github.eslamasabry.oc.ui.words.res.widgetPanelUpdating
+import io.github.eslamasabry.oc.ui.words.res.widgetV2ConfigureTitle
 import io.github.eslamasabry.opencode_mobile.graph.*
+import org.jetbrains.compose.resources.stringResource
 
 /** One private, kit-only window. Presentation panels never inspect message routing extras. */
 open class WidgetOverlayActivity : ComponentActivity() {
@@ -111,8 +124,12 @@ open class WidgetOverlayActivity : ComponentActivity() {
         messages = messageModel
         val settings = appGraph as SettingsAppGraph
         val platform = AndroidKitPlatform(window.decorView, window)
+        val gateState = appGraph.migration.engine.gate.state
         setContent {
             val appearance by settings.appPreferences.appearance.collectAsState()
+            // The update gate (plan 07 §2.2.2): nothing reads stores or sends until it is open; a
+            // blocked update is finished from the app, never from this window.
+            val gate by gateState.collectAsState()
             CompositionLocalProvider(LocalKitPlatform provides platform) {
                 KitTheme(
                     appearance = appearance,
@@ -120,7 +137,9 @@ open class WidgetOverlayActivity : ComponentActivity() {
                     localeTag =
                         AppLocale.applied ?: resources.configuration.locales[0].toLanguageTag(),
                 ) {
-                    if (panelModel != null) {
+                    if (gate !is GateState.Open) {
+                        WidgetGateNotice(gate)
+                    } else if (panelModel != null) {
                         val state by panelModel.state.collectAsState()
                         LaunchedEffect(state.closed) {
                             if (state.closed) {
@@ -173,6 +192,37 @@ open class WidgetOverlayActivity : ComponentActivity() {
                     }
                 }
             }
+        }
+    }
+
+    @androidx.compose.runtime.Composable
+    private fun WidgetGateNotice(gate: GateState) {
+        val waiting = gate !is GateState.Blocked
+        KitScreen(
+            topBar = {
+                KitTopBar(
+                    stringResource(Res.string.widgetV2ConfigureTitle),
+                    exit = KitTopBarExit.Close,
+                    exitLabel = stringResource(Res.string.kitTopBarClose),
+                    onExit = ::finish,
+                )
+            },
+            loading = waiting,
+        ) {
+            KitNotice(
+                stringResource(
+                    if (waiting) Res.string.widgetPanelUpdating
+                    else Res.string.widgetPanelOpenAppForUpdate
+                )
+            )
+            if (!waiting)
+                KitButton(
+                    stringResource(Res.string.widgetPanelOpenApp),
+                    {
+                        startActivity(Intent(this@WidgetOverlayActivity, MainActivity::class.java))
+                        finish()
+                    },
+                )
         }
     }
 

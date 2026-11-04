@@ -55,6 +55,7 @@ class NativeAgentSetupJobs(
     private val stores: PreviewStores,
     private val dispatchers: AppDispatchers,
     private val payloads: PhonePayloadGuard,
+    private val payloadAdmission: NativePaseoAdmission,
 ) : AgentSetupJobs, ProfileCloser {
     override val owner: String = ":engine:agents"
     private val denied = ConcurrentHashMap.newKeySet<ProfileId>()
@@ -64,7 +65,12 @@ class NativeAgentSetupJobs(
     val guard = AgentInstallGuard(BuildConfig.AGENT_INSTALL_MIN_FREE_BYTES)
 
     override suspend fun anySetupRunning(): Boolean? =
-        (native { runner.running || status()?.optString("state") == "running" } as? Outcome.Ok)
+        (native {
+                payloadAdmission.payloadsBusy() ||
+                    runner.running ||
+                    status()?.optString("state") == "running"
+            }
+                as? Outcome.Ok)
             ?.value
 
     override suspend fun freeBytes(): Long? =
@@ -83,7 +89,7 @@ class NativeAgentSetupJobs(
                 getString(Res.string.phoneSetupNotificationDone),
                 getString(Res.string.phoneSetupNotificationStopped),
             )
-        return native {
+        val started = native {
             check(admitted(owner)) { "unavailable" }
             val descriptor = AgentCatalog.builtIn.byId(agent) ?: error("unavailable")
             val estimate = guard.downloadBytesFor(descriptor) ?: error("unavailable")
@@ -146,16 +152,24 @@ class NativeAgentSetupJobs(
             try {
                 synchronized(admission) {
                     check(admitted(owner)) { "unavailable" }
-                    runner.start(
-                        "agent-${UUID.randomUUID()}",
-                        specs,
-                        JSONObject().put("agentOwner", owner.raw).put("agentId", agent.raw),
-                        texts,
-                    )
+                    payloadAdmission.startSetup {
+                        runner.start(
+                            "agent-${UUID.randomUUID()}",
+                            specs,
+                            JSONObject().put("agentOwner", owner.raw).put("agentId", agent.raw),
+                            texts,
+                        )
+                    }
                 }
             } finally {
                 mutation.release()
             }
+        }
+        return when (started) {
+            is Outcome.Failed -> started
+            is Outcome.Ok ->
+                if (started.value) Outcome.Ok(Unit)
+                else Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy))
         }
     }
 

@@ -85,6 +85,11 @@ public sealed interface HeaderSheet {
         val choices: ImmutableList<ContinueChoice>,
         val loading: Boolean,
         val failure: Failure?,
+        val agents: List<io.github.eslamasabry.oc.feature.chat.header.world.AgentHandoffChoice> =
+            emptyList(),
+        val draft: io.github.eslamasabry.oc.engine.agents.handoff.HandoffDraft? = null,
+        val handoffFailure: io.github.eslamasabry.oc.engine.agents.handoff.HandoffFailureKind? =
+            null,
     ) : HeaderSheet
 
     /**
@@ -189,4 +194,15 @@ public interface ChatHeaderActions {
 
     /** Copy the "Continue on computer" command (only writes the clipboard; nothing is sent). */
     public fun copyResumeCommand() {}
+}
+
+/** Optional handoff intents; implemented only by the production header with a concrete host. */
+public interface ChatAgentHandoffActions {
+    public fun prepareHandoff(
+        choice: io.github.eslamasabry.oc.feature.chat.header.world.AgentHandoffChoice
+    )
+
+    public fun sendHandoff(prompt: String)
+
+    public fun retryHandoffLink()
 }

@@ -20,9 +20,9 @@ kotlin {
         implementation(project(":engine:setupassist"))
         implementation(project(":ui:kit-chat"))
         implementation(project(":engine:diagnostics"))
+        implementation(project(":ui:kit-content"))
         // P12-SETTINGS: personal choices over the device Preferences facade (PreferencesChoices).
         implementation(project(":engine:settings"))
-        implementation(project(":ui:kit-chat"))
     }
     sourceSets.getByName("desktopTest").dependencies {
         implementation(

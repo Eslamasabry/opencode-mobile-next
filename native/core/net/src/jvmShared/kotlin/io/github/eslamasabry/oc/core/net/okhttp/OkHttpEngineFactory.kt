@@ -2,8 +2,11 @@ package io.github.eslamasabry.oc.core.net.okhttp
 
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.model.TerminalChannel
 import io.github.eslamasabry.oc.core.net.EngineFactory
+import io.github.eslamasabry.oc.core.net.TerminalSocketSpec
 import io.github.eslamasabry.oc.core.net.TransportError
 import io.github.eslamasabry.oc.core.net.TransportSpec
 import io.github.eslamasabry.oc.core.net.TrustRefusal
@@ -102,15 +105,27 @@ public class OkHttpEngineFactory(
         client.dispatcher.executorService.shutdown()
     }
 
+    override suspend fun openTerminal(
+        engine: HttpClientEngine,
+        spec: TerminalSocketSpec,
+        scope: CoroutineScope,
+        dispatchers: AppDispatchers,
+    ): Outcome<TerminalChannel> {
+        val client =
+            (engine.config as? OkHttpConfig)?.preconfigured
+                ?: return Outcome.Failed(Failure.Unavailable(FeatureId("terminal")))
+        return openTerminalSocket(client, spec, scope, dispatchers, ::classify)
+    }
+
     override fun classify(error: Throwable): TransportError =
         when (error) {
             is TrustRefusal ->
                 TransportError
                     .ConnectFailed // nothing was sent; TransportFailures uses its own failure
             is ResendRefusedException -> TransportError.ResendRefused
+            is UnknownHostException -> TransportError.DnsFailed
             is ConnectTimeoutException,
             is ConnectException,
-            is UnknownHostException,
             is NoRouteToHostException -> TransportError.ConnectFailed
             is HttpRequestTimeoutException,
             is SocketTimeoutException -> TransportError.Timeout
@@ -237,6 +252,12 @@ internal object StaleConnectionRetry {
             }
         }
     }
+
+    /**
+     * A one-use PTY ticket is never replayed after a failed upgrade (the unit's terminal channel
+     * name for [withoutRetries]).
+     */
+    fun forUpgrade(client: OkHttpClient): OkHttpClient = withoutRetries(client)
 
     /** A single-use-ticket upgrade must never inherit the read retry path. */
     fun withoutRetries(client: OkHttpClient): OkHttpClient =

@@ -28,4 +28,10 @@
     <string name="remoteTerminalEndQuestion">End this terminal?</string>
     <string name="remoteTerminalEndBody">This stops the remote shell and anything running inside it.</string>
     <string name="remoteTerminalKeep">Keep terminal</string>
+    <string name="remoteTerminalOffline">The terminal is disconnected. Open it again to reconnect.</string>
+    <string name="remoteTerminalSize">Terminal size</string>
+    <string name="remoteTerminalRows">Rows</string>
+    <string name="remoteTerminalColumns">Columns</string>
+    <string name="remoteTerminalApplySize">Apply size</string>
+    <string name="remoteTerminalSizeRange">Choose between 1 and 1000 rows and columns.</string>
 </resources>

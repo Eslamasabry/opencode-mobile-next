@@ -182,4 +182,12 @@ public interface SettingsActions {
      * outside.
      */
     public fun onResume() {}
+
+    public fun onVoiceLicense(id: String) {}
+
+    public fun onRetryLicense() {}
+
+    public fun onCopyLicense() {}
+
+    public fun onLicenseWebsite() {}
 }

@@ -4,6 +4,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- The network monitor reads the default network (ConnectivityManager). No probes, no network names. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
     <queries>
         <!-- Tailscale handoff (plan 11 §14.6, 16 §1.8.2): the one package AndroidTailscaleApp may look up and open. -->
         <package android:name="com.tailscale.ipn" />

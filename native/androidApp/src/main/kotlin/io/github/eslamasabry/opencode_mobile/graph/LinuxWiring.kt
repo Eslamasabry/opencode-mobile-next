@@ -15,13 +15,16 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
+import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.pace.DefaultPacer
 import io.github.eslamasabry.oc.core.common.pace.Pacer
-import io.github.eslamasabry.oc.core.common.pace.Visibility
 import io.github.eslamasabry.oc.core.security.ExternalLinkPolicy
 import io.github.eslamasabry.oc.core.security.LinkDecision
 import io.github.eslamasabry.oc.core.security.LinkOrigin
+import io.github.eslamasabry.oc.engine.runtime.budget.ServiceExitReason
+import io.github.eslamasabry.oc.engine.runtime.budget.ServiceExitRecord
+import io.github.eslamasabry.oc.engine.runtime.budget.lastAndroidKill as findLastAndroidKill
 import io.github.eslamasabry.oc.feature.linux.manager.LinuxJobKind
 import io.github.eslamasabry.oc.feature.linux.manager.LinuxManager
 import io.github.eslamasabry.oc.feature.linux.manager.LinuxRetryWait
@@ -48,11 +51,14 @@ import io.github.eslamasabry.oc.ui.words.res.linuxMgrJobNoticeInstall
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrJobNoticeRemove
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrJobNoticeUpdate
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrJobRestoring
+import io.github.eslamasabry.opencode_mobile.BuiltinLinux
+import io.github.eslamasabry.opencode_mobile.ChildProcessLimit
+import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.getString
 
 /**
@@ -210,31 +216,28 @@ object LinuxWiring {
         }
 
     @Provides
-    fun childLimitSource(app: Application): ChildLimitSource =
+    fun childLimitSource(
+        app: Application,
+        dispatchers: AppDispatchers,
+        clock: Clock,
+        admission: NativePaseoAdmission,
+    ): ChildLimitSource =
         object : ChildLimitSource {
-            override suspend fun status(): ChildLimitStatus {
-                val resolver = app.contentResolver
-                // Android 14+ "Disable child process restrictions" writes this flag false (plan 11
-                // §7.2); never written here.
-                val monitor =
-                    Settings.Global.getString(resolver, "settings_enable_monitor_phantom_procs")
-                return ChildLimitStatus(
-                    sdkInt = Build.VERSION.SDK_INT,
-                    state =
-                        when (monitor) {
-                            "false" -> ChildLimitState.Lifted
-                            "true" -> ChildLimitState.Enforced
-                            else -> ChildLimitState.Unknown
-                        },
-                    developerOptionsEnabled =
-                        Settings.Global.getInt(
-                            resolver,
-                            Settings.Global.DEVELOPMENT_SETTINGS_ENABLED,
-                            0,
-                        ) == 1,
-                    canOpenSettings = true,
-                )
-            }
+            override suspend fun status(): ChildLimitStatus =
+                withContext(dispatchers.io) {
+                    val raw = ChildProcessLimit.status(app)
+                    ChildLimitStatus(
+                        sdkInt = raw["sdkInt"] as? Int,
+                        state =
+                            when (raw["restrictionsOff"]) {
+                                true -> ChildLimitState.Lifted
+                                false -> ChildLimitState.Enforced
+                                else -> ChildLimitState.Unknown
+                            },
+                        developerOptionsEnabled = raw["developerOptionsEnabled"] as? Boolean,
+                        canOpenSettings = true,
+                    )
+                }
 
             override suspend fun openDeveloperOptions(): DeveloperOptionsOpened =
                 when {
@@ -245,9 +248,42 @@ object LinuxWiring {
                     else -> DeveloperOptionsOpened.None
                 }
 
-            override suspend fun lastAndroidKill(): Instant? = null
+            override suspend fun lastAndroidKill(): Instant? =
+                withContext(dispatchers.io) {
+                    try {
+                        val services = BuiltinLinux.get(app).performance()["services"] as? Map<*, *>
+                        val exits =
+                            services
+                                .orEmpty()
+                                .entries
+                                .mapNotNull { (name, value) ->
+                                    val row = value as? Map<*, *> ?: return@mapNotNull null
+                                    val key = name as? String ?: return@mapNotNull null
+                                    key to
+                                        ServiceExitRecord(
+                                            lastExitAt =
+                                                (row["lastExitAtMs"] as? Number)
+                                                    ?.toLong()
+                                                    ?.takeIf { it > 0 }
+                                                    ?.let(Instant::fromEpochMilliseconds),
+                                            lastStopRequested =
+                                                row["lastStopRequested"] as? Boolean,
+                                            exitReason =
+                                                ServiceExitReason.parse(
+                                                    row["exitReason"] as? String
+                                                ),
+                                        )
+                                }
+                                .toMap()
+                        findLastAndroidKill(exits, clock.now())
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (_: Exception) {
+                        null
+                    }
+                }
 
-            override fun queuesOften(): Boolean = false
+            override fun queuesOften(): Boolean = admission.queuesOften()
 
             override suspend fun hiddenAt(): Instant? =
                 prefs(app)
@@ -290,13 +326,12 @@ object LinuxWiring {
         }
 
     /**
-     * The Pacer the phone and Linux pages tick on (S3-PHONEUI R3: none was bound). Their timers run
-     * only while their page is shown, so a foreground-only visibility is exact for them. Remove
-     * this when the shell binds the app's own.
+     * Phone and Linux timers follow actual window visibility, including while a page remains
+     * composed.
      */
     @Provides
     @SingleIn(AppScope::class)
-    fun pacer(): Pacer = DefaultPacer(MutableStateFlow(Visibility.Foreground))
+    fun pacer(visibility: AppVisibility): Pacer = DefaultPacer(visibility.state)
 
     private fun Context.startSettings(intent: Intent): Boolean =
         try {

@@ -160,8 +160,14 @@ public class HandoffLinks(
         }
     }
 
+    /** ProfileCloser step 1: synchronous fence before any asynchronous deletion step. */
     public fun stopAdmission(profileId: String) {
         close(profileId)
+    }
+
+    /** Called only after a failed deletion drained the lane and kept the saved profile. */
+    public fun reopenProfile(profileId: String) {
+        if (hasProfile(profileId)) closed -= profileId
     }
 
     /**

@@ -96,6 +96,7 @@ class AppPhoneAgents(
     private val registry: ConnectionRegistry,
     private val redactor: Redactor,
     private val payloads: PhonePayloadGuard,
+    private val payloadAdmission: NativePaseoAdmission,
 ) : PhoneAgents, ProfileCloser {
     override val owner: String = ":engine:agents:auth"
     private val admission = Any()
@@ -336,48 +337,55 @@ class AppPhoneAgents(
     }
 
     private suspend fun removeLocked(id: String): Outcome<PhoneAgentRemoval> = lane.withLock {
-        val owner =
-            try {
-                (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value
-            } catch (e: Exception) {
-                null
-            }
-        if (owner.isNullOrEmpty())
-            return@withLock Outcome.Ok(
-                PhoneAgentRemoval.Refused(PhoneAgentRemovalIssue.Unavailable)
-            )
-        val busy =
-            when (
-                val read = native {
-                    SetupRunner.get(app).status()?.let { text ->
-                        JSONObject(text).optString("state") !in
-                            setOf("done", "failed", "interrupted", "cancelled")
-                    } ?: false
+        if (!payloadAdmission.beginRemoval())
+            return@withLock Outcome.Ok(PhoneAgentRemoval.Refused(PhoneAgentRemovalIssue.Busy))
+        try {
+            val owner =
+                try {
+                    (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value
+                } catch (e: Exception) {
+                    null
                 }
-            ) {
-                is Outcome.Ok -> read.value
-                is Outcome.Failed -> true
-            }
-        val answer =
-            when (val result = removal.remove(ProfileId(owner), AgentId(id), busy)) {
-                is Outcome.Failed -> return@withLock result
-                is Outcome.Ok ->
-                    when (val value = result.value) {
-                        is RemovalResult.Removed -> PhoneAgentRemoval.Removed(value.freedBytes)
-                        is RemovalResult.Refused ->
-                            PhoneAgentRemoval.Refused(
-                                when (value.reason) {
-                                    RemovalRefusal.Busy -> PhoneAgentRemovalIssue.Busy
-                                    RemovalRefusal.Unsafe -> PhoneAgentRemovalIssue.Unsafe
-                                    RemovalRefusal.Unconfirmed -> PhoneAgentRemovalIssue.Unconfirmed
-                                    RemovalRefusal.NotRemovable,
-                                    RemovalRefusal.Failed -> PhoneAgentRemovalIssue.Unavailable
-                                }
-                            )
+            if (owner.isNullOrEmpty())
+                return@withLock Outcome.Ok(
+                    PhoneAgentRemoval.Refused(PhoneAgentRemovalIssue.Unavailable)
+                )
+            val busy =
+                when (
+                    val read = native {
+                        SetupRunner.get(app).status()?.let { text ->
+                            JSONObject(text).optString("state") !in
+                                setOf("done", "failed", "interrupted", "cancelled")
+                        } ?: false
                     }
-            }
-        refreshLocked()
-        Outcome.Ok(answer)
+                ) {
+                    is Outcome.Ok -> read.value
+                    is Outcome.Failed -> true
+                }
+            val answer =
+                when (val result = removal.remove(ProfileId(owner), AgentId(id), busy)) {
+                    is Outcome.Failed -> return@withLock result
+                    is Outcome.Ok ->
+                        when (val value = result.value) {
+                            is RemovalResult.Removed -> PhoneAgentRemoval.Removed(value.freedBytes)
+                            is RemovalResult.Refused ->
+                                PhoneAgentRemoval.Refused(
+                                    when (value.reason) {
+                                        RemovalRefusal.Busy -> PhoneAgentRemovalIssue.Busy
+                                        RemovalRefusal.Unsafe -> PhoneAgentRemovalIssue.Unsafe
+                                        RemovalRefusal.Unconfirmed ->
+                                            PhoneAgentRemovalIssue.Unconfirmed
+                                        RemovalRefusal.NotRemovable,
+                                        RemovalRefusal.Failed -> PhoneAgentRemovalIssue.Unavailable
+                                    }
+                                )
+                        }
+                }
+            refreshLocked()
+            Outcome.Ok(answer)
+        } finally {
+            payloadAdmission.endRemoval()
+        }
     }
 
     private fun previousAvailable(agent: AgentDescriptor): Boolean =

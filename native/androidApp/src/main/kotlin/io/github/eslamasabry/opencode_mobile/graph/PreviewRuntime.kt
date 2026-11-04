@@ -64,6 +64,10 @@ class PreviewRuntime(
     private val clock: Clock,
     // 40-port-screens-3: new conversations use the server's saved model/variant defaults.
     private val defaults: NativeServerDefaults,
+    // job-47: the root-owned managed upgrade admits a profile before any gateway opens.
+    private val managedUpgrade: RootManagedUpgrade,
+    // job-47: Flutter-compatible opening labels (also read by Paseo's no-restamp idle guard).
+    private val sessionInventory: NativeSessionInventory,
 ) : ServerConnections, ServerDisconnects {
     val profiles: ProfileStore = stores.profiles
     private val lane = dispatchers.serial("preview-runtime")
@@ -119,6 +123,7 @@ class PreviewRuntime(
     private val creationOwners = LinkedHashMap<String, CreationOwner>()
 
     init {
+        managedUpgrade.reconnect = { connect(it) }
         scope.launch {
             val result = stores.warm()
             ready.complete(result)
@@ -348,6 +353,10 @@ class PreviewRuntime(
         recoverDrafts: Boolean = false,
         makeActive: Boolean = true,
     ): Outcome<Unit> {
+        when (val admitted = managedUpgrade.prepare(id)) {
+            is Outcome.Failed -> return admitted
+            is Outcome.Ok -> Unit
+        }
         val loaded =
             profiles.profile(id)
                 ?: return Failure.Refused(RefusalReason.ProfileDeleted)
@@ -760,6 +769,11 @@ class PreviewRuntime(
                     return Failure.Refused(RefusalReason.StaleScope)
                         .failed()
                         .atStage(ConnectionStage.LoadConversations)
+                val stored = profiles.profile(id)?.profile
+                if (stored != null)
+                    sessionInventory.save(stored, page.value.sessions) {
+                        registry.live.value[id] === graph
+                    }
                 val statuses = graph.session.server.sessionStatuses()
                 val caps = graph.session.server.capabilities.value
                 val permissions =

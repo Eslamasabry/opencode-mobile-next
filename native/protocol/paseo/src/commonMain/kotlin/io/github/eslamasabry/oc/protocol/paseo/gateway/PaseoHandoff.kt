@@ -51,8 +51,18 @@ public val PaseoGateway.handoffGeneration: Long
     get() = (transport.epoch.toLong() shl 32) xor locationEpoch.toLong()
 
 /**
+ * Writes one new, private handoff record; an existing file is never overwritten (the unit's entry
+ * point, the same writer as [PaseoGateway.writeHandoffRecord]).
+ */
+public suspend fun PaseoGateway.writeAgentHandoff(
+    directory: String,
+    recordId: String,
+    markdown: String,
+): Outcome<String> = PaseoHandoff(this).write(directory, recordId, markdown)
+
+/**
  * Exclusively creates one ignored handoff directory; existing records are never overwritten or
- * retried.
+ * retried. The AGENT-2 payload lease and the B-AGENT-173 payload-use admission both cover it.
  */
 internal class PaseoHandoff(private val g: PaseoGateway) {
     private val redactor = Redactor()
@@ -60,7 +70,7 @@ internal class PaseoHandoff(private val g: PaseoGateway) {
     suspend fun write(directory: String, recordId: String, markdown: String): Outcome<String> =
         g.withPayloadLease {
             withContext(g.lane) {
-                paseoAttempt {
+                paseoAttempt { g.withPayloadUse {
                     if (
                         !g.handoffFilesReady ||
                             directory != g.scopeDir ||
@@ -175,7 +185,7 @@ internal class PaseoHandoff(private val g: PaseoGateway) {
                     writeNew(folder, ".gitignore", "# OpenCode Mobile conversation handoff\n*\n")
                     writeNew(folder, "record.md", markdown)
                     "$folder/record.md"
-                }
+                } }
             }
         }
 }

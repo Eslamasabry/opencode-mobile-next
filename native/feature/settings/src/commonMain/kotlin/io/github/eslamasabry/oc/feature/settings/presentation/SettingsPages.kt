@@ -46,6 +46,8 @@ public sealed interface SettingsPage {
 
     public data object Tips : SettingsPage
 
+    public data class VoiceLicense(val id: String) : SettingsPage
+
     public data object Privacy : SettingsPage
 
     public data object PrivacyPolicy : SettingsPage

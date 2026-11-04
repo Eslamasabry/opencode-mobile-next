@@ -30,6 +30,7 @@ import io.github.eslamasabry.oc.engine.delivery.port.AutomationPolicy
 import io.github.eslamasabry.oc.engine.delivery.port.ConversationFacts
 import io.github.eslamasabry.oc.engine.delivery.port.DeliveryConnection
 import io.github.eslamasabry.oc.engine.delivery.port.GatewaySendLink
+import io.github.eslamasabry.oc.engine.delivery.port.ObservedPromptReceipts
 import io.github.eslamasabry.oc.engine.delivery.port.SendLink
 import io.github.eslamasabry.oc.engine.delivery.port.StopMemory
 import io.github.eslamasabry.oc.engine.delivery.queue.OfflineQueue
@@ -105,8 +106,15 @@ public class ConnectionDelivery(
         return Outcome.Ok(Unit)
     }
 
+    private val observedReceipts = ObservedPromptReceipts()
     private val link =
-        GatewaySendLink(profile.id, profile.origin.toString(), gateway, tracing) {
+        GatewaySendLink(
+            profile.id,
+            profile.origin.toString(),
+            gateway,
+            tracing,
+            observedReceipts,
+        ) {
             admission(profile)
         }
     private val connection =
@@ -188,6 +196,22 @@ public class ConnectionDelivery(
         tracing?.let { trace ->
             scope.launch { gateway.events.project.collect { feed(trace, it.event) } }
         }
+        scope.launch {
+            gateway.events.all.collect { envelope ->
+                val event = envelope.event
+                val current = connection.link.value
+                val location = envelope.location
+                if (
+                    event is GatewayEvent.MessageUpserted &&
+                        current != null &&
+                        (location?.directory == null ||
+                            location.directory == current.scope.directory) &&
+                        (location?.workspace == null ||
+                            location.workspace == current.scope.workspace)
+                )
+                    observedReceipts.observe(current.scope, event)
+            }
+        }
         val lane = dispatchers.serial("delivery-reconcile")
         scope.launch(lane) {
             gateway.events.project.collect { envelope ->
@@ -213,6 +237,7 @@ public class ConnectionDelivery(
                                 profile.origin.toString(),
                                 gateway,
                                 tracing,
+                                observedReceipts,
                             ) {
                                 admission(profile)
                             }

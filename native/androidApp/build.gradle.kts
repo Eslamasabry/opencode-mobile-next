@@ -108,6 +108,8 @@ dependencies {
             ":ui:kit-content",
             ":feature:settings",
             ":feature:capabilities",
+            ":feature:widget-panels",
+            ":feature:manage-space",
             ":feature:onboarding",
             ":engine:settings",
             ":engine:analytics",

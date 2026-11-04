@@ -52,6 +52,9 @@ public data class ProjectsPickerUi(
     val createName: String = "",
     val creatingFolder: Boolean = false,
     val folderFailure: Failure? = null,
+    val storageDirectory: String? = null,
+    val requestingStorage: Boolean = false,
+    val storageRefused: Boolean = false,
     /** The folder used last, so the path field starts next to it. */
     val pathStart: String = "",
     val canBrowsePhone: Boolean = false,

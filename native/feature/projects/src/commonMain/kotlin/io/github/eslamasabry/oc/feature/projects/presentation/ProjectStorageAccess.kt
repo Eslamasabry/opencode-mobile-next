@@ -57,18 +57,30 @@ public data class ProjectStorageUi(
     val refused: Boolean = false,
 )
 
+/**
+ * One set of storage intents for both gates: the project page's storage check
+ * ([ProjectStorageViewModel]: shown/allow/restart/retry/back/useAppSpace) and the picker's
+ * folder-access confirmation ([ProjectFolderAccess]: allowStorage/cancelStorage). Each owner
+ * overrides the intents its screen offers.
+ */
 public interface ProjectStorageActions {
-    public fun shown()
+    public fun shown() {}
 
-    public fun allow()
+    public fun allow() {}
 
-    public fun restart()
+    public fun restart() {}
 
-    public fun retry()
+    public fun retry() {}
 
-    public fun back()
+    public fun back() {}
 
-    public fun useAppSpace()
+    public fun useAppSpace() {}
+
+    /** Picker: the person confirmed the folder-access request for the chosen project. */
+    public fun allowStorage() {}
+
+    /** Picker: the person declined the folder-access request. */
+    public fun cancelStorage() {}
 }
 
 @AssistedInject

@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.core.common.getOrNull
 import io.github.eslamasabry.oc.core.model.ServerOrigin
 import io.github.eslamasabry.oc.core.net.ws.WsSession
 import io.github.eslamasabry.oc.core.net.ws.WsSpec
+import io.github.eslamasabry.oc.core.model.TerminalChannel
 import io.github.eslamasabry.oc.core.security.HostClass
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
@@ -70,6 +71,9 @@ public class TrustRefusal(public val failure: Failure) : IOException("refused by
  * mutations.
  */
 public enum class TransportError {
+    /** The resolver could not find the host; no request reached a server. */
+    DnsFailed,
+
     /**
      * Nothing reached the server: DNS, refused, no route, connect timeout, a refused trust gate.
      */
@@ -110,6 +114,14 @@ public interface EngineFactory {
      * nothing frees them (review w1-core-net MAJOR 6).
      */
     public fun release(engine: HttpClientEngine) {}
+
+    /** Opens a PTY upgrade on this connection's own trust-enforced client. */
+    public suspend fun openTerminal(
+        engine: HttpClientEngine,
+        spec: TerminalSocketSpec,
+        scope: CoroutineScope,
+        dispatchers: AppDispatchers,
+    ): Outcome<TerminalChannel> = Outcome.Failed(Failure.Unavailable(FeatureId("terminal")))
 }
 
 /**
@@ -184,6 +196,7 @@ public object TransportFailures {
         return when {
             // Nothing reached the server, so even a mutation is safe to call failed (DNS, refused,
             // no route, gate).
+            error == TransportError.DnsFailed -> Failure.Network(NetworkWhy.Dns, details)
             error == TransportError.ConnectFailed -> Failure.Network(NetworkWhy.Refused, details)
             kind == CallKind.Mutation -> Failure.Refused(RefusalReason.DispatchUncertain, details)
             error == TransportError.Timeout -> Failure.TimedOut(details)
@@ -238,6 +251,9 @@ public class HttpClientFactory(
             socketConnector = { socket, scope, dispatchers ->
                 engines.connectSocket(engine, socket, scope, dispatchers)
             },
+            terminal = { spec, scope, dispatchers ->
+                engines.openTerminal(engine, spec, scope, dispatchers)
+            },
         ) {
             engine.close()
             engines.release(engine)
@@ -255,6 +271,11 @@ public class NetClient(
     private val classify: (Throwable) -> TransportError,
     private val socketConnector:
         suspend (WsSpec, CoroutineScope, AppDispatchers) -> Outcome<WsSession> =
+        { _, _, _ ->
+            Outcome.Failed(Failure.Unavailable(FeatureId("terminal")))
+        },
+    private val terminal:
+        suspend (TerminalSocketSpec, CoroutineScope, AppDispatchers) -> Outcome<TerminalChannel> =
         { _, _, _ ->
             Outcome.Failed(Failure.Unavailable(FeatureId("terminal")))
         },
@@ -332,6 +353,13 @@ public class NetClient(
         }
         return result
     }
+
+    /** Same-client PTY upgrade; credentials and one-use tickets never enter diagnostics. */
+    public suspend fun openTerminal(
+        spec: TerminalSocketSpec,
+        scope: CoroutineScope,
+        dispatchers: AppDispatchers,
+    ): Outcome<TerminalChannel> = terminal(spec, scope, dispatchers)
 
     private val observers = AtomicReference<List<HttpCallObserver>>(emptyList())
 

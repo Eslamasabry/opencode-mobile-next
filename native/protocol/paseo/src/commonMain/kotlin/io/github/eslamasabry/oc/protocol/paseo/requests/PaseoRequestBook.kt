@@ -97,6 +97,12 @@ public interface PaseoRequestHost {
 
     public fun directoryOf(appId: String): String? = null
 
+    /**
+     * Profile-owned card qualification (a second source beside
+     * [PaseoRequestBook.setDisplayCardAllowance]); unbound hosts never approve card tools.
+     */
+    public fun canAutoAllowCard(appId: String): Boolean = false
+
     /** Transport request on [expectedEpoch]; throws [PaseoException]. */
     public suspend fun request(
         type: String,
@@ -303,9 +309,11 @@ public class PaseoRequestBook(
             hostRequest,
             canonical(request) + "|" + provider,
             displayCard =
-                request.str("kind") == "tool" &&
+                hostRequest == null &&
+                    request.str("kind") == "tool" &&
                     request.str("name") == "mcp__oc-ui__show" &&
-                    provider == "claude",
+                    provider == "claude" &&
+                    (request.str("provider") == null || request.str("provider") == "claude"),
         )
     }
 
@@ -393,11 +401,31 @@ public class PaseoRequestBook(
             host.providerOf(pending.permission.sessionId.raw) == "claude" &&
             host.scope != null &&
             host.directoryOf(pending.permission.sessionId.raw) == host.scope &&
+            cardQualified(pending.permission.sessionId.raw)
+
+    /**
+     * Either live qualification source approves: the allowance installed by the owning native
+     * graph, or the host's profile-owned check. Absence or an error never approves.
+     */
+    private fun cardQualified(appId: String): Boolean {
+        val allowed =
             try {
                 cardsAllowed?.invoke() == true
             } catch (_: Exception) {
                 false
             }
+        if (allowed) return true
+        return try {
+            host.canAutoAllowCard(appId)
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    /** Recheck pending card tools after the profile's effective qualification changes. */
+    public fun sweepCardApprovals() {
+        permissions.values.toList().forEach { tryAllowDisplayCard(it, previouslyShown = true) }
+    }
 
     private fun tryAllowDisplayCard(
         pending: Permission,

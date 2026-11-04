@@ -40,7 +40,8 @@ public class ProjectsPickerViewModel(
     private val discovery: PhoneProjectDiscovery,
     private val creator: ProjectCreation = NoProjectCreation(),
     private val phoneFolders: PhoneFolders = NoPhoneFolders(),
-) : ViewModel(), ProjectsPickerActions {
+    private val storageAccess: Set<ProjectFolderAccess> = emptySet(),
+) : ViewModel(), ProjectsPickerActions, ProjectStorageActions {
     private val mutable = MutableStateFlow(ProjectsPickerUi())
     public val state: StateFlow<ProjectsPickerUi> = mutable.asStateFlow()
 
@@ -396,7 +397,39 @@ public class ProjectsPickerViewModel(
 
     override fun openProject(directory: String) {
         val profile = chosen ?: return
-        nav.open(ProjectsRoute.Project(profile, ProjectRules.normalize(directory)))
+        val normalized = ProjectRules.normalize(directory)
+        val mine = generation
+        viewModelScope.launch {
+            if (storageAccess.any { it.blocked(profile, normalized) }) {
+                if (chosen == profile && generation == mine)
+                    mutable.update {
+                        it.copy(storageDirectory = normalized, storageRefused = false)
+                    }
+            } else if (chosen == profile && generation == mine)
+                nav.open(ProjectsRoute.Project(profile, normalized))
+        }
+    }
+
+    override fun allowStorage() {
+        val profile = chosen ?: return
+        val directory = state.value.storageDirectory ?: return
+        val access = storageAccess.singleOrNull() ?: return
+        if (state.value.requestingStorage) return
+        val mine = generation
+        mutable.update { it.copy(requestingStorage = true) }
+        viewModelScope.launch {
+            val result = access.request(profile, directory)
+            val denied = result is Outcome.Failed || access.blocked(profile, directory)
+            if (chosen != profile || generation != mine) return@launch
+            mutable.update {
+                it.copy(requestingStorage = false, storageDirectory = null, storageRefused = denied)
+            }
+            if (!denied) nav.open(ProjectsRoute.Project(profile, directory))
+        }
+    }
+
+    override fun cancelStorage(): Unit = mutable.update {
+        it.copy(storageDirectory = null, storageRefused = false)
     }
 
     override fun search(query: String) {

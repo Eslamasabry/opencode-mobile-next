@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="agentFeaturesTitle">Agent settings</string>
+    <string name="agentFeaturesEmpty">This agent has no extra settings.</string>
+    <string name="agentFeaturesFailed">Could not load agent settings</string>
+</resources>

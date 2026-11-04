@@ -35,13 +35,20 @@ import kotlinx.serialization.json.JsonObject
  * and a refusal is plain: the daemon's words never reach a Failure (not even Details).
  */
 
-/** Biggest file the viewer asks for; the daemon refuses larger ones and a bigger frame would drop the connection. */
+/**
+ * Biggest file the viewer asks for; the daemon refuses larger ones and a bigger frame would drop
+ * the connection.
+ */
 internal const val PASEO_MAX_FILE_BYTES: Int = 2 * 1024 * 1024
 
 /** Runs [block] on the gateway's lane and turns module failures into a Failure. */
-internal suspend fun <T> PaseoGateway.laneCall(block: suspend () -> T): Outcome<T> = withContext(lane) { paseoAttempt { block() } }
+internal suspend fun <T> PaseoGateway.laneCall(block: suspend () -> T): Outcome<T> =
+    withContext(lane) { paseoAttempt { block() } }
 
-/** One daemon request for the open folder; a folder change while it ran fails ScopeMismatch. Refusals carry no text. */
+/**
+ * One daemon request for the open folder; a folder change while it ran fails ScopeMismatch.
+ * Refusals carry no text.
+ */
 internal suspend fun PaseoGateway.workspaceRequest(
     type: String,
     body: JsonObject,
@@ -50,11 +57,18 @@ internal suspend fun PaseoGateway.workspaceRequest(
 ): JsonObject {
     val scope = scopeDir
     val epoch = locationEpoch
-    val result = try {
-        transport.request(type, body, mutation = mutation, timeoutMs = timeoutMs)
-    } catch (e: PaseoException) {
-        throw PaseoException(e.kind)
-    }
+    val result =
+        try {
+            transport.request(
+                type,
+                body,
+                mutation = mutation,
+                timeoutMs = timeoutMs,
+                beforeSend = { checkLocation(scope, epoch) },
+            )
+        } catch (e: PaseoException) {
+            throw PaseoException(e.kind)
+        }
     checkLocation(scope, epoch)
     return result
 }
@@ -62,10 +76,12 @@ internal suspend fun PaseoGateway.workspaceRequest(
 /** Checkout answers carry their failure as `{code, message}`: a plain Unavailable. */
 private fun requireCheckoutOk(payload: JsonObject) {
     val error = payload["error"]
-    if (error != null && error !is kotlinx.serialization.json.JsonNull) paseoFail(PaseoFailureKind.Unavailable)
+    if (error != null && error !is kotlinx.serialization.json.JsonNull)
+        paseoFail(PaseoFailureKind.Unavailable)
 }
 
-internal fun folderName(directory: String): String = directory.split('/').lastOrNull { it.isNotEmpty() } ?: directory
+internal fun folderName(directory: String): String =
+    directory.split('/').lastOrNull { it.isNotEmpty() } ?: directory
 
 /** A path inside the open folder, relative, with `.` for the folder itself. */
 internal fun PaseoGateway.relativeToScope(path: String): String {
@@ -77,7 +93,10 @@ internal fun PaseoGateway.relativeToScope(path: String): String {
     return value.ifEmpty { "." }
 }
 
-/** Where the daemon reads [path]: inside the folder relative to it, an absolute path outside it from `/`. */
+/**
+ * Where the daemon reads [path]: inside the folder relative to it, an absolute path outside it from
+ * `/`.
+ */
 private fun PaseoGateway.readTarget(path: String): Pair<String, String> {
     val value = path.trim()
     val root = scopeDir
@@ -89,30 +108,49 @@ private fun PaseoGateway.readTarget(path: String): Pair<String, String> {
 
 internal suspend fun PaseoGateway.readFileList(path: String): ImmutableList<FileNode> {
     val (cwd, target) = readTarget(path)
-    val payload = workspaceRequest("file_explorer_request", jsonOf("cwd" to cwd, "path" to target, "mode" to "list"))
-    val directory = payload["directory"].objectOrNull() ?: paseoFail(PaseoFailureKind.InvalidResponse)
-    val nodes = paseoList(directory["entries"], max = 50_000).map {
-        val entry = paseoObject(it)
-        FileNode(name = paseoString(entry["name"], max = 1024), path = paseoString(entry["path"]), isDir = entry.str("kind") == "directory")
-    }
-    return nodes.sortedWith(compareBy<FileNode> { !it.isDir }.thenBy { it.name.lowercase() }).toImmutableList()
+    val payload =
+        workspaceRequest(
+            "file_explorer_request",
+            jsonOf("cwd" to cwd, "path" to target, "mode" to "list"),
+        )
+    val directory =
+        payload["directory"].objectOrNull() ?: paseoFail(PaseoFailureKind.InvalidResponse)
+    val nodes =
+        paseoList(directory["entries"], max = 50_000).map {
+            val entry = paseoObject(it)
+            FileNode(
+                name = paseoString(entry["name"], max = 1024),
+                path = paseoString(entry["path"]),
+                isDir = entry.str("kind") == "directory",
+            )
+        }
+    return nodes
+        .sortedWith(compareBy<FileNode> { !it.isDir }.thenBy { it.name.lowercase() })
+        .toImmutableList()
 }
 
 internal suspend fun PaseoGateway.readFileContent(path: String): FileContent {
     val (cwd, target) = readTarget(path)
-    val payload = workspaceRequest(
-        "file_explorer_request",
-        jsonOf("cwd" to cwd, "path" to target, "mode" to "file", "maxBytes" to PASEO_MAX_FILE_BYTES),
-    )
+    val payload =
+        workspaceRequest(
+            "file_explorer_request",
+            jsonOf(
+                "cwd" to cwd,
+                "path" to target,
+                "mode" to "file",
+                "maxBytes" to PASEO_MAX_FILE_BYTES,
+            ),
+        )
     val file = paseoObject(payload["file"])
     val kind = file.str("kind")
     return FileContent(
         content = file.str("content") ?: "",
-        type = when (kind) {
-            "binary" -> "binary"
-            "image" -> "image"
-            else -> "text"
-        },
+        type =
+            when (kind) {
+                "binary" -> "binary"
+                "image" -> "image"
+                else -> "text"
+            },
         encoding = if (file.str("encoding") == "base64") "base64" else null,
         mimeType = file.str("mimeType"),
     )
@@ -121,30 +159,47 @@ internal suspend fun PaseoGateway.readFileContent(path: String): FileContent {
 internal suspend fun PaseoGateway.findFileByName(query: String): ImmutableList<String> {
     val text = query.trim()
     if (text.isEmpty()) return persistentListOf()
-    val payload = workspaceRequest(
-        "directory_suggestions_request",
-        jsonOf("query" to text, "cwd" to scopeDir, "includeFiles" to true, "includeDirectories" to false, "limit" to 100),
-    )
+    val payload =
+        workspaceRequest(
+            "directory_suggestions_request",
+            jsonOf(
+                "query" to text,
+                "cwd" to scopeDir,
+                "includeFiles" to true,
+                "includeDirectories" to false,
+                "limit" to 100,
+            ),
+        )
     return paseoList(payload["entries"], max = 1000)
-        .mapNotNull { it.objectOrNull()?.takeIf { e -> e.str("kind") == "file" }?.let { e -> paseoString(e["path"]) } }
+        .mapNotNull {
+            it.objectOrNull()
+                ?.takeIf { e -> e.str("kind") == "file" }
+                ?.let { e -> paseoString(e["path"]) }
+        }
         .toImmutableList()
 }
 
 // ---- Changes (checkout.diff.get, checkout_status_request)
 
 private suspend fun PaseoGateway.checkoutDiff(cwd: String, mode: VcsDiffMode): List<JsonObject> {
-    val payload = workspaceRequest(
-        "checkout.diff.get.request",
-        jsonOf(
-            "cwd" to cwd,
-            "compare" to mapOf("mode" to (if (mode == VcsDiffMode.WorkingTree) "uncommitted" else "base"), "ignoreWhitespace" to false),
-        ),
-    )
+    val payload =
+        workspaceRequest(
+            "checkout.diff.get.request",
+            jsonOf(
+                "cwd" to cwd,
+                "compare" to
+                    mapOf(
+                        "mode" to (if (mode == VcsDiffMode.WorkingTree) "uncommitted" else "base"),
+                        "ignoreWhitespace" to false,
+                    ),
+            ),
+        )
     requireCheckoutOk(payload)
     return paseoList(payload["files"], max = 5000).map(::paseoObject)
 }
 
-private fun count(file: JsonObject, key: String): Int = file[key].longOrNull()?.takeIf { it >= 0 && it <= Int.MAX_VALUE }?.toInt() ?: 0
+private fun count(file: JsonObject, key: String): Int =
+    file[key].longOrNull()?.takeIf { it >= 0 && it <= Int.MAX_VALUE }?.toInt() ?: 0
 
 private fun fileStatus(file: JsonObject): String =
     when {
@@ -171,14 +226,16 @@ internal fun paseoFileDiff(file: JsonObject): FileDiff {
                 for (raw in lines) {
                     val line = raw.objectOrNull() ?: continue
                     val text = line["content"].stringOrNull() ?: ""
-                    patch.append(
-                        when (line.str("type")) {
-                            "header" -> text
-                            "add" -> "+$text"
-                            "remove" -> "-$text"
-                            else -> " $text"
-                        },
-                    ).append('\n')
+                    patch
+                        .append(
+                            when (line.str("type")) {
+                                "header" -> text
+                                "add" -> "+$text"
+                                "remove" -> "-$text"
+                                else -> " $text"
+                            }
+                        )
+                        .append('\n')
                 }
             }
         }
@@ -193,7 +250,16 @@ internal fun paseoFileDiff(file: JsonObject): FileDiff {
 }
 
 private fun fileStatuses(files: List<JsonObject>): ImmutableList<VersionControlFile> =
-    files.map { VersionControlFile(paseoString(it["path"]), fileStatus(it), count(it, "additions"), count(it, "deletions")) }.toImmutableList()
+    files
+        .map {
+            VersionControlFile(
+                paseoString(it["path"]),
+                fileStatus(it),
+                count(it, "additions"),
+                count(it, "deletions"),
+            )
+        }
+        .toImmutableList()
 
 internal suspend fun PaseoGateway.readVcsDiffs(mode: VcsDiffMode): ImmutableList<FileDiff> =
     checkoutDiff(scopeDir, mode).map(::paseoFileDiff).toImmutableList()
@@ -204,50 +270,85 @@ internal suspend fun PaseoGateway.readSessionDiff(id: String): ImmutableList<Fil
     return checkoutDiff(cwd, VcsDiffMode.WorkingTree).map(::paseoFileDiff).toImmutableList()
 }
 
-internal suspend fun PaseoGateway.readFileStatuses(directory: String? = null): ImmutableList<VersionControlFile> =
-    fileStatuses(checkoutDiff(directory?.let { paseoString(it, max = 4096) } ?: scopeDir, VcsDiffMode.WorkingTree))
+internal suspend fun PaseoGateway.readFileStatuses(
+    directory: String? = null
+): ImmutableList<VersionControlFile> =
+    fileStatuses(
+        checkoutDiff(
+            directory?.let { paseoString(it, max = 4096) } ?: scopeDir,
+            VcsDiffMode.WorkingTree,
+        )
+    )
 
 internal suspend fun PaseoGateway.readVersionControlHealth(): VersionControlHealth {
     val payload = workspaceRequest("checkout_status_request", jsonOf("cwd" to scopeDir))
     requireCheckoutOk(payload)
-    if (payload["isGit"].boolOrNull() != true) return VersionControlHealth(null, null, persistentListOf(), VersionControlSetupState.Absent)
-    val changes = if (payload["isDirty"].boolOrNull() == true) readFileStatuses() else persistentListOf()
-    return VersionControlHealth(payload.str("currentBranch"), payload.str("baseRef"), changes, VersionControlSetupState.Git)
+    if (payload["isGit"].boolOrNull() != true)
+        return VersionControlHealth(null, null, persistentListOf(), VersionControlSetupState.Absent)
+    val changes =
+        if (payload["isDirty"].boolOrNull() == true) readFileStatuses() else persistentListOf()
+    return VersionControlHealth(
+        payload.str("currentBranch"),
+        payload.str("baseRef"),
+        changes,
+        VersionControlSetupState.Git,
+    )
 }
 
-// ---- Worktrees (paseo_worktree_list / create_paseo_worktree / paseo_worktree_archive). No reset: the daemon has none.
+// ---- Worktrees (paseo_worktree_list / create_paseo_worktree / paseo_worktree_archive). No reset:
+// the daemon has none.
 
-internal suspend fun PaseoGateway.readWorktrees(projectDirectory: String): ImmutableList<WorktreeInfo> {
+internal suspend fun PaseoGateway.readWorktrees(
+    projectDirectory: String
+): ImmutableList<WorktreeInfo> {
     val payload = workspaceRequest("paseo_worktree_list_request", jsonOf("cwd" to projectDirectory))
     requireCheckoutOk(payload)
-    return paseoList(payload["worktrees"], max = 5000).map {
-        val entry = paseoObject(it)
-        val directory = paseoString(entry["worktreePath"])
-        WorktreeInfo(folderName(directory), directory, entry.str("branchName")?.takeIf { b -> b.isNotEmpty() }, ready = true)
-    }.toImmutableList()
+    return paseoList(payload["worktrees"], max = 5000)
+        .map {
+            val entry = paseoObject(it)
+            val directory = paseoString(entry["worktreePath"])
+            WorktreeInfo(
+                folderName(directory),
+                directory,
+                entry.str("branchName")?.takeIf { b -> b.isNotEmpty() },
+                ready = true,
+            )
+        }
+        .toImmutableList()
 }
 
-internal suspend fun PaseoGateway.makeWorktree(projectDirectory: String, name: String?): WorktreeInfo {
+internal suspend fun PaseoGateway.makeWorktree(
+    projectDirectory: String,
+    name: String?,
+): WorktreeInfo {
     val slug = name?.trim().orEmpty()
-    val payload = workspaceRequest(
-        "create_paseo_worktree_request",
-        jsonOf("cwd" to projectDirectory, "worktreeSlug" to slug.ifEmpty { null }).withoutNulls(),
-        mutation = true,
-    )
+    val payload =
+        workspaceRequest(
+            "create_paseo_worktree_request",
+            jsonOf("cwd" to projectDirectory, "worktreeSlug" to slug.ifEmpty { null })
+                .withoutNulls(),
+            mutation = true,
+        )
     requireCheckoutOk(payload)
     val workspace = paseoObject(payload["workspace"])
     val directory = paseoString(workspace["workspaceDirectory"] ?: workspace["projectRootPath"])
-    val branch = workspace["gitRuntime"].objectOrNull()?.str("currentBranch")?.takeIf { it.isNotEmpty() }
+    val branch =
+        workspace["gitRuntime"].objectOrNull()?.str("currentBranch")?.takeIf { it.isNotEmpty() }
     // The daemon answers once the folder exists: no readiness event follows.
     return WorktreeInfo(folderName(directory), directory, branch, ready = true)
 }
 
 internal suspend fun PaseoGateway.archiveWorktree(projectDirectory: String, directory: String) {
-    val payload = workspaceRequest(
-        "paseo_worktree_archive_request",
-        jsonOf("worktreePath" to paseoString(directory), "repoRoot" to projectDirectory, "scope" to "worktree"),
-        mutation = true,
-    )
+    val payload =
+        workspaceRequest(
+            "paseo_worktree_archive_request",
+            jsonOf(
+                "worktreePath" to paseoString(directory),
+                "repoRoot" to projectDirectory,
+                "scope" to "worktree",
+            ),
+            mutation = true,
+        )
     requireCheckoutOk(payload)
     if (payload["success"].boolOrNull() != true) paseoFail(PaseoFailureKind.Unavailable)
 }

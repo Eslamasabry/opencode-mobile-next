@@ -5,7 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import io.github.eslamasabry.oc.feature.onboarding.presentation.ManagedMoveActions
-import io.github.eslamasabry.oc.feature.onboarding.presentation.ManagedMoveReason
+import io.github.eslamasabry.oc.feature.onboarding.presentation.ManagedMoveProblem
 import io.github.eslamasabry.oc.feature.onboarding.presentation.ManagedMoveUi
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
@@ -26,18 +26,21 @@ import io.github.eslamasabry.oc.ui.words.res.openCode2MoveProgress
 import io.github.eslamasabry.oc.ui.words.res.openCode2MoveRetrying
 import io.github.eslamasabry.oc.ui.words.res.openCode2UpgradeTitle
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardFailedTitle
+import io.github.eslamasabry.oc.ui.words.res.serverSwitcherTitle
 import org.jetbrains.compose.resources.stringResource
 
 /**
  * The first-launch move is drawn on kit ground in every language, with no raw diagnostics in its
- * main copy.
+ * main copy. A protected history move has a visible retry and an exit to the server list.
  */
 @Composable
 public fun ManagedMoveScreen(state: ManagedMoveUi, actions: ManagedMoveActions) {
     KitScreen(width = KitScreenWidth.Reading, page = true) {
         Column(Modifier.testTag("managed-opencode2-upgrade")) {
-            val failed = state.failure
-            if (failed == null) {
+            val problem = state.problem
+            val changeServer =
+                KitAction(stringResource(Res.string.serverSwitcherTitle), actions::changeServer)
+            if (state.running || problem == null) {
                 KitStateView(
                     kind = KitStateKind.Working,
                     title = stringResource(Res.string.openCode2UpgradeTitle),
@@ -50,6 +53,7 @@ public fun ManagedMoveScreen(state: ManagedMoveUi, actions: ManagedMoveActions) 
                             )
                         else stringResource(Res.string.openCode2MoveProgress),
                     progress = KitProgress.Waiting(),
+                    secondary = changeServer,
                 )
             } else {
                 KitStateView(
@@ -57,25 +61,24 @@ public fun ManagedMoveScreen(state: ManagedMoveUi, actions: ManagedMoveActions) 
                     title = stringResource(Res.string.phoneServerCardFailedTitle),
                     body =
                         stringResource(
-                            when (failed.reason) {
-                                ManagedMoveReason.PhoneNotReady ->
-                                    Res.string.openCode2MoveFailedNotReady
-                                ManagedMoveReason.SeparateHistory ->
+                            when (problem) {
+                                ManagedMoveProblem.NotReady -> Res.string.openCode2MoveFailedNotReady
+                                ManagedMoveProblem.SeparateHistory ->
                                     Res.string.openCode2MoveFailedSeparateHistory
-                                ManagedMoveReason.MoveStopped ->
-                                    Res.string.openCode2MoveFailedStopped
-                                ManagedMoveReason.NotConfirmed ->
+                                ManagedMoveProblem.Stopped -> Res.string.openCode2MoveFailedStopped
+                                ManagedMoveProblem.NotConfirmed ->
                                     Res.string.openCode2MoveFailedNotConfirmed
                             }
                         ),
                     primary =
-                        if (failed.reason == ManagedMoveReason.SeparateHistory) null
+                        if (problem == ManagedMoveProblem.SeparateHistory) null
                         else KitAction(stringResource(Res.string.commonRetry), actions::retry),
+                    secondary = changeServer,
                 )
                 KitDetailsFold(
                     label = stringResource(Res.string.kitDetails),
                     copyLabel = stringResource(Res.string.kitCopyDetails),
-                    text = failed.failure?.details,
+                    text = state.failure?.details,
                 )
             }
         }

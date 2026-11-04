@@ -185,6 +185,9 @@ public class GraphFilesConnections(private val registry: ConnectionRegistry) : F
     private fun unavailable(feature: String): Outcome.Failed =
         Outcome.Failed(Failure.Unavailable(FeatureId(feature)))
 
+    override fun canTerminal(ref: ConversationRef): Boolean =
+        live(ref)?.capabilities?.value?.terminal == true
+
     override suspend fun directory(ref: ConversationRef): String? {
         val gateway = live(ref) ?: return null
         return ConversationFiles(gateway, ref.sessionId).directory()

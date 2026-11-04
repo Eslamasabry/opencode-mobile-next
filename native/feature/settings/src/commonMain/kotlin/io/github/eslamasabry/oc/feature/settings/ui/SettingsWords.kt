@@ -61,6 +61,7 @@ import io.github.eslamasabry.oc.ui.words.res.effectsMotionFullHint
 import io.github.eslamasabry.oc.ui.words.res.effectsMotionOff
 import io.github.eslamasabry.oc.ui.words.res.effectsMotionOffHint
 import io.github.eslamasabry.oc.ui.words.res.effectsSaveFailed
+import io.github.eslamasabry.oc.ui.words.res.kitCopied
 import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
 import io.github.eslamasabry.oc.ui.words.res.nativeCapabilitiesTitle
 import io.github.eslamasabry.oc.ui.words.res.nativePhraseChipsAliases
@@ -112,6 +113,7 @@ import io.github.eslamasabry.oc.ui.words.res.textSizeLarge
 import io.github.eslamasabry.oc.ui.words.res.textSizeSmall
 import io.github.eslamasabry.oc.ui.words.res.textSizeSmallest
 import io.github.eslamasabry.oc.ui.words.res.tipsTitle
+import io.github.eslamasabry.oc.ui.words.res.voiceNoticeCopyFailed
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -283,6 +285,8 @@ internal fun noteWords(note: SettingsNote): String =
         SettingsNote.ConsentNotSaved -> stringResource(Res.string.effectsSaveFailed)
         SettingsNote.TestNotSent -> PendingWords.TEST_NOT_SENT
         SettingsNote.UpdateFailed -> stringResource(Res.string.appUpdateFailNetwork)
+        SettingsNote.LicenseCopied -> stringResource(Res.string.kitCopied)
+        SettingsNote.LicenseCopyFailed -> stringResource(Res.string.voiceNoticeCopyFailed)
         SettingsNote.ReportCopied -> stringResource(Res.string.reportProblemCopied)
         SettingsNote.ShareFailed -> stringResource(Res.string.diagnosticsReportShareFailed)
     }

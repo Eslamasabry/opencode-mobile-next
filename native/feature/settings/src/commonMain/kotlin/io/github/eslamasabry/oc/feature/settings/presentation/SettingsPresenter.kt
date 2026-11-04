@@ -61,6 +61,7 @@ public class SettingsPresenter(
     private val localData: LocalDataSettings? = null,
     /** What's new › Show me highlights the place it opens, through the teaching slot. */
     private val arrivals: io.github.eslamasabry.oc.engine.settings.teaching.ShowMeTargets? = null,
+    private val licenses: VoiceLicenseSource? = null,
 ) : SettingsActions {
     private data class Local(
         val stack: ImmutableList<SettingsPage> = persistentListOf(SettingsPage.Hub),
@@ -82,6 +83,7 @@ public class SettingsPresenter(
         val discardConfirm: LocalDataKind? = null,
         val discardResult: LocalDeleteResult? = null,
         val discardFailed: Boolean = false,
+        val license: LicenseUi? = null,
     )
 
     private data class Engines(
@@ -337,6 +339,8 @@ public class SettingsPresenter(
             crash = l.crash,
             note = l.note,
             newsStep = l.whatsNewIndex,
+            voiceLicenses = licenses != null,
+            license = l.license,
         )
     }
 
@@ -555,6 +559,7 @@ public class SettingsPresenter(
     }
 
     override fun onOpen(page: SettingsPage) {
+        updates?.setPageOpen(page == SettingsPage.Updates)
         if (page == SettingsPage.WhatsNew) {
             showWhatsNew()
             return
@@ -599,6 +604,7 @@ public class SettingsPresenter(
             l.stack.size > 1 -> {
                 if (l.stack.last() == SettingsPage.ReportProblem) closeReport()
                 local.update { it.copy(stack = it.stack.dropLast(1).toImmutableList()) }
+                updates?.setPageOpen(local.value.stack.last() == SettingsPage.Updates)
                 true
             }
             l.query.isNotEmpty() -> {
@@ -684,6 +690,11 @@ public class SettingsPresenter(
         // A host without the Tips screen still has this module's own Tips page.
         if (place == SettingsOutside.Tips && !currentFacts.value.canOpen(SettingsOutside.Tips)) {
             onOpen(SettingsPage.Tips)
+            return
+        }
+        // With the voice licenses on board, the notices live on About's own license pages.
+        if (place == SettingsOutside.VoiceNotices && licenses != null) {
+            onOpen(SettingsPage.About)
             return
         }
         if (place == SettingsOutside.WhatsNew) showWhatsNew() else openers.open(place)
@@ -887,6 +898,63 @@ public class SettingsPresenter(
         reportGeneration++
         diagnostics?.endReport()
         local.update { it.copy(report = null, reportDescription = "") }
+    }
+
+    override fun onVoiceLicense(id: String) {
+        if (licenses == null || VoiceLicenseComponent.entries.none { it.id == id }) return
+        onOpen(SettingsPage.VoiceLicense(id))
+        loadLicense(id)
+    }
+
+    override fun onRetryLicense() {
+        val page = local.value.stack.last() as? SettingsPage.VoiceLicense ?: return
+        loadLicense(page.id)
+    }
+
+    override fun onCopyLicense() {
+        val source = licenses ?: return
+        val text = (local.value.license as? LicenseUi.Ready)?.text ?: return
+        scope.launch {
+            val note =
+                if (source.copy(text) is Outcome.Ok) SettingsNote.LicenseCopied
+                else SettingsNote.LicenseCopyFailed
+            local.update { it.copy(note = note) }
+        }
+    }
+
+    override fun onLicenseWebsite() {
+        val page = local.value.stack.last() as? SettingsPage.VoiceLicense ?: return
+        val component = VoiceLicenseComponent.entries.firstOrNull { it.id == page.id } ?: return
+        licenses?.openWebsite(component.website)
+    }
+
+    private var licenseGeneration = 0L
+
+    private fun loadLicense(id: String) {
+        val source = licenses ?: return
+        val component = VoiceLicenseComponent.entries.firstOrNull { it.id == id } ?: return
+        val generation = ++licenseGeneration
+        local.update { it.copy(license = LicenseUi.Loading) }
+        scope.launch {
+            val result =
+                when (val read = source.read(component.asset)) {
+                    is Outcome.Ok -> LicenseUi.Ready(reflowLicenseText(read.value))
+                    is Outcome.Failed -> LicenseUi.Failed
+                }
+            if (
+                generation == licenseGeneration &&
+                    local.value.stack.last() == SettingsPage.VoiceLicense(id)
+            ) {
+                local.update { it.copy(license = result) }
+            }
+        }
+    }
+
+    /** The ViewModel is gone: end the report, the Updates page's interest and any license read. */
+    public fun close() {
+        closeReport()
+        updates?.setPageOpen(false)
+        licenseGeneration++
     }
 
     override fun onNoteSeen() {

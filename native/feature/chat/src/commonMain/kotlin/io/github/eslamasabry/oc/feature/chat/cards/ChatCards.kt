@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.AgentFeaturesGateway
 import io.github.eslamasabry.oc.core.domain.CachedAgentRecoveryGateway
 import io.github.eslamasabry.oc.core.domain.McpGateway
+import io.github.eslamasabry.oc.core.domain.BoundedCardHistoryGateway
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
@@ -524,10 +525,14 @@ internal constructor(
                 return@CardDispatchCheck CardRefusal.Changed
             if (!read(gateway)) return@CardDispatchCheck CardRefusal.Changed
             val idle =
-                when (val statuses = gateway.sessionStatuses()) {
-                    is Outcome.Failed -> false
-                    is Outcome.Ok ->
-                        statuses.value[sid].let { it == null || it == SessionStatus.Idle }
+                if (gateway is BoundedCardHistoryGateway) {
+                    (gateway.cardSessionIdle(sid) as? Outcome.Ok)?.value == true
+                } else {
+                    when (val statuses = gateway.sessionStatuses()) {
+                        is Outcome.Failed -> false
+                        is Outcome.Ok ->
+                            statuses.value[sid].let { it == null || it == SessionStatus.Idle }
+                    }
                 }
             if (bound !== graph) return@CardDispatchCheck CardRefusal.Changed
             board?.setBusy(!idle)
@@ -590,7 +595,25 @@ internal constructor(
                             read(gateway, explicit = false) // reconcile by refetch, not replay
                         }
                     is GatewayEvent.MessageUpserted ->
-                        if (e.message.sessionId == sid.raw) upsert(e.message)
+                        if (e.message.sessionId == sid.raw) {
+                            val echo = e.userEcho
+                            if (
+                                echo != null &&
+                                    e.message.role ==
+                                        io.github.eslamasabry.oc.core.model.transcript.Role.User &&
+                                    echo.parts.all {
+                                        it.sessionId == sid.raw && it.messageId == e.message.id
+                                    }
+                            ) {
+                                transcript.upsert(
+                                    io.github.eslamasabry.oc.core.model.transcript.MessageWithParts(
+                                        e.message,
+                                        echo.parts.toImmutableList(),
+                                    )
+                                )
+                                publish()
+                            } else upsert(e.message)
+                        }
                     is GatewayEvent.PartUpserted -> if (e.part.sessionId == sid.raw) upsert(e.part)
                     is GatewayEvent.TranscriptStale -> if (e.sessionId == sid) read(gateway)
                     GatewayEvent.Connected -> {
@@ -645,9 +668,13 @@ internal constructor(
         }
         if (!explicit && !CardRecovery.needsRead(target(), thisCoverage)) return current()
         val source = CardHistorySource { session, cursor, limit ->
-            when (
-                val page = gateway.messagePage(SessionId(session), cursor = cursor, limit = limit)
-            ) {
+            val result =
+                if (gateway is BoundedCardHistoryGateway) {
+                    gateway.cardHistoryPage(SessionId(session), cursor, limit)
+                } else {
+                    gateway.messagePage(SessionId(session), cursor = cursor, limit = limit)
+                }
+            when (val page = result) {
                 is Outcome.Ok ->
                     Outcome.Ok(
                         CardHistoryPage(

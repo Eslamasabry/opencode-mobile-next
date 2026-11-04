@@ -48,6 +48,9 @@ public class PaseoGatewayFactory(
     private val savedTitles: ((ProfileId, String) -> String?)? = null,
     private val backgroundTasks: ((GatewaySpec) -> PaseoBackgroundTasks)? = null,
     private val payloadUse: ((GatewaySpec) -> (() -> Outcome<PaseoPayloadLease>)?)? = null,
+    /** Install profile-owned native guards before listening or accepting any work. */
+    private val configureGateway: ((GatewaySpec, PaseoGateway) -> Unit)? = null,
+    private val localWorkForProfile: ((GatewaySpec) -> Boolean)? = null,
 ) : GatewayFactory {
     override val backend: BackendKind = BackendKind.Paseo
 
@@ -118,11 +121,12 @@ public class PaseoGatewayFactory(
                 clock = clock,
                 directory = spec.location.directory,
                 defaultProviderModes = defaultProviderModes,
-                trackLocalWork = trackLocalWork,
+                trackLocalWork = localWorkForProfile?.invoke(spec) ?: trackLocalWork,
                 sharedBackgroundTasks = backgroundTasks?.invoke(spec),
                 payloadLease = payloadUse?.invoke(spec),
             )
         savedTitles?.let { lookup -> gateway.savedTitle = { key -> lookup(spec.profile.id, key) } }
+        configureGateway?.invoke(spec, gateway)
         return GatewayPair(gateway, PaseoOperations(gateway))
     }
 

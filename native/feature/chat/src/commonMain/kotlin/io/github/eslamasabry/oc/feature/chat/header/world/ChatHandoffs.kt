@@ -17,7 +17,11 @@ public interface ChatHandoffs {
     ): HandoffEngine?
 }
 
+/** One owner of both handoff multibindings. */
 @ContributesTo(AppScope::class)
 public interface ChatHandoffBindings {
     @Multibinds(allowEmpty = true) public val chatHandoffSources: Set<ChatHandoffs>
+
+    /** Daemon-owned agent handoffs ([ChatAgentHandoffs]) offered inside "Continue with…". */
+    @Multibinds(allowEmpty = true) public val chatAgentHandoffs: Set<ChatAgentHandoffs>
 }

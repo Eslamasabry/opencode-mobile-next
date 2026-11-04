@@ -194,3 +194,19 @@ public class ApiRouteReply(public val status: Int, public val body: String?) {
 public interface ApiRouteGateway {
     public suspend fun apiRoute(method: String, path: String, jsonBody: String? = null): Outcome<ApiRouteReply>
 }
+
+/** Recovery reads on a private capped transport, independent of the live chat stream. */
+public interface BoundedCardHistoryGateway {
+    public suspend fun cardHistoryPage(
+        session: SessionId,
+        cursor: String?,
+        limit: Int,
+    ): Outcome<
+        io.github.eslamasabry.oc.core.model.ServerPage<
+            io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
+        >
+    >
+
+    /** Fresh authoritative idle proof; drafts and read-only children cannot qualify. */
+    public suspend fun cardSessionIdle(session: SessionId): Outcome<Boolean>
+}

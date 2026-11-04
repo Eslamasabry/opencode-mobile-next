@@ -53,6 +53,9 @@ public interface SettingsHost {
     public val phrases: PhraseSettings?
         get() = null
 
+    public val licenses: VoiceLicenseSource?
+        get() = null
+
     public val diagnostics: DiagnosticsExport?
 }
 
@@ -88,6 +91,7 @@ public class SettingsViewModel(
             host.serverPage,
             host.localData,
             arrivals,
+            host.licenses,
         )
 
     public val state: StateFlow<SettingsUi> = presenter.state
@@ -101,7 +105,7 @@ public class SettingsViewModel(
     public fun exit(): Unit = nav.back()
 
     override fun onCleared() {
-        presenter.closeReport()
+        presenter.close()
     }
 
     private var announced = false

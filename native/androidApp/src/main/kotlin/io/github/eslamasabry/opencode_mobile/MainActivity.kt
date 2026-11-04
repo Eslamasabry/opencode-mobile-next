@@ -20,10 +20,13 @@ import io.github.eslamasabry.oc.ui.kit.logo.LocalKitLogoLoader
 import io.github.eslamasabry.oc.ui.kit.platform.AndroidKitPlatform
 import io.github.eslamasabry.oc.ui.shell.App
 import io.github.eslamasabry.opencode_mobile.graph.AppLocale
+import io.github.eslamasabry.opencode_mobile.graph.IncomingShareHost
 import io.github.eslamasabry.opencode_mobile.graph.MigrationRoot
 import io.github.eslamasabry.opencode_mobile.graph.ProviderLogoGraph
 import io.github.eslamasabry.opencode_mobile.graph.SettingsAppGraph
 import io.github.eslamasabry.opencode_mobile.graph.TerminalLinksGraph
+import io.github.eslamasabry.opencode_mobile.graph.UpdateNoticeAccessors
+import io.github.eslamasabry.opencode_mobile.graph.UpdateNoticeHost
 import io.github.eslamasabry.opencode_mobile.graph.appGraph
 import io.github.eslamasabry.opencode_mobile.graph.migration
 import io.github.eslamasabry.opencode_mobile.graph.platformHub
@@ -36,6 +39,10 @@ class MainActivity : ComponentActivity() {
     private var routeWhenReady = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Before super.onCreate: the product's activity-lifecycle owners (ResumedActivities, the
+        // mic/result registries, AppVisibility) must see this activity's own created/started
+        // callbacks, as they did when the product started in Application.onCreate.
+        (application as OcApplication).startProduct()
         super.onCreate(savedInstanceState)
         routeWhenReady =
             savedInstanceState == null &&
@@ -75,6 +82,11 @@ class MainActivity : ComponentActivity() {
                         graph.metroViewModelFactory,
                         appearance,
                         AppLocale.applied,
+                        windowContent = { shell ->
+                            UpdateNoticeHost((graph as UpdateNoticeAccessors).updateNotices) {
+                                IncomingShareHost(platformHub.incomingShare, shell)
+                            }
+                        },
                     )
                     // A parked launch is handed over only after the migration gate and shell
                     // have actually composed. This effect dies with its Activity's composition.

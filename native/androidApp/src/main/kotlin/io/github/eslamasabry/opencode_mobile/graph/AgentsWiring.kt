@@ -30,6 +30,7 @@ import io.github.eslamasabry.oc.core.model.ServerLocation
 import io.github.eslamasabry.oc.engine.agents.memory.ConversationTitleMemory
 import io.github.eslamasabry.oc.engine.agents.store.AgentPrefs
 import io.github.eslamasabry.oc.engine.agents.store.AgentPrefsEdit
+import io.github.eslamasabry.oc.engine.cards.CardAgent
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.connection.ServerConnections
 import io.github.eslamasabry.oc.engine.profiles.ProfileStore
@@ -39,6 +40,7 @@ import io.github.eslamasabry.oc.feature.agents.hub.AgentComputer
 import io.github.eslamasabry.oc.feature.agents.hub.AgentComputerKind
 import io.github.eslamasabry.oc.feature.agents.hub.AgentComputers
 import io.github.eslamasabry.oc.feature.agents.hub.ComputerCheck
+import io.github.eslamasabry.oc.feature.chat.cards.ChatCards
 import io.github.eslamasabry.oc.protocol.paseo.PaseoEndpoint
 import io.github.eslamasabry.oc.protocol.paseo.PaseoException
 import io.github.eslamasabry.oc.protocol.paseo.PaseoFailureKind
@@ -63,6 +65,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -212,8 +215,11 @@ class AppPaseoGatewayFactory(
     dispatchers: AppDispatchers,
     clock: Clock,
     private val profiles: ProfileStore,
-    stores: PreviewStores,
+    private val stores: PreviewStores,
     payloads: PhonePayloadGuard,
+    private val admission: NativePaseoAdmission,
+    private val cards: Lazy<ChatCards>,
+    private val inventory: NativeSessionInventory,
 ) : GatewayFactory {
     /**
      * B-AGENT-181: titles the app saved per server (`oc.conversationTitles.<id>`, carried over from
@@ -247,6 +253,30 @@ class AppPaseoGatewayFactory(
             clock,
             backgroundTasks = ::backgroundBook,
             payloadUse = payloads::callbackFor,
+            localWorkForProfile = admission::local,
+            configureGateway = { spec, gateway ->
+                gateway.savedListTime = { daemonId ->
+                    try {
+                        stores.profiles.profile(spec.profile.id)?.profile?.let {
+                            inventory.savedListTime(it, daemonId)
+                        }
+                    } catch (e: GateNotOpen) {
+                        null
+                    }
+                }
+                if (admission.local(spec)) {
+                    gateway.beforePayloadUse = { admission.acquire(spec.profile.id) }
+                    gateway.afterPayloadUse = admission::release
+                    gateway.beforeAgentStart = admission::admitAgent
+                }
+                gateway.genUiShowAllowed = {
+                    stores.profiles.profile(spec.profile.id) != null &&
+                        cards.value.setup.effective(spec.profile.id.raw, CardAgent.Claude)
+                }
+                spec.scope.launch {
+                    cards.value.setup.changes.collect { gateway.refreshCardApprovalQualification() }
+                }
+            },
             savedTitles = { profile, key ->
                 // Before the migration gate opens the store refuses reads: no saved title then.
                 try {

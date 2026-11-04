@@ -42,6 +42,8 @@ public data class SettingsUi(
     val note: SettingsNote? = null,
     /** The What's new step on screen (the same index as [whatsNew]). */
     val newsStep: Int = 0,
+    val voiceLicenses: Boolean = false,
+    val license: LicenseUi? = null,
 ) {
     val page: SettingsPage
         get() = stack.last()
@@ -256,6 +258,8 @@ public enum class SettingsNote {
     TestNotSent,
     UpdateFailed,
     ReportCopied,
+    LicenseCopied,
+    LicenseCopyFailed,
     ShareFailed,
 }
 

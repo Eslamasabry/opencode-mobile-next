@@ -27,9 +27,10 @@ import io.github.eslamasabry.oc.ui.shell.nav.ShellNavDisplay
 import io.github.eslamasabry.oc.ui.shell.nav.motionLevelOf
 
 /**
- * The root both apps call (plan 03 §21.1). Boot/migration gate and safe mode join with :engine:entry (slice 2).
- * [appearance] and [localeTag] are the person's stored choices (Settings › Appearance, Language), applied here so every
- * screen follows them live; a host that passes no [localeTag] gets the platform's. A host passes a tag always or never.
+ * The root both apps call (plan 03 §21.1). Boot/migration gate and safe mode join with
+ * :engine:entry (slice 2). [appearance] and [localeTag] are the person's stored choices (Settings ›
+ * Appearance, Language), applied here so every screen follows them live; a host that passes no
+ * [localeTag] gets the platform's. A host passes a tag always or never.
  */
 @Composable
 public fun App(
@@ -38,22 +39,35 @@ public fun App(
     viewModels: MetroViewModelFactory,
     appearance: KitAppearance = KitAppearance.Default,
     localeTag: String? = null,
+    windowContent: @Composable (@Composable () -> Unit) -> Unit = { it() },
 ) {
-    CompositionLocalProvider(LocalKitPlatform provides platform, LocalMetroViewModelFactory provides viewModels) {
+    CompositionLocalProvider(
+        LocalKitPlatform provides platform,
+        LocalMetroViewModelFactory provides viewModels,
+    ) {
         if (localeTag == null) {
-            KitTheme(appearance = appearance) { NavShell(start = ChatsRoute.Home, deps = deps) }
+            KitTheme(appearance = appearance) {
+                windowContent { NavShell(start = ChatsRoute.Home, deps = deps) }
+            }
         } else {
-            KitTheme(appearance = appearance, localeTag = localeTag) { NavShell(start = ChatsRoute.Home, deps = deps) }
+            KitTheme(appearance = appearance, localeTag = localeTag) {
+                windowContent { NavShell(start = ChatsRoute.Home, deps = deps) }
+            }
         }
     }
 }
 
 /**
- * Nav3 with a user-owned back stack, per-entry ViewModel stores and contributed entry installers (plan 03 §15.4),
- * route motion and predictive back with the row → chat transform, option A (P2; plan 07 §3.2, plan 08 §5.4).
+ * Nav3 with a user-owned back stack, per-entry ViewModel stores and contributed entry installers
+ * (plan 03 §15.4), route motion and predictive back with the row → chat transform, option A (P2;
+ * plan 07 §3.2, plan 08 §5.4).
  */
 @Composable
-public fun NavShell(start: AppRoute, deps: ShellDependencies, gate: RowTransformGate = remember { RowTransformGate() }) {
+public fun NavShell(
+    start: AppRoute,
+    deps: ShellDependencies,
+    gate: RowTransformGate = remember { RowTransformGate() },
+) {
     val backStack = rememberNavBackStack(RouteSaving.configuration, start)
     DisposableEffect(backStack, gate) {
         deps.navigator.attach(backStack)
@@ -63,8 +77,13 @@ public fun NavShell(start: AppRoute, deps: ShellDependencies, gate: RowTransform
             deps.navigator.detach(backStack)
         }
     }
-    LaunchedEffect(backStack) { snapshotFlow { backStack.toList() }.collect { deps.navigator.publish() } }
-    val provider = remember(deps.installers) { entryProvider<NavKey> { deps.installers.forEach { with(it) { install() } } } }
+    LaunchedEffect(backStack) {
+        snapshotFlow { backStack.toList() }.collect { deps.navigator.publish() }
+    }
+    val provider =
+        remember(deps.installers) {
+            entryProvider<NavKey> { deps.installers.forEach { with(it) { install() } } }
+        }
     val scale by deps.motion.animatorScale.collectAsState()
     ShellNavDisplay(
         backStack = backStack,
@@ -72,7 +91,10 @@ public fun NavShell(start: AppRoute, deps: ShellDependencies, gate: RowTransform
         level = motionLevelOf(scale),
         onSystemBack = deps.navigator::systemBack,
         baseDecorators =
-            listOf(rememberSaveableStateHolderNavEntryDecorator(), rememberViewModelStoreNavEntryDecorator()),
+            listOf(
+                rememberSaveableStateHolderNavEntryDecorator(),
+                rememberViewModelStoreNavEntryDecorator(),
+            ),
         entryProvider = provider,
     )
 }
