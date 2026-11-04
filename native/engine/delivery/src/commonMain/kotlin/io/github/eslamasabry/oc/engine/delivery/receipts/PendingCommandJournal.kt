@@ -47,7 +47,13 @@ public class PendingCommandJournal internal constructor(
 
     public fun read(): Outcome<List<CommandReceipt>> {
         admission()?.let { return it.failed() }
-        val value = store.get(key) ?: return emptyList<CommandReceipt>().ok()
+        // B-STATE-050: a store that cannot load fails closed before any platform write, and stays closed.
+        val value = try {
+            store.get(key)
+        } catch (e: IllegalStateException) {
+            storageAvailable = false
+            return Failure.StorageRefused().failed()
+        } ?: return emptyList<CommandReceipt>().ok()
         val parsed = (value as? PrefValue.Str)?.value?.let(::parse)
         if (parsed == null) {
             storageAvailable = false

@@ -63,6 +63,17 @@ class RedactorTest {
     }
 
     @Test
+    fun `B-SEC-144 the redactor masks every fake credential in the fixtures and the gate is not vacuous`() {
+        val r = redactor()
+        for (fake in fakes) {
+            assertTrue(r.containsSecret(fake.line), "${fake.kind}: the redactor must recognise this fake")
+            assertEquals(emptyList(), leaks(r.redact(fake.line)), "${fake.kind}: redact leaves part of it")
+        }
+        // Negative control: the raw lines leak every kind, so the leak check itself can see each fake.
+        assertEquals(fakes.size, leaks(fakes.joinToString("\n") { it.line }).size)
+    }
+
+    @Test
     fun `secrets shorter than six characters are not registered and forget removes one`() {
         val r = Redactor()
         r.registerSecret("abc12")
