@@ -146,11 +146,12 @@ class AndroidPlansSource(
                 } ?: io.github.eslamasabry.oc.core.domain.unavailable("terminal")
             }
 
+            // B-AGENT-072: cleanup is not generation-gated. The exact PTY id goes back to the same
+            // gateway object that created it, so a reconnect or scope change mid-read cannot leak
+            // the temporary terminal on the computer.
             override suspend fun remove(id: String): Outcome<Unit> =
-                if (!current()) Failure.Refused(RefusalReason.StaleScope).failed()
-                else
-                    operations?.removeTerminal(id)
-                        ?: io.github.eslamasabry.oc.core.domain.unavailable("terminal")
+                operations?.removeTerminal(id)
+                    ?: io.github.eslamasabry.oc.core.domain.unavailable("terminal")
 
             override fun close() {
                 closed = true
@@ -252,8 +253,8 @@ class AndroidPlansSource(
             }
     }
 
-    override suspend fun refresh() {
-        engine()?.refresh()
+    override suspend fun refresh(force: Boolean) {
+        engine()?.refresh(force)
         publishReaders()
     }
 

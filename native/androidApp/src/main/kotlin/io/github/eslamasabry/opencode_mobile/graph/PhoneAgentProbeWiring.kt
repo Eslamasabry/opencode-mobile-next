@@ -3,6 +3,7 @@ package io.github.eslamasabry.opencode_mobile.graph
 import android.app.Application
 import dev.zacsweers.metro.*
 import io.github.eslamasabry.oc.core.common.*
+import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.catalog.*
 import io.github.eslamasabry.oc.engine.agents.probe.*
 import io.github.eslamasabry.oc.feature.agents.hub.*
@@ -84,7 +85,7 @@ class AppPhoneAgents(
                                     "agentId" to agent.id.raw,
                                     "action" to "probe",
                                     "script" to AgentAuthScripts.forProfile(owner, script),
-                                    "timeoutSeconds" to 10,
+                                    "timeoutSeconds" to if (agent.id == AgentId.CLAUDE) 65 else 10,
                                 )
                             )
                     }
@@ -96,7 +97,11 @@ class AppPhoneAgents(
             val projection = (answer as? Outcome.Ok)?.value
             if (projection == null) {
                 probeFailure = Failure.Unavailable(FeatureId("builtinLinux"))
-            } else if (projection["state"] == "error" && projection["error"] != "notInstalled") {
+            } else if (
+                projection["state"] == "error" &&
+                    projection["error"] != "notInstalled" &&
+                    projection["error"] != "probeUnsupported"
+            ) {
                 probeFailure =
                     if (projection["error"] == "timedOut") Failure.TimedOut()
                     else Failure.ComputerDidNotAnswer()
@@ -106,9 +111,13 @@ class AppPhoneAgents(
                     "signedIn" -> PhoneAgentStatus.Ready
                     "signedOut" -> PhoneAgentStatus.SignInNeeded
                     else ->
-                        if (projection?.get("error") == "notInstalled")
-                            PhoneAgentStatus.NotInstalled
-                        else previous[agent.id.raw]?.status ?: PhoneAgentStatus.Unavailable
+                        when (projection?.get("error")) {
+                            "notInstalled" -> PhoneAgentStatus.NotInstalled
+                            // No private status protocol (gemini, qwen, goose, omp): a check on
+                            // the phone is needed; it is not a failed probe.
+                            "probeUnsupported" -> PhoneAgentStatus.PhoneCheck
+                            else -> previous[agent.id.raw]?.status ?: PhoneAgentStatus.Unavailable
+                        }
                 }
             rows[index] = rows[index].copy(status = status)
             mutable.value = PhoneAgentsState(available = true, agents = rows.toImmutableList())

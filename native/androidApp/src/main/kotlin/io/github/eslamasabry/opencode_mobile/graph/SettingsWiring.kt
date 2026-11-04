@@ -313,7 +313,7 @@ class AndroidSettingsHost(
                             io.github.eslamasabry.opencode_mobile.SetupRunner.get(application)
                                 .status()
                         io.github.eslamasabry.oc.engine.runtime.setup.SetupJobRecord.parse(
-                                status.toString()
+                                status
                             )
                             ?.let {
                                 io.github.eslamasabry.oc.engine.runtime.setup.FailedSetupReport

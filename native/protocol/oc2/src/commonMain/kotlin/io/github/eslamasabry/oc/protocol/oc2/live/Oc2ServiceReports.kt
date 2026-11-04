@@ -58,6 +58,10 @@ public object Oc2ServiceReports {
         }
     }
 
+    /**
+     * The last 64 KiB of the run's output, like Flutter's `readLogs`: a one-byte read learns the
+     * size, then the tail is read from there, so the failure at the end is the part attached.
+     */
     public suspend fun output(
         gateway: ServerGateway,
         id: String,
@@ -65,12 +69,43 @@ public object Oc2ServiceReports {
         workspace: String?,
     ): Outcome<ManagedShellOutput>? {
         val oc2 = gateway as? Oc2Gateway ?: return null
-        return when (
+        val head =
+            when (val read = read(oc2, id, directory, workspace, cursor = 0, limit = 1)) {
+                is Outcome.Failed -> return read
+                is Outcome.Ok -> read.value
+            }
+        if (head.size < 0) return Failure.UnreadableReply().failed()
+        val start = maxOf(0L, head.size - TAIL)
+        return when (val read = read(oc2, id, directory, workspace, cursor = start, limit = TAIL)) {
+            is Outcome.Failed -> read
+            is Outcome.Ok -> {
+                val tail = read.value
+                if (tail.cursor < start || tail.cursor > tail.size)
+                    return Failure.UnreadableReply().failed()
+                val text = tail.text
+                (if (text.length > TAIL) tail.copy(text = text.takeLast(TAIL.toInt())) else tail)
+                    .ok()
+            }
+        }
+    }
+
+    private const val TAIL = 65_536L
+
+    private suspend fun read(
+        oc2: Oc2Gateway,
+        id: String,
+        directory: String,
+        workspace: String?,
+        cursor: Long,
+        limit: Long,
+    ): Outcome<ManagedShellOutput> =
+        when (
             val read =
                 oc2.json(
                     "/shell/${id.encodeURLPathPart()}/output",
                     query =
-                        location(directory, workspace) + mapOf("cursor" to "0", "limit" to "65536"),
+                        location(directory, workspace) +
+                            mapOf("cursor" to cursor.toString(), "limit" to limit.toString()),
                 )
         ) {
             is Outcome.Failed -> read
@@ -86,7 +121,6 @@ public object Oc2ServiceReports {
                     .ok()
             }
         }
-    }
 
     private fun location(directory: String, workspace: String?): Map<String, String?> =
         mapOf("location[directory]" to directory, "location[workspace]" to workspace)

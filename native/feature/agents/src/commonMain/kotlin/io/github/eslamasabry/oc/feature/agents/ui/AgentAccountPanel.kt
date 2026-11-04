@@ -18,6 +18,7 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.KitTextRole
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
@@ -109,6 +110,15 @@ internal fun AgentAccountPanel(state: AgentsUi, actions: AgentsActions) {
                     KitButton(
                         stringResource(Res.string.agentAccountOpenSignIn),
                         actions::openAccountSignIn,
+                    )
+                    // The button opens without a second sheet only because it names its host here
+                    // (Flutter shows the host under Open official sign-in).
+                    KitText(
+                        code.verificationUrl
+                            .substringAfter("://")
+                            .substringBefore('/')
+                            .substringBefore(':'),
+                        role = KitTextRole.Supporting,
                     )
                 }
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {

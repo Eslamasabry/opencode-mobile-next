@@ -216,8 +216,8 @@ public class ProjectPageViewModel(
     override fun startIsolated() {
         val live = server ?: return
         val operations = live.operations ?: return
-        if (!live.gateway.capabilities.value.worktreeCreate || isolated != null) return
-        val generation = this.generation
+        if (!live.gateway.capabilities.value.worktreeCreate) return
+        if (isolated?.state?.value?.canStartAgain == false) return
         val location = live.gateway.location.value
         val project =
             sessions
@@ -230,9 +230,9 @@ public class ProjectPageViewModel(
                 events = live.gateway.events.all,
                 scope = viewModelScope,
                 current = {
-                    server?.gateway === live.gateway &&
-                        this.generation == generation &&
-                        live.gateway.location.value == location
+                    // Page reloads (Try again) do not invalidate the copy; only a changed
+                    // connection or location does.
+                    server?.gateway === live.gateway && live.gateway.location.value == location
                 },
                 create = { operations.createWorktree(directory) },
                 open = { copyDirectory ->

@@ -55,7 +55,7 @@ public class PlansViewModel(
             )
 
     init {
-        refresh()
+        load(force = false)
     }
 
     override fun back(): Unit = nav.back()
@@ -81,12 +81,14 @@ public class PlansViewModel(
         }
     }
 
-    override fun refresh() {
+    override fun refresh(): Unit = load(force = true)
+
+    private fun load(force: Boolean) {
         if (refreshing.value) return
         refreshing.value = true
         viewModelScope.launch {
             try {
-                source.refresh()
+                source.refresh(force)
             } finally {
                 refreshing.value = false
             }

@@ -41,6 +41,13 @@ public data class IsolatedTaskUi(
         get() =
             phase in
                 setOf(IsolatedPhase.Creating, IsolatedPhase.Preparing, IsolatedPhase.Unconfirmed)
+
+    /** Terminal with nothing left to act on here, so the person may request another copy. */
+    public val canStartAgain: Boolean
+        get() =
+            phase == IsolatedPhase.Cancelled ||
+                phase == IsolatedPhase.Opened ||
+                (phase == IsolatedPhase.Failed && copy == null)
 }
 
 /**

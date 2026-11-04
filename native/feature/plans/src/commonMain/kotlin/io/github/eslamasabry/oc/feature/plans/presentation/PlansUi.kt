@@ -22,8 +22,11 @@ import kotlinx.coroutines.flow.StateFlow
 public interface PlansSource {
     public val snapshot: StateFlow<UsageSnapshot>
 
-    /** Reads every source once; returns when done. */
-    public suspend fun refresh()
+    /**
+     * Reads every source once; returns when done. [force] (the visible Refresh) bypasses reader
+     * cadence, as Flutter's `refresh(force: true)` does.
+     */
+    public suspend fun refresh(force: Boolean = false)
 
     /** Computer readers are off until the person enables one saved server explicitly. */
     public val computerReaders: StateFlow<List<ComputerReaderUi>>

@@ -789,7 +789,9 @@ class PlatformHub(
             if (!shape.accepts(typedReply.text))
                 return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
         }
-        val reply = ShadeReplyAnswers.of(answer.kind, answer.reply) // B-PROTO-046 (BuildRestWiring)
+        // Flutter trims the shade reply before sending; the accepted text is the trimmed text.
+        val shadeReply = typedReply?.let { ShadeReply.Text(it.text.trim()) } ?: answer.reply
+        val reply = ShadeReplyAnswers.of(answer.kind, shadeReply) // B-PROTO-046 (BuildRestWiring)
         val result = engine.answerNow(answer.request, reply)
         log.i { "shade answer ${answer.kind} ${if (result is Outcome.Ok) "sent" else "not sent"}" }
         return result

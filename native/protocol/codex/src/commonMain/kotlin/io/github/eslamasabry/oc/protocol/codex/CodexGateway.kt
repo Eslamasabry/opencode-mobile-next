@@ -640,43 +640,80 @@ public class CodexGateway(
     }
 
     private suspend fun restoreTracked(context: Context) {
+        // Flutter `_recoverNow`: one thread failing to resume still lets the others resume; the
+        // recovery stays degraded (thrown at the end) and the failed thread stays tracked.
+        var failure: CodexException? = null
         for (id in resumed.toList()) {
+            check(context)
             if (id in emptyThreads && id !in uncertain) {
+                // Flutter: a never-dispatched thread may have no rollout. Retire it from automatic
+                // recovery only; keep its metadata (a local draft is keyed to it) and never emit a
+                // deletion. Explicit session/history/prompt access reads the server again.
                 resumed.remove(id)
-                emptyThreads.remove(id)
-                sessions.remove(id)
-                statuses.remove(id)
-                emit(GatewayEvent.SessionDeleted(SessionId(id)))
             } else {
-                resume(id, context)
-                emit(GatewayEvent.TranscriptStale(SessionId(id)))
+                try {
+                    resume(id, context)
+                    emit(GatewayEvent.TranscriptStale(SessionId(id)))
+                } catch (e: CodexException) {
+                    failure = failure ?: e
+                }
             }
         }
+        failure?.let { throw it }
     }
 
+    /**
+     * Flutter `_scheduleReconnect`/`_recover`: retries with 1, 2, 4, 8, 16 s backoff until the
+     * socket and every tracked thread are restored; a sign-in failure stops the loop.
+     */
     private fun scheduleRecovery(immediate: Boolean = false) {
-        if (closed || recovery?.isActive == true) return
+        if (closed) return
+        if (recovery?.isActive == true) {
+            if (!immediate) return
+            recovery?.cancel()
+        }
         recovery =
             scope.launch(lane) {
-                if (!immediate) delay(1000)
-                mutableStatus.value = StreamStatus.Reconnecting(1, null)
-                val result = codexAttempt {
-                    transport.connect()
-                    val context = capture()
-                    check(context)
-                    mutableCapabilities.value =
-                        CodexCapabilities.Base.copy(agentAccount = transport.accountSupported)
-                    mutableConnects.value++
-                    emit(GatewayEvent.Connected)
-                }
-                mutableStatus.value =
-                    when (result) {
-                        is Outcome.Ok -> StreamStatus.Connected
-                        is Outcome.Failed ->
-                            if (result.failure is Failure.SignIn)
-                                StreamStatus.Stopped(result.failure)
-                            else StreamStatus.Disconnected(1, null)
+                var attempt = 0
+                var wait = !immediate
+                while (!closed) {
+                    if (wait) delay(1000L shl attempt.coerceIn(0, 4))
+                    wait = true
+                    attempt++
+                    mutableStatus.value = StreamStatus.Reconnecting(attempt, null)
+                    val result = codexAttempt {
+                        transport.connect()
+                        val context = capture()
+                        check(context)
+                        mutableCapabilities.value =
+                            CodexCapabilities.Base.copy(agentAccount = transport.accountSupported)
+                        mutableConnects.value++
+                        emit(GatewayEvent.Connected)
                     }
+                    when (result) {
+                        is Outcome.Ok -> {
+                            mutableStatus.value = StreamStatus.Connected
+                            return@launch
+                        }
+                        is Outcome.Failed ->
+                            if (result.failure is Failure.SignIn) {
+                                mutableStatus.value = StreamStatus.Stopped(result.failure)
+                                return@launch
+                            } else {
+                                // Degraded (socket or a tracked thread not restored): retry later.
+                                val next =
+                                    clock.now().toEpochMilliseconds() +
+                                        (1000L shl attempt.coerceIn(0, 4))
+                                mutableStatus.value =
+                                    if (attempt >= 6) StreamStatus.Disconnected(attempt, next)
+                                    else StreamStatus.Reconnecting(attempt, next)
+                            }
+                    }
+                    if (!reconnectAllowed.value) {
+                        mutableStatus.value = StreamStatus.Disconnected(attempt, null)
+                        return@launch
+                    }
+                }
             }
     }
 

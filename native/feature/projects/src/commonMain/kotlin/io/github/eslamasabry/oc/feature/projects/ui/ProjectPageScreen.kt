@@ -99,7 +99,7 @@ public fun ProjectPageScreen(state: ProjectPageUi, actions: ProjectPageActions) 
                     KitTextRole.Supporting,
                 )
             }
-            if (state.canIsolate && state.isolated == null) {
+            if (state.canIsolate && state.isolated?.canStartAgain != false) {
                 item(key = "isolated-start") {
                     KitRow(
                         title = stringResource(Res.string.agentIsolatedStart),

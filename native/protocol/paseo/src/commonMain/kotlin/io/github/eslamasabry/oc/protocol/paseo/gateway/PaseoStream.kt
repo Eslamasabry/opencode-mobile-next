@@ -198,7 +198,11 @@ private fun PaseoGateway.onTimelineItem(
     if (message.info.errorText != null) {
         state.turnErrorShown = true
         state.failedBeforeLoad = true
-    } else if (message.info.role == Role.User) {
+    } else if (
+        message.info.role == Role.User ||
+            message.parts.any { it.type == PartType.Text && it.text.isNotBlank() }
+    ) {
+        // Flutter `turnFailedAfter`: a prompt or later reply words end the failure.
         state.failedBeforeLoad = false
     }
     if (text == null) {
