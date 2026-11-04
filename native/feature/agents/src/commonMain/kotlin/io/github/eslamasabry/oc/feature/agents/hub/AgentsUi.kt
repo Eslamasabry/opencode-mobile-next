@@ -25,6 +25,14 @@ public data class AgentsUi(
     val removingAgent: PhoneAgentRow? = null,
     val removal: PhoneAgentRemoval? = null,
     val installIssue: PhoneAgentInstallIssue? = null,
+    val revertingAgent: PhoneAgentRow? = null,
+    val previousVersionFailed: Boolean = false,
+    val previousVersionRestored: Boolean = false,
+    val helperOffered: Boolean = false,
+    val helperConnectFailed: Boolean = false,
+    val helperConnected: Boolean = false,
+    val resettingSignIns: Boolean = false,
+    val resetFailed: Boolean = false,
 )
 
 public interface AgentsActions {
@@ -50,6 +58,20 @@ public interface AgentsActions {
     public fun cancelPhoneInstall() {}
 
     public fun refreshPhone()
+
+    public fun requestPreviousVersion(id: String) {}
+
+    public fun cancelPreviousVersion() {}
+
+    public fun confirmPreviousVersion() {}
+
+    public fun connectPhoneHelper() {}
+
+    public fun requestSignInReset() {}
+
+    public fun cancelSignInReset() {}
+
+    public fun confirmSignInReset() {}
 
     public fun requestRemoval(id: String)
 

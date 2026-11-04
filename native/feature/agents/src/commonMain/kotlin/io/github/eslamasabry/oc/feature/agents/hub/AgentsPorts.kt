@@ -71,6 +71,12 @@ public interface PhoneAgents {
 
     public suspend fun refresh(): Outcome<Unit> = Outcome.Ok(Unit)
 
+    public suspend fun resetSavedSignIns(): Outcome<Unit> =
+        Outcome.Failed(Failure.SecretUnavailable())
+
+    public suspend fun usePreviousVersion(id: String): Outcome<Unit> =
+        Outcome.Failed(Failure.SecretUnavailable())
+
     public suspend fun install(id: String): Outcome<PhoneAgentInstallResult> =
         Outcome.Ok(PhoneAgentInstallResult.Refused(PhoneAgentInstallIssue.Unavailable))
 
@@ -88,6 +94,9 @@ public data class PhoneAgentsState(
     val available: Boolean = false,
     val agents: ImmutableList<PhoneAgentRow> = persistentListOf(),
     val installation: PhoneAgentInstallation? = null,
+    val needsRestart: Boolean = false,
+    val helperStoppedUnexpectedly: Boolean = false,
+    val helperMayHaveBeenStoppedByAndroid: Boolean = false,
 )
 
 public data class PhoneAgentRow(
@@ -96,6 +105,7 @@ public data class PhoneAgentRow(
     val status: PhoneAgentStatus,
     val removable: Boolean = false,
     val installable: Boolean = false,
+    val previousVersionAvailable: Boolean = false,
 )
 
 public sealed interface PhoneAgentRemoval {
@@ -160,4 +170,15 @@ public enum class PhoneAgentInstallIssue {
     Busy,
     Space,
     Unavailable,
+}
+
+/** The visible local helper action. Platform bindings must use native owner admission. */
+public fun interface PhoneAgentHostStarter {
+    public suspend fun connect(): Outcome<Unit>
+}
+
+@dev.zacsweers.metro.ContributesTo(dev.zacsweers.metro.AppScope::class)
+public interface PhoneAgentHostBindings {
+    @dev.zacsweers.metro.Multibinds(allowEmpty = true)
+    public val phoneAgentHostStarters: Set<PhoneAgentHostStarter>
 }

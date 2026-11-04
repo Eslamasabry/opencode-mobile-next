@@ -16,6 +16,7 @@ import io.github.eslamasabry.opencode_mobile.graph.DiagnosticsLogSink
 import io.github.eslamasabry.opencode_mobile.graph.GraphOwner
 import io.github.eslamasabry.opencode_mobile.graph.LinuxAccessors
 import io.github.eslamasabry.opencode_mobile.graph.NativeExitAccessors
+import io.github.eslamasabry.opencode_mobile.graph.NativeHealingAccessors
 import io.github.eslamasabry.opencode_mobile.graph.PlatformAccessors
 
 /**
@@ -31,7 +32,10 @@ class OcApplication : Application(), GraphOwner {
         super.onCreate()
         val redactor = Redactor() // 2. before any secret is read
         AppLog.install(
-            RedactingWriter(redactor, listOf(DiagnosticsLogSink)), // P12: warnings/errors feed Report a problem
+            RedactingWriter(
+                redactor,
+                listOf(DiagnosticsLogSink),
+            ), // P12: warnings/errors feed Report a problem
             Severity.Info,
         ) // ring + logcat sinks: slice 1
         val buildInfo =
@@ -44,13 +48,23 @@ class OcApplication : Application(), GraphOwner {
         appGraph =
             createGraphFactory<AndroidAppGraph.Factory>()
                 .create(this, buildInfo, redactor, LaunchMode.Normal)
-        (appGraph as DiagnosticsAttentionAccessors).diagnosticsAttention.start() // persisted report, crash store, exits
+        (appGraph as DiagnosticsAttentionAccessors)
+            .diagnosticsAttention
+            .start() // persisted report, crash store, exits
         appGraph.previewRuntime // warm stores, restore saved profile, connect
-        (appGraph as PlatformAccessors).platform.start() // P12-PLATFORM: channels, widgets feed, alerts, update check
-        appGraph.resumedActivities // P12-VOICE: follow the resumed activity from the start (mic permission)
-        appGraph.builtinRuntime // P12-FIX-LINUX-VOICE: the built-in Linux follows the activity; phone server comes back
+        (appGraph as PlatformAccessors)
+            .platform
+            .start() // P12-PLATFORM: channels, widgets feed, alerts, update check
+        appGraph.resumedActivities // P12-VOICE: follow the resumed activity from the start (mic
+        // permission)
+        appGraph
+            .builtinRuntime // P12-FIX-LINUX-VOICE: the built-in Linux follows the activity; phone
+        // server comes back
+        (appGraph as NativeHealingAccessors).nativePhoneHealing.start()
         (appGraph as NativeExitAccessors).nativeAppExitRecovery.start()
-        (appGraph as LinuxAccessors).linuxStartup.start() // P12-FIX: finish an interrupted Reset Linux (B-LINUX-093)
+        (appGraph as LinuxAccessors)
+            .linuxStartup
+            .start() // P12-FIX: finish an interrupted Reset Linux (B-LINUX-093)
         AppLog.tagged("App").i { "graph ready ${buildInfo.versionName} (${buildInfo.versionCode})" }
     }
 }

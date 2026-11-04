@@ -45,6 +45,10 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.addServerCheckFailedPlain
+import io.github.eslamasabry.oc.ui.words.res.agentsConnectPhoneHelper
+import io.github.eslamasabry.oc.ui.words.res.agentsConnectPhoneHelperFailed
+import io.github.eslamasabry.oc.ui.words.res.agentsHelperMayHaveStopped
+import io.github.eslamasabry.oc.ui.words.res.agentsHelperStopped
 import io.github.eslamasabry.oc.ui.words.res.agentsHubAddComputer
 import io.github.eslamasabry.oc.ui.words.res.agentsHubAddFailed
 import io.github.eslamasabry.oc.ui.words.res.agentsHubAdded
@@ -63,6 +67,15 @@ import io.github.eslamasabry.oc.ui.words.res.agentsHubOnComputers
 import io.github.eslamasabry.oc.ui.words.res.agentsHubOnPhone
 import io.github.eslamasabry.oc.ui.words.res.agentsHubSignInFailed
 import io.github.eslamasabry.oc.ui.words.res.agentsHubStartFailed
+import io.github.eslamasabry.oc.ui.words.res.agentsPhoneHelperConnected
+import io.github.eslamasabry.oc.ui.words.res.agentsPreviousVersion
+import io.github.eslamasabry.oc.ui.words.res.agentsPreviousVersionBody
+import io.github.eslamasabry.oc.ui.words.res.agentsPreviousVersionFailed
+import io.github.eslamasabry.oc.ui.words.res.agentsPreviousVersionRestored
+import io.github.eslamasabry.oc.ui.words.res.agentsResetSavedSignIns
+import io.github.eslamasabry.oc.ui.words.res.agentsResetSavedSignInsBody
+import io.github.eslamasabry.oc.ui.words.res.agentsResetSavedSignInsFailed
+import io.github.eslamasabry.oc.ui.words.res.agentsRestartAfterReset
 import io.github.eslamasabry.oc.ui.words.res.agentsRunOnBuiltIn
 import io.github.eslamasabry.oc.ui.words.res.agentsSectionTitle
 import io.github.eslamasabry.oc.ui.words.res.agentsStateChecking
@@ -124,8 +137,8 @@ public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
     }
     LaunchedEffect(Unit) {
         snapshotFlow {
-                listOf(address.text.toString(), folder.text.toString(), password.text.toString())
-            }
+            listOf(address.text.toString(), folder.text.toString(), password.text.toString())
+        }
             .collect { actions.edited() }
     }
     val enabled =
@@ -153,6 +166,22 @@ public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
             state.issue?.let { IssueNotice(it, gutter) }
 
             KitSectionLabel(stringResource(Res.string.agentsHubOnPhone))
+            if (state.phone.needsRestart) {
+                KitNotice(stringResource(Res.string.agentsRestartAfterReset), gutter)
+            }
+            if (state.phone.helperStoppedUnexpectedly) {
+                KitNotice(
+                    stringResource(
+                        if (state.phone.helperMayHaveBeenStoppedByAndroid)
+                            Res.string.agentsHelperMayHaveStopped
+                        else Res.string.agentsHelperStopped
+                    ),
+                    gutter,
+                )
+            }
+            if (state.resetFailed) {
+                KitErrorNotice(stringResource(Res.string.agentsResetSavedSignInsFailed), gutter)
+            }
             state.removal?.let { removal ->
                 when (removal) {
                     is PhoneAgentRemoval.Removed ->
@@ -176,6 +205,24 @@ public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
                             gutter,
                         )
                 }
+            }
+            if (state.previousVersionFailed)
+                KitErrorNotice(stringResource(Res.string.agentsPreviousVersionFailed), gutter)
+            if (state.previousVersionRestored)
+                KitNotice(stringResource(Res.string.agentsPreviousVersionRestored), gutter)
+            if (state.helperConnectFailed) {
+                KitErrorNotice(stringResource(Res.string.agentsConnectPhoneHelperFailed), gutter)
+            }
+            if (state.helperConnected) {
+                KitNotice(stringResource(Res.string.agentsPhoneHelperConnected), gutter)
+            }
+            if (state.helperOffered && state.phone.available && !state.phone.needsRestart) {
+                KitButton(
+                    stringResource(Res.string.agentsConnectPhoneHelper),
+                    actions::connectPhoneHelper,
+                    gutter,
+                    enabled = enabled,
+                )
             }
             AgentInstallPanel(state, actions, gutter, enabled)
             KitButton(
@@ -202,6 +249,15 @@ public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
                             enabled = enabled,
                         )
                     }
+                    if (agent.previousVersionAvailable) {
+                        KitButton(
+                            stringResource(Res.string.agentsPreviousVersion, agent.name),
+                            { actions.requestPreviousVersion(agent.id) },
+                            gutter,
+                            role = KitButtonRole.Secondary,
+                            enabled = enabled,
+                        )
+                    }
                     if (agent.removable) {
                         KitButton(
                             stringResource(Res.string.linuxAgentPayloadRemove, agent.name),
@@ -213,6 +269,14 @@ public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
                     }
                 }
             }
+
+            KitButton(
+                stringResource(Res.string.agentsResetSavedSignIns),
+                actions::requestSignInReset,
+                gutter,
+                role = KitButtonRole.Secondary,
+                enabled = enabled,
+            )
 
             KitSectionLabel(stringResource(Res.string.agentsHubOnComputers))
             if (state.computers.isEmpty() && !state.adding) {
@@ -348,6 +412,30 @@ public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
             }
         }
     }
+    KitConfirm(
+        state.revertingAgent?.let { agent ->
+            KitConfirmSpec(
+                title = stringResource(Res.string.agentsPreviousVersion, agent.name),
+                confirmLabel = stringResource(Res.string.agentsPreviousVersion, agent.name),
+                kind = KitConfirmKind.Destructive,
+                body = stringResource(Res.string.agentsPreviousVersionBody),
+            )
+        },
+        onConfirm = actions::confirmPreviousVersion,
+        onCancel = actions::cancelPreviousVersion,
+    )
+    KitConfirm(
+        if (state.resettingSignIns)
+            KitConfirmSpec(
+                title = stringResource(Res.string.agentsResetSavedSignIns),
+                confirmLabel = stringResource(Res.string.agentsResetSavedSignIns),
+                kind = KitConfirmKind.Destructive,
+                body = stringResource(Res.string.agentsResetSavedSignInsBody),
+            )
+        else null,
+        onConfirm = actions::confirmSignInReset,
+        onCancel = actions::cancelSignInReset,
+    )
     KitConfirm(
         state.removingAgent?.let { agent ->
             KitConfirmSpec(

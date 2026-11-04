@@ -69,6 +69,16 @@ class NativeChatLeases(
         started = true
         scope.launch {
             if (stores.warm() is Outcome.Failed) return@launch
+            scope.launch {
+                profiles.profiles.collect {
+                    val gone = watches.filterValues { !readableGraph(it.graph) }
+                    for ((id, watch) in gone) {
+                        watches.remove(id)
+                        watch.job.cancelAndJoin()
+                        readings.update { it - id.raw }
+                    }
+                }
+            }
             registry.live.collect { live ->
                 val removed = watches.filter { (id, watch) -> live[id] !== watch.graph }
                 for ((id, watch) in removed) {
@@ -77,7 +87,7 @@ class NativeChatLeases(
                     readings.update { it - id.raw }
                 }
                 for ((id, graph) in live) {
-                    if (id !in watches && local(graph))
+                    if (id !in watches && readableGraph(graph) && local(graph))
                         watches[id] = Watch(graph, scope.launch { follow(graph) })
                 }
             }
@@ -93,28 +103,39 @@ class NativeChatLeases(
             false
         }
 
+    private fun readableGraph(graph: ConnectionGraph): Boolean {
+        val raw = graph.profile.id.raw
+        if (profiles.profile(graph.profile.id) != null) return true
+        if (!raw.endsWith(".agents")) return false
+        val owner = raw.removeSuffix(".agents")
+        val alias =
+            (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value ?: return false
+        if (!PROFILE.matches(alias) || profiles.profile(ProfileId(alias)) == null) return false
+        val canonical =
+            (stores.prefs.get("oc.phoneAgentOwner.$alias") as? PrefValue.Str)?.value ?: alias
+        return canonical == owner
+    }
+
     private suspend fun follow(graph: ConnectionGraph): Unit = coroutineScope {
         val profile = graph.profile.id
-        if (!PROFILE.matches(profile.raw)) return@coroutineScope
+        val alias = profile.raw.removeSuffix(".agents")
+        if (!PROFILE.matches(alias) || !readableGraph(graph)) return@coroutineScope
         val lane = Mutex()
         val busySessions = mutableSetOf<SessionId>()
         var known = false
         var lease: Lease? = null
+        var observed = false
+        var lastBusy: Boolean? = null
         val agent = URI(graph.profile.origin.toString()).port == 4099
         val owner =
             if (agent)
-                (stores.prefs.get("oc.phoneAgentOwner.${profile.raw}") as? PrefValue.Str)?.value
-                    ?: profile.raw
+                (stores.prefs.get("oc.phoneAgentOwner.$alias") as? PrefValue.Str)?.value ?: alias
             else null
         if (owner != null && !PROFILE.matches(owner)) return@coroutineScope
 
         suspend fun hold(current: Lease, on: Boolean, duration: Long): Pair<Boolean, Boolean>? =
             withContext(dispatchers.io) {
-                if (
-                    on &&
-                        (profiles.profile(profile) == null ||
-                            registry.live.value[profile] !== graph)
-                )
+                if (on && (!readableGraph(graph) || registry.live.value[profile] !== graph))
                     return@withContext null
                 if (
                     !NAME.matches(current.name) ||
@@ -159,15 +180,20 @@ class NativeChatLeases(
             }
         }
 
-        suspend fun observe() {
-            if (agent)
-                heartbeat(if (busySessions.isNotEmpty()) true else if (known) false else null)
-            readings.update {
-                it +
-                    (profile.raw to
-                        if (busySessions.isNotEmpty()) true else if (known) false else null)
+        suspend fun observe(force: Boolean = false) {
+            val value = if (busySessions.isNotEmpty()) true else if (known) false else null
+            if (!force && observed && value == lastBusy) return
+            observed = true
+            lastBusy = value
+            if (agent) heartbeat(value)
+            readings.update { it + (profile.raw to value) }
+            if (!known) {
+                // Unknown cannot acquire or end a busy run. Renew only its already-held identity.
+                lease
+                    ?.takeIf { !it.closed }
+                    ?.let { hold(it, true, if (agent) AGENT_TTL else CHAT_TTL) }
+                return
             }
-            if (!known) return
             if (busySessions.isEmpty()) {
                 lease?.let { hold(it, false, if (agent) AGENT_TTL else CHAT_TTL) }
                 lease = null
@@ -209,7 +235,7 @@ class NativeChatLeases(
         val renewal = launch {
             while (true) {
                 delay(5.minutes)
-                lane.withLock { if (lease != null && known) observe() }
+                lane.withLock { if (lease != null) observe(force = true) }
             }
         }
         val heartbeats = launch {
@@ -226,8 +252,8 @@ class NativeChatLeases(
                     if (stream == StreamStatus.Connected) reconcile()
                     else {
                         known = false
-                        heartbeat(null)
-                        readings.update { it + (profile.raw to null) }
+                        busySessions.clear()
+                        observe()
                     }
                 }
             }
