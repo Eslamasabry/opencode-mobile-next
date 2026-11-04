@@ -248,7 +248,9 @@ class GitHubAccountController extends ChangeNotifier {
     if (token == null) return const [];
     try {
       return await _flow.fetchUserRepositories(token);
-    } on GitHubSignInException {
+    } on GitHubSignInException catch (e) {
+      // A rejected token asks for a new sign-in, as a rejected push does.
+      if (e.problem == GitHubSignInProblem.tokenRejected) await tokenRejected();
       return const [];
     }
   }

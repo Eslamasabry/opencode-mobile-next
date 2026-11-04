@@ -52884,6 +52884,30 @@ abstract class AppLocalizations {
   /// **'Add a remote'**
   String get gitRemoteAddTitle;
 
+  /// Button on the Git remotes step: pick the remote address from the signed-in GitHub account's repositories.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from GitHub'**
+  String get gitRemotePickGitHub;
+
+  /// Title of the sheet listing the GitHub account's repositories.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a repository'**
+  String get gitRemotePickGitHubTitle;
+
+  /// Shown under the button when the GitHub account has no repositories (or they could not be listed).
+  ///
+  /// In en, this message translates to:
+  /// **'No repositories on this GitHub account yet.'**
+  String get gitRemotePickGitHubNone;
+
+  /// Supporting line on a private repository in the GitHub repository list.
+  ///
+  /// In en, this message translates to:
+  /// **'Private'**
+  String get gitRemoteRepoPrivate;
+
   /// Git remote field
   ///
   /// In en, this message translates to:

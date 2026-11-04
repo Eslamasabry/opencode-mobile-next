@@ -88,12 +88,11 @@ class GitHubRepository {
   final String defaultBranch;
   final bool isPrivate;
 
-  String get remoteUrl =>
-      cloneUrl.isNotEmpty
-          ? cloneUrl
-          : htmlUrl.endsWith('.git')
-          ? htmlUrl
-          : '$htmlUrl.git';
+  String get remoteUrl => cloneUrl.isNotEmpty
+      ? cloneUrl
+      : htmlUrl.endsWith('.git')
+      ? htmlUrl
+      : '$htmlUrl.git';
 
   factory GitHubRepository.fromJson(Map<String, Object?> json) {
     final fullName = json['full_name'];

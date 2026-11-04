@@ -415,40 +415,42 @@ extension _GitSheetSteps on _GitSheetState {
 
   // ------------------------------------------------------------ Remotes
 
-  Future<void> _pickRemoteFromGitHub() async {
+  /// Fills the remote address from one of the signed-in account's GitHub
+  /// repositories, so nobody has to type or paste the URL.
+  Future<void> _pickRemoteFromGitHub(AppLocalizations l10n) async {
     final controller = account;
     if (controller == null || controller.state is! GitHubSignedIn) return;
-    setState(() => _reposLoading = true);
+    _update(() {
+      _reposLoading = true;
+      _reposNone = false;
+    });
     try {
       final repos = await controller.fetchRepositories();
       if (!mounted) return;
       if (repos.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No GitHub repositories found.')),
-        );
+        _update(() => _reposNone = true);
         return;
       }
-      final selected = await showDialog<GitHubRepository>(
-        context: context,
-        builder: (context) => SimpleDialog(
-          title: const Text('Choose a repository'),
-          children: [
-            for (final repo in repos)
-              SimpleDialogOption(
-                onPressed: () => Navigator.of(context).pop(repo),
-                child: Text(repo.fullName),
-              ),
-          ],
-        ),
+      final selected = await showKitChoiceSheet<GitHubRepository>(
+        context,
+        title: l10n.gitRemotePickGitHubTitle,
+        sheetKey: const Key('git-remote-github-repos'),
+        choices: [
+          for (final repo in repos)
+            KitChoice<GitHubRepository>(
+              value: repo,
+              title: KitBidi.ltr(repo.fullName),
+              supporting: repo.isPrivate ? l10n.gitRemoteRepoPrivate : null,
+            ),
+        ],
       );
       if (selected == null || !mounted) return;
-      if (_remoteName.text.trim().isEmpty) {
-        _remoteName.text = 'origin';
-      }
-      _remoteUrl.text = selected.remoteUrl;
-      _update(() {});
+      _update(() {
+        if (_remoteName.text.trim().isEmpty) _remoteName.text = 'origin';
+        _remoteUrl.text = selected.remoteUrl;
+      });
     } finally {
-      if (mounted) setState(() => _reposLoading = false);
+      if (mounted) _update(() => _reposLoading = false);
     }
   }
 
@@ -470,7 +472,7 @@ extension _GitSheetSteps on _GitSheetState {
     final sshOverHttps =
         page.abilities.offersGitHubSignIn &&
         remotes.any((r) => r.kind == GitRemoteKind.gitHubSsh);
-    final repoPickerVisible = account != null && account!.state is GitHubSignedIn;
+    final repoPickerVisible = account?.state is GitHubSignedIn;
     return KitSheet(
       key: const Key('git-remotes'),
       step: 'remotes',
@@ -525,19 +527,27 @@ extension _GitSheetSteps on _GitSheetState {
                 role: KitTextRole.secondary,
               ),
             ),
-          if (repoPickerVisible)
+          if (repoPickerVisible) ...[
             Padding(
               padding: EdgeInsetsDirectional.only(top: tokens.space3),
               child: Align(
-                alignment: AlignmentDirectional.centerEnd,
-                child: TextButton.icon(
+                alignment: AlignmentDirectional.centerStart,
+                child: KitButton.tertiary(
                   key: const Key('git-remote-pick-github'),
-                  onPressed: _reposLoading ? null : _pickRemoteFromGitHub,
-                  icon: const Icon(AppIconography.github),
-                  label: const Text('Choose repo'),
+                  icon: AppIconography.github,
+                  label: l10n.gitRemotePickGitHub,
+                  onPressed: _reposLoading
+                      ? null
+                      : () => _pickRemoteFromGitHub(l10n),
                 ),
               ),
             ),
+            if (_reposNone)
+              KitText(
+                l10n.gitRemotePickGitHubNone,
+                role: KitTextRole.secondary,
+              ),
+          ],
           SizedBox(height: tokens.space4),
           KitSectionLabel.inline(l10n.gitRemoteAddTitle),
           KitField(

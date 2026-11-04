@@ -54,6 +54,9 @@ class _Account extends GitHubAccountController {
   GitHubSignInState get state => _state;
   @override
   Future<String?> tokenForGit() async => null;
+  var repos = const <GitHubRepository>[];
+  @override
+  Future<List<GitHubRepository>> fetchRepositories() async => repos;
   @override
   Future<void> startSignIn() async => started++;
   @override
@@ -495,6 +498,65 @@ void main() {
     await tester.pumpAndSettle();
     expect(shell.scripts.any((s) => s.contains("'switch' 'feature'")), isTrue);
     expect(_text('Switched branch.'), findsOneWidget);
+  });
+
+  testWidgets('Choose from GitHub fills the remote from the account repos', (
+    tester,
+  ) async {
+    final shell = FakeGitShell([_snapshot(), _snapshot()]);
+    final account = _Account(const GitHubSignedIn('o'))
+      ..repos = const [
+        GitHubRepository(
+          fullName: 'o/alpha',
+          htmlUrl: 'https://github.com/o/alpha',
+          cloneUrl: 'https://github.com/o/alpha.git',
+          defaultBranch: 'main',
+          isPrivate: false,
+        ),
+        GitHubRepository(
+          fullName: 'o/beta',
+          htmlUrl: 'https://github.com/o/beta',
+          cloneUrl: '',
+          defaultBranch: 'dev',
+          isPrivate: true,
+        ),
+      ];
+    await _open(tester, shell, account: account);
+    await _openMore(tester);
+    await tester.tap(find.byKey(const Key('git-row-remotes')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('git-remote-pick-github')));
+    await tester.pumpAndSettle();
+    expect(_text('Private'), findsOneWidget);
+    await tester.tap(_text('o/beta'));
+    await tester.pumpAndSettle();
+    String field(Key key) => tester
+        .widget<EditableText>(
+          find.descendant(
+            of: find.byKey(key),
+            matching: find.byType(EditableText),
+          ),
+        )
+        .controller
+        .text;
+    expect(field(const Key('git-remote-url')), 'https://github.com/o/beta.git');
+    expect(field(const Key('git-remote-name')), 'origin');
+  });
+
+  testWidgets('Choose from GitHub says so when the account has no repos', (
+    tester,
+  ) async {
+    final shell = FakeGitShell([_snapshot(), _snapshot()]);
+    await _open(tester, shell, account: _Account(const GitHubSignedIn('o')));
+    await _openMore(tester);
+    await tester.tap(find.byKey(const Key('git-row-remotes')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('git-remote-pick-github')));
+    await tester.pumpAndSettle();
+    expect(
+      _text('No repositories on this GitHub account yet.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('Remotes shows each address; Add a remote refuses a password', (
