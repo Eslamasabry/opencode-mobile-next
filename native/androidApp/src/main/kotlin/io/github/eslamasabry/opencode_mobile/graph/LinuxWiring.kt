@@ -16,9 +16,6 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppLog
-import io.github.eslamasabry.oc.core.common.Failure
-import io.github.eslamasabry.oc.core.common.Outcome
-import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import io.github.eslamasabry.oc.core.common.pace.DefaultPacer
 import io.github.eslamasabry.oc.core.common.pace.Pacer
 import io.github.eslamasabry.oc.core.common.pace.Visibility
@@ -41,8 +38,6 @@ import io.github.eslamasabry.oc.feature.phone.presentation.KeepAliveSetting
 import io.github.eslamasabry.oc.feature.phone.presentation.KeepAliveSettings
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneNavigator
 import io.github.eslamasabry.oc.feature.phone.presentation.PhonePage
-import io.github.eslamasabry.oc.feature.phone.presentation.PhoneProcessSource
-import io.github.eslamasabry.oc.feature.phone.presentation.ProcessReading
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.LinuxRoute
 import io.github.eslamasabry.oc.ui.routes.PhoneRoute
@@ -108,14 +103,7 @@ object LinuxWiring {
     // ---- The built-in Linux: LinuxHost, LinuxLifecycle and PhoneServerSource are the real BuiltinLinux bindings in
     // LinuxRuntimeWiring (P12-FIX-LINUX-VOICE).
 
-    /** Nothing of the app's own runs without the built-in Linux: an honest empty reading. */
-    @Provides
-    fun phoneProcessSource(): PhoneProcessSource =
-        object : PhoneProcessSource {
-            override suspend fun read(): Outcome<ProcessReading> = Outcome.Ok(ProcessReading(emptyList(), count = null, limitLifted = false))
-
-            override suspend fun stop(pid: Int): Outcome<Unit> = Outcome.Failed(Failure.Runtime(RuntimeProblem.NotInstalled))
-        }
+    // PhoneProcessSource: the real native process table, in RuntimeBWiring (BUILD-RUNTIME-B).
 
     // ---- Real Android bindings
 

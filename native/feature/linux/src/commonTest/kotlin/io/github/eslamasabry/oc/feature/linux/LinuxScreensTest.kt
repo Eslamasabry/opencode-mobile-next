@@ -79,6 +79,60 @@ class LinuxScreensTest {
         override fun checkInstall(typed: String) { seen += "check $typed" }
         override fun askRemove(name: String) { seen += "askRemove $name" }
         override fun askUpdate() { seen += "askUpdate" }
+        override fun askRemove(projects: Boolean) {
+            seen += "askRemove $projects"
+        }
+        override fun startSetup() {
+            seen += "startSetup"
+        }
+        override fun addPython() {
+            seen += "addPython"
+        }
+        override fun continueSetup() {
+            seen += "continueSetup"
+        }
+        override fun askStopSetup() {
+            seen += "askStopSetup"
+        }
+        override fun setIdleEnabled(enabled: Boolean) {
+            seen += "setIdleEnabled $enabled"
+        }
+        override fun askIdleMinutes() {
+            seen += "askIdleMinutes"
+        }
+        override fun finishIdleMinutes(value: String?) {
+            seen += "finishIdleMinutes $value"
+        }
+        override fun resumeIdle() {
+            seen += "resumeIdle"
+        }
+        override fun refreshLifetimes() {
+            seen += "refreshLifetimes"
+        }
+        override fun askCreateProject() {
+            seen += "askCreateProject"
+        }
+        override fun finishCreateProject(path: String?) {
+            seen += "finishCreateProject $path"
+        }
+        override fun browse(path: String) {
+            seen += "browse $path"
+        }
+        override fun closeFolders() {
+            seen += "closeFolders"
+        }
+        override fun measureRemoval() {
+            seen += "measureRemoval"
+        }
+        override fun readProgramLog(pid: Int) {
+            seen += "readProgramLog $pid"
+        }
+        override fun askStopProgram(pid: Int) {
+            seen += "askStopProgram $pid"
+        }
+        override fun confirmStopProgram() {
+            seen += "confirmStopProgram"
+        }
     }
 
     @Test

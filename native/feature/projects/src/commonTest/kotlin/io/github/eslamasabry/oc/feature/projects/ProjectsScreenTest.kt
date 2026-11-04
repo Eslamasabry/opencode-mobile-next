@@ -54,6 +54,10 @@ class ProjectsScreenTest {
 
         override fun newConversationHere() { calls += "new" }
 
+        override fun developmentServices() {
+            calls += "developmentServices"
+        }
+
         override fun openConversation(ref: ConversationRef) { calls += "open ${ref.sessionId.raw}" }
 
         override fun loadMore() { calls += "more" }

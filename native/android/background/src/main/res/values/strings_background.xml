@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- :android:background copy. The pause lines are the Flutter app's backgroundPause* strings, verbatim (%1$s is the
+     time phrase, e.g. "at 3:10 PM"); the errors are BackgroundLiveController.lastError, verbatim. -->
+<resources>
+    <string name="background_pause_time_limit">Background connection paused %1$s to save battery.</string>
+    <string name="background_pause_restricted">Background connection paused: battery use is restricted.</string>
+    <string name="background_pause_user_stopped">Background connection stopped when the app closed %1$s.</string>
+    <string name="background_pause_app_updated">Background connection stopped when the app was updated %1$s.</string>
+    <string name="background_pause_interrupted">Background connection stopped for an unknown reason.</string>
+    <string name="background_pause_device_restarted">Background connection stopped when the phone restarted.</string>
+    <string name="background_pause_resume">Resume background connection</string>
+    <string name="background_pause_resume_short">Resume</string>
+    <string name="background_pause_resuming">Resuming background connection…</string>
+    <string name="background_pause_resume_failed">Couldn\'t resume. Open Keep running settings.</string>
+    <string name="background_pause_open_keep_running">Open Keep running settings</string>
+    <string name="background_pause_resumed">Background connection resumed.</string>
+    <string name="background_error_notifications_required">Notification access is required.</string>
+    <string name="background_error_could_not_change">Android could not change background mode.</string>
+    <string name="background_error_android_app_only">Background live mode is available in the Android app.</string>
+</resources>

@@ -1,0 +1,24 @@
+<resources>
+    <string name="linuxLocalProjects">تصفح مشاريع الهاتف</string>
+    <string name="linuxLocalProjectsDetail">تصفح المجلدات أثناء توقف الخادم، بما فيها المشاريع المحفوظة بعد إزالة لينكس.</string>
+    <string name="linuxLocalParent">المجلد الأعلى</string>
+    <string name="linuxLocalClose">إغلاق المجلدات</string>
+    <string name="linuxLocalGit">مشروع Git</string>
+    <string name="linuxLocalFolder">مجلد</string>
+    <string name="linuxLocalReading">جارٍ قراءة المجلدات…</string>
+    <string name="linuxLocalFolderFailed">تعذر قراءة هذا المجلد. ربما نُقل أو حُذف أو كان رابطًا.</string>
+    <string name="linuxLocalEmpty">لا توجد مجلدات هنا.</string>
+    <string name="linuxLocalMeasure">قياس مساحة خيارات إزالة لينكس</string>
+    <string name="linuxLocalRemoveKeep">إزالة لينكس مع الاحتفاظ بالمشاريع</string>
+    <string name="linuxLocalRemoveAll">إزالة لينكس والمشاريع</string>
+    <string name="linuxLocalFreed">يوفر %1$s</string>
+    <string name="linuxLocalRemoveKeepQuestion">هل تريد إزالة لينكس مع الاحتفاظ بالمشاريع؟</string>
+    <string name="linuxLocalRemoveAllQuestion">هل تريد إزالة لينكس وجميع مشاريع الهاتف؟</string>
+    <string name="linuxLocalRemoveKeepBody">يوقف برامج الهاتف ويزيل لينكس والأدوات المثبتة وبيانات تسجيل الدخول وسجل الخادم المحلي. تبقى ملفات مشاريعك متاحة للتصفح. يوفر %1$s.</string>
+    <string name="linuxLocalRemoveAllBody">يوقف برامج الهاتف ويزيل لينكس والأدوات المثبتة وبيانات تسجيل الدخول وسجل الخادم المحلي وجميع ملفات مشاريع الهاتف المحفوظة. لا يمكن التراجع عن ذلك. يوفر %1$s.</string>
+    <string name="linuxLocalStorageFailed">تعذر على الهاتف إكمال قراءة مساحة لينكس أو إزالتها. أغلق مهام الهاتف وحاول مجددًا.</string>
+    <string name="linuxLocalRemoved">تمت إزالة مساحة لينكس.</string>
+    <string name="linuxLocalCreate">إنشاء مشروع على الهاتف</string>
+    <string name="linuxLocalCreatePath">المسار المطلق لمجلد المشروع</string>
+    <string name="linuxLocalInvalidPath">أدخل مسار مجلد مطلقًا دون الرجوع إلى المجلدات الأصلية أو فواصل الأسطر.</string>
+</resources>

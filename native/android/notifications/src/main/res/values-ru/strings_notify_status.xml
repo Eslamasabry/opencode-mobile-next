@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The status row's words (StatusModel, B-ANDR-041..047). Native translation of the notifStatus* strings; numbers arrive pre-formatted (%s). -->
+<resources>
+    <string name="notify_status_working">Работает…</string>
+    <string name="notify_status_still_working">%1$s ещё работают</string>
+    <string name="notify_status_chats_working">Работают беседы: %1$s</string>
+    <string name="notify_status_more">+%1$s ещё</string>
+    <string name="notify_status_waiting_count">Ожидают: %1$s</string>
+    <string name="notify_status_tasks_progress">%1$s из %2$s задач</string>
+    <string name="notify_status_minutes">%1$s мин</string>
+    <string name="notify_status_hours">%1$s ч</string>
+    <string name="notify_status_waiting_provider">Ожидание · лимит %1$s</string>
+    <string name="notify_status_waiting_generic">Ожидание · провайдер занят</string>
+    <string name="notify_status_tries_again_at">Повтор в %1$s</string>
+    <string name="notify_status_tries_again_soon">Скоро повтор</string>
+    <string name="notify_status_paused_android_title">Пауза · фоновый лимит Android</string>
+    <string name="notify_status_paused_android_body">Android останавливает фоновую работу после 6 часов в день. Откройте OpenCode, чтобы продолжить.</string>
+    <string name="notify_status_paused_hot_title">Пауза · телефон нагрелся</string>
+    <string name="notify_status_paused_hot_body">Продолжит, когда остынет</string>
+    <string name="notify_status_paused_idle_title">Пауза · ничего не выполнялось</string>
+    <string name="notify_status_paused_idle_body">Нажмите, чтобы снова запустить OpenCode</string>
+    <string name="notify_status_reconnecting_title">Переподключение к %1$s</string>
+    <string name="notify_status_reconnecting_generic">Переподключение</string>
+    <string name="notify_status_reconnecting_body">Ожидание соединения</string>
+    <string name="notify_status_ready_title">Готово · ничего не выполняется</string>
+    <string name="notify_status_ready_body">Готово к работе</string>
+    <string name="notify_status_last_reply">Последний ответ %1$s назад</string>
+    <string name="notify_status_last_reply_now">Последний ответ только что</string>
+    <string name="notify_status_setup_title">Настройка · %1$s из %2$s</string>
+    <string name="notify_status_on_server">на %1$s</string>
+    <string name="notify_status_on_this_phone">на этом телефоне</string>
+    <string name="notify_status_lock_working">Работают: %1$s</string>
+    <string name="notify_status_lock_waiting">Ожидание</string>
+    <string name="notify_status_lock_paused">Пауза</string>
+    <string name="notify_status_lock_reconnecting">Переподключение</string>
+    <string name="notify_status_lock_ready">Готово</string>
+    <string name="notify_status_lock_setup">Настройка</string>
+    <plurals name="notify_status_needs_you">
+        <item quantity="one">%1$s ждёт вас</item>
+        <item quantity="few">%1$s ждут вас</item>
+        <item quantity="many">%1$s ждут вас</item>
+        <item quantity="other">%1$s ждут вас</item>
+    </plurals>
+</resources>

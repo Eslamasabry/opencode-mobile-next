@@ -11,7 +11,10 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import kotlinx.coroutines.flow.StateFlow
 
-/** `AgentsRoute.Home`. All logic is in [AgentsPresenter]; this only gives it a lifecycle scope and navigation. */
+/**
+ * `AgentsRoute.Home`. All logic is in [AgentsPresenter]; this only gives it a lifecycle scope and
+ * navigation.
+ */
 @Inject
 @ViewModelKey
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
@@ -21,7 +24,13 @@ public class AgentsViewModel(
     nav: AppNavigator,
 ) : ViewModel(), AgentsActions {
     private val presenter =
-        AgentsPresenter(viewModelScope, computers, phone, onBack = nav::back, openChat = { nav.openChat(it, focusComposer = true) })
+        AgentsPresenter(
+            viewModelScope,
+            computers,
+            phone,
+            onBack = nav::back,
+            openChat = { nav.openChat(it, focusComposer = true) },
+        )
 
     public val state: StateFlow<AgentsUi> = presenter.state
 
@@ -33,7 +42,8 @@ public class AgentsViewModel(
 
     override fun edited(): Unit = presenter.edited()
 
-    override fun check(address: String, password: String, folder: String): Unit = presenter.check(address, password, folder)
+    override fun check(address: String, password: String, folder: String): Unit =
+        presenter.check(address, password, folder)
 
     override fun add(name: String, address: String, password: String, folder: String): Unit =
         presenter.add(name, address, password, folder)
@@ -41,4 +51,16 @@ public class AgentsViewModel(
     override fun readAgents(id: ProfileId): Unit = presenter.readAgents(id)
 
     override fun newConversation(id: ProfileId): Unit = presenter.newConversation(id)
+
+    override fun installPhone(id: String): Unit = presenter.installPhone(id)
+
+    override fun cancelPhoneInstall(): Unit = presenter.cancelPhoneInstall()
+
+    override fun refreshPhone(): Unit = presenter.refreshPhone()
+
+    override fun requestRemoval(id: String): Unit = presenter.requestRemoval(id)
+
+    override fun cancelRemoval(): Unit = presenter.cancelRemoval()
+
+    override fun confirmRemoval(): Unit = presenter.confirmRemoval()
 }

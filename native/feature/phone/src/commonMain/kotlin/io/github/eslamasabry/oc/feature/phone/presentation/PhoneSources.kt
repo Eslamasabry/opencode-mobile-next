@@ -6,6 +6,7 @@ import io.github.eslamasabry.oc.engine.runtime.host.RuntimeStatus
 import io.github.eslamasabry.oc.engine.runtime.server.ProbeAnswer
 import io.github.eslamasabry.oc.engine.runtime.server.StartProblem
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlin.time.Instant
 
 /*
@@ -77,6 +78,31 @@ public interface PhoneServerSource {
 
     /** The setup engine's "Update OpenCode" job (B-LINUX-079 manual row); the server restarts itself after (R7). */
     public suspend fun updateOpenCode(): Outcome<Unit>
+}
+
+/** Real Android exit metadata, never the OS description or exception text. */
+public enum class PhoneExitKind { ForceStop, LowMemory, MemoryLimit, Crash, Killed }
+
+public data class PhoneExitNotice(
+    val kind: PhoneExitKind,
+    val at: Instant,
+    val recoveryAllowed: Boolean,
+    /** True only after a new authenticated restart completed; a pre-existing process never sets this. */
+    val restored: Boolean = false,
+)
+
+/** One process-wide launch notice. Desktop has no Android exit record. */
+public interface PhoneExitNotices {
+    public val notice: StateFlow<PhoneExitNotice?>
+
+    public fun dismiss()
+
+    public companion object {
+        public val Absent: PhoneExitNotices = object : PhoneExitNotices {
+            override val notice: StateFlow<PhoneExitNotice?> = MutableStateFlow(null)
+            override fun dismiss() = Unit
+        }
+    }
 }
 
 /** One Android settings screen the app may open (plan 11 §8.4 `KeepAliveSettings.open`). */

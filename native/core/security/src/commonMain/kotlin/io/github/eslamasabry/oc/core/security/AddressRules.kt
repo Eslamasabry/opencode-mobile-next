@@ -83,9 +83,9 @@ public object AddressRules {
         if (raw.isEmpty()) return invalid()
         if ("://" in raw) return origin(raw)
         if (!BARE.matches(raw)) return invalid()
-        val probe = UrlParts.parse("http://$raw") ?: return invalid()
-        val scheme = if (isLoopback(probe.host)) "http" else "https"
-        return origin("$scheme://$raw")
+        val text = ServerUrlRules.normalizeText(raw) // B-SEC-146: unbracketed IPv6 gains brackets, [::1] is loopback
+        if ("://" !in text) return invalid()
+        return origin(text)
     }
 
     /** Dart isCleartextChoiceRequired: plain HTTP anywhere but this device needs the person's explicit choice. */

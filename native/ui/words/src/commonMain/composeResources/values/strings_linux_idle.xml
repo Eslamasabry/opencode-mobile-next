@@ -1,0 +1,11 @@
+<resources>
+    <string name="linuxIdleTitle">Stop the server when idle</string>
+    <string name="linuxIdleDetail">Saves phone resources after work finishes. Resume the same server when you need it.</string>
+    <string name="linuxIdleMinutes">Idle time in minutes</string>
+    <string name="linuxIdleMinutesValue">%1$d minutes</string>
+    <string name="linuxIdleInvalid">Enter a whole number from 1 to 60.</string>
+    <string name="linuxIdleFailed">The phone could not read or change its idle state. Open this page again to retry.</string>
+    <string name="linuxIdleResume">Resume idle phone server</string>
+    <string name="linuxIdleSave">Save idle time</string>
+    <string name="linuxIdleWorking">Updating idle state…</string>
+</resources>

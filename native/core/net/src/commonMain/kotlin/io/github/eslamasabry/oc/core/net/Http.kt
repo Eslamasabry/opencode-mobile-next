@@ -8,6 +8,7 @@ import io.github.eslamasabry.oc.core.common.Redacted
 import io.github.eslamasabry.oc.core.common.SignInWhy
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.attempt
+import io.github.eslamasabry.oc.core.common.getOrNull
 import io.github.eslamasabry.oc.core.model.ServerOrigin
 import io.github.eslamasabry.oc.core.security.HostClass
 import io.ktor.client.HttpClient
@@ -17,9 +18,12 @@ import io.ktor.client.plugins.UserAgent
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.prepareRequest
 import io.ktor.client.statement.HttpResponse
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
+import io.ktor.http.encodedPath
 import io.ktor.http.isSuccess
 import kotlinx.io.IOException
+import kotlin.concurrent.atomics.AtomicReference
 
 /**
  * What one live connection's transport is allowed to do (plan 04 §3.3). The trust decision itself (cleartext consent,
@@ -188,8 +192,15 @@ public class NetClient(
     public suspend fun <T> exchange(build: HttpRequestBuilder.() -> Unit, read: suspend (HttpResponse) -> T): Outcome<T> {
         val builder = HttpRequestBuilder().apply(build)
         val kind = CallKind.of(builder.method)
+        val watch: List<HttpCallEnd> = observers.load().mapNotNull { observer ->
+            attempt<HttpCallEnd>({ Failure.Unexpected() }) { observer.begin(builder.method.value, builder.url.encodedPath) }.getOrNull()
+        }
+        var status: Int? = null
+        var bytes: Long? = null
         val outcome = attempt({ TransportFailures.of(kind, classify(it), it) }) {
             http.prepareRequest(builder).execute { response ->
+                status = response.status.value
+                bytes = response.headers[HttpHeaders.ContentLength]?.toLongOrNull()
                 if (!response.status.isSuccess()) {
                     Outcome.Failed(StatusMapping.failureFor(response.status.value))
                 } else {
@@ -197,11 +208,29 @@ public class NetClient(
                 }
             }
         }
-        return when (outcome) {
+        val result = when (outcome) {
             is Outcome.Ok -> outcome.value
             is Outcome.Failed -> outcome
         }
+        for (end in watch) {
+            attempt<Unit>({ Failure.Unexpected() }) { end.end(status, bytes, result is Outcome.Failed) }
+        }
+        return result
     }
+
+    private val observers = AtomicReference<List<HttpCallObserver>>(emptyList())
+
+    /** Adds [observer] once (B-BUILD-026: attaching twice adds one). False when it was already attached. */
+    public fun attach(observer: HttpCallObserver): Boolean {
+        while (true) {
+            val current = observers.load()
+            if (observer in current) return false
+            if (observers.compareAndSet(current, current + observer)) return true
+        }
+    }
+
+    /** The observers attached to this client (diagnostics and tests). */
+    public val observerCount: Int get() = observers.load().size
 
     /** Stops new calls, then closes the engine and cancels calls still running on it (plan 04 §3.1 order). */
     public fun close() {
