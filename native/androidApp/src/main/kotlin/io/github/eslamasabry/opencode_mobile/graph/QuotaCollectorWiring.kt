@@ -2,8 +2,6 @@ package io.github.eslamasabry.opencode_mobile.graph
 
 import android.app.Application
 import android.app.NotificationManager
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
@@ -51,7 +49,6 @@ import java.io.File
 import java.net.URI
 import java.security.MessageDigest
 import java.security.SecureRandom
-import java.util.Calendar
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 import kotlin.time.Clock
@@ -77,6 +74,7 @@ class CollectorUsageSource(
     private val appScope: AppCoroutineScope,
     private val alerts: QuotaAlertPublisher,
     private val http: HttpClientFactory,
+    private val policy: QuotaCollectionPolicy,
 ) : UsageSource, UsageAlertBridge {
     private val random = SecureRandom()
 
@@ -84,7 +82,7 @@ class CollectorUsageSource(
         appScope.launch {
             while (true) {
                 delay(5.minutes)
-                if (stores.warm() is Outcome.Ok && alertsOn()) {
+                if (stores.warm() is Outcome.Ok && policy.runningAllowed) {
                     read(
                         UsageReadContext(
                             connections(),
@@ -103,7 +101,12 @@ class CollectorUsageSource(
     private val credentialSalt = ByteArray(32).also(random::nextBytes)
     private val credentialIdentities = mutableMapOf<ProfileId, String>()
     private val changedCredentials = mutableSetOf<ProfileId>()
+    private val retiredTokens = mutableSetOf<String>()
     private val retired = java.util.concurrent.ConcurrentHashMap.newKeySet<ProfileId>()
+    private val disabled = java.util.concurrent.ConcurrentHashMap.newKeySet<ProfileId>()
+    private val activeGateways =
+        java.util.concurrent.ConcurrentHashMap<ProfileId, HttpProviderQuotaGateway>()
+    private var cursor = 0
     private val rules by lazy {
         CollectorRules(
             stores.prefs,
@@ -126,7 +129,7 @@ class CollectorUsageSource(
         DartJson.sha256Hex(DartJson.encode(listOf(p.profile.baseUrl, p.profile.username)))
 
     private fun current(p: LoadedProfile): Boolean =
-        p.id !in retired && stores.profiles.profile(p.id) == p
+        p.id !in retired && p.id !in disabled && stores.profiles.profile(p.id) == p
 
     private fun enabled(p: LoadedProfile): Boolean =
         stores.prefs.bool(InAppQuotaCollector.enabledKey(p.id)) == true
@@ -174,111 +177,141 @@ class CollectorUsageSource(
             val readings = mutableListOf<UsageReading>()
             val failures = mutableListOf<UsageFailure>()
             val unreached = mutableSetOf<String>()
-            for (p in all()) {
-                if (p.id.raw !in context.connections.map { it.id }) continue
-                for (provider in QuotaProvider.entries) {
-                    if (p.id.raw in unreached || !applies(p, provider) || !current(p)) continue
-                    val old = snapshots[key(p.id, provider)]
-                    val read =
-                        if (
-                            !context.force &&
-                                old != null &&
-                                context.now - old.second < 4.minutes &&
-                                !old.first.isStale(context.now)
-                        )
-                            QuotaRead.Read(old.first)
-                        else readSnapshot(p, provider)
-                    if (!current(p) || !applies(p, provider)) continue
-                    when (read) {
-                        is QuotaRead.Failed ->
-                            when (read.failure.kind) {
-                                QuotaFailureKind.CollectorAuth ->
-                                    readings +=
-                                        bare(
-                                            p,
-                                            provider,
-                                            UsageReadingStatus.AuthRequired,
-                                            context.now,
-                                        )
-                                QuotaFailureKind.Unavailable ->
-                                    if (local(p))
-                                        failures +=
-                                            UsageFailure(
-                                                p.id.raw,
-                                                provider.wire,
-                                                UsageProblem.Broken,
-                                            )
-                                    else unreached += p.id.raw
-                                else ->
-                                    failures +=
-                                        UsageFailure(p.id.raw, provider.wire, UsageProblem.Broken)
-                            }
-                        is QuotaRead.Read -> {
-                            val s = read.snapshot
-                            snapshots[key(p.id, provider)] = s to context.now
-                            maybeAlert(p, s)
-                            when {
-                                s.status == ProviderQuotaStatus.Ok && s.canShowWindows -> {
-                                    // Consent is bound to the account as well as the saved source.
-                                    val consent = rule(p, provider)
-                                    if (!local(p) && consent?.account != s.account.ref) {
-                                        readings +=
-                                            bare(
-                                                p,
-                                                provider,
-                                                UsageReadingStatus.AuthRequired,
-                                                context.now,
-                                            )
-                                        continue
-                                    }
-                                    val windows =
-                                        s.windows.mapNotNull { w ->
-                                            w.usedPercent?.let {
-                                                UsageWindow(w.id, it, w.durationSeconds, w.resetsAt)
-                                            }
-                                        }
-                                    readings +=
-                                        UsageReading(
-                                            provider.wire,
-                                            name(provider),
-                                            p.id.raw,
-                                            if (windows.isEmpty()) UsageReadingStatus.NoLimits
-                                            else UsageReadingStatus.Ok,
-                                            s.fetchedAt,
-                                            windows,
-                                            s.account.ref,
-                                            s.account.plan,
-                                            SignInMethod.Plan,
-                                        )
-                                }
-                                s.status == ProviderQuotaStatus.Unconfigured ->
-                                    if (context.lastReading(p.id.raw, provider.wire) != null)
-                                        readings +=
-                                            bare(
-                                                p,
-                                                provider,
-                                                UsageReadingStatus.NotSignedIn,
-                                                context.now,
-                                            )
-                                s.status == ProviderQuotaStatus.AuthRequired ->
-                                    readings +=
-                                        bare(
-                                            p,
-                                            provider,
-                                            UsageReadingStatus.AuthRequired,
-                                            context.now,
-                                        )
-                                s.status == ProviderQuotaStatus.RateLimited ->
+            val candidates =
+                all()
+                    .flatMap { p -> QuotaProvider.entries.map { p to it } }
+                    .filter { (p, provider) ->
+                        p.id.raw in context.connections.map { it.id } &&
+                            applies(p, provider) &&
+                            current(p)
+                    }
+            val selected =
+                if (context.background && candidates.isNotEmpty()) {
+                    val start = cursor % candidates.size
+                    val count = minOf(3, candidates.size)
+                    cursor = (start + count) % candidates.size
+                    List(count) { candidates[(start + it) % candidates.size] }
+                } else candidates
+            val runtime = policy.runtimeEpoch
+            for ((p, provider) in selected) {
+                if (
+                    context.background && (!policy.runningAllowed || runtime != policy.runtimeEpoch)
+                )
+                    break
+                val savedRule = rule(p, provider)
+                if (
+                    context.background &&
+                        (savedRule == null ||
+                            policy.wifiOnly(savedRule.wifiOnly) && policy.onWifi() != true)
+                )
+                    continue
+                if (p.id.raw in unreached || !applies(p, provider) || !current(p)) continue
+                val old = snapshots[key(p.id, provider)]
+                val read =
+                    if (
+                        !context.force &&
+                            old != null &&
+                            context.now - old.second < 4.minutes &&
+                            !old.first.isStale(context.now)
+                    )
+                        QuotaRead.Read(old.first)
+                    else readSnapshot(p, provider)
+                if (
+                    !current(p) ||
+                        !applies(p, provider) ||
+                        context.background &&
+                            (!policy.runningAllowed || runtime != policy.runtimeEpoch)
+                )
+                    continue
+                when (read) {
+                    is QuotaRead.Failed ->
+                        when (read.failure.kind) {
+                            QuotaFailureKind.CollectorAuth ->
+                                readings +=
+                                    bare(
+                                        p,
+                                        provider,
+                                        UsageReadingStatus.AuthRequired,
+                                        context.now,
+                                    )
+                            QuotaFailureKind.Unavailable ->
+                                if (local(p))
                                     failures +=
                                         UsageFailure(
                                             p.id.raw,
                                             provider.wire,
-                                            UsageProblem.RateLimited,
+                                            UsageProblem.Broken,
                                         )
-                                else ->
-                                    failures +=
-                                        UsageFailure(p.id.raw, provider.wire, UsageProblem.Broken)
+                                else unreached += p.id.raw
+                            else ->
+                                failures +=
+                                    UsageFailure(p.id.raw, provider.wire, UsageProblem.Broken)
+                        }
+                    is QuotaRead.Read -> {
+                        val s = read.snapshot
+                        snapshots[key(p.id, provider)] = s to context.now
+                        maybeAlert(p, s)
+                        when {
+                            s.status == ProviderQuotaStatus.Ok && s.canShowWindows -> {
+                                // Consent is bound to the account as well as the saved source.
+                                val consent = rule(p, provider)
+                                if (!local(p) && consent?.account != s.account.ref) {
+                                    readings +=
+                                        bare(
+                                            p,
+                                            provider,
+                                            UsageReadingStatus.AuthRequired,
+                                            context.now,
+                                        )
+                                    continue
+                                }
+                                val windows =
+                                    s.windows.mapNotNull { w ->
+                                        w.usedPercent?.let {
+                                            UsageWindow(w.id, it, w.durationSeconds, w.resetsAt)
+                                        }
+                                    }
+                                readings +=
+                                    UsageReading(
+                                        provider.wire,
+                                        name(provider),
+                                        p.id.raw,
+                                        if (windows.isEmpty()) UsageReadingStatus.NoLimits
+                                        else UsageReadingStatus.Ok,
+                                        s.fetchedAt,
+                                        windows,
+                                        s.account.ref,
+                                        s.account.plan,
+                                        SignInMethod.Plan,
+                                    )
                             }
+                            s.status == ProviderQuotaStatus.Unconfigured ->
+                                if (context.lastReading(p.id.raw, provider.wire) != null)
+                                    readings +=
+                                        bare(
+                                            p,
+                                            provider,
+                                            UsageReadingStatus.NotSignedIn,
+                                            context.now,
+                                        )
+                            s.status == ProviderQuotaStatus.AuthRequired ->
+                                readings +=
+                                    bare(
+                                        p,
+                                        provider,
+                                        UsageReadingStatus.AuthRequired,
+                                        context.now,
+                                    )
+                            s.status == ProviderQuotaStatus.RateLimited ->
+                                failures +=
+                                    UsageFailure(
+                                        p.id.raw,
+                                        provider.wire,
+                                        UsageProblem.RateLimited,
+                                    )
+                            else ->
+                                failures +=
+                                    UsageFailure(p.id.raw, provider.wire, UsageProblem.Broken)
                         }
                     }
                 }
@@ -326,42 +359,52 @@ class CollectorUsageSource(
             }
         }
 
-    suspend fun consentRemote(id: ProfileId, enabled: Boolean): Outcome<Unit> = lock.withLock {
-        val p = stores.profiles.profile(id) ?: return@withLock stale()
-        if (local(p)) return@withLock Outcome.Failed(Failure.UnreadableReply())
+    suspend fun consentRemote(id: ProfileId, enabled: Boolean): Outcome<Unit> {
         if (!enabled) {
-            for (provider in QuotaProvider.entries) {
-                val result = rules.save(id, provider, null)
-                if (result is Outcome.Failed) return@withLock result
-                snapshots.remove(key(id, provider))
+            disabled += id
+            activeGateways.remove(id)?.close()
+        }
+        return lock.withLock {
+            val p = stores.profiles.profile(id) ?: return@withLock stale()
+            if (local(p)) return@withLock Outcome.Failed(Failure.UnreadableReply())
+            if (!enabled) {
+                for (provider in QuotaProvider.entries) {
+                    val result = rules.save(id, provider, null)
+                    if (result is Outcome.Failed) return@withLock result
+                    snapshots.remove(key(id, provider))
+                }
+                return@withLock Outcome.Ok(Unit)
             }
-            return@withLock Outcome.Ok(Unit)
+            retired -= id
+            disabled -= id
+            changedCredentials.remove(id)
+            credentialIdentities.remove(id)
+            var enrolled = false
+            for (provider in QuotaProvider.entries.filter(::quotaCollectionAvailable)) {
+                val read = readSnapshot(p, provider)
+                if (!current(p)) return@withLock stale()
+                if (read !is QuotaRead.Read || !read.snapshot.canShowWindows) continue
+                val result =
+                    rules.enroll(
+                        id,
+                        source(p),
+                        read.snapshot,
+                        clock.now(),
+                        notifications = alertsOn(),
+                        threshold = 80.0,
+                    )
+                if (result is Outcome.Failed) return@withLock result
+                snapshots[key(id, provider)] = read.snapshot to clock.now()
+                enrolled = true
+            }
+            if (enrolled) Outcome.Ok(Unit) else Outcome.Failed(Failure.UnreadableReply())
         }
-        changedCredentials.remove(id)
-        credentialIdentities.remove(id)
-        var enrolled = false
-        for (provider in QuotaProvider.entries.filter(::quotaCollectionAvailable)) {
-            val read = readSnapshot(p, provider)
-            if (!current(p)) return@withLock stale()
-            if (read !is QuotaRead.Read || !read.snapshot.canShowWindows) continue
-            val result =
-                rules.enroll(
-                    id,
-                    source(p),
-                    read.snapshot,
-                    clock.now(),
-                    notifications = alertsOn(),
-                    threshold = 80.0,
-                )
-            if (result is Outcome.Failed) return@withLock result
-            snapshots[key(id, provider)] = read.snapshot to clock.now()
-            enrolled = true
-        }
-        if (enrolled) Outcome.Ok(Unit) else Outcome.Failed(Failure.UnreadableReply())
     }
 
     suspend fun setUpInApp(id: ProfileId): Outcome<Unit> = lock.withLock {
         val p = stores.profiles.profile(id) ?: return@withLock stale()
+        retired -= id
+        disabled -= id
         if (!current(p)) return@withLock stale()
         if (!local(p)) return@withLock Outcome.Failed(Failure.UnreadableReply())
         if (all().any { it.id != p.id && local(it) && enabled(it) })
@@ -374,28 +417,56 @@ class CollectorUsageSource(
         }
     }
 
-    suspend fun turnOff(id: ProfileId): Outcome<Unit> = lock.withLock {
-        val p = stores.profiles.profile(id) ?: return@withLock stale()
-        if (!local(p)) return@withLock Outcome.Failed(Failure.UnreadableReply())
-        when (val done = attempt({ Failure.Device() }) { collector(p).turnOff(id) }) {
-            is Outcome.Failed -> done
-            is Outcome.Ok -> {
-                if (done.value != null) return@withLock Outcome.Failed(Failure.Device())
-                for (provider in QuotaProvider.entries) {
-                    rules.save(id, provider, null)
-                    snapshots.remove(key(id, provider))
+    suspend fun turnOff(id: ProfileId): Outcome<Unit> {
+        disabled += id
+        activeGateways.remove(id)?.close()
+        return lock.withLock {
+            val p = stores.profiles.profile(id) ?: return@withLock stale()
+            if (!local(p)) return@withLock Outcome.Failed(Failure.UnreadableReply())
+            when (
+                val done =
+                    attempt({ Failure.Device() }) { collector(p, retiring = true).turnOff(id) }
+            ) {
+                is Outcome.Failed -> done
+                is Outcome.Ok -> {
+                    if (done.value != null) return@withLock Outcome.Failed(Failure.Device())
+                    for (provider in QuotaProvider.entries) {
+                        val removed = rules.save(id, provider, null)
+                        if (removed is Outcome.Failed) return@withLock removed
+                        snapshots.remove(key(id, provider))
+                    }
+                    Outcome.Ok(Unit)
                 }
-                Outcome.Ok(Unit)
             }
         }
     }
 
     fun stopAdmission(id: ProfileId) {
         retired += id
+        activeGateways.remove(id)?.close()
     }
 
-    fun reopen(id: ProfileId) {
-        retired -= id
+    // An aborted deletion does not restore collector consent. Explicit enrollment reopens it.
+    fun reopen(id: ProfileId) = Unit
+
+    fun acceptsAlert(profile: String, token: String): Boolean {
+        val p = stores.profiles.profile(ProfileId(profile)) ?: return false
+        return current(p) &&
+            p.id !in changedCredentials &&
+            QuotaProvider.entries.any { provider ->
+                rule(p, provider)?.token == token && token !in retiredTokens
+            }
+    }
+
+    fun acceptsProfile(profile: String): Boolean {
+        val id = ProfileId(profile)
+        return id !in retired && id !in disabled && id !in changedCredentials
+    }
+
+    fun covers(profile: String, provider: String): Boolean {
+        val p = stores.profiles.profile(ProfileId(profile)) ?: return false
+        val kind = QuotaProvider.entries.firstOrNull { it.wire == provider } ?: return false
+        return current(p) && applies(p, kind) && rule(p, kind) != null
     }
 
     suspend fun drain(id: ProfileId): Outcome<Unit> = lock.withLock {
@@ -417,8 +488,7 @@ class CollectorUsageSource(
 
     private suspend fun maybeAlert(p: LoadedProfile, snapshot: ProviderQuotaSnapshot) {
         if (
-            !alertsOn() ||
-                !current(p) ||
+            !current(p) ||
                 !snapshot.canShowWindows ||
                 snapshot.freshness != QuotaFreshness.Fresh ||
                 snapshot.fetchedAt > clock.now() ||
@@ -426,62 +496,79 @@ class CollectorUsageSource(
         )
             return
         val rule = rule(p, snapshot.provider) ?: return
-        if (!rule.notifications || rule.account != snapshot.account.ref) return
-        if (rule.wifiOnly) {
-            val manager = app.getSystemService(ConnectivityManager::class.java)
-            if (
-                manager
-                    .getNetworkCapabilities(manager.activeNetwork)
-                    ?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) != true
-            )
-                return
-        }
-        val now = Calendar.getInstance()
-        val minute = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE)
-        val start = rule.quietStart
-        val end = rule.quietEnd
-        if (
-            start != null &&
-                end != null &&
-                (start == end ||
-                    if (start < end) minute >= start && minute < end
-                    else minute >= start || minute < end)
-        )
+        if (rule.account != snapshot.account.ref) {
+            retiredTokens += rule.token
+            snapshots.remove(key(p.id, snapshot.provider))
+            alerts.dismiss("quota:${p.id.raw}:${snapshot.provider.wire}")
             return
-        val window =
-            snapshot.windows.firstOrNull {
+        }
+        val high =
+            snapshot.windows.filter {
                 (it.usedPercent ?: -1.0) >= rule.threshold &&
                     (it.resetsAt == null || it.resetsAt!! > clock.now())
-            } ?: return
-        val key =
-            DartJson.sha256Hex(
-                DartJson.encode(
-                    listOf(
-                        snapshot.provider.wire,
-                        rule.account,
-                        window.id,
-                        window.resetsAt?.toEpochMilliseconds(),
+            }
+        val markers = rule.alerted.toMutableMap()
+        for (window in snapshot.windows) {
+            if (window.usedPercent != null && window.usedPercent!! < rule.threshold)
+                markers.remove(
+                    DartJson.sha256Hex(DartJson.encode(listOf(window.id, window.durationSeconds)))
+                )
+        }
+        if (high.isEmpty()) {
+            if (markers != rule.alerted)
+                rules.save(p.id, snapshot.provider, rule.copy(alerted = markers))
+            if (markers.isEmpty()) alerts.dismiss("quota:${p.id.raw}:${snapshot.provider.wire}")
+            return
+        }
+        if (
+            !alertsOn() ||
+                !rule.notifications ||
+                policy.foreground.value ||
+                policy.quiet(rule.quietStart, rule.quietEnd) ||
+                policy.wifiOnly(rule.wifiOnly) && policy.onWifi() != true
+        )
+            return
+        var changed = false
+        for (window in high) {
+            val key = DartJson.sha256Hex(DartJson.encode(listOf(window.id, window.durationSeconds)))
+            val marker =
+                DartJson.sha256Hex(
+                    DartJson.encode(
+                        listOf(key, window.resetsAt?.toEpochMilliseconds(), rule.threshold)
                     )
                 )
-            )
-        val marker = DartJson.sha256Hex(rule.threshold.toString())
-        if (rule.alerted[key] == marker) return
-        if (!current(p)) return
-        val alert =
-            CodingAlert(
-                AlertKind.Quota,
-                "quota",
-                "quota:${p.id.raw}:${snapshot.provider.wire}",
-                profileId = p.id.raw,
-                monitorToken = rule.token,
-            )
-        if (alerts.show(alert) == AlertShown.Shown) {
-            val marked =
-                (rule.alerted + (key to marker)).entries.toList().takeLast(64).associate {
-                    it.toPair()
-                }
-            rules.save(p.id, snapshot.provider, rule.copy(alerted = marked))
+            if (markers[key] != marker) {
+                markers[key] = marker
+                changed = true
+            }
         }
+        if (!changed || !current(p)) return
+        val claimed =
+            rule.copy(alerted = markers.entries.toList().takeLast(64).associate { it.toPair() })
+        if (rules.save(p.id, snapshot.provider, claimed) !is Outcome.Ok || !current(p)) return
+        val shown =
+            when (
+                val posted =
+                    attempt({ Failure.Device() }) {
+                        alerts.show(
+                            CodingAlert(
+                                AlertKind.Quota,
+                                "quota",
+                                "quota:${p.id.raw}:${snapshot.provider.wire}",
+                                profileId = p.id.raw,
+                                monitorToken = rule.token,
+                            )
+                        )
+                    }
+            ) {
+                is Outcome.Ok -> posted.value
+                is Outcome.Failed -> null
+            }
+        if (!current(p)) {
+            alerts.dismiss("quota:${p.id.raw}:${snapshot.provider.wire}")
+            return
+        }
+        if (shown != AlertShown.Shown) rules.save(p.id, snapshot.provider, rule)
     }
 
     private suspend fun readSnapshot(p: LoadedProfile, provider: QuotaProvider): QuotaRead {
@@ -511,7 +598,11 @@ class CollectorUsageSource(
                     )
                     .joinToString("") { "%02x".format(it.toInt() and 255) }
             val prior = credentialIdentities.put(p.id, identity)
-            if (prior != null && prior != identity) changedCredentials += p.id
+            if (prior != null && prior != identity) {
+                changedCredentials += p.id
+                snapshots.keys.removeAll { it.startsWith(p.id.raw + "|") }
+                for (kind in QuotaProvider.entries) alerts.dismiss("quota:${p.id.raw}:${kind.wire}")
+            }
             if (p.id in changedCredentials)
                 return QuotaRead.Failed(ProviderQuotaFailure(QuotaFailureKind.CollectorAuth))
         }
@@ -537,9 +628,11 @@ class CollectorUsageSource(
                         })
                     else null,
             )
+        activeGateways[p.id] = gateway
         return try {
             gateway.readSnapshot()
         } finally {
+            activeGateways.remove(p.id, gateway)
             gateway.close()
         }
     }

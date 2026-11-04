@@ -21,17 +21,14 @@ import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.core.common.ok
-import io.github.eslamasabry.oc.core.domain.platform.DeviceFacts
-import io.github.eslamasabry.oc.core.data.kv.bool
 import io.github.eslamasabry.oc.core.common.supervisedContext
+import io.github.eslamasabry.oc.core.data.kv.bool
 import io.github.eslamasabry.oc.core.domain.GatewayFactory
 import io.github.eslamasabry.oc.core.domain.GatewaySpec
 import io.github.eslamasabry.oc.core.domain.ProviderUsageGateway
 import io.github.eslamasabry.oc.core.domain.ServerGateway
-import io.github.eslamasabry.oc.core.data.kv.PrefType
-import io.github.eslamasabry.oc.core.data.scope.KeyScope
-import io.github.eslamasabry.oc.core.data.scope.KeyShape
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
+import io.github.eslamasabry.oc.core.domain.platform.DeviceFacts
 import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.engine.connection.ConnectionCredentialSource
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
@@ -59,8 +56,8 @@ import io.github.eslamasabry.oc.engine.profiles.DeletionOptions
 import io.github.eslamasabry.oc.engine.profiles.DeletionStep
 import io.github.eslamasabry.oc.engine.profiles.ProfileResourceCleaner
 import io.github.eslamasabry.oc.feature.plans.presentation.CollectorTarget
-import io.github.eslamasabry.oc.feature.plans.presentation.PlanCollectorUi
 import io.github.eslamasabry.oc.feature.plans.presentation.ComputerReaderUi
+import io.github.eslamasabry.oc.feature.plans.presentation.PlanCollectorUi
 import io.github.eslamasabry.oc.feature.plans.presentation.PlansSource
 import io.github.eslamasabry.opencode_mobile.UsageWidgetProvider
 import kotlin.time.Clock
@@ -117,6 +114,8 @@ class AndroidPlansSource(
     private val phoneUsage: PhoneUsageReader,
     private val collectorUsage: CollectorUsageSource,
     private val codexReads: AppCodexReads,
+    private val subscriptionAlerts: AndroidSubscriptionAlerts,
+    private val quotaPolicy: QuotaCollectionPolicy,
 ) : PlansSource, ProviderUsageMonitorSettings {
     private val scope = CoroutineScope(appScope.coroutineContext)
     private val state = MutableStateFlow(UsageSnapshot())
@@ -181,6 +180,7 @@ class AndroidPlansSource(
             appVisible.collect { visible ->
                 paseoMonitor?.setRuntime(visible, false)
                 explicitMonitor?.setRuntime(visible, false)
+                engine?.setForeground(visible)
             }
         }
     }
@@ -443,6 +443,10 @@ class AndroidPlansSource(
                 while (isActive) {
                     delay(5.minutes)
                     explicitMonitor?.refresh()
+                    if (quotaPolicy.runningAllowed) {
+                        engine?.setForeground(quotaPolicy.foreground.value)
+                        engine?.refresh()
+                    }
                     publishMonitorStates()
                 }
             }
@@ -500,7 +504,20 @@ class AndroidPlansSource(
                         // AGENT-1: explicit computer usage readers.
                         computer,
                     ),
-                alertBridge = additional.alertBridge,
+                alertBridge =
+                    object : UsageAlertBridge {
+                        override fun legacyRules(): List<LegacyQuotaRule> =
+                            (additional.alertBridge.legacyRules() + collectorUsage.legacyRules())
+                                .distinctBy { "${it.connectionId}|${it.providerId}" }
+
+                        override suspend fun reconcile(
+                            wanted: List<QuotaWatch>,
+                            alertsOn: Boolean,
+                        ) {
+                            additional.alertBridge.reconcile(wanted, alertsOn)
+                            collectorUsage.reconcile(wanted, alertsOn)
+                        }
+                    },
                 alertsOnRule = { stores.prefs.bool("oc.notify.quotaAlerts") == true },
                 setQuotaAlerts = { enabled ->
                     stores.prefs.commit(stores.lanes.app) {
@@ -509,12 +526,25 @@ class AndroidPlansSource(
                 },
                 widget = widget,
                 clock = { clock.now() },
+                subscriptionAlerts = subscriptionAlerts.delivery,
+                alertCovered = { subscription ->
+                    subscription.readFrom?.let {
+                        collectorUsage.covers(it.id, subscription.providerId)
+                    } == true
+                },
             )
             .also { created ->
+                created.setForeground(quotaPolicy.foreground.value)
                 engine = created
                 scope.launch { created.snapshot.collect { state.value = it } }
             }
     }
+
+    override val widgetSettings: UsageWidgetSettings
+        get() = engine?.widgetSettings ?: UsageWidgetSettings()
+
+    override suspend fun setWidgetSettings(settings: UsageWidgetSettings): Boolean =
+        engine()?.setWidgetSettings(settings) == true
 
     override val defaultThreshold: Double
         get() = engine?.defaultThreshold ?: 80.0
@@ -535,7 +565,10 @@ class AndroidPlansSource(
     }
 
     override suspend fun refresh(force: Boolean) {
-        engine()?.refresh(force)
+        engine()?.let { owner ->
+            owner.setForeground(quotaPolicy.foreground.value)
+            owner.refresh(force)
+        }
         publishReaders()
     }
 

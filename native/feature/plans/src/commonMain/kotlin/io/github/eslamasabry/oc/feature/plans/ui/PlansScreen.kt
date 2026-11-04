@@ -12,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import io.github.eslamasabry.oc.engine.integrations.usage.UsageFix
 import io.github.eslamasabry.oc.feature.plans.presentation.CollectorFailure
 import io.github.eslamasabry.oc.feature.plans.presentation.CollectorUi
 import io.github.eslamasabry.oc.feature.plans.presentation.PlanCardUi
@@ -23,22 +22,22 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
-import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
-import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
-import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
-import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
+import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
+import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -53,35 +52,35 @@ import org.jetbrains.compose.resources.stringResource
 public fun PlansScreen(state: PlansUi, actions: PlansActions) {
     val words = plansWords()
     KitSheetHost {
-    KitScreen(
-        topBar = {
-            KitTopBar(
-                title = words.title,
-                exit = KitTopBarExit.Back,
-                exitLabel = words.back,
-                onExit = actions::back,
-            )
-        },
-        loading = state.phase == PlansPhase.Loading,
-        loadingLabel = words.loading,
-        bottom =
-            if (state.phase == PlansPhase.Loading) null
-            else
-                ({
-                    KitButton(
-                        if (state.refreshing) words.refreshing else words.refresh,
-                        actions::refresh,
-                        Modifier.fillMaxWidth()
-                            .padding(
-                                horizontal = LocalKitTokens.current.gutter.dp,
-                                vertical = Space.S2.dp,
-                            ),
-                        role = KitButtonRole.Secondary,
-                        working = state.refreshing,
-                    )
-                }),
-        width = KitScreenWidth.Reading,
-    ) {
+        KitScreen(
+            topBar = {
+                KitTopBar(
+                    title = words.title,
+                    exit = KitTopBarExit.Back,
+                    exitLabel = words.back,
+                    onExit = actions::back,
+                )
+            },
+            loading = state.phase == PlansPhase.Loading,
+            loadingLabel = words.loading,
+            bottom =
+                if (state.phase == PlansPhase.Loading) null
+                else
+                    ({
+                        KitButton(
+                            if (state.refreshing) words.refreshing else words.refresh,
+                            actions::refresh,
+                            Modifier.fillMaxWidth()
+                                .padding(
+                                    horizontal = LocalKitTokens.current.gutter.dp,
+                                    vertical = Space.S2.dp,
+                                ),
+                            role = KitButtonRole.Secondary,
+                            working = state.refreshing,
+                        )
+                    }),
+            width = KitScreenWidth.Reading,
+        ) {
             Column(
                 Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
@@ -90,7 +89,8 @@ public fun PlansScreen(state: PlansUi, actions: PlansActions) {
                 if (state.collector.available) CollectorSetup(state.collector, actions)
                 // AGENT-2: usage alerts and the provider-usage collectors.
                 UsageCollectorRows(state, actions)
-                if (state.phase == PlansPhase.Loading) KitStateView(KitStateKind.Loading, words.loading)
+                if (state.phase == PlansPhase.Loading)
+                    KitStateView(KitStateKind.Loading, words.loading)
                 if (state.phase == PlansPhase.Empty)
                     KitStateView(
                         KitStateKind.Empty,
@@ -120,6 +120,40 @@ public fun PlansScreen(state: PlansUi, actions: PlansActions) {
                     }
                     if (state.failed && !state.editing)
                         KitNotice(stringResource(Res.string.statePlansSaveFailed))
+                }
+                if (state.phase != PlansPhase.Loading) {
+                    KitRowGroup(label = stringResource(Res.string.plansWidgetSettings)) {
+                        KitSwitchRow(
+                            title = stringResource(Res.string.plansWidgetSetupRows),
+                            checked = state.widgetSettings.showSetupRows,
+                            onCheckedChange = actions::setWidgetSetupRows,
+                        )
+                        for (windows in
+                            io.github.eslamasabry.oc.engine.integrations.usage.UsageWidgetWindows
+                                .entries) {
+                            KitRow(
+                                title =
+                                    stringResource(
+                                        when (windows) {
+                                            io.github.eslamasabry.oc.engine.integrations.usage
+                                                .UsageWidgetWindows
+                                                .Both -> Res.string.plansWidgetBoth
+                                            io.github.eslamasabry.oc.engine.integrations.usage
+                                                .UsageWidgetWindows
+                                                .FiveHour -> Res.string.plansWidgetFiveHour
+                                            io.github.eslamasabry.oc.engine.integrations.usage
+                                                .UsageWidgetWindows
+                                                .Weekly -> Res.string.plansWidgetWeekly
+                                        }
+                                    ),
+                                supporting =
+                                    if (state.widgetSettings.windows == windows)
+                                        stringResource(Res.string.plansWidgetSelected)
+                                    else null,
+                                onClick = { actions.setWidgetWindows(windows) },
+                            )
+                        }
+                    }
                 }
                 for (card in state.cards) PlanCard(card, state.nowMs, words, actions)
                 if (state.keys.isNotEmpty()) {
@@ -190,7 +224,10 @@ public fun PlansScreen(state: PlansUi, actions: PlansActions) {
                                     if (state.readerBusy) null
                                     else
                                         ({
-                                            actions.setComputerReaderEnabled(reader.id, !reader.enabled)
+                                            actions.setComputerReaderEnabled(
+                                                reader.id,
+                                                !reader.enabled,
+                                            )
                                         }),
                             )
                             if (reader.enabled) {
@@ -201,7 +238,10 @@ public fun PlansScreen(state: PlansUi, actions: PlansActions) {
                                         else ({ actions.readComputerNow(reader.id) }),
                                 )
                                 if (reader.found.isNotEmpty())
-                                    KitRow(title = words.found(reader.found), supportingMaxLines = 2)
+                                    KitRow(
+                                        title = words.found(reader.found),
+                                        supportingMaxLines = 2,
+                                    )
                             }
                         }
                         if (state.readerBusy) KitRow(title = words.reading)
@@ -210,73 +250,74 @@ public fun PlansScreen(state: PlansUi, actions: PlansActions) {
                     }
                 }
             }
-    }
-    val pending = state.confirmCollector
-    KitConfirm(
-        spec =
-            pending?.let {
-                KitConfirmSpec(
-                    title =
-                        if (it.provider == "paseo") stringResource(Res.string.plansPaseoQuestion)
-                        else if (it.provider == "builtin")
-                            stringResource(Res.string.plansBuiltinQuestion)
-                        else
+        }
+        val pending = state.confirmCollector
+        KitConfirm(
+            spec =
+                pending?.let {
+                    KitConfirmSpec(
+                        title =
+                            if (it.provider == "paseo")
+                                stringResource(Res.string.plansPaseoQuestion)
+                            else if (it.provider == "builtin")
+                                stringResource(Res.string.plansBuiltinQuestion)
+                            else
+                                stringResource(
+                                    Res.string.plansCollectorQuestion,
+                                    words.providerName(it.provider),
+                                ),
+                        confirmLabel = stringResource(Res.string.plansCollectorAllow),
+                        body =
                             stringResource(
-                                Res.string.plansCollectorQuestion,
-                                words.providerName(it.provider),
+                                if (it.provider == "paseo") Res.string.plansPaseoTrust
+                                else if (it.provider == "builtin") Res.string.plansBuiltinTrust
+                                else Res.string.plansCollectorTrust,
+                                it.name,
                             ),
-                    confirmLabel = stringResource(Res.string.plansCollectorAllow),
-                    body =
-                        stringResource(
-                            if (it.provider == "paseo") Res.string.plansPaseoTrust
-                            else if (it.provider == "builtin") Res.string.plansBuiltinTrust
-                            else Res.string.plansCollectorTrust,
-                            it.name,
-                        ),
-                )
-            },
-        onConfirm = actions::confirmCollector,
-        onCancel = actions::cancelCollector,
-    )
-    // AGENT-2: the provider-usage collector consent.
-    val ask = state.ask
-    val place = ask?.collector?.let { if (it.inApp) words.thisPhone else it.name }.orEmpty()
-    KitConfirm(
-        spec =
-            ask?.let {
-                KitConfirmSpec(
-                    title =
-                        stringResource(
-                            when {
-                                !it.enable -> Res.string.plansNativeOffQuestion
-                                it.collector.inApp -> Res.string.plansNativeSetupQuestion
-                                else -> Res.string.plansNativeRemoteQuestion
-                            },
-                            place,
-                        ),
-                    confirmLabel =
-                        stringResource(
-                            when {
-                                !it.enable -> Res.string.plansNativeTurnOff
-                                it.collector.inApp -> Res.string.plansNativeSetUp
-                                else -> Res.string.plansNativeAllow
-                            }
-                        ),
-                    body =
-                        stringResource(
-                            when {
-                                !it.enable -> Res.string.plansNativeOffBody
-                                it.collector.inApp -> Res.string.plansNativeSetupBody
-                                else -> Res.string.plansNativeRemoteBody
-                            }
-                        ),
-                    cancelLabel = stringResource(Res.string.plansNativeCancel),
-                )
-            },
-        onConfirm = actions::confirmCollector,
-        onCancel = actions::cancelCollector,
-    )
-    // STATE: the threshold editor.
+                    )
+                },
+            onConfirm = actions::confirmCollector,
+            onCancel = actions::cancelCollector,
+        )
+        // AGENT-2: the provider-usage collector consent.
+        val ask = state.ask
+        val place = ask?.collector?.let { if (it.inApp) words.thisPhone else it.name }.orEmpty()
+        KitConfirm(
+            spec =
+                ask?.let {
+                    KitConfirmSpec(
+                        title =
+                            stringResource(
+                                when {
+                                    !it.enable -> Res.string.plansNativeOffQuestion
+                                    it.collector.inApp -> Res.string.plansNativeSetupQuestion
+                                    else -> Res.string.plansNativeRemoteQuestion
+                                },
+                                place,
+                            ),
+                        confirmLabel =
+                            stringResource(
+                                when {
+                                    !it.enable -> Res.string.plansNativeTurnOff
+                                    it.collector.inApp -> Res.string.plansNativeSetUp
+                                    else -> Res.string.plansNativeAllow
+                                }
+                            ),
+                        body =
+                            stringResource(
+                                when {
+                                    !it.enable -> Res.string.plansNativeOffBody
+                                    it.collector.inApp -> Res.string.plansNativeSetupBody
+                                    else -> Res.string.plansNativeRemoteBody
+                                }
+                            ),
+                        cancelLabel = stringResource(Res.string.plansNativeCancel),
+                    )
+                },
+            onConfirm = actions::confirmCollector,
+            onCancel = actions::cancelCollector,
+        )
+        // STATE: the threshold editor.
         if (state.editing)
             key(state.editKey) {
                 val field = rememberTextFieldState(state.thresholdInput)
@@ -396,6 +437,11 @@ private fun UsageCollectorRows(state: PlansUi, actions: PlansActions) {
 @Composable
 private fun PlanCard(card: PlanCardUi, nowMs: Long, words: PlansWords, actions: PlansActions) {
     KitRowGroup(label = words.cardTitle(card.name, card.connection)) {
+        KitSwitchRow(
+            title = stringResource(Res.string.plansWidgetVisible),
+            checked = card.widgetVisible,
+            onCheckedChange = { actions.setWidgetVisible(card.key, it) },
+        )
         KitRow(
             title = words.state(card.state),
             supporting =

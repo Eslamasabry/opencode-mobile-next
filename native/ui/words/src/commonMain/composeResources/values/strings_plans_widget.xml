@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="plansWidgetSettings">Usage widget</string>
+    <string name="plansWidgetSetupRows">Show plans that need setup</string>
+    <string name="plansWidgetBoth">Show both windows</string>
+    <string name="plansWidgetFiveHour">Show the five-hour window</string>
+    <string name="plansWidgetWeekly">Show the weekly window</string>
+    <string name="plansWidgetSelected">Selected</string>
+    <string name="plansWidgetVisible">Show this plan in the widget</string>
+</resources>

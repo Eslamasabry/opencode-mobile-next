@@ -294,6 +294,7 @@ class PlatformHub(
     private val widgetPersistence: WidgetPersistence,
     private val redactor: Redactor,
     private val background: BackgroundHub,
+    private val quotaTargets: QuotaAlertTargets,
 ) {
     private val mainDispatcher = dispatchers.main
     private val appScope = CoroutineScope(appScope.coroutineContext + mainDispatcher)
@@ -441,6 +442,15 @@ class PlatformHub(
      */
     fun route(intent: Intent?) {
         if (intent == null) return
+        if (intent.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_SESSION_ID) == "quota") {
+            val profile =
+                intent.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_PROFILE_ID).orEmpty()
+            val token = intent.getStringExtra(FrozenExtras.EXTRA_MONITOR_TOKEN).orEmpty()
+            intent.removeExtra(FrozenExtras.EXTRA_MONITOR_TOKEN)
+            alertTap(intent)
+            appScope.launch { if (quotaTargets.accepts(profile, token)) navigator.open(PlansRoute) }
+            return
+        }
         if (monitoring.route(intent)) return
         if (intent.action == Intent.ACTION_VIEW && intent.data != null) {
             // B-ANDR-072: the one VIEW filter. Consumed once; route identifiers only.
@@ -501,8 +511,8 @@ class PlatformHub(
     }
 
     /**
-     * Flutter `_openSessionForLink`: a saved server opens that exact session (connecting first);
-     * an unknown server, one that needs its secret again, or a failed connection shows Servers.
+     * Flutter `_openSessionForLink`: a saved server opens that exact session (connecting first); an
+     * unknown server, one that needs its secret again, or a failed connection shows Servers.
      * Nothing is sent, created or resumed.
      */
     private fun openSessionLink(link: ParsedLink.Session) {
