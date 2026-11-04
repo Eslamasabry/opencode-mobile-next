@@ -113,6 +113,7 @@ dependencies {
             ":android:background", // BUILD-ANDROID-BG-PLATFORM: live mode, pause, sign-in lease
             ":android:migration",
             ":android:termux",
+            ":engine:termuxhost",
             ":engine:migration",
             ":feature:gate",
             ":protocol:paseo",

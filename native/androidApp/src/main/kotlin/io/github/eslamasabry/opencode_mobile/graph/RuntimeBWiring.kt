@@ -29,6 +29,7 @@ import io.github.eslamasabry.oc.feature.phone.presentation.ChildLimitState
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneProcess
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneProcessSource
 import io.github.eslamasabry.oc.feature.phone.presentation.ProcessKind
+import io.github.eslamasabry.oc.feature.phone.presentation.ProcessOrphanReason
 import io.github.eslamasabry.oc.feature.phone.presentation.ProcessReading
 import io.github.eslamasabry.oc.feature.phone.presentation.ProcessRole
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -172,11 +173,19 @@ internal class NativePhoneProcesses(
                         if (measured.size == group.members.size) measured.sum()
                         else members.sumOf { it.cpuPercent ?: 0.0 },
                     leftBehind = members.any { it.leftBehind },
+                    orphanReason = members.firstNotNullOfOrNull { it.orphanReason },
                     heavy = members.any { it.heavy },
                     memoryMb = group.memoryMb,
                     elapsedSeconds = group.elapsedSeconds,
                     memberCount = group.count,
                     identity = group.leader.identity,
+                    stopIdentities =
+                        ownScan
+                            ?.withDescendants(group.roots)
+                            .orEmpty()
+                            .filter { it.pid !in protectedPids }
+                            .mapNotNull { p -> shownIdentities[p.pid]?.let { p.pid to it } }
+                            .toMap(),
                 )
         }
         lastScan = ownScan
@@ -328,7 +337,8 @@ internal object ProcessRows {
                             else -> ProcessRole.Normal
                         },
                     cpuPercent = p.cpuPercent,
-                    leftBehind = node.leftBehind || node.stuck,
+                    leftBehind =
+                        node.leftBehind || (node.stuck && p.owner == PhoneProcessOwner.Other),
                     command = redact(p.command),
                     memoryBytes = p.rssBytes.takeIf { it > 0 },
                     elapsedSeconds = p.elapsed.inWholeSeconds.takeIf { it >= 0 },
@@ -336,6 +346,13 @@ internal object ProcessRows {
                     heavy = node.heavy,
                     memoryMb = (p.rssBytes / 1_048_576).coerceAtLeast(0),
                     identity = p.startTicks?.let { "${p.pid}:$it" },
+                    orphanReason =
+                        when {
+                            node.leftBehind -> ProcessOrphanReason.ParentGone
+                            node.stuck && p.owner == PhoneProcessOwner.Other ->
+                                ProcessOrphanReason.CpuWithoutOwner
+                            else -> null
+                        },
                 )
             }
         }
@@ -349,7 +366,9 @@ internal object ProcessRows {
             all.forEach { if (it.process.ppid in selected && selected.add(it.pid)) changed = true }
         }
         return all.filter { it.pid in selected && it.stoppable }
-            .mapNotNull { node -> node.process.startTicks?.takeIf { it > 0 }?.let { node.pid to it } }
+            .mapNotNull { node ->
+                node.process.startTicks?.takeIf { it > 0 }?.let { node.pid to it }
+            }
             .toMap()
     }
 

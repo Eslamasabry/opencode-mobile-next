@@ -10,9 +10,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.engine.project.terminal.TerminalKey
 import io.github.eslamasabry.oc.feature.agents.remote_terminal.presentation.*
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.*
+import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalKey
+import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalKeyBar
 import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalView
 import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalWords
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
@@ -48,12 +51,25 @@ public fun RemoteTerminalScreen(state: RemoteTerminalUi, actions: RemoteTerminal
             Modifier.fillMaxSize().padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
         ) {
+            val builtIn = stringResource(Res.string.terminalSourceBuiltIn)
+            val server =
+                state.serverName.trim().ifBlank { stringResource(Res.string.terminalSourceServer) }
+            val serverLabel =
+                if (server == builtIn)
+                    stringResource(Res.string.terminalSourceServerRuntime, server)
+                else server
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+                if (state.builtInAvailable)
+                    KitButton(builtIn, actions::builtIn, role = KitButtonRole.Secondary)
+                KitText(serverLabel)
+            }
             state.issue?.let { issue ->
                 KitNotice(
                     stringResource(
                         when (issue) {
                             RemoteTerminalIssue.Unavailable -> Res.string.remoteTerminalUnavailable
                             RemoteTerminalIssue.Failed -> Res.string.remoteTerminalFailed
+                            RemoteTerminalIssue.RerunUncertain -> Res.string.terminalRerunUncertain
                             RemoteTerminalIssue.InputUncertain ->
                                 Res.string.remoteTerminalInputUncertain
                         }
@@ -129,43 +145,67 @@ public fun RemoteTerminalScreen(state: RemoteTerminalUi, actions: RemoteTerminal
                 }
                 if (!state.connected && !state.busy)
                     KitNotice(stringResource(Res.string.remoteTerminalDisconnected))
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                    val input =
-                        if (state.connected && !state.busy) KitEnabled.Enabled
-                        else KitEnabled.Disabled(stringResource(Res.string.remoteTerminalInputOff))
+                if (
+                    state.canRerun &&
+                        state.selected.process?.let {
+                            !it.running && it.command.isNotBlank() && it.directory.isNotBlank()
+                        } == true
+                )
                     KitButton(
-                        stringResource(Res.string.remoteTerminalInterrupt),
-                        actions::interrupt,
-                        role = KitButtonRole.Secondary,
-                        enabled = input,
+                        stringResource(Res.string.terminalRerun),
+                        actions::rerun,
+                        enabled = enabled,
                     )
-                    KitButton(
-                        stringResource(Res.string.remoteTerminalEndInput),
-                        actions::endOfInput,
-                        role = KitButtonRole.Secondary,
-                        enabled = input,
-                    )
-                    KitButton(
-                        stringResource(Res.string.remoteTerminalEscape),
-                        actions::escape,
-                        role = KitButtonRole.Secondary,
-                        enabled = input,
-                    )
-                    KitButton(
-                        stringResource(Res.string.remoteTerminalTab),
-                        actions::tab,
-                        role = KitButtonRole.Secondary,
-                        enabled = input,
-                    )
-                }
+                val input =
+                    if (state.connected) KitEnabled.Enabled
+                    else KitEnabled.Disabled(stringResource(Res.string.remoteTerminalInputOff))
+                KitTerminalKeyBar(
+                    keys =
+                        TerminalKey.entries.map { key ->
+                            val label =
+                                stringResource(
+                                    when (key) {
+                                        TerminalKey.Control -> Res.string.terminalKeyControl
+                                        TerminalKey.Alt -> Res.string.terminalKeyAlt
+                                        TerminalKey.Escape -> Res.string.terminalKeyEscape
+                                        TerminalKey.Tab -> Res.string.terminalKeyTab
+                                        TerminalKey.Up -> Res.string.terminalKeyUp
+                                        TerminalKey.Down -> Res.string.terminalKeyDown
+                                        TerminalKey.Left -> Res.string.terminalKeyLeft
+                                        TerminalKey.Right -> Res.string.terminalKeyRight
+                                        TerminalKey.Home -> Res.string.terminalKeyHome
+                                        TerminalKey.End -> Res.string.terminalKeyEnd
+                                        TerminalKey.PageUp -> Res.string.terminalKeyPageUp
+                                        TerminalKey.PageDown -> Res.string.terminalKeyPageDown
+                                        TerminalKey.Pipe -> Res.string.terminalKeyPipe
+                                        TerminalKey.Slash -> Res.string.terminalKeySlash
+                                        TerminalKey.Backslash -> Res.string.terminalKeyBackslash
+                                        TerminalKey.Tilde -> Res.string.terminalKeyTilde
+                                        TerminalKey.Minus -> Res.string.terminalKeyMinus
+                                        TerminalKey.Underscore -> Res.string.terminalKeyUnderscore
+                                    }
+                                )
+                            KitTerminalKey(
+                                label,
+                                when (key) {
+                                    TerminalKey.Control -> state.control
+                                    TerminalKey.Alt -> state.alt
+                                    else -> null
+                                },
+                            ) {
+                                actions.key(key)
+                            }
+                        },
+                    enabled = input,
+                )
                 KitTerminalView(
-                    platformView = null,
+                    platformView = state.platformView?.native,
                     title = title,
                     transcript = state.transcript,
-                    accessibleMode = true,
-                    onAccessibleModeChange = {},
+                    accessibleMode = state.accessible,
+                    onAccessibleModeChange = actions::setAccessible,
                     onSend = actions::send,
-                    inputEnabled = state.connected && !state.busy,
+                    inputEnabled = state.connected,
                     modifier = Modifier.weight(1f),
                     words =
                         KitTerminalWords(

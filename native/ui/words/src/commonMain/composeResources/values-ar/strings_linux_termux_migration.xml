@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="linuxMigrationOfferTitle">نقل %1$s من Termux</string>
+    <string name="linuxMigrationOfferBody">انسخ المشاريع إلى هذا التطبيق، أو استأنف نسخة محفوظة. يبقى Termux كما هو.</string>
+    <string name="linuxMigrationBytes">%1$s بايت</string>
+    <string name="linuxMigrationKilobytes">%1$s ك.ب</string>
+    <string name="linuxMigrationMegabytes">%1$s م.ب</string>
+    <string name="linuxMigrationGigabytes">%1$s ج.ب</string>
+</resources>

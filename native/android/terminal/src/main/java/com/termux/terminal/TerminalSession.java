@@ -43,6 +43,12 @@ public final class TerminalSession extends TerminalOutput {
     public final String mHandle = UUID.randomUUID().toString();
 
     TerminalEmulator mEmulator;
+    private final SgrNormalizer mSgrNormalizer = new SgrNormalizer();
+
+    private void appendNormalized(byte[] bytes, int count) {
+        byte[] normalized = mSgrNormalizer.append(bytes, count);
+        if (normalized.length > 0) mEmulator.append(normalized, normalized.length);
+    }
 
     /**
      * A queue written to from a separate thread when the process outputs, and read by main thread to process by
@@ -111,7 +117,7 @@ public final class TerminalSession extends TerminalOutput {
         if (mExternalIo == null) throw new IllegalStateException("Not an external session");
         if (mExternalClosed) return;
         if (mEmulator == null) throw new IllegalStateException("The emulator has no size");
-        mEmulator.append(data, data.length);
+        appendNormalized(data, data.length);
         notifyScreenUpdate();
     }
 
@@ -413,7 +419,7 @@ public final class TerminalSession extends TerminalOutput {
         public void handleMessage(Message msg) {
             int bytesRead = mProcessToTerminalIOQueue.read(mReceiveBuffer, false);
             if (bytesRead > 0) {
-                mEmulator.append(mReceiveBuffer, bytesRead);
+                appendNormalized(mReceiveBuffer, bytesRead);
                 notifyScreenUpdate();
             }
 
@@ -432,7 +438,7 @@ public final class TerminalSession extends TerminalOutput {
                 exitDescription += " - press Enter]";
 
                 byte[] bytesToWrite = exitDescription.getBytes(StandardCharsets.UTF_8);
-                mEmulator.append(bytesToWrite, bytesToWrite.length);
+                appendNormalized(bytesToWrite, bytesToWrite.length);
                 notifyScreenUpdate();
 
                 mClient.onSessionFinished(TerminalSession.this);
