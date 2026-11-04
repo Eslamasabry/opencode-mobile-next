@@ -211,7 +211,7 @@ internal class Oc2ManagedShells(private val gateway: Oc2Gateway, location: Serve
             startedAtMs = started,
             completedAtMs = time.long("completed"),
             exitCode = obj.int("exit"),
-            sessionId = null,
+            sessionId = obj.obj("metadata")?.str("sessionID"),
             directory = obj.str("cwd"),
             ownerToken = obj.obj("metadata")?.str("ocDevelopmentServiceOwner"),
         )

@@ -11,6 +11,7 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.CardsSettingsRoute
+import io.github.eslamasabry.oc.ui.routes.ComputerRoute
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -39,6 +40,7 @@ public class AgentsViewModel(
             phone,
             onBack = nav::back,
             openChat = { nav.openChat(it, focusComposer = true) },
+            openComputerPage = { nav.open(ComputerRoute(it)) },
         )
 
     public val state: StateFlow<AgentsUi> = presenter.state
@@ -86,6 +88,8 @@ public class AgentsViewModel(
     override fun readAgents(id: ProfileId): Unit = presenter.readAgents(id)
 
     override fun newConversation(id: ProfileId): Unit = presenter.newConversation(id)
+
+    override fun openComputer(id: ProfileId): Unit = presenter.openComputer(id)
 
     override fun installPhone(id: String): Unit = presenter.installPhone(id)
 

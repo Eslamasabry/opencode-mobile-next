@@ -80,6 +80,7 @@ import io.github.eslamasabry.oc.ui.words.res.agentsSwitchToBuiltIn
 import io.github.eslamasabry.oc.ui.words.res.cardsFromAgentsSupporting
 import io.github.eslamasabry.oc.ui.words.res.cardsFromAgentsTitle
 import io.github.eslamasabry.oc.ui.words.res.codexProjectFolder
+import io.github.eslamasabry.oc.ui.words.res.computerToolsOpen
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
@@ -289,6 +290,11 @@ public fun AgentsScreen(
                         { actions.readAgents(computer.id) },
                         role = KitButtonRole.Secondary,
                         enabled = enabled,
+                    )
+                    KitButton(
+                        stringResource(Res.string.computerToolsOpen),
+                        { actions.openComputer(computer.id) },
+                        role = KitButtonRole.Secondary,
                     )
                 }
             }
