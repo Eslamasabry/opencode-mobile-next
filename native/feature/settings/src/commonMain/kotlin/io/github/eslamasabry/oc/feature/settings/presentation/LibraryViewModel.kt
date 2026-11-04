@@ -13,8 +13,8 @@ import io.github.eslamasabry.oc.core.model.*
 import io.github.eslamasabry.oc.engine.integrations.catalog.*
 import io.github.eslamasabry.oc.engine.setupassist.*
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
-import io.github.eslamasabry.oc.ui.routes.PhoneRoute
 import io.github.eslamasabry.oc.ui.routes.LibraryRoute
+import io.github.eslamasabry.oc.ui.routes.PhoneRoute
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -42,6 +42,12 @@ public interface LibraryHost {
     public fun closeRegistry(store: SetupRegistryStore)
 
     public fun onPhone(ref: ConversationRef?): Boolean
+
+    /** One confirmation, bound to the captured connection and picker selection. */
+    public fun skillConversation(
+        profile: ProfileId,
+        selection: SessionSelection?,
+    ): SkillConversation?
 }
 
 public data class LibraryLink(val host: String, val token: Any)
@@ -105,6 +111,8 @@ public data class LibraryUi(
     val notice: LibraryNotice? = null,
     val registry: SetupRegistrySnapshot? = null,
     val onPhone: Boolean = false,
+    val skillConversation: SkillConversationResult? = null,
+    val skillConversationRef: ConversationRef? = null,
 )
 
 public interface LibraryActions {
@@ -119,6 +127,10 @@ public interface LibraryActions {
     public fun run(command: CommandInfo, session: SessionId, arguments: String)
 
     public fun activate(skill: SkillInfo, session: SessionId, resume: Boolean)
+
+    public fun useSkillInNewConversation(skill: SkillInfo)
+
+    public fun openSkillConversation()
 
     public fun copy(value: String)
 
@@ -236,7 +248,15 @@ public class LibraryViewModel(
             registryStore = null
             mutable.update { it.copy(registry = null) }
         }
-        mutable.update { it.copy(sheet = sheet, locked = false, notice = null) }
+        mutable.update {
+            it.copy(
+                sheet = sheet,
+                locked = false,
+                notice = null,
+                skillConversation = null,
+                skillConversationRef = null,
+            )
+        }
         if (sheet == LibrarySheet.Registry && registryStore == null)
             viewModelScope.launch {
                 val profile = session?.profileId ?: return@launch
@@ -323,6 +343,48 @@ public class LibraryViewModel(
             mutable.update { it.copy(sheet = null, locked = false) }
         }
         mutable.update { it.copy(locked = true) }
+    }
+
+    override fun useSkillInNewConversation(skill: SkillInfo) {
+        val library = session ?: return
+        val profile = library.profileId ?: return
+        if (
+            mutable.value.working || mutable.value.locked || mutable.value.skillConversation != null
+        )
+            return
+        if (mutable.value.inventory.skills.none { it == skill } || skill.id.isNullOrBlank()) return
+        val selection =
+            route.ref?.sessionId?.let { id ->
+                mutable.value.inventory.conversations.firstOrNull { it.id == id }?.selection
+            }
+        val action = host?.skillConversation(profile, selection)
+        if (action == null) {
+            mutable.update {
+                it.copy(
+                    skillConversation = SkillConversationResult(SkillConversationStatus.Changed)
+                )
+            }
+            return
+        }
+        // Keep this confirmation consumed after failure: creation/activation may have reached the
+        // server.
+        mutable.update { it.copy(working = true, locked = true, notice = null) }
+        viewModelScope.launch {
+            val result = action.useInNewConversation(skill.id)
+            mutable.update {
+                it.copy(
+                    working = false,
+                    skillConversation = result,
+                    skillConversationRef =
+                        result.sessionId?.let { id -> ConversationRef(profile, SessionId(id)) },
+                )
+            }
+            if (result.status == SkillConversationStatus.Ready) library.refresh()
+        }
+    }
+
+    override fun openSkillConversation() {
+        mutable.value.skillConversationRef?.let { nav.openChat(it, focusComposer = true) }
     }
 
     override fun copy(value: String) {

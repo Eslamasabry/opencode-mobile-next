@@ -80,11 +80,10 @@ import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.BackgroundRoute
 import io.github.eslamasabry.oc.ui.routes.DiagnosticsRoute
-import io.github.eslamasabry.oc.ui.routes.IntegrationsRoute
+import io.github.eslamasabry.oc.ui.routes.LibraryRoute
 import io.github.eslamasabry.oc.ui.routes.ProvidersRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.ui.routes.SettingsRoute
-import io.github.eslamasabry.oc.ui.routes.LibraryRoute
 import io.github.eslamasabry.oc.ui.routes.TeachingRoute
 import io.github.eslamasabry.oc.ui.routes.ToolsRoute
 import io.github.eslamasabry.oc.ui.routes.VoiceRoute
@@ -225,19 +224,39 @@ class AndroidSettingsHost(
             desktopReleaseCheck = false,
         )
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val selectedCapabilities =
+        combine(reportRegistry.live, stores.profiles.activeId, connections.servers) {
+                live,
+                active,
+                servers ->
+                val selected =
+                    servers.firstOrNull { it.id == active && it.connected }
+                        ?: servers.firstOrNull { it.connected }
+                selected?.let { live[it.id] }
+            }
+            .flatMapLatest { graph ->
+                (graph as? io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors)
+                    ?.chatGateway
+                    ?.capabilities ?: kotlinx.coroutines.flow.flowOf(null)
+            }
+
     override val facts: StateFlow<SettingsFacts> =
         combine(
                 connections.servers,
                 stores.profiles.activeId,
                 motion.animatorScale,
                 configurationInspection.available,
-            ) { servers, active, scale, configAvailable ->
+                selectedCapabilities,
+            ) { servers, active, scale, configAvailable, capabilities ->
                 val live =
                     servers.firstOrNull { it.id == active && it.connected }
                         ?: servers.firstOrNull { it.connected }
                 SettingsFacts(
                     platform = shipped,
                     server = live?.let { ServerLine(it.name, onPhone = false) },
+                    serverCapabilities = capabilities,
+                    usageStatistics = live != null,
                     dynamicColour = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
                     systemMotionOff = scale == 0f,
                     diagnostics = true,
@@ -266,6 +285,7 @@ class AndroidSettingsHost(
     override val openers: SettingsOpeners = SettingsOpeners { place ->
         when (place) {
             SettingsOutside.Servers -> nav.open(ServersRoute.Home)
+            SettingsOutside.Usage -> nav.open(io.github.eslamasabry.oc.ui.routes.UsageRoute.Hub())
             SettingsOutside.Tools,
             SettingsOutside.Providers -> {
                 val live = connections.servers.value
@@ -279,7 +299,8 @@ class AndroidSettingsHost(
                         else ToolsRoute(target.id)
                     )
                 } else {
-                    // PORT-SCREENS-2: with no connected server, the tabbed library answers (it picks its own
+                    // PORT-SCREENS-2: with no connected server, the tabbed library answers (it
+                    // picks its own
                     // server). SEC-2's integrations page stays reachable from Servers.
                     nav.open(
                         if (place == SettingsOutside.Providers) LibraryRoute(tab = "providers")
@@ -362,9 +383,7 @@ class AndroidSettingsHost(
                         val status =
                             io.github.eslamasabry.opencode_mobile.SetupRunner.get(application)
                                 .status()
-                        io.github.eslamasabry.oc.engine.runtime.setup.SetupJobRecord.parse(
-                                status
-                            )
+                        io.github.eslamasabry.oc.engine.runtime.setup.SetupJobRecord.parse(status)
                             ?.let {
                                 io.github.eslamasabry.oc.engine.runtime.setup.FailedSetupReport
                                     .from(it, reportRedactor::redact)
@@ -459,6 +478,7 @@ class AndroidSettingsHost(
                 SettingsOutside.Tools,
                 SettingsOutside.Providers,
                 SettingsOutside.Servers,
+                SettingsOutside.Usage,
                 SettingsOutside.StarOnGitHub,
                 SettingsOutside.WhatsNew,
                 SettingsOutside.ReleaseNotes,
@@ -781,7 +801,11 @@ class FirstRunStarter(
 internal fun systemLocaleTag(): String {
     val list = Resources.getSystem().configuration.locales
     val tags = (0 until list.size()).map { list[it].toLanguageTag() }
-    val code = io.github.eslamasabry.oc.core.common.text.AppLanguageResolver.resolve(tags, SHIPPED_LANGUAGES)
+    val code =
+        io.github.eslamasabry.oc.core.common.text.AppLanguageResolver.resolve(
+            tags,
+            SHIPPED_LANGUAGES,
+        )
     return tags.firstOrNull { it.substringBefore('-').lowercase() == code } ?: code
 }
 

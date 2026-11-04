@@ -23,10 +23,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
-import io.github.eslamasabry.oc.feature.servers.pairing.PairingAnswer
 import io.github.eslamasabry.oc.engine.lifecycle.PhoneHostSupport
 import io.github.eslamasabry.oc.engine.lifecycle.PhoneOwnServers
 import io.github.eslamasabry.oc.engine.lifecycle.PhoneServerCandidate
+import io.github.eslamasabry.oc.feature.servers.pairing.PairingAnswer
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingText
 import io.github.eslamasabry.oc.feature.servers.pairing.ShareLink
 import io.github.eslamasabry.oc.feature.servers.pairing.pairingProblemText
@@ -43,14 +43,14 @@ import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
-import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
-import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitServerName
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
@@ -61,11 +61,11 @@ import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.addServerScan
 import io.github.eslamasabry.oc.ui.words.res.agentToolsTitle
 import io.github.eslamasabry.oc.ui.words.res.agentsSectionTitle
+import io.github.eslamasabry.oc.ui.words.res.codexNativeTitle
+import io.github.eslamasabry.oc.ui.words.res.e7SettingsDisconnectTitle
 import io.github.eslamasabry.oc.ui.words.res.e7SetupNoServerAnswer
 import io.github.eslamasabry.oc.ui.words.res.e7SetupPairAddressUnusable
 import io.github.eslamasabry.oc.ui.words.res.e7SetupPairTestFailed
-import io.github.eslamasabry.oc.ui.words.res.codexNativeTitle
-import io.github.eslamasabry.oc.ui.words.res.e7SettingsDisconnectTitle
 import io.github.eslamasabry.oc.ui.words.res.e7SetupPairingInstructions
 import io.github.eslamasabry.oc.ui.words.res.e7SetupRefused
 import io.github.eslamasabry.oc.ui.words.res.e7SetupTimeout
@@ -74,6 +74,8 @@ import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.linuxHostSetupTitle
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrRowDetail
+import io.github.eslamasabry.oc.ui.words.res.mcpNativeTitle
+import io.github.eslamasabry.oc.ui.words.res.monitorNativeTitle
 import io.github.eslamasabry.oc.ui.words.res.monitorOptIn
 import io.github.eslamasabry.oc.ui.words.res.monitorOptInDetail
 import io.github.eslamasabry.oc.ui.words.res.monitorServerCheckInMinutes
@@ -84,16 +86,14 @@ import io.github.eslamasabry.oc.ui.words.res.monitorServerUnavailable
 import io.github.eslamasabry.oc.ui.words.res.monitorServerWaiting
 import io.github.eslamasabry.oc.ui.words.res.monitorServerWifi
 import io.github.eslamasabry.oc.ui.words.res.monitorServerWifiRequired
-import io.github.eslamasabry.oc.ui.words.res.mcpNativeTitle
-import io.github.eslamasabry.oc.ui.words.res.monitorNativeTitle
 import io.github.eslamasabry.oc.ui.words.res.previewQrLinkFilled
 import io.github.eslamasabry.oc.ui.words.res.previewQrPairFilled
 import io.github.eslamasabry.oc.ui.words.res.previewQrPairingCodeLabel
 import io.github.eslamasabry.oc.ui.words.res.protoPairingCheck
-import io.github.eslamasabry.oc.ui.words.res.secImportedSignInsTitle
-import io.github.eslamasabry.oc.ui.words.res.secSetupTitle
 import io.github.eslamasabry.oc.ui.words.res.safetyDisconnectBody
 import io.github.eslamasabry.oc.ui.words.res.safetyDisconnectBodyPhone
+import io.github.eslamasabry.oc.ui.words.res.secImportedSignInsTitle
+import io.github.eslamasabry.oc.ui.words.res.secSetupTitle
 import io.github.eslamasabry.oc.ui.words.res.serverDisconnectFrom
 import io.github.eslamasabry.oc.ui.words.res.serverFailureCertificate
 import io.github.eslamasabry.oc.ui.words.res.serverFailureIncompatible
@@ -135,11 +135,11 @@ import io.github.eslamasabry.oc.ui.words.res.serversTitle
 import io.github.eslamasabry.oc.ui.words.res.serversUsername
 import io.github.eslamasabry.oc.ui.words.res.serversWorking
 import io.github.eslamasabry.oc.ui.words.res.settingsV3ThisPhone
-import io.github.eslamasabry.oc.ui.words.res.tailscaleTitle
+import io.github.eslamasabry.oc.ui.words.res.setupNativeTitle
 import io.github.eslamasabry.oc.ui.words.res.stateDemoTryOffline
 import io.github.eslamasabry.oc.ui.words.res.stateServerSchedules
 import io.github.eslamasabry.oc.ui.words.res.stateSetupTitle
-import io.github.eslamasabry.oc.ui.words.res.setupNativeTitle
+import io.github.eslamasabry.oc.ui.words.res.tailscaleTitle
 import io.github.eslamasabry.oc.ui.words.res.usageTabPlans
 import io.github.eslamasabry.oc.ui.words.res.usageTitle
 import kotlinx.coroutines.flow.drop
@@ -254,7 +254,12 @@ public fun ServersScreen(
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
             state.issue?.let { issue ->
-                val words = issueWords(issue, state.failure)
+                val known =
+                    state.addressProblem
+                        ?: state.failure?.details?.text?.let {
+                            io.github.eslamasabry.oc.engine.runtime.messages.SetupMessages.plain(it)
+                        }
+                val words = known?.let { setupMessageWords(it) } ?: issueWords(issue, state.failure)
                 if (issue == ServerIssue.Connected) {
                     KitNotice(words)
                 } else {

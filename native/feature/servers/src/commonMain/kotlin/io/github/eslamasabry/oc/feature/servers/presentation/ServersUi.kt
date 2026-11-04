@@ -18,6 +18,8 @@ public data class ServersUi(
     val cleartextAllowed: Boolean = false,
     val issue: ServerIssue? = null,
     val failure: Failure? = null,
+    /** App-authored validation fact only; no input or credentials are retained. */
+    val addressProblem: io.github.eslamasabry.oc.engine.runtime.messages.SetupMessage.Known? = null,
     val savedGeneration: Int = 0,
     /**
      * Ticks when a pairing code or share link waits in the inbox (PREVIEW-QR); the form takes it

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="kitCapEnableFailed">Could not open this action. Try again from its page.</string>
+</resources>

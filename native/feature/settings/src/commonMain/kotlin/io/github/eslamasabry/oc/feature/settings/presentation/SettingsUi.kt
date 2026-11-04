@@ -24,6 +24,7 @@ public data class SettingsUi(
     val privacy: PrivacyUi? = null,
     /** The language in use (acknowledged), for the Language page and its row. */
     val language: AppLanguage = AppLanguage.System,
+    val capabilities: ServerCapabilitiesUi? = null,
     /** Report a problem's preview; null until the page opens. */
     val report: ReportUi? = null,
     val reportDescription: String = "",
@@ -59,10 +60,16 @@ public data class AppearanceUi(
     /** How many packs "See all" shows in total; 0 when everything is already listed. */
     val seeAllCount: Int = 0,
     val style: SurfaceStyle = SurfaceStyle.Solid,
-    /** The Corners shown as chosen: the person's choice, else the style's own (a choice equal to it does not differ). */
+    /**
+     * The Corners shown as chosen: the person's choice, else the style's own (a choice equal to it
+     * does not differ).
+     */
     val corners: Corners = Corners.Round,
     val spacing: Density = Density.Comfortable,
-    /** Corners or Spacing differ from the style's own: "Reset to <style> defaults" is offered (B-KIT-017). */
+    /**
+     * Corners or Spacing differ from the style's own: "Reset to <style> defaults" is offered
+     * (B-KIT-017).
+     */
     val fineTuned: Boolean = false,
     /** The Accent swatch id; null = Match theme (B-KIT-049). */
     val accent: String? = null,

@@ -27,6 +27,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.words.LanguageCoverage
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.diagnosticsReportShare
@@ -41,6 +42,7 @@ import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiRussian
 import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiSpanish
 import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiSystem
 import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
+import io.github.eslamasabry.oc.ui.words.res.languagePickerPartlyTranslated
 import io.github.eslamasabry.oc.ui.words.res.reportProblemCopyShort
 import io.github.eslamasabry.oc.ui.words.res.reportProblemDescribeHint
 import io.github.eslamasabry.oc.ui.words.res.reportProblemDescribeLabel
@@ -58,7 +60,18 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 internal fun ColumnScope.LanguageBody(language: AppLanguage, actions: SettingsActions) {
     KitChoiceList(
-        choices = AppLanguage.entries.map { KitChoice(it, languageWords(it)) },
+        choices =
+            AppLanguage.entries.map { item ->
+                val share = item.tag?.let { LanguageCoverage.percent[it] }
+                KitChoice(
+                    item,
+                    languageWords(item),
+                    supporting =
+                        share
+                            ?.takeIf { it < 100 }
+                            ?.let { stringResource(Res.string.languagePickerPartlyTranslated, it) },
+                )
+            },
         selected = language,
         semanticsLabel = stringResource(Res.string.e7LocaleUiLanguage),
         modifier = Modifier.testTag("language-choices"),

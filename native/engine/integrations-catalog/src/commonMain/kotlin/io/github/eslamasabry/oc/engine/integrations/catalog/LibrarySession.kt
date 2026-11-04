@@ -89,6 +89,7 @@ public data class LibraryInventory(
     val storageUncertain: Boolean = false,
     val hasAttemptsAtOtherSource: Boolean = false,
     val catalog: CatalogSnapshot? = null,
+    val skillConversationsSupported: Boolean = false,
     val activeCredential: ImmutableMap<String, String?> = persistentMapOf(),
 )
 
@@ -254,6 +255,10 @@ public class LibrarySession(
         mutable.update {
             it.copy(
                 loading = false,
+                skillConversationsSupported =
+                    src.current() &&
+                        src.capabilities.serverCatalog &&
+                        src.server.facet<ServerSessionSkills>()?.sessionSkillsSupported == true,
                 failedSections = failures.toImmutableSet(),
                 notice = if (!src.current()) LibraryNotice.Changed else it.notice,
             )

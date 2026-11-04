@@ -16,6 +16,8 @@ import io.github.eslamasabry.oc.feature.settings.presentation.SettingsNote
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsUi
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.capability.KitCapabilityExplainer
+import io.github.eslamasabry.oc.ui.kit.capability.KitCapabilityVariant
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
@@ -26,6 +28,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.aboutTitle
 import io.github.eslamasabry.oc.ui.words.res.appUpdatesTitle
+import io.github.eslamasabry.oc.ui.words.res.capabilityScreenTitle
 import io.github.eslamasabry.oc.ui.words.res.e7AppearanceTitle
 import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
@@ -130,6 +133,21 @@ public fun SettingsScreen(
                 modifier,
             ) {
                 LanguageBody(state.language, actions)
+            }
+        SettingsPage.ServerCapabilities ->
+            SettingsFrame(
+                stringResource(Res.string.capabilityScreenTitle),
+                back,
+                state,
+                actions,
+                modifier,
+            ) {
+                state.capabilities?.let { ServerCapabilitiesBody(it, actions) }
+                    ?: KitCapabilityExplainer(
+                        "server.any",
+                        variant = KitCapabilityVariant.State,
+                        source = "settings-capabilities",
+                    )
             }
         SettingsPage.ServerConfiguration -> ServerConfigurationPage(onBack = back)
         SettingsPage.ReportProblem ->

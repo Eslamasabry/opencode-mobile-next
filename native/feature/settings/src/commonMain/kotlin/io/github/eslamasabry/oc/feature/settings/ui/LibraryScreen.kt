@@ -498,6 +498,30 @@ private fun SkillSheet(
                 )
             else emptyList(),
     ) {
+        if (skill.id != null && state.inventory.skillConversationsSupported) {
+            KitButton(
+                stringResource(Res.string.migrationSkillUseNew),
+                { actions.useSkillInNewConversation(skill) },
+                enabled = enabled,
+                working = state.working,
+            )
+        }
+        state.skillConversation?.let { result ->
+            KitNotice(
+                stringResource(
+                    when (result.status) {
+                        SkillConversationStatus.Ready -> Res.string.migrationSkillReady
+                        SkillConversationStatus.Changed -> Res.string.migrationSkillChanged
+                        SkillConversationStatus.Unsupported -> Res.string.nlibUnsupported
+                        SkillConversationStatus.InvalidInput -> Res.string.migrationSkillInvalid
+                        else -> Res.string.migrationSkillUncertain
+                    }
+                )
+            )
+        }
+        if (state.skillConversationRef != null) {
+            KitButton(stringResource(Res.string.migrationSkillOpen), actions::openSkillConversation)
+        }
         if (session != null) {
             KitText(stringResource(Res.string.nlibSkillHelp))
             KitSwitchRow(

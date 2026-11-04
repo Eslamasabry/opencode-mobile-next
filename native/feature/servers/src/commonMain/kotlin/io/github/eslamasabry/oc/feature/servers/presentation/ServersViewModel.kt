@@ -212,8 +212,16 @@ public class ServersViewModel(
 
     override fun save(name: String, address: String, username: String, password: String) {
         if (local.value.busy || connections.busy.value) return
-        if (address.isBlank()) {
-            local.update { it.copy(issue = ServerIssue.InputRequired, failure = null) }
+        val addressProblem =
+            io.github.eslamasabry.oc.engine.runtime.messages.SetupMessages.addressProblem(address)
+        if (addressProblem != null) {
+            local.update {
+                it.copy(
+                    issue = ServerIssue.InputRequired,
+                    failure = null,
+                    addressProblem = addressProblem,
+                )
+            }
             return
         }
         // Capture this explicit choice for exactly this submitted address; it is not a global
@@ -329,6 +337,7 @@ public class ServersViewModel(
         local.update {
             it.copy(
                 pairingProblem = null,
+                addressProblem = null,
                 pairingChecks = kotlinx.collections.immutable.persistentListOf(),
                 issue = null,
                 failure = null,
@@ -362,7 +371,7 @@ public class ServersViewModel(
 
     private fun operation(block: suspend () -> Unit) {
         if (local.value.busy || connections.busy.value) return
-        local.update { it.copy(busy = true, issue = null, failure = null) }
+        local.update { it.copy(busy = true, issue = null, failure = null, addressProblem = null) }
         viewModelScope.launch {
             try {
                 block()
