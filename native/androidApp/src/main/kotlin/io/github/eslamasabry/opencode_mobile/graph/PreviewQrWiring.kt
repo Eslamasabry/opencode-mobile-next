@@ -60,8 +60,8 @@ import io.github.eslamasabry.oc.core.security.LinkDecision
 import io.github.eslamasabry.oc.core.security.LinkOrigin
 import io.github.eslamasabry.oc.feature.preview.presentation.BrowserTicket
 import io.github.eslamasabry.oc.feature.preview.presentation.NoPreviewBrowser
-import io.github.eslamasabry.oc.feature.preview.presentation.PreviewBrowser
 import io.github.eslamasabry.oc.feature.preview.presentation.PagePhase
+import io.github.eslamasabry.oc.feature.preview.presentation.PreviewBrowser
 import io.github.eslamasabry.oc.feature.preview.presentation.PreviewEgress
 import io.github.eslamasabry.oc.feature.preview.ui.NoWebPreviewSlot
 import io.github.eslamasabry.oc.feature.preview.ui.WebPreviewEvents
@@ -83,7 +83,10 @@ import kotlinx.coroutines.withTimeoutOrNull
  * ExternalLinkOpener (AGENTS invariant 8: ExternalLinkPolicy → ExternalLinkOpener; nothing else launches a URL).
  */
 
-/** Opens an approved link in the person's browser. Only `ExternalLinkPolicy` makes an [ApprovedLink]. */
+/**
+ * Opens an approved link in the person's browser. Only `ExternalLinkPolicy` makes an
+ * [ApprovedLink].
+ */
 @ContributesBinding(AppScope::class)
 @Inject
 class AndroidExternalLinkOpener(private val application: Application) : ExternalLinkOpener {
@@ -106,25 +109,44 @@ class AndroidExternalLinkOpener(private val application: Application) : External
 /** The preview's way to the browser: ExternalLinkPolicy decides, ExternalLinkOpener opens. */
 @ContributesBinding(AppScope::class, replaces = [NoPreviewBrowser::class])
 @Inject
-class PolicyPreviewBrowser(private val policy: ExternalLinkPolicy, private val opener: ExternalLinkOpener) : PreviewBrowser {
+class PolicyPreviewBrowser(
+    private val policy: ExternalLinkPolicy,
+    private val opener: ExternalLinkOpener,
+) : PreviewBrowser {
     override fun check(url: String, appAuthored: Boolean): BrowserTicket =
-        when (val decision = policy.check(url, if (appAuthored) LinkOrigin.AppAuthored else LinkOrigin.ServerContent)) {
+        when (
+            val decision =
+                policy.check(
+                    url,
+                    if (appAuthored) LinkOrigin.AppAuthored else LinkOrigin.ServerContent,
+                )
+        ) {
             is LinkDecision.Open -> BrowserTicket.Open(decision.link)
-            is LinkDecision.AskFirst -> BrowserTicket.AskFirst(decision.shownHost, decision.link)
+            is LinkDecision.AskFirst ->
+                BrowserTicket.AskFirst(decision.shownHost, decision.link, decision.insecure)
             is LinkDecision.Refuse -> BrowserTicket.Refused
         }
 
-    override fun open(token: Any): Boolean = (token as? ApprovedLink)?.let { opener.open(it) is Outcome.Ok } ?: false
+    override fun open(token: Any): Boolean =
+        (token as? ApprovedLink)?.let { opener.open(it) is Outcome.Ok } ?: false
 }
 
-/** The dev preview's page: `:android:webview` [KitWebPreview] under the screen's [PreviewEgress]. */
+/**
+ * The dev preview's page: `:android:webview` [KitWebPreview] under the screen's [PreviewEgress].
+ */
 @ContributesBinding(AppScope::class, replaces = [NoWebPreviewSlot::class])
 @Inject
 class AndroidWebPreviewSlot : WebPreviewSlot {
     override val supported: Boolean = true
 
     @Composable
-    override fun Page(origin: String, egress: PreviewEgress, handle: WebPreviewHandle, events: WebPreviewEvents, modifier: Modifier) {
+    override fun Page(
+        origin: String,
+        egress: PreviewEgress,
+        handle: WebPreviewHandle,
+        events: WebPreviewEvents,
+        modifier: Modifier,
+    ) {
         val latest by rememberUpdatedState(events)
         key(origin) {
             val holder = remember { arrayOfNulls<KitWebPreview>(1) }
@@ -142,7 +164,8 @@ class AndroidWebPreviewSlot : WebPreviewSlot {
                         object : PreviewGuard {
                             override fun mayLoad(url: String): Boolean = egress.mayLoad(url)
 
-                            override fun methodAllowed(method: String): Boolean = egress.methodAllowed(method)
+                            override fun methodAllowed(method: String): Boolean =
+                                egress.methodAllowed(method)
 
                             override val documentPolicy: String = egress.documentPolicy
                         }
@@ -154,7 +177,7 @@ class AndroidWebPreviewSlot : WebPreviewSlot {
                                         PreviewPhase.Loading -> PagePhase.Loading
                                         PreviewPhase.Ready -> PagePhase.Ready
                                         PreviewPhase.Failed -> PagePhase.Failed
-                                    },
+                                    }
                                 )
 
                             override fun address(url: String) = latest.address(url)
@@ -176,13 +199,15 @@ class AndroidWebPreviewSlot : WebPreviewSlot {
 }
 
 /**
- * The pairing scanner: `:android:camera` [CameraXScanner] (CameraX + zxing-cpp, no ML Kit) drawn into a TextureView,
- * with the camera permission in three states (B-ANDR-049): asked on opening and on "Allow camera"; refused for good →
- * app settings, rechecked on return; no camera → the screen says so and nothing is asked.
+ * The pairing scanner: `:android:camera` [CameraXScanner] (CameraX + zxing-cpp, no ML Kit) drawn
+ * into a TextureView, with the camera permission in three states (B-ANDR-049): asked on opening and
+ * on "Allow camera"; refused for good → app settings, rechecked on return; no camera → the screen
+ * says so and nothing is asked.
  */
 @ContributesBinding(AppScope::class, replaces = [NoQrScannerSlot::class])
 @Inject
-class AndroidQrScannerSlot(private val application: Application, private val clock: Clock) : QrScannerSlot {
+class AndroidQrScannerSlot(private val application: Application, private val clock: Clock) :
+    QrScannerSlot {
     override val supported: Boolean
         get() = AndroidCameraHardware(application).hasCamera()
 
@@ -200,22 +225,34 @@ class AndroidQrScannerSlot(private val application: Application, private val clo
             LaunchedEffect(Unit) { handle.stage = ScanStage.Failed }
             return
         }
-        fun allowed() = context.checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+        fun allowed() =
+            context.checkSelfPermission(Manifest.permission.CAMERA) ==
+                PackageManager.PERMISSION_GRANTED
         var granted by remember { mutableStateOf(allowed()) }
         val launcher =
             rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok ->
                 granted = ok
                 if (!ok) {
                     handle.stage =
-                        if (activity.shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) ScanStage.Denied
+                        if (
+                            activity.shouldShowRequestPermissionRationale(
+                                Manifest.permission.CAMERA
+                            )
+                        )
+                            ScanStage.Denied
                         else ScanStage.Blocked
                 }
             }
-        LaunchedEffect(handle.allowRequests) { if (!granted) launcher.launch(Manifest.permission.CAMERA) }
+        LaunchedEffect(handle.allowRequests) {
+            if (!granted) launcher.launch(Manifest.permission.CAMERA)
+        }
         LaunchedEffect(handle.settingsRequests) {
             if (handle.settingsRequests > 0) {
                 val settings =
-                    Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", activity.packageName, null))
+                    Intent(
+                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                        Uri.fromParts("package", activity.packageName, null),
+                    )
                 try {
                     activity.startActivity(settings)
                 } catch (_: ActivityNotFoundException) {
@@ -225,10 +262,9 @@ class AndroidQrScannerSlot(private val application: Application, private val clo
         }
         // Back from app settings: recheck without asking again.
         DisposableEffect(activity) {
-            val observer =
-                LifecycleEventObserver { _, event ->
-                    if (event == Lifecycle.Event.ON_RESUME && !granted && allowed()) granted = true
-                }
+            val observer = LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME && !granted && allowed()) granted = true
+            }
             activity.lifecycle.addObserver(observer)
             onDispose { activity.lifecycle.removeObserver(observer) }
         }
@@ -276,7 +312,10 @@ class AndroidQrScannerSlot(private val application: Application, private val clo
     }
 }
 
-/** Follows the Activity's lifecycle while the scanner is on screen, then ends, so the camera never outlives the page. */
+/**
+ * Follows the Activity's lifecycle while the scanner is on screen, then ends, so the camera never
+ * outlives the page.
+ */
 private class ScopedLifecycle(private val parent: Lifecycle) : LifecycleOwner {
     private val registry = LifecycleRegistry(this)
     override val lifecycle: Lifecycle
@@ -290,7 +329,8 @@ private class ScopedLifecycle(private val parent: Lifecycle) : LifecycleOwner {
 
     fun destroy() {
         parent.removeObserver(mirror)
-        if (registry.currentState != Lifecycle.State.INITIALIZED) registry.currentState = Lifecycle.State.DESTROYED
+        if (registry.currentState != Lifecycle.State.INITIALIZED)
+            registry.currentState = Lifecycle.State.DESTROYED
     }
 }
 
@@ -316,11 +356,19 @@ private fun attach(view: TextureView, request: SurfaceRequest) {
     }
     view.surfaceTextureListener =
         object : TextureView.SurfaceTextureListener {
-            override fun onSurfaceTextureAvailable(texture: SurfaceTexture, width: Int, height: Int) {
+            override fun onSurfaceTextureAvailable(
+                texture: SurfaceTexture,
+                width: Int,
+                height: Int,
+            ) {
                 if (view.tag === request) provide(texture)
             }
 
-            override fun onSurfaceTextureSizeChanged(texture: SurfaceTexture, width: Int, height: Int) = fit(view, size)
+            override fun onSurfaceTextureSizeChanged(
+                texture: SurfaceTexture,
+                width: Int,
+                height: Int,
+            ) = fit(view, size)
 
             override fun onSurfaceTextureDestroyed(texture: SurfaceTexture): Boolean = true
 
@@ -339,29 +387,43 @@ private fun fit(view: TextureView, size: Size) {
     val frameW = (if (portrait) size.height else size.width).toFloat()
     val frameH = (if (portrait) size.width else size.height).toFloat()
     val scale = maxOf(width / frameW, height / frameH)
-    view.setTransform(Matrix().apply { setScale(frameW * scale / width, frameH * scale / height, width / 2f, height / 2f) })
+    view.setTransform(
+        Matrix().apply {
+            setScale(frameW * scale / width, frameH * scale / height, width / 2f, height / 2f)
+        }
+    )
 }
 
 /**
- * P12-FIX-PREVIEWQR: a pairing code's addresses are asked in turn with the protocol's own health/version probe, which
- * never sends a credential to an origin that is not trusted yet (B-SEC-124); the form then fills the one that works,
- * or that at least answered (B-PROTO-068). A probe that does not finish in time counts as no answer.
+ * P12-FIX-PREVIEWQR: a pairing code's addresses are asked in turn with the protocol's own
+ * health/version probe, which never sends a credential to an origin that is not trusted yet
+ * (B-SEC-124); the form then fills the one that works, or that at least answered (B-PROTO-068). A
+ * probe that does not finish in time counts as no answer.
  */
 @ContributesBinding(AppScope::class)
 @Inject
 class GatewayPairingProbe(private val factories: Set<GatewayFactory>) : PairingProbe {
     override suspend fun check(address: String): PairingAnswer {
-        val origin = (AddressRules.normalize(address) as? Outcome.Ok)?.value ?: return PairingAnswer.NoAnswer
+        val origin =
+            (AddressRules.normalize(address) as? Outcome.Ok)?.value ?: return PairingAnswer.NoAnswer
         val factory =
-            factories.firstOrNull { it.backend == BackendKind.OpenCode2 } ?: factories.firstOrNull() ?: return PairingAnswer.NoAnswer
-        val result = withTimeoutOrNull(PROBE_TIMEOUT) { factory.probe(ProbeTarget(origin, credentials = null)) }
+            factories.firstOrNull { it.backend == BackendKind.OpenCode2 }
+                ?: factories.firstOrNull()
+                ?: return PairingAnswer.NoAnswer
+        val result =
+            withTimeoutOrNull(PROBE_TIMEOUT) {
+                factory.probe(ProbeTarget(origin, credentials = null))
+            }
         return when (result) {
             null -> PairingAnswer.NoAnswer
             is Outcome.Ok -> PairingAnswer.Works
             is Outcome.Failed ->
                 when (result.failure) {
-                    is Failure.SignIn, is Failure.Server, is Failure.Incompatible, is Failure.Rejected, is Failure.NotFound ->
-                        PairingAnswer.Answers
+                    is Failure.SignIn,
+                    is Failure.Server,
+                    is Failure.Incompatible,
+                    is Failure.Rejected,
+                    is Failure.NotFound -> PairingAnswer.Answers
                     else -> PairingAnswer.NoAnswer
                 }
         }

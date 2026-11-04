@@ -38,15 +38,24 @@ public data class ChatUi(
     val clip: ClipUi?,
     val arrival: ChatArrivalUi?,
     val capabilities: ChatCapabilitiesUi,
-    /** The Back guard is enabled (07 §3.4): the system's predictive preview is off only while this is true. */
+    /**
+     * The Back guard is enabled (07 §3.4): the system's predictive preview is off only while this
+     * is true.
+     */
     val guardBack: Boolean,
     /** P12-CHAT-FEEL: the "Select text" sheet over one message's words; null = closed. */
     val select: SelectTextUi? = null,
-    /** P12-CHAT-FEEL: words "Edit and resend" puts in the composer once, then acknowledged ([ChatActions.insertDone]). */
+    /**
+     * P12-CHAT-FEEL: words "Edit and resend" puts in the composer once, then acknowledged
+     * ([ChatActions.insertDone]).
+     */
     val insert: ClipUi? = null,
     /** P12-CHAT-FEEL: the picture viewer over the chat; null = closed. */
     val picture: PictureUi? = null,
-    /** A reply the person asked to hear (P12-VOICE): the screen hands it to the reader once, then acknowledges. */
+    /**
+     * A reply the person asked to hear (P12-VOICE): the screen hands it to the reader once, then
+     * acknowledges.
+     */
     val readAloud: ReadAloudUi? = null,
     /** B-CHAT-064: file paths in replies the server confirmed exist; only these become tappable. */
     val confirmedPaths: ImmutableSet<String> = persistentSetOf(),
@@ -84,10 +93,21 @@ public sealed interface ChatPhase {
     public data class Failed(val failure: Failure) : ChatPhase
 }
 
-/** The one status line (plan 09 §6.5, 07 §10.1). [id] is stable per condition (tag `chat-status-<id>`). */
-public data class ChatStatusUi(val id: String, val kind: ChatStatusKind, val failure: Failure? = null, val localId: Long? = null)
+/**
+ * The one status line (plan 09 §6.5, 07 §10.1). [id] is stable per condition (tag
+ * `chat-status-<id>`).
+ */
+public data class ChatStatusUi(
+    val id: String,
+    val kind: ChatStatusKind,
+    val failure: Failure? = null,
+    val localId: Long? = null,
+)
 
-/** Lower ordinal = more urgent. Connection first (07 §10.1), then the chat's own lines in plan 09 §6.5's order. */
+/**
+ * Lower ordinal = more urgent. Connection first (07 §10.1), then the chat's own lines in plan 09
+ * §6.5's order.
+ */
 public enum class ChatStatusKind {
     /** This conversation's backend is unreachable. */
     Offline,
@@ -111,12 +131,16 @@ public enum class ChatStatusKind {
     LinkRefused,
 }
 
-/** The live line while a turn runs (plan 09 §4.1, trimmed: no step count until S2-DLV's `ConversationActivity`). */
+/**
+ * The live line while a turn runs (plan 09 §4.1, trimmed: no step count until S2-DLV's
+ * `ConversationActivity`).
+ */
 public data class LiveTurnUi(val stopping: Boolean)
 
 /**
- * Find (plan 09 §6.6, Flutter `transcript_find.dart`): hits in reading order, "3 of 12". [current] is 0-based (-1 with
- * no hits); [currentIndex] is the newest-first row index of the current hit's row in [ChatUi.rows] (-1 if none).
+ * Find (plan 09 §6.6, Flutter `transcript_find.dart`): hits in reading order, "3 of 12". [current]
+ * is 0-based (-1 with no hits); [currentIndex] is the newest-first row index of the current hit's
+ * row in [ChatUi.rows] (-1 if none).
  */
 public data class FindUi(
     val query: String,
@@ -128,12 +152,26 @@ public data class FindUi(
     val partial: Boolean,
 )
 
-/** A message a menu acts on. [rowKey] is the row it was opened from; [messageId] null = not addressable (no delete). */
-public data class MessageTarget(val turnId: String, val rowKey: String, val kind: TargetKind, val messageId: String?)
+/**
+ * A message a menu acts on. [rowKey] is the row it was opened from; [messageId] null = not
+ * addressable (no delete).
+ */
+public data class MessageTarget(
+    val turnId: String,
+    val rowKey: String,
+    val kind: TargetKind,
+    val messageId: String?,
+)
 
-public enum class TargetKind { Prompt, Reply }
+public enum class TargetKind {
+    Prompt,
+    Reply,
+}
 
-/** One action list per message for every way in (plan 09 §6.6). Order is the menu's order; destructive last. */
+/**
+ * One action list per message for every way in (plan 09 §6.6). Order is the menu's order;
+ * destructive last.
+ */
 public enum class MessageAction {
     Copy,
     Share,
@@ -145,31 +183,58 @@ public enum class MessageAction {
     Fork,
     /** P12-REVIEW: the files the reply's turn changed (ReviewRoute.Changes). */
     Changes,
-    /** "Undo from here" on a prompt: P12-REVIEW's page (ReviewRoute.UndoFromHere), staged or one-step. */
+    /**
+     * "Undo from here" on a prompt: P12-REVIEW's page (ReviewRoute.UndoFromHere), staged or
+     * one-step.
+     */
     UndoFromHere,
     Delete,
 }
 
-public data class MessageMenuUi(val target: MessageTarget, val actions: ImmutableList<MessageAction>)
+public data class MessageMenuUi(
+    val target: MessageTarget,
+    val actions: ImmutableList<MessageAction>,
+)
 
 public sealed interface ChatConfirm {
-    /** "Delete this message?" (plan 09 §6.6): no Undo bar afterwards; the message leaving is the confirmation. */
+    /**
+     * "Delete this message?" (plan 09 §6.6): no Undo bar afterwards; the message leaving is the
+     * confirmation.
+     */
     public data class DeleteMessage(val target: MessageTarget) : ChatConfirm
 
     /** The draft could not be saved on Back (07 §3.4): leave without saving, or keep editing. */
     public data object LeaveUnsaved : ChatConfirm
 
-    /** "Undo from here?" (Flutter `revertFromHere`, B-CHAT-120): the prompt and everything after it go. */
+    /**
+     * "Undo from here?" (Flutter `revertFromHere`, B-CHAT-120): the prompt and everything after it
+     * go.
+     */
     public data class UndoFrom(val target: MessageTarget) : ChatConfirm
 
-    /** A link from a reply asks first, naming where it goes (R17: policy → opener, never straight to the platform). */
-    public data class OpenLink(val url: String, val host: String) : ChatConfirm
+    /**
+     * A link from a reply asks first, naming where it goes (R17: policy → opener, never straight to
+     * the platform).
+     */
+    public data class OpenLink(val url: String, val host: String, val insecure: Boolean = false) :
+        ChatConfirm
 }
 
-/** A reply's server picture in the viewer. [bytes] null while loading; [failed] when it could not be read. */
-public class PictureUi(public val id: Long, public val name: String, public val bytes: ByteArray?, public val failed: Boolean)
+/**
+ * A reply's server picture in the viewer. [bytes] null while loading; [failed] when it could not be
+ * read.
+ */
+public class PictureUi(
+    public val id: Long,
+    public val name: String,
+    public val bytes: ByteArray?,
+    public val failed: Boolean,
+)
 
-/** One message's words in a sheet where any part of them can be selected (Flutter's selectable message). */
+/**
+ * One message's words in a sheet where any part of them can be selected (Flutter's selectable
+ * message).
+ */
 public data class SelectTextUi(val id: Long, val text: String)
 
 public data class ClipUi(val id: Long, val text: String)
@@ -177,8 +242,9 @@ public data class ClipUi(val id: Long, val text: String)
 public data class ReadAloudUi(val id: Long, val rowKey: String, val text: String)
 
 /**
- * One-time details the chat was opened with, acknowledged through [ChatActions.arrivalShown] (07 §2.5).
- * [landOnIndex] is the newest-first row index to bring into view once (the newest failed turn), or null.
+ * One-time details the chat was opened with, acknowledged through [ChatActions.arrivalShown] (07
+ * §2.5). [landOnIndex] is the newest-first row index to bring into view once (the newest failed
+ * turn), or null.
  */
 public data class ChatArrivalUi(val id: Long, val focusComposer: Boolean, val landOnIndex: Int?)
 
@@ -223,7 +289,9 @@ public interface ChatActions {
 
     public fun openTimeline()
 
-    /** From a prompt (tap or long-press) or a reply's footer; the ViewModel resolves the message. */
+    /**
+     * From a prompt (tap or long-press) or a reply's footer; the ViewModel resolves the message.
+     */
     public fun openMessageMenu(rowKey: String)
 
     /** The conversation's changed files (P12-REVIEW, ReviewRoute.Changes). */
@@ -247,12 +315,18 @@ public interface ChatActions {
 
     public fun retrySend(localId: Long)
 
-    /** Only a line whose dismissal changes nothing real (a finished action's failure) can be dismissed. */
+    /**
+     * Only a line whose dismissal changes nothing real (a finished action's failure) can be
+     * dismissed.
+     */
     public fun dismissStatus(id: String)
 
     // ---- P12-CHAT-FEEL (defaults keep other implementers compiling) ----
 
-    /** A link tapped in a reply (or a picture that lives on the web): checked by the app's link policy first. */
+    /**
+     * A link tapped in a reply (or a picture that lives on the web): checked by the app's link
+     * policy first.
+     */
     public fun openLink(url: String) {}
 
     /** The person said yes to the "Open link?" confirm. */
@@ -273,19 +347,24 @@ public interface ChatActions {
     public fun openPicture(path: String, name: String) {}
 
     /**
-     * B-CHAT-064 / B-CHAT-114: a file a reply names (a confirmed path) or a step produced: a picture opens in the
-     * viewer, any other file in the file viewer (which offers Open with and Share).
+     * B-CHAT-064 / B-CHAT-114: a file a reply names (a confirmed path) or a step produced: a
+     * picture opens in the viewer, any other file in the file viewer (which offers Open with and
+     * Share).
      */
     public fun openPath(path: String, line: Int?) {}
 
-    /** B-CHAT-064: the path-like text a reply shows; the ones that exist on the server become tappable. */
+    /**
+     * B-CHAT-064: the path-like text a reply shows; the ones that exist on the server become
+     * tappable.
+     */
     public fun checkPaths(paths: List<String>) {}
 
     public fun closePicture() {}
 
     /**
-     * B-AGENT-024: a reply that stopped on a lost connection to the model's provider offers Continue: [words] (the
-     * localized "Continue") are sent alone, never the draft or its files (Flutter `_continueTruncated`).
+     * B-AGENT-024: a reply that stopped on a lost connection to the model's provider offers
+     * Continue: [words] (the localized "Continue") are sent alone, never the draft or its files
+     * (Flutter `_continueTruncated`).
      */
     public fun continueReply(words: String) {}
 }

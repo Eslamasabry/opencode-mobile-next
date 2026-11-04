@@ -5,14 +5,22 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 /** What the running page is doing (mirrors the platform web view's phase). */
-public enum class PagePhase { Loading, Ready, Failed }
+public enum class PagePhase {
+    Loading,
+    Ready,
+    Failed,
+}
 
 /** One-shot words for the screen after an act. */
-public enum class PreviewNotice { OpenFailed, LinkBlocked }
+public enum class PreviewNotice {
+    OpenFailed,
+    LinkBlocked,
+}
 
 /**
- * The preview page (Flutter `DevPreviewScreen`). [target] is null while blocked; [blocked] then says why. [shown] is
- * the address the page is on now. [leaveHost] asks "Open this link in your browser?" for a link to elsewhere.
+ * The preview page (Flutter `DevPreviewScreen`). [target] is null while blocked; [blocked] then
+ * says why. [shown] is the address the page is on now. [leaveHost] asks "Open this link in your
+ * browser?" for a link to elsewhere.
  */
 public data class DevPreviewUi(
     val port: Int,
@@ -22,6 +30,7 @@ public data class DevPreviewUi(
     val shown: String? = null,
     val canGoBack: Boolean = false,
     val leaveHost: String? = null,
+    val leaveInsecure: Boolean = false,
     val details: Boolean = false,
     val notice: PreviewNotice? = null,
 ) {
@@ -63,7 +72,12 @@ public interface DevPreviewActions {
 }
 
 /** One mentioned port, with where it opens. [host] null = on this phone. */
-public data class PortRow(val port: Int, val https: Boolean, val host: String?, val path: String = "/")
+public data class PortRow(
+    val port: Int,
+    val https: Boolean,
+    val host: String?,
+    val path: String = "/",
+)
 
 /** "Preview a running app" (Flutter chat dev-preview sheet). */
 public data class PortsUi(

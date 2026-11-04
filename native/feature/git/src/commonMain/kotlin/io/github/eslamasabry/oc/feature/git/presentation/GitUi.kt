@@ -14,7 +14,11 @@ import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentSetOf
 
 /** A sheet of the Git page (screen state, never a route: plan 07 §2.2). */
-public enum class GitSheet { Branches, Remotes, Clone }
+public enum class GitSheet {
+    Branches,
+    Remotes,
+    Clone,
+}
 
 /** A question the page asks before an act that cannot be undone. */
 public sealed interface GitConfirm {
@@ -23,7 +27,10 @@ public sealed interface GitConfirm {
     public data object SignOut : GitConfirm
 }
 
-/** Everything the Git screen draws. Words are chosen by the screen from these values; nothing here is copy. */
+/**
+ * Everything the Git screen draws. Words are chosen by the screen from these values; nothing here
+ * is copy.
+ */
 public data class GitUi(
     val view: GitPageView = GitPageView.Loading,
     val busy: GitBusy? = null,
@@ -45,8 +52,9 @@ public data class GitUi(
     /** The server's saved name, for "uses the Git sign-in set up on …". */
     val placeName: String? = null,
     /**
-     * True only where the app's own GitHub sign-in is used for a push. Every host today (the connected server) pushes
-     * with its own Git sign-in, so the GitHub section is not offered (Flutter `offersGitHubSignIn`; B-SEC-082).
+     * True only for built-in Linux, where the app's own GitHub sign-in can be privately handed to
+     * one push. Servers use their own Git sign-in, so the GitHub section is not offered (Flutter
+     * `offersGitHubSignIn`; B-SEC-082).
      */
     val offersGitHubSignIn: Boolean = false,
     /** The quiet remote check after opening. */
@@ -58,10 +66,12 @@ public data class GitUi(
     /** Bumped when a write finished: the screen clears its message field once. */
     val generation: Int = 0,
 ) {
-    val snapshot: GitSnapshot? get() = (view as? GitPageView.Ready)?.snapshot
+    val snapshot: GitSnapshot?
+        get() = (view as? GitPageView.Ready)?.snapshot
 
     /** True while an action runs: every write button is held (one action at a time, B-NAV-020). */
-    val working: Boolean get() = busy != null
+    val working: Boolean
+        get() = busy != null
 }
 
 public interface GitActions {
@@ -94,7 +104,10 @@ public interface GitActions {
 
     public fun addRemote(name: String, url: String)
 
-    /** Clones [url] into [folder] beside the project; a blank folder takes the name from the address. */
+    /**
+     * Clones [url] into [folder] beside the project; a blank folder takes the name from the
+     * address.
+     */
     public fun clone(url: String, folder: String)
 
     public fun closeSheet()

@@ -38,7 +38,10 @@ class PreviewRuntime(
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
     private val draftOwners: Set<ConversationDrafts>,
-    private val cleaners: Set<ProfileResourceCleaner>, // P12-FIX: the saved-prompt shelf and its files (B-SEC-172)
+    private val profileClosers: Set<ProfileCloser>,
+    private val runtimeOwner: RuntimeProfileOwner,
+    private val cleaners:
+        Set<ProfileResourceCleaner>, // P12-FIX: the saved-prompt shelf and its files (B-SEC-172)
 ) : ServerConnections {
     val profiles: ProfileStore = stores.profiles
     private val lane = dispatchers.serial("preview-runtime")
@@ -173,6 +176,10 @@ class PreviewRuntime(
                 is Outcome.Failed -> return reopened.atStage(ConnectionStage.DraftRecovery)
                 is Outcome.Ok -> draftRecovery.remove(id)
             }
+        }
+        when (val claimed = runtimeOwner.claim(id, profile.origin)) {
+            is Outcome.Failed -> return claimed.atStage(ConnectionStage.ProfileRead)
+            is Outcome.Ok -> Unit
         }
         when (val opened = registry.open(profile)) {
             is Outcome.Failed -> return opened.atStage(ConnectionStage.OpenGateway)
@@ -347,7 +354,17 @@ class PreviewRuntime(
                 registerSecret("pw.", "profiles")
                 registerSecret("oc.codexToken.", "profiles")
             }
-        when (val result = ProfileDeletion(profiles, scoped, stores.lanes, cleaners = cleaners).delete(id)) {
+        when (
+            val result =
+                ProfileDeletion(
+                        profiles,
+                        scoped,
+                        stores.lanes,
+                        closers = profileClosers,
+                        cleaners = cleaners,
+                    )
+                    .delete(id)
+        ) {
             is Outcome.Failed -> result
             is Outcome.Ok ->
                 if (result.value.complete) {

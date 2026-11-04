@@ -26,6 +26,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
@@ -53,6 +54,9 @@ import io.github.eslamasabry.oc.ui.words.res.devPreviewShowDetails
 import io.github.eslamasabry.oc.ui.words.res.devPreviewTitle
 import io.github.eslamasabry.oc.ui.words.res.devPreviewUnsupportedBody
 import io.github.eslamasabry.oc.ui.words.res.devPreviewUnsupportedTitle
+import io.github.eslamasabry.oc.ui.words.res.e7SharedHTTPIsNotEncryptedOtherDevicesOn
+import io.github.eslamasabry.oc.ui.words.res.e7SharedOpenHTTPLink
+import io.github.eslamasabry.oc.ui.words.res.e7SharedOpenInsecureHTTPLink
 import io.github.eslamasabry.oc.ui.words.res.externalLinkBlockedBody
 import io.github.eslamasabry.oc.ui.words.res.externalLinkBlockedTitle
 import io.github.eslamasabry.oc.ui.words.res.externalLinkDontOpen
@@ -65,10 +69,11 @@ import io.github.eslamasabry.oc.ui.words.res.previewQrLeaveTitle
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * The in-app preview of a dev server (Flutter `DevPreviewScreen`, map page `dev-preview`): the running page fills the
- * screen under one slim bar ("Preview", Port 8080 under it, Refresh page, Open in browser). Tapping the title opens
- * Details: the real address and, for a remote server, the "listen on 0.0.0.0" note. Back steps back through the page's
- * own history first, then leaves. A link to elsewhere never loads here; it asks to open in the browser.
+ * The in-app preview of a dev server (Flutter `DevPreviewScreen`, map page `dev-preview`): the
+ * running page fills the screen under one slim bar ("Preview", Port 8080 under it, Refresh page,
+ * Open in browser). Tapping the title opens Details: the real address and, for a remote server, the
+ * "listen on 0.0.0.0" note. Back steps back through the page's own history first, then leaves. A
+ * link to elsewhere never loads here; it asks to open in the browser.
  */
 @Composable
 public fun DevPreviewScreen(
@@ -93,7 +98,10 @@ public fun DevPreviewScreen(
         }
     val origin = state.origin
     val showing = origin != null && egress != null && slot.supported
-    KitBackGuard(enabled = showing && state.canGoBack, onBack = { if (!handle.goBack()) actions.back() })
+    KitBackGuard(
+        enabled = showing && state.canGoBack,
+        onBack = { if (!handle.goBack()) actions.back() },
+    )
     val reload = stringResource(Res.string.devPreviewReload)
     val browser = stringResource(Res.string.devPreviewOpenInBrowser)
     // The frame, its sheet and its confirmation share one modal layer (as the chat screen does).
@@ -105,7 +113,8 @@ public fun DevPreviewScreen(
                 topBar = {
                     KitTopBar(
                         title = stringResource(Res.string.devPreviewTitle),
-                        subtitle = stringResource(Res.string.devPreviewPortTitle, state.port.toString()),
+                        subtitle =
+                            stringResource(Res.string.devPreviewPortTitle, state.port.toString()),
                         exit = KitTopBarExit.Back,
                         exitLabel = stringResource(Res.string.kitTopBarBack),
                         onExit = actions::back,
@@ -115,8 +124,21 @@ public fun DevPreviewScreen(
                             if (origin == null) emptyList()
                             else
                                 buildList {
-                                    if (showing) add(KitLineAction(reload, { handle.reload() }, testTag = "dev-preview-reload"))
-                                    add(KitLineAction(browser, actions::openInBrowser, testTag = "dev-preview-browser"))
+                                    if (showing)
+                                        add(
+                                            KitLineAction(
+                                                reload,
+                                                { handle.reload() },
+                                                testTag = "dev-preview-reload",
+                                            )
+                                        )
+                                    add(
+                                        KitLineAction(
+                                            browser,
+                                            actions::openInBrowser,
+                                            testTag = "dev-preview-browser",
+                                        )
+                                    )
                                 },
                     )
                 },
@@ -135,34 +157,61 @@ public fun DevPreviewScreen(
                                 primary = KitAction(browser, actions::openInBrowser),
                                 modifier = Modifier.align(Alignment.Center),
                             )
-                        else -> if (origin != null && egress != null) {
-                            // The screen's tag sits on its own box so the slot's own semantics (and tags) stay intact.
-                            Box(Modifier.fillMaxSize().testTag("dev-preview-page")) {
-                                slot.Page(origin, egress, handle, events, Modifier.fillMaxSize())
+                        else ->
+                            if (origin != null && egress != null) {
+                                // The screen's tag sits on its own box so the slot's own semantics
+                                // (and tags) stay intact.
+                                Box(Modifier.fillMaxSize().testTag("dev-preview-page")) {
+                                    slot.Page(
+                                        origin,
+                                        egress,
+                                        handle,
+                                        events,
+                                        Modifier.fillMaxSize(),
+                                    )
+                                }
+                                if (state.phase == PagePhase.Failed) {
+                                    KitStateView(
+                                        kind = KitStateKind.Error,
+                                        title = stringResource(Res.string.devPreviewFailedTitle),
+                                        body =
+                                            stringResource(
+                                                Res.string.devPreviewFailedBody,
+                                                state.port.toString(),
+                                            ),
+                                        primary =
+                                            KitAction(
+                                                stringResource(Res.string.devPreviewRetry),
+                                                { handle.reload() },
+                                            ),
+                                        modifier = Modifier.fillMaxSize(),
+                                    )
+                                }
                             }
-                            if (state.phase == PagePhase.Failed) {
-                                KitStateView(
-                                    kind = KitStateKind.Error,
-                                    title = stringResource(Res.string.devPreviewFailedTitle),
-                                    body = stringResource(Res.string.devPreviewFailedBody, state.port.toString()),
-                                    primary = KitAction(stringResource(Res.string.devPreviewRetry), { handle.reload() }),
-                                    modifier = Modifier.fillMaxSize(),
-                                )
-                            }
-                        }
                     }
                     state.notice?.let { notice ->
                         KitNotice(
                             message =
                                 stringResource(
-                                    if (notice == PreviewNotice.OpenFailed) Res.string.externalLinkOpenFailedTitle
-                                    else Res.string.externalLinkBlockedBody,
+                                    if (notice == PreviewNotice.OpenFailed)
+                                        Res.string.externalLinkOpenFailedTitle
+                                    else Res.string.externalLinkBlockedBody
                                 ),
-                            title = if (notice == PreviewNotice.LinkBlocked) stringResource(Res.string.externalLinkBlockedTitle) else null,
-                            dismiss = KitLineAction(stringResource(Res.string.kitSheetDismiss), actions::noticeShown),
+                            title =
+                                if (notice == PreviewNotice.LinkBlocked)
+                                    stringResource(Res.string.externalLinkBlockedTitle)
+                                else null,
+                            dismiss =
+                                KitLineAction(
+                                    stringResource(Res.string.kitSheetDismiss),
+                                    actions::noticeShown,
+                                ),
                             modifier =
                                 Modifier.align(Alignment.TopCenter)
-                                    .padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S2.dp),
+                                    .padding(
+                                        horizontal = LocalKitTokens.current.gutter.dp,
+                                        vertical = Space.S2.dp,
+                                    ),
                         )
                     }
                     KitSheet(
@@ -171,14 +220,23 @@ public fun DevPreviewScreen(
                         title = stringResource(Res.string.devPreviewDetails),
                         closeLabel = stringResource(Res.string.kitSheetClose),
                     ) {
-                        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+                        Column(
+                            Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
+                        ) {
                             KitRow(
                                 title = stringResource(Res.string.devPreviewAddress),
                                 supporting = state.shown ?: origin.orEmpty(),
                                 supportingMaxLines = 3,
                             )
                             state.remoteHost?.let { host ->
-                                KitNotice(stringResource(Res.string.devPreviewRemoteNote, state.port.toString(), host))
+                                KitNotice(
+                                    stringResource(
+                                        Res.string.devPreviewRemoteNote,
+                                        state.port.toString(),
+                                        host,
+                                    )
+                                )
                             }
                         }
                     }
@@ -187,8 +245,25 @@ public fun DevPreviewScreen(
             KitConfirm(
                 state.leaveHost?.let { host ->
                     KitConfirmSpec(
-                        title = stringResource(Res.string.previewQrLeaveTitle),
-                        confirmLabel = browser,
+                        title =
+                            stringResource(
+                                if (state.leaveInsecure) Res.string.e7SharedOpenInsecureHTTPLink
+                                else Res.string.previewQrLeaveTitle
+                            ),
+                        confirmLabel =
+                            if (state.leaveInsecure) stringResource(Res.string.e7SharedOpenHTTPLink)
+                            else browser,
+                        kind =
+                            if (state.leaveInsecure) KitConfirmKind.Destructive
+                            else KitConfirmKind.Neutral,
+                        consequences =
+                            if (state.leaveInsecure)
+                                listOf(
+                                    stringResource(
+                                        Res.string.e7SharedHTTPIsNotEncryptedOtherDevicesOn
+                                    )
+                                )
+                            else emptyList(),
                         body = stringResource(Res.string.externalLinkOpensHost, host),
                         cancelLabel = stringResource(Res.string.externalLinkDontOpen),
                     )
@@ -205,8 +280,15 @@ private fun Blocked(why: PreviewBlock) {
     val noServer = why == PreviewBlock.NoServer
     KitStateView(
         kind = KitStateKind.Missing,
-        title = stringResource(if (noServer) Res.string.devPreviewNoServerTitle else Res.string.devPreviewNoHostTitle),
-        body = stringResource(if (noServer) Res.string.devPreviewNoServerBody else Res.string.devPreviewNoHostBody),
+        title =
+            stringResource(
+                if (noServer) Res.string.devPreviewNoServerTitle
+                else Res.string.devPreviewNoHostTitle
+            ),
+        body =
+            stringResource(
+                if (noServer) Res.string.devPreviewNoServerBody else Res.string.devPreviewNoHostBody
+            ),
         modifier = Modifier.fillMaxSize(),
     )
 }
