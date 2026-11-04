@@ -136,8 +136,10 @@ public class LinuxPortsModel(
         val admitted = generation
         scope.launch {
             ui.update { it.copy(loading = true) }
-            val captured = manager.scanProcesses()
             val read = manager.scanPorts()
+            // Identities are captured only for a listing that will be shown; a failed port read
+            // says busy/failed instead of being masked by the process scan's retries.
+            val captured = if (read is LinuxAnswer.Ok) manager.scanProcesses() else null
             if (!visible || admitted != generation) return@launch
             processScan = (captured as? LinuxAnswer.Ok)?.value
             when (read) {

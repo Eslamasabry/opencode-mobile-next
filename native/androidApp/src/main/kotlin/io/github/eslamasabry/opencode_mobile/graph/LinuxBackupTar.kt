@@ -35,6 +35,9 @@ internal object LinuxBackupTar {
         var longLink: String? = null
         var extended = emptyMap<String, String>()
         val links = mutableSetOf<String>()
+        // Every directory prefix a symlink target walks through; a link may never sit on one, and a
+        // target may never walk through a link, so chains cannot climb out of the restore root.
+        val traversed = mutableSetOf<String>()
         val seen = mutableSetOf<String>()
         val files = mutableSetOf<String>()
         val base =
@@ -101,8 +104,11 @@ internal object LinuxBackupTar {
                     } else {
                         check(!link.startsWith('/') && !link.contains('\\'))
                         val parent = name.substringBeforeLast('/', "")
-                        confined(if (parent.isEmpty()) link else "$parent/$link")
+                        val walked = confined(if (parent.isEmpty()) link else "$parent/$link")
+                        check(walked.none { it in links || it == name })
+                        check(traversed.none { it == name || it.startsWith("$name/") })
                         check(seen.none { it.startsWith("$name/") })
+                        traversed += walked
                         links += name
                     }
                 }
@@ -122,19 +128,25 @@ internal object LinuxBackupTar {
         return parts.joinToString("/")
     }
 
-    private fun confined(path: String) {
-        var depth = 0
+    /** Checks [path] never climbs above the root and returns every prefix it walks through. */
+    private fun confined(path: String): List<String> {
+        val stack = ArrayDeque<String>()
+        val walked = mutableListOf<String>()
         for (part in path.split('/')) {
             when (part) {
                 "",
                 "." -> Unit
                 ".." -> {
-                    depth--
-                    check(depth >= 0)
+                    check(stack.isNotEmpty())
+                    stack.removeLast()
                 }
-                else -> depth++
+                else -> {
+                    stack.addLast(part)
+                    walked += stack.joinToString("/")
+                }
             }
         }
+        return walked
     }
 
     private fun noExistingLinks(base: File, relative: String) {
