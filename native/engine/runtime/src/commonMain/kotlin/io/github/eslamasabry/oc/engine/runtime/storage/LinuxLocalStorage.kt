@@ -35,8 +35,9 @@ public interface LinuxLocalStorage {
         public const val DELETION_NAME: String = "OpenCode"
 
         public fun normalize(path: String): String? {
+            if (path.any { it.code < 0x20 || it.code == 0x7f }) return null
             val value = path.trim()
-            if (!value.startsWith('/') || '\u0000' in value) return null
+            if (!value.startsWith('/')) return null
             val segments = value.split('/').filter { it.isNotEmpty() && it != "." }
             if (segments.any { it == ".." }) return null
             return "/" + segments.joinToString("/")

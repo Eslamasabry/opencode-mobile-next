@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.feature.linux.presentation.LinuxPackagesViewMode
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxPortsViewModel
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxServicesViewModel
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxStorageViewModel
+import io.github.eslamasabry.oc.feature.linux.presentation.LinuxToolsViewModel
 import io.github.eslamasabry.oc.feature.linux.ui.LinuxHomeScreen
 import io.github.eslamasabry.oc.feature.linux.ui.LinuxPackagesScreen
 import io.github.eslamasabry.oc.feature.linux.ui.LinuxPortsScreen
@@ -42,7 +43,16 @@ public class LinuxEntries : EntryInstaller {
         entry<LinuxRoute.Home> {
             val vm = metroViewModel<LinuxHomeViewModel>()
             val state by vm.state.collectAsStateWithLifecycle()
-            LinuxHomeScreen(state, vm)
+            val tools = metroViewModel<LinuxToolsViewModel>()
+            val toolsState by tools.state.collectAsStateWithLifecycle()
+            LinuxHomeScreen(
+                state.copy(
+                    working = state.working || toolsState.tools.removing || toolsState.measuring
+                ),
+                vm,
+                toolsState,
+                tools,
+            )
         }
         entry<LinuxRoute.Ports> {
             val vm = metroViewModel<LinuxPortsViewModel>()

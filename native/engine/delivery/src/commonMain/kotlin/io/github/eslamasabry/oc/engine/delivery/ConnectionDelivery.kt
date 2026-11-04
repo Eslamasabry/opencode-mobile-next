@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.engine.delivery
 
-import io.github.eslamasabry.oc.core.model.PromptAgentMention
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
@@ -21,6 +20,7 @@ import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.domain.events.RunOutcome
 import io.github.eslamasabry.oc.core.model.transcript.Role
 import io.github.eslamasabry.oc.core.model.ModelSelection
+import io.github.eslamasabry.oc.core.model.PromptAgentMention
 import io.github.eslamasabry.oc.core.model.PromptAttachment
 import io.github.eslamasabry.oc.core.model.ServerProfile
 import io.github.eslamasabry.oc.engine.delivery.port.AutomationPolicy
@@ -54,6 +54,14 @@ public class DeliveryStorage(
 @ContributesTo(AppScope::class)
 public interface DeliveryStorageBindings {
     @Multibinds(allowEmpty = true) public val deliveryStores: Set<DeliveryStorage>
+    @Multibinds(allowEmpty = true) public val interactiveSendChecks: Set<InteractiveSendCheck>
+}
+
+/**
+ * Platform admission before interactive work, including explicit queue retries. No server mutation.
+ */
+public fun interface InteractiveSendCheck {
+    public suspend fun check(profile: ServerProfile): Outcome<Unit>
 }
 
 /** Connection-owned pipeline, shared by every entry and kept after an entry is destroyed. */
@@ -67,13 +75,24 @@ public class ConnectionDelivery(
     stores: Set<DeliveryStorage>,
     dispatchers: AppDispatchers,
     tracers: Set<PromptTracing> = emptySet(),
+    private val interactiveSendChecks: Set<InteractiveSendCheck> = emptySet(),
 ) {
     private val tracing: PromptTracing? = tracers.firstOrNull()
     private val running = MutableStateFlow<Set<ConversationRef>>(emptySet())
     private val stopped = MutableStateFlow<Set<ConversationRef>>(emptySet())
     public val stoppedByPerson: kotlinx.coroutines.flow.StateFlow<Set<ConversationRef>> = stopped
     private val requestedStop = MutableStateFlow<Set<ConversationRef>>(emptySet())
-    private val link = GatewaySendLink(profile.id, profile.origin.toString(), gateway, tracing)
+
+    private suspend fun admission(profile: ServerProfile): Outcome<Unit> {
+        for (check in interactiveSendChecks) {
+            val result = check.check(profile)
+            if (result is Outcome.Failed) return result
+        }
+        return Outcome.Ok(Unit)
+    }
+
+    private val link =
+        GatewaySendLink(profile.id, profile.origin.toString(), gateway, tracing) { admission(profile) }
     private val connection =
         object : DeliveryConnection {
             override val link = MutableStateFlow<SendLink?>(this@ConnectionDelivery.link)
@@ -91,7 +110,9 @@ public class ConnectionDelivery(
                         connects = n
                         status = s
                         connection.link.value =
-                            GatewaySendLink(profile.id, profile.origin.toString(), gateway, tracing)
+                            GatewaySendLink(profile.id, profile.origin.toString(), gateway, tracing) {
+                                admission(profile)
+                            }
                     }
                 }
         }
@@ -157,21 +178,27 @@ public class ConnectionDelivery(
         if (!busy) engine?.turnEnded(ref)
     }
 
-    /** A picker change under the conversation's send-selection lock (Codex composer #3); no engine: runs as is. */
+    /**
+     * A picker change under the conversation's send-selection lock (Codex composer #3); no engine:
+     * runs as is.
+     */
     public suspend fun <T> withSelection(ref: ConversationRef, block: suspend () -> T): T =
         engine?.withSelection(ref, block) ?: block()
 
     /**
-     * Only the durable pipeline may accept; the caller keeps its draft on any refusal. [attachments] and
-     * [model] ride the same request: the files are snapshotted immutably and the choice is applied before
-     * the prompt is admitted to the wire.
+     * Only the durable pipeline may accept; the caller keeps its draft on any refusal.
+     * [attachments] and [model] ride the same request: the files are snapshotted immutably and the
+     * choice is applied before the prompt is admitted to the wire.
      */
     public suspend fun send(
         ref: ConversationRef,
         text: String,
         attachments: ImmutableList<PromptAttachment> = persistentListOf(),
         model: ModelSelection? = null,
-        /** Sub-agent `@name` mentions in [text] (Codex composer #6; OC2 sends them as the prompt's agents). */
+        /**
+         * Sub-agent `@name` mentions in [text] (Codex composer #6; OC2 sends them as the prompt's
+         * agents).
+         */
         mentions: ImmutableList<PromptAgentMention> = persistentListOf(),
     ): Outcome<LocalSendId> {
         val engine = engine ?: return Outcome.Failed(Failure.StorageRefused())
@@ -180,6 +207,8 @@ public class ConnectionDelivery(
             is Outcome.Ok ->
                 if (undo.value) return Outcome.Failed(Failure.Refused(RefusalReason.UndoUnresolved))
         }
-        return engine.send(SendRequest(ref, text, attachments = attachments, model = model, mentions = mentions))
+        return engine.send(
+            SendRequest(ref, text, attachments = attachments, model = model, mentions = mentions)
+        )
     }
 }

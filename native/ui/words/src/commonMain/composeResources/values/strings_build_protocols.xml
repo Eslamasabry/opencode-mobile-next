@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Unit BUILD-PROTOCOLS: Settings › Agents › a computer's tools page (update agents, import from Claude Code). -->
+<resources>
+    <string name="computerToolsOpen">Update and import</string>
+</resources>

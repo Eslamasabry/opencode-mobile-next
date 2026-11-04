@@ -1,0 +1,10 @@
+<resources>
+    <string name="monitorServerUnavailable">تعذّر فحص هذا الخادم. افتح المحادثة لمراجعة الطلبات.</string>
+    <string name="monitorServerWifi">الفحص عبر واي فاي فقط</string>
+    <string name="monitorServerCheckInOff">تذكير المهام الطويلة: متوقف · اضغط للتغيير</string>
+    <string name="monitorServerCheckInMinutes">التذكير بعد %1$d دقيقة · اضغط للتغيير</string>
+    <string name="monitorServerWaiting">بانتظار الفحص التالي.</string>
+    <string name="monitorServerCurrent">تم فحص الطلبات.</string>
+    <string name="monitorServerPaused">الفحص متوقف مؤقتًا. افتح التطبيق أو استأنف اتصال الخلفية.</string>
+    <string name="monitorServerWifiRequired">بانتظار واي فاي.</string>
+</resources>

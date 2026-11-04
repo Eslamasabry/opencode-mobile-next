@@ -45,6 +45,9 @@ public interface AgentsActions {
 
     public fun newConversation(id: ProfileId)
 
+    /** BUILD-PROTOCOLS: opens the computer's page (update its agents, import Claude Code conversations). */
+    public fun openComputer(id: ProfileId) {}
+
     public fun installPhone(id: String) {}
 
     public fun cancelPhoneInstall() {}

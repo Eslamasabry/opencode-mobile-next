@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="voice_download_title">Voice setup</string>
+    <string name="voice_download_downloading">Downloading voice pack</string>
+    <string name="voice_download_verifying">Preparing voice input</string>
+    <string name="voice_download_complete">Voice input is ready</string>
+    <string name="voice_download_failed">Voice setup failed. Open the app to try again.</string>
+</resources>
