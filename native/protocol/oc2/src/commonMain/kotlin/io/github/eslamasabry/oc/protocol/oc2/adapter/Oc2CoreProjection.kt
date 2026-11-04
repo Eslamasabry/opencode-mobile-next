@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.core.common.ids.WorkspaceId
 import io.github.eslamasabry.oc.core.domain.events.DeltaField
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.domain.events.HintKind
+import io.github.eslamasabry.oc.protocol.oc2.wire.Oc2ToolResultItem
 import io.github.eslamasabry.oc.core.domain.events.InboxChange
 import io.github.eslamasabry.oc.core.domain.events.InstallationKind
 import io.github.eslamasabry.oc.core.domain.events.InterruptReason
@@ -34,10 +35,10 @@ import io.github.eslamasabry.oc.core.model.transcript.MessageInfo
 import io.github.eslamasabry.oc.core.model.transcript.MsgTime
 import io.github.eslamasabry.oc.core.model.transcript.Part
 import io.github.eslamasabry.oc.core.model.transcript.PartType
+import io.github.eslamasabry.oc.core.model.transcript.ToolSegment
 import io.github.eslamasabry.oc.core.model.transcript.Role
 import io.github.eslamasabry.oc.core.model.transcript.Tokens
 import io.github.eslamasabry.oc.core.model.transcript.ToolOutputFile
-import io.github.eslamasabry.oc.core.model.transcript.ToolSegment
 import io.github.eslamasabry.oc.core.model.transcript.ToolState
 import io.github.eslamasabry.oc.core.model.transcript.ToolStatus
 import io.github.eslamasabry.oc.protocol.oc2.wire.Oc2FormField
@@ -45,7 +46,6 @@ import io.github.eslamasabry.oc.protocol.oc2.wire.Oc2FormInfo
 import io.github.eslamasabry.oc.protocol.oc2.wire.Oc2ModelRef
 import io.github.eslamasabry.oc.protocol.oc2.wire.Oc2PermissionRequest
 import io.github.eslamasabry.oc.protocol.oc2.wire.Oc2Tokens
-import io.github.eslamasabry.oc.protocol.oc2.wire.Oc2ToolResultItem
 import io.github.eslamasabry.oc.protocol.oc2.wire.Oc2Wire
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
@@ -310,7 +310,7 @@ internal class Oc2CoreProjection(private val redact: (String) -> Redacted) {
                     }
                     .toImmutableList(),
             segments =
-                segments
+                content
                     .mapNotNull { item ->
                         when (item) {
                             is Oc2ToolResultItem.Text -> ToolSegment.Text(item.text)

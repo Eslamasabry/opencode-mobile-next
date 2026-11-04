@@ -358,6 +358,7 @@ class PreviewRuntime(
                 io.github.eslamasabry.oc.engine.integrations.quota.InAppQuotaCollector.register(
                     this
                 )
+                AndroidProfileMonitoring.registerKeys(this)
                 registerSecret("pw.", "profiles")
                 registerSecret("oc.codexToken.", "profiles")
             }

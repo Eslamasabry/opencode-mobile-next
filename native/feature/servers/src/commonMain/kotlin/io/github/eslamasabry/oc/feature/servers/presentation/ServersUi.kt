@@ -13,6 +13,7 @@ import kotlinx.collections.immutable.persistentListOf
 public data class ServersUi(
     val servers: ImmutableList<SavedServer> = persistentListOf(),
     val busy: Boolean = false,
+    val monitoring: Map<ProfileId, ServerMonitorUi> = emptyMap(),
     val newConversation: Boolean = false,
     val cleartextAllowed: Boolean = false,
     val issue: ServerIssue? = null,
@@ -37,6 +38,12 @@ public enum class ServerIssue {
 }
 
 public interface ServersActions {
+    public fun monitor(id: ProfileId, enabled: Boolean) {}
+
+    public fun monitorWifi(id: ProfileId, enabled: Boolean) {}
+
+    public fun monitorCheckIn(id: ProfileId, minutes: Int?) {}
+
     public fun back()
 
     public fun allowCleartext(allowed: Boolean, address: String)

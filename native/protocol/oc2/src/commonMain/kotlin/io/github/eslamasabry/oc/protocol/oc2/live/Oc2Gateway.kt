@@ -36,8 +36,8 @@ import kotlinx.serialization.json.*
 
 /** Every mutation makes exactly one request. An uncertain prompt receipt is never replayed. */
 internal class Oc2Gateway(
-    private val net: NetClient,
-    private val origin: ServerOrigin,
+    internal val net: NetClient,
+    internal val origin: ServerOrigin,
     private val credentials: ConnectionCredentials,
     private val clock: Clock,
     private val redactor: Redactor,
@@ -269,7 +269,7 @@ internal class Oc2Gateway(
         credentials.secret?.let(redactor::registerSecret)
     }
 
-    private val auth =
+    internal val auth =
         credentials.secret?.let {
             val token =
                 Base64.encode("${credentials.username ?: "opencode"}:$it".encodeToByteArray())
@@ -382,11 +382,10 @@ internal class Oc2Gateway(
         }
         val settled = dialect.value ?: return Failure.UnreadableReply().failed()
         val route = settled.route(path, verb, body, query)
-        route.removedFeature?.let {
-            return Failure.Unavailable(FeatureId(it)).failed()
-        }
+        // dialect.dart Api2RemovedInStable: fail clearly, nothing is sent.
+        route.removed?.let { return Failure.Unavailable(FeatureId(it)).failed() }
         return rawJson(route.path, route.method, route.body, route.query, headers).map {
-            settled.response(path, verb, it)
+            settled.response(verb, path, it)
         }
     }
 
@@ -401,9 +400,8 @@ internal class Oc2Gateway(
         }
         val settled = dialect.value ?: return Failure.UnreadableReply().failed()
         val route = settled.route(path, HttpMethod.Get, null, query)
-        route.removedFeature?.let {
-            return Failure.Unavailable(FeatureId(it)).failed()
-        }
+        // dialect.dart Api2RemovedInStable: fail clearly, nothing is sent.
+        route.removed?.let { return Failure.Unavailable(FeatureId(it)).failed() }
         return net.exchange(
             { request(route.path, route.method, route.query) },
             readFailure = ::readFailure,
@@ -542,27 +540,31 @@ internal class Oc2Gateway(
             fromInfo = true
             response = rawJson("/info")
         }
+        // B-PROTO-021 (Flutter unexpectedHealthShapeTag): an answer that is not an OpenCode 2 health shape (no
+        // version, an OpenCode 1 version, an HTML page) is the re-detection signal, not a plain unreadable reply.
+        val mismatch = Failure.Incompatible(IncompatibleKind.ProtocolMismatch)
         when (val result = response) {
-            is Outcome.Failed -> result
+            is Outcome.Failed ->
+                if (result.failure is Failure.UnreadableReply) mismatch.failed() else result
             is Outcome.Ok -> {
                 val obj =
                     data(result.value) as? JsonObject
-                        ?: return@withLock Failure.UnreadableReply().failed()
+                        ?: return@withLock mismatch.failed()
                 val version = obj.str("version")
                 val detected =
                     Oc2Dialect.ofVersion(version)
-                        ?: return@withLock Failure.UnreadableReply().failed()
+                        ?: return@withLock mismatch.failed()
                 if (fromInfo && detected != Oc2Dialect.Stable)
-                    return@withLock Failure.UnreadableReply().failed()
+                    return@withLock mismatch.failed()
                 val healthy =
                     if (fromInfo) true
                     else
                         (obj["healthy"] as? JsonPrimitive)?.booleanOrNull
-                            ?: return@withLock Failure.UnreadableReply().failed()
+                            ?: return@withLock mismatch.failed()
                 // A changed generation is not silently installed under an already pinned
                 // connection.
                 if (known != null && known != detected)
-                    return@withLock Failure.UnreadableReply().failed()
+                    return@withLock mismatch.failed()
                 if (healthy) dialect.value = detected
                 Health(healthy, version).ok()
             }
@@ -584,9 +586,11 @@ internal class Oc2Gateway(
             is Outcome.Failed -> {
                 val failure = result.failure
                 when {
-                    failure is Failure.Busy && failure.kind == BusyKind.Overloaded ->
-                        Failure.Busy(BusyKind.Starting).failed()
-                    failure is Failure.NotFound || failure is Failure.UnreadableReply ->
+                    failure is Failure.Busy && failure.kind == BusyKind.Overloaded -> Failure.Busy(BusyKind.Starting).failed()
+                    failure is Failure.NotFound ||
+                        failure is Failure.UnreadableReply ||
+                        (failure is Failure.Incompatible &&
+                            failure.kind == IncompatibleKind.ProtocolMismatch) ->
                         if (isLegacyServer())
                             Failure.Incompatible(IncompatibleKind.LegacyOpenCode1).failed()
                         else result
@@ -1147,12 +1151,6 @@ internal class Oc2Gateway(
     override suspend fun selectTerminalShell(value: String): Outcome<Unit> =
         Oc2HostTools(this, location.value).selectShell(value)
 
-    override suspend fun webSearchProviders(): Outcome<ImmutableList<WebSearchProvider>> =
-        Oc2WebSearch(this, location.value).providers()
-
-    override suspend fun searchWeb(query: String, providerId: String): Outcome<WebSearchResponse> =
-        Oc2WebSearch(this, location.value).search(query, providerId)
-
     private fun locationQuery(at: ServerLocation = location.value): Map<String, String?> =
         mapOf(
             "location[directory]" to at.directory,
@@ -1441,22 +1439,41 @@ internal class Oc2Gateway(
         at: ServerLocation,
     ): Outcome<Pair<ByteArray, String?>> {
         if (dialect.value == null) {
-            val checked = health()
-            if (checked is Outcome.Failed) return checked
+            when (val checked = health()) {
+                is Outcome.Failed -> return checked
+                is Outcome.Ok -> if (!checked.value.healthy) return Failure.UnreadableReply().failed()
+            }
         }
         val settled = dialect.value ?: return Failure.UnreadableReply().failed()
         val route = settled.route(path, HttpMethod.Get, null, locationQuery(at))
-        route.removedFeature?.let {
-            return Failure.Unavailable(FeatureId(it)).failed()
+        route.removed?.let { return Failure.Unavailable(FeatureId(it)).failed() }
+        val response =
+            net.exchange(
+                { request(route.path, route.method, route.query) },
+                readFailure = ::readFailure,
+            ) { reply ->
+                reply.bodyAsBytes() to
+                    reply.headers[HttpHeaders.ContentType]?.substringBefore(';')?.trim()
+            }
+        if (response is Outcome.Failed) {
+            val failure = response.failure
+            if (auth == null && failure is Failure.SignIn && failure.why == SignInWhy.PasswordRejected) {
+                return Failure.SignIn(SignInWhy.PasswordMissing, failure.details).failed()
+            }
         }
-        return net.exchange(
-            { request(route.path, route.method, route.query) },
-            readFailure = ::readFailure,
-        ) { reply ->
-            reply.bodyAsBytes() to
-                reply.headers[HttpHeaders.ContentType]?.substringBefore(';')?.trim()
-        }
+        return response
     }
+
+    // ---- Stable-line features and operations (new files Oc2Operations / Oc2WebSearch / Oc2HistoryMigration /
+    // Oc2Terminal; Flutter lib/api2/gateway_operations). Each delegates; the request shapes live there.
+
+    override suspend fun webSearchProviders(): Outcome<ImmutableList<WebSearchProvider>> = searchProviders()
+
+    override suspend fun searchWeb(query: String, providerId: String): Outcome<WebSearchResponse> =
+        search(query, providerId)
+
+    /** B-PROTO-063: `GET /experimental/migration/v1`; null when the server has nothing to report. */
+    suspend fun historyMigrationStatus(): Outcome<HistoryMigrationStatus?> = historyMigrationStatusRead()
 
     override suspend fun close() {
         try {

@@ -7,6 +7,10 @@ import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ok
+import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -17,23 +21,22 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
-import kotlin.time.Clock
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 
 /**
- * Port of lib/builtin/setup/setup_engine.dart and its parts start.dart, poll.dart (the phone setup engine, built-in
- * host). [run] checks every component first and skips what is installed, so each run is also a resume; the rest goes
- * to the native job runner over [SetupJobHost], which keeps going in the background and writes setup.json. The engine
- * polls that into [progress]. Starting OpenCode is the job's last step (`start`): the native job waits while
- * [finisher] starts the server and connects.
+ * Port of lib/builtin/setup/setup_engine.dart and its parts start.dart, poll.dart (the phone setup
+ * engine, built-in host). [run] checks every component first and skips what is installed, so each
+ * run is also a resume; the rest goes to the native job runner over [SetupJobHost], which keeps
+ * going in the background and writes setup.json. The engine polls that into [progress]. Starting
+ * OpenCode is the job's last step (`start`): the native job waits while [finisher] starts the
+ * server and connects.
  *
- * Confined to one serial lane: every call and [scope] must run on the same serial dispatcher. A second [run] while one
- * is starting returns at once (Flutter's `_starting`), and [cancel] never waits for a start that is still checking.
+ * Confined to one serial lane: every call and [scope] must run on the same serial dispatcher. A
+ * second [run] while one is starting returns at once (Flutter's `_starting`), and [cancel] never
+ * waits for a start that is still checking.
  *
- * Not ported here: app-side components (the voice model), the Termux host's uncertain hand-over, and the process
- * budget wait (`:engine:runtime` budget owns it; the binding admits before calling [run]).
+ * Not ported here: app-side components (the voice model), the Termux host's uncertain hand-over,
+ * and the process budget wait (`:engine:runtime` budget owns it; the binding admits before calling
+ * [run]).
  */
 public class SetupEngine(
     private val host: SetupJobHost,
@@ -50,12 +53,17 @@ public class SetupEngine(
     private val idlePollInterval: Duration = 60.seconds,
     private val readTimeout: Duration = 10.seconds,
     private val foreground: () -> Boolean = { true },
+    /** Receives only fixed timing names, component ids and states, never output or credentials. */
+    private val timing: ((SetupTiming) -> Unit)? = null,
 ) {
     public val hostKind: SetupHostKind = SetupHostKind.Builtin
 
     private val _progress = MutableStateFlow(SetupProgress.Idle)
 
-    /** The live progress of the current or last job. Collecting it keeps an idle engine reading (idle interval). */
+    /**
+     * The live progress of the current or last job. Collecting it keeps an idle engine reading
+     * (idle interval).
+     */
     public val progress: StateFlow<SetupProgress> = _progress.asStateFlow()
 
     private val _toolsChanged = MutableStateFlow(0)
@@ -78,50 +86,72 @@ public class SetupEngine(
     private var pollIdle = false
     private var disposed = false
     private val watcher: Job
+    private val traced = mutableSetOf<String>()
+
+    /**
+     * Removal and other external tool changes invalidate in-flight reads before notifying every
+     * consumer.
+     */
+    public fun invalidateTools() {
+        _toolsChanged.value++
+    }
 
     init {
         watcher = scope.launch {
-            _progress.subscriptionCount.map { it > 0 }.distinctUntilChanged().collect { watched ->
-                if (watched) {
-                    ensurePolling()
-                } else if (pollIdle) {
-                    // The last page stopped watching: an idle wait has nothing left to show.
-                    poll?.cancel()
-                    poll = null
-                    pollIdle = false
+            _progress.subscriptionCount
+                .map { it > 0 }
+                .distinctUntilChanged()
+                .collect { watched ->
+                    if (watched) {
+                        ensurePolling()
+                    } else if (pollIdle) {
+                        // The last page stopped watching: an idle wait has nothing left to show.
+                        poll?.cancel()
+                        poll = null
+                        pollIdle = false
+                    }
                 }
-            }
         }
     }
 
     /** Every component the app knows, in dependency order. */
-    public val registry: List<SetupComponent> get() = registryPort.components(emptyMap())
+    public val registry: List<SetupComponent>
+        get() = registryPort.components(emptyMap())
 
-    private val jobRunning: Boolean get() = record?.state == "running"
+    private val jobRunning: Boolean
+        get() = record?.state == "running"
 
     private fun publish(next: SetupProgress) {
         val ended = next.endedBefore(_progress.value)
         _progress.value = next
-        if (ended) _toolsChanged.value++
+        if (ended) invalidateTools()
     }
 
-    /** Starts (or continues) a job for [ids] plus what they depend on. Failures are published, never thrown. */
-    public suspend fun run(ids: Set<String>, params: Map<String, Map<String, String>> = emptyMap()) {
+    /**
+     * Starts (or continues) a job for [ids] plus what they depend on. Failures are published, never
+     * thrown.
+     */
+    public suspend fun run(
+        ids: Set<String>,
+        params: Map<String, Map<String, String>> = emptyMap(),
+    ) {
         if (starting) return
         starting = true
         cancelRequested = false
         try {
-            val last = when (val read = read()) {
-                is Outcome.Failed -> {
-                    failStart(readError(read.failure))
-                    return
+            val last =
+                when (val read = read()) {
+                    is Outcome.Failed -> {
+                        failStart(readError(read.failure))
+                        return
+                    }
+                    is Outcome.Ok -> read.value
                 }
-                is Outcome.Ok -> read.value
-            }
             if (last == null) {
                 // An unreadable host must never be mistaken for a fresh setup.
-                val status = withTimeoutOrNull(readTimeout) { guarded { host.linuxInstalled() } }
-                    ?: Failure.TimedOut().failed()
+                val status =
+                    withTimeoutOrNull(readTimeout) { guarded { host.linuxInstalled() } }
+                        ?: Failure.TimedOut().failed()
                 if (status is Outcome.Failed) {
                     failStart(readError(status.failure))
                     return
@@ -152,12 +182,14 @@ public class SetupEngine(
 
     /** Reads the persisted job (after an app restart) into [progress]. */
     public suspend fun restore(): Outcome<Unit> {
-        val saved = when (val read = read()) {
-            is Outcome.Failed -> return read
-            is Outcome.Ok -> read.value
-        }
+        val saved =
+            when (val read = read()) {
+                is Outcome.Failed -> return read
+                is Outcome.Ok -> read.value
+            }
         if (saved == null) {
-            // No job on disk: none yet, or Linux was removed with it. A finished or stopped job still held from
+            // No job on disk: none yet, or Linux was removed with it. A finished or stopped job
+            // still held from
             // before is no longer true, so the screens must not say "ready" from it (N1-5).
             val held = _progress.value.state
             if (!starting && held != SetupState.Idle && held != SetupState.Running) {
@@ -171,7 +203,10 @@ public class SetupEngine(
         return Unit.ok()
     }
 
-    /** Continues the saved selection and params after a cold restart; a running job is observed, never duplicated. */
+    /**
+     * Continues the saved selection and params after a cold restart; a running job is observed,
+     * never duplicated.
+     */
     public suspend fun resume() {
         val saved = (read() as? Outcome.Ok)?.value ?: return
         show(saved)
@@ -182,13 +217,16 @@ public class SetupEngine(
         }
     }
 
-    /** Ids of optional components installed now; an incomplete probe is a failure, never absence. */
+    /**
+     * Ids of optional components installed now; an incomplete probe is a failure, never absence.
+     */
     public suspend fun installedOptional(): Outcome<Set<String>> {
         val optional = registry.filter { !it.required && !it.jobStep }
         if (optional.isEmpty()) return emptySet<String>().ok()
         return when (val checks = check(optional, requireComplete = true)) {
             is Checks.Failed -> Failure.Runtime(RuntimeProblem.Generic).failed()
-            is Checks.Ok -> optional.filter { checks.results[it.id]?.ok == true }.map { it.id }.toSet().ok()
+            is Checks.Ok ->
+                optional.filter { checks.results[it.id]?.ok == true }.map { it.id }.toSet().ok()
         }
     }
 
@@ -199,7 +237,8 @@ public class SetupEngine(
         watcher.cancel()
     }
 
-    // ---- start ---------------------------------------------------------------------------------------------------
+    // ---- start
+    // ---------------------------------------------------------------------------------------------------
 
     private suspend fun start(ids: Set<String>, params: Map<String, Map<String, String>>) {
         val all = registryPort.components(params)
@@ -212,45 +251,60 @@ public class SetupEngine(
         resetFloors(jobId)
         emitLocal(
             jobId,
-            job.associate { it.id to ComponentProgress(it.id, if (it.jobStep) ComponentState.Pending else ComponentState.Checking) },
+            job.associate {
+                it.id to
+                    ComponentProgress(
+                        it.id,
+                        if (it.jobStep) ComponentState.Pending else ComponentState.Checking,
+                    )
+            },
             job,
         )
         // The resume rule: whatever its check finds installed is not redone.
-        val checks = when (val result = check(job, requireComplete = false)) {
-            is Checks.Failed -> {
-                emitLocal(jobId, emptyMap(), job, SetupState.Failed, result.error)
-                return
+        val checks =
+            when (val result = check(job, requireComplete = false)) {
+                is Checks.Failed -> {
+                    emitLocal(jobId, emptyMap(), job, SetupState.Failed, result.error)
+                    return
+                }
+                is Checks.Ok -> result.results
             }
-            is Checks.Ok -> result.results
-        }
         if (cancelRequested) {
             emitLocal(jobId, afterChecks(job, checks), job, SetupState.Cancelled)
             return
         }
         emitLocal(jobId, afterChecks(job, checks), job)
         val runtime = runtimeWireName(params[SetupComponentIds.OPENCODE]?.get("runtime"))
-        val openCodeChanged = job.any { it.id == SetupComponentIds.OPENCODE } &&
-            checks[SetupComponentIds.OPENCODE]?.ok != true
+        val openCodeChanged =
+            job.any { it.id == SetupComponentIds.OPENCODE } &&
+                checks[SetupComponentIds.OPENCODE]?.ok != true
         val specs = job.map { spec(it, checks[it.id], runtime, openCodeChanged) }
-        val texts = SetupNotificationTexts(
-            channel = words.notificationChannel,
-            title = if (localAdding.isEmpty()) {
-                words.notificationTitle
-            } else {
-                words.addingTitle(localAdding.mapNotNull { id -> all.firstOrNull { it.id == id }?.shortTitle })
-            },
-            progress = words.notificationProgress,
-            done = words.notificationDone,
-            stopped = words.notificationStopped,
-        )
+        val texts =
+            SetupNotificationTexts(
+                channel = words.notificationChannel,
+                title =
+                    if (localAdding.isEmpty()) {
+                        words.notificationTitle
+                    } else {
+                        words.addingTitle(
+                            localAdding.mapNotNull { id ->
+                                all.firstOrNull { it.id == id }?.shortTitle
+                            }
+                        )
+                    },
+                progress = words.notificationProgress,
+                done = words.notificationDone,
+                stopped = words.notificationStopped,
+            )
         val handed = guarded { host.startSetup(SetupJobStart(jobId, specs, params, texts)) }
         if (handed is Outcome.Failed) {
-            val error = when {
-                SetupPlanning.isOwnershipFailure(handed.failure) -> SetupError.OwnershipUnknown
-                (handed.failure as? Failure.Runtime)?.problem == RuntimeProblem.SetupPersistence ->
-                    SetupError.Install("OpenCode")
-                else -> SetupError.HostRefused
-            }
+            val error =
+                when {
+                    SetupPlanning.isOwnershipFailure(handed.failure) -> SetupError.OwnershipUnknown
+                    (handed.failure as? Failure.Runtime)?.problem ==
+                        RuntimeProblem.SetupPersistence -> SetupError.PersistenceFailure
+                    else -> SetupError.HostRefused
+                }
             emitLocal(jobId, afterChecks(job, checks), job, SetupState.Failed, error)
             return
         }
@@ -268,11 +322,18 @@ public class SetupEngine(
     private fun failStart(error: SetupError) {
         val jobId = startingJobId ?: "setup-${nowMicros()}"
         val shown = _progress.value.components.associateBy { it.id }
-        emitLocal(jobId, jobComponents.mapNotNull { c -> shown[c.id]?.let { c.id to it } }.toMap(), jobComponents, SetupState.Failed, error)
+        emitLocal(
+            jobId,
+            jobComponents.mapNotNull { c -> shown[c.id]?.let { c.id to it } }.toMap(),
+            jobComponents,
+            SetupState.Failed,
+            error,
+        )
     }
 
     private fun readError(failure: Failure): SetupError =
-        if (SetupPlanning.isOwnershipFailure(failure)) SetupError.OwnershipUnknown else SetupError.StatusUnreadable
+        if (SetupPlanning.isOwnershipFailure(failure)) SetupError.OwnershipUnknown
+        else SetupError.StatusUnreadable
 
     private fun spec(
         component: SetupComponent,
@@ -280,28 +341,46 @@ public class SetupEngine(
         runtime: String,
         openCodeChanged: Boolean,
     ): SetupStepSpec {
-        val data = mapOf(
-            "requiredFreeBytes" to
-                SetupPreflight.requiredFreeBytes(component.downloadBytes ?: 0, component.installedBytes).toString(),
-        )
-        val base = SetupStepSpec(id = component.id, weight = component.estimatedSeconds, data = data)
+        val data =
+            mapOf(
+                "requiredFreeBytes" to
+                    SetupPreflight.requiredFreeBytes(
+                            component.downloadBytes ?: 0,
+                            component.installedBytes,
+                        )
+                        .toString()
+            )
+        val base =
+            SetupStepSpec(id = component.id, weight = component.estimatedSeconds, data = data)
         return when {
             check?.ok == true -> base.copy(skipped = true, version = check.version)
-            component.jobStep -> base.copy(
-                step = true,
-                stage = words.stageStarting,
-                data = data + mapOf("runtime" to runtime, "openCodeChanged" to openCodeChanged.toString()),
-            )
-            component.native -> base.copy(
-                native = true,
-                labels = mapOf("download" to words.stageDownloadingLinux, "unpack" to words.stageUnpackingLinux),
-            )
+            component.jobStep ->
+                base.copy(
+                    step = true,
+                    stage = words.stageStarting,
+                    data =
+                        data +
+                            mapOf(
+                                "runtime" to runtime,
+                                "openCodeChanged" to openCodeChanged.toString(),
+                            ),
+                )
+            component.native ->
+                base.copy(
+                    native = true,
+                    labels =
+                        mapOf(
+                            "download" to words.stageDownloadingLinux,
+                            "unpack" to words.stageUnpackingLinux,
+                        ),
+                )
             // An interrupted step runs again by itself (SetupStepRetry.kt); its row says so.
-            else -> base.copy(
-                script = scriptPrelude + component.installScript,
-                labels = mapOf("retry" to words.stageRetrying),
-                agentUser = component.agentUser,
-            )
+            else ->
+                base.copy(
+                    script = scriptPrelude + component.installScript,
+                    labels = mapOf("retry" to words.stageRetrying),
+                    agentUser = component.agentUser,
+                )
         }
     }
 
@@ -311,26 +390,63 @@ public class SetupEngine(
         data class Failed(val error: SetupError) : Checks
     }
 
-    /** The Linux base by asking Android whether it is installed, the rest in one proot run per user. */
+    /**
+     * The Linux base by asking Android whether it is installed, the rest in one proot run per user.
+     */
     private suspend fun check(job: List<SetupComponent>, requireComplete: Boolean): Checks {
-        val installed = when (val status = guarded { host.linuxInstalled() }) {
-            is Outcome.Failed -> return Checks.Failed(hostError(status.failure))
-            is Outcome.Ok -> status.value
+        val started = clock.now().toEpochMilliseconds()
+        var failed = true
+        try {
+            val result = checkComponents(job, requireComplete)
+            failed = result is Checks.Failed
+            return result
+        } finally {
+            timing?.invoke(
+                SetupTiming(
+                    "setup.check",
+                    (clock.now().toEpochMilliseconds() - started).coerceAtLeast(0),
+                    mapOf("components" to job.size.toString()),
+                    failed,
+                )
+            )
         }
+    }
+
+    private suspend fun checkComponents(
+        job: List<SetupComponent>,
+        requireComplete: Boolean,
+    ): Checks {
+        val installed =
+            when (val status = guarded { host.linuxInstalled() }) {
+                is Outcome.Failed -> return Checks.Failed(hostError(status.failure))
+                is Outcome.Ok -> status.value
+            }
         // Nothing inside Ubuntu can pass before Ubuntu is there.
         if (!installed) return Checks.Ok(emptyMap())
         val results = LinkedHashMap<String, SetupCheckResult>()
         for (agentUser in listOf(false, true)) {
             val scripts = LinkedHashMap<String, String>()
             for (component in job) {
-                if (!component.jobStep && component.agentUser == agentUser && component.checkScript.isNotBlank()) {
+                if (
+                    !component.jobStep &&
+                        component.agentUser == agentUser &&
+                        component.checkScript.isNotBlank()
+                ) {
                     scripts[component.id] = component.checkScript
                 }
             }
             if (scripts.isEmpty()) continue
-            when (val run = guarded { host.runCheck(SetupPlanning.combinedCheckScript(scripts), agentUser) }) {
+            when (
+                val run = guarded {
+                    host.runCheck(SetupPlanning.combinedCheckScript(scripts), agentUser)
+                }
+            ) {
                 is Outcome.Failed -> {
-                    if (requireComplete || !agentUser || SetupPlanning.isOwnershipFailure(run.failure)) {
+                    if (
+                        requireComplete ||
+                            !agentUser ||
+                            SetupPlanning.isOwnershipFailure(run.failure)
+                    ) {
                         return Checks.Failed(hostError(run.failure))
                     }
                     // The first agent install has not created oc yet: its checks stay pending.
@@ -353,17 +469,21 @@ public class SetupEngine(
     }
 
     private fun hostError(failure: Failure): SetupError =
-        if (SetupPlanning.isOwnershipFailure(failure)) SetupError.OwnershipUnknown else SetupError.HostRefused
+        if (SetupPlanning.isOwnershipFailure(failure)) SetupError.OwnershipUnknown
+        else SetupError.HostRefused
 
-    private fun afterChecks(job: List<SetupComponent>, checks: Map<String, SetupCheckResult>): Map<String, ComponentProgress> =
-        job.associate { component ->
-            val check = checks[component.id]
-            component.id to if (check?.ok == true) {
+    private fun afterChecks(
+        job: List<SetupComponent>,
+        checks: Map<String, SetupCheckResult>,
+    ): Map<String, ComponentProgress> = job.associate { component ->
+        val check = checks[component.id]
+        component.id to
+            if (check?.ok == true) {
                 ComponentProgress(component.id, ComponentState.Skipped, version = check.version)
             } else {
                 ComponentProgress(component.id, ComponentState.Pending)
             }
-        }
+    }
 
     private fun emitLocal(
         jobId: String,
@@ -372,7 +492,9 @@ public class SetupEngine(
         state: SetupState = SetupState.Running,
         error: SetupError? = null,
     ) {
-        val list = rows.map { components[it.id] ?: ComponentProgress(it.id, ComponentState.Pending) }
+        val list = rows.map {
+            components[it.id] ?: ComponentProgress(it.id, ComponentState.Pending)
+        }
         publish(
             SetupProgress(
                 jobId = jobId,
@@ -382,13 +504,17 @@ public class SetupEngine(
                 error = error,
                 firstSetup = localFirstSetup,
                 adding = localAdding,
-            ),
+            )
         )
     }
 
-    // ---- polling -------------------------------------------------------------------------------------------------
+    // ---- polling
+    // -------------------------------------------------------------------------------------------------
 
-    /** Reads within [pollInterval]: a job started or a page began watching. Brings an idle wait forward. */
+    /**
+     * Reads within [pollInterval]: a job started or a page began watching. Brings an idle wait
+     * forward.
+     */
     private fun ensurePolling() {
         if (disposed) return
         val pending = poll
@@ -417,7 +543,8 @@ public class SetupEngine(
     }
 
     private suspend fun tick() {
-        // A watched engine with no job reads only while the app is in front. One bad read never ends polling.
+        // A watched engine with no job reads only while the app is in front. One bad read never
+        // ends polling.
         if (jobRunning || foreground()) refresh()
     }
 
@@ -425,7 +552,11 @@ public class SetupEngine(
         val current = (read() as? Outcome.Ok)?.value ?: return
         if (startingJobId != null && current.jobId != startingJobId) return
         show(current)
-        if (current.state == "running" && current.current == SetupComponentIds.START && finishing != current.jobId) {
+        if (
+            current.state == "running" &&
+                current.current == SetupComponentIds.START &&
+                finishing != current.jobId
+        ) {
             val step = current.component(SetupComponentIds.START)
             if (step != null && step.state == "running") {
                 finishing = current.jobId
@@ -437,44 +568,60 @@ public class SetupEngine(
     private suspend fun finish(job: SetupJobRecord, step: SetupJobComponent) {
         val version = job.component(SetupComponentIds.OPENCODE)?.version
         val start = finisher
-        val error: String? = if (start == null) {
-            START_UNAVAILABLE
-        } else {
-            val request = SetupFinishRequest(
-                host = hostKind,
-                runtime = runtimeWireName(step.data["runtime"]),
-                openCodeChanged = step.data["openCodeChanged"] == "true",
-                version = version,
-            )
-            when (val result = guarded { start.finish(request) }) {
-                is Outcome.Ok -> null
-                is Outcome.Failed -> when {
-                    SetupPlanning.isOwnershipFailure(result.failure) -> SetupPlanning.OWNERSHIP_UNKNOWN_CODE
-                    else -> redact(result.failure.details?.text ?: START_FAILED)
+        val error: String? =
+            if (start == null) {
+                START_UNAVAILABLE
+            } else {
+                val request =
+                    SetupFinishRequest(
+                        host = hostKind,
+                        runtime = runtimeWireName(step.data["runtime"]),
+                        openCodeChanged = step.data["openCodeChanged"] == "true",
+                        version = version,
+                    )
+                when (val result = guarded { start.finish(request) }) {
+                    is Outcome.Ok -> null
+                    is Outcome.Failed ->
+                        when {
+                            SetupPlanning.isOwnershipFailure(result.failure) ->
+                                SetupPlanning.OWNERSHIP_UNKNOWN_CODE
+                            else -> redact(result.failure.details?.text ?: START_FAILED)
+                        }
                 }
             }
-        }
         val completed = guarded {
-            host.completeStep(job.jobId, SetupComponentIds.START, error == null, error, version?.let(redact))
+            host.completeStep(
+                job.jobId,
+                SetupComponentIds.START,
+                error == null,
+                error,
+                version?.let(redact),
+            )
         }
         if (completed is Outcome.Failed) {
-            // The acknowledgement may have been lost: the next poll retries the idempotent finish on this same job.
+            // The acknowledgement may have been lost: the next poll retries the idempotent finish
+            // on this same job.
             finishing = null
             return
         }
         refresh()
     }
 
-    /** setup.json, read within [readTimeout]. An unreadable job is not evidence of a fresh install. */
+    /**
+     * setup.json, read within [readTimeout]. An unreadable job is not evidence of a fresh install.
+     */
     private suspend fun read(): Outcome<SetupJobRecord?> {
-        val answer = withTimeoutOrNull(readTimeout) { guarded { host.setupStatus() } }
-            ?: return Failure.TimedOut().failed()
-        val text = when (answer) {
-            is Outcome.Failed -> return answer
-            is Outcome.Ok -> answer.value
-        }
+        val answer =
+            withTimeoutOrNull(readTimeout) { guarded { host.setupStatus() } }
+                ?: return Failure.TimedOut().failed()
+        val text =
+            when (answer) {
+                is Outcome.Failed -> return answer
+                is Outcome.Ok -> answer.value
+            }
         val parsed = SetupJobRecord.parse(text)
-        if (text != null && text.isNotBlank() && parsed == null) return Failure.Runtime(RuntimeProblem.Generic).failed()
+        if (text != null && text.isNotBlank() && parsed == null)
+            return Failure.Runtime(RuntimeProblem.Generic).failed()
         if (parsed != null) {
             // Hostless records predate host selection and belong only to built-in.
             if ((parsed.host ?: SetupHostKind.Builtin.wireName) != hostKind.wireName) {
@@ -488,18 +635,66 @@ public class SetupEngine(
     private fun show(saved: SetupJobRecord) {
         val starting = startingJobId
         if (starting != null && saved.jobId != starting) return
-        if (jobComponents.isEmpty() || _progress.value.jobId != saved.jobId ||
-            jobComponents.size != saved.components.size
+        if (
+            jobComponents.isEmpty() ||
+                _progress.value.jobId != saved.jobId ||
+                jobComponents.size != saved.components.size
         ) {
             val all = registryPort.components(saved.params)
-            jobComponents = saved.components.map { row ->
-                all.firstOrNull { it.id == row.id } ?: SetupComponent(row.id, row.id, row.id, "", "")
-            }
+            jobComponents =
+                saved.components.map { row ->
+                    all.firstOrNull { it.id == row.id }
+                        ?: SetupComponent(row.id, row.id, row.id, "", "")
+                }
         }
         resetFloors(saved.jobId)
+        traceFinished(saved)
         publish(
-            SetupPlanning.progressFromRecord(saved, jobComponents, clock.now().toEpochMilliseconds(), redact, floors),
+            SetupPlanning.progressFromRecord(
+                saved,
+                jobComponents,
+                clock.now().toEpochMilliseconds(),
+                redact,
+                floors,
+            )
         )
+    }
+
+    private fun traceFinished(saved: SetupJobRecord) {
+        val recordTiming = timing ?: return
+        for (component in saved.components) {
+            val started = component.startedAt ?: continue
+            val ended = component.endedAt ?: continue
+            if (
+                component.state !in setOf("done", "failed") ||
+                    ended < started ||
+                    !traced.add("${saved.jobId}/${component.id}")
+            )
+                continue
+            recordTiming(
+                SetupTiming(
+                    "setup.component",
+                    ended - started,
+                    mapOf("id" to component.id),
+                    component.state == "failed",
+                )
+            )
+        }
+        if (
+            saved.state != "running" &&
+                saved.startedAt > 0 &&
+                saved.updatedAt >= saved.startedAt &&
+                traced.add("${saved.jobId}/")
+        ) {
+            recordTiming(
+                SetupTiming(
+                    "setup.job",
+                    saved.updatedAt - saved.startedAt,
+                    mapOf("state" to saved.state),
+                    saved.state != "done",
+                )
+            )
+        }
     }
 
     private fun resetFloors(jobId: String) {
@@ -513,7 +708,9 @@ public class SetupEngine(
         return now.epochSeconds * 1_000_000 + now.nanosecondsOfSecond / 1_000
     }
 
-    /** A port that throws instead of answering is a failure value here, never an escaped exception. */
+    /**
+     * A port that throws instead of answering is a failure value here, never an escaped exception.
+     */
     private suspend inline fun <T> guarded(block: () -> Outcome<T>): Outcome<T> =
         when (val result = attempt({ Failure.Unexpected(Redacted.shape(it)) }, block)) {
             is Outcome.Ok -> result.value
@@ -521,7 +718,10 @@ public class SetupEngine(
         }
 
     public companion object {
-        /** Persisted as the start step's error when no finisher is set (shown as [SetupError.CannotStart]). */
+        /**
+         * Persisted as the start step's error when no finisher is set (shown as
+         * [SetupError.CannotStart]).
+         */
         public const val START_UNAVAILABLE: String = "start_unavailable"
 
         /** Persisted when a finisher failed without details. */
@@ -529,6 +729,7 @@ public class SetupEngine(
 
         /** `TermuxRuntime.parse(...).wireName` for the values a job can hold. */
         internal fun runtimeWireName(value: String?): String =
-            if (value?.trim() == SetupPlanning.RUNTIME_OPENCODE2) SetupPlanning.RUNTIME_OPENCODE2 else "opencode1"
+            if (value?.trim() == SetupPlanning.RUNTIME_OPENCODE2) SetupPlanning.RUNTIME_OPENCODE2
+            else "opencode1"
     }
 }

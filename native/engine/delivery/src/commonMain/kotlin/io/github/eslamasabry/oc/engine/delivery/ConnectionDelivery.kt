@@ -61,6 +61,14 @@ public class DeliveryStorage(
 @ContributesTo(AppScope::class)
 public interface DeliveryStorageBindings {
     @Multibinds(allowEmpty = true) public val deliveryStores: Set<DeliveryStorage>
+    @Multibinds(allowEmpty = true) public val interactiveSendChecks: Set<InteractiveSendCheck>
+}
+
+/**
+ * Platform admission before interactive work, including explicit queue retries. No server mutation.
+ */
+public fun interface InteractiveSendCheck {
+    public suspend fun check(profile: ServerProfile): Outcome<Unit>
 }
 
 /** Connection-owned pipeline, shared by every entry and kept after an entry is destroyed. */
@@ -73,12 +81,23 @@ public class ConnectionDelivery(
     clock: Clock,
     stores: Set<DeliveryStorage>,
     dispatchers: AppDispatchers,
+    private val interactiveSendChecks: Set<InteractiveSendCheck> = emptySet(),
 ) {
     private val running = MutableStateFlow<Set<ConversationRef>>(emptySet())
     private val stopped = MutableStateFlow<Set<ConversationRef>>(emptySet())
     public val stoppedByPerson: kotlinx.coroutines.flow.StateFlow<Set<ConversationRef>> = stopped
     private val requestedStop = MutableStateFlow<Set<ConversationRef>>(emptySet())
-    private val link = GatewaySendLink(profile.id, profile.origin.toString(), gateway)
+
+    private suspend fun admission(profile: ServerProfile): Outcome<Unit> {
+        for (check in interactiveSendChecks) {
+            val result = check.check(profile)
+            if (result is Outcome.Failed) return result
+        }
+        return Outcome.Ok(Unit)
+    }
+
+    private val link =
+        GatewaySendLink(profile.id, profile.origin.toString(), gateway) { admission(profile) }
     private val connection =
         object : DeliveryConnection {
             override val link = MutableStateFlow<SendLink?>(this@ConnectionDelivery.link)
@@ -156,7 +175,9 @@ public class ConnectionDelivery(
                     status = s
                     if (changed) {
                         connection.link.value =
-                            GatewaySendLink(profile.id, profile.origin.toString(), gateway)
+                            GatewaySendLink(profile.id, profile.origin.toString(), gateway) {
+                                admission(profile)
+                            }
                         if (s == StreamStatus.Connected) {
                             // A reconnect reconciles admitted sends and receipts; marked/uncertain
                             // sends are never replayed.
