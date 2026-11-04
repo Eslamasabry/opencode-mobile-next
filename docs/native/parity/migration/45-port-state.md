@@ -1,4 +1,4 @@
-Already there: 6 | Ported now: 4 | Not needed: 5 | Blocked: 17
+Already there: 6 | Ported now: 5 | Not needed: 9 | Blocked: 22
 
 # Migration step 4: Flutter state and connection logic
 
@@ -6,7 +6,7 @@ Base: `b6c30a59983a145a4d9cf0bcc3d1ec0295c0d6bc`; branch `p12x/45-port-state`.
 
 Finish line: read all 87 assigned Flutter sources, map reachable native behavior, port missing runnable slices, and identify prerequisites which still prevent full-file parity. Non-goals: tests, APKs, pushes, signing and releases. A dormant engine is not an implementation a person can use. A blocked row may contain a completed partial port; it stays blocked while other behavior in that source is missing.
 
-Checkpoint: 32/87 dispositions recorded; the remaining review reports are being integrated. Counts above cover recorded rows only. All Flutter source is read-only.
+Checkpoint: 42/87 dispositions recorded; the remaining review reports are being integrated. Counts above cover recorded rows only. All Flutter source is read-only.
 
 - `lib/state/connection/activity.dart` — blocked: AutomaticActivityRegistry has no production owner or Inbox history binding; confirmed-act recording/dismiss/undo cannot reach the person (native/engine/attention/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/attention/activity/AutomaticActivity.kt:430).
 - `lib/state/connection/agent_handoff.dart` — blocked: no production phone-agent target gateway/host lease/adoption binding exists; the standalone HandoffEngine cannot safely open or retain the target conversation.
@@ -43,8 +43,21 @@ Checkpoint: 32/87 dispositions recorded; the remaining review reports are being 
 - `lib/state/server_trust_probe.dart` — already there: native/protocol/oc2/src/commonMain/kotlin/io/github/eslamasabry/oc/protocol/oc2/live/Oc2GatewayFactory.kt:28 probes health using typed credential/trust inputs and native/core/net/src/jvmShared/kotlin/io/github/eslamasabry/oc/core/net/okhttp/TrustGate.kt:33 enforces origin-bound consent/pinning before any request; native pairing invokes factory probe at PreviewQrWiring.kt:357. Note native current PairingProbe accepts no credentials whereas Flutter probe does.
 - `lib/state/shared_storage_gate.dart` — ported now: native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/SharedStorageWiring.kt:51 distinguishes app All-files access from positive Termux storage denial; source-fenced Projects/Files admission, real permission actions, resume/retry and EN/AR kit guidance are wired, while unknown probes defer to the authoritative read.
 
+- `lib/state/team_model.dart` — not needed: AI Team model selection/application belongs to deferred AI Team (ADR §12 D6); preserved stored data remains opaque.
+- `lib/state/team_roles.dart` — not needed: AI Team persona CRUD/suggestion/task role dispatch belongs to deferred AI Team (ADR §12 D6).
+- `lib/state/team_storage_redaction.dart` — not needed: recursive redaction is only used by AI Team cache/mutation persistence, deferred with AI Team under ADR §12 D6; current native keeps pre-existing data opaque.
+- `lib/state/team_voice.dart` — not needed: AI Team task timeline speaker/persona mapping belongs to deferred AI Team (ADR §12 D6).
+- `lib/state/termux_migration_offer.dart` — blocked: ADR D7 specifically keeps migration-out; native has no offer dismissal producer/consumer or Termux-out migration workflow. Existing Flutter key registry marks its data deferred, which is not real implementation.
+- `lib/state/whats_new.dart` — ported now: native/engine/settings/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/settings/walkthrough/WhatsNew.kt:26 keeps once-per-build exact-version launch admission and latest-note replay; native/feature/settings/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/settings/ui/WhatsNewPage.kt:34 provides the built-in walkthrough and real destination actions after the migration/first-run fence.
+- `lib/state/connection/events.dart` — blocked: typed session/request events and graph-bound forms are live, but catalog/config/integration invalidation and confirmed automatic reconnect history still lack a connection-owned coordinator.
+- `lib/state/connection/feed_forms.dart` — blocked: graph-bound chat/global forms now use schema/source preflight and typed held answers, but cross-directory feed-row captures and safe source-bound form routes have no native implementation.
+- `lib/state/connection/feed_permissions.dart` — blocked: `native/protocol/paseo/src/commonMain/kotlin/io/github/eslamasabry/oc/protocol/paseo/gateway/PaseoGatewayFeedPort.kt` inventories Paseo but native Conversations rows offer no source/revision-bound inline permission decision; RequestsEngine covers open chats only.
+- `lib/state/connection/feed_question_reads.dart` — blocked: no bounded rotating cross-folder request/form inventory reader attached to native merged feed; `PreviewRuntime.refreshOne` only loads sessions/statuses, no question/form reads.
+
 Compile checkpoint 1: requested command passed for Android and desktop, 592 actionable tasks, 0 test tasks, 14 seconds after the shared build lock became available. Log: `/tmp/45-port-state-compile-2.log`. The fresh-cache initial compile also passed (596 actionable tasks; 18m56s). No tests were written, modified or run; no APK was built.
 
 Compile checkpoint 2: requested Android/desktop targets passed, 592 actionable tasks, 0 test tasks, 52 seconds; `/tmp/45-port-state-compile-5.log`. Two integration retries corrected an internal kit icon reference; the guide now uses public KitStepChip and keeps glyph drawing in the kit. Changed Kotlin files were formatted with the plan-pinned ktfmt 0.64 fat jar after verifying its documented SHA-256. No tests changed or run.
 
 Compile checkpoint 3: graph-bound OC2 forms and real form transport, durable local reads/return briefs, visible private-by-default read sharing, and Projects/Files shared-storage admission compiled for both requested targets. 592 actionable tasks, 0 test tasks, 1m54s; `/tmp/45-port-state-compile-6.log`. Per-profile watermark/brief/form-draft keys are registered in the actual deletion scope; deletion drains the same owners. Only non-sensitive multiline form drafts persist. No tests changed or run.
+
+Compile checkpoint 4: reviewed-card identity, identical-content request reincarnation, both automatic-approval callers and session-specific form hydration/preflight passed both requested targets. 592 actionable tasks, 0 test tasks, 23 seconds; `/tmp/45-port-state-compile-7.log`. The only integration conflict was formatter layout in three request files; the source changes were retained and reformatted. Existing test files and doubles were not edited.

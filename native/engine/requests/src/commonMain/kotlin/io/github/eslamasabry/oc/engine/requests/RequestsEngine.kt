@@ -136,9 +136,14 @@ public class RequestsEngine(
      * The person answered on the card: held for [HELD_ANSWER], then sent once. Refused when the
      * request is not waiting (a second answer, or one already settled), when the answer does not
      * fit the request, or when Always allow is asked where the server keeps no grants or the
-     * request offers none.
+     * request offers none. [expectedRequest] is the immutable request the person or automatic
+     * policy actually reviewed, not only a reused wire id.
      */
-    public fun answer(id: RequestId, answer: RequestAnswer): Outcome<Unit> {
+    public fun answer(
+        id: RequestId,
+        answer: RequestAnswer,
+        expectedRequest: PendingRequest? = null,
+    ): Outcome<Unit> {
         val until = clock.now().toEpochMilliseconds() + holdWindow.inWholeMilliseconds
         val token = tokens.incrementAndFetch()
         var refusal: Failure? = null
@@ -146,6 +151,11 @@ public class RequestsEngine(
             val entry = list.firstOrNull { it.id == id }
             refusal =
                 when {
+                    expectedRequest != null &&
+                        (entry == null ||
+                            expectedRequest.id != id ||
+                            !entry.sameIncarnation(expectedRequest)) ->
+                        Failure.Refused(RefusalReason.StaleScope)
                     entry == null || entry.phase != AnswerPhase.Waiting ->
                         Failure.Refused(RefusalReason.AlreadyAnswered)
                     else -> admissible(entry, answer)
@@ -164,13 +174,20 @@ public class RequestsEngine(
         return Unit.ok()
     }
 
+    /** True only while this captured request still has the same immutable contents. */
+    public fun isCurrent(request: PendingRequest): Boolean =
+        state.value.firstOrNull { it.id == request.id }?.sameIncarnation(request) == true
+
     /** Takes a held answer back; true when there was one. Nothing is sent. */
-    public fun undo(id: RequestId): Boolean {
+    public fun undo(id: RequestId, expectedRequest: PendingRequest? = null): Boolean {
         var undone = false
         state.update { list ->
             undone = false
             list.mapEntry(id) { entry ->
-                if (entry.phase is AnswerPhase.Held)
+                if (
+                    entry.phase is AnswerPhase.Held &&
+                        (expectedRequest == null || entry.sameIncarnation(expectedRequest))
+                )
                     entry.withPhase(AnswerPhase.Waiting).also { undone = true }
                 else entry
             }
@@ -183,14 +200,23 @@ public class RequestsEngine(
      * is sent now instead of [answer]; a write already out is awaited, never repeated; a request
      * already gone is Ok (B-PROTO-074).
      */
-    public suspend fun answerNow(id: RequestId, answer: RequestAnswer): Outcome<Unit> {
+    public suspend fun answerNow(
+        id: RequestId,
+        answer: RequestAnswer,
+        expectedRequest: PendingRequest? = null,
+    ): Outcome<Unit> {
         while (true) {
             val entry = state.value.firstOrNull { it.id == id } ?: return Unit.ok()
+            if (
+                expectedRequest != null &&
+                    (expectedRequest.id != id || !entry.sameIncarnation(expectedRequest))
+            )
+                return Failure.Refused(RefusalReason.StaleScope).failed()
             when (val phase = entry.phase) {
                 is AnswerPhase.Sending -> return phase.result.await()
                 is AnswerPhase.Sent -> return Unit.ok()
                 is AnswerPhase.Held ->
-                    send(id, phase)?.let {
+                    send(id, phase, expectedRequest)?.let {
                         return it
                     }
                 AnswerPhase.Waiting,
@@ -198,7 +224,7 @@ public class RequestsEngine(
                     admissible(entry, answer)?.let {
                         return it.failed()
                     }
-                    claimAndWrite(id, phase, answer)?.let {
+                    claimAndWrite(id, phase, answer, expectedRequest ?: entry)?.let {
                         return it
                     }
                 }
@@ -207,11 +233,14 @@ public class RequestsEngine(
     }
 
     /** Try again after "Not accepted": the same answer, sent once more. */
-    public suspend fun retry(id: RequestId): Outcome<Unit> {
+    public suspend fun retry(
+        id: RequestId,
+        expectedRequest: PendingRequest? = null,
+    ): Outcome<Unit> {
         val phase =
             phaseOf(id) as? AnswerPhase.NotAccepted
                 ?: return Failure.Refused(RefusalReason.AlreadyAnswered).failed()
-        return claimAndWrite(id, phase, phase.answer)
+        return claimAndWrite(id, phase, phase.answer, expectedRequest)
             ?: Failure.Refused(RefusalReason.AlreadyAnswered).failed()
     }
 
@@ -283,8 +312,11 @@ public class RequestsEngine(
     }
 
     /** Sends a held answer if [held] is still its phase; null when someone else moved it first. */
-    private suspend fun send(id: RequestId, held: AnswerPhase.Held): Outcome<Unit>? =
-        claimAndWrite(id, held, held.answer)
+    private suspend fun send(
+        id: RequestId,
+        held: AnswerPhase.Held,
+        expectedRequest: PendingRequest? = null,
+    ): Outcome<Unit>? = claimAndWrite(id, held, held.answer, expectedRequest)
 
     /**
      * Claims and captures the entry together; the connection owns the write, callers only await its
@@ -294,7 +326,10 @@ public class RequestsEngine(
         id: RequestId,
         expected: AnswerPhase,
         answer: RequestAnswer,
+        expectedRequest: PendingRequest? = null,
     ): Outcome<Unit>? {
+        val reviewed =
+            expectedRequest ?: state.value.firstOrNull { it.id == id } ?: return Unit.ok()
         val sending =
             AnswerPhase.Sending(answer, clock.now().toEpochMilliseconds(), CompletableDeferred())
         var claimed: PendingRequest? = null
@@ -303,7 +338,10 @@ public class RequestsEngine(
             claimed = null
             refusal = null
             list.mapEntry(id) { entry ->
-                if (entry.phase !== expected) entry
+                if (reviewed.id != id || !entry.sameIncarnation(reviewed)) {
+                    refusal = Failure.Refused(RefusalReason.StaleScope)
+                    entry
+                } else if (entry.phase !== expected) entry
                 else {
                     val invalid = admissible(entry, answer)
                     refusal = invalid
@@ -560,5 +598,18 @@ private fun PendingRequest.sameContents(other: PendingRequest): Boolean =
             request == other.request
         this is PendingRequest.Question && other is PendingRequest.Question ->
             question == other.question
+        else -> false
+    }
+
+/**
+ * Equal hydration snapshots preserve the raw object; settlement then re-addition creates a new
+ * incarnation.
+ */
+private fun PendingRequest.sameIncarnation(other: PendingRequest): Boolean =
+    when {
+        this is PendingRequest.Permission && other is PendingRequest.Permission ->
+            request === other.request
+        this is PendingRequest.Question && other is PendingRequest.Question ->
+            question === other.question
         else -> false
     }

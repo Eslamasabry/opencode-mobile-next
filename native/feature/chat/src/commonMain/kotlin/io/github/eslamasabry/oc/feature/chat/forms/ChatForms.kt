@@ -145,7 +145,7 @@ internal constructor(
     private fun bind(graph: ConnectionGraph?) {
         jobs.forEach { it.cancel() }
         jobs.clear()
-        connection?.watching(false)
+        connection?.watchingFormSession(ref.sessionId, false)
         bound = graph
         source = graph?.session?.server?.location?.value
         connection = (graph as? ChatGraphAccessors)?.chatRequests
@@ -158,7 +158,7 @@ internal constructor(
         known = emptyMap()
         publish()
         val owner = connection ?: return
-        owner.watching(true)
+        owner.watchingFormSession(ref.sessionId, true)
         jobs += scope.launch {
             owner.forms.pending.collect {
                 val next = forms().associateBy(::identity)
@@ -347,7 +347,7 @@ internal constructor(
         watcher.cancel()
         jobs.forEach { it.cancel() }
         jobs.clear()
-        connection?.watching(false)
+        connection?.watchingFormSession(ref.sessionId, false)
         connection = null
         bound = null
         sheet = null

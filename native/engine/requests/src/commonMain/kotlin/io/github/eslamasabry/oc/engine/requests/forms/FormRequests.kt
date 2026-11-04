@@ -101,6 +101,7 @@ public class FormRequests(
     private var revision = 0L
     private val changedAt = HashMap<FormId, Long>()
     private val settled = LinkedHashSet<FormId>()
+    private val watchedSessions = HashSet<SessionId>()
     private val _pending = MutableStateFlow<ImmutableList<PendingForm>>(persistentListOf())
     private val _notices = MutableStateFlow<ImmutableList<FormNotice>>(persistentListOf())
 
@@ -155,10 +156,48 @@ public class FormRequests(
             return@withLock Failure.Refused(RefusalReason.StaleScope).failed()
         val ids = listed.map { it.id }.toSet()
         _pending.value
-            .filter { it.id !in ids && !lane.isInFlight(it.id) && (changedAt[it.id] ?: 0) <= began }
+            .filter {
+                it.wire.sessionId !in watchedSessions &&
+                    it.id !in ids &&
+                    !lane.isInFlight(it.id) &&
+                    (changedAt[it.id] ?: 0) <= began
+            }
             .forEach { leave(it.id) }
         listed.filter { (changedAt[it.id] ?: 0) <= began && it.id !in settled }.forEach(::add)
         Unit.ok()
+    }
+
+    /** Session endpoints work without moving the shared connection onto that chat's folder. */
+    public suspend fun refreshSession(session: SessionId): Outcome<Unit> = readSlot.withLock {
+        val began = revision
+        val source = sourceIdentity()
+        val response =
+            withTimeoutOrNull(3_000) { gateway.sessionForms(session) }
+                ?: return@withLock Failure.TimedOut().failed()
+        val listed =
+            when (response) {
+                is Outcome.Ok -> response.value
+                is Outcome.Failed -> return@withLock response
+            }
+        if (sourceIdentity() != source)
+            return@withLock Failure.Refused(RefusalReason.StaleScope).failed()
+        if (listed.any { it.sessionId != session })
+            return@withLock Failure.UnreadableReply().failed()
+        val ids = listed.map { it.id }.toSet()
+        _pending.value
+            .filter {
+                it.wire.sessionId == session &&
+                    it.id !in ids &&
+                    !lane.isInFlight(it.id) &&
+                    (changedAt[it.id] ?: 0) <= began
+            }
+            .forEach { leave(it.id) }
+        listed.filter { (changedAt[it.id] ?: 0) <= began && it.id !in settled }.forEach(::add)
+        Unit.ok()
+    }
+
+    internal fun watchSession(session: SessionId, open: Boolean) {
+        if (open) watchedSessions += session else watchedSessions -= session
     }
 
     /**
@@ -239,8 +278,10 @@ public class FormRequests(
         val key = id to form.spec.revision
         if (key in attempts) return Failure.Refused(RefusalReason.DispatchUncertain).failed()
         val fresh =
-            withTimeoutOrNull(3_000) { gateway.pendingForms() }
-                ?: return Failure.TimedOut().failed()
+            withTimeoutOrNull(3_000) {
+                if (form.sessionId == null) gateway.pendingForms()
+                else gateway.sessionForms(form.wire.sessionId)
+            } ?: return Failure.TimedOut().failed()
         if (fresh is Outcome.Failed) return fresh
         if (!current()) return Failure.Refused(RefusalReason.StaleScope).failed()
         val latest =
