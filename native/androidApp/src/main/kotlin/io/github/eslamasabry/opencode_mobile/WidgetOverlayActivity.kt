@@ -35,16 +35,24 @@ open class WidgetOverlayActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setResult(RESULT_CANCELED)
-        val mode =
-            intent.getStringExtra(WidgetTextActions.EXTRA_MODE).takeIf {
-                it in setOf("configure", "project", "steer", "voice")
-            } ?: "configure"
         val app = applicationContext
         val widgetId =
             intent.getIntExtra(
                 AppWidgetManager.EXTRA_APPWIDGET_ID,
                 AppWidgetManager.INVALID_APPWIDGET_ID,
             )
+        // The exported launcher entry accepts only a widget id (Flutter WidgetConfigureActivity):
+        // the window is chosen locally, and the Conversations widget's Edit picks its project.
+        val mode =
+            if (this is WidgetConfigureActivity) {
+                val provider =
+                    AppWidgetManager.getInstance(app).getAppWidgetInfo(widgetId)?.provider
+                if (provider?.className == SessionsWideWidgetProvider::class.java.name) "project"
+                else "configure"
+            } else
+                intent.getStringExtra(WidgetTextActions.EXTRA_MODE).takeIf {
+                    it in setOf("configure", "project", "steer", "voice")
+                } ?: "configure"
         val panel = mode in setOf("configure", "project")
         val target = if (panel) null else WidgetTextActions.target(intent)
         if ((panel && !WidgetPanels.owns(app, widgetId)) || (!panel && target == null)) {

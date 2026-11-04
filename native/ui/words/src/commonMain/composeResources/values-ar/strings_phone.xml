@@ -1136,7 +1136,5 @@
     <string name="linuxMgrJobDoneBackup">النسخة الاحتياطية جاهزة</string>
     <string name="linuxMgrJobDoneRestore">تمت استعادة Linux</string>
     <string name="linuxMgrResetBackUpFirst">انسخ احتياطيًا أولًا</string>
-    <string name="thermalGuardSetting">إيقاف فريق الذكاء الاصطناعي مؤقتًا عندما يسخن الهاتف</string>
-    <string name="thermalGuardSettingDetail">يتوقف الفريق مؤقتًا مع حفظ عمله، ويستأنف تلقائيًا عندما يبرد الهاتف.</string>
     <string name="thermalGuardSaveFailed">تعذّر حفظ الحماية من الحرارة. حاول مرة أخرى.</string>
 </resources>

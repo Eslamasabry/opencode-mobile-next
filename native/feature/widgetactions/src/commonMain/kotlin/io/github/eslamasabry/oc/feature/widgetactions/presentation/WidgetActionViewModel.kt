@@ -74,6 +74,11 @@ public class WidgetActionViewModel(
         )
     public val state: StateFlow<WidgetActionUi> = mutable.asStateFlow()
 
+    init {
+        // Flutter voice box: dictation opens at once; sending still waits for an explicit Send.
+        if (newConversation) dictate()
+    }
+
     public fun foreground(active: Boolean) {
         voice?.foreground(active)
     }
