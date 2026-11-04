@@ -66,8 +66,8 @@ import io.github.eslamasabry.oc.ui.words.res.linuxMgrRowDetail
 import io.github.eslamasabry.oc.ui.words.res.monitorServerCheckInMinutes
 import io.github.eslamasabry.oc.ui.words.res.monitorServerCheckInOff
 import io.github.eslamasabry.oc.ui.words.res.monitorServerCurrent
-import io.github.eslamasabry.oc.ui.words.res.monitorServerEnable
-import io.github.eslamasabry.oc.ui.words.res.monitorServerHelp
+import io.github.eslamasabry.oc.ui.words.res.monitorOptIn
+import io.github.eslamasabry.oc.ui.words.res.monitorOptInDetail
 import io.github.eslamasabry.oc.ui.words.res.monitorServerPaused
 import io.github.eslamasabry.oc.ui.words.res.monitorServerUnavailable
 import io.github.eslamasabry.oc.ui.words.res.monitorServerWaiting
@@ -301,8 +301,8 @@ public fun ServersScreen(
                     state.monitoring[server.id]?.let { monitor ->
                         if (monitor.available) {
                             KitSwitchRow(
-                                title = stringResource(Res.string.monitorServerEnable),
-                                supporting = stringResource(Res.string.monitorServerHelp),
+                                title = stringResource(Res.string.monitorOptIn),
+                                supporting = stringResource(Res.string.monitorOptInDetail),
                                 checked = monitor.enabled,
                                 enabled = enabled,
                                 onCheckedChange = { actions.monitor(server.id, it) },

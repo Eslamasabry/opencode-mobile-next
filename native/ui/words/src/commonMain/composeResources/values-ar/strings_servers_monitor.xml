@@ -1,6 +1,4 @@
 <resources>
-    <string name="monitorServerEnable">مراقبة الطلبات</string>
-    <string name="monitorServerHelp">فحص هذا الخادم عندما يكون التطبيق مفتوحًا أو اتصال الخلفية يعمل بالفعل. تفتح التنبيهات التطبيق للمراجعة.</string>
     <string name="monitorServerUnavailable">تعذّر فحص هذا الخادم. افتح المحادثة لمراجعة الطلبات.</string>
     <string name="monitorServerWifi">الفحص عبر واي فاي فقط</string>
     <string name="monitorServerCheckInOff">تذكير المهام الطويلة: متوقف · اضغط للتغيير</string>

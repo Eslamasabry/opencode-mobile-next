@@ -2,7 +2,7 @@
 <resources>
     <string name="voice_download_title">إعداد الصوت</string>
     <string name="voice_download_downloading">جارٍ تنزيل حزمة الصوت</string>
-    <string name="voice_download_verifying">جارٍ تجهيز الإدخال الصوتي</string>
+    <string name="voice_download_verifying">جارٍ تجهيز الصوت</string>
     <string name="voice_download_complete">الإدخال الصوتي جاهز</string>
     <string name="voice_download_failed">تعذّر إعداد الصوت. افتح التطبيق للمحاولة مجددًا.</string>
 </resources>

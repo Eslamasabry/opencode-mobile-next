@@ -75,6 +75,8 @@ import io.github.eslamasabry.oc.engine.agents.feed.ChatStatus
 import io.github.eslamasabry.oc.engine.composer.drafts.ConversationDrafts
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
+import io.github.eslamasabry.oc.engine.entry.EntryLinkParser
+import io.github.eslamasabry.oc.engine.entry.ParsedLink
 import io.github.eslamasabry.oc.engine.requests.PendingRequest
 import io.github.eslamasabry.oc.engine.updates.AppUpdateState
 import io.github.eslamasabry.oc.engine.updates.AppUpdates
@@ -348,6 +350,19 @@ class PlatformHub(
     fun route(intent: Intent?) {
         if (intent == null) return
         if (monitoring.route(intent)) return
+        if (intent.action == Intent.ACTION_VIEW && intent.data != null) {
+            // B-ANDR-072: the one VIEW filter. Consumed once; route identifiers only.
+            val raw = intent.dataString
+            intent.data = null
+            when (val link = raw?.let(EntryLinkParser::parse)) {
+                is ParsedLink.Session -> openSessionLink(link)
+                // AI Team links: the team target is deferred under D6, so they land on the list.
+                is ParsedLink.TeamGate,
+                is ParsedLink.TeamRun -> navigator.land()
+                null -> Unit
+            }
+            return
+        }
         val share = SharedTextIntake.consume(intent)
         if (share != null) {
             this.share.arrived(share.text, runtime.snapshot.value.items.map { it.ref }.toSet())
@@ -384,6 +399,26 @@ class PlatformHub(
             // Activity, background and the other Flutter actions land on Conversations (needs-you
             // rows lead).
             else -> navigator.land()
+        }
+    }
+
+    /**
+     * Flutter `_openSessionForLink`: a saved server opens that exact session (connecting first);
+     * an unknown server, one that needs its secret again, or a failed connection shows Servers.
+     * Nothing is sent, created or resumed.
+     */
+    private fun openSessionLink(link: ParsedLink.Session) {
+        val saved = stores.profiles.profile(link.profileId)
+        if (saved == null || saved.reentry.password || saved.reentry.agentToken) {
+            navigator.open(ServersRoute.Home)
+            return
+        }
+        appScope.launch {
+            if (runtime.connect(link.profileId) !is Outcome.Ok) {
+                navigator.open(ServersRoute.Home)
+                return@launch
+            }
+            navigator.openChat(ConversationRef(link.profileId, link.sessionId))
         }
     }
 
@@ -500,10 +535,11 @@ class PlatformHub(
             }
             .conflate()
             .collect { (feed, waiting, appVisible) ->
-                publishWidgets(feed, waiting)
                 publishTile(waiting)
                 publishPins(feed)
                 alerts(feed, waiting, appVisible)
+                // Last: its bounded detail reads (up to four) must never hold back an alert.
+                publishWidgets(feed, waiting)
             }
     }
 

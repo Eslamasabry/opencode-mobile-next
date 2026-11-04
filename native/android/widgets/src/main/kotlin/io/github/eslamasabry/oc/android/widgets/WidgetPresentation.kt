@@ -91,8 +91,12 @@ public class WidgetPresentation(context: Context, redactor: Redactor) {
                 kind == "read" -> R.string.widget_ask_read
                 else -> R.string.widget_ask_permission
             }
-        val result =
-            mutableMapOf("kind" to kind, "q" to text.title(NativeStrings.get(app, question)))
+        // Flutter `e7PermissionAction7`: an unknown permission is named, never hidden.
+        val words =
+            if (question == R.string.widget_ask_permission)
+                NativeStrings.get(app, question, permission)
+            else NativeStrings.get(app, question)
+        val result = mutableMapOf("kind" to kind, "q" to text.title(words))
         val first = patterns.firstOrNull()?.trim().orEmpty()
         val seen = target?.trim().orEmpty()
         val folder = first.replace(Regex("""[\\/]?\*+$"""), "")
@@ -104,7 +108,8 @@ public class WidgetPresentation(context: Context, redactor: Redactor) {
         } else if (seen.isEmpty()) {
             if (folder.isNotEmpty()) result["dir"] = text.path(folder)
         } else {
-            val isPath = '/' in seen
+            // Flutter widgetAskFor: text with a space is not split into path parts.
+            val isPath = ' ' !in seen && '/' in seen
             val cut = if (isPath) seen.lastIndexOf('/') else -1
             result["file"] = text.title(if (isPath) seen.substring(cut + 1) else seen)
             if (isPath) result["path"] = text.path(seen)

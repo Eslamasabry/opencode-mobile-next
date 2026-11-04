@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="widget_ask_outside_write">السماح بالكتابة خارج هذا المشروع؟</string>
-    <string name="widget_ask_outside_read">السماح بالقراءة خارج هذا المشروع؟</string>
-    <string name="widget_ask_outside_run">السماح بالتشغيل خارج هذا المشروع؟</string>
-    <string name="widget_ask_directory">السماح باستخدام هذا المجلد؟</string>
+    <string name="widget_ask_outside_write">الكتابة خارج هذا المشروع؟</string>
+    <string name="widget_ask_outside_read">القراءة خارج هذا المشروع؟</string>
+    <string name="widget_ask_outside_run">تشغيل أمر خارج هذا المشروع؟</string>
+    <string name="widget_ask_directory">العمل خارج هذا المشروع؟</string>
     <string name="widget_ask_command">تشغيل هذا الأمر؟</string>
     <string name="widget_ask_edit">تعديل هذا الملف؟</string>
     <string name="widget_ask_read">قراءة هذا الملف؟</string>
-    <string name="widget_ask_permission">السماح بهذا الإجراء؟</string>
+    <string name="widget_ask_permission">استخدام %1$s</string>
 </resources>

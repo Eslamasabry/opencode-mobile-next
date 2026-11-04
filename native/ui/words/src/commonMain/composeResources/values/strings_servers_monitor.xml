@@ -1,6 +1,4 @@
 <resources>
-    <string name="monitorServerEnable">Watch for requests</string>
-    <string name="monitorServerHelp">Check this server while the app is open or the background connection is already running. Alerts open the app to review.</string>
     <string name="monitorServerUnavailable">Could not check this server. Open the conversation to review requests.</string>
     <string name="monitorServerWifi">Check on Wi-Fi only</string>
     <string name="monitorServerCheckInOff">Long-running reminders: off · tap to change</string>

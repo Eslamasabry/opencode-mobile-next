@@ -308,7 +308,9 @@ class AndroidProfileMonitoring(
             // Refresh secret identities before each bounded poll; never retain the credential
             // itself.
             while (isActive) {
-                updateIdentity()
+                // No secret reads while no server is enrolled (monitoring is off by default).
+                if (stores.profiles.profiles.value.any { engine.rulesFor(it.id.raw).enabled })
+                    updateIdentity()
                 engine.refresh()
                 publish(engine)
                 delay(30.seconds)
@@ -359,6 +361,8 @@ class AndroidProfileMonitoring(
             val e =
                 withTimeoutOrNull(8.seconds) { prepared.await() }
                     ?: return@withContext Failure.TimedOut().failed()
+            // The idle loop skips secret reads while nothing is enrolled: refresh before enrolling.
+            if (enabled) updateIdentity()
             e.setEnabled(profile.raw, enabled).also { publish(e) }
         }
     }

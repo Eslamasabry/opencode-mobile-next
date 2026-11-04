@@ -2,10 +2,10 @@
 <resources>
     <string name="widget_ask_outside_write">Write outside this project?</string>
     <string name="widget_ask_outside_read">Read outside this project?</string>
-    <string name="widget_ask_outside_run">Run outside this project?</string>
-    <string name="widget_ask_directory">Use this folder?</string>
+    <string name="widget_ask_outside_run">Run a command outside this project?</string>
+    <string name="widget_ask_directory">Work outside this project?</string>
     <string name="widget_ask_command">Run this command?</string>
     <string name="widget_ask_edit">Edit this file?</string>
     <string name="widget_ask_read">Read this file?</string>
-    <string name="widget_ask_permission">Allow this action?</string>
+    <string name="widget_ask_permission">Use %1$s</string>
 </resources>

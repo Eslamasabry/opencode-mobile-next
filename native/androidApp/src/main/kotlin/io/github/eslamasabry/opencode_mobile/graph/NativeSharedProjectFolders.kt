@@ -59,15 +59,28 @@ class NativeSharedProjectFolders(
         val owner = stores.prefs.string("oc.builtinServerOwner")
         val profile =
             owner?.takeIf { it.isNotEmpty() }?.let { stores.profiles.profile(ProfileId(it)) }
-        val roots =
+        // Folders a Flutter build already granted (`oc.sharedProjects.<profileId>`, migrated as
+        // is) stay bound like Flutter's union, but only for saved phone profiles: a deleted or
+        // remote server's list grants nothing.
+        val migrated =
+            stores.prefs
+                .keys(SHARED_PROJECTS)
+                .filter { key ->
+                    stores.profiles
+                        .profile(ProfileId(key.removePrefix(SHARED_PROJECTS)))
+                        ?.let { localPhone(it.profile.baseUrl) } == true
+                }
+                .flatMap { stores.prefs.stringList(it).orEmpty() }
+        val opened =
             if (profile != null && localPhone(profile.profile.baseUrl))
-                stores.prefs
-                    .stringList("oc.openedProjects.${profile.id.raw}")
-                    .orEmpty()
-                    .filter(SharedStoragePath::isShared)
-                    .mapNotNull(SharedStoragePath::projectRoot)
-                    .distinct()
+                stores.prefs.stringList("oc.openedProjects.${profile.id.raw}").orEmpty()
             else emptyList()
+        val roots =
+            (migrated + opened)
+                .filter(SharedStoragePath::isShared)
+                .mapNotNull(SharedStoragePath::projectRoot)
+                .distinct()
+                .sorted()
         if (published == roots) return
         // The copied runtime writes atomically. A failed replacement leaves the previous
         // file intact; the next acknowledged preference/profile change attempts it again.
@@ -78,6 +91,10 @@ class NativeSharedProjectFolders(
                 }
             }
         if (written is Outcome.Ok) published = roots
+    }
+
+    private companion object {
+        const val SHARED_PROJECTS = "oc.sharedProjects."
     }
 
     private fun localPhone(raw: String): Boolean =
