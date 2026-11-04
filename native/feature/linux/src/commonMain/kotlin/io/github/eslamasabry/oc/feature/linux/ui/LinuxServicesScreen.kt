@@ -230,19 +230,29 @@ public fun LinuxServicesScreen(state: LinuxServicesUi, actions: LinuxServicesAct
         onResult = actions::finishCommand,
     )
     KitAlert(
-        visible = state.log != null || state.report != null,
-        title =
-            stringResource(
-                if (state.report != null) Res.string.linuxSvcReport else Res.string.linuxDevLog
-            ),
-        body =
-            state.report?.let {
+        visible = state.log != null,
+        title = stringResource(Res.string.linuxDevLog),
+        body = state.log?.ifEmpty { stringResource(Res.string.linuxDevLogEmpty) },
+        onDismissRequest = actions::dismiss,
+    )
+    KitSheet(
+        visible = state.report != null,
+        title = stringResource(Res.string.linuxSvcReport),
+        onDismissRequest = actions::dismiss,
+        primary =
+            if (!state.working)
+                KitAction(stringResource(Res.string.kitReportProblem), actions::sendReport)
+            else null,
+    ) {
+        state.report?.let {
+            KitText(
                 listOf(it.title, it.detail, it.logExcerpt)
                     .filter(String::isNotBlank)
                     .joinToString("\n\n")
-            } ?: state.log?.ifEmpty { stringResource(Res.string.linuxDevLogEmpty) },
-        onDismissRequest = actions::dismiss,
-    )
+            )
+        }
+    }
+
     val ask = state.ask
     KitConfirm(
         spec =

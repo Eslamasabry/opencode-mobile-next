@@ -3,6 +3,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="com.termux.permission.RUN_COMMAND" />
     <!-- Settings › Notifications: Android 13+ lets the app notify only with this declared (P12-SETTINGS). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -56,7 +58,7 @@
         <service
             android:name=".BackgroundConnectionService"
             android:exported="false"
-            android:foregroundServiceType="dataSync" />
+            android:foregroundServiceType="dataSync|shortService" />
         <!-- P12 fix (Codex files #3, plan 10 §11.6 S4): untrusted PDFs are parsed only in this isolated process. -->
         <service
             android:name=".LocalPdfService"

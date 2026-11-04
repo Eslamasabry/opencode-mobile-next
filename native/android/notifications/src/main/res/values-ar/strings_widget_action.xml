@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notify_widget_action">جارٍ إرسال إجراء الأداة</string>
+    <string name="notify_widget_action_description">جارٍ التحقق من المحادثة والطلب المحددين.</string>
+</resources>

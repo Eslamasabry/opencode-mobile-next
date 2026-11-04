@@ -44,6 +44,7 @@ import io.github.eslamasabry.oc.engine.diagnostics.exit.LifecycleSource
 import io.github.eslamasabry.oc.engine.diagnostics.exit.PolicyExitHistory
 import io.github.eslamasabry.oc.engine.diagnostics.exit.RawLaunchReport
 import io.github.eslamasabry.oc.engine.diagnostics.perf.PerfTrace
+import io.github.eslamasabry.oc.engine.diagnostics.problem.AttachedError
 import io.github.eslamasabry.oc.engine.diagnostics.problem.ProblemEventKind
 import io.github.eslamasabry.oc.engine.diagnostics.problem.ProblemReport
 import io.github.eslamasabry.oc.engine.diagnostics.problem.ProblemReportClipboard
@@ -55,6 +56,15 @@ import io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptDiagnostics
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.reportProblemDiagnosticsCopied
 import io.github.eslamasabry.oc.ui.words.res.reportProblemLinkCopiesWhole
+import java.io.File
+import java.io.FileOutputStream
+import java.nio.file.Files
+import java.nio.file.LinkOption
+import java.nio.file.StandardCopyOption
+import java.text.DateFormat
+import java.util.Date
+import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -68,15 +78,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.getString
-import java.io.File
-import java.io.FileOutputStream
-import java.nio.file.Files
-import java.nio.file.LinkOption
-import java.nio.file.StandardCopyOption
-import java.text.DateFormat
-import java.util.Date
-import kotlin.time.Clock
-import kotlin.time.Instant
 
 /*
  * Unit BUILD-DIAGNOSTICS-ATTENTION: the Android halves of the diagnostics engines. The persisted problem report
@@ -94,12 +95,25 @@ object DiagnosticsAttentionBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    fun reportProblemStartup(application: Application, diagnostics: Diagnostics, trace: PerfTrace, redactor: Redactor, clock: Clock): ReportProblemStartup =
-        ReportProblemStartup({ AndroidReportFiles(application.filesDir) }, diagnostics, trace, redactor, clock)
+    fun reportProblemStartup(
+        application: Application,
+        diagnostics: Diagnostics,
+        trace: PerfTrace,
+        redactor: Redactor,
+        clock: Clock,
+    ): ReportProblemStartup =
+        ReportProblemStartup(
+            { AndroidReportFiles(application.filesDir) },
+            diagnostics,
+            trace,
+            redactor,
+            clock,
+        )
 
     @Provides
     @SingleIn(AppScope::class)
-    fun lifecycleSource(application: Application): LifecycleSource = AndroidLifecycleSource(application)
+    fun lifecycleSource(application: Application): LifecycleSource =
+        AndroidLifecycleSource(application)
 
     @Provides
     @SingleIn(AppScope::class)
@@ -118,7 +132,12 @@ object DiagnosticsAttentionBindings {
         CrashStartup(
             source = {
                 val exits = (source.retainedExits() as? Outcome.Ok)?.value.orEmpty()
-                Outcome.Ok(CrashStartupEvidence(AndroidCrashStore(File(application.filesDir, "crash")), exits = exits))
+                Outcome.Ok(
+                    CrashStartupEvidence(
+                        AndroidCrashStore(File(application.filesDir, "crash")),
+                        exits = exits,
+                    )
+                )
             },
             diagnostics = diagnostics,
             clock = clock,
@@ -128,12 +147,22 @@ object DiagnosticsAttentionBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    fun deviceDiagnostics(exits: ExitHistory, crash: CrashStartup, application: Application, dispatchers: AppDispatchers): DeviceDiagnostics {
+    fun deviceDiagnostics(
+        exits: ExitHistory,
+        crash: CrashStartup,
+        application: Application,
+        dispatchers: AppDispatchers,
+    ): DeviceDiagnostics {
         val sheet = CrashShareSheet { text ->
             withContext(dispatchers.main) {
                 try {
-                    val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
-                    application.startActivity(Intent.createChooser(send, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                    val send =
+                        Intent(Intent.ACTION_SEND)
+                            .setType("text/plain")
+                            .putExtra(Intent.EXTRA_TEXT, text)
+                    application.startActivity(
+                        Intent.createChooser(send, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    )
                     true
                 } catch (e: RuntimeException) {
                     AppLog.tagged("Diagnostics").w(e) { "share sheet unavailable" }
@@ -141,12 +170,16 @@ object DiagnosticsAttentionBindings {
                 }
             }
         }
-        // Helper deaths need the built-in Linux performance read, which is not exposed to the app graph yet.
+        // Helper deaths need the built-in Linux performance read, which is not exposed to the app
+        // graph yet.
         return DeviceDiagnostics(exits, null, CrashReportBuilder({ crash.ready.await() }, sheet))
     }
 }
 
-/** The once-per-process start: the persisted report, the crash store, the framework error hook and the exit entry. */
+/**
+ * The once-per-process start: the persisted report, the crash store, the framework error hook and
+ * the exit entry.
+ */
 @SingleIn(AppScope::class)
 @Inject
 class DiagnosticsAttentionStartup(
@@ -164,7 +197,8 @@ class DiagnosticsAttentionStartup(
         started = true
         val capture = AppErrorCapture(diagnostics)
         val previous = Thread.getDefaultUncaughtExceptionHandler()
-        // A fatal error leaves only its category (B-STATE-074); the platform handler then ends the process as before.
+        // A fatal error leaves only its category (B-STATE-074); the platform handler then ends the
+        // process as before.
         Thread.setDefaultUncaughtExceptionHandler { thread, error ->
             capture.capture(error)
             previous?.uncaughtException(thread, error)
@@ -172,7 +206,9 @@ class DiagnosticsAttentionStartup(
         crash.start()
         appScope.launch(dispatchers.io) {
             val session = report.start() ?: return@launch
-            exits.launchReport().exit?.let { session.recordAndroidExit(it) } // B-STATE-077: once per exit
+            exits.launchReport().exit?.let {
+                session.recordAndroidExit(it)
+            } // B-STATE-077: once per exit
         }
     }
 }
@@ -207,24 +243,30 @@ class AppKeptDiagnosticsHost(
         combine(diagnostics.errors, reopened) { ring, _ -> ring }
             .flatMapLatest { ring ->
                 val session = report.current
-                session?.report?.state?.map { s -> s.entries.count { it.kind.name == "Error" || it.kind.name == "AndroidExit" } }
-                    ?: flowOf(ring.size)
+                session?.report?.state?.map { s ->
+                    s.entries.count { it.kind.name == "Error" || it.kind.name == "AndroidExit" }
+                } ?: flowOf(ring.size)
             }
             .stateIn(appScope, SharingStarted.Eagerly, diagnostics.errors.value.size)
 
-    override suspend fun setCrashCapture(on: Boolean): Boolean = crashStartup.ready.await()?.setEnabled(on) ?: false
+    override suspend fun setCrashCapture(on: Boolean): Boolean =
+        crashStartup.ready.await()?.setEnabled(on) ?: false
 
-    override suspend fun deleteCrashReports(): Boolean = crashStartup.ready.await()?.clear() ?: false
+    override suspend fun deleteCrashReports(): Boolean =
+        crashStartup.ready.await()?.clear() ?: false
 
-    override suspend fun exitHistory(): DeviceExitHistory = withContext(dispatchers.io) { device.exitHistory() }
+    override suspend fun exitHistory(): DeviceExitHistory =
+        withContext(dispatchers.io) { device.exitHistory() }
 
     override suspend fun previewCrashReport(): CrashReportResult = device.previewCrashReport()
 
-    override suspend fun shareCrashReport(preview: CrashReportPreview): CrashShareResult = device.shareCrashReport(preview)
+    override suspend fun shareCrashReport(preview: CrashReportPreview): CrashShareResult =
+        device.shareCrashReport(preview)
 
     override suspend fun clearErrors(): Outcome<Unit> =
         withContext(dispatchers.io) {
-            // Diagnostics.clear also erases the saved report and restored crash evidence through its listeners.
+            // Diagnostics.clear also erases the saved report and restored crash evidence through
+            // its listeners.
             val cleared = report.current?.report?.clear() ?: Outcome.Ok(Unit)
             diagnostics.clear()
             reopened.value++
@@ -235,9 +277,10 @@ class AppKeptDiagnosticsHost(
 }
 
 /**
- * Report a problem › Send as a GitHub issue (B-SEC-129): the report is built here with no address, name or credential
- * (B-SEC-128); a short one is prefilled whole in the app-authored link, a long one is copied first and the form says
- * to paste. The link goes through ExternalLinkPolicy → ExternalLinkOpener; nothing is filed until the person submits.
+ * Report a problem › Send as a GitHub issue (B-SEC-129): the report is built here with no address,
+ * name or credential (B-SEC-128); a short one is prefilled whole in the app-authored link, a long
+ * one is copied first and the form says to paste. The link goes through ExternalLinkPolicy →
+ * ExternalLinkOpener; nothing is filed until the person submits.
  */
 @SingleIn(AppScope::class)
 @Inject
@@ -255,52 +298,119 @@ class GitHubProblemReporter(
     private val policy = ExternalLinkPolicy()
 
     /**
-     * The errors Report a problem lists, oldest first: the persisted report's (they survive a restart, B-STATE-075),
-     * else null so the caller keeps this run's ring. Each is (time, source, message), already redacted.
+     * The errors Report a problem lists, oldest first: the persisted report's (they survive a
+     * restart, B-STATE-075), else null so the caller keeps this run's ring. Each is (time, source,
+     * message), already redacted.
      */
     fun keptErrors(): List<Triple<String, String, String>>? =
-        report.current?.report?.entries
+        report.current
+            ?.report
+            ?.entries
             ?.filter { it.kind.name == "Error" || it.kind.name == "AndroidExit" }
             ?.map { Triple(it.at.toString(), it.source, it.message) }
 
-    fun send(connection: String?) {
-        scope.launch {
-            val stored =
-                report.current?.report?.entries?.map { e ->
-                    ProblemReportEvent(ProblemEventKind.entries.first { it.name == e.kind.name }, e.at, e.source, e.message, e.stack)
-                }
-            val problem =
-                ProblemReport.build(
-                    redactor = redactor,
-                    description = "",
-                    version = "${build.versionName}+${build.versionCode}",
-                    platform = "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})",
-                    connection = connection,
-                    fallbackTitle = diagnostics.errors.value.lastOrNull()?.message,
-                    events = ProblemReports.events(stored, diagnostics.errors.value),
+    private data class Prepared(val description: String, val problem: ProblemReport)
+
+    @Volatile private var prepared: Prepared? = null
+    @Volatile private var attachment: AttachedError? = null
+
+    /** A failed job's report keeps its own log and excludes unrelated timing traces. */
+    fun attachFailure(title: String, details: String?, source: String, log: String? = null) {
+        attachment =
+            AttachedError(
+                title = ProblemReports.scrub(redactor, title),
+                details = details?.let { ProblemReports.scrub(redactor, it) },
+                source = ProblemReports.scrub(redactor, source),
+                log = log?.let { redactor.excerpt(it) },
+            )
+        prepared = null
+    }
+
+    fun clearAttachment() {
+        attachment = null
+        prepared = null
+    }
+
+    /** The preview and the eventual issue link share this immutable, already scrubbed report. */
+    fun preview(connection: String?, description: String = ""): String {
+        val current = prepare(connection, description)
+        prepared = current
+        return current.problem.text
+    }
+
+    private fun prepare(connection: String?, description: String): Prepared {
+        val stored =
+            report.current?.report?.entries?.map { e ->
+                ProblemReportEvent(
+                    ProblemEventKind.entries.first { it.name == e.kind.name },
+                    e.at,
+                    e.source,
+                    e.message,
+                    e.stack,
                 )
-            val link = problem.link()
-            val approved = ProblemReports.approve(policy, link) ?: return@launch
-            withContext(dispatchers.main) {
-                link.clipboardText?.let { text ->
+            }
+        val events = ProblemReports.events(stored, diagnostics.errors.value)
+        val latest = events.firstOrNull { it.isError }
+        val problem =
+            ProblemReport.build(
+                redactor = redactor,
+                description = description,
+                version =
+                    build.versionName.takeIf { it.isNotBlank() }?.let { "$it+${build.versionCode}" }
+                        ?: ProblemReports.UNKNOWN_VERSION,
+                platform = "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})",
+                connection = connection,
+                error =
+                    attachment
+                        ?: latest?.let {
+                            AttachedError(
+                                title = it.message.lineSequence().firstOrNull().orEmpty(),
+                                details = it.message,
+                                source = it.source,
+                            )
+                        },
+                events = events,
+            )
+        return Prepared(description, problem)
+    }
+
+    fun send(connection: String?) {
+        scope.launch { sendReport(connection, "") }
+    }
+
+    suspend fun sendReport(connection: String?, description: String): Outcome<Unit> {
+        val current =
+            prepared?.takeIf { it.description == description }
+                ?: prepare(connection, description).also { prepared = it }
+        val link = current.problem.link()
+        val approved =
+            ProblemReports.approve(policy, link) ?: return Outcome.Failed(Failure.Device())
+        return withContext(dispatchers.main) {
+            link.clipboardText?.let { text ->
+                val copied =
                     attempt({ Failure.StorageRefused() }) {
-                        application.getSystemService(ClipboardManager::class.java)
+                        application
+                            .getSystemService(ClipboardManager::class.java)
                             .setPrimaryClip(ClipData.newPlainText("OpenCode Mobile report", text))
                     }
-                    val words =
-                        when (link.clipboard) {
-                            ProblemReportClipboard.Whole -> getString(Res.string.reportProblemLinkCopiesWhole)
-                            else -> getString(Res.string.reportProblemDiagnosticsCopied)
-                        }
-                    Toast.makeText(application, words, Toast.LENGTH_LONG).show()
-                }
-                opener.open(approved.link)
+                if (copied is Outcome.Failed) return@withContext copied
+                val words =
+                    when (link.clipboard) {
+                        ProblemReportClipboard.Whole ->
+                            getString(Res.string.reportProblemLinkCopiesWhole)
+                        else -> getString(Res.string.reportProblemDiagnosticsCopied)
+                    }
+                Toast.makeText(application, words, Toast.LENGTH_LONG).show()
             }
+            opener.open(approved.link)
         }
     }
 }
 
-/** The crash store's four app-private files; atomic writes, size-capped reads, no symbolic links followed. */
+/**
+ * The crash store's four app-private files; atomic writes, size-capped reads, no symbolic links
+ * followed.
+ */
 class AndroidCrashStore(private val dir: File) : CrashStore {
     private fun target(file: CrashFile): File {
         if (Files.isSymbolicLink(dir.toPath())) throw java.io.IOException("refused")
@@ -326,7 +436,12 @@ class AndroidCrashStore(private val dir: File) : CrashStore {
                 out.write(text.encodeToByteArray())
                 out.fd.sync()
             }
-            Files.move(pending.toPath(), f.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
+            Files.move(
+                pending.toPath(),
+                f.toPath(),
+                StandardCopyOption.ATOMIC_MOVE,
+                StandardCopyOption.REPLACE_EXISTING,
+            )
         }
 
     override suspend fun delete(file: CrashFile): Outcome<Unit> =
@@ -334,8 +449,9 @@ class AndroidCrashStore(private val dir: File) : CrashStore {
 }
 
 /**
- * Android's record of each time the app's process ended (ApplicationExitInfo, API 30+). The launch report is the newest
- * exit not reported before; the last reported time is kept app-wide (not per profile) in `oc.diag.lastExitSeen`.
+ * Android's record of each time the app's process ended (ApplicationExitInfo, API 30+). The launch
+ * report is the newest exit not reported before; the last reported time is kept app-wide (not per
+ * profile) in `oc.diag.lastExitSeen`.
  */
 class AndroidLifecycleSource(private val application: Application) : LifecycleSource {
     override val exitHistorySupported: Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
@@ -363,7 +479,8 @@ class AndroidLifecycleSource(private val application: Application) : LifecycleSo
         if (all !is Outcome.Ok) return Outcome.Ok(RawLaunchReport())
         val prefs = application.getSharedPreferences("oc.diag", Context.MODE_PRIVATE)
         val seen = prefs.getLong("oc.diag.lastExitSeen", 0L)
-        val newest = all.value.filter { it.processName == mainProcessName }.maxByOrNull { it.timestampMs }
+        val newest =
+            all.value.filter { it.processName == mainProcessName }.maxByOrNull { it.timestampMs }
         if (newest == null || newest.timestampMs <= seen) return Outcome.Ok(RawLaunchReport())
         prefs.edit().putLong("oc.diag.lastExitSeen", newest.timestampMs).apply()
         return Outcome.Ok(RawLaunchReport(exit = newest))

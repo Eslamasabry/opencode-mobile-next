@@ -127,6 +127,35 @@ object WidgetV2Bridge {
         val current = runCatching { JSONObject(before) }.getOrNull() ?: return
         val profile = current.optString("profileID")
         if (profile.isBlank() || current.optString("scopeToken").isBlank()) return
+        // Older snapshots carried routing in onDemand. Move it to the private slot before
+        // republishing.
+        val descriptor = current.optJSONObject("onDemand")
+        val fingerprint = descriptor?.optString("fingerprint").orEmpty()
+        if (descriptor != null) {
+            val targetKey = "oc.widgetTarget.$profile"
+            val oldTarget = storage.string(targetKey)
+            if (
+                fingerprint.isNotBlank() &&
+                    (descriptor.has("directory") || descriptor.has("workspace"))
+            ) {
+                val target =
+                    JSONObject()
+                        .put("profileID", profile)
+                        .put("scopeToken", current.optString("scopeToken"))
+                        .put("fingerprint", fingerprint)
+                for (key in listOf("directory", "workspace")) {
+                    descriptor
+                        .optString(key)
+                        .takeIf { it.isNotBlank() }
+                        ?.let { target.put(key, it) }
+                }
+                if (!storage.cas(profile, targetKey, oldTarget, target.toString())) return
+            }
+            if (fingerprint.isNotBlank())
+                current.put("onDemand", JSONObject().put("fingerprint", fingerprint))
+            else current.remove("onDemand")
+        }
+        for (key in listOf("directory", "workspace", "baseUrl", "origin")) current.remove(key)
         current.put("connected", false)
         current.put("lastSeenAt", storage.clock.now().toEpochMilliseconds())
         if (storage.cas(profile, "oc.widgetSessions", before, current.toString()))
@@ -143,18 +172,22 @@ object WidgetV2Bridge {
         val storage = persistence ?: return false
         WidgetStatusScheduler.clearProfile(context, profileID)
         val before = storage.string("oc.widgetSessions")
-        if (
-            before != null &&
-                runCatching { JSONObject(before).optString("profileID") }.getOrNull() == profileID
-        ) {
-            // Deletion runs after the profile lane closes, so embedded cleanup uses the app lane.
-            val removed =
-                storage.store
-                    .compareAndSet(storage.lanes.app, "oc.widgetSessions", before, null)
-                    .getOrNull()
-            if (removed != true) return false
+        val owner = before?.let {
+            runCatching { JSONObject(it).optString("profileID") }.getOrNull()
         }
-        if (!storage.removeProfileKeys(profileID)) return false
+        val cleared =
+            storage.store.commit(storage.lanes.app) {
+                if (before != null && (owner.isNullOrBlank() || owner == profileID))
+                    remove("oc.widgetSessions")
+                for (prefix in
+                    listOf(
+                        "oc.widgetStyle.",
+                        "oc.widgetActions.",
+                        "oc.widgetTarget.",
+                        "oc.widgetFollowup.",
+                    )) remove(prefix + profileID)
+            }
+        if (cleared is io.github.eslamasabry.oc.core.common.Outcome.Failed) return false
         SessionsWidgetProvider.refreshAll(context)
         UsageWidgetProvider.refreshAll(context)
         return true
