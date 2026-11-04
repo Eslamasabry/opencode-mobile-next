@@ -19,6 +19,8 @@ import io.github.eslamasabry.oc.engine.attention.monitor.*
 import io.github.eslamasabry.oc.engine.connection.*
 import io.github.eslamasabry.oc.engine.profiles.*
 import io.github.eslamasabry.oc.engine.requests.consent.*
+import io.github.eslamasabry.oc.feature.servers.presentation.ServerMonitorStatus
+import io.github.eslamasabry.oc.feature.servers.presentation.ServerMonitorUi
 import io.github.eslamasabry.oc.feature.settings.presentation.NotificationProfile
 import java.time.ZoneId
 import java.util.UUID
@@ -73,6 +75,9 @@ class NativeProfileMonitoring(
         MutableStateFlow<ImmutableList<NotificationProfile>>(persistentListOf())
     val profileSettings: StateFlow<ImmutableList<NotificationProfile>> =
         mutableSettings.asStateFlow()
+    private val mutableServerRows = MutableStateFlow<Map<ProfileId, ServerMonitorUi>>(emptyMap())
+    /** The Servers-list rows (NativeServerMonitoring): opt-in, support and last read status. */
+    val serverRows: StateFlow<Map<ProfileId, ServerMonitorUi>> = mutableServerRows.asStateFlow()
     override val owner = "attention-monitor"
 
     override fun profiles(): List<MonitorProfile> = cached.values.filter { it.id !in blocked }
@@ -339,6 +344,28 @@ class NativeProfileMonitoring(
                     )
                 }
                 .toImmutableList()
+        mutableServerRows.value =
+            cached.values
+                .filter { it.id !in blocked }
+                .associate { p ->
+                    val snapshot = value.snapshotFor(p.id)
+                    ProfileId(p.id) to
+                        ServerMonitorUi(
+                            enabled = value.rulesFor(p.id).enabled && consent.allows(p.id),
+                            available = value.supportsProfile(p),
+                            status =
+                                when (snapshot.status) {
+                                    MonitorStatus.Current -> ServerMonitorStatus.Current
+                                    MonitorStatus.Unavailable -> ServerMonitorStatus.Unavailable
+                                    MonitorStatus.WifiRequired -> ServerMonitorStatus.WifiRequired
+                                    MonitorStatus.Paused -> ServerMonitorStatus.Paused
+                                    MonitorStatus.Disabled,
+                                    MonitorStatus.Waiting,
+                                    MonitorStatus.Checking -> ServerMonitorStatus.Waiting
+                                },
+                            pending = snapshot.pendingCount,
+                        )
+                }
     }
 
     suspend fun setEnabled(profile: ProfileId, on: Boolean): Outcome<Unit> =

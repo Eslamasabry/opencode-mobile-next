@@ -84,7 +84,7 @@ public fun ServersScreen(
                 onClick = { hostSetup = true },
             )
             if (state.servers.isEmpty()) KitNotice(stringResource(Res.string.serversEmpty))
-            ServerSavedRows(state, actions, enabled)
+            ServerSavedRows(state, actions, enabled, phoneHost = onThisPhone != null)
             KitButton(
                 stringResource(Res.string.agentsSectionTitle),
                 actions::openAgents,

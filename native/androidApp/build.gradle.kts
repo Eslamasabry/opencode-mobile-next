@@ -125,6 +125,8 @@ dependencies {
             ":engine:updates", // P12-PLATFORM: in-app update notice
             ":feature:updates", // P12-PLATFORM: Updates page
             ":feature:background", // BUILD-ANDROID-BG-PLATFORM: Settings › Background
+            ":android:platform", // Android share chooser and activity ports
+            ":engine:entry", // B-ANDR-072: exact-shape opencode-mobile:// link parser
             ":android:tiles", // P12-PLATFORM: QS tiles, shortcuts, share, update installer
             ":android:widgets", // P12-PLATFORM: home-screen widgets
             ":feature:preview", // PREVIEW-QR

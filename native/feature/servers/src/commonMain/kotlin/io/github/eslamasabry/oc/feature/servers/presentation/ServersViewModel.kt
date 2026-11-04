@@ -52,6 +52,7 @@ public class ServersViewModel(
      * Picks among a code's addresses (B-PROTO-068); without one, the best-ordered address is used.
      */
     private val probe: PairingProbe = NoPairingProbe,
+    private val monitoring: Set<ServerMonitoring> = emptySet(),
 ) : ViewModel(), ServersActions {
     private val local = MutableStateFlow(ServersUi(newConversation = route != null))
     public val state: StateFlow<ServersUi> =
@@ -94,6 +95,11 @@ public class ServersViewModel(
     private var choosing = 0
 
     init {
+        monitoring.singleOrNull()?.let { source ->
+            viewModelScope.launch {
+                source.rows.collect { rows -> local.update { it.copy(monitoring = rows) } }
+            }
+        }
         // A code from the scanner or a paste lands in the inbox; its address is picked here before
         // the form fills.
         viewModelScope.launch { pairing.arrivals.collect { pairing.take()?.let(::choose) } }
@@ -137,6 +143,20 @@ public class ServersViewModel(
 
     override fun settings(id: ProfileId) {
         nav.open(ServerSettingsRoute(id))
+    }
+
+    override fun monitor(id: ProfileId, enabled: Boolean) = monitorOperation {
+        it.enabled(id, enabled)
+    }
+
+    private fun monitorOperation(change: suspend (ServerMonitoring) -> Outcome<Unit>) {
+        val source = monitoring.singleOrNull() ?: return
+        operation {
+            when (val result = change(source)) {
+                is Outcome.Failed -> failed(ServerIssue.SaveFailed, result.failure)
+                is Outcome.Ok -> Unit
+            }
+        }
     }
 
     override fun back(): Unit = nav.back()

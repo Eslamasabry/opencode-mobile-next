@@ -13,6 +13,7 @@ public data class ServersUi(
     val servers: ImmutableList<SavedServer> = persistentListOf(),
     val rows: ServerRowsState = ServerRowsState(),
     val busy: Boolean = false,
+    val monitoring: Map<ProfileId, ServerMonitorUi> = emptyMap(),
     val newConversation: Boolean = false,
     val cleartextAllowed: Boolean = false,
     val issue: ServerIssue? = null,
@@ -43,6 +44,11 @@ public interface ServersActions {
     public fun edit(id: ProfileId?)
 
     public fun settings(id: ProfileId)
+    /**
+     * Opt in to background monitoring from the server row (ANDR-2). Wi-Fi only and check-in are
+     * shared rules in Settings › Notifications, as in Flutter (`SharedNotifyRules.applyTo`).
+     */
+    public fun monitor(id: ProfileId, enabled: Boolean) {}
 
     public fun back()
 

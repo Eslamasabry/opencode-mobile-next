@@ -36,6 +36,8 @@ dependencies {
     implementation(project(":engine:profiles"))
     api(project(":engine:attention"))
     implementation(project(":core:domain"))
+    implementation(project(":core:security"))
+    implementation(project(":core:model"))
     testImplementation(libs.kotlinx.coroutines.test)
     implementation(libs.androidx.core.ktx)
     implementation(catalogOr("androidx-work-runtime", "androidx.work:work-runtime:2.12.0"))
