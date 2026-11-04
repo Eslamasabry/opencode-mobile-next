@@ -1,15 +1,11 @@
 package io.github.eslamasabry.oc.android.terminal
 
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.view.KeyEvent
 import android.view.MotionEvent
-import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
-import android.widget.FrameLayout
 import com.termux.terminal.TerminalSession
 import com.termux.terminal.TerminalSessionClient
 import com.termux.view.TerminalView
@@ -156,17 +152,14 @@ class NativeLocalTerminal(
                     }
 
                 override fun onSingleTapUp(e: MotionEvent) {
+                    if (held.host.openLink(e)) return
                     held.view.requestFocus()
                     (context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager)
                         .showSoftInput(held.view, InputMethodManager.SHOW_IMPLICIT)
                 }
 
                 override fun onCopyTextToClipboard(session: TerminalSession, text: String) {
-                    // OSC 52 cannot silently change the clipboard; copying requires an active user
-                    // selection.
-                    if (held.view.isSelectingText)
-                        (context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager)
-                            .setPrimaryClip(ClipData.newPlainText("", text))
+                    copyTerminalText(session, text, context)
                 }
             }
         try {
@@ -290,12 +283,13 @@ class NativeLocalTerminal(
     /** Runtime cleanup calls this synchronous bridge from its own background lane. */
     fun startFromBridge(rows: Int, cols: Int): Int {
         val facts = launchFacts()
-        return onMainBlocking { startWith(rows, cols, facts) }.let { started ->
-            when (started) {
-                is Outcome.Ok -> started.value
-                is Outcome.Failed -> error("terminal_start_failed")
+        return onMainBlocking { startWith(rows, cols, facts) }
+            .let { started ->
+                when (started) {
+                    is Outcome.Ok -> started.value
+                    is Outcome.Failed -> error("terminal_start_failed")
+                }
             }
-        }
     }
 
     fun stopFromBridge(id: Int) {
@@ -360,8 +354,8 @@ class NativeLocalTerminal(
 }
 
 /** Keyboard animation can deliver many sizes; only its settled size reaches the PTY. */
-private class SettledTerminalHost(context: Context, private val terminal: TerminalView) :
-    FrameLayout(context) {
+private class SettledTerminalHost(context: Context, terminal: TerminalView) :
+    TerminalSurfaceHost(context, terminal) {
     private val main = Handler(Looper.getMainLooper())
     private var wantedWidth = 0
     private var wantedHeight = 0
@@ -371,13 +365,6 @@ private class SettledTerminalHost(context: Context, private val terminal: Termin
             MeasureSpec.makeMeasureSpec(wantedHeight, MeasureSpec.EXACTLY),
         )
         terminal.layout(0, 0, wantedWidth, wantedHeight)
-    }
-
-    init {
-        addView(
-            terminal,
-            LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
-        )
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {

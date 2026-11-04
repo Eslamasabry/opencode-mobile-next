@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="terminalLinkReviewBody">Open this link in your browser? %1$s</string>
+    <string name="terminalLinkReviewInsecure">This link uses an unencrypted connection. Open %1$s in your browser?</string>
+    <string name="terminalLinkReviewTitle">Open this link?</string>
+    <string name="terminalParityInterrupt">Ctrl-C</string>
+    <string name="terminalParityEndInput">Ctrl-D</string>
+    <string name="terminalParityEscape">Esc</string>
+    <string name="terminalParityTab">Tab</string>
+    <string name="terminalParityOpenAddress">Open link · %1$s</string>
+</resources>

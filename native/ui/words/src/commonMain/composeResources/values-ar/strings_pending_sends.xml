@@ -1,0 +1,13 @@
+<resources>
+  <string name="nativePendingTitle">بانتظار الإرسال</string>
+  <string name="nativePendingReview">مراجعة</string>
+  <string name="nativePendingFailed">تعذّر تحديث هذا الإرسال. تحقّق من الاتصال وحاول مجددًا.</string>
+  <string name="nativePendingOffline">يُرسل عند عودة الاتصال</string>
+  <string name="nativePendingAdmitted">بانتظار الخادم</string>
+  <string name="nativePendingJoining">ينضم إلى الرد الجاري</string>
+  <string name="nativePendingUnconfirmed">ربما أُرسلت بالفعل</string>
+  <string name="nativePendingEdit">إعادة للتحرير</string>
+  <string name="nativePendingSteer">الانضمام إلى هذا الرد</string>
+  <string name="nativePendingCheck">التحقّق مجددًا</string>
+    <string name="nativePendingEmpty">لا توجد رسائل بانتظار الإرسال.</string>
+</resources>

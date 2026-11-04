@@ -55,7 +55,9 @@ public object KitTerminalTags {
     public const val ANNOUNCER: String = "terminal-accessible-announcer"
 }
 
-/** The words a terminal shows; the host screen passes them from `:ui:words` (no copy in the kit). */
+/**
+ * The words a terminal shows; the host screen passes them from `:ui:words` (no copy in the kit).
+ */
 @Immutable
 public data class KitTerminalWords(
     /** The grid's one accessibility description ("Terminal"). */
@@ -74,21 +76,28 @@ public data class KitTerminalWords(
     val inputUnavailable: String,
 )
 
-/** The newest lines a screen reader hears as they arrive (06 §7.7: the last 3, one announcement per second). */
+/**
+ * The newest lines a screen reader hears as they arrive (06 §7.7: the last 3, one announcement per
+ * second).
+ */
 internal const val ANNOUNCED_LINES: Int = 3
 internal const val ANNOUNCE_EVERY_MS: Long = 1_000
 
 /**
- * A live terminal with accessible mode (plan 06 §7.7 `KitTerminalView` `.live` + `.accessible`; DESKTOP-WEB-CROSS-30).
+ * A live terminal with accessible mode (plan 06 §7.7 `KitTerminalView` `.live` + `.accessible`;
+ * DESKTOP-WEB-CROSS-30).
  *
- * The visible switch [KitTerminalTags.ACCESSIBLE_MODE] chooses between the live grid ([KitTerminalLive], one semantics
- * node) and the accessible view ([KitTerminalAccessible]: the transcript as text and a "Send to terminal" field).
- * [accessibleMode] is the person's choice; null follows the system: on by itself while TalkBack or Switch Access is on
- * (`KitSystemSignals.accessibleNavigation`), and the person can turn it off. Without a live [platformView] (`PlatformViewHandle.native`) (not started yet,
- * or a platform without a terminal view) only the accessible view can show.
+ * The visible switch [KitTerminalTags.ACCESSIBLE_MODE] chooses between the live grid
+ * ([KitTerminalLive], one semantics node) and the accessible view ([KitTerminalAccessible]: the
+ * transcript as text and a "Send to terminal" field). [accessibleMode] is the person's choice; null
+ * follows the system: on by itself while TalkBack or Switch Access is on
+ * (`KitSystemSignals.accessibleNavigation`), and the person can turn it off. Without a live
+ * [platformView] (`PlatformViewHandle.native`) (not started yet, or a platform without a terminal
+ * view) only the accessible view can show.
  *
- * [onSend] receives exactly what to write: the field's value and a carriage return. [above] sits above the grid or the
- * transcript in both modes (the sign-in terminal's "Open sign-in page" and "Copy code", 17 §1.5).
+ * [onSend] receives exactly what to write: the field's value and a carriage return. [above] sits
+ * above the grid or the transcript in both modes (the sign-in terminal's "Open sign-in page" and
+ * "Copy code", 17 §1.5).
  */
 @Composable
 public fun KitTerminalView(
@@ -104,13 +113,20 @@ public fun KitTerminalView(
     above: @Composable ColumnScope.() -> Unit = {},
 ) {
     val signals by LocalKitPlatform.current.signals.collectAsState()
-    val on = KitTerminalRules.accessibleOn(accessibleMode, signals.accessibleNavigation, platformView != null)
+    val on =
+        KitTerminalRules.accessibleOn(
+            accessibleMode,
+            signals.accessibleNavigation,
+            platformView != null,
+        )
     Column(modifier) {
         KitSwitchRow(
             title = words.accessibleMode,
             checked = on,
             modifier = Modifier.testTag(KitTerminalTags.ACCESSIBLE_MODE),
-            enabled = if (platformView == null) KitEnabled.Disabled(words.inputUnavailable) else KitEnabled.Enabled,
+            enabled =
+                if (platformView == null) KitEnabled.Disabled(words.inputUnavailable)
+                else KitEnabled.Enabled,
             onCheckedChange = onAccessibleModeChange,
         )
         above()
@@ -125,24 +141,42 @@ public fun KitTerminalView(
         } else {
             KitTerminalLive(platformView, title, words.terminal, Modifier.weight(1f).fillMaxWidth())
         }
+        KitTerminalLinks(
+            transcript,
+            columns =
+                (platformView as? io.github.eslamasabry.oc.core.common.terminal.TerminalSurface)
+                    ?.columns
+                    ?.takeIf { it > 0 } ?: 80,
+        )
+        KitTerminalKeyBar(
+            onSend = onSend,
+            enabled =
+                if (inputEnabled) KitEnabled.Enabled
+                else KitEnabled.Disabled(words.inputUnavailable),
+        )
     }
 }
 
 /** Pure rules of [KitTerminalView] (unit-tested). */
 public object KitTerminalRules {
-    /** Accessible mode is the person's choice when made, else on with a screen reader; always on without a grid. */
+    /**
+     * Accessible mode is the person's choice when made, else on with a screen reader; always on
+     * without a grid.
+     */
     public fun accessibleOn(choice: Boolean?, screenReader: Boolean, hasGrid: Boolean): Boolean =
         !hasGrid || (choice ?: screenReader)
 
     /** The lines a screen reader hears for [lines]: the newest [ANNOUNCED_LINES], joined. */
-    public fun announcement(lines: List<String>): String = lines.takeLast(ANNOUNCED_LINES).joinToString("\n")
+    public fun announcement(lines: List<String>): String =
+        lines.takeLast(ANNOUNCED_LINES).joinToString("\n")
 }
 
 /**
- * The accessible terminal (plan 06 §7.7 `.accessible`): the transcript stripped and capped ([TerminalTranscript]) as a
- * selectable list, one item per line (each merged into one node), newest at the bottom; the newest three lines are a
- * polite live region throttled to one announcement per second; and a mono "Send to terminal" field with a Send button
- * that writes the value and a carriage return, then clears the field.
+ * The accessible terminal (plan 06 §7.7 `.accessible`): the transcript stripped and capped
+ * ([TerminalTranscript]) as a selectable list, one item per line (each merged into one node),
+ * newest at the bottom; the newest three lines are a polite live region throttled to one
+ * announcement per second; and a mono "Send to terminal" field with a Send button that writes the
+ * value and a carriage return, then clears the field.
  */
 @Composable
 public fun KitTerminalAccessible(
@@ -152,16 +186,19 @@ public fun KitTerminalAccessible(
     modifier: Modifier = Modifier,
     inputEnabled: Boolean = true,
 ) {
-    val lines = remember(transcript) { TerminalTranscript.lines(TerminalTranscript.forDisplay(transcript)) }
+    val lines =
+        remember(transcript) { TerminalTranscript.lines(TerminalTranscript.forDisplay(transcript)) }
     val listState = rememberLazyListState()
     LaunchedEffect(lines.size) { if (lines.isNotEmpty()) listState.scrollToItem(lines.lastIndex) }
     val latest by rememberUpdatedState(KitTerminalRules.announcement(lines))
     var spoken by remember { mutableStateOf("") }
     LaunchedEffect(Unit) {
-        snapshotFlow { latest }.conflate().collect {
-            spoken = it
-            delay(ANNOUNCE_EVERY_MS)
-        }
+        snapshotFlow { latest }
+            .conflate()
+            .collect {
+                spoken = it
+                delay(ANNOUNCE_EVERY_MS)
+            }
     }
     val field = rememberTextFieldState()
     val send = {
@@ -170,33 +207,34 @@ public fun KitTerminalAccessible(
             field.clearText()
         }
     }
-    val enabled = if (inputEnabled) KitEnabled.Enabled else KitEnabled.Disabled(words.inputUnavailable)
+    val enabled =
+        if (inputEnabled) KitEnabled.Enabled else KitEnabled.Disabled(words.inputUnavailable)
     Column(modifier) {
         SelectionContainer(Modifier.weight(1f).fillMaxWidth()) {
             LazyColumn(
-                Modifier
-                    .fillMaxSize()
-                    .testTag(KitTerminalTags.TRANSCRIPT)
-                    .semantics { contentDescription = words.transcript },
+                Modifier.fillMaxSize().testTag(KitTerminalTags.TRANSCRIPT).semantics {
+                    contentDescription = words.transcript
+                },
                 state = listState,
             ) {
                 if (lines.isEmpty()) {
                     item { KitText(words.noOutput, tone = TextTone.Secondary) }
                 } else {
                     itemsIndexed(lines) { _, line ->
-                        KitText(line, Modifier.fillMaxWidth().semantics(mergeDescendants = true) {}, role = TypeRole.Mono)
+                        KitText(
+                            line,
+                            Modifier.fillMaxWidth().semantics(mergeDescendants = true) {},
+                            role = TypeRole.Mono,
+                        )
                     }
                 }
             }
         }
         Spacer(
-            Modifier
-                .size(1.dp)
-                .testTag(KitTerminalTags.ANNOUNCER)
-                .semantics {
-                    liveRegion = LiveRegionMode.Polite
-                    contentDescription = spoken
-                },
+            Modifier.size(1.dp).testTag(KitTerminalTags.ANNOUNCER).semantics {
+                liveRegion = LiveRegionMode.Polite
+                contentDescription = spoken
+            }
         )
         Spacer(Modifier.height(8.dp))
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {

@@ -575,6 +575,11 @@ internal class GraphChatWorld(
                                             it is SendOutcome.Accepted &&
                                                 it.ref == ref &&
                                                 it.localId == id
+                                        } ||
+                                        outcomes.any {
+                                            it is SendOutcome.Queued &&
+                                                it.ref == ref &&
+                                                it.entryId == id.raw
                                         } -> true
                                     outcomes.any {
                                         it is SendOutcome.Unconfirmed &&
@@ -792,6 +797,19 @@ internal class GraphChatWorld(
                             userMessageKeys += "prompt:${event.message.id}"
                         if (event is CoreEvent.SessionSelection && event.sessionId == sid)
                             adoptRemoteSelection(event)
+                        if (
+                            event is CoreEvent.InboxChanged &&
+                                event.sessionId == sid &&
+                                event.change ==
+                                    io.github.eslamasabry.oc.core.domain.events.InboxChange
+                                        .Delivered
+                        ) {
+                            // Delivery promotes the inbox id into canonical history without a
+                            // message event.
+                            scope.launch(registry.mainContext) {
+                                readHistory(gateway, handle, bridge)
+                            }
+                        }
                         if (
                             event is CoreEvent.MessageUpserted &&
                                 event.message.sessionId == sid.raw &&
@@ -1613,6 +1631,7 @@ internal class GraphChatWorld(
 
     private fun syncDelivery(delivery: ConnectionDelivery) {
         val engine = delivery.engine ?: return
+        val queuedLocalIds = ArrayList<Long>()
         for ((localId, id) in deliveryIds) {
             val bubble = engine.pending.value.firstOrNull { it.localId == id }
             if (voiceProof?.localId == localId && bubble != null) {
@@ -1647,6 +1666,13 @@ internal class GraphChatWorld(
                             it.copy(state = PendingState.Unconfirmed, failure = outcome.reason)
                         }
                     }
+                is SendOutcome.Queued ->
+                    if (outcome.entryId == id.raw) {
+                        // The queue write is durable before this outcome; the waiting-send slot
+                        // owns display now.
+                        acknowledgedDraft(localId)
+                        queuedLocalIds += localId
+                    }
                 is SendOutcome.PutBack ->
                     if (outcome.localId == id) {
                         if (voiceProof?.localId == localId)
@@ -1657,6 +1683,17 @@ internal class GraphChatWorld(
                     }
                 else -> Unit
             }
+        }
+        if (queuedLocalIds.isNotEmpty()) {
+            mutablePending.update { list ->
+                list.filterNot { it.localId in queuedLocalIds }.toImmutableList()
+            }
+            for (localId in queuedLocalIds) {
+                sentSnapshots.remove(localId)
+                baselines.remove(localId)
+                deliveryIds.remove(localId)
+            }
+            refreshDraftProtection()
         }
         delivered.forEach(::retireFailedTwins)
         delivered.clear()

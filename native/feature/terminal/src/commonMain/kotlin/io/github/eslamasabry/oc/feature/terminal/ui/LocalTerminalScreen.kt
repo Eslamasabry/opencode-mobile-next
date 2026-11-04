@@ -4,11 +4,15 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import io.github.eslamasabry.oc.feature.terminal.presentation.LocalTerminalActions
 import io.github.eslamasabry.oc.feature.terminal.presentation.LocalTerminalUi
 import io.github.eslamasabry.oc.ui.kit.KitAction
@@ -29,6 +33,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
+import io.github.eslamasabry.oc.ui.kit.teaching.KitTip
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.e7SetupCommandInput
 import io.github.eslamasabry.oc.ui.words.res.e7SetupInputUnavailable
@@ -56,12 +61,17 @@ import io.github.eslamasabry.oc.ui.words.res.localTerminalStopBody
 import io.github.eslamasabry.oc.ui.words.res.localTerminalStopShell
 import io.github.eslamasabry.oc.ui.words.res.localTerminalTryAgain
 import io.github.eslamasabry.oc.ui.words.res.terminalScreenReadableMode
+import io.github.eslamasabry.oc.ui.words.res.tipTerminalLinks
 import org.jetbrains.compose.resources.stringResource
 
 /** F15 local shells. The only terminal surface is the kit's platform slot / accessible terminal. */
 @Composable
 public fun LocalTerminalScreen(state: LocalTerminalUi, actions: LocalTerminalActions) {
     val selected = state.shells.firstOrNull { it.id == state.selected }
+    val keyboardVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+    LaunchedEffect(selected?.id, selected?.transcript, keyboardVisible, state.linkTip) {
+        actions.linkTipMoment(keyboardVisible)
+    }
     val enabled =
         if (state.working) KitEnabled.Disabled(stringResource(Res.string.localTerminalStarting))
         else KitEnabled.Enabled
@@ -141,25 +151,36 @@ public fun LocalTerminalScreen(state: LocalTerminalUi, actions: LocalTerminalAct
                                 )
                             ),
                     )
-                KitTerminalView(
-                    platformView = selected.view.native,
-                    title = stringResource(Res.string.localTerminalShellName, selected.number),
-                    transcript = selected.transcript,
-                    accessibleMode = state.accessible,
-                    onAccessibleModeChange = actions::setAccessible,
-                    onSend = actions::send,
-                    inputEnabled = selected.running,
+                KitTip(
+                    message = stringResource(Res.string.tipTerminalLinks),
+                    visible = state.linkTip && !keyboardVisible,
+                    onDismissed = actions::dismissLinkTip,
                     modifier = Modifier.weight(1f).fillMaxWidth(),
-                    words =
-                        KitTerminalWords(
-                            terminal = stringResource(Res.string.libraryTerminalTitle),
-                            accessibleMode = stringResource(Res.string.terminalScreenReadableMode),
-                            transcript = stringResource(Res.string.e7SetupTranscript),
-                            noOutput = stringResource(Res.string.e7SetupNoOutput),
-                            sendToTerminal = stringResource(Res.string.e7SetupCommandInput),
-                            send = stringResource(Res.string.e7SetupSendCommand),
-                            inputUnavailable = stringResource(Res.string.e7SetupInputUnavailable),
-                        ),
+                    anchor = {
+                        KitTerminalView(
+                            platformView = selected.view.native,
+                            title =
+                                stringResource(Res.string.localTerminalShellName, selected.number),
+                            transcript = selected.transcript,
+                            accessibleMode = state.accessible,
+                            onAccessibleModeChange = actions::setAccessible,
+                            onSend = actions::send,
+                            inputEnabled = selected.running,
+                            modifier = Modifier.fillMaxSize(),
+                            words =
+                                KitTerminalWords(
+                                    terminal = stringResource(Res.string.libraryTerminalTitle),
+                                    accessibleMode =
+                                        stringResource(Res.string.terminalScreenReadableMode),
+                                    transcript = stringResource(Res.string.e7SetupTranscript),
+                                    noOutput = stringResource(Res.string.e7SetupNoOutput),
+                                    sendToTerminal = stringResource(Res.string.e7SetupCommandInput),
+                                    send = stringResource(Res.string.e7SetupSendCommand),
+                                    inputUnavailable =
+                                        stringResource(Res.string.e7SetupInputUnavailable),
+                                ),
+                        )
+                    },
                 )
                 KitSwitchRow(
                     title = stringResource(Res.string.localTerminalKeyCtrl),

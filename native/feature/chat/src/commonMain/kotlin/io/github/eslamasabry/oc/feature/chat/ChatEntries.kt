@@ -4,7 +4,9 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
@@ -13,28 +15,31 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
+import io.github.eslamasabry.oc.core.domain.platform.AppNotices
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.transcript.state.BlockRow
 import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
-import io.github.eslamasabry.oc.feature.chat.context.ActiveContextModel
-import io.github.eslamasabry.oc.core.domain.platform.AppNotices
 import io.github.eslamasabry.oc.feature.chat.cards.ChatCards
 import io.github.eslamasabry.oc.feature.chat.cards.LocalChatCards
 import io.github.eslamasabry.oc.feature.chat.cards.ModelCardSlotHost
 import io.github.eslamasabry.oc.feature.chat.composer.ChatPromptsDoor
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
+import io.github.eslamasabry.oc.feature.chat.context.ActiveContextModel
 import io.github.eslamasabry.oc.feature.chat.handoff.StateHandoffSheet
 import io.github.eslamasabry.oc.feature.chat.handoff.StateHandoffViewModel
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderViewModel
 import io.github.eslamasabry.oc.feature.chat.header.ui.ApprovalChipSlot
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
-import io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase
+import io.github.eslamasabry.oc.feature.chat.inbox.presentation.ChatInboxViewModel
+import io.github.eslamasabry.oc.feature.chat.inbox.ui.ChatInboxSlot
 import io.github.eslamasabry.oc.feature.chat.notes.SessionNoteViewModel
+import io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatViewModel
 import io.github.eslamasabry.oc.feature.chat.sessiontransfer.presentation.SessionTransferViewModel
 import io.github.eslamasabry.oc.feature.chat.sessiontransfer.ui.SessionTransferSheet
 import io.github.eslamasabry.oc.feature.chat.start.presentation.ChatStartViewModel
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
+import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
@@ -49,12 +54,15 @@ import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.PreviewRoute
 import io.github.eslamasabry.oc.ui.routes.ToolsRoute
+import io.github.eslamasabry.oc.ui.routes.WebSourcesRoute
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.activeContextTitle
 import io.github.eslamasabry.oc.ui.words.res.devPreviewMenu
+import io.github.eslamasabry.oc.ui.words.res.nativePendingReview
 import io.github.eslamasabry.oc.ui.words.res.protoToolsTitle
 import io.github.eslamasabry.oc.ui.words.res.sessionTransferTitle
 import io.github.eslamasabry.oc.ui.words.res.stateHandoffTitle
+import io.github.eslamasabry.oc.ui.words.res.webSourcesTitle
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -82,6 +90,15 @@ public class ChatEntries(
         entry<ChatRoute> { route ->
             val vm = assistedMetroViewModel<ChatViewModel, ChatViewModel.Factory> { create(route) }
             val state by vm.state.collectAsStateWithLifecycle()
+            val liveGraphs by registry.live.collectAsStateWithLifecycle()
+            val gateway = (liveGraphs[route.ref.profileId] as? ChatGraphAccessors)?.chatGateway
+            val serverCapabilities = gateway?.capabilities?.collectAsStateWithLifecycle()?.value
+            val pendingVm =
+                assistedMetroViewModel<ChatInboxViewModel, ChatInboxViewModel.Factory> {
+                    create(route)
+                }
+            val pendingSends by pendingVm.state.collectAsStateWithLifecycle()
+            var pendingOpen by remember(route.ref) { mutableStateOf(false) }
             val startVm =
                 assistedMetroViewModel<ChatStartViewModel, ChatStartViewModel.Factory> {
                     create(route)
@@ -176,11 +193,16 @@ public class ChatEntries(
                     },
                     testTag = "chat-dev-preview",
                 )
-            // B-CHAT-001..003: the inspector of what the next turn reads; offered only where the server has the route.
+            // B-CHAT-001..003: the inspector of what the next turn reads; offered only where the
+            // server has the route.
             val activeContext = remember(route.ref) { ActiveContextModel(route.ref, registry) }
             DisposableEffect(activeContext) { onDispose { activeContext.close() } }
             val inspect =
-                KitLineAction(stringResource(Res.string.activeContextTitle), activeContext::open, testTag = "chat-active-context")
+                KitLineAction(
+                    stringResource(Res.string.activeContextTitle),
+                    activeContext::open,
+                    testTag = "chat-active-context",
+                )
             val transfer =
                 assistedMetroViewModel<SessionTransferViewModel, SessionTransferViewModel.Factory> {
                     create(route)
@@ -223,6 +245,18 @@ public class ChatEntries(
                                     inspect.takeIf { activeContext.available() },
                                     transferAction,
                                     toolsAction,
+                                    KitLineAction(
+                                            stringResource(Res.string.webSourcesTitle),
+                                            { navigator.open(WebSourcesRoute(route.ref)) },
+                                        )
+                                        .takeIf { serverCapabilities?.webSearch == true },
+                                    KitLineAction(
+                                            stringResource(Res.string.nativePendingReview),
+                                            { pendingOpen = true },
+                                        )
+                                        .takeIf {
+                                            pendingSends.rows.isNotEmpty() || pendingSends.failed
+                                        },
                                     // STATE: continue this conversation elsewhere.
                                     KitLineAction(
                                         stringResource(Res.string.stateHandoffTitle),
@@ -246,6 +280,21 @@ public class ChatEntries(
                             startActions = startVm,
                             appStatus = appStatus,
                             replyOffer = offerContent,
+                        )
+                        ChatInboxSlot(
+                            pendingSends,
+                            pendingVm,
+                            { text ->
+                                inbox.offer(
+                                    ComposerInbox.target(
+                                        route.ref.profileId.raw,
+                                        route.ref.sessionId.raw,
+                                    ),
+                                    text,
+                                )
+                            },
+                            open = pendingOpen,
+                            onDismiss = { pendingOpen = false },
                         )
                         SessionTransferSheet(transferState, transfer)
                         StateHandoffSheet(handoff, handoffVm)

@@ -19,12 +19,12 @@ import io.github.eslamasabry.oc.core.data.lane.WriterLanes
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.domain.events.RunOutcome
-import io.github.eslamasabry.oc.core.model.transcript.Role
 import io.github.eslamasabry.oc.core.model.ModelSelection
 import io.github.eslamasabry.oc.core.model.PromptAgentMention
 import io.github.eslamasabry.oc.core.model.PromptAttachment
 import io.github.eslamasabry.oc.core.model.ServerProfile
 import io.github.eslamasabry.oc.core.model.StreamStatus
+import io.github.eslamasabry.oc.core.model.transcript.Role
 import io.github.eslamasabry.oc.engine.delivery.live.InboxProjection
 import io.github.eslamasabry.oc.engine.delivery.port.AutomationPolicy
 import io.github.eslamasabry.oc.engine.delivery.port.ConversationFacts
@@ -106,7 +106,9 @@ public class ConnectionDelivery(
     }
 
     private val link =
-        GatewaySendLink(profile.id, profile.origin.toString(), gateway, tracing) { admission(profile) }
+        GatewaySendLink(profile.id, profile.origin.toString(), gateway, tracing) {
+            admission(profile)
+        }
     private val connection =
         object : DeliveryConnection {
             override val link = MutableStateFlow<SendLink?>(this@ConnectionDelivery.link)
@@ -160,12 +162,18 @@ public class ConnectionDelivery(
     private fun feed(trace: PromptTracing, event: GatewayEvent) {
         when (event) {
             is GatewayEvent.MessageUpserted ->
-                trace.message(event.message.sessionId, event.message.id, event.message.role == Role.Assistant)
-            is GatewayEvent.PartUpserted -> trace.part(event.part.sessionId, event.part.messageId, event.part.rawType)
+                trace.message(
+                    event.message.sessionId,
+                    event.message.id,
+                    event.message.role == Role.Assistant,
+                )
+            is GatewayEvent.PartUpserted ->
+                trace.part(event.part.sessionId, event.part.messageId, event.part.rawType)
             is GatewayEvent.PartDelta -> trace.delta(event.sessionId.raw)
             is GatewayEvent.RunStarted -> trace.busy(event.sessionId.raw)
             is GatewayEvent.RunEnded ->
-                if (event.outcome is RunOutcome.Failed) trace.error(event.sessionId.raw) else trace.idle(event.sessionId.raw)
+                if (event.outcome is RunOutcome.Failed) trace.error(event.sessionId.raw)
+                else trace.idle(event.sessionId.raw)
             else -> Unit
         }
     }
@@ -177,7 +185,9 @@ public class ConnectionDelivery(
     public val inbox: InboxProjection = InboxProjection(gateway)
 
     init {
-        tracing?.let { trace -> scope.launch { gateway.events.project.collect { feed(trace, it.event) } } }
+        tracing?.let { trace ->
+            scope.launch { gateway.events.project.collect { feed(trace, it.event) } }
+        }
         val lane = dispatchers.serial("delivery-reconcile")
         scope.launch(lane) {
             gateway.events.project.collect { envelope ->
@@ -198,14 +208,20 @@ public class ConnectionDelivery(
                     status = s
                     if (changed) {
                         connection.link.value =
-                            GatewaySendLink(profile.id, profile.origin.toString(), gateway, tracing) {
+                            GatewaySendLink(
+                                profile.id,
+                                profile.origin.toString(),
+                                gateway,
+                                tracing,
+                            ) {
                                 admission(profile)
                             }
                         if (s == StreamStatus.Connected) {
                             // A reconnect reconciles admitted sends and receipts; marked/uncertain
                             // sends are never replayed.
-                            if (gateway.capabilities.value.inbox) inbox.refreshKnown()
-                            queue?.flush()
+                            if (gateway.capabilities.value.inbox)
+                                scope.launch(lane) { inbox.refreshKnown() }
+                            scope.launch(lane) { queue?.flush() }
                         }
                     }
                 }
@@ -243,10 +259,16 @@ public class ConnectionDelivery(
         insteadOfDraft: Boolean = false,
     ): Outcome<LocalSendId> {
         val engine = engine ?: return Outcome.Failed(Failure.StorageRefused())
-        when (val undo = (connection.link.value ?: link).revertPending(ref.sessionId)) {
-            is Outcome.Failed -> return undo
-            is Outcome.Ok ->
-                if (undo.value) return Outcome.Failed(Failure.Refused(RefusalReason.UndoUnresolved))
+        val currentLink = connection.link.value ?: link
+        // Offline admission is a local durable write. Flush checks staged undo again before any
+        // dispatch.
+        if (currentLink.connected) {
+            when (val undo = currentLink.revertPending(ref.sessionId)) {
+                is Outcome.Failed -> return undo
+                is Outcome.Ok ->
+                    if (undo.value)
+                        return Outcome.Failed(Failure.Refused(RefusalReason.UndoUnresolved))
+            }
         }
         val request =
             SendRequest(ref, text, attachments = attachments, model = model, mentions = mentions)

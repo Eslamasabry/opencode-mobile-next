@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="terminalLinkReviewBody">هل تريد فتح هذا الرابط في المتصفح؟ %1$s</string>
+    <string name="terminalLinkReviewInsecure">يستخدم هذا الرابط اتصالًا غير مشفّر. هل تريد فتح %1$s في المتصفح؟</string>
+    <string name="terminalLinkReviewTitle">هل تريد فتح هذا الرابط؟</string>
+    <string name="terminalParityInterrupt">Ctrl-C</string>
+    <string name="terminalParityEndInput">Ctrl-D</string>
+    <string name="terminalParityEscape">Esc</string>
+    <string name="terminalParityTab">Tab</string>
+    <string name="terminalParityOpenAddress">فتح الرابط · %1$s</string>
+</resources>

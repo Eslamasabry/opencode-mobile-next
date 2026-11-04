@@ -92,6 +92,18 @@ public final class TerminalSession extends TerminalOutput {
 
     private final ExternalIo mExternalIo;
     private boolean mExternalClosed;
+    // Intercept writes before the emulator: its stock OSC implementation is not bounded and
+    // replaces invalid UTF-8. Clipboard reads never reach either the client or the PTY.
+    private final io.github.eslamasabry.oc.core.common.terminal.TerminalOsc52Stream mClipboard =
+        new io.github.eslamasabry.oc.core.common.terminal.TerminalOsc52Stream(text -> {
+            mClient.onCopyTextToClipboard(this, text);
+            return kotlin.Unit.INSTANCE;
+        });
+
+    private void appendFiltered(byte[] data, int count) {
+        byte[] safe = mClipboard.feed(data, count);
+        if (safe.length > 0) mEmulator.append(safe, safe.length);
+    }
 
     /** Constructs an external session without a shell path, descriptor, process or worker thread. */
     public TerminalSession(ExternalIo io, Integer transcriptRows, TerminalSessionClient client) {
@@ -111,7 +123,7 @@ public final class TerminalSession extends TerminalOutput {
         if (mExternalIo == null) throw new IllegalStateException("Not an external session");
         if (mExternalClosed) return;
         if (mEmulator == null) throw new IllegalStateException("The emulator has no size");
-        mEmulator.append(data, data.length);
+        appendFiltered(data, data.length);
         notifyScreenUpdate();
     }
 
@@ -413,7 +425,7 @@ public final class TerminalSession extends TerminalOutput {
         public void handleMessage(Message msg) {
             int bytesRead = mProcessToTerminalIOQueue.read(mReceiveBuffer, false);
             if (bytesRead > 0) {
-                mEmulator.append(mReceiveBuffer, bytesRead);
+                appendFiltered(mReceiveBuffer, bytesRead);
                 notifyScreenUpdate();
             }
 
@@ -432,7 +444,7 @@ public final class TerminalSession extends TerminalOutput {
                 exitDescription += " - press Enter]";
 
                 byte[] bytesToWrite = exitDescription.getBytes(StandardCharsets.UTF_8);
-                mEmulator.append(bytesToWrite, bytesToWrite.length);
+                appendFiltered(bytesToWrite, bytesToWrite.length);
                 notifyScreenUpdate();
 
                 mClient.onSessionFinished(TerminalSession.this);
