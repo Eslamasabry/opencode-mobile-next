@@ -204,3 +204,62 @@ entire imported history additionally reports pre-existing commit-message violati
 in six integration commits; the imported `docs/native/inventory/rest.md` also has
 existing Markdown trailing whitespace. Those other units' history/content were
 preserved. These findings do not affect the requested compile gate.
+
+## P12 integration repair against ca65eb2 (2026-11-04)
+
+Merged `ca65eb2f0a89a6560c597f9ea30895189d511555` into
+`p12x/protocols-e59de09`, starting at
+`e59de09007222d912b4b7f4e0e0a8fc73b7b32bd`.
+
+- Resolved the sole textual conflict, `native/MODULE_OWNERS`, by retaining
+  both protocol/computer entries and all four incoming diagnostics/background
+  entries. Verified all 89 module paths are unique and both parents' entries
+  survive.
+- Verified the automatically merged `native/androidApp/build.gradle.kts`
+  retains every project dependency from both parents.
+- Reconciled the automatic OC2 gateway merge: `health()` keeps this unit's
+  `Incompatible(ProtocolMismatch)` re-detection signal, while `probe()` also
+  recognizes that signal before checking for a legacy server. Without the
+  extra condition, the integration's existing B-PROTO-094 malformed-health
+  case could no longer reach legacy recognition. The existing tests and their
+  assertions are unchanged. Applied ktfmt to the changed condition; retained
+  surrounding formatting to avoid unrelated churn.
+
+The first compile attempt completed both desktop compilation groups with zero
+Kotlin errors, but eight Android tasks failed because this fresh worktree lacked
+its gitignored sherpa-onnx AAR. Restored it with `native/tools/vendor/fetch.sh`,
+which verified the committed SHA-256, then reran the entire requested command.
+
+```bash
+cd native
+export JAVA_HOME=/home/eslam/Storage2/tools/jdk21
+export ANDROID_HOME="$HOME/Android/Sdk"
+../tool/qa/machine_lock.sh build -- nice -n 5 ./gradlew --console=plain --continue \
+  -Dorg.gradle.workers.max=2 \
+  -Dorg.gradle.daemon.idletimeout=300000 \
+  -Dorg.gradle.jvmargs='-Xmx2g -XX:MaxMetaspaceSize=768m' \
+  :androidApp:assemblePreviewDebug compileKotlinDesktop compileTestKotlinDesktop
+```
+
+**Final result: BUILD SUCCESSFUL in 46 seconds; 3/3 requested gates passed.**
+1,268 actionable tasks: 149 executed, 11 from cache, 1,108 up-to-date.
+Zero failed tasks and zero Kotlin errors. Desktop source compilation covered
+70 modules; desktop test-source compilation covered 70 tasks (68 with source,
+two `NO-SOURCE`). Existing compiler/configuration warnings remain.
+
+Compiled candidate tree: `15e09dd0e1805dc9f8214cb72062fe89550a5e15`
+(before this documentation-only verification append).
+Logs: `/tmp/p12-protocols-ca65eb2-compile-20261104.log` (initial dependency
+failure) and `/tmp/p12-protocols-ca65eb2-compile-final-20261104.log` (green).
+
+Tests executed: **0**, per the owner's compile-only migration boundary. The
+Flutter preflight also executes tests and was therefore not run. The resolved
+ownership, Android dependency, OC2 source and verification-report diffs pass
+whitespace checks; the imported `docs/native/inventory/ui-c.md` retains two
+pre-existing whitespace findings. No other unit's content was changed to remove
+those findings. No push, CI run, release or device validation was performed.
+
+The new merge message passes `native/tool/check_commits.sh --message-file ...
+--merge`. A post-merge range scan (`HEAD^1..HEAD`, 118 commits) also traverses
+incoming integration history and reports pre-existing subject/body/skip-CI
+violations there. Those imported commits were preserved without rewriting.

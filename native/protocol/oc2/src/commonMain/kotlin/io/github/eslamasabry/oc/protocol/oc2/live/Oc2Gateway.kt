@@ -51,6 +51,16 @@ internal class Oc2Gateway(
 
     override fun createPromptMessageId(): MessageId = MessageId(ids.message())
 
+    /**
+     * B-PROTO-028 (Flutter `Api2Gateway.serverRunsTools`): true when the person approves this session automatically.
+     * Such a session gets its original rules back before each send, so the server runs what its own rules allow
+     * without waiting for this phone; asks and denials still apply.
+     */
+    var serverRunsTools: (SessionId) -> Boolean = { false }
+
+    /** Re-installs the session's permission layer now (automatic approval switched on or off mid-reply). */
+    suspend fun syncSessionPermissions(session: SessionId): Outcome<Unit> = preparePermissions(session)
+
     override val capabilities: StateFlow<ServerCapabilities> = MutableStateFlow(Capabilities)
     override val location = MutableStateFlow(initialLocation)
     private val status = MutableStateFlow<StreamStatus>(StreamStatus.Connecting)
@@ -286,6 +296,45 @@ internal class Oc2Gateway(
         }
     }
 
+    /**
+     * The add-server probe verdict (Flutter `probeServerConnection`, row B-PROTO-094): a healthy answer connects with its
+     * version; an unhealthy one fails as `Busy(Failed)` without any v1 fallback; a 503 while booting is
+     * `Busy(Starting)`; 401 keeps its password verdict. Only when no OpenCode 2 health answer exists (404, or a 200 that
+     * is not the v2 health JSON) is the OpenCode 1 route read, and a real v1 server is `Incompatible(LegacyOpenCode1)`,
+     * never read as v2.
+     */
+    internal suspend fun probe(): Outcome<Health> =
+        when (val result = health()) {
+            is Outcome.Ok -> if (result.value.healthy) result else Failure.Busy(BusyKind.Failed).failed()
+            is Outcome.Failed -> {
+                val failure = result.failure
+                when {
+                    failure is Failure.Busy && failure.kind == BusyKind.Overloaded -> Failure.Busy(BusyKind.Starting).failed()
+                    failure is Failure.NotFound ||
+                        failure is Failure.UnreadableReply ||
+                        (failure is Failure.Incompatible &&
+                            failure.kind == IncompatibleKind.ProtocolMismatch) ->
+                        if (isLegacyServer())
+                            Failure.Incompatible(IncompatibleKind.LegacyOpenCode1).failed()
+                        else result
+                    else -> result
+                }
+            }
+        }
+
+    /** `GET /global/health` (no `/api` prefix): an OpenCode 1 server answers `{healthy: true, version}` there. */
+    private suspend fun isLegacyServer(): Boolean {
+        val response =
+            net.exchange({
+                method = HttpMethod.Get
+                url("$origin/global/health")
+                header(HttpHeaders.Accept, "application/json")
+                auth?.let { header(HttpHeaders.Authorization, it) }
+            }) { reply -> reply.bodyAsText() }
+        val obj = (response as? Outcome.Ok)?.value?.let { Oc2Wire.parse(it) } as? JsonObject ?: return false
+        return (obj["healthy"] as? JsonPrimitive)?.booleanOrNull == true && obj.str("version") != null
+    }
+
     override suspend fun sessionPage(cursor: String?, limit: Int): Outcome<ServerPage<Session>> =
         read(
             "/session",
@@ -502,7 +551,7 @@ internal class Oc2Gateway(
                     }
             } ?: return Failure.Refused(RefusalReason.ConsentMissing).failed()
         val update =
-            policy.updateForAgent(agentData, serverRuns = false)
+            policy.updateForAgent(agentData, serverRuns = serverRunsTools(session))
                 ?: return Failure.Refused(RefusalReason.ConsentMissing).failed()
         if (policy.confirms(update)) return Outcome.Ok(Unit)
         val patched = json(path, HttpMethod.Patch, update)
@@ -1108,7 +1157,7 @@ internal class Oc2Gateway(
                 legacyQuestionRequests = false,
                 forms = false,
                 inbox = false,
-                cliSessionResume = false,
+                cliSessionResume = true, // Flutter api2: opencode2 --session resumes by id (P12-BUILD-AGENTS)
                 projectsAreGitRepositories = false,
                 remoteShell = false,
                 claudeAgent = false,

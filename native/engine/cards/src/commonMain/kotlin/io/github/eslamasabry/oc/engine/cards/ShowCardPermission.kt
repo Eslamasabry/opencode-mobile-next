@@ -24,6 +24,8 @@ public class ShowCardPermission(
         val sessionProvider: String?,
         /** The request's directory equals the open location. */
         val inLocation: Boolean,
+        /** The daemon reported a tested version (Paseo `paseoSupports`); an unqualified daemon never auto-allows (B-SEC-080). */
+        val daemonTested: Boolean,
     )
 
     public enum class Decision {
@@ -89,6 +91,7 @@ public class ShowCardPermission(
         }
 
     private fun exact(r: Request): Boolean {
+        if (!r.daemonTested) return false
         if (r.kind != "tool" || r.toolName != CLAUDE_SHOW) return false
         if (!r.inLocation || r.sessionProvider == null) return false
         if (r.sessionProvider != "claude") return false

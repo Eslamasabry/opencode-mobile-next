@@ -21,13 +21,19 @@ buttons, no trampolines, unconditional Compat Live Update calls, BigTextStyle on
 | `NotificationActionBody.kt` | the body behind `CodingActionReceiver` and `StatusActionReceiver` |
 | `StatusRow.kt`, `StatusRenderer.kt` | `StatusContent`, `StatusThrottle`, `LiveUpdatePolicy`, the 4747 renderer |
 | `ReplyWatch.kt` | `ReplyWatchPolicy` and `ReplyWatchServiceBody` (S11-4) |
+| `StatusModel.kt` | `StatusInput` → `StatusContent` (port of `notification_status.dart`), `StatusWords` / `AndroidStatusWords` |
+| `StatusController.kt` | chat state → `StatusInput` (busy set, runs, plans, pending requests, pauses; B-ANDR-041) |
+| `AlertMoments.kt` | which alerts a profile's sessions get and when they go (B-ANDR-011, -039, -040) |
+| `ShadeReplyGuard.kt` | `QuestionShape` (shade options, typed-reply rule), `GuardedShadeAnswerer`, `RunningOnlyStopper` |
+| `ReplyExcerpt.kt` | the finished alert's line from assistant, non-synthetic text (B-ANDR-048) |
 
 OS-visible classes (`CodingActionReceiver`, `StatusActionReceiver`, `BackgroundConnectionService`) are thin shells in
 `:androidApp` at their frozen FQCNs (plan 11 §2.2); this module only names them. The seams (`ShadeAnswerer`,
 `ReplyStopper`, `ReplyRunSource`) are bound by the engines in the app graph.
 
 Strings: `res/values*/strings_notify.xml`, names `notify_*`. en and ar are the Flutter app's `native_*` strings,
-verbatim; es, ja, pt, ru and zh are new. They move into `:ui:words` `strings_os` when its owner takes them.
+verbatim; es, ja, pt, ru and zh are new. The status row's words are `strings_notify_status.xml` (`notify_status_*`;
+en and ar are the Flutter `notifStatus*` arb strings, verbatim). They move into `:ui:words` `strings_os` when its owner takes them.
 
 ```bash
 ./gradlew :android:notifications:testDebugUnitTest   # JVM + Robolectric (SDK 35, and 36 for Live Updates)

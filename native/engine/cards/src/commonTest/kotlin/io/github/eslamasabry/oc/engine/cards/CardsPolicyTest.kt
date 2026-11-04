@@ -242,8 +242,8 @@ class CardsPolicyTest {
 
     // ------------------------------------------------------------------ show permission
 
-    private fun request(id: String = "r1", name: String? = "mcp__oc-ui__show", kind: String = "tool", provider: String? = "claude", session: String? = "claude", inLocation: Boolean = true) =
-        ShowCardPermission.Request(id, "s", name, kind, provider, session, inLocation)
+    private fun request(id: String = "r1", name: String? = "mcp__oc-ui__show", kind: String = "tool", provider: String? = "claude", session: String? = "claude", inLocation: Boolean = true, daemonTested: Boolean = true) =
+        ShowCardPermission.Request(id, "s", name, kind, provider, session, inLocation, daemonTested)
 
     @Test
     fun `B-CHAT-049 a qualified exact show is allowed once without an approval card`() {

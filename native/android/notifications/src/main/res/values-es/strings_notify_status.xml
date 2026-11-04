@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The status row's words (StatusModel, B-ANDR-041..047). Native translation of the notifStatus* strings; numbers arrive pre-formatted (%s). -->
+<resources>
+    <string name="notify_status_working">Trabajando…</string>
+    <string name="notify_status_still_working">%1$s siguen trabajando</string>
+    <string name="notify_status_chats_working">%1$s conversaciones trabajando</string>
+    <string name="notify_status_more">+%1$s más</string>
+    <string name="notify_status_waiting_count">%1$s en espera</string>
+    <string name="notify_status_tasks_progress">%1$s de %2$s tareas</string>
+    <string name="notify_status_minutes">%1$s min</string>
+    <string name="notify_status_hours">%1$s h</string>
+    <string name="notify_status_waiting_provider">En espera · límite de %1$s</string>
+    <string name="notify_status_waiting_generic">En espera · el proveedor está ocupado</string>
+    <string name="notify_status_tries_again_at">Vuelve a intentarlo a las %1$s</string>
+    <string name="notify_status_tries_again_soon">Vuelve a intentarlo pronto</string>
+    <string name="notify_status_paused_android_title">En pausa · límite de segundo plano de Android</string>
+    <string name="notify_status_paused_android_body">Android detiene el trabajo en segundo plano tras 6 horas al día. Abre OpenCode para continuar.</string>
+    <string name="notify_status_paused_hot_title">En pausa · el teléfono está caliente</string>
+    <string name="notify_status_paused_hot_body">Se reanuda cuando se enfríe</string>
+    <string name="notify_status_paused_idle_title">En pausa · no había nada en marcha</string>
+    <string name="notify_status_paused_idle_body">Toca para iniciar OpenCode de nuevo</string>
+    <string name="notify_status_reconnecting_title">Reconectando con %1$s</string>
+    <string name="notify_status_reconnecting_generic">Reconectando</string>
+    <string name="notify_status_reconnecting_body">Esperando la conexión</string>
+    <string name="notify_status_ready_title">Listo · nada en marcha</string>
+    <string name="notify_status_ready_body">Listo cuando quieras</string>
+    <string name="notify_status_last_reply">Última respuesta hace %1$s</string>
+    <string name="notify_status_last_reply_now">Última respuesta ahora mismo</string>
+    <string name="notify_status_setup_title">Configuración · %1$s de %2$s</string>
+    <string name="notify_status_on_server">en %1$s</string>
+    <string name="notify_status_on_this_phone">en este teléfono</string>
+    <string name="notify_status_lock_working">%1$s trabajando</string>
+    <string name="notify_status_lock_waiting">En espera</string>
+    <string name="notify_status_lock_paused">En pausa</string>
+    <string name="notify_status_lock_reconnecting">Reconectando</string>
+    <string name="notify_status_lock_ready">Listo</string>
+    <string name="notify_status_lock_setup">Configurando</string>
+    <plurals name="notify_status_needs_you">
+        <item quantity="one">%1$s te necesita</item>
+        <item quantity="many">%1$s te necesitan</item>
+        <item quantity="other">%1$s te necesitan</item>
+    </plurals>
+</resources>
