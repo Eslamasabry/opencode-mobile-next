@@ -11,7 +11,10 @@ public interface ChatRequestActions {
 
     public fun reject(id: RequestId)
 
-    /** The quiet Always allow action: opens the one confirm that names what and where; sends nothing yet. */
+    /**
+     * The quiet Always allow action: opens the one confirm that names what and where; sends nothing
+     * yet.
+     */
     public fun askAlwaysAllow(id: RequestId)
 
     /** Confirmed: answers "always" through the same held path, if the request still waits. */
@@ -32,6 +35,14 @@ public interface ChatRequestActions {
 
     /** A longer question: opens the request sheet (the sheet itself is S3-REQFORMS). */
     public fun openSheet(id: RequestId)
+
+    public fun closeSheet(id: RequestId)
+
+    public fun chooseInSheet(id: RequestId, prompt: Int, label: String)
+
+    public fun editSheetOther(id: RequestId, prompt: Int, text: String)
+
+    public fun sendSheet(id: RequestId)
 
     /** Inside the 3 s hold only. */
     public fun undo(id: RequestId)

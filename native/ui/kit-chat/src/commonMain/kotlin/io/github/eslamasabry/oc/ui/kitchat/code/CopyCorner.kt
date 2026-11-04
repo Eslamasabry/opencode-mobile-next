@@ -26,11 +26,17 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import kotlinx.coroutines.delay
 
 /**
- * The code block's Copy at the end of its first line (QA wave 4 N9): after a tap it says [copiedLabel] for
- * [COPIED_MS] (announced politely), and it adds no height of its own, so a one-line block stays one line tall.
+ * The code block's Copy at the end of its first line (QA wave 4 N9): after a tap it says
+ * [copiedLabel] for [COPIED_MS] (announced politely), and it adds no height of its own, so a
+ * one-line block stays one line tall.
  */
 @Composable
-internal fun BoxScope.CopyCorner(label: String, copiedLabel: String?, onCopy: () -> Unit) {
+internal fun BoxScope.CopyCorner(
+    label: String,
+    copiedLabel: String?,
+    trailingInset: Int = 0,
+    onCopy: () -> Unit,
+) {
     var taps by remember { mutableIntStateOf(0) }
     var copied by remember { mutableStateOf(false) }
     LaunchedEffect(taps) {
@@ -47,7 +53,7 @@ internal fun BoxScope.CopyCorner(label: String, copiedLabel: String?, onCopy: ()
             },
             modifier =
                 Modifier.align(Alignment.TopEnd)
-                    .offset(x = Space.S3.dp, y = (-14).dp)
+                    .offset(x = (Space.S3 - trailingInset).dp, y = (-14).dp)
                     .layout { measurable, constraints ->
                         val placeable = measurable.measure(constraints.copy(minHeight = 0))
                         layout(placeable.width, 0) { placeable.place(0, 0) }

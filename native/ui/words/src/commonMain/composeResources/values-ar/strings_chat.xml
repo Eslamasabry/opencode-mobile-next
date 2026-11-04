@@ -1401,4 +1401,5 @@
     <string name="composerPasteImageFromClipboard">لصق صورة من الحافظة</string>
     <string name="composerPasteImageFromClipboardSupporting">إرفاق الصورة المنسوخة</string>
     <string name="composerPasteImageEmpty">لا توجد صورة في الحافظة.</string>
+    <string name="chatRequestAnswerRequired">أجب عن الأسئلة المطلوبة أولاً.</string>
 </resources>

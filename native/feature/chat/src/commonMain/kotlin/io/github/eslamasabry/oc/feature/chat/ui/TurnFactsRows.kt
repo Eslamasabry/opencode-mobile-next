@@ -25,6 +25,7 @@ import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitCommandBox
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolKind
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolOutput
+import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolRail
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolRow
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolStatus
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolView
@@ -111,7 +112,17 @@ internal fun TurnWorkLine(
         earlier = earlier,
         modifier = Modifier.testTag("chat-work-line"),
     ) {
-        for (step in work.steps.drop(hidden)) StepRow(step, nowMs, folds, onOpenSession, onOpenFile)
+        val shown = work.steps.drop(hidden)
+        shown.forEachIndexed { index, step ->
+            StepRow(
+                step,
+                nowMs,
+                folds,
+                onOpenSession,
+                onOpenFile,
+                KitToolRail(index == 0, index == shown.lastIndex),
+            )
+        }
     }
 }
 
@@ -132,6 +143,7 @@ private fun StepRow(
     folds: TranscriptFolds,
     onOpenSession: ((String) -> Unit)?,
     onOpenFile: ((ToolArtifact) -> Unit)?,
+    rail: KitToolRail? = null,
 ) {
     val key = "step:${step.partId}"
     val f = step.facts
@@ -170,6 +182,7 @@ private fun StepRow(
     val more = pluralStringResource(Res.plurals.kitCodeShowAll, lines, lines)
     KitToolRow(
         view = view,
+        rail = rail,
         opened = folds.open[key] == true,
         onToggle = { folds.open[key] = !(folds.open[key] ?: false) },
         modifier = Modifier.testTag("chat-step-${step.partId}"),

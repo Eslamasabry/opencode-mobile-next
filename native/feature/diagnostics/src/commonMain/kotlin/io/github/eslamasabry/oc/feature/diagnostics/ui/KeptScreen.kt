@@ -18,11 +18,9 @@ import io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptNotice
 import io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptUi
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.tokens.Space
-import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitAction
-import io.github.eslamasabry.oc.ui.kit.KitText
-import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
+import io.github.eslamasabry.oc.ui.kit.content.log.KitLogPanel
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
@@ -87,10 +85,10 @@ import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * Settings › Report a problem › Everything this phone kept (Flutter `AppDiagnosticsKeptScreen`): the opt-in crash
- * reports with their switch, the saved reports (time and category only), Preview → the exact text → Share report;
- * Android's record of each time the app closed; and the errors kept on this phone with Clear. Nothing here sends
- * anything by itself.
+ * Settings › Report a problem › Everything this phone kept (Flutter `AppDiagnosticsKeptScreen`):
+ * the opt-in crash reports with their switch, the saved reports (time and category only), Preview →
+ * the exact text → Share report; Android's record of each time the app closed; and the errors kept
+ * on this phone with Clear. Nothing here sends anything by itself.
  */
 @Composable
 public fun KeptScreen(state: KeptUi, actions: KeptActions) {
@@ -107,14 +105,19 @@ public fun KeptScreen(state: KeptUi, actions: KeptActions) {
         width = KitScreenWidth.Reading,
     ) {
         Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(vertical = Space.S3.dp),
+            Modifier.fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(vertical = Space.S3.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
         ) {
             state.notice?.let { notice ->
                 KitNotice(
                     noticeWords(notice),
                     gutter.testTag("kept-notice"),
-                    tone = if (notice == KeptNotice.Stale || notice == KeptNotice.CaptureOff) StatusTone.Neutral else StatusTone.Failure,
+                    tone =
+                        if (notice == KeptNotice.Stale || notice == KeptNotice.CaptureOff)
+                            StatusTone.Neutral
+                        else StatusTone.Failure,
                 )
             }
             ErrorsSection(state, actions)
@@ -133,26 +136,54 @@ public fun KeptScreen(state: KeptUi, actions: KeptActions) {
                 )
             } else if (state.confirmClear) {
                 KitConfirmSpec(
-                    title = pluralStringResource(Res.plurals.appDiagnosticsClearTitle, state.errorsKept, state.errorsKept),
-                    confirmLabel = pluralStringResource(Res.plurals.appDiagnosticsClearConfirm, state.errorsKept, state.errorsKept),
+                    title =
+                        pluralStringResource(
+                            Res.plurals.appDiagnosticsClearTitle,
+                            state.errorsKept,
+                            state.errorsKept,
+                        ),
+                    confirmLabel =
+                        pluralStringResource(
+                            Res.plurals.appDiagnosticsClearConfirm,
+                            state.errorsKept,
+                            state.errorsKept,
+                        ),
                     kind = KitConfirmKind.Destructive,
-                    body = pluralStringResource(Res.plurals.appDiagnosticsClearBody, state.errorsKept, state.errorsKept),
+                    body =
+                        pluralStringResource(
+                            Res.plurals.appDiagnosticsClearBody,
+                            state.errorsKept,
+                            state.errorsKept,
+                        ),
                 )
             } else {
                 null
             },
-        onConfirm = { if (state.confirmDelete) actions.onConfirmDelete() else actions.onConfirmClear() },
+        onConfirm = {
+            if (state.confirmDelete) actions.onConfirmDelete() else actions.onConfirmClear()
+        },
         onCancel = actions::onCancelConfirm,
     )
 }
 
 @Composable
 private fun ErrorsSection(state: KeptUi, actions: KeptActions) {
-    KitSectionLabel(pluralStringResource(Res.plurals.reportProblemErrorsLabel, state.errorsKept, state.errorsKept))
+    KitSectionLabel(
+        pluralStringResource(
+            Res.plurals.reportProblemErrorsLabel,
+            state.errorsKept,
+            state.errorsKept,
+        )
+    )
     if (state.errorsKept > 0) {
         KitRowGroup {
             KitRow(
-                title = pluralStringResource(Res.plurals.appDiagnosticsClearConfirm, state.errorsKept, state.errorsKept),
+                title =
+                    pluralStringResource(
+                        Res.plurals.appDiagnosticsClearConfirm,
+                        state.errorsKept,
+                        state.errorsKept,
+                    ),
                 modifier = Modifier.testTag("kept-clear"),
                 onClick = actions::onClearErrors,
             )
@@ -169,7 +200,8 @@ private fun CrashSection(state: KeptUi, actions: KeptActions, gutter: Modifier) 
             title = stringResource(Res.string.crashReportsSwitch),
             checked = state.crashOn,
             supporting = stringResource(Res.string.crashReportsSwitchBody),
-            enabled = if (state.crashAvailable) KitEnabled.Enabled else KitEnabled.Disabled(unavailable),
+            enabled =
+                if (state.crashAvailable) KitEnabled.Enabled else KitEnabled.Disabled(unavailable),
             onCheckedChange = actions::onCrashCapture,
         )
         if (state.crashOn && state.crashRows.isEmpty()) {
@@ -180,7 +212,13 @@ private fun CrashSection(state: KeptUi, actions: KeptActions, gutter: Modifier) 
             )
         }
         val category = stringResource(Res.string.crashReportDetailCategory)
-        state.crashRows.forEach { row -> KitRow(title = row.time, supporting = "$category · ${row.category}", supportingMaxLines = 2) }
+        state.crashRows.forEach { row ->
+            KitRow(
+                title = row.time,
+                supporting = "$category · ${row.category}",
+                supportingMaxLines = 2,
+            )
+        }
         if (state.crashRows.isNotEmpty()) {
             KitRow(
                 title = stringResource(Res.string.diagnosticsReportTitle),
@@ -188,22 +226,32 @@ private fun CrashSection(state: KeptUi, actions: KeptActions, gutter: Modifier) 
                 onClick = actions::onPreviewCrashReport,
             )
             KitRow(
-                title = pluralStringResource(Res.plurals.crashReportsDelete, state.crashRows.size, state.crashRows.size),
+                title =
+                    pluralStringResource(
+                        Res.plurals.crashReportsDelete,
+                        state.crashRows.size,
+                        state.crashRows.size,
+                    ),
                 onClick = actions::onDeleteCrashReports,
             )
         }
     }
     KitGroupNote(
-        if (state.crashOn) stringResource(Res.string.crashReportsOffDeletes) else stringResource(Res.string.crashReportsNote),
+        if (state.crashOn) stringResource(Res.string.crashReportsOffDeletes)
+        else stringResource(Res.string.crashReportsNote)
     )
     state.preview?.let { preview ->
         KitGroupNote(stringResource(Res.string.diagnosticsReportPrivacy))
         KitGroupNote(stringResource(Res.string.crashReportPreviewBody))
-        Box(gutter.testTag("kept-preview-text")) { KitText(preview.text, role = TypeRole.Mono, kind = KitTextKind.Reading) }
+        Box(gutter.testTag("kept-preview-text")) { KitLogPanel(redactedText = preview.text, live = false) }
         Box(gutter) {
             KitActionBlock(
                 primary =
-                    KitAction(stringResource(Res.string.diagnosticsReportShare), actions::onShareCrashReport, working = state.sharing),
+                    KitAction(
+                        stringResource(Res.string.diagnosticsReportShare),
+                        actions::onShareCrashReport,
+                        working = state.sharing,
+                    )
             )
         }
     }
@@ -226,12 +274,18 @@ private fun ExitsSection(exits: KeptExits, actions: KeptActions, gutter: Modifie
                 stringResource(Res.string.diagnosticsExitHistoryFailed),
                 gutter,
                 tone = StatusTone.Failure,
-                actions = listOf(KitLineAction(stringResource(Res.string.commonRetry), actions::onRetryExits)),
+                actions =
+                    listOf(
+                        KitLineAction(stringResource(Res.string.commonRetry), actions::onRetryExits)
+                    ),
             )
         is KeptExits.Ready -> {
             KitRowGroup {
-                if (exits.rows.none { it.kind.notable }) KitRow(title = stringResource(Res.string.diagnosticsExitNoProblems))
-                exits.rows.forEach { row -> KitRow(title = exitWords(row.kind), supporting = row.time) }
+                if (exits.rows.none { it.kind.notable })
+                    KitRow(title = stringResource(Res.string.diagnosticsExitNoProblems))
+                exits.rows.forEach { row ->
+                    KitRow(title = exitWords(row.kind), supporting = row.time)
+                }
             }
             KitGroupNote(stringResource(Res.string.diagnosticsExitHistoryNote))
         }
@@ -245,10 +299,11 @@ private fun exitWords(kind: ExitKind): String =
             ExitKind.Normal -> Res.string.diagnosticsExitNormal
             ExitKind.Update -> Res.string.diagnosticsExitUpdate
             ExitKind.ForceStop -> Res.string.diagnosticsExitForceStop
-            ExitKind.LowMemory, ExitKind.MemoryLimit -> Res.string.diagnosticsExitLowMemory
+            ExitKind.LowMemory,
+            ExitKind.MemoryLimit -> Res.string.diagnosticsExitLowMemory
             ExitKind.Crash -> Res.string.diagnosticsExitCrash
             ExitKind.Killed -> Res.string.diagnosticsExitKilled
-        },
+        }
     )
 
 @Composable
@@ -263,5 +318,5 @@ private fun noticeWords(notice: KeptNotice): String =
             KeptNotice.ShareFailed -> Res.string.diagnosticsReportShareFailed
             KeptNotice.DetailsUnavailable -> Res.string.diagnosticsUnavailable
             KeptNotice.ClearFailed -> Res.string.reportProblemClearFailed
-        },
+        }
     )

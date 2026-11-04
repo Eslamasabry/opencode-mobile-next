@@ -30,6 +30,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.style.KitSignalSample
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.appearanceAccentMatchShort
@@ -115,14 +116,26 @@ internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActio
     // A style the app does not draw would be a choice that changes nothing: listed only where it is drawn.
     if (ui.styles) {
         KitSectionLabel(stringResource(Res.string.appearanceAskStyle))
-        val styleHeld = if (ui.heldBySaver) KitEnabled.Disabled(stringResource(Res.string.appearanceSaverHoldsStyle)) else KitEnabled.Enabled
+        val styleHeld =
+            if (ui.heldBySaver)
+                KitEnabled.Disabled(stringResource(Res.string.appearanceSaverHoldsStyle))
+            else KitEnabled.Enabled
         KitChoiceList(
-            choices = SurfaceStyle.entries.map { KitChoice(it, styleWords(it), enabled = if (it == ui.style) KitEnabled.Enabled else styleHeld) },
+            choices =
+                // All five are drawn (the style resolver); the Signal sample below previews Signal.
+                SurfaceStyle.entries.map {
+                    KitChoice(
+                        it,
+                        styleWords(it),
+                        enabled = if (it == ui.style) KitEnabled.Enabled else styleHeld,
+                    )
+                },
             selected = ui.style,
             semanticsLabel = stringResource(Res.string.appearanceAskStyle),
             modifier = Modifier.testTag("appearance-styles"),
             onSelect = actions::onStyle,
         )
+        KitSignalSample(modifier = gutter)
         if (ui.heldBySaver) KitGroupNote(stringResource(Res.string.appearanceSaverHoldsStyle))
 
         KitSectionLabel(stringResource(Res.string.appearanceAskShape))
@@ -163,7 +176,10 @@ internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActio
             selected = ui.motion,
             semanticsLabel = stringResource(Res.string.appearanceAskMotion),
             modifier = Modifier.testTag("appearance-motion"),
-            enabled = if (ui.heldBySaver) KitEnabled.Disabled(stringResource(Res.string.appearanceSaverMotion)) else KitEnabled.Enabled,
+            enabled =
+                if (ui.heldBySaver)
+                    KitEnabled.Disabled(stringResource(Res.string.appearanceSaverMotion))
+                else KitEnabled.Enabled,
             onChange = actions::onMotion,
         )
     }

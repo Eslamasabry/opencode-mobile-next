@@ -78,6 +78,18 @@ class FilesScreensTest {
     private class FileCalls : FileActions {
         val calls = mutableListOf<String>()
 
+        override fun openLink(url: String) {
+            calls += "openLink"
+        }
+
+        override fun confirmLink() {
+            calls += "confirmLink"
+        }
+
+        override fun cancelLink() {
+            calls += "cancelLink"
+        }
+
         override fun back() {
             calls += "back"
         }
