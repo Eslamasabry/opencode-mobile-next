@@ -1,6 +1,6 @@
 # Migration 46 — Flutter platform, Linux, protocol and other code (part 1)
 
-Counts (31/78 files recorded): already there **14**; ported now **11**; not needed **6**; blocked **0**.
+Counts (41/78 files recorded): already there **14**; ported now **11**; not needed **16**; blocked **0**.
 
 Base: `b6c30a59983a145a4d9cf0bcc3d1ec0295c0d6bc`; branch `p12x/46-port-rest-1`.
 Finish line: all 78 source files have a behavior-based disposition and missing feasible native behavior is wired.
@@ -38,6 +38,16 @@ Non-goals: tests, APKs, pushes, signing, releases, and features explicitly defer
 - `lib/api2/http_keep_alive.dart` — not needed: browser/Dio adapter glue; native uses the profile-owned hardened OkHttp transport, with no browser client.
 - `lib/builtin/abi_native.dart` — not needed: Dart FFI Abi re-export; native installation reads real Build.SUPPORTED_ABIS at native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/AppPhoneAgents.kt:96.
 - `lib/builtin/abi_shim.dart` — not needed: Conditional Dart/browser export for the Widgetbook compiler; native uses platform capability interfaces.
+- `lib/builtin/abi_web.dart` — not needed: Widgetbook-only fake Abi implementation, never a device path; the binding plan ships Android first and no browser native client.
+- `lib/builtin/claude_agent_link.dart` — not needed: the OpenCode 2 Claude Agent launcher/sign-in-folder trial is explicitly after-switch work under plan/01 §12 D8, which chooses Paseo for the switch.
+- `lib/builtin/int64_max_native.dart` — not needed: Dart integer constant plumbing; Kotlin Long.MAX_VALUE supplies the same signed bound in native/engine/runtime/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/runtime/setup/SetupPreflight.kt.
+- `lib/builtin/int64_max_shim.dart` — not needed: Dart conditional export selecting native versus browser integer precision, unnecessary for Kotlin Long.
+- `lib/builtin/int64_max_web.dart` — not needed: Widgetbook-only 53-bit browser saturation constant; no browser native product in plan/01.
+- `lib/desktop/window_icon.dart` — not needed — Flutter GTK running-window icon; native desktop remains a kit gallery until its later product phase (plan/01 §1 and §12 D14).
+- `lib/domain/attention_item.dart` — not needed: unused Flutter observation DTO (no imports/callers); the live native attention feed uses scoped AttentionModel/SelectedTransportAttention instead of this superseded shape.
+- `lib/domain/claude_agent_trial.dart` — not needed: plan/01 §12 D8 selects the existing Paseo phone path for the switch and explicitly revisits the OpenCode 2 Claude Agent trial after the switch; no trial adapter or UI is enabled.
+- `lib/domain/factsbook/factsbook_gateway.dart` — not needed: FactsBook App API and signed trigger/reminder/offer contracts are explicitly deferred until after the switch by plan/01 §12 D6; existing persisted data is retained by DeferredFeatureData.
+- `lib/domain/factsbook/fake_factsbook_triggers.dart` — not needed: in-memory demo/test trigger evaluation and seeded reminder offers for the deferred FactsBook feature (plan/01 §12 D6), not a production node implementation.
 
 The native implementations include shared-storage file/APK handoff with a visible permission retry, localized age labels, retained assistant-model deletion, advisory agent build caps/full-speed settings, native thermal scheduling, visible-only Linux vitals, bounded card history, staged-history pagination, typed error fallback copy, Fork, project inventory and guarded launcher routing. Partial protocol/launch changes remain marked blocked where the rest of that file still lacks a complete native journey.
 
@@ -50,6 +60,7 @@ Validation: from `native/`, JDK 21, serialized with the shared machine build loc
 - `build/native-rest-46/compile-3.log`: both requested compilation tasks passed together (39s).
 - `build/native-rest-46/compile-21.log`: both requested compilation tasks passed together (3s).
 - `build/native-rest-46/compile-31.log`: both requested compilation tasks passed together (1s).
+- `build/native-rest-46/compile-41.log`: both requested compilation tasks passed together (1s).
 
 The first two attempts exposed an unavailable resource-environment import and a void Android Intent setter; both were corrected before the successful checkpoint. No tests were written, run, weakened or removed; no Flutter/preflight/test runner, APK, signing, push, publication or release command was run. Existing compiler warnings remain in untouched code. Kotlin/XML diff and source-manifest checks are static review only.
 
