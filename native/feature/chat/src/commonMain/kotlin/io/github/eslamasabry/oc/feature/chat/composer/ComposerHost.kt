@@ -18,21 +18,31 @@ public interface ComposerHost {
 }
 
 /** Plain ids: the profile, and the session (null = a new conversation that has none yet). */
-@Immutable
-public data class ComposerTarget(val profileId: String, val sessionId: String?)
+@Immutable public data class ComposerTarget(val profileId: String, val sessionId: String?)
 
 /**
- * Words waiting for the composer (state, never a one-shot flow; ADR §9.1): a saved prompt, a slash command or an
- * agent ```choices tap go after the person's words; [replace] (P12-CHAT-FEEL "Edit and resend") takes the field whole.
+ * Words waiting for the composer (state, never a one-shot flow; ADR §9.1): a saved prompt, a slash
+ * command or an agent ```choices tap go after the person's words; [replace] (P12-CHAT-FEEL "Edit
+ * and resend") takes the field whole.
  */
 @Immutable
-public data class InsertRequest(val id: Long, val text: String, val replace: Boolean = false)
+public data class InsertRequest(
+    val id: Long,
+    val text: String,
+    val replace: Boolean = false,
+    /**
+     * A starter belongs only to an untouched field. A late starter never overwrites or appends to
+     * typing.
+     */
+    val onlyIfEmpty: Boolean = false,
+)
 
 /**
- * What the chat hands the composer. Every getter is read in draw, layout or an effect, so a change never recomposes
- * the chat. Slice-2 additions to the plan's shape (request K-1): [focusRequest]/[focusDone] carry the
- * "ready to type" arrival (07 §2.5, B-NAV-005); [onStop]/[stopping] keep Stop in the composer's row while the chat
- * owns the stop and its live line (plan 09 §4.4).
+ * What the chat hands the composer. Every getter is read in draw, layout or an effect, so a change
+ * never recomposes the chat. Slice-2 additions to the plan's shape (request K-1):
+ * [focusRequest]/[focusDone] carry the "ready to type" arrival (07 §2.5, B-NAV-005);
+ * [onStop]/[stopping] keep Stop in the composer's row while the chat owns the stop and its live
+ * line (plan 09 §4.4).
  */
 public class ComposerChrome(
     public val busy: () -> Boolean,
@@ -44,6 +54,9 @@ public class ComposerChrome(
     public val focusDone: (id: Long) -> Unit,
     public val onStop: () -> Unit,
     public val stopping: () -> Boolean,
-    /** Chips another part folds into the composer's own row (the approval mode; P12 CHAT-HEADER). Never a new bar. */
+    /**
+     * Chips another part folds into the composer's own row (the approval mode; P12 CHAT-HEADER).
+     * Never a new bar.
+     */
     public val rowChips: @Composable () -> Unit = {},
 )

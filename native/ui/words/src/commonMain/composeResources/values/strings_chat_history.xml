@@ -1,0 +1,8 @@
+<resources>
+    <string name="chatHistoryTitle">Reuse a prompt</string>
+    <string name="chatHistorySubtitle">Choose words from this conversation or your recent sends. They are added to your draft; nothing is sent.</string>
+    <string name="chatHistorySearch">Search recent prompts</string>
+    <string name="chatHistoryEmpty">No recent prompts yet.</string>
+    <string name="chatHistoryLoading">Loading recent prompts…</string>
+    <string name="chatHistoryLoadFailed">Recent prompts could not be loaded. You can still use prompts from this conversation.</string>
+</resources>

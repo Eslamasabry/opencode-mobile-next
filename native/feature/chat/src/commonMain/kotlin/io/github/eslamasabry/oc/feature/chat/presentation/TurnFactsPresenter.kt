@@ -28,6 +28,8 @@ import io.github.eslamasabry.oc.engine.transcript.turnfacts.isCompactionLineLive
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.retryBannerFacts
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.runResult
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.runningBackgroundTasks
+import io.github.eslamasabry.oc.feature.chat.tasks.presentation.ChatTaskList
+import io.github.eslamasabry.oc.feature.chat.tasks.presentation.latestChatTasks
 import io.github.eslamasabry.oc.feature.chat.world.ChatLink
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeed
 import kotlin.time.Clock
@@ -39,7 +41,10 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
-/** What a finished turn did (B-CHAT-068/100/101): changed files with counts, commands with exit codes, and timing. */
+/**
+ * What a finished turn did (B-CHAT-068/100/101): changed files with counts, commands with exit
+ * codes, and timing.
+ */
 public data class TurnResultUi(
     val outcome: RunOutcomeKind,
     val files: List<ChangedFile>,
@@ -50,9 +55,17 @@ public data class TurnResultUi(
 )
 
 /** The context ring and its sheet (B-CHAT-019/057/102). */
-public data class ContextUi(val percent: Int, val level: ContextLevel, val sheet: ContextSheetFacts, val compacting: Boolean)
+public data class ContextUi(
+    val percent: Int,
+    val level: ContextLevel,
+    val sheet: ContextSheetFacts,
+    val compacting: Boolean,
+)
 
-/** What the live line says instead of "Working…" (no new bar: it folds into the line that is already there). */
+/**
+ * What the live line says instead of "Working…" (no new bar: it folds into the line that is already
+ * there).
+ */
 public sealed interface LiveNoticeUi {
     /** B-CHAT-016: the server retries; rate limit only when it is one, the attempt, a countdown. */
     public data class Retry(val facts: RetryBannerFacts) : LiveNoticeUi
@@ -65,8 +78,8 @@ public sealed interface LiveNoticeUi {
 }
 
 /**
- * Everything the transcript shows beside the engine's rows, keyed by turn id (CHAT-TRANSCRIPT). Side tables only: a
- * change here never copies the transcript rows.
+ * Everything the transcript shows beside the engine's rows, keyed by turn id (CHAT-TRANSCRIPT).
+ * Side tables only: a change here never copies the transcript rows.
  */
 public data class TurnFactsUi(
     val work: Map<String, TurnWork> = emptyMap(),
@@ -77,6 +90,7 @@ public data class TurnFactsUi(
     val background: List<BackgroundTask> = emptyList(),
     /** The clock these facts were read at (a running step's own time). */
     val nowMs: Long = 0,
+    val tasks: ChatTaskList? = null,
 ) {
     public companion object {
         public val Empty: TurnFactsUi = TurnFactsUi()
@@ -84,9 +98,10 @@ public data class TurnFactsUi(
 }
 
 /**
- * Turns the [TurnFeed] into [TurnFactsUi] (CHAT-TRANSCRIPT). Pure except for [Clock] and the stall tracker it keeps:
- * [present] is called with the time; [states] ticks once a second only while something counts (a run, a retry
- * countdown, background work), so an idle conversation costs nothing.
+ * Turns the [TurnFeed] into [TurnFactsUi] (CHAT-TRANSCRIPT). Pure except for [Clock] and the stall
+ * tracker it keeps: [present] is called with the time; [states] ticks once a second only while
+ * something counts (a run, a retry countdown, background work), so an idle conversation costs
+ * nothing.
  */
 public class TurnFactsPresenter(private val clock: Clock) {
     private val stall = TurnStallTracker()
@@ -94,20 +109,32 @@ public class TurnFactsPresenter(private val clock: Clock) {
     private var sessionKey = "turn"
     private var lastLink: ChatLink? = null
 
-    public fun states(feed: Flow<TurnFeed>, waiting: Flow<Boolean>, scope: CoroutineScope, started: SharingStarted): StateFlow<TurnFactsUi> {
+    public fun states(
+        feed: Flow<TurnFeed>,
+        waiting: Flow<Boolean>,
+        scope: CoroutineScope,
+        started: SharingStarted,
+    ): StateFlow<TurnFactsUi> {
         val ticks = factTicks(clock, feed.map { ticking(it) }, TICK_MS)
         return combine(feed, waiting, ticks) { f, w, now -> present(f, now, w) }
             .stateIn(scope, started, TurnFactsUi.Empty)
     }
 
     /**
-     * Whether the clock must tick: a run, a retry countdown, or background work still believed running after its turn
-     * ended (B-CHAT-007: its elapsed time keeps counting and the six-hour cutoff applies in a quiet chat).
+     * Whether the clock must tick: a run, a retry countdown, or background work still believed
+     * running after its turn ended (B-CHAT-007: its elapsed time keeps counting and the six-hour
+     * cutoff applies in a quiet chat).
      */
     internal fun ticking(f: TurnFeed): Boolean =
-        f.busy || f.retry != null || runningBackgroundTasks(f.ledger.messages, clock.now().toEpochMilliseconds()).isNotEmpty()
+        f.busy ||
+            f.retry != null ||
+            runningBackgroundTasks(f.ledger.messages, clock.now().toEpochMilliseconds())
+                .isNotEmpty()
 
-    /** The facts at [nowMs]. [waitingForYou]: a request card waits for the person (no stall, no spinner). */
+    /**
+     * The facts at [nowMs]. [waitingForYou]: a request card waits for the person (no stall, no
+     * spinner).
+     */
     public fun present(feed: TurnFeed, nowMs: Long, waitingForYou: Boolean = false): TurnFactsUi {
         val snapshot = feed.ledger
         val stopped = feed.lastOutcome is RunOutcome.Interrupted
@@ -118,7 +145,8 @@ public class TurnFactsPresenter(private val clock: Clock) {
             if (newest && feed.busy) continue
             result(turn, feed.timings[turn.turnId])?.let { results[turn.turnId] = it }
         }
-        val compacting = feed.busy && snapshot.messages.lastOrNull()?.parts?.any(::isCompactionLineLive) == true
+        val compacting =
+            feed.busy && snapshot.messages.lastOrNull()?.parts?.any(::isCompactionLineLive) == true
         return TurnFactsUi(
             work = work,
             results = results,
@@ -126,6 +154,7 @@ public class TurnFactsPresenter(private val clock: Clock) {
             live = live(feed, nowMs, waitingForYou, work, compacting),
             background = runningBackgroundTasks(snapshot.messages, nowMs),
             nowMs = nowMs,
+            tasks = latestChatTasks(snapshot.messages),
         )
     }
 
@@ -143,8 +172,9 @@ public class TurnFactsPresenter(private val clock: Clock) {
     private fun context(feed: TurnFeed, compacting: Boolean): ContextUi? {
         if (feed.windows.isEmpty()) return null
         val reading =
-            contextReading(feed.ledger.messages) { provider, model -> feed.windows[TurnFeed.windowKey(provider, model)] }
-                ?: return null
+            contextReading(feed.ledger.messages) { provider, model ->
+                feed.windows[TurnFeed.windowKey(provider, model)]
+            } ?: return null
         val fraction = reading.fraction
         return ContextUi(
             percent = contextPercent(fraction),
@@ -167,11 +197,15 @@ public class TurnFactsPresenter(private val clock: Clock) {
             lastLink = null
             return null
         }
-        feed.retry?.let { r -> return LiveNoticeUi.Retry(retryBannerFacts(r.attempt, r.nextAtMs, r.tag, nowMs)) }
+        feed.retry?.let { r ->
+            return LiveNoticeUi.Retry(retryBannerFacts(r.attempt, r.nextAtMs, r.tag, nowMs))
+        }
         if (compacting) return LiveNoticeUi.Compacting
-        // B-CHAT-118: silence per turn, reset by progress, suppressed while a request waits or a step runs.
+        // B-CHAT-118: silence per turn, reset by progress, suppressed while a request waits or a
+        // step runs.
         stall.begin(sessionKey, feed.runStartedAtMs ?: nowMs)
-        // A changed connection makes the last diagnosis stale (Flutter invalidates evidence on transport changes):
+        // A changed connection makes the last diagnosis stale (Flutter invalidates evidence on
+        // transport changes):
         // check again without counting it as progress.
         if (lastLink != null && lastLink != feed.link) stall.invalidateEvidence(sessionKey)
         lastLink = feed.link
@@ -181,13 +215,20 @@ public class TurnFactsPresenter(private val clock: Clock) {
             stall.noteProgress(sessionKey, progress)
         }
         stall.setWaiting(sessionKey, waiting, nowMs)
-        val toolRunning = work.values.lastOrNull()?.steps?.any { it.state == StepState.Running } == true
+        val toolRunning =
+            work.values.lastOrNull()?.steps?.any { it.state == StepState.Running } == true
         stall.setToolRunning(sessionKey, toolRunning, nowMs)
         stall.takeProbe(sessionKey, nowMs)?.let { probe ->
-            // The probe: the conversation's own event stream. Live = the server answers (model slow); anything else
-            // is a lost or unconfirmed connection. Helper facts belong to the built-in runtime and stay unknown here.
+            // The probe: the conversation's own event stream. Live = the server answers (model
+            // slow); anything else
+            // is a lost or unconfirmed connection. Helper facts belong to the built-in runtime and
+            // stay unknown here.
             val connected = feed.link == ChatLink.Live
-            stall.completeProbe(probe, TurnStallEvidence(transportConnected = connected, endpointReachable = connected), nowMs)
+            stall.completeProbe(
+                probe,
+                TurnStallEvidence(transportConnected = connected, endpointReachable = connected),
+                nowMs,
+            )
         }
         return stall.diagnosisFor(sessionKey)?.let { LiveNoticeUi.Stall(it.notice) }
     }
