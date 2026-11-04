@@ -161,3 +161,46 @@ commit carries them.
   None of these were exercised here; there is no device or daemon in this container.
 - **Real servers.** The live OC2 checks for the new dialect routes (stable 2.1 line) are not run here.
   `LiveOc2ServerSmokeTest` stays opt-in.
+
+## P12 integration repair (2026-11-04)
+
+Merged integration head `6973eefcd33aa5fe019280bc3b898ddce04f550b` into
+`p12x/protocols-abddca7`, starting at `abddca71ec636915871cec590832a5783bd6165f`.
+The only conflict was `native/MODULE_OWNERS`: retained both protocol/computer rows
+and all five integrations/Plans rows. The automatic Android dependency merge
+retains every project dependency from both parents. No Kotlin source or tests
+needed changes.
+
+The fresh worktree lacked the gitignored sherpa-onnx AAR. The first compile run
+failed eight Android tasks because that dependency was missing; all desktop
+source and test-source compilation completed. Ran `native/tools/vendor/fetch.sh`
+and verified the artifact against its committed SHA-256, then reran the complete
+requested command under the shared PC build lock:
+
+```bash
+cd native
+export JAVA_HOME=/home/eslam/Storage2/tools/jdk21
+export ANDROID_HOME="$HOME/Android/Sdk"
+../tool/qa/machine_lock.sh build -- nice -n 5 ./gradlew --console=plain --continue \
+  -Dorg.gradle.workers.max=2 \
+  -Dorg.gradle.jvmargs='-Xmx2g -XX:MaxMetaspaceSize=768m' \
+  :androidApp:assemblePreviewDebug compileKotlinDesktop compileTestKotlinDesktop
+```
+
+Final result: **BUILD SUCCESSFUL**, 29 seconds; **3/3 requested gates passed**,
+1,215 actionable tasks (145 executed, 9 from cache, 1,061 up-to-date), zero failed
+tasks and zero Kotlin errors. Desktop source compilation covered 68 modules;
+desktop test-source compilation covered 65 modules, with three additional
+`NO-SOURCE` tasks. Existing compiler/configuration warnings remain.
+
+Local logs: `/tmp/p12-protocols-compile-20261104.log` (initial dependency failure)
+and `/tmp/p12-protocols-compile-final-20261104.log` (successful final gate).
+Behavior tests were not executed, as requested; the integrator owns that gate.
+No push, CI run, release, or device validation was performed.
+
+The merge message passes `native/tool/check_commits.sh --message-file ... --merge`,
+and the ownership/dependency/report diff passes whitespace checks. Checking the
+entire imported history additionally reports pre-existing commit-message violations
+in six integration commits; the imported `docs/native/inventory/rest.md` also has
+existing Markdown trailing whitespace. Those other units' history/content were
+preserved. These findings do not affect the requested compile gate.

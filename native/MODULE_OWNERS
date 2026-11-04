@@ -79,3 +79,8 @@
 :feature:voice	F	(slice brief names the agent)	slice-12
 :protocol:codex	F	build-protocols	parity-p12
 :feature:computer	F	build-protocols	parity-p12
+:engine:integrations-usage	F	build-integrations-b	parity-p12
+:engine:integrations-quota	F	build-integrations-b	parity-p12
+:engine:integrations-catalog	F	build-integrations-b	parity-p12
+:engine:integrations-host	F	build-integrations-b	parity-p12
+:feature:plans	F	build-integrations-b	parity-p12

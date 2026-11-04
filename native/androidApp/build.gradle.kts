@@ -119,6 +119,8 @@ dependencies {
             ":android:voice",
             ":feature:voice",
             ":android:linux", // P12-FIX-LINUX-VOICE: the real built-in Linux (proot runtime + its native libraries)
+            ":engine:integrations-usage", // P12-BUILD-INTEGRATIONS-B: Usage › Plans engine
+            ":feature:plans", // P12-BUILD-INTEGRATIONS-B: Usage › Plans
         )
         .forEach { implementation(project(it)) }
     implementation(libs.androidx.activity.compose)
