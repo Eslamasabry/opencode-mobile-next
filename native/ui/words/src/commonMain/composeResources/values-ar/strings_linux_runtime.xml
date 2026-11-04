@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="linuxRuntimePythonTitle">بايثون</string>
+    <string name="linuxRuntimeNodeTitle">Node.js</string>
+    <string name="linuxRuntimeOpenCodeTitle">OpenCode</string>
+</resources>
