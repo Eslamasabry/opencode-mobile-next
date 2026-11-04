@@ -110,6 +110,10 @@ public data class KeepRunningUi(
     val thermalEnabled: Boolean = true,
     val thermalSaving: Boolean = false,
     val thermalFailed: Boolean = false,
+    val speedAvailable: Boolean = false,
+    val fullSpeed: Boolean = false,
+    val savingSpeed: Boolean = false,
+    val speedSaveFailed: Boolean = false,
 )
 
 public interface KeepRunningActions {
@@ -124,13 +128,17 @@ public interface KeepRunningActions {
     public fun back()
 }
 
-/** Keep running in the background, including the real phone heat-protection switch. */
+/**
+ * Keep running in the background, including the real phone heat-protection switch and the
+ * phone-agent full-speed preference (AI Team remains deferred).
+ */
 public class KeepRunningModel(
     private val settings: KeepAliveSettings,
     private val nav: PhoneNavigator,
     private val scope: CoroutineScope,
     private val thermal: ThermalSettings = NoThermalSettings(),
-) : ThermalKeepRunningActions {
+    private val budget: PhoneBudgetSource? = null,
+) : ThermalKeepRunningActions, PhoneBudgetActions {
     private val ui = MutableStateFlow(KeepRunningUi())
     public val state: StateFlow<KeepRunningUi> = ui.asStateFlow()
 
@@ -160,6 +168,7 @@ public class KeepRunningModel(
     override fun resumed() {
         scope.launch {
             val info = settings.info() ?: return@launch
+            val fullSpeed = budget?.fullSpeed() ?: false
             ui.update {
                 build(info)
                     .copy(
@@ -168,7 +177,27 @@ public class KeepRunningModel(
                         thermalEnabled = thermal.enabled.value,
                         thermalSaving = it.thermalSaving,
                         thermalFailed = it.thermalFailed,
+                        speedAvailable = budget != null,
+                        fullSpeed = if (it.savingSpeed) it.fullSpeed else fullSpeed,
+                        savingSpeed = it.savingSpeed,
+                        speedSaveFailed = it.speedSaveFailed,
                     )
+            }
+        }
+    }
+
+    override fun setFullSpeed(enabled: Boolean) {
+        val source = budget ?: return
+        if (ui.value.savingSpeed) return
+        ui.update { it.copy(savingSpeed = true, speedSaveFailed = false) }
+        scope.launch {
+            val saved = source.setFullSpeed(enabled) is Outcome.Ok
+            ui.update {
+                it.copy(
+                    fullSpeed = if (saved) enabled else it.fullSpeed,
+                    savingSpeed = false,
+                    speedSaveFailed = !saved,
+                )
             }
         }
     }

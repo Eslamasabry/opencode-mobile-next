@@ -74,6 +74,7 @@ class PreviewRuntime(
     private val scope = CoroutineScope(appScope.coroutineContext + lane)
     private val order = Mutex()
     private val ready = CompletableDeferred<Outcome<Unit>>()
+    private val initialConnection = CompletableDeferred<Outcome<Unit>>()
     private val mutableServers = MutableStateFlow<ImmutableList<SavedServer>>(persistentListOf())
     override val servers: StateFlow<ImmutableList<SavedServer>> = mutableServers.asStateFlow()
     private val mutableBusy = MutableStateFlow(false)
@@ -180,14 +181,24 @@ class PreviewRuntime(
     fun restoreSavedConnection() {
         if (!restoreRequested.compareAndSet(false, true)) return
         scope.launch {
-            if (ready.await() is Outcome.Failed) return@launch
+            val warmed = ready.await()
+            if (warmed is Outcome.Failed) {
+                initialConnection.complete(warmed)
+                return@launch
+            }
             val active = profiles.activeId.value ?: profiles.profiles.value.firstOrNull()?.id
             // PORT-SCREENS-2: the home list records each source's failure, then the other shown
             // sources join.
-            if (active != null) command { connectForHome(active) }
+            // job-46: pinned shortcuts wait for this restore (awaitInitialConnection).
+            initialConnection.complete(
+                if (active != null) command { connectForHome(active) } else Unit.ok()
+            )
             synchronizeListSources()
         }
     }
+
+    /** Launcher shortcuts wait for the existing startup connection; they never start or switch a server. */
+    internal suspend fun awaitInitialConnection(): Outcome<Unit> = initialConnection.await()
 
     private fun publishServers() {
         mutableServers.value =

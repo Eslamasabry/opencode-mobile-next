@@ -190,4 +190,11 @@ public interface SettingsActions {
     public fun onCopyLicense() {}
 
     public fun onLicenseWebsite() {}
+    public fun onAskDeleteLocalModel() {}
+
+    public fun onDeleteLocalModel() {}
+
+    public fun onCancelDeleteLocalModel() {}
+
+    public fun onRefreshLocalModels() {}
 }

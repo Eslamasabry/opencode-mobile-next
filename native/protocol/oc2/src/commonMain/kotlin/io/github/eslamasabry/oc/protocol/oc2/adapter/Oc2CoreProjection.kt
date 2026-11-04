@@ -32,6 +32,9 @@ import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.core.model.SessionTime
 import io.github.eslamasabry.oc.core.model.transcript.EmptyJsonObject
 import io.github.eslamasabry.oc.core.model.transcript.MessageInfo
+import io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind
+import io.github.eslamasabry.oc.core.model.transcript.messageErrorKind
+import io.github.eslamasabry.oc.core.model.transcript.refineMessageErrorKind
 import io.github.eslamasabry.oc.core.model.transcript.MsgTime
 import io.github.eslamasabry.oc.core.model.transcript.Part
 import io.github.eslamasabry.oc.core.model.transcript.PartType
@@ -66,8 +69,8 @@ import kotlinx.serialization.json.JsonObject
  *   settle.
  * - `WorktreeOutcome.workspace`: both kinds are the same freshness hint.
  * - `RunRetrying`'s server message goes to `details` only; a failed run's type becomes a [WireTag],
- *   its message `details`. `MessageErrorKind` stays null until S2-MODEL ports `fromName` (the words
- *   come from the tag).
+ *   its message `details`. Message error kinds retain typed classification for resource-backed
+ *   fallback copy.
  * - A tool the adapter settled itself (`settledBy`) becomes `Error` with no output: plan 09 words
  *   it as "failed".
  * - `SessionViewed` without an idle time reads as idle 0 ms (just viewed).
@@ -238,7 +241,12 @@ internal class Oc2CoreProjection(private val redact: (String) -> Redacted) {
                 )
             is Oc2RunOutcome.Failed ->
                 RunOutcome.Failed(
-                    kind = null,
+                    kind =
+                        refineMessageErrorKind(
+                                messageErrorKind(type) ?: MessageErrorKind.Unknown,
+                                message,
+                            )
+                            .takeUnless { it == MessageErrorKind.Unknown },
                     tag = type?.let(::WireTag),
                     details = message?.let(redact),
                 )
@@ -256,7 +264,17 @@ internal class Oc2CoreProjection(private val redact: (String) -> Redacted) {
             tokens = tokens?.toCore() ?: Tokens(),
             time = MsgTime(createdMs, completedMs),
             // Server prose: redacted like the history path (Oc2History) before it can be shown.
-            errorText = error?.message?.let { redact(it).text },
+            errorText =
+                error?.let { e ->
+                    e.message?.takeIf(String::isNotBlank)?.let { redact(it).text }.orEmpty()
+                },
+            errorKind =
+                error?.let {
+                    refineMessageErrorKind(
+                        messageErrorKind(it.type) ?: MessageErrorKind.Unknown,
+                        it.message,
+                    )
+                },
             finish = finish,
         )
 
@@ -334,6 +352,7 @@ internal class Oc2CoreProjection(private val redact: (String) -> Redacted) {
             executedFlag = executed ?: true,
             startedAtMs = startedAtMs,
             completedAtMs = completedAtMs,
+            pruned = pruned,
         )
 
     private fun Oc2NoticeKind.toCore(): NoticeKind =

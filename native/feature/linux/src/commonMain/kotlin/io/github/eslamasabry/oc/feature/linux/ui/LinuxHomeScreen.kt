@@ -7,6 +7,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.LifecycleStartEffect
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import io.github.eslamasabry.oc.feature.linux.presentation.LinuxVitalsActions
 import io.github.eslamasabry.oc.feature.linux.host.LinuxPresence
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxConfirm
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxHomeActions
@@ -99,6 +101,12 @@ public fun LinuxHomeScreen(
     tools: io.github.eslamasabry.oc.feature.linux.presentation.LinuxToolsPanelUi? = null,
     toolsActions: io.github.eslamasabry.oc.feature.linux.presentation.LinuxToolsActions? = null,
 ) {
+    if (actions is LinuxVitalsActions) {
+        LifecycleResumeEffect(actions) {
+            actions.vitalsShown(true)
+            onPauseOrDispose { actions.vitalsShown(false) }
+        }
+    }
     LifecycleStartEffect(actions) {
         actions.shown(true)
         onStopOrDispose { actions.shown(false) }
@@ -130,7 +138,6 @@ public fun LinuxHomeScreen(
                         onClick = { nativeActions?.openMigration(offer.profileId) },
                     )
                 }
-            state.vitals?.let { LinuxVitalsPanel(it) { actions.open(LinuxPage.Running) } }
             val dismiss =
                 KitLineAction(stringResource(Res.string.workspaceDismissNotice), actions::dismiss)
             when (val notice = state.notice) {
@@ -218,6 +225,7 @@ public fun LinuxHomeScreen(
                     liveRegion = false,
                 )
             }
+            if (state.ready) LinuxVitalsPanel(state.vitals) { actions.open(LinuxPage.Running) }
             LinuxJobPanel(state.job, actions::askStopJob, actions::dismissJob)
             if (presence != null && presence != LinuxPresence.NotOnThisBuild) {
                 if (state.ready) LinuxIdlePanel(state, actions)

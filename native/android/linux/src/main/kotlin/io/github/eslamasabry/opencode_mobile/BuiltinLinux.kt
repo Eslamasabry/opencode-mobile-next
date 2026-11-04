@@ -5936,6 +5936,10 @@ exec gc supervisor run
         return owners
     }
 
+    /** Only this app's real helper trees enter or leave Android's background scheduling class. */
+    fun agentPriority(level: String): Map<String, Any?>? =
+        AgentPriority.apply(level, AndroidProcess.myUid(), AndroidProcess.myPid())?.toMap()
+
     /**
      * This app user's processes now, for "What's running on this phone" (see [NativeProcessList]).
      */

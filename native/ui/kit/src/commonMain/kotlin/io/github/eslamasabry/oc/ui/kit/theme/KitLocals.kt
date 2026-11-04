@@ -19,6 +19,8 @@ import io.github.eslamasabry.oc.ui.design.style.SolidSpec
 import io.github.eslamasabry.oc.ui.design.tokens.Tokens
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotionState
 
+public val LocalKitLocaleTag: ProvidableCompositionLocal<String> = staticCompositionLocalOf { "en" }
+
 private fun missing(what: String): Nothing = error("$what is provided by KitTheme")
 
 /** Plan 06 §5.1. Static: theme values change rarely and cost no read tracking. Kit parts only. */

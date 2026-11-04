@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="migrationStorageTitle">التخزين</string>
+    <string name="migrationStorageAssistant">نموذج المساعد على هذا الهاتف</string>
+    <string name="migrationStorageDelete">حذف النموذج</string>
+    <string name="migrationStorageDeleteTitle">حذف نموذج المساعد؟</string>
+    <string name="migrationStorageDeleteBody">يحذف هذا النموذج المحفوظ والتنزيلات غير المكتملة من هذا الهاتف، ويحرر %1$s.</string>
+    <string name="migrationStorageEmpty">لا يوجد نموذج مساعد محفوظ على هذا الهاتف</string>
+    <string name="localModelStorageFailed">تعذّر تغيير النموذج المحفوظ. حاول مجددًا.</string>
+</resources>

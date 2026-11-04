@@ -18,9 +18,11 @@ import io.github.eslamasabry.oc.protocol.oc2.send.Oc2ClientIds
 import io.github.eslamasabry.oc.protocol.oc2.send.Oc2PromptSend
 import io.github.eslamasabry.oc.protocol.oc2.wire.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.bodyAsBytes
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
+import io.ktor.utils.io.readAvailable
 import kotlin.io.encoding.Base64
 import kotlin.random.Random
 import kotlin.time.Clock
@@ -78,7 +80,8 @@ internal class Oc2Gateway(
     FencedSlashCommandGateway,
     FencedNewSessionPromptGateway,
     PromptRunIdentityGateway,
-    ServerInspectionGateway {
+    ServerInspectionGateway,
+    BoundedHistoryGateway {
     // AGENT-2: worktree inspection reads (WorktreeInspectionGateway). Its MCP calls are served once
     // by PROTO's Oc2Library and SEC-2's integrations below.
     private val inspection = Oc2WorktreeInspection(this)
@@ -352,6 +355,8 @@ internal class Oc2Gateway(
     private var stream: Job? = null
     private val terminalChannels = mutableSetOf<TerminalChannel>()
     private val terminalLane = Mutex()
+    @kotlin.concurrent.Volatile private var closed: Boolean = false
+    internal val terminalClosed: Boolean get() = closed
 
     init {
         credentials.secret?.let(redactor::registerSecret)
@@ -951,6 +956,40 @@ internal class Oc2Gateway(
             buildJsonObject { put("agent", agent) },
         )
 
+    /** The visible Fork action uses the server's own boundary contract; an anchored copy excludes its anchor. */
+    override suspend fun forkSession(id: SessionId, from: MessageId?): Outcome<SessionId> {
+        if (id.raw.isEmpty() || from?.raw?.isEmpty() == true) return Failure.Rejected(null).failed()
+        return read(
+            "/session/${sid(id)}/fork",
+            HttpMethod.Post,
+            buildJsonObject {
+                putJsonObject("boundary") {
+                    if (from == null) put("type", "through")
+                    else {
+                        put("type", "before")
+                        put("messageID", from.raw)
+                    }
+                }
+            },
+        ) { root -> sessionValue(data(root))?.id }.also { forked ->
+            // Flutter ops_sessions: give the copy a plain name, best effort; the server's stamp stays otherwise.
+            val copy = (forked as? Outcome.Ok)?.value ?: return@also
+            val original = (session(id) as? Outcome.Ok)?.value?.title
+            forkedTitle(original)?.let { renameSession(copy, it) }
+        }
+    }
+
+    /** Dart `forkedSessionTitle`: null for an unreadable or placeholder title, so the copy keeps the server's. */
+    private fun forkedTitle(original: String?): String? {
+        var title = original?.trim().orEmpty()
+        val lower = title.lowercase()
+        FORK_TITLE_MARKERS.map { lower.indexOf(it) }.filter { it >= 0 }.minOrNull()?.let { at ->
+            title = title.substring(0, at).replace(Regex("""[\s…]*(?:\.\.\.)?[\s…]*$"""), "").trim()
+        }
+        if (title.isEmpty() || FORK_PLACEHOLDER_TITLE.matches(title)) return null
+        return "Copy of $title"
+    }
+
     override suspend fun renameSession(id: SessionId, title: String): Outcome<Unit> =
         unit("/session/${sid(id)}/rename", HttpMethod.Post, buildJsonObject { put("title", title) })
 
@@ -1010,6 +1049,8 @@ internal class Oc2Gateway(
         cursor: String?,
         limit: Int,
     ): Outcome<ServerPage<MessageWithParts>> =
+        // The ordinary transcript keeps the connection's normal read and typed failures; only agent-card recovery
+        // takes the bounded path below (Flutter keeps the two apart too).
         read(
             "/session/${sid(id)}/message",
             query =
@@ -1025,6 +1066,108 @@ internal class Oc2Gateway(
                 cursor(root)?.takeIf { it.isNotEmpty() && rows.size >= limit },
             )
         }
+
+    override suspend fun boundedHistoryPage(
+        session: SessionId,
+        cursor: String?,
+        limit: Int,
+    ): Outcome<BoundedHistoryPage> {
+        if (limit !in 1..50) return Failure.Rejected(null).failed()
+        return historyPage(session, cursor, limit, 1024 * 1024, 10_000)
+    }
+
+    /** Flutter gen_ui_history.dart / gen_ui_history_http.dart: validate before dispatch and fence the answer. */
+    private suspend fun historyPage(
+        session: SessionId,
+        cursor: String?,
+        limit: Int,
+        byteLimit: Int,
+        timeoutMs: Long,
+    ): Outcome<BoundedHistoryPage> {
+        if (closed || session.raw.isEmpty() || session.raw.length > 512 || limit < 1 ||
+            (cursor != null && (cursor.isEmpty() || cursor.length > 4096))) {
+            return Failure.Rejected(null).failed()
+        }
+        val at = location.value
+        val path = "/session/${sid(session)}/message"
+        // Session routes are globally identified, so no location query is attached. Retain the requested limit on
+        // continuation pages too: a cursor is opaque, and must never silently enlarge the bounded recovery page.
+        val query = mapOf("limit" to limit.toString()) +
+            if (cursor != null) mapOf("cursor" to cursor) else mapOf("order" to "desc")
+        val reply = boundedHistoryJson(path, query, byteLimit, timeoutMs)
+        if (closed || location.value != at) return Failure.Refused(RefusalReason.StaleScope).failed()
+        return reply.flatMap { root ->
+            val rows = pageEntries(root) ?: return@flatMap Failure.UnreadableReply().failed()
+            if (rows.size > limit) return@flatMap Failure.UnreadableReply().failed()
+            val history = Oc2History(redactor)
+            val seen = HashSet<String>()
+            val messages = rows.reversed().map { row ->
+                val wire = data(row) as? JsonObject ?: return@flatMap Failure.UnreadableReply().failed()
+                if ("sessionID" in wire && wire.str("sessionID") != session.raw) {
+                    return@flatMap Failure.UnreadableReply().failed()
+                }
+                val message = history.message(session.raw, wire) ?: return@flatMap Failure.UnreadableReply().failed()
+                if (message.info.id.isEmpty() || !seen.add(message.info.id)) return@flatMap Failure.UnreadableReply().failed()
+                message
+            }
+            val next = cursor(root)
+            if (next != null && (next.isEmpty() || next.length > 4096 || next == cursor)) {
+                return@flatMap Failure.UnreadableReply().failed()
+            }
+            BoundedHistoryPage(messages.toImmutableList(), next?.takeIf { rows.size >= limit }, rows.size == limit).ok()
+        }
+    }
+
+    /** Stream within the budget before JSON decoding. Timeout cancels the actual request, including a stalled body. */
+    private suspend fun boundedHistoryJson(
+        path: String,
+        query: Map<String, String?>,
+        byteLimit: Int,
+        timeoutMs: Long,
+    ): Outcome<JsonElement> = withTimeoutOrNull(timeoutMs) {
+        if (dialect.value == null) {
+            when (val health = health()) {
+                is Outcome.Failed -> return@withTimeoutOrNull health
+                is Outcome.Ok -> if (!health.value.healthy) return@withTimeoutOrNull Failure.UnreadableReply().failed()
+            }
+        }
+        val settled = dialect.value ?: return@withTimeoutOrNull Failure.UnreadableReply().failed()
+        val route = settled.route(path, HttpMethod.Get, null, query)
+        route.removed?.let { return@withTimeoutOrNull Failure.Unavailable(FeatureId(it)).failed() }
+        net.exchange({
+            request(route.path, route.method, route.query)
+            header(HttpHeaders.Accept, "application/json")
+        }) { response ->
+            if (response.status != HttpStatusCode.OK ||
+                (response.headers[HttpHeaders.ContentLength]?.toLongOrNull() ?: 0L) > byteLimit) {
+                return@exchange Failure.UnreadableReply().failed()
+            }
+            val channel = response.bodyAsChannel()
+            val chunks = ArrayList<ByteArray>()
+            val buffer = ByteArray(8192)
+            var size = 0
+            while (true) {
+                val count = channel.readAvailable(buffer, 0, buffer.size)
+                if (count < 0) break
+                if (count > byteLimit - size) return@exchange Failure.UnreadableReply().failed()
+                if (count > 0) {
+                    chunks += buffer.copyOf(count)
+                    size += count
+                }
+            }
+            val bytes = ByteArray(size)
+            var offset = 0
+            for (chunk in chunks) {
+                chunk.copyInto(bytes, offset)
+                offset += chunk.size
+            }
+            attempt({ Failure.UnreadableReply() }) {
+                val text = bytes.decodeToString(throwOnInvalidSequence = true)
+                Oc2Wire.parse(text)?.let { settled.response(HttpMethod.Get, path, it) }
+                    ?: return@attempt null
+            }.flatMap { value -> value?.ok() ?: Failure.UnreadableReply().failed() }
+        }.flatMap { it }
+    } ?: Failure.TimedOut().failed()
 
     override suspend fun prompt(
         session: SessionId,
@@ -1963,6 +2106,7 @@ internal class Oc2Gateway(
         historyMigrationStatusRead()
 
     override suspend fun close() {
+        closed = true
         val channels = terminalLane.withLock {
             terminalScope = null
             terminalDispatchers = null
@@ -2081,10 +2225,10 @@ internal class Oc2Gateway(
                 fileBrowsing = true,
                 terminal = true,
                 conversationShell = true,
-                projectManagement = false,
+                projectManagement = true,
                 globalSessionSearch = false,
                 sessionDiff = false,
-                sessionFork = false,
+                sessionFork = true,
                 sessionCompact = false,
                 persistentPermissionGrants = false,
                 permissionRequests = true,
@@ -2150,3 +2294,12 @@ internal class Oc2Gateway(
 
 private const val AGENT_BOOT_RETRY_MS = 500L
 private const val ADMISSION_WAIT_MS = 5_000L
+
+private val FORK_TITLE_MARKERS = listOf("<tool_call", "</tool_call", "<tool_use", "<function", "</function", "<|")
+
+private val FORK_PLACEHOLDER_TITLE =
+    Regex(
+        """^(?:(?:New|Child)\s+session|Fork(?:ed)?(?:\s+session)?)?\s*[-:–]?\s*""" +
+            """\d{4}-\d{2}-\d{2}T[\d:.]+(?:Z|[+-]\d{2}:?\d{2})?$""",
+        RegexOption.IGNORE_CASE,
+    )

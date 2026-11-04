@@ -31,7 +31,7 @@ public object CardCodec {
                 part.toolName !in CARD_TOOL_NAMES ||
                 tool == null ||
                 tool.status != ToolStatus.Completed ||
-                !tool.executedFlag ||
+                !tool.ran ||
                 tool.input.isEmpty() ||
                 part.callId.isNullOrEmpty() ||
                 messageId.isEmpty() ||

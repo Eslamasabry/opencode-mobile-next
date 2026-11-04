@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="phoneSharedAccessTitle">هل سمحت بالوصول إلى ملفات هذا الهاتف؟</string>
+    <string name="phoneSharedAccessBody">اسمح بالوصول في إعدادات أندرويد، ثم حاول فتح الملف مجددًا.</string>
+</resources>

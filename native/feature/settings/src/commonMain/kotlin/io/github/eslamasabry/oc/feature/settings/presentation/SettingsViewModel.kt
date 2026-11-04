@@ -56,6 +56,9 @@ public interface SettingsHost {
     public val licenses: VoiceLicenseSource?
         get() = null
 
+    public val localModels: LocalModelStorage?
+        get() = null
+
     public val diagnostics: DiagnosticsExport?
 }
 
@@ -92,6 +95,7 @@ public class SettingsViewModel(
             host.localData,
             arrivals,
             host.licenses,
+            host.localModels,
         )
 
     public val state: StateFlow<SettingsUi> = presenter.state

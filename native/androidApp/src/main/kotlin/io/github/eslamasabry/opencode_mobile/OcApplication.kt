@@ -111,6 +111,9 @@ class OcApplication : Application(), GraphOwner {
         (appGraph as PlatformAccessors)
             .platform
             .start() // P12-PLATFORM: channels, widgets feed, alerts, update check
+        (appGraph as io.github.eslamasabry.opencode_mobile.graph.PhoneBudgetAccessors)
+            .nativePhoneBudget
+            .start()
         appGraph
             .resumedActivities // P12-VOICE: follow the resumed activity from the start (mic
                                // permission)

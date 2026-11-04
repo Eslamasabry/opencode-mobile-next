@@ -62,7 +62,7 @@ public object ChatsState {
             running = roots.count { it.status == ChatStatus.Running },
             projects = chips.toImmutableList(),
             filters = filters,
-            brief = if (filters.identities == null) briefUi(brief, roots) else null,
+            brief = if (filters.identities == null) briefUi(brief, roots, nowMs) else null,
             incomplete = feed.incompleteSources,
             settingsAvailable = settingsAvailable,
             projectChoices = projects.toImmutableList(),
@@ -123,7 +123,11 @@ public object ChatsState {
      * Brief rows are the feed rows of the sessions it names (same profile); nothing when it has
      * nothing to say.
      */
-    private fun briefUi(brief: ReturnBrief, roots: List<ChatFeedItem>): BriefUi? {
+    private fun briefUi(
+        brief: ReturnBrief,
+        roots: List<ChatFeedItem>,
+        nowMs: Long = 0L,
+    ): BriefUi? {
         if (brief.isEmpty && !brief.unknown && brief.hiddenUnreviewed + brief.hiddenRequests == 0)
             return null
         // A session id is local to a source and folder. Unknown scope or an ambiguous match fails
@@ -145,7 +149,7 @@ public object ChatsState {
                 .mapNotNull(::match)
                 .distinctBy { it.identity }
                 .map {
-                    row(it).let { r ->
+                    row(it, nowMs).let { r ->
                         if (r.status == RowStatus.None) r.copy(status = RowStatus.Done) else r
                     }
                 }

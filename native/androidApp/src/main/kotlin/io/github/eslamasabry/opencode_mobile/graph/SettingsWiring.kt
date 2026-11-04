@@ -219,6 +219,7 @@ class AndroidSettingsHost(
     private val privacyData: SettingsPrivacy,
     private val phraseSettings: AndroidPhraseSettings,
     private val activities: ResumedActivities,
+    override val localModels: AndroidLocalModelStorage,
     private val gitHubReports: GitHubProblemReporter, // BUILD-DIAGNOSTICS-ATTENTION
     private val migrationMemory: NativeSettingsMemory,
 ) : SettingsHost {
@@ -300,6 +301,7 @@ class AndroidSettingsHost(
                     systemMotionOff = scale == 0f,
                     diagnostics = true,
                     configurationInspection = configAvailable,
+                    localModelStorage = true,
                     opens = OPENS,
                     surfaceStyles = true,
                     phraseChips = phraseFacts?.available != false,
@@ -313,6 +315,7 @@ class AndroidSettingsHost(
                     platform = shipped,
                     dynamicColour = Build.VERSION.SDK_INT >= 31,
                     diagnostics = true,
+                    localModelStorage = true,
                     opens = OPENS,
                     surfaceStyles = true,
                     phraseChips = true,

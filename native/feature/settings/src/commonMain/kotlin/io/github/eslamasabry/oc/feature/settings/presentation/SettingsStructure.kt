@@ -30,6 +30,7 @@ public enum class SettingsRowId(public val tag: String, public val group: Settin
     Language("settings-language", SettingsGroupId.ThisApp),
     Privacy("settings-privacy", SettingsGroupId.ThisApp),
     Updates("settings-updates", SettingsGroupId.ThisApp),
+    Storage("settings-storage", SettingsGroupId.ThisApp),
     Guide("settings-guide", SettingsGroupId.Help),
     Tips("settings-tips", SettingsGroupId.Help),
     Capabilities("settings-capabilities", SettingsGroupId.Help),
@@ -81,6 +82,7 @@ public data class SettingsFacts(
     val serverCapabilities: io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities? =
         null,
     val usageStatistics: Boolean = false,
+    val localModelStorage: Boolean = false,
     /**
      * The places the host can open; a row leading anywhere else is absent, never dead (02 §3.7).
      * Null = every place (a host with every feature routed).
@@ -170,6 +172,8 @@ public object SettingsStructure {
                                     SettingsDoor.Outside(SettingsOutside.Updates)
                                 else SettingsDoor.Page(SettingsPage.Updates))
                                 .takeIf { p.inAppUpdater || p.desktopReleaseCheck }
+                        SettingsRowId.Storage ->
+                            SettingsDoor.Page(SettingsPage.Storage).takeIf { facts.localModelStorage }
                         SettingsRowId.Guide -> SettingsDoor.Outside(SettingsOutside.Guide)
                         SettingsRowId.Capabilities ->
                             SettingsDoor.Outside(SettingsOutside.Capabilities)

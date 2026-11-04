@@ -62,6 +62,7 @@ public class SettingsPresenter(
     /** What's new › Show me highlights the place it opens, through the teaching slot. */
     private val arrivals: io.github.eslamasabry.oc.engine.settings.teaching.ShowMeTargets? = null,
     private val licenses: VoiceLicenseSource? = null,
+    private val localModels: LocalModelStorage? = null,
 ) : SettingsActions {
     private data class Local(
         val stack: ImmutableList<SettingsPage> = persistentListOf(SettingsPage.Hub),
@@ -84,6 +85,7 @@ public class SettingsPresenter(
         val discardResult: LocalDeleteResult? = null,
         val discardFailed: Boolean = false,
         val license: LicenseUi? = null,
+        val confirmLocalModels: Boolean = false,
     )
 
     private data class Engines(
@@ -93,17 +95,26 @@ public class SettingsPresenter(
         val updates: UpdateFacts?,
         val data: LocalDataFacts?,
         val phrases: PhraseSettingsFacts?,
+        val localModels: LocalModelStorageFacts?,
     )
 
     private val local = MutableStateFlow(Local())
     private val currentFacts = facts
     private val prefs = choices.value
 
-    private data class Extra(val data: LocalDataFacts?, val phrases: PhraseSettingsFacts?)
+    private data class Extra(
+        val data: LocalDataFacts?,
+        val phrases: PhraseSettingsFacts?,
+        val localModels: LocalModelStorageFacts?,
+    )
 
     private val extra =
-        combine(localData?.facts ?: flowOf(null), phrases?.facts ?: flowOf(null)) { d, p ->
-            Extra(d, p)
+        combine(
+            localData?.facts ?: flowOf(null),
+            phrases?.facts ?: flowOf(null),
+            localModels?.facts ?: flowOf(null),
+        ) { d, p, m ->
+            Extra(d, p, m)
         }
 
     private val engines =
@@ -114,7 +125,7 @@ public class SettingsPresenter(
             updates?.facts ?: flowOf(null),
             extra,
         ) { c, v, n, u, x ->
-            Engines(c, v, n, u, x.data, x.phrases)
+            Engines(c, v, n, u, x.data, x.phrases, x.localModels)
         }
 
     private fun engineNow() =
@@ -125,6 +136,7 @@ public class SettingsPresenter(
             updates?.facts?.value,
             localData?.facts?.value,
             phrases?.facts?.value,
+            localModels?.facts?.value,
         )
 
     public val state: StateFlow<SettingsUi> =
@@ -337,6 +349,7 @@ public class SettingsPresenter(
             focusedRow = l.focusedRow,
             focusedAnchor = l.focusedAnchor,
             crash = l.crash,
+            localModels = e.localModels?.copy(confirmDelete = l.confirmLocalModels),
             note = l.note,
             newsStep = l.whatsNewIndex,
             voiceLicenses = licenses != null,
@@ -569,11 +582,34 @@ public class SettingsPresenter(
             else it.copy(stack = (it.stack + page).toImmutableList())
         }
         if (page == SettingsPage.ReportProblem) loadReport()
+        if (page == SettingsPage.Storage) onRefreshLocalModels()
         if (page == SettingsPage.Notifications) notifications?.refresh()
         if (page == SettingsPage.Privacy) localData?.refresh()
     }
 
+    override fun onRefreshLocalModels() {
+        scope.launch { localModels?.refresh() }
+    }
+
+    override fun onAskDeleteLocalModel() {
+        val facts = localModels?.facts?.value ?: return
+        if (!facts.loading && !facts.deleting && !facts.failed && facts.present) {
+            local.update { it.copy(confirmLocalModels = true) }
+        }
+    }
+
+    override fun onCancelDeleteLocalModel() {
+        local.update { it.copy(confirmLocalModels = false) }
+    }
+
+    override fun onDeleteLocalModel() {
+        if (!local.value.confirmLocalModels) return
+        local.update { it.copy(confirmLocalModels = false) }
+        scope.launch { localModels?.delete() }
+    }
+
     override fun onResume() {
+        if (local.value.stack.last() == SettingsPage.Storage) onRefreshLocalModels()
         if (local.value.stack.last() == SettingsPage.Notifications) notifications?.refresh()
     }
 

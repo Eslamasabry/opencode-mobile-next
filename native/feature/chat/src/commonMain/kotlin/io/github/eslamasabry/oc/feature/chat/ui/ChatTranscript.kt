@@ -45,6 +45,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.ReceiptCheckUi
 import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFailureKind
 import io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
+import io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
 import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
@@ -135,6 +136,7 @@ internal class ChatListWords(
     val tryAgain: String,
     /** B5: the plain reason and next step of a failed reply, by kind. */
     val replyFailed: (ReplyFailureKind) -> String = { "" },
+    val messageError: (MessageErrorKind) -> String = { "" },
     /** B2/B5: the label and copy label of the Details fold under a failure. */
     val details: String = "",
     val copyDetails: String = "",
@@ -633,7 +635,6 @@ private fun ChatRow(
             Column {
                 if (
                     row.failed &&
-                        !row.reason.isNullOrBlank() &&
                         listWords != null &&
                         listWords.details.isNotEmpty()
                 ) {
@@ -659,9 +660,18 @@ private fun ChatRow(
                             }
                         else KitQuietLine(words.footer(row.failed))
                         val kind = ReplyFailureKind.of(reason)
-                        val (headline, hint) = agentFailureWords(reason)
-                        KitQuietLine(headline)
-                        KitQuietLine(hint)
+                        // job-46: a typed server error kind has its own plain line; otherwise the
+                        // classified headline and hint.
+                        val typed = row.errorKind?.takeUnless { it == MessageErrorKind.Unknown }
+                        val typedLine =
+                            typed?.let(listWords.messageError)?.takeIf { it.isNotBlank() }
+                        if (typedLine != null) {
+                            KitQuietLine(typedLine)
+                        } else {
+                            val (headline, hint) = agentFailureWords(reason)
+                            KitQuietLine(headline)
+                            KitQuietLine(hint)
+                        }
                         if (
                             AgentErrorText.classify(reason)?.offersSignIn == true &&
                                 reply?.signInSettingsLabel != null
@@ -684,11 +694,12 @@ private fun ChatRow(
                                 onClick = { reply.onContinue(continueLabel) },
                                 role = KitButtonRole.Secondary,
                             )
-                        KitDetailsFold(
-                            label = listWords.details,
-                            copyLabel = listWords.copyDetails,
-                            notes = listOf(mask(reason)),
-                        )
+                        if (reason.isNotBlank())
+                            KitDetailsFold(
+                                label = listWords.details,
+                                copyLabel = listWords.copyDetails,
+                                notes = listOf(mask(reason)),
+                            )
                     }
                 } else if (onOpenMenu != null && listWords != null) {
                     KitTappable(

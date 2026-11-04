@@ -48,7 +48,7 @@ internal suspend fun Oc2Gateway.connectTerminalAt(
             ?: return Failure.UnreadableReply().failed()
     val ticket =
         ((envelope["data"] as? JsonObject) ?: envelope).str("ticket")?.takeIf {
-            it.isNotEmpty() && it.length <= 8192 && it.none { c -> c.code < 32 }
+            it.isNotEmpty() && it.length <= 4096 && it.all { c -> c.code in 33..126 }
         } ?: return Failure.UnreadableReply().failed()
     terminalRegisterSecret(ticket)
     val url =

@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.protocol.oc2.live
 
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.core.common.ok
@@ -9,7 +10,8 @@ import io.github.eslamasabry.oc.core.model.TerminalChannel
 import io.github.eslamasabry.oc.core.model.TerminalProcess
 import io.ktor.client.request.header
 import io.ktor.client.request.url
-import io.ktor.client.statement.bodyAsText
+import io.ktor.client.statement.bodyAsChannel
+import io.ktor.utils.io.readAvailable
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.URLBuilder
@@ -49,38 +51,55 @@ internal suspend fun Oc2Gateway.terminalHandshake(
     id: String,
     cursor: Long?,
 ): Outcome<Oc2TerminalHandshake> {
-    val at = location.value
-    val directory = at.directory
+    if (terminalClosed) return Failure.Refused(RefusalReason.StaleScope).failed()
+    if (id.isBlank() || id.length > 256 || id.any { it.code < 32 || it.code == 127 })
+        return Failure.UnreadableReply().failed()
+    if (cursor != null && cursor < 0) return Failure.UnreadableReply().failed()
+    val here = location.value
+    val directory = here.directory
     val path = "/pty/${id.encodeURLPathPart()}"
     val reply =
         net.exchange({
             method = HttpMethod.Post
             url(origin.toString() + "/api" + path + "/connect-token")
             directory?.let { url.parameters.append("location[directory]", it) }
-            at.workspace?.let { url.parameters.append("location[workspace]", it) }
+            here.workspace?.let { url.parameters.append("location[workspace]", it) }
             auth?.let { header(HttpHeaders.Authorization, it) }
             header("x-opencode-ticket", "1")
             header(HttpHeaders.Accept, "application/json")
-        }) {
-            it.bodyAsText()
+        }) { response ->
+            // Read at most the bound plus one byte, so an oversized response is refused before
+            // buffering it whole.
+            val channel = response.bodyAsChannel()
+            val bytes = ByteArray(16_385)
+            var length = 0
+            while (length < bytes.size) {
+                val read = channel.readAvailable(bytes, length, bytes.size - length)
+                if (read < 0) break
+                length += read
+            }
+            if (length > 16_384) null else bytes.decodeToString(endIndex = length)
         }
     val text =
         when (reply) {
             is Outcome.Failed -> return reply
-            is Outcome.Ok -> reply.value
+            is Outcome.Ok -> reply.value ?: return Failure.UnreadableReply().failed()
         }
+    if (terminalClosed || location.value != here) return Failure.Refused(RefusalReason.StaleScope).failed()
     val root = io.github.eslamasabry.oc.protocol.oc2.wire.Oc2Wire.parse(text) as? JsonObject
     val data = (root?.get("data") as? JsonObject) ?: root
     val ticket =
         (data?.get("ticket") as? JsonPrimitive)
             ?.takeIf { it.isString }
             ?.content
-            ?.takeIf { it.isNotEmpty() } ?: return Failure.UnreadableReply().failed()
+            ?.takeIf { it.isNotEmpty() && it.length <= 4096 && it.all { char -> char.code in 33..126 } }
+            ?: return Failure.UnreadableReply().failed()
     val socket = URLBuilder().takeFrom(origin.toString() + "/api" + path + "/connect")
     socket.protocol = if (origin.scheme == "https") URLProtocol.WSS else URLProtocol.WS
     socket.parameters.append("ticket", ticket)
     cursor?.let { socket.parameters.append("cursor", it.toString()) }
     directory?.let { socket.parameters.append("location[directory]", it) }
+    here.workspace?.let { socket.parameters.append("location[workspace]", it) }
     return Oc2TerminalHandshake(
             socket.buildString(),
             buildMap { auth?.let { put(HttpHeaders.Authorization, it) } },
@@ -96,11 +115,25 @@ internal suspend fun Oc2Gateway.connectTerminalWith(
     opener: Oc2TerminalSocketOpener,
     id: String,
     cursor: Long?,
-): Outcome<TerminalChannel> =
-    when (val handshake = terminalHandshake(id, cursor)) {
-        is Outcome.Failed -> handshake
-        is Outcome.Ok -> opener.open(handshake.value.url, handshake.value.headers)
+): Outcome<TerminalChannel> {
+    val here = location.value
+    fun stale(): Boolean = terminalClosed || location.value != here
+    if (stale()) return Failure.Refused(RefusalReason.StaleScope).failed()
+    val handshake = when (val result = terminalHandshake(id, cursor)) {
+        is Outcome.Failed -> return result
+        is Outcome.Ok -> result.value
     }
+    if (stale()) return Failure.Refused(RefusalReason.StaleScope).failed()
+    val channel = when (val result = opener.open(handshake.url, handshake.headers)) {
+        is Outcome.Failed -> return result
+        is Outcome.Ok -> result.value
+    }
+    if (stale()) {
+        channel.close()
+        return Failure.Refused(RefusalReason.StaleScope).failed()
+    }
+    return channel.ok()
+}
 
 private fun terminalOf(value: JsonElement): TerminalProcess? {
     val item = value as? JsonObject ?: return null

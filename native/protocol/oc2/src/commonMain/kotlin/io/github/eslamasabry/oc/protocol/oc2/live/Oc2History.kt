@@ -32,7 +32,10 @@ internal class Oc2History(private val redactor: Redactor) {
                     } ?: Tokens(),
                 time = MsgTime(wire.time.created, wire.time.completed),
                 finish = assistant?.finish,
-                errorText = assistant?.error?.message?.let { redactor.redact(it) },
+                errorText = assistant?.error?.let { redactor.redact(it.message?.takeIf(String::isNotBlank).orEmpty()) },
+                errorKind = assistant?.error?.let {
+                    refineMessageErrorKind(messageErrorKind(it.type) ?: MessageErrorKind.Unknown, it.message)
+                },
             )
         val parts =
             if (assistant != null) {

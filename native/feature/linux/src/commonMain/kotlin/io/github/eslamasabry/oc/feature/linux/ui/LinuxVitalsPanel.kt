@@ -1,78 +1,69 @@
 package io.github.eslamasabry.oc.feature.linux.ui
 
 import androidx.compose.runtime.Composable
-import io.github.eslamasabry.oc.feature.linux.presentation.LinuxHeat
-import io.github.eslamasabry.oc.feature.linux.presentation.LinuxVitalsUi
-import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
-import io.github.eslamasabry.oc.ui.kit.state.KitNotice
-import io.github.eslamasabry.oc.ui.words.res.*
+import io.github.eslamasabry.oc.core.common.text.Numbers
+import io.github.eslamasabry.oc.engine.runtime.vitals.LinuxHeat
+import io.github.eslamasabry.oc.engine.runtime.vitals.LinuxVitals
+import io.github.eslamasabry.oc.feature.linux.presentation.LinuxSize
+import io.github.eslamasabry.oc.ui.kit.status.KitVital
+import io.github.eslamasabry.oc.ui.kit.status.KitVitalsStrip
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.linuxVitalsCool
+import io.github.eslamasabry.oc.ui.words.res.linuxVitalsCpuLabel
+import io.github.eslamasabry.oc.ui.words.res.linuxVitalsHeat
+import io.github.eslamasabry.oc.ui.words.res.linuxVitalsHeatLabel
+import io.github.eslamasabry.oc.ui.words.res.linuxVitalsHeavy
+import io.github.eslamasabry.oc.ui.words.res.linuxVitalsHot
+import io.github.eslamasabry.oc.ui.words.res.linuxVitalsLinuxCpu
+import io.github.eslamasabry.oc.ui.words.res.linuxVitalsMemoryFree
+import io.github.eslamasabry.oc.ui.words.res.linuxVitalsMemoryLabel
+import io.github.eslamasabry.oc.ui.words.res.linuxVitalsNotLinux
+import io.github.eslamasabry.oc.ui.words.res.linuxVitalsOpenRunning
+import io.github.eslamasabry.oc.ui.words.res.linuxVitalsSummary
+import io.github.eslamasabry.oc.ui.words.res.linuxVitalsSummaryCool
+import io.github.eslamasabry.oc.ui.words.res.linuxVitalsTooHot
+import io.github.eslamasabry.oc.ui.words.res.linuxVitalsWarm
+import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.stringResource
 
-/** Every word follows a real observation; absent readings never become zeros or a cool claim. */
 @Composable
-internal fun LinuxVitalsPanel(state: LinuxVitalsUi, openRunning: () -> Unit) {
-    val heat =
-        state.heat?.let { value ->
-            stringResource(
-                when (value) {
-                    LinuxHeat.Cool -> Res.string.linuxVitalsCool
-                    LinuxHeat.Warm -> Res.string.linuxVitalsWarm
-                    LinuxHeat.Hot -> Res.string.linuxVitalsHot
-                    LinuxHeat.TooHot -> Res.string.linuxVitalsTooHot
-                }
-            )
+internal fun LinuxVitalsPanel(vitals: LinuxVitals?, openRunning: () -> Unit) {
+    val heat = when (vitals?.heat) {
+        LinuxHeat.Cool -> stringResource(Res.string.linuxVitalsCool)
+        LinuxHeat.Warm -> stringResource(Res.string.linuxVitalsWarm)
+        LinuxHeat.Hot -> stringResource(Res.string.linuxVitalsHot)
+        LinuxHeat.TooHot -> stringResource(Res.string.linuxVitalsTooHot)
+        null -> null
+    }
+    val cells = buildList {
+        if (vitals == null || heat != null) {
+            add(KitVital(heat.orEmpty(), stringResource(Res.string.linuxVitalsHeat), stringResource(Res.string.linuxVitalsHeatLabel, heat.orEmpty())))
         }
-    val metrics =
-        listOfNotNull(
-            heat?.let { stringResource(Res.string.linuxVitalsHeatLabel, it) },
-            state.phoneFreeBytes?.let {
-                stringResource(Res.string.linuxVitalsMemoryLabel, size(it))
-            },
-            state.linuxCpuPercent?.let { stringResource(Res.string.linuxVitalsCpuLabel, "$it%") },
-        )
-    val heavy =
-        state.heat != null &&
-            state.heat != LinuxHeat.Cool &&
-            state.heavyProgram != null &&
-            state.heavyPercent != null
-    val summary =
-        when {
-            state.heat == null ->
-                state.linuxMemoryBytes?.let {
-                    stringResource(Res.string.linuxVitalsSummary, size(it))
-                }
-            state.heat == LinuxHeat.Cool ->
-                state.linuxMemoryBytes?.let {
-                    stringResource(Res.string.linuxVitalsSummaryCool, size(it))
-                }
-            heavy ->
-                stringResource(
-                    Res.string.linuxVitalsHeavy,
-                    heat.orEmpty(),
-                    state.heavyProgram.orEmpty(),
-                    state.heavyPercent.toString(),
-                )
-            state.linuxCpuPercent != null ->
-                stringResource(
-                    Res.string.linuxVitalsNotLinux,
-                    heat.orEmpty(),
-                    state.linuxCpuPercent.toString(),
-                )
-            else -> null
+        val memory = vitals?.phoneMemoryFreeBytes
+        if (vitals == null || memory != null) {
+            val size = memory?.let { Numbers.digits(LinuxSize.format(it)) }.orEmpty()
+            add(KitVital(size, stringResource(Res.string.linuxVitalsMemoryFree), stringResource(Res.string.linuxVitalsMemoryLabel, size)))
         }
-    if (metrics.isNotEmpty() || summary != null)
-        KitNotice(
-            title = metrics.joinToString(" · ").takeIf { it.isNotBlank() },
-            message = summary ?: metrics.joinToString(" · "),
-            actions =
-                if (heavy)
-                    listOf(
-                        KitLineAction(
-                            stringResource(Res.string.linuxVitalsOpenRunning),
-                            openRunning,
-                        )
-                    )
-                else emptyList(),
-            liveRegion = false,
-        )
+        val cpu = vitals?.linuxCpuPercent
+        if (vitals == null || cpu != null) {
+            val share = cpu?.let { "${Numbers.format(it.roundToInt())}%" }.orEmpty()
+            add(KitVital(share, stringResource(Res.string.linuxVitalsLinuxCpu), stringResource(Res.string.linuxVitalsCpuLabel, share)))
+        }
+    }
+    val named = vitals != null && heat != null && vitals.heat != LinuxHeat.Cool && vitals.hasHeavyProgram
+    val summary = when {
+        vitals == null -> null
+        vitals.heat == null || vitals.heat == LinuxHeat.Cool -> vitals.linuxMemoryBytes?.let { memory ->
+            stringResource(if (vitals.heat == null) Res.string.linuxVitalsSummary else Res.string.linuxVitalsSummaryCool, Numbers.digits(LinuxSize.format(memory)))
+        }
+        named -> stringResource(Res.string.linuxVitalsHeavy, heat.orEmpty(), vitals.heaviestProgram.orEmpty(), Numbers.format(vitals.heaviestCpuPercent!!.roundToInt()))
+        else -> vitals.linuxCpuPercent?.let { cpu -> stringResource(Res.string.linuxVitalsNotLinux, heat.orEmpty(), Numbers.format(cpu.roundToInt())) }
+    }
+    KitVitalsStrip(
+        vitals = cells,
+        summary = summary,
+        loading = vitals == null,
+        onSummaryTap = openRunning.takeIf { named },
+        summaryLabel = if (named) stringResource(Res.string.linuxVitalsOpenRunning) else null,
+    )
 }

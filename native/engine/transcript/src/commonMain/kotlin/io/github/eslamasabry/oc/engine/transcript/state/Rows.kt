@@ -129,6 +129,7 @@ public data class FooterRow(
     val stopped: Boolean = false,
     /** Creation time of the actual newest assistant message represented by this turn footer. */
     val createdMs: Long? = null,
+    val errorKind: io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind? = null,
 ) : TranscriptRow {
     override val kind: RowKind
         get() = RowKind.Footer

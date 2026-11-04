@@ -12,9 +12,10 @@ import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.AgentFeaturesGateway
+import io.github.eslamasabry.oc.core.domain.BoundedCardHistoryGateway
+import io.github.eslamasabry.oc.core.domain.BoundedHistoryGateway
 import io.github.eslamasabry.oc.core.domain.CachedAgentRecoveryGateway
 import io.github.eslamasabry.oc.core.domain.McpGateway
-import io.github.eslamasabry.oc.core.domain.BoundedCardHistoryGateway
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
@@ -667,22 +668,33 @@ internal constructor(
             )
         }
         if (!explicit && !CardRecovery.needsRead(target(), thisCoverage)) return current()
+        // job-46: OpenCode 2 reads through its capped BoundedHistoryGateway; Paseo through its private
+        // BoundedCardHistoryGateway. A backend with neither gets no unbounded fallback.
+        val bounded = gateway.facet<BoundedHistoryGateway>()
+        val cardHistory = gateway.facet<BoundedCardHistoryGateway>()
+        if (bounded == null && cardHistory == null) return false
         val source = CardHistorySource { session, cursor, limit ->
-            val result =
-                if (gateway is BoundedCardHistoryGateway) {
-                    gateway.cardHistoryPage(SessionId(session), cursor, limit)
-                } else {
-                    gateway.messagePage(SessionId(session), cursor = cursor, limit = limit)
-                }
-            when (val page = result) {
-                is Outcome.Ok ->
-                    Outcome.Ok(
-                        CardHistoryPage(
-                            page.value.items,
-                            page.value.nextCursor,
-                            page.value.nextCursor != null,
+            if (bounded != null) {
+                when (
+                    val page =
+                        bounded.boundedHistoryPage(SessionId(session), cursor = cursor, limit = limit)
+                ) {
+                    is Outcome.Ok ->
+                        Outcome.Ok(
+                            CardHistoryPage(page.value.items, page.value.nextCursor, page.value.hasMore)
                         )
-                    )
+                    is Outcome.Failed -> page
+                }
+            } else
+                when (val page = cardHistory!!.cardHistoryPage(SessionId(session), cursor, limit)) {
+                    is Outcome.Ok ->
+                        Outcome.Ok(
+                            CardHistoryPage(
+                                page.value.items,
+                                page.value.nextCursor,
+                                page.value.nextCursor != null,
+                            )
+                        )
                 is Outcome.Failed -> page
             }
         }
