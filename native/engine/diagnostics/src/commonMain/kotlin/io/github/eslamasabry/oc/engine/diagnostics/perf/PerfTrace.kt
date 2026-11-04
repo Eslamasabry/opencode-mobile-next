@@ -143,6 +143,21 @@ public class PerfTrace(
     private val ring = AtomicReference<PersistentList<PerfSpan>>(persistentListOf())
     private val onceMarks = AtomicReference<PersistentSet<String>>(persistentSetOf())
     private val nextId = AtomicLong(1L)
+    private val recordedListeners = AtomicReference<List<(PerfSpan) -> Unit>>(emptyList())
+
+    /** Same-module hook for the persisted problem report (B-STATE-070): every finished span, in the same call. */
+    internal fun onRecorded(listener: (PerfSpan) -> Unit): () -> Unit {
+        while (true) {
+            val current = recordedListeners.load()
+            if (recordedListeners.compareAndSet(current, current + listener)) break
+        }
+        return {
+            while (true) {
+                val current = recordedListeners.load()
+                if (recordedListeners.compareAndSet(current, current - listener)) break
+            }
+        }
+    }
 
     /** Monotonic microseconds since this tracer started. */
     public val nowMicros: Long get() = started.elapsedNow().inWholeMicroseconds
@@ -313,6 +328,7 @@ public class PerfTrace(
                 if (next.size > capacity * 2) next = next.subList(next.size - capacity, next.size).toPersistentList()
                 if (ring.compareAndSet(current, next)) break
             }
+            for (listener in recordedListeners.load()) guarded { listener(clean) }
             val sink = logSink
             if (sink != null && (clean.isMark || clean.failed || clean.durationMicros >= logMinMicros)) {
                 guarded { sink(redactor.redact(clean.toLogLine())) }

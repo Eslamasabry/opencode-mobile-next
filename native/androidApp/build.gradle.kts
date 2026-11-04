@@ -84,6 +84,7 @@ dependencies {
             ":engine:analytics",
             ":engine:diagnostics",
             ":android:notifications",
+            ":android:background", // BUILD-ANDROID-BG-PLATFORM: live mode, pause, sign-in lease
             ":android:migration",
             ":engine:migration",
             ":feature:gate",
@@ -96,6 +97,7 @@ dependencies {
             ":feature:git",
             ":engine:updates", // P12-PLATFORM: in-app update notice
             ":feature:updates", // P12-PLATFORM: Updates page
+            ":feature:background", // BUILD-ANDROID-BG-PLATFORM: Settings › Background
             ":android:tiles", // P12-PLATFORM: QS tiles, shortcuts, share, update installer
             ":android:widgets", // P12-PLATFORM: home-screen widgets
             ":feature:preview", // PREVIEW-QR
@@ -116,8 +118,11 @@ dependencies {
             ":engine:voice",
             ":android:voice",
             ":feature:voice",
+            ":feature:diagnostics", // BUILD-DIAGNOSTICS-ATTENTION
             ":android:linux", // P12-FIX-LINUX-VOICE: the real built-in Linux (proot runtime + its native libraries)
             ":feature:devservices", // BUILD-RUNTIME-A: Development services (saved commands, dev servers found)
+            ":engine:integrations-usage", // P12-BUILD-INTEGRATIONS-B: Usage › Plans engine
+            ":feature:plans", // P12-BUILD-INTEGRATIONS-B: Usage › Plans
         )
         .forEach { implementation(project(it)) }
     implementation(libs.androidx.activity.compose)

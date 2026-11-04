@@ -1,81 +1,93 @@
 package io.github.eslamasabry.oc.engine.runtime.services
 
-import io.github.eslamasabry.oc.core.common.BusyKind
 import io.github.eslamasabry.oc.core.common.Failure
-import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
-import io.github.eslamasabry.oc.core.common.RefusalReason
-import io.github.eslamasabry.oc.core.common.RuntimeProblem
-import io.github.eslamasabry.oc.core.common.failed
-import io.github.eslamasabry.oc.core.common.ok
-import io.github.eslamasabry.oc.engine.runtime.devservers.TerminalText
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlin.math.max
+import kotlin.random.Random
 
-/** What one project's Development services panel shows. */
-public data class DevelopmentServicesState(
-    val services: List<DevelopmentService> = emptyList(),
-    val statuses: Map<String, DevelopmentServiceStatus> = emptyMap(),
-    /** Plain-text log tails by service id; never saved. */
-    val logs: Map<String, String> = emptyMap(),
-    val busy: Boolean = false,
-    /** False when the saved list cannot be read: nothing is changed until it can. */
-    val readable: Boolean = true,
-    val error: Failure? = null,
-)
-
-/**
- * One visible project panel (port of lib/state/development_services.dart, B-LINUX-060..064). Every remote change
- * resolves the current transport, then rechecks scope ([isCurrent] and the runtime generation that
- * [invalidateRuntime] moves). Only a receipt written by Start can authorize control of a shell; command text or a
- * discovered pid never grants ownership.
- *
- * Commands answer an [Outcome] and also put a failure in [state]'s `error`. One command runs at a time: a command
- * while another is busy is refused with `Busy`. Call [reload] once after construction. The caller confines the
- * object to one serial lane (the engine's), as the Flutter model ran on the UI isolate.
- *
- * Failure kinds: scope change `Refused(StaleScope)`; unsupported transport `Unavailable(developmentServices)`; no
- * reachable server `Unknown`; ownership not confirmed `Runtime(OwnershipUnknown)`; a previous run not yet confirmed
- * `Runtime(ConfirmationRequired)`; a stop the server has not confirmed `Busy(Stopping)`; an invalid service
- * `StorageRefused`; a bad log answer `UnreadableReply`.
- *
- * [newOwnerToken] must come from a secure random source (Flutter: 24 bytes of `Random.secure()` as hex).
+/*
+ * Port of lib/state/development_services.dart (one visible project panel: register, start, stop, refresh, read logs
+ * and the failed-run report). Every remote mutation resolves the current transport, then rechecks scope. Only a
+ * receipt written by Start can authorize control of a shell; command text or a discovered PID never grants ownership.
  */
+
+/** Why the last action did not complete (Dart threw a `StateError`/`FormatException` with these meanings). */
+public enum class ServiceRefusal {
+    /** `Invalid project service`. */
+    InvalidService,
+
+    /** `The connection or project changed`. */
+    ScopeChanged,
+
+    /** `Service control is unavailable`. */
+    Unsupported,
+
+    /** `Reconnect to check this service`. */
+    NoConnection,
+
+    /** `Confirm the previous run before starting another`. */
+    PreviousRunUnconfirmed,
+
+    /** `The server did not confirm ownership of this command`. */
+    OwnershipNotConfirmed,
+
+    /** `Ownership could not be confirmed; nothing was stopped`. */
+    StopOwnershipUnknown,
+
+    /** `The server has not confirmed the stop`. */
+    StopNotConfirmed,
+
+    /** `The command log could not be confirmed`. */
+    LogNotConfirmed,
+
+    /** `Invalid log size` / `Invalid log cursor`. */
+    InvalidLog,
+
+    /** The service id is not in this panel. */
+    UnknownService,
+}
+
+/** The panel's last error: an app refusal, or the store/server's own failure value. */
+public sealed interface ServiceError {
+    public data class Refused(val reason: ServiceRefusal) : ServiceError
+
+    public data class Failed(val failure: Failure) : ServiceError
+}
+
 public class DevelopmentServices(
-    private val store: DevelopmentServiceStore,
+    public val store: DevelopmentServiceStore,
     public val directory: String,
     public val workspace: String?,
-    private val resolveShells: suspend () -> ManagedShellPort?,
+    private val resolveGateway: suspend () -> ManagedShellGateway?,
     private val isCurrent: () -> Boolean,
     private val supported: () -> Boolean,
-    private val newOwnerToken: () -> String,
+    /** Display masking for the report (the kit's redactor); applied before bounding. */
+    private val redact: (String) -> String,
+    private val newOwnerToken: () -> String = ::newId,
 ) {
-    private val mutableState = MutableStateFlow(DevelopmentServicesState())
-    public val state: StateFlow<DevelopmentServicesState> = mutableState.asStateFlow()
-
-    private var services: List<DevelopmentService> = emptyList()
+    public var services: List<DevelopmentService> = emptyList()
+        private set
     private val observed = mutableMapOf<String, ManagedShell>()
-    private val logs = mutableMapOf<String, String>()
     private val logSources = mutableMapOf<String, ManagedShell>()
-    private var busy = false
-    private var readable = true
-    private var error: Failure? = null
+    private val logText = mutableMapOf<String, String>()
+
+    /** Plain-text log tails read this session; never persisted. */
+    public val logs: Map<String, String> get() = logText
+
+    public var busy: Boolean = false
+        private set
+    public var readable: Boolean = true
+        private set
+    public var error: ServiceError? = null
+        private set
     private var generation = 0
-    private var closed = false
+    private var disposed = false
 
-    /** Internal control flow: a step answered a failure, so the command ends with it. Never leaves this class. */
-    private class Abort(val failure: Failure) : Exception()
+    init {
+        reload()
+    }
 
-    private fun abort(failure: Failure): Nothing = throw Abort(failure)
-
-    private fun <T> Outcome<T>.orAbort(): T =
-        when (this) {
-            is Outcome.Ok -> value
-            is Outcome.Failed -> abort(failure)
-        }
-
-    public suspend fun reload() {
+    public fun reload() {
         when (val loaded = store.load()) {
             is Outcome.Ok -> {
                 services = loaded.value.filter { it.directory == directory && it.workspace == workspace }
@@ -84,10 +96,9 @@ public class DevelopmentServices(
             is Outcome.Failed -> {
                 services = emptyList()
                 readable = false
-                error = loaded.failure
+                error = ServiceError.Failed(loaded.failure)
             }
         }
-        publish()
     }
 
     public fun status(service: DevelopmentService): DevelopmentServiceStatus {
@@ -97,84 +108,108 @@ public class DevelopmentServices(
         if (shell == null || !matches(service, shell)) return DevelopmentServiceStatus.Unknown
         return when (shell.status) {
             ManagedShellStatus.Running -> DevelopmentServiceStatus.Running
-            ManagedShellStatus.Exited, ManagedShellStatus.Killed, ManagedShellStatus.Timeout ->
-                DevelopmentServiceStatus.Stopped
+            ManagedShellStatus.Exited, ManagedShellStatus.Killed, ManagedShellStatus.Timeout -> DevelopmentServiceStatus.Stopped
             ManagedShellStatus.Unknown -> DevelopmentServiceStatus.Unknown
         }
     }
 
     public fun exitCode(service: DevelopmentService): Int? = observed[service.id]?.exitCode
 
+    /**
+     * Snapshot for an explicit Report action; call [readLogs] first to load the excerpt. Null means the failure or
+     * ownership is unconfirmed, or this scope is obsolete. A log is attached only when it was read from this exact
+     * owned shell.
+     */
+    public fun failedReport(id: String): FailedServiceReport? {
+        if (disposed || !isCurrent() || !supported() || !readable) return null
+        val shell = observed[id] ?: return null
+        val service = services.firstOrNull { it.id == id } ?: return null
+        val source = logSources[id]
+        val tail = if (source != null && matches(service, source)) logText[id].orEmpty() else ""
+        return FailedServiceReport.of(service, shell, tail, redact)
+    }
+
     public fun canStart(service: DevelopmentService): Boolean =
         supported() && !busy && isCurrent() && readable &&
-            status(service).let { it == DevelopmentServiceStatus.NotStarted || it == DevelopmentServiceStatus.Stopped }
+            (status(service) == DevelopmentServiceStatus.NotStarted || status(service) == DevelopmentServiceStatus.Stopped)
 
     public fun canStop(service: DevelopmentService): Boolean =
         supported() && !busy && isCurrent() && status(service) == DevelopmentServiceStatus.Running
 
-    /** The connection or project changed: what was observed no longer counts, and work in flight stops changing it. */
+    /** The connection or runtime changed: everything observed (shells, logs, sources) is dropped, pending work stales. */
     public fun invalidateRuntime() {
         generation++
         observed.clear()
-        logs.clear()
+        logText.clear()
         logSources.clear()
         busy = false
-        publish()
     }
 
-    public fun close() {
-        closed = true
+    public fun dispose() {
+        disposed = true
         generation++
     }
 
-    private fun current(at: Int): Boolean = !closed && isCurrent() && at == generation
+    private fun current(gen: Int): Boolean = !disposed && isCurrent() && gen == generation
 
-    private fun check(at: Int) {
-        if (!current(at)) abort(Failure.Refused(RefusalReason.StaleScope))
+    private fun forget(id: String) {
+        observed.remove(id)
+        logText.remove(id)
+        logSources.remove(id)
     }
 
-    private suspend fun shells(at: Int): ManagedShellPort {
-        check(at)
-        if (!supported()) abort(Failure.Unavailable(FEATURE))
-        val port = resolveShells()
-        check(at)
-        return port ?: abort(Failure.Unknown())
+    /** One step's answer: [value] or the [error] that ends the action. */
+    private class Step<out T>(val value: T?, val error: ServiceError?)
+
+    private fun <T> ok(value: T): Step<T> = Step(value, null)
+
+    private fun refused(reason: ServiceRefusal): Step<Nothing> = Step(null, ServiceError.Refused(reason))
+
+    private fun failed(failure: Failure): Step<Nothing> = Step(null, ServiceError.Failed(failure))
+
+    private fun check(gen: Int): ServiceError? = if (current(gen)) null else ServiceError.Refused(ServiceRefusal.ScopeChanged)
+
+    private suspend fun gateway(gen: Int): Step<ManagedShellGateway> {
+        check(gen)?.let { return Step(null, it) }
+        if (!supported()) return refused(ServiceRefusal.Unsupported)
+        val gateway = resolveGateway()
+        check(gen)?.let { return Step(null, it) }
+        return if (gateway == null) refused(ServiceRefusal.NoConnection) else ok(gateway)
     }
 
-    private suspend fun action(body: suspend (Int) -> Unit): Outcome<Unit> {
-        if (busy || !isCurrent() || closed || !readable) return Failure.Busy(BusyKind.SessionBusy).failed()
-        val at = generation
+    private suspend fun action(body: suspend (Int) -> ServiceError?) {
+        if (busy || !isCurrent() || disposed || !readable) return
+        val gen = generation
         busy = true
         error = null
-        publish()
-        var result: Outcome<Unit> = Unit.ok()
-        try {
-            body(at)
-        } catch (stop: Abort) {
-            result = stop.failure.failed()
-            if (current(at)) {
-                error = stop.failure
-                observed.clear()
-            }
-        } finally {
-            if (current(at)) {
-                busy = false
-                reload()
-            }
+        val failure = body(gen)
+        if (failure != null && current(gen)) {
+            error = failure
+            observed.clear()
         }
-        return result
+        if (current(gen)) {
+            val kept = error
+            reload()
+            if (kept != null && error == null) error = kept
+            busy = false
+        }
     }
 
-    /** Saves [service] for this project. Never runs it. */
-    public suspend fun register(service: DevelopmentService): Outcome<Unit> = action {
-        if (service.directory != directory || service.workspace != workspace || service.run != null ||
-            service.name.isBlank() || service.name.length > 80 ||
-            service.command.isBlank() || service.command.length > 4096
-        ) {
-            abort(Failure.StorageRefused())
+    public suspend fun register(service: DevelopmentService): Unit =
+        action { _ ->
+            if (service.directory != directory ||
+                service.workspace != workspace ||
+                service.run != null ||
+                service.name.isBlank() ||
+                service.name.length > 80 ||
+                service.command.isBlank() ||
+                service.command.length > 4096
+            ) {
+                ServiceError.Refused(ServiceRefusal.InvalidService)
+            } else {
+                (store.save(service) as? Outcome.Failed)?.let { ServiceError.Failed(it.failure) }
+            }
         }
-        store.save(service).orAbort()
-    }
 
     private fun matches(service: DevelopmentService, shell: ManagedShell): Boolean {
         val run = service.run ?: return false
@@ -183,157 +218,175 @@ public class DevelopmentServices(
             shell.command == service.command &&
             shell.directory == service.directory &&
             (run.shellId == null || shell.id == run.shellId) &&
-            (run.startedAtMillis == null || shell.startedAtMillis == run.startedAtMillis)
+            (run.startedAt == null || shell.startedAt == run.startedAt)
     }
 
-    private fun forget(id: String) {
-        observed.remove(id)
-        logs.remove(id)
-        logSources.remove(id)
-    }
-
-    private suspend fun reconcile(service: DevelopmentService, port: ManagedShellPort, at: Int): ManagedShell? {
-        val run = service.run ?: return null
-        if (run.stopped) return null
-        val shell =
-            if (run.shellId != null) {
-                port.get(run.shellId).orAbort()
-            } else {
-                // Recover only this saved, pre-POST ownership nonce. Never adopt a shell because it looks familiar.
-                val inventory = port.running().orAbort()
-                check(at)
-                inventory.shells.filter { matches(service, it) }.singleOrNull()
+    /** The owned shell of [service], or null (and its observation and log forgotten) when ownership is unconfirmed. */
+    private suspend fun reconcile(service: DevelopmentService, gateway: ManagedShellGateway, gen: Int): Step<ManagedShell?> {
+        val run = service.run
+        if (run == null || run.stopped) return ok(null)
+        var shell: ManagedShell? = null
+        if (run.shellId != null) {
+            when (val got = gateway.getManagedShell(run.shellId)) {
+                is Outcome.Failed -> return failed(got.failure)
+                is Outcome.Ok -> shell = got.value
             }
-        check(at)
+        } else {
+            // Recover only this persisted, pre-POST ownership nonce; never adopt a familiar-looking shell.
+            when (val inventory = gateway.loadRunningShells()) {
+                is Outcome.Failed -> return failed(inventory.failure)
+                is Outcome.Ok -> {
+                    check(gen)?.let { return Step(null, it) }
+                    val matching = inventory.value.filter { matches(service, it) }
+                    if (matching.size == 1) shell = matching.single()
+                }
+            }
+        }
+        check(gen)?.let { return Step(null, it) }
         if (shell == null || !matches(service, shell)) {
             forget(service.id)
-            return null
+            return ok(null)
         }
         if (run.shellId == null) {
-            store.updateRun(
-                service.id,
-                DevelopmentServiceRun(run.ownerToken, shell.id, shell.startedAtMillis),
-                expectedOwner = run.ownerToken,
-            ).orAbort()
-            check(at)
+            val updated = store.updateRun(service.id, DevelopmentServiceRun(run.ownerToken, shell.id, shell.startedAt), run.ownerToken)
+            if (updated is Outcome.Failed) return failed(updated.failure)
+            check(gen)?.let { return Step(null, it) }
         }
         observed[service.id] = shell
-        return shell
+        return ok(shell)
     }
 
-    /** Re-reads the saved list and confirms each owned run with the server. A failure leaves nothing "running". */
-    public suspend fun refresh(): Outcome<Unit> = action { at ->
-        reload()
-        observed.clear()
-        if (!supported() || services.none { it.run != null && !it.run.stopped }) return@action
-        val port = shells(at)
-        for (service in services) reconcile(service, port, at)
-    }
+    public suspend fun refresh(): Unit =
+        action { gen ->
+            reload()
+            observed.clear()
+            if (!supported() || services.none { it.run != null && !it.run.stopped }) return@action null
+            val gateway = gateway(gen)
+            gateway.error?.let { return@action it }
+            for (service in services) {
+                reconcile(service, gateway.value!!, gen).error?.let { return@action it }
+            }
+            null
+        }
 
-    public suspend fun start(id: String): Outcome<Unit> = action { at -> startIn(id, at) }
+    public suspend fun start(id: String): Unit = action { gen -> startRun(id, gen) }
 
-    private fun service(id: String): DevelopmentService =
-        services.firstOrNull { it.id == id } ?: abort(Failure.Refused(RefusalReason.StaleScope))
-
-    private suspend fun startIn(id: String, at: Int) {
-        val service = service(id)
+    private suspend fun startRun(id: String, gen: Int): ServiceError? {
+        val service = services.firstOrNull { it.id == id } ?: return ServiceError.Refused(ServiceRefusal.UnknownService)
         val state = status(service)
         if (state != DevelopmentServiceStatus.NotStarted && state != DevelopmentServiceStatus.Stopped) {
-            abort(Failure.Runtime(RuntimeProblem.ConfirmationRequired))
+            return ServiceError.Refused(ServiceRefusal.PreviousRunUnconfirmed)
         }
-        val port = shells(at)
+        val gateway = gateway(gen)
+        gateway.error?.let { return it }
         val owner = newOwnerToken()
-        store.updateRun(id, DevelopmentServiceRun(ownerToken = owner)).orAbort()
+        (store.updateRun(id, DevelopmentServiceRun(owner)) as? Outcome.Failed)?.let { return ServiceError.Failed(it.failure) }
         reload()
-        check(at)
-        // A failure or a lost answer deliberately leaves the pending nonce saved.
-        val shell = port.start(service.command, directory, owner).orAbort()
-        val pending = service.withRun(DevelopmentServiceRun(ownerToken = owner))
+        check(gen)?.let { return it }
+        // Failure or a lost response deliberately leaves the pending nonce saved.
+        val shell =
+            when (val started = gateway.value!!.startManagedShell(service.command, directory, owner)) {
+                is Outcome.Failed -> return ServiceError.Failed(started.failure)
+                is Outcome.Ok -> started.value
+            }
+        val pending = service.withRun(DevelopmentServiceRun(owner))
         if (!matches(pending, shell) || !shell.id.startsWith("sh_")) {
-            abort(Failure.Runtime(RuntimeProblem.OwnershipUnknown))
+            return ServiceError.Refused(ServiceRefusal.OwnershipNotConfirmed)
         }
-        // Keep the receipt even if this screen closed while the POST was pending. The store refuses writes after the
-        // profile was deleted or a newer start replaced the nonce.
-        store.updateRun(id, DevelopmentServiceRun(owner, shell.id, shell.startedAtMillis), expectedOwner = owner)
-            .orAbort()
-        if (current(at)) {
+        // Preserve the receipt even if this route closed while POST was pending.
+        val saved = store.updateRun(id, DevelopmentServiceRun(owner, shell.id, shell.startedAt), owner)
+        if (saved is Outcome.Failed) return ServiceError.Failed(saved.failure)
+        if (current(gen)) {
             observed[id] = shell
-            logs.remove(id)
+            logText.remove(id)
             logSources.remove(id)
         }
+        return null
     }
 
-    public suspend fun stop(id: String): Outcome<Unit> = action { at -> stopIn(id, at) }
+    public suspend fun stop(id: String): Unit = action { gen -> stopRun(id, gen) }
 
-    private suspend fun stopIn(id: String, at: Int) {
-        val service = service(id)
-        val port = shells(at)
-        val shell = reconcile(service, port, at) ?: abort(Failure.Runtime(RuntimeProblem.OwnershipUnknown))
-        check(at)
-        port.stop(shell.id).orAbort()
-        check(at)
-        val remaining = port.get(shell.id).orAbort()
-        check(at)
-        if (remaining != null) abort(Failure.Busy(BusyKind.Stopping))
+    private suspend fun stopRun(id: String, gen: Int): ServiceError? {
+        val service = services.firstOrNull { it.id == id } ?: return ServiceError.Refused(ServiceRefusal.UnknownService)
+        val gateway = gateway(gen)
+        gateway.error?.let { return it }
+        val reconciled = reconcile(service, gateway.value!!, gen)
+        reconciled.error?.let { return it }
+        val shell = reconciled.value ?: return ServiceError.Refused(ServiceRefusal.StopOwnershipUnknown)
+        check(gen)?.let { return it }
+        (gateway.value.stopManagedShell(shell.id) as? Outcome.Failed)?.let { return ServiceError.Failed(it.failure) }
+        check(gen)?.let { return it }
+        val remaining =
+            when (val got = gateway.value.getManagedShell(shell.id)) {
+                is Outcome.Failed -> return ServiceError.Failed(got.failure)
+                is Outcome.Ok -> got.value
+            }
+        check(gen)?.let { return it }
+        if (remaining != null) return ServiceError.Refused(ServiceRefusal.StopNotConfirmed)
         val owner = service.run!!.ownerToken
-        store.updateRun(id, DevelopmentServiceRun(owner, shell.id, shell.startedAtMillis, stopped = true), owner)
-            .orAbort()
+        val saved = store.updateRun(id, DevelopmentServiceRun(owner, shell.id, shell.startedAt, stopped = true), owner)
+        if (saved is Outcome.Failed) return ServiceError.Failed(saved.failure)
         forget(id)
         reload()
+        return null
     }
 
-    public suspend fun restart(id: String): Outcome<Unit> = action { at ->
-        stopIn(id, at)
-        check(at)
-        startIn(id, at)
-    }
+    public suspend fun restart(id: String): Unit =
+        action { gen ->
+            stopRun(id, gen) ?: check(gen) ?: startRun(id, gen)
+        }
 
-    /** Loads the end of [id]'s output: one 1-byte read for the size, then at most 64 KB, colour codes removed. */
-    public suspend fun readLogs(id: String): Outcome<Unit> = action { at ->
-        logs.remove(id)
-        logSources.remove(id)
-        val port = shells(at)
-        val service = service(id)
-        val shell = reconcile(service, port, at) ?: abort(Failure.Runtime(RuntimeProblem.OwnershipUnknown))
-        val head = port.output(shell.id, cursor = 0, limit = 1).orAbort()
-        check(at)
-        if (head.size < 0) abort(Failure.UnreadableReply())
-        val start = maxOf(0L, head.size - LOG_TAIL)
-        val tail = port.output(shell.id, cursor = start, limit = LOG_TAIL).orAbort()
-        check(at)
-        if (tail.cursor < start || tail.cursor > tail.size) abort(Failure.UnreadableReply())
-        val text = tail.text.let { if (it.length > LOG_TAIL) it.substring(it.length - LOG_TAIL) else it }
-        logs[id] = TerminalText.plain(text)
-        logSources[id] = shell
-    }
+    /** Reads at most the last 64 KiB of the owned shell's output; a failed read leaves no previous excerpt behind. */
+    public suspend fun readLogs(id: String): Unit =
+        action { gen ->
+            logText.remove(id)
+            logSources.remove(id)
+            val gateway = gateway(gen)
+            gateway.error?.let { return@action it }
+            val service = services.firstOrNull { it.id == id } ?: return@action ServiceError.Refused(ServiceRefusal.UnknownService)
+            val reconciled = reconcile(service, gateway.value!!, gen)
+            reconciled.error?.let { return@action it }
+            val shell = reconciled.value ?: return@action ServiceError.Refused(ServiceRefusal.LogNotConfirmed)
+            val head =
+                when (val read = gateway.value.readManagedShellOutput(shell.id, cursor = 0, limit = 1)) {
+                    is Outcome.Failed -> return@action ServiceError.Failed(read.failure)
+                    is Outcome.Ok -> read.value
+                }
+            check(gen)?.let { return@action it }
+            if (head.size < 0) return@action ServiceError.Refused(ServiceRefusal.InvalidLog)
+            val start = max(0L, head.size - LOG_WINDOW)
+            val tail =
+                when (val read = gateway.value.readManagedShellOutput(shell.id, cursor = start, limit = LOG_WINDOW.toInt())) {
+                    is Outcome.Failed -> return@action ServiceError.Failed(read.failure)
+                    is Outcome.Ok -> read.value
+                }
+            check(gen)?.let { return@action it }
+            if (tail.cursor < start || tail.cursor > tail.size) return@action ServiceError.Refused(ServiceRefusal.InvalidLog)
+            var text = tail.text
+            if (text.length > LOG_WINDOW) text = text.substring(text.length - LOG_WINDOW.toInt())
+            logText[id] = TerminalText.withoutTerminalCodes(text)
+            logSources[id] = shell
+            null
+        }
 
-    /** Forgets an unknown run locally. Never stops anything on the server. */
-    public suspend fun forgetRun(id: String): Outcome<Unit> = action {
-        store.updateRun(id, null).orAbort()
-        forget(id)
-    }
+    public suspend fun forgetRun(id: String): Unit =
+        action { _ ->
+            (store.updateRun(id, null) as? Outcome.Failed)?.let { return@action ServiceError.Failed(it.failure) }
+            forget(id)
+            null
+        }
 
-    /** Removes the saved service. Never stops anything on the server. */
-    public suspend fun remove(id: String): Outcome<Unit> = action {
-        store.remove(id).orAbort()
-        forget(id)
-    }
-
-    private fun publish() {
-        if (closed) return
-        mutableState.value =
-            DevelopmentServicesState(
-                services = services,
-                statuses = services.associate { it.id to status(it) },
-                logs = logs.toMap(),
-                busy = busy,
-                readable = readable,
-                error = error,
-            )
-    }
+    public suspend fun remove(id: String): Unit =
+        action { _ ->
+            (store.remove(id) as? Outcome.Failed)?.let { return@action ServiceError.Failed(it.failure) }
+            forget(id)
+            null
+        }
 
     public companion object {
-        public val FEATURE: FeatureId = FeatureId("developmentServices")
-        public const val LOG_TAIL: Int = 65_536
+        private const val LOG_WINDOW = 65536L
+
+        /** 24 random bytes as hex: the ownership nonce written before the create request. */
+        public fun newId(): String = Random.nextBytes(24).joinToString("") { (it.toInt() and 0xff).toString(16).padStart(2, '0') }
     }
 }

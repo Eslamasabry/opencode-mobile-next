@@ -7,5 +7,7 @@ kotlin {
     sourceSets.commonMain.dependencies {
         api(project(":core:common"))
         implementation(project(":core:security"))
+        api(project(":core:net")) // BUILD-REST B-BUILD-026: HttpSpanRecorder observes NetClient calls
     }
+    sourceSets.commonTest.dependencies { implementation("io.ktor:ktor-client-mock:${libs.versions.ktor.get()}") }
 }

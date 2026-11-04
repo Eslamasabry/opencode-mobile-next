@@ -9,7 +9,7 @@ import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
-import io.github.eslamasabry.oc.engine.runtime.services.DevelopmentServiceStatus
+import io.github.eslamasabry.oc.engine.runtime.services.commands.DevelopmentServiceStatus
 import io.github.eslamasabry.oc.feature.devservices.presentation.DevServicesActions
 import io.github.eslamasabry.oc.feature.devservices.presentation.DevServicesUi
 import io.github.eslamasabry.oc.feature.devservices.presentation.FoundRowUi

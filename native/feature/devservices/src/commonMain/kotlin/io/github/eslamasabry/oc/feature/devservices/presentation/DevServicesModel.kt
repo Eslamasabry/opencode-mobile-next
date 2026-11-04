@@ -7,10 +7,10 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.pace.Pacer
 import io.github.eslamasabry.oc.engine.runtime.devservers.DetectedDevServers
 import io.github.eslamasabry.oc.engine.runtime.devservers.DetectedServer
-import io.github.eslamasabry.oc.engine.runtime.services.DevelopmentService
-import io.github.eslamasabry.oc.engine.runtime.services.DevelopmentServiceStatus
-import io.github.eslamasabry.oc.engine.runtime.services.DevelopmentServiceStore
-import io.github.eslamasabry.oc.engine.runtime.services.DevelopmentServices
+import io.github.eslamasabry.oc.engine.runtime.services.commands.DevelopmentService
+import io.github.eslamasabry.oc.engine.runtime.services.commands.DevelopmentServiceStatus
+import io.github.eslamasabry.oc.engine.runtime.services.commands.DevelopmentServiceStore
+import io.github.eslamasabry.oc.engine.runtime.services.commands.DevelopmentServices
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -156,7 +156,14 @@ class ChatHeaderPresenterTest {
         world.capabilities.value = ServerCapabilities(sessionShare = false, sessionFork = false, sessionArchive = false, sessionDelete = false)
         val menu = p.current().menu
         assertEquals(
-            listOf(HeaderAction.Find, HeaderAction.Details, HeaderAction.Rename, HeaderAction.ContinueWith, HeaderAction.CopyTranscript),
+            listOf(
+                HeaderAction.Find,
+                HeaderAction.Details,
+                HeaderAction.Rename,
+                HeaderAction.ContinueWith,
+                HeaderAction.ContinueOnComputer,
+                HeaderAction.CopyTranscript,
+            ),
             menu,
         )
         world.capabilities.value = allCaps

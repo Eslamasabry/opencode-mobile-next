@@ -1,4 +1,50 @@
-VERIFIED: green
+VERIFIED: green (P12X integration compile only; tests not run)
+
+## P12X integration reconciliation (2026-11-04)
+
+Checkout: `p12x/runtime-a-b1fe12d`, original unit `b1fe12d071c5cd0ed8aecf28fd28549f9521dcb7`.
+Integration parent: `d4a607926b20c036503f1c255a854889004ea0de`.
+
+- Resolved all three merge conflicts. `MODULE_OWNERS` and the Android app dependencies keep the union of both parents.
+- The two service controllers have incompatible store and command APIs. The integration's `services` API and failed-run
+  report remain unchanged. Runtime-a's observable project command controller, models, store, shell port and tests now
+  live in `services.commands`; runtime-a's feature, discovery and Android wiring imports follow them.
+- Runtime-a's setup job record/progress types also collided with the integrated setup engine. Runtime-a's job engine,
+  record helpers, phone finisher and their tests now live in `setup.jobs`. Both setup implementations remain available;
+  the existing Linux channel and tools-change counter remain shared within runtime-a.
+- These are namespace/import changes: the stored preference key and JSON formats are unchanged. All 25 runtime-a
+  common-test files retain their test bodies and assertions. The integrated service controller, model, failed report
+  and report tests are byte-identical to the integration parent.
+
+Current gate: compile only, as requested by the owner while migration is unfinished. No tests, Flutter gates, pushes,
+CI runs, release commands or device runs are authorized for this reconciliation. The historical test results below
+belong to the original unit candidate, not this merged candidate.
+
+Compile result: **BUILD SUCCESSFUL in 4m 13s**, exit 0, first compile invocation. The exact requested command ran
+under `tool/qa/machine_lock.sh build`, with JDK 21 and the requested Android SDK, niceness, worker and JVM limits:
+
+```bash
+cd native
+export JAVA_HOME=/home/eslam/Storage2/tools/jdk21 ANDROID_HOME=$HOME/Android/Sdk
+nice -n 5 ./gradlew --console=plain --continue -Dorg.gradle.workers.max=2 \
+  -Dorg.gradle.daemon.idletimeout=300000 \
+  -Dorg.gradle.jvmargs='-Xmx2g -XX:MaxMetaspaceSize=768m' \
+  :androidApp:assemblePreviewDebug compileKotlinDesktop compileTestKotlinDesktop
+```
+
+- 3/3 requested task groups passed; 1,255 actionable tasks: 933 executed, 322 from cache.
+- Android preview assembly and its native-library verification both completed.
+- 69 desktop production compile tasks and 69 desktop test-source compile tasks completed.
+- Compiler errors: 0. Kotlin warning lines: 235; configuration `WARNING` lines: 58. No warning suppression added.
+- Executed test tasks: 0. Runtime-a's engine and feature compiled for Android and desktop, including desktop tests.
+- Fresh-worktree setup: copied the ignored sherpa-onnx 2.0.1 AAR from an existing local checkout after verifying it
+  against `native/third_party/SHA256SUMS`; verified the destination hash too. No tracked dependency or build rule changed.
+- Compiled native source tree: `38348fc1195e9a01d99442992d49f5047a9e7180` (the `native/` Git tree, excluding ignored build/cache/vendor output).
+- Conflict paths and new namespaces passed `git diff --check`; all merge conflicts are resolved.
+
+Local compile log: `native/build/runtime-a-integration/compile.log` (ignored build output).
+
+---
 
 # P12-BUILD-RUNTIME-A — 52 runtime rows ported natively
 

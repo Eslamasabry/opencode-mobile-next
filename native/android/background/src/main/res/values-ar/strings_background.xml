@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Flutter app's app_ar.arb backgroundPause* strings, verbatim; the three errors are new translations. -->
+<resources>
+    <string name="background_pause_time_limit">أُوقف الاتصال في الخلفية مؤقتًا %1$s لتوفير البطارية.</string>
+    <string name="background_pause_restricted">أُوقف الاتصال في الخلفية مؤقتًا: استخدام البطارية مقيَّد.</string>
+    <string name="background_pause_user_stopped">توقف الاتصال في الخلفية لأن التطبيق أُغلق %1$s.</string>
+    <string name="background_pause_app_updated">توقف الاتصال في الخلفية لأن التطبيق حُدِّث %1$s.</string>
+    <string name="background_pause_interrupted">توقف الاتصال في الخلفية لسبب غير معروف.</string>
+    <string name="background_pause_device_restarted">توقف الاتصال في الخلفية عند إعادة تشغيل الهاتف.</string>
+    <string name="background_pause_resume">استئناف الاتصال في الخلفية</string>
+    <string name="background_pause_resume_short">استئناف</string>
+    <string name="background_pause_resuming">جارٍ استئناف الاتصال في الخلفية…</string>
+    <string name="background_pause_resume_failed">تعذّر الاستئناف. افتح إعدادات الاستمرار في العمل.</string>
+    <string name="background_pause_open_keep_running">فتح إعدادات الاستمرار في العمل</string>
+    <string name="background_pause_resumed">تم استئناف الاتصال في الخلفية.</string>
+    <string name="background_error_notifications_required">يلزم السماح بالإشعارات.</string>
+    <string name="background_error_could_not_change">تعذّر على Android تغيير وضع الخلفية.</string>
+    <string name="background_error_android_app_only">وضع الاتصال المباشر في الخلفية متاح في تطبيق Android.</string>
+</resources>

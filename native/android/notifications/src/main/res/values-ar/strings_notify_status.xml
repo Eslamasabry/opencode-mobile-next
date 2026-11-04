@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The status row's words (StatusModel, B-ANDR-041..047). en and ar are the Flutter app's notifStatus* strings (lib/l10n/app_*.arb), verbatim; numbers arrive pre-formatted (%s). -->
+<resources>
+    <string name="notify_status_working">جارٍ العمل…</string>
+    <string name="notify_status_still_working">%1$s ما زالت تعمل</string>
+    <string name="notify_status_chats_working">%1$s محادثات تعمل</string>
+    <string name="notify_status_more">+%1$s أخرى</string>
+    <string name="notify_status_waiting_count">%1$s في الانتظار</string>
+    <string name="notify_status_tasks_progress">%1$s من %2$s مهام</string>
+    <string name="notify_status_minutes">%1$s د</string>
+    <string name="notify_status_hours">%1$s س</string>
+    <string name="notify_status_waiting_provider">في الانتظار · حدّ %1$s</string>
+    <string name="notify_status_waiting_generic">في الانتظار · المزوّد مشغول</string>
+    <string name="notify_status_tries_again_at">يعيد المحاولة في %1$s</string>
+    <string name="notify_status_tries_again_soon">يعيد المحاولة قريبًا</string>
+    <string name="notify_status_paused_android_title">متوقف · حدّ الخلفية في أندرويد</string>
+    <string name="notify_status_paused_android_body">يوقف أندرويد العمل في الخلفية بعد 6 ساعات يوميًا. افتح OpenCode لتواصل.</string>
+    <string name="notify_status_paused_hot_title">متوقف · الهاتف ساخن</string>
+    <string name="notify_status_paused_hot_body">يستأنف عندما يبرد</string>
+    <string name="notify_status_paused_idle_title">متوقف · لم يكن شيء يعمل</string>
+    <string name="notify_status_paused_idle_body">المس لتشغيل OpenCode من جديد</string>
+    <string name="notify_status_reconnecting_title">إعادة الاتصال بـ %1$s</string>
+    <string name="notify_status_reconnecting_generic">إعادة الاتصال</string>
+    <string name="notify_status_reconnecting_body">بانتظار الاتصال</string>
+    <string name="notify_status_ready_title">جاهز · لا شيء قيد التشغيل</string>
+    <string name="notify_status_ready_body">جاهز عندما تكون جاهزًا</string>
+    <string name="notify_status_last_reply">آخر رد منذ %1$s</string>
+    <string name="notify_status_last_reply_now">آخر رد قبل لحظات</string>
+    <string name="notify_status_setup_title">إعداد OpenCode · الخطوة %1$s من %2$s</string>
+    <string name="notify_status_on_server">على %1$s</string>
+    <string name="notify_status_on_this_phone">على هذا الهاتف</string>
+    <string name="notify_status_lock_working">OpenCode · %1$s تعمل</string>
+    <string name="notify_status_lock_waiting">OpenCode · في الانتظار</string>
+    <string name="notify_status_lock_paused">OpenCode · متوقف</string>
+    <string name="notify_status_lock_reconnecting">OpenCode · إعادة الاتصال</string>
+    <string name="notify_status_lock_ready">OpenCode · جاهز</string>
+    <string name="notify_status_lock_setup">OpenCode · الإعداد</string>
+    <plurals name="notify_status_needs_you">
+        <item quantity="zero">%1$s طلب ينتظرك</item>
+        <item quantity="one">طلب واحد ينتظرك</item>
+        <item quantity="two">طلبان ينتظرانك</item>
+        <item quantity="few">%1$s طلبات تنتظرك</item>
+        <item quantity="many">%1$s طلبًا ينتظرك</item>
+        <item quantity="other">%1$s طلب ينتظرك</item>
+    </plurals>
+</resources>

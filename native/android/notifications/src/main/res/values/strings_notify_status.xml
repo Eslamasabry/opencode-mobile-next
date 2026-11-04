@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The status row's words (StatusModel, B-ANDR-041..047). en and ar are the Flutter app's notifStatus* strings (lib/l10n/app_*.arb), verbatim; numbers arrive pre-formatted (%s). -->
+<resources>
+    <string name="notify_status_working">Working…</string>
+    <string name="notify_status_still_working">%1$s still working</string>
+    <string name="notify_status_chats_working">%1$s conversations working</string>
+    <string name="notify_status_more">+%1$s more</string>
+    <string name="notify_status_waiting_count">%1$s waiting</string>
+    <string name="notify_status_tasks_progress">%1$s of %2$s tasks</string>
+    <string name="notify_status_minutes">%1$s min</string>
+    <string name="notify_status_hours">%1$s h</string>
+    <string name="notify_status_waiting_provider">Waiting · %1$s limit</string>
+    <string name="notify_status_waiting_generic">Waiting · the provider is busy</string>
+    <string name="notify_status_tries_again_at">Tries again at %1$s</string>
+    <string name="notify_status_tries_again_soon">Tries again soon</string>
+    <string name="notify_status_paused_android_title">Paused · Android\'s background limit</string>
+    <string name="notify_status_paused_android_body">Android stops background work after 6 hours a day. Open OpenCode to keep going.</string>
+    <string name="notify_status_paused_hot_title">Paused · phone is hot</string>
+    <string name="notify_status_paused_hot_body">Resumes when it cools down</string>
+    <string name="notify_status_paused_idle_title">Paused · nothing was running</string>
+    <string name="notify_status_paused_idle_body">Tap to start OpenCode again</string>
+    <string name="notify_status_reconnecting_title">Reconnecting to %1$s</string>
+    <string name="notify_status_reconnecting_generic">Reconnecting</string>
+    <string name="notify_status_reconnecting_body">Waiting for the connection</string>
+    <string name="notify_status_ready_title">Ready · nothing running</string>
+    <string name="notify_status_ready_body">Ready when you are</string>
+    <string name="notify_status_last_reply">Last reply %1$s ago</string>
+    <string name="notify_status_last_reply_now">Last reply just now</string>
+    <string name="notify_status_setup_title">Setup · %1$s of %2$s</string>
+    <string name="notify_status_on_server">on %1$s</string>
+    <string name="notify_status_on_this_phone">on this phone</string>
+    <string name="notify_status_lock_working">%1$s working</string>
+    <string name="notify_status_lock_waiting">Waiting</string>
+    <string name="notify_status_lock_paused">Paused</string>
+    <string name="notify_status_lock_reconnecting">Reconnecting</string>
+    <string name="notify_status_lock_ready">Ready</string>
+    <string name="notify_status_lock_setup">Setting up</string>
+    <plurals name="notify_status_needs_you">
+        <item quantity="one">%1$s needs you</item>
+        <item quantity="other">%1$s need you</item>
+    </plurals>
+</resources>

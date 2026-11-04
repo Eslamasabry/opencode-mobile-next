@@ -6,9 +6,9 @@ import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.getOrNull
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.testing.TestClock
-import io.github.eslamasabry.oc.engine.runtime.services.FakeShells
-import io.github.eslamasabry.oc.engine.runtime.services.ManagedShell
-import io.github.eslamasabry.oc.engine.runtime.services.ManagedShellStatus
+import io.github.eslamasabry.oc.engine.runtime.services.commands.FakeShells
+import io.github.eslamasabry.oc.engine.runtime.services.commands.ManagedShell
+import io.github.eslamasabry.oc.engine.runtime.services.commands.ManagedShellStatus
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runCurrent

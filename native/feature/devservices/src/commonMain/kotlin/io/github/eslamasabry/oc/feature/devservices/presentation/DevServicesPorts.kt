@@ -5,8 +5,8 @@ import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.runtime.devservers.PhoneScriptRunner
-import io.github.eslamasabry.oc.engine.runtime.services.DevelopmentServiceSettings
-import io.github.eslamasabry.oc.engine.runtime.services.ManagedShellPort
+import io.github.eslamasabry.oc.engine.runtime.services.commands.DevelopmentServiceSettings
+import io.github.eslamasabry.oc.engine.runtime.services.commands.ManagedShellPort
 import kotlin.time.Clock
 
 /**

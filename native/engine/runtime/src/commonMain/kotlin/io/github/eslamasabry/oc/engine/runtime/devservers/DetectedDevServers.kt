@@ -8,7 +8,7 @@ import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ok
-import io.github.eslamasabry.oc.engine.runtime.services.ManagedShellPort
+import io.github.eslamasabry.oc.engine.runtime.services.commands.ManagedShellPort
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

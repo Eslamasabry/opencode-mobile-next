@@ -64,4 +64,7 @@ public interface ServersActions {
     public fun openSchedules(id: ProfileId) {}
     /** Usage and cost this connected server reports (unit P12-SEARCH-USAGE). */
     public fun openUsage(id: ProfileId) {}
+
+    /** Usage › Plans across every connection (:feature:plans, unit P12-BUILD-INTEGRATIONS-B). */
+    public fun openPlans() {}
 }
