@@ -11,6 +11,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.search.presentation.ContentPhase
+import io.github.eslamasabry.oc.feature.search.presentation.GoToMenu
+import io.github.eslamasabry.oc.feature.search.presentation.GoToPlace
+import io.github.eslamasabry.oc.feature.search.presentation.GoToRow
 import io.github.eslamasabry.oc.feature.search.presentation.SearchActions
 import io.github.eslamasabry.oc.feature.search.presentation.SearchHitUi
 import io.github.eslamasabry.oc.feature.search.presentation.SearchPhase
@@ -42,6 +45,13 @@ import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.discoverSearchGoTo
+import io.github.eslamasabry.oc.ui.words.res.e7ProjectProjectsTitle
+import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceNeedsYou
+import io.github.eslamasabry.oc.ui.words.res.kitCapServerAnyEnable
+import io.github.eslamasabry.oc.ui.words.res.librarySettingsTitle
+import io.github.eslamasabry.oc.ui.words.res.settingsV3Servers
+import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
 import io.github.eslamasabry.oc.ui.words.res.globalSessionsLoadMore
 import io.github.eslamasabry.oc.ui.words.res.globalSessionsLoadMoreFailed
 import io.github.eslamasabry.oc.ui.words.res.globalSessionsUntitled
@@ -81,6 +91,8 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 public fun SearchScreen(state: SearchUi, actions: SearchActions, field: TextFieldState = rememberTextFieldState(state.query)) {
     val gutter = LocalKitTokens.current.gutter
+    val placeLabels = GoToPlace.entries.filter { it.openable }.associateWith { goToLabel(it) }
+    val goToRows = GoToMenu.match(state.goTo, state.query) { row -> listOfNotNull(row.place?.let(placeLabels::get), row.title) }
     KitScreen(
         topBar = {
             KitTopBar(
@@ -140,6 +152,7 @@ public fun SearchScreen(state: SearchUi, actions: SearchActions, field: TextFiel
             if (state.recentFailed) {
                 item(key = "recent-failed") { KitNotice(stringResource(Res.string.p12SearchRecentFailed)) }
             }
+            if (state.phase != SearchPhase.NoServer && goToRows.isNotEmpty()) goTo(goToRows, placeLabels, actions)
             when (state.phase) {
                 SearchPhase.NoServer ->
                     item(key = "no-server") {
@@ -193,6 +206,34 @@ public fun SearchScreen(state: SearchUi, actions: SearchActions, field: TextFiel
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun goToLabel(place: GoToPlace): String =
+    stringResource(
+        when (place) {
+            GoToPlace.NeedsYou -> Res.string.e7WorkspaceNeedsYou
+            GoToPlace.Projects -> Res.string.e7ProjectProjectsTitle
+            GoToPlace.Settings -> Res.string.librarySettingsTitle
+            GoToPlace.Servers -> Res.string.settingsV3Servers
+            GoToPlace.AddServer -> Res.string.kitCapServerAnyEnable
+            GoToPlace.Files,
+            GoToPlace.Terminal,
+            GoToPlace.Help -> error("not an openable place")
+            GoToPlace.NewConversation -> Res.string.workspaceNewSession
+        }
+    )
+
+/** Search's Go to menu (B-NAV-056): places first, then the last three conversations; typing filters it. */
+private fun LazyListScope.goTo(rows: List<GoToRow>, labels: Map<GoToPlace, String>, actions: SearchActions) {
+    item(key = "goto-label") { KitSectionLabel(stringResource(Res.string.discoverSearchGoTo)) }
+    items(rows, key = { "goto-" + (it.place?.name ?: it.ref?.sessionId?.raw) }) { row ->
+        KitRow(
+            title = row.place?.let(labels::get) ?: row.title ?: stringResource(Res.string.globalSessionsUntitled),
+            trailing = KitRowTrailing.Chevron,
+            onClick = { actions.goTo(row) },
+        )
     }
 }
 

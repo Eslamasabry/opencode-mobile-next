@@ -10,6 +10,7 @@ import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -22,6 +23,7 @@ import io.github.eslamasabry.oc.core.model.transcript.PartType
 import io.github.eslamasabry.oc.core.model.transcript.Role
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.feature.search.presentation.ConversationSearchSource
+import io.github.eslamasabry.oc.feature.search.presentation.SearchGoToFacts
 import io.github.eslamasabry.oc.feature.search.presentation.RecentSearchHistory
 import io.github.eslamasabry.oc.feature.search.presentation.RecentSearchStore
 import io.github.eslamasabry.oc.feature.search.presentation.SearchConversation
@@ -121,6 +123,16 @@ class AndroidConversationSearch(private val shared: SearchUsageServers, appScope
                     allProjects = false,
                 ).ok()
         }
+    }
+
+    override suspend fun goToFacts(profile: ProfileId): SearchGoToFacts? {
+        val gateway = shared.gateway(profile) ?: return null
+        val caps = gateway.capabilities.value
+        val recent =
+            (gateway.sessionPage(null, PAGE) as? Outcome.Ok)?.value?.items.orEmpty()
+                .filter { it.parentId == null }
+                .map { ConversationRef(profile, it.id) to it.title }
+        return SearchGoToFacts(caps.fileBrowsing, caps.terminal, caps.projectManagement, recent.toImmutableList())
     }
 
     override suspend fun recentMessages(

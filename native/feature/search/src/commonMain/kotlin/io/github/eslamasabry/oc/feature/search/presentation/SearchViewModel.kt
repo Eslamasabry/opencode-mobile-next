@@ -13,6 +13,9 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.ChatsRoute
+import io.github.eslamasabry.oc.ui.routes.ProjectsRoute
+import io.github.eslamasabry.oc.ui.routes.SettingsRoute
 import io.github.eslamasabry.oc.ui.routes.SearchRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import kotlinx.collections.immutable.persistentListOf
@@ -55,6 +58,7 @@ public class SearchViewModel(
                 local.update { it.copy(servers = servers, server = chosen) }
                 val noServerShown = local.value.phase == SearchPhase.NoServer
                 if (chosen != before || (chosen == null) != noServerShown) restart()
+                if (chosen != before || local.value.goTo.isEmpty()) loadGoTo(chosen)
             }
         }
         viewModelScope.launch { recents.recent.collect { recent -> local.update { it.copy(recent = recent) } } }
@@ -78,6 +82,7 @@ public class SearchViewModel(
         if (local.value.server == id || local.value.servers.none { it.id == id }) return
         local.update { it.copy(server = id) }
         restart()
+        loadGoTo(id)
     }
 
     override fun searchInside(on: Boolean) {
@@ -126,6 +131,53 @@ public class SearchViewModel(
     }
 
     override fun openServers(): Unit = nav.open(ServersRoute.Home)
+
+    override fun goTo(row: GoToRow) {
+        val server = local.value.server
+        val ref = row.ref
+        when (row.place) {
+            null -> if (ref != null) nav.openChat(ref)
+            GoToPlace.NeedsYou -> nav.open(ChatsRoute.All(null))
+            GoToPlace.Projects -> nav.open(ProjectsRoute.Picker(server))
+            GoToPlace.Settings -> nav.open(SettingsRoute.Home)
+            GoToPlace.Servers,
+            GoToPlace.AddServer -> nav.open(ServersRoute.Home)
+            GoToPlace.NewConversation -> nav.open(ChatsRoute.New(server))
+            GoToPlace.Files,
+            GoToPlace.Terminal,
+            GoToPlace.Help -> Unit
+        }
+    }
+
+    private fun loadGoTo(server: ProfileId?) {
+        if (server == null) {
+            local.update { it.copy(goTo = persistentListOf()) }
+            return
+        }
+        viewModelScope.launch {
+            val facts = source.goToFacts(server)
+            if (local.value.server != server) return@launch
+            local.update { s ->
+                s.copy(
+                    goTo =
+                        facts
+                            ?.let {
+                                GoToMenu.rows(
+                                    GoToInput(
+                                        fileBrowsing = false,
+                                        terminal = false,
+                                        projectManagement = it.projectManagement,
+                                        hasSavedServer = s.servers.isNotEmpty(),
+                                        waiting = 0,
+                                        project = null,
+                                        recent = it.recent,
+                                    )
+                                ).toImmutableList()
+                            } ?: persistentListOf()
+                )
+            }
+        }
+    }
 
     override fun forgetRecent(query: String) {
         viewModelScope.launch { recentResult(recents.forget(query)) }
