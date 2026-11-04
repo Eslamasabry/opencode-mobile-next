@@ -106,7 +106,7 @@ internal fun PaseoGateway.onStream(id: String, event: JsonObject, payload: JsonO
     }
 }
 
-private fun PaseoGateway.onTimelineItem(
+internal fun PaseoGateway.onTimelineItem(
     id: String,
     state: PaseoLive,
     raw: JsonObject,
@@ -183,7 +183,7 @@ private fun PaseoGateway.onTimelineItem(
             state.open[messageId] = message.info
     }
     for (part in message.parts) {
-        emit(GatewayEvent.PartUpserted(part.copy(sessionId = id)))
+        emit(GatewayEvent.PartUpserted(subagents.linked(part.copy(sessionId = id))))
     }
 }
 

@@ -156,6 +156,11 @@ dependencies {
             ":engine:integrations-catalog",
             ":feature:integrations-catalog",
             ":feature:setupreview",
+            ":feature:agenttools",
+            ":feature:widgetactions",
+            ":feature:monitor",
+            ":android:terminal",
+            ":engine:integrations-quota",
             ":engine:setupassist",
         )
         .forEach { implementation(project(it)) }

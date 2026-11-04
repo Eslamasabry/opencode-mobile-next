@@ -1,0 +1,15 @@
+<resources>
+    <string name="widgetActionTitle">Message this conversation</string>
+    <string name="widgetActionMessage">Message</string>
+    <string name="widgetActionHint">Guide the current reply. If this agent cannot take guidance while working, your message follows its reply.</string>
+    <string name="widgetActionSend">Send message</string>
+    <string name="widgetActionClose">Close</string>
+    <string name="widgetActionOpen">Open conversation</string>
+    <string name="widgetActionAccepted">Message sent</string>
+    <string name="widgetActionRejected">This conversation could not take the message</string>
+    <string name="widgetActionUncertain">Could not confirm the message</string>
+    <string name="widgetActionCheckFirst">Check the conversation before sending again.</string>
+    <string name="widgetActionOpenHint">Open the conversation to see its latest reply.</string>
+    <string name="widgetActionSending">Sending message…</string>
+    <string name="widgetActionEnterMessage">Enter a message first</string>
+</resources>

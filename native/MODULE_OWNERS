@@ -96,3 +96,7 @@
 :feature:plans	F	build-integrations-b	parity-p12
 :feature:integrations-catalog	F	27-build-AGENT-2	parity-p12
 :feature:setupreview	F	27-build-AGENT-2	parity-p12
+:feature:agenttools	F	27-build-AGENT-2	parity-p12
+:feature:widgetactions	F	27-build-AGENT-2	parity-p12
+:feature:monitor	F	27-build-AGENT-2	parity-p12
+:android:terminal	F	27-build-AGENT-2	parity-p12

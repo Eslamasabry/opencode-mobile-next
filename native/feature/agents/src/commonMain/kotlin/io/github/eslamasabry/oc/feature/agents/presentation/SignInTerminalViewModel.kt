@@ -2,35 +2,53 @@ package io.github.eslamasabry.oc.feature.agents.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
+import io.github.eslamasabry.oc.core.common.AppCoroutineScope
+import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.feature.agents.signin.AgentRef
 import io.github.eslamasabry.oc.feature.agents.signin.SignInAgents
 import io.github.eslamasabry.oc.feature.agents.signin.SignInClipboard
 import io.github.eslamasabry.oc.feature.agents.signin.SignInForeground
 import io.github.eslamasabry.oc.feature.agents.signin.SignInLinks
 import io.github.eslamasabry.oc.feature.agents.signin.TerminalHost
+import io.github.eslamasabry.oc.ui.routes.AgentsRoute
+import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 /**
- * `SignInTerminalViewModel` (plan 07 G03, `AgentsRoute.SignInTerminal(agentId)`). Not yet contributed to the Metro
- * graph: the route, the `:engine:agents` and `TerminalHost` bindings and the foreground claim are not in this tree
- * (S3-TERMMIN report, "open problems"); the entries file that installs it comes with them.
- *
- * Sessions belong to the terminal host, not this ViewModel: leaving goes through [leave], which drains the sign-in
- * first. A screen torn down without it leaves the drain to the host's `owner-closed` path (plan 17 §1.5).
+ * The real agent sign-in route; leaving drains exactly its native PTY before releasing protection.
  */
+@AssistedInject
 public class SignInTerminalViewModel(
-    owner: ProfileId,
-    agent: AgentRef,
+    @Assisted route: AgentsRoute.SignInTerminal,
     agents: SignInAgents,
     host: TerminalHost,
     foreground: SignInForeground,
     links: SignInLinks,
     clipboard: SignInClipboard,
-    onLeave: () -> Unit,
+    nav: AppNavigator,
+    private val cleanup: AppCoroutineScope,
+    private val dispatchers: AppDispatchers,
 ) : ViewModel(), SignInTerminalActions {
     private val presenter =
-        SignInTerminalPresenter(viewModelScope, owner, agent, agents, host, foreground, links, clipboard, onLeave)
+        SignInTerminalPresenter(
+                viewModelScope,
+                route.owner,
+                AgentRef(route.agentId),
+                agents,
+                host,
+                foreground,
+                links,
+                clipboard,
+                nav::back,
+            )
             .also { it.begin() }
 
     public val state: StateFlow<SignInTerminalUi> = presenter.state
@@ -48,4 +66,15 @@ public class SignInTerminalViewModel(
     override fun startAgain(): Unit = presenter.startAgain()
 
     override fun leave(): Unit = presenter.leave()
+
+    override fun onCleared() {
+        cleanup.launch(dispatchers.main) { presenter.close() }
+    }
+
+    @AssistedFactory
+    @ManualViewModelAssistedFactoryKey
+    @ContributesIntoMap(AppScope::class)
+    public fun interface Factory : ManualViewModelAssistedFactory {
+        public fun create(@Assisted route: AgentsRoute.SignInTerminal): SignInTerminalViewModel
+    }
 }

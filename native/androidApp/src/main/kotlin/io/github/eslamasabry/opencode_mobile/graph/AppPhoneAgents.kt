@@ -63,6 +63,7 @@ class AppPhoneAgents(
     private val dispatchers: AppDispatchers,
     private val stores: PreviewStores,
     private val setupJobs: NativeAgentSetupJobs,
+    private val payloads: PhonePayloadGuard,
 ) : PhoneAgents {
     private val mutable = MutableStateFlow(PhoneAgentsState())
     override val state = mutable.asStateFlow()
@@ -237,7 +238,21 @@ class AppPhoneAgents(
         }
     }
 
-    override suspend fun remove(id: String): Outcome<PhoneAgentRemoval> = lane.withLock {
+    override suspend fun remove(id: String): Outcome<PhoneAgentRemoval> {
+        val mutation =
+            when (val claim = payloads.beginMutation(ownerId())) {
+                is Outcome.Failed ->
+                    return Outcome.Ok(PhoneAgentRemoval.Refused(PhoneAgentRemovalIssue.Busy))
+                is Outcome.Ok -> claim.value
+            }
+        try {
+            return removeLocked(id)
+        } finally {
+            mutation.release()
+        }
+    }
+
+    private suspend fun removeLocked(id: String): Outcome<PhoneAgentRemoval> = lane.withLock {
         val owner =
             try {
                 (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value

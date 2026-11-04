@@ -20,6 +20,7 @@ import io.github.eslamasabry.oc.protocol.paseo.paseoAttempt
 import io.github.eslamasabry.oc.protocol.paseo.transport.PaseoSocketFactory
 import io.github.eslamasabry.oc.protocol.paseo.transport.PaseoTransport
 import io.github.eslamasabry.oc.protocol.paseo.work.PaseoBackgroundTasks
+import io.github.eslamasabry.oc.protocol.paseo.work.PaseoPayloadLease
 import kotlin.time.Clock
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -46,6 +47,7 @@ public class PaseoGatewayFactory(
      */
     private val savedTitles: ((ProfileId, String) -> String?)? = null,
     private val backgroundTasks: ((GatewaySpec) -> PaseoBackgroundTasks)? = null,
+    private val payloadUse: ((GatewaySpec) -> (() -> Outcome<PaseoPayloadLease>)?)? = null,
 ) : GatewayFactory {
     override val backend: BackendKind = BackendKind.Paseo
 
@@ -118,6 +120,7 @@ public class PaseoGatewayFactory(
                 defaultProviderModes = defaultProviderModes,
                 trackLocalWork = trackLocalWork,
                 backgroundTasks = backgroundTasks?.invoke(spec),
+                beforePayloadUse = payloadUse?.invoke(spec),
             )
         savedTitles?.let { lookup -> gateway.savedTitle = { key -> lookup(spec.profile.id, key) } }
         return GatewayPair(gateway, gateway.workspaceOperations)

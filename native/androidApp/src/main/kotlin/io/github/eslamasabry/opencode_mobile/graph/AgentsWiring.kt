@@ -211,6 +211,7 @@ class AppPaseoGatewayFactory(
     clock: Clock,
     private val profiles: ProfileStore,
     stores: PreviewStores,
+    payloads: PhonePayloadGuard,
 ) : GatewayFactory {
     /**
      * B-AGENT-181: titles the app saved per server (`oc.conversationTitles.<id>`, carried over from
@@ -224,6 +225,7 @@ class AppPaseoGatewayFactory(
             dispatchers,
             clock,
             backgroundTasks = ::PaseoBackgroundWork,
+            payloadUse = payloads::callbackFor,
             savedTitles = { profile, key ->
                 // Before the migration gate opens the store refuses reads: no saved title then.
                 try {

@@ -71,6 +71,7 @@ public fun SetupReviewScreen(state: SetupReviewUi, actions: SetupReviewActions) 
                 }),
     ) {
         when {
+            state.guided != null -> GuidedSetupContent(state.guided, actions)
             state.phase == SetupReviewPhase.Unsupported ->
                 KitStateView(
                     KitStateKind.Missing,
@@ -105,7 +106,7 @@ public fun SetupReviewScreen(state: SetupReviewUi, actions: SetupReviewActions) 
                     stringResource(Res.string.setupNativeEmpty),
                     body = stringResource(Res.string.setupNativeEmptyBody),
                 )
-            else -> SetupList(state)
+            else -> SetupList(state, actions)
         }
     }
 }
@@ -121,7 +122,7 @@ private fun urgency(status: SetupMcpState): Int =
     }
 
 @Composable
-private fun SetupList(state: SetupReviewUi) {
+private fun SetupList(state: SetupReviewUi, actions: SetupReviewActions) {
     val servers = state.content.servers.sortedBy { urgency(it.status) }
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
@@ -136,6 +137,7 @@ private fun SetupList(state: SetupReviewUi) {
                 }
             )
         )
+        KitRow(title = stringResource(Res.string.setupNativeGuided), onClick = actions::openGuided)
         val suggestions = servers.filter {
             it.status == SetupMcpState.NeedsAuth || it.status == SetupMcpState.Failed
         }

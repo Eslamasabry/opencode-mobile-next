@@ -12,7 +12,6 @@ import io.github.eslamasabry.oc.protocol.paseo.PaseoException
 import io.github.eslamasabry.oc.protocol.paseo.PaseoFailureKind
 import io.github.eslamasabry.oc.protocol.paseo.feed.PaseoFeedPort
 import io.github.eslamasabry.oc.protocol.paseo.feed.PaseoTitles
-import io.github.eslamasabry.oc.protocol.paseo.mappers.PaseoImages
 import io.github.eslamasabry.oc.protocol.paseo.paseoFail
 import io.github.eslamasabry.oc.protocol.paseo.str
 import kotlinx.coroutines.CancellationException
@@ -137,15 +136,12 @@ private class GatewayFeedPort(private val g: PaseoGateway) : PaseoFeedPort {
     }
 
     override suspend fun prompt(session: SessionId, text: String, model: ModelRef) {
-        g.onLane {
-            g.sendPrompt(
-                session.raw,
-                paseoUuid(g.random),
-                OutgoingPrompt(text, ModelSelection(model)),
-                (PaseoImages.Ok(emptyList())).images,
-                false,
-                null,
-            )
+        when (val admitted = g.prompt(session, OutgoingPrompt(text, ModelSelection(model)))) {
+            is io.github.eslamasabry.oc.core.common.Outcome.Ok ->
+                if (admitted.value is io.github.eslamasabry.oc.core.model.PromptAdmission.Uncertain)
+                    paseoFail(PaseoFailureKind.DeliveryUnknown)
+            is io.github.eslamasabry.oc.core.common.Outcome.Failed ->
+                paseoFail(PaseoFailureKind.Unavailable)
         }
     }
 

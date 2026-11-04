@@ -16,6 +16,8 @@ public interface McpCatalogHost {
 
     public suspend fun saveCache(profile: String, value: JsonObject): Outcome<Unit>
 
+    public suspend fun saveRefreshedCache(profile: String, value: JsonObject): Outcome<Unit>
+
     public suspend fun fetchRegistry(query: String?): Outcome<JsonObject>
 
     public fun sourceIdentity(profile: String): Any?
@@ -371,6 +373,10 @@ public fun searchMcpCatalog(
     if (entries == null)
         return buildJsonObject {
             put("status", "catalogue_not_loaded")
+            put(
+                "message",
+                "The connector catalogue could not be loaded right now. Try again in a moment.",
+            )
             put("matches", JsonArray(emptyList()))
         }
     val terms = prose(query, 100, redactor).lowercase().split(' ').filter { it.isNotEmpty() }

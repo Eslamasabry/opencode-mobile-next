@@ -12,16 +12,18 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.cards.CardAgent
 import io.github.eslamasabry.oc.engine.cards.CardsProblem
 import io.github.eslamasabry.oc.engine.cards.CardsStatus
+import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
-import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
-import io.github.eslamasabry.oc.ui.design.type.TextTone
-import io.github.eslamasabry.oc.ui.design.type.TypeRole
-import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.agentNamesPair
 import io.github.eslamasabry.oc.ui.words.res.cardsFromAgentsSupporting
@@ -51,13 +53,20 @@ import io.github.eslamasabry.oc.ui.words.res.cardsStatusPartial
 import io.github.eslamasabry.oc.ui.words.res.cardsStatusRestart
 import io.github.eslamasabry.oc.ui.words.res.cardsStatusUnavailable
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
+import io.github.eslamasabry.oc.ui.words.res.mcpNativeTitle
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.toImmutableList
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /** One server's Cards row: what the person chose and what is true now. */
-public data class CardsRowUi(val profileId: String, val server: String, val on: Boolean, val status: CardsStatus, val pending: Boolean, val failed: Boolean)
+public data class CardsRowUi(
+    val profileId: String,
+    val server: String,
+    val on: Boolean,
+    val status: CardsStatus,
+    val pending: Boolean,
+    val failed: Boolean,
+)
 
 public data class CardsSettingsUi(val rows: ImmutableList<CardsRowUi>)
 
@@ -68,11 +77,16 @@ public interface CardsSettingsActions {
 }
 
 /**
- * Settings › Cards from agents (Flutter `CardsFromAgentsRow`): one switch per connected server, its status under it.
- * Off blocks card actions at once; the status says what is still to do rather than claiming more than is verified.
+ * Settings › Cards from agents (Flutter `CardsFromAgentsRow`): one switch per connected server, its
+ * status under it. Off blocks card actions at once; the status says what is still to do rather than
+ * claiming more than is verified.
  */
 @Composable
-public fun CardsSettingsScreen(state: CardsSettingsUi, actions: CardsSettingsActions) {
+public fun CardsSettingsScreen(
+    state: CardsSettingsUi,
+    actions: CardsSettingsActions,
+    onOpenCatalogue: ((String) -> Unit)? = null,
+) {
     KitScreen(
         modifier = Modifier.fillMaxSize(),
         page = true,
@@ -85,7 +99,11 @@ public fun CardsSettingsScreen(state: CardsSettingsUi, actions: CardsSettingsAct
             )
         },
     ) {
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(vertical = Space.S2.dp)) {
+        Column(
+            Modifier.fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(vertical = Space.S2.dp)
+        ) {
             KitText(
                 stringResource(Res.string.cardsFromAgentsSupporting),
                 Modifier.padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
@@ -94,15 +112,25 @@ public fun CardsSettingsScreen(state: CardsSettingsUi, actions: CardsSettingsAct
             )
             KitRowGroup(Modifier.testTag("cards-from-agents")) {
                 state.rows.forEach { row ->
-                    val status = if (row.failed) stringResource(Res.string.cardsSettingFailed) else cardsStatusText(row.status)
+                    val status =
+                        if (row.failed) stringResource(Res.string.cardsSettingFailed)
+                        else cardsStatusText(row.status)
                     KitSwitchRow(
-                        title = if (state.rows.size > 1) row.server else stringResource(Res.string.cardsFromAgentsTitle),
+                        title =
+                            if (state.rows.size > 1) row.server
+                            else stringResource(Res.string.cardsFromAgentsTitle),
                         checked = row.on,
                         supporting = status,
                         enabled = KitEnabled.of(!row.pending, status),
                         modifier = Modifier.testTag("cards-switch-${row.profileId}"),
                         onCheckedChange = { actions.setEnabled(row.profileId, it) },
                     )
+                    if (onOpenCatalogue != null)
+                        KitButton(
+                            stringResource(Res.string.mcpNativeTitle),
+                            { onOpenCatalogue(row.profileId) },
+                            role = KitButtonRole.Tertiary,
+                        )
                 }
             }
         }
@@ -114,7 +142,11 @@ public fun CardsSettingsScreen(state: CardsSettingsUi, actions: CardsSettingsAct
 private fun agentNames(agents: List<CardAgent>): String {
     val names = agents.map { it.displayName }.distinct()
     if (names.size < 2) return names.joinToString("")
-    return stringResource(Res.string.agentNamesPair, names.dropLast(1).joinToString(", "), names.last())
+    return stringResource(
+        Res.string.agentNamesPair,
+        names.dropLast(1).joinToString(", "),
+        names.last(),
+    )
 }
 
 /** Why a step stopped, in plain words; a problem about particular agents names them. */
@@ -125,7 +157,8 @@ internal fun cardsProblemText(problem: CardsProblem, affected: List<CardAgent>):
     return when (problem) {
         CardsProblem.UnsupportedHost -> stringResource(Res.string.cardsProblemUnsupportedHost)
         CardsProblem.RuntimeMissing ->
-            if (names == null) stringResource(Res.string.cardsProblemRuntimeMissing) else stringResource(Res.string.cardsProblemRuntimeMissingFor, names)
+            if (names == null) stringResource(Res.string.cardsProblemRuntimeMissing)
+            else stringResource(Res.string.cardsProblemRuntimeMissingFor, names)
         CardsProblem.NotQualified ->
             if (names == null) stringResource(Res.string.cardsProblemNotQualified)
             else pluralStringResource(Res.plurals.cardsProblemNotQualifiedFor, count, count, names)
@@ -154,9 +187,21 @@ internal fun cardsStatusText(status: CardsStatus): String =
         CardsStatus.Checking -> stringResource(Res.string.cardsStatusChecking)
         is CardsStatus.On -> stringResource(Res.string.cardsStatusOn, agentNames(status.agents))
         is CardsStatus.Partial ->
-            stringResource(Res.string.cardsStatusPartial, agentNames(status.agents), cardsProblemText(status.reason, status.affected))
-        is CardsStatus.RestartRequired -> stringResource(Res.string.cardsStatusRestart, agentNames(status.agents))
-        is CardsStatus.Unavailable -> stringResource(Res.string.cardsStatusUnavailable, cardsProblemText(status.reason, status.affected))
-        is CardsStatus.Failed -> stringResource(Res.string.cardsStatusFailed, cardsProblemText(status.reason, status.affected))
+            stringResource(
+                Res.string.cardsStatusPartial,
+                agentNames(status.agents),
+                cardsProblemText(status.reason, status.affected),
+            )
+        is CardsStatus.RestartRequired ->
+            stringResource(Res.string.cardsStatusRestart, agentNames(status.agents))
+        is CardsStatus.Unavailable ->
+            stringResource(
+                Res.string.cardsStatusUnavailable,
+                cardsProblemText(status.reason, status.affected),
+            )
+        is CardsStatus.Failed ->
+            stringResource(
+                Res.string.cardsStatusFailed,
+                cardsProblemText(status.reason, status.affected),
+            )
     }
-

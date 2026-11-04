@@ -239,7 +239,7 @@ class AppScheduleProfiles(
             factories.firstOrNull { it.backend == server.backend }
                 ?: return Failure.Unavailable(FeatureId("backend.${server.backend}")).failed()
         val credentials =
-            when (val read = credentialSources.singleOrNull()?.resolve(server)) {
+            when (val read = credentialSources.singleOrNull()?.resolve(saved)) {
                 null -> ConnectionCredentials(null, null)
                 is Outcome.Ok -> read.value
                 is Outcome.Failed -> return read

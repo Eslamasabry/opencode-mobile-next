@@ -14,18 +14,26 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.CardsSettingsRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
+import io.github.eslamasabry.oc.ui.routes.McpCatalogRoute
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 
-/** The page's entry: one row per connected server, rebuilt whenever the cards setup or the connections change. */
+/**
+ * The page's entry: one row per connected server, rebuilt whenever the cards setup or the
+ * connections change.
+ */
 @Inject
 @ContributesIntoSet(AppScope::class, binding = binding<EntryInstaller>())
-public class CardsSettingsEntries(private val cards: ChatCards, private val registry: ConnectionRegistry, private val nav: AppNavigator) :
-    EntryInstaller {
+public class CardsSettingsEntries(
+    private val cards: ChatCards,
+    private val registry: ConnectionRegistry,
+    private val nav: AppNavigator,
+) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
         entry<CardsSettingsRoute> {
             val changes by cards.setup.changes.collectAsStateWithLifecycle()
@@ -36,28 +44,41 @@ public class CardsSettingsEntries(private val cards: ChatCards, private val regi
             LaunchedEffect(live.keys) { live.keys.forEach { cards.setup.recheck(it.raw) } }
             val rows =
                 remember(changes, live, pending, failed) {
-                    live.values.map { graph ->
-                        val id = graph.profile.id.raw
-                        CardsRowUi(id, graph.profile.name, cards.setup.desired(id), cards.status(id), id in pending, id in failed)
-                    }.toImmutableList()
-                }
-            val actions =
-                remember {
-                    object : CardsSettingsActions {
-                        override fun setEnabled(profileId: String, on: Boolean) {
-                            pending = pending + profileId
-                            failed = failed - profileId
-                            scope.launch {
-                                val result = cards.setEnabled(profileId, on)
-                                pending = pending - profileId
-                                if (result is Outcome.Failed && cards.setup.desired(profileId) != on) failed = failed + profileId
-                            }
+                    live.values
+                        .map { graph ->
+                            val id = graph.profile.id.raw
+                            CardsRowUi(
+                                id,
+                                graph.profile.name,
+                                cards.setup.desired(id),
+                                cards.status(id),
+                                id in pending,
+                                id in failed,
+                            )
                         }
-
-                        override fun back(): Unit = nav.back()
-                    }
+                        .toImmutableList()
                 }
-            CardsSettingsScreen(CardsSettingsUi(rows), actions)
+            val actions = remember {
+                object : CardsSettingsActions {
+                    override fun setEnabled(profileId: String, on: Boolean) {
+                        pending = pending + profileId
+                        failed = failed - profileId
+                        scope.launch {
+                            val result = cards.setEnabled(profileId, on)
+                            pending = pending - profileId
+                            if (result is Outcome.Failed && cards.setup.desired(profileId) != on)
+                                failed = failed + profileId
+                        }
+                    }
+
+                    override fun back(): Unit = nav.back()
+                }
+            }
+            CardsSettingsScreen(CardsSettingsUi(rows), actions) { profile ->
+                val id = ProfileId(profile)
+                val location = registry.live.value[id]?.session?.server?.location?.value
+                nav.open(McpCatalogRoute(id, location?.directory, location?.workspace))
+            }
         }
     }
 }

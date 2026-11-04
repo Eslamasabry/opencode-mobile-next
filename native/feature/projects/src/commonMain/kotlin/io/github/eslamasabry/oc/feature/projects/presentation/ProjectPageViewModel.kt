@@ -51,9 +51,14 @@ public class ProjectPageViewModel(
     private var generation = 0
     private var adopted = false
     private val workspace =
-        ProjectWorkspace(directory, viewModelScope) { next ->
-            mutable.update { it.copy(workspace = next) }
-        }
+        ProjectWorkspace(
+            directory,
+            viewModelScope,
+            publish = { next -> mutable.update { it.copy(workspace = next) } },
+            openConversation = { session ->
+                server?.let { nav.openChat(ConversationRef(it.profile, session)) }
+            },
+        )
 
     init {
         viewModelScope.launch {
@@ -215,6 +220,12 @@ public class ProjectPageViewModel(
     override fun closeWorkspaceDiff() = workspace.closeWorkspaceDiff()
 
     override fun workspaceDiffPage(delta: Int) = workspace.workspaceDiffPage(delta)
+
+    override fun inspectCopy(directory: String) = workspace.inspectCopy(directory)
+
+    override fun loadMoreCopyConversations() = workspace.loadMoreCopyConversations()
+
+    override fun openCopyConversation(sessionId: String) = workspace.openCopyConversation(sessionId)
 
     override fun back(): Unit = nav.back()
 

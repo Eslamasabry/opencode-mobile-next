@@ -43,6 +43,9 @@
                 android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts" />
         </activity>
+        <activity android:name=".WidgetRouteActivity" android:exported="false" android:excludeFromRecents="true" />
+        <activity android:name=".WidgetOverlayActivity" android:exported="false" android:excludeFromRecents="true" android:windowSoftInputMode="adjustResize" />
+        <meta-data android:name="io.github.eslamasabry.opencode_mobile.WIDGET_OVERLAY_READY" android:value="true" />
         <service android:name="io.github.eslamasabry.oc.android.termux.GitRepairResultService" android:exported="false" />
         <!-- Notification buttons (P12-PLATFORM); frozen Flutter FQCNs. Tiles, widgets and the update receiver merge
              from :android:tiles and :android:widgets. -->
@@ -56,7 +59,7 @@
         <service
             android:name=".BackgroundConnectionService"
             android:exported="false"
-            android:foregroundServiceType="dataSync" />
+            android:foregroundServiceType="dataSync|shortService" />
         <!-- P12 fix (Codex files #3, plan 10 §11.6 S4): untrusted PDFs are parsed only in this isolated process. -->
         <service
             android:name=".LocalPdfService"

@@ -121,6 +121,12 @@ public class ServersViewModel(
         nav.open(SetupReviewRoute(id, location?.directory, location?.workspace))
     }
 
+    override fun openAgentTools(id: ProfileId) =
+        nav.open(io.github.eslamasabry.oc.ui.routes.AgentToolsRoute(id))
+
+    override fun openMonitor(id: ProfileId) =
+        nav.open(io.github.eslamasabry.oc.ui.routes.MonitorRoute(id))
+
     private var consentAddress: String? = null
 
     override fun allowCleartext(allowed: Boolean, address: String) {

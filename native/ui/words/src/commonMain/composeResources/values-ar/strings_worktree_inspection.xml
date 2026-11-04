@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="worktreeInspectionTitle">فحص نسخة</string>
+    <string name="worktreeInspectionExactScope">تُقرأ التغييرات والمحادثات للمشروع والمجلد ومساحة العمل المحددة تمامًا.</string>
+    <string name="worktreeInspectionReadFailed">تعذّر فحص هذه النسخة. حالتها غير معروفة.</string>
+    <string name="worktreeInspectionWorkspace">مساحة العمل: %1$s</string>
+    <string name="worktreeInspectionHostScope">على هذا الخادم</string>
+    <string name="worktreeInspectionConversations">المحادثات في هذه النسخة</string>
+    <string name="worktreeInspectionNoPageMatches">لا توجد محادثات مطابقة في هذه الصفحة. حمّل المزيد لمتابعة البحث.</string>
+    <string name="worktreeInspectionNoConversations">لا توجد محادثات مطابقة في هذه النسخة.</string>
+</resources>

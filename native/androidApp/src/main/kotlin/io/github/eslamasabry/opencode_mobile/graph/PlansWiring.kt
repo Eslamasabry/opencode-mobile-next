@@ -46,6 +46,7 @@ import io.github.eslamasabry.oc.engine.integrations.usage.parseProviderUsageList
 import io.github.eslamasabry.oc.engine.profiles.DeletionOptions
 import io.github.eslamasabry.oc.engine.profiles.DeletionStep
 import io.github.eslamasabry.oc.engine.profiles.ProfileResourceCleaner
+import io.github.eslamasabry.oc.feature.plans.presentation.PlanCollectorUi
 import io.github.eslamasabry.oc.feature.plans.presentation.PlansSource
 import io.github.eslamasabry.opencode_mobile.UsageWidgetProvider
 import kotlin.time.Clock
@@ -83,6 +84,8 @@ class AndroidPlansSource(
     private val credentialSources: Set<ConnectionCredentialSource>,
     private val dispatchers: AppDispatchers,
     private val appScope: AppCoroutineScope,
+    private val phoneUsage: PhoneUsageReader,
+    private val collector: CollectorUsageSource,
 ) : PlansSource {
     private val scope = CoroutineScope(appScope.coroutineContext)
     private val state = MutableStateFlow(UsageSnapshot())
@@ -127,6 +130,11 @@ class AndroidPlansSource(
             )
         val usagePorts =
             object : PaseoUsagePorts {
+                override fun phoneSupported(): Boolean = phoneUsage.supported
+
+                override suspend fun readPhone(): Outcome<List<ProviderUsageReading>?> =
+                    phoneUsage.read()
+
                 override fun paseoProfiles(): List<PaseoUsageProfile> =
                     registry.live.value
                         .filterValues { it.session.server is ProviderUsageGateway }
@@ -198,14 +206,28 @@ class AndroidPlansSource(
                                 },
                             )
                         }
+                        .let { known ->
+                            val all =
+                                if (phoneUsage.supported)
+                                    known +
+                                        UsageConnection(
+                                            UsageConnection.PHONE_ID,
+                                            "",
+                                            UsageConnectionKind.PhoneAgents,
+                                        )
+                                else known
+                            (all + collector.connections()).distinctBy { it.id }
+                        }
                 },
                 sources =
                     listOf(
                         signIns,
+                        collector,
                         PaseoUsageSource(daemonUsage) { usagePorts.paseoProfiles().map { it.id } },
                     ),
-                alertsOnRule = { false },
-                setQuotaAlerts = {},
+                alertsOnRule = collector::alertsOn,
+                setQuotaAlerts = { collector.setAlertsOn(it) },
+                alertBridge = collector,
                 widget = widget,
                 clock = { clock.now() },
             )
@@ -218,6 +240,31 @@ class AndroidPlansSource(
     override suspend fun refresh() {
         engine()?.refresh()
     }
+
+    override fun collectors(): List<PlanCollectorUi> = collector.collectorOptions()
+
+    override fun alertsOn(): Boolean = collector.alertsOn()
+
+    override fun canAlert(): Boolean = true
+
+    override fun phoneSignInOwner(): ProfileId? = phoneUsage.signInOwner()
+
+    override suspend fun setAlertsOn(enabled: Boolean): Outcome<Unit> {
+        val result = collector.setAlertsOn(enabled)
+        if (result is Outcome.Ok) engine()?.refresh()
+        return result
+    }
+
+    override suspend fun setUpCollector(profile: ProfileId): Outcome<Unit> =
+        collector.setUpInApp(profile)
+
+    override suspend fun consentRemoteCollector(
+        profile: ProfileId,
+        enabled: Boolean,
+    ): Outcome<Unit> = collector.consentRemote(profile, enabled)
+
+    override suspend fun turnOffCollector(profile: ProfileId): Outcome<Unit> =
+        collector.turnOff(profile)
 
     /**
      * A one-shot reader owns its socket; refreshing Plans never closes an active chat connection.
@@ -298,6 +345,10 @@ class AndroidPlansSource(
      */
     suspend fun removeProfile(profile: ProfileId): Boolean {
         val e = engine() ?: return false
+        if (phoneUsage.retire(profile)) {
+            paseo?.removeProfile(UsageConnection.PHONE_ID)
+            e.removeProfile(UsageConnection.PHONE_ID)
+        }
         paseo?.removeProfile(profile.raw)
         e.removeProfile(profile.raw)
         return true

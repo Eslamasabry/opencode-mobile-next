@@ -63,6 +63,8 @@ internal fun ProjectWorkspaceSheet(state: ProjectWorkspaceUi, actions: ProjectWo
                     )
                 }
             }
+            if (state.canInspect)
+                item(key = "copy-inspection") { WorktreeInspectionPane(state, actions) }
             state.health?.let { health ->
                 item(key = "checkout-health") {
                     if (health.setupState == VersionControlSetupState.Absent)

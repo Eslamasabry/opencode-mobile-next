@@ -40,7 +40,6 @@ import io.github.eslamasabry.oc.engine.linuxsetup.SetupRunnerSpec
 import io.github.eslamasabry.oc.engine.linuxsetup.SetupScriptWrapper
 import io.github.eslamasabry.oc.engine.linuxsetup.SetupToolsChanged
 import io.github.eslamasabry.oc.engine.linuxsetup.setupComponentRegistry
-import io.github.eslamasabry.oc.engine.profiles.ProfileStore
 import io.github.eslamasabry.oc.engine.profiles.SecretEdit
 import io.github.eslamasabry.oc.engine.profiles.StoredProfile
 import io.github.eslamasabry.oc.engine.setupscripts.withSetupPrelude
@@ -86,12 +85,18 @@ object PhoneSetupWiring {
     private const val RUN_TIMEOUT_SECONDS = 600L
     private const val POLL_MILLIS = 500L
 
-    @Provides @SingleIn(AppScope::class) fun setupToolsChanged(): SetupToolsChanged = SetupToolsChanged()
+    @Provides
+    @SingleIn(AppScope::class)
+    fun setupToolsChanged(): SetupToolsChanged = SetupToolsChanged()
 
     @Provides
     @SingleIn(AppScope::class)
-    fun setupLinuxHost(app: Application, linux: LinuxHost, dispatchers: AppDispatchers): SetupLinuxHost =
-        RunnerSetupHost(app, linux, dispatchers)
+    fun setupLinuxHost(
+        app: Application,
+        linux: LinuxHost,
+        dispatchers: AppDispatchers,
+        payloadGuard: PhonePayloadGuard,
+    ): SetupLinuxHost = RunnerSetupHost(app, linux, dispatchers, payloadGuard)
 
     @Provides
     @SingleIn(AppScope::class)
@@ -119,7 +124,8 @@ object PhoneSetupWiring {
             override suspend fun facts(): SetupDevice =
                 withContext(dispatchers.io) {
                     val memory =
-                        (app.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager)?.let { manager ->
+                        (app.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager)?.let {
+                            manager ->
                             ActivityManager.MemoryInfo().also(manager::getMemoryInfo).totalMem
                         }
                     val free =
@@ -130,25 +136,30 @@ object PhoneSetupWiring {
                         }
                     SetupDevice(
                         supportedAbis = Build.SUPPORTED_ABIS.toList(),
-                        totalMemoryMb = memory?.takeIf { it > 0 }?.let { (it / (1024 * 1024)).toInt() },
+                        totalMemoryMb =
+                            memory?.takeIf { it > 0 }?.let { (it / (1024 * 1024)).toInt() },
                         availableStorageBytes = free,
                     )
                 }
 
             override fun openStorageSettings(): Boolean =
                 listOf(
-                    Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS),
-                    Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${app.packageName}")),
-                ).any { intent ->
-                    try {
-                        app.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-                        true
-                    } catch (e: ActivityNotFoundException) {
-                        false
-                    } catch (e: SecurityException) {
-                        false
+                        Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS),
+                        Intent(
+                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                            Uri.parse("package:${app.packageName}"),
+                        ),
+                    )
+                    .any { intent ->
+                        try {
+                            app.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                            true
+                        } catch (e: ActivityNotFoundException) {
+                            false
+                        } catch (e: SecurityException) {
+                            false
+                        }
                     }
-                }
         }
 
     @Provides
@@ -161,7 +172,8 @@ object PhoneSetupWiring {
     ): PhoneSetupJobs =
         object : PhoneSetupJobs {
             override suspend fun finishStep(jobId: String, openCodeChanged: Boolean) {
-                val finisher = finisher(stores, server, linux, getString(Res.string.phoneSetupProfileName))
+                val finisher =
+                    finisher(stores, server, linux, getString(Res.string.phoneSetupProfileName))
                 val failure =
                     try {
                         finisher.finish(SetupFinishRequest(openCodeChanged = openCodeChanged))
@@ -172,10 +184,15 @@ object PhoneSetupWiring {
                         FinishFailureMarker
                     }
                 withContext(dispatchers.io) {
-                    SetupRunner.get(app).completeStep(
-                        jobId, SetupComponentIds.START, ok = failure == null,
-                        error = failure?.let { "[oc] OpenCode was installed but did not start" }, version = null,
-                    )
+                    SetupRunner.get(app)
+                        .completeStep(
+                            jobId,
+                            SetupComponentIds.START,
+                            ok = failure == null,
+                            error =
+                                failure?.let { "[oc] OpenCode was installed but did not start" },
+                            version = null,
+                        )
                 }
             }
 
@@ -186,24 +203,40 @@ object PhoneSetupWiring {
             override suspend fun pause() = delay(POLL_MILLIS)
         }
 
-    /** A finish that threw: reported to the runner as a failed start; the reason stays in the device log by type. */
-    private val FinishFailureMarker = io.github.eslamasabry.oc.engine.linuxsetup.SetupFinishFailure.CannotStart
+    /**
+     * A finish that threw: reported to the runner as a failed start; the reason stays in the device
+     * log by type.
+     */
+    private val FinishFailureMarker =
+        io.github.eslamasabry.oc.engine.linuxsetup.SetupFinishFailure.CannotStart
 
-    /** The engine's finisher over the app's ProfileStore and the phone server (B-LINUX-205's rules). */
-    private fun finisher(stores: PreviewStores, server: PhoneServerSource, linux: LinuxHost, name: String): SetupFinisher {
+    /**
+     * The engine's finisher over the app's ProfileStore and the phone server (B-LINUX-205's rules).
+     */
+    private fun finisher(
+        stores: PreviewStores,
+        server: PhoneServerSource,
+        linux: LinuxHost,
+        name: String,
+    ): SetupFinisher {
         val profiles = stores.profiles
         val store =
             object : FinishProfiles {
                 private var cached: List<FinishProfile>? = null
                 override val profiles: List<FinishProfile>
                     get() = cached ?: snapshot().also { cached = it }
-                override val activeId: String? get() = stores.profiles.activeId.value?.raw
+
+                override val activeId: String?
+                    get() = stores.profiles.activeId.value?.raw
 
                 private fun snapshot(): List<FinishProfile> =
                     stores.profiles.profiles.value.map { loaded ->
                         val p = loaded.profile
                         FinishProfile(
-                            id = p.id.raw, name = p.name, baseUrl = p.baseUrl, username = p.username,
+                            id = p.id.raw,
+                            name = p.name,
+                            baseUrl = p.baseUrl,
+                            username = p.username,
                             password = if (loaded.hasSecret) SECRET_KEPT else "",
                             requiresPasswordReentry = loaded.reentry.password,
                             requiresOpenCode2Migration = p.requiresOpenCode2Migration,
@@ -216,15 +249,23 @@ object PhoneSetupWiring {
                     val id = ProfileId(profile.id)
                     val existing = profiles.profile(id)?.profile
                     val stored =
-                        (existing ?: StoredProfile(id = id, name = profile.name, baseUrl = profile.baseUrl)).copy(
-                            name = profile.name,
-                            baseUrl = profile.baseUrl,
-                            username = profile.username,
-                            requiresOpenCode2Migration = profile.requiresOpenCode2Migration,
-                            openCode2HistoryPending = profile.openCode2HistoryPending,
-                            serverVersion = profile.serverVersion,
-                        )
-                    val secret = if (profile.password == SECRET_KEPT) SecretEdit.Keep else SecretEdit.Set(profile.password)
+                        (existing
+                                ?: StoredProfile(
+                                    id = id,
+                                    name = profile.name,
+                                    baseUrl = profile.baseUrl,
+                                ))
+                            .copy(
+                                name = profile.name,
+                                baseUrl = profile.baseUrl,
+                                username = profile.username,
+                                requiresOpenCode2Migration = profile.requiresOpenCode2Migration,
+                                openCode2HistoryPending = profile.openCode2HistoryPending,
+                                serverVersion = profile.serverVersion,
+                            )
+                    val secret =
+                        if (profile.password == SECRET_KEPT) SecretEdit.Keep
+                        else SecretEdit.Set(profile.password)
                     val ok = profiles.upsert(stored, secret) is Outcome.Ok
                     cached = null
                     return ok
@@ -239,7 +280,7 @@ object PhoneSetupWiring {
                         SetupLinuxStatus(
                             installed = linux.presence() == LinuxPresence.Ready,
                             serverRunning = facts.status?.serverRunning == true,
-                        ),
+                        )
                     )
                 }
 
@@ -247,8 +288,12 @@ object PhoneSetupWiring {
                     server.stop()
                 }
 
-                override suspend fun start(profile: FinishProfile, migrateLegacyHistory: Boolean): FinishStartProblem? {
-                    val owned = stores.prefs.commit(stores.lanes.app) { putString(OWNER_KEY, profile.id) }
+                override suspend fun start(
+                    profile: FinishProfile,
+                    migrateLegacyHistory: Boolean,
+                ): FinishStartProblem? {
+                    val owned =
+                        stores.prefs.commit(stores.lanes.app) { putString(OWNER_KEY, profile.id) }
                     if (owned is Outcome.Failed) return FinishStartProblem.PasswordNotSaved
                     return when (server.start()) {
                         is Outcome.Ok -> null
@@ -279,6 +324,7 @@ private class RunnerSetupHost(
     private val app: Application,
     private val linux: LinuxHost,
     private val dispatchers: AppDispatchers,
+    private val payloadGuard: PhonePayloadGuard,
 ) : SetupLinuxHost {
     override suspend fun status(): HostReply<SetupLinuxStatus> =
         HostReply.Ok(SetupLinuxStatus(installed = linux.presence() == LinuxPresence.Ready))
@@ -321,32 +367,41 @@ private class RunnerSetupHost(
                 done = getString(Res.string.phoneSetupNotificationDone),
                 stopped = getString(Res.string.phoneSetupNotificationStopped),
             )
-        val specs =
-            components.map { spec ->
-                SetupRunner.Spec(
-                    id = spec.id,
-                    script = spec.script,
-                    native = spec.native,
-                    step = spec.step,
-                    weight = spec.weight,
-                    skipped = spec.skipped,
-                    version = spec.version,
-                    stage = if (spec.id == SetupComponentIds.START) starting else spec.stage,
-                    labels = spec.labels.mapValues { (key, value) -> labels[key] ?: value },
-                    data = spec.data,
-                    agentUser = spec.agentUser,
-                )
+        val specs = components.map { spec ->
+            SetupRunner.Spec(
+                id = spec.id,
+                script = spec.script,
+                native = spec.native,
+                step = spec.step,
+                weight = spec.weight,
+                skipped = spec.skipped,
+                version = spec.version,
+                stage = if (spec.id == SetupComponentIds.START) starting else spec.stage,
+                labels = spec.labels.mapValues { (key, value) -> labels[key] ?: value },
+                data = spec.data,
+                agentUser = spec.agentUser,
+            )
+        }
+        val json =
+            JSONObject().apply { params.forEach { (id, values) -> put(id, JSONObject(values)) } }
+        val reservation =
+            when (val reserved = payloadGuard.beginMutation(null)) {
+                is Outcome.Failed -> return HostReply.Refused("setup is busy")
+                is Outcome.Ok -> reserved.value
             }
-        val json = JSONObject().apply { params.forEach { (id, values) -> put(id, JSONObject(values)) } }
-        return withContext(dispatchers.io) {
-            try {
-                SetupRunner.get(app).start(jobId, specs, json, words)
-                HostReply.Ok(Unit)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                HostReply.Refused(e::class.simpleName ?: "start")
+        return try {
+            withContext(dispatchers.io) {
+                try {
+                    SetupRunner.get(app).start(jobId, specs, json, words)
+                    HostReply.Ok(Unit)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    HostReply.Refused(e::class.simpleName ?: "start")
+                }
             }
+        } finally {
+            reservation.release()
         }
     }
 }

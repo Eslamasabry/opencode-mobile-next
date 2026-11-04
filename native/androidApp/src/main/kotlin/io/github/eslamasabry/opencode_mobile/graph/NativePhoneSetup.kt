@@ -48,6 +48,7 @@ class NativePhoneSetup(
     appScope: AppCoroutineScope,
     private val clock: Clock,
     private val redactor: Redactor,
+    private val payloadGuard: PhonePayloadGuard,
 ) : LinuxSetupSource {
     private val serial = dispatchers.serial("phone-setup")
     private val scope = CoroutineScope(appScope.coroutineContext + serial)
@@ -76,35 +77,46 @@ class NativePhoneSetup(
                 linux.run(script, 120, agentUser).let { SetupCheckRun(it.exitCode, it.output) }
             }
 
-            override suspend fun startSetup(job: SetupJobStart): Outcome<Unit> = native {
-                val specs =
-                    job.components.map { s ->
-                        SetupRunner.Spec(
-                            s.id,
-                            s.script,
-                            s.native,
-                            s.step,
-                            s.weight.toDouble(),
-                            s.skipped,
-                            s.version,
-                            s.stage,
-                            s.labels,
-                            s.data,
-                            s.agentUser,
+            override suspend fun startSetup(job: SetupJobStart): Outcome<Unit> {
+                val reservation =
+                    when (val reserved = payloadGuard.beginMutation(null)) {
+                        is Outcome.Failed -> return reserved
+                        is Outcome.Ok -> reserved.value
+                    }
+                return try {
+                    native {
+                        val specs =
+                            job.components.map { s ->
+                                SetupRunner.Spec(
+                                    s.id,
+                                    s.script,
+                                    s.native,
+                                    s.step,
+                                    s.weight.toDouble(),
+                                    s.skipped,
+                                    s.version,
+                                    s.stage,
+                                    s.labels,
+                                    s.data,
+                                    s.agentUser,
+                                )
+                            }
+                        runner.start(
+                            job.jobId,
+                            specs,
+                            JSONObject(job.params),
+                            SetupRunner.Texts(
+                                job.texts.channel,
+                                job.texts.title,
+                                job.texts.progress,
+                                job.texts.done,
+                                job.texts.stopped,
+                            ),
                         )
                     }
-                runner.start(
-                    job.jobId,
-                    specs,
-                    JSONObject(job.params),
-                    SetupRunner.Texts(
-                        job.texts.channel,
-                        job.texts.title,
-                        job.texts.progress,
-                        job.texts.done,
-                        job.texts.stopped,
-                    ),
-                )
+                } finally {
+                    reservation.release()
+                }
             }
 
             override suspend fun cancelSetup(): Outcome<Unit> = native { runner.cancel() }

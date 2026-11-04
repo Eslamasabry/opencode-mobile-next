@@ -28,3 +28,9 @@ fetch() { # <relative path under third_party> <url>
 
 fetch maven/com/k2fsa/sherpa/onnx/sherpa-onnx-android/2.0.1/sherpa-onnx-android-2.0.1.aar \
   https://jitpack.io/com/github/k2-fsa/sherpa-onnx/sherpa-onnx/v2.0.1/sherpa-onnx-v2.0.1.aar
+
+# Same Termux PTY/emulator release used by the Flutter app. No substitute renderer or shell pipes.
+fetch maven/com/github/termux/termux-app/terminal-emulator/v0.118.3/terminal-emulator-v0.118.3.aar \
+  https://jitpack.io/com/github/termux/termux-app/terminal-emulator/v0.118.3/terminal-emulator-v0.118.3.aar
+fetch maven/com/github/termux/termux-app/terminal-view/v0.118.3/terminal-view-v0.118.3.aar \
+  https://jitpack.io/com/github/termux/termux-app/terminal-view/v0.118.3/terminal-view-v0.118.3.aar

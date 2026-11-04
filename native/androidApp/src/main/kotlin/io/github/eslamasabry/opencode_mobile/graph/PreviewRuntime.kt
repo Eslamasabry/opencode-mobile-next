@@ -493,6 +493,46 @@ class PreviewRuntime(
             DefaultProfileScope(stores.prefs, stores.secrets, stores.lanes.app).apply {
                 registerSecret("pw.", "profiles")
                 registerSecret("oc.codexToken.", "profiles")
+                registerSecret("oc.agentHostSecret.", ":engine:agents")
+                io.github.eslamasabry.oc.engine.integrations.quota.CollectorRules.register(this)
+                io.github.eslamasabry.oc.engine.integrations.quota.InAppQuotaCollector.register(
+                    this
+                )
+                for (prefix in
+                    listOf(
+                        "oc.notifyRules.",
+                        "oc.monitorRoutes.",
+                        "oc.monitorBusy.",
+                        "oc.widgetTarget.",
+                    )) {
+                    register(
+                        io.github.eslamasabry.oc.core.data.scope.KeyShape(
+                            prefix,
+                            io.github.eslamasabry.oc.core.data.scope.KeyScope.Profile,
+                            io.github.eslamasabry.oc.core.data.kv.PrefType.Str,
+                            ":engine:attention",
+                            "monitor and private widget routing metadata",
+                        )
+                    )
+                }
+                register(
+                    io.github.eslamasabry.oc.core.data.scope.KeyShape(
+                        "oc.monitorAlerts.",
+                        io.github.eslamasabry.oc.core.data.scope.KeyScope.Profile,
+                        io.github.eslamasabry.oc.core.data.kv.PrefType.StrList,
+                        ":engine:attention",
+                        "recent per-server monitor alert ids",
+                    )
+                )
+                register(
+                    io.github.eslamasabry.oc.core.data.scope.KeyShape(
+                        "oc.monitorConsent.",
+                        io.github.eslamasabry.oc.core.data.scope.KeyScope.Profile,
+                        io.github.eslamasabry.oc.core.data.kv.PrefType.Bool,
+                        ":engine:attention",
+                        "explicit per-server foreground monitor consent",
+                    )
+                )
                 register(
                     io.github.eslamasabry.oc.core.data.scope.KeyShape(
                         "oc.pendingCommands.",

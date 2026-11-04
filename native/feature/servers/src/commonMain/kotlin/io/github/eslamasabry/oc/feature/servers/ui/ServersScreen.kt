@@ -55,6 +55,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.addServerScan
+import io.github.eslamasabry.oc.ui.words.res.agentToolsTitle
 import io.github.eslamasabry.oc.ui.words.res.agentsSectionTitle
 import io.github.eslamasabry.oc.ui.words.res.e7SetupPairingInstructions
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
@@ -63,6 +64,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.linuxHostSetupTitle
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrRowDetail
 import io.github.eslamasabry.oc.ui.words.res.mcpNativeTitle
+import io.github.eslamasabry.oc.ui.words.res.monitorNativeTitle
 import io.github.eslamasabry.oc.ui.words.res.previewQrLinkFilled
 import io.github.eslamasabry.oc.ui.words.res.previewQrPairFilled
 import io.github.eslamasabry.oc.ui.words.res.previewQrPairingCodeLabel
@@ -290,6 +292,18 @@ public fun ServersScreen(
                         KitButton(
                             stringResource(Res.string.setupNativeTitle),
                             { actions.openSetupReview(server.id) },
+                            role = KitButtonRole.Tertiary,
+                            enabled = enabled,
+                        )
+                        KitButton(
+                            stringResource(Res.string.agentToolsTitle),
+                            { actions.openAgentTools(server.id) },
+                            role = KitButtonRole.Tertiary,
+                            enabled = enabled,
+                        )
+                        KitButton(
+                            stringResource(Res.string.monitorNativeTitle),
+                            { actions.openMonitor(server.id) },
                             role = KitButtonRole.Tertiary,
                             enabled = enabled,
                         )

@@ -39,6 +39,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
@@ -124,8 +125,8 @@ public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
     }
     LaunchedEffect(Unit) {
         snapshotFlow {
-                listOf(address.text.toString(), folder.text.toString(), password.text.toString())
-            }
+            listOf(address.text.toString(), folder.text.toString(), password.text.toString())
+        }
             .collect { actions.edited() }
     }
     val enabled =
@@ -193,7 +194,11 @@ public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
                 )
             } else {
                 for (agent in state.phone.agents) {
-                    KitRow(title = agent.name, supporting = phoneStatusWords(agent.status))
+                    KitRow(
+                        title = agent.name,
+                        supporting = phoneStatusWords(agent.status),
+                        leading = KitRowLeading.Logo(agent.id, agent.name, agent = true),
+                    )
                     if (agent.installable) {
                         KitButton(
                             agentInstallLabel(agent.name),

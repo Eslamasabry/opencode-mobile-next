@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="monitorNativeTitle">Check other servers</string>
+    <string name="monitorNativeBack">Back</string>
+    <string name="monitorNativeForegroundOnly">Check saved servers while this page is open. Closing it stops the reads. This does not start a phone server or turn on background alerts.</string>
+    <string name="monitorNativeCheck">Check now</string>
+    <string name="monitorNativeChecking">Checking…</string>
+    <string name="monitorNativeAllow">Allow checks</string>
+    <string name="monitorNativeConsent">Allow this app to read requests and recent conversation status from this saved server.</string>
+    <string name="monitorNativeUnsupported">This saved server cannot be checked here.</string>
+    <string name="monitorNativeOff">Checks are off</string>
+    <string name="monitorNativeWaiting">Not checked yet</string>
+    <string name="monitorNativeCurrent">Checked</string>
+    <string name="monitorNativePartial">Partly checked. Check again to read more conversations.</string>
+    <string name="monitorNativeUnknown">Could not confirm the latest state. Earlier observations may still be shown.</string>
+    <string name="monitorNativePaused">Checks paused</string>
+    <string name="monitorNativePending">Waiting for you: %1$d</string>
+    <string name="monitorNativeRunning">Running: %1$d</string>
+    <string name="monitorNativeConversation">Conversation</string>
+    <string name="monitorNativeFailed">The latest checked turn failed</string>
+    <string name="monitorNativeEarlierFailure">Earlier failure; the latest state is unknown</string>
+    <string name="monitorNativeSaveFailed">Could not save or load these settings. Try again.</string>
+    <string name="monitorNativeEmpty">No saved servers are available to check.</string>
+    <string name="monitorNativeRequest">Waiting for you</string>
+    <string name="monitorNativeEarlierRequest">Earlier request; the latest state is unknown</string>
+    <string name="monitorNativeReconnect">Connect to this server or update its sign-in in Servers before checking.</string>
+</resources>

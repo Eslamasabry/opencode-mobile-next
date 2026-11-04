@@ -198,7 +198,11 @@ object WidgetV2Bridge {
         val session =
             (0 until rows.length())
                 .mapNotNull { rows.optJSONObject(it) }
-                .firstOrNull { it.optString("id") == payload["sessionID"] }
+                .singleOrNull {
+                    it.optString("id") == payload["sessionID"] &&
+                        it.optString("profileID", snapshot.optString("profileID")) ==
+                            snapshot.optString("profileID")
+                }
         return if (payload["action"] != "voice" && session == null) null
         else
             identity(snapshot, session) +

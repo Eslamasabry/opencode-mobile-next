@@ -11,6 +11,7 @@ import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import io.github.eslamasabry.oc.feature.setupreview.presentation.SetupReviewViewModel
 import io.github.eslamasabry.oc.feature.setupreview.ui.SetupReviewScreen
+import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.SetupReviewRoute
 
@@ -24,6 +25,7 @@ public class SetupReviewEntries : EntryInstaller {
                     create(route)
                 }
             val state by vm.state.collectAsStateWithLifecycle()
+            KitBackGuard(enabled = state.guided != null, onBack = vm::back)
             SetupReviewScreen(state, vm)
         }
     }

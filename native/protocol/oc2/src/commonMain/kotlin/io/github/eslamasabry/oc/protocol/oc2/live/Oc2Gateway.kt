@@ -53,8 +53,10 @@ internal class Oc2Gateway(
     LocatedVcsGateway,
     LocatedManagedShellGateway,
     SetupInspectionGateway,
-    SessionCreationGateway {
+    SessionCreationGateway,
+    WorktreeInspectionGateway {
     private val mcp = Oc2Mcp(this, redactor)
+    private val inspection = Oc2WorktreeInspection(this)
     private val ids = Oc2ClientIds(clock, random)
     private val dialect = MutableStateFlow(initialDialect)
     private val negotiation = Mutex()
@@ -351,6 +353,23 @@ internal class Oc2Gateway(
         return (obj["healthy"] as? JsonPrimitive)?.booleanOrNull == true &&
             obj.str("version") != null
     }
+
+    override suspend fun inspectionProject(location: ServerLocation): Outcome<WorkspaceProject?> =
+        inspection.inspectionProject(location)
+
+    override suspend fun inspectionWorktrees(
+        projectId: String
+    ): Outcome<ImmutableList<WorktreeInfo>> = inspection.inspectionWorktrees(projectId)
+
+    override suspend fun inspectionChanges(
+        location: ServerLocation
+    ): Outcome<ImmutableList<VersionControlFile>> = inspection.inspectionChanges(location)
+
+    override suspend fun inspectionSessions(
+        cursor: String?,
+        limit: Int,
+        includeArchived: Boolean,
+    ): Outcome<ServerPage<Session>> = inspection.inspectionSessions(cursor, limit, includeArchived)
 
     override suspend fun sessionPage(cursor: String?, limit: Int): Outcome<ServerPage<Session>> =
         read(
@@ -1214,7 +1233,7 @@ internal class Oc2Gateway(
         }
     }
 
-    private fun sessionValue(value: JsonElement): Session? {
+    internal fun sessionValue(value: JsonElement): Session? {
         val wire = Oc2Session.fromJson(value as? JsonObject ?: return null) ?: return null
         return Session(
             SessionId(wire.id),
@@ -1326,6 +1345,7 @@ internal class Oc2Gateway(
                 worktreeReset = false,
                 worktreeCreate = false,
                 worktreeBrowsing = false,
+                worktreeInspection = true,
                 legacyQuestionRequests = false,
                 forms = false,
                 inbox = false,

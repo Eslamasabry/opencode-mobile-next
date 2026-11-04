@@ -91,6 +91,33 @@ class AppMcpCatalogHost(
         return if (stores.profiles.profile(id) == null) staleCatalog() else result
     }
 
+    override suspend fun saveRefreshedCache(profile: String, value: JsonObject): Outcome<Unit> {
+        val id = ProfileId(profile)
+        if (stores.profiles.profile(id) == null) return staleCatalog()
+        val before = stores.prefs.get(key(profile)) as? PrefValue.Str ?: return staleCatalog()
+        val parsed =
+            (attempt({ Failure.UnreadableReply() }) {
+                    Json.parseToJsonElement(before.value) as JsonObject
+                }
+                    as? Outcome.Ok)
+                ?.value ?: return staleCatalog()
+        if ((parsed["optedIn"] as? JsonPrimitive)?.booleanOrNull != true) return staleCatalog()
+        return when (
+            val saved =
+                stores.prefs.compareAndCommit(
+                    stores.lanes.forProfile(id),
+                    mapOf(key(profile) to before),
+                ) {
+                    putString(key(profile), value.toString())
+                }
+        ) {
+            is Outcome.Failed -> saved
+            is Outcome.Ok ->
+                if (saved.value && stores.profiles.profile(id) != null) Unit.ok()
+                else staleCatalog()
+        }
+    }
+
     /**
      * A separate, public-only client: the selected server's authentication never reaches the
      * registry.
@@ -186,7 +213,8 @@ class AppMcpCatalogHost(
     }
 }
 
-private fun staleCatalog(): Outcome.Failed = Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+private fun staleCatalog(): Outcome.Failed =
+    Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @SingleIn(AppScope::class)
@@ -224,6 +252,73 @@ class AppSetupReviewHost(
                     }
             }
             .distinctUntilChanged()
+
+    override fun plan(
+        context: SetupReviewContext,
+        intent: SetupGuidedIntent,
+        inputs: Map<SetupGuidedField, String>,
+    ): SetupGuidedReply {
+        val graph =
+            context.owner as? ConnectionGraph
+                ?: return SetupGuidedReply(SetupGuidedPhase.Unavailable)
+        if (
+            registry.savedGraph(stores, context.profile) !== graph ||
+                graph.session.server.location.value !=
+                    ServerLocation(context.directory, context.workspace)
+        ) {
+            return SetupGuidedReply(SetupGuidedPhase.Unavailable)
+        }
+        val planner = io.github.eslamasabry.oc.engine.setupassist.SetupPlanner(redactor)
+        try {
+            val selected =
+                when (intent) {
+                    SetupGuidedIntent.ChooseModel ->
+                        io.github.eslamasabry.oc.engine.setupassist.SetupIntent.ChooseModel
+                    SetupGuidedIntent.DefaultAgent ->
+                        io.github.eslamasabry.oc.engine.setupassist.SetupIntent.DefaultAgent
+                    SetupGuidedIntent.Permission ->
+                        io.github.eslamasabry.oc.engine.setupassist.SetupIntent.Permission
+                    SetupGuidedIntent.RemoteMcp ->
+                        io.github.eslamasabry.oc.engine.setupassist.SetupIntent.ConnectRemoteMcp
+                    SetupGuidedIntent.LocalMcp ->
+                        io.github.eslamasabry.oc.engine.setupassist.SetupIntent.AddLocalMcp
+                    SetupGuidedIntent.RemoveMcp ->
+                        io.github.eslamasabry.oc.engine.setupassist.SetupIntent.RemoveMcp
+                }
+            val values =
+                inputs
+                    .mapKeys { (field, _) -> field.name.lowercase() }
+                    .mapValues { (field, value) ->
+                        if (field == "command") JsonArray(value.lines().map(::JsonPrimitive))
+                        else JsonPrimitive(value)
+                    }
+            val reply = planner.start(selected, inputs = values)
+            return when (reply.state) {
+                io.github.eslamasabry.oc.engine.setupassist.SetupPlannerState.NeedsInput ->
+                    SetupGuidedReply(
+                        SetupGuidedPhase.NeedsInput,
+                        inputsInvalid = inputs.isNotEmpty(),
+                    )
+                io.github.eslamasabry.oc.engine.setupassist.SetupPlannerState.Unsupported ->
+                    SetupGuidedReply(SetupGuidedPhase.Unavailable)
+                io.github.eslamasabry.oc.engine.setupassist.SetupPlannerState.Proposed ->
+                    SetupGuidedReply(
+                        SetupGuidedPhase.Proposed,
+                        reply.edits
+                            .map { edit ->
+                                SetupValueUi(
+                                    edit.path.joinToString(" / ") { redactor.redact(it) },
+                                    if (edit.remove) ""
+                                    else setupRedact(redactor, edit.value).toString(),
+                                )
+                            }
+                            .toImmutableList(),
+                    )
+            }
+        } finally {
+            planner.dispose()
+        }
+    }
 
     override suspend fun read(context: SetupReviewContext): Outcome<SetupReviewContent> {
         val graph = context.owner as? ConnectionGraph ?: return staleCatalog()

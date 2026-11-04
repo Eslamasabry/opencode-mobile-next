@@ -17,7 +17,9 @@ public data class ChatHeaderUi(
     /** "server · project" parts; either may be absent. */
     val serverName: String? = null,
     val projectName: String? = null,
-    /** The ⋯ menu's entries in order (Go to, then Do; destructive last), built from capabilities. */
+    /**
+     * The ⋯ menu's entries in order (Go to, then Do; destructive last), built from capabilities.
+     */
     val menu: ImmutableList<HeaderAction> = persistentListOf(),
     val menuOpen: Boolean = false,
     /** Compact and Fork wait for the first prompt (Flutter `sessionMenuNeedsPrompt`). */
@@ -45,8 +47,13 @@ public enum class HeaderAction {
     Fork,
     Rename,
     ContinueWith,
+    AgentOptions,
+    CardsSettings,
 
-    /** "Continue on computer" (Flutter `continueOnComputer`, B-AGENT-227): the copyable resume command. */
+    /**
+     * "Continue on computer" (Flutter `continueOnComputer`, B-AGENT-227): the copyable resume
+     * command.
+     */
     ContinueOnComputer,
     CopyTranscript,
     Archive,
@@ -58,10 +65,16 @@ public sealed interface HeaderSheet {
     public data class Details(val facts: DetailsUi) : HeaderSheet
 
     /** "Continue with…": this server's other models; picking one moves the conversation to it. */
-    public data class ContinueWith(val choices: ImmutableList<ContinueChoice>, val loading: Boolean, val failure: Failure?) :
-        HeaderSheet
+    public data class ContinueWith(
+        val choices: ImmutableList<ContinueChoice>,
+        val loading: Boolean,
+        val failure: Failure?,
+    ) : HeaderSheet
 
-    /** "Continue on computer": the terminal command that resumes this conversation, or why there is none. */
+    /**
+     * "Continue on computer": the terminal command that resumes this conversation, or why there is
+     * none.
+     */
     public data class ContinueOnComputer(val command: SessionResumeCommand) : HeaderSheet
 }
 
@@ -70,13 +83,20 @@ public data class DetailsUi(
     val projectName: String?,
     val model: String?,
     val agent: String?,
-    /** Whole percent 0–100, or null when the server reported no tokens or no window (B-CHAT-019). */
+    /**
+     * Whole percent 0–100, or null when the server reported no tokens or no window (B-CHAT-019).
+     */
     val contextPercent: Int?,
     val contextLevel: ContextLevel?,
     val totalTokens: Long?,
 )
 
-public data class ContinueChoice(val providerId: String, val modelId: String, val label: String, val current: Boolean)
+public data class ContinueChoice(
+    val providerId: String,
+    val modelId: String,
+    val label: String,
+    val current: Boolean,
+)
 
 public sealed interface HeaderConfirm {
     public data class Archive(val title: String?) : HeaderConfirm
@@ -86,7 +106,11 @@ public sealed interface HeaderConfirm {
 
 public data class HeaderFailure(val id: Long, val action: HeaderAction, val failure: Failure)
 
-public enum class ClipKind { Transcript, ShareLink, ResumeCommand }
+public enum class ClipKind {
+    Transcript,
+    ShareLink,
+    ResumeCommand,
+}
 
 public data class HeaderClip(val id: Long, val text: String, val kind: ClipKind)
 

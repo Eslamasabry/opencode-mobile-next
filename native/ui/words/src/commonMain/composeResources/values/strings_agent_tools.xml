@@ -1,0 +1,28 @@
+<resources>
+    <string name="agentToolsTitle">Agent tools</string>
+    <string name="agentToolsWorking">Wait for this action to finish.</string>
+    <string name="agentToolsUnavailable">Connect this server first</string>
+    <string name="agentToolsUnavailableBody">Open the saved server, then return here to manage its agent.</string>
+    <string name="agentToolsRefresh">Refresh agent tools</string>
+    <string name="agentToolsFailed">Couldn’t complete this agent action. Refresh to check the current state.</string>
+    <string name="agentToolsUncertain">The computer may have received this action. It won’t be repeated. Check the computer before starting another action.</string>
+    <string name="agentToolsModel">Model for this conversation</string>
+    <string name="agentToolsOptions">Agent options</string>
+    <string name="agentToolsNoOptions">This agent offers no extra options for the current model.</string>
+    <string name="agentToolsReadImports">Find Claude Code conversations</string>
+    <string name="agentToolsImportTitle">Conversations from this project</string>
+    <string name="agentToolsNoImports">No new conversations were found for this project.</string>
+    <string name="agentToolsAlreadyImported">Already imported: %1$d</string>
+    <string name="agentToolsUntitled">Untitled conversation</string>
+    <string name="agentToolsImport">Import and open</string>
+    <string name="agentToolsUpdate">Update agents</string>
+    <string name="agentToolsUpdateStarting">Starting the update…</string>
+    <string name="agentToolsUpdateDownloading">Downloading the update on your computer…</string>
+    <string name="agentToolsUpdateInstalling">Installing the update on your computer…</string>
+    <string name="agentToolsUpdateComplete">Update complete</string>
+    <string name="agentToolsUpToDate">Your computer’s helper is already up to date.</string>
+    <string name="agentToolsUpdated">The helper was updated to %1$s. The connection returns automatically after it restarts.</string>
+    <string name="agentToolsUpdateFailed">The helper could not be updated. Check Details for the computer’s reason.</string>
+    <string name="agentToolsUpdateQuestion">Update the agents on “%1$s”?</string>
+    <string name="agentToolsUpdateBody">Downloads and installs the helper on this computer. Its connection may briefly restart. Active agent work may be interrupted.</string>
+</resources>

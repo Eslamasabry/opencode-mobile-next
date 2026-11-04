@@ -1,16 +1,14 @@
 package io.github.eslamasabry.oc.feature.chat.header.presentation
 
-import io.github.eslamasabry.oc.core.model.transcript.Role
-import io.github.eslamasabry.oc.engine.transcript.turnfacts.contextReading
-import io.github.eslamasabry.oc.feature.chat.world.TurnFeed
-import io.github.eslamasabry.oc.feature.chat.world.TurnFeedSource
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
+import io.github.eslamasabry.oc.core.model.transcript.Role
 import io.github.eslamasabry.oc.engine.agents.resume.SessionResumeCli
 import io.github.eslamasabry.oc.engine.agents.resume.SessionResumeCommand
 import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptState
+import io.github.eslamasabry.oc.engine.transcript.turnfacts.contextReading
 import io.github.eslamasabry.oc.feature.chat.header.freemodel.FreeModel
 import io.github.eslamasabry.oc.feature.chat.header.freemodel.FreeModelFacts
 import io.github.eslamasabry.oc.feature.chat.header.freemodel.FreeNoteStore
@@ -20,6 +18,8 @@ import io.github.eslamasabry.oc.feature.chat.presentation.ChatLauncher
 import io.github.eslamasabry.oc.feature.chat.world.ChatWorld
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModel
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModels
+import io.github.eslamasabry.oc.feature.chat.world.TurnFeed
+import io.github.eslamasabry.oc.feature.chat.world.TurnFeedSource
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
@@ -39,20 +39,31 @@ internal data class HeaderLocal(
     val failure: HeaderFailure? = null,
     val clip: HeaderClip? = null,
     val renaming: String? = null,
-    /** A rename the server acknowledged before its event arrived: shown until the server says otherwise. */
+    /**
+     * A rename the server acknowledged before its event arrived: shown until the server says
+     * otherwise.
+     */
     val renamed: String? = null,
-    /** The server's title when [renamed] was acknowledged; once the server names it otherwise, the server wins. */
+    /**
+     * The server's title when [renamed] was acknowledged; once the server names it otherwise, the
+     * server wins.
+     */
     val renamedOver: String? = null,
     val continueFailure: io.github.eslamasabry.oc.core.common.Failure? = null,
     val freeFacts: FreeModelFacts? = null,
     val freeDismissed: Boolean = false,
 )
 
-internal enum class SheetKind { Details, ContinueWith, ContinueOnComputer }
+internal enum class SheetKind {
+    Details,
+    ContinueWith,
+    ContinueOnComputer,
+}
 
 /**
- * The header's state holder (plain `kotlin.test`, no ViewModel): [current] presents the present values; [states] is
- * the production flow. Acts go to the conversation's own port; a failure becomes one plain line with Details.
+ * The header's state holder (plain `kotlin.test`, no ViewModel): [current] presents the present
+ * values; [states] is the production flow. Acts go to the conversation's own port; a failure
+ * becomes one plain line with Details.
  */
 public class ChatHeaderPresenter(
     private val world: ChatWorld,
@@ -64,17 +75,32 @@ public class ChatHeaderPresenter(
     private val local = MutableStateFlow(HeaderLocal())
     private var nextId = 1L
 
-    public val ref: ConversationRef get() = world.ref
+    public val ref: ConversationRef
+        get() = world.ref
 
     public fun current(): ChatHeaderUi =
-        present(world.title.value, world.capabilities.value, port.facts.value, world.transcript.value, world.models.value, local.value)
+        present(
+            world.title.value,
+            world.capabilities.value,
+            port.facts.value,
+            world.transcript.value,
+            world.models.value,
+            local.value,
+        )
 
     public fun states(scope: CoroutineScope, started: SharingStarted): StateFlow<ChatHeaderUi> {
         val serverSide =
-            combine(world.title, world.capabilities, port.facts, world.transcript, world.models) { t, c, f, tr, m ->
+            combine(world.title, world.capabilities, port.facts, world.transcript, world.models) {
+                t,
+                c,
+                f,
+                tr,
+                m ->
                 ServerSide(t, c, f, tr, m)
             }
-        return combine(serverSide, local) { s, l -> present(s.title, s.caps, s.facts, s.transcript, s.models, l) }
+        return combine(serverSide, local, world.readOnly) { s, l, _ ->
+                present(s.title, s.caps, s.facts, s.transcript, s.models, l)
+            }
             .stateIn(scope, started, current())
             .also { launcher.launch { loadFreeFacts() } }
     }
@@ -121,16 +147,28 @@ public class ChatHeaderPresenter(
             when (l.sheet) {
                 null -> null
                 SheetKind.Details -> {
-                    // Codex chat-header #8: OC2 sessions carry no context reading; the replies' own tokens against
-                    // their model's window do (Flutter derives it the same way, as the transcript's context action).
+                    // Codex chat-header #8: OC2 sessions carry no context reading; the replies' own
+                    // tokens against
+                    // their model's window do (Flutter derives it the same way, as the transcript's
+                    // context action).
                     val feed = (world as? TurnFeedSource)?.turnFeed?.value
                     val reading =
                         if (facts.contextTokens != null || feed == null) null
-                        else contextReading(feed.ledger.messages) { p, m -> feed.windows[TurnFeed.windowKey(p, m)] }
+                        else
+                            contextReading(feed.ledger.messages) { p, m ->
+                                feed.windows[TurnFeed.windowKey(p, m)]
+                            }
                     val percent =
-                        HeaderRules.contextPercent(facts.contextTokens ?: reading?.tokens, facts.contextLimit ?: reading?.limit)
+                        HeaderRules.contextPercent(
+                            facts.contextTokens ?: reading?.tokens,
+                            facts.contextLimit ?: reading?.limit,
+                        )
                     val replyTokens =
-                        feed?.ledger?.messages?.filter { it.info.role == Role.Assistant }?.sumOf { it.info.tokens.total }
+                        feed
+                            ?.ledger
+                            ?.messages
+                            ?.filter { it.info.role == Role.Assistant }
+                            ?.sumOf { it.info.tokens.total }
                     HeaderSheet.Details(
                         DetailsUi(
                             serverName = facts.serverName,
@@ -140,13 +178,17 @@ public class ChatHeaderPresenter(
                             contextPercent = percent,
                             contextLevel = HeaderRules.contextLevel(percent),
                             totalTokens = (facts.totalTokens ?: replyTokens)?.takeIf { it > 0 },
-                        ),
+                        )
                     )
                 }
                 SheetKind.ContinueWith ->
                     HeaderSheet.ContinueWith(
                         choices = continueChoices(models),
-                        loading = models.loading || (models.choices.isEmpty() && models.failure == null && l.continueFailure == null),
+                        loading =
+                            models.loading ||
+                                (models.choices.isEmpty() &&
+                                    models.failure == null &&
+                                    l.continueFailure == null),
                         failure = l.continueFailure ?: models.failure,
                     )
                 SheetKind.ContinueOnComputer -> HeaderSheet.ContinueOnComputer(resumeCommand(facts))
@@ -155,7 +197,18 @@ public class ChatHeaderPresenter(
             title = title,
             serverName = facts.serverName,
             projectName = project,
-            menu = HeaderRules.menu(caps, shared = facts.shareUrl != null),
+            menu =
+                HeaderRules.menu(caps, shared = facts.shareUrl != null)
+                    .filter {
+                        world.readOnly.value == null ||
+                            it in
+                                setOf(
+                                    HeaderAction.Find,
+                                    HeaderAction.Details,
+                                    HeaderAction.CopyTranscript,
+                                )
+                    }
+                    .toImmutableList(),
             menuOpen = l.menuOpen,
             hasPrompt = transcript.rows.any { it is PromptRow },
             sheet = sheet,
@@ -173,12 +226,19 @@ public class ChatHeaderPresenter(
 
     private fun titleNow(): String? = shownTitle(world.title.value, local.value)
 
-    /** "Models on this server": the current one first, marked; at most eight others (Flutter caps the list at six picks). */
-    private fun continueChoices(models: ComposerModels): kotlinx.collections.immutable.ImmutableList<ContinueChoice> {
+    /**
+     * "Models on this server": the current one first, marked; at most eight others (Flutter caps
+     * the list at six picks).
+     */
+    private fun continueChoices(
+        models: ComposerModels
+    ): kotlinx.collections.immutable.ImmutableList<ContinueChoice> {
         val current = models.selected
         val others = models.choices.filter { !same(it, current) }.take(MAX_CONTINUE)
         return (listOfNotNull(current) + others)
-            .map { ContinueChoice(it.providerId, it.modelId, it.label, current = same(it, current)) }
+            .map {
+                ContinueChoice(it.providerId, it.modelId, it.label, current = same(it, current))
+            }
             .toImmutableList()
     }
 
@@ -196,6 +256,12 @@ public class ChatHeaderPresenter(
     override fun choose(action: HeaderAction) {
         local.update { it.copy(menuOpen = false) }
         when (action) {
+            HeaderAction.CardsSettings ->
+                nav.open(io.github.eslamasabry.oc.ui.routes.CardsSettingsRoute)
+            HeaderAction.AgentOptions ->
+                nav.open(
+                    io.github.eslamasabry.oc.ui.routes.AgentToolsRoute(ref.profileId, ref.sessionId)
+                )
             HeaderAction.Find -> Unit // the chat screen's own find bar
             HeaderAction.Details -> {
                 local.update { it.copy(sheet = SheetKind.Details) }
@@ -207,38 +273,48 @@ public class ChatHeaderPresenter(
                 if (world.models.value.choices.isEmpty()) loadModels()
             }
             HeaderAction.ContinueOnComputer -> {
-                // Built from the folder the server reports now (Flutter showSessionHandoff reads the session first).
+                // Built from the folder the server reports now (Flutter showSessionHandoff reads
+                // the session first).
                 local.update { it.copy(sheet = SheetKind.ContinueOnComputer) }
                 launcher.launch { port.refresh() }
             }
             HeaderAction.CopyTranscript -> Unit // needs the person's words: [copyTranscript]
-            HeaderAction.Share -> run(action) {
-                when (val r = port.share()) {
-                    is Outcome.Ok -> {
-                        r.value?.let { url -> local.update { it.copy(clip = HeaderClip(nextId++, url, ClipKind.ShareLink)) } }
-                        Outcome.Ok(Unit)
+            HeaderAction.Share ->
+                run(action) {
+                    when (val r = port.share()) {
+                        is Outcome.Ok -> {
+                            r.value?.let { url ->
+                                local.update {
+                                    it.copy(clip = HeaderClip(nextId++, url, ClipKind.ShareLink))
+                                }
+                            }
+                            Outcome.Ok(Unit)
+                        }
+                        is Outcome.Failed -> r
                     }
-                    is Outcome.Failed -> r
                 }
-            }
             HeaderAction.Unshare -> run(action) { port.unshare() }
-            HeaderAction.Fork -> run(action) {
-                when (val r = port.fork()) {
-                    is Outcome.Ok -> {
-                        nav.openChat(ConversationRef(world.ref.profileId, r.value))
-                        Outcome.Ok(Unit)
+            HeaderAction.Fork ->
+                run(action) {
+                    when (val r = port.fork()) {
+                        is Outcome.Ok -> {
+                            nav.openChat(ConversationRef(world.ref.profileId, r.value))
+                            Outcome.Ok(Unit)
+                        }
+                        is Outcome.Failed -> r
                     }
-                    is Outcome.Failed -> r
                 }
-            }
-            HeaderAction.Archive -> local.update { it.copy(confirm = HeaderConfirm.Archive(titleNow())) }
-            HeaderAction.Delete -> local.update { it.copy(confirm = HeaderConfirm.Delete(titleNow())) }
+            HeaderAction.Archive ->
+                local.update { it.copy(confirm = HeaderConfirm.Archive(titleNow())) }
+            HeaderAction.Delete ->
+                local.update { it.copy(confirm = HeaderConfirm.Delete(titleNow())) }
         }
     }
 
     /**
-     * B-AGENT-227/228: the resume command for this conversation. The CLI follows the server's product generation (an
-     * OpenCode 2 server, the only one that reports `cliSessionResume`); the menu row is gated on that capability.
+     * B-AGENT-227/228: the resume command for this conversation. The CLI follows the server's
+     * product generation (an OpenCode 2 server, the only one that reports `cliSessionResume`); the
+     * menu row is gated on that capability.
      */
     private fun resumeCommand(facts: HeaderFacts): SessionResumeCommand =
         SessionResumeCommand.build(
@@ -281,7 +357,9 @@ public class ChatHeaderPresenter(
         if (!HeaderRules.renameValid(next) || next == (titleNow())) return
         run(HeaderAction.Rename) {
             val over = world.title.value
-            port.rename(next).also { r -> if (r is Outcome.Ok) local.update { it.copy(renamed = next, renamedOver = over) } }
+            port.rename(next).also { r ->
+                if (r is Outcome.Ok) local.update { it.copy(renamed = next, renamedOver = over) }
+            }
         }
     }
 
@@ -294,13 +372,16 @@ public class ChatHeaderPresenter(
             closeSheet()
             return
         }
-        val model = world.models.value.choices.firstOrNull { it.providerId == choice.providerId && it.modelId == choice.modelId }
-            ?: return
+        val model =
+            world.models.value.choices.firstOrNull {
+                it.providerId == choice.providerId && it.modelId == choice.modelId
+            } ?: return
         local.update { it.copy(working = HeaderAction.ContinueWith, continueFailure = null) }
         launcher.launch {
             when (val r = world.selectModel(model)) {
                 is Outcome.Ok -> local.update { it.copy(working = null, sheet = null) }
-                is Outcome.Failed -> local.update { it.copy(working = null, continueFailure = r.failure) }
+                is Outcome.Failed ->
+                    local.update { it.copy(working = null, continueFailure = r.failure) }
             }
         }
     }
@@ -319,7 +400,8 @@ public class ChatHeaderPresenter(
 
     override fun confirm() {
         val confirm = local.value.confirm ?: return
-        val action = if (confirm is HeaderConfirm.Delete) HeaderAction.Delete else HeaderAction.Archive
+        val action =
+            if (confirm is HeaderConfirm.Delete) HeaderAction.Delete else HeaderAction.Archive
         local.update { it.copy(confirm = null) }
         run(action) {
             val r = if (action == HeaderAction.Delete) port.delete() else port.archive()
@@ -353,7 +435,10 @@ public class ChatHeaderPresenter(
             local.update {
                 it.copy(
                     working = null,
-                    failure = (r as? Outcome.Failed)?.let { f -> HeaderFailure(nextId++, action, f.failure) },
+                    failure =
+                        (r as? Outcome.Failed)?.let { f ->
+                            HeaderFailure(nextId++, action, f.failure)
+                        },
                 )
             }
         }

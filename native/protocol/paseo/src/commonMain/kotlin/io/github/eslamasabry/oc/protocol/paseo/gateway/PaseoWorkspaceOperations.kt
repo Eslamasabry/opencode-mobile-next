@@ -45,6 +45,11 @@ internal class PaseoWorkspaceOperations(
             return directory(target.directory ?: paseoFail(PaseoFailureKind.ScopeMismatch))
         }
 
+    override suspend fun sessionChildren(
+        id: io.github.eslamasabry.oc.core.common.ids.SessionId
+    ): Outcome<ImmutableList<io.github.eslamasabry.oc.core.model.Session>> =
+        gateway.subagents.children(id)
+
     private suspend inline fun <T> call(crossinline block: suspend () -> T): Outcome<T> =
         withContext(gateway.lane) { paseoAttempt { block() } }
 
