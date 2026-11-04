@@ -11,7 +11,8 @@ import kotlinx.coroutines.withTimeoutOrNull
  * A launch contains identifiers only. The text field never becomes an Intent or stored widget
  * field.
  */
-public class WidgetTextTarget internal constructor(internal val payload: Map<String, Any?>) {
+public class WidgetTextTarget
+internal constructor(internal val payload: Map<String, Any?>, public val mode: String) {
     public val profileId: String
         get() = payload["profileID"] as? String ?: ""
 
@@ -24,16 +25,18 @@ public object WidgetTextActions {
     public const val EXTRA_MODE: String = "oc.widgetMode"
 
     public fun target(intent: Intent): WidgetTextTarget? {
-        if (intent.getStringExtra(EXTRA_MODE) != "steer") return null
+        val mode = intent.getStringExtra(EXTRA_MODE)
+        if (mode !in setOf("steer", "voice")) return null
         val payload =
             WidgetV2Bridge.parsePayload(intent.getStringExtra(EXTRA_PAYLOAD)) ?: return null
         if (
             (payload["profileID"] as? String).isNullOrBlank() ||
                 (payload["scopeToken"] as? String).isNullOrBlank() ||
-                (payload["sessionID"] as? String).isNullOrBlank()
+                (if (mode == "voice") (payload["lastProjectID"] as? String).isNullOrBlank()
+                else (payload["sessionID"] as? String).isNullOrBlank())
         )
             return null
-        return WidgetTextTarget(payload)
+        return WidgetTextTarget(payload, mode!!)
     }
 
     /**
@@ -49,7 +52,7 @@ public object WidgetTextActions {
                     return@suspendCancellableCoroutine
                 }
                 val action =
-                    WidgetActionBridge.overlayPayload(target.payload, "steer", text) +
+                    WidgetActionBridge.overlayPayload(target.payload, target.mode, text) +
                         mapOf("deadlineEpochMs" to now + 6_000L)
                 WidgetActionBridge.submit(context, action) { response ->
                     if (continuation.isActive)

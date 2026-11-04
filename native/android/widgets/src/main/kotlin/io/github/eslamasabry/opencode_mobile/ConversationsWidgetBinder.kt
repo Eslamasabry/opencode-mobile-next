@@ -225,7 +225,16 @@ internal class ConversationsWidgetBinder(
             }
         val step = m.step.trim().removeSuffix("…").removeSuffix("...").trim()
         val dot = if (m.ticking) g.green else g.idle
-        meta(v, dot, env.copy.working(), if (m.ticking) g.green else g.muted, m.project, step, span)
+        meta(
+            v,
+            dot,
+            env.copy.working(),
+            if (m.ticking) g.green else g.muted,
+            m.project,
+            m.model,
+            step,
+            span,
+        )
         return ConversationsWidgetPlan.titleHeight(1) + META_DP
     }
 
@@ -237,7 +246,7 @@ internal class ConversationsWidgetBinder(
         if (m.lead == WidgetLayoutPolicy.Lead.OFFLINE) {
             meta(v, null, "", g.muted, env.copy.offline(env.lastSeen))
         } else {
-            meta(v, null, "", g.muted, m.project, env.copy.ago(m.updatedAt))
+            meta(v, null, "", g.muted, m.project, m.model, env.copy.ago(m.updatedAt))
         }
         return ConversationsWidgetPlan.titleHeight(1) + META_DP
     }

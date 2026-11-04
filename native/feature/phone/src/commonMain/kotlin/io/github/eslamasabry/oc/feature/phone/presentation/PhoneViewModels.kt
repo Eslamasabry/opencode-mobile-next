@@ -136,14 +136,19 @@ public class RunningViewModel(
 @Inject
 @ViewModelKey
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
-public class KeepRunningViewModel(settings: KeepAliveSettings, nav: PhoneNavigator) :
-    ViewModel(), KeepRunningActions {
-    private val model = KeepRunningModel(settings, nav, viewModelScope)
+public class KeepRunningViewModel(
+    settings: KeepAliveSettings,
+    nav: PhoneNavigator,
+    thermal: ThermalSettings,
+) : ViewModel(), ThermalKeepRunningActions {
+    private val model = KeepRunningModel(settings, nav, viewModelScope, thermal)
     public val state: StateFlow<KeepRunningUi> = model.state
 
     override fun resumed(): Unit = model.resumed()
 
     override fun open(step: KeepAliveStepKind): Unit = model.open(step)
+
+    override fun setThermalEnabled(value: Boolean): Unit = model.setThermalEnabled(value)
 
     override fun back(): Unit = model.back()
 }

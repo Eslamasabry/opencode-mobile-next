@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -29,12 +30,21 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 public fun WidgetActionScreen(state: WidgetActionUi, actions: WidgetActionActions) {
     val field = remember { TextFieldState() }
-    val editing = state.phase == WidgetActionPhase.Editing
+    LaunchedEffect(state.dictatedWords) {
+        val words = state.dictatedWords ?: return@LaunchedEffect
+        field.edit { replace(length, length, if (length == 0) words else " $words") }
+        actions.takeDictatedWords()
+    }
+    val editing = state.phase == WidgetActionPhase.Editing && !state.listening && !state.dictating
     val sending = state.phase == WidgetActionPhase.Sending
     KitScreen(
         topBar = {
             KitTopBar(
-                title = stringResource(Res.string.widgetActionTitle),
+                title =
+                    stringResource(
+                        if (state.newConversation) Res.string.widgetV2VoiceTitle
+                        else Res.string.widgetActionTitle
+                    ),
                 exit = KitTopBarExit.Close,
                 exitLabel = stringResource(Res.string.widgetActionClose),
                 onExit = actions::close,
@@ -46,7 +56,28 @@ public fun WidgetActionScreen(state: WidgetActionUi, actions: WidgetActionAction
             Modifier.fillMaxWidth().imePadding().padding(Space.S3.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
-            if (editing || sending) {
+            if (state.phase == WidgetActionPhase.Editing || sending) {
+                if (state.voiceAvailable)
+                    KitButton(
+                        label =
+                            stringResource(
+                                if (state.listening) Res.string.widgetPanelFinishRecording
+                                else Res.string.widgetPanelRecord
+                            ),
+                        onClick =
+                            if (state.listening) actions::finishDictation else actions::dictate,
+                        role = KitButtonRole.Secondary,
+                        working = state.dictating,
+                        enabled =
+                            if (!sending && !state.dictating) KitEnabled.Enabled
+                            else
+                                KitEnabled.Disabled(
+                                    stringResource(Res.string.widgetPanelListening)
+                                ),
+                    )
+                if (state.listening) KitGroupNote(stringResource(Res.string.widgetPanelListening))
+                if (state.dictationFailed)
+                    KitGroupNote(stringResource(Res.string.widgetV2DictationUnavailable))
                 KitGroupNote(stringResource(Res.string.widgetActionHint))
                 KitField(
                     state = field,

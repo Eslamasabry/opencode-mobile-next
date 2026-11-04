@@ -1,9 +1,9 @@
 package io.github.eslamasabry.oc.feature.plans.presentation
 
-import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.integrations.usage.ComputerUsageProblem
 import io.github.eslamasabry.oc.engine.integrations.usage.SignInState
 import io.github.eslamasabry.oc.engine.integrations.usage.SubscriptionState
@@ -21,6 +21,14 @@ import kotlinx.coroutines.flow.StateFlow
 
 /** The engine the app wiring binds: every connection's readings merged into one list. */
 public interface PlansSource {
+    public val widgetSettings:
+        io.github.eslamasabry.oc.engine.integrations.usage.UsageWidgetSettings
+        get() = io.github.eslamasabry.oc.engine.integrations.usage.UsageWidgetSettings()
+
+    public suspend fun setWidgetSettings(
+        settings: io.github.eslamasabry.oc.engine.integrations.usage.UsageWidgetSettings
+    ): Boolean = false
+
     public val snapshot: StateFlow<UsageSnapshot>
 
     /**
@@ -85,6 +93,7 @@ public data class CollectorTarget(
     val enabled: Boolean,
     val binding: String,
 )
+
 public enum class CollectorFailure {
     LinuxNotReady,
     NoNode,
@@ -172,6 +181,7 @@ public data class PlanCardUi(
     val fetchedAtMs: Long?,
     val alertThreshold: Int,
     val canFix: Boolean = false,
+    val widgetVisible: Boolean = true,
 )
 
 public data class PlanKeyUi(
@@ -208,10 +218,20 @@ public data class PlansUi(
     val computerReaders: ImmutableList<ComputerReaderUi> = persistentListOf(),
     val readerBusy: Boolean = false,
     val readerFailed: Boolean = false,
+    val widgetSettings: io.github.eslamasabry.oc.engine.integrations.usage.UsageWidgetSettings =
+        io.github.eslamasabry.oc.engine.integrations.usage.UsageWidgetSettings(),
 )
 
 public interface PlansActions {
     public fun back()
+
+    public fun setWidgetVisible(key: String, visible: Boolean) {}
+
+    public fun setWidgetSetupRows(visible: Boolean) {}
+
+    public fun setWidgetWindows(
+        windows: io.github.eslamasabry.oc.engine.integrations.usage.UsageWidgetWindows
+    ) {}
 
     public fun refresh()
 

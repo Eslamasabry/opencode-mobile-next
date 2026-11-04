@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!--
+      User-entered server hosts are known only at runtime: LAN, Tailscale and
+      public addresses can all be explicitly chosen. Android's static domain
+      configuration cannot scope cleartext permission to those runtime origins
+      or express IP ranges. The base permission is therefore the narrowest
+      platform setting that supports arbitrary user-selected HTTP servers.
+      The app's transport remains the security boundary (TrustGateInterceptor
+      in the native app, as Dart was in Flutter): every non-loopback HTTP origin needs
+      explicit, origin-bound per-profile consent before any authenticated
+      request, and the OpenCode 2 transport refuses redirects so consent and
+      credentials cannot cross to a different origin or downgrade silently.
+      Other clients retain their own gates, including isOrchestrationUrlAllowed.
+    -->
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

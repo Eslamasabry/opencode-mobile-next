@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="plansWidgetSettings">أداة الاستخدام</string>
+    <string name="plansWidgetSetupRows">إظهار الخطط التي تحتاج إلى إعداد</string>
+    <string name="plansWidgetBoth">إظهار الفترتين</string>
+    <string name="plansWidgetFiveHour">إظهار فترة الخمس ساعات</string>
+    <string name="plansWidgetWeekly">إظهار الفترة الأسبوعية</string>
+    <string name="plansWidgetSelected">محدد</string>
+    <string name="plansWidgetVisible">إظهار هذه الخطة في الأداة</string>
+</resources>

@@ -349,10 +349,9 @@ private class NotificationPermission(
 }
 
 /**
- * Where a phone-setup notification tap lands (B-ANDR-050; Flutter `phone_setup_routes.dart`). The
- * ongoing setup row (`phone_setup`) opens the setup's progress, which in this build is the Linux
- * page that shows it; a tap while that page is already on top changes nothing. The result row
- * (`phone_setup_done`) just brings the app back (null = land).
+ * Where a phone-setup notification tap lands (B-ANDR-050; Flutter `phone_setup_routes.dart`). Both
+ * progress and result taps open the real setup entry, which restores the durable job and displays
+ * progress, success or failure. A tap while that entry is already on top changes nothing.
  */
 internal object SetupTapRoutes {
     fun routeFor(
@@ -360,10 +359,10 @@ internal object SetupTapRoutes {
         top: io.github.eslamasabry.oc.ui.routes.AppRoute?,
     ): SetupTap =
         when (action) {
-            io.github.eslamasabry.oc.android.tiles.LaunchAction.PhoneSetup ->
-                if (top == io.github.eslamasabry.oc.ui.routes.LinuxRoute.Home) SetupTap.Stay
-                else SetupTap.Open(io.github.eslamasabry.oc.ui.routes.LinuxRoute.Home)
-            io.github.eslamasabry.oc.android.tiles.LaunchAction.PhoneSetupDone -> SetupTap.Land
+            io.github.eslamasabry.oc.android.tiles.LaunchAction.PhoneSetup,
+            io.github.eslamasabry.oc.android.tiles.LaunchAction.PhoneSetupDone ->
+                if (top == io.github.eslamasabry.oc.ui.routes.PhoneSetupRoute.Setup) SetupTap.Stay
+                else SetupTap.Open(io.github.eslamasabry.oc.ui.routes.PhoneSetupRoute.Setup)
             else -> SetupTap.NotSetup
         }
 }

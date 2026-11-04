@@ -8,14 +8,17 @@ import androidx.core.app.NotificationCompat
 import androidx.core.net.toUri
 
 /**
- * Draws the one status row (plan 11 §10.3, §10.5). Port of `StatusNotificationRenderer` with the native changes:
+ * Draws the one status row (plan 11 §10.3, §10.5). Port of `StatusNotificationRenderer` with the
+ * native changes:
  *
- * - **Live Updates**: the Compat calls are made unconditionally and androidx.core decides per SDK (no
- *   `SDK_INT_FULL >= BAKLAVA_1` gate). A promoted row is ongoing, has a title, no custom views, is not colorized and
- *   not a group summary, and uses the standard or `BigTextStyle` — never `InboxStyle`, which Android does not promote:
- *   lines are joined by newlines in the same order (same ≤ 4 lines).
+ * - **Live Updates**: the Compat calls are made unconditionally and androidx.core decides per SDK
+ *   (no `SDK_INT_FULL >= BAKLAVA_1` gate). A promoted row is ongoing, has a title, no custom views,
+ *   is not colorized and not a group summary, and uses the standard or `BigTextStyle` — never
+ *   `InboxStyle`, which Android does not promote: lines are joined by newlines in the same order
+ *   (same ≤ 4 lines).
  * - Lock screen: `VISIBILITY_PRIVATE` with a count-only public version.
- * - Dismissal: `setDeleteIntent` tells `StatusActionReceiver` the person swiped the row away (S11-9).
+ * - Dismissal: `setDeleteIntent` tells `StatusActionReceiver` the person swiped the row away
+ *   (S11-9).
  */
 public class StatusRenderer(private val context: Context, private val words: NotifyWords) {
     public fun build(content: StatusContent, ongoing: Boolean, chip: LiveChip?): Notification {
@@ -36,18 +39,23 @@ public class StatusRenderer(private val context: Context, private val words: Not
                     NotificationCompat.Builder(localized, NotifyChannel.LiveConnection.id)
                         .setSmallIcon(R.drawable.notify_ic_status)
                         .setContentTitle(content.publicTitle)
-                        .build(),
+                        .build()
                 )
                 .setDeleteIntent(dismissIntent(content))
         if (content.subText.isNotEmpty()) builder.setSubText(content.subText)
         if (content.lines.isNotEmpty()) {
             if (chip != null) {
                 builder.setStyle(
-                    NotificationCompat.BigTextStyle().setBigContentTitle(content.title).bigText(content.lines.joinToString("\n")),
+                    NotificationCompat.BigTextStyle()
+                        .setBigContentTitle(content.title)
+                        .bigText(content.lines.joinToString("\n"))
                 )
             } else {
                 builder.setStyle(
-                    NotificationCompat.InboxStyle().setBigContentTitle(content.title).also { inbox -> content.lines.forEach(inbox::addLine) },
+                    NotificationCompat.InboxStyle().setBigContentTitle(content.title).also { inbox
+                        ->
+                        content.lines.forEach(inbox::addLine)
+                    }
                 )
             }
         }
@@ -61,12 +69,22 @@ public class StatusRenderer(private val context: Context, private val words: Not
         return builder.build()
     }
 
-    private fun openIntent(requestCode: Int, launch: String?, content: StatusContent): PendingIntent =
+    private fun openIntent(
+        requestCode: Int,
+        launch: String?,
+        content: StatusContent,
+    ): PendingIntent =
         PendingIntent.getActivity(
             context,
             requestCode,
             Intent().apply {
-                component = FrozenComponents.of(context, FrozenComponents.MAIN_ACTIVITY)
+                component =
+                    if (requestCode == START_REQUEST)
+                        android.content.ComponentName(
+                            context.packageName,
+                            "io.github.eslamasabry.opencode_mobile.IdleStartActivity",
+                        )
+                    else FrozenComponents.of(context, FrozenComponents.MAIN_ACTIVITY)
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
                 data = targetUri("opencode://status/open", content)
                 putStatusConversation(content.conversation)
@@ -80,9 +98,14 @@ public class StatusRenderer(private val context: Context, private val words: Not
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
-    /** Extras do not participate in PendingIntent identity; keep older delivered actions on their own chat. */
+    /**
+     * Extras do not participate in PendingIntent identity; keep older delivered actions on their
+     * own chat.
+     */
     private fun targetUri(base: String, content: StatusContent): android.net.Uri =
-        base.toUri().buildUpon()
+        base
+            .toUri()
+            .buildUpon()
             .appendQueryParameter("profile", content.conversation?.profileId?.raw.orEmpty())
             .appendQueryParameter("session", content.conversation?.sessionId?.raw.orEmpty())
             .build()
@@ -93,11 +116,15 @@ public class StatusRenderer(private val context: Context, private val words: Not
             DISMISS_REQUEST,
             Intent(FrozenExtras.ACTION_STATUS).apply {
                 component = FrozenComponents.of(context, FrozenComponents.STATUS_ACTION_RECEIVER)
-                // A previously delivered delete intent keeps its own turn when this row is replaced.
-                data = FrozenExtras.STATUS_DISMISSED_URI.toUri().buildUpon()
-                    .appendPath(content.conversation?.profileId?.raw.orEmpty())
-                    .appendPath(content.conversation?.sessionId?.raw.orEmpty())
-                    .appendPath(content.turnId).build()
+                // A previously delivered delete intent keeps its own turn when this row is
+                // replaced.
+                data =
+                    FrozenExtras.STATUS_DISMISSED_URI.toUri()
+                        .buildUpon()
+                        .appendPath(content.conversation?.profileId?.raw.orEmpty())
+                        .appendPath(content.conversation?.sessionId?.raw.orEmpty())
+                        .appendPath(content.turnId)
+                        .build()
                 putExtra(FrozenExtras.EXTRA_STATUS_ACTION, DISMISSED_ACTION)
                 putStatusConversation(content.conversation)
                 putExtra(FrozenExtras.EXTRA_STATUS_TURN, content.turnId)
@@ -109,11 +136,23 @@ public class StatusRenderer(private val context: Context, private val words: Not
         val icon = R.drawable.notify_ic_status
         return when (action) {
             StatusAction.Open ->
-                NotificationCompat.Action(icon, words.text(R.string.notify_status_action_open), openIntent(OPEN_REQUEST, null, content))
+                NotificationCompat.Action(
+                    icon,
+                    words.text(R.string.notify_status_action_open),
+                    openIntent(OPEN_REQUEST, null, content),
+                )
             StatusAction.Start ->
-                NotificationCompat.Action(icon, words.text(R.string.notify_status_action_start), openIntent(START_REQUEST, null, content))
+                NotificationCompat.Action(
+                    icon,
+                    words.text(R.string.notify_status_action_start),
+                    openIntent(START_REQUEST, null, content),
+                )
             StatusAction.NewChat ->
-                NotificationCompat.Action(icon, words.text(R.string.notify_status_action_new_chat), openIntent(NEW_CHAT_REQUEST, "new_task", content))
+                NotificationCompat.Action(
+                    icon,
+                    words.text(R.string.notify_status_action_new_chat),
+                    openIntent(NEW_CHAT_REQUEST, "new_task", content),
+                )
             StatusAction.StopReply ->
                 NotificationCompat.Action(
                     icon,
@@ -122,7 +161,11 @@ public class StatusRenderer(private val context: Context, private val words: Not
                         context,
                         STOP_REPLY_REQUEST,
                         Intent(FrozenExtras.ACTION_STATUS).apply {
-                            component = FrozenComponents.of(context, FrozenComponents.STATUS_ACTION_RECEIVER)
+                            component =
+                                FrozenComponents.of(
+                                    context,
+                                    FrozenComponents.STATUS_ACTION_RECEIVER,
+                                )
                             data = targetUri(FrozenExtras.STOP_REPLY_URI, content)
                             putExtra(FrozenExtras.EXTRA_STATUS_ACTION, StatusAction.StopReply.wire)
                             putStatusConversation(content.conversation)
@@ -138,7 +181,8 @@ public class StatusRenderer(private val context: Context, private val words: Not
                         context,
                         STOP_SERVER_REQUEST,
                         Intent(FrozenExtras.ACTION_STOP_SERVER).apply {
-                            component = FrozenComponents.of(context, FrozenComponents.SERVER_SERVICE)
+                            component =
+                                FrozenComponents.of(context, FrozenComponents.SERVER_SERVICE)
                         },
                         PendingIntent.FLAG_IMMUTABLE,
                     ),
@@ -147,7 +191,10 @@ public class StatusRenderer(private val context: Context, private val words: Not
     }
 
     public companion object {
-        /** Request codes copied from the Flutter renderer (content 0, Open 10, Start 11, New chat 12, Stop reply 13). */
+        /**
+         * Request codes copied from the Flutter renderer (content 0, Open 10, Start 11, New chat
+         * 12, Stop reply 13).
+         */
         public const val CONTENT_REQUEST: Int = 0
         public const val OPEN_REQUEST: Int = 10
         public const val START_REQUEST: Int = 11
