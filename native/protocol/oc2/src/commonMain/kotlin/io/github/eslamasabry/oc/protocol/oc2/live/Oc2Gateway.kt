@@ -44,7 +44,7 @@ internal class Oc2Gateway(
     random: Random = Random.Default,
     initialDialect: Oc2Dialect? = null,
 ) : ServerGateway, ServerOperationsGateway, CorrelatedPromptGateway, SessionSelectionGateway, StagedRevertGateway,
-    LocatedFileGateway, LocatedVcsGateway, WebSearchGateway, LocatedManagedShellGateway {
+    LocatedFileGateway, LocatedVcsGateway, WebSearchGateway, LocatedManagedShellGateway, ApiRouteGateway {
     private val ids = Oc2ClientIds(clock, random)
     private val dialect = MutableStateFlow(initialDialect)
     private val negotiation = Mutex()
@@ -1031,6 +1031,22 @@ internal class Oc2Gateway(
             }
         }
         return response
+    }
+
+    /**
+     * An optional `/api` route with its own origin and Basic credentials (no location query: its routes name their session) (the active-context inspector,
+     * session export/import). Any status is an answer; a mutation is one request and never retried.
+     */
+    override suspend fun apiRoute(method: String, path: String, jsonBody: String?): Outcome<ApiRouteReply> {
+        val verb = HttpMethod.parse(method.uppercase())
+        return net.exchangeAnswer({
+            request(path, verb)
+            header(HttpHeaders.Accept, "application/json")
+            if (jsonBody != null) {
+                contentType(ContentType.Application.Json)
+                setBody(jsonBody)
+            }
+        }) { reply -> ApiRouteReply(reply.status.value, reply.bodyAsText().takeIf { it.isNotEmpty() }) }
     }
 
     // ---- Stable-line features and operations (new files Oc2Operations / Oc2WebSearch / Oc2HistoryMigration /

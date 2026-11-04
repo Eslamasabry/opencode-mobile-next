@@ -46,7 +46,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitInlineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.frame.ExitGlyph
 import io.github.eslamasabry.oc.ui.kit.frame.KitExitGlyph
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
@@ -130,7 +130,7 @@ public fun KitDetailsFold(
             Column(
                 Modifier
                     .fillMaxWidth()
-                    .background(colors.surface1, KitShapeId.Code.toShape())
+                    .background(colors.surface1, KitShapeId.Code.shape())
                     .padding(Space.S3.dp)
                     .testTag("kit-details-body"),
                 verticalArrangement = Arrangement.spacedBy(Space.S2.dp),

@@ -78,7 +78,11 @@ object PreviewBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    fun http(): HttpClientFactory = HttpClientFactory(OkHttpEngineFactory())
+    fun http(trace: io.github.eslamasabry.oc.engine.diagnostics.perf.PerfTrace): HttpClientFactory =
+        HttpClientFactory(
+            OkHttpEngineFactory(),
+            listOf(io.github.eslamasabry.oc.engine.diagnostics.perf.HttpSpanRecorder(trace, "app")),
+        )
 
     @Provides @SingleIn(AppScope::class) fun random(): Random = SecureRandom().asKotlinRandom()
 }

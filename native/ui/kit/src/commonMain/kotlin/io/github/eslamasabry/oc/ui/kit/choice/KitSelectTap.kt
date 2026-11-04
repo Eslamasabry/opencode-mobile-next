@@ -16,7 +16,7 @@ import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitFillIndication
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -51,7 +51,7 @@ internal fun Modifier.kitSelectTap(
     }
     val base =
         this.sizeIn(minWidth = tokens.minTarget.dp, minHeight = tokens.minTarget.dp)
-            .clip(shape.toShape())
+            .clip(shape.shape())
             .semantics { enabled.reason?.let { stateDescription = it } }
     return if (role == Role.Checkbox || role == Role.Switch) {
         base.toggleable(

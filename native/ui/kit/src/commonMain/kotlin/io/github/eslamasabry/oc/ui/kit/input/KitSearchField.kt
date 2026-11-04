@@ -65,7 +65,7 @@ import io.github.eslamasabry.oc.ui.kit.chip.KitChipTone
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitPartGlyphs
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.motion.KitPresence
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -157,7 +157,7 @@ public fun KitSearchField(
         val back = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
         NavigationBackHandler(state = back, isBackEnabled = true, onBackCompleted = { state.clearText() })
     }
-    val shape = KitShapeId.Button.toShape()
+    val shape = KitShapeId.Button.shape()
     val text = LocalKitTypography.current.style(TypeRole.Body).copy(color = if (enabled) colors.text1 else colors.text3)
     Column(modifier.fillMaxWidth()) {
         Row(

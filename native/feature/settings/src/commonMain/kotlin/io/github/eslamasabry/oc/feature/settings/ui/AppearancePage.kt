@@ -5,26 +5,41 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.settings.presentation.AppearanceUi
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
 import io.github.eslamasabry.oc.feature.settings.presentation.SurfaceStyle
+import io.github.eslamasabry.oc.ui.design.color.Accents
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
+import io.github.eslamasabry.oc.ui.design.style.Corners
+import io.github.eslamasabry.oc.ui.design.tokens.Density
+import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.text.AppTextSize
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoice
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceList
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
+import io.github.eslamasabry.oc.ui.kit.choice.KitSwatch
+import io.github.eslamasabry.oc.ui.kit.choice.KitSwatchGrid
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.appearanceAccentMatchShort
+import io.github.eslamasabry.oc.ui.words.res.appearanceAskAccent
 import io.github.eslamasabry.oc.ui.words.res.appearanceAskMode
+import io.github.eslamasabry.oc.ui.words.res.appearanceAskShape
+import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneCorners
+import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneReset
+import io.github.eslamasabry.oc.ui.words.res.appearanceShapeSpacing
+import io.github.eslamasabry.oc.ui.words.res.kitSwatchInUse
 import io.github.eslamasabry.oc.ui.words.res.appearanceAskMotion
 import io.github.eslamasabry.oc.ui.words.res.appearanceAskStyle
 import io.github.eslamasabry.oc.ui.words.res.appearanceAskTheme
@@ -40,7 +55,8 @@ import org.jetbrains.compose.resources.stringResource
 /**
  * I04, one page (plan 06 K4): light or dark, the colour pack (most used first, "See all 31 themes" for the rest), the
  * five styles and Motion. Every choice applies at once (no Apply). Saver holds Style and Motion and says so.
- * Text size is the last question (B-KIT-059). Fine-tune, accent, glow and the guided first visit are S4-APPEAR's.
+ * Text size is the last question (B-KIT-059). Accent is a swatch grid (B-KIT-049) and Fine-tune is Corners and Spacing
+ * over the style's own (B-KIT-017). Glow and the guided first visit are S4-APPEAR's.
  */
 @Composable
 internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActions) {
@@ -79,6 +95,23 @@ internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActio
         )
     }
 
+    KitSectionLabel(stringResource(Res.string.appearanceAskAccent))
+    Box(gutter) {
+        val dark = LocalKitColors.current.dark
+        val inUse = stringResource(Res.string.kitSwatchInUse)
+        val match = stringResource(Res.string.appearanceAccentMatchShort)
+        KitSwatchGrid(
+            label = stringResource(Res.string.appearanceAskAccent),
+            inUseLabel = inUse,
+            modifier = Modifier.testTag("appearance-accent"),
+            swatches =
+                listOf(KitSwatch("match", match, null, ui.accent == null, onPressed = { actions.onAccent(null) })) +
+                    Accents.swatches.map { sw ->
+                        KitSwatch(sw.id, accentWords(sw.id), Color(sw.of(dark).v), ui.accent == sw.id, onPressed = { actions.onAccent(sw.id) })
+                    },
+        )
+    }
+
     // A style the app does not draw would be a choice that changes nothing: listed only where it is drawn.
     if (ui.styles) {
         KitSectionLabel(stringResource(Res.string.appearanceAskStyle))
@@ -91,6 +124,36 @@ internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActio
             onSelect = actions::onStyle,
         )
         if (ui.heldBySaver) KitGroupNote(stringResource(Res.string.appearanceSaverHoldsStyle))
+
+        KitSectionLabel(stringResource(Res.string.appearanceAskShape))
+        val held = if (ui.heldBySaver) KitEnabled.Disabled(stringResource(Res.string.appearanceSaverHoldsStyle)) else KitEnabled.Enabled
+        Box(gutter) {
+            KitSegmented(
+                segments = Corners.entries.map { KitSegment(it, cornersWords(it)) },
+                selected = ui.corners,
+                semanticsLabel = stringResource(Res.string.appearanceFineTuneCorners),
+                modifier = Modifier.testTag("appearance-corners"),
+                enabled = held,
+                onChange = actions::onCorners,
+            )
+        }
+        Box(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp).padding(top = Space.S2.dp)) {
+            KitSegmented(
+                segments = Density.entries.map { KitSegment(it, spacingWords(it)) },
+                selected = ui.spacing,
+                semanticsLabel = stringResource(Res.string.appearanceShapeSpacing),
+                modifier = Modifier.testTag("appearance-spacing"),
+                enabled = held,
+                onChange = actions::onSpacing,
+            )
+        }
+        if (ui.fineTuned && !ui.heldBySaver) {
+            KitRow(
+                title = stringResource(Res.string.appearanceFineTuneReset, styleWords(ui.style)),
+                modifier = Modifier.testTag("appearance-fine-tune-reset"),
+                onClick = actions::onResetFineTune,
+            )
+        }
     }
 
     KitSectionLabel(stringResource(Res.string.appearanceAskMotion))

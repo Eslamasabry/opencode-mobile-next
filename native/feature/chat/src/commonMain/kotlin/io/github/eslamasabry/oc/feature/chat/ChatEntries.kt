@@ -12,7 +12,9 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
+import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.feature.chat.composer.ChatPromptsDoor
+import io.github.eslamasabry.oc.feature.chat.context.ActiveContextModel
 import io.github.eslamasabry.oc.feature.chat.cards.ChatCards
 import io.github.eslamasabry.oc.feature.chat.cards.LocalChatCards
 import io.github.eslamasabry.oc.feature.chat.cards.ModelCardSlotHost
@@ -34,6 +36,7 @@ import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.PreviewRoute
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.activeContextTitle
 import io.github.eslamasabry.oc.ui.words.res.devPreviewMenu
 import org.jetbrains.compose.resources.stringResource
 
@@ -51,6 +54,7 @@ public class ChatEntries(
     private val environment: KitChatEnvironment,
     private val inbox: ComposerInbox,
     private val cards: ChatCards,
+    private val registry: ConnectionRegistry,
     private val navigator: AppNavigator,
     private val readers: Set<KitReplyReader>,
 ) : EntryInstaller {
@@ -77,6 +81,11 @@ public class ChatEntries(
                         }
                     navigator.open(PreviewRoute.Ports.from(route.ref, texts))
                 }, testTag = "chat-dev-preview")
+            // B-CHAT-001..003: the inspector of what the next turn reads; offered only where the server has the route.
+            val activeContext = remember(route.ref) { ActiveContextModel(route.ref, registry) }
+            DisposableEffect(activeContext) { onDispose { activeContext.close() } }
+            val inspect =
+                KitLineAction(stringResource(Res.string.activeContextTitle), activeContext::open, testTag = "chat-active-context")
             val prompts = remember(route.ref) { ChatPromptsDoor(route.ref, inbox, navigator) }
             // P12-CHAT-CARDS: the conversation's agent cards, read by the transcript's card slot.
             val cardModel = remember(route.ref) { cards.open(route.ref) }
@@ -91,7 +100,8 @@ public class ChatEntries(
                         composerHost,
                         requests = slot,
                         requestActions = requests,
-                        extraActions = listOf(preview),
+                        extraActions = listOfNotNull(preview, inspect.takeIf { activeContext.available() }),
+                        activeContext = activeContext,
                         prompts = prompts,
                         facts = facts,
                         onOpenSession = vm::openSession,

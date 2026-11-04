@@ -19,13 +19,17 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.action.KitWorkingMark
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
@@ -109,6 +113,24 @@ public fun KitButton(
     val easedFill by animateColorAsState(fill, specs.quick(), label = "kit-button-fill")
     val easedWords by animateColorAsState(words, specs.quick(), label = "kit-button-words")
     val ink = if (role == KitButtonRole.Primary && !destructive) TextTone.OnAccent else TextTone.Primary
+    // The style decides the face (B-KIT-043..045); Solid keeps the fill above. A tertiary button has no face.
+    val look =
+        if (role == KitButtonRole.Tertiary) {
+            null
+        } else {
+            kitSurfaceLook(
+                KitSurfaceInput(
+                    role = SurfaceRole.Control,
+                    shape = KitShapeId.Button,
+                    level = SurfaceLevel.Surface3,
+                    ownFill = easedFill,
+                    color = if (role == KitButtonRole.Primary && on) easedFill else null,
+                    disabled = !on,
+                    action = true,
+                ),
+            )
+        }
+    val wordsColor = look?.words?.takeIf { on } ?: easedWords
     val minHeight = if (role == KitButtonRole.Tertiary) tokens.minTarget else tokens.buttonHeight
     val pad = if (role == KitButtonRole.Tertiary) Space.S2 else Space.S6
     Row(
@@ -127,16 +149,16 @@ public fun KitButton(
                     if (working) disabled()
                     if (semanticsLabel != null) contentDescription = semanticsLabel
                 }
-                .background(easedFill)
+                .then(if (look != null) look.modifier else Modifier.background(easedFill))
                 .padding(horizontal = pad.dp),
         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         when {
-            working -> KitWorkingMark(easedWords, size = tokens.smallIcon.dp)
-            icon != null -> KitGlyph(icon, easedWords, tokens.smallIcon.dp)
+            working -> KitWorkingMark(wordsColor, size = tokens.smallIcon.dp)
+            icon != null -> KitGlyph(icon, wordsColor, tokens.smallIcon.dp)
         }
-        KitButtonWords(label, easedWords, maxLines)
+        KitButtonWords(label, wordsColor, maxLines)
     }
 }
 

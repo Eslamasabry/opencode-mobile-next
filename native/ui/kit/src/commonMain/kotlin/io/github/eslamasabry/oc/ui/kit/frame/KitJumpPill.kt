@@ -39,7 +39,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitPartGlyphs
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotionState
 import io.github.eslamasabry.oc.ui.kit.motion.KitPace
@@ -126,7 +126,7 @@ public fun KitJumpPill(
 private fun PillFace(label: String, onClick: () -> Unit, modifier: Modifier, edge: KitJumpEdge) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
-    val shape = KitShapeId.Pill.toShape()
+    val shape = KitShapeId.Pill.shape()
     Row(
         modifier
             .testTag("kit-jump-pill")

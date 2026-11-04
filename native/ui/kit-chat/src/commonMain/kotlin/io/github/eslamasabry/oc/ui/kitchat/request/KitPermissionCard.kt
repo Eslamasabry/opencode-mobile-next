@@ -32,7 +32,7 @@ import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -74,7 +74,7 @@ public fun KitPermissionCard(
 ) {
     require(enabled || disabledReason != null) { "KitPermissionCard: a card that cannot answer must say why" }
     val colors = LocalKitColors.current
-    val shape = KitShapeId.Card.toShape()
+    val shape = KitShapeId.Card.shape()
     val reason = if (enabled) null else disabledReason
     Column(
         modifier
@@ -109,7 +109,7 @@ public fun KitPermissionCard(
             if (!subject.isNullOrEmpty()) {
                 Box(
                     Modifier.fillMaxWidth()
-                        .clip(KitShapeId.Code.toShape())
+                        .clip(KitShapeId.Code.shape())
                         .background(colors.ground)
                         .padding(horizontal = Space.S3.dp, vertical = Space.S2.dp),
                 ) {
@@ -161,7 +161,7 @@ private fun Answers(
 private fun SecondaryAnswer(label: String, onClick: () -> Unit, enabled: Boolean, reason: String?, modifier: Modifier) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
-    val shape = KitShapeId.Button.toShape()
+    val shape = KitShapeId.Button.shape()
     KitTappable(
         onClick = onClick,
         modifier =

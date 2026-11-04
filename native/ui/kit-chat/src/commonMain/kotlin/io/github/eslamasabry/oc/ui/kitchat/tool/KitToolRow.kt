@@ -39,6 +39,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 
@@ -125,7 +126,16 @@ private fun StepLine(view: KitToolView, opened: Boolean?) {
         modifier = Modifier.fillMaxWidth().padding(vertical = Space.S1.dp),
         verticalAlignment = Alignment.Top,
     ) {
-        KitToolGlyph(view.kind, colors.text2, glyph, Modifier.padding(top = Space.S1.dp / 2))
+        // B-KIT-036: a running step's node carries the step light (one 2 s lap; still under reduced motion).
+        Box(Modifier.padding(top = Space.S1.dp / 2), contentAlignment = Alignment.Center) {
+            KitToolGlyph(view.kind, colors.text2, glyph)
+            KitStepLight(
+                state = if (view.status == KitToolStatus.Running) KitStepLightState.Working else KitStepLightState.Idle,
+                color = colors.accent,
+                size = glyph,
+                animate = !LocalKitMotion.current.reduced,
+            )
+        }
         Spacer(Modifier.width(Space.S3.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.S1.dp / 2)) {
             KitText(

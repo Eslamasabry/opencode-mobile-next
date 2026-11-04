@@ -30,7 +30,7 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
@@ -99,7 +99,7 @@ private fun SidebarItem(d: KitNavDestination, chosen: Boolean, onClick: () -> Un
             Modifier
                 .fillMaxWidth()
                 .heightIn(min = LocalKitTokens.current.minTarget.dp)
-                .then(if (chosen) Modifier.background(colors.surface3, KitShapeId.Button.toShape()) else Modifier)
+                .then(if (chosen) Modifier.background(colors.surface3, KitShapeId.Button.shape()) else Modifier)
                 .padding(horizontal = Space.S3.dp, vertical = Space.S2.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),

@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
+import io.github.eslamasabry.oc.feature.chat.context.ActiveContextModel
+import io.github.eslamasabry.oc.feature.chat.context.ActiveContextSheet
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -200,6 +202,8 @@ public fun ChatScreen(
     onOpenSession: ((String) -> Unit)? = null,
     header: ChatHeaderSlot? = null,
     replyReader: KitReplyReader? = null,
+    /** B-CHAT-001..003: the active-context inspector this conversation opens from its bar (null where the server has none). */
+    activeContext: ActiveContextModel? = null,
 ) {
     var contextOpen by remember { mutableStateOf(false) }
     KitBackGuard(enabled = state.guardBack, onBack = actions::leaveRequested)
@@ -429,6 +433,7 @@ public fun ChatScreen(
                 reads = replyReader != null,
             )
             ChatContextSheet(facts.context, contextOpen) { contextOpen = false }
+            if (activeContext != null) ActiveContextSheet(activeContext)
             SelectTextSheet(state.select, actions)
             PictureSheet(state.picture, actions)
             KitConfirm(

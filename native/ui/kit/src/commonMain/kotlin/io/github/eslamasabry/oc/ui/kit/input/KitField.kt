@@ -38,6 +38,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.Color
+import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceLook
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
@@ -68,7 +76,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitPartGlyphs
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
@@ -301,7 +309,8 @@ private fun FieldBox(
             color = if (on) colors.text1 else colors.text3,
             textDirection = if (technical) TextDirection.Ltr else TextDirection.Content,
         )
-    val shape = KitShapeId.Tile.toShape()
+    val shape = KitShapeId.Tile.shape()
+    val fieldLook = rememberFieldLook(colors.surface1, focused || hasError)
     val edge =
         when {
             hasError -> colors.text1
@@ -352,8 +361,14 @@ private fun FieldBox(
             .fillMaxWidth()
             .heightIn(min = tokens.minTarget.dp)
             .clip(shape)
-            .background(colors.surface1)
-            .border(if (focused || hasError) 2.dp else 1.dp, edge, shape)
+            .then(
+                // The style draws the field (B-KIT-043..045); Solid keeps the surface1 fill and the edge above.
+                if (fieldLook.isSolid) {
+                    Modifier.background(colors.surface1).border(if (focused || hasError) 2.dp else 1.dp, edge, shape)
+                } else {
+                    fieldLook.look.modifier
+                },
+            )
             .padding(horizontal = Space.S3.dp, vertical = Space.S3.dp)
     val decorator: @Composable (inner: @Composable () -> Unit) -> Unit = { inner ->
         Box(Modifier.fillMaxWidth()) {
@@ -535,3 +550,13 @@ private fun CheckingLine() {
 }
 
 private const val SECRET_DOT = "\u2022"
+
+private class FieldLook(val look: KitSurfaceLook, val isSolid: Boolean)
+
+@Composable
+private fun rememberFieldLook(ownFill: Color, selected: Boolean): FieldLook {
+    val style = LocalKitStyle.current
+    val look =
+        kitSurfaceLook(KitSurfaceInput(SurfaceRole.Field, KitShapeId.Tile, SurfaceLevel.Surface1, ownFill = ownFill, selected = selected))
+    return FieldLook(look, style.style == Style.Solid)
+}

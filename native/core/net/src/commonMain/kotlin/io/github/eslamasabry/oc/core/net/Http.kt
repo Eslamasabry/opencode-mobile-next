@@ -153,7 +153,11 @@ public object TransportFailures {
  * One connection's Ktor client (plan 04 §3.3): no redirects, no retry plugin, no content negotiation, no logging
  * plugin, status codes as values. Closing it closes the engine and releases it (plan 04 §3.1).
  */
-public class HttpClientFactory(private val engines: EngineFactory) {
+public class HttpClientFactory(
+    private val engines: EngineFactory,
+    /** Attached to every client this factory builds (B-BUILD-026: the diagnostics tracer). */
+    private val observers: List<HttpCallObserver> = emptyList(),
+) {
     public fun create(spec: TransportSpec): NetClient {
         val engine = engines.create(spec)
         val client = HttpClient(engine) {
@@ -170,7 +174,7 @@ public class HttpClientFactory(private val engines: EngineFactory) {
         return NetClient(client, engines::classify) {
             engine.close()
             engines.release(engine)
-        }
+        }.also { net -> observers.forEach { net.attach(it) } }
     }
 
     public companion object {
@@ -189,7 +193,17 @@ public class NetClient(
      * One request, one answer. A non-2xx status becomes its [StatusMapping] failure; any error becomes a
      * [TransportFailures] failure for the method's [CallKind]. Cancellation is rethrown. Nothing here retries.
      */
-    public suspend fun <T> exchange(build: HttpRequestBuilder.() -> Unit, read: suspend (HttpResponse) -> T): Outcome<T> {
+    public suspend fun <T> exchange(build: HttpRequestBuilder.() -> Unit, read: suspend (HttpResponse) -> T): Outcome<T> =
+        exchangeWith(build, read, mapStatus = true)
+
+    /**
+     * Like [exchange], but any HTTP status is an answer for [read] to decode (a 404 body names its own error tag); only
+     * a transport error is a failure. For optional routes whose absence and whose "not found" mean different things.
+     */
+    public suspend fun <T> exchangeAnswer(build: HttpRequestBuilder.() -> Unit, read: suspend (HttpResponse) -> T): Outcome<T> =
+        exchangeWith(build, read, mapStatus = false)
+
+    private suspend fun <T> exchangeWith(build: HttpRequestBuilder.() -> Unit, read: suspend (HttpResponse) -> T, mapStatus: Boolean): Outcome<T> {
         val builder = HttpRequestBuilder().apply(build)
         val kind = CallKind.of(builder.method)
         val watch: List<HttpCallEnd> = observers.load().mapNotNull { observer ->
@@ -201,7 +215,7 @@ public class NetClient(
             http.prepareRequest(builder).execute { response ->
                 status = response.status.value
                 bytes = response.headers[HttpHeaders.ContentLength]?.toLongOrNull()
-                if (!response.status.isSuccess()) {
+                if (mapStatus && !response.status.isSuccess()) {
                     Outcome.Failed(StatusMapping.failureFor(response.status.value))
                 } else {
                     Outcome.Ok(read(response))

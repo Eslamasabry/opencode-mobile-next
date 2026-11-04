@@ -5,6 +5,8 @@ import io.github.eslamasabry.oc.ui.design.text.AppTextSize
 import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.design.style.Corners
+import io.github.eslamasabry.oc.ui.design.tokens.Density
 
 /** Everything a person can do on the Settings pages. Each call names its target (rule 15). */
 public interface SettingsActions {
@@ -31,6 +33,18 @@ public interface SettingsActions {
     public fun onStyle(style: SurfaceStyle)
 
     public fun onMotion(motion: MotionLevel)
+
+    /** Appearance › Corners: the person's choice over the style's own (B-KIT-017). */
+    public fun onCorners(corners: Corners) {}
+
+    /** Appearance › Spacing: the person's choice over the style's own. */
+    public fun onSpacing(spacing: Density) {}
+
+    /** Appearance › Reset to the style's defaults: Corners and Spacing back to the style's own. */
+    public fun onResetFineTune() {}
+
+    /** Appearance › Accent: a swatch id, or null for Match theme (B-KIT-049). */
+    public fun onAccent(id: String?) {}
 
     public fun onReadAloud(on: Boolean)
 

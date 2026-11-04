@@ -41,7 +41,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.workRefresh
@@ -174,7 +174,7 @@ private fun BoxScope.RefreshIndicator(state: PullToRefreshState, refreshing: Boo
                 scaleY = scaleX
             }
             .size(disc)
-            .background(colors.surface2, KitShapeId.Circle.toShape())
+            .background(colors.surface2, KitShapeId.Circle.shape())
             .drawWithCache {
                 val stroke = 2.dp.toPx()
                 val inset = size.minDimension * 0.28f

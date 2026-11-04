@@ -26,3 +26,36 @@ internal object ShadeReplyAnswers {
                 }
         }
 }
+
+/**
+ * B-BUILD-027: the prompt timeline (sent → accepted → first token → turn done) fed by the real send path and the live
+ * stream of every connection (delivery's `PromptTracing` port). Spans carry ids and timings only.
+ */
+@dev.zacsweers.metro.ContributesIntoSet(dev.zacsweers.metro.AppScope::class, binding = dev.zacsweers.metro.binding<io.github.eslamasabry.oc.engine.delivery.PromptTracing>())
+@dev.zacsweers.metro.Inject
+class AppPromptTracing(trace: io.github.eslamasabry.oc.engine.diagnostics.perf.PerfTrace) :
+    io.github.eslamasabry.oc.engine.delivery.PromptTracing {
+    private val timeline = io.github.eslamasabry.oc.engine.diagnostics.perf.PromptTimeline(trace)
+
+    override fun sent(sessionId: String) = timeline.sent(sessionId)
+
+    override fun accepted(sessionId: String, error: Boolean) = timeline.accepted(sessionId, error)
+
+    override fun message(sessionId: String, messageId: String, assistant: Boolean) =
+        timeline.observe(io.github.eslamasabry.oc.engine.diagnostics.perf.PromptSignal.Message(sessionId, messageId, assistant))
+
+    override fun part(sessionId: String, messageId: String, kind: String) =
+        timeline.observe(io.github.eslamasabry.oc.engine.diagnostics.perf.PromptSignal.Part(sessionId, messageId, kind))
+
+    override fun delta(sessionId: String) =
+        timeline.observe(io.github.eslamasabry.oc.engine.diagnostics.perf.PromptSignal.Delta(sessionId))
+
+    override fun busy(sessionId: String) =
+        timeline.observe(io.github.eslamasabry.oc.engine.diagnostics.perf.PromptSignal.Busy(sessionId))
+
+    override fun idle(sessionId: String) =
+        timeline.observe(io.github.eslamasabry.oc.engine.diagnostics.perf.PromptSignal.Idle(sessionId))
+
+    override fun error(sessionId: String) =
+        timeline.observe(io.github.eslamasabry.oc.engine.diagnostics.perf.PromptSignal.Error(sessionId))
+}

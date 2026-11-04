@@ -28,7 +28,7 @@ import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.content.foundation.contentAssert
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.toKitColors
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -84,7 +84,7 @@ private fun QrCode(matrix: QrMatrix, label: String, modifier: Modifier) {
         val maxPx = with(density) { (if (constraints.hasBoundedWidth) maxWidth else QrRules.MAX_SIDE_DP.dp).toPx() }
         val sidePx = QrRules.sidePx(maxPx, matrix.size, density.density)
         val side: Dp = with(density) { sidePx.toDp() }
-        val shape = KitShapeId.Code.toShape()
+        val shape = KitShapeId.Code.shape()
         Canvas(
             Modifier
                 .testTag(KIT_QR_TAG)

@@ -16,6 +16,9 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
 import io.github.eslamasabry.oc.core.data.lane.WriterLanes
 import io.github.eslamasabry.oc.core.domain.ServerGateway
+import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
+import io.github.eslamasabry.oc.core.domain.events.RunOutcome
+import io.github.eslamasabry.oc.core.model.transcript.Role
 import io.github.eslamasabry.oc.core.model.ModelSelection
 import io.github.eslamasabry.oc.core.model.PromptAgentMention
 import io.github.eslamasabry.oc.core.model.PromptAttachment
@@ -71,8 +74,10 @@ public class ConnectionDelivery(
     clock: Clock,
     stores: Set<DeliveryStorage>,
     dispatchers: AppDispatchers,
+    tracers: Set<PromptTracing> = emptySet(),
     private val interactiveSendChecks: Set<InteractiveSendCheck> = emptySet(),
 ) {
+    private val tracing: PromptTracing? = tracers.firstOrNull()
     private val running = MutableStateFlow<Set<ConversationRef>>(emptySet())
     private val stopped = MutableStateFlow<Set<ConversationRef>>(emptySet())
     public val stoppedByPerson: kotlinx.coroutines.flow.StateFlow<Set<ConversationRef>> = stopped
@@ -87,7 +92,7 @@ public class ConnectionDelivery(
     }
 
     private val link =
-        GatewaySendLink(profile.id, profile.origin.toString(), gateway) { admission(profile) }
+        GatewaySendLink(profile.id, profile.origin.toString(), gateway, tracing) { admission(profile) }
     private val connection =
         object : DeliveryConnection {
             override val link = MutableStateFlow<SendLink?>(this@ConnectionDelivery.link)
@@ -95,6 +100,7 @@ public class ConnectionDelivery(
         }
 
     init {
+        tracing?.let { trace -> scope.launch { gateway.events.project.collect { feed(trace, it.event) } } }
         var connects = gateway.events.connects.value
         var status = gateway.events.status.value
         scope.launch {
@@ -104,7 +110,7 @@ public class ConnectionDelivery(
                         connects = n
                         status = s
                         connection.link.value =
-                            GatewaySendLink(profile.id, profile.origin.toString(), gateway) {
+                            GatewaySendLink(profile.id, profile.origin.toString(), gateway, tracing) {
                                 admission(profile)
                             }
                     }
@@ -152,6 +158,19 @@ public class ConnectionDelivery(
             clock,
             scope,
         )
+    }
+
+    private fun feed(trace: PromptTracing, event: GatewayEvent) {
+        when (event) {
+            is GatewayEvent.MessageUpserted ->
+                trace.message(event.message.sessionId, event.message.id, event.message.role == Role.Assistant)
+            is GatewayEvent.PartUpserted -> trace.part(event.part.sessionId, event.part.messageId, event.part.rawType)
+            is GatewayEvent.PartDelta -> trace.delta(event.sessionId.raw)
+            is GatewayEvent.RunStarted -> trace.busy(event.sessionId.raw)
+            is GatewayEvent.RunEnded ->
+                if (event.outcome is RunOutcome.Failed) trace.error(event.sessionId.raw) else trace.idle(event.sessionId.raw)
+            else -> Unit
+        }
     }
 
     public fun running(ref: ConversationRef, busy: Boolean) {

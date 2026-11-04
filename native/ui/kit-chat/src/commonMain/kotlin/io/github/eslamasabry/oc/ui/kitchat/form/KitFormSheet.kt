@@ -28,7 +28,7 @@ import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 
@@ -116,7 +116,7 @@ public fun KitFormCard(
     error: String? = null,
 ) {
     val colors = LocalKitColors.current
-    val shape = KitShapeId.Card.toShape()
+    val shape = KitShapeId.Card.shape()
     Column(
         modifier
             .widthIn(max = 700.dp)

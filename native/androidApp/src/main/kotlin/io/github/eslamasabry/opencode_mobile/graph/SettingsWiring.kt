@@ -234,7 +234,7 @@ class AndroidSettingsHost(
                     systemMotionOff = scale == 0f,
                     diagnostics = true,
                     opens = OPENS,
-                    surfaceStyles = false,
+                    surfaceStyles = true,
                     transcriptDisplay = false,
                 )
             }
@@ -246,7 +246,7 @@ class AndroidSettingsHost(
                     dynamicColour = Build.VERSION.SDK_INT >= 31,
                     diagnostics = true,
                     opens = OPENS,
-                    surfaceStyles = false,
+                    surfaceStyles = true,
                     transcriptDisplay = false,
                 ),
             )

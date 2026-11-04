@@ -131,3 +131,17 @@ public interface LocatedFileGateway {
 public interface LocatedVcsGateway {
     public suspend fun workingTreeAt(location: ServerLocation): Outcome<ImmutableList<FileDiff>>
 }
+
+/** One answer from an optional `/api` route: the HTTP [status] and the body text (null when the body was empty). */
+public class ApiRouteReply(public val status: Int, public val body: String?) {
+    override fun toString(): String = "ApiRouteReply($status)" // the body can hold conversation text: never printed
+}
+
+/**
+ * Optional `/api` routes that have no typed gateway method (the active-context inspector, session export/import). The
+ * gateway adds its own origin and credentials; [path] starts under `/api`. Any HTTP status is an answer; only a
+ * transport problem is a failure. A mutation that may have reached the server is DispatchUncertain and never retried.
+ */
+public interface ApiRouteGateway {
+    public suspend fun apiRoute(method: String, path: String, jsonBody: String? = null): Outcome<ApiRouteReply>
+}
