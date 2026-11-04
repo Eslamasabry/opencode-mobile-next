@@ -7,19 +7,28 @@ import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metro.binding
+import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
+import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
+import io.github.eslamasabry.oc.core.common.attempt
+import io.github.eslamasabry.oc.core.common.failed
+import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentArchitecture
+import io.github.eslamasabry.oc.engine.agents.catalog.AgentAvailability
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
 import io.github.eslamasabry.oc.engine.agents.install.AgentInstaller
 import io.github.eslamasabry.oc.engine.agents.install.AgentSetupPhase
 import io.github.eslamasabry.oc.engine.agents.install.InstallRefusal
 import io.github.eslamasabry.oc.engine.agents.install.InstallStart
+import io.github.eslamasabry.oc.engine.agents.probe.AgentAuthScripts
+import io.github.eslamasabry.oc.engine.agents.probe.AuthScriptAction
 import io.github.eslamasabry.oc.engine.agents.removal.AgentRemoval
 import io.github.eslamasabry.oc.engine.agents.removal.AgentRemovalRunner
 import io.github.eslamasabry.oc.engine.agents.removal.RemovalReceipt
@@ -46,6 +55,8 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -53,7 +64,8 @@ import org.json.JSONObject
 
 /**
  * The Agents hub reads the real shared payloads and removes only catalog-owned files, keeping
- * profile homes.
+ * profile homes. "Check phone agents" also runs the explicit read-only sign-in probe for the active
+ * profile: no helper, sign-in or installer is started.
  */
 @SingleIn(AppScope::class)
 @Inject
@@ -63,6 +75,7 @@ class AppPhoneAgents(
     private val dispatchers: AppDispatchers,
     private val stores: PreviewStores,
     private val setupJobs: NativeAgentSetupJobs,
+    appScope: AppCoroutineScope,
 ) : PhoneAgents {
     private val mutable = MutableStateFlow(PhoneAgentsState())
     override val state = mutable.asStateFlow()
@@ -70,6 +83,37 @@ class AppPhoneAgents(
     private val linux by lazy { BuiltinLinux.get(app) }
     private val catalog = AgentCatalog.builtIn
     private val installers = HashMap<ProfileId, AgentInstaller>()
+
+    /** Sign-in states from the last explicit probe, valid only for [probedOwner]. */
+    @Volatile private var probedOwner: ProfileId? = null
+    @Volatile private var probed: Map<String, PhoneAgentStatus> = emptyMap()
+
+    init {
+        appScope.launch {
+            combine(stores.profiles.activeId, stores.profiles.profiles) { active, saved ->
+                    active to saved.any { it.id == active }
+                }
+                .collect { (active, exists) ->
+                    if (probedOwner != null && (probedOwner != active || !exists)) {
+                        probedOwner = null
+                        probed = emptyMap()
+                        mutable.value =
+                            mutable.value.copy(
+                                agents =
+                                    mutable.value.agents
+                                        .map { row ->
+                                            if (row.status == PhoneAgentStatus.Ready ||
+                                                row.status == PhoneAgentStatus.SignInNeeded ||
+                                                row.status == PhoneAgentStatus.Checking)
+                                                row.copy(status = PhoneAgentStatus.PhoneCheck)
+                                            else row
+                                        }
+                                        .toImmutableList()
+                            )
+                    }
+                }
+        }
+    }
 
     private fun installation(owner: ProfileId): AgentInstaller =
         installers.getOrPut(owner) {
@@ -126,7 +170,102 @@ class AppPhoneAgents(
             SecureBytes { count -> ByteArray(count).also(SecureRandom()::nextBytes) },
         )
 
-    override suspend fun refresh(): Outcome<Unit> = lane.withLock { refreshLocked() }
+    override suspend fun refresh(): Outcome<Unit> = lane.withLock {
+        when (val read = refreshLocked()) {
+            is Outcome.Failed -> read
+            is Outcome.Ok -> probeLocked()
+        }
+    }
+
+    /** Explicit read-only sign-in checks for installed payloads: unknown results keep known state. */
+    private suspend fun probeLocked(): Outcome<Unit> {
+        val owner =
+            stores.profiles.activeId.value ?: return Failure.Refused(RefusalReason.StaleScope).failed()
+        val previous = if (probedOwner == owner) probed else emptyMap()
+        probedOwner = owner
+        probed = previous
+        fun current() =
+            stores.profiles.activeId.value == owner && stores.profiles.profile(owner) != null
+        val rows = mutable.value.agents.toMutableList()
+        val targets =
+            rows.indices.filter { index ->
+                val agent = catalog.byId(AgentId(rows[index].id))
+                rows[index].status == PhoneAgentStatus.PhoneCheck &&
+                    agent != null &&
+                    agent.availability != AgentAvailability.Hidden
+            }
+        for (index in targets) rows[index] = rows[index].copy(status = PhoneAgentStatus.Checking)
+        mutable.value = mutable.value.copy(agents = rows.toImmutableList())
+        var probeFailure: Failure? = null
+        for (index in targets) {
+            val agent = catalog.byId(AgentId(rows[index].id)) ?: continue
+            if (!current()) return stale()
+            val script = AgentAuthScripts.script(agent, AuthScriptAction.Probe)
+            val answer =
+                withContext(dispatchers.io) {
+                    attempt({ Failure.Unexpected() }) {
+                        if (!linux.installed || script == null) null
+                        else
+                            linux.agentAuthProbe(
+                                mapOf(
+                                    "profileId" to owner.raw,
+                                    "agentId" to agent.id.raw,
+                                    "action" to "probe",
+                                    "script" to AgentAuthScripts.forProfile(owner, script),
+                                    "timeoutSeconds" to if (agent.id == AgentId.CLAUDE) 65 else 10,
+                                )
+                            )
+                    }
+                }
+            if (!current()) return stale()
+            val projection = (answer as? Outcome.Ok)?.value
+            if (projection == null) {
+                probeFailure = Failure.Unavailable(FeatureId("builtinLinux"))
+            } else if (
+                projection["state"] == "error" &&
+                    projection["error"] != "notInstalled" &&
+                    projection["error"] != "probeUnsupported"
+            ) {
+                probeFailure =
+                    if (projection["error"] == "timedOut") Failure.TimedOut()
+                    else Failure.ComputerDidNotAnswer()
+            }
+            val status =
+                when (projection?.get("state")) {
+                    "signedIn" -> PhoneAgentStatus.Ready
+                    "signedOut" -> PhoneAgentStatus.SignInNeeded
+                    else ->
+                        when (projection?.get("error")) {
+                            "notInstalled" -> PhoneAgentStatus.NotInstalled
+                            // No private status protocol (gemini, qwen, goose, omp): a check on
+                            // the phone is needed; it is not a failed probe.
+                            "probeUnsupported" -> PhoneAgentStatus.PhoneCheck
+                            else -> previous[agent.id.raw] ?: PhoneAgentStatus.PhoneCheck
+                        }
+                }
+            probed = probed + (agent.id.raw to status)
+            rows[index] = rows[index].copy(status = status)
+            mutable.value = mutable.value.copy(agents = rows.toImmutableList())
+        }
+        return probeFailure?.failed() ?: Unit.ok()
+    }
+
+    private fun stale(): Outcome<Unit> {
+        probedOwner = null
+        probed = emptyMap()
+        mutable.value =
+            mutable.value.copy(
+                agents =
+                    mutable.value.agents
+                        .map {
+                            if (it.status == PhoneAgentStatus.Checking)
+                                it.copy(status = PhoneAgentStatus.PhoneCheck)
+                            else it
+                        }
+                        .toImmutableList()
+            )
+        return Failure.Refused(RefusalReason.StaleScope).failed()
+    }
 
     private suspend fun refreshLocked(): Outcome<Unit> {
         when (val warm = stores.warm()) {
@@ -169,7 +308,11 @@ class AppPhoneAgents(
                                     agent.id.raw,
                                     agent.name,
                                     when (present) {
-                                        true -> PhoneAgentStatus.PhoneCheck
+                                        true ->
+                                            probed[agent.id.raw]
+                                                ?.takeIf {
+                                                    probedOwner == stores.profiles.activeId.value
+                                                } ?: PhoneAgentStatus.PhoneCheck
                                         false -> PhoneAgentStatus.NotInstalled
                                         null -> PhoneAgentStatus.Unavailable
                                     },
