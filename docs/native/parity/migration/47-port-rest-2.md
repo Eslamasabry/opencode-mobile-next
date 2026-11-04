@@ -1,6 +1,6 @@
 # Migration 47 — Flutter platform, Linux and protocol (part 2)
 
-Counts: **already there 0 · ported now 0 · not needed 20 · blocked 0** (20/78 reviewed).
+Counts: **already there 7 · ported now 0 · not needed 25 · blocked 0** (32/78 reviewed).
 
 Base: `b6c30a59983a145a4d9cf0bcc3d1ec0295c0d6bc`, branch `p12x/47-port-rest-2`.
 Implementation review only; no tests or device qualification. Binding design: `docs/design/native-rewrite-2026-11-01/plan/01-architecture-decision.md` and `03-architecture-modules.md`.
@@ -27,8 +27,16 @@ Implementation review only; no tests or device qualification. Binding design: `d
 - `lib/termux/scripts/status_scripts.dart` — not needed: Reports managed Termux installation/setup/storage/diagnostics state; ADR 01 D7 removes its setup and running pages, with migrate-out using its own inspection contract.
 - `lib/termux/scripts/tools_script.dart` — not needed: Storage scan/cache cleanup and process management target external Termux; those pages are explicitly dropped by plan 07 F17/X1 under ADR 01 D7, while built-in Linux tools remain separate.
 
+- `lib/orchestration/adapters/fixture/project_fixture/apply.dart` — not needed: simulated AI Team commands, fabricated commits/checks and demo task transitions; AI Team is deferred by binding 01 §12 D6.
+- `lib/orchestration/adapters/fixture/project_fixture/helpers.dart` — not needed: demo plan generation, synthetic findings, simulated review/merge requests and fixture bookkeeping for deferred AI Team (01 §12 D6).
+- `lib/orchestration/adapters/fixture/project_fixture/seed.dart` — not needed: canned servers, roles, projects, spend and timeline for a simulated AI Team workspace; no real native runtime may be seeded with this data (01 §12 D6).
+- `lib/platform/browser_context_io.dart` — not needed: the constant secure-context answer is Dart conditional-import plumbing; native Android storage has no browser-origin security context (ADR §1, §7.3).
+- `lib/platform/browser_context_web.dart` — not needed: window.isSecureContext serves Flutter web, a platform outside the native rewrite's Android/desktop/iOS design (ADR §1).
+
 ## Compile-only checkpoints
 
 Batch 1: documentation only; Gradle skipped because this commit changes no Kotlin or Gradle file. No tests written or executed. No APK, push or release.
 
 Batch 2: ten retired Termux-path dispositions; documentation only, so Gradle skipped.
+
+Batch 3: seven existing update/voice implementations and five fixture/browser dispositions; documentation only, so Gradle skipped.
