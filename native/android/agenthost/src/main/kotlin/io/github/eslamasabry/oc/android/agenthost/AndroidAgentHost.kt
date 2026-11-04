@@ -363,10 +363,10 @@ enum class AuthRequestAction(val wire: String) {
     Probe("probe"),
     SignOut("logout");
 
-    /** Every probe 10 s, sign-out 20 s (`PhoneAgentAuthRequest.deadline`). */
+    /** Claude's probe 65 s (cold start under PRoot), other probes 10 s, sign-out 20 s. */
     fun timeoutSeconds(agentId: String): Int =
         when (this) {
-            Probe -> 10
+            Probe -> if (agentId == "claude") 65 else 10
             SignOut -> 20
         }
 }

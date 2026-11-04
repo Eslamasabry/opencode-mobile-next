@@ -164,7 +164,7 @@ public class AgentAuth(
     }
 
     private suspend fun probeOnce(agent: AgentId): AuthProjection {
-        val timeout = PROBE_TIMEOUT
+        val timeout = if (agent == AgentId.CLAUDE) CLAUDE_PROBE_TIMEOUT else PROBE_TIMEOUT
         val outcome =
             withTimeoutOrNull(timeout) { host.auth(owner, agent, AuthAction.Probe, timeout) }
                 ?: return AuthProjectionJson.failed(AuthProbeError.TimedOut)
@@ -198,7 +198,7 @@ public class AgentAuth(
     }
 
     public companion object {
-        public val CLAUDE_PROBE_TIMEOUT: Duration = 10.seconds
+        public val CLAUDE_PROBE_TIMEOUT: Duration = 65.seconds
         public val PROBE_TIMEOUT: Duration = 10.seconds
         public val SIGN_OUT_TIMEOUT: Duration = 20.seconds
 
