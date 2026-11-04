@@ -6,8 +6,7 @@ import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
  * The Paseo base (plan 04 §11.4): a port of Dart `paseoServerCapabilities` (lib/paseo/gateway/capabilities.dart),
  * written as the flags that differ from the core defaults. Runtime facts are applied by [paseoCapabilities].
  *
- * Deviation (S3-PASEO report D3): the P1 extras this unit does not port yet are OFF here, so no screen offers them:
- * files, changes (diff), worktrees, terminal and sub-agent sessions (S5-PASEOP1 turns them on with their code).
+ * Files, changes, worktrees and terminal are on (S5-PASEOP1); so are read-only sub-agent sessions.
  */
 public object PaseoCapabilities {
     public val Base: ServerCapabilities = ServerCapabilities(
@@ -58,13 +57,14 @@ public object PaseoCapabilities {
         globalEventStream = false,
         worktreeReset = false,
         cliSessionResume = false,
-        // TODO(S5-PASEOP1): Dart has these on; their gateways are P1 extras.
-        fileBrowsing = false,
-        terminal = false,
-        sessionDiff = false,
-        worktreeCreate = false,
-        worktreeBrowsing = false,
-        subagentSessions = false,
+        // Files, Changes, Worktrees and Terminal (gateway/PaseoWorkspace.kt, PaseoTerminals.kt, PaseoOperations.kt).
+        fileBrowsing = true,
+        terminal = true,
+        sessionDiff = true,
+        worktreeCreate = true,
+        worktreeBrowsing = true,
+        // Claude Code's sub-agents as read-only child sessions (gateway/PaseoSubAgents.kt); they take no replies.
+        subagentSessions = true,
     )
 }
 

@@ -78,6 +78,8 @@
 :feature:review	F	(slice brief names the agent)	slice-4
 :feature:voice	F	(slice brief names the agent)	slice-12
 :feature:setup	F	build-runtime-b	parity
+:protocol:codex	F	build-protocols	parity-p12
+:feature:computer	F	build-protocols	parity-p12
 :engine:linuxsetup	F	build-runtime-c (P12-BUILD-RUNTIME-C)	parity-p12
 :engine:setupassist	F	build-runtime-c (P12-BUILD-RUNTIME-C)	parity-p12
 :engine:termuxhost	F	build-runtime-c (P12-BUILD-RUNTIME-C)	parity-p12

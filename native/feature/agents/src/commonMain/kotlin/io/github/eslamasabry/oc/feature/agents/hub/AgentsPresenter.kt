@@ -25,6 +25,7 @@ public class AgentsPresenter(
     private val phone: PhoneAgents,
     private val onBack: () -> Unit,
     private val openChat: (ConversationRef) -> Unit,
+    private val openComputerPage: (ProfileId) -> Unit = {},
 ) : AgentsActions {
     private val local = MutableStateFlow(AgentsUi())
 
@@ -104,6 +105,8 @@ public class AgentsPresenter(
             is Outcome.Failed -> failed(AgentsIssue.StartFailed, result.failure)
         }
     }
+
+    override fun openComputer(id: ProfileId): Unit = openComputerPage(id)
 
     override fun installPhone(id: String): Unit = operation {
         if (phone.state.value.agents.none { it.id == id && it.installable }) return@operation
