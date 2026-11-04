@@ -30,4 +30,5 @@
     <string name="andr_notifyPermissionRefused">Notifications are blocked. Allow notifications in Android settings, then turn on the background connection.</string>
     <string name="andr_notifyEnableFailed">The background connection did not start. Open Background settings to try again.</string>
     <string name="andr_pauseBackground">Pause background</string>
+    <string name="andr_notifySaveFailed">Your choice could not be saved, so nothing was turned on. Try again.</string>
 </resources>

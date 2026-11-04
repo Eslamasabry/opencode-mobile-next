@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.phone.presentation
 
+import io.github.eslamasabry.oc.engine.runtime.storage.HostStorageAvailability
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.pace.Pacer
 import io.github.eslamasabry.oc.engine.runtime.budget.ProcessBudget
@@ -166,7 +167,22 @@ public class ThisPhoneModel(
         scope.launch {
             try {
                 val measured = reader.read(includeBuiltinHost)
-                local.update { it.copy(storage = measured) }
+                local.update { current ->
+                    // A plain free-space refresh keeps sizes the person asked to measure earlier.
+                    val earlier = current.storage
+                    val kept =
+                        if (
+                            measured.builtinAvailability == HostStorageAvailability.NotRequested &&
+                                earlier != null &&
+                                earlier.builtinAvailability != HostStorageAvailability.NotRequested
+                        )
+                            measured.copy(
+                                builtinHost = earlier.builtinHost,
+                                builtinAvailability = earlier.builtinAvailability,
+                            )
+                        else measured
+                    current.copy(storage = kept)
+                }
             } finally {
                 local.update { it.copy(measuringStorage = false) }
             }

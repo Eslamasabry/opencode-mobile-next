@@ -254,7 +254,8 @@ public class ProjectsPickerViewModel(
     override fun usePhoneFolder() {
         val path = state.value.phonePath ?: return
         if (
-            state.value.phoneLoading ||
+            path == PHONE_ROOT ||
+                state.value.phoneLoading ||
                 state.value.phoneFailure != null ||
                 current()?.phoneFolders != true
         )

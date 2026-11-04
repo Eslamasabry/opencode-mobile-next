@@ -194,6 +194,9 @@ public fun ThisPhoneScreen(state: ThisPhoneUi, actions: ThisPhoneActions) {
                     title = stringResource(Res.string.andrStorageTitle),
                     message =
                         when {
+                            // Unknown only after a reading finished; the first one is still running.
+                            storage == null && state.measuringStorage ->
+                                stringResource(Res.string.andrStorageMeasuring)
                             bytes == null -> stringResource(Res.string.andrStorageUnknown)
                             storage?.pressure == StoragePressure.NearlyFull ->
                                 stringResource(

@@ -13,9 +13,11 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.stringList
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
 import io.github.eslamasabry.oc.core.domain.facet
+import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.profiles.LoadedProfile
+import io.github.eslamasabry.oc.engine.runtime.switching.ManagedLocalServer
 import io.github.eslamasabry.oc.feature.chats.presentation.ConversationServer
 import io.github.eslamasabry.oc.feature.chats.presentation.ConversationServers
 import io.github.eslamasabry.oc.feature.chats.presentation.NoConversationServers
@@ -91,8 +93,13 @@ class LiveProjectServers(
                         name,
                         graph.session.server,
                         graph.operations(),
+                        // B-ANDR-051: only the app-managed OpenCode on this phone (Flutter
+                        // isManagedPhoneProfile), never any loopback tunnel to another machine.
                         graph.profile.managedOnPhone ||
-                            graph.profile.origin.host in setOf("127.0.0.1", "localhost", "::1"),
+                            graph.profile.backend == BackendKind.OpenCode2 &&
+                                graph.profile.origin.toString().let {
+                                    ManagedLocalServer.isTermux(it) || ManagedLocalServer.isBuiltin(it)
+                                },
                     )
                 }
             }

@@ -276,8 +276,9 @@ class PreviewRuntime(
         eventJobs.remove(id)?.cancel()
         listings.remove(id)
         rebuildFeed()
-        application.platformHub.onExplicitDisconnect()
-        if (profiles.activeId.value == id) profiles.setActive(null) else Unit.ok()
+        application.platformHub.onExplicitDisconnect(id)
+        // Flutter disconnect(keepActive: true): the server stays the chosen one, just offline.
+        Unit.ok()
     }
 
     override suspend fun createConversation(profile: ProfileId?): Outcome<ConversationRef> =

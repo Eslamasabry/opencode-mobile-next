@@ -36,7 +36,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        pendingEntry = intent
+        // A recreate (language switch, rotation) redelivers the original launch extras: route only a
+        // fresh launch so a share or tap is not applied twice.
+        if (savedInstanceState == null) pendingEntry = intent
         // B14 (QA wave 1): after super.onCreate, so a recreate (language switch) keeps edge-to-edge
         // too.
         enableEdgeToEdge()

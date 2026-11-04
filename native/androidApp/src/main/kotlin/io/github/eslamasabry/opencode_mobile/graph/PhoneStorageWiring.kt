@@ -121,6 +121,10 @@ class AndroidPhoneFolders(
                                 throw NoSuchFileException(path)
                             if (!Files.isDirectory(directory, LinkOption.NOFOLLOW_LINKS))
                                 throw NoSuchFileException(path)
+                            // A link swapped in after confined() must not lead outside storage.
+                            val root = Paths.get(PhoneStorageFolders.ROOT).toRealPath()
+                            if (!directory.toRealPath().startsWith(root))
+                                throw AccessDeniedException(path)
                             Files.newDirectoryStream(directory).use { children ->
                                 children
                                     .map { child ->
@@ -139,6 +143,8 @@ class AndroidPhoneFolders(
     override suspend fun list(path: String): Outcome<ImmutableList<PhoneFolderUi>> =
         folders.list(path).map { rows ->
             rows
+                // Flutter's browser hides dot folders (.thumbnails and the like).
+                .filterNot { it.name.startsWith(".") }
                 .map {
                     PhoneFolderUi(it.name, it.path, it.inside?.joinToString(", ")?.ifBlank { null })
                 }

@@ -30,4 +30,5 @@
     <string name="andr_notifyPermissionRefused">الإشعارات محظورة. اسمح بالإشعارات في إعدادات Android، ثم شغّل الاتصال في الخلفية.</string>
     <string name="andr_notifyEnableFailed">لم يبدأ الاتصال في الخلفية. افتح إعدادات الخلفية للمحاولة مرة أخرى.</string>
     <string name="andr_pauseBackground">إيقاف الاتصال في الخلفية مؤقتًا</string>
+    <string name="andr_notifySaveFailed">تعذّر حفظ اختيارك، لذلك لم يُشغَّل أي شيء. حاول مرة أخرى.</string>
 </resources>

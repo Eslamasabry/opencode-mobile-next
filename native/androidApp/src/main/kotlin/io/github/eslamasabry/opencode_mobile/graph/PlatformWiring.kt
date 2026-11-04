@@ -355,7 +355,10 @@ class PlatformHub(
                     val graph = registry.live.value[ref.profileId]
                     val stillRunning =
                         runtime.snapshot.value.items.any {
-                            it.ref == ref && it.status == ChatStatus.Running
+                            // A run waiting on a permission or question is still a run to stop.
+                            it.ref == ref &&
+                                (it.status == ChatStatus.Running ||
+                                    it.status == ChatStatus.NeedsYou)
                         }
                     if (graph == null || !stillRunning) Outcome.Failed(Failure.NotFound())
                     else graph.session.server.stop(ref.sessionId).map { Unit }
@@ -672,8 +675,10 @@ class PlatformHub(
     /**
      * Explicit disconnect withdraws the launcher promises; a lifecycle suspension never calls this.
      */
-    suspend fun onExplicitDisconnect() =
+    suspend fun onExplicitDisconnect(profile: ProfileId) =
         kotlinx.coroutines.withContext(mainDispatcher) {
+            // The launcher shows the active server only: another server's disconnect leaves it.
+            if (profile != stores.profiles.activeId.value) return@withContext
             if (PinnedShortcuts.withdrawAll(application)) publishedPins = null
             AttentionTileCache.clear(application)
         }

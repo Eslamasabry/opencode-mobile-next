@@ -17,4 +17,5 @@
     <string name="andrStorageMeasuring">جارٍ قياس مساحة التخزين…</string>
     <string name="andrStorageHostSizes">لينكس والأدوات: %1$s · المشاريع: %2$s. هذه أحجام الملفات وليست مساحة التطبيق كاملة.</string>
     <string name="andrStorageHostUnknown">تعذّر قياس أحجام ملفات لينكس. ملفاتك محفوظة.</string>
+    <string name="andrStorageRootHere">لا يمكن أن تكون وحدة التخزين الداخلية نفسها مشروعًا. افتح مجلدًا بداخلها.</string>
 </resources>

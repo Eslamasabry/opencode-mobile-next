@@ -211,9 +211,13 @@ public class PauseReceiptStore(
     }
 
     private fun read(): PauseReceipt? {
-        val phase = file.phase() ?: PauseReceipt.PHASE_NONE
-        val reason = file.reason() ?: PauseReason.None.wire
+        val storedPhase = file.phase()
+        val storedReason = file.reason()
         val at = file.at()
+        // A receipt that lost its phase but kept a reason or time is damaged, not empty (B-ANDR-015).
+        if (storedPhase == null && (storedReason != null || at != 0L)) return null
+        val phase = storedPhase ?: PauseReceipt.PHASE_NONE
+        val reason = storedReason ?: PauseReason.None.wire
         if (phase !in PHASES || PauseReason.fromWire(reason) == null || at < 0L) return null
         if (phase != PauseReceipt.PHASE_NONE && at <= 0L) return null
         if (phase == PauseReceipt.PHASE_PAUSED && reason == PauseReason.None.wire) return null

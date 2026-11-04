@@ -17,4 +17,5 @@
     <string name="andrStorageMeasuring">Measuring storage…</string>
     <string name="andrStorageHostSizes">Linux and tools: %1$s · Projects: %2$s. These are file sizes, not all app storage.</string>
     <string name="andrStorageHostUnknown">Linux file sizes could not be measured. Your files are kept.</string>
+    <string name="andrStorageRootHere">Internal storage itself cannot be a project. Open a folder inside.</string>
 </resources>

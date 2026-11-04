@@ -6,6 +6,7 @@ import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.android.background.FirstReplyNotifyOffer
+import io.github.eslamasabry.oc.android.background.NotifyOfferFailure
 import io.github.eslamasabry.oc.android.background.LiveModeError
 import io.github.eslamasabry.oc.android.notifications.NotifyWords
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
@@ -59,6 +60,7 @@ class AndroidAppNotices(
     private val mutableOffer = MutableStateFlow<ReplyNotificationOffer?>(null)
     override val replyOffer: StateFlow<ReplyNotificationOffer?> = mutableOffer.asStateFlow()
     private var offer: FirstReplyNotifyOffer? = null
+    private var offerPending = false
     private var offerJob: Job? = null
     private var started = false
 
@@ -189,7 +191,11 @@ class AndroidAppNotices(
                             val completed = mutableSetOf<String>()
                             val ended = mutableSetOf<String>()
                             graph.session.server.events.all.collect { envelope ->
-                                if (registry.live.value[profile] !== graph || offer != null)
+                                if (
+                                    registry.live.value[profile] !== graph ||
+                                        offer != null ||
+                                        offerPending
+                                )
                                     return@collect
                                 val session =
                                     when (val event = envelope.event) {
@@ -229,8 +235,15 @@ class AndroidAppNotices(
                                         }
                                         else -> return@collect
                                     }
-                                if (session in completed && session in ended)
-                                    showOffer(background.notifyOffer(profile.raw))
+                                if (session in completed && session in ended) {
+                                    // Two servers finishing together must not both claim an offer.
+                                    offerPending = true
+                                    try {
+                                        showOffer(background.notifyOffer(profile.raw))
+                                    } finally {
+                                        offerPending = false
+                                    }
+                                }
                                 // Only transient completion metadata is retained, bounded for a
                                 // long-lived connection.
                                 if (completed.size > 256) completed.clear()
@@ -254,9 +267,13 @@ class AndroidAppNotices(
                         state.failure != null ->
                             ReplyNotificationOffer(
                                 words.text(
-                                    if (state.failureError == LiveModeError.NotificationsRequired)
-                                        R.string.andr_notifyPermissionRefused
-                                    else R.string.andr_notifyEnableFailed
+                                    when {
+                                        state.failure == NotifyOfferFailure.SaveFailed ->
+                                            R.string.andr_notifySaveFailed
+                                        state.failureError == LiveModeError.NotificationsRequired ->
+                                            R.string.andr_notifyPermissionRefused
+                                        else -> R.string.andr_notifyEnableFailed
+                                    }
                                 ),
                                 words.text(R.string.andr_firstRunNotifyAccept),
                                 words.text(R.string.andr_notifyDismiss),

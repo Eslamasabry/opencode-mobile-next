@@ -48,6 +48,7 @@ import io.github.eslamasabry.oc.ui.words.res.andrStorageFolderMissing
 import io.github.eslamasabry.oc.ui.words.res.andrStorageFoldersEmpty
 import io.github.eslamasabry.oc.ui.words.res.andrStorageInternal
 import io.github.eslamasabry.oc.ui.words.res.andrStorageUp
+import io.github.eslamasabry.oc.ui.words.res.andrStorageRootHere
 import io.github.eslamasabry.oc.ui.words.res.andrStorageUseFolder
 import io.github.eslamasabry.oc.ui.words.res.andrStorageWorking
 import io.github.eslamasabry.oc.ui.words.res.chatsFilterChatCount
@@ -292,13 +293,21 @@ private fun PhoneFolderSheet(state: ProjectsPickerUi, actions: ProjectsPickerAct
                 stringResource(Res.string.andrStorageUseFolder),
                 actions::usePhoneFolder,
                 enabled =
-                    if (!state.phoneLoading && state.phoneFailure == null)
+                    if (
+                        !state.phoneLoading &&
+                            state.phoneFailure == null &&
+                            state.phoneParent != null
+                    )
                         io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled.Enabled
                     else
                         io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled.Disabled(
                             stringResource(
-                                if (state.phoneLoading) Res.string.andrStorageWorking
-                                else Res.string.andrStorageFolderFailed
+                                when {
+                                    state.phoneLoading -> Res.string.andrStorageWorking
+                                    state.phoneFailure != null -> Res.string.andrStorageFolderFailed
+                                    // B-ANDR-051: the storage root is never a project (Flutter).
+                                    else -> Res.string.andrStorageRootHere
+                                }
                             )
                         ),
             ),

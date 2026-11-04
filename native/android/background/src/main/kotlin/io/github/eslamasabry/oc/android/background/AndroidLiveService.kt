@@ -32,6 +32,12 @@ public class LiveServiceSignals {
      */
     @Volatile public var lastStartFailure: String? = null
 
+    /**
+     * The last start request outlived its bounded wait and was reported as not started; a late
+     * foreground promise for it must stop instead of running with live mode off and no owner.
+     */
+    @Volatile public var startAbandoned: Boolean = false
+
     public companion object {
         public const val START_REFUSED: String = "refused"
         public const val START_RECEIPT_UNSAVED: String = "receiptUnsaved"
@@ -106,6 +112,7 @@ public class AndroidLiveServicePort(
                 return refused(ServiceRefusal.NOTIFICATION_DENIED)
             }
             signals.lastStartFailure = null
+            signals.startAbandoned = false
             try {
                 starter.start()
             } catch (_: IllegalStateException) {
@@ -117,6 +124,7 @@ public class AndroidLiveServicePort(
             withTimeoutOrNull(ackWait) {
                 while (!signals.active && signals.lastStartFailure == null) delay(ackPoll)
             }
+            if (!signals.active) signals.startAbandoned = true
             val status = statusOf(signals.active)
             return ServiceReply.Ok(
                 if (signals.active) status
@@ -196,6 +204,10 @@ public class LiveServiceBody(
     public suspend fun onForegroundResult(promised: Boolean): Boolean {
         if (!promised) {
             signals.lastStartFailure = LiveServiceSignals.START_REFUSED
+            return false
+        }
+        if (signals.startAbandoned) {
+            signals.startAbandoned = false
             return false
         }
         if (!receipts.confirmedStarted(persistOptIn = false)) {

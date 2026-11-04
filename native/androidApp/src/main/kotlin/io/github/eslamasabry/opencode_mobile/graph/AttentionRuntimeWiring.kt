@@ -129,7 +129,19 @@ class AttentionRuntime(
      * Used synchronously to keep Android's foreground promise before its activation
      * acknowledgement.
      */
-    fun notification(): Notification = render(latest)
+    /**
+     * The service's first row. Channels are ensured here (idempotent): the service may start before
+     * the platform hub has created them, and a missing channel fails startForeground.
+     */
+    fun notification(): Notification {
+        io.github.eslamasabry.oc.android.notifications
+            .ChannelRegistry(
+                application.getSystemService(android.app.NotificationManager::class.java),
+                words,
+            )
+            .ensure()
+        return render(latest)
+    }
 
     private fun controller(id: ProfileId): StatusController =
         controllers.getOrPut(id) {
@@ -308,9 +320,10 @@ class AttentionRuntime(
                                     },
                                 )
                             }
-                        }
+                        } else return@collect // streaming text and other parts: row unchanged
                     }
-                    else -> Unit
+                    // Deltas and other events do not change the row: no rebuild per streamed token.
+                    else -> return@collect
                 }
                 refresh()
             }

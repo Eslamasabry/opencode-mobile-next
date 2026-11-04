@@ -52,6 +52,8 @@ public fun networkReading(caps: NetworkCaps, defaultNetworkId: Long?): NetworkSt
     return NetworkState(
         online,
         transport,
+        // Flutter monitorNetworkPolicy: Wi-Fi counts with a VPN on top (Tailscale over Wi-Fi).
+        onWifi = caps.wifi,
         metered = !caps.notMetered,
         defaultNetworkId = defaultNetworkId,
     )
