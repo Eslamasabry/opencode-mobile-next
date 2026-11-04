@@ -18,7 +18,9 @@ import io.github.eslamasabry.oc.engine.agents.host.PaseoConfig
 import io.github.eslamasabry.oc.engine.agents.store.SecureBytes
 import io.github.eslamasabry.oc.engine.connection.*
 import io.github.eslamasabry.oc.engine.profiles.*
+import io.github.eslamasabry.oc.feature.agents.hub.AgentHandoffDrafts
 import io.github.eslamasabry.oc.feature.handoff.presentation.*
+import io.github.eslamasabry.oc.protocol.codex.CodexGateway
 import io.github.eslamasabry.oc.protocol.paseo.work.PaseoPayloadLease
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import io.github.eslamasabry.opencode_mobile.SetupRunner
@@ -260,6 +262,7 @@ class GraphAgentHandoffHost(
     private val payloads: PhonePayloadGuard,
     private val dispatchers: AppDispatchers,
     private val redactor: Redactor,
+    private val drafts: AgentHandoffDrafts,
 ) : AgentHandoffHost {
     private val linux by lazy { BuiltinLinux.get(app) }
     private val random = SecureBytes { count -> ByteArray(count).also(SecureRandom()::nextBytes) }
@@ -272,12 +275,62 @@ class GraphAgentHandoffHost(
             .takeIf { Regex("[A-Za-z0-9_-]{1,80}").matches(it) }
             ?.let(::ProfileId)
 
+    override suspend fun review(source: ConversationRef): Outcome<AgentHandoffReview?> {
+        val graph = registry.graphFor(source) ?: return stale()
+        // Codex's normal messagePage resumes/subscribes. The source-review service deliberately
+        // uses its full thread/read snapshot, including turns, and never calls messagePage.
+        val gateway = graph.session.server as? CodexGateway ?: return null.ok()
+        val revision = gateway.scopeRevision
+        val location = gateway.location.value
+        val profile = stores.profiles.profile(source.profileId) ?: return stale()
+        fun current(): Boolean =
+            registry.graphFor(source) === graph &&
+                gateway.scopeRevision == revision &&
+                gateway.location.value == location &&
+                gateway.events.status.value == StreamStatus.Connected &&
+                stores.profiles.profile(source.profileId) == profile &&
+                saved.admitting(source.profileId)
+        if (!current()) return stale()
+        val record =
+            when (val built = drafts.prepare(source.profileId, source.sessionId)) {
+                is Outcome.Failed -> return built
+                is Outcome.Ok -> built.value
+            }
+        if (!current()) return stale()
+        val id = HandoffEngine.uuidV4(random)
+        val path = ".handoff/$id/record.md"
+        val draft =
+            HandoffDraft(
+                id,
+                HandoffRecord(
+                    record.markdown,
+                    record.omittedMessages,
+                    record.redacted,
+                    record.byteLength,
+                ),
+                HandoffPrompt.initial(path),
+                path,
+            )
+        // Reviewing context is safe without a shared-filesystem attestation. It never grants a
+        // destination, creates a file, starts Claude, or offers send/link/retry commands.
+        return AgentHandoffReview(redactor.redact(graph.profile.name), draft) { text ->
+                text.split(path).joinToString(path) {
+                    redactor.opaqueTokens(redactor.redact(it))
+                }
+            }
+            .ok()
+    }
+
     override suspend fun open(source: ConversationRef): Outcome<AgentHandoffSession> {
         when (val warm = stores.warm()) {
             is Outcome.Failed -> return warm
             is Outcome.Ok -> Unit
         }
         val original = registry.graphFor(source) ?: return stale()
+        // A direct Codex endpoint provides read-only history, but no native process attestation
+        // tying its filesystem to our phone project. Its source-only draft is handled by review().
+        if (original.session.server is CodexGateway)
+            return Failure.Unavailable(FeatureId("sharedProject")).failed()
         val trustedOwner = registry.ownerOfTransient(source.profileId)
         val parent = trustedOwner ?: source.profileId
         val owner = trustedOwner ?: rawOwner(parent) ?: return stale()

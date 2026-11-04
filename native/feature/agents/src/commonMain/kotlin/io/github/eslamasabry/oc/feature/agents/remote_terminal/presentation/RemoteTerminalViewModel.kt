@@ -13,14 +13,20 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.domain.RemoteTerminalRenderSession
+import io.github.eslamasabry.oc.core.domain.RemoteTerminalRenderer
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
+import io.github.eslamasabry.oc.core.domain.TerminalCommandGateway
 import io.github.eslamasabry.oc.core.model.ServerLocation
 import io.github.eslamasabry.oc.core.model.TerminalChannel
 import io.github.eslamasabry.oc.core.model.TerminalProcess
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
+import io.github.eslamasabry.oc.engine.project.terminal.TerminalKey
+import io.github.eslamasabry.oc.engine.project.terminal.TerminalKeys
 import io.github.eslamasabry.oc.ui.kit.content.terminal.TerminalTranscript
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.LocalTerminalRoute
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,6 +39,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.yield
 
 @ContributesTo(ConnectionScope::class)
 public interface RemoteTerminalAccessors {
@@ -41,8 +48,8 @@ public interface RemoteTerminalAccessors {
 
 /**
  * The view owns only its socket. Leaving disconnects it without ending the remote process. Input is
- * never queued or replayed; reconnecting is an explicit action and obtains a new one-use ticket
- * through the gateway.
+ * batched within the current channel and never replayed; reconnecting is an explicit action and
+ * obtains a new one-use ticket through the gateway.
  */
 @Inject
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
@@ -51,6 +58,8 @@ public class RemoteTerminalViewModel(
     private val registry: ConnectionRegistry,
     private val navigator: AppNavigator,
     private val textPolicies: Set<RemoteTerminalTextPolicy>,
+    private val renderers: Set<RemoteTerminalRenderer>,
+    private val platform: io.github.eslamasabry.oc.core.domain.capabilities.PlatformCapabilities,
 ) : ViewModel(), RemoteTerminalActions {
     private val mutable = MutableStateFlow(RemoteTerminalUi())
     public val state: StateFlow<RemoteTerminalUi> = mutable.asStateFlow()
@@ -62,6 +71,9 @@ public class RemoteTerminalViewModel(
     private var watcher: Job? = null
     private var output: Job? = null
     private var channel: TerminalChannel? = null
+    private var renderer: RemoteTerminalRenderSession? = null
+    private var input: Job? = null
+    private val pending = StringBuilder()
     private val cursors = LinkedHashMap<String, Long>()
     private val transcript = TerminalTranscript()
 
@@ -98,7 +110,13 @@ public class RemoteTerminalViewModel(
                                     transcript.reset()
                                 }
                                 location = place
-                                mutable.value = RemoteTerminalUi(available = available)
+                                mutable.value =
+                                    RemoteTerminalUi(
+                                        available = available,
+                                        builtInAvailable = platform.builtinLinux,
+                                        serverName = expected.profile.name,
+                                        canRerun = operations(expected) is TerminalCommandGateway,
+                                    )
                                 if (available) load(expected, place, generation)
                             }
                     }
@@ -127,12 +145,20 @@ public class RemoteTerminalViewModel(
                 is Outcome.Failed ->
                     mutable.value.copy(busy = false, issue = RemoteTerminalIssue.Failed)
                 is Outcome.Ok ->
-                    mutable.value.copy(busy = false, terminals = result.value.take(100).map(::item))
+                    mutable.value.copy(
+                        busy = false,
+                        terminals = result.value.take(100).map(::item),
+                        selected =
+                            mutable.value.selected?.let { selected ->
+                                result.value.firstOrNull { it.id == selected.id }?.let(::item)
+                                    ?: selected
+                            },
+                    )
             }
     }
 
     private fun item(value: TerminalProcess): RemoteTerminalItem =
-        RemoteTerminalItem(value.id, value.title.take(200), value.running)
+        RemoteTerminalItem(value.id, value.title.take(200), value.running, value)
 
     override fun refresh() = command { expected, place, stamp, _ -> load(expected, place, stamp) }
 
@@ -184,7 +210,25 @@ public class RemoteTerminalViewModel(
         }
         val next = (opened as Outcome.Ok).value
         channel = next
-        mutable.value = mutable.value.copy(connected = true)
+        val rendered =
+            renderers
+                .firstOrNull()
+                ?.open(
+                    onInput = ::send,
+                    onResize = { rows, cols ->
+                        viewModelScope.launch(registry.mainContext) {
+                            if (current(expected, place, stamp) && channel === next)
+                                gateway.resizeTerminal(selected.id, rows, cols)
+                        }
+                    },
+                )
+        if (!current(expected, place, stamp) || channel !== next) {
+            if (rendered is Outcome.Ok) rendered.value.close()
+            next.close()
+            return
+        }
+        renderer = (rendered as? Outcome.Ok)?.value
+        mutable.value = mutable.value.copy(connected = true, platformView = renderer?.view)
         output =
             viewModelScope.launch(registry.mainContext) {
                 val read =
@@ -192,6 +236,7 @@ public class RemoteTerminalViewModel(
                         next.output.collect { chunk ->
                             if (!current(expected, place, stamp) || channel !== next) return@collect
                             transcript.add(chunk)
+                            renderer?.append(chunk)
                             mutable.value = mutable.value.copy(transcript = shownTranscript())
                             rememberCursor(selected.id, next.cursor)
                         }
@@ -199,6 +244,9 @@ public class RemoteTerminalViewModel(
                 if (current(expected, place, stamp) && channel === next) {
                     rememberCursor(selected.id, next.cursor)
                     channel = null
+                    pending.clear()
+                    input?.cancel()
+                    input = null
                     mutable.value =
                         mutable.value.copy(
                             connected = false,
@@ -207,30 +255,101 @@ public class RemoteTerminalViewModel(
                         )
                 }
                 attempt({ Failure.Network() }) { next.close() }
+                if (
+                    current(expected, place, stamp) &&
+                        channel == null &&
+                        mutable.value.selected?.id == selected.id
+                )
+                    load(expected, place, stamp)
             }
     }
 
     override fun send(value: String) {
-        if (
-            value.isEmpty() ||
-                value.length > 65_536 ||
-                !mutable.value.connected ||
-                mutable.value.busy
-        )
+        val currentChannel = channel ?: return
+        val expected = graph ?: return
+        val place = location ?: return
+        val stamp = generation
+        if (value.isEmpty() || value.length > 65_536 || !current(expected, place, stamp)) return
+        val typed = TerminalKeys.text(value, mutable.value.control, mutable.value.alt)
+        mutable.value = mutable.value.copy(control = false, alt = false)
+        if (pending.length + typed.length > 65_536) {
+            release()
+            mutable.value =
+                mutable.value.copy(connected = false, issue = RemoteTerminalIssue.InputUncertain)
             return
-        command { expected, place, stamp, _ ->
-            val currentChannel = channel ?: return@command
-            val sent = attempt({ Failure.Network() }) { currentChannel.write(value) }
-            if (!current(expected, place, stamp) || channel !== currentChannel) return@command
-            if (sent is Outcome.Failed) {
-                release()
-                mutable.value =
-                    mutable.value.copy(
-                        connected = false,
-                        issue = RemoteTerminalIssue.InputUncertain,
+        }
+        pending.append(typed)
+        if (input?.isActive == true) return
+        input =
+            viewModelScope.launch(registry.mainContext) {
+                yield()
+                while (
+                    pending.isNotEmpty() &&
+                        channel === currentChannel &&
+                        current(expected, place, stamp)
+                ) {
+                    val batch = pending.toString()
+                    pending.clear()
+                    val sent = attempt({ Failure.Network() }) { currentChannel.write(batch) }
+                    if (channel !== currentChannel || !current(expected, place, stamp))
+                        return@launch
+                    if (sent is Outcome.Failed) {
+                        release()
+                        mutable.value =
+                            mutable.value.copy(
+                                connected = false,
+                                issue = RemoteTerminalIssue.InputUncertain,
+                            )
+                        return@launch
+                    }
+                    yield()
+                }
+            }
+    }
+
+    override fun key(key: TerminalKey) {
+        when (key) {
+            TerminalKey.Control ->
+                mutable.value = mutable.value.copy(control = !mutable.value.control)
+            TerminalKey.Alt -> mutable.value = mutable.value.copy(alt = !mutable.value.alt)
+            else -> {
+                val bytes =
+                    TerminalKeys.bytes(
+                        key,
+                        mutable.value.control,
+                        mutable.value.alt,
+                        renderer?.applicationCursor == true,
                     )
+                mutable.value = mutable.value.copy(control = false, alt = false)
+                send(bytes)
             }
         }
+    }
+
+    override fun setAccessible(enabled: Boolean) {
+        mutable.value = mutable.value.copy(accessible = enabled)
+    }
+
+    override fun builtIn() {
+        if (platform.builtinLinux) {
+            detach()
+            navigator.open(LocalTerminalRoute)
+        }
+    }
+
+    override fun rerun() = command { expected, place, stamp, gateway ->
+        val process = mutable.value.selected?.process ?: return@command
+        val facet = gateway as? TerminalCommandGateway ?: return@command
+        if (process.running || process.command.isBlank() || process.directory.isBlank())
+            return@command
+        val result = facet.rerunTerminalCommand(process, place)
+        if (!current(expected, place, stamp)) return@command
+        if (result is Outcome.Ok) {
+            val next = item(result.value)
+            mutable.value =
+                mutable.value.copy(terminals = (mutable.value.terminals + next).takeLast(100))
+            open(expected, place, stamp, gateway, next)
+        } else mutable.value = mutable.value.copy(issue = RemoteTerminalIssue.RerunUncertain)
     }
 
     override fun interrupt(): Unit = send("\u0003")
@@ -302,7 +421,9 @@ public class RemoteTerminalViewModel(
     }
 
     private fun shownTranscript(): String =
-        textPolicies.fold(transcript.text) { text, policy -> policy.redact(text) }
+        textPolicies.fold(renderer?.transcript?.value ?: transcript.text) { text, policy ->
+            policy.redact(text)
+        }
 
     private fun rememberCursor(id: String, value: Long?) {
         if (value == null || value < 0) return
@@ -312,6 +433,14 @@ public class RemoteTerminalViewModel(
     }
 
     private fun release() {
+        pending.clear()
+        input?.cancel()
+        input = null
+        val previousRenderer = renderer
+        renderer = null
+        mutable.value = mutable.value.copy(platformView = null, control = false, alt = false)
+        if (previousRenderer != null)
+            registry.appScope.launch(registry.mainContext) { previousRenderer.close() }
         val old = channel
         channel = null
         mutable.value.selected?.id?.let { rememberCursor(it, old?.cursor) }

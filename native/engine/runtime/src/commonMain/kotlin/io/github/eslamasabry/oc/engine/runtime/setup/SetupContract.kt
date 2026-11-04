@@ -90,6 +90,8 @@ public data class SetupComponent(
     val native: Boolean = false,
     val agentUser: Boolean = false,
     val jobStep: Boolean = false,
+    /** Runs in the app, never in the Linux shell. */
+    val app: SetupAppComponent? = null,
 ) {
     /** The same component with [bytes] as its download size. */
     public fun withDownloadBytes(bytes: Long?, evidence: DownloadSize? = null): SetupComponent =
@@ -284,3 +286,22 @@ public object OpenCodeInstallFailure {
 public fun setupLogForPeople(log: String): String =
     if (!log.contains("OCTRACE")) log
     else log.split('\n').filterNot { it.contains("OCTRACE") }.joinToString("\n")
+
+/** A restart-safe app-owned setup step. Downloads retain partial files on cancellation. */
+public interface SetupAppComponent {
+    public suspend fun installed(): io.github.eslamasabry.oc.core.common.Outcome<Boolean>
+
+    public suspend fun install(
+        progress: (SetupAppProgress) -> Unit
+    ): io.github.eslamasabry.oc.core.common.Outcome<Unit>
+
+    public suspend fun cancel()
+
+    public suspend fun remove(): io.github.eslamasabry.oc.core.common.Outcome<Unit>
+}
+
+public data class SetupAppProgress(
+    val stage: String,
+    val bytesDone: Long? = null,
+    val bytesTotal: Long? = null,
+)

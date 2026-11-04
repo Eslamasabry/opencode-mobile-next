@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="linuxMigrationOfferTitle">Move %1$s from Termux</string>
+    <string name="linuxMigrationOfferBody">Copy projects into this app, or resume a saved copy. Termux stays as it is.</string>
+    <string name="linuxMigrationBytes">%1$s B</string>
+    <string name="linuxMigrationKilobytes">%1$s KB</string>
+    <string name="linuxMigrationMegabytes">%1$s MB</string>
+    <string name="linuxMigrationGigabytes">%1$s GB</string>
+</resources>

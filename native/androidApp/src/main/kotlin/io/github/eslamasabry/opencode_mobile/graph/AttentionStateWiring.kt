@@ -19,10 +19,9 @@ import io.github.eslamasabry.oc.core.domain.events.RunOutcome
 import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.core.model.StreamStatus
 import io.github.eslamasabry.oc.core.security.Redactor
-import io.github.eslamasabry.oc.engine.attention.activity.AttentionKeyStore
 import io.github.eslamasabry.oc.engine.attention.activity.AutomaticActKind
 import io.github.eslamasabry.oc.engine.attention.activity.AutomaticActivity
-import io.github.eslamasabry.oc.engine.attention.activity.AutomaticActivityRegistry
+import io.github.eslamasabry.oc.engine.attention.activity.AutomaticUndoResult
 import io.github.eslamasabry.oc.engine.attention.elsewhere.AttentionEvent
 import io.github.eslamasabry.oc.engine.attention.feed.*
 import io.github.eslamasabry.oc.engine.attention.monitor.MonitorNotifyRules
@@ -59,6 +58,7 @@ import kotlinx.serialization.json.intOrNull
 @Inject
 class AppAttentionState(
     private val stores: PreviewStores,
+    private val activities: AppAutomaticActivities,
     private val connections: ConnectionRegistry,
     private val redactor: Redactor,
     private val clock: Clock,
@@ -76,29 +76,8 @@ class AppAttentionState(
     private val graphs = mutableMapOf<ProfileId, ConnectionGraph>()
     private val jobs = mutableMapOf<ProfileId, List<Job>>()
     private val histories = mutableMapOf<ProfileId, AutomaticActivity>()
+    private val undoResults = mutableMapOf<HistoryIdentity, AutomaticUndoResult>()
     private val historyJobs = mutableMapOf<ProfileId, Job>()
-    private val historyRegistry =
-        AutomaticActivityRegistry(
-            object : AttentionKeyStore {
-                override suspend fun read(key: String): String? =
-                    (stores.prefs.get(key) as? PrefValue.Str)?.value
-
-                override suspend fun write(key: String, value: String): Boolean {
-                    val id = ProfileId(key.removePrefix("oc.automaticActivity."))
-                    if (stores.profiles.profile(id) == null) return false
-                    return stores.prefs.commit(stores.lanes.forProfile(id)) {
-                        putString(key, value)
-                    } is Outcome.Ok
-                }
-
-                override suspend fun remove(key: String): Boolean {
-                    val id = ProfileId(key.removePrefix("oc.automaticActivity."))
-                    return stores.prefs.commit(stores.lanes.forProfile(id)) { remove(key) } is
-                        Outcome.Ok
-                }
-            },
-            redactor,
-        )
 
     fun start() {
         if (started) return
@@ -119,15 +98,12 @@ class AppAttentionState(
                     for (id in (histories.keys - ids).toList()) {
                         historyJobs.remove(id)?.cancel()
                         histories.remove(id)?.dispose()
-                        historyRegistry.forgetProfile(id.raw)
+                        activities.forget(id)
+                        undoResults.keys.removeAll { it.profile == id.raw }
                     }
                     for (owner in saved) {
                         if (owner.id !in histories) {
-                            val history =
-                                historyRegistry.forProfile(owner.id.raw) {
-                                    stores.profiles.profile(owner.id) != null &&
-                                        stores.lanes.forProfile(owner.id).isAdmitting
-                                }
+                            val history = activities.forProfile(owner.id)
                             if (history != null) {
                                 histories[owner.id] = history
                                 historyJobs[owner.id] =
@@ -452,6 +428,16 @@ class AppAttentionState(
             result
         }
 
+    override suspend fun undo(identity: HistoryIdentity) =
+        withContext(dispatchers.main) {
+            val result =
+                histories[ProfileId(identity.profile)]?.undo(identity.id)
+                    ?: AutomaticUndoResult.Unavailable
+            undoResults[identity] = result
+            publish()
+            result
+        }
+
     override suspend fun acknowledge(shown: List<HistoryIdentity>): Outcome<Unit> {
         val captured = shown.toList()
         return withContext(dispatchers.main) {
@@ -530,6 +516,11 @@ class AppAttentionState(
                                             DateFormat.SHORT,
                                         )
                                         .format(Date(act.occurredAt.toEpochMilliseconds())),
+                                    undoable = history.canUndo(act.id),
+                                    undoing = act.id in history.state.value.undoing,
+                                    undoAttempted = act.undoAttempted,
+                                    undone = act.undone,
+                                    undoResult = undoResults[HistoryIdentity(owner.id.raw, act.id)],
                                 )
                         }
                 }

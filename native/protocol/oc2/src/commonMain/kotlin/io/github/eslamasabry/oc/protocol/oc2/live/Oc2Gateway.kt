@@ -48,6 +48,7 @@ internal class Oc2Gateway(
 ) :
     ServerGateway,
     ServerOperationsGateway,
+    TerminalCommandGateway,
     CorrelatedPromptGateway,
     SessionSelectionGateway,
     StagedRevertGateway,
@@ -186,6 +187,11 @@ internal class Oc2Gateway(
         arguments: List<String>,
         title: String,
     ): Outcome<TerminalProcess> = terminals().createCommandTerminal(command, arguments, title)
+
+    override suspend fun rerunTerminalCommand(
+        ended: TerminalProcess,
+        location: ServerLocation,
+    ): Outcome<TerminalProcess> = terminals().rerunTerminalCommand(ended, location)
 
     override suspend fun renameTerminal(id: String, title: String): Outcome<Unit> =
         terminals().renameTerminal(id, title)

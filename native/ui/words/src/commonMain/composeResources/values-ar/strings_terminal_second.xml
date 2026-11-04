@@ -1,0 +1,25 @@
+<resources>
+    <string name="terminalSourceBuiltIn">لينكس المدمج</string>
+    <string name="terminalSourceServer">خادم OpenCode</string>
+    <string name="terminalSourceServerRuntime">%1$s · خادم OpenCode</string>
+    <string name="terminalRerun">تشغيل الأمر مجددًا</string>
+    <string name="terminalRerunUncertain">تعذر تأكيد إعادة التشغيل. حدّث قائمة الطرفيات قبل المحاولة مجددًا.</string>
+    <string name="terminalKeyControl">Control</string>
+    <string name="terminalKeyAlt">Alt</string>
+    <string name="terminalKeyEscape">Esc</string>
+    <string name="terminalKeyTab">Tab</string>
+    <string name="terminalKeyUp">↑</string>
+    <string name="terminalKeyDown">↓</string>
+    <string name="terminalKeyLeft">←</string>
+    <string name="terminalKeyRight">→</string>
+    <string name="terminalKeyHome">Home</string>
+    <string name="terminalKeyEnd">End</string>
+    <string name="terminalKeyPageUp">صفحة لأعلى</string>
+    <string name="terminalKeyPageDown">صفحة لأسفل</string>
+    <string name="terminalKeyPipe">|</string>
+    <string name="terminalKeySlash">/</string>
+    <string name="terminalKeyBackslash">\\</string>
+    <string name="terminalKeyTilde">~</string>
+    <string name="terminalKeyMinus">−</string>
+    <string name="terminalKeyUnderscore">_</string>
+</resources>

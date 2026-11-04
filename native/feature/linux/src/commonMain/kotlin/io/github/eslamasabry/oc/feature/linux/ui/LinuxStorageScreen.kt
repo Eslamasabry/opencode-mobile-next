@@ -39,13 +39,23 @@ import io.github.eslamasabry.oc.ui.words.res.linuxMgrLoadFailedTitle
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrMeasuring
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrStorageTitle
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrStorageTotal
+import io.github.eslamasabry.oc.ui.words.res.linuxOutputError
+import io.github.eslamasabry.oc.ui.words.res.linuxOutputWarning
+import io.github.eslamasabry.oc.ui.words.res.linuxStorageScanDone
+import io.github.eslamasabry.oc.ui.words.res.linuxStorageScanIdle
+import io.github.eslamasabry.oc.ui.words.res.linuxStorageScanLog
+import io.github.eslamasabry.oc.ui.words.res.linuxStorageScanRunning
+import io.github.eslamasabry.oc.ui.words.res.termuxStorageBytesB
+import io.github.eslamasabry.oc.ui.words.res.termuxStorageBytesGb
+import io.github.eslamasabry.oc.ui.words.res.termuxStorageBytesKb
+import io.github.eslamasabry.oc.ui.words.res.termuxStorageBytesMb
 import io.github.eslamasabry.oc.ui.words.res.workspaceDismissNotice
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * LinuxRoute.Storage (Flutter LinuxStoragePage): the total, where it goes by category (projects say they are never
- * cleared from here), then "Free up space" with one row per safe cleanup and what it would give back now. Each cleanup
- * asks first and then says what it freed.
+ * LinuxRoute.Storage (Flutter LinuxStoragePage): the total, where it goes by category (projects say
+ * they are never cleared from here), then "Free up space" with one row per safe cleanup and what it
+ * would give back now. Each cleanup asks first and then says what it freed.
  */
 @Composable
 public fun LinuxStorageScreen(state: LinuxStorageUi, actions: LinuxStorageActions) {
@@ -63,9 +73,45 @@ public fun LinuxStorageScreen(state: LinuxStorageUi, actions: LinuxStorageAction
             )
         },
         width = KitScreenWidth.Reading,
-        loading = state.loading && state.report == null,
+        loading = false,
     ) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+            val scanState = state.scan.state
+            KitNotice(
+                message =
+                    when (scanState) {
+                        io.github.eslamasabry.oc.feature.linux.manager.LinuxStorageScanState
+                            .Running ->
+                            state.scan.stage?.let {
+                                stringResource(Res.string.linuxStorageScanRunning, it.title())
+                            } ?: stringResource(Res.string.linuxMgrMeasuring)
+                        io.github.eslamasabry.oc.feature.linux.manager.LinuxStorageScanState.Done ->
+                            stringResource(Res.string.linuxStorageScanDone)
+                        io.github.eslamasabry.oc.feature.linux.manager.LinuxStorageScanState
+                            .Failed -> stringResource(Res.string.linuxMgrLoadFailedTitle)
+                        io.github.eslamasabry.oc.feature.linux.manager.LinuxStorageScanState.Idle ->
+                            stringResource(Res.string.linuxStorageScanIdle)
+                    },
+                tone =
+                    if (
+                        scanState ==
+                            io.github.eslamasabry.oc.feature.linux.manager.LinuxStorageScanState
+                                .Running
+                    )
+                        StatusTone.Progress
+                    else StatusTone.Neutral,
+            )
+            if (state.scan.headings.isNotEmpty()) {
+                io.github.eslamasabry.oc.ui.kit.content.log.KitLogPanel(
+                    lines =
+                        state.scan.headings.map {
+                            io.github.eslamasabry.oc.ui.kit.content.log.KitLogLine(it.title())
+                        },
+                    title = stringResource(Res.string.linuxStorageScanLog),
+                    warningLabel = stringResource(Res.string.linuxOutputWarning),
+                    errorLabel = stringResource(Res.string.linuxOutputError),
+                )
+            }
             state.problem?.let { problem ->
                 KitErrorNotice(
                     title = stringResource(Res.string.linuxMgrLoadFailedTitle),
@@ -73,21 +119,41 @@ public fun LinuxStorageScreen(state: LinuxStorageUi, actions: LinuxStorageAction
                     retry = KitLineAction(stringResource(Res.string.commonRetry), actions::retry),
                 )
             }
-            val dismiss = KitLineAction(stringResource(Res.string.workspaceDismissNotice), actions::dismiss)
+            val dismiss =
+                KitLineAction(stringResource(Res.string.workspaceDismissNotice), actions::dismiss)
             when (val result = state.result) {
-                is CleanupResult.Freed -> KitNotice(message = stringResource(Res.string.linuxMgrCleanDone, size(result.bytes)), tone = StatusTone.Ok, dismiss = dismiss)
-                CleanupResult.Nothing -> KitNotice(message = stringResource(Res.string.linuxMgrCleanNothing), dismiss = dismiss)
+                is CleanupResult.Freed ->
+                    KitNotice(
+                        message =
+                            stringResource(Res.string.linuxMgrCleanDone, storageSize(result.bytes)),
+                        tone = StatusTone.Ok,
+                        dismiss = dismiss,
+                    )
+                CleanupResult.Nothing ->
+                    KitNotice(
+                        message = stringResource(Res.string.linuxMgrCleanNothing),
+                        dismiss = dismiss,
+                    )
                 null -> Unit
             }
-            state.actProblem?.let { KitNotice(message = it.words(), tone = StatusTone.Attention, dismiss = dismiss) }
+            state.actProblem?.let {
+                KitNotice(message = it.words(), tone = StatusTone.Attention, dismiss = dismiss)
+            }
             state.report?.let { report ->
-                KitRowGroup(label = stringResource(Res.string.linuxMgrStorageTotal, size(report.total))) {
+                KitRowGroup(
+                    label =
+                        stringResource(Res.string.linuxMgrStorageTotal, storageSize(report.total))
+                ) {
                     LinuxStorageCategory.entries.forEach { category ->
                         KitRow(
                             title = category.title(),
                             supporting = category.detail(),
                             supportingMaxLines = 2,
-                            trailing = KitRowTrailing.Value(size(report.of(category)), chevron = false),
+                            trailing =
+                                KitRowTrailing.Value(
+                                    storageSize(report.of(category)),
+                                    chevron = false,
+                                ),
                         )
                     }
                 }
@@ -101,11 +167,20 @@ public fun LinuxStorageScreen(state: LinuxStorageUi, actions: LinuxStorageAction
                             supportingMaxLines = 2,
                             trailing =
                                 when {
-                                    cleaning || bytes == null -> KitRowTrailing.Value(stringResource(Res.string.linuxMgrMeasuring), chevron = false)
-                                    bytes <= 0L -> KitRowTrailing.Value(stringResource(Res.string.linuxMgrCleanNone), chevron = false)
-                                    else -> KitRowTrailing.Value(size(bytes), chevron = true)
+                                    cleaning || bytes == null ->
+                                        KitRowTrailing.Value(
+                                            stringResource(Res.string.linuxMgrMeasuring),
+                                            chevron = false,
+                                        )
+                                    bytes <= 0L ->
+                                        KitRowTrailing.Value(
+                                            stringResource(Res.string.linuxMgrCleanNone),
+                                            chevron = false,
+                                        )
+                                    else -> KitRowTrailing.Value(storageSize(bytes), chevron = true)
                                 },
-                            enabled = !cleaning && bytes != null && bytes > 0L && state.cleaning == null,
+                            enabled =
+                                !cleaning && bytes != null && bytes > 0L && state.cleaning == null,
                             disabledReason = stringResource(Res.string.linuxMgrCleanNone),
                             onClick = { actions.askCleanup(action.id) },
                         )
@@ -122,11 +197,28 @@ public fun LinuxStorageScreen(state: LinuxStorageUi, actions: LinuxStorageAction
                     title = it.id.ask(),
                     confirmLabel = it.id.title(),
                     kind = KitConfirmKind.Destructive,
-                    body = stringResource(Res.string.linuxMgrCleanBody, size(it.bytes)),
+                    body = stringResource(Res.string.linuxMgrCleanBody, storageSize(it.bytes)),
                     consequences = listOf(stringResource(Res.string.linuxMgrCleanKept)),
                 )
             },
         onConfirm = actions::confirm,
         onCancel = actions::dismiss,
     )
+}
+
+@Composable
+private fun storageSize(bytes: Long): String {
+    val amount = io.github.eslamasabry.oc.feature.linux.presentation.LinuxSize.storage(bytes)
+    val unit =
+        when (amount.unit) {
+            io.github.eslamasabry.oc.feature.linux.presentation.StorageByteUnit.B ->
+                Res.string.termuxStorageBytesB
+            io.github.eslamasabry.oc.feature.linux.presentation.StorageByteUnit.KB ->
+                Res.string.termuxStorageBytesKb
+            io.github.eslamasabry.oc.feature.linux.presentation.StorageByteUnit.MB ->
+                Res.string.termuxStorageBytesMb
+            io.github.eslamasabry.oc.feature.linux.presentation.StorageByteUnit.GB ->
+                Res.string.termuxStorageBytesGb
+        }
+    return "⁦${stringResource(unit, amount.number)}⁩"
 }

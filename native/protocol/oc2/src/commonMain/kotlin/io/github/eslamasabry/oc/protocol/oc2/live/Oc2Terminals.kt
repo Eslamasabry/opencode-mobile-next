@@ -5,6 +5,7 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.core.common.ok
+import io.github.eslamasabry.oc.core.domain.TerminalCommandGateway
 import io.github.eslamasabry.oc.core.domain.TerminalGateway
 import io.github.eslamasabry.oc.core.model.ServerLocation
 import io.github.eslamasabry.oc.core.model.TerminalChannel
@@ -27,7 +28,7 @@ internal class Oc2Terminals(
     private val gateway: Oc2Gateway,
     private val location: ServerLocation,
     private val connect: suspend (String, Long?, ServerLocation) -> Outcome<TerminalChannel>,
-) : TerminalGateway {
+) : TerminalGateway, TerminalCommandGateway {
     private val query =
         mapOf(
             "location[directory]" to location.directory,
@@ -82,6 +83,40 @@ internal class Oc2Terminals(
                     put("command", command)
                     put("args", JsonArray(arguments.map(::JsonPrimitive)))
                     put("title", title)
+                },
+                query,
+            )
+        if (reply is Outcome.Failed) return reply
+        return parse(data((reply as Outcome.Ok).value))?.ok() ?: Failure.UnreadableReply().failed()
+    }
+
+    override suspend fun rerunTerminalCommand(
+        ended: TerminalProcess,
+        location: ServerLocation,
+    ): Outcome<TerminalProcess> {
+        if (
+            this.location != location ||
+                gateway.location.value != location ||
+                location.directory.isNullOrBlank() ||
+                ended.running ||
+                ended.command.isBlank() ||
+                ended.directory.isBlank() ||
+                listOf(ended.command, ended.directory, *ended.arguments.toTypedArray()).any {
+                    '\u0000' in it
+                } ||
+                ended.title.length > 200 ||
+                ended.title.any { it.code < 32 }
+        )
+            return Failure.Rejected(400).failed()
+        val reply =
+            gateway.json(
+                "/pty",
+                HttpMethod.Post,
+                buildJsonObject {
+                    put("command", ended.command)
+                    put("args", JsonArray(ended.arguments.map(::JsonPrimitive)))
+                    put("cwd", ended.directory)
+                    put("title", ended.title)
                 },
                 query,
             )

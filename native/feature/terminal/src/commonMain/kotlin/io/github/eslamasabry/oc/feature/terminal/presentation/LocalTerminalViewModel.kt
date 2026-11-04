@@ -10,23 +10,33 @@ import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.project.terminal.LocalShell
+import io.github.eslamasabry.oc.engine.project.terminal.LocalTerminalInputPort
 import io.github.eslamasabry.oc.engine.project.terminal.LocalTerminalPort
 import io.github.eslamasabry.oc.engine.settings.teaching.TeachingIds
 import io.github.eslamasabry.oc.engine.settings.teaching.TeachingSource
 import io.github.eslamasabry.oc.engine.settings.teaching.TipController
 import io.github.eslamasabry.oc.engine.settings.teaching.TipMoment
 import io.github.eslamasabry.oc.engine.settings.teaching.TipVisit
+import io.github.eslamasabry.oc.engine.project.terminal.TerminalKey
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.RemoteTerminalRoute
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+public data class TerminalServerSource(val id: ProfileId, val name: String)
+
 public data class LocalTerminalUi(
+    val servers: List<TerminalServerSource> = emptyList(),
     val shells: List<LocalShell> = emptyList(),
     val selected: Int? = null,
     val working: Boolean = false,
@@ -36,6 +46,12 @@ public data class LocalTerminalUi(
     val confirmStop: Int? = null,
     val linkTip: Boolean = false,
 )
+
+public interface LocalTerminalNativeActions {
+    public fun key(key: TerminalKey)
+
+    public fun server(id: ProfileId)
+}
 
 public interface LocalTerminalActions {
     public fun create()
@@ -72,15 +88,28 @@ public class LocalTerminalViewModel(
     private val port: LocalTerminalPort,
     private val nav: AppNavigator,
     private val teaching: TeachingSource,
-) : ViewModel(), LocalTerminalActions {
+    private val registry: ConnectionRegistry,
+) : ViewModel(), LocalTerminalActions, LocalTerminalNativeActions {
+    private val sources =
+        registry.live.flatMapLatest { graphs ->
+            if (graphs.isEmpty()) flowOf(emptyList())
+            else
+                combine(graphs.values.map { it.session.capabilities }) { caps ->
+                    graphs.values
+                        .zip(caps)
+                        .filter { it.second.terminal }
+                        .map { TerminalServerSource(it.first.profile.id, it.first.profile.name) }
+                }
+        }
     private val local = MutableStateFlow(LocalTerminalUi())
     private var tips: TipController? = null
     private val tipVisit = TipVisit()
     private var keyboardVisible = true
     public val state: StateFlow<LocalTerminalUi> =
-        combine(port.shells, local) { shells, ui ->
+        combine(port.shells, local, sources) { shells, ui, servers ->
                 ui.copy(
                     shells = shells,
+                    servers = servers,
                     selected =
                         ui.selected?.takeIf { id -> shells.any { it.id == id } }
                             ?: shells.lastOrNull()?.id,
@@ -126,11 +155,35 @@ public class LocalTerminalViewModel(
     }
 
     override fun select(id: Int) {
+        discardInput()
         local.update { it.copy(selected = id) }
     }
 
     override fun send(text: String) {
-        state.value.selected?.let { id -> viewModelScope.launch { port.send(id, text) } }
+        val id = state.value.selected ?: return
+        val input = port as? LocalTerminalInputPort
+        if (input != null) {
+            if (input.enqueueText(id, text) is Outcome.Failed)
+                local.update { it.copy(failed = true) }
+        } else viewModelScope.launch { port.send(id, text) }
+    }
+
+    private fun discardInput() {
+        state.value.selected?.let { (port as? LocalTerminalInputPort)?.discardInput(it) }
+    }
+
+    override fun key(key: TerminalKey) {
+        val id = state.value.selected ?: return
+        val input = port as? LocalTerminalInputPort ?: return
+        if (input.enqueueKey(id, key) is Outcome.Failed) local.update { it.copy(failed = true) }
+    }
+
+    override fun server(id: ProfileId) {
+        val graph = registry.live.value[id] ?: return
+        if (graph.session.capabilities.value.terminal) {
+            discardInput()
+            nav.open(RemoteTerminalRoute(id))
+        }
     }
 
     override fun setControl(enabled: Boolean) {
@@ -191,6 +244,7 @@ public class LocalTerminalViewModel(
 
     override fun back() {
         dismissLinkTip()
+        discardInput()
         nav.back()
     }
 

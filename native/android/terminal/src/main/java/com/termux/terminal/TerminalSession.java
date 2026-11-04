@@ -43,6 +43,12 @@ public final class TerminalSession extends TerminalOutput {
     public final String mHandle = UUID.randomUUID().toString();
 
     TerminalEmulator mEmulator;
+    private final SgrNormalizer mSgrNormalizer = new SgrNormalizer();
+
+    private void appendNormalized(byte[] bytes, int count) {
+        byte[] normalized = mSgrNormalizer.append(bytes, count);
+        if (normalized.length > 0) mEmulator.append(normalized, normalized.length);
+    }
 
     /**
      * A queue written to from a separate thread when the process outputs, and read by main thread to process by
@@ -102,7 +108,7 @@ public final class TerminalSession extends TerminalOutput {
 
     private void appendFiltered(byte[] data, int count) {
         byte[] safe = mClipboard.feed(data, count);
-        if (safe.length > 0) mEmulator.append(safe, safe.length);
+        if (safe.length > 0) appendNormalized(safe, safe.length);
     }
 
     /** Constructs an external session without a shell path, descriptor, process or worker thread. */

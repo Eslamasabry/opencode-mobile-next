@@ -58,8 +58,15 @@ public object LinuxBindings {
 
 /** LinuxPage → the routes of :ui:routes. */
 @Inject
-@ContributesBinding(AppScope::class)
-public class RoutedLinuxNavigator(private val nav: AppNavigator) : LinuxNavigator {
+@ContributesBinding(AppScope::class, binding = binding<LinuxNavigator>())
+public class RoutedLinuxNavigator(private val nav: AppNavigator) :
+    LinuxNavigator, LinuxMigrationNavigator {
+    override fun migrate(profileId: String) {
+        nav.open(
+            LinuxRoute.Migration(io.github.eslamasabry.oc.core.common.ids.ProfileId(profileId))
+        )
+    }
+
     override fun open(page: LinuxPage) {
         nav.open(
             when (page) {
@@ -91,9 +98,10 @@ public class LinuxHomeViewModel(
     idle: LinuxIdleSource,
     lifetimes: LinuxLifetimesSource,
     vitals: LinuxVitalsSource,
+    migrationOffers: LinuxMigrationOffers,
     nav: LinuxNavigator,
     pacer: Pacer,
-) : ViewModel(), LinuxHomeActions {
+) : ViewModel(), LinuxHomeNativeActions {
     private val model =
         LinuxHomeModel(
             manager,
@@ -108,6 +116,7 @@ public class LinuxHomeViewModel(
             idle,
             lifetimes,
             vitals,
+            migrationOffers,
         )
     public val state: StateFlow<LinuxHomeUi> = model.state
 
@@ -130,6 +139,10 @@ public class LinuxHomeViewModel(
     override fun startSetup(): Unit = model.startSetup()
 
     override fun addPython(): Unit = model.addPython()
+
+    override fun addVoice(): Unit = model.addVoice()
+
+    override fun openMigration(profileId: String): Unit = model.openMigration(profileId)
 
     override fun continueSetup(): Unit = model.continueSetup()
 

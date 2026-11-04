@@ -97,7 +97,8 @@ internal const val ANNOUNCE_EVERY_MS: Long = 1_000
  *
  * [onSend] receives exactly what to write: the field's value and a carriage return. [above] sits
  * above the grid or the transcript in both modes (the sign-in terminal's "Open sign-in page" and
- * "Copy code", 17 §1.5).
+ * "Copy code", 17 §1.5). [defaultKeyBar] shows the Ctrl-C / Ctrl-D / Esc / Tab bar; a screen that
+ * supplies its own [KitTerminalKeyBar] turns it off so the keys are not shown twice.
  */
 @Composable
 public fun KitTerminalView(
@@ -110,6 +111,7 @@ public fun KitTerminalView(
     words: KitTerminalWords,
     modifier: Modifier = Modifier,
     inputEnabled: Boolean = true,
+    defaultKeyBar: Boolean = true,
     above: @Composable ColumnScope.() -> Unit = {},
 ) {
     val signals by LocalKitPlatform.current.signals.collectAsState()
@@ -148,12 +150,13 @@ public fun KitTerminalView(
                     ?.columns
                     ?.takeIf { it > 0 } ?: 80,
         )
-        KitTerminalKeyBar(
-            onSend = onSend,
-            enabled =
-                if (inputEnabled) KitEnabled.Enabled
-                else KitEnabled.Disabled(words.inputUnavailable),
-        )
+        if (defaultKeyBar)
+            KitTerminalKeyBar(
+                onSend = onSend,
+                enabled =
+                    if (inputEnabled) KitEnabled.Enabled
+                    else KitEnabled.Disabled(words.inputUnavailable),
+            )
     }
 }
 

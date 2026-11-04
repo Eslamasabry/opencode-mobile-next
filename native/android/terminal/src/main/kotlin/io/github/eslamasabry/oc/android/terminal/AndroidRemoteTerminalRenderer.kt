@@ -79,6 +79,9 @@ class AndroidRemoteTerminalRenderer(
                 },
             )
         private val surface = TerminalSurfaceHost(app, grid)
+        override val applicationCursor: Boolean
+            get() = session.emulator?.isCursorKeysApplicationMode == true
+
         override val view =
             object : PlatformViewHandle {
                 override val native: Any = surface

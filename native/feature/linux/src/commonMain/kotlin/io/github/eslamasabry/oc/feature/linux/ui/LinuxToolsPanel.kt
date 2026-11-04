@@ -128,9 +128,7 @@ internal fun LinuxToolsPanel(state: LinuxToolsPanelUi, actions: LinuxToolsAction
                         state.bytes
                             ?.takeIf { it > 0 }
                             ?.let {
-                                listOf(
-                                    stringResource(Res.string.linuxToolsFreedBytes, size(it))
-                                )
+                                listOf(stringResource(Res.string.linuxToolsFreedBytes, size(it)))
                             }
                             .orEmpty(),
                 )
@@ -151,6 +149,7 @@ internal fun componentTitle(id: String): String =
             "opencode" -> Res.string.linuxRuntimeOpenCodeTitle
             "start" -> Res.string.phoneSetupStartTitle
             "aiteam" -> Res.string.linuxToolsAiTeam
+            "voice" -> Res.string.voiceComponentTitle
             else -> Res.string.linuxToolsPart
         }
     )

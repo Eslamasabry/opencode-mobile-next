@@ -37,6 +37,7 @@ public data class ProcessRowUi(
     val memoryMb: Long? = null,
     val memberCount: Int = 1,
     val identity: String? = null,
+    val orphanReason: ProcessOrphanReason? = null,
 ) {
     val stoppable: Boolean
         get() = protectedAs == null
@@ -171,6 +172,7 @@ public class RunningModel(
             memoryMb = p.memoryMb,
             memberCount = p.memberCount,
             identity = p.identity,
+            orphanReason = p.orphanReason,
         )
 
     override fun details(pid: Int) {
@@ -188,11 +190,11 @@ public class RunningModel(
         val row = ui.value.confirmStop ?: return
         ui.update { it.copy(confirmStop = null, stopping = row.pid) }
         scope.launch {
-            // A guest-scan group stops by its displayed identity (LINUX-2); a native row by its frozen tree.
+            // A guest-scan group stops by its displayed identity (LINUX-2); a native row by its
+            // frozen tree.
             val stopped =
-                if (row.memberCount > 1 || row.stopIdentities.isEmpty())
-                    source.stop(row.pid, row.identity)
-                else source.stop(row.pid, row.stopIdentities)
+                if (row.stopIdentities.isNotEmpty()) source.stop(row.pid, row.stopIdentities)
+                else source.stop(row.pid, row.identity)
             ui.update { it.copy(stopping = null, stopFailed = stopped is Outcome.Failed) }
             load()
         }
