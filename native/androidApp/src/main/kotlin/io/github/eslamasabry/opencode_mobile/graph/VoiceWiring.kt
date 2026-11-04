@@ -83,7 +83,10 @@ import org.jetbrains.compose.resources.getString
  * Flutter app does. The phone's own recognizer ([PhoneDictation]) is only the fallback when the JNI library cannot load.
  */
 
-/** The app's voice: built once, after the stores are warm (the adopted Flutter prefs throw on early reads). */
+/**
+ * The app's voice: built once, after the stores are warm (the adopted Flutter prefs throw on early
+ * reads).
+ */
 @SingleIn(AppScope::class)
 @Inject
 @ContributesBinding(AppScope::class)
@@ -94,23 +97,29 @@ class AndroidVoiceHub(
     private val scope: AppCoroutineScope,
     private val stores: PreviewStores,
     private val activities: ResumedActivities,
+    private val preferences: AppPreferences,
 ) : VoiceHub {
     private val building = Mutex()
     private var built: Outcome<VoiceParts>? = null
 
-    override suspend fun parts(): Outcome<VoiceParts> =
-        building.withLock {
-            built?.let { return@withLock it }
-            when (val warm = stores.warm()) {
-                is Outcome.Failed -> return@withLock warm // not cached: a later screen tries again
-                is Outcome.Ok -> Unit
-            }
-            build().also { built = it }
+    override suspend fun parts(): Outcome<VoiceParts> = building.withLock {
+        built?.let {
+            return@withLock it
         }
+        when (val warm = stores.warm()) {
+            is Outcome.Failed -> return@withLock warm // not cached: a later screen tries again
+            is Outcome.Ok -> Unit
+        }
+        build().also { built = it }
+    }
 
     private fun build(): Outcome<VoiceParts> {
         val offline = OfflineSpeechEngine.available
-        val prefs = OfflineEngineAwarePrefs(KeyValueVoicePrefs(stores.prefs, stores.lanes.app), naturalVoiceRuns = offline)
+        val prefs =
+            OfflineEngineAwarePrefs(
+                KeyValueVoicePrefs(stores.prefs, stores.lanes.app),
+                naturalVoiceRuns = offline,
+            )
         val permission = ActivityMicPermission(application, activities, dispatchers.main)
         val hasMic = application.packageManager.hasSystemFeature(PackageManager.FEATURE_MICROPHONE)
         val components =
@@ -126,7 +135,15 @@ class AndroidVoiceHub(
                 voiceAvailable = hasMic,
                 readAloudAvailable = true,
             )
-        val models = components.packs.asVoiceModels()
+        val models =
+            NotifyingVoiceModels(
+                components.packs.asVoiceModels(),
+                io.github.eslamasabry.oc.engine.voice.setup.VoiceSetupNotices(
+                    VoiceDownloadNoticeSink(application, activities, dispatchers, preferences),
+                    supportsVoice = hasMic,
+                ),
+                components.network,
+            )
         val dictation =
             if (offline) {
                 components.voice.asDictation()
@@ -134,14 +151,18 @@ class AndroidVoiceHub(
                 phoneDictation(permission, models, components)
             }
         return VoiceParts(
-            dictation = dictation,
-            models = models,
-            reader = components.readAloud.asReader(),
-            engine = if (offline) SpeechEngineKind.OfflineModel else SpeechEngineKind.PhoneRecognizer,
-            // S1: the offline engine, or else only an on-device recognizer types (never a cloud fallback).
-            micAvailable = hasMic && (offline || onDeviceRecognizer(application)),
-            naturalVoiceAvailable = offline,
-        ).ok()
+                dictation = dictation,
+                models = models,
+                reader = components.readAloud.asReader(),
+                engine =
+                    if (offline) SpeechEngineKind.OfflineModel
+                    else SpeechEngineKind.PhoneRecognizer,
+                // S1: the offline engine, or else only an on-device recognizer types (never a cloud
+                // fallback).
+                micAvailable = hasMic && (offline || onDeviceRecognizer(application)),
+                naturalVoiceAvailable = offline,
+            )
+            .ok()
     }
 
     private fun phoneDictation(
@@ -149,19 +170,22 @@ class AndroidVoiceHub(
         models: io.github.eslamasabry.oc.feature.voice.presentation.VoiceModels,
         components: AndroidVoiceComponents,
     ): Dictation =
-            PhoneDictation(
-                app = application,
-                permission = permission,
-                main = dispatchers.main,
-                clock = clock,
-                scope = scope,
-                language = { models.state.value.language },
-                stopReading = { components.readAloud.stop() },
-            )
+        PhoneDictation(
+            app = application,
+            permission = permission,
+            main = dispatchers.main,
+            clock = clock,
+            scope = scope,
+            language = { models.state.value.language },
+            stopReading = { components.readAloud.stop() },
+        )
 
     override fun openAppSettings() {
         val intent =
-            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", application.packageName, null))
+            Intent(
+                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    Uri.fromParts("package", application.packageName, null),
+                )
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         try {
             application.startActivity(intent)
@@ -170,19 +194,19 @@ class AndroidVoiceHub(
         }
     }
 
-    override fun ticks(period: Duration): Flow<Unit> =
-        flow {
-            while (true) {
-                emit(Unit)
-                delay(period)
-            }
+    override fun ticks(period: Duration): Flow<Unit> = flow {
+        while (true) {
+            emit(Unit)
+            delay(period)
         }
+    }
 }
 
 /**
- * Settings › Voice (plan 07 I11; B-MEDIA-012/017/022): offered where dictation can run (the offline engine, or else the
- * phone's on-device recognizer); its Voice typing row names that engine and opens Voice typing settings (language,
- * models, Send when I stop talking). Read aloud is asked for at first use from a reply, so its switch is not shown here.
+ * Settings › Voice (plan 07 I11; B-MEDIA-012/017/022): offered where dictation can run (the offline
+ * engine, or else the phone's on-device recognizer); its Voice typing row names that engine and
+ * opens Voice typing settings (language, models, Send when I stop talking). Read aloud is asked for
+ * at first use from a reply, so its switch is not shown here.
  */
 @SingleIn(AppScope::class)
 @Inject
@@ -198,31 +222,41 @@ class AndroidVoiceSettings(application: Application, appScope: AppCoroutineScope
     init {
         if (offered) {
             appScope.launch {
-                val engine = if (offline) Res.string.voiceNoticesWhisper else Res.string.voiceNativePhoneRecognizer
+                val engine =
+                    if (offline) Res.string.voiceNoticesWhisper
+                    else Res.string.voiceNativePhoneRecognizer
                 mutable.value = VoiceFacts(speechModel = SpeechModel.Ready(getString(engine)))
             }
         }
     }
 
-    override suspend fun setReadAloud(on: Boolean): Outcome<Unit> = Unit.ok() // no switch: readAloudSupported is false
+    override suspend fun setReadAloud(on: Boolean): Outcome<Unit> =
+        Unit.ok() // no switch: readAloudSupported is false
 }
 
 /** An on-device recognizer exists (API 31+): the only one dictation may use (plan 10 §17 S1). */
 private fun onDeviceRecognizer(app: Application): Boolean =
     OnDeviceSpeech.usable(Build.VERSION.SDK_INT) {
-        Build.VERSION.SDK_INT >= OnDeviceSpeech.MIN_SDK && SpeechRecognizer.isOnDeviceRecognitionAvailable(app)
+        Build.VERSION.SDK_INT >= OnDeviceSpeech.MIN_SDK &&
+            SpeechRecognizer.isOnDeviceRecognitionAvailable(app)
     }
 
-/** The natural voice needs the offline engine; where it cannot load, a stored "natural" choice reads as the phone's. */
-private class OfflineEngineAwarePrefs(private val inner: VoicePrefs, private val naturalVoiceRuns: Boolean) : VoicePrefs by inner {
+/**
+ * The natural voice needs the offline engine; where it cannot load, a stored "natural" choice reads
+ * as the phone's.
+ */
+private class OfflineEngineAwarePrefs(
+    private val inner: VoicePrefs,
+    private val naturalVoiceRuns: Boolean,
+) : VoicePrefs by inner {
     override fun readAloudNatural(): Boolean = naturalVoiceRuns && inner.readAloudNatural()
 }
 
 /**
- * RECORD_AUDIO through the resumed activity's result registry. The request uses one stable key, and an activity created
- * while the request waits (rotation with the dialog open) registers that key again, so the answer the replacement
- * activity receives reaches the waiting request (B-MEDIA-023). Denied twice (no rationale left) = only Android settings
- * can allow it now.
+ * RECORD_AUDIO through the resumed activity's result registry. The request uses one stable key, and
+ * an activity created while the request waits (rotation with the dialog open) registers that key
+ * again, so the answer the replacement activity receives reaches the waiting request (B-MEDIA-023).
+ * Denied twice (no rationale left) = only Android settings can allow it now.
  */
 private class ActivityMicPermission(
     private val app: Application,
@@ -243,20 +277,31 @@ private class ActivityMicPermission(
             val asker = activities.current ?: activity
             when {
                 allowed -> MicPermissionStatus.Granted
-                ActivityCompat.shouldShowRequestPermissionRationale(asker, Manifest.permission.RECORD_AUDIO) ->
-                    MicPermissionStatus.Denied
+                ActivityCompat.shouldShowRequestPermissionRationale(
+                    asker,
+                    Manifest.permission.RECORD_AUDIO,
+                ) -> MicPermissionStatus.Denied
                 else -> MicPermissionStatus.PermanentlyDenied
             }
         }
 
     private fun granted(): Boolean =
-        ContextCompat.checkSelfPermission(app, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+        ContextCompat.checkSelfPermission(app, Manifest.permission.RECORD_AUDIO) ==
+            PackageManager.PERMISSION_GRANTED
 }
 
-/** One activity's result registry, as [MicRequestRelay] needs it (lifecycle-free registration: results arrive at once). */
+/**
+ * One activity's result registry, as [MicRequestRelay] needs it (lifecycle-free registration:
+ * results arrive at once).
+ */
 private class RegistryMicHost(private val activity: ComponentActivity) : MicHost {
     override fun register(key: String, onResult: (Boolean) -> Unit): MicLauncher {
-        val launcher = activity.activityResultRegistry.register(key, ActivityResultContracts.RequestPermission(), onResult)
+        val launcher =
+            activity.activityResultRegistry.register(
+                key,
+                ActivityResultContracts.RequestPermission(),
+                onResult,
+            )
         return object : MicLauncher {
             override fun launch() = launcher.launch(Manifest.permission.RECORD_AUDIO)
 
@@ -265,7 +310,10 @@ private class RegistryMicHost(private val activity: ComponentActivity) : MicHost
     }
 }
 
-/** The resumed activity, followed from app start (`OcApplication` touches it right after the graph is made). */
+/**
+ * The resumed activity, followed from app start (`OcApplication` touches it right after the graph
+ * is made).
+ */
 @ContributesTo(AppScope::class)
 interface VoiceActivityGraph {
     val resumedActivities: ResumedActivities
@@ -278,9 +326,13 @@ class ResumedActivities(app: Application) {
 
     private val created = mutableListOf<(ComponentActivity) -> Unit>()
 
-    val current: ComponentActivity? get() = resumed.get()
+    val current: ComponentActivity?
+        get() = resumed.get()
 
-    /** Called on the main thread for every activity created from now on (after its result registry is restored). */
+    /**
+     * Called on the main thread for every activity created from now on (after its result registry
+     * is restored).
+     */
     fun onCreated(listener: (ComponentActivity) -> Unit) {
         created += listener
     }
@@ -304,19 +356,22 @@ class ResumedActivities(app: Application) {
 
                 override fun onActivityStopped(activity: Activity) = Unit
 
-                override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
+                override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) =
+                    Unit
 
                 override fun onActivityDestroyed(activity: Activity) = Unit
-            },
+            }
         )
     }
 }
 
 /**
- * Voice typing with the phone's on-device speech recognizer (`SpeechRecognizer.createOnDeviceSpeechRecognizer`, API
- * 31+; never the default service, which may send audio away: plan 10 §17 S1). Partial results are the live words. A tap without "Send when I stop talking" and a held mic keep listening
- * across pauses (the recognizer is restarted after each phrase); with the setting on, a tap ends on the first pause
- * (`VoiceEnd.Silence`). All recognizer calls run on the main thread, as Android requires.
+ * Voice typing with the phone's on-device speech recognizer
+ * (`SpeechRecognizer.createOnDeviceSpeechRecognizer`, API 31+; never the default service, which may
+ * send audio away: plan 10 §17 S1). Partial results are the live words. A tap without "Send when I
+ * stop talking" and a held mic keep listening across pauses (the recognizer is restarted after each
+ * phrase); with the setting on, a tap ends on the first pause (`VoiceEnd.Silence`). All recognizer
+ * calls run on the main thread, as Android requires.
  */
 private class PhoneDictation(
     private val app: Application,
@@ -340,21 +395,29 @@ private class PhoneDictation(
     private var finished: CompletableDeferred<Unit>? = null
 
     private val words: String
-        get() = listOf(committed.toString().trim(), partial.trim()).filter { it.isNotEmpty() }.joinToString(" ")
+        get() =
+            listOf(committed.toString().trim(), partial.trim())
+                .filter { it.isNotEmpty() }
+                .joinToString(" ")
 
     override suspend fun start(request: VoiceStart): Outcome<Unit> =
         withContext(main) {
             when (state.value) {
-                VoiceState.Idle, VoiceState.NeedsModel, is VoiceState.Done, is VoiceState.Failed -> Unit
+                VoiceState.Idle,
+                VoiceState.NeedsModel,
+                is VoiceState.Done,
+                is VoiceState.Failed -> Unit
                 else -> return@withContext Unit.ok() // a second tap while starting is a no-op
             }
-            // S1: no on-device recognizer = no dictation; the default service may send the audio off the phone.
+            // S1: no on-device recognizer = no dictation; the default service may send the audio
+            // off the phone.
             if (!onDeviceRecognizer(app)) return@withContext fail(MediaProblem.SpeechModelMissing)
             stopReading()
             when (permission.request()) {
                 MicPermissionStatus.Granted -> Unit
                 MicPermissionStatus.Denied -> return@withContext fail(MediaProblem.MicDenied)
-                MicPermissionStatus.PermanentlyDenied -> return@withContext fail(MediaProblem.MicDeniedForever)
+                MicPermissionStatus.PermanentlyDenied ->
+                    return@withContext fail(MediaProblem.MicDeniedForever)
             }
             if (host != VoiceHost.Foreground) return@withContext fail(MediaProblem.LeftTheApp)
             this@PhoneDictation.request = request
@@ -391,7 +454,10 @@ private class PhoneDictation(
 
     private fun intent(): Intent =
         Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM,
+            )
             putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
             putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
             putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, app.packageName)
@@ -414,7 +480,8 @@ private class PhoneDictation(
     }
 
     private inner class Listener(private val owner: SpeechRecognizer) : RecognitionListener {
-        private val current: Boolean get() = recognizer === owner
+        private val current: Boolean
+            get() = recognizer === owner
 
         override fun onReadyForSpeech(params: Bundle?) {
             if (current && !stopping) publishListening()
@@ -434,13 +501,20 @@ private class PhoneDictation(
 
         override fun onPartialResults(partialResults: Bundle?) {
             if (!current) return
-            partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()?.let { partial = it }
+            partialResults
+                ?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                ?.firstOrNull()
+                ?.let { partial = it }
             if (!stopping) publishListening() else state.value = VoiceState.Writing(words)
         }
 
         override fun onResults(results: Bundle?) {
             if (!current) return
-            val heard = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull().orEmpty()
+            val heard =
+                results
+                    ?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                    ?.firstOrNull()
+                    .orEmpty()
             if (heard.isNotBlank()) committed.append(' ').append(heard.trim())
             partial = ""
             phraseEnded()
@@ -449,29 +523,41 @@ private class PhoneDictation(
         override fun onError(error: Int) {
             if (!current) return
             when (error) {
-                SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> {
+                SpeechRecognizer.ERROR_NO_MATCH,
+                SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> {
                     partial = ""
                     phraseEnded()
                 }
-                SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> end(VoiceState.Failed(MediaProblem.MicDenied, words))
-                SpeechRecognizer.ERROR_AUDIO -> end(VoiceState.Failed(MediaProblem.RecordingInterrupted, words))
-                SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> end(VoiceState.Failed(MediaProblem.MicBusy, words))
-                LANGUAGE_NOT_SUPPORTED, LANGUAGE_UNAVAILABLE ->
-                    // The on-device recognizer lacks the language. Never hand the audio to the default service (S1).
+                SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS ->
+                    end(VoiceState.Failed(MediaProblem.MicDenied, words))
+                SpeechRecognizer.ERROR_AUDIO ->
+                    end(VoiceState.Failed(MediaProblem.RecordingInterrupted, words))
+                SpeechRecognizer.ERROR_RECOGNIZER_BUSY ->
+                    end(VoiceState.Failed(MediaProblem.MicBusy, words))
+                LANGUAGE_NOT_SUPPORTED,
+                LANGUAGE_UNAVAILABLE ->
+                    // The on-device recognizer lacks the language. Never hand the audio to the
+                    // default service (S1).
                     end(VoiceState.Failed(MediaProblem.ChunkNotTranscribed, words))
-                else -> if (stopping) end(VoiceState.Done(words, VoiceEnd.Person)) else end(VoiceState.Failed(MediaProblem.ChunkNotTranscribed, words))
+                else ->
+                    if (stopping) end(VoiceState.Done(words, VoiceEnd.Person))
+                    else end(VoiceState.Failed(MediaProblem.ChunkNotTranscribed, words))
             }
         }
 
         override fun onEvent(eventType: Int, params: Bundle?) = Unit
 
-        /** One phrase is written down: end (Done, a pause with the setting on) or keep listening. */
+        /**
+         * One phrase is written down: end (Done, a pause with the setting on) or keep listening.
+         */
         private fun phraseEnded() {
             val req = request
             when {
                 stopping -> end(VoiceState.Done(words, VoiceEnd.Person))
                 req != null && req.stopOnSilence -> end(VoiceState.Done(words, VoiceEnd.Silence))
-                else -> if (!listen()) end(VoiceState.Done(words, VoiceEnd.Person)) else publishListening()
+                else ->
+                    if (!listen()) end(VoiceState.Done(words, VoiceEnd.Person))
+                    else publishListening()
             }
         }
     }
@@ -485,7 +571,8 @@ private class PhoneDictation(
                 val waiter = CompletableDeferred<Unit>()
                 finished = waiter
                 r.stopListening()
-                if (withTimeoutOrNull(FINISH_WAIT) { waiter.await() } == null) end(VoiceState.Done(words, VoiceEnd.Person))
+                if (withTimeoutOrNull(FINISH_WAIT) { waiter.await() } == null)
+                    end(VoiceState.Done(words, VoiceEnd.Person))
             }
             when (val now = state.value) {
                 is VoiceState.Done -> now.words.ok()
@@ -502,7 +589,9 @@ private class PhoneDictation(
             r.destroy()
             level.value = 0f
             val kept = words
-            state.value = if (keepWords && kept.isNotEmpty()) VoiceState.Done(kept, VoiceEnd.Person) else VoiceState.Idle
+            state.value =
+                if (keepWords && kept.isNotEmpty()) VoiceState.Done(kept, VoiceEnd.Person)
+                else VoiceState.Idle
             finished?.complete(Unit)
             finished = null
         }
@@ -533,13 +622,16 @@ private class PhoneDictation(
     private companion object {
         val FINISH_WAIT = 4.seconds
 
-        // SpeechRecognizer.ERROR_LANGUAGE_NOT_SUPPORTED / ERROR_LANGUAGE_UNAVAILABLE (API 31; constants inlined).
+        // SpeechRecognizer.ERROR_LANGUAGE_NOT_SUPPORTED / ERROR_LANGUAGE_UNAVAILABLE (API 31;
+        // constants inlined).
         const val LANGUAGE_NOT_SUPPORTED = 12
         const val LANGUAGE_UNAVAILABLE = 13
     }
 }
 
-/** A place that can ask for the microphone (an activity's result registry); see [MicRequestRelay]. */
+/**
+ * A place that can ask for the microphone (an activity's result registry); see [MicRequestRelay].
+ */
 internal interface MicHost {
     fun register(key: String, onResult: (Boolean) -> Unit): MicLauncher
 }
@@ -551,16 +643,18 @@ internal interface MicLauncher {
 }
 
 /**
- * The one microphone request in flight, kept across activity recreation (B-MEDIA-023): the dialog's answer goes to the
- * activity that exists when it is closed, so a host created while the request waits registers the same key and the
- * registry hands the answer over. Main thread only.
+ * The one microphone request in flight, kept across activity recreation (B-MEDIA-023): the dialog's
+ * answer goes to the activity that exists when it is closed, so a host created while the request
+ * waits registers the same key and the registry hands the answer over. Main thread only.
  */
 internal class MicRequestRelay {
     private var waiting: CompletableDeferred<Boolean>? = null
     private var launcher: MicLauncher? = null
 
     suspend fun ask(host: MicHost): Boolean {
-        waiting?.let { return it.await() } // a second ask while the dialog is open waits for the same answer
+        waiting?.let {
+            return it.await()
+        } // a second ask while the dialog is open waits for the same answer
         val answer = CompletableDeferred<Boolean>()
         waiting = answer
         try {
