@@ -3001,25 +3001,48 @@ class BuiltinLinux(private val context: Context) {
     }
 
     /** Explicit helper start shares native owner, idle and foreground admission. */
-    fun startPhoneAgentHelper(profile: String, password: String, config: String, port: Int = 4099,
-        expectedHelperVersion: String? = null): Map<String, Any?> {
+    fun startPhoneAgentHelper(
+        profile: String,
+        password: String,
+        config: String,
+        port: Int = 4099,
+        expectedHelperVersion: String? = null,
+    ): Map<String, Any?> {
         val ticket = captureAgentHostStart(profile, false, null) ?: error("agent_host_unavailable")
         return withAgentHostStart(ticket) {
-            agentHost.start(PhoneAgentHost.StartRequest(profile, password, port, config,
-                PhoneAgentHost.HelperPolicy(expectedVersion = expectedHelperVersion)))
+            agentHost.start(
+                PhoneAgentHost.StartRequest(
+                    profile,
+                    password,
+                    port,
+                    config,
+                    PhoneAgentHost.HelperPolicy(expectedVersion = expectedHelperVersion),
+                )
+            )
         }
     }
 
     /** Foreground idle restoration uses the receipt's exact helper and generation. */
-    fun resumeIdleStoppedAgentHost(profile: String, generation: Long, password: String, config: String): Map<String, Any?> {
+    fun resumeIdleStoppedAgentHost(
+        profile: String,
+        generation: Long,
+        password: String,
+        config: String,
+    ): Map<String, Any?> {
         val ticket = captureAgentHostStart(profile, true, generation) ?: error("idle_resume_stale")
         return withAgentHostStart(ticket) {
             agentHost.start(PhoneAgentHost.StartRequest(profile, password, 4099, config))
         }
     }
 
-    internal data class AgentHostTicket(val profile: String, val owner: String?, val revision: Long,
-        val epoch: Long, val idleGeneration: Long?)
+    internal data class AgentHostTicket(
+        val profile: String,
+        val owner: String?,
+        val revision: Long,
+        val epoch: Long,
+        val idleGeneration: Long?,
+    )
+
     private val agentHostTicket = ThreadLocal<AgentHostTicket?>()
     private val agentHostAdmissions = java.util.IdentityHashMap<Process, AgentHostTicket>()
 
@@ -5169,6 +5192,50 @@ class BuiltinLinux(private val context: Context) {
     @Synchronized
     fun serviceRunning(name: String): Boolean = services[name]?.process?.isAlive == true
 
+    /** Heat recovery may save only the app's existing AI Team recipe, never the OpenCode server. */
+    @Synchronized
+    fun thermalTeamRecipe(): String? =
+        services["aiteam"]
+            ?.takeIf { it.process.isAlive }
+            ?.let { service ->
+                service.script?.let { script ->
+                    JSONObject().put("script", script).put("port", service.port).toString()
+                }
+            }
+
+    /** Replays only the AI Team service captured by the heat guard before a confirmed stop. */
+    @Synchronized
+    fun resumeThermalTeam(recipe: String?, notice: String?): Boolean {
+        if (serviceRunning("aiteam")) return true
+        val value = recipe?.let(::JSONObject)
+        val script =
+            if (value != null) value.opt("script") as? String ?: return false
+            else
+                """set -eu
+[ ! -e /root/.oc-builtin/aiteam.disabled ] || exit 0
+[ -f /root/aiteam/city.ready ] && [ -f /root/aiteam/city/city.toml ]
+[ -x /usr/local/bin/gc ] && [ -x /opt/aiteam/agent-bin/opencode ]
+export HOME=/root GC_BIN=/usr/local/bin/gc
+export DO_NOT_TRACK=1 GC_DISABLE_USAGE_METRICS=1 BD_DISABLE_METRICS=1 DOLT_DISABLE_EVENT_FLUSH=1
+export PATH=/opt/aiteam/agent-bin:/usr/local/bin:/usr/bin:/bin
+cd /root/aiteam/city
+mkdir -p /root/.gc
+printf '%s\n' '[supervisor]' 'bind = "127.0.0.1"' 'port = 8472' 'allowed_hosts = ["127.0.0.1", "localhost"]' > /root/.gc/supervisor.toml
+if command -v nice >/dev/null 2>&1; then
+  if command -v ionice >/dev/null 2>&1 && ionice -c 3 true 2>/dev/null; then
+    exec nice -n 19 ionice -c 3 gc supervisor run
+  fi
+  exec nice -n 19 gc supervisor run
+fi
+exec gc supervisor run
+"""
+        val port = value?.optInt("port", 8472) ?: 8472
+        if (script.isEmpty() || port != 8472) return false
+        if (File(rootfs, "root/.oc-builtin/aiteam.disabled").exists()) return false
+        startService("aiteam", script, port, notice)
+        return serviceRunning("aiteam")
+    }
+
     @Synchronized
     fun servicePort(name: String): Int? = services[name]?.takeIf { it.process.isAlive }?.port
 
@@ -5254,8 +5321,7 @@ class BuiltinLinux(private val context: Context) {
         )
 
     /** Read-only admission check for interactive sends; a failed read must refuse dispatch. */
-    @Synchronized
-    fun hasScheduledPhoneLease(): Boolean = activeScheduledPhoneLease()
+    @Synchronized fun hasScheduledPhoneLease(): Boolean = activeScheduledPhoneLease()
 
     @Synchronized
     internal fun activeScheduledPhoneLease(): Boolean {
@@ -5850,7 +5916,9 @@ class BuiltinLinux(private val context: Context) {
                 val reason =
                     if (
                         expectedStarts != null &&
-                            (expectedStarts[pid] == null || entry == null || expectedStarts[pid] != entry.startTicks)
+                            (expectedStarts[pid] == null ||
+                                entry == null ||
+                                expectedStarts[pid] != entry.startTicks)
                     )
                         "changed"
                     else NativeProcessList.stopRefusal(pid, entry, uid, appPids, roots)

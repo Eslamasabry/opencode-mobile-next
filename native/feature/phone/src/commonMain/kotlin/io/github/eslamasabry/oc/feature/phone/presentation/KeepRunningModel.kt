@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.phone.presentation
 
+import io.github.eslamasabry.oc.core.common.Outcome
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -10,7 +11,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** Phone makers whose Android closes apps on its own (dontkillmyapp.com), grouped by the settings they share. */
+/**
+ * Phone makers whose Android closes apps on its own (dontkillmyapp.com), grouped by the settings
+ * they share.
+ */
 public enum class PhoneMaker {
     /** Nubia, RedMagic and ZTE: force-stop an app swiped from Recents. */
     Nubia,
@@ -20,12 +24,15 @@ public enum class PhoneMaker {
     Huawei,
     Samsung,
 
-    /** Everything else, Pixels included: stock Android keeps an app with a running notification alive. */
-    Other,
-    ;
+    /**
+     * Everything else, Pixels included: stock Android keeps an app with a running notification
+     * alive.
+     */
+    Other;
 
     /** Swiping the app away from Recents may close it on this phone. */
-    public val closesOnSwipe: Boolean get() = this != Other
+    public val closesOnSwipe: Boolean
+        get() = this != Other
 
     public companion object {
         /** Port of `PhoneMaker.of` (B-ANDR-007). */
@@ -46,9 +53,16 @@ public enum class PhoneMaker {
 }
 
 /** One thing to allow so Android leaves the app running. */
-public enum class KeepAliveStepKind { Battery, LockInRecents, Autostart, Background }
+public enum class KeepAliveStepKind {
+    Battery,
+    LockInRecents,
+    Autostart,
+    Background,
+}
 
-/** [setting] is the screen that allows it; locking in Recents has none (the person does it by hand). */
+/**
+ * [setting] is the screen that allows it; locking in Recents has none (the person does it by hand).
+ */
 public data class KeepAliveStep(val kind: KeepAliveStepKind, val setting: KeepAliveSetting?)
 
 /** Port of keep_alive_advice.dart `keepAliveSteps` (plan 11 §8.4). Battery first everywhere. */
@@ -56,7 +70,8 @@ public object KeepAliveAdvice {
     private val battery = KeepAliveStep(KeepAliveStepKind.Battery, KeepAliveSetting.Battery)
     private val lock = KeepAliveStep(KeepAliveStepKind.LockInRecents, null)
     private val autostart = KeepAliveStep(KeepAliveStepKind.Autostart, KeepAliveSetting.Autostart)
-    private val background = KeepAliveStep(KeepAliveStepKind.Background, KeepAliveSetting.AppDetails)
+    private val background =
+        KeepAliveStep(KeepAliveStepKind.Background, KeepAliveSetting.AppDetails)
 
     public fun steps(maker: PhoneMaker): List<KeepAliveStep> =
         when (maker) {
@@ -72,9 +87,16 @@ public object KeepAliveAdvice {
 }
 
 /** One row: [done] steps keep their word ("Allowed") and open nothing. */
-public data class KeepAliveStepUi(val kind: KeepAliveStepKind, val done: Boolean, val opens: KeepAliveSetting?)
+public data class KeepAliveStepUi(
+    val kind: KeepAliveStepKind,
+    val done: Boolean,
+    val opens: KeepAliveSetting?,
+)
 
-/** PhoneRoute.KeepRunning's state (plan 07 F15). The words per maker are the screen's (`keepRunning*`). */
+/**
+ * PhoneRoute.KeepRunning's state (plan 07 F15). The words per maker are the screen's
+ * (`keepRunning*`).
+ */
 public data class KeepRunningUi(
     val loaded: Boolean = false,
     val maker: PhoneMaker = PhoneMaker.Other,
@@ -84,10 +106,17 @@ public data class KeepRunningUi(
     val openFailed: Boolean = false,
     /** Android 15+'s ~6 h / 24 h background budget, stated plainly (plan 07 F15). */
     val dailyLimit: Boolean = true,
+    val thermalSupported: Boolean = false,
+    val thermalEnabled: Boolean = true,
+    val thermalSaving: Boolean = false,
+    val thermalFailed: Boolean = false,
 )
 
 public interface KeepRunningActions {
-    /** The page came to the front (also back from a Settings screen: the battery switch may have changed). */
+    /**
+     * The page came to the front (also back from a Settings screen: the battery switch may have
+     * changed).
+     */
     public fun resumed()
 
     public fun open(step: KeepAliveStepKind)
@@ -95,19 +124,52 @@ public interface KeepRunningActions {
     public fun back()
 }
 
-/** Keep running in the background (port of `KeepRunningSection`, without the AI Team heat and full-speed groups). */
+/** Keep running in the background, including the real phone heat-protection switch. */
 public class KeepRunningModel(
     private val settings: KeepAliveSettings,
     private val nav: PhoneNavigator,
     private val scope: CoroutineScope,
-) : KeepRunningActions {
+    private val thermal: ThermalSettings = NoThermalSettings(),
+) : ThermalKeepRunningActions {
     private val ui = MutableStateFlow(KeepRunningUi())
     public val state: StateFlow<KeepRunningUi> = ui.asStateFlow()
+
+    init {
+        scope.launch {
+            thermal.enabled.collect { value ->
+                ui.update { it.copy(thermalSupported = thermal.supported, thermalEnabled = value) }
+            }
+        }
+    }
+
+    override fun setThermalEnabled(value: Boolean) {
+        if (!thermal.supported || ui.value.thermalSaving) return
+        ui.update { it.copy(thermalSaving = true, thermalFailed = false) }
+        scope.launch {
+            val result = thermal.setEnabled(value)
+            ui.update {
+                it.copy(
+                    thermalSaving = false,
+                    thermalEnabled = thermal.enabled.value,
+                    thermalFailed = result is Outcome.Failed,
+                )
+            }
+        }
+    }
 
     override fun resumed() {
         scope.launch {
             val info = settings.info() ?: return@launch
-            ui.update { build(info).copy(openFailed = it.openFailed) }
+            ui.update {
+                build(info)
+                    .copy(
+                        openFailed = it.openFailed,
+                        thermalSupported = thermal.supported,
+                        thermalEnabled = thermal.enabled.value,
+                        thermalSaving = it.thermalSaving,
+                        thermalFailed = it.thermalFailed,
+                    )
+            }
         }
     }
 
@@ -124,17 +186,26 @@ public class KeepRunningModel(
     private fun build(info: KeepAliveInfo): KeepRunningUi {
         val maker = PhoneMaker.of(info.manufacturer, info.brand)
         val batteryAllowed = info.batteryOptimizationIgnored
-        // On stock Android, App info › Battery › Unrestricted is the same switch as the exemption, so nothing the app
-        // cannot check is left. Other makers add screens the app cannot read, so they never get "You're set".
+        // On stock Android, App info › Battery › Unrestricted is the same switch as the exemption,
+        // so nothing the app
+        // cannot check is left. Other makers add screens the app cannot read, so they never get
+        // "You're set".
         val allSet = maker == PhoneMaker.Other && batteryAllowed
-        val steps = KeepAliveAdvice.steps(maker).filterNot { allSet && it.kind == KeepAliveStepKind.Background }
+        val steps =
+            KeepAliveAdvice.steps(maker).filterNot {
+                allSet && it.kind == KeepAliveStepKind.Background
+            }
         fun done(step: KeepAliveStep) = step.kind == KeepAliveStepKind.Battery && batteryAllowed
-        // One list, what is left first; done steps keep the maker's order among themselves (no state sections).
+        // One list, what is left first; done steps keep the maker's order among themselves (no
+        // state sections).
         val ordered = steps.filterNot(::done) + steps.filter(::done)
         return KeepRunningUi(
             loaded = true,
             maker = maker,
-            steps = ordered.map { KeepAliveStepUi(it.kind, done(it), if (done(it)) null else it.setting) }.toImmutableList(),
+            steps =
+                ordered
+                    .map { KeepAliveStepUi(it.kind, done(it), if (done(it)) null else it.setting) }
+                    .toImmutableList(),
             allSet = allSet,
             swipeWarning = maker.closesOnSwipe,
         )

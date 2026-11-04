@@ -1048,4 +1048,7 @@
     <string name="linuxMgrJobDoneBackup">The backup is ready</string>
     <string name="linuxMgrJobDoneRestore">Linux is restored</string>
     <string name="linuxMgrResetBackUpFirst">Back up first</string>
+    <string name="thermalGuardSetting">Pause the AI Team when the phone is hot</string>
+    <string name="thermalGuardSettingDetail">The team pauses with its work kept and resumes by itself once the phone cools.</string>
+    <string name="thermalGuardSaveFailed">Couldn't save heat protection. Try again.</string>
 </resources>
