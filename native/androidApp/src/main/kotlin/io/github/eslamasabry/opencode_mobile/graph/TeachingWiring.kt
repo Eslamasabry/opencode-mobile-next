@@ -28,6 +28,14 @@ import kotlinx.coroutines.flow.map
 object TeachingBindings {
     @Provides
     @SingleIn(AppScope::class)
+    fun arrivals(
+        tips: TipController,
+        scope: AppCoroutineScope,
+    ): io.github.eslamasabry.oc.engine.settings.teaching.ShowMeTargets =
+        io.github.eslamasabry.oc.engine.settings.teaching.ShowMeTargets(tips, scope)
+
+    @Provides
+    @SingleIn(AppScope::class)
     fun controller(stores: PreviewStores, clock: Clock, scope: AppCoroutineScope): TipController =
         TipController(stores.prefs, stores.lanes, clock, scope)
 }

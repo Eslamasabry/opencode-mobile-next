@@ -71,6 +71,7 @@ public object EditorRules {
         schedule: ScheduledPrompt,
         models: List<ModelChoice>,
         zoneId: String? = null,
+        nowMs: Long? = null,
     ): EditorFields {
         val rec = schedule.recurrence
         val at = rec.atMs?.let { ScheduleTime.moment(it, it, zoneId) }
@@ -81,8 +82,16 @@ public object EditorRules {
             project = schedule.projectPath,
             kind = rec.kind,
             time = "${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}",
-            date = if (rec.kind == RecurrenceKind.Once && at != null) at.date else "",
-            hours = rec.hours.toString(),
+            date =
+                if (rec.kind == RecurrenceKind.Once && at != null) {
+                    if (
+                        nowMs != null &&
+                            ScheduleTime.moment(rec.atMs!!, nowMs, zoneId).dayOffset < 0
+                    )
+                        ScheduleTime.today(nowMs, zoneId)
+                    else at.date
+                } else "",
+            hours = if (rec.kind == RecurrenceKind.Interval) rec.hours.toString() else "3",
             missed = schedule.missedPolicy,
             thisConversation = schedule.sessionId != null,
             model =
@@ -147,7 +156,7 @@ public class ScheduleEditViewModel(
                 sessionId = existing.sessionId
                 agent = existing.agent
                 workspace = existing.workspace
-                EditorRules.fields(existing, models)
+                EditorRules.fields(existing, models, nowMs = clock.now().toEpochMilliseconds())
             } else {
                 val from = route.from?.let { servers.conversation(it) }
                 if (from != null) sessionId = route.from?.sessionId?.raw
@@ -183,6 +192,7 @@ public class ScheduleEditViewModel(
                     else EditPhase.Ready,
                 fields = if (kept != null) fields.copy(prompt = kept) else fields,
                 seed = it.seed + 1,
+                nowMs = clock.now().toEpochMilliseconds(),
                 models = models.toImmutableList(),
                 continuesConversation = sessionId != null,
                 canChooseConversation = sessionId != null,

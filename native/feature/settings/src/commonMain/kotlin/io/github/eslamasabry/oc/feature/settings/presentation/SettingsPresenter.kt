@@ -45,6 +45,7 @@ public class SettingsPresenter(
     private val serverPage: SettingsServerDoor? = null,
     private val localData: LocalDataSettings? = null,
     private val phrases: PhraseSettings? = null,
+    private val arrivals: io.github.eslamasabry.oc.engine.settings.teaching.ShowMeTargets? = null,
 ) : SettingsActions {
     private data class Local(
         val stack: ImmutableList<SettingsPage> = persistentListOf(SettingsPage.Hub),
@@ -293,12 +294,19 @@ public class SettingsPresenter(
     }
 
     override fun onRow(row: SettingsRowId) {
+        val serverSection =
+            when (row) {
+                SettingsRowId.DefaultShell -> SettingsOutside.DefaultShell
+                SettingsRowId.Permissions -> SettingsOutside.Permissions
+                SettingsRowId.ModelAndMode -> SettingsOutside.ModelAndMode
+                SettingsRowId.Providers -> SettingsOutside.Providers
+                SettingsRowId.Tools -> SettingsOutside.Tools
+                else -> null
+            }
         if (
-            row == SettingsRowId.DefaultShell &&
-                currentFacts.value.savedServers.size > 1 &&
-                serverPage != null
+            serverSection != null && currentFacts.value.savedServers.size > 1 && serverPage != null
         ) {
-            onOpen(SettingsPage.ByServer(SettingsOutside.DefaultShell))
+            onOpen(SettingsPage.ByServer(serverSection))
             return
         }
         val p = prefs.value
@@ -370,11 +378,22 @@ public class SettingsPresenter(
 
     override fun onNewsShow() {
         val step = local.value.newsStep
+        val target =
+            when (step) {
+                0 -> io.github.eslamasabry.oc.engine.settings.teaching.ShowMeTarget.Updates
+                1 -> io.github.eslamasabry.oc.engine.settings.teaching.ShowMeTarget.Agents
+                2 -> io.github.eslamasabry.oc.engine.settings.teaching.ShowMeTarget.AppearanceText
+                else -> null
+            }
+        if (target != null) arrivals?.request(target)
         onBack()
         when (step) {
             0 -> onOutside(SettingsOutside.Updates)
             1 -> onOutside(SettingsOutside.Agents)
-            2 -> onOpen(SettingsPage.Appearance)
+            2 -> {
+                if (state.value.appearance.guide?.done == false) onAppearanceGuide(2, false)
+                onOpen(SettingsPage.Appearance)
+            }
         }
     }
 

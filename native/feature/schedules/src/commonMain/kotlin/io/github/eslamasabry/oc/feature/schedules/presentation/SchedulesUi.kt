@@ -167,6 +167,7 @@ public data class ScheduleEditUi(
     val issue: EditIssue? = null,
     val error: ScheduleCode? = null,
     val saving: Boolean = false,
+    val nowMs: Long = 0,
 )
 
 public interface ScheduleEditActions {

@@ -1,0 +1,5 @@
+<resources>
+    <string name="invitation40Question">طُلب هذا الإجراء 3 مرات. هل تسمح به دائمًا؟</string>
+    <string name="invitation40KeepAsking">الاستمرار في السؤال</string>
+    <string name="invitation40SaveFailed">تعذّر حفظ هذا الاختيار. لا يزال الطلب في الانتظار؛ يمكنك السماح به مرة واحدة.</string>
+</resources>

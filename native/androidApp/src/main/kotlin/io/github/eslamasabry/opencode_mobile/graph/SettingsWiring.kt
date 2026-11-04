@@ -204,6 +204,7 @@ class AndroidSettingsHost(
     private val voiceSettings: AndroidVoiceSettings,
     private val journey: SettingsJourney,
     private val monitoring: NativeProfileMonitoring,
+    private val notificationSettings: AndroidNotificationSettings,
     private val privacyData: SettingsPrivacy,
     private val phraseSettings: AndroidPhraseSettings,
     private val gitHubReports: GitHubProblemReporter, // BUILD-DIAGNOSTICS-ATTENTION
@@ -221,6 +222,16 @@ class AndroidSettingsHost(
             desktopReleaseCheck = false,
         )
 
+    private fun onPhone(id: io.github.eslamasabry.oc.core.common.ids.ProfileId): Boolean =
+        try {
+            val owner = (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value
+            owner == id.raw &&
+                stores.profiles.profile(id)?.profile?.baseUrl?.trimEnd('/') ==
+                    io.github.eslamasabry.oc.engine.lifecycle.PhoneOwnServers.IN_APP_URL
+        } catch (_: io.github.eslamasabry.oc.core.data.kv.GateNotOpen) {
+            false
+        }
+
     override val facts: StateFlow<SettingsFacts> =
         combine(
                 connections.servers,
@@ -233,12 +244,17 @@ class AndroidSettingsHost(
                         ?: servers.firstOrNull { it.connected }
                 SettingsFacts(
                     platform = shipped,
-                    server = live?.let { ServerLine(it.name, onPhone = false) },
+                    server = live?.let { ServerLine(it.name, onPhone = onPhone(it.id)) },
                     savedServers =
                         servers
                             .map {
                                 io.github.eslamasabry.oc.feature.settings.presentation
-                                    .SettingsSavedServer(it.id, it.name, it.connected)
+                                    .SettingsSavedServer(
+                                        it.id,
+                                        it.name,
+                                        it.connected,
+                                        onPhone(it.id),
+                                    )
                             }
                             .toImmutableList(),
                     dynamicColour = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
@@ -268,14 +284,37 @@ class AndroidSettingsHost(
         io.github.eslamasabry.oc.feature.settings.presentation.SettingsServerDoor { profile, section
             ->
             if (stores.profiles.profile(profile) != null)
-                nav.open(
-                    io.github.eslamasabry.oc.ui.routes.ServerSettingsRoute(
-                        profile,
-                        if (section == SettingsOutside.DefaultShell)
-                            io.github.eslamasabry.oc.ui.routes.ServerSettingsPage.Shell
-                        else io.github.eslamasabry.oc.ui.routes.ServerSettingsPage.Home,
-                    )
-                )
+                when (section) {
+                    SettingsOutside.Permissions -> nav.open(SettingsRoute.Permissions(profile))
+                    SettingsOutside.Providers ->
+                        nav.open(
+                            io.github.eslamasabry.oc.ui.routes.ServerIntegrationRoute(
+                                profile,
+                                io.github.eslamasabry.oc.ui.routes.ServerIntegrationPage.Providers,
+                            )
+                        )
+                    SettingsOutside.Tools ->
+                        nav.open(
+                            io.github.eslamasabry.oc.ui.routes.ServerIntegrationRoute(
+                                profile,
+                                io.github.eslamasabry.oc.ui.routes.ServerIntegrationPage.Tools,
+                            )
+                        )
+                    else ->
+                        nav.open(
+                            io.github.eslamasabry.oc.ui.routes.ServerSettingsRoute(
+                                profile,
+                                when (section) {
+                                    SettingsOutside.DefaultShell ->
+                                        io.github.eslamasabry.oc.ui.routes.ServerSettingsPage.Shell
+                                    SettingsOutside.ModelAndMode ->
+                                        io.github.eslamasabry.oc.ui.routes.ServerSettingsPage.Model
+                                    else ->
+                                        io.github.eslamasabry.oc.ui.routes.ServerSettingsPage.Home
+                                },
+                            )
+                        )
+                }
         }
 
     override val phrases: io.github.eslamasabry.oc.feature.settings.presentation.PhraseSettings =
@@ -329,6 +368,22 @@ class AndroidSettingsHost(
                 nav.open(BackgroundRoute.Home) // BUILD-ANDROID-BG-PLATFORM
             SettingsOutside.VoiceNotices ->
                 application.view("$REPO/blob/master/THIRD_PARTY_NOTICES.md")
+            SettingsOutside.ModelAndMode,
+            SettingsOutside.Providers,
+            SettingsOutside.Tools -> {
+                val profile =
+                    stores.profiles.activeId.value
+                        ?: stores.profiles.profiles.value.singleOrNull()?.id
+                if (profile != null) serverPage.open(profile, place)
+                else nav.open(ServersRoute.Home)
+            }
+            SettingsOutside.Permissions -> {
+                val profile =
+                    stores.profiles.activeId.value
+                        ?: stores.profiles.profiles.value.singleOrNull()?.id
+                if (profile != null) nav.open(SettingsRoute.Permissions(profile))
+                else nav.open(ServersRoute.Home)
+            }
             SettingsOutside.ReadState -> nav.open(ServersRoute.Home)
             SettingsOutside.KeptPrompts ->
                 nav.open(io.github.eslamasabry.oc.ui.routes.KeptPromptsRoute)
@@ -345,8 +400,7 @@ class AndroidSettingsHost(
 
     override val analytics: AnalyticsChoices = EngineAnalyticsChoices(analyticsEngine)
     override val voice: VoiceSettings? = voiceSettings.takeIf { it.offered }
-    override val notifications: NotificationSettings =
-        AndroidNotificationSettings(application, stores, prefs, scope, monitoring)
+    override val notifications: NotificationSettings = notificationSettings
     override val updates: UpdateSettings? = updateSettings
     override val about: AboutFacts =
         AboutFacts(
@@ -429,6 +483,10 @@ class AndroidSettingsHost(
         val OPENS: Set<SettingsOutside> =
             setOf(
                 SettingsOutside.Servers,
+                SettingsOutside.Permissions,
+                SettingsOutside.ModelAndMode,
+                SettingsOutside.Providers,
+                SettingsOutside.Tools,
                 SettingsOutside.StarOnGitHub,
                 SettingsOutside.WhatsNew,
                 SettingsOutside.ReleaseNotes,

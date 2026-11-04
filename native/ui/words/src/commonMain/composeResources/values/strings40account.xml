@@ -72,4 +72,6 @@
     <string name="account40OpenQuestion">Open the official sign-in page at %1$s?</string>
     <string name="account40OpenPage">Open sign-in page</string>
     <string name="account40OpenFailed">The sign-in page or clipboard could not be opened.</string>
+    <string name="account40ChatGpt">ChatGPT</string>
+    <string name="account40Bedrock">Amazon Bedrock</string>
 </resources>

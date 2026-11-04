@@ -1,0 +1,5 @@
+<resources>
+    <string name="invitation40Question">Asked 3 times. Always allow this same action?</string>
+    <string name="invitation40KeepAsking">Keep asking</string>
+    <string name="invitation40SaveFailed">This choice could not be saved. The request is still waiting; you can answer it once.</string>
+</resources>

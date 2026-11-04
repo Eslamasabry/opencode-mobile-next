@@ -3,8 +3,11 @@ package io.github.eslamasabry.oc.protocol.oc2.live
 import io.github.eslamasabry.oc.core.common.*
 import io.github.eslamasabry.oc.core.model.McpResourceInfo
 import io.github.eslamasabry.oc.core.model.McpServerInfo
+import io.github.eslamasabry.oc.core.model.ReferenceInfo
 import io.github.eslamasabry.oc.core.model.ServerLocation
+import io.github.eslamasabry.oc.core.model.SkillInfo
 import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.protocol.oc2.wire.Oc2Skill
 import io.ktor.http.HttpMethod
 import io.ktor.http.encodeURLPathPart
 import kotlinx.collections.immutable.ImmutableList
@@ -194,6 +197,70 @@ internal suspend fun Oc2Gateway.mcpRuntimeAction(
         is Outcome.Failed -> inspectionFailure(result.failure).failed()
         is Outcome.Ok -> Unit.ok()
     }
+}
+
+/** The server's declared skill catalog, pinned to this call's project location. */
+internal suspend fun Oc2Gateway.readSkills(): Outcome<ImmutableList<SkillInfo>> {
+    val pinned = location.value
+    val read = json("/skill", query = loc(pinned))
+    if (read is Outcome.Failed) return inspectionFailure(read.failure).failed()
+    val rows =
+        ((read as Outcome.Ok).value as? JsonObject)?.get("data") as? JsonArray
+            ?: return Failure.UnreadableReply().failed()
+    if (rows.size > MAX_INSPECTION_ROWS) return Failure.UnreadableReply().failed()
+    val skills = rows.map { value ->
+        val row = value as? JsonObject ?: return Failure.UnreadableReply().failed()
+        val skill = Oc2Skill.fromJson(row) ?: return Failure.UnreadableReply().failed()
+        if (skill.id.isBlank()) return Failure.UnreadableReply().failed()
+        SkillInfo(
+            skill.id,
+            skill.name ?: skill.id,
+            skill.description,
+            skill.location.orEmpty(),
+            skill.content.orEmpty(),
+            skill.slash,
+        )
+    }
+    return skills.toImmutableList().ok()
+}
+
+/** Hidden references never cross into the product inventory; malformed visible rows are unknown. */
+internal suspend fun Oc2Gateway.readReferences(): Outcome<ImmutableList<ReferenceInfo>> {
+    val pinned = location.value
+    val read = json("/reference", query = loc(pinned))
+    if (read is Outcome.Failed) return inspectionFailure(read.failure).failed()
+    val rows =
+        ((read as Outcome.Ok).value as? JsonObject)?.get("data") as? JsonArray
+            ?: return Failure.UnreadableReply().failed()
+    if (rows.size > MAX_INSPECTION_ROWS) return Failure.UnreadableReply().failed()
+    val references = mutableListOf<ReferenceInfo>()
+    for (value in rows) {
+        val row = value as? JsonObject ?: return Failure.UnreadableReply().failed()
+        val hidden = row["hidden"]
+        if (
+            hidden != null &&
+                hidden != JsonNull &&
+                (hidden !is JsonPrimitive || hidden.isString || hidden.booleanOrNull == null)
+        )
+            return Failure.UnreadableReply().failed()
+        if ((hidden as? JsonPrimitive)?.booleanOrNull == true) continue
+        fun text(key: String): String? =
+            (row[key] as? JsonPrimitive)?.takeIf { it.isString }?.content
+        val name =
+            text("name")?.takeIf { it.isNotBlank() } ?: return Failure.UnreadableReply().failed()
+        for (key in listOf("path", "location", "description")) {
+            val member = row[key]
+            if (
+                member != null &&
+                    member != JsonNull &&
+                    (member !is JsonPrimitive || !member.isString)
+            )
+                return Failure.UnreadableReply().failed()
+        }
+        references +=
+            ReferenceInfo(name, text("path") ?: text("location").orEmpty(), text("description"))
+    }
+    return references.toImmutableList().ok()
 }
 
 private fun validMcpName(name: String, redactor: Redactor): Boolean =

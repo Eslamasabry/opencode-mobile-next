@@ -91,7 +91,15 @@ public class AgentAccountViewModel(
                         handle = owner
                         observing = viewModelScope.launch {
                             owner.state.collect { panel ->
-                                if (handle === owner && owner.active && !lost) publish(panel)
+                                if (handle === owner && !lost) {
+                                    if (owner.active) publish(panel)
+                                    else
+                                        local.value =
+                                            AgentAccountUi(
+                                                phase = AgentAccountPhase.Disconnected,
+                                                profileName = local.value.profileName,
+                                            )
+                                }
                             }
                         }
                         local.update { it.copy(phase = AgentAccountPhase.Panel, failure = null) }
@@ -143,7 +151,7 @@ public class AgentAccountViewModel(
 
     override fun refresh() {
         val owner = handle ?: return
-        viewModelScope.launch { if (owner.active && handle === owner) owner.refresh() }
+        viewModelScope.launch { if (handle === owner && !lost) owner.refresh() }
     }
 
     override fun signIn() {
@@ -189,7 +197,7 @@ public class AgentAccountViewModel(
         if (!owner.active || lost) return
         when (val copied = port.copyCode(route.profile, scope, code.userCode)) {
             is Outcome.Failed -> local.update { it.copy(failure = copied.failure) }
-            is Outcome.Ok -> local.update { it.copy(copied = true) }
+            is Outcome.Ok -> local.update { it.copy(copied = true, failure = null) }
         }
     }
 

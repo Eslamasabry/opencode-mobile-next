@@ -48,6 +48,7 @@ internal class Oc2Gateway(
     ServerOperationsGateway,
     CorrelatedPromptGateway,
     FencedSessionReadStateGateway,
+    FencedSlashCommandGateway,
     FencedNewSessionPromptGateway,
     PromptRunIdentityGateway,
     SessionSelectionGateway,
@@ -702,9 +703,22 @@ internal class Oc2Gateway(
         command: String,
         args: String,
         model: ModelSelection?,
+    ): Outcome<Unit> = slashCommandFenced(session, command, args) { true }
+
+    override suspend fun slashCommandFenced(
+        session: SessionId,
+        command: String,
+        args: String,
+        beforeSend: () -> Boolean,
     ): Outcome<Unit> {
+        val at = location.value
+        if (!beforeSend()) return Failure.Refused(RefusalReason.StaleScope).failed()
         val prepared = preparePermissions(session)
         if (prepared is Outcome.Failed) return prepared
+        // Preparation negotiates the dialect and may suspend for policy installation/readback.
+        // The destination and the caller's admission must still be the captured ones afterwards.
+        if (location.value != at || !beforeSend())
+            return Failure.Refused(RefusalReason.StaleScope).failed()
         return unit(
             "/session/${sid(session)}/command",
             HttpMethod.Post,
@@ -1287,6 +1301,10 @@ internal class Oc2Gateway(
     override suspend fun terminalShellSettings(): Outcome<TerminalShellSettings> = shellSettings()
 
     override suspend fun selectTerminalShell(value: String): Outcome<Unit> = selectShell(value)
+
+    override suspend fun skills(): Outcome<ImmutableList<SkillInfo>> = readSkills()
+
+    override suspend fun references(): Outcome<ImmutableList<ReferenceInfo>> = readReferences()
 
     override suspend fun readSetupConfig(location: ServerLocation): Outcome<JsonElement> =
         inspectConfig(location, redactor)

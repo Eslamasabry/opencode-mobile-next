@@ -55,4 +55,19 @@
     <string name="s40iFixTool">Check %1$s on the server</string>
     <string name="s40iAddTools">Add tool servers on the server</string>
     <string name="s40iUnnamed">Unnamed item</string>
+    <string name="s40iToolsNotListed">This server does not list the tools available to a model. Its other catalog pages are available above.</string>
+    <string name="s40iCommands">Commands</string>
+    <string name="s40iSkills">Skills</string>
+    <string name="s40iReferences">References</string>
+    <string name="s40iRendered">Rendered</string>
+    <string name="s40iRaw">Raw text</string>
+    <string name="s40iCommandArguments">Command arguments</string>
+    <string name="s40iRunning">Starting command</string>
+    <string name="s40iNewConversation">New conversation</string>
+    <string name="s40iUntitled">Untitled conversation</string>
+    <string name="s40iOlder">Older conversations</string>
+    <string name="s40iUncertain">The result is not confirmed. Check the conversation before running the command again.</string>
+    <string name="s40iRunCommand">Run /%1$s</string>
+    <string name="s40iOpenPageQuestion">Open this page?</string>
+    <string name="s40iOpenPage">Open page</string>
 </resources>

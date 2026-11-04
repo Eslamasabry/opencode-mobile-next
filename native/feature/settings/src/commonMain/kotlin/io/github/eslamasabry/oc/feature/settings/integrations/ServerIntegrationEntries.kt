@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.settings.integrations
 
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
@@ -21,6 +22,10 @@ public class ServerIntegrationEntries : EntryInstaller {
                     create(route)
                 }
             val state by vm.state.collectAsStateWithLifecycle()
+            LifecycleResumeEffect(vm) {
+                vm.refresh()
+                onPauseOrDispose {}
+            }
             ServerIntegrationScreen(state, vm)
         }
     }

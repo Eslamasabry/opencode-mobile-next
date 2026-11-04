@@ -7,6 +7,9 @@ import kotlinx.serialization.Serializable
 public enum class ServerIntegrationPage {
     Providers,
     Tools,
+    Commands,
+    Skills,
+    References,
     Mcp,
     Permissions,
     Setup,

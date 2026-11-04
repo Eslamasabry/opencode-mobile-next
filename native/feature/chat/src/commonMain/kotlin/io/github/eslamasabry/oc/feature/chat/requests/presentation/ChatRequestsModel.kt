@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.chat.requests.presentation
 
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
@@ -46,16 +48,25 @@ public class ChatRequestsModel(
 ) : ChatRequestActions {
     private data class Local(
         val confirm: RequestId? = null,
+        val confirmAsk: io.github.eslamasabry.oc.engine.requests.ask.AskView? = null,
+        val confirmInvitation: Boolean = false,
         val focused: RequestId? = null,
         val otherOpen: RequestId? = null,
         val drafts: PersistentMap<RequestId, String> = persistentMapOf(),
         val sheet: RequestId? = null,
+        val invitationFailure: Failure? = null,
+        val invitationFailureFor: RequestId? = null,
     )
 
     private val local = MutableStateFlow(Local())
 
     public val state: StateFlow<RequestSlotUi> =
-        combine(engine.pending, capabilities, place, local) { all, caps, where, mine ->
+        combine(engine.pending, capabilities, place, local, engine.invitationOffers) {
+                all,
+                caps,
+                where,
+                mine,
+                _ ->
                 slot(selected(all, mine.focused), caps, where, mine)
             }
             .stateIn(scope, SharingStarted.Eagerly, current())
@@ -90,7 +101,14 @@ public class ChatRequestsModel(
     override fun askAlwaysAllow(id: RequestId) {
         val card = permissionCard(id) ?: return
         if (card.canAlwaysAllow && card.state == CardState.Waiting)
-            local.update { it.copy(confirm = id) }
+            local.update {
+                it.copy(
+                    confirm = id,
+                    confirmAsk = card.ask,
+                    confirmInvitation = card.invitation,
+                    invitationFailure = null,
+                )
+            }
     }
 
     override fun confirmAlwaysAllow() {
@@ -98,12 +116,37 @@ public class ChatRequestsModel(
         // confirm already.
         val confirm = current().confirmAlways
         local.update { it.copy(confirm = null) }
-        if (confirm != null)
-            engine.answer(confirm.id, RequestAnswer.Permission(PermissionReply.Always))
+        if (confirm != null) {
+            if (confirm.invitation)
+                scope.launch {
+                    val result = engine.acceptInvitation(confirm.id)
+                    local.update {
+                        it.copy(
+                            invitationFailure = (result as? Outcome.Failed)?.failure,
+                            invitationFailureFor = confirm.id,
+                        )
+                    }
+                }
+            else engine.answer(confirm.id, RequestAnswer.Permission(PermissionReply.Always))
+        }
     }
 
     override fun cancelAlwaysAllow() {
         local.update { it.copy(confirm = null) }
+    }
+
+    override fun keepAsking(id: RequestId) {
+        val card = permissionCard(id) ?: return
+        if (!card.invitation || card.state != CardState.Waiting) return
+        scope.launch {
+            val result = engine.keepAsking(id)
+            local.update {
+                it.copy(
+                    invitationFailure = (result as? Outcome.Failed)?.failure,
+                    invitationFailureFor = id,
+                )
+            }
+        }
     }
 
     override fun choose(id: RequestId, option: String) {
@@ -193,6 +236,7 @@ public class ChatRequestsModel(
                             ),
                         canAlwaysAllow =
                             caps.persistentPermissionGrants && request.request.canAlwaysAllow,
+                        invitation = engine.isInvited(request.id),
                     )
                 is PendingRequest.Question -> {
                     val prompt = request.question.prompts.firstOrNull()
@@ -220,10 +264,19 @@ public class ChatRequestsModel(
         val confirm =
             (card as? RequestCardUi.Permission)
                 ?.takeIf {
-                    mine.confirm == it.id && it.canAlwaysAllow && it.state == CardState.Waiting
+                    mine.confirm == it.id &&
+                        it.ask == mine.confirmAsk &&
+                        it.canAlwaysAllow &&
+                        it.state == CardState.Waiting &&
+                        (!mine.confirmInvitation || it.invitation)
                 }
-                ?.let { AlwaysConfirmUi(it.id, it.ask.always) }
-        return RequestSlotUi(card, requests.moreWaiting, confirm)
+                ?.let { AlwaysConfirmUi(it.id, it.ask.always, mine.confirmInvitation) }
+        return RequestSlotUi(
+            card,
+            requests.moreWaiting,
+            confirm,
+            mine.invitationFailure.takeIf { mine.invitationFailureFor == request.id },
+        )
     }
 
     private fun cardState(phase: AnswerPhase): CardState =

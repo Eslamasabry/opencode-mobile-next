@@ -12,6 +12,7 @@ import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsDoor
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsGroupId
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage
+import io.github.eslamasabry.oc.feature.settings.presentation.SettingsRowId
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsSearchEntry
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsUi
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -24,6 +25,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitSearchNoMatch
 import io.github.eslamasabry.oc.ui.words.res.settingsHubSearch
@@ -149,6 +151,7 @@ internal fun GroupPage(
                         KitRow(
                             title = title,
                             modifier = Modifier.testTag(row.id.tag),
+                            supporting = rowValue(row.id, state),
                             trailing = KitRowTrailing.Chevron,
                             onClick = { actions.onRow(row.id) },
                         )
@@ -195,5 +198,51 @@ internal fun androidx.compose.foundation.layout.ColumnScope.SavedServersBody(
                 onClick = { actions.onSavedServer(server.id, section) },
             )
         }
+    }
+}
+
+@Composable
+private fun rowValue(row: SettingsRowId, state: SettingsUi): String? {
+    val servers = state.hub.savedServers
+    return when (row) {
+        SettingsRowId.Servers ->
+            when {
+                servers.isEmpty() -> null
+                servers.size > 1 ->
+                    pluralStringResource(
+                        Res.plurals.settingsV3ServersCount,
+                        servers.size,
+                        servers.size,
+                    )
+                servers.single().connected ->
+                    stringResource(Res.string.settingsV3ServerConnected, servers.single().name)
+                else -> servers.single().name
+            }
+        SettingsRowId.ThisPhone ->
+            stringResource(
+                when {
+                    servers.any { it.onPhone && it.connected } -> Res.string.settingsV3PhoneRunning
+                    servers.any { it.onPhone } -> Res.string.settingsV3PhoneInstalled
+                    else -> Res.string.settingsV3PhoneSetUp
+                }
+            )
+        SettingsRowId.Notifications -> {
+            val notify = state.notifications ?: return null
+            val different = notify.profiles.count { it.enabled && !it.notifications }
+            if (different > 0)
+                pluralStringResource(Res.plurals.settingsV3DifferentOn, different, different)
+            else
+                stringResource(
+                    if (notify.questions || notify.finishedWork) Res.string.settingsV3On
+                    else Res.string.settingsV3Off
+                )
+        }
+        SettingsRowId.DefaultShell,
+        SettingsRowId.ModelAndMode,
+        SettingsRowId.Providers,
+        SettingsRowId.Tools,
+        SettingsRowId.Permissions ->
+            if (servers.size > 1) stringResource(Res.string.settingsV3ByServer) else null
+        else -> null
     }
 }

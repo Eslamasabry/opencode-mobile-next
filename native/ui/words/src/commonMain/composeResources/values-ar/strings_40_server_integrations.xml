@@ -55,4 +55,19 @@
     <string name="s40iFixTool">تحقّق من %1$s على الخادم</string>
     <string name="s40iAddTools">أضف خوادم أدوات على الخادم</string>
     <string name="s40iUnnamed">عنصر بلا اسم</string>
+    <string name="s40iToolsNotListed">لا يسرد هذا الخادم الأدوات المتاحة للنموذج. صفحات قائمته الأخرى متاحة أعلاه.</string>
+    <string name="s40iCommands">الأوامر</string>
+    <string name="s40iSkills">المهارات</string>
+    <string name="s40iReferences">المراجع</string>
+    <string name="s40iRendered">عرض منسّق</string>
+    <string name="s40iRaw">النص الخام</string>
+    <string name="s40iCommandArguments">وسائط الأمر</string>
+    <string name="s40iRunning">جارٍ بدء الأمر</string>
+    <string name="s40iNewConversation">محادثة جديدة</string>
+    <string name="s40iUntitled">محادثة بلا عنوان</string>
+    <string name="s40iOlder">محادثات أقدم</string>
+    <string name="s40iUncertain">لم تتأكد النتيجة. تحقّق من المحادثة قبل تشغيل الأمر مجددًا.</string>
+    <string name="s40iRunCommand">تشغيل /%1$s</string>
+    <string name="s40iOpenPageQuestion">هل تريد فتح هذه الصفحة؟</string>
+    <string name="s40iOpenPage">فتح الصفحة</string>
 </resources>

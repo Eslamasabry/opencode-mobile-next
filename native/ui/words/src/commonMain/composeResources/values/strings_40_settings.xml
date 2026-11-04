@@ -22,4 +22,6 @@
     <string name="settings40_discard_done">Deleted %1$d items.</string>
     <string name="settings40_discard_kept">Deleted %1$d items. Kept %2$d prompts that need review.</string>
     <string name="settings40_discard_cleanup">Deleted %1$d drafts. Some attachment files could not be removed. Try deleting drafts again to finish.</string>
+    <string name="settings40_no_answers">No questions on this server need an answer yet.</string>
+    <string name="settings40_answer_failed">This step did not finish. Your saved answer and Android settings may differ. Check Notifications or Keep running, then try again.</string>
 </resources>

@@ -8,12 +8,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import io.github.eslamasabry.oc.ui.kit.*
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.*
 import io.github.eslamasabry.oc.ui.kit.input.*
 import io.github.eslamasabry.oc.ui.kit.modal.*
 import io.github.eslamasabry.oc.ui.kit.row.*
 import io.github.eslamasabry.oc.ui.kit.state.*
+import io.github.eslamasabry.oc.ui.kitchat.code.*
+import io.github.eslamasabry.oc.ui.kitchat.markdown.*
 import io.github.eslamasabry.oc.ui.routes.ServerIntegrationPage
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
@@ -62,25 +65,31 @@ public fun ServerIntegrationScreen(state: ServerIntegrationUi, actions: ServerIn
                 KitNotice(stringResource(Res.string.s40iHostIntro))
                 KitButton(stringResource(Res.string.s40iDocs), actions::docs)
             }
-            if (state.page == ServerIntegrationPage.Tools) {
-                KitRow(
-                    stringResource(Res.string.s40iModel),
-                    supporting =
-                        state.models.firstOrNull { it.key == state.model }?.label
-                            ?: stringResource(Res.string.s40iChooseModel),
-                    trailing = KitRowTrailing.Chevron,
-                    onClick = { chooseModel = true },
-                )
-                KitRow(
-                    stringResource(Res.string.s40iMcp),
-                    trailing = KitRowTrailing.Chevron,
-                    onClick = { actions.go(ServerIntegrationPage.Mcp) },
-                )
-                KitRow(
-                    stringResource(Res.string.s40iPlugins),
-                    trailing = KitRowTrailing.Chevron,
-                    onClick = { actions.go(ServerIntegrationPage.Plugins) },
-                )
+            if (state.page == ServerIntegrationPage.Tools && state.catalog) {
+                listOf(
+                        ServerIntegrationPage.Mcp,
+                        ServerIntegrationPage.Commands,
+                        ServerIntegrationPage.Skills,
+                        ServerIntegrationPage.References,
+                        ServerIntegrationPage.Plugins,
+                    )
+                    .forEach { page ->
+                        KitRow(
+                            integrationTitle(page),
+                            trailing = KitRowTrailing.Chevron,
+                            onClick = { actions.go(page) },
+                        )
+                    }
+                if (!state.toolsListed) KitNotice(stringResource(Res.string.s40iToolsNotListed))
+                else
+                    KitRow(
+                        stringResource(Res.string.s40iModel),
+                        supporting =
+                            state.models.firstOrNull { it.key == state.model }?.label
+                                ?: stringResource(Res.string.s40iChooseModel),
+                        trailing = KitRowTrailing.Chevron,
+                        onClick = { chooseModel = true },
+                    )
             }
             if (state.items.size >= 8 || query.isNotBlank())
                 KitField(
@@ -94,7 +103,12 @@ public fun ServerIntegrationScreen(state: ServerIntegrationUi, actions: ServerIn
                     query.isBlank() ||
                         (it.title + " " + it.description.orEmpty()).contains(query, true)
                 }
-            if (shown.isEmpty() && !state.loading && state.available)
+            if (
+                shown.isEmpty() &&
+                    !state.loading &&
+                    state.available &&
+                    !(state.page == ServerIntegrationPage.Tools && !state.toolsListed)
+            )
                 KitNotice(
                     stringResource(
                         if (query.isBlank()) Res.string.s40iEmpty else Res.string.s40iNoMatch
@@ -131,17 +145,85 @@ public fun ServerIntegrationScreen(state: ServerIntegrationUi, actions: ServerIn
         }
         val selected = state.selected
         val label = remember(selected?.key) { TextFieldState() }
+        val commandArgs = remember(selected?.key) { TextFieldState() }
+        var destination by
+            remember(selected?.key) { mutableStateOf(state.sessions.firstOrNull()?.key.orEmpty()) }
+        var raw by remember(selected?.key) { mutableStateOf(false) }
         KitSheet(
             selected != null,
             actions::dismiss,
             selected?.let { integrationItemTitle(it) } ?: title,
             closeLabel = stringResource(Res.string.kitSheetClose),
             height = KitSheetHeight.Full,
+            dismissible = !state.running,
+            dirty = selected?.mayRun == true && commandArgs.text.isNotBlank(),
         ) {
             selected?.let { item ->
                 if (item.kind != ServerIntegrationKind.Plugin)
                     item.description?.takeIf { it.isNotBlank() }?.let { KitText(it) }
-                KitText(integrationState(item.status))
+                if (
+                    item.kind !in
+                        setOf(
+                            ServerIntegrationKind.Command,
+                            ServerIntegrationKind.Skill,
+                            ServerIntegrationKind.Reference,
+                        )
+                )
+                    KitText(integrationState(item.status))
+                item.content?.let { content ->
+                    KitButton(
+                        stringResource(if (raw) Res.string.s40iRendered else Res.string.s40iRaw),
+                        { raw = !raw },
+                    )
+                    if (raw)
+                        KitCodeBlock(
+                            content,
+                            KitCodeKind.Code,
+                            copyLabel = stringResource(Res.string.s40iCopy),
+                        )
+                    else
+                        KitMarkdown(
+                            remember(content) { KitMdSource.blocks(item.key, content, false) },
+                            KitMarkdownActions(
+                                actions::openLink,
+                                copyCodeLabel = stringResource(Res.string.s40iCopy),
+                            ),
+                        )
+                }
+                if (item.mayRun) {
+                    KitField(
+                        commandArgs,
+                        label = stringResource(Res.string.s40iCommandArguments),
+                        enabled =
+                            if (state.running)
+                                KitEnabled.Disabled(stringResource(Res.string.s40iRunning))
+                            else KitEnabled.Enabled,
+                    )
+                    KitRow(
+                        stringResource(Res.string.s40iNewConversation),
+                        selected = destination.isEmpty(),
+                        onClick = { if (!state.running) destination = "" },
+                    )
+                    state.sessions.forEach { session ->
+                        KitRow(
+                            session.label.ifBlank { stringResource(Res.string.s40iUntitled) },
+                            selected = destination == session.key,
+                            onClick = { if (!state.running) destination = session.key },
+                        )
+                    }
+                    if (state.moreSessions)
+                        KitButton(stringResource(Res.string.s40iOlder), actions::moreSessions)
+                    if (state.commandBlocked) KitNotice(stringResource(Res.string.s40iUncertain))
+                    KitButton(
+                        stringResource(Res.string.s40iRunCommand, item.title),
+                        { actions.runCommand(commandArgs.text.toString(), destination) },
+                        working = state.running,
+                        enabled =
+                            if (state.commandBlocked)
+                                KitEnabled.Disabled(stringResource(Res.string.s40iUncertain))
+                            else KitEnabled.Enabled,
+                    )
+                }
                 item.details?.let {
                     KitDetailsFold(
                         stringResource(Res.string.kitDetails),
@@ -200,6 +282,17 @@ public fun ServerIntegrationScreen(state: ServerIntegrationUi, actions: ServerIn
                 )
             },
             actions::disconnect,
+            actions::dismiss,
+        )
+        KitConfirm(
+            state.linkHost?.let {
+                KitConfirmSpec(
+                    stringResource(Res.string.s40iOpenPageQuestion),
+                    stringResource(Res.string.s40iOpenPage),
+                    body = it,
+                )
+            },
+            actions::confirmLink,
             actions::dismiss,
         )
         AddMcpSheet(state, actions)
@@ -275,6 +368,9 @@ private fun integrationTitle(page: ServerIntegrationPage): String =
         when (page) {
             ServerIntegrationPage.Providers -> Res.string.s40iProviders
             ServerIntegrationPage.Tools -> Res.string.s40iTools
+            ServerIntegrationPage.Commands -> Res.string.s40iCommands
+            ServerIntegrationPage.Skills -> Res.string.s40iSkills
+            ServerIntegrationPage.References -> Res.string.s40iReferences
             ServerIntegrationPage.Mcp -> Res.string.s40iMcp
             ServerIntegrationPage.Plugins -> Res.string.s40iPlugins
             ServerIntegrationPage.Setup -> Res.string.s40iSetup

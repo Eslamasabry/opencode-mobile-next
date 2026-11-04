@@ -17,6 +17,8 @@ public enum class ServerIntegrationKind {
     CallableTool,
     RegisteredTool,
     Command,
+    Skill,
+    Reference,
     Mcp,
     Resource,
     Plugin,
@@ -46,6 +48,8 @@ public data class ServerIntegrationItem(
     val kind: ServerIntegrationKind,
     val status: ServerIntegrationState = ServerIntegrationState.Unknown,
     val details: Redacted? = null,
+    val content: String? = null,
+    val mayRun: Boolean = false,
     val builtIn: Boolean = false,
     val mayConnect: Boolean = false,
     val mayDisconnect: Boolean = false,
@@ -60,9 +64,16 @@ public data class ServerIntegrationUi(
     val server: String? = null,
     val loading: Boolean = true,
     val available: Boolean = false,
+    val catalog: Boolean = false,
+    val toolsListed: Boolean = false,
     val items: ImmutableList<ServerIntegrationItem> = persistentListOf(),
     val models: ImmutableList<ServerIntegrationModelChoice> = persistentListOf(),
     val model: String? = null,
+    val sessions: ImmutableList<ServerIntegrationModelChoice> = persistentListOf(),
+    val moreSessions: Boolean = false,
+    val running: Boolean = false,
+    val commandBlocked: Boolean = false,
+    val linkHost: String? = null,
     val selected: ServerIntegrationItem? = null,
     val question: ServerIntegrationItem? = null,
     val failure: Failure? = null,
@@ -76,6 +87,14 @@ public interface ServerIntegrationActions {
     public fun refresh()
 
     public fun select(key: String)
+
+    public fun runCommand(arguments: String, destination: String)
+
+    public fun moreSessions()
+
+    public fun openLink(url: String)
+
+    public fun confirmLink()
 
     public fun chooseModel(key: String)
 
@@ -124,6 +143,14 @@ public class UnavailableServerIntegrations : ServerIntegrations {
 
             override fun select(key: String) = Unit
 
+            override fun runCommand(arguments: String, destination: String) = Unit
+
+            override fun moreSessions() = Unit
+
+            override fun openLink(url: String) = Unit
+
+            override fun confirmLink() = Unit
+
             override fun chooseModel(key: String) = Unit
 
             override fun connect(key: String) = Unit
@@ -166,6 +193,15 @@ public class ServerIntegrationViewModel(
 
     override fun select(key: String): Unit = session.select(key)
 
+    override fun runCommand(arguments: String, destination: String): Unit =
+        session.runCommand(arguments, destination)
+
+    override fun moreSessions(): Unit = session.moreSessions()
+
+    override fun openLink(url: String): Unit = session.openLink(url)
+
+    override fun confirmLink(): Unit = session.confirmLink()
+
     override fun chooseModel(key: String): Unit = session.chooseModel(key)
 
     override fun connect(key: String): Unit = session.connect(key)
@@ -192,6 +228,7 @@ public class ServerIntegrationViewModel(
     override fun docs(): Unit = session.docs()
 
     override fun close() {
+        if (state.value.running) return
         session.close()
         nav.back()
     }

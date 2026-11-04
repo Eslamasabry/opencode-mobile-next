@@ -121,7 +121,7 @@ class AndroidAgentAccountPort(
                     override val state: StateFlow<AccountPanelState> = controller.state
 
                     override suspend fun refresh() {
-                        withContext(lane) { if (active) controller.refresh() }
+                        withContext(lane) { controller.refresh() }
                     }
 
                     override suspend fun signIn() {

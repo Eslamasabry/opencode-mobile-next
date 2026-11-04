@@ -215,9 +215,17 @@ private fun ServerHome(state: ServerSettingsUi, actions: ServerSettingsActions) 
                 IntegrationDoor(Res.string.aiSetupTitle, ServerIntegrationPage.Setup, actions)
             if (flags?.pluginInventory == true)
                 IntegrationDoor(Res.string.server40Plugins, ServerIntegrationPage.Plugins, actions)
-            if (flags?.serverCatalog == true && flags.hostAgentProviders != true)
+            if (
+                !facts.managedOnPhone &&
+                    flags?.serverCatalog == true &&
+                    flags.hostAgentProviders != true
+            )
                 IntegrationDoor(Res.string.e7SettingsUi65, ServerIntegrationPage.Host, actions)
-            if (flags?.remoteUpgrade != true && flags?.hostAgentProviders != true)
+            if (
+                !facts.managedOnPhone &&
+                    flags?.remoteUpgrade != true &&
+                    flags?.hostAgentProviders != true
+            )
                 KitNotice(stringResource(Res.string.e7SettingsUi68))
             if (facts.capabilities?.shellSettings == true)
                 KitRow(

@@ -24,6 +24,7 @@ import io.github.eslamasabry.oc.core.model.TerminalShellSettings
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.connection.ServerConnections
+import io.github.eslamasabry.oc.engine.runtime.switching.ManagedLocalServer
 import io.github.eslamasabry.oc.feature.servers.presentation.ServerEditorInput
 import io.github.eslamasabry.oc.feature.servers.presentation.ServerEditorPort
 import io.github.eslamasabry.oc.feature.settings.presentation.*
@@ -78,6 +79,9 @@ class NativeServerSettings(
                                 !loaded.profile.usesAgentSocket,
                                 null,
                                 loaded.profile.backend == BackendKind.Codex,
+                                loaded.profile.backend == BackendKind.OpenCode2 &&
+                                    (ManagedLocalServer.isBuiltin(loaded.profile.baseUrl) ||
+                                        ManagedLocalServer.isTermux(loaded.profile.baseUrl)),
                             )
                         )
                     else
@@ -92,6 +96,9 @@ class NativeServerSettings(
                                     !loaded.profile.usesAgentSocket,
                                     flags,
                                     loaded.profile.backend == BackendKind.Codex,
+                                    loaded.profile.backend == BackendKind.OpenCode2 &&
+                                        (ManagedLocalServer.isBuiltin(loaded.profile.baseUrl) ||
+                                            ManagedLocalServer.isTermux(loaded.profile.baseUrl)),
                                 )
                             }
                         }

@@ -72,4 +72,6 @@
     <string name="account40OpenQuestion">هل تريد فتح صفحة تسجيل الدخول الرسمية لدى %1$s؟</string>
     <string name="account40OpenPage">فتح صفحة تسجيل الدخول</string>
     <string name="account40OpenFailed">تعذّر فتح صفحة تسجيل الدخول أو الحافظة.</string>
+    <string name="account40ChatGpt">ChatGPT</string>
+    <string name="account40Bedrock">Amazon Bedrock</string>
 </resources>

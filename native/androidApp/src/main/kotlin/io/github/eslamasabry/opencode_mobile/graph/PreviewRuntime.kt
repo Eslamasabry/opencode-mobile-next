@@ -410,6 +410,7 @@ class PreviewRuntime(
                     AndroidProjectStorageAccess.register(this)
                     NativePhraseSuggestions.register(this)
                     NativeReadStateConsent.register(this)
+                    NativePermissionInvitations.register(this)
                     NativeConnectionForms.register(this)
                     PlansLegacyCollectors.register(this)
                     NativeServerDefaults.register(this)

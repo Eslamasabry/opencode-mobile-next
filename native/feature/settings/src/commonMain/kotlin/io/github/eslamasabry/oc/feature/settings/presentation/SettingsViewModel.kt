@@ -53,7 +53,11 @@ public interface SettingsHost {
 @Inject
 @ViewModelKey
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
-public class SettingsViewModel(host: SettingsHost, private val nav: AppNavigator) : ViewModel() {
+public class SettingsViewModel(
+    host: SettingsHost,
+    private val nav: AppNavigator,
+    arrivals: io.github.eslamasabry.oc.engine.settings.teaching.ShowMeTargets,
+) : ViewModel() {
     private val presenter =
         SettingsPresenter(
             viewModelScope,
@@ -70,6 +74,7 @@ public class SettingsViewModel(host: SettingsHost, private val nav: AppNavigator
             host.serverPage,
             host.localData,
             host.phrases,
+            arrivals,
         )
 
     public val state: StateFlow<SettingsUi> = presenter.state

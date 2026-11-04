@@ -34,8 +34,10 @@ public fun AgentAccountScreen(state: AgentAccountUi, actions: AgentAccountAction
     val panel = state.panel
     val busy =
         state.phase == AgentAccountPhase.Loading ||
-            panel.status == AccountPanelStatus.Loading ||
-            panel.loginStatus in setOf(AccountLoginStatus.Starting, AccountLoginStatus.Cancelling)
+            (state.phase == AgentAccountPhase.Panel &&
+                (panel.status == AccountPanelStatus.Loading ||
+                    panel.loginStatus in
+                        setOf(AccountLoginStatus.Starting, AccountLoginStatus.Cancelling)))
     val loading = stringResource(Res.string.account40Loading)
     KitScreen(
         topBar = {
@@ -184,7 +186,8 @@ private fun Identity(panel: AccountPanelState, actions: AgentAccountActions) {
         AccountPanelStatus.Error ->
             KitErrorNotice(
                 headline,
-                retry = KitLineAction(stringResource(Res.string.account40Refresh), actions::refresh),
+                retry =
+                    KitLineAction(stringResource(Res.string.account40Refresh), actions::refresh),
             )
         AccountPanelStatus.Unavailable ->
             KitStateView(
@@ -207,9 +210,9 @@ private fun Identity(panel: AccountPanelState, actions: AgentAccountActions) {
                         trailing =
                             KitRowTrailing.Value(
                                 when (account.type) {
-                                    "chatgpt" -> "ChatGPT"
+                                    "chatgpt" -> stringResource(Res.string.account40ChatGpt)
                                     "apiKey" -> stringResource(Res.string.account40ApiKey)
-                                    "amazonBedrock" -> "Amazon Bedrock"
+                                    "amazonBedrock" -> stringResource(Res.string.account40Bedrock)
                                     else -> stringResource(Res.string.account40HostAuth)
                                 },
                                 chevron = false,

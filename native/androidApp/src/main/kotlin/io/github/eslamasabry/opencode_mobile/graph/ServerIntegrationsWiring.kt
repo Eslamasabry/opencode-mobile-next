@@ -6,7 +6,9 @@ import android.content.ClipboardManager
 import android.content.Context
 import dev.zacsweers.metro.*
 import io.github.eslamasabry.oc.core.common.*
+import io.github.eslamasabry.oc.core.common.ids.*
 import io.github.eslamasabry.oc.core.domain.*
+import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.model.*
 import io.github.eslamasabry.oc.core.security.*
 import io.github.eslamasabry.oc.engine.connection.*
@@ -64,6 +66,8 @@ class NativeServerIntegrations(
         private var location: ServerLocation? = null
         private var token = 0L
         private var closed = false
+        private var closeWhenIdle = false
+        private var selectedProvider: IntegrationInfo? = null
         private var loaded = false
         private val providers = mutableMapOf<String, IntegrationInfo>()
         private val credentials = mutableMapOf<String, String>()
@@ -71,6 +75,13 @@ class NativeServerIntegrations(
         private val models = mutableMapOf<String, ModelRef>()
         private val rawCopy = mutableMapOf<String, String>()
         private var sourceWatch: Job? = null
+        private var eventWatch: Job? = null
+        private var refreshQueued = false
+        private var refreshRunning = false
+        private var sessionCursor: String? = null
+        private var pendingLink: ApprovedLink? = null
+        private val commandNames = mutableMapOf<String, String>()
+        private val createdCommands = mutableMapOf<String, SessionId>()
 
         init {
             refresh()
@@ -92,279 +103,335 @@ class NativeServerIntegrations(
         }
 
         override fun refresh() {
-            if (closed || state.value.loading && loaded) return
+            if (closed) return
+            if (refreshRunning) {
+                refreshQueued = true
+                return
+            }
+            refreshRunning = true
             own.launch {
-                val mine = ++token
-                mutable.update { it.copy(loading = true, failure = null) }
-                when (val warmed = stores.warm()) {
-                    is Outcome.Failed -> {
-                        failed(warmed.failure)
+                try {
+                    val mine = ++token
+                    mutable.update { it.copy(loading = true, failure = null) }
+                    when (val warmed = stores.warm()) {
+                        is Outcome.Failed -> {
+                            failed(warmed.failure)
+                            return@launch
+                        }
+                        is Outcome.Ok -> Unit
+                    }
+                    val profile = stores.profiles.profile(route.profile)
+                    if (profile == null) {
+                        unavailable()
                         return@launch
                     }
-                    is Outcome.Ok -> Unit
-                }
-                val profile = stores.profiles.profile(route.profile)
-                if (profile == null) {
-                    unavailable()
-                    return@launch
-                }
-                mutable.update { it.copy(server = safe(profile.profile.name)) }
-                if (route.page == ServerIntegrationPage.Permissions) {
-                    nav.open(ServersRoute.Permissions(route.profile))
-                    close()
-                    return@launch
-                }
-                if (route.page == ServerIntegrationPage.Host) {
+                    mutable.update { it.copy(server = safe(profile.profile.name)) }
+                    if (route.page == ServerIntegrationPage.Permissions) {
+                        withContext(dispatchers.main) {
+                            if (
+                                !closed &&
+                                    stores.profiles.profile(route.profile) == profile &&
+                                    nav.top.value == route
+                            ) {
+                                nav.back()
+                                nav.open(SettingsRoute.Permissions(route.profile))
+                            }
+                        }
+                        close()
+                        return@launch
+                    }
+                    if (route.page == ServerIntegrationPage.Host) {
+                        saved = profile
+                        val port =
+                            profile.toServerProfile()?.origin?.port
+                                ?: run {
+                                    unavailable()
+                                    return@launch
+                                }
+                        rawCopy["install"] = HostScripts.install(port)
+                        rawCopy["usb"] = "adb reverse tcp:$port tcp:$port"
+                        mutable.update {
+                            it.copy(
+                                loading = false,
+                                available = true,
+                                items =
+                                    rawCopy
+                                        .map { (key, value) ->
+                                            ServerIntegrationItem(
+                                                key,
+                                                key,
+                                                kind = ServerIntegrationKind.HostCommand,
+                                                details = details(value),
+                                            )
+                                        }
+                                        .toImmutableList(),
+                            )
+                        }
+                        return@launch
+                    }
+                    val live = registry.live.value[route.profile]
+                    if (
+                        live == null ||
+                            live.profile !=
+                                profile.toServerProfile(
+                                    managedOnPhone = live.profile.managedOnPhone
+                                )
+                    ) {
+                        unavailable()
+                        return@launch
+                    }
+                    if (
+                        loaded &&
+                            (graph !== live ||
+                                saved != profile ||
+                                location != live.session.server.location.value)
+                    ) {
+                        unavailable()
+                        return@launch
+                    }
                     saved = profile
-                    val port =
-                        profile.toServerProfile()?.origin?.port
-                            ?: run {
+                    graph = live
+                    location = live.session.server.location.value
+                    loaded = true
+                    if (sourceWatch == null)
+                        sourceWatch = own.launch {
+                            combine(
+                                    registry.live,
+                                    stores.profiles.profiles,
+                                    live.session.server.location,
+                                ) { _, _, _ ->
+                                    valid()
+                                }
+                                .collect { if (!it) unavailable() }
+                        }
+                    if (eventWatch == null)
+                        eventWatch = own.launch {
+                            live.session.server.events.project.collect { envelope ->
+                                val event = envelope.event
+                                if (
+                                    valid() &&
+                                        (event == GatewayEvent.Connected ||
+                                            event is GatewayEvent.RefreshHint &&
+                                                event.kind.raw in
+                                                    setOf(
+                                                        "plugin",
+                                                        "config",
+                                                        "integration",
+                                                        "catalog",
+                                                        "agent",
+                                                    ))
+                                )
+                                    refresh()
+                            }
+                        }
+                    val ops = live.session.server.facet<ServerOperationsGateway>()
+                    if (ops == null) {
+                        unavailable()
+                        return@launch
+                    }
+                    val caps = live.session.capabilities.value
+                    mutable.update {
+                        it.copy(catalog = caps.serverCatalog, toolsListed = caps.toolInventory)
+                    }
+                    when (route.page) {
+                        ServerIntegrationPage.Providers -> {
+                            if (!caps.integrationCredentials) {
                                 unavailable()
                                 return@launch
                             }
-                    rawCopy["install"] = HostScripts.install(port)
-                    rawCopy["usb"] = "adb reverse tcp:$port tcp:$port"
-                    mutable.update {
-                        it.copy(
-                            loading = false,
-                            available = true,
-                            items =
-                                rawCopy
-                                    .map { (key, value) ->
-                                        ServerIntegrationItem(
-                                            key,
-                                            key,
-                                            kind = ServerIntegrationKind.HostCommand,
-                                            details = details(value),
-                                        )
-                                    }
-                                    .toImmutableList(),
-                        )
-                    }
-                    return@launch
-                }
-                val live = registry.live.value[route.profile]
-                if (
-                    live == null ||
-                        live.profile !=
-                            profile.toServerProfile(managedOnPhone = live.profile.managedOnPhone)
-                ) {
-                    unavailable()
-                    return@launch
-                }
-                if (
-                    loaded &&
-                        (graph !== live ||
-                            saved != profile ||
-                            location != live.session.server.location.value)
-                ) {
-                    unavailable()
-                    return@launch
-                }
-                saved = profile
-                graph = live
-                location = live.session.server.location.value
-                loaded = true
-                if (sourceWatch == null)
-                    sourceWatch = own.launch {
-                        combine(
-                                registry.live,
-                                stores.profiles.profiles,
-                                live.session.server.location,
-                            ) { _, _, _ ->
-                                valid()
-                            }
-                            .collect { if (!it) unavailable() }
-                    }
-                val ops = live.session.server.facet<ServerOperationsGateway>()
-                if (ops == null) {
-                    unavailable()
-                    return@launch
-                }
-                val caps = live.session.capabilities.value
-                when (route.page) {
-                    ServerIntegrationPage.Providers -> {
-                        if (!caps.integrationCredentials) {
-                            unavailable()
-                            return@launch
-                        }
-                        val got = ops.integrations()
-                        if (!valid()) return@launch
-                        when (got) {
-                            is Outcome.Failed -> failed(got.failure)
-                            is Outcome.Ok -> {
-                                providers.clear()
-                                credentials.clear()
-                                val rows = buildList {
-                                    got.value.forEach { info ->
-                                        val key = "provider:${info.id}"
-                                        providers[key] = info
-                                        add(
-                                            ServerIntegrationItem(
-                                                key,
-                                                safe(info.name).ifBlank { safe(info.id) },
-                                                kind = ServerIntegrationKind.Provider,
-                                                status =
-                                                    if (info.connectionCount > 0)
-                                                        ServerIntegrationState.Connected
-                                                    else ServerIntegrationState.Disconnected,
-                                                mayConnect = info.methods.isNotEmpty(),
-                                                mayDisconnect = info.connections.isNotEmpty(),
-                                            )
-                                        )
-                                        info.connections.forEach { connection ->
-                                            val id = connection.id ?: return@forEach
-                                            val credentialKey = "credential:$id"
-                                            credentials[credentialKey] = id
+                            val got = ops.integrations()
+                            if (!valid()) return@launch
+                            when (got) {
+                                is Outcome.Failed -> failed(got.failure)
+                                is Outcome.Ok -> {
+                                    providers.clear()
+                                    credentials.clear()
+                                    val rows = buildList {
+                                        got.value.forEach { info ->
+                                            val key = "provider:${info.id}"
+                                            providers[key] = info
                                             add(
                                                 ServerIntegrationItem(
-                                                    credentialKey,
-                                                    safe(connection.label).ifBlank {
-                                                        safe(info.name)
-                                                    },
-                                                    kind = ServerIntegrationKind.Credential,
+                                                    key,
+                                                    safe(info.name).ifBlank { safe(info.id) },
+                                                    kind = ServerIntegrationKind.Provider,
                                                     status =
-                                                        if (connection.status == "active")
+                                                        if (info.connectionCount > 0)
                                                             ServerIntegrationState.Connected
-                                                        else ServerIntegrationState.Available,
-                                                    mayRename =
-                                                        live.session.server
-                                                            is IntegrationCredentialGateway,
-                                                    mayActivate =
-                                                        live.session.server
-                                                            is IntegrationCredentialGateway,
-                                                    mayDisconnect =
-                                                        live.session.server
-                                                            is IntegrationCredentialGateway,
+                                                        else ServerIntegrationState.Disconnected,
+                                                    mayConnect = info.methods.isNotEmpty(),
+                                                    mayDisconnect = info.connections.isNotEmpty(),
                                                 )
                                             )
-                                        }
-                                    }
-                                }
-                                publish(rows, mine)
-                            }
-                        }
-                    }
-                    ServerIntegrationPage.Tools -> loadTools(ops, mine)
-                    ServerIntegrationPage.Mcp -> {
-                        if (!caps.serverCatalog) {
-                            unavailable()
-                            return@launch
-                        }
-                        when (val got = ops.mcpServers()) {
-                            is Outcome.Failed -> failed(got.failure)
-                            is Outcome.Ok -> {
-                                if (!valid()) return@launch
-                                mcp.clear()
-                                val rows =
-                                    got.value
-                                        .map { server ->
-                                            val key = "mcp:${server.name}"
-                                            mcp[key] = server
-                                            ServerIntegrationItem(
-                                                key,
-                                                safe(server.name).ifBlank { key },
-                                                kind = ServerIntegrationKind.Mcp,
-                                                status = status(server.status),
-                                                mayConnect =
-                                                    server.status !in setOf("connected", "pending"),
-                                                mayDisconnect = server.status == "connected",
-                                            )
-                                        }
-                                        .toMutableList()
-                                when (val resources = ops.mcpResources()) {
-                                    is Outcome.Failed ->
-                                        if (
-                                            resources.failure !is Failure.Unavailable &&
-                                                resources.failure !is Failure.NotFound
-                                        )
-                                            failed(resources.failure)
-                                    is Outcome.Ok ->
-                                        if (valid())
-                                            resources.value.forEachIndexed { index, resource ->
-                                                rows.add(
+                                            info.connections.forEach { connection ->
+                                                val id = connection.id ?: return@forEach
+                                                val credentialKey = "credential:$id"
+                                                credentials[credentialKey] = id
+                                                add(
                                                     ServerIntegrationItem(
-                                                        "resource:$index",
-                                                        safe(resource.name).ifBlank {
-                                                            safe(resource.server)
+                                                        credentialKey,
+                                                        safe(connection.label).ifBlank {
+                                                            safe(info.name)
                                                         },
-                                                        safe(resource.description.orEmpty()),
-                                                        ServerIntegrationKind.Resource,
-                                                        details = details(resource.uri),
+                                                        kind = ServerIntegrationKind.Credential,
+                                                        status =
+                                                            if (connection.status == "active")
+                                                                ServerIntegrationState.Connected
+                                                            else ServerIntegrationState.Available,
+                                                        mayRename =
+                                                            live.session.server
+                                                                is IntegrationCredentialGateway,
+                                                        mayActivate =
+                                                            live.session.server
+                                                                is IntegrationCredentialGateway,
+                                                        mayDisconnect =
+                                                            live.session.server
+                                                                is IntegrationCredentialGateway,
                                                     )
                                                 )
                                             }
-                                }
-                                mutable.update { it.copy(mayAdd = caps.mcpConfigWrites) }
-                                publish(rows, mine)
-                            }
-                        }
-                    }
-                    ServerIntegrationPage.Plugins -> {
-                        val inspection = live.session.server as? ServerInspectionGateway
-                        if (!caps.pluginInventory || inspection == null) {
-                            unavailable()
-                            return@launch
-                        }
-                        val pinned = location!!
-                        val reader =
-                            PluginInventoryReader(
-                                CatalogTransport { request ->
-                                    if (!valid() || request.path != "/plugin") stale()
-                                    else
-                                        inspection.readPluginInventory(pinned).map {
-                                            CatalogReply(200, it)
                                         }
+                                    }
+                                    publish(rows, mine)
                                 }
-                            ) {
-                                CatalogLocation(pinned.directory, pinned.workspace)
                             }
-                        when (val got = reader.listPlugins()) {
-                            is Outcome.Failed -> failed(got.failure)
-                            is Outcome.Ok ->
-                                publish(
-                                    got.value.mapIndexed { index, plugin ->
-                                        ServerIntegrationItem(
-                                            "plugin:$index",
-                                            plugin.id?.let(::pluginName) ?: "?",
-                                            plugin.status.name.lowercase(),
-                                            ServerIntegrationKind.Plugin,
-                                            builtIn = plugin.source == PluginSourceKind.Builtin,
-                                            status =
-                                                when (plugin.status) {
-                                                    PluginStatus.Active ->
-                                                        ServerIntegrationState.Connected
-                                                    PluginStatus.Failed ->
-                                                        ServerIntegrationState.Failed
-                                                    PluginStatus.Unknown ->
-                                                        ServerIntegrationState.Unknown
-                                                },
-                                            details =
-                                                details(
-                                                    listOfNotNull(
-                                                            plugin.id,
-                                                            plugin.packageName,
-                                                            plugin.source.name,
-                                                            if (plugin.terminalUi) "TUI" else null,
-                                                        )
-                                                        .joinToString("\n")
-                                                ),
-                                        )
-                                    },
-                                    mine,
-                                )
                         }
+                        ServerIntegrationPage.Tools -> loadTools(ops, mine)
+                        ServerIntegrationPage.Commands,
+                        ServerIntegrationPage.Skills,
+                        ServerIntegrationPage.References -> loadCatalogPage(ops, mine)
+                        ServerIntegrationPage.Mcp -> {
+                            if (!caps.serverCatalog) {
+                                unavailable()
+                                return@launch
+                            }
+                            when (val got = ops.mcpServers()) {
+                                is Outcome.Failed -> failed(got.failure)
+                                is Outcome.Ok -> {
+                                    if (!valid()) return@launch
+                                    mcp.clear()
+                                    val rows =
+                                        got.value
+                                            .map { server ->
+                                                val key = "mcp:${server.name}"
+                                                mcp[key] = server
+                                                ServerIntegrationItem(
+                                                    key,
+                                                    safe(server.name).ifBlank { key },
+                                                    kind = ServerIntegrationKind.Mcp,
+                                                    status = status(server.status),
+                                                    mayConnect =
+                                                        server.status !in
+                                                            setOf("connected", "pending"),
+                                                    mayDisconnect = server.status == "connected",
+                                                )
+                                            }
+                                            .toMutableList()
+                                    when (val resources = ops.mcpResources()) {
+                                        is Outcome.Failed ->
+                                            if (
+                                                resources.failure !is Failure.Unavailable &&
+                                                    resources.failure !is Failure.NotFound
+                                            )
+                                                failed(resources.failure)
+                                        is Outcome.Ok ->
+                                            if (valid())
+                                                resources.value.forEachIndexed { index, resource ->
+                                                    rows.add(
+                                                        ServerIntegrationItem(
+                                                            "resource:$index",
+                                                            safe(resource.name).ifBlank {
+                                                                safe(resource.server)
+                                                            },
+                                                            safe(resource.description.orEmpty()),
+                                                            ServerIntegrationKind.Resource,
+                                                            details = details(resource.uri),
+                                                        )
+                                                    )
+                                                }
+                                    }
+                                    mutable.update { it.copy(mayAdd = caps.mcpConfigWrites) }
+                                    publish(rows, mine)
+                                }
+                            }
+                        }
+                        ServerIntegrationPage.Plugins -> {
+                            val inspection = live.session.server as? ServerInspectionGateway
+                            if (!caps.pluginInventory || inspection == null) {
+                                unavailable()
+                                return@launch
+                            }
+                            val pinned = location!!
+                            val reader =
+                                PluginInventoryReader(
+                                    CatalogTransport { request ->
+                                        if (!valid() || request.path != "/plugin") stale()
+                                        else
+                                            inspection.readPluginInventory(pinned).map {
+                                                CatalogReply(200, it)
+                                            }
+                                    }
+                                ) {
+                                    CatalogLocation(pinned.directory, pinned.workspace)
+                                }
+                            when (val got = reader.listPlugins()) {
+                                is Outcome.Failed -> failed(got.failure)
+                                is Outcome.Ok ->
+                                    publish(
+                                        got.value.mapIndexed { index, plugin ->
+                                            ServerIntegrationItem(
+                                                "plugin:$index",
+                                                plugin.id?.let(::pluginName) ?: "?",
+                                                plugin.status.name.lowercase(),
+                                                ServerIntegrationKind.Plugin,
+                                                builtIn = plugin.source == PluginSourceKind.Builtin,
+                                                status =
+                                                    when (plugin.status) {
+                                                        PluginStatus.Active ->
+                                                            ServerIntegrationState.Connected
+                                                        PluginStatus.Failed ->
+                                                            ServerIntegrationState.Failed
+                                                        PluginStatus.Unknown ->
+                                                            ServerIntegrationState.Unknown
+                                                    },
+                                                details =
+                                                    details(
+                                                        listOfNotNull(
+                                                                plugin.id,
+                                                                plugin.packageName,
+                                                                plugin.source.name,
+                                                                if (plugin.terminalUi) "TUI"
+                                                                else null,
+                                                            )
+                                                            .joinToString("\n")
+                                                    ),
+                                            )
+                                        },
+                                        mine,
+                                    )
+                            }
+                        }
+                        ServerIntegrationPage.Setup -> loadSetup(live, mine)
+                        else -> unavailable()
                     }
-                    ServerIntegrationPage.Setup -> loadSetup(live, mine)
-                    else -> unavailable()
+                } finally {
+                    refreshRunning = false
+                    if (refreshQueued && !closed) {
+                        refreshQueued = false
+                        refresh()
+                    }
                 }
             }
         }
 
         private suspend fun loadTools(ops: ServerOperationsGateway, mine: Long) {
             val live = graph ?: return
-            if (!live.session.capabilities.value.toolInventory) {
+            if (!live.session.capabilities.value.serverCatalog) {
                 unavailable()
+                return
+            }
+            if (!live.session.capabilities.value.toolInventory) {
+                publish(emptyList(), mine)
                 return
             }
             if (models.isEmpty())
@@ -475,6 +542,242 @@ class NativeServerIntegrations(
                         }
                 }
             publish(rows, mine)
+        }
+
+        private suspend fun loadCatalogPage(ops: ServerOperationsGateway, mine: Long) {
+            val live = graph ?: return
+            if (!live.session.capabilities.value.serverCatalog) {
+                unavailable()
+                return
+            }
+            when (route.page) {
+                ServerIntegrationPage.Commands -> {
+                    if (!live.session.capabilities.value.slashCommands) {
+                        unavailable()
+                        return
+                    }
+                    when (val got = ops.commands()) {
+                        is Outcome.Failed -> failed(got.failure)
+                        is Outcome.Ok -> {
+                            commandNames.clear()
+                            val rows =
+                                got.value.map { command ->
+                                    val key = "command:${command.name}"
+                                    commandNames[key] = command.name
+                                    ServerIntegrationItem(
+                                        key,
+                                        safe(command.name).ifBlank { "?" },
+                                        safe(command.description.orEmpty()),
+                                        ServerIntegrationKind.Command,
+                                        details = details(command.description.orEmpty()),
+                                        mayRun = live.session.server is FencedSlashCommandGateway,
+                                    )
+                                }
+                            readSessions(null)
+                            publish(rows, mine)
+                        }
+                    }
+                }
+                ServerIntegrationPage.Skills ->
+                    when (val got = ops.skills()) {
+                        is Outcome.Failed -> failed(got.failure)
+                        is Outcome.Ok ->
+                            publish(
+                                got.value.mapIndexed { index, skill ->
+                                    val key = "skill:$index"
+                                    if (skill.slashCommand)
+                                        rawCopy[key] = safe("/${skill.id ?: skill.name}")
+                                    ServerIntegrationItem(
+                                        key,
+                                        safe(skill.name).ifBlank { "?" },
+                                        safe(skill.description.orEmpty()),
+                                        ServerIntegrationKind.Skill,
+                                        details = details(skill.location),
+                                        content = safeSkill(skill.content, skill.name),
+                                    )
+                                },
+                                mine,
+                            )
+                    }
+                ServerIntegrationPage.References ->
+                    when (val got = ops.references()) {
+                        is Outcome.Failed -> failed(got.failure)
+                        is Outcome.Ok ->
+                            publish(
+                                got.value.mapIndexed { index, reference ->
+                                    val key = "reference:$index"
+                                    rawCopy[key] = safe("@${reference.name}")
+                                    ServerIntegrationItem(
+                                        key,
+                                        safe(reference.name).ifBlank { "?" },
+                                        safe(reference.description.orEmpty()),
+                                        ServerIntegrationKind.Reference,
+                                        details = details(reference.path),
+                                    )
+                                },
+                                mine,
+                            )
+                    }
+                else -> Unit
+            }
+        }
+
+        private fun safeSkill(text: String, name: String): String {
+            val lines = redactor.diagnostics(text, 200_000).lines()
+            return if (lines.firstOrNull()?.trim()?.removePrefix("# ")?.equals(name, true) == true)
+                lines.drop(1).joinToString("\n").trimStart()
+            else lines.joinToString("\n")
+        }
+
+        private suspend fun readSessions(cursor: String?) {
+            if (!valid()) return
+            val live = graph ?: return
+            when (val got = live.session.server.sessionPage(cursor, 100)) {
+                is Outcome.Failed -> failed(got.failure)
+                is Outcome.Ok ->
+                    if (valid()) {
+                        sessionCursor = got.value.nextCursor
+                        val old = if (cursor == null) emptyList() else state.value.sessions
+                        mutable.update {
+                            it.copy(
+                                sessions =
+                                    (old +
+                                            got.value.items.map { session ->
+                                                ServerIntegrationModelChoice(
+                                                    session.id.raw,
+                                                    safe(session.title.orEmpty()),
+                                                )
+                                            })
+                                        .distinctBy { it.key }
+                                        .toImmutableList(),
+                                moreSessions = sessionCursor != null,
+                            )
+                        }
+                    }
+            }
+        }
+
+        override fun moreSessions() {
+            val cursor = sessionCursor ?: return
+            own.launch { readSessions(cursor) }
+        }
+
+        override fun runCommand(arguments: String, destination: String) {
+            val item = state.value.selected ?: return
+            val name = commandNames[item.key] ?: return
+            if (!valid() || state.value.running || state.value.commandBlocked || !item.mayRun)
+                return
+            if (destination.isNotEmpty() && state.value.sessions.none { it.key == destination })
+                return
+            own.launch {
+                if (!valid()) return@launch
+                val live = graph ?: return@launch
+                val gateway = live.session.server
+                val facet = gateway as? FencedSlashCommandGateway ?: return@launch
+                mutable.update { it.copy(running = true, failure = null) }
+                try {
+                    val fresh =
+                        gateway.facet<ServerOperationsGateway>()?.commands() ?: return@launch
+                    if (fresh is Outcome.Failed) {
+                        failed(fresh.failure)
+                        return@launch
+                    }
+                    if (!valid() || (fresh as Outcome.Ok).value.none { it.name == name }) {
+                        failed(Failure.Refused(RefusalReason.StaleScope))
+                        return@launch
+                    }
+                    var id =
+                        destination.takeIf { it.isNotEmpty() }?.let(::SessionId)
+                            ?: createdCommands[item.key]
+                    if (id == null) {
+                        when (
+                            val created = gateway.createSession(NewSession(location = location))
+                        ) {
+                            is Outcome.Failed -> {
+                                failed(created.failure)
+                                mutable.update {
+                                    it.copy(
+                                        commandBlocked =
+                                            created.failure is Failure.Network ||
+                                                created.failure is Failure.TimedOut ||
+                                                created.failure is Failure.UnreadableReply
+                                    )
+                                }
+                                return@launch
+                            }
+                            is Outcome.Ok -> {
+                                id = created.value.id
+                                createdCommands[item.key] = id
+                            }
+                        }
+                    }
+                    if (!valid()) return@launch
+                    val target = id ?: return@launch
+                    when (val session = gateway.session(target)) {
+                        is Outcome.Failed -> {
+                            failed(session.failure)
+                            return@launch
+                        }
+                        is Outcome.Ok ->
+                            if (
+                                session.value.id != target ||
+                                    (location?.directory != null &&
+                                        session.value.directory != location?.directory) ||
+                                    session.value.workspaceId?.raw != location?.workspace
+                            ) {
+                                failed(Failure.Refused(RefusalReason.StaleScope))
+                                return@launch
+                            }
+                    }
+                    if (!valid()) return@launch
+                    when (
+                        val result =
+                            facet.slashCommandFenced(target, name, arguments.trim(), ::valid)
+                    ) {
+                        is Outcome.Failed -> {
+                            failed(result.failure)
+                            mutable.update {
+                                it.copy(
+                                    commandBlocked =
+                                        result.failure is Failure.Network ||
+                                            result.failure is Failure.TimedOut ||
+                                            result.failure is Failure.UnreadableReply
+                                )
+                            }
+                        }
+                        is Outcome.Ok ->
+                            if (valid()) {
+                                mutable.update { it.copy(selected = null) }
+                                withContext(dispatchers.main) {
+                                    if (valid() && nav.top.value == route)
+                                        nav.open(ChatRoute(ConversationRef(route.profile, target)))
+                                }
+                            }
+                    }
+                } finally {
+                    mutable.update { it.copy(running = false) }
+                    if (closeWhenIdle) close()
+                }
+            }
+        }
+
+        override fun openLink(url: String) {
+            if (!valid()) return
+            when (val decision = links.check(url, LinkOrigin.ServerContent)) {
+                is LinkDecision.Open -> opener.open(decision.link)
+                is LinkDecision.AskFirst -> {
+                    pendingLink = decision.link
+                    mutable.update { it.copy(linkHost = decision.shownHost) }
+                }
+                is LinkDecision.Refuse -> failed(Failure.Rejected(null))
+            }
+        }
+
+        override fun confirmLink() {
+            val link = pendingLink
+            pendingLink = null
+            mutable.update { it.copy(linkHost = null) }
+            if (link != null && valid()) opener.open(link)
         }
 
         private suspend fun loadSetup(live: ConnectionGraph, mine: Long) {
@@ -595,6 +898,7 @@ class NativeServerIntegrations(
 
         override fun select(key: String) {
             val item = state.value.items.firstOrNull { it.key == key } ?: return
+            selectedProvider = providers[key]
             mutable.update { it.copy(selected = item, copied = false) }
         }
 
@@ -684,7 +988,7 @@ class NativeServerIntegrations(
                 // A lost acknowledgement may still have changed the server: only a fresh read
                 // restores controls.
                 refresh()
-                if (result is Outcome.Failed) failed(result.failure)
+                if (result is Outcome.Failed) mutable.update { it.copy(failure = result.failure) }
             }
         }
 
@@ -732,8 +1036,16 @@ class NativeServerIntegrations(
         }
 
         override fun dismiss() {
+            if (state.value.running) return
+            pendingLink = null
             mutable.update {
-                it.copy(selected = null, question = null, add = false, copied = false)
+                it.copy(
+                    selected = null,
+                    question = null,
+                    add = false,
+                    copied = false,
+                    linkHost = null,
+                )
             }
         }
 
@@ -767,6 +1079,10 @@ class NativeServerIntegrations(
         }
 
         override fun close() {
+            if (state.value.running) {
+                closeWhenIdle = true
+                return
+            }
             closed = true
             token++
             own.cancel()

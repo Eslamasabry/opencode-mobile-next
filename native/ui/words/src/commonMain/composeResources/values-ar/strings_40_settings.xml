@@ -22,4 +22,6 @@
     <string name="settings40_discard_done">تم حذف %1$d عناصر.</string>
     <string name="settings40_discard_kept">تم حذف %1$d عناصر. تم الاحتفاظ بـ %2$d مطالبات تحتاج إلى مراجعة.</string>
     <string name="settings40_discard_cleanup">تم حذف %1$d مسودات. تعذّر حذف بعض ملفات المرفقات. حاول حذف المسودات مجددًا للإكمال.</string>
+    <string name="settings40_no_answers">لا توجد أسئلة على هذا الخادم تحتاج إلى إجابة بعد.</string>
+    <string name="settings40_answer_failed">لم تكتمل هذه الخطوة. قد تختلف إجابتك المحفوظة عن إعدادات أندرويد. راجع الإشعارات أو الاستمرار في التشغيل، ثم أعد المحاولة.</string>
 </resources>

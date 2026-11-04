@@ -37,6 +37,7 @@ import io.github.eslamasabry.oc.ui.words.res.settingsHubPrivacyRow
 import io.github.eslamasabry.oc.ui.words.res.settingsHubVoice
 import io.github.eslamasabry.oc.ui.words.res.settingsV3Language
 import io.github.eslamasabry.oc.ui.words.res.settingsV3Notifications
+import io.github.eslamasabry.oc.ui.words.res.shareSessionViewsTitle
 import io.github.eslamasabry.oc.ui.words.res.tipsTitle
 import io.github.eslamasabry.oc.ui.words.res.whatsNewTitle
 import org.jetbrains.compose.resources.stringResource
@@ -52,6 +53,8 @@ public fun SettingsScreen(
     actions: SettingsActions,
     modifier: Modifier = Modifier,
     onExit: (() -> Unit)? = null,
+    showAppearanceArrival: Boolean = false,
+    dismissAppearanceArrival: () -> Unit = {},
 ) {
     val back: () -> Unit = { actions.onBack() }
     // Back from Android's notification settings: the blocked notice must say what is true now
@@ -65,10 +68,36 @@ public fun SettingsScreen(
         is SettingsPage.Group -> GroupPage(state, actions, page, modifier)
         is SettingsPage.ByServer ->
             SettingsFrame(
-                rowWords(
-                    io.github.eslamasabry.oc.feature.settings.presentation.SettingsRowId
-                        .DefaultShell
-                ),
+                if (
+                    page.section ==
+                        io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
+                            .ReadState
+                )
+                    stringResource(Res.string.shareSessionViewsTitle)
+                else
+                    rowWords(
+                        when (page.section) {
+                            io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
+                                .Permissions ->
+                                io.github.eslamasabry.oc.feature.settings.presentation.SettingsRowId
+                                    .Permissions
+                            io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
+                                .ModelAndMode ->
+                                io.github.eslamasabry.oc.feature.settings.presentation.SettingsRowId
+                                    .ModelAndMode
+                            io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
+                                .Providers ->
+                                io.github.eslamasabry.oc.feature.settings.presentation.SettingsRowId
+                                    .Providers
+                            io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
+                                .Tools ->
+                                io.github.eslamasabry.oc.feature.settings.presentation.SettingsRowId
+                                    .Tools
+                            else ->
+                                io.github.eslamasabry.oc.feature.settings.presentation.SettingsRowId
+                                    .DefaultShell
+                        }
+                    ),
                 back,
                 state,
                 actions,
@@ -84,7 +113,12 @@ public fun SettingsScreen(
                 actions,
                 modifier,
             ) {
-                AppearanceBody(state.appearance, actions)
+                AppearanceBody(
+                    state.appearance,
+                    actions,
+                    showAppearanceArrival,
+                    dismissAppearanceArrival,
+                )
             }
         SettingsPage.Voice ->
             SettingsFrame(

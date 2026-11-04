@@ -83,7 +83,7 @@ public fun ScheduleEditScreen(state: ScheduleEditUi, actions: ScheduleEditAction
                 ({
                     KitButton(
                         if (state.saving) words.saving
-                        else scheduleActionLabel(draft.fields(), words),
+                        else scheduleActionLabel(draft.fields(), state.nowMs, words),
                         { actions.save(draft.fields()) },
                         Modifier.fillMaxWidth()
                             .padding(
@@ -267,7 +267,7 @@ private fun EditorForm(state: ScheduleEditUi, draft: EditorDraft, words: Schedul
 }
 
 @Composable
-private fun scheduleActionLabel(fields: EditorFields, words: ScheduleWords): String {
+private fun scheduleActionLabel(fields: EditorFields, nowMs: Long, words: ScheduleWords): String {
     if (fields.kind == RecurrenceKind.Interval) {
         val hours = fields.hours.toIntOrNull() ?: return words.save
         return stringResource(Res.string.scheduleActionHours, hours)
@@ -279,13 +279,12 @@ private fun scheduleActionLabel(fields: EditorFields, words: ScheduleWords): Str
         "${time.first.toString().padStart(2, '0')}:${time.second.toString().padStart(2, '0')}"
     val whenText =
         if (fields.kind == RecurrenceKind.Once) {
-            val now = kotlin.time.Clock.System.now().toEpochMilliseconds()
             io.github.eslamasabry.oc.engine.schedules.ScheduleTime.at(
                     fields.date,
                     time.first,
                     time.second,
                 )
-                ?.let { moment(it, now, words) } ?: return words.save
+                ?.let { moment(it, nowMs, words) } ?: return words.save
         } else clock
     return stringResource(Res.string.scheduleActionWhen, whenText)
 }

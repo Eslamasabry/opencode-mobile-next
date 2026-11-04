@@ -56,6 +56,7 @@ public data class SettingsSavedServer(
     val id: io.github.eslamasabry.oc.core.common.ids.ProfileId,
     val name: String,
     val connected: Boolean,
+    val onPhone: Boolean = false,
 )
 
 public data class SettingsFacts(
@@ -137,7 +138,9 @@ public object SettingsStructure {
                         SettingsRowId.Voice ->
                             SettingsDoor.Page(SettingsPage.Voice).takeIf { p.voice || p.readAloud }
                         SettingsRowId.Permissions ->
-                            SettingsDoor.Outside(SettingsOutside.Permissions)
+                            SettingsDoor.Outside(SettingsOutside.Permissions).takeIf {
+                                facts.savedServers.isNotEmpty()
+                            }
                         SettingsRowId.Notifications ->
                             SettingsDoor.Page(SettingsPage.Notifications).takeIf { p.notifications }
                         SettingsRowId.Background ->
