@@ -37,6 +37,7 @@ public class GatewaySendLink(
      */
     private val baseUrl: String,
     private val gateway: ServerGateway,
+    private val observed: ObservedPromptReceipts = ObservedPromptReceipts(),
     private val admitInteractive: suspend () -> Outcome<Unit> = { Outcome.Ok(Unit) },
 ) : SendLink {
     /** One gateway is one connection epoch; a status-change wrapper over it is the same target. */
@@ -136,8 +137,14 @@ public class GatewaySendLink(
         if (admitted is Outcome.Failed) return admitted
         val id = prompt.clientMessageId
         val correlatedGateway = correlatedGateway
-        if (id != null && correlatedGateway != null)
-            return correlatedGateway.promptWithMessageId(session, id, prompt, beforeSend)
+        if (id != null && correlatedGateway != null) {
+            val origin = scope
+            val result = correlatedGateway.promptWithMessageId(session, id, prompt, beforeSend)
+            if (scope == origin && observed.contains(origin, session, id)) {
+                return PromptAdmission.Confirmed(id.raw).ok()
+            }
+            return result
+        }
         if (!beforeSend()) return Failure.Refused(RefusalReason.StaleScope).failed()
         return gateway.prompt(session, prompt.copy(clientMessageId = null))
     }
@@ -156,6 +163,8 @@ public class GatewaySendLink(
         // is confirmed.
         if (!capabilities.commandReceipts || gateway.events.status.value is StreamStatus.Stopped)
             return false.ok()
+        val origin = scope
+        if (observed.contains(origin, session, messageId)) return true.ok()
         if (capabilities.inbox) {
             when (val inbox = gateway.inbox(session)) {
                 is Outcome.Failed -> return inbox

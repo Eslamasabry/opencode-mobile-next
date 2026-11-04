@@ -16,6 +16,7 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
 import io.github.eslamasabry.oc.core.data.lane.WriterLanes
 import io.github.eslamasabry.oc.core.domain.ServerGateway
+import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.model.ModelSelection
 import io.github.eslamasabry.oc.core.model.PromptAgentMention
 import io.github.eslamasabry.oc.core.model.PromptAttachment
@@ -24,6 +25,7 @@ import io.github.eslamasabry.oc.engine.delivery.port.AutomationPolicy
 import io.github.eslamasabry.oc.engine.delivery.port.ConversationFacts
 import io.github.eslamasabry.oc.engine.delivery.port.DeliveryConnection
 import io.github.eslamasabry.oc.engine.delivery.port.GatewaySendLink
+import io.github.eslamasabry.oc.engine.delivery.port.ObservedPromptReceipts
 import io.github.eslamasabry.oc.engine.delivery.port.SendLink
 import io.github.eslamasabry.oc.engine.delivery.port.StopMemory
 import io.github.eslamasabry.oc.engine.delivery.queue.OfflineQueue
@@ -86,8 +88,11 @@ public class ConnectionDelivery(
         return Outcome.Ok(Unit)
     }
 
+    private val observedReceipts = ObservedPromptReceipts()
     private val link =
-        GatewaySendLink(profile.id, profile.origin.toString(), gateway) { admission(profile) }
+        GatewaySendLink(profile.id, profile.origin.toString(), gateway, observedReceipts) {
+            admission(profile)
+        }
     private val connection =
         object : DeliveryConnection {
             override val link = MutableStateFlow<SendLink?>(this@ConnectionDelivery.link)
@@ -95,6 +100,22 @@ public class ConnectionDelivery(
         }
 
     init {
+        scope.launch {
+            gateway.events.all.collect { envelope ->
+                val event = envelope.event
+                val current = connection.link.value
+                val location = envelope.location
+                if (
+                    event is GatewayEvent.MessageUpserted &&
+                        current != null &&
+                        (location?.directory == null ||
+                            location.directory == current.scope.directory) &&
+                        (location?.workspace == null ||
+                            location.workspace == current.scope.workspace)
+                )
+                    observedReceipts.observe(current.scope, event)
+            }
+        }
         var connects = gateway.events.connects.value
         var status = gateway.events.status.value
         scope.launch {
@@ -104,7 +125,12 @@ public class ConnectionDelivery(
                         connects = n
                         status = s
                         connection.link.value =
-                            GatewaySendLink(profile.id, profile.origin.toString(), gateway) {
+                            GatewaySendLink(
+                                profile.id,
+                                profile.origin.toString(),
+                                gateway,
+                                observedReceipts,
+                            ) {
                                 admission(profile)
                             }
                     }
