@@ -1,0 +1,36 @@
+# LINUX migration, part 3 of 3
+
+Branch: `p12x/30-build-LINUX-3`; integration base: `cde0afb45f598c00e89de766d9d0a68ba89ae470`.
+
+Finish line: account for all 57 assigned rows with reachable native behavior or an explicit prerequisite blocker. Non-goal: tests, APKs, signing, releases, pushes, and active Termux server management prohibited by plan/01 D7.
+
+Assignment was computed from the PC ledger `/home/eslam/Storage2/wt/parity-gate-pc/docs/native/parity/ledger.json`, this checkout's `native/catalog/scope.jsonl`, sorted unproven switch rows for LINUX, final third (`R[2*n//3:]`). The cited Flutter test cases were read as behavior specifications, followed into their lib implementations and native equivalents; no tests were written or run. Scope's old module labels sometimes resolve to `:engine:linuxsetup`, `:engine:termuxhost` or `:engine:linuxtools`; `:engine:project` is absent.
+
+A row marked blocked remains incomplete even when its line names a useful implemented subset. Native helpers without app bindings do not count as already there. D7 migrate-out-only conflicts with rows requiring active Termux setup/runtime management; no deprecated management path was re-enabled.
+
+- B-LINUX-186 -> built now (native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/NativeLinuxTools.kt:48) — Real inventory/removal adapter uses fail-closed status and presence probes; LinuxHome tools panel is reachable. Flutter source: `test/setup_component_removal_test.dart:303`.
+- B-LINUX-187 -> built now (native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/NativeLinuxTools.kt:125) — Confirmed Python removal uses shared setup lane, busy protection, fresh post-probe and partial-removal invalidation; failures use stable copy. Flutter source: `test/setup_component_removal_test.dart:428`.
+- B-LINUX-188 -> built now (native/engine/runtime/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/runtime/components/ComponentRemoval.kt:347) — Positive-only measured size, overflow rejection and kit confirmation without invented zero bytes; registry scripts retain POSIX syntax. Flutter source: `test/setup_component_removal_test.dart:193`.
+- B-LINUX-190 -> already there (native/engine/runtime/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/runtime/install/InstallPrelude.kt:306) — Activation receipt recovery used by real cold BuiltinLinux recovery at native/android/linux/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinLinux.kt:441 and OpenCodeNativeInstall.kt:192. Flutter source: `test/setup_component_update_test.dart:19`.
+- B-LINUX-191 -> already there (native/engine/runtime/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/runtime/install/InstallPrelude.kt:298) — Link-safe existence and corrupt receipt refusal in same wired cold recovery; replay handles before move/after restore. Flutter source: `test/setup_component_update_test.dart:64`.
+- B-LINUX-192 -> built now (native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/NativePhoneSetup.kt:87) — Full device/storage preflight now runs before native dispatch using selected download/extracted peaks; step data already forwards requiredFreeBytes. Flutter source: `test/setup_preflight_test.dart:29`.
+- B-LINUX-193 -> built now (native/feature/linux/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/linux/ui/LinuxSetupPanel.kt:121) — Ownership recovery code survives typed engine checks/start/restore and now renders localized guidance without native details. Flutter source: `test/setup_engine_test.dart:254`.
+- B-LINUX-194 -> already there (native/engine/runtime/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/runtime/setup/SetupEngine.kt:134) — Reads saved status and installed presence before fresh admission; effectiveJobParams forces supported OC2; NativePhoneSetup real registry uses pinned OpenCodeInstallScripts. Flutter source: `test/setup_engine_test.dart:353`.
+- B-LINUX-195 -> built now (native/feature/linux/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/linux/ui/LinuxSetupPanel.kt:86) — Existing persisted check/resume/skip behavior now visibly renders component states, versions and byte progress. Flutter source: `test/setup_engine_test.dart:457`.
+- B-LINUX-196 -> already there (native/engine/runtime/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/runtime/setup/SetupPlanning.kt:38) — Job facts merge onto saved parameters; first flag remains. Cited Flutter test says laid OVER stopped params rather than replacing them, unlike ambiguous catalog wording. Flutter source: `test/setup_engine_test.dart:590`.
+
+Checkpoint: 10 of 57 row dispositions recorded; remaining dispositions follow in local commits.
+
+## Compile-only gate
+
+Ran from `native/` with `JAVA_HOME=/home/eslam/Storage2/tools/jdk21`, `ANDROID_HOME=$HOME/Android/Sdk`, shared `/home/eslam/Storage/tmp/oc-build.lock`, `nice -n 5`:
+
+```sh
+./gradlew :androidApp:compilePreviewDebugKotlin compileKotlinDesktop \
+  -Dorg.gradle.workers.max=2 -Dorg.gradle.daemon.idletimeout=300000 \
+  '-Dorg.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=768m' --console=plain
+```
+
+Result: **BUILD SUCCESSFUL**, 2m 21s, 574 actionable tasks (316 executed, 170 from cache, 88 up-to-date). Both requested gates completed; no warnings appeared in the changed Kotlin files. Existing warnings in other modules remain. First attempt stopped on the missing pinned sherpa-onnx AAR; restored the ignored artifact from a local worktree after matching `native/third_party/SHA256SUMS`, then reran successfully. Kotlin source was frozen before the successful invocation.
+
+Only changed Kotlin files were formatted with ktfmt 0.64 because the documented format-changed script is absent. `git diff --check` passed. No tests written or run; no test files changed, APK assembled, emulator/device action, signing, push, PR, or release. Compile success is not runtime qualification or catalog proof. Subsequent checkpoint commits change this report only, so Gradle is skipped for them.
