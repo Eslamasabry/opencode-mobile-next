@@ -55,23 +55,37 @@ public class ActiveContextModel(private val ref: ConversationRef, private val re
     private var gateway: ActiveContextGateway? = null
     private var job: Job? = null
 
-    /** False where the connected server has no route facet at all (nothing to offer). */
-    public fun available(): Boolean = (registry.graphFor(ref)?.let { api(it) } != null)
+    /**
+     * False where the connected server has no route facet at all, or where this connection already answered that the
+     * route is missing (Flutter hides the entry once `activeContextSupported` latches off).
+     */
+    public fun available(): Boolean {
+        val graph = registry.graphFor(ref) ?: return false
+        if (api(graph) == null) return false
+        return graph !== bound || gateway?.supported != false
+    }
 
     public fun open() {
         val graph = registry.graphFor(ref)
         mutableVisible.value = true
-        bound = graph
-        gateway = graph?.let(::api)?.let { ActiveContextGateway(Oc2Routes(GatewayRouteTransport(it))) }
-        mutableState.value = if (gateway == null) ActiveContextUi.Unsupported else ActiveContextUi.Loading
-        load()
+        // One gateway per connection, so a missing route stays latched across reopenings of the same connection.
+        if (graph !== bound || gateway == null) {
+            bound = graph
+            gateway = graph?.let(::api)?.let { ActiveContextGateway(Oc2Routes(GatewayRouteTransport(it))) }
+        }
+        val source = gateway
+        mutableState.value =
+            when {
+                source == null || !source.supported -> ActiveContextUi.Unsupported
+                else -> ActiveContextUi.Loading
+            }
+        if (source != null && source.supported) load()
     }
 
+    /** Hides the sheet and stops a read in flight; the connection's gateway (and its latch) is kept. */
     public fun close() {
         job?.cancel()
         mutableVisible.value = false
-        bound = null
-        gateway = null
     }
 
     public fun refresh() {

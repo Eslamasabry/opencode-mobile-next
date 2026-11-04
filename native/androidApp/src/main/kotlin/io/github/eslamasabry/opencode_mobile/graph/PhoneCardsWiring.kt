@@ -9,7 +9,7 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Outcome
-import io.github.eslamasabry.oc.core.data.kv.PrefValue
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.cards.CardAgent
 import io.github.eslamasabry.oc.engine.cards.CardsInstallOutcome
 import io.github.eslamasabry.oc.engine.cards.CardsInstallScripts
@@ -18,6 +18,7 @@ import io.github.eslamasabry.oc.engine.cards.CardsQualifier
 import io.github.eslamasabry.oc.engine.cards.CardsStatus
 import io.github.eslamasabry.oc.engine.cards.CardsVerdict
 import io.github.eslamasabry.oc.engine.cards.ManagedCardsInstaller
+import io.github.eslamasabry.oc.engine.runtime.switching.ManagedLocalServer
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
@@ -55,14 +56,16 @@ internal class PhoneCardsQualifier(
             }
         }
 
-    private fun owner(): String? =
+    /**
+     * Flutter `_genUiManaged`: the profile's address is the built-in Linux server (`http://127.0.0.1:4097`), whichever
+     * profile currently owns the runtime. A Termux or remote address is never set up from here.
+     */
+    override fun managed(profileId: String): Boolean =
         try {
-            (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value?.takeIf { it.isNotEmpty() }
+            ManagedLocalServer.isBuiltin(stores.profiles.profile(ProfileId(profileId))?.profile?.baseUrl)
         } catch (e: RuntimeException) {
-            null
+            false
         }
-
-    override fun managed(profileId: String): Boolean = owner() == profileId
 
     override fun agentsHere(profileId: String): List<CardAgent> = listOf(CardAgent.Claude, CardAgent.OpenCode2)
 
