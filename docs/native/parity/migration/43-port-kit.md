@@ -1,6 +1,6 @@
 # Migration 43: Flutter kit parts
 
-Counts: already there **0**; ported now **0**; not needed **10**; blocked **0**. Assessed **10/76**.
+Counts: already there **0**; ported now **0**; not needed **20**; blocked **0**. Assessed **20/76**.
 
 Implementation-only review from P12 `f00dbf8e9b0948f0caad4db96c4170f841977401`. No tests written or run. Deferred means deliberately excluded by the binding native plan, not missing by accident. Plan references below are under `docs/design/native-rewrite-2026-11-01/`.
 
@@ -17,6 +17,19 @@ Implementation-only review from P12 `f00dbf8e9b0948f0caad4db96c4170f841977401`. 
 | `lib/ui/kit/live_background/styles/kit_live_caustics.dart` | not needed | Animated pool-light vertex mesh; deliberately outside the switch under ADR 01 §12 D11 (`plan/01-architecture-decision.md:881`), explicit kit exclusion `plan/06-ui-kit-design-system.md:946`/`:1018`; preferences remain retained. |
 | `lib/ui/kit/live_background/styles/kit_live_circuit.dart` | not needed | Cached circuit traces and traveling light pulses; deliberately outside the switch under ADR 01 §12 D11 (`plan/01-architecture-decision.md:881`), explicit kit exclusion `plan/06-ui-kit-design-system.md:946`/`:1018`; preferences remain retained. |
 
+| `lib/ui/kit/live_background/styles/kit_live_constellation.dart` | not needed | Drifting stars and proximity links; deliberately outside the switch under ADR 01 §12 D11 (`plan/01-architecture-decision.md:881`), explicit kit exclusion `plan/06-ui-kit-design-system.md:946`/`:1018`; preferences remain retained. |
+| `lib/ui/kit/live_background/styles/kit_live_dot_ripple.dart` | not needed | Concentric pulsing dot field; deliberately outside the switch under ADR 01 §12 D11 (`plan/01-architecture-decision.md:881`), explicit kit exclusion `plan/06-ui-kit-design-system.md:946`/`:1018`; preferences remain retained. |
+| `lib/ui/kit/live_background/styles/kit_live_flow_threads.dart` | not needed | Noise-directed particle trails; deliberately outside the switch under ADR 01 §12 D11 (`plan/01-architecture-decision.md:881`), explicit kit exclusion `plan/06-ui-kit-design-system.md:946`/`:1018`; preferences remain retained. |
+| `lib/ui/kit/live_background/styles/kit_live_glow_spill.dart` | not needed | Breathing running glow and cached grain; deliberately outside the switch under ADR 01 §12 D11 (`plan/01-architecture-decision.md:881`), explicit kit exclusion `plan/06-ui-kit-design-system.md:946`/`:1018`; preferences remain retained. |
+| `lib/ui/kit/live_background/styles/kit_live_halftone.dart` | not needed | Warped animated halftone dot field; deliberately outside the switch under ADR 01 §12 D11 (`plan/01-architecture-decision.md:881`), explicit kit exclusion `plan/06-ui-kit-design-system.md:946`/`:1018`; preferences remain retained. |
+| `lib/ui/kit/live_background/styles/kit_live_honeycomb.dart` | not needed | Hexagonal lattice with running light band; deliberately outside the switch under ADR 01 §12 D11 (`plan/01-architecture-decision.md:881`), explicit kit exclusion `plan/06-ui-kit-design-system.md:946`/`:1018`; preferences remain retained. |
+| `lib/ui/kit/live_background/styles/kit_live_light_rays.dart` | not needed | Swaying translucent light-ray polygons; deliberately outside the switch under ADR 01 §12 D11 (`plan/01-architecture-decision.md:881`), explicit kit exclusion `plan/06-ui-kit-design-system.md:946`/`:1018`; preferences remain retained. |
+| `lib/ui/kit/live_background/styles/kit_live_liquid_blobs.dart` | not needed | Animated metaball colour field; deliberately outside the switch under ADR 01 §12 D11 (`plan/01-architecture-decision.md:881`), explicit kit exclusion `plan/06-ui-kit-design-system.md:946`/`:1018`; preferences remain retained. |
+| `lib/ui/kit/live_background/styles/kit_live_mesh.dart` | not needed | Breathing interpolated colour mesh; deliberately outside the switch under ADR 01 §12 D11 (`plan/01-architecture-decision.md:881`), explicit kit exclusion `plan/06-ui-kit-design-system.md:946`/`:1018`; preferences remain retained. |
+| `lib/ui/kit/live_background/styles/kit_live_oscilloscope.dart` | not needed | Scope grid and running waveform; deliberately outside the switch under ADR 01 §12 D11 (`plan/01-architecture-decision.md:881`), explicit kit exclusion `plan/06-ui-kit-design-system.md:946`/`:1018`; preferences remain retained. |
+
 ## Verification
 
 Batch 1: documentation only; Kotlin/Gradle unchanged in this commit, compile gate skipped as instructed.
+
+Batch 2: documentation only; compile gate skipped (no Kotlin/Gradle changes in commit).
