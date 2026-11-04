@@ -1106,7 +1106,7 @@ internal class Oc2Gateway(
                 legacyQuestionRequests = false,
                 forms = false,
                 inbox = false,
-                cliSessionResume = false,
+                cliSessionResume = true, // Flutter api2: opencode2 --session resumes by id (P12-BUILD-AGENTS)
                 projectsAreGitRepositories = false,
                 remoteShell = false,
                 claudeAgent = false,
