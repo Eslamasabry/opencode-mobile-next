@@ -6,6 +6,12 @@ import kotlinx.serialization.Serializable
 @Serializable
 public sealed interface OnboardingRoute : AppRoute {
     @Serializable
+    public data object ManagedMove : OnboardingRoute {
+        override val motion: RouteMotion
+            get() = RouteMotion.Root
+    }
+
+    @Serializable
     public data object Welcome : OnboardingRoute {
         override val motion: RouteMotion
             get() = RouteMotion.Root

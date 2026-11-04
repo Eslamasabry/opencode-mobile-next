@@ -19,7 +19,12 @@ public enum class SearchPhase {
 }
 
 /** Inside-text search: off until the person turns it on (it reads up to 20 conversations). */
-public enum class ContentPhase { Off, Searching, Done, Failed }
+public enum class ContentPhase {
+    Off,
+    Searching,
+    Done,
+    Failed,
+}
 
 public data class SearchHitUi(
     val ref: ConversationRef,
@@ -53,8 +58,12 @@ public data class SearchUi(
     val failure: Failure? = null,
     /** A recent-search write failed; the search itself still works. */
     val recentFailed: Boolean = false,
-    /** The Go to menu's rows for the chosen server (B-NAV-056); empty until the server has been read. */
+    /**
+     * The Go to menu's rows for the chosen server (B-NAV-056); empty until the server has been
+     * read.
+     */
     val goTo: ImmutableList<GoToRow> = persistentListOf(),
+    val destinations: ImmutableList<SearchIndexEntry> = persistentListOf(),
 ) {
     val serverName: String?
         get() = servers.firstOrNull { it.id == server }?.name
@@ -87,4 +96,6 @@ public interface SearchActions {
 
     /** Open the place or conversation a Go to row names. */
     public fun goTo(row: GoToRow)
+
+    public fun openDestination(entry: SearchIndexEntry) {}
 }

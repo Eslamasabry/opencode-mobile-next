@@ -36,6 +36,17 @@ public fun RemoteTerminalScreen(state: RemoteTerminalUi, actions: RemoteTerminal
         topBar = {
             KitTopBar(
                 title = title,
+                subtitle =
+                    state.devServerPort?.let { stringResource(Res.string.terminalNavDevServer) },
+                actions =
+                    state.devServerPort?.let {
+                        listOf(
+                            io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction(
+                                stringResource(Res.string.terminalNavOpenPreview),
+                                actions::openDevPreview,
+                            )
+                        )
+                    } ?: emptyList(),
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::back,

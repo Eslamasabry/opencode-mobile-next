@@ -15,9 +15,9 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.ProjectsRoute
-import io.github.eslamasabry.oc.ui.routes.SettingsRoute
 import io.github.eslamasabry.oc.ui.routes.SearchRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
+import io.github.eslamasabry.oc.ui.routes.SettingsRoute
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,9 +27,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * Search across one server's conversations: the server's own title search (every project when it can), and, only when
- * the person turns it on, the text of the [SearchMatch.CONTENT_CONVERSATIONS] most recent conversations. A newer query
- * cancels the older one, so a slow answer never replaces a newer result. Nothing here sends or changes anything.
+ * Search across one server's conversations: the server's own title search (every project when it
+ * can), and, only when the person turns it on, the text of the [SearchMatch.CONTENT_CONVERSATIONS]
+ * most recent conversations. A newer query cancels the older one, so a slow answer never replaces a
+ * newer result. Nothing here sends or changes anything.
  */
 @AssistedInject
 public class SearchViewModel(
@@ -43,6 +44,7 @@ public class SearchViewModel(
 
     private var cancelSearch: () -> Unit = {}
     private var cancelMore: () -> Unit = {}
+    private var cancelGoTo: () -> Unit = {}
     private var cursor: String? = null
     private var titlesDone = false
     private var generation = 0
@@ -61,7 +63,9 @@ public class SearchViewModel(
                 if (chosen != before || local.value.goTo.isEmpty()) loadGoTo(chosen)
             }
         }
-        viewModelScope.launch { recents.recent.collect { recent -> local.update { it.copy(recent = recent) } } }
+        viewModelScope.launch {
+            recents.recent.collect { recent -> local.update { it.copy(recent = recent) } }
+        }
     }
 
     override fun back(): Unit = nav.back()
@@ -101,32 +105,40 @@ public class SearchViewModel(
         if (!s.canLoadMore || s.loadingMore) return
         val mine = generation
         local.update { it.copy(loadingMore = true, loadMoreFailed = false) }
-        viewModelScope.launch {
-            val page = source.conversations(server, s.query, next)
-            if (mine != generation) return@launch
-            when (page) {
-                is Outcome.Failed -> local.update { it.copy(loadingMore = false, loadMoreFailed = true) }
-                is Outcome.Ok -> {
-                    cursor = page.value.next
-                    val more = hits(server, page.value, s.query)
-                    // A page can be empty (all archived) yet keep a cursor: the phase follows what has arrived.
-                    local.update {
-                        settle(
-                            it.copy(
-                                titleHits = (it.titleHits + more).distinctBy { hit -> hit.key }.toImmutableList(),
-                                loadingMore = false,
-                                canLoadMore = page.value.next != null,
+        viewModelScope
+            .launch {
+                val page = source.conversations(server, s.query, next)
+                if (mine != generation) return@launch
+                when (page) {
+                    is Outcome.Failed ->
+                        local.update { it.copy(loadingMore = false, loadMoreFailed = true) }
+                    is Outcome.Ok -> {
+                        cursor = page.value.next
+                        val more = hits(server, page.value, s.query)
+                        // A page can be empty (all archived) yet keep a cursor: the phase follows
+                        // what has arrived.
+                        local.update {
+                            settle(
+                                it.copy(
+                                    titleHits =
+                                        (it.titleHits + more)
+                                            .distinctBy { hit -> hit.key }
+                                            .toImmutableList(),
+                                    loadingMore = false,
+                                    canLoadMore = page.value.next != null,
+                                )
                             )
-                        )
+                        }
                     }
                 }
             }
-        }.also { job -> cancelMore = { job.cancel() } }
+            .also { job -> cancelMore = { job.cancel() } }
     }
 
     override fun open(hit: SearchHitUi) {
         remember(local.value.query)
-        // ChatRoute has no message anchor yet; the row shows the matching words (integrator item in the unit report).
+        // ChatRoute has no message anchor yet; the row shows the matching words (integrator item in
+        // the unit report).
         nav.openChat(hit.ref)
     }
 
@@ -137,7 +149,8 @@ public class SearchViewModel(
         val ref = row.ref
         when (row.place) {
             null -> if (ref != null) nav.openChat(ref)
-            // Dart opens the Chats home with its Needs-you filter; the native home carries that filter and count.
+            // Dart opens the Chats home with its Needs-you filter; the native home carries that
+            // filter and count.
             GoToPlace.NeedsYou -> nav.land()
             GoToPlace.Projects -> nav.open(ProjectsRoute.Picker(server))
             GoToPlace.Settings -> nav.open(SettingsRoute.Home)
@@ -150,34 +163,59 @@ public class SearchViewModel(
         }
     }
 
+    override fun openDestination(entry: SearchIndexEntry) {
+        // Capabilities can change while a search result is visible. Recheck membership before
+        // opening.
+        if (entry !in local.value.destinations) return
+        remember(local.value.query)
+        nav.open(entry.destination)
+    }
+
     private fun loadGoTo(server: ProfileId?) {
-        if (server == null) {
-            local.update { it.copy(goTo = persistentListOf()) }
-            return
+        cancelGoTo()
+        local.update {
+            it.copy(
+                goTo = persistentListOf(),
+                destinations =
+                    SearchIndex.appEntries(source.platformCapabilities, source.hasShell)
+                        .toImmutableList(),
+            )
         }
-        viewModelScope.launch {
-            val facts = source.goToFacts(server)
-            if (local.value.server != server) return@launch
-            local.update { s ->
-                s.copy(
-                    goTo =
-                        facts
-                            ?.let {
-                                GoToMenu.rows(
-                                    GoToInput(
-                                        fileBrowsing = false,
-                                        terminal = false,
-                                        projectManagement = it.projectManagement,
-                                        hasSavedServer = s.servers.isNotEmpty(),
-                                        waiting = 0,
-                                        project = null,
-                                        recent = it.recent,
-                                    )
-                                ).filter { row -> row.place?.openable != false }.toImmutableList()
-                            } ?: persistentListOf()
-                )
+        if (server == null) return
+        viewModelScope
+            .launch {
+                source.navigationFacts(server).collect { facts ->
+                    if (local.value.server != server) return@collect
+                    local.update { s ->
+                        s.copy(
+                            destinations =
+                                facts?.let { SearchIndex.entries(server, it).toImmutableList() }
+                                    ?: SearchIndex.appEntries(
+                                            source.platformCapabilities,
+                                            source.hasShell,
+                                        )
+                                        .toImmutableList(),
+                            goTo =
+                                facts?.let {
+                                    GoToMenu.rows(
+                                            GoToInput(
+                                                fileBrowsing = false,
+                                                terminal = false,
+                                                projectManagement = it.projectManagement,
+                                                hasSavedServer = s.servers.isNotEmpty(),
+                                                waiting = 0,
+                                                project = null,
+                                                recent = it.recent,
+                                            )
+                                        )
+                                        .filter { row -> row.place?.openable != false }
+                                        .toImmutableList()
+                                } ?: persistentListOf(),
+                        )
+                    }
+                }
             }
-        }
+            .also { job -> cancelGoTo = { job.cancel() } }
     }
 
     override fun forgetRecent(query: String) {
@@ -222,16 +260,22 @@ public class SearchViewModel(
             return
         }
         if (s.query.isEmpty()) {
-            local.value = cleared.copy(phase = SearchPhase.Idle, content = if (inside) ContentPhase.Done else ContentPhase.Off)
+            local.value =
+                cleared.copy(
+                    phase = SearchPhase.Idle,
+                    content = if (inside) ContentPhase.Done else ContentPhase.Off,
+                )
             return
         }
         local.value = cleared.copy(phase = SearchPhase.Searching)
         val mine = generation
         val query = s.query
-        viewModelScope.launch {
-            titles(server, query, mine)
-            if (inside && mine == generation) inside(server, query, mine)
-        }.also { job -> cancelSearch = { job.cancel() } }
+        viewModelScope
+            .launch {
+                titles(server, query, mine)
+                if (inside && mine == generation) inside(server, query, mine)
+            }
+            .also { job -> cancelSearch = { job.cancel() } }
     }
 
     private suspend fun titles(server: ProfileId, query: String, mine: Int) {
@@ -253,7 +297,8 @@ public class SearchViewModel(
             found += hits(server, ok, query)
             scanned += ok.items.size
             cursor = ok.next
-            // A server that cannot search titles itself: read further pages here, bounded, then stop.
+            // A server that cannot search titles itself: read further pages here, bounded, then
+            // stop.
             val next = ok.next
             if (ok.titlesMatched || next == null || scanned >= CLIENT_SCAN_LIMIT) {
                 titlesDone = true
@@ -276,7 +321,8 @@ public class SearchViewModel(
         val recent =
             when (val page = source.conversations(server, "", null)) {
                 is Outcome.Failed -> {
-                    if (mine == generation) local.update { settle(it.copy(content = ContentPhase.Failed)) }
+                    if (mine == generation)
+                        local.update { settle(it.copy(content = ContentPhase.Failed)) }
                     return
                 }
                 is Outcome.Ok -> page.value.items.take(SearchMatch.CONTENT_CONVERSATIONS)
@@ -285,28 +331,32 @@ public class SearchViewModel(
         var failed = 0
         for (conversation in recent) {
             if (mine != generation) return
-            when (val messages = source.recentMessages(server, conversation.id, SearchMatch.CONTENT_MESSAGES)) {
+            when (
+                val messages =
+                    source.recentMessages(server, conversation.id, SearchMatch.CONTENT_MESSAGES)
+            ) {
                 is Outcome.Failed -> failed++
                 is Outcome.Ok -> {
                     read++
                     val match = SearchMatch.newestMatch(messages.value, query)
                     if (mine != generation) return
                     local.update { s ->
-                        val added =
-                            match?.let { (message, excerpt) ->
-                                SearchHitUi(
-                                    ConversationRef(server, conversation.id),
-                                    conversation.title,
-                                    SearchMatch.projectName(conversation.directory),
-                                    snippet = excerpt,
-                                    snippetFromYou = message.fromYou,
-                                    messageId = message.id,
-                                )
-                            }
+                        val added = match?.let { (message, excerpt) ->
+                            SearchHitUi(
+                                ConversationRef(server, conversation.id),
+                                conversation.title,
+                                SearchMatch.projectName(conversation.directory),
+                                snippet = excerpt,
+                                snippetFromYou = message.fromYou,
+                                messageId = message.id,
+                            )
+                        }
                         settle(
                             s.copy(
                                 contentRead = read,
-                                contentHits = if (added == null) s.contentHits else (s.contentHits + added).toImmutableList(),
+                                contentHits =
+                                    if (added == null) s.contentHits
+                                    else (s.contentHits + added).toImmutableList(),
                             )
                         )
                     }
@@ -318,14 +368,29 @@ public class SearchViewModel(
         local.update { settle(it.copy(content = outcome)) }
     }
 
-    private fun hits(server: ProfileId, page: SearchConversationPage, query: String): List<SearchHitUi> =
+    private fun hits(
+        server: ProfileId,
+        page: SearchConversationPage,
+        query: String,
+    ): List<SearchHitUi> =
         page.items
             .filter { page.titlesMatched || SearchMatch.titleMatches(it.title, query) }
-            .map { SearchHitUi(ConversationRef(server, it.id), it.title, SearchMatch.projectName(it.directory)) }
+            .map {
+                SearchHitUi(
+                    ConversationRef(server, it.id),
+                    it.title,
+                    SearchMatch.projectName(it.directory),
+                )
+            }
 
     /** The phase that follows from what has arrived so far. */
     private fun settle(s: SearchUi): SearchUi {
-        if (s.phase == SearchPhase.Failed || s.phase == SearchPhase.Idle || s.phase == SearchPhase.NoServer) return s
+        if (
+            s.phase == SearchPhase.Failed ||
+                s.phase == SearchPhase.Idle ||
+                s.phase == SearchPhase.NoServer
+        )
+            return s
         val any = s.titleHits.isNotEmpty() || s.contentHits.isNotEmpty()
         val phase =
             when {
@@ -344,7 +409,9 @@ public class SearchViewModel(
     }
 
     public companion object {
-        /** Conversations read when the server cannot search titles itself (plan 07 A12: up to 400). */
+        /**
+         * Conversations read when the server cannot search titles itself (plan 07 A12: up to 400).
+         */
         public const val CLIENT_SCAN_LIMIT: Int = 400
     }
 }

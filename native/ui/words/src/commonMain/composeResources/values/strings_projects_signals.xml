@@ -1,0 +1,4 @@
+<resources>
+    <string name="navProjectChangesCount">Changes · %1$d</string>
+    <string name="navProjectDevServer">Dev server running · Port %1$d</string>
+</resources>

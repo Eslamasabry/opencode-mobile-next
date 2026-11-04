@@ -24,12 +24,13 @@ import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -51,9 +52,19 @@ public class RemoteTerminalViewModel(
     private val registry: ConnectionRegistry,
     private val navigator: AppNavigator,
     private val textPolicies: Set<RemoteTerminalTextPolicy>,
+    private val devServers:
+        io.github.eslamasabry.oc.engine.runtime.devservers.TerminalDevServerHost =
+        io.github.eslamasabry.oc.engine.runtime.devservers.NoTerminalDevServerHost(),
 ) : ViewModel(), RemoteTerminalActions {
     private val mutable = MutableStateFlow(RemoteTerminalUi())
-    public val state: StateFlow<RemoteTerminalUi> = mutable.asStateFlow()
+    private val devPort = MutableStateFlow<Int?>(null)
+    public val state: StateFlow<RemoteTerminalUi> =
+        combine(mutable, devPort) { ui, port -> ui.copy(devServerPort = port) }
+            .stateIn(
+                viewModelScope,
+                kotlinx.coroutines.flow.SharingStarted.Eagerly,
+                RemoteTerminalUi(),
+            )
     private val commands = Mutex()
     private var profile: ProfileId? = null
     private var graph: ConnectionGraph? = null
@@ -65,6 +76,63 @@ public class RemoteTerminalViewModel(
     private val cursors = LinkedHashMap<String, Long>()
     private val transcript = TerminalTranscript()
 
+    private var devSession:
+        io.github.eslamasabry.oc.engine.runtime.devservers.TerminalDevServerSession? =
+        null
+    private var devWatch: Job? = null
+    private var devWanted = false
+
+    public fun resumeDevServer() {
+        devWanted = true
+        if (devWatch?.isActive == true) return
+        val owner = profile ?: return
+        devWatch = viewModelScope.launch {
+            devServers.sessions(owner).collectLatest { session ->
+                devSession = session
+                devPort.value = null
+                if (session == null) return@collectLatest
+                try {
+                    kotlinx.coroutines.coroutineScope {
+                        launch {
+                            while (kotlinx.coroutines.currentCoroutineContext().isActive) {
+                                session.signal.refresh()
+                                kotlinx.coroutines.delay(15_000)
+                            }
+                        }
+                        session.signal.running.collect { port -> devPort.value = port }
+                    }
+                } finally {
+                    session.signal.close()
+                }
+            }
+        }
+    }
+
+    public fun pauseDevServer() {
+        devWanted = false
+        stopDevServer()
+    }
+
+    private fun stopDevServer() {
+        devWatch?.cancel()
+        devWatch = null
+        devSession?.signal?.close()
+        devSession = null
+        devPort.value = null
+    }
+
+    override fun openDevPreview() {
+        val session = devSession ?: return
+        val port = devPort.value ?: return
+        if (session.signal.available && session.signal.running.value == port)
+            navigator.open(
+                io.github.eslamasabry.oc.ui.routes.PreviewRoute.Page(
+                    port,
+                    profile = session.profile,
+                )
+            )
+    }
+
     public fun start(target: ProfileId) {
         if (profile == target && watcher?.isActive == true) return
         detach()
@@ -73,6 +141,7 @@ public class RemoteTerminalViewModel(
             transcript.reset()
         }
         profile = target
+        if (devWanted) resumeDevServer()
         watcher =
             viewModelScope.launch(registry.mainContext) {
                 registry.live
@@ -324,6 +393,7 @@ public class RemoteTerminalViewModel(
     }
 
     public fun detach() {
+        stopDevServer()
         generation++
         watcher?.cancel()
         watcher = null

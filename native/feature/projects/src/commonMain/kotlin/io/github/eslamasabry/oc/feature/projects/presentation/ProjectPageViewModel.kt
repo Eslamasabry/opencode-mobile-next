@@ -42,6 +42,7 @@ public class ProjectPageViewModel(
     private val connections: ProjectServers,
     private val opened: OpenedFolders,
     private val isolatedHosts: Set<IsolatedTaskHost> = emptySet(),
+    private val signals: ProjectSignalsHost = NoProjectSignalsHost(),
 ) : ViewModel(), ProjectPageActions {
     private val directory = ProjectRules.normalize(route.directory)
     private val mutable = MutableStateFlow(ProjectPageUi(directory, ProjectRules.name(directory)))
@@ -61,6 +62,9 @@ public class ProjectPageViewModel(
     private var isolatedWatch: kotlinx.coroutines.Job? = null
     private val taskWrites = kotlinx.coroutines.sync.Mutex()
     private var attentionWatch: Job? = null
+    private var devServer: io.github.eslamasabry.oc.engine.runtime.devservers.ProjectDevServer? =
+        null
+    private var devServerWatch: Job? = null
     private val workspace =
         ProjectWorkspace(
             directory,
@@ -78,7 +82,9 @@ public class ProjectPageViewModel(
                 if (!adopted || next?.gateway !== server?.gateway) {
                     adopted = true
                     mutable.update {
-                        it.copy(elsewhereAttention = kotlinx.collections.immutable.persistentListOf())
+                        it.copy(
+                            elsewhereAttention = kotlinx.collections.immutable.persistentListOf()
+                        )
                     }
                     attentionWatch?.cancel()
                     attentionWatch =
@@ -123,7 +129,19 @@ public class ProjectPageViewModel(
                             }
                         }
                     server = next
+                    devServer?.close()
+                    devServerWatch?.cancel()
+                    devServer = next?.let { signals.devServer(it.profile, directory) }
+                    mutable.update { it.copy(devServerPort = null, changesCount = null) }
+                    devServerWatch = devServer?.let { signal ->
+                        viewModelScope.launch {
+                            signal.running.collect { port ->
+                                mutable.update { it.copy(devServerPort = port) }
+                            }
+                        }
+                    }
                     workspace.adopt(next)
+                    if (next != null && route.initialWorkspace) workspace.openWorkspace()
                     load()
                     mutable.update {
                         it.copy(
@@ -156,6 +174,20 @@ public class ProjectPageViewModel(
         viewModelScope.launch {
             val page = live.gateway.sessionPage()
             val statuses = live.gateway.sessionStatuses()
+            viewModelScope.launch {
+                devServer?.refresh()
+                val changes =
+                    if (live.gateway.capabilities.value.sessionDiff)
+                        (live.gateway
+                                as? io.github.eslamasabry.oc.core.domain.LocatedProjectGateway)
+                            ?.operationsAt(ServerLocation(directory = directory))
+                            ?.listVcsDiffs(
+                                io.github.eslamasabry.oc.core.model.VcsDiffMode.WorkingTree
+                            )
+                    else null
+                if (run == generation && changes is Outcome.Ok)
+                    mutable.update { it.copy(changesCount = changes.value.size) }
+            }
             if (run != generation) return@launch
             when (page) {
                 is Outcome.Failed ->
@@ -254,7 +286,15 @@ public class ProjectPageViewModel(
                     sessions = listOf(made.value) + sessions
                     mutable.update { it.copy(creating = false) }
                     publish(ProjectPagePhase.Ready)
-                    nav.openChat(ConversationRef(live.profile, made.value.id), focusComposer = true)
+                    when (val selected = signals.applyNewChatDefault(live, made.value.id)) {
+                        is Outcome.Failed ->
+                            mutable.update { it.copy(createFailure = selected.failure) }
+                        is Outcome.Ok ->
+                            nav.openChat(
+                                ConversationRef(live.profile, made.value.id),
+                                focusComposer = true,
+                            )
+                    }
                 }
             }
         }
@@ -489,6 +529,7 @@ public class ProjectPageViewModel(
     }
 
     override fun onCleared() {
+        devServer?.close()
         isolatedLaunch?.close()
         super.onCleared()
     }

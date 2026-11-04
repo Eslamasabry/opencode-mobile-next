@@ -55,6 +55,8 @@ import io.github.eslamasabry.oc.ui.words.res.localTerminalStop
 import io.github.eslamasabry.oc.ui.words.res.localTerminalStopBody
 import io.github.eslamasabry.oc.ui.words.res.localTerminalStopShell
 import io.github.eslamasabry.oc.ui.words.res.localTerminalTryAgain
+import io.github.eslamasabry.oc.ui.words.res.terminalNavDevServer
+import io.github.eslamasabry.oc.ui.words.res.terminalNavOpenPreview
 import io.github.eslamasabry.oc.ui.words.res.terminalScreenReadableMode
 import org.jetbrains.compose.resources.stringResource
 
@@ -69,15 +71,23 @@ public fun LocalTerminalScreen(state: LocalTerminalUi, actions: LocalTerminalAct
         topBar = {
             KitTopBar(
                 title = stringResource(Res.string.libraryTerminalTitle),
+                subtitle =
+                    state.devServerPort?.let { stringResource(Res.string.terminalNavDevServer) },
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::back,
                 actions =
-                    listOf(
+                    listOfNotNull(
+                        state.devServerPort?.let {
+                            KitLineAction(
+                                stringResource(Res.string.terminalNavOpenPreview),
+                                actions::openDevPreview,
+                            )
+                        },
                         KitLineAction(
                             stringResource(Res.string.localTerminalNewShell),
                             actions::create,
-                        )
+                        ),
                     ),
             )
         },

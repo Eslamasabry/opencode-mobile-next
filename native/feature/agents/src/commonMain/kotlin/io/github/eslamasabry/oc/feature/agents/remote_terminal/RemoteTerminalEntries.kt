@@ -22,6 +22,10 @@ public class RemoteTerminalEntries : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
         entry<RemoteTerminalRoute> { route ->
             val vm = metroViewModel<RemoteTerminalViewModel>()
+            androidx.lifecycle.compose.LifecycleStartEffect(vm, route.profile) {
+                vm.resumeDevServer()
+                onStopOrDispose { vm.pauseDevServer() }
+            }
             LaunchedEffect(route.profile) { vm.start(route.profile) }
             DisposableEffect(vm, route.profile) { onDispose { vm.detach() } }
             val state by vm.state.collectAsStateWithLifecycle()

@@ -45,6 +45,8 @@ import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
 import io.github.eslamasabry.oc.ui.words.res.linuxSvcTitle
+import io.github.eslamasabry.oc.ui.words.res.navProjectChangesCount
+import io.github.eslamasabry.oc.ui.words.res.navProjectDevServer
 import io.github.eslamasabry.oc.ui.words.res.p12CreateFailed
 import io.github.eslamasabry.oc.ui.words.res.p12ElsewhereTitle
 import io.github.eslamasabry.oc.ui.words.res.p12NewHere
@@ -140,6 +142,14 @@ public fun ProjectPageScreen(
                         )
                     }
                 }
+            state.devServerPort?.let { port ->
+                item(key = "dev-server-running") {
+                    KitRow(
+                        title = stringResource(Res.string.navProjectDevServer, port),
+                        onClick = actions::developmentServices,
+                    )
+                }
+            }
             item(key = "development-services") {
                 KitRow(
                     title = stringResource(Res.string.linuxSvcTitle),
@@ -150,7 +160,10 @@ public fun ProjectPageScreen(
             if (state.workspace.available) {
                 item(key = "project-workspace") {
                     KitRow(
-                        title = stringResource(Res.string.agentProjectWorkspace),
+                        title =
+                            state.changesCount?.let {
+                                stringResource(Res.string.navProjectChangesCount, it)
+                            } ?: stringResource(Res.string.agentProjectWorkspace),
                         trailing = KitRowTrailing.Chevron,
                         onClick = actions::openWorkspace,
                     )

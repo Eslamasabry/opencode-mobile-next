@@ -16,7 +16,9 @@ import io.github.eslamasabry.oc.feature.search.presentation.GoToPlace
 import io.github.eslamasabry.oc.feature.search.presentation.GoToRow
 import io.github.eslamasabry.oc.feature.search.presentation.SearchActions
 import io.github.eslamasabry.oc.feature.search.presentation.SearchHitUi
+import io.github.eslamasabry.oc.feature.search.presentation.SearchIndex
 import io.github.eslamasabry.oc.feature.search.presentation.SearchPhase
+import io.github.eslamasabry.oc.feature.search.presentation.SearchPlace
 import io.github.eslamasabry.oc.feature.search.presentation.SearchUi
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitAction
@@ -48,16 +50,14 @@ import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.discoverSearchGoTo
 import io.github.eslamasabry.oc.ui.words.res.e7ProjectProjectsTitle
 import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceNeedsYou
-import io.github.eslamasabry.oc.ui.words.res.kitCapServerAnyEnable
-import io.github.eslamasabry.oc.ui.words.res.librarySettingsTitle
-import io.github.eslamasabry.oc.ui.words.res.settingsV3Servers
-import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
 import io.github.eslamasabry.oc.ui.words.res.globalSessionsLoadMore
 import io.github.eslamasabry.oc.ui.words.res.globalSessionsLoadMoreFailed
 import io.github.eslamasabry.oc.ui.words.res.globalSessionsUntitled
+import io.github.eslamasabry.oc.ui.words.res.kitCapServerAnyEnable
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
+import io.github.eslamasabry.oc.ui.words.res.librarySettingsTitle
 import io.github.eslamasabry.oc.ui.words.res.p12SearchConversationsWhat
 import io.github.eslamasabry.oc.ui.words.res.p12SearchFailed
 import io.github.eslamasabry.oc.ui.words.res.p12SearchField
@@ -81,6 +81,8 @@ import io.github.eslamasabry.oc.ui.words.res.p12SearchSearching
 import io.github.eslamasabry.oc.ui.words.res.p12SearchTitle
 import io.github.eslamasabry.oc.ui.words.res.p12SearchTitles
 import io.github.eslamasabry.oc.ui.words.res.p12SearchTryAgain
+import io.github.eslamasabry.oc.ui.words.res.settingsV3Servers
+import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -98,7 +100,15 @@ public fun SearchScreen(
 ) {
     val gutter = LocalKitTokens.current.gutter
     val placeLabels = GoToPlace.entries.filter { it.openable }.associateWith { goToLabel(it) }
-    val goToRows = GoToMenu.match(state.goTo, state.query) { row -> listOfNotNull(row.place?.let(placeLabels::get), row.title) }
+    val goToRows =
+        if (state.query.isBlank())
+            GoToMenu.match(state.goTo, state.query) { row ->
+                listOfNotNull(row.place?.let(placeLabels::get), row.title)
+            }
+        else emptyList()
+    val destinationWords = SearchPlace.entries.associateWith { searchPlaceWords(it) }
+    val destinations =
+        SearchIndex.find(state.query, state.destinations) { destinationWords.getValue(it) }
     KitScreen(
         topBar = {
             KitTopBar(
@@ -117,13 +127,12 @@ public fun SearchScreen(
                 onSubmit = actions::submit,
                 resultCount =
                     if (state.phase == SearchPhase.Results || state.phase == SearchPhase.NoMatch) {
-                        state.titleHits.size + state.contentHits.size
+                        state.titleHits.size + state.contentHits.size + destinations.size
                     } else {
                         null
                     },
                 partial = state.content == ContentPhase.Searching,
-                enabled = state.phase != SearchPhase.NoServer,
-                disabledReason = stringResource(Res.string.p12SearchNoServerBody),
+                enabled = true,
             )
         },
         loading = state.phase == SearchPhase.Searching,
@@ -161,7 +170,15 @@ public fun SearchScreen(
                     KitNotice(stringResource(Res.string.p12SearchRecentFailed))
                 }
             }
-            if (state.phase != SearchPhase.NoServer && goToRows.isNotEmpty()) goTo(goToRows, placeLabels, actions)
+            if (state.phase != SearchPhase.NoServer && goToRows.isNotEmpty())
+                goTo(goToRows, placeLabels, actions)
+            items(destinations, key = { "destination-" + it.id }) { entry ->
+                KitRow(
+                    title = destinationWords.getValue(entry.place).first,
+                    trailing = KitRowTrailing.Chevron,
+                    onClick = { actions.openDestination(entry) },
+                )
+            }
             when (state.phase) {
                 SearchPhase.NoServer ->
                     item(key = "no-server") {
@@ -194,13 +211,14 @@ public fun SearchScreen(
                         )
                     }
                 SearchPhase.NoMatch -> {
-                    item(key = "no-match") {
-                        KitSearchNoMatch(
-                            query = state.query,
-                            onClear = { field.edit { replace(0, length, "") } },
-                            what = stringResource(Res.string.p12SearchConversationsWhat),
-                        )
-                    }
+                    if (destinations.isEmpty())
+                        item(key = "no-match") {
+                            KitSearchNoMatch(
+                                query = state.query,
+                                onClear = { field.edit { replace(0, length, "") } },
+                                what = stringResource(Res.string.p12SearchConversationsWhat),
+                            )
+                        }
                     // Nothing matched on the pages read so far, but the server has more: keep the
                     // way on.
                     more(state, actions)
@@ -249,12 +267,22 @@ private fun goToLabel(place: GoToPlace): String =
         }
     )
 
-/** Search's Go to menu (B-NAV-056): places first, then the last three conversations; typing filters it. */
-private fun LazyListScope.goTo(rows: List<GoToRow>, labels: Map<GoToPlace, String>, actions: SearchActions) {
+/**
+ * Search's Go to menu (B-NAV-056): places first, then the last three conversations; typing filters
+ * it.
+ */
+private fun LazyListScope.goTo(
+    rows: List<GoToRow>,
+    labels: Map<GoToPlace, String>,
+    actions: SearchActions,
+) {
     item(key = "goto-label") { KitSectionLabel(stringResource(Res.string.discoverSearchGoTo)) }
     items(rows, key = { "goto-" + (it.place?.name ?: it.ref?.sessionId?.raw) }) { row ->
         KitRow(
-            title = row.place?.let(labels::get) ?: row.title ?: stringResource(Res.string.globalSessionsUntitled),
+            title =
+                row.place?.let(labels::get)
+                    ?: row.title
+                    ?: stringResource(Res.string.globalSessionsUntitled),
             trailing = KitRowTrailing.Chevron,
             onClick = { actions.goTo(row) },
         )
