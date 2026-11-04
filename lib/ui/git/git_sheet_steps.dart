@@ -415,6 +415,43 @@ extension _GitSheetSteps on _GitSheetState {
 
   // ------------------------------------------------------------ Remotes
 
+  Future<void> _pickRemoteFromGitHub() async {
+    final controller = account;
+    if (controller == null || controller.state is! GitHubSignedIn) return;
+    setState(() => _reposLoading = true);
+    try {
+      final repos = await controller.fetchRepositories();
+      if (!mounted) return;
+      if (repos.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No GitHub repositories found.')),
+        );
+        return;
+      }
+      final selected = await showDialog<GitHubRepository>(
+        context: context,
+        builder: (context) => SimpleDialog(
+          title: const Text('Choose a repository'),
+          children: [
+            for (final repo in repos)
+              SimpleDialogOption(
+                onPressed: () => Navigator.of(context).pop(repo),
+                child: Text(repo.fullName),
+              ),
+          ],
+        ),
+      );
+      if (selected == null || !mounted) return;
+      if (_remoteName.text.trim().isEmpty) {
+        _remoteName.text = 'origin';
+      }
+      _remoteUrl.text = selected.remoteUrl;
+      _update(() {});
+    } finally {
+      if (mounted) setState(() => _reposLoading = false);
+    }
+  }
+
   Widget _remotesStep(AppLocalizations l10n) {
     final tokens = KitTokens.of(context);
     final snapshot = page.snapshot;
@@ -433,6 +470,7 @@ extension _GitSheetSteps on _GitSheetState {
     final sshOverHttps =
         page.abilities.offersGitHubSignIn &&
         remotes.any((r) => r.kind == GitRemoteKind.gitHubSsh);
+    final repoPickerVisible = account != null && account!.state is GitHubSignedIn;
     return KitSheet(
       key: const Key('git-remotes'),
       step: 'remotes',
@@ -485,6 +523,19 @@ extension _GitSheetSteps on _GitSheetState {
               child: KitText(
                 l10n.gitHubPushOverHttps,
                 role: KitTextRole.secondary,
+              ),
+            ),
+          if (repoPickerVisible)
+            Padding(
+              padding: EdgeInsetsDirectional.only(top: tokens.space3),
+              child: Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: TextButton.icon(
+                  key: const Key('git-remote-pick-github'),
+                  onPressed: _reposLoading ? null : _pickRemoteFromGitHub,
+                  icon: const Icon(AppIconography.github),
+                  label: const Text('Choose repo'),
+                ),
               ),
             ),
           SizedBox(height: tokens.space4),

@@ -107,6 +107,7 @@ class _GitSheetState extends State<GitSheet> {
   // Remotes
   final _remoteName = TextEditingController();
   final _remoteUrl = TextEditingController();
+  bool _reposLoading = false;
 
   // Identity
   final _identityName = TextEditingController();
