@@ -2093,6 +2093,24 @@ class BuiltinLinux(private val context: Context) {
         return serverIdleStatus()
     }
 
+    /** Explicit helper start shares native owner, idle and foreground admission. */
+    fun startPhoneAgentHelper(profile: String, password: String, config: String, port: Int = 4099,
+        expectedHelperVersion: String? = null): Map<String, Any?> {
+        val ticket = captureAgentHostStart(profile, false, null) ?: error("agent_host_unavailable")
+        return withAgentHostStart(ticket) {
+            agentHost.start(PhoneAgentHost.StartRequest(profile, password, port, config,
+                PhoneAgentHost.HelperPolicy(expectedVersion = expectedHelperVersion)))
+        }
+    }
+
+    /** Foreground idle restoration uses the receipt's exact helper and generation. */
+    fun resumeIdleStoppedAgentHost(profile: String, generation: Long, password: String, config: String): Map<String, Any?> {
+        val ticket = captureAgentHostStart(profile, true, generation) ?: error("idle_resume_stale")
+        return withAgentHostStart(ticket) {
+            agentHost.start(PhoneAgentHost.StartRequest(profile, password, 4099, config))
+        }
+    }
+
     internal data class AgentHostTicket(val profile: String, val owner: String?, val revision: Long,
         val epoch: Long, val idleGeneration: Long?)
     private val agentHostTicket = ThreadLocal<AgentHostTicket?>()
@@ -3842,14 +3860,16 @@ class BuiltinLinux(private val context: Context) {
      * processes of this app user, never the app itself nor the root of a tree
      * the app runs. Says which ended and why the others were refused.
      */
-    fun stopProcesses(pids: List<Int>): Map<String, Any?> {
+    fun stopProcesses(pids: List<Int>, expectedStartTicks: Map<Int, Long>? = null): Map<String, Any?> {
         val uid = AndroidProcess.myUid()
         val appPids = registeredRuntimePids() + AndroidProcess.myPid()
         val roots = synchronized(this) { trackedRootPids() } + terminalRootPids()
         val refused = mutableListOf<Map<String, Any?>>()
         val targets = pids.distinct().take(MAX_STOP_PIDS).mapNotNull { pid ->
             val entry = NativeProcScan.read(pid, uid)
-            val reason = NativeProcessList.stopRefusal(pid, entry, uid, appPids, roots)
+            val reason = if (expectedStartTicks != null &&
+                (expectedStartTicks[pid] == null || entry?.startTicks != expectedStartTicks[pid])) "changed"
+                else NativeProcessList.stopRefusal(pid, entry, uid, appPids, roots)
             if (reason != null) refused += mapOf("pid" to pid, "reason" to reason)
             entry.takeIf { reason == null }
         }

@@ -1,15 +1,17 @@
 package io.github.eslamasabry.opencode_mobile
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import android.content.Context
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import io.github.eslamasabry.oc.ui.kit.content.terminal.AndroidKitTerminalSlot
+import io.github.eslamasabry.oc.ui.kit.content.terminal.LocalKitTerminalSlot
 import io.github.eslamasabry.oc.ui.kit.input.KitSecretSink
 import io.github.eslamasabry.oc.ui.kit.input.LocalKitSecretSink
 import io.github.eslamasabry.oc.ui.kit.platform.AndroidKitPlatform
@@ -25,7 +27,8 @@ import io.github.eslamasabry.opencode_mobile.graph.platformHub
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // B14 (QA wave 1): after super.onCreate, so a recreate (language switch) keeps edge-to-edge too.
+        // B14 (QA wave 1): after super.onCreate, so a recreate (language switch) keeps edge-to-edge
+        // too.
         enableEdgeToEdge()
         val graph = appGraph
         graph.composerFiles.attach(this)
@@ -38,13 +41,22 @@ class MainActivity : ComponentActivity() {
         setContent {
             val appearance by settings.appPreferences.appearance.collectAsState()
             LaunchedEffect(Unit) {
-                settings.appPreferences.storedLocaleTag.collect { tag -> if (AppLocale.changed(tag)) recreate() }
+                settings.appPreferences.storedLocaleTag.collect { tag ->
+                    if (AppLocale.changed(tag)) recreate()
+                }
             }
             CompositionLocalProvider(
-                LocalKitSecretSink provides KitSecretSink(graph.redactor::registerSecret)
+                LocalKitSecretSink provides KitSecretSink(graph.redactor::registerSecret),
+                LocalKitTerminalSlot provides AndroidKitTerminalSlot,
             ) {
                 MigrationRoot(graph.migration, graph.shell.navigator, platform) {
-                    App(graph.shell, platform, graph.metroViewModelFactory, appearance, AppLocale.applied)
+                    App(
+                        graph.shell,
+                        platform,
+                        graph.metroViewModelFactory,
+                        appearance,
+                        AppLocale.applied,
+                    )
                 }
             }
         }
@@ -54,7 +66,8 @@ class MainActivity : ComponentActivity() {
         super.attachBaseContext(AppLocale.wrap(newBase))
     }
 
-    // P12-PLATFORM: launcher / pinned shortcuts, notification taps and shares. Posted so the shell's first frame
+    // P12-PLATFORM: launcher / pinned shortcuts, notification taps and shares. Posted so the
+    // shell's first frame
     // attaches the back stack first; each extra is consumed once.
     override fun onPostCreate(savedInstanceState: Bundle?) {
         super.onPostCreate(savedInstanceState)

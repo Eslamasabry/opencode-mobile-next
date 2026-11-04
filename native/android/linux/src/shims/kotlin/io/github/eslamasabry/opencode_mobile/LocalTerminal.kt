@@ -1,34 +1,65 @@
-// S1-LINUX shim (native-authored, not a twin). TODO(S3/S5 :android:terminal): the Flutter LocalTerminal imports
-// io.flutter (banned in native/) and Termux's terminal-emulator (allowed only in :android:terminal, ExternalRules), so it
-// is not copied in slice 1. Until :android:terminal exists there are no terminal sessions, which is what this answers.
 package io.github.eslamasabry.opencode_mobile
 
 import android.content.Context
 
-/** The members BuiltinLinux reads, with the Flutter class's signatures. It never holds a session. */
+/**
+ * Runtime-facing registry: the app graph supplies the real PTY manager, avoiding a platform-module
+ * cycle.
+ */
 class LocalTerminal private constructor() {
-    /** Mirror of `LocalTerminal.Session`'s members that BuiltinLinux reads. */
-    class Session(val id: Int, val pid: Int, val confined: Boolean) {
-        val running: Boolean get() = false
-        fun stop() = Unit
-        fun toMap(): Map<String, Any?> = mapOf("id" to id, "pid" to pid, "running" to running, "confined" to confined)
+    class Session(
+        val id: Int,
+        val pid: Int,
+        val confined: Boolean,
+        private val live: () -> Boolean,
+        private val stopSession: () -> Unit,
+    ) {
+        val running: Boolean
+            get() = live()
+
+        fun stop() = stopSession()
+
+        fun toMap(): Map<String, Any?> =
+            mapOf("id" to id, "pid" to pid, "running" to running, "confined" to confined)
     }
 
-    /**
-     * Same signature as the Flutter class (BuiltinWorkLeaseAcceptance calls it). There is no PTY in this module, so it
-     * refuses; that acceptance step stays red on a device until :android:terminal replaces this shim.
-     */
-    @Suppress("UNUSED_PARAMETER")
-    fun start(rows: Int, cols: Int, signInProfile: String? = null, signInProgram: List<String>? = null): Session =
-        throw UnsupportedOperationException("The local terminal is not part of :android:linux yet")
+    interface Backend {
+        fun start(
+            rows: Int,
+            cols: Int,
+            signInProfile: String?,
+            signInProgram: List<String>?,
+        ): Session
 
-    @Synchronized fun list(): List<Session> = emptyList()
+        fun list(): List<Session>
 
-    @Synchronized fun hasLiveSessions(): Boolean = false
+        fun remove(id: Int)
+    }
 
-    @Synchronized fun hasUnconfinedSessions(): Boolean = false
+    @Volatile private var backend: Backend? = null
 
-    fun remove(@Suppress("UNUSED_PARAMETER") id: Int) = Unit
+    fun install(value: Backend) {
+        backend = value
+    }
+
+    fun start(
+        rows: Int,
+        cols: Int,
+        signInProfile: String? = null,
+        signInProgram: List<String>? = null,
+    ): Session =
+        checkNotNull(backend) { "terminal_unavailable" }
+            .start(rows, cols, signInProfile, signInProgram)
+
+    fun list(): List<Session> = backend?.list().orEmpty()
+
+    fun hasLiveSessions(): Boolean = list().any { it.running }
+
+    fun hasUnconfinedSessions(): Boolean = list().any { it.running && !it.confined }
+
+    fun remove(id: Int) {
+        backend?.remove(id)
+    }
 
     companion object {
         private val instance = LocalTerminal()

@@ -5,9 +5,9 @@ import io.github.eslamasabry.oc.engine.runtime.budget.ServiceExitReason
 import io.github.eslamasabry.oc.engine.runtime.host.RuntimeStatus
 import io.github.eslamasabry.oc.engine.runtime.server.ProbeAnswer
 import io.github.eslamasabry.oc.engine.runtime.server.StartProblem
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlin.time.Instant
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 /*
  * The seams these pages read. They are the narrow faces of :engine:runtime's RuntimeHost facets (plan 11 §5.4), which
@@ -15,15 +15,27 @@ import kotlin.time.Instant
  * those facets land; until then the binding lives with S3-RTWIRE / :androidApp. Feature code never sees Android types.
  */
 
-/** What the app knows about the phone server right now. Every field is a reading; the page derives the words. */
+/**
+ * What the app knows about the phone server right now. Every field is a reading; the page derives
+ * the words.
+ */
 public data class PhoneServerFacts(
     /** Null until the first status read answered (the page says "Checking the server"). */
     val status: RuntimeStatus? = null,
-    /** The last authenticated loopback probe while [RuntimeStatus.serverRunning]; a pid alone is never evidence. */
+    /**
+     * The last authenticated loopback probe while [RuntimeStatus.serverRunning]; a pid alone is
+     * never evidence.
+     */
     val probe: ProbeAnswer? = null,
-    /** `oc.phoneServerStopped.<p>` or the native `lastStopRequested`: the person stopped it (plan 11 §6.7). */
+    /**
+     * `oc.phoneServerStopped.<p>` or the native `lastStopRequested`: the person stopped it (plan 11
+     * §6.7).
+     */
     val stoppedByPerson: Boolean = false,
-    /** How the server last ended, when it is not running ([ServiceExitReason.MemoryOrPhantomKill] = Android closed it). */
+    /**
+     * How the server last ended, when it is not running ([ServiceExitReason.MemoryOrPhantomKill] =
+     * Android closed it).
+     */
     val lastExit: ServiceExitReason? = null,
     /** The one start path is running (plan 11 §6.2), whoever asked for it. */
     val starting: Boolean = false,
@@ -56,11 +68,16 @@ public sealed interface RecoveryFacts {
     /** An automatic attempt is launching now. */
     public data object Restarting : RecoveryFacts
 
-    /** Three attempts failed: it will not restart by itself until a manual start or a healthy open. */
+    /**
+     * Three attempts failed: it will not restart by itself until a manual start or a healthy open.
+     */
     public data object Exhausted : RecoveryFacts
 }
 
-/** The phone server's commands (plan 11 §6.2 Manual start, §6.7 Stop). Each runs on the runtime's one lane. */
+/**
+ * The phone server's commands (plan 11 §6.2 Manual start, §6.7 Stop). Each runs on the runtime's
+ * one lane.
+ */
 public interface PhoneServerSource {
     public val facts: StateFlow<PhoneServerFacts>
 
@@ -73,21 +90,36 @@ public interface PhoneServerSource {
     /** `server.requestStop(Person)`, then marks `oc.phoneServerStopped.<p>`. */
     public suspend fun stop(): Outcome<Unit>
 
-    /** Stop then the one start path; a person's restart is not a crash, so it spends no recovery attempt. */
+    /**
+     * Stop then the one start path; a person's restart is not a crash, so it spends no recovery
+     * attempt.
+     */
     public suspend fun restart(): Outcome<Unit>
 
-    /** The setup engine's "Update OpenCode" job (B-LINUX-079 manual row); the server restarts itself after (R7). */
+    /**
+     * The setup engine's "Update OpenCode" job (B-LINUX-079 manual row); the server restarts itself
+     * after (R7).
+     */
     public suspend fun updateOpenCode(): Outcome<Unit>
 }
 
 /** Real Android exit metadata, never the OS description or exception text. */
-public enum class PhoneExitKind { ForceStop, LowMemory, MemoryLimit, Crash, Killed }
+public enum class PhoneExitKind {
+    ForceStop,
+    LowMemory,
+    MemoryLimit,
+    Crash,
+    Killed,
+}
 
 public data class PhoneExitNotice(
     val kind: PhoneExitKind,
     val at: Instant,
     val recoveryAllowed: Boolean,
-    /** True only after a new authenticated restart completed; a pre-existing process never sets this. */
+    /**
+     * True only after a new authenticated restart completed; a pre-existing process never sets
+     * this.
+     */
     val restored: Boolean = false,
 )
 
@@ -98,15 +130,21 @@ public interface PhoneExitNotices {
     public fun dismiss()
 
     public companion object {
-        public val Absent: PhoneExitNotices = object : PhoneExitNotices {
-            override val notice: StateFlow<PhoneExitNotice?> = MutableStateFlow(null)
-            override fun dismiss() = Unit
-        }
+        public val Absent: PhoneExitNotices =
+            object : PhoneExitNotices {
+                override val notice: StateFlow<PhoneExitNotice?> = MutableStateFlow(null)
+
+                override fun dismiss() = Unit
+            }
     }
 }
 
 /** One Android settings screen the app may open (plan 11 §8.4 `KeepAliveSettings.open`). */
-public enum class KeepAliveSetting { Battery, Autostart, AppDetails }
+public enum class KeepAliveSetting {
+    Battery,
+    Autostart,
+    AppDetails,
+}
 
 /** The phone facts Keep running reads (plan 11 §8.4 `KeepAliveSettings.info`). */
 public data class KeepAliveInfo(
@@ -116,7 +154,10 @@ public data class KeepAliveInfo(
     val batteryOptimizationIgnored: Boolean,
 )
 
-/** Plan 11 §8.4's `KeepAliveSettings` (CR11-9, :core:domain when it lands). [open] answers false if nothing opened. */
+/**
+ * Plan 11 §8.4's `KeepAliveSettings` (CR11-9, :core:domain when it lands). [open] answers false if
+ * nothing opened.
+ */
 public interface KeepAliveSettings {
     public suspend fun info(): KeepAliveInfo?
 
@@ -124,12 +165,30 @@ public interface KeepAliveSettings {
 }
 
 /** Why a process row may not be stopped from Running on this phone (B-LINUX-143: never offered). */
-public enum class ProcessRole { Normal, ServerRoot, App }
+public enum class ProcessRole {
+    Normal,
+    ServerRoot,
+    App,
+}
 
-/** What a process is, so the row can be named in plain words (B-LINUX-180; the reading names it, not the path). */
-public enum class ProcessKind { OpenCode, ClaudeCode, AiTeam, DevService, Terminal, Helper, Other }
+/**
+ * What a process is, so the row can be named in plain words (B-LINUX-180; the reading names it, not
+ * the path).
+ */
+public enum class ProcessKind {
+    OpenCode,
+    ClaudeCode,
+    AiTeam,
+    DevService,
+    Terminal,
+    Helper,
+    Other,
+}
 
-/** One process from the reading. [name] is already the plain name the runtime chose (B-LINUX-146, 180). */
+/**
+ * One process from the reading. [name] is already the plain name the runtime chose (B-LINUX-146,
+ * 180).
+ */
 public data class PhoneProcess(
     val pid: Int,
     val parentPid: Int?,
@@ -138,25 +197,48 @@ public data class PhoneProcess(
     val role: ProcessRole = ProcessRole.Normal,
     val cpuPercent: Double? = null,
     val leftBehind: Boolean = false,
+    val heavy: Boolean = false,
+    val memoryMb: Long? = null,
+    val elapsedSeconds: Long? = null,
+    val memberCount: Int = 1,
+    val identity: String? = null,
 )
 
-/** One reading of what runs (B-LINUX-147). [count] is the app's child-process count the limit is about. */
+/**
+ * One reading of what runs (B-LINUX-147). [count] is the app's child-process count the limit is
+ * about.
+ */
 public data class ProcessReading(
     val processes: List<PhoneProcess>,
     val count: Int?,
     val limitLifted: Boolean,
+    val status: io.github.eslamasabry.oc.engine.runtime.procs.RunningRowStatus? = null,
+    val leftover: io.github.eslamasabry.oc.engine.runtime.procs.RunawayNotice? = null,
 )
 
-/** Reads and stops the app's own processes (`ProcessHost`, plan 11 §5.4). Off Android nothing is asked. */
+/**
+ * Reads and stops the app's own processes (`ProcessHost`, plan 11 §5.4). Off Android nothing is
+ * asked.
+ */
 public interface PhoneProcessSource {
     public suspend fun read(): Outcome<ProcessReading>
 
     /** A polite stop, then a forced one; protected processes are refused by the runtime as well. */
     public suspend fun stop(pid: Int): Outcome<Unit>
+
+    /**
+     * The identity the confirmation displayed; native bindings reject a later process at the same
+     * pid.
+     */
+    public suspend fun stop(pid: Int, identity: String?): Outcome<Unit> = stop(pid)
 }
 
 /** Android 14+ "Disable child process restrictions" (plan 11 §7.2 guided card). */
-public enum class ChildLimitState { Enforced, Lifted, Unknown }
+public enum class ChildLimitState {
+    Enforced,
+    Lifted,
+    Unknown,
+}
 
 public data class ChildLimitStatus(
     val sdkInt: Int? = null,
@@ -166,16 +248,28 @@ public data class ChildLimitStatus(
     val canOpenSettings: Boolean = false,
 )
 
-/** Which Settings screen opened, if any (`openDeveloperOptions`: "developer", "about" or "none"). */
-public enum class DeveloperOptionsOpened { Developer, About, None }
+/**
+ * Which Settings screen opened, if any (`openDeveloperOptions`: "developer", "about" or "none").
+ */
+public enum class DeveloperOptionsOpened {
+    Developer,
+    About,
+    None,
+}
 
-/** The card's inputs: the limit's state, Android's kills and the budget guard's queueing. Never changes the setting. */
+/**
+ * The card's inputs: the limit's state, Android's kills and the budget guard's queueing. Never
+ * changes the setting.
+ */
 public interface ChildLimitSource {
     public suspend fun status(): ChildLimitStatus
 
     public suspend fun openDeveloperOptions(): DeveloperOptionsOpened
 
-    /** When Android last stopped one of the app's Linux programs by itself in 24 h (`lastAndroidKill`), else null. */
+    /**
+     * When Android last stopped one of the app's Linux programs by itself in 24 h
+     * (`lastAndroidKill`), else null.
+     */
     public suspend fun lastAndroidKill(): Instant?
 
     /** `ProcessBudgetGuard.queuesOften()`. */
@@ -187,9 +281,19 @@ public interface ChildLimitSource {
     public suspend fun hide(at: Instant)
 }
 
-/** The pages these screens open. The entry installer maps them to `PhoneRoute`s once :ui:routes has them. */
+/**
+ * The pages these screens open. The entry installer maps them to `PhoneRoute`s once :ui:routes has
+ * them.
+ */
 /** [Linux] is the Linux manager (:feature:linux), reached from This phone's "Linux" row. */
-public enum class PhonePage { Running, KeepRunning, SetupStart, SetupProgress, Linux }
+public enum class PhonePage {
+    Running,
+    KeepRunning,
+    SetupStart,
+    SetupProgress,
+    Linux,
+    Terminal,
+}
 
 public interface PhoneNavigator {
     public fun open(page: PhonePage)

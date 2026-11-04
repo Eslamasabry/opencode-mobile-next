@@ -1,0 +1,4 @@
+<resources>
+    <string name="linuxProcessMembers">%1$d processes</string>
+    <string name="linuxProcessHeavy">Heavy use</string>
+</resources>

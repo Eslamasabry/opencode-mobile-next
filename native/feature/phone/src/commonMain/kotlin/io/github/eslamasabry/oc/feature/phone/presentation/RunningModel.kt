@@ -1,11 +1,14 @@
 package io.github.eslamasabry.oc.feature.phone.presentation
 
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.pace.Pacer
 import io.github.eslamasabry.oc.engine.runtime.budget.ProcessBudget
+import kotlin.math.roundToInt
+import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import io.github.eslamasabry.oc.core.common.pace.Pacer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,11 +16,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
-import kotlin.time.Clock
-import kotlin.time.Instant
 
-/** One process row. [protectedAs] says why it has no Stop (B-LINUX-143); the words point to This phone. */
+/**
+ * One process row. [protectedAs] says why it has no Stop (B-LINUX-143); the words point to This
+ * phone.
+ */
 public data class ProcessRowUi(
     val pid: Int,
     val name: String,
@@ -25,8 +28,15 @@ public data class ProcessRowUi(
     val cpuPercent: Int?,
     val leftBehind: Boolean,
     val protectedAs: ProcessRole?,
+    val cpuWords: io.github.eslamasabry.oc.engine.runtime.procs.CpuWords? = null,
+    val heavy: Boolean = false,
+    val memoryMb: Long? = null,
+    val elapsedSeconds: Long? = null,
+    val memberCount: Int = 1,
+    val identity: String? = null,
 ) {
-    val stoppable: Boolean get() = protectedAs == null
+    val stoppable: Boolean
+        get() = protectedAs == null
 }
 
 /** PhoneRoute.Running's state (plan 07 F08, merged Linux processes + Running on this phone). */
@@ -42,6 +52,8 @@ public data class RunningUi(
     val confirmStop: ProcessRowUi? = null,
     val stopping: Int? = null,
     val stopFailed: Boolean = false,
+    val status: io.github.eslamasabry.oc.engine.runtime.procs.RunningRowStatus? = null,
+    val leftover: io.github.eslamasabry.oc.engine.runtime.procs.RunawayNotice? = null,
 )
 
 public interface RunningActions {
@@ -65,8 +77,9 @@ public interface RunningActions {
 }
 
 /**
- * Running on this phone (plan 07 F08): reads every 10 s ([PhoneTimers.runningRefresh]) only while shown, stops one process with a confirm
- * and never offers a protected one, warns from 28 programs, and carries the child-process-limit card (plan 11 §7.2).
+ * Running on this phone (plan 07 F08): reads every 10 s ([PhoneTimers.runningRefresh]) only while
+ * shown, stops one process with a confirm and never offers a protected one, warns from 28 programs,
+ * and carries the child-process-limit card (plan 11 §7.2).
  */
 public class RunningModel(
     private val source: PhoneProcessSource,
@@ -116,6 +129,8 @@ public class RunningModel(
                         count = reading.count,
                         cap = ProcessBudget.ceiling(reading.limitLifted),
                         nearLimit = ProcessBudget.nearLimit(reading.count),
+                        status = reading.status,
+                        leftover = reading.leftover,
                     )
                 }
             }
@@ -138,6 +153,15 @@ public class RunningModel(
             cpuPercent = p.cpuPercent?.takeIf { it.isFinite() && it >= 0 }?.roundToInt(),
             leftBehind = p.leftBehind,
             protectedAs = p.role.takeIf { it != ProcessRole.Normal },
+            cpuWords =
+                p.cpuPercent?.let {
+                    io.github.eslamasabry.oc.engine.runtime.procs.runningCpuWords(it)
+                },
+            heavy = p.heavy,
+            memoryMb = p.memoryMb,
+            elapsedSeconds = p.elapsedSeconds,
+            memberCount = p.memberCount,
+            identity = p.identity,
         )
 
     override fun askStop(pid: Int) {
@@ -150,7 +174,7 @@ public class RunningModel(
         val row = ui.value.confirmStop ?: return
         ui.update { it.copy(confirmStop = null, stopping = row.pid) }
         scope.launch {
-            val stopped = source.stop(row.pid)
+            val stopped = source.stop(row.pid, row.identity)
             ui.update { it.copy(stopping = null, stopFailed = stopped is Outcome.Failed) }
             load()
         }

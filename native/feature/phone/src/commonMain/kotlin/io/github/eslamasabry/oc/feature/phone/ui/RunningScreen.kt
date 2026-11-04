@@ -7,6 +7,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.LifecycleStartEffect
+import io.github.eslamasabry.oc.engine.runtime.procs.DurationWords
 import io.github.eslamasabry.oc.feature.phone.presentation.ChildLimitCardKind
 import io.github.eslamasabry.oc.feature.phone.presentation.ProcessRole
 import io.github.eslamasabry.oc.feature.phone.presentation.ProcessRowUi
@@ -38,6 +39,8 @@ import io.github.eslamasabry.oc.ui.words.res.childLimitStepsText
 import io.github.eslamasabry.oc.ui.words.res.childLimitTitle
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
+import io.github.eslamasabry.oc.ui.words.res.linuxProcessHeavy
+import io.github.eslamasabry.oc.ui.words.res.linuxProcessMembers
 import io.github.eslamasabry.oc.ui.words.res.runningPhoneEmpty
 import io.github.eslamasabry.oc.ui.words.res.runningPhoneEmptyBody
 import io.github.eslamasabry.oc.ui.words.res.runningPhoneLimitBody
@@ -55,13 +58,15 @@ import io.github.eslamasabry.oc.ui.words.res.runningPhoneStopTitle
 import io.github.eslamasabry.oc.ui.words.res.runningPhoneTitle
 import io.github.eslamasabry.oc.ui.words.res.termuxProcsAboutHostApp
 import io.github.eslamasabry.oc.ui.words.res.termuxProcsAutoRefresh
+import io.github.eslamasabry.oc.ui.words.res.termuxProcsMemoryMb
 import io.github.eslamasabry.oc.ui.words.res.termuxProcsStopping
 import io.github.eslamasabry.oc.ui.words.res.workspaceDismissNotice
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * PhoneRoute.Running (plan 07 F08): the near-limit notice, the guided child-process-limit card (plan 11 §7.2), then
- * one row per program. Protected rows carry no Stop and say where they are controlled. Kit parts only (K1).
+ * PhoneRoute.Running (plan 07 F08): the near-limit notice, the guided child-process-limit card
+ * (plan 11 §7.2), then one row per program. Protected rows carry no Stop and say where they are
+ * controlled. Kit parts only (K1).
  */
 @Composable
 public fun RunningScreen(state: RunningUi, actions: RunningActions) {
@@ -89,7 +94,25 @@ public fun RunningScreen(state: RunningUi, actions: RunningActions) {
                     retry = KitLineAction(stringResource(Res.string.commonRetry), actions::retry),
                 )
             }
-            if (state.refreshFailed) KitNotice(message = stringResource(Res.string.runningPhoneRefreshFailed))
+            if (state.refreshFailed)
+                KitNotice(message = stringResource(Res.string.runningPhoneRefreshFailed))
+            state.leftover?.let { notice ->
+                KitNotice(
+                    message = notice.message.words(),
+                    tone = StatusTone.Attention,
+                    actions =
+                        listOf(
+                            KitLineAction(
+                                stringResource(
+                                    Res.string.runningPhoneStopNamed,
+                                    notice.stopLabelName,
+                                ),
+                                { actions.askStop(notice.identity.pid) },
+                            )
+                        ),
+                )
+            }
+            state.status?.let { KitGroupNote(it.words()) }
             val count = state.count
             if (state.nearLimit && count != null) {
                 KitNotice(
@@ -103,7 +126,11 @@ public fun RunningScreen(state: RunningUi, actions: RunningActions) {
                 KitNotice(
                     message = stringResource(Res.string.runningPhoneStopFailed),
                     tone = StatusTone.Failure,
-                    dismiss = KitLineAction(stringResource(Res.string.workspaceDismissNotice), actions::dismiss),
+                    dismiss =
+                        KitLineAction(
+                            stringResource(Res.string.workspaceDismissNotice),
+                            actions::dismiss,
+                        ),
                 )
             }
             if (!state.loading && !state.loadFailed && state.rows.isEmpty()) {
@@ -115,7 +142,9 @@ public fun RunningScreen(state: RunningUi, actions: RunningActions) {
             }
             if (state.rows.isNotEmpty()) {
                 KitRowGroup(note = stringResource(Res.string.termuxProcsAutoRefresh)) {
-                    state.rows.forEach { ProcessRow(it, stopping = state.stopping == it.pid, actions) }
+                    state.rows.forEach {
+                        ProcessRow(it, stopping = state.stopping == it.pid, actions)
+                    }
                 }
             } else if (!state.loadFailed) {
                 KitGroupNote(stringResource(Res.string.termuxProcsAutoRefresh))
@@ -142,30 +171,48 @@ public fun RunningScreen(state: RunningUi, actions: RunningActions) {
 private fun ProcessRow(row: ProcessRowUi, stopping: Boolean, actions: RunningActions) {
     val details =
         listOfNotNull(
-            row.kind.words(),
-            row.cpuPercent?.let { "⁦$it %⁩" },
-            if (row.leftBehind) stringResource(Res.string.runningPhoneMarkStuck) else null,
-        ).joinToString(" · ")
+                row.kind.words(),
+                row.cpuWords?.words(),
+                row.memoryMb?.let { stringResource(Res.string.termuxProcsMemoryMb, it) },
+                row.elapsedSeconds?.let { DurationWords.of(it).words() },
+                if (row.memberCount > 1)
+                    stringResource(Res.string.linuxProcessMembers, row.memberCount)
+                else null,
+                if (row.heavy) stringResource(Res.string.linuxProcessHeavy) else null,
+                if (row.leftBehind) stringResource(Res.string.runningPhoneMarkStuck) else null,
+            )
+            .joinToString(" · ")
     val supporting =
         when (row.protectedAs) {
             ProcessRole.ServerRoot -> stringResource(Res.string.runningPhoneServerRoot)
             ProcessRole.App -> stringResource(Res.string.termuxProcsAboutHostApp)
-            ProcessRole.Normal, null -> if (stopping) stringResource(Res.string.termuxProcsStopping) else details.ifBlank { null }
+            ProcessRole.Normal,
+            null ->
+                if (stopping) stringResource(Res.string.termuxProcsStopping)
+                else details.ifBlank { null }
         }
     KitRow(
         title = row.name,
         supporting = supporting,
-        supportingMaxLines = 2,
+        supportingMaxLines = 5,
         trailing =
             if (row.stoppable && !stopping) {
-                KitRowTrailing.Action(KitLineAction(stringResource(Res.string.runningPhoneStop), { actions.askStop(row.pid) }))
+                KitRowTrailing.Action(
+                    KitLineAction(
+                        stringResource(Res.string.runningPhoneStop),
+                        { actions.askStop(row.pid) },
+                    )
+                )
             } else {
                 KitRowTrailing.None
             },
     )
 }
 
-/** The guided card (port of child_limit_card.dart): one notice with its steps, one button when one can open, Hide. */
+/**
+ * The guided card (port of child_limit_card.dart): one notice with its steps, one button when one
+ * can open, Hide.
+ */
 @Composable
 private fun ChildLimitCard(kind: ChildLimitCardKind, actions: RunningActions) {
     val steps =
@@ -184,8 +231,22 @@ private fun ChildLimitCard(kind: ChildLimitCardKind, actions: RunningActions) {
         title = stringResource(Res.string.childLimitTitle),
         message = stringResource(Res.string.childLimitBody),
         notes = listOf(stringResource(steps)),
-        actions = listOfNotNull(open?.let { KitLineAction(stringResource(it), actions::openChildLimitSettings, testTag = "child-limit-open") }),
-        dismiss = KitLineAction(stringResource(Res.string.childLimitHide), actions::hideChildLimit, testTag = "child-limit-hide"),
+        actions =
+            listOfNotNull(
+                open?.let {
+                    KitLineAction(
+                        stringResource(it),
+                        actions::openChildLimitSettings,
+                        testTag = "child-limit-open",
+                    )
+                }
+            ),
+        dismiss =
+            KitLineAction(
+                stringResource(Res.string.childLimitHide),
+                actions::hideChildLimit,
+                testTag = "child-limit-hide",
+            ),
         liveRegion = false,
     )
 }

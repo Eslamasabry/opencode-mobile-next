@@ -128,7 +128,9 @@ public fun LinuxPortsScreen(state: LinuxPortsUi, actions: LinuxPortsActions) {
                             )
                         KitRow(
                             title =
-                                server.command.takeIf { it.isNotBlank() }?.take(100)
+                                io.github.eslamasabry.oc.engine.runtime.procs.CommandNames
+                                    .serverName(server.command)
+                                    .takeIf { it.isNotBlank() }
                                     ?: stringResource(Res.string.linuxDevProgram, server.pid),
                             supporting =
                                 ports +
