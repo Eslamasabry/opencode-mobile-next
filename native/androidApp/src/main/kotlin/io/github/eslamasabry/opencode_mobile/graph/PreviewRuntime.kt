@@ -491,6 +491,7 @@ class PreviewRuntime(
         }
         val scoped =
             DefaultProfileScope(stores.prefs, stores.secrets, stores.lanes.app).apply {
+                AndroidProfileMonitoring.registerKeys(this)
                 registerSecret("pw.", "profiles")
                 registerSecret("oc.codexToken.", "profiles")
                 registerSecret("oc.agentHostSecret.", ":engine:agents")

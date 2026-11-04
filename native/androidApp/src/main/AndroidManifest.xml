@@ -32,6 +32,14 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- B-ANDR-072: the same single route-only VIEW filter as the Flutter app. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="opencode-mobile" android:host="session" />
+                <data android:scheme="opencode-mobile" android:host="team" />
+            </intent-filter>
             <!-- Share target (P12-PLATFORM): text shared from any app lands in a new conversation's draft. -->
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />

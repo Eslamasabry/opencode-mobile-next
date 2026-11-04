@@ -5151,6 +5151,10 @@ class BuiltinLinux(private val context: Context) {
             System.currentTimeMillis(),
         )
 
+    /** Read-only admission check for interactive sends; a failed read must refuse dispatch. */
+    @Synchronized
+    fun hasScheduledPhoneLease(): Boolean = activeScheduledPhoneLease()
+
     @Synchronized
     internal fun activeScheduledPhoneLease(): Boolean {
         val current = services[SERVER]?.process?.takeIf { it.isAlive }
@@ -6509,6 +6513,7 @@ object SharedStorageBinds {
     private val volume = Regex("^/storage/(?:emulated/\\d+|[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4})(/.+)$")
 
     fun canonicalRoot(path: String): String? {
+        if (!path.trim().replace('\\', '/').startsWith('/')) return null
         val parts = ArrayList<String>()
         for (part in path.trim().replace('\\', '/').split('/')) {
             if (part.isEmpty() || part == ".") continue
@@ -6521,7 +6526,7 @@ object SharedStorageBinds {
         var value = "/" + parts.joinToString("/")
         for (alias in aliases) {
             val match = alias.find(value) ?: continue
-            val user = match.groupValues[1].ifEmpty { "0" }
+            val user = match.groupValues.getOrNull(1).orEmpty().ifEmpty { "0" }
             value = "/storage/emulated/$user" + value.substring(match.range.last + 1)
             break
         }

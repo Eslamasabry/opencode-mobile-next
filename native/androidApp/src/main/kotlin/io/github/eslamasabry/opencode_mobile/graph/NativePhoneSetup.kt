@@ -1,6 +1,9 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
+import android.app.ActivityManager
 import android.app.Application
+import android.os.Build
+import android.os.StatFs
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
@@ -13,6 +16,7 @@ import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.agents.scripts.PaseoPhoneScripts
 import io.github.eslamasabry.oc.engine.connection.ServerConnections
+import io.github.eslamasabry.oc.engine.diagnostics.perf.PerfTrace
 import io.github.eslamasabry.oc.engine.runtime.install.InstallPrelude
 import io.github.eslamasabry.oc.engine.runtime.install.OpenCodeInstallScripts
 import io.github.eslamasabry.oc.engine.runtime.install.SetupHost
@@ -23,6 +27,7 @@ import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import io.github.eslamasabry.opencode_mobile.SetupRunner
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -49,6 +54,7 @@ class NativePhoneSetup(
     private val clock: Clock,
     private val redactor: Redactor,
     private val payloadGuard: PhonePayloadGuard,
+    private val trace: PerfTrace,
 ) : LinuxSetupSource {
     private val serial = dispatchers.serial("phone-setup")
     private val scope = CoroutineScope(appScope.coroutineContext + serial)
@@ -56,6 +62,8 @@ class NativePhoneSetup(
     private var engine: SetupEngine? = null
     private val shown = MutableStateFlow(SetupProgress.Idle)
     private val changed = MutableStateFlow(0)
+    private val admissionState = MutableStateFlow<SetupPreflightResult?>(null)
+    val admission: StateFlow<SetupPreflightResult?> = admissionState
     override val progress: StateFlow<SetupProgress> = shown
     override val toolsChanged: StateFlow<Int> = changed
     private val linux by lazy { BuiltinLinux.get(app) }
@@ -78,6 +86,55 @@ class NativePhoneSetup(
             }
 
             override suspend fun startSetup(job: SetupJobStart): Outcome<Unit> {
+                val ids = job.components.filterNot { it.skipped }.map { it.id }.toSet()
+                val components = engine?.registry.orEmpty().filter { it.id in ids }
+                fun total(values: List<Long>): Long =
+                    values.fold(0L) { sum, value ->
+                        if (value >= Long.MAX_VALUE - sum) Long.MAX_VALUE else sum + value
+                    }
+                val downloads = total(components.mapNotNull { it.downloadBytes?.coerceAtLeast(0) })
+                val extracted = total(components.mapNotNull { it.installedBytes?.coerceAtLeast(0) })
+                val abis = Build.SUPPORTED_ABIS.toList()
+                val architecture =
+                    SetupPreflight.check(SetupDeviceInfo(abis, null, null), downloads)
+                if (!architecture.supported) {
+                    admissionState.value = architecture
+                    return Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
+                }
+                val memory =
+                    (native {
+                            ActivityManager.MemoryInfo()
+                                .also {
+                                    app.getSystemService(ActivityManager::class.java)
+                                        .getMemoryInfo(it)
+                                }
+                                .totalMem
+                                // A zero reading is unknown, never a phone with no memory.
+                                .takeIf { it > 0 }
+                                ?.div(1024 * 1024)
+                                ?.coerceAtMost(Int.MAX_VALUE.toLong())
+                                ?.toInt()
+                        }
+                            as? Outcome.Ok)
+                        ?.value
+                val memoryAdmission =
+                    SetupPreflight.check(SetupDeviceInfo(abis, memory, null), downloads)
+                if (!memoryAdmission.supported) {
+                    admissionState.value = memoryAdmission
+                    return Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
+                }
+                val available =
+                    (native { StatFs(app.filesDir.absolutePath).availableBytes } as? Outcome.Ok)
+                        ?.value
+                val admission =
+                    SetupPreflight.check(
+                        SetupDeviceInfo(abis, memory, available),
+                        downloads,
+                        extracted.takeIf { it > 0 },
+                    )
+                admissionState.value = admission
+                if (!admission.supported)
+                    return Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
                 val reservation =
                     when (val reserved = payloadGuard.beginMutation(null)) {
                         is Outcome.Failed -> return reserved
@@ -240,6 +297,14 @@ class NativePhoneSetup(
                 InstallPrelude.SETUP,
                 { redactor.diagnostics(it) },
                 foreground = { runtime.isForeground },
+                timing = {
+                    trace.recordDuration(
+                        it.name,
+                        it.durationMillis.milliseconds,
+                        it.attributes,
+                        error = it.failed,
+                    )
+                },
                 finisher =
                     SetupFinisher { request ->
                         when (val finished = runtime.finishSetup(request)) {
@@ -295,7 +360,27 @@ class NativePhoneSetup(
 
     override suspend fun resume(): Outcome<Unit> = command { it.resume() }
 
-    override suspend fun cancel(): Outcome<Unit> = command { it.cancel() }
+    override suspend fun cancel(): Outcome<Unit> =
+        withContext(serial) {
+            // A cancel during checks must set cancelRequested before startSetup can run, so it
+            // bypasses the lane a running start holds. With no engine yet (a cold app with a
+            // runner job), nothing is starting: build it through the lane and cancel normally.
+            val current = engine ?: return@withContext command { it.cancel() }
+            current.cancel()
+            Outcome.Ok(Unit)
+        }
+
+    internal suspend fun <T> toolsCommand(block: suspend () -> T): T =
+        withContext(serial) {
+            lane.withLock {
+                get()
+                block()
+            }
+        }
+
+    internal fun toolsInvalidated() {
+        engine?.invalidateTools()
+    }
 
     suspend fun update(): Outcome<Unit> {
         if (!runtime.mayUpdate()) return Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy))

@@ -75,6 +75,7 @@ import io.github.eslamasabry.oc.ui.words.res.agentsStateSignInNeeded
 import io.github.eslamasabry.oc.ui.words.res.agentsStateStopped
 import io.github.eslamasabry.oc.ui.words.res.agentsStateUnavailable
 import io.github.eslamasabry.oc.ui.words.res.codexProjectFolder
+import io.github.eslamasabry.oc.ui.words.res.computerToolsOpen
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
@@ -251,6 +252,11 @@ public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
                         { actions.readAgents(computer.id) },
                         role = KitButtonRole.Secondary,
                         enabled = enabled,
+                    )
+                    KitButton(
+                        stringResource(Res.string.computerToolsOpen),
+                        { actions.openComputer(computer.id) },
+                        role = KitButtonRole.Secondary,
                     )
                 }
             }

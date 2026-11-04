@@ -33,6 +33,7 @@ import io.github.eslamasabry.oc.feature.servers.pairing.ShareLink
 import io.github.eslamasabry.oc.feature.servers.pairing.pairingProblemText
 import io.github.eslamasabry.oc.feature.servers.presentation.ServerFailureKind
 import io.github.eslamasabry.oc.feature.servers.presentation.ServerIssue
+import io.github.eslamasabry.oc.feature.servers.presentation.ServerMonitorStatus
 import io.github.eslamasabry.oc.feature.servers.presentation.ServersActions
 import io.github.eslamasabry.oc.feature.servers.presentation.ServersUi
 import io.github.eslamasabry.oc.feature.servers.presentation.serverFailureKind
@@ -66,6 +67,16 @@ import io.github.eslamasabry.oc.ui.words.res.linuxHostSetupTitle
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrRowDetail
 import io.github.eslamasabry.oc.ui.words.res.mcpNativeTitle
 import io.github.eslamasabry.oc.ui.words.res.monitorNativeTitle
+import io.github.eslamasabry.oc.ui.words.res.monitorServerCheckInMinutes
+import io.github.eslamasabry.oc.ui.words.res.monitorServerCheckInOff
+import io.github.eslamasabry.oc.ui.words.res.monitorServerCurrent
+import io.github.eslamasabry.oc.ui.words.res.monitorOptIn
+import io.github.eslamasabry.oc.ui.words.res.monitorOptInDetail
+import io.github.eslamasabry.oc.ui.words.res.monitorServerPaused
+import io.github.eslamasabry.oc.ui.words.res.monitorServerUnavailable
+import io.github.eslamasabry.oc.ui.words.res.monitorServerWaiting
+import io.github.eslamasabry.oc.ui.words.res.monitorServerWifi
+import io.github.eslamasabry.oc.ui.words.res.monitorServerWifiRequired
 import io.github.eslamasabry.oc.ui.words.res.previewQrLinkFilled
 import io.github.eslamasabry.oc.ui.words.res.previewQrPairFilled
 import io.github.eslamasabry.oc.ui.words.res.previewQrPairingCodeLabel
@@ -315,6 +326,63 @@ public fun ServersScreen(
                             destructive = true,
                             enabled = enabled,
                         )
+                    }
+                    state.monitoring[server.id]?.let { monitor ->
+                        if (monitor.available) {
+                            KitSwitchRow(
+                                title = stringResource(Res.string.monitorOptIn),
+                                supporting = stringResource(Res.string.monitorOptInDetail),
+                                checked = monitor.enabled,
+                                enabled = enabled,
+                                onCheckedChange = { actions.monitor(server.id, it) },
+                            )
+                            if (monitor.enabled) {
+                                KitText(
+                                    stringResource(
+                                        when (monitor.status) {
+                                            ServerMonitorStatus.Current ->
+                                                Res.string.monitorServerCurrent
+                                            ServerMonitorStatus.Unavailable ->
+                                                Res.string.monitorServerUnavailable
+                                            ServerMonitorStatus.WifiRequired ->
+                                                Res.string.monitorServerWifiRequired
+                                            ServerMonitorStatus.Paused ->
+                                                Res.string.monitorServerPaused
+                                            ServerMonitorStatus.Waiting ->
+                                                Res.string.monitorServerWaiting
+                                        }
+                                    )
+                                )
+                                KitSwitchRow(
+                                    title = stringResource(Res.string.monitorServerWifi),
+                                    checked = monitor.wifiOnly,
+                                    enabled = enabled,
+                                    onCheckedChange = { actions.monitorWifi(server.id, it) },
+                                )
+                                KitButton(
+                                    stringResource(
+                                        if (monitor.checkInMinutes == null)
+                                            Res.string.monitorServerCheckInOff
+                                        else Res.string.monitorServerCheckInMinutes,
+                                        monitor.checkInMinutes ?: 30,
+                                    ),
+                                    {
+                                        actions.monitorCheckIn(
+                                            server.id,
+                                            when (monitor.checkInMinutes) {
+                                                null -> 15
+                                                15 -> 30
+                                                30 -> 60
+                                                60 -> 120
+                                                else -> null
+                                            },
+                                        )
+                                    },
+                                    role = KitButtonRole.Secondary,
+                                    enabled = enabled,
+                                )
+                            }
+                        } else KitText(stringResource(Res.string.monitorServerUnavailable))
                     }
                     if (removing == server.id) {
                         KitNotice(stringResource(Res.string.serversRemoveConfirm, server.name))

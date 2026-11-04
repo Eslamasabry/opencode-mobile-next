@@ -1,0 +1,272 @@
+package io.github.eslamasabry.oc.protocol.oc2.live
+
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.FeatureId
+import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.domain.WebSearchGateway
+import io.github.eslamasabry.oc.core.model.WebSearchProvider
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
+
+/**
+ * Flutter `WebSourceSelection` (lib/domain/web_source_selection.dart): one source a person reviewed. Its text is
+ * unverified, untrusted material; no consumer may fetch a page because it holds one. Build with [of].
+ */
+public class WebSourceSelection private constructor(
+    public val title: String,
+    public val url: String,
+    public val excerpt: String?,
+) {
+    override fun equals(other: Any?): Boolean =
+        other is WebSourceSelection && other.title == title && other.url == url && other.excerpt == excerpt
+
+    override fun hashCode(): Int = url.hashCode()
+
+    override fun toString(): String = "WebSourceSelection(${title.length} chars)"
+
+    /** Why a source was refused; :ui:words owns the sentence for each. */
+    public enum class Problem { Url, Title, ExcerptTooLong, ExcerptControl }
+
+    public sealed interface Built {
+        public data class Ok(val source: WebSourceSelection) : Built
+
+        public data class Refused(val problem: Problem) : Built
+    }
+
+    public companion object {
+        public const val MAX_TITLE: Int = 200
+        public const val MAX_URL: Int = 2048
+        public const val MAX_EXCERPT: Int = 2000
+        private val Http = Regex("^(https?)://([^/?#]*)(.*)$", RegexOption.IGNORE_CASE)
+        private val UrlForbidden = Regex("[\\s\\u0000-\\u001f\\u007f\\\\]")
+        private val TitleControl = Regex("[\\u0000-\\u001f\\u007f]")
+        private val ExcerptControl = Regex("[\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f\\u007f]")
+        private val Tld = Regex("^[a-z]{2,63}$")
+        private val Label = Regex("^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$")
+        private val PrivateTld = setOf("localhost", "local", "internal", "lan", "home", "test", "invalid")
+
+        public fun of(title: String, url: String, excerpt: String? = null): Built {
+            val normalized = url.trim()
+            val match = Http.matchEntire(normalized)
+            if (normalized.length > MAX_URL || UrlForbidden.containsMatchIn(normalized) || match == null)
+                return Built.Refused(Problem.Url)
+            val authority = match.groupValues[2]
+            if ('@' in authority) return Built.Refused(Problem.Url)
+            val host = authority.substringBefore(':').lowercase()
+            val port = authority.substringAfter(':', "")
+            if ((':' in authority && (port.isEmpty() || port.any { !it.isDigit() })) || !publicDnsHost(host))
+                return Built.Refused(Problem.Url)
+            val label = title.trim().ifEmpty { host }
+            if (label.length > MAX_TITLE || TitleControl.containsMatchIn(label)) return Built.Refused(Problem.Title)
+            val text = excerpt?.trim()
+            if (text != null && text.length > MAX_EXCERPT) return Built.Refused(Problem.ExcerptTooLong)
+            if (text != null && ExcerptControl.containsMatchIn(text)) return Built.Refused(Problem.ExcerptControl)
+            val canonical = match.groupValues[1].lowercase() + "://" + host + (if (port.isNotEmpty()) ":$port" else "") +
+                match.groupValues[3]
+            return Built.Ok(WebSourceSelection(label, canonical, text?.ifEmpty { null }))
+        }
+
+        /** Conservative offline input policy, not DNS resolution or an SSRF guard. */
+        private fun publicDnsHost(host: String): Boolean {
+            val name = host.removeSuffix(".")
+            val labels = name.split('.')
+            if (labels.size < 2 || name.length > 253) return false
+            if (labels.last() in PrivateTld) return false
+            if (name == "home.arpa" || name.endsWith(".home.arpa")) return false
+            if (!Tld.matches(labels.last())) return false
+            return labels.all { Label.matches(it) }
+        }
+    }
+}
+
+/**
+ * Flutter `WebSourcesOverview` (B-CHAT-124): search and review are transient, and only an explicit confirmation
+ * ([reviewedSelection]) returns draft context. Discovery never searches; a search needs a chosen provider; a scope
+ * change ([scope] differs from the value at creation: profile, location or gateway) discards every pending result
+ * and the local review; a provider invalidation (`websearch.updated`, [invalidateProviders]) supersedes an in-flight
+ * search and rediscovers without another query.
+ *
+ * One serial lane: call from one coroutine context (the owning engine/view model), like the Dart ChangeNotifier.
+ */
+public class WebSourcesReview(
+    private val gateway: WebSearchGateway?,
+    private val searchEnabled: () -> Boolean,
+    private val scope: () -> Any?,
+) {
+    private val origin = scope()
+    private val staged = mutableListOf<WebSourceSelection>()
+    private val selected = mutableSetOf<String>()
+    private var searchRevision = 0
+    private var providerRevision = 0
+    private var discoverAgain = false
+
+    public var scopeChanged: Boolean = false
+        private set
+    public var providers: ImmutableList<WebSearchProvider> = persistentListOf()
+        private set
+    public var results: ImmutableList<WebSourceSelection> = persistentListOf()
+        private set
+    public var providerId: String? = null
+        private set
+    public var discovering: Boolean = false
+        private set
+    public var searching: Boolean = false
+        private set
+    public var searched: Boolean = false
+        private set
+    public var omittedResults: Int = 0
+        private set
+    public var searchFailure: Failure? = null
+        private set
+
+    /** An immutable snapshot of the review list. */
+    public val sources: ImmutableList<WebSourceSelection> get() = staged.toImmutableList()
+
+    public val supportsSearch: Boolean get() = gateway != null && searchEnabled()
+
+    public fun isSelected(source: WebSourceSelection): Boolean = source.url in selected
+
+    private fun checkScope() {
+        if (scopeChanged || scope() == origin) return
+        scopeChanged = true
+        searchRevision++
+        providerRevision++
+        providers = persistentListOf()
+        results = persistentListOf()
+        searching = false
+        discovering = false
+        staged.clear()
+        selected.clear()
+    }
+
+    private fun canEdit(): Boolean {
+        checkScope()
+        return !scopeChanged
+    }
+
+    /** Lists providers; never submits a query. A burst while one runs coalesces into one more discovery. */
+    public suspend fun discoverProviders() {
+        if (!canEdit() || !supportsSearch) return
+        if (discovering) {
+            providerRevision++
+            searchRevision++
+            discoverAgain = true
+            return
+        }
+        val revision = ++providerRevision
+        searchRevision++
+        searching = false
+        discovering = true
+        results = persistentListOf()
+        providers = persistentListOf()
+        searched = false
+        searchFailure = null
+        val found = gateway!!.webSearchProviders()
+        if (canEdit() && revision == providerRevision) {
+            when (found) {
+                is Outcome.Ok -> {
+                    providers = found.value
+                    if (providers.none { it.id == providerId }) providerId = providers.singleOrNull()?.id
+                }
+                is Outcome.Failed -> {
+                    searchFailure = found.failure
+                    providerId = null
+                }
+            }
+        }
+        if (canEdit()) {
+            discovering = false
+            if (discoverAgain) {
+                discoverAgain = false
+                discoverProviders()
+            }
+        }
+    }
+
+    /** The `websearch.updated` / reconnect signal: drop the current answer and rediscover. */
+    public suspend fun invalidateProviders(): Unit = discoverProviders()
+
+    public fun chooseProvider(id: String?) {
+        if (!canEdit() || providers.none { it.id == id }) return
+        searchRevision++
+        providerId = id
+        searching = false
+        searched = false
+        results = persistentListOf()
+        searchFailure = null
+    }
+
+    /** Explicit search with the chosen provider. Results are only shown for review; nothing is added or sent. */
+    public suspend fun search(query: String) {
+        val chosen = providerId
+        if (!canEdit() || !supportsSearch || discovering || searching || query.isBlank() ||
+            query.length > Oc2WebSearch.MAX_QUERY || chosen == null || providers.none { it.id == chosen })
+            return
+        val revision = ++searchRevision
+        searching = true
+        searched = false
+        results = persistentListOf()
+        omittedResults = 0
+        searchFailure = null
+        val reply = gateway!!.searchWeb(query, chosen)
+        if (!canEdit() || revision != searchRevision) return
+        when (reply) {
+            is Outcome.Ok ->
+                if (reply.value.providerId != chosen) {
+                    searchFailure = Failure.UnreadableReply()
+                } else {
+                    val safe = mutableListOf<WebSourceSelection>()
+                    val seen = mutableSetOf<String>()
+                    for (result in reply.value.results.take(100)) {
+                        when (val built = WebSourceSelection.of(result.title ?: "", result.url, result.content)) {
+                            is WebSourceSelection.Built.Ok -> if (seen.add(built.source.url)) safe += built.source
+                            is WebSourceSelection.Built.Refused -> omittedResults++
+                        }
+                    }
+                    results = safe.toImmutableList()
+                    searched = true
+                }
+            is Outcome.Failed -> {
+                searchFailure = reply.failure
+                if (reply.failure == Failure.Unavailable(FeatureId("webSearch"))) {
+                    providers = persistentListOf()
+                    providerId = null
+                }
+            }
+        }
+        searching = false
+    }
+
+    /** Why [add] refused; :ui:words owns the sentences ("Connection changed…", "already in your review list", …). */
+    public enum class AddProblem { ScopeChanged, Duplicate, TooMany }
+
+    /** Stages [source] for review (selected). Null on success; a failure keeps every staged source. */
+    public fun add(source: WebSourceSelection): AddProblem? {
+        if (!canEdit()) return AddProblem.ScopeChanged
+        if (staged.any { it.url == source.url }) return AddProblem.Duplicate
+        if (staged.size >= MAX_SOURCES) return AddProblem.TooMany
+        staged += source
+        selected += source.url
+        return null
+    }
+
+    public fun select(source: WebSourceSelection, on: Boolean) {
+        if (!canEdit() || source !in staged) return
+        if (on) selected += source.url else selected -= source.url
+    }
+
+    public fun remove(source: WebSourceSelection) {
+        if (!canEdit()) return
+        staged -= source
+        selected -= source.url
+    }
+
+    /** The explicit confirmation: the selected sources, or null when the original scope is no longer valid. */
+    public fun reviewedSelection(): ImmutableList<WebSourceSelection>? =
+        if (!canEdit()) null else staged.filter { it.url in selected }.toImmutableList()
+
+    public companion object {
+        public const val MAX_SOURCES: Int = 10
+    }
+}

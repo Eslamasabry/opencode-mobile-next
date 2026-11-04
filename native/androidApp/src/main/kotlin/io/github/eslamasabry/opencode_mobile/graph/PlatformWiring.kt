@@ -44,6 +44,7 @@ import io.github.eslamasabry.oc.android.tiles.updates.AndroidUpdatePlatform
 import io.github.eslamasabry.oc.android.tiles.updates.PrefsUpdateStore
 import io.github.eslamasabry.oc.android.widgets.WidgetFeed
 import io.github.eslamasabry.oc.android.widgets.WidgetPersistence
+import io.github.eslamasabry.oc.android.widgets.WidgetPresentation
 import io.github.eslamasabry.oc.core.common.AppBuildInfo
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
@@ -65,12 +66,15 @@ import io.github.eslamasabry.oc.core.security.ExternalLinkOpener
 import io.github.eslamasabry.oc.core.security.ExternalLinkPolicy
 import io.github.eslamasabry.oc.core.security.LinkDecision
 import io.github.eslamasabry.oc.core.security.LinkOrigin
+import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedItem
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedSnapshot
 import io.github.eslamasabry.oc.engine.agents.feed.ChatStatus
 import io.github.eslamasabry.oc.engine.composer.drafts.ConversationDrafts
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
+import io.github.eslamasabry.oc.engine.entry.EntryLinkParser
+import io.github.eslamasabry.oc.engine.entry.ParsedLink
 import io.github.eslamasabry.oc.engine.requests.PendingRequest
 import io.github.eslamasabry.oc.engine.updates.AppUpdateState
 import io.github.eslamasabry.oc.engine.updates.AppUpdates
@@ -88,6 +92,7 @@ import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.AppRoute
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
+import io.github.eslamasabry.oc.ui.routes.PlansRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.ui.routes.UpdatesRoute
 import kotlin.time.Clock
@@ -253,6 +258,9 @@ class PlatformHub(
     private val draftOwners: Set<ConversationDrafts>,
     private val appPreferences: AppPreferences,
     private val agentWidgets: AgentWidgetWiring,
+    private val monitoring: AndroidProfileMonitoring,
+    private val sharedProjectFolders: NativeSharedProjectFolders,
+    redactor: Redactor,
 ) {
     private val log = AppLog.tagged("Platform")
     private val prefs = application.getSharedPreferences("oc_platform", Context.MODE_PRIVATE)
@@ -270,6 +278,7 @@ class PlatformHub(
             appScope,
             clock,
         )
+    private val widgetPresentation = WidgetPresentation(application, redactor)
 
     @Volatile private var started = 0
     private val visible = MutableStateFlow(0)
@@ -305,6 +314,8 @@ class PlatformHub(
     fun start() {
         if (started++ > 0) return
         WidgetFeed.persistence = widgetPersistence
+        sharedProjectFolders.start()
+        monitoring.start()
         channels.ensure()
         // B-L10N-002: channel names follow an acknowledged language save (the stored value, never
         // an attempt).
@@ -336,6 +347,20 @@ class PlatformHub(
      */
     fun route(intent: Intent?) {
         if (intent == null) return
+        if (monitoring.route(intent)) return
+        if (intent.action == Intent.ACTION_VIEW && intent.data != null) {
+            // B-ANDR-072: the one VIEW filter. Consumed once; route identifiers only.
+            val raw = intent.dataString
+            intent.data = null
+            when (val link = raw?.let(EntryLinkParser::parse)) {
+                is ParsedLink.Session -> openSessionLink(link)
+                // AI Team links: the team target is deferred under D6, so they land on the list.
+                is ParsedLink.TeamGate,
+                is ParsedLink.TeamRun -> navigator.land()
+                null -> Unit
+            }
+            return
+        }
         val share = SharedTextIntake.consume(intent)
         if (share != null) {
             this.share.arrived(share.text, runtime.snapshot.value.items.map { it.ref }.toSet())
@@ -365,10 +390,33 @@ class PlatformHub(
             LaunchAction.Connect -> navigator.open(ServersRoute.Home)
             LaunchAction.NewTask ->
                 navigator.open(ChatsRoute.New(profile = stores.profiles.activeId.value))
+            LaunchAction.Usage,
+            LaunchAction.UsageSettings,
+            is LaunchAction.UsageTarget -> navigator.open(PlansRoute)
             null -> Unit
             // Activity, background and the other Flutter actions land on Conversations (needs-you
             // rows lead).
             else -> navigator.land()
+        }
+    }
+
+    /**
+     * Flutter `_openSessionForLink`: a saved server opens that exact session (connecting first);
+     * an unknown server, one that needs its secret again, or a failed connection shows Servers.
+     * Nothing is sent, created or resumed.
+     */
+    private fun openSessionLink(link: ParsedLink.Session) {
+        val saved = stores.profiles.profile(link.profileId)
+        if (saved == null || saved.reentry.password || saved.reentry.agentToken) {
+            navigator.open(ServersRoute.Home)
+            return
+        }
+        appScope.launch {
+            if (runtime.connect(link.profileId) !is Outcome.Ok) {
+                navigator.open(ServersRoute.Home)
+                return@launch
+            }
+            navigator.openChat(ConversationRef(link.profileId, link.sessionId))
         }
     }
 
@@ -414,10 +462,12 @@ class PlatformHub(
     private inner class Visibility : Application.ActivityLifecycleCallbacks {
         override fun onActivityStarted(activity: Activity) {
             visible.value += 1
+            monitoring.visible(visible.value > 0)
         }
 
         override fun onActivityStopped(activity: Activity) {
             visible.value = (visible.value - 1).coerceAtLeast(0)
+            monitoring.visible(visible.value > 0)
         }
 
         override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = Unit
@@ -483,10 +533,11 @@ class PlatformHub(
             }
             .conflate()
             .collect { (feed, waiting, appVisible) ->
-                publishWidgets(feed, waiting)
                 publishTile(waiting)
                 publishPins(feed)
                 alerts(feed, waiting, appVisible)
+                // Last: its bounded detail reads (up to four) must never hold back an alert.
+                publishWidgets(feed, waiting)
             }
     }
 
@@ -518,38 +569,126 @@ class PlatformHub(
 
     private suspend fun publishWidgets(feed: ChatFeedSnapshot, waiting: List<Waiting>) {
         val profile = stores.profiles.activeId.value ?: return
-        val names = stores.profiles.profiles.value.associate { it.id to it.profile.name }
+        val savedProfiles = stores.profiles.profiles.value
+        val names = savedProfiles.associate { it.id to it.profile.name }
         val model =
             PlatformRules.widgetModel(feed, waiting, profile, names, registry.live.value.keys)
         // Unchanged content is not rewritten or redrawn: clock stamps move only when the content
         // does (B-ANDR-117).
         if (model == widgetModel) return
+        val details = mutableMapOf<Pair<String, String>, WidgetDetail>()
+        // Only the four launcher-visible rows. Each read is bounded and never mutates the server.
+        for (row in model.rows.take(4)) {
+            if (row.profile != profile.raw) continue
+            val id = ProfileId(row.profile)
+            val graph = registry.live.value[id] ?: continue
+            val location = graph.session.server.location.value
+            if (row.project != location.directory.orEmpty()) continue
+            val page =
+                withTimeoutOrNull(2_000L) {
+                    graph.session.server.messagePage(SessionId(row.id), limit = EXCERPT_MESSAGES)
+                }
+            if (
+                registry.live.value[id] !== graph || graph.session.server.location.value != location
+            )
+                continue
+            val messages =
+                (page as? Outcome.Ok)?.value?.items.orEmpty().filter { it.info.sessionId == row.id }
+            val permission =
+                waiting
+                    .firstOrNull { it.profile == id && it.request.sessionId.raw == row.id }
+                    ?.request as? PendingRequest.Permission
+            val call =
+                permission?.request?.tool?.let { named ->
+                    messages
+                        .firstOrNull { it.info.id == named.messageId.raw }
+                        ?.parts
+                        ?.firstOrNull { it.type == PartType.Tool && it.callId == named.callId }
+                }
+            val target =
+                call?.tool?.input?.let { input ->
+                    val keys =
+                        if (call.toolName in listOf("bash", "shell")) listOf("command")
+                        else listOf("filePath", "filepath", "file_path", "path", "file")
+                    keys.firstNotNullOfOrNull { key ->
+                        (input[key] as? JsonPrimitive)?.takeIf { it.isString }?.content
+                    }
+                }
+            details[row.profile to row.id] =
+                WidgetDetail(
+                    preview = widgetPresentation.assistantPreview(messages),
+                    ask =
+                        permission
+                            ?.request
+                            ?.let {
+                                widgetPresentation.ask(
+                                    it.permission,
+                                    it.patterns,
+                                    call?.toolName,
+                                    target,
+                                )
+                            }
+                            .orEmpty(),
+                )
+        }
+        // A read must never publish a result against a replaced profile, location, request or feed.
+        val freshWaiting =
+            registry.live.value.flatMap { (id, graph) ->
+                (graph as? ChatGraphAccessors)?.chatRequests?.engine?.pending?.value.orEmpty().map {
+                    Waiting(id, it)
+                }
+            }
+        if (freshWaiting != waiting || stores.profiles.profiles.value != savedProfiles) return
+        val current =
+            PlatformRules.widgetModel(
+                runtime.snapshot.value,
+                freshWaiting,
+                profile,
+                stores.profiles.profiles.value.associate { it.id to it.profile.name },
+                registry.live.value.keys,
+            )
+        if (current != model || stores.profiles.activeId.value != profile) return
+        val now = clock.now().toEpochMilliseconds()
         widgetModel = model
-        widgetStampMs = clock.now().toEpochMilliseconds()
-        agentWidgets.publish(widgetJson(model, widgetStampMs), profile.raw)
+        widgetStampMs = now
+        // The agent widget wiring adds the live on-demand actions and drops foreign request ids.
+        agentWidgets.publish(widgetJson(model, now, details), profile.raw)
     }
 
-    private fun widgetJson(model: WidgetModel, now: Long): String {
+    private data class WidgetDetail(val preview: String, val ask: Map<String, String>)
+
+    private fun widgetJson(
+        model: WidgetModel,
+        now: Long,
+        details: Map<Pair<String, String>, WidgetDetail>,
+    ): String {
         val sessions = JSONArray()
         for (row in model.rows) {
             sessions.put(
                 JSONObject()
                     .put("id", row.id)
                     .put("profileID", row.profile)
-                    .put("title", row.title)
-                    .put("project", row.project)
+                    .put("title", widgetPresentation.title(row.title))
+                    .put("project", widgetPresentation.project(row.project))
                     .put("server", row.server)
                     .put("busy", row.busy)
                     .put("needsYou", row.needsYou)
-                    .put("requestID", row.requestId)
+                    .put("onDemandActions", JSONArray())
                     .put("updatedAt", row.updatedAt)
+                    .apply {
+                        val detail = details[row.profile to row.id]
+                        if (row.requestId.isNotEmpty()) put("requestID", row.requestId)
+                        if (detail != null) {
+                            if (detail.preview.isNotEmpty()) put("preview", detail.preview)
+                            if (detail.ask.isNotEmpty()) put("ask", JSONObject(detail.ask))
+                        }
+                    }
             )
         }
         val servers = JSONArray()
         for (server in model.servers) {
-            val since =
-                serverSince[server.name]?.takeIf { it.first == server.online }?.second ?: now
-            serverSince[server.name] = server.online to since
+            val since = serverSince[server.id]?.takeIf { it.first == server.online }?.second ?: now
+            serverSince[server.id] = server.online to since
             servers.put(
                 JSONObject()
                     .put("name", server.name)
@@ -805,7 +944,7 @@ internal data class WidgetRow(
     val updatedAt: Long,
 )
 
-internal data class WidgetServer(val name: String, val online: Boolean)
+internal data class WidgetServer(val name: String, val online: Boolean, val id: String = name)
 
 /** What the widgets show, without clock stamps: equal models are never republished (B-ANDR-117). */
 internal data class WidgetModel(
@@ -834,6 +973,20 @@ internal object PlatformRules {
         val rows =
             feed.items
                 .filter { !it.isSubagent }
+                .sortedWith(
+                    compareBy<ChatFeedItem> {
+                            when {
+                                it.status == ChatStatus.NeedsYou ||
+                                    waiting.any { w ->
+                                        w.profile == it.profileId &&
+                                            w.request.sessionId == it.sessionId
+                                    } -> 0
+                                it.status == ChatStatus.Running -> 1
+                                else -> 2
+                            }
+                        }
+                        .thenByDescending { it.lastActivityMs }
+                )
                 .take(WIDGET_SESSIONS)
                 .map { item ->
                     val request = waiting.firstOrNull {
@@ -844,7 +997,7 @@ internal object PlatformRules {
                         id = item.sessionId.raw,
                         profile = item.profileId.raw,
                         title = widgetText(item.title),
-                        project = widgetText(item.projectName),
+                        project = item.directory.orEmpty(),
                         server = widgetText(names[item.profileId]),
                         busy = item.status == ChatStatus.Running,
                         needsYou = item.status == ChatStatus.NeedsYou || request != null,
@@ -858,7 +1011,8 @@ internal object PlatformRules {
             running = feed.items.count { !it.isSubagent && it.status == ChatStatus.Running },
             pending = waiting.size,
             rows = rows,
-            servers = names.map { (id, name) -> WidgetServer(widgetText(name), id in online) },
+            servers =
+                names.map { (id, name) -> WidgetServer(widgetText(name), id in online, id.raw) },
         )
     }
 
