@@ -159,3 +159,61 @@ App wiring:
 9. **Phone-setup taps:** they open the Linux page because setup pages are not in this build. When the setup screens
    land, update `SetupTapRoutes` (`BackgroundWiring.kt`).
 10. **Widgetbook:** add catalog use-cases for the Background page (and later Move from Termux).
+
+## Integration conflict repair — 2026-11-04
+
+Checkout branch: `p12x/android-bg-platform-d8dd66e`. Tested candidate:
+`1d53692444f3087764591ea71e752e01250cc870`, the no-fast-forward merge of unit
+`d8dd66e91fe338725fa1b73d3525644c6f0b1c29` and integration head
+`1febc299c06a2dc8fa66cd1091761e0fc0075d25`.
+
+- Resolved the sole conflict, `native/MODULE_OWNERS`, by retaining the unit's three background/Termux ownership
+  entries and the integration head's five integrations/Plans entries.
+- Verified that `androidApp/build.gradle.kts` retains every project dependency from both parents.
+- Retained the automatically merged `PlatformWiring.kt`: setup notification routing and the integration's shared
+  shade-answer mapping coexist. No Kotlin behavior or tests needed further edits; no tests were weakened or deleted.
+- Restored the ignored sherpa-onnx AAR with `native/tools/vendor/fetch.sh`; its committed SHA-256 pin passed.
+
+One native Gradle invocation, serialized with `/tmp/oc-native-gradle.lock`, ran from `native/`:
+
+```bash
+export JAVA_HOME=/home/eslam/Storage2/tools/jdk21 ANDROID_HOME=$HOME/Android/Sdk
+flock /tmp/oc-native-gradle.lock nice -n 5 ./gradlew --console=plain --continue \
+  -Dorg.gradle.workers.max=2 \
+  -Dorg.gradle.jvmargs='-Xmx2g -XX:MaxMetaspaceSize=768m' \
+  :feature:background:desktopTest :engine:updates:desktopTest \
+  :feature:settings:desktopTest :ui:routes:desktopTest \
+  :android:background:testDebugUnitTest :android:notifications:testDebugUnitTest \
+  :android:termux:testDebugUnitTest :android:tiles:testDebugUnitTest \
+  :android:platform:testDebugUnitTest :android:migration:testQaUnitTest \
+  :androidApp:testPreviewDebugUnitTest :androidApp:assemblePreviewDebug \
+  compileKotlinDesktop :quality:test
+```
+
+Result: **BUILD SUCCESSFUL in 10m 4s**, 1,292 actionable tasks (1,100 executed, 192 from cache).
+Counts below come from the gate's JUnit XML reports; all have zero failures, errors and skipped tests.
+
+| Task | Tests |
+|---|---:|
+| `:feature:background:desktopTest` | 12 |
+| `:engine:updates:desktopTest` | 31 |
+| `:feature:settings:desktopTest` | 80 |
+| `:ui:routes:desktopTest` | 3 |
+| `:android:background:testDebugUnitTest` | 98 |
+| `:android:notifications:testDebugUnitTest` | 162 |
+| `:android:termux:testDebugUnitTest` | 89 |
+| `:android:tiles:testDebugUnitTest` | 55 |
+| `:android:platform:testDebugUnitTest` | 93 |
+| `:android:migration:testQaUnitTest` | 82 |
+| `:androidApp:testPreviewDebugUnitTest` | 96 |
+| `:quality:test` | 76 |
+| **Total** | **877** |
+
+Migration's configured host-test build type is `qa`; the app uses the `previewDebug` variant. KMP modules run their
+common/desktop tests through `desktopTest`; their Android sources also compile during APK assembly. The unqualified
+`compileKotlinDesktop` gate completed 67 module compilation tasks, and the desktop app compiled for the quality
+graph check. Preview assembly and `:androidApp:verifyPreviewDebugNativeLibraries` both passed. No test timed out,
+so no timeout retry was needed. `git diff --check` against the integration parent passed for `native/`.
+
+Verified locally and committed; not pushed, deployed or released. No device/emulator qualification was performed.
+The product gaps documented above remain open. The subsequent report commit changes documentation only.
