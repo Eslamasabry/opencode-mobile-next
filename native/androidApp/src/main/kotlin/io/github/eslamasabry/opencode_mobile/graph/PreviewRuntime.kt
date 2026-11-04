@@ -3,7 +3,7 @@ package io.github.eslamasabry.opencode_mobile.graph
 import dev.zacsweers.metro.*
 import io.github.eslamasabry.oc.core.common.*
 import io.github.eslamasabry.oc.core.common.ids.*
-import io.github.eslamasabry.oc.core.data.scope.DefaultProfileScope
+import io.github.eslamasabry.oc.core.data.scope.ProfileScope
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.model.NewSession
 import io.github.eslamasabry.oc.core.security.AddressRules
@@ -34,6 +34,7 @@ import kotlinx.coroutines.sync.withLock
 class PreviewRuntime(
     private val stores: PreviewStores,
     private val registry: ConnectionRegistry,
+    private val profileScope: ProfileScope,
     private val redactor: Redactor,
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
@@ -344,16 +345,11 @@ class PreviewRuntime(
             is Outcome.Failed -> return@command closed
             is Outcome.Ok -> Unit
         }
-        val scoped =
-            DefaultProfileScope(stores.prefs, stores.secrets, stores.lanes.app).apply {
-                registerSecret("pw.", "profiles")
-                registerSecret("oc.codexToken.", "profiles")
-            }
         when (
             val result =
                 ProfileDeletion(
                         profiles,
-                        scoped,
+                        profileScope,
                         stores.lanes,
                         closers = profileClosers,
                         cleaners = cleaners,

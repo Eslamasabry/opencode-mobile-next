@@ -80,6 +80,7 @@ import io.github.eslamasabry.oc.feature.settings.presentation.VoiceSettings
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.BackgroundRoute
+import io.github.eslamasabry.oc.ui.routes.IntegrationsRoute
 import io.github.eslamasabry.oc.ui.routes.DiagnosticsRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.ui.routes.SettingsRoute
@@ -227,6 +228,7 @@ class AndroidSettingsHost(
     override val openers: SettingsOpeners = SettingsOpeners { place ->
         when (place) {
             SettingsOutside.Servers -> nav.open(ServersRoute.Home)
+            SettingsOutside.Providers, SettingsOutside.Tools -> nav.open(IntegrationsRoute)
             SettingsOutside.StarOnGitHub -> application.view(REPO)
             SettingsOutside.WhatsNew, SettingsOutside.ReleaseNotes -> application.view("$REPO/releases")
             SettingsOutside.PrivacyPolicy ->
@@ -310,6 +312,7 @@ class AndroidSettingsHost(
                 SettingsOutside.AndroidNotificationSettings, SettingsOutside.VoiceSetup, SettingsOutside.VoiceNotices,
                 SettingsOutside.ReportOnGitHub, SettingsOutside.KeptDiagnostics,
                 SettingsOutside.KeepRunning,
+                SettingsOutside.Providers, SettingsOutside.Tools,
             )
     }
 }

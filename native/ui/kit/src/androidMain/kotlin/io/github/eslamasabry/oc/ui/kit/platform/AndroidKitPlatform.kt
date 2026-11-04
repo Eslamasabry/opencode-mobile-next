@@ -5,6 +5,9 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.pm.ApplicationInfo
 import android.database.ContentObserver
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.RectF
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -23,7 +26,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RenderEffect
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.toArgb
+import com.caverock.androidsvg.SVG
 import io.github.eslamasabry.oc.ui.design.color.Argb
 import io.github.eslamasabry.oc.ui.design.color.DynamicSource
 import io.github.eslamasabry.oc.ui.design.color.DynamicTones
@@ -77,6 +84,22 @@ public class AndroidKitPlatform(
     override fun frostEffect(spec: FrostSpec, density: Float): RenderEffect? =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) AndroidFrost.effect(spec, density)
         else null
+
+    override fun svgPainter(text: String, pixels: Int): Painter? {
+        if (!isStaticKitSvg(text) || pixels !in 1..256) return null
+        return try {
+            SVG.setInternalEntitiesEnabled(false)
+            val document = SVG.getFromString(text)
+            val bitmap = Bitmap.createBitmap(pixels, pixels, Bitmap.Config.ARGB_8888)
+            document.renderToCanvas(
+                Canvas(bitmap),
+                RectF(0f, 0f, pixels.toFloat(), pixels.toFloat()),
+            )
+            BitmapPainter(bitmap.asImageBitmap())
+        } catch (_: Exception) {
+            null // A refused mark is initials, never exception text or a second download.
+        }
+    }
 
     /**
      * Material You (plan 06 §4.2): the system's dynamic schemes on API 31+, mirroring Dart
@@ -159,7 +182,8 @@ private tailrec fun Context.findWindow(): Window? =
 
 @Suppress("DEPRECATION")
 internal fun applySystemBars(window: Window, darkContent: Boolean, ground: Int) {
-    // B14 (QA wave 1): the window itself wears the app's ground, so a recreated Activity (language switch) never
+    // B14 (QA wave 1): the window itself wears the app's ground, so a recreated Activity (language
+    // switch) never
     // shows the platform theme's grey behind the status and navigation bars.
     window.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(ground))
     window.statusBarColor = android.graphics.Color.TRANSPARENT

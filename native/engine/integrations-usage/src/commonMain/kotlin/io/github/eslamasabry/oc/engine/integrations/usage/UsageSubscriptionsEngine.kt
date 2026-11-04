@@ -7,6 +7,10 @@ import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
 import io.github.eslamasabry.oc.core.data.kv.string
 import io.github.eslamasabry.oc.core.data.lane.WriterLane
+import kotlin.math.abs
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,20 +19,23 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
-import kotlin.math.abs
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
-import kotlin.time.Instant
 
 /** What a [UsageSource] is asked to read. */
 public class UsageReadContext(
     public val connections: List<UsageConnection>,
     public val now: Instant,
     public val force: Boolean = false,
-    /** The app is in the background: readers that cost a request on a computer keep to their slower cadence. */
+    /**
+     * The app is in the background: readers that cost a request on a computer keep to their slower
+     * cadence.
+     */
     public val background: Boolean = false,
-    /** The last reading kept for a connection and provider, to tell "used before" from "never used". */
-    public val lastReading: (connectionId: String, providerId: String) -> UsageReading? = { _, _ -> null },
+    /**
+     * The last reading kept for a connection and provider, to tell "used before" from "never used".
+     */
+    public val lastReading: (connectionId: String, providerId: String) -> UsageReading? = { _, _ ->
+        null
+    },
     /** The provider ids the last refresh saw signed in on a connection. */
     public val signedIn: (connectionId: String) -> Set<String> = { emptySet() },
 )
@@ -40,20 +47,34 @@ public data class UsageSourceResult(
     val failures: List<UsageFailure> = emptyList(),
     /** Connections the source tried and could not reach at all. */
     val unreached: Set<String> = emptySet(),
-    /** Connections whose [signIns] list is complete: a provider missing from it is signed out there. */
+    /**
+     * Connections whose [signIns] list is complete: a provider missing from it is signed out there.
+     */
     val authoritativeSignIns: Set<String> = emptySet(),
 )
 
-/** One reader of usage (the collector, OpenCode sign-ins, Paseo, this phone). Sources never switch the active server. */
+/**
+ * One reader of usage (the collector, OpenCode sign-ins, Paseo, this phone). Sources never switch
+ * the active server.
+ */
 public fun interface UsageSource {
     public suspend fun read(context: UsageReadContext): Outcome<UsageSourceResult>
 }
 
 /** A rule the old per-source quota monitor already holds. */
-public data class LegacyQuotaRule(val connectionId: String, val providerId: String, val accountRef: String, val threshold: Double)
+public data class LegacyQuotaRule(
+    val connectionId: String,
+    val providerId: String,
+    val accountRef: String,
+    val threshold: Double,
+)
 
 /** One collector reading that should be watched at [threshold]. */
-public data class QuotaWatch(val connectionId: String, val providerId: String, val threshold: Double)
+public data class QuotaWatch(
+    val connectionId: String,
+    val providerId: String,
+    val threshold: Double,
+)
 
 /** The bridge to the quota monitor, which keeps its own timer, delivery and dedupe markers. */
 public interface UsageAlertBridge {
@@ -64,9 +85,9 @@ public interface UsageAlertBridge {
 
 /**
  * Subscriptions across every connection, with the alert state that goes with them (Flutter
- * `UsageSubscriptionsController`; contract docs/design/usage-subscriptions-contract-2026-10-13.md). Cached readings
- * live in `oc.usageLast.<connectionId>` (swept with the profile); alert levels in the app-wide `oc.usageAlerts.v1`.
- * Timers belong to the caller: [refresh] reads every source once.
+ * `UsageSubscriptionsController`; contract docs/design/usage-subscriptions-contract-2026-10-13.md).
+ * Cached readings live in `oc.usageLast.<connectionId>` (swept with the profile); alert levels in
+ * the app-wide `oc.usageAlerts.v1`. Timers belong to the caller: [refresh] reads every source once.
  */
 public class UsageSubscriptionsEngine(
     private val store: KeyValueStore,
@@ -88,7 +109,8 @@ public class UsageSubscriptionsEngine(
 
         public fun lastKey(connectionId: String): String = "oc.usageLast.$connectionId"
 
-        private fun validLevel(percent: Double): Boolean = percent.isFinite() && percent > 0 && percent <= 100
+        private fun validLevel(percent: Double): Boolean =
+            percent.isFinite() && percent > 0 && percent <= 100
     }
 
     private val cache = HashMap<String, MutableMap<String, UsageReading>>()
@@ -119,7 +141,8 @@ public class UsageSubscriptionsEngine(
         rebuild(loaded = false)
     }
 
-    public fun subscription(key: String): UsageSubscription? = _snapshot.value.subscriptions.firstOrNull { it.key == key }
+    public fun subscription(key: String): UsageSubscription? =
+        _snapshot.value.subscriptions.firstOrNull { it.key == key }
 
     // ------------------------------------------------------------------------------------------------------- refresh
 
@@ -152,12 +175,14 @@ public class UsageSubscriptionsEngine(
                 force = force,
                 background = !foreground,
                 lastReading = { connection, provider -> cache[connection]?.get(provider) },
-                signedIn = { connection -> signIns[connection].orEmpty().mapTo(HashSet()) { it.providerId } },
+                signedIn = { connection ->
+                    signIns[connection].orEmpty().mapTo(HashSet()) { it.providerId }
+                },
             )
         // A source that fails, throws or runs out of time is ignored; the others still show.
-        val results =
-            coroutineScope {
-                sources.map { source ->
+        val results = coroutineScope {
+            sources
+                .map { source ->
                     async {
                         withTimeoutOrNull(sourceTimeout) {
                             when (val r = attempt({ Failure.Device() }) { source.read(context) }) {
@@ -166,8 +191,9 @@ public class UsageSubscriptionsEngine(
                             }
                         } ?: UsageSourceResult()
                     }
-                }.map { it.await() }
-            }
+                }
+                .map { it.await() }
+        }
         if (disposed || start != epoch) return
         val now = clock()
         val known = list.mapTo(HashSet()) { it.id }
@@ -180,7 +206,8 @@ public class UsageSubscriptionsEngine(
             val slot = cache[id] ?: continue
             for (reading in slot.values.toList()) {
                 if (!reading.hasNumbers) continue
-                slot[reading.providerId] = reading.copy(problem = UsageProblem.Offline, checkedAt = now)
+                slot[reading.providerId] =
+                    reading.copy(problem = UsageProblem.Offline, checkedAt = now)
                 touched += id
             }
         }
@@ -190,8 +217,20 @@ public class UsageSubscriptionsEngine(
                 val slot = cache.getOrPut(reading.connectionId) { LinkedHashMap() }
                 val old = slot[reading.providerId]
                 // The older of two numbers never replaces the newer.
-                if (old != null && old.hasNumbers && old.problem == null && reading.hasNumbers && old.fetchedAt > reading.fetchedAt) continue
-                slot[reading.providerId] = reading.copy(problem = null, checkedAt = now, accountRef = reading.accountRef ?: old?.accountRef)
+                if (
+                    old != null &&
+                        old.hasNumbers &&
+                        old.problem == null &&
+                        reading.hasNumbers &&
+                        old.fetchedAt > reading.fetchedAt
+                )
+                    continue
+                slot[reading.providerId] =
+                    reading.copy(
+                        problem = null,
+                        checkedAt = now,
+                        accountRef = reading.accountRef ?: old?.accountRef,
+                    )
                 touched += reading.connectionId
             }
             for (failure in result.failures) {
@@ -295,7 +334,8 @@ public class UsageSubscriptionsEngine(
 
     // -------------------------------------------------------------------------------------------------------- alerts
 
-    public val alertsOn: Boolean get() = alertsOnRule()
+    public val alertsOn: Boolean
+        get() = alertsOnRule()
 
     public suspend fun setAlertsOn(value: Boolean) {
         setQuotaAlerts(value)
@@ -303,9 +343,14 @@ public class UsageSubscriptionsEngine(
         syncAlerts()
     }
 
-    public val defaultThreshold: Double get() = default
-    public val notifyOnResetDefault: Boolean get() = resetDefault
-    public val alertOverrides: List<UsageSubscription> get() = _snapshot.value.subscriptions.filter { it.hasAlertOverride }
+    public val defaultThreshold: Double
+        get() = default
+
+    public val notifyOnResetDefault: Boolean
+        get() = resetDefault
+
+    public val alertOverrides: List<UsageSubscription>
+        get() = _snapshot.value.subscriptions.filter { it.hasAlertOverride }
 
     public suspend fun setDefaultThreshold(percent: Double): Boolean {
         if (!validLevel(percent)) return false
@@ -318,15 +363,24 @@ public class UsageSubscriptionsEngine(
         return commitAlerts()
     }
 
-    /** A per-subscription level; null removes the override. Bad levels are refused and change nothing. */
+    /**
+     * A per-subscription level; null removes the override. Bad levels are refused and change
+     * nothing.
+     */
     public suspend fun setThresholdFor(key: String, percent: Double?): Boolean {
         if (percent != null && !validLevel(percent)) return false
-        putOverride(key, UsageAlertOverride(threshold = percent, notifyOnReset = overrides[key]?.notifyOnReset))
+        putOverride(
+            key,
+            UsageAlertOverride(threshold = percent, notifyOnReset = overrides[key]?.notifyOnReset),
+        )
         return commitAlerts()
     }
 
     public suspend fun setNotifyOnReset(key: String, value: Boolean): Boolean {
-        putOverride(key, UsageAlertOverride(threshold = overrides[key]?.threshold, notifyOnReset = value))
+        putOverride(
+            key,
+            UsageAlertOverride(threshold = overrides[key]?.threshold, notifyOnReset = value),
+        )
         return commitAlerts()
     }
 
@@ -373,7 +427,7 @@ public class UsageSubscriptionsEngine(
                             v.notifyOnReset?.let { entry["r"] = it }
                             k to entry
                         },
-                ),
+                )
             )
         return store.commit(lane) { putString(ALERTS_KEY, payload) } is Outcome.Ok
     }
@@ -386,7 +440,11 @@ public class UsageSubscriptionsEngine(
             if (abs(rule.threshold - DEFAULT_ALERT_THRESHOLD) < 0.001) continue
             val key = usageSubscriptionKey(rule.providerId, rule.accountRef, rule.connectionId)
             val old = overrides[key]
-            overrides[key] = UsageAlertOverride(threshold = old?.threshold ?: rule.threshold, notifyOnReset = old?.notifyOnReset)
+            overrides[key] =
+                UsageAlertOverride(
+                    threshold = old?.threshold ?: rule.threshold,
+                    notifyOnReset = old?.notifyOnReset,
+                )
         }
         migrated = true
         saveAlerts()
@@ -399,8 +457,11 @@ public class UsageSubscriptionsEngine(
         val wanted =
             _snapshot.value.subscriptions.mapNotNull { s ->
                 val from = s.readFrom
-                if (from == null || s.windows.isEmpty() || s.state == SubscriptionState.OfflineStale ||
-                    s.state == SubscriptionState.ReaderBroken
+                if (
+                    from == null ||
+                        s.windows.isEmpty() ||
+                        s.state == SubscriptionState.OfflineStale ||
+                        s.state == SubscriptionState.ReaderBroken
                 ) {
                     null
                 } else {
@@ -425,20 +486,32 @@ public class UsageSubscriptionsEngine(
 
     // ------------------------------------------------------------------------------------------------------ deletion
 
-    /** A saved server was removed: its cached numbers, sign-ins and overrides of vanished subscriptions go with it. */
-    public suspend fun removeProfile(profileId: String) {
+    /** Consent withdrawn: forget that reader's measurements and redraw the subscriptions feed. */
+    public suspend fun removeProvider(profileId: String, providerId: String) {
+        epoch++
+        cache[profileId]?.remove(providerId)
+        saveCache(profileId)
+        rebuild(loaded)
+        publishWidget()
+    }
+
+    /**
+     * A saved server was removed: its cached numbers, sign-ins and overrides of vanished
+     * subscriptions go with it.
+     */
+    public suspend fun removeProfile(profileId: String): Boolean {
         epoch++
         cache.remove(profileId)
         signIns.remove(profileId)
         authoritative -= profileId
         offline -= profileId
-        store.commit(lane) { remove(lastKey(profileId)) }
+        if (store.commit(lane) { remove(lastKey(profileId)) } !is Outcome.Ok) return false
         rebuild(loaded)
         val alive = _snapshot.value.subscriptions.mapTo(HashSet()) { it.key }
         val before = overrides.size
         overrides.keys.retainAll(alive)
-        if (overrides.size != before) saveAlerts()
-        publishWidget()
+        if (overrides.size != before && !saveAlerts()) return false
+        return widget?.publishSubscriptions(_snapshot.value, widgetSettings) ?: true
     }
 
     public fun dispose() {

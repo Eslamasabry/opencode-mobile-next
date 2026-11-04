@@ -16,73 +16,147 @@ import io.github.eslamasabry.oc.feature.plans.presentation.PlansActions
 import io.github.eslamasabry.oc.feature.plans.presentation.PlansPhase
 import io.github.eslamasabry.oc.feature.plans.presentation.PlansUi
 import io.github.eslamasabry.oc.ui.design.tokens.Space
-import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.words.res.*
+import org.jetbrains.compose.resources.stringResource
 
-/** Usage › Plans: one group per plan, what is left in each window and when it resets; every action is a visible row. */
+/**
+ * Usage › Plans: one group per plan, what is left in each window and when it resets; every action
+ * is a visible row.
+ */
 @Composable
 public fun PlansScreen(state: PlansUi, actions: PlansActions) {
     val words = plansWords()
     KitScreen(
         topBar = {
-            KitTopBar(title = words.title, exit = KitTopBarExit.Back, exitLabel = words.back, onExit = actions::back)
+            KitTopBar(
+                title = words.title,
+                exit = KitTopBarExit.Back,
+                exitLabel = words.back,
+                onExit = actions::back,
+            )
         },
         loading = state.phase == PlansPhase.Loading,
         loadingLabel = words.loading,
         bottom =
             if (state.phase == PlansPhase.Loading) null
-            else ({
-                KitButton(
-                    if (state.refreshing) words.refreshing else words.refresh,
-                    actions::refresh,
-                    Modifier.fillMaxWidth().padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S2.dp),
-                    role = KitButtonRole.Secondary,
-                    working = state.refreshing,
-                )
-            }),
+            else
+                ({
+                    KitButton(
+                        if (state.refreshing) words.refreshing else words.refresh,
+                        actions::refresh,
+                        Modifier.fillMaxWidth()
+                            .padding(
+                                horizontal = LocalKitTokens.current.gutter.dp,
+                                vertical = Space.S2.dp,
+                            ),
+                        role = KitButtonRole.Secondary,
+                        working = state.refreshing,
+                    )
+                }),
         width = KitScreenWidth.Reading,
     ) {
-        when (state.phase) {
-            PlansPhase.Loading -> KitStateView(KitStateKind.Loading, words.loading)
-            PlansPhase.Empty ->
-                KitStateView(
-                    KitStateKind.Empty,
-                    words.emptyTitle,
-                    body = words.emptyBody,
-                    primary = KitAction(words.refresh, actions::refresh),
-                )
-            PlansPhase.List ->
-                Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                    for (card in state.cards) PlanCard(card, state.nowMs, words, actions)
-                    if (state.keys.isNotEmpty()) {
-                        KitRowGroup(label = words.keysLabel) {
-                            for (key in state.keys) {
-                                KitRow(
-                                    title = words.cardTitle(key.name, key.connection),
-                                    supporting = if (key.viaOpenCode) words.viaOpenCode else words.state(io.github.eslamasabry.oc.engine.integrations.usage.SubscriptionState.ApiKeyOnly),
-                                    supportingMaxLines = 2,
-                                )
-                            }
-                        }
-                    }
-                    if (state.addable.isNotEmpty()) {
-                        KitRowGroup(label = words.addLabel) {
-                            for (provider in state.addable) KitRow(title = words.providerName(provider))
+        if (state.phase == PlansPhase.Loading) KitStateView(KitStateKind.Loading, words.loading)
+        else
+            Column(
+                Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
+            ) {
+                if (state.phase == PlansPhase.Empty)
+                    KitStateView(KitStateKind.Empty, words.emptyTitle, body = words.emptyBody)
+                for (card in state.cards) PlanCard(card, state.nowMs, words, actions)
+                if (state.keys.isNotEmpty()) {
+                    KitRowGroup(label = words.keysLabel) {
+                        for (key in state.keys) {
+                            KitRow(
+                                title = words.cardTitle(key.name, key.connection),
+                                supporting =
+                                    if (key.viaOpenCode) words.viaOpenCode
+                                    else
+                                        words.state(
+                                            io.github.eslamasabry.oc.engine.integrations.usage
+                                                .SubscriptionState
+                                                .ApiKeyOnly
+                                        ),
+                                supportingMaxLines = 2,
+                            )
                         }
                     }
                 }
-        }
+                if (state.addable.isNotEmpty()) {
+                    KitRowGroup(label = words.addLabel) {
+                        for (provider in state.addable) KitRow(title = words.providerName(provider))
+                    }
+                }
+                if (state.collectors.isNotEmpty()) {
+                    KitRowGroup(label = stringResource(Res.string.plansCollectors)) {
+                        for (target in state.collectors) KitRow(
+                            title =
+                                stringResource(
+                                    Res.string.plansCollectorTarget,
+                                    if (target.provider == "paseo") "Paseo"
+                                    else if (target.provider == "builtin")
+                                        stringResource(Res.string.plansBuiltinReader)
+                                    else words.providerName(target.provider),
+                                    target.name,
+                                ),
+                            supporting =
+                                stringResource(
+                                    if (target.enabled) Res.string.plansCollectorEnabled
+                                    else if (target.provider == "paseo")
+                                        Res.string.plansPaseoDisabled
+                                    else if (target.provider == "builtin")
+                                        Res.string.plansBuiltinDisabled
+                                    else Res.string.plansCollectorDisabled
+                                ),
+                            onClick = { actions.chooseCollector(target) },
+                        )
+                    }
+                }
+                if (state.collectorFailed)
+                    KitNotice(stringResource(Res.string.plansCollectorFailed))
+            }
     }
+    val pending = state.confirmCollector
+    KitConfirm(
+        spec =
+            pending?.let {
+                KitConfirmSpec(
+                    title =
+                        if (it.provider == "paseo") stringResource(Res.string.plansPaseoQuestion)
+                        else if (it.provider == "builtin")
+                            stringResource(Res.string.plansBuiltinQuestion)
+                        else
+                            stringResource(
+                                Res.string.plansCollectorQuestion,
+                                words.providerName(it.provider),
+                            ),
+                    confirmLabel = stringResource(Res.string.plansCollectorAllow),
+                    body =
+                        stringResource(
+                            if (it.provider == "paseo") Res.string.plansPaseoTrust
+                            else if (it.provider == "builtin") Res.string.plansBuiltinTrust
+                            else Res.string.plansCollectorTrust,
+                            it.name,
+                        ),
+                )
+            },
+        onConfirm = actions::confirmCollector,
+        onCancel = actions::cancelCollector,
+    )
 }
 
 @Composable
@@ -91,7 +165,10 @@ private fun PlanCard(card: PlanCardUi, nowMs: Long, words: PlansWords, actions: 
         KitRow(
             title = words.state(card.state),
             supporting =
-                listOfNotNull(card.plan?.let { words.plan(it) }, words.alertAt(card.alertThreshold).takeIf { card.windows.isNotEmpty() })
+                listOfNotNull(
+                        card.plan?.let { words.plan(it) },
+                        words.alertAt(card.alertThreshold).takeIf { card.windows.isNotEmpty() },
+                    )
                     .joinToString(" · ")
                     .ifBlank { null },
             supportingMaxLines = 2,
@@ -100,7 +177,10 @@ private fun PlanCard(card: PlanCardUi, nowMs: Long, words: PlansWords, actions: 
             KitRow(
                 title = words.window(w.kind, w.label),
                 supporting =
-                    listOfNotNull(words.left(w.leftPercent), w.resetsAtMs?.let { words.resetsIn((it - nowMs) / 60_000) })
+                    listOfNotNull(
+                            words.left(w.leftPercent),
+                            w.resetsAtMs?.let { words.resetsIn((it - nowMs) / 60_000) },
+                        )
                         .joinToString(" · "),
             )
         }
@@ -113,7 +193,10 @@ private fun PlanCard(card: PlanCardUi, nowMs: Long, words: PlansWords, actions: 
             }
         }
         for (on in card.signedInOn) {
-            KitRow(title = words.signedIn(on.connection, on.state, on.online, on.readsFromHere), supportingMaxLines = 2)
+            KitRow(
+                title = words.signedIn(on.connection, on.state, on.online, on.readsFromHere),
+                supportingMaxLines = 2,
+            )
         }
     }
 }

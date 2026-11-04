@@ -20,13 +20,16 @@ internal enum class Oc2Dialect {
         if (this == Beta) return Oc2Route(path, method, body, query)
         if (method == HttpMethod.Get && path == "/health")
             return Oc2Route("/info", method, body, query)
+        if (method == HttpMethod.Post && path == "/session/import")
+            return Oc2Route("/experimental/session/import", method, body, query)
         val session = SessionScoped.matchEntire(path)
         if (session != null && method == HttpMethod.Post) {
             val id = session.groupValues[1]
             val rest = session.groupValues[2]
             if (rest == "rename") return Oc2Route("/session/$id", HttpMethod.Patch, body, query)
             // dialect.dart: stable clears a staged revert with DELETE .../revert.
-            if (rest == "revert/clear") return Oc2Route("/session/$id/revert", HttpMethod.Delete, null, query)
+            if (rest == "revert/clear")
+                return Oc2Route("/session/$id/revert", HttpMethod.Delete, null, query)
             if (rest == "interrupt" && "continue" in query) {
                 return Oc2Route(
                     path,

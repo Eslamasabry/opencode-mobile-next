@@ -123,6 +123,7 @@ dependencies {
             ":feature:background", // BUILD-ANDROID-BG-PLATFORM: Settings › Background
             ":android:tiles", // P12-PLATFORM: QS tiles, shortcuts, share, update installer
             ":android:widgets", // P12-PLATFORM: home-screen widgets
+            ":android:platform",
             ":feature:preview", // PREVIEW-QR
             ":android:webview", // PREVIEW-QR
             ":android:camera", // PREVIEW-QR (pairing scanner)
@@ -150,6 +151,9 @@ dependencies {
             ":feature:devservices", // BUILD-RUNTIME-A: Development services (saved commands, dev
                                     // servers found)
             ":engine:integrations-usage", // P12-BUILD-INTEGRATIONS-B: Usage › Plans engine
+            ":engine:integrations-quota",
+            ":engine:integrations-catalog",
+            ":feature:integrations",
             ":feature:plans", // P12-BUILD-INTEGRATIONS-B: Usage › Plans
         )
         .forEach { implementation(project(it)) }

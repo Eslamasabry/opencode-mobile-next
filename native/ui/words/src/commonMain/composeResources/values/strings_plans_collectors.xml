@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="plansCollectors">Read plan limits</string>
+    <string name="plansCollectorTarget">%1$s · %2$s</string>
+    <string name="plansCollectorEnabled">Reading enabled. Tap to turn off and clear these numbers.</string>
+    <string name="plansCollectorDisabled">Read from the collector installed on this server</string>
+    <string name="plansCollectorQuestion">Read %1$s limits from this server?</string>
+    <string name="plansCollectorAllow">Trust collector and read</string>
+    <string name="plansCollectorTrust">Only continue if you trust the quota collector installed on %1$s. It receives this server’s saved sign-in credential at a fixed quota address. Requests do not follow redirects. You can turn reading off here. Changing the address or sign-in requires permission again.</string>
+    <string name="plansCollectorFailed">Could not save this choice. Reconnect to the server and try again.</string>
+    <string name="plansPaseoDisabled">Read usage from this Paseo server</string>
+    <string name="plansPaseoQuestion">Read plan usage from Paseo?</string>
+    <string name="plansPaseoTrust">Read plan limits reported by %1$s while this app is visible. Turning this off clears its saved widget numbers. No background reader is started.</string>
+    <string name="plansBuiltinReader">On-phone usage reader</string>
+    <string name="plansBuiltinDisabled">Set up the usage reader inside this phone’s Ubuntu</string>
+    <string name="plansBuiltinQuestion">Read plan limits on this phone?</string>
+    <string name="plansBuiltinTrust">Install the bundled usage reader in %1$s and read the provider sign-ins saved there. Its read token stays in secure storage and private files. Claude collection remains unavailable. Turning it off stops its service and clears its widget numbers.</string>
+</resources>
