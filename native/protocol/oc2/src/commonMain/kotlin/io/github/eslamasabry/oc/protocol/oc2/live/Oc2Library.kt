@@ -270,7 +270,6 @@ internal class Oc2Library(private val owner: Oc2Gateway, private val redactor: R
         val existing =
             rows((inventory as Outcome.Ok).value) ?: return Failure.UnreadableReply().failed()
         if (existing.any { it.text("name") == name }) return Failure.Conflict().failed()
-        if (at != query()) return Failure.Refused(RefusalReason.StaleScope).failed()
         return unit(
             "/mcp/${segment(name)}",
             HttpMethod.Put,

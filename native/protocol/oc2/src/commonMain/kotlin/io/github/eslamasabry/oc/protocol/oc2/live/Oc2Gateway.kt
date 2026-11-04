@@ -1276,14 +1276,11 @@ internal class Oc2Gateway(
 
     override suspend fun initializeGitRepository(): Outcome<Unit> = gitInit()
 
-    override suspend fun createWorktree(projectDirectory: String, name: String?): Outcome<WorktreeInfo> =
-        worktreeCreate(projectDirectory, name)
+    // createWorktree and addMcpServer are implemented once, by Oc2Worktrees and Oc2Library (migration 40).
 
     override suspend fun terminalShellSettings(): Outcome<TerminalShellSettings> = shellSettings()
 
     override suspend fun selectTerminalShell(value: String): Outcome<Unit> = selectShell(value)
-
-    override suspend fun addMcpServer(draft: McpServerDraft, scope: McpConfigScope): Outcome<Unit> = mcpAdd(draft, scope)
 
     override suspend fun webSearchProviders(): Outcome<ImmutableList<WebSearchProvider>> = searchProviders()
 
