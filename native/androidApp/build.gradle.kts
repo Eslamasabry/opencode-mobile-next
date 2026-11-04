@@ -103,6 +103,7 @@ dependencies {
             ":ui:kit-chat",
             ":ui:kit-content",
             ":feature:settings",
+            ":feature:capabilities",
             ":feature:onboarding",
             ":engine:settings",
             ":engine:analytics",
