@@ -152,6 +152,10 @@ import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.draftLeaveAction
 import io.github.eslamasabry.oc.ui.words.res.draftLeaveMessage
 import io.github.eslamasabry.oc.ui.words.res.gitSheetTitle
+import io.github.eslamasabry.oc.ui.words.res.e7SharedHTTPIsNotEncryptedOtherDevicesOn
+import io.github.eslamasabry.oc.ui.words.res.e7SharedOpenHTTPLink
+import io.github.eslamasabry.oc.ui.words.res.e7SharedOpenInsecureHTTPLink
+import io.github.eslamasabry.oc.ui.words.res.externalLinkDontOpen
 import io.github.eslamasabry.oc.ui.words.res.historyLoadOlder
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmFailed
 import io.github.eslamasabry.oc.ui.words.res.kitContextRingSemantics
@@ -814,9 +818,24 @@ private fun confirmSpec(confirm: ChatConfirm?): KitConfirmSpec? =
             )
         is ChatConfirm.OpenLink ->
             KitConfirmSpec(
-                title = stringResource(Res.string.chatFeelOpenLinkTitle),
-                confirmLabel = stringResource(Res.string.chatFeelOpenLinkAction),
+                title =
+                    stringResource(
+                        if (confirm.insecure) Res.string.e7SharedOpenInsecureHTTPLink
+                        else Res.string.chatFeelOpenLinkTitle
+                    ),
+                confirmLabel =
+                    stringResource(
+                        if (confirm.insecure) Res.string.e7SharedOpenHTTPLink
+                        else Res.string.chatFeelOpenLinkAction
+                    ),
                 body = stringResource(Res.string.chatFeelOpenLinkBody, confirm.host),
+                kind = if (confirm.insecure) KitConfirmKind.Destructive else KitConfirmKind.Neutral,
+                consequences =
+                    if (confirm.insecure)
+                        listOf(stringResource(Res.string.e7SharedHTTPIsNotEncryptedOtherDevicesOn))
+                    else emptyList(),
+                cancelLabel =
+                    if (confirm.insecure) stringResource(Res.string.externalLinkDontOpen) else null,
             )
     }
 

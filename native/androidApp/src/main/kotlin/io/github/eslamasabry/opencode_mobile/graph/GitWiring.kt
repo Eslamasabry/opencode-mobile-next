@@ -17,6 +17,7 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ok
+import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.model.ServerOrigin
 import io.github.eslamasabry.oc.core.model.ServerProfile
 import io.github.eslamasabry.oc.core.net.HttpClientFactory
@@ -31,15 +32,18 @@ import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.connection.ConnectionCredentialSource
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
+import io.github.eslamasabry.oc.engine.git.GitHost
 import io.github.eslamasabry.oc.engine.git.GitHubDeviceFlow
 import io.github.eslamasabry.oc.engine.git.GitHubTokenStore
 import io.github.eslamasabry.oc.engine.git.GitServices
 import io.github.eslamasabry.oc.engine.git.GitUnavailableReason
+import io.github.eslamasabry.oc.engine.git.GitWorkspace
 import io.github.eslamasabry.oc.engine.git.GitWorkspaceResolution
 import io.github.eslamasabry.oc.engine.git.GitWorkspaces
 import io.github.eslamasabry.oc.engine.git.NetGitHubHttp
 import io.github.eslamasabry.oc.engine.git.ServerGitShell
 import io.github.eslamasabry.oc.engine.git.resolveGitWorkspace
+import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import kotlin.io.encoding.Base64
 import kotlin.time.Clock
 import kotlinx.coroutines.launch
@@ -66,8 +70,8 @@ object GitWiring {
         credentialSources: Set<ConnectionCredentialSource>,
         redactor: Redactor,
         appScope: AppCoroutineScope,
-        clock: Clock,
         dispatchers: AppDispatchers,
+        clock: Clock,
     ): GitServices {
         val github =
             http.create(
@@ -166,22 +170,41 @@ private class ServerGitWorkspaces(
                 is Outcome.Ok -> read.value
             }
         val profile = graph.profile
-        if (
-            profile.managedOnPhone &&
-                profile.origin.scheme == "http" &&
-                AddressRules.isLoopback(profile.origin.host)
-        ) {
+        // Stored runtime ownership plus the exact managed origin, never merely a server at a
+        // familiar port (Dart looksLikeInAppServer). ServerProfile.managedOnPhone is never set by
+        // the profile store, so it cannot gate this.
+        fun ownsLinux(): Boolean =
+            try {
+                registry.graphFor(ref) === graph &&
+                    profile.origin == ServerOrigin("http", "127.0.0.1", 4097) &&
+                    (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value ==
+                        profile.id.raw
+            } catch (_: Exception) {
+                false
+            }
+        if (ownsLinux()) {
+            // The shell also re-checks the saved owner and that this app's server is the one
+            // running on that port before every command.
             val native = BuiltinGitShell(application, stores, dispatchers, graph, registry, ref)
             if (!native.current())
                 return GitWorkspaceResolution.Unavailable(GitUnavailableReason.NotConnected)
-            return resolveGitWorkspace(
-                connected = true,
-                directory = session.directory,
-                remoteShell = true,
-                placeName = profile.name,
-            ) {
-                native
-            }
+            val folder =
+                session.directory?.trim()?.takeIf { it.isNotEmpty() }
+                    ?: return GitWorkspaceResolution.Unavailable(GitUnavailableReason.NoProject)
+            return GitWorkspaceResolution.Available(
+                GitWorkspace(
+                    GitHost.BuiltinLinux,
+                    folder,
+                    native,
+                    placeName = profile.name,
+                    credentials =
+                        BuiltinGitCredentialDrop(
+                            BuiltinLinux.get(application),
+                            dispatchers,
+                            ::ownsLinux,
+                        ),
+                )
+            )
         }
         val auth =
             when (val read = credentialSources.singleOrNull()?.resolve(profile)) {

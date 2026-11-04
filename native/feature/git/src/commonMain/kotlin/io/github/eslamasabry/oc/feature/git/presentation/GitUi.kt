@@ -59,9 +59,9 @@ public data class GitUi(
     /** The server's saved name, for "uses the Git sign-in set up on …". */
     val placeName: String? = null,
     /**
-     * True only where the app's own GitHub sign-in is used for a push. Every host today (the
-     * connected server) pushes with its own Git sign-in, so the GitHub section is not offered
-     * (Flutter `offersGitHubSignIn`; B-SEC-082).
+     * True only for built-in Linux, where the app's own GitHub sign-in can be privately handed to
+     * one push. Servers use their own Git sign-in, so the GitHub section is not offered (Flutter
+     * `offersGitHubSignIn`; B-SEC-082).
      */
     val offersGitHubSignIn: Boolean = false,
     /** The quiet remote check after opening. */

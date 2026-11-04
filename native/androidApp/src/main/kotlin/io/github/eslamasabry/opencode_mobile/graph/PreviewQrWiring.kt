@@ -124,7 +124,8 @@ class PolicyPreviewBrowser(
                 )
         ) {
             is LinkDecision.Open -> BrowserTicket.Open(decision.link)
-            is LinkDecision.AskFirst -> BrowserTicket.AskFirst(decision.shownHost, decision.link)
+            is LinkDecision.AskFirst ->
+                BrowserTicket.AskFirst(decision.shownHost, decision.link, decision.insecure)
             is LinkDecision.Refuse -> BrowserTicket.Refused
         }
 
@@ -397,9 +398,9 @@ private fun fit(view: TextureView, size: Size) {
 
 /**
  * P12-FIX-PREVIEWQR: a pairing code's addresses are asked in turn with the protocol's own
- * health/version probe, which sends the pairing credential only to its validated HTTPS or loopback
- * candidate; the form fills the one that works, or that at least answered (B-PROTO-068). A probe
- * that does not finish in time counts as no answer.
+ * health/version probe, which never sends a credential to an origin that is not trusted yet
+ * (B-SEC-124); the form then fills the one that works, or that at least answered (B-PROTO-068). A
+ * probe that does not finish in time counts as no answer.
  */
 @ContributesBinding(AppScope::class)
 @Inject

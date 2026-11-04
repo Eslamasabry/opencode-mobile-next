@@ -45,6 +45,7 @@ public class SettingsPresenter(
     private val updates: UpdateSettings? = null,
     private val about: AboutFacts = AboutFacts(),
     private val diagnostics: DiagnosticsExport? = null,
+    private val crashes: CrashSettings? = null,
 ) : SettingsActions {
     private data class Local(
         val stack: ImmutableList<SettingsPage> = persistentListOf(SettingsPage.Hub),
@@ -55,6 +56,7 @@ public class SettingsPresenter(
         val consentSaving: Boolean = false,
         val report: ReportUi? = null,
         val reportDescription: String = "",
+        val crash: CrashUi? = null,
     )
 
     private data class Engines(
@@ -94,6 +96,76 @@ public class SettingsPresenter(
                 build(local.value, facts.value, prefs.value, engineNow()),
             )
 
+    init {
+        crashes?.let { port ->
+            scope.launch {
+                port.state.collect { evidence ->
+                    local.update { current ->
+                        val valid:
+                            io.github.eslamasabry.oc.engine.diagnostics.crash.CrashReportPreview? =
+                            null
+                        current.copy(
+                            crash =
+                                CrashUi(
+                                    current.crash?.history,
+                                    evidence?.available == true,
+                                    evidence?.enabled == true,
+                                    evidence?.records?.size ?: 0,
+                                    valid,
+                                    if (evidence?.storageFailed == true)
+                                        io.github.eslamasabry.oc.engine.diagnostics.crash
+                                            .CrashReportError
+                                            .StorageFailed
+                                    else null,
+                                )
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    override fun onRefreshExitHistory() {
+        val port = crashes ?: return
+        scope.launch {
+            val history = port.history()
+            local.update { it.copy(crash = (it.crash ?: CrashUi()).copy(history = history)) }
+        }
+    }
+
+    override fun onCrashCapture(on: Boolean) {
+        val port = crashes ?: return
+        scope.launch {
+            if (!port.setEnabled(on)) local.update { it.copy(note = SettingsNote.ConsentNotSaved) }
+        }
+    }
+
+    override fun onClearCrashes() {
+        val port = crashes ?: return
+        scope.launch {
+            if (!port.clear()) local.update { it.copy(note = SettingsNote.ChoiceNotSaved) }
+        }
+    }
+
+    override fun onPreviewCrashes() {
+        val port = crashes ?: return
+        scope.launch {
+            val result = port.preview()
+            local.update {
+                it.copy(crash = it.crash?.copy(preview = result.preview, error = result.error))
+            }
+        }
+    }
+
+    override fun onShareCrashes() {
+        val port = crashes ?: return
+        val preview = local.value.crash?.preview ?: return
+        scope.launch {
+            val error = port.share(preview)
+            local.update { it.copy(crash = it.crash?.copy(error = error)) }
+        }
+    }
+
     override fun onSearchEntries(entries: List<SettingsSearchEntry>) {
         local.update { it.copy(entries = entries) }
     }
@@ -120,6 +192,7 @@ public class SettingsPresenter(
             language = p.language,
             report = l.report,
             reportDescription = l.reportDescription,
+            crash = l.crash,
             note = l.note,
         )
     }

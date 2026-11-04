@@ -252,7 +252,12 @@ class BuiltinLinux(private val context: Context) {
     }
 
     /** Runs [script] with /bin/sh inside Ubuntu as root (faked by proot). */
-    fun run(script: String, timeoutSeconds: Long = 600, agentUser: Boolean = false): Result {
+    fun run(
+        script: String,
+        timeoutSeconds: Long = 600,
+        agentUser: Boolean = false,
+        logOutput: Boolean = true,
+    ): Result {
         val began = SystemClock.elapsedRealtime()
         val timeoutMillis = TimeUnit.SECONDS.toMillis(timeoutSeconds).coerceAtLeast(0L)
         val process = admitCheckProcess(script, timeoutMillis, began, agentUser)
@@ -271,7 +276,7 @@ class BuiltinLinux(private val context: Context) {
                                             if (agentUser) PhoneAgentCheckOutput.accept(line)
                                             else line
                                         if (projected != null) {
-                                            if (!agentUser) Log.i(TAG, projected)
+                                            if (!agentUser && logOutput) Log.i(TAG, projected)
                                             synchronized(output) {
                                                 output.appendLine(projected)
                                                 if (output.length > OUTPUT_CAP * 2) {

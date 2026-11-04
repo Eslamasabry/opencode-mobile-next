@@ -35,6 +35,7 @@ public data class DevPreviewUi(
     val shown: String? = null,
     val canGoBack: Boolean = false,
     val leaveHost: String? = null,
+    val leaveInsecure: Boolean = false,
     val details: Boolean = false,
     val menu: Boolean = false,
     val notice: PreviewNotice? = null,

@@ -5,12 +5,17 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.engine.diagnostics.Diagnostics
 import io.github.eslamasabry.oc.engine.diagnostics.exit.ExitReason
 import io.github.eslamasabry.oc.engine.diagnostics.exit.ExitRecord
+import kotlin.concurrent.atomics.AtomicBoolean
+import kotlin.concurrent.atomics.AtomicInt
+import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -23,9 +28,6 @@ import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
-import kotlin.concurrent.atomics.AtomicBoolean
-import kotlin.time.Clock
-import kotlin.time.Instant
 
 /** What the consent UI and the problem report read; never paths or raw errors. */
 public data class CrashDiagnosticsState(
@@ -39,11 +41,13 @@ public data class CrashDiagnosticsState(
 )
 
 /**
- * Explicit opt-in, app-private crash evidence (port of `CrashDiagnosticsController`; plan 16 §1.10, B-SEC-042/043/045).
- * Only fixed sources, fixed categories and times are kept; no throwable text or stack has a slot. Off by default:
- * without consent every evidence file is erased at open. Commands run on one serial lane.
+ * Explicit opt-in, app-private crash evidence (port of `CrashDiagnosticsController`; plan 16 §1.10,
+ * B-SEC-042/043/045). Only fixed sources, fixed categories and times are kept; no throwable text or
+ * stack has a slot. Off by default: without consent every evidence file is erased at open. Commands
+ * run on one serial lane.
  */
-public class CrashDiagnostics private constructor(
+public class CrashDiagnostics
+private constructor(
     private val store: CrashStore,
     private val diagnostics: Diagnostics,
     private val clock: Clock,
@@ -53,41 +57,55 @@ public class CrashDiagnostics private constructor(
     private var records: List<CrashRecord> = emptyList()
     private var enabledSince = 0L
     private var storageFailed = false
-    private var consentEpoch = 0
+    private val consentEpoch = AtomicInt(0)
     private var revision = 0
     private val closed = AtomicBoolean(false)
     private val clearing = AtomicBoolean(false)
+    private val clearRequested = AtomicBoolean(false)
     private var detach: () -> Unit = {}
 
     private val mutableState = MutableStateFlow(snapshot())
     public val state: StateFlow<CrashDiagnosticsState> = mutableState.asStateFlow()
 
-    public val enabled: Boolean get() = enabledSince > 0
-    public val savedCount: Int get() = records.size
-    internal val isClosed: Boolean get() = closed.load()
+    public val enabled: Boolean
+        get() = enabledSince > 0
+
+    public val savedCount: Int
+        get() = records.size
+
+    internal val isClosed: Boolean
+        get() = closed.load()
 
     /** Records oldest first, as stored (for the startup replay). */
     internal fun storedRecords(): List<CrashRecord> = records
 
-    /** Returns false when storage cannot honour the choice. A successful disable removes all evidence at once. */
-    public suspend fun setEnabled(value: Boolean): Boolean =
-        lane.withLock {
-            if (closed.load()) return@withLock false
-            if (value && enabled && !storageFailed) return@withLock true
-            replaceConsent(value)
-        }
+    /**
+     * Returns false when storage cannot honour the choice. A successful disable removes all
+     * evidence at once.
+     */
+    public suspend fun setEnabled(value: Boolean): Boolean = lane.withLock {
+        if (closed.load()) return@withLock false
+        if (value && enabled && !storageFailed) return@withLock true
+        replaceConsent(value)
+    }
 
-    /** Erases evidence but keeps consent; the new consent epoch stops an old ANR from coming back. */
-    public suspend fun clear(): Boolean =
-        lane.withLock {
-            if (closed.load() || clearing.load()) return@withLock false
+    /**
+     * Erases evidence but keeps consent; the new consent epoch stops an old ANR from coming back.
+     */
+    public suspend fun clear(): Boolean = lane.withLock {
+        if (closed.load() || clearing.load()) return@withLock false
+        try {
             replaceConsent(enabled)
+        } finally {
+            clearRequested.store(false)
+            publish()
         }
+    }
 
     /** Safe in crash paths: only the error's TYPE is read, never its message or stack. */
     public suspend fun capture(error: Throwable, source: CrashSource = CrashSource.Platform) {
         lane.withLock {
-            if (!enabled || closed.load()) return@withLock
+            if (!enabled || closed.load() || clearRequested.load()) return@withLock
             save(source, CrashRecordCategory.of(error), clock.now(), intoRing = true)
         }
     }
@@ -99,28 +117,44 @@ public class CrashDiagnostics private constructor(
     }
 
     /**
-     * ExitImport (plan 16 §1.10): the JVM handler's last crash, native crashes and ANRs since consent become
-     * category-only records, once. Nothing goes to the diagnostics ring here; the startup replays after readiness.
+     * ExitImport (plan 16 §1.10): the JVM handler's last crash, native crashes and ANRs since
+     * consent become category-only records, once. Nothing goes to the diagnostics ring here; the
+     * startup replays after readiness.
      */
     internal suspend fun importAtStart(platformCrash: NativeCrashRecord?, exits: List<ExitRecord>) {
         lane.withLock {
-            if (!enabled || closed.load()) return@withLock
+            if (!enabled || closed.load() || clearRequested.load()) return@withLock
             if (platformCrash != null) {
-                importSince(CrashSource.Platform, CrashRecordCategory.ofClassName(platformCrash.exceptionClass), platformCrash.timestamp)
+                importSince(
+                    CrashSource.Platform,
+                    CrashRecordCategory.ofClassName(platformCrash.exceptionClass),
+                    platformCrash.timestamp,
+                )
             }
             for (exit in exits.sortedBy { it.timestampMs }) {
                 when (exit.reason) {
-                    ExitReason.CRASH_NATIVE -> importSince(CrashSource.Native, CrashRecordCategory.NativeApplicationError, exit.at)
-                    ExitReason.ANR -> importSince(CrashSource.Anr, CrashRecordCategory.NotResponding, exit.at)
+                    ExitReason.CRASH_NATIVE ->
+                        importSince(
+                            CrashSource.Native,
+                            CrashRecordCategory.NativeApplicationError,
+                            exit.at,
+                        )
+                    ExitReason.ANR ->
+                        importSince(CrashSource.Anr, CrashRecordCategory.NotResponding, exit.at)
                     else -> Unit
                 }
             }
         }
     }
 
-    private suspend fun importSince(source: CrashSource, category: CrashRecordCategory, at: Instant) {
+    private suspend fun importSince(
+        source: CrashSource,
+        category: CrashRecordCategory,
+        at: Instant,
+    ) {
         val millis = at.toEpochMilliseconds()
-        if (millis <= 0 || millis < enabledSince || millis > clock.now().toEpochMilliseconds()) return
+        if (millis <= 0 || millis < enabledSince || millis > clock.now().toEpochMilliseconds())
+            return
         save(source, category, at, intoRing = false)
     }
 
@@ -194,19 +228,25 @@ public class CrashDiagnostics private constructor(
             if (entry !is JsonObject || entry.size != 3) return null
             val source = entry.string("source")?.let(CrashSource::ofWire) ?: return null
             val category = entry.string("category")?.let(CrashRecordCategory::ofWire) ?: return null
-            val time = (entry["time"] as? JsonPrimitive)?.takeIf { !it.isString }?.longOrNull ?: return null
+            val time =
+                (entry["time"] as? JsonPrimitive)?.takeIf { !it.isString }?.longOrNull
+                    ?: return null
             if (time < enabledSince || time > now) return null
             CrashRecord(source, category, Instant.fromEpochMilliseconds(time))
         }
     }
 
-    private fun JsonObject.string(key: String): String? = (this[key] as? JsonPrimitive)?.takeIf { it.isString }?.content
+    private fun JsonObject.string(key: String): String? =
+        (this[key] as? JsonPrimitive)?.takeIf { it.isString }?.content
 
     private suspend fun replaceConsent(value: Boolean): Boolean {
-        consentEpoch++
+        consentEpoch.fetchAndAdd(1)
         clearing.store(true)
         try {
             enabledSince = 0L
+            // Revoke issued previews before the first storage suspension, even when disk I/O
+            // stalls.
+            publish()
             need(store.delete(CrashFile.Consent))
             eraseEvidence()
             diagnostics.clear()
@@ -231,14 +271,24 @@ public class CrashDiagnostics private constructor(
     private suspend fun eraseEvidence() {
         records = emptyList()
         revision++
-        for (file in listOf(CrashFile.Records, CrashFile.Pending, CrashFile.NativeLastCrash)) need(store.delete(file))
+        for (file in listOf(CrashFile.Records, CrashFile.Pending, CrashFile.NativeLastCrash)) need(
+            store.delete(file)
+        )
     }
 
-    private suspend fun save(source: CrashSource, category: CrashRecordCategory, at: Instant, intoRing: Boolean) {
+    private suspend fun save(
+        source: CrashSource,
+        category: CrashRecordCategory,
+        at: Instant,
+        intoRing: Boolean,
+    ) {
         val millis = at.toEpochMilliseconds()
         if (records.any { it.source == source && it.at.toEpochMilliseconds() == millis }) return
-        val next = (records + CrashRecord(source, category, Instant.fromEpochMilliseconds(millis))).toMutableList()
-        while (next.size > MAX_ENTRIES || encode(next).encodeToByteArray().size > MAX_BYTES) next.removeAt(0)
+        val next =
+            (records + CrashRecord(source, category, Instant.fromEpochMilliseconds(millis)))
+                .toMutableList()
+        while (next.size > MAX_ENTRIES || encode(next).encodeToByteArray().size > MAX_BYTES) next
+            .removeAt(0)
         when (store.write(CrashFile.Records, encode(next))) {
             is Outcome.Failed -> {
                 storageFailed = true
@@ -269,11 +319,13 @@ public class CrashDiagnostics private constructor(
         )
 
     private fun snapshot(): CrashDiagnosticsState {
-        val open = !closed.load()
+        val open = !closed.load() && !clearRequested.load()
         val visible =
             if (enabled && open && !storageFailed) {
                 val now = clock.now()
-                records.filter { it.at.toEpochMilliseconds() >= enabledSince && it.at <= now }.asReversed()
+                records
+                    .filter { it.at.toEpochMilliseconds() >= enabledSince && it.at <= now }
+                    .asReversed()
             } else {
                 emptyList()
             }
@@ -281,7 +333,7 @@ public class CrashDiagnostics private constructor(
             available = open,
             enabled = enabled,
             storageFailed = storageFailed,
-            consentEpoch = consentEpoch,
+            consentEpoch = consentEpoch.load(),
             revision = revision,
             records = visible.toImmutableList(),
         )
@@ -297,17 +349,35 @@ public class CrashDiagnostics private constructor(
         public const val MAX_CONSENT_BYTES: Int = 32
 
         /**
-         * Opens the store (consent, restore or erase). Never throws: a broken store answers a closed-to-capture
-         * instance with `storageFailed`. A diagnostics [Diagnostics.clear] from elsewhere erases the evidence too.
+         * Opens the store (consent, restore or erase). Never throws: a broken store answers a
+         * closed-to-capture instance with `storageFailed`. A diagnostics [Diagnostics.clear] from
+         * elsewhere erases the evidence too.
          */
-        public suspend fun open(store: CrashStore, diagnostics: Diagnostics, clock: Clock, scope: CoroutineScope): CrashDiagnostics {
+        public suspend fun open(
+            store: CrashStore,
+            diagnostics: Diagnostics,
+            clock: Clock,
+            scope: CoroutineScope,
+        ): CrashDiagnostics {
             val controller = CrashDiagnostics(store, diagnostics, clock, scope)
             controller.lane.withLock { controller.openLocked() }
-            controller.detach =
-                diagnostics.onCleared {
-                    // Synchronous check: a clear this controller started itself must not loop back.
-                    if (!controller.clearing.load() && !controller.closed.load()) scope.launch { controller.clear() }
+            controller.detach = diagnostics.onCleared {
+                // Synchronous check: a clear this controller started itself must not loop back.
+                if (!controller.clearing.load() && !controller.closed.load()) {
+                    // App diagnostics clears synchronously. Revoke previews now, before its
+                    // queued erasure can wait behind another command or a slow filesystem.
+                    controller.clearRequested.store(true)
+                    val epoch = controller.consentEpoch.fetchAndAdd(1) + 1
+                    controller.mutableState.update {
+                        it.copy(
+                            available = false,
+                            consentEpoch = epoch,
+                            records = emptyList<CrashRecord>().toImmutableList(),
+                        )
+                    }
+                    scope.launch { controller.clear() }
                 }
+            }
             controller.publish()
             return controller
         }

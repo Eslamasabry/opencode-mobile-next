@@ -83,6 +83,16 @@ public interface SettingsActions {
     /** Report a problem: copy the previewed report as it is shown. */
     public fun onCopyReport() {}
 
+    public fun onRefreshExitHistory() {}
+
+    public fun onCrashCapture(on: Boolean) {}
+
+    public fun onClearCrashes() {}
+
+    public fun onPreviewCrashes() {}
+
+    public fun onShareCrashes() {}
+
     /** Report a problem: open Android's share sheet with the previewed report. */
     public fun onShareReport() {}
 

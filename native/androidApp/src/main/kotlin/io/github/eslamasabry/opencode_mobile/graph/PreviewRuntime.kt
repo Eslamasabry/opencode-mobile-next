@@ -51,6 +51,7 @@ class PreviewRuntime(
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
     private val draftOwners: Set<ConversationDrafts>,
+    private val runtimeOwner: RuntimeProfileOwner,
     private val cleaners:
         Set<ProfileResourceCleaner>, // P12-FIX: the saved-prompt shelf and its files (B-SEC-172)
     private val deliveryStores: Set<DeliveryStorage>,
@@ -323,6 +324,10 @@ class PreviewRuntime(
                 is Outcome.Failed -> return reopened.atStage(ConnectionStage.DraftRecovery)
                 is Outcome.Ok -> draftRecovery.remove(id)
             }
+        }
+        when (val claimed = runtimeOwner.claim(id, profile.origin)) {
+            is Outcome.Failed -> return claimed.atStage(ConnectionStage.ProfileRead)
+            is Outcome.Ok -> Unit
         }
         val previous = registry.live.value[id]
         if (previous != null && previous.session.profile != profile) {

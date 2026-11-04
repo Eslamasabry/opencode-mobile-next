@@ -24,6 +24,12 @@ public interface SettingsHost {
     public val notifications: NotificationSettings?
     public val updates: UpdateSettings?
     public val about: AboutFacts
+    public val configuration: ConfigurationInspection?
+        get() = null
+
+    public val crashes: CrashSettings?
+        get() = null
+
     public val diagnostics: DiagnosticsExport?
 }
 
@@ -47,6 +53,7 @@ public class SettingsViewModel(host: SettingsHost, private val nav: AppNavigator
             host.updates,
             host.about,
             host.diagnostics,
+            host.crashes,
         )
 
     public val state: StateFlow<SettingsUi> = presenter.state

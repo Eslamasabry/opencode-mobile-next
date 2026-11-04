@@ -70,7 +70,8 @@ internal class Oc2Gateway(
     IntegrationAuthRecoveryGateway,
     ApiRouteGateway,
     SessionCreationGateway,
-    WorktreeInspectionGateway {
+    WorktreeInspectionGateway,
+    ConfigurationGateway {
     // AGENT-2: worktree inspection reads (WorktreeInspectionGateway). Its MCP calls are served once
     // by PROTO's Oc2Library and SEC-2's integrations below.
     private val inspection = Oc2WorktreeInspection(this)
@@ -1479,6 +1480,15 @@ internal class Oc2Gateway(
     // The public provider inventory suffices; never request config/provider (which contains API
     // keys).
     override suspend fun configuredProviders(): Outcome<ProvidersResponse> = providers()
+
+    override suspend fun configurationPreview(
+        location: ServerLocation
+    ): Outcome<ConfigurationPreview> =
+        read(
+            "/config",
+            query = locationQuery(location),
+            decode = Oc2ConfigurationPreview(redactor)::read,
+        )
 
     override suspend fun agents(): Outcome<ImmutableList<AgentInfo>> =
         read("/agent", query = locationQuery()) { root ->

@@ -202,6 +202,8 @@ class AndroidSettingsHost(
     analyticsEngine: AnalyticsEngine,
     private val dispatchers: AppDispatchers,
     private val diagnosticsLog: Diagnostics,
+    private val crashSettings: AppCrashDiagnostics,
+    private val configurationInspection: AndroidConfigurationInspection,
     updateSettings:
         AppUpdateSettings, // P12-FIX-PLATFORM-GIT: Settings › Updates on the real updater
     private val voiceSettings: AndroidVoiceSettings,
@@ -222,10 +224,12 @@ class AndroidSettingsHost(
         )
 
     override val facts: StateFlow<SettingsFacts> =
-        combine(connections.servers, stores.profiles.activeId, motion.animatorScale) {
-                servers,
-                active,
-                scale ->
+        combine(
+                connections.servers,
+                stores.profiles.activeId,
+                motion.animatorScale,
+                configurationInspection.available,
+            ) { servers, active, scale, configAvailable ->
                 val live =
                     servers.firstOrNull { it.id == active && it.connected }
                         ?: servers.firstOrNull { it.connected }
@@ -235,6 +239,7 @@ class AndroidSettingsHost(
                     dynamicColour = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
                     systemMotionOff = scale == 0f,
                     diagnostics = true,
+                    configurationInspection = configAvailable,
                     opens = OPENS,
                     surfaceStyles = true,
                     transcriptDisplay = false,
@@ -319,6 +324,12 @@ class AndroidSettingsHost(
             whatsNew = true,
             notices = false,
         )
+
+    override val configuration:
+        io.github.eslamasabry.oc.feature.settings.presentation.ConfigurationInspection =
+        configurationInspection
+    override val crashes: io.github.eslamasabry.oc.feature.settings.presentation.CrashSettings =
+        crashSettings
 
     override val diagnostics: DiagnosticsExport =
         object : DiagnosticsExport {

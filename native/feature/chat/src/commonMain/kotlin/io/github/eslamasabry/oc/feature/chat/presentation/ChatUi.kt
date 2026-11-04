@@ -260,7 +260,8 @@ public sealed interface ChatConfirm {
      * A link from a reply asks first, naming where it goes (R17: policy → opener, never straight to
      * the platform).
      */
-    public data class OpenLink(val url: String, val host: String) : ChatConfirm
+    public data class OpenLink(val url: String, val host: String, val insecure: Boolean = false) :
+        ChatConfirm
 }
 
 /**

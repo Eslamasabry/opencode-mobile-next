@@ -198,7 +198,7 @@ public class DevPreviewViewModel(
             is BrowserTicket.Open -> open(ticket.token)
             is BrowserTicket.AskFirst -> {
                 pending = ticket.token
-                mutable.update { it.copy(leaveHost = ticket.host) }
+                mutable.update { it.copy(leaveHost = ticket.host, leaveInsecure = ticket.insecure) }
             }
             BrowserTicket.Refused -> mutable.update { it.copy(notice = PreviewNotice.LinkBlocked) }
         }

@@ -107,6 +107,7 @@ dependencies {
             ":engine:settings",
             ":engine:analytics",
             ":engine:diagnostics",
+            ":android:platform", // SEC: the adopted category-only native crash handler/store
             ":android:notifications",
             ":android:platform",
             ":android:background", // BUILD-ANDROID-BG-PLATFORM: live mode, pause, sign-in lease

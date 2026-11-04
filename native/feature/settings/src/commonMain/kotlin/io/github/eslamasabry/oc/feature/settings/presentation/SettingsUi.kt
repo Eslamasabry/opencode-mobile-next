@@ -27,6 +27,7 @@ public data class SettingsUi(
     /** Report a problem's preview; null until the page opens. */
     val report: ReportUi? = null,
     val reportDescription: String = "",
+    val crash: CrashUi? = null,
     /** One plain line about the last save that did not stick, if any. */
     val note: SettingsNote? = null,
 ) {

@@ -1,0 +1,6 @@
+<resources>
+    <string name="configInspectionTitle">Server configuration</string>
+    <string name="configInspectionExplanation">Read the server’s configuration sources in priority order. Keys, tokens, environment values, headers, commands and prompts are hidden. This page changes nothing.</string>
+    <string name="configInspectionUnavailable">The server’s configuration could not be loaded. Reconnect and try again.</string>
+    <string name="configInspectionRefresh">Refresh configuration</string>
+</resources>

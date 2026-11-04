@@ -6,9 +6,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-/** Where the project of the Git page lives, which decides how commands run and whether a GitHub sign-in is handed over. */
+/**
+ * Where the project of the Git page lives, which decides how commands run and whether a GitHub
+ * sign-in is handed over.
+ */
 public enum class GitHost {
-    /** The connected server (`POST /api/shell`): pushes use the server's own Git sign-in; the app never sends its token. */
+    /** App-private Ubuntu: a token can be handed to one command through a private file. */
+    BuiltinLinux,
+    /**
+     * The connected server (`POST /api/shell`): pushes use the server's own Git sign-in; the app
+     * never sends its token.
+     */
     Server,
 }
 
@@ -32,14 +40,19 @@ public class GitWorkspace(
     public val shell: GitShell,
     /** The server's saved name, for "uses the Git sign-in set up on …". */
     public val placeName: String? = null,
+    public val credentials: GitCredentialDrop? = null,
 ) {
-    /** Pushes use the sign-in that environment already has (every host today). */
-    public val usesOwnGitSignIn: Boolean get() = usesOwnGitSignIn(host)
+    /** Remote pushes use the sign-in that environment already has. */
+    public val usesOwnGitSignIn: Boolean
+        get() = usesOwnGitSignIn(host)
 
     override fun toString(): String = "GitWorkspace($host)"
 
     public companion object {
-        /** Pushes from [host] use the Git sign-in set up there; the app's GitHub sign-in is not offered (B-SEC-082). */
+        /**
+         * Remote [host] uses the Git sign-in set up there; built-in Linux offers the app's sign-in
+         * (B-SEC-082).
+         */
         public fun usesOwnGitSignIn(host: GitHost): Boolean = host == GitHost.Server
     }
 }
@@ -50,16 +63,20 @@ public sealed interface GitWorkspaceResolution {
     public data class Unavailable(val reason: GitUnavailableReason) : GitWorkspaceResolution
 }
 
-/** Finds the conversation's project and the shell that reaches it; bound by the app (Android: `GitWiring`). */
+/**
+ * Finds the conversation's project and the shell that reaches it; bound by the app (Android:
+ * `GitWiring`).
+ */
 public fun interface GitWorkspaces {
     public suspend fun resolve(ref: ConversationRef): GitWorkspaceResolution
 }
 
 /**
- * B-NAV-022, gated on capability and never on the protocol flavor: no connection or no project means no Git; a server
- * that advertises the command endpoint gets a server shell (with no token); one that reports it absent is unavailable
- * whatever its flavor. [remoteShell] null = not advertised either way: the shell is tried and a 404 answers
- * "this server can't run Git" ([GitShellFailure.Unsupported]).
+ * B-NAV-022, gated on capability and never on the protocol flavor: no connection or no project
+ * means no Git; a server that advertises the command endpoint gets a server shell (with no token);
+ * one that reports it absent is unavailable whatever its flavor. [remoteShell] null = not
+ * advertised either way: the shell is tried and a 404 answers "this server can't run Git"
+ * ([GitShellFailure.Unsupported]).
  */
 public fun resolveGitWorkspace(
     connected: Boolean,
@@ -70,9 +87,13 @@ public fun resolveGitWorkspace(
 ): GitWorkspaceResolution {
     if (!connected) return GitWorkspaceResolution.Unavailable(GitUnavailableReason.NotConnected)
     val folder = directory?.trim()
-    if (folder.isNullOrEmpty()) return GitWorkspaceResolution.Unavailable(GitUnavailableReason.NoProject)
-    if (remoteShell == false) return GitWorkspaceResolution.Unavailable(GitUnavailableReason.ServerCannotRunCommands)
-    return GitWorkspaceResolution.Available(GitWorkspace(GitHost.Server, folder, shell(folder), placeName))
+    if (folder.isNullOrEmpty())
+        return GitWorkspaceResolution.Unavailable(GitUnavailableReason.NoProject)
+    if (remoteShell == false)
+        return GitWorkspaceResolution.Unavailable(GitUnavailableReason.ServerCannotRunCommands)
+    return GitWorkspaceResolution.Available(
+        GitWorkspace(GitHost.Server, folder, shell(folder), placeName)
+    )
 }
 
 /** What the page body shows. */
@@ -96,18 +117,43 @@ public sealed interface GitDiffView {
 
     public data class Loading(override val file: GitFileChange) : GitDiffView
 
-    public data class Ready(override val file: GitFileChange, val patch: String, val binary: Boolean) : GitDiffView {
+    public data class Ready(
+        override val file: GitFileChange,
+        val patch: String,
+        val binary: Boolean,
+    ) : GitDiffView {
         override fun toString(): String = "Ready(${file.path.length})"
     }
 
-    public data class Failed(override val file: GitFileChange, val failure: GitFailure) : GitDiffView
+    public data class Failed(override val file: GitFileChange, val failure: GitFailure) :
+        GitDiffView
 }
 
 /** Save-and-send's two halves, so the busy line names each one (B-NAV-021). */
-public enum class GitBusy { Refresh, Pull, Push, Commit, SaveThenSend, SwitchBranch, CreateBranch, Discard, SetIdentity, AddRemote, Clone }
+public enum class GitBusy {
+    Refresh,
+    Pull,
+    Push,
+    Commit,
+    SaveThenSend,
+    SwitchBranch,
+    CreateBranch,
+    Discard,
+    SetIdentity,
+    AddRemote,
+    Clone,
+}
 
-/** The quiet look at the remote after the page opens ("behind" is only true after it). Never shown as busy. */
-public enum class GitCheck { Idle, Checking, Done, Failed }
+/**
+ * The quiet look at the remote after the page opens ("behind" is only true after it). Never shown
+ * as busy.
+ */
+public enum class GitCheck {
+    Idle,
+    Checking,
+    Done,
+    Failed,
+}
 
 public data class GitPageState(
     val view: GitPageView = GitPageView.Loading,
@@ -129,18 +175,21 @@ public data class GitPageState(
     /** Bumped on every finished write, so the screen can clear its fields once. */
     val generation: Int = 0,
 ) {
-    val snapshot: GitSnapshot? get() = (view as? GitPageView.Ready)?.snapshot
+    val snapshot: GitSnapshot?
+        get() = (view as? GitPageView.Ready)?.snapshot
 }
 
 /**
- * The Git page model for one conversation's project (port of lib/state/git_page_controller.dart; B-NAV-020/021).
- * Loads (Loading → Ready), shows not-a-repository and failures as views, keeps the last snapshot when a refresh fails,
- * never runs on an unavailable workspace, records a write's result then rereads, and runs one action at a time:
- * a tap while another action runs is ignored (steer, never queue).
+ * The Git page model for one conversation's project (port of lib/state/git_page_controller.dart;
+ * B-NAV-020/021). Loads (Loading → Ready), shows not-a-repository and failures as views, keeps the
+ * last snapshot when a refresh fails, never runs on an unavailable workspace, records a write's
+ * result then rereads, and runs one action at a time: a tap while another action runs is ignored
+ * (steer, never queue).
  */
 public class GitPage(
     private val ref: ConversationRef,
     private val workspaces: GitWorkspaces,
+    private val account: GitHubAccount? = null,
 ) {
     private val mutableState = MutableStateFlow(GitPageState())
     public val state: StateFlow<GitPageState> = mutableState.asStateFlow()
@@ -159,16 +208,30 @@ public class GitPage(
 
     public suspend fun pull(): Unit = write(GitBusy.Pull) { it.pull() }
 
-    public suspend fun push(): Unit = write(GitBusy.Push) { it.push() }
+    public suspend fun push(): Unit = write(GitBusy.Push) { push(it) }
 
-    public suspend fun commit(paths: List<String>, message: String, renamedFrom: List<String> = emptyList()): Unit =
-        write(GitBusy.Commit) { it.commit(paths, message, renamedFrom) }
+    private suspend fun push(repo: GitRepository): GitActionResult {
+        val token = if (repo.canUseGitHubToken) account?.validToken() else null
+        val sent = repo.push(token)
+        if (sent.problem == GitProblem.GitHubTokenRejected) account?.tokenRejected()
+        return sent
+    }
+
+    public suspend fun commit(
+        paths: List<String>,
+        message: String,
+        renamedFrom: List<String> = emptyList(),
+    ): Unit = write(GitBusy.Commit) { it.commit(paths, message, renamedFrom) }
 
     /**
-     * Save-and-send in one tap (B-NAV-021): saves, then sends, then reads once, with the busy line naming each half. A
-     * failed save stops there; a failed send keeps the save and says so.
+     * Save-and-send in one tap (B-NAV-021): saves, then sends, then reads once, with the busy line
+     * naming each half. A failed save stops there; a failed send keeps the save and says so.
      */
-    public suspend fun commitAndPush(paths: List<String>, message: String, renamedFrom: List<String> = emptyList()) {
+    public suspend fun commitAndPush(
+        paths: List<String>,
+        message: String,
+        renamedFrom: List<String> = emptyList(),
+    ) {
         val repo = repository ?: return
         if (!begin(GitBusy.Commit)) return
         try {
@@ -178,7 +241,7 @@ public class GitPage(
                 return
             }
             mutableState.update { it.copy(busy = GitBusy.SaveThenSend) }
-            val sent = repo.push()
+            val sent = push(repo)
             finish(sent, savedNotSent = !sent.ok)
             read()
         } finally {
@@ -186,14 +249,17 @@ public class GitPage(
         }
     }
 
-    public suspend fun addRemote(name: String, url: String): Unit = write(GitBusy.AddRemote) { it.addRemote(name, url) }
+    public suspend fun addRemote(name: String, url: String): Unit =
+        write(GitBusy.AddRemote) { it.addRemote(name, url) }
 
-    public suspend fun clone(url: String, folder: String): Unit = write(GitBusy.Clone) { it.clone(url, folder) }
+    public suspend fun clone(url: String, folder: String): Unit =
+        write(GitBusy.Clone) { it.clone(url, folder) }
 
     /**
-     * Looks at the remote quietly and rereads, so "Up to date" and new remote branches are true (Flutter
-     * `checkForUpdates`, run after the page opens). Not an action: it holds no button and never reports a failure as
-     * one; [GitPageState.check] says how it went. A branch with no upstream has nothing to check.
+     * Looks at the remote quietly and rereads, so "Up to date" and new remote branches are true
+     * (Flutter `checkForUpdates`, run after the page opens). Not an action: it holds no button and
+     * never reports a failure as one; [GitPageState.check] says how it went. A branch with no
+     * upstream has nothing to check.
      */
     public suspend fun checkForUpdates() {
         val repo = repository ?: return
@@ -213,15 +279,22 @@ public class GitPage(
         if (state.value.busy == null) read()
     }
 
-    public suspend fun switchBranch(name: String): Unit = write(GitBusy.SwitchBranch) { it.switchBranch(name) }
+    public suspend fun switchBranch(name: String): Unit =
+        write(GitBusy.SwitchBranch) { it.switchBranch(name) }
 
-    public suspend fun createBranch(name: String): Unit = write(GitBusy.CreateBranch) { it.createBranch(name) }
+    public suspend fun createBranch(name: String): Unit =
+        write(GitBusy.CreateBranch) { it.createBranch(name) }
 
-    public suspend fun discard(file: GitFileChange): Unit = write(GitBusy.Discard) { it.discard(file) }
+    public suspend fun discard(file: GitFileChange): Unit =
+        write(GitBusy.Discard) { it.discard(file) }
 
-    public suspend fun setIdentity(name: String, email: String): Unit = write(GitBusy.SetIdentity) { it.setIdentity(name, email) }
+    public suspend fun setIdentity(name: String, email: String): Unit =
+        write(GitBusy.SetIdentity) { it.setIdentity(name, email) }
 
-    /** Opens one file's diff. Reads only; may run beside nothing else but never blocks the page's actions. */
+    /**
+     * Opens one file's diff. Reads only; may run beside nothing else but never blocks the page's
+     * actions.
+     */
     public suspend fun openDiff(file: GitFileChange) {
         val repo = repository ?: return
         mutableState.update { it.copy(diff = GitDiffView.Loading(file)) }
@@ -254,7 +327,9 @@ public class GitPage(
     }
 
     private fun finish(result: GitActionResult, savedNotSent: Boolean) {
-        mutableState.update { it.copy(result = result, savedNotSent = savedNotSent, generation = it.generation + 1) }
+        mutableState.update {
+            it.copy(result = result, savedNotSent = savedNotSent, generation = it.generation + 1)
+        }
     }
 
     private suspend fun read() {
@@ -262,27 +337,51 @@ public class GitPage(
             repository
                 ?: when (val found = workspaces.resolve(ref)) {
                     is GitWorkspaceResolution.Unavailable -> {
-                        mutableState.update { it.copy(view = GitPageView.Unavailable(found.reason)) }
+                        mutableState.update {
+                            it.copy(view = GitPageView.Unavailable(found.reason))
+                        }
                         return
                     }
                     is GitWorkspaceResolution.Available -> {
-                        val made = GitRepository(found.workspace.shell, found.workspace.directory)
+                        val made =
+                            GitRepository(
+                                found.workspace.shell,
+                                found.workspace.directory,
+                                credentials = found.workspace.credentials,
+                            )
                         repository = made
-                        mutableState.update { it.copy(host = found.workspace.host, placeName = found.workspace.placeName, directory = found.workspace.directory) }
+                        mutableState.update {
+                            it.copy(
+                                host = found.workspace.host,
+                                placeName = found.workspace.placeName,
+                                directory = found.workspace.directory,
+                            )
+                        }
                         made
                     }
                 }
         when (val read = repo.snapshot()) {
             is GitSnapshotResult.Ready ->
-                mutableState.update { it.copy(view = GitPageView.Ready(read.snapshot), refreshFailure = null) }
-            GitSnapshotResult.NotRepository -> mutableState.update { it.copy(view = GitPageView.NotRepository, refreshFailure = null) }
+                mutableState.update {
+                    it.copy(view = GitPageView.Ready(read.snapshot), refreshFailure = null)
+                }
+            GitSnapshotResult.NotRepository ->
+                mutableState.update {
+                    it.copy(view = GitPageView.NotRepository, refreshFailure = null)
+                }
             is GitSnapshotResult.Failed -> {
                 // The server has no command endpoint: the page is unavailable, not failed.
                 val unsupported = read.failure.problem == GitProblem.ServerCannotRunCommands
                 if (unsupported) repository = null
                 mutableState.update {
                     when {
-                        unsupported -> it.copy(view = GitPageView.Unavailable(GitUnavailableReason.ServerCannotRunCommands))
+                        unsupported ->
+                            it.copy(
+                                view =
+                                    GitPageView.Unavailable(
+                                        GitUnavailableReason.ServerCannotRunCommands
+                                    )
+                            )
                         // Keep the last snapshot; say the refresh failed (B-NAV-020).
                         it.view is GitPageView.Ready -> it.copy(refreshFailure = read.failure)
                         else -> it.copy(view = GitPageView.Failed(read.failure))

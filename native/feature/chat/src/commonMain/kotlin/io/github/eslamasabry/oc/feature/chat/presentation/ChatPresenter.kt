@@ -745,7 +745,9 @@ public class ChatPresenter(
         when (val check = out.checkLink(url)) {
             LinkCheck.Opened -> Unit
             is LinkCheck.Ask ->
-                local.update { it.copy(confirm = ChatConfirm.OpenLink(url, check.host)) }
+                local.update {
+                    it.copy(confirm = ChatConfirm.OpenLink(url, check.host, check.insecure))
+                }
             LinkCheck.Refused -> local.update { it.copy(linkRefused = true) }
         }
     }

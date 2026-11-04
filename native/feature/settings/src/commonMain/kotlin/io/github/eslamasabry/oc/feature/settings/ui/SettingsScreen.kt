@@ -129,6 +129,7 @@ public fun SettingsScreen(
             ) {
                 LanguageBody(state.language, actions)
             }
+        SettingsPage.ServerConfiguration -> ServerConfigurationPage(onBack = back)
         SettingsPage.ReportProblem ->
             SettingsFrame(
                 stringResource(Res.string.kitReportProblem),
@@ -138,6 +139,7 @@ public fun SettingsScreen(
                 modifier,
             ) {
                 ReportBody(state.report, actions, state.reportDescription)
+                state.crash?.let { CrashBody(it, actions) }
             }
         is SettingsPage.QuietTime ->
             SettingsFrame(
