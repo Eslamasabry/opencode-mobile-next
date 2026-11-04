@@ -96,3 +96,7 @@
 :engine:integrations-catalog	F	build-integrations-b	parity-p12
 :engine:integrations-host	F	build-integrations-b	parity-p12
 :feature:plans	F	build-integrations-b	parity-p12
+
+:feature:manage-space	F	47-port-rest-2	parity-p12
+:feature:widget-panels	F	47-port-rest-2	parity-p12
+:feature:terminal	F	47-port-rest-2	parity-p12

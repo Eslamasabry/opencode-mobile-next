@@ -22,7 +22,14 @@
         android:label="@string/app_label_preview"
         android:localeConfig="@xml/locales_config"
         android:supportsRtl="true"
+        android:manageSpaceActivity=".ManageSpaceActivity"
         android:theme="@android:style/Theme.Material.NoActionBar">
+        <activity
+            android:name=".ManageSpaceActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -51,6 +58,12 @@
                 android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts" />
         </activity>
+        <meta-data android:name="io.github.eslamasabry.opencode_mobile.WIDGET_OVERLAY_READY" android:value="true" />
+        <activity android:name=".WidgetConfigureActivity" android:exported="true" android:excludeFromRecents="true" android:theme="@style/WidgetOverlayTheme">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" /></intent-filter>
+        </activity>
+        <activity android:name=".WidgetRouteActivity" android:exported="false" android:excludeFromRecents="true" android:theme="@style/WidgetOverlayTheme" />
+        <activity android:name=".WidgetOverlayActivity" android:exported="false" android:excludeFromRecents="true" android:theme="@style/WidgetOverlayTheme" android:hardwareAccelerated="true" android:windowSoftInputMode="adjustResize" android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode" />
         <service android:name="io.github.eslamasabry.oc.android.termux.GitRepairResultService" android:exported="false" />
         <!-- Notification buttons (P12-PLATFORM); frozen Flutter FQCNs. Tiles, widgets and the update receiver merge
              from :android:tiles and :android:widgets. -->

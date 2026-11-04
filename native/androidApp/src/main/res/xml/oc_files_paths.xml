@@ -2,4 +2,5 @@
 <!-- P12-FILES: Open with hands over only the latest private cache copy (FilesWiring.kt AndroidFileHandoff). -->
 <paths>
     <cache-path name="open-with" path="open-with/" />
+    <external-path name="phone-shared-storage" path="." />
 </paths>

@@ -78,6 +78,8 @@ import io.github.eslamasabry.oc.feature.settings.presentation.SettingsHost
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsOpeners
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
 import io.github.eslamasabry.oc.feature.settings.presentation.UpdateSettings
+import io.github.eslamasabry.oc.feature.settings.presentation.VoiceLicenseComponent
+import io.github.eslamasabry.oc.feature.settings.presentation.VoiceLicenseSource
 import io.github.eslamasabry.oc.feature.settings.presentation.VoiceSettings
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
@@ -295,6 +297,28 @@ class AndroidSettingsHost(
             whatsNew = true,
             notices = false,
         )
+
+    override val licenses: VoiceLicenseSource =
+        object : VoiceLicenseSource {
+            override suspend fun read(asset: String): Outcome<String> {
+                if (VoiceLicenseComponent.entries.none { it.asset == asset })
+                    return Outcome.Failed(Failure.StorageRefused())
+                return withContext(dispatchers.io) {
+                    attempt({ Failure.StorageRefused() }) {
+                        application.assets.open("licenses/$asset").bufferedReader().use {
+                            it.readText()
+                        }
+                    }
+                }
+            }
+
+            override suspend fun copy(text: String): Outcome<Unit> = diagnostics.copy(text)
+
+            override fun openWebsite(url: String) {
+                // Only the authored component URLs can reach the platform opener.
+                if (VoiceLicenseComponent.entries.any { it.website == url }) application.view(url)
+            }
+        }
 
     override val diagnostics: DiagnosticsExport =
         object : DiagnosticsExport {

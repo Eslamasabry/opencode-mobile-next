@@ -3,12 +3,16 @@ package io.github.eslamasabry.opencode_mobile.graph
 import dev.zacsweers.metro.*
 import io.github.eslamasabry.oc.core.common.*
 import io.github.eslamasabry.oc.core.common.ids.*
+import io.github.eslamasabry.oc.core.data.kv.PrefType
 import io.github.eslamasabry.oc.core.data.scope.DefaultProfileScope
+import io.github.eslamasabry.oc.core.data.scope.KeyScope
+import io.github.eslamasabry.oc.core.data.scope.KeyShape
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.model.NewSession
 import io.github.eslamasabry.oc.core.security.AddressRules
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.agents.feed.*
+import io.github.eslamasabry.oc.engine.agents.handoff.HandoffLinks
 import io.github.eslamasabry.oc.engine.composer.drafts.ConversationDrafts
 import io.github.eslamasabry.oc.engine.connection.*
 import io.github.eslamasabry.oc.engine.delivery.queue.*
@@ -39,6 +43,8 @@ class PreviewRuntime(
     dispatchers: AppDispatchers,
     private val draftOwners: Set<ConversationDrafts>,
     private val profileClosers: Set<ProfileCloser>,
+    private val managedUpgrade: RootManagedUpgrade,
+    private val inventory: NativeSessionInventory,
     private val cleaners:
         Set<ProfileResourceCleaner>, // P12-FIX: the saved-prompt shelf and its files (B-SEC-172)
 ) : ServerConnections {
@@ -52,6 +58,7 @@ class PreviewRuntime(
     private val mutableBusy = MutableStateFlow(false)
     override val busy: StateFlow<Boolean> = mutableBusy.asStateFlow()
     internal val snapshot = MutableStateFlow(ChatFeedSnapshot())
+    private val unverifiedListings = mutableSetOf<ProfileId>()
     private val listings = mutableMapOf<ProfileId, MutableStateFlow<OpenCodeListing>>()
     private var feed: ChatFeed? = null
     private var feedJob: Job? = null
@@ -60,13 +67,17 @@ class PreviewRuntime(
     private val draftRecovery = mutableSetOf<ProfileId>()
 
     init {
+        managedUpgrade.reconnect = { connect(it) }
         scope.launch {
             val result = stores.warm()
             ready.complete(result)
             if (result is Outcome.Ok) {
                 publishServers()
                 val active = profiles.activeId.value ?: profiles.profiles.value.firstOrNull()?.id
-                if (active != null) command { connectNow(active) }
+                if (active != null) {
+                    seedOpening(active)
+                    command { connectNow(active) }
+                }
             }
         }
         scope.launch { profiles.profiles.collect { if (ready.isCompleted) publishServers() } }
@@ -147,6 +158,10 @@ class PreviewRuntime(
     }
 
     private suspend fun connectNow(id: ProfileId, recoverDrafts: Boolean = false): Outcome<Unit> {
+        when (val admitted = managedUpgrade.prepare(id)) {
+            is Outcome.Failed -> return admitted
+            is Outcome.Ok -> Unit
+        }
         val loaded =
             profiles.profile(id)
                 ?: return Failure.Refused(RefusalReason.ProfileDeleted)
@@ -183,7 +198,12 @@ class PreviewRuntime(
                 if (saved is Outcome.Failed) return saved.atStage(ConnectionStage.SaveActiveProfile)
                 val graph = opened.value
                 if (!listings.containsKey(id)) {
-                    listings[id] = MutableStateFlow(OpenCodeListing(loading = true))
+                    val cached = inventory.read(loaded.profile)
+                    if (cached.isNotEmpty()) unverifiedListings += id
+                    listings[id] =
+                        MutableStateFlow(
+                            OpenCodeListing(sessions = cached, loading = true, complete = false)
+                        )
                     rebuildFeed()
                     eventJobs[id] = scope.launch {
                         graph.session.server.events.all.collect { envelope ->
@@ -220,8 +240,35 @@ class PreviewRuntime(
         }
         val merged = ChatFeed(sources, scope)
         feed = merged
-        snapshot.value = merged.snapshot.value
-        feedJob = scope.launch { merged.snapshot.collect { snapshot.value = it } }
+        snapshot.value = openingFlags(merged.snapshot.value)
+        feedJob = scope.launch { merged.snapshot.collect { snapshot.value = openingFlags(it) } }
+    }
+
+    private fun openingFlags(value: ChatFeedSnapshot): ChatFeedSnapshot =
+        value.copy(
+            items =
+                value.items
+                    .map {
+                        if (it.profileId in unverifiedListings) it.copy(canReopen = false) else it
+                    }
+                    .toImmutableList()
+        )
+
+    private fun seedOpening(id: ProfileId) {
+        val loaded = profiles.profile(id) ?: return
+        val cached = inventory.read(loaded.profile)
+        if (cached.isEmpty()) return
+        val source =
+            OpenCodeChatFeedSource(
+                id,
+                loaded.profile.name,
+                MutableStateFlow(OpenCodeListing(sessions = cached, complete = false)),
+            )
+        snapshot.value =
+            ChatFeedSnapshot(
+                items = source.current().items.map { it.copy(canReopen = false) }.toImmutableList(),
+                complete = false,
+            )
     }
 
     private suspend fun refreshOne(id: ProfileId): Outcome<Unit> {
@@ -245,6 +292,12 @@ class PreviewRuntime(
                     return Failure.Refused(RefusalReason.StaleScope)
                         .failed()
                         .atStage(ConnectionStage.LoadConversations)
+                unverifiedListings.remove(id)
+                val stored = profiles.profile(id)?.profile
+                if (stored != null)
+                    inventory.save(stored, page.value.sessions) {
+                        registry.live.value[id] === graph
+                    }
                 val statuses = graph.session.server.sessionStatuses()
                 listing.value =
                     OpenCodeListing(
@@ -311,6 +364,7 @@ class PreviewRuntime(
         registry.close(id)
         eventJobs.remove(id)?.cancel()
         listings.remove(id)
+        unverifiedListings.remove(id)
         rebuildFeed()
         // Queue admission is fenced above and close joins connection work. A send may have written
         // its marker
@@ -347,6 +401,24 @@ class PreviewRuntime(
         val scoped =
             DefaultProfileScope(stores.prefs, stores.secrets, stores.lanes.app).apply {
                 AndroidProfileMonitoring.registerKeys(this)
+                register(
+                    KeyShape(
+                        NativeSessionInventory.PREFIX,
+                        KeyScope.Profile,
+                        PrefType.Str,
+                        ":engine:connection",
+                        "read-only opening session labels",
+                    )
+                )
+                register(
+                    KeyShape(
+                        HandoffLinks.PREFIX,
+                        KeyScope.Profile,
+                        PrefType.Str,
+                        ":engine:agents",
+                        "conversation handoff navigation metadata",
+                    )
+                )
                 registerSecret("pw.", "profiles")
                 registerSecret("oc.codexToken.", "profiles")
             }

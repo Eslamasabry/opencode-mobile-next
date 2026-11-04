@@ -16,8 +16,11 @@ import io.github.eslamasabry.oc.ui.kit.input.LocalKitSecretSink
 import io.github.eslamasabry.oc.ui.kit.platform.AndroidKitPlatform
 import io.github.eslamasabry.oc.ui.shell.App
 import io.github.eslamasabry.opencode_mobile.graph.AppLocale
+import io.github.eslamasabry.opencode_mobile.graph.IncomingShareHost
 import io.github.eslamasabry.opencode_mobile.graph.MigrationRoot
 import io.github.eslamasabry.opencode_mobile.graph.SettingsAppGraph
+import io.github.eslamasabry.opencode_mobile.graph.UpdateNoticeAccessors
+import io.github.eslamasabry.opencode_mobile.graph.UpdateNoticeHost
 import io.github.eslamasabry.opencode_mobile.graph.appGraph
 import io.github.eslamasabry.opencode_mobile.graph.migration
 import io.github.eslamasabry.opencode_mobile.graph.platformHub
@@ -35,6 +38,7 @@ class MainActivity : ComponentActivity() {
         // B14 (QA wave 1): after super.onCreate, so a recreate (language switch) keeps edge-to-edge
         // too.
         enableEdgeToEdge()
+        (application as OcApplication).startProduct()
         val graph = appGraph
         graph.composerFiles.attach(this)
         // DecorView's DecorContext need not wrap this Activity; pass the actual window for
@@ -60,6 +64,11 @@ class MainActivity : ComponentActivity() {
                         graph.metroViewModelFactory,
                         appearance,
                         AppLocale.applied,
+                        windowContent = { shell ->
+                            UpdateNoticeHost((graph as UpdateNoticeAccessors).updateNotices) {
+                                IncomingShareHost(platformHub.incomingShare, shell)
+                            }
+                        },
                     )
                     // A parked launch is handed over only after the migration gate and shell
                     // have actually composed. This effect dies with its Activity's composition.

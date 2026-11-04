@@ -15,13 +15,16 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
+import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.pace.DefaultPacer
 import io.github.eslamasabry.oc.core.common.pace.Pacer
-import io.github.eslamasabry.oc.core.common.pace.Visibility
 import io.github.eslamasabry.oc.core.security.ExternalLinkPolicy
 import io.github.eslamasabry.oc.core.security.LinkDecision
 import io.github.eslamasabry.oc.core.security.LinkOrigin
+import io.github.eslamasabry.oc.engine.runtime.budget.ServiceExitReason
+import io.github.eslamasabry.oc.engine.runtime.budget.ServiceExitRecord
+import io.github.eslamasabry.oc.engine.runtime.budget.lastAndroidKill as findLastAndroidKill
 import io.github.eslamasabry.oc.feature.linux.manager.LinuxJobKind
 import io.github.eslamasabry.oc.feature.linux.manager.LinuxManager
 import io.github.eslamasabry.oc.feature.linux.manager.LinuxRetryWait
@@ -48,17 +51,21 @@ import io.github.eslamasabry.oc.ui.words.res.linuxMgrJobNoticeInstall
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrJobNoticeRemove
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrJobNoticeUpdate
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrJobRestoring
+import io.github.eslamasabry.opencode_mobile.BuiltinLinux
+import io.github.eslamasabry.opencode_mobile.ChildProcessLimit
+import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlin.time.Instant
+import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.getString
 
 /**
- * App start (Flutter `root.dart _finishLinuxReset`, B-LINUX-093): a Reset Linux the app did not finish (killed while
- * erasing, or before setup started) is finished now, so Linux is never left erased with no setup on the way. Called
- * once from OcApplication; a failure is logged by type only and the marker stays for the next start.
+ * App start (Flutter `root.dart _finishLinuxReset`, B-LINUX-093): a Reset Linux the app did not
+ * finish (killed while erasing, or before setup started) is finished now, so Linux is never left
+ * erased with no setup on the way. Called once from OcApplication; a failure is logged by type only
+ * and the marker stays for the next start.
  */
 @SingleIn(AppScope::class)
 @Inject
@@ -100,19 +107,25 @@ object LinuxWiring {
 
     private fun prefs(app: Application) = app.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
-    // ---- The built-in Linux: LinuxHost, LinuxLifecycle and PhoneServerSource are the real BuiltinLinux bindings in
+    // ---- The built-in Linux: LinuxHost, LinuxLifecycle and PhoneServerSource are the real
+    // BuiltinLinux bindings in
     // LinuxRuntimeWiring (P12-FIX-LINUX-VOICE).
 
     // PhoneProcessSource: the real native process table, in RuntimeBWiring (BUILD-RUNTIME-B).
 
     // ---- Real Android bindings
 
-    /** The pause between tries of a passing Linux failure (B-LINUX-092); features may not import delay (K1). */
-    @Provides fun linuxRetryWait(): LinuxRetryWait = LinuxRetryWait { delay(LinuxManager.RETRY_DELAY) }
+    /**
+     * The pause between tries of a passing Linux failure (B-LINUX-092); features may not import
+     * delay (K1).
+     */
+    @Provides
+    fun linuxRetryWait(): LinuxRetryWait = LinuxRetryWait { delay(LinuxManager.RETRY_DELAY) }
 
     /**
-     * The long job's foreground notice in the person's language (Flutter `linuxMgrJobNotice*`). It is read outside
-     * composition, so it lives here rather than in the feature (K1 allows features only stringResource).
+     * The long job's foreground notice in the person's language (Flutter `linuxMgrJobNotice*`). It
+     * is read outside composition, so it lives here rather than in the feature (K1 allows features
+     * only stringResource).
      */
     @Provides
     fun linuxJobNotices(): LinuxJobNotices =
@@ -125,16 +138,19 @@ object LinuxWiring {
                         LinuxJobKind.Update -> Res.string.linuxMgrJobNoticeUpdate
                         LinuxJobKind.Backup -> Res.string.linuxMgrJobBackingUp
                         LinuxJobKind.Restore -> Res.string.linuxMgrJobRestoring
-                    },
+                    }
                 )
         }
 
-    /** The device-wide reset marker `oc.linuxReset.pending` and the Reply speed reading it clears. */
+    /**
+     * The device-wide reset marker `oc.linuxReset.pending` and the Reply speed reading it clears.
+     */
     @Provides
     @SingleIn(AppScope::class)
     fun linuxResetMarker(app: Application): LinuxResetMarker =
         object : LinuxResetMarker {
-            override suspend fun read(): String? = prefs(app).getString(LinuxResetFlow.MARKER_KEY, null)
+            override suspend fun read(): String? =
+                prefs(app).getString(LinuxResetFlow.MARKER_KEY, null)
 
             override suspend fun write(value: String) {
                 prefs(app).edit().putString(LinuxResetFlow.MARKER_KEY, value).commit()
@@ -149,15 +165,18 @@ object LinuxWiring {
             }
         }
 
-    /** A port preview: an app-authored loopback URL, still through ExternalLinkPolicy (AGENTS invariant 8). */
+    /**
+     * A port preview: an app-authored loopback URL, still through ExternalLinkPolicy (AGENTS
+     * invariant 8).
+     */
     @Provides
-    fun portPreviewOpener(app: Application): PortPreviewOpener =
-        PortPreviewOpener { url ->
-            when (val decision = ExternalLinkPolicy().check(url, LinkOrigin.AppAuthored)) {
-                is LinkDecision.Open -> app.startView(decision.link.uri)
-                is LinkDecision.AskFirst, is LinkDecision.Refuse -> false
-            }
+    fun portPreviewOpener(app: Application): PortPreviewOpener = PortPreviewOpener { url ->
+        when (val decision = ExternalLinkPolicy().check(url, LinkOrigin.AppAuthored)) {
+            is LinkDecision.Open -> app.startView(decision.link.uri)
+            is LinkDecision.AskFirst,
+            is LinkDecision.Refuse -> false
         }
+    }
 
     @Provides
     fun keepAliveSettings(app: Application): KeepAliveSettings =
@@ -168,58 +187,116 @@ object LinuxWiring {
                     brand = Build.BRAND.orEmpty(),
                     sdkInt = Build.VERSION.SDK_INT,
                     batteryOptimizationIgnored =
-                        (app.getSystemService(Context.POWER_SERVICE) as? PowerManager)?.isIgnoringBatteryOptimizations(app.packageName) == true,
+                        (app.getSystemService(Context.POWER_SERVICE) as? PowerManager)
+                            ?.isIgnoringBatteryOptimizations(app.packageName) == true,
                 )
 
             override suspend fun open(setting: KeepAliveSetting): Boolean =
                 when (setting) {
-                    KeepAliveSetting.Battery -> app.startSettings(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
-                    // No public intent opens every maker's autostart screen; the app's own page holds the switches.
-                    KeepAliveSetting.Autostart, KeepAliveSetting.AppDetails ->
-                        app.startSettings(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${app.packageName}")))
+                    KeepAliveSetting.Battery ->
+                        app.startSettings(
+                            Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                        )
+                    // No public intent opens every maker's autostart screen; the app's own page
+                    // holds the switches.
+                    KeepAliveSetting.Autostart,
+                    KeepAliveSetting.AppDetails ->
+                        app.startSettings(
+                            Intent(
+                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                Uri.parse("package:${app.packageName}"),
+                            )
+                        )
                 }
         }
 
     @Provides
-    fun childLimitSource(app: Application): ChildLimitSource =
+    fun childLimitSource(
+        app: Application,
+        dispatchers: AppDispatchers,
+        clock: Clock,
+        admission: NativePaseoAdmission,
+    ): ChildLimitSource =
         object : ChildLimitSource {
-            override suspend fun status(): ChildLimitStatus {
-                val resolver = app.contentResolver
-                // Android 14+ "Disable child process restrictions" writes this flag false (plan 11 §7.2); never written here.
-                val monitor = Settings.Global.getString(resolver, "settings_enable_monitor_phantom_procs")
-                return ChildLimitStatus(
-                    sdkInt = Build.VERSION.SDK_INT,
-                    state =
-                        when (monitor) {
-                            "false" -> ChildLimitState.Lifted
-                            "true" -> ChildLimitState.Enforced
-                            else -> ChildLimitState.Unknown
-                        },
-                    developerOptionsEnabled = Settings.Global.getInt(resolver, Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0) == 1,
-                    canOpenSettings = true,
-                )
-            }
+            override suspend fun status(): ChildLimitStatus =
+                withContext(dispatchers.io) {
+                    val raw = ChildProcessLimit.status(app)
+                    ChildLimitStatus(
+                        sdkInt = raw["sdkInt"] as? Int,
+                        state =
+                            when (raw["restrictionsOff"]) {
+                                true -> ChildLimitState.Lifted
+                                false -> ChildLimitState.Enforced
+                                else -> ChildLimitState.Unknown
+                            },
+                        developerOptionsEnabled = raw["developerOptionsEnabled"] as? Boolean,
+                        canOpenSettings = true,
+                    )
+                }
 
             override suspend fun openDeveloperOptions(): DeveloperOptionsOpened =
                 when {
-                    app.startSettings(Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)) -> DeveloperOptionsOpened.Developer
-                    app.startSettings(Intent(Settings.ACTION_DEVICE_INFO_SETTINGS)) -> DeveloperOptionsOpened.About
+                    app.startSettings(Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)) ->
+                        DeveloperOptionsOpened.Developer
+                    app.startSettings(Intent(Settings.ACTION_DEVICE_INFO_SETTINGS)) ->
+                        DeveloperOptionsOpened.About
                     else -> DeveloperOptionsOpened.None
                 }
 
-            override suspend fun lastAndroidKill(): Instant? = null
+            override suspend fun lastAndroidKill(): Instant? =
+                withContext(dispatchers.io) {
+                    try {
+                        val services = BuiltinLinux.get(app).performance()["services"] as? Map<*, *>
+                        val exits =
+                            services
+                                .orEmpty()
+                                .entries
+                                .mapNotNull { (name, value) ->
+                                    val row = value as? Map<*, *> ?: return@mapNotNull null
+                                    val key = name as? String ?: return@mapNotNull null
+                                    key to
+                                        ServiceExitRecord(
+                                            lastExitAt =
+                                                (row["lastExitAtMs"] as? Number)
+                                                    ?.toLong()
+                                                    ?.takeIf { it > 0 }
+                                                    ?.let(Instant::fromEpochMilliseconds),
+                                            lastStopRequested =
+                                                row["lastStopRequested"] as? Boolean,
+                                            exitReason =
+                                                ServiceExitReason.parse(
+                                                    row["exitReason"] as? String
+                                                ),
+                                        )
+                                }
+                                .toMap()
+                        findLastAndroidKill(exits, clock.now())
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (_: Exception) {
+                        null
+                    }
+                }
 
-            override fun queuesOften(): Boolean = false
+            override fun queuesOften(): Boolean = admission.queuesOften()
 
             override suspend fun hiddenAt(): Instant? =
-                prefs(app).getLong("oc.childLimitCardHidden", -1L).takeIf { it >= 0 }?.let(Instant::fromEpochMilliseconds)
+                prefs(app)
+                    .getLong("oc.childLimitCardHidden", -1L)
+                    .takeIf { it >= 0 }
+                    ?.let(Instant::fromEpochMilliseconds)
 
             override suspend fun hide(at: Instant) {
-                prefs(app).edit().putLong("oc.childLimitCardHidden", at.toEpochMilliseconds()).commit()
+                prefs(app)
+                    .edit()
+                    .putLong("oc.childLimitCardHidden", at.toEpochMilliseconds())
+                    .commit()
             }
         }
 
-    /** PhonePage → routes. Setup opens the real setup page (P12-BUILD-RUNTIME-C, PhoneSetupWiring). */
+    /**
+     * PhonePage → routes. Setup opens the real setup page (P12-BUILD-RUNTIME-C, PhoneSetupWiring).
+     */
     @Provides
     fun phoneNavigator(nav: AppNavigator): PhoneNavigator =
         object : PhoneNavigator {
@@ -230,8 +307,9 @@ object LinuxWiring {
                         PhonePage.KeepRunning -> PhoneRoute.KeepRunning
                         PhonePage.Linux -> LinuxRoute.Home
                         // P12-BUILD-RUNTIME-C: the real setup journey (PhoneSetupWiring).
-                        PhonePage.SetupStart, PhonePage.SetupProgress -> PhoneSetupRoute.Setup
-                    },
+                        PhonePage.SetupStart,
+                        PhonePage.SetupProgress -> PhoneSetupRoute.Setup
+                    }
                 )
             }
 
@@ -239,10 +317,12 @@ object LinuxWiring {
         }
 
     /**
-     * The Pacer the phone and Linux pages tick on (S3-PHONEUI R3: none was bound). Their timers run only while their
-     * page is shown, so a foreground-only visibility is exact for them. Remove this when the shell binds the app's own.
+     * Phone and Linux timers follow actual window visibility, including while a page remains
+     * composed.
      */
-    @Provides @SingleIn(AppScope::class) fun pacer(): Pacer = DefaultPacer(MutableStateFlow(Visibility.Foreground))
+    @Provides
+    @SingleIn(AppScope::class)
+    fun pacer(visibility: AppVisibility): Pacer = DefaultPacer(visibility.state)
 
     private fun Context.startSettings(intent: Intent): Boolean =
         try {
@@ -254,5 +334,6 @@ object LinuxWiring {
             false
         }
 
-    private fun Context.startView(uri: String): Boolean = startSettings(Intent(Intent.ACTION_VIEW, Uri.parse(uri)))
+    private fun Context.startView(uri: String): Boolean =
+        startSettings(Intent(Intent.ACTION_VIEW, Uri.parse(uri)))
 }
