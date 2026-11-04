@@ -13,6 +13,8 @@ import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.MediaProblem
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.domain.platform.SharedStorageAccess
+import io.github.eslamasabry.oc.core.domain.platform.SharedStorageBlock
 import io.github.eslamasabry.oc.engine.files.FileBody
 import io.github.eslamasabry.oc.engine.files.FileData
 import io.github.eslamasabry.oc.engine.files.FileHandoff
@@ -123,6 +125,8 @@ public data class FileUi(
     val pdfPageCount: Int = 0,
     val pdfFailure: Failure? = null,
     val pdfPages: ImmutableMap<Int, PdfPageUi> = persistentMapOf(),
+    val storageBlock: SharedStorageBlock = SharedStorageBlock.None,
+    val requestingStorage: Boolean = false,
 ) {
     val name: String
         get() = FilePaths.name(path)
@@ -137,6 +141,10 @@ public interface FileActions {
     public fun confirmLink()
 
     public fun cancelLink()
+
+    public fun requestStorage() {}
+
+    public fun onResume() {}
 
     public fun back()
 
@@ -203,6 +211,7 @@ public class FileViewModel(
     private val savers: Set<FileSaver>,
     private val links: FileLinks,
     private val preferences: Set<FilesReaderPreferences>,
+    private val storageAccess: Set<SharedStorageAccess> = emptySet(),
 ) : ViewModel(), FileActions {
     override fun openLink(url: String) {
         val host = links.host(url)
@@ -254,6 +263,7 @@ public class FileViewModel(
     private var shareId: Long? = null
 
     init {
+        check(storageAccess.size <= 1) { "multiple shared-storage hosts" }
         load()
         viewModelScope.launch {
             share.state.collect { running ->
@@ -292,6 +302,7 @@ public class FileViewModel(
 
     private fun load() {
         val mine = ++loads
+        val identity = connections.sourceIdentity(route.from)
         val gateway = connections.gateway(route.from)
         when {
             gateway == null ->
@@ -299,10 +310,25 @@ public class FileViewModel(
             !connections.canBrowse(route.from) ->
                 local.update { it.copy(phase = FilePhase.Unavailable, failure = null) }
             else -> {
-                local.update { it.copy(phase = FilePhase.Loading, failure = null) }
+                local.update {
+                    it.copy(
+                        phase = FilePhase.Loading,
+                        failure = null,
+                        requestingStorage = false,
+                        asking = false,
+                    )
+                }
                 viewModelScope.launch {
+                    if (!checkStorage(identity) { mine == loads }) return@launch
+                    if (mine != loads || connections.sourceIdentity(route.from) !== identity)
+                        return@launch
                     val opened = ProjectFiles.open(gateway, route.path, route.line)
-                    if (mine != loads || !connections.isCurrent(route.from, gateway)) return@launch
+                    if (
+                        mine != loads ||
+                            !connections.isCurrent(route.from, gateway) ||
+                            connections.sourceIdentity(route.from) !== identity
+                    )
+                        return@launch
                     when (opened) {
                         is Outcome.Failed ->
                             local.update {
@@ -354,6 +380,100 @@ public class FileViewModel(
             if (svg != null) return FileBody.Svg(svg.source, text)
         }
         return original
+    }
+
+    private var projectDirectory: String? = null
+
+    private suspend fun checkStorage(identity: Any?, wanted: () -> Boolean = { true }): Boolean {
+        val access = storageAccess.singleOrNull() ?: return true
+        val directory = connections.directory(route.from)
+        if (!wanted()) return false
+        if (!sourceCurrent(identity)) return false
+        val checked = access.check(route.from.profileId, directory, identity)
+        if (!wanted()) return false
+        if (!sourceCurrent(identity)) return false
+        projectDirectory = directory
+        return when (checked) {
+            is Outcome.Failed -> {
+                local.update {
+                    it.copy(
+                        phase = FilePhase.Failed,
+                        storageBlock = SharedStorageBlock.None,
+                        failure = checked.failure,
+                        asking = false,
+                    )
+                }
+                false
+            }
+            is Outcome.Ok -> {
+                local.update { it.copy(storageBlock = checked.value) }
+                if (checked.value == SharedStorageBlock.None) true
+                else {
+                    data = null
+                    closeShare()
+                    pdf?.close()
+                    pdf = null
+                    local.update {
+                        it.copy(
+                            phase = FilePhase.Failed,
+                            body = null,
+                            failure = null,
+                            asking = false,
+                            pdfPages = persistentMapOf(),
+                            pdfPageCount = 0,
+                        )
+                    }
+                    false
+                }
+            }
+        }
+    }
+
+    private fun sourceCurrent(identity: Any?): Boolean {
+        if (connections.sourceIdentity(route.from) === identity) return true
+        data = null
+        closeShare()
+        local.update {
+            it.copy(
+                phase = FilePhase.NotConnected,
+                storageBlock = SharedStorageBlock.None,
+                requestingStorage = false,
+                failure = null,
+                asking = false,
+                body = null,
+            )
+        }
+        return false
+    }
+
+    override fun onResume() {
+        // Flutter asks the storage gate only when the page opens; a resume re-checks only a
+        // page that is still showing the shared-storage notice (back from the permission page).
+        val l = local.value
+        if (
+            l.storageBlock != SharedStorageBlock.None &&
+                !l.requestingStorage &&
+                l.phase != FilePhase.Loading
+        )
+            load()
+    }
+
+    override fun requestStorage() {
+        val access = storageAccess.singleOrNull() ?: return
+        val block = local.value.storageBlock
+        val identity = connections.sourceIdentity(route.from)
+        val run = loads
+        if (block == SharedStorageBlock.None || local.value.requestingStorage) return
+        local.update { it.copy(requestingStorage = true) }
+        viewModelScope.launch {
+            val asked = access.request(route.from.profileId, projectDirectory, block, identity)
+            if (run != loads) return@launch
+            if (!sourceCurrent(identity)) return@launch
+            local.update {
+                it.copy(requestingStorage = false, failure = (asked as? Outcome.Failed)?.failure)
+            }
+            if (asked is Outcome.Ok) retry()
+        }
     }
 
     private suspend fun openPdf(bytes: ByteArray) {
@@ -424,11 +544,21 @@ public class FileViewModel(
     }
 
     override fun ask() {
+        if (
+            local.value.phase != FilePhase.Ready ||
+                local.value.storageBlock != SharedStorageBlock.None
+        )
+            return
         if (local.value.asking) return
+        val identity = connections.sourceIdentity(route.from)
+        val run = loads
         local.update { it.copy(asking = true, notice = null) }
         viewModelScope.launch {
-            val directory = connections.directory(route.from)
+            if (!checkStorage(identity) { run == loads }) return@launch
+            if (connections.sourceIdentity(route.from) !== identity) return@launch
+            val directory = projectDirectory ?: connections.directory(route.from)
             val result = mentions.mentionAt(route.from, local.value.path, directory, route.line)
+            if (connections.sourceIdentity(route.from) !== identity) return@launch
             local.update { it.copy(asking = false) }
             when (result) {
                 is Outcome.Failed -> local.update { it.copy(notice = FileNotice.MentionFailed) }
@@ -495,6 +625,11 @@ public class FileViewModel(
     }
 
     override fun openWith() {
+        if (
+            local.value.phase != FilePhase.Ready ||
+                local.value.storageBlock != SharedStorageBlock.None
+        )
+            return
         val file = data ?: return
         val handoff = handoffs.firstOrNull() ?: return
         if (local.value.opening) return
@@ -518,6 +653,11 @@ public class FileViewModel(
     }
 
     override fun save() {
+        if (
+            local.value.phase != FilePhase.Ready ||
+                local.value.storageBlock != SharedStorageBlock.None
+        )
+            return
         val file = data ?: return
         val saver = savers.firstOrNull() ?: return
         if (local.value.saving) return
@@ -538,6 +678,11 @@ public class FileViewModel(
     }
 
     override fun shareOnWifi() {
+        if (
+            local.value.phase != FilePhase.Ready ||
+                local.value.storageBlock != SharedStorageBlock.None
+        )
+            return
         val file = data ?: return
         if (local.value.share == ShareSheetUi.Starting) return
         shareWanted = true

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stateProviderZaiGlobal">Z.AI · عالمي</string>
+    <string name="stateProviderZaiChina">Z.AI · الصين</string>
+    <string name="stateProviderZaiPlanGlobal">خطة Z.AI للبرمجة · عالمي</string>
+    <string name="stateProviderZaiPlanChina">خطة Z.AI للبرمجة · الصين</string>
+</resources>

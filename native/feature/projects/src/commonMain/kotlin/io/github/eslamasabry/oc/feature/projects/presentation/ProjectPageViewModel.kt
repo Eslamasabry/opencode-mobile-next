@@ -12,6 +12,8 @@ import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.SessionId
+import io.github.eslamasabry.oc.core.domain.platform.SharedStorageAccess
+import io.github.eslamasabry.oc.core.domain.platform.SharedStorageBlock
 import io.github.eslamasabry.oc.core.model.NewSession
 import io.github.eslamasabry.oc.core.model.ServerLocation
 import io.github.eslamasabry.oc.core.model.Session
@@ -43,6 +45,7 @@ public class ProjectPageViewModel(
     private val opened: OpenedFolders,
     private val isolatedHosts: Set<IsolatedTaskHost> = emptySet(),
     private val signals: ProjectSignalsHost = NoProjectSignalsHost(),
+    private val storageAccess: Set<SharedStorageAccess> = emptySet(),
 ) : ViewModel(), ProjectPageActions {
     private val directory = ProjectRules.normalize(route.directory)
     private val mutable = MutableStateFlow(ProjectPageUi(directory, ProjectRules.name(directory)))
@@ -164,7 +167,7 @@ public class ProjectPageViewModel(
                 }
             }
         }
-        viewModelScope.launch { opened.remember(route.profile, directory) }
+        check(storageAccess.size <= 1) { "multiple shared-storage hosts" }
     }
 
     private fun load() {
@@ -175,10 +178,20 @@ public class ProjectPageViewModel(
             return
         }
         mutable.update {
-            it.copy(phase = ProjectPagePhase.Opening, serverName = live.name, failure = null)
+            it.copy(
+                phase = ProjectPagePhase.Opening,
+                serverName = live.name,
+                failure = null,
+                storageBlock = SharedStorageBlock.None,
+                requestingStorage = false,
+                creating = false,
+                loadingMore = false,
+            )
         }
         viewModelScope.launch {
+            if (!checkStorage(live, run)) return@launch
             val page = live.gateway.sessionPage()
+            if (!isCurrent(live, run)) return@launch
             val statuses = live.gateway.sessionStatuses()
             viewModelScope.launch {
                 devServer?.refresh()
@@ -195,12 +208,15 @@ public class ProjectPageViewModel(
                     mutable.update { it.copy(changesCount = changes.value.size) }
             }
             if (run != generation) return@launch
+            if (!isCurrent(live, run)) return@launch
             when (page) {
                 is Outcome.Failed ->
                     mutable.update {
                         it.copy(phase = ProjectPagePhase.Failed, failure = page.failure)
                     }
                 is Outcome.Ok -> {
+                    opened.remember(route.profile, directory)
+                    if (!isCurrent(live, run)) return@launch
                     sessions = page.value.items
                     cursor = page.value.nextCursor
                     running =
@@ -212,6 +228,75 @@ public class ProjectPageViewModel(
                     publish(ProjectPagePhase.Ready)
                 }
             }
+        }
+    }
+
+    private fun isCurrent(live: ProjectServer, run: Int): Boolean =
+        run == generation &&
+            connections.servers.value.any {
+                it.profile == route.profile && it.gateway === live.gateway
+            }
+
+    private suspend fun checkStorage(live: ProjectServer, run: Int): Boolean {
+        val result = storageAccess.singleOrNull()?.check(route.profile, directory, live.gateway)
+        if (!isCurrent(live, run)) return false
+        return when (result) {
+            null -> true
+            is Outcome.Failed -> {
+                mutable.update {
+                    it.copy(
+                        phase = ProjectPagePhase.Failed,
+                        storageBlock = SharedStorageBlock.None,
+                        failure = result.failure,
+                        creating = false,
+                        loadingMore = false,
+                    )
+                }
+                false
+            }
+            is Outcome.Ok -> {
+                mutable.update { it.copy(storageBlock = result.value) }
+                if (result.value != SharedStorageBlock.None) {
+                    mutable.update {
+                        it.copy(
+                            phase = ProjectPagePhase.Failed,
+                            failure = null,
+                            creating = false,
+                            loadingMore = false,
+                        )
+                    }
+                    false
+                } else true
+            }
+        }
+    }
+
+    override fun onResume() {
+        // Re-check only a page still blocked by shared storage; a plain return from a chat or
+        // Files must not turn the page back into a skeleton (Flutter asks only on open).
+        val s = state.value
+        if (
+            s.storageBlock != SharedStorageBlock.None &&
+                !s.requestingStorage &&
+                s.phase != ProjectPagePhase.Opening
+        )
+            load()
+    }
+
+    override fun requestStorage() {
+        val access = storageAccess.singleOrNull() ?: return
+        val block = state.value.storageBlock
+        val live = server ?: return
+        val run = generation
+        if (block == SharedStorageBlock.None || state.value.requestingStorage) return
+        mutable.update { it.copy(requestingStorage = true) }
+        viewModelScope.launch {
+            val asked = access.request(route.profile, directory, block, live.gateway)
+            if (!isCurrent(live, run)) return@launch
+            mutable.update {
+                it.copy(requestingStorage = false, failure = (asked as? Outcome.Failed)?.failure)
+            }
+            if (asked is Outcome.Ok) load()
         }
     }
 
@@ -253,8 +338,9 @@ public class ProjectPageViewModel(
         val run = generation
         mutable.update { it.copy(loadingMore = true) }
         viewModelScope.launch {
+            if (!checkStorage(live, run)) return@launch
             val page = live.gateway.sessionPage(cursor = next)
-            if (run != generation) return@launch
+            if (!isCurrent(live, run)) return@launch
             when (page) {
                 is Outcome.Failed ->
                     mutable.update { it.copy(loadingMore = false, loadMoreFailure = page.failure) }
@@ -276,19 +362,23 @@ public class ProjectPageViewModel(
     override fun newConversationHere() {
         val live = server ?: return
         if (state.value.creating) return
+        val run = generation
         mutable.update { it.copy(creating = true, createFailure = null) }
         viewModelScope.launch {
+            if (!checkStorage(live, run)) return@launch
             // The project rides on the new session itself; the shared connection's location is
             // never moved.
             val made =
                 live.gateway.createSession(
                     NewSession(location = ServerLocation(directory = directory))
                 )
+            if (!isCurrent(live, run)) return@launch
             when (made) {
                 is Outcome.Failed ->
                     mutable.update { it.copy(creating = false, createFailure = made.failure) }
                 is Outcome.Ok -> {
                     opened.remember(live.profile, directory)
+                    if (!isCurrent(live, run)) return@launch
                     sessions = listOf(made.value) + sessions
                     mutable.update { it.copy(creating = false) }
                     publish(ProjectPagePhase.Ready)
@@ -537,8 +627,13 @@ public class ProjectPageViewModel(
 
     override fun openConversation(ref: ConversationRef): Unit = nav.openChat(ref)
 
-    override fun developmentServices(): Unit =
-        nav.open(LinuxRoute.Services(route.profile, directory))
+    override fun developmentServices() {
+        val live = server ?: return
+        val run = generation
+        viewModelScope.launch {
+            if (checkStorage(live, run)) nav.open(LinuxRoute.Services(route.profile, directory))
+        }
+    }
 
     override fun openWorkspace() = workspace.openWorkspace()
 

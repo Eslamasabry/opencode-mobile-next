@@ -7,6 +7,7 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.NetworkWhy
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -77,9 +78,9 @@ internal class GraphChatHeaderPort(
             override val waiting: StateFlow<List<PermissionRequest>> = waitingAsks.asStateFlow()
 
             override suspend fun allowOnce(id: RequestId): Outcome<Unit> {
-                val graph = bound ?: return offline()
-                val engine = (graph as ChatGraphAccessors).chatRequests.engine
-                return engine.answerNow(id, RequestAnswer.Permission(PermissionReply.Once))
+                val reviewed =
+                    waitingAsks.value.firstOrNull { it.id == id } ?: return Outcome.Ok(Unit)
+                return allowOnce(reviewed)
             }
 
             override suspend fun syncPermissions(): Outcome<Unit> {
@@ -89,6 +90,18 @@ internal class GraphChatHeaderPort(
                 val result = modes.syncSessionPermissions(sid)
                 return if (bound === graph && registry.graphFor(ref) === graph) result
                 else offline()
+            }
+
+            override suspend fun allowOnce(request: PermissionRequest): Outcome<Unit> {
+                val graph = bound ?: return offline()
+                if (registry.graphFor(ref) !== graph)
+                    return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+                val engine = (graph as ChatGraphAccessors).chatRequests.engine
+                return engine.answerNow(
+                    request.id,
+                    RequestAnswer.Permission(PermissionReply.Once),
+                    PendingRequest.Permission(request),
+                )
             }
 
             // Codex chat-header BLOCKER 2: sub-agent inheritance needs the real parent; an ask is

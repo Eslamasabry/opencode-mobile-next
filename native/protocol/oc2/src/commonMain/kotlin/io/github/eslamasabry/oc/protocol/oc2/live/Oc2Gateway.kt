@@ -52,6 +52,7 @@ internal class Oc2Gateway(
     CorrelatedPromptGateway,
     SessionSelectionGateway,
     StagedRevertGateway,
+    SessionReadStateGateway,
     LocatedFileGateway,
     LocatedVcsGateway,
     LocatedManagedShellGateway,
@@ -917,6 +918,15 @@ internal class Oc2Gateway(
             buildJsonObject { put("agent", agent) },
         )
 
+    override suspend fun viewSession(session: SessionId, idleMs: Long): Outcome<Unit> {
+        if (idleMs <= 0) return Failure.Refused(RefusalReason.StaleScope).failed()
+        return unit(
+            "/session/${sid(session)}/view",
+            HttpMethod.Post,
+            buildJsonObject { put("idle", idleMs) },
+        )
+    }
+
     override suspend fun renameSession(id: SessionId, title: String): Outcome<Unit> =
         unit("/session/${sid(id)}/rename", HttpMethod.Post, buildJsonObject { put("title", title) })
 
@@ -1376,6 +1386,58 @@ internal class Oc2Gateway(
                 )
                 if (message != null && reply == PermissionReply.Reject) put("message", message)
             },
+        )
+
+    override suspend fun pendingForms(): Outcome<ImmutableList<FormSpec>> =
+        read("/form/request", query = locationQuery(), decode = ::decodeForms)
+
+    override suspend fun sessionForms(session: SessionId): Outcome<ImmutableList<FormSpec>> =
+        read("/session/${sid(session)}/form", decode = ::decodeForms)
+
+    /** Decode through the same projection as live form events, so schema identities agree. */
+    private fun decodeForms(root: JsonElement): ImmutableList<FormSpec>? {
+        val rows = data(root) as? JsonArray ?: return null
+        val projection = Oc2CoreProjection(redactor::details)
+        return rows
+            .map { value ->
+                val wire = (value as? JsonObject)?.let { Oc2FormInfo.fromJson(it) } ?: return null
+                if (wire.id.isBlank() || wire.sessionID.isBlank()) return null
+                (projection.toCore(Oc2Adapted.FormCreated(wire)) as GatewayEvent.FormCreated).form
+            }
+            .toImmutableList()
+    }
+
+    override suspend fun formState(session: SessionId, form: FormId): Outcome<FormState> =
+        read("/session/${sid(session)}/form/${form.raw.encodeURLPathPart()}/state") { root ->
+            val raw = data(root) as? JsonObject ?: return@read null
+            val wire = Oc2FormState.fromJson(raw)
+            FormState(
+                status =
+                    when (wire.status) {
+                        Oc2FormStatus.Pending -> FormStatus.Pending
+                        Oc2FormStatus.Answered -> FormStatus.Answered
+                        Oc2FormStatus.Cancelled -> FormStatus.Cancelled
+                        Oc2FormStatus.Unknown -> FormStatus.Unknown
+                    },
+                answer = wire.answer,
+            )
+        }
+
+    override suspend fun replyForm(
+        session: SessionId,
+        form: FormId,
+        answer: FormAnswer,
+    ): Outcome<Unit> =
+        unit(
+            "/session/${sid(session)}/form/${form.raw.encodeURLPathPart()}/reply",
+            HttpMethod.Post,
+            buildJsonObject { put("answer", JsonObject(answer.values)) },
+        )
+
+    override suspend fun cancelForm(session: SessionId, form: FormId): Outcome<Unit> =
+        unit(
+            "/session/${sid(session)}/form/${form.raw.encodeURLPathPart()}/cancel",
+            HttpMethod.Post,
         )
 
     /**
@@ -1979,7 +2041,7 @@ internal class Oc2Gateway(
                 worktreeBrowsing = false,
                 worktreeInspection = true,
                 legacyQuestionRequests = false,
-                forms = false,
+                forms = true,
                 inbox = true,
                 cliSessionResume =
                     true, // Flutter api2: opencode2 --session resumes by id (P12-BUILD-AGENTS)

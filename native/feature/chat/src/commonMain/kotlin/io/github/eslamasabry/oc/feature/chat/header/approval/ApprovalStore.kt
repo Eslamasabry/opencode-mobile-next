@@ -113,6 +113,8 @@ public interface ApprovalPort {
      * Applies a saved choice to tools that may already be running; server policies are read back.
      */
     public suspend fun syncPermissions(): Outcome<Unit> = Outcome.Ok(Unit)
+    /** Carries the exact ask the policy reviewed across any parent lookup or transport await. */
+    public suspend fun allowOnce(request: PermissionRequest): Outcome<Unit> = allowOnce(request.id)
 
     /** The session's parent, when the connection knows it (sub-agent inheritance). */
     public fun parentOf(session: SessionId): SessionId? = null

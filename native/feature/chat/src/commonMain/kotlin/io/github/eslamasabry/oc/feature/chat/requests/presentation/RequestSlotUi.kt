@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.feature.chat.requests.presentation
 
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.model.PendingQuestion
+import io.github.eslamasabry.oc.engine.requests.PendingRequest
 import io.github.eslamasabry.oc.engine.requests.ask.AlwaysGrant
 import io.github.eslamasabry.oc.engine.requests.ask.AskView
 import io.github.eslamasabry.oc.engine.requests.questions.PromptDraft
@@ -28,6 +29,10 @@ public sealed interface RequestCardUi {
     public val id: RequestId
     public val waitingSinceMs: Long?
     public val state: CardState
+    /**
+     * Immutable contents of the request this frame displayed; absent only in hand-built previews.
+     */
+    public val captured: PendingRequest?
 
     /**
      * A permission ask. [ask] is the engine's wording data; [canAlwaysAllow] gates the quiet Always
@@ -40,6 +45,7 @@ public sealed interface RequestCardUi {
         override val state: CardState,
         val ask: AskView,
         val canAlwaysAllow: Boolean,
+        override val captured: PendingRequest.Permission? = null,
     ) : RequestCardUi
 
     /**
@@ -57,6 +63,7 @@ public sealed interface RequestCardUi {
         val oneAnswer: Boolean,
         val custom: Boolean,
         val other: OtherAnswerUi? = null,
+        override val captured: PendingRequest.Question? = null,
     ) : RequestCardUi
 }
 
@@ -104,7 +111,11 @@ public sealed interface AnswerWords {
  * null = "these requests") and where (this project). Cancel, a dismissal or an answer that landed
  * meanwhile sends nothing.
  */
-public data class AlwaysConfirmUi(val id: RequestId, val grant: AlwaysGrant?)
+public data class AlwaysConfirmUi(
+    val id: RequestId,
+    val grant: AlwaysGrant?,
+    val captured: PendingRequest.Permission? = null,
+)
 
 /**
  * The current request sheet and its retained per-request answers; disappearing or answered requests

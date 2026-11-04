@@ -236,6 +236,8 @@ public fun ChatScreen(
     demoMode: Boolean = false,
     appStatus: KitStatus? = null,
     replyOffer: (@Composable () -> Unit)? = null,
+    formWaiting: Boolean = false,
+    formSlot: (@Composable (Modifier) -> Unit)? = null,
 ) {
     var contextOpen by remember { mutableStateOf(false) }
     var tasksOpen by remember(state.ref) { mutableStateOf(false) }
@@ -243,6 +245,7 @@ public fun ChatScreen(
     val currentStartActions by rememberUpdatedState(startActions)
     KitBackGuard(enabled = state.guardBack, onBack = actions::leaveRequested)
     val requestState by rememberUpdatedState(requests)
+    val formPending by rememberUpdatedState(formWaiting)
     val headerState by rememberUpdatedState(header)
     val words = rememberChatWords()
     val listWords =
@@ -302,7 +305,7 @@ public fun ChatScreen(
         remember(actions, prompts) {
             ComposerChrome(
                 busy = { latest.live != null },
-                requestWaiting = { requestState.card != null },
+                requestWaiting = { requestState.card != null || formPending },
                 onSent = { list.following = true },
                 // "Edit and resend" (P12-CHAT-FEEL) first, then saved prompts and slash commands
                 // (P12-PROMPTS); each
@@ -478,6 +481,8 @@ public fun ChatScreen(
                                     nowMs = null,
                                     modifier = Modifier.padding(horizontal = Space.S4.dp),
                                 )
+                            if (requests.card == null)
+                                formSlot?.invoke(Modifier.padding(horizontal = Space.S4.dp))
                             composerHost.Composer(
                                 ComposerTarget(state.ref.profileId.raw, state.ref.sessionId.raw),
                                 chrome,

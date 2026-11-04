@@ -22,6 +22,7 @@ import io.github.eslamasabry.oc.core.model.PromptAttachment
 import io.github.eslamasabry.oc.core.model.ServerLocation
 import io.github.eslamasabry.oc.core.model.VersionControlFile
 import io.github.eslamasabry.oc.core.model.WorkspaceSymbol
+import io.github.eslamasabry.oc.core.domain.platform.SharedStorageAccess
 import io.github.eslamasabry.oc.engine.composer.drafts.ConversationDrafts
 import io.github.eslamasabry.oc.engine.composer.input.Mentions
 import io.github.eslamasabry.oc.engine.composer.vault.AttachmentVault
@@ -57,6 +58,8 @@ public interface FilesGraphAccessors {
 /** Platform halves; an empty set hides the action (desktop has none of them today). */
 @ContributesTo(AppScope::class)
 public interface FilesPlatformBindings {
+    @Multibinds(allowEmpty = true) public val sharedStorageAccess: Set<SharedStorageAccess>
+
     @Multibinds(allowEmpty = true) public val shareHosts: Set<ShareHost>
 
     @Multibinds(allowEmpty = true) public val fileHandoffs: Set<FileHandoff>
@@ -179,6 +182,8 @@ public class GraphFilesConnections(private val registry: ConnectionRegistry) : F
 
     private fun unavailable(feature: String): Outcome.Failed =
         Outcome.Failed(Failure.Unavailable(FeatureId(feature)))
+
+    override fun sourceIdentity(ref: ConversationRef): Any? = registry.graphFor(ref)
 
     override suspend fun directory(ref: ConversationRef): String? {
         val gateway = live(ref) ?: return null

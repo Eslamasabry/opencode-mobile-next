@@ -4,6 +4,7 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
+import io.github.eslamasabry.oc.core.model.PendingQuestion
 import io.github.eslamasabry.oc.core.model.PermissionReply
 import io.github.eslamasabry.oc.engine.requests.AnswerPhase
 import io.github.eslamasabry.oc.engine.requests.PendingRequest
@@ -24,7 +25,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -34,6 +34,16 @@ import kotlinx.coroutines.launch
  * from it.
  */
 public data class RequestPlace(val project: String? = null, val directory: String? = null)
+
+/**
+ * A same-id, same-text question asked again is still a new request and gets no earlier typed draft.
+ */
+private class QuestionDraftKey(val question: PendingQuestion) {
+    override fun equals(other: Any?): Boolean =
+        other is QuestionDraftKey && question === other.question
+
+    override fun hashCode(): Int = question.hashCode()
+}
 
 /**
  * The chat's request slot (plan 09 §5.1, §6.4): the ChatViewModel owns one per open conversation
@@ -48,13 +58,13 @@ public class ChatRequestsModel(
     private val capabilities: StateFlow<ServerCapabilities>,
     private val place: StateFlow<RequestPlace>,
     private val scope: CoroutineScope,
-) : ChatRequestActions, QuestionSheetActions {
+) : ChatRequestActions {
     private data class Local(
-        val confirm: RequestId? = null,
-        val otherOpen: RequestId? = null,
-        val drafts: PersistentMap<RequestId, String> = persistentMapOf(),
-        val sheet: RequestId? = null,
-        val questionDrafts: Map<RequestId, ImmutableList<PromptDraft>> = emptyMap(),
+        val confirm: PendingRequest.Permission? = null,
+        val otherOpen: PendingRequest.Question? = null,
+        val drafts: PersistentMap<QuestionDraftKey, String> = persistentMapOf(),
+        val sheet: PendingRequest.Question? = null,
+        val questionDrafts: Map<QuestionDraftKey, ImmutableList<PromptDraft>> = emptyMap(),
     )
 
     private val local = MutableStateFlow(Local())
@@ -70,11 +80,21 @@ public class ChatRequestsModel(
             .stateIn(scope, SharingStarted.Eagerly, current())
 
     /**
-     * The request whose sheet the person asked for; [state] carries its current questions and draft
-     * answers.
+     * The request whose sheet the person asked for (a longer question); the sheet is S3-REQFORMS.
      */
     public val sheetFor: StateFlow<RequestId?> =
-        local.map { it.sheet }.stateIn(scope, SharingStarted.Eagerly, null)
+        combine(local, engine.pending) { mine, requests ->
+                mine.sheet
+                    ?.takeIf { reviewed ->
+                        requests.any {
+                            it is PendingRequest.Question &&
+                                it.question === reviewed.question &&
+                                it.phase == AnswerPhase.Waiting
+                        }
+                    }
+                    ?.id
+            }
+            .stateIn(scope, SharingStarted.Eagerly, null)
 
     /** Leaving the chat sends its held answers now (plan 09 §5.1). */
     public suspend fun leave() {
@@ -86,30 +106,32 @@ public class ChatRequestsModel(
     }
 
     override fun allowOnce(id: RequestId) {
-        permissionCard(id)?.let {
-            engine.answer(id, RequestAnswer.Permission(PermissionReply.Once))
-        }
+        permissionCard(id)?.let { performReviewed(it, ReviewedRequestAction.AllowOnce) }
     }
 
     override fun reject(id: RequestId) {
-        permissionCard(id)?.let {
-            engine.answer(id, RequestAnswer.Permission(PermissionReply.Reject))
-        }
+        permissionCard(id)?.let { performReviewed(it, ReviewedRequestAction.Reject) }
     }
 
     override fun askAlwaysAllow(id: RequestId) {
-        val card = permissionCard(id) ?: return
-        if (card.canAlwaysAllow && card.state == CardState.Waiting)
-            local.update { it.copy(confirm = id) }
+        permissionCard(id)?.let { performReviewed(it, ReviewedRequestAction.AskAlways) }
     }
 
     override fun confirmAlwaysAllow() {
-        // Read before closing: an answer that landed meanwhile, or a request that left, closed the
-        // confirm already.
-        val confirm = current().confirmAlways
+        current().confirmAlways?.let(::confirmAlwaysReviewed)
+    }
+
+    override fun confirmAlwaysReviewed(confirm: AlwaysConfirmUi) {
+        val reviewed = confirm.captured ?: return
+        val current = current().confirmAlways?.captured ?: return
+        if (
+            reviewed.id != confirm.id ||
+                current.request !== reviewed.request ||
+                !engine.isCurrent(reviewed)
+        )
+            return
         local.update { it.copy(confirm = null) }
-        if (confirm != null)
-            engine.answer(confirm.id, RequestAnswer.Permission(PermissionReply.Always))
+        engine.answer(reviewed.id, RequestAnswer.Permission(PermissionReply.Always), reviewed)
     }
 
     override fun cancelAlwaysAllow() {
@@ -117,33 +139,27 @@ public class ChatRequestsModel(
     }
 
     override fun choose(id: RequestId, option: String) {
-        val card = questionCard(id) ?: return
-        if (card.oneAnswer && option in card.options)
-            engine.answer(id, RequestAnswer.Question(single(option)))
+        questionCard(id)?.let { performReviewed(it, ReviewedRequestAction.Choose(option)) }
     }
 
     override fun openOther(id: RequestId) {
-        val card = questionCard(id) ?: return
-        if (card.oneAnswer && card.custom) local.update { it.copy(otherOpen = id) }
+        questionCard(id)?.let { performReviewed(it, ReviewedRequestAction.OpenOther) }
     }
 
     override fun editOther(id: RequestId, text: String) {
-        if (questionCard(id)?.other != null)
-            local.update { it.copy(drafts = it.drafts.putting(id, text)) }
+        questionCard(id)?.let { performReviewed(it, ReviewedRequestAction.EditOther(text)) }
     }
 
     override fun sendOther(id: RequestId) {
-        val other = questionCard(id)?.other ?: return
-        if (other.canSend) engine.answer(id, RequestAnswer.Question(single(other.text.trim())))
+        questionCard(id)?.let { performReviewed(it, ReviewedRequestAction.SendOther) }
     }
 
     override fun openSheet(id: RequestId) {
-        val card = questionCard(id) ?: return
-        local.update { it.copy(sheet = card.id) }
+        questionCard(id)?.let { performReviewed(it, ReviewedRequestAction.OpenSheet) }
     }
 
     override fun closeSheet(id: RequestId) {
-        local.update { if (it.sheet == id) it.copy(sheet = null) else it }
+        local.update { if (it.sheet?.id == id) it.copy(sheet = null) else it }
     }
 
     override fun chooseInSheet(id: RequestId, prompt: Int, label: String) {
@@ -160,12 +176,14 @@ public class ChatRequestsModel(
         }
     }
 
+    /** Sheet edits land only on the exact question incarnation the person opened. */
     private fun updateSheet(
         id: RequestId,
         prompt: Int,
         edit: (io.github.eslamasabry.oc.core.model.QuestionPrompt, PromptDraft) -> PromptDraft,
     ) {
-        val sheet = current().sheet?.takeIf { it.question.id == id } ?: return
+        val reviewed = local.value.sheet?.takeIf { it.id == id && engine.isCurrent(it) } ?: return
+        val sheet = current().sheet?.takeIf { it.question === reviewed.question } ?: return
         val question = sheet.question.prompts.getOrNull(prompt) ?: return
         val changed =
             sheet.drafts
@@ -173,70 +191,138 @@ public class ChatRequestsModel(
                     if (index == prompt) edit(question, draft) else draft
                 }
                 .toImmutableList()
-        local.update { it.copy(questionDrafts = it.questionDrafts + (id to changed)) }
+        local.update {
+            it.copy(questionDrafts = it.questionDrafts + (QuestionDraftKey(reviewed.question) to changed))
+        }
     }
 
     override fun sendSheet(id: RequestId) {
-        val sheet = current().sheet?.takeIf { it.question.id == id } ?: return
+        val reviewed = local.value.sheet?.takeIf { it.id == id && engine.isCurrent(it) } ?: return
+        val sheet = current().sheet?.takeIf { it.question === reviewed.question } ?: return
         val answers = QuestionSheet.answers(sheet.question, sheet.drafts) ?: return
-        if (engine.answer(id, RequestAnswer.Question(answers)) is Outcome.Ok) {
+        if (engine.answer(id, RequestAnswer.Question(answers), reviewed) is Outcome.Ok) {
             local.update { it.copy(sheet = null) }
         }
-    }
-
-    private fun sheetRequest(id: RequestId): PendingRequest.Question? =
-        (engine.pending.value.firstOrNull { it.id == id && it.sessionId == session }
-                as? PendingRequest.Question)
-            ?.takeIf {
-                current().questionSheet?.question?.id == id && it.phase == AnswerPhase.Waiting
-            }
-
-    override fun chooseSheet(id: RequestId, prompt: Int, label: String) {
-        val question = sheetRequest(id)?.question ?: return
-        val spec = question.prompts.getOrNull(prompt) ?: return
-        if (spec.choices.none { it.label == label }) return
-        local.update { mine ->
-            val drafts =
-                (mine.sheetDrafts[id] ?: QuestionSheet.emptyDraft(question)).toMutableList()
-            sized(drafts, question.prompts.size)
-            drafts[prompt] = QuestionSheet.choose(spec, drafts[prompt], label)
-            mine.copy(sheetDrafts = mine.sheetDrafts.put(id, drafts.toImmutableList()))
-        }
-    }
-
-    override fun writeSheet(id: RequestId, prompt: Int, text: String) {
-        val question = sheetRequest(id)?.question ?: return
-        val spec = question.prompts.getOrNull(prompt)?.takeIf { it.custom } ?: return
-        local.update { mine ->
-            val drafts =
-                (mine.sheetDrafts[id] ?: QuestionSheet.emptyDraft(question)).toMutableList()
-            sized(drafts, question.prompts.size)
-            drafts[prompt] = QuestionSheet.write(spec, drafts[prompt], text)
-            mine.copy(sheetDrafts = mine.sheetDrafts.put(id, drafts.toImmutableList()))
-        }
-    }
-
-    override fun sendSheet(id: RequestId) {
-        val question = sheetRequest(id)?.question ?: return
-        val drafts = local.value.sheetDrafts[id] ?: QuestionSheet.emptyDraft(question)
-        val answers = QuestionSheet.answers(question, drafts) ?: return
-        // The engine's own check is stricter (no repeated values): the sheet stays open, with the
-        // person's words, unless the answer was taken.
-        if (engine.answer(id, RequestAnswer.Question(answers)) is Outcome.Ok)
-            local.update { it.copy(sheet = null) }
-    }
-
-    override fun closeSheet() {
-        local.update { it.copy(sheet = null) }
     }
 
     override fun undo(id: RequestId) {
-        if (current().card?.id == id) engine.undo(id)
+        current()
+            .card
+            ?.takeIf { it.id == id }
+            ?.let { performReviewed(it, ReviewedRequestAction.Undo) }
     }
 
     override fun retry(id: RequestId) {
-        if (current().card?.state !is CardState.NotAccepted || current().card?.id != id) return
-        scope.launch { engine.retry(id) }
+        current()
+            .card
+            ?.takeIf { it.id == id }
+            ?.let { performReviewed(it, ReviewedRequestAction.Retry) }
+    }
+
+    /**
+     * The rendered card is the consent boundary; equality with a newer card's wire id alone never
+     * admits a reply.
+     */
+    override fun performReviewed(card: RequestCardUi, action: ReviewedRequestAction) {
+        val reviewed = card.captured ?: return
+        val currentCard = current().card ?: return
+        if (
+            reviewed.id != card.id ||
+                reviewed.sessionId != session ||
+                !engine.isCurrent(reviewed) ||
+                currentCard.id != card.id
+        )
+            return
+        when (action) {
+            ReviewedRequestAction.Undo -> if (currentCard.state !is CardState.Held) return
+            ReviewedRequestAction.Retry ->
+                if (currentCard.state !is CardState.NotAccepted || currentCard.state != card.state)
+                    return
+            else -> if (currentCard.state != CardState.Waiting) return
+        }
+        when (action) {
+            ReviewedRequestAction.AllowOnce ->
+                if (reviewed is PendingRequest.Permission && card.state == CardState.Waiting) {
+                    engine.answer(
+                        reviewed.id,
+                        RequestAnswer.Permission(PermissionReply.Once),
+                        reviewed,
+                    )
+                }
+            ReviewedRequestAction.Reject ->
+                if (reviewed is PendingRequest.Permission && card.state == CardState.Waiting) {
+                    engine.answer(
+                        reviewed.id,
+                        RequestAnswer.Permission(PermissionReply.Reject),
+                        reviewed,
+                    )
+                }
+            ReviewedRequestAction.AskAlways ->
+                if (
+                    reviewed is PendingRequest.Permission &&
+                        card is RequestCardUi.Permission &&
+                        card.canAlwaysAllow &&
+                        card.state == CardState.Waiting
+                ) {
+                    local.update { it.copy(confirm = reviewed) }
+                }
+            is ReviewedRequestAction.Choose ->
+                if (
+                    reviewed is PendingRequest.Question &&
+                        card is RequestCardUi.Question &&
+                        card.state == CardState.Waiting &&
+                        card.oneAnswer &&
+                        action.option in card.options
+                ) {
+                    engine.answer(
+                        reviewed.id,
+                        RequestAnswer.Question(single(action.option)),
+                        reviewed,
+                    )
+                }
+            ReviewedRequestAction.OpenOther ->
+                if (
+                    reviewed is PendingRequest.Question &&
+                        card is RequestCardUi.Question &&
+                        card.state == CardState.Waiting &&
+                        card.oneAnswer &&
+                        card.custom
+                ) {
+                    local.update { it.copy(otherOpen = reviewed) }
+                }
+            is ReviewedRequestAction.EditOther ->
+                if (reviewed is PendingRequest.Question && questionCard(card.id)?.other != null) {
+                    local.update {
+                        it.copy(
+                            drafts =
+                                it.drafts.putting(QuestionDraftKey(reviewed.question), action.text)
+                        )
+                    }
+                }
+            ReviewedRequestAction.SendOther ->
+                if (reviewed is PendingRequest.Question) {
+                    val other = questionCard(card.id)?.other
+                    if (other?.canSend == true)
+                        engine.answer(
+                            reviewed.id,
+                            RequestAnswer.Question(single(other.text.trim())),
+                            reviewed,
+                        )
+                }
+            ReviewedRequestAction.OpenSheet ->
+                if (
+                    reviewed is PendingRequest.Question &&
+                        card is RequestCardUi.Question &&
+                        !card.oneAnswer &&
+                        card.state == CardState.Waiting
+                ) {
+                    local.update { it.copy(sheet = reviewed) }
+                }
+            ReviewedRequestAction.Undo -> engine.undo(reviewed.id, reviewed)
+            ReviewedRequestAction.Retry ->
+                if (card.state is CardState.NotAccepted)
+                    scope.launch { engine.retry(reviewed.id, reviewed) }
+        }
     }
 
     /** The slot as of now (actions decide on this, never on a frame that may be behind). */
@@ -279,6 +365,7 @@ public class ChatRequestsModel(
                             ),
                         canAlwaysAllow =
                             caps.persistentPermissionGrants && request.request.canAlwaysAllow,
+                        captured = request.copy(phase = AnswerPhase.Waiting),
                     )
                 is PendingRequest.Question -> {
                     val prompt = request.question.prompts.firstOrNull()
@@ -300,24 +387,30 @@ public class ChatRequestsModel(
                         oneAnswer = oneAnswer,
                         custom = custom,
                         other =
-                            if (custom && mine.otherOpen == request.id)
-                                OtherAnswerUi(mine.drafts[request.id].orEmpty())
+                            if (custom && mine.otherOpen?.question === request.question)
+                                OtherAnswerUi(
+                                    mine.drafts[QuestionDraftKey(request.question)].orEmpty()
+                                )
                             else null,
+                        captured = request.copy(phase = AnswerPhase.Waiting),
                     )
                 }
             }
         val confirm =
             (card as? RequestCardUi.Permission)
                 ?.takeIf {
-                    mine.confirm == it.id && it.canAlwaysAllow && it.state == CardState.Waiting
+                    mine.confirm?.request === it.captured?.request &&
+                        mine.confirm != null &&
+                        it.canAlwaysAllow &&
+                        it.state == CardState.Waiting
                 }
-                ?.let { AlwaysConfirmUi(it.id, it.ask.always) }
+                ?.let { AlwaysConfirmUi(it.id, it.ask.always, it.captured) }
         val sheet =
             (request as? PendingRequest.Question)
-                ?.takeIf { mine.sheet == it.id && state == CardState.Waiting }
+                ?.takeIf { mine.sheet?.question === it.question && state == CardState.Waiting }
                 ?.let {
                     val drafts =
-                        mine.questionDrafts[it.id]?.takeIf { drafts ->
+                        mine.questionDrafts[QuestionDraftKey(it.question)]?.takeIf { drafts ->
                             drafts.size == it.question.prompts.size
                         } ?: QuestionSheet.emptyDraft(it.question)
                     QuestionSheetUi(

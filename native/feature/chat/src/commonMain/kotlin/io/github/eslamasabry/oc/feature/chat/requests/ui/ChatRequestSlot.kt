@@ -17,13 +17,13 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.CardState
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestActions
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.QuestionSheetUi
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestCardUi
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi
+import io.github.eslamasabry.oc.feature.chat.requests.presentation.ReviewedRequestAction
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitAction
@@ -83,7 +83,7 @@ public fun ChatRequestSlot(
     modifier: Modifier = Modifier,
 ) {
     val card = state.card ?: return
-    key(card.id) {
+    key(card.id, card.captured) {
         LaunchedEffect(card.id) { actions.shown(card.id) }
         Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
             when (val phase = card.state) {
@@ -100,14 +100,14 @@ public fun ChatRequestSlot(
                             QuestionWaiting(card, state.moreWaiting, actions)
                     }
                 }
-                is CardState.Held -> HeldLine(card.id, answerWords(phase.words), actions)
+                is CardState.Held -> HeldLine(card, answerWords(phase.words), actions)
                 is CardState.Sending ->
                     AnsweredLine(answerWords(phase.words), KitReceiptState.Sending, null)
                 is CardState.Sent ->
                     AnsweredLine(answerWords(phase.words), KitReceiptState.Sent, null)
                 is CardState.NotAccepted ->
                     AnsweredLine(answerWords(phase.words), KitReceiptState.Refused(null)) {
-                        actions.retry(card.id)
+                        actions.performReviewed(card, ReviewedRequestAction.Retry)
                     }
             }
         }
@@ -124,7 +124,7 @@ public fun ChatRequestSlot(
                     cancelLabel = stringResource(Res.string.kitConfirmCancel),
                 )
             },
-        onConfirm = actions::confirmAlwaysAllow,
+        onConfirm = { confirm?.let(actions::confirmAlwaysReviewed) },
         onCancel = actions::cancelAlwaysAllow,
     )
 }
@@ -153,9 +153,12 @@ private fun PermissionWaiting(
         allowOnceLabel = stringResource(Res.string.kitRequestAllowOnce),
         alwaysLabel = if (card.canAlwaysAllow) alwaysLabel(card.ask.always) else null,
         denyLabel = stringResource(Res.string.kitRequestReject),
-        onAllowOnce = { actions.allowOnce(card.id) },
-        onAlways = if (card.canAlwaysAllow) ({ actions.askAlwaysAllow(card.id) }) else null,
-        onDeny = { actions.reject(card.id) },
+        onAllowOnce = { actions.performReviewed(card, ReviewedRequestAction.AllowOnce) },
+        onAlways =
+            if (card.canAlwaysAllow)
+                ({ actions.performReviewed(card, ReviewedRequestAction.AskAlways) })
+            else null,
+        onDeny = { actions.performReviewed(card, ReviewedRequestAction.Reject) },
     )
 }
 
@@ -170,9 +173,9 @@ private fun QuestionWaiting(
         question = card.question,
         summary = waitsLine(moreWaiting),
         choices = card.options,
-        onChoose = { actions.choose(card.id, it) },
+        onChoose = { actions.performReviewed(card, ReviewedRequestAction.Choose(it)) },
         answerLabel = stringResource(Res.string.kitRequestAnswer),
-        onDetails = { actions.openSheet(card.id) },
+        onDetails = { actions.performReviewed(card, ReviewedRequestAction.OpenSheet) },
         inPlace = card.oneAnswer,
         other =
             if (!card.custom) null
@@ -182,9 +185,9 @@ private fun QuestionWaiting(
                     KitChoiceRow(
                         title = stringResource(Res.string.chatRequestOtherAnswer),
                         selected = other != null,
-                        onClick = { actions.openOther(card.id) },
+                        onClick = { actions.performReviewed(card, ReviewedRequestAction.OpenOther) },
                     )
-                    if (other != null) OtherField(card.id, other.text, other.canSend, actions)
+                    if (other != null) OtherField(card, other.text, other.canSend, actions)
                 }),
     )
 }
@@ -256,19 +259,25 @@ private fun QuestionSheet(state: QuestionSheetUi, actions: ChatRequestActions) {
 
 /** "Something else": the typed answer is kept as the request's draft by the model. */
 @Composable
-private fun OtherField(id: RequestId, text: String, canSend: Boolean, actions: ChatRequestActions) {
+private fun OtherField(
+    card: RequestCardUi.Question,
+    text: String,
+    canSend: Boolean,
+    actions: ChatRequestActions,
+) {
     val field = rememberTextFieldState(text)
-    LaunchedEffect(id) {
-        snapshotFlow { field.text.toString() }.collect { actions.editOther(id, it) }
+    LaunchedEffect(card.captured) {
+        snapshotFlow { field.text.toString() }
+            .collect { actions.performReviewed(card, ReviewedRequestAction.EditOther(it)) }
     }
     KitField(
         field,
         label = stringResource(Res.string.chatRequestOtherField),
-        onSubmit = { actions.sendOther(id) },
+        onSubmit = { actions.performReviewed(card, ReviewedRequestAction.SendOther) },
     )
     KitButton(
         stringResource(Res.string.kitRequestSend),
-        onClick = { actions.sendOther(id) },
+        onClick = { actions.performReviewed(card, ReviewedRequestAction.SendOther) },
         enabled =
             if (canSend) KitEnabled.Enabled
             else KitEnabled.Disabled(stringResource(Res.string.kitRequestReplyEmptyReason)),
@@ -277,7 +286,7 @@ private fun OtherField(id: RequestId, text: String, canSend: Boolean, actions: C
 
 /** Inside the hold: "Allowed · Undo" (plan 08 `HELD_ANSWER`). */
 @Composable
-private fun HeldLine(id: RequestId, words: String, actions: ChatRequestActions) {
+private fun HeldLine(card: RequestCardUi, words: String, actions: ChatRequestActions) {
     Row(
         Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite },
         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
@@ -286,7 +295,7 @@ private fun HeldLine(id: RequestId, words: String, actions: ChatRequestActions) 
         KitText(words, Modifier.weight(1f), role = TypeRole.Body, kind = KitTextKind.Frame)
         KitButton(
             stringResource(Res.string.chatStopAfterStepUndo),
-            onClick = { actions.undo(id) },
+            onClick = { actions.performReviewed(card, ReviewedRequestAction.Undo) },
             role = KitButtonRole.Tertiary,
         )
     }

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="connectionCheckAction">Check connection</string>
+    <string name="connectionCheckTitle">Connection check</string>
+    <string name="connectionCheckAgain">Check again</string>
+    <string name="connectionCheckAddress">Address</string>
+    <string name="connectionCheckSignIn">Sign-in</string>
+    <string name="connectionCheckVersion">Server version</string>
+    <string name="connectionCheckLive">Live updates</string>
+    <string name="connectionCheckSpeed">Response time</string>
+    <string name="connectionCheckWaiting">Waiting</string>
+    <string name="connectionCheckRunning">Checking…</string>
+    <string name="connectionCheckPassed">Passed</string>
+    <string name="connectionCheckVersionValue">Version %1$s</string>
+    <string name="connectionCheckMillis">%1$s ms</string>
+    <string name="connectionCheckUnreachable">Could not reach the server. Check the address and that the server is running.</string>
+    <string name="connectionCheckNotServer">This address did not answer as a supported server. Check the address.</string>
+    <string name="connectionCheckNeedsPassword">Enter the saved server’s password or token again, then retry.</string>
+    <string name="connectionCheckPasswordRejected">The server refused the saved sign-in. Update the password or token.</string>
+    <string name="connectionCheckUnsupported">This server version is not supported. Update the server.</string>
+    <string name="connectionCheckNotReady">The server answered but is not ready. Wait a moment and check again.</string>
+    <string name="connectionCheckStreamUnchecked">Connect this server to check live updates.</string>
+    <string name="connectionCheckStreamConnecting">The live connection is still reconnecting. Check again shortly.</string>
+    <string name="connectionCheckStreamDown">The existing live connection is down. Reconnect this server.</string>
+    <string name="connectionCheckSlow">%1$s ms — the server is responding slowly. Check the network or server load.</string>
+    <string name="connectionCheckSkipped">Not checked because an earlier step needs attention.</string>
+    <string name="connectionCheckTrust">Review this server’s connection trust before checking again.</string>
+    <string name="connectionCheckChanged">The saved server changed. Close this check and open it again.</string>
+</resources>

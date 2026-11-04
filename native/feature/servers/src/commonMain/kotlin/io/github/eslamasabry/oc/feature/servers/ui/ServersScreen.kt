@@ -66,6 +66,7 @@ import io.github.eslamasabry.oc.ui.words.res.e7SettingsDisconnectTitle
 import io.github.eslamasabry.oc.ui.words.res.e7SetupNoServerAnswer
 import io.github.eslamasabry.oc.ui.words.res.e7SetupPairAddressUnusable
 import io.github.eslamasabry.oc.ui.words.res.e7SetupPairTestFailed
+import io.github.eslamasabry.oc.ui.words.res.connectionCheckAction
 import io.github.eslamasabry.oc.ui.words.res.e7SetupPairingInstructions
 import io.github.eslamasabry.oc.ui.words.res.e7SetupRefused
 import io.github.eslamasabry.oc.ui.words.res.e7SetupTimeout
@@ -140,6 +141,9 @@ import io.github.eslamasabry.oc.ui.words.res.stateDemoTryOffline
 import io.github.eslamasabry.oc.ui.words.res.stateServerSchedules
 import io.github.eslamasabry.oc.ui.words.res.stateSetupTitle
 import io.github.eslamasabry.oc.ui.words.res.tailscaleTitle
+import io.github.eslamasabry.oc.ui.words.res.stateShareViewedDetail
+import io.github.eslamasabry.oc.ui.words.res.stateShareViewedSaving
+import io.github.eslamasabry.oc.ui.words.res.stateShareViewedTitle
 import io.github.eslamasabry.oc.ui.words.res.usageTabPlans
 import io.github.eslamasabry.oc.ui.words.res.usageTitle
 import kotlinx.coroutines.flow.drop
@@ -229,6 +233,7 @@ public fun ServersScreen(
         address.edit { replace(0, length, reviewed) }
         actions.allowCleartext(false, reviewed)
     }
+    ConnectionCheckSheet(state.connectionCheck, actions)
     val enabled =
         if (state.busy) KitEnabled.Disabled(stringResource(Res.string.serversWorking))
         else KitEnabled.Enabled
@@ -342,6 +347,14 @@ public fun ServersScreen(
                     }
                     if (server.connected) KitText(stringResource(Res.string.serversConnected))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+                        if (state.connectionCheckAvailable) {
+                            KitButton(
+                                stringResource(Res.string.connectionCheckAction),
+                                { actions.checkConnection(server.id) },
+                                role = KitButtonRole.Secondary,
+                                enabled = enabled,
+                            )
+                        }
                         KitButton(
                             stringResource(Res.string.secImportedSignInsTitle),
                             { actions.reviewImportedSignIns(server.id) },
@@ -437,6 +450,22 @@ public fun ServersScreen(
                             enabled = enabled,
                         )
                     }
+                    state.readSharing[server.id]
+                        ?.takeIf { it.available }
+                        ?.let { sharing ->
+                            KitSwitchRow(
+                                title = stringResource(Res.string.stateShareViewedTitle),
+                                supporting = stringResource(Res.string.stateShareViewedDetail),
+                                checked = sharing.enabled,
+                                enabled =
+                                    if (sharing.saving)
+                                        KitEnabled.Disabled(
+                                            stringResource(Res.string.stateShareViewedSaving)
+                                        )
+                                    else enabled,
+                                onCheckedChange = { actions.setReadSharing(server.id, it) },
+                            )
+                        }
                     state.monitoring[server.id]?.let { monitor ->
                         if (monitor.available) {
                             KitSwitchRow(

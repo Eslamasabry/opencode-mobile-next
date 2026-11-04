@@ -6,10 +6,10 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-    <!-- Raw project paths inside selected proot mounts require Android file access. Requested only from a visible folder action. -->
-    <!-- Phone storage browsing is enabled only after the person grants folder access in Settings. -->
+    <!-- Raw project paths inside selected proot mounts require Android file access. Requested only from a visible folder action
+         (a shared-storage project on this phone, or folder access granted in Settings), never at startup or for a remote host. -->
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
     <uses-permission android:name="com.termux.permission.RUN_COMMAND" />
     <!-- Settings › Notifications: Android 13+ lets the app notify only with this declared (P12-SETTINGS). -->

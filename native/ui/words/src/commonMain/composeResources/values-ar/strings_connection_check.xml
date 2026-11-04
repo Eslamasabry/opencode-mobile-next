@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="connectionCheckAction">فحص الاتصال</string>
+    <string name="connectionCheckTitle">فحص الاتصال</string>
+    <string name="connectionCheckAgain">الفحص مجددًا</string>
+    <string name="connectionCheckAddress">العنوان</string>
+    <string name="connectionCheckSignIn">تسجيل الدخول</string>
+    <string name="connectionCheckVersion">إصدار الخادم</string>
+    <string name="connectionCheckLive">التحديثات المباشرة</string>
+    <string name="connectionCheckSpeed">زمن الاستجابة</string>
+    <string name="connectionCheckWaiting">في الانتظار</string>
+    <string name="connectionCheckRunning">جارٍ الفحص…</string>
+    <string name="connectionCheckPassed">نجح الفحص</string>
+    <string name="connectionCheckVersionValue">الإصدار %1$s</string>
+    <string name="connectionCheckMillis">%1$s مللي ثانية</string>
+    <string name="connectionCheckUnreachable">تعذّر الوصول إلى الخادم. تحقّق من العنوان ومن تشغيل الخادم.</string>
+    <string name="connectionCheckNotServer">لم يُجب هذا العنوان كخادم مدعوم. تحقّق من العنوان.</string>
+    <string name="connectionCheckNeedsPassword">أدخل كلمة مرور الخادم المحفوظ أو رمزه مجددًا، ثم أعد المحاولة.</string>
+    <string name="connectionCheckPasswordRejected">رفض الخادم بيانات الدخول المحفوظة. حدّث كلمة المرور أو الرمز.</string>
+    <string name="connectionCheckUnsupported">إصدار الخادم هذا غير مدعوم. حدّث الخادم.</string>
+    <string name="connectionCheckNotReady">أجاب الخادم لكنه غير جاهز. انتظر قليلًا وافحص مجددًا.</string>
+    <string name="connectionCheckStreamUnchecked">اتصل بهذا الخادم لفحص التحديثات المباشرة.</string>
+    <string name="connectionCheckStreamConnecting">لا يزال الاتصال المباشر يحاول إعادة الاتصال. افحص مجددًا بعد قليل.</string>
+    <string name="connectionCheckStreamDown">الاتصال المباشر الحالي متوقف. أعد الاتصال بهذا الخادم.</string>
+    <string name="connectionCheckSlow">%1$s مللي ثانية — يستجيب الخادم ببطء. تحقّق من الشبكة أو حمل الخادم.</string>
+    <string name="connectionCheckSkipped">لم يُفحص لأن خطوة سابقة تحتاج إلى معالجة.</string>
+    <string name="connectionCheckTrust">راجع أمان الاتصال بهذا الخادم قبل الفحص مجددًا.</string>
+    <string name="connectionCheckChanged">تغيّر الخادم المحفوظ. أغلق هذا الفحص وافتحه مجددًا.</string>
+</resources>

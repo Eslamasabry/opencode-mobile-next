@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stateFormTitle">أجب عن الوكيل</string>
+    <string name="stateFormAnswer">إجابة</string>
+    <string name="stateFormHeld">ستُرسل إجابتك بعد قليل.</string>
+    <string name="stateFormUndo">تراجع</string>
+    <string name="stateFormInvalid">تحقّق من الإجابات المحددة قبل الإرسال.</string>
+    <string name="stateFormOther">شيء آخر</string>
+    <string name="stateFormOpenLink">فتح الرابط</string>
+    <string name="stateFormRestoring">جارٍ استعادة إجاباتك المحفوظة…</string>
+    <string name="stateFormSend">إرسال الإجابات</string>
+    <string name="stateFormDecline">رفض هذا الطلب</string>
+    <string name="stateFormDeclineTitle">هل تريد رفض هذا الطلب؟</string>
+    <string name="stateFormDeclineBody">سيتابع الوكيل دون إجاباتك. لا يمكن استعادة هذا الطلب.</string>
+    <string name="stateFormKeepEditing">متابعة التعديل</string>
+    <string name="stateFormStorageFailed">تعذّر قراءة إجاباتك المحفوظة أو حفظها. أغلق هذا الطلب وافتحه مجددًا للمحاولة مرة أخرى.</string>
+    <string name="stateFormUncertain">لم يتأكد تسليم الإجابة. تحقّق من المحادثة قبل الإجابة مجددًا.</string>
+    <string name="stateFormChanged">تغيّر هذا الطلب. افتح الطلب الحالي مجددًا.</string>
+    <string name="stateFormNotAccepted">لم تُقبل إجابتك. راجع الطلب قبل المحاولة مجددًا.</string>
+    <string name="stateFormDismiss">إغلاق</string>
+</resources>

@@ -7,6 +7,7 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
+import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceGuideMemory
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import kotlinx.coroutines.flow.StateFlow
 
@@ -16,6 +17,9 @@ import kotlinx.coroutines.flow.StateFlow
  * is null; its row is already absent.
  */
 public interface SettingsHost {
+    public val appearanceGuide: AppearanceGuideMemory?
+        get() = null
+
     public val facts: StateFlow<SettingsFacts>
     public val choices: PersonalChoices
     public val openers: SettingsOpeners
@@ -58,6 +62,8 @@ public class SettingsViewModel(host: SettingsHost, private val nav: AppNavigator
             host.diagnostics,
             host.crashes,
             host.phrases,
+            host.appearanceGuide,
+            nav::back,
         )
 
     public val state: StateFlow<SettingsUi> = presenter.state
@@ -72,5 +78,13 @@ public class SettingsViewModel(host: SettingsHost, private val nav: AppNavigator
 
     override fun onCleared() {
         presenter.closeReport()
+    }
+
+    private var announced = false
+
+    public fun showWhatsNew() {
+        if (announced) return
+        announced = true
+        presenter.showWhatsNew(standalone = true)
     }
 }

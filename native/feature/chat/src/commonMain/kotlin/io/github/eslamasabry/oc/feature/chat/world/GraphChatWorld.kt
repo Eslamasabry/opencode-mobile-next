@@ -81,6 +81,19 @@ public interface ChatGraphAccessors {
  * last entry; their transport work belongs to the connection, while display collectors stop when
  * the entry leaves.
  */
+public fun interface SessionReadRecorder {
+    public suspend fun viewed(
+        graph: ConnectionGraph,
+        session: Session,
+        stillVisible: () -> Boolean,
+    ): Outcome<Unit>
+}
+
+@ContributesTo(AppScope::class)
+public interface SessionReadBindings {
+    @Multibinds(allowEmpty = true) public val sessionReadRecorders: Set<SessionReadRecorder>
+}
+
 @ContributesTo(AppScope::class)
 public interface ChatDraftBindings {
     @Multibinds(allowEmpty = true) public val conversationDrafts: Set<ConversationDrafts>
@@ -105,6 +118,7 @@ public class GraphChatWorlds(
     private val histories:
         Set<io.github.eslamasabry.oc.feature.chat.composer.history.ComposerHistory> =
         emptySet(),
+    private val readRecorders: Set<SessionReadRecorder> = emptySet(),
 ) : ChatWorlds {
     /**
      * B3: shared by every conversation of the app run; B-STATE-032: saved per server (8 newest)
@@ -133,6 +147,7 @@ public class GraphChatWorlds(
                     histories.singleOrNull(),
                     phrases.singleOrNull(),
                     clock,
+                    readRecorders.singleOrNull(),
                 ) to 0)
         open[ref] = world to holders + 1
         if (holders == 0) world.attach()
@@ -171,6 +186,7 @@ internal class GraphChatWorld(
         io.github.eslamasabry.oc.feature.chat.composer.presentation.ComposerPhrases? =
         null,
     private val clock: kotlin.time.Clock? = null,
+    private val readRecorder: SessionReadRecorder? = null,
 ) : ChatWorld, TurnFeedSource, VoiceConversationSession {
     // CHAT-TRANSCRIPT: full messages, run and retry facts for the turn facts (steps, results,
     // context).
@@ -2062,15 +2078,29 @@ internal class GraphChatWorld(
         return Outcome.Ok(nodes.any { !it.isDir && it.name == name })
     }
 
-    override fun markRead() {
+    override fun markRead() = markReadIfVisible { true }
+
+    override fun markReadIfVisible(stillVisible: () -> Boolean) {
         val a = currentAttached() ?: return
+        val displayed = mutableTranscript.value
+        val displayedRun = turnFeed.value.runStartedAtMs
+        fun visible(): Boolean =
+            currentAttached() === a &&
+                mutableLoad.value == ChatLoad.Live &&
+                !mutableTranscript.value.run.busy &&
+                mutableTranscript.value === displayed &&
+                turnFeed.value.runStartedAtMs == displayedRun &&
+                stillVisible()
+        if (!visible()) return
         a.graph.scope.launch(registry.mainContext) {
+            if (!visible()) return@launch
             val session =
                 (a.graph.session.reads.session(sid) as? Outcome.Ok)?.value ?: return@launch
-            if (currentAttached() !== a) return@launch
+            if (currentAttached() !== a || !visible()) return@launch
             val owner = a.graph.session.readState
             owner.observe(session)
             session.time?.idleMs?.let { owner.markRead(sid, it) }
+            readRecorder?.viewed(a.graph, session, ::visible)
         }
     }
 

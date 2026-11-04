@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceQuestion
 import io.github.eslamasabry.oc.feature.settings.presentation.AppearanceUi
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
 import io.github.eslamasabry.oc.feature.settings.presentation.SurfaceStyle
@@ -63,8 +64,9 @@ import org.jetbrains.compose.resources.stringResource
  * for the rest), the five styles and Motion. A colour pack opens a contained preview with Apply and
  * then Undo (Material You applies at once); every other choice applies at once. Saver holds
  * Style and Motion and says so. Text size is the last question (B-KIT-059). Accent is a swatch grid
- * (B-KIT-049) and Fine-tune is Corners and Spacing over the style's own (B-KIT-017). Glow and the
- * guided first visit are S4-APPEAR's.
+ * (B-KIT-049) and Fine-tune is Corners and Spacing over the style's own (B-KIT-017). The guide asks
+ * one question at a time and offers only the controls the host actually draws; its record retains
+ * every migrated Flutter question.
  */
 @Composable
 internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActions) {
@@ -96,161 +98,179 @@ internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActio
         }
     val gutter = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
 
-    KitSectionLabel(stringResource(Res.string.appearanceAskMode))
-    Box(gutter) {
-        KitSegmented(
-            segments = AppearanceMode.entries.map { KitSegment(it, modeWords(it)) },
-            selected = ui.mode,
-            semanticsLabel = stringResource(Res.string.appearanceAskMode),
-            modifier = Modifier.testTag("appearance-mode"),
-            onChange = actions::onMode,
-        )
+    if (ui.guide != null) {
+        AppearanceGuideHeader(ui, actions)
+        if (!ui.guide.done && ui.question == null) {
+            AppearanceGuideFooter(ui, actions)
+            return
+        }
     }
-    when (ui.mode) {
-        AppearanceMode.System -> KitGroupNote(stringResource(Res.string.appearanceModeAutoNote))
-        AppearanceMode.Saver -> KitGroupNote(stringResource(Res.string.appearanceSaverNote))
-        else -> Unit
-    }
-
-    KitSectionLabel(stringResource(Res.string.appearanceAskTheme))
-    KitChoiceList(
-        choices = ui.packs.map { KitChoice(it, packName(it)) },
-        selected = ui.pack,
-        semanticsLabel = stringResource(Res.string.appearanceAskTheme),
-        modifier = Modifier.testTag("appearance-packs"),
-        // Material You has no contained preview (its colours come from the system), so it applies
-        // at once like before; every other pack is previewed first.
-        onSelect = { if (it == PackId.Dynamic) actions.onPack(it) else preview = it },
-    )
-    if (ui.seeAllCount > 0) {
-        KitRow(
-            title = stringResource(Res.string.appearanceSeeAllThemes, ui.seeAllCount),
-            modifier = Modifier.testTag("appearance-see-all"),
-            trailing = KitRowTrailing.Chevron,
-            onClick = actions::onSeeAllPacks,
-        )
-    }
-
-    KitSectionLabel(stringResource(Res.string.appearanceAskAccent))
-    Box(gutter) {
-        val dark = LocalKitColors.current.dark
-        val inUse = stringResource(Res.string.kitSwatchInUse)
-        val match = stringResource(Res.string.appearanceAccentMatchShort)
-        KitSwatchGrid(
-            label = stringResource(Res.string.appearanceAskAccent),
-            inUseLabel = inUse,
-            modifier = Modifier.testTag("appearance-accent"),
-            swatches =
-                listOf(
-                    KitSwatch(
-                        "match",
-                        match,
-                        null,
-                        ui.accent == null,
-                        onPressed = { actions.onAccent(null) },
-                    )
-                ) +
-                    Accents.swatches.map { sw ->
-                        KitSwatch(
-                            sw.id,
-                            accentWords(sw.id),
-                            Color(sw.of(dark).v),
-                            ui.accent == sw.id,
-                            onPressed = { actions.onAccent(sw.id) },
-                        )
-                    },
-        )
-    }
-
-    // A style the app does not draw would be a choice that changes nothing: listed only where it is
-    // drawn.
-    if (ui.styles) {
-        KitSectionLabel(stringResource(Res.string.appearanceAskStyle))
-        val styleHeld =
-            if (ui.heldBySaver)
-                KitEnabled.Disabled(stringResource(Res.string.appearanceSaverHoldsStyle))
-            else KitEnabled.Enabled
-        KitChoiceList(
-            choices =
-                // All five are drawn (the style resolver); the Signal sample below previews Signal.
-                SurfaceStyle.entries.map {
-                    KitChoice(
-                        it,
-                        styleWords(it),
-                        enabled = if (it == ui.style) KitEnabled.Enabled else styleHeld,
-                    )
-                },
-            selected = ui.style,
-            semanticsLabel = stringResource(Res.string.appearanceAskStyle),
-            modifier = Modifier.testTag("appearance-styles"),
-            onSelect = actions::onStyle,
-        )
-        KitSignalSample(modifier = gutter)
-        if (ui.heldBySaver) KitGroupNote(stringResource(Res.string.appearanceSaverHoldsStyle))
-
-        KitSectionLabel(stringResource(Res.string.appearanceAskShape))
-        val held =
-            if (ui.heldBySaver)
-                KitEnabled.Disabled(stringResource(Res.string.appearanceSaverHoldsStyle))
-            else KitEnabled.Enabled
+    if (ui.question == null || ui.question == AppearanceQuestion.Mode) {
+        KitSectionLabel(stringResource(Res.string.appearanceAskMode))
         Box(gutter) {
             KitSegmented(
-                segments = Corners.entries.map { KitSegment(it, cornersWords(it)) },
-                selected = ui.corners,
-                semanticsLabel = stringResource(Res.string.appearanceFineTuneCorners),
-                modifier = Modifier.testTag("appearance-corners"),
-                enabled = held,
-                onChange = actions::onCorners,
+                segments = AppearanceMode.entries.map { KitSegment(it, modeWords(it)) },
+                selected = ui.mode,
+                semanticsLabel = stringResource(Res.string.appearanceAskMode),
+                modifier = Modifier.testTag("appearance-mode"),
+                onChange = actions::onMode,
             )
         }
-        Box(
-            Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
-                .padding(top = Space.S2.dp)
-        ) {
-            KitSegmented(
-                segments = Density.entries.map { KitSegment(it, spacingWords(it)) },
-                selected = ui.spacing,
-                semanticsLabel = stringResource(Res.string.appearanceShapeSpacing),
-                modifier = Modifier.testTag("appearance-spacing"),
-                enabled = held,
-                onChange = actions::onSpacing,
-            )
+        when (ui.mode) {
+            AppearanceMode.System -> KitGroupNote(stringResource(Res.string.appearanceModeAutoNote))
+            AppearanceMode.Saver -> KitGroupNote(stringResource(Res.string.appearanceSaverNote))
+            else -> Unit
         }
-        if (ui.fineTuned && !ui.heldBySaver) {
+    }
+
+    if (ui.question == null || ui.question == AppearanceQuestion.Theme) {
+        KitSectionLabel(stringResource(Res.string.appearanceAskTheme))
+        KitChoiceList(
+            choices = ui.packs.map { KitChoice(it, packName(it)) },
+            selected = ui.pack,
+            semanticsLabel = stringResource(Res.string.appearanceAskTheme),
+            modifier = Modifier.testTag("appearance-packs"),
+            // Material You has no contained preview (its colours come from the system), so it applies
+            // at once like before; every other pack is previewed first.
+            onSelect = { if (it == PackId.Dynamic) actions.onPack(it) else preview = it },
+        )
+        if (ui.seeAllCount > 0) {
             KitRow(
-                title = stringResource(Res.string.appearanceFineTuneReset, styleWords(ui.style)),
-                modifier = Modifier.testTag("appearance-fine-tune-reset"),
-                onClick = actions::onResetFineTune,
+                title = stringResource(Res.string.appearanceSeeAllThemes, ui.seeAllCount),
+                modifier = Modifier.testTag("appearance-see-all"),
+                trailing = KitRowTrailing.Chevron,
+                onClick = actions::onSeeAllPacks,
+            )
+        }
+
+        KitSectionLabel(stringResource(Res.string.appearanceAskAccent))
+        Box(gutter) {
+            val dark = LocalKitColors.current.dark
+            val inUse = stringResource(Res.string.kitSwatchInUse)
+            val match = stringResource(Res.string.appearanceAccentMatchShort)
+            KitSwatchGrid(
+                label = stringResource(Res.string.appearanceAskAccent),
+                inUseLabel = inUse,
+                modifier = Modifier.testTag("appearance-accent"),
+                swatches =
+                    listOf(
+                        KitSwatch(
+                            "match",
+                            match,
+                            null,
+                            ui.accent == null,
+                            onPressed = { actions.onAccent(null) },
+                        )
+                    ) +
+                        Accents.swatches.map { sw ->
+                            KitSwatch(
+                                sw.id,
+                                accentWords(sw.id),
+                                Color(sw.of(dark).v),
+                                ui.accent == sw.id,
+                                onPressed = { actions.onAccent(sw.id) },
+                            )
+                        },
             )
         }
     }
 
-    KitSectionLabel(stringResource(Res.string.appearanceAskMotion))
-    Box(gutter) {
-        KitSegmented(
-            segments = MotionLevel.entries.map { KitSegment(it, motionWords(it)) },
-            selected = ui.motion,
-            semanticsLabel = stringResource(Res.string.appearanceAskMotion),
-            modifier = Modifier.testTag("appearance-motion"),
-            enabled =
+    if (ui.question == null || ui.question == AppearanceQuestion.Style) {
+        // A style the app does not draw would be a choice that changes nothing: listed only where it is
+        // drawn.
+        if (ui.styles) {
+            KitSectionLabel(stringResource(Res.string.appearanceAskStyle))
+            val styleHeld =
                 if (ui.heldBySaver)
-                    KitEnabled.Disabled(stringResource(Res.string.appearanceSaverMotion))
-                else KitEnabled.Enabled,
-            onChange = actions::onMotion,
-        )
-    }
-    if (!ui.heldBySaver) KitGroupNote(motionHint(ui.motion))
-    if (ui.systemMotionOff) KitGroupNote(stringResource(Res.string.effectsMotionSystemOff))
+                    KitEnabled.Disabled(stringResource(Res.string.appearanceSaverHoldsStyle))
+                else KitEnabled.Enabled
+            KitChoiceList(
+                choices =
+                    // All five are drawn (the style resolver); the Signal sample below previews Signal.
+                    SurfaceStyle.entries.map {
+                        KitChoice(
+                            it,
+                            styleWords(it),
+                            enabled = if (it == ui.style) KitEnabled.Enabled else styleHeld,
+                        )
+                    },
+                selected = ui.style,
+                semanticsLabel = stringResource(Res.string.appearanceAskStyle),
+                modifier = Modifier.testTag("appearance-styles"),
+                onSelect = actions::onStyle,
+            )
+            KitSignalSample(modifier = gutter)
+            if (ui.heldBySaver) KitGroupNote(stringResource(Res.string.appearanceSaverHoldsStyle))
 
-    // B-KIT-059: Default until chosen; applies at the app root at once, this page included.
-    KitSectionLabel(stringResource(Res.string.textSizeTitle))
-    Box(gutter) {
-        KitSegmented(
-            segments = AppTextSize.entries.map { KitSegment(it, textSizeWords(it)) },
-            selected = ui.textSize,
-            semanticsLabel = stringResource(Res.string.textSizeTitle),
-            modifier = Modifier.testTag("appearance-text-size"),
-            onChange = actions::onTextSize,
-        )
+            KitSectionLabel(stringResource(Res.string.appearanceAskShape))
+            val held =
+                if (ui.heldBySaver)
+                    KitEnabled.Disabled(stringResource(Res.string.appearanceSaverHoldsStyle))
+                else KitEnabled.Enabled
+            Box(gutter) {
+                KitSegmented(
+                    segments = Corners.entries.map { KitSegment(it, cornersWords(it)) },
+                    selected = ui.corners,
+                    semanticsLabel = stringResource(Res.string.appearanceFineTuneCorners),
+                    modifier = Modifier.testTag("appearance-corners"),
+                    enabled = held,
+                    onChange = actions::onCorners,
+                )
+            }
+            Box(
+                Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
+                    .padding(top = Space.S2.dp)
+            ) {
+                KitSegmented(
+                    segments = Density.entries.map { KitSegment(it, spacingWords(it)) },
+                    selected = ui.spacing,
+                    semanticsLabel = stringResource(Res.string.appearanceShapeSpacing),
+                    modifier = Modifier.testTag("appearance-spacing"),
+                    enabled = held,
+                    onChange = actions::onSpacing,
+                )
+            }
+            if (ui.fineTuned && !ui.heldBySaver) {
+                KitRow(
+                    title = stringResource(Res.string.appearanceFineTuneReset, styleWords(ui.style)),
+                    modifier = Modifier.testTag("appearance-fine-tune-reset"),
+                    onClick = actions::onResetFineTune,
+                )
+            }
+        }
     }
+
+    if (ui.question == null || ui.question == AppearanceQuestion.Motion) {
+        KitSectionLabel(stringResource(Res.string.appearanceAskMotion))
+        Box(gutter) {
+            KitSegmented(
+                segments = MotionLevel.entries.map { KitSegment(it, motionWords(it)) },
+                selected = ui.motion,
+                semanticsLabel = stringResource(Res.string.appearanceAskMotion),
+                modifier = Modifier.testTag("appearance-motion"),
+                enabled =
+                    if (ui.heldBySaver)
+                        KitEnabled.Disabled(stringResource(Res.string.appearanceSaverMotion))
+                    else KitEnabled.Enabled,
+                onChange = actions::onMotion,
+            )
+        }
+        if (!ui.heldBySaver) KitGroupNote(motionHint(ui.motion))
+        if (ui.systemMotionOff) KitGroupNote(stringResource(Res.string.effectsMotionSystemOff))
+    }
+
+    if (ui.question == null || ui.question == AppearanceQuestion.Text) {
+        // B-KIT-059: Default until chosen; applies at the app root at once, this page included.
+        KitSectionLabel(stringResource(Res.string.textSizeTitle))
+        Box(gutter) {
+            KitSegmented(
+                segments = AppTextSize.entries.map { KitSegment(it, textSizeWords(it)) },
+                selected = ui.textSize,
+                semanticsLabel = stringResource(Res.string.textSizeTitle),
+                modifier = Modifier.testTag("appearance-text-size"),
+                onChange = actions::onTextSize,
+            )
+        }
+    }
+    if (ui.guide != null) AppearanceGuideFooter(ui, actions)
 }

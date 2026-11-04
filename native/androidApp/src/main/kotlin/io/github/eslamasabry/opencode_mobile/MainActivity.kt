@@ -82,6 +82,12 @@ class MainActivity : ComponentActivity() {
                         withFrameNanos {}
                         if (!isDestroyed) {
                             shellReady = true
+                            if (
+                                savedInstanceState == null &&
+                                    intent.action == Intent.ACTION_MAIN &&
+                                    intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0
+                            )
+                                settings.whatsNewStarter.start()
                             if (routeWhenReady) {
                                 routeWhenReady = false
                                 platformHub.route(intent)

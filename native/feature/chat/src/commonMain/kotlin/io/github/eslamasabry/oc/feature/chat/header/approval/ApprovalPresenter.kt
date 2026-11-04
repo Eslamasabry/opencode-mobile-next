@@ -83,7 +83,7 @@ public class ApprovalPresenter(
     private val sweep =
         AutoApprovalSweep(
             automatic = { session -> effective(session).automatic },
-            reply = { request -> port.allowOnce(request.id) },
+            reply = { request -> port.allowOnce(request) },
             clock = clock,
         )
 

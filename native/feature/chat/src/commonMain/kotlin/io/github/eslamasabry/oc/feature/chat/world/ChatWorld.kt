@@ -241,6 +241,11 @@ public interface ChatWorld {
 
     /** The visible transcript was read at the live edge (plan 09 §6.7). */
     public fun markRead()
+
+    /** Recheck the originating display after asynchronous work, before acknowledging it. */
+    public fun markReadIfVisible(stillVisible: () -> Boolean) {
+        if (stillVisible()) markRead()
+    }
 }
 
 /**

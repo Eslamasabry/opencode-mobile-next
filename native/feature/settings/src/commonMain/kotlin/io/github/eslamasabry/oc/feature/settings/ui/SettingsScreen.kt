@@ -50,6 +50,7 @@ import io.github.eslamasabry.oc.ui.words.res.settingsHubPrivacyRow
 import io.github.eslamasabry.oc.ui.words.res.settingsHubVoice
 import io.github.eslamasabry.oc.ui.words.res.settingsV3Language
 import io.github.eslamasabry.oc.ui.words.res.settingsV3Notifications
+import io.github.eslamasabry.oc.ui.words.res.whatsNewTitle
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -141,6 +142,16 @@ public fun SettingsScreen(
                 modifier,
             ) {
                 PhraseChipsBody(state.phraseChips, actions)
+            }
+        SettingsPage.WhatsNew ->
+            SettingsFrame(
+                stringResource(Res.string.whatsNewTitle, state.whatsNew?.version.orEmpty()),
+                back,
+                state,
+                actions,
+                modifier,
+            ) {
+                state.whatsNew?.let { WhatsNewBody(it, actions) }
             }
         SettingsPage.About ->
             SettingsFrame(stringResource(Res.string.aboutTitle), back, state, actions, modifier) {

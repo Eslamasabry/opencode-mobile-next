@@ -132,5 +132,8 @@ object SecurityFeatureBindings {
                     "model favorites and recent choices",
                 )
             )
+            // 45-port-state: form drafts and per-location read state are per profile.
+            SavedStateFormDrafts.registerKeys(this)
+            NativeSessionReads.shapes.forEach(::register)
         }
 }

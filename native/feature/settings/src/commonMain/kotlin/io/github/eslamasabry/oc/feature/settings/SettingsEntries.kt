@@ -32,6 +32,26 @@ import io.github.eslamasabry.oc.ui.routes.SettingsRoute
 @ContributesIntoSet(AppScope::class, binding = binding<EntryInstaller>())
 public class SettingsEntries(private val host: SettingsHost) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
+        entry<SettingsRoute.WhatsNew> {
+            val vm = metroViewModel<SettingsViewModel>()
+            val state by vm.state.collectAsStateWithLifecycle()
+            LaunchedEffect(vm) { vm.showWhatsNew() }
+            KitBackGuard(
+                enabled = state.page != SettingsPage.Hub || state.hub.query.isNotEmpty(),
+                onBack = vm::back,
+            )
+            SettingsScreen(state, vm.actions, onExit = vm::exit)
+        }
+        entry<SettingsRoute.WhatsNew> {
+            val vm = metroViewModel<SettingsViewModel>()
+            val state by vm.state.collectAsStateWithLifecycle()
+            LaunchedEffect(vm) { vm.showWhatsNew() }
+            KitBackGuard(
+                enabled = state.page != SettingsPage.Hub || state.hub.query.isNotEmpty(),
+                onBack = vm::back,
+            )
+            SettingsCapabilityFlows(host) { SettingsScreen(state, vm.actions, onExit = vm::exit) }
+        }
         entry<SettingsRoute.Home> {
             val vm = metroViewModel<SettingsViewModel>()
             val state by vm.state.collectAsStateWithLifecycle()

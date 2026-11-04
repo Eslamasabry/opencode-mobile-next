@@ -39,6 +39,7 @@ public sealed interface SettingsPage {
     public data object Notices : SettingsPage
 
     public data object PhraseChips : SettingsPage
+    public data object WhatsNew : SettingsPage
 
     public data object Privacy : SettingsPage
 

@@ -1,6 +1,9 @@
 package io.github.eslamasabry.oc.feature.settings.presentation
 
 import io.github.eslamasabry.oc.engine.analytics.WhatWeCollect
+import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceGuideRecord
+import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceQuestion
+import io.github.eslamasabry.oc.engine.settings.walkthrough.WhatsNewChange
 import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
@@ -21,6 +24,7 @@ public data class SettingsUi(
     val notifications: NotificationFacts? = null,
     val updates: UpdateFacts? = null,
     val about: AboutFacts = AboutFacts(),
+    val whatsNew: WhatsNewUi? = null,
     val privacy: PrivacyUi? = null,
     /** The language in use (acknowledged), for the Language page and its row. */
     val language: AppLanguage = AppLanguage.System,
@@ -83,6 +87,9 @@ public data class AppearanceUi(
     /** Saver holds Style and Motion (B-KIT-008): shown, not changeable, with the reason. */
     val heldBySaver: Boolean = false,
     val systemMotionOff: Boolean = false,
+    val guide: AppearanceGuideRecord? = null,
+    val question: AppearanceQuestion? = null,
+    val questions: List<AppearanceQuestion> = emptyList(),
 )
 
 public sealed interface SpeechModel {
@@ -226,4 +233,18 @@ public sealed interface ReportUi {
 
     /** The report could not be built: a plain line and Try again, never the reason's text. */
     public data object Failed : ReportUi
+}
+
+/** A built-in walkthrough step. Strings and glyphs are resolved only by the screen. */
+public data class WhatsNewUi(
+    val version: String,
+    val changes: List<WhatsNewChange>,
+    val index: Int = 0,
+    val canShow: Boolean = false,
+) {
+    public val change: WhatsNewChange
+        get() = changes[index]
+
+    public val last: Boolean
+        get() = index == changes.lastIndex
 }

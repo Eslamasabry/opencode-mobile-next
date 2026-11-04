@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stateAppearanceOverview">All appearance choices</string>
+    <string name="stateAppearanceChangedLast">Changed last: %1$s</string>
+</resources>
