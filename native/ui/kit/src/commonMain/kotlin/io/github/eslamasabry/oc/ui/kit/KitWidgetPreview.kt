@@ -69,13 +69,13 @@ public fun KitWidgetPreview(
                 animateDpAsState(
                     if (compact) 112.dp
                     else if (wide) minOf(maxWidth, 320.dp)
-                    else 212.dp, // F: lib/ui/kit/kit_widget_preview.dart:47-49
+                    else 212.dp, // F: lib/ui/kit/kit_widget_preview.dart:41-43
                     specs.enter(),
                     label = "widget-preview-width",
                 )
             val bodyHeight =
                 if (compact) 112
-                else if (wide) 132 else 168 // F: lib/ui/kit/kit_widget_preview.dart:47-49
+                else if (wide) 132 else 168 // F: lib/ui/kit/kit_widget_preview.dart:41-43
             val height by
                 animateDpAsState(
                     (bodyHeight + Space.S6).dp,
@@ -118,7 +118,7 @@ public fun KitWidgetPreview(
                             KitText(
                                 2.toString(),
                                 role = TypeRole.Title,
-                            ) // F: lib/ui/kit/kit_widget_preview.dart:179
+                            ) // F: lib/ui/kit/kit_widget_preview.dart:177
                             KitText(
                                 stringResource(Res.string.widgetV2PreviewWorking),
                                 role = TypeRole.Caption,

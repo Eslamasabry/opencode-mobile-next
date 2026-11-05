@@ -21,7 +21,12 @@ public fun WidgetActionScreen(state: WidgetActionUi, actions: WidgetActionAction
     val field = remember { TextFieldState() }
     LaunchedEffect(state.dictatedWords) {
         val words = state.dictatedWords ?: return@LaunchedEffect
-        field.edit { replace(length, length, if (length == 0) words else " $words") }
+        val existing = field.text.toString()
+        val combined =
+            (existing + if (existing.isEmpty()) words else " $words").take(
+                WidgetActionViewModel.MAX_TEXT
+            )
+        field.edit { replace(0, length, combined) }
         actions.takeDictatedWords()
     }
     val sending = state.phase == WidgetActionPhase.Sending
@@ -92,7 +97,7 @@ public fun WidgetActionScreen(state: WidgetActionUi, actions: WidgetActionAction
     }
     LaunchedEffect(state.phase) {
         if (state.phase == WidgetActionPhase.Accepted) {
-            delay(700) // F: lib/ui/screens/widgets/widget_steer_screen.dart:21
+            delay(700) // F: lib/ui/screens/widgets/widget_steer_screen.dart:19
             actions.close()
         }
     }
