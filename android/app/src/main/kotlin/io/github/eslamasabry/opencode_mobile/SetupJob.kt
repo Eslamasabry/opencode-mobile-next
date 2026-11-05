@@ -11,6 +11,7 @@ import org.json.JSONObject
  *     ::oc bytes <done> <total>
  *     ::oc percent <0-100>
  *     ::oc version <text>
+ *     ::oc fetch <https url> <absolute guest path> <sha256>
  *
  * Anything else, including a malformed `::oc` line, is plain log text.
  */
@@ -20,6 +21,8 @@ object SetupProtocol {
         data class Bytes(val done: Long, val total: Long) : Event()
         data class Percent(val value: Double) : Event()
         data class Version(val text: String) : Event()
+        /** The script asks the app to download [url] to [dest] (a path inside Ubuntu). */
+        data class Fetch(val url: String, val dest: String, val sha256: String) : Event()
     }
 
     private const val PREFIX = "::oc "
@@ -40,6 +43,8 @@ object SetupProtocol {
             "percent" -> args.toDoubleOrNull()
                 ?.takeIf { !it.isNaN() }
                 ?.let { Event.Percent(it.coerceIn(0.0, 100.0)) }
+            "fetch" -> args.split(Regex("\\s+")).takeIf { it.size == 3 && it[0].isNotEmpty() }
+                ?.let { Event.Fetch(it[0], it[1], it[2]) }
             "version" -> args.takeIf { it.isNotEmpty() }?.let { Event.Version(it.take(80)) }
             else -> null
         }
@@ -78,6 +83,7 @@ class SetupComponentStatus(
             }
             is SetupProtocol.Event.Percent -> percent = event.value
             is SetupProtocol.Event.Version -> version = event.text
+            is SetupProtocol.Event.Fetch -> Unit
         }
     }
 

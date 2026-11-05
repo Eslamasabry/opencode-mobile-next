@@ -419,6 +419,10 @@ class SetupRunner private constructor(private val context: Context) {
             started.inputStream.bufferedReader().forEachLine { line ->
                 if (completion.accept(line)) return@forEachLine
                 val parsed = SetupProtocol.parse(line)
+                if (parsed is SetupProtocol.Event.Fetch) {
+                    appFetch(component, parsed)
+                    return@forEachLine
+                }
                 val event = installerEvent(spec, parsed)
                 if (event == null) {
                     if (!spec.agentUser) {
@@ -444,6 +448,18 @@ class SetupRunner private constructor(private val context: Context) {
         return if (cancelled) "cancelled"
         else if (code == 0 && completion.exitCode != 0) SetupStepRetry.missingResult(last)
         else installerFailure(spec, component, code, last)
+    }
+
+    /**
+     * The script's download tool crashed and it asked us to download instead
+     * (issue #117). Android's own networking fills the file the script then
+     * checks against its pinned checksum.
+     */
+    private fun appFetch(component: SetupComponentStatus, request: SetupProtocol.Event.Fetch) {
+        logLine("==> The app is downloading this itself")
+        SetupAppFetch(linux.rootfs).run(request, { cancelled }) { done, total ->
+            event(component, SetupProtocol.Event.Bytes(done, total))
+        }
     }
 
     private fun installerFailure(spec: Spec, component: SetupComponentStatus, code: Int, last: String?): String? =

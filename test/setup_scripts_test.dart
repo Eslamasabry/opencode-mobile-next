@@ -4,6 +4,7 @@ import 'package:opencode_mobile/termux/bridge.dart';
 // honours Range and sends slowly enough to watch, oc_apt_install against a
 // fake apt-get, and a syntax check of every script. Skipped with a message
 // when python3, curl or dash are missing.
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -278,6 +279,156 @@ void main() {
       expect(result.exitCode, 22, reason: 'curl -f on a 404');
       expect(result.stderr, contains('Download failed (curl exit 22)'));
     }, skip: skip);
+
+    // Issue #117: curl under proot died with SIGSEGV (exit 139) on one ROM.
+    group('when curl crashes with a signal', () {
+      late String bin;
+      late String realCurl;
+
+      Future<void> fakeCurl({required bool http1Works}) async {
+        File('$bin/curl').writeAsStringSync(
+          '#!/bin/sh\n'
+          '${http1Works ? 'case " \$* " in *" --http1.1 "*) exec $realCurl "\$@" ;; esac\n' : ''}'
+          'exit 139\n',
+        );
+        await Process.run('chmod', ['+x', '$bin/curl']);
+      }
+
+      setUp(() {
+        bin = Directory('${dir.path}/fakebin').path;
+        Directory(bin).createSync();
+        realCurl = Process.runSync('sh', [
+          '-c',
+          'command -v curl',
+        ]).stdout.toString().trim();
+      });
+
+      /// Runs oc_download with the fake curl first on PATH. [app] plays the
+      /// app: it answers each `::oc fetch` line, or never answers when null.
+      Future<(int, String, String, List<String>)> run(
+        String target,
+        String expectSha, {
+        Future<void> Function(List<String> fetch)? app,
+        Map<String, String> env = const {},
+      }) async {
+        final process = await Process.start(
+          'dash',
+          [
+            '-c',
+            'set -eu\n${withSetupPrelude('oc_download http://127.0.0.1:$port/blob.bin $target $expectSha')}',
+          ],
+          environment: {
+            'PATH': '$bin:${Platform.environment['PATH']}',
+            'OC_POLL_SECONDS': '0.05',
+            'OC_RETRY_SECONDS': '0',
+            ...env,
+          },
+        );
+        final fetches = <String>[];
+        final out = StringBuffer();
+        final lines = process.stdout
+            .transform(utf8.decoder)
+            .transform(const LineSplitter());
+        final answered = <Future<void>>[];
+        final drained = Completer<void>();
+        lines.listen((line) {
+          out.writeln(line);
+          if (line.startsWith('::oc fetch ') && app != null) {
+            final parts = line.split(' ');
+            fetches.add(line);
+            answered.add(app([parts[2], parts[3], parts[4]]));
+          }
+        }, onDone: drained.complete);
+        final err = process.stderr.transform(utf8.decoder).join();
+        final code = await process.exitCode;
+        await drained.future;
+        await Future.wait(answered);
+        return (code, out.toString(), await err, fetches);
+      }
+
+      /// The app's side of the handshake with [bytes] as the downloaded file.
+      Future<void> Function(List<String>) appWriting(List<int> bytes) =>
+          (request) async {
+            final dest = request[1];
+            File('$dest.oc-fetch-ack').writeAsStringSync('1');
+            File(dest).writeAsBytesSync(bytes);
+            File('$dest.oc-fetch-done').writeAsStringSync('ok');
+          };
+
+      test('the app downloads it, and the checksum is still checked', () async {
+        await fakeCurl(http1Works: false);
+        final target = '${dir.path}/out/blob.bin';
+        final (code, out, err, fetches) = await run(
+          target,
+          sha,
+          app: appWriting(blob.readAsBytesSync()),
+        );
+        expect(code, 0, reason: err);
+        expect(fetches, [
+          '::oc fetch http://127.0.0.1:$port/blob.bin $target $sha',
+        ]);
+        expect(out, contains('The download tool crashed (signal 11)'));
+        expect(sha256.convert(File(target).readAsBytesSync()).toString(), sha);
+        expect(File('$target.oc-fetch-done').existsSync(), isFalse);
+      }, skip: skip);
+
+      test('a wrong file from the app still fails the checksum', () async {
+        await fakeCurl(http1Works: false);
+        final target = '${dir.path}/out/blob.bin';
+        final (code, _, err, _) = await run(
+          target,
+          sha,
+          app: appWriting(List.filled(1200000, 1)),
+        );
+        expect(code, 1);
+        expect(err, contains('did not match its checksum'));
+        expect(File(target).existsSync(), isFalse);
+      }, skip: skip);
+
+      test('an app that says it failed leads to curl --http1.1', () async {
+        await fakeCurl(http1Works: true);
+        final target = '${dir.path}/out/blob.bin';
+        final (code, out, err, _) = await run(
+          target,
+          sha,
+          app: (request) async {
+            File('${request[1]}.oc-fetch-ack').writeAsStringSync('1');
+            File(
+              '${request[1]}.oc-fetch-done',
+            ).writeAsStringSync('fail the connection failed');
+          },
+        );
+        expect(code, 0, reason: err);
+        expect(out, contains('The app could not download it'));
+        expect(sha256.convert(File(target).readAsBytesSync()).toString(), sha);
+      }, skip: skip);
+
+      test('no app at all: --http1.1 takes over after the wait', () async {
+        await fakeCurl(http1Works: true);
+        final target = '${dir.path}/out/blob.bin';
+        final (code, out, err, _) = await run(
+          target,
+          sha,
+          env: {'OC_ACK_POLLS': '3'},
+        );
+        expect(code, 0, reason: err);
+        expect(out, contains('The app did not take over'));
+        expect(sha256.convert(File(target).readAsBytesSync()).toString(), sha);
+      }, skip: skip);
+
+      test('every way crashing says so in plain words', () async {
+        await fakeCurl(http1Works: false);
+        File('$bin/wget').writeAsStringSync('#!/bin/sh\nexit 139\n');
+        await Process.run('chmod', ['+x', '$bin/wget']);
+        final (code, _, err, _) = await run(
+          '${dir.path}/out/blob.bin',
+          sha,
+          env: {'OC_ACK_POLLS': '2'},
+        );
+        expect(code, 139);
+        expect(err, contains('the download tool crashed (signal 11)'));
+      }, skip: skip);
+    });
   });
 
   group('oc_apt_install', () {
