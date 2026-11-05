@@ -19,6 +19,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.model.BackendKind
+import io.github.eslamasabry.oc.core.model.ServerOrigin
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingText
 import io.github.eslamasabry.oc.feature.servers.pairing.pairingProblemText
 import io.github.eslamasabry.oc.feature.servers.presentation.*
@@ -28,6 +29,7 @@ import io.github.eslamasabry.oc.ui.kit.action.KitPasteButton
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.*
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.*
 import io.github.eslamasabry.oc.ui.kit.input.*
 import io.github.eslamasabry.oc.ui.kit.modal.*
@@ -64,7 +66,7 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
     var pin by remember { mutableStateOf(restored?.certificatePin) }
     var pinOrigin by remember { mutableStateOf(restored?.certificateOrigin) }
     var loaded by remember { mutableStateOf(restored != null) }
-    var trustQuestion by remember { mutableStateOf(false) }
+    var trustOrigin by remember { mutableStateOf<ServerOrigin?>(null) }
     var commandsOpen by remember { mutableStateOf(false) }
     var moreOpen by remember { mutableStateOf(false) }
     var tailscaleOpened by remember { mutableStateOf(false) }
@@ -239,55 +241,7 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                 body = stringResource(Res.string.editor40DiscardBody),
             )
         else null
-    KitConfirm(discard, actions::discard, actions::keepEditing)
-    val trustSpec =
-        if (trustQuestion)
-            KitConfirmSpec(
-                stringResource(Res.string.editor40HttpTitle),
-                stringResource(Res.string.editor40UseAddress),
-                body = stringResource(Res.string.editor40HttpBody),
-                consequences = listOf(address.text.toString()),
-            )
-        else null
-    KitConfirm(
-        trustSpec,
-        {
-            confirmedOrigin = address.text.toString()
-            trustQuestion = false
-            actions.changed()
-        },
-        { trustQuestion = false },
-    )
     val certificate = state.certificate
-    val certSpec = certificate?.let {
-        KitConfirmSpec(
-            stringResource(Res.string.editor40CertificateTitle),
-            stringResource(Res.string.editor40TrustCertificate),
-            body = stringResource(Res.string.editor40CertificateBody),
-            consequences =
-                listOf(
-                    it.origin,
-                    it.fingerprint,
-                    stringResource(
-                        Res.string.editor40CertificateDates,
-                        it.validFrom,
-                        it.validUntil,
-                    ),
-                ),
-        )
-    }
-    KitConfirm(
-        certSpec,
-        {
-            if (certificate != null) {
-                pin = certificate.fingerprint
-                pinOrigin = certificate.origin
-                actions.changed()
-            }
-            actions.dismissCertificate()
-        },
-        actions::dismissCertificate,
-    )
     KitScreen(
         topBar = {
             KitTopBar(
@@ -318,6 +272,72 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
             )
         }),
     ) {
+        KitConfirm(discard, actions::discard, actions::keepEditing)
+        KitSheet(
+            visible = trustOrigin != null,
+            onDismissRequest = { trustOrigin = null },
+            title = stringResource(Res.string.serverTrustHttpTitle),
+            icon = KitIcons.warning,
+            primary =
+                KitAction(
+                    stringResource(Res.string.serverTrustHttpAccept),
+                    {
+                        val reviewed = trustOrigin
+                        // F: lib/ui/screens/servers/profile_editor_trust.dart:20-24
+                        if (reviewed != null && reviewed == editorOrigin(address.text.toString())) {
+                            confirmedOrigin = reviewed.toString()
+                            actions.changed()
+                        }
+                        trustOrigin = null
+                    },
+                    enabled = enabled,
+                ),
+        ) {
+            trustOrigin?.let {
+                KitServerTrustBody(it.toString(), httpWarning(it), inset = false)
+            }
+        }
+        KitSheet(
+            visible = certificate != null,
+            onDismissRequest = actions::dismissCertificate,
+            title = stringResource(Res.string.serverTrustCertificateTitle),
+            icon = KitIcons.warning,
+            primary =
+                KitAction(
+                    stringResource(Res.string.serverTrustCertificateAccept),
+                    {
+                        if (certificate != null) {
+                            if (
+                                editorOrigin(certificate.origin) ==
+                                    editorOrigin(address.text.toString()) &&
+                                    editorOrigin(certificate.origin) != null
+                            ) {
+                                pin = certificate.fingerprint
+                                pinOrigin = certificate.origin
+                                actions.changed()
+                            }
+                        }
+                        actions.dismissCertificate()
+                    },
+                    enabled = enabled,
+                ),
+        ) {
+            certificate?.let {
+                KitServerTrustBody(
+                    it.origin,
+                    stringResource(Res.string.serverTrustCertificateBody),
+                    fingerprint = it.fingerprint,
+                    fingerprintLabel = stringResource(Res.string.serverTrustFingerprint),
+                    validity =
+                        stringResource(
+                            Res.string.serverTrustCertificateValidity,
+                            it.validFrom,
+                            it.validUntil,
+                        ),
+                    inset = false,
+                )
+            }
+        }
         Column(
             Modifier.fillMaxSize()
                 .imePadding()
@@ -498,9 +518,28 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                                 stringResource(if (backend == BackendKind.OpenCode2) Res.string.e7SetupServerUrl else Res.string.connectionServerAddress),
                                 kind = KitFieldKind.Url,
                                 placeholder = if (backend == BackendKind.Paseo) stringResource(Res.string.paseoAddressHint)
-                                    else if (backend == BackendKind.Codex) stringResource(Res.string.codexAddressHint) else null,
+                                    else if (backend == BackendKind.Codex) stringResource(Res.string.codexAddressHint) else "https://server.example", // F: lib/ui/screens/servers/profile_editor_fields.dart:248
+                                helper = if (backend == BackendKind.OpenCode2)
+                                    stringResource(if (tailscale) Res.string.tailscaleAddressDetail else Res.string.e7SetupHttpsHint) else null,
                                 enabled = enabled,
                             )
+                            val origin = editorOrigin(address.text.toString())
+                            if (backend == BackendKind.OpenCode2 && origin != null && AddressRules.needsCleartextConsent(origin)) {
+                                val pending = editorOrigin(confirmedOrigin.orEmpty()) != origin
+                                if (pending) KitNotice(
+                                    message = httpWarning(origin),
+                                    icon = KitIcons.warning,
+                                    actions = buildList {
+                                        if (pending && state.newServer && state.canTailscale) add(KitLineAction(
+                                            stringResource(Res.string.addServerUseTailscale), {
+                                                actions.keepDraft(input())
+                                                tailscale = true
+                                                actions.step(ServerEditorStep.Tailscale)
+                                            }, enabled = enabled.isEnabled, disabledReason = enabled.reason))
+                                        if (pending) add(KitLineAction(stringResource(Res.string.addServerCleartextConfirm), { trustOrigin = origin }, enabled = enabled.isEnabled, disabledReason = enabled.reason))
+                                    },
+                                ) else KitNotice(stringResource(Res.string.addServerCleartextConfirmed))
+                            }
                             if (backend != BackendKind.OpenCode2)
                                 KitField(
                                     directory,
@@ -551,19 +590,6 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                             if (state.record?.needsSecret == true)
                                 KitNotice(stringResource(Res.string.rows40Secret))
                             if (backend == BackendKind.OpenCode2) {
-                                KitSwitchRow(
-                                    stringResource(Res.string.serversCleartext),
-                                    checked = confirmedOrigin != null,
-                                    supporting = stringResource(Res.string.serversCleartextHelp),
-                                    enabled = enabled,
-                                    onCheckedChange = {
-                                        if (it) trustQuestion = true
-                                        else {
-                                            confirmedOrigin = null
-                                            actions.changed()
-                                        }
-                                    },
-                                )
                                 if (address.text.toString().trim().startsWith("https://")) {
                                     if (pin != null) KitNotice(stringResource(Res.string.editor40Pinned))
                                     KitButton(
@@ -578,11 +604,14 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                             KitField(
                                 password,
                                 stringResource(
-                                    if (backend == BackendKind.OpenCode2) Res.string.serversPassword
+                                    if (state.record?.needsSecret == true) {
+                                        if (backend == BackendKind.OpenCode2) Res.string.e7SetupReenterPassword else Res.string.codexTokenReentry
+                                    } else if (backend == BackendKind.OpenCode2) Res.string.e7SetupServerPassword
                                     else if (backend == BackendKind.Paseo) Res.string.paseoPasswordLabel else Res.string.codexTokenLabel
                                 ),
                                 kind = KitFieldKind.Secret,
-                                helper = stringResource(if (backend == BackendKind.Paseo) Res.string.paseoPasswordHelp else if (backend == BackendKind.Codex) Res.string.codexTokenStorageHelp else Res.string.e7SetupPasswordStartupHint),
+                                helper = stringResource(if (backend == BackendKind.Paseo) Res.string.paseoPasswordHelp else if (backend == BackendKind.Codex) Res.string.codexTokenStorageHelp
+                                    else if (state.record?.needsSecret == true) Res.string.e7SetupEmptyPasswordHint else Res.string.e7SetupPasswordStartupHint),
                                 enabled = enabled,
                                 secretPresence =
                                     if (keepSecret || heldSecret != null) SecretFieldPresence.Saved
@@ -648,6 +677,17 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
         }
     }
 }
+
+internal fun editorOrigin(address: String): ServerOrigin? =
+    (AddressRules.normalize(address) as? Outcome.Ok)?.value
+
+@Composable
+private fun httpWarning(origin: ServerOrigin): String =
+    stringResource(
+        if (AddressRules.isPrivateNetwork(origin.host) || AddressRules.isTailnet(origin.host))
+            Res.string.addServerCleartextWarning
+        else Res.string.serverTrustHttpPublicBody
+    )
 
 /** One copyable setup command (Flutter `KitCodeBlock(copyLabel: handoffCopyCommand)`). */
 @Composable
