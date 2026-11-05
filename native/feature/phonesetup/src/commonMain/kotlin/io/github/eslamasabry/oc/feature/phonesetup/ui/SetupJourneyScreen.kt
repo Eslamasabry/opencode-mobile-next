@@ -8,6 +8,8 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.kit.setup.*
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.row.KitLockedRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -137,28 +139,46 @@ public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyAction
 private fun StartHero(state: SetupJourneyUi, actions: SetupJourneyActions) {
     val names = state.install.filter { !it.required || it.id in setOf(SetupComponentIds.ESSENTIALS, SetupComponentIds.NODE) }
         .filter { it.id != SetupComponentIds.LINUX && it.id != SetupComponentIds.OPENCODE }
-        .map { itemTitle(it.id, it.shortTitle) }
+        .map { if (it.id == SetupComponentIds.ESSENTIALS) stringResource(Res.string.phoneSetupEssentialsShort) else itemTitle(it.id, it.shortTitle) }
     val includes = if (names.isEmpty()) null else {
         val joined = if (names.size == 1) names.single() else stringResource(Res.string.phoneSetupStartListPair,
             names.dropLast(1).joinToString(stringResource(Res.string.phoneSetupStartListSeparator)), names.last())
         stringResource(Res.string.phoneSetupStartIncludes, joined)
     }
+    val check = state.preflight
+    val blocked = check?.supported == false
+    val title = when (check) {
+        is SetupPreflightResult.UnsupportedAbi -> stringResource(Res.string.phoneSetupPreflightUnsupportedHeadline)
+        is SetupPreflightResult.LowMemory -> stringResource(Res.string.phoneSetupPreflightLowMemoryHeadline)
+        is SetupPreflightResult.LowSpace -> stringResource(Res.string.phoneSetupPreflightLowSpaceHeadline)
+        else -> stringResource(Res.string.phoneSetupStartHeadline)
+    }
+    val body = when (check) {
+        is SetupPreflightResult.UnsupportedAbi -> stringResource(Res.string.phoneSetupPreflightUnsupportedBody, check.reportedAbi)
+        is SetupPreflightResult.LowMemory -> stringResource(Res.string.phoneSetupPreflightLowMemoryBody, Numbers.format(SetupPreflight.MINIMUM_MEMORY_MB), Numbers.format(check.totalMemoryMb))
+        is SetupPreflightResult.LowSpace -> stringResource(Res.string.phoneSetupPreflightLowSpaceBody, journeySize(check.bytesToFree))
+        else -> if (state.bytes > 0) stringResource(Res.string.phoneSetupStartPromise, journeySize(state.bytes))
+            else stringResource(Res.string.phoneSetupStartPromiseNoSize)
+    }
     KitSetupHero(
-        title = stringResource(Res.string.phoneSetupStartHeadline),
-        body = if (state.bytes > 0) stringResource(Res.string.phoneSetupStartPromise, journeySize(state.bytes))
-            else stringResource(Res.string.phoneSetupStartPromiseNoSize),
+        title = title,
+        body = body,
         primary = KitAction(stringResource(Res.string.phoneSetupStartSetUp),
             onClick = actions::start, working = state.working,
             enabled = KitEnabled.of(state.canConfirm, stringResource(Res.string.r40SetupCheckDevice))),
-        tertiary = if (includes == null) emptyList() else listOf(KitAction(stringResource(Res.string.phoneSetupStartCustomize), actions::customize)),
+        tertiary = buildList {
+            if (check is SetupPreflightResult.LowSpace) add(KitAction(stringResource(Res.string.phoneSetupPreflightOpenStorage), actions::openStorage))
+            if (includes != null && check !is SetupPreflightResult.UnsupportedAbi && check !is SetupPreflightResult.LowMemory)
+                add(KitAction(stringResource(Res.string.phoneSetupStartCustomize), actions::customize))
+        },
         content = {
             Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
                 val minutes = ceil(state.seconds / 60.0).toInt().coerceAtLeast(1) // NV: estimated seconds converted to whole minutes
                 val time = if (minutes == 1) stringResource(Res.string.phoneSetupStartStepsTime__eq1)
                     else org.jetbrains.compose.resources.pluralStringResource(Res.plurals.phoneSetupStartStepsTime, minutes, minutes)
-                KitText(stringResource(Res.string.phoneSetupStartSteps, time), role = TypeRole.Label)
+                if (!blocked) KitText(stringResource(Res.string.phoneSetupStartSteps, time), role = TypeRole.Label)
                 includes?.let { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary) }
-                Preflight(state, actions)
+                if (check is SetupPreflightResult.MayBeSlow) KitText(stringResource(Res.string.phoneSetupPreflightMayBeSlow, Numbers.format(check.totalMemoryMb)), role = TypeRole.Secondary)
                 if (state.storageUnopened) KitErrorNotice(stringResource(Res.string.r40SetupStorageUnopened))
                 if (state.failure != null) KitErrorNotice(stringResource(Res.string.r40SetupCouldNotCheck),
                     retry = KitLineAction(stringResource(Res.string.r40SetupRetry), actions::retry))
@@ -174,8 +194,9 @@ private fun Choices(state: SetupJourneyUi, actions: SetupJourneyActions) {
         return
     }
     val options = state.options ?: return
-    val choices = options.components.filter { !it.jobStep && (!state.adding || !it.required) }
+    val choices = options.components.filter { !it.jobStep && (!state.adding || !it.required) }.sortedBy { !it.required }
     if (!state.customizing) KitText(stringResource(Res.string.phoneSetupStartHeadline))
+    KitRowGroup {
     for (component in choices) {
         val installed = component.id in options.installed
         val required = component.required
@@ -187,9 +208,10 @@ private fun Choices(state: SetupJourneyUi, actions: SetupJourneyActions) {
                 else -> component.summary ?: component.why
             }
         if (state.customizing) {
-            if (required) KitRow(
+            if (required || installed) KitLockedRow(
                 title = itemTitle(component.id, component.title),
-                trailing = KitRowTrailing.Value(stringResource(Res.string.r40SetupRequired), chevron = false),
+                lockedLabel = stringResource(if (required) Res.string.phoneSetupCustomizeIncluded else Res.string.phoneSetupStartInstalled),
+                supporting = if (required) component.why else component.summary,
             ) else KitSwitchRow(
                 title = itemTitle(component.id, component.title),
                 checked = included,
@@ -210,6 +232,7 @@ private fun Choices(state: SetupJourneyUi, actions: SetupJourneyActions) {
             }
         } else if (included)
             KitRow(itemTitle(component.id, component.title), supporting = supporting)
+    }
     }
     KitText(
         if (state.adding && state.install.isEmpty())
