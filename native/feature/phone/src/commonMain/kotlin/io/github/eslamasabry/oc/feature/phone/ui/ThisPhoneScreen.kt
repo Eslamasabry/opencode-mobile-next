@@ -34,6 +34,7 @@ import io.github.eslamasabry.oc.feature.phone.presentation.ThisPhoneNotice
 import io.github.eslamasabry.oc.feature.phone.presentation.ThisPhoneUi
 import io.github.eslamasabry.oc.feature.phone.presentation.UpdateRow
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
+import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -167,14 +168,9 @@ public fun ThisPhoneScreen(
         loading = state.answer.headline == AnswerHeadline.Checking,
         bottom = {
             state.answer.primary?.let { act ->
-                KitActionBlock(
-                    primary =
-                        KitAction(
-                            label = act.words(),
-                            onClick = { actions.act(act) },
-                            working = busy,
-                        )
-                )
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    KitButton(KitAction(label = act.words(), onClick = { actions.act(act) }, working = busy), fullWidth = true, hero = true)
+                }
             }
         },
     ) {
