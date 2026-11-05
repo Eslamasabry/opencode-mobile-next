@@ -52,6 +52,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.ReceiptCheckResult
 import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFailureKind
 import io.github.eslamasabry.oc.feature.chat.presentation.SelectTextUi
 import io.github.eslamasabry.oc.feature.chat.presentation.StatusPick
+import io.github.eslamasabry.oc.feature.chat.presentation.TargetKind
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestActions
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi
@@ -123,6 +124,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatFeelPictureLoading
 import io.github.eslamasabry.oc.ui.words.res.chatFeelPictureOnServer
 import io.github.eslamasabry.oc.ui.words.res.chatFeelPictureOnWeb
 import io.github.eslamasabry.oc.ui.words.res.chatFeelSelectText
+import io.github.eslamasabry.oc.ui.words.res.chatUiCopyMessageText
 import io.github.eslamasabry.oc.ui.words.res.chatFeelShare
 import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoAction
 import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoBody
@@ -696,25 +698,28 @@ private fun EarlierMessagesPill(
  * has no Copy.
  */
 @Composable
-private fun MessageMenu(
+internal fun MessageMenu(
     menu: MessageMenuUi?,
     actions: ChatActions,
     modifier: Modifier,
     reads: Boolean = false,
 ) {
     val feel = menu?.actions?.contains(MessageAction.Share) == true
+    val prompt = menu?.target?.kind == TargetKind.Prompt
     val items =
         menu
             ?.actions
             .orEmpty()
             .filter {
-                (feel || it != MessageAction.Copy) && (reads || it != MessageAction.ReadAloud)
+                // Only replies have Copy beside More. A prompt must keep its copy action here.
+                (feel || prompt || it != MessageAction.Copy) &&
+                    (reads || it != MessageAction.ReadAloud)
             }
             .map { action ->
                 KitMenuItem(
                     label =
                         when (action) {
-                            MessageAction.Copy -> stringResource(Res.string.kitCopy)
+                            MessageAction.Copy -> stringResource(Res.string.chatUiCopyMessageText)
                             MessageAction.Share -> stringResource(Res.string.chatFeelShare)
                             MessageAction.SelectText ->
                                 stringResource(Res.string.chatFeelSelectText)
