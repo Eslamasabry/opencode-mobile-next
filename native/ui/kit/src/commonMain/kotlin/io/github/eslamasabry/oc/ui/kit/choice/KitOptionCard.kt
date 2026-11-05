@@ -20,6 +20,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.color.ThemeResolver
+import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.style.*
 import io.github.eslamasabry.oc.ui.design.tokens.Density
@@ -43,11 +44,10 @@ public fun KitThemeOptionCard(
     modifier: Modifier = Modifier,
 ) {
     val frame = LocalKitColors.current
-    val tokens = LocalKitTokens.current
     val roles =
         remember(pack, frame.dark) { ThemeResolver.roles(pack, null, frame.dark, false, null) }
     val colors = roles.toKitColors()
-    val radius = RoundedCornerShape((tokens.cardRadius - Space.S1).dp)
+    val radius = RoundedCornerShape((FlutterKitTokens.CARD_RADIUS - Space.S1).dp)
     val look =
         kitSurfaceLook(
             KitSurfaceInput(
@@ -182,7 +182,6 @@ private fun OptionCheck(modifier: Modifier = Modifier) {
 
 @Composable
 private fun StyleSample(style: Style) {
-    val tokens = LocalKitTokens.current
     val appearance = LocalKitAppearance.current
     val dark = LocalKitColors.current.dark
     val base = ThemeResolver.roles(appearance.pack, null, dark, false, null)
@@ -204,8 +203,9 @@ private fun StyleSample(style: Style) {
                 RoundedCornerShape(
                     StyleResolver.corner(value, knobs.corners, spec.tokens.sharpRadius).dp
                 )
-            val stripShape = radius((tokens.cardRadius - Space.S1).toFloat())
-            val cardShape = radius(tokens.cardRadius / 2f) // F: lib/ui/kit/kit_option_card.dart:668
+            val stripShape = radius((FlutterKitTokens.CARD_RADIUS - Space.S1).toFloat())
+            val cardShape =
+                radius(FlutterKitTokens.CARD_RADIUS / 2f) // F: lib/ui/kit/kit_option_card.dart:668
             val card =
                 spec.resolve(
                     SurfaceRequest(
@@ -216,7 +216,7 @@ private fun StyleSample(style: Style) {
                         radii =
                             Radii.all(
                                 StyleResolver.corner(
-                                    tokens.cardRadius /
+                                    FlutterKitTokens.CARD_RADIUS /
                                         2f, // F: lib/ui/kit/kit_option_card.dart:668
                                     knobs.corners,
                                     spec.tokens.sharpRadius,
