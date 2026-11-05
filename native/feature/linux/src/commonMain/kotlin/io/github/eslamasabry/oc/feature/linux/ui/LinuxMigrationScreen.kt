@@ -141,30 +141,44 @@ public fun LinuxMigrationScreen(state: LinuxMigrationUi, actions: LinuxMigration
                 )
             }
         }
+        val stop = state.confirmation == LinuxMigrationCommand.Stop
+        KitConfirm(
+            state.confirmation?.let {
+                KitConfirmSpec(
+                    title =
+                        stringResource(
+                            if (stop) Res.string.migrationStopTitle
+                            else Res.string.migrationDiscardTitle
+                        ),
+                    confirmLabel =
+                        stringResource(
+                            if (stop) Res.string.migrationStop else Res.string.migrationDiscard
+                        ),
+                    body =
+                        stringResource(
+                            if (stop) Res.string.migrationStopBody else Res.string.migrationDiscardBody
+                        ),
+                    kind = if (stop) KitConfirmKind.Stop else KitConfirmKind.Destructive,
+                    cancelLabel = if (stop) stringResource(Res.string.migrationKeepGoing) else null,
+                    consequenceItems =
+                        listOfNotNull(
+                            if (stop)
+                                KitConsequence(
+                                    stringResource(Res.string.migrationStopKept),
+                                    KitConsequenceMark.Kept,
+                                )
+                            else null,
+                            KitConsequence(
+                                stringResource(Res.string.migrationTermuxKept),
+                                KitConsequenceMark.Kept,
+                            ),
+                        ),
+                )
+            },
+            actions::confirm,
+            actions::dismiss,
+        )
     }
-    val stop = state.confirmation == LinuxMigrationCommand.Stop
-    KitConfirm(
-        state.confirmation?.let {
-            KitConfirmSpec(
-                title =
-                    stringResource(
-                        if (stop) Res.string.migrationStopTitle
-                        else Res.string.migrationDiscardTitle
-                    ),
-                confirmLabel =
-                    stringResource(
-                        if (stop) Res.string.migrationStop else Res.string.migrationDiscard
-                    ),
-                body =
-                    stringResource(
-                        if (stop) Res.string.migrationStopBody else Res.string.migrationDiscardBody
-                    ),
-                kind = if (stop) KitConfirmKind.Stop else KitConfirmKind.Destructive,
-            )
-        },
-        actions::confirm,
-        actions::dismiss,
-    )
 }
 
 @Composable

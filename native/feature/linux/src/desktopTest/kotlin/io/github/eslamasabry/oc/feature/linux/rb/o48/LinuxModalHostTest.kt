@@ -194,4 +194,23 @@ class LinuxModalHostTest {
         onNodeWithText("Restore").performClick()
         assertEquals(1, actions.confirmed)
     }
+
+    @Test
+    fun `migration stop names kept data and Keep going dismisses without confirming`() =
+        runComposeUiTest {
+            val actions = Actions()
+            setContent {
+                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                    LinuxMigrationScreen(
+                        LinuxMigrationUi(confirmation = LinuxMigrationCommand.Stop),
+                        actions,
+                    )
+                }
+            }
+            onNodeWithText("Stop copying?").assertIsDisplayed()
+            onNodeWithText("What was copied so far is kept").assertExists()
+            onNodeWithText("Keep going").performClick()
+            assertEquals(1, actions.dismissed)
+            assertEquals(0, actions.confirmed)
+        }
 }
