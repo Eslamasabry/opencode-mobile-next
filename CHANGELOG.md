@@ -2,6 +2,12 @@
 
 This project is in public alpha. Only the newest preview is supported.
 
+## 2.1.2+60 — 2026-11-05
+
+Antigravity CLI on the phone in place of Gemini CLI (#116), an "Add an agent"
+card on New conversation, and a GitHub repository picker for Git remotes
+(#114). Full notes: [docs/releases/v2.1.2+60.md](docs/releases/v2.1.2+60.md).
+
 ## 2.1.1+59 — 2026-11-04
 
 AI Team on Android 16 and newer (#111, #112): the safety check passes, OpenCode
