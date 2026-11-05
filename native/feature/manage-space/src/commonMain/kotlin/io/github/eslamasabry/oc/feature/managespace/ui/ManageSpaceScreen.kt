@@ -1,6 +1,6 @@
 package io.github.eslamasabry.oc.feature.managespace.ui
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -10,26 +10,33 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.lifecycle.ManageSpaceState
 import io.github.eslamasabry.oc.engine.lifecycle.StorageNotice
 import io.github.eslamasabry.oc.feature.managespace.presentation.ManageSpaceActions
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
-import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
+import io.github.eslamasabry.oc.ui.kit.modal.KitConsequence
+import io.github.eslamasabry.oc.ui.kit.modal.KitConsequenceMark
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.state.KitProgressRow
+import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
 import kotlin.math.roundToLong
 import org.jetbrains.compose.resources.pluralStringResource
@@ -39,7 +46,6 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 public fun ManageSpaceScreen(state: ManageSpaceState, actions: ManageSpaceActions) {
     var delete by rememberSaveable { mutableStateOf(false) }
-    var cache by rememberSaveable { mutableStateOf(false) }
     val wait = stringResource(Res.string.manageSpaceWaitForExport)
     val enabled = if (state.busy) KitEnabled.Disabled(wait) else KitEnabled.Enabled
     KitSheetHost {
@@ -57,12 +63,20 @@ public fun ManageSpaceScreen(state: ManageSpaceState, actions: ManageSpaceAction
             loadingLabel = stringResource(Res.string.manageSpaceMeasuring),
         ) {
             Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
-                KitText(
-                    stringResource(
-                        if (state.facts?.projects?.isNotEmpty() == true) Res.string.manageSpaceIntro
-                        else Res.string.manageSpaceIntroNothingToExport
+                if (state.loading && state.facts == null) KitSkeletonRows()
+                else if (state.facts != null)
+                    KitNotice(
+                        message =
+                            stringResource(
+                                if (
+                                    state.facts.projects.isNotEmpty() || state.facts.serverInstalled
+                                )
+                                    Res.string.manageSpaceIntro
+                                else Res.string.manageSpaceIntroNothingToExport
+                            ),
+                        icon = KitIcons.warning,
+                        modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
                     )
-                )
                 if (state.failed)
                     KitNotice(
                         message = stringResource(Res.string.projectExportFailedSource),
@@ -96,42 +110,173 @@ public fun ManageSpaceScreen(state: ManageSpaceState, actions: ManageSpaceAction
                             StorageNotice.ExportStopped ->
                                 stringResource(Res.string.projectExportStopped)
                             StorageNotice.DeleteFailed ->
-                                stringResource(Res.string.manageSpaceCacheFailed)
+                                stringResource(Res.string.kitConfirmFailed)
                         }
                     KitNotice(
                         message = words,
+                        modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
+                        tone =
+                            when (notice) {
+                                StorageNotice.CacheCleared,
+                                StorageNotice.Exported -> StatusTone.Ok
+                                StorageNotice.CacheFailed,
+                                StorageNotice.ExportFailed,
+                                StorageNotice.DeleteFailed -> StatusTone.Failure
+                                else -> StatusTone.Neutral
+                            },
+                        notes =
+                            buildList {
+                                if (
+                                    notice == StorageNotice.Exported &&
+                                        state.export?.private == true
+                                )
+                                    add(stringResource(Res.string.projectExportDonePrivate))
+                                if (
+                                    notice == StorageNotice.Exported &&
+                                        state.export?.private == false &&
+                                        (state.facts?.privateFiles ?: 0) > 0
+                                ) {
+                                    val count = state.facts?.privateFiles ?: 0
+                                    add(
+                                        if (count == 1)
+                                            stringResource(Res.string.projectExportDoneLeftOut__eq1)
+                                        else
+                                            pluralStringResource(
+                                                Res.plurals.projectExportDoneLeftOut,
+                                                count,
+                                                count,
+                                            )
+                                    )
+                                }
+                            },
+                        actions =
+                            when (notice) {
+                                StorageNotice.CacheFailed ->
+                                    listOf(
+                                        KitLineAction(
+                                            stringResource(Res.string.manageSpaceTryAgain),
+                                            actions::clearCache,
+                                        )
+                                    )
+                                StorageNotice.ExportFailed ->
+                                    listOf(
+                                        KitLineAction(
+                                            stringResource(Res.string.manageSpaceTryAgain),
+                                            actions::export,
+                                        )
+                                    )
+                                else -> emptyList()
+                            },
                         dismiss =
                             KitLineAction(
                                 stringResource(Res.string.workspaceDismissNotice),
                                 actions::dismiss,
                             ),
                     )
-                    if (notice == StorageNotice.Exported && state.export?.private == true)
-                        KitText(stringResource(Res.string.projectExportDonePrivate))
-                    if (
-                        notice == StorageNotice.Exported &&
-                            state.export?.private == false &&
-                            (state.facts?.privateFiles ?: 0) > 0
-                    ) {
-                        val count = state.facts?.privateFiles ?: 0
-                        KitText(
-                            pluralStringResource(Res.plurals.projectExportDoneLeftOut, count, count)
-                        )
-                    }
                 }
                 state.facts?.let { facts ->
-                    KitRowGroup(label = stringResource(Res.string.manageSpaceDeletedLabel)) {
-                        if (facts.serverInstalled || facts.serverBytes > 0)
+                    Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
+                    KitRowGroup(leadingTiles = true) {
+                        if (facts.projects.isNotEmpty() || facts.serverInstalled) {
+                            if (state.exporting) {
+                                KitProgressRow(
+                                    stringResource(Res.string.projectExportRunning),
+                                    value = null,
+                                    valueLabel = bytes(state.bytesDone),
+                                )
+                                KitRow(
+                                    title = stringResource(Res.string.projectExportStop),
+                                    leading = KitRowLeading.Glyph(KitIcons.stop),
+                                    supporting = stringResource(Res.string.projectExportStopDetail),
+                                    onClick = actions::stopExport,
+                                )
+                            } else
+                                KitRow(
+                                    title = stringResource(Res.string.manageSpaceExportFirst),
+                                    leading = KitRowLeading.Glyph(KitIcons.zip),
+                                    supporting =
+                                        if (facts.projects.isEmpty())
+                                            stringResource(Res.string.projectExportNoProjects)
+                                        else if (facts.projects.size == 1)
+                                            stringResource(
+                                                Res.string.projectExportDetail__eq1,
+                                                facts.projects.size,
+                                                bytes(facts.projectBytes),
+                                            )
+                                        else
+                                            pluralStringResource(
+                                                Res.plurals.projectExportDetail,
+                                                facts.projects.size,
+                                                facts.projects.size,
+                                                bytes(facts.projectBytes),
+                                            ),
+                                    supportingMaxLines =
+                                        2, // F: lib/ui/screens/manage_space_screen.dart:331
+                                    trailing = KitRowTrailing.Chevron,
+                                    enabled = !state.busy,
+                                    disabledReason = wait,
+                                    onClick = actions::export,
+                                )
+                            KitSwitchRow(
+                                title = stringResource(Res.string.projectExportPrivate),
+                                checked = state.includePrivate,
+                                leading = KitIcons.locked,
+                                supporting = stringResource(Res.string.projectExportPrivateDetail),
+                                enabled = enabled,
+                                onCheckedChange = actions::includePrivate,
+                            )
+                        }
+                        KitRow(
+                            title = stringResource(Res.string.manageSpaceClearCache),
+                            leading = KitRowLeading.Glyph(KitIcons.clearAll),
+                            supporting =
+                                state.cacheBytes
+                                    ?.takeIf { it > 0 }
+                                    ?.let {
+                                        stringResource(
+                                            Res.string.manageSpaceClearCacheDetail,
+                                            bytes(it),
+                                        )
+                                    } ?: stringResource(Res.string.manageSpaceClearCacheKeeps),
+                            supportingMaxLines = 2,
+                            enabled = !state.busy,
+                            disabledReason = wait,
+                            onClick = actions::clearCache,
+                        ) // F: lib/ui/screens/manage_space_screen.dart:192
+                        KitRow(
+                            title = stringResource(Res.string.manageSpaceDeleteAll),
+                            leading = KitRowLeading.Glyph(KitIcons.delete),
+                            supporting = stringResource(Res.string.manageSpaceDeleteAllDetail),
+                            supportingMaxLines = 2, // F: lib/ui/kit/kit_row.dart:451
+                            enabled = !state.busy && !state.loading,
+                            disabledReason = wait,
+                            onClick = { delete = true },
+                        )
+                    }
+                    Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
+                    KitRowGroup(
+                        label = stringResource(Res.string.manageSpaceDeletedLabel),
+                        leadingTiles = true,
+                    ) {
+                        if (facts.serverInstalled)
                             KitRow(
                                 title = stringResource(Res.string.manageSpaceServer),
+                                leading = KitRowLeading.Glyph(KitIcons.server),
                                 supporting = stringResource(Res.string.manageSpaceServerDetail),
-                                supportingMaxLines = 3,
+                                supportingMaxLines =
+                                    2, // F: lib/ui/screens/manage_space_screen.dart:232
                                 trailing =
-                                    KitRowTrailing.Value(bytes(facts.serverBytes), chevron = false),
+                                    if (facts.serverBytes > 0)
+                                        KitRowTrailing.Value(
+                                            bytes(facts.serverBytes),
+                                            chevron = false,
+                                        )
+                                    else KitRowTrailing.None,
                             )
                         facts.projects.forEach { project ->
                             KitRow(
                                 title = project.name,
+                                leading = KitRowLeading.Glyph(KitIcons.projects),
                                 titleIsFileName = true,
                                 trailing =
                                     KitRowTrailing.Value(bytes(project.bytes), chevron = false),
@@ -139,9 +284,12 @@ public fun ManageSpaceScreen(state: ManageSpaceState, actions: ManageSpaceAction
                         }
                         KitRow(
                             title = stringResource(Res.string.manageSpaceSettings),
+                            leading = KitRowLeading.Glyph(KitIcons.settings),
                             supporting =
                                 if (facts.savedServers == 0)
                                     stringResource(Res.string.manageSpaceSavedServers__eq0)
+                                else if (facts.savedServers == 1)
+                                    stringResource(Res.string.manageSpaceSavedServers__eq1)
                                 else
                                     pluralStringResource(
                                         Res.plurals.manageSpaceSavedServers,
@@ -150,69 +298,24 @@ public fun ManageSpaceScreen(state: ManageSpaceState, actions: ManageSpaceAction
                                     ),
                         )
                     }
-                    if (facts.projects.isNotEmpty() || facts.privateDataBytes > 0) {
-                        KitRowGroup(label = stringResource(Res.string.manageSpaceExportFirst)) {
-                            KitSwitchRow(
-                                title = stringResource(Res.string.projectExportPrivate),
-                                supporting = stringResource(Res.string.projectExportPrivateDetail),
-                                risk = stringResource(Res.string.projectExportPrivateDetail),
-                                checked = state.includePrivate,
-                                enabled = enabled,
-                                onCheckedChange = actions::includePrivate,
-                            )
-                            if (state.exporting) {
-                                KitRow(
-                                    title = stringResource(Res.string.projectExportRunning),
-                                    supporting = bytes(state.bytesDone),
-                                )
-                                KitRow(
-                                    title = stringResource(Res.string.projectExportStop),
-                                    supporting = stringResource(Res.string.projectExportStopDetail),
-                                    onClick = actions::stopExport,
-                                )
-                            } else
-                                KitRow(
-                                    title = stringResource(Res.string.projectExportSave),
-                                    enabled =
-                                        !state.busy &&
-                                            (facts.projects.isNotEmpty() ||
-                                                (state.includePrivate &&
-                                                    facts.privateDataBytes > 0)),
-                                    disabledReason =
-                                        if (state.busy) wait
-                                        else stringResource(Res.string.projectExportNoProjects),
-                                    onClick = actions::export,
-                                )
-                        }
+                    Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
+                    KitRowGroup(
+                        label = stringResource(Res.string.manageSpaceKeptLabel),
+                        leadingTiles = true,
+                    ) {
+                        KitRow(
+                            title = stringResource(Res.string.manageSpaceKeptTermux),
+                            leading = KitRowLeading.Glyph(KitIcons.terminal),
+                        )
+                        KitRow(
+                            title = stringResource(Res.string.manageSpaceKeptComputers),
+                            leading = KitRowLeading.Glyph(KitIcons.computer),
+                        )
+                        KitRow(
+                            title = stringResource(Res.string.manageSpaceKeptGit),
+                            leading = KitRowLeading.Glyph(KitIcons.branch),
+                        )
                     }
-                }
-                KitRowGroup {
-                    KitRow(
-                        title = stringResource(Res.string.manageSpaceClearCache),
-                        supporting =
-                            state.cacheBytes?.let {
-                                stringResource(Res.string.manageSpaceClearCacheDetail, bytes(it))
-                            } ?: stringResource(Res.string.manageSpaceClearCacheKeeps),
-                        supportingMaxLines = 3,
-                        enabled = !state.busy,
-                        disabledReason = wait,
-                        onClick = { cache = true },
-                    )
-                    KitRow(
-                        title = stringResource(Res.string.manageSpaceDeleteAll),
-                        supporting = stringResource(Res.string.manageSpaceDeleteAllDetail),
-                        supportingMaxLines = 3,
-                        enabled = !state.busy && !state.loading && state.facts != null,
-                        disabledReason =
-                            if (state.busy) wait
-                            else stringResource(Res.string.manageSpaceMeasuring),
-                        onClick = { delete = true },
-                    )
-                }
-                KitRowGroup(label = stringResource(Res.string.manageSpaceKeptLabel)) {
-                    KitRow(title = stringResource(Res.string.manageSpaceKeptTermux))
-                    KitRow(title = stringResource(Res.string.manageSpaceKeptComputers))
-                    KitRow(title = stringResource(Res.string.manageSpaceKeptGit))
                 }
             }
         }
@@ -224,11 +327,63 @@ public fun ManageSpaceScreen(state: ManageSpaceState, actions: ManageSpaceAction
                         confirmLabel = stringResource(Res.string.manageSpaceDeleteAll),
                         kind = KitConfirmKind.Destructive,
                         body = stringResource(Res.string.manageSpaceDeleteBody),
-                        consequences =
-                            listOf(
-                                stringResource(Res.string.manageSpaceLostServer),
-                                stringResource(Res.string.manageSpaceSettings),
-                            ) + state.facts?.projects.orEmpty().map { it.name },
+                        consequenceItems =
+                            buildList<KitConsequence> {
+                                val facts = state.facts ?: return@buildList
+                                if (facts.serverInstalled)
+                                    add(
+                                        KitConsequence(
+                                            stringResource(Res.string.manageSpaceLostServer),
+                                            KitConsequenceMark.Lost,
+                                        )
+                                    )
+                                if (facts.projects.isNotEmpty())
+                                    add(
+                                        KitConsequence(
+                                            if (facts.projects.size == 1)
+                                                stringResource(
+                                                    Res.string.manageSpaceLostProjects__eq1,
+                                                    facts.projects.size,
+                                                    bytes(facts.projectBytes),
+                                                )
+                                            else
+                                                pluralStringResource(
+                                                    Res.plurals.manageSpaceLostProjects,
+                                                    facts.projects.size,
+                                                    facts.projects.size,
+                                                    bytes(facts.projectBytes),
+                                                ),
+                                            KitConsequenceMark.Lost,
+                                        )
+                                    )
+                                add(
+                                    KitConsequence(
+                                        when (facts.savedServers) {
+                                            0 ->
+                                                stringResource(
+                                                    Res.string.manageSpaceLostSettings__eq0
+                                                )
+                                            1 ->
+                                                stringResource(
+                                                    Res.string.manageSpaceLostSettings__eq1
+                                                )
+                                            else ->
+                                                pluralStringResource(
+                                                    Res.plurals.manageSpaceLostSettings,
+                                                    facts.savedServers,
+                                                    facts.savedServers,
+                                                )
+                                        },
+                                        KitConsequenceMark.Lost,
+                                    )
+                                )
+                                add(
+                                    KitConsequence(
+                                        stringResource(Res.string.manageSpaceKeptAll),
+                                        KitConsequenceMark.Kept,
+                                    )
+                                )
+                            },
                     )
                 else null,
             onConfirm = {
@@ -236,21 +391,6 @@ public fun ManageSpaceScreen(state: ManageSpaceState, actions: ManageSpaceAction
                 actions.deleteAll()
             },
             onCancel = { delete = false },
-        )
-        KitConfirm(
-            spec =
-                if (cache && !state.busy)
-                    KitConfirmSpec(
-                        title = stringResource(Res.string.manageSpaceClearCacheQuestion),
-                        confirmLabel = stringResource(Res.string.manageSpaceClearCache),
-                        body = stringResource(Res.string.manageSpaceClearCacheKeeps),
-                    )
-                else null,
-            onConfirm = {
-                cache = false
-                actions.clearCache()
-            },
-            onCancel = { cache = false },
         )
     }
 }

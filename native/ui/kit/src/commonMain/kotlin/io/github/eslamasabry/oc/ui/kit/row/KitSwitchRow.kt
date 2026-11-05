@@ -26,10 +26,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.compositeOver
-import io.github.eslamasabry.oc.ui.design.tokens.Alphas
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
+import io.github.eslamasabry.oc.ui.design.tokens.Alphas
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
@@ -37,7 +37,6 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
-import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.choice.kitSelectTap
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
@@ -56,15 +55,25 @@ private const val TRACK_H = 32
 private const val THUMB = 24
 
 /** What a tap on a switch row does (pure; B-KIT-027). */
-public enum class SwitchTap { Flip, AskRisk, Refuse, Ignore }
+public enum class SwitchTap {
+    Flip,
+    AskRisk,
+    Refuse,
+    Ignore,
+}
 
 /** Pure rules of [KitSwitchRow] (Dart `KitSwitchRow`, `KitRisk`). */
 public object SwitchRules {
     /**
-     * A locked row ("Always included") refuses false; a risky step asks first when turning on; a disabled row ignores
-     * taps; everything else flips.
+     * A locked row ("Always included") refuses false; a risky step asks first when turning on; a
+     * disabled row ignores taps; everything else flips.
      */
-    public fun onTap(checked: Boolean, enabled: Boolean, locked: Boolean, risky: Boolean): SwitchTap =
+    public fun onTap(
+        checked: Boolean,
+        enabled: Boolean,
+        locked: Boolean,
+        risky: Boolean,
+    ): SwitchTap =
         when {
             !enabled -> SwitchTap.Ignore
             locked && checked -> SwitchTap.Refuse
@@ -73,19 +82,19 @@ public object SwitchRules {
         }
 
     /** The haptic a flip plays (plan 06 §4.9: `ToggleOn` / `ToggleOff`). */
-    public fun haptic(newValue: Boolean): KitHaptic = if (newValue) KitHaptic.ToggleOn else KitHaptic.ToggleOff
+    public fun haptic(newValue: Boolean): KitHaptic =
+        if (newValue) KitHaptic.ToggleOn else KitHaptic.ToggleOff
 }
 
 /**
- * A row with a switch (Dart `KitSwitchRow` + `KitRisk`; plan 06 §7.5): the whole row is the toggle (`Role.Switch`), the
- * kit-drawn track sits at the end. A flip plays `ToggleOn`/`ToggleOff` through the kit seam. With [risk], turning on
- * first unfolds the risk line inline with "Turn on" / "Not now" (turning off never asks). [locked] ("Always included")
- * keeps the switch on and refuses false. A disabled row says why on its supporting line.
+ * A row with a switch (Dart `KitSwitchRow` + `KitRisk`; plan 06 §7.5): the whole row is the toggle
+ * (`Role.Switch`), the kit-drawn track sits at the end. A flip plays `ToggleOn`/`ToggleOff` through
+ * the kit seam. With [risk], turning on first unfolds the risk line inline with "Turn on" / "Not
+ * now" (turning off never asks). [locked] ("Always included") keeps the switch on and refuses
+ * false. A disabled row says why on its supporting line.
  *
- * States: off, on, disabled, locked, asking (risk)
- * Text: reading (title), frame (risk actions)
- * Cap: List
- * Motion: thumb slides and track cross-fades QUICK; the risk fold reveals; Off = instant
+ * States: off, on, disabled, locked, asking (risk) Text: reading (title), frame (risk actions) Cap:
+ * List Motion: thumb slides and track cross-fades QUICK; the risk fold reveals; Off = instant
  * Replaces: KitSwitchRow, KitRisk (lib/ui/kit/kit_row_parts.dart)
  */
 @Composable
@@ -97,6 +106,59 @@ public fun KitSwitchRow(
     risk: String? = null,
     locked: Boolean = false,
     enabled: KitEnabled = KitEnabled.Enabled,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    SwitchRowBody(
+        title,
+        checked,
+        modifier,
+        supporting,
+        risk,
+        locked,
+        enabled,
+        null,
+        onCheckedChange,
+    )
+}
+
+/**
+ * Flutter's optional leading glyph; the original switch call and trailing lambda keep their shape.
+ */
+@Composable
+public fun KitSwitchRow(
+    title: String,
+    checked: Boolean,
+    leading: androidx.compose.ui.graphics.vector.ImageVector,
+    modifier: Modifier = Modifier,
+    supporting: String? = null,
+    risk: String? = null,
+    locked: Boolean = false,
+    enabled: KitEnabled = KitEnabled.Enabled,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    SwitchRowBody(
+        title,
+        checked,
+        modifier,
+        supporting,
+        risk,
+        locked,
+        enabled,
+        leading,
+        onCheckedChange,
+    )
+}
+
+@Composable
+private fun SwitchRowBody(
+    title: String,
+    checked: Boolean,
+    modifier: Modifier,
+    supporting: String?,
+    risk: String?,
+    locked: Boolean,
+    enabled: KitEnabled,
+    leading: androidx.compose.ui.graphics.vector.ImageVector?,
     onCheckedChange: (Boolean) -> Unit,
 ) {
     val tokens = LocalKitTokens.current
@@ -123,15 +185,28 @@ public fun KitSwitchRow(
                             onCheckedChange(!checked)
                         }
                         SwitchTap.AskRisk -> asking = !asking
-                        SwitchTap.Refuse, SwitchTap.Ignore -> Unit
+                        SwitchTap.Refuse,
+                        SwitchTap.Ignore -> Unit
                     }
                 }
                 .padding(horizontal = tokens.gutter.dp, vertical = Space.S2.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
+            leading?.let {
+                Box(Modifier.size(tokens.iconTile.dp), contentAlignment = Alignment.Center) {
+                    io.github.eslamasabry.oc.ui.kit.icon.KitIcon(
+                        it,
+                        size = io.github.eslamasabry.oc.ui.kit.icon.KitIconSize.Small,
+                    )
+                }
+            }
             Column(Modifier.weight(1f)) {
-                KitText(title, role = TypeRole.RowTitle, tone = if (on) TextTone.Primary else TextTone.Tertiary)
+                KitText(
+                    title,
+                    role = TypeRole.RowTitle,
+                    tone = if (on) TextTone.Primary else TextTone.Tertiary,
+                )
                 (enabled.reason ?: supporting)?.let {
                     KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = 3)
                 }
@@ -144,7 +219,8 @@ public fun KitSwitchRow(
             exit = shrinkVertically(specs.exit()) + fadeOut(specs.exit()),
         ) {
             Column(
-                Modifier.fillMaxWidth().padding(horizontal = tokens.gutter.dp, vertical = Space.S2.dp),
+                Modifier.fillMaxWidth()
+                    .padding(horizontal = tokens.gutter.dp, vertical = Space.S2.dp),
                 verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
             ) {
                 KitText(risk.orEmpty(), role = TypeRole.Secondary, tone = TextTone.Primary)
@@ -158,10 +234,16 @@ public fun KitSwitchRow(
                             }
                         },
                         role = KitButtonRole.Secondary,
-                        enabled = if (canConfirm) KitEnabled.Enabled else KitEnabled.Disabled(enabled.reason ?: title),
+                        enabled =
+                            if (canConfirm) KitEnabled.Enabled
+                            else KitEnabled.Disabled(enabled.reason ?: title),
                         haptic = KitHaptic.ToggleOn,
                     )
-                    KitButton(label = stringResource(Res.string.kitRiskNotNow), onClick = { asking = false }, role = KitButtonRole.Tertiary)
+                    KitButton(
+                        label = stringResource(Res.string.kitRiskNotNow),
+                        onClick = { asking = false },
+                        role = KitButtonRole.Tertiary,
+                    )
                 }
             }
         }
@@ -173,20 +255,36 @@ public fun KitSwitchRow(
 internal fun KitSwitchTrack(checked: Boolean, active: Boolean) {
     val colors = LocalKitColors.current
     val specs = KitMotion.specs
-    val track by animateColorAsState(
-        when {
-            checked && active -> colors.accent
-            checked -> colors.accent.copy(alpha = Alphas.DISABLED).compositeOver(colors.surface3) // on, but fixed
-            // B-KIT-004: an off switch that cannot be used reads unavailable too, not just an on one.
-            !active -> colors.surface3.copy(alpha = Alphas.DISABLED).compositeOver(colors.ground)
-            else -> colors.surface3
-        },
-        specs.quick(),
-        label = "switch-track",
-    )
+    val track by
+        animateColorAsState(
+            when {
+                checked && active -> colors.accent
+                checked ->
+                    colors.accent
+                        .copy(alpha = Alphas.DISABLED)
+                        .compositeOver(colors.surface3) // on, but fixed
+                // B-KIT-004: an off switch that cannot be used reads unavailable too, not just an
+                // on one.
+                !active ->
+                    colors.surface3.copy(alpha = Alphas.DISABLED).compositeOver(colors.ground)
+                else -> colors.surface3
+            },
+            specs.quick(),
+            label = "switch-track",
+        )
     val thumbColor = if (checked) colors.onAccent else if (active) colors.text2 else colors.text3
-    val x by animateDpAsState(if (checked) (TRACK_W - THUMB - 4).dp else 4.dp, specs.quick(), label = "switch-thumb")
+    val x by
+        animateDpAsState(
+            if (checked) (TRACK_W - THUMB - 4).dp else 4.dp,
+            specs.quick(),
+            label = "switch-thumb",
+        )
     Box(Modifier.size(TRACK_W.dp, TRACK_H.dp).clip(KitShapeId.Pill.shape()).background(track)) {
-        Box(Modifier.offset(x = x, y = ((TRACK_H - THUMB) / 2).dp).size(THUMB.dp).clip(KitShapeId.Circle.shape()).background(thumbColor))
+        Box(
+            Modifier.offset(x = x, y = ((TRACK_H - THUMB) / 2).dp)
+                .size(THUMB.dp)
+                .clip(KitShapeId.Circle.shape())
+                .background(thumbColor)
+        )
     }
 }
