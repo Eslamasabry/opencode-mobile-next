@@ -70,6 +70,8 @@ import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
+private const val LOG_HEIGHT_SHARE = .6f // F: lib/ui/screens/development_services_screen.dart:726
+
 /**
  * DevServicesRoute.Home (Flutter DevelopmentServicesScreen): the project folder, the saved services
  * with Start or Stop and their other acts, then "Also running" — dev servers found on the phone or
@@ -259,9 +261,7 @@ public fun DevServicesScreen(state: DevServicesUi, actions: DevServicesActions) 
                     rememberKitMask(),
                     actions::refreshLogs,
                     Modifier.fillMaxWidth()
-                        .height(
-                            (LocalKitWindow.current.heightDp * .6f).dp
-                        ), // F: lib/ui/screens/development_services_screen.dart:734
+                        .height((LocalKitWindow.current.heightDp * LOG_HEIGHT_SHARE).dp),
                 )
             }
         }
@@ -479,7 +479,9 @@ private fun ServiceBlock(
                             if (row.status == DevelopmentServiceStatus.Unknown) TypeRole.Secondary
                             else TypeRole.Mono,
                         tone = TextTone.Secondary,
-                        maxLines = 1,
+                        maxLines =
+                            if (row.status == DevelopmentServiceStatus.Unknown) Int.MAX_VALUE
+                            else 1,
                     )
                 }
             } else null,

@@ -23,6 +23,10 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
+private const val COMMAND_GLYPH_DP = 24f // F: lib/ui/kit/kit_row.dart:1085
+private const val COMMAND_SUPPORTING_LINES =
+    2 // F: lib/ui/screens/development_services_screen.dart:1009
+
 /**
  * Flutter KitRow's below slot and custom trailing rail, used by saved/found development commands.
  */
@@ -64,7 +68,7 @@ public fun KitCommandRow(
                 KitGlyph(
                     icon,
                     if (current) colors.accent else colors.text2,
-                    (24f * minOf(scale, TextScalePolicy.ICON_CAP)).dp,
+                    (COMMAND_GLYPH_DP * minOf(scale, TextScalePolicy.ICON_CAP)).dp,
                 ) // F: lib/ui/kit/kit_row.dart:1085
             }
             Column(
@@ -76,7 +80,7 @@ public fun KitCommandRow(
                     supporting,
                     role = TypeRole.Secondary,
                     tone = TextTone.Secondary,
-                    maxLines = kitRowSupportingLines(scale, 2),
+                    maxLines = kitRowSupportingLines(scale, COMMAND_SUPPORTING_LINES),
                 ) // F: lib/ui/screens/development_services_screen.dart:1009
                 below?.invoke()
             }
