@@ -18,6 +18,9 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -45,6 +48,9 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -58,6 +64,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
+import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
@@ -73,6 +81,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.state.KitLoadingBar
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -81,6 +90,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitDiscardBody
 import io.github.eslamasabry.oc.ui.words.res.kitDiscardConfirm
 import io.github.eslamasabry.oc.ui.words.res.kitDiscardTitle
 import io.github.eslamasabry.oc.ui.words.res.kitSheetClose
+import io.github.eslamasabry.oc.ui.words.res.kitSheetLoading
 import org.jetbrains.compose.resources.stringResource
 
 /** How tall a sheet is (Dart `KitSheetHeight`). */
@@ -88,6 +98,12 @@ public enum class KitSheetHeight {
     Content,
     Half,
     Full,
+}
+
+/** The tone of a sheet header's icon tile (Dart `KitSheetTone`). */
+public enum class KitSheetTone {
+    Neutral,
+    Attention,
 }
 
 /** Where a sheet sits for the window it is in (plan 06 §7.4, §10.1). */
@@ -178,6 +194,7 @@ internal class SheetEntry {
     var subtitle: String? by mutableStateOf(null)
     var closeLabel: String? by mutableStateOf(null)
     var icon: ImageVector? by mutableStateOf(null)
+    var tone: KitSheetTone by mutableStateOf(KitSheetTone.Neutral)
     var height: KitSheetHeight by mutableStateOf(KitSheetHeight.Content)
     var primary: KitAction? by mutableStateOf(null)
     var secondary: KitAction? by mutableStateOf(null)
@@ -186,6 +203,8 @@ internal class SheetEntry {
     var draft: Boolean by mutableStateOf(false)
     var dismissible: Boolean by mutableStateOf(true)
     var framed: Boolean by mutableStateOf(false)
+    var loading: Boolean by mutableStateOf(false)
+    var secondaryDismisses: Boolean by mutableStateOf(false)
     var asking: Boolean by mutableStateOf(false)
     var onDismissRequest: () -> Unit by mutableStateOf({})
     var body: @Composable ColumnScope.() -> Unit by mutableStateOf({})
@@ -193,9 +212,16 @@ internal class SheetEntry {
     /** Scrim, Close and Back all come here: unsaved input without a draft asks first. */
     fun requestDismiss() {
         if (!dismissible) return
+        if (asking) { // F: lib/ui/kit/kit_sheet_modal.dart:336-339
+            asking = false
+            return
+        }
         if (SheetLayout.asksBeforeClosing(dirty, draft)) asking = true else onDismissRequest()
     }
 }
+
+/** The keyboard's height where the platform reports none (the desktop gate sets it); null reads the real IME inset. */
+internal val LocalSheetKeyboard: ProvidableCompositionLocal<Dp?> = staticCompositionLocalOf { null }
 
 public val LocalKitSheetHost: ProvidableCompositionLocal<KitSheetHostState?> =
     staticCompositionLocalOf {
@@ -249,6 +275,9 @@ public fun KitSheet(
     draft: Boolean = false,
     dismissible: Boolean = true,
     framed: Boolean = false,
+    tone: KitSheetTone = KitSheetTone.Neutral,
+    loading: Boolean = false,
+    secondaryDismisses: Boolean = false,
     body: @Composable ColumnScope.() -> Unit,
 ) {
     val host = LocalKitSheetHost.current
@@ -261,6 +290,7 @@ public fun KitSheet(
         entry.subtitle = subtitle
         entry.closeLabel = closeLabel
         entry.icon = icon
+        entry.tone = tone
         entry.height = height
         entry.primary = primary
         entry.secondary = secondary
@@ -269,6 +299,8 @@ public fun KitSheet(
         entry.draft = draft
         entry.dismissible = dismissible
         entry.framed = framed
+        entry.loading = loading
+        entry.secondaryDismisses = secondaryDismisses
         entry.onDismissRequest = onDismissRequest
         entry.body = body
     }
@@ -378,7 +410,6 @@ private fun SheetLayer(state: KitSheetHostState) {
                 }
         }
     }
-    if (entry.asking) DiscardQuestion(entry)
 }
 
 /**
@@ -408,7 +439,7 @@ private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean) {
             }
             .testTag("kit-sheet")
             .navigationBarsPadding()
-            .imePadding()
+            .then(LocalSheetKeyboard.current?.let { Modifier.padding(bottom = it) } ?: Modifier.imePadding())
     ) {
         if (handle) {
             val density = LocalDensity.current
@@ -447,7 +478,10 @@ private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean) {
         } else {
             Box(Modifier.height(Space.S3.dp))
         }
-        BoxWithConstraints(Modifier.weight(1f, fill = false)) {
+        if (entry.asking) SheetQuestion(entry)
+        BoxWithConstraints(
+            Modifier.weight(1f, fill = false).then(if (entry.asking) Modifier.keptOffstage() else Modifier)
+        ) {
             // Under a large font or the keyboard, let the header join the scroll. Pinned actions
             // keep their
             // own space and the words always have room instead of sitting under an oversized fixed
@@ -455,17 +489,29 @@ private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean) {
             val frameHeight = maxHeight
             val scrollHeader = frameHeight < 400.dp || LocalDensity.current.fontScale >= 2f
             Column {
-                if (!scrollHeader) SheetHeader(entry)
+                if (!scrollHeader) {
+                    SheetHeader(entry, handle)
+                    KitLoadingBar(entry.loading, stringResource(Res.string.kitSheetLoading))
+                }
                 Column(
                     Modifier.weight(1f, fill = false)
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(tokens.labelGap.dp),
                 ) {
-                    if (scrollHeader) SheetHeader(entry)
+                    if (scrollHeader) {
+                        SheetHeader(entry, handle)
+                        KitLoadingBar(entry.loading, stringResource(Res.string.kitSheetLoading))
+                    }
+                    val hasActions =
+                        entry.primary != null || entry.secondary != null || entry.tertiary.isNotEmpty()
                     Column(
-                        Modifier.padding(tokens.gutter.dp),
-                        verticalArrangement = Arrangement.spacedBy(tokens.labelGap.dp),
+                        Modifier.padding(
+                            start = FlutterKitTokens.RAIL.dp,
+                            top = Space.S2.dp,
+                            end = FlutterKitTokens.RAIL.dp,
+                            bottom = (if (hasActions) Space.S2 else FlutterKitTokens.RAIL).dp,
+                        ),
                     ) {
                         if (entry.framed) {
                             Column(
@@ -486,9 +532,10 @@ private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean) {
                         Modifier.heightIn(max = (frameHeight - 64.dp).coerceAtLeast(0.dp))
                             .verticalScroll(rememberScrollState())
                             .padding(
-                                start = tokens.gutter.dp,
-                                end = tokens.gutter.dp,
-                                bottom = tokens.gutter.dp,
+                                start = FlutterKitTokens.RAIL.dp,
+                                top = Space.S2.dp,
+                                end = FlutterKitTokens.RAIL.dp,
+                                bottom = Space.S4.dp,
                             ),
                         primary = entry.primary,
                         secondary = entry.secondary,
@@ -501,40 +548,74 @@ private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean) {
 }
 
 @Composable
-private fun SheetHeader(entry: SheetEntry) {
+private fun SheetHeader(entry: SheetEntry, handle: Boolean) {
     val tokens = LocalKitTokens.current
-    Row(
-        Modifier.fillMaxWidth().padding(start = tokens.gutter.dp, end = (tokens.gutter / 2).dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
+    // The close glyph's ink ends on the rail: rail - (minTarget - glyph) / 2 - ink inset.
+    val showClose = entry.dismissible && !(entry.secondaryDismisses && entry.secondary != null) // F: lib/ui/kit/kit_sheet_modal.dart:383-385
+    val closeEnd =
+        if (showClose) {
+            (FlutterKitTokens.RAIL - (tokens.minTarget - 24) / 2f - 24 * 0.1875f).coerceAtLeast(0f).dp // F: lib/ui/kit/kit_sheet.dart:616-627 lib/ui/kit/kit_optical.dart:29,34 lib/ui/app_iconography.dart:20
+        } else Space.S2.dp
+    Column(
+        Modifier.fillMaxWidth()
+            .padding(
+                start = FlutterKitTokens.RAIL.dp,
+                top = if (handle) 0.dp else Space.S3.dp,
+                end = closeEnd,
+                bottom = Space.S1.dp,
+            )
     ) {
         entry.icon?.let { glyph ->
-            IconTile(glyph, tokens.iconTile.dp + Space.S2.dp)
+            IconTile(glyph, entry.tone)
+            Spacer(Modifier.height(Space.S3.dp))
         }
-        Column(Modifier.weight(1f)) {
-            KitText(entry.title, role = TypeRole.Title, kind = KitTextKind.Frame, maxLines = 2)
-            entry.subtitle?.let {
-                KitText(
-                    it,
-                    role = TypeRole.Secondary,
+        Row(Modifier.fillMaxWidth()) {
+            Column(Modifier.weight(1f).padding(top = Space.S3.dp, end = Space.S2.dp)) {
+                KitText(entry.title, role = TypeRole.Title)
+                entry.subtitle?.let {
+                    Spacer(Modifier.height((Space.S1 / 2f).dp)) // F: lib/ui/kit/kit_sheet.dart:604
+                    KitText(
+                        it,
+                        role = TypeRole.Secondary,
+                        tone = TextTone.Secondary,
+                    )
+                }
+            }
+            if (showClose) {
+                // Flutter's sheet: Close is the X glyph at the end; its words are what TalkBack says.
+                KitIconButton(
+                    icon = KitIcons.close,
+                    label = entry.closeLabel ?: stringResource(Res.string.kitSheetClose),
+                    onClick = { entry.requestDismiss() },
                     tone = TextTone.Secondary,
-                    kind = KitTextKind.Frame,
                 )
             }
-        }
-        if (entry.dismissible) {
-            // Flutter's sheet: Close is the X glyph at the end; its words are what TalkBack says.
-            KitIconButton(
-                icon = KitIcons.close,
-                label = entry.closeLabel ?: stringResource(Res.string.kitSheetClose),
-                onClick = { entry.requestDismiss() },
-                tone = TextTone.Secondary,
-            )
         }
     }
 }
 
-/** The header mark tile (LOOK-23): the glyph on `surface3`, never a solid colour block. */
+/** The header mark tile (`_KitIconTile`): the 44 dp square, neutral on `surface3`, attention tinted. */
+@Composable
+internal fun IconTile(glyph: ImageVector, tone: KitSheetTone = KitSheetTone.Neutral) {
+    val colors = LocalKitColors.current
+    val fill =
+        when (tone) {
+            KitSheetTone.Neutral -> colors.surface3
+            KitSheetTone.Attention ->
+                colors.attention.copy(alpha = FlutterKitTokens.MARK_TINT_ALPHA).compositeOver(colors.surface2)
+        }
+    val ink = if (tone == KitSheetTone.Neutral) colors.text1 else colors.attention
+    Box(
+        Modifier.size(FlutterKitTokens.MARK_SIZE.dp)
+            .clip(RoundedCornerShape(FlutterKitTokens.MARK_RADIUS.dp))
+            .background(fill),
+        contentAlignment = Alignment.Center,
+    ) {
+        KitGlyph(glyph, ink, FlutterKitTokens.MARK_ICON_SIZE.dp)
+    }
+}
+
+/** The confirm sheet's tile at a given [size] (KitConfirm keeps this call). */
 @Composable
 internal fun IconTile(glyph: ImageVector, size: Dp) {
     val colors = LocalKitColors.current
@@ -547,22 +628,65 @@ internal fun IconTile(glyph: ImageVector, size: Dp) {
     }
 }
 
-/** "Discard your changes?" over a dirty sheet without a draft (Dart `showKitDiscardChanges`). */
+/**
+ * The content kept composed (its typed text stays) but out of sight, out of focus and out of the
+ * reading order while the question has the sheet (Flutter's `Visibility(maintainState)` under
+ * `ExcludeFocus`, `kit_sheet_modal.dart:441-449`).
+ */
+private fun Modifier.keptOffstage(): Modifier =
+    layout { measurable, constraints ->
+            measurable.measure(constraints)
+            layout(0, 0) {}
+        }
+        .focusProperties { canFocus = false }
+        .clearAndSetSemantics {}
+
+/**
+ * "Discard your changes?" over a dirty sheet without a draft (Dart `showKitDiscardChanges`): the
+ * question takes the content's place inside the sheet (`kit_sheet_modal.dart:451-474`), drawn as
+ * `KitConfirmSheet` does (`kit_confirm_sheet.dart:520-560`).
+ */
 @Composable
-private fun DiscardQuestion(entry: SheetEntry) {
-    KitConfirm(
-        spec =
-            KitConfirmSpec(
-                title = stringResource(Res.string.kitDiscardTitle),
-                confirmLabel = stringResource(Res.string.kitDiscardConfirm),
-                kind = KitConfirmKind.Discard,
-                body = stringResource(Res.string.kitDiscardBody),
-                cancelLabel = stringResource(Res.string.kitConfirmKeepEditing),
-            ),
-        onConfirm = {
-            entry.asking = false
-            entry.onDismissRequest()
-        },
-        onCancel = { entry.asking = false },
-    )
+private fun SheetQuestion(entry: SheetEntry) {
+    val tokens = LocalKitTokens.current
+    val answer = { yes: Boolean ->
+        entry.asking = false
+        if (yes) entry.onDismissRequest()
+    }
+    Column(
+        Modifier.fillMaxWidth()
+            .testTag("kit-sheet-question")
+            .padding(
+                start = FlutterKitTokens.RAIL.dp,
+                top = Space.S3.dp,
+                end = FlutterKitTokens.RAIL.dp,
+                bottom = Space.S4.dp,
+            )
+            .verticalScroll(rememberScrollState())
+    ) {
+        IconTile(KitIcons.editOff)
+        Spacer(Modifier.height(Space.S3.dp))
+        KitText(stringResource(Res.string.kitDiscardTitle), role = TypeRole.Title)
+        Spacer(Modifier.height(Space.S2.dp))
+        KitText(
+            stringResource(Res.string.kitDiscardBody),
+            role = TypeRole.Body,
+            tone = TextTone.Secondary,
+        )
+        Spacer(Modifier.height(Space.S5.dp))
+        KitActionBlock(
+            primary =
+                KitAction(
+                    stringResource(Res.string.kitDiscardConfirm),
+                    onClick = { answer(true) },
+                    destructive = true,
+                    haptic = KitHaptic.Commit,
+                ),
+        )
+        Spacer(Modifier.height(Space.S3.dp)) // F: lib/ui/kit/kit_confirm_sheet.dart:610
+        KitActionBlock(
+            secondary =
+                KitAction(stringResource(Res.string.kitConfirmKeepEditing), onClick = { answer(false) }),
+        )
+    }
 }
