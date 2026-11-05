@@ -6,6 +6,9 @@
 #   3. the order's gate cases: <module>:desktopTest --tests '*.rb.o<NN>.*' (FlutterGoldenGate v2 writes
 #      looks-out/gate/rows/*.tsv, looks-out/gate/matrix/*.tsv and the flutter/native/diff PNGs)
 #   4. every golden on its ink box against gate_thresholds.tsv, waivers, matrix; tracker updated          rb_gate.py evaluate
+# RB_PARTS="part-a part-b": gate only those parts (their goldens, matrix, caps, write set and Gradle test classes).
+# Gradle runs desktopTest only (no Android variants); configuration and build cache come from native/gradle.properties,
+# Kotlin compiles in the Gradle daemon (kotlin.compiler.execution.strategy=in-process: no Kotlin daemon is started).
 # Environment: RB_DEV=1 while iterating (skips the clean-tree and commit checks; never for the final run).
 #   FLUTTER_REPO (default ~/wt/flutter-ref), GLASS_REPO (default ~/Storage/Code/oc_app), RB_BASE (default
 #   native/looks-pass-2026-11-04), JAVA_HOME / ANDROID_HOME (defaults below), RB_GRADLE_SLOTS (default 2).
@@ -26,9 +29,13 @@ $PY fetch --order "$NN" || { echo "GATE FAIL (fetch)"; exit 1; }
 echo "== order $NN: gate cases"
 rm -rf "$ROOT/looks-out/gate"
 mkdir -p "$ROOT/looks-out/gate/rows" "$ROOT/looks-out/gate/matrix"
-MODS=$($PY modules --order "$NN")
 args=()
-for m in $MODS; do args+=("$m:desktopTest" --tests "*.rb.o$NN.*"); done
+while IFS=$'\t' read -r m filters; do          # RB_PARTS: only those parts' test classes (rb_gate.py tests)
+  [ -n "$m" ] || continue
+  args+=("$m:desktopTest")
+  for f in $filters; do args+=(--tests "$f"); done
+done < <($PY tests --order "$NN")
+[ -n "${RB_PARTS:-}" ] && echo "   parts: $RB_PARTS -> ${args[*]:-no gate cases}"
 if [ ${#args[@]} -gt 0 ]; then
   export JAVA_HOME=${JAVA_HOME:-$HOME/wt/native-repair-20261102/tools/jdk}
   export PATH=$JAVA_HOME/bin:$PATH
@@ -41,7 +48,7 @@ if [ ${#args[@]} -gt 0 ]; then
       exec 9>"$HOME/.oc-rb-gradle.$s.lock"
       if flock -n 9; then
         (cd native && ./gradlew "${args[@]}" --continue -Dorg.gradle.workers.max=2 \
-          "-Dorg.gradle.jvmargs=-Xmx3g -XX:MaxMetaspaceSize=1g" -Pkotlin.daemon.jvmargs=-Xmx4g) \
+          "-Dorg.gradle.jvmargs=-Xmx3g -XX:MaxMetaspaceSize=1g") \
           > "$ROOT/looks-out/gate/gradle.log" 2>&1
         rc=$?
         flock -u 9; exec 9>&-

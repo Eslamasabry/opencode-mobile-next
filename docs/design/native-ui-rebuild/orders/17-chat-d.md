@@ -31,6 +31,8 @@ This order is binding together with `docs/design/native-ui-rebuild/GOLDEN-STANDA
 | 7 | `part-kit_step_signal` | `lib/ui/kit/chat/kit_step_signal.dart` (`~/wt/flutter-ref/lib/ui/kit/chat/kit_step_signal.dart`) | – | 0 | T2 | NEW `native/ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/tool/KitStepSignal.kt` | – |
 | 8 | `part-kit_context_region` | `lib/ui/kit/kit_context_region.dart` (`~/wt/flutter-ref/lib/ui/kit/kit_context_region.dart`) | – | 0 | T2 | NEW `native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/modal/KitContextRegion.kt` | KitContextRegion (wrapper) |
 
+`part-kit_step_light`: its 40 goldens draw the light inside a `KitStepTimeline` (order 15, `part-kit_step_timeline`, `native/ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/tool/KitStepTimeline.kt`) holding `KitToolRow`s (order 14, `part-kit_tool_row`), in a `Scaffold` with 12 dp padding, at 260x262 dp (260x214 for the first/last shots, 380x480 for two) and density 3, as `kit_step_light_golden_test.dart` captures them (`toImage(pixelRatio: 3)`). The gate renders them at that window and density from `looks-gate/flutter/<ref>/render.tsv`; use `Frame.Screen` and pass no window or density. Use both parts read-only: you do not write KitStepTimeline.kt or KitToolRow.kt, and this part's gate case can pass only once orders 14 and 15 are merged.
+
 Logic-only parts (no widget, no golden): each needs `rb/o17/<Pascal>ParityTest.kt` asserting every constant and rule of the Dart file (standard §6 step 8): `kit_project_file_sheet`.
 
 ## 3. Write set
