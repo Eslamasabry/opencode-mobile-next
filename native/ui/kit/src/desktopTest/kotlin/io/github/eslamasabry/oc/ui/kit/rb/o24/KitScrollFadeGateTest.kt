@@ -36,7 +36,7 @@ class KitScrollFadeGateTest {
 
     @Test fun scaled() {
         for (s in listOf("", "_1280x800")) {
-            FlutterGoldenGate.check("kit_scroll_fade_default_text2$s", textScale = 2f, content = default)
+            FlutterGoldenGate.check("kit_scroll_fade_default_text2$s", modes = listOf("dark"), textScale = 2f, content = default)
         }
     }
 
