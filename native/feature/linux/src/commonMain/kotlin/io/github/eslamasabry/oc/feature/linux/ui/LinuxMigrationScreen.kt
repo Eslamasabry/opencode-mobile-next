@@ -3,6 +3,9 @@ package io.github.eslamasabry.oc.feature.linux.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -13,6 +16,11 @@ import io.github.eslamasabry.oc.feature.linux.presentation.*
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.row.*
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.frame.*
@@ -26,16 +34,25 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 public fun LinuxMigrationScreen(state: LinuxMigrationUi, actions: LinuxMigrationActions) {
     KitBackGuard(state.busy, actions::back)
+    val reviewing = state.paragraphs.any { it.word == LinuxMigrationWord.migrationReviewIntro }
+    val start = state.buttons.firstOrNull { it.command == LinuxMigrationCommand.Start }
+    val primaryReason = state.paragraphs.firstOrNull {
+        it.word == LinuxMigrationWord.migrationChooseOne || it.word == LinuxMigrationWord.migrationReviewSpaceShort
+    }?.let { migrationText(it) } ?: stringResource(Res.string.migrationChooseOne)
     KitScreen(
         topBar = {
             KitTopBar(
-                title = migrationText(LinuxMigrationText(state.title)),
+                title = stringResource(Res.string.migrationTitle),
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::back,
             )
         },
         width = KitScreenWidth.Reading,
+        bottom = start?.let { button -> ({
+            KitButton(migrationText(LinuxMigrationText(button.word)), { actions.command(button.command) },
+                enabled = KitEnabled.of(button.enabled, primaryReason))
+        }) },
     ) {
         Column(
             Modifier.fillMaxWidth()
@@ -43,6 +60,9 @@ public fun LinuxMigrationScreen(state: LinuxMigrationUi, actions: LinuxMigration
                 .testTag("termux-migration"),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
+            if (state.title != LinuxMigrationWord.migrationTitle)
+                KitText(migrationText(LinuxMigrationText(state.title)),
+                    Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp), role = TypeRole.Title)
             state.access?.let { access ->
                 val (body, fix) =
                     when (access) {
@@ -68,51 +88,56 @@ public fun LinuxMigrationScreen(state: LinuxMigrationUi, actions: LinuxMigration
                     KitText(stringResource(Res.string.termuxOtherAppsBody))
                 KitButton(stringResource(fix), { actions.command(LinuxMigrationCommand.FixTermux) })
             }
-            state.paragraphs.forEach { KitText(migrationText(it)) }
-            if (state.showSpace) {
-                val required = migrationSize(state.requiredBytes ?: 0)
-                KitNotice(
-                    message =
-                        if (state.availableBytes == null)
-                            stringResource(Res.string.migrationReviewSpaceUnknown, required)
-                        else
-                            stringResource(
-                                Res.string.migrationReviewSpace,
-                                required,
-                                migrationSize(state.availableBytes),
-                            )
-                )
+            val reviewNotes = setOf(
+                LinuxMigrationWord.migrationExportsNote, LinuxMigrationWord.migrationNotMovedSignIn,
+                LinuxMigrationWord.migrationNotMovedSignInNamed, LinuxMigrationWord.migrationNotMovedKeys,
+                LinuxMigrationWord.migrationNotMovedTools, LinuxMigrationWord.migrationTermuxKept,
+                LinuxMigrationWord.migrationChooseOne, LinuxMigrationWord.migrationReviewSpaceShort,
+            )
+            state.paragraphs.filter { !reviewing || it.word !in reviewNotes }.forEach {
+                KitText(migrationText(it), Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp))
             }
-            state.choices.forEach { row ->
-                val detail = migrationText(LinuxMigrationText(row.detail))
-                val measured =
-                    if (row.bytes == null || row.files == null)
-                        stringResource(Res.string.migrationSizeUnknown)
-                    else
-                        pluralStringResource(
-                            Res.plurals.migrationItemSize,
-                            row.files.toInt(),
-                            migrationSize(row.bytes),
-                            row.files.toInt(),
-                        )
-                KitSwitchRow(
-                    title = migrationText(LinuxMigrationText(row.title)),
-                    checked = row.selected,
-                    supporting = "$detail\n$measured",
-                    enabled =
-                        if (row.enabled && !state.busy) KitEnabled.Enabled
-                        else KitEnabled.Disabled(detail),
-                    onCheckedChange = { actions.toggle(row.id, it) },
+            // The source model's disposition is fixed: projects migrate; every other item is a private export.
+            // Flutter termux migration's TermuxMigrationSize.disposition and native MigrationModel.kt agree.
+            val moves = state.choices.filter { it.id == "projects" }
+            val exports = state.choices.filter { it.id != "projects" }
+            if (moves.isNotEmpty()) MigrationChoices(moves, stringResource(Res.string.migrationGroupMoves), state.busy, actions)
+            if (exports.isNotEmpty()) {
+                MigrationChoices(exports, stringResource(Res.string.migrationGroupExports), state.busy, actions)
+                state.paragraphs.firstOrNull { it.word == LinuxMigrationWord.migrationExportsNote }?.let {
+                    KitGroupNote(migrationText(it))
+                }
+            }
+            if (reviewing) {
+                KitSectionLabel(stringResource(Res.string.migrationGroupNotMoved))
+                state.paragraphs.filter { it.word in reviewNotes && it.word != LinuxMigrationWord.migrationExportsNote &&
+                    it.word != LinuxMigrationWord.migrationChooseOne && it.word != LinuxMigrationWord.migrationReviewSpaceShort
+                }.forEach { KitGroupNote(migrationText(it)) }
+            }
+            if (state.showSpace) {
+                val required = state.requiredBytes?.let { migrationSize(it) }
+                KitNotice(
+                    message = when {
+                        required == null -> stringResource(Res.string.migrationSizeUnknown)
+                        state.availableBytes == null -> stringResource(Res.string.migrationReviewSpaceUnknown, required)
+                        else -> stringResource(Res.string.migrationReviewSpace, required, migrationSize(state.availableBytes))
+                    },
+                    notes = if (reviewing) listOf(stringResource(Res.string.migrationKeepOpen)) else emptyList(),
+                    liveRegion = false,
                 )
             }
             if (state.busy) KitProgressView(KitProgress.Waiting())
-            state.buttons.forEach { button ->
+            state.buttons.filter { it.command != LinuxMigrationCommand.Start }.forEachIndexed { index, button ->
                 KitButton(
                     migrationText(LinuxMigrationText(button.word)),
                     { actions.command(button.command) },
-                    enabled =
-                        if (button.enabled) KitEnabled.Enabled
-                        else KitEnabled.Disabled(stringResource(Res.string.migrationChooseOne)),
+                    role = when {
+                        button.command == LinuxMigrationCommand.Discard -> KitButtonRole.Tertiary
+                        button.command == LinuxMigrationCommand.Stop -> KitButtonRole.Secondary
+                        index == 0 -> KitButtonRole.Primary
+                        else -> KitButtonRole.Tertiary
+                    },
+                    enabled = KitEnabled.of(button.enabled, primaryReason),
                 )
             }
         }
@@ -140,6 +165,23 @@ public fun LinuxMigrationScreen(state: LinuxMigrationUi, actions: LinuxMigration
         actions::confirm,
         actions::dismiss,
     )
+}
+
+@Composable
+private fun MigrationChoices(rows: List<LinuxMigrationChoice>, title: String, busy: Boolean, actions: LinuxMigrationActions) {
+    KitRowGroup(label = title) {
+        rows.forEach { row ->
+            val detail = migrationText(LinuxMigrationText(row.detail))
+            val measured = if (row.bytes == null || row.files == null) stringResource(Res.string.migrationSizeUnknown)
+            else pluralStringResource(Res.plurals.migrationItemSize, row.files.toInt(), migrationSize(row.bytes), row.files.toInt())
+            KitSwitchRow(
+                title = migrationText(LinuxMigrationText(row.title)), checked = row.selected,
+                supporting = "$measured\n$detail",
+                enabled = KitEnabled.of(row.enabled && !busy, if (busy) stringResource(Res.string.migrationKeepOpen) else detail),
+                onCheckedChange = { actions.toggle(row.id, it) },
+            )
+        }
+    }
 }
 
 /** Flutter formatPhoneStorage: one decimal above a kilobyte, Latin digits in an LTR isolate. */
