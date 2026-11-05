@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.feature.chats.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -13,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.chats.presentation.AllConversationsUi
 import io.github.eslamasabry.oc.feature.chats.presentation.AllPhase
@@ -30,6 +32,8 @@ import io.github.eslamasabry.oc.ui.kit.chip.KitChipTone
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipWrap
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceMark
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceRow
+import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
+import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
@@ -48,11 +52,16 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitUndoOffer
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
+import io.github.eslamasabry.oc.ui.kit.row.KitRowState
+import io.github.eslamasabry.oc.ui.kit.row.KitRowStateTone
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
+import io.github.eslamasabry.oc.ui.kit.motion.KitRefresh
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeClearFilters
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeIncompleteNamed
@@ -118,6 +127,7 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
     // One text state for the page, so the field keeps its words when select mode hides and brings
     // it back.
     val searchText = rememberTextFieldState(state.query)
+    val project = state.projects.firstOrNull { it.selected }
     LaunchedEffect(state.query) {
         if (state.query.isEmpty() && searchText.text.isNotEmpty()) searchText.edit { replace(0, length, "") }
     }
@@ -161,19 +171,33 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
             )
         },
         search =
-            if (listed && !state.selecting) {
+            if (state.phase != AllPhase.NoServer && !state.selecting) {
                 {
                     KitSearchField(
                         label = stringResource(Res.string.globalSessionsSearchLabel),
                         onSearch = actions::search,
                         state = searchText,
+                        resultCount = if (state.query.isBlank() || state.phase == AllPhase.Opening) null else state.rows.size,
+                        partial = state.canLoadMore,
+                        filters = buildList {
+                            if (state.projects.size > 1) state.projects.forEach { choice ->
+                                add(KitMenuItem(choice.name, { actions.chooseProject(choice.directory) }, icon = KitIcons.files, checked = choice.selected))
+                            }
+                            add(KitMenuItem(stringResource(Res.string.chatsHomeRunning), actions::toggleRunning, checked = state.running))
+                        },
+                        activeFilter = project?.name,
+                        removeFilterLabel = stringResource(Res.string.kitSearchClear),
+                        onClearFilter = project?.let { { actions.chooseProject(it.directory) } },
                     )
                 }
             } else {
                 null
             },
         bottom = { Bottom(state, actions) },
-        width = KitScreenWidth.Reading,
+        header = if (state.phase == AllPhase.NoServer || state.selecting) null else ({ Filters(state, actions) }),
+        loading = state.phase == AllPhase.Opening || state.loadingMore,
+        loadingLabel = stringResource(Res.string.globalSessionsRefresh),
+        width = KitScreenWidth.List,
     ) {
         val list = rememberLazyListState()
         // Reaching the end asks for the next page; after a failure only the visible Try again does.
@@ -190,9 +214,8 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
             }
                 .collect { near -> if (near) actions.loadMore() }
         }
+        KitRefresh(refreshing = false, onRefresh = actions::retry, enabled = listed && !state.selecting) {
         LazyColumn(state = list, verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-            if ((listed || state.hasArchived) && !state.selecting)
-                item(key = "filters") { Filters(state, actions) }
             if (state.incomplete.isNotEmpty()) {
                 item(key = "incomplete") {
                     KitNotice(
@@ -222,7 +245,7 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                 }
             }
             when (state.phase) {
-                AllPhase.Opening -> item(key = "opening") { KitSkeletonRows() }
+                AllPhase.Opening -> item(key = "opening") { KitSkeletonRows(count = 7) } // F: lib/ui/screens/global_sessions_screen.dart:816
                 AllPhase.NoServer ->
                     item(key = "no-server") {
                         KitStateView(
@@ -250,13 +273,28 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                     item(key = "empty") {
                         KitStateView(
                             kind = KitStateKind.Empty,
-                            title = stringResource(Res.string.globalSessionsEmptyTitle),
-                            body = stringResource(Res.string.globalSessionsEmptyMessage),
+                            title = stringResource(if (state.archived) Res.string.globalSessionsArchivedEmptyTitle else Res.string.globalSessionsEmptyTitle),
+                            body = stringResource(if (state.archived) Res.string.globalSessionsArchivedEmptyMessage else Res.string.globalSessionsEmptyMessage),
+                            icon = if (state.archived) KitIcons.archive else KitIcons.searchList,
+                            secondary = if (state.archived) KitAction(stringResource(Res.string.globalSessionsShowActive), actions::toggleArchived) else null,
                         )
                     }
                 AllPhase.NoMatch ->
                     item(key = "no-match") {
-                        if (state.query.isNotBlank()) KitSearchNoMatch(query = state.query, onClear = actions::clearFilters)
+                        if (state.query.isNotBlank()) KitStateView(
+                            kind = KitStateKind.Empty,
+                            title = stringResource(Res.string.globalSessionsNoMatchTitle),
+                            body = stringResource(if (state.archived) Res.string.globalSessionsArchivedNoMatchMessage else Res.string.globalSessionsNoMatchMessage),
+                            icon = KitIcons.searchList,
+                            secondary = KitAction(stringResource(Res.string.commonClearSearch), { actions.search("") }),
+                        )
+                        else if (state.archived && project == null && !state.running) KitStateView(
+                            kind = KitStateKind.Empty,
+                            title = stringResource(Res.string.globalSessionsArchivedEmptyTitle),
+                            body = stringResource(Res.string.globalSessionsArchivedEmptyMessage),
+                            icon = KitIcons.archive,
+                            secondary = KitAction(stringResource(Res.string.globalSessionsShowActive), actions::toggleArchived),
+                        )
                         else KitStateView(
                             kind = KitStateKind.Empty,
                             title = stringResource(Res.string.globalSessionsNoMatchTitle),
@@ -296,6 +334,7 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                 }
             }
         }
+        }
         RenameDialog(state, actions)
     }
 }
@@ -322,41 +361,32 @@ private const val END_SLACK = 3
 
 @Composable
 private fun Filters(state: AllConversationsUi, actions: ChatsAllActions) {
-    KitChipWrap {
-        KitChip(
-            label = stringResource(Res.string.chatsHomeRunning),
-            kind = KitChipKind.Action,
-            tone = if (state.running) KitChipTone.Active else KitChipTone.Neutral,
-            selected = state.running,
-            onClick = actions::toggleRunning,
-        )
-        if (state.hasArchived) {
-            KitChip(
-                label = stringResource(Res.string.p12ArchivedFilter),
-                kind = KitChipKind.Action,
-                tone = if (state.archived) KitChipTone.Active else KitChipTone.Neutral,
-                selected = state.archived,
-                onClick = actions::toggleArchived,
-            )
-        }
-        state.projects.forEach { project ->
-            KitChip(
-                label = project.name,
-                kind = KitChipKind.Action,
-                tone = if (project.selected) KitChipTone.Active else KitChipTone.Neutral,
-                selected = project.selected,
-                onClick = { actions.chooseProject(project.directory) },
-            )
-        }
-    }
+    KitSegmented(
+        segments = listOf(
+            KitSegment(false, stringResource(Res.string.globalSessionsFilterActive)),
+            KitSegment(true, stringResource(Res.string.globalSessionsArchivedShort), icon = KitIcons.archive),
+        ),
+        selected = state.archived,
+        semanticsLabel = stringResource(Res.string.globalSessionsFilterLabel),
+        modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp).padding(top = Space.S1.dp, bottom = Space.S2.dp),
+        onChange = { archived -> if (archived != state.archived) actions.toggleArchived() },
+    )
+    if (state.running) KitChip(
+        label = stringResource(Res.string.chatsHomeRunning),
+        kind = KitChipKind.Action,
+        tone = KitChipTone.Active,
+        selected = true,
+        onClick = actions::toggleRunning,
+        modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
+    )
 }
 
 @Composable
 private fun rowTitle(title: RowTitle): String =
     when (title) {
         is RowTitle.Text -> title.text
-        RowTitle.New,
-        RowTitle.Untitled -> stringResource(Res.string.workspaceNewSession)
+        RowTitle.New -> stringResource(Res.string.workspaceNewSession)
+        RowTitle.Untitled -> stringResource(Res.string.globalSessionsUntitled)
     }
 
 @Composable
@@ -427,7 +457,8 @@ private fun AllRow(row: AllRowUi, selecting: Boolean, actions: ChatsAllActions) 
             title = title,
             titleMaxLines = 2, // F: lib/ui/screens/global_sessions_screen.dart:1107
             supportingMaxLines = 2, // F: lib/ui/screens/global_sessions_screen.dart:1108
-            leading = KitRowLeading.Glyph(if (row.archived) KitIcons.archive else KitIcons.chat),
+            leading = if (row.running) null else KitRowLeading.Glyph(if (row.archived) KitIcons.archive else KitIcons.chat),
+            state = if (row.running) KitRowState(null, KitRowStateTone.Running) else null,
             supporting = supporting,
             trailing =
                 KitRowTrailing.Action(
