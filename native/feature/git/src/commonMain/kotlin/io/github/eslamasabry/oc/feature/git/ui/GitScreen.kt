@@ -451,16 +451,22 @@ private fun Ready(
                     enabled = enabled,
                     modifier = Modifier.testTag("git-message"),
                 )
-                val count = state.selected.size
-                KitButton(
-                    pluralStringResource(Res.plurals.gitSaveButton, count, count),
-                    { actions.commit(message.text.toString()) },
-                    enabled =
-                        if (count == 0)
+                val known = files.map { it.path }.toSet()
+                val count = state.selected.count { it in known }
+                val saveEnabled =
+                    when {
+                        count == 0 ->
                             KitEnabled.Disabled(
                                 stringResource(Res.string.gitProblemNothingSelected)
                             )
-                        else enabled,
+                        message.text.toString().trim().isEmpty() ->
+                            KitEnabled.Disabled(stringResource(Res.string.gitProblemEmptyMessage))
+                        else -> enabled
+                    }
+                KitButton(
+                    pluralStringResource(Res.plurals.gitSaveButton, count, count),
+                    { actions.commit(message.text.toString()) },
+                    enabled = saveEnabled,
                     working = state.busy == GitBusy.Commit,
                     modifier = Modifier.testTag("git-save"),
                 )
@@ -469,12 +475,7 @@ private fun Ready(
                         stringResource(Res.string.gitSaveAndSendTitle),
                         { actions.commitAndPush(message.text.toString()) },
                         role = KitButtonRole.Secondary,
-                        enabled =
-                            if (count == 0)
-                                KitEnabled.Disabled(
-                                    stringResource(Res.string.gitProblemNothingSelected)
-                                )
-                            else enabled,
+                        enabled = saveEnabled,
                         modifier = Modifier.testTag("git-save-send"),
                     )
                 }

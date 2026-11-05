@@ -14,6 +14,7 @@ import java.lang.reflect.Proxy
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
 
 @OptIn(ExperimentalTestApi::class)
 class GitStepsTest {
@@ -139,4 +140,46 @@ class GitStepsTest {
         save.performScrollTo().performClick()
         assertEquals(listOf("setIdentity" to listOf("Owner", "owner@example.invalid")), calls)
     }
+
+    @Test
+    fun `B-NAV-020 both save actions hold whitespace and preserve the entered message`() =
+        runComposeUiTest {
+            val file = GitFileChange("app.kt", unstaged = GitChangeKind.Modified)
+            val ready =
+                snapshot.copy(
+                    status = snapshot.status.copy(files = persistentListOf(file)),
+                    remotes =
+                        persistentListOf(
+                            GitRemote(
+                                "origin",
+                                GitRemoteKind.GitHubHttps,
+                                "https://github.com/example/app.git",
+                            )
+                        ),
+                )
+            setContent {
+                KitTheme(
+                    platform = DesktopKitPlatform(),
+                    appearance = KitAppearance(motion = MotionLevel.Off),
+                    stillFrame = true,
+                ) {
+                    GitScreen(
+                        GitUi(
+                            view = GitPageView.Ready(ready),
+                            selected = persistentSetOf(file.path),
+                        ),
+                        actions,
+                    )
+                }
+            }
+            val message = onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("git-message")))
+            message.performScrollTo().performTextReplacement("  \n ")
+            onNodeWithTag("git-save").performScrollTo().assertIsNotEnabled()
+            onNodeWithTag("git-save-send").performScrollTo().assertIsNotEnabled()
+            assertEquals(emptyList(), calls)
+            message.performScrollTo().performTextReplacement(" Keep this message ")
+            onNodeWithTag("git-save").assertIsEnabled()
+            onNodeWithTag("git-save-send").performScrollTo().performClick()
+            assertEquals(listOf("commitAndPush" to listOf(" Keep this message ")), calls)
+        }
 }
