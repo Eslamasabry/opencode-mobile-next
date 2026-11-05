@@ -2,8 +2,11 @@ package io.github.eslamasabry.oc.ui.design.style
 
 import io.github.eslamasabry.oc.ui.design.tokens.Density
 
-/** The five visual styles (Dart `KitSurfaceStyle`; B-KIT-037). Glass and Crystal are retired and Clay was dropped. */
-public enum class Style(public val storageName: String) { Solid("solid"), Soft("soft"), Brutal("brutal"), Paper("paper"), Signal("signal") }
+/**
+ * The six visual styles (Dart `KitSurfaceStyle`; B-KIT-037), in picker order: Solid, Glass (restored from GLASS_REF
+ * `1bbdc3f9c`), Soft, Brutal, Paper, Signal. Crystal is retired and Clay was dropped.
+ */
+public enum class Style(public val storageName: String) { Solid("solid"), Glass("glass"), Soft("soft"), Brutal("brutal"), Paper("paper"), Signal("signal") }
 
 public enum class Corners { Round, Soft, Sharp }
 
@@ -56,9 +59,26 @@ public data class NeedsYouLook(
     }
 }
 
-/** How the live background shows under a style (contract §3.11). */
-public data class LivePolicy(val maxStrength: Float? = null, val offWhenChosen: Boolean = false) {
-    public fun cap(strength: Float): Float = maxStrength?.let { if (strength <= it) strength else it } ?: strength
+/**
+ * How the live background shows under a style (contract §3.11). The Glass hooks (GLASS_REF `kit_style.dart`): [boost]
+ * lifts the person's Intensity before the cap, [lightVivid] and [darkVivid] are the colour lift, [fillsMiddle] lays the
+ * colour across the middle of the page, [lookWhenChosen] is the live look choosing the style picks.
+ */
+public data class LivePolicy(
+    val maxStrength: Float? = null,
+    val offWhenChosen: Boolean = false,
+    val boost: Float = 1f,
+    val lightVivid: Float = 0f,
+    val darkVivid: Float = 0f,
+    val fillsMiddle: Boolean = false,
+    val lookWhenChosen: String? = null,
+) {
+    public fun vividFor(dark: Boolean): Float = if (dark) darkVivid else lightVivid
+
+    public fun cap(strength: Float): Float {
+        val lifted = strength * boost
+        return maxStrength?.let { if (lifted <= it) lifted else it } ?: lifted
+    }
 }
 
 /** How the message box's running glow is drawn (contract §3.10). */
@@ -75,10 +95,12 @@ public data class StyleType(
     val monoLabels: Boolean = false,
     val engravedLabels: Boolean = false,
     val firmWeights: Boolean = false,
+    /** Added to every role's weight (Glass: words a step heavier on panes; GLASS_REF `weightBoost`). */
+    val weightBoost: Float = 0f,
 ) {
     public val isNone: Boolean
         get() = displayWeight == null && displayTracking == null && largeTitleSize == null && largeTitleWeight == null &&
-            titleSize == null && bodyWeight == null && !monoLabels && !engravedLabels && !firmWeights
+            titleSize == null && bodyWeight == null && !monoLabels && !engravedLabels && !firmWeights && weightBoost == 0f
 }
 
 /** What a style fixes for every part: its Fine-tune defaults and the tokens the resolver reads (Dart `KitStyleTokens`). */
@@ -98,6 +120,8 @@ public data class StyleTokens(
     val fieldHalo: Boolean? = null,
     val flatLists: Boolean = false,
     val track: Boolean = false,
+    /** Whether floating pieces and sheets blur what lies behind them (Glass; GLASS_REF `blursBehind`). */
+    val blursBehind: Boolean = false,
 ) {
     public val fieldHaloShown: Boolean get() = fieldHalo ?: glow.halo
 }

@@ -71,4 +71,17 @@ public data class SurfaceDecoration(
     val hardOffsetDp: Float = 0f,
     /** Hook H2: the face and its content sink into the shadow while pressed. */
     val faceShiftDp: Float = 0f,
-)
+    /** The fill at the top-start corner; it fades to [fill] at the bottom end. Null: [fill] (GLASS_REF `fillStart`). */
+    val fillStart: Argb? = null,
+    /** A soft plate of this colour behind the words on this surface (hook H10; Glass). Transparent: none. */
+    val wordsPlate: Argb = Argb(0),
+    /** The sigma of the background blur behind this surface's face (Glass); 0 asks for none. Never lerps. */
+    val frost: Float = 0f,
+    /** A glow inside the face along its top edge, [INNER_GLOW_DEPTH_DP] down (Glass); transparent draws none. */
+    val innerGlow: Argb = Argb(0),
+) {
+    public companion object {
+        /** How far down the face [innerGlow] reaches, in dp (at most half the face). */
+        public const val INNER_GLOW_DEPTH_DP: Float = 22f // FG: lib/ui/kit/kit_surface_look.dart:608
+    }
+}
