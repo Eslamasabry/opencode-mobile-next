@@ -30,6 +30,7 @@ import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -70,7 +71,11 @@ public fun KitSetupHero(
             }
             if (primary != null || secondary != null || tertiary.isNotEmpty()) {
                 Spacer(Modifier.height(Space.S6.dp))
-                KitActionBlock(primary = primary, secondary = secondary, tertiary = tertiary)
+                primary?.let { KitButton(it, fullWidth = true, hero = true) }
+                if (secondary != null || tertiary.isNotEmpty()) {
+                    Spacer(Modifier.height(Space.S2.dp))
+                    KitActionBlock(secondary = secondary, tertiary = tertiary)
+                }
             }
             footer?.let {
                 Spacer(Modifier.height(Space.S4.dp))

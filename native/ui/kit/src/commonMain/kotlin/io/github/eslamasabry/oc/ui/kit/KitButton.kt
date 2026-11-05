@@ -110,6 +110,7 @@ public fun KitButton(
     working: Boolean = false,
     haptic: KitHaptic? = null,
     fullWidth: Boolean = false,
+    hero: Boolean = false,
 ) {
     kitAssert(label.isNotBlank()) { "KitButton: a button needs words (B-KIT-011)" }
     kitAssert(enabled !is KitEnabled.Disabled || enabled.reason.isNotBlank()) {
@@ -139,6 +140,7 @@ public fun KitButton(
     val easedWords by animateColorAsState(words, specs.quick(), label = "kit-button-words")
     val ink = if (role == KitButtonRole.Primary && !destructive) TextTone.OnAccent else TextTone.Primary
     // The style decides the face (B-KIT-043..045); Solid keeps the fill above. A tertiary button has no face.
+    val faceShape = if (hero) KitShapeId.Pill else KitShapeId.Button
     val look =
         if (role == KitButtonRole.Tertiary) {
             null
@@ -146,7 +148,7 @@ public fun KitButton(
             kitSurfaceLook(
                 KitSurfaceInput(
                     role = SurfaceRole.Control,
-                    shape = KitShapeId.Button,
+                    shape = faceShape,
                     level = SurfaceLevel.Surface3,
                     ownFill = easedFill,
                     color = if (role == KitButtonRole.Primary && on) easedFill else null,
@@ -156,13 +158,13 @@ public fun KitButton(
             )
         }
     val wordsColor = look?.words?.takeIf { on } ?: easedWords
-    val minHeight = if (role == KitButtonRole.Tertiary) tokens.minTarget else tokens.buttonHeight
+    val minHeight = if (hero) tokens.minTarget + Space.S2 else if (role == KitButtonRole.Tertiary) tokens.minTarget else tokens.buttonHeight
     val pad = if (role == KitButtonRole.Tertiary) Space.S2 else Space.S6
     val interactions = remember { MutableInteractionSource() }
     val pressed by interactions.collectIsPressedAsState()
     val reduced = KitMotion.state.reduced
     val press by animateFloatAsState(if (pressed && on && !reduced) 1f else 0f, specs.spatial(), label = "kit-button-press")
-    val rest = (Shapes.of(KitShapeId.Button) as? Corner.Radius)?.dp ?: PRESS_ROUND_DP
+    val rest = if (hero) minHeight / 2 else (Shapes.of(KitShapeId.Button) as? Corner.Radius)?.dp ?: PRESS_ROUND_DP // NV: a stadium's radius is half its height
     Row(
         modifier =
             modifier
@@ -182,7 +184,7 @@ public fun KitButton(
                     enabled = on,
                     disabledReason = enabled.reason,
                     haptic = if (working) null else haptic,
-                    shape = KitShapeId.Button,
+                    shape = faceShape,
                     ink = ink,
                     interactionSource = interactions,
                 )
@@ -257,6 +259,7 @@ public fun KitButton(
     modifier: Modifier = Modifier,
     role: KitButtonRole = KitButtonRole.Primary,
     fullWidth: Boolean = false,
+    hero: Boolean = false,
 ) {
     val run = action.onClick
     kitAssert(run != null || !action.enabled.isEnabled) {
@@ -276,6 +279,7 @@ public fun KitButton(
         working = action.working,
         haptic = action.haptic,
         fullWidth = fullWidth,
+        hero = hero,
     )
 }
 
