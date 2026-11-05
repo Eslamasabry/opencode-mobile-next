@@ -28,6 +28,8 @@ import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
+import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitInlineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
@@ -54,6 +56,10 @@ public enum class KitTopBarExit {
  * `KitRowMenu` from S1-KITA2); a bar with hidden actions and no [more] asserts in debug. Frame
  * text: it never grows past 1.3×, and the title wraps to two lines from 1.3×.
  *
+ * An action with an [KitLineAction.icon] is an icon button on phones and tablets (its words are what TalkBack says);
+ * wide windows show the words. Words never break inside a word: one line, then "…". [large] is a hub's bar: the
+ * title in the 28 sp large size on its own line, the actions on the title's line at the end (or beside Back).
+ *
  * States: default, subtitle, switcher, disabled (action) Text: frame Cap: Fill Motion: none Hidden:
  * none Replaces: KitTopBar (lib/ui/kit/kit_top_bar.dart)
  */
@@ -70,6 +76,7 @@ public fun KitTopBar(
     onTitleTap: (() -> Unit)? = null,
     titleTapLabel: String? = null,
     actions: List<KitLineAction> = emptyList(),
+    large: Boolean = false,
     more: (@Composable (hidden: List<KitLineAction>) -> Unit)? = null,
 ) {
     val colors = LocalKitColors.current
@@ -134,7 +141,85 @@ public fun KitTopBar(
     kitAssert(hidden.isEmpty() || more != null) {
         "KitTopBar: ${hidden.size} actions past the bar's limit need the overflow"
     }
-    val large = TextScalePolicy.isLargeText(kitTextScale())
+    val largeText = TextScalePolicy.isLargeText(kitTextScale())
+    val icons = window.cls == WindowClass.Compact || window.cls == WindowClass.Medium
+    val actionRow: @Composable () -> Unit = {
+        if (shown.isNotEmpty()) {
+            Row(
+                Modifier.layout { measurable, constraints ->
+                    val cap =
+                        (constraints.maxWidth * (if (large) LARGE_ACTIONS_SHARE else ACTIONS_SHARE))
+                            .toInt()
+                            .coerceAtLeast(constraints.minWidth)
+                    val placeable = measurable.measure(constraints.copy(maxWidth = cap))
+                    layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+                },
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                shown.forEach { action ->
+                    val glyph = action.icon
+                    if (icons && glyph != null) {
+                        KitIconButton(
+                            icon = glyph,
+                            label = action.semanticsLabel ?: action.label,
+                            onClick = action.onClick,
+                            modifier = action.testTag?.let { Modifier.testTag(it) } ?: Modifier,
+                            enabled = KitEnabled.of(action.enabled, action.disabledReason),
+                        )
+                    } else {
+                        // QA wave 4 N1: inline actions never take more than their share of the bar, so the
+                        // title always keeps room. One line, ending in "…", never broken inside a word.
+                        KitInlineAction(action, Modifier.weight(1f, fill = false), maxLines = 1)
+                    }
+                }
+            }
+        }
+        if (hidden.isNotEmpty() || more != null) more?.invoke(hidden)
+    }
+    if (large) {
+        Column(
+            modifier
+                .fillMaxWidth()
+                .semantics { isTraversalGroup = true }
+                .testTag("kit-top-bar"),
+        ) {
+            Row(
+                Modifier.fillMaxWidth()
+                    .heightIn(min = tokens.minTarget.dp)
+                    .padding(horizontal = Space.S1.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (exit == KitTopBarExit.Back && onExit != null)
+                    ExitButton(ExitGlyph.Back, exitLabel.orEmpty(), onExit, -1f)
+                if (exit == KitTopBarExit.Back && onExit != null) {
+                    Box(Modifier.weight(1f))
+                    actionRow()
+                }
+            }
+            Row(
+                Modifier.fillMaxWidth()
+                    .padding(start = tokens.gutter.dp, end = Space.S1.dp, bottom = Space.S2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    KitText(
+                        title,
+                        Modifier.semantics { heading() }.testTag("kit-top-bar-title"),
+                        role = TypeRole.LargeTitle,
+                        kind = KitTextKind.Frame,
+                        maxLines = 2,
+                        pageTitle = true,
+                    )
+                    if (scope != null) scope()
+                    else subtitle?.let { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Frame, maxLines = 1) }
+                }
+                if (exit != KitTopBarExit.Back || onExit == null) actionRow()
+                if (exit == KitTopBarExit.Close && onExit != null)
+                    ExitButton(ExitGlyph.Close, exitLabel.orEmpty(), onExit, 1f)
+            }
+        }
+        return
+    }
     Row(
         modifier
             .fillMaxWidth()
@@ -163,7 +248,7 @@ public fun KitTopBar(
                             .testTag("kit-top-bar-title"),
                         role = TypeRole.Headline,
                         kind = KitTextKind.Frame,
-                        maxLines = if (large) 2 else 1,
+                        maxLines = if (largeText) 2 else 1,
                         pageTitle = true,
                     )
                     if (onTitleTap != null) KitExitGlyph(ExitGlyph.Chevron, colors.text2)
@@ -194,26 +279,7 @@ public fun KitTopBar(
                 titleBlock()
             }
         }
-        // QA wave 4 N1: the inline actions never take more than [ACTIONS_SHARE] of the bar, so the
-        // title always keeps
-        // room (a "Context 34 % used" action once squeezed it to 2 px). Labels wrap or end in "…"
-        // inside that share.
-        if (shown.isNotEmpty()) {
-            Row(
-                Modifier.layout { measurable, constraints ->
-                    val cap =
-                        (constraints.maxWidth * ACTIONS_SHARE)
-                            .toInt()
-                            .coerceAtLeast(constraints.minWidth)
-                    val placeable = measurable.measure(constraints.copy(maxWidth = cap))
-                    layout(placeable.width, placeable.height) { placeable.place(0, 0) }
-                },
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                shown.forEach { KitInlineAction(it, Modifier.weight(1f, fill = false)) }
-            }
-        }
-        if (hidden.isNotEmpty() || more != null) more?.invoke(hidden)
+        actionRow()
         if (exit == KitTopBarExit.Close && onExit != null)
             ExitButton(ExitGlyph.Close, exitLabel.orEmpty(), onExit, 1f)
     }
@@ -237,3 +303,6 @@ private fun ExitButton(glyph: ExitGlyph, label: String, onExit: () -> Unit, orde
 
 /** The most of the bar's free width the inline actions may take (QA wave 4 N1). */
 private const val ACTIONS_SHARE = 0.35f
+
+/** A large bar's actions sit beside a title that may wrap, so they may take a little more. */
+private const val LARGE_ACTIONS_SHARE = 0.45f

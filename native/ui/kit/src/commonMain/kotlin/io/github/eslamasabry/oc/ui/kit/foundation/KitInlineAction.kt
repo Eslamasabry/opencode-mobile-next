@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -28,6 +29,11 @@ public data class KitLineAction(
     val disabledReason: String? = null,
     val testTag: String? = null,
     val semanticsLabel: String? = null,
+    /**
+     * The glyph a bar shows instead of the words on a phone (the words become what TalkBack says and the tooltip).
+     * Rows and notices keep the words.
+     */
+    val icon: ImageVector? = null,
 )
 
 /**
@@ -35,7 +41,7 @@ public data class KitLineAction(
  * Kit-internal.
  */
 @Composable
-internal fun KitInlineAction(action: KitLineAction, modifier: Modifier = Modifier) {
+internal fun KitInlineAction(action: KitLineAction, modifier: Modifier = Modifier, maxLines: Int = 2) {
     val tagged = action.testTag?.let { modifier.testTag(it) } ?: modifier
     KitTappable(
         onClick = action.onClick,
@@ -53,7 +59,7 @@ internal fun KitInlineAction(action: KitLineAction, modifier: Modifier = Modifie
             role = TypeRole.Button,
             tone = if (action.enabled) TextTone.Accent else TextTone.Tertiary,
             kind = KitTextKind.Frame,
-            maxLines = 2,
+            maxLines = maxLines,
         )
     }
 }
