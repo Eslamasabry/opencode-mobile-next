@@ -5,7 +5,8 @@ Subcommands (gate_order.sh calls them in this order; each exits non-zero on a fa
   static   --order NN          write set, numbers cited from Flutter, Material and kit-only rules, copy, signatures, commits
   fetch    --order NN          copy the order's Flutter goldens into looks-gate/flutter/<ref9>/
   modules  --order NN          print the Gradle modules whose desktopTest runs the order's gate cases
-  evaluate --order NN          read looks-out/gate/rows and matrix, apply gate_thresholds.tsv and waivers, post the tracker
+  evaluate --order NN          measure looks-out/gate trios (rasterisation-tolerant, RB_METRICS_JAVA), apply
+                               gate_thresholds.tsv and waivers, check the matrix, post the tracker
 Standard library only; run with python3 -I from the repository root.
 """
 import argparse, fnmatch, glob, json, os, re, socket, subprocess, sys, urllib.request
@@ -331,13 +332,208 @@ def cmd_modules(nn):
 
 # ------------------------------------------------------------------ evaluate
 def thresholds():
+    """tier -> (box %, blob px, ink band, shift px). Older 3-column files read with the 2026-11-05 defaults."""
     t = {}
     for line in open(os.path.join(ROOT, 'native/tool/design/gate_thresholds.tsv'), encoding='utf-8'):
         if line.startswith('#') or not line.strip():
             continue
-        tier, box, blob = line.split('\t')[:3]
-        t[tier] = (float(box), int(blob))
+        c = line.rstrip('\n').split('\t')
+        ink = float(c[3]) if len(c) > 4 and re.fullmatch(r'[0-9.]+', c[3]) else 0.10
+        shift = float(c[4]) if len(c) > 4 and re.fullmatch(r'[0-9.]+', c[4]) else 1.75
+        t[c[0]] = (float(c[1]), int(c[2]), ink, shift)
     return t
+
+
+# Rasterisation-tolerant metrics (lead calibration 2026-11-05). Flutter's test renderer and Compose desktop draw the same
+# glyphs with different anti-aliasing, gamma and sub-pixel placement, so a raw per-pixel diff flags matching text. This
+# measure forgives what a 3x3 neighbourhood explains and keeps three checks for real misses: the largest cluster of
+# unexplained pixels (a missing dot, a wrong icon or colour), each text line's ink mass (a heavier or lighter weight, a
+# missing word) and each line's ink centroid (a block placed 2 px off). Proven on planted mistakes in the commit message.
+RB_METRICS_JAVA = r'''
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.util.*;
+import javax.imageio.ImageIO;
+
+/**
+ * Rasterisation-tolerant golden metrics for the native UI rebuild gate (rb_gate.py evaluate).
+ * stdin: "shot\tflutter.png\tnative.png[\tdiff.png]" per line.
+ * stdout: shot, size, box %, blob px, worst line ink ratio, lines, worst line shift px, differing px.
+ *
+ * A pixel differs only when neither image can explain it from the other's 3x3 neighbourhood: for each channel the
+ * pixel must lie inside [min-T, max+T] of the other image's 3x3 window (anti-aliasing, gamma and 1 px glyph placement
+ * differences fall inside; a 2 px move, a wrong colour or a missing mark do not). Box %: differing pixels over the
+ * ink box. Blob: the largest 8-connected cluster of differing pixels (no erosion). Lines: the ink box split at blank
+ * rows; per line, native ink mass over Flutter's (a heavier or lighter weight, a missing word) and how far its ink
+ * centroid moved (a block placed 2 px off), since both survive the neighbourhood tolerance.
+ */
+public class RbMetrics {
+    static final int T = Integer.getInteger("rb.tol", 24);
+    static final int R = Integer.getInteger("rb.radius", 1);
+    static final double MIN_BAND_INK = Double.parseDouble(System.getProperty("rb.minBandInk", "4000"));
+
+    static boolean rowInk(int[] f, int[] n, int w, int x0, int x1, int y, int bg) {
+        for (int x = x0; x <= x1; x++) { int i = y * w + x; if (dist(f[i], bg) > T || dist(n[i], bg) > T) return true; }
+        return false;
+    }
+
+    public static void main(String[] a) throws Exception {
+        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+        String line;
+        while ((line = in.readLine()) != null) {
+            String[] c = line.split("\t");
+            if (c.length < 3) continue;
+            try { System.out.println(c[0] + "\t" + measure(ImageIO.read(new File(c[1])), ImageIO.read(new File(c[2])), c.length > 3 ? c[3] : null)); }
+            catch (Exception e) { System.out.println(c[0] + "\terror " + e); }
+        }
+    }
+
+    static int[] px(BufferedImage im) {
+        int w = im.getWidth(), h = im.getHeight();
+        return im.getRGB(0, 0, w, h, null, 0, w);
+    }
+
+    static int ch(int p, int s) { return (p >> s) & 0xFF; }
+
+    static int background(int[] f) {
+        HashMap<Integer, Integer> n = new HashMap<>();
+        for (int i = 0; i < f.length; i += 7) n.merge(f[i] & 0xFFFFFF, 1, Integer::sum);
+        return Collections.max(n.entrySet(), Map.Entry.comparingByValue()).getKey();
+    }
+
+    static int dist(int p, int q) {
+        return Math.max(Math.abs(ch(p, 16) - ch(q, 16)), Math.max(Math.abs(ch(p, 8) - ch(q, 8)), Math.abs(ch(p, 0) - ch(q, 0))));
+    }
+
+    /** True when [p] is explained by [o]'s window around (x, y). */
+    static boolean explained(int p, int[] o, int w, int h, int x, int y) {
+        for (int s = 0; s <= 16; s += 8) {
+            int lo = 255, hi = 0, v = ch(p, s);
+            for (int dy = -R; dy <= R; dy++) for (int dx = -R; dx <= R; dx++) {
+                int xx = x + dx, yy = y + dy;
+                if (xx < 0 || yy < 0 || xx >= w || yy >= h) continue;
+                int q = ch(o[yy * w + xx], s);
+                if (q < lo) lo = q;
+                if (q > hi) hi = q;
+            }
+            if (v < lo - T || v > hi + T) return false;
+        }
+        return true;
+    }
+
+    static double lum(int p) { return 0.2126 * ch(p, 16) + 0.7152 * ch(p, 8) + 0.0722 * ch(p, 0); }
+
+    static String measure(BufferedImage fi, BufferedImage ni, String diffOut) throws IOException {
+        int w = fi.getWidth(), h = fi.getHeight();
+        if (ni.getWidth() != w || ni.getHeight() != h)
+            return "size " + ni.getWidth() + "x" + ni.getHeight() + " vs " + w + "x" + h + "\t100\t999999\t0\t0\t999\t999999";
+        int[] f = px(fi), n = px(ni);
+        int bg = background(f);
+        double bgL = lum(bg);
+        int x0 = w, y0 = h, x1 = -1, y1 = -1;
+        for (int y = 0; y < h; y++) for (int x = 0; x < w; x++) {
+            int i = y * w + x;
+            if (dist(f[i], bg) > T || dist(n[i], bg) > T) {
+                if (x < x0) x0 = x; if (y < y0) y0 = y; if (x > x1) x1 = x; if (y > y1) y1 = y;
+            }
+        }
+        if (x1 < 0) return "same-size\t0.00\t0\t1.000\t0\t0.00\t0";
+        x0 = Math.max(0, x0 - 4); y0 = Math.max(0, y0 - 4); x1 = Math.min(w - 1, x1 + 4); y1 = Math.min(h - 1, y1 + 4);
+        boolean[] d = new boolean[w * h];
+        long diff = 0;
+        for (int y = y0; y <= y1; y++) for (int x = x0; x <= x1; x++) {
+            int i = y * w + x;
+            if (dist(f[i], n[i]) <= T) continue;
+            if (explained(f[i], n, w, h, x, y) && explained(n[i], f, w, h, x, y)) continue;
+            d[i] = true; diff++;
+        }
+        // largest 8-connected cluster
+        int best = 0;
+        boolean[] seen = new boolean[w * h];
+        ArrayDeque<Integer> q = new ArrayDeque<>();
+        for (int i = 0; i < d.length; i++) {
+            if (!d[i] || seen[i]) continue;
+            int size = 0; q.add(i); seen[i] = true;
+            while (!q.isEmpty()) {
+                int k = q.poll(); size++;
+                int kx = k % w, ky = k / w;
+                for (int dy = -1; dy <= 1; dy++) for (int dx = -1; dx <= 1; dx++) {
+                    int xx = kx + dx, yy = ky + dy;
+                    if (xx < 0 || yy < 0 || xx >= w || yy >= h) continue;
+                    int j = yy * w + xx;
+                    if (d[j] && !seen[j]) { seen[j] = true; q.add(j); }
+                }
+            }
+            best = Math.max(best, size);
+        }
+        // ink mass per text line band (rows where either image has ink, split at blank rows): native over Flutter.
+        // Anti-aliasing moves ink between neighbouring pixels but keeps a line's mass; a heavier or lighter weight, a
+        // missing word or a different size changes it.
+        double worst = 1.0, shift = 0; int bands = 0;
+        int by = y0;
+        while (by <= y1) {
+            while (by <= y1 && !rowInk(f, n, w, x0, x1, by, bg)) by++;
+            if (by > y1) break;
+            int ey = by;
+            while (ey + 1 <= y1 && rowInk(f, n, w, x0, x1, ey + 1, bg)) ey++;
+            double fm = 0, nm = 0;
+            for (int y = by; y <= ey; y++) for (int x = x0; x <= x1; x++) {
+                int i = y * w + x;
+                fm += Math.abs(lum(f[i]) - bgL); nm += Math.abs(lum(n[i]) - bgL);
+            }
+            if (Math.max(fm, nm) >= MIN_BAND_INK) {
+                bands++;
+                double r = (nm + 1) / (fm + 1);
+                if (Math.abs(Math.log(r)) > Math.abs(Math.log(worst))) worst = r;
+                // where the line sits: ink-weighted centroid, Flutter vs native (a moved block moves it whole pixels)
+                double fx = 0, fy = 0, nx = 0, ny = 0, fw = 0, nw = 0;
+                for (int y = Math.max(0, by - 3); y <= Math.min(h - 1, ey + 3); y++) for (int x = x0; x <= x1; x++) {
+                    int i = y * w + x;
+                    double a = Math.abs(lum(f[i]) - bgL), b = Math.abs(lum(n[i]) - bgL);
+                    fx += a * x; fy += a * y; fw += a; nx += b * x; ny += b * y; nw += b;
+                }
+                if (fw > 0 && nw > 0) shift = Math.max(shift, Math.max(Math.abs(fx / fw - nx / nw), Math.abs(fy / fw - ny / nw)));
+            }
+            by = ey + 1;
+        }
+        if (diffOut != null) {
+            BufferedImage o = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+            for (int i = 0; i < f.length; i++) {
+                int g = (int) (lum(n[i]) / 3 + 40);
+                o.setRGB(i % w, i / w, d[i] ? 0xE61E1E : (g << 16 | g << 8 | g));
+            }
+            ImageIO.write(o, "png", new File(diffOut));
+        }
+        double area = (double) (x1 - x0 + 1) * (y1 - y0 + 1);
+        return String.format(Locale.ROOT, "same-size\t%.2f\t%d\t%.3f\t%d\t%.2f\t%d", diff * 100.0 / area, best, worst, bands, shift, diff);
+    }
+}
+'''
+
+
+def tolerant_metrics(shots):
+    """shot -> [size, box %, blob px, ink ratio, lines, shift px, differing px] for every shot with both PNGs in OUTG."""
+    pairs = []
+    for shot in shots:
+        f, n = (os.path.join(OUTG, f'{shot}-{k}.png') for k in ('flutter', 'native'))
+        if os.path.exists(f) and os.path.exists(n):
+            pairs.append(f'{shot}\t{f}\t{n}\t{os.path.join(OUTG, shot + "-tdiff.png")}')
+    if not pairs:
+        return {}
+    import tempfile
+    d = tempfile.mkdtemp(prefix='rbm')
+    src = os.path.join(d, 'RbMetrics.java')
+    open(src, 'w', encoding='utf-8').write(RB_METRICS_JAVA)
+    java = os.path.join(os.environ.get('JAVA_HOME') or os.path.expanduser('~/wt/native-repair-20261102/tools/jdk'), 'bin', 'java')
+    if not os.path.exists(java):
+        java = 'java'
+    p = subprocess.run([java, src], input='\n'.join(pairs) + '\n', capture_output=True, text=True)
+    out = {}
+    for line in p.stdout.splitlines():
+        c = line.split('\t')
+        if len(c) >= 8:
+            out[c[0]] = c[1:]
+    return out
 
 
 def post(url, body):
@@ -380,18 +576,39 @@ def cmd_evaluate(nn):
     fails, per_part, results = [], {}, []
     goldens = [r for r in man if r[0] == 'golden']
     waived = 0
+    tm = tolerant_metrics([os.path.basename(r[3])[:-4] for r in goldens])
     for r in goldens:
         pid, ref, path, tier = r[1], r[2], r[3], r[4]
         shot = os.path.basename(path)[:-4]
-        box_max, blob_max = T[tier]
+        box_max, blob_max, ink_band, shift_max = T[tier]
         row = rows.get(shot)
         status, why, box = 'FAIL', 'no gate row (no test rendered it)', None
-        if row:
+        m = tm.get(shot) if row else None
+        if m:
+            size, box, blob, ink, shift, npx = m[0], float(m[1]), int(m[2]), float(m[3]), float(m[5]), int(m[6])
+            lo, hi = 1 - ink_band, 1 / (1 - ink_band)
+            bad_ = []
+            # box counts only past a few scattered pixels: one-line shots have tiny ink boxes
+            if box > box_max and npx > 4 * blob_max:
+                bad_.append(f'box {box:.2f}% (max {box_max})')
+            if blob > blob_max:
+                bad_.append(f'blob {blob} px (max {blob_max})')
+            if not lo <= ink <= hi:
+                bad_.append(f'line ink {ink:.2f}x (allowed {lo:.2f}-{hi:.2f})')
+            if shift > shift_max:
+                bad_.append(f'line moved {shift:.1f} px (max {shift_max})')
+            if size != 'same-size':
+                why = f'size {size}'
+            elif bad_:
+                why = ', '.join(bad_)
+            else:
+                status, why = 'PASS', f'box {box:.2f}% blob {blob} px ink {ink:.2f}x moved {shift:.1f} px'
+        elif row:
             box, blob, size = float(row[3]), int(row[4]), row[6]
             if size != 'same-size':
                 why = f'size {size}'
             elif box > box_max or blob > blob_max:
-                why = f'box {box:.2f}% (max {box_max}) blob {blob} px (max {blob_max})'
+                why = f'box {box:.2f}% (max {box_max}) blob {blob} px (max {blob_max}) (raw rows: no PNG trio to measure)'
             else:
                 status, why = 'PASS', f'box {box:.2f}% blob {blob} px'
         if status == 'FAIL' and shot in waivers:
@@ -472,7 +689,8 @@ def cmd_evaluate(nn):
             if agg['worst'] >= 0:
                 body['diff'] = round(agg['worst'], 2)
                 s = agg['shot']
-                body['images'] = {k: f'rb-{nn}/{s}-{k}.png' for k in ('flutter', 'native', 'diff')}
+                body['images'] = {k: f'rb-{nn}/{s}-{"tdiff" if k == "diff" and os.path.exists(os.path.join(OUTG, s + "-tdiff.png")) else k}.png'
+                                  for k in ('flutter', 'native', 'diff')}
             post(url, body)
         if kind == 'gallery' and nn in ('34', '36', '37'):
             for sch in ('solid', 'soft', 'brutal', 'paper', 'signal', 'glass'):
