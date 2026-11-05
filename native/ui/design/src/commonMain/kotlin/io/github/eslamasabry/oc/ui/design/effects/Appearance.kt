@@ -48,9 +48,27 @@ public data class KitAppearance(
     val fineTune: FineTuneChoice = FineTuneChoice.None,
     val activityGlow: Boolean = true,
     val softGlow: Boolean = false,
+    val celebrations: Boolean = true,
+    val liveBackground: Boolean = false,
+    val liveHeldByStyle: Boolean = false,
+    val liveStyle: String = "aurora",
 ) {
     public val saver: Boolean
         get() = mode == AppearanceMode.Saver
+
+    /** Flutter KitEffects.withSurfaceStyle resets the person's Fine-tune choices. */
+    public fun withSurfaceStyle(style: Style): KitAppearance = copy(style = style, fineTune = FineTuneChoice.None)
+
+    /** Render-only Saver override; the stored appearance is immutable. */
+    public val underSaver: KitAppearance
+        get() = copy(mode = AppearanceMode.Saver, motion = MotionLevel.Off, celebrations = false,
+            liveBackground = false, style = Style.Solid, fineTune = FineTuneChoice.None)
+
+    /** A person's background switch releases a style hold only when its value changes. */
+    public fun withLiveBackground(enabled: Boolean): KitAppearance = copy(
+        liveBackground = enabled,
+        liveHeldByStyle = if (enabled == liveBackground) liveHeldByStyle else false,
+    )
 
     public companion object {
         public val Default: KitAppearance = KitAppearance()
