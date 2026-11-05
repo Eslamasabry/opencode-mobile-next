@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.ui.kitchat.transcript
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -38,7 +39,7 @@ public fun KitContinuedLine(text: String, onOpen: () -> Unit, modifier: Modifier
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val goneWords = stringResource(Res.string.continuedGone)
     val words = if (gone) goneWords else text
-    Box(modifier.kitMaxWidth(CapRole.Conversation, CapAlign.Start), contentAlignment = Alignment.CenterStart) {
+    Box(modifier.kitMaxWidth(CapRole.Conversation, CapAlign.Start).fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
     KitTappable(
         onClick = onOpen,
         modifier = Modifier.testTag("continued-line").semantics { contentDescription = words },
