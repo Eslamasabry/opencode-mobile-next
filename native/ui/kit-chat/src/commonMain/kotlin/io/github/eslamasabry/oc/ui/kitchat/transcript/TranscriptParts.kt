@@ -19,13 +19,17 @@ import androidx.compose.ui.FrameRateCategory
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.preferredFrameRate
-import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextMotion
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
 import io.github.eslamasabry.oc.ui.kitchat.stream.RevealRegistry
 import io.github.eslamasabry.oc.ui.kitchat.stream.drive
@@ -172,27 +176,30 @@ private fun styleOf(kind: KitBlockKind): TextStyle {
     )
 }
 
-/** The person's prompt: a bubble at the end side, ≤ 85 % wide (R13). */
+/**
+ * The person's prompt: a bubble at the end side, ≤ 85 % wide (R13), wrapped to its words. Graphite `surface2` with
+ * the primary ink, as in Flutter: mint is kept for actions and live things, never the person's words.
+ */
 @Composable
 public fun KitPromptBubble(text: String, modifier: Modifier = Modifier) {
+    val colors = LocalKitColors.current
+    val tokens = LocalKitTokens.current
     Box(modifier.then(Column), contentAlignment = Alignment.CenterEnd) {
-        BasicText(
-            text = text,
-            style =
-                // QA wave 4 B12: the person's own words read in their own direction (an English prompt in an
-                // Arabic interface is left to right, its full stop at the end).
-                MaterialTheme.typography.bodyLarge.copy(
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    textDirection = TextDirection.Content,
-                ),
-            modifier =
-                Modifier.fillMaxWidth(0.85f)
-                    .background(
-                        MaterialTheme.colorScheme.primaryContainer,
-                        RoundedCornerShape(16.dp),
-                    )
-                    .padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
-        )
+        Box(Modifier.fillMaxWidth(0.85f), contentAlignment = Alignment.CenterEnd) {
+            BasicText(
+                text = text,
+                style =
+                    // QA wave 4 B12: the person's own words read in their own direction (an English prompt in an
+                    // Arabic interface is left to right, its full stop at the end).
+                    LocalKitTypography.current.style(TypeRole.Body).copy(
+                        color = colors.text1,
+                        textDirection = TextDirection.Content,
+                    ),
+                modifier =
+                    Modifier.background(colors.surface2, RoundedCornerShape(tokens.bubbleRadius.dp))
+                        .padding(horizontal = Space.S4.dp, vertical = Space.S3.dp),
+            )
+        }
     }
 }
 

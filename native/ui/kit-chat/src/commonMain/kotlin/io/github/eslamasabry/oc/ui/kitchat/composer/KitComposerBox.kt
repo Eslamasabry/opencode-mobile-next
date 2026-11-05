@@ -174,7 +174,7 @@ public fun KitComposerSend(
     val on = enabled.isEnabled
     KitTappable(
         onClick = { if (!working) onClick() },
-        modifier = modifier.semantics { contentDescription = label }.testTag("kit-composer-send"),
+        modifier = modifier.semantics { contentDescription = label },
         enabled = on,
         disabledReason = (enabled as? KitEnabled.Disabled)?.reason,
         haptic = KitHaptic.Send,
@@ -215,7 +215,7 @@ public fun KitComposerStopRing(
         }
     KitTappable(
         onClick = { if (!stopping) onClick() },
-        modifier = modifier.semantics { contentDescription = label }.testTag("kit-composer-stop"),
+        modifier = modifier.semantics { contentDescription = label },
         haptic = KitHaptic.Commit,
         shape = KitShapeId.Circle,
     ) {
