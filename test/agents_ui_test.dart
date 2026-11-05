@@ -98,8 +98,10 @@ void main() {
         tester,
         _host(agents: FakePhoneAgentsSource(rows: const [])),
       );
-      // One agent never shows one lonely card: the quiet line instead.
-      expect(find.byType(KitAgentChoice), findsNothing);
+      // OpenCode alone: its card sits beside the Add an agent card, which
+      // leads the row so the way to more agents is always in view.
+      expect(find.byType(KitAgentChoice), findsOneWidget);
+      expect(find.byType(KitAddAgentCard), findsOneWidget);
       expect(find.textContaining('OpenCode'), findsWidgets);
       expect(find.textContaining('alpha'), findsWidgets);
     });
