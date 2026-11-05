@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chats.ui
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -29,6 +30,8 @@ import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitInputDialog
+import io.github.eslamasabry.oc.ui.kit.modal.KitPageOverlay
+import io.github.eslamasabry.oc.ui.kit.frame.*
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
@@ -69,7 +72,7 @@ internal fun HomeFilterChips(state: ChatsUi, actions: ChatsActions) {
 internal fun ChatsHomeSheets(state: ChatsUi, actions: ChatsActions) {
     val sheet = state.sheet
     KitSheet(
-        visible = sheet != null && sheet != ChatsHomeSheet.OpenProject,
+        visible = sheet != null && sheet != ChatsHomeSheet.OpenProject && sheet != ChatsHomeSheet.Inbox,
         onDismissRequest = actions::closeHomeSheet,
         title =
             when (sheet) {
@@ -86,11 +89,19 @@ internal fun ChatsHomeSheets(state: ChatsUi, actions: ChatsActions) {
             when (sheet) {
                 ChatsHomeSheet.Projects -> ProjectChoices(state, actions)
                 ChatsHomeSheet.Sources -> SourceChoices(state, actions)
-                ChatsHomeSheet.Inbox -> InboxRows(state, actions)
+                ChatsHomeSheet.Inbox -> Unit
                 ChatsHomeSheet.Monitoring -> MonitoringSettings(state, actions)
                 ChatsHomeSheet.OpenProject,
                 null -> Unit
             }
+        }
+    }
+    KitPageOverlay(sheet == ChatsHomeSheet.Inbox, stringResource(Res.string.inboxTitle), actions::closeHomeSheet) {
+        KitScreen(
+            topBar = { KitTopBar(stringResource(Res.string.inboxTitle), exit = KitTopBarExit.Back, exitLabel = stringResource(Res.string.kitTopBarBack), onExit = actions::closeHomeSheet) },
+            width = KitScreenWidth.Reading,
+        ) {
+            Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) { InboxRows(state, actions) }
         }
     }
     val notAbsolute = stringResource(Res.string.p12PathNotAbsolute)
