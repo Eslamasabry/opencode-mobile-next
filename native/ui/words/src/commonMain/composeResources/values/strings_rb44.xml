@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="rb44AboutCheckUpdates">Check for updates</string>
+    <string name="rb44AboutUpdateIdle">Looks for a newer version of this app</string>
+    <string name="rb44AboutUpdateChecking">Checking…</string>
+    <string name="rb44AboutUpdateCurrent">You have the latest version</string>
+    <string name="rb44AboutUpdateDownloading">Downloading the update…</string>
+    <string name="rb44AboutUpdateFailed">Couldn't check for updates. Check your connection and try again.</string>
+</resources>

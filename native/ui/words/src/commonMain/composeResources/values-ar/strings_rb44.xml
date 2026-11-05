@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="rb44AboutCheckUpdates">التحقّق من التحديثات</string>
+    <string name="rb44AboutUpdateIdle">يبحث عن إصدار أحدث من هذا التطبيق</string>
+    <string name="rb44AboutUpdateChecking">جارٍ التحقّق…</string>
+    <string name="rb44AboutUpdateCurrent">لديك أحدث إصدار</string>
+    <string name="rb44AboutUpdateDownloading">جارٍ تنزيل التحديث…</string>
+    <string name="rb44AboutUpdateFailed">تعذّر التحقّق من التحديثات. تحقّق من اتصالك وحاول مجددًا.</string>
+</resources>

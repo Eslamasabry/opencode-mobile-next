@@ -29,8 +29,6 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
-import io.github.eslamasabry.oc.ui.kit.frame.ExitGlyph
-import io.github.eslamasabry.oc.ui.kit.frame.KitExitGlyph
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.logo.KitProviderLogo
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
@@ -41,8 +39,9 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 @Immutable
 public sealed interface KitRowLeading {
     /**
-     * A kit glyph (Dart `KitRow.icon`): a bare 20 dp Phosphor glyph in the secondary ink, in the lead column, the way
-     * the Flutter rows draw it. [tile] keeps the old 28 dp `surface3` tile for a row that sits among tiled rows.
+     * A kit glyph (Dart `KitRow.icon`): a bare 20 dp Phosphor glyph in the secondary ink, in the
+     * lead column, the way the Flutter rows draw it. [tile] keeps the old 28 dp `surface3` tile for
+     * a row that sits among tiled rows.
      */
     public data class Glyph(val icon: ImageVector, val tile: Boolean = false) : KitRowLeading
 
@@ -77,11 +76,11 @@ public enum class KitRowStateTone {
 }
 
 /**
- * A feed row's state: [word] leads the supporting line in its tone; NeedsYou and Running also mark the lead column.
- * A row with nothing to say passes a null word, so it still keeps the lead column and lines up with its neighbours.
+ * A feed row's state: [word] leads the supporting line in its tone; NeedsYou and Running also mark
+ * the lead column. A row with nothing to say passes a null word, so it still keeps the lead column
+ * and lines up with its neighbours.
  */
-@Immutable
-public data class KitRowState(val word: String?, val tone: KitRowStateTone)
+@Immutable public data class KitRowState(val word: String?, val tone: KitRowStateTone)
 
 /** What ends a row (Dart `KitRowValue`, `KitChevron`, the row's own action). */
 @Immutable
@@ -90,6 +89,9 @@ public sealed interface KitRowTrailing {
 
     /** The row opens a page. */
     public data object Chevron : KitRowTrailing
+
+    /** Flutter KitIconButton.copy, for an app-authored value such as the build version. */
+    public data class Copy(val text: String, val label: String) : KitRowTrailing
 
     /**
      * A value in quiet words, optionally with the chevron. It goes under the title when it cannot
@@ -114,14 +116,18 @@ internal fun RowLeadingTile(leading: KitRowLeading, dim: Boolean) {
             Image(
                 leading.icon,
                 null,
-                Modifier.size((tokens.smallIcon * minOf(kitTextScale(), TextScalePolicy.ICON_CAP)).dp),
+                Modifier.size(
+                    (tokens.smallIcon * minOf(kitTextScale(), TextScalePolicy.ICON_CAP)).dp
+                ),
                 colorFilter = ColorFilter.tint(if (dim) colors.text3 else colors.text2),
             )
         }
         return
     }
     Box(
-        Modifier.size(tile.dp).background(colors.surface3, KitShapeId.Tile.shape()).clearAndSetSemantics {},
+        Modifier.size(tile.dp)
+            .background(colors.surface3, KitShapeId.Tile.shape())
+            .clearAndSetSemantics {},
         contentAlignment = Alignment.Center,
     ) {
         when (leading) {
@@ -182,18 +188,28 @@ internal fun RowValue(value: KitRowTrailing.Value, modifier: Modifier = Modifier
 @Composable
 internal fun RowChevron() {
     val size = LocalKitTokens.current.smallIcon * minOf(kitTextScale(), TextScalePolicy.FRAME_CAP)
-    KitGlyph(KitIcons.chevronRight, LocalKitColors.current.text3, size.dp, Modifier.testTag("kit-row-chevron"))
+    KitGlyph(
+        KitIcons.chevronRight,
+        LocalKitColors.current.text3,
+        size.dp,
+        Modifier.testTag("kit-row-chevron"),
+    )
 }
 
-/** The lead-column mark of a live row: an 8 dp amber dot for "needs you", a 12 dp mint ring for "running". */
+/**
+ * The lead-column mark of a live row: an 8 dp amber dot for "needs you", a 12 dp mint ring for
+ * "running".
+ */
 @Composable
 internal fun RowStateMark(tone: KitRowStateTone) {
     val colors = LocalKitColors.current
     val width = LocalKitTokens.current.iconTile
     Box(Modifier.size(width.dp).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
         when (tone) {
-            KitRowStateTone.NeedsYou -> Box(Modifier.size(8.dp).background(colors.attention, CircleShape))
-            KitRowStateTone.Running -> Box(Modifier.size(12.dp).border(2.dp, colors.live, CircleShape))
+            KitRowStateTone.NeedsYou ->
+                Box(Modifier.size(8.dp).background(colors.attention, CircleShape))
+            KitRowStateTone.Running ->
+                Box(Modifier.size(12.dp).border(2.dp, colors.live, CircleShape))
             else -> Unit
         }
     }

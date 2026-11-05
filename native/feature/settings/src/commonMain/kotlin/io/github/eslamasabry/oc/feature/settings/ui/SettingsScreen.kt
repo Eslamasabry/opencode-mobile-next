@@ -33,7 +33,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
-import io.github.eslamasabry.oc.ui.words.res.aboutAllLicences
+import io.github.eslamasabry.oc.ui.words.res.aboutBundledComponents
 import io.github.eslamasabry.oc.ui.words.res.aboutTitle
 import io.github.eslamasabry.oc.ui.words.res.appUpdatesTitle
 import io.github.eslamasabry.oc.ui.words.res.capabilityScreenTitle
@@ -171,7 +171,7 @@ public fun SettingsScreen(
             }
         SettingsPage.Notices ->
             SettingsFrame(
-                stringResource(Res.string.aboutAllLicences),
+                stringResource(Res.string.aboutBundledComponents),
                 back,
                 state,
                 actions,
@@ -201,7 +201,7 @@ public fun SettingsScreen(
             }
         SettingsPage.About ->
             SettingsFrame(stringResource(Res.string.aboutTitle), back, state, actions, modifier) {
-                AboutBody(state.about, actions, state.voiceLicenses)
+                AboutBody(state.about, actions, state.voiceLicenses, state.updates)
             }
         is SettingsPage.VoiceLicense -> VoiceLicenseScreen(page.id, state, actions)
         SettingsPage.PrivacyPolicy ->

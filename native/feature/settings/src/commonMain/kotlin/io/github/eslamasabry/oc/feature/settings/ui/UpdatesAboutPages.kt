@@ -3,6 +3,8 @@ package io.github.eslamasabry.oc.feature.settings.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -11,51 +13,22 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.settings.presentation.AboutFacts
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
+import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage
 import io.github.eslamasabry.oc.feature.settings.presentation.UpdateFacts
 import io.github.eslamasabry.oc.feature.settings.presentation.UpdateState
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
+import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
-import io.github.eslamasabry.oc.ui.words.res.Res
-import io.github.eslamasabry.oc.ui.words.res.aboutAllLicences
-import io.github.eslamasabry.oc.ui.words.res.aboutAllLicencesDetail
-import io.github.eslamasabry.oc.ui.words.res.aboutBuildVersion
-import io.github.eslamasabry.oc.ui.words.res.appUpdateAvailableLine
-import io.github.eslamasabry.oc.ui.words.res.appUpdateBuildLabel
-import io.github.eslamasabry.oc.ui.words.res.appUpdateCancel
-import io.github.eslamasabry.oc.ui.words.res.appUpdateCheckNow
-import io.github.eslamasabry.oc.ui.words.res.appUpdateCheckSwitch
-import io.github.eslamasabry.oc.ui.words.res.appUpdateCheckSwitchBody
-import io.github.eslamasabry.oc.ui.words.res.appUpdateCheckedJustNow
-import io.github.eslamasabry.oc.ui.words.res.appUpdateChecking
-import io.github.eslamasabry.oc.ui.words.res.appUpdateCheckingOff
-import io.github.eslamasabry.oc.ui.words.res.appUpdateCurrentVersion
-import io.github.eslamasabry.oc.ui.words.res.appUpdateDownloadingTitle
-import io.github.eslamasabry.oc.ui.words.res.appUpdateInstall
-import io.github.eslamasabry.oc.ui.words.res.appUpdateInstallReadyTitle
-import io.github.eslamasabry.oc.ui.words.res.appUpdateInstalling
-import io.github.eslamasabry.oc.ui.words.res.appUpdateNeverChecked
-import io.github.eslamasabry.oc.ui.words.res.appUpdatePercent
-import io.github.eslamasabry.oc.ui.words.res.appUpdateSizeMb
-import io.github.eslamasabry.oc.ui.words.res.appUpdateTryAgain
-import io.github.eslamasabry.oc.ui.words.res.appUpdateUpToDate
-import io.github.eslamasabry.oc.ui.words.res.appUpdateUpdate
-import io.github.eslamasabry.oc.ui.words.res.appUpdateWhatsNew
-import io.github.eslamasabry.oc.ui.words.res.nativeAboutProvenance
-import io.github.eslamasabry.oc.ui.words.res.nativeAboutProvenanceTitle
-import io.github.eslamasabry.oc.ui.words.res.privacyPolicyTitle
-import io.github.eslamasabry.oc.ui.words.res.shareRowDetail
-import io.github.eslamasabry.oc.ui.words.res.shareRowTitle
-import io.github.eslamasabry.oc.ui.words.res.starRowDetail
-import io.github.eslamasabry.oc.ui.words.res.starRowTitle
-import io.github.eslamasabry.oc.ui.words.res.starShareGroup
-import io.github.eslamasabry.oc.ui.words.res.whatsNewRowTitle
+import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -151,62 +124,103 @@ private fun updateLine(state: UpdateState): String =
         is UpdateState.Failed -> updateFailureWords(state.why)
     }
 
-/**
- * L04: the version, What's new, the two quiet "Tell others" rows, the notices and the privacy
- * policy.
- */
+/** About identity, notices and bundled components (Flutter about_screen.dart:246-416). */
 @Composable
 internal fun ColumnScope.AboutBody(
     about: AboutFacts,
     actions: SettingsActions,
     voiceLicenses: Boolean = false,
+    updates: UpdateFacts? = null,
 ) {
-    KitRowGroup {
-        KitRow(title = stringResource(Res.string.aboutBuildVersion, about.version, about.build))
-        KitRow(
-            title = stringResource(Res.string.nativeAboutProvenanceTitle),
-            supporting = stringResource(Res.string.nativeAboutProvenance),
-            supportingMaxLines = 8,
-        )
-        if (about.whatsNew) {
+    val gutter = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
+    val knownBuild = about.version.isNotBlank() && about.build.isNotBlank()
+    val version =
+        if (knownBuild) stringResource(Res.string.aboutBuildVersion, about.version, about.build)
+        else stringResource(Res.string.appTitle)
+    Column {
+        KitRowGroup(leadingTiles = true) {
             KitRow(
-                title = stringResource(Res.string.whatsNewRowTitle),
-                trailing = KitRowTrailing.Chevron,
-                onClick = { actions.onOutside(SettingsOutside.WhatsNew) },
+                title = version,
+                leading = KitRowLeading.Glyph(KitIcons.phone),
+                trailing =
+                    if (knownBuild)
+                        KitRowTrailing.Copy(version, stringResource(Res.string.aboutCopyVersion))
+                    else KitRowTrailing.None,
+                modifier = Modifier.testTag("about-version"),
             )
+            updates?.let { update ->
+                val checking =
+                    update.state == UpdateState.Checking ||
+                        update.state is UpdateState.Downloading ||
+                        update.state == UpdateState.Installing
+                val line = aboutUpdateLine(update.state)
+                KitRow(
+                    title =
+                        stringResource(
+                            when (update.state) {
+                                is UpdateState.Available -> Res.string.appUpdateUpdate
+                                is UpdateState.Downloaded -> Res.string.appUpdateInstall
+                                else -> Res.string.rb44AboutCheckUpdates
+                            }
+                        ),
+                    leading = KitRowLeading.Glyph(KitIcons.download),
+                    supporting = line,
+                    supportingMaxLines = 2, // F: lib/ui/screens/about_screen.dart:391
+                    enabled = !checking,
+                    disabledReason = line.takeIf { checking },
+                    onClick = {
+                        if (
+                            update.state is UpdateState.Available ||
+                                update.state is UpdateState.Downloaded
+                        )
+                            actions.onUpdateAction()
+                        else actions.onCheckForUpdates()
+                    },
+                    modifier = Modifier.testTag("about-check-updates"),
+                )
+            }
         }
-    }
-    KitRowGroup(label = stringResource(Res.string.starShareGroup)) {
-        KitRow(
-            title = stringResource(Res.string.starRowTitle),
-            modifier = Modifier.testTag("about-star-github"),
-            supporting = stringResource(Res.string.starRowDetail),
-            onClick = { actions.onOutside(SettingsOutside.StarOnGitHub) },
+        Spacer(Modifier.height(Space.S4.dp))
+        KitNotice(stringResource(Res.string.e7SettingsNonAffiliation), gutter, liveRegion = false)
+        Spacer(Modifier.height(Space.S3.dp))
+        KitNotice(
+            stringResource(Res.string.e7SettingsAlphaBody),
+            gutter,
+            title = stringResource(Res.string.e7SettingsDetailUi19),
+            icon = KitIcons.experiments,
+            liveRegion = false,
         )
-        KitRow(
-            title = stringResource(Res.string.shareRowTitle),
-            supporting = stringResource(Res.string.shareRowDetail),
-            onClick = { actions.onOutside(SettingsOutside.ShareApp) },
-        )
-    }
-    if (voiceLicenses) VoiceLicenseRows(actions)
-    KitRowGroup {
         if (about.notices) {
-            KitRow(
-                title = stringResource(Res.string.aboutAllLicences),
-                supporting = stringResource(Res.string.aboutAllLicencesDetail),
-                trailing = KitRowTrailing.Chevron,
-                onClick = {
-                    actions.onOpen(
-                        io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage.Notices
-                    )
-                },
-            )
+            Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
+            KitRowGroup(
+                label = stringResource(Res.string.e7SettingsDetailUi18),
+                leadingTiles = true,
+            ) {
+                KitRow(
+                    title = stringResource(Res.string.aboutBundledComponents),
+                    supporting = stringResource(Res.string.aboutBundledComponentsDetail),
+                    supportingMaxLines = 2, // F: lib/ui/screens/about_screen.dart:331
+                    leading = KitRowLeading.Glyph(KitIcons.info),
+                    trailing = KitRowTrailing.Chevron,
+                    modifier = Modifier.testTag("about-bundled-components"),
+                    onClick = { actions.onOpen(SettingsPage.Notices) },
+                )
+            }
         }
-        KitRow(
-            title = stringResource(Res.string.privacyPolicyTitle),
-            trailing = KitRowTrailing.Chevron,
-            onClick = { actions.onOutside(SettingsOutside.PrivacyPolicy) },
-        )
+        if (voiceLicenses) {
+            Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
+            VoiceLicenseRows(actions)
+        }
     }
 }
+
+@Composable
+private fun aboutUpdateLine(state: UpdateState): String =
+    when (state) {
+        UpdateState.NeverChecked -> stringResource(Res.string.rb44AboutUpdateIdle)
+        UpdateState.Checking -> stringResource(Res.string.rb44AboutUpdateChecking)
+        is UpdateState.UpToDate -> stringResource(Res.string.rb44AboutUpdateCurrent)
+        is UpdateState.Downloading -> stringResource(Res.string.rb44AboutUpdateDownloading)
+        is UpdateState.Failed -> stringResource(Res.string.rb44AboutUpdateFailed)
+        else -> updateLine(state)
+    }
