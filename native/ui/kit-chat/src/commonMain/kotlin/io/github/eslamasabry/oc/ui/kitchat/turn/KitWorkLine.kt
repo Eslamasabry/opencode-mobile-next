@@ -1,14 +1,18 @@
 package io.github.eslamasabry.oc.ui.kitchat.turn
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,17 +20,26 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.semantics.collapse
+import androidx.compose.ui.semantics.expand
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.color.SignalPalette
 import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
+import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
+import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
+import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -150,16 +163,53 @@ public fun KitWorkLine(
                     KitButton(earlier.label, earlier.onClick, role = KitButtonRole.Tertiary)
                 steps()
             }
-        } else
-            KitExpandRow(
-                title = label,
-                expanded = expanded,
-                supporting = stateWords,
-                onExpandedChange = onToggle,
+        } else {
+            // Flutter's work line: one quiet line, a mark for where the work stands, the summary in the supporting
+            // grey and a caret at the end; no frame, no fill. The state words are what TalkBack adds.
+            val colors = LocalKitColors.current
+            KitTappable(
+                onClick = { onToggle(!expanded) },
+                modifier =
+                    Modifier.fillMaxWidth().semantics {
+                        if (expanded) collapse { onToggle(false); true } else expand { onToggle(true); true }
+                    },
+                role = KitTappableRole.Row,
+                shape = KitShapeId.Tile,
             ) {
-                if (earlier != null)
-                    KitButton(earlier.label, earlier.onClick, role = KitButtonRole.Tertiary)
-                steps()
+                Row(
+                    Modifier.fillMaxWidth().heightIn(min = 40.dp).padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    when (state) {
+                        KitWorkState.Running -> Box(Modifier.size(16.dp), contentAlignment = Alignment.Center) {
+                            Box(Modifier.size(8.dp).background(colors.live, CircleShape))
+                        }
+                        KitWorkState.WaitingForYou -> Box(Modifier.size(16.dp), contentAlignment = Alignment.Center) {
+                            Box(Modifier.size(8.dp).background(colors.attention, CircleShape))
+                        }
+                        KitWorkState.EndedFailed -> KitIcon(KitIcons.warning, Modifier.size(16.dp), tone = TextTone.Secondary)
+                        KitWorkState.Stopped -> KitIcon(KitIcons.stopCircle, Modifier.size(16.dp), tone = TextTone.Secondary)
+                        KitWorkState.Done -> KitIcon(KitIcons.fileText, Modifier.size(16.dp), tone = TextTone.Secondary)
+                    }
+                    KitText(
+                        label,
+                        Modifier.weight(1f, fill = false),
+                        role = TypeRole.Secondary,
+                        tone = if (state == KitWorkState.Running) TextTone.Primary else TextTone.Secondary,
+                        kind = KitTextKind.Frame,
+                        maxLines = 2,
+                    )
+                    KitIcon(if (expanded) KitIcons.chevronUp else KitIcons.chevronDown, Modifier.size(16.dp), tone = TextTone.Secondary)
+                }
             }
+            KitReveal(visible = expanded) {
+                Column(Modifier.fillMaxWidth().padding(start = 4.dp)) {
+                    if (earlier != null)
+                        KitButton(earlier.label, earlier.onClick, role = KitButtonRole.Tertiary)
+                    steps()
+                }
+            }
+        }
     }
 }

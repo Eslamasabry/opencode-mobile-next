@@ -99,10 +99,9 @@ internal fun KitToolNode(view: KitToolView, size: Dp, modifier: Modifier = Modif
         }
         return
     }
-    Box(
-        modifier.size(size).background(colors.surface3, RoundedCornerShape(30)),
-        contentAlignment = Alignment.Center,
-    ) {
+    // Flutter's step node: the bare tool glyph (no tile); a running step's glyph turns live and the step light
+    // draws its rounded square around it.
+    Box(modifier.size(size), contentAlignment = Alignment.Center) {
         val showTick =
             finishedFromRunning &&
                 view.status == KitToolStatus.Done &&
@@ -124,9 +123,9 @@ internal fun KitToolNode(view: KitToolView, size: Dp, modifier: Modifier = Modif
                     2.dp.toPx(),
                 )
             }
-        else KitToolGlyph(view.kind, if (running) colors.accent else colors.text2, size * .6f)
+        else KitToolGlyph(view.kind, if (running) colors.live else colors.text2, if (running) size * .7f else size * .9f)
         if (running)
-            KitStepLight(KitStepLightState.Working, colors.accent, size, animate = !motion.reduced)
+            KitStepLight(KitStepLightState.Working, colors.live, size, animate = !motion.reduced)
         else if (finishedFromRunning && transition.value < 1f && view.status != KitToolStatus.Done)
             Canvas(Modifier.size(size)) {
                 drawRoundRect(

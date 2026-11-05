@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kitchat.tool
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,8 +9,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -39,6 +42,8 @@ import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitFrameText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
@@ -162,30 +167,32 @@ private fun StepLine(view: KitToolView, opened: Boolean?) {
             KitToolNode(view, glyph)
             KitStepLight(
                 state = if (view.status == KitToolStatus.Running) KitStepLightState.Working else KitStepLightState.Idle,
-                color = colors.accent,
+                color = colors.live,
                 size = glyph,
                 animate = !LocalKitMotion.current.reduced,
             )
         }
         Spacer(Modifier.width(Space.S3.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.S1.dp / 2)) {
-            KitLiveSweep(working = view.status == KitToolStatus.Running) {
-                KitText(
-                    view.title,
-                    role = TypeRole.Secondary,
-                    tone = TextTone.Primary,
-                    kind = KitTextKind.Frame,
-                    maxLines = lines,
-                )
-            }
-            if (subject != null) {
-                KitFrameText {
-                    KitMonoLtr(
-                        subject,
-                        Modifier.fillMaxWidth(),
-                        TextTone.Secondary,
-                        maxLines = lines,
-                    )
+            // Flutter's step line: the verb in the label weight and the subject in mono on the same line ("Read
+            // checkout_bloc.dart"), so a list of steps scans as one column of verbs. From 1.3x text the subject
+            // drops under the verb.
+            if (wide || subject == null) {
+                KitLiveSweep(working = view.status == KitToolStatus.Running) {
+                    KitText(view.title, role = TypeRole.Label, tone = TextTone.Primary, kind = KitTextKind.Frame, maxLines = lines)
+                }
+                if (subject != null) {
+                    KitFrameText { KitMonoLtr(subject, Modifier.fillMaxWidth(), TextTone.Secondary, maxLines = lines) }
+                }
+            } else {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    KitLiveSweep(working = view.status == KitToolStatus.Running) {
+                        KitText(view.title, role = TypeRole.Label, tone = TextTone.Primary, kind = KitTextKind.Frame, maxLines = 1)
+                    }
+                    Spacer(Modifier.width(Space.S2.dp))
+                    Box(Modifier.weight(1f)) {
+                        KitFrameText { KitMonoLtr(subject, Modifier.fillMaxWidth(), TextTone.Primary, maxLines = 1) }
+                    }
                 }
             }
             if (detail != null) {
@@ -219,48 +226,46 @@ private fun StepLine(view: KitToolView, opened: Boolean?) {
     }
 }
 
-/** The end of the line: the counts, then the status in words and how long it took. */
+/**
+ * The end of the line, on one line as in Flutter: the counts, then how the step stands — a finished step shows only
+ * how long it took; a running one a live dot and its time; waiting, failed and stopped ones a small mark and their
+ * words. The status is always spoken.
+ */
 @Composable
 private fun StepEnd(view: KitToolView, lines: Int, modifier: Modifier) {
-    val done = view.status == KitToolStatus.Done
+    val colors = LocalKitColors.current
     val duration = view.durationLabel?.takeIf { it.isNotEmpty() }
-    Column(
-        modifier,
-        horizontalAlignment = Alignment.End,
-        verticalArrangement = Arrangement.spacedBy(Space.S1.dp / 2),
+    Row(
+        modifier.semantics(mergeDescendants = true) { stateDescription = view.statusLabel },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {
         if (view.added != null || view.removed != null) Counts(view.added, view.removed)
-        if (done && duration != null) {
-            // A finished step shows how long it took; its status is still read out.
-            KitText(
-                duration,
-                Modifier.semantics { stateDescription = view.statusLabel },
-                role = TypeRole.Caption,
-                tone = TextTone.Tertiary,
-                kind = KitTextKind.Frame,
-                maxLines = lines,
-            )
-        } else {
-            KitText(
-                view.statusLabel,
-                role = TypeRole.Secondary,
-                // LOOK-5: a failed step's word is plain text1, never a danger colour; the rest are
-                // quiet.
-                tone =
-                    if (view.status == KitToolStatus.Failed) TextTone.Primary
-                    else TextTone.Secondary,
-                kind = KitTextKind.Frame,
-                maxLines = lines,
-            )
-            if (duration != null) {
-                KitText(
-                    duration,
-                    role = TypeRole.Caption,
-                    tone = TextTone.Tertiary,
-                    kind = KitTextKind.Frame,
-                    maxLines = 1,
-                )
+        when (view.status) {
+            KitToolStatus.Done -> Unit
+            KitToolStatus.Running -> Box(Modifier.size(8.dp).background(colors.live, CircleShape))
+            else -> {
+                val mark =
+                    when (view.status) {
+                        KitToolStatus.Failed -> KitIcons.error
+                        KitToolStatus.Stopped -> KitIcons.stopCircle
+                        else -> KitIcons.radioEmpty
+                    }
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+                    KitIcon(mark, Modifier.size(16.dp), tone = if (view.status == KitToolStatus.Failed) TextTone.Primary else TextTone.Secondary)
+                    KitText(
+                        view.statusLabel,
+                        role = TypeRole.Secondary,
+                        // LOOK-5: a failed step's word is plain text1, never a danger colour; the rest are quiet.
+                        tone = if (view.status == KitToolStatus.Failed) TextTone.Primary else TextTone.Secondary,
+                        kind = KitTextKind.Frame,
+                        maxLines = lines,
+                    )
+                }
             }
+        }
+        if (duration != null && view.status != KitToolStatus.Pending) {
+            KitText(duration, role = TypeRole.Caption, tone = TextTone.Tertiary, kind = KitTextKind.Frame, maxLines = 1)
         }
     }
 }
