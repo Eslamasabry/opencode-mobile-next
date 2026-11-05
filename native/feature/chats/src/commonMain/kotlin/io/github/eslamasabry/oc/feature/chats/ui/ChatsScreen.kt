@@ -59,6 +59,11 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
 import io.github.eslamasabry.oc.ui.kit.motion.KitGrowPage
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kitchat.request.KitPermissionCard
+import io.github.eslamasabry.oc.ui.words.res.chatRequestAskRunNamed
+import io.github.eslamasabry.oc.ui.words.res.kitRequestAllowOnce
+import io.github.eslamasabry.oc.ui.words.res.kitRequestReject
+import io.github.eslamasabry.oc.ui.words.res.serversWorking
 import io.github.eslamasabry.oc.ui.kit.row.KitFeedItem
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRowWorking
@@ -354,6 +359,24 @@ private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, state
         onClick = if (row.canOpen) ({ actions.openConversation(row.ref) }) else null,
     )
 
+    if (!signal && row.permission != null) {
+        val permission = row.permission
+        val answering = permission.requestId in state?.answering.orEmpty()
+        KitPermissionCard(
+            title = stringResource(Res.string.chatRequestAskRunNamed, permission.command),
+            summary = null,
+            subject = permission.command,
+            allowOnceLabel = stringResource(Res.string.kitRequestAllowOnce),
+            alwaysLabel = null,
+            denyLabel = stringResource(Res.string.kitRequestReject),
+            onAllowOnce = { actions.answerPermission(row, true) },
+            onAlways = null,
+            onDeny = { actions.answerPermission(row, false) },
+            enabled = row.canOpen && !answering,
+            disabledReason = if (answering) stringResource(Res.string.serversWorking) else if (!row.canOpen) stringResource(Res.string.e7WorkspaceConnecting) else null,
+            modifier = Modifier.padding(start = Space.S4.dp, end = Space.S4.dp, bottom = Space.S3.dp),
+        )
+    }
     if (signal) {
         row.running?.let { running ->
             val minuteTemplate = stringResource(Res.string.chatHomeMinutes)
