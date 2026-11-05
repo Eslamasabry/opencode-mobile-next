@@ -2,7 +2,8 @@ package io.github.eslamasabry.oc.feature.widgetactions.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.placeCursorAtEnd
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -18,7 +19,7 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 public fun WidgetActionScreen(state: WidgetActionUi, actions: WidgetActionActions) {
-    val field = remember { TextFieldState() }
+    val field = rememberTextFieldState()
     LaunchedEffect(state.dictatedWords) {
         val words = state.dictatedWords ?: return@LaunchedEffect
         val existing = field.text.toString()
@@ -26,7 +27,10 @@ public fun WidgetActionScreen(state: WidgetActionUi, actions: WidgetActionAction
             (existing + if (existing.isEmpty()) words else " $words").take(
                 WidgetActionViewModel.MAX_TEXT
             )
-        field.edit { replace(0, length, combined) }
+        field.edit {
+            replace(0, length, combined)
+            placeCursorAtEnd()
+        }
         actions.takeDictatedWords()
     }
     val sending = state.phase == WidgetActionPhase.Sending

@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.widgetactions.presentation.*
@@ -20,7 +21,7 @@ import org.jetbrains.compose.resources.stringResource
 /** Android's current overlay adapter, using the same kit form as WidgetPanel.Style/Project. */
 @Composable
 public fun WidgetPanelScreen(state: WidgetPanelUi, actions: WidgetPanelActions) {
-    var preview by remember { mutableStateOf("card") }
+    var preview by rememberSaveable { mutableStateOf("card") }
     val enabled =
         if (state.saving) KitEnabled.Disabled(stringResource(Res.string.widgetV2Sending))
         else KitEnabled.Enabled

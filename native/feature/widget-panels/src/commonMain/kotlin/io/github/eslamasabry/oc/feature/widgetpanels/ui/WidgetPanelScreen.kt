@@ -2,8 +2,8 @@ package io.github.eslamasabry.oc.feature.widgetpanels.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.placeCursorAtEnd
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -151,7 +151,7 @@ private fun ProjectBody(state: WidgetPanelUi, actions: WidgetPanelActions) {
 
 @Composable
 private fun ComposeBody(state: WidgetPanelUi, actions: WidgetPanelActions, title: String) {
-    val field = remember { TextFieldState() }
+    val field = rememberTextFieldState()
     LaunchedEffect(state.dictated) {
         state.dictated?.let { heard ->
             val previous = field.text.toString()

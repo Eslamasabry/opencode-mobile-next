@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.widgetactions.rb.o52
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -62,5 +63,49 @@ class WidgetComposePanelTest {
         runOnIdle { state = state.copy(phase = WidgetActionPhase.Sending) }
         onNodeWithTag("floating-panel-scrim").assertIsNotEnabled().performClick()
         assertEquals(0, closed)
+    }
+
+    @Test
+    fun `B-NAV-021 widget draft survives recreation without dispatching it`() = runComposeUiTest {
+        var shown by mutableStateOf(true)
+        val sent = mutableListOf<String>()
+        val actions =
+            object : WidgetActionActions {
+                override fun dictate() {}
+
+                override fun finishDictation() {}
+
+                override fun takeDictatedWords() {}
+
+                override fun send(text: String) {
+                    sent += text
+                }
+
+                override fun close() {}
+
+                override fun openConversation() {}
+            }
+        setContent {
+            KitTheme(
+                platform = DesktopKitPlatform(),
+                localeTag = "en",
+                appearance = KitAppearance(motion = MotionLevel.Off),
+                stillFrame = true,
+            ) {
+                val holder = rememberSaveableStateHolder()
+                if (shown)
+                    holder.SaveableStateProvider("widget-panel") {
+                        Box(Modifier.size(412.dp, 915.dp)) {
+                            WidgetActionScreen(WidgetActionUi(), actions)
+                        }
+                    }
+            }
+        }
+        onNodeWithTag("widget-message").performTextInput("Keep my unsent words")
+        runOnIdle { shown = false }
+        waitForIdle()
+        runOnIdle { shown = true }
+        onNodeWithText("Keep my unsent words").assertExists()
+        assertEquals(emptyList(), sent)
     }
 }
