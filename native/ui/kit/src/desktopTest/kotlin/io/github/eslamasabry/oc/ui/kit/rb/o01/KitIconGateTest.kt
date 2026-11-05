@@ -26,6 +26,11 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.icon.KitStatusIcon
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
+import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
+import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlin.test.Test
 
 /** Every scene of test/goldens/kit/kit_icon_golden_test.dart, with its inputs (English and Arabic). */
@@ -128,10 +133,18 @@ class KitIconGateTest {
                     KitText("Selected (two layers)", role = TypeRole.Body)
                 }
                 Spacer(Modifier.height(10.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    KitIcon(KitIcons.workspaceSelected)
-                    Spacer(Modifier.width(12.dp))
-                    KitText("High contrast (one layer)", role = TypeRole.Body)
+                val base = LocalKitPlatform.current
+                val contrast = remember(base) {
+                    object : KitPlatform by base {
+                        override val signals = MutableStateFlow(base.signals.value.copy(highContrast = true))
+                    }
+                }
+                CompositionLocalProvider(LocalKitPlatform provides contrast) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        KitIcon(KitIcons.workspaceSelected)
+                        Spacer(Modifier.width(12.dp))
+                        KitText("High contrast (one layer)", role = TypeRole.Body)
+                    }
                 }
             }
         }
