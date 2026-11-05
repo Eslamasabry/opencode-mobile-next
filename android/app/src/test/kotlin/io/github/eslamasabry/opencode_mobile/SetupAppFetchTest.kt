@@ -42,7 +42,8 @@ class SetupAppFetchTest {
         SetupProtocol.Event.Fetch("http://127.0.0.1:${server.address.port}/blob", dest, sha)
 
     private fun fetch() = SetupAppFetch(rootfs, allowInsecure = true)
-    private fun doneFile(dest: String = "/var/cache/oc-setup/node.tgz") = File(rootfs, dest.removePrefix("/") + ".oc-fetch-done")
+    private fun doneFile(dest: String = "/var/cache/oc-setup/node.tgz") =
+        File(rootfs, dest.removePrefix("/") + ".oc-fetch-done")
 
     @Test fun parsesTheFetchLine() {
         assertEquals(
@@ -82,8 +83,8 @@ class SetupAppFetchTest {
         val plain = SetupProtocol.Event.Fetch("http://127.0.0.1:${server.address.port}/blob", "/tmp/x", sha)
         SetupAppFetch(rootfs).run(plain, { false }) { _, _ -> }
         assertTrue(File(rootfs, "tmp/x.oc-fetch-done").readText().startsWith("fail "))
-        assertNull(fetch().resolve("/var/../../etc/passwd"))
-        assertNull(fetch().resolve("relative/path"))
+        assertNull(RootfsPaths(rootfs).resolve("/var/../../etc/passwd"))
+        assertNull(RootfsPaths(rootfs).resolve("relative/path"))
     }
 
     @Test fun cancellingStopsWithAFailureAnswer() {

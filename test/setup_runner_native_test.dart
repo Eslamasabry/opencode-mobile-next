@@ -64,6 +64,7 @@ void main() {
     jar = await cachedKotlinJar(
       compiler: compiler,
       sources: [
+        'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupAppFetch.kt',
         'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt',
         'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupScriptCompletion.kt',
         'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupWorkScopes.kt',

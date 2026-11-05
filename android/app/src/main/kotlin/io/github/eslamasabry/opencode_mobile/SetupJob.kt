@@ -27,27 +27,39 @@ object SetupProtocol {
 
     private const val PREFIX = "::oc "
 
+    private const val MAX_STAGE_LENGTH = 120
+    private const val MAX_VERSION_LENGTH = 80
+    private const val FETCH_ARGUMENTS = 3
+    private val whitespace = Regex("\\s+")
+
     fun parse(line: String): Event? {
         if (!line.startsWith(PREFIX)) return null
         val rest = line.substring(PREFIX.length).trim()
-        val verb = rest.substringBefore(' ')
         val args = rest.substringAfter(' ', "").trim()
-        return when (verb) {
-            "stage" -> args.takeIf { it.isNotEmpty() }?.let { Event.Stage(it.take(120)) }
-            "bytes" -> {
-                val parts = args.split(Regex("\\s+"))
-                val done = parts.getOrNull(0)?.toLongOrNull()
-                val total = parts.getOrNull(1)?.toLongOrNull() ?: 0L
-                if (done == null || done < 0 || total < 0) null else Event.Bytes(done, total)
-            }
+        return when (rest.substringBefore(' ')) {
+            "stage" -> args.takeIf { it.isNotEmpty() }?.let { Event.Stage(it.take(MAX_STAGE_LENGTH)) }
+            "bytes" -> parseBytes(args)
             "percent" -> args.toDoubleOrNull()
                 ?.takeIf { !it.isNaN() }
                 ?.let { Event.Percent(it.coerceIn(0.0, 100.0)) }
-            "fetch" -> args.split(Regex("\\s+")).takeIf { it.size == 3 && it[0].isNotEmpty() }
-                ?.let { Event.Fetch(it[0], it[1], it[2]) }
-            "version" -> args.takeIf { it.isNotEmpty() }?.let { Event.Version(it.take(80)) }
+            "fetch" -> parseFetch(args)
+            "version" -> args.takeIf { it.isNotEmpty() }?.let { Event.Version(it.take(MAX_VERSION_LENGTH)) }
             else -> null
         }
+    }
+
+    private fun parseBytes(args: String): Event? {
+        val parts = args.split(whitespace)
+        val done = parts.getOrNull(0)?.toLongOrNull()
+        val total = parts.getOrNull(1)?.toLongOrNull() ?: 0L
+        return if (done == null || done < 0 || total < 0) null else Event.Bytes(done, total)
+    }
+
+    private fun parseFetch(args: String): Event? {
+        val parts = args.split(whitespace)
+        return if (parts.size == FETCH_ARGUMENTS && parts[0].isNotEmpty()) {
+            Event.Fetch(parts[0], parts[1], parts[2])
+        } else null
     }
 }
 

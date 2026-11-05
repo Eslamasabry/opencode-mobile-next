@@ -3,6 +3,7 @@ import android.content.Context
 import java.io.File
 class BuiltinLinux private constructor(context: Context) {
     val home: File = context.filesDir
+    val rootfs: File = File(home, "ubuntu")
     val installed = true
     enum class InstallStage { DOWNLOAD, UNPACK }
     interface InstallProgress {
