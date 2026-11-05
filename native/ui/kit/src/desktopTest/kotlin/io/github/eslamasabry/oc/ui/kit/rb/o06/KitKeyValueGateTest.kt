@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -30,7 +32,22 @@ class KitKeyValueGateTest {
     }
     @Test fun kit_key_value_default() { FlutterGoldenGate.check(wrap = { content -> FlutterCapture(content) }, name = "kit_key_value_default", modes = listOf("dark", "light")) { scene() } }
     @Test fun kit_key_value_default_1280x800() { FlutterGoldenGate.check(wrap = { content -> FlutterCapture(content) }, name = "kit_key_value_default_1280x800", modes = listOf("dark", "light")) { scene() } }
-    @Test fun kit_key_value_default_ar() { FlutterGoldenGate.check(wrap = { content -> FlutterCapture(content) }, name = "kit_key_value_default_ar", modes = listOf("dark")) { scene() } }
+    @Test fun kit_key_value_default_ar() {
+        FlutterGoldenGate.check(
+            wrap = { content ->
+                // kit_gallery.dart:64-88 keeps captureTheme's Geist primary face;
+                // the Arabic locale changes direction and adds a fallback, without
+                // calling AppTheme.forLocale. These fact strings are all Latin.
+                val fonts = rememberKitFonts(arabic = false)
+                val typography = remember(fonts) { KitTypography(fonts, arabic = false) }
+                CompositionLocalProvider(LocalKitTypography provides typography) {
+                    FlutterCapture(content)
+                }
+            },
+            name = "kit_key_value_default_ar",
+            modes = listOf("dark"),
+        ) { scene() }
+    }
     @Test fun kit_key_value_default_text2() { FlutterGoldenGate.check(wrap = { content -> FlutterCapture(content) }, name = "kit_key_value_default_text2", modes = listOf("dark")) { scene() } }
     @Test fun kit_key_value_default_text2_1280x800() { FlutterGoldenGate.check(wrap = { content -> FlutterCapture(content) }, name = "kit_key_value_default_text2_1280x800", modes = listOf("dark")) { scene() } }
     @Test fun matrix() { FlutterGoldenGate.matrix("part-kit_key_value", caps = mapOf("KitKeyValue" to "reading")) { scene() } }
