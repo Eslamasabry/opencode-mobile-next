@@ -274,6 +274,7 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                                 body = stringResource(if (state.archived) Res.string.globalSessionsArchivedEmptyMessage else Res.string.globalSessionsEmptyMessage),
                                 icon = if (state.archived) KitIcons.archive else KitIcons.searchList,
                                 secondary = if (state.archived) KitAction(stringResource(Res.string.globalSessionsShowActive), actions::toggleArchived) else null,
+                                tertiary = if (state.archived) emptyList() else listOf(KitAction(stringResource(Res.string.globalSessionsRefresh), actions::retry)),
                             )
                         }
                     AllPhase.NoMatch ->
@@ -305,34 +306,39 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                 }
                 // Under a filter with no loaded match, older pages may still hold one: Load more and
                 // its Try again stay.
-                if (listed && state.canLoadMore) {
+                if (listed && (state.canLoadMore || state.loadMoreFailure != null)) {
                     item(key = "more") {
-                        val failed = state.loadMoreFailure
-                        if (failed != null) {
-                            KitErrorNotice(
-                                message = stringResource(Res.string.globalSessionsLoadMoreFailed),
-                                failure = failed,
-                                detailsLabel = stringResource(Res.string.kitDetails),
-                                copyLabel = stringResource(Res.string.kitCopyDetails),
-                                retry =
-                                    KitLineAction(
-                                        stringResource(Res.string.kitTryAgain),
-                                        actions::loadMore,
-                                    ),
-                            )
-                        } else {
-                            KitButton(
-                                label = stringResource(Res.string.globalSessionsLoadMore),
-                                onClick = actions::loadMore,
-                                role = KitButtonRole.Tertiary,
-                                working = state.loadingMore,
-                            )
-                        }
+                        AllConversationsPagingTail(state, actions::loadMore)
                     }
                 }
             }
         }
         RenameDialog(state, actions)
+    }
+}
+
+/** Flutter's paging tail: the screen loading bar owns progress; the explicit button returns after the read. */
+@Composable
+internal fun AllConversationsPagingTail(state: AllConversationsUi, onLoadMore: () -> Unit) {
+    val failed = state.loadMoreFailure
+    if (failed == null && (!state.canLoadMore || state.loadingMore || state.phase == AllPhase.Opening)) return
+    val tokens = LocalKitTokens.current
+    Column(Modifier.padding(horizontal = tokens.gutter.dp).padding(top = if (state.rows.isEmpty()) 0.dp else tokens.sectionGap.dp)) {
+        if (failed != null) {
+            KitErrorNotice(
+                message = stringResource(Res.string.globalSessionsLoadMoreFailed),
+                failure = failed,
+                detailsLabel = stringResource(Res.string.kitDetails),
+                copyLabel = stringResource(Res.string.kitCopyDetails),
+                retry = KitLineAction(stringResource(Res.string.commonRetry), onLoadMore),
+            )
+        } else {
+            KitButton(
+                label = stringResource(Res.string.globalSessionsLoadMore),
+                onClick = onLoadMore,
+                role = KitButtonRole.Secondary,
+            )
+        }
     }
 }
 
