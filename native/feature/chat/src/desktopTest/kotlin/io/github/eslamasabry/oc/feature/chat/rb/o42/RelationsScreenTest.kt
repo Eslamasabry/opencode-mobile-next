@@ -85,7 +85,7 @@ class RelationsScreenTest {
                 SessionRelationsScreen(state, actions)
             }
         }
-        onNode(hasText("Actions") and hasAnyAncestor(hasTestTag("session-relation-child")), useUnmergedTree = true).performClick()
+        onNodeWithContentDescription("Actions for Review changes").performClick()
         onNodeWithText("Pin Review changes").performClick()
         assertEquals(child.id, pinned)
         assertEquals(0, dismissed)

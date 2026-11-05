@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.feature.chat.relations.ui
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Spacer
@@ -45,7 +44,6 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
-import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeBlock
@@ -210,12 +208,12 @@ private fun RelationRowView(
                 disabledReason =
                     if (state.stale) stringResource(Res.string.r40RelationsStale)
                     else if (state.working) stringResource(Res.string.sessionRelationsOpening) else null,
-                supportingMaxLines = 2,
                 trailing =
                     KitRowTrailing.Action(
                         KitLineAction(
                             stringResource(Res.string.r40RelationsActions),
                             { menuOpen = true; actions.showMenu(row.id) },
+                            semanticsLabel = menuLabel,
                         )
                     ),
                 onClick = if (row.current) null else ({ actions.open(row.id) }),
