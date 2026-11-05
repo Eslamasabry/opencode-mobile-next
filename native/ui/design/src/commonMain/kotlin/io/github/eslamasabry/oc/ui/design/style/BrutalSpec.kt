@@ -150,7 +150,7 @@ public object BrutalSpec : StyleSpec {
             SurfaceRole.Toggle -> box((if (r.selected) r.color else null) ?: r.levelFill)
             SurfaceRole.Code -> box(r.color ?: r.levelFill, keep = edged)
             SurfaceRole.Divider ->
-                SurfaceDecoration(fill = if (edged && !r.withinGroup) ink.withAlpha(.9f) else roles.clear(), edgeWidthDp = EDGE)
+                SurfaceDecoration(fill = if (edged && !r.withinGroup) ink.withAlpha(.9f) else roles.clear()) // F: lib/ui/kit/style/kit_style_brutal.dart:307
             SurfaceRole.StateLayer ->
                 SurfaceDecoration(radii = r.radii, circle = r.circle, fill = if (r.pressed) roles.surface3 else ink.withAlpha(.04f))
             else -> null
