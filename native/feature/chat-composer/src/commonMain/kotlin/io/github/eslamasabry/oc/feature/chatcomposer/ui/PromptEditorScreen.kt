@@ -18,6 +18,7 @@ import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.modal.*
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
@@ -37,7 +38,7 @@ internal fun PromptEditorScreen(visible: Boolean, field: TextFieldState, onClose
             topBar = { KitTopBar(title, exit = KitTopBarExit.Close, exitLabel = stringResource(Res.string.kitSheetClose), onExit = close) },
             bottom = { KitActionBlock(primary = KitAction(stringResource(Res.string.promptEditorDone), onClose, icon = KitIcons.check)) },
         ) {
-            Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = Space.S2.dp, bottom = Space.S4.dp)) {
+            Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = LocalKitTokens.current.gutter.dp).padding(top = Space.S2.dp, bottom = Space.S4.dp)) {
                 KitField(
                     state = field,
                     label = stringResource(Res.string.promptEditorFieldLabel),
@@ -56,6 +57,7 @@ internal fun PromptEditorScreen(visible: Boolean, field: TextFieldState, onClose
                 confirmLabel = stringResource(Res.string.promptEditorDiscardChanges),
                 cancelLabel = stringResource(Res.string.draftKeepEditing),
                 kind = KitConfirmKind.Destructive,
+                icon = KitIcons.clearAll,
             ),
             onConfirm = {
                 field.edit { replace(0, length, original); this.selection = selection }
