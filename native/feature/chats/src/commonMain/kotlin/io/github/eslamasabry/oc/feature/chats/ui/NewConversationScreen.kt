@@ -333,7 +333,6 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
 @Composable
 private fun NewConversationSheet(state: NewConversationUi, actions: NewConversationActions) {
     val current = state.sheet
-    val directory = rememberTextFieldState(state.directory.orEmpty())
     KitPageOverlay(current == NewConversationSheet.Import, stringResource(Res.string.claudeImportTitle), { actions.sheet(null) }) {
         KitScreen(
             topBar = { KitTopBar(stringResource(Res.string.claudeImportTitle), exit = KitTopBarExit.Back, exitLabel = stringResource(Res.string.kitTopBarBack), onExit = { actions.sheet(null) }) },
@@ -362,6 +361,8 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
         ) {
             when (current) {
                 NewConversationSheet.Projects -> {
+                    // The picker starts from the selected project on each visit, after setup has loaded.
+                    val directory = rememberTextFieldState(state.directory.orEmpty())
                     KitRowGroup {
                         state.setup?.projects.orEmpty().forEach { project ->
                             KitRow(
