@@ -40,6 +40,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -221,6 +222,8 @@ public fun KitField(
      * face (the message box pill). The host draws the face and the focus cue.
      */
     framed: Boolean = true,
+    /** Flutter KitField.composer: center text in the control target and omit an empty footer. */
+    composer: Boolean = false,
 ) {
     kitAssert(label.isNotBlank()) { "KitField: a field needs its label" }
     kitAssert(
@@ -249,35 +252,39 @@ public fun KitField(
                 onTextChanged,
                 multilineLines,
                 framed,
+                composer,
             )
         }
         val note = error ?: helper
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-            Box(Modifier.weight(1f)) {
-                when {
-                    checking -> CheckingLine()
-                    note != null ->
-                        KitText(
-                            note,
-                            Modifier.semantics {
-                                liveRegion = LiveRegionMode.Polite
-                                if (error != null) error(error)
-                            },
-                            role = TypeRole.Secondary,
-                            tone = if (error != null) TextTone.Primary else TextTone.Secondary,
-                            kind = KitTextKind.Frame,
-                        )
+        val length = state.text.length
+        val counter = KitFieldRules.showCounter(length, maxLength)
+        if (!composer || checking || note != null || counter) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+                Box(Modifier.weight(1f)) {
+                    when {
+                        checking -> CheckingLine()
+                        note != null ->
+                            KitText(
+                                note,
+                                Modifier.semantics {
+                                    liveRegion = LiveRegionMode.Polite
+                                    if (error != null) error(error)
+                                },
+                                role = TypeRole.Secondary,
+                                tone = if (error != null) TextTone.Primary else TextTone.Secondary,
+                                kind = KitTextKind.Frame,
+                            )
+                    }
                 }
-            }
-            val length = state.text.length
-            if (KitFieldRules.showCounter(length, maxLength)) {
-                KitText(
-                    pluralStringResource(Res.plurals.kitFieldCount, length, Numbers.format(length), Numbers.format(maxLength ?: 0)),
-                    Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-                    role = TypeRole.Caption,
-                    tone = TextTone.Secondary,
-                    kind = KitTextKind.Frame,
-                )
+                if (counter) {
+                    KitText(
+                        pluralStringResource(Res.plurals.kitFieldCount, length, Numbers.format(length), Numbers.format(maxLength ?: 0)),
+                        Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                        role = TypeRole.Caption,
+                        tone = TextTone.Secondary,
+                        kind = KitTextKind.Frame,
+                    )
+                }
             }
         }
     }
@@ -298,6 +305,7 @@ private fun FieldBox(
     onTextChanged: ((String) -> Unit)?,
     multilineLines: IntRange,
     framed: Boolean = true,
+    composer: Boolean = false,
 ) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
@@ -316,6 +324,9 @@ private fun FieldBox(
             color = if (on) colors.text1 else colors.text3,
             textDirection = if (technical) TextDirection.Ltr else TextDirection.Content,
         )
+    val composerPadding = with(LocalDensity.current) {
+        ((tokens.minTarget.dp - style.lineHeight.toDp()) / 2).coerceAtLeast(0.dp) // F: lib/ui/kit/kit_field.dart:737
+    }
     // Flutter's field radius is the control's (14), not the icon tile's.
     val shape = KitShapeId.Button.shape()
     val fieldLook = rememberFieldLook(colors.surface1, focused || hasError)
@@ -370,6 +381,7 @@ private fun FieldBox(
             .heightIn(min = tokens.minTarget.dp)
             .then(
                 when {
+                    composer -> Modifier.padding(vertical = composerPadding)
                     !framed -> Modifier.padding(vertical = Space.S3.dp)
                     // The style draws the field (B-KIT-043..045); Solid keeps the surface1 fill and the edge above.
                     fieldLook.isSolid ->

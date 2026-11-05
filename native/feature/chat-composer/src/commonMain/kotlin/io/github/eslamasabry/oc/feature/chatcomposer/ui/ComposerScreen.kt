@@ -151,6 +151,7 @@ fun ComposerScreen(
                         enabled = if (state.fieldEnabled) KitEnabled.Enabled else KitEnabled.Disabled(readOnlyWords()),
                         labelShown = false,
                         framed = false,
+                        composer = true,
                         multilineLines = if (LocalKitWindow.current.short) 1..3 else 1..8, // F: lib/ui/kit/chat/kit_composer.dart:590
                     )
                     if (canExpand) KitIconButton(
