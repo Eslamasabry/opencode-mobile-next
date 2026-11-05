@@ -72,9 +72,9 @@ public fun KitSteerBox(
                     KitEnabled.Enabled
                 else KitEnabled.Disabled(reason),
         )
-        (blockedReason ?: message)?.let {
+        message?.let {
             Spacer(Modifier.height(Space.S3.dp))
-            KitNotice(it)
+            KitNotice(it, icon = KitIcons.info)
         }
         Spacer(Modifier.height(Space.S3.dp))
         Row(Modifier.fillMaxWidth()) {
