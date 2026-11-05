@@ -65,6 +65,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 internal fun AgentAccountPanel(state: AgentsUi, actions: AgentsActions, now: Instant = CommonBindings.clock().now()) {
     val panel = state.accountPanel
+    val signedIn = panel?.status == AccountPanelStatus.Ready && panel?.account?.signedIn == true
     KitScreen(
         topBar = {
             KitTopBar(
@@ -106,10 +107,10 @@ internal fun AgentAccountPanel(state: AgentsUi, actions: AgentsActions, now: Ins
                         } else Res.string.agentAccountNoAuth
                 })
                 val account = panel.account
-                if (panel.status == AccountPanelStatus.Ready && account?.signedIn == true) {
+                if (signedIn) {
                     KitRowGroup(leadingTiles = true) {
-                        KitRow(headline, supporting = account.email?.takeIf(String::isNotBlank), leading = KitRowLeading.Glyph(KitIcons.privacy))
-                        account.type?.let { type ->
+                        KitRow(headline, supporting = account?.email?.takeIf(String::isNotBlank), leading = KitRowLeading.Glyph(KitIcons.privacy))
+                        account?.type?.let { type ->
                             KitRow(stringResource(Res.string.agentAccountSignInMethod), leading = KitRowLeading.Glyph(KitIcons.login),
                                 trailing = KitRowTrailing.Value(stringResource(when (type) {
                                     "apiKey" -> Res.string.agentAccountApiKey
@@ -118,7 +119,7 @@ internal fun AgentAccountPanel(state: AgentsUi, actions: AgentsActions, now: Ins
                                     else -> Res.string.agentAccountHostAuth
                                 }), chevron = false))
                         }
-                        account.plan?.takeIf(String::isNotBlank)?.let {
+                        account?.plan?.takeIf(String::isNotBlank)?.let {
                             KitRow(stringResource(Res.string.agentAccountPlanTitle), leading = KitRowLeading.Glyph(KitIcons.star), trailing = KitRowTrailing.Value(it, chevron = false))
                         }
                     }
@@ -148,14 +149,16 @@ internal fun AgentAccountPanel(state: AgentsUi, actions: AgentsActions, now: Ins
                         AccountLoginStatus.Failed -> Res.string.agentAccountLoginFailed
                         AccountLoginStatus.Uncertain -> Res.string.agentAccountLoginUncertain
                         AccountLoginStatus.Completed -> Res.string.agentAccountLoginCompleted
-                        AccountLoginStatus.Cancelled -> Res.string.agentAccountLoginCancelled
+                        AccountLoginStatus.Cancelled -> Res.string.agentAccountCancelled
                         AccountLoginStatus.Idle -> null
                     }
                 if (loginWords != null) Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
                 val code = panel.deviceCode
                 val cancelVisible = panel.canCancel || panel.loginStatus == AccountLoginStatus.Cancelling
                 val cancelEnabled = KitEnabled.of(panel.canCancel, stringResource(Res.string.agentAccountCancelling))
-                if (code != null) {
+                if (panel.loginStatus == AccountLoginStatus.Failed) {
+                    io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice(stringResource(Res.string.agentAccountLoginFailed))
+                } else if (code != null && panel.loginStatus != AccountLoginStatus.Idle) {
                     KitSurfacePanel(title = loginWords?.let { stringResource(it) }, icon = KitIcons.login) {
                         Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
                             KitText(stringResource(Res.string.agentAccountCodeHint), role = KitTextRole.Supporting)
@@ -191,7 +194,7 @@ internal fun AgentAccountPanel(state: AgentsUi, actions: AgentsActions, now: Ins
                             role = KitButtonRole.Tertiary, icon = KitIcons.close, enabled = cancelEnabled)
                     }
                 }
-                if (panel.account?.signedIn == true && panel.account?.type == "chatgpt") {
+                if (signedIn) {
                     Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
                     val buckets = panel.limits
                     val windows = buckets.orEmpty().flatMap { bucket -> listOfNotNull(bucket.primary, bucket.secondary).map { bucket to it } }
@@ -222,12 +225,12 @@ internal fun AgentAccountPanel(state: AgentsUi, actions: AgentsActions, now: Ins
                     val reached = buckets.orEmpty().flatMap { listOfNotNull(it.primary, it.secondary) }.firstOrNull { it.usedPercent >= 100 } // F: lib/ui/screens/agent_account_screen.dart:493
                     reached?.let {
                         Spacer(Modifier.height(Space.S3.dp))
-                        KitNotice(stringResource(Res.string.agentAccountLimitReached, accountReset(it.resetsAtEpochMillis, now, withDate = true)))
+                        KitNotice(stringResource(Res.string.agentAccountLimitReached, accountReset(it.resetsAtEpochMillis, now, withDate = true)), icon = KitIcons.blocked)
                     }
                     Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
                     val usage = panel.usage
                     KitRowGroup(label = stringResource(Res.string.agentAccountUsage)) {
-                    if (panel.metricsLoading && usage == null) KitProgressRow(stringResource(Res.string.agentAccountUsage), null)
+                    if (panel.metricsLoading && usage?.lifetimeTokens == null && usage?.peakDailyTokens == null) KitProgressRow(stringResource(Res.string.agentAccountUsage), null)
                     else if (usage?.lifetimeTokens == null && usage?.peakDailyTokens == null) {
                         KitRow(stringResource(Res.string.agentAccountUsageUnavailable), titleMaxLines = 3,
                             enabled = false, disabledReason = stringResource(Res.string.agentAccountUsageNote)) // F: lib/ui/screens/agent_account_screen.dart:569
@@ -257,7 +260,7 @@ internal fun AgentAccountPanel(state: AgentsUi, actions: AgentsActions, now: Ins
             Spacer(Modifier.height(Space.S4.dp))
             KitDetailsFold(label = stringResource(Res.string.kitDetails), copyLabel = stringResource(Res.string.kitCopyDetails),
                 notes = listOfNotNull(stringResource(Res.string.agentAccountHostNote),
-                    if (panel?.account?.signedIn == true) stringResource(Res.string.agentAccountUsageNote) else null))
+                    if (signedIn) stringResource(Res.string.agentAccountUsageNote) else null))
         }
     }
 }
