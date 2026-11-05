@@ -32,7 +32,7 @@ import io.github.eslamasabry.oc.ui.kit.status.KitStatusGlyph
 import io.github.eslamasabry.oc.ui.kit.status.glyphColor
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 
-private const val LEAD_SLOT = 28
+private const val LEAD_SLOT = 28 // NV: native stand-in for KitLeadColumn.slotOf (no literal in Flutter)
 
 /** Network or not (Dart `KitErrorKind`): decides between "Report a problem" and the network fix. */
 public enum class KitErrorKind {
@@ -99,7 +99,7 @@ public fun KitNotice(
         verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
     ) {
         Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
-            Box(Modifier.width(LEAD_SLOT.dp).padding(top = 2.dp), contentAlignment = Alignment.TopCenter) {
+            Box(Modifier.width(LEAD_SLOT.dp).padding(top = 2.dp), contentAlignment = Alignment.TopCenter) {  // NV: icon nudged onto the first text line
                 KitStatusGlyph(tone.glyph, glyphColor(tone, colors))
             }
             Column(
@@ -114,7 +114,7 @@ public fun KitNotice(
                     tone = if (title == null) TextTone.Primary else TextTone.Secondary,
                 )
                 notes.forEach { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary) }
-                val shown = actions.take(2)
+                val shown = actions.take(2) // F: lib/ui/kit/kit_notice.dart:403
                 if (shown.isNotEmpty()) {
                     FlowRow(
                         Modifier.padding(top = Space.S2.dp),
