@@ -92,6 +92,12 @@ public fun SignInTerminalScreen(
             )
         },
         page = true,
+        loading = state.step == SignInStep.Preparing || state.step == SignInStep.Starting || state.step == SignInStep.Checking,
+        loadingLabel = stringResource(if (state.step == SignInStep.Checking) Res.string.agentsSignInChecking else Res.string.localTerminalStarting),
+        header = {
+            KitText(stringResource(if (state.usesClaudeAccount) Res.string.agentsSignInTerminalIntro else Res.string.agentsSignInTerminalIntroOther, state.agentName),
+                Modifier.padding(horizontal = Space.S4.dp, vertical = Space.S2.dp), tone = TextTone.Secondary)
+        },
     ) {
         Column(
             Modifier.fillMaxSize().padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
@@ -100,17 +106,9 @@ public fun SignInTerminalScreen(
             if (state.stopFailed) KitNotice(stringResource(Res.string.agentsSignInStopFailed))
             when (state.step) {
                 SignInStep.Preparing,
-                SignInStep.Starting ->
-                    KitStateView(
-                        KitStateKind.Loading,
-                        stringResource(Res.string.localTerminalStarting),
-                    )
+                SignInStep.Starting -> Unit
                 SignInStep.Running -> Running(state, actions, Modifier.weight(1f))
-                SignInStep.Checking ->
-                    KitStateView(
-                        KitStateKind.Working,
-                        stringResource(Res.string.agentsSignInChecking),
-                    )
+                SignInStep.Checking -> if (state.terminal != null) Running(state, actions, Modifier.weight(1f))
                 SignInStep.SignedIn ->
                     KitStateView(
                         KitStateKind.Finished,
@@ -202,10 +200,6 @@ public fun SignInTerminalScreen(
 
 @Composable
 private fun Running(state: SignInTerminalUi, actions: SignInTerminalActions, modifier: Modifier) {
-    val intro =
-        if (state.usesClaudeAccount) Res.string.agentsSignInTerminalIntro
-        else Res.string.agentsSignInTerminalIntroOther
-    KitText(stringResource(intro, state.agentName), tone = TextTone.Secondary)
     KitTerminalView(
         platformView = state.terminal?.native,
         title = state.title,
@@ -218,24 +212,10 @@ private fun Running(state: SignInTerminalUi, actions: SignInTerminalActions, mod
         inputEnabled = state.inputEnabled,
     ) {
         if (state.canOpenPage || state.code != null) {
-            FlowRow(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
-                verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
-            ) {
-                if (state.canOpenPage)
-                    KitButton(
-                        stringResource(Res.string.agentsSignInOpenPage),
-                        actions::openSignInPage,
-                    )
-                state.code?.let { code ->
-                    KitButton(
-                        stringResource(Res.string.agentsSignInCopyCode, code),
-                        actions::copyCode,
-                        role = KitButtonRole.Secondary,
-                    )
-                }
-            }
+            io.github.eslamasabry.oc.ui.kit.action.KitActionBlock(
+                primary = if (state.canOpenPage) KitAction(stringResource(Res.string.agentsSignInOpenPage), actions::openSignInPage) else null,
+                secondary = state.code?.let { KitAction(stringResource(Res.string.agentsSignInCopyCode, it), actions::copyCode) },
+            )
         }
     }
     KitButton(stringResource(Res.string.agentsDone), actions::finish, role = KitButtonRole.Tertiary)
