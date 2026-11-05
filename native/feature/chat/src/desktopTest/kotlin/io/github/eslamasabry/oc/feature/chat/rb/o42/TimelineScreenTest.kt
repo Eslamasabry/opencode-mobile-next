@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.feature.chat.RecordingNavigator
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatActions
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPresenter
 import io.github.eslamasabry.oc.feature.chat.presentation.TimelineUi
+import io.github.eslamasabry.oc.feature.chat.presentation.TimelineEntryUi
 import io.github.eslamasabry.oc.feature.chat.ui.ChatTimelineSheet
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
@@ -20,6 +21,9 @@ import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import kotlinx.collections.immutable.persistentListOf
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -27,6 +31,40 @@ import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
 class TimelineScreenTest {
+    @Test fun `C03 timeline fork is a separate glyph target and never also jumps`() = runComposeUiTest {
+        val selections = mutableListOf<Pair<String, Boolean>>()
+        val presenter = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+        val actions = object : ChatActions by presenter {
+            override fun timelineSelect(messageId: String, fork: Boolean) { selections += messageId to fork }
+        }
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Off)) {
+                KitSheetHost {
+                    ChatTimelineSheet(TimelineUi("", persistentListOf(TimelineEntryUi("prompt", "row", true, "Fix checkout", null, true)), false, false, null), actions)
+                }
+            }
+        }
+        onNodeWithTag("timeline-fork-prompt").performClick()
+        assertEquals(listOf("prompt" to true), selections)
+        onNodeWithText("Fork from this prompt").assertDoesNotExist()
+        onNodeWithTag("timeline-row-prompt").performClick()
+        assertEquals(listOf("prompt" to true, "prompt" to false), selections)
+    }
+
+    @Test fun `C03 kit row disables its glyph action with the row`() = runComposeUiTest {
+        var calls = 0
+        setContent {
+            KitTheme(platform = DesktopKitPlatform()) {
+                KitRow(
+                    "Fix checkout", enabled = false, disabledReason = "Conversation changed",
+                    trailing = KitRowTrailing.IconAction(KitLineAction("Fork from this prompt", { calls++ }, icon = KitIcons.branch)),
+                )
+            }
+        }
+        onNodeWithContentDescription("Fork from this prompt").assertIsNotEnabled().performClick()
+        assertEquals(0, calls)
+    }
+
     @Test fun `C03 timeline filters before the search announcement settles`() = runComposeUiTest {
         val queries = mutableListOf<String>()
         val presenter = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)

@@ -110,6 +110,11 @@ public sealed interface KitRowTrailing {
      * The row's one act ("Turn on"): a trailing tertiary; under the supporting line from 1.3× text.
      */
     public data class Action(val action: KitLineAction) : KitRowTrailing
+
+    /** A separately labelled glyph target, as in Flutter's timeline Fork control. */
+    public data class IconAction(val action: KitLineAction) : KitRowTrailing {
+        init { require(action.icon != null) { "An icon action needs a glyph" } }
+    }
 }
 
 @Composable

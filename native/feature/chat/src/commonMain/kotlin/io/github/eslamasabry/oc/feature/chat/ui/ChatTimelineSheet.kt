@@ -82,6 +82,7 @@ internal fun ChatTimelineSheet(timeline: TimelineUi?, actions: ChatActions, nowM
             if (timeline.partial && timeline.olderFailure == null) {
                 KitNotice(
                     message = stringResource(Res.string.historyLoadedOnly),
+                    icon = KitIcons.history,
                     actions = listOf(KitLineAction(
                         stringResource(Res.string.historyLoadOlder), actions::loadOlder,
                         enabled = !timeline.loadingOlder,
@@ -113,7 +114,7 @@ internal fun ChatTimelineSheet(timeline: TimelineUi?, actions: ChatActions, nowM
                         .joinToString(" · "),
                 trailing =
                     if (entry.forkable)
-                        KitRowTrailing.Action(
+                        KitRowTrailing.IconAction(
                             KitLineAction(
                                 stringResource(Res.string.chatUiForkFromThisPrompt),
                                 { actions.timelineSelect(entry.messageId, fork = true) },

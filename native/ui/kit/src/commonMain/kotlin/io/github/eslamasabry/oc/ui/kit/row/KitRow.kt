@@ -33,6 +33,8 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitInlineAction
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
@@ -128,6 +130,9 @@ public fun KitRow(
         }
     val value = trailing as? KitRowTrailing.Value
     val action = (trailing as? KitRowTrailing.Action)?.action?.let {
+        if (enabled) it else it.copy(enabled = false, disabledReason = disabledReason, onClick = {})
+    }
+    val iconAction = (trailing as? KitRowTrailing.IconAction)?.action?.let {
         if (enabled) it else it.copy(enabled = false, disabledReason = disabledReason, onClick = {})
     }
     val actionBelow = action != null && large
@@ -257,6 +262,13 @@ public fun KitRow(
                     if (actionBelow) KitInlineAction(action)
                 }
                 when {
+                    iconAction != null -> KitIconButton(
+                        icon = requireNotNull(iconAction.icon),
+                        label = iconAction.semanticsLabel ?: iconAction.label,
+                        onClick = iconAction.onClick,
+                        modifier = Modifier.testTag(iconAction.testTag ?: "kit-row-icon-action"),
+                        enabled = KitEnabled.of(iconAction.enabled, iconAction.disabledReason),
+                    )
                     value != null && !valueBelow -> RowValue(value)
                     action != null && !actionBelow -> KitInlineAction(action)
                     trailing is KitRowTrailing.Locked -> RowLockedValue(trailing)
