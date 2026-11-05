@@ -12,6 +12,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.state.KitInlineState
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.words.res.workRefresh
+import io.github.eslamasabry.oc.ui.words.res.setupNativeRefreshing
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -96,7 +97,7 @@ public fun LinuxPortsScreen(state: LinuxPortsUi, actions: LinuxPortsActions) {
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::back,
-                actions = listOf(KitLineAction(stringResource(Res.string.workRefresh), actions::retry, icon = KitIcons.retry, enabled = !state.loading, disabledReason = stringResource(Res.string.linuxDevLogLoading))),
+                actions = listOf(KitLineAction(stringResource(Res.string.workRefresh), actions::retry, icon = KitIcons.retry, enabled = !state.loading, disabledReason = stringResource(Res.string.setupNativeRefreshing))),
             )
         },
         width = KitScreenWidth.Reading,
