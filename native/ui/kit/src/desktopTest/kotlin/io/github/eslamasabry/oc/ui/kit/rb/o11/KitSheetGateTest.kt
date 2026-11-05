@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import io.github.eslamasabry.oc.ui.kit.modal.LocalSheetKeyboard
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -11,6 +13,9 @@ import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate
 import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate.Frame
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.modal.KitConsequence
+import io.github.eslamasabry.oc.ui.kit.modal.KitConsequenceMark
+import io.github.eslamasabry.oc.ui.kit.modal.KitMarkedConsequences
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
@@ -37,6 +42,7 @@ class KitSheetGateTest {
         dismissible: Boolean = true,
         dirty: Boolean = false,
         loading: Boolean = false,
+        disabled: Boolean = false,
     ) {
         KitSheetHost {
             KitSheet(
@@ -50,7 +56,7 @@ class KitSheetGateTest {
                 dismissible = dismissible,
                 dirty = dirty,
                 loading = loading,
-                primary = KitAction("Use English", onClick = {}),
+                primary = KitAction("Use English", onClick = if (disabled) null else ({})),
                 secondary = KitAction("Keep current", onClick = {}),
                 tertiary = listOf(KitAction("More languages", onClick = {})),
             ) {
@@ -104,5 +110,35 @@ class KitSheetGateTest {
     @Test fun kit_sheet_oneclose_1280x800() { FlutterGoldenGate.check("kit_sheet_oneclose_1280x800", Frame.Screen) { Folder() } }
     @Test fun kit_sheet_text250() { FlutterGoldenGate.check("kit_sheet_text250", Frame.Screen, textScale = 2.5f) { Folder() } }
     @Test fun kit_sheet_text250_1280x800() { FlutterGoldenGate.check("kit_sheet_text250_1280x800", Frame.Screen, textScale = 2.5f) { Folder() } }
+    /** `_consequences`: all three marks on one panel inside a sheet body. */
+    @Composable
+    private fun Consequences() {
+        KitSheetHost {
+            KitSheet(
+                visible = true,
+                onDismissRequest = {},
+                title = "Delete conversation?",
+                subtitle = "This cannot be undone",
+                icon = KitIcons.delete,
+                primary = KitAction("Delete conversation", onClick = {}),
+                secondary = KitAction("Cancel", onClick = {}),
+            ) {
+                KitMarkedConsequences(
+                    listOf(
+                        KitConsequence("3 queued prompts will be deleted", KitConsequenceMark.Lost),
+                        KitConsequence("The exported transcript is kept", KitConsequenceMark.Kept),
+                        KitConsequence("This runs in the background", KitConsequenceMark.Info),
+                    ),
+                )
+            }
+        }
+    }
+
+    @Test fun kit_sheet_consequences() { FlutterGoldenGate.check("kit_sheet_consequences", Frame.Screen) { Consequences() } }
+    @Test fun kit_sheet_disabled() { FlutterGoldenGate.check("kit_sheet_disabled", Frame.Screen) { Language(disabled = true) } }
+    @Test fun kit_sheet_keyboard_open() {
+        // DPR 3.0, 900 physical px of keyboard = 300 dp (the Dart test's viewInsets).
+        FlutterGoldenGate.check("kit_sheet_keyboard_open", Frame.Screen) { CompositionLocalProvider(LocalSheetKeyboard provides 300.dp) { Language() } }
+    }
     @Test fun matrix() { FlutterGoldenGate.matrix("part-kit_sheet", caps = mapOf("KitSheet" to "sheet"), frame = Frame.Screen) { Language(icon = KitIcons.globe) } }
 }

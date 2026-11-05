@@ -22,3 +22,13 @@ kit_sheet_oneclose_1280x800_light	DEPENDS_ON 07	the panel stacks KitActionBlock 
 kit_sheet_oneclose_1280x800_dark	DEPENDS_ON 07	the panel stacks KitActionBlock actions at 560 dp as Flutter does (part-kit_action_block, order 07); the native block rows them
 kit_sheet_text250_1280x800_light	DEPENDS_ON 07	the panel stacks KitActionBlock actions at 560 dp as Flutter does (part-kit_action_block, order 07); the native block rows them
 kit_sheet_text250_1280x800_dark	DEPENDS_ON 07	the panel stacks KitActionBlock actions at 560 dp as Flutter does (part-kit_action_block, order 07); the native block rows them
+kit_sheet_disabled_light	DEPENDS_ON 08	the body rows are KitRow with padding and the current check (part-kit_row, order 08); the sheet shell matches, see evidence/11.md
+kit_sheet_disabled_dark	DEPENDS_ON 08	the body rows are KitRow with padding and the current check (part-kit_row, order 08); the sheet shell matches, see evidence/11.md
+kit_sheet_keyboard_open_light	DEPENDS_ON 08	the body rows are KitRow with padding and the current check (part-kit_row, order 08); the sheet shell matches, see evidence/11.md
+kit_sheet_keyboard_open_dark	DEPENDS_ON 08	the body rows are KitRow with padding and the current check (part-kit_row, order 08); the sheet shell matches, see evidence/11.md
+kit_sheet_oneclose_light	DEPENDS_ON 08	the body rows are KitRow with padding and the current check (part-kit_row, order 08); the sheet shell matches, see evidence/11.md
+kit_sheet_oneclose_dark	DEPENDS_ON 08	the body rows are KitRow with padding and the current check (part-kit_row, order 08); the sheet shell matches, see evidence/11.md
+kit_sheet_text250_light	DEPENDS_ON 07	the action buttons grow their label and height with 2.5x text (part-kit_button, order 07); the sheet header matches, the body rows are also part-kit_row (order 08), see evidence/11.md
+kit_sheet_consequences_light	DEPENDS_ON 12	the marked facts panel is KitConsequences with icon marks and dividers (part-kit_confirm_sheet, order 12); the sheet shell matches, see evidence/11.md
+kit_sheet_text250_dark	DEPENDS_ON 07	the action buttons grow their label and height with 2.5x text (part-kit_button, order 07); the sheet header matches, the body rows are also part-kit_row (order 08), see evidence/11.md
+kit_sheet_consequences_dark	DEPENDS_ON 12	the marked facts panel is KitConsequences with icon marks and dividers (part-kit_confirm_sheet, order 12); the sheet shell matches, see evidence/11.md

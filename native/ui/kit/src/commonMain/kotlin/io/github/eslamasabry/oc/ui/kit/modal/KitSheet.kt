@@ -48,6 +48,9 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -62,6 +65,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
+import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
@@ -208,9 +212,16 @@ internal class SheetEntry {
     /** Scrim, Close and Back all come here: unsaved input without a draft asks first. */
     fun requestDismiss() {
         if (!dismissible) return
+        if (asking) { // F: lib/ui/kit/kit_sheet_modal.dart:336-339
+            asking = false
+            return
+        }
         if (SheetLayout.asksBeforeClosing(dirty, draft)) asking = true else onDismissRequest()
     }
 }
+
+/** The keyboard's height where the platform reports none (the desktop gate sets it); null reads the real IME inset. */
+internal val LocalSheetKeyboard: ProvidableCompositionLocal<Dp?> = staticCompositionLocalOf { null }
 
 public val LocalKitSheetHost: ProvidableCompositionLocal<KitSheetHostState?> =
     staticCompositionLocalOf {
@@ -399,7 +410,6 @@ private fun SheetLayer(state: KitSheetHostState) {
                 }
         }
     }
-    if (entry.asking) DiscardQuestion(entry)
 }
 
 /**
@@ -429,7 +439,7 @@ private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean) {
             }
             .testTag("kit-sheet")
             .navigationBarsPadding()
-            .imePadding()
+            .then(LocalSheetKeyboard.current?.let { Modifier.padding(bottom = it) } ?: Modifier.imePadding())
     ) {
         if (handle) {
             val density = LocalDensity.current
@@ -468,7 +478,10 @@ private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean) {
         } else {
             Box(Modifier.height(Space.S3.dp))
         }
-        BoxWithConstraints(Modifier.weight(1f, fill = false)) {
+        if (entry.asking) SheetQuestion(entry)
+        BoxWithConstraints(
+            Modifier.weight(1f, fill = false).then(if (entry.asking) Modifier.keptOffstage() else Modifier)
+        ) {
             // Under a large font or the keyboard, let the header join the scroll. Pinned actions
             // keep their
             // own space and the words always have room instead of sitting under an oversized fixed
@@ -558,14 +571,13 @@ private fun SheetHeader(entry: SheetEntry, handle: Boolean) {
         }
         Row(Modifier.fillMaxWidth()) {
             Column(Modifier.weight(1f).padding(top = Space.S3.dp, end = Space.S2.dp)) {
-                KitText(entry.title, role = TypeRole.Title, kind = KitTextKind.Frame)
+                KitText(entry.title, role = TypeRole.Title)
                 entry.subtitle?.let {
                     Spacer(Modifier.height((Space.S1 / 2f).dp)) // F: lib/ui/kit/kit_sheet.dart:604
                     KitText(
                         it,
                         role = TypeRole.Secondary,
                         tone = TextTone.Secondary,
-                        kind = KitTextKind.Frame,
                     )
                 }
             }
@@ -616,22 +628,65 @@ internal fun IconTile(glyph: ImageVector, size: Dp) {
     }
 }
 
-/** "Discard your changes?" over a dirty sheet without a draft (Dart `showKitDiscardChanges`). */
+/**
+ * The content kept composed (its typed text stays) but out of sight, out of focus and out of the
+ * reading order while the question has the sheet (Flutter's `Visibility(maintainState)` under
+ * `ExcludeFocus`, `kit_sheet_modal.dart:441-449`).
+ */
+private fun Modifier.keptOffstage(): Modifier =
+    layout { measurable, constraints ->
+            measurable.measure(constraints)
+            layout(0, 0) {}
+        }
+        .focusProperties { canFocus = false }
+        .clearAndSetSemantics {}
+
+/**
+ * "Discard your changes?" over a dirty sheet without a draft (Dart `showKitDiscardChanges`): the
+ * question takes the content's place inside the sheet (`kit_sheet_modal.dart:451-474`), drawn as
+ * `KitConfirmSheet` does (`kit_confirm_sheet.dart:520-560`).
+ */
 @Composable
-private fun DiscardQuestion(entry: SheetEntry) {
-    KitConfirm(
-        spec =
-            KitConfirmSpec(
-                title = stringResource(Res.string.kitDiscardTitle),
-                confirmLabel = stringResource(Res.string.kitDiscardConfirm),
-                kind = KitConfirmKind.Discard,
-                body = stringResource(Res.string.kitDiscardBody),
-                cancelLabel = stringResource(Res.string.kitConfirmKeepEditing),
-            ),
-        onConfirm = {
-            entry.asking = false
-            entry.onDismissRequest()
-        },
-        onCancel = { entry.asking = false },
-    )
+private fun SheetQuestion(entry: SheetEntry) {
+    val tokens = LocalKitTokens.current
+    val answer = { yes: Boolean ->
+        entry.asking = false
+        if (yes) entry.onDismissRequest()
+    }
+    Column(
+        Modifier.fillMaxWidth()
+            .testTag("kit-sheet-question")
+            .padding(
+                start = FlutterKitTokens.RAIL.dp,
+                top = Space.S3.dp,
+                end = FlutterKitTokens.RAIL.dp,
+                bottom = Space.S4.dp,
+            )
+            .verticalScroll(rememberScrollState())
+    ) {
+        IconTile(KitIcons.editOff)
+        Spacer(Modifier.height(Space.S3.dp))
+        KitText(stringResource(Res.string.kitDiscardTitle), role = TypeRole.Title)
+        Spacer(Modifier.height(Space.S2.dp))
+        KitText(
+            stringResource(Res.string.kitDiscardBody),
+            role = TypeRole.Body,
+            tone = TextTone.Secondary,
+        )
+        Spacer(Modifier.height(Space.S5.dp))
+        KitActionBlock(
+            primary =
+                KitAction(
+                    stringResource(Res.string.kitDiscardConfirm),
+                    onClick = { answer(true) },
+                    destructive = true,
+                    haptic = KitHaptic.Commit,
+                ),
+        )
+        Spacer(Modifier.height(Space.S3.dp)) // F: lib/ui/kit/kit_confirm_sheet.dart:610
+        KitActionBlock(
+            secondary =
+                KitAction(stringResource(Res.string.kitConfirmKeepEditing), onClick = { answer(false) }),
+        )
+    }
 }
