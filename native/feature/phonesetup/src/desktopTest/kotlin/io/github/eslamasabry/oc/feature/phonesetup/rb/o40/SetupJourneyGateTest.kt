@@ -287,6 +287,77 @@ class SetupJourneyGateTest {
     }
 
     @Test
+    fun `failure names its current component when no failed row was saved`() = runComposeUiTest {
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                SetupJourneyScreen(
+                    state.copy(
+                        progress =
+                            SetupProgress(SetupState.Failed, emptyList(), .5, current = "python")
+                    ),
+                    Actions(),
+                )
+            }
+        }
+        onNodeWithText("Stopped at Python. What went wrong is under Details.").assertExists()
+        onNodeWithText("Continue setup").assertIsEnabled()
+    }
+
+    @Test
+    fun `offline failure gives the same recovery sentence as Flutter`() = runComposeUiTest {
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                SetupJourneyScreen(
+                    state.copy(
+                        progress =
+                            SetupProgress(
+                                SetupState.Failed,
+                                listOf(
+                                    ComponentProgress(
+                                        "node",
+                                        ComponentState.Failed,
+                                        error = SetupError.Offline("Node.js"),
+                                    )
+                                ),
+                                .5,
+                            )
+                    ),
+                    Actions(),
+                )
+            }
+        }
+        onNodeWithText("No internet connection — Continue when you're back online").assertExists()
+    }
+
+    @Test
+    fun `failed step keeps its known stage when its reason is technical`() = runComposeUiTest {
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                SetupJourneyScreen(
+                    state.copy(
+                        progress =
+                            SetupProgress(
+                                SetupState.Failed,
+                                listOf(
+                                    ComponentProgress(
+                                        "node",
+                                        ComponentState.Failed,
+                                        stage = "Installing Node.js",
+                                        error = SetupError.Unexpected,
+                                    )
+                                ),
+                                .5,
+                            )
+                    ),
+                    Actions(),
+                )
+            }
+        }
+        onNodeWithText("Stopped during: Installing Node.js. What went wrong is under Details.")
+            .assertExists()
+    }
+
+    @Test
     fun running() {
         val progress =
             SetupProgress(

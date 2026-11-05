@@ -481,7 +481,7 @@ private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions) {
     }
     val note = when (progress.state) {
         SetupState.Running, SetupState.Idle -> stringResource(Res.string.phoneSetupRingSafeToLeaveQuiet)
-        SetupState.Failed -> runtimeProblem(rows.firstOrNull { it.state == ComponentState.Failed }?.error ?: progress.error)
+        SetupState.Failed -> journeyFailure(state)
         SetupState.Interrupted, SetupState.Cancelled -> stringResource(Res.string.phoneSetupRingStoppedNote)
         SetupState.Done -> null
     }
@@ -639,6 +639,39 @@ internal class JourneyProgressMemory {
         }
         return remaining
     }
+}
+
+/** The job answer uses Flutter's ownership/network/known-reason/stage fallback order. */
+@Composable
+private fun journeyFailure(state: SetupJourneyUi): String {
+    val progress = state.progress
+    val failed = progress.components.filter { it.state == ComponentState.Failed }
+    val errors = listOfNotNull(progress.error) + failed.mapNotNull { it.error }
+    if (SetupError.OwnershipUnknown in errors)
+        return stringResource(Res.string.inAppServerOwnershipRecoveryBody)
+    if (errors.any { it == SetupError.NoInternet || it is SetupError.Offline })
+        return stringResource(Res.string.setupProgressViewNoInternet)
+    val row = failed.firstOrNull()
+    val error = row?.error ?: progress.error
+    if (
+        error != null &&
+            error !in setOf(SetupError.Unexpected, SetupError.HostRefused, SetupError.HostMismatch)
+    )
+        return runtimeProblem(error)
+    // F: lib/ui/widgets/setup_progress_view.dart:144-167
+    if (row != null) {
+        return row.stage?.let {
+            stringResource(Res.string.setupProgressViewFailedDuring, setupMessageWords(it))
+        } ?: stringResource(Res.string.setupProgressViewFailedStep)
+    }
+    val current =
+        progress.current ?: return stringResource(Res.string.setupProgressViewFailedUnknown)
+    val component = state.options?.components?.firstOrNull { it.id == current }
+    val title =
+        if (current == SetupComponentIds.ESSENTIALS)
+            stringResource(Res.string.phoneSetupEssentialsShort)
+        else itemTitle(current, component?.shortTitle ?: current)
+    return stringResource(Res.string.setupProgressViewFailedAt, title)
 }
 
 @Composable
