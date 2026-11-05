@@ -5,6 +5,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.*
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -80,6 +82,13 @@ public fun KitProgressRing(
                 contentDescription = listOfNotNull(semanticsLabel, spoken, caption).joinToString(", ")
                 progressBarRangeInfo = ProgressBarRangeInfo(target, 0f..1f)
             }, contentAlignment = Alignment.Center) {
+                if (!halted && arc.value > 0) Canvas(Modifier.fillMaxSize().blur((stroke * .9f).dp, BlurredEdgeTreatment.Unbounded)) { // F: lib/ui/kit/kit_progress_ring.dart:473
+                    val width = stroke.dp.toPx()
+                    val inset = width / 2 // F: lib/ui/kit/kit_progress_ring.dart:487
+                    drawArc(colors.accent.copy(alpha = if (colors.dark) .32f else .18f), // F: lib/ui/kit/kit_progress_ring.dart:300
+                        -90f, (if (rtl) -1 else 1) * 360f * arc.value, false, // NV: Flutter's radians converted to Compose degrees
+                        Offset(inset, inset), Size(size.width - width, size.height - width), style = Stroke(width * 1.6f, cap = StrokeCap.Round)) // F: lib/ui/kit/kit_progress_ring.dart:470
+                }
                 Canvas(Modifier.fillMaxSize()) {
                     val width = stroke.dp.toPx()
                     val inset = width / 2 // F: lib/ui/kit/kit_progress_ring.dart:487
@@ -93,10 +102,9 @@ public fun KitProgressRing(
                     )
                 }
                 if (finished) {
-                    io.github.eslamasabry.oc.ui.kit.icon.KitIcon(
+                    io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph(
                         io.github.eslamasabry.oc.ui.kit.icon.KitIcons.check,
-                        Modifier.size((diameter * .3f).dp), // F: lib/ui/kit/kit_progress_ring.dart:281
-                        tone = io.github.eslamasabry.oc.ui.design.type.TextTone.Accent,
+                        colors.accent, (diameter * .3f).dp, // F: lib/ui/kit/kit_progress_ring.dart:281
                     )
                 } else Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     val big = typography.style(TypeRole.LargeTitle).copy(
