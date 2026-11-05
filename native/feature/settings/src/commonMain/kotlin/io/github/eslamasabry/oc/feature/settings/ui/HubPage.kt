@@ -1,11 +1,9 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
-import androidx.compose.ui.semantics.contentDescription
-import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
-import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
-import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
-import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
@@ -13,8 +11,8 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -27,18 +25,17 @@ import io.github.eslamasabry.oc.feature.settings.presentation.SettingsRowId
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsSearchEntry
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsUi
 import io.github.eslamasabry.oc.ui.design.tokens.Space
-import io.github.eslamasabry.oc.ui.design.type.TextTone
-import io.github.eslamasabry.oc.ui.design.type.TypeRole
-import io.github.eslamasabry.oc.ui.kit.KitText
-import io.github.eslamasabry.oc.ui.kit.input.KitField
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
+import io.github.eslamasabry.oc.ui.kit.input.KitSearchNoMatch
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.Res
-import io.github.eslamasabry.oc.ui.words.res.kitSearchNoMatch
 import io.github.eslamasabry.oc.ui.words.res.settingsHubSearch
 import io.github.eslamasabry.oc.ui.words.res.settingsHubServerLine
 import io.github.eslamasabry.oc.ui.words.res.settingsHubServerNone
@@ -66,7 +63,6 @@ internal fun HubPage(
     val entries = hub.searchable.map { SettingsSearchEntry(it, rowWords(it), aliasWords(it)) }
     LaunchedEffect(entries) { actions.onSearchEntries(entries) }
     val field = rememberTextFieldState(hub.query)
-    LaunchedEffect(field) { snapshotFlow { field.text.toString() }.collect { actions.onQuery(it) } }
     // Back clears the search in the presenter; the field follows.
     LaunchedEffect(hub.query) {
         if (field.text.toString() != hub.query) field.edit { replace(0, length, hub.query) }
@@ -77,68 +73,42 @@ internal fun HubPage(
         state = state,
         actions = actions,
         modifier = modifier,
-        large = true,
-        search = {
-            Box(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)) {
-                KitSearchField(
-                    label = stringResource(Res.string.settingsHubSearch),
-                    onSearch = {},
-                    state = field,
-                    modifier = Modifier.testTag("settings-search"),
-                )
-            }
-        },
     ) {
+        Box(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)) {
+            KitSearchField(
+                label = stringResource(Res.string.settingsHubSearch),
+                onSearch = actions::onQuery,
+                onSubmit = { hub.results.firstOrNull()?.let(actions::onTarget) },
+                resultCount = hub.results.size.takeIf { hub.query.isNotBlank() && it > 0 },
+                prominent = true,
+                state = field,
+                modifier = Modifier.testTag("settings-search"),
+            )
+        }
+        Spacer(Modifier.height(Space.S2.dp))
         if (hub.query.isBlank()) {
-            // Looks pass, owner pick A (2026-11-05): the five groups as flat labelled sections, each with its key
-            // rows and their current value at the end, so nobody opens a page only to read a setting. The rest of a
-            // group is one "More" row away.
-            hub.groups.forEach { group ->
-                val rows = HUB_ROWS.getValue(group).filter { it in hub.searchable }
-                val groupName = groupWords(group)
-                KitSectionLabel(groupName, Modifier.testTag("settings-group-${group.name}"))
-                if (group == SettingsGroupId.Server) {
+            val large =
+                LocalDensity.current.fontScale * 10 >=
+                    18 // F: lib/ui/screens/settings_screen.dart:290
+            KitRowGroup {
+                hub.groups.forEach { group ->
                     KitRow(
-                        title = state.hub.server?.name ?: stringResource(Res.string.settingsHubServerNone),
-                        leading = KitRowLeading.Glyph(if (state.hub.server?.onPhone == true) KitIcons.phone else KitIcons.computer),
-                        trailing =
-                            state.hub.server?.let {
-                                KitRowTrailing.Value(
-                                    if (it.onPhone) stringResource(Res.string.settingsHubServerOnPhone)
-                                    else stringResource(Res.string.settingsV3Connected)
-                                )
-                            } ?: KitRowTrailing.Chevron,
-                        onClick = { actions.onOpen(SettingsPage.Group(group)) },
-                    )
-                }
-                rows.forEach { row ->
-                    KitRow(
-                        title = rowWords(row),
-                        modifier = Modifier.testTag(row.tag),
-                        leading = KitRowLeading.Glyph(rowGlyph(row)),
-                        trailing = rowValue(row, state)?.let { KitRowTrailing.Value(it) } ?: KitRowTrailing.Chevron,
-                        onClick = { actions.onTarget(row) },
-                    )
-                }
-                if (hub.searchable.count { it.group == group } > rows.size + (if (group == SettingsGroupId.Server) 1 else 0)) {
-                    KitRow(
-                        title = stringResource(Res.string.agentToolsTerminalMore),
-                        modifier = Modifier.semantics { contentDescription = groupName },
-                        leading = KitRowLeading.Glyph(KitIcons.more),
-                        trailing = KitRowTrailing.Chevron,
+                        title = groupWords(group),
+                        modifier =
+                            Modifier.heightIn(min = LocalKitTokens.current.rowHeightTwo.dp)
+                                .testTag("settings-group-${group.name}"),
+                        leading = if (large) null else KitRowLeading.Glyph(groupGlyph(group)),
+                        supporting =
+                            if (group == SettingsGroupId.Server) hubServerLine(state) else null,
+                        trailing = if (large) KitRowTrailing.None else KitRowTrailing.Chevron,
                         onClick = { actions.onOpen(SettingsPage.Group(group)) },
                     )
                 }
             }
         } else if (hub.results.isEmpty()) {
-            KitText(
-                stringResource(Res.string.kitSearchNoMatch, hub.query),
-                Modifier.padding(
-                    horizontal = LocalKitTokens.current.gutter.dp,
-                    vertical = Space.S4.dp,
-                ),
-                role = TypeRole.Secondary,
-                tone = TextTone.Secondary,
+            KitSearchNoMatch(
+                query = hub.query,
+                onClear = { actions.onQuery("") },
             )
         } else {
             KitRowGroup {
@@ -147,6 +117,7 @@ internal fun HubPage(
                         title = rowWords(row),
                         modifier = Modifier.testTag(row.tag),
                         supporting = groupWords(row.group),
+                        leading = KitRowLeading.Glyph(rowGlyph(row)),
                         trailing = KitRowTrailing.Chevron,
                         onClick = { actions.onTarget(row) },
                     )
@@ -156,15 +127,31 @@ internal fun HubPage(
     }
 }
 
-/** The rows each group shows on the hub (concept A): the ones people come to read or change most. */
-private val HUB_ROWS: Map<SettingsGroupId, List<SettingsRowId>> =
-    mapOf(
-        SettingsGroupId.Server to listOf(SettingsRowId.ThisPhone),
-        SettingsGroupId.Agent to listOf(SettingsRowId.ModelAndMode, SettingsRowId.Permissions, SettingsRowId.Usage),
-        SettingsGroupId.Conversations to listOf(SettingsRowId.ShowReasoning, SettingsRowId.ShowTimestamps, SettingsRowId.Voice),
-        SettingsGroupId.ThisApp to listOf(SettingsRowId.Appearance, SettingsRowId.Language, SettingsRowId.Notifications, SettingsRowId.Background),
-        SettingsGroupId.Help to listOf(SettingsRowId.Guide, SettingsRowId.About),
-    ).withDefault { emptyList() }
+/** The five hub glyphs, in Flutter's group order. */
+private fun groupGlyph(group: SettingsGroupId) =
+    when (group) {
+        SettingsGroupId.Server -> KitIcons.server
+        SettingsGroupId.Agent -> KitIcons.agent
+        SettingsGroupId.Conversations -> KitIcons.chat
+        SettingsGroupId.ThisApp -> KitIcons.phone
+        SettingsGroupId.Help -> KitIcons.question
+    }
+
+@Composable
+private fun hubServerLine(state: SettingsUi): String {
+    val server = state.hub.server
+    val saved = state.hub.savedServers
+    if (server == null)
+        return if (saved.isEmpty()) stringResource(Res.string.settingsHubServerNone)
+        else pluralStringResource(Res.plurals.settingsV3ServersCount, saved.size, saved.size)
+    val where =
+        if (server.onPhone) stringResource(Res.string.settingsHubServerOnPhone) else server.name
+    return stringResource(
+        Res.string.settingsHubServerLine,
+        where,
+        stringResource(Res.string.settingsV3Connected),
+    )
+}
 
 /** Each row's Phosphor glyph (the Flutter Settings icons). */
 private fun rowGlyph(row: SettingsRowId) =

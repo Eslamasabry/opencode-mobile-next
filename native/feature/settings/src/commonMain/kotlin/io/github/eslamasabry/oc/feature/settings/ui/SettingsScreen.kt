@@ -31,7 +31,6 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
-import io.github.eslamasabry.oc.ui.words.res.migrationStorageTitle
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.aboutAllLicences
 import io.github.eslamasabry.oc.ui.words.res.aboutTitle
@@ -41,6 +40,7 @@ import io.github.eslamasabry.oc.ui.words.res.e7AppearanceTitle
 import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.librarySettingsTitle
+import io.github.eslamasabry.oc.ui.words.res.migrationStorageTitle
 import io.github.eslamasabry.oc.ui.words.res.monitorQuietEnd
 import io.github.eslamasabry.oc.ui.words.res.monitorQuietStart
 import io.github.eslamasabry.oc.ui.words.res.nativeBundledPrivacy
@@ -254,7 +254,13 @@ public fun SettingsScreen(
             }
         SettingsPage.ServerConfiguration -> ServerConfigurationPage(onBack = back)
         SettingsPage.Storage ->
-            SettingsFrame(stringResource(Res.string.migrationStorageTitle), back, state, actions, modifier) {
+            SettingsFrame(
+                stringResource(Res.string.migrationStorageTitle),
+                back,
+                state,
+                actions,
+                modifier,
+            ) {
                 state.localModels?.let { LocalModelsBody(it, actions) }
             }
         SettingsPage.ReportProblem ->
@@ -316,7 +322,7 @@ internal fun SettingsFrame(
         Column(
             Modifier.fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = Space.S6.dp),
+                .padding(top = Space.S2.dp, bottom = Space.S6.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
         ) {
             state.note?.let { NoteLine(it, actions) }
