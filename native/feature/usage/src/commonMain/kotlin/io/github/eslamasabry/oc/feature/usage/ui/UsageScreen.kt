@@ -6,13 +6,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.runtime.*
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageBudgetUnit
+import io.github.eslamasabry.oc.engine.integrations.usage.UsageBudgets
 import io.github.eslamasabry.oc.engine.usage.UsageCalendar
 import io.github.eslamasabry.oc.feature.usage.presentation.UsageActions
 import io.github.eslamasabry.oc.feature.usage.presentation.UsageFigures
@@ -25,8 +26,6 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitAction
-import io.github.eslamasabry.oc.ui.kit.KitButton
-import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextRole
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
@@ -34,14 +33,17 @@ import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
 import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
-import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
-import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
+import io.github.eslamasabry.oc.ui.kit.modal.KitInputFormDialog
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
@@ -53,11 +55,11 @@ import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
-import io.github.eslamasabry.oc.ui.words.res.kitTopBarClose
 import io.github.eslamasabry.oc.ui.words.res.p12SearchNoServerTitle
 import io.github.eslamasabry.oc.ui.words.res.p12SearchOpenServers
 import io.github.eslamasabry.oc.ui.words.res.p12UsageActivity
@@ -108,11 +110,6 @@ import io.github.eslamasabry.oc.ui.words.res.usageNoModels
 import io.github.eslamasabry.oc.ui.words.res.usageNoTools
 import io.github.eslamasabry.oc.ui.words.res.usageOutput
 import io.github.eslamasabry.oc.ui.words.res.usagePeriod
-import io.github.eslamasabry.oc.ui.words.res.usageSpentAllTime
-import io.github.eslamasabry.oc.ui.words.res.usageSpentPeriod
-import io.github.eslamasabry.oc.ui.words.res.usageSpentThirtyDays
-import io.github.eslamasabry.oc.ui.words.res.usageSpentToday
-import io.github.eslamasabry.oc.ui.words.res.usageSpentYear
 import io.github.eslamasabry.oc.ui.words.res.usagePreviousResult
 import io.github.eslamasabry.oc.ui.words.res.usagePrompts
 import io.github.eslamasabry.oc.ui.words.res.usageProviderCostUnavailable
@@ -122,6 +119,11 @@ import io.github.eslamasabry.oc.ui.words.res.usageReasoning
 import io.github.eslamasabry.oc.ui.words.res.usageRefresh
 import io.github.eslamasabry.oc.ui.words.res.usageScope
 import io.github.eslamasabry.oc.ui.words.res.usageSessions
+import io.github.eslamasabry.oc.ui.words.res.usageSpentAllTime
+import io.github.eslamasabry.oc.ui.words.res.usageSpentPeriod
+import io.github.eslamasabry.oc.ui.words.res.usageSpentThirtyDays
+import io.github.eslamasabry.oc.ui.words.res.usageSpentToday
+import io.github.eslamasabry.oc.ui.words.res.usageSpentYear
 import io.github.eslamasabry.oc.ui.words.res.usageSteps
 import io.github.eslamasabry.oc.ui.words.res.usageStreak
 import io.github.eslamasabry.oc.ui.words.res.usageSubagents
@@ -222,9 +224,36 @@ public fun UsageContent(state: UsageUi, actions: UsageActions) {
 
 @Composable
 private fun Budgets(state: UsageUi, actions: UsageActions) {
+    var confirmingClear by remember(state.server) { mutableStateOf(false) }
+    KitConfirm(
+        spec =
+            if (confirmingClear)
+                KitConfirmSpec(
+                    title = stringResource(Res.string.usageBudgetClearTitle),
+                    confirmLabel = stringResource(Res.string.usageBudgetClearConfirm),
+                    body = stringResource(Res.string.usageBudgetClearDescription),
+                    kind = KitConfirmKind.Destructive,
+                )
+            else null,
+        onConfirm = {
+            confirmingClear = false
+            actions.clearBudgets()
+        },
+        onCancel = { confirmingClear = false },
+    )
     KitRowGroup(label = stringResource(Res.string.stateUsageBudgets)) {
         KitRow(
-            title = stringResource(Res.string.usageBudgetUsdTitle),
+            title =
+                stringResource(
+                    if (state.usdBudget == null) Res.string.usageBudgetUsd
+                    else Res.string.usageBudgetUsdTitle
+                ),
+            trailing =
+                if (state.usdBudget == null)
+                    KitRowTrailing.Value(stringResource(Res.string.usageBudgetNotSet))
+                else KitRowTrailing.Chevron,
+            enabled = !state.budgetSaving,
+            disabledReason = stringResource(Res.string.rb50BudgetSaving),
             supporting =
                 state.usdBudget?.let { limit ->
                     stringResource(
@@ -233,11 +262,21 @@ private fun Budgets(state: UsageUi, actions: UsageActions) {
                         UsageFigures.money(limit),
                         stringResource(Res.string.stateUsageUsd),
                     )
-                } ?: stringResource(Res.string.usageBudgetNotSet),
+                },
             onClick = { actions.editBudget(UsageBudgetUnit.Usd) },
         )
         KitRow(
-            title = stringResource(Res.string.usageBudgetTokensTitle),
+            title =
+                stringResource(
+                    if (state.tokenBudget == null) Res.string.usageBudgetTokens
+                    else Res.string.usageBudgetTokensTitle
+                ),
+            trailing =
+                if (state.tokenBudget == null)
+                    KitRowTrailing.Value(stringResource(Res.string.usageBudgetNotSet))
+                else KitRowTrailing.Chevron,
+            enabled = !state.budgetSaving,
+            disabledReason = stringResource(Res.string.rb50BudgetSaving),
             supporting =
                 state.tokenBudget?.let { limit ->
                     stringResource(
@@ -246,13 +285,15 @@ private fun Budgets(state: UsageUi, actions: UsageActions) {
                         UsageFigures.count(limit.toLong()),
                         stringResource(Res.string.usageBudgetTokenUnit),
                     )
-                } ?: stringResource(Res.string.usageBudgetNotSet),
+                },
             onClick = { actions.editBudget(UsageBudgetUnit.Tokens) },
         )
-        if (state.hasSavedBudgets)
+        if (state.hasSavedBudgets || state.usdBudget != null || state.tokenBudget != null)
             KitRow(
                 title = stringResource(Res.string.usageBudgetClearAll),
-                onClick = actions::clearBudgets,
+                enabled = !state.budgetSaving,
+                disabledReason = stringResource(Res.string.rb50BudgetSaving),
+                onClick = { confirmingClear = true },
             )
     }
     KitText(
@@ -280,48 +321,53 @@ private fun BudgetEditor(state: UsageUi, actions: UsageActions) {
     val unit = state.budgetUnit ?: return
     key(unit, state.server, state.range, state.scope) {
         val field = rememberTextFieldState(state.budgetInput)
-        KitSheet(
-            visible = true,
+        val usd = unit == UsageBudgetUnit.Usd
+        val hasCurrent = if (usd) state.usdBudget != null else state.tokenBudget != null
+        val invalid =
+            stringResource(
+                if (usd) Res.string.usageBudgetInvalidUsd else Res.string.usageBudgetInvalidTokens
+            )
+        KitInputFormDialog(
+            state = field,
             title =
                 stringResource(
-                    if (unit == UsageBudgetUnit.Usd) Res.string.usageBudgetUsdTitle
-                    else Res.string.usageBudgetTokensTitle
+                    if (usd) Res.string.usageBudgetUsd else Res.string.usageBudgetTokens
                 ),
-            closeLabel = stringResource(Res.string.kitTopBarClose),
+            fieldLabel = stringResource(Res.string.usageBudgetAmount),
+            confirmLabel =
+                stringResource(
+                    if (usd) Res.string.usageBudgetSaveUsd else Res.string.usageBudgetSaveTokens
+                ),
+            cancelLabel = stringResource(Res.string.workCancel),
+            kind = if (usd) KitFieldKind.Text else KitFieldKind.Number,
+            helper =
+                stringResource(
+                    if (usd) Res.string.usageBudgetHelperUsd else Res.string.usageBudgetHelperTokens
+                ),
+            validate = { value ->
+                val parsed = value.trim().toDoubleOrNull()
+                if (parsed != null && UsageBudgets.validLimit(parsed, unit)) null else invalid
+            },
+            onTextChanged = actions::budgetChanged,
+            onSave = {
+                // IME submission and the button both use the latest field, before any frame-delayed
+                // state update.
+                actions.budgetChanged(field.text.toString())
+                actions.saveBudget()
+            },
             onDismissRequest = actions::closeBudget,
-            primary =
-                KitAction(
-                    stringResource(
-                        if (unit == UsageBudgetUnit.Usd) Res.string.usageBudgetSaveUsd
-                        else Res.string.usageBudgetSaveTokens
-                    ),
-                    actions::saveBudget,
-                ),
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                KitField(
-                    field,
-                    stringResource(Res.string.usageBudgetAmount),
-                    kind = KitFieldKind.Number,
-                    onTextChanged = actions::budgetChanged,
-                    checking = state.budgetSaving,
-                    error =
-                        if (state.budgetInvalid)
-                            stringResource(
-                                if (unit == UsageBudgetUnit.Usd) Res.string.usageBudgetInvalidUsd
-                                else Res.string.usageBudgetInvalidTokens
-                            )
-                        else null,
-                )
-                if (state.budgetFailed) KitNotice(stringResource(Res.string.quotaBudgetSaveFailed))
-                KitButton(
-                    stringResource(Res.string.usageBudgetRemove),
-                    actions::removeBudget,
-                    role = KitButtonRole.Tertiary,
-                    working = state.budgetSaving,
-                )
-            }
-        }
+            alternative =
+                if (hasCurrent)
+                    KitAction(stringResource(Res.string.usageBudgetRemove), actions::removeBudget)
+                else null,
+            working = state.budgetSaving,
+            enabled =
+                if (state.budgetSaving)
+                    KitEnabled.Disabled(stringResource(Res.string.rb50BudgetSaving))
+                else KitEnabled.Enabled,
+            failure =
+                if (state.budgetFailed) stringResource(Res.string.quotaBudgetSaveFailed) else null,
+        )
     }
 }
 
@@ -335,11 +381,15 @@ private fun Total(report: UsageReport, range: UsageRange, timezone: String?) {
         val zone = timezone?.takeIf { UsageCalendar.isReadable(it) }
         val first = zone?.let { UsageCalendar.dayLabel(report.fromMs, it) }
         val last = zone?.let { UsageCalendar.dayLabel(report.toMs - 1, it) }
-        val days = if (first != null && last != null) stringResource(Res.string.usagePeriod, first, last) else null
-        // The label names the days the server actually covered when they differ from the range asked for.
+        val days =
+            if (first != null && last != null) stringResource(Res.string.usagePeriod, first, last)
+            else null
+        // The label names the days the server actually covered when they differ from the range
+        // asked for.
         val label =
             when {
-                !report.coversRequest && days != null -> stringResource(Res.string.usageSpentPeriod, days)
+                !report.coversRequest && days != null ->
+                    stringResource(Res.string.usageSpentPeriod, days)
                 !report.coversRequest -> stringResource(Res.string.p12UsageCost)
                 else ->
                     when (range) {
@@ -352,8 +402,13 @@ private fun Total(report: UsageReport, range: UsageRange, timezone: String?) {
         KitText(label, role = TypeRole.Label, tone = TextTone.Secondary)
         KitText(cost(report.cost), role = TypeRole.LargeTitle)
         if (zone != null && days != null) {
-            if (report.coversRequest) KitText(days, role = TypeRole.Secondary, tone = TextTone.Secondary)
-            KitText(stringResource(Res.string.usageTimezone, zone), role = TypeRole.Caption, tone = TextTone.Tertiary)
+            if (report.coversRequest)
+                KitText(days, role = TypeRole.Secondary, tone = TextTone.Secondary)
+            KitText(
+                stringResource(Res.string.usageTimezone, zone),
+                role = TypeRole.Caption,
+                tone = TextTone.Tertiary,
+            )
         }
     }
 }
@@ -595,4 +650,6 @@ private fun ValueRow(title: String, value: String) {
 
 @Composable
 private fun cost(value: Double): String =
-    if (UsageFigures.isTiny(value)) stringResource(Res.string.usageTinyCost) else UsageFigures.money(value, symbolAfter = LocalLayoutDirection.current == LayoutDirection.Rtl)
+    if (UsageFigures.isTiny(value)) stringResource(Res.string.usageTinyCost)
+    else
+        UsageFigures.money(value, symbolAfter = LocalLayoutDirection.current == LayoutDirection.Rtl)
