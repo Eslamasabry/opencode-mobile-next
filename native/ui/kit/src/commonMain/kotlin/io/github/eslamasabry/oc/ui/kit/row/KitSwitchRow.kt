@@ -149,6 +149,22 @@ public fun KitSwitchRow(
     )
 }
 
+/** Explicit copy measure for a long cost sentence; existing overloads keep their call shapes. */
+@Composable
+public fun KitSwitchRow(
+    title: String,
+    checked: Boolean,
+    supportingMaxLines: Int,
+    modifier: Modifier = Modifier,
+    supporting: String? = null,
+    leading: androidx.compose.ui.graphics.vector.ImageVector? = null,
+    enabled: KitEnabled = KitEnabled.Enabled,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    SwitchRowBody(title, checked, modifier, supporting, null, false, enabled, leading,
+        onCheckedChange, supportingMaxLines)
+}
+
 @Composable
 private fun SwitchRowBody(
     title: String,
@@ -160,6 +176,7 @@ private fun SwitchRowBody(
     enabled: KitEnabled,
     leading: androidx.compose.ui.graphics.vector.ImageVector?,
     onCheckedChange: (Boolean) -> Unit,
+    supportingMaxLines: Int = 3,
 ) {
     val tokens = LocalKitTokens.current
     val specs = KitMotion.specs
@@ -208,7 +225,7 @@ private fun SwitchRowBody(
                     tone = if (on) TextTone.Primary else TextTone.Tertiary,
                 )
                 (enabled.reason ?: supporting)?.let {
-                    KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = 3)
+                    KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = kitRowSupportingLines(io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale(), supportingMaxLines))
                 }
             }
             KitSwitchTrack(checked, on && !locked)

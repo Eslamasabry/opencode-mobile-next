@@ -36,6 +36,7 @@ public data class KitStatus(
     val onDismiss: (() -> Unit)? = null,
     val dismissLabel: String? = null,
     val more: List<KitLineAction> = emptyList(),
+    val icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
 ) {
     /** Lower is more important. */
     val priority: Int
