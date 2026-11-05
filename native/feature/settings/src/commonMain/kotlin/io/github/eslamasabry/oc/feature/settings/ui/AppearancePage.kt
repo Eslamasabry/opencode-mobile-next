@@ -20,6 +20,7 @@ import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Corners
 import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.design.style.StyleResolver
 import io.github.eslamasabry.oc.ui.design.text.AppTextSize
 import io.github.eslamasabry.oc.ui.design.tokens.Density
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -29,6 +30,8 @@ import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
+import io.github.eslamasabry.oc.ui.kit.choice.KitSliderStep
+import io.github.eslamasabry.oc.ui.kit.choice.KitStepSlider
 import io.github.eslamasabry.oc.ui.kit.choice.KitStyleOptionCard
 import io.github.eslamasabry.oc.ui.kit.choice.KitSwatch
 import io.github.eslamasabry.oc.ui.kit.choice.KitSwatchGrid
@@ -38,7 +41,6 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.guide.KitGuideQuestionHeading
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
-import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
@@ -274,6 +276,7 @@ private fun ColumnScope.AppearanceControls(
                         },
             )
         }
+        KitGroupNote(stringResource(Res.string.appearanceAccentMatchNote, packName(ui.pack)))
     }
 
     if (question == null || question == AppearanceQuestion.Style) {
@@ -341,11 +344,22 @@ private fun ColumnScope.AppearanceControls(
                 onChange = actions::onSpacing,
             )
         }
+        val defaults = StyleResolver.spec(Style.valueOf(ui.style.name)).tokens.defaults
+        KitGroupNote(
+            stringResource(
+                Res.string.appearanceShapeNote,
+                styleWords(ui.style),
+                cornersWords(defaults.corners),
+                spacingWords(defaults.density),
+            )
+        )
         if (ui.fineTuned && !ui.heldBySaver) {
-            KitRow(
-                title = stringResource(Res.string.appearanceFineTuneReset, styleWords(ui.style)),
-                modifier = Modifier.testTag("appearance-fine-tune-reset"),
-                onClick = actions::onResetFineTune,
+            KitButton(
+                stringResource(Res.string.appearanceFineTuneReset, styleWords(ui.style)),
+                actions::onResetFineTune,
+                gutter.testTag("appearance-fine-tune-reset"),
+                role = KitButtonRole.Tertiary,
+                fullWidth = false,
             )
         }
     }
@@ -359,14 +373,15 @@ private fun ColumnScope.AppearanceControls(
             top,
         )
         Box(gutter) {
-            KitSegmented(
-                segments = AppTextSize.entries.map { KitSegment(it, textSizeWords(it)) },
+            KitStepSlider(
+                steps = AppTextSize.entries.map { KitSliderStep(it, textSizeWords(it)) },
                 selected = ui.textSize,
                 semanticsLabel = stringResource(Res.string.textSizeTitle),
                 modifier = Modifier.testTag("appearance-text-size"),
                 onChange = actions::onTextSize,
             )
         }
+        KitGroupNote(stringResource(Res.string.appearanceTextHelp))
     }
     if (question == null || question == AppearanceQuestion.Motion) {
         AppearanceControlHeading(
@@ -377,7 +392,20 @@ private fun ColumnScope.AppearanceControls(
         )
         Box(gutter) {
             KitSegmented(
-                segments = MotionLevel.entries.map { KitSegment(it, motionWords(it)) },
+                segments =
+                    MotionLevel.entries.map {
+                        KitSegment(
+                            it,
+                            motionWords(it),
+                            icon =
+                                when (it) {
+                                    MotionLevel.Full -> KitIcons.sparkle
+                                    MotionLevel.Calm -> KitIcons.waveform
+                                    MotionLevel.Off -> KitIcons.stopCircle
+                                },
+                        )
+                    },
+                tall = true,
                 selected = ui.motion,
                 semanticsLabel = stringResource(Res.string.appearanceAskMotion),
                 modifier = Modifier.testTag("appearance-motion"),
@@ -388,8 +416,14 @@ private fun ColumnScope.AppearanceControls(
                 onChange = actions::onMotion,
             )
         }
-        if (!ui.heldBySaver) KitGroupNote(motionHint(ui.motion))
-        if (ui.systemMotionOff) KitGroupNote(stringResource(Res.string.effectsMotionSystemOff))
+        KitGroupNote(
+            when {
+                ui.heldBySaver -> stringResource(Res.string.appearanceSaverMotion)
+                ui.systemMotionOff && ui.motion != MotionLevel.Off ->
+                    stringResource(Res.string.effectsMotionSystemOff)
+                else -> motionHint(ui.motion)
+            }
+        )
     }
 }
 
