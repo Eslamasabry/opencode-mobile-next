@@ -241,6 +241,7 @@ public fun ChatHeaderTopBar(
                                     actions.closeMenu()
                                     extra.onClick()
                                 },
+                                icon = extra.icon,
                                 enabled =
                                     if (extra.enabled) KitEnabled.Enabled
                                     else KitEnabled.Disabled(extra.disabledReason.orEmpty()),
@@ -619,6 +620,24 @@ private fun menuItems(
                     HeaderAction.CopyTranscript -> actions.copyTranscript(words, mask)
                     else -> actions.choose(action)
                 }
+            },
+            icon = when (action) {
+                HeaderAction.Find -> KitIcons.search
+                HeaderAction.Details -> KitIcons.info
+                HeaderAction.Share -> KitIcons.link
+                HeaderAction.Unshare -> KitIcons.unlink
+                HeaderAction.Fork -> KitIcons.fork
+                HeaderAction.Rename -> KitIcons.edit
+                HeaderAction.ContinueWith -> KitIcons.swap
+                HeaderAction.AgentOptions -> KitIcons.agent
+                HeaderAction.AgentHandoff -> KitIcons.forward
+                HeaderAction.CardsSettings -> KitIcons.layers
+                HeaderAction.ContinueOnComputer -> KitIcons.computer
+                HeaderAction.ImportConversation -> KitIcons.download
+                HeaderAction.Handoff -> KitIcons.forward
+                HeaderAction.CopyTranscript -> KitIcons.copy
+                HeaderAction.Archive -> KitIcons.archive
+                HeaderAction.Delete -> KitIcons.delete
             },
             group =
                 when (action) {

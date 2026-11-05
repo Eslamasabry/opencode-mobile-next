@@ -148,6 +148,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiDeleteThisMessage
 import io.github.eslamasabry.oc.ui.words.res.chatUiEarlierMessageCount
 import io.github.eslamasabry.oc.ui.words.res.chatUiExpandReasoning
 import io.github.eslamasabry.oc.ui.words.res.chatUiFiles
+import io.github.eslamasabry.oc.ui.words.res.chatUiTimeline
 import io.github.eslamasabry.oc.ui.words.res.chatUiForkFromThisPrompt
 import io.github.eslamasabry.oc.ui.words.res.chatUiNotConnectedToTheServerRightNow
 import io.github.eslamasabry.oc.ui.words.res.chatUiOpenCodeIsReconnectingTryAgainShortly
@@ -396,6 +397,12 @@ public fun ChatScreen(
                                             actions::openFiles,
                                             testTag = "chat-files-open",
                                                 icon = KitIcons.files,
+                                        ),
+                                        KitLineAction(
+                                            stringResource(Res.string.chatUiTimeline),
+                                            actions::openTimeline,
+                                            testTag = "chat-timeline-open",
+                                            icon = KitIcons.timeline,
                                         ),
                                         facts.tasks?.let { tasks ->
                                             KitLineAction(
