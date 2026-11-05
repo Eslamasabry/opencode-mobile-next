@@ -66,7 +66,7 @@ class ManageSpaceParityTest {
             assertEquals(1, actions.cleared)
             onNodeWithText("Delete everything").performScrollTo().performClick()
             assertEquals(0, actions.deleted)
-            onNodeWithText("2 projects (3.0 MB)").assertExists()
+            onNodeWithText("2 projects (\u20663.0 MB\u2069)").assertExists()
             onNodeWithText("2 saved servers and all settings").assertExists()
             onNodeWithText("Termux, your computers and anything pushed to git stay").assertExists()
         }
