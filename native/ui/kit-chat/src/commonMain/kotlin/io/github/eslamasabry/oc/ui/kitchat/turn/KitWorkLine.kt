@@ -194,11 +194,11 @@ public fun KitWorkLine(
                     }
                     KitText(
                         label,
-                        Modifier.weight(1f, fill = false),
+                        Modifier.weight(1f),
                         role = TypeRole.Secondary,
                         tone = if (state == KitWorkState.Running) TextTone.Primary else TextTone.Secondary,
                         kind = KitTextKind.Frame,
-                        maxLines = 2,
+                        maxLines = 1,
                     )
                     KitIcon(if (expanded) KitIcons.chevronUp else KitIcons.chevronDown, Modifier.size(16.dp), tone = TextTone.Secondary)
                 }
