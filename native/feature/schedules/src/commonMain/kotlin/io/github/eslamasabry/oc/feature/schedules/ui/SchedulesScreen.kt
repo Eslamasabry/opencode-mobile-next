@@ -55,7 +55,7 @@ private const val DELETE_NAME_LENGTH =
     40 // F: lib/ui/screens/scheduling/scheduled_prompts_screen.dart:183
 
 private const val NEW_TEXT_SCALE =
-    1.6f // F: lib/ui/screens/scheduling/scheduled_prompts_screen.dart:342
+    1.6f // F: lib/ui/screens/scheduling/scheduled_prompts_screen.dart:344
 
 /**
  * K01: calm rows, one "New scheduled prompt" at the thumb; every action is a visible row (nothing
