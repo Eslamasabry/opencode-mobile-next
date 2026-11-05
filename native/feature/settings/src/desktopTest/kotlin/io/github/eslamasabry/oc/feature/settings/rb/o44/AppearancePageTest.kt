@@ -68,7 +68,7 @@ class AppearancePageTest {
         runComposeUiTest {
             val sizes = mutableListOf<AppTextSize>()
             val actions =
-                object : SettingsActions {
+                object : SettingsActions by RecordingActions() {
                     override fun onTextSize(size: AppTextSize) {
                         sizes += size
                     }
