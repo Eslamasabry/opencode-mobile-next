@@ -491,11 +491,11 @@ public fun ChatScreen(
                             KitStatus.highest(
                                 listOf(state.status?.let { statusLine(it, actions) }, appStatus)
                             ),
-                    search = state.find?.let { find -> @Composable { FindBar(find, actions) } },
                     loading = state.phase == ChatPhase.Loading,
                     loadingLabel = stringResource(Res.string.chatLoadingConversation),
                     bottom = {
                         Column {
+                            state.find?.let { TranscriptFindBar(it, actions) }
                             replyOffer?.invoke()
                             // P12-VOICE: the reading strip (Stop, notes) and the once-per-phone
                             // consent.
@@ -672,73 +672,6 @@ private fun EarlierMessagesPill(
             onClick = actions::openTimeline,
             modifier = modifier.testTag("earlier-messages-pill"),
         )
-    }
-}
-
-@Composable
-private fun FindBar(find: FindUi, actions: ChatActions) {
-    val field = rememberTextFieldState(find.query)
-    LaunchedEffect(find.query) {
-        if (field.text.toString() != find.query) field.edit { replace(0, length, find.query) }
-    }
-    Column(
-        Modifier.fillMaxWidth().padding(horizontal = Space.S4.dp).testTag("transcript-find-bar")
-    ) {
-        KitField(
-            field,
-            stringResource(Res.string.transcriptFindHint),
-            Modifier.testTag("transcript-find-input"),
-            onTextChanged = { actions.find(it) },
-            onSubmit = actions::findNext,
-        )
-        if (find.partial) {
-            KitText(stringResource(Res.string.transcriptFindPartial))
-            KitButton(
-                stringResource(
-                    if (find.searchingAll) Res.string.transcriptFindStopSearchingAll
-                    else Res.string.transcriptFindAll
-                ),
-                if (find.searchingAll) actions::cancelSearchAll else actions::searchAllHistory,
-                Modifier.testTag(
-                    if (find.searchingAll) "transcript-find-cancel-all" else "transcript-find-older"
-                ),
-                role = KitButtonRole.Tertiary,
-            )
-        }
-        find.olderFailure?.let { HistoryReadFailure(it, actions::searchAllHistory) }
-        find.excerpt?.let { KitFindExcerpt(it, find.query) }
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            val count =
-                when {
-                    find.query.isBlank() -> ""
-                    find.count == 0 -> stringResource(Res.string.transcriptFindNone)
-                    else ->
-                        pluralStringResource(
-                            Res.plurals.transcriptFindCount,
-                            find.count,
-                            Numbers.format(find.count),
-                            find.current + 1,
-                        )
-                }
-            KitText(count, Modifier.weight(1f))
-            KitButton(
-                stringResource(Res.string.transcriptFindPrevious),
-                actions::findPrevious,
-                Modifier.testTag("transcript-find-previous"),
-                role = KitButtonRole.Tertiary,
-            )
-            KitButton(
-                stringResource(Res.string.transcriptFindNext),
-                actions::findNext,
-                Modifier.testTag("transcript-find-next"),
-                role = KitButtonRole.Tertiary,
-            )
-            KitButton(
-                stringResource(Res.string.transcriptFindClose),
-                { actions.find(null) },
-                role = KitButtonRole.Tertiary,
-            )
-        }
     }
 }
 

@@ -7,6 +7,7 @@ plugins { id("oc.kmp.feature") }
 kotlin {
     sourceSets.getByName("desktopTest").dependencies {
         implementation(libs.compose.desktop.currentos)
+        implementation(project(":ui:gate"))
     }
     sourceSets.commonMain.dependencies {
         implementation(project(":engine:settings"))
@@ -33,5 +34,5 @@ kotlin {
 
 // looks capture only: stale existing tests in this module do not compile; compile only the capture test and fixtures.
 kotlin.sourceSets.matching { it.name == "commonTest" || it.name == "desktopTest" }.configureEach {
-    kotlin.exclude { it.file.name.endsWith("Test.kt") && it.file.name != "LooksCaptureTest.kt" }
+    kotlin.exclude { it.file.name.endsWith("Test.kt") && it.file.name != "LooksCaptureTest.kt" && !it.file.invariantSeparatorsPath.contains("/rb/o42/") }
 }
