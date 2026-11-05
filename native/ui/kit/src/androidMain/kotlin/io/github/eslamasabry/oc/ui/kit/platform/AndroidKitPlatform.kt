@@ -77,6 +77,19 @@ public class AndroidKitPlatform(
 
     override fun pressIndication(ink: Color): Indication = ripple(bounded = true, color = ink)
 
+    override fun graphemePrefix(text: String, count: Int): String {
+        require(count >= 0)
+        val iterator = android.icu.text.BreakIterator.getCharacterInstance(java.util.Locale.ROOT)
+        iterator.setText(text)
+        var end = iterator.first()
+        repeat(count) {
+            val next = iterator.next()
+            if (next == android.icu.text.BreakIterator.DONE) return text
+            end = next
+        }
+        return text.substring(0, end)
+    }
+
     override fun haptic(kind: KitHaptic) {
         hapticConstant(kind, Build.VERSION.SDK_INT)?.let { view.performHapticFeedback(it) }
     }

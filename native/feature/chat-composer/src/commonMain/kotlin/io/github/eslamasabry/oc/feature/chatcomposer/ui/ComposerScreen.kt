@@ -49,6 +49,7 @@ import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
+import io.github.eslamasabry.oc.ui.kit.chip.KitComposerModelChip
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
@@ -203,7 +204,7 @@ private fun ChipRow(state: ComposerUi, actions: ComposerActions) {
     KitComposerStatusStrip(
         hasChips = approvals.isNotEmpty(),
         model = if (model == null) null else ({
-            KitChip(modelChipWords(model), kind = KitChipKind.Action, icon = KitIcons.model, opensMenu = true, onClick = actions::onModelChip)
+            KitComposerModelChip(modelChipWords(model), onClick = actions::onModelChip)
         }),
         stop = if (stop == null) null else ({
             KitComposerStop(

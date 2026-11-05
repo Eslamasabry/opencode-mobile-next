@@ -44,6 +44,8 @@ import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.text.Numbers
@@ -84,6 +86,7 @@ public fun KitChip(
     liveRegion: Boolean = false,
     expanded: Boolean? = null,
     onLongClick: (() -> Unit)? = null,
+    adaptiveModel: Boolean = false,
 ) {
     kitAssert(label.isNotBlank()) { "KitChip: a chip always carries a word" }
     kitAssert(kind != KitChipKind.Removable || onRemove != null) { "KitChip: a removable chip needs onRemove" }
@@ -113,7 +116,7 @@ public fun KitChip(
     val ink = if (tone == KitChipTone.Neutral) semanticInk else Color(RoleDerivation.readableOn(Argb(semanticInk.toArgb()), (if (tint != null) listOf(tint) else listOf(c.surface2, c.surface3)).map { Argb(it.toArgb()) }, 4.7, Argb(c.text1.toArgb())).v) // F: lib/ui/kit/kit_chip.dart:239
     val words = if (selected == true) look.words ?: ink else ink
     val baseStyle = LocalKitTypography.current.style(TypeRole.Secondary)
-    val style = baseStyle.copy(color = words, fontWeight = if (kind == KitChipKind.Plain || track) FontWeight.SemiBold else baseStyle.fontWeight)
+    val style = baseStyle.copy(color = words, fontWeight = if (!adaptiveModel && (kind == KitChipKind.Plain || track)) FontWeight.SemiBold else baseStyle.fontWeight)
     val formatted = count?.let { Numbers.format(it) }
     val text = if (kind == KitChipKind.Count && formatted != null) {
         AnnotatedString.Builder().apply {
@@ -127,14 +130,28 @@ public fun KitChip(
     val accessible = spoken ?: if (kind == KitChipKind.Count && formatted != null) "$label, $formatted" else label
     val removeSpoken = removeLabel ?: stringResource(Res.string.kitChipRemove, label)
     val iconSize = tokens.smallIcon.dp * LocalDensity.current.fontScale.coerceAtMost(tokens.maxIconScale)
-    val minHeight = tokens.chipHeight.dp + if (track) Space.S1.dp else 0.dp
+    val minHeight = tokens.chipHeight.dp + if (track && !adaptiveModel) Space.S1.dp else 0.dp
     val focusWidth = (2f / LocalDensity.current.density).dp // F: lib/ui/kit/kit_chip.dart:801
-    val target = modifier.kitMaxWidth(CapRole.Chip).heightIn(min = tokens.minTarget.dp).then(
+    val target = modifier.kitMaxWidth(if (adaptiveModel) CapRole.Conversation else CapRole.Chip).heightIn(min = tokens.minTarget.dp).then(
         if (onClick != null || onRemove != null) Modifier.widthIn(min = tokens.minTarget.dp) else Modifier,
     ).onPreviewKeyEvent {
         if (onRemove != null && it.type == KeyEventType.KeyDown && (it.key == Key.Delete || it.key == Key.Backspace)) { onRemove(); true } else false
     }
-    Box(target, contentAlignment = Alignment.Center) {
+    val density = LocalDensity.current
+    val measurer = rememberTextMeasurer()
+    val platform = LocalKitPlatform.current
+    BoxWithConstraints(target, contentAlignment = Alignment.Center) {
+        val available = maxWidth - Space.S3.dp * 2 - iconSize * 2 - Space.S2.dp - Space.S1.dp // F: lib/ui/kit/chat/kit_composer_chips.dart:472-477
+        fun fits(probe: String): Boolean {
+            if (available <= 0.dp) return false
+            return !measurer.measure(
+                probe, style, maxLines = 1,
+                constraints = Constraints(maxWidth = with(density) { available.roundToPx() }),
+            ).hasVisualOverflow
+        }
+        val prefix = if (adaptiveModel) platform.graphemePrefix(label, 6) ?: label else label // F: lib/ui/kit/chat/kit_composer_chips.dart:478-485
+        val narrow = adaptiveModel && constraints.hasBoundedWidth && !fits(label) && (prefix == label || !fits("$prefix…"))
+        val modelPairFits = iconSize * 2 + Space.S1.dp * 2 <= maxWidth // F: lib/ui/kit/chat/kit_composer_chips.dart:504-506
         Row(
             Modifier.onSizeChanged { faceSize = it }.heightIn(min = minHeight).then(look.modifier)
                 .drawWithContent {
@@ -145,7 +162,7 @@ public fun KitChip(
                         translate(-w / 2, -w / 2) { drawOutline(outline, c.accent, style = Stroke(w)) } // NV: paint Flutter strokeAlignOutside around the face, converted to a centred Compose stroke
                     }
                 }
-                .padding(horizontal = if (track) Space.S4.dp else Space.S3.dp)
+                .padding(horizontal = if (adaptiveModel && narrow) Space.S1.dp else if (adaptiveModel) Space.S3.dp else if (track) Space.S4.dp else Space.S3.dp)
                 .clearAndSetSemantics { if (onClick == null && onRemove == null) contentDescription = accessible },
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -156,17 +173,23 @@ public fun KitChip(
                     transitionSpec = { fadeIn(specs.quick()) togetherWith fadeOut(specs.quick()) },
                     label = "kit-chip-glyph",
                 ) { checked ->
-                    Box(Modifier.padding(end = Space.S1.dp).size(iconSize).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
+                    Box(Modifier.padding(end = if (narrow) 0.dp else if (adaptiveModel) Space.S2.dp else Space.S1.dp).size(iconSize).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
                         if (checked) KitGlyph(KitIcons.check, c.accent, iconSize, Modifier.testTag("kit-chip-check"))
                         else if (glyph != null) glyph()
-                        else if (icon != null) KitGlyph(icon, words, iconSize)
+                        else if (icon != null) KitGlyph(icon, if (adaptiveModel) c.text2 else words, iconSize)
                     }
                 }
             }
-            BasicText(text, Modifier.weight(1f, fill = false), style = style, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
-            if (kind == KitChipKind.Removable || opensMenu || expanded != null) {
-                KitGlyph(if (kind == KitChipKind.Removable) KitIcons.close else KitIcons.chevronDown, if (kind == KitChipKind.Removable) c.text2 else c.text1, iconSize,
-                    Modifier.padding(start = Space.S1.dp).then(if (expanded == true) Modifier.rotate(180f) else Modifier)) // NV: Flutter kit_chip.dart:384 half-turn converted to Compose degrees
+            if (!narrow) BasicText(
+                text, Modifier.weight(1f, fill = false).testTag(if (adaptiveModel) "kit-model-chip-label" else "kit-chip-label"),
+                style = style,
+                maxLines = if (adaptiveModel && density.fontScale >= 1.3f) 2 else 1, // F: lib/ui/kit/chat/kit_composer_chips.dart:468,523
+                softWrap = adaptiveModel,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (kind == KitChipKind.Removable || (opensMenu && (!narrow || modelPairFits)) || expanded != null) {
+                KitGlyph(if (kind == KitChipKind.Removable) KitIcons.close else KitIcons.chevronDown, if (adaptiveModel || kind == KitChipKind.Removable) c.text2 else c.text1, iconSize,
+                    Modifier.padding(start = if (narrow) 0.dp else Space.S1.dp).testTag("kit-chip-chevron").then(if (expanded == true) Modifier.rotate(180f) else Modifier)) // NV: Flutter kit_chip.dart:384 half-turn converted to Compose degrees
             }
         }
         Box(Modifier.matchParentSize().drawWithContent {
