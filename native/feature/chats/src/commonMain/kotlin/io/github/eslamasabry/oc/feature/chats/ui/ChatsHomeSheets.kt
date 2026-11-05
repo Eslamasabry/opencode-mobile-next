@@ -16,6 +16,10 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsWatchedKind
 import io.github.eslamasabry.oc.feature.chats.presentation.ConversationRowUi
 import io.github.eslamasabry.oc.feature.chats.presentation.RowTitle
+import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceRow
+import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceMark
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
@@ -126,7 +130,9 @@ internal fun ChatsHomeSheets(state: ChatsUi, actions: ChatsActions) {
 @Composable
 private fun ProjectChoices(state: ChatsUi, actions: ChatsActions) {
     KitRowGroup {
-        KitRow(
+        KitChoiceRow(
+            mark = KitChoiceMark.Tick,
+            leading = { KitIcon(KitIcons.folderOpen) },
             title = stringResource(Res.string.chatsHomeAllProjects),
             supporting =
                 pluralStringResource(
@@ -151,7 +157,9 @@ private fun ProjectChoices(state: ChatsUi, actions: ChatsActions) {
                 if (project.directory in state.projectNeedsYou)
                     add(stringResource(Res.string.chatsFilterNeedsYouWord))
             }
-            KitRow(
+            KitChoiceRow(
+                mark = KitChoiceMark.Tick,
+                leading = { KitIcon(KitIcons.folderOpen) },
                 title = project.name,
                 supporting = parts.joinToString(" · "),
                 selected = state.filters.projectDirectory == project.directory,
@@ -159,7 +167,9 @@ private fun ProjectChoices(state: ChatsUi, actions: ChatsActions) {
             )
         }
         if (state.otherFoldersCount > 0) {
-            KitRow(
+            KitChoiceRow(
+                mark = KitChoiceMark.Tick,
+                leading = { KitIcon(KitIcons.folderOpen) },
                 title = stringResource(Res.string.chatsHomeOtherFolders),
                 supporting =
                     pluralStringResource(
