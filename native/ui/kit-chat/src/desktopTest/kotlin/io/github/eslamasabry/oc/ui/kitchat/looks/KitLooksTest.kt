@@ -30,6 +30,8 @@ import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
+import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceCard
+import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceCards
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipTone
 import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips
@@ -204,5 +206,19 @@ class KitLooksTest {
                 )
             }
             Spacer(Modifier.height(24.dp))
+        }
+
+    @Test
+    fun `choice cards`() =
+        shoot("choice-cards") {
+            KitTopBar(title = "Where should your agent run?", large = true)
+            KitChoiceCards(Modifier.padding(horizontal = 16.dp)) {
+                KitChoiceCard("On this phone", selected = true, onSelect = {}, supporting = "About 4 min · 208 MB download", icon = KitIcons.phone, tag = "Recommended")
+                KitChoiceCard("On my computer", selected = false, onSelect = {}, supporting = "Pair with a code, or type its address", icon = KitIcons.computer)
+            }
+            Spacer(Modifier.weight(1f))
+            Box(Modifier.padding(16.dp)) { KitButton("Set up on this phone", {}, fullWidth = true) }
+            KitButton("I already have a server", {}, role = KitButtonRole.Tertiary, modifier = Modifier.align(Alignment.CenterHorizontally))
+            Spacer(Modifier.height(16.dp))
         }
 }
