@@ -11,7 +11,7 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
-import io.github.eslamasabry.oc.ui.kit.foundation.KitMaxWidth
+import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.row.KitKeyValue
 import io.github.eslamasabry.oc.ui.kit.row.KitKeyValueRow
 import io.github.eslamasabry.oc.ui.words.res.*
@@ -20,7 +20,7 @@ import org.jetbrains.compose.resources.stringResource
 /** Flutter kit_context_sheet.dart's summary; no fabricated measurements or per-reply history. */
 @Composable
 public fun KitContextSheet(tokens: Long, limit: Long, modelName: String, percent: Int, level: KitContextLevel) {
-    KitMaxWidth(CapRole.Sheet) {
+    Box(Modifier.kitMaxWidth(CapRole.Sheet)) {
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S4.dp)) {
                 Box(contentAlignment = Alignment.Center) {

@@ -172,7 +172,7 @@ internal fun ActiveContextScreen(visible: Boolean, state: ActiveContextUi, onClo
                                     KitRow(
                                         title = label,
                                         supporting = message.previewFor(query.trim()).ifEmpty { stringResource(Res.string.activeContextNoText) },
-                                        supportingMaxLines = 3, // F: lib/ui/screens/active_context_screen.dart:354
+                                        supportingMaxLines = 3, // F: lib/ui/screens/active_context_screen.dart:350
                                         trailing = KitRowTrailing.Chevron,
                                         onClickLabel = stringResource(Res.string.activeContextOpenMessage, label),
                                         onClick = { openId = message.id },
