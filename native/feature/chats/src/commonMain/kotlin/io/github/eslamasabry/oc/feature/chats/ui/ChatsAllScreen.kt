@@ -47,6 +47,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitUndoBar
 import io.github.eslamasabry.oc.ui.kit.modal.KitUndoOffer
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
@@ -65,6 +66,8 @@ import io.github.eslamasabry.oc.ui.words.res.globalSessionsLoadMoreFailed
 import io.github.eslamasabry.oc.ui.words.res.globalSessionsNoMatchTitle
 import io.github.eslamasabry.oc.ui.words.res.globalSessionsSearchLabel
 import io.github.eslamasabry.oc.ui.words.res.globalSessionsUnknownLocation
+import io.github.eslamasabry.oc.ui.words.res.globalSessionsWorking
+import io.github.eslamasabry.oc.ui.words.res.globalSessionsArchivedShort
 import io.github.eslamasabry.oc.ui.words.res.kitChoiceSelectedCount
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
@@ -365,12 +368,18 @@ private fun AllRow(row: AllRowUi, selecting: Boolean, actions: ChatsAllActions) 
         row.contextPercent?.let {
             "$location · " + stringResource(Res.string.stateContextUsage, it)
         } ?: location
-    val running = stringResource(Res.string.chatsHomeRunning)
+    val running = stringResource(Res.string.globalSessionsWorking)
+    val status = when {
+        row.running -> running
+        row.archived -> stringResource(Res.string.globalSessionsArchivedShort)
+        else -> null
+    }
     // ANDR-1: the visible More action takes the trailing slot, so Running moves into the line.
-    val supporting = if (row.running) "$place · $running" else place
+    val supporting = listOfNotNull(status, place).joinToString(" · ")
     if (row.readOnly) {
         KitRow(
             title = title,
+            titleMaxLines = 2, // F: lib/ui/screens/global_sessions_screen.dart:1107
             supporting = place,
             enabled = false,
             disabledReason = stringResource(Res.string.stateSavedPreview),
@@ -416,6 +425,9 @@ private fun AllRow(row: AllRowUi, selecting: Boolean, actions: ChatsAllActions) 
     KitMenu(expanded = menu, items = items, onDismissRequest = { menu = false }, title = title) {
         KitRow(
             title = title,
+            titleMaxLines = 2, // F: lib/ui/screens/global_sessions_screen.dart:1107
+            supportingMaxLines = 2, // F: lib/ui/screens/global_sessions_screen.dart:1108
+            leading = KitRowLeading.Glyph(if (row.archived) KitIcons.archive else KitIcons.chat),
             supporting = supporting,
             trailing =
                 KitRowTrailing.Action(
@@ -437,7 +449,7 @@ private fun Bottom(state: AllConversationsUi, actions: ChatsAllActions) {
             val n = state.selectedCount
             if (n == 1) {
                 val selected = state.rows.singleOrNull { it.selected }
-                KitButton(
+                if (selected?.pinAvailable == true) KitButton(
                     label =
                         stringResource(
                             if (selected?.pinned == true) Res.string.stateUnpin
