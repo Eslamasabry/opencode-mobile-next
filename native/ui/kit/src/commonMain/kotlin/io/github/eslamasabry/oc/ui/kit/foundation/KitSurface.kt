@@ -256,7 +256,7 @@ private fun SurfaceBox(
         }
     val surfaceRole = if (level == SurfaceLevel.Ground && role == SurfaceRole.Content) SurfaceRole.Ground else role
     val look = kitSurfaceLook(KitSurfaceInput(role = surfaceRole, shape = shape, level = level, ownFill = argbColor(own), pressed = inset))
-    val hairline = Dp(1f / LocalDensity.current.density) // F: lib/ui/kit/kit_tokens.dart:317
+    val hairline = kitHairline()
     var box = modifier.then(look.modifier)
     if (outlined) box = box.border(hairline, argbColor(roles.hairline), look.shape)
     if (clip) box = box.clip(look.shape)
