@@ -1,6 +1,19 @@
 package io.github.eslamasabry.oc.feature.setup.ui
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextAlign
+import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.ui.kit.setup.*
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.words.res.*
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -101,6 +114,8 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Composable
 public fun SetupScreen(state: SetupUi, actions: SetupActions) {
+    var detailsOpen by remember { mutableStateOf(false) }
+    val progress = (state.phase as? SetupPhase.Progress)?.progress
     KitScreen(
         topBar = {
             KitTopBar(
@@ -112,103 +127,114 @@ public fun SetupScreen(state: SetupUi, actions: SetupActions) {
         },
         width = KitScreenWidth.Reading,
         loading = state.phase == SetupPhase.Loading,
+        bottom = if (progress == null) null else ({ ProgressAction(progress, state.working, actions) }),
     ) {
-        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
-            when (val phase = state.phase) {
-                SetupPhase.Loading -> Unit
-                is SetupPhase.Start -> StartPage(phase.start, state.working, actions)
-                is SetupPhase.Progress -> ProgressPage(phase.progress, state.working, actions)
+        when (val phase = state.phase) {
+            SetupPhase.Loading -> Unit
+            is SetupPhase.Start -> StartPage(phase.start, state.working, actions)
+            is SetupPhase.Progress -> ProgressPage(phase.progress) { detailsOpen = true }
+        }
+        if (state.settingsMissing) KitNotice(stringResource(Res.string.keepRunningOpenFailed))
+        KitSheet(
+            visible = detailsOpen && progress != null,
+            onDismissRequest = { detailsOpen = false },
+            title = stringResource(Res.string.phoneSetupRingDetailsTitle),
+        ) {
+            progress?.let { p ->
+                p.steps.forEach { StepRow(it) }
+                p.details?.let {
+                    KitDetailsFold(
+                        label = stringResource(Res.string.kitDetails),
+                        copyLabel = stringResource(Res.string.kitCopyDetails),
+                        text = it,
+                    )
+                }
             }
-            if (state.settingsMissing) KitNotice(stringResource(Res.string.keepRunningOpenFailed))
         }
     }
 }
 
 @Composable
 private fun StartPage(start: SetupStartUi, working: Boolean, actions: SetupActions) {
-    KitStateView(
-        kind = KitStateKind.Calm,
+    KitSetupHero(
         title = stringResource(Res.string.phoneSetupStartHeadline),
-        body =
-            if (start.downloadBytes > 0) stringResource(Res.string.phoneSetupStartPromise, sizeText(start.downloadBytes))
+        body = if (start.downloadBytes > 0) stringResource(Res.string.phoneSetupStartPromise, sizeText(start.downloadBytes))
             else stringResource(Res.string.phoneSetupStartPromiseNoSize),
         primary = KitAction(stringResource(Res.string.phoneSetupStartSetUp), onClick = actions::start, working = working),
+        content = if (start.includes.isEmpty()) null else ({
+            KitText(stringResource(Res.string.phoneSetupStartIncludes, joinNames(start.includes)), role = TypeRole.Secondary)
+        }),
     )
-    if (start.includes.isNotEmpty()) {
-        KitGroupNote(stringResource(Res.string.phoneSetupStartIncludes, joinNames(start.includes)))
+}
+
+@Composable
+private fun ProgressAction(p: SetupProgressUi, working: Boolean, actions: SetupActions) {
+    when {
+        p.failure == SetupFailureLine.Ownership -> KitButton(stringResource(Res.string.e7SetupOpenAppSettings), actions::openAppSettings)
+        p.canContinue -> KitButton(stringResource(Res.string.setupProgressViewContinue), actions::resume, working = working)
+        p.state == SetupState.Done -> KitButton(stringResource(Res.string.phoneSetupStartDone), actions::back)
+        p.running -> KitButton(stringResource(Res.string.phoneSetupRingPause), actions::pause, role = KitButtonRole.Secondary, working = working)
     }
 }
 
 @Composable
-private fun ProgressPage(p: SetupProgressUi, working: Boolean, actions: SetupActions) {
-    val kind =
-        when (p.state) {
-            SetupState.Done -> KitStateKind.Finished
-            SetupState.Failed -> KitStateKind.Error
-            SetupState.Interrupted, SetupState.Cancelled -> KitStateKind.Calm
-            SetupState.Running, SetupState.Idle -> KitStateKind.Working
-        }
-    val subject = p.subject.orEmpty()
-    val title =
-        when (p.headline) {
-            SetupHeadline.Done -> stringResource(Res.string.setupProgressViewDone)
-            SetupHeadline.Failed -> stringResource(Res.string.setupProgressViewFailedTitle)
-            SetupHeadline.Interrupted -> stringResource(Res.string.phoneSetupRingInterruptedTitle)
-            SetupHeadline.Paused -> stringResource(Res.string.phoneSetupRingPausedTitle)
-            SetupHeadline.Checking -> stringResource(Res.string.phoneSetupRingChecking)
-            SetupHeadline.GettingStarted -> stringResource(Res.string.setupProgressViewGettingStarted)
-            SetupHeadline.Starting -> stringResource(Res.string.phoneSetupStageStarting)
-            SetupHeadline.Downloading -> stringResource(Res.string.phoneSetupRingDownloading, subject)
-            SetupHeadline.Unpacking -> stringResource(Res.string.phoneSetupRingUnpacking, subject)
-            SetupHeadline.Installing -> stringResource(Res.string.phoneSetupRingInstalling, subject)
-        }
-    val body =
-        when (p.state) {
-            SetupState.Done -> stringResource(Res.string.phoneSetupNotificationDone)
-            SetupState.Failed -> p.failure?.let { failureLine(it) } ?: stringResource(Res.string.setupProgressViewFailedUnknown)
-            SetupState.Interrupted, SetupState.Cancelled -> stringResource(Res.string.phoneSetupRingStoppedNote)
-            SetupState.Running, SetupState.Idle -> stringResource(Res.string.phoneSetupRingSafeToLeaveQuiet)
-        }
-    val step = p.step
-    val bytes = p.bytes?.let { (done, total) -> stringResource(Res.string.setupProgressViewBytes, done, total) }
-    val progress =
+private fun ProgressPage(p: SetupProgressUi, openDetails: () -> Unit) {
+    val title = when (p.headline) {
+        SetupHeadline.Done -> stringResource(Res.string.setupProgressViewDone)
+        SetupHeadline.Failed -> stringResource(Res.string.setupProgressViewFailedTitle)
+        SetupHeadline.Interrupted -> stringResource(Res.string.phoneSetupRingInterruptedTitle)
+        SetupHeadline.Paused -> stringResource(Res.string.phoneSetupRingPausedTitle)
+        SetupHeadline.Checking -> stringResource(Res.string.phoneSetupRingChecking)
+        SetupHeadline.GettingStarted -> stringResource(Res.string.setupProgressViewGettingStarted)
+        SetupHeadline.Starting -> stringResource(Res.string.phoneSetupStageStarting)
+        SetupHeadline.Downloading -> stringResource(Res.string.phoneSetupRingDownloading, p.subject.orEmpty())
+        SetupHeadline.Unpacking -> stringResource(Res.string.phoneSetupRingUnpacking, p.subject.orEmpty())
+        SetupHeadline.Installing -> stringResource(Res.string.phoneSetupRingInstalling, p.subject.orEmpty())
+    }
+    val note = when (p.state) {
+        SetupState.Done -> null
+        SetupState.Failed -> p.failure?.let { failureLine(it) } ?: stringResource(Res.string.setupProgressViewFailedUnknown)
+        SetupState.Interrupted, SetupState.Cancelled -> stringResource(Res.string.phoneSetupRingStoppedNote)
+        else -> stringResource(Res.string.phoneSetupRingSafeToLeaveQuiet)
+    }
+    val done = p.steps.count { it.state == ComponentState.Done || it.state == ComponentState.Skipped }
+    val trail = p.steps.mapIndexed { index, step ->
         when {
-            p.state == SetupState.Done -> KitProgress.Known(1f)
-            step != null && step in 1..p.of ->
-                KitProgress.Staged(
-                    step = step,
-                    of = p.of,
-                    label = p.steps.getOrNull(step - 1)?.title.orEmpty(),
-                    stepValue = p.measured,
-                    caption = bytes,
-                    eta = p.minutesLeft?.minutes,
-                )
-            p.running -> KitProgress.Waiting(bytes)
-            else -> null
-        }
-    val primary =
-        when {
-            p.failure == SetupFailureLine.Ownership ->
-                KitAction(stringResource(Res.string.e7SetupOpenAppSettings), onClick = actions::openAppSettings)
-            p.canContinue -> KitAction(stringResource(Res.string.setupProgressViewContinue), onClick = actions::resume, working = working)
-            p.state == SetupState.Done -> KitAction(stringResource(Res.string.phoneSetupStartDone), onClick = actions::back)
-            else -> null
-        }
-    val secondary =
-        if (p.running) KitAction(stringResource(Res.string.phoneSetupRingPause), onClick = actions::pause, working = working) else null
-    KitStateView(kind = kind, title = title, body = body, progress = progress, primary = primary, secondary = secondary)
-    if (p.steps.isNotEmpty()) {
-        KitRowGroup(label = stringResource(Res.string.phoneSetupRingDetailsTitle)) {
-            p.steps.forEach { StepRow(it) }
+            step.state == ComponentState.Done || step.state == ComponentState.Skipped -> KitTrailMark.Done
+            p.step == index + 1 && p.headline != SetupHeadline.Checking -> KitTrailMark.Current
+            else -> KitTrailMark.Waiting
         }
     }
-    p.details?.let { details ->
-        KitDetailsFold(
-            label = stringResource(Res.string.kitDetails),
-            copyLabel = stringResource(Res.string.kitCopyDetails),
-            text = details,
-            initiallyExpanded = false,
-        )
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val height = maxHeight
+        Column(
+            Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).heightIn(min = height)
+                .padding(horizontal = Space.S5.dp, vertical = Space.S6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Spacer(Modifier.weight(.7f)) // NV: alignment -0.3 puts 35 percent of free space above
+            KitProgressRing(
+                headline = title,
+                semanticsLabel = stringResource(Res.string.setupProgressViewOverallLabel),
+                value = if (p.canContinue) null else p.measured,
+                done = done, of = p.of,
+                finished = p.state == SetupState.Done,
+                halted = p.canContinue || p.state == SetupState.Failed,
+                caption = p.bytes?.let { (done, total) -> stringResource(Res.string.setupProgressViewBytes, done, total) },
+                trail = trail,
+            )
+            if (p.running && p.minutesLeft != null) {
+                Spacer(Modifier.height(Space.S6.dp))
+                KitText(stringResource(Res.string.phoneSetupRingMinutesLeft, p.minutesLeft), role = TypeRole.RowTitle, tone = TextTone.Secondary, textAlign = TextAlign.Center)
+            }
+            if (note != null) {
+                Spacer(Modifier.height(if (p.running && p.minutesLeft != null) Space.S2.dp else Space.S6.dp))
+                KitText(note, Modifier.widthIn(max = 320.dp), role = TypeRole.Secondary, tone = TextTone.Tertiary, textAlign = TextAlign.Center) // F: lib/ui/screens/phone_setup/phone_setup_progress_screen.dart:575
+            }
+            Spacer(Modifier.height(Space.S3.dp))
+            KitButton(stringResource(Res.string.kitDetails), openDetails, role = KitButtonRole.Tertiary)
+            Spacer(Modifier.weight(1.3f)) // NV: alignment -0.3 divides free space into .7 above and 1.3 below
+        }
     }
 }
 
