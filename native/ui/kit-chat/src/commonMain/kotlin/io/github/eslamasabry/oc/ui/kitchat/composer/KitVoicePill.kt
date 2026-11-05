@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
+import kotlin.math.roundToInt
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -108,28 +110,33 @@ public fun KitVoicePill(
 
 /** Nine bars that light from the start edge as the voice gets louder; drawn, never recomposed (MOT rule). */
 @Composable
-public fun KitLevelMeter(level: () -> Float, modifier: Modifier = Modifier) {
+public fun KitLevelMeter(level: () -> Float, modifier: Modifier = Modifier, active: Boolean = true) {
     val colors = LocalKitColors.current
     val on = colors.accent
-    val off = colors.hairline
+    val off = colors.surface3
+    val bars = KitLevelMeterRules.BARS
+    val width = io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens.METER_BAR_WIDTH
+    val tallest = io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens.METER_BAR_MAX
+    val shortest = io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens.METER_BAR_MIN
     Box(
         modifier
-            .width(40.dp)
-            .height(18.dp)
+            .kitMaxWidth(io.github.eslamasabry.oc.ui.design.layout.CapRole.Reading)
+            .width((bars * width + (bars - 1) * Space.S1).dp)
+            .height(tallest.dp)
             .clearAndSetSemantics {}
             .drawBehind {
-                val bars = KitLevelMeterRules.BARS
-                val gap = 1.5.dp.toPx()
-                val barWidth = (size.width - gap * (bars - 1)) / bars
+                val barWidth = width.dp.toPx().roundToInt().toFloat()
+                val gap = Space.S1.dp.toPx().roundToInt().toFloat()
+                val center = (bars - 1) / 2f // F: lib/ui/kit/kit_level_meter.dart:145
                 val now = level()
                 for (i in 0 until bars) {
-                    val h = size.height * (0.35f + 0.65f * (i + 1) / bars)
+                    val h = (shortest + (tallest - shortest) * kotlin.math.abs(i - center) / center).dp.toPx().roundToInt().toFloat()
                     val slot = if (layoutDirection == LayoutDirection.Rtl) bars - 1 - i else i
                     drawRoundRect(
-                        color = if (KitLevelMeterRules.isLit(i, now)) on else off,
-                        topLeft = Offset(slot * (barWidth + gap), size.height - h),
+                        color = if (active && KitLevelMeterRules.isLit(i, now)) on else off,
+                        topLeft = Offset((slot * (barWidth + gap)).roundToInt().toFloat(), ((size.height - h) / 2).roundToInt().toFloat()), // F: lib/ui/kit/kit_level_meter.dart:159
                         size = Size(barWidth, h),
-                        cornerRadius = CornerRadius(barWidth / 2, barWidth / 2),
+                        cornerRadius = CornerRadius(barWidth / 2, barWidth / 2), // F: lib/ui/kit/kit_level_meter.dart:164
                     )
                 }
             },
