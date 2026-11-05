@@ -2,6 +2,22 @@ package io.github.eslamasabry.oc.ui.kit.choice
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.geometry.Offset
+import io.github.eslamasabry.oc.core.common.text.Numbers
+import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -55,6 +71,7 @@ public data class KitSegment<T>(
     val label: String,
     val icon: ImageVector? = null,
     val enabled: KitEnabled = KitEnabled.Enabled,
+    val count: Int? = null,
 )
 
 /** Pure rules of [KitSegmented] (B-KIT-031). */
@@ -100,6 +117,7 @@ public fun <T> KitSegmented(
     semanticsLabel: String,
     modifier: Modifier = Modifier,
     enabled: KitEnabled = KitEnabled.Enabled,
+    tall: Boolean = false,
     onChange: (T) -> Unit,
 ) {
     kitAssert(SegmentedRules.validCount(segments.size)) { "KitSegmented needs 2 to 4 segments (B-KIT-031)" }
@@ -112,52 +130,77 @@ public fun <T> KitSegmented(
     val measurer = rememberTextMeasurer()
     val appDensity = LocalKitAppDensity.current ?: LocalDensity.current
     val fontScale = appDensity.fontScale
-    Column(modifier.fillMaxWidth().semantics { contentDescription = semanticsLabel }, verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+    val reasons =
+        if (!enabled.isEnabled) listOfNotNull(enabled.reason)
+        else segments.mapNotNull { it.enabled.reason }.distinct()
+    Column(modifier.fillMaxWidth().semantics { contentDescription = semanticsLabel }) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val style = typography.style(TypeRole.Label)
-            val frameScale = minOf(fontScale, TextScalePolicy.FRAME_CAP)
             val unscaled = Density(appDensity.density, 1f)
+            fun width(text: String, role: TypeRole): Float =
+                measurer.measure(text, typography.style(role), density = unscaled).size.width / appDensity.density *
+                    minOf(fontScale, TextScalePolicy.FRAME_CAP)
+            val smallIcon = tokens.smallIcon.toFloat()
             val widths =
                 segments.map { s ->
-                    val px = measurer.measure(s.label, style, density = unscaled).size.width
-                    px / appDensity.density * frameScale + (if (s.icon != null) tokens.smallIcon + Space.S1 else 0)
+                    if (tall) {
+                        2f * Space.S1 + maxOf(width(s.label, TypeRole.Caption), smallIcon) // F: lib/ui/kit/kit_segmented.dart:488
+                    } else {
+                        2f * Space.S2 + smallIcon + Space.S1 + width(s.label, TypeRole.Label) + // F: lib/ui/kit/kit_segmented.dart:496
+                            (if (s.icon != null) smallIcon + Space.S1 else 0f) +
+                            (s.count?.let { Space.S1 + width(Numbers.format(it), TypeRole.Caption) } ?: 0f)
+                    }
                 }
-            val stacked = SegmentedRules.stacks(widths, maxWidth.value, (Space.S3 * 2).toFloat(), fontScale)
+            val room = maxWidth.value - 2f * kitHairline().value // F: lib/ui/kit/kit_segmented.dart:452-453
+            val stacked = fontScale >= SegmentedRules.STACK_AT_SCALE || widths.any { it > room / segments.size }
             if (stacked) {
                 StackedSegments(segments, selected, enabled, onChange)
             } else {
-                RowSegments(segments, selected, enabled, onChange)
+                RowSegments(segments, selected, enabled, tall, onChange)
             }
         }
-        enabled.reason?.let { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Frame) }
+        // In the stack a disabled segment's reason is on its row; only the whole control's reason stays under it.
+        // (The stack decision lives inside the constraints, so the segment reasons are shown here for both forms.)
+        if (reasons.isNotEmpty()) {
+            Column(Modifier.padding(start = Space.S2.dp, top = Space.S1.dp)) {
+                reasons.forEach { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Frame) }
+            }
+        }
     }
 }
 
 @Composable
-private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled: KitEnabled, onChange: (T) -> Unit) {
+private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled: KitEnabled, tall: Boolean, onChange: (T) -> Unit) {
     val haptics = rememberKitHaptics()
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val specs = KitMotion.specs
-    val track = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Track, KitShapeId.Button, SurfaceLevel.Surface3, ownFill = colors.surface3))
+    val solid = LocalKitStyle.current.style == Style.Solid
+    val hairline = kitHairline()
+    val inset = (Space.S1 / 2f).dp // F: lib/ui/kit/kit_segmented.dart:629
+    val density = LocalDensity.current
+    val captionLine = with(density) { LocalKitTypography.current.style(TypeRole.Caption).fontSize.toDp() } * 1.3f * density.fontScale // F: lib/ui/kit/kit_segmented.dart:781
+    val tallHeight = maxOf(tokens.minTarget.dp, (tokens.smallIcon * 1.2f).dp + Space.S1.dp + captionLine + (Space.S2 * 2).dp) // F: lib/ui/kit/kit_segmented.dart:783-786
+    val selectedIndex = segments.indexOfFirst { it.value == selected }
+    val step = if (colors.dark) colors.surface3 else colors.surface2
+    val track =
+        kitSurfaceLook(KitSurfaceInput(SurfaceRole.Track, KitShapeId.Button, SurfaceLevel.Surface1, ownFill = colors.surface1))
     Row(
         Modifier.fillMaxWidth()
-            .clip(KitShapeId.Button.shape())
             .then(track.modifier)
-            .padding(Space.S1.dp)
+            .then(if (solid) Modifier.border(hairline, colors.hairline, track.shape) else Modifier)
+            .padding(hairline)
             .selectableGroup(),
-        horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
     ) {
-        segments.forEach { s ->
+        segments.forEachIndexed { i, s ->
             val chosen = s.value == selected
             val segEnabled = if (!enabled.isEnabled) enabled else s.enabled
-            val fill by animateColorAsState(if (chosen) colors.accent else colors.surface3, specs.quick(), label = "segment")
+            val on = segEnabled.isEnabled
+            val fill by animateColorAsState(if (chosen) (if (solid) step else colors.accent) else Color.Transparent, specs.quick(), label = "segment")
             val words = when {
-                !segEnabled.isEnabled -> TextTone.Tertiary
-                chosen -> TextTone.OnAccent
-                else -> TextTone.Primary
+                !on -> TextTone.Tertiary
+                chosen -> if (solid) TextTone.Primary else TextTone.OnAccent
+                else -> TextTone.Secondary
             }
-            // The style draws the chosen segment (B-KIT-043..045); Solid keeps the accent fill above.
             val thumb =
                 kitSurfaceLook(
                     KitSurfaceInput(
@@ -165,30 +208,59 @@ private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled:
                         shape = KitShapeId.Tile,
                         level = SurfaceLevel.Surface3,
                         ownFill = fill,
-                        color = if (chosen) colors.accent else null,
+                        color = if (chosen) (if (solid) step else colors.accent) else null,
                         selected = chosen,
-                        disabled = !segEnabled.isEnabled,
+                        disabled = !on,
                     ),
                 )
-            val inkColors = thumb.words?.takeIf { chosen }?.let { w -> colors.copy(onAccent = w) } ?: colors
-            CompositionLocalProvider(LocalKitColors provides inkColors) {
-            Row(
+            val inkColors = thumb.words?.takeIf { chosen && !solid }?.let { w -> colors.copy(onAccent = w) } ?: colors
+            val ink = inkColors.tone(words)
+            // Solid's chosen glyph and check take the accent, its one accent mark.
+            val glyph = if (solid && chosen && on) colors.accent else ink
+            val seam = i < segments.size - 1 && tall && i != selectedIndex && i + 1 != selectedIndex
+            val seamColor = colors.hairline
+            Box(
                 Modifier.weight(1f)
-                    .heightIn(min = (tokens.minTarget - Space.S2).dp)
+                    .let { if (tall) it.height(tallHeight) else it.heightIn(min = tokens.minTarget.dp) }
+                    .drawBehind {
+                        if (seam) drawLine(seamColor, Offset(size.width, 0f), Offset(size.width, size.height), hairline.toPx())
+                    }
+                    .padding(inset)
+                    .then(if (chosen) thumb.modifier else Modifier)
                     .kitSelectTap(chosen, Role.RadioButton, segEnabled, haptic = null, KitShapeId.Tile) {
                         SegmentedRules.onTap(s, selected, enabled.isEnabled)?.let {
                             haptics(KitHaptic.Select)
                             onChange(it)
                         }
                     }
-                    .then(if (chosen) thumb.modifier else Modifier)
-                    .padding(horizontal = Space.S2.dp),
-                horizontalArrangement = Arrangement.spacedBy(Space.S1.dp, Alignment.CenterHorizontally),
-                verticalAlignment = Alignment.CenterVertically,
+                    .padding(horizontal = (Space.S2.toFloat() - Space.S1 / 2f).dp), // F: lib/ui/kit/kit_segmented.dart:629
+                contentAlignment = Alignment.Center,
             ) {
-                s.icon?.let { KitGlyph(it, inkColors.tone(words), tokens.smallIcon.dp) }
-                KitText(s.label, role = TypeRole.Label, tone = words, kind = KitTextKind.Frame, maxLines = 1, textAlign = TextAlign.Center)
-            }
+                CompositionLocalProvider(LocalKitColors provides inkColors) {
+                    val count = s.count?.let { Numbers.format(it) }
+                    if (tall) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            s.icon?.let { KitGlyph(it, glyph, (tokens.smallIcon * 1.2f).dp) } // F: lib/ui/kit/kit_segmented.dart:851
+                            Spacer(Modifier.height(Space.S1.dp))
+                            KitText(s.label, role = TypeRole.Caption, tone = words, kind = KitTextKind.Frame, maxLines = 1)
+                        }
+                    } else {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+                            Box(Modifier.padding(end = Space.S1.dp).alpha(if (chosen) 1f else 0f)) {
+                                KitGlyph(KitIcons.check, if (!on) colors.text3 else if (solid) colors.accent else inkColors.onAccent, tokens.smallIcon.dp)
+                            }
+                            s.icon?.let {
+                                KitGlyph(it, glyph, tokens.smallIcon.dp)
+                                Spacer(Modifier.width(Space.S1.dp))
+                            }
+                            KitText(s.label, role = TypeRole.Label, tone = words, kind = KitTextKind.Frame, maxLines = 1)
+                            if (count != null) {
+                                Spacer(Modifier.width(Space.S1.dp))
+                                KitText(count, role = TypeRole.Caption, tone = words, kind = KitTextKind.Frame, maxLines = 1)
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -197,14 +269,24 @@ private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled:
 @Composable
 private fun <T> StackedSegments(segments: List<KitSegment<T>>, selected: T, enabled: KitEnabled, onChange: (T) -> Unit) {
     val haptics = rememberKitHaptics()
-    Column(Modifier.fillMaxWidth().selectableGroup()) {
-        segments.forEach { s ->
+    val colors = LocalKitColors.current
+    val tokens = LocalKitTokens.current
+    val panel = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Content, KitShapeId.Panel, SurfaceLevel.Surface1, ownFill = colors.surface1))
+    Column(Modifier.fillMaxWidth().clip(panel.shape).then(panel.modifier).selectableGroup()) {
+        segments.forEachIndexed { i, s ->
             val segEnabled = if (!enabled.isEnabled) enabled else s.enabled
+            if (i > 0) {
+                Box(
+                    Modifier.padding(start = (tokens.gutter + tokens.smallIcon + Space.S3).dp)
+                        .fillMaxWidth().height(kitHairline()).background(colors.hairline),
+                )
+            }
             KitChoiceRow(
-                title = s.label,
+                title = s.count?.let { "${s.label} · ${Numbers.format(it)}" } ?: s.label,
                 selected = s.value == selected,
                 mark = KitChoiceMark.Radio,
                 enabled = segEnabled,
+                leading = s.icon?.let { icon -> { KitGlyph(icon, if (segEnabled.isEnabled) colors.text2 else colors.text3, tokens.smallIcon.dp) } },
                 onClick = {
                     SegmentedRules.onTap(s, selected, enabled.isEnabled)?.let {
                         haptics(KitHaptic.Select)
