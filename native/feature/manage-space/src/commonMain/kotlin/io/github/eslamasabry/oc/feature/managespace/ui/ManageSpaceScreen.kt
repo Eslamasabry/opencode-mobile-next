@@ -46,6 +46,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 public fun ManageSpaceScreen(state: ManageSpaceState, actions: ManageSpaceActions) {
     var delete by rememberSaveable { mutableStateOf(false) }
+    val initialFacts = state.facts
     val wait = stringResource(Res.string.manageSpaceWaitForExport)
     val enabled = if (state.busy) KitEnabled.Disabled(wait) else KitEnabled.Enabled
     KitSheetHost {
@@ -64,12 +65,12 @@ public fun ManageSpaceScreen(state: ManageSpaceState, actions: ManageSpaceAction
         ) {
             Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
                 if (state.loading && state.facts == null) KitSkeletonRows()
-                else if (state.facts != null)
+                else if (initialFacts != null)
                     KitNotice(
                         message =
                             stringResource(
                                 if (
-                                    state.facts.projects.isNotEmpty() || state.facts.serverInstalled
+                                    initialFacts.projects.isNotEmpty() || initialFacts.serverInstalled
                                 )
                                     Res.string.manageSpaceIntro
                                 else Res.string.manageSpaceIntroNothingToExport

@@ -90,7 +90,7 @@ class ManageSpaceParityTest {
             }
             onNodeWithText("Clear the app's cache only").performScrollTo().assertIsNotEnabled()
             onNodeWithText("Delete everything").performScrollTo().assertIsNotEnabled()
-            onNodeWithText("Stop export").performScrollTo().performClick()
+            onNodeWithText("Stop the export").performScrollTo().performClick()
             assertEquals(1, actions.stopped)
             assertEquals(0, actions.deleted)
         }
