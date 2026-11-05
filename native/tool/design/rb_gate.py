@@ -8,6 +8,8 @@ Subcommands (gate_order.sh calls them in this order; each exits non-zero on a fa
   tests    --order NN          one line per module: <module> TAB <--tests filters>; with RB_PARTS only the classes of
                                those parts (<Pascal>GateTest / <Pascal>ParityTest, or a test naming the part or its goldens)
   renders  --order NN|all      each golden's render window and density (WxH@D) and where it came from; a per-order count
+  recheck  --order NN          once order NN is done: re-gate every shot of a merged order waived DEPENDS_ON NN
+                               (gate_order.sh --recheck MM per order MM, RB_PARTS = the parts of those shots)
   chunks   --order NN          one line per part: id, golden count, the part's write globs (chunks.py prints it)
   RB_PARTS="part-a part-b"     restricts static (write set), fetch, evaluate and the manifest to those parts of NN
   evaluate --order NN          measure looks-out/gate trios (rasterisation-tolerant, RB_METRICS_JAVA), apply
@@ -47,6 +49,23 @@ CITE = re.compile(r'//\s*(FG?|NV):\s*(.*)$')
 MAIN_KT = re.compile(r'^native/.+/src/(commonMain|androidMain|desktopMain|iosMain)/.+\.kt$')
 WAIVER_CODES = {'NO_NATIVE_STATE': 'screen', 'DEFERRED': 'screen', 'PLATFORM_ONLY': 'any', 'GALLERY_FOREIGN': 'gallery'}
 WAIVER_CAP = {'kit': 0.05, 'screen': 0.25, 'gallery': 0.30}
+# DEPENDS_ON <order>: the shot's only difference comes from a part of an order that is not merged yet. Off the cap; the
+# named order must exist, be another order and have no <order>.done in RB_STATE; listed in looks-out/gate/deferred.tsv.
+DEPENDS = re.compile(r'^DEPENDS_ON\s+(\w+)$')
+STATE = os.environ.get('RB_STATE', os.path.expanduser('~/wt/ui/state'))
+RECHECK = os.environ.get('RB_RECHECK', '')  # set by `recheck`: the done order whose DEPENDS_ON waivers no longer apply
+
+
+def depends_on(code):
+    m = DEPENDS.match(code.strip())
+    if not m:
+        return None
+    v = m.group(1)
+    return f'{int(v):02d}' if v.isdigit() else v
+
+
+def order_done(o):
+    return os.path.exists(os.path.join(STATE, f'{o}.done'))
 
 
 def run(*a, check=True, cwd=ROOT):
@@ -826,7 +845,7 @@ def cmd_evaluate(nn):
     kind = 'screen' if any(r[0] == 'golden' and r[4] == 'T5' for r in man) else ('gallery' if nn in ('29', '30', '34', '36', '37') else 'kit')
     fails, per_part, results = [], {}, []
     goldens = [r for r in man if r[0] == 'golden']
-    waived = 0
+    waived, deferred = 0, []
     tm = tolerant_metrics([os.path.basename(r[3])[:-4] for r in goldens])
     rend = {ref: read_renders(ref) for ref in ('product', 'glass')}
     for r in goldens:
@@ -835,6 +854,7 @@ def cmd_evaluate(nn):
         box_max, blob_max, ink_band, shift_max = T[tier]
         row = rows.get(shot)
         status, why, box = 'FAIL', 'no gate row (no test rendered it)', None
+        drawn = False  # rendered at the golden's size: only such a shot can wait for another order (DEPENDS_ON)
         m = tm.get(shot) if row else None
         rd = rend[ref].get(shot)
         dens = rd[2] if rd else 1.0
@@ -853,6 +873,7 @@ def cmd_evaluate(nn):
                 bad_.append(f'line ink {ink:.2f}x (allowed {lo:.2f}-{hi:.2f})')
             if shift > shift_max:
                 bad_.append(f'line moved {shift:.1f} px (max {shift_max})')
+            drawn = size == 'same-size'
             if size != 'same-size':
                 why = f'size {size}' + (f' (render {rd[0]}x{rd[1]}@{fmt_d(dens)} by {rd[3]})' if rd else ' (no render.tsv: run fetch)')
             elif bad_:
@@ -861,13 +882,30 @@ def cmd_evaluate(nn):
                 status, why = 'PASS', f'box {box:.2f}% blob {blob} px ink {ink:.2f}x moved {shift:.1f} px'
         elif row:
             box, blob, size = float(row[3]), int(row[4]), row[6]
+            drawn = size == 'same-size'
             if size != 'same-size':
                 why = f'size {size}'
             elif box > box_max or blob > blob_max:
                 why = f'box {box:.2f}% (max {box_max}) blob {blob} px (max {blob_max}) (raw rows: no PNG trio to measure)'
             else:
                 status, why = 'PASS', f'box {box:.2f}% blob {blob} px'
-        if status == 'FAIL' and shot in waivers:
+        dep = depends_on(waivers[shot][0]) if status == 'FAIL' and waivers.get(shot) else None
+        if dep:
+            reason = waivers[shot][1].strip() if len(waivers[shot]) > 1 else ''
+            if not drawn:
+                why += f' (DEPENDS_ON {dep} rejected: only a shot rendered at the golden\'s size can wait for another order)'
+            elif dep == nn or not glob.glob(os.path.join(DOC, 'orders', f'{dep}-*.md')):
+                why += f' (DEPENDS_ON {dep} rejected: not another order)'
+            elif not reason:
+                why += f' (DEPENDS_ON {dep} rejected: no reason naming the part)'
+            elif dep == RECHECK:
+                why += f' (recheck: order {dep} is done, its DEPENDS_ON waiver no longer applies)'
+            elif order_done(dep):
+                why += f' (DEPENDS_ON {dep} rejected: order {dep} is done, the shot must pass now; rb_gate.py recheck --order {dep})'
+            else:
+                status, why = 'DEFER', f'DEPENDS_ON {dep}: {reason[:80]}'
+                deferred.append((shot, dep))
+        elif status == 'FAIL' and shot in waivers:
             code = waivers[shot][0] if waivers[shot] else ''
             scope = WAIVER_CODES.get(code)
             if scope and (scope == 'any' or scope == kind) and len(waivers[shot]) > 1 and waivers[shot][1].strip():
@@ -879,6 +917,8 @@ def cmd_evaluate(nn):
         agg = per_part.setdefault(pid, {'ok': True, 'worst': -1.0, 'shot': None})
         if status == 'FAIL':
             agg['ok'] = False
+        if status == 'DEFER':
+            agg['deferred'] = agg.get('deferred', 0) + 1
         if box is not None and box > agg['worst']:
             agg['worst'], agg['shot'] = box, shot
     if goldens and waived > WAIVER_CAP[kind] * len(goldens):
@@ -933,7 +973,11 @@ def cmd_evaluate(nn):
     bad = [r for r in results if r[0] == 'FAIL']
     for f in fails:
         print('FAIL', f)
-    print(f'evaluate {oid}: {len(results)} goldens, {len(bad)} failed, {waived} waived, {len(fails)} other failures')
+    os.makedirs(OUTG, exist_ok=True)
+    with open(os.path.join(OUTG, 'deferred.tsv'), 'w', encoding='utf-8') as fh:
+        fh.write('# golden\torder\n' + ''.join(f'{g}\t{o}\n' for g, o in deferred))
+    print(f'evaluate {oid}: {len(results)} goldens, {len(bad)} failed, {waived} waived, {len(deferred)} deferred '
+          f'(DEPENDS_ON, off the cap; looks-out/gate/deferred.tsv), {len(fails)} other failures')
     # tracker
     url = os.environ.get('OC_UI_URL') or tracker_url()
     if url:
@@ -941,7 +985,7 @@ def cmd_evaluate(nn):
             if not pid.startswith('part-'):
                 continue
             body = {'id': pid, 'state': 'gate-pass' if agg['ok'] else 'gate-fail', 'agent': f'rb-{nn}-{engine}', 'engine': engine,
-                    'note': f'{oid} gate'}
+                    'note': f'{oid} gate' + (f', {agg["deferred"]} shots wait for other orders (DEPENDS_ON)' if agg.get('deferred') else '')}
             if agg['worst'] >= 0:
                 body['diff'] = round(agg['worst'], 2)
                 s = agg['shot']
@@ -958,13 +1002,53 @@ def cmd_evaluate(nn):
     return 1 if (bad or fails) else 0
 
 
+def cmd_recheck(nn):
+    """Order NN is done: re-gate every shot another order waived DEPENDS_ON NN, per waiving order MM, with
+    `RB_PARTS=<those shots' parts> RB_RECHECK=NN gate_order.sh --recheck MM` (no static checks: MM is merged). Writes
+    looks-out/recheck/NN.tsv (order, golden, status, why); exits 1 when a shot still fails."""
+    if not order_done(nn):
+        print(f'recheck: order {nn} is not done ({os.path.join(STATE, nn + ".done")} missing)')
+        return 2
+    todo = {}
+    for wf in sorted(glob.glob(os.path.join(DOC, 'waivers', '*.tsv'))):
+        mm = os.path.basename(wf)[:-4]
+        for line in open(wf, encoding='utf-8'):
+            c = line.rstrip('\n').split('\t')
+            if len(c) > 1 and not line.startswith('#') and depends_on(c[1]) == nn:
+                todo.setdefault(mm, []).append(c[0])
+    out_dir = os.path.join(ROOT, 'looks-out', 'recheck', nn)
+    os.makedirs(out_dir, exist_ok=True)
+    rows, bad = [], 0
+    for mm, shots in todo.items():
+        parts = sorted({r[1] for r in manifest(mm, whole=True) if r[0] == 'golden' and shot_of(r[3]) in shots})
+        print(f'recheck {nn}: order {mm}, {len(shots)} shots of {" ".join(parts)}', flush=True)
+        env = dict(os.environ, RB_PARTS=' '.join(parts), RB_RECHECK=nn)
+        p = subprocess.run([os.path.join(ROOT, 'native/tool/design/gate_order.sh'), '--recheck', mm], cwd=ROOT, env=env,
+                           capture_output=True, text=True)
+        open(os.path.join(out_dir, f'{mm}.log'), 'w', encoding='utf-8').write(p.stdout + p.stderr)
+        seen = {}
+        for line in p.stdout.splitlines():
+            m = re.match(r'^(PASS|FAIL|WAIVED|DEFER)\s+(\S+)\s+(.*)$', line)
+            if m:
+                seen[m.group(2)] = (m.group(1), m.group(3))
+        for shot in shots:
+            st, why = seen.get(shot, ('FAIL', f'not evaluated (gate exit {p.returncode}; looks-out/recheck/{nn}/{mm}.log)'))
+            bad += st != 'PASS'
+            rows.append((mm, shot, st, why))
+            print(f'{st:6} {mm} {shot}  {why}')
+    with open(os.path.join(ROOT, 'looks-out', 'recheck', f'{nn}.tsv'), 'w', encoding='utf-8') as fh:
+        fh.write('# order\tgolden\tstatus\twhy\n' + ''.join('\t'.join(r) + '\n' for r in rows))
+    print(f'recheck {nn}: {len(rows)} deferred shots in {len(todo)} orders, {bad} not passing (looks-out/recheck/{nn}.tsv)')
+    return 1 if bad else 0
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=['static', 'fetch', 'modules', 'evaluate', 'chunks', 'renders', 'tests'])
+    ap.add_argument('cmd', choices=['static', 'fetch', 'modules', 'evaluate', 'chunks', 'renders', 'tests', 'recheck'])
     ap.add_argument('--order', required=True)
     a = ap.parse_args()
     nn = 'all' if a.order == 'all' else f'{int(a.order):02d}'
-    sys.exit({'static': cmd_static, 'fetch': cmd_fetch, 'modules': cmd_modules, 'evaluate': cmd_evaluate, 'chunks': cmd_chunks, 'renders': cmd_renders, 'tests': cmd_tests}[a.cmd](nn))
+    sys.exit({'static': cmd_static, 'fetch': cmd_fetch, 'modules': cmd_modules, 'evaluate': cmd_evaluate, 'chunks': cmd_chunks, 'renders': cmd_renders, 'tests': cmd_tests, 'recheck': cmd_recheck}[a.cmd](nn))
 
 
 if __name__ == '__main__':

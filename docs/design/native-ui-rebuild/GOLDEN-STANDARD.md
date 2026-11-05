@@ -519,9 +519,22 @@ one line: `<shot with mode>	<CODE>	<one-line reason naming the owner part or the
 | `GALLERY_FOREIGN` | galleries (29, 30, 34, 36, 37) | the failing region belongs to another order's part; name its tracker id |
 | `NO_NATIVE_STATE` | screens | the native screen state has no such state; name the missing `XUi` field |
 | `DEFERRED` | screens | the golden shows a deferred or dropped screen (plan 07 §6) |
+| `DEPENDS_ON <NN>` | any order | the shot's only difference comes from a part of order NN, which is not merged yet; name that part |
 
 Caps: kit orders 5 %, galleries 30 %, screens 25 % of the order's goldens. A waiver with another code or no reason is
 rejected. **Check:** evaluate rule V1.
+
+`DEPENDS_ON <NN>` is for orders that run in parallel: your shot draws a part another order is still porting (a row
+holding a button of order 05, say), and the rest of the shot matches. It is off the cap, but evaluate accepts it only
+when the shot rendered at the golden's size, NN is another order, the reason names the part, and order NN is not done
+(`~/wt/ui/state/NN.done` absent). The shot shows as `DEFER` and is listed in `looks-out/gate/deferred.tsv`
+(golden, order). Once NN merges, the waiver stops counting and the lead runs `rb_gate.py recheck --order NN`, which
+re-gates every such shot of every merged order and writes `looks-out/recheck/NN.tsv`. Your own part's differences,
+missing renders and size mismatches are never deferred. Example line in `waivers/09.tsv`:
+
+```
+kit_settings_row_toggle_dark	DEPENDS_ON 05	the switch is part-kit_switch (order 05); the row's text, gap and divider match
+```
 
 ---
 
@@ -598,7 +611,7 @@ with the next item, when any of these is true:
 1. the fix needs a path outside your `WRITES:` (name the file, the line and the Flutter line it must follow);
 2. the generated tokens lack a value Flutter reads (`needs token: <file>:<line>`);
 3. a dependency's part draws wrong in your golden (name its tracker id; that is a `GALLERY_FOREIGN` waiver only in
-   gallery orders);
+   gallery orders, and a `DEPENDS_ON <NN>` waiver (§9.5) while that order is not merged);
 4. a golden still fails after 12 iterations (attach the diff path);
 5. the screen state lacks data the Flutter screen shows (name the missing field);
 6. the order and this standard disagree, or a rule cannot be met as written;

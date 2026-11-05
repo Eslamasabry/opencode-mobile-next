@@ -13,15 +13,23 @@
 #   FLUTTER_REPO (default ~/wt/flutter-ref), GLASS_REPO (default ~/Storage/Code/oc_app), RB_BASE (default
 #   native/looks-pass-2026-11-04), JAVA_HOME / ANDROID_HOME (defaults below), RB_GRADLE_SLOTS (default 2).
 set -uo pipefail
+# gate_order.sh --recheck <MM> (run by `rb_gate.py recheck`, with RB_PARTS and RB_RECHECK set): the render and evaluation
+#   of a merged order's shots that waited for order RB_RECHECK (DEPENDS_ON); no static checks, the order is merged.
+RECHECK_RUN=0
+if [ "${1:-}" = "--recheck" ]; then RECHECK_RUN=1; shift; [ -n "${RB_RECHECK:-}" ] || { echo "--recheck needs RB_RECHECK" >&2; exit 2; }; fi
 [ $# -ge 1 ] || { echo "usage: gate_order.sh <NN>" >&2; exit 2; }
-NN=$(printf '%02d' "$((10#$1))")
+case "$1" in *[!0-9]*) NN=$1 ;; *) NN=$(printf '%02d' "$((10#$1))") ;; esac
 ROOT=$(git rev-parse --show-toplevel) || exit 2
 cd "$ROOT" || exit 2
 T=native/tool/design
 PY="python3 -I $ROOT/$T/rb_gate.py"
 
-echo "== order $NN: static checks"
-$PY static --order "$NN" || { echo "GATE FAIL (static)"; exit 1; }
+if [ "$RECHECK_RUN" = 1 ]; then
+  echo "== order $NN: recheck of shots that waited for order $RB_RECHECK (static checks skipped: merged order)"
+else
+  echo "== order $NN: static checks"
+  $PY static --order "$NN" || { echo "GATE FAIL (static)"; exit 1; }
+fi
 
 echo "== order $NN: Flutter goldens"
 $PY fetch --order "$NN" || { echo "GATE FAIL (fetch)"; exit 1; }
