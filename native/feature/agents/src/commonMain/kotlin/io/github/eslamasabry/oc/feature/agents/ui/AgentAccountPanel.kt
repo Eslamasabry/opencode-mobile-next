@@ -45,6 +45,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitInlineState
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
@@ -52,7 +53,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitPageState
 import io.github.eslamasabry.oc.ui.kit.state.KitProgress
 import io.github.eslamasabry.oc.ui.kit.state.KitProgressRow
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
-import io.github.eslamasabry.oc.ui.kit.text.kitLocalTime
+import io.github.eslamasabry.oc.ui.kit.text.kitDateTime
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
 import kotlin.time.Instant
@@ -350,7 +351,8 @@ internal fun AgentAccountPanel(
                             buckets.orEmpty().flatMap { bucket ->
                                 listOfNotNull(bucket.primary, bucket.secondary).map { bucket to it }
                             }
-                        KitRowGroup(label = stringResource(Res.string.agentAccountLimits)) {
+                        KitSectionLabel(stringResource(Res.string.agentAccountLimits), margin = 0.dp, gapBefore = 0.dp)
+                        KitRowGroup {
                             if (panel.metricsLoading && buckets == null)
                                 KitProgressRow(
                                     stringResource(Res.string.agentAccountAllowance),
@@ -433,7 +435,8 @@ internal fun AgentAccountPanel(
                         }
                         Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
                         val usage = panel.usage
-                        KitRowGroup(label = stringResource(Res.string.agentAccountUsage)) {
+                        KitSectionLabel(stringResource(Res.string.agentAccountUsage), margin = 0.dp, gapBefore = 0.dp)
+                        KitRowGroup {
                             if (
                                 panel.metricsLoading &&
                                     usage?.lifetimeTokens == null &&
@@ -468,7 +471,7 @@ internal fun AgentAccountPanel(
                         }
                     }
                     panel.updatedAt?.let { at ->
-                        val time = kitLocalTime(at.toEpochMilliseconds(), now.toEpochMilliseconds())
+                        val time = kitDateTime(at.toEpochMilliseconds())
                         if (time != null) {
                             Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
                             KitText(
@@ -516,7 +519,7 @@ private fun accountReset(at: Long?, now: Instant, withDate: Boolean = false): St
                 pluralStringResource(Res.plurals.agentAccountResetInMinutes, minutes, minutes)
             }
         }
-    val time = if (withDate) kitLocalTime(at, now.toEpochMilliseconds()) else null
+    val time = if (withDate) kitDateTime(at) else null
     return if (time == null) relative
     else stringResource(Res.string.agentAccountResetWhen, relative, time)
 }

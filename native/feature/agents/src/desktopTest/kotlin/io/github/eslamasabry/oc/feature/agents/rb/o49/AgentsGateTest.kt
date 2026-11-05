@@ -12,6 +12,7 @@ import io.github.eslamasabry.oc.feature.agents.ui.AgentsScreen
 import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
+import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.Instant
@@ -337,6 +338,48 @@ class AgentsGateTest {
             onNodeWithContentDescription("Copy sign-in code").assertDoesNotExist()
             onNodeWithText("STALE-CODE").assertDoesNotExist()
         }
+
+    @Test
+    fun `Last checked and reached-limit dates use the full date formatter`() = runComposeUiTest {
+        val resetAt = Instant.parse("2026-09-05T18:00:00Z").toEpochMilliseconds()
+        val platform =
+            object : KitPlatform by DesktopKitPlatform() {
+                override fun dateTime(atMs: Long, localeTag: String): String =
+                    if (atMs == resetAt) "Sep 5, 2026 6:00 PM" else "Sep 5, 2026 12:00 PM"
+
+                override fun messageTime(createdMs: Long, nowMs: Long): String =
+                    error("An account fact must retain its full date")
+            }
+        setContent {
+            KitTheme(platform = platform, localeTag = "en", stillFrame = true) {
+                AgentAccountPanel(
+                    AgentsUi(
+                        accountTarget = target,
+                        accountPanel =
+                            AccountPanelState(
+                                status = AccountPanelStatus.Ready,
+                                account =
+                                    AgentRuntimeAccount(type = "chatgpt", requiresSignIn = true),
+                                limits =
+                                    persistentListOf(
+                                        AccountRateBucket(
+                                            "Codex",
+                                            AccountRateWindow(100, 300, resetAt),
+                                            null,
+                                        )
+                                    ),
+                                updatedAt = fixtureNow,
+                            ),
+                    ),
+                    Actions(),
+                    now = fixtureNow,
+                )
+            }
+        }
+        onNodeWithText("Last checked Sep 5, 2026 12:00 PM").assertExists()
+        onNodeWithText("You’ve reached a Codex limit. Resets in 6 h (Sep 5, 2026 6:00 PM)")
+            .assertExists()
+    }
 
     @Test
     fun signed_out() {
