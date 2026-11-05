@@ -45,16 +45,16 @@ class KitDividerGateTest {
             }
         }
     }
-    @Test fun kit_divider_insets() { FlutterGoldenGate.check("kit_divider_insets", modes = listOf("dark", "light")) { scene(ar = false, vertical = false) } }
-    @Test fun kit_divider_insets_1280x800() { FlutterGoldenGate.check("kit_divider_insets_1280x800", modes = listOf("dark", "light")) { scene(ar = false, vertical = false) } }
-    @Test fun kit_divider_insets_1600x1000() { FlutterGoldenGate.check("kit_divider_insets_1600x1000", modes = listOf("dark", "light")) { scene(ar = false, vertical = false) } }
-    @Test fun kit_divider_insets_360x800() { FlutterGoldenGate.check("kit_divider_insets_360x800", modes = listOf("dark", "light")) { scene(ar = false, vertical = false) } }
-    @Test fun kit_divider_insets_800x1280() { FlutterGoldenGate.check("kit_divider_insets_800x1280", modes = listOf("dark", "light")) { scene(ar = false, vertical = false) } }
-    @Test fun kit_divider_insets_915x412() { FlutterGoldenGate.check("kit_divider_insets_915x412", modes = listOf("dark", "light")) { scene(ar = false, vertical = false) } }
-    @Test fun kit_divider_insets_ar() { FlutterGoldenGate.check("kit_divider_insets_ar", modes = listOf("dark", "light")) { scene(ar = true, vertical = false) } }
-    @Test fun kit_divider_insets_ar_1280x800() { FlutterGoldenGate.check("kit_divider_insets_ar_1280x800", modes = listOf("dark", "light")) { scene(ar = true, vertical = false) } }
-    @Test fun kit_divider_insets_text2() { FlutterGoldenGate.check("kit_divider_insets_text2", modes = listOf("dark", "light")) { scene(ar = false, vertical = false) } }
-    @Test fun kit_divider_insets_text2_1280x800() { FlutterGoldenGate.check("kit_divider_insets_text2_1280x800", modes = listOf("dark", "light")) { scene(ar = false, vertical = false) } }
-    @Test fun kit_divider_vertical() { FlutterGoldenGate.check("kit_divider_vertical", modes = listOf("dark", "light")) { scene(ar = false, vertical = true) } }
+    @Test fun kit_divider_insets() { FlutterGoldenGate.check(wrap = { content -> FlutterCapture(content) }, name = "kit_divider_insets", modes = listOf("dark", "light")) { scene(ar = false, vertical = false) } }
+    @Test fun kit_divider_insets_1280x800() { FlutterGoldenGate.check(wrap = { content -> FlutterCapture(content) }, name = "kit_divider_insets_1280x800", modes = listOf("dark", "light")) { scene(ar = false, vertical = false) } }
+    @Test fun kit_divider_insets_1600x1000() { FlutterGoldenGate.check(wrap = { content -> FlutterCapture(content) }, name = "kit_divider_insets_1600x1000", modes = listOf("dark", "light")) { scene(ar = false, vertical = false) } }
+    @Test fun kit_divider_insets_360x800() { FlutterGoldenGate.check(wrap = { content -> FlutterCapture(content) }, name = "kit_divider_insets_360x800", modes = listOf("dark", "light")) { scene(ar = false, vertical = false) } }
+    @Test fun kit_divider_insets_800x1280() { FlutterGoldenGate.check(wrap = { content -> FlutterCapture(content) }, name = "kit_divider_insets_800x1280", modes = listOf("dark", "light")) { scene(ar = false, vertical = false) } }
+    @Test fun kit_divider_insets_915x412() { FlutterGoldenGate.check(wrap = { content -> FlutterCapture(content) }, name = "kit_divider_insets_915x412", modes = listOf("dark", "light")) { scene(ar = false, vertical = false) } }
+    @Test fun kit_divider_insets_ar() { FlutterGoldenGate.check(wrap = { content -> FlutterCapture(content) }, name = "kit_divider_insets_ar", textScale = 1.3f, modes = listOf("dark", "light")) { scene(ar = true, vertical = false) } }
+    @Test fun kit_divider_insets_ar_1280x800() { FlutterGoldenGate.check(wrap = { content -> FlutterCapture(content) }, name = "kit_divider_insets_ar_1280x800", textScale = 1.3f, modes = listOf("dark", "light")) { scene(ar = true, vertical = false) } }
+    @Test fun kit_divider_insets_text2() { FlutterGoldenGate.check(wrap = { content -> FlutterCapture(content) }, name = "kit_divider_insets_text2", modes = listOf("dark", "light")) { scene(ar = false, vertical = false) } }
+    @Test fun kit_divider_insets_text2_1280x800() { FlutterGoldenGate.check(wrap = { content -> FlutterCapture(content) }, name = "kit_divider_insets_text2_1280x800", modes = listOf("dark", "light")) { scene(ar = false, vertical = false) } }
+    @Test fun kit_divider_vertical() { FlutterGoldenGate.check(wrap = { content -> FlutterCapture(content) }, name = "kit_divider_vertical", modes = listOf("dark", "light")) { scene(ar = false, vertical = true) } }
     @Test fun matrix() { FlutterGoldenGate.matrix("part-kit_divider", caps = mapOf("KitDivider" to "fill")) { scene() } }
 }
