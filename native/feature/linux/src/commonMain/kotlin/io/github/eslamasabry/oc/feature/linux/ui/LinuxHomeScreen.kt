@@ -131,7 +131,6 @@ public fun LinuxHomeScreen(
                         onClick = { nativeActions?.openMigration(offer.profileId) },
                     )
                 }
-            state.vitals?.let { LinuxVitalsPanel(it) { actions.open(LinuxPage.Running) } }
             val dismiss =
                 KitLineAction(stringResource(Res.string.workspaceDismissNotice), actions::dismiss)
             when (val notice = state.notice) {
