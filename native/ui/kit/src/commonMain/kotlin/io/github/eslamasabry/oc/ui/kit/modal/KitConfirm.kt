@@ -4,8 +4,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -24,6 +28,7 @@ import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
@@ -32,11 +37,13 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitAction
+import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
-import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
-import io.github.eslamasabry.oc.ui.kit.foundation.KitPartGlyphs
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.input.KitField
@@ -45,7 +52,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitTechnicalValue
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmCancel
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmFailed
@@ -56,6 +63,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitConfirmTypeNameReason
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWorking
+import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -121,8 +129,8 @@ public object ConfirmRules {
 /**
  * A confirmation as screen state (Dart `showKitConfirm`, `KitConfirmSheet`, `KitConsequences`; plan
  * 06 §7.4): shown while [spec] is non-null. A sheet on compact windows, a 480 dp dialog on wide
- * ones. The header mark tile, the question, its body, the consequences, the typed-name field when
- * asked, then the strong neutral confirm with Cancel (Keep running for a stop, Keep editing for a
+ * ones. The header mark tile above the question, its body, the consequences, the typed-name field when
+ * asked, then the confirm with a secondary Cancel (Keep running for a stop, Keep editing for a
  * discard). Back, the scrim and Cancel call [onCancel]. A stop, destructive or discard confirm
  * plays `Commit` through the kit seam. Works at 200 % text: everything scrolls and the actions
  * stack.
@@ -170,112 +178,140 @@ public fun KitConfirm(
         sheetOnCompact = true,
         dismissible = !working,
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
+        Column(
+            Modifier.fillMaxWidth().testTag("kit-confirm-content").onKeyEvent { event ->
+                when {
+                    event.type != KeyEventType.KeyDown -> false
+                    event.key == Key.Escape -> {
+                        cancelAction()
+                        true
+                    }
+                    event.key == Key.Enter && ConfirmRules.enterConfirms(shown.kind) -> {
+                        confirm()
+                        true
+                    }
+                    else -> false
+                }
+            },
         ) {
-            IconTile(
-                shown.icon ?: when (shown.kind) {
-                    KitConfirmKind.Neutral -> KitPartGlyphs.Ring
-                    KitConfirmKind.Stop -> KitPartGlyphs.Close
-                    KitConfirmKind.Destructive,
-                    KitConfirmKind.Discard -> KitPartGlyphs.Warning
-                },
-                (LocalKitTokens.current.iconTile + Space.S2).dp,
-            )
+            Box(Modifier.testTag("kit-confirm-mark")) {
+                IconTile(shown.icon ?: when (shown.kind) {
+                    KitConfirmKind.Neutral -> KitIcons.info
+                    KitConfirmKind.Stop -> KitIcons.stop
+                    KitConfirmKind.Destructive -> KitIcons.delete
+                    KitConfirmKind.Discard -> KitIcons.editOff
+                })
+            }
+            Spacer(Modifier.height(Space.S3.dp))
             KitText(
                 shown.title,
-                Modifier.weight(1f),
+                Modifier.semantics { heading() }.testTag("kit-confirm-title"),
                 role = TypeRole.Title,
                 kind = KitTextKind.Frame,
             )
-        }
-        shown.body?.let { KitText(it, role = TypeRole.Body, tone = TextTone.Secondary) }
-        // Plain consequence lines keep the neutral bullet: the kit cannot tell a loss from a
-        // kept fact, so only callers that say so ([KitConfirmSpec.consequenceItems]) get marks.
-        if (shown.consequenceItems.isNotEmpty()) KitMarkedConsequences(shown.consequenceItems)
-        else if (shown.consequences.isNotEmpty()) KitConsequences(shown.consequences)
-        shown.typedName?.let { name ->
-            KitField(
-                state = typed,
-                label = stringResource(Res.string.kitConfirmTypeName, name),
-                kind = KitFieldKind.Mono,
-                enabled = KitEnabled.of(!working, stringResource(Res.string.kitTurnLiveWorking)),
-                imeAction =
-                    if (ConfirmRules.enterConfirms(shown.kind)) ImeAction.Done else ImeAction.None,
-                onSubmit = if (ConfirmRules.enterConfirms(shown.kind) && on) confirm else null,
-            )
-        }
-        if (failed) KitNotice(stringResource(Res.string.kitConfirmFailed))
-        KitActionBlock(
-            modifier =
-                Modifier.onKeyEvent { event ->
-                    when {
-                        event.type != KeyEventType.KeyDown -> false
-                        event.key == Key.Escape -> {
-                            cancelAction()
-                            true
-                        }
-                        event.key == Key.Enter && ConfirmRules.enterConfirms(shown.kind) -> {
-                            confirm()
-                            true
-                        }
-                        else -> false
-                    }
-                },
-            primary =
-                KitAction(
+            shown.body?.let {
+                Spacer(Modifier.height(Space.S2.dp))
+                KitText(it, role = TypeRole.Body, tone = TextTone.Secondary)
+            }
+            val consequences = shown.consequenceItems.ifEmpty {
+                shown.consequences.mapIndexed { index, fact ->
+                    KitConsequence(fact, if (index == 0 && shown.kind != KitConfirmKind.Neutral) KitConsequenceMark.Lost else KitConsequenceMark.Info)
+                }
+            }
+            if (consequences.isNotEmpty()) {
+                Spacer(Modifier.height(Space.S4.dp))
+                KitMarkedConsequences(consequences)
+            }
+            shown.typedName?.let { name ->
+                Spacer(Modifier.height(Space.S4.dp))
+                KitField(
+                    state = typed,
+                    label = stringResource(Res.string.kitConfirmTypeName, name),
+                    kind = KitFieldKind.Mono,
+                    enabled = KitEnabled.of(!working, stringResource(Res.string.kitTurnLiveWorking)),
+                    imeAction = if (ConfirmRules.enterConfirms(shown.kind)) ImeAction.Done else ImeAction.None,
+                    onSubmit = if (ConfirmRules.enterConfirms(shown.kind) && on) confirm else null,
+                )
+            }
+            if (failed) {
+                Spacer(Modifier.height(Space.S3.dp))
+                KitNotice(
+                    stringResource(Res.string.kitConfirmFailed),
+                    tone = io.github.eslamasabry.oc.ui.design.color.StatusTone.Failure,
+                    actions = listOf(KitLineAction(
+                        stringResource(Res.string.kitTryAgain), confirm,
+                        enabled = on && !working,
+                        disabledReason = if (!on) reason else if (working) stringResource(Res.string.kitTurnLiveWorking) else null,
+                    )),
+                )
+            }
+            Spacer(Modifier.height(Space.S5.dp))
+            ConfirmAnswers(
+                confirm = KitAction(
                     label = shown.confirmLabel,
                     onClick = confirm,
                     working = working,
                     enabled = if (on) KitEnabled.Enabled else KitEnabled.Disabled(reason),
-                    destructive =
-                        true, // the strong neutral fill for every kind (never red, never the
-                    // accent)
+                    destructive = shown.kind != KitConfirmKind.Neutral,
                     haptic = ConfirmRules.haptic(shown.kind),
                 ),
-            tertiary =
-                listOfNotNull(
-                    shown.alternative?.let { alternative ->
-                        alternative.copy(
-                            onClick =
-                                if (working) null
-                                else
-                                    ({
-                                        onCancel()
-                                        alternative.onClick?.invoke()
-                                    }),
-                            enabled =
-                                if (working) KitEnabled.Disabled(cancel) else alternative.enabled,
-                        )
-                    },
-                    alternative?.let { action ->
-                        action.copy(
-                            onClick =
-                                if (working) null
-                                else
-                                    action.onClick?.let { click ->
-                                        {
-                                            onCancel()
-                                            click()
-                                        }
-                                    },
-                            enabled = if (working) KitEnabled.Disabled(cancel) else action.enabled,
-                        )
-                    },
-                    KitAction(
-                        cancel,
-                        onClick = cancelAction,
-                        enabled = if (working) KitEnabled.Disabled(cancel) else KitEnabled.Enabled,
-                    ),
+                cancel = KitAction(
+                    cancel, onClick = cancelAction,
+                    enabled = if (working) KitEnabled.Disabled(cancel) else KitEnabled.Enabled,
                 ),
-        )
-        if (shown.details.isNotEmpty())
-            KitDetailsFold(
-                label = stringResource(Res.string.kitDetails),
-                copyLabel = stringResource(Res.string.kitCopyDetails),
-                values = shown.details,
+                alternatives = listOfNotNull(shown.alternative, alternative).map { action ->
+                    action.copy(
+                        onClick = if (working) null else action.onClick?.let { click -> { onCancel(); click() } },
+                        enabled = if (working) KitEnabled.Disabled(cancel) else action.enabled,
+                    )
+                },
             )
+            if (shown.details.isNotEmpty()) {
+                Spacer(Modifier.height(Space.S2.dp))
+                KitDetailsFold(
+                    label = stringResource(Res.string.kitDetails),
+                    copyLabel = stringResource(Res.string.kitCopyDetails),
+                    values = shown.details,
+                )
+            }
+        }
+    }
+}
+
+/** Flutter kit_confirm_sheet.dart: compact answers stack, wide answers wrap at the window's end. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ConfirmAnswers(confirm: KitAction, cancel: KitAction, alternatives: List<KitAction>) {
+    val wide = LocalKitWindow.current.modal.isWide
+    if (wide) {
+        Column(Modifier.fillMaxWidth()) {
+            FlowRow(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Space.S3.dp, Alignment.End),
+                verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
+                itemVerticalAlignment = Alignment.CenterVertically,
+            ) {
+                KitButton(cancel, role = KitButtonRole.Secondary)
+                alternatives.forEach { KitButton(it, role = KitButtonRole.Tertiary) }
+                KitButton(confirm)
+            }
+            confirm.enabled.reason?.let {
+                Spacer(Modifier.height(Space.S2.dp))
+                KitText(it, role = TypeRole.Secondary)
+            }
+        }
+    } else {
+        KitButton(confirm, Modifier.fillMaxWidth())
+        confirm.enabled.reason?.let {
+            Spacer(Modifier.height(Space.S2.dp))
+            KitText(it, role = TypeRole.Secondary)
+        }
+        alternatives.forEach {
+            Spacer(Modifier.height(Space.S2.dp))
+            KitButton(it, Modifier.fillMaxWidth(), role = KitButtonRole.Tertiary)
+        }
+        Spacer(Modifier.height(Space.S3.dp))
+        KitButton(cancel, Modifier.fillMaxWidth(), role = KitButtonRole.Secondary)
     }
 }
 
