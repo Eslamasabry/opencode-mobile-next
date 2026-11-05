@@ -1,0 +1,27 @@
+# kind	id	ref	path_or_class	tier_or_role_or_ownership	gradle_module
+part	part-kit_copy	product	lib/ui/kit/kit_copy.dart	own:logic	:ui:kit
+part	part-kit_effects	product	lib/ui/kit/kit_effects.dart	own:logic	:ui:design
+part	part-kit_layout	product	lib/ui/kit/kit_layout.dart	own:logic	:ui:design
+part	part-kit_redact	product	lib/ui/kit/kit_redact.dart	own:logic	:ui:kit
+part	part-kit_shape	product	lib/ui/kit/kit_shape.dart	own:logic	:ui:kit
+part	part-kit_time	product	lib/ui/kit/kit_time.dart	own:logic	:ui:kit
+part	part-kit_tokens	product	lib/ui/kit/kit_tokens.dart	none:logic	:ui:kit
+golden	part-kit_tokens	product	test/goldens/kit/kit_foundation_type_dark.png	T1	:ui:kit
+golden	part-kit_tokens	product	test/goldens/kit/kit_foundation_type_light.png	T1	:ui:kit
+golden	part-kit_tokens	product	test/goldens/kit/kit_foundation_work_1280x800_dark.png	T1	:ui:kit
+golden	part-kit_tokens	product	test/goldens/kit/kit_foundation_work_1280x800_light.png	T1	:ui:kit
+golden	part-kit_tokens	product	test/goldens/kit/kit_foundation_work_ar_dark.png	T1	:ui:kit
+golden	part-kit_tokens	product	test/goldens/kit/kit_foundation_work_ar_light.png	T1	:ui:kit
+golden	part-kit_tokens	product	test/goldens/kit/kit_foundation_work_dark.png	T1	:ui:kit
+golden	part-kit_tokens	product	test/goldens/kit/kit_foundation_work_light.png	T1	:ui:kit
+golden	part-kit_tokens	product	test/goldens/kit/kit_foundation_work_text2_dark.png	T1	:ui:kit
+golden	part-kit_tokens	product	test/goldens/kit/kit_foundation_work_text2_light.png	T1	:ui:kit
+part	part-kit_animated_rows	product	lib/ui/kit/motion/kit_animated_rows.dart	own:visual	:ui:kit
+cap	part-kit_animated_rows	-	KitAnimatedRows	wrapper	:ui:kit
+part	part-kit_haptics	product	lib/ui/kit/motion/kit_haptics.dart	own:logic	:ui:design
+part	part-kit_motion_parts	product	lib/ui/kit/motion/kit_motion_parts.dart	own:visual	:ui:kit
+cap	part-kit_motion_parts	-	KitAnimatedBox	wrapper	:ui:kit
+cap	part-kit_motion_parts	-	KitAnimatedValue	wrapper	:ui:kit
+cap	part-kit_motion_parts	-	KitDim	wrapper	:ui:kit
+cap	part-kit_motion_parts	-	KitSpin	wrapper	:ui:kit
+cap	part-kit_motion_parts	-	KitSwap	wrapper	:ui:kit

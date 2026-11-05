@@ -1,0 +1,3 @@
+# kind	id	ref	path_or_class	tier_or_role_or_ownership	gradle_module
+part	part-glass-kit_live_aurora_image	glass	lib/ui/kit/live_background/styles/kit_live_aurora_image.dart	own:logic	:ui:gate
+part	part-glass-kit_live_vivid	glass	lib/ui/kit/live_background/styles/kit_live_vivid.dart	own:logic	:ui:gate

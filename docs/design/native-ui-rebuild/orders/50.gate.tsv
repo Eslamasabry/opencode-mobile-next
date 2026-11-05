@@ -1,0 +1,26 @@
+# kind	id	ref	path_or_class	tier_or_role_or_ownership	gradle_module
+golden	gallery-o50	product	test/revamp/goldens/saved_prompts_deleted_undo_1280x800_dark.png	T5	:feature:usage
+golden	gallery-o50	product	test/revamp/goldens/saved_prompts_deleted_undo_dark.png	T5	:feature:usage
+golden	gallery-o50	product	test/revamp/goldens/saved_prompts_older_draft_1280x800_dark.png	T5	:feature:usage
+golden	gallery-o50	product	test/revamp/goldens/saved_prompts_older_draft_dark.png	T5	:feature:usage
+golden	gallery-o50	product	test/revamp/goldens/saved_prompts_older_drafts_full_dark.png	T5	:feature:usage
+golden	gallery-o50	product	test/revamp/goldens/saved_prompts_restored_undo_1280x800_dark.png	T5	:feature:usage
+golden	gallery-o50	product	test/revamp/goldens/saved_prompts_restored_undo_dark.png	T5	:feature:usage
+golden	gallery-o50	product	test/revamp/goldens/usage_budget_clear_dialog_dark.png	T5	:feature:usage
+golden	gallery-o50	product	test/revamp/goldens/usage_budget_clear_dialog_light.png	T5	:feature:usage
+golden	gallery-o50	product	test/revamp/goldens/usage_budget_dialog_dark.png	T5	:feature:usage
+golden	gallery-o50	product	test/revamp/goldens/usage_budget_dialog_light.png	T5	:feature:usage
+golden	gallery-o50	product	test/revamp/goldens/usage_budget_reached_dark.png	T5	:feature:usage
+golden	gallery-o50	product	test/revamp/goldens/usage_budget_reached_light.png	T5	:feature:usage
+golden	gallery-o50	product	test/revamp/goldens/usage_range_picker_dark.png	T5	:feature:usage
+golden	gallery-o50	product	test/revamp/goldens/usage_range_picker_light.png	T5	:feature:usage
+golden	gallery-o50	product	test/revamp/goldens/usage_stats_empty_dark.png	T5	:feature:usage
+golden	gallery-o50	product	test/revamp/goldens/usage_stats_empty_light.png	T5	:feature:usage
+golden	gallery-o50	product	test/revamp/goldens/usage_stats_loaded_1280x800_dark.png	T5	:feature:usage
+golden	gallery-o50	product	test/revamp/goldens/usage_stats_loaded_1280x800_light.png	T5	:feature:usage
+golden	gallery-o50	product	test/revamp/goldens/usage_stats_loaded_dark.png	T5	:feature:usage
+golden	gallery-o50	product	test/revamp/goldens/usage_stats_loaded_light.png	T5	:feature:usage
+golden	gallery-o50	product	test/revamp/goldens/usage_stats_models_dark.png	T5	:feature:usage
+golden	gallery-o50	product	test/revamp/goldens/usage_stats_models_light.png	T5	:feature:usage
+golden	gallery-o50	product	test/revamp/goldens/usage_stats_unsupported_dark.png	T5	:feature:usage
+golden	gallery-o50	product	test/revamp/goldens/usage_stats_unsupported_light.png	T5	:feature:usage

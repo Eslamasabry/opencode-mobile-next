@@ -1,0 +1,14 @@
+# kind	id	ref	path_or_class	tier_or_role_or_ownership	gradle_module
+part	part-states_parts	product	lib/ui/kit/scenes/states_parts.dart	own:logic	:ui:kit
+part	part-states_scenes	product	lib/ui/kit/scenes/states_scenes.dart	own:logic	:ui:kit
+part	part-states_working_scene	product	lib/ui/kit/scenes/states_working_scene.dart	own:logic	:ui:kit
+part	part-team_discover_scenes	product	lib/ui/kit/scenes/team_discover_scenes.dart	own:logic	:ui:kit
+part	part-team_scenes	product	lib/ui/kit/scenes/team_scenes.dart	own:logic	:ui:kit
+golden	gallery-o30	product	test/goldens/kit/kit_scenes_states_dark.png	T4	:ui:kit
+golden	gallery-o30	product	test/goldens/kit/kit_scenes_states_light.png	T4	:ui:kit
+golden	gallery-o30	product	test/goldens/kit/kit_scenes_team_dark.png	T4	:ui:kit
+golden	gallery-o30	product	test/goldens/kit/kit_scenes_team_discover_dark.png	T4	:ui:kit
+golden	gallery-o30	product	test/goldens/kit/kit_scenes_team_discover_light.png	T4	:ui:kit
+golden	gallery-o30	product	test/goldens/kit/kit_scenes_team_light.png	T4	:ui:kit
+golden	gallery-o30	product	test/goldens/kit/kit_scenes_working_dark.png	T4	:ui:kit
+golden	gallery-o30	product	test/goldens/kit/kit_scenes_working_light.png	T4	:ui:kit

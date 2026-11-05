@@ -1,0 +1,14 @@
+# kind	id	ref	path_or_class	tier_or_role_or_ownership	gradle_module
+part	part-kit_surface_paint	product	lib/ui/kit/kit_surface_paint.dart	fold:logic	:ui:kit
+part	part-kit_system_bars	product	lib/ui/kit/kit_system_bars.dart	own:logic	:ui:kit
+part	part-kit_task_sheet	product	lib/ui/kit/kit_task_sheet.dart	own:visual	:ui:kit
+cap	part-kit_task_sheet	-	showKitTaskSheet	sheet	:ui:kit
+part	part-kit_terminal_links	product	lib/ui/kit/kit_terminal_links.dart	own:logic	:ui:kit-content
+cap	part-kit_terminal_links	-	showKitTerminalLinkSheet	sheet	:ui:kit-content
+part	part-kit_text_halo	product	lib/ui/kit/kit_text_halo.dart	own:logic	:ui:kit
+cap	part-kit_text_halo	-	KitTextHalo	wrapper	:ui:kit
+part	part-kit_top_bar_centred	product	lib/ui/kit/kit_top_bar_centred.dart	fold:visual	:ui:kit
+part	part-kit_top_bar_pill	product	lib/ui/kit/kit_top_bar_pill.dart	own:visual	:ui:kit-chat
+part	part-kit_top_bar_scope	product	lib/ui/kit/kit_top_bar_scope.dart	fold:visual	:ui:kit
+part	part-kit_top_bar_tail	product	lib/ui/kit/kit_top_bar_tail.dart	fold:visual	:ui:kit
+part	part-kit_vector_logo	product	lib/ui/kit/kit_vector_logo.dart	own:visual	:ui:kit

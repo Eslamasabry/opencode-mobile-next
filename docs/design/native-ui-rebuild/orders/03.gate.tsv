@@ -1,0 +1,14 @@
+# kind	id	ref	path_or_class	tier_or_role_or_ownership	gradle_module
+part	part-kit_page_transitions	product	lib/ui/kit/motion/kit_page_transitions.dart	own:visual	:ui:kit
+part	part-kit_refresh	product	lib/ui/kit/motion/kit_refresh.dart	own:visual	:ui:kit
+cap	part-kit_refresh	-	KitRefresh	wrapper	:ui:kit
+part	part-kit_reveal	product	lib/ui/kit/motion/kit_reveal.dart	own:visual	:ui:kit
+cap	part-kit_reveal	-	KitEntrance	wrapper	:ui:kit
+cap	part-kit_reveal	-	KitReveal	wrapper	:ui:kit
+part	part-kit_signal_slip	product	lib/ui/kit/style/kit_signal_slip.dart	own:visual	:ui:kit
+part	part-kit_style	product	lib/ui/kit/style/kit_style.dart	own:logic	:ui:design
+part	part-kit_style_brutal	product	lib/ui/kit/style/kit_style_brutal.dart	own:logic	:ui:design
+part	part-kit_style_paper	product	lib/ui/kit/style/kit_style_paper.dart	own:logic	:ui:design
+part	part-kit_style_signal	product	lib/ui/kit/style/kit_style_signal.dart	own:logic	:ui:design
+part	part-kit_style_soft	product	lib/ui/kit/style/kit_style_soft.dart	own:logic	:ui:design
+part	part-kit_style_solid	product	lib/ui/kit/style/kit_style_solid.dart	own:logic	:ui:design

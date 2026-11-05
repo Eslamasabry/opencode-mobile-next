@@ -1,0 +1,14 @@
+# kind	id	ref	path_or_class	tier_or_role_or_ownership	gradle_module
+part	part-kit_lead_column	product	lib/ui/kit/kit_lead_column.dart	fold:logic	:ui:kit
+cap	part-kit_lead_column	-	KitLeadColumn	wrapper	:ui:kit
+part	part-kit_link_scope	product	lib/ui/kit/kit_link_scope.dart	own:logic	:ui:kit
+cap	part-kit_link_scope	-	KitLinkScope	scope	:ui:kit
+part	part-kit_log_panel_tools	product	lib/ui/kit/kit_log_panel_tools.dart	fold:visual	:ui:kit
+part	part-kit_max_width	product	lib/ui/kit/kit_max_width.dart	own:visual	:ui:design
+part	part-kit_optical	product	lib/ui/kit/kit_optical.dart	own:logic	:ui:kit
+part	part-kit_reach	product	lib/ui/kit/kit_reach.dart	own:visual	:ui:kit
+cap	part-kit_reach	-	KitReach	wrapper	:ui:kit
+part	part-kit_request_question	product	lib/ui/kit/kit_request_question.dart	fold:logic	:ui:kit
+part	part-kit_request_row	product	lib/ui/kit/kit_request_row.dart	fold:logic	:ui:kit
+part	part-kit_request_shape	product	lib/ui/kit/kit_request_shape.dart	fold:logic	:ui:kit
+part	part-kit_surface_look	product	lib/ui/kit/kit_surface_look.dart	fold:visual	:ui:kit

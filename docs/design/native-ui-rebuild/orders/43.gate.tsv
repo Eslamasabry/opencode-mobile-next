@@ -1,0 +1,17 @@
+# kind	id	ref	path_or_class	tier_or_role_or_ownership	gradle_module
+golden	gallery-o43	product	test/goldens/chat_approval_ask_dark.png	T5	:feature:chat-composer
+golden	gallery-o43	product	test/goldens/chat_approval_ask_light.png	T5	:feature:chat-composer
+golden	gallery-o43	product	test/goldens/chat_approval_auto_dark.png	T5	:feature:chat-composer
+golden	gallery-o43	product	test/goldens/chat_approval_auto_light.png	T5	:feature:chat-composer
+golden	gallery-o43	product	test/goldens/chat_approval_confirm_dark.png	T5	:feature:chat-composer
+golden	gallery-o43	product	test/goldens/chat_approval_confirm_light.png	T5	:feature:chat-composer
+golden	gallery-o43	product	test/goldens/chat_approval_everything_dark.png	T5	:feature:chat-composer
+golden	gallery-o43	product	test/goldens/chat_approval_everything_light.png	T5	:feature:chat-composer
+golden	gallery-o43	product	test/goldens/chat_approval_plus_dark.png	T5	:feature:chat-composer
+golden	gallery-o43	product	test/goldens/chat_approval_plus_light.png	T5	:feature:chat-composer
+golden	gallery-o43	product	test/goldens/chat_approval_sheet_ask_dark.png	T5	:feature:chat-composer
+golden	gallery-o43	product	test/goldens/chat_approval_sheet_ask_light.png	T5	:feature:chat-composer
+golden	gallery-o43	product	test/goldens/chat_approval_sheet_auto_dark.png	T5	:feature:chat-composer
+golden	gallery-o43	product	test/goldens/chat_approval_sheet_auto_light.png	T5	:feature:chat-composer
+golden	gallery-o43	product	test/goldens/chat_approval_sheet_everything_dark.png	T5	:feature:chat-composer
+golden	gallery-o43	product	test/goldens/chat_approval_sheet_everything_light.png	T5	:feature:chat-composer

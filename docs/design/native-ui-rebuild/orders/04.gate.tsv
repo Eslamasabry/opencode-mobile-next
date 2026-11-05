@@ -1,0 +1,2 @@
+# kind	id	ref	path_or_class	tier_or_role_or_ownership	gradle_module
+part	part-kit_style_theme	product	lib/ui/kit/style/kit_style_theme.dart	own:visual	:ui:kit

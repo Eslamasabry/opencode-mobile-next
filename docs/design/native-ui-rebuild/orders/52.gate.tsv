@@ -1,0 +1,13 @@
+# kind	id	ref	path_or_class	tier_or_role_or_ownership	gradle_module
+golden	gallery-o52	product	test/goldens/widget_overlay_after_reply_dark.png	T5	:feature:widget-panels
+golden	gallery-o52	product	test/goldens/widget_overlay_after_reply_light.png	T5	:feature:widget-panels
+golden	gallery-o52	product	test/goldens/widget_overlay_configure_dark.png	T5	:feature:widget-panels
+golden	gallery-o52	product	test/goldens/widget_overlay_configure_light.png	T5	:feature:widget-panels
+golden	gallery-o52	product	test/goldens/widget_overlay_failed_dark.png	T5	:feature:widget-panels
+golden	gallery-o52	product	test/goldens/widget_overlay_failed_light.png	T5	:feature:widget-panels
+golden	gallery-o52	product	test/goldens/widget_overlay_project_dark.png	T5	:feature:widget-panels
+golden	gallery-o52	product	test/goldens/widget_overlay_project_light.png	T5	:feature:widget-panels
+golden	gallery-o52	product	test/goldens/widget_overlay_steer_dark.png	T5	:feature:widget-panels
+golden	gallery-o52	product	test/goldens/widget_overlay_steer_light.png	T5	:feature:widget-panels
+golden	gallery-o52	product	test/goldens/widget_overlay_voice_dark.png	T5	:feature:widget-panels
+golden	gallery-o52	product	test/goldens/widget_overlay_voice_light.png	T5	:feature:widget-panels

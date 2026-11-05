@@ -1,0 +1,10 @@
+# kind	id	ref	path_or_class	tier_or_role_or_ownership	gradle_module
+part	part-kit_live_oscilloscope	product	lib/ui/kit/live_background/styles/kit_live_oscilloscope.dart	own:logic	:ui:kit
+golden	part-kit_live_oscilloscope	product	test/goldens/live_styles/kit_live_oscilloscope_dark.png	T4	:ui:kit
+part	part-kit_live_radar	product	lib/ui/kit/live_background/styles/kit_live_radar.dart	own:logic	:ui:kit
+golden	part-kit_live_radar	product	test/goldens/live_styles/kit_live_radar_dark.png	T4	:ui:kit
+part	part-kit_live_silk	product	lib/ui/kit/live_background/styles/kit_live_silk.dart	own:logic	:ui:kit
+golden	part-kit_live_silk	product	test/goldens/live_styles/kit_live_silk_dark.png	T4	:ui:kit
+part	part-kit_live_support	product	lib/ui/kit/live_background/styles/kit_live_support.dart	own:logic	:ui:kit
+part	part-kit_live_toolkit	product	lib/ui/kit/live_background/styles/kit_live_toolkit.dart	own:logic	:ui:kit
+part	part-kit_live_topo	product	lib/ui/kit/live_background/styles/kit_live_topo.dart	own:logic	:ui:kit

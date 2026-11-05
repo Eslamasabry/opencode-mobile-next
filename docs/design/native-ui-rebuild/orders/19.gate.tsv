@@ -1,0 +1,3 @@
+# kind	id	ref	path_or_class	tier_or_role_or_ownership	gradle_module
+part	part-kit_viewer_content	product	lib/ui/kit/kit_viewer_content.dart	own:logic	:ui:kit-content
+part	part-terminal_key_bar	product	lib/ui/kit/terminal_key_bar.dart	own:visual	:ui:kit-content

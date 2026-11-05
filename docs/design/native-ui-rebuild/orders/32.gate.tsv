@@ -1,0 +1,14 @@
+# kind	id	ref	path_or_class	tier_or_role_or_ownership	gradle_module
+part	part-kit_live_constellation	product	lib/ui/kit/live_background/styles/kit_live_constellation.dart	own:logic	:ui:kit
+part	part-kit_live_dot_ripple	product	lib/ui/kit/live_background/styles/kit_live_dot_ripple.dart	own:logic	:ui:kit
+part	part-kit_live_flow_threads	product	lib/ui/kit/live_background/styles/kit_live_flow_threads.dart	own:logic	:ui:kit
+part	part-kit_live_glow_spill	product	lib/ui/kit/live_background/styles/kit_live_glow_spill.dart	own:logic	:ui:kit
+part	part-kit_live_halftone	product	lib/ui/kit/live_background/styles/kit_live_halftone.dart	own:logic	:ui:kit
+part	part-kit_live_honeycomb	product	lib/ui/kit/live_background/styles/kit_live_honeycomb.dart	own:logic	:ui:kit
+golden	part-kit_live_honeycomb	product	test/goldens/live_styles/kit_live_honeycomb_dark.png	T4	:ui:kit
+golden	part-kit_live_honeycomb	product	test/goldens/live_styles/kit_live_honeycomb_light.png	T4	:ui:kit
+part	part-kit_live_light_rays	product	lib/ui/kit/live_background/styles/kit_live_light_rays.dart	own:logic	:ui:kit
+part	part-kit_live_liquid_blobs	product	lib/ui/kit/live_background/styles/kit_live_liquid_blobs.dart	own:logic	:ui:kit
+part	part-kit_live_matrix_rain	product	lib/ui/kit/live_background/styles/kit_live_matrix_rain.dart	own:logic	:ui:kit
+golden	part-kit_live_matrix_rain	product	test/goldens/live_styles/kit_live_matrixrain_dark.png	T4	:ui:kit
+part	part-kit_live_mesh	product	lib/ui/kit/live_background/styles/kit_live_mesh.dart	own:logic	:ui:kit

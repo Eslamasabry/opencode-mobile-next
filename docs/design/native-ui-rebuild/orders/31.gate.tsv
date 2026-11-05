@@ -1,0 +1,17 @@
+# kind	id	ref	path_or_class	tier_or_role_or_ownership	gradle_module
+part	part-kit_live_clock	product	lib/ui/kit/live_background/kit_live_clock.dart	own:logic	:ui:kit
+part	part-kit_live_style	product	lib/ui/kit/live_background/kit_live_style.dart	own:logic	:ui:kit
+part	part-kit_live_styles	product	lib/ui/kit/live_background/kit_live_styles.dart	own:logic	:ui:kit
+part	part-live_mock_chat	product	lib/ui/kit/live_background/live_mock_chat.dart	own:logic	:ui:kit
+part	part-kit_live_aurora	product	lib/ui/kit/live_background/styles/kit_live_aurora.dart	own:logic	:ui:kit
+part	part-kit_live_blueprint	product	lib/ui/kit/live_background/styles/kit_live_blueprint.dart	own:logic	:ui:kit
+golden	part-kit_live_blueprint	product	test/goldens/live_styles/kit_live_blueprint_dark.png	T4	:ui:kit
+part	part-kit_live_bokeh	product	lib/ui/kit/live_background/styles/kit_live_bokeh.dart	own:logic	:ui:kit
+golden	part-kit_live_bokeh	product	test/goldens/live_styles/kit_live_bokeh_dark.png	T4	:ui:kit
+part	part-kit_live_brushed_metal	product	lib/ui/kit/live_background/styles/kit_live_brushed_metal.dart	own:logic	:ui:kit
+golden	part-kit_live_brushed_metal	product	test/goldens/live_styles/kit_live_brushedmetal_dark.png	T4	:ui:kit
+part	part-kit_live_caustics	product	lib/ui/kit/live_background/styles/kit_live_caustics.dart	own:logic	:ui:kit
+golden	part-kit_live_caustics	product	test/goldens/live_styles/kit_live_caustics_dark.png	T4	:ui:kit
+part	part-kit_live_circuit	product	lib/ui/kit/live_background/styles/kit_live_circuit.dart	own:logic	:ui:kit
+golden	part-kit_live_circuit	product	test/goldens/live_styles/kit_live_circuit_dark.png	T4	:ui:kit
+golden	part-kit_live_circuit	product	test/goldens/live_styles/kit_live_circuit_light.png	T4	:ui:kit
