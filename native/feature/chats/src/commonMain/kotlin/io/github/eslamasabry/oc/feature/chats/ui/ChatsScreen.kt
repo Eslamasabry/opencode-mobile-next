@@ -156,6 +156,7 @@ public fun ChatsScreen(
         if (state.updateReady) add(KitLineAction(updateLabel, actions::openUpdate, icon = KitIcons.systemDownload))
         if (state.settingsAvailable) add(KitLineAction(settingsLabel, actions::openSettings, icon = KitIcons.settingsGear))
     }
+    val briefKeys = state.brief?.rows.orEmpty().mapTo(hashSetOf()) { it.key }
     KitScreen(
         topBar = {
             KitTopBar(
@@ -241,8 +242,8 @@ public fun ChatsScreen(
                         )
                     }
                 ChatsPhase.List -> {
-                    val today = state.today
-                    val earlier = state.earlier
+                    val today = state.today.filterNot { it.key in briefKeys }
+                    val earlier = state.earlier.filterNot { it.key in briefKeys }
                     if (today.isNotEmpty()) {
                         item(key = "today") {
                             KitSectionLabel(stringResource(Res.string.chatsHomeToday))
