@@ -59,3 +59,5 @@ kit_search_field_typing_dark	DEPENDS_ON 05	part-kit_icon_button explicit 20 dp c
 kit_search_field_typing_text2_1280x800_dark	DEPENDS_ON 07	part-kit_buttons wide Filter typography/scaling (07); clear icon size override from part-kit_icon_button (05) also pending
 kit_search_field_typing_text2_1280x800_light	DEPENDS_ON 07	part-kit_buttons wide Filter typography/scaling (07); clear icon size override from part-kit_icon_button (05) also pending
 kit_search_field_typing_text2_dark	DEPENDS_ON 05	part-kit_icon_button explicit 20 dp clear/filter glyphs and selected filter ink API (order 05)
+kit_key_value_default_text2_dark	DEPENDS_ON 01b	part-kit_text / KitTypography body baseline and leading at 2x (order 01b follow-up item 3); KitKeyValue row geometry and wrapping match
+kit_key_value_default_text2_1280x800_dark	DEPENDS_ON 01b	part-kit_text / KitTypography body baseline and leading at 2x (order 01b follow-up item 3); KitKeyValue row geometry and wrapping match
