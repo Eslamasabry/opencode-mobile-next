@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate
 import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate.Frame
 import io.github.eslamasabry.oc.ui.kit.KitAction
+import io.github.eslamasabry.oc.ui.kit.redacted
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
@@ -24,7 +25,7 @@ class KitConfirmSheetGateTest {
                 consequences = listOf(if (arabic) "ستُحذف 3 رسائل في قائمة الانتظار" else "3 queued prompts will be deleted"),
                 typedName = "fox",
                 alternative = KitAction(if (arabic) "تصدير أولًا" else "Export first", onClick = {}),
-                details = listOf(KitTechnicalValue("Path", "/home/dev/code/.worktrees/fox")),
+                details = listOf(KitTechnicalValue("Path", redacted("/home/dev/code/.worktrees/fox"))),
             ),
             onConfirm = {},
             onCancel = {},
