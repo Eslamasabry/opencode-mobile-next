@@ -8,6 +8,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
+import io.github.eslamasabry.oc.ui.words.res.serverEditorMoreOptions
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -103,6 +109,7 @@ public fun LinuxHomeScreen(
     tools: io.github.eslamasabry.oc.feature.linux.presentation.LinuxToolsPanelUi? = null,
     toolsActions: io.github.eslamasabry.oc.feature.linux.presentation.LinuxToolsActions? = null,
 ) {
+    var moreOpen by remember { mutableStateOf(false) }
     LifecycleStartEffect(actions) {
         actions.shown(true)
         onStopOrDispose { actions.shown(false) }
@@ -224,40 +231,8 @@ public fun LinuxHomeScreen(
             val vitals = state.vitals
             if (state.ready && vitals != null) LinuxVitalsPanel(vitals) { actions.open(LinuxPage.Running) }
             LinuxJobPanel(state.job, actions::askStopJob, actions::dismissJob)
-            if (presence != null && presence != LinuxPresence.NotOnThisBuild) {
-                if (state.ready) LinuxIdlePanel(state, actions)
-                LinuxSetupPanel(state, actions, toolsActions?.let { it::openAppSettings })
-                if (tools != null && toolsActions != null)
-                    LinuxToolsPanel(
-                        tools,
-                        toolsActions,
-                        busy =
-                            state.working ||
-                                state.job.running ||
-                                state.setup.state ==
-                                    io.github.eslamasabry.oc.engine.runtime.setup.SetupState
-                                        .Running,
-                    )
-                if (state.ready) LinuxComponentsPanel(state, actions)
-                LinuxLocalStoragePanel(state, actions)
-                LinuxLifetimesPanel(state.lifetimes, actions::refreshLifetimes)
-            }
             if (state.ready) {
                 KitRowGroup(leadingTiles = true) {
-                    PageRow(
-                        stringResource(Res.string.keptSvcTitle),
-                        stringResource(Res.string.keptSvcKeepsRunning),
-                        icon = KitIcons.heartbeat,
-                    ) {
-                        actions.open(LinuxPage.KeptServices)
-                    }
-                    PageRow(
-                        stringResource(Res.string.linuxBackupRow),
-                        stringResource(Res.string.linuxBackupSetupProjectsDetail),
-                        icon = KitIcons.zip,
-                    ) {
-                        actions.open(LinuxPage.Backups)
-                    }
                     PageRow(
                         stringResource(Res.string.linuxMgrRunning),
                         stringResource(Res.string.linuxMgrRunningDetail),
@@ -301,6 +276,38 @@ public fun LinuxHomeScreen(
                         supportingMaxLines = 2,
                         onClick = actions::askReset,
                     )
+                }
+            }
+            if (presence != null && presence != LinuxPresence.NotOnThisBuild) {
+                if (!state.ready) {
+                    LinuxSetupPanel(state, actions, toolsActions?.let { it::openAppSettings })
+                    LinuxLocalStoragePanel(state, actions)
+                } else KitExpandRow(stringResource(Res.string.serverEditorMoreOptions), moreOpen,
+                    onExpandedChange = { moreOpen = it }) {
+                    LinuxIdlePanel(state, actions)
+                    LinuxSetupPanel(state, actions, toolsActions?.let { it::openAppSettings })
+                    if (tools != null && toolsActions != null)
+                        LinuxToolsPanel(tools, toolsActions, busy = state.working || state.job.running ||
+                            state.setup.state == io.github.eslamasabry.oc.engine.runtime.setup.SetupState.Running)
+                    LinuxComponentsPanel(state, actions)
+                    LinuxLocalStoragePanel(state, actions)
+                    LinuxLifetimesPanel(state.lifetimes, actions::refreshLifetimes)
+                    KitRowGroup(leadingTiles = true) {
+                    PageRow(
+                        stringResource(Res.string.keptSvcTitle),
+                        stringResource(Res.string.keptSvcKeepsRunning),
+                        icon = KitIcons.heartbeat,
+                    ) {
+                        actions.open(LinuxPage.KeptServices)
+                    }
+                    PageRow(
+                        stringResource(Res.string.linuxBackupRow),
+                        stringResource(Res.string.linuxBackupSetupProjectsDetail),
+                        icon = KitIcons.zip,
+                    ) {
+                        actions.open(LinuxPage.Backups)
+                    }
+                    }
                 }
             }
         }
