@@ -81,7 +81,7 @@ public fun KitGuideRail(
                                 role = TypeRole.Secondary,
                                 tone = if (item.held) TextTone.Tertiary else TextTone.Secondary,
                                 maxLines = 2,
-                            ) // F: lib/ui/kit/kit_guide.dart:311
+                            ) // F: lib/ui/kit/kit_guide.dart:304
                         }
                         if (item.next) GuideDot()
                         Spacer(Modifier.width(Space.S1.dp))

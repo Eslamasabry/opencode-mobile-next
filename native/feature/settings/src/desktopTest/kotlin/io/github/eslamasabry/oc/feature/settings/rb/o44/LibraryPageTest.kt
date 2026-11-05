@@ -21,9 +21,17 @@ class LibraryPageTest {
         Proxy.newProxyInstance(
             LibraryActions::class.java.classLoader,
             arrayOf(LibraryActions::class.java),
-        ) { _, method, args ->
-            calls += method.name to args?.toList().orEmpty()
-            null
+        ) { proxy, method, args ->
+            when (method.name) {
+                "equals" -> proxy === args?.getOrNull(0)
+                "hashCode" -> System.identityHashCode(proxy)
+                "toString" -> "TestActions"
+                else -> {
+
+                    calls += method.name to args?.toList().orEmpty()
+                    null
+                }
+            }
         } as LibraryActions
 
     @Test
@@ -37,7 +45,8 @@ class LibraryPageTest {
                     inventory =
                         LibraryInventory(loading = false, commands = persistentListOf(command)),
                 )
-            setContent { SettingsThemed { LibraryScreen(state, actions()) } }
+            val actions = actions()
+            setContent { SettingsThemed { LibraryScreen(state, actions) } }
             onNodeWithText("Pick a command, then the conversation it runs in").assertExists()
             onNodeWithText("/review · Runs with plan").assertExists()
             onNodeWithTag("library-command-review").performClick()
@@ -55,7 +64,8 @@ class LibraryPageTest {
                 inventory =
                     LibraryInventory(loading = false, references = persistentListOf(reference)),
             )
-        setContent { SettingsThemed { LibraryScreen(state, actions()) } }
+        val actions = actions()
+        setContent { SettingsThemed { LibraryScreen(state, actions) } }
         onNodeWithTag("library-reference-docs").performClick()
         assertEquals(listOf("addReference" to listOf(reference)), calls)
     }
@@ -69,7 +79,8 @@ class LibraryPageTest {
                 inventory =
                     LibraryInventory(loading = false, failedSections = persistentSetOf("skills")),
             )
-        setContent { SettingsThemed { LibraryScreen(state, actions()) } }
+        val actions = actions()
+        setContent { SettingsThemed { LibraryScreen(state, actions) } }
         onNodeWithText("No skills available").assertDoesNotExist()
     }
 }

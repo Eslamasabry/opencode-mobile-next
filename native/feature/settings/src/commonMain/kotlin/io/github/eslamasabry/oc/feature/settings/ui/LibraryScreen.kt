@@ -159,7 +159,7 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                                     modifier = Modifier.testTag("library-command-${command.name}"),
                                     supporting = libraryCommandSupporting(command),
                                     supportingMaxLines =
-                                        2, // F: lib/ui/screens/library/skills_screen.dart:176
+                                        2, // F: lib/ui/widgets/command_sheet.dart:663
                                     trailing = KitRowTrailing.None,
                                     onClick = { actions.show(LibrarySheet.Command(command)) },
                                 )
