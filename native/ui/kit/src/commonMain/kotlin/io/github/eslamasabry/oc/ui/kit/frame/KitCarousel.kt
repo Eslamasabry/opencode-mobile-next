@@ -87,8 +87,8 @@ public fun KitCarousel(
                     }
                 }
             } else {
-                val track = (Space.S6 * 3).dp
-                val bar = track / itemCount * 2
+                val track = (Space.S6 * 3).dp // F: lib/ui/kit/kit_carousel.dart:138
+                val bar = track / itemCount * 2 // F: lib/ui/kit/kit_carousel.dart:139
                 val t = if (itemCount <= 1) 0f else nearest.toFloat() / (itemCount - 1)
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
                     Box(Modifier.width(track).height(Space.S2.dp).background(colors.surface3, RoundedCornerShape(Space.S2.dp))) {
@@ -105,8 +105,8 @@ public fun KitCarousel(
 
 public object KitCarouselRules {
     /** More cards than this show the place as a bar, not dots. */
-    public const val DOTS_UP_TO: Int = 8
+    public const val DOTS_UP_TO: Int = 8 // F: lib/ui/kit/kit_carousel.dart:64
 
     /** How much of the width one card takes (the rest shows the next). */
-    public const val CARD_SHARE: Float = .62f
+    public const val CARD_SHARE: Float = .62f // F: lib/ui/kit/kit_carousel.dart:67
 }
