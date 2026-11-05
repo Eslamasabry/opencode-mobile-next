@@ -123,7 +123,7 @@ class ServersGateTest {
                 ServersScreen(state.copy(rows = state.rows.copy(facts = facts)), Actions())
             }
         }
-        onNodeWithTag("kit-row-state").assertTextEquals("Needs you")
+        onNodeWithTag("kit-row-state", useUnmergedTree = true).assertTextEquals("Needs you")
     }
 
     @Test
