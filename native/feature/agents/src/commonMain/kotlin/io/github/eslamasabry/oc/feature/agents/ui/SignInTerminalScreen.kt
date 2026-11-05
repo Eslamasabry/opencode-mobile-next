@@ -65,6 +65,10 @@ import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.libraryTerminalTitle
 import io.github.eslamasabry.oc.ui.words.res.localTerminalStarting
+import io.github.eslamasabry.oc.ui.words.res.localTerminalFailedTitle
+import io.github.eslamasabry.oc.ui.words.res.localTerminalFailedBody
+import io.github.eslamasabry.oc.ui.words.res.agentsSignInStart
+import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.terminalScreenReadableMode
 import org.jetbrains.compose.resources.stringResource
 
@@ -103,8 +107,10 @@ public fun SignInTerminalScreen(
             Modifier.fillMaxSize().padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
         ) {
-            if (state.stopFailed) KitNotice(stringResource(Res.string.agentsSignInStopFailed))
-            when (state.step) {
+            if (state.stopFailed) {
+                KitStateView(KitStateKind.Error, stringResource(Res.string.agentsSignInStopFailed),
+                    primary = KitAction(stringResource(Res.string.commonRetry), actions::startAgain))
+            } else when (state.step) {
                 SignInStep.Preparing,
                 SignInStep.Starting -> Unit
                 SignInStep.Running -> Running(state, actions, Modifier.weight(1f))
@@ -126,7 +132,7 @@ public fun SignInTerminalScreen(
                         stringResource(Res.string.agentsSignInTerminalNotYet, state.agentName),
                         primary =
                             KitAction(
-                                stringResource(Res.string.agentsSignInAgain),
+                                stringResource(Res.string.agentsSignInStart, state.agentName),
                                 actions::startAgain,
                             ),
                     )
@@ -136,14 +142,15 @@ public fun SignInTerminalScreen(
                         if (state.step == SignInStep.NotificationsBlocked) {
                             stringResource(Res.string.kitCapPermNotificationsWhy)
                         } else {
-                            stringResource(Res.string.agentsSignInFailed)
+                            stringResource(Res.string.localTerminalFailedTitle)
                         }
                     KitStateView(
                         KitStateKind.Error,
                         title,
+                        body = if (state.step == SignInStep.Failed) stringResource(Res.string.localTerminalFailedBody) else null,
                         primary =
                             KitAction(
-                                stringResource(Res.string.agentsSignInAgain),
+                                stringResource(Res.string.agentsSignInStart, state.agentName),
                                 actions::startAgain,
                             ),
                     )
