@@ -21,7 +21,7 @@ class KitTipGateTest {
     private val scene: @Composable () -> Unit = {
         Box(Modifier.fillMaxSize().padding(top = 320.dp, start = 24.dp, end = 24.dp, bottom = 24.dp)) {
             Box(Modifier.align(Alignment.CenterEnd)) {
-                KitIconButton(KitIcons.stopCircle, "Stop", onClick = {})
+                Box(Modifier.align(Alignment.CenterEnd)) { KitIconButton(KitIcons.stopCircle, "Stop", onClick = {}) }
                 KitTipBubble(
                     "Hold to stop after this step",
                     Modifier.align(Alignment.TopEnd).layout { m, c ->
