@@ -572,6 +572,15 @@ public fun ChatScreen(
                                         reveal = reveal,
                                         motion = motion,
                                         onOpenMenu = actions::openMessageMenu,
+                                        onCopyReply = { footer ->
+                                            actions.messageAction(
+                                                io.github.eslamasabry.oc.feature.chat.presentation.MessageTarget(
+                                                    footer.turnId, footer.key,
+                                                    io.github.eslamasabry.oc.feature.chat.presentation.TargetKind.Reply, null,
+                                                ),
+                                                MessageAction.Copy,
+                                            )
+                                        },
                                         onRetrySend = actions::retrySend,
                                         receiptChecks = state.receiptChecks,
                                         onCheckReceipt = actions::checkReceipt,
