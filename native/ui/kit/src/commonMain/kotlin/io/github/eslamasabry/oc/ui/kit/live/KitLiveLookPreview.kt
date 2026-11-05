@@ -1,6 +1,8 @@
 package io.github.eslamasabry.oc.ui.kit.live
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -48,13 +50,13 @@ public fun KitLiveLookPreview(
         shape = KitShapeId.Card,
     ) {
         KitSurface(
-            modifier = Modifier.height(HEIGHT.dp).clearAndSetSemantics { },
+            modifier = Modifier.fillMaxWidth().height(HEIGHT.dp).clearAndSetSemantics { },
             level = SurfaceLevel.Ground,
             shape = KitShapeId.Card,
             padding = KitSurfacePadding.None,
             outlined = true,
         ) {
-            Box(Modifier.height(HEIGHT.dp), contentAlignment = Alignment.Center) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 KitSurface(
                     level = SurfaceLevel.Surface1,
                     shape = KitShapeId.Button,
