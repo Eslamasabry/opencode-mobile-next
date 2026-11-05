@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.ui.kit.state
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
+import androidx.compose.runtime.key
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -38,8 +39,11 @@ public fun KitProgressRow(title: String, value: Float?, modifier: Modifier = Mod
             KitText(words, role = TypeRole.Secondary, tone = TextTone.Secondary)
         }
         Spacer(Modifier.height(Space.S2.dp))
-        if (amount != null) KitProgressView(KitProgress.Known(amount), semanticsLabel = title,
-            tone = if (amount >= 1f) KitProgressTone.Failed else KitProgressTone.Moving) // F: lib/ui/kit/kit_progress_row.dart:136
+        if (amount != null) key(amount) {
+            // A quota may go down when a window resets; it is not a monotonically advancing job.
+            KitProgressView(KitProgress.Known(amount), semanticsLabel = title,
+                tone = if (amount >= 1f) KitProgressTone.Failed else KitProgressTone.Moving) // F: lib/ui/kit/kit_progress_row.dart:136
+        }
         else Canvas(Modifier.fillMaxWidth().height(tokens.progressBar.dp).semantics {
             progressBarRangeInfo = ProgressBarRangeInfo.Indeterminate
         }) { drawRoundRect(colors.surface3, cornerRadius = CornerRadius(size.height / 2)) } // NV: circular ends use half the track height
