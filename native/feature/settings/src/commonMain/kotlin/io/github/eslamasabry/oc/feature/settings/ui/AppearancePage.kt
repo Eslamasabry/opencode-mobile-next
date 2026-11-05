@@ -1,39 +1,44 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceQuestion
 import io.github.eslamasabry.oc.feature.settings.presentation.AppearanceUi
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
 import io.github.eslamasabry.oc.feature.settings.presentation.SurfaceStyle
 import io.github.eslamasabry.oc.ui.design.color.Accents
-import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Corners
+import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.design.text.AppTextSize
 import io.github.eslamasabry.oc.ui.design.tokens.Density
 import io.github.eslamasabry.oc.ui.design.tokens.Space
-import io.github.eslamasabry.oc.ui.kit.choice.KitChoice
-import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceList
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
+import io.github.eslamasabry.oc.ui.kit.choice.KitStyleOptionCard
 import io.github.eslamasabry.oc.ui.kit.choice.KitSwatch
 import io.github.eslamasabry.oc.ui.kit.choice.KitSwatchGrid
+import io.github.eslamasabry.oc.ui.kit.choice.KitThemeOptionCard
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
-import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
-import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
-import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
-import io.github.eslamasabry.oc.ui.kit.state.KitNotice
-import io.github.eslamasabry.oc.ui.kit.style.KitSignalSample
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -47,7 +52,6 @@ import io.github.eslamasabry.oc.ui.words.res.appearanceAskTheme
 import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneCorners
 import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneReset
 import io.github.eslamasabry.oc.ui.words.res.appearanceModeAutoNote
-import io.github.eslamasabry.oc.ui.words.res.appearancePickerThemeApplied
 import io.github.eslamasabry.oc.ui.words.res.appearanceSaverHoldsStyle
 import io.github.eslamasabry.oc.ui.words.res.appearanceSaverMotion
 import io.github.eslamasabry.oc.ui.words.res.appearanceSaverNote
@@ -55,47 +59,20 @@ import io.github.eslamasabry.oc.ui.words.res.appearanceSeeAllThemes
 import io.github.eslamasabry.oc.ui.words.res.appearanceShapeSpacing
 import io.github.eslamasabry.oc.ui.words.res.effectsMotionSystemOff
 import io.github.eslamasabry.oc.ui.words.res.kitSwatchInUse
-import io.github.eslamasabry.oc.ui.words.res.kitUndoAction
 import io.github.eslamasabry.oc.ui.words.res.textSizeTitle
 import org.jetbrains.compose.resources.stringResource
 
 /**
  * I04, one page (plan 06 K4): light or dark, the colour pack (most used first, "See all 31 themes"
  * for the rest), the five styles and Motion. A colour pack opens a contained preview with Apply and
- * then Undo (Material You applies at once); every other choice applies at once. Saver holds
- * Style and Motion and says so. Text size is the last question (B-KIT-059). Accent is a swatch grid
+ * then Undo (Material You applies at once); every other choice applies at once. Saver holds Style
+ * and Motion and says so. Text size is the last question (B-KIT-059). Accent is a swatch grid
  * (B-KIT-049) and Fine-tune is Corners and Spacing over the style's own (B-KIT-017). The guide asks
  * one question at a time and offers only the controls the host actually draws; its record retains
  * every migrated Flutter question.
  */
 @Composable
 internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActions) {
-    var preview by remember { mutableStateOf<PackId?>(null) }
-    var undo by remember { mutableStateOf<Pair<PackId, PackId>?>(null) }
-    preview?.let { pack ->
-        ThemePreviewSheet(pack, ui, { preview = null }) { selected ->
-            undo = ui.pack to selected
-            actions.onPack(selected)
-            preview = null
-        }
-    }
-    undo
-        ?.takeIf { ui.pack == it.second }
-        ?.let { (previous, applied) ->
-            KitNotice(
-                stringResource(Res.string.appearancePickerThemeApplied, packName(applied)),
-                actions =
-                    listOf(
-                        KitLineAction(
-                            stringResource(Res.string.kitUndoAction),
-                            {
-                                actions.onPack(previous)
-                                undo = null
-                            },
-                        )
-                    ),
-            )
-        }
     val gutter = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
 
     if (ui.guide != null) {
@@ -106,10 +83,24 @@ internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActio
         }
     }
     if (ui.question == null || ui.question == AppearanceQuestion.Mode) {
-        KitSectionLabel(stringResource(Res.string.appearanceAskMode))
+        AppearanceQuestionHeading(stringResource(Res.string.appearanceAskMode))
         Box(gutter) {
             KitSegmented(
-                segments = AppearanceMode.entries.map { KitSegment(it, modeWords(it)) },
+                segments =
+                    AppearanceMode.entries.map {
+                        KitSegment(
+                            it,
+                            modeWords(it),
+                            icon =
+                                when (it) {
+                                    AppearanceMode.System -> KitIcons.systemTheme
+                                    AppearanceMode.Light -> KitIcons.lightMode
+                                    AppearanceMode.Dark -> KitIcons.darkMode
+                                    AppearanceMode.Saver -> KitIcons.leaf
+                                },
+                        )
+                    },
+                tall = true,
                 selected = ui.mode,
                 semanticsLabel = stringResource(Res.string.appearanceAskMode),
                 modifier = Modifier.testTag("appearance-mode"),
@@ -124,26 +115,40 @@ internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActio
     }
 
     if (ui.question == null || ui.question == AppearanceQuestion.Theme) {
-        KitSectionLabel(stringResource(Res.string.appearanceAskTheme))
-        KitChoiceList(
-            choices = ui.packs.map { KitChoice(it, packName(it)) },
-            selected = ui.pack,
-            semanticsLabel = stringResource(Res.string.appearanceAskTheme),
-            modifier = Modifier.testTag("appearance-packs"),
-            // Material You has no contained preview (its colours come from the system), so it applies
-            // at once like before; every other pack is previewed first.
-            onSelect = { if (it == PackId.Dynamic) actions.onPack(it) else preview = it },
-        )
+        AppearanceQuestionHeading(stringResource(Res.string.appearanceAskTheme))
+        val guided = ui.question != null
+        val columns = if (guided) 2 else 3 // F: lib/ui/screens/settings/appearance_screen.dart:904
+        val base = if (guided) 84 else 64 // F: lib/ui/screens/settings/appearance_screen.dart:905
+        val scaleHeight =
+            30 * // F: lib/ui/screens/settings/appearance_screen.dart:905
+                LocalDensity.current
+                    .fontScale // F: lib/ui/screens/settings/appearance_screen.dart:905
+        val picks =
+            if (!guided && ui.seeAllCount > 0)
+                ui.packs.take(6) // F: lib/ui/screens/settings/appearance_screen.dart:896
+            else ui.packs // F: lib/ui/screens/settings/appearance_screen.dart:896
+        val shown = if (ui.pack in picks || picks.isEmpty()) picks else picks.dropLast(1) + ui.pack
+        Box(gutter) {
+            AppearanceGrid(shown, columns, (base + scaleHeight).dp) { pack ->
+                KitThemeOptionCard(
+                    pack = pack,
+                    label = packName(pack),
+                    selected = ui.pack == pack,
+                    onSelect = { actions.onPack(pack) },
+                    modifier = Modifier.testTag("appearance-pack-${pack.name}"),
+                )
+            }
+        }
         if (ui.seeAllCount > 0) {
-            KitRow(
-                title = stringResource(Res.string.appearanceSeeAllThemes, ui.seeAllCount),
-                modifier = Modifier.testTag("appearance-see-all"),
-                trailing = KitRowTrailing.Chevron,
-                onClick = actions::onSeeAllPacks,
+            KitButton(
+                stringResource(Res.string.appearanceSeeAllThemes, ui.seeAllCount),
+                actions::onSeeAllPacks,
+                gutter.padding(top = Space.S3.dp).testTag("appearance-see-all"),
+                role = KitButtonRole.Secondary,
             )
         }
 
-        KitSectionLabel(stringResource(Res.string.appearanceAskAccent))
+        AppearanceQuestionHeading(stringResource(Res.string.appearanceAskAccent))
         Box(gutter) {
             val dark = LocalKitColors.current.dark
             val inUse = stringResource(Res.string.kitSwatchInUse)
@@ -176,33 +181,32 @@ internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActio
     }
 
     if (ui.question == null || ui.question == AppearanceQuestion.Style) {
-        // A style the app does not draw would be a choice that changes nothing: listed only where it is
+        // A style the app does not draw would be a choice that changes nothing: listed only where
+        // it is
         // drawn.
         if (ui.styles) {
-            KitSectionLabel(stringResource(Res.string.appearanceAskStyle))
+            AppearanceQuestionHeading(stringResource(Res.string.appearanceAskStyle))
             val styleHeld =
                 if (ui.heldBySaver)
                     KitEnabled.Disabled(stringResource(Res.string.appearanceSaverHoldsStyle))
                 else KitEnabled.Enabled
-            KitChoiceList(
-                choices =
-                    // All five are drawn (the style resolver); the Signal sample below previews Signal.
-                    SurfaceStyle.entries.map {
-                        KitChoice(
-                            it,
-                            styleWords(it),
-                            enabled = if (it == ui.style) KitEnabled.Enabled else styleHeld,
-                        )
-                    },
-                selected = ui.style,
-                semanticsLabel = stringResource(Res.string.appearanceAskStyle),
-                modifier = Modifier.testTag("appearance-styles"),
-                onSelect = actions::onStyle,
-            )
-            KitSignalSample(modifier = gutter)
+            Box(gutter) {
+                val columns = 2 // F: lib/ui/screens/settings/appearance_screen.dart:973
+                AppearanceGrid(SurfaceStyle.entries, columns) { style ->
+                    KitStyleOptionCard(
+                        style = Style.valueOf(style.name),
+                        label = styleWords(style),
+                        selected = style == ui.style,
+                        enabled = styleHeld.isEnabled,
+                        disabledReason = styleHeld.reason,
+                        onSelect = { actions.onStyle(style) },
+                        modifier = Modifier.testTag("appearance-style-${style.name}"),
+                    )
+                }
+            }
             if (ui.heldBySaver) KitGroupNote(stringResource(Res.string.appearanceSaverHoldsStyle))
 
-            KitSectionLabel(stringResource(Res.string.appearanceAskShape))
+            AppearanceQuestionHeading(stringResource(Res.string.appearanceAskShape))
             val held =
                 if (ui.heldBySaver)
                     KitEnabled.Disabled(stringResource(Res.string.appearanceSaverHoldsStyle))
@@ -232,7 +236,8 @@ internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActio
             }
             if (ui.fineTuned && !ui.heldBySaver) {
                 KitRow(
-                    title = stringResource(Res.string.appearanceFineTuneReset, styleWords(ui.style)),
+                    title =
+                        stringResource(Res.string.appearanceFineTuneReset, styleWords(ui.style)),
                     modifier = Modifier.testTag("appearance-fine-tune-reset"),
                     onClick = actions::onResetFineTune,
                 )
@@ -240,8 +245,21 @@ internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActio
         }
     }
 
+    if (ui.question == null || ui.question == AppearanceQuestion.Text) {
+        // B-KIT-059: Default until chosen; applies at the app root at once, this page included.
+        AppearanceQuestionHeading(stringResource(Res.string.textSizeTitle))
+        Box(gutter) {
+            KitSegmented(
+                segments = AppTextSize.entries.map { KitSegment(it, textSizeWords(it)) },
+                selected = ui.textSize,
+                semanticsLabel = stringResource(Res.string.textSizeTitle),
+                modifier = Modifier.testTag("appearance-text-size"),
+                onChange = actions::onTextSize,
+            )
+        }
+    }
     if (ui.question == null || ui.question == AppearanceQuestion.Motion) {
-        KitSectionLabel(stringResource(Res.string.appearanceAskMotion))
+        AppearanceQuestionHeading(stringResource(Res.string.appearanceAskMotion))
         Box(gutter) {
             KitSegmented(
                 segments = MotionLevel.entries.map { KitSegment(it, motionWords(it)) },
@@ -259,18 +277,40 @@ internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActio
         if (ui.systemMotionOff) KitGroupNote(stringResource(Res.string.effectsMotionSystemOff))
     }
 
-    if (ui.question == null || ui.question == AppearanceQuestion.Text) {
-        // B-KIT-059: Default until chosen; applies at the app root at once, this page included.
-        KitSectionLabel(stringResource(Res.string.textSizeTitle))
-        Box(gutter) {
-            KitSegmented(
-                segments = AppTextSize.entries.map { KitSegment(it, textSizeWords(it)) },
-                selected = ui.textSize,
-                semanticsLabel = stringResource(Res.string.textSizeTitle),
-                modifier = Modifier.testTag("appearance-text-size"),
-                onChange = actions::onTextSize,
-            )
+    if (ui.guide != null) AppearanceGuideFooter(ui, actions)
+}
+
+/** The one-page question is a reading heading, not a muted section caption. */
+@Composable
+private fun AppearanceQuestionHeading(title: String) {
+    KitText(
+        title,
+        Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
+            .padding(top = Space.S6.dp, bottom = Space.S3.dp)
+            .semantics { heading() },
+        role = TypeRole.RowTitle,
+    )
+}
+
+@Composable
+private fun <T> AppearanceGrid(
+    choices: List<T>,
+    columns: Int,
+    cellHeight: Dp? = null,
+    cell: @Composable (T) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+        choices.chunked(columns).forEach { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+                for (index in 0 until columns) {
+                    Box(
+                        Modifier.weight(1f)
+                            .then(if (cellHeight != null) Modifier.height(cellHeight) else Modifier)
+                    ) {
+                        row.getOrNull(index)?.let { cell(it) }
+                    }
+                }
+            }
         }
     }
-    if (ui.guide != null) AppearanceGuideFooter(ui, actions)
 }
