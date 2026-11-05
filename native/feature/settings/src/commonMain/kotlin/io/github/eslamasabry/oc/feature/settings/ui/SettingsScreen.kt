@@ -220,8 +220,8 @@ public fun SettingsScreen(
                 actions,
                 modifier,
             ) {
-                PrivacyBody(state.privacy, actions)
                 state.localData?.let { LocalDataBody(it, actions) }
+                PrivacyBody(state.privacy, actions)
             }
         SettingsPage.WhatWeCollect ->
             SettingsFrame(PendingWords.WHAT_WE_COLLECT, back, state, actions, modifier) {
@@ -309,7 +309,10 @@ internal fun SettingsFrame(
         topBar = {
             KitTopBar(
                 title = title,
-                exit = if (onBack != null) KitTopBarExit.Back else KitTopBarExit.None,
+                exit =
+                    if (onBack != null && (state.stack.size > 1 || state.page == SettingsPage.Hub))
+                        KitTopBarExit.Back
+                    else KitTopBarExit.None,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = onBack,
                 large = large,

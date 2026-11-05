@@ -1,16 +1,28 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.settings.presentation.*
+import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
+import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.words.HandWords
 import io.github.eslamasabry.oc.ui.words.res.*
+import kotlin.math.roundToLong
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -18,12 +30,6 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Composable
 internal fun ColumnScope.LocalDataBody(ui: LocalDataUi, actions: SettingsActions) {
-    KitRowGroup {
-        KitRow(
-            title = stringResource(Res.string.keptPromptsTitle),
-            onClick = { actions.onOutside(SettingsOutside.KeptPrompts) },
-        )
-    }
     if (ui.failed) KitNotice(stringResource(Res.string.settings40_discard_failed))
     ui.result?.let { result ->
         KitNotice(
@@ -47,11 +53,20 @@ internal fun ColumnScope.LocalDataBody(ui: LocalDataUi, actions: SettingsActions
         KitRowGroup(label = stringResource(Res.string.privacySharedSection)) {
             KitRow(
                 title = stringResource(Res.string.shareSessionViewsTitle),
-                supporting =
-                    stringResource(
-                        Res.string.settingsV3SharingCount,
-                        facts.sharing,
-                        facts.servers.size,
+                leading = KitRowLeading.Glyph(KitIcons.visible),
+                trailing =
+                    KitRowTrailing.Value(
+                        if (facts.servers.size == 1)
+                            stringResource(
+                                if (facts.sharing == 1) Res.string.settingsV3On
+                                else Res.string.settingsV3Off
+                            )
+                        else
+                            stringResource(
+                                Res.string.settingsV3SharingCount,
+                                facts.sharing,
+                                facts.servers.size,
+                            )
                     ),
                 onClick = {
                     if (facts.servers.size == 1)
@@ -60,79 +75,96 @@ internal fun ColumnScope.LocalDataBody(ui: LocalDataUi, actions: SettingsActions
                 },
             )
         }
-    KitRowGroup(label = stringResource(Res.string.settings40_local_work)) {
+    Spacer(Modifier.height(Space.S6.dp))
+    KitRowGroup(label = stringResource(Res.string.e7SettingsUi76)) {
         KitRow(
-            title = stringResource(Res.string.settings40_queue_title),
+            title = stringResource(Res.string.e7SettingsUi77),
+            modifier = Modifier.testTag("local-storage-usage"),
+            leading = KitRowLeading.Glyph(KitIcons.storage),
             supporting =
-                if (facts.queueReadable)
-                    stringResource(
-                        Res.string.settings40_storage_size,
+                if (facts.queueReadable && facts.draftsReadable)
+                    HandWords.e7SettingsStorageSummaryText(
+                        localBytes(facts.queueBytes + facts.draftBytes),
                         facts.queued,
                         localBytes(facts.queueBytes),
+                        facts.drafts,
+                        localBytes(facts.draftBytes),
+                        14, // F: lib/state/offline_queue.dart:264
                     )
-                else stringResource(Res.string.settings40_storage_unknown),
-            supportingMaxLines = 3,
+                else stringResource(Res.string.queueStorageCountUnknown),
+            supportingMaxLines = 4, // F: lib/ui/screens/settings/personal_settings_screens.dart:197
         )
         KitRow(
-            title = stringResource(Res.string.settings40_discard_queue),
-            supporting = stringResource(Res.string.settings40_queue_keeps),
-            supportingMaxLines = 3,
+            title = stringResource(Res.string.e7SettingsUi78),
+            modifier = Modifier.testTag("clear-queued-prompts"),
+            leading = KitRowLeading.Glyph(KitIcons.outbox),
+            supporting =
+                when {
+                    !facts.queueReadable -> stringResource(Res.string.queueStorageUnreadable)
+                    facts.queued == 0 -> stringResource(Res.string.e7SettingsUi79)
+                    else ->
+                        pluralStringResource(
+                            Res.plurals.e7SettingsQueueDeleteSummary,
+                            facts.queued,
+                            facts.queued,
+                        )
+                },
+            supportingMaxLines = 2, // F: lib/ui/screens/settings/personal_settings_screens.dart:299
             enabled = !ui.busy && facts.queueReadable && facts.queued > 0,
             disabledReason =
                 stringResource(
                     when {
-                        ui.busy -> Res.string.settings40_discard_working
-                        !facts.queueReadable -> Res.string.settings40_storage_unknown
-                        else -> Res.string.settings40_queue_empty
+                        ui.busy -> Res.string.privacyDeleting
+                        !facts.queueReadable -> Res.string.queueStorageUnreadable
+                        else -> Res.string.e7SettingsUi79
                     }
                 ),
             onClick = { actions.onAskDiscard(LocalDataKind.Queue) },
         )
         KitRow(
-            title = stringResource(Res.string.settings40_drafts_title),
+            title = stringResource(Res.string.e7SettingsUi83),
+            modifier = Modifier.testTag("clear-session-drafts"),
+            leading = KitRowLeading.Glyph(KitIcons.editNote),
             supporting =
-                if (facts.draftsReadable)
-                    stringResource(
-                        Res.string.settings40_storage_size,
+                if (facts.drafts == 0) stringResource(Res.string.e7SettingsUi84)
+                else
+                    pluralStringResource(
+                        Res.plurals.e7SettingsDraftDeleteSummary,
                         facts.drafts,
-                        localBytes(facts.draftBytes),
-                    )
-                else stringResource(Res.string.settings40_storage_unknown),
-            supportingMaxLines = 3,
-        )
-        KitRow(
-            title = stringResource(Res.string.settings40_discard_drafts),
-            enabled =
-                !ui.busy && facts.draftsReadable && (facts.drafts > 0 || facts.draftBytes > 0),
+                        facts.drafts,
+                    ),
+            supportingMaxLines = 2, // F: lib/ui/screens/settings/personal_settings_screens.dart:299
+            enabled = !ui.busy && facts.draftsReadable && facts.drafts > 0,
             disabledReason =
                 stringResource(
-                    when {
-                        ui.busy -> Res.string.settings40_discard_working
-                        !facts.draftsReadable -> Res.string.settings40_storage_unknown
-                        else -> Res.string.settings40_drafts_empty
-                    }
+                    if (ui.busy) Res.string.privacyDeleting else Res.string.e7SettingsUi84
                 ),
             onClick = { actions.onAskDiscard(LocalDataKind.Drafts) },
         )
     }
+    Spacer(Modifier.height(Space.S6.dp))
     KitConfirm(
         spec =
             ui.confirm?.let { kind ->
                 KitConfirmSpec(
                     title =
                         stringResource(
-                            if (kind == LocalDataKind.Queue) Res.string.settings40_queue_question
-                            else Res.string.settings40_drafts_question
+                            if (kind == LocalDataKind.Queue) Res.string.e7SettingsUi80
+                            else Res.string.e7SettingsUi85
                         ),
                     confirmLabel =
-                        stringResource(
-                            if (kind == LocalDataKind.Queue) Res.string.settings40_discard_queue
-                            else Res.string.settings40_discard_drafts
+                        pluralStringResource(
+                            if (kind == LocalDataKind.Queue) Res.plurals.privacyDeleteQueuedCount
+                            else Res.plurals.privacyDeleteDraftsCount,
+                            if (kind == LocalDataKind.Queue) facts.queued else facts.drafts,
+                            if (kind == LocalDataKind.Queue) facts.queued else facts.drafts,
                         ),
                     body =
-                        stringResource(
-                            if (kind == LocalDataKind.Queue) Res.string.settings40_queue_keeps
-                            else Res.string.settings40_drafts_body
+                        pluralStringResource(
+                            if (kind == LocalDataKind.Queue) Res.plurals.e7SettingsQueueDeleteBody
+                            else Res.plurals.e7SettingsDraftDeleteBody,
+                            if (kind == LocalDataKind.Queue) facts.queued else facts.drafts,
+                            if (kind == LocalDataKind.Queue) facts.queued else facts.drafts,
                         ),
                     kind = KitConfirmKind.Destructive,
                 )
@@ -142,8 +174,17 @@ internal fun ColumnScope.LocalDataBody(ui: LocalDataUi, actions: SettingsActions
     )
 }
 
-private fun localBytes(bytes: Long): String {
-    val unit = if (bytes >= 1024 * 1024) 1024L * 1024 else if (bytes >= 1024) 1024L else 1L
-    return if (unit == 1L) "$bytes B"
-    else "${bytes / unit}.${bytes % unit * 10 / unit} ${if (unit == 1024L) "KB" else "MB"}"
+internal fun localBytes(bytes: Long): String {
+    val kilo = 1024L // F: lib/ui/screens/settings/personal_settings_screens.dart:30
+    val mega = kilo * kilo
+    val unit =
+        when {
+            bytes >= mega -> mega
+            bytes >= kilo -> kilo
+            else -> 1L
+        }
+    if (unit == 1L) return "${bytes.coerceAtLeast(0)} B"
+    val decimals = 10 // NV: one fractional decimal digit, as Dart toStringAsFixed(1)
+    val tenths = (bytes.toDouble() / unit * decimals).roundToLong()
+    return "${tenths / decimals}.${tenths % decimals} ${if (unit == kilo) "KB" else "MB"}"
 }
