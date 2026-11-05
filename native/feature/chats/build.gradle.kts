@@ -10,3 +10,8 @@ kotlin {
         implementation(project(":engine:settings"))
     }
 }
+
+kotlin {
+    sourceSets.getByName("desktopTest").dependencies { implementation(libs.compose.desktop.currentos) }
+}
+apply(from = rootProject.file("gradle/desktop-golden-fonts.gradle"))

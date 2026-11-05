@@ -56,6 +56,14 @@ import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerBox
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerChip
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerSend
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerStopRing
+import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolKind
+import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolRow
+import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolStatus
+import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolView
+import io.github.eslamasabry.oc.ui.kitchat.turn.KitWorkLine
+import io.github.eslamasabry.oc.ui.kitchat.turn.KitWorkState
+import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import java.io.File
 import java.util.Locale
 import javax.imageio.ImageIO
@@ -82,7 +90,9 @@ class KitLooksTest {
                             localeTag = "en",
                             stillFrame = true,
                         ) {
-                            Column(Modifier.fillMaxSize().background(LocalKitColors.current.ground).padding(top = 32.dp), content = content)
+                            CompositionLocalProvider(LocalKitRedactor provides Redactor()) {
+                                Column(Modifier.fillMaxSize().background(LocalKitColors.current.ground).padding(top = 32.dp), content = content)
+                            }
                         }
                     }
                 }
@@ -220,5 +230,24 @@ class KitLooksTest {
             Box(Modifier.padding(16.dp)) { KitButton("Set up on this phone", {}, fullWidth = true) }
             KitButton("I already have a server", {}, role = KitButtonRole.Tertiary, modifier = Modifier.align(Alignment.CenterHorizontally))
             Spacer(Modifier.height(16.dp))
+        }
+
+    @Test
+    fun `tool steps and the work line`() =
+        shoot("tool-steps", motion = MotionLevel.Calm) {
+            Column(Modifier.padding(horizontal = 16.dp)) {
+                KitWorkLine("Read 3 files · edited 1 file", "Done", KitWorkState.Done, expanded = false, onToggle = {}) {}
+                Spacer(Modifier.height(16.dp))
+                KitWorkLine("Running flutter test", "Working", KitWorkState.Running, expanded = true, onToggle = {}) {
+                    KitToolRow(KitToolView("1", KitToolKind.Read, "Read", "lib/checkout/checkout_bloc.dart", null, KitToolStatus.Done, "1 s", null, null, "Done"), opened = false, onToggle = {})
+                    KitToolRow(KitToolView("2", KitToolKind.Edit, "Edit", "test/checkout_test.dart", null, KitToolStatus.Done, "2 s", 6, 2, "Done"), opened = false, onToggle = {})
+                    KitToolRow(KitToolView("3", KitToolKind.Shell, "Shell", "flutter test test/checkout_test.dart", null, KitToolStatus.Running, "12 s", null, null, "Running"), opened = false, onToggle = {}, body = {})
+                    KitToolRow(KitToolView("4", KitToolKind.Shell, "Shell", "git push", null, KitToolStatus.Pending, null, null, null, "Waiting for you"), opened = false, onToggle = {})
+                    KitToolRow(KitToolView("5", KitToolKind.Shell, "Shell", "npm run lint", null, KitToolStatus.Failed, null, null, null, "Failed"), opened = false, onToggle = {})
+                    KitToolRow(KitToolView("6", KitToolKind.Search, "Search text", "applyCoupon", null, KitToolStatus.Done, null, null, null, "Done"), opened = false, onToggle = {})
+                }
+                Spacer(Modifier.height(16.dp))
+                KitWorkLine("Waiting for you: allow editing lib/main.dart", "Needs you", KitWorkState.WaitingForYou, expanded = false, onToggle = {}) {}
+            }
         }
 }

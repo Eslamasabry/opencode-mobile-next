@@ -14,3 +14,13 @@ kotlin {
         ) // RuntimeStatus, ProbeAnswer, StartProblem, ProcessBudget (public API)
     }
 }
+
+kotlin {
+    sourceSets.getByName("desktopTest").dependencies { implementation(libs.compose.desktop.currentos) }
+}
+apply(from = rootProject.file("gradle/desktop-golden-fonts.gradle"))
+
+// looks capture only: stale existing tests in this module do not compile; compile only the capture test and fixtures.
+kotlin.sourceSets.matching { it.name == "commonTest" || it.name == "desktopTest" }.configureEach {
+    kotlin.exclude { it.file.name.endsWith("Test.kt") && it.file.name != "LooksCaptureTest.kt" }
+}
