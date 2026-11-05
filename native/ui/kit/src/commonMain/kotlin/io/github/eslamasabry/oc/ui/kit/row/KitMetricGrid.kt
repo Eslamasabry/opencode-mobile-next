@@ -13,11 +13,13 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 
+private const val SINGLE_COLUMN_SCALE = 1.5f // F: lib/ui/screens/usage_screen.dart:925
+
 /** Flutter usage_screen.dart's labelled figures: two columns, one from 1.5 text scale. */
 @Composable
 public fun KitMetricGrid(values: List<Pair<String, String>>, modifier: Modifier = Modifier) {
     val columns =
-        if (LocalDensity.current.fontScale >= 1.5f) 1
+        if (LocalDensity.current.fontScale >= SINGLE_COLUMN_SCALE) 1
         else 2 // F: lib/ui/screens/usage_screen.dart:925
     Column(
         modifier.kitMaxWidth(CapRole.Reading).fillMaxWidth(),
