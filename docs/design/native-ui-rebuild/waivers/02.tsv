@@ -1,5 +1,3 @@
-kit_foundation_type_light	DEPENDS_ON 07	part-kit_buttons: foundation type scene includes primary, secondary, destructive, disabled and tertiary buttons
-kit_foundation_type_dark	DEPENDS_ON 07	part-kit_buttons: foundation type scene includes primary, secondary, destructive, disabled and tertiary buttons
 kit_foundation_work_light	DEPENDS_ON 11	part-kit_notice and part-kit_request_card: existing KitSummaryCard lacks the Flutter card APIs; rows also await order 08
 kit_foundation_work_dark	DEPENDS_ON 11	part-kit_notice and part-kit_request_card: existing KitSummaryCard lacks the Flutter card APIs; rows also await order 08
 kit_foundation_work_1280x800_light	DEPENDS_ON 11	part-kit_notice and part-kit_request_card: card APIs and painting await order 11; rows also await order 08
