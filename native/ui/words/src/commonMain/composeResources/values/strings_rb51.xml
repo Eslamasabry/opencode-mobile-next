@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rb51VoiceEnglish">English</string>
+    <string name="rb51VoiceArabic">Arabic</string>
+    <string name="rb51VoiceMoreLanguages">More languages</string>
+</resources>

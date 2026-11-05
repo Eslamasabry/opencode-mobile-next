@@ -1,0 +1,74 @@
+package io.github.eslamasabry.oc.feature.voice.rb.o51
+
+import androidx.compose.ui.test.*
+import androidx.compose.ui.test.v2.runComposeUiTest
+import io.github.eslamasabry.oc.engine.voice.state.PackId
+import io.github.eslamasabry.oc.engine.voice.state.PackStatus
+import io.github.eslamasabry.oc.feature.voice.FakeHub
+import io.github.eslamasabry.oc.feature.voice.presentation.*
+import io.github.eslamasabry.oc.feature.voice.ui.VoiceSettingsScreen
+import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
+import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.kit.KitTheme
+import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
+import kotlin.test.Test
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
+
+@OptIn(ExperimentalTestApi::class, kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+class VoiceSettingsScreenTest {
+    @Test
+    fun `B-MEDIA-012 missing model has one pinned Download and source language choices`() =
+        runTest {
+            val presenter = VoiceSettingsPresenter(FakeHub(), backgroundScope) {}
+            runCurrent()
+            val state = presenter.state.value
+            runComposeUiTest {
+                setContent {
+                    KitTheme(
+                        platform = DesktopKitPlatform(),
+                        appearance = KitAppearance(motion = MotionLevel.Off),
+                        localeTag = "en",
+                        stillFrame = true,
+                    ) {
+                        VoiceSettingsScreen(state, presenter)
+                    }
+                }
+                onAllNodesWithTag("voice-model-primary-action").assertCountEquals(1)
+                onNodeWithText("Auto detect").assertExists()
+                onNodeWithText("English").assertExists()
+                onNodeWithText("Arabic").assertExists()
+                onNodeWithText("More languages").assertExists()
+                onNodeWithText("Recommended").assertDoesNotExist()
+            }
+        }
+
+    @Test
+    fun `B-MEDIA-012 installed model has maintenance actions and no Download footer`() = runTest {
+        val presenter = VoiceSettingsPresenter(FakeHub(), backgroundScope) {}
+        runCurrent()
+        val initial = presenter.state.value
+        val state =
+            initial.copy(
+                packs =
+                    initial.packs.map {
+                        if (it.id == PackId("base")) it.copy(status = PackStatus.Installed) else it
+                    }
+            )
+        runComposeUiTest {
+            setContent {
+                KitTheme(
+                    platform = DesktopKitPlatform(),
+                    appearance = KitAppearance(motion = MotionLevel.Off),
+                    localeTag = "en",
+                    stillFrame = true,
+                ) {
+                    VoiceSettingsScreen(state, presenter)
+                }
+            }
+            onNodeWithTag("voice-model-primary-action").assertDoesNotExist()
+            onNodeWithTag("voice-redownload-base").assertExists()
+            onNodeWithTag("voice-delete-base").assertExists()
+        }
+    }
+}
