@@ -169,7 +169,7 @@ private fun rowGlyph(row: SettingsRowId) =
         SettingsRowId.Agents -> KitIcons.agent
         SettingsRowId.ShowReasoning -> KitIcons.idea
         SettingsRowId.ShowTimestamps -> KitIcons.clock
-        SettingsRowId.PhraseChips -> KitIcons.textShort
+        SettingsRowId.PhraseChips -> KitIcons.chat
         SettingsRowId.DefaultShell -> KitIcons.terminal
         SettingsRowId.Voice -> KitIcons.mic
         SettingsRowId.Permissions -> KitIcons.shield
@@ -222,7 +222,7 @@ internal fun GroupPage(
             }
         }
         val rows = state.group?.rows.orEmpty()
-        KitRowGroup {
+        KitRowGroup(leadingTiles = true) {
             rows.forEach { row ->
                 val title = rowWords(row.id)
                 val request = remember(row.id) { BringIntoViewRequester() }
@@ -232,12 +232,20 @@ internal fun GroupPage(
                     Modifier.testTag(row.id.tag).bringIntoViewRequester(request).semantics {
                         selected = focused
                     }
-                when (val door = row.door) {
-                    is SettingsDoor.Switch ->
+                when {
+                    row.id == SettingsRowId.PhraseChips ->
+                        KitIconSwitchRow(
+                            title = stringResource(Res.string.settingsPhraseChipsTitle),
+                            icon = KitIcons.chat,
+                            checked = state.phrases?.enabled ?: state.phraseChips,
+                            modifier = rowModifier,
+                            onCheckedChange = actions::onPhraseChips,
+                        )
+                    row.door is SettingsDoor.Switch ->
                         KitIconSwitchRow(
                             title = title,
                             icon = rowGlyph(row.id),
-                            checked = door.on,
+                            checked = row.door.on,
                             modifier = rowModifier,
                             onCheckedChange = { actions.onRow(row.id) },
                         )
@@ -264,6 +272,7 @@ internal fun GroupPage(
                 ?.let { phrases ->
                     KitRow(
                         title = stringResource(Res.string.settingsPhraseChipsShowHidden),
+                        leading = KitRowLeading.Glyph(KitIcons.hidden),
                         supporting =
                             pluralStringResource(
                                 Res.plurals.settingsPhraseChipsHiddenCount,
@@ -296,7 +305,8 @@ internal fun androidx.compose.foundation.layout.ColumnScope.SavedServersBody(
         }
     note?.let { KitGroupNote(stringResource(it)) }
     KitRowGroup(
-        label = if (section == null) stringResource(Res.string.settingsV3ServersBlock) else null
+        leadingTiles = true,
+        label = if (section == null) stringResource(Res.string.settingsV3ServersBlock) else null,
     ) {
         state.hub.savedServers.forEach { server ->
             KitRow(

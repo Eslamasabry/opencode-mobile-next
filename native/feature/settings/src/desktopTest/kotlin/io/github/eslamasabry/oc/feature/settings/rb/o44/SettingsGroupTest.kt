@@ -74,4 +74,39 @@ class SettingsGroupTest {
             assertEquals(listOf(true), calls)
             onAllNodes(isToggleable()).assertCountEquals(1)
         }
+
+    @Test
+    fun `B-KIT-027 phrase suggestions toggle in their group without opening another page`() =
+        runComposeUiTest {
+            val calls = mutableListOf<Boolean>()
+            val actions =
+                object : SettingsActions by RecordingActions() {
+                    override fun onPhraseChips(on: Boolean) {
+                        calls += on
+                    }
+                }
+            val state =
+                SettingsUi(
+                    stack =
+                        persistentListOf(
+                            SettingsPage.Hub,
+                            SettingsPage.Group(SettingsGroupId.Conversations),
+                        ),
+                    group =
+                        GroupUi(
+                            SettingsGroupId.Conversations,
+                            persistentListOf(
+                                SettingsRowUi(
+                                    SettingsRowId.PhraseChips,
+                                    SettingsDoor.Page(SettingsPage.PhraseChips),
+                                )
+                            ),
+                        ),
+                    phraseChips = true,
+                )
+            setContent { SettingsThemed { SettingsScreen(state, actions) } }
+            onAllNodes(isToggleable()).assertCountEquals(1)
+            onNode(isToggleable()).performClick()
+            assertEquals(listOf(false), calls)
+        }
 }

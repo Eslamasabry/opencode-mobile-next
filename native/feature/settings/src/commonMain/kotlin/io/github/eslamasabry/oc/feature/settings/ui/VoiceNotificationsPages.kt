@@ -163,7 +163,7 @@ internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: Settin
         )
         Spacer(Modifier.height(Space.S6.dp))
     }
-    KitRowGroup(label = stringResource(Res.string.notifySectionWhat)) {
+    KitRowGroup(leadingTiles = true, label = stringResource(Res.string.notifySectionWhat)) {
         val enabled =
             if (n.blocked) KitEnabled.Disabled(stringResource(Res.string.notifyBlockedMessage))
             else KitEnabled.Enabled
@@ -246,7 +246,7 @@ internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: Settin
             )
         }
     }
-    KitRowGroup(label = stringResource(Res.string.notifySectionServers)) {
+    KitRowGroup(leadingTiles = true, label = stringResource(Res.string.notifySectionServers)) {
         n.profiles.forEach { profile ->
             KitIconSwitchRow(
                 title = profile.name,
@@ -288,7 +288,10 @@ internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: Settin
         )
     }
     n.background?.let { bg ->
-        KitRowGroup(label = stringResource(Res.string.notifySectionBackground)) {
+        KitRowGroup(
+            leadingTiles = true,
+            label = stringResource(Res.string.notifySectionBackground),
+        ) {
             KitRow(
                 title = stringResource(Res.string.e7SettingsUi25),
                 leading = KitRowLeading.Glyph(KitIcons.sync),

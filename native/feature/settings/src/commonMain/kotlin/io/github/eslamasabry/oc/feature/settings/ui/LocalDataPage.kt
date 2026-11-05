@@ -50,7 +50,7 @@ internal fun ColumnScope.LocalDataBody(ui: LocalDataUi, actions: SettingsActions
         return
     }
     if (facts.servers.isNotEmpty())
-        KitRowGroup(label = stringResource(Res.string.privacySharedSection)) {
+        KitRowGroup(leadingTiles = true, label = stringResource(Res.string.privacySharedSection)) {
             KitRow(
                 title = stringResource(Res.string.shareSessionViewsTitle),
                 leading = KitRowLeading.Glyph(KitIcons.visible),
@@ -76,7 +76,7 @@ internal fun ColumnScope.LocalDataBody(ui: LocalDataUi, actions: SettingsActions
             )
         }
     Spacer(Modifier.height(Space.S6.dp))
-    KitRowGroup(label = stringResource(Res.string.e7SettingsUi76)) {
+    KitRowGroup(leadingTiles = true, label = stringResource(Res.string.e7SettingsUi76)) {
         KitRow(
             title = stringResource(Res.string.e7SettingsUi77),
             modifier = Modifier.testTag("local-storage-usage"),
