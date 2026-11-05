@@ -390,8 +390,7 @@ public fun ChatScreen(
                                 (if (demoMode) emptyList()
                                 else
                                     listOfNotNull(
-                                        // Looks pass: Files leads, so a phone's two bar icons are Files and
-                                        // Git; the rest sit in the ⋯ menu.
+                                        // Project navigation is in the scope line; these actions stay in the session menu.
                                         KitLineAction(
                                             stringResource(Res.string.chatUiFiles),
                                             actions::openFiles,

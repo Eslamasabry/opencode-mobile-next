@@ -227,14 +227,14 @@ public fun ChatHeaderTopBar(
         onExit = onBack,
         onTitleTap = actions::renameRequested,
         titleTapLabel = stringResource(Res.string.chatUiRenameSession),
-        actions = extraActions,
+        actions = emptyList(),
         more = { hidden ->
             KitChatMoreMenu(
                 label = stringResource(Res.string.kitTopBarMore),
                 expanded = state.menuOpen,
                 items =
                     items +
-                        hidden.map { extra ->
+                        (extraActions + hidden).map { extra ->
                             KitMenuItem(
                                 label = extra.label,
                                 onSelect = {
