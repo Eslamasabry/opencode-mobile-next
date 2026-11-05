@@ -4,6 +4,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.graphics.vector.ImageVector
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.LifecycleStartEffect
@@ -240,45 +243,52 @@ public fun LinuxHomeScreen(
                 LinuxLifetimesPanel(state.lifetimes, actions::refreshLifetimes)
             }
             if (state.ready) {
-                KitRowGroup {
+                KitRowGroup(leadingTiles = true) {
                     PageRow(
                         stringResource(Res.string.keptSvcTitle),
                         stringResource(Res.string.keptSvcKeepsRunning),
+                        icon = KitIcons.heartbeat,
                     ) {
                         actions.open(LinuxPage.KeptServices)
                     }
                     PageRow(
                         stringResource(Res.string.linuxBackupRow),
                         stringResource(Res.string.linuxBackupSetupProjectsDetail),
+                        icon = KitIcons.zip,
                     ) {
                         actions.open(LinuxPage.Backups)
                     }
                     PageRow(
                         stringResource(Res.string.linuxMgrRunning),
                         stringResource(Res.string.linuxMgrRunningDetail),
+                        icon = KitIcons.processor,
                     ) {
                         actions.open(LinuxPage.Running)
                     }
                     PageRow(
                         stringResource(Res.string.linuxMgrPorts),
                         stringResource(Res.string.linuxMgrPortsDetail),
+                        icon = KitIcons.network,
                     ) {
                         actions.open(LinuxPage.Ports)
                     }
                     PageRow(
                         stringResource(Res.string.linuxMgrStorage),
                         stringResource(Res.string.linuxMgrStorageDetail),
+                        icon = KitIcons.database,
                     ) {
                         actions.open(LinuxPage.Storage)
                     }
                     PageRow(
                         stringResource(Res.string.linuxMgrPackages),
                         stringResource(Res.string.linuxMgrPackagesDetail),
+                        icon = KitIcons.`package`,
                     ) {
                         actions.open(LinuxPage.Packages)
                     }
                     KitRow(
                         title = stringResource(Res.string.linuxMgrRepair),
+                        leading = KitRowLeading.Glyph(KitIcons.tools),
                         supporting = stringResource(Res.string.linuxMgrRepairDetail),
                         supportingMaxLines = 3,
                         trailing = KitRowTrailing.Chevron,
@@ -286,6 +296,7 @@ public fun LinuxHomeScreen(
                     )
                     KitRow(
                         title = stringResource(Res.string.linuxMgrReset),
+                        leading = KitRowLeading.Glyph(KitIcons.restart),
                         supporting = stringResource(Res.string.linuxMgrResetDetail),
                         supportingMaxLines = 2,
                         onClick = actions::askReset,
@@ -399,11 +410,13 @@ public fun LinuxHomeScreen(
 private fun PageRow(
     title: String,
     detail: String,
+    icon: ImageVector,
     onClick: () -> Unit,
 ) {
     KitRow(
         title = title,
         supporting = detail,
+        leading = KitRowLeading.Glyph(icon),
         supportingMaxLines = 2,
         trailing = KitRowTrailing.Chevron,
         onClick = onClick,
