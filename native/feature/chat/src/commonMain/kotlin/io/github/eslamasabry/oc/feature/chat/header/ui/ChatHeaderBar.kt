@@ -1,5 +1,10 @@
 package io.github.eslamasabry.oc.feature.chat.header.ui
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.design.type.TextTone
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
@@ -379,6 +384,7 @@ public fun ChatHeaderOverlays(slot: ChatHeaderSlot) {
         visible = sheet is HeaderSheet.ContinueOnComputer,
         onDismissRequest = actions::closeSheet,
         title = stringResource(Res.string.handoffUiComputerTitle),
+        icon = KitIcons.computer,
         closeLabel = stringResource(Res.string.kitSheetClose),
     ) {
         (sheet as? HeaderSheet.ContinueOnComputer)?.let { ComputerBody(it, actions) }
@@ -466,21 +472,22 @@ private fun DetailsBody(facts: DetailsUi) {
 @Composable
 private fun ComputerBody(sheet: HeaderSheet.ContinueOnComputer, actions: ChatHeaderActions) {
     val command = sheet.command
-    Column(Modifier.fillMaxWidth().testTag("continue-on-computer-sheet")) {
-        KitNotice(message = stringResource(Res.string.handoffUiComputerIntro, command.binary))
+    Column(Modifier.fillMaxWidth().testTag("continue-on-computer-sheet"), verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+        KitText(stringResource(Res.string.handoffUiComputerIntro, command.binary))
         val text = command.command
         if (text != null) {
             KitSectionLabel(stringResource(Res.string.handoffUiComputerCommandLabel))
             KitCodeBlock(
                 source = text,
                 kind = KitCodeKind.Command,
+                maxLines = Int.MAX_VALUE,
                 modifier = Modifier.testTag("continue-on-computer-command"),
                 wrap = true,
                 copyLabel = stringResource(Res.string.handoffSheetCopyCommand),
                 copiedLabel = stringResource(Res.string.kitCopied),
                 onCopy = { actions.copyResumeCommand() },
             )
-            KitNotice(message = stringResource(Res.string.handoffUiComputerDirectoryNote))
+            KitText(stringResource(Res.string.handoffUiComputerDirectoryNote), role = TypeRole.Secondary, tone = TextTone.Secondary)
             KitDetailsFold(
                 label = stringResource(Res.string.kitDetails),
                 copyLabel = stringResource(Res.string.kitCopyDetails),
@@ -565,6 +572,7 @@ private fun ContinueBody(
                                     )
                                 else KitRowTrailing.Chevron,
                             enabled = !working,
+                            disabledReason = if (working) stringResource(Res.string.continueWithPreparing) else null,
                             onClick = { actions.continueWith(choice) },
                         )
                     }
@@ -578,6 +586,7 @@ private fun ContinueBody(
                                 title = choice.label,
                                 trailing = KitRowTrailing.Chevron,
                                 enabled = !working,
+                                disabledReason = if (working) stringResource(Res.string.continueWithPreparing) else null,
                                 onClick = { handoffActions.prepareHandoff(choice) },
                             )
                         }
