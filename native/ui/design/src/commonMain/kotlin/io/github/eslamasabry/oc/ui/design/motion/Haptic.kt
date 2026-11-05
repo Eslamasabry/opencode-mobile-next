@@ -18,3 +18,7 @@ public enum class KitHaptic {
     ToggleOn,
     ToggleOff,
 }
+
+/** Flutter KitHaptics: the global and contextual settings both win; only done obeys reduced motion. */
+public fun KitHaptic.allowed(enabled: Boolean = true, contextEnabled: Boolean = true, reduced: Boolean = false): Boolean =
+    enabled && contextEnabled && (this != KitHaptic.Done || !reduced)
