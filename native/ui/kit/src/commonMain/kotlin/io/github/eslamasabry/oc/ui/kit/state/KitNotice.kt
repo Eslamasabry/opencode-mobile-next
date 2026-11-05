@@ -1,6 +1,16 @@
 package io.github.eslamasabry.oc.ui.kit.state
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import io.github.eslamasabry.oc.ui.kit.KitAction
+import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -100,7 +110,14 @@ public fun KitNotice(
     ) {
         Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
             Box(Modifier.width(LEAD_SLOT.dp).padding(top = 2.dp), contentAlignment = Alignment.TopCenter) {  // NV: icon nudged onto the first text line
-                KitStatusGlyph(tone.glyph, glyphColor(tone, colors))
+                if (tone == StatusTone.Neutral) {
+                    Image(
+                        KitIcons.info, null, Modifier.size(LocalKitTokens.current.smallIcon.dp).clearAndSetSemantics {},
+                        colorFilter = ColorFilter.tint(glyphColor(tone, colors)), // F: kit_notice.dart _iconFor info
+                    )
+                } else {
+                    KitStatusGlyph(tone.glyph, glyphColor(tone, colors))
+                }
             }
             Column(
                 Modifier.weight(1f).semantics(mergeDescendants = true) { if (liveRegion) this.liveRegion = LiveRegionMode.Polite },
@@ -120,12 +137,17 @@ public fun KitNotice(
                         Modifier.padding(top = Space.S2.dp),
                         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
                     ) {
-                        shown.forEach { KitInlineAction(it) }
+                        shown.forEach { KitButton(KitAction(it.label, it.onClick), Modifier.testTag(it.testTag ?: "kit-notice-action"), KitButtonRole.Secondary) }
                     }
                 }
             }
             trailing?.invoke()
-            dismiss?.let { KitInlineAction(it.copy(testTag = it.testTag ?: "kit-notice-dismiss")) }
+            dismiss?.let {
+                KitIconButton(
+                    KitIcons.close, it.label, it.onClick, Modifier.testTag(it.testTag ?: "kit-notice-dismiss"),
+                    size = LocalKitTokens.current.smallIcon,
+                )
+            }
         }
     }
 }
