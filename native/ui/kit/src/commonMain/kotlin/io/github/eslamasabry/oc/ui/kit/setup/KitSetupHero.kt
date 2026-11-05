@@ -82,68 +82,68 @@ public fun KitSetupPhone(mood: KitSetupPhoneMood = KitSetupPhoneMood.Fresh, modi
     val c = LocalKitColors.current
     val stopped = mood == KitSetupPhoneMood.Stopped
     val ready = mood == KitSetupPhoneMood.Ready || mood == KitSetupPhoneMood.Celebration
-    Canvas(modifier.widthIn(max = 248.dp).fillMaxWidth().aspectRatio(160f / 120f).clearAndSetSemantics {}) { // F: lib/ui/screens/phone_setup/phone_setup_hero.dart:75 lib/ui/kit/scenes/setup_phone_scene.dart:39
-        withTransform({ scale(size.width / 160f, size.height / 120f, Offset.Zero) }) { // F: lib/ui/kit/scenes/setup_phone_scene.dart:39
+    Canvas(modifier.widthIn(max = 248.dp).fillMaxWidth().aspectRatio(160f / 120f).clearAndSetSemantics {}) { // F: lib/ui/kit/scenes/setup_phone_scene.dart:35 lib/ui/screens/phone_setup/phone_setup_hero.dart:65
+        withTransform({ scale(size.width / 160f, size.height / 120f, Offset.Zero) }) { // F: lib/ui/kit/scenes/setup_phone_scene.dart:35
             val wash = c.accent.copy(alpha = FlutterKitTokens.SCENE_WASH_ALPHA)
-            drawCircle(if (stopped) c.text3.copy(alpha = FlutterKitTokens.SCENE_WASH_ALPHA) else wash, 50f, Offset(80f, 60f)) // F: lib/ui/kit/scenes/setup_phone_scene.dart:46,81
-            drawRoundRect(c.surface3, Offset(61f, 17f), Size(38f, 84f), CornerRadius(5f)) // F: lib/ui/kit/scenes/setup_phone_scene.dart:48,52
-            if (!stopped) drawRoundRect(wash, Offset(61f, 17f), Size(38f, 84f), CornerRadius(5f)) // F: lib/ui/kit/scenes/setup_phone_scene.dart:48,52
-            drawRoundRect(if (stopped) c.text2 else c.text1, Offset(54f, 8f), Size(52f, 104f), CornerRadius(12f), style = Stroke(5f, cap = StrokeCap.Round)) // F: lib/ui/kit/scenes/setup_phone_scene.dart:47 lib/ui/kit/kit_illustration.dart:165
-            drawLine(c.text2.copy(alpha = .8f), Offset(74f, 106.5f), Offset(86f, 106.5f), 2f, StrokeCap.Round) // F: lib/ui/kit/scenes/setup_phone_scene.dart:133-135
+            drawCircle(if (stopped) c.text3.copy(alpha = FlutterKitTokens.SCENE_WASH_ALPHA) else wash, 50f, Offset(80f, 60f)) // F: lib/ui/kit/scenes/setup_phone_scene.dart:41,77
+            drawRoundRect(c.surface3, Offset(61f, 17f), Size(99f - 61f, 101f - 17f), CornerRadius(5f)) // F: lib/ui/kit/scenes/setup_phone_scene.dart:43,47
+            if (!stopped) drawRoundRect(wash, Offset(61f, 17f), Size(99f - 61f, 101f - 17f), CornerRadius(5f)) // F: lib/ui/kit/scenes/setup_phone_scene.dart:43,47
+            drawRoundRect(if (stopped) c.text2 else c.text1, Offset(54f, 8f), Size(106f - 54f, 112f - 8f), CornerRadius(12f), style = Stroke(5f, cap = StrokeCap.Round)) // F: lib/ui/kit/scenes/setup_phone_scene.dart:42,44,47
+            drawLine(c.text2.copy(alpha = .8f), Offset(74f, 106.5f), Offset(74f + 12f, 106.5f), 2f, StrokeCap.Round) // F: lib/ui/kit/scenes/setup_phone_scene.dart:122,123
             if (!ready && !stopped) {
-                val prompt = Path().apply { moveTo(66f, 26f); lineTo(70f, 30f); lineTo(66f, 34f) } // F: lib/ui/kit/scenes/setup_phone_scene.dart:54 lib/ui/kit/scenes/setup_cast.dart:127-130
-                drawPath(prompt, c.accent, style = Stroke(2.5f, cap = StrokeCap.Round, join = StrokeJoin.Round)) // F: lib/ui/kit/kit_illustration.dart:168
-                drawLine(c.accent, Offset(73f, 34f), Offset(80f, 34f), 2.5f, StrokeCap.Round) // F: lib/ui/kit/scenes/setup_phone_scene.dart:183-185 lib/ui/kit/kit_illustration.dart:168
+                val prompt = Path().apply { moveTo(66f, 26f); lineTo(66f + 8f / 2, 26f + 8f / 2); lineTo(66f, 34f) } // F: lib/ui/kit/scenes/setup_phone_scene.dart:49,52,53,123,174
+                drawPath(prompt, c.accent, style = Stroke(2.5f, cap = StrokeCap.Round, join = StrokeJoin.Round)) // F: lib/ui/kit/kit_illustration.dart:167
+                drawLine(c.accent, Offset(73f, 34f), Offset(80f, 34f), 2.5f, StrokeCap.Round) // F: lib/ui/kit/kit_illustration.dart:167 lib/ui/kit/scenes/setup_phone_scene.dart:140,175
             }
             if (mood == KitSetupPhoneMood.Termux) {
-                listOf(44f to 22f, 53f to 14f, 62f to 26f, 71f to 18f).forEachIndexed { index, (y, length) -> // F: lib/ui/kit/scenes/setup_phone_scene.dart:63-66
-                    drawLine(if (index == 3) c.accent else c.text2.copy(alpha = .7f), Offset(66f, y), Offset(66f + length, y), 2.5f, StrokeCap.Round) // F: lib/ui/kit/scenes/setup_phone_scene.dart:209 lib/ui/kit/kit_illustration.dart:168
+                listOf(44f to 22f, 53f to 14f, 62f to 26f, 71f to 18f).forEachIndexed { index, (y, length) -> // F: lib/ui/kit/scenes/setup_phone_scene.dart:57,58,59,60
+                    drawLine(if (index == listOf(44f, 53f, 62f, 71f).lastIndex) c.accent else c.text2.copy(alpha = .7f), Offset(66f, y), Offset(66f + length, y), 2.5f, StrokeCap.Round) // F: lib/ui/kit/scenes/setup_phone_scene.dart:57,58,59,60,77 lib/ui/kit/kit_illustration.dart:167
                 }
             } else {
-                val cy = if (ready) 58f else 66f // F: lib/ui/kit/scenes/setup_phone_scene.dart:148,234
-                val span = if (ready) 34f else 30f // F: lib/ui/kit/scenes/setup_phone_scene.dart:244
-                portal(Offset(80f, cy), span, if (stopped) c.text2 else c.accent, if (mood == KitSetupPhoneMood.Celebration) 2.5f else 0f) // F: lib/ui/kit/scenes/setup_phone_scene.dart:154 lib/ui/kit/scenes/setup_ready_scene.dart:120
+                val cy = if (ready) 58f else 66f // F: lib/ui/kit/scenes/setup_phone_scene.dart:60,133
+                val span = if (ready) 34f else 30f // F: lib/ui/kit/scenes/setup_phone_scene.dart:219
+                portal(Offset(80f, cy), span, if (stopped) c.text2 else c.accent, if (mood == KitSetupPhoneMood.Celebration) 2.5f else 0f) // F: lib/ui/kit/kit_illustration.dart:167 lib/ui/kit/scenes/setup_phone_scene.dart:140
                 if (mood == KitSetupPhoneMood.Celebration) {
                     val check = Path().apply {
                         moveTo(74.6f, 58.3f); lineTo(78.5f, 62.2f); lineTo(85.7f, 54.4f) // NV: SetupCast.check at (80,58), size 15, using .36/.02/.1/.28/.38/.24
                     }
-                    drawPath(check, c.accent, style = Stroke(3.5f, cap = StrokeCap.Round, join = StrokeJoin.Round)) // F: lib/ui/kit/scenes/setup_ready_scene.dart:125
-                } else if (!stopped) drawCircle(c.accent, 3.2f, Offset(80f, cy)) // F: lib/ui/kit/scenes/setup_phone_scene.dart:259
+                    drawPath(check, c.accent, style = Stroke(3.5f, cap = StrokeCap.Round, join = StrokeJoin.Round)) // F: lib/ui/kit/scenes/setup_ready_scene.dart:142
+                } else if (!stopped) drawCircle(c.accent, 3.2f, Offset(80f, cy)) // F: lib/ui/kit/scenes/setup_phone_scene.dart:212,231
             }
             if (!stopped) {
-                sparkle(Offset(126f, 26f), 9f, c.accent) // F: lib/ui/kit/scenes/setup_phone_scene.dart:271-272
-                sparkle(Offset(138f, 46f), 4.5f, c.accent.copy(alpha = .8f)) // F: lib/ui/kit/scenes/setup_phone_scene.dart:279-281
-                sparkle(Offset(32f, 90f), 5f, c.accent.copy(alpha = .55f)) // F: lib/ui/kit/scenes/setup_phone_scene.dart:287-289
+                sparkle(Offset(126f, 26f), 9f, c.accent) // F: lib/ui/kit/scenes/setup_phone_scene.dart:242,243
+                sparkle(Offset(138f, 46f), 4.5f, c.accent.copy(alpha = .8f)) // F: lib/ui/kit/scenes/setup_phone_scene.dart:249,250,251
+                sparkle(Offset(32f, 90f), 5f, c.accent.copy(alpha = .55f)) // F: lib/ui/kit/scenes/setup_phone_scene.dart:256,257,258
             }
-            drawCircle(c.text2.copy(alpha = .5f), 2.2f, Offset(34f, 34f)) // F: lib/ui/kit/scenes/setup_phone_scene.dart:302,304
-            drawCircle(c.text2.copy(alpha = .5f), 1.6f, Offset(22f, 62f)) // F: lib/ui/kit/scenes/setup_phone_scene.dart:302,305
-            drawCircle(c.text2.copy(alpha = .5f), 2.4f, Offset(132f, 94f)) // F: lib/ui/kit/scenes/setup_phone_scene.dart:302,306
+            drawCircle(c.text2.copy(alpha = .5f), 2.2f, Offset(34f, 34f)) // F: lib/ui/kit/scenes/setup_phone_scene.dart:268,270
+            drawCircle(c.text2.copy(alpha = .5f), 1.6f, Offset(22f, 62f)) // F: lib/ui/kit/scenes/setup_phone_scene.dart:268,271
+            drawCircle(c.text2.copy(alpha = .5f), 2.4f, Offset(132f, 94f)) // F: lib/ui/kit/scenes/setup_phone_scene.dart:268,272
         }
     }
 }
 
 private fun DrawScope.portal(center: Offset, span: Float, color: Color, open: Float) {
-    fun x(v: Float) = center.x + (v - 54f) / 60f * span // F: lib/ui/kit/scenes/setup_cast.dart:14
-    fun y(v: Float) = center.y + (v - 54f) / 60f * span // F: lib/ui/kit/scenes/setup_cast.dart:14
+    fun x(v: Float) = center.x + (v - 54f) / 60f * span // F: lib/ui/kit/scenes/setup_cast.dart:15
+    fun y(v: Float) = center.y + (v - 54f) / 60f * span // F: lib/ui/kit/scenes/setup_cast.dart:15
     val upper = Path().apply {
-        moveTo(x(61f) - open, y(31f) - open); lineTo(x(43f) - open, y(31f) - open) // F: lib/ui/kit/scenes/setup_cast.dart:17-18
-        quadraticTo(x(31f) - open, y(31f) - open, x(31f) - open, y(43f) - open) // F: lib/ui/kit/scenes/setup_cast.dart:19-24
-        lineTo(x(31f) - open, y(64f) - open) // F: lib/ui/kit/scenes/setup_cast.dart:24
+        moveTo(x(61f) - open, y(31f) - open); lineTo(x(43f) - open, y(31f) - open) // F: lib/ui/kit/scenes/setup_cast.dart:18,19
+        quadraticTo(x(31f) - open, y(31f) - open, x(31f) - open, y(43f) - open) // F: lib/ui/kit/scenes/setup_cast.dart:19
+        lineTo(x(31f) - open, y(64f) - open) // F: lib/ui/kit/scenes/setup_cast.dart:25
     }
     val lower = Path().apply {
-        moveTo(x(77f) + open, y(44f) + open); lineTo(x(77f) + open, y(65f) + open) // F: lib/ui/kit/scenes/setup_cast.dart:27-28
-        quadraticTo(x(77f) + open, y(77f) + open, x(65f) + open, y(77f) + open) // F: lib/ui/kit/scenes/setup_cast.dart:29-34
-        lineTo(x(44f) + open, y(77f) + open) // F: lib/ui/kit/scenes/setup_cast.dart:34
+        moveTo(x(77f) + open, y(44f) + open); lineTo(x(77f) + open, y(65f) + open) // F: lib/ui/kit/scenes/setup_cast.dart:28,29
+        quadraticTo(x(77f) + open, y(77f) + open, x(65f) + open, y(77f) + open) // F: lib/ui/kit/scenes/setup_cast.dart:29
+        lineTo(x(44f) + open, y(77f) + open) // F: lib/ui/kit/scenes/setup_cast.dart:35
     }
-    val pen = Stroke(4.5f, cap = StrokeCap.Round, join = StrokeJoin.Round) // F: lib/ui/kit/scenes/setup_phone_scene.dart:249
+    val pen = Stroke(4.5f, cap = StrokeCap.Round, join = StrokeJoin.Round) // F: lib/ui/kit/scenes/setup_phone_scene.dart:250
     drawPath(upper, color, style = pen); drawPath(lower, color, style = pen)
 }
 
 private fun DrawScope.sparkle(at: Offset, r: Float, color: Color) {
     val p = Path().apply {
         moveTo(0f, -1f)
-        quadraticTo(.14f, -.14f, 1f, 0f); quadraticTo(.14f, .14f, 0f, 1f) // F: lib/ui/kit/scenes/setup_cast.dart:78-79
-        quadraticTo(-.14f, .14f, -1f, 0f); quadraticTo(-.14f, -.14f, 0f, -1f) // F: lib/ui/kit/scenes/setup_cast.dart:80-81
+        quadraticTo(.14f, -.14f, 1f, 0f); quadraticTo(.14f, .14f, 0f, 1f) // F: lib/ui/kit/scenes/setup_cast.dart:75
+        quadraticTo(-.14f, .14f, -1f, 0f); quadraticTo(-.14f, -.14f, 0f, -1f) // F: lib/ui/kit/scenes/setup_cast.dart:75
         close()
     }
     withTransform({ translate(at.x, at.y); scale(r, r, Offset.Zero) }) { drawPath(p, color) }

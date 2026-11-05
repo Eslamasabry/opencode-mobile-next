@@ -1,6 +1,14 @@
 package io.github.eslamasabry.oc.feature.phonesetup.ui
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.style.TextAlign
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.kit.setup.*
+import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -47,12 +55,12 @@ public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyAction
             state.customizing && state.adding -> Res.string.phoneSetupStartAddTitle
             state.customizing -> Res.string.phoneSetupStartCustomizeTitle
             idle -> Res.string.phoneSetupStartScreenTitle
-            else -> Res.string.phoneSetupProgressTitle
+            else -> Res.string.phoneSetupStartScreenTitle
         }
     KitScreen(
         topBar = {
             KitTopBar(
-                stringResource(title),
+                stringResource(Res.string.phoneSetupStartScreenTitle),
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::back,
@@ -61,21 +69,19 @@ public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyAction
         width = KitScreenWidth.Reading,
         loading = state.checking,
     ) {
-        Column(
-            Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(Space.S3.dp),
-            verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+        if (!state.checking) {
+            if (state.customizing || idle) StartHero(state, actions)
+            else Job(state, actions)
+        }
+        KitSheet(
+            visible = state.customizing,
+            onDismissRequest = actions::back,
+            title = stringResource(title),
+            dismissible = !state.working,
         ) {
-            if (state.customizing || idle) {
-                Choices(state, actions)
-            } else {
-                Job(state, actions)
-            }
-            if (state.failure != null && state.confirmStop == null && !state.confirmRemoveVoice) {
-                KitErrorNotice(
-                    message = stringResource(Res.string.r40SetupCouldNotCheck),
-                    retry = KitLineAction(stringResource(Res.string.r40SetupRetry), actions::retry),
-                )
-            }
+            Choices(state, actions)
+            if (state.failure != null) KitErrorNotice(stringResource(Res.string.r40SetupCouldNotCheck),
+                retry = KitLineAction(stringResource(Res.string.r40SetupRetry), actions::retry))
         }
         KitSheet(
             visible = state.confirmStop != null,
@@ -128,6 +134,40 @@ public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyAction
 }
 
 @Composable
+private fun StartHero(state: SetupJourneyUi, actions: SetupJourneyActions) {
+    val names = state.install.filter { !it.required || it.id in setOf(SetupComponentIds.ESSENTIALS, SetupComponentIds.NODE) }
+        .filter { it.id != SetupComponentIds.LINUX && it.id != SetupComponentIds.OPENCODE }
+        .map { itemTitle(it.id, it.shortTitle) }
+    val includes = if (names.isEmpty()) null else {
+        val joined = if (names.size == 1) names.single() else stringResource(Res.string.phoneSetupStartListPair,
+            names.dropLast(1).joinToString(stringResource(Res.string.phoneSetupStartListSeparator)), names.last())
+        stringResource(Res.string.phoneSetupStartIncludes, joined)
+    }
+    KitSetupHero(
+        title = stringResource(Res.string.phoneSetupStartHeadline),
+        body = if (state.bytes > 0) stringResource(Res.string.phoneSetupStartPromise, journeySize(state.bytes))
+            else stringResource(Res.string.phoneSetupStartPromiseNoSize),
+        primary = KitAction(stringResource(Res.string.phoneSetupStartSetUp),
+            onClick = actions::start, working = state.working,
+            enabled = KitEnabled.of(state.canConfirm, stringResource(Res.string.r40SetupCheckDevice))),
+        tertiary = if (includes == null) emptyList() else listOf(KitAction(stringResource(Res.string.phoneSetupStartCustomize), actions::customize)),
+        content = {
+            Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+                val minutes = ceil(state.seconds / 60.0).toInt().coerceAtLeast(1) // NV: estimated seconds converted to whole minutes
+                val time = if (minutes == 1) stringResource(Res.string.phoneSetupStartStepsTime__eq1)
+                    else org.jetbrains.compose.resources.pluralStringResource(Res.plurals.phoneSetupStartStepsTime, minutes, minutes)
+                KitText(stringResource(Res.string.phoneSetupStartSteps, time), role = TypeRole.Label)
+                includes?.let { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary) }
+                Preflight(state, actions)
+                if (state.storageUnopened) KitErrorNotice(stringResource(Res.string.r40SetupStorageUnopened))
+                if (state.failure != null) KitErrorNotice(stringResource(Res.string.r40SetupCouldNotCheck),
+                    retry = KitLineAction(stringResource(Res.string.r40SetupRetry), actions::retry))
+            }
+        },
+    )
+}
+
+@Composable
 private fun Choices(state: SetupJourneyUi, actions: SetupJourneyActions) {
     if (state.checking) {
         KitText(stringResource(Res.string.phoneSetupStartChecking))
@@ -147,11 +187,14 @@ private fun Choices(state: SetupJourneyUi, actions: SetupJourneyActions) {
                 else -> component.summary ?: component.why
             }
         if (state.customizing) {
-            KitSwitchRow(
+            if (required) KitRow(
+                title = itemTitle(component.id, component.title),
+                trailing = KitRowTrailing.Value(stringResource(Res.string.r40SetupRequired), chevron = false),
+            ) else KitSwitchRow(
                 title = itemTitle(component.id, component.title),
                 checked = included,
-                supporting = supporting,
-                locked = installed || required,
+                supporting = if (installed) supporting else component.downloadBytes?.let { journeySize(it) },
+                locked = installed,
                 enabled = KitEnabled.of(!state.working, stringResource(Res.string.r40SetupWorking)),
                 modifier = Modifier.testTag("phone-setup-customize-${component.id}"),
                 onCheckedChange = { actions.toggle(component.id, it) },
@@ -265,97 +308,76 @@ private fun Preflight(state: SetupJourneyUi, actions: SetupJourneyActions) {
 @Composable
 private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions) {
     val progress = state.progress
-    KitProgressView(
-        progress =
-            KitProgress.Known(
-                progress.overall.toFloat().coerceIn(0f, 1f),
-                eta = progress.etaSeconds?.seconds,
-            ),
-        semanticsLabel = stringResource(Res.string.setupProgressViewOverallLabel),
-        tone =
-            when (progress.state) {
-                SetupState.Failed -> KitProgressTone.Failed
-                SetupState.Running,
-                SetupState.Done -> KitProgressTone.Moving
-                else -> KitProgressTone.Stopped
-            },
-    )
-    KitText(
-        stringResource(
-            Res.string.r40SetupPercent,
-            Numbers.format(
-                (progress.overall * 100)
-                    .toInt()
-                    .coerceIn(0, if (progress.state == SetupState.Done) 100 else 99)
-            ),
-        )
-    )
-    for (component in progress.components) {
-        val title =
-            state.options?.components?.firstOrNull { it.id == component.id }?.title ?: component.id
-        val label =
-            when (component.state) {
-                ComponentState.Done -> Res.string.r40SetupComponentDone
-                ComponentState.Skipped -> Res.string.r40SetupComponentInstalled
-                ComponentState.Checking -> Res.string.r40SetupComponentChecking
-                ComponentState.Running -> Res.string.r40SetupComponentRunning
-                ComponentState.Failed -> Res.string.r40SetupComponentFailed
-                ComponentState.Pending -> Res.string.r40SetupComponentPending
-            }
-        KitRow(
-            itemTitle(component.id, title),
-            supporting = component.stage ?: stringResource(label),
-        )
-        val done = component.bytesDone
-        val total = component.bytesTotal
-        if (done != null && total != null && total > 0)
-            KitText(
-                stringResource(
-                    Res.string.setupProgressViewBytes,
-                    journeySize(done),
-                    journeySize(total),
-                )
-            )
+    var detailsOpen by remember { mutableStateOf(false) }
+    val rows = progress.components
+    fun finished(row: ComponentProgress) = row.state == ComponentState.Done || row.state == ComponentState.Skipped
+    val done = rows.count(::finished)
+    val current = rows.indexOfFirst { it.state == ComponentState.Running || it.state == ComponentState.Checking || it.state == ComponentState.Failed }
+        .let { found -> if (found >= 0) found else rows.indexOfFirst { it.id == progress.current && !finished(it) } }
+    val row = rows.getOrNull(current)
+    val halted = progress.canContinue
+    val measured = if (!halted) row?.fraction?.toFloat() else null
+    val subject = state.options?.components?.firstOrNull { it.id == row?.id }?.shortTitle ?: row?.id.orEmpty()
+    val title = when (progress.state) {
+        SetupState.Done -> stringResource(Res.string.setupProgressViewDone)
+        SetupState.Failed -> stringResource(Res.string.setupProgressViewFailedTitle)
+        SetupState.Interrupted -> stringResource(Res.string.phoneSetupRingInterruptedTitle)
+        SetupState.Cancelled -> stringResource(Res.string.phoneSetupRingPausedTitle)
+        else -> when {
+            row?.state == ComponentState.Checking -> stringResource(Res.string.phoneSetupRingChecking)
+            row == null || row.state == ComponentState.Pending -> stringResource(Res.string.setupProgressViewGettingStarted)
+            row.id == SetupComponentIds.START -> stringResource(Res.string.phoneSetupStageStarting)
+            row.bytesTotal != null -> stringResource(Res.string.phoneSetupRingDownloading, subject)
+            else -> stringResource(Res.string.phoneSetupRingInstalling, subject)
+        }
     }
-    when (progress.state) {
-        SetupState.Running ->
-            KitButton(
-                stringResource(Res.string.setupProgressViewCancel),
-                actions::askStop,
-                role = KitButtonRole.Secondary,
-            )
-        SetupState.Done -> {
-            KitNotice(
-                title = stringResource(Res.string.phoneSetupReadyTitle),
-                message = stringResource(Res.string.phoneSetupStartReadyBody),
-                tone = StatusTone.Ok,
-            )
-            KitButton(stringResource(Res.string.phoneSetupStartOpen), actions::done)
+    val note = when (progress.state) {
+        SetupState.Running, SetupState.Idle -> stringResource(Res.string.phoneSetupRingSafeToLeaveQuiet)
+        SetupState.Failed -> runtimeProblem(progress.error)
+        SetupState.Interrupted, SetupState.Cancelled -> stringResource(Res.string.phoneSetupRingStoppedNote)
+        SetupState.Done -> stringResource(Res.string.phoneSetupStartReadyBody)
+    }
+    val bytesDone = row?.bytesDone
+    val bytesTotal = row?.bytesTotal
+    val caption = if (bytesDone != null && bytesTotal != null && bytesTotal > 0)
+        stringResource(Res.string.setupProgressViewBytes, journeySize(bytesDone), journeySize(bytesTotal)) else null
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val availableHeight = maxHeight
+        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).heightIn(min = availableHeight)
+            .padding(horizontal = Space.S5.dp, vertical = Space.S6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Spacer(Modifier.weight(.7f)) // NV: Flutter Alignment(0,-.3) apportions .7 above and 1.3 below
+            KitProgressRing(title, stringResource(Res.string.setupProgressViewOverallLabel),
+                value = measured, done = done, of = rows.size, finished = progress.state == SetupState.Done,
+                halted = halted, caption = caption,
+                trail = rows.mapIndexed { index, step -> when {
+                    finished(step) -> KitTrailMark.Done
+                    index == current -> KitTrailMark.Current
+                    else -> KitTrailMark.Waiting
+                } })
+            progress.etaSeconds?.takeIf { progress.state == SetupState.Running }?.let {
+                Spacer(Modifier.height(Space.S6.dp))
+                val minutes = ceil(it / 60.0).toInt().coerceAtLeast(1) // NV: ETA seconds to whole minutes
+                KitText(stringResource(Res.string.phoneSetupRingMinutesLeft, minutes), role = TypeRole.RowTitle, textAlign = TextAlign.Center)
+            }
+            Spacer(Modifier.height(Space.S2.dp))
+            KitText(note, role = TypeRole.Secondary, tone = TextTone.Tertiary, textAlign = TextAlign.Center)
+            Spacer(Modifier.height(Space.S3.dp))
+            KitButton(stringResource(Res.string.kitDetails), { detailsOpen = true }, role = KitButtonRole.Tertiary)
+            Spacer(Modifier.weight(1.3f)) // NV: Flutter Alignment(0,-.3) free space below
+            when {
+                progress.state == SetupState.Running -> KitButton(stringResource(Res.string.phoneSetupRingPause), { actions.askStop(); actions.confirmStop() }, fullWidth = true, role = KitButtonRole.Secondary, icon = io.github.eslamasabry.oc.ui.kit.icon.KitIcons.pause)
+                progress.canContinue -> KitButton(stringResource(Res.string.setupProgressViewContinue), actions::continueSetup, working = state.working)
+                progress.state == SetupState.Done -> KitButton(stringResource(Res.string.phoneSetupStartOpen), actions::done)
+            }
         }
-        SetupState.Failed,
-        SetupState.Interrupted,
-        SetupState.Cancelled -> {
-            KitErrorNotice(
-                message =
-                    when (progress.state) {
-                        SetupState.Interrupted ->
-                            stringResource(Res.string.setupProgressViewInterrupted)
-                        SetupState.Cancelled ->
-                            stringResource(Res.string.setupProgressViewCancelled)
-                        else -> runtimeProblem(progress.error)
-                    },
-                title = stringResource(Res.string.setupProgressViewFailedTitle),
-                details = state.details,
-                detailsLabel = stringResource(Res.string.kitDetails),
-                copyLabel = stringResource(Res.string.kitCopyDetails),
-            )
-            KitButton(
-                stringResource(Res.string.setupProgressViewContinue),
-                actions::continueSetup,
-                working = state.working,
-            )
+    }
+    KitSheet(visible = detailsOpen, onDismissRequest = { detailsOpen = false }, title = stringResource(Res.string.phoneSetupRingDetailsTitle)) {
+        rows.forEach { component ->
+            KitRow(itemTitle(component.id, state.options?.components?.firstOrNull { it.id == component.id }?.title ?: component.id),
+                supporting = component.stage,
+                trailing = if (finished(component)) KitRowTrailing.Value(component.version ?: stringResource(Res.string.phoneSetupStartInstalled), chevron = false) else KitRowTrailing.None)
         }
-        SetupState.Idle -> Unit
+        KitDetailsFold(label = stringResource(Res.string.kitDetails), copyLabel = stringResource(Res.string.kitCopyDetails), text = state.details)
     }
 }
 

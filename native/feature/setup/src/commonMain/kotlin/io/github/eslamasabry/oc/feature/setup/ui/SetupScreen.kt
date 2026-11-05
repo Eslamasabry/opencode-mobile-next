@@ -173,7 +173,7 @@ private fun ProgressAction(p: SetupProgressUi, working: Boolean, actions: SetupA
         p.failure == SetupFailureLine.Ownership -> KitButton(stringResource(Res.string.e7SetupOpenAppSettings), actions::openAppSettings)
         p.canContinue -> KitButton(stringResource(Res.string.setupProgressViewContinue), actions::resume, working = working)
         p.state == SetupState.Done -> KitButton(stringResource(Res.string.phoneSetupStartDone), actions::back)
-        p.running -> KitButton(stringResource(Res.string.phoneSetupRingPause), actions::pause, role = KitButtonRole.Secondary, working = working)
+        p.running -> KitButton(stringResource(Res.string.phoneSetupRingPause), actions::pause, fullWidth = true, role = KitButtonRole.Secondary, working = working, icon = io.github.eslamasabry.oc.ui.kit.icon.KitIcons.pause)
     }
 }
 
@@ -229,7 +229,7 @@ private fun ProgressPage(p: SetupProgressUi, openDetails: () -> Unit) {
             }
             if (note != null) {
                 Spacer(Modifier.height(if (p.running && p.minutesLeft != null) Space.S2.dp else Space.S6.dp))
-                KitText(note, Modifier.widthIn(max = 320.dp), role = TypeRole.Secondary, tone = TextTone.Tertiary, textAlign = TextAlign.Center) // F: lib/ui/screens/phone_setup/phone_setup_progress_screen.dart:575
+                KitText(note, Modifier.widthIn(max = 320.dp), role = TypeRole.Secondary, tone = TextTone.Tertiary, textAlign = TextAlign.Center) // F: lib/ui/screens/phone_setup/phone_setup_progress_screen.dart:553
             }
             Spacer(Modifier.height(Space.S3.dp))
             KitButton(stringResource(Res.string.kitDetails), openDetails, role = KitButtonRole.Tertiary)

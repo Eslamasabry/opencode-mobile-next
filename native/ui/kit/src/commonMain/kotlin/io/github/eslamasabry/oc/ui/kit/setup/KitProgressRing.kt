@@ -61,7 +61,7 @@ public fun KitProgressRing(
         if (target < arc.value || motion.state.reduced) arc.snapTo(target)
         else arc.animateTo(target, motion.enter())
     }
-    val whole = Numbers.format(if (value == null) done else floor(target * 100).toInt()) // F: lib/ui/kit/kit_progress_ring.dart:198-205
+    val whole = Numbers.format(if (value == null) done else floor(target * 100).toInt()) // F: lib/ui/kit/kit_progress_ring.dart:181
     val total = Numbers.format(of)
     val spoken = when {
         finished -> stringResource(Res.string.kitProgressRingFinished)
@@ -74,42 +74,40 @@ public fun KitProgressRing(
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     Column(modifier.kitMaxWidth(CapRole.Reading).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            val diameter = (maxWidth.value * .64f).coerceIn(150f, 264f) // F: lib/ui/kit/kit_progress_ring.dart:219-223
-            val stroke = (diameter * .052f).coerceIn(9f, 14f) // F: lib/ui/kit/kit_progress_ring.dart:222-223
+            val diameter = (maxWidth.value * .64f).coerceIn(150f, 264f) // F: lib/ui/kit/kit_progress_ring.dart:199
+            val stroke = (diameter * .052f).coerceIn(9f, 14f) // F: lib/ui/kit/kit_progress_ring.dart:200
             Box(Modifier.size(diameter.dp).clearAndSetSemantics {
                 contentDescription = listOfNotNull(semanticsLabel, spoken, caption).joinToString(", ")
                 progressBarRangeInfo = ProgressBarRangeInfo(target, 0f..1f)
             }, contentAlignment = Alignment.Center) {
                 Canvas(Modifier.fillMaxSize()) {
                     val width = stroke.dp.toPx()
-                    val inset = width / 2 // F: lib/ui/kit/kit_progress_ring.dart:489
+                    val inset = width / 2 // F: lib/ui/kit/kit_progress_ring.dart:487
                     val bounds = Size(size.width - width, size.height - width)
-                    drawArc(colors.text3.copy(alpha = if (colors.dark) .22f else .18f), 0f, 360f, false, Offset(inset, inset), bounds, style = Stroke(width)) // F: lib/ui/kit/kit_progress_ring.dart:335,513-514
+                    drawArc(colors.text3.copy(alpha = if (colors.dark) .22f else .18f), 0f, 360f, false, Offset(inset, inset), bounds, style = Stroke(width)) // NV: a full Compose arc is 360 degrees; Flutter uses 2*pi radians
+                    // F: lib/ui/kit/kit_progress_ring.dart:294,300
                     if (arc.value > 0) drawArc(
-                        if (halted) colors.text3.copy(alpha = .7f) else colors.accent, // F: lib/ui/kit/kit_progress_ring.dart:337-339
+                        if (halted) colors.text3.copy(alpha = .7f) else colors.accent, // F: lib/ui/kit/kit_progress_ring.dart:296
                         -90f, (if (rtl) -1 else 1) * 360f * arc.value, false, // NV: radians converted to degrees for Compose drawArc
                         Offset(inset, inset), bounds, style = Stroke(width, cap = StrokeCap.Round),
                     )
                 }
                 if (finished) {
-                    Canvas(Modifier.size((diameter * .3f).dp)) { // F: lib/ui/kit/kit_progress_ring.dart:315-318
-                        val path = androidx.compose.ui.graphics.Path().apply {
-                            moveTo(size.width * .15f, size.height * .5f) // F: lib/ui/kit/scenes/setup_cast.dart:133-135
-                            lineTo(size.width * .4f, size.height * .75f) // F: lib/ui/kit/scenes/setup_cast.dart:133-135
-                            lineTo(size.width * .85f, size.height * .25f) // F: lib/ui/kit/kit_progress_ring.dart:229 lib/ui/kit/scenes/setup_ready_scene.dart:125
-                        }
-                        drawPath(path, colors.accent, style = Stroke(stroke.dp.toPx(), cap = StrokeCap.Round))
-                    }
+                    io.github.eslamasabry.oc.ui.kit.icon.KitIcon(
+                        io.github.eslamasabry.oc.ui.kit.icon.KitIcons.check,
+                        Modifier.size((diameter * .3f).dp), // F: lib/ui/kit/kit_progress_ring.dart:281
+                        tone = io.github.eslamasabry.oc.ui.design.type.TextTone.Accent,
+                    )
                 } else Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     val big = typography.style(TypeRole.LargeTitle).copy(
                         color = if (halted) colors.text2 else colors.text1,
-                        fontSize = (diameter * .25f).sp, lineHeight = (diameter * .25f).sp, // F: lib/ui/kit/kit_progress_ring.dart:229-230
-                        fontWeight = FontWeight.W600, letterSpacing = (-diameter * .006f).sp, // F: lib/ui/kit/kit_progress_ring.dart:231-232
+                        fontSize = (diameter * .25f).sp, lineHeight = (diameter * .25f).sp, // F: lib/ui/kit/kit_progress_ring.dart:205
+                        fontWeight = FontWeight.W600, letterSpacing = (-diameter * .006f).sp, // F: lib/ui/kit/kit_progress_ring.dart:208
                         fontFeatureSettings = "tnum",
                     )
                     val text = buildAnnotatedString {
                         append(whole)
-                        withStyle(SpanStyle(fontSize = (diameter * if (value != null) .13f else .1f).sp, letterSpacing = 0.sp)) { append(suffix) } // F: lib/ui/kit/kit_progress_ring.dart:254-255,290-291
+                        withStyle(SpanStyle(fontSize = (diameter * if (value != null) .13f else .1f).sp, letterSpacing = 0.sp)) { append(suffix) } // F: lib/ui/kit/kit_progress_ring.dart:228,259
                     }
                     BasicText(text, style = big, maxLines = 1)
                     if (value == null || caption != null) {
@@ -120,7 +118,7 @@ public fun KitProgressRing(
             }
         }
         Spacer(Modifier.height((Space.S6 + Space.S2).dp))
-        KitText(headline, Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite }, role = TypeRole.Title, textAlign = TextAlign.Center, maxLines = 3) // F: lib/ui/kit/kit_progress_ring.dart:385
+        KitText(headline, Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite }, role = TypeRole.Title, textAlign = TextAlign.Center, maxLines = 3) // F: lib/ui/kit/kit_progress_ring.dart:343
         if (trail.isNotEmpty()) {
             Spacer(Modifier.height(Space.S4.dp))
             RingTrail(trail, halted)
@@ -137,15 +135,15 @@ private fun RingTrail(marks: List<KitTrailMark>, halted: Boolean) {
     val colors = LocalKitColors.current
     val ringWidth = kitFocusRingWidth()
     val lit = if (halted) colors.text2 else colors.accent
-    val waiting = colors.text3.copy(alpha = .45f) // F: lib/ui/kit/kit_progress_ring.dart:427
-    val dot = 8.dp // F: lib/ui/kit/kit_progress_ring.dart:425
+    val waiting = colors.text3.copy(alpha = .45f) // F: lib/ui/kit/kit_progress_ring.dart:375
+    val dot = 8.dp // F: lib/ui/kit/kit_progress_ring.dart:373
     Row(Modifier.clearAndSetSemantics {}, verticalAlignment = Alignment.CenterVertically) {
         marks.forEachIndexed { index, mark ->
-            if (index > 0) Canvas(Modifier.padding(horizontal = Space.S1.dp).width(14.dp).height(1.5.dp)) { // F: lib/ui/kit/kit_progress_ring.dart:438-439
-                drawRect(if (mark == KitTrailMark.Waiting) waiting else lit.copy(alpha = .55f)) // F: lib/ui/kit/kit_progress_ring.dart:441
+            if (index > 0) Canvas(Modifier.padding(horizontal = Space.S1.dp).width(14.dp).height(1.5.dp)) { // F: lib/ui/kit/kit_progress_ring.dart:385,386
+                drawRect(if (mark == KitTrailMark.Waiting) waiting else lit.copy(alpha = .55f)) // F: lib/ui/kit/kit_progress_ring.dart:388
             }
-            Canvas(Modifier.width(if (mark == KitTrailMark.Current) 24.dp else dot).height(dot)) { // F: lib/ui/kit/kit_progress_ring.dart:450
-                val radius = androidx.compose.ui.geometry.CornerRadius(size.height / 2) // F: lib/ui/kit/kit_progress_ring.dart:462
+            Canvas(Modifier.width(if (mark == KitTrailMark.Current) 24.dp else dot).height(dot)) { // F: lib/ui/kit/kit_progress_ring.dart:396
+                val radius = androidx.compose.ui.geometry.CornerRadius(size.height / 2) // F: lib/ui/kit/kit_progress_ring.dart:461
                 drawRoundRect(if (mark == KitTrailMark.Waiting) waiting else lit, cornerRadius = radius,
                     style = if (mark == KitTrailMark.Waiting) Stroke(ringWidth.toPx()) else androidx.compose.ui.graphics.drawscope.Fill)
             }
