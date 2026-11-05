@@ -370,6 +370,7 @@ private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, state
             allowOnceLabel = stringResource(Res.string.kitRequestAllowOnce),
             alwaysLabel = null,
             denyLabel = stringResource(Res.string.kitRequestReject),
+            secondary = true,
             onAllowOnce = { actions.answerPermission(row, true) },
             onAlways = null,
             onDeny = { actions.answerPermission(row, false) },
