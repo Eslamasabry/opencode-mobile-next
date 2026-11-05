@@ -41,6 +41,6 @@ class KitScrollFadeGateTest {
     }
 
     @Test fun matrix() {
-        FlutterGoldenGate.matrix("part-kit_scroll_fade", caps = mapOf("KitScrollFade" to "mask")) { default() }
+        FlutterGoldenGate.matrix("part-kit_scroll_fade", caps = mapOf("KitScrollFade" to "wrapper")) { default() }
     }
 }
