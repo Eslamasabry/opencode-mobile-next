@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -45,6 +46,7 @@ import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
@@ -183,7 +185,7 @@ internal fun DialogLayer(state: KitSheetHostState) {
 
 /**
  * A short message that needs an answer (Dart `showKitAlert`; plan 06 §7.4): an in-window centred panel, title, body,
- * then its actions. Dismissing (scrim, Back, the predictive back gesture) calls [onDismissRequest]. With no [primary]
+ * then its actions; [icon] shows in a tile beside the title. Dismissing (scrim, Back, the predictive back gesture) calls [onDismissRequest]. With no [primary]
  * the alert offers one Close.
  *
  * States: closed, open
@@ -200,15 +202,18 @@ public fun KitAlert(
     body: String? = null,
     primary: KitAction? = null,
     secondary: KitAction? = null,
+    icon: ImageVector? = null,
 ) {
     val close = stringResource(Res.string.kitSheetClose)
     KitDialogFrame(visible, title, onDismissRequest) {
-        KitText(title, role = TypeRole.Title, kind = KitTextKind.Frame)
+        Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+            icon?.let { IconTile(it, LocalKitTokens.current.iconTile.dp) }
+            KitText(title, Modifier.weight(1f), role = TypeRole.Title, kind = KitTextKind.Frame)
+        }
         body?.let { KitText(it, role = TypeRole.Body, tone = TextTone.Secondary) }
         KitActionBlock(
             primary = primary,
-            secondary = secondary,
-            tertiary = if (primary == null && secondary == null) listOf(KitAction(close, onDismissRequest)) else emptyList(),
+            secondary = secondary ?: if (primary == null) KitAction(close, onDismissRequest) else null,
         )
     }
 }
