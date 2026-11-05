@@ -10,6 +10,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.chats.presentation.*
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.foundation.KitDivider
@@ -21,8 +22,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowState
 import io.github.eslamasabry.oc.ui.kit.row.KitRowStateTone
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
-import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
-import io.github.eslamasabry.oc.ui.kit.state.KitStateView
+import io.github.eslamasabry.oc.ui.kit.state.KitInboxEmptyAnswer
 import io.github.eslamasabry.oc.ui.kit.text.KitBidi
 import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAge
 import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
@@ -90,7 +90,23 @@ internal fun ChatsInboxScreen(state: ChatsUi, actions: ChatsActions) {
                         Modifier.fillParentMaxHeight(if (state.finished.isEmpty()) 1f else .4f), // F: lib/ui/screens/inbox/inbox_screen.dart:244
                         contentAlignment = Alignment.Center,
                     ) {
-                        KitStateView(KitStateKind.Calm, stringResource(Res.string.inboxEmptyTitle))
+                        val down = state.home.sources.filter { it.shown && it.unreachable }
+                        val names = state.incomplete.ifEmpty { down.map { it.name } }
+                        val mask = rememberKitMask()
+                        val partial = if (names.isEmpty()) null else stringResource(
+                            Res.string.inboxEmptyPartialLine,
+                            names.joinToString(", ") { KitBidi.auto(mask(it)) },
+                        )
+                        KitInboxEmptyAnswer(
+                            answer = stringResource(Res.string.inboxEmptyTitle),
+                            uncertain = names.isNotEmpty() || watched.failure != null,
+                            line = partial,
+                            retry = if (down.isEmpty()) null else KitAction(
+                                stringResource(Res.string.commonRetry),
+                                { down.forEach { actions.retrySource(it.profile) } },
+                            ),
+                            modifier = Modifier.padding(horizontal = Space.S4.dp, vertical = Space.S6.dp),
+                        )
                     }
                 }
                 if (state.finished.isNotEmpty()) item("finished") {

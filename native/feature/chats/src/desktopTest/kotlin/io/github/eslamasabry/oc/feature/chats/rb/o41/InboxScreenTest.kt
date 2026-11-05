@@ -1,6 +1,14 @@
 package io.github.eslamasabry.oc.feature.chats.rb.o41
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.*
@@ -14,6 +22,8 @@ import io.github.eslamasabry.oc.feature.chats.Themed
 import io.github.eslamasabry.oc.feature.chats.presentation.*
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsInboxScreen
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.KitAction
+import io.github.eslamasabry.oc.ui.kit.state.KitInboxEmptyAnswer
 import io.github.eslamasabry.oc.ui.kitchat.request.KitInboxRequestRow
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
@@ -68,4 +78,25 @@ class InboxScreenTest {
         onNodeWithContentDescription("Open Checkout").performClick()
         assertEquals(listOf("open one"), recorded.calls)
     }
+    @Test fun `B-KIT-003 Inbox answer caps large type on a narrow page and offers retry for an unread source`() = runComposeUiTest {
+        var retries = 0
+        setContent {
+            Themed {
+                CompositionLocalProvider(LocalDensity provides Density(1f, 2f)) {
+                    Box(Modifier.width(320.dp)) {
+                        KitInboxEmptyAnswer("Nothing waits", uncertain = true, line = "Laptop may have more",
+                            retry = KitAction("Try again", { retries++ }))
+                    }
+                }
+            }
+        }
+        onNodeWithTag("inbox-answer-off", useUnmergedTree = true).assertExists()
+        onNodeWithTag("inbox-answer-ok", useUnmergedTree = true).assertDoesNotExist()
+        val layouts = mutableListOf<TextLayoutResult>()
+        onNode(hasText("Nothing waits")).performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+        assertEquals(38.4f, layouts.single().layoutInput.style.fontSize.value, .01f)
+        onNodeWithText("Try again").performClick()
+        assertEquals(1, retries)
+    }
+
 }
