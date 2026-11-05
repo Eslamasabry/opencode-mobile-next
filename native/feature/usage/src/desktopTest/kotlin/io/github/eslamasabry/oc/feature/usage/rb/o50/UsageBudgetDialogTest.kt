@@ -27,9 +27,17 @@ class UsageBudgetDialogTest {
                 Proxy.newProxyInstance(
                     UsageActions::class.java.classLoader,
                     arrayOf(UsageActions::class.java),
-                ) { _, method, args ->
-                    calls += method.name to args?.toList().orEmpty()
-                    null
+                ) { proxy, method, args ->
+                    when (method.name) {
+                        "equals" -> proxy === args?.getOrNull(0)
+                        "hashCode" -> System.identityHashCode(proxy)
+                        "toString" -> "TestActions"
+                        else -> {
+
+                            calls += method.name to args?.toList().orEmpty()
+                            null
+                        }
+                    }
                 } as UsageActions
             val state = UsageUi(budgetsAvailable = true, budgetUnit = UsageBudgetUnit.Usd)
             setContent {
@@ -57,9 +65,17 @@ class UsageBudgetDialogTest {
             Proxy.newProxyInstance(
                 UsageActions::class.java.classLoader,
                 arrayOf(UsageActions::class.java),
-            ) { _, method, _ ->
-                if (method.name == "clearBudgets") cleared++
-                null
+            ) { proxy, method, args ->
+                when (method.name) {
+                    "equals" -> proxy === args?.getOrNull(0)
+                    "hashCode" -> System.identityHashCode(proxy)
+                    "toString" -> "TestActions"
+                    else -> {
+
+                        if (method.name == "clearBudgets") cleared++
+                        null
+                    }
+                }
             } as UsageActions
         setContent {
             KitTheme(
