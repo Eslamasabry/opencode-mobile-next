@@ -377,7 +377,7 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
                         )
                         state.setup?.models.orEmpty().forEach { model ->
                             KitChoiceRow(
-                            mark = KitChoiceMark.Tick,
+                                mark = KitChoiceMark.Tick,
                                 title = model.name,
                                 supporting = model.model.providerId,
                                 selected = model.model == state.model,
@@ -425,68 +425,67 @@ private fun importAge(ageMs: Long): String {
 
 @Composable
 private fun ClaudeImportBody(state: NewConversationUi, actions: NewConversationActions) {
-                    KitText(
-                        stringResource(
-                            Res.string.claudeImportIntro,
-                            state.directory?.substringAfterLast('/').orEmpty(),
-                        )
-                    )
-                    if (state.importFailed && state.imports == null && !state.importBusy)
-                        KitStateView(
-                            kind = KitStateKind.Error,
-                            title = stringResource(Res.string.claudeImportLoadFailedTitle),
-                            body = stringResource(Res.string.claudeImportLoadFailedBody),
-                            primary =
-                                KitAction(
-                                    stringResource(Res.string.commonRetry),
-                                    { actions.sheet(NewConversationSheet.Import) },
+    KitText(
+        stringResource(
+            Res.string.claudeImportIntro,
+            state.directory?.substringAfterLast('/').orEmpty(),
+        )
+    )
+    if (state.importFailed && state.imports == null && !state.importBusy)
+        KitStateView(
+            kind = KitStateKind.Error,
+            title = stringResource(Res.string.claudeImportLoadFailedTitle),
+            body = stringResource(Res.string.claudeImportLoadFailedBody),
+            primary =
+                KitAction(
+                    stringResource(Res.string.commonRetry),
+                    { actions.sheet(NewConversationSheet.Import) },
+                ),
+        )
+    else if (state.importFailed)
+        KitNotice(stringResource(Res.string.claudeImportFailed))
+    if (state.importBusy && state.imports == null) KitSkeletonRows()
+    else
+        state.imports?.let { found ->
+            if (found.items.isEmpty())
+                KitStateView(
+                    kind = KitStateKind.Empty,
+                    title = stringResource(Res.string.claudeImportEmptyTitle),
+                    body = stringResource(Res.string.claudeImportEmptyBody),
+                )
+            else
+                KitRowGroup {
+                    found.items.forEach { item ->
+                        KitRow(
+                            leading = KitRowLeading.Glyph(KitIcons.history),
+                            enabled = !state.importBusy,
+                            disabledReason = stringResource(Res.string.claudeImportWorking),
+                            title =
+                                item.displayTitle
+                                    ?: stringResource(
+                                        Res.string.claudeImportUntitled
+                                    ),
+                            supporting =
+                                stringResource(
+                                    Res.string.claudeImportRowDetail,
+                                    item.directory.substringAfterLast('/'),
+                                    importAge(
+                                        state.importsReadAtMs -
+                                            item.lastUsed.toEpochMilliseconds()
+                                    ),
                                 ),
+                            supportingMaxLines = 2,
+                            onClick = { actions.import(item) },
                         )
-                    else if (state.importFailed)
-                        KitNotice(stringResource(Res.string.claudeImportFailed))
-                    if (state.importBusy && state.imports == null) KitSkeletonRows()
-                    else
-                        state.imports?.let { found ->
-                            if (found.items.isEmpty())
-                                KitStateView(
-                                    kind = KitStateKind.Empty,
-                                    title = stringResource(Res.string.claudeImportEmptyTitle),
-                                    body = stringResource(Res.string.claudeImportEmptyBody),
-                                )
-                            else
-                                KitRowGroup {
-                                    found.items.forEach { item ->
-                                        KitRow(
-                                            leading = KitRowLeading.Glyph(KitIcons.history),
-                                            enabled = !state.importBusy,
-                                            disabledReason = stringResource(Res.string.claudeImportWorking),
-                                            title =
-                                                item.displayTitle
-                                                    ?: stringResource(
-                                                        Res.string.claudeImportUntitled
-                                                    ),
-                                            supporting =
-                                                stringResource(
-                                                    Res.string.claudeImportRowDetail,
-                                                    item.directory.substringAfterLast('/'),
-                                                    importAge(
-                                                        state.importsReadAtMs -
-                                                            item.lastUsed.toEpochMilliseconds()
-                                                    ),
-                                                ),
-                                            supportingMaxLines = 2,
-                                            onClick = { actions.import(item) },
-                                        )
-                                    }
-                                }
-                            if (found.alreadyImported > 0)
-                                KitText(
-                                    pluralStringResource(
-                                        Res.plurals.claudeImportAlready,
-                                        found.alreadyImported,
-                                        found.alreadyImported,
-                                    )
-                                )
-                        }
-
+                    }
+                }
+            if (found.alreadyImported > 0)
+                KitText(
+                    pluralStringResource(
+                        Res.plurals.claudeImportAlready,
+                        found.alreadyImported,
+                        found.alreadyImported,
+                    )
+                )
+        }
 }

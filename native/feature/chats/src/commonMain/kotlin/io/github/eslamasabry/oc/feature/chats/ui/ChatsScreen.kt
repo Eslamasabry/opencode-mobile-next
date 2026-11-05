@@ -435,4 +435,3 @@ public fun ChatPreviewScreen(state: ChatPreviewUi, actions: ChatPreviewActions) 
         }
     }
 }
-

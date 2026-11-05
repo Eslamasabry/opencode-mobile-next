@@ -253,8 +253,12 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                     }
                 AllPhase.NoMatch ->
                     item(key = "no-match") {
-                        KitSearchNoMatch(query = state.query, onClear = actions::clearFilters)
-
+                        if (state.query.isNotBlank()) KitSearchNoMatch(query = state.query, onClear = actions::clearFilters)
+                        else KitStateView(
+                            kind = KitStateKind.Empty,
+                            title = stringResource(Res.string.globalSessionsNoMatchTitle),
+                            primary = KitAction(stringResource(Res.string.chatsHomeClearFilters), actions::clearFilters),
+                        )
                     }
                 AllPhase.List ->
                     items(state.rows, key = { it.key }) { row ->
