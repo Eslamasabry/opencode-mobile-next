@@ -16,7 +16,10 @@ import 'cards_from_agents_row.dart';
 /// the built-in server when this phone has one, so the person is never left
 /// with an empty page.
 class AgentsScreen extends ConsumerWidget {
-  const AgentsScreen({super.key});
+  const AgentsScreen({super.key, this.onAgentChosen});
+
+  /// Returns to an existing new conversation after "Use …" in setup.
+  final VoidCallback? onAgentChosen;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -37,9 +40,9 @@ class AgentsScreen extends ConsumerWidget {
               bottom: KitScreen.endPadding(context),
             ),
             children: [
-              if (available) ...const [
-                AgentsSection(),
-                CardsFromAgentsRow(),
+              if (available) ...[
+                AgentsSection(onAgentChosen: onAgentChosen),
+                const CardsFromAgentsRow(),
               ] else
                 KitStateView(
                   key: const ValueKey('agents-unavailable'),

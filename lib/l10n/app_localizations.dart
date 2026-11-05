@@ -56412,6 +56412,12 @@ abstract class AppLocalizations {
   /// **'The safety check stopped at “{check}”.'**
   String phoneTeamProofOther(String check);
 
+  /// New conversation: visible action inside the agent grid that opens phone agent setup
+  ///
+  /// In en, this message translates to:
+  /// **'Add an agent'**
+  String get chatsNewAddAgent;
+
   /// Agent persona: Antigravity card line, at most 28 characters
   ///
   /// In en, this message translates to:

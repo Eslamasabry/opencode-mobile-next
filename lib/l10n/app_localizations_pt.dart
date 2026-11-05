@@ -35912,6 +35912,9 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get chatsNewAddAgent => 'Add an agent';
+
+  @override
   String get agentPersonaAntigravityStrength => 'Google’s terminal agent';
 
   @override

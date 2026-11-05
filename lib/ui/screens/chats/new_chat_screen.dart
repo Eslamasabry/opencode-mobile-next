@@ -20,6 +20,7 @@ import '../../widgets/product_states.dart'
 import '../agents/agent_model_sheet.dart';
 import '../../agents/agent_persona_text.dart';
 import '../agents/agent_sheet.dart';
+import '../agents/agents_screen.dart';
 import '../agents/agents_text.dart' show agentChoosable;
 import 'chats_host.dart';
 import 'claude_import_screen.dart';
@@ -358,6 +359,21 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
     }
   }
 
+  /// Keep this unsent conversation underneath setup. "Use …" returns here
+  /// with the chosen agent; Back also refreshes any newly installed agents.
+  Future<void> _addAgent() async {
+    _focus.unfocus();
+    await pushKitPage<void>(
+      context,
+      (_) => AgentsScreen(onAgentChosen: () => Navigator.of(context).pop()),
+    );
+    if (!mounted) return;
+    final agents = ref.read(chatsHostProvider).agents;
+    if (agents != null && agents.phoneAgentsAvailable) {
+      await agents.refreshAgentRows();
+    }
+  }
+
   Widget _screen(BuildContext context, ChatsHost host) {
     final source = host.source;
     if (!_resolved) {
@@ -425,8 +441,9 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
     setupRows.sort(
       (a, b) => rank(a.id, a.iconKey).compareTo(rank(b.id, b.iconKey)),
     );
-    // A single agent (a remote server's own) never shows one lonely card.
-    final grid = choices.length + setupRows.length >= 2;
+    // Phone setup remains visible even before an agent has been installed.
+    // A remote server's single agent still needs no grid.
+    final grid = phoneAgents || choices.length + setupRows.length >= 2;
     final agentChoice = !phoneAgents
         ? null
         : choices.where((choice) => choice.selected).firstOrNull;
@@ -506,6 +523,20 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
           ),
       ],
     ];
+    if (phoneAgents) {
+      final empty = !agents.agentRows.any((row) => row.installedOnPhone);
+      final largeText = MediaQuery.textScalerOf(context).scale(1) > 1.3;
+      // Always in the first row. Empty setup and large-text single-column
+      // layouts lead with the action so it never sits below the choices.
+      cards.insert(
+        empty || largeText || cards.isEmpty ? 0 : 1,
+        KitAddAgentCard(
+          tappableKey: const ValueKey('chats-new-add-agent'),
+          label: l10n.chatsNewAddAgent,
+          onPressed: () => unawaited(_addAgent()),
+        ),
+      );
+    }
     return KitScreen(
       topBar: KitTopBar(title: l10n.chatsHomeNewChat, centred: true),
       // A wide window keeps the field, the rows and Start at a reading

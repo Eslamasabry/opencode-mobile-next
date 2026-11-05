@@ -10933,6 +10933,7 @@
   "phoneTeamProofNoAnswer": "لم يستجب اختبار الأمان في الوقت المحدد.",
   "phoneTeamProofProot": "لم ينجح فحص أمان proot «{check}».",
   "phoneTeamProofOther": "توقف فحص الأمان عند «{check}».",
+  "chatsNewAddAgent": "إضافة وكيل",
   "agentPersonaAntigravityStrength": "وكيل Google في الطرفية",
   "agentPersonaAntigravityAbout": "يعمل على مشروعك باستخدام نماذج Gemini.",
   "agentPersonaAntigravityNeeds": "حساب Google؛ سجّل الدخول في المتصفح",

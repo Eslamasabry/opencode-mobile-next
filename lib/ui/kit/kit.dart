@@ -81,6 +81,7 @@
 /// | [KitAgentChoice], [KitAgentChoiceState] | one agent as a large card in a grid: its big mark, name in title size and a calm line from its persona; the chosen one has a mint ring and a filled check badge, one not set up is dimmed and says Set up |
 /// | [KitAgentGridSpan] | lets the one card spanning a grid's row know to lay out sideways |
 /// | [KitAgentGrid] | agent cards in two equal columns, a pair as tall as its taller card; an odd last one spans the row sideways; one column at large text |
+/// | [KitAddAgentCard] | a plus and an action label inside the agent grid; opens setup, never a selectable agent |
 /// | [KitStartBox] | the glowing question field a new conversation starts with (two lines by default, growing as you type), its question as the placeholder |
 /// | [KitSegmented], [KitSegment] | kit v2 §1.6 one choice among 2–4 short, always-visible options |
 /// | [KitMenuItem], [KitMenuGroup], [showKitMenu], [KitMenuPanel] | kit v2 the one popup menu: groups (a named group gets a heading), checks, disabled reasons, destructive last |
@@ -181,6 +182,7 @@ library;
 
 export 'kit_action_stack.dart';
 export 'kit_agent_choice.dart';
+export 'kit_add_agent_card.dart';
 export 'kit_agent_grid.dart';
 export 'kit_agent_grid_span.dart';
 export 'kit_agent_line.dart';

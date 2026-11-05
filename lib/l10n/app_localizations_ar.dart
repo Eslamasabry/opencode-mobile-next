@@ -35972,6 +35972,9 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get chatsNewAddAgent => 'إضافة وكيل';
+
+  @override
   String get agentPersonaAntigravityStrength => 'وكيل Google في الطرفية';
 
   @override

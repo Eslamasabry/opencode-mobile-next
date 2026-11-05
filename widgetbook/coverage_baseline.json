@@ -51,7 +51,6 @@
     "McpCatalogScreen": "lib/ui/screens/mcp_catalog_screen.dart",
     "McpSetupScreen": "lib/ui/screens/mcp_setup_screen.dart",
     "ModelCatalogView": "lib/ui/widgets/pickers.dart",
-    "NewChatScreen": "lib/ui/screens/chats/new_chat_screen.dart",
     "PairingScannerScreen": "lib/ui/screens/pairing_scanner_screen.dart",
     "PermissionsAutomationScreen": "lib/ui/screens/settings/agents_permissions_screens.dart",
     "PhoneSetupReadyScreen": "lib/ui/screens/phone_setup/phone_setup_ready_screen.dart",

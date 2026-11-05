@@ -23,7 +23,10 @@ final _never = ValueNotifier<int>(0);
 /// check, resume), and "Check this phone". Draws nothing when the
 /// connection has no phone agents.
 class AgentsSection extends ConsumerStatefulWidget {
-  const AgentsSection({super.key});
+  const AgentsSection({super.key, this.onAgentChosen});
+
+  /// Setup launched from an existing conversation returns there when chosen.
+  final VoidCallback? onAgentChosen;
 
   @override
   ConsumerState<AgentsSection> createState() => _AgentsSectionState();
@@ -112,6 +115,11 @@ class _AgentsSectionState extends ConsumerState<AgentsSection> {
   Future<void> _openSheet(String agentId, AgentSheetStep step) async {
     final chosen = await showAgentSheet(context, agentId: agentId, step: step);
     if (chosen != true || !mounted) return;
+    final onChosen = widget.onAgentChosen;
+    if (onChosen != null) {
+      onChosen();
+      return;
+    }
     await showNewChat(context);
   }
 

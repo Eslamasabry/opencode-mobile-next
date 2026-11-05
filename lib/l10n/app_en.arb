@@ -43900,6 +43900,8 @@
       }
     }
   },
+  "chatsNewAddAgent": "Add an agent",
+  "@chatsNewAddAgent": {"description": "New conversation: visible action inside the agent grid that opens phone agent setup"},
   "agentPersonaAntigravityStrength": "Google’s terminal agent",
   "@agentPersonaAntigravityStrength": {"description": "Agent persona: Antigravity card line, at most 28 characters"},
   "agentPersonaAntigravityAbout": "Works on your project with Gemini models.",

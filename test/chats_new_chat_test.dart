@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show MethodChannel;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/builtin/git_link_repair.dart';
+import 'package:opencode_mobile/domain/agent_catalog.dart';
+import 'package:opencode_mobile/domain/agent_sign_in.dart';
+import 'package:opencode_mobile/domain/phone_agent_host.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart'
     show ProductException, WorkspaceProject;
 import 'package:opencode_mobile/ui/kit/kit.dart';
@@ -10,6 +13,7 @@ import 'package:opencode_mobile/paseo/transport.dart'
 import 'package:opencode_mobile/state/profiles.dart' show ProfileStore;
 import 'package:opencode_mobile/ui/app_iconography.dart';
 import 'package:opencode_mobile/ui/screens/chats/new_chat_screen.dart';
+import 'package:opencode_mobile/ui/screens/agents/agents_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../tool/capture/fixtures.dart' show loadCaptureFonts;
@@ -30,6 +34,8 @@ Future<void> _open(
   FakeChatsHost host, {
   String? directory,
   Size size = const Size(412, 915),
+  Locale locale = const Locale('en'),
+  double textScale = 1,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -43,6 +49,8 @@ Future<void> _open(
           child: const Text('go'),
         ),
       ),
+      locale: locale,
+      textScale: textScale,
     ),
   );
   await tester.tap(find.text('go'));
@@ -51,6 +59,186 @@ Future<void> _open(
 
 void main() {
   setUpAll(loadCaptureFonts);
+
+  group('Add an agent', () {
+    for (final (locale, label) in [
+      (const Locale('en'), 'Add an agent'),
+      (const Locale('ar'), 'إضافة وكيل'),
+    ]) {
+      testWidgets('is a visible grid action in ${locale.languageCode}', (
+        tester,
+      ) async {
+        final semantics = tester.ensureSemantics();
+        final host = FakeChatsHost(_source())
+          ..phoneAgents = FakePhoneAgentsSource(
+            rows: [
+              agentRowFor('antigravity', FakeAgentStage.ready),
+              agentRowFor('claude', FakeAgentStage.notInstalled),
+            ],
+            selected: 'antigravity',
+          );
+        await _open(tester, host, locale: locale);
+        final action = find.byKey(const ValueKey('chats-new-add-agent'));
+        final labelled = find.bySemanticsLabel(label);
+        expect(action, findsOneWidget);
+        expect(labelled, findsOneWidget);
+        expect(find.text(label), findsOneWidget);
+        expect(
+          find.ancestor(of: action, matching: find.byType(KitAgentGrid)),
+          findsOneWidget,
+        );
+        expect(
+          find.ancestor(of: action, matching: find.byType(KitAgentChoice)),
+          findsNothing,
+        );
+        final flags = tester.getSemantics(labelled).flagsCollection;
+        expect(flags.isButton, isTrue);
+        expect(flags.isInMutuallyExclusiveGroup, isFalse);
+        final bounds = tester.getRect(action);
+        expect(bounds.width, greaterThanOrEqualTo(48));
+        expect(bounds.height, greaterThanOrEqualTo(48));
+        expect(bounds.top, greaterThanOrEqualTo(0));
+        expect(bounds.bottom, lessThanOrEqualTo(915));
+        final firstAgent = tester.getRect(find.byType(KitAgentChoice).first);
+        if (locale.languageCode == 'ar') {
+          expect(bounds.right, lessThanOrEqualTo(firstAgent.left));
+        } else {
+          expect(bounds.left, greaterThanOrEqualTo(firstAgent.right));
+        }
+        expect(
+          bounds.top,
+          lessThanOrEqualTo(
+            tester.getRect(find.byType(KitAgentChoice).first).bottom,
+          ),
+        );
+        expect(action.hitTestable(), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        semantics.dispose();
+      });
+    }
+
+    testWidgets('is first when no phone agent is installed', (tester) async {
+      final host = FakeChatsHost(_source())
+        ..phoneAgents = FakePhoneAgentsSource(rows: []);
+      await _open(tester, host);
+      final grid = tester.widget<KitAgentGrid>(find.byType(KitAgentGrid));
+      final action = find.byKey(const ValueKey('chats-new-add-agent'));
+      expect(
+        find.descendant(
+          of: find.byWidget(grid.children.first),
+          matching: action,
+        ),
+        findsOneWidget,
+      );
+      expect(
+        tester.getRect(action).top,
+        lessThanOrEqualTo(
+          tester
+              .getRect(find.byKey(const ValueKey('chats-new-agent-opencode')))
+              .top,
+        ),
+      );
+      expect(action.hitTestable(), findsOneWidget);
+    });
+
+    testWidgets('stays first and visible with large text on a small phone', (
+      tester,
+    ) async {
+      final host = FakeChatsHost(_source())
+        ..phoneAgents = FakePhoneAgentsSource(
+          rows: [agentRowFor('claude', FakeAgentStage.ready)],
+          selected: 'claude',
+        );
+      await _open(tester, host, size: const Size(320, 640), textScale: 2);
+      final action = find.byKey(const ValueKey('chats-new-add-agent'));
+      expect(action.hitTestable(), findsOneWidget);
+      expect(tester.getRect(action).height, greaterThanOrEqualTo(48));
+      expect(tester.getRect(action).bottom, lessThanOrEqualTo(640));
+      expect(
+        tester.getRect(action).bottom,
+        lessThanOrEqualTo(
+          tester.getRect(find.byType(KitAgentChoice).first).top,
+        ),
+      );
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('setup Use returns to the original page with its draft', (
+      tester,
+    ) async {
+      final agents = FakePhoneAgentsSource(
+        rows: [agentRowFor('claude', FakeAgentStage.notInstalled)],
+      );
+      final host = FakeChatsHost(_source(lastUsed: '/root/projects/alpha'))
+        ..phoneAgents = agents;
+      await _open(tester, host);
+      final originalPage = tester.element(find.byType(NewChatScreen));
+      const draft = 'Keep this idea while I add an agent';
+      await tester.enterText(
+        find.byKey(const ValueKey('chats-new-field')),
+        draft,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('chats-new-add-agent')));
+      await tester.pumpAndSettle();
+      expect(find.byType(AgentsScreen), findsOneWidget);
+      expect(host.fake.started, isEmpty);
+      await tester.tap(find.byKey(const ValueKey('agents-fix-claude')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('agents-install')));
+      await tester.pump();
+      expect(agents.calls, contains('install:claude'));
+
+      // Simulate the installed CLI and the account state it reports after
+      // the person completes its own sign-in; no real terminal or account.
+      agents.afterCheck = () {
+        agents.rows = [agentRowFor('claude', FakeAgentStage.signedOut)];
+      };
+      agents.change(() {
+        agents.rows = [agentRowFor('claude', FakeAgentStage.needsCheck)];
+        agents.progress = const AgentSetupProgress(
+          agentId: 'claude',
+          phase: AgentSetupPhase.done,
+        );
+      });
+      await tester.pumpAndSettle();
+      expect(agents.calls, contains('check:claude'));
+      expect(
+        find.byKey(const ValueKey('agents-sign-in-start')),
+        findsOneWidget,
+      );
+      agents.change(() {
+        agents.signIn['claude'] = const AgentSignInState(
+          phase: AgentSignInPhase.signedIn,
+          method: AgentSignInMethod.browserOAuthHost,
+          inspected: true,
+        );
+        agents.rows = [agentRowFor('claude', FakeAgentStage.ready)];
+      });
+      await tester.pumpAndSettle();
+      final refreshesBeforeUse = agents.calls
+          .where((c) => c == 'refresh')
+          .length;
+      await tester.tap(find.byKey(const ValueKey('agents-sign-in-done')));
+      await tester.pumpAndSettle();
+      expect(find.byType(AgentsScreen), findsNothing);
+      expect(find.byType(NewChatScreen), findsOneWidget);
+      expect(tester.element(find.byType(NewChatScreen)), same(originalPage));
+      expect(find.text(draft), findsOneWidget);
+      expect(agents.selected, 'claude');
+      expect(
+        agents.calls.where((c) => c == 'refresh').length,
+        greaterThan(refreshesBeforeUse),
+      );
+      expect(find.text('Start with Claude Code'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('chats-new-agent-claude')).hitTestable(),
+        findsOneWidget,
+      );
+      expect(host.fake.started, isEmpty);
+      expect(tester.takeException(), isNull);
+    });
+  });
 
   testWidgets('shows the question and the last used project on its chip', (
     tester,
