@@ -101,8 +101,10 @@ public fun KitRequestAnsweredRow(
     modifier: Modifier = Modifier,
     outcome: @Composable () -> Unit,
 ) {
+    // kitRequestPlacement: the page gutter less the 4 dp ring across (12 dp), space1 (4 dp) above and below.
     Row(
-        modifier.fillMaxWidth().heightIn(min = LocalKitTokens.current.rowHeightOne.dp).padding(horizontal = Space.S4.dp),
+        modifier.fillMaxWidth().padding(horizontal = Space.S3.dp, vertical = Space.S1.dp)
+            .heightIn(min = LocalKitTokens.current.rowHeightOne.dp).padding(horizontal = Space.S4.dp),
         horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
