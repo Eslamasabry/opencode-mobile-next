@@ -101,6 +101,8 @@ import io.github.eslamasabry.oc.ui.words.res.reportProblemErrorsLabel
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
+private const val REPORT_KIB = 1024 // F: lib/ui/screens/crash_report_share.dart:164
+
 /**
  * Settings › Report a problem › Everything this phone kept (Flutter `AppDiagnosticsKeptScreen`):
  * the opt-in crash reports with their switch, the saved reports (time and category only), Preview →
@@ -350,9 +352,8 @@ private fun SharePreview(state: KeptUi, actions: KeptActions) {
         if (preview != null) {
             state.notice?.let { KitNotice(noticeWords(it)) }
             val size =
-                if (preview.bytes < 1024) "${preview.bytes} B"
-                else "${Numbers.decimal(preview.bytes / 1024.0, 1)} KB" // F:
-            // lib/ui/screens/crash_report_share.dart:164
+                if (preview.bytes < REPORT_KIB) "${preview.bytes} B"
+                else "${Numbers.decimal(preview.bytes / REPORT_KIB.toDouble(), 1)} KB"
             KitText(
                 pluralStringResource(
                     Res.plurals.diagnosticsReportSize,
