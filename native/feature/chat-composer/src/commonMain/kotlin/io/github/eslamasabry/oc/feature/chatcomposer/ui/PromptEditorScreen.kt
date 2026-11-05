@@ -43,7 +43,7 @@ internal fun PromptEditorScreen(visible: Boolean, field: TextFieldState, onClose
                     label = stringResource(Res.string.promptEditorFieldLabel),
                     placeholder = stringResource(Res.string.chatUiWriteYourOpenCodePrompt),
                     kind = KitFieldKind.Multiline,
-                    multilineLines = if (LocalKitWindow.current.short) 6..6 else 18..18, // F: lib/ui/screens/chat/prompt_editor.dart:187
+                    multilineLines = if (LocalKitWindow.current.short) 3..6 else 3..18, // F: lib/ui/kit/kit_field.dart:711-713 lib/ui/screens/chat/prompt_editor.dart:187
                     focusRequester = focus,
                     modifier = Modifier.testTag("prompt-editor-field"),
                 )
