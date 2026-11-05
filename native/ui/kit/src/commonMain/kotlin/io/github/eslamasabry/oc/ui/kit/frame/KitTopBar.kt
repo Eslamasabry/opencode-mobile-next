@@ -183,7 +183,7 @@ public fun KitTopBar(
                 .semantics { isTraversalGroup = true }
                 .testTag("kit-top-bar"),
         ) {
-            Row(
+            if (exit == KitTopBarExit.Back && onExit != null) Row(
                 Modifier.fillMaxWidth()
                     .heightIn(min = tokens.minTarget.dp)
                     .padding(horizontal = Space.S1.dp),

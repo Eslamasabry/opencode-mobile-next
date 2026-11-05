@@ -51,7 +51,7 @@ public fun KitFeedItem(
     val meta = buildAnnotatedString {
         if (word != null) {
             if (done) append("✓ ")
-            withStyle(SpanStyle(color = statusColor, fontWeight = if (state.tone == KitRowStateTone.NeedsYou || state.tone == KitRowStateTone.Running) FontWeight.SemiBold else null)) { append(word) }
+            withStyle(SpanStyle(color = statusColor, fontWeight = if (state?.tone == KitRowStateTone.NeedsYou || state?.tone == KitRowStateTone.Running) FontWeight.SemiBold else null)) { append(word) }
         }
         if (project.isNotBlank()) { if (isNotEmpty()) append("\u00a0· "); append("\u2068$project\u2069") }
         if (time != null) { if (isNotEmpty()) append("\u00a0· "); append(time.replace(' ', '\u00a0')) }
@@ -62,7 +62,7 @@ public fun KitFeedItem(
             Modifier.fillMaxWidth().padding(horizontal = tokens.gutter.dp, vertical = Space.S3.dp).clearAndSetSemantics {},
             verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
         ) {
-            KitText(title, role = TypeRole.RowTitle, maxLines = if (large) 2 else 1) // F: lib/ui/kit/kit_feed_item.dart:493
+            KitText(title, role = TypeRole.RowTitle, maxLines = if (large) 2 else 1) // F: lib/ui/kit/kit_feed_item.dart:490
             if (meta.isNotEmpty()) BasicText(meta, style = LocalKitTypography.current.style(TypeRole.Secondary).copy(color = colors.text2), maxLines = if (large) Int.MAX_VALUE else 1, overflow = TextOverflow.Ellipsis)
         }
     }

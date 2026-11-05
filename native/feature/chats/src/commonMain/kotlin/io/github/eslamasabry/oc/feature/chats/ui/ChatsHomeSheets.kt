@@ -39,7 +39,12 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 internal fun HomeFilterChips(state: ChatsUi, actions: ChatsActions) {
     KitChip(
-        label = stringResource(Res.string.chatsFilterSheetTitle),
+        label = when {
+            state.otherFoldersSelected -> stringResource(Res.string.chatsHomeOtherFolders)
+            state.filters.projectDirectory == null -> stringResource(Res.string.chatsHomeAllProjects)
+            else -> state.projectChoices.firstOrNull { it.directory == state.filters.projectDirectory }?.name
+                ?: state.filters.projectDirectory!!.trimEnd('/').substringAfterLast('/'),
+        },
         kind = KitChipKind.Action,
         selected = state.filters.projectDirectory != null || state.otherFoldersSelected,
         opensMenu = true,
@@ -47,20 +52,13 @@ internal fun HomeFilterChips(state: ChatsUi, actions: ChatsActions) {
     )
     if (state.home.sources.size > 1) {
         KitChip(
-            label = stringResource(Res.string.chatsSourcesSheetTitle),
+            label = if (state.home.sources.all { it.shown }) stringResource(Res.string.chatsSourcesAll)
+                else stringResource(Res.string.chatsSourcesSome, state.home.sources.count { it.shown }, state.home.sources.size),
             kind = KitChipKind.Action,
             onClick = actions::showSources,
         )
     }
-    val inboxCount = state.inbox.size + state.home.monitoring.requests.size
-    KitChip(
-        label =
-            if (inboxCount > 0)
-                stringResource(Res.string.homeInboxCount, Numbers.format(inboxCount))
-            else stringResource(Res.string.inboxTitle),
-        kind = KitChipKind.Action,
-        onClick = actions::showInbox,
-    )
+
 }
 
 @Composable

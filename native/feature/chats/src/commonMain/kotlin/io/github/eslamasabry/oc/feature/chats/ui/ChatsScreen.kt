@@ -10,6 +10,17 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import io.github.eslamasabry.oc.ui.kit.frame.KitHeadingLine
+import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
+import io.github.eslamasabry.oc.ui.words.res.kitNeedsYouSpan
+import io.github.eslamasabry.oc.ui.words.res.kitTopBarMore
+import io.github.eslamasabry.oc.ui.words.res.inboxTitle
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -129,24 +140,40 @@ public fun ChatsScreen(
     // (Settings).
     val settingsLabel = stringResource(Res.string.librarySettingsTitle)
     val updateLabel = stringResource(Res.string.appUpdateUpdate)
-    val showFab = state.phase != ChatsPhase.Empty && state.home.opening == null
+    val showFab = state.phase == ChatsPhase.List && state.home.opening == null
+    var menuOpen by remember { mutableStateOf(false) }
     // Looks pass (concept A): a hub's large title with icon actions; New conversation is the floating button, so
     // the bar keeps Search and Settings (and Servers or Update only while they apply).
     val barActions = buildList {
+        add(KitLineAction(stringResource(Res.string.kitTopBarSearch), actions::openSearch, icon = KitIcons.search))
         if (state.home.opening != null)
             add(KitLineAction(stringResource(Res.string.serversTitle), actions::openServers, icon = KitIcons.server))
         if (state.updateReady) add(KitLineAction(updateLabel, actions::openUpdate, icon = KitIcons.systemDownload))
         if (state.settingsAvailable) add(KitLineAction(settingsLabel, actions::openSettings, icon = KitIcons.settingsGear))
     }
-    // The one waiting conversation the summary card carries leaves the list below, so it is said once.
-    val waiting = (state.today + state.earlier).filter { it.status == RowStatus.NeedsYou && it.canOpen }
     KitScreen(
         topBar = {
-            KitTopBar(title = stringResource(Res.string.chatsHomeTitle), actions = barActions, large = true)
+            KitTopBar(
+                title = stringResource(Res.string.chatsHomeTitle), actions = barActions, large = true,
+                scope = if (state.needsYou == 0) null else ({
+                    val line = pluralStringResource(Res.plurals.kitNeedsYouSpan, state.needsYou, Numbers.format(state.needsYou)).trimEnd().removeSuffix("·").trimEnd()
+                    KitHeadingLine(line, actions::showInbox)
+                }),
+                more = { hidden ->
+                    val items = listOf(
+                        KitMenuItem(stringResource(Res.string.inboxTitle), { actions.showInbox() }, icon = KitIcons.inbox),
+                        KitMenuItem(stringResource(Res.string.serversTitle), { actions.openServers() }, icon = KitIcons.server),
+                        KitMenuItem(stringResource(Res.string.chatsHomeShowAll), { actions.showAll() }, icon = KitIcons.chat),
+                        KitMenuItem(stringResource(Res.string.p12ProjectsTitle), { actions.openProjects() }, icon = KitIcons.projects),
+                        KitMenuItem(stringResource(Res.string.stateAttentionTitle), { actions.openAttention() }, icon = KitIcons.activity),
+                    ) + hidden.map { KitMenuItem(it.label, it.onClick, icon = it.icon) }
+                    KitMenu(menuOpen, items.map { item -> item.copy(onSelect = { menuOpen = false; item.onSelect() }) }, { menuOpen = false }, title = stringResource(Res.string.kitTopBarMore)) {
+                        KitIconButton(KitIcons.more, stringResource(Res.string.kitTopBarMore), { menuOpen = true })
+                    }
+                },
+            )
         },
-        search =
-            if (state.phase == ChatsPhase.Empty || state.phase == ChatsPhase.Opening) null
-            else ({ SearchField(actions) }),
+        header = if (state.phase == ChatsPhase.List || state.phase == ChatsPhase.NoMatch) ({ Filters(state, actions) }) else null,
         status = appStatus,
         width = KitScreenWidth.Reading,
     ) {
@@ -162,9 +189,6 @@ public fun ChatsScreen(
                 return@LazyColumn
             }
             replyOffer?.let { offer -> item(key = "reply-notification-offer") { offer() } }
-            // One summary card, only while something waits: the first waiting conversation with its exact
-            // command and Allow once; with no command on hand, Open only. The rest are "N more" (Activity).
-
             state.brief?.let { brief -> item(key = "brief") { BriefBlock(brief, actions) } }
             if (state.answerFailure != null)
                 item(key = "answer-failure") {
@@ -173,12 +197,6 @@ public fun ChatsScreen(
                         failure = state.answerFailure,
                     )
                 }
-            if (state.phase == ChatsPhase.List || state.phase == ChatsPhase.NoMatch) {
-                item(key = "filters") { Filters(state, actions) }
-            }
-            if (state.phase == ChatsPhase.Empty) {
-                item(key = "home-controls") { KitFilterChips { HomeFilterChips(state, actions) } }
-            }
             if (state.incomplete.isNotEmpty()) {
                 item(key = "incomplete") {
                     KitNotice(
@@ -240,23 +258,7 @@ public fun ChatsScreen(
                     }
                 }
             }
-            if (state.phase != ChatsPhase.Opening) {
-                // The visible ways on (All conversations, B12; Search; Projects) as rows with their glyphs, not a
-                // stack of bare words.
-                item(key = "more-label") { KitSectionLabel(stringResource(Res.string.p12ProjectsTitle)) }
-                item(key = "show-all") {
-                    KitRow(stringResource(Res.string.chatsHomeShowAll), leading = KitRowLeading.Glyph(KitIcons.chat), trailing = KitRowTrailing.Chevron, onClick = actions::showAll)
-                }
-                item(key = "search-all") {
-                    KitRow(stringResource(Res.string.p12SearchTitle), leading = KitRowLeading.Glyph(KitIcons.search), trailing = KitRowTrailing.Chevron, onClick = actions::openSearch)
-                }
-                item(key = "projects") {
-                    KitRow(stringResource(Res.string.p12ProjectsTitle), leading = KitRowLeading.Glyph(KitIcons.projects), trailing = KitRowTrailing.Chevron, onClick = actions::openProjects)
-                }
-                item(key = "activity") {
-                    KitRow(stringResource(Res.string.stateAttentionTitle), leading = KitRowLeading.Glyph(KitIcons.activity), trailing = KitRowTrailing.Chevron, onClick = actions::openAttention)
-                }
-            }
+
         }
         if (showFab) {
             KitFab(
@@ -287,38 +289,10 @@ private fun SearchField(actions: ChatsActions) {
 private fun Filters(state: ChatsUi, actions: ChatsActions) {
     KitFilterChips {
         HomeFilterChips(state, actions)
-        if (state.needsYou > 0) {
-            KitChip(
-                label =
-                    pluralStringResource(
-                        Res.plurals.notifStatusNeedsYou,
-                        state.needsYou,
-                        Numbers.format(state.needsYou),
-                    ),
-                kind = KitChipKind.Action,
-                tone = KitChipTone.Attention,
-                selected = state.filters.needsYou,
-                onClick = actions::toggleNeedsYou,
-            )
-        }
-        if (state.running > 0 || state.filters.running) {
-            KitChip(
-                label = stringResource(Res.string.chatsHomeRunning),
-                kind = KitChipKind.Action,
-                selected = state.filters.running,
-                onClick = actions::toggleRunning,
-            )
-        }
-        // Recent projects: the newest real folders; the chosen one filters the list.
-        state.projects.forEach { project ->
-            KitChip(
-                label = project.name,
-                kind = KitChipKind.Action,
-                tone = if (project.selected) KitChipTone.Active else KitChipTone.Neutral,
-                selected = project.selected,
-                onClick = { actions.chooseProject(project.directory) },
-            )
-        }
+        KitChip(
+            label = stringResource(Res.string.chatsHomeRunning), kind = KitChipKind.Action,
+            selected = state.filters.running, onClick = actions::toggleRunning,
+        )
     }
 }
 
