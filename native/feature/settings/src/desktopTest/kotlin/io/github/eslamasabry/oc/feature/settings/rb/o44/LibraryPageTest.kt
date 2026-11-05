@@ -83,4 +83,57 @@ class LibraryPageTest {
         setContent { SettingsThemed { LibraryScreen(state, actions) } }
         onNodeWithText("No skills available").assertDoesNotExist()
     }
+
+    @Test
+    fun `B-NAV-068 skill preview copies its named slash command`() = runComposeUiTest {
+        val skill =
+            SkillInfo(
+                "focused-review",
+                "focused-review",
+                "Review a change for correctness",
+                "/skills/review/SKILL.md",
+                "# focused-review\n\nKeep the patch focused.",
+                true,
+            )
+        val state =
+            LibraryUi(
+                tab = LibraryTab.Skills,
+                available = true,
+                inventory = LibraryInventory(loading = false, skills = persistentListOf(skill)),
+                sheet = LibrarySheet.Skill(skill),
+            )
+        val actions = actions()
+        setContent { SettingsThemed { LibraryScreen(state, actions) } }
+        onNodeWithText("Review a change for correctness").assertExists()
+        onNodeWithText("Copy /focused-review").performClick()
+        assertEquals(listOf("copy" to listOf("/focused-review")), calls)
+        onNodeWithText("Copy path").assertDoesNotExist()
+    }
+
+    @Test
+    fun `B-NAV-068 reference details copy the mention without changing the target`() =
+        runComposeUiTest {
+            val reference =
+                ReferenceInfo(
+                    "platform-docs",
+                    "/work/references/platform-docs",
+                    "Android platform guidance",
+                )
+            val state =
+                LibraryUi(
+                    tab = LibraryTab.References,
+                    available = true,
+                    inventory =
+                        LibraryInventory(loading = false, references = persistentListOf(reference)),
+                    sheet = LibrarySheet.Reference(reference),
+                )
+            val actions = actions()
+            setContent { SettingsThemed { LibraryScreen(state, actions) } }
+            onNodeWithText(
+                    "Write @platform-docs in a prompt and the agent reads this folder for that reply."
+                )
+                .assertExists()
+            onNodeWithText("Copy @platform-docs").performClick()
+            assertEquals(listOf("copy" to listOf("@platform-docs")), calls)
+        }
 }

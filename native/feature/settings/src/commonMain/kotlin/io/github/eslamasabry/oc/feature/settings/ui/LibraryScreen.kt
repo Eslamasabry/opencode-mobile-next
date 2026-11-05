@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.core.model.*
 import io.github.eslamasabry.oc.engine.integrations.catalog.*
 import io.github.eslamasabry.oc.feature.settings.presentation.*
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.*
 import io.github.eslamasabry.oc.ui.kit.choice.*
@@ -449,37 +450,7 @@ private fun LibrarySheetBody(sheet: LibrarySheet, state: LibraryUi, actions: Lib
         when (sheet) {
             is LibrarySheet.Command -> CommandSheet(sheet.value, state, actions, enabled)
             is LibrarySheet.Skill -> SkillSheet(sheet.value, state, actions, enabled)
-            is LibrarySheet.Reference ->
-                KitSheet(
-                    true,
-                    { actions.show(null) },
-                    sheet.value.name,
-                    primary =
-                        KitAction(
-                            if (state.ref == null)
-                                stringResource(Res.string.nlibCopyMention, "@${sheet.value.name}")
-                            else stringResource(Res.string.nlibAddReference),
-                            {
-                                if (state.ref == null) actions.copy("@${sheet.value.name}")
-                                else actions.addReference(sheet.value)
-                            },
-                        ),
-                    tertiary =
-                        listOf(
-                            KitAction(
-                                stringResource(Res.string.nlibCopyPath),
-                                { actions.copy(sheet.value.path) },
-                            )
-                        ),
-                ) {
-                    sheet.value.description?.let { KitText(it) }
-                    KitText(stringResource(Res.string.nlibReferenceHelp))
-                    KitDetailsFold(
-                        stringResource(Res.string.nlibDetails),
-                        stringResource(Res.string.nlibCopy),
-                        text = LocalKitRedactor.current.details(sheet.value.path),
-                    )
-                }
+            is LibrarySheet.Reference -> ReferenceSheet(sheet.value, state, actions)
             is LibrarySheet.Provider -> ProviderSheet(sheet.value, state, actions)
             is LibrarySheet.Method ->
                 MethodSheet(sheet.provider, sheet.method, state, actions, enabled)
@@ -542,6 +513,53 @@ private fun LibrarySheetBody(sheet: LibrarySheet, state: LibraryUi, actions: Lib
 }
 
 @Composable
+private fun ReferenceSheet(reference: ReferenceInfo, state: LibraryUi, actions: LibraryActions) {
+    val mention = "@${reference.name}"
+    val description = reference.description?.trim()?.takeIf { it.isNotEmpty() }
+    KitSheet(
+        true,
+        { actions.show(null) },
+        reference.name,
+        icon = KitIcons.bookmark,
+        primary =
+            KitAction(
+                stringResource(
+                    if (state.ref == null) Res.string.referencesScreenCopyMention
+                    else Res.string.referencesScreenAdd,
+                    mention,
+                ),
+                {
+                    if (state.ref == null) actions.copy(mention)
+                    else actions.addReference(reference)
+                },
+            ),
+    ) {
+        KitText(
+            description ?: stringResource(Res.string.e7LibraryNoDescription),
+            tone = if (description == null) TextTone.Secondary else TextTone.Primary,
+        )
+        Spacer(Modifier.height(Space.S2.dp))
+        KitText(
+            stringResource(Res.string.referencesScreenSheetBody, mention),
+            role = TypeRole.Secondary,
+            tone = TextTone.Secondary,
+        )
+        Spacer(Modifier.height(Space.S3.dp))
+        KitDetailsFold(
+            stringResource(Res.string.nlibDetails),
+            stringResource(Res.string.nlibCopy),
+            values =
+                listOf(
+                    KitTechnicalValue(
+                        stringResource(Res.string.referencesScreenPathLabel),
+                        LocalKitRedactor.current.details(reference.path),
+                    )
+                ),
+        )
+    }
+}
+
+@Composable
 private fun CommandSheet(
     command: CommandInfo,
     state: LibraryUi,
@@ -596,6 +614,14 @@ private fun SkillSheet(
         true,
         { actions.show(null) },
         skill.name,
+        subtitle =
+            if (session == null) skill.description?.trim()?.takeIf { it.isNotEmpty() }
+            else
+                state.inventory.conversations
+                    .firstOrNull { it.id == session }
+                    ?.title
+                    ?.takeIf { it.isNotBlank() } ?: stringResource(Res.string.nlibUntitled),
+        icon = KitIcons.extensions,
         height = KitSheetHeight.Full,
         dismissible = !state.working,
         primary =
@@ -611,7 +637,10 @@ private fun SkillSheet(
             if (session == null && skill.slashCommand)
                 listOf(
                     KitAction(
-                        stringResource(Res.string.nlibCopyCommand),
+                        stringResource(
+                            Res.string.skillSheetCopyCommand,
+                            "/${skill.id ?: skill.name}",
+                        ),
                         { actions.copy("/${skill.id ?: skill.name}") },
                     )
                 )
@@ -642,15 +671,36 @@ private fun SkillSheet(
             KitButton(stringResource(Res.string.migrationSkillOpen), actions::openSkillConversation)
         }
         if (session != null) {
-            KitText(stringResource(Res.string.nlibSkillHelp))
-            KitSwitchRow(
-                stringResource(Res.string.nlibRunNow),
-                resume,
-                enabled = enabled,
-                onCheckedChange = { resume = it },
+            KitText(
+                stringResource(Res.string.skillActivationHelp),
+                role = TypeRole.Secondary,
+                tone = TextTone.Secondary,
             )
+            Spacer(Modifier.height(Space.S2.dp))
+            Column {
+                KitSwitchRow(
+                    stringResource(Res.string.skillRunNow),
+                    resume,
+                    supporting = stringResource(Res.string.skillRunHelp),
+                    enabled =
+                        when {
+                            state.locked ->
+                                KitEnabled.Disabled(
+                                    stringResource(Res.string.skillSheetCheckConversation)
+                                )
+                            state.working ->
+                                KitEnabled.Disabled(stringResource(Res.string.skillSheetSending))
+                            else -> KitEnabled.Enabled
+                        },
+                    onCheckedChange = { resume = it },
+                )
+            }
         }
-        (state.notice ?: state.inventory.notice)?.let { KitNotice(noticeLabel(it)) }
+        (state.notice ?: state.inventory.notice)?.let {
+            Spacer(Modifier.height(Space.S3.dp))
+            KitNotice(noticeLabel(it))
+        }
+        if (session != null) Spacer(Modifier.height(Space.S4.dp))
         KitSegmented(
             listOf(
                 KitSegment(false, stringResource(Res.string.nlibRendered)),
@@ -660,11 +710,12 @@ private fun SkillSheet(
             stringResource(Res.string.nlibView),
             onChange = { raw = it },
         )
+        Spacer(Modifier.height(Space.S3.dp))
         if (raw)
             KitCodeBlock(
                 skill.content,
                 KitCodeKind.Code,
-                language = CodeLanguage.Plain,
+                language = CodeLanguage.Markdown,
                 maxLines = Int.MAX_VALUE,
                 copyLabel = stringResource(Res.string.nlibCopy),
                 onCopy = actions::copy,
@@ -678,15 +729,17 @@ private fun SkillSheet(
                     onCopyCode = actions::copy,
                 ),
             )
+        Spacer(Modifier.height(Space.S4.dp))
         KitDetailsFold(
             stringResource(Res.string.nlibDetails),
             stringResource(Res.string.nlibCopy),
-            text = LocalKitRedactor.current.details(skill.location),
-        )
-        KitButton(
-            stringResource(Res.string.nlibCopyPath),
-            { actions.copy(skill.location) },
-            role = KitButtonRole.Tertiary,
+            values =
+                listOf(
+                    KitTechnicalValue(
+                        stringResource(Res.string.skillSheetLocation),
+                        LocalKitRedactor.current.details(skill.location),
+                    )
+                ),
         )
     }
 }
