@@ -165,7 +165,7 @@ internal fun ColumnScope.AboutBody(
                         ),
                     leading = KitRowLeading.Glyph(KitIcons.download),
                     supporting = line,
-                    supportingMaxLines = 2, // F: lib/ui/screens/about_screen.dart:391
+                    supportingMaxLines = 2, // F: lib/ui/screens/about_screen.dart:389
                     enabled = !checking,
                     disabledReason = line.takeIf { checking },
                     onClick = {
@@ -199,7 +199,7 @@ internal fun ColumnScope.AboutBody(
                 KitRow(
                     title = stringResource(Res.string.aboutBundledComponents),
                     supporting = stringResource(Res.string.aboutBundledComponentsDetail),
-                    supportingMaxLines = 2, // F: lib/ui/screens/about_screen.dart:331
+                    supportingMaxLines = 2, // F: lib/ui/screens/about_screen.dart:330
                     leading = KitRowLeading.Glyph(KitIcons.info),
                     trailing = KitRowTrailing.Chevron,
                     modifier = Modifier.testTag("about-bundled-components"),
