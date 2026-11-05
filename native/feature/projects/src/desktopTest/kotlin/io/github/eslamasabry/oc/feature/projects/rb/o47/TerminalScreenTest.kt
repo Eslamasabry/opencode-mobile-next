@@ -27,9 +27,17 @@ class TerminalScreenTest {
                 Proxy.newProxyInstance(
                     TerminalActions::class.java.classLoader,
                     arrayOf(TerminalActions::class.java),
-                ) { _, method, args ->
-                    if (method.name == "key") keys += args[0] as String
-                    null
+                ) { proxy, method, args ->
+                    when (method.name) {
+                        "equals" -> proxy === args?.getOrNull(0)
+                        "hashCode" -> System.identityHashCode(proxy)
+                        "toString" -> "TestActions"
+                        else -> {
+
+                            if (method.name == "key") keys += args[0] as String
+                            null
+                        }
+                    }
                 } as TerminalActions
             val process =
                 TerminalProcess(
