@@ -625,7 +625,7 @@ public fun ChatScreen(
                 if (activeContext != null) ActiveContextSheet(activeContext)
                 SelectTextSheet(state.select, actions)
                 PictureSheet(state.picture, actions)
-                ChatTimelineSheet(state.timeline, actions)
+                ChatTimelineSheet(state.timeline, actions, facts.nowMs)
                 KitConfirm(
                     spec = confirmSpec(state.confirm),
                     onConfirm = {

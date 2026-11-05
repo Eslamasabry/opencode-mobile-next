@@ -6,7 +6,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -44,12 +45,13 @@ import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.historyLoadOlder
 import io.github.eslamasabry.oc.ui.words.res.historyLoadedOnly
 import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
-import kotlin.time.Instant
+import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
+import kotlinx.coroutines.flow.drop
 import org.jetbrains.compose.resources.stringResource
 
 /** Real messages, newest first; a row jumps and a saved prompt has its own Fork action. */
 @Composable
-internal fun ChatTimelineSheet(timeline: TimelineUi?, actions: ChatActions) {
+internal fun ChatTimelineSheet(timeline: TimelineUi?, actions: ChatActions, nowMs: Long = 0) {
     KitSheet(
         visible = timeline != null,
         onDismissRequest = actions::closeTimeline,
@@ -60,6 +62,11 @@ internal fun ChatTimelineSheet(timeline: TimelineUi?, actions: ChatActions) {
         if (timeline == null) return@KitSheet
         val field = rememberTextFieldState(timeline.query)
         val mask = rememberKitMask()
+        val platform = LocalKitPlatform.current
+        // Flutter filters every keystroke; the search field settles only its announcement.
+        LaunchedEffect(field, actions) {
+            snapshotFlow { field.text.toString() }.drop(1).collect(actions::timelineQuery)
+        }
         Column(
             Modifier.fillMaxWidth().testTag("timeline-sheet"),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
@@ -68,7 +75,7 @@ internal fun ChatTimelineSheet(timeline: TimelineUi?, actions: ChatActions) {
                 label = stringResource(Res.string.chatUiSearchMessages),
                 state = field,
                 modifier = Modifier.testTag("timeline-search"),
-                onSearch = actions::timelineQuery,
+                onSearch = {},
                 resultCount = if (timeline.query.isBlank()) null else timeline.entries.size,
                 partial = timeline.partial,
             )
@@ -92,20 +99,16 @@ internal fun ChatTimelineSheet(timeline: TimelineUi?, actions: ChatActions) {
                 }
             }
         }
-        KitRowGroup {
+        if (timeline.entries.isNotEmpty()) KitRowGroup {
         for (entry in timeline.entries) {
             KitRow(
                 title = mask(entry.preview.ifBlank { stringResource(Res.string.chatUiMessage) }),
+                titleMaxLines = 2, // F: lib/ui/screens/chat/timeline_sheet.dart:242
                 leading = KitRowLeading.Glyph(if (entry.prompt) KitIcons.person else KitIcons.sparkle),
                 supporting =
                     listOfNotNull(
                             if (entry.prompt) stringResource(Res.string.chatUiYou) else "OpenCode",
-                            entry.createdMs?.let {
-                                Instant.fromEpochMilliseconds(it)
-                                    .toString()
-                                    .replace('T', ' ')
-                                    .removeSuffix("Z")
-                            },
+                            entry.createdMs?.let { platform.messageTime(it, nowMs) },
                         )
                         .joinToString(" · "),
                 trailing =
