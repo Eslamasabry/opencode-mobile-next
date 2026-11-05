@@ -104,7 +104,7 @@ public sealed interface KitRowTrailing {
      * A value in quiet words, optionally with the chevron. It goes under the title when it cannot
      * share the line.
      */
-    public data class Value(val text: String, val chevron: Boolean = true) : KitRowTrailing
+    public data class Value(val text: String, val chevron: Boolean = true, val prominent: Boolean = false) : KitRowTrailing
 
     /**
      * The row's one act ("Turn on"): a trailing tertiary; under the supporting line from 1.3× text.
@@ -183,7 +183,7 @@ internal fun RowValue(value: KitRowTrailing.Value, modifier: Modifier = Modifier
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
     ) {
-        KitText(value.text, role = TypeRole.Secondary, tone = TextTone.Tertiary, maxLines = 1)
+        KitText(value.text, role = if (value.prominent) TypeRole.Body else TypeRole.Secondary, tone = if (value.prominent) TextTone.Secondary else TextTone.Tertiary, maxLines = 1)
         if (value.chevron) RowChevron()
     }
 }

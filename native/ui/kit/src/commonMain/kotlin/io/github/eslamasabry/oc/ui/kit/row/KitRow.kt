@@ -186,7 +186,7 @@ public fun KitRow(
                     softWrap = false, maxLines = 1,
                 ).size.width
                 val valueWidth = measurer.measure(
-                    value.text, style = typography.style(TypeRole.Secondary).copy(textDirection = TextDirection.Content),
+                    value.text, style = typography.style(if (value.prominent) TypeRole.Body else TypeRole.Secondary).copy(textDirection = TextDirection.Content),
                     softWrap = false, maxLines = 1,
                 ).size.width
                 val chevron = if (value.chevron) {

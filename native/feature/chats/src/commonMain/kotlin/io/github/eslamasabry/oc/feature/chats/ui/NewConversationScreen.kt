@@ -1,10 +1,13 @@
 package io.github.eslamasabry.oc.feature.chats.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -98,44 +101,48 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
             loading = state.busy,
             loadingLabel = working,
             bottom = {
-                KitActionBlock(
-                    primary =
-                        KitAction(
-                            label =
-                                stringResource(
-                                    Res.string.chatsNewStartWith,
-                                    state.setup
-                                        ?.models
-                                        ?.firstOrNull { it.model == state.model }
-                                        ?.runtime ?: state.setup?.defaultRuntime ?: "OpenCode",
-                                ),
-                            onClick = actions::start,
-                            enabled =
-                                if (
-                                    !state.busy &&
-                                        !state.creationUnconfirmed &&
-                                        !state.deliveryUnconfirmed &&
-                                        state.setup != null &&
-                                        state.directory != null &&
-                                        state.text.isNotBlank()
-                                )
-                                    KitEnabled.Enabled
-                                else
-                                    KitEnabled.Disabled(
-                                        when {
-                                            state.busy -> working
-                                            state.deliveryUnconfirmed ->
-                                                stringResource(Res.string.p12NewDeliveryUnconfirmed)
-                                            state.creationUnconfirmed ->
-                                                stringResource(Res.string.p12NewCreationUnconfirmed)
-                                            state.directory == null ->
-                                                stringResource(Res.string.chatsNewNeedProject)
-                                            else -> stringResource(Res.string.chatsNewBuildPrompt)
-                                        }
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    KitButton(
+                        action =
+                            KitAction(
+                                label =
+                                    stringResource(
+                                        Res.string.chatsNewStartWith,
+                                        state.setup
+                                            ?.models
+                                            ?.firstOrNull { it.model == state.model }
+                                            ?.runtime ?: state.setup?.defaultRuntime ?: "OpenCode",
                                     ),
-                            working = state.busy,
-                        )
-                )
+                                onClick = actions::start,
+                                enabled =
+                                    if (
+                                        !state.busy &&
+                                            !state.creationUnconfirmed &&
+                                            !state.deliveryUnconfirmed &&
+                                            state.setup != null &&
+                                            state.directory != null &&
+                                            state.text.isNotBlank()
+                                    )
+                                        KitEnabled.Enabled
+                                    else
+                                        KitEnabled.Disabled(
+                                            when {
+                                                state.busy -> working
+                                                state.deliveryUnconfirmed ->
+                                                    stringResource(Res.string.p12NewDeliveryUnconfirmed)
+                                                state.creationUnconfirmed ->
+                                                    stringResource(Res.string.p12NewCreationUnconfirmed)
+                                                state.directory == null ->
+                                                    stringResource(Res.string.chatsNewNeedProject)
+                                                else -> stringResource(Res.string.chatsNewBuildPrompt)
+                                            }
+                                        ),
+                                working = state.busy,
+                            ),
+                        modifier = Modifier.fillMaxWidth(),
+                        hero = true,
+                    )
+                }
             },
         ) {
             Column(
@@ -167,13 +174,13 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     KitStartBox(
                         field,
                         stringResource(Res.string.chatsNewBuildPrompt),
-                        Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp).testTag("chats-new-field"),
+                        Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp).padding(bottom = Space.S1.dp).testTag("chats-new-field"),
                         enabled = enabled,
                         minLines = 4, // F: lib/ui/screens/chats/new_chat_screen.dart:537
                         autofocus = !state.busy,
                         onTextChanged = actions::draftChanged,
                     )
-                    KitRowGroup {
+                    KitRowGroup(leadingTiles = true, note = if (state.directory == null) stringResource(Res.string.chatsNewNeedProject) else null) {
                         KitRow(
                             title = stringResource(Res.string.chatsNewModelRow),
                             leading = KitRowLeading.Glyph(KitIcons.model),
@@ -182,7 +189,8 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                     state.setup
                                         ?.models
                                         ?.firstOrNull { it.model == state.model }
-                                        ?.name ?: stringResource(Res.string.p12NewDefaultModel)
+                                        ?.name ?: stringResource(Res.string.modelServerDefault),
+                                    prominent = true,
                                 ),
                             enabled = !state.busy,
                             disabledReason = working,
@@ -193,9 +201,8 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                             leading = KitRowLeading.Glyph(KitIcons.files),
                             trailing =
                                 KitRowTrailing.Value(
-                                    state.directory?.substringAfterLast('/')?.ifBlank {
-                                        state.directory
-                                    } ?: stringResource(Res.string.chatsNewChooseProject)
+                                    state.directory?.let(::importFolder) ?: stringResource(Res.string.chatsNewChooseProject),
+                                    prominent = true,
                                 ),
                             enabled =
                                 !state.busy &&
@@ -221,6 +228,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                         if (state.canCopy)
                             KitSwitchRow(
                                 title = stringResource(Res.string.chatsNewSeparateCopy),
+                                leading = KitRowLeading.Glyph(KitIcons.fork),
                                 supporting = stringResource(Res.string.chatsNewSeparateCopyDetail),
                                 checked = state.separateCopy,
                                 enabled =
@@ -237,6 +245,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                         )
                             KitRow(
                                 title = stringResource(Res.string.claudeImportTitle),
+                                leading = KitRowLeading.Glyph(KitIcons.download),
                                 enabled = !state.busy,
                                 disabledReason = working,
                                 onClick = { actions.sheet(NewConversationSheet.Import) },
@@ -251,8 +260,6 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                 role = KitButtonRole.Secondary,
                             )
                     }
-                    if (state.directory == null)
-                        KitNotice(stringResource(Res.string.chatsNewNeedProject))
                     if (state.draftFailed) KitNotice(stringResource(Res.string.p12NewDraftFailed))
                     if (state.repairing) KitNotice(stringResource(Res.string.gitRepairLooking))
                     state.repair?.let { result ->
