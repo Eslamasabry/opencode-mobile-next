@@ -29,6 +29,7 @@ import io.github.eslamasabry.oc.engine.git.GitCheck
 import io.github.eslamasabry.oc.engine.git.GitDiffView
 import io.github.eslamasabry.oc.engine.git.GitFileChange
 import io.github.eslamasabry.oc.engine.git.GitHubSignIn
+import io.github.eslamasabry.oc.engine.git.GitOperation
 import io.github.eslamasabry.oc.engine.git.GitPageView
 import io.github.eslamasabry.oc.engine.git.GitProblem
 import io.github.eslamasabry.oc.engine.git.GitRemoteKind
@@ -177,6 +178,7 @@ public fun GitScreen(state: GitUi, actions: GitActions, serverTools: @Composable
                     KitRowGroup {
                         KitRow(
                             title = stringResource(Res.string.gitCloneRow),
+                            leading = KitRowLeading.Glyph(KitIcons.cloud),
                             supporting = stringResource(Res.string.gitCloneRowHint),
                             trailing = KitRowTrailing.Chevron,
                             onClick = actions::openClone,
@@ -269,6 +271,21 @@ private fun Ready(
     message: TextFieldState,
 ) {
     val branch = snapshot.status.branch
+    // F: lib/state/git_page_controller.dart:153-160
+    val operationInProgress = snapshot.operation != GitOperation.None
+    val branchEnabled =
+        if (operationInProgress)
+            KitEnabled.Disabled(stringResource(Res.string.gitProblemOperationInProgress))
+        else enabled
+    val canPull = !branch.detached && branch.hasUpstream && !operationInProgress
+    val noPullRemote = !snapshot.hasRemote && !branch.detached && !operationInProgress
+    val pullReason =
+        (enabled as? KitEnabled.Disabled)?.reason
+            ?: when {
+                operationInProgress -> stringResource(Res.string.gitProblemOperationInProgress)
+                branch.detached -> stringResource(Res.string.gitProblemDetachedHead)
+                else -> stringResource(Res.string.gitPullNotOnRemote)
+            }
     val ownSignIn =
         state.placeName?.let { stringResource(Res.string.gitUsesOwnSignInOn, it) }
             ?: stringResource(Res.string.gitUsesOwnSignIn)
@@ -308,21 +325,23 @@ private fun Ready(
     KitRowGroup(label = stringResource(Res.string.gitDetailsBranch)) {
         KitRow(
             title = branch.head ?: stringResource(Res.string.gitDetachedHead),
+            leading = KitRowLeading.Glyph(KitIcons.branch),
             supporting = if (branch.unborn) stringResource(Res.string.gitNoCommitsYet) else null,
             trailing = KitRowTrailing.Value(stringResource(Res.string.gitSwitchRow)),
-            enabled = enabled.isEnabled,
-            disabledReason = (enabled as? KitEnabled.Disabled)?.reason,
+            enabled = branchEnabled.isEnabled,
+            disabledReason = (branchEnabled as? KitEnabled.Disabled)?.reason,
             onClickLabel = stringResource(Res.string.gitActionSwitchBranch),
             onClick = actions::openBranches,
             modifier = Modifier.testTag("git-branch-row"),
         )
         KitRow(
             title = stringResource(Res.string.gitGetLatest),
+            leading = KitRowLeading.Glyph(KitIcons.download),
             supporting =
                 when {
                     !snapshot.hasRemote -> stringResource(Res.string.gitPullNoRemote)
                     !branch.hasUpstream -> stringResource(Res.string.gitPullNotOnRemote)
-                    branch.behind > 0 ->
+                    state.check == GitCheck.Done && branch.behind > 0 ->
                         pluralStringResource(
                             Res.plurals.gitGetNewFrom,
                             branch.behind,
@@ -332,21 +351,20 @@ private fun Ready(
                         )
                     // "Up to date" only after the quiet look at the remote (Flutter
                     // checkForUpdates).
-                    state.check == GitCheck.Checking -> stringResource(Res.string.gitChecking)
+                    state.check == GitCheck.Done -> stringResource(Res.string.gitStateUpToDate)
                     state.check == GitCheck.Failed -> stringResource(Res.string.gitCheckFailed)
-                    else -> stringResource(Res.string.gitStateUpToDate)
+                    else -> stringResource(Res.string.gitChecking)
                 },
-            enabled = enabled.isEnabled && (!snapshot.hasRemote || branch.hasUpstream),
+            enabled = enabled.isEnabled && (canPull || noPullRemote),
             disabledReason =
-                (enabled as? KitEnabled.Disabled)?.reason
-                    ?: if (snapshot.hasRemote && !branch.hasUpstream)
-                        stringResource(Res.string.gitPullNotOnRemote)
-                    else null,
-            onClick = if (!snapshot.hasRemote) actions::openRemotes else actions::pull,
+                if (enabled.isEnabled && (canPull || noPullRemote)) null else pullReason,
+            trailing = if (noPullRemote) KitRowTrailing.Chevron else KitRowTrailing.None,
+            onClick = if (noPullRemote) actions::openRemotes else actions::pull,
             modifier = Modifier.testTag("git-pull-row"),
         )
         KitRow(
             title = stringResource(Res.string.gitSend),
+            leading = KitRowLeading.Glyph(KitIcons.upload),
             supporting =
                 when {
                     !snapshot.hasRemote -> stringResource(Res.string.gitSendNoRemote)
@@ -372,6 +390,7 @@ private fun Ready(
     KitRowGroup {
         KitRow(
             title = stringResource(Res.string.gitRemotesRow),
+            leading = KitRowLeading.Glyph(KitIcons.link),
             supporting =
                 if (snapshot.remotes.isEmpty()) stringResource(Res.string.gitRemotesRowNone)
                 else snapshot.remotes.joinToString(", ") { it.name },
@@ -451,10 +470,12 @@ private fun Ready(
                     enabled = enabled,
                     modifier = Modifier.testTag("git-message"),
                 )
-                val known = files.map { it.path }.toSet()
+                val known = files.filterNot { it.isConflicted }.map { it.path }.toSet()
                 val count = state.selected.count { it in known }
                 val saveEnabled =
                     when {
+                        snapshot.status.hasConflicts ->
+                            KitEnabled.Disabled(stringResource(Res.string.gitProblemConflicts))
                         count == 0 ->
                             KitEnabled.Disabled(
                                 stringResource(Res.string.gitProblemNothingSelected)
@@ -470,7 +491,7 @@ private fun Ready(
                     working = state.busy == GitBusy.Commit,
                     modifier = Modifier.testTag("git-save"),
                 )
-                if (snapshot.hasRemote && !branch.detached) {
+                if (snapshot.hasRemote && !branch.detached && !branch.unborn) {
                     KitButton(
                         stringResource(Res.string.gitSaveAndSendTitle),
                         { actions.commitAndPush(message.text.toString()) },

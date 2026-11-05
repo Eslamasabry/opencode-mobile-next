@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.git.rb.o46
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.engine.git.*
@@ -66,6 +67,64 @@ class GitStepsTest {
             )
         }
     }
+
+    @Composable
+    private fun Repository(state: GitUi) {
+        KitTheme(
+            platform = DesktopKitPlatform(),
+            appearance = KitAppearance(motion = MotionLevel.Off),
+            localeTag = "en",
+            stillFrame = true,
+        ) {
+            GitScreen(state, actions)
+        }
+    }
+
+    @Test
+    fun `B-NAV-020 half finished operations hold pull and branch switching`() = runComposeUiTest {
+        setContent {
+            Repository(
+                GitUi(view = GitPageView.Ready(snapshot.copy(operation = GitOperation.Rebase)))
+            )
+        }
+        onNodeWithTag("git-branch-row").assertIsNotEnabled()
+        onNodeWithTag("git-pull-row").assertIsNotEnabled()
+        assertEquals(emptyList(), calls)
+    }
+
+    @Test
+    fun `B-NAV-020 an unchecked remote never claims up to date`() = runComposeUiTest {
+        val ready =
+            snapshot.copy(
+                remotes =
+                    persistentListOf(
+                        GitRemote("origin", GitRemoteKind.Other, "https://example.invalid/app.git")
+                    )
+            )
+        val state = mutableStateOf(GitUi(view = GitPageView.Ready(ready), check = GitCheck.Idle))
+        setContent { Repository(state.value) }
+        onNodeWithText("Up to date").assertDoesNotExist()
+        runOnIdle { state.value = state.value.copy(check = GitCheck.Done) }
+        onNodeWithText("Up to date").assertExists()
+    }
+
+    @Test
+    fun `B-NAV-020 conflict elsewhere holds saving even with a selected clean path`() =
+        runComposeUiTest {
+            val file = GitFileChange("app.kt", unstaged = GitChangeKind.Modified)
+            val conflicted = GitFileChange("conflict.kt", conflict = GitConflictKind.BothModified)
+            val ready =
+                snapshot.copy(
+                    status = snapshot.status.copy(files = persistentListOf(file, conflicted))
+                )
+            setContent {
+                Repository(
+                    GitUi(view = GitPageView.Ready(ready), selected = persistentSetOf(file.path))
+                )
+            }
+            onNodeWithTag("git-save").performScrollTo().assertIsNotEnabled()
+            assertEquals(emptyList(), calls)
+        }
 
     @Test
     fun `B-NAV-020 branch list shows tracking and dispatches the chosen branch once`() =
