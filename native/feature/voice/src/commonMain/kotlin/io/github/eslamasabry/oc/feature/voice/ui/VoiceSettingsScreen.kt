@@ -11,6 +11,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.voice.language.VoiceLanguage
 import io.github.eslamasabry.oc.engine.voice.models.SetupNetwork
@@ -194,6 +198,7 @@ public fun VoiceSettingsScreen(state: VoiceSettingsUi, actions: VoiceSettingsPre
                             Res.string.voiceNativePhoneEngine
                         else Res.string.e7VoiceUiPrivacyDownload
                     ),
+                icon = KitIcons.locked,
                 liveRegion = false,
             )
             if (!state.hasMicrophone) {
@@ -264,41 +269,56 @@ public fun VoiceSettingsScreen(state: VoiceSettingsUi, actions: VoiceSettingsPre
 private fun DownloadProgress(state: VoiceSettingsUi, actions: VoiceSettingsPresenter) {
     val job = state.job ?: return
     val natural = state.natural?.downloading == true
+    val fraction = job.fraction
+    val announcement =
+        if (job.verifying) stringResource(Res.string.e7VoiceUiVerifying)
+        else
+            stringResource(
+                Res.string.e7VoiceUiDownloadPercent,
+                kotlin.math.floor((fraction ?: 0f) * 10).toInt() * 10,
+            ) // F: lib/voice/voice_ui.dart:365
     Column(
         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
         modifier = Modifier.testTag("voice-download-progress"),
     ) {
-        KitText(
-            when {
-                job.verifying -> stringResource(Res.string.e7VoiceUiVerifying)
-                natural -> stringResource(Res.string.naturalVoiceDownloading)
-                else -> stringResource(Res.string.voiceSetupDownloadingPack, packName(job.pack))
+        Column(
+            Modifier.clearAndSetSemantics {
+                liveRegion = LiveRegionMode.Polite
+                contentDescription = announcement
             },
-            role = TypeRole.RowTitle,
-        )
-        val fraction = job.fraction
-        KitProgressView(
-            progress =
-                if (fraction == null) KitProgress.Waiting()
-                else
-                    KitProgress.Known(
-                        fraction,
-                        caption =
-                            stringResource(
-                                Res.string.e7VoiceUiDownloadProgress,
-                                sizeWords(job.received),
-                                sizeWords(job.total),
-                            ),
-                    )
-        )
-        if (!job.verifying) {
-            KitButton(
-                label = stringResource(Res.string.e7VoiceUiCancelDownload),
-                onClick = actions::cancelDownload,
-                role = KitButtonRole.Secondary,
-                modifier = Modifier.testTag("voice-model-cancel-download"),
+            verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
+        ) {
+            KitText(
+                when {
+                    job.verifying -> stringResource(Res.string.e7VoiceUiVerifying)
+                    natural -> stringResource(Res.string.naturalVoiceDownloading)
+                    else -> stringResource(Res.string.voiceSetupDownloadingPack, packName(job.pack))
+                },
+                role = TypeRole.RowTitle,
+            )
+            KitProgressView(
+                progress =
+                    if (job.verifying || fraction == null) KitProgress.Waiting()
+                    else
+                        KitProgress.Known(
+                            fraction.coerceIn(0f, 1f),
+                            caption =
+                                stringResource(
+                                    Res.string.e7VoiceUiDownloadProgress,
+                                    sizeWords(job.received),
+                                    sizeWords(job.total),
+                                ),
+                        )
             )
         }
+        if (!job.verifying)
+            KitActionBlock(
+                secondary =
+                    KitAction(
+                        stringResource(Res.string.e7VoiceUiCancelDownload),
+                        actions::cancelDownload,
+                    )
+            )
     }
 }
 

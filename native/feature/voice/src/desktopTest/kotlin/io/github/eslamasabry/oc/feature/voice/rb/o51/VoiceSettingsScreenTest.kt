@@ -77,4 +77,53 @@ class VoiceSettingsScreenTest {
             onNodeWithTag("voice-delete-base").assertExists()
         }
     }
+
+    @Test
+    fun `B-MEDIA-012 download announces coarse progress and keeps Cancel separately usable`() =
+        runTest {
+            val hub = FakeHub()
+            val presenter = VoiceSettingsPresenter(hub, backgroundScope) {}
+            runCurrent()
+            val state = presenter.state.value.copy(job = PackJobUi(PackId("base"), 49, 100, false))
+            runComposeUiTest {
+                setContent {
+                    KitTheme(
+                        platform = DesktopKitPlatform(),
+                        appearance = KitAppearance(motion = MotionLevel.Off),
+                        localeTag = "en",
+                        stillFrame = true,
+                    ) {
+                        VoiceSettingsScreen(state, presenter)
+                    }
+                }
+                onNodeWithContentDescription("Downloading voice model 40 percent").assertExists()
+                onNodeWithText("Cancel download").performClick()
+            }
+            runCurrent()
+            assertEquals(1, hub.models.calls.count { it == "cancel" })
+        }
+
+    @Test
+    fun `B-MEDIA-012 verification announces its phase and removes download cancellation`() =
+        runTest {
+            val presenter = VoiceSettingsPresenter(FakeHub(), backgroundScope) {}
+            runCurrent()
+            val state = presenter.state.value.copy(job = PackJobUi(PackId("base"), 100, 100, true))
+            runComposeUiTest {
+                setContent {
+                    KitTheme(
+                        platform = DesktopKitPlatform(),
+                        appearance = KitAppearance(motion = MotionLevel.Off),
+                        localeTag = "en",
+                        stillFrame = true,
+                    ) {
+                        VoiceSettingsScreen(state, presenter)
+                    }
+                }
+                onNodeWithContentDescription("Verifying downloaded model").assertExists()
+                onNodeWithText("Cancel download").assertDoesNotExist()
+                onNodeWithContentDescription("Downloading voice model 100 percent")
+                    .assertDoesNotExist()
+            }
+        }
 }
