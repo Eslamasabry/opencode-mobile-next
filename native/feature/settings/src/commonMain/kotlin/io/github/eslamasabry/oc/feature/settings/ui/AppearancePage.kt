@@ -1,9 +1,6 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -63,13 +60,9 @@ import io.github.eslamasabry.oc.ui.words.res.textSizeTitle
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * I04, one page (plan 06 K4): light or dark, the colour pack (most used first, "See all 31 themes"
- * for the rest), the five styles and Motion. A colour pack opens a contained preview with Apply and
- * then Undo (Material You applies at once); every other choice applies at once. Saver holds Style
- * and Motion and says so. Text size is the last question (B-KIT-059). Accent is a swatch grid
- * (B-KIT-049) and Fine-tune is Corners and Spacing over the style's own (B-KIT-017). The guide asks
- * one question at a time and offers only the controls the host actually draws; its record retains
- * every migrated Flutter question.
+ * I04's supported Appearance questions. Theme cards apply at once and style cards draw their own
+ * samples. The existing guide record selects a question; Saver holds Style and Motion. Background,
+ * glow and Glass selection need the presentation fields recorded in evidence/44.md.
  */
 @Composable
 internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActions) {

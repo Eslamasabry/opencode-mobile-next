@@ -44,6 +44,9 @@ class ByServerTest {
             )
             .assertExists()
         onNodeWithText("Laptop").performClick()
-        assertEquals(listOf(target to SettingsOutside.Providers), calls)
+        assertEquals(
+            listOf<Pair<ProfileId, SettingsOutside?>>(target to SettingsOutside.Providers),
+            calls,
+        )
     }
 }
