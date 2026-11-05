@@ -25,15 +25,10 @@ kotlin.sourceSets.matching { it.name == "commonTest" || it.name == "desktopTest"
     kotlin.exclude { it.file.name.endsWith("Test.kt") && it.file.name != "LooksCaptureTest.kt" && !it.file.invariantSeparatorsPath.contains("/rb/o48/") }
 }
 
-// Order 48's phone catalog compiles each owned management feature in the render gate.
+// Order 48 renders phone-owned screens here; Linux and other features retain separate test modules.
 kotlin.sourceSets.getByName("desktopTest") {
     kotlin.srcDir("../../ui/gate/src/desktopMain/kotlin")
     resources.srcDir("../../ui/gate/src/desktopMain/resources")
-    dependencies {
-        implementation(project(":feature:linux"))
-        implementation(project(":feature:background"))
-        implementation(project(":feature:manage-space"))
-    }
 }
 tasks.withType<Test>().matching { it.name == "desktopTest" }.configureEach {
     outputs.upToDateWhen { false }
