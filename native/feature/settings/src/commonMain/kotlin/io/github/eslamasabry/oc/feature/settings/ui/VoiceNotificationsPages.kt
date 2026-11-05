@@ -119,6 +119,7 @@ internal fun ColumnScope.VoiceBody(voice: VoiceFacts, actions: SettingsActions) 
 @Composable
 internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: SettingsActions) {
     var checkInOpen by remember { mutableStateOf(false) }
+    val defaultCheckIn = 30 // F: lib/domain/profile_monitor.dart:31
     if (checkInOpen)
         KitSheet(
             visible = true,
@@ -190,7 +191,7 @@ internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: Settin
             onCheckedChange = {
                 actions.onNotification(
                     NotificationChange.CheckIn(
-                        if (it) 30 else null
+                        if (it) defaultCheckIn else null
                     ) // F: lib/domain/profile_monitor.dart:31
                 ) // F: lib/domain/profile_monitor.dart:31
             }, // NV: the existing native check-in default is 30 minutes

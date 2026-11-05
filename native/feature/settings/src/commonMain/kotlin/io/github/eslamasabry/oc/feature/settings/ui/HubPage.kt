@@ -89,12 +89,12 @@ internal fun HubPage(
                 modifier = Modifier.testTag("settings-search"),
             )
         }
-        Spacer(Modifier.height(Space.S2.dp))
+        Spacer(Modifier.height(Space.S4.dp))
         if (hub.query.isBlank()) {
             val large =
                 LocalDensity.current.fontScale * 10 >= // F: lib/ui/screens/settings_screen.dart:290
                     18 // F: lib/ui/screens/settings_screen.dart:290
-            KitRowGroup {
+            KitRowGroup(leadingTiles = true) {
                 hub.groups.forEach { group ->
                     KitRow(
                         title = groupWords(group),

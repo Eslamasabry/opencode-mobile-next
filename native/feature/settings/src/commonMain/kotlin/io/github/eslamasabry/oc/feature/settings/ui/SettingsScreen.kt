@@ -326,7 +326,8 @@ internal fun SettingsFrame(
             Modifier.fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(top = Space.S2.dp, bottom = Space.S6.dp),
-            verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
+            verticalArrangement =
+                Arrangement.spacedBy(if (state.page == SettingsPage.Hub) 0.dp else Space.S2.dp),
         ) {
             state.note?.let { NoteLine(it, actions) }
             content()
