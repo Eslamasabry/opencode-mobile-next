@@ -77,6 +77,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.state.KitLoadingBar
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -85,6 +86,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitDiscardBody
 import io.github.eslamasabry.oc.ui.words.res.kitDiscardConfirm
 import io.github.eslamasabry.oc.ui.words.res.kitDiscardTitle
 import io.github.eslamasabry.oc.ui.words.res.kitSheetClose
+import io.github.eslamasabry.oc.ui.words.res.kitSheetLoading
 import org.jetbrains.compose.resources.stringResource
 
 /** How tall a sheet is (Dart `KitSheetHeight`). */
@@ -197,6 +199,8 @@ internal class SheetEntry {
     var draft: Boolean by mutableStateOf(false)
     var dismissible: Boolean by mutableStateOf(true)
     var framed: Boolean by mutableStateOf(false)
+    var loading: Boolean by mutableStateOf(false)
+    var secondaryDismisses: Boolean by mutableStateOf(false)
     var asking: Boolean by mutableStateOf(false)
     var onDismissRequest: () -> Unit by mutableStateOf({})
     var body: @Composable ColumnScope.() -> Unit by mutableStateOf({})
@@ -261,6 +265,8 @@ public fun KitSheet(
     dismissible: Boolean = true,
     framed: Boolean = false,
     tone: KitSheetTone = KitSheetTone.Neutral,
+    loading: Boolean = false,
+    secondaryDismisses: Boolean = false,
     body: @Composable ColumnScope.() -> Unit,
 ) {
     val host = LocalKitSheetHost.current
@@ -282,6 +288,8 @@ public fun KitSheet(
         entry.draft = draft
         entry.dismissible = dismissible
         entry.framed = framed
+        entry.loading = loading
+        entry.secondaryDismisses = secondaryDismisses
         entry.onDismissRequest = onDismissRequest
         entry.body = body
     }
@@ -468,14 +476,20 @@ private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean) {
             val frameHeight = maxHeight
             val scrollHeader = frameHeight < 400.dp || LocalDensity.current.fontScale >= 2f
             Column {
-                if (!scrollHeader) SheetHeader(entry, handle)
+                if (!scrollHeader) {
+                    SheetHeader(entry, handle)
+                    KitLoadingBar(entry.loading, stringResource(Res.string.kitSheetLoading))
+                }
                 Column(
                     Modifier.weight(1f, fill = false)
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(tokens.labelGap.dp),
                 ) {
-                    if (scrollHeader) SheetHeader(entry, handle)
+                    if (scrollHeader) {
+                        SheetHeader(entry, handle)
+                        KitLoadingBar(entry.loading, stringResource(Res.string.kitSheetLoading))
+                    }
                     val hasActions =
                         entry.primary != null || entry.secondary != null || entry.tertiary.isNotEmpty()
                     Column(
@@ -524,8 +538,9 @@ private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean) {
 private fun SheetHeader(entry: SheetEntry, handle: Boolean) {
     val tokens = LocalKitTokens.current
     // The close glyph's ink ends on the rail: rail - (minTarget - glyph) / 2 - ink inset.
+    val showClose = entry.dismissible && !(entry.secondaryDismisses && entry.secondary != null) // F: lib/ui/kit/kit_sheet_modal.dart:383-385
     val closeEnd =
-        if (entry.dismissible) {
+        if (showClose) {
             (FlutterKitTokens.RAIL - (tokens.minTarget - 24) / 2f - 24 * 0.1875f).coerceAtLeast(0f).dp // F: lib/ui/kit/kit_sheet.dart:616-627 lib/ui/kit/kit_optical.dart:29,34 lib/ui/app_iconography.dart:20
         } else Space.S2.dp
     Column(
@@ -554,7 +569,7 @@ private fun SheetHeader(entry: SheetEntry, handle: Boolean) {
                     )
                 }
             }
-            if (entry.dismissible) {
+            if (showClose) {
                 // Flutter's sheet: Close is the X glyph at the end; its words are what TalkBack says.
                 KitIconButton(
                     icon = KitIcons.close,
