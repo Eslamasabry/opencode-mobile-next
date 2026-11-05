@@ -575,7 +575,7 @@ private fun phoneStatusWords(status: PhoneAgentStatus): String =
 @Composable
 private fun PhoneAgentRows(state: AgentsUi, actions: AgentsActions, enabled: KitEnabled) {
     var menuFor by remember { mutableStateOf<String?>(null) }
-    KitRowGroup {
+    KitRowGroup(leadingTiles = true) {
         for (agent in state.phone.agents) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.weight(1f)) {

@@ -21,6 +21,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitSurface
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfacePadding
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
+import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
 /** KitStateView.inline at zero outer padding (kit_state_view.dart:689-792). */
@@ -36,7 +37,7 @@ public fun KitInlineState(
     val tokens = LocalKitTokens.current
     Column(modifier.kitMaxWidth(CapRole.State).fillMaxWidth(), horizontalAlignment = Alignment.Start) {
         KitSurface(level = SurfaceLevel.Surface3, shape = KitShapeId.Tile, padding = KitSurfacePadding.None, clip = false) {
-            Box(Modifier.size(tokens.iconTile.dp), contentAlignment = Alignment.Center) { KitIcon(icon) }
+            Box(Modifier.size(tokens.iconTile.dp), contentAlignment = Alignment.Center) { KitIcon(icon, size = KitIconSize.Small) }
         }
         Spacer(Modifier.height(Space.S3.dp))
         KitText(title, Modifier.semantics { heading() }, role = TypeRole.Headline)

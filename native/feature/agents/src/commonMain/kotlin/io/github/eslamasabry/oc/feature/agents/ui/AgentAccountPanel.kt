@@ -53,7 +53,7 @@ internal fun AgentAccountPanel(state: AgentsUi, actions: AgentsActions) {
                 subtitle = state.accountTarget?.name,
                 actions = listOf(KitLineAction(stringResource(Res.string.agentAccountRefresh), actions::refreshAccount,
                     enabled = !state.accountOpening && panel?.status != AccountPanelStatus.Loading,
-                    disabledReason = stringResource(Res.string.agentAccountLoading))),
+                    disabledReason = stringResource(Res.string.agentAccountLoading), icon = KitIcons.retry)),
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::closeAccount,
