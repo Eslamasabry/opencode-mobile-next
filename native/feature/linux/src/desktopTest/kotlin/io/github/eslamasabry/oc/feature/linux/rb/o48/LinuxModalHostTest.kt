@@ -145,4 +145,24 @@ class LinuxModalHostTest {
             onNodeWithText("Clear package downloads").performClick()
             assertEquals(1, actions.confirmed)
         }
+
+    @Test
+    fun `package removal question is visible without an enclosing shell host`() = runComposeUiTest {
+        val actions = Actions()
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                LinuxPackagesScreen(
+                    LinuxPackagesUi(
+                        loading = false,
+                        confirm = PackagesConfirm.Remove("htop", emptyList()),
+                    ),
+                    actions,
+                )
+            }
+        }
+        onNodeWithText("Remove htop?").assertIsDisplayed()
+        assertEquals(0, actions.confirmed)
+        onNodeWithText("Remove htop").performClick()
+        assertEquals(1, actions.confirmed)
+    }
 }

@@ -191,73 +191,73 @@ public fun LinuxPackagesScreen(state: LinuxPackagesUi, actions: LinuxPackagesAct
             }
             }
         }
-    }
-    KitCheckedInputDialog(
-        visible = installOpen,
-        title = stringResource(Res.string.linuxMgrPkgInstall),
-        state = typed,
-        fieldLabel = stringResource(Res.string.linuxMgrPkgName),
-        confirmLabel = stringResource(Res.string.linuxMgrPkgCheck),
-        helper = stringResource(Res.string.linuxMgrPkgNameHelper),
-        placeholder = "htop", // F: lib/ui/screens/linux_manager/linux_packages_page.dart:152
-        error = when (val notice = state.notice) {
-            PackagesNotice.InvalidName -> stringResource(Res.string.linuxMgrPkgNameInvalid)
-            is PackagesNotice.AlreadyInstalled -> stringResource(Res.string.linuxMgrPkgAlready, notice.name)
-            is PackagesNotice.Unknown -> stringResource(Res.string.linuxMgrPkgUnknown, notice.name)
-            is PackagesNotice.BlockedPlan -> stringResource(Res.string.linuxMgrPkgBlockedPlan, notice.needed)
-            is PackagesNotice.Problem -> notice.problem.words()
-            null -> null
-        },
-        working = state.checking,
-        enabled = if (state.job.running) busy else KitEnabled.Enabled,
-        onConfirm = { actions.checkInstall(typed.text.toString()) },
-        onDismiss = { installOpen = false; actions.dismiss() },
-    )
-    KitSheet(visible = selected != null, title = selected?.name ?: stringResource(Res.string.linuxMgrPkgTitle),
-        subtitle = selected?.version, icon = KitIcons.`package`, onDismissRequest = { detailName = null },
-        secondary = selected?.takeUnless { it.locked }?.let { pkg ->
-            KitAction(stringResource(Res.string.linuxMgrPkgRemove, pkg.name), {
-                detailName = null
-                actions.askRemove(pkg.name)
-            }, icon = KitIcons.delete, destructive = true,
-                enabled = KitEnabled.of(state.canStartJob, stringResource(Res.string.linuxMgrProblemJob)))
-        }) {
-        selected?.let { pkg ->
-            if (pkg.locked) KitText(stringResource(Res.string.linuxMgrPkgLocked))
-            KitDetailsFold(stringResource(Res.string.kitDetails), stringResource(Res.string.kitCopyDetails),
-                notes = listOf(pkg.name, pkg.version, size(pkg.sizeKb * 1024))) // F: lib/ui/screens/linux_manager/linux_packages_page.dart:280-284
-        }
-    }
-    val spec =
-        when (val asked = state.confirm) {
-            null -> null
-            is PackagesConfirm.Install ->
-                KitConfirmSpec(
-                    title = stringResource(Res.string.linuxMgrPkgInstallTitle, names(asked.names)),
-                    confirmLabel = stringResource(Res.string.linuxMgrPkgInstallLabel, names(asked.names)),
-                    body = stringResource(Res.string.linuxMgrPkgInstallBody),
-                )
-            is PackagesConfirm.Remove ->
-                KitConfirmSpec(
-                    title = stringResource(Res.string.linuxMgrPkgRemoveTitle, names(listOf(asked.name))),
-                    confirmLabel = stringResource(Res.string.linuxMgrPkgRemove, names(listOf(asked.name))),
-                    kind = KitConfirmKind.Destructive,
-                    body = stringResource(Res.string.linuxMgrPkgRemoveBody),
-                    consequences =
-                        if (asked.alsoRemoved.isEmpty()) emptyList() else listOf(stringResource(Res.string.linuxMgrPkgAlsoRemoved, names(asked.alsoRemoved))),
-                )
-            PackagesConfirm.Update ->
-                KitConfirmSpec(
-                    title = stringResource(Res.string.linuxMgrPkgUpdateTitle),
-                    confirmLabel = stringResource(Res.string.linuxMgrPkgUpdate),
-                    body = stringResource(Res.string.linuxMgrPkgUpdateBody),
-                )
-            is PackagesConfirm.StopJob -> {
-                val (title, label) = stopJobWords(asked.kind, asked.names)
-                KitConfirmSpec(title = title, confirmLabel = label, kind = KitConfirmKind.Stop, body = stringResource(Res.string.linuxMgrJobStopBody))
+        KitCheckedInputDialog(
+            visible = installOpen,
+            title = stringResource(Res.string.linuxMgrPkgInstall),
+            state = typed,
+            fieldLabel = stringResource(Res.string.linuxMgrPkgName),
+            confirmLabel = stringResource(Res.string.linuxMgrPkgCheck),
+            helper = stringResource(Res.string.linuxMgrPkgNameHelper),
+            placeholder = "htop", // F: lib/ui/screens/linux_manager/linux_packages_page.dart:152
+            error = when (val notice = state.notice) {
+                PackagesNotice.InvalidName -> stringResource(Res.string.linuxMgrPkgNameInvalid)
+                is PackagesNotice.AlreadyInstalled -> stringResource(Res.string.linuxMgrPkgAlready, notice.name)
+                is PackagesNotice.Unknown -> stringResource(Res.string.linuxMgrPkgUnknown, notice.name)
+                is PackagesNotice.BlockedPlan -> stringResource(Res.string.linuxMgrPkgBlockedPlan, notice.needed)
+                is PackagesNotice.Problem -> notice.problem.words()
+                null -> null
+            },
+            working = state.checking,
+            enabled = if (state.job.running) busy else KitEnabled.Enabled,
+            onConfirm = { actions.checkInstall(typed.text.toString()) },
+            onDismiss = { installOpen = false; actions.dismiss() },
+        )
+        KitSheet(visible = selected != null, title = selected?.name ?: stringResource(Res.string.linuxMgrPkgTitle),
+            subtitle = selected?.version, icon = KitIcons.`package`, onDismissRequest = { detailName = null },
+            secondary = selected?.takeUnless { it.locked }?.let { pkg ->
+                KitAction(stringResource(Res.string.linuxMgrPkgRemove, pkg.name), {
+                    detailName = null
+                    actions.askRemove(pkg.name)
+                }, icon = KitIcons.delete, destructive = true,
+                    enabled = KitEnabled.of(state.canStartJob, stringResource(Res.string.linuxMgrProblemJob)))
+            }) {
+            selected?.let { pkg ->
+                if (pkg.locked) KitText(stringResource(Res.string.linuxMgrPkgLocked))
+                KitDetailsFold(stringResource(Res.string.kitDetails), stringResource(Res.string.kitCopyDetails),
+                    notes = listOf(pkg.name, pkg.version, size(pkg.sizeKb * 1024))) // F: lib/ui/screens/linux_manager/linux_packages_page.dart:280-284
             }
         }
-    KitConfirm(spec = spec, onConfirm = actions::confirm, onCancel = actions::dismiss)
+        val spec =
+            when (val asked = state.confirm) {
+                null -> null
+                is PackagesConfirm.Install ->
+                    KitConfirmSpec(
+                        title = stringResource(Res.string.linuxMgrPkgInstallTitle, names(asked.names)),
+                        confirmLabel = stringResource(Res.string.linuxMgrPkgInstallLabel, names(asked.names)),
+                        body = stringResource(Res.string.linuxMgrPkgInstallBody),
+                    )
+                is PackagesConfirm.Remove ->
+                    KitConfirmSpec(
+                        title = stringResource(Res.string.linuxMgrPkgRemoveTitle, names(listOf(asked.name))),
+                        confirmLabel = stringResource(Res.string.linuxMgrPkgRemove, names(listOf(asked.name))),
+                        kind = KitConfirmKind.Destructive,
+                        body = stringResource(Res.string.linuxMgrPkgRemoveBody),
+                        consequences =
+                            if (asked.alsoRemoved.isEmpty()) emptyList() else listOf(stringResource(Res.string.linuxMgrPkgAlsoRemoved, names(asked.alsoRemoved))),
+                    )
+                PackagesConfirm.Update ->
+                    KitConfirmSpec(
+                        title = stringResource(Res.string.linuxMgrPkgUpdateTitle),
+                        confirmLabel = stringResource(Res.string.linuxMgrPkgUpdate),
+                        body = stringResource(Res.string.linuxMgrPkgUpdateBody),
+                    )
+                is PackagesConfirm.StopJob -> {
+                    val (title, label) = stopJobWords(asked.kind, asked.names)
+                    KitConfirmSpec(title = title, confirmLabel = label, kind = KitConfirmKind.Stop, body = stringResource(Res.string.linuxMgrJobStopBody))
+                }
+            }
+        KitConfirm(spec = spec, onConfirm = actions::confirm, onCancel = actions::dismiss)
+    }
 }
 
 @Composable
