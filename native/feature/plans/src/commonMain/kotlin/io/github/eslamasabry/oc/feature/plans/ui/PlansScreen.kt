@@ -12,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.integrations.usage.SignInState
 import io.github.eslamasabry.oc.engine.integrations.usage.SubscriptionState
@@ -23,18 +24,20 @@ import io.github.eslamasabry.oc.feature.plans.presentation.PlansPhase
 import io.github.eslamasabry.oc.feature.plans.presentation.PlansUi
 import io.github.eslamasabry.oc.feature.plans.presentation.cardWindows
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitAction
-import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
-import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
-import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
-import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
-import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
@@ -42,6 +45,8 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
+import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
+import io.github.eslamasabry.oc.ui.kit.state.KitPlanBlock
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.state.KitWindowRow
@@ -109,10 +114,32 @@ public fun PlansContent(
                 if (state.collector.available) CollectorSetup(state.collector, actions)
                 // AGENT-2: usage alerts and the provider-usage collectors.
                 UsageCollectorRows(state, actions)
-                for (card in
+                val measured =
                     state.cards.filter {
                         it.windows.isNotEmpty() || it.state == SubscriptionState.NoLimits
-                    }) PlanCard(card, state.nowMs, words, actions) { opened = card.key }
+                    }
+                val connections =
+                    (state.cards.flatMap { card ->
+                            listOfNotNull(card.readFrom, card.connection, card.fixConnection) +
+                                card.signedInOn.map { it.connection }
+                        } + state.keys.map { it.connection })
+                        .distinctBy {
+                            it.id.ifBlank { if (it.isPhone) "phone" else it.name }
+                        }
+                if (measured.isNotEmpty()) {
+                    KitRowGroup {
+                        for (card in measured) PlanCard(
+                            card,
+                            state.nowMs,
+                            words,
+                            actions,
+                            severalConnections = connections.size > 1,
+                            refreshing = state.refreshing,
+                        ) {
+                            opened = card.key
+                        }
+                    }
+                }
                 val setup =
                     state.cards.filter {
                         it.windows.isEmpty() && it.state != SubscriptionState.NoLimits
@@ -179,8 +206,7 @@ public fun PlansContent(
             pending?.let {
                 KitConfirmSpec(
                     title =
-                        if (it.provider == "paseo")
-                            stringResource(Res.string.plansPaseoQuestion)
+                        if (it.provider == "paseo") stringResource(Res.string.plansPaseoQuestion)
                         else if (it.provider == "builtin")
                             stringResource(Res.string.plansBuiltinQuestion)
                         else
@@ -247,45 +273,73 @@ private fun PlanCard(
     nowMs: Long,
     words: PlansWords,
     actions: PlansActions,
+    severalConnections: Boolean,
+    refreshing: Boolean,
     open: () -> Unit,
 ) {
-    KitRowGroup {
-        KitRow(
-            title = words.cardTitle(card.name, card.connection),
-            supporting = card.plan?.let { words.plan(it) },
-            trailing =
-                words.summary(card, nowMs)?.let { KitRowTrailing.Value(it) }
-                    ?: KitRowTrailing.Chevron,
-            onClick = open,
-        )
-        if (
-            card.state != SubscriptionState.Ok &&
-                card.state != SubscriptionState.NearLimit &&
-                card.state != SubscriptionState.Exhausted
-        ) {
-            KitRow(title = words.state(card.state, card.providerId), supportingMaxLines = 3)
-        }
+    val tier =
+        listOfNotNull(
+                card.plan?.trim()?.takeIf { it.isNotEmpty() }?.replaceFirstChar { it.titlecase() },
+                card.readFrom
+                    ?.takeIf { severalConnections && card.state != SubscriptionState.OfflineStale }
+                    ?.let { words.connection(it) },
+            )
+            .joinToString(" · ")
+            .ifEmpty { null }
+    KitPlanBlock(
+        title = card.name,
+        titleNote = tier,
+        summary = words.summary(card, nowMs),
+        onClick = open,
+        modifier = Modifier.testTag("usage-card-${card.key}"),
+    ) {
+        words.blockMessage(card, nowMs, severalConnections)?.let { PlanNote(it) }
         for (w in card.cardWindows()) {
             val at = w.resetsAtMs?.takeIf { it > nowMs }
             KitWindowRow(
                 title = words.window(w.kind, w.label, w.id),
-                left = w.leftPercent / 100f,
+                left = w.leftPercent / 100f, // F: lib/ui/screens/usage/usage_plan_card.dart:97
                 valueLabel =
                     listOfNotNull("${w.leftPercent}%", at?.let { words.whenAt(it, nowMs) })
                         .joinToString(" · "),
                 valueSemantics =
                     listOfNotNull(words.left(w.leftPercent), at?.let { words.whenAt(it, nowMs) })
                         .joinToString(" · "),
+                inline = true,
+                modifier = Modifier.testTag("usage-bar-${card.key}-${w.id}"),
             )
         }
-        if (card.resetSince) KitRow(title = words.resetSince, supportingMaxLines = 2)
-        words.checked(card, nowMs)?.let { KitRow(title = it) }
-        if (card.fix == UsageFix.TryAgain)
-            KitRow(
-                title = words.fix(card.fix, card.fixConnection).orEmpty(),
+        if (card.resetSince) {
+            card.windows
+                .mapNotNull { it.resetsAtMs }
+                .filter { it <= nowMs }
+                .minOrNull()
+                ?.let {
+                    PlanNote(stringResource(Res.string.usageResetSince, words.whenAt(it, nowMs)))
+                }
+        }
+        words.checked(card, nowMs)?.let { PlanNote(it) }
+        if (card.fix == UsageFix.TryAgain && card.canFix) {
+            KitButton(
+                label = words.fix(card.fix, card.fixConnection).orEmpty(),
                 onClick = actions::refresh,
+                role = KitButtonRole.Tertiary,
+                enabled =
+                    if (refreshing) KitEnabled.Disabled(words.refreshing) else KitEnabled.Enabled,
+                modifier = Modifier.testTag("usage-fix-${card.key}"),
             )
+        }
     }
+}
+
+@Composable
+private fun PlanNote(text: String) {
+    KitText(
+        text,
+        Modifier.padding(top = Space.S1.dp),
+        role = TypeRole.Caption,
+        tone = TextTone.Secondary,
+    )
 }
 
 @Composable
