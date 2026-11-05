@@ -2,6 +2,12 @@
 
 This project is in public alpha. Only the newest preview is supported.
 
+## 2.1.3+61 — 2026-11-05
+
+Built-in Linux sets up on phones where its download tool crashes (#117): the
+app downloads the file itself and still checks its pinned checksum. Full
+notes: [docs/releases/v2.1.3+61.md](docs/releases/v2.1.3+61.md).
+
 ## 2.1.2+60 — 2026-11-05
 
 Antigravity CLI on the phone in place of Gemini CLI (#116), an "Add an agent"
