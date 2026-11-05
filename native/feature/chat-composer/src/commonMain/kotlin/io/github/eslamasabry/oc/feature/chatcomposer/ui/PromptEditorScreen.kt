@@ -29,7 +29,13 @@ internal fun PromptEditorScreen(visible: Boolean, field: TextFieldState, onClose
     val selection = remember(visible) { field.selection }
     var discard by remember(visible) { mutableStateOf(false) }
     val focus = remember(visible) { FocusRequester() }
-    val close = { if (field.text.toString() == original) onClose() else discard = true }
+    val close = {
+        if (field.text.toString() == original) {
+            // Flutter cancel returns no editor value, including when only the selection changed.
+            field.edit { this.selection = selection }
+            onClose()
+        } else discard = true
+    }
     val title = stringResource(Res.string.chatUiPromptEditor)
     KitPageOverlay(visible, title, close) {
         LaunchedEffect(Unit) { focus.requestFocus() }
