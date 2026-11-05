@@ -34,14 +34,14 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 public fun KitPhraseChips(
     phrases: List<String>,
     label: String,
-    sendLabel: (String) -> String,
-    menuLabel: String,
-    editLabel: String,
+    insertLabel: (String) -> String,
+    menuLabel: (String) -> String,
     hideLabel: String,
     onChoose: (String) -> Unit,
-    onEdit: (String) -> Unit,
     onHide: (String) -> Unit,
     modifier: Modifier = Modifier,
+    editLabel: String? = null,
+    onEdit: ((String) -> Unit)? = null,
 ) {
     if (phrases.isEmpty()) return
     Row(
@@ -54,15 +54,15 @@ public fun KitPhraseChips(
             var menu by remember(phrase) { mutableStateOf(false) }
             KitMenu(
                 menu,
-                listOf(
-                    KitMenuItem(editLabel, { menu = false; onEdit(phrase) }),
+                listOfNotNull(
+                    if (editLabel != null && onEdit != null) KitMenuItem(editLabel, { menu = false; onEdit(phrase) }) else null,
                     KitMenuItem(hideLabel, { menu = false; onHide(phrase) }),
                 ),
                 { menu = false },
-                title = menuLabel,
+                title = menuLabel(phrase),
             ) {
                 Box(Modifier.pointerInput(phrase) { detectTapGestures(onLongPress = { menu = true }) }) {
-                    KitChip(phrase, kind = KitChipKind.Action, onClick = { onChoose(phrase) }, spoken = sendLabel(phrase))
+                    KitChip(phrase, kind = KitChipKind.Action, onClick = { onChoose(phrase) }, spoken = insertLabel(phrase))
                 }
             }
         }

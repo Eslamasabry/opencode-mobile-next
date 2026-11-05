@@ -19,8 +19,8 @@ class KitPhraseChipsGateTest {
             KitPhraseChips(
                 phrases = listOf("Continue", "Run the tests", "Commit this"),
                 label = "Quick phrases",
-                sendLabel = { "Send: $it" },
-                menuLabel = "Phrase options",
+                insertLabel = { "Send: $it" },
+                menuLabel = { "Phrase options" },
                 editLabel = "Edit",
                 hideLabel = "Hide",
                 onChoose = {},
