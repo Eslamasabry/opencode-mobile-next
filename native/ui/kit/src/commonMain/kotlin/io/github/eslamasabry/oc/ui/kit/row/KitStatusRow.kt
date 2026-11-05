@@ -7,6 +7,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.layout.CapRole
+import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
@@ -34,6 +36,7 @@ public fun KitStatusRow(
     val tokens = LocalKitTokens.current
     Row(
         modifier
+            .kitMaxWidth(CapRole.List)
             .fillMaxWidth()
             .heightIn(min = tokens.rowHeightTwo.dp)
             .padding(horizontal = tokens.gutter.dp, vertical = Space.S2.dp),
