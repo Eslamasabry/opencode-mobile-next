@@ -35,20 +35,12 @@ public data class KitColors(
     val elevationShadow: Color,
 ) {
     /**
-     * The colour of live things only: the running dot and ring, the message box glow, the live line. Dark mode uses
-     * the accent itself; light mode keeps the deep accent for words and buttons but lifts live marks to a brighter
-     * shade of it (owner 2026-11-05: bright mint only for the live dot and glow), so "running" still reads as alive
-     * on the pale ground.
+     * The colour of live things (the running dot and ring, the message box glow, the live line). Flutter draws them in
+     * the accent, so this is the accent: the exact rebuild comes first (owner, 2026-11-05). A brighter live colour on
+     * light themes was approved as a later improvement and is parked until the rebuild is done.
      */
     val live: Color
-        get() =
-            if (dark) accent
-            else Color(
-                red = (accent.red * LIVE_LIFT).coerceAtMost(1f),
-                green = (accent.green * LIVE_LIFT).coerceAtMost(1f),
-                blue = (accent.blue * LIVE_LIFT).coerceAtMost(1f),
-                alpha = accent.alpha,
-            )
+        get() = accent
 
     public fun tone(t: TextTone): Color =
         when (t) {
@@ -61,9 +53,6 @@ public data class KitColors(
             TextTone.Success -> success
         }
 }
-
-/** How far a light theme's live colour rises over its accent (#087F43 → about #0DCB6B). */
-private const val LIVE_LIFT = 1.6f
 
 internal fun Argb.toColor(): Color = Color(v)
 

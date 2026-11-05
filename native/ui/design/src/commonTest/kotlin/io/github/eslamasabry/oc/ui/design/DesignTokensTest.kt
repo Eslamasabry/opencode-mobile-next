@@ -81,10 +81,9 @@ class DesignTokensTest {
         assertEquals(24, TypeScale.of(TypeRole.Body).lineHeightSp)
         assertEquals(20, TypeScale.of(TypeRole.Button).lineHeightSp)
         assertEquals(19, TypeScale.of(TypeRole.Mono).lineHeightSp)
-        // The looks pass's split of the small tier: supporting 14, labels 13, meta 12 (direction §5.2).
-        assertEquals(14, TypeScale.of(TypeRole.Secondary).sizeSp)
-        assertEquals(13, TypeScale.of(TypeRole.Label).sizeSp)
-        assertEquals(12, TypeScale.of(TypeRole.Caption).sizeSp)
+        // Flutter 2.1.1: the small tier is one size, 13/18.
+        assertEquals(13, TypeScale.of(TypeRole.Secondary).sizeSp)
+        assertEquals(13, TypeScale.of(TypeRole.Caption).sizeSp)
         assertEquals(0f, TypeScale.forLocale(TypeRole.Headline, arabic = true).trackingSp)
         assertEquals(10, TypeRole.entries.size)
     }
@@ -94,7 +93,7 @@ class DesignTokensTest {
         val c = Tokens.Compact
         assertEquals(48, c.buttonHeight)
         assertEquals(48, c.rowHeightOne)
-        assertEquals(64, c.rowHeightTwo)
+        assertEquals(56, c.rowHeightTwo)
         assertEquals(16, c.sectionGap)
         assertEquals(4, c.labelGap)
         assertEquals(48, c.minTarget)

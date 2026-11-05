@@ -1,27 +1,29 @@
 package io.github.eslamasabry.oc.ui.design.motion
 
+import io.github.eslamasabry.oc.ui.design.generated.FlutterKitMotion
+
 /**
  * Motion numbers (plan 08 §2.1–§2.5, §2.7; names follow Dart `KitMotion`, `lib/ui/kit/kit_motion.dart`). No Compose:
  * the kit builds every spec from these in `KitMotion.kt`. Milliseconds unless the name says otherwise.
  */
 public object MotionTokens {
     // Durations (§2.1)
-    public const val QUICK: Int = 150
-    public const val STANDARD: Int = 250
+    public const val QUICK: Int = FlutterKitMotion.QUICK_MS
+    public const val STANDARD: Int = FlutterKitMotion.STANDARD_MS
     public const val ROW_OPEN: Int = 450
-    public const val ROW_RETURN: Int = 300
-    public const val GLOW_FADE: Int = 450
+    public const val ROW_RETURN: Int = FlutterKitMotion.ROW_RETURN_MS
+    public const val GLOW_FADE: Int = FlutterKitMotion.EDGE_LIGHT_HUE_FADE_MS
     public const val FROST_FADE: Int = 180
     public const val STYLE_FADE: Int = 200
     public const val STATE_FADE: Int = 120
-    public const val PRESS_HOLD: Int = 100
+    public const val PRESS_HOLD: Int = FlutterKitMotion.PRESS_HOLD_MS
     public const val STOP_IGNORE_AFTER_SEND: Int = 800
     public const val PREDICTIVE_SPAN: Int = 300
     // Waits and holds, not motion
-    public const val ESCALATE_AFTER: Int = 8000
-    public const val UNDO_WINDOW: Int = 8000
-    public const val COPIED_HOLD: Int = 2000
-    public const val TYPING_SETTLE: Int = 300
+    public const val ESCALATE_AFTER: Int = FlutterKitMotion.ESCALATE_AFTER_MS
+    public const val UNDO_WINDOW: Int = FlutterKitMotion.UNDO_WINDOW_MS
+    public const val COPIED_HOLD: Int = FlutterKitMotion.COPIED_HOLD_MS
+    public const val TYPING_SETTLE: Int = FlutterKitMotion.TYPING_SETTLE_MS
     public const val HELD_ANSWER: Int = 3000
     public const val ARRIVAL_HOLD: Int = 2400
     public const val TIP_HOLD: Int = 4000
@@ -32,17 +34,17 @@ public object MotionTokens {
     public const val GLOW_SOFT_LAP: Int = 8000
     public const val GLOW_SOFT_MIN_LAP: Int = 6000
     public const val STOP_RING_LAP: Int = 2000
-    public const val LIVE_SWEEP_LAP: Int = 2200
-    public const val STEP_LAP: Int = 2000
-    public const val STEP_LAP_CALM: Int = 4000
-    public const val STEP_BREATHE: Int = 1600
-    public const val STEP_FLASH: Int = 300
-    public const val STEP_TICK: Int = 600
-    public const val STEP_SPRING: Int = 260
-    public const val STEP_FADE: Int = 200
+    public const val LIVE_SWEEP_LAP: Int = FlutterKitMotion.STEP_SWEEP_MS
+    public const val STEP_LAP: Int = FlutterKitMotion.STEP_LAP_MS
+    public const val STEP_LAP_CALM: Int = FlutterKitMotion.STEP_LAP_CALM_MS
+    public const val STEP_BREATHE: Int = FlutterKitMotion.STEP_BREATHE_MS
+    public const val STEP_FLASH: Int = FlutterKitMotion.STEP_FLASH_MS
+    public const val STEP_TICK: Int = FlutterKitMotion.STEP_TICK_MS
+    public const val STEP_SPRING: Int = FlutterKitMotion.STEP_SPRING_MS
+    public const val STEP_FADE: Int = FlutterKitMotion.STEP_FADE_MS
     public const val CARET_BREATH: Int = 1100
     public const val SPINNER_LAP: Int = 1333
-    public const val REFRESH_BREATH: Int = 4000
+    public const val REFRESH_BREATH: Int = FlutterKitMotion.BREATH_MS
     // Distances (dp) and ratios (§2.5)
     public const val PAGE_TRAVEL_DP: Int = 30
     public const val ENTRANCE_RISE_DP: Int = 8
@@ -55,7 +57,7 @@ public object MotionTokens {
     public const val FOLLOW_SLACK_DP: Int = 48
     public const val PAGE_FADE_OUT_SHARE: Float = 0.3f
     public const val COUNT_ROLL_SHARE: Float = 0.6f
-    public const val MARK_FROM: Float = 0.9f
+    public const val MARK_FROM: Float = FlutterKitMotion.MARK_FROM
     public const val LIFT_START_SCALE: Float = 0.92f
     public const val PREDICTIVE_MIN_SCALE: Float = 0.9f
     public const val PREDICTIVE_FADE_AT: Float = 0.35f
@@ -68,7 +70,7 @@ public object MotionTokens {
     public const val SPATIAL_K: Float = 700f
     public const val SPATIAL_SLOW_K: Float = 300f
     public const val LARGE_TRAVEL_K: Float = 550f
-    public const val REPLY_GROW_K: Float = 700f
+    public const val REPLY_GROW_K: Float = FlutterKitMotion.REPLY_GROW_STIFFNESS
     public const val EFFECTS_FAST_K: Float = 3800f
     public const val EFFECTS_K: Float = 1600f
     public const val EFFECTS_SLOW_K: Float = 800f

@@ -1,43 +1,46 @@
 package io.github.eslamasabry.oc.ui.design.tokens
 
+import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
+
 /** Fine-tune spacing knob (the UI exposes Corners and Spacing; owner 2026-10-22). */
 public enum class Density { Comfortable, Compact }
 
 /**
- * Sizes in dp from Dart `KitTokens.fallback` and its static constants (`lib/ui/kit/kit_tokens.dart`). Compact steps
+ * Sizes in dp from Dart `KitTokens.fallback` and its static constants (`lib/ui/kit/kit_tokens.dart`), read from the
+ * generated [FlutterKitTokens] (native/tool/design/gen_tokens.py); no size here is typed by hand. Compact steps
  * stay on the 4 dp scale and touch targets never shrink (`KitTokens._styled`). Slice 0 carries the sizes the P7 parts
  * and the 20 frozen signatures need; the rest of plan 06 §4.5 joins with the parts that read them.
  */
 public data class Tokens(
-    val gutter: Int = 16,
-    val sectionGap: Int = 24,
-    val labelGap: Int = 8,
-    val panelPadding: Int = 16,
-    val rowHeightOne: Int = 56,
-    val rowHeightTwo: Int = 72,
-    val choiceRowMin: Int = 56,
-    val buttonHeight: Int = 52,
-    val minTarget: Int = 48,
-    val chipHeight: Int = 32,
-    val iconTile: Int = 28,
-    val smallIcon: Int = 20,
-    val navHeight: Int = 60,
-    val navRadius: Int = 22,
+    val gutter: Int = FlutterKitTokens.GUTTER,
+    val sectionGap: Int = FlutterKitTokens.SECTION_GAP,
+    val labelGap: Int = FlutterKitTokens.LABEL_GAP,
+    val panelPadding: Int = FlutterKitTokens.PANEL_PADDING,
+    val rowHeightOne: Int = FlutterKitTokens.ROW_HEIGHT,
+    val rowHeightTwo: Int = FlutterKitTokens.ROW_HEIGHT_TWO_LINE,
+    val choiceRowMin: Int = FlutterKitTokens.CHOICE_ROW_MIN_HEIGHT,
+    val buttonHeight: Int = FlutterKitTokens.BUTTON_HEIGHT,
+    val minTarget: Int = FlutterKitTokens.MIN_TARGET,
+    val chipHeight: Int = FlutterKitTokens.CHIP_HEIGHT,
+    val iconTile: Int = FlutterKitTokens.ICON_TILE_SIZE,
+    val smallIcon: Int = FlutterKitTokens.SMALL_ICON_SIZE,
+    val navHeight: Int = FlutterKitTokens.NAV_HEIGHT,
+    val navRadius: Int = FlutterKitTokens.NAV_RADIUS,
     val leadColumn: Int = 40,
-    val statusLineMin: Int = 52,
-    val handleWidth: Int = 36,
-    val handleThickness: Int = 5,
-    val handleBand: Int = 22,
-    val loadingBar: Int = 2,
-    val progressBar: Int = 4,
-    val skeletonRow: Int = 64,
-    val composerRadius: Int = 26,
-    val composerRadiusWide: Int = 18,
-    val bubbleRadius: Int = 20,
-    val bubbleTail: Int = 6,
-    val panelInset: Int = 24,
+    val statusLineMin: Int = FlutterKitTokens.STATUS_LINE_MIN_HEIGHT,
+    val handleWidth: Int = FlutterKitTokens.HANDLE_WIDTH,
+    val handleThickness: Int = FlutterKitTokens.HANDLE_THICKNESS,
+    val handleBand: Int = FlutterKitTokens.HANDLE_HEIGHT,
+    val loadingBar: Int = FlutterKitTokens.LOADING_BAR_HEIGHT,
+    val progressBar: Int = FlutterKitTokens.PROGRESS_BAR_HEIGHT,
+    val skeletonRow: Int = FlutterKitTokens.SKELETON_ROW_HEIGHT,
+    val composerRadius: Int = FlutterKitTokens.COMPOSER_RADIUS,
+    val composerRadiusWide: Int = FlutterKitTokens.COMPOSER_RADIUS_WIDE,
+    val bubbleRadius: Int = FlutterKitTokens.BUBBLE_RADIUS,
+    val bubbleTail: Int = FlutterKitTokens.BUBBLE_TAIL_RADIUS,
+    val panelInset: Int = FlutterKitTokens.PANEL_INSET,
     /** Leading and state icons grow with text up to this. */
-    val maxIconScale: Float = 1.5f,
+    val maxIconScale: Float = FlutterKitTokens.MAX_ICON_SCALE,
 ) {
     public companion object {
         public val Comfortable: Tokens = Tokens()
@@ -60,8 +63,8 @@ public data class Tokens(
 
 /** Alphas that are not colour roles (Dart constants). */
 public object Alphas {
-    public const val DISABLED: Float = 0.38f
-    public const val STALE: Float = 0.60f
+    public const val DISABLED: Float = FlutterKitTokens.DISABLED_ALPHA
+    public const val STALE: Float = FlutterKitTokens.STALE_ALPHA
     /** The press ripple / pressed fill: the part's ink at this alpha (Dart `KitInk.alpha`). */
     public const val PRESSED: Float = 0.12f
     public const val HOVERED: Float = 0.08f

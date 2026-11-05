@@ -72,8 +72,6 @@ public class KitTypography internal constructor(private val fonts: KitFontFamili
             fontWeight = FontWeight(spec.weight),
             letterSpacing = spec.trackingSp.sp,
             lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Proportional, LineHeightStyle.Trim.None),
-            // Meta (times, counts, sizes) lines up in columns: tabular figures.
-            fontFeatureSettings = if (role == TypeRole.Caption) "tnum" else null,
         )
     }
 }
