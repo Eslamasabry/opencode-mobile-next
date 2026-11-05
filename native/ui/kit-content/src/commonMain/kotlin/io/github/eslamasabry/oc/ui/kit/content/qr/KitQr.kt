@@ -3,6 +3,15 @@ package io.github.eslamasabry.oc.ui.kit.content.qr
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import io.github.eslamasabry.oc.ui.design.layout.CapRole
+import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
+import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -10,6 +19,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.platform.LocalDensity
@@ -60,11 +71,11 @@ public fun KitQr(data: String, semanticsLabel: String, modifier: Modifier = Modi
     when (payload) {
         QrPayload.Empty -> contentAssert(false) { "KitQr: data must not be empty (B-KIT-026)" }
         QrPayload.TooLong ->
-            KitText(
-                stringResource(Res.string.kitQrTooLong),
-                modifier.semantics { liveRegion = LiveRegionMode.Polite },
-                role = TypeRole.Secondary,
-            )
+            Row(modifier.kitMaxWidth(CapRole.Control).semantics { liveRegion = LiveRegionMode.Polite }) {
+                KitIcon(KitIcons.error, size = KitIconSize.Small)
+                Spacer(Modifier.width(Space.S2.dp))
+                KitText(stringResource(Res.string.kitQrTooLong), Modifier.weight(1f), role = TypeRole.Secondary)
+            }
         is QrPayload.Ready -> QrCode(payload.matrix, semanticsLabel, modifier)
     }
 }
@@ -80,7 +91,7 @@ private fun QrCode(matrix: QrMatrix, label: String, modifier: Modifier) {
     val paper = remember { Graphite.of(false).toKitColors() }
     val hairline = LocalKitColors.current.hairline
     val density = LocalDensity.current
-    BoxWithConstraints(modifier.widthIn(max = QrRules.MAX_SIDE_DP.dp)) {
+    BoxWithConstraints(modifier.kitMaxWidth(CapRole.Control).widthIn(max = QrRules.MAX_SIDE_DP.dp)) {
         val maxPx = with(density) { (if (constraints.hasBoundedWidth) maxWidth else QrRules.MAX_SIDE_DP.dp).toPx() }
         val sidePx = QrRules.sidePx(maxPx, matrix.size, density.density)
         val side: Dp = with(density) { sidePx.toDp() }
@@ -101,11 +112,14 @@ private fun QrCode(matrix: QrMatrix, label: String, modifier: Modifier) {
             val module = size.width / total
             val quiet = module * QrRules.QUIET_MODULES
             val ink = paper.text1
+            val paint = Paint().apply { color = ink; isAntiAlias = false }
+            drawIntoCanvas { canvas ->
             for (row in 0 until matrix.size) {
                 for (col in 0 until matrix.size) {
                     if (!matrix.isDark(row, col)) continue
-                    drawRect(ink, Offset(quiet + col * module, quiet + row * module), Size(module, module))
+                    canvas.drawRect(androidx.compose.ui.geometry.Rect(quiet + col * module, quiet + row * module, quiet + (col + 1) * module, quiet + (row + 1) * module), paint)
                 }
+            }
             }
         }
     }
