@@ -11,10 +11,10 @@ import kotlin.math.abs
  */
 public object QrRules {
     /** Modules of light margin on every side (Dart `KitTokens.qrQuietModules`). */
-    public const val QUIET_MODULES: Int = 4
+    public const val QUIET_MODULES: Int = io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens.QR_QUIET_MODULES
 
     /** The largest side a code is drawn at, in dp (Dart `KitTokens.qrMaxSize`). */
-    public const val MAX_SIDE_DP: Float = 240f
+    public const val MAX_SIDE_DP: Float = io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens.QR_MAX_SIZE.toFloat()
 
     /** The lost-point score of one symbol; lower is easier to scan. */
     public fun penalty(m: QrMatrix): Double = sameNeighbours(m) + solidBlocks(m) + finderLookAlikes(m) + balance(m)
@@ -101,7 +101,8 @@ public object QrRules {
      */
     public fun sidePx(maxWidthPx: Float, moduleCount: Int, density: Float): Float {
         val total = moduleCount + QUIET_MODULES * 2
-        val ideal = maxOf(0f, minOf(maxWidthPx, MAX_SIDE_DP * density))
+        val ratio = if (density > 0f) density else 1f
+        val ideal = maxOf(0f, minOf(maxWidthPx, MAX_SIDE_DP * ratio))
         val modulePx = (ideal / total).toInt()
         return if (modulePx < 1) ideal else (modulePx * total).toFloat()
     }

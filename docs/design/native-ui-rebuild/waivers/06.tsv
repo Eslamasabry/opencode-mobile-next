@@ -1,0 +1,63 @@
+kit_divider_insets_1280x800_dark	DEPENDS_ON 08	part-kit_row glyph/row geometry (order 08); inset divider itself follows kit_divider.dart
+kit_divider_insets_1280x800_light	DEPENDS_ON 08	part-kit_row glyph/row geometry (order 08); inset divider itself follows kit_divider.dart
+kit_divider_insets_1600x1000_dark	DEPENDS_ON 08	part-kit_row glyph/row geometry (order 08); inset divider itself follows kit_divider.dart
+kit_divider_insets_1600x1000_light	DEPENDS_ON 08	part-kit_row glyph/row geometry (order 08); inset divider itself follows kit_divider.dart
+kit_divider_insets_360x800_dark	DEPENDS_ON 08	part-kit_row glyph/row geometry (order 08); inset divider itself follows kit_divider.dart
+kit_divider_insets_360x800_light	DEPENDS_ON 08	part-kit_row glyph/row geometry (order 08); inset divider itself follows kit_divider.dart
+kit_divider_insets_800x1280_dark	DEPENDS_ON 08	part-kit_row glyph/row geometry (order 08); inset divider itself follows kit_divider.dart
+kit_divider_insets_800x1280_light	DEPENDS_ON 08	part-kit_row glyph/row geometry (order 08); inset divider itself follows kit_divider.dart
+kit_divider_insets_915x412_dark	DEPENDS_ON 08	part-kit_row glyph/row geometry (order 08); inset divider itself follows kit_divider.dart
+kit_divider_insets_915x412_light	DEPENDS_ON 08	part-kit_row glyph/row geometry (order 08); inset divider itself follows kit_divider.dart
+kit_divider_insets_ar_1280x800_dark	DEPENDS_ON 08	part-kit_row glyph/row geometry (order 08); inset divider itself follows kit_divider.dart
+kit_divider_insets_ar_1280x800_light	DEPENDS_ON 08	part-kit_row glyph/row geometry (order 08); inset divider itself follows kit_divider.dart
+kit_divider_insets_ar_dark	DEPENDS_ON 08	part-kit_row glyph/row geometry (order 08); inset divider itself follows kit_divider.dart
+kit_divider_insets_ar_light	DEPENDS_ON 08	part-kit_row glyph/row geometry (order 08); inset divider itself follows kit_divider.dart
+kit_divider_insets_dark	DEPENDS_ON 08	part-kit_row glyph/row geometry (order 08); inset divider itself follows kit_divider.dart
+kit_divider_insets_light	DEPENDS_ON 08	part-kit_row glyph/row geometry (order 08); inset divider itself follows kit_divider.dart
+kit_divider_insets_text2_1280x800_dark	DEPENDS_ON 08	part-kit_row glyph/row geometry (order 08); inset divider itself follows kit_divider.dart
+kit_divider_insets_text2_1280x800_light	DEPENDS_ON 08	part-kit_row glyph/row geometry (order 08); inset divider itself follows kit_divider.dart
+kit_divider_insets_text2_dark	DEPENDS_ON 08	part-kit_row glyph/row geometry (order 08); inset divider itself follows kit_divider.dart
+kit_divider_insets_text2_light	DEPENDS_ON 08	part-kit_row glyph/row geometry (order 08); inset divider itself follows kit_divider.dart
+kit_divider_vertical_dark	DEPENDS_ON 05	part-kit_icon_button glyph sizing (order 05); divider geometry follows kit_divider.dart
+kit_divider_vertical_light	DEPENDS_ON 05	part-kit_icon_button glyph sizing (order 05); divider geometry follows kit_divider.dart
+kit_needs_you_badges_1280x800_dark	DEPENDS_ON 08	part-kit_row custom leading badge/mark slot, styled supporting spans and title line limit API (order 08)
+kit_needs_you_badges_1280x800_light	DEPENDS_ON 08	part-kit_row custom leading badge/mark slot, styled supporting spans and title line limit API (order 08)
+kit_needs_you_badges_dark	DEPENDS_ON 08	part-kit_row custom leading badge/mark slot, styled supporting spans and title line limit API (order 08)
+kit_needs_you_badges_light	DEPENDS_ON 08	part-kit_row custom leading badge/mark slot, styled supporting spans and title line limit API (order 08)
+kit_needs_you_marks_1280x800_dark	DEPENDS_ON 08	part-kit_row custom leading badge/mark slot, styled supporting spans and title line limit API (order 08)
+kit_needs_you_marks_1280x800_light	DEPENDS_ON 08	part-kit_row custom leading badge/mark slot, styled supporting spans and title line limit API (order 08)
+kit_needs_you_marks_dark	DEPENDS_ON 08	part-kit_row custom leading badge/mark slot, styled supporting spans and title line limit API (order 08)
+kit_needs_you_marks_light	DEPENDS_ON 08	part-kit_row custom leading badge/mark slot, styled supporting spans and title line limit API (order 08)
+kit_needs_you_row_1280x800_dark	DEPENDS_ON 08	part-kit_row custom leading badge/mark slot, styled supporting spans and title line limit API (order 08)
+kit_needs_you_row_1280x800_light	DEPENDS_ON 08	part-kit_row custom leading badge/mark slot, styled supporting spans and title line limit API (order 08)
+kit_needs_you_row_dark	DEPENDS_ON 08	part-kit_row custom leading badge/mark slot, styled supporting spans and title line limit API (order 08)
+kit_needs_you_row_light	DEPENDS_ON 08	part-kit_row custom leading badge/mark slot, styled supporting spans and title line limit API (order 08)
+kit_section_label_page_1280x800_dark	DEPENDS_ON 08	part-kit_row / KitRowGroup custom gap context and row geometry (08); part-kit_term explanation underline (05) also pending
+kit_section_label_page_1280x800_light	DEPENDS_ON 08	part-kit_row / KitRowGroup custom gap context and row geometry (08); part-kit_term explanation underline (05) also pending
+kit_section_label_page_dark	DEPENDS_ON 08	part-kit_row / KitRowGroup custom gap context and row geometry (08); part-kit_term explanation underline (05) also pending
+kit_section_label_page_light	DEPENDS_ON 08	part-kit_row / KitRowGroup custom gap context and row geometry (08); part-kit_term explanation underline (05) also pending
+kit_section_label_page_text2_dark	DEPENDS_ON 08	part-kit_row / KitRowGroup custom gap context and row geometry (08); part-kit_term explanation underline (05) also pending
+kit_section_label_page_text2_light	DEPENDS_ON 08	part-kit_row / KitRowGroup custom gap context and row geometry (08); part-kit_term explanation underline (05) also pending
+kit_qr_default_1280x800_dark	DEPENDS_ON 05	part-kit_icon_button Copy caption glyph size/placement (order 05); QR modules and notice text match
+kit_qr_default_dark	DEPENDS_ON 05	part-kit_icon_button Copy caption glyph size/placement (order 05); QR modules and notice text match
+kit_qr_too_long_1280x800_dark	DEPENDS_ON 05	part-kit_icon_button Copy caption glyph size/placement (order 05); QR modules and notice text match
+kit_qr_too_long_1280x800_light	DEPENDS_ON 05	part-kit_icon_button Copy caption glyph size/placement (order 05); QR modules and notice text match
+kit_qr_too_long_dark	DEPENDS_ON 05	part-kit_icon_button Copy caption glyph size/placement (order 05); QR modules and notice text match
+kit_qr_too_long_light	DEPENDS_ON 05	part-kit_icon_button Copy caption glyph size/placement (order 05); QR modules and notice text match
+kit_qr_too_long_text2_1280x800_dark	DEPENDS_ON 05	part-kit_icon_button Copy caption glyph size/placement (order 05); QR modules and notice text match
+kit_qr_too_long_text2_dark	DEPENDS_ON 05	part-kit_icon_button Copy caption glyph size/placement (order 05); QR modules and notice text match
+kit_search_field_empty_dark	DEPENDS_ON 05	part-kit_icon_button explicit 20 dp clear/filter glyphs and selected filter ink API (order 05)
+kit_search_field_filtered_dark	DEPENDS_ON 05	part-kit_icon_button explicit 20 dp clear/filter glyphs and selected filter ink API (order 05)
+kit_search_field_filtered_light	DEPENDS_ON 05	part-kit_icon_button explicit 20 dp clear/filter glyphs and selected filter ink API (order 05)
+kit_search_field_nomatch_dark	DEPENDS_ON 08	part-kit_state_view needs inline size/action arrangement (order 08); KitSearchNoMatch uses the current API
+kit_search_field_nomatch_light	DEPENDS_ON 08	part-kit_state_view needs inline size/action arrangement (order 08); KitSearchNoMatch uses the current API
+kit_search_field_partial_dark	DEPENDS_ON 05	part-kit_icon_button explicit 20 dp clear/filter glyphs and selected filter ink API (order 05)
+kit_search_field_results_dark	DEPENDS_ON 05	part-kit_icon_button explicit 20 dp clear/filter glyphs and selected filter ink API (order 05)
+kit_search_field_typing_1280x800_dark	DEPENDS_ON 07	part-kit_buttons wide Filter typography/scaling (07); clear icon size override from part-kit_icon_button (05) also pending
+kit_search_field_typing_1280x800_light	DEPENDS_ON 07	part-kit_buttons wide Filter typography/scaling (07); clear icon size override from part-kit_icon_button (05) also pending
+kit_search_field_typing_dark	DEPENDS_ON 05	part-kit_icon_button explicit 20 dp clear/filter glyphs and selected filter ink API (order 05)
+kit_search_field_typing_text2_1280x800_dark	DEPENDS_ON 07	part-kit_buttons wide Filter typography/scaling (07); clear icon size override from part-kit_icon_button (05) also pending
+kit_search_field_typing_text2_1280x800_light	DEPENDS_ON 07	part-kit_buttons wide Filter typography/scaling (07); clear icon size override from part-kit_icon_button (05) also pending
+kit_search_field_typing_text2_dark	DEPENDS_ON 05	part-kit_icon_button explicit 20 dp clear/filter glyphs and selected filter ink API (order 05)
+kit_key_value_default_text2_dark	DEPENDS_ON 01b	part-kit_text / KitTypography body baseline and leading at 2x (order 01b follow-up item 3); KitKeyValue row geometry and wrapping match
+kit_key_value_default_text2_1280x800_dark	DEPENDS_ON 01b	part-kit_text / KitTypography body baseline and leading at 2x (order 01b follow-up item 3); KitKeyValue row geometry and wrapping match

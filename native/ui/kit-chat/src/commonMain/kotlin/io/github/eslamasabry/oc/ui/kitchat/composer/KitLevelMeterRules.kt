@@ -1,8 +1,11 @@
 package io.github.eslamasabry.oc.ui.kitchat.composer
 
-/** The level meter's bars (Dart `LevelMeter`, B-MEDIA-003): bar i is lit when the level reaches (i + 1) / 12. */
-public object KitLevelMeterRules {
-    public const val BARS: Int = 9
+import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 
-    public fun isLit(index: Int, level: Float): Boolean = level >= (index + 1) / 12f
+/** The meter lights from the start edge, clamping the input and treating NaN as silence. */
+public object KitLevelMeterRules {
+    public const val BARS: Int = FlutterKitTokens.METER_BARS
+
+    public fun isLit(index: Int, level: Float): Boolean =
+        index in 0 until BARS && !level.isNaN() && level.coerceIn(0f, 1f) >= (index + 1) / 12f // F: lib/ui/kit/kit_level_meter.dart:52-63
 }

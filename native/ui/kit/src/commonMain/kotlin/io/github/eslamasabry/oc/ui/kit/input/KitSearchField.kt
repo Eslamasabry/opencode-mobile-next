@@ -1,5 +1,32 @@
 package io.github.eslamasabry.oc.ui.kit.input
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.focus.FocusDirection
+import io.github.eslamasabry.oc.ui.design.layout.CapRole
+import io.github.eslamasabry.oc.ui.design.layout.WindowClass
+import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
+import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
+import io.github.eslamasabry.oc.ui.kit.state.KitStateView
+import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.words.res.kitSearchFilter
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,6 +38,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.TextFieldDecorator
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -86,7 +114,7 @@ public enum class SearchEscape { Clear, Leave }
 /** Dart `KitSearchField` rules (B-KIT-030). */
 public object SearchRules {
     /** A search earns its place when the list can pass 8 items (kit-v2 §1.5). Hosts ask this; no literal. */
-    public const val SHOW_ABOVE: Int = 8
+    public const val SHOW_ABOVE: Int = 8 // F: lib/ui/kit/kit_search_field.dart:116
 
     /** The debounce, and the wait before the count is announced (`KitMotion.typingSettle`). */
     public const val SETTLE_MS: Long = MotionTokens.TYPING_SETTLE.toLong()
@@ -111,6 +139,7 @@ public object SearchRules {
  * Motion: Clear fades QUICK (KitPresence); count line and filter chip unfold (KitReveal); Off = instant (class Fade)
  * Replaces: KitSearchField (lib/ui/kit/kit_search_field.dart)
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 public fun KitSearchField(
     label: String,
@@ -125,12 +154,19 @@ public fun KitSearchField(
     onClearFilter: (() -> Unit)? = null,
     enabled: Boolean = true,
     disabledReason: String? = null,
+    filters: List<KitMenuItem> = emptyList(),
+    prominent: Boolean = false,
 ) {
     kitAssert(label.isNotBlank()) { "KitSearchField: a search field names what it searches" }
     kitAssert(enabled || !disabledReason.isNullOrBlank()) { "KitSearchField: a disabled field says why (STATE-8)" }
     kitAssert(activeFilter == null || (onClearFilter != null && !removeFilterLabel.isNullOrBlank())) {
         "KitSearchField: an active filter needs onClearFilter and its remove label"
     }
+    val interactions = remember { MutableInteractionSource() }
+    val focused by interactions.collectIsFocusedAsState()
+    val focusManager = LocalFocusManager.current
+    var filterOpen by remember { mutableStateOf(false) }
+    val wide = LocalKitWindow.current.cls != WindowClass.Compact
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val search by rememberUpdatedState(onSearch)
@@ -153,21 +189,32 @@ public fun KitSearchField(
         NavigationBackHandler(state = back, isBackEnabled = true, onBackCompleted = { state.clearText() })
     }
     // A filled, fully rounded field with no outline (the Flutter search look): the magnifier and the words carry it.
-    val shape = KitShapeId.Pill.shape()
+    val shapeId = if (prominent) KitShapeId.Pill else KitShapeId.Button
+    val shape = shapeId.shape()
+    val look = kitSurfaceLook(KitSurfaceInput(role = SurfaceRole.Field, shape = shapeId, ownFill = colors.surface1, selected = focused))
+    val edge = if (focused) colors.accent else if (prominent) colors.surface1 else colors.hairline
+    val plain = LocalKitStyle.current.style == Style.Solid
+    val hairline = (1f / LocalDensity.current.density).dp
+    val lineHeight = with(LocalDensity.current) { LocalKitTypography.current.style(TypeRole.Body).lineHeight.toDp() }
+    val lineBox = maxOf(tokens.minTarget.dp, lineHeight)
+    val vertical = ((tokens.buttonHeight - tokens.minTarget) / 2).dp // F: lib/ui/kit/kit_search_field.dart:299
+
     val text = LocalKitTypography.current.style(TypeRole.Body).copy(color = if (enabled) colors.text1 else colors.text3)
-    Column(modifier.fillMaxWidth()) {
+    Column(modifier.kitMaxWidth(CapRole.List).fillMaxWidth()) {
         Row(
             Modifier.fillMaxWidth()
-                .heightIn(min = tokens.minTarget.dp)
-                .background(if (colors.dark) colors.surface1 else colors.surface3, shape)
-                .padding(start = Space.S4.dp),
+                .heightIn(min = tokens.buttonHeight.dp)
+                .then(look.modifier)
+                .then(if (plain) Modifier.border(if (focused) hairline * 2 else hairline, edge, shape) else Modifier), // F: lib/ui/kit/kit_tokens.dart:324-325
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+            horizontalArrangement = Arrangement.Start,
         ) {
-            KitGlyph(KitIcons.search, colors.text2, tokens.smallIcon.dp)
-            Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+            KitGlyph(KitIcons.search, colors.text3, tokens.smallIcon.dp * minOf(kitTextScale(), tokens.maxIconScale), Modifier.padding(start = Space.S4.dp, end = Space.S3.dp))
+            Box(Modifier.weight(1f).padding(end = Space.S2.dp, top = vertical, bottom = vertical).heightIn(min = lineBox), contentAlignment = Alignment.CenterStart) {
                 BasicTextField(
                     state = state,
+                    interactionSource = interactions,
+                    decorator = TextFieldDecorator { inner -> Box(Modifier.heightIn(min = lineBox), contentAlignment = Alignment.CenterStart) { inner() } },
                     enabled = enabled,
                     textStyle = text,
                     cursorBrush = SolidColor(colors.accent),
@@ -191,53 +238,51 @@ public fun KitSearchField(
                                 if (esc && SearchRules.escape(state.text.toString()) == SearchEscape.Clear) {
                                     state.clearText()
                                     true
+                                } else if (e.type == KeyEventType.KeyDown && e.key == Key.DirectionDown) {
+                                    focusManager.moveFocus(FocusDirection.Down)
+                                    true
                                 } else {
                                     false
                                 }
                             },
                 )
                 if (query.isEmpty()) {
-                    KitText(label, role = TypeRole.Body, tone = TextTone.Tertiary, kind = KitTextKind.Frame, maxLines = 1)
+                    KitText(label, role = TypeRole.Body, tone = TextTone.Tertiary, kind = KitTextKind.Reading, maxLines = if (LocalDensity.current.fontScale >= 1.3f) 2 else 1) // F: lib/ui/kit/kit_search_field.dart:337
                 }
             }
-            KitPresence(visible = query.isNotEmpty() && enabled) {
+            if (filters.isNotEmpty()) {
+                KitMenu(expanded = filterOpen, items = filters, onDismissRequest = { filterOpen = false }, title = stringResource(Res.string.kitSearchFilter), anchor = {
+                    if (wide) KitButton(label = stringResource(Res.string.kitSearchFilter), onClick = { filterOpen = true }, role = KitButtonRole.Tertiary, icon = KitIcons.filter, enabled = if (enabled) KitEnabled.Enabled else KitEnabled.Disabled(disabledReason.orEmpty()))
+                    else KitIconButton(icon = KitIcons.filter, label = stringResource(Res.string.kitSearchFilter), onClick = { filterOpen = true }, enabled = if (enabled) KitEnabled.Enabled else KitEnabled.Disabled(disabledReason.orEmpty()), tone = TextTone.Tertiary)
+                })
+            }
+            KitPresence(visible = query.isNotEmpty()) {
                 KitIconButton(
-                    icon = KitPartGlyphs.Close,
+                    icon = KitIcons.close,
                     label = stringResource(Res.string.kitSearchClear),
                     onClick = { state.clearText() },
+                    enabled = if (enabled) KitEnabled.Enabled else KitEnabled.Disabled(disabledReason.orEmpty()),
                     tone = TextTone.Secondary,
                 )
             }
         }
+
         val countLine =
             when {
-                query.isEmpty() || settled != query || resultCount == null -> null
+                query.isEmpty() || resultCount == null -> null
                 partial -> stringResource(Res.string.kitSearchPartial, resultCount)
                 resultCount == 0 -> stringResource(Res.string.kitSearchResults__eq0)
                 else -> pluralStringResource(Res.plurals.kitSearchResults, resultCount, Numbers.format(resultCount))
             }
-        KitReveal(visible = countLine != null) {
-            KitText(
-                countLine.orEmpty(),
-                modifier =
-                    Modifier.padding(top = Space.S1.dp, start = Space.S1.dp)
-                        .semantics { liveRegion = LiveRegionMode.Polite },
-                role = TypeRole.Secondary,
-                tone = TextTone.Secondary,
-                kind = KitTextKind.Frame,
-            )
+        KitReveal(visible = countLine != null || activeFilter != null) {
+            FlowRow(Modifier.padding(top = Space.S2.dp), horizontalArrangement = Arrangement.spacedBy(Space.S3.dp), verticalArrangement = Arrangement.spacedBy(Space.S2.dp), itemVerticalAlignment = Alignment.CenterVertically) {
+                if (activeFilter != null) KitChip(label = activeFilter, kind = KitChipKind.Removable, removeLabel = removeFilterLabel, onRemove = onClearFilter)
+                if (countLine != null) KitText(countLine, modifier = Modifier.semantics { if (settled == query) liveRegion = LiveRegionMode.Polite }, role = TypeRole.Secondary, tone = TextTone.Secondary)
+            }
         }
-        KitReveal(visible = activeFilter != null) {
-            KitChip(
-                label = stringResource(Res.string.kitSearchFilterActive, activeFilter.orEmpty()),
-                kind = KitChipKind.Removable,
-                tone = KitChipTone.Active,
-                removeLabel = removeFilterLabel,
-                onRemove = onClearFilter,
-            )
-        }
+
         if (!enabled && disabledReason != null) {
-            KitText(disabledReason, Modifier.padding(top = Space.S1.dp), role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Frame)
+            KitText(disabledReason, Modifier.padding(top = Space.S2.dp), role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Frame)
         }
     }
 }
@@ -260,21 +305,14 @@ public fun KitSearchNoMatch(
     what: String? = null,
     action: KitAction? = null,
 ) {
-    // The query is the person's own words: isolate it so an Arabic or English query never reorders the sentence.
-    val q = "⁨$query⁩"
-    val title = if (what == null) stringResource(Res.string.kitSearchNoMatch, q) else stringResource(Res.string.kitSearchNoMatchIn, what, q)
-    Column(
-        modifier.fillMaxWidth().padding(vertical = Space.S4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
-    ) {
-        KitText(
-            title,
-            Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-            role = TypeRole.RowTitle,
-            kind = KitTextKind.Frame,
-        )
-        KitButton(label = stringResource(Res.string.kitSearchClear), onClick = onClear, role = KitButtonRole.Tertiary)
-        action?.let { KitButton(it, role = KitButtonRole.Tertiary) }
-    }
+    val q = "“⁨$query⁩”"
+    val title = if (what == null) stringResource(Res.string.kitSearchNoMatch, q) else stringResource(Res.string.kitSearchNoMatchIn, "⁨$what⁩", q)
+    KitStateView(
+        kind = KitStateKind.Empty,
+        title = title,
+        modifier = modifier.kitMaxWidth(CapRole.State).semantics { liveRegion = LiveRegionMode.Polite },
+        icon = KitIcons.search,
+        primary = KitAction(label = stringResource(Res.string.kitSearchClear), onClick = onClear),
+        secondary = action,
+    )
 }
