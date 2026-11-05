@@ -6,6 +6,8 @@ import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.agents.account.*
 import io.github.eslamasabry.oc.feature.agents.hub.*
+import io.github.eslamasabry.oc.feature.agents.ui.AgentAccountPanel
+import kotlin.time.Instant
 import io.github.eslamasabry.oc.feature.agents.ui.AgentsScreen
 import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate
 import io.github.eslamasabry.oc.ui.kit.KitTheme
@@ -33,6 +35,7 @@ class AgentsGateTest {
         override fun confirmRemoval() {}
         override fun installPhone(id: String) { installed = id }
     }
+    private val fixtureNow = Instant.parse("2026-09-05T12:00:00Z")
     private val target = AgentAccountTarget(ProfileId("codex"), "My Codex host")
     @Test fun `device sign-in names its host and keeps copy and cancel visible`() = runComposeUiTest {
         val actions = Actions()
@@ -50,22 +53,24 @@ class AgentsGateTest {
     }
     @Test fun signed_out() {
         FlutterGoldenGate.check("agent_account_signed_out", frame = FlutterGoldenGate.Frame.Screen) {
-            AgentsScreen(AgentsUi(accountTarget = target, accountPanel = AccountPanelState(status = AccountPanelStatus.Ready,
-                account = AgentRuntimeAccount(requiresSignIn = true), canSignIn = true)), Actions())
+            AgentAccountPanel(AgentsUi(accountTarget = target, accountPanel = AccountPanelState(status = AccountPanelStatus.Ready,
+                account = AgentRuntimeAccount(requiresSignIn = true), canSignIn = true, updatedAt = fixtureNow)), Actions(), now = fixtureNow)
         }
     }
     @Test fun signed_in() {
         FlutterGoldenGate.check("agent_account_signed_in", frame = FlutterGoldenGate.Frame.Screen) {
-            AgentsScreen(AgentsUi(accountTarget = target, accountPanel = AccountPanelState(status = AccountPanelStatus.Ready,
+            AgentAccountPanel(AgentsUi(accountTarget = target, accountPanel = AccountPanelState(status = AccountPanelStatus.Ready,
                 account = AgentRuntimeAccount(type = "chatgpt", email = "person@example.com", plan = "plus", requiresSignIn = true),
-                limits = persistentListOf(AccountRateBucket("Codex", AccountRateWindow(32, 300, null), AccountRateWindow(68, 10080, null))),
-                usage = AccountTokenUsage(184250, 12640))), Actions())
+                limits = persistentListOf(AccountRateBucket("Codex", AccountRateWindow(32, 300, Instant.parse("2026-09-05T18:00:00Z").toEpochMilliseconds()), AccountRateWindow(68, 10080, null))),
+                usage = AccountTokenUsage(184250, 12640), updatedAt = fixtureNow)), Actions(), now = fixtureNow)
         }
     }
-    @Test fun unavailable_account() {
-        FlutterGoldenGate.check("agent_account_unsupported", frame = FlutterGoldenGate.Frame.Screen) {
-            AgentsScreen(AgentsUi(accountTarget = target, accountPanel = AccountPanelState(status = AccountPanelStatus.Unavailable)), Actions())
-        }
+    @Test fun `unavailable account methods explain their own state without claiming an unsupported server`() = runComposeUiTest {
+        setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+            AgentAccountPanel(AgentsUi(accountTarget = target, accountPanel = AccountPanelState(status = AccountPanelStatus.Unavailable)), Actions(), now = fixtureNow)
+        } }
+        onNodeWithText("Account panel unavailable").assertExists()
+        onNodeWithText("Sign in with ChatGPT").assertDoesNotExist()
     }
     @Test fun `the install chip targets the exact phone agent`() = runComposeUiTest {
         val actions = Actions()

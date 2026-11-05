@@ -54,7 +54,7 @@ import org.jetbrains.compose.resources.stringResource
 
 /** One transient account panel; leaving it closes its owned login session and discards its code. */
 @Composable
-internal fun AgentAccountPanel(state: AgentsUi, actions: AgentsActions) {
+internal fun AgentAccountPanel(state: AgentsUi, actions: AgentsActions, now: Instant = Clock.System.now()) {
     val panel = state.accountPanel
     KitScreen(
         topBar = {
@@ -90,7 +90,11 @@ internal fun AgentAccountPanel(state: AgentsUi, actions: AgentsActions) {
                     AccountPanelStatus.Error -> Res.string.agentAccountReadFailed
                     AccountPanelStatus.Disconnected -> Res.string.agentAccountDisconnected
                     AccountPanelStatus.Ready -> if (panel.account?.signedIn == true) Res.string.agentAccountConnected
-                        else if (panel.account?.requiresSignIn == true) Res.string.agentAccountSignedOut else Res.string.agentAccountNoAuth
+                        else if (panel.account?.requiresSignIn == true) when (panel.loginStatus) {
+                            AccountLoginStatus.Starting, AccountLoginStatus.Waiting, AccountLoginStatus.Cancelling -> Res.string.agentAccountInProgress
+                            AccountLoginStatus.Uncertain -> Res.string.agentAccountNeedsAttention
+                            else -> Res.string.agentAccountSignedOut
+                        } else Res.string.agentAccountNoAuth
                 })
                 val account = panel.account
                 if (panel.status == AccountPanelStatus.Ready && account?.signedIn == true) {
@@ -109,9 +113,16 @@ internal fun AgentAccountPanel(state: AgentsUi, actions: AgentsActions) {
                             KitRow(stringResource(Res.string.agentAccountPlanTitle), leading = KitRowLeading.Glyph(KitIcons.star), trailing = KitRowTrailing.Value(it, chevron = false))
                         }
                     }
+                } else if (panel.status == AccountPanelStatus.Error) {
+                    io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice(message = headline,
+                        retry = KitLineAction(stringResource(Res.string.commonRetry), actions::refreshAccount))
                 } else {
                     KitInlineState(
-                        title = headline, icon = KitIcons.account,
+                        title = headline, icon = when (panel.status) {
+                            AccountPanelStatus.Unavailable -> KitIcons.blocked
+                            AccountPanelStatus.Disconnected -> KitIcons.cloudOff
+                            else -> KitIcons.account
+                        },
                         body = when (panel.status) {
                             AccountPanelStatus.Unavailable -> stringResource(Res.string.agentAccountUnsupportedDetail)
                             AccountPanelStatus.Disconnected -> stringResource(Res.string.agentAccountReconnectDetail)
@@ -177,7 +188,7 @@ internal fun AgentAccountPanel(state: AgentsUi, actions: AgentsActions) {
                                 KitProgressRow(
                                     title = (bucket.name?.takeIf(String::isNotBlank) ?: stringResource(Res.string.agentAccountAllowance)) + " · " + windowWords,
                                     value = window.usedPercent / 100f, // F: lib/ui/screens/agent_account_screen.dart:519
-                                    valueLabel = stringResource(Res.string.agentAccountPercentUsed, window.usedPercent) + " · " + accountReset(window.resetsAtEpochMillis),
+                                    valueLabel = stringResource(Res.string.agentAccountPercentUsed, window.usedPercent) + " · " + accountReset(window.resetsAtEpochMillis, now),
                                 )
                             }
                         }
@@ -185,7 +196,7 @@ internal fun AgentAccountPanel(state: AgentsUi, actions: AgentsActions) {
                     val reached = buckets.orEmpty().flatMap { listOfNotNull(it.primary, it.secondary) }.firstOrNull { it.usedPercent >= 100 } // F: lib/ui/screens/agent_account_screen.dart:493
                     reached?.let {
                         Spacer(Modifier.height(Space.S3.dp))
-                        KitNotice(stringResource(Res.string.agentAccountLimitReached, accountReset(it.resetsAtEpochMillis, withDate = true)))
+                        KitNotice(stringResource(Res.string.agentAccountLimitReached, accountReset(it.resetsAtEpochMillis, now, withDate = true)))
                     }
                     Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
                     val usage = panel.usage
@@ -209,7 +220,7 @@ internal fun AgentAccountPanel(state: AgentsUi, actions: AgentsActions) {
                     }
                 }
                 panel.updatedAt?.let { at ->
-                    val time = LocalKitPlatform.current.messageTime(at.toEpochMilliseconds(), Clock.System.now().toEpochMilliseconds())
+                    val time = LocalKitPlatform.current.messageTime(at.toEpochMilliseconds(), now.toEpochMilliseconds())
                     if (time != null) {
                         Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
                         KitText(stringResource(Res.string.agentAccountUpdated, time), role = io.github.eslamasabry.oc.ui.design.type.TypeRole.Caption)
@@ -225,9 +236,8 @@ internal fun AgentAccountPanel(state: AgentsUi, actions: AgentsActions) {
 }
 
 @Composable
-private fun accountReset(at: Long?, withDate: Boolean = false): String {
+private fun accountReset(at: Long?, now: Instant, withDate: Boolean = false): String {
     if (at == null) return stringResource(Res.string.agentAccountResetUnknown)
-    val now = Clock.System.now()
     val left = Instant.fromEpochMilliseconds(at) - now
     val relative = when {
         left.isNegative() -> stringResource(Res.string.agentAccountResetDue)
