@@ -255,7 +255,11 @@ private fun Modifier.composerKeys(
         when (event.key) {
             Key.Enter, Key.NumPadEnter -> {
                 val enter = ComposerKeys.enter(finePointer, event.isShiftPressed, event.isCtrlPressed || event.isMetaPressed)
-                if (enter == EnterKey.Send && button != FieldButton.Mic && button != FieldButton.None) {
+                val canSend = when (button) {
+                    FieldButton.Send, FieldButton.AddToTurn, FieldButton.StopAndSend, FieldButton.SendWhenOnline -> true
+                    else -> false
+                }
+                if (enter == EnterKey.Send && canSend) {
                     actions.onSend()
                     true
                 } else {
