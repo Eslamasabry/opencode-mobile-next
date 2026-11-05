@@ -42,6 +42,17 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.state.KitAskLine
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.text.KitBidi
+import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
+import io.github.eslamasabry.oc.ui.words.res.consentAlwaysAllowQuestion
+import io.github.eslamasabry.oc.ui.words.res.consentAlwaysAllowFailed
+import io.github.eslamasabry.oc.ui.words.res.consentAlwaysAllowDecline
+import io.github.eslamasabry.oc.ui.words.res.consentAlwaysAllowTitle
+import io.github.eslamasabry.oc.ui.words.res.chatUiAllMatchingRequests
+import io.github.eslamasabry.oc.ui.words.res.chatUiInThisChat
+import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysScope
 import io.github.eslamasabry.oc.ui.kit.state.KitReceipt
 import io.github.eslamasabry.oc.ui.kit.state.KitReceiptState
 import io.github.eslamasabry.oc.ui.kitchat.request.KitPermissionCard
@@ -104,30 +115,28 @@ public fun ChatRequestSlot(
                             PermissionWaiting(card, state.moreWaiting, actions)
                             state.invitationFailure?.let {
                                 KitErrorNotice(
-                                    stringResource(Res.string.invitation40SaveFailed),
+                                    stringResource(Res.string.consentAlwaysAllowFailed),
                                     failure = it,
                                 )
                             }
-                            if (card.invitation)
-                                KitNotice(
-                                    message = stringResource(Res.string.invitation40Question),
-                                    actions =
-                                        listOf(
-                                            KitLineAction(
-                                                stringResource(Res.string.chatUiAlwaysAllow),
-                                                {
-                                                    actions.performReviewed(
-                                                        card,
-                                                        ReviewedRequestAction.AskAlways,
-                                                    )
-                                                },
-                                            ),
-                                            KitLineAction(
-                                                stringResource(Res.string.invitation40KeepAsking),
-                                                { actions.keepAsking(card.id) },
-                                            ),
-                                        ),
+                            if (card.invitation) {
+                                val request = card.captured?.request
+                                val mask = rememberKitMask()
+                                val what = request?.let {
+                                    it.always.ifEmpty { it.patterns }.joinToString(", ").ifEmpty { it.permission }
+                                }
+                                KitAskLine(
+                                    icon = KitIcons.privacy,
+                                    question = if (what != null) stringResource(Res.string.consentAlwaysAllowQuestion, KitBidi.ltr(mask(what)))
+                                        else stringResource(Res.string.invitation40Question),
+                                    accept = KitAction(stringResource(Res.string.chatUiAlwaysAllow), {
+                                        actions.performReviewed(card, ReviewedRequestAction.AskAlways)
+                                    }),
+                                    decline = KitAction(stringResource(Res.string.consentAlwaysAllowDecline), {
+                                        actions.keepAsking(card.id)
+                                    }),
                                 )
+                            }
                         }
                         is RequestCardUi.Question ->
                             QuestionWaiting(card, state.moreWaiting, actions)
@@ -150,10 +159,18 @@ public fun ChatRequestSlot(
     KitConfirm(
         spec =
             confirm?.let {
+                val request = it.captured?.request
+                val patterns = request?.let { ask -> ask.always.ifEmpty { ask.patterns }.joinToString(", ") }
+                val mask = rememberKitMask()
                 KitConfirmSpec(
-                    title = alwaysConfirmTitle(it.grant),
+                    title = if (it.invitation) stringResource(Res.string.consentAlwaysAllowTitle) else alwaysConfirmTitle(it.grant),
                     confirmLabel = stringResource(Res.string.chatUiAlwaysAllow),
-                    body = alwaysConfirmBody(it.grant),
+                    body = if (it.invitation && patterns != null) stringResource(
+                        Res.string.chatRequestAlwaysScope,
+                        patterns.takeIf { scope -> scope.isNotEmpty() }?.let { scope -> KitBidi.ltr(mask(scope)) }
+                            ?: stringResource(Res.string.chatUiAllMatchingRequests),
+                        stringResource(Res.string.chatUiInThisChat),
+                    ) else alwaysConfirmBody(it.grant),
                     cancelLabel = stringResource(Res.string.kitConfirmCancel),
                 )
             },
