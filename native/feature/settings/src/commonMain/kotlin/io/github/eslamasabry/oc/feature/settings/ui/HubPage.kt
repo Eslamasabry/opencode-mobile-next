@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsDoor
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsGroupId
+import io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsRowId
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsSearchEntry
@@ -30,6 +31,7 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchNoMatch
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitIconSwitchRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
@@ -283,7 +285,19 @@ internal fun androidx.compose.foundation.layout.ColumnScope.SavedServersBody(
     actions: SettingsActions,
     section: io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside?,
 ) {
-    KitRowGroup(label = stringResource(Res.string.settingsV3ServersBlock)) {
+    val note =
+        when (section) {
+            SettingsOutside.ModelAndMode -> Res.string.settingsV3ModelByServerNote
+            SettingsOutside.Providers -> Res.string.settingsV3ProvidersByServerNote
+            SettingsOutside.Tools -> Res.string.settingsV3ToolsByServerNote
+            SettingsOutside.DefaultShell -> Res.string.settingsV3ShellByServerNote
+            SettingsOutside.ReadState -> Res.string.settingsV3ReadStateByServerNote
+            else -> null
+        }
+    note?.let { KitGroupNote(stringResource(it)) }
+    KitRowGroup(
+        label = if (section == null) stringResource(Res.string.settingsV3ServersBlock) else null
+    ) {
         state.hub.savedServers.forEach { server ->
             KitRow(
                 title = server.name,
