@@ -9,7 +9,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.ui.Alignment
+import io.github.eslamasabry.oc.ui.kit.row.*
+import io.github.eslamasabry.oc.ui.kit.modal.*
+import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
+import io.github.eslamasabry.oc.ui.kit.chip.KitChip
+import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.state.KitStateView
+import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.words.res.*
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
@@ -269,66 +281,16 @@ public fun AgentsScreen(
             }
             val phoneAvailable = state.phone.available && hub?.connection?.usingBuiltIn != false
             if (phoneAvailable) AgentInstallPanel(state, actions, gutter, enabled)
-            if (phoneAvailable)
-                KitButton(
-                    stringResource(Res.string.linuxAgentPayloadRefresh),
-                    actions::refreshPhone,
-                    gutter,
-                    role = KitButtonRole.Secondary,
-                    enabled = enabled,
-                )
             if (!phoneAvailable) {
-                KitRow(
-                    title = stringResource(Res.string.agentsRunOnBuiltIn),
-                    supporting = stringResource(Res.string.agentsStateUnavailable),
-                    supportingMaxLines = 3,
+                KitStateView(
+                    kind = KitStateKind.Missing,
+                    title = stringResource(Res.string.agentsRunOnBuiltIn), icon = KitIcons.phone,
+                    primary = if (hub?.connection?.builtInAvailable == true && hubActions != null)
+                        io.github.eslamasabry.oc.ui.kit.KitAction(stringResource(Res.string.agentsSwitchToBuiltIn), hubActions::switchToBuiltIn, working = hub.working)
+                        else null,
                 )
-                if (hub?.connection?.builtInAvailable == true && hubActions != null) {
-                    KitButton(
-                        stringResource(Res.string.agentsSwitchToBuiltIn),
-                        hubActions::switchToBuiltIn,
-                        gutter,
-                        enabled =
-                            if (hub.working)
-                                KitEnabled.Disabled(stringResource(Res.string.serversWorking))
-                            else enabled,
-                        working = hub.working,
-                    )
-                }
             } else {
-                for (agent in state.phone.agents) {
-                    KitRow(
-                        title = agent.name,
-                        supporting = phoneStatusWords(agent.status),
-                        leading = KitRowLeading.Logo(agent.id, agent.name, agent = true),
-                    )
-                    if (agent.installable) {
-                        KitButton(
-                            agentInstallLabel(agent.name),
-                            { actions.installPhone(agent.id) },
-                            gutter,
-                            enabled = enabled,
-                        )
-                    }
-                    if (agent.previousVersionAvailable) {
-                        KitButton(
-                            stringResource(Res.string.agentsPreviousVersion, agent.name),
-                            { actions.requestPreviousVersion(agent.id) },
-                            gutter,
-                            role = KitButtonRole.Secondary,
-                            enabled = enabled,
-                        )
-                    }
-                    if (agent.removable) {
-                        KitButton(
-                            stringResource(Res.string.linuxAgentPayloadRemove, agent.name),
-                            { actions.requestRemoval(agent.id) },
-                            gutter,
-                            role = KitButtonRole.Secondary,
-                            enabled = enabled,
-                        )
-                    }
-                }
+                PhoneAgentRows(state, actions, enabled)
             }
 
             if (phoneAvailable && hubActions != null) {
@@ -340,22 +302,11 @@ public fun AgentsScreen(
                 )
             }
 
-            KitButton(
-                stringResource(Res.string.agentsResetSavedSignIns),
-                actions::requestSignInReset,
-                gutter,
-                role = KitButtonRole.Secondary,
-                enabled = enabled,
-            )
-
-            KitButton(
-                stringResource(Res.string.agentPhoneCheck),
-                actions::checkPhoneAgents,
-                gutter,
-                role = KitButtonRole.Secondary,
-                enabled = enabled,
-                working = state.busy,
-            )
+            var morePhoneOptions by remember { mutableStateOf(false) }
+            KitExpandRow(stringResource(Res.string.editor40More), morePhoneOptions, onExpandedChange = { morePhoneOptions = it }) {
+                KitButton(stringResource(Res.string.linuxAgentPayloadRefresh), actions::refreshPhone, role = KitButtonRole.Tertiary, enabled = enabled)
+                KitButton(stringResource(Res.string.agentsResetSavedSignIns), actions::requestSignInReset, role = KitButtonRole.Tertiary, enabled = enabled)
+            }
 
             if (state.draftSources.isNotEmpty()) {
                 KitSectionLabel(stringResource(Res.string.agentDraftTitle))
@@ -619,3 +570,38 @@ private fun phoneStatusWords(status: PhoneAgentStatus): String =
             PhoneAgentStatus.Unavailable -> Res.string.agentsStateUnavailable
         }
     )
+
+/** No agent sheet is fabricated: only actions actually present in AgentsActions are offered. */
+@Composable
+private fun PhoneAgentRows(state: AgentsUi, actions: AgentsActions, enabled: KitEnabled) {
+    var menuFor by remember { mutableStateOf<String?>(null) }
+    KitRowGroup {
+        for (agent in state.phone.agents) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.weight(1f)) {
+                    KitRow(title = agent.name, supporting = phoneStatusWords(agent.status),
+                        leading = KitRowLeading.Logo(agent.id, agent.name, agent = true))
+                }
+                if (agent.installable) KitChip(
+                    label = stringResource(Res.string.agentsInstallHint), kind = KitChipKind.Action,
+                    spoken = agentInstallLabel(agent.name),
+                    onClick = if (enabled.isEnabled) ({ actions.installPhone(agent.id) }) else null,
+                )
+                if (agent.removable || agent.previousVersionAvailable) {
+                    val menu = buildList {
+                        if (agent.previousVersionAvailable) add(KitMenuItem(stringResource(Res.string.agentsPreviousVersion, agent.name), { actions.requestPreviousVersion(agent.id) }, enabled = enabled))
+                        if (agent.removable) add(KitMenuItem(stringResource(Res.string.linuxAgentPayloadRemove, agent.name), { actions.requestRemoval(agent.id) }, destructive = true, enabled = enabled))
+                    }
+                    KitMenu(expanded = menuFor == agent.id, items = menu, onDismissRequest = { menuFor = null }, title = agent.name,
+                        anchor = { KitIconButton(KitIcons.more, agent.name, { menuFor = agent.id }, enabled = enabled) })
+                }
+            }
+        }
+        if (state.phone.agents.any { it.status != PhoneAgentStatus.NotInstalled && it.status != PhoneAgentStatus.Unavailable }) {
+            KitRow(title = stringResource(Res.string.agentsCheckTitle), leading = KitRowLeading.Glyph(KitIcons.phone),
+                trailing = KitRowTrailing.Chevron, enabled = enabled.isEnabled,
+                disabledReason = if (enabled.isEnabled) null else stringResource(Res.string.agentsCheckTitle),
+                onClick = actions::checkPhoneAgents)
+        }
+    }
+}
