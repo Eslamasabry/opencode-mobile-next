@@ -1,6 +1,11 @@
 package io.github.eslamasabry.oc.ui.kit.row
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -156,6 +161,15 @@ public fun KitRow(
             .testTag("kit-row")
     Row(base, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
         when {
+            leading is KitRowLeading.Glyph && !leading.tile -> {
+                val glyph = (24f * minOf(scale, TextScalePolicy.ICON_CAP)).dp // F: lib/ui/kit/kit_row.dart:1085
+                Box(Modifier.size((tokens.iconTile * minOf(scale, TextScalePolicy.ICON_CAP)).dp).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
+                    Image(
+                        leading.icon, null, Modifier.size(glyph),
+                        colorFilter = ColorFilter.tint(if (enabled) colors.text2 else colors.text3),
+                    )
+                }
+            }
             leading != null -> RowLeadingTile(leading, dim = !enabled)
             state != null -> RowStateMark(state.tone)
         }
