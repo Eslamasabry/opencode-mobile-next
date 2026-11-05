@@ -385,11 +385,17 @@ def ref_dir(ref):
 #           (window = PNG / D; the test's boundary is its whole view, as kit_step_light_golden_test.dart's is)
 #   ratio   the PNG is an exact integer multiple D of the name's window
 #   png     anything else: window = the PNG's pixel size, density 1 (the recorded default)
+# and the Flutter test view's device pixel ratio (KitTokens.hairlineWidth = 1 / ratio): the one literal
+# `devicePixelRatio = N` in the golden's test file or, failing that, in the test files it imports; else 3, flutter_test's
+# default and the kit gallery's. A golden's test is its part's test file in the order table, else the test file with the
+# longest string literal that starts the golden's name. An explicit column reads `WxH@D/R`.
 # fetch writes the result to looks-gate/flutter/<ref9>/render.tsv; FlutterGoldenGate.check reads it, and evaluate
 # divides blob (px²) and line-shift (px) by the density so the tier thresholds stay in density-1 pixels.
 GALLERY_WINDOW = (412, 915)  # F: test/goldens/kit/kit_gallery.dart:109 (kitGalleryName leaves this size out)
 RENDER_TSV = 'render.tsv'
-RENDER_COL = re.compile(r'^(\d+)x(\d+)@(\d+(?:\.\d+)?)$')
+RENDER_COL = re.compile(r'^(\d+)x(\d+)@(\d+(?:\.\d+)?)(?:/(\d+(?:\.\d+)?))?$')
+VIEW_DPR = re.compile(r'devicePixelRatio\s*=\s*(\d+(?:\.\d+)?)\s*;')
+DEFAULT_DPR = 3.0  # F: flutter_test TestFlutterView default; test/goldens/kit/kit_gallery.dart:178
 SUFFIX = re.compile(r'_(\d+)x(\d+)$')
 RATIO = re.compile(r'toImage\([^;]*?pixelRatio:\s*(\d+(?:\.\d+)?)\s*[,)]', re.S)
 
@@ -457,10 +463,62 @@ def capture_ratio(ref, test):
     return _ratio_cache[key]
 
 
+_test_index = {}
+
+
+def test_sources(ref):
+    """test file -> source, for every Dart test of the ref (one cat-file batch, cached)."""
+    if ref not in _test_index:
+        repo, sha = repo_of(ref)
+        files = [f for f in run('git', '-C', repo, 'ls-tree', '-r', '--name-only', sha, 'test').split() if f.endswith('.dart')]
+        _test_index[ref] = {f: b.decode('utf-8', 'replace') for f, b in blobs(repo, sha, files).items()}
+    return _test_index[ref]
+
+
+_literal_index = {}
+
+
+def test_of(ref, shot):
+    """The test file with the longest string literal (6+ chars) that starts [shot]; the first file wins a tie."""
+    if ref not in _literal_index:
+        idx = {}
+        for f, src in sorted(test_sources(ref).items()):
+            for lit in re.findall(r"'([a-z0-9_]{6,})", src):
+                idx.setdefault(lit, f)
+        _literal_index[ref] = idx
+    idx = _literal_index[ref]
+    for k in range(len(shot), 5, -1):
+        if shot[:k] in idx:
+            return idx[shot[:k]]
+    return None
+
+
+def view_ratio(ref, tests, shot):
+    srcs = test_sources(ref)
+    for t in (tests or [test_of(ref, shot)]):
+        if not t or t not in srcs:
+            continue
+        vals = {float(v) for v in VIEW_DPR.findall(srcs[t])}
+        if not vals:
+            for imp in re.findall(r"^import\s+'([^':]+\.dart)'", srcs[t], re.M):
+                dep = os.path.normpath(os.path.join(os.path.dirname(t), imp))
+                vals |= {float(v) for v in VIEW_DPR.findall(srcs.get(dep, ''))}
+        if len(vals) == 1:
+            return vals.pop()
+    return DEFAULT_DPR
+
+
 def render_of(row, wh, tests):
-    """(w dp, h dp, density, how) for a golden manifest row, its PNG size and its part's test files."""
+    """(w dp, h dp, density, how, view ratio) for a golden manifest row, its PNG size and its part's test files."""
+    w, h, d, how = _render_of(row, wh, tests)
+    m = RENDER_COL.match(row[6]) if len(row) > 6 else None
+    r = float(m.group(4)) if m and m.group(4) else view_ratio(row[2], tests, shot_of(row[3]))
+    return w, h, d, how, r
+
+
+def _render_of(row, wh, tests):
     if len(row) > 6 and RENDER_COL.match(row[6]):
-        w, h, d = RENDER_COL.match(row[6]).groups()
+        w, h, d = RENDER_COL.match(row[6]).groups()[:3]
         return int(w), int(h), float(d), 'tsv'
     W, H = name_window(shot_of(row[3]))
     if wh is None or wh == (W, H):
@@ -486,7 +544,7 @@ def read_renders(ref):
         for line in open(f, encoding='utf-8'):
             c = line.rstrip('\n').split('\t')
             if len(c) >= 4 and not line.startswith('#'):
-                out[c[0]] = (int(c[1]), int(c[2]), float(c[3]), c[4] if len(c) > 4 else '')
+                out[c[0]] = (int(c[1]), int(c[2]), float(c[3]), c[4] if len(c) > 4 else '', float(c[5]) if len(c) > 5 else DEFAULT_DPR)
     return out
 
 
@@ -507,14 +565,16 @@ def cmd_renders(nn):
         odd = {}
         for r in goldens:
             wh = png_wh(data.get((r[2], r[3]), b''))
-            w, h, d, how = render_of(r, wh, tests.get(r[1], []))
+            w, h, d, how, ratio = render_of(r, wh, tests.get(r[1], []))
             if how != 'name':
                 odd[how] = odd.get(how, 0) + 1
-            print(f'{o}\t{shot_of(r[3])}\t{w}x{h}@{fmt_d(d)}\t{how}\t{"x".join(map(str, wh)) if wh else "missing"}')
+            odd[f'view{fmt_d(ratio)}'] = odd.get(f'view{fmt_d(ratio)}', 0) + 1
+            print(f'{o}\t{shot_of(r[3])}\t{w}x{h}@{fmt_d(d)}/{fmt_d(ratio)}\t{how}\t{"x".join(map(str, wh)) if wh else "missing"}')
         summary.append((o, len(goldens), odd))
-    print('# order\tgoldens\tnon-default\tby how')
+    print('# order\tgoldens\tnon-default size\tby how and view ratio')
     for o, n, odd in summary:
-        print(f'# {o}\t{n}\t{sum(odd.values())}\t{" ".join(f"{k}={v}" for k, v in sorted(odd.items())) or "-"}')
+        print(f'# {o}\t{n}\t{sum(v for k, v in odd.items() if not k.startswith("view"))}\t'
+              f'{" ".join(f"{k}={v}" for k, v in sorted(odd.items())) or "-"}')
     return 0
 
 
@@ -545,10 +605,10 @@ def cmd_fetch(nn):
         have = read_renders(ref)
         have.update(got)
         with open(os.path.join(ref_dir(ref), RENDER_TSV), 'w', encoding='utf-8') as fh:
-            fh.write('# shot\twindow w dp\twindow h dp\tdensity\thow (rb_gate.py render_of)\n')
+            fh.write('# shot\twindow w dp\twindow h dp\tdensity\thow (rb_gate.py render_of)\tview pixel ratio\n')
             for shot in sorted(have):
-                w, h, dd, how = have[shot]
-                fh.write(f'{shot}\t{w}\t{h}\t{fmt_d(dd)}\t{how}\n')
+                w, h, dd, how, ratio = have[shot]
+                fh.write(f'{shot}\t{w}\t{h}\t{fmt_d(dd)}\t{how}\t{fmt_d(ratio)}\n')
         odd += sum(1 for v in got.values() if v[3] != 'name')
     print(f'fetch: {n} new goldens, {odd} rendered at a non-default window or density (looks-gate/flutter/*/{RENDER_TSV})')
     return 0
