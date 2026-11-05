@@ -95,6 +95,25 @@ void main() {
       expect(byPid[60]!.kind, LinuxProcessKind.other);
     });
 
+    test('recognises Antigravity launcher and installed payload as agents', () {
+      final agents = LinuxProcessScan.parse(
+        [
+          _p(40, 'agy', 10, '/home/oc/.local/bin/agy --acp'),
+          _p(
+            41,
+            'antigravity',
+            10,
+            '/home/oc/.local/share/oc-agents/antigravity/1.5.0/payload/antigravity --acp',
+          ),
+        ].join('\n'),
+      ).processes;
+      expect(agents, hasLength(2));
+      for (final agent in agents) {
+        expect(agent.kind, LinuxProcessKind.agent);
+        expect(agent.protected, isFalse);
+      }
+    });
+
     test('names the program a person would recognise', () {
       expect(byPid[51]!.programName, 'vite');
       expect(byPid[40]!.programName, 'claude');

@@ -12,6 +12,7 @@ Brand names are not translated and live in `agent_persona_text.dart`.
 | Claude Code | by Anthropic | Careful with big changes | Plans before it edits; good for larger changes across files. | A Claude plan or an Anthropic key |
 | Codex | by OpenAI | Fast edits and reviews | Quick at focused fixes and reviewing changes. | A ChatGPT plan or an OpenAI key |
 | Gemini | by Google | Reads a lot at once | Handles long files and wide questions well. | A Google account or a Gemini key |
+| Antigravity | by Google | Google’s terminal agent | Works on your project with Gemini models. | A Google account; sign in in your browser |
 | Kilo | open source | Your choice of provider | One agent that works with many model providers. | A key from any supported provider |
 | Cline | open source | Step by step, asks first | Works in small steps and checks in with you. | A key from any supported provider |
 | OpenCode | open source | Any model, free ones too | Works with any provider, and has free models to start. | Nothing to start; add a key for more models |

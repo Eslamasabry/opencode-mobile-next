@@ -99,6 +99,7 @@ final class HostAgentProvider {
   /// authored by the app, never commands supplied by the host or agent.
   String? get hostSignInCommand => switch (id) {
     'gemini' => 'gemini',
+    'antigravity' => 'agy acp --login',
     'omp' || 'omp-acp' => 'omp',
     'fx' => 'fx login',
     _ => null,
@@ -106,6 +107,8 @@ final class HostAgentProvider {
 
   String get signInMessage => switch (id) {
     'gemini' => 'Sign in on your computer: run gemini there, then check again.',
+    'antigravity' =>
+      'Run agy acp --login on your computer, finish Google sign-in in your browser, then check again.',
     'omp' || 'omp-acp' =>
       'Run omp on your computer, use /login to sign in, then check again.',
     _ => 'Sign in to the agent on your computer, then check again.',

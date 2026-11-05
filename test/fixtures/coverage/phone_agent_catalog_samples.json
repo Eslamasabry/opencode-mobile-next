@@ -641,6 +641,276 @@
       ]
     },
     {
+      "id": "catalog_antigravity",
+      "kind": "catalog",
+      "payload": {
+        "agent": {
+          "id": "antigravity",
+          "name": "Antigravity",
+          "iconKey": "antigravity",
+          "route": "acpPaseo",
+          "providerId": "antigravity",
+          "signInMethod": "browserOAuthHost",
+          "availability": "limited",
+          "limitation": "Sign in with Google, then check it on your phone. Starts a new chat.",
+          "resumeReason": "Can't reopen old chats",
+          "capabilities": {
+            "resumeVerified": false,
+            "modelList": false,
+            "permissions": false,
+            "images": false,
+            "cancel": false
+          },
+          "recipe": {
+            "version": "1.5.0",
+            "executable": "agy",
+            "launchArgs": [
+              "acp",
+              "--disable-telemetry"
+            ],
+            "signInArgs": [
+              "acp",
+              "--login"
+            ],
+            "artifacts": {
+              "arm64": {
+                "url": "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.0-5269980577660928/linux-arm/cli_linux_arm64.tar.gz",
+                "sha256": "87e73a5ab4ecb3a9668660d259dafd13f5443149da0113664d59129a21a62ba4",
+                "format": "tarGz",
+                "archiveMember": "antigravity",
+                "downloadBytes": 66011999,
+                "installedBytes": 227627384
+              },
+              "x64": {
+                "url": "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.0-5269980577660928/linux-x64/cli_linux_x64.tar.gz",
+                "sha256": "f65e365a67be49abdaf92f5669c3157bd4b9c569f6b9f448340b00ca261b0f01",
+                "format": "tarGz",
+                "archiveMember": "antigravity",
+                "downloadBytes": 69781910,
+                "installedBytes": 238604688
+              }
+            }
+          }
+        }
+      },
+      "fields": [
+        {
+          "key": "agent.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Antigravity"
+          ],
+          "primary": false
+        },
+        {
+          "key": "agent.iconKey",
+          "path": "iconKey",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.route",
+          "path": "route",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.providerId",
+          "path": "providerId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.signInMethod",
+          "path": "signInMethod",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.availability",
+          "path": "availability",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.limitation",
+          "path": "limitation",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.resumeReason",
+          "path": "resumeReason",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.resumeVerified",
+          "path": "capabilities.resumeVerified",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.modelList",
+          "path": "capabilities.modelList",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.permissions",
+          "path": "capabilities.permissions",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.images",
+          "path": "capabilities.images",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.cancel",
+          "path": "capabilities.cancel",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.recipe.version",
+          "path": "recipe.version",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.recipe.executable",
+          "path": "recipe.executable",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.recipe.launchArgs[]",
+          "path": "recipe.launchArgs[]",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.recipe.signInArgs[]",
+          "path": "recipe.signInArgs[]",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.recipe.artifacts.arm64.url",
+          "path": "recipe.artifacts.arm64.url",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.recipe.artifacts.arm64.sha256",
+          "path": "recipe.artifacts.arm64.sha256",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.recipe.artifacts.arm64.format",
+          "path": "recipe.artifacts.arm64.format",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.recipe.artifacts.arm64.archiveMember",
+          "path": "recipe.artifacts.arm64.archiveMember",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.recipe.artifacts.arm64.downloadBytes",
+          "path": "recipe.artifacts.arm64.downloadBytes",
+          "kind": "string",
+          "probes": [
+            "66 MB"
+          ],
+          "primary": false
+        },
+        {
+          "key": "agent.recipe.artifacts.arm64.installedBytes",
+          "path": "recipe.artifacts.arm64.installedBytes",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.recipe.artifacts.x64.url",
+          "path": "recipe.artifacts.x64.url",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.recipe.artifacts.x64.sha256",
+          "path": "recipe.artifacts.x64.sha256",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.recipe.artifacts.x64.format",
+          "path": "recipe.artifacts.x64.format",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.recipe.artifacts.x64.archiveMember",
+          "path": "recipe.artifacts.x64.archiveMember",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.recipe.artifacts.x64.downloadBytes",
+          "path": "recipe.artifacts.x64.downloadBytes",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.recipe.artifacts.x64.installedBytes",
+          "path": "recipe.artifacts.x64.installedBytes",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
       "id": "catalog_gemini",
       "kind": "catalog",
       "payload": {

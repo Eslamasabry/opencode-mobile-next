@@ -35970,4 +35970,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String phoneTeamProofOther(String check) {
     return 'توقف فحص الأمان عند «$check».';
   }
+
+  @override
+  String get agentPersonaAntigravityStrength => 'وكيل Google في الطرفية';
+
+  @override
+  String get agentPersonaAntigravityAbout =>
+      'يعمل على مشروعك باستخدام نماذج Gemini.';
+
+  @override
+  String get agentPersonaAntigravityNeeds =>
+      'حساب Google؛ سجّل الدخول في المتصفح';
+
+  @override
+  String get agentsAntigravitySignInIntro =>
+      'يعرض Antigravity رابط تسجيل الدخول في الطرفية. افتحه في المتصفح وسجّل الدخول باستخدام Google، ثم الصق الرمز الذي يعرضه المتصفح في الطرفية.';
+
+  @override
+  String get agentsGeminiMigrationNote =>
+      'إذا طلب منك Gemini CLI استخدام Antigravity، ارجع إلى الوكلاء وثبّت Antigravity (agy). تبقى محادثات Gemini هنا.';
 }

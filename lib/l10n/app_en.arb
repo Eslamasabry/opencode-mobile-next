@@ -43899,5 +43899,15 @@
         "type": "String"
       }
     }
-  }
+  },
+  "agentPersonaAntigravityStrength": "Google’s terminal agent",
+  "@agentPersonaAntigravityStrength": {"description": "Agent persona: Antigravity card line, at most 28 characters"},
+  "agentPersonaAntigravityAbout": "Works on your project with Gemini models.",
+  "@agentPersonaAntigravityAbout": {"description": "Agent persona: one sentence about Antigravity"},
+  "agentPersonaAntigravityNeeds": "A Google account; sign in in your browser",
+  "@agentPersonaAntigravityNeeds": {"description": "Agent persona: what a person needs to use Antigravity"},
+  "agentsAntigravitySignInIntro": "Antigravity gives you a sign-in link in the terminal. Open it in your browser and sign in with Google, then paste the browser’s code into the terminal.",
+  "@agentsAntigravitySignInIntro": {"description": "Agents: Antigravity sign-in uses its own terminal and browser code flow"},
+  "agentsGeminiMigrationNote": "If Gemini CLI asks you to use Antigravity, go back to Agents and install Antigravity (agy). Your Gemini conversations stay here.",
+  "@agentsGeminiMigrationNote": {"description": "Agents: way forward when the upstream Gemini CLI asks the user to switch; does not claim Gemini is unsupported by the app"}
 }

@@ -34007,4 +34007,23 @@ class AppLocalizationsZh extends AppLocalizations {
   String phoneTeamProofOther(String check) {
     return 'The safety check stopped at “$check”.';
   }
+
+  @override
+  String get agentPersonaAntigravityStrength => 'Google’s terminal agent';
+
+  @override
+  String get agentPersonaAntigravityAbout =>
+      'Works on your project with Gemini models.';
+
+  @override
+  String get agentPersonaAntigravityNeeds =>
+      'A Google account; sign in in your browser';
+
+  @override
+  String get agentsAntigravitySignInIntro =>
+      'Antigravity gives you a sign-in link in the terminal. Open it in your browser and sign in with Google, then paste the browser’s code into the terminal.';
+
+  @override
+  String get agentsGeminiMigrationNote =>
+      'If Gemini CLI asks you to use Antigravity, go back to Agents and install Antigravity (agy). Your Gemini conversations stay here.';
 }

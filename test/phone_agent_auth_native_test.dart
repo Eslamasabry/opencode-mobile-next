@@ -114,6 +114,7 @@ void main() {
       'claude',
       'codex',
       'gemini',
+      'antigravity',
       'qwen',
       'kilo',
       'cline',

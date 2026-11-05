@@ -9,6 +9,7 @@ import java.nio.file.Path
 internal object PhoneAgentInventory {
     private val agents = mapOf(
         "codex" to "codex", "gemini" to "gemini", "qwen" to "qwen",
+        "agy" to "antigravity",
         "kilo" to "kilo", "cline" to "cline",
         "goose" to "goose", "omp" to "omp-acp", "fx" to "fx",
     )

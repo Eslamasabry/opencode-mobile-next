@@ -15,6 +15,7 @@ final class AgentInstallGuard {
   static const agentIds = {
     'codex',
     'gemini',
+    'antigravity',
     'qwen',
     'kilo',
     'cline',

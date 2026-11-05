@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:opencode_mobile/domain/agent_catalog.dart';
+import 'package:opencode_mobile/domain/agent_sign_in.dart';
 import 'package:opencode_mobile/domain/phone_agent_host.dart';
 import 'package:opencode_mobile/domain/phone_agents.dart';
 import 'package:opencode_mobile/domain/phone_agents_source.dart';
@@ -16,7 +17,15 @@ import '../fakes/fake_chats_host.dart';
 
 class _CheckAgents extends ChangeNotifier
     implements PhoneAgentsSource, PhoneAgentRecoverySource {
-  _CheckAgents(this.failure, {this.downloading = false, this.previous});
+  _CheckAgents(
+    this.failure, {
+    this.downloading = false,
+    this.previous,
+    this.agentId = 'claude',
+    this.setup = false,
+  });
+  final String agentId;
+  final bool setup;
   final AgentHostFailure? failure;
   final bool downloading;
   final String? previous;
@@ -24,12 +33,12 @@ class _CheckAgents extends ChangeNotifier
   @override
   List<AgentRow> get agentRows => [
     buildAgentRow(
-      descriptor: AgentCatalog.builtIn.byId('claude')!,
+      descriptor: AgentCatalog.builtIn.byId(agentId)!,
       architecture: AgentArchitecture.arm64,
       serverCapabilities: catalogServerCapabilities,
-      runtime: const PhoneAgentRuntime(
-        agentId: 'claude',
-        installed: true,
+      runtime: PhoneAgentRuntime(
+        agentId: agentId,
+        installed: !setup,
         checkRequiredReason: 'helperVersion',
       ),
     ),
@@ -40,8 +49,12 @@ class _CheckAgents extends ChangeNotifier
 
   @override
   AgentSetupProgress get agentSetupProgress => AgentSetupProgress(
-    agentId: 'claude',
-    phase: downloading ? AgentSetupPhase.installing : AgentSetupPhase.done,
+    agentId: agentId,
+    phase: setup
+        ? AgentSetupPhase.idle
+        : downloading
+        ? AgentSetupPhase.installing
+        : AgentSetupPhase.done,
     componentId: 'agent-claude',
     downloadedBytes: 60000000,
     totalBytes: 240000000,
@@ -50,6 +63,16 @@ class _CheckAgents extends ChangeNotifier
 
   @override
   Future<void> refreshAgentRows() async {}
+
+  @override
+  AgentSignInState? agentSignInState(String agentId) => const AgentSignInState(
+    phase: AgentSignInPhase.signedOut,
+    method: AgentSignInMethod.browserOAuthHost,
+    inspected: true,
+  );
+
+  @override
+  Future<void> recheckAgentSignIn(String agentId) async {}
 
   @override
   Future<AgentPhoneCheckResult> runAgentPhoneCheck(String agentId) async {
@@ -101,15 +124,23 @@ Widget _check({
   AgentHostFailure? failure,
   bool downloading = false,
   String? previous,
+  String agentId = 'claude',
+  AgentSheetStep step = AgentSheetStep.check,
 }) => FakeAppScene<_CheckScene>(
   platform: FakePlatform.android,
   create: () async => _CheckScene(
     await FakeApp.create(),
-    _CheckAgents(failure, downloading: downloading, previous: previous),
+    _CheckAgents(
+      failure,
+      downloading: downloading,
+      previous: previous,
+      agentId: agentId,
+      setup: step == AgentSheetStep.setup,
+    ),
   ),
   builder: (context, scene) => ProviderScope(
     overrides: [chatsHostProvider.overrideWithValue(_CheckHost(scene.agents))],
-    child: const AgentSheet(agentId: 'claude', step: AgentSheetStep.check),
+    child: AgentSheet(agentId: agentId, step: step),
   ),
 );
 
@@ -118,6 +149,20 @@ CatalogComponent agentPhoneCheck() => catalogComponent(
   screen: 'AgentSheet',
   name: 'Check this phone',
   useCases: [
+    WidgetbookUseCase(
+      name: 'Antigravity install',
+      builder: (_) =>
+          _check(agentId: 'antigravity', step: AgentSheetStep.setup),
+    ),
+    WidgetbookUseCase(
+      name: 'Antigravity Google sign-in',
+      builder: (_) =>
+          _check(agentId: 'antigravity', step: AgentSheetStep.signIn),
+    ),
+    WidgetbookUseCase(
+      name: 'Gemini switch guidance',
+      builder: (_) => _check(agentId: 'gemini', step: AgentSheetStep.setup),
+    ),
     WidgetbookUseCase(
       name: 'Downloading a resumed update',
       builder: (_) => _check(downloading: true),

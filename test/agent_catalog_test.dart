@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/agent_catalog.dart';
+import 'package:opencode_mobile/domain/agent_tools/agent_certification.dart';
 
 void main() {
   AgentArtifact artifact({
@@ -164,6 +165,7 @@ void main() {
         'opencode2',
         'claude',
         'codex',
+        'antigravity',
         'gemini',
         'qwen',
         'kilo',
@@ -193,6 +195,71 @@ void main() {
       expect(catalog.byId('claude')!.recipe!.version, '2.1.294');
     },
   );
+
+  test('Antigravity uses official pinned Linux archives and ACP sign-in', () {
+    final entry = AgentCatalog.builtIn.byId('antigravity')!;
+    expect(entry.name, 'Antigravity');
+    expect(entry.iconKey, 'antigravity');
+    expect(entry.providerId, 'antigravity');
+    expect(entry.route, AgentRoute.acpPaseo);
+    expect(entry.signInMethod, AgentSignInMethod.browserOAuthHost);
+    expect(entry.recipe!.version, '1.5.0');
+    expect(entry.recipe!.executable, 'agy');
+    expect(entry.recipe!.launchArgs, ['acp', '--disable-telemetry']);
+    expect(entry.recipe!.signInArgs, ['acp', '--login']);
+    const pins = {
+      AgentArchitecture.arm64: (
+        path: 'linux-arm/cli_linux_arm64.tar.gz',
+        sha256:
+            '87e73a5ab4ecb3a9668660d259dafd13f5443149da0113664d59129a21a62ba4',
+        bytes: 66011999,
+        installedBytes: 227627384,
+      ),
+      AgentArchitecture.x64: (
+        path: 'linux-x64/cli_linux_x64.tar.gz',
+        sha256:
+            'f65e365a67be49abdaf92f5669c3157bd4b9c569f6b9f448340b00ca261b0f01',
+        bytes: 69781910,
+        installedBytes: 238604688,
+      ),
+    };
+    for (final MapEntry(key: architecture, value: pin) in pins.entries) {
+      final artifact = entry.artifactFor(architecture)!;
+      expect(
+        artifact.url.toString(),
+        'https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.0-5269980577660928/${pin.path}',
+      );
+      expect(artifact.sha256, pin.sha256);
+      expect(artifact.format, AgentArtifactFormat.tarGz);
+      expect(artifact.archiveMember, 'antigravity');
+      expect(artifact.downloadBytes, pin.bytes);
+      expect(artifact.installedBytes, pin.installedBytes);
+    }
+    expect(entry.availability, AgentAvailability.limited);
+    expect(entry.capabilities.resumeVerified, isFalse);
+    expect(entry.capabilities.modelList, isFalse);
+    expect(entry.capabilities.permissions, isFalse);
+    expect(entry.capabilities.images, isFalse);
+    expect(entry.capabilities.cancel, isFalse);
+  });
+
+  test('Antigravity has no bundled runtime qualification', () {
+    final entry = AgentCatalog.builtIn.byId('antigravity')!;
+    final matrix = AgentCertificationMatrix.bundled;
+    expect(matrix.certifiedForChat(entry.id), isFalse);
+    for (final architecture in AgentArchitecture.values) {
+      final capabilities = matrix.capabilitiesFor(
+        descriptor: entry,
+        architecture: architecture,
+        helperVersion: '0.11.2',
+      );
+      expect(capabilities.resumeVerified, isFalse);
+      expect(capabilities.modelList, isFalse);
+      expect(capabilities.permissions, isFalse);
+      expect(capabilities.images, isFalse);
+      expect(capabilities.cancel, isFalse);
+    }
+  });
 
   test('Kilo and Cline are pinned ACP agents with exact launch args', () {
     final catalog = AgentCatalog.builtIn;

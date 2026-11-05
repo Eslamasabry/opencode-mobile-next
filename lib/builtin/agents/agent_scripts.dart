@@ -53,7 +53,7 @@ def account(value):
 home = os.environ.get('HOME', '')
 if os.getuid() != 1000 or not home.startswith('/home/oc/.oc-profiles/') or not re.fullmatch(r'[A-Za-z0-9_-]{1,80}', home[len('/home/oc/.oc-profiles/'):]):
     fail('invalidContext')
-if agent not in ('claude', 'fx', 'codex', 'kilo', 'cline'):
+if agent not in ('claude', 'fx', 'codex', 'kilo', 'cline', 'antigravity'):
     fail('probeUnsupported')
 binary = '/home/oc/.local/bin/' + executable
 if not os.access(binary, os.X_OK): fail('notInstalled')
@@ -84,6 +84,60 @@ def run(args, parse=True, stderr=False):
         try: os.killpg(process.pid, signal.SIGKILL)
         except ProcessLookupError: pass
         process.wait()
+def antigravity_status():
+    # ACP session/list is read-only and requires cached authentication in 1.5.0.
+    # Never create a conversation, prompt a model, or inspect credential files.
+    process = subprocess.Popen([binary, 'acp', '--disable-telemetry'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, start_new_session=True)
+    selector = selectors.DefaultSelector()
+    selector.register(process.stdout, selectors.EVENT_READ)
+    deadline = time.monotonic() + 8
+    pending = bytearray()
+    received = 0
+    def request(identifier, method, params):
+        nonlocal received
+        message = {'jsonrpc': '2.0', 'id': identifier, 'method': method, 'params': params}
+        process.stdin.write((json.dumps(message) + '\n').encode())
+        process.stdin.flush()
+        while True:
+            while b'\n' in pending:
+                line, _, rest = pending.partition(b'\n')
+                pending[:] = rest
+                reply = json.loads(line)
+                if not isinstance(reply, dict) or reply.get('jsonrpc') != '2.0': raise ValueError()
+                if 'method' in reply:
+                    # Notifications carry no authentication proof. Requests
+                    # (tools, permissions, terminal auth) are never serviced.
+                    if 'id' in reply: raise ValueError()
+                    continue
+                if type(reply.get('id')) is not int or reply['id'] != identifier or ('result' in reply) == ('error' in reply): raise ValueError()
+                return reply
+            remaining = deadline - time.monotonic()
+            if remaining <= 0: raise TimeoutError()
+            if not selector.select(remaining): raise TimeoutError()
+            block = os.read(process.stdout.fileno(), 4096)
+            if not block: raise ValueError()
+            received += len(block)
+            if received > 65536: raise ValueError()
+            pending.extend(block)
+    try:
+        reply = request(1, 'initialize', {'protocolVersion': 1, 'clientCapabilities': {}})
+        result = reply.get('result')
+        if not isinstance(result, dict) or type(result.get('protocolVersion')) is not int or result['protocolVersion'] != 1: raise ValueError()
+        capabilities = result.get('agentCapabilities')
+        sessions = capabilities.get('sessionCapabilities') if isinstance(capabilities, dict) else None
+        if not isinstance(sessions, dict) or not isinstance(sessions.get('list'), dict): raise ValueError()
+        reply = request(2, 'session/list', {})
+        error = reply.get('error')
+        if isinstance(error, dict) and type(error.get('code')) is int and error['code'] == -32000 and error.get('message') == 'Authentication required':
+            emit('signedOut')
+        elif isinstance(reply.get('result'), dict) and isinstance(reply['result'].get('sessions'), list):
+            emit('signedIn')
+        else: raise ValueError()
+    finally:
+        selector.close()
+        try: os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError: pass
+        process.wait()
 try:
     if action == 'logout':
         if agent == 'claude':
@@ -93,7 +147,9 @@ try:
         else: fail('probeUnsupported')
         code, _ = run(logout_args, parse=False)
         if code != 0: fail('signOutFailed')
-    if agent == 'claude':
+    if agent == 'antigravity':
+        antigravity_status()
+    elif agent == 'claude':
         if os.environ.get('CLAUDE_CONFIG_DIR') != home + '/claude': fail('invalidContext')
         code, data = run(['auth', 'status', '--json'])
         if code not in (0, 1) or not isinstance(data, dict) or type(data.get('loggedIn')) is not bool or not isinstance(data.get('authMethod'), str) or not isinstance(data.get('apiProvider'), str):

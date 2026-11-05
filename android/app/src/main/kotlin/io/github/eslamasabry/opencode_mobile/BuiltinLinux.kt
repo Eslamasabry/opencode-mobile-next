@@ -4531,7 +4531,7 @@ class BuiltinLinux(private val context: Context) {
         const val TAG = "OcLinux"
 
         /** The agent programs a sign-in terminal may run (the agent catalog's). */
-        val SIGN_IN_PROGRAMS = setOf("claude", "codex", "gemini", "qwen", "goose", "omp", "fx", "kilo", "cline")
+        val SIGN_IN_PROGRAMS = setOf("claude", "codex", "gemini", "agy", "qwen", "goose", "omp", "fx", "kilo", "cline")
 
         /** The longest one wake-lock hold for a reply lasts before renewal. */
         const val MAX_WORK_HOLD_MS = 15 * 60 * 1000L

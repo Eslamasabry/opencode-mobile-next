@@ -58,6 +58,30 @@ class _ReplacementForegroundLease implements AgentSignInForegroundLease {
 
 void _phoneRemovalTests() {
   test(
+    'Antigravity payload can be removed through the phone agent controller',
+    () async {
+      final w = await _world(null, removalSupported: true);
+      final c = w.controller;
+      addTearDown(c.dispose);
+      w.state.runtimes = {
+        'antigravity': const PhoneAgentRuntime(
+          agentId: 'antigravity',
+          payloadPresent: true,
+        ),
+      };
+      await c.refreshAgentRows();
+      expect(c.canRemoveAgent('antigravity'), isTrue);
+      final result = await c.removeAgent('antigravity');
+      expect(result.agentId, 'antigravity');
+      expect(c.canRemoveAgent('antigravity'), isFalse);
+      expect(
+        c.agentRows.singleWhere((row) => row.id == 'antigravity').status,
+        PhoneAgentStatus.needsInstall,
+      );
+      expect(w.events.log, contains('remove.antigravity'));
+    },
+  );
+  test(
     'BA16 partial payload removal survives restart and unrelated setup',
     () async {
       for (final phase in [AgentSetupPhase.idle, AgentSetupPhase.done]) {

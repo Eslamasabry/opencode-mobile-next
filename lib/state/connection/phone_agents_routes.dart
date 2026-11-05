@@ -5,6 +5,7 @@ extension _PhoneAgentRoutes on _ConnectionControllerPhoneAgents {
   static const _removableAgents = {
     'codex',
     'gemini',
+    'antigravity',
     'qwen',
     'kilo',
     'cline',

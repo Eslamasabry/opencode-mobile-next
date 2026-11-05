@@ -56411,6 +56411,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The safety check stopped at “{check}”.'**
   String phoneTeamProofOther(String check);
+
+  /// Agent persona: Antigravity card line, at most 28 characters
+  ///
+  /// In en, this message translates to:
+  /// **'Google’s terminal agent'**
+  String get agentPersonaAntigravityStrength;
+
+  /// Agent persona: one sentence about Antigravity
+  ///
+  /// In en, this message translates to:
+  /// **'Works on your project with Gemini models.'**
+  String get agentPersonaAntigravityAbout;
+
+  /// Agent persona: what a person needs to use Antigravity
+  ///
+  /// In en, this message translates to:
+  /// **'A Google account; sign in in your browser'**
+  String get agentPersonaAntigravityNeeds;
+
+  /// Agents: Antigravity sign-in uses its own terminal and browser code flow
+  ///
+  /// In en, this message translates to:
+  /// **'Antigravity gives you a sign-in link in the terminal. Open it in your browser and sign in with Google, then paste the browser’s code into the terminal.'**
+  String get agentsAntigravitySignInIntro;
+
+  /// Agents: way forward when the upstream Gemini CLI asks the user to switch; does not claim Gemini is unsupported by the app
+  ///
+  /// In en, this message translates to:
+  /// **'If Gemini CLI asks you to use Antigravity, go back to Agents and install Antigravity (agy). Your Gemini conversations stay here.'**
+  String get agentsGeminiMigrationNote;
 }
 
 class _AppLocalizationsDelegate

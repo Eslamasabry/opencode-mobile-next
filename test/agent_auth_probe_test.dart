@@ -90,6 +90,73 @@ void main() {
       );
     }
 
+    Future<void> agy(String reply, {bool advertiseList = true}) async {
+      await File('$home/agy-fixture.py').writeAsString('''
+import json, sys
+assert sys.argv[1:] == ['acp', '--disable-telemetry']
+request = json.loads(sys.stdin.readline())
+assert request['method'] == 'initialize'
+print(json.dumps({'jsonrpc':'2.0', 'id':1, 'result':{
+    'protocolVersion':1,
+    'agentCapabilities':{'sessionCapabilities':${advertiseList ? "{'list':{}}" : '{}'}}
+}}), flush=True)
+request = json.loads(sys.stdin.readline())
+assert request['method'] == 'session/list' and request['params'] == {}
+print($reply, flush=True)
+# Wait for the probe to terminate its owned process; no conversation or prompt.
+assert not sys.stdin.readline()
+''');
+      await cli('agy', 'exec python3 "\$HOME/agy-fixture.py" "\$@"');
+    }
+
+    test('Antigravity checks cached sign-in with read-only ACP listing', () async {
+      await agy(
+        "json.dumps({'jsonrpc':'2.0','id':2,'error':{'code':-32000,'message':'Authentication required','data':'synthetic-secret'}})",
+      );
+      expect((await run('antigravity')).state, AgentAuthProbeState.signedOut);
+      await agy(
+        "json.dumps({'jsonrpc':'2.0','id':2,'result':{'sessions':[{'sessionId':'synthetic-secret','title':'synthetic-secret'}]}})",
+      );
+      final result = await run('antigravity');
+      expect(result.state, AgentAuthProbeState.signedIn);
+      expect(result.accountDisplayName, isNull);
+    });
+
+    test(
+      'Antigravity rejects unsupported, malformed and unrelated replies',
+      () async {
+        for (final reply in [
+          "json.dumps({'jsonrpc':'2.0','id':2,'error':{'code':-32000,'message':'synthetic-secret'}})",
+          "json.dumps({'jsonrpc':'2.0','id':2,'result':{}})",
+          "json.dumps({'jsonrpc':'2.0','id':2,'result':{'sessions':{} }})",
+          "json.dumps({'jsonrpc':'2.0','id':1,'result':{'sessions':[]}})",
+          "json.dumps({'jsonrpc':'2.0','id':True,'result':{'sessions':[]}})",
+          "json.dumps({'jsonrpc':'2.0','id':2,'result':{'sessions':[]},'error':{}})",
+          "json.dumps({'jsonrpc':'2.0','id':7,'method':'session/request_permission','params':{}})",
+          "'synthetic-secret'",
+          "'x'*65537",
+        ]) {
+          await agy(reply);
+          expect(
+            (await run('antigravity')).error,
+            AgentAuthProbeError.invalidResponse,
+          );
+        }
+        await agy("'{}'", advertiseList: false);
+        expect(
+          (await run('antigravity')).error,
+          AgentAuthProbeError.invalidResponse,
+        );
+      },
+    );
+
+    test('Antigravity sign-in check has a bounded deadline', () async {
+      await cli('agy', 'sleep 60');
+      final watch = Stopwatch()..start();
+      expect((await run('antigravity')).error, AgentAuthProbeError.timedOut);
+      expect(watch.elapsed, lessThan(const Duration(seconds: 10)));
+    });
+
     test(
       'Claude explicit signed-out status overrides successful exit',
       () async {

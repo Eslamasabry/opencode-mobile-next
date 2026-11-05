@@ -92,7 +92,7 @@ class LinuxProcess {
   static final _serve = RegExp(r'(^| )serve( |$)');
   static final _paseo = RegExp(r'(^|[/ ])paseo( |$)|oc-paseo|/paseo/');
   static final _agent = RegExp(
-    r'(^|[/ ])(claude|claude-code|codex|gemini|aider|goose)( |$)|'
+    r'(^|[/ ])(claude|claude-code|codex|gemini|agy|antigravity|aider|goose)( |$)|'
     r'@anthropic-ai/claude-code|/opt/oc-claude|/opt/aiteam|(^|[/ ])(gc|dolt|bd)( |$)|'
     r'(^|[/ ])opencode2? (acp|run)( |$)',
   );

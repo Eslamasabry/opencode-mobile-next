@@ -266,6 +266,8 @@ void main() {
 
   test('sign-in details use only fixed app commands', () {
     expect(provider().hostSignInCommand, 'gemini');
+    expect(provider(id: 'antigravity').hostSignInCommand, 'agy acp --login');
+    expect(provider(id: 'antigravity').signInMessage, contains('your browser'));
     expect(provider(id: 'omp').hostSignInCommand, 'omp');
     expect(provider(id: 'fx').hostSignInCommand, 'fx login');
     expect(provider(id: 'unknown-agent').hostSignInCommand, isNull);
