@@ -1,6 +1,29 @@
 package io.github.eslamasabry.oc.ui.kit.foundation
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
+import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -169,5 +192,145 @@ private fun DrawScope.drawGrown(shape: Shape, grow: Float, color: Color) {
     if (w <= 0f || h <= 0f) return
     translate(-grow, -grow) {
         drawOutline(shape.createOutline(androidx.compose.ui.geometry.Size(w, h), layoutDirection, this), color)
+    }
+}
+
+/** How much inside space a [KitSurface] gives its child: none, compact (space 3) or panel (space 4). */
+public enum class KitSurfacePadding { None, Compact, Panel }
+
+private fun KitSurfacePadding.dp(): Dp =
+    when (this) {
+        KitSurfacePadding.None -> Dp(0f)
+        KitSurfacePadding.Compact -> Dp(Space.S3.toFloat()) // F: lib/ui/kit/kit_surface.dart:187 lib/ui/kit/kit_tokens.dart:40-44
+        KitSurfacePadding.Panel -> Dp(Space.S4.toFloat()) // F: lib/ui/kit/kit_surface.dart:188 lib/ui/kit/kit_tokens.dart:40-44
+    }
+
+private fun argbColor(v: Argb): Color = Color(v.v)
+
+/**
+ * The one solid box (Dart `KitSurface`, kit_surface.dart): a fill from the surface steps, a token [shape] and token
+ * [padding], with an optional hairline [outlined] edge (LOOK-21). Not interactive: a surface that opens something wraps
+ * in `KitTappable`. [flatInLists] draws no fill, edge or padding where the style sets lists flat on the page.
+ *
+ * Motion: the style change fades the decoration (class Fade)
+ * Cap: wrapper (it adds no width of its own)
+ */
+@Composable
+public fun KitSurface(
+    modifier: Modifier = Modifier,
+    level: SurfaceLevel = SurfaceLevel.Surface1,
+    shape: KitShapeId = KitShapeId.Panel,
+    padding: KitSurfacePadding = KitSurfacePadding.Panel,
+    outlined: Boolean = false,
+    clip: Boolean = true,
+    flatInLists: Boolean = false,
+    content: @Composable () -> Unit,
+) {
+    if (flatInLists && LocalKitStyle.current.spec.tokens.flatLists) {
+        Box(modifier) { content() }
+        return
+    }
+    SurfaceBox(modifier, level, shape, padding, outlined, clip, inset = false, content = content)
+}
+
+@Composable
+private fun SurfaceBox(
+    modifier: Modifier,
+    level: SurfaceLevel,
+    shape: KitShapeId,
+    padding: KitSurfacePadding,
+    outlined: Boolean,
+    clip: Boolean,
+    inset: Boolean,
+    role: SurfaceRole = SurfaceRole.Content,
+    content: @Composable () -> Unit,
+) {
+    val roles = LocalKitRoles.current
+    val own =
+        when {
+            inset -> if (roles.dark) roles.surface1 else roles.ground // F: lib/ui/kit/kit_tokens.dart insetSurface, surface1 in dark and ground in light
+            level == SurfaceLevel.Ground -> roles.ground
+            level == SurfaceLevel.Surface1 -> roles.surface1
+            level == SurfaceLevel.Surface2 -> roles.surface2
+            else -> roles.surface3
+        }
+    val surfaceRole = if (level == SurfaceLevel.Ground && role == SurfaceRole.Content) SurfaceRole.Ground else role
+    val look = kitSurfaceLook(KitSurfaceInput(role = surfaceRole, shape = shape, level = level, ownFill = argbColor(own), pressed = inset))
+    val hairline = Dp(1f / LocalDensity.current.density) // F: lib/ui/kit/kit_tokens.dart:317
+    var box = modifier.then(look.modifier)
+    if (outlined) box = box.border(hairline, argbColor(roles.hairline), look.shape)
+    if (clip) box = box.clip(look.shape)
+    Box(box.padding(padding.dp())) { content() }
+}
+
+/**
+ * A grouped panel (Dart `KitSurface.panel`): `surface1`, the panel shape, panel padding, and an optional one-line header
+ * (a small [icon] in `text2` and a headline [title]) above [content].
+ */
+@Composable
+public fun KitSurfacePanel(
+    modifier: Modifier = Modifier,
+    title: String? = null,
+    icon: ImageVector? = null,
+    padding: KitSurfacePadding = KitSurfacePadding.Panel,
+    content: @Composable () -> Unit,
+) {
+    SurfaceBox(modifier, SurfaceLevel.Surface1, KitShapeId.Panel, padding, outlined = false, clip = true, inset = false) {
+        PanelBody(title, icon, content)
+    }
+}
+
+/** A panel set into a sheet or a dialog (Dart `KitSurface.inset`): surface1 in dark, the ground in light, pressed in under Soft. */
+@Composable
+public fun KitSurfaceInset(
+    modifier: Modifier = Modifier,
+    padding: KitSurfacePadding = KitSurfacePadding.Panel,
+    content: @Composable () -> Unit,
+) {
+    SurfaceBox(modifier, SurfaceLevel.Surface1, KitShapeId.Panel, padding, outlined = false, clip = true, inset = true, content = content)
+}
+
+/** A leading icon in its tile (Dart `KitSurface.tile`): the icon tile of `surface3`, a small glyph in [tone]. */
+@Composable
+public fun KitSurfaceTile(
+    icon: ImageVector,
+    modifier: Modifier = Modifier,
+    tone: TextTone = TextTone.Primary,
+    semanticsLabel: String? = null,
+) {
+    val tokens = LocalKitTokens.current
+    val color = LocalKitColors.current.tone(tone)
+    val size = Dp(tokens.iconTile.toFloat())
+    SurfaceBox(
+        modifier.size(size).then(if (semanticsLabel != null) Modifier.semantics { contentDescription = semanticsLabel } else Modifier),
+        SurfaceLevel.Surface3,
+        KitShapeId.Tile,
+        KitSurfacePadding.None,
+        outlined = false,
+        clip = true,
+        inset = false,
+        role = SurfaceRole.Control,
+    ) {
+        Box(Modifier.size(size), contentAlignment = Alignment.Center) { KitGlyph(icon, color, Dp(tokens.smallIcon.toFloat())) }
+    }
+}
+
+@Composable
+private fun PanelBody(title: String?, icon: ImageVector?, content: @Composable () -> Unit) {
+    if (title == null && icon == null) {
+        content()
+        return
+    }
+    val tokens = LocalKitTokens.current
+    Column {
+        Row(verticalAlignment = Alignment.Top) {
+            if (icon != null) {
+                KitGlyph(icon, LocalKitColors.current.text2, Dp(tokens.smallIcon.toFloat()))
+                Spacer(Modifier.width(Dp(tokens.labelGap.toFloat())))
+            }
+            if (title != null) Box(Modifier.weight(1f)) { KitText(title, role = TypeRole.Headline) }
+        }
+        Spacer(Modifier.height(Dp(tokens.labelGap.toFloat())))
+        content()
     }
 }

@@ -1,0 +1,2 @@
+kit_text_selectable_selected_light	PLATFORM_ONLY	the golden shows Android's own text-selection handles that Flutter draws; Compose draws the platform's on device and nothing on desktop
+kit_text_selectable_selected_dark	PLATFORM_ONLY	the golden shows Android's own text-selection handles that Flutter draws; Compose draws the platform's on device and nothing on desktop

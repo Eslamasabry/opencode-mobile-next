@@ -20,6 +20,10 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
@@ -139,22 +143,6 @@ public fun KitTabStrip(
     val specs = KitMotion.specs
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val scroll = rememberScrollState()
-    val bounds = remember { mutableStateMapOf<Int, Pair<Float, Float>>() }
-    val left = remember { Animatable(Float.NaN) }
-    val width = remember { Animatable(0f) }
-    val target = bounds[selected]
-    LaunchedEffect(selected, target, motion.level) {
-        val (x, w) = target ?: return@LaunchedEffect
-        if (left.value.isNaN() || !TabRules.indicatorMoves(motion.level)) {
-            left.snapTo(x)
-            width.snapTo(w)
-        } else {
-            coroutineScope {
-                launch { left.animateTo(x, specs.spatialFast()) }
-                launch { width.animateTo(w, specs.spatialFast()) }
-            }
-        }
-    }
     val requesters = remember(tabs.size) { List(tabs.size) { BringIntoViewRequester() } }
     LaunchedEffect(selected) { requesters.getOrNull(selected)?.bringIntoView() }
     val pill = KitShapeId.Pill
@@ -177,45 +165,35 @@ public fun KitTabStrip(
                     val next = TabRules.arrow(selected, arrow, tabs.size, rtl)
                     if (next != selected) onSelected(next)
                     true
-                }
-                .drawBehind {
-                    val x = left.value
-                    if (x.isNaN()) return@drawBehind
-                    val h = size.height - 2 * INDICATOR_INSET.dp.toPx()
-                    drawRoundRect(
-                        colors.surface3,
-                        topLeft = Offset(x, INDICATOR_INSET.dp.toPx()),
-                        size = Size(width.value, h),
-                        cornerRadius = CornerRadius(h / 2, h / 2),
-                    )
                 },
-            horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
+            horizontalArrangement = Arrangement.spacedBy(Space.S2.dp), // F: lib/ui/kit/motion/kit_tab_switcher.dart:197
             verticalAlignment = Alignment.CenterVertically,
         ) {
             tabs.forEachIndexed { i, tab ->
                 val chosen = i == selected
                 val count = TabRules.countWords(tab.count)
                 val spoken = if (count != null) stringResource(Res.string.kitTabLabel, tab.label, count) else tab.label
+                val look = kitSurfaceLook(KitSurfaceInput(role = SurfaceRole.Control, shape = pill, level = SurfaceLevel.Surface3, ownFill = colors.surface3, selected = true))
                 Row(
                     Modifier
-                        .onPlaced { c -> bounds[i] = c.positionInParent().x to c.size.width.toFloat() }
                         .bringIntoViewRequester(requesters[i])
                         .heightIn(min = tokens.minTarget.dp)
+                        .then(if (chosen) look.modifier else Modifier)
                         .kitTappable(onClick = { if (!chosen) onSelected(i) }, role = KitTappableRole.Tab, shape = pill)
                         .semantics(mergeDescendants = true) {
                             this.selected = chosen
                             contentDescription = spoken
                         }
-                        .padding(horizontal = Space.S4.dp),
+                        .padding(horizontal = Space.S3.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
                 ) {
                     val tone = if (chosen) TextTone.Primary else TextTone.Secondary
                     tab.icon?.let { KitGlyph(it, colors.tone(tone), tokens.smallIcon.dp) }
                     KitText(tab.label, role = TypeRole.Label, tone = tone, kind = KitTextKind.Frame, maxLines = 1)
                     if (tab.count != null) {
                         KitSwapCount(tab.count) { n ->
-                            KitText(n.toString(), role = TypeRole.Label, tone = TextTone.Tertiary, kind = KitTextKind.Frame, maxLines = 1)
+                            KitText(n.toString(), role = TypeRole.Label, tone = TextTone.Primary, kind = KitTextKind.Frame, maxLines = 1)
                         }
                     }
                     if (tab.needsYou > 0) NeedsYouMark(tab.needsYou)

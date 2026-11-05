@@ -39,6 +39,11 @@ kotlin {
             zxingCore
         ) // QR readability: every drawn code is decoded by ZXing (plan 10 §14.1)
     }
+    // The golden-diff gate lives in ui/gate (desktopMain); ModuleRules has no :ui:gate edges, so it is compiled in here.
+    sourceSets.getByName("desktopTest") {
+        kotlin.srcDir("../gate/src/desktopMain/kotlin")
+        resources.srcDir("../gate/src/desktopMain/resources")
+    }
     sourceSets.getByName("androidHostTest").dependencies {
         implementation(libs.junit4)
         implementation(libs.robolectric)
@@ -69,3 +74,10 @@ tasks
             "--add-opens=java.base/java.lang=ALL-UNNAMED",
         )
     }
+
+// The golden gate writes its rows and pictures (looks-out/gate) as a side effect of the desktop tests, so Gradle must run
+// them every time: a restored (FROM-CACHE) or up-to-date result would leave the gate with no rows to evaluate.
+tasks.withType<Test>().matching { it.name == "desktopTest" }.configureEach {
+    outputs.upToDateWhen { false }
+    outputs.cacheIf { false }
+}

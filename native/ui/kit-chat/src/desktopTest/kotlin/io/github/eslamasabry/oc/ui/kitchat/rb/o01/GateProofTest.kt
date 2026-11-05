@@ -1,4 +1,4 @@
-package io.github.eslamasabry.oc.ui.kitchat.gate
+package io.github.eslamasabry.oc.ui.kitchat.rb.o01
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -8,11 +8,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
@@ -23,6 +26,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerAdd
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerBox
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerSend
@@ -34,9 +38,17 @@ import kotlin.test.Test
  * kit_composer_golden_test.dart `idle_empty` with its `_Backdrop`). Evidence only; nothing fails on a diff yet.
  */
 class GateProofTest {
+    private val redactor: @androidx.compose.runtime.Composable (@androidx.compose.runtime.Composable () -> Unit) -> Unit =
+        { CompositionLocalProvider(LocalKitRedactor provides Redactor()) { it() } }
+
+    /** These three goldens belong to other orders (08, 14); the proof runs only where they have been fetched. */
+    private fun proof(name: String, frame: FlutterGoldenGate.Frame = FlutterGoldenGate.Frame.Part, content: @androidx.compose.runtime.Composable () -> Unit) {
+        if (FlutterGoldenGate.hasGolden(name)) FlutterGoldenGate.check(name, frame, wrap = redactor, content = content)
+    }
+
     @Test
     fun `kit_row_default`() {
-        FlutterGoldenGate.check("kit_row_default") {
+        proof("kit_row_default") {
             KitRowGroup(label = "Conversations") {
                 KitRow("Fix the login bug", supporting = "Finished 5h ago", leading = KitRowLeading.Glyph(KitIcons.chat), onClick = {})
                 KitRow("Model", leading = KitRowLeading.Glyph(KitIcons.model), trailing = KitRowTrailing.Value("Claude Sonnet 4"), onClick = {})
@@ -47,7 +59,7 @@ class GateProofTest {
 
     @Test
     fun `kit_action_stack_default`() {
-        FlutterGoldenGate.check("kit_action_stack_default") {
+        proof("kit_action_stack_default") {
             KitActionBlock(
                 primary = KitAction("Update", {}),
                 secondary = KitAction("Check now", {}),
@@ -58,7 +70,7 @@ class GateProofTest {
 
     @Test
     fun `kit_composer_idle_empty`() {
-        FlutterGoldenGate.check("kit_composer_idle_empty", FlutterGoldenGate.Frame.Screen) {
+        proof("kit_composer_idle_empty", FlutterGoldenGate.Frame.Screen) {
             Box(Modifier.fillMaxSize()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     KitText("Can you check why the release build fails on the signing step?", role = TypeRole.Body)
