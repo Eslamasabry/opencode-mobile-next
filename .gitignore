@@ -67,3 +67,7 @@ docs/qa/**/*.mp4
 
 # Private build server target for tool/qa/vps_*.sh and run_tests_split.sh.
 tool/qa/build-server.env
+
+# native UI rebuild gate output
+/looks-gate/
+/looks-out/
