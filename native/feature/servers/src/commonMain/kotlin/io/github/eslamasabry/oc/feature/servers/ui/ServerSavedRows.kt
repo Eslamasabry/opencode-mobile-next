@@ -20,7 +20,6 @@ import io.github.eslamasabry.oc.ui.kit.foundation.*
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.*
 import io.github.eslamasabry.oc.ui.kit.row.*
-import io.github.eslamasabry.oc.ui.kit.state.kitNeedsYouSpan
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
@@ -47,28 +46,32 @@ internal fun ServerSavedRows(
                     if (phoneHost) PhoneHostSupport.Android else PhoneHostSupport.Elsewhere,
                 )
             val waiting = if (server.connected) 0 else (facts?.waiting ?: 0)
-            val needsYou =
-                if (waiting > 0) kitNeedsYouSpan(waiting).text.trimEnd().removeSuffix("·").trimEnd() else null
-            val lines = buildList {
-                if (server.connected) add(stringResource(Res.string.serverRowConnected))
-                if ((facts?.running ?: 0) > 0)
-                    add(stringResource(Res.string.rows40Working, facts!!.running!!))
-                if (facts?.needsSecret == true) add(stringResource(Res.string.rows40Secret))
-                if ((facts?.queued ?: 0) > 0)
-                    add(stringResource(Res.string.rows40Queued, facts!!.queued))
-                if (!server.connected && (facts?.waiting ?: 0) == 0 && (facts?.running ?: 0) == 0)
-                    add(stringResource(Res.string.settingsV3NotConnected))
-                add(
-                    stringResource(
-                        when (facts?.backend) {
-                            BackendKind.Codex -> Res.string.addServerTypeCodex
-                            BackendKind.Paseo -> Res.string.addServerTypePaseo
-                            BackendKind.OpenCode2 -> Res.string.setupRuntimeTwo
-                            null -> Res.string.firstRunAgentOpenCode
-                        }
-                    )
+            val kind =
+                stringResource(
+                    when (facts?.backend) {
+                        BackendKind.Codex -> Res.string.addServerTypeCodex
+                        BackendKind.Paseo -> Res.string.addServerTypePaseo
+                        BackendKind.OpenCode2 -> Res.string.setupRuntimeTwo
+                        null -> Res.string.firstRunAgentOpenCode
+                    }
                 )
-            }
+            val secret =
+                if (facts?.needsSecret == true)
+                    stringResource(
+                        if (facts.backend == BackendKind.Codex || facts.backend == BackendKind.Paseo)
+                            Res.string.e7SetupTokenRequired
+                        else Res.string.e7SetupPasswordRequired
+                    )
+                else null
+            val supporting =
+                kitServerSupporting(
+                    kind = kind,
+                    connected = server.connected,
+                    waiting = waiting,
+                    running = facts?.running ?: 0,
+                    secret = secret,
+                    queued = facts?.queued ?: 0,
+                )
             val destination =
                 state.rows.moveDestination
                     ?.takeIf { it != server.id }
@@ -123,17 +126,17 @@ internal fun ServerSavedRows(
                 Box(Modifier.weight(1f)) {
                     KitRow(
                         title = server.name,
-                        supporting = lines.joinToString(" · "),
+                        supporting = supporting,
                         supportingMaxLines =
                             2, // F: lib/ui/screens/servers/server_rows.dart:191-196
                         leading =
-                            if (needsYou == null)
+                            if (waiting <= 0)
                                 KitRowLeading.Glyph(
                                     if (phone) KitIcons.phone else KitIcons.server,
                                     tile = false,
                                 )
                             else null,
-                        state = needsYou?.let { KitRowState(it, KitRowStateTone.NeedsYou) },
+                        state = if (waiting > 0) KitRowState(null, KitRowStateTone.NeedsYou) else null,
                         selected = server.connected,
                         enabled = enabled.isEnabled,
                         disabledReason =

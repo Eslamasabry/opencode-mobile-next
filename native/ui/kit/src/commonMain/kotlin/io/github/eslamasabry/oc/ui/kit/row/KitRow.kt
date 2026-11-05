@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.foundation.layout.Arrangement
@@ -22,7 +23,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.text.TextScalePolicy
@@ -155,6 +158,36 @@ public fun KitRow(
 }
 
 @Composable
+public fun KitRow(
+    title: String,
+    supporting: AnnotatedString,
+    modifier: Modifier = Modifier,
+    leading: KitRowLeading? = null,
+    trailing: KitRowTrailing = KitRowTrailing.None,
+    supportingMaxLines: Int = 1,
+    enabled: Boolean = true,
+    disabledReason: String? = null,
+    selected: Boolean = false,
+    state: KitRowState? = null,
+    onClick: (() -> Unit)? = null,
+) {
+    RowBody(
+        title = title,
+        modifier = modifier,
+        supporting = supporting.text,
+        leading = leading,
+        trailing = trailing,
+        supportingMaxLines = supportingMaxLines,
+        enabled = enabled,
+        disabledReason = disabledReason,
+        selected = selected,
+        state = state,
+        onClick = onClick,
+        supportingSpan = supporting,
+    )
+}
+
+@Composable
 private fun RowBody(
     title: String,
     modifier: Modifier = Modifier,
@@ -175,6 +208,7 @@ private fun RowBody(
     meta: String? = null,
     onClick: (() -> Unit)? = null,
     titleMaxLines: Int = 1,
+    supportingSpan: AnnotatedString? = null,
 ) {
     kitAssert(title.isNotBlank()) { "KitRow: a row needs a title" }
     kitAssert(enabled || !disabledReason.isNullOrBlank()) { "KitRow: a disabled row must say why (B-KIT-051)" }
@@ -281,7 +315,17 @@ private fun RowBody(
                     }
                     val stateWord = state?.takeIf { enabled }
                     val word = stateWord?.word
-                    if (stateWord != null && word != null) {
+                    if (enabled && supportingSpan != null) {
+                        BasicText(
+                            supportingSpan,
+                            Modifier.testTag("kit-row-supporting"),
+                            style = LocalKitTypography.current.style(TypeRole.Secondary).copy(
+                                color = colors.text2, textDirection = TextDirection.Content,
+                            ),
+                            maxLines = kitRowSupportingLines(scale, supportingMaxLines),
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    } else if (stateWord != null && word != null) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             KitText(
                                 word,

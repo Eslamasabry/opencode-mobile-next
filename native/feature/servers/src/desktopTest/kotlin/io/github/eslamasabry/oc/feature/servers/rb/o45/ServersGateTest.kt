@@ -123,8 +123,32 @@ class ServersGateTest {
                 ServersScreen(state.copy(rows = state.rows.copy(facts = facts)), Actions())
             }
         }
-        onNodeWithTag("kit-row-state", useUnmergedTree = true).assertTextEquals("Needs you")
+        onNodeWithText("Needs you · OpenCode 2", useUnmergedTree = true).assertExists()
     }
+
+    @Test
+    fun `saved socket credentials ask for a token while OpenCode asks for a password`() =
+        runComposeUiTest {
+            val facts =
+                state.rows.facts
+                    .mapValues { (_, facts) -> facts.copy(needsSecret = true, queued = 1) }
+                    .toPersistentMap()
+            setContent {
+                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                    ServersScreen(state.copy(rows = state.rows.copy(facts = facts)), Actions())
+                }
+            }
+            onNodeWithText(
+                    "Can't read the saved token · 1 prompt waiting to send · Not connected · Codex",
+                    useUnmergedTree = true,
+                )
+                .assertExists()
+            onAllNodesWithText(
+                    "Can't read the saved password · 1 prompt waiting to send · Not connected · OpenCode 2",
+                    useUnmergedTree = true,
+                )
+                .assertCountEquals(2)
+        }
 
     @Test
     fun saved_servers() {
