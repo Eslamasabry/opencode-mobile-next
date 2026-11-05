@@ -66,10 +66,12 @@ import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
+import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -521,15 +523,13 @@ private fun SheetHeader(entry: SheetEntry) {
             }
         }
         if (entry.dismissible) {
-            KitTappable(onClick = { entry.requestDismiss() }, shape = KitShapeId.Pill) {
-                KitText(
-                    entry.closeLabel ?: stringResource(Res.string.kitSheetClose),
-                    Modifier.padding(horizontal = tokens.labelGap.dp),
-                    role = TypeRole.Label,
-                    tone = TextTone.Secondary,
-                    kind = KitTextKind.Frame,
-                )
-            }
+            // Flutter's sheet: Close is the X glyph at the end; its words are what TalkBack says.
+            KitIconButton(
+                icon = KitIcons.close,
+                label = entry.closeLabel ?: stringResource(Res.string.kitSheetClose),
+                onClick = { entry.requestDismiss() },
+                tone = TextTone.Secondary,
+            )
         }
     }
 }

@@ -64,6 +64,12 @@ public enum class KitChoiceMark {
     Radio,
     Check,
     None,
+
+    /**
+     * A long pick list (the model picker, Dart `KitPickerRow`): no ring on every row; the chosen row takes a quiet
+     * `surface3` band and a mint check at its start, the others keep the space so titles line up.
+     */
+    Tick,
 }
 
 /** Pure rules of the choice list (B-KIT-014). */
@@ -202,13 +208,16 @@ public fun KitChoiceRow(
     enabled: KitEnabled = KitEnabled.Enabled,
     haptic: KitHaptic? = null,
     leading: (@Composable () -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
     onClick: () -> Unit,
 ) {
     val tokens = LocalKitTokens.current
     val on = enabled.isEnabled
+    val band = mark == KitChoiceMark.Tick && selected
     Row(
         modifier
             .fillMaxWidth()
+            .then(if (band) Modifier.background(LocalKitColors.current.surface3.copy(alpha = 0.6f)) else Modifier)
             .heightIn(min = tokens.choiceRowMin.dp)
             .kitSelectTap(
                 selected = selected,
@@ -243,6 +252,7 @@ public fun KitChoiceRow(
                 maxLines = 1,
             )
         }
+        trailing?.invoke()
     }
 }
 
@@ -251,6 +261,16 @@ private fun ChoiceMarkGlyph(mark: KitChoiceMark, selected: Boolean, on: Boolean)
     val colors = LocalKitColors.current
     val size = 22.dp
     val edge = if (!on) colors.text3 else if (selected) colors.accent else colors.text2
+    if (mark == KitChoiceMark.Tick) {
+        Box(Modifier.size(size), contentAlignment = Alignment.Center) {
+            if (selected) {
+                Box(Modifier.size(size).clip(KitShapeId.Circle.shape()).background(colors.accent), contentAlignment = Alignment.Center) {
+                    KitGlyph(KitPartGlyphs.Check, colors.onAccent, 14.dp)
+                }
+            }
+        }
+        return
+    }
     val shape = if (mark == KitChoiceMark.Radio) KitShapeId.Circle.shape() else KitShapeId.Square.shape()
     if (mark == KitChoiceMark.Check && selected) {
         Box(Modifier.size(size).clip(KitShapeId.Code.shape()).background(edge), contentAlignment = Alignment.Center) {

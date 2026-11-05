@@ -158,7 +158,7 @@ public fun KitTheme(
         LocalRippleConfiguration provides ripple,
         LocalTextSelectionColors provides selection,
     ) {
-        MaterialTheme(colorScheme = scheme, shapes = MaterialBridge.shapes, content = content)
+        MaterialTheme(colorScheme = scheme, shapes = MaterialBridge.shapes, typography = MaterialBridge.typography(typography), content = content)
     }
 }
 

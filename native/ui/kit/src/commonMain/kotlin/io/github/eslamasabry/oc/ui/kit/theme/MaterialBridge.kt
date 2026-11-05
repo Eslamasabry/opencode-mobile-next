@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.ui.kit.theme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.Shapes
+import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
@@ -10,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.color.Roles
 import io.github.eslamasabry.oc.ui.design.color.lerp
 import io.github.eslamasabry.oc.ui.design.color.over
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
 
 /**
  * Dart `schemeFromRoles` (`lib/ui/theme_roles.dart`), slot for slot (plan 06 §5.4). Only the M3 parts the kit wraps
@@ -41,6 +43,24 @@ internal object MaterialBridge {
             inverseSurface = c.text1, inverseOnSurface = c.ground, inversePrimary = c.accent,
             scrim = Color.Black, surfaceTint = Color.Transparent,
             background = c.ground, onBackground = c.text1, surfaceVariant = c.surface1,
+        )
+    }
+
+    /**
+     * Material's type roles on the kit's Geist scale, so a part that still reads `MaterialTheme.typography` (the
+     * Markdown renderer, the transcript's quiet lines) draws in Geist at the kit sizes rather than Roboto.
+     */
+    fun typography(k: KitTypography): Typography {
+        val body = k.style(TypeRole.Body)
+        val supporting = k.style(TypeRole.Secondary)
+        return Typography(
+            displayLarge = k.style(TypeRole.LargeTitle), displayMedium = k.style(TypeRole.LargeTitle),
+            displaySmall = k.style(TypeRole.LargeTitle),
+            headlineLarge = k.style(TypeRole.LargeTitle), headlineMedium = k.style(TypeRole.Title),
+            headlineSmall = k.style(TypeRole.Title),
+            titleLarge = k.style(TypeRole.Title), titleMedium = k.style(TypeRole.Headline), titleSmall = k.style(TypeRole.RowTitle),
+            bodyLarge = body, bodyMedium = supporting, bodySmall = k.style(TypeRole.Caption),
+            labelLarge = k.style(TypeRole.Button), labelMedium = k.style(TypeRole.Label), labelSmall = k.style(TypeRole.Caption),
         )
     }
 

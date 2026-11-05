@@ -76,9 +76,12 @@ public enum class KitRowStateTone {
     Quiet,
 }
 
-/** A feed row's state: [word] leads the supporting line in its tone; NeedsYou and Running also mark the lead column. */
+/**
+ * A feed row's state: [word] leads the supporting line in its tone; NeedsYou and Running also mark the lead column.
+ * A row with nothing to say passes a null word, so it still keeps the lead column and lines up with its neighbours.
+ */
 @Immutable
-public data class KitRowState(val word: String, val tone: KitRowStateTone)
+public data class KitRowState(val word: String?, val tone: KitRowStateTone)
 
 /** What ends a row (Dart `KitRowValue`, `KitChevron`, the row's own action). */
 @Immutable

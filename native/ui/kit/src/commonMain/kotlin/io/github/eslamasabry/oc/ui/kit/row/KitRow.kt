@@ -201,10 +201,11 @@ public fun KitRow(
                         }
                     }
                     val stateWord = state?.takeIf { enabled }
-                    if (stateWord != null) {
+                    val word = stateWord?.word
+                    if (stateWord != null && word != null) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             KitText(
-                                stateWord.word,
+                                word,
                                 Modifier.testTag("kit-row-state"),
                                 role = TypeRole.Secondary,
                                 tone =
