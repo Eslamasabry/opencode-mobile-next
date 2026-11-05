@@ -25,7 +25,7 @@ public fun KitContextSheet(tokens: Long, limit: Long, modelName: String, percent
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S4.dp)) {
                 Box(contentAlignment = Alignment.Center) {
                     KitContextRing(percent, level, stringResource(Res.string.kitContextRingSemantics, Numbers.format(percent)), size = 64.dp) // F: lib/ui/kit/kit_context_ring.dart:116
-                    KitText(stringResource(Res.string.kitModelContext, Numbers.format(percent)), role = TypeRole.Label)
+                    KitText(stringResource(Res.string.kitModelContext, Numbers.format(percent)), role = TypeRole.Label, tone = when (level) { KitContextLevel.Calm -> TextTone.Secondary; KitContextLevel.Warning -> TextTone.Attention; KitContextLevel.Full -> TextTone.Primary })
                 }
                 KitText(stringResource(Res.string.kitContextSheetTokens, Numbers.format(tokens), Numbers.format(limit)), Modifier.weight(1f), role = TypeRole.RowTitle)
             }

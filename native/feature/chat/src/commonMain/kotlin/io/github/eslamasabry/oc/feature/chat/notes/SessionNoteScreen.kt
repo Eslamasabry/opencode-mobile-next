@@ -31,7 +31,8 @@ import org.jetbrains.compose.resources.stringResource
 public fun SessionNoteScreen(state: SessionNoteUi, actions: SessionNoteActions) {
     val title = stringResource(Res.string.sessionNoteTitle)
     var savingHere by remember(state.visible) { mutableStateOf(false) }
-    LaunchedEffect(state.loading, state.dirty, state.savedReceipt) {
+    LaunchedEffect(state.loading, state.dirty, state.savedReceipt, state.failure) {
+        if (savingHere && !state.loading && state.failure != null) savingHere = false
         if (savingHere && !state.loading && !state.dirty && state.savedReceipt == true && state.failure == null) {
             savingHere = false
             actions.closeNote()

@@ -280,6 +280,9 @@ internal fun ChatTranscriptList(
     // B0: a repeated key kills the whole screen (LazyColumn throws), so the list never sees one.
     val unique = remember(rows) { rows.distinctKeys() }
     val tables = remember(unique) { LongTable.of(unique) }
+    val copyableTurns = remember(unique) {
+        unique.filterIsInstance<BlockRow>().filter { it.text.isNotBlank() }.mapTo(hashSetOf()) { it.turnId }
+    }
     val newestKey =
         when {
             live != null -> ListKeys.LIVE
@@ -378,7 +381,7 @@ internal fun ChatTranscriptList(
                             onOpenFile,
                             reasoningExpanded,
                             onCompactAgain,
-                            onCopyReply,
+                            onCopyReply.takeIf { row.turnId in copyableTurns },
                         )
                 } else {
                     ChatRow(
@@ -396,7 +399,7 @@ internal fun ChatTranscriptList(
                         onOpenFile,
                         reasoningExpanded,
                         onCompactAgain,
-                        onCopyReply,
+                        onCopyReply.takeIf { row.turnId in copyableTurns },
                     )
                 }
                 if (display.timestampsVisible) {
@@ -689,7 +692,8 @@ private fun ChatRow(
                         onMore = onOpenMenu?.let { menu -> { menu(row.key) } },
                         modifier = Modifier.testTag("chat-turn-footer"),
                     ) {
-                        if (row.stopped) KitQuietLine(words.stoppedFooter())
+                        if (row.failed) KitQuietLine(words.footer(true))
+                        else if (row.stopped) KitQuietLine(words.stoppedFooter())
                         facts.reading.endNotes[row.turnId]?.let { TurnEndNote(it) }
                         facts.reading.metadata[row.turnId]?.let { TurnMetadata(it) }
                     }
