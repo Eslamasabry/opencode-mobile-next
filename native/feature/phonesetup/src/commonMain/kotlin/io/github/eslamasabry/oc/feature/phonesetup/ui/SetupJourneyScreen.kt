@@ -380,7 +380,7 @@ private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions) {
             progress.etaSeconds?.takeIf { progress.state == SetupState.Running }?.let {
                 Spacer(Modifier.height(Space.S6.dp))
                 val minutes = ceil(it / 60.0).toInt().coerceAtLeast(1) // NV: ETA seconds to whole minutes
-                KitText(stringResource(Res.string.phoneSetupRingMinutesLeft, minutes), role = TypeRole.RowTitle, textAlign = TextAlign.Center)
+                KitText(org.jetbrains.compose.resources.pluralStringResource(Res.plurals.phoneSetupRingMinutesLeft, minutes, minutes), role = TypeRole.RowTitle, textAlign = TextAlign.Center)
             }
             Spacer(Modifier.height(Space.S2.dp))
             KitText(note, role = TypeRole.Secondary, tone = TextTone.Tertiary, textAlign = TextAlign.Center)

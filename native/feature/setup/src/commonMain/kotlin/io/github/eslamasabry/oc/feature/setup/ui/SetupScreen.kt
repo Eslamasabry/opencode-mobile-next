@@ -225,7 +225,7 @@ private fun ProgressPage(p: SetupProgressUi, openDetails: () -> Unit) {
             )
             if (p.running && p.minutesLeft != null) {
                 Spacer(Modifier.height(Space.S6.dp))
-                KitText(stringResource(Res.string.phoneSetupRingMinutesLeft, p.minutesLeft), role = TypeRole.RowTitle, tone = TextTone.Secondary, textAlign = TextAlign.Center)
+                KitText(org.jetbrains.compose.resources.pluralStringResource(Res.plurals.phoneSetupRingMinutesLeft, p.minutesLeft, p.minutesLeft), role = TypeRole.RowTitle, tone = TextTone.Secondary, textAlign = TextAlign.Center)
             }
             if (note != null) {
                 Spacer(Modifier.height(if (p.running && p.minutesLeft != null) Space.S2.dp else Space.S6.dp))
