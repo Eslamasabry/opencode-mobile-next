@@ -1,10 +1,20 @@
 package io.github.eslamasabry.oc.feature.phone.ui
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
+import io.github.eslamasabry.oc.ui.kit.state.KitInlineState
+import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.LifecycleStartEffect
 import io.github.eslamasabry.oc.engine.runtime.procs.DurationWords
@@ -32,7 +42,8 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
-import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.*
+import io.github.eslamasabry.oc.feature.phone.presentation.ProcessKind
 import io.github.eslamasabry.oc.ui.words.res.childLimitBody
 import io.github.eslamasabry.oc.ui.words.res.childLimitHide
 import io.github.eslamasabry.oc.ui.words.res.childLimitOpenAbout
@@ -95,12 +106,16 @@ public fun RunningScreen(state: RunningUi, actions: RunningActions) {
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::back,
+                actions = listOf(KitLineAction(stringResource(Res.string.workRefresh), actions::retry, icon = KitIcons.retry,
+                    enabled = !state.loading && state.stopping == null,
+                    disabledReason = stringResource(Res.string.termuxProcsStopping))),
             )
         },
         width = KitScreenWidth.Reading,
-        loading = state.loading,
+        loading = state.stopping != null,
     ) {
-        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(vertical = Space.S2.dp)) {
+            if (state.loading && state.rows.isEmpty()) KitSkeletonRows()
             if (state.loadFailed) {
                 KitErrorNotice(
                     title = stringResource(Res.string.runningPhoneLoadFailedTitle),
@@ -113,7 +128,7 @@ public fun RunningScreen(state: RunningUi, actions: RunningActions) {
             state.leftover?.let { notice ->
                 KitNotice(
                     message = notice.message.words(),
-                    tone = StatusTone.Attention,
+                    tone = StatusTone.Neutral,
                     actions =
                         listOf(
                             KitLineAction(
@@ -132,7 +147,7 @@ public fun RunningScreen(state: RunningUi, actions: RunningActions) {
                 KitNotice(
                     title = stringResource(Res.string.runningPhoneLimitTitle),
                     message = stringResource(Res.string.runningPhoneLimitBody, count, state.cap),
-                    tone = StatusTone.Attention,
+                    tone = StatusTone.Neutral,
                 )
             }
             state.childLimit?.let { ChildLimitCard(it, actions) }
@@ -148,14 +163,15 @@ public fun RunningScreen(state: RunningUi, actions: RunningActions) {
                 )
             }
             if (!state.loading && !state.loadFailed && state.rows.isEmpty()) {
-                KitNotice(
+                KitInlineState(
                     title = stringResource(Res.string.runningPhoneEmpty),
-                    message = stringResource(Res.string.runningPhoneEmptyBody),
-                    liveRegion = false,
+                    body = stringResource(Res.string.runningPhoneEmptyBody),
+                    icon = KitIcons.processor,
+                    modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
                 )
             }
             if (state.rows.isNotEmpty()) {
-                KitRowGroup(note = stringResource(Res.string.termuxProcsAutoRefresh)) {
+                KitRowGroup(leadingTiles = true, note = stringResource(Res.string.termuxProcsAutoRefresh)) {
                     state.rows.forEach {
                         ProcessRow(it, stopping = state.stopping == it.pid, actions)
                     }
@@ -193,30 +209,43 @@ public fun RunningScreen(state: RunningUi, actions: RunningActions) {
         visible = selected != null,
         title = selected?.name ?: stringResource(Res.string.runningPhoneTitle),
         onDismissRequest = actions::dismiss,
-        primary =
+        subtitle = selected?.kind?.words(),
+        icon = selected?.let { processGlyph(it) },
+        secondary =
             selected
                 ?.takeIf { it.stoppable }
                 ?.let { row ->
                     KitAction(
                         stringResource(Res.string.runningPhoneStopNamed, row.name),
                         { actions.askStop(row.pid) },
+                        icon = KitIcons.stop,
+                        destructive = true,
+                        enabled = KitEnabled.of(state.stopping == null, stringResource(Res.string.termuxProcsStopping)),
                     )
                 },
     ) {
         selected?.let { row ->
-            row.kind.words()?.let { KitText(it) }
-            KitText(stringResource(Res.string.runningDetailPid, row.pid))
+            KitText(stringResource(when {
+                row.leftBehind -> Res.string.runningPhoneAbout__leftBehind
+                row.protectedAs == ProcessRole.App -> Res.string.runningPhoneAbout__app
+                row.kind == ProcessKind.OpenCode -> Res.string.runningPhoneAbout__openCode
+                row.kind == ProcessKind.ClaudeCode -> Res.string.runningPhoneAbout__claudeCode
+                row.kind == ProcessKind.Terminal -> Res.string.runningPhoneAbout__terminal
+                row.kind == ProcessKind.Helper -> Res.string.runningPhoneAbout__helpers
+                else -> Res.string.runningPhoneAbout__other
+            }))
             row.memoryBytes?.let {
                 KitText(
                     stringResource(Res.string.runningDetailMemory, (it / 1048576).coerceAtLeast(1))
                 )
             }
             row.elapsedSeconds?.let {
-                KitText(stringResource(Res.string.runningDetailElapsed, it / 60))
+                KitText(DurationWords.of(it).words(), role = TypeRole.Secondary)
             }
             KitDetailsFold(
                 label = stringResource(Res.string.kitDetails),
                 copyLabel = stringResource(Res.string.kitCopyDetails),
+                notes = listOf(stringResource(Res.string.runningDetailPid, row.pid)),
                 text = row.command,
             )
         }
@@ -269,10 +298,11 @@ private fun ProcessRow(row: ProcessRowUi, stopping: Boolean, actions: RunningAct
     KitRow(
         title = row.name,
         supporting = supporting,
-        supportingMaxLines = 5,
+        leading = KitRowLeading.Glyph(processGlyph(row)),
+        supportingMaxLines = 2, // F: lib/ui/screens/running_on_phone_screen.dart:594
         onClick = { actions.details(row.pid) },
         trailing =
-            if (row.stoppable && !stopping) {
+            if (offersInlineStop(row) && !stopping) {
                 KitRowTrailing.Action(
                     KitLineAction(
                         stringResource(Res.string.runningPhoneStop),
@@ -280,9 +310,24 @@ private fun ProcessRow(row: ProcessRowUi, stopping: Boolean, actions: RunningAct
                     )
                 )
             } else {
-                KitRowTrailing.None
+                KitRowTrailing.Chevron
             },
     )
+}
+
+internal fun offersInlineStop(row: ProcessRowUi): Boolean = row.stoppable && (row.leftBehind || row.heavy || row.orphanReason != null)
+
+private fun processGlyph(row: ProcessRowUi) = when {
+    row.leftBehind || row.orphanReason != null -> KitIcons.warning
+    row.heavy -> KitIcons.speed
+    else -> when (row.kind) {
+        ProcessKind.OpenCode -> KitIcons.server
+        ProcessKind.ClaudeCode -> KitIcons.code
+        ProcessKind.Terminal -> KitIcons.terminal
+        ProcessKind.Helper -> KitIcons.agent
+        ProcessKind.DevService -> KitIcons.network
+        else -> KitIcons.processor
+    }
 }
 
 /**

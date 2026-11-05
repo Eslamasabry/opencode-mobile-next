@@ -12,6 +12,9 @@ import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlinx.collections.immutable.persistentListOf
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+import io.github.eslamasabry.oc.feature.phone.ui.offersInlineStop
 
 class PhoneGateTest {
     @Test fun `an installed-tools row with a leading glyph retains its visible expand action`() = runComposeUiTest {
@@ -22,6 +25,14 @@ class PhoneGateTest {
         } }
         onNodeWithText("Installed").performClick()
         assertEquals(true, expanded)
+    }
+
+    @Test fun `only stoppable work needing attention gets a prominent Stop`() {
+        val row = ProcessRowUi(42, "node", ProcessKind.DevService, 2, false, null)
+        assertFalse(offersInlineStop(row))
+        assertTrue(offersInlineStop(row.copy(heavy = true)))
+        assertTrue(offersInlineStop(row.copy(leftBehind = true)))
+        assertFalse(offersInlineStop(row.copy(heavy = true, protectedAs = ProcessRole.ServerRoot)))
     }
 
     private object PhoneActions : ThisPhoneActions {
