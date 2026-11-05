@@ -206,7 +206,7 @@ public fun VoiceSettingsScreen(state: VoiceSettingsUi, actions: VoiceSettingsPre
             KitText(stringResource(Res.string.e7VoiceUiLanguage), role = TypeRole.Label)
             Spacer(Modifier.height(Space.S2.dp))
             val sourceLanguages =
-                listOf(VoiceLanguage.Auto, VoiceLanguage.English, VoiceLanguage.Arabic)
+                listOf(VoiceLanguage.Detect, VoiceLanguage.English, VoiceLanguage.Arabic)
             val shownLanguages =
                 if (state.language in sourceLanguages) sourceLanguages
                 else sourceLanguages + state.language
@@ -216,7 +216,7 @@ public fun VoiceSettingsScreen(state: VoiceSettingsUi, actions: VoiceSettingsPre
                         KitSegment(
                             language,
                             when (language) {
-                                VoiceLanguage.Auto -> stringResource(Res.string.e7VoiceUiAuto)
+                                VoiceLanguage.Detect -> stringResource(Res.string.e7VoiceUiAuto)
                                 VoiceLanguage.English -> stringResource(Res.string.rb51VoiceEnglish)
                                 VoiceLanguage.Arabic -> stringResource(Res.string.rb51VoiceArabic)
                                 else -> languageName(language)
