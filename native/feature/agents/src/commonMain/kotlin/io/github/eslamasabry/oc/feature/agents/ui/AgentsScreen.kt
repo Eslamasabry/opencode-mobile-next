@@ -298,12 +298,13 @@ public fun AgentsScreen(
                     title = stringResource(Res.string.cardsFromAgentsTitle),
                     supporting = stringResource(Res.string.cardsFromAgentsSupporting),
                     supportingMaxLines = 3,
+                    trailing = KitRowTrailing.Chevron,
                     onClick = hubActions::openCardsSettings,
                 )
             }
 
             var morePhoneOptions by remember { mutableStateOf(false) }
-            KitExpandRow(stringResource(Res.string.editor40More), morePhoneOptions, onExpandedChange = { morePhoneOptions = it }) {
+            if (phoneAvailable) KitExpandRow(stringResource(Res.string.editor40More), morePhoneOptions, onExpandedChange = { morePhoneOptions = it }) {
                 KitButton(stringResource(Res.string.linuxAgentPayloadRefresh), actions::refreshPhone, role = KitButtonRole.Tertiary, enabled = enabled)
                 KitButton(stringResource(Res.string.agentsResetSavedSignIns), actions::requestSignInReset, role = KitButtonRole.Tertiary, enabled = enabled)
             }
@@ -398,16 +399,10 @@ public fun AgentsScreen(
                     )
                     val invalid = state.check as? ComputerCheck.Invalid
                     KitField(
-                        name,
-                        stringResource(Res.string.serversName),
-                        placeholder = stringResource(Res.string.agentsHubDefaultName),
-                        enabled = enabled,
-                    )
-                    KitField(
                         address,
                         stringResource(Res.string.serversAddress),
                         kind = KitFieldKind.Url,
-                        placeholder = stringResource(Res.string.paseoAddressHint),
+                        placeholder = stringResource(if (state.computerKind == AgentComputerKind.Codex) Res.string.codexAddressHint else Res.string.paseoAddressHint),
                         error =
                             if (invalid?.address == true)
                                 stringResource(Res.string.agentsHubInvalidAddress)
@@ -427,13 +422,19 @@ public fun AgentsScreen(
                     )
                     KitField(
                         password,
-                        stringResource(Res.string.paseoPasswordLabel),
+                        stringResource(if (state.computerKind == AgentComputerKind.Codex) Res.string.codexTokenLabel else Res.string.paseoPasswordLabel),
                         kind = KitFieldKind.Secret,
-                        helper = stringResource(Res.string.paseoPasswordHelp),
+                        helper = stringResource(if (state.computerKind == AgentComputerKind.Codex) Res.string.codexTokenStorageHelp else Res.string.paseoPasswordHelp),
                         error =
                             if (invalid?.password == true)
                                 stringResource(Res.string.agentsHubInvalidPassword)
                             else null,
+                        enabled = enabled,
+                    )
+                    KitField(
+                        name,
+                        stringResource(Res.string.connectionDisplayName),
+                        placeholder = stringResource(Res.string.agentsHubDefaultName),
                         enabled = enabled,
                     )
                     (state.check as? ComputerCheck.Ready)?.let { ready ->
@@ -575,6 +576,9 @@ private fun phoneStatusWords(status: PhoneAgentStatus): String =
 @Composable
 private fun PhoneAgentRows(state: AgentsUi, actions: AgentsActions, enabled: KitEnabled) {
     var menuFor by remember { mutableStateOf<String?>(null) }
+    if (state.phone.agents.isEmpty()) {
+        KitText(stringResource(Res.string.agentsChecking), Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp))
+    }
     KitRowGroup(leadingTiles = true) {
         for (agent in state.phone.agents) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
