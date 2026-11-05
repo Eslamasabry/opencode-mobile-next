@@ -7,6 +7,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import io.github.eslamasabry.oc.ui.kit.state.KitInlineState
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.agents.presentation.SignInStep
@@ -85,6 +89,10 @@ public fun SignInTerminalScreen(
     modifier: Modifier = Modifier,
     pageApproval: @Composable () -> Unit = {},
 ) {
+    LaunchedEffect(state.step) {
+        // Only the agent's account check can publish SignedIn. A clean terminal exit alone never does.
+        if (state.step == SignInStep.SignedIn) actions.leave()
+    }
     KitScreen(
         modifier = modifier,
         topBar = {
@@ -100,11 +108,12 @@ public fun SignInTerminalScreen(
         loadingLabel = stringResource(if (state.step == SignInStep.Checking) Res.string.agentsSignInChecking else Res.string.localTerminalStarting),
         header = {
             KitText(stringResource(if (state.usesClaudeAccount) Res.string.agentsSignInTerminalIntro else Res.string.agentsSignInTerminalIntroOther, state.agentName),
-                Modifier.padding(horizontal = Space.S4.dp, vertical = Space.S2.dp), tone = TextTone.Secondary)
+                Modifier.padding(start = LocalKitTokens.current.gutter.dp, top = Space.S1.dp,
+                    end = LocalKitTokens.current.gutter.dp, bottom = Space.S2.dp), tone = TextTone.Secondary)
         },
     ) {
         Column(
-            Modifier.fillMaxSize().padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
+            Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
         ) {
             if (state.stopFailed) {
@@ -114,7 +123,7 @@ public fun SignInTerminalScreen(
                 SignInStep.Preparing,
                 SignInStep.Starting -> Unit
                 SignInStep.Running -> Running(state, actions, Modifier.weight(1f))
-                SignInStep.Checking -> if (state.terminal != null) Running(state, actions, Modifier.weight(1f))
+                SignInStep.Checking -> if (state.terminal != null || state.transcript.isNotEmpty()) Running(state, actions, Modifier.weight(1f))
                 SignInStep.SignedIn ->
                     KitStateView(
                         KitStateKind.Finished,
@@ -126,16 +135,13 @@ public fun SignInTerminalScreen(
                                 actions::leave,
                             ),
                     )
-                SignInStep.NotYet ->
-                    KitStateView(
-                        KitStateKind.Calm,
-                        stringResource(Res.string.agentsSignInTerminalNotYet, state.agentName),
-                        primary =
-                            KitAction(
-                                stringResource(Res.string.agentsSignInStart, state.agentName),
-                                actions::startAgain,
-                            ),
-                    )
+                SignInStep.NotYet -> {
+                    Running(state, actions, Modifier.weight(1f))
+                    KitInlineState(title = stringResource(Res.string.agentsSignInTerminalNotYet, state.agentName),
+                        icon = KitIcons.terminal,
+                        modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S2.dp),
+                        primary = KitAction(stringResource(Res.string.agentsSignInStart, state.agentName), actions::startAgain))
+                }
                 SignInStep.Failed,
                 SignInStep.NotificationsBlocked -> {
                     val title =
@@ -207,25 +213,27 @@ public fun SignInTerminalScreen(
 
 @Composable
 private fun Running(state: SignInTerminalUi, actions: SignInTerminalActions, modifier: Modifier) {
-    KitTerminalView(
-        platformView = state.terminal?.native,
-        title = state.title,
-        transcript = state.transcript,
-        accessibleMode = state.accessibleMode,
-        onAccessibleModeChange = actions::setAccessibleMode,
-        onSend = actions::send,
-        words = terminalWords(),
-        modifier = modifier.fillMaxWidth(),
-        inputEnabled = state.inputEnabled,
-    ) {
-        if (state.canOpenPage || state.code != null) {
+    Column(modifier.fillMaxWidth()) {
+        if (state.step == SignInStep.Running && state.inputEnabled && (state.canOpenPage || state.code != null)) {
             io.github.eslamasabry.oc.ui.kit.action.KitActionBlock(
-                primary = if (state.canOpenPage) KitAction(stringResource(Res.string.agentsSignInOpenPage), actions::openSignInPage) else null,
-                secondary = state.code?.let { KitAction(stringResource(Res.string.agentsSignInCopyCode, it), actions::copyCode) },
+                modifier = Modifier.padding(start = LocalKitTokens.current.gutter.dp, end = LocalKitTokens.current.gutter.dp, bottom = Space.S2.dp),
+                primary = if (state.canOpenPage) KitAction(stringResource(Res.string.agentsSignInOpenPage), actions::openSignInPage, icon = KitIcons.externalLink) else null,
+                secondary = state.code?.let { KitAction(stringResource(Res.string.agentsSignInCopyCode, "\u2066$it\u2069"), actions::copyCode) },
             )
         }
+        KitTerminalView(
+            platformView = state.terminal?.native,
+            title = state.title,
+            transcript = state.transcript,
+            accessibleMode = state.accessibleMode,
+            onAccessibleModeChange = actions::setAccessibleMode,
+            onSend = actions::send,
+            words = terminalWords(),
+            modifier = Modifier.weight(1f).fillMaxWidth(),
+            inputEnabled = state.inputEnabled,
+            defaultKeyBar = state.inputEnabled,
+        )
     }
-    KitButton(stringResource(Res.string.agentsDone), actions::finish, role = KitButtonRole.Tertiary)
 }
 
 // The Flutter terminal's own strings name the readable-mode switch and the input field (plan 06
