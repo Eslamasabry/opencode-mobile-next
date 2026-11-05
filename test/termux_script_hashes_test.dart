@@ -16,7 +16,9 @@ import 'package:opencode_mobile/termux/bridge.dart';
 /// these Termux payloads. The 2026-11-03 manager snapshot reads the server
 /// password on stdin inside Ubuntu (runner and readiness check), so every
 /// script embedding the manager moved with it. Unrelated script hashes retain
-/// the original snapshot.
+/// the original snapshot. The 2026-11-05 snapshot adds the crashed-download
+/// fallback (issue #117) to the setup prelude, which the six aiteamVerbScript
+/// payloads embed.
 /// Refresh only after reviewing intentional changes, including shared helpers;
 /// byte drift otherwise fails here, even when the bridge itself is unchanged.
 Map<String, String> _scripts() => {
