@@ -43,8 +43,8 @@ import org.jetbrains.compose.resources.stringResource
 public fun ManagedMoveScreen(state: ManagedMoveUi, actions: ManagedMoveActions) {
     KitScreen(width = KitScreenWidth.Reading, page = true) {
         BoxWithConstraints(Modifier.fillMaxSize()) {
-        val available = maxHeight
-        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).heightIn(min = available)
+            val available = maxHeight
+            Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).heightIn(min = available)
             .padding(horizontal = LocalKitTokens.current.gutter.dp).testTag("managed-opencode2-upgrade"),
             verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
             val failed = state.failure
@@ -96,7 +96,7 @@ public fun ManagedMoveScreen(state: ManagedMoveUi, actions: ManagedMoveActions) 
                     text = failed.failure?.details,
                 )
             }
+            }
         }
     }
-}
 }
