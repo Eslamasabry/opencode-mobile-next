@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.settings.rb.o44
 
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.test.*
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -78,6 +79,21 @@ class SettingsHubGateTest {
                     )
             }
             onNodeWithText("Appearance").performClick()
+            assertEquals(listOf(SettingsRowId.Appearance), targets)
+        }
+
+    @Test
+    fun `B-NAV-072 keyboard submit searches the current text before debounced results arrive`() =
+        runComposeUiTest {
+            val targets = mutableListOf<SettingsRowId>()
+            val actions =
+                object : SettingsActions by RecordingActions() {
+                    override fun onTarget(row: SettingsRowId) {
+                        targets += row
+                    }
+                }
+            setContent { SettingsThemed { SettingsScreen(hub(), actions) } }
+            onNode(hasSetTextAction()).performTextInput("Appearance").performImeAction()
             assertEquals(listOf(SettingsRowId.Appearance), targets)
         }
 }

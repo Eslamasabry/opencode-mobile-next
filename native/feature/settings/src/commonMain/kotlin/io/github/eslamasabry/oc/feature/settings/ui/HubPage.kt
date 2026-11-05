@@ -24,6 +24,7 @@ import io.github.eslamasabry.oc.feature.settings.presentation.SettingsGroupId
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsRowId
+import io.github.eslamasabry.oc.feature.settings.presentation.SettingsSearch
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsSearchEntry
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsUi
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -82,7 +83,9 @@ internal fun HubPage(
             KitSearchField(
                 label = stringResource(Res.string.settingsHubSearch),
                 onSearch = actions::onQuery,
-                onSubmit = { hub.results.firstOrNull()?.let(actions::onTarget) },
+                onSubmit = { text ->
+                    SettingsSearch.find(text, entries).firstOrNull()?.let(actions::onTarget)
+                },
                 resultCount = hub.results.size.takeIf { hub.query.isNotBlank() && it > 0 },
                 prominent = true,
                 state = field,
