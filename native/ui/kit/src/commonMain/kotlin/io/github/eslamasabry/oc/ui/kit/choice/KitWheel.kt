@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.ui.kit.choice
 
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.border
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.animateScrollBy
@@ -28,7 +27,6 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
-import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
 import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
@@ -40,6 +38,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFocusRingWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
+import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.*
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -133,6 +132,7 @@ private fun WheelColumn(
     val current by rememberUpdatedState(column)
     val scope = rememberCoroutineScope()
     val motion = LocalKitMotion.current
+    val motionSpecs = KitMotion.specs
     val density = LocalDensity.current
     val haptic = rememberKitHaptics()
     var focused by remember { mutableStateOf(false) }
@@ -158,7 +158,7 @@ private fun WheelColumn(
                     val extentPx = with(density) { extentDp.dp.toPx() }
                     val offset =
                         list.firstVisibleItemIndex * extentPx + list.firstVisibleItemScrollOffset
-                    list.animateScrollBy(target * extentPx - offset, tween(MotionTokens.QUICK))
+                    list.animateScrollBy(target * extentPx - offset, motionSpecs.quick())
                 }
                 if (enabledNow && target != current.selectedIndex) {
                     haptic(KitHaptic.Select)
