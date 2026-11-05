@@ -34,6 +34,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitPageOverlay
 import io.github.eslamasabry.oc.ui.kit.frame.*
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
@@ -213,6 +214,7 @@ private fun SourceChoices(state: ChatsUi, actions: ChatsActions) {
         state.home.sources.forEach { source ->
             KitSwitchRow(
                 title = source.name,
+                leading = KitRowLeading.Glyph(if (source.onThisPhone) KitIcons.phone else KitIcons.server),
                 checked = source.shown,
                 locked = source.main,
                 supporting =

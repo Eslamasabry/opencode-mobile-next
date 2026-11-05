@@ -13,6 +13,13 @@ import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
 class FeedPartsTest {
+    @Test fun aSourceSwitchWithLeadingGlyphKeepsItsSwitchBehavior() = runComposeUiTest {
+        var checked = false
+        setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en") { KitSwitchRow("Laptop", false, leading = KitRowLeading.Glyph(io.github.eslamasabry.oc.ui.kit.icon.KitIcons.server), onCheckedChange = { checked = it }) } }
+        onNodeWithText("Laptop").performClick()
+        assertTrue(checked)
+    }
+
     @Test fun feedRowIsOneAccessibleTargetWithAllItsContext() = runComposeUiTest {
         var opened = 0
         setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en") { KitFeedItem("Fix login", "alpha", "2 min ago", KitRowState("Needs you", KitRowStateTone.NeedsYou), { opened++ }) } }
