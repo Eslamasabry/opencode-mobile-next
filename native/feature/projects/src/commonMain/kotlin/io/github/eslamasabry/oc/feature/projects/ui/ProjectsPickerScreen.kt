@@ -2,12 +2,15 @@ package io.github.eslamasabry.oc.feature.projects.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FolderProblem
@@ -32,15 +35,17 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
-import io.github.eslamasabry.oc.ui.kit.modal.KitInputDialog
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
@@ -216,27 +221,71 @@ public fun ProjectsPickerScreen(state: ProjectsPickerUi, actions: ProjectsPicker
 /** Inside the KitScreen body, so the dialog finds the screen's KitSheetHost. */
 @Composable
 private fun PathDialog(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
-    val notAbsolute = stringResource(Res.string.p12PathNotAbsolute)
-    val badParts = stringResource(Res.string.p12PathBadParts)
-    val home = stringResource(Res.string.folderBrowserHomeHere)
-    KitInputDialog(
-        visible = state.askingPath,
-        title = stringResource(Res.string.projectFolderOpen),
-        fieldLabel = stringResource(Res.string.projectFolderPathLabel),
-        confirmLabel = stringResource(Res.string.projectFolderOpenAction),
-        initial = state.pathStart,
-        kind = KitFieldKind.Path,
-        validate = { typed ->
-            when (ProjectRules.pathProblem(typed)) {
-                PathProblem.NotAbsolute -> notAbsolute
-                PathProblem.BadParts -> badParts
-                PathProblem.HomeOrRoot -> home
-                null -> null
+    if (!state.askingPath) return
+    val path = rememberTextFieldState(state.pathStart)
+    var submitted by remember { mutableStateOf(false) }
+    val typed = path.text.toString().trim()
+    val problem =
+        when (ProjectRules.pathProblem(typed)) {
+            PathProblem.NotAbsolute -> stringResource(Res.string.p12PathNotAbsolute)
+            PathProblem.BadParts -> stringResource(Res.string.p12PathBadParts)
+            PathProblem.HomeOrRoot -> stringResource(Res.string.folderBrowserHomeHere)
+            null -> null
+        }
+    fun submit() {
+        submitted = true
+        if (problem == null) actions.finishPath(typed)
+    }
+    val recent = state.openedBefore.distinctBy { it.directory }
+    val projects =
+        state.projects
+            .filter { project ->
+                recent.none { it.directory == project.directory } &&
+                    ProjectRules.pathProblem(project.directory) == null
             }
-        },
-        operationKey = "open-folder",
-        onResult = actions::finishPath,
-    )
+            .distinctBy { it.directory }
+            .sortedBy { it.directory }
+    KitSheet(
+        visible = true,
+        title = stringResource(Res.string.projectFolderOpen),
+        onDismissRequest = { actions.finishPath(null) },
+        primary =
+            KitAction(
+                stringResource(Res.string.projectFolderOpenAction),
+                ::submit,
+                icon = KitIcons.folderOpen,
+            ),
+    ) {
+        if (recent.isNotEmpty() || projects.isNotEmpty()) {
+            KitSectionLabel(stringResource(Res.string.folderBrowserFoldersLabel))
+            KitRowGroup(leadingTiles = true) {
+                for ((folder, icon) in
+                    recent.map { it to KitIcons.history } +
+                        projects.map { it to KitIcons.projects }) {
+                    KitRow(
+                        folder.name,
+                        supporting = folder.directory,
+                        leading = KitRowLeading.Glyph(icon),
+                        trailing = KitRowTrailing.Chevron,
+                        modifier = Modifier.testTag("remote-folder-${folder.directory}"),
+                        onClick = { actions.finishPath(folder.directory) },
+                    )
+                }
+            }
+            Spacer(Modifier.height(Space.S4.dp))
+        }
+        KitField(
+            path,
+            stringResource(Res.string.projectFolderPathLabel),
+            kind = KitFieldKind.Path,
+            placeholder = stringResource(Res.string.projectFolderPathHint, "/root/projects"),
+            helper = stringResource(Res.string.projectFolderOpenMessage),
+            error = if (submitted) problem else null,
+            modifier = Modifier.testTag("open-folder-path"),
+            onTextChanged = { submitted = false },
+            onSubmit = ::submit,
+        )
+    }
 }
 
 @Composable
