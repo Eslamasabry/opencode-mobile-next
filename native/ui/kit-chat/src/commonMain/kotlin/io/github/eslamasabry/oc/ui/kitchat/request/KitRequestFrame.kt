@@ -3,7 +3,10 @@ package io.github.eslamasabry.oc.ui.kitchat.request
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Column
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -18,7 +21,13 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
+import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.state.KitNeedsYou
 import io.github.eslamasabry.oc.ui.kit.state.KitNeedsYouReason
 import io.github.eslamasabry.oc.ui.kit.style.KitSignalNeedsYou
@@ -77,5 +86,29 @@ public fun KitRequestWaitingCaption(waiting: String?, modifier: Modifier = Modif
         KitSignalNeedsYou(if (age == null) label else "$label · $age", modifier = modifier)
     } else {
         KitNeedsYou(KitNeedsYouReason.Decision, modifier = modifier, waiting = waiting)
+    }
+}
+
+/**
+ * The collapsed answered row (kit_request_card.dart `_collapsed`): no card, border or attention colour. The request's glyph
+ * at the start, the ask in small secondary words, and the [outcome] (the receipt, then any Undo) under it.
+ */
+@Composable
+public fun KitRequestAnsweredRow(
+    icon: ImageVector,
+    title: String,
+    modifier: Modifier = Modifier,
+    outcome: @Composable () -> Unit,
+) {
+    Row(
+        modifier.fillMaxWidth().padding(vertical = Space.S2.dp),
+        horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        KitIcon(icon, size = KitIconSize.Large, tone = TextTone.Tertiary)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+            KitText(title, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Reading)
+            outcome()
+        }
     }
 }
