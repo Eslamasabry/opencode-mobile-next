@@ -139,6 +139,16 @@ public class AndroidKitPlatform(
         SideEffect { applySystemBars(hostWindow, darkContent, ground.toArgb()) }
     }
 
+    override fun dateTime(atMs: Long, localeTag: String): String {
+        val locale = java.util.Locale.forLanguageTag(localeTag)
+        // Match intl's two explicit skeletons; the time follows the app locale, not an OS clock
+        // override.
+        val date = android.text.format.DateFormat.getBestDateTimePattern(locale, "yMMMd")
+        val time = android.text.format.DateFormat.getBestDateTimePattern(locale, "jm")
+        val pattern = java.text.SimpleDateFormat(date + " " + time, locale)
+        return pattern.format(java.util.Date(atMs))
+    }
+
     override fun messageTime(createdMs: Long, nowMs: Long): String {
         val created = java.util.Date(createdMs)
         val a = java.util.Calendar.getInstance().apply { timeInMillis = createdMs }

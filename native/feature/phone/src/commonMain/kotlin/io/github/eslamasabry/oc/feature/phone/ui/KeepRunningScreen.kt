@@ -5,6 +5,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import io.github.eslamasabry.oc.feature.phone.presentation.KeepAliveStepKind
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import io.github.eslamasabry.oc.feature.phone.presentation.KeepRunningActions
@@ -22,7 +25,6 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
-import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.words.res.fullSpeedSetting
 import io.github.eslamasabry.oc.ui.words.res.usageSaveFailed
@@ -81,17 +83,22 @@ public fun KeepRunningScreen(state: KeepRunningUi, actions: KeepRunningActions) 
             if (state.swipeWarning) {
                 KitNotice(
                     message = stringResource(Res.string.keepRunningSwipeWarning),
-                    tone = StatusTone.Attention,
                     liveRegion = false,
                 )
             }
             KitGroupNote(stringResource(Res.string.keepRunningIntro))
-            KitRowGroup(label = stringResource(Res.string.keepRunningTitle)) {
+            KitRowGroup(label = stringResource(Res.string.keepRunningTitle), leadingTiles = true) {
                 state.steps.forEach { step ->
                     val (title, detail) = step.kind.words(state.maker, step.done)
-                    val opens = step.opens != null
+                    val opens = step.opens != null && !step.done
                     KitRow(
                         title = title,
+                        leading = KitRowLeading.Glyph(if (step.done) KitIcons.check else when (step.kind) {
+                            KeepAliveStepKind.Battery -> KitIcons.batteryWarning
+                            KeepAliveStepKind.LockInRecents -> KitIcons.locked
+                            KeepAliveStepKind.Autostart -> KitIcons.launch
+                            KeepAliveStepKind.Background -> KitIcons.sync
+                        }),
                         supporting = detail,
                         supportingMaxLines = 4,
                         trailing =
@@ -102,12 +109,13 @@ public fun KeepRunningScreen(state: KeepRunningUi, actions: KeepRunningActions) 
                     )
                 }
             }
+            if (state.openFailed) KitNotice(message = stringResource(Res.string.keepRunningOpenFailed))
             if (state.thermalSupported && actions is ThermalKeepRunningActions) {
                 KitSwitchRow(
                     title = stringResource(Res.string.thermalGuardSetting),
                     supporting = stringResource(Res.string.thermalGuardSettingDetail),
                     checked = state.thermalEnabled,
-                    locked = state.thermalSaving,
+                    enabled = KitEnabled.of(!state.thermalSaving, stringResource(Res.string.thermalGuardSetting)),
                     onCheckedChange = actions::setThermalEnabled,
                 )
                 if (state.thermalFailed)
@@ -123,7 +131,6 @@ public fun KeepRunningScreen(state: KeepRunningUi, actions: KeepRunningActions) 
                 )
             }
             if (state.speedSaveFailed) KitNotice(message = stringResource(Res.string.usageSaveFailed))
-            if (state.openFailed) KitNotice(message = stringResource(Res.string.keepRunningOpenFailed))
             if (state.dailyLimit) KitGroupNote(stringResource(Res.string.keepRunningDailyLimit))
             KitGroupNote(stringResource(Res.string.keepRunningFootnote))
         }

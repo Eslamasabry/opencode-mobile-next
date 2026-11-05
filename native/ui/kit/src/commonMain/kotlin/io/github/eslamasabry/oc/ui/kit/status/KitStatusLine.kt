@@ -94,7 +94,16 @@ public fun KitStatusLine(status: KitStatus, modifier: Modifier = Modifier) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
-            KitStatusGlyph(status.tone.glyph, glyphColor(status.tone, colors))
+            if (status.icon == null) KitStatusGlyph(status.tone.glyph, glyphColor(status.tone, colors))
+            else io.github.eslamasabry.oc.ui.kit.icon.KitIcon(
+                status.icon, size = io.github.eslamasabry.oc.ui.kit.icon.KitIconSize.Small,
+                tone = when (status.tone) {
+                    StatusTone.Neutral -> TextTone.Secondary
+                    StatusTone.Progress -> TextTone.Accent
+                    StatusTone.Ok -> TextTone.Success
+                    StatusTone.Attention, StatusTone.Failure -> TextTone.Primary
+                }, growsWithText = true,
+            )
             Column(
                 Modifier.weight(1f).semantics(mergeDescendants = true) {
                     liveRegion = LiveRegionMode.Polite

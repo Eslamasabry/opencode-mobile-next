@@ -184,7 +184,7 @@ public fun KitButton(
     val pressed by interactions.collectIsPressedAsState()
     val reduced = KitMotion.state.reduced
     val press by animateFloatAsState(if (pressed && on && !reduced) 1f else 0f, specs.spatial(), label = "kit-button-press")
-    val rest = (Shapes.of(KitShapeId.Button) as? Corner.Radius)?.dp ?: PRESS_ROUND_DP
+    val rest = if (hero) minHeight / 2 else (Shapes.of(KitShapeId.Button) as? Corner.Radius)?.dp ?: PRESS_ROUND_DP // NV: a stadium's radius is half its height
     Row(
         modifier =
             modifier

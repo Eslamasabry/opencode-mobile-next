@@ -6,19 +6,30 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+import io.github.eslamasabry.oc.ui.kit.setup.KitServersLink
+import io.github.eslamasabry.oc.ui.kit.setup.KitServersLinkState
+import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.security.AddressRules
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.model.BackendKind
+import io.github.eslamasabry.oc.core.model.ServerOrigin
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingText
 import io.github.eslamasabry.oc.feature.servers.pairing.pairingProblemText
 import io.github.eslamasabry.oc.feature.servers.presentation.*
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.action.KitPasteButton
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.*
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.*
 import io.github.eslamasabry.oc.ui.kit.input.*
 import io.github.eslamasabry.oc.ui.kit.modal.*
@@ -43,7 +54,6 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
     val username = rememberTextFieldState(restored?.username ?: "opencode")
     val directory = rememberTextFieldState(restored?.directory.orEmpty())
     val password = remember { TextFieldState() }
-    val pairing = remember { TextFieldState() }
     var backend by remember { mutableStateOf(restored?.backend ?: BackendKind.OpenCode2) }
     var tailscale by remember { mutableStateOf(restored?.tailscale ?: false) }
     var keepSecret by remember { mutableStateOf(restored?.keepSecret ?: false) }
@@ -56,9 +66,15 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
     var pin by remember { mutableStateOf(restored?.certificatePin) }
     var pinOrigin by remember { mutableStateOf(restored?.certificateOrigin) }
     var loaded by remember { mutableStateOf(restored != null) }
-    var trustQuestion by remember { mutableStateOf(false) }
+    var trustOrigin by remember { mutableStateOf<ServerOrigin?>(null) }
     var commandsOpen by remember { mutableStateOf(false) }
     var moreOpen by remember { mutableStateOf(false) }
+    var tailscaleOpened by remember { mutableStateOf(false) }
+    var tailscaleReturned by remember { mutableStateOf(false) }
+    var manualOpen by remember { mutableStateOf(!state.newServer || restored?.address?.isNotBlank() == true) }
+    LaunchedEffect(state.failure, state.record?.needsSecret, state.fillGeneration) {
+        if (state.failure != null || state.record?.needsSecret == true || state.fillGeneration > 0) manualOpen = true
+    }
     var clip by remember { mutableStateOf<String?>(null) }
     var clipId by remember { mutableLongStateOf(0L) }
     KitClipboardEffect(if (clip == null) null else clipId, clip) { clip = null }
@@ -162,15 +178,6 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                     password.fill(text.substring("server password".length).trim())
             }
     }
-    LaunchedEffect(pairing) {
-        snapshotFlow { pairing.text.toString() }
-            .collect { text ->
-                if (text.isNotBlank()) {
-                    pairing.fill("")
-                    actions.paste(text)
-                }
-            }
-    }
     LaunchedEffect(state.step, loaded) {
         snapshotFlow {
                 listOf(
@@ -211,8 +218,14 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
             actions.step(ServerEditorStep.Connect)
         else actions.back(dirty)
     }
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+    LaunchedEffect(state.step) {
         if (state.step == ServerEditorStep.Tailscale) actions.refreshTailscale()
+    }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        if (state.step == ServerEditorStep.Tailscale) {
+            actions.refreshTailscale()
+            if (tailscaleOpened) tailscaleReturned = true
+        }
     }
     KitBackGuard(enabled = true, onBack = { leave() })
     val enabled =
@@ -228,69 +241,103 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                 body = stringResource(Res.string.editor40DiscardBody),
             )
         else null
-    KitConfirm(discard, actions::discard, actions::keepEditing)
-    val trustSpec =
-        if (trustQuestion)
-            KitConfirmSpec(
-                stringResource(Res.string.editor40HttpTitle),
-                stringResource(Res.string.editor40UseAddress),
-                body = stringResource(Res.string.editor40HttpBody),
-                consequences = listOf(address.text.toString()),
-            )
-        else null
-    KitConfirm(
-        trustSpec,
-        {
-            confirmedOrigin = address.text.toString()
-            trustQuestion = false
-            actions.changed()
-        },
-        { trustQuestion = false },
-    )
     val certificate = state.certificate
-    val certSpec = certificate?.let {
-        KitConfirmSpec(
-            stringResource(Res.string.editor40CertificateTitle),
-            stringResource(Res.string.editor40TrustCertificate),
-            body = stringResource(Res.string.editor40CertificateBody),
-            consequences =
-                listOf(
-                    it.origin,
-                    it.fingerprint,
-                    stringResource(
-                        Res.string.editor40CertificateDates,
-                        it.validFrom,
-                        it.validUntil,
-                    ),
-                ),
-        )
-    }
-    KitConfirm(
-        certSpec,
-        {
-            if (certificate != null) {
-                pin = certificate.fingerprint
-                pinOrigin = certificate.origin
-                actions.changed()
-            }
-            actions.dismissCertificate()
-        },
-        actions::dismissCertificate,
-    )
     KitScreen(
         topBar = {
             KitTopBar(
                 title =
                     stringResource(
-                        if (state.newServer) Res.string.serversAdd else Res.string.editor40Edit
+                        if (!state.newServer) Res.string.editor40Edit
+                        else if (state.step == ServerEditorStep.Connect) when (backend) {
+                            BackendKind.OpenCode2 -> Res.string.firstRunAgentOpenCode
+                            BackendKind.Codex -> Res.string.firstRunAgentCodex
+                            BackendKind.Paseo -> Res.string.firstRunPaseoTitle
+                        } else Res.string.serversAdd
                     ),
-                exit = KitTopBarExit.Close,
+                exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = { leave() },
             )
         },
         width = KitScreenWidth.Reading,
+        loading = state.loading || state.checking || state.saving,
+        bottom = if (state.step == ServerEditorStep.Tailscale) ({
+            KitButton(stringResource(Res.string.editor40EnterAddress), { actions.step(ServerEditorStep.Connect) }, fullWidth = true)
+        }) else if (state.step != ServerEditorStep.Connect && state.step != ServerEditorStep.Ready) null else ({
+            KitButton(
+                stringResource(if (state.step == ServerEditorStep.Ready) Res.string.editor40Open
+                    else if (state.connectOnSave) Res.string.editor40SaveConnect else Res.string.editor40SaveChanges),
+                { if (state.step == ServerEditorStep.Ready) actions.openReady() else actions.save(input()) },
+                enabled = enabled, working = state.saving, fullWidth = true,
+            )
+        }),
     ) {
+        KitConfirm(discard, actions::discard, actions::keepEditing)
+        KitSheet(
+            visible = trustOrigin != null,
+            onDismissRequest = { trustOrigin = null },
+            title = stringResource(Res.string.serverTrustHttpTitle),
+            icon = KitIcons.warning,
+            primary =
+                KitAction(
+                    stringResource(Res.string.serverTrustHttpAccept),
+                    {
+                        val reviewed = trustOrigin
+                        // F: lib/ui/screens/servers/profile_editor_trust.dart:20-24
+                        if (reviewed != null && reviewed == editorOrigin(address.text.toString())) {
+                            confirmedOrigin = reviewed.toString()
+                            actions.changed()
+                        }
+                        trustOrigin = null
+                    },
+                    enabled = enabled,
+                ),
+        ) {
+            trustOrigin?.let {
+                KitServerTrustBody(it.toString(), httpWarning(it), inset = false)
+            }
+        }
+        KitSheet(
+            visible = certificate != null,
+            onDismissRequest = actions::dismissCertificate,
+            title = stringResource(Res.string.serverTrustCertificateTitle),
+            icon = KitIcons.warning,
+            primary =
+                KitAction(
+                    stringResource(Res.string.serverTrustCertificateAccept),
+                    {
+                        if (certificate != null) {
+                            if (
+                                editorOrigin(certificate.origin) ==
+                                    editorOrigin(address.text.toString()) &&
+                                    editorOrigin(certificate.origin) != null
+                            ) {
+                                pin = certificate.fingerprint
+                                pinOrigin = certificate.origin
+                                actions.changed()
+                            }
+                        }
+                        actions.dismissCertificate()
+                    },
+                    enabled = enabled,
+                ),
+        ) {
+            certificate?.let {
+                KitServerTrustBody(
+                    it.origin,
+                    stringResource(Res.string.serverTrustCertificateBody),
+                    fingerprint = it.fingerprint,
+                    fingerprintLabel = stringResource(Res.string.serverTrustFingerprint),
+                    validity =
+                        stringResource(
+                            Res.string.serverTrustCertificateValidity,
+                            it.validFrom,
+                            it.validUntil,
+                        ),
+                    inset = false,
+                )
+            }
+        }
         Column(
             Modifier.fillMaxSize()
                 .imePadding()
@@ -298,12 +345,43 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                 .padding(LocalKitTokens.current.gutter.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
-            if (state.loading) KitNotice(stringResource(Res.string.editor40Loading))
+            if (state.newServer) {
+                val total = if (tailscale) 5 else 4 // F: lib/ui/screens/servers/profile_editor_steps.dart:26
+                val connect = if (tailscale) 3 else 2 // F: lib/ui/screens/servers/profile_editor_steps.dart:27
+                val step = when (state.step) {
+                    ServerEditorStep.Kind -> 1
+                    ServerEditorStep.Tailscale -> 2 // F: lib/ui/screens/servers/profile_editor_steps.dart:31
+                    ServerEditorStep.Connect -> if (state.checking || state.saving) connect + 1 else connect
+                    ServerEditorStep.Ready -> total
+                }
+                val label = stringResource(when {
+                    state.step == ServerEditorStep.Kind -> Res.string.addServerStepKind
+                    state.step == ServerEditorStep.Tailscale -> Res.string.addServerStepTailscale
+                    state.step == ServerEditorStep.Ready -> Res.string.addServerStepReady
+                    state.checking || state.saving -> Res.string.addServerStepCheck
+                    backend != BackendKind.OpenCode2 -> Res.string.addServerStepAddress
+                    else -> Res.string.addServerStepPair
+                })
+                KitProgressView(KitProgress.Staged(step, total, label,
+                    stepValue = if (state.step == ServerEditorStep.Ready) 1f else null),
+                    semanticsLabel = stringResource(Res.string.addServerStepsLabel))
+            }
             when (state.step) {
                 ServerEditorStep.Kind -> {
-                    KitText(stringResource(Res.string.editor40Kind))
-                    for (kind in BackendKind.entries) KitRow(
+                    KitText(stringResource(Res.string.firstRunAgentsSideBySide), role = TypeRole.Secondary)
+                    for (kind in listOf(BackendKind.OpenCode2, BackendKind.Codex, BackendKind.Paseo)) KitRow(
                         title = backendName(kind),
+                        leading = KitRowLeading.Glyph(when (kind) {
+                            BackendKind.OpenCode2 -> KitIcons.computer
+                            BackendKind.Codex -> KitIcons.code
+                            BackendKind.Paseo -> KitIcons.agent
+                        }),
+                        supporting = stringResource(when (kind) {
+                            BackendKind.OpenCode2 -> Res.string.addServerTypeOpenCodeDetail
+                            BackendKind.Codex -> Res.string.addServerTypeCodexDetail
+                            BackendKind.Paseo -> Res.string.addServerTypePaseoDetail
+                        }),
+                        supportingMaxLines = 2, // F: lib/ui/screens/servers/profile_editor_steps.dart:372
                         trailing = KitRowTrailing.Chevron,
                         onClick = {
                             backend = kind
@@ -311,9 +389,14 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                             actions.step(ServerEditorStep.Connect)
                         },
                     )
+                    Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
+                    KitRowGroup(label = stringResource(Res.string.serversAddOtherWays)) {
                     if (state.canTailscale)
                         KitRow(
                             title = stringResource(Res.string.tailscaleTitle),
+                            leading = KitRowLeading.Glyph(KitIcons.secureNetwork),
+                            supporting = stringResource(Res.string.onboardingPrivateNetwork),
+                            supportingMaxLines = 2, // F: lib/ui/screens/servers/profile_editor_steps.dart:372
                             trailing = KitRowTrailing.Chevron,
                             onClick = {
                                 backend = BackendKind.OpenCode2
@@ -324,66 +407,63 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                     if (state.canPhone)
                         KitRow(
                             title = stringResource(Res.string.settingsV3ThisPhone),
+                            leading = KitRowLeading.Glyph(KitIcons.phone),
                             trailing = KitRowTrailing.Chevron,
                             onClick = actions::phone,
                         )
                     KitRow(
-                        title = stringResource(Res.string.agentsSectionTitle),
+                        title = stringResource(Res.string.a2aTitle),
+                        leading = KitRowLeading.Glyph(KitIcons.network),
                         trailing = KitRowTrailing.Chevron,
                         onClick = actions::agents,
                     )
+                    }
                 }
                 ServerEditorStep.Tailscale -> {
-                    KitText(stringResource(Res.string.editor40TailscaleBody))
-                    KitNotice(
-                        stringResource(
-                            when (state.tailscaleApp) {
-                                EditorTailscaleState.Installed ->
-                                    Res.string.editor40TailscaleInstalled
-                                EditorTailscaleState.Missing -> Res.string.editor40TailscaleMissing
-                                else -> Res.string.editor40TailscaleUnknown
-                            }
-                        )
+                    KitText(stringResource(Res.string.tailscaleIntro), tone = io.github.eslamasabry.oc.ui.design.type.TextTone.Secondary)
+                    TailscalePhoneContent(
+                        appState = when (state.tailscaleApp) {
+                            null -> KitStepState.Working
+                            EditorTailscaleState.Installed -> KitStepState.Done
+                            EditorTailscaleState.Missing -> KitStepState.Waiting
+                            EditorTailscaleState.Unavailable -> KitStepState.Failed
+                        },
+                        appSupporting = stringResource(when (state.tailscaleApp) {
+                            null -> Res.string.tailscaleChecking
+                            EditorTailscaleState.Installed -> Res.string.tailscaleInstalled
+                            EditorTailscaleState.Missing -> Res.string.tailscaleMissing
+                            EditorTailscaleState.Unavailable -> Res.string.tailscaleUnknown
+                        }),
+                        canCheck = true, onCheck = actions::refreshTailscale,
+                        canOpen = state.tailscaleApp == EditorTailscaleState.Installed,
+                        onOpen = {
+                            actions.keepDraft(input())
+                            actions.changed()
+                            tailscaleOpened = true
+                            actions.openTailscale()
+                        },
+                        openFailed = tailscaleOpened && state.failure != null,
+                        getApp = if (state.tailscaleApp == EditorTailscaleState.Missing) actions::installTailscale else null,
                     )
-                    if (state.tailscaleApp == EditorTailscaleState.Installed)
-                        KitButton(
-                            stringResource(Res.string.editor40TailscaleOpen),
-                            {
-                                actions.keepDraft(input())
-                                actions.openTailscale()
-                            },
-                            role = KitButtonRole.Secondary,
-                        )
-                    if (state.tailscaleApp == EditorTailscaleState.Missing)
-                        KitButton(
-                            stringResource(Res.string.editor40TailscaleInstall),
-                            actions::installTailscale,
-                            role = KitButtonRole.Secondary,
-                        )
-                    KitButton(
-                        stringResource(Res.string.editor40TailscaleRefresh),
-                        actions::refreshTailscale,
-                        role = KitButtonRole.Tertiary,
-                    )
+                    if (tailscaleReturned) KitNotice(stringResource(Res.string.tailscaleReturned), icon = KitIcons.info)
                     state.failure?.let { KitErrorNotice(editorFailureWords(it), failure = it) }
-                    KitButton(
-                        stringResource(Res.string.editor40EnterAddress),
-                        { actions.step(ServerEditorStep.Connect) },
-                    )
+                    TailscaleHelpContent()
                 }
                 ServerEditorStep.Ready -> {
-                    KitNotice(stringResource(Res.string.editor40Ready))
+                    EditorLinkMoment(KitServersLinkState.Linked, state, address.text.toString())
+                    KitText(stringResource(Res.string.addServerReadyTitle, state.record?.name ?: name.text.toString()), role = TypeRole.Headline)
+                    KitText(stringResource(Res.string.addServerReadyBody), tone = io.github.eslamasabry.oc.ui.design.type.TextTone.Secondary)
                     state.failure?.let { KitErrorNotice(editorFailureWords(it), failure = it) }
-                    KitButton(
-                        stringResource(Res.string.editor40Open),
-                        actions::openReady,
-                        enabled = enabled,
-                        working = state.saving,
-                    )
+
                 }
                 ServerEditorStep.Connect -> {
-                    KitText(backendName(backend))
                     if (state.newServer) {
+                        EditorLinkMoment(when {
+                            state.checking || state.saving -> KitServersLinkState.Linking
+                            state.failure != null -> KitServersLinkState.Failed
+                            state.checked != null -> KitServersLinkState.Linked
+                            else -> KitServersLinkState.Idle
+                        }, state, address.text.toString())
                         EditorCommand(
                             SetupCommands.startFor(backend),
                             copyLabel,
@@ -415,170 +495,199 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                         }
                     }
                     if (backend == BackendKind.OpenCode2 && !tailscale) {
-                        if (state.canScan)
-                            KitButton(
+                        KitText(stringResource(if (state.canScan) Res.string.firstRunPairingNextScan else Res.string.firstRunPairingNextPaste),
+                            role = TypeRole.Secondary, tone = io.github.eslamasabry.oc.ui.design.type.TextTone.Secondary)
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+                            if (state.canScan) KitButton(
                                 stringResource(Res.string.addServerScan),
-                                {
-                                    actions.keepDraft(input())
-                                    actions.scan()
-                                },
-                                role = KitButtonRole.Secondary,
-                                enabled = enabled,
+                                { actions.keepDraft(input()); actions.scan() },
+                                modifier = Modifier.weight(1f), role = KitButtonRole.Secondary,
+                                icon = KitIcons.qrCode, enabled = enabled, fullWidth = true,
                             )
-                        KitField(
-                            pairing,
-                            stringResource(Res.string.previewQrPairingCodeLabel),
-                            kind = KitFieldKind.Secret,
-                            enabled = enabled,
-                        )
-                    }
-                    state.pairingProblem?.let { KitErrorNotice(pairingProblemText(it)) }
-                    KitField(
-                        address,
-                        stringResource(Res.string.serversAddress),
-                        kind = KitFieldKind.Url,
-                        enabled = enabled,
-                    )
-                    if (backend != BackendKind.OpenCode2)
-                        KitField(
-                            directory,
-                            stringResource(Res.string.editor40Folder),
-                            kind = KitFieldKind.Path,
-                            enabled = enabled,
-                        )
-                    if (tailscale) {
-                        KitText(stringResource(Res.string.editor40TailscaleBody))
-                        if (state.canTailscale)
-                            KitButton(
-                                stringResource(Res.string.tailscaleTitle),
-                                {
-                                    actions.keepDraft(input())
-                                    actions.step(ServerEditorStep.Tailscale)
-                                },
-                                role = KitButtonRole.Tertiary,
-                                enabled = enabled,
-                            )
-                    }
-                    if (state.record?.needsSecret == true)
-                        KitNotice(stringResource(Res.string.rows40Secret))
-                    if (backend == BackendKind.OpenCode2) {
-                        KitSwitchRow(
-                            stringResource(Res.string.serversCleartext),
-                            checked = confirmedOrigin != null,
-                            supporting = stringResource(Res.string.serversCleartextHelp),
-                            enabled = enabled,
-                            onCheckedChange = {
-                                if (it) trustQuestion = true
-                                else {
-                                    confirmedOrigin = null
-                                    actions.changed()
-                                }
-                            },
-                        )
-                        if (address.text.toString().trim().startsWith("https://")) {
-                            if (pin != null) KitNotice(stringResource(Res.string.editor40Pinned))
-                            KitButton(
-                                stringResource(Res.string.editor40Inspect),
-                                { actions.inspect(address.text.toString()) },
-                                role = KitButtonRole.Tertiary,
-                                enabled = enabled,
-                                working = state.inspecting,
+                            KitPasteButton(
+                                stringResource(if (state.canScan) Res.string.addServerPaste else Res.string.e7SetupPastePairing),
+                                actions::paste, modifier = Modifier.weight(1f), enabled = enabled,
                             )
                         }
                     }
-                    KitField(
-                        password,
-                        stringResource(
-                            if (backend == BackendKind.OpenCode2) Res.string.serversPassword
-                            else Res.string.editor40Token
-                        ),
-                        kind = KitFieldKind.Secret,
-                        enabled = enabled,
-                        secretPresence =
-                            if (keepSecret || heldSecret != null) SecretFieldPresence.Saved
-                            else SecretFieldPresence.Editing,
-                        onReplaceSecret = {
-                            keepSecret = false
-                            heldSecret = null
-                            password.fill("")
-                            actions.changed()
-                        },
-                    )
-                    KitExpandRow(
-                        stringResource(Res.string.editor40More),
-                        moreOpen,
-                        onExpandedChange = { moreOpen = it },
-                    ) {
-                        KitField(name, stringResource(Res.string.serversName), enabled = enabled)
-                        if (backend == BackendKind.OpenCode2)
+                    state.pairingProblem?.let { KitErrorNotice(pairingProblemText(it)) }
+                    val manualFields: @Composable () -> Unit = {
+                        Column(verticalArrangement = Arrangement.spacedBy(Space.S4.dp)) {
                             KitField(
-                                username,
-                                stringResource(Res.string.serversUsername),
+                                address,
+                                stringResource(if (backend == BackendKind.OpenCode2) Res.string.e7SetupServerUrl else Res.string.connectionServerAddress),
+                                kind = KitFieldKind.Url,
+                                placeholder = if (backend == BackendKind.Paseo) stringResource(Res.string.paseoAddressHint)
+                                    else if (backend == BackendKind.Codex) stringResource(Res.string.codexAddressHint) else "https://server.example", // F: lib/ui/screens/servers/profile_editor_fields.dart:248
+                                helper = if (backend == BackendKind.OpenCode2)
+                                    stringResource(if (tailscale) Res.string.tailscaleAddressDetail else Res.string.e7SetupHttpsHint) else null,
                                 enabled = enabled,
                             )
-                    }
-                    state.failure?.let { failure ->
-                        KitErrorNotice(
-                            editorFailureWords(failure),
-                            failure = failure,
-                            detailsLabel = stringResource(Res.string.kitDetails),
-                            copyLabel = stringResource(Res.string.kitCopyDetails),
-                        )
-                        if (
-                            (failure as? Failure.Incompatible)?.kind ==
-                                io.github.eslamasabry.oc.core.common.IncompatibleKind
-                                    .LegacyOpenCode1
-                        )
-                            EditorCommand(
-                                SetupCommands.OPENCODE2_UPGRADE,
-                                copyLabel,
-                                copiedLabel,
-                                copy,
+                            val origin = editorOrigin(address.text.toString())
+                            if (backend == BackendKind.OpenCode2 && origin != null && AddressRules.needsCleartextConsent(origin)) {
+                                val pending = editorOrigin(confirmedOrigin.orEmpty()) != origin
+                                if (pending) KitNotice(
+                                    message = httpWarning(origin),
+                                    icon = KitIcons.warning,
+                                    actions = buildList {
+                                        if (pending && state.newServer && state.canTailscale) add(KitLineAction(
+                                            stringResource(Res.string.addServerUseTailscale), {
+                                                actions.keepDraft(input())
+                                                tailscale = true
+                                                actions.step(ServerEditorStep.Tailscale)
+                                            }, enabled = enabled.isEnabled, disabledReason = enabled.reason))
+                                        if (pending) add(KitLineAction(stringResource(Res.string.addServerCleartextConfirm), { trustOrigin = origin }, enabled = enabled.isEnabled, disabledReason = enabled.reason))
+                                    },
+                                ) else KitNotice(stringResource(Res.string.addServerCleartextConfirmed))
+                            }
+                            if (backend != BackendKind.OpenCode2)
+                                KitField(
+                                    directory,
+                                    stringResource(Res.string.codexProjectFolder),
+                                    kind = KitFieldKind.Path,
+                                    enabled = enabled,
+                                )
+                            if (tailscale) {
+                                KitText(stringResource(Res.string.editor40TailscaleBody))
+                                if (state.canTailscale)
+                                    KitButton(
+                                        stringResource(Res.string.tailscaleTitle),
+                                        {
+                                            actions.keepDraft(input())
+                                            actions.step(ServerEditorStep.Tailscale)
+                                        },
+                                        role = KitButtonRole.Tertiary,
+                                        enabled = enabled,
+                                    )
+                            }
+                            state.failure?.let { failure ->
+                                KitErrorNotice(
+                                    editorFailureWords(failure),
+                                    failure = failure,
+                                    detailsLabel = stringResource(Res.string.kitDetails),
+                                    copyLabel = stringResource(Res.string.kitCopyDetails),
+                                )
+                                if (
+                                    (failure as? Failure.Incompatible)?.kind ==
+                                        io.github.eslamasabry.oc.core.common.IncompatibleKind
+                                            .LegacyOpenCode1
+                                )
+                                    EditorCommand(
+                                        SetupCommands.OPENCODE2_UPGRADE,
+                                        copyLabel,
+                                        copiedLabel,
+                                        copy,
+                                    )
+                            }
+                            if (state.saved && state.failure != null)
+                                KitNotice(stringResource(Res.string.editor40SavedFailed))
+                            state.checked?.let {
+                                KitNotice(
+                                    stringResource(Res.string.editor40Checked, it.version.orEmpty()),
+                                    notes = it.runtimes,
+                                )
+                            }
+                            if (state.record?.needsSecret == true)
+                                KitNotice(stringResource(Res.string.rows40Secret))
+                            if (backend == BackendKind.OpenCode2) {
+                                if (address.text.toString().trim().startsWith("https://")) {
+                                    if (pin != null) KitNotice(stringResource(Res.string.editor40Pinned))
+                                    KitButton(
+                                        stringResource(Res.string.editor40Inspect),
+                                        { actions.inspect(address.text.toString()) },
+                                        role = KitButtonRole.Tertiary,
+                                        enabled = enabled,
+                                        working = state.inspecting,
+                                    )
+                                }
+                            }
+                            KitField(
+                                password,
+                                stringResource(
+                                    if (state.record?.needsSecret == true) {
+                                        if (backend == BackendKind.OpenCode2) Res.string.e7SetupReenterPassword else Res.string.codexTokenReentry
+                                    } else if (backend == BackendKind.OpenCode2) Res.string.e7SetupServerPassword
+                                    else if (backend == BackendKind.Paseo) Res.string.paseoPasswordLabel else Res.string.codexTokenLabel
+                                ),
+                                kind = KitFieldKind.Secret,
+                                helper = stringResource(if (backend == BackendKind.Paseo) Res.string.paseoPasswordHelp else if (backend == BackendKind.Codex) Res.string.codexTokenStorageHelp
+                                    else if (state.record?.needsSecret == true) Res.string.e7SetupEmptyPasswordHint else Res.string.e7SetupPasswordStartupHint),
+                                enabled = enabled,
+                                secretPresence =
+                                    if (keepSecret || heldSecret != null) SecretFieldPresence.Saved
+                                    else SecretFieldPresence.Editing,
+                                onReplaceSecret = {
+                                    keepSecret = false
+                                    heldSecret = null
+                                    password.fill("")
+                                    actions.changed()
+                                },
                             )
+                            if (state.slow) KitNotice(stringResource(Res.string.editor40Slow))
+                            if (state.checking)
+                                KitButton(
+                                    stringResource(Res.string.editor40CancelCheck),
+                                    actions::cancelCheck,
+                                    role = KitButtonRole.Tertiary,
+                                )
+                            KitButton(
+                                stringResource(Res.string.editor40Check),
+                                { actions.check(input()) },
+                                role = KitButtonRole.Tertiary,
+                                enabled = enabled,
+                                working = state.checking,
+                            )
+                            if (state.failedCheck)
+                                KitButton(
+                                    stringResource(Res.string.editor40SaveAnyway),
+                                    { actions.save(input(), true) },
+                                    role = KitButtonRole.Secondary,
+                                    enabled = enabled,
+                                )
+                        }
                     }
-                    if (state.saved && state.failure != null)
-                        KitNotice(stringResource(Res.string.editor40SavedFailed))
-                    state.checked?.let {
-                        KitNotice(
-                            stringResource(Res.string.editor40Checked, it.version.orEmpty()),
-                            notes = it.runtimes,
-                        )
+                    if (state.newServer && backend == BackendKind.OpenCode2 && !tailscale) {
+                        KitExpandRow(stringResource(Res.string.addServerManual), manualOpen,
+                            onExpandedChange = { manualOpen = it }) { manualFields() }
+                    } else manualFields()
+                    if (backend == BackendKind.OpenCode2) {
+                        KitExpandRow(
+                            stringResource(Res.string.editor40More),
+                            moreOpen,
+                            onExpandedChange = { moreOpen = it },
+                        ) {
+                            KitField(name, stringResource(Res.string.serversName), enabled = enabled)
+                            if (backend == BackendKind.OpenCode2)
+                                KitField(
+                                    username,
+                                    stringResource(Res.string.serversUsername),
+                                    enabled = enabled,
+                                )
+                        }
+                    } else {
+                        KitField(name, stringResource(Res.string.connectionDisplayName),
+                            placeholder = stringResource(Res.string.connectionDisplayNameHint), enabled = enabled)
+                        KitText(stringResource(if (backend == BackendKind.Paseo) Res.string.paseoSetupNotice else Res.string.codexApprovalRecoveryNotice),
+                            role = TypeRole.Secondary, tone = io.github.eslamasabry.oc.ui.design.type.TextTone.Secondary)
                     }
-                    if (state.slow) KitNotice(stringResource(Res.string.editor40Slow))
-                    if (state.checking)
-                        KitButton(
-                            stringResource(Res.string.editor40CancelCheck),
-                            actions::cancelCheck,
-                            role = KitButtonRole.Tertiary,
-                        )
-                    KitButton(
-                        stringResource(Res.string.editor40Check),
-                        { actions.check(input()) },
-                        role = KitButtonRole.Tertiary,
-                        enabled = enabled,
-                        working = state.checking,
-                    )
-                    if (state.failedCheck)
-                        KitButton(
-                            stringResource(Res.string.editor40SaveAnyway),
-                            { actions.save(input(), true) },
-                            role = KitButtonRole.Secondary,
-                            enabled = enabled,
-                        )
-                    KitButton(
-                        stringResource(
-                            if (state.connectOnSave) Res.string.editor40SaveConnect
-                            else Res.string.editor40SaveChanges
-                        ),
-                        { actions.save(input()) },
-                        enabled = enabled,
-                        working = state.saving,
-                    )
+
+
                 }
             }
         }
     }
 }
+
+internal fun editorOrigin(address: String): ServerOrigin? =
+    (AddressRules.normalize(address) as? Outcome.Ok)?.value
+
+@Composable
+private fun httpWarning(origin: ServerOrigin): String =
+    stringResource(
+        if (AddressRules.isPrivateNetwork(origin.host) || AddressRules.isTailnet(origin.host))
+            Res.string.addServerCleartextWarning
+        else Res.string.serverTrustHttpPublicBody
+    )
 
 /** One copyable setup command (Flutter `KitCodeBlock(copyLabel: handoffCopyCommand)`). */
 @Composable
@@ -628,3 +737,22 @@ private fun editorFailureWords(failure: Failure): String =
             else -> Res.string.serverFailureOther
         }
     )
+
+/** The scene's caption never falls back to the raw address: an invalid URL might contain a credential. */
+@Composable
+private fun EditorLinkMoment(link: KitServersLinkState, state: ServerEditorUi, address: String) {
+    val normalized = address.replaceFirst("wss://", "https://").replaceFirst("ws://", "http://")
+    val host = (AddressRules.normalize(normalized) as? Outcome.Ok)?.value?.host
+    val caption = if (host == null) null else when (link) {
+        KitServersLinkState.Linking -> stringResource(if (state.saving) Res.string.addServerConnectingHost else Res.string.addServerCheckingHost, host)
+        KitServersLinkState.Linked -> stringResource(Res.string.addServerConnectedHost, host)
+        else -> null
+    }
+    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+        KitServersLink(link)
+        Box(Modifier.fillMaxWidth().height(Space.S6.dp), contentAlignment = Alignment.Center) {
+            KitText(caption.orEmpty(), role = TypeRole.Secondary, tone = io.github.eslamasabry.oc.ui.design.type.TextTone.Secondary,
+                maxLines = 1, textAlign = TextAlign.Center)
+        }
+    }
+}

@@ -10,3 +10,14 @@ kotlin {
         implementation(project(":engine:runtime"))
     }
 }
+
+// The setup journey and its controls are tested in their owning feature.
+kotlin.sourceSets.getByName("desktopTest") {
+    kotlin.srcDir("../../ui/gate/src/desktopMain/kotlin")
+    resources.srcDir("../../ui/gate/src/desktopMain/resources")
+    dependencies { implementation(libs.compose.desktop.currentos) }
+}
+tasks.withType<Test>().matching { it.name == "desktopTest" }.configureEach {
+    outputs.upToDateWhen { false }
+    outputs.cacheIf { false }
+}

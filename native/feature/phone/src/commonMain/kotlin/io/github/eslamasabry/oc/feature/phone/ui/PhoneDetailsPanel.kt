@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.phone.ui
 
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -21,11 +23,12 @@ import org.jetbrains.compose.resources.stringResource
 
 /** Measured reply speed stays visible; native logs and performance readings stay inside Details. */
 @Composable
-internal fun PhoneDetailsPanel(state: ThisPhoneUi, actions: ThisPhoneActions) {
+internal fun PhoneReplySpeed(state: ThisPhoneUi) {
     val reading = state.details
     reading.reply?.let { reply ->
         KitRow(
             title = stringResource(Res.string.r40PhoneReplySpeed),
+            leading = KitRowLeading.Glyph(KitIcons.speed),
             modifier = Modifier.testTag("this-phone-reply-speed"),
             supporting =
                 if (reply.firstMs == null)
@@ -39,25 +42,32 @@ internal fun PhoneDetailsPanel(state: ThisPhoneUi, actions: ThisPhoneActions) {
             supportingMaxLines = 2,
         )
     }
+}
+
+@Composable
+internal fun PhoneInstalledPanel(state: ThisPhoneUi, actions: ThisPhoneActions) {
+    val reading = state.details
     if (!reading.installed) return
     val names = reading.installedNames
     if (names == null && reading.loading) {
         KitRow(
-            title = stringResource(Res.string.r40PhoneInstalled),
+            title = stringResource(Res.string.thisPhoneInstalled),
             supporting = stringResource(Res.string.r40PhoneChecking),
         )
     } else if (names != null) {
         KitExpandRow(
-            title = stringResource(Res.string.r40PhoneInstalled),
+            title = stringResource(Res.string.thisPhoneInstalled),
             expanded = state.installedOpen,
             modifier = Modifier.testTag("this-phone-installed"),
             supporting =
                 names.joinToString(stringResource(Res.string.phoneSetupStartListSeparator)),
             onExpandedChange = actions::showInstalled,
+            leading = KitIcons.check,
         ) {
             names.forEach {
                 KitRow(
                     title = it,
+                    leading = KitRowLeading.Glyph(KitIcons.check),
                     trailing =
                         KitRowTrailing.Value(
                             stringResource(Res.string.r40PhoneInstalledMark),
@@ -74,6 +84,12 @@ internal fun PhoneDetailsPanel(state: ThisPhoneUi, actions: ThisPhoneActions) {
             retry = KitLineAction(stringResource(Res.string.kitTryAgain), actions::refreshDetails),
         )
     }
+}
+
+@Composable
+internal fun PhoneDetailsPanel(state: ThisPhoneUi, actions: ThisPhoneActions) {
+    val reading = state.details
+    if (!reading.installed) return
     KitExpandRow(
         title = stringResource(Res.string.kitDetails),
         expanded = state.detailsOpen,

@@ -1,6 +1,21 @@
 package io.github.eslamasabry.oc.feature.phone.ui
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.feature.phone.presentation.AnswerTone
+import io.github.eslamasabry.oc.feature.phone.presentation.AnswerHeadline
+import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.state.KitStatusAnswer
+import io.github.eslamasabry.oc.ui.kit.state.KitAnswerTone
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.words.res.*
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
+import io.github.eslamasabry.oc.ui.words.res.firstRunAgentOpenCode
+import io.github.eslamasabry.oc.ui.words.res.thisPhoneHostInApp
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -19,6 +34,7 @@ import io.github.eslamasabry.oc.feature.phone.presentation.ThisPhoneNotice
 import io.github.eslamasabry.oc.feature.phone.presentation.ThisPhoneUi
 import io.github.eslamasabry.oc.feature.phone.presentation.UpdateRow
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
+import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -136,7 +152,13 @@ public fun ThisPhoneScreen(
     }
     val back = stringResource(Res.string.kitTopBarBack)
     val busyWords = stringResource(Res.string.thisPhoneBusy)
+    var storageOpen by remember { mutableStateOf(false) }
     val busy = state.working != null
+    var stopping by remember { mutableStateOf(false) }
+    LaunchedEffect(busy, state.serverRows, state.confirm) {
+        if (busy || ServerRow.Stop !in state.serverRows || state.confirm != null) stopping = false
+    }
+    val installed = state.details.installed || state.version != null || state.serverRows.isNotEmpty()
     KitScreen(
         topBar = {
             KitTopBar(
@@ -147,19 +169,17 @@ public fun ThisPhoneScreen(
             )
         },
         width = KitScreenWidth.Reading,
+        loading = state.answer.headline == AnswerHeadline.Checking,
         bottom = {
             state.answer.primary?.let { act ->
-                KitActionBlock(
-                    primary =
-                        KitAction(
-                            label = act.words(),
-                            onClick = { actions.act(act) },
-                            working = busy,
-                        )
-                )
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    KitButton(KitAction(label = act.words(), onClick = { actions.act(act) }, working = busy), fullWidth = true, hero = true)
+                }
             }
         },
     ) {
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+        val available = maxHeight
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
             val migrationActions =
                 actions
@@ -264,11 +284,27 @@ public fun ThisPhoneScreen(
                         ),
                 )
             }
-            KitNotice(
-                message = state.answer.line?.words() ?: state.answer.headline.words(),
-                title = if (state.answer.line != null) state.answer.headline.words() else null,
-                tone = state.answer.tone.status(),
-            )
+            Box(Modifier.fillMaxWidth().heightIn(min = if (installed) 0.dp else available)
+                .padding(vertical = Space.S6.dp), contentAlignment = Alignment.Center) {
+                KitStatusAnswer(
+                    answer = state.answer.headline.words(),
+                    line = state.answer.line?.words(),
+                    action = if (installed && state.details.canConnect) KitAction(stringResource(Res.string.r40PhoneConnect), actions::connect, enabled = io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled.of(!busy, busyWords)) else null,
+                    tone = when (state.answer.tone) {
+                        AnswerTone.Ok -> KitAnswerTone.Ok
+                        AnswerTone.Working -> KitAnswerTone.Working
+                        AnswerTone.Off -> KitAnswerTone.Off
+                        AnswerTone.Paused -> KitAnswerTone.Paused
+                        AnswerTone.NeedsYou -> KitAnswerTone.NeedsYou
+                    },
+                )
+            }
+            if (installed) {
+            KitRowGroup(leadingTiles = true) {
+                KitRow(title = stringResource(Res.string.firstRunAgentOpenCode),
+                    supporting = stringResource(Res.string.thisPhoneHostInApp),
+                    leading = KitRowLeading.Glyph(KitIcons.phone))
+            }
             state.lifecycle
                 ?.takeIf { it.showNotice }
                 ?.let { report ->
@@ -294,24 +330,6 @@ public fun ThisPhoneScreen(
                             ),
                     )
                 }
-            if (state.details.canConnect) {
-                KitRow(
-                    title = stringResource(Res.string.r40PhoneConnect),
-                    trailing = KitRowTrailing.Chevron,
-                    enabled = !busy,
-                    disabledReason = busyWords,
-                    onClick = actions::connect,
-                )
-            }
-            if (onAddTools != null && (state.details.installed || state.version != null)) {
-                KitRow(
-                    title = stringResource(Res.string.phoneSetupStartAddTitle),
-                    trailing = KitRowTrailing.Chevron,
-                    enabled = !busy,
-                    disabledReason = busyWords,
-                    onClick = onAddTools,
-                )
-            }
             when (val notice = state.notice) {
                 null -> Unit
                 is ThisPhoneNotice.Failed -> PhoneNoticeLine(notice.op.failedWords(), actions)
@@ -321,19 +339,22 @@ public fun ThisPhoneScreen(
                     PhoneNoticeLine(stringResource(Res.string.keepRunningOpenFailed), actions)
             }
             if (state.serverRows.isNotEmpty() || state.version != null) {
-                KitRowGroup {
+                Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
+                KitRowGroup(leadingTiles = true) {
                     state.serverRows.forEach { row ->
                         when (row) {
                             ServerRow.Stop ->
                                 KitRow(
                                     title = stringResource(Res.string.thisPhoneStop),
+                                    leading = KitRowLeading.Glyph(KitIcons.stopCircle),
                                     enabled = !busy,
                                     disabledReason = busyWords,
-                                    onClick = actions::stopServer,
+                                    onClick = { stopping = true },
                                 )
                             ServerRow.Restart ->
                                 KitRow(
                                     title = stringResource(Res.string.thisPhoneRestartRow),
+                                    leading = KitRowLeading.Glyph(KitIcons.restart),
                                     enabled = !busy,
                                     disabledReason = busyWords,
                                     onClick = actions::askRestart,
@@ -347,21 +368,18 @@ public fun ThisPhoneScreen(
                                 if (installed != null)
                                     KitRow(
                                         title =
-                                            stringResource(Res.string.thisPhoneUpToDate, installed)
+                                            stringResource(Res.string.thisPhoneUpToDate, installed),
+                                        leading = KitRowLeading.Glyph(KitIcons.check),
                                     )
                             is UpdateRow.Available,
                             is UpdateRow.Failed -> {
-                                installed?.let {
-                                    KitRow(
-                                        title =
-                                            stringResource(Res.string.phoneServerCardVersion, it)
-                                    )
-                                }
                                 val offered =
                                     if (update is UpdateRow.Available) update.version
                                     else (update as UpdateRow.Failed).version
                                 KitRow(
                                     title = stringResource(Res.string.thisPhoneUpdate),
+                                    leading = KitRowLeading.Glyph(KitIcons.download),
+                                    trailing = KitRowTrailing.Chevron,
                                     supporting =
                                         stringResource(Res.string.thisPhoneUpdateDetail, offered),
                                     enabled = !busy,
@@ -386,6 +404,92 @@ public fun ThisPhoneScreen(
                     }
                 }
             }
+            Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
+                state.leftover?.let { notice ->
+                    KitNotice(
+                        message = notice.message.words(),
+                        actions =
+                            listOf(
+                                KitLineAction(
+                                    stringResource(Res.string.workRunawaySeeRunning),
+                                    actions::openRunning,
+                                )
+                            ),
+                        dismiss =
+                            KitLineAction(
+                                stringResource(Res.string.workspaceDismissNotice),
+                                actions::dismiss,
+                            ),
+                    )
+                }
+            KitRowGroup(leadingTiles = true) {
+                val running = state.running
+                val count = running.count
+                if ((count ?: 0) > 0 || running.status != null || running.nearLimit) KitRow(
+                    title = stringResource(Res.string.runningPhoneTitle),
+                    leading = KitRowLeading.Glyph(KitIcons.terminal),
+                    supporting =
+                        if (running.status != null) {
+                            running.status.words()
+                        } else if (running.nearLimit && count != null) {
+                            stringResource(Res.string.runningPhoneRowNearLimit, count, running.cap)
+                        } else {
+                            stringResource(Res.string.runningPhoneRowIdle)
+                        },
+                    supportingMaxLines = 2,
+                    trailing = KitRowTrailing.Chevron,
+                    onClick = actions::openRunning,
+                )
+                if (onAddTools != null) KitRow(
+                    title = stringResource(Res.string.thisPhoneAddTools),
+                    supporting = stringResource(Res.string.thisPhoneAddToolsDetail),
+                    leading = KitRowLeading.Glyph(KitIcons.tools),
+                    trailing = KitRowTrailing.Chevron,
+                    enabled = !busy, disabledReason = busyWords, onClick = onAddTools,
+                )
+                PhoneInstalledPanel(state, actions)
+                KitRow(
+                    title = stringResource(Res.string.linuxMgrRow),
+                    leading = KitRowLeading.Glyph(KitIcons.terminal),
+                    supporting = stringResource(Res.string.linuxMgrRowDetail),
+                    supportingMaxLines = 2,
+                    trailing = KitRowTrailing.Chevron,
+                    onClick = actions::openLinux,
+                )
+                PhoneReplySpeed(state)
+                KitRow(
+                    title = stringResource(Res.string.thisPhoneExportProjects),
+                    leading = KitRowLeading.Glyph(KitIcons.zip),
+                    trailing = KitRowTrailing.Chevron,
+                    onClick = { actions.act(PhoneAct.ExportProjects) },
+                )
+                KitRow(
+                    title = stringResource(Res.string.sharedFoldersTitle),
+                    leading = KitRowLeading.Glyph(KitIcons.folders),
+                    trailing = KitRowTrailing.Chevron,
+                    onClick = { actions.act(PhoneAct.SharedFolders) },
+                )
+                KitRow(
+                    title = stringResource(Res.string.keepRunningTitle),
+                    leading = KitRowLeading.Glyph(KitIcons.batteryCharging),
+                    supporting = stringResource(Res.string.keepRunningRowSubtitle),
+                    supportingMaxLines = 2,
+                    trailing = KitRowTrailing.Chevron,
+                    onClick = actions::openKeepRunning,
+                )
+                KitRow(
+                    title = stringResource(Res.string.libraryTerminalTitle),
+                    leading = KitRowLeading.Glyph(KitIcons.terminal),
+                    trailing = KitRowTrailing.Chevron,
+                    onClick = actions::openTerminal,
+                )
+            }
+            Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
+            PhoneDetailsPanel(state, actions)
+            if (state.storage != null || state.storageSupported || state.storageFailed) KitExpandRow(
+                title = stringResource(Res.string.stateStorageTitle), expanded = storageOpen,
+                onExpandedChange = { storageOpen = it }, leading = KitIcons.storage,
+            ) {
             state.storage?.let { storage ->
                 KitRowGroup(label = stringResource(Res.string.stateStorageTitle)) {
                     if (
@@ -488,96 +592,62 @@ public fun ThisPhoneScreen(
                         ),
                 )
             }
-            KitRowGroup {
-                KitRow(
-                    title = stringResource(Res.string.thisPhoneExportProjects),
-                    trailing = KitRowTrailing.Chevron,
-                    onClick = { actions.act(PhoneAct.ExportProjects) },
-                )
-                KitRow(
-                    title = stringResource(Res.string.sharedFoldersTitle),
-                    trailing = KitRowTrailing.Chevron,
-                    onClick = { actions.act(PhoneAct.SharedFolders) },
-                )
-                state.leftover?.let { notice ->
-                    KitNotice(
-                        message = notice.message.words(),
-                        actions =
-                            listOf(
-                                KitLineAction(
-                                    stringResource(Res.string.workRunawaySeeRunning),
-                                    actions::openRunning,
-                                )
-                            ),
-                        dismiss =
-                            KitLineAction(
-                                stringResource(Res.string.workspaceDismissNotice),
-                                actions::dismiss,
-                            ),
-                    )
-                }
-                val running = state.running
-                val count = running.count
-                KitRow(
-                    title = stringResource(Res.string.runningPhoneTitle),
-                    supporting =
-                        if (running.status != null) {
-                            running.status.words()
-                        } else if (running.nearLimit && count != null) {
-                            stringResource(Res.string.runningPhoneRowNearLimit, count, running.cap)
-                        } else {
-                            stringResource(Res.string.runningPhoneRowIdle)
-                        },
-                    supportingMaxLines = 2,
-                    trailing = KitRowTrailing.Chevron,
-                    onClick = actions::openRunning,
-                )
-                KitRow(
-                    title = stringResource(Res.string.keepRunningTitle),
-                    supporting = stringResource(Res.string.keepRunningRowSubtitle),
-                    supportingMaxLines = 2,
-                    trailing = KitRowTrailing.Chevron,
-                    onClick = actions::openKeepRunning,
-                )
-                KitRow(
-                    title = stringResource(Res.string.linuxMgrRow),
-                    supporting = stringResource(Res.string.linuxMgrRowDetail),
-                    supportingMaxLines = 2,
-                    trailing = KitRowTrailing.Chevron,
-                    onClick = actions::openLinux,
-                )
-                KitRow(
-                    title = stringResource(Res.string.libraryTerminalTitle),
-                    trailing = KitRowTrailing.Chevron,
-                    onClick = actions::openTerminal,
-                )
             }
-            PhoneDetailsPanel(state, actions)
+            }
         }
+        }
+        PhoneConfirmation(state, actions, stopping, onStopDismiss = { stopping = false })
     }
+
+}
+
+@Composable
+private fun PhoneConfirmation(
+    state: ThisPhoneUi,
+    actions: ThisPhoneActions,
+    stopping: Boolean,
+    onStopDismiss: () -> Unit,
+) {
     KitConfirm(
         spec =
-            when (val asked = state.confirm) {
-                null -> null
-                is ThisPhoneConfirm.Restart ->
-                    KitConfirmSpec(
-                        title = stringResource(Res.string.thisPhoneRestartTitle),
-                        confirmLabel = stringResource(Res.string.thisPhoneRestartRow),
-                        kind = KitConfirmKind.Neutral,
-                        body =
-                            if (asked.replyRunning) stringResource(Res.string.thisPhoneRestartBusy)
-                            else null,
-                    )
-                is ThisPhoneConfirm.Update ->
-                    KitConfirmSpec(
-                        title = stringResource(Res.string.thisPhoneUpdateTitle, OPENCODE),
-                        confirmLabel = stringResource(Res.string.thisPhoneUpdate),
-                        body = stringResource(Res.string.thisPhoneUpdateBody, asked.version),
-                        consequences = listOf(stringResource(Res.string.thisPhoneUpdateKept)),
-                    )
-            },
-        onConfirm = actions::confirm,
-        onCancel = actions::dismiss,
+            if (stopping)
+                KitConfirmSpec(
+                    title = stringResource(Res.string.safetyStopLocalServerTitle),
+                    body = stringResource(Res.string.safetyStopLocalServerBody),
+                    confirmLabel = stringResource(Res.string.e7SetupStopLocal),
+                    cancelLabel = stringResource(Res.string.safetyStopLocalServerKeep),
+                    kind = KitConfirmKind.Stop,
+                )
+            else
+                when (val asked = state.confirm) {
+                    null -> null
+                    is ThisPhoneConfirm.Restart ->
+                        KitConfirmSpec(
+                            title = stringResource(Res.string.thisPhoneRestartTitle),
+                            confirmLabel = stringResource(Res.string.thisPhoneRestartRow),
+                            kind = KitConfirmKind.Neutral,
+                            body =
+                                if (asked.replyRunning)
+                                    stringResource(Res.string.thisPhoneRestartBusy)
+                                else null,
+                        )
+                    is ThisPhoneConfirm.Update ->
+                        KitConfirmSpec(
+                            title = stringResource(Res.string.thisPhoneUpdateTitle, OPENCODE),
+                            confirmLabel = stringResource(Res.string.thisPhoneUpdate),
+                            body = stringResource(Res.string.thisPhoneUpdateBody, asked.version),
+                            consequences = listOf(stringResource(Res.string.thisPhoneUpdateKept)),
+                        )
+                },
+        onConfirm = {
+            if (stopping) {
+                onStopDismiss()
+                if (state.working == null && ServerRow.Stop in state.serverRows)
+                    actions.stopServer()
+            } else actions.confirm()
+        },
+        onCancel = { if (stopping) onStopDismiss() else actions.dismiss() },
+        working = state.working != null,
     )
 }
 

@@ -2,10 +2,12 @@ package io.github.eslamasabry.oc.feature.linux.ui
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleStartEffect
 import io.github.eslamasabry.oc.feature.linux.manager.LinuxStorage
 import io.github.eslamasabry.oc.feature.linux.manager.LinuxStorageCategory
@@ -13,19 +15,30 @@ import io.github.eslamasabry.oc.feature.linux.presentation.CleanupResult
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxStorageActions
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxStorageUi
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.*
+import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
+import io.github.eslamasabry.oc.ui.kit.modal.KitConsequence
+import io.github.eslamasabry.oc.ui.kit.modal.KitConsequenceMark
+import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.state.*
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
@@ -39,12 +52,7 @@ import io.github.eslamasabry.oc.ui.words.res.linuxMgrLoadFailedTitle
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrMeasuring
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrStorageTitle
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrStorageTotal
-import io.github.eslamasabry.oc.ui.words.res.linuxOutputError
-import io.github.eslamasabry.oc.ui.words.res.linuxOutputWarning
-import io.github.eslamasabry.oc.ui.words.res.linuxStorageScanDone
-import io.github.eslamasabry.oc.ui.words.res.linuxStorageScanIdle
 import io.github.eslamasabry.oc.ui.words.res.linuxStorageScanLog
-import io.github.eslamasabry.oc.ui.words.res.linuxStorageScanRunning
 import io.github.eslamasabry.oc.ui.words.res.termuxStorageBytesB
 import io.github.eslamasabry.oc.ui.words.res.termuxStorageBytesGb
 import io.github.eslamasabry.oc.ui.words.res.termuxStorageBytesKb
@@ -73,45 +81,26 @@ public fun LinuxStorageScreen(state: LinuxStorageUi, actions: LinuxStorageAction
             )
         },
         width = KitScreenWidth.Reading,
-        loading = false,
+        loading = state.loading || state.cleaning != null,
+        loadingLabel = stringResource(Res.string.linuxMgrMeasuring),
     ) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
-            val scanState = state.scan.state
-            KitNotice(
-                message =
-                    when (scanState) {
-                        io.github.eslamasabry.oc.feature.linux.manager.LinuxStorageScanState
-                            .Running ->
-                            state.scan.stage?.let {
-                                stringResource(Res.string.linuxStorageScanRunning, it.title())
-                            } ?: stringResource(Res.string.linuxMgrMeasuring)
-                        io.github.eslamasabry.oc.feature.linux.manager.LinuxStorageScanState.Done ->
-                            stringResource(Res.string.linuxStorageScanDone)
-                        io.github.eslamasabry.oc.feature.linux.manager.LinuxStorageScanState
-                            .Failed -> stringResource(Res.string.linuxMgrLoadFailedTitle)
-                        io.github.eslamasabry.oc.feature.linux.manager.LinuxStorageScanState.Idle ->
-                            stringResource(Res.string.linuxStorageScanIdle)
-                    },
-                tone =
-                    if (
-                        scanState ==
-                            io.github.eslamasabry.oc.feature.linux.manager.LinuxStorageScanState
-                                .Running
+            if (state.report == null) {
+                if (state.loading) KitSkeletonRows()
+                else
+                    KitStateView(
+                        KitStateKind.Error,
+                        stringResource(Res.string.linuxMgrLoadFailedTitle),
+                        body = state.problem?.words(),
+                        primary = KitAction(stringResource(Res.string.commonRetry), actions::retry),
                     )
-                        StatusTone.Progress
-                    else StatusTone.Neutral,
-            )
-            if (state.scan.headings.isNotEmpty()) {
-                io.github.eslamasabry.oc.ui.kit.content.log.KitLogPanel(
-                    lines =
-                        state.scan.headings.map {
-                            io.github.eslamasabry.oc.ui.kit.content.log.KitLogLine(it.title())
-                        },
-                    title = stringResource(Res.string.linuxStorageScanLog),
-                    warningLabel = stringResource(Res.string.linuxOutputWarning),
-                    errorLabel = stringResource(Res.string.linuxOutputError),
-                )
+                return@Column
             }
+            KitText(
+                stringResource(Res.string.linuxMgrStorageTotal, storageSize(state.report.total)),
+                modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
+                role = TypeRole.Headline,
+            )
             state.problem?.let { problem ->
                 KitErrorNotice(
                     title = stringResource(Res.string.linuxMgrLoadFailedTitle),
@@ -137,16 +126,24 @@ public fun LinuxStorageScreen(state: LinuxStorageUi, actions: LinuxStorageAction
                 null -> Unit
             }
             state.actProblem?.let {
-                KitNotice(message = it.words(), tone = StatusTone.Attention, dismiss = dismiss)
+                KitNotice(message = it.words(), tone = StatusTone.Failure, dismiss = dismiss)
             }
             state.report?.let { report ->
-                KitRowGroup(
-                    label =
-                        stringResource(Res.string.linuxMgrStorageTotal, storageSize(report.total))
-                ) {
+                KitRowGroup(leadingTiles = true) {
                     LinuxStorageCategory.entries.forEach { category ->
                         KitRow(
                             title = category.title(),
+                            leading =
+                                KitRowLeading.Glyph(
+                                    when (category) {
+                                        LinuxStorageCategory.Base -> KitIcons.computer
+                                        LinuxStorageCategory.Packages -> KitIcons.`package`
+                                        LinuxStorageCategory.Tools -> KitIcons.tools
+                                        LinuxStorageCategory.Agents -> KitIcons.agent
+                                        LinuxStorageCategory.Projects -> KitIcons.folders
+                                        LinuxStorageCategory.Temp -> KitIcons.clock
+                                    }
+                                ),
                             supporting = category.detail(),
                             supportingMaxLines = 2,
                             trailing =
@@ -157,12 +154,31 @@ public fun LinuxStorageScreen(state: LinuxStorageUi, actions: LinuxStorageAction
                         )
                     }
                 }
-                KitRowGroup(label = stringResource(Res.string.linuxMgrFreeUp)) {
-                    LinuxStorage.cleanups.forEach { action ->
+                val offered =
+                    LinuxStorage.cleanups.filter {
+                        (state.cleanable[it.id] ?: 0L) >= 1024L || state.cleaning == it.id
+                    } // F: lib/ui/screens/linux_manager/linux_storage_page.dart:231
+                KitRowGroup(
+                    label = stringResource(Res.string.linuxMgrFreeUp),
+                    leadingTiles = true,
+                ) {
+                    if (offered.isEmpty())
+                        KitText(
+                            stringResource(
+                                if (state.cleanable.size < LinuxStorage.cleanups.size)
+                                    Res.string.linuxMgrMeasuring
+                                else Res.string.linuxMgrCleanNone
+                            ),
+                            modifier =
+                                Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
+                            role = TypeRole.Secondary,
+                        )
+                    offered.forEach { action ->
                         val bytes = state.cleanable[action.id]
                         val cleaning = state.cleaning == action.id
                         KitRow(
                             title = action.id.title(),
+                            leading = KitRowLeading.Glyph(KitIcons.delete),
                             supporting = action.id.detail(),
                             supportingMaxLines = 2,
                             trailing =
@@ -186,24 +202,49 @@ public fun LinuxStorageScreen(state: LinuxStorageUi, actions: LinuxStorageAction
                         )
                     }
                 }
+                if (state.scan.headings.isNotEmpty()) {
+                    var scanDetails by remember { mutableStateOf(false) }
+                    KitExpandRow(
+                        stringResource(Res.string.linuxStorageScanLog),
+                        scanDetails,
+                        onExpandedChange = { scanDetails = it },
+                    ) {
+                        KitDetailsFold(
+                            label = stringResource(Res.string.kitDetails),
+                            copyLabel = stringResource(Res.string.kitCopyDetails),
+                            text = state.scan.headings.joinToString("\n") { it.title() },
+                        )
+                    }
+                }
+                KitButton(
+                    stringResource(Res.string.workRefresh),
+                    actions::retry,
+                    role = KitButtonRole.Tertiary,
+                )
             }
         }
+        val ask = state.confirm
+        KitConfirm(
+            spec =
+                ask?.let {
+                    KitConfirmSpec(
+                        title = it.id.ask(),
+                        confirmLabel = it.id.title(),
+                        kind = KitConfirmKind.Destructive,
+                        body = stringResource(Res.string.linuxMgrCleanBody, storageSize(it.bytes)),
+                        consequenceItems =
+                            listOf(
+                                KitConsequence(
+                                    stringResource(Res.string.linuxMgrCleanKept),
+                                    KitConsequenceMark.Kept,
+                                )
+                            ),
+                    )
+                },
+            onConfirm = actions::confirm,
+            onCancel = actions::dismiss,
+        )
     }
-    val ask = state.confirm
-    KitConfirm(
-        spec =
-            ask?.let {
-                KitConfirmSpec(
-                    title = it.id.ask(),
-                    confirmLabel = it.id.title(),
-                    kind = KitConfirmKind.Destructive,
-                    body = stringResource(Res.string.linuxMgrCleanBody, storageSize(it.bytes)),
-                    consequences = listOf(stringResource(Res.string.linuxMgrCleanKept)),
-                )
-            },
-        onConfirm = actions::confirm,
-        onCancel = actions::dismiss,
-    )
 }
 
 @Composable

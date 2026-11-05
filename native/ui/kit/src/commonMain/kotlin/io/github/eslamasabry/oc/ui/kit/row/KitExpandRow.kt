@@ -6,6 +6,11 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.graphics.vector.ImageVector
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
+import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -55,6 +60,7 @@ public fun KitExpandRow(
     modifier: Modifier = Modifier,
     supporting: String? = null,
     onExpandedChange: (Boolean) -> Unit,
+    leading: ImageVector? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val colors = LocalKitColors.current
@@ -73,6 +79,9 @@ public fun KitExpandRow(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
+            leading?.let { icon ->
+                Box(Modifier.size(tokens.iconTile.dp), contentAlignment = Alignment.Center) { KitIcon(icon, size = KitIconSize.Small) }
+            }
             Column(Modifier.weight(1f)) {
                 KitText(title, role = TypeRole.RowTitle)
                 supporting?.let { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = 3) }

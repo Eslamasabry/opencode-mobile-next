@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.foundation.layout.Arrangement
@@ -22,7 +23,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.text.TextScalePolicy
@@ -114,6 +117,70 @@ public fun KitRow(
     titleMaxLines: Int = 1,
     titleAccent: Boolean = false,
     onClick: (() -> Unit)? = null,
+) {
+    RowBody(
+        title = title, modifier = modifier, supporting = supporting, leading = leading, trailing = trailing,
+        server = server, titleIsFileName = titleIsFileName, supportingMaxLines = supportingMaxLines,
+        enabled = enabled, disabledReason = disabledReason, selected = selected, growKey = growKey,
+        onClickLabel = onClickLabel, onLongClick = onLongClick, onLongClickLabel = onLongClickLabel,
+        state = state, meta = meta, onClick = onClick,
+        titleMaxLines = titleMaxLines, titleAccent = titleAccent,
+    )
+}
+
+@Composable
+public fun KitRow(
+    title: String,
+    supporting: AnnotatedString,
+    modifier: Modifier = Modifier,
+    leading: KitRowLeading? = null,
+    trailing: KitRowTrailing = KitRowTrailing.None,
+    supportingMaxLines: Int = 1,
+    enabled: Boolean = true,
+    disabledReason: String? = null,
+    selected: Boolean = false,
+    state: KitRowState? = null,
+    onClick: (() -> Unit)? = null,
+) {
+    RowBody(
+        title = title,
+        modifier = modifier,
+        supporting = supporting.text,
+        leading = leading,
+        trailing = trailing,
+        supportingMaxLines = supportingMaxLines,
+        enabled = enabled,
+        disabledReason = disabledReason,
+        selected = selected,
+        state = state,
+        onClick = onClick,
+        supportingSpan = supporting,
+    )
+}
+
+@Composable
+private fun RowBody(
+    title: String,
+    modifier: Modifier = Modifier,
+    supporting: String? = null,
+    leading: KitRowLeading? = null,
+    trailing: KitRowTrailing = KitRowTrailing.None,
+    server: String? = null,
+    titleIsFileName: Boolean = false,
+    supportingMaxLines: Int = 1,
+    enabled: Boolean = true,
+    disabledReason: String? = null,
+    selected: Boolean = false,
+    growKey: Any? = null,
+    onClickLabel: String? = null,
+    onLongClick: (() -> Unit)? = null,
+    onLongClickLabel: String? = null,
+    state: KitRowState? = null,
+    meta: String? = null,
+    onClick: (() -> Unit)? = null,
+    titleMaxLines: Int = 1,
+    titleAccent: Boolean = false,
+    supportingSpan: AnnotatedString? = null,
 ) {
     kitAssert(title.isNotBlank()) { "KitRow: a row needs a title" }
     kitAssert(enabled || !disabledReason.isNullOrBlank()) { "KitRow: a disabled row must say why (B-KIT-051)" }
@@ -223,7 +290,17 @@ public fun KitRow(
                     }
                     val stateWord = state?.takeIf { enabled }
                     val word = stateWord?.word
-                    if (stateWord != null && word != null) {
+                    if (enabled && supportingSpan != null) {
+                        BasicText(
+                            supportingSpan,
+                            Modifier.kitMaxWidth(CapRole.Reading).testTag("kit-row-supporting"),
+                            style = LocalKitTypography.current.style(TypeRole.Secondary).copy(
+                                color = colors.text2, textDirection = TextDirection.Content,
+                            ),
+                            maxLines = kitRowSupportingLines(scale, supportingMaxLines),
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    } else if (stateWord != null && word != null) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             KitText(
                                 word,

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand names from agent_account_screen.dart's sign-in method mapping. -->
+    <string name="rb49_accountChatGpt">ChatGPT</string>
+    <string name="rb49_accountAmazonBedrock">Amazon Bedrock</string>
+</resources>

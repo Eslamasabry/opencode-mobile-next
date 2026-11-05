@@ -13,5 +13,16 @@ kotlin {
 
 // looks capture only: stale existing tests in this module do not compile; compile only the capture test and fixtures.
 kotlin.sourceSets.matching { it.name == "commonTest" || it.name == "desktopTest" }.configureEach {
-    kotlin.exclude { it.file.name.endsWith("Test.kt") && it.file.name != "LooksCaptureTest.kt" }
+    kotlin.exclude { it.file.name.endsWith("Test.kt") && it.file.name != "LooksCaptureTest.kt" && !it.file.invariantSeparatorsPath.contains("/rb/o45/") }
+}
+
+// Order 45 compares the real server screens against the frozen Flutter scenes.
+kotlin.sourceSets.getByName("desktopTest") {
+    kotlin.srcDir("../../ui/gate/src/desktopMain/kotlin")
+    resources.srcDir("../../ui/gate/src/desktopMain/resources")
+    dependencies { implementation(libs.compose.desktop.currentos) }
+}
+tasks.withType<Test>().matching { it.name == "desktopTest" }.configureEach {
+    outputs.upToDateWhen { false }
+    outputs.cacheIf { false }
 }

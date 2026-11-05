@@ -7,3 +7,13 @@ kotlin {
     sourceSets.getByName("desktopTest").dependencies { implementation(libs.compose.desktop.currentos) }
 }
 apply(from = rootProject.file("gradle/desktop-golden-fonts.gradle"))
+
+// Order 40 renders onboarding states in their owning module.
+kotlin.sourceSets.getByName("desktopTest") {
+    kotlin.srcDir("../../ui/gate/src/desktopMain/kotlin")
+    resources.srcDir("../../ui/gate/src/desktopMain/resources")
+}
+tasks.withType<Test>().matching { it.name == "desktopTest" }.configureEach {
+    outputs.upToDateWhen { false }
+    outputs.cacheIf { false }
+}

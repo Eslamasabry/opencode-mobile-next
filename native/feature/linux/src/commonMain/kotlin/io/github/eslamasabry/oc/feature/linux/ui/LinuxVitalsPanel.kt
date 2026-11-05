@@ -3,6 +3,8 @@ package io.github.eslamasabry.oc.feature.linux.ui
 import androidx.compose.runtime.Composable
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxHeat
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxVitalsUi
+import io.github.eslamasabry.oc.ui.kit.status.KitVital
+import io.github.eslamasabry.oc.ui.kit.status.KitVitalsStrip
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.words.res.*
@@ -22,14 +24,17 @@ internal fun LinuxVitalsPanel(state: LinuxVitalsUi, openRunning: () -> Unit) {
                 }
             )
         }
-    val metrics =
-        listOfNotNull(
-            heat?.let { stringResource(Res.string.linuxVitalsHeatLabel, it) },
-            state.phoneFreeBytes?.let {
-                stringResource(Res.string.linuxVitalsMemoryLabel, size(it))
-            },
-            state.linuxCpuPercent?.let { stringResource(Res.string.linuxVitalsCpuLabel, "$it%") },
-        )
+    val metrics = listOfNotNull(
+        heat?.let { KitVital(it, stringResource(Res.string.linuxVitalsHeat), stringResource(Res.string.linuxVitalsHeatLabel, it)) },
+        state.phoneFreeBytes?.let { value ->
+            val words = size(value)
+            KitVital(words, stringResource(Res.string.linuxVitalsMemoryFree), stringResource(Res.string.linuxVitalsMemoryLabel, words))
+        },
+        state.linuxCpuPercent?.let { value ->
+            val words = "$value%"
+            KitVital(words, stringResource(Res.string.linuxVitalsLinuxCpu), stringResource(Res.string.linuxVitalsCpuLabel, words))
+        },
+    )
     val heavy =
         state.heat != null &&
             state.heat != LinuxHeat.Cool &&
@@ -60,19 +65,9 @@ internal fun LinuxVitalsPanel(state: LinuxVitalsUi, openRunning: () -> Unit) {
                 )
             else -> null
         }
-    if (metrics.isNotEmpty() || summary != null)
-        KitNotice(
-            title = metrics.joinToString(" · ").takeIf { it.isNotBlank() },
-            message = summary ?: metrics.joinToString(" · "),
-            actions =
-                if (heavy)
-                    listOf(
-                        KitLineAction(
-                            stringResource(Res.string.linuxVitalsOpenRunning),
-                            openRunning,
-                        )
-                    )
-                else emptyList(),
-            liveRegion = false,
-        )
+    if (metrics.isNotEmpty() || summary != null) KitVitalsStrip(
+        vitals = metrics, summary = summary,
+        onSummaryTap = if (heavy) openRunning else null,
+        summaryLabel = if (heavy) stringResource(Res.string.linuxVitalsOpenRunning) else null,
+    )
 }

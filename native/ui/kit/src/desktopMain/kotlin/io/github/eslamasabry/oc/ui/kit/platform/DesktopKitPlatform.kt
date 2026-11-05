@@ -41,6 +41,13 @@ public class DesktopKitPlatform : KitPlatform {
         return text.substring(0, end)
     }
 
+    override fun dateTime(atMs: Long, localeTag: String): String =
+        mediumLocalDateTime(
+            atMs,
+            java.util.Locale.forLanguageTag(localeTag),
+            java.util.TimeZone.getDefault(),
+        )
+
     override fun messageTime(createdMs: Long, nowMs: Long): String {
         val created = java.util.Date(createdMs)
         val a = java.util.Calendar.getInstance().apply { timeInMillis = createdMs }
@@ -63,4 +70,22 @@ public class DesktopKitPlatform : KitPlatform {
             null
         }
     }
+}
+
+/** Flutter agent_account_screen.dart:614-617: a date and time joined with a space. */
+internal fun mediumLocalDateTime(
+    atMs: Long,
+    locale: java.util.Locale,
+    zone: java.util.TimeZone,
+): String {
+    val instant = java.util.Date(atMs)
+    val date =
+        java.text.DateFormat.getDateInstance(java.text.DateFormat.MEDIUM, locale).apply {
+            timeZone = zone
+        }
+    val time =
+        java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT, locale).apply {
+            timeZone = zone
+        }
+    return date.format(instant) + " " + time.format(instant)
 }

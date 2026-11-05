@@ -4,7 +4,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.graphics.vector.ImageVector
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
+import io.github.eslamasabry.oc.ui.words.res.serverEditorMoreOptions
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -100,6 +109,7 @@ public fun LinuxHomeScreen(
     tools: io.github.eslamasabry.oc.feature.linux.presentation.LinuxToolsPanelUi? = null,
     toolsActions: io.github.eslamasabry.oc.feature.linux.presentation.LinuxToolsActions? = null,
 ) {
+    var moreOpen by remember { mutableStateOf(false) }
     LifecycleStartEffect(actions) {
         actions.shown(true)
         onStopOrDispose { actions.shown(false) }
@@ -131,7 +141,6 @@ public fun LinuxHomeScreen(
                         onClick = { nativeActions?.openMigration(offer.profileId) },
                     )
                 }
-            state.vitals?.let { LinuxVitalsPanel(it) { actions.open(LinuxPage.Running) } }
             val dismiss =
                 KitLineAction(stringResource(Res.string.workspaceDismissNotice), actions::dismiss)
             when (val notice = state.notice) {
@@ -222,64 +231,39 @@ public fun LinuxHomeScreen(
             val vitals = state.vitals
             if (state.ready && vitals != null) LinuxVitalsPanel(vitals) { actions.open(LinuxPage.Running) }
             LinuxJobPanel(state.job, actions::askStopJob, actions::dismissJob)
-            if (presence != null && presence != LinuxPresence.NotOnThisBuild) {
-                if (state.ready) LinuxIdlePanel(state, actions)
-                LinuxSetupPanel(state, actions, toolsActions?.let { it::openAppSettings })
-                if (tools != null && toolsActions != null)
-                    LinuxToolsPanel(
-                        tools,
-                        toolsActions,
-                        busy =
-                            state.working ||
-                                state.job.running ||
-                                state.setup.state ==
-                                    io.github.eslamasabry.oc.engine.runtime.setup.SetupState
-                                        .Running,
-                    )
-                if (state.ready) LinuxComponentsPanel(state, actions)
-                LinuxLocalStoragePanel(state, actions)
-                LinuxLifetimesPanel(state.lifetimes, actions::refreshLifetimes)
-            }
             if (state.ready) {
-                KitRowGroup {
-                    PageRow(
-                        stringResource(Res.string.keptSvcTitle),
-                        stringResource(Res.string.keptSvcKeepsRunning),
-                    ) {
-                        actions.open(LinuxPage.KeptServices)
-                    }
-                    PageRow(
-                        stringResource(Res.string.linuxBackupRow),
-                        stringResource(Res.string.linuxBackupSetupProjectsDetail),
-                    ) {
-                        actions.open(LinuxPage.Backups)
-                    }
+                KitRowGroup(leadingTiles = true) {
                     PageRow(
                         stringResource(Res.string.linuxMgrRunning),
                         stringResource(Res.string.linuxMgrRunningDetail),
+                        icon = KitIcons.processor,
                     ) {
                         actions.open(LinuxPage.Running)
                     }
                     PageRow(
                         stringResource(Res.string.linuxMgrPorts),
                         stringResource(Res.string.linuxMgrPortsDetail),
+                        icon = KitIcons.network,
                     ) {
                         actions.open(LinuxPage.Ports)
                     }
                     PageRow(
                         stringResource(Res.string.linuxMgrStorage),
                         stringResource(Res.string.linuxMgrStorageDetail),
+                        icon = KitIcons.database,
                     ) {
                         actions.open(LinuxPage.Storage)
                     }
                     PageRow(
                         stringResource(Res.string.linuxMgrPackages),
                         stringResource(Res.string.linuxMgrPackagesDetail),
+                        icon = KitIcons.`package`,
                     ) {
                         actions.open(LinuxPage.Packages)
                     }
                     KitRow(
                         title = stringResource(Res.string.linuxMgrRepair),
+                        leading = KitRowLeading.Glyph(KitIcons.tools),
                         supporting = stringResource(Res.string.linuxMgrRepairDetail),
                         supportingMaxLines = 3,
                         trailing = KitRowTrailing.Chevron,
@@ -287,124 +271,159 @@ public fun LinuxHomeScreen(
                     )
                     KitRow(
                         title = stringResource(Res.string.linuxMgrReset),
+                        leading = KitRowLeading.Glyph(KitIcons.restart),
                         supporting = stringResource(Res.string.linuxMgrResetDetail),
                         supportingMaxLines = 2,
                         onClick = actions::askReset,
                     )
                 }
             }
-        }
-    }
-    val spec =
-        when (val asked = state.confirm) {
-            null -> null
-            LinuxConfirm.Repair ->
-                KitConfirmSpec(
-                    title = stringResource(Res.string.linuxMgrRepairTitle),
-                    confirmLabel = stringResource(Res.string.linuxMgrRepair),
-                    body = stringResource(Res.string.linuxMgrRepairBody),
-                    consequences = listOf(stringResource(Res.string.linuxMgrRepairKept)),
-                )
-            LinuxConfirm.Reset ->
-                KitConfirmSpec(
-                    title = stringResource(Res.string.linuxMgrResetTitle),
-                    confirmLabel = stringResource(Res.string.linuxMgrReset),
-                    kind = KitConfirmKind.Destructive,
-                    body = stringResource(Res.string.linuxMgrResetBody),
-                    consequences =
-                        listOf(
-                            stringResource(Res.string.linuxMgrResetLostTools),
-                            stringResource(Res.string.linuxMgrResetLostSignIns),
-                            stringResource(Res.string.linuxMgrResetLostChats),
-                            stringResource(Res.string.linuxMgrResetKept),
-                        ),
-                    typedName = stringResource(Res.string.linuxMgrResetWord),
-                )
-            LinuxConfirm.StopSetup ->
-                KitConfirmSpec(
-                    title = stringResource(Res.string.linuxSetupStopQuestion),
-                    confirmLabel = stringResource(Res.string.linuxSetupStop),
-                    kind = KitConfirmKind.Stop,
-                    body = stringResource(Res.string.linuxSetupStopBody),
-                )
-            is LinuxConfirm.RemoveComponent ->
-                KitConfirmSpec(
-                    title =
-                        stringResource(
-                            io.github.eslamasabry.oc.ui.words.res.Res.string
-                                .linuxComponentsRemoveQuestion,
-                            componentName(asked.id),
-                        ),
-                    confirmLabel =
-                        stringResource(
-                            io.github.eslamasabry.oc.ui.words.res.Res.string.linuxComponentsRemove,
-                            componentName(asked.id),
-                        ),
-                    kind = KitConfirmKind.Destructive,
-                    body =
-                        stringResource(
-                            io.github.eslamasabry.oc.ui.words.res.Res.string
-                                .linuxComponentsRemoveBody
-                        ),
-                )
-            is LinuxConfirm.Remove ->
-                KitConfirmSpec(
-                    title =
-                        stringResource(
-                            if (asked.projects) Res.string.linuxLocalRemoveAllQuestion
-                            else Res.string.linuxLocalRemoveKeepQuestion
-                        ),
-                    confirmLabel =
-                        stringResource(
-                            if (asked.projects) Res.string.linuxLocalRemoveAll
-                            else Res.string.linuxLocalRemoveKeep
-                        ),
-                    kind = KitConfirmKind.Destructive,
-                    body =
-                        stringResource(
-                            if (asked.projects) Res.string.linuxLocalRemoveAllBody
-                            else Res.string.linuxLocalRemoveKeepBody,
-                            size(asked.bytes),
-                        ),
-                    typedName =
-                        if (asked.projects)
-                            io.github.eslamasabry.oc.engine.runtime.storage.LinuxLocalStorage
-                                .DELETION_NAME
-                        else null,
-                )
-            is LinuxConfirm.StopJob -> {
-                val (title, label) = stopJobWords(asked.kind, asked.names)
-                KitConfirmSpec(
-                    title = title,
-                    confirmLabel = label,
-                    kind = KitConfirmKind.Stop,
-                    body = stringResource(Res.string.linuxMgrJobStopBody),
-                )
+            if (presence != null && presence != LinuxPresence.NotOnThisBuild) {
+                if (!state.ready) {
+                    LinuxSetupPanel(state, actions, toolsActions?.let { it::openAppSettings })
+                    LinuxLocalStoragePanel(state, actions)
+                } else KitExpandRow(stringResource(Res.string.serverEditorMoreOptions), moreOpen,
+                    onExpandedChange = { moreOpen = it }) {
+                    LinuxIdlePanel(state, actions)
+                    LinuxSetupPanel(state, actions, toolsActions?.let { it::openAppSettings })
+                    if (tools != null && toolsActions != null)
+                        LinuxToolsPanel(tools, toolsActions, busy = state.working || state.job.running ||
+                            state.setup.state == io.github.eslamasabry.oc.engine.runtime.setup.SetupState.Running)
+                    LinuxComponentsPanel(state, actions)
+                    LinuxLocalStoragePanel(state, actions)
+                    LinuxLifetimesPanel(state.lifetimes, actions::refreshLifetimes)
+                    KitRowGroup(leadingTiles = true) {
+                    PageRow(
+                        stringResource(Res.string.keptSvcTitle),
+                        stringResource(Res.string.keptSvcKeepsRunning),
+                        icon = KitIcons.heartbeat,
+                    ) {
+                        actions.open(LinuxPage.KeptServices)
+                    }
+                    PageRow(
+                        stringResource(Res.string.linuxBackupRow),
+                        stringResource(Res.string.linuxBackupSetupProjectsDetail),
+                        icon = KitIcons.zip,
+                    ) {
+                        actions.open(LinuxPage.Backups)
+                    }
+                    }
+                }
             }
         }
-    KitConfirm(
-        spec = spec,
-        onConfirm = actions::confirm,
-        onCancel = actions::dismiss,
-        alternative =
-            if (state.confirm == LinuxConfirm.Reset)
-                KitAction(
-                    stringResource(Res.string.linuxMgrResetBackUpFirst),
-                    { actions.open(LinuxPage.Backups) },
-                )
-            else null,
-    )
+        val spec =
+            when (val asked = state.confirm) {
+                null -> null
+                LinuxConfirm.Repair ->
+                    KitConfirmSpec(
+                        title = stringResource(Res.string.linuxMgrRepairTitle),
+                        confirmLabel = stringResource(Res.string.linuxMgrRepair),
+                        body = stringResource(Res.string.linuxMgrRepairBody),
+                        consequences = listOf(stringResource(Res.string.linuxMgrRepairKept)),
+                    )
+                LinuxConfirm.Reset ->
+                    KitConfirmSpec(
+                        title = stringResource(Res.string.linuxMgrResetTitle),
+                        confirmLabel = stringResource(Res.string.linuxMgrReset),
+                        kind = KitConfirmKind.Destructive,
+                        body = stringResource(Res.string.linuxMgrResetBody),
+                        consequences =
+                            listOf(
+                                stringResource(Res.string.linuxMgrResetLostTools),
+                                stringResource(Res.string.linuxMgrResetLostSignIns),
+                                stringResource(Res.string.linuxMgrResetLostChats),
+                                stringResource(Res.string.linuxMgrResetKept),
+                            ),
+                        typedName = stringResource(Res.string.linuxMgrResetWord),
+                    )
+                LinuxConfirm.StopSetup ->
+                    KitConfirmSpec(
+                        title = stringResource(Res.string.linuxSetupStopQuestion),
+                        confirmLabel = stringResource(Res.string.linuxSetupStop),
+                        kind = KitConfirmKind.Stop,
+                        body = stringResource(Res.string.linuxSetupStopBody),
+                    )
+                is LinuxConfirm.RemoveComponent ->
+                    KitConfirmSpec(
+                        title =
+                            stringResource(
+                                io.github.eslamasabry.oc.ui.words.res.Res.string
+                                    .linuxComponentsRemoveQuestion,
+                                componentName(asked.id),
+                            ),
+                        confirmLabel =
+                            stringResource(
+                                io.github.eslamasabry.oc.ui.words.res.Res.string.linuxComponentsRemove,
+                                componentName(asked.id),
+                            ),
+                        kind = KitConfirmKind.Destructive,
+                        body =
+                            stringResource(
+                                io.github.eslamasabry.oc.ui.words.res.Res.string
+                                    .linuxComponentsRemoveBody
+                            ),
+                    )
+                is LinuxConfirm.Remove ->
+                    KitConfirmSpec(
+                        title =
+                            stringResource(
+                                if (asked.projects) Res.string.linuxLocalRemoveAllQuestion
+                                else Res.string.linuxLocalRemoveKeepQuestion
+                            ),
+                        confirmLabel =
+                            stringResource(
+                                if (asked.projects) Res.string.linuxLocalRemoveAll
+                                else Res.string.linuxLocalRemoveKeep
+                            ),
+                        kind = KitConfirmKind.Destructive,
+                        body =
+                            stringResource(
+                                if (asked.projects) Res.string.linuxLocalRemoveAllBody
+                                else Res.string.linuxLocalRemoveKeepBody,
+                                size(asked.bytes),
+                            ),
+                        typedName =
+                            if (asked.projects)
+                                io.github.eslamasabry.oc.engine.runtime.storage.LinuxLocalStorage
+                                    .DELETION_NAME
+                            else null,
+                    )
+                is LinuxConfirm.StopJob -> {
+                    val (title, label) = stopJobWords(asked.kind, asked.names)
+                    KitConfirmSpec(
+                        title = title,
+                        confirmLabel = label,
+                        kind = KitConfirmKind.Stop,
+                        body = stringResource(Res.string.linuxMgrJobStopBody),
+                    )
+                }
+            }
+        KitConfirm(
+            spec = spec,
+            onConfirm = actions::confirm,
+            onCancel = actions::dismiss,
+            alternative =
+                if (state.confirm == LinuxConfirm.Reset)
+                    KitAction(
+                        stringResource(Res.string.linuxMgrResetBackUpFirst),
+                        { actions.open(LinuxPage.Backups) },
+                    )
+                else null,
+        )
+    }
 }
 
 @Composable
 private fun PageRow(
     title: String,
     detail: String,
+    icon: ImageVector,
     onClick: () -> Unit,
 ) {
     KitRow(
         title = title,
         supporting = detail,
+        leading = KitRowLeading.Glyph(icon),
         supportingMaxLines = 2,
         trailing = KitRowTrailing.Chevron,
         onClick = onClick,

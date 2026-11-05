@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.linux.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -28,8 +29,15 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
+import io.github.eslamasabry.oc.ui.kit.modal.KitConsequence
+import io.github.eslamasabry.oc.ui.kit.modal.KitConsequenceMark
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
+import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
@@ -58,6 +66,15 @@ public fun LinuxBackupsScreen(state: LinuxBackupsUi, actions: LinuxBackupsAction
             )
         },
         width = KitScreenWidth.Reading,
+        bottom = {
+            KitButton(stringResource(when (state.choice) {
+                LinuxBackupChoice.Setup -> Res.string.linuxBackupNowSetup
+                LinuxBackupChoice.SetupAndProjects -> Res.string.linuxBackupNowSetupProjects
+                LinuxBackupChoice.ProjectsOnly -> Res.string.linuxBackupNowProjects
+            }), actions::go, enabled = enabled,
+                working = backup.phase == LinuxBackupPhase.Preparing || backup.phase == LinuxBackupPhase.Saving,
+                hero = true, modifier = Modifier.testTag("linux-backup-go"))
+        },
     ) {
         Column(
             Modifier.fillMaxWidth().testTag("linux-backups").verticalScroll(rememberScrollState()),
@@ -183,7 +200,7 @@ public fun LinuxBackupsScreen(state: LinuxBackupsUi, actions: LinuxBackupsAction
                 LinuxBackupPhase.Idle,
                 LinuxBackupPhase.Ready -> Unit
             }
-            KitRowGroup(label = stringResource(Res.string.linuxBackupWhat)) {
+            KitSectionLabel(stringResource(Res.string.linuxBackupWhat))
                 KitChoiceList(
                     choices =
                         listOf(
@@ -210,25 +227,12 @@ public fun LinuxBackupsScreen(state: LinuxBackupsUi, actions: LinuxBackupsAction
                     semanticsLabel = stringResource(Res.string.linuxBackupWhat),
                     onSelect = actions::choose,
                 )
-            }
-            KitButton(
-                stringResource(
-                    when (state.choice) {
-                        LinuxBackupChoice.Setup -> Res.string.linuxBackupNowSetup
-                        LinuxBackupChoice.SetupAndProjects -> Res.string.linuxBackupNowSetupProjects
-                        LinuxBackupChoice.ProjectsOnly -> Res.string.linuxBackupNowProjects
-                    }
-                ),
-                actions::go,
-                enabled = enabled,
-                working =
-                    backup.phase == LinuxBackupPhase.Preparing ||
-                        backup.phase == LinuxBackupPhase.Saving,
-                modifier = Modifier.testTag("linux-backup-go"),
-            )
             KitRowGroup {
                 KitRow(
                     title = stringResource(Res.string.linuxRestoreRow),
+                    leading = KitRowLeading.Glyph(KitIcons.restore),
+                    supportingMaxLines = 2, // Flutter branch 67b6ff077 linux_backups_page.dart restore row
+
                     supporting = stringResource(Res.string.linuxRestoreRowDetail),
                     trailing = KitRowTrailing.Chevron,
                     enabled = !backup.busy,
@@ -237,53 +241,66 @@ public fun LinuxBackupsScreen(state: LinuxBackupsUi, actions: LinuxBackupsAction
                     modifier = Modifier.testTag("linux-restore-row"),
                 )
             }
-            KitText(stringResource(Res.string.linuxBackupPrivacyNative))
+            KitText(stringResource(Res.string.linuxBackupPrivacyNative),
+                Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp), role = TypeRole.Caption)
         }
-    }
-    val manifest = backup.manifest
-    val confirm =
-        when {
-            state.askingStop -> {
-                val restoring = backup.phase == LinuxBackupPhase.Restoring
-                KitConfirmSpec(
-                    title =
-                        stringResource(
-                            if (restoring) Res.string.linuxMgrJobStopRestoreTitle
-                            else Res.string.linuxMgrJobStopBackupTitle
-                        ),
-                    confirmLabel =
-                        stringResource(
-                            if (restoring) Res.string.linuxMgrJobStopRestore
-                            else Res.string.linuxMgrJobStopBackup
-                        ),
-                    kind = KitConfirmKind.Stop,
-                    body = stringResource(Res.string.linuxMgrJobStopBody),
-                )
-            }
-            backup.phase == LinuxBackupPhase.Ready && manifest != null ->
-                KitConfirmSpec(
-                    title = stringResource(Res.string.linuxRestoreTitle),
-                    confirmLabel = stringResource(Res.string.linuxRestoreConfirm),
-                    body =
-                        stringResource(
-                            Res.string.linuxRestoreBody,
+        val manifest = backup.manifest
+        val confirm =
+            when {
+                state.askingStop -> {
+                    val restoring = backup.phase == LinuxBackupPhase.Restoring
+                    KitConfirmSpec(
+                        title =
                             stringResource(
-                                if (manifest.hasProjects) Res.string.linuxBackupSetupProjects
-                                else Res.string.linuxBackupSetup
+                                if (restoring) Res.string.linuxMgrJobStopRestoreTitle
+                                else Res.string.linuxMgrJobStopBackupTitle
                             ),
-                            manifest.created,
-                        ),
-                    consequences =
-                        listOfNotNull(
-                            stringResource(Res.string.linuxRestoreKeptProjects).takeIf {
-                                manifest.hasProjects
-                            },
-                            stringResource(Res.string.linuxRestoreReplacedSettings),
-                            stringResource(Res.string.linuxRestoreAddedTools),
-                            stringResource(Res.string.linuxBackupServiceAccountsNative),
-                        ),
-                )
-            else -> null
-        }
-    KitConfirm(confirm, actions::confirm, actions::dismiss)
+                        confirmLabel =
+                            stringResource(
+                                if (restoring) Res.string.linuxMgrJobStopRestore
+                                else Res.string.linuxMgrJobStopBackup
+                            ),
+                        kind = KitConfirmKind.Stop,
+                        body = stringResource(Res.string.linuxMgrJobStopBody),
+                    )
+                }
+                backup.phase == LinuxBackupPhase.Ready && manifest != null ->
+                    KitConfirmSpec(
+                        title = stringResource(Res.string.linuxRestoreTitle),
+                        confirmLabel = stringResource(Res.string.linuxRestoreConfirm),
+                        body =
+                            stringResource(
+                                Res.string.linuxRestoreBody,
+                                stringResource(
+                                    if (manifest.hasProjects) Res.string.linuxBackupSetupProjects
+                                    else Res.string.linuxBackupSetup
+                                ),
+                                manifest.created,
+                            ),
+                        consequenceItems =
+                            listOfNotNull(
+                                if (manifest.hasProjects)
+                                    KitConsequence(
+                                        stringResource(Res.string.linuxRestoreKeptProjects),
+                                        KitConsequenceMark.Kept,
+                                    )
+                                else null,
+                                KitConsequence(
+                                    stringResource(Res.string.linuxRestoreReplacedSettings),
+                                    KitConsequenceMark.Info,
+                                ),
+                                KitConsequence(
+                                    stringResource(Res.string.linuxRestoreAddedTools),
+                                    KitConsequenceMark.Info,
+                                ),
+                                KitConsequence(
+                                    stringResource(Res.string.linuxBackupServiceAccountsNative),
+                                    KitConsequenceMark.Info,
+                                ),
+                            ),
+                    )
+                else -> null
+            }
+        KitConfirm(confirm, actions::confirm, actions::dismiss)
+    }
 }

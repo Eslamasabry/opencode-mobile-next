@@ -106,6 +106,7 @@ public fun KitSwitchRow(
     leading: KitRowLeading? = null,
     lockedLabel: String? = null,
     below: (@Composable () -> Unit)? = null,
+    supportingMaxLines: Int = 3,
     onCheckedChange: (Boolean) -> Unit,
 ) {
     val tokens = LocalKitTokens.current
@@ -156,7 +157,7 @@ public fun KitSwitchRow(
             Column(Modifier.weight(1f)) {
                 KitText(title, role = TypeRole.RowTitle, tone = if (on) TextTone.Primary else TextTone.Tertiary)
                 (enabled.reason ?: supporting)?.let {
-                    KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = 3)
+                    KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = kitRowSupportingLines(io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale(), supportingMaxLines))
                 }
                 below?.invoke()
             }
