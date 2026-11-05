@@ -275,7 +275,7 @@ def cmd_static(nn):
     # commits
     if not DEV:
         oid = os.path.basename(order_file(nn))[:-3]
-        log = run('git', 'log', '--format=%H%x00%s%x00%b%x01', f'{mb}..HEAD')
+        log = run("git", "log", "--no-merges", "--format=%H%x00%s%x00%b%x01", f"{mb}..HEAD")
         for entry in filter(None, (e.strip() for e in log.split('\x01'))):
             sha, subj, body = (entry.split('\x00') + ['', ''])[:3]
             if not re.match(r'^(feat|fix|test|refactor|docs|chore)\([a-z0-9-]+\): \S.* \[skip ci\]$', subj):
