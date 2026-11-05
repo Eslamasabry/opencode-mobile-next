@@ -62,12 +62,12 @@ internal const val MENU_MAX_WIDTH_DP: Int = 320
 private const val MENU_MIN_WIDTH_DP = 180
 
 /** A named group in a menu; its [heading] leads the group's first item (Dart `KitMenuGroup`). */
-@Immutable
-public data class KitMenuGroup(val id: String, val heading: String? = null)
+@Immutable public data class KitMenuGroup(val id: String, val heading: String? = null)
 
 /**
- * One menu item (Dart `KitMenuItem`). A disabled item says why on a second muted line. [checked] non-null draws the
- * check mark slot (a chosen value). [destructive] items move last, after one divider (B-KIT-022); never red.
+ * One menu item (Dart `KitMenuItem`). A disabled item says why on a second muted line. [checked]
+ * non-null draws the check mark slot (a chosen value). [destructive] items move last, after one
+ * divider (B-KIT-022); never red.
  */
 @Immutable
 public data class KitMenuItem(
@@ -90,10 +90,10 @@ public sealed interface KitMenuEntry {
 }
 
 /**
- * The ordering rule (Dart `kitMenuLayout`, KitMenu.md "Ordering"), pure: items keep their order within their group;
- * groups keep the order of their first item; a divider sits where consecutive groups differ and a named group's heading
- * leads it; every destructive item then moves, in stable order, after one divider at the end (none when all are
- * destructive). B-KIT-022.
+ * The ordering rule (Dart `kitMenuLayout`, KitMenu.md "Ordering"), pure: items keep their order
+ * within their group; groups keep the order of their first item; a divider sits where consecutive
+ * groups differ and a named group's heading leads it; every destructive item then moves, in stable
+ * order, after one divider at the end (none when all are destructive). B-KIT-022.
  */
 public object MenuLayout {
     public fun arrange(items: List<KitMenuItem>): List<KitMenuEntry> {
@@ -120,15 +120,13 @@ public object MenuLayout {
 }
 
 /**
- * The one popup menu (Dart `showKitMenu`, plan 06 §7.4), as screen state: shown while [expanded], anchored to [anchor]
- * (below its end edge; above when there is no room). Choosing an item closes the menu, then runs the item. Dismissing
- * (outside tap, Back) calls [onDismissRequest] and runs nothing. An empty [items] never opens.
+ * The one popup menu (Dart `showKitMenu`, plan 06 §7.4), as screen state: shown while [expanded],
+ * anchored to [anchor] (below its end edge; above when there is no room). Choosing an item closes
+ * the menu, then runs the item. Dismissing (outside tap, Back) calls [onDismissRequest] and runs
+ * nothing. An empty [items] never opens.
  *
- * States: closed, open
- * Text: frame
- * Cap: Menu (320)
- * Motion: drops a few dp as it fades in at Full; Calm fades; Off appears at once
- * Replaces: showKitMenu, KitMenuPanel (lib/ui/kit/kit_menu.dart)
+ * States: closed, open Text: frame Cap: Menu (320) Motion: drops a few dp as it fades in at Full;
+ * Calm fades; Off appears at once Replaces: showKitMenu, KitMenuPanel (lib/ui/kit/kit_menu.dart)
  */
 @Composable
 public fun KitMenu(
@@ -137,6 +135,8 @@ public fun KitMenu(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
     title: String? = null,
+    // A state-backed action may need its target until selection has consumed it.
+    dismissBeforeSelect: Boolean = true,
     anchor: @Composable () -> Unit,
 ) {
     Box(modifier) {
@@ -154,15 +154,19 @@ public fun KitMenu(
                 val shown = remember { MutableTransitionState(false).apply { targetState = true } }
                 AnimatedVisibility(
                     shown,
-                    enter = fadeIn(specs.quick()) + if (motion.travels) slideInVertically(specs.quick()) { -it / 16 } else fadeIn(specs.quick()),
+                    enter =
+                        fadeIn(specs.quick()) +
+                            if (motion.travels) slideInVertically(specs.quick()) { -it / 16 }
+                            else fadeIn(specs.quick()),
                     exit = fadeOut(specs.exit()),
                 ) {
                     KitMenuPanel(
                         items = items,
                         title = title,
                         onChoose = { item ->
-                            onDismissRequest()
+                            if (dismissBeforeSelect) onDismissRequest()
                             item.onSelect()
+                            if (!dismissBeforeSelect) onDismissRequest()
                         },
                     )
                 }
@@ -172,8 +176,8 @@ public fun KitMenu(
 }
 
 /**
- * The menu's panel on its own (Dart `KitMenuPanel`): `surface2`, a hairline, at most 320 dp, rows of at least 48 dp.
- * Used by [KitMenu] and by captures; screens use [KitMenu].
+ * The menu's panel on its own (Dart `KitMenuPanel`): `surface2`, a hairline, at most 320 dp, rows
+ * of at least 48 dp. Used by [KitMenu] and by captures; screens use [KitMenu].
  */
 @Composable
 public fun KitMenuPanel(
@@ -194,16 +198,22 @@ public fun KitMenuPanel(
             .verticalScroll(rememberScrollState())
             .padding(vertical = Space.S1.dp)
             .semantics { if (title != null) paneTitle = title }
-            .testTag("kit-menu"),
+            .testTag("kit-menu")
     ) {
         MenuLayout.arrange(items).forEach { entry ->
             when (entry) {
                 KitMenuEntry.Divider ->
-                    Box(Modifier.padding(vertical = Space.S1.dp).fillMaxWidth().height(1.dp).background(colors.hairline))
+                    Box(
+                        Modifier.padding(vertical = Space.S1.dp)
+                            .fillMaxWidth()
+                            .height(1.dp)
+                            .background(colors.hairline)
+                    )
                 is KitMenuEntry.Heading ->
                     KitText(
                         entry.group.heading.orEmpty(),
-                        Modifier.padding(horizontal = tokens.gutter.dp, vertical = Space.S1.dp).semantics { heading() },
+                        Modifier.padding(horizontal = tokens.gutter.dp, vertical = Space.S1.dp)
+                            .semantics { heading() },
                         role = TypeRole.Caption,
                         tone = TextTone.Secondary,
                         kind = KitTextKind.Frame,
@@ -237,9 +247,21 @@ private fun MenuRow(item: KitMenuItem, onChoose: (KitMenuItem) -> Unit) {
         val ink = if (on) colors.text1 else colors.text3
         item.icon?.let { KitGlyph(it, ink, tokens.smallIcon.dp) }
         Column(Modifier.weight(1f)) {
-            KitText(item.label, role = TypeRole.RowTitle, tone = if (on) TextTone.Primary else TextTone.Tertiary, kind = KitTextKind.Frame, maxLines = 2)
+            KitText(
+                item.label,
+                role = TypeRole.RowTitle,
+                tone = if (on) TextTone.Primary else TextTone.Tertiary,
+                kind = KitTextKind.Frame,
+                maxLines = 2,
+            )
             item.enabled.reason?.let {
-                KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Frame, maxLines = 2)
+                KitText(
+                    it,
+                    role = TypeRole.Secondary,
+                    tone = TextTone.Secondary,
+                    kind = KitTextKind.Frame,
+                    maxLines = 2,
+                )
             }
         }
         when (item.checked) {
@@ -250,7 +272,10 @@ private fun MenuRow(item: KitMenuItem, onChoose: (KitMenuItem) -> Unit) {
     }
 }
 
-/** Below the anchor, aligned to its end edge; above when there is no room below; kept inside the window by [margin]. */
+/**
+ * Below the anchor, aligned to its end edge; above when there is no room below; kept inside the
+ * window by [margin].
+ */
 private class MenuPosition(private val margin: Int) : PopupPositionProvider {
     override fun calculatePosition(
         anchorBounds: IntRect,
@@ -259,9 +284,12 @@ private class MenuPosition(private val margin: Int) : PopupPositionProvider {
         popupContentSize: IntSize,
     ): IntOffset {
         val x =
-            if (layoutDirection == LayoutDirection.Ltr) anchorBounds.right - popupContentSize.width else anchorBounds.left
+            if (layoutDirection == LayoutDirection.Ltr) anchorBounds.right - popupContentSize.width
+            else anchorBounds.left
         val below = anchorBounds.bottom
-        val y = if (below + popupContentSize.height <= windowSize.height) below else anchorBounds.top - popupContentSize.height
+        val y =
+            if (below + popupContentSize.height <= windowSize.height) below
+            else anchorBounds.top - popupContentSize.height
         return IntOffset(
             x.coerceIn(margin, maxOf(margin, windowSize.width - popupContentSize.width - margin)),
             y.coerceIn(0, maxOf(0, windowSize.height - popupContentSize.height)),

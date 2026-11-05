@@ -12,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.model.FileNode
 import io.github.eslamasabry.oc.feature.files.presentation.FileNotice
@@ -28,16 +29,19 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
-import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kitchat.header.KitClipboardEffect
@@ -86,11 +90,11 @@ import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarClose
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
+import io.github.eslamasabry.oc.ui.words.res.libraryTerminalTitle
 import io.github.eslamasabry.oc.ui.words.res.readerUiAttachPrompt
 import io.github.eslamasabry.oc.ui.words.res.readerUiChangedCount
 import io.github.eslamasabry.oc.ui.words.res.readerUiCopyPath
 import io.github.eslamasabry.oc.ui.words.res.readerUiIndicatorsFailed
-import io.github.eslamasabry.oc.ui.words.res.libraryTerminalTitle
 import io.github.eslamasabry.oc.ui.words.res.readerUiNoFiles
 import io.github.eslamasabry.oc.ui.words.res.readerUiNoSymbols
 import io.github.eslamasabry.oc.ui.words.res.readerUiOpenReview
@@ -128,7 +132,6 @@ import io.github.eslamasabry.oc.ui.words.res.storageAccessWhyAgent
 import io.github.eslamasabry.oc.ui.words.res.storageAccessWhyOff
 import io.github.eslamasabry.oc.ui.words.res.storageAccessWhyScope
 import org.jetbrains.compose.resources.pluralStringResource
-import io.github.eslamasabry.oc.ui.words.res.stateReaderSaveFailed
 import org.jetbrains.compose.resources.stringResource
 
 /** The project's real file, text and symbol reads; every uncommon act also has a visible button. */
@@ -169,7 +172,9 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                                         actions::terminal,
                                     )
                                 )
-                            add(KitLineAction(stringResource(Res.string.fileReload), actions::retry))
+                            add(
+                                KitLineAction(stringResource(Res.string.fileReload), actions::retry)
+                            )
                             add(
                                 KitLineAction(
                                     stringResource(Res.string.filesViewOptions),
@@ -438,32 +443,6 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                     )
             }
         }
-        val node = state.actionsFor
-        KitSheet(
-            visible = node != null,
-            onDismissRequest = actions::closeActions,
-            title = node?.name ?: stringResource(Res.string.filesRowActions),
-            closeLabel = stringResource(Res.string.kitTopBarClose),
-        ) {
-            if (node != null)
-                Column {
-                    val deleted = state.changes[node.path]?.status == "deleted"
-                    if (!node.isDir && !deleted)
-                        KitRow(stringResource(Res.string.filesAskAboutFile), onClick = actions::ask)
-                    if (!node.isDir && !deleted && state.canAttach && !state.attaching)
-                        KitRow(
-                            stringResource(Res.string.readerUiAttachPrompt),
-                            onClick = actions::attach,
-                        )
-                    if (state.changes[node.path] != null)
-                        KitRow(
-                            stringResource(Res.string.readerUiOpenReview),
-                            onClick = actions::review,
-                        )
-                    KitRow(stringResource(Res.string.readerUiCopyPath), onClick = actions::copyPath)
-                    KitRow(stringResource(Res.string.filesCopyName), onClick = actions::copyName)
-                }
-        }
     }
 }
 
@@ -591,20 +570,71 @@ private fun EntryRow(node: FileNode, state: FolderUi, actions: FolderActions) {
     }
         .joinToString(" · ")
         .ifEmpty { null }
-    KitRow(
-        title = node.name,
-        supporting = detail,
-        supportingMaxLines = 2,
-        titleIsFileName = true,
-        trailing =
-            KitRowTrailing.Action(
-                KitLineAction(
-                    stringResource(Res.string.filesRowActions),
-                    { actions.showActions(node) },
+    val deleted = change?.status == "deleted"
+    val menu = buildList {
+        if (!node.isDir && !deleted) {
+            add(
+                KitMenuItem(
+                    stringResource(Res.string.filesAskAboutFile),
+                    actions::ask,
+                    icon = KitIcons.chat,
                 )
-            ),
-        onClick = { actions.open(node) },
-    )
+            )
+            if (state.canAttach && !state.attaching)
+                add(
+                    KitMenuItem(
+                        stringResource(Res.string.readerUiAttachPrompt),
+                        actions::attach,
+                        icon = KitIcons.attach,
+                    )
+                )
+        }
+        if (change != null)
+            add(
+                KitMenuItem(
+                    stringResource(Res.string.readerUiOpenReview),
+                    actions::review,
+                    icon = KitIcons.review,
+                )
+            )
+        add(
+            KitMenuItem(
+                stringResource(Res.string.readerUiCopyPath),
+                actions::copyPath,
+                icon = KitIcons.copy,
+            )
+        )
+        add(
+            KitMenuItem(
+                stringResource(Res.string.filesCopyName),
+                actions::copyName,
+                icon = KitIcons.textShort,
+            )
+        )
+    }
+    KitMenu(
+        expanded = state.actionsFor?.path == node.path,
+        items = menu,
+        onDismissRequest = actions::closeActions,
+        dismissBeforeSelect = false,
+    ) {
+        KitRow(
+            title = node.name,
+            modifier = Modifier.testTag("files-entry-${node.path}"),
+            leading = KitRowLeading.Glyph(if (node.isDir) KitIcons.folderOpen else KitIcons.file),
+            supporting = detail,
+            supportingMaxLines = 2,
+            titleIsFileName = true,
+            trailing =
+                KitRowTrailing.Action(
+                    KitLineAction(
+                        stringResource(Res.string.filesRowActions),
+                        { actions.showActions(node) },
+                    )
+                ),
+            onClick = { actions.open(node) },
+        )
+    }
 }
 
 @Composable
