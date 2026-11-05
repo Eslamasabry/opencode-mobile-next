@@ -24,7 +24,12 @@ class KitLiveBackgroundGateTest {
         FlutterGoldenGate.check("kit_live_background_default_1280x800", content = part)
     }
 
+    @Test fun text2() {
+        FlutterGoldenGate.check("kit_live_background_default_text2", modes = listOf("dark"), textScale = 2f, content = part)
+        FlutterGoldenGate.check("kit_live_background_default_text2_1280x800", modes = listOf("dark"), textScale = 2f, content = part)
+    }
+
     @Test fun matrix() {
-        FlutterGoldenGate.matrix("part-kit_live_background", caps = mapOf("KitLiveBackground" to "reading"), content = part)
+        FlutterGoldenGate.matrix("part-kit_live_background", caps = mapOf("KitLiveBackground" to "fill"), content = part)
     }
 }
