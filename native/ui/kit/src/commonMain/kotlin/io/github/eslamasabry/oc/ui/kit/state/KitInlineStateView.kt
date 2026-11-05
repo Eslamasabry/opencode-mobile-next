@@ -35,6 +35,7 @@ public fun KitInlineStateView(
     modifier: Modifier = Modifier,
     body: String? = null,
     primary: KitAction? = null,
+    secondary: KitAction? = null,
 ) {
     val tokens = LocalKitTokens.current
     Column(
@@ -56,9 +57,9 @@ public fun KitInlineStateView(
             Spacer(Modifier.height(Space.S1.dp))
             KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary)
         }
-        primary?.let {
+        if (primary != null || secondary != null) {
             Spacer(Modifier.height(Space.S3.dp))
-            KitActionBlock(primary = it)
+            KitActionBlock(primary = primary, secondary = secondary)
         }
     }
 }

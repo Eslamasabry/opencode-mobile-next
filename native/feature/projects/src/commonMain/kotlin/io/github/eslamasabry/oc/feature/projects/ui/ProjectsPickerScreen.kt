@@ -1,13 +1,10 @@
 package io.github.eslamasabry.oc.feature.projects.ui
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -48,7 +45,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
-import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.state.KitInlineStateView
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
@@ -467,103 +464,109 @@ private fun CreateDialog(state: ProjectsPickerUi, actions: ProjectsPickerActions
  */
 @Composable
 private fun PhoneFolderSheet(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
-    val path = state.phonePath
+    val path = state.phonePath ?: return
+    val folderName = path.trimEnd('/').substringAfterLast('/').ifEmpty { path }
+    val canOpen = !state.phoneLoading && state.phoneFailure == null && state.phoneParent != null
+    val held =
+        if (state.phoneLoading) KitEnabled.Disabled(stringResource(Res.string.andrStorageWorking))
+        else KitEnabled.Enabled
     KitSheet(
-        visible = path != null,
+        visible = true,
         onDismissRequest = actions::closePhoneFolders,
         title =
+            if (!state.browsingBuiltin && state.phoneParent == null)
+                stringResource(Res.string.folderBrowserInternalStorage)
+            else folderName,
+        subtitle =
             stringResource(
-                if (state.browsingBuiltin) Res.string.secBuiltinFolders
-                else Res.string.andrStorageInternal
+                if (state.browsingBuiltin) Res.string.folderBrowserPlaceProjects
+                else Res.string.folderBrowserPlacePhone
             ),
-        subtitle = path,
-        height = KitSheetHeight.Full,
-        primary =
+        leading =
             KitAction(
-                stringResource(Res.string.andrStorageUseFolder),
-                actions::usePhoneFolder,
-                enabled =
-                    if (
-                        !state.phoneLoading &&
-                            state.phoneFailure == null &&
-                            state.phoneParent != null
-                    )
-                        io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled.Enabled
-                    else
-                        io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled.Disabled(
-                            stringResource(
-                                when {
-                                    state.phoneLoading -> Res.string.andrStorageWorking
-                                    state.phoneFailure != null -> Res.string.andrStorageFolderFailed
-                                    // B-ANDR-051: the storage root is never a project (Flutter).
-                                    else -> Res.string.andrStorageRootHere
-                                }
-                            )
-                        ),
+                stringResource(
+                    if (state.phoneParent == null) Res.string.kitTopBarBack
+                    else Res.string.folderBrowserUp
+                ),
+                {
+                    state.phoneParent?.let(actions::enterPhoneFolder) ?: actions.closePhoneFolders()
+                },
+                enabled = held,
             ),
+        height = KitSheetHeight.Content,
+        primary =
+            if (!canOpen) null
+            else
+                KitAction(
+                    stringResource(Res.string.folderBrowserOpen, folderName),
+                    actions::usePhoneFolder,
+                    icon = KitIcons.folderOpen,
+                ),
     ) {
-        Column(Modifier.verticalScroll(rememberScrollState())) {
-            state.phoneParent?.let { parent ->
-                KitRow(
-                    title = stringResource(Res.string.andrStorageUp),
-                    onClick = { actions.enterPhoneFolder(parent) },
+        when {
+            state.phoneLoading ->
+                KitSkeletonRows(count = 4) // F: lib/ui/widgets/folder_browser.dart:1122
+            state.phoneFailure != null -> {
+                val failure = state.phoneFailure
+                val message =
+                    when ((failure as? Failure.Folder)?.problem) {
+                        FolderProblem.Missing -> Res.string.folderBrowserErrorMissing
+                        FolderProblem.Denied -> Res.string.folderBrowserErrorDenied
+                        FolderProblem.Linked -> Res.string.folderBrowserErrorLinked
+                        FolderProblem.NotInstalled -> Res.string.folderBrowserErrorNotInstalled
+                        else -> Res.string.folderBrowserErrorFailed
+                    }
+                KitInlineStateView(
+                    title = stringResource(Res.string.folderBrowserErrorTitle),
+                    icon = KitIcons.warning,
+                    body = stringResource(message),
+                    secondary =
+                        KitAction(
+                            stringResource(Res.string.folderBrowserRetry),
+                            { actions.enterPhoneFolder(path) },
+                        ),
                 )
-            }
-            when {
-                state.phoneLoading -> KitSkeletonRows(count = 4)
-                state.phoneFailure != null -> {
-                    val failure = state.phoneFailure
-                    val message =
-                        when {
-                            failure is Failure.Folder && failure.problem == FolderProblem.Missing ->
-                                Res.string.andrStorageFolderMissing
-                            failure is Failure.Folder && failure.problem == FolderProblem.Denied ->
-                                Res.string.andrStorageFolderDenied
-                            failure is Failure.Folder && failure.problem == FolderProblem.Linked ->
-                                Res.string.secBuiltinFolderLinked
-                            failure is Failure.Folder &&
-                                failure.problem == FolderProblem.NotInstalled ->
-                                Res.string.secBuiltinFolderNotInstalled
-                            else -> Res.string.andrStorageFolderFailed
-                        }
-                    KitNotice(
-                        message = stringResource(message),
-                        actions =
-                            buildList {
-                                if (
-                                    !state.browsingBuiltin &&
-                                        failure is Failure.Folder &&
-                                        failure.problem == FolderProblem.Denied
-                                )
-                                    add(
-                                        KitLineAction(
-                                            stringResource(Res.string.andrStorageAccess),
-                                            actions::allowPhoneFolderAccess,
-                                        )
-                                    )
-                                add(
-                                    KitLineAction(
-                                        stringResource(Res.string.kitTryAgain),
-                                        { path?.let(actions::enterPhoneFolder) },
-                                    )
-                                )
-                            },
+                failure.details?.let {
+                    KitDetailsFold(
+                        stringResource(Res.string.kitDetails),
+                        stringResource(Res.string.kitCopyDetails),
+                        text = it,
                     )
                 }
-                state.phoneFolders.isEmpty() ->
-                    KitNotice(message = stringResource(Res.string.andrStorageFoldersEmpty))
-                else ->
-                    KitRowGroup {
-                        state.phoneFolders.forEach { folder ->
-                            KitRow(
-                                title = folder.name,
-                                supporting = folder.hint,
-                                trailing = KitRowTrailing.Chevron,
-                                onClick = { actions.enterPhoneFolder(folder.path) },
-                            )
-                        }
-                    }
+                if (
+                    !state.browsingBuiltin &&
+                        failure is Failure.Folder &&
+                        failure.problem == FolderProblem.Denied
+                )
+                    io.github.eslamasabry.oc.ui.kit.KitButton(
+                        stringResource(Res.string.andrStorageAccess),
+                        actions::allowPhoneFolderAccess,
+                        role = io.github.eslamasabry.oc.ui.kit.KitButtonRole.Tertiary,
+                    )
             }
+            state.phoneFolders.isEmpty() ->
+                KitInlineStateView(
+                    title = stringResource(Res.string.folderBrowserEmptyTitle),
+                    icon = KitIcons.folderOpen,
+                    body =
+                        stringResource(
+                            if (state.browsingBuiltin) Res.string.folderBrowserEmptyBody
+                            else Res.string.folderBrowserEmptyPhoneBody
+                        ),
+                )
+            else ->
+                KitRowGroup(leadingTiles = true) {
+                    state.phoneFolders.forEach { folder ->
+                        KitRow(
+                            title = folder.name,
+                            supporting = folder.hint,
+                            leading = KitRowLeading.Glyph(KitIcons.folderOpen),
+                            trailing = KitRowTrailing.Chevron,
+                            modifier = Modifier.testTag("phone-folder-${folder.path}"),
+                            onClick = { actions.enterPhoneFolder(folder.path) },
+                        )
+                    }
+                }
         }
     }
 }
