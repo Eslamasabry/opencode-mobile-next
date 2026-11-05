@@ -118,7 +118,7 @@ public fun KitBreadcrumb(
 
         Trail {
             var first = true
-            fun sep() { if (!first) Separator(); first = false }
+            @Composable fun sep() { if (!first) Separator(); first = false }
             for (i in shown) {
                 sep()
                 Ancestor(nameOf(i), i < 0, textWidth.getValue(i), plain, measurer) { onSelected(i) }
