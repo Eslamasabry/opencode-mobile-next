@@ -87,6 +87,20 @@ class AppearancePageTest {
         }
 
     @Test
+    fun `B-KIT-017 guided Motion shows captioned cards and selects the named preference`() =
+        runComposeUiTest {
+            val actions = RecordingActions()
+            setContent {
+                SettingsThemed { SettingsScreen(appearance(AppearanceQuestion.Motion), actions) }
+            }
+            onNodeWithTag("appearance-motion").assertDoesNotExist()
+            onNodeWithTag("appearance-motion-Full").assertExists()
+            onNodeWithTag("appearance-motion-Off").assertExists()
+            onNodeWithTag("appearance-motion-Calm").performScrollTo().performClick()
+            assertEquals(listOf("motion:Calm"), actions.calls)
+        }
+
+    @Test
     fun `B-KIT-017 Shape shows both knobs without the style grid`() = runComposeUiTest {
         setContent {
             SettingsThemed {

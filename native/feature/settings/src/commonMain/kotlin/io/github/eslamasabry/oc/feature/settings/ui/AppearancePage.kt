@@ -28,6 +28,7 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.choice.KitPlainOptionCard
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
 import io.github.eslamasabry.oc.ui.kit.choice.KitSliderStep
@@ -390,40 +391,49 @@ private fun ColumnScope.AppearanceControls(
             onePage,
             top,
         )
-        Box(gutter) {
-            KitSegmented(
-                segments =
-                    MotionLevel.entries.map {
-                        KitSegment(
-                            it,
-                            motionWords(it),
-                            icon =
-                                when (it) {
-                                    MotionLevel.Full -> KitIcons.sparkle
-                                    MotionLevel.Calm -> KitIcons.waveform
-                                    MotionLevel.Off -> KitIcons.stopCircle
-                                },
-                        )
-                    },
-                tall = true,
-                selected = ui.motion,
-                semanticsLabel = stringResource(Res.string.appearanceAskMotion),
-                modifier = Modifier.testTag("appearance-motion"),
-                enabled =
-                    if (ui.heldBySaver)
-                        KitEnabled.Disabled(stringResource(Res.string.appearanceSaverMotion))
-                    else KitEnabled.Enabled,
-                onChange = actions::onMotion,
-            )
-        }
-        KitGroupNote(
+        val shownMotion = if (ui.heldBySaver) MotionLevel.Off else ui.motion
+        val hold =
+            if (ui.heldBySaver)
+                KitEnabled.Disabled(stringResource(Res.string.appearanceSaverMotion))
+            else KitEnabled.Enabled
+        val note =
             when {
                 ui.heldBySaver -> stringResource(Res.string.appearanceSaverMotion)
                 ui.systemMotionOff && ui.motion != MotionLevel.Off ->
                     stringResource(Res.string.effectsMotionSystemOff)
-                else -> motionHint(ui.motion)
+                else -> null
             }
-        )
+        Box(gutter) {
+            if (onePage)
+                KitSegmented(
+                    segments =
+                        MotionLevel.entries.map {
+                            KitSegment(it, motionWords(it), icon = motionIcon(it))
+                        },
+                    tall = true,
+                    selected = shownMotion,
+                    semanticsLabel = stringResource(Res.string.appearanceAskMotion),
+                    modifier = Modifier.testTag("appearance-motion"),
+                    enabled = hold,
+                    onChange = actions::onMotion,
+                )
+            else
+                Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+                    MotionLevel.entries.forEach { level ->
+                        KitPlainOptionCard(
+                            label = motionWords(level),
+                            caption = motionHint(level),
+                            icon = motionIcon(level),
+                            selected = shownMotion == level,
+                            onSelect = { actions.onMotion(level) },
+                            enabled = hold,
+                            modifier = Modifier.testTag("appearance-motion-${level.name}"),
+                        )
+                    }
+                }
+        }
+        if (onePage) KitGroupNote(note ?: motionHint(shownMotion))
+        else note?.let { KitGroupNote(it) }
     }
 }
 
@@ -504,3 +514,10 @@ private fun <T> AppearanceGrid(
         }
     }
 }
+
+private fun motionIcon(level: MotionLevel) =
+    when (level) {
+        MotionLevel.Full -> KitIcons.sparkle
+        MotionLevel.Calm -> KitIcons.waveform
+        MotionLevel.Off -> KitIcons.stopCircle
+    }

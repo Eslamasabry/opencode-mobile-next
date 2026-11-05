@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.choice
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -7,10 +8,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -22,15 +26,18 @@ import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.color.ThemeResolver
 import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
+import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
 import io.github.eslamasabry.oc.ui.design.style.*
 import io.github.eslamasabry.oc.ui.design.tokens.Density
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.*
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.style.KitSignalSample
 import io.github.eslamasabry.oc.ui.kit.theme.*
 
@@ -161,6 +168,95 @@ public fun KitStyleOptionCard(
                 KitText(label, Modifier.weight(1f), role = TypeRole.RowTitle, maxLines = 1)
                 if (selected) OptionCheck() else Spacer(Modifier.size(Space.S5.dp))
             }
+        }
+    }
+}
+
+/** Flutter KitOptionCard.plain: a small icon/check rail, title and three-line caption. */
+@Composable
+public fun KitPlainOptionCard(
+    label: String,
+    caption: String,
+    icon: ImageVector,
+    selected: Boolean,
+    onSelect: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: KitEnabled = KitEnabled.Enabled,
+) {
+    val colors = LocalKitColors.current
+    val tokens = LocalKitTokens.current
+    val look =
+        kitSurfaceLook(
+            KitSurfaceInput(
+                SurfaceRole.Content,
+                KitShapeId.Card,
+                SurfaceLevel.Surface2,
+                ownFill = colors.surface1,
+                selected = selected,
+                disabled = !enabled.isEnabled,
+            )
+        )
+    val mark by
+        animateFloatAsState(
+            if (selected) 1f else 0f,
+            KitMotion.specs.enter(),
+            label = "option-mark",
+        )
+    val markScale by
+        animateFloatAsState(
+            if (selected) 1f else MotionTokens.MARK_FROM,
+            KitMotion.specs.enter(),
+            label = "option-mark-scale",
+        )
+    KitTappable(
+        onClick = onSelect,
+        modifier =
+            modifier.kitMaxWidth(CapRole.Reading).fillMaxWidth().semantics {
+                role = Role.RadioButton
+                this.selected = selected
+                contentDescription = label
+            },
+        enabled = enabled.isEnabled,
+        disabledReason = enabled.reason,
+        shape = KitShapeId.Card,
+    ) {
+        Column(
+            Modifier.fillMaxWidth()
+                .then(look.modifier)
+                .border(
+                    if (selected) kitFocusRingWidth() else kitHairline(),
+                    if (selected) colors.accent else colors.hairline,
+                    look.shape,
+                )
+                .padding(Space.S3.dp)
+                .clearAndSetSemantics {}
+        ) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                KitGlyph(icon, if (selected) colors.accent else colors.text2, tokens.smallIcon.dp)
+                Spacer(Modifier.weight(1f))
+                OptionCheck(
+                    Modifier.graphicsLayer {
+                        alpha = mark
+                        scaleX = markScale
+                        scaleY = markScale
+                    }
+                )
+            }
+            Spacer(Modifier.height(Space.S2.dp))
+            KitText(
+                label,
+                role = TypeRole.RowTitle,
+                tone = if (enabled.isEnabled) TextTone.Primary else TextTone.Tertiary,
+                maxLines = 1,
+            )
+            KitText(
+                caption,
+                role = TypeRole.Secondary,
+                maxLines = 3,
+            ) // F: lib/ui/kit/kit_option_card.dart:263
+            enabled.reason?.let {
+                KitText(it, role = TypeRole.Secondary, maxLines = 3)
+            } // F: lib/ui/kit/kit_option_card.dart:266
         }
     }
 }
