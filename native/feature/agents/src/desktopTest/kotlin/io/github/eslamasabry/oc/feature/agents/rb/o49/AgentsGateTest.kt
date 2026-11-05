@@ -17,6 +17,8 @@ import kotlin.test.assertEquals
 class AgentsGateTest {
     private class Actions : AgentsActions {
         var installed: String? = null
+        var cancelled = false
+        override fun cancelAccountSignIn() { cancelled = true }
         override fun back() {}
         override fun startAdding() {}
         override fun cancelAdding() {}
@@ -32,6 +34,20 @@ class AgentsGateTest {
         override fun installPhone(id: String) { installed = id }
     }
     private val target = AgentAccountTarget(ProfileId("codex"), "My Codex host")
+    @Test fun `device sign-in names its host and keeps copy and cancel visible`() = runComposeUiTest {
+        val actions = Actions()
+        setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+            AgentsScreen(AgentsUi(accountTarget = target, accountPanel = AccountPanelState(
+                status = AccountPanelStatus.Ready, loginStatus = AccountLoginStatus.Waiting,
+                account = AgentRuntimeAccount(requiresSignIn = true), canCancel = true,
+                deviceCode = AccountDeviceCode("https://auth.example/device", "DEMO-CODE"))), actions)
+        } }
+        onNodeWithText("auth.example").assertExists()
+        onNodeWithContentDescription("Copy sign-in code").assertHasClickAction()
+        onNodeWithText("Open official sign-in").assertExists()
+        onNodeWithText("Cancel sign-in").performClick()
+        assertEquals(true, actions.cancelled)
+    }
     @Test fun signed_out() {
         FlutterGoldenGate.check("agent_account_signed_out", frame = FlutterGoldenGate.Frame.Screen) {
             AgentsScreen(AgentsUi(accountTarget = target, accountPanel = AccountPanelState(status = AccountPanelStatus.Ready,
