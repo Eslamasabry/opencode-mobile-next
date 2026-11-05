@@ -56,6 +56,8 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerTextBox
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerMic
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitStopAndSendPill
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerSend
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerStop
 import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
@@ -150,7 +152,7 @@ fun ComposerScreen(
                     )
                 }
             },
-            trailing = { FieldButtonSlot(state.button, actions, mic) },
+            trailing = { FieldButtonSlot(state.button, actions, mic, quiet = state.glow) },
         )
 
     }
@@ -193,7 +195,7 @@ private fun ChipRow(state: ComposerUi, actions: ComposerActions) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
         Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
             state.chips.filterIsInstance<ComposerChip.Approval>().forEach { chip ->
-                KitChip(approvalWords(chip.mode), kind = KitChipKind.Action, icon = KitIcons.shield,
+                KitChip(approvalWords(chip.mode), kind = KitChipKind.Action, icon = if (chip.mode == ApprovalMode.AutoApprove) KitIcons.check else KitIcons.shield,
                     tone = if (chip.mode == ApprovalMode.AutoApprove) KitChipTone.Active else KitChipTone.Neutral,
                     onClick = actions::onApprovalChip)
             }
@@ -214,22 +216,21 @@ private fun approvalWords(mode: ApprovalMode): String =
     }
 
 @Composable
-private fun FieldButtonSlot(button: FieldButton, actions: ComposerActions, mic: (@Composable () -> Unit)?) {
+private fun FieldButtonSlot(button: FieldButton, actions: ComposerActions, mic: (@Composable () -> Unit)?, quiet: Boolean) {
     when (button) {
         FieldButton.None -> Unit
         FieldButton.Mic ->
-            mic?.invoke() ?: KitIconButton(KitIcons.mic, stringResource(Res.string.kitComposerVoice), actions::onMic)
+            mic?.invoke() ?: KitComposerMic(stringResource(Res.string.kitComposerVoice), actions::onMic, quiet = quiet)
         FieldButton.Send -> KitComposerSend(stringResource(Res.string.kitComposerSend), actions::onSend)
         FieldButton.AddToTurn -> KitComposerSend(stringResource(Res.string.kitComposerAddToTurn), actions::onSend)
         FieldButton.StopAndSend ->
-            KitButton(stringResource(Res.string.kitComposerStopAndSend), onClick = actions::onSend, role = KitButtonRole.Secondary, maxLines = 1)
+            KitStopAndSendPill(stringResource(Res.string.kitComposerStopAndSend), actions::onSend)
         FieldButton.SendWhenOnline ->
             KitButton(stringResource(Res.string.kitComposerSendOffline), onClick = actions::onSend, role = KitButtonRole.Secondary, maxLines = 1)
         FieldButton.CannotSendYet ->
-            KitButton(
+            KitComposerSend(
                 stringResource(Res.string.kitComposerSend),
                 onClick = actions::onSend,
-                maxLines = 1,
                 enabled = KitEnabled.Disabled(stringResource(Res.string.kitComposerCannotSendYet)),
             )
         FieldButton.Sending ->
