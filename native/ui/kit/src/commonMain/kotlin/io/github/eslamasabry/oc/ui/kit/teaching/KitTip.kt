@@ -11,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
@@ -40,14 +41,14 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
 import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
-import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
+import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
-import io.github.eslamasabry.oc.ui.kit.foundation.shape
+import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotionState
 import io.github.eslamasabry.oc.ui.kit.motion.KitPace
@@ -144,13 +145,13 @@ public fun KitTip(
 @Composable
 public fun KitTipBubble(message: String, modifier: Modifier = Modifier) {
     val colors = LocalKitColors.current
-    val shape = KitShapeId.Panel.shape()
+    val shape = RoundedCornerShape(FlutterKitTokens.POPOVER_CORNER.dp) // F: lib/ui/kit/kit_tip.dart:239 lib/ui/kit/kit_tokens.dart:137
     Box(
         modifier
             .testTag("kit-tip")
             .widthIn(max = TipRules.MAX_WIDTH_DP.dp)
             .background(colors.surface2, shape)
-            .border(1.dp, colors.hairline, shape)
+            .border(kitHairline(), colors.hairline, shape)
             .padding(horizontal = Space.S3.dp, vertical = Space.S2.dp)
             .semantics { liveRegion = LiveRegionMode.Polite },
     ) {
