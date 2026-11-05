@@ -1,33 +1,22 @@
 package io.github.eslamasabry.oc.feature.widgetpanels.ui
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.placeCursorAtEnd
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.widgetpanels.presentation.*
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.tokens.Space
-import io.github.eslamasabry.oc.ui.kit.KitButton
-import io.github.eslamasabry.oc.ui.kit.KitButtonRole
-import io.github.eslamasabry.oc.ui.kit.KitText
-import io.github.eslamasabry.oc.ui.kit.KitWidgetPreview
-import io.github.eslamasabry.oc.ui.kit.choice.KitChoice
-import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceList
+import io.github.eslamasabry.oc.ui.kit.*
+import io.github.eslamasabry.oc.ui.kit.choice.*
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
-import io.github.eslamasabry.oc.ui.kit.input.KitField
-import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
-import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
-import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
+import io.github.eslamasabry.oc.ui.kit.modal.KitFloatingPanel
+import io.github.eslamasabry.oc.ui.kit.modal.KitPanelHeading
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.routes.WidgetPanel
 import io.github.eslamasabry.oc.ui.words.res.*
@@ -49,24 +38,76 @@ public fun WidgetPanelScreen(state: WidgetPanelUi, actions: WidgetPanelActions) 
                     else Res.string.widgetV2SteerTitle
                 )
         }
-    KitSheetHost(Modifier.fillMaxSize()) {
-        KitSheet(
-            visible = true,
-            onDismissRequest = actions::close,
-            title = title,
-            closeLabel = stringResource(Res.string.kitSheetClose),
-        ) {
-            Column(
-                Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
-            ) {
-                state.problem?.let {
-                    KitNotice(problemWords(it, state.route), tone = StatusTone.Failure)
+    val locked = state.saving || state.phase == WidgetComposePhase.Sending
+    val enabled =
+        if (state.saving || state.loading)
+            KitEnabled.Disabled(stringResource(Res.string.widgetV2Sending))
+        else KitEnabled.Enabled
+    KitFloatingPanel(
+        onDismiss = if (locked) null else actions::close,
+        dismissLabel = stringResource(Res.string.widgetV2Cancel),
+    ) {
+        when (state.route) {
+            is WidgetPanel.Steer ->
+                Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())) {
+                    ComposeBody(state, actions, title)
                 }
-                when (state.route) {
-                    is WidgetPanel.Style -> StyleBody(state, actions)
-                    is WidgetPanel.Project -> ProjectBody(state, actions)
-                    is WidgetPanel.Steer -> ComposeBody(state, actions)
+            is WidgetPanel.Style -> {
+                KitPanelHeading(
+                    title,
+                    stringResource(Res.string.widgetV2Cancel),
+                    actions::close,
+                    enabled,
+                )
+                Column(
+                    Modifier.weight(1f, fill = false)
+                        .verticalScroll(rememberScrollState())
+                        .padding(top = Space.S3.dp)
+                ) {
+                    KitWidgetStyleForm(
+                        state.previewSize,
+                        state.background,
+                        state.accent,
+                        accents = listOf("wallpaper", "app", "green", "teal", "blue", "amber"),
+                        accentName = { accentName(it) },
+                        accentColor = { widgetAccentColor(it) },
+                        onPreviewSize = actions::choosePreviewSize,
+                        onBackground = actions::chooseBackground,
+                        onAccent = actions::chooseAccent,
+                        enabled = enabled,
+                    )
+                }
+                state.problem?.let {
+                    Spacer(Modifier.height(Space.S3.dp))
+                    KitNotice(problemWords(it, state.route), tone = StatusTone.Neutral)
+                }
+                Spacer(Modifier.height(Space.S4.dp))
+                KitButton(
+                    stringResource(
+                        if (state.saving) Res.string.widgetV2Sending
+                        else Res.string.widgetV2SaveStyle
+                    ),
+                    actions::saveStyle,
+                    enabled = enabled,
+                    working = state.saving,
+                    modifier = Modifier.fillMaxWidth().testTag("widget-style-save"),
+                    fullWidth = true,
+                )
+            }
+            is WidgetPanel.Project -> {
+                KitPanelHeading(
+                    title,
+                    stringResource(Res.string.widgetV2Cancel),
+                    actions::close,
+                    enabled,
+                )
+                Spacer(Modifier.height(Space.S3.dp))
+                Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())) {
+                    ProjectBody(state, actions)
+                }
+                state.problem?.let {
+                    Spacer(Modifier.height(Space.S3.dp))
+                    KitNotice(problemWords(it, state.route), tone = StatusTone.Neutral)
                 }
             }
         }
@@ -74,86 +115,17 @@ public fun WidgetPanelScreen(state: WidgetPanelUi, actions: WidgetPanelActions) 
 }
 
 @Composable
-private fun StyleBody(state: WidgetPanelUi, actions: WidgetPanelActions) {
-    KitWidgetPreview(
-        title = stringResource(Res.string.widgetV2PreviewTitle),
-        background = state.background,
-        accent = state.accent,
-        compact = state.previewSize == "compact",
-        wide = state.previewSize == "list",
-        modifier = Modifier.testTag("widget-style-preview"),
+private fun accentName(id: String): String =
+    stringResource(
+        when (id) {
+            "wallpaper" -> Res.string.widgetV2AccentWallpaper
+            "app" -> Res.string.widgetV2AccentApp
+            "green" -> Res.string.widgetV2AccentGreen
+            "teal" -> Res.string.widgetV2AccentTeal
+            "blue" -> Res.string.widgetV2AccentBlue
+            else -> Res.string.widgetV2AccentAmber
+        }
     )
-    val waiting = stringResource(Res.string.widgetV2Busy)
-    val enabled =
-        if (state.saving || state.loading) KitEnabled.Disabled(waiting) else KitEnabled.Enabled
-    KitChoiceList(
-        choices =
-            listOf(
-                KitChoice("card", stringResource(Res.string.widgetV2SizeCard)),
-                KitChoice("compact", stringResource(Res.string.widgetV2SizeCompact)),
-                KitChoice("list", stringResource(Res.string.widgetV2SizeList)),
-            ),
-        selected = state.previewSize,
-        semanticsLabel = stringResource(Res.string.widgetV2SizeLabel),
-        onSelect = actions::choosePreviewSize,
-    )
-    KitChoiceList(
-        choices =
-            listOf(
-                KitChoice(
-                    "solid",
-                    stringResource(Res.string.widgetV2BackgroundSolid),
-                    enabled = enabled,
-                ),
-                KitChoice(
-                    "tinted",
-                    stringResource(Res.string.widgetV2BackgroundTinted),
-                    enabled = enabled,
-                ),
-                KitChoice(
-                    "transparent",
-                    stringResource(Res.string.widgetV2BackgroundTransparent),
-                    enabled = enabled,
-                ),
-            ),
-        selected = state.background,
-        semanticsLabel = stringResource(Res.string.widgetV2BackgroundLabel),
-        onSelect = actions::chooseBackground,
-    )
-    KitChoiceList(
-        choices =
-            listOf(
-                KitChoice(
-                    "wallpaper",
-                    stringResource(Res.string.widgetV2AccentWallpaper),
-                    enabled = enabled,
-                ),
-                KitChoice("app", stringResource(Res.string.widgetV2AccentApp), enabled = enabled),
-                KitChoice(
-                    "green",
-                    stringResource(Res.string.widgetV2AccentGreen),
-                    enabled = enabled,
-                ),
-                KitChoice("teal", stringResource(Res.string.widgetV2AccentTeal), enabled = enabled),
-                KitChoice("blue", stringResource(Res.string.widgetV2AccentBlue), enabled = enabled),
-                KitChoice(
-                    "amber",
-                    stringResource(Res.string.widgetV2AccentAmber),
-                    enabled = enabled,
-                ),
-            ),
-        selected = state.accent,
-        semanticsLabel = stringResource(Res.string.widgetV2AccentLabel),
-        onSelect = actions::chooseAccent,
-    )
-    KitButton(
-        stringResource(Res.string.widgetV2SaveStyle),
-        actions::saveStyle,
-        enabled = enabled,
-        working = state.saving,
-        modifier = Modifier.testTag("widget-style-save"),
-    )
-}
 
 @Composable
 private fun ProjectBody(state: WidgetPanelUi, actions: WidgetPanelActions) {
@@ -165,7 +137,12 @@ private fun ProjectBody(state: WidgetPanelUi, actions: WidgetPanelActions) {
         choices =
             listOf(
                 KitChoice("", stringResource(Res.string.chatsHomeAllProjects), enabled = enabled)
-            ) + state.projects.map { KitChoice(it, it, enabled = enabled) },
+            ) +
+                state.projects
+                    .filter { it.isNotEmpty() }
+                    .map {
+                        KitChoice(it, it, enabled = enabled)
+                    },
         selected = state.project,
         semanticsLabel = stringResource(Res.string.widgetProjectTitle),
         onSelect = actions::chooseProject,
@@ -173,8 +150,8 @@ private fun ProjectBody(state: WidgetPanelUi, actions: WidgetPanelActions) {
 }
 
 @Composable
-private fun ComposeBody(state: WidgetPanelUi, actions: WidgetPanelActions) {
-    val field = remember { TextFieldState() }
+private fun ComposeBody(state: WidgetPanelUi, actions: WidgetPanelActions, title: String) {
+    val field = rememberTextFieldState()
     LaunchedEffect(state.dictated) {
         state.dictated?.let { heard ->
             val previous = field.text.toString()
@@ -192,33 +169,17 @@ private fun ComposeBody(state: WidgetPanelUi, actions: WidgetPanelActions) {
             state.steerMode == "restart" && state.composeBlocked ->
                 stringResource(Res.string.widgetV2RestartUnavailable)
             state.composeBlocked -> stringResource(Res.string.widgetV2UnknownBehavior)
-            state.phase != WidgetComposePhase.Ready -> stringResource(Res.string.widgetV2Busy)
             else -> null
         }
-    if (block != null && state.problem == null) KitNotice(block)
-    val enabled = block?.let { KitEnabled.Disabled(it) } ?: KitEnabled.Enabled
-    if (state.phase == WidgetComposePhase.Sent) KitText(stringResource(Res.string.widgetV2Accepted))
-    KitField(
-        field,
-        label = stringResource(Res.string.widgetV2MessageHint),
-        kind = KitFieldKind.Multiline,
-        maxLength = 8000,
-        enabled = enabled,
-        modifier = Modifier.testTag("widget-message"),
-    )
-    KitButton(
-        stringResource(Res.string.widgetV2Dictate),
-        actions::dictate,
-        role = KitButtonRole.Secondary,
-        enabled = enabled,
-        working = state.phase == WidgetComposePhase.Dictating,
-    )
-    KitButton(
-        stringResource(Res.string.widgetV2Send),
-        { actions.send(field.text.toString()) },
-        enabled = enabled,
-        working = state.phase == WidgetComposePhase.Sending,
-        modifier = Modifier.testTag("widget-send"),
+    KitSteerBox(
+        title = title,
+        state = field,
+        phase = KitSteerBoxPhase.valueOf(state.phase.name),
+        onSend = actions::send,
+        onDictate = actions::dictate,
+        onClose = actions::close,
+        message = state.problem?.takeIf { block == null }?.let { problemWords(it, state.route) },
+        blockedReason = block,
     )
 }
 

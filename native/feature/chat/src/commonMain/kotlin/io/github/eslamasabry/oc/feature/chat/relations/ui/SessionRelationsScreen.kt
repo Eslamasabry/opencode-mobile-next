@@ -28,6 +28,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenuDismissal
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
@@ -176,10 +177,10 @@ private fun RelationRowView(
     // The model's menu is the reviewed target. Hiding the popup must not clear it before an intent reads it.
     fun select(action: () -> Unit) { menuOpen = false; action() }
     val items = buildList {
-        if (!row.current) add(KitMenuItem(stringResource(Res.string.sessionRelationsOpen, rowTitle), { select { actions.open(row.id) } }, icon = KitIcons.chat, enabled = actionEnabled, dismissOnSelect = false))
-        if (state.canResume) add(KitMenuItem(stringResource(Res.string.sessionRelationsCopyHandoff, rowTitle), { select(actions::showResume) }, icon = KitIcons.copy, enabled = actionEnabled, dismissOnSelect = false))
-        if (state.canPin) add(KitMenuItem(stringResource(if (row.pinned) Res.string.sessionRelationsUnpin else Res.string.sessionRelationsPin, rowTitle), { select(actions::togglePin) }, icon = KitIcons.pin, enabled = actionEnabled, dismissOnSelect = false))
-        if (!row.parent && row.status == RelationStatus.Working) add(KitMenuItem(stringResource(Res.string.sessionRelationsStop, rowTitle), { select(actions::requestStop) }, icon = KitIcons.stopCircle, destructive = true, enabled = actionEnabled, dismissOnSelect = false))
+        if (!row.current) add(KitMenuItem(stringResource(Res.string.sessionRelationsOpen, rowTitle), { select { actions.open(row.id) } }, icon = KitIcons.chat, enabled = actionEnabled, dismissal = KitMenuDismissal.ByAction))
+        if (state.canResume) add(KitMenuItem(stringResource(Res.string.sessionRelationsCopyHandoff, rowTitle), { select(actions::showResume) }, icon = KitIcons.copy, enabled = actionEnabled, dismissal = KitMenuDismissal.ByAction))
+        if (state.canPin) add(KitMenuItem(stringResource(if (row.pinned) Res.string.sessionRelationsUnpin else Res.string.sessionRelationsPin, rowTitle), { select(actions::togglePin) }, icon = KitIcons.pin, enabled = actionEnabled, dismissal = KitMenuDismissal.ByAction))
+        if (!row.parent && row.status == RelationStatus.Working) add(KitMenuItem(stringResource(Res.string.sessionRelationsStop, rowTitle), { select(actions::requestStop) }, icon = KitIcons.stopCircle, destructive = true, enabled = actionEnabled, dismissal = KitMenuDismissal.ByAction))
     }
     KitMenu(
         expanded = menuOpen && state.menu?.id == row.id && !state.stale,

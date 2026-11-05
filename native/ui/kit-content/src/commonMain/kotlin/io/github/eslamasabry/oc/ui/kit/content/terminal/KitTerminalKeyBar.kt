@@ -193,7 +193,7 @@ private fun controlByte(rune: Int): Int? =
  * The sticky Ctrl and Alt of a [TerminalKeyBar] (Dart `TerminalKeyBarController`). A tap latches a modifier for the
  * next key, from the bar or the phone's keyboard; the key releases it. Compose state, so the bar redraws on a change.
  */
-public class TerminalKeyBarController {
+public class TerminalKeyBarController(private val onModifierToggle: ((KitTerminalBarKey) -> Unit)? = null) {
     private var _ctrl by mutableStateOf(false)
     private var _alt by mutableStateOf(false)
 
@@ -203,6 +203,13 @@ public class TerminalKeyBarController {
     public fun toggle(key: KitTerminalBarKey) {
         if (key == KitTerminalBarKey.Ctrl) _ctrl = !_ctrl // F: lib/ui/kit/terminal_key_bar.dart:132
         if (key == KitTerminalBarKey.Alt) _alt = !_alt // F: lib/ui/kit/terminal_key_bar.dart:133
+        if (key.isModifier) onModifierToggle?.invoke(key)
+    }
+
+    /** Mirrors a native grid's acknowledged latches, including release after hardware/IME input. */
+    public fun sync(ctrl: Boolean, alt: Boolean) {
+        _ctrl = ctrl
+        _alt = alt
     }
 
     /** The latched modifiers, released. */

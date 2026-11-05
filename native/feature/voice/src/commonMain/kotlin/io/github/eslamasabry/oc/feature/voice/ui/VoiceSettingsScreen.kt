@@ -2,14 +2,19 @@ package io.github.eslamasabry.oc.feature.voice.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.voice.language.VoiceLanguage
 import io.github.eslamasabry.oc.engine.voice.models.SetupNetwork
@@ -23,29 +28,33 @@ import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoice
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceList
+import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
+import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
-import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
-import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitProgress
 import io.github.eslamasabry.oc.ui.kit.state.KitProgressView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.e7VoiceUiCancelDownload
 import io.github.eslamasabry.oc.ui.words.res.e7VoiceUiDeleteDetail
@@ -114,13 +123,42 @@ public fun VoiceSettingsScreen(state: VoiceSettingsUi, actions: VoiceSettingsPre
         },
         width = KitScreenWidth.Reading,
         loading = state.loading,
+        bottom =
+            if (
+                state.available &&
+                    !state.loading &&
+                    !state.busy &&
+                    state.selectedRow?.installed == false
+            ) {
+                {
+                    val row = state.selectedRow!!
+                    KitActionBlock(
+                        Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
+                            .padding(vertical = Space.S2.dp)
+                            .testTag("voice-model-primary-action"),
+                        primary =
+                            KitAction(
+                                stringResource(
+                                    Res.string.voiceSetupDownloadPack,
+                                    packName(row.id),
+                                    sizeWords(row.bytes),
+                                ),
+                                actions::downloadSelected,
+                                icon = KitIcons.download,
+                                enabled =
+                                    if (row.unsupported) KitEnabled.Disabled(unsupportedReason(row))
+                                    else KitEnabled.Enabled,
+                            ),
+                    )
+                }
+            } else null,
     ) {
         Column(
             Modifier.fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S3.dp)
-                .testTag("voice-settings-list"),
-            verticalArrangement = Arrangement.spacedBy(Space.S4.dp),
+                .padding(horizontal = LocalKitTokens.current.gutter.dp)
+                .padding(top = Space.S2.dp, bottom = Space.S6.dp)
+                .testTag("voice-settings-list")
         ) {
             if (!state.available) {
                 KitNotice(
@@ -134,8 +172,12 @@ public fun VoiceSettingsScreen(state: VoiceSettingsUi, actions: VoiceSettingsPre
                 role = TypeRole.Secondary,
                 tone = TextTone.Secondary,
             )
+            Spacer(Modifier.height(Space.S4.dp))
             // What is happening comes first (STATE-1): the running download or why it failed.
-            DownloadProgress(state, actions)
+            if (state.busy) {
+                DownloadProgress(state, actions)
+                Spacer(Modifier.height(Space.S4.dp))
+            }
             state.problem?.let { problem ->
                 KitNotice(
                     message =
@@ -147,6 +189,7 @@ public fun VoiceSettingsScreen(state: VoiceSettingsUi, actions: VoiceSettingsPre
                             actions::dismissProblem,
                         ),
                 )
+                Spacer(Modifier.height(Space.S3.dp))
             }
             KitNotice(
                 message =
@@ -155,29 +198,56 @@ public fun VoiceSettingsScreen(state: VoiceSettingsUi, actions: VoiceSettingsPre
                             Res.string.voiceNativePhoneEngine
                         else Res.string.e7VoiceUiPrivacyDownload
                     ),
+                icon = KitIcons.locked,
                 liveRegion = false,
             )
-            if (!state.hasMicrophone) KitNotice(stringResource(Res.string.e7VoiceUiNoBuiltInMic))
+            if (!state.hasMicrophone) {
+                Spacer(Modifier.height(Space.S3.dp))
+                KitNotice(stringResource(Res.string.e7VoiceUiNoBuiltInMic))
+            }
+            Spacer(Modifier.height(Space.S4.dp))
             Models(state, actions)
+            Spacer(Modifier.height(Space.S4.dp))
+            KitText(stringResource(Res.string.e7VoiceUiLanguage), role = TypeRole.Label)
+            Spacer(Modifier.height(Space.S2.dp))
+            val sourceLanguages =
+                listOf(VoiceLanguage.Detect, VoiceLanguage.English, VoiceLanguage.Arabic)
+            val shownLanguages =
+                if (state.language in sourceLanguages) sourceLanguages
+                else sourceLanguages + state.language
+            KitSegmented(
+                segments =
+                    shownLanguages.map { language ->
+                        KitSegment(
+                            language,
+                            when (language) {
+                                VoiceLanguage.Detect -> stringResource(Res.string.e7VoiceUiAuto)
+                                VoiceLanguage.English -> stringResource(Res.string.rb51VoiceEnglish)
+                                VoiceLanguage.Arabic -> stringResource(Res.string.rb51VoiceArabic)
+                                else -> languageName(language)
+                            },
+                        )
+                    },
+                selected = state.language,
+                semanticsLabel = stringResource(Res.string.e7VoiceUiLanguage),
+                enabled =
+                    if (state.busy)
+                        KitEnabled.Disabled(stringResource(Res.string.voiceSetupBusyReason))
+                    else KitEnabled.Enabled,
+                onChange = actions::chooseLanguage,
+                modifier = Modifier.testTag("voice-model-language"),
+            )
+            KitButton(
+                stringResource(Res.string.rb51VoiceMoreLanguages),
+                actions::openLanguages,
+                role = KitButtonRole.Tertiary,
+                enabled =
+                    if (state.busy)
+                        KitEnabled.Disabled(stringResource(Res.string.voiceSetupBusyReason))
+                    else KitEnabled.Enabled,
+            )
+            Spacer(Modifier.height(Space.S4.dp))
             KitRowGroup {
-                KitRow(
-                    title = stringResource(Res.string.e7VoiceUiLanguage),
-                    supporting =
-                        when (state.language) {
-                            VoiceLanguage.Auto ->
-                                stringResource(Res.string.vpttLanguageFollowAppDetail)
-                            VoiceLanguage.Detect ->
-                                stringResource(Res.string.vpttLanguageDetectDetail)
-                            else -> null
-                        },
-                    supportingMaxLines = 4,
-                    trailing = KitRowTrailing.Value(languageName(state.language)),
-                    enabled = !state.busy,
-                    disabledReason =
-                        if (state.busy) stringResource(Res.string.voiceSetupBusyReason) else null,
-                    onClick = actions::openLanguages,
-                    modifier = Modifier.testTag("voice-model-language"),
-                )
                 KitSwitchRow(
                     title = stringResource(Res.string.vpttAutoSendTitle),
                     checked = state.autoSend,
@@ -186,6 +256,7 @@ public fun VoiceSettingsScreen(state: VoiceSettingsUi, actions: VoiceSettingsPre
                     modifier = Modifier.testTag("voice-auto-send"),
                 )
             }
+            Spacer(Modifier.height(Space.S4.dp))
             ReadAloudVoice(state, actions)
         }
         // Inside the frame: KitScreen places the sheet host these overlays register with.
@@ -198,68 +269,76 @@ public fun VoiceSettingsScreen(state: VoiceSettingsUi, actions: VoiceSettingsPre
 private fun DownloadProgress(state: VoiceSettingsUi, actions: VoiceSettingsPresenter) {
     val job = state.job ?: return
     val natural = state.natural?.downloading == true
+    val fraction = job.fraction
+    val announcement =
+        if (job.verifying) stringResource(Res.string.e7VoiceUiVerifying)
+        else
+            stringResource(
+                Res.string.e7VoiceUiDownloadPercent,
+                kotlin.math.floor((fraction ?: 0f) * 10).toInt() * 10,
+            ) // F: lib/voice/voice_ui.dart:363
     Column(
         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
         modifier = Modifier.testTag("voice-download-progress"),
     ) {
-        KitText(
-            when {
-                job.verifying -> stringResource(Res.string.e7VoiceUiVerifying)
-                natural -> stringResource(Res.string.naturalVoiceDownloading)
-                else -> stringResource(Res.string.voiceSetupDownloadingPack, packName(job.pack))
+        Column(
+            Modifier.clearAndSetSemantics {
+                liveRegion = LiveRegionMode.Polite
+                contentDescription = announcement
             },
-            role = TypeRole.RowTitle,
-        )
-        val fraction = job.fraction
-        KitProgressView(
-            progress =
-                if (fraction == null) KitProgress.Waiting()
-                else
-                    KitProgress.Known(
-                        fraction,
-                        caption =
-                            stringResource(
-                                Res.string.e7VoiceUiDownloadProgress,
-                                sizeWords(job.received),
-                                sizeWords(job.total),
-                            ),
-                    )
-        )
-        if (!job.verifying) {
-            KitButton(
-                label = stringResource(Res.string.e7VoiceUiCancelDownload),
-                onClick = actions::cancelDownload,
-                role = KitButtonRole.Secondary,
-                modifier = Modifier.testTag("voice-model-cancel-download"),
+            verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
+        ) {
+            KitText(
+                when {
+                    job.verifying -> stringResource(Res.string.e7VoiceUiVerifying)
+                    natural -> stringResource(Res.string.naturalVoiceDownloading)
+                    else -> stringResource(Res.string.voiceSetupDownloadingPack, packName(job.pack))
+                },
+                role = TypeRole.RowTitle,
+            )
+            KitProgressView(
+                progress =
+                    if (job.verifying || fraction == null) KitProgress.Waiting()
+                    else
+                        KitProgress.Known(
+                            fraction.coerceIn(0f, 1f),
+                            caption =
+                                stringResource(
+                                    Res.string.e7VoiceUiDownloadProgress,
+                                    sizeWords(job.received),
+                                    sizeWords(job.total),
+                                ),
+                        )
             )
         }
+        if (!job.verifying)
+            KitActionBlock(
+                secondary =
+                    KitAction(
+                        stringResource(Res.string.e7VoiceUiCancelDownload),
+                        actions::cancelDownload,
+                    )
+            )
     }
 }
 
 @Composable
 private fun Models(state: VoiceSettingsUi, actions: VoiceSettingsPresenter) {
-    KitRowGroup(label = stringResource(Res.string.voiceSetupModelLabel)) {
-        KitChoiceList(
-            choices = state.packs.map { row -> packChoice(row, state.busy) },
-            selected = state.selected,
-            semanticsLabel = stringResource(Res.string.voiceSetupModelLabel),
-            onSelect = actions::choose,
-        )
-    }
+    KitText(stringResource(Res.string.voiceSetupModelLabel), role = TypeRole.Label)
+    Spacer(Modifier.height(Space.S1.dp))
+    KitChoiceList(
+        choices = state.packs.map { row -> packChoice(row, state.busy) },
+        selected = state.selected,
+        semanticsLabel = stringResource(Res.string.voiceSetupModelLabel),
+        loading = state.loading,
+        empty = {},
+        onSelect = actions::choose,
+    )
     val row = state.selectedRow ?: return
     if (state.busy) return
     val name = packName(row.id)
     val size = sizeWords(row.bytes)
-    if (!row.installed) {
-        KitButton(
-            label = stringResource(Res.string.voiceSetupDownloadPack, name, size),
-            onClick = actions::downloadSelected,
-            enabled =
-                if (row.unsupported) KitEnabled.Disabled(unsupportedReason(row))
-                else KitEnabled.Enabled,
-            modifier = Modifier.fillMaxWidth().testTag("voice-model-primary-action"),
-        )
-    } else {
+    if (row.installed) {
         Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
             KitButton(
                 label = stringResource(Res.string.voiceSetupRedownloadPack, name),
@@ -299,11 +378,10 @@ private fun packChoice(
         value = row.id,
         title = packName(row.id),
         supporting = line,
-        recommended = row.id.raw == "base",
         enabled =
             when {
                 row.unsupported -> KitEnabled.Disabled(unsupportedReason(row))
-                busy -> KitEnabled.Disabled(stringResource(Res.string.voiceSetupBusyReason))
+                busy -> KitEnabled.Disabled(line)
                 else -> KitEnabled.Enabled
             },
     )

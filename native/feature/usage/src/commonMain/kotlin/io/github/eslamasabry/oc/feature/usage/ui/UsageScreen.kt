@@ -2,17 +2,22 @@ package io.github.eslamasabry.oc.feature.usage.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.runtime.*
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageBudgetUnit
+import io.github.eslamasabry.oc.engine.integrations.usage.UsageBudgets
 import io.github.eslamasabry.oc.engine.usage.UsageCalendar
 import io.github.eslamasabry.oc.feature.usage.presentation.UsageActions
 import io.github.eslamasabry.oc.feature.usage.presentation.UsageFigures
@@ -25,49 +30,48 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitAction
-import io.github.eslamasabry.oc.ui.kit.KitButton
-import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextRole
-import io.github.eslamasabry.oc.ui.kit.chip.KitChip
-import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
-import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips
-import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
-import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
+import io.github.eslamasabry.oc.ui.kit.choice.KitChoice
+import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceList
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfacePanel
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
-import io.github.eslamasabry.oc.ui.kit.input.KitField
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
+import io.github.eslamasabry.oc.ui.kit.modal.KitInputFormDialog
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
+import io.github.eslamasabry.oc.ui.kit.row.KitMetricGrid
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
+import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
-import io.github.eslamasabry.oc.ui.words.res.kitTopBarClose
 import io.github.eslamasabry.oc.ui.words.res.p12SearchNoServerTitle
 import io.github.eslamasabry.oc.ui.words.res.p12SearchOpenServers
-import io.github.eslamasabry.oc.ui.words.res.p12UsageActivity
 import io.github.eslamasabry.oc.ui.words.res.p12UsageCost
-import io.github.eslamasabry.oc.ui.words.res.p12UsageCounts
-import io.github.eslamasabry.oc.ui.words.res.p12UsageDay
 import io.github.eslamasabry.oc.ui.words.res.p12UsageFailed
 import io.github.eslamasabry.oc.ui.words.res.p12UsageNoServerBody
 import io.github.eslamasabry.oc.ui.words.res.p12UsageProjectsFailed
-import io.github.eslamasabry.oc.ui.words.res.p12UsageRange
 import io.github.eslamasabry.oc.ui.words.res.p12UsageTryAgain
 import io.github.eslamasabry.oc.ui.words.res.quotaBudgetSaveFailed
 import io.github.eslamasabry.oc.ui.words.res.stateUsageBudgets
@@ -108,11 +112,6 @@ import io.github.eslamasabry.oc.ui.words.res.usageNoModels
 import io.github.eslamasabry.oc.ui.words.res.usageNoTools
 import io.github.eslamasabry.oc.ui.words.res.usageOutput
 import io.github.eslamasabry.oc.ui.words.res.usagePeriod
-import io.github.eslamasabry.oc.ui.words.res.usageSpentAllTime
-import io.github.eslamasabry.oc.ui.words.res.usageSpentPeriod
-import io.github.eslamasabry.oc.ui.words.res.usageSpentThirtyDays
-import io.github.eslamasabry.oc.ui.words.res.usageSpentToday
-import io.github.eslamasabry.oc.ui.words.res.usageSpentYear
 import io.github.eslamasabry.oc.ui.words.res.usagePreviousResult
 import io.github.eslamasabry.oc.ui.words.res.usagePrompts
 import io.github.eslamasabry.oc.ui.words.res.usageProviderCostUnavailable
@@ -122,6 +121,11 @@ import io.github.eslamasabry.oc.ui.words.res.usageReasoning
 import io.github.eslamasabry.oc.ui.words.res.usageRefresh
 import io.github.eslamasabry.oc.ui.words.res.usageScope
 import io.github.eslamasabry.oc.ui.words.res.usageSessions
+import io.github.eslamasabry.oc.ui.words.res.usageSpentAllTime
+import io.github.eslamasabry.oc.ui.words.res.usageSpentPeriod
+import io.github.eslamasabry.oc.ui.words.res.usageSpentThirtyDays
+import io.github.eslamasabry.oc.ui.words.res.usageSpentToday
+import io.github.eslamasabry.oc.ui.words.res.usageSpentYear
 import io.github.eslamasabry.oc.ui.words.res.usageSteps
 import io.github.eslamasabry.oc.ui.words.res.usageStreak
 import io.github.eslamasabry.oc.ui.words.res.usageSubagents
@@ -169,6 +173,7 @@ public fun UsageScreen(state: UsageUi, actions: UsageActions) {
                                     actions::refresh,
                                     enabled = !state.refreshing,
                                     disabledReason = stringResource(Res.string.usageLoading),
+                                    icon = KitIcons.retry,
                                 )
                             ),
                 )
@@ -187,7 +192,7 @@ public fun UsageScreen(state: UsageUi, actions: UsageActions) {
 @Composable
 public fun UsageContent(state: UsageUi, actions: UsageActions) {
     val gutter = LocalKitTokens.current.gutter
-    LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+    LazyColumn(contentPadding = PaddingValues(top = Space.S3.dp, bottom = Space.S6.dp)) {
         if (state.phase == UsagePhase.NoServer) {
             item(key = "no-server") {
                 KitStateView(
@@ -203,28 +208,87 @@ public fun UsageContent(state: UsageUi, actions: UsageActions) {
             }
             return@LazyColumn
         }
-        state.report?.let { report ->
-            item(key = "total") { Total(report, state.range, state.timezone) }
-        }
-        item(key = "filters") { Filters(state, actions) }
-        item(key = "status") { Status(state, actions) }
-        if (state.budgetsAvailable) item(key = "budgets") { Budgets(state, actions) }
-        state.report?.let { report -> breakdowns(report) }
-        item(key = "disclosure") {
+        item(key = "description") {
             KitText(
-                stringResource(Res.string.usageCostDisclosure),
-                role = KitTextRole.Supporting,
-                modifier = Modifier.padding(horizontal = gutter.dp, vertical = Space.S3.dp),
+                stringResource(Res.string.usageDescription),
+                Modifier.padding(horizontal = gutter.dp, vertical = Space.S3.dp),
+                role = TypeRole.Secondary,
+                tone = TextTone.Secondary,
             )
         }
+        item(key = "status") { Status(state, actions) }
+        state.report?.let { report ->
+            item(key = "total") { Total(report, state.range, state.timezone, state) }
+        }
+        if (state.phase != UsagePhase.Unsupported) item(key = "filters") { Filters(state, actions) }
+        if (state.budgetsAvailable)
+            item(key = "budgets") {
+                Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
+                Budgets(state, actions)
+            }
+        state.report?.let { report -> breakdowns(report) }
+        if (state.report != null)
+            item(key = "disclosure") {
+                Column(
+                    Modifier.padding(
+                        horizontal = gutter.dp,
+                        vertical = LocalKitTokens.current.sectionGap.dp,
+                    )
+                ) {
+                    KitText(
+                        stringResource(Res.string.usageCostDisclosure),
+                        role = TypeRole.Secondary,
+                        tone = TextTone.Secondary,
+                    )
+                    Spacer(Modifier.height(Space.S4.dp))
+                    KitDetailsFold(
+                        stringResource(Res.string.usageAboutNumbers),
+                        stringResource(Res.string.kitCopyDetails),
+                        notes =
+                            listOf(
+                                stringResource(Res.string.usageProviderScope),
+                                stringResource(Res.string.usageScopedProviderTotals),
+                                stringResource(Res.string.usageInspectionDisclosure),
+                                stringResource(Res.string.usageBudgetDescription),
+                            ),
+                    )
+                }
+            }
     }
 }
 
 @Composable
 private fun Budgets(state: UsageUi, actions: UsageActions) {
+    var confirmingClear by remember(state.server) { mutableStateOf(false) }
+    KitConfirm(
+        spec =
+            if (confirmingClear)
+                KitConfirmSpec(
+                    title = stringResource(Res.string.usageBudgetClearTitle),
+                    confirmLabel = stringResource(Res.string.usageBudgetClearConfirm),
+                    body = stringResource(Res.string.usageBudgetClearDescription),
+                    kind = KitConfirmKind.Destructive,
+                )
+            else null,
+        onConfirm = {
+            confirmingClear = false
+            actions.clearBudgets()
+        },
+        onCancel = { confirmingClear = false },
+    )
     KitRowGroup(label = stringResource(Res.string.stateUsageBudgets)) {
         KitRow(
-            title = stringResource(Res.string.usageBudgetUsdTitle),
+            title =
+                stringResource(
+                    if (state.usdBudget == null) Res.string.usageBudgetUsd
+                    else Res.string.usageBudgetUsdTitle
+                ),
+            trailing =
+                if (state.usdBudget == null)
+                    KitRowTrailing.Value(stringResource(Res.string.usageBudgetNotSet))
+                else KitRowTrailing.Chevron,
+            enabled = !state.budgetSaving,
+            disabledReason = stringResource(Res.string.rb50BudgetSaving),
             supporting =
                 state.usdBudget?.let { limit ->
                     stringResource(
@@ -233,11 +297,21 @@ private fun Budgets(state: UsageUi, actions: UsageActions) {
                         UsageFigures.money(limit),
                         stringResource(Res.string.stateUsageUsd),
                     )
-                } ?: stringResource(Res.string.usageBudgetNotSet),
+                },
             onClick = { actions.editBudget(UsageBudgetUnit.Usd) },
         )
         KitRow(
-            title = stringResource(Res.string.usageBudgetTokensTitle),
+            title =
+                stringResource(
+                    if (state.tokenBudget == null) Res.string.usageBudgetTokens
+                    else Res.string.usageBudgetTokensTitle
+                ),
+            trailing =
+                if (state.tokenBudget == null)
+                    KitRowTrailing.Value(stringResource(Res.string.usageBudgetNotSet))
+                else KitRowTrailing.Chevron,
+            enabled = !state.budgetSaving,
+            disabledReason = stringResource(Res.string.rb50BudgetSaving),
             supporting =
                 state.tokenBudget?.let { limit ->
                     stringResource(
@@ -246,13 +320,15 @@ private fun Budgets(state: UsageUi, actions: UsageActions) {
                         UsageFigures.count(limit.toLong()),
                         stringResource(Res.string.usageBudgetTokenUnit),
                     )
-                } ?: stringResource(Res.string.usageBudgetNotSet),
+                },
             onClick = { actions.editBudget(UsageBudgetUnit.Tokens) },
         )
-        if (state.hasSavedBudgets)
+        if (state.hasSavedBudgets || state.usdBudget != null || state.tokenBudget != null)
             KitRow(
                 title = stringResource(Res.string.usageBudgetClearAll),
-                onClick = actions::clearBudgets,
+                enabled = !state.budgetSaving,
+                disabledReason = stringResource(Res.string.rb50BudgetSaving),
+                onClick = { confirmingClear = true },
             )
     }
     KitText(
@@ -280,134 +356,210 @@ private fun BudgetEditor(state: UsageUi, actions: UsageActions) {
     val unit = state.budgetUnit ?: return
     key(unit, state.server, state.range, state.scope) {
         val field = rememberTextFieldState(state.budgetInput)
-        KitSheet(
-            visible = true,
+        val usd = unit == UsageBudgetUnit.Usd
+        val hasCurrent = if (usd) state.usdBudget != null else state.tokenBudget != null
+        val invalid =
+            stringResource(
+                if (usd) Res.string.usageBudgetInvalidUsd else Res.string.usageBudgetInvalidTokens
+            )
+        KitInputFormDialog(
+            state = field,
             title =
                 stringResource(
-                    if (unit == UsageBudgetUnit.Usd) Res.string.usageBudgetUsdTitle
-                    else Res.string.usageBudgetTokensTitle
+                    if (usd) Res.string.usageBudgetUsd else Res.string.usageBudgetTokens
                 ),
-            closeLabel = stringResource(Res.string.kitTopBarClose),
+            fieldLabel = stringResource(Res.string.usageBudgetAmount),
+            confirmLabel =
+                stringResource(
+                    if (usd) Res.string.usageBudgetSaveUsd else Res.string.usageBudgetSaveTokens
+                ),
+            cancelLabel = stringResource(Res.string.workCancel),
+            kind = if (usd) KitFieldKind.Text else KitFieldKind.Number,
+            helper =
+                stringResource(
+                    if (usd) Res.string.usageBudgetHelperUsd else Res.string.usageBudgetHelperTokens
+                ),
+            validate = { value ->
+                val parsed = value.trim().toDoubleOrNull()
+                if (parsed != null && UsageBudgets.validLimit(parsed, unit)) null else invalid
+            },
+            onTextChanged = actions::budgetChanged,
+            onSave = {
+                // IME submission and the button both use the latest field, before any frame-delayed
+                // state update.
+                actions.budgetChanged(field.text.toString())
+                actions.saveBudget()
+            },
             onDismissRequest = actions::closeBudget,
-            primary =
-                KitAction(
-                    stringResource(
-                        if (unit == UsageBudgetUnit.Usd) Res.string.usageBudgetSaveUsd
-                        else Res.string.usageBudgetSaveTokens
-                    ),
-                    actions::saveBudget,
-                ),
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                KitField(
-                    field,
-                    stringResource(Res.string.usageBudgetAmount),
-                    kind = KitFieldKind.Number,
-                    onTextChanged = actions::budgetChanged,
-                    checking = state.budgetSaving,
-                    error =
-                        if (state.budgetInvalid)
-                            stringResource(
-                                if (unit == UsageBudgetUnit.Usd) Res.string.usageBudgetInvalidUsd
-                                else Res.string.usageBudgetInvalidTokens
-                            )
-                        else null,
-                )
-                if (state.budgetFailed) KitNotice(stringResource(Res.string.quotaBudgetSaveFailed))
-                KitButton(
-                    stringResource(Res.string.usageBudgetRemove),
-                    actions::removeBudget,
-                    role = KitButtonRole.Tertiary,
-                    working = state.budgetSaving,
-                )
-            }
-        }
+            alternative =
+                if (hasCurrent)
+                    KitAction(stringResource(Res.string.usageBudgetRemove), actions::removeBudget)
+                else null,
+            working = state.budgetSaving,
+            enabled =
+                if (state.budgetSaving)
+                    KitEnabled.Disabled(stringResource(Res.string.rb50BudgetSaving))
+                else KitEnabled.Enabled,
+            failure =
+                if (state.budgetFailed) stringResource(Res.string.quotaBudgetSaveFailed) else null,
+        )
     }
 }
 
 @Composable
-private fun Total(report: UsageReport, range: UsageRange, timezone: String?) {
+private fun Total(report: UsageReport, range: UsageRange, timezone: String?, state: UsageUi) {
     val gutter = LocalKitTokens.current.gutter
-    Column(
-        Modifier.padding(horizontal = gutter.dp, vertical = Space.S3.dp),
-        verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
-    ) {
-        val zone = timezone?.takeIf { UsageCalendar.isReadable(it) }
-        val first = zone?.let { UsageCalendar.dayLabel(report.fromMs, it) }
-        val last = zone?.let { UsageCalendar.dayLabel(report.toMs - 1, it) }
-        val days = if (first != null && last != null) stringResource(Res.string.usagePeriod, first, last) else null
-        // The label names the days the server actually covered when they differ from the range asked for.
-        val label =
-            when {
-                !report.coversRequest && days != null -> stringResource(Res.string.usageSpentPeriod, days)
-                !report.coversRequest -> stringResource(Res.string.p12UsageCost)
-                else ->
-                    when (range) {
-                        UsageRange.Today -> stringResource(Res.string.usageSpentToday)
-                        UsageRange.ThirtyDays -> stringResource(Res.string.usageSpentThirtyDays)
-                        UsageRange.Year -> stringResource(Res.string.usageSpentYear)
-                        UsageRange.AllTime -> stringResource(Res.string.usageSpentAllTime)
+    Column(Modifier.padding(horizontal = gutter.dp, vertical = Space.S4.dp)) {
+        KitSurfacePanel {
+            Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+                val zone = timezone?.takeIf { UsageCalendar.isReadable(it) }
+                val first = zone?.let { UsageCalendar.dayLabel(report.fromMs, it) }
+                val last = zone?.let { UsageCalendar.dayLabel(report.toMs - 1, it) }
+                val days =
+                    if (first != null && last != null)
+                        stringResource(Res.string.usagePeriod, first, last)
+                    else null
+                // The label names the days the server actually covered when they differ from the
+                // range
+                // asked for.
+                val label =
+                    when {
+                        !report.coversRequest && days != null ->
+                            stringResource(Res.string.usageSpentPeriod, days)
+                        !report.coversRequest -> stringResource(Res.string.p12UsageCost)
+                        else ->
+                            when (range) {
+                                UsageRange.Today -> stringResource(Res.string.usageSpentToday)
+                                UsageRange.ThirtyDays ->
+                                    stringResource(Res.string.usageSpentThirtyDays)
+                                UsageRange.Year -> stringResource(Res.string.usageSpentYear)
+                                UsageRange.AllTime -> stringResource(Res.string.usageSpentAllTime)
+                            }
                     }
+                KitText(label, role = TypeRole.Label, tone = TextTone.Secondary)
+                KitText(
+                    cost(report.cost),
+                    Modifier.testTag("usage-total-cost"),
+                    role = TypeRole.LargeTitle,
+                )
+                Spacer(Modifier.height(Space.S1.dp))
+                val project =
+                    (state.scope as? UsageScope.Project)?.let { scope ->
+                        state.projects.firstOrNull { it.id == scope.id }?.name
+                    }
+                if (project != null)
+                    KitText(project, role = TypeRole.Secondary, tone = TextTone.Secondary)
+                if (zone != null && days != null) {
+                    if (report.coversRequest)
+                        KitText(days, role = TypeRole.Secondary, tone = TextTone.Secondary)
+                    KitText(
+                        stringResource(Res.string.usageTimezone, zone),
+                        role = TypeRole.Caption,
+                        tone = TextTone.Tertiary,
+                    )
+                }
+                if (report.empty) {
+                    Spacer(Modifier.height(Space.S3.dp))
+                    KitText(stringResource(Res.string.usageEmpty))
+                }
             }
-        KitText(label, role = TypeRole.Label, tone = TextTone.Secondary)
-        KitText(cost(report.cost), role = TypeRole.LargeTitle)
-        if (zone != null && days != null) {
-            if (report.coversRequest) KitText(days, role = TypeRole.Secondary, tone = TextTone.Secondary)
-            KitText(stringResource(Res.string.usageTimezone, zone), role = TypeRole.Caption, tone = TextTone.Tertiary)
         }
     }
 }
 
 @Composable
 private fun Filters(state: UsageUi, actions: UsageActions) {
-    Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-        if (state.servers.size > 1) {
-            KitFilterChips {
-                for (server in state.servers) {
-                    KitChip(
-                        label = server.name,
-                        kind = KitChipKind.Action,
-                        selected = server.id == state.server,
-                        onClick = { actions.chooseServer(server.id) },
-                    )
-                }
-            }
-        }
-        Column(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)) {
-            KitSegmented(
-                segments =
-                    listOf(
-                        KitSegment(UsageRange.Today, stringResource(Res.string.usageToday)),
-                        KitSegment(
-                            UsageRange.ThirtyDays,
-                            stringResource(Res.string.usageThirtyDays),
-                        ),
-                        KitSegment(UsageRange.Year, stringResource(Res.string.usageYear)),
-                        KitSegment(UsageRange.AllTime, stringResource(Res.string.usageAllTime)),
-                    ),
-                selected = state.range,
-                semanticsLabel = stringResource(Res.string.p12UsageRange),
-                onChange = actions::chooseRange,
+    var picker by remember { mutableStateOf<String?>(null) }
+    val rangeChoices =
+        listOf(
+            KitChoice(UsageRange.Today, stringResource(Res.string.usageToday)),
+            KitChoice(UsageRange.ThirtyDays, stringResource(Res.string.usageThirtyDays)),
+            KitChoice(UsageRange.Year, stringResource(Res.string.usageYear)),
+            KitChoice(UsageRange.AllTime, stringResource(Res.string.usageAllTime)),
+        )
+    val scopeChoices =
+        listOf(
+            KitChoice<UsageScope>(
+                UsageScope.AllProjects,
+                stringResource(Res.string.usageAllProjects),
             )
-        }
-        KitSectionLabel(stringResource(Res.string.usageScope))
-        KitFilterChips {
-            KitChip(
-                label = stringResource(Res.string.usageAllProjects),
-                kind = KitChipKind.Action,
-                selected = state.scope == UsageScope.AllProjects,
-                onClick = { actions.chooseScope(UsageScope.AllProjects) },
-            )
-            for (project in state.projects) {
-                KitChip(
-                    label = project.name,
-                    kind = KitChipKind.Action,
-                    selected = state.scope == UsageScope.Project(project.id),
-                    onClick = { actions.chooseScope(UsageScope.Project(project.id)) },
+        ) + state.projects.map { KitChoice<UsageScope>(UsageScope.Project(it.id), it.name) }
+    Column {
+        Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
+        if (state.servers.size > 1)
+            KitRowGroup {
+                KitRow(
+                    stringResource(Res.string.settingsV3ServersBlock),
+                    trailing = KitRowTrailing.Value(state.serverName.orEmpty()),
+                    onClick = { picker = "server" },
                 )
             }
+        KitRowGroup {
+            KitRow(
+                stringResource(Res.string.usageRangeLabel),
+                modifier = Modifier.testTag("usage-range"),
+                trailing =
+                    KitRowTrailing.Value(rangeChoices.first { it.value == state.range }.title),
+                onClick = { picker = "range" },
+            )
+            KitRow(
+                stringResource(Res.string.usageScope),
+                modifier = Modifier.testTag("usage-scope"),
+                trailing =
+                    KitRowTrailing.Value(
+                        scopeChoices.firstOrNull { it.value == state.scope }?.title
+                            ?: stringResource(Res.string.usageCurrentProject)
+                    ),
+                onClick = { picker = "scope" },
+            )
         }
         if (state.projectsFailed) KitNotice(stringResource(Res.string.p12UsageProjectsFailed))
+    }
+    KitSheet(
+        picker != null,
+        { picker = null },
+        stringResource(
+            when (picker) {
+                "range" -> Res.string.usageRangeLabel
+                "server" -> Res.string.settingsV3ServersBlock
+                else -> Res.string.usageScope
+            }
+        ),
+    ) {
+        when (picker) {
+            "range" ->
+                KitChoiceList(
+                    rangeChoices,
+                    state.range,
+                    stringResource(Res.string.usageRangeLabel),
+                    onSelect = {
+                        picker = null
+                        actions.chooseRange(it)
+                    },
+                )
+            "scope" ->
+                KitChoiceList(
+                    scopeChoices,
+                    state.scope,
+                    stringResource(Res.string.usageScope),
+                    onSelect = {
+                        picker = null
+                        actions.chooseScope(it)
+                    },
+                )
+            "server" ->
+                KitChoiceList(
+                    state.servers.map { KitChoice(it.id, it.name) },
+                    state.server,
+                    stringResource(Res.string.settingsV3ServersBlock),
+                    empty = {},
+                    onSelect = {
+                        picker = null
+                        actions.chooseServer(it)
+                    },
+                )
+            else -> Unit
+        }
     }
 }
 
@@ -416,14 +568,7 @@ private fun Status(state: UsageUi, actions: UsageActions) {
     val retry = KitLineAction(stringResource(Res.string.p12UsageTryAgain), actions::refresh)
     when (state.phase) {
         UsagePhase.Loading -> if (state.report == null) KitSkeletonRows()
-        UsagePhase.Ready ->
-            if (state.report?.empty == true) {
-                KitStateView(
-                    kind = KitStateKind.Empty,
-                    title = stringResource(Res.string.usageEmpty),
-                    body = stringResource(Res.string.usageDescription),
-                )
-            }
+        UsagePhase.Ready -> Unit
         UsagePhase.Unsupported ->
             KitStateView(
                 kind = KitStateKind.Calm,
@@ -446,36 +591,83 @@ private fun Status(state: UsageUi, actions: UsageActions) {
             )
         UsagePhase.NoServer -> Unit
     }
-    if (state.previous) KitNotice(stringResource(Res.string.usagePreviousResult))
+    if (state.previous || (state.refreshing && state.report != null))
+        KitText(
+            stringResource(Res.string.usagePreviousResult),
+            Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
+            role = TypeRole.Secondary,
+            tone = TextTone.Secondary,
+        )
 }
 
 private fun LazyListScope.breakdowns(report: UsageReport) {
     if (report.empty) return
     item(key = "counts") {
-        KitRowGroup(label = stringResource(Res.string.p12UsageCounts)) {
-            ValueRow(stringResource(Res.string.usageSessions), UsageFigures.count(report.sessions))
-            ValueRow(
-                stringResource(Res.string.usageSubagents),
-                UsageFigures.count(report.subagents),
-            )
-            ValueRow(stringResource(Res.string.usagePrompts), UsageFigures.count(report.prompts))
-            ValueRow(stringResource(Res.string.usageSteps), UsageFigures.count(report.steps))
-            ValueRow(
-                stringResource(Res.string.usageActiveDays),
-                UsageFigures.count(report.activeDays),
-            )
-            ValueRow(stringResource(Res.string.usageStreak), UsageFigures.count(report.streak))
+        Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
+        KitSectionLabel(stringResource(Res.string.usageScopedTotals))
+        Column(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)) {
+            KitSurfacePanel {
+                KitMetricGrid(
+                    listOf(
+                        stringResource(Res.string.usageSessions) to
+                            UsageFigures.count(report.sessions),
+                        stringResource(Res.string.usagePrompts) to
+                            UsageFigures.count(report.prompts),
+                        stringResource(Res.string.usageSteps) to UsageFigures.count(report.steps),
+                        stringResource(Res.string.usageSubagents) to
+                            UsageFigures.count(report.subagents),
+                        stringResource(Res.string.usageActiveDays) to
+                            UsageFigures.count(report.activeDays),
+                        stringResource(Res.string.usageStreak) to UsageFigures.count(report.streak),
+                    )
+                )
+            }
         }
     }
+    if (report.activity.isNotEmpty())
+        item(key = "days") {
+            Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
+            KitRowGroup(label = stringResource(Res.string.usageBusiestDays)) {
+                // Top five by activity, as usage_screen.dart:727-729.
+                report.activity
+                    .sortedByDescending { it.steps }
+                    .take(5)
+                    .forEach { day -> // F: lib/ui/screens/usage_screen.dart:730
+                        KitRow(
+                            day.date,
+                            trailing =
+                                KitRowTrailing.Value(
+                                    pluralStringResource(
+                                        Res.plurals.usageDaySteps,
+                                        day.steps.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
+                                        UsageFigures.count(day.steps),
+                                    ),
+                                    chevron = false,
+                                ),
+                        )
+                    }
+            }
+        }
     item(key = "tokens") {
+        Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
+        KitSectionLabel(stringResource(Res.string.usageTokens))
         val t = report.tokens
-        KitRowGroup(label = stringResource(Res.string.usageTokens)) {
-            ValueRow(stringResource(Res.string.usageTotalTokens), UsageFigures.compact(t.total))
-            ValueRow(stringResource(Res.string.usageInput), UsageFigures.compact(t.input))
-            ValueRow(stringResource(Res.string.usageOutput), UsageFigures.compact(t.output))
-            ValueRow(stringResource(Res.string.usageReasoning), UsageFigures.compact(t.reasoning))
-            ValueRow(stringResource(Res.string.usageCacheRead), UsageFigures.compact(t.cacheRead))
-            ValueRow(stringResource(Res.string.usageCacheWrite), UsageFigures.compact(t.cacheWrite))
+        Column(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)) {
+            KitSurfacePanel {
+                KitMetricGrid(
+                    listOf(
+                        stringResource(Res.string.usageTotalTokens) to UsageFigures.count(t.total),
+                        stringResource(Res.string.usageInput) to UsageFigures.count(t.input),
+                        stringResource(Res.string.usageOutput) to UsageFigures.count(t.output),
+                        stringResource(Res.string.usageReasoning) to
+                            UsageFigures.count(t.reasoning),
+                        stringResource(Res.string.usageCacheRead) to
+                            UsageFigures.count(t.cacheRead),
+                        stringResource(Res.string.usageCacheWrite) to
+                            UsageFigures.count(t.cacheWrite),
+                    )
+                )
+            }
         }
     }
     val providers = UsageFigures.providers(report.models)
@@ -575,17 +767,6 @@ private fun LazyListScope.breakdowns(report: UsageReport) {
             }
         }
     }
-    val days = UsageFigures.activeDays(report.activity)
-    if (days.isNotEmpty()) {
-        item(key = "days") {
-            KitRowGroup(label = stringResource(Res.string.p12UsageActivity)) {
-                for (d in days) KitRow(
-                    title =
-                        stringResource(Res.string.p12UsageDay, d.date, UsageFigures.count(d.steps))
-                )
-            }
-        }
-    }
 }
 
 @Composable
@@ -595,4 +776,6 @@ private fun ValueRow(title: String, value: String) {
 
 @Composable
 private fun cost(value: Double): String =
-    if (UsageFigures.isTiny(value)) stringResource(Res.string.usageTinyCost) else UsageFigures.money(value, symbolAfter = LocalLayoutDirection.current == LayoutDirection.Rtl)
+    if (UsageFigures.isTiny(value)) stringResource(Res.string.usageTinyCost)
+    else
+        UsageFigures.money(value, symbolAfter = LocalLayoutDirection.current == LayoutDirection.Rtl)

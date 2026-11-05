@@ -62,7 +62,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
  * (hook H3, null = the part's own), [faceShift] sinks the face while pressed (hook H2).
  */
 @Immutable
-public data class KitSurfaceLook(val modifier: Modifier, val words: Color?, val shape: Shape)
+public data class KitSurfaceLook(val modifier: Modifier, val words: Color?, val shape: Shape, val paints: Boolean = false)
 
 /** What a part asks for. [ownFill] is the part's own look under Solid; the other fields are the request. */
 @Immutable
@@ -79,6 +79,8 @@ public data class KitSurfaceInput(
     val withinGroup: Boolean = false,
     /** A part-specific token radius, e.g. Flutter's composerRadius / composerRadiusWide. */
     val radius: Dp? = null,
+    /** A floating sheet-radius card rounds all corners; edge-attached sheets keep their bottom square. */
+    val roundSheetBottom: Boolean = false,
 )
 
 private fun Color.toArgb(): Argb = Argb(
@@ -100,13 +102,18 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
     val roles = LocalKitRoles.current
     val sharp = style.spec.tokens.sharpRadius
     val base = input.radius?.value ?: input.shape.radiusDp()
-    val sheet = input.shape == KitShapeId.Sheet
+    val sheet = input.shape == KitShapeId.Sheet && !input.roundSheetBottom
     val r = StyleResolver.corner(base, style.knobs.corners, sharp)
     val radii = if (sheet) Radii(r, r, 0f, 0f) else Radii.all(if (input.shape == KitShapeId.Square) 0f else r)
-    val shape = if (input.radius == null) input.shape.shape() else RoundedCornerShape(
-        topStart = radii.topStart.dp, topEnd = radii.topEnd.dp,
-        bottomStart = radii.bottomStart.dp, bottomEnd = radii.bottomEnd.dp,
-    )
+    val shape =
+        if (input.radius == null && !(input.shape == KitShapeId.Sheet && input.roundSheetBottom)) {
+            input.shape.shape()
+        } else {
+            RoundedCornerShape(
+                topStart = radii.topStart.dp, topEnd = radii.topEnd.dp,
+                bottomStart = radii.bottomStart.dp, bottomEnd = radii.bottomEnd.dp,
+            )
+        }
     val request =
         SurfaceRequest(
             roles = roles,
@@ -127,10 +134,16 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
     if (decoration == null) {
         val own = input.ownFill
         val modifier = if (own == null) Modifier else Modifier.background(own, shape)
-        return KitSurfaceLook(modifier, words, shape)
+        return KitSurfaceLook(modifier, words, shape, own != null && own.alpha > 0f)
     }
     val sink = if (decoration.faceShiftDp > 0f) Modifier.graphicsLayer { translationY = decoration.faceShiftDp * density } else Modifier
-    return KitSurfaceLook(Modifier.kitDecorated(decoration).then(sink), words, shape)
+    val paints = decoration.fill?.let { it.v ushr 24 != 0 } == true ||
+        (decoration.edgeWidthDp > 0f &&
+            (decoration.edgeStart?.let { it.v ushr 24 != 0 } == true ||
+                decoration.edgeEnd?.let { it.v ushr 24 != 0 } == true)) ||
+        decoration.shadows.isNotEmpty() || decoration.hardShadow?.let { it.v ushr 24 != 0 } == true ||
+        decoration.paired?.let { it.distanceDp > 0f && (it.light.v ushr 24 != 0 || it.dark.v ushr 24 != 0) } == true
+    return KitSurfaceLook(Modifier.kitDecorated(decoration).then(sink), words, shape, paints)
 }
 
 private fun SurfaceDecoration.shape(): Shape =

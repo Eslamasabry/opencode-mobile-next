@@ -1,20 +1,25 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
-import androidx.compose.ui.semantics.contentDescription
-import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
-import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
-import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
-import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -22,23 +27,31 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsDoor
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsGroupId
+import io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsRowId
+import io.github.eslamasabry.oc.feature.settings.presentation.SettingsSearch
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsSearchEntry
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsUi
+import io.github.eslamasabry.oc.ui.design.layout.Layout
 import io.github.eslamasabry.oc.ui.design.tokens.Space
-import io.github.eslamasabry.oc.ui.design.type.TextTone
-import io.github.eslamasabry.oc.ui.design.type.TypeRole
-import io.github.eslamasabry.oc.ui.kit.KitText
-import io.github.eslamasabry.oc.ui.kit.input.KitField
+import io.github.eslamasabry.oc.ui.kit.frame.KitPaneScreen
+import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
+import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
+import io.github.eslamasabry.oc.ui.kit.input.KitSearchNoMatch
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
+import io.github.eslamasabry.oc.ui.kit.row.KitIconSwitchRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
-import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.Res
-import io.github.eslamasabry.oc.ui.words.res.kitSearchNoMatch
 import io.github.eslamasabry.oc.ui.words.res.settingsHubSearch
 import io.github.eslamasabry.oc.ui.words.res.settingsHubServerLine
 import io.github.eslamasabry.oc.ui.words.res.settingsHubServerNone
@@ -62,109 +75,111 @@ internal fun HubPage(
     modifier: Modifier,
     onExit: (() -> Unit)?,
 ) {
-    val hub = state.hub
-    val entries = hub.searchable.map { SettingsSearchEntry(it, rowWords(it), aliasWords(it)) }
-    LaunchedEffect(entries) { actions.onSearchEntries(entries) }
-    val field = rememberTextFieldState(hub.query)
-    LaunchedEffect(field) { snapshotFlow { field.text.toString() }.collect { actions.onQuery(it) } }
-    // Back clears the search in the presenter; the field follows.
-    LaunchedEffect(hub.query) {
-        if (field.text.toString() != hub.query) field.edit { replace(0, length, hub.query) }
-    }
     SettingsFrame(
         title = settingsTitle(),
         onBack = onExit,
         state = state,
         actions = actions,
         modifier = modifier,
-        large = true,
-        search = {
-            Box(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)) {
-                KitSearchField(
-                    label = stringResource(Res.string.settingsHubSearch),
-                    onSearch = {},
-                    state = field,
-                    modifier = Modifier.testTag("settings-search"),
+    ) {
+        HubBody(state, actions)
+    }
+}
+
+@Composable
+private fun ColumnScope.HubBody(
+    state: SettingsUi,
+    actions: SettingsActions,
+    selected: SettingsGroupId? = null,
+) {
+    val hub = state.hub
+    val entries = hub.searchable.map { SettingsSearchEntry(it, rowWords(it), aliasWords(it)) }
+    LaunchedEffect(entries) { actions.onSearchEntries(entries) }
+    val field = rememberTextFieldState(hub.query)
+    // Back clears the search in the presenter; the field follows.
+    LaunchedEffect(hub.query) {
+        if (field.text.toString() != hub.query) field.edit { replace(0, length, hub.query) }
+    }
+    Box(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)) {
+        KitSearchField(
+            label = stringResource(Res.string.settingsHubSearch),
+            onSearch = actions::onQuery,
+            onSubmit = { text ->
+                SettingsSearch.find(text, entries).firstOrNull()?.let(actions::onTarget)
+            },
+            resultCount = hub.results.size.takeIf { hub.query.isNotBlank() && it > 0 },
+            prominent = true,
+            state = field,
+            modifier = Modifier.testTag("settings-search"),
+        )
+    }
+    Spacer(Modifier.height(Space.S4.dp))
+    if (hub.query.isBlank()) {
+        val large =
+            LocalDensity.current.fontScale * 10 >= // F: lib/ui/screens/settings_screen.dart:290
+                18 // F: lib/ui/screens/settings_screen.dart:290
+        KitRowGroup(leadingTiles = true) {
+            hub.groups.forEach { group ->
+                KitRow(
+                    title = groupWords(group),
+                    selected = group == selected,
+                    modifier =
+                        Modifier.heightIn(min = LocalKitTokens.current.rowHeightTwo.dp)
+                            .testTag("settings-group-${group.name}"),
+                    leading = if (large) null else KitRowLeading.Glyph(groupGlyph(group)),
+                    supporting =
+                        if (group == SettingsGroupId.Server) hubServerLine(state) else null,
+                    trailing = if (large) KitRowTrailing.None else KitRowTrailing.Chevron,
+                    onClick = { actions.onOpen(SettingsPage.Group(group)) },
                 )
             }
-        },
-    ) {
-        if (hub.query.isBlank()) {
-            // Looks pass, owner pick A (2026-11-05): the five groups as flat labelled sections, each with its key
-            // rows and their current value at the end, so nobody opens a page only to read a setting. The rest of a
-            // group is one "More" row away.
-            hub.groups.forEach { group ->
-                val rows = HUB_ROWS.getValue(group).filter { it in hub.searchable }
-                val groupName = groupWords(group)
-                KitSectionLabel(groupName, Modifier.testTag("settings-group-${group.name}"))
-                if (group == SettingsGroupId.Server) {
-                    KitRow(
-                        title = state.hub.server?.name ?: stringResource(Res.string.settingsHubServerNone),
-                        leading = KitRowLeading.Glyph(if (state.hub.server?.onPhone == true) KitIcons.phone else KitIcons.computer),
-                        trailing =
-                            state.hub.server?.let {
-                                KitRowTrailing.Value(
-                                    if (it.onPhone) stringResource(Res.string.settingsHubServerOnPhone)
-                                    else stringResource(Res.string.settingsV3Connected)
-                                )
-                            } ?: KitRowTrailing.Chevron,
-                        onClick = { actions.onOpen(SettingsPage.Group(group)) },
-                    )
-                }
-                rows.forEach { row ->
-                    KitRow(
-                        title = rowWords(row),
-                        modifier = Modifier.testTag(row.tag),
-                        leading = KitRowLeading.Glyph(rowGlyph(row)),
-                        trailing = rowValue(row, state)?.let { KitRowTrailing.Value(it) } ?: KitRowTrailing.Chevron,
-                        onClick = { actions.onTarget(row) },
-                    )
-                }
-                if (hub.searchable.count { it.group == group } > rows.size + (if (group == SettingsGroupId.Server) 1 else 0)) {
-                    KitRow(
-                        title = stringResource(Res.string.agentToolsTerminalMore),
-                        modifier = Modifier.semantics { contentDescription = groupName },
-                        leading = KitRowLeading.Glyph(KitIcons.more),
-                        trailing = KitRowTrailing.Chevron,
-                        onClick = { actions.onOpen(SettingsPage.Group(group)) },
-                    )
-                }
-            }
-        } else if (hub.results.isEmpty()) {
-            KitText(
-                stringResource(Res.string.kitSearchNoMatch, hub.query),
-                Modifier.padding(
-                    horizontal = LocalKitTokens.current.gutter.dp,
-                    vertical = Space.S4.dp,
-                ),
-                role = TypeRole.Secondary,
-                tone = TextTone.Secondary,
-            )
-        } else {
-            KitRowGroup {
-                hub.results.forEach { row ->
-                    KitRow(
-                        title = rowWords(row),
-                        modifier = Modifier.testTag(row.tag),
-                        supporting = groupWords(row.group),
-                        trailing = KitRowTrailing.Chevron,
-                        onClick = { actions.onTarget(row) },
-                    )
-                }
+        }
+    } else if (hub.results.isEmpty()) {
+        KitSearchNoMatch(
+            query = hub.query,
+            onClear = { actions.onQuery("") },
+        )
+    } else {
+        KitRowGroup {
+            hub.results.forEach { row ->
+                KitRow(
+                    title = rowWords(row),
+                    modifier = Modifier.testTag(row.tag),
+                    supporting = groupWords(row.group),
+                    leading = KitRowLeading.Glyph(rowGlyph(row)),
+                    trailing = KitRowTrailing.Chevron,
+                    onClick = { actions.onTarget(row) },
+                )
             }
         }
     }
 }
 
-/** The rows each group shows on the hub (concept A): the ones people come to read or change most. */
-private val HUB_ROWS: Map<SettingsGroupId, List<SettingsRowId>> =
-    mapOf(
-        SettingsGroupId.Server to listOf(SettingsRowId.ThisPhone),
-        SettingsGroupId.Agent to listOf(SettingsRowId.ModelAndMode, SettingsRowId.Permissions, SettingsRowId.Usage),
-        SettingsGroupId.Conversations to listOf(SettingsRowId.ShowReasoning, SettingsRowId.ShowTimestamps, SettingsRowId.Voice),
-        SettingsGroupId.ThisApp to listOf(SettingsRowId.Appearance, SettingsRowId.Language, SettingsRowId.Notifications, SettingsRowId.Background),
-        SettingsGroupId.Help to listOf(SettingsRowId.Guide, SettingsRowId.About),
-    ).withDefault { emptyList() }
+/** The five hub glyphs, in Flutter's group order. */
+private fun groupGlyph(group: SettingsGroupId) =
+    when (group) {
+        SettingsGroupId.Server -> KitIcons.server
+        SettingsGroupId.Agent -> KitIcons.agent
+        SettingsGroupId.Conversations -> KitIcons.chat
+        SettingsGroupId.ThisApp -> KitIcons.phone
+        SettingsGroupId.Help -> KitIcons.question
+    }
+
+@Composable
+private fun hubServerLine(state: SettingsUi): String {
+    val server = state.hub.server
+    val saved = state.hub.savedServers
+    if (server == null)
+        return if (saved.isEmpty()) stringResource(Res.string.settingsHubServerNone)
+        else pluralStringResource(Res.plurals.settingsV3ServersCount, saved.size, saved.size)
+    val where =
+        if (server.onPhone) stringResource(Res.string.settingsHubServerOnPhone) else server.name
+    return stringResource(
+        Res.string.settingsHubServerLine,
+        where,
+        stringResource(Res.string.settingsV3Connected),
+    )
+}
 
 /** Each row's Phosphor glyph (the Flutter Settings icons). */
 private fun rowGlyph(row: SettingsRowId) =
@@ -178,7 +193,7 @@ private fun rowGlyph(row: SettingsRowId) =
         SettingsRowId.Agents -> KitIcons.agent
         SettingsRowId.ShowReasoning -> KitIcons.idea
         SettingsRowId.ShowTimestamps -> KitIcons.clock
-        SettingsRowId.PhraseChips -> KitIcons.textShort
+        SettingsRowId.PhraseChips -> KitIcons.chat
         SettingsRowId.DefaultShell -> KitIcons.terminal
         SettingsRowId.Voice -> KitIcons.mic
         SettingsRowId.Permissions -> KitIcons.shield
@@ -208,53 +223,137 @@ internal fun GroupPage(
     page: SettingsPage.Group,
     modifier: Modifier,
 ) {
-    SettingsFrame(groupWords(page.id), { actions.onBack() }, state, actions, modifier) {
-        val rows = state.group?.rows.orEmpty()
-        KitRowGroup {
-            rows.forEach { row ->
-                val title = rowWords(row.id)
-                val request = remember(row.id) { BringIntoViewRequester() }
-                val focused = state.focusedRow == row.id
-                LaunchedEffect(focused) { if (focused) request.bringIntoView() }
-                val rowModifier =
-                    Modifier.testTag(row.id.tag).bringIntoViewRequester(request).semantics {
-                        selected = focused
+    BoxWithConstraints(modifier.fillMaxSize()) {
+        val window = LocalKitWindow.current
+        if (Layout.showsDetail(window.cls, window.short, maxWidth.value)) {
+            KitPaneScreen(
+                topBar = {
+                    KitTopBar(
+                        title = settingsTitle(),
+                        exit = KitTopBarExit.Back,
+                        exitLabel = stringResource(Res.string.kitTopBarBack),
+                        onExit = { actions.onBack() },
+                    )
+                },
+                list = {
+                    Column(
+                        Modifier.fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .padding(top = Space.S2.dp, bottom = Space.S6.dp)
+                    ) {
+                        HubBody(state, actions, selected = page.id)
                     }
-                when (val door = row.door) {
-                    is SettingsDoor.Switch ->
-                        KitSwitchRow(title = title, checked = door.on, modifier = rowModifier) {
-                            actions.onRow(row.id)
-                        }
-                    else ->
-                        KitRow(
-                            title = title,
-                            modifier = rowModifier,
-                            selected = focused,
-                            supporting = rowValue(row.id, state),
-                            trailing = KitRowTrailing.Chevron,
-                            onClick = { actions.onRow(row.id) },
-                        )
-                }
+                },
+                detail = {
+                    Column(
+                        Modifier.fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            // F: lib/ui/screens/settings/settings_group_page.dart:399-401
+                            .padding(top = Space.S5.dp, bottom = Space.S6.dp)
+                    ) {
+                        GroupBody(state, actions, page)
+                    }
+                },
+                emptyDetail = {},
+            )
+        } else {
+            SettingsFrame(groupWords(page.id), { actions.onBack() }, state, actions) {
+                GroupBody(state, actions, page)
             }
         }
-        if (page.id == SettingsGroupId.Conversations)
-            state.phrases
-                ?.takeIf { it.hiddenCount > 0 && it.profile != null }
-                ?.let { phrases ->
-                    KitRow(
-                        title = stringResource(Res.string.settingsPhraseChipsShowHidden),
-                        supporting =
-                            pluralStringResource(
-                                Res.plurals.settingsPhraseChipsHiddenCount,
-                                phrases.hiddenCount,
-                                phrases.hiddenCount,
-                            ),
-                        onClick = actions::onShowHiddenPhrases,
-                    )
-                }
-        if (page.id == SettingsGroupId.Server && state.hub.savedServers.size > 1) {
-            SavedServersBody(state, actions, null)
+    }
+}
+
+@Composable
+private fun ColumnScope.GroupBody(
+    state: SettingsUi,
+    actions: SettingsActions,
+    page: SettingsPage.Group,
+) {
+    var languageOpen by remember(page.id) { mutableStateOf(false) }
+    if (languageOpen) {
+        KitSheet(
+            visible = true,
+            onDismissRequest = { languageOpen = false },
+            title = stringResource(Res.string.settingsV3Language),
+        ) {
+            LanguageBody(
+                state.language,
+                object : SettingsActions by actions {
+                    override fun onLanguage(
+                        language: io.github.eslamasabry.oc.feature.settings.presentation.AppLanguage
+                    ) {
+                        actions.onLanguage(language)
+                        languageOpen = false
+                    }
+                },
+            )
         }
+    }
+    val rows = state.group?.rows.orEmpty()
+    KitRowGroup(leadingTiles = true) {
+        rows.forEach { row ->
+            val title = rowWords(row.id)
+            val request = remember(row.id) { BringIntoViewRequester() }
+            val focused = state.focusedRow == row.id
+            LaunchedEffect(focused) { if (focused) request.bringIntoView() }
+            val rowModifier =
+                Modifier.testTag(row.id.tag).bringIntoViewRequester(request).semantics {
+                    selected = focused
+                }
+            when {
+                row.id == SettingsRowId.PhraseChips ->
+                    KitIconSwitchRow(
+                        title = stringResource(Res.string.settingsPhraseChipsTitle),
+                        icon = KitIcons.chat,
+                        checked = state.phrases?.enabled ?: state.phraseChips,
+                        modifier = rowModifier,
+                        onCheckedChange = actions::onPhraseChips,
+                    )
+                row.door is SettingsDoor.Switch ->
+                    KitIconSwitchRow(
+                        title = title,
+                        icon = rowGlyph(row.id),
+                        checked = row.door.on,
+                        modifier = rowModifier,
+                        onCheckedChange = { actions.onRow(row.id) },
+                    )
+                else ->
+                    KitRow(
+                        title = title,
+                        modifier = rowModifier,
+                        selected = focused,
+                        leading = KitRowLeading.Glyph(rowGlyph(row.id)),
+                        trailing =
+                            rowValue(row.id, state)?.let { KitRowTrailing.Value(it) }
+                                ?: KitRowTrailing.Chevron,
+                        onClick = {
+                            if (row.id == SettingsRowId.Language) languageOpen = true
+                            else actions.onRow(row.id)
+                        },
+                    )
+            }
+        }
+    }
+    if (page.id == SettingsGroupId.Conversations)
+        state.phrases
+            ?.takeIf { it.hiddenCount > 0 && it.profile != null }
+            ?.let { phrases ->
+                KitRow(
+                    title = stringResource(Res.string.settingsPhraseChipsShowHidden),
+                    leading = KitRowLeading.Glyph(KitIcons.hidden),
+                    supporting =
+                        pluralStringResource(
+                            Res.plurals.settingsPhraseChipsHiddenCount,
+                            phrases.hiddenCount,
+                            phrases.hiddenCount,
+                        ),
+                    onClick = actions::onShowHiddenPhrases,
+                )
+            }
+    if (page.id == SettingsGroupId.Server && state.hub.savedServers.size > 1) {
+        Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
+        SavedServersBody(state, actions, null)
     }
 }
 
@@ -264,10 +363,25 @@ internal fun androidx.compose.foundation.layout.ColumnScope.SavedServersBody(
     actions: SettingsActions,
     section: io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside?,
 ) {
-    KitRowGroup(label = stringResource(Res.string.settingsV3ServersBlock)) {
+    val note =
+        when (section) {
+            SettingsOutside.ModelAndMode -> Res.string.settingsV3ModelByServerNote
+            SettingsOutside.Providers -> Res.string.settingsV3ProvidersByServerNote
+            SettingsOutside.Tools -> Res.string.settingsV3ToolsByServerNote
+            SettingsOutside.DefaultShell -> Res.string.settingsV3ShellByServerNote
+            SettingsOutside.ReadState -> Res.string.settingsV3ReadStateByServerNote
+            else -> null
+        }
+    note?.let { KitGroupNote(stringResource(it)) }
+    KitRowGroup(
+        leadingTiles = true,
+        label = if (section == null) stringResource(Res.string.settingsV3ServersBlock) else null,
+    ) {
         state.hub.savedServers.forEach { server ->
             KitRow(
                 title = server.name,
+                leading =
+                    KitRowLeading.Glyph(if (server.onPhone) KitIcons.phone else KitIcons.server),
                 supporting =
                     stringResource(
                         if (server.connected) Res.string.settingsV3Connected
@@ -284,6 +398,9 @@ internal fun androidx.compose.foundation.layout.ColumnScope.SavedServersBody(
 private fun rowValue(row: SettingsRowId, state: SettingsUi): String? {
     val servers = state.hub.savedServers
     return when (row) {
+        SettingsRowId.Language -> languageWords(state.language)
+        SettingsRowId.Appearance -> modeWords(state.appearance.mode)
+        SettingsRowId.Background -> state.notifications?.background?.let { backgroundWords(it) }
         SettingsRowId.Servers ->
             when {
                 servers.isEmpty() -> null

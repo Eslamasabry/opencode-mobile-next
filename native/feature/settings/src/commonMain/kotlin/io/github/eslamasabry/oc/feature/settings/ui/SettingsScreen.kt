@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
@@ -31,9 +32,8 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
-import io.github.eslamasabry.oc.ui.words.res.migrationStorageTitle
 import io.github.eslamasabry.oc.ui.words.res.Res
-import io.github.eslamasabry.oc.ui.words.res.aboutAllLicences
+import io.github.eslamasabry.oc.ui.words.res.aboutBundledComponents
 import io.github.eslamasabry.oc.ui.words.res.aboutTitle
 import io.github.eslamasabry.oc.ui.words.res.appUpdatesTitle
 import io.github.eslamasabry.oc.ui.words.res.capabilityScreenTitle
@@ -41,16 +41,17 @@ import io.github.eslamasabry.oc.ui.words.res.e7AppearanceTitle
 import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.librarySettingsTitle
+import io.github.eslamasabry.oc.ui.words.res.migrationStorageTitle
 import io.github.eslamasabry.oc.ui.words.res.monitorQuietEnd
 import io.github.eslamasabry.oc.ui.words.res.monitorQuietStart
 import io.github.eslamasabry.oc.ui.words.res.nativeBundledPrivacy
 import io.github.eslamasabry.oc.ui.words.res.nativePhraseChipsTitle
 import io.github.eslamasabry.oc.ui.words.res.notifyDismiss
 import io.github.eslamasabry.oc.ui.words.res.privacyPolicyTitle
+import io.github.eslamasabry.oc.ui.words.res.settingsHubGroupNotifications
 import io.github.eslamasabry.oc.ui.words.res.settingsHubPrivacyRow
 import io.github.eslamasabry.oc.ui.words.res.settingsHubVoice
 import io.github.eslamasabry.oc.ui.words.res.settingsV3Language
-import io.github.eslamasabry.oc.ui.words.res.settingsV3Notifications
 import io.github.eslamasabry.oc.ui.words.res.shareSessionViewsTitle
 import io.github.eslamasabry.oc.ui.words.res.whatsNewTitle
 import org.jetbrains.compose.resources.stringResource
@@ -124,6 +125,10 @@ public fun SettingsScreen(
                 state,
                 actions,
                 modifier,
+                footer =
+                    if (state.appearance.guide?.done == false) {
+                        { AppearanceGuideNext(state.appearance, actions) }
+                    } else null,
             ) {
                 AppearanceBody(state.appearance, actions)
             }
@@ -139,7 +144,7 @@ public fun SettingsScreen(
             }
         SettingsPage.Notifications ->
             SettingsFrame(
-                stringResource(Res.string.settingsV3Notifications),
+                stringResource(Res.string.settingsHubGroupNotifications),
                 back,
                 state,
                 actions,
@@ -166,7 +171,7 @@ public fun SettingsScreen(
             }
         SettingsPage.Notices ->
             SettingsFrame(
-                stringResource(Res.string.aboutAllLicences),
+                stringResource(Res.string.aboutBundledComponents),
                 back,
                 state,
                 actions,
@@ -196,7 +201,7 @@ public fun SettingsScreen(
             }
         SettingsPage.About ->
             SettingsFrame(stringResource(Res.string.aboutTitle), back, state, actions, modifier) {
-                AboutBody(state.about, actions, state.voiceLicenses)
+                AboutBody(state.about, actions, state.voiceLicenses, state.updates)
             }
         is SettingsPage.VoiceLicense -> VoiceLicenseScreen(page.id, state, actions)
         SettingsPage.PrivacyPolicy ->
@@ -220,8 +225,8 @@ public fun SettingsScreen(
                 actions,
                 modifier,
             ) {
-                PrivacyBody(state.privacy, actions)
                 state.localData?.let { LocalDataBody(it, actions) }
+                PrivacyBody(state.privacy, actions)
             }
         SettingsPage.WhatWeCollect ->
             SettingsFrame(PendingWords.WHAT_WE_COLLECT, back, state, actions, modifier) {
@@ -254,7 +259,13 @@ public fun SettingsScreen(
             }
         SettingsPage.ServerConfiguration -> ServerConfigurationPage(onBack = back)
         SettingsPage.Storage ->
-            SettingsFrame(stringResource(Res.string.migrationStorageTitle), back, state, actions, modifier) {
+            SettingsFrame(
+                stringResource(Res.string.migrationStorageTitle),
+                back,
+                state,
+                actions,
+                modifier,
+            ) {
                 state.localModels?.let { LocalModelsBody(it, actions) }
             }
         SettingsPage.ReportProblem ->
@@ -296,6 +307,7 @@ internal fun SettingsFrame(
     modifier: Modifier = Modifier,
     search: (@Composable () -> Unit)? = null,
     large: Boolean = false,
+    footer: (@Composable () -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     KitScreen(
@@ -303,24 +315,38 @@ internal fun SettingsFrame(
         topBar = {
             KitTopBar(
                 title = title,
-                exit = if (onBack != null) KitTopBarExit.Back else KitTopBarExit.None,
+                exit =
+                    if (onBack != null && (state.stack.size > 1 || state.page == SettingsPage.Hub))
+                        KitTopBarExit.Back
+                    else KitTopBarExit.None,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = onBack,
                 large = large,
             )
         },
         search = search,
-        width = KitScreenWidth.Reading,
+        width =
+            if (state.page == SettingsPage.Appearance) KitScreenWidth.List
+            else KitScreenWidth.Reading,
         page = true,
     ) {
-        Column(
-            Modifier.fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(bottom = Space.S6.dp),
-            verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
-        ) {
-            state.note?.let { NoteLine(it, actions) }
-            content()
+        Column(Modifier.fillMaxSize()) {
+            Column(
+                Modifier.fillMaxWidth()
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(top = Space.S2.dp, bottom = Space.S6.dp),
+                verticalArrangement =
+                    Arrangement.spacedBy(
+                        if (state.page == SettingsPage.Hub || state.page == SettingsPage.Appearance)
+                            0.dp
+                        else Space.S2.dp
+                    ),
+            ) {
+                state.note?.let { NoteLine(it, actions) }
+                content()
+            }
+            footer?.invoke()
         }
     }
 }

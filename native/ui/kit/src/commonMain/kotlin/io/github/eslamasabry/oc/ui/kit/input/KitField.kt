@@ -51,6 +51,8 @@ import androidx.compose.ui.semantics.inputText
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.password
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -255,7 +257,9 @@ public fun KitField(
                 composer,
             )
         }
-        val note = error ?: helper
+        val disabledNote = error == null && !enabled.isEnabled
+        val note =
+            error ?: if (enabled.isEnabled) helper else enabled.reason?.takeIf { it.isNotEmpty() }
         val length = state.text.length
         val counter = KitFieldRules.showCounter(length, maxLength)
         if (!composer || checking || note != null || counter) {
@@ -269,7 +273,7 @@ public fun KitField(
                                 Modifier.semantics {
                                     liveRegion = LiveRegionMode.Polite
                                     if (error != null) error(error)
-                                },
+                                }.then(if (disabledNote) Modifier.clearAndSetSemantics {} else Modifier),
                                 role = TypeRole.Secondary,
                                 tone = if (error != null) TextTone.Primary else TextTone.Secondary,
                                 kind = KitTextKind.Frame,
@@ -374,9 +378,10 @@ private fun FieldBox(
     val finalInput = if (report == null) transformation else transformation?.then(report) ?: report
     val submit = onSubmit?.let { KeyboardActionHandler { _ -> it() } }
     val box =
-        Modifier.then(
-                if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier
-            )
+        Modifier.semantics {
+                if (!on && !hasError) enabled.reason?.let { stateDescription = it }
+            }
+            .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
             .fillMaxWidth()
             .heightIn(min = tokens.minTarget.dp)
             .then(

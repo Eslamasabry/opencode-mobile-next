@@ -14,7 +14,6 @@ import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Corners
 import io.github.eslamasabry.oc.ui.design.text.AppTextSize
 import io.github.eslamasabry.oc.ui.design.tokens.Density
-import io.github.eslamasabry.oc.ui.words.res.migrationStorageTitle
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.aboutTitle
 import io.github.eslamasabry.oc.ui.words.res.appUpdateFailChecksum
@@ -64,9 +63,9 @@ import io.github.eslamasabry.oc.ui.words.res.effectsMotionOffHint
 import io.github.eslamasabry.oc.ui.words.res.effectsSaveFailed
 import io.github.eslamasabry.oc.ui.words.res.kitCopied
 import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
+import io.github.eslamasabry.oc.ui.words.res.migrationStorageTitle
 import io.github.eslamasabry.oc.ui.words.res.nativeCapabilitiesTitle
 import io.github.eslamasabry.oc.ui.words.res.nativePhraseChipsAliases
-import io.github.eslamasabry.oc.ui.words.res.nativePhraseChipsTitle
 import io.github.eslamasabry.oc.ui.words.res.onboardingSetupGuide
 import io.github.eslamasabry.oc.ui.words.res.reportProblemCopied
 import io.github.eslamasabry.oc.ui.words.res.settingsHubGroupAgent
@@ -147,7 +146,7 @@ internal fun rowWords(row: SettingsRowId): String =
             SettingsRowId.Agents -> Res.string.settingsV3AgentsOnPhone
             SettingsRowId.ShowReasoning -> Res.string.settingsHubShowReasoning
             SettingsRowId.ShowTimestamps -> Res.string.settingsHubShowTimestamps
-            SettingsRowId.PhraseChips -> Res.string.nativePhraseChipsTitle
+            SettingsRowId.PhraseChips -> Res.string.settingsPhraseChipsTitle
             SettingsRowId.DefaultShell -> Res.string.e7SettingsUi35
             SettingsRowId.Voice -> Res.string.settingsHubVoice
             SettingsRowId.Permissions -> Res.string.settingsV3Permissions

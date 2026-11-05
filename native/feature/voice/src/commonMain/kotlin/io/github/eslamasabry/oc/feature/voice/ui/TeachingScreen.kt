@@ -1,23 +1,30 @@
 package io.github.eslamasabry.oc.feature.voice.ui
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.engine.settings.teaching.TeachingKind
 import io.github.eslamasabry.oc.feature.voice.presentation.TeachingActions
 import io.github.eslamasabry.oc.feature.voice.presentation.TeachingUi
-import io.github.eslamasabry.oc.ui.kit.KitButton
-import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
-import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
+import io.github.eslamasabry.oc.ui.kit.row.KitTeachingRow
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
@@ -35,7 +42,10 @@ public fun TeachingScreen(state: TeachingUi, actions: TeachingActions) {
         },
         width = KitScreenWidth.Reading,
     ) {
-        LazyColumn(Modifier.testTag("help-tips")) {
+        LazyColumn(
+            Modifier.testTag("help-tips"),
+            contentPadding = PaddingValues(top = Space.S2.dp, bottom = Space.S6.dp),
+        ) {
             if (!state.ready) {
                 item {
                     if (state.failed)
@@ -53,54 +63,89 @@ public fun TeachingScreen(state: TeachingUi, actions: TeachingActions) {
                 }
                 return@LazyColumn
             }
-            state.replay?.let { entry ->
-                item(key = "replay") {
-                    val last = entry.steps.isEmpty() || state.step >= entry.steps.lastIndex
-                    KitNotice(
-                        message =
-                            teachingWords(
-                                entry.steps.getOrNull(state.step)?.messageKey ?: entry.messageKey
-                            ),
-                        title = teachingWords(entry.titleKey),
-                        actions =
-                            listOf(
-                                KitLineAction(
-                                    stringResource(
-                                        if (last) Res.string.voiceConversationNativeTourDone
-                                        else Res.string.voiceConversationNativeTourNext
-                                    ),
-                                    actions::next,
-                                )
-                            ),
-                        dismiss =
-                            KitLineAction(
-                                stringResource(Res.string.e7VoiceUiNotNow),
-                                actions::dismiss,
-                            ),
-                    )
-                }
+            item(key = "intro") {
+                KitText(
+                    stringResource(Res.string.tipsIntro),
+                    Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
+                    role = TypeRole.Secondary,
+                )
             }
-            state.entries.forEach { entry ->
-                item(key = entry.id.raw) {
-                    KitRow(
-                        title = teachingWords(entry.titleKey),
-                        supporting = teachingWords(entry.messageKey),
-                        supportingMaxLines = 4,
-                        trailing = KitRowTrailing.Chevron,
-                        onClick = { actions.replay(entry.id) },
-                    )
+            state.replay
+                ?.takeIf { it.kind == TeachingKind.Tour }
+                ?.let { entry ->
+                    item(key = "replay") {
+                        val last = entry.steps.isEmpty() || state.step >= entry.steps.lastIndex
+                        KitNotice(
+                            message =
+                                teachingWords(
+                                    entry.steps.getOrNull(state.step)?.messageKey
+                                        ?: entry.messageKey
+                                ),
+                            title = teachingWords(entry.titleKey),
+                            actions =
+                                listOf(
+                                    KitLineAction(
+                                        stringResource(
+                                            if (last) Res.string.voiceConversationNativeTourDone
+                                            else Res.string.voiceConversationNativeTourNext
+                                        ),
+                                        actions::next,
+                                    )
+                                ),
+                            dismiss =
+                                KitLineAction(
+                                    stringResource(Res.string.e7VoiceUiNotNow),
+                                    actions::dismiss,
+                                ),
+                        )
+                    }
+                }
+            TeachingKind.entries.forEach { kind ->
+                item(key = "group-${kind.name}") {
+                    KitRowGroup(
+                        label =
+                            stringResource(
+                                if (kind == TeachingKind.Tip) Res.string.tipsTipsLabel
+                                else Res.string.tipsToursLabel
+                            ),
+                        leadingTiles = true,
+                    ) {
+                        state.entries
+                            .filter { it.kind == kind }
+                            .forEach { entry ->
+                                KitTeachingRow(
+                                    title = teachingWords(entry.titleKey),
+                                    icon =
+                                        if (kind == TeachingKind.Tour) KitIcons.playCircle
+                                        else KitIcons.idea,
+                                    showLabel = stringResource(Res.string.tipsShowMe),
+                                    onShow = { actions.replay(entry.id) },
+                                    message = teachingWords(entry.messageKey),
+                                    replaying =
+                                        kind == TeachingKind.Tip && state.replay?.id == entry.id,
+                                    onDismissed = actions::dismiss,
+                                    modifier = Modifier.testTag("tips-row-${entry.id.raw}"),
+                                )
+                            }
+                    }
                 }
             }
             item(key = "reset") {
                 Column {
                     if (state.resetFailed)
                         KitNotice(stringResource(Res.string.voiceConversationNativeTourResetFailed))
-                    KitButton(
-                        stringResource(Res.string.voiceConversationNativeTourReset),
-                        actions::reset,
-                        role = KitButtonRole.Tertiary,
-                        modifier = Modifier.testTag("tips-reset"),
-                    )
+                    Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
+                    KitRowGroup(leadingTiles = true) {
+                        KitRow(
+                            title = stringResource(Res.string.discoverShowTipsAgain),
+                            supporting = stringResource(Res.string.discoverShowTipsSubtitle),
+                            supportingMaxLines =
+                                2, // F: lib/ui/screens/settings/tips_screen.dart:138
+                            leading = KitRowLeading.Glyph(KitIcons.idea),
+                            onClick = actions::reset,
+                            modifier = Modifier.testTag("tips-reset"),
+                        )
+                    }
                 }
             }
         }
@@ -111,6 +156,8 @@ public fun TeachingScreen(state: TeachingUi, actions: TeachingActions) {
 private fun teachingWords(key: String): String =
     stringResource(
         when (key) {
+            "terminal40TipTitle" -> Res.string.terminal40TipTitle
+            "terminal40Tip" -> Res.string.terminal40Tip
             "tipTerminalLinksTitle" -> Res.string.tipTerminalLinksTitle
             "tipTerminalLinks" -> Res.string.tipTerminalLinks
             "tipStopAfterStepTitle" -> Res.string.tipStopAfterStepTitle

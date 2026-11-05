@@ -34,12 +34,12 @@ import io.github.eslamasabry.oc.ui.words.res.appUpdateCurrentVersion
 import io.github.eslamasabry.oc.ui.words.res.appUpdateNeverChecked
 import io.github.eslamasabry.oc.ui.words.res.appUpdateOpenRelease
 import io.github.eslamasabry.oc.ui.words.res.appUpdatesTitle
-import io.github.eslamasabry.oc.ui.words.res.desktopUpdatesBuildAvailable
 import io.github.eslamasabry.oc.ui.words.res.desktopReleaseCurrent
 import io.github.eslamasabry.oc.ui.words.res.desktopReleaseFailed
 import io.github.eslamasabry.oc.ui.words.res.desktopReleaseLimit
 import io.github.eslamasabry.oc.ui.words.res.desktopReleaseOpenFailed
 import io.github.eslamasabry.oc.ui.words.res.desktopReleaseOpenQuestion
+import io.github.eslamasabry.oc.ui.words.res.desktopUpdatesBuildAvailable
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import org.jetbrains.compose.resources.stringResource
 
@@ -110,17 +110,17 @@ public fun DesktopUpdatesScreen(state: DesktopUpdatesUi, actions: DesktopUpdates
             }
             KitGroupNote(stringResource(Res.string.desktopReleaseLimit))
         }
+        KitConfirm(
+            spec =
+                if (state.askingToOpen)
+                    KitConfirmSpec(
+                        title = stringResource(Res.string.desktopReleaseOpenQuestion),
+                        confirmLabel = stringResource(Res.string.appUpdateOpenRelease),
+                        body = state.releasePage,
+                    )
+                else null,
+            onConfirm = actions::onConfirmOpen,
+            onCancel = actions::onCancelOpen,
+        )
     }
-    KitConfirm(
-        spec =
-            if (state.askingToOpen)
-                KitConfirmSpec(
-                    title = stringResource(Res.string.desktopReleaseOpenQuestion),
-                    confirmLabel = stringResource(Res.string.appUpdateOpenRelease),
-                    body = state.releasePage,
-                )
-            else null,
-        onConfirm = actions::onConfirmOpen,
-        onCancel = actions::onCancelOpen,
-    )
 }

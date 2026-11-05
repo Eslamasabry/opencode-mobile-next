@@ -1,7 +1,10 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -14,17 +17,22 @@ import io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage
 import io.github.eslamasabry.oc.feature.settings.presentation.SpeechModel
 import io.github.eslamasabry.oc.feature.settings.presentation.VoiceFacts
-import io.github.eslamasabry.oc.ui.design.color.StatusTone
+import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoice
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceList
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
-import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.row.KitActionRow
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
+import io.github.eslamasabry.oc.ui.kit.row.KitIconSwitchRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
-import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -110,152 +118,184 @@ internal fun ColumnScope.VoiceBody(voice: VoiceFacts, actions: SettingsActions) 
  */
 @Composable
 internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: SettingsActions) {
+    var checkInOpen by remember { mutableStateOf(false) }
+    val defaultCheckIn = 30 // F: lib/domain/profile_monitor.dart:31
+    if (checkInOpen)
+        KitSheet(
+            visible = true,
+            onDismissRequest = { checkInOpen = false },
+            title = stringResource(Res.string.monitorCheckInAfter),
+        ) {
+            val minutes = n.checkInMinutes
+            if (minutes != null)
+                KitChoiceList(
+                    choices =
+                        (listOf(15, 30, 60, 120) + minutes) // F: lib/domain/profile_monitor.dart:30
+                            .distinct()
+                            .sorted()
+                            .map { // F: lib/domain/profile_monitor.dart:30
+                                KitChoice(
+                                    it,
+                                    pluralStringResource(Res.plurals.monitorMinutes, it, it),
+                                )
+                            }, // NV: supported minute choices retain the current saved value
+                    selected = minutes,
+                    semanticsLabel = stringResource(Res.string.monitorCheckInAfter),
+                    onSelect = {
+                        actions.onNotification(NotificationChange.CheckIn(it))
+                        checkInOpen = false
+                    },
+                )
+        }
     if (n.blocked) {
-        KitNotice(
-            stringResource(Res.string.notifyBlockedMessage),
-            Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
+        KitRow(
             title = stringResource(Res.string.notifyBlockedTitle),
-            tone = StatusTone.Neutral,
-            actions =
-                listOf(
-                    KitLineAction(
-                        stringResource(Res.string.notifyTurnOnInAndroid),
-                        { actions.onOutside(SettingsOutside.AndroidNotificationSettings) },
-                    )
-                ),
+            leading = KitRowLeading.Glyph(KitIcons.notificationImportant),
+            supporting = stringResource(Res.string.notifyBlockedMessage),
+            supportingMaxLines = Int.MAX_VALUE,
         )
+        KitButton(
+            stringResource(Res.string.notifyTurnOnInAndroid),
+            { actions.onOutside(SettingsOutside.AndroidNotificationSettings) },
+            Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
+            role = KitButtonRole.Primary,
+            fullWidth = true,
+        )
+        Spacer(Modifier.height(Space.S6.dp))
     }
-    KitRowGroup(label = stringResource(Res.string.notifySectionWhat)) {
-        KitSwitchRow(
+    KitRowGroup(leadingTiles = true, label = stringResource(Res.string.notifySectionWhat)) {
+        val enabled =
+            if (n.blocked) KitEnabled.Disabled(stringResource(Res.string.notifyBlockedMessage))
+            else KitEnabled.Enabled
+        KitIconSwitchRow(
             title = stringResource(Res.string.notifyFinishedRuns),
+            icon = KitIcons.checkCircle,
             checked = n.finishedWork,
             supporting = stringResource(Res.string.notifyFinishedRunsDetail),
-            enabled =
-                if (n.blocked) KitEnabled.Disabled(stringResource(Res.string.notifyBlockedMessage))
-                else KitEnabled.Enabled,
-        ) {
-            actions.onNotification(NotificationChange.FinishedWork(it))
-        }
-        KitSwitchRow(
+            enabled = enabled,
+            onCheckedChange = { actions.onNotification(NotificationChange.FinishedWork(it)) },
+        )
+        KitIconSwitchRow(
             title = stringResource(Res.string.notifyRequests),
+            icon = KitIcons.question,
             checked = n.questions,
             supporting = stringResource(Res.string.notifyRequestsDetail),
-            enabled =
-                if (n.blocked) KitEnabled.Disabled(stringResource(Res.string.notifyBlockedMessage))
-                else KitEnabled.Enabled,
-        ) {
-            actions.onNotification(NotificationChange.Questions(it))
+            enabled = enabled,
+            onCheckedChange = { actions.onNotification(NotificationChange.Questions(it)) },
+        )
+        KitIconSwitchRow(
+            title = stringResource(Res.string.monitorCheckIn),
+            icon = KitIcons.clock,
+            checked = n.checkInMinutes != null,
+            supporting = stringResource(Res.string.monitorCheckInDetail),
+            onCheckedChange = {
+                actions.onNotification(
+                    NotificationChange.CheckIn(
+                        if (it) defaultCheckIn else null
+                    ) // F: lib/domain/profile_monitor.dart:31
+                ) // F: lib/domain/profile_monitor.dart:31
+            }, // NV: the existing native check-in default is 30 minutes
+        )
+        n.checkInMinutes?.let { minutes ->
+            KitRow(
+                title = stringResource(Res.string.monitorCheckInAfter),
+                leading = KitRowLeading.Glyph(KitIcons.timer),
+                trailing =
+                    KitRowTrailing.Value(
+                        pluralStringResource(Res.plurals.monitorMinutes, minutes, minutes)
+                    ),
+                onClick = { checkInOpen = true },
+            )
         }
-        if (n.usageAlertsShown) {
+        if (n.usageAlertsShown)
             KitRow(
                 title = stringResource(Res.string.notifyQuotaAlerts),
+                leading = KitRowLeading.Glyph(KitIcons.usage),
                 supporting = stringResource(Res.string.notifyQuotaAlertsDetail),
                 trailing = KitRowTrailing.Chevron,
                 onClick = { actions.onOutside(SettingsOutside.UsageAlerts) },
             )
-        }
-    }
-    KitRowGroup {
-        KitSwitchRow(
-            title = stringResource(Res.string.monitorCheckIn),
-            checked = n.checkInMinutes != null,
-            supporting = stringResource(Res.string.monitorCheckInDetail),
-        ) {
-            actions.onNotification(NotificationChange.CheckIn(if (it) 30 else null))
-        }
-        n.checkInMinutes?.let { minutes ->
-            KitChoiceList(
-                choices =
-                    ((listOf(15, 30, 60, 120) + minutes).distinct().sorted()).map {
-                        KitChoice(it, pluralStringResource(Res.plurals.monitorMinutes, it, it))
-                    },
-                selected = minutes,
-                semanticsLabel = stringResource(Res.string.monitorCheckInAfter),
-                onSelect = { actions.onNotification(NotificationChange.CheckIn(it)) },
-            )
-        }
-    }
-    if (n.profiles.isNotEmpty())
-        KitRowGroup(label = stringResource(Res.string.notifySectionServers)) {
-            n.profiles.forEach { profile ->
-                KitSwitchRow(
-                    title = profile.name,
-                    checked = profile.enabled,
-                    supporting = stringResource(Res.string.monitorOptIn),
-                    enabled =
-                        if (profile.supported) KitEnabled.Enabled
-                        else
-                            KitEnabled.Disabled(
-                                stringResource(Res.string.e7ProjectMonitorUnsupported)
-                            ),
-                ) {
-                    actions.onNotification(NotificationChange.ProfileWatch(profile.id, it))
-                }
-                if (profile.supported && profile.enabled)
-                    KitSwitchRow(
-                        title = stringResource(Res.string.monitorNotifications),
-                        checked = profile.notifications,
-                    ) {
-                        actions.onNotification(
-                            NotificationChange.ProfileNotifications(profile.id, it)
-                        )
-                    }
-            }
-        }
-    else
-        // Flutter `_savedServers`: nothing to watch yet is said, rather than an empty section.
-        KitRowGroup(label = stringResource(Res.string.notifySectionServers)) {
-            KitRow(
-                title = stringResource(Res.string.notifyNoServersTitle),
-                supporting = stringResource(Res.string.notifyNoServersDetail),
-                supportingMaxLines = 2,
-            )
-        }
-    // Flutter `_quietHours`: one switch that names itself; when on, its start and end (each opens
-    // its time page).
-    KitRowGroup {
+        KitActionRow(
+            title = stringResource(Res.string.notifySendTest),
+            supporting = stringResource(Res.string.notifySendTestDetail),
+            icon = KitIcons.notificationImportant,
+            onClick = actions::onSendTestNotification,
+        )
         val quiet = n.quietHours
-        KitSwitchRow(
+        KitIconSwitchRow(
             title = stringResource(Res.string.monitorQuiet),
+            icon = KitIcons.darkMode,
             checked = quiet != null,
             supporting = stringResource(Res.string.notifyQuietDetail),
-        ) {
-            actions.onQuietHours(it)
-        }
+            onCheckedChange = actions::onQuietHours,
+        )
         if (quiet != null) {
             KitRow(
                 title = stringResource(Res.string.monitorQuietStart),
+                leading = KitRowLeading.Glyph(KitIcons.clock),
                 trailing = KitRowTrailing.Value(clock(quiet.start)),
                 onClick = { actions.onOpen(SettingsPage.QuietTime(start = true)) },
             )
             KitRow(
                 title = stringResource(Res.string.monitorQuietEnd),
+                leading = KitRowLeading.Glyph(KitIcons.clock),
+                trailing = KitRowTrailing.Value(clock(quiet.end)),
                 supporting =
                     if (quiet.allDay) stringResource(Res.string.notifyQuietAllDay) else null,
-                supportingMaxLines = 2,
-                trailing = KitRowTrailing.Value(clock(quiet.end)),
                 onClick = { actions.onOpen(SettingsPage.QuietTime(start = false)) },
             )
         }
-        KitSwitchRow(
+    }
+    KitRowGroup(leadingTiles = true, label = stringResource(Res.string.notifySectionServers)) {
+        n.profiles.forEach { profile ->
+            KitIconSwitchRow(
+                title = profile.name,
+                icon = KitIcons.server,
+                checked = profile.enabled,
+                supporting = stringResource(Res.string.monitorOptIn),
+                enabled =
+                    if (profile.supported) KitEnabled.Enabled
+                    else
+                        KitEnabled.Disabled(stringResource(Res.string.e7ProjectMonitorUnsupported)),
+                onCheckedChange = {
+                    actions.onNotification(NotificationChange.ProfileWatch(profile.id, it))
+                },
+            )
+            if (profile.supported && profile.enabled)
+                KitIconSwitchRow(
+                    title = stringResource(Res.string.monitorNotifications),
+                    icon = KitIcons.notificationImportant,
+                    checked = profile.notifications,
+                    onCheckedChange = {
+                        actions.onNotification(
+                            NotificationChange.ProfileNotifications(profile.id, it)
+                        )
+                    },
+                )
+        }
+        if (n.profiles.isEmpty())
+            KitRow(
+                title = stringResource(Res.string.notifyNoServersTitle),
+                leading = KitRowLeading.Glyph(KitIcons.server),
+                supporting = stringResource(Res.string.notifyNoServersDetail),
+            )
+        KitIconSwitchRow(
             title = stringResource(Res.string.notifyWifiOnly),
+            icon = KitIcons.network,
             checked = n.wifiOnly,
             supporting = stringResource(Res.string.monitorWifiDetail),
-        ) {
-            actions.onNotification(NotificationChange.WifiOnly(it))
-        }
-        KitRow(
-            title = stringResource(Res.string.notifySendTest),
-            supporting = stringResource(Res.string.notifySendTestDetail),
-            onClick = actions::onSendTestNotification,
+            onCheckedChange = { actions.onNotification(NotificationChange.WifiOnly(it)) },
         )
     }
     n.background?.let { bg ->
-        KitRowGroup(label = stringResource(Res.string.notifySectionBackground)) {
+        KitRowGroup(
+            leadingTiles = true,
+            label = stringResource(Res.string.notifySectionBackground),
+        ) {
             KitRow(
                 title = stringResource(Res.string.e7SettingsUi25),
+                leading = KitRowLeading.Glyph(KitIcons.sync),
                 trailing = KitRowTrailing.Value(backgroundWords(bg)),
-                supportingMaxLines = 2,
                 onClick = { actions.onOutside(SettingsOutside.KeepRunning) },
             )
         }

@@ -253,6 +253,50 @@ public class PlansWords internal constructor() {
         else stringResource(Res.string.m40PlansCheckedAgo, duration(now - checked))
     }
 
+    /**
+     * The compact card speaks only when its numbers do not tell the state
+     * (usage_text.dart:279-322).
+     */
+    @Composable
+    fun blockMessage(card: PlanCardUi, now: Long, several: Boolean): String? {
+        val where = card.fixConnection ?: card.readFrom
+        return when (card.state) {
+            SubscriptionState.CantReadYet ->
+                if (several && where != null)
+                    stringResource(Res.string.usageCantReadBody, connection(where))
+                else stringResource(Res.string.usageCantReadBodyOne)
+            SubscriptionState.SignInExpired ->
+                if (several && where != null)
+                    stringResource(Res.string.usageSignInRanOut, card.name, connection(where))
+                else stringResource(Res.string.usageSignInRanOutOne, card.name)
+            SubscriptionState.NotSignedIn ->
+                stringResource(
+                    if (card.providerId == "glm" || card.providerId == "minimax")
+                        Res.string.usageNoKey
+                    else if (several) Res.string.usageNotSignedInAnywhere
+                    else Res.string.usageNotSignedInOne
+                )
+            SubscriptionState.ReaderBroken ->
+                stringResource(Res.string.usageReaderBroken, card.name)
+            SubscriptionState.NoLimits -> stringResource(Res.string.usageNoLimits)
+            SubscriptionState.OfflineStale -> {
+                val fetched = card.fetchedAtMs
+                if (fetched == null) stringResource(Res.string.usagePillOffline)
+                else if (several && card.readFrom != null)
+                    stringResource(
+                        Res.string.usageOfflineStale,
+                        connection(card.readFrom),
+                        duration(now - fetched),
+                    )
+                else stringResource(Res.string.usageOfflineStaleOne, duration(now - fetched))
+            }
+            SubscriptionState.Ok,
+            SubscriptionState.NearLimit,
+            SubscriptionState.Exhausted,
+            SubscriptionState.ApiKeyOnly -> null
+        }
+    }
+
     @Composable
     fun facts(card: PlanCardUi, now: Long): List<String> = buildList {
         card.readFrom?.let { add(stringResource(Res.string.m40PlansReadFrom, connection(it))) }

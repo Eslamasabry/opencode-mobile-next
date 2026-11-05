@@ -1,13 +1,13 @@
 package io.github.eslamasabry.oc.feature.projects.ui
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FolderProblem
@@ -21,7 +21,6 @@ import io.github.eslamasabry.oc.feature.projects.presentation.ProjectsPickerActi
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectsPickerUi
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitAction
-import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipTone
@@ -32,17 +31,21 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
-import io.github.eslamasabry.oc.ui.kit.modal.KitInputDialog
+import io.github.eslamasabry.oc.ui.kit.modal.KitInputOperationDialog
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
+import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
-import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.state.KitInlineStateView
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
@@ -57,7 +60,6 @@ import io.github.eslamasabry.oc.ui.words.res.folderBrowserHomeHere
 import io.github.eslamasabry.oc.ui.words.res.folderBrowserOpenedBefore
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
-import io.github.eslamasabry.oc.ui.words.res.kitSheetClose
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
 import io.github.eslamasabry.oc.ui.words.res.p12NewProjectUnavailable
@@ -82,7 +84,6 @@ import io.github.eslamasabry.oc.ui.words.res.projectFolderOpenAction
 import io.github.eslamasabry.oc.ui.words.res.projectFolderOpenSubtitle
 import io.github.eslamasabry.oc.ui.words.res.projectFolderPathLabel
 import io.github.eslamasabry.oc.ui.words.res.serversTitle
-import io.github.eslamasabry.oc.ui.words.res.stateFolderCreating
 import io.github.eslamasabry.oc.ui.words.res.stateFolderNameCharacters
 import io.github.eslamasabry.oc.ui.words.res.stateFolderNameEmpty
 import io.github.eslamasabry.oc.ui.words.res.stateFolderNameSegment
@@ -216,27 +217,71 @@ public fun ProjectsPickerScreen(state: ProjectsPickerUi, actions: ProjectsPicker
 /** Inside the KitScreen body, so the dialog finds the screen's KitSheetHost. */
 @Composable
 private fun PathDialog(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
-    val notAbsolute = stringResource(Res.string.p12PathNotAbsolute)
-    val badParts = stringResource(Res.string.p12PathBadParts)
-    val home = stringResource(Res.string.folderBrowserHomeHere)
-    KitInputDialog(
-        visible = state.askingPath,
-        title = stringResource(Res.string.projectFolderOpen),
-        fieldLabel = stringResource(Res.string.projectFolderPathLabel),
-        confirmLabel = stringResource(Res.string.projectFolderOpenAction),
-        initial = state.pathStart,
-        kind = KitFieldKind.Path,
-        validate = { typed ->
-            when (ProjectRules.pathProblem(typed)) {
-                PathProblem.NotAbsolute -> notAbsolute
-                PathProblem.BadParts -> badParts
-                PathProblem.HomeOrRoot -> home
-                null -> null
+    if (!state.askingPath) return
+    val path = rememberTextFieldState(state.pathStart)
+    var submitted by remember { mutableStateOf(false) }
+    val typed = path.text.toString().trim()
+    val problem =
+        when (ProjectRules.pathProblem(typed)) {
+            PathProblem.NotAbsolute -> stringResource(Res.string.p12PathNotAbsolute)
+            PathProblem.BadParts -> stringResource(Res.string.p12PathBadParts)
+            PathProblem.HomeOrRoot -> stringResource(Res.string.folderBrowserHomeHere)
+            null -> null
+        }
+    fun submit() {
+        submitted = true
+        if (problem == null) actions.finishPath(typed)
+    }
+    val recent = state.openedBefore.distinctBy { it.directory }
+    val projects =
+        state.projects
+            .filter { project ->
+                recent.none { it.directory == project.directory } &&
+                    ProjectRules.pathProblem(project.directory) == null
             }
-        },
-        operationKey = "open-folder",
-        onResult = actions::finishPath,
-    )
+            .distinctBy { it.directory }
+            .sortedBy { it.directory }
+    KitSheet(
+        visible = true,
+        title = stringResource(Res.string.projectFolderOpen),
+        onDismissRequest = { actions.finishPath(null) },
+        primary =
+            KitAction(
+                stringResource(Res.string.projectFolderOpenAction),
+                ::submit,
+                icon = KitIcons.folderOpen,
+            ),
+    ) {
+        if (recent.isNotEmpty() || projects.isNotEmpty()) {
+            KitSectionLabel(stringResource(Res.string.folderBrowserFoldersLabel))
+            KitRowGroup(leadingTiles = true) {
+                for ((folder, icon) in
+                    recent.map { it to KitIcons.history } +
+                        projects.map { it to KitIcons.projects }) {
+                    KitRow(
+                        folder.name,
+                        supporting = folder.directory,
+                        leading = KitRowLeading.Glyph(icon),
+                        trailing = KitRowTrailing.Chevron,
+                        modifier = Modifier.testTag("remote-folder-${folder.directory}"),
+                        onClick = { actions.finishPath(folder.directory) },
+                    )
+                }
+            }
+            Spacer(Modifier.height(Space.S4.dp))
+        }
+        KitField(
+            path,
+            stringResource(Res.string.projectFolderPathLabel),
+            kind = KitFieldKind.Path,
+            placeholder = stringResource(Res.string.projectFolderPathHint, "/root/projects"),
+            helper = stringResource(Res.string.projectFolderOpenMessage),
+            error = if (submitted) problem else null,
+            modifier = Modifier.testTag("open-folder-path"),
+            onTextChanged = { submitted = false },
+            onSubmit = ::submit,
+        )
+    }
 }
 
 @Composable
@@ -370,50 +415,47 @@ private fun ProjectRow(project: FolderRowUi, actions: ProjectsPickerActions) {
 
 @Composable
 private fun CreateDialog(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
-    val problem =
-        when (ProjectFolderName.problem(state.createName)) {
-            ProjectFolderNameProblem.Empty -> stringResource(Res.string.stateFolderNameEmpty)
-            ProjectFolderNameProblem.NotSingleSegment ->
-                stringResource(Res.string.stateFolderNameSegment)
-            ProjectFolderNameProblem.InvalidCharacters ->
-                stringResource(Res.string.stateFolderNameCharacters)
-            null -> null
-        }
-    val working = stringResource(Res.string.stateFolderCreating)
-    KitSheet(
-        visible = state.askingCreate,
-        onDismissRequest = actions::closeCreate,
+    if (!state.askingCreate) return
+    val empty = stringResource(Res.string.stateFolderNameEmpty)
+    val segment = stringResource(Res.string.stateFolderNameSegment)
+    val characters = stringResource(Res.string.stateFolderNameCharacters)
+    val failed = stringResource(Res.string.projectFolderCreateFailedTitle)
+    KitInputOperationDialog(
+        visible = true,
         title = stringResource(Res.string.projectFolderCreate),
-        closeLabel = stringResource(Res.string.kitSheetClose),
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
-            KitNotice(stringResource(Res.string.projectFolderCreateHelper, "/root/projects"))
-            val field = rememberTextFieldState(state.createName)
-            KitField(
-                state = field,
-                label = stringResource(Res.string.projectFolderNameLabel),
-                error = problem,
-                onTextChanged = actions::changeCreateName,
-                enabled =
-                    if (state.creatingFolder) KitEnabled.Disabled(working) else KitEnabled.Enabled,
-            )
-            state.folderFailure?.let {
-                KitErrorNotice(
-                    message = stringResource(Res.string.projectFolderCreateFailedTitle),
-                    failure = it,
+        fieldLabel = stringResource(Res.string.projectFolderNameLabel),
+        confirmLabel = stringResource(Res.string.projectFolderCreateAction),
+        cancelLabel = stringResource(Res.string.projectFolderCancel),
+        initial = state.createName,
+        hint = stringResource(Res.string.projectFolderNameHint),
+        helper = stringResource(Res.string.projectFolderCreateHelper, "/root/projects"),
+        working = state.creatingFolder,
+        error = state.folderFailure?.let { failed },
+        validate = { name ->
+            when (ProjectFolderName.problem(name)) {
+                ProjectFolderNameProblem.Empty -> empty
+                ProjectFolderNameProblem.NotSingleSegment -> segment
+                ProjectFolderNameProblem.InvalidCharacters -> characters
+                null -> null
+            }
+        },
+        details = {
+            state.folderFailure?.details?.let {
+                KitDetailsFold(
+                    label = stringResource(Res.string.kitDetails),
+                    copyLabel = stringResource(Res.string.kitCopyDetails),
+                    text = it,
                 )
             }
-            KitButton(
-                label = stringResource(Res.string.projectFolderCreateAction),
-                onClick = actions::createFolder,
-                working = state.creatingFolder,
-                enabled =
-                    if (state.creatingFolder || problem != null)
-                        KitEnabled.Disabled(if (state.creatingFolder) working else problem!!)
-                    else KitEnabled.Enabled,
-            )
-        }
-    }
+        },
+        onTextChanged = actions::changeCreateName,
+        onSubmit = { name ->
+            // A supplied suggestion and a last-keystroke IME submit both use the visible name.
+            actions.changeCreateName(name)
+            actions.createFolder()
+        },
+        onDismissRequest = actions::closeCreate,
+    )
 }
 
 /**
@@ -422,103 +464,109 @@ private fun CreateDialog(state: ProjectsPickerUi, actions: ProjectsPickerActions
  */
 @Composable
 private fun PhoneFolderSheet(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
-    val path = state.phonePath
+    val path = state.phonePath ?: return
+    val folderName = path.trimEnd('/').substringAfterLast('/').ifEmpty { path }
+    val canOpen = !state.phoneLoading && state.phoneFailure == null && state.phoneParent != null
+    val held =
+        if (state.phoneLoading) KitEnabled.Disabled(stringResource(Res.string.andrStorageWorking))
+        else KitEnabled.Enabled
     KitSheet(
-        visible = path != null,
+        visible = true,
         onDismissRequest = actions::closePhoneFolders,
         title =
+            if (!state.browsingBuiltin && state.phoneParent == null)
+                stringResource(Res.string.folderBrowserInternalStorage)
+            else folderName,
+        subtitle =
             stringResource(
-                if (state.browsingBuiltin) Res.string.secBuiltinFolders
-                else Res.string.andrStorageInternal
+                if (state.browsingBuiltin) Res.string.folderBrowserPlaceProjects
+                else Res.string.folderBrowserPlacePhone
             ),
-        subtitle = path,
-        height = KitSheetHeight.Full,
-        primary =
+        leading =
             KitAction(
-                stringResource(Res.string.andrStorageUseFolder),
-                actions::usePhoneFolder,
-                enabled =
-                    if (
-                        !state.phoneLoading &&
-                            state.phoneFailure == null &&
-                            state.phoneParent != null
-                    )
-                        io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled.Enabled
-                    else
-                        io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled.Disabled(
-                            stringResource(
-                                when {
-                                    state.phoneLoading -> Res.string.andrStorageWorking
-                                    state.phoneFailure != null -> Res.string.andrStorageFolderFailed
-                                    // B-ANDR-051: the storage root is never a project (Flutter).
-                                    else -> Res.string.andrStorageRootHere
-                                }
-                            )
-                        ),
+                stringResource(
+                    if (state.phoneParent == null) Res.string.kitTopBarBack
+                    else Res.string.folderBrowserUp
+                ),
+                {
+                    state.phoneParent?.let(actions::enterPhoneFolder) ?: actions.closePhoneFolders()
+                },
+                enabled = held,
             ),
+        height = KitSheetHeight.Content,
+        primary =
+            if (!canOpen) null
+            else
+                KitAction(
+                    stringResource(Res.string.folderBrowserOpen, folderName),
+                    actions::usePhoneFolder,
+                    icon = KitIcons.folderOpen,
+                ),
     ) {
-        Column(Modifier.verticalScroll(rememberScrollState())) {
-            state.phoneParent?.let { parent ->
-                KitRow(
-                    title = stringResource(Res.string.andrStorageUp),
-                    onClick = { actions.enterPhoneFolder(parent) },
+        when {
+            state.phoneLoading ->
+                KitSkeletonRows(count = 4) // F: lib/ui/widgets/folder_browser.dart:1122
+            state.phoneFailure != null -> {
+                val failure = state.phoneFailure
+                val message =
+                    when ((failure as? Failure.Folder)?.problem) {
+                        FolderProblem.Missing -> Res.string.folderBrowserErrorMissing
+                        FolderProblem.Denied -> Res.string.folderBrowserErrorDenied
+                        FolderProblem.Linked -> Res.string.folderBrowserErrorLinked
+                        FolderProblem.NotInstalled -> Res.string.folderBrowserErrorNotInstalled
+                        else -> Res.string.folderBrowserErrorFailed
+                    }
+                KitInlineStateView(
+                    title = stringResource(Res.string.folderBrowserErrorTitle),
+                    icon = KitIcons.warning,
+                    body = stringResource(message),
+                    secondary =
+                        KitAction(
+                            stringResource(Res.string.folderBrowserRetry),
+                            { actions.enterPhoneFolder(path) },
+                        ),
                 )
-            }
-            when {
-                state.phoneLoading -> KitSkeletonRows(count = 4)
-                state.phoneFailure != null -> {
-                    val failure = state.phoneFailure
-                    val message =
-                        when {
-                            failure is Failure.Folder && failure.problem == FolderProblem.Missing ->
-                                Res.string.andrStorageFolderMissing
-                            failure is Failure.Folder && failure.problem == FolderProblem.Denied ->
-                                Res.string.andrStorageFolderDenied
-                            failure is Failure.Folder && failure.problem == FolderProblem.Linked ->
-                                Res.string.secBuiltinFolderLinked
-                            failure is Failure.Folder &&
-                                failure.problem == FolderProblem.NotInstalled ->
-                                Res.string.secBuiltinFolderNotInstalled
-                            else -> Res.string.andrStorageFolderFailed
-                        }
-                    KitNotice(
-                        message = stringResource(message),
-                        actions =
-                            buildList {
-                                if (
-                                    !state.browsingBuiltin &&
-                                        failure is Failure.Folder &&
-                                        failure.problem == FolderProblem.Denied
-                                )
-                                    add(
-                                        KitLineAction(
-                                            stringResource(Res.string.andrStorageAccess),
-                                            actions::allowPhoneFolderAccess,
-                                        )
-                                    )
-                                add(
-                                    KitLineAction(
-                                        stringResource(Res.string.kitTryAgain),
-                                        { path?.let(actions::enterPhoneFolder) },
-                                    )
-                                )
-                            },
+                failure.details?.let {
+                    KitDetailsFold(
+                        stringResource(Res.string.kitDetails),
+                        stringResource(Res.string.kitCopyDetails),
+                        text = it,
                     )
                 }
-                state.phoneFolders.isEmpty() ->
-                    KitNotice(message = stringResource(Res.string.andrStorageFoldersEmpty))
-                else ->
-                    KitRowGroup {
-                        state.phoneFolders.forEach { folder ->
-                            KitRow(
-                                title = folder.name,
-                                supporting = folder.hint,
-                                trailing = KitRowTrailing.Chevron,
-                                onClick = { actions.enterPhoneFolder(folder.path) },
-                            )
-                        }
-                    }
+                if (
+                    !state.browsingBuiltin &&
+                        failure is Failure.Folder &&
+                        failure.problem == FolderProblem.Denied
+                )
+                    io.github.eslamasabry.oc.ui.kit.KitButton(
+                        stringResource(Res.string.andrStorageAccess),
+                        actions::allowPhoneFolderAccess,
+                        role = io.github.eslamasabry.oc.ui.kit.KitButtonRole.Tertiary,
+                    )
             }
+            state.phoneFolders.isEmpty() ->
+                KitInlineStateView(
+                    title = stringResource(Res.string.folderBrowserEmptyTitle),
+                    icon = KitIcons.folderOpen,
+                    body =
+                        stringResource(
+                            if (state.browsingBuiltin) Res.string.folderBrowserEmptyBody
+                            else Res.string.folderBrowserEmptyPhoneBody
+                        ),
+                )
+            else ->
+                KitRowGroup(leadingTiles = true) {
+                    state.phoneFolders.forEach { folder ->
+                        KitRow(
+                            title = folder.name,
+                            supporting = folder.hint,
+                            leading = KitRowLeading.Glyph(KitIcons.folderOpen),
+                            trailing = KitRowTrailing.Chevron,
+                            modifier = Modifier.testTag("phone-folder-${folder.path}"),
+                            onClick = { actions.enterPhoneFolder(folder.path) },
+                        )
+                    }
+                }
         }
     }
 }

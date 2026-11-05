@@ -204,6 +204,8 @@ internal class SheetEntry {
     var dismissible: Boolean by mutableStateOf(true)
     var framed: Boolean by mutableStateOf(false)
     var loading: Boolean by mutableStateOf(false)
+    var showClose: Boolean by mutableStateOf(true)
+    var leading: KitAction? by mutableStateOf(null)
     var secondaryDismisses: Boolean by mutableStateOf(false)
     var asking: Boolean by mutableStateOf(false)
     var onDismissRequest: () -> Unit by mutableStateOf({})
@@ -278,6 +280,8 @@ public fun KitSheet(
     tone: KitSheetTone = KitSheetTone.Neutral,
     loading: Boolean = false,
     secondaryDismisses: Boolean = false,
+    showClose: Boolean = true,
+    leading: KitAction? = null,
     body: @Composable ColumnScope.() -> Unit,
 ) {
     val host = LocalKitSheetHost.current
@@ -300,6 +304,8 @@ public fun KitSheet(
         entry.dismissible = dismissible
         entry.framed = framed
         entry.loading = loading
+        entry.showClose = showClose
+        entry.leading = leading
         entry.secondaryDismisses = secondaryDismisses
         entry.onDismissRequest = onDismissRequest
         entry.body = body
@@ -551,15 +557,24 @@ private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean) {
 private fun SheetHeader(entry: SheetEntry, handle: Boolean) {
     val tokens = LocalKitTokens.current
     // The close glyph's ink ends on the rail: rail - (minTarget - glyph) / 2 - ink inset.
-    val showClose = entry.dismissible && !(entry.secondaryDismisses && entry.secondary != null) // F: lib/ui/kit/kit_sheet_modal.dart:383-385
+    val lead = entry.leading
+    val showClose =
+        lead == null &&
+            entry.showClose &&
+            entry.dismissible &&
+            !(entry.secondaryDismisses &&
+                entry.secondary != null) // F: lib/ui/kit/kit_sheet_modal.dart:383-385
     val closeEnd =
         if (showClose) {
-            (FlutterKitTokens.RAIL - (tokens.minTarget - 24) / 2f - 24 * 0.1875f).coerceAtLeast(0f).dp // F: lib/ui/kit/kit_sheet.dart:616-627 lib/ui/kit/kit_optical.dart:29,34 lib/ui/app_iconography.dart:20
+            (FlutterKitTokens.RAIL - (tokens.minTarget - 24) / 2f - 24 * 0.1875f)
+                .coerceAtLeast(0f)
+                .dp // F: lib/ui/kit/kit_sheet.dart:616-627 lib/ui/kit/kit_optical.dart:29,34
+                    // lib/ui/app_iconography.dart:20
         } else Space.S2.dp
     Column(
         Modifier.fillMaxWidth()
             .padding(
-                start = FlutterKitTokens.RAIL.dp,
+                start = if (lead != null) Space.S1.dp else FlutterKitTokens.RAIL.dp,
                 top = if (handle) 0.dp else Space.S3.dp,
                 end = closeEnd,
                 bottom = Space.S1.dp,
@@ -569,20 +584,43 @@ private fun SheetHeader(entry: SheetEntry, handle: Boolean) {
             IconTile(glyph, entry.tone)
             Spacer(Modifier.height(Space.S3.dp))
         }
-        Row(Modifier.fillMaxWidth()) {
-            Column(Modifier.weight(1f).padding(top = Space.S3.dp, end = Space.S2.dp)) {
-                KitText(entry.title, role = TypeRole.Title)
-                entry.subtitle?.let {
-                    Spacer(Modifier.height((Space.S1 / 2f).dp)) // F: lib/ui/kit/kit_sheet.dart:604
-                    KitText(
-                        it,
-                        role = TypeRole.Secondary,
-                        tone = TextTone.Secondary,
+        Row(
+            Modifier.fillMaxWidth(),
+            verticalAlignment = if (lead != null) Alignment.CenterVertically else Alignment.Top,
+        ) {
+            if (lead != null)
+                KitIconButton(
+                    icon = lead.icon ?: KitIcons.back,
+                    label = lead.semanticsLabel ?: lead.label,
+                    onClick = { if (lead.runnable && !lead.working) lead.onClick?.invoke() },
+                    enabled = lead.enabled,
+                    working = lead.working,
+                )
+            Column(
+                Modifier.weight(1f)
+                    .padding(
+                        start = if (lead != null) Space.S1.dp else 0.dp,
+                        top = if (lead == null) Space.S3.dp else 0.dp,
+                        end = Space.S2.dp,
                     )
-                }
+            ) {
+                KitText(entry.title, role = TypeRole.Title)
+                entry.subtitle
+                    ?.takeIf { lead == null }
+                    ?.let {
+                        Spacer(
+                            Modifier.height((Space.S1 / 2f).dp)
+                        ) // F: lib/ui/kit/kit_sheet.dart:604
+                        KitText(
+                            it,
+                            role = TypeRole.Secondary,
+                            tone = TextTone.Secondary,
+                        )
+                    }
             }
             if (showClose) {
-                // Flutter's sheet: Close is the X glyph at the end; its words are what TalkBack says.
+                // Flutter's sheet: Close is the X glyph at the end; its words are what TalkBack
+                // says.
                 KitIconButton(
                     icon = KitIcons.close,
                     label = entry.closeLabel ?: stringResource(Res.string.kitSheetClose),
@@ -591,6 +629,19 @@ private fun SheetHeader(entry: SheetEntry, handle: Boolean) {
                 )
             }
         }
+        if (lead != null)
+            entry.subtitle?.let {
+                Column(
+                    Modifier.padding(
+                        start = tokens.minTarget.dp + Space.S1.dp,
+                        end = Space.S2.dp,
+                        bottom = Space.S1.dp,
+                    )
+                ) {
+                    Spacer(Modifier.height((Space.S1 / 2f).dp)) // F: lib/ui/kit/kit_sheet.dart:604
+                    KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary)
+                }
+            }
     }
 }
 

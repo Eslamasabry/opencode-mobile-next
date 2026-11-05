@@ -2,8 +2,10 @@ package io.github.eslamasabry.oc.feature.git.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -15,7 +17,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -27,11 +28,14 @@ import io.github.eslamasabry.oc.engine.git.GitCheck
 import io.github.eslamasabry.oc.engine.git.GitDiffView
 import io.github.eslamasabry.oc.engine.git.GitFileChange
 import io.github.eslamasabry.oc.engine.git.GitHubSignIn
+import io.github.eslamasabry.oc.engine.git.GitOperation
 import io.github.eslamasabry.oc.engine.git.GitPageView
 import io.github.eslamasabry.oc.engine.git.GitProblem
+import io.github.eslamasabry.oc.engine.git.GitRemoteKind
 import io.github.eslamasabry.oc.engine.git.GitSnapshot
 import io.github.eslamasabry.oc.engine.git.gitCloneTarget
 import io.github.eslamasabry.oc.engine.git.gitRemoteAddressProblem
+import io.github.eslamasabry.oc.engine.git.isValidGitBranchName
 import io.github.eslamasabry.oc.engine.git.isValidGitFolderName
 import io.github.eslamasabry.oc.engine.git.isValidGitRemoteName
 import io.github.eslamasabry.oc.engine.git.suggestGitCloneFolder
@@ -46,14 +50,18 @@ import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextRole
+import io.github.eslamasabry.oc.ui.kit.choice.KitChoice
+import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceList
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
+import io.github.eslamasabry.oc.ui.kit.input.KitOneTimeCode
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
@@ -61,7 +69,9 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
@@ -86,26 +96,21 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 public fun GitScreen(state: GitUi, actions: GitActions, serverTools: @Composable () -> Unit = {}) {
     val message = remember { TextFieldState() }
-    var suggested by remember { mutableStateOf("") }
     var messageEdited by remember { mutableStateOf(false) }
     val defaultMessage =
         suggestedMessage(
             state.snapshot?.status?.files.orEmpty().filter { it.path in state.selected }
         )
-    LaunchedEffect(message) {
-        snapshotFlow { message.text.toString() }
-            .collect { if (it != suggested) messageEdited = true }
-    }
     LaunchedEffect(defaultMessage) {
         if (!messageEdited) {
-            suggested = defaultMessage
             message.edit { replace(0, length, defaultMessage) }
         }
     }
     LaunchedEffect(state.generation) {
-        val saved = state.result?.let { it.ok && it.note != null && it.commit != null } ?: false
+        val saved =
+            state.savedNotSent ||
+                (state.result?.let { it.ok && it.note != null && it.commit != null } ?: false)
         if (saved) {
-            suggested = ""
             message.edit { replace(0, length, "") }
             messageEdited = false
         }
@@ -167,6 +172,7 @@ public fun GitScreen(state: GitUi, actions: GitActions, serverTools: @Composable
                     KitRowGroup {
                         KitRow(
                             title = stringResource(Res.string.gitCloneRow),
+                            leading = KitRowLeading.Glyph(KitIcons.cloud),
                             supporting = stringResource(Res.string.gitCloneRowHint),
                             trailing = KitRowTrailing.Chevron,
                             onClick = actions::openClone,
@@ -198,7 +204,8 @@ public fun GitScreen(state: GitUi, actions: GitActions, serverTools: @Composable
                                 ),
                         )
                     }
-                is GitPageView.Ready -> Ready(view.snapshot, state, actions, enabled, message)
+                is GitPageView.Ready ->
+                    Ready(view.snapshot, state, actions, enabled, message) { messageEdited = true }
             }
             // The app's GitHub sign-in only where a push would use it; servers push with their own
             // (B-SEC-082).
@@ -257,8 +264,24 @@ private fun Ready(
     actions: GitActions,
     enabled: KitEnabled,
     message: TextFieldState,
+    onMessageEdited: () -> Unit,
 ) {
     val branch = snapshot.status.branch
+    // F: lib/state/git_page_controller.dart:153-160
+    val operationInProgress = snapshot.operation != GitOperation.None
+    val branchEnabled =
+        if (operationInProgress)
+            KitEnabled.Disabled(stringResource(Res.string.gitProblemOperationInProgress))
+        else enabled
+    val canPull = !branch.detached && branch.hasUpstream && !operationInProgress
+    val noPullRemote = !snapshot.hasRemote && !branch.detached && !operationInProgress
+    val pullReason =
+        (enabled as? KitEnabled.Disabled)?.reason
+            ?: when {
+                operationInProgress -> stringResource(Res.string.gitProblemOperationInProgress)
+                branch.detached -> stringResource(Res.string.gitProblemDetachedHead)
+                else -> stringResource(Res.string.gitPullNotOnRemote)
+            }
     val ownSignIn =
         state.placeName?.let { stringResource(Res.string.gitUsesOwnSignInOn, it) }
             ?: stringResource(Res.string.gitUsesOwnSignIn)
@@ -298,21 +321,23 @@ private fun Ready(
     KitRowGroup(label = stringResource(Res.string.gitDetailsBranch)) {
         KitRow(
             title = branch.head ?: stringResource(Res.string.gitDetachedHead),
+            leading = KitRowLeading.Glyph(KitIcons.branch),
             supporting = if (branch.unborn) stringResource(Res.string.gitNoCommitsYet) else null,
             trailing = KitRowTrailing.Value(stringResource(Res.string.gitSwitchRow)),
-            enabled = enabled.isEnabled,
-            disabledReason = (enabled as? KitEnabled.Disabled)?.reason,
+            enabled = branchEnabled.isEnabled,
+            disabledReason = (branchEnabled as? KitEnabled.Disabled)?.reason,
             onClickLabel = stringResource(Res.string.gitActionSwitchBranch),
             onClick = actions::openBranches,
             modifier = Modifier.testTag("git-branch-row"),
         )
         KitRow(
             title = stringResource(Res.string.gitGetLatest),
+            leading = KitRowLeading.Glyph(KitIcons.download),
             supporting =
                 when {
                     !snapshot.hasRemote -> stringResource(Res.string.gitPullNoRemote)
                     !branch.hasUpstream -> stringResource(Res.string.gitPullNotOnRemote)
-                    branch.behind > 0 ->
+                    state.check == GitCheck.Done && branch.behind > 0 ->
                         pluralStringResource(
                             Res.plurals.gitGetNewFrom,
                             branch.behind,
@@ -322,21 +347,20 @@ private fun Ready(
                         )
                     // "Up to date" only after the quiet look at the remote (Flutter
                     // checkForUpdates).
-                    state.check == GitCheck.Checking -> stringResource(Res.string.gitChecking)
+                    state.check == GitCheck.Done -> stringResource(Res.string.gitStateUpToDate)
                     state.check == GitCheck.Failed -> stringResource(Res.string.gitCheckFailed)
-                    else -> stringResource(Res.string.gitStateUpToDate)
+                    else -> stringResource(Res.string.gitChecking)
                 },
-            enabled = enabled.isEnabled && (!snapshot.hasRemote || branch.hasUpstream),
+            enabled = enabled.isEnabled && (canPull || noPullRemote),
             disabledReason =
-                (enabled as? KitEnabled.Disabled)?.reason
-                    ?: if (snapshot.hasRemote && !branch.hasUpstream)
-                        stringResource(Res.string.gitPullNotOnRemote)
-                    else null,
-            onClick = if (!snapshot.hasRemote) actions::openRemotes else actions::pull,
+                if (enabled.isEnabled && (canPull || noPullRemote)) null else pullReason,
+            trailing = if (noPullRemote) KitRowTrailing.Chevron else KitRowTrailing.None,
+            onClick = if (noPullRemote) actions::openRemotes else actions::pull,
             modifier = Modifier.testTag("git-pull-row"),
         )
         KitRow(
             title = stringResource(Res.string.gitSend),
+            leading = KitRowLeading.Glyph(KitIcons.upload),
             supporting =
                 when {
                     !snapshot.hasRemote -> stringResource(Res.string.gitSendNoRemote)
@@ -362,6 +386,7 @@ private fun Ready(
     KitRowGroup {
         KitRow(
             title = stringResource(Res.string.gitRemotesRow),
+            leading = KitRowLeading.Glyph(KitIcons.link),
             supporting =
                 if (snapshot.remotes.isEmpty()) stringResource(Res.string.gitRemotesRowNone)
                 else snapshot.remotes.joinToString(", ") { it.name },
@@ -440,31 +465,35 @@ private fun Ready(
                     kind = KitFieldKind.Multiline,
                     enabled = enabled,
                     modifier = Modifier.testTag("git-message"),
+                    onTextChanged = { onMessageEdited() },
                 )
-                val count = state.selected.size
-                KitButton(
-                    pluralStringResource(Res.plurals.gitSaveButton, count, count),
-                    { actions.commit(message.text.toString()) },
-                    enabled =
-                        if (count == 0)
+                val known = files.filterNot { it.isConflicted }.map { it.path }.toSet()
+                val count = state.selected.count { it in known }
+                val saveEnabled =
+                    when {
+                        snapshot.status.hasConflicts ->
+                            KitEnabled.Disabled(stringResource(Res.string.gitProblemConflicts))
+                        count == 0 ->
                             KitEnabled.Disabled(
                                 stringResource(Res.string.gitProblemNothingSelected)
                             )
-                        else enabled,
+                        message.text.toString().trim().isEmpty() ->
+                            KitEnabled.Disabled(stringResource(Res.string.gitProblemEmptyMessage))
+                        else -> enabled
+                    }
+                KitButton(
+                    pluralStringResource(Res.plurals.gitSaveButton, count, count),
+                    { actions.commit(message.text.toString()) },
+                    enabled = saveEnabled,
                     working = state.busy == GitBusy.Commit,
                     modifier = Modifier.testTag("git-save"),
                 )
-                if (snapshot.hasRemote && !branch.detached) {
+                if (snapshot.hasRemote && !branch.detached && !branch.unborn) {
                     KitButton(
                         stringResource(Res.string.gitSaveAndSendTitle),
                         { actions.commitAndPush(message.text.toString()) },
                         role = KitButtonRole.Secondary,
-                        enabled =
-                            if (count == 0)
-                                KitEnabled.Disabled(
-                                    stringResource(Res.string.gitProblemNothingSelected)
-                                )
-                            else enabled,
+                        enabled = saveEnabled,
                         modifier = Modifier.testTag("git-save-send"),
                     )
                 }
@@ -513,22 +542,33 @@ private fun placeOf(state: GitUi, snapshot: GitSnapshot): String {
 private fun IdentityBlock(snapshot: GitSnapshot, actions: GitActions, enabled: KitEnabled) {
     val name = remember { TextFieldState(snapshot.identity?.name.orEmpty()) }
     val email = remember { TextFieldState(snapshot.identity?.email.orEmpty()) }
+    val typedName = name.text.toString().trim()
+    val typedEmail = email.text.toString().trim()
+    val ready = typedName.isNotEmpty() && '@' in typedEmail
     Gutter {
-        Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
             KitText(stringResource(Res.string.gitIdentityTitle), role = KitTextRole.Title)
             KitText(stringResource(Res.string.gitIdentityWhy), role = KitTextRole.Supporting)
-            KitField(name, stringResource(Res.string.gitIdentityName), enabled = enabled)
+            KitField(
+                name,
+                stringResource(Res.string.gitIdentityName),
+                enabled = enabled,
+                modifier = Modifier.testTag("git-identity-name"),
+            )
             KitField(
                 email,
                 stringResource(Res.string.gitIdentityEmail),
+                modifier = Modifier.testTag("git-identity-email"),
                 kind = KitFieldKind.Text,
                 enabled = enabled,
             )
             KitButton(
                 stringResource(Res.string.gitActionSaveIdentity),
-                { actions.setIdentity(name.text.toString(), email.text.toString()) },
+                { actions.setIdentity(typedName, typedEmail) },
                 role = KitButtonRole.Secondary,
-                enabled = enabled,
+                enabled =
+                    if (ready) enabled
+                    else KitEnabled.Disabled(stringResource(Res.string.gitIdentityEmail)),
             )
         }
     }
@@ -558,18 +598,37 @@ private fun GitHubSection(state: GitUi, actions: GitActions) {
                     onClick = actions::signIn,
                     modifier = Modifier.testTag("github-sign-in"),
                 )
-            GitHubSignIn.RequestingCode ->
-                KitRow(title = stringResource(Res.string.gitHubRequestingCode))
-            is GitHubSignIn.WaitingForUser -> {
+            GitHubSignIn.RequestingCode -> {
+                Gutter {
+                    KitNotice(
+                        stringResource(Res.string.gitHubRequestingCode),
+                        tone = StatusTone.Progress,
+                    )
+                }
                 KitRow(
-                    title = sign.userCode,
-                    supporting = stringResource(Res.string.gitHubEnterCode),
-                    supportingMaxLines = 3,
-                    modifier = Modifier.testTag("github-code"),
+                    title = stringResource(Res.string.gitHubCancel),
+                    onClick = actions::cancelSignIn,
                 )
+            }
+            is GitHubSignIn.WaitingForUser -> {
+                Gutter {
+                    Column {
+                        KitText(stringResource(Res.string.gitHubEnterCode))
+                        Spacer(Modifier.height(Space.S3.dp))
+                        KitOneTimeCode(
+                            sign.userCode,
+                            stringResource(Res.string.gitHubCopyCode),
+                            Modifier.testTag("github-code"),
+                        )
+                        Spacer(Modifier.height(Space.S3.dp))
+                        KitText(
+                            stringResource(Res.string.gitHubWaiting),
+                            role = KitTextRole.Supporting,
+                        )
+                    }
+                }
                 KitRow(
                     title = stringResource(Res.string.gitHubOpenGitHub),
-                    supporting = stringResource(Res.string.gitHubWaiting),
                     trailing = KitRowTrailing.Chevron,
                     onClick = actions::openGitHub,
                 )
@@ -578,11 +637,21 @@ private fun GitHubSection(state: GitUi, actions: GitActions) {
                     onClick = actions::cancelSignIn,
                 )
             }
-            GitHubSignIn.Finishing -> KitRow(title = stringResource(Res.string.gitHubFinishing))
+            GitHubSignIn.Finishing ->
+                Gutter {
+                    KitNotice(
+                        stringResource(Res.string.gitHubFinishing),
+                        tone = StatusTone.Progress,
+                    )
+                }
             is GitHubSignIn.SignedIn -> {
-                KitRow(title = stringResource(Res.string.gitHubSignedInAs, sign.login))
+                KitRow(
+                    title = stringResource(Res.string.gitHubSignedInAs, sign.login),
+                    leading = KitRowLeading.Glyph(KitIcons.globe),
+                )
                 KitRow(
                     title = stringResource(Res.string.gitHubManageAccess),
+                    leading = KitRowLeading.Glyph(KitIcons.link),
                     trailing = KitRowTrailing.Chevron,
                     onClick = actions::manageGitHubAccess,
                 )
@@ -610,56 +679,75 @@ private fun GitHubSection(state: GitUi, actions: GitActions) {
 private fun BranchSheet(state: GitUi, actions: GitActions) {
     val snapshot = state.snapshot
     val newName = remember { TextFieldState() }
+    val name = newName.text.toString().trim()
+    val invalid = name.isNotEmpty() && !isValidGitBranchName(name)
+    val head = snapshot?.status?.branch?.head
     val busyReason = state.busy?.let { gitBusyText(it) }
+    val hold = busyReason?.let { KitEnabled.Disabled(it) } ?: KitEnabled.Enabled
+    val reason =
+        when {
+            name.isEmpty() -> stringResource(Res.string.gitBranchNameHint)
+            invalid -> stringResource(Res.string.gitProblemInvalidBranchName)
+            else -> null
+        }
     KitSheet(
         visible = state.sheet == GitSheet.Branches && snapshot != null,
         onDismissRequest = actions::closeSheet,
-        title = stringResource(Res.string.gitActionSwitchBranch),
+        title = stringResource(Res.string.gitSwitchRow),
+        subtitle = head?.let { stringResource(Res.string.gitSwitchRowOn, it) },
         closeLabel = stringResource(Res.string.kitSheetClose),
-        height = KitSheetHeight.Half,
+        loading = state.working,
         primary =
             KitAction(
-                stringResource(Res.string.gitActionCreateBranch),
-                { actions.createBranch(newName.text.toString()) },
-                enabled =
-                    when {
-                        busyReason != null -> KitEnabled.Disabled(busyReason)
-                        newName.text.isBlank() ->
-                            KitEnabled.Disabled(stringResource(Res.string.gitBranchNameHint))
-                        else -> KitEnabled.Enabled
-                    },
+                head?.let { stringResource(Res.string.gitNewBranchFrom, it) }
+                    ?: stringResource(Res.string.gitActionCreateBranch),
+                { actions.createBranch(name) },
+                icon = KitIcons.add,
+                working = state.busy == GitBusy.CreateBranch,
+                enabled = reason?.let { KitEnabled.Disabled(it) } ?: hold,
             ),
     ) {
         val branches = snapshot?.branches ?: return@KitSheet
-        KitRowGroup {
-            for (branch in branches.local) {
-                KitRow(
-                    title = branch.name,
+        val choices =
+            branches.local.map { branch ->
+                KitChoice(
+                    branch.name,
+                    branch.name,
                     supporting =
                         if (branch.current) stringResource(Res.string.gitBranchCurrent)
-                        else branch.subject,
-                    selected = branch.current,
-                    enabled = !branch.current,
-                    onClick = { actions.switchBranch(branch.name) },
+                        else branch.upstream,
+                    enabled = hold,
                 )
-            }
-            for (branch in branches.remoteOnly) {
-                KitRow(
-                    title = branch.localName,
-                    supporting =
-                        stringResource(Res.string.gitBranchRemoteOnly, branch.remoteName.orEmpty()),
-                    onClick = { actions.switchBranch(branch.localName) },
-                )
-            }
-        }
-        Gutter {
+            } +
+                branches.remoteOnly.map { branch ->
+                    KitChoice(
+                        branch.localName,
+                        branch.localName,
+                        supporting =
+                            stringResource(
+                                Res.string.gitBranchRemoteOnly,
+                                branch.remoteName.orEmpty(),
+                            ),
+                        enabled = hold,
+                    )
+                }
+        Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+            SheetResult(state, actions, GitAction.SwitchBranch)
+            SheetResult(state, actions, GitAction.CreateBranch)
+            KitChoiceList(
+                choices,
+                head,
+                stringResource(Res.string.gitSwitchRow),
+                modifier = Modifier.testTag("git-branch-list"),
+                empty = {},
+                onSelect = { if (it != head && !state.working) actions.switchBranch(it) },
+            )
             KitField(
                 newName,
                 stringResource(Res.string.gitBranchNameHint),
-                helper =
-                    snapshot?.status?.branch?.head?.let {
-                        stringResource(Res.string.gitNewBranchFrom, it)
-                    },
+                enabled = hold,
+                error =
+                    if (invalid) stringResource(Res.string.gitProblemInvalidBranchName) else null,
                 modifier = Modifier.testTag("git-new-branch"),
             )
         }
@@ -672,6 +760,7 @@ private fun RemotesSheet(state: GitUi, actions: GitActions) {
     val name = remember { TextFieldState() }
     val url = remember { TextFieldState() }
     val busyReason = state.busy?.let { gitBusyText(it) }
+    val hold = busyReason?.let { KitEnabled.Disabled(it) } ?: KitEnabled.Enabled
     val remotes = snapshot?.remotes.orEmpty()
     val typedName = name.text.toString().trim()
     val typedUrl = url.text.toString().trim()
@@ -693,11 +782,13 @@ private fun RemotesSheet(state: GitUi, actions: GitActions) {
         onDismissRequest = actions::closeSheet,
         title = stringResource(Res.string.gitRemotesTitle),
         closeLabel = stringResource(Res.string.kitSheetClose),
-        height = KitSheetHeight.Half,
+        loading = state.working,
         primary =
             KitAction(
                 stringResource(Res.string.gitActionAddRemote),
                 { actions.addRemote(typedName, typedUrl) },
+                icon = KitIcons.add,
+                working = state.busy == GitBusy.AddRemote,
                 enabled =
                     when {
                         busyReason != null -> KitEnabled.Disabled(busyReason)
@@ -709,9 +800,7 @@ private fun RemotesSheet(state: GitUi, actions: GitActions) {
     ) {
         SheetResult(state, actions, GitAction.AddRemote)
         if (remotes.isEmpty()) {
-            Gutter {
-                KitText(stringResource(Res.string.gitRemotesEmpty), role = KitTextRole.Supporting)
-            }
+            KitText(stringResource(Res.string.gitRemotesEmpty), role = KitTextRole.Supporting)
         } else {
             KitRowGroup {
                 for (remote in remotes) {
@@ -724,25 +813,34 @@ private fun RemotesSheet(state: GitUi, actions: GitActions) {
                 }
             }
         }
-        Gutter {
-            Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                KitText(stringResource(Res.string.gitRemoteAddTitle), role = KitTextRole.Title)
-                KitField(
-                    name,
-                    stringResource(Res.string.gitRemoteNameLabel),
-                    placeholder = if (remotes.isEmpty()) "origin" else null,
-                    error = nameProblem?.let { gitProblemText(it) },
-                    modifier = Modifier.testTag("git-remote-name"),
-                )
-                KitField(
-                    url,
-                    stringResource(Res.string.gitRemoteAddressLabel),
-                    kind = KitFieldKind.Url,
-                    placeholder = "https://github.com/owner/name",
-                    error = urlProblem?.let { gitProblemText(it) },
-                    modifier = Modifier.testTag("git-remote-url"),
-                )
-            }
+        if (state.offersGitHubSignIn && remotes.any { it.kind == GitRemoteKind.GitHubSsh })
+            KitText(
+                stringResource(Res.string.gitHubPushOverHttps),
+                Modifier.padding(top = Space.S2.dp),
+                role = KitTextRole.Supporting,
+            )
+        Column(
+            Modifier.padding(top = Space.S4.dp),
+            verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+        ) {
+            KitSectionLabel(stringResource(Res.string.gitRemoteAddTitle))
+            KitField(
+                name,
+                enabled = hold,
+                label = stringResource(Res.string.gitRemoteNameLabel),
+                placeholder = if (remotes.isEmpty()) "origin" else null,
+                error = nameProblem?.let { gitProblemText(it) },
+                modifier = Modifier.testTag("git-remote-name"),
+            )
+            KitField(
+                url,
+                enabled = hold,
+                label = stringResource(Res.string.gitRemoteAddressLabel),
+                kind = KitFieldKind.Url,
+                placeholder = "https://github.com/owner/name",
+                error = urlProblem?.let { gitProblemText(it) },
+                modifier = Modifier.testTag("git-remote-url"),
+            )
         }
     }
 }
@@ -752,9 +850,10 @@ private fun CloneSheet(state: GitUi, actions: GitActions) {
     val url = remember { TextFieldState() }
     val folder = remember { TextFieldState() }
     val busyReason = state.busy?.let { gitBusyText(it) }
+    val hold = busyReason?.let { KitEnabled.Disabled(it) } ?: KitEnabled.Enabled
     val typedUrl = url.text.toString().trim()
-    // The folder takes its name from the address until the person types one.
-    val typedFolder = folder.text.toString().trim().ifEmpty { suggestGitCloneFolder(typedUrl) }
+    var folderTouched by remember { mutableStateOf(false) }
+    val typedFolder = folder.text.toString().trim()
     val urlProblem = if (typedUrl.isEmpty()) null else gitRemoteAddressProblem(typedUrl)
     val folderProblem =
         if (typedFolder.isEmpty() || isValidGitFolderName(typedFolder)) null
@@ -768,6 +867,7 @@ private fun CloneSheet(state: GitUi, actions: GitActions) {
         if (state.result?.note == GitActionNote.Cloned) {
             url.edit { replace(0, length, "") }
             folder.edit { replace(0, length, "") }
+            folderTouched = false
         }
     }
     KitSheet(
@@ -775,11 +875,13 @@ private fun CloneSheet(state: GitUi, actions: GitActions) {
         onDismissRequest = actions::closeSheet,
         title = stringResource(Res.string.gitCloneRow),
         closeLabel = stringResource(Res.string.kitSheetClose),
-        height = KitSheetHeight.Half,
+        loading = state.working,
         primary =
             KitAction(
                 stringResource(Res.string.gitCloneButton),
                 { actions.clone(typedUrl, typedFolder) },
+                icon = KitIcons.cloud,
+                working = state.busy == GitBusy.Clone,
                 enabled =
                     when {
                         busyReason != null -> KitEnabled.Disabled(busyReason)
@@ -790,31 +892,35 @@ private fun CloneSheet(state: GitUi, actions: GitActions) {
             ),
     ) {
         SheetResult(state, actions, GitAction.Clone)
-        Gutter {
-            Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                KitField(
-                    url,
-                    stringResource(Res.string.gitCloneAddressLabel),
-                    kind = KitFieldKind.Url,
-                    placeholder = "https://github.com/owner/name",
-                    error = urlProblem?.let { gitProblemText(it) },
-                    modifier = Modifier.testTag("git-clone-url"),
-                )
-                KitField(
-                    folder,
-                    stringResource(Res.string.gitCloneFolderLabel),
-                    placeholder = suggestGitCloneFolder(typedUrl).ifEmpty { null },
-                    error = folderProblem?.let { gitProblemText(it) },
-                    helper =
-                        if (typedFolder.isEmpty()) null
-                        else
-                            stringResource(
-                                Res.string.gitCloneInto,
-                                gitCloneTarget(state.directory ?: "/", typedFolder),
-                            ),
-                    modifier = Modifier.testTag("git-clone-folder"),
-                )
-            }
+        Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+            KitField(
+                url,
+                enabled = hold,
+                label = stringResource(Res.string.gitCloneAddressLabel),
+                kind = KitFieldKind.Url,
+                placeholder = "https://github.com/owner/name",
+                error = urlProblem?.let { gitProblemText(it) },
+                modifier = Modifier.testTag("git-clone-url"),
+                onTextChanged = { value ->
+                    if (!folderTouched)
+                        folder.edit { replace(0, length, suggestGitCloneFolder(value)) }
+                },
+            )
+            KitField(
+                folder,
+                enabled = hold,
+                label = stringResource(Res.string.gitCloneFolderLabel),
+                error = folderProblem?.let { gitProblemText(it) },
+                helper =
+                    if (typedFolder.isEmpty()) null
+                    else
+                        stringResource(
+                            Res.string.gitCloneInto,
+                            gitCloneTarget(state.directory ?: "/", typedFolder),
+                        ),
+                modifier = Modifier.testTag("git-clone-folder"),
+                onTextChanged = { folderTouched = true },
+            )
         }
     }
 }

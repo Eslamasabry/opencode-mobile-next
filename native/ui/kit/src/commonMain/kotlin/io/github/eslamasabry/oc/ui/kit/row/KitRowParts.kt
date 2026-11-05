@@ -32,8 +32,6 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
-import io.github.eslamasabry.oc.ui.kit.frame.ExitGlyph
-import io.github.eslamasabry.oc.ui.kit.frame.KitExitGlyph
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.logo.KitProviderLogo
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
@@ -93,6 +91,9 @@ public sealed interface KitRowTrailing {
 
     /** The row opens a page. */
     public data object Chevron : KitRowTrailing
+
+    /** Flutter KitIconButton.copy, for an app-authored value such as the build version. */
+    public data class Copy(val text: String, val label: String) : KitRowTrailing
 
     /** A chosen row, with the check after its words (Flutter project/model choices). */
     public data object Check : KitRowTrailing
