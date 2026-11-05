@@ -715,6 +715,18 @@ private fun MessageMenu(
                             MessageAction.Delete -> stringResource(Res.string.chatUiDeleteMessage)
                         },
                     onSelect = { menu?.let { actions.messageAction(it.target, action) } },
+                    icon = when (action) {
+                        MessageAction.Copy -> KitIcons.copy
+                        MessageAction.Share -> KitIcons.externalLink
+                        MessageAction.SelectText -> KitIcons.text
+                        MessageAction.EditAndResend -> KitIcons.edit
+                        MessageAction.ReadAloud -> KitIcons.volume
+                        MessageAction.SendAgain -> KitIcons.send
+                        MessageAction.Fork -> KitIcons.fork
+                        MessageAction.Changes -> KitIcons.review
+                        MessageAction.UndoFromHere -> KitIcons.history
+                        MessageAction.Delete -> KitIcons.delete
+                    },
                     destructive = action == MessageAction.Delete,
                 )
             }
