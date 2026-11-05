@@ -12,7 +12,7 @@ is typed by hand. Every number in the output comes from Flutter.
 
 Usage: gen_tokens.py --repo /path/to/oc_app [--ref mobile-next/master] --out path/to/FlutterKit.kt [--report out.md]
 """
-import argparse, re, subprocess, sys
+import argparse, os, re, subprocess, sys
 from fractions import Fraction
 
 def show(repo, ref, path):
@@ -70,6 +70,8 @@ def main():
     ap.add_argument("--ref", default="mobile-next/master")
     ap.add_argument("--out", required=True)
     ap.add_argument("--report")
+    ap.add_argument("--flutter-sdk", default="~/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/packages/flutter/lib/src/animation/curves.dart",
+                    help="the pinned Flutter SDK's curves.dart; the named curves' numbers are read from it")
     a = ap.parse_args()
     sha = subprocess.run(["git", "-C", a.repo, "rev-parse", "--short=9", a.ref], capture_output=True, text=True, check=True).stdout.strip()
     get = lambda p: strip_comments(show(a.repo, a.ref, p))
@@ -272,6 +274,67 @@ def main():
         v = num(val)
         if v is not None:
             w(f"    public const val {snake(name)}: {kconst(v)}")
+    w("}")
+    w("")
+
+    # 3b. Motion curves: KitMotion's `static const Curve` values, as the Flutter SDK defines each named curve
+    # (packages/flutter/lib/src/animation/curves.dart). Native builds its easings from these numbers.
+    w("/** A Flutter curve, as its SDK defines it: a cubic (x1, y1, x2, y2), a three-point cubic, or linear. */")
+    w("public sealed class FlutterCurve {")
+    w("    public data class Cubic(val x1: Float, val y1: Float, val x2: Float, val y2: Float) : FlutterCurve()")
+    w("    /** `ThreePointCubic(a1, b1, midpoint, a2, b2)`: two cubics joined at [midX], [midY] (each point as x, y). */")
+    w("    public data class ThreePointCubic(")
+    w("        val a1x: Float, val a1y: Float, val b1x: Float, val b1y: Float, val midX: Float, val midY: Float,")
+    w("        val a2x: Float, val a2y: Float, val b2x: Float, val b2y: Float,")
+    w("    ) : FlutterCurve()")
+    w("    /** `FlippedCurve(curve)`: `1 - curve(1 - t)`. */")
+    w("    public data class Flipped(val curve: FlutterCurve) : FlutterCurve()")
+    w("    public data object Linear : FlutterCurve()")
+    w("}")
+    w("")
+    sdk = {
+        "linear": "FlutterCurve.Linear",
+        "easeInOutQuad": "FlutterCurve.Cubic(0.455f, 0.03f, 0.515f, 0.955f)",
+        "easeOutQuad": "FlutterCurve.Cubic(0.25f, 0.46f, 0.45f, 0.94f)",
+        "easeOutCubic": "FlutterCurve.Cubic(0.215f, 0.61f, 0.355f, 1.0f)",
+        "easeInCubic": "FlutterCurve.Cubic(0.55f, 0.055f, 0.675f, 0.19f)",
+        "easeInOutCubic": "FlutterCurve.Cubic(0.645f, 0.045f, 0.355f, 1.0f)",
+        "easeOutBack": "FlutterCurve.Cubic(0.175f, 0.885f, 0.32f, 1.275f)",
+        "easeInOut": "FlutterCurve.Cubic(0.42f, 0.0f, 0.58f, 1.0f)",
+        "easeIn": "FlutterCurve.Cubic(0.42f, 0.0f, 1.0f, 1.0f)",
+        "easeOut": "FlutterCurve.Cubic(0.0f, 0.0f, 0.58f, 1.0f)",
+        "ease": "FlutterCurve.Cubic(0.25f, 0.1f, 0.25f, 1.0f)",
+        "fastOutSlowIn": "FlutterCurve.Cubic(0.4f, 0.0f, 0.2f, 1.0f)",
+        "easeInOutCubicEmphasized": "FlutterCurve.ThreePointCubic(0.05f, 0.0f, 0.133333f, 0.06f, 0.166666f, 0.4f, 0.208333f, 0.82f, 0.25f, 1.0f)",
+    }
+    sdk_src = os.path.expanduser(a.flutter_sdk) if a.flutter_sdk else None
+    if sdk_src and os.path.exists(sdk_src):
+        txt = open(sdk_src).read()
+        for name, args in re.findall(r"static const Cubic (\w+)\s*=\s*Cubic\(([^)]*)\);", txt):
+            v = [float(x) for x in args.split(",") if x.strip()]
+            sdk[name] = "FlutterCurve.Cubic(" + ", ".join(kfloat(x) for x in v) + ")"
+        for name, body in re.findall(r"static const ThreePointCubic (\w+)\s*=\s*ThreePointCubic\((.*?)\);", txt, flags=re.S):
+            pts = [float(x) for x in re.findall(r"-?[0-9.]+", body)]
+            sdk[name] = "FlutterCurve.ThreePointCubic(" + ", ".join(kfloat(x) for x in pts) + ")"
+        w(f"// Curves read from the Flutter SDK's curves.dart ({sdk_src.split('/bin/cache/')[-1] if '/bin/cache/' in sdk_src else sdk_src}).")
+
+    def curve_of(expr):
+        expr = expr.strip()
+        m = re.fullmatch(r"Curves\.(\w+)", expr)
+        if m:
+            return sdk.get(m.group(1))
+        m = re.fullmatch(r"FlippedCurve\(\s*Curves\.(\w+)\s*,?\s*\)", expr, flags=re.S)
+        if m and sdk.get(m.group(1)):
+            return f"FlutterCurve.Flipped({sdk[m.group(1)]})"
+        return None
+    w("/** `KitMotion`'s curves (lib/ui/kit/kit_motion.dart). `emphasized` pairs with STANDARD_MS (kit_motion_parts.dart). */")
+    w("public object FlutterKitCurves {")
+    for name, expr in re.findall(r"static const Curve (\w+)\s*=\s*([^;]+);", motion, flags=re.S):
+        c = curve_of(expr)
+        if c:
+            w(f"    public val {name}: FlutterCurve = {c}")
+        else:
+            w(f"    // {name} = {' '.join(expr.split())}: not a named SDK curve; not emitted")
     w("}")
     w("")
 

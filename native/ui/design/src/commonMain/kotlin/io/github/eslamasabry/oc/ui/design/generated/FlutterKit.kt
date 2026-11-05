@@ -262,6 +262,33 @@ public object FlutterKitMotion {
     public const val MARK_FROM: Float = 0.9f
 }
 
+/** A Flutter curve, as its SDK defines it: a cubic (x1, y1, x2, y2), a three-point cubic, or linear. */
+public sealed class FlutterCurve {
+    public data class Cubic(val x1: Float, val y1: Float, val x2: Float, val y2: Float) : FlutterCurve()
+    /** `ThreePointCubic(a1, b1, midpoint, a2, b2)`: two cubics joined at [midX], [midY] (each point as x, y). */
+    public data class ThreePointCubic(
+        val a1x: Float, val a1y: Float, val b1x: Float, val b1y: Float, val midX: Float, val midY: Float,
+        val a2x: Float, val a2y: Float, val b2x: Float, val b2y: Float,
+    ) : FlutterCurve()
+    /** `FlippedCurve(curve)`: `1 - curve(1 - t)`. */
+    public data class Flipped(val curve: FlutterCurve) : FlutterCurve()
+    public data object Linear : FlutterCurve()
+}
+
+// Curves read from the Flutter SDK's curves.dart (flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/packages/flutter/lib/src/animation/curves.dart).
+/** `KitMotion`'s curves (lib/ui/kit/kit_motion.dart). `emphasized` pairs with STANDARD_MS (kit_motion_parts.dart). */
+public object FlutterKitCurves {
+    public val stepEase: FlutterCurve = FlutterCurve.Cubic(0.455f, 0.03f, 0.515f, 0.955f)
+    public val stepOut: FlutterCurve = FlutterCurve.Cubic(0.25f, 0.46f, 0.45f, 0.94f)
+    public val enter: FlutterCurve = FlutterCurve.Cubic(0.215f, 0.61f, 0.355f, 1f)
+    public val exit: FlutterCurve = FlutterCurve.Cubic(0.55f, 0.055f, 0.675f, 0.19f)
+    public val emphasized: FlutterCurve = FlutterCurve.ThreePointCubic(0.05f, 0f, 0.133333f, 0.06f, 0.166666f, 0.4f, 0.208333f, 0.82f, 0.25f, 1f)
+    public val rowReturnPath: FlutterCurve = FlutterCurve.Flipped(FlutterCurve.ThreePointCubic(0.05f, 0f, 0.133333f, 0.06f, 0.166666f, 0.4f, 0.208333f, 0.82f, 0.25f, 1f))
+    public val land: FlutterCurve = FlutterCurve.Cubic(0.175f, 0.885f, 0.32f, 1.275f)
+    public val pulse: FlutterCurve = FlutterCurve.Cubic(0.42f, 0f, 0.58f, 1f)
+    public val steady: FlutterCurve = FlutterCurve.Linear
+}
+
 /** Every `const x = ThemeRoles(...)` in lib/ui/theme_roles.dart, role for role. */
 public object FlutterKitRoles {
     public val graphiteDark: Roles = Roles(dark = true, ground = argb(0xFF0B0C0E), surface1 = argb(0xFF141518), surface2 = argb(0xFF1B1C20), surface3 = argb(0xFF26282D), hairline = argb(0x12FFFFFF), text1 = argb(0xFFF3F3F1), text2 = argb(0xFFA3A5AB), text3 = argb(0xFF8C8F96), accent = argb(0xFF3DDC8A), onAccent = argb(0xFF03140B), partner = argb(0xFFC7A6FF), onPartner = argb(0xFF111214), attention = argb(0xFFFFB547), attentionFill = argb(0xFFFFB547), onAttentionFill = argb(0xFF1A1000), attentionSurface = argb(0x17FFB547), attentionLine = argb(0x4DFFB547), success = argb(0xFF3DDC8A), scrim = argb(0x94000000), codeKeyword = argb(0xFFC7A6FF), codeString = argb(0xFFFFB88A), codeType = argb(0xFF7FD1FF), elevationShadow = argb(0x4D000000))
