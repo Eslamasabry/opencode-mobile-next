@@ -54,7 +54,6 @@ public fun KitLiveLookPreview(
             level = SurfaceLevel.Ground,
             shape = KitShapeId.Card,
             padding = KitSurfacePadding.None,
-            outlined = true,
         ) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 KitSurface(
