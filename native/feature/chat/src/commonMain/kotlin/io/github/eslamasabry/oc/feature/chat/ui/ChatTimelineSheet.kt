@@ -18,7 +18,15 @@ import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
-import io.github.eslamasabry.oc.ui.kit.input.KitField
+import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
+import io.github.eslamasabry.oc.ui.kit.input.KitSearchNoMatch
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
+import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.state.KitStateView
+import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.words.res.chatUiJumpAnywhereForkRestoresAPromptFor
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
@@ -47,37 +55,48 @@ internal fun ChatTimelineSheet(timeline: TimelineUi?, actions: ChatActions) {
         onDismissRequest = actions::closeTimeline,
         title = stringResource(Res.string.chatUiMessageTimeline),
         closeLabel = stringResource(Res.string.kitSheetDismiss),
+        subtitle = if (timeline?.entries?.any { it.forkable } == true) stringResource(Res.string.chatUiJumpAnywhereForkRestoresAPromptFor) else null,
     ) {
         if (timeline == null) return@KitSheet
         val field = rememberTextFieldState(timeline.query)
         val mask = rememberKitMask()
         Column(
-            Modifier.fillMaxWidth().padding(horizontal = Space.S4.dp).testTag("timeline-sheet"),
-            verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
+            Modifier.fillMaxWidth().testTag("timeline-sheet"),
+            verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
-            KitField(
-                field,
-                stringResource(Res.string.chatUiSearchMessages),
-                Modifier.testTag("timeline-search"),
-                onTextChanged = actions::timelineQuery,
+            KitSearchField(
+                label = stringResource(Res.string.chatUiSearchMessages),
+                state = field,
+                modifier = Modifier.testTag("timeline-search"),
+                onSearch = actions::timelineQuery,
+                resultCount = if (timeline.query.isBlank()) null else timeline.entries.size,
+                partial = timeline.partial,
             )
-            if (timeline.partial) {
-                KitText(stringResource(Res.string.historyLoadedOnly))
-                KitButton(
-                    stringResource(Res.string.historyLoadOlder),
-                    actions::loadOlder,
-                    Modifier.testTag("timeline-load-older"),
-                    role = KitButtonRole.Tertiary,
-                    working = timeline.loadingOlder,
+            if (timeline.partial && timeline.olderFailure == null) {
+                KitNotice(
+                    message = stringResource(Res.string.historyLoadedOnly),
+                    actions = listOf(KitLineAction(
+                        stringResource(Res.string.historyLoadOlder), actions::loadOlder,
+                        enabled = !timeline.loadingOlder,
+                        disabledReason = if (timeline.loadingOlder) stringResource(Res.string.historyLoadedOnly) else null,
+                        testTag = "timeline-load-older",
+                    )),
                 )
             }
             timeline.olderFailure?.let { HistoryReadFailure(it, actions::loadOlder) }
-            if (timeline.entries.isEmpty())
-                KitText(stringResource(Res.string.chatUiNoMatchingMessages))
+            if (timeline.entries.isEmpty()) {
+                if (timeline.query.isNotBlank() && !timeline.partial) {
+                    KitSearchNoMatch(timeline.query, { field.edit { replace(0, length, "") }; actions.timelineQuery("") }, Modifier.testTag("timeline-no-match"))
+                } else {
+                    KitStateView(kind = KitStateKind.Empty, title = stringResource(Res.string.chatUiNoMatchingMessages), icon = KitIcons.history, modifier = Modifier.testTag("timeline-empty"))
+                }
+            }
         }
+        KitRowGroup {
         for (entry in timeline.entries) {
             KitRow(
                 title = mask(entry.preview.ifBlank { stringResource(Res.string.chatUiMessage) }),
+                leading = KitRowLeading.Glyph(if (entry.prompt) KitIcons.person else KitIcons.sparkle),
                 supporting =
                     listOfNotNull(
                             if (entry.prompt) stringResource(Res.string.chatUiYou) else "OpenCode",
@@ -96,12 +115,14 @@ internal fun ChatTimelineSheet(timeline: TimelineUi?, actions: ChatActions) {
                                 stringResource(Res.string.chatUiForkFromThisPrompt),
                                 { actions.timelineSelect(entry.messageId, fork = true) },
                                 testTag = "timeline-fork-${entry.messageId}",
+                                icon = KitIcons.branch,
                             )
                         )
                     else KitRowTrailing.None,
                 modifier = Modifier.testTag("timeline-row-${entry.messageId}"),
                 onClick = { actions.timelineSelect(entry.messageId) },
             )
+        }
         }
     }
 }
