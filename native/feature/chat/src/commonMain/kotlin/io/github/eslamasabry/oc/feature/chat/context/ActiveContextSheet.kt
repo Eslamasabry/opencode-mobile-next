@@ -1,5 +1,22 @@
 package io.github.eslamasabry.oc.feature.chat.context
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.input.TextFieldState
+import io.github.eslamasabry.oc.ui.kit.frame.*
+import io.github.eslamasabry.oc.ui.kit.modal.KitPageOverlay
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitKeyValue
+import io.github.eslamasabry.oc.ui.kit.row.KitKeyValueRow
+import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownSelection
+import io.github.eslamasabry.oc.ui.words.res.kitSearchClear
+import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
+import io.github.eslamasabry.oc.ui.words.res.activeContextTypeCount
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -81,122 +98,94 @@ private fun titleRole(type: String): String =
 public fun ActiveContextSheet(model: ActiveContextModel) {
     val visible by model.visible.collectAsStateWithLifecycle()
     val state by model.state.collectAsStateWithLifecycle()
+    ActiveContextScreen(visible, state, model::close, model::refresh)
+}
+
+@Composable
+internal fun ActiveContextScreen(visible: Boolean, state: ActiveContextUi, onClose: () -> Unit, onRefresh: () -> Unit) {
+    val field = remember(visible) { TextFieldState() }
     var query by remember(visible) { mutableStateOf("") }
+    var type by remember(visible) { mutableStateOf<String?>(null) }
     var openId by remember(visible) { mutableStateOf<String?>(null) }
     val ready = state as? ActiveContextUi.Ready
     val opened = ready?.messages?.firstOrNull { it.id == openId }
-    KitSheet(
-        visible = visible,
-        onDismissRequest = model::close,
-        title = stringResource(Res.string.activeContextTitle),
-        subtitle = stringResource(Res.string.activeContextSubtitle),
-        closeLabel = stringResource(Res.string.kitSheetDismiss),
-        height = KitSheetHeight.Full,
-        secondary =
-            if (state == ActiveContextUi.Unsupported || state == ActiveContextUi.Changed) null
-            else KitAction(stringResource(Res.string.activeContextRefresh), model::refresh),
-    ) {
-        when (val shown = state) {
-            ActiveContextUi.Loading -> KitStateView(KitStateKind.Loading, stringResource(Res.string.activeContextLoading))
-            ActiveContextUi.Unsupported ->
-                KitStateView(KitStateKind.Missing, stringResource(Res.string.activeContextTitle), body = stringResource(Res.string.activeContextUnsupported))
-            ActiveContextUi.Changed ->
-                KitStateView(KitStateKind.Missing, stringResource(Res.string.activeContextChangedTitle), body = stringResource(Res.string.activeContextChanged))
-            ActiveContextUi.Invalid ->
-                KitStateView(
-                    KitStateKind.Error,
-                    stringResource(Res.string.activeContextFailedTitle),
-                    body = stringResource(Res.string.activeContextInvalid),
-                    primary = KitAction(stringResource(Res.string.commonRetry), model::refresh),
+    val title = stringResource(Res.string.activeContextTitle)
+    val typeLabel = type?.let { stringResource(HandWords.activeContextMessageTitle(titleRole(it))) }
+    val shown = ready?.messages?.filter { (type == null || it.type == type) && it.matches(query.trim()) }.orEmpty()
+    KitPageOverlay(visible, title, { if (openId != null) openId = null else onClose() }) {
+        KitScreen(
+            topBar = {
+                KitTopBar(
+                    title = opened?.let { stringResource(HandWords.activeContextMessageTitle(titleRole(it.type))) } ?: title,
+                    exit = KitTopBarExit.Back,
+                    exitLabel = stringResource(Res.string.kitTopBarBack),
+                    onExit = { if (openId != null) openId = null else onClose() },
+                    actions = if (opened != null || state == ActiveContextUi.Changed || state == ActiveContextUi.Unsupported) emptyList() else listOf(
+                        KitLineAction(stringResource(Res.string.activeContextRefresh), onRefresh, icon = KitIcons.retry),
+                    ),
                 )
-            ActiveContextUi.Failed ->
-                KitStateView(
-                    KitStateKind.Error,
-                    stringResource(Res.string.activeContextFailedTitle),
-                    primary = KitAction(stringResource(Res.string.commonRetry), model::refresh),
+            },
+            width = KitScreenWidth.List,
+            search = if (opened != null || ready == null || ready.messages.isEmpty()) null else ({
+                KitSearchField(
+                    label = stringResource(Res.string.activeContextSearch),
+                    state = field,
+                    onSearch = { query = it },
+                    modifier = Modifier.testTag("active-context-search"),
+                    resultCount = shown.size,
+                    filters = listOf(KitMenuItem(stringResource(Res.string.activeContextAllCount, ready.messages.size), { type = null }, checked = type == null)) +
+                        ready.messages.groupingBy { it.type }.eachCount().map { (kind, count) ->
+                            KitMenuItem(stringResource(Res.string.activeContextTypeCount, stringResource(HandWords.activeContextMessageTitle(titleRole(kind))), count), { type = kind }, checked = type == kind)
+                        },
+                    activeFilter = typeLabel,
+                    removeFilterLabel = stringResource(Res.string.kitSearchClear),
+                    onClearFilter = { type = null },
                 )
-            is ActiveContextUi.Ready ->
-                if (opened != null) {
-                    MessageDetail(opened) { openId = null }
-                } else {
-                    MessageList(shown, query, { query = it }) { openId = it }
+            }),
+        ) {
+            Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = Space.S2.dp)) {
+                when (state) {
+                    ActiveContextUi.Loading -> KitStateView(KitStateKind.Loading, stringResource(Res.string.activeContextLoading), icon = KitIcons.layers)
+                    ActiveContextUi.Unsupported -> KitStateView(KitStateKind.Missing, title, body = stringResource(Res.string.activeContextUnsupported))
+                    ActiveContextUi.Changed -> KitStateView(KitStateKind.Missing, stringResource(Res.string.activeContextChangedTitle), body = stringResource(Res.string.activeContextChanged))
+                    ActiveContextUi.Invalid, ActiveContextUi.Failed -> KitStateView(
+                        KitStateKind.Error, stringResource(Res.string.activeContextFailedTitle),
+                        body = if (state == ActiveContextUi.Invalid) stringResource(Res.string.activeContextInvalid) else null,
+                        primary = KitAction(stringResource(Res.string.commonRetry), onRefresh),
+                    )
+                    is ActiveContextUi.Ready -> if (opened != null) {
+                        KitKeyValue(listOf(KitKeyValueRow(stringResource(Res.string.activeContextMessageId), opened.id)))
+                        KitText(stringResource(Res.string.activeContextContentHelp), role = TypeRole.Secondary, tone = TextTone.Secondary)
+                        if (opened.content.isEmpty()) KitText(stringResource(Res.string.activeContextNoText), tone = TextTone.Secondary)
+                        KitMarkdownSelection { opened.content.forEach { PartBlock(it) } }
+                    } else {
+                        if (state.refreshFailed) KitNotice(stringResource(Res.string.activeContextRefreshFailed, stringResource(Res.string.activeContextFailedTitle)), actions = listOf(KitLineAction(stringResource(Res.string.commonRetry), onRefresh)))
+                        KitText(stringResource(Res.string.activeContextIntro), Modifier.padding(vertical = Space.S2.dp), role = TypeRole.Secondary, tone = TextTone.Secondary)
+                        when {
+                            state.messages.isEmpty() -> KitStateView(KitStateKind.Empty, stringResource(Res.string.activeContextEmpty), body = stringResource(Res.string.activeContextEmptyDetail), icon = KitIcons.layers)
+                            shown.isEmpty() -> KitSearchNoMatch(query.trim().ifEmpty { typeLabel.orEmpty() }, {
+                                field.edit { replace(0, length, "") }; query = ""; type = null
+                            }, what = stringResource(Res.string.activeContextWhat))
+                            else -> KitRowGroup {
+                                shown.forEach { message ->
+                                    val label = stringResource(HandWords.activeContextMessageTitle(titleRole(message.type)))
+                                    KitRow(
+                                        title = label,
+                                        supporting = message.previewFor(query.trim()).ifEmpty { stringResource(Res.string.activeContextNoText) },
+                                        supportingMaxLines = 3, // F: lib/ui/screens/active_context_screen.dart:354
+                                        trailing = KitRowTrailing.Chevron,
+                                        onClickLabel = stringResource(Res.string.activeContextOpenMessage, label),
+                                        onClick = { openId = message.id },
+                                        modifier = Modifier.testTag("active-context-row"),
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
+            }
         }
     }
-}
-
-@Composable
-private fun MessageList(ready: ActiveContextUi.Ready, query: String, onQuery: (String) -> Unit, onOpen: (String) -> Unit) {
-    if (ready.refreshFailed) {
-        KitNotice(
-            stringResource(Res.string.activeContextRefreshFailed, stringResource(Res.string.activeContextFailedTitle)),
-            modifier = Modifier.padding(horizontal = Space.S4.dp),
-        )
-    }
-    if (ready.messages.isEmpty()) {
-        KitStateView(
-            KitStateKind.Empty,
-            stringResource(Res.string.activeContextEmpty),
-            body = stringResource(Res.string.activeContextEmptyDetail),
-        )
-        return
-    }
-    KitText(
-        stringResource(Res.string.activeContextIntro),
-        role = TypeRole.Caption,
-        tone = TextTone.Secondary,
-        modifier = Modifier.padding(horizontal = Space.S4.dp),
-    )
-    KitSearchField(
-        label = stringResource(Res.string.activeContextSearch),
-        onSearch = onQuery,
-        modifier = Modifier.fillMaxWidth().testTag("active-context-search"),
-        resultCount = if (query.isBlank()) null else ready.messages.count { it.matches(query.trim()) },
-    )
-    val shown = ready.messages.filter { it.matches(query.trim()) }
-    KitSectionLabel(stringResource(Res.string.activeContextAllCount, Numbers.format(shown.size.toLong())))
-    if (shown.isEmpty()) {
-        KitSearchNoMatch(query.trim(), onClear = { onQuery("") }, what = stringResource(Res.string.activeContextWhat))
-        return
-    }
-    for (message in shown) {
-        val title = stringResource(HandWords.activeContextMessageTitle(titleRole(message.type)))
-        val preview = message.previewFor(query.trim())
-        KitRow(
-            title = title,
-            supporting = preview.ifEmpty { stringResource(Res.string.activeContextNoText) },
-            supportingMaxLines = 3,
-            trailing = KitRowTrailing.Value(Numbers.format(message.content.size.toLong())),
-            onClickLabel = stringResource(Res.string.activeContextOpenMessage, title),
-            onClick = { onOpen(message.id) },
-            modifier = Modifier.testTag("active-context-row"),
-        )
-    }
-}
-
-@Composable
-private fun MessageDetail(message: ActiveContextMessage, onBack: () -> Unit) {
-    val title = stringResource(HandWords.activeContextMessageTitle(titleRole(message.type)))
-    KitRow(
-        title = title,
-        supporting = stringResource(Res.string.activeContextMessageId) + " · " + message.id,
-        onClickLabel = stringResource(Res.string.kitSheetDismiss),
-        onClick = onBack,
-    )
-    KitText(
-        stringResource(Res.string.activeContextContentHelp),
-        role = TypeRole.Caption,
-        tone = TextTone.Secondary,
-        modifier = Modifier.padding(horizontal = Space.S4.dp),
-    )
-    if (message.content.none { it.text.isNotEmpty() || it.kind == ContextContentKind.Pruned || it.kind == ContextContentKind.Truncated }) {
-        KitText(
-            stringResource(Res.string.activeContextNoText),
-            tone = TextTone.Secondary,
-            modifier = Modifier.padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
-        )
-    }
-    for (part in message.content) PartBlock(part)
 }
 
 @Composable
