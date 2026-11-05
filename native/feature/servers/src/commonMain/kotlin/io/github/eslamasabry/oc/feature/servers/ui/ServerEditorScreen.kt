@@ -24,6 +24,7 @@ import io.github.eslamasabry.oc.feature.servers.pairing.pairingProblemText
 import io.github.eslamasabry.oc.feature.servers.presentation.*
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.action.KitPasteButton
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.*
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
@@ -51,7 +52,6 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
     val username = rememberTextFieldState(restored?.username ?: "opencode")
     val directory = rememberTextFieldState(restored?.directory.orEmpty())
     val password = remember { TextFieldState() }
-    val pairing = remember { TextFieldState() }
     var backend by remember { mutableStateOf(restored?.backend ?: BackendKind.OpenCode2) }
     var tailscale by remember { mutableStateOf(restored?.tailscale ?: false) }
     var keepSecret by remember { mutableStateOf(restored?.keepSecret ?: false) }
@@ -67,6 +67,8 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
     var trustQuestion by remember { mutableStateOf(false) }
     var commandsOpen by remember { mutableStateOf(false) }
     var moreOpen by remember { mutableStateOf(false) }
+    var tailscaleOpened by remember { mutableStateOf(false) }
+    var tailscaleReturned by remember { mutableStateOf(false) }
     var manualOpen by remember { mutableStateOf(!state.newServer || restored?.address?.isNotBlank() == true) }
     LaunchedEffect(state.failure, state.record?.needsSecret, state.fillGeneration) {
         if (state.failure != null || state.record?.needsSecret == true || state.fillGeneration > 0) manualOpen = true
@@ -174,15 +176,6 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                     password.fill(text.substring("server password".length).trim())
             }
     }
-    LaunchedEffect(pairing) {
-        snapshotFlow { pairing.text.toString() }
-            .collect { text ->
-                if (text.isNotBlank()) {
-                    pairing.fill("")
-                    actions.paste(text)
-                }
-            }
-    }
     LaunchedEffect(state.step, loaded) {
         snapshotFlow {
                 listOf(
@@ -223,8 +216,14 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
             actions.step(ServerEditorStep.Connect)
         else actions.back(dirty)
     }
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+    LaunchedEffect(state.step) {
         if (state.step == ServerEditorStep.Tailscale) actions.refreshTailscale()
+    }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        if (state.step == ServerEditorStep.Tailscale) {
+            actions.refreshTailscale()
+            if (tailscaleOpened) tailscaleReturned = true
+        }
     }
     KitBackGuard(enabled = true, onBack = { leave() })
     val enabled =
@@ -308,7 +307,9 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
         },
         width = KitScreenWidth.Reading,
         loading = state.loading || state.checking || state.saving,
-        bottom = if (state.step != ServerEditorStep.Connect && state.step != ServerEditorStep.Ready) null else ({
+        bottom = if (state.step == ServerEditorStep.Tailscale) ({
+            KitButton(stringResource(Res.string.editor40EnterAddress), { actions.step(ServerEditorStep.Connect) }, fullWidth = true)
+        }) else if (state.step != ServerEditorStep.Connect && state.step != ServerEditorStep.Ready) null else ({
             KitButton(
                 stringResource(if (state.step == ServerEditorStep.Ready) Res.string.editor40Open
                     else if (state.connectOnSave) Res.string.editor40SaveConnect else Res.string.editor40SaveChanges),
@@ -399,42 +400,34 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                     }
                 }
                 ServerEditorStep.Tailscale -> {
-                    KitText(stringResource(Res.string.editor40TailscaleBody))
-                    KitNotice(
-                        stringResource(
-                            when (state.tailscaleApp) {
-                                EditorTailscaleState.Installed ->
-                                    Res.string.editor40TailscaleInstalled
-                                EditorTailscaleState.Missing -> Res.string.editor40TailscaleMissing
-                                else -> Res.string.editor40TailscaleUnknown
-                            }
-                        )
+                    KitText(stringResource(Res.string.tailscaleIntro), tone = io.github.eslamasabry.oc.ui.design.type.TextTone.Secondary)
+                    TailscalePhoneContent(
+                        appState = when (state.tailscaleApp) {
+                            null -> KitStepState.Working
+                            EditorTailscaleState.Installed -> KitStepState.Done
+                            EditorTailscaleState.Missing -> KitStepState.Waiting
+                            EditorTailscaleState.Unavailable -> KitStepState.Failed
+                        },
+                        appSupporting = stringResource(when (state.tailscaleApp) {
+                            null -> Res.string.tailscaleChecking
+                            EditorTailscaleState.Installed -> Res.string.tailscaleInstalled
+                            EditorTailscaleState.Missing -> Res.string.tailscaleMissing
+                            EditorTailscaleState.Unavailable -> Res.string.tailscaleUnknown
+                        }),
+                        canCheck = true, onCheck = actions::refreshTailscale,
+                        canOpen = state.tailscaleApp == EditorTailscaleState.Installed,
+                        onOpen = {
+                            actions.keepDraft(input())
+                            actions.changed()
+                            tailscaleOpened = true
+                            actions.openTailscale()
+                        },
+                        openFailed = tailscaleOpened && state.failure != null,
+                        getApp = if (state.tailscaleApp == EditorTailscaleState.Missing) actions::installTailscale else null,
                     )
-                    if (state.tailscaleApp == EditorTailscaleState.Installed)
-                        KitButton(
-                            stringResource(Res.string.editor40TailscaleOpen),
-                            {
-                                actions.keepDraft(input())
-                                actions.openTailscale()
-                            },
-                            role = KitButtonRole.Secondary,
-                        )
-                    if (state.tailscaleApp == EditorTailscaleState.Missing)
-                        KitButton(
-                            stringResource(Res.string.editor40TailscaleInstall),
-                            actions::installTailscale,
-                            role = KitButtonRole.Secondary,
-                        )
-                    KitButton(
-                        stringResource(Res.string.editor40TailscaleRefresh),
-                        actions::refreshTailscale,
-                        role = KitButtonRole.Tertiary,
-                    )
+                    if (tailscaleReturned) KitNotice(stringResource(Res.string.tailscaleReturned), icon = KitIcons.info)
                     state.failure?.let { KitErrorNotice(editorFailureWords(it), failure = it) }
-                    KitButton(
-                        stringResource(Res.string.editor40EnterAddress),
-                        { actions.step(ServerEditorStep.Connect) },
-                    )
+                    TailscaleHelpContent()
                 }
                 ServerEditorStep.Ready -> {
                     EditorLinkMoment(KitServersLinkState.Linked, state, address.text.toString())
@@ -484,22 +477,18 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                     if (backend == BackendKind.OpenCode2 && !tailscale) {
                         KitText(stringResource(if (state.canScan) Res.string.firstRunPairingNextScan else Res.string.firstRunPairingNextPaste),
                             role = TypeRole.Secondary, tone = io.github.eslamasabry.oc.ui.design.type.TextTone.Secondary)
-                        if (state.canScan)
-                            KitButton(
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+                            if (state.canScan) KitButton(
                                 stringResource(Res.string.addServerScan),
-                                {
-                                    actions.keepDraft(input())
-                                    actions.scan()
-                                },
-                                role = KitButtonRole.Secondary,
-                                enabled = enabled,
+                                { actions.keepDraft(input()); actions.scan() },
+                                modifier = Modifier.weight(1f), role = KitButtonRole.Secondary,
+                                icon = KitIcons.qrCode, enabled = enabled, fullWidth = true,
                             )
-                        KitField(
-                            pairing,
-                            stringResource(Res.string.previewQrPairingCodeLabel),
-                            kind = KitFieldKind.Secret,
-                            enabled = enabled,
-                        )
+                            KitPasteButton(
+                                stringResource(if (state.canScan) Res.string.addServerPaste else Res.string.e7SetupPastePairing),
+                                actions::paste, modifier = Modifier.weight(1f), enabled = enabled,
+                            )
+                        }
                     }
                     state.pairingProblem?.let { KitErrorNotice(pairingProblemText(it)) }
                     val manualFields: @Composable () -> Unit = {

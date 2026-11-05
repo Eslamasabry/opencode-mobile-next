@@ -1,6 +1,8 @@
 package io.github.eslamasabry.oc.feature.servers.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -29,6 +31,7 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
+import io.github.eslamasabry.oc.ui.kit.state.KitStepState
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
@@ -46,7 +49,6 @@ internal fun TailscaleSetupSheet(
     var invalid by remember { mutableStateOf(false) }
     var opened by remember { mutableStateOf(false) }
     var returned by remember { mutableStateOf(false) }
-    var helpOpen by remember { mutableStateOf(false) }
     // A URL may contain credentials. It is transient and cleared when the sheet closes.
     val address = remember { TextFieldState() }
     fun check() { presence = source?.check() ?: TailscalePresence.Unsupported }
@@ -90,60 +92,33 @@ internal fun TailscaleSetupSheet(
     ) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
             KitText(stringResource(Res.string.tailscaleIntro), tone = TextTone.Secondary)
-            KitRowGroup(label = stringResource(Res.string.tailscaleAppStep), leadingTiles = true) {
-                KitRow(
-                    title = stringResource(Res.string.tailscaleSetupAppTitle),
-                    leading = KitRowLeading.Glyph(when (presence) {
-                        TailscalePresence.Installed -> KitIcons.check
-                        TailscalePresence.Unavailable -> KitIcons.error
-                        else -> KitIcons.statusDot
-                    }),
-                    supporting = stringResource(when (presence) {
-                        TailscalePresence.Installed -> Res.string.tailscaleInstalled
-                        TailscalePresence.Missing -> Res.string.tailscaleMissing
-                        TailscalePresence.Unavailable -> Res.string.tailscaleUnknown
-                        TailscalePresence.Unsupported -> Res.string.tailscaleUnsupported
-                    }),
-                    supportingMaxLines = 4, // F: lib/ui/screens/tailscale_setup_screen.dart:220
-                )
-                KitRow(
-                    title = stringResource(Res.string.tailscaleSetupVpnTitle),
-                    leading = KitRowLeading.Glyph(if (openFailed) KitIcons.error else KitIcons.statusDot),
-                    supporting = if (openFailed) stringResource(Res.string.tailscaleSetupOpenFailed)
-                        else stringResource(Res.string.tailscaleSetupToDo, stringResource(Res.string.tailscaleSetupVpnSupporting)),
-                    supportingMaxLines = 4, // F: lib/ui/screens/tailscale_setup_screen.dart:220
-                )
-                if (presence == TailscalePresence.Installed) {
-                    KitButton(stringResource(Res.string.tailscaleOpen), {
-                        opened = true
-                        openFailed = source?.open() != true
-                        if (openFailed) check()
-                    }, role = KitButtonRole.Secondary, icon = KitIcons.externalLink, fullWidth = false,
-                        modifier = Modifier.padding(start = (LocalKitTokens.current.gutter + LocalKitTokens.current.iconTile + Space.S3).dp))
-                }
-                if (presence != TailscalePresence.Unsupported) KitRow(
-                    title = stringResource(Res.string.tailscaleCheckAgain),
-                    leading = KitRowLeading.Glyph(KitIcons.retry),
-                    onClick = { check() },
-                )
-            }
-            if (returned) KitNotice(stringResource(Res.string.tailscaleReturned))
+            TailscalePhoneContent(
+                appState = when (presence) {
+                    TailscalePresence.Installed -> KitStepState.Done
+                    TailscalePresence.Unavailable -> KitStepState.Failed
+                    else -> KitStepState.Waiting
+                },
+                appSupporting = stringResource(when (presence) {
+                    TailscalePresence.Installed -> Res.string.tailscaleInstalled
+                    TailscalePresence.Missing -> Res.string.tailscaleMissing
+                    TailscalePresence.Unavailable -> Res.string.tailscaleUnknown
+                    TailscalePresence.Unsupported -> Res.string.tailscaleUnsupported
+                }),
+                canCheck = presence != TailscalePresence.Unsupported, onCheck = ::check,
+                canOpen = presence == TailscalePresence.Installed,
+                onOpen = { opened = true; openFailed = source?.open() != true; if (openFailed) check() },
+                openFailed = openFailed,
+            )
+            if (returned) KitNotice(stringResource(Res.string.tailscaleReturned), icon = KitIcons.info)
             KitSectionLabel(stringResource(Res.string.tailscaleAddressStep), margin = 0.dp)
             KitField(address, stringResource(Res.string.tailscaleAddressLabel), kind = KitFieldKind.Url,
+                maxLength = 2048, // F: lib/ui/screens/tailscale_setup_screen.dart:121
                 placeholder = "https://computer.tailnet-name.ts.net", // F: lib/ui/screens/tailscale_setup_screen.dart:118
                 helper = stringResource(Res.string.tailscaleSetupAddressHelper),
                 error = if (invalid) stringResource(Res.string.tailscaleAddressError) else null,
                 onSubmit = ::continueWithAddress)
-            KitExpandRow(stringResource(Res.string.tailscaleHelp), helpOpen, onExpandedChange = { helpOpen = it }) {
-                Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
-                    KitText(stringResource(Res.string.tailscaleVpnHandoff))
-                    KitText(stringResource(Res.string.tailscaleAddressDetail))
-                    KitText(stringResource(Res.string.tailscaleSetupNoDeviceList))
-                    KitText(stringResource(Res.string.tailscaleReviewDetail))
-                    KitText(stringResource(Res.string.tailscaleServeHelp))
-                    KitText(stringResource(Res.string.tailscaleRecovery))
-                }
-            }
+            Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
+            TailscaleHelpContent()
         }
     }
 }

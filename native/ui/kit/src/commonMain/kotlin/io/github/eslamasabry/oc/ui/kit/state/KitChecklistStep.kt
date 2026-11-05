@@ -112,7 +112,7 @@ public fun KitChecklistStep(
 }
 
 @Composable
-private fun StepMark(state: KitStepState) {
+internal fun StepMark(state: KitStepState) {
     val colors = LocalKitColors.current
     when (state) {
         KitStepState.Done -> KitStatusIcon(StatusTone.Ok)
