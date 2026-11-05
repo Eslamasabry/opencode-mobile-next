@@ -22,10 +22,10 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 
-private const val HeroSize = 40f
-private const val HeroNarrowSize = 32f
-private const val HeroNarrowBelow = 340f
-private const val HeroMaxScale = 1.15f
+private const val HeroSize = 40f // F: lib/ui/kit/kit_hero_question.dart:47-48
+private const val HeroNarrowSize = 32f // F: lib/ui/kit/kit_hero_question.dart:49
+private const val HeroNarrowBelow = 340f // F: lib/ui/kit/kit_hero_question.dart:50
+private const val HeroMaxScale = 1.15f // F: lib/ui/kit/kit_hero_question.dart:51
 
 /**
  * The one big question a first page opens on (Dart `KitHeroQuestion`): display type, larger than a screen title, tight
@@ -49,7 +49,7 @@ public fun KitHeroQuestion(question: String, modifier: Modifier = Modifier) {
         // Capped text scale: only kit parts clamp (A11Y-8). Laid out at font scale 1 with the capped size.
         val scale = density.fontScale.coerceAtMost(HeroMaxScale)
         val px = size * scale
-        val spacing = if (base.letterSpacing.value == 0f) 0f else -px * 0.02f
+        val spacing = if (base.letterSpacing.value == 0f) 0f else -px * 0.02f // F: lib/ui/kit/kit_hero_question.dart:65
         CompositionLocalProvider(LocalDensity provides Density(density.density, 1f)) {
             BasicText(
                 question,
@@ -57,7 +57,7 @@ public fun KitHeroQuestion(question: String, modifier: Modifier = Modifier) {
                 style = base.copy(
                     color = color,
                     fontSize = px.sp,
-                    lineHeight = (px + 6f * scale).sp,
+                    lineHeight = (px + 6f * scale).sp, // F: lib/ui/kit/kit_hero_question.dart:63
                     fontWeight = FontWeight.W500,
                     letterSpacing = spacing.sp,
                     textDirection = TextDirection.Content,
