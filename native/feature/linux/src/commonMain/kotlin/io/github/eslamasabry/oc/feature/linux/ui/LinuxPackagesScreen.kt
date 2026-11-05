@@ -188,8 +188,7 @@ public fun LinuxPackagesScreen(state: LinuxPackagesUi, actions: LinuxPackagesAct
             ) {
                 KitField(
                     typed,
-                    stringResource(Res.string.linuxMgrPkgInstall),
-                    placeholder = stringResource(Res.string.linuxMgrPkgName),
+                    stringResource(Res.string.linuxMgrPkgName),
                     helper = stringResource(Res.string.linuxMgrPkgNameHelper),
                     error = when (val notice = state.notice) {
                         PackagesNotice.InvalidName -> stringResource(Res.string.linuxMgrPkgNameInvalid)
