@@ -3,9 +3,7 @@ package io.github.eslamasabry.oc.ui.kitchat.transcript
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -15,12 +13,14 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.layout.CapAlign
+import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
+import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -37,7 +37,7 @@ public fun KitContinuedLine(text: String, onOpen: () -> Unit, modifier: Modifier
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val goneWords = stringResource(Res.string.continuedGone)
     val words = if (gone) goneWords else text
-    Box(modifier.widthIn(max = 700.dp).fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
+    Box(modifier.kitMaxWidth(CapRole.Conversation, CapAlign.Start), contentAlignment = Alignment.CenterStart) {
     KitTappable(
         onClick = onOpen,
         modifier = Modifier.testTag("continued-line").semantics { contentDescription = words },
