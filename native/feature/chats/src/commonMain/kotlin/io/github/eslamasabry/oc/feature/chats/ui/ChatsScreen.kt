@@ -48,6 +48,9 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
 import io.github.eslamasabry.oc.ui.kit.motion.KitGrowPage
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitFeedItem
+import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeRowWorking
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowState
 import io.github.eslamasabry.oc.ui.kit.row.KitRowStateTone
@@ -137,7 +140,6 @@ public fun ChatsScreen(
     }
     // The one waiting conversation the summary card carries leaves the list below, so it is said once.
     val waiting = (state.today + state.earlier).filter { it.status == RowStatus.NeedsYou && it.canOpen }
-    val carded = waiting.firstOrNull()?.key
     KitScreen(
         topBar = {
             KitTopBar(title = stringResource(Res.string.chatsHomeTitle), actions = barActions, large = true)
@@ -173,9 +175,6 @@ public fun ChatsScreen(
                 }
             if (state.phase == ChatsPhase.List || state.phase == ChatsPhase.NoMatch) {
                 item(key = "filters") { Filters(state, actions) }
-            }
-            waiting.firstOrNull()?.let { first ->
-                item(key = "needs-you") { NeedsYouCard(first, waiting.size - 1, state, actions) }
             }
             if (state.phase == ChatsPhase.Empty) {
                 item(key = "home-controls") { KitFilterChips { HomeFilterChips(state, actions) } }
@@ -219,13 +218,16 @@ public fun ChatsScreen(
                         )
                     }
                 ChatsPhase.List -> {
-                    val today = state.today.filter { it.key != carded }
-                    val earlier = state.earlier.filter { it.key != carded }
+                    val today = state.today
+                    val earlier = state.earlier
                     if (today.isNotEmpty()) {
                         item(key = "today") {
                             KitSectionLabel(stringResource(Res.string.chatsHomeToday))
                         }
-                        items(today, key = { it.key }) { ConversationRow(it, actions, state) }
+                        items(today, key = { it.key }) { row ->
+                            ConversationRow(row, actions, state)
+                            if (row != today.last()) io.github.eslamasabry.oc.ui.kit.foundation.KitDivider(Modifier.padding(horizontal = Space.S4.dp))
+                        }
                     }
                     if (earlier.isNotEmpty()) {
                         item(key = "earlier") {
@@ -233,6 +235,7 @@ public fun ChatsScreen(
                         }
                         items(earlier, key = { it.key }) {
                             ConversationRow(it, actions, state)
+                            if (it != earlier.last()) io.github.eslamasabry.oc.ui.kit.foundation.KitDivider(Modifier.padding(horizontal = Space.S4.dp))
                         }
                     }
                 }
@@ -352,7 +355,7 @@ private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, state
     val status =
         when (row.status) {
             RowStatus.NeedsYou -> stringResource(Res.string.chatsHomeNeedsYou)
-            RowStatus.Running -> stringResource(Res.string.chatsHomeRunning)
+            RowStatus.Running -> stringResource(Res.string.chatsHomeRowWorking)
             RowStatus.Failed -> stringResource(Res.string.chatsHomeFailed)
             RowStatus.Done -> stringResource(Res.string.chatsHomeDone)
             RowStatus.None -> null
@@ -367,18 +370,16 @@ private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, state
         }
     // The row registers its grow key; the chat page grows out of it and shrinks back into it (P2). Looks pass: the
     // state leads the supporting line in its colour, the time sits in its own column.
-    KitRow(
+    KitFeedItem(
         title = title,
-        supporting = row.project.ifEmpty { null },
-        // Every feed row keeps the lead column (a null word for a quiet row), so titles line up.
+        project = row.project,
         state = KitRowState(status?.takeUnless { signal && row.running != null }, tone),
-        meta = row.ago?.takeUnless { signal && row.running != null }?.let { agoText(it) },
-        growKey = row.ref,
-        enabled = row.canOpen,
-        disabledReason =
-            if (row.canOpen) null else stringResource(Res.string.e7WorkspaceConnecting),
+        time = row.updatedAtMs?.takeIf { state != null && state.nowMs > 0 }?.let { kitRelativeAge(it, state!!.nowMs) }
+            ?: row.ago?.takeUnless { signal && row.running != null }?.let { agoText(it) },
+        done = row.status == RowStatus.Done,
         onClick = if (row.canOpen) ({ actions.openConversation(row.ref) }) else null,
     )
+
     if (signal) {
         row.running?.let { running ->
             val minuteTemplate = stringResource(Res.string.chatHomeMinutes)
@@ -437,36 +438,3 @@ public fun ChatPreviewScreen(state: ChatPreviewUi, actions: ChatPreviewActions) 
     }
 }
 
-/** The one summary card on the home (owner pick 2026-11-05): only while a conversation waits for the person. */
-@Composable
-private fun NeedsYouCard(row: ConversationRowUi, others: Int, state: ChatsUi, actions: ChatsActions) {
-    val title =
-        when (val t = row.title) {
-            is RowTitle.Text -> t.text
-            RowTitle.New,
-            RowTitle.Untitled -> stringResource(Res.string.workspaceNewSession)
-        }
-    val permission = row.permission
-    val open = KitAction(stringResource(Res.string.kitRequestOpen), { actions.openConversation(row.ref) })
-    KitSummaryCard(
-        kicker = stringResource(Res.string.chatsHomeNeedsYou),
-        attention = true,
-        title = title,
-        supporting = row.project.ifEmpty { null },
-        // Allow only ever appears beside the exact command it allows.
-        detail = permission?.let { "$ " + it.command },
-        primary =
-            permission?.let {
-                KitAction(
-                    stringResource(Res.string.chatHomeAllow),
-                    { actions.answerPermission(row, true) },
-                    working = it.requestId in state.answering,
-                )
-            } ?: open,
-        secondary = if (permission != null) open else null,
-        more =
-            if (others > 0) KitLineAction(stringResource(Res.string.notifStatusMore, others), actions::openAttention) else null,
-        onClick = { actions.openConversation(row.ref) },
-        modifier = Modifier.padding(vertical = Space.S2.dp),
-    )
-}
