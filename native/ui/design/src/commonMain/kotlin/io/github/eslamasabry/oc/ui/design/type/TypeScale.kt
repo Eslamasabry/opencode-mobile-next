@@ -10,8 +10,10 @@ public data class TypeSpec(
 )
 
 /**
- * The firm Solid type scale: the code values after the 2026-10-30 pass (`KitText.styleFor`, `kit_text.dart` lines
- * 279–345). Docs that say 32/24/17 or weight 650 are stale. Other styles' firm weights come with the Style resolver.
+ * The firm Solid type scale: the 2026-10-30 pass (`KitText.styleFor`, `kit_text.dart` lines 279–345) with the
+ * native looks pass's split of the small tier (docs/design/native-looks-2026-11-04/direction.md §5.2): supporting
+ * text 14/20, labels 13/18, meta (times, counts, sizes) 12/16 with a little tracking and tabular figures. Mono stays
+ * 13/19 (the command box caps output by line, and its tests pin that height). Other styles' firm weights come with the Style resolver.
  */
 public object TypeScale {
     public fun of(role: TypeRole): TypeSpec =
@@ -21,9 +23,9 @@ public object TypeScale {
             TypeRole.Headline -> TypeSpec(16, 22, 500, -0.17f)
             TypeRole.Body -> TypeSpec(16, 24, 400, 0f)
             TypeRole.RowTitle -> TypeSpec(16, 22, 500, 0f)
-            TypeRole.Secondary -> TypeSpec(13, 18, 400, 0f)
+            TypeRole.Secondary -> TypeSpec(14, 20, 400, 0f)
             TypeRole.Label -> TypeSpec(13, 18, 500, 0f)
-            TypeRole.Caption -> TypeSpec(13, 18, 500, 0f)
+            TypeRole.Caption -> TypeSpec(12, 16, 500, 0.1f)
             TypeRole.Button -> TypeSpec(16, 20, 500, 0f)
             TypeRole.Mono -> TypeSpec(13, 19, 400, 0f, TypeFamily.Mono)
         }

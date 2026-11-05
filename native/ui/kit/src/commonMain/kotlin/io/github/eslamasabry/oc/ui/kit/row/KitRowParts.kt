@@ -2,10 +2,12 @@ package io.github.eslamasabry.oc.ui.kit.row
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
@@ -23,21 +25,26 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.frame.ExitGlyph
 import io.github.eslamasabry.oc.ui.kit.frame.KitExitGlyph
-import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.logo.KitProviderLogo
+import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
 /** What starts a row (Dart `KitRow.icon`, the lead column). */
 @Immutable
 public sealed interface KitRowLeading {
-    /** A kit glyph in its 28 dp `surface3` tile (Dart `KitRow.icon`). */
-    public data class Glyph(val icon: ImageVector) : KitRowLeading
+    /**
+     * A kit glyph (Dart `KitRow.icon`): a bare 20 dp Phosphor glyph in the secondary ink, in the lead column, the way
+     * the Flutter rows draw it. [tile] keeps the old 28 dp `surface3` tile for a row that sits among tiled rows.
+     */
+    public data class Glyph(val icon: ImageVector, val tile: Boolean = false) : KitRowLeading
 
     /**
      * Two letters in the tile, for a thing with no glyph (a server, a project). Never coloured by
@@ -53,6 +60,25 @@ public sealed interface KitRowLeading {
     public data class Logo(val id: String, val name: String, val agent: Boolean = false) :
         KitRowLeading
 }
+
+/** The live state a feed row leads with (Dart `KitFeedItem`'s mark and status word). */
+public enum class KitRowStateTone {
+    /** Waiting for the person: an amber dot and the word in amber. */
+    NeedsYou,
+
+    /** Working now: a mint ring and the word in mint. */
+    Running,
+
+    /** Ended badly: the word in the danger ink, no mark. */
+    Failed,
+
+    /** Finished or idle: the word in the quiet ink, no mark. */
+    Quiet,
+}
+
+/** A feed row's state: [word] leads the supporting line in its tone; NeedsYou and Running also mark the lead column. */
+@Immutable
+public data class KitRowState(val word: String, val tone: KitRowStateTone)
 
 /** What ends a row (Dart `KitRowValue`, `KitChevron`, the row's own action). */
 @Immutable
@@ -80,6 +106,17 @@ internal fun RowLeadingTile(leading: KitRowLeading, dim: Boolean) {
     val tokens = LocalKitTokens.current
     val tone = if (dim) TextTone.Tertiary else TextTone.Primary
     val tile = tokens.iconTile * minOf(kitTextScale(), TextScalePolicy.ICON_CAP)
+    if (leading is KitRowLeading.Glyph && !leading.tile) {
+        Box(Modifier.size(tile.dp).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
+            Image(
+                leading.icon,
+                null,
+                Modifier.size((tokens.smallIcon * minOf(kitTextScale(), TextScalePolicy.ICON_CAP)).dp),
+                colorFilter = ColorFilter.tint(if (dim) colors.text3 else colors.text2),
+            )
+        }
+        return
+    }
     Box(
         Modifier.size(tile.dp).background(colors.surface3, KitShapeId.Tile.shape()).clearAndSetSemantics {},
         contentAlignment = Alignment.Center,
@@ -141,9 +178,20 @@ internal fun RowValue(value: KitRowTrailing.Value, modifier: Modifier = Modifier
 
 @Composable
 internal fun RowChevron() {
-    KitExitGlyph(
-        ExitGlyph.Chevron,
-        LocalKitColors.current.text3,
-        Modifier.testTag("kit-row-chevron"),
-    )
+    val size = LocalKitTokens.current.smallIcon * minOf(kitTextScale(), TextScalePolicy.FRAME_CAP)
+    KitGlyph(KitIcons.chevronRight, LocalKitColors.current.text3, size.dp, Modifier.testTag("kit-row-chevron"))
+}
+
+/** The lead-column mark of a live row: an 8 dp amber dot for "needs you", a 12 dp mint ring for "running". */
+@Composable
+internal fun RowStateMark(tone: KitRowStateTone) {
+    val colors = LocalKitColors.current
+    val width = LocalKitTokens.current.iconTile
+    Box(Modifier.size(width.dp).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
+        when (tone) {
+            KitRowStateTone.NeedsYou -> Box(Modifier.size(8.dp).background(colors.attention, CircleShape))
+            KitRowStateTone.Running -> Box(Modifier.size(12.dp).border(2.dp, colors.live, CircleShape))
+            else -> Unit
+        }
+    }
 }

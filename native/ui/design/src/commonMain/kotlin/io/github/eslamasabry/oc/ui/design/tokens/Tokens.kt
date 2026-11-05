@@ -14,7 +14,7 @@ public data class Tokens(
     val labelGap: Int = 8,
     val panelPadding: Int = 16,
     val rowHeightOne: Int = 56,
-    val rowHeightTwo: Int = 64,
+    val rowHeightTwo: Int = 72,
     val choiceRowMin: Int = 56,
     val buttonHeight: Int = 52,
     val minTarget: Int = 48,

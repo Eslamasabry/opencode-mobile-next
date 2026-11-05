@@ -2,8 +2,8 @@ package io.github.eslamasabry.oc.ui.kit.row
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -11,13 +11,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.text.TextScalePolicy
@@ -26,6 +26,7 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitInlineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
@@ -77,7 +78,12 @@ public fun kitBreakableFileName(name: String): String {
  * Cap: List
  * Motion: pressed fill ≥ PRESS_HOLD (KitTappable); with [growKey] the opened page grows out of the row (Full only)
  * Hidden: long-press when [onLongClick] is set (the caller registers its tip and its visible twin)
- * Replaces: KitRow (lib/ui/kit/kit_row.dart)
+ * Feed rows (Dart `KitFeedItem`): [state] puts its word in its colour at the start of the supporting line ("Needs
+ * you · shopfront · Allow running the tests?") and, for needs-you and running, a mark in the lead column (an amber
+ * dot, a mint ring), so a list of feed rows keeps one aligned lead column. [meta] is the row's time or count, in the
+ * 12 sp meta size at the end of the title line, so times line up in one column.
+ *
+ * Replaces: KitRow (lib/ui/kit/kit_row.dart), KitFeedItem (lib/ui/kit/kit_feed_item.dart)
  */
 @Composable
 public fun KitRow(
@@ -96,6 +102,8 @@ public fun KitRow(
     onClickLabel: String? = null,
     onLongClick: (() -> Unit)? = null,
     onLongClickLabel: String? = null,
+    state: KitRowState? = null,
+    meta: String? = null,
     onClick: (() -> Unit)? = null,
 ) {
     kitAssert(title.isNotBlank()) { "KitRow: a row needs a title" }
@@ -143,11 +151,14 @@ public fun KitRow(
                 if (titleIsFileName) contentDescription = title
             }
             .then(if (selected) Modifier.background(colors.surface3) else Modifier)
-            .heightIn(min = (if (supportLine != null) tokens.rowHeightTwo else tokens.rowHeightOne).dp)
+            .heightIn(min = (if (supportLine != null || state != null) tokens.rowHeightTwo else tokens.rowHeightOne).dp)
             .padding(horizontal = tokens.gutter.dp, vertical = Space.S2.dp)
             .testTag("kit-row")
     Row(base, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
-        leading?.let { RowLeadingTile(it, dim = !enabled) }
+        when {
+            leading != null -> RowLeadingTile(leading, dim = !enabled)
+            state != null -> RowStateMark(state.tone)
+        }
         BoxWithConstraints(Modifier.weight(1f)) {
             val measurer = rememberTextMeasurer()
             val typography = LocalKitTypography.current
@@ -170,21 +181,60 @@ public fun KitRow(
             })
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    KitText(
-                        if (titleIsFileName) kitBreakableFileName(title) else title,
-                        Modifier.testTag("kit-row-title"),
-                        role = TypeRole.RowTitle,
-                        tone = if (enabled) TextTone.Primary else TextTone.Tertiary,
-                        maxLines = if (titleIsFileName && large) Int.MAX_VALUE else kitRowTitleLines(scale),
-                    )
-                    supportLine?.let {
+                    Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
                         KitText(
-                            it,
-                            Modifier.testTag("kit-row-supporting"),
-                            role = TypeRole.Secondary,
-                            tone = TextTone.Secondary,
-                            maxLines = if (!enabled) Int.MAX_VALUE else kitRowSupportingLines(scale, supportingMaxLines),
+                            if (titleIsFileName) kitBreakableFileName(title) else title,
+                            Modifier.weight(1f).testTag("kit-row-title"),
+                            role = TypeRole.RowTitle,
+                            tone = if (enabled) TextTone.Primary else TextTone.Tertiary,
+                            maxLines = if (titleIsFileName && large) Int.MAX_VALUE else kitRowTitleLines(scale),
                         )
+                        meta?.let {
+                            KitText(
+                                it,
+                                Modifier.padding(top = 2.dp).testTag("kit-row-meta"),
+                                role = TypeRole.Caption,
+                                tone = TextTone.Tertiary,
+                                kind = KitTextKind.Frame,
+                                maxLines = 1,
+                            )
+                        }
+                    }
+                    val stateWord = state?.takeIf { enabled }
+                    if (stateWord != null) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            KitText(
+                                stateWord.word,
+                                Modifier.testTag("kit-row-state"),
+                                role = TypeRole.Secondary,
+                                tone =
+                                    when (stateWord.tone) {
+                                        KitRowStateTone.NeedsYou -> TextTone.Attention
+                                        KitRowStateTone.Running -> TextTone.Accent
+                                        else -> TextTone.Secondary
+                                    },
+                                maxLines = 1,
+                            )
+                            supportLine?.let {
+                                KitText(
+                                    " · $it",
+                                    Modifier.weight(1f, fill = false).testTag("kit-row-supporting"),
+                                    role = TypeRole.Secondary,
+                                    tone = TextTone.Secondary,
+                                    maxLines = 1,
+                                )
+                            }
+                        }
+                    } else {
+                        supportLine?.let {
+                            KitText(
+                                it,
+                                Modifier.testTag("kit-row-supporting"),
+                                role = TypeRole.Secondary,
+                                tone = TextTone.Secondary,
+                                maxLines = if (!enabled) Int.MAX_VALUE else kitRowSupportingLines(scale, supportingMaxLines),
+                            )
+                        }
                     }
                     if (valueBelow) RowValue(value)
                     if (actionBelow) KitInlineAction(action)
