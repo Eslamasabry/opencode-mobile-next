@@ -114,4 +114,29 @@ class GitStepsTest {
                 calls,
             )
         }
+
+    @Test
+    fun `B-NAV-020 identity holds invalid input and saves the trimmed author`() = runComposeUiTest {
+        setContent {
+            KitTheme(
+                platform = DesktopKitPlatform(),
+                appearance = KitAppearance(motion = MotionLevel.Off),
+                localeTag = "en",
+                stillFrame = true,
+            ) {
+                GitScreen(
+                    GitUi(view = GitPageView.Ready(snapshot.copy(identity = GitIdentity()))),
+                    actions,
+                )
+            }
+        }
+        val save = onNodeWithText("Save name and email")
+        save.performScrollTo().assertIsNotEnabled()
+        onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("git-identity-name")))
+            .performTextInput(" Owner ")
+        onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("git-identity-email")))
+            .performTextInput(" owner@example.invalid ")
+        save.performScrollTo().performClick()
+        assertEquals(listOf("setIdentity" to listOf("Owner", "owner@example.invalid")), calls)
+    }
 }

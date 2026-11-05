@@ -2,8 +2,10 @@ package io.github.eslamasabry.oc.feature.git.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -59,6 +61,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
+import io.github.eslamasabry.oc.ui.kit.input.KitOneTimeCode
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
@@ -519,22 +522,33 @@ private fun placeOf(state: GitUi, snapshot: GitSnapshot): String {
 private fun IdentityBlock(snapshot: GitSnapshot, actions: GitActions, enabled: KitEnabled) {
     val name = remember { TextFieldState(snapshot.identity?.name.orEmpty()) }
     val email = remember { TextFieldState(snapshot.identity?.email.orEmpty()) }
+    val typedName = name.text.toString().trim()
+    val typedEmail = email.text.toString().trim()
+    val ready = typedName.isNotEmpty() && '@' in typedEmail
     Gutter {
-        Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
             KitText(stringResource(Res.string.gitIdentityTitle), role = KitTextRole.Title)
             KitText(stringResource(Res.string.gitIdentityWhy), role = KitTextRole.Supporting)
-            KitField(name, stringResource(Res.string.gitIdentityName), enabled = enabled)
+            KitField(
+                name,
+                stringResource(Res.string.gitIdentityName),
+                enabled = enabled,
+                modifier = Modifier.testTag("git-identity-name"),
+            )
             KitField(
                 email,
                 stringResource(Res.string.gitIdentityEmail),
+                modifier = Modifier.testTag("git-identity-email"),
                 kind = KitFieldKind.Text,
                 enabled = enabled,
             )
             KitButton(
                 stringResource(Res.string.gitActionSaveIdentity),
-                { actions.setIdentity(name.text.toString(), email.text.toString()) },
+                { actions.setIdentity(typedName, typedEmail) },
                 role = KitButtonRole.Secondary,
-                enabled = enabled,
+                enabled =
+                    if (ready) enabled
+                    else KitEnabled.Disabled(stringResource(Res.string.gitIdentityEmail)),
             )
         }
     }
@@ -567,15 +581,24 @@ private fun GitHubSection(state: GitUi, actions: GitActions) {
             GitHubSignIn.RequestingCode ->
                 KitRow(title = stringResource(Res.string.gitHubRequestingCode))
             is GitHubSignIn.WaitingForUser -> {
-                KitRow(
-                    title = sign.userCode,
-                    supporting = stringResource(Res.string.gitHubEnterCode),
-                    supportingMaxLines = 3,
-                    modifier = Modifier.testTag("github-code"),
-                )
+                Gutter {
+                    Column {
+                        KitText(stringResource(Res.string.gitHubEnterCode))
+                        Spacer(Modifier.height(Space.S3.dp))
+                        KitOneTimeCode(
+                            sign.userCode,
+                            stringResource(Res.string.gitHubCopyCode),
+                            Modifier.testTag("github-code"),
+                        )
+                        Spacer(Modifier.height(Space.S3.dp))
+                        KitText(
+                            stringResource(Res.string.gitHubWaiting),
+                            role = KitTextRole.Supporting,
+                        )
+                    }
+                }
                 KitRow(
                     title = stringResource(Res.string.gitHubOpenGitHub),
-                    supporting = stringResource(Res.string.gitHubWaiting),
                     trailing = KitRowTrailing.Chevron,
                     onClick = actions::openGitHub,
                 )
