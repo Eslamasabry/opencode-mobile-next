@@ -20,6 +20,8 @@ import io.github.eslamasabry.oc.engine.git.GitLinkRepairResult
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationActions
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSheet
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationUi
+import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationModel
+import io.github.eslamasabry.oc.core.model.ModelRef
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitButton
@@ -339,7 +341,7 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
         title =
             stringResource(
                 when (current) {
-                    NewConversationSheet.Models -> Res.string.chatsNewModelRow
+                    NewConversationSheet.Models -> Res.string.agentsModelTitle
                     NewConversationSheet.Agents -> Res.string.p12NewAgent
                     NewConversationSheet.Import -> Res.string.claudeImportTitle
                     else -> Res.string.chatsNewProjectRow
@@ -373,24 +375,7 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
                         { actions.chooseDirectory(directory.text.toString()) },
                     )
                 }
-                NewConversationSheet.Models ->
-                    KitRowGroup {
-                        KitChoiceRow(
-                            mark = KitChoiceMark.Tick,
-                            title = stringResource(Res.string.p12NewDefaultModel),
-                            selected = state.model == null,
-                            onClick = { actions.chooseModel(null) },
-                        )
-                        state.setup?.models.orEmpty().forEach { model ->
-                            KitChoiceRow(
-                                mark = KitChoiceMark.Tick,
-                                title = model.name,
-                                supporting = model.model.providerId,
-                                selected = model.model == state.model,
-                                onClick = { actions.chooseModel(model.model) },
-                            )
-                        }
-                    }
+                NewConversationSheet.Models -> NewConversationModelChoices(state.setup?.models.orEmpty(), state.model, actions::chooseModel)
                 NewConversationSheet.Agents ->
                     KitRowGroup {
                         KitRow(
@@ -409,6 +394,27 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
                 NewConversationSheet.Import -> Unit
                 null -> Unit
             }
+        }
+    }
+}
+
+/** Flutter agent_model_sheet.dart: the default first, then named models, each checked at the end. */
+@Composable
+internal fun NewConversationModelChoices(models: List<NewConversationModel>, selected: ModelRef?, choose: (ModelRef?) -> Unit) {
+    KitRowGroup {
+        KitRow(
+            title = stringResource(Res.string.agentsModelDefault),
+            selected = selected == null,
+            trailing = if (selected == null) KitRowTrailing.Check else KitRowTrailing.None,
+            onClick = { choose(null) },
+        )
+        models.filter { it.model.modelId != "default" }.forEach { model ->
+            KitRow(
+                title = model.name,
+                selected = model.model == selected,
+                trailing = if (model.model == selected) KitRowTrailing.Check else KitRowTrailing.None,
+                onClick = { choose(model.model) },
+            )
         }
     }
 }
