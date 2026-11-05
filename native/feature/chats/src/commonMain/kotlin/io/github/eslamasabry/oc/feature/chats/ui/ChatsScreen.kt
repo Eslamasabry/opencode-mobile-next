@@ -195,7 +195,7 @@ public fun ChatsScreen(
                 return@LazyColumn
             }
             replyOffer?.let { offer -> item(key = "reply-notification-offer") { offer() } }
-            state.brief?.let { brief -> item(key = "brief") { BriefBlock(brief, actions) } }
+            state.brief?.let { brief -> item(key = "brief") { BriefBlock(brief, actions, state) } }
             if (state.answerFailure != null)
                 item(key = "answer-failure") {
                     io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice(
@@ -303,10 +303,10 @@ private fun Filters(state: ChatsUi, actions: ChatsActions) {
 }
 
 @Composable
-private fun BriefBlock(brief: BriefUi, actions: ChatsActions) {
+private fun BriefBlock(brief: BriefUi, actions: ChatsActions, state: ChatsUi) {
     Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
         if (brief.unknown) KitNotice(stringResource(Res.string.chatsReturnBriefUnknown))
-        brief.rows.forEach { ConversationRow(it, actions) }
+        brief.rows.forEach { ConversationRow(it, actions, state) }
         if (brief.more > 0) {
             KitButton(
                 label = stringResource(Res.string.chatsReturnBriefMore, brief.more),
