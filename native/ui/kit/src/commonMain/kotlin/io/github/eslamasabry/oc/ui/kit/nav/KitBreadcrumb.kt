@@ -70,13 +70,13 @@ public fun KitBreadcrumb(
         val measurer = rememberTextMeasurer()
         val typography = LocalKitTypography.current
         val plain = typography.style(TypeRole.Secondary)
-        val semibold = plain.copy(fontWeight = FontWeight.SemiBold) // F: lib/ui/kit/kit_breadcrumb.dart:269
+        val semibold = plain.copy(fontWeight = FontWeight.SemiBold) // F: lib/ui/kit/kit_breadcrumb.dart:310
         fun natural(value: String, style: androidx.compose.ui.text.TextStyle): Float =
             kotlin.math.ceil(measurer.measure(KitBidi.auto(value), style, softWrap = false, maxLines = 1).size.width.toFloat() / density.density)
 
         val minTarget = FlutterKitTokens.MIN_TARGET.toFloat()
-        val padding = Space.S2 * 2f // F: lib/ui/kit/kit_breadcrumb.dart:107
-        val separatorWidth = KitIconSize.Small.dp + Space.S1 * 2f // F: lib/ui/kit/kit_breadcrumb.dart:108
+        val padding = Space.S2 * 2f // F: lib/ui/kit/kit_breadcrumb.dart:94
+        val separatorWidth = KitIconSize.Small.dp + Space.S1 * 2f // F: lib/ui/kit/kit_breadcrumb.dart:95
         val maxWidth = constraints.maxWidth / density.density
         fun nameOf(i: Int) = if (i < 0) rootLabel else segments[i]
         fun crumbWidth(text: Float) = maxOf(minTarget, text + padding)
@@ -87,8 +87,8 @@ public fun KitBreadcrumb(
         }
 
         val count = segments.size
-        val parentIndex = count - 2 // F: lib/ui/kit/kit_breadcrumb.dart:121
-        val middle = if (count >= 3) count - 2 else 0 // F: lib/ui/kit/kit_breadcrumb.dart:123
+        val parentIndex = count - 2 // F: lib/ui/kit/kit_breadcrumb.dart:113
+        val middle = if (count >= 3) count - 2 else 0 // F: lib/ui/kit/kit_breadcrumb.dart:115
         val naturalText = (-1..parentIndex).associateWith { minOf(natural(nameOf(it), plain), FlutterKitTokens.CRUMB_MAX_WIDTH.toFloat()) }
         val moreWidth = crumbWidth(natural(ELLIPSIS, plain))
         val currentNatural = natural(segments.last(), semibold) + padding
@@ -108,7 +108,7 @@ public fun KitBreadcrumb(
         val shown = shownFor(hidden)
 
         val textWidth = naturalText.toMutableMap()
-        val minCurrent = minOf(currentNatural, minTarget * 2f) // F: lib/ui/kit/kit_breadcrumb.dart:179
+        val minCurrent = minOf(currentNatural, minTarget * 2f) // F: lib/ui/kit/kit_breadcrumb.dart:159
         if (maxWidth.isFinite() && fixedWidth(shown, hidden, textWidth) + minCurrent > maxWidth) {
             val crumbs = shown.size + (if (hidden > 0) 1 else 0)
             val budget = maxWidth - minCurrent - separatorWidth * crumbs - (if (hidden > 0) moreWidth else 0f)
@@ -136,7 +136,7 @@ public fun KitBreadcrumb(
 @Composable
 private fun Trail(content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit) {
     Row(
-        Modifier.heightIn(min = FlutterKitTokens.MIN_TARGET.dp), // F: lib/ui/kit/kit_breadcrumb.dart:225
+        Modifier.heightIn(min = FlutterKitTokens.MIN_TARGET.dp), // F: lib/ui/kit/kit_breadcrumb.dart:235
         verticalAlignment = Alignment.CenterVertically,
         content = content,
     )
@@ -173,7 +173,7 @@ private fun Ancestor(
     ) {
         KitText(
             KitBidi.auto(display),
-            Modifier.padding(horizontal = Space.S2.dp).widthIn(max = (textWidth + Space.S2 * 2f).dp),
+            Modifier.padding(horizontal = Space.S2.dp).widthIn(max = (textWidth + Space.S2 * 2f).dp), // F: lib/ui/kit/kit_breadcrumb.dart:266
             role = TypeRole.Secondary,
             tone = TextTone.Secondary,
             kind = KitTextKind.Frame,
@@ -218,11 +218,11 @@ private fun Current(name: String, style: androidx.compose.ui.text.TextStyle, mod
     BasicText(
         KitBidi.auto(name),
         modifier
-            .heightIn(min = FlutterKitTokens.MIN_TARGET.dp) // F: lib/ui/kit/kit_breadcrumb.dart:268
+            .heightIn(min = FlutterKitTokens.MIN_TARGET.dp) // F: lib/ui/kit/kit_breadcrumb.dart:300
             .padding(horizontal = Space.S2.dp)
             .clearAndSetSemantics { contentDescription = label; selected = true },
         style = style.copy(color = color, textDirection = TextDirection.Content),
-        maxLines = 2, // F: lib/ui/kit/kit_breadcrumb.dart:282
+        maxLines = 2, // F: lib/ui/kit/kit_breadcrumb.dart:314
         overflow = TextOverflow.Ellipsis,
     )
 }
@@ -234,9 +234,9 @@ private fun middleCut(name: String, maxWidth: Float, density: Float, widthPx: (S
     var high = name.length - 1
     var best = ELLIPSIS
     while (low <= high) {
-        val kept = (low + high) / 2
-        val head = kept - kept / 2
-        val tail = kept / 2
+        val kept = (low + high) / 2 // F: lib/ui/kit/kit_breadcrumb.dart:448
+        val head = kept - kept / 2 // F: lib/ui/kit/kit_breadcrumb.dart:449
+        val tail = kept / 2 // F: lib/ui/kit/kit_breadcrumb.dart:450
         val candidate = name.take(head) + ELLIPSIS + name.takeLast(tail)
         if (widthPx(candidate) <= maxWidth * density) { best = candidate; low = kept + 1 } else high = kept - 1
     }
