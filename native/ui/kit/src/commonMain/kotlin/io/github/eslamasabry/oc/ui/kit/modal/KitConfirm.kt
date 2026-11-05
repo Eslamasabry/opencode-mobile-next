@@ -16,6 +16,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -86,6 +87,7 @@ public data class KitConfirmSpec(
     val consequenceItems: List<KitConsequence> = emptyList(),
     val alternative: KitAction? = null,
     val details: List<KitTechnicalValue> = emptyList(),
+    val icon: ImageVector? = null,
 )
 
 /** Pure rules of [KitConfirm] (B-KIT-015). */
@@ -173,7 +175,7 @@ public fun KitConfirm(
             horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
             IconTile(
-                when (shown.kind) {
+                shown.icon ?: when (shown.kind) {
                     KitConfirmKind.Neutral -> KitPartGlyphs.Ring
                     KitConfirmKind.Stop -> KitPartGlyphs.Close
                     KitConfirmKind.Destructive,

@@ -19,10 +19,12 @@ import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.*
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.modal.*
 import io.github.eslamasabry.oc.ui.kit.state.*
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
@@ -54,6 +56,7 @@ public fun SessionNoteScreen(state: SessionNoteUi, actions: SessionNoteActions) 
                     primary = if (!state.dirty) null else KitAction(
                         stringResource(Res.string.sessionNoteSave),
                         { savingHere = true; actions.saveNote() },
+                        icon = KitIcons.check,
                         enabled = when {
                             state.loading || conflict -> enabled
                             state.tooLarge -> KitEnabled.Disabled(stringResource(Res.string.sessionNoteTooLarge))
@@ -65,6 +68,7 @@ public fun SessionNoteScreen(state: SessionNoteUi, actions: SessionNoteActions) 
                         stringResource(Res.string.sessionNoteRemove),
                         actions::removeNote,
                         enabled = enabled,
+                        icon = KitIcons.delete,
                         destructive = true,
                     )),
                 )
@@ -77,10 +81,10 @@ public fun SessionNoteScreen(state: SessionNoteUi, actions: SessionNoteActions) 
                     body = stringResource(if (conflict) Res.string.sessionNoteChanged else Res.string.stateNoteFailed),
                     failure = state.failure,
                     onRetry = actions::reloadNote,
-                ) else KitStateView(kind = KitStateKind.Loading, title = stringResource(Res.string.sessionNoteLoading))
+                ) else KitStateView(kind = KitStateKind.Loading, title = stringResource(Res.string.sessionNoteLoading), icon = KitIcons.note)
             } else {
                 Column(
-                    Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = Space.S3.dp),
+                    Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = LocalKitTokens.current.gutter.dp).padding(top = Space.S3.dp),
                     verticalArrangement = Arrangement.spacedBy(Space.S4.dp),
                 ) {
                     KitText(stringResource(Res.string.sessionNoteDescription), role = TypeRole.Secondary, tone = TextTone.Secondary)
@@ -114,7 +118,8 @@ public fun SessionNoteScreen(state: SessionNoteUi, actions: SessionNoteActions) 
                 body = stringResource(Res.string.sessionNoteDiscardDetail),
                 confirmLabel = stringResource(Res.string.sessionNoteDiscardAction),
                 cancelLabel = stringResource(Res.string.sessionNoteKeepEditing),
-                kind = KitConfirmKind.Destructive,
+                kind = KitConfirmKind.Discard,
+                icon = KitIcons.note,
             ),
             onConfirm = actions::discardNote,
             onCancel = actions::keepEditing,

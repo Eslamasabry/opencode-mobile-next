@@ -12,10 +12,12 @@ import kotlin.test.assertEquals
 class NoteScreenTest {
     private class Actions : SessionNoteActions {
         var removed = 0
+        var discarded = 0
+        var kept = 0
         override fun openNote() {}
         override fun closeNote() {}
-        override fun discardNote() {}
-        override fun keepEditing() {}
+        override fun discardNote() { discarded++ }
+        override fun keepEditing() { kept++ }
         override fun changeNote(value: String) {}
         override fun saveNote() {}
         override fun removeNote() { removed++ }
@@ -33,4 +35,17 @@ class NoteScreenTest {
         setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en") { SessionNoteScreen(SessionNoteUi(), Actions()) } }
         onNodeWithTag("kit-page-overlay").assertDoesNotExist()
     }
+    @Test fun discardUsesTheNoteGlyphAndKeepsEditingWithoutLosingTheDraft() = runComposeUiTest {
+        val actions = Actions()
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), localeTag = "en") {
+                SessionNoteScreen(SessionNoteUi(visible = true, ready = true, draft = "Keep my edits", saved = "Old note", discard = true), actions)
+            }
+        }
+        onNodeWithText("Keep editing").performClick()
+        assertEquals(1, actions.kept)
+        assertEquals(0, actions.discarded)
+        assertEquals(0, actions.removed)
+    }
+
 }
