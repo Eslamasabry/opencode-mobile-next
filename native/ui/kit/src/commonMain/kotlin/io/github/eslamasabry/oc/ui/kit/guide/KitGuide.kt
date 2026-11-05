@@ -70,7 +70,7 @@ public fun KitGuideRail(
                                     Modifier.weight(1f, fill = false),
                                     role = TypeRole.RowTitle,
                                     maxLines = 2,
-                                ) // F: lib/ui/kit/kit_guide.dart:305
+                                ) // F: lib/ui/kit/kit_guide.dart:298
                                 if (item.done) {
                                     Spacer(Modifier.width(Space.S1.dp))
                                     KitGlyph(KitIcons.check, colors.accent, tokens.smallIcon.dp)
@@ -81,7 +81,7 @@ public fun KitGuideRail(
                                 role = TypeRole.Secondary,
                                 tone = if (item.held) TextTone.Tertiary else TextTone.Secondary,
                                 maxLines = 2,
-                            ) // F: lib/ui/kit/kit_guide.dart:312
+                            ) // F: lib/ui/kit/kit_guide.dart:311
                         }
                         if (item.next) GuideDot()
                         Spacer(Modifier.width(Space.S1.dp))
@@ -117,16 +117,16 @@ public fun KitGuideRail(
                                 CircleShape,
                             )
                             .clearAndSetSemantics {}
-                    ) // F: lib/ui/kit/kit_guide.dart:452
+                    ) // F: lib/ui/kit/kit_guide.dart:455
                 }
             }
             Spacer(Modifier.height(Space.S2.dp))
         }
         val columns =
             if (group == null) {
-                if (scale >= 1.6f) 1 else 2 // F: lib/ui/kit/kit_guide.dart:341
+                if (scale >= 1.6f) 1 else 2 // F: lib/ui/kit/kit_guide.dart:326
             } else if (scale >= 1.3f) 1
-            else items.size.coerceAtLeast(1) // F: lib/ui/kit/kit_guide.dart:369
+            else items.size.coerceAtLeast(1) // F: lib/ui/kit/kit_guide.dart:349
         Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
             items.chunked(columns).forEach { row ->
                 Row(
@@ -164,7 +164,7 @@ private fun GuideCard(
                 KitShapeId.Card,
                 ownFill =
                     if (selected) colors.accent.copy(alpha = .14f).compositeOver(colors.ground)
-                    else colors.surface1, // F: lib/ui/kit/kit_guide.dart:555
+                    else colors.surface1, // F: lib/ui/kit/kit_guide.dart:560
                 selected = selected,
             )
         )
@@ -198,7 +198,7 @@ private fun GuideCard(
                         Modifier.weight(1f, fill = false),
                         role = TypeRole.RowTitle,
                         maxLines = 2,
-                    ) // F: lib/ui/kit/kit_guide.dart:598
+                    ) // F: lib/ui/kit/kit_guide.dart:603
                     if (item.done) {
                         Spacer(Modifier.width(Space.S1.dp))
                         KitGlyph(KitIcons.check, colors.accent, tokens.smallIcon.dp)
@@ -224,7 +224,7 @@ private fun GuideDot() {
         Modifier.size(7.dp)
             .background(LocalKitColors.current.accent, CircleShape)
             .clearAndSetSemantics {}
-    ) // F: lib/ui/kit/kit_guide.dart:518
+    ) // F: lib/ui/kit/kit_guide.dart:508
 }
 
 /** The next step stays at the foot of the guide; large text stacks its button below its count. */
@@ -236,7 +236,7 @@ public fun KitGuideNextBar(
     ready: Boolean = false,
 ) {
     val tokens = LocalKitTokens.current
-    val large = LocalDensity.current.fontScale >= 1.3f // F: lib/ui/kit/kit_guide.dart:838
+    val large = LocalDensity.current.fontScale >= 1.3f // F: lib/ui/kit/kit_guide.dart:843
     Column(Modifier.fillMaxWidth()) {
         KitDivider()
         val inset =
@@ -250,7 +250,7 @@ public fun KitGuideNextBar(
                     count,
                     role = TypeRole.Secondary,
                     maxLines = 2,
-                ) // F: lib/ui/kit/kit_guide.dart:823
+                ) // F: lib/ui/kit/kit_guide.dart:832
                 if (label != null) {
                     Spacer(Modifier.height(Space.S2.dp))
                     KitButton(label, onNext, role = role, fullWidth = true)
@@ -263,13 +263,13 @@ public fun KitGuideNextBar(
                     Modifier.weight(1f),
                     role = TypeRole.Secondary,
                     maxLines = 2,
-                ) // F: lib/ui/kit/kit_guide.dart:823
+                ) // F: lib/ui/kit/kit_guide.dart:832
                 if (label != null) {
                     Spacer(Modifier.width(Space.S2.dp))
                     Box(
                         Modifier.weight(2f),
                         contentAlignment = Alignment.CenterEnd,
-                    ) { // F: lib/ui/kit/kit_guide.dart:883
+                    ) { // F: lib/ui/kit/kit_guide.dart:882
                         KitButton(label, onNext, role = role)
                     }
                 }

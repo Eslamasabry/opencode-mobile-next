@@ -6,6 +6,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.model.*
@@ -18,11 +19,13 @@ import io.github.eslamasabry.oc.ui.kit.choice.*
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.*
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.*
 import io.github.eslamasabry.oc.ui.kit.modal.*
 import io.github.eslamasabry.oc.ui.kit.nav.*
 import io.github.eslamasabry.oc.ui.kit.row.*
 import io.github.eslamasabry.oc.ui.kit.state.*
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.kitchat.code.*
 import io.github.eslamasabry.oc.ui.kitchat.markdown.*
@@ -36,8 +39,10 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Composable
 public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
-    val tabs = LibraryTab.entries
-    val search = rememberTextFieldState()
+    val providerPage = state.tab == LibraryTab.Providers
+    val tabs = listOf(LibraryTab.Mcp, LibraryTab.Commands, LibraryTab.Skills, LibraryTab.References)
+    val searches = remember { mutableMapOf<LibraryTab, TextFieldState>() }
+    val search = searches.getOrPut(state.tab) { TextFieldState() }
     val query = search.text.toString().trim()
     fun match(vararg values: String?) =
         query.isEmpty() || values.any { it?.contains(query, ignoreCase = true) == true }
@@ -54,7 +59,9 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
         width = KitScreenWidth.List,
         topBar = {
             KitTopBar(
-                stringResource(Res.string.nlibTitle),
+                stringResource(
+                    if (providerPage) Res.string.usageProviders else Res.string.e7SettingsDetailUi25
+                ),
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.nlibBack),
                 onExit = actions::back,
@@ -62,25 +69,35 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                     listOf(KitLineAction(stringResource(Res.string.nlibRefresh), actions::refresh)),
             )
         },
-        header = {
-            KitTabStrip(
-                tabs.map { KitTab(tabLabel(it)) },
-                tabs.indexOf(state.tab),
-                { actions.tab(tabs[it]) },
-            )
-        },
-        search = {
-            KitField(
-                search,
-                stringResource(Res.string.nlibSearch),
-                Modifier.padding(horizontal = Space.S4.dp),
-            )
-        },
+        header =
+            if (providerPage) null
+            else {
+                {
+                    KitTabStrip(
+                        tabs.map { KitTab(tabLabel(it)) },
+                        tabs.indexOf(state.tab),
+                        { actions.tab(tabs[it]) },
+                    )
+                }
+            },
+        search =
+            if (providerPage) {
+                {
+                    KitSearchField(
+                        label = stringResource(Res.string.e7LibrarySearchProvidersOrModels),
+                        onSearch = {},
+                        state = search,
+                        modifier =
+                            Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
+                                .testTag("library-provider-search"),
+                    )
+                }
+            } else null,
         loading = inventory.loading,
     ) {
         LazyColumn(
-            Modifier.fillMaxSize().padding(horizontal = Space.S4.dp),
-            verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
+            Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(top = Space.S2.dp, bottom = Space.S6.dp),
         ) {
             item {
                 if (!state.available)
@@ -119,14 +136,31 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                 when (state.tab) {
                     LibraryTab.Commands -> {
                         val rows = inventory.commands.filter { match(it.name, it.description) }
-                        EmptyList(rows.isEmpty(), query, inventory.loading)
-                        KitRowGroup {
+                        LibraryEmpty(
+                            rows.isEmpty(),
+                            query,
+                            inventory.loading,
+                            selectedSection in inventory.failedSections,
+                            state.tab,
+                        )
+                        KitGroupNote(stringResource(Res.string.commandSheetLibrarySubtitle))
+                        Box(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)) {
+                            KitSearchField(
+                                label = stringResource(Res.string.chatUiFindACommandOrAction),
+                                state = search,
+                                onSearch = {},
+                                modifier = Modifier.testTag("library-command-search"),
+                            )
+                        }
+                        KitRowGroup(label = stringResource(Res.string.e7LibraryServerCommands)) {
                             rows.forEach { command ->
                                 KitRow(
-                                    command.name,
-                                    supporting = command.description,
-                                    supportingMaxLines = 3,
-                                    trailing = KitRowTrailing.Chevron,
+                                    libraryCommandTitle(command),
+                                    modifier = Modifier.testTag("library-command-${command.name}"),
+                                    supporting = libraryCommandSupporting(command),
+                                    supportingMaxLines =
+                                        2, // F: lib/ui/screens/library/skills_screen.dart:176
+                                    trailing = KitRowTrailing.None,
                                     onClick = { actions.show(LibrarySheet.Command(command)) },
                                 )
                             }
@@ -135,13 +169,24 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                     LibraryTab.Skills -> {
                         val rows =
                             inventory.skills.filter { match(it.name, it.description, it.location) }
-                        EmptyList(rows.isEmpty(), query, inventory.loading)
-                        KitRowGroup {
+                        LibraryEmpty(
+                            rows.isEmpty(),
+                            query,
+                            inventory.loading,
+                            selectedSection in inventory.failedSections,
+                            state.tab,
+                        )
+                        KitRowGroup(leadingTiles = true) {
                             rows.forEach { skill ->
                                 KitRow(
                                     skill.name,
-                                    supporting = skill.description ?: skill.location,
-                                    supportingMaxLines = 3,
+                                    modifier = Modifier.testTag("library-skill-${skill.name}"),
+                                    leading = KitRowLeading.Glyph(KitIcons.extensions),
+                                    supporting =
+                                        skill.description?.takeIf { it.isNotBlank() }
+                                            ?: skill.location,
+                                    supportingMaxLines =
+                                        2, // F: lib/ui/screens/library/skills_screen.dart:176
                                     trailing = KitRowTrailing.Chevron,
                                     onClick = { actions.show(LibrarySheet.Skill(skill)) },
                                 )
@@ -151,15 +196,34 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                     LibraryTab.References -> {
                         val rows =
                             inventory.references.filter { match(it.name, it.description, it.path) }
-                        EmptyList(rows.isEmpty(), query, inventory.loading)
-                        KitRowGroup {
+                        LibraryEmpty(
+                            rows.isEmpty(),
+                            query,
+                            inventory.loading,
+                            selectedSection in inventory.failedSections,
+                            state.tab,
+                        )
+                        if (rows.isNotEmpty())
+                            KitGroupNote(stringResource(Res.string.referencesScreenIntro))
+                        KitRowGroup(leadingTiles = true) {
                             rows.forEach { reference ->
                                 KitRow(
                                     reference.name,
-                                    supporting = reference.description ?: reference.path,
-                                    supportingMaxLines = 3,
-                                    trailing = KitRowTrailing.Chevron,
-                                    onClick = { actions.show(LibrarySheet.Reference(reference)) },
+                                    modifier =
+                                        Modifier.testTag("library-reference-${reference.name}"),
+                                    leading = KitRowLeading.Glyph(KitIcons.bookmark),
+                                    supporting =
+                                        reference.description?.takeIf { it.isNotBlank() }
+                                            ?: reference.path,
+                                    supportingMaxLines =
+                                        2, // F: lib/ui/screens/library/references_screen.dart:177
+                                    trailing =
+                                        if (state.ref != null) KitRowTrailing.None
+                                        else KitRowTrailing.Chevron,
+                                    onClick = {
+                                        if (state.ref != null) actions.addReference(reference)
+                                        else actions.show(LibrarySheet.Reference(reference))
+                                    },
                                 )
                             }
                         }
@@ -207,14 +271,17 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                                             .thenBy { providerRank(it.id) }
                                             .thenBy { it.name.lowercase() }
                                     )
-                            EmptyList(
+                            LibraryEmpty(
                                 rows.isEmpty() && inventory.attempts.isEmpty(),
                                 query,
                                 inventory.loading,
+                                selectedSection in inventory.failedSections,
+                                state.tab,
                             )
                             rows.forEach { provider ->
                                 KitRow(
                                     provider.name,
+                                    leading = KitRowLeading.Logo(provider.id, provider.name),
                                     supporting =
                                         if (provider.connections.isEmpty())
                                             stringResource(Res.string.nlibDisconnected)
@@ -257,7 +324,13 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                                         }
                                         .thenBy { it.name.lowercase() }
                                 )
-                        EmptyList(rows.isEmpty(), query, inventory.loading)
+                        LibraryEmpty(
+                            rows.isEmpty(),
+                            query,
+                            inventory.loading,
+                            selectedSection in inventory.failedSections,
+                            state.tab,
+                        )
                         KitRowGroup {
                             rows.forEach { server ->
                                 KitRow(
@@ -269,26 +342,31 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                                 )
                             }
                         }
-                        KitRowGroup {
-                            inventory.resources
-                                .filter { match(it.name, it.server, it.description) }
-                                .forEach { resource ->
-                                    KitRow(
-                                        resource.name,
-                                        supporting =
-                                            listOfNotNull(resource.server, resource.description)
-                                                .joinToString(" · "),
-                                        supportingMaxLines = 3,
-                                        trailing =
-                                            KitRowTrailing.Action(
-                                                KitLineAction(
-                                                    stringResource(Res.string.nlibCopy),
-                                                    { actions.copy(resource.uri) },
-                                                )
-                                            ),
-                                    )
-                                }
-                        }
+                        if (inventory.resources.isNotEmpty())
+                            KitRowGroup(
+                                label = stringResource(Res.string.e7LibraryResources),
+                                leadingTiles = true,
+                            ) {
+                                inventory.resources
+                                    .filter { match(it.name, it.server, it.description) }
+                                    .forEach { resource ->
+                                        KitRow(
+                                            resource.name,
+                                            leading = KitRowLeading.Glyph(KitIcons.bookmark),
+                                            supporting =
+                                                listOfNotNull(resource.server, resource.description)
+                                                    .joinToString(" · "),
+                                            supportingMaxLines = 3,
+                                            trailing =
+                                                KitRowTrailing.Action(
+                                                    KitLineAction(
+                                                        stringResource(Res.string.nlibCopy),
+                                                        { actions.copy(resource.uri) },
+                                                    )
+                                                ),
+                                        )
+                                    }
+                            }
                     }
                 }
             }
@@ -312,12 +390,53 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
 }
 
 @Composable
-private fun EmptyList(empty: Boolean, query: String, loading: Boolean) {
-    if (empty && !loading)
-        KitStateView(
-            KitStateKind.Calm,
-            stringResource(if (query.isEmpty()) Res.string.nlibEmpty else Res.string.nlibNoMatch),
-        )
+private fun LibraryEmpty(
+    empty: Boolean,
+    query: String,
+    loading: Boolean,
+    failed: Boolean,
+    tab: LibraryTab,
+) {
+    if (!empty) return
+    if (loading) {
+        KitSkeletonRows()
+        return
+    }
+    if (failed) return
+    if (query.isNotEmpty()) {
+        KitStateView(KitStateKind.Calm, stringResource(Res.string.nlibNoMatch))
+        return
+    }
+    val title =
+        when (tab) {
+            LibraryTab.Skills -> Res.string.e7LibraryNoSkillsAvailable
+            LibraryTab.References -> Res.string.e7LibraryNoReferencesConfigured
+            LibraryTab.Mcp -> Res.string.e7LibraryNoMCPServersConfigured
+            else -> Res.string.nlibEmpty
+        }
+    KitStateView(KitStateKind.Calm, stringResource(title))
+    when (tab) {
+        LibraryTab.Skills -> KitGroupNote(stringResource(Res.string.emptyTeachSkillsMessage))
+        LibraryTab.References -> KitGroupNote(stringResource(Res.string.referencesScreenEmptyBody))
+        else -> Unit
+    }
+}
+
+internal fun libraryCommandTitle(command: CommandInfo): String =
+    command.description?.trim()?.takeIf { it.isNotEmpty() } ?: "/${command.name.removePrefix("/")}"
+
+@Composable
+private fun libraryCommandSupporting(command: CommandInfo): String {
+    val name = "/${command.name.removePrefix("/")}"
+    val detail =
+        if (command.description.isNullOrBlank())
+            stringResource(Res.string.chatUiOpenCodeServerCommand)
+        else name
+    return command.agent
+        ?.takeIf { it.isNotBlank() }
+        ?.let {
+            detail + " · " + stringResource(Res.string.commandsScreenRunsWith, it)
+        } ?: detail
 }
 
 @Composable
