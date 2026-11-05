@@ -15,12 +15,18 @@ class SignInTerminalParityTest {
     private class Actions : SignInTerminalActions {
         var restarted = 0
         var left = 0
+        var approved = 0
+        var dismissed = 0
 
         override fun openSignInPage() {}
 
-        override fun confirmSignInPage() {}
+        override fun confirmSignInPage() {
+            approved++
+        }
 
-        override fun dismissSignInPage() {}
+        override fun dismissSignInPage() {
+            dismissed++
+        }
 
         override fun copyCode() {}
 
@@ -121,5 +127,30 @@ class SignInTerminalParityTest {
             onNodeWithText("sign-in-start", substring = true).assertExists()
             onNodeWithText("Sign in with Codex").performScrollTo().performClick()
             assertEquals(1, actions.restarted)
+        }
+
+    @Test
+    fun `standalone terminal hosts official-page approval and dispatches the admitted action`() =
+        runComposeUiTest {
+            val actions = Actions()
+            setContent {
+                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                    SignInTerminalScreen(
+                        SignInTerminalUi(
+                            agentName = "Codex",
+                            step = SignInStep.Running,
+                            transcript = "Waiting for sign-in",
+                            accessibleMode = true,
+                            linkPrompt = SignInPagePrompt("auth.example", false),
+                        ),
+                        actions,
+                    )
+                }
+            }
+            onNodeWithText("Open link?").assertExists()
+            onNodeWithText("Open").performClick()
+            assertEquals(1, actions.approved)
+            assertEquals(0, actions.left)
+            assertEquals(0, actions.restarted)
         }
 }

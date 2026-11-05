@@ -22,6 +22,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
@@ -121,6 +122,7 @@ public fun SignInTerminalScreen(
             )
         },
     ) {
+        KitBackGuard(state.linkPrompt == null, actions::leave)
         Column(
             Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
@@ -214,33 +216,37 @@ public fun SignInTerminalScreen(
                 }
         }
         pageApproval()
+        KitConfirm(
+            state.linkPrompt?.let { prompt ->
+                KitConfirmSpec(
+                    title =
+                        stringResource(
+                            if (prompt.insecure) Res.string.e7SharedOpenInsecureHTTPLink
+                            else Res.string.chatFeelOpenLinkTitle
+                        ),
+                    confirmLabel =
+                        stringResource(
+                            if (prompt.insecure) Res.string.e7SharedOpenHTTPLink
+                            else Res.string.chatFeelOpenLinkAction
+                        ),
+                    body = stringResource(Res.string.chatFeelOpenLinkBody, prompt.host),
+                    kind =
+                        if (prompt.insecure) KitConfirmKind.Destructive else KitConfirmKind.Neutral,
+                    consequences =
+                        if (prompt.insecure)
+                            listOf(
+                                stringResource(Res.string.e7SharedHTTPIsNotEncryptedOtherDevicesOn)
+                            )
+                        else emptyList(),
+                    cancelLabel =
+                        if (prompt.insecure) stringResource(Res.string.externalLinkDontOpen)
+                        else null,
+                )
+            },
+            actions::confirmSignInPage,
+            actions::dismissSignInPage,
+        )
     }
-    KitConfirm(
-        state.linkPrompt?.let { prompt ->
-            KitConfirmSpec(
-                title =
-                    stringResource(
-                        if (prompt.insecure) Res.string.e7SharedOpenInsecureHTTPLink
-                        else Res.string.chatFeelOpenLinkTitle
-                    ),
-                confirmLabel =
-                    stringResource(
-                        if (prompt.insecure) Res.string.e7SharedOpenHTTPLink
-                        else Res.string.chatFeelOpenLinkAction
-                    ),
-                body = stringResource(Res.string.chatFeelOpenLinkBody, prompt.host),
-                kind = if (prompt.insecure) KitConfirmKind.Destructive else KitConfirmKind.Neutral,
-                consequences =
-                    if (prompt.insecure)
-                        listOf(stringResource(Res.string.e7SharedHTTPIsNotEncryptedOtherDevicesOn))
-                    else emptyList(),
-                cancelLabel =
-                    if (prompt.insecure) stringResource(Res.string.externalLinkDontOpen) else null,
-            )
-        },
-        actions::confirmSignInPage,
-        actions::dismissSignInPage,
-    )
 }
 
 @Composable
