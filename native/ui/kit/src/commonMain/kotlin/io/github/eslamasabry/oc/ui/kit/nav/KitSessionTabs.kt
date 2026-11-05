@@ -88,7 +88,7 @@ public fun KitSessionTabs(
                                 if (bed.paints) colors.hairline.copy(alpha = 0f)
                                 else colors.hairline,
                                 KitShapeId.Pill.shape(),
-                            ) // F: lib/ui/kit/kit_session_tabs.dart:225-230
+                            ) // F: lib/ui/kit/kit_session_tabs.dart:219-220
                     Box(
                         face
                             .padding(horizontal = Space.S4.dp, vertical = Space.S2.dp)
@@ -104,6 +104,7 @@ public fun KitSessionTabs(
                                         .style(TypeRole.Label)
                                         .copy(color = chosen.words ?: colors.onAccent),
                                 maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                             )
                         } else
                             KitText(

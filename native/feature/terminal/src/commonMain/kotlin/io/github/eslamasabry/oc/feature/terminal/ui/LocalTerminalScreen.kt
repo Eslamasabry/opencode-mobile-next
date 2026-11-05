@@ -9,6 +9,7 @@ import io.github.eslamasabry.oc.engine.project.terminal.TerminalKey
 import io.github.eslamasabry.oc.feature.terminal.presentation.LocalTerminalActions
 import io.github.eslamasabry.oc.feature.terminal.presentation.LocalTerminalNativeActions
 import io.github.eslamasabry.oc.feature.terminal.presentation.LocalTerminalUi
+import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.content.terminal.*
@@ -23,7 +24,7 @@ import io.github.eslamasabry.oc.ui.kit.teaching.KitTip
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
-private val LOCAL_TERMINAL_COMPACT = 420.dp // F: lib/ui/screens/local_terminal_screen.dart:366
+private val LOCAL_TERMINAL_COMPACT = 420.dp // F: lib/ui/screens/local_terminal_screen.dart:333
 
 /** Flutter's local phone shell: optional sessions, one terminal/key surface, actions in the bar. */
 @Composable
@@ -44,7 +45,7 @@ public fun LocalTerminalScreen(state: LocalTerminalUi, actions: LocalTerminalAct
                 )
             }
         }
-    LaunchedEffect(selected?.control, selected?.alt) {
+    LaunchedEffect(keys, selected?.control, selected?.alt) {
         keys.sync(selected?.control == true, selected?.alt == true)
     }
     LaunchedEffect(selected?.id, selected?.transcript, keyboardVisible, state.linkTip) {
@@ -153,6 +154,7 @@ public fun LocalTerminalScreen(state: LocalTerminalUi, actions: LocalTerminalAct
                             },
                             label = stringResource(Res.string.terminalSessionsLabel),
                             endedLabel = stringResource(Res.string.terminalSessionEnded),
+                            modifier = Modifier.padding(bottom = Space.S1.dp),
                         )
                     })
                 else null,
@@ -226,14 +228,9 @@ public fun LocalTerminalScreen(state: LocalTerminalUi, actions: LocalTerminalAct
                             safeArea = true,
                             onKey = { key, _, _ ->
                                 when (key) {
-                                    KitTerminalBarKey.Interrupt ->
-                                        actions.send(
-                                            "\u0003"
-                                        ) // F: lib/ui/kit/terminal_key_bar.dart:170
+                                    KitTerminalBarKey.Interrupt,
                                     KitTerminalBarKey.EndOfInput ->
-                                        actions.send(
-                                            "\u0004"
-                                        ) // F: lib/ui/kit/terminal_key_bar.dart:174
+                                        terminalBarKeyInput(key)?.let(actions::send)
                                     else -> nativeActions.key(localTerminalKey(key))
                                 }
                             },
