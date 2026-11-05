@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.ui.kit.nav
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -64,7 +65,7 @@ public fun KitBreadcrumb(
 ) {
     val trailLabel = stringResource(Res.string.kitBreadcrumb)
     BoxWithConstraints(
-        modifier.kitMaxWidth(CapRole.List).semantics { contentDescription = trailLabel },
+        modifier.kitMaxWidth(CapRole.List).fillMaxWidth().semantics { contentDescription = trailLabel },
     ) {
         val density = LocalDensity.current
         val measurer = rememberTextMeasurer()
@@ -136,7 +137,7 @@ public fun KitBreadcrumb(
 @Composable
 private fun Trail(content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit) {
     Row(
-        Modifier.heightIn(min = FlutterKitTokens.MIN_TARGET.dp), // F: lib/ui/kit/kit_breadcrumb.dart:235
+        Modifier.fillMaxWidth().heightIn(min = FlutterKitTokens.MIN_TARGET.dp), // F: lib/ui/kit/kit_breadcrumb.dart:235 (Row is mainAxisSize.max)
         verticalAlignment = Alignment.CenterVertically,
         content = content,
     )
