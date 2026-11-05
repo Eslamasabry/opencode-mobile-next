@@ -7,6 +7,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,13 +29,20 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.LayoutDirection
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
+import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -43,6 +51,9 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
+import io.github.eslamasabry.oc.ui.kit.action.KitWorkingMark
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
@@ -173,21 +184,43 @@ public fun KitComposerSend(
     working: Boolean = false,
 ) {
     val colors = LocalKitColors.current
+    val tokens = LocalKitTokens.current
     val on = enabled.isEnabled
+    val look = kitSurfaceLook(KitSurfaceInput(
+        role = SurfaceRole.Control,
+        shape = KitShapeId.Circle,
+        level = SurfaceLevel.Surface3,
+        ownFill = if (on) colors.accent else colors.surface3,
+        color = if (on) colors.accent else null,
+        action = true,
+    ))
+    val ink = if (on) look.words ?: colors.onAccent else colors.text3
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     KitTappable(
-        onClick = { if (!working) onClick() },
+        onClick = onClick,
         modifier = modifier.semantics { contentDescription = label },
-        enabled = on,
-        disabledReason = (enabled as? KitEnabled.Disabled)?.reason,
+        enabled = on && !working,
+        disabledReason = if (working) label else enabled.reason,
         haptic = KitHaptic.Send,
         shape = KitShapeId.Circle,
-        ink = TextTone.OnAccent,
+        ink = if (on) TextTone.OnAccent else TextTone.Tertiary,
     ) {
         Box(
-            Modifier.size(DISC.dp).background(if (on) colors.accent else colors.surface3, CircleShape),
+            Modifier.size(FlutterKitTokens.COMPOSER_ACTION_SIZE.dp)
+                .then(look.modifier)
+                .testTag("kit-composer-send-disc"),
             contentAlignment = Alignment.Center,
         ) {
-            KitIcon(KitIcons.send, size = KitIconSize.Small, tone = if (on) TextTone.OnAccent else TextTone.Tertiary)
+            if (working) KitWorkingMark(
+                ink,
+                size = tokens.smallIcon.dp,
+                modifier = Modifier.testTag("kit-composer-send-working"),
+            ) else Image(
+                KitIcons.send,
+                contentDescription = null,
+                modifier = Modifier.size(tokens.smallIcon.dp).graphicsLayer { scaleX = if (rtl) -1f else 1f },
+                colorFilter = ColorFilter.tint(ink),
+            )
         }
     }
 }

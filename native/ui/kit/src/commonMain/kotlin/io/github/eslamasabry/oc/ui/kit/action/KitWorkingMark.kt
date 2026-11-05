@@ -30,7 +30,7 @@ private const val STROKE_SHARE = 0.14f
  * phase; a still dot when loops are not allowed (motion Off, Calm, tests and screenshots; plan 08 MOT-7).
  */
 @Composable
-internal fun KitWorkingMark(color: Color, size: Dp = 16.dp, modifier: Modifier = Modifier) {
+public fun KitWorkingMark(color: Color, size: Dp = 16.dp, modifier: Modifier = Modifier) {
     val motion = KitMotion.state
     if (!motion.ambientLoops) {
         Canvas(modifier.size(size)) { drawCircle(color, radius = this.size.minDimension / 6f) }

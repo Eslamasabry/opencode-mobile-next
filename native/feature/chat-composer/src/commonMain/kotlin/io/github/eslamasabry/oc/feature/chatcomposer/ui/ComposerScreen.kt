@@ -226,7 +226,7 @@ private fun FieldButtonSlot(button: FieldButton, actions: ComposerActions, mic: 
         FieldButton.StopAndSend ->
             KitStopAndSendPill(stringResource(Res.string.kitComposerStopAndSend), actions::onSend)
         FieldButton.SendWhenOnline ->
-            KitButton(stringResource(Res.string.kitComposerSendOffline), onClick = actions::onSend, role = KitButtonRole.Secondary, maxLines = 1)
+            KitComposerSend(stringResource(Res.string.kitComposerSendOffline), actions::onSend)
         FieldButton.CannotSendYet ->
             KitComposerSend(
                 stringResource(Res.string.kitComposerSend),
@@ -234,12 +234,10 @@ private fun FieldButtonSlot(button: FieldButton, actions: ComposerActions, mic: 
                 enabled = KitEnabled.Disabled(stringResource(Res.string.kitComposerCannotSendYet)),
             )
         FieldButton.Sending ->
-            KitButton(
+            KitComposerSend(
                 stringResource(Res.string.kitComposerSending),
                 onClick = actions::onSend,
-                maxLines = 1,
                 working = true,
-                enabled = KitEnabled.Disabled(stringResource(Res.string.kitComposerSending)),
             )
     }
 }
