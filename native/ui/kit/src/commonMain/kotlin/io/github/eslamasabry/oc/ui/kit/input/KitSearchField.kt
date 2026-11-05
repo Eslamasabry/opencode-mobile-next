@@ -1,7 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.input
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,12 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -66,6 +60,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitPartGlyphs
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitPresence
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -157,19 +152,19 @@ public fun KitSearchField(
         val back = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
         NavigationBackHandler(state = back, isBackEnabled = true, onBackCompleted = { state.clearText() })
     }
-    val shape = KitShapeId.Button.shape()
+    // A filled, fully rounded field with no outline (the Flutter search look): the magnifier and the words carry it.
+    val shape = KitShapeId.Pill.shape()
     val text = LocalKitTypography.current.style(TypeRole.Body).copy(color = if (enabled) colors.text1 else colors.text3)
     Column(modifier.fillMaxWidth()) {
         Row(
             Modifier.fillMaxWidth()
-                .heightIn(min = tokens.buttonHeight.dp)
-                .background(colors.surface1, shape)
-                .border(1.dp, colors.hairline, shape)
-                .padding(start = Space.S3.dp),
+                .heightIn(min = tokens.minTarget.dp)
+                .background(if (colors.dark) colors.surface1 else colors.surface3, shape)
+                .padding(start = Space.S4.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
         ) {
-            KitGlyph(SearchGlyph, colors.text3, tokens.smallIcon.dp)
+            KitGlyph(KitIcons.search, colors.text2, tokens.smallIcon.dp)
             Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
                 BasicTextField(
                     state = state,
@@ -283,20 +278,3 @@ public fun KitSearchNoMatch(
         action?.let { KitButton(it, role = KitButtonRole.Tertiary) }
     }
 }
-
-/** The magnifier (decorative; it does not mirror, LAY-8). A stand-in until the generated `KitGlyphs`. */
-private val SearchGlyph: ImageVector =
-    ImageVector.Builder(name = "search", defaultWidth = 24.dp, defaultHeight = 24.dp, viewportWidth = 24f, viewportHeight = 24f)
-        .path(
-            stroke = SolidColor(Color.Black),
-            strokeLineWidth = 2f,
-            strokeLineCap = StrokeCap.Round,
-            strokeLineJoin = StrokeJoin.Round,
-        ) {
-            moveTo(18f, 11f)
-            arcToRelative(7f, 7f, 0f, true, true, -14f, 0f)
-            arcToRelative(7f, 7f, 0f, true, true, 14f, 0f)
-            moveTo(16f, 16f)
-            lineTo(21f, 21f)
-        }
-        .build()

@@ -37,27 +37,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.Color
-import io.github.eslamasabry.oc.ui.design.style.Style
-import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
-import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
-import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
-import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceLook
-import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.editableText
 import androidx.compose.ui.semantics.error
+import androidx.compose.ui.semantics.inputText
 import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.password
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.semantics.inputText
-import androidx.compose.ui.semantics.editableText
-import androidx.compose.ui.semantics.password
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -65,8 +58,11 @@ import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.text.Numbers
+import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
@@ -74,10 +70,14 @@ import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitPartGlyphs
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -216,6 +216,11 @@ public fun KitField(
      * [placeholder] is given) and stays the field's accessible name. For a message box that must stay one row tall.
      */
     labelShown: Boolean = true,
+    /**
+     * False draws the words only, with no fill, edge or inner padding: for a field that sits inside another part's
+     * face (the message box pill). The host draws the face and the focus cue.
+     */
+    framed: Boolean = true,
 ) {
     kitAssert(label.isNotBlank()) { "KitField: a field needs its label" }
     kitAssert(
@@ -243,6 +248,7 @@ public fun KitField(
                 onSubmit,
                 onTextChanged,
                 multilineLines,
+                framed,
             )
         }
         val note = error ?: helper
@@ -291,6 +297,7 @@ private fun FieldBox(
     onSubmit: (() -> Unit)?,
     onTextChanged: ((String) -> Unit)?,
     multilineLines: IntRange,
+    framed: Boolean = true,
 ) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
@@ -309,7 +316,8 @@ private fun FieldBox(
             color = if (on) colors.text1 else colors.text3,
             textDirection = if (technical) TextDirection.Ltr else TextDirection.Content,
         )
-    val shape = KitShapeId.Tile.shape()
+    // Flutter's field radius is the control's (14), not the icon tile's.
+    val shape = KitShapeId.Button.shape()
     val fieldLook = rememberFieldLook(colors.surface1, focused || hasError)
     val edge =
         when {
@@ -360,16 +368,18 @@ private fun FieldBox(
             )
             .fillMaxWidth()
             .heightIn(min = tokens.minTarget.dp)
-            .clip(shape)
             .then(
-                // The style draws the field (B-KIT-043..045); Solid keeps the surface1 fill and the edge above.
-                if (fieldLook.isSolid) {
-                    Modifier.background(colors.surface1).border(if (focused || hasError) 2.dp else 1.dp, edge, shape)
-                } else {
-                    fieldLook.look.modifier
+                when {
+                    !framed -> Modifier.padding(vertical = Space.S3.dp)
+                    // The style draws the field (B-KIT-043..045); Solid keeps the surface1 fill and the edge above.
+                    fieldLook.isSolid ->
+                        Modifier.clip(shape)
+                            .background(colors.surface1)
+                            .border(if (focused || hasError) 2.dp else 1.dp, edge, shape)
+                            .padding(horizontal = Space.S3.dp, vertical = Space.S3.dp)
+                    else -> Modifier.clip(shape).then(fieldLook.look.modifier).padding(horizontal = Space.S3.dp, vertical = Space.S3.dp)
                 },
             )
-            .padding(horizontal = Space.S3.dp, vertical = Space.S3.dp)
     val decorator: @Composable (inner: @Composable () -> Unit) -> Unit = { inner ->
         Box(Modifier.fillMaxWidth()) {
             if (state.text.isEmpty() && placeholder != null) {
