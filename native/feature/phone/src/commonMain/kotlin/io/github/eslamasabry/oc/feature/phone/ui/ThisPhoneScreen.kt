@@ -11,6 +11,9 @@ import io.github.eslamasabry.oc.ui.kit.state.KitStatusAnswer
 import io.github.eslamasabry.oc.ui.kit.state.KitAnswerTone
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.words.res.*
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
 import io.github.eslamasabry.oc.ui.words.res.firstRunAgentOpenCode
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneHostInApp
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -148,6 +151,7 @@ public fun ThisPhoneScreen(
     }
     val back = stringResource(Res.string.kitTopBarBack)
     val busyWords = stringResource(Res.string.thisPhoneBusy)
+    var storageOpen by remember { mutableStateOf(false) }
     val busy = state.working != null
     val installed = state.details.installed || state.version != null || state.serverRows.isNotEmpty()
     KitScreen(
@@ -285,6 +289,7 @@ public fun ThisPhoneScreen(
                 KitStatusAnswer(
                     answer = state.answer.headline.words(),
                     line = state.answer.line?.words(),
+                    action = if (installed && state.details.canConnect) KitAction(stringResource(Res.string.r40PhoneConnect), actions::connect, enabled = io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled.of(!busy, busyWords)) else null,
                     tone = when (state.answer.tone) {
                         AnswerTone.Ok -> KitAnswerTone.Ok
                         AnswerTone.Working -> KitAnswerTone.Working
@@ -295,7 +300,7 @@ public fun ThisPhoneScreen(
                 )
             }
             if (installed) {
-            KitRowGroup {
+            KitRowGroup(leadingTiles = true) {
                 KitRow(title = stringResource(Res.string.firstRunAgentOpenCode),
                     supporting = stringResource(Res.string.thisPhoneHostInApp),
                     leading = KitRowLeading.Glyph(KitIcons.phone))
@@ -325,24 +330,6 @@ public fun ThisPhoneScreen(
                             ),
                     )
                 }
-            if (state.details.canConnect) {
-                KitRow(
-                    title = stringResource(Res.string.r40PhoneConnect),
-                    trailing = KitRowTrailing.Chevron,
-                    enabled = !busy,
-                    disabledReason = busyWords,
-                    onClick = actions::connect,
-                )
-            }
-            if (onAddTools != null && (state.details.installed || state.version != null)) {
-                KitRow(
-                    title = stringResource(Res.string.phoneSetupStartAddTitle),
-                    trailing = KitRowTrailing.Chevron,
-                    enabled = !busy,
-                    disabledReason = busyWords,
-                    onClick = onAddTools,
-                )
-            }
             when (val notice = state.notice) {
                 null -> Unit
                 is ThisPhoneNotice.Failed -> PhoneNoticeLine(notice.op.failedWords(), actions)
@@ -352,7 +339,8 @@ public fun ThisPhoneScreen(
                     PhoneNoticeLine(stringResource(Res.string.keepRunningOpenFailed), actions)
             }
             if (state.serverRows.isNotEmpty() || state.version != null) {
-                KitRowGroup {
+                Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
+                KitRowGroup(leadingTiles = true) {
                     state.serverRows.forEach { row ->
                         when (row) {
                             ServerRow.Stop ->
@@ -380,21 +368,18 @@ public fun ThisPhoneScreen(
                                 if (installed != null)
                                     KitRow(
                                         title =
-                                            stringResource(Res.string.thisPhoneUpToDate, installed)
+                                            stringResource(Res.string.thisPhoneUpToDate, installed),
+                                        leading = KitRowLeading.Glyph(KitIcons.check),
                                     )
                             is UpdateRow.Available,
                             is UpdateRow.Failed -> {
-                                installed?.let {
-                                    KitRow(
-                                        title =
-                                            stringResource(Res.string.phoneServerCardVersion, it)
-                                    )
-                                }
                                 val offered =
                                     if (update is UpdateRow.Available) update.version
                                     else (update as UpdateRow.Failed).version
                                 KitRow(
                                     title = stringResource(Res.string.thisPhoneUpdate),
+                                    leading = KitRowLeading.Glyph(KitIcons.download),
+                                    trailing = KitRowTrailing.Chevron,
                                     supporting =
                                         stringResource(Res.string.thisPhoneUpdateDetail, offered),
                                     enabled = !busy,
@@ -419,6 +404,92 @@ public fun ThisPhoneScreen(
                     }
                 }
             }
+            Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
+                state.leftover?.let { notice ->
+                    KitNotice(
+                        message = notice.message.words(),
+                        actions =
+                            listOf(
+                                KitLineAction(
+                                    stringResource(Res.string.workRunawaySeeRunning),
+                                    actions::openRunning,
+                                )
+                            ),
+                        dismiss =
+                            KitLineAction(
+                                stringResource(Res.string.workspaceDismissNotice),
+                                actions::dismiss,
+                            ),
+                    )
+                }
+            KitRowGroup(leadingTiles = true) {
+                val running = state.running
+                val count = running.count
+                if ((count ?: 0) > 0 || running.status != null || running.nearLimit) KitRow(
+                    title = stringResource(Res.string.runningPhoneTitle),
+                    leading = KitRowLeading.Glyph(KitIcons.terminal),
+                    supporting =
+                        if (running.status != null) {
+                            running.status.words()
+                        } else if (running.nearLimit && count != null) {
+                            stringResource(Res.string.runningPhoneRowNearLimit, count, running.cap)
+                        } else {
+                            stringResource(Res.string.runningPhoneRowIdle)
+                        },
+                    supportingMaxLines = 2,
+                    trailing = KitRowTrailing.Chevron,
+                    onClick = actions::openRunning,
+                )
+                if (onAddTools != null) KitRow(
+                    title = stringResource(Res.string.thisPhoneAddTools),
+                    supporting = stringResource(Res.string.thisPhoneAddToolsDetail),
+                    leading = KitRowLeading.Glyph(KitIcons.tools),
+                    trailing = KitRowTrailing.Chevron,
+                    enabled = !busy, disabledReason = busyWords, onClick = onAddTools,
+                )
+                PhoneInstalledPanel(state, actions)
+                KitRow(
+                    title = stringResource(Res.string.linuxMgrRow),
+                    leading = KitRowLeading.Glyph(KitIcons.terminal),
+                    supporting = stringResource(Res.string.linuxMgrRowDetail),
+                    supportingMaxLines = 2,
+                    trailing = KitRowTrailing.Chevron,
+                    onClick = actions::openLinux,
+                )
+                PhoneReplySpeed(state)
+                KitRow(
+                    title = stringResource(Res.string.thisPhoneExportProjects),
+                    leading = KitRowLeading.Glyph(KitIcons.zip),
+                    trailing = KitRowTrailing.Chevron,
+                    onClick = { actions.act(PhoneAct.ExportProjects) },
+                )
+                KitRow(
+                    title = stringResource(Res.string.sharedFoldersTitle),
+                    leading = KitRowLeading.Glyph(KitIcons.folders),
+                    trailing = KitRowTrailing.Chevron,
+                    onClick = { actions.act(PhoneAct.SharedFolders) },
+                )
+                KitRow(
+                    title = stringResource(Res.string.keepRunningTitle),
+                    leading = KitRowLeading.Glyph(KitIcons.batteryCharging),
+                    supporting = stringResource(Res.string.keepRunningRowSubtitle),
+                    supportingMaxLines = 2,
+                    trailing = KitRowTrailing.Chevron,
+                    onClick = actions::openKeepRunning,
+                )
+                KitRow(
+                    title = stringResource(Res.string.libraryTerminalTitle),
+                    leading = KitRowLeading.Glyph(KitIcons.terminal),
+                    trailing = KitRowTrailing.Chevron,
+                    onClick = actions::openTerminal,
+                )
+            }
+            Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
+            PhoneDetailsPanel(state, actions)
+            if (state.storage != null || state.storageSupported || state.storageFailed) KitExpandRow(
+                title = stringResource(Res.string.stateStorageTitle), expanded = storageOpen,
+                onExpandedChange = { storageOpen = it }, leading = KitIcons.storage,
+            ) {
             state.storage?.let { storage ->
                 KitRowGroup(label = stringResource(Res.string.stateStorageTitle)) {
                     if (
@@ -521,71 +592,7 @@ public fun ThisPhoneScreen(
                         ),
                 )
             }
-            KitRowGroup {
-                KitRow(
-                    title = stringResource(Res.string.thisPhoneExportProjects),
-                    trailing = KitRowTrailing.Chevron,
-                    onClick = { actions.act(PhoneAct.ExportProjects) },
-                )
-                KitRow(
-                    title = stringResource(Res.string.sharedFoldersTitle),
-                    trailing = KitRowTrailing.Chevron,
-                    onClick = { actions.act(PhoneAct.SharedFolders) },
-                )
-                state.leftover?.let { notice ->
-                    KitNotice(
-                        message = notice.message.words(),
-                        actions =
-                            listOf(
-                                KitLineAction(
-                                    stringResource(Res.string.workRunawaySeeRunning),
-                                    actions::openRunning,
-                                )
-                            ),
-                        dismiss =
-                            KitLineAction(
-                                stringResource(Res.string.workspaceDismissNotice),
-                                actions::dismiss,
-                            ),
-                    )
-                }
-                val running = state.running
-                val count = running.count
-                KitRow(
-                    title = stringResource(Res.string.runningPhoneTitle),
-                    supporting =
-                        if (running.status != null) {
-                            running.status.words()
-                        } else if (running.nearLimit && count != null) {
-                            stringResource(Res.string.runningPhoneRowNearLimit, count, running.cap)
-                        } else {
-                            stringResource(Res.string.runningPhoneRowIdle)
-                        },
-                    supportingMaxLines = 2,
-                    trailing = KitRowTrailing.Chevron,
-                    onClick = actions::openRunning,
-                )
-                KitRow(
-                    title = stringResource(Res.string.keepRunningTitle),
-                    supporting = stringResource(Res.string.keepRunningRowSubtitle),
-                    supportingMaxLines = 2,
-                    trailing = KitRowTrailing.Chevron,
-                    onClick = actions::openKeepRunning,
-                )
-                KitRow(
-                    title = stringResource(Res.string.linuxMgrRow),
-                    supporting = stringResource(Res.string.linuxMgrRowDetail),
-                    supportingMaxLines = 2,
-                    trailing = KitRowTrailing.Chevron,
-                    onClick = actions::openLinux,
-                )
-                KitRow(
-                    title = stringResource(Res.string.libraryTerminalTitle),
-                    trailing = KitRowTrailing.Chevron,
-                    onClick = actions::openTerminal,
-                )
             }
-            PhoneDetailsPanel(state, actions)
             }
         }
         }

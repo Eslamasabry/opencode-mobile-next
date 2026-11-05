@@ -14,6 +14,16 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class PhoneGateTest {
+    @Test fun `an installed-tools row with a leading glyph retains its visible expand action`() = runComposeUiTest {
+        var expanded = false
+        setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+            io.github.eslamasabry.oc.ui.kit.row.KitExpandRow("Installed", false, onExpandedChange = { expanded = it },
+                leading = io.github.eslamasabry.oc.ui.kit.icon.KitIcons.check) { }
+        } }
+        onNodeWithText("Installed").performClick()
+        assertEquals(true, expanded)
+    }
+
     private object PhoneActions : ThisPhoneActions {
         override fun act(act: PhoneAct) {}
         override fun dismissRecovery() {}
