@@ -20,7 +20,7 @@ import kotlin.test.Test
 class KitButtonGateTest {
     private val copied: @Composable () -> Unit = {
         Column(
-            Modifier.fillMaxWidth().padding(start = 6.dp, end = 6.dp, top = 16.dp),
+            Modifier.fillMaxWidth().padding(horizontal = 6.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             KitButton("Done", {}, Modifier.fillMaxWidth(), role = KitButtonRole.Primary)
