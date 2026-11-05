@@ -33,7 +33,7 @@ class KitDetailsFoldGateTest {
     )
 
     @Composable private fun panel(fold: @Composable () -> Unit) {
-        Column(Modifier.padding(16.dp)) {
+        Column(Modifier.padding(horizontal = 16.dp)) { // the gate already pads 16 dp top and bottom (kit_gallery.dart:766)
             Column(Modifier.fillMaxWidth().background(LocalKitColors.current.surface1, RoundedCornerShape(18.dp)).padding(16.dp)) {
                 KitText("Couldn't reach the server", role = TypeRole.RowTitle)
                 Spacer(Modifier.height(4.dp))
