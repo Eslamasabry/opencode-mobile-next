@@ -31,7 +31,11 @@ import io.github.eslamasabry.oc.ui.kit.motion.KitDimLevel
 import io.github.eslamasabry.oc.ui.kit.motion.KitSpin
 import io.github.eslamasabry.oc.ui.kit.motion.KitSwap
 import io.github.eslamasabry.oc.ui.kit.motion.kitDim
+import androidx.compose.ui.text.font.FontWeight
+import io.github.eslamasabry.oc.ui.kit.theme.KitFontFamilies
+import io.github.eslamasabry.oc.ui.kit.theme.KitTypography
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import kotlin.test.Test
 
 private val MaterialTerminal: androidx.compose.ui.graphics.vector.ImageVector =
@@ -110,6 +114,24 @@ class KitMotionGateTest {
 
     private fun shot(name: String, textScale: Float? = null, content: @Composable () -> Unit) { FlutterGoldenGate.check(name, textScale = textScale, content = content) }
 
+    /** The `_ar` goldens: Flutter's test loads its Noto Sans Arabic fixture, so the kit's Arabic roles use it here too. */
+    private fun shotAr(name: String, textScale: Float, content: @Composable () -> Unit) {
+        FlutterGoldenGate.check(
+            name,
+            textScale = textScale,
+            wrap = { inner ->
+                val regular = androidx.compose.ui.text.platform.Font("NotoSansArabic-Regular", fixtureBytes("NotoSansArabic-Regular.ttf"), FontWeight.Normal)
+                val bold = androidx.compose.ui.text.platform.Font("NotoSansArabic-Bold", fixtureBytes("NotoSansArabic-Bold.ttf"), FontWeight.Bold)
+                val fixture = androidx.compose.ui.text.font.FontFamily(regular, bold)
+                val families = androidx.compose.runtime.remember { KitFontFamilies(fixture, fixture) }
+                androidx.compose.runtime.CompositionLocalProvider(LocalKitTypography provides KitTypography(families, true)) { inner() }
+            },
+            content = content,
+        )
+    }
+
+    private fun fixtureBytes(name: String): ByteArray = checkNotNull(javaClass.getResourceAsStream("/fonts/$name")).readBytes()
+
     @Test fun swap_before() = shot("kit_motion_swap_before", content = swapBefore)
     @Test fun swap_after() = shot("kit_motion_swap_after", content = swapAfter)
     @Test fun spin_chevron_closed() = shot("kit_motion_spin_chevron_closed", content = chevron(false, "Show details"))
@@ -132,9 +154,9 @@ class KitMotionGateTest {
     @Test fun swap_text2_and_ar() {
         for (size in listOf("", "_1280x800")) {
             shot("kit_motion_swap_after_text2$size", content = swapAfter)
-            shot("kit_motion_swap_after_ar$size", 1.3f, swapAfterAr)
+            shotAr("kit_motion_swap_after_ar$size", 1.3f, swapAfterAr)
             shot("kit_motion_spin_chevron_open_text2$size", content = chevron(true, "Hide details"))
-            shot("kit_motion_spin_chevron_open_ar$size", 1.3f, chevron(true, "إخفاء التفاصيل"))
+            shotAr("kit_motion_spin_chevron_open_ar$size", 1.3f, chevron(true, "إخفاء التفاصيل"))
         }
     }
 
