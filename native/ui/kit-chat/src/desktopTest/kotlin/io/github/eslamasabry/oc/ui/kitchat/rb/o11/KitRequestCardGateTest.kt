@@ -35,7 +35,7 @@ class KitRequestCardGateTest {
         }
     }
 
-    @Test fun answered() = FlutterGoldenGate.check("kit_request_card_answered", content = answered)
+    @Test fun answered() { FlutterGoldenGate.check("kit_request_card_answered", content = answered) }
 
     @Test fun matrix() {
         FlutterGoldenGate.matrix("part-kit_request_card", caps = mapOf("KitRequestCard" to "wrapper"), content = answered)
