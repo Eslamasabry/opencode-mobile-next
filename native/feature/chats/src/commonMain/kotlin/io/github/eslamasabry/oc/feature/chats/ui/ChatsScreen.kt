@@ -411,7 +411,7 @@ private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, state
 }
 
 @Composable
-private fun agoText(age: RelativeAge): String =
+internal fun agoText(age: RelativeAge): String =
     when (age) {
         RelativeAge.JustNow -> stringResource(Res.string.e7WorkspaceJustNow)
         is RelativeAge.Minutes ->

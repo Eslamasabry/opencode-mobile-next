@@ -102,12 +102,7 @@ internal fun ChatsHomeSheets(state: ChatsUi, actions: ChatsActions) {
         }
     }
     KitPageOverlay(sheet == ChatsHomeSheet.Inbox, stringResource(Res.string.inboxTitle), actions::closeHomeSheet) {
-        KitScreen(
-            topBar = { KitTopBar(stringResource(Res.string.inboxTitle), exit = KitTopBarExit.Back, exitLabel = stringResource(Res.string.kitTopBarBack), onExit = actions::closeHomeSheet) },
-            width = KitScreenWidth.Reading,
-        ) {
-            Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) { InboxRows(state, actions) }
-        }
+        ChatsInboxScreen(state, actions)
     }
     val notAbsolute = stringResource(Res.string.p12PathNotAbsolute)
     val badParts = stringResource(Res.string.p12PathBadParts)
@@ -232,49 +227,6 @@ private fun SourceChoices(state: ChatsUi, actions: ChatsActions) {
 }
 
 @Composable
-private fun InboxRows(state: ChatsUi, actions: ChatsActions) {
-    if (state.inbox.isEmpty() && state.home.monitoring.requests.isEmpty()) {
-        KitStateView(kind = KitStateKind.Calm, title = stringResource(Res.string.inboxEmptyTitle))
-        if (state.finished.isNotEmpty()) {
-            KitRowGroup(label = stringResource(Res.string.inboxFinishedLabel)) {
-                state.finished.forEach { InboxRow(it, actions) }
-            }
-        }
-    } else
-        KitRowGroup {
-            state.inbox.forEach { InboxRow(it, actions) }
-            state.home.monitoring.requests.forEach { watched ->
-                KitRow(
-                    title = title(watched.title),
-                    supporting =
-                        when (watched.kind) {
-                            ChatsWatchedKind.Permission ->
-                                stringResource(Res.string.inboxAsksPermission)
-                            ChatsWatchedKind.Question,
-                            ChatsWatchedKind.Form -> stringResource(Res.string.inboxAsksQuestion)
-                        },
-                    server = watched.sourceName,
-                    trailing = KitRowTrailing.Chevron,
-                    onClick = { actions.openWatched(watched.key) },
-                )
-            }
-        }
-    state.home.monitoring.failure?.let { problem ->
-        KitStateView(
-            kind = KitStateKind.Error,
-            title = stringResource(Res.string.homeWatchedOpenFailed),
-            failure = problem,
-        )
-    }
-    KitButton(
-        stringResource(Res.string.homeRefreshWatched),
-        actions::refreshWatched,
-        role = KitButtonRole.Tertiary,
-        working = state.home.monitoring.refreshing,
-    )
-}
-
-@Composable
 private fun MonitoringSettings(state: ChatsUi, actions: ChatsActions) {
     io.github.eslamasabry.oc.ui.kit.KitText(
         stringResource(Res.string.monitorDisclosure),
@@ -317,16 +269,6 @@ private fun MonitoringSettings(state: ChatsUi, actions: ChatsActions) {
         actions::refreshWatched,
         role = KitButtonRole.Tertiary,
         working = state.home.monitoring.refreshing,
-    )
-}
-
-@Composable
-private fun InboxRow(row: ConversationRowUi, actions: ChatsActions) {
-    KitRow(
-        title = title(row.title),
-        supporting = row.project,
-        trailing = KitRowTrailing.Chevron,
-        onClick = { actions.openConversation(row.ref) },
     )
 }
 
