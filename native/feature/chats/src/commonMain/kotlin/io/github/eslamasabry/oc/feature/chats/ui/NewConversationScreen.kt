@@ -30,6 +30,9 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.input.KitField
+import io.github.eslamasabry.oc.ui.kit.input.KitStartBox
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
@@ -74,6 +77,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
             topBar = {
                 KitTopBar(
                     title = stringResource(Res.string.chatsHomeNewChat),
+                    centred = true,
                     exit = KitTopBarExit.Close,
                     exitLabel = stringResource(Res.string.kitSheetClose),
                     onExit = actions::back,
@@ -126,7 +130,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
             Column(
                 Modifier.fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S3.dp),
+                    .padding(top = Space.S6.dp, bottom = Space.S4.dp),
                 verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
             ) {
                 if (state.servers.isEmpty()) {
@@ -149,18 +153,33 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                 )
                             }
                         }
-                    KitField(
+                    KitStartBox(
                         field,
                         stringResource(Res.string.chatsNewBuildPrompt),
-                        Modifier.testTag("chats-new-field"),
-                        kind = KitFieldKind.Multiline,
+                        Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp).testTag("chats-new-field"),
                         enabled = enabled,
-                        multilineLines = 4..10,
+                        minLines = 4, // F: lib/ui/screens/chats/new_chat_screen.dart:537
+                        autofocus = !state.busy,
                         onTextChanged = actions::draftChanged,
                     )
                     KitRowGroup {
                         KitRow(
+                            title = stringResource(Res.string.chatsNewModelRow),
+                            leading = KitRowLeading.Glyph(KitIcons.model),
+                            trailing =
+                                KitRowTrailing.Value(
+                                    state.setup
+                                        ?.models
+                                        ?.firstOrNull { it.model == state.model }
+                                        ?.name ?: stringResource(Res.string.p12NewDefaultModel)
+                                ),
+                            enabled = !state.busy,
+                            disabledReason = working,
+                            onClick = { actions.sheet(NewConversationSheet.Models) },
+                        )
+                        KitRow(
                             title = stringResource(Res.string.chatsNewProjectRow),
+                            leading = KitRowLeading.Glyph(KitIcons.files),
                             trailing =
                                 KitRowTrailing.Value(
                                     state.directory?.substringAfterLast('/')?.ifBlank {
@@ -176,19 +195,6 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                     stringResource(Res.string.p12NewBoundProject)
                                 else working,
                             onClick = { actions.sheet(NewConversationSheet.Projects) },
-                        )
-                        KitRow(
-                            title = stringResource(Res.string.chatsNewModelRow),
-                            trailing =
-                                KitRowTrailing.Value(
-                                    state.setup
-                                        ?.models
-                                        ?.firstOrNull { it.model == state.model }
-                                        ?.name ?: stringResource(Res.string.p12NewDefaultModel)
-                                ),
-                            enabled = !state.busy,
-                            disabledReason = working,
-                            onClick = { actions.sheet(NewConversationSheet.Models) },
                         )
                         if (!state.setup?.agents.isNullOrEmpty())
                             KitRow(
