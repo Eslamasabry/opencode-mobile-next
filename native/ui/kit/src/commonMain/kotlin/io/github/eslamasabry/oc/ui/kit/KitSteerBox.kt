@@ -58,6 +58,10 @@ public fun KitSteerBox(
         KitField(
             state,
             stringResource(Res.string.widgetV2MessageHint),
+            placeholder =
+                stringResource(
+                    Res.string.widgetV2MessageHint
+                ), // F: lib/ui/kit/kit_steer_box.dart:141
             modifier = Modifier.testTag("widget-message"),
             kind = KitFieldKind.Multiline,
             maxLength = 8000, // F: lib/ui/kit/kit_steer_box.dart:92

@@ -34,4 +34,26 @@ class KitSteerBoxAvailabilityTest {
             onNodeWithTag("widget-send").assertIsEnabled().performClick()
             assertEquals(listOf("Typed message"), sent)
         }
+
+    @Test
+    fun `B-KIT-051 empty composer shows both label and in field hint then removes only the hint`() =
+        runComposeUiTest {
+            val field = TextFieldState()
+            setContent {
+                KitTheme(platform = FakeKitPlatform(), localeTag = "en") {
+                    KitSteerBox(
+                        "Add to this turn",
+                        field,
+                        KitSteerBoxPhase.Ready,
+                        onSend = {},
+                        onDictate = {},
+                        onClose = {},
+                    )
+                }
+            }
+            onAllNodesWithText("Write a message").assertCountEquals(2)
+            onNode(hasSetTextAction()).performTextInput("Keep this draft")
+            onAllNodesWithText("Write a message").assertCountEquals(1)
+            onNodeWithText("Keep this draft").assertExists()
+        }
 }
