@@ -33,7 +33,7 @@ internal fun ServerSavedRows(state: ServersUi, actions: ServersActions, enabled:
     }.thenByDescending { (state.rows.facts[it.id]?.running ?: 0) > 0 }
         .thenByDescending { state.rows.facts[it.id]?.needsSecret == true })
     KitRowGroup(leadingTiles = true) {
-        ordered.forEachIndexed { index, server ->
+        ordered.forEach { server ->
             val facts = state.rows.facts[server.id]
             val phone = PhoneOwnServers.isPhoneOwnServer(PhoneServerCandidate(server.id.raw, server.address),
                 if (phoneHost) PhoneHostSupport.Android else PhoneHostSupport.Elsewhere)
@@ -47,7 +47,8 @@ internal fun ServerSavedRows(state: ServersUi, actions: ServersActions, enabled:
                 add(stringResource(when (facts?.backend) {
                     BackendKind.Codex -> Res.string.addServerTypeCodex
                     BackendKind.Paseo -> Res.string.addServerTypePaseo
-                    else -> Res.string.addServerTypeOpenCode
+                    BackendKind.OpenCode2 -> Res.string.setupRuntimeTwo
+                    null -> Res.string.firstRunAgentOpenCode
                 }))
             }
             val destination = state.rows.moveDestination?.takeIf { it != server.id }?.let { id -> state.servers.firstOrNull { it.id == id } }
