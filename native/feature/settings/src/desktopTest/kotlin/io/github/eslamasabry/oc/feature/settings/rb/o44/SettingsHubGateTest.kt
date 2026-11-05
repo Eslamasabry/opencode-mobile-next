@@ -93,7 +93,9 @@ class SettingsHubGateTest {
                     }
                 }
             setContent { SettingsThemed { SettingsScreen(hub(), actions) } }
-            onNode(hasSetTextAction()).performTextInput("Appearance").performImeAction()
+            val field = onNode(hasSetTextAction())
+            field.performTextInput("Appearance")
+            field.performImeAction()
             assertEquals(listOf(SettingsRowId.Appearance), targets)
         }
 }

@@ -43,6 +43,7 @@ class PrivacyGateTest {
         FlutterGoldenGate.check(
             "settings_privacy_loaded_1280x800",
             frame = FlutterGoldenGate.Frame.Screen,
+            modes = listOf("dark"),
         ) {
             SettingsScreen(privacy(), RecordingActions())
         }
