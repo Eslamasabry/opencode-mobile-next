@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.ui.kit.chip.KitChipTone
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipWrap
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
@@ -27,6 +28,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
@@ -177,6 +179,7 @@ internal fun ProjectWorkspaceSheet(state: ProjectWorkspaceUi, actions: ProjectWo
                             KitText(stringResource(Res.string.agentProjectNoWorktrees))
                         for (tree in state.worktrees) KitRow(
                             title = tree.name,
+                            leading = KitRowLeading.Glyph(KitIcons.branch),
                             supporting =
                                 listOfNotNull(
                                         tree.branch,
@@ -241,8 +244,7 @@ internal fun ProjectWorkspaceSheet(state: ProjectWorkspaceUi, actions: ProjectWo
         operationKey = "project-worktree-name",
         onResult = actions::finishWorktreeName,
     )
-    val removing =
-        state.removal?.takeIf { state.visible && state.removalChanges != null && !state.busy }
+    val removing = state.removal?.takeIf { state.visible && state.removalChanges != null }
     KitConfirm(
         spec =
             removing?.let { tree ->
@@ -263,5 +265,6 @@ internal fun ProjectWorkspaceSheet(state: ProjectWorkspaceUi, actions: ProjectWo
             },
         onConfirm = actions::confirmWorktreeRemoval,
         onCancel = actions::cancelWorktreeRemoval,
+        working = state.busy,
     )
 }
