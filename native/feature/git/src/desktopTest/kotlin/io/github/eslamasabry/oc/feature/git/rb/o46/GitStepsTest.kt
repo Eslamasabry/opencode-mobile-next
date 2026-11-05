@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.feature.git.rb.o46
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -140,7 +141,10 @@ class GitStepsTest {
             )
         setContent { Repository(state.value) }
         val field = onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("git-message")))
-        field.performScrollTo().performTextReplacement("Update app.kt")
+        field.performScrollTo().performSemanticsAction(SemanticsActions.SetText) { edit ->
+            edit(AnnotatedString(""))
+            edit(AnnotatedString("Update app.kt"))
+        }
         runOnIdle {
             state.value = state.value.copy(selected = persistentSetOf(file.path, second.path))
         }
