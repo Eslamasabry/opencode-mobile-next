@@ -319,8 +319,16 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
 private fun NewConversationSheet(state: NewConversationUi, actions: NewConversationActions) {
     val current = state.sheet
     val directory = rememberTextFieldState(state.directory.orEmpty())
+    KitPageOverlay(current == NewConversationSheet.Import, stringResource(Res.string.claudeImportTitle), { actions.sheet(null) }) {
+        KitScreen(
+            topBar = { KitTopBar(stringResource(Res.string.claudeImportTitle), exit = KitTopBarExit.Back, exitLabel = stringResource(Res.string.kitTopBarBack), onExit = { actions.sheet(null) }) },
+            width = KitScreenWidth.Reading,
+        ) {
+            Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = Space.S3.dp)) { ClaudeImportBody(state, actions) }
+        }
+    }
     KitSheet(
-        visible = current != null,
+        visible = current != null && current != NewConversationSheet.Import,
         onDismissRequest = { actions.sheet(null) },
         title =
             stringResource(
@@ -392,7 +400,31 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
                             )
                         }
                     }
-                NewConversationSheet.Import -> {
+                NewConversationSheet.Import -> Unit
+                null -> Unit
+            }
+        }
+    }
+}
+
+/** "Just now" / "5 min ago" / "3h ago" / "2d ago", never a raw timestamp. */
+@Composable
+private fun importAge(ageMs: Long): String {
+    val minutes = ageMs.coerceAtLeast(0) / 60_000
+    return when {
+        minutes < 1 -> stringResource(Res.string.e7WorkspaceJustNow)
+        minutes < 60 -> stringResource(Res.string.e7WorkspaceMinutesAgo, minutes.toInt())
+        minutes < 24 * 60 -> stringResource(Res.string.e7WorkspaceHoursAgo, (minutes / 60).toInt())
+        else ->
+            stringResource(
+                Res.string.e7WorkspaceDaysAgo,
+                (minutes / (24 * 60)).coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
+            )
+    }
+}
+
+@Composable
+private fun ClaudeImportBody(state: NewConversationUi, actions: NewConversationActions) {
                     KitText(
                         stringResource(
                             Res.string.claudeImportIntro,
@@ -412,7 +444,7 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
                         )
                     else if (state.importFailed)
                         KitNotice(stringResource(Res.string.claudeImportFailed))
-                    if (state.importBusy) KitSkeletonRows()
+                    if (state.importBusy && state.imports == null) KitSkeletonRows()
                     else
                         state.imports?.let { found ->
                             if (found.items.isEmpty())
@@ -425,6 +457,9 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
                                 KitRowGroup {
                                     found.items.forEach { item ->
                                         KitRow(
+                                            leading = KitRowLeading.Glyph(KitIcons.history),
+                                            enabled = !state.importBusy,
+                                            disabledReason = stringResource(Res.string.claudeImportWorking),
                                             title =
                                                 item.displayTitle
                                                     ?: stringResource(
@@ -453,25 +488,5 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
                                     )
                                 )
                         }
-                }
-                null -> Unit
-            }
-        }
-    }
-}
 
-/** "Just now" / "5 min ago" / "3h ago" / "2d ago", never a raw timestamp. */
-@Composable
-private fun importAge(ageMs: Long): String {
-    val minutes = ageMs.coerceAtLeast(0) / 60_000
-    return when {
-        minutes < 1 -> stringResource(Res.string.e7WorkspaceJustNow)
-        minutes < 60 -> stringResource(Res.string.e7WorkspaceMinutesAgo, minutes.toInt())
-        minutes < 24 * 60 -> stringResource(Res.string.e7WorkspaceHoursAgo, (minutes / 60).toInt())
-        else ->
-            stringResource(
-                Res.string.e7WorkspaceDaysAgo,
-                (minutes / (24 * 60)).coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
-            )
-    }
 }
