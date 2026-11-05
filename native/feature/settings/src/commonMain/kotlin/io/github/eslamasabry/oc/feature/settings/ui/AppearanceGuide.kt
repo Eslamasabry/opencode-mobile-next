@@ -1,7 +1,6 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -10,43 +9,16 @@ import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceGroup
 import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceQuestion
 import io.github.eslamasabry.oc.feature.settings.presentation.AppearanceUi
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
+import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
-import io.github.eslamasabry.oc.ui.kit.chip.KitChip
-import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
-import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips
-import io.github.eslamasabry.oc.ui.kit.chip.KitStepChip
-import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
+import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.guide.*
+import io.github.eslamasabry.oc.ui.kit.row.*
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
-import io.github.eslamasabry.oc.ui.words.res.Res
-import io.github.eslamasabry.oc.ui.words.res.appearanceChipAccent
-import io.github.eslamasabry.oc.ui.words.res.appearanceChipGlow
-import io.github.eslamasabry.oc.ui.words.res.appearanceChipLook
-import io.github.eslamasabry.oc.ui.words.res.appearanceChipMode
-import io.github.eslamasabry.oc.ui.words.res.appearanceChipMotion
-import io.github.eslamasabry.oc.ui.words.res.appearanceChipShape
-import io.github.eslamasabry.oc.ui.words.res.appearanceChipStrength
-import io.github.eslamasabry.oc.ui.words.res.appearanceChipStyle
-import io.github.eslamasabry.oc.ui.words.res.appearanceChipText
-import io.github.eslamasabry.oc.ui.words.res.appearanceChipTheme
-import io.github.eslamasabry.oc.ui.words.res.appearanceGroupBackground
-import io.github.eslamasabry.oc.ui.words.res.appearanceGroupColours
-import io.github.eslamasabry.oc.ui.words.res.appearanceGroupComfort
-import io.github.eslamasabry.oc.ui.words.res.appearanceGroupStyle
-import io.github.eslamasabry.oc.ui.words.res.appearanceGuideAgain
-import io.github.eslamasabry.oc.ui.words.res.appearanceGuideAllSet
-import io.github.eslamasabry.oc.ui.words.res.appearanceGuideContinue
-import io.github.eslamasabry.oc.ui.words.res.appearanceGuideCountAt
-import io.github.eslamasabry.oc.ui.words.res.appearanceGuideCountIntro
-import io.github.eslamasabry.oc.ui.words.res.appearanceGuideCountSeen
-import io.github.eslamasabry.oc.ui.words.res.appearanceGuideFinish
-import io.github.eslamasabry.oc.ui.words.res.appearanceGuideNext
-import io.github.eslamasabry.oc.ui.words.res.appearanceGuideResume
-import io.github.eslamasabry.oc.ui.words.res.appearanceGuideSkip
-import io.github.eslamasabry.oc.ui.words.res.appearanceGuideStart
-import io.github.eslamasabry.oc.ui.words.res.appearanceGuideStartButton
-import io.github.eslamasabry.oc.ui.words.res.stateAppearanceChangedLast
-import io.github.eslamasabry.oc.ui.words.res.stateAppearanceOverview
+import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -58,67 +30,154 @@ internal fun ColumnScope.AppearanceGuideHeader(ui: AppearanceUi, actions: Settin
     val record = ui.guide ?: return
     val question = ui.question
     val questions = ui.questions
-    val groups = questions.map { it.group }.distinct()
-    KitFilterChips {
-        groups.forEach { group ->
-            KitChip(
-                label = appearanceGroupWords(group),
-                kind = KitChipKind.Action,
-                selected = question?.group == group,
-                onClick = { actions.onAppearanceGroup(group) },
-            )
-        }
-    }
-    if (question != null) {
-        KitFilterChips {
-            questions
-                .filter { it.group == question.group }
-                .forEach { item ->
-                    KitStepChip(
-                        label = appearanceQuestionWords(item),
-                        selected = question == item,
-                        checked = !record.done && item in record.seen,
-                        onClick = { actions.onAppearanceQuestion(item) },
+    val next =
+        AppearanceQuestion.after(question ?: record.seen.lastOrNull(), ui.heldBySaver, questions)
+    if (question == null) {
+        val groups = questions.map { it.group }.distinct()
+        KitGuideRail(
+            items =
+                groups.map { group ->
+                    KitGuideItem(
+                        group.name,
+                        appearanceGroupWords(group),
+                        appearanceGroupValue(ui, group),
+                        done =
+                            group.questions
+                                .filter { it in questions }
+                                .all { it in record.seen || (ui.heldBySaver && it.heldBySaver) },
+                        next = !record.done && next?.group == group,
+                        held = ui.heldBySaver && group == AppearanceGroup.Style,
                     )
-                }
-        }
-        if (!record.done)
-            KitGroupNote(
-                stringResource(
-                    Res.string.appearanceGuideCountAt,
-                    questions.indexOf(question) + 1,
-                    questions.size,
-                )
-            )
-    } else if (!record.done) {
-        KitGroupNote(
+                },
+            onItem = { id -> actions.onAppearanceGroup(AppearanceGroup.valueOf(id)) },
+        )
+        KitText(
             stringResource(
                 if (record.seen.isEmpty()) Res.string.appearanceGuideStart
                 else Res.string.appearanceGuideResume
-            )
+            ),
+            Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
+                .padding(top = Space.S4.dp),
+            role = TypeRole.Secondary,
         )
-        KitGroupNote(
-            if (record.seen.isEmpty())
-                stringResource(Res.string.appearanceGuideCountIntro, questions.size)
-            else
+        KitRowGroup {
+            KitRow(
+                title = stringResource(Res.string.appearanceGuideSkip),
+                onClick = actions::onAppearanceSkip,
+            )
+        }
+    } else {
+        KitGuideRail(
+            items =
+                questions
+                    .filter { it.group == question.group }
+                    .map { item ->
+                        KitGuideItem(
+                            item.name,
+                            appearanceQuestionWords(item),
+                            appearanceQuestionValue(ui, item),
+                            done = item != question && item in record.seen,
+                            next = item == next,
+                            held = ui.heldBySaver && item.heldBySaver,
+                        )
+                    },
+            selected = question.name,
+            group = appearanceGroupWords(question.group),
+            allLabel = stringResource(Res.string.kitGuideAll),
+            backLabel = stringResource(Res.string.kitGuideBack),
+            onBack = { actions.onAppearanceQuestion(null) },
+            onItem = { id -> actions.onAppearanceQuestion(AppearanceQuestion.valueOf(id)) },
+        )
+    }
+}
+
+/** The guide bar stays visible while its question scrolls. */
+@Composable
+internal fun AppearanceGuideNext(ui: AppearanceUi, actions: SettingsActions) {
+    val record = ui.guide ?: return
+    val question = ui.question
+    val from = question ?: AppearanceQuestion.entries.lastOrNull { it in record.seen }
+    val next = AppearanceQuestion.after(from, ui.heldBySaver, ui.questions)
+    val count =
+        when {
+            question != null ->
+                stringResource(
+                    Res.string.appearanceGuideCountAt,
+                    ui.questions.indexOf(question) + 1,
+                    ui.questions.size,
+                )
+            record.seen.isEmpty() ->
+                stringResource(Res.string.appearanceGuideCountIntro, ui.questions.size)
+            else ->
                 stringResource(
                     Res.string.appearanceGuideCountSeen,
-                    questions.count { it in record.seen },
-                    questions.size,
+                    ui.questions.count { it in record.seen },
+                    ui.questions.size,
                 )
-        )
-    } else KitGroupNote(stringResource(Res.string.appearanceGuideAllSet))
-    if (record.done && question != null)
-        KitButton(
-            stringResource(Res.string.stateAppearanceOverview),
-            { actions.onAppearanceQuestion(null) },
-            Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
-            role = KitButtonRole.Tertiary,
-        )
-    record.last?.let {
-        KitGroupNote(
-            stringResource(Res.string.stateAppearanceChangedLast, appearanceQuestionWords(it))
-        )
+        }
+    val label =
+        when {
+            next == null -> stringResource(Res.string.appearanceGuideFinish)
+            question == null && record.seen.isEmpty() ->
+                stringResource(Res.string.appearanceGuideStartButton)
+            question == null ->
+                stringResource(Res.string.appearanceGuideContinue, appearanceGroupWords(next.group))
+            else ->
+                stringResource(
+                    Res.string.appearanceGuideNext,
+                    if (next.group == question.group) appearanceQuestionWords(next)
+                    else appearanceGroupWords(next.group),
+                )
+        }
+    KitGuideNextBar(count, label, actions::onAppearanceNext, ready = question == null)
+}
+
+@Composable
+private fun appearanceGroupValue(ui: AppearanceUi, group: AppearanceGroup): String =
+    when (group) {
+        AppearanceGroup.Colours ->
+            stringResource(Res.string.appearanceGroupPair, modeWords(ui.mode), packName(ui.pack))
+        AppearanceGroup.Style ->
+            if (ui.heldBySaver) stringResource(Res.string.appearanceOffInSaver)
+            else styleWords(ui.style)
+        AppearanceGroup.Comfort ->
+            stringResource(
+                Res.string.appearanceGroupPair,
+                textSizeWords(ui.textSize),
+                stringResource(
+                    when (if (ui.heldBySaver) MotionLevel.Off else ui.motion) {
+                        MotionLevel.Full -> Res.string.appearanceMotionPhraseFull
+                        MotionLevel.Calm -> Res.string.appearanceMotionPhraseCalm
+                        MotionLevel.Off -> Res.string.appearanceMotionPhraseOff
+                    }
+                ),
+            )
+        // No Background group is offered until its questions are exposed by presentation.
+        AppearanceGroup.Background -> ""
+    }
+
+@Composable
+private fun appearanceQuestionValue(ui: AppearanceUi, question: AppearanceQuestion): String {
+    if (ui.heldBySaver && question.heldBySaver)
+        return stringResource(Res.string.appearanceOffInSaver)
+    return when (question) {
+        AppearanceQuestion.Mode -> modeWords(ui.mode)
+        AppearanceQuestion.Theme -> packName(ui.pack)
+        AppearanceQuestion.AccentColour ->
+            ui.accent?.let { accentWords(it) }
+                ?: stringResource(Res.string.appearanceAccentMatchShort)
+        AppearanceQuestion.Style -> styleWords(ui.style)
+        AppearanceQuestion.Shape ->
+            stringResource(
+                Res.string.appearanceShapeValue,
+                cornersWords(ui.corners),
+                spacingWords(ui.spacing),
+            )
+        AppearanceQuestion.Text -> textSizeWords(ui.textSize)
+        AppearanceQuestion.Motion -> motionWords(if (ui.heldBySaver) MotionLevel.Off else ui.motion)
+        AppearanceQuestion.Look,
+        AppearanceQuestion.Strength,
+        AppearanceQuestion.Glow -> ""
     }
 }
 
@@ -127,12 +186,12 @@ internal fun ColumnScope.AppearanceGuideFooter(ui: AppearanceUi, actions: Settin
     val record = ui.guide ?: return
     val gutter = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
     if (record.done) {
-        KitButton(
-            stringResource(Res.string.appearanceGuideAgain),
-            actions::onAppearanceAgain,
-            gutter,
-            role = KitButtonRole.Tertiary,
-        )
+        KitRowGroup {
+            KitRow(
+                title = stringResource(Res.string.appearanceGuideAgain),
+                onClick = actions::onAppearanceAgain,
+            )
+        }
         return
     }
     val from = ui.question ?: AppearanceQuestion.entries.lastOrNull { it in record.seen }

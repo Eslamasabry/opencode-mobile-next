@@ -10,6 +10,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceGroup
 import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceQuestion
 import io.github.eslamasabry.oc.feature.settings.presentation.AppearanceUi
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
@@ -32,12 +33,16 @@ import io.github.eslamasabry.oc.ui.kit.choice.KitStyleOptionCard
 import io.github.eslamasabry.oc.ui.kit.choice.KitSwatch
 import io.github.eslamasabry.oc.ui.kit.choice.KitSwatchGrid
 import io.github.eslamasabry.oc.ui.kit.choice.KitThemeOptionCard
+import io.github.eslamasabry.oc.ui.kit.foundation.KitDivider
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.guide.KitGuideQuestionHeading
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
+import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.appearanceAccentMatchShort
 import io.github.eslamasabry.oc.ui.words.res.appearanceAskAccent
@@ -66,17 +71,104 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Composable
 internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActions) {
-    val gutter = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
-
+    val onePage = ui.question == null && ui.guide?.done != false
+    if (onePage) {
+        AppearanceOnePage(ui, actions)
+        if (ui.guide != null) AppearanceGuideFooter(ui, actions)
+        return
+    }
     if (ui.guide != null) {
         AppearanceGuideHeader(ui, actions)
         if (!ui.guide.done && ui.question == null) {
-            AppearanceGuideFooter(ui, actions)
             return
         }
     }
-    if (ui.question == null || ui.question == AppearanceQuestion.Mode) {
-        AppearanceQuestionHeading(stringResource(Res.string.appearanceAskMode))
+    AppearanceControls(ui, actions, ui.question)
+}
+
+/** Returning visits use Flutter's two columns from Expanded; each column keeps its own rules. */
+@Composable
+private fun AppearanceOnePage(ui: AppearanceUi, actions: SettingsActions) {
+    if (LocalKitWindow.current.cls.isWide) {
+        Row(Modifier.fillMaxWidth().testTag("appearance-columns")) {
+            Column(Modifier.weight(1f)) {
+                AppearanceSection(ui, actions, AppearanceGroup.Colours, first = true)
+                AppearanceSection(ui, actions, AppearanceGroup.Style, first = false)
+            }
+            Column(Modifier.weight(1f)) {
+                // Background belongs above Comfort once its state/actions exist; see evidence/44.
+                AppearanceSection(ui, actions, AppearanceGroup.Comfort, first = true)
+            }
+        }
+    } else {
+        Column {
+            listOf(AppearanceGroup.Colours, AppearanceGroup.Style, AppearanceGroup.Comfort)
+                .forEachIndexed { index, group ->
+                    AppearanceSection(ui, actions, group, first = index == 0)
+                }
+        }
+    }
+}
+
+@Composable
+private fun ColumnScope.AppearanceSection(
+    ui: AppearanceUi,
+    actions: SettingsActions,
+    group: AppearanceGroup,
+    first: Boolean,
+) {
+    if (group == AppearanceGroup.Style && !ui.styles) return
+    if (!first) {
+        Spacer(Modifier.height(Space.S6.dp))
+        KitDivider()
+    }
+    if (group == AppearanceGroup.Style && ui.heldBySaver) {
+        AppearanceQuestionHeading(
+            appearanceGroupWords(group),
+            if (first) Space.S2.dp else Space.S6.dp,
+        )
+        KitGroupNote(stringResource(Res.string.appearanceSaverHoldsStyle))
+        return
+    }
+    val supported =
+        setOf(
+            AppearanceQuestion.Mode,
+            AppearanceQuestion.Theme,
+            AppearanceQuestion.AccentColour,
+            AppearanceQuestion.Style,
+            AppearanceQuestion.Shape,
+            AppearanceQuestion.Text,
+            AppearanceQuestion.Motion,
+        )
+    group.questions
+        .filter { it in supported }
+        .forEachIndexed { index, question ->
+            AppearanceControls(
+                ui,
+                actions,
+                question,
+                onePage = true,
+                top = if (first && index == 0) Space.S2.dp else Space.S6.dp,
+            )
+        }
+}
+
+@Composable
+private fun ColumnScope.AppearanceControls(
+    ui: AppearanceUi,
+    actions: SettingsActions,
+    question: AppearanceQuestion?,
+    onePage: Boolean = false,
+    top: Dp = Space.S6.dp,
+) {
+    val gutter = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
+    if (question == null || question == AppearanceQuestion.Mode) {
+        AppearanceControlHeading(
+            stringResource(Res.string.appearanceAskMode),
+            question,
+            onePage,
+            top,
+        )
         Box(gutter) {
             KitSegmented(
                 segments =
@@ -107,9 +199,14 @@ internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActio
         }
     }
 
-    if (ui.question == null || ui.question == AppearanceQuestion.Theme) {
-        AppearanceQuestionHeading(stringResource(Res.string.appearanceAskTheme))
-        val guided = ui.question != null
+    if (question == null || question == AppearanceQuestion.Theme) {
+        AppearanceControlHeading(
+            stringResource(Res.string.appearanceAskTheme),
+            question,
+            onePage,
+            top,
+        )
+        val guided = !onePage
         val columns = if (guided) 2 else 3 // F: lib/ui/screens/settings/appearance_screen.dart:904
         val base = if (guided) 84 else 64 // F: lib/ui/screens/settings/appearance_screen.dart:905
         val scaleHeight =
@@ -140,8 +237,14 @@ internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActio
                 role = KitButtonRole.Secondary,
             )
         }
-
-        AppearanceQuestionHeading(stringResource(Res.string.appearanceAskAccent))
+    }
+    if (question == null || question == AppearanceQuestion.AccentColour) {
+        AppearanceControlHeading(
+            stringResource(Res.string.appearanceAskAccent),
+            question,
+            onePage,
+            top,
+        )
         Box(gutter) {
             val dark = LocalKitColors.current.dark
             val inUse = stringResource(Res.string.kitSwatchInUse)
@@ -173,12 +276,17 @@ internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActio
         }
     }
 
-    if (ui.question == null || ui.question == AppearanceQuestion.Style) {
+    if (question == null || question == AppearanceQuestion.Style) {
         // A style the app does not draw would be a choice that changes nothing: listed only where
         // it is
         // drawn.
         if (ui.styles) {
-            AppearanceQuestionHeading(stringResource(Res.string.appearanceAskStyle))
+            AppearanceControlHeading(
+                stringResource(Res.string.appearanceAskStyle),
+                question,
+                onePage,
+                top,
+            )
             val styleHeld =
                 if (ui.heldBySaver)
                     KitEnabled.Disabled(stringResource(Res.string.appearanceSaverHoldsStyle))
@@ -198,49 +306,58 @@ internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActio
                 }
             }
             if (ui.heldBySaver) KitGroupNote(stringResource(Res.string.appearanceSaverHoldsStyle))
-
-            AppearanceQuestionHeading(stringResource(Res.string.appearanceAskShape))
-            val held =
-                if (ui.heldBySaver)
-                    KitEnabled.Disabled(stringResource(Res.string.appearanceSaverHoldsStyle))
-                else KitEnabled.Enabled
-            Box(gutter) {
-                KitSegmented(
-                    segments = Corners.entries.map { KitSegment(it, cornersWords(it)) },
-                    selected = ui.corners,
-                    semanticsLabel = stringResource(Res.string.appearanceFineTuneCorners),
-                    modifier = Modifier.testTag("appearance-corners"),
-                    enabled = held,
-                    onChange = actions::onCorners,
-                )
-            }
-            Box(
-                Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
-                    .padding(top = Space.S2.dp)
-            ) {
-                KitSegmented(
-                    segments = Density.entries.map { KitSegment(it, spacingWords(it)) },
-                    selected = ui.spacing,
-                    semanticsLabel = stringResource(Res.string.appearanceShapeSpacing),
-                    modifier = Modifier.testTag("appearance-spacing"),
-                    enabled = held,
-                    onChange = actions::onSpacing,
-                )
-            }
-            if (ui.fineTuned && !ui.heldBySaver) {
-                KitRow(
-                    title =
-                        stringResource(Res.string.appearanceFineTuneReset, styleWords(ui.style)),
-                    modifier = Modifier.testTag("appearance-fine-tune-reset"),
-                    onClick = actions::onResetFineTune,
-                )
-            }
+        }
+    }
+    if ((question == null || question == AppearanceQuestion.Shape) && ui.styles) {
+        AppearanceControlHeading(
+            stringResource(Res.string.appearanceAskShape),
+            question,
+            onePage,
+            top,
+        )
+        val held =
+            if (ui.heldBySaver)
+                KitEnabled.Disabled(stringResource(Res.string.appearanceSaverHoldsStyle))
+            else KitEnabled.Enabled
+        AppearanceKnobLabel(stringResource(Res.string.appearanceFineTuneCorners))
+        Box(gutter) {
+            KitSegmented(
+                segments = Corners.entries.map { KitSegment(it, cornersWords(it)) },
+                selected = ui.corners,
+                semanticsLabel = stringResource(Res.string.appearanceFineTuneCorners),
+                modifier = Modifier.testTag("appearance-corners"),
+                enabled = held,
+                onChange = actions::onCorners,
+            )
+        }
+        AppearanceKnobLabel(stringResource(Res.string.appearanceShapeSpacing))
+        Box(gutter) {
+            KitSegmented(
+                segments = Density.entries.map { KitSegment(it, spacingWords(it)) },
+                selected = ui.spacing,
+                semanticsLabel = stringResource(Res.string.appearanceShapeSpacing),
+                modifier = Modifier.testTag("appearance-spacing"),
+                enabled = held,
+                onChange = actions::onSpacing,
+            )
+        }
+        if (ui.fineTuned && !ui.heldBySaver) {
+            KitRow(
+                title = stringResource(Res.string.appearanceFineTuneReset, styleWords(ui.style)),
+                modifier = Modifier.testTag("appearance-fine-tune-reset"),
+                onClick = actions::onResetFineTune,
+            )
         }
     }
 
-    if (ui.question == null || ui.question == AppearanceQuestion.Text) {
+    if (question == null || question == AppearanceQuestion.Text) {
         // B-KIT-059: Default until chosen; applies at the app root at once, this page included.
-        AppearanceQuestionHeading(stringResource(Res.string.textSizeTitle))
+        AppearanceControlHeading(
+            stringResource(Res.string.appearanceAskText),
+            question,
+            onePage,
+            top,
+        )
         Box(gutter) {
             KitSegmented(
                 segments = AppTextSize.entries.map { KitSegment(it, textSizeWords(it)) },
@@ -251,8 +368,13 @@ internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActio
             )
         }
     }
-    if (ui.question == null || ui.question == AppearanceQuestion.Motion) {
-        AppearanceQuestionHeading(stringResource(Res.string.appearanceAskMotion))
+    if (question == null || question == AppearanceQuestion.Motion) {
+        AppearanceControlHeading(
+            stringResource(Res.string.appearanceAskMotion),
+            question,
+            onePage,
+            top,
+        )
         Box(gutter) {
             KitSegmented(
                 segments = MotionLevel.entries.map { KitSegment(it, motionWords(it)) },
@@ -269,17 +391,58 @@ internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActio
         if (!ui.heldBySaver) KitGroupNote(motionHint(ui.motion))
         if (ui.systemMotionOff) KitGroupNote(stringResource(Res.string.effectsMotionSystemOff))
     }
+}
 
-    if (ui.guide != null) AppearanceGuideFooter(ui, actions)
+@Composable
+private fun AppearanceKnobLabel(title: String) {
+    KitText(
+        title,
+        Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
+            .padding(top = Space.S3.dp, bottom = Space.S2.dp),
+        role = TypeRole.Label,
+    )
+}
+
+@Composable
+private fun AppearanceControlHeading(
+    title: String,
+    question: AppearanceQuestion?,
+    onePage: Boolean,
+    top: Dp,
+) {
+    if (onePage || question == null) {
+        AppearanceQuestionHeading(title, top)
+        return
+    }
+    val changes =
+        when (question) {
+            AppearanceQuestion.Mode -> Res.string.appearanceChangesMode
+            AppearanceQuestion.Theme -> Res.string.appearanceChangesTheme
+            AppearanceQuestion.AccentColour -> Res.string.appearanceChangesAccent
+            AppearanceQuestion.Style -> Res.string.appearanceChangesStyle
+            AppearanceQuestion.Shape -> Res.string.appearanceChangesShape
+            AppearanceQuestion.Look -> Res.string.appearanceChangesLook
+            AppearanceQuestion.Strength -> Res.string.appearanceChangesStrength
+            AppearanceQuestion.Text -> Res.string.appearanceChangesText
+            AppearanceQuestion.Motion -> Res.string.appearanceChangesMotion
+            AppearanceQuestion.Glow -> Res.string.appearanceChangesGlow
+        }
+    KitGuideQuestionHeading(
+        title,
+        stringResource(Res.string.kitGuideChanges),
+        stringResource(changes),
+        Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
+            .padding(top = Space.S4.dp, bottom = Space.S3.dp),
+    )
 }
 
 /** The one-page question is a reading heading, not a muted section caption. */
 @Composable
-private fun AppearanceQuestionHeading(title: String) {
+private fun AppearanceQuestionHeading(title: String, top: Dp = Space.S6.dp) {
     KitText(
         title,
         Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
-            .padding(top = Space.S6.dp, bottom = Space.S3.dp)
+            .padding(top = top, bottom = Space.S3.dp)
             .semantics { heading() },
         role = TypeRole.RowTitle,
     )

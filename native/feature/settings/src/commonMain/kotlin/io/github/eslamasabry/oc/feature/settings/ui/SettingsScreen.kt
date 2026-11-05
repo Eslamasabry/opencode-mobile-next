@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
@@ -124,6 +125,10 @@ public fun SettingsScreen(
                 state,
                 actions,
                 modifier,
+                footer =
+                    if (state.appearance.guide?.done == false) {
+                        { AppearanceGuideNext(state.appearance, actions) }
+                    } else null,
             ) {
                 AppearanceBody(state.appearance, actions)
             }
@@ -302,6 +307,7 @@ internal fun SettingsFrame(
     modifier: Modifier = Modifier,
     search: (@Composable () -> Unit)? = null,
     large: Boolean = false,
+    footer: (@Composable () -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     KitScreen(
@@ -319,18 +325,28 @@ internal fun SettingsFrame(
             )
         },
         search = search,
-        width = KitScreenWidth.Reading,
+        width =
+            if (state.page == SettingsPage.Appearance) KitScreenWidth.List
+            else KitScreenWidth.Reading,
         page = true,
     ) {
-        Column(
-            Modifier.fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(top = Space.S2.dp, bottom = Space.S6.dp),
-            verticalArrangement =
-                Arrangement.spacedBy(if (state.page == SettingsPage.Hub) 0.dp else Space.S2.dp),
-        ) {
-            state.note?.let { NoteLine(it, actions) }
-            content()
+        Column(Modifier.fillMaxSize()) {
+            Column(
+                Modifier.fillMaxWidth()
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(top = Space.S2.dp, bottom = Space.S6.dp),
+                verticalArrangement =
+                    Arrangement.spacedBy(
+                        if (state.page == SettingsPage.Hub || state.page == SettingsPage.Appearance)
+                            0.dp
+                        else Space.S2.dp
+                    ),
+            ) {
+                state.note?.let { NoteLine(it, actions) }
+                content()
+            }
+            footer?.invoke()
         }
     }
 }
