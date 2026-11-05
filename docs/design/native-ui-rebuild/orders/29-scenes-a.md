@@ -1,6 +1,6 @@
 ORDER: 29-scenes-a
 ENGINE: sonnet
-DEPENDS: 04
+DEPENDS: 01
 WRITES: native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/scene/FoldersOpenScene.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/scene/PortalScene.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/scene/ServersCast.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/scene/ServersLinkScene.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/scene/ServersWelcomeScene.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/scene/SetupCast.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/scene/SetupPhoneScene.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/scene/SetupReadyScene.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/scene/SetupStepsScene.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/scene/SetupUnpluggedScene.kt native/ui/kit/src/desktopTest/kotlin/**/rb/o29/** native/ui/words/src/commonMain/composeResources/values/strings_rb29.xml native/ui/words/src/commonMain/composeResources/values-ar/strings_rb29.xml docs/design/native-ui-rebuild/waivers/29.tsv docs/design/native-ui-rebuild/evidence/29.md
 GATE: native/tool/design/gate_order.sh 29
 TIMEOUT_MIN: 240

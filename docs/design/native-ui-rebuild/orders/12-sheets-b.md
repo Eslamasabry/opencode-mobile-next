@@ -1,6 +1,6 @@
 ORDER: 12-sheets-b
 ENGINE: codex
-DEPENDS: 08,09,10
+DEPENDS: 01
 WRITES: native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/action/KitFab.kt native/ui/kit/src/commonTest/kotlin/**/KitFabTest.kt native/ui/kit/src/desktopTest/kotlin/**/KitFabTest.kt native/ui/kit/src/androidHostTest/kotlin/**/KitFabTest.kt native/ui/kit/src/screenshots/KitFab/** native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/modal/KitConfirm.kt native/ui/kit/src/commonTest/kotlin/**/KitConfirmTest.kt native/ui/kit/src/desktopTest/kotlin/**/KitConfirmTest.kt native/ui/kit/src/androidHostTest/kotlin/**/KitConfirmTest.kt native/ui/kit/src/screenshots/KitConfirm/** native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/frame/KitScrollbar.kt native/ui/kit/src/desktopTest/kotlin/**/rb/o12/** native/ui/words/src/commonMain/composeResources/values/strings_rb12.xml native/ui/words/src/commonMain/composeResources/values-ar/strings_rb12.xml docs/design/native-ui-rebuild/waivers/12.tsv docs/design/native-ui-rebuild/evidence/12.md
 GATE: native/tool/design/gate_order.sh 12
 TIMEOUT_MIN: 240

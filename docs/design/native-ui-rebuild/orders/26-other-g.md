@@ -1,6 +1,6 @@
 ORDER: 26-other-g
 ENGINE: commandcode
-DEPENDS: 13
+DEPENDS: 01
 WRITES: native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/text/KitLinkScope.kt native/ui/design/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/design/layout/CapRole.kt native/ui/design/src/commonTest/kotlin/**/CapRoleTest.kt native/ui/design/src/desktopTest/kotlin/**/CapRoleTest.kt native/ui/design/src/androidHostTest/kotlin/**/CapRoleTest.kt native/ui/design/src/screenshots/CapRole/** native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/foundation/KitMaxWidth.kt native/ui/kit/src/commonTest/kotlin/**/KitMaxWidthTest.kt native/ui/kit/src/desktopTest/kotlin/**/KitMaxWidthTest.kt native/ui/kit/src/androidHostTest/kotlin/**/KitMaxWidthTest.kt native/ui/kit/src/screenshots/KitMaxWidth/** native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/text/KitOptical.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/frame/KitReach.kt native/ui/design/src/desktopTest/kotlin/**/rb/o26/** native/ui/kit/src/desktopTest/kotlin/**/rb/o26/** native/ui/words/src/commonMain/composeResources/values/strings_rb26.xml native/ui/words/src/commonMain/composeResources/values-ar/strings_rb26.xml docs/design/native-ui-rebuild/waivers/26.tsv docs/design/native-ui-rebuild/evidence/26.md
 GATE: native/tool/design/gate_order.sh 26
 TIMEOUT_MIN: 240

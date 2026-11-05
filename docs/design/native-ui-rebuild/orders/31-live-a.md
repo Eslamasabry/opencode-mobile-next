@@ -1,6 +1,6 @@
 ORDER: 31-live-a
 ENGINE: sonnet
-DEPENDS: 04
+DEPENDS: 01
 WRITES: native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/live/KitLiveClock.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/live/KitLiveStyle.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/live/KitLiveStyles.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/live/LiveMockChat.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/live/KitLiveAurora.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/live/KitLiveBlueprint.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/live/KitLiveBokeh.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/live/KitLiveBrushedMetal.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/live/KitLiveCaustics.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/live/KitLiveCircuit.kt native/ui/kit/src/desktopTest/kotlin/**/rb/o31/** native/ui/words/src/commonMain/composeResources/values/strings_rb31.xml native/ui/words/src/commonMain/composeResources/values-ar/strings_rb31.xml docs/design/native-ui-rebuild/waivers/31.tsv docs/design/native-ui-rebuild/evidence/31.md
 GATE: native/tool/design/gate_order.sh 31
 TIMEOUT_MIN: 240

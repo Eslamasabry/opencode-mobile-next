@@ -1,6 +1,6 @@
 ORDER: 20-other-a
 ENGINE: codex
-DEPENDS: 13,14
+DEPENDS: 01
 WRITES: native/ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/composer/KitSteerBox.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/modal/KitServerTrust.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/team/KitDigest.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/team/KitFindingsCard.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/team/KitMergeQueue.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/team/KitMilestoneRow.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/team/KitPhaseCard.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/team/KitPlanCard.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/team/KitProjectRow.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/team/KitPromoteCard.kt native/ui/kit/src/desktopTest/kotlin/**/rb/o20/** native/ui/kit-chat/src/desktopTest/kotlin/**/rb/o20/** native/ui/words/src/commonMain/composeResources/values/strings_rb20.xml native/ui/words/src/commonMain/composeResources/values-ar/strings_rb20.xml docs/design/native-ui-rebuild/waivers/20.tsv docs/design/native-ui-rebuild/evidence/20.md
 GATE: native/tool/design/gate_order.sh 20
 TIMEOUT_MIN: 240

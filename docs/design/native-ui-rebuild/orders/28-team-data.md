@@ -1,6 +1,6 @@
 ORDER: 28-team-data
 ENGINE: commandcode
-DEPENDS: 13
+DEPENDS: 01
 WRITES: native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/team/KitTeamData.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/team/TeamParts.kt native/ui/kit/src/desktopTest/kotlin/**/rb/o28/** native/ui/words/src/commonMain/composeResources/values/strings_rb28.xml native/ui/words/src/commonMain/composeResources/values-ar/strings_rb28.xml docs/design/native-ui-rebuild/waivers/28.tsv docs/design/native-ui-rebuild/evidence/28.md
 GATE: native/tool/design/gate_order.sh 28
 TIMEOUT_MIN: 240

@@ -1,6 +1,6 @@
 ORDER: 30-scenes-b
 ENGINE: sonnet
-DEPENDS: 04
+DEPENDS: 01
 WRITES: native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/scene/StatesParts.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/scene/StatesScenes.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/scene/StatesWorkingScene.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/scene/TeamDiscoverScenes.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/scene/TeamScenes.kt native/ui/kit/src/desktopTest/kotlin/**/rb/o30/** native/ui/words/src/commonMain/composeResources/values/strings_rb30.xml native/ui/words/src/commonMain/composeResources/values-ar/strings_rb30.xml docs/design/native-ui-rebuild/waivers/30.tsv docs/design/native-ui-rebuild/evidence/30.md
 GATE: native/tool/design/gate_order.sh 30
 TIMEOUT_MIN: 240

@@ -1,6 +1,6 @@
 ORDER: 34-glass
 ENGINE: sonnet
-DEPENDS: 03,05,06,08,11,21,25,27
+DEPENDS: 03
 WRITES: native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/foundation/KitGlass.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/foundation/KitWordsPlate.kt native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/foundation/KitSurfaceGlass.kt native/ui/gate/src/desktopTest/kotlin/**/rb/o34/** native/ui/kit/src/desktopTest/kotlin/**/rb/o34/** native/ui/words/src/commonMain/composeResources/values/strings_rb34.xml native/ui/words/src/commonMain/composeResources/values-ar/strings_rb34.xml docs/design/native-ui-rebuild/waivers/34.tsv docs/design/native-ui-rebuild/evidence/34.md
 GATE: native/tool/design/gate_order.sh 34
 TIMEOUT_MIN: 420
