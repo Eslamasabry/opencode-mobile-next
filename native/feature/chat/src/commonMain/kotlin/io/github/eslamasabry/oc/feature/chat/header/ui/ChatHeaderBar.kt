@@ -31,6 +31,7 @@ import io.github.eslamasabry.oc.feature.chat.notes.SessionNoteScreen
 import io.github.eslamasabry.oc.feature.chat.notes.SessionNoteUi
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarScope
@@ -330,14 +331,16 @@ public fun ChatHeaderOverlays(slot: ChatHeaderSlot) {
                         confirmLabel = stringResource(Res.string.chatUiShareSession),
                         kind = KitConfirmKind.Neutral,
                         body = stringResource(Res.string.chatUiAnyoneWithTheLinkCanViewThis),
+                        icon = KitIcons.globe,
                     )
                 HeaderConfirm.Unshare ->
                     KitConfirmSpec(
                         title = stringResource(Res.string.safetyStopSharingTitle),
                         confirmLabel = stringResource(Res.string.chatUiStopSharing),
-                        kind = KitConfirmKind.Stop,
+                        kind = KitConfirmKind.Destructive,
                         body = stringResource(Res.string.safetyStopSharingBody),
                         cancelLabel = stringResource(Res.string.safetyStopSharingKeep),
+                        icon = KitIcons.unlink,
                     )
                 is HeaderConfirm.Archive ->
                     KitConfirmSpec(
@@ -345,6 +348,7 @@ public fun ChatHeaderOverlays(slot: ChatHeaderSlot) {
                         confirmLabel = stringResource(Res.string.sessionMenuArchive),
                         kind = KitConfirmKind.Neutral,
                         body = stringResource(Res.string.sessionArchiveBody),
+                        icon = KitIcons.archive,
                     )
                 is HeaderConfirm.Delete ->
                     KitConfirmSpec(
@@ -352,6 +356,7 @@ public fun ChatHeaderOverlays(slot: ChatHeaderSlot) {
                         confirmLabel = stringResource(Res.string.sessionMenuDelete),
                         kind = KitConfirmKind.Destructive,
                         body = stringResource(Res.string.sessionDeleteBody),
+                        icon = KitIcons.delete,
                     )
             },
         onConfirm = actions::confirm,
