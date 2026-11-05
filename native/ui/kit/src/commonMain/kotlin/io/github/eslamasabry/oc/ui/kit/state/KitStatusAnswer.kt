@@ -1,10 +1,12 @@
 package io.github.eslamasabry.oc.ui.kit.state
 
-import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.*
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.BlurredEdgeTreatment
+import io.github.eslamasabry.oc.ui.kit.action.KitWorkingMark
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -29,7 +31,6 @@ import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFocusRingWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
-import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.*
 
 public enum class KitAnswerTone { Ok, Paused, Working, NeedsYou, Off }
@@ -119,7 +120,21 @@ private fun AnswerWords(text: String, scale: KitAnswerScale) {
 private fun AnswerMark(tone: KitAnswerTone) {
     val colors = LocalKitColors.current
     val edge = kitFocusRingWidth()
-    Canvas(Modifier.size(32.dp).clearAndSetSemantics {}) { // F: lib/ui/kit/kit_status_answer.dart:407
+    val flat = LocalKitStyle.current == Style.Solid
+    Box(Modifier.size(32.dp).clearAndSetSemantics {}, contentAlignment = Alignment.Center) { // F: lib/ui/kit/kit_status_answer.dart:407
+    if (tone == KitAnswerTone.Working) {
+        KitWorkingMark(colors.text2, LocalKitTokens.current.smallIcon.dp)
+        return@Box
+    }
+    val lamp = when (tone) {
+        KitAnswerTone.Ok -> colors.success
+        KitAnswerTone.NeedsYou -> colors.attention
+        else -> null
+    }
+    if (!flat && lamp != null) Canvas(Modifier.fillMaxSize().blur(18.dp, BlurredEdgeTreatment.Unbounded)) { // F: lib/ui/kit/kit_status_answer.dart:427
+        drawCircle(lamp.copy(alpha = if (colors.dark) .45f else .30f), 14.dp.toPx() / 2 + 2.dp.toPx()) // F: lib/ui/kit/kit_status_answer.dart:405,426,428,448
+    }
+    Canvas(Modifier.fillMaxSize()) {
         val dot = 14.dp.toPx() // F: lib/ui/kit/kit_status_answer.dart:405
         val radius = dot / 2 // F: lib/ui/kit/kit_status_answer.dart:448
         when (tone) {
@@ -136,4 +151,5 @@ private fun AnswerMark(tone: KitAnswerTone) {
             }
         }
     }
+}
 }
