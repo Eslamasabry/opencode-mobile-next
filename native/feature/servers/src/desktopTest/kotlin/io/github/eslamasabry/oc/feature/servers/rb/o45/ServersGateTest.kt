@@ -7,6 +7,7 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.engine.connection.SavedServer
 import io.github.eslamasabry.oc.feature.servers.presentation.*
+import io.github.eslamasabry.oc.feature.servers.pairing.*
 import io.github.eslamasabry.oc.feature.servers.ui.ServersScreen
 import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate
 import io.github.eslamasabry.oc.ui.kit.KitTheme
@@ -16,12 +17,15 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class ServersGateTest {
-    private class Actions : ServersActions {
+    private class Actions(var pending: PairingFill? = null) : ServersActions {
+        var savedAddress: String? = null
+        var passwordWasPresent = false
+        override fun takePairing(): PairingFill? = pending.also { pending = null }
         var opened: ProfileId? = null
         var removed: ProfileId? = null
         override fun back() {}
         override fun allowCleartext(allowed: Boolean, address: String) {}
-        override fun save(name: String, address: String, username: String, password: String) {}
+        override fun save(name: String, address: String, username: String, password: String) { savedAddress = address; passwordWasPresent = password.isNotEmpty() }
         override fun connect(id: ProfileId) {}
         override fun create(id: ProfileId) {}
         override fun remove(id: ProfileId) { removed = id }
@@ -50,5 +54,14 @@ class ServersGateTest {
         onNodeWithContentDescription("Laptop").performClick()
         onNodeWithText("Remove").performClick()
         assertEquals(ProfileId("laptop"), actions.removed)
+    }
+    @Test fun `an incoming pairing fill is reviewed and saved without losing its memory-only credential`() = runComposeUiTest {
+        val fill = PairingFill.of(PairingText.read("""{"urls":["https://paired.example"],"password":"fixture-only"}"""))!!
+        val actions = Actions(fill)
+        setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) { ServersScreen(state.copy(pairingArrival = 1), actions) } }
+        onNodeWithText("Save").performClick()
+        assertEquals("https://paired.example", actions.savedAddress)
+        assertEquals(true, actions.passwordWasPresent)
+        assertEquals(null, fill.takePassword())
     }
 }

@@ -32,7 +32,7 @@ internal fun ServerSavedRows(state: ServersUi, actions: ServersActions, enabled:
         (state.rows.facts[it.id]?.waiting ?: 0) > 0
     }.thenByDescending { (state.rows.facts[it.id]?.running ?: 0) > 0 }
         .thenByDescending { state.rows.facts[it.id]?.needsSecret == true })
-    KitRowGroup {
+    KitRowGroup(leadingTiles = true) {
         ordered.forEachIndexed { index, server ->
             val facts = state.rows.facts[server.id]
             val phone = PhoneOwnServers.isPhoneOwnServer(PhoneServerCandidate(server.id.raw, server.address),
@@ -60,7 +60,6 @@ internal fun ServerSavedRows(state: ServersUi, actions: ServersActions, enabled:
                 add(KitMenuItem(stringResource(Res.string.kitDetails), { detailsFor = server.id }))
                 add(KitMenuItem(stringResource(Res.string.capsuleRemove), { actions.remove(server.id) }, destructive = true, enabled = enabled))
             }
-            if (index > 0) KitDivider(inset = KitDividerInset.Text)
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.weight(1f)) {
                     KitRow(title = server.name, supporting = lines.joinToString(" · "), supportingMaxLines = 2, // F: lib/ui/screens/servers/server_rows.dart:191-196
