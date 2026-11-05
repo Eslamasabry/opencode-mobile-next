@@ -1,6 +1,12 @@
 package io.github.eslamasabry.oc.feature.onboarding.ui
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -36,11 +42,16 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 public fun ManagedMoveScreen(state: ManagedMoveUi, actions: ManagedMoveActions) {
     KitScreen(width = KitScreenWidth.Reading, page = true) {
-        Column(Modifier.testTag("managed-opencode2-upgrade")) {
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+        val available = maxHeight
+        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).heightIn(min = available)
+            .padding(horizontal = LocalKitTokens.current.gutter.dp).testTag("managed-opencode2-upgrade"),
+            verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
             val failed = state.failure
             if (failed == null) {
                 KitStateView(
                     kind = KitStateKind.Working,
+                    icon = KitIcons.sync,
                     title = stringResource(Res.string.openCode2UpgradeTitle),
                     body =
                         if (state.retry > 0)
@@ -55,6 +66,7 @@ public fun ManagedMoveScreen(state: ManagedMoveUi, actions: ManagedMoveActions) 
             } else {
                 KitStateView(
                     kind = KitStateKind.Error,
+                    icon = KitIcons.warning,
                     title = stringResource(Res.string.phoneServerCardFailedTitle),
                     body =
                         stringResource(
@@ -86,4 +98,5 @@ public fun ManagedMoveScreen(state: ManagedMoveUi, actions: ManagedMoveActions) 
             }
         }
     }
+}
 }
