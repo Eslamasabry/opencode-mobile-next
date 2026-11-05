@@ -223,28 +223,28 @@ public fun LinuxStorageScreen(state: LinuxStorageUi, actions: LinuxStorageAction
                 )
             }
         }
+        val ask = state.confirm
+        KitConfirm(
+            spec =
+                ask?.let {
+                    KitConfirmSpec(
+                        title = it.id.ask(),
+                        confirmLabel = it.id.title(),
+                        kind = KitConfirmKind.Destructive,
+                        body = stringResource(Res.string.linuxMgrCleanBody, storageSize(it.bytes)),
+                        consequenceItems =
+                            listOf(
+                                KitConsequence(
+                                    stringResource(Res.string.linuxMgrCleanKept),
+                                    KitConsequenceMark.Kept,
+                                )
+                            ),
+                    )
+                },
+            onConfirm = actions::confirm,
+            onCancel = actions::dismiss,
+        )
     }
-    val ask = state.confirm
-    KitConfirm(
-        spec =
-            ask?.let {
-                KitConfirmSpec(
-                    title = it.id.ask(),
-                    confirmLabel = it.id.title(),
-                    kind = KitConfirmKind.Destructive,
-                    body = stringResource(Res.string.linuxMgrCleanBody, storageSize(it.bytes)),
-                    consequenceItems =
-                        listOf(
-                            KitConsequence(
-                                stringResource(Res.string.linuxMgrCleanKept),
-                                KitConsequenceMark.Kept,
-                            )
-                        ),
-                )
-            },
-        onConfirm = actions::confirm,
-        onCancel = actions::dismiss,
-    )
 }
 
 @Composable

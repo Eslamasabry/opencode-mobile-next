@@ -123,4 +123,26 @@ class LinuxModalHostTest {
         onNodeWithText("Repair Linux").performClick()
         assertEquals(1, actions.confirmed)
     }
+
+    @Test
+    fun `storage cleanup shows the kept data before dispatching the confirmation`() =
+        runComposeUiTest {
+            val actions = Actions()
+            setContent {
+                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                    LinuxStorageScreen(
+                        LinuxStorageUi(
+                            loading = false,
+                            confirm = CleanupAsk(LinuxCleanupId.AptCache, 2048),
+                        ),
+                        actions,
+                    )
+                }
+            }
+            onNodeWithText("Clear package downloads?").assertIsDisplayed()
+            onNodeWithText("Projects, sign-ins and settings stay").assertExists()
+            assertEquals(0, actions.confirmed)
+            onNodeWithText("Clear package downloads").performClick()
+            assertEquals(1, actions.confirmed)
+        }
 }
