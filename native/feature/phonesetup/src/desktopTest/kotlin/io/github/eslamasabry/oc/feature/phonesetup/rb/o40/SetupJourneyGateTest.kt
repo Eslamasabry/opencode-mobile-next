@@ -16,6 +16,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitLockedRow
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class SetupJourneyGateTest {
     private class Actions : SetupJourneyActions {
@@ -356,6 +357,41 @@ class SetupJourneyGateTest {
         onNodeWithText("Stopped during: Installing Node.js. What went wrong is under Details.")
             .assertExists()
     }
+
+    @Test
+    fun `progress body rests above the middle of the viewport and details stays reachable`() =
+        runComposeUiTest {
+            setContent {
+                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                    SetupJourneyScreen(
+                        state.copy(
+                            progress =
+                                SetupProgress(
+                                    SetupState.Running,
+                                    listOf(
+                                        ComponentProgress(
+                                            "node",
+                                            ComponentState.Running,
+                                            percent = 60.0,
+                                        )
+                                    ),
+                                    .6,
+                                    current = "node",
+                                )
+                        ),
+                        Actions(),
+                    )
+                }
+            }
+            val viewport =
+                onNodeWithTag("setup-progress-viewport").fetchSemanticsNode().boundsInRoot
+            val body = onNodeWithTag("setup-progress-body").fetchSemanticsNode().boundsInRoot
+            val room = viewport.height - body.height
+            assertTrue(room > 0f, "The fixture must leave room to detect top-pinned content")
+            assertEquals(viewport.top + room * .35f, body.top, absoluteTolerance = 1f)
+            onNodeWithText("Details").assertIsDisplayed().performClick()
+            onNodeWithText("Setup details").assertIsDisplayed()
+        }
 
     @Test
     fun running() {

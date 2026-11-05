@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.setup.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.style.TextAlign
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -19,6 +20,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import io.github.eslamasabry.oc.engine.runtime.setup.ComponentState
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupError
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupState
@@ -181,61 +183,114 @@ private fun ProgressAction(p: SetupProgressUi, working: Boolean, actions: SetupA
 
 @Composable
 private fun ProgressPage(p: SetupProgressUi, openDetails: () -> Unit) {
-    val title = when (p.headline) {
-        SetupHeadline.Done -> stringResource(Res.string.setupProgressViewDone)
-        SetupHeadline.Failed -> stringResource(Res.string.setupProgressViewFailedTitle)
-        SetupHeadline.Interrupted -> stringResource(Res.string.phoneSetupRingInterruptedTitle)
-        SetupHeadline.Paused -> stringResource(Res.string.phoneSetupRingPausedTitle)
-        SetupHeadline.Checking -> stringResource(Res.string.phoneSetupRingChecking)
-        SetupHeadline.GettingStarted -> stringResource(Res.string.setupProgressViewGettingStarted)
-        SetupHeadline.Starting -> stringResource(Res.string.phoneSetupStageStarting)
-        SetupHeadline.Downloading -> stringResource(Res.string.phoneSetupRingDownloading, p.subject.orEmpty())
-        SetupHeadline.Unpacking -> stringResource(Res.string.phoneSetupRingUnpacking, p.subject.orEmpty())
-        SetupHeadline.Installing -> stringResource(Res.string.phoneSetupRingInstalling, p.subject.orEmpty())
-    }
-    val note = when (p.state) {
-        SetupState.Done -> null
-        SetupState.Failed -> p.failure?.let { failureLine(it) } ?: stringResource(Res.string.setupProgressViewFailedUnknown)
-        SetupState.Interrupted, SetupState.Cancelled -> stringResource(Res.string.phoneSetupRingStoppedNote)
-        else -> stringResource(Res.string.phoneSetupRingSafeToLeaveQuiet)
-    }
-    val done = p.steps.count { it.state == ComponentState.Done || it.state == ComponentState.Skipped }
-    val trail = p.steps.mapIndexed { index, step ->
-        when {
-            step.state == ComponentState.Done || step.state == ComponentState.Skipped -> KitTrailMark.Done
-            p.step == index + 1 && p.headline != SetupHeadline.Checking -> KitTrailMark.Current
-            else -> KitTrailMark.Waiting
+    val title =
+        when (p.headline) {
+            SetupHeadline.Done -> stringResource(Res.string.setupProgressViewDone)
+            SetupHeadline.Failed -> stringResource(Res.string.setupProgressViewFailedTitle)
+            SetupHeadline.Interrupted -> stringResource(Res.string.phoneSetupRingInterruptedTitle)
+            SetupHeadline.Paused -> stringResource(Res.string.phoneSetupRingPausedTitle)
+            SetupHeadline.Checking -> stringResource(Res.string.phoneSetupRingChecking)
+            SetupHeadline.GettingStarted ->
+                stringResource(Res.string.setupProgressViewGettingStarted)
+            SetupHeadline.Starting -> stringResource(Res.string.phoneSetupStageStarting)
+            SetupHeadline.Downloading ->
+                stringResource(Res.string.phoneSetupRingDownloading, p.subject.orEmpty())
+            SetupHeadline.Unpacking ->
+                stringResource(Res.string.phoneSetupRingUnpacking, p.subject.orEmpty())
+            SetupHeadline.Installing ->
+                stringResource(Res.string.phoneSetupRingInstalling, p.subject.orEmpty())
         }
-    }
+    val note =
+        when (p.state) {
+            SetupState.Done -> null
+            SetupState.Failed ->
+                p.failure?.let { failureLine(it) }
+                    ?: stringResource(Res.string.setupProgressViewFailedUnknown)
+            SetupState.Interrupted,
+            SetupState.Cancelled -> stringResource(Res.string.phoneSetupRingStoppedNote)
+            else -> stringResource(Res.string.phoneSetupRingSafeToLeaveQuiet)
+        }
+    val done =
+        p.steps.count { it.state == ComponentState.Done || it.state == ComponentState.Skipped }
+    val trail =
+        p.steps.mapIndexed { index, step ->
+            when {
+                step.state == ComponentState.Done || step.state == ComponentState.Skipped ->
+                    KitTrailMark.Done
+                p.step == index + 1 && p.headline != SetupHeadline.Checking -> KitTrailMark.Current
+                else -> KitTrailMark.Waiting
+            }
+        }
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val height = maxHeight
-        Column(
-            Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).heightIn(min = height)
-                .padding(horizontal = Space.S5.dp, vertical = Space.S6.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+        val height = (maxHeight - Space.S4.dp).coerceAtLeast(0.dp)
+        Box(
+            Modifier.fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = Space.S4.dp)
         ) {
-            Spacer(Modifier.weight(.7f)) // NV: alignment -0.3 puts 35 percent of free space above
-            KitProgressRing(
-                headline = title,
-                semanticsLabel = stringResource(Res.string.setupProgressViewOverallLabel),
-                value = if (p.canContinue) null else p.measured,
-                done = done, of = p.of,
-                finished = p.state == SetupState.Done,
-                halted = p.canContinue || p.state == SetupState.Failed,
-                caption = p.bytes?.let { (done, total) -> stringResource(Res.string.setupProgressViewBytes, done, total) },
-                trail = trail,
-            )
-            if (p.running && p.minutesLeft != null) {
-                Spacer(Modifier.height(Space.S6.dp))
-                KitText(org.jetbrains.compose.resources.pluralStringResource(Res.plurals.phoneSetupRingMinutesLeft, p.minutesLeft, p.minutesLeft), role = TypeRole.RowTitle, tone = TextTone.Secondary, textAlign = TextAlign.Center)
+            Box(
+                Modifier.fillMaxWidth().heightIn(min = height).testTag("setup-progress-viewport"),
+                contentAlignment =
+                    BiasAlignment(
+                        0f,
+                        -.3f,
+                    ), // F: lib/ui/screens/phone_setup/phone_setup_progress_screen.dart:384
+            ) {
+                Column(
+                    Modifier.fillMaxWidth()
+                        .testTag("setup-progress-body")
+                        .padding(horizontal = Space.S5.dp, vertical = Space.S6.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    KitProgressRing(
+                        headline = title,
+                        semanticsLabel = stringResource(Res.string.setupProgressViewOverallLabel),
+                        value = if (p.canContinue) null else p.measured,
+                        done = done,
+                        of = p.of,
+                        finished = p.state == SetupState.Done,
+                        halted = p.canContinue || p.state == SetupState.Failed,
+                        caption =
+                            p.bytes?.let { (done, total) ->
+                                stringResource(Res.string.setupProgressViewBytes, done, total)
+                            },
+                        trail = trail,
+                    )
+                    if (p.running && p.minutesLeft != null) {
+                        Spacer(Modifier.height(Space.S6.dp))
+                        KitText(
+                            org.jetbrains.compose.resources.pluralStringResource(
+                                Res.plurals.phoneSetupRingMinutesLeft,
+                                p.minutesLeft,
+                                p.minutesLeft,
+                            ),
+                            role = TypeRole.RowTitle,
+                            tone = TextTone.Secondary,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                    if (note != null) {
+                        Spacer(
+                            Modifier.height(
+                                if (p.running && p.minutesLeft != null) Space.S2.dp else Space.S6.dp
+                            )
+                        )
+                        KitText(
+                            note,
+                            Modifier.widthIn(max = 320.dp),
+                            role = TypeRole.Secondary,
+                            tone = TextTone.Tertiary,
+                            textAlign = TextAlign.Center,
+                        ) // F: lib/ui/screens/phone_setup/phone_setup_progress_screen.dart:553
+                    }
+                    Spacer(Modifier.height(Space.S3.dp))
+                    KitButton(
+                        stringResource(Res.string.kitDetails),
+                        openDetails,
+                        role = KitButtonRole.Tertiary,
+                    )
+                }
             }
-            if (note != null) {
-                Spacer(Modifier.height(if (p.running && p.minutesLeft != null) Space.S2.dp else Space.S6.dp))
-                KitText(note, Modifier.widthIn(max = 320.dp), role = TypeRole.Secondary, tone = TextTone.Tertiary, textAlign = TextAlign.Center) // F: lib/ui/screens/phone_setup/phone_setup_progress_screen.dart:553
-            }
-            Spacer(Modifier.height(Space.S3.dp))
-            KitButton(stringResource(Res.string.kitDetails), openDetails, role = KitButtonRole.Tertiary)
-            Spacer(Modifier.weight(1.3f)) // NV: alignment -0.3 divides free space into .7 above and 1.3 below
         }
     }
 }
