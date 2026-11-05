@@ -22,10 +22,15 @@ def snake(name):
     s = re.sub(r"(?<=[a-z0-9])([A-Z])", r"_\1", name.lstrip("_"))
     return s.upper()
 
+SYMBOLS = {}
+COVER = set()
+
+
 def num(expr):
-    """Evaluate a Dart numeric literal or a simple quotient/product (1 / 3.6, .5, 34 / 28)."""
+    """Evaluate a Dart numeric literal or a simple expression (1 / 3.6, .5, 34 / 28, badgeHeight / 3)."""
     e = expr.strip().rstrip(",")
-    if not re.fullmatch(r"[0-9.\s/*+\-()]+", e):
+    e = re.sub(r"\b([a-zA-Z_]\w*)\b", lambda m: repr(SYMBOLS[m.group(1)]) if m.group(1) in SYMBOLS else m.group(1), e)
+    if not re.fullmatch(r"[0-9.\s/*+\-()e]+", e):
         return None
     try:
         return float(eval(e, {"__builtins__": {}}, {}))
@@ -77,9 +82,11 @@ def main():
     w("")
     w("package io.github.eslamasabry.oc.ui.design.generated")
     w("")
+    w("import io.github.eslamasabry.oc.ui.design.color.Argb")
     w("import io.github.eslamasabry.oc.ui.design.color.Roles")
     w("import io.github.eslamasabry.oc.ui.design.color.argb")
     w("import io.github.eslamasabry.oc.ui.design.type.TypeFamily")
+    w("import io.github.eslamasabry.oc.ui.design.type.TypeRole")
     w("import io.github.eslamasabry.oc.ui.design.type.TypeSpec")
     w("")
 
@@ -100,6 +107,31 @@ def main():
         v = num(val)
         if v is not None:
             statics[name] = v
+    SYMBOLS.update(fields)
+    SYMBOLS.update(statics)
+    for _ in range(3):  # statics written as other statics (badgeOffset = badgeHeight / 3)
+        for name, val in re.findall(r"static const (?:double|int) (\w+)\s*=\s*([^;]+);", tokens):
+            v = num(val)
+            if v is not None and name not in statics:
+                statics[name] = v
+                SYMBOLS[name] = v
+    # constructor defaults (fieldCorner = fieldRadius, pillRadius = double.infinity)
+    defaults = {}
+    for name, val in re.findall(r"this\.(\w+)\s*=\s*([\w.]+)\s*,", tokens):
+        if val == "double.infinity":
+            defaults[name] = float("inf")
+        else:
+            v = num(val)
+            if v is not None:
+                defaults[name] = v
+    SYMBOLS.update(defaults)
+    # derived instance getters (leadColumn => iconTileSize + space3)
+    derived = {}
+    for name, val in re.findall(r"double get (\w+)\s*=>\s*([^;]+);", tokens):
+        v = num(val)
+        if v is not None:
+            derived[name] = v
+            SYMBOLS[name] = v
     w("/** `KitTokens.fallback` (lib/ui/kit/kit_tokens.dart): sizes, radii and spacing in logical pixels (dp). */")
     w("public object FlutterKitTokens {")
     for k in sorted(fields):
@@ -110,8 +142,92 @@ def main():
         if k in fields:
             continue
         w(f"    public const val {snake(k)}: {kconst(statics[k])}")
+    if defaults or derived:
+        w("")
+        w("    // Constructor defaults and derived getters (fieldCorner = fieldRadius, leadColumn = iconTileSize + space3).")
+    for k in sorted(defaults):
+        v = defaults[k]
+        if v == float("inf"):
+            w(f"    public const val {snake(k)}: Float = Float.POSITIVE_INFINITY")
+        else:
+            w(f"    public const val {snake(k)}: {kconst(v)}")
+    for k in sorted(derived):
+        w(f"    public const val {snake(k)}: {kconst(derived[k])}")
+    # physical-pixel widths written as n / dpr (hairlineWidth, focusRingWidth)
+    for name, n in re.findall(r"static double (\w+)\(BuildContext context\)\s*\{[^}]*?\b(\d+) / dpr", tokens, flags=re.S):
+        w(f"    /** `KitTokens.{name}`: {n} physical px, in logical px: {n} / devicePixelRatio. */")
+        w(f"    public const val {snake(name)}_PHYSICAL_PX: Int = {n}")
+    # shadows (surfaceShadows, floatingShadows)
+    for name in ("surfaceShadows", "floatingShadows"):
+        m = re.search(rf"(?:List<BoxShadow> get {name}|List<BoxShadow> {name}\(BuildContext context\))(.*?)\];", tokens, flags=re.S)
+        if not m:
+            continue
+        shadows, rest = [], m.group(1)
+        while "BoxShadow(" in rest:
+            body = block(rest, r"BoxShadow\(")
+            shadows.append(body)
+            rest = rest[rest.index(body) + len(body):]
+        for i, sh in enumerate(shadows):
+            blur = re.search(r"blurRadius:\s*(-?[0-9.]+)", sh); spread = re.search(r"spreadRadius:\s*(-?[0-9.]+)", sh)
+            off = re.search(r"Offset\(\s*(-?[0-9.]+)\s*,\s*(-?[0-9.]+)\s*\)", sh); alpha = re.search(r"withValues\(alpha:\s*([0-9.]+)\)", sh)
+            tag = snake(name) + ("" if i == 0 else f"_{i + 1}")
+            w(f"    /** `{name}` shadow {i + 1}: colour `{re.search(r'color:\s*([^,]+)', sh).group(1).strip()}`. */")
+            if blur: w(f"    public const val {tag}_BLUR: {kconst(float(blur.group(1)))}")
+            if spread: w(f"    public const val {tag}_SPREAD: {kconst(float(spread.group(1)))}")
+            if off:
+                w(f"    public const val {tag}_DX: {kconst(float(off.group(1)))}")
+                w(f"    public const val {tag}_DY: {kconst(float(off.group(2)))}")
+            w(f"    public const val {tag}_ALPHA: {kconst(float(alpha.group(1)) if alpha else 1.0)}")
     w("}")
     w("")
+
+    # 1b. The tokens that are colours or text styles of the theme's roles (KitTokens.fromRoles and the role getters).
+    fr_start = tokens.index("factory KitTokens.fromRoles")
+    fr = block(tokens[fr_start:], r"return KitTokens\(")
+    def kt_role(expr, var):
+        expr = expr.strip()
+        m = re.fullmatch(rf"{var}\.isDark\s*\?\s*{var}\.(\w+)\s*:\s*{var}\.(\w+)", expr)
+        if m:
+            return f"if (r.dark) r.{m.group(1)} else r.{m.group(2)}"
+        m = re.fullmatch(rf"{var}\.(\w+)", expr)
+        return f"r.{m.group(1)}" if m else None
+    colours = {}
+    for name, expr in re.findall(r"(\w+):\s*(r\.[^,]+?|r\.isDark[^,]+?),\n", fr):
+        k = kt_role(expr, "r")
+        if k and name != "roles":
+            colours[name] = k
+    for name, expr in re.findall(r"Color get (\w+)\s*=>\s*([^;]+);", tokens):
+        k = kt_role(expr, "roles")
+        if k:
+            colours[name] = k
+    statics_roles = re.findall(r"static Color get (\w+)\s*=>\s*(graphite(?:Light|Dark))\.(\w+);", tokens)
+    texts = re.findall(r"(\w+):\s*role\(KitTextRole\.(\w+),\s*r\.(\w+)\)", fr)
+    lists = {}
+    for name, body in re.findall(r"List<Color> get (\w+)\s*=>\s*\[(.*?)\];", tokens, flags=re.S):
+        items = [kt_role(x, "roles") for x in body.split(",") if x.strip()]
+        if all(items):
+            lists[name] = items
+    w("/** The tokens that are a role of the theme (`KitTokens.fromRoles` and its role getters): colour = role(roles). */")
+    w("public object FlutterKitTokenRoles {")
+    for k in sorted(colours):
+        w(f"    public fun {k}(r: Roles): Argb = {colours[k]}")
+    for k, items in sorted(lists.items()):
+        w(f"    public fun {k}(r: Roles): List<Argb> = listOf({', '.join(items)})")
+    for k, pack, role in statics_roles:
+        w(f"    /** `KitTokens.{k}`: always {pack}.{role}, whatever the theme. */")
+        w(f"    public val {k}: Argb get() = FlutterKitRoles.{pack}.{role}")
+    w("}")
+    w("")
+    w("/** A text token: a type role drawn in a colour role (`KitTokens.fromRoles` `role(KitTextRole.x, r.y)`). */")
+    w("public class FlutterTextToken(public val role: TypeRole, public val colour: (Roles) -> Argb)")
+    w("")
+    w("public object FlutterKitTokenText {")
+    for name, role, col in texts:
+        w(f"    public val {name}: FlutterTextToken = FlutterTextToken(TypeRole.{role[0].upper() + role[1:]}) {{ it.{col} }}")
+    w("}")
+    w("")
+    COVER.update(set(fields) | set(statics) | set(defaults) | set(derived) | set(colours) | {k for k, _, _ in statics_roles} | {t[0] for t in texts} | set(lists)
+                 | {"handleSize", "surfaceShadows", "floatingShadows", "hairlineWidth", "focusRingWidth"})
 
     # 2. Type: KitText.styleFor.
     text = get("lib/ui/kit/kit_text.dart")
@@ -195,7 +311,23 @@ def main():
         w(f"    public const val {snake(k)}: {kconst(style_vals[k])}")
     w("}")
 
+    # coverage: every KitTokens member the Flutter UI reads is emitted, or is a method/the theme object
+    refs = set()
+    for path in subprocess.run(["git", "-C", a.repo, "ls-tree", "-r", "--name-only", a.ref, "lib/ui"], capture_output=True, text=True).stdout.split():
+        if path.endswith(".dart"):
+            body = show(a.repo, a.ref, path)
+            refs |= set(re.findall(r"KitTokens\.([a-z]\w*)", body)) | set(re.findall(r"\btokens\.([a-z]\w*)", body))
+    declared = set(re.findall(r"final [\w<>?]+ (\w+);", tokens)) | set(re.findall(r"\bget (\w+)\s*=>", tokens)) \
+        | set(re.findall(r"static const (?:double|int|Color) (\w+)", tokens))
+    methods = set(re.findall(r"(?:static )?[\w<>?]+ (\w+)\(", tokens)) | {"roles", "fallback", "fromRoles"}
+    refs &= declared | methods
+    missing = sorted(r for r in refs if r not in COVER and r not in methods)
+    w("")
+    w(f"// Coverage: {len(refs)} KitTokens members read by lib/ui; not emitted (methods, the roles object, or Flutter-only):")
+    for i in range(0, len(missing), 8):
+        w("//   " + ", ".join(missing[i:i + 8]))
     open(a.out, "w").write("\n".join(out) + "\n")
+    print("not emitted:", missing)
     summary = f"tokens {len(fields)}+{len(statics)}, type roles {len(roles)}, durations {len(durations)}, packs {len(packs)}, style values {len(style_vals)}"
     print(summary)
     if a.report:
