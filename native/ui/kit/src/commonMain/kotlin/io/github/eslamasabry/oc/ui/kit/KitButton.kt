@@ -1,19 +1,27 @@
 package io.github.eslamasabry.oc.ui.kit
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
@@ -22,17 +30,19 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.Corner
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
-import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.design.tokens.Shapes
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.action.KitWorkingMark
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
-import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.style.LocalKitSignalInSlip
@@ -76,7 +86,11 @@ public data class KitAction(
  * words) and its reason as the state a screen reader hears. [working] shows the working mark before
  * the words and makes taps no-ops while the button keeps its colour. Labels wrap to two lines.
  * Plain presses are silent; pass [haptic] only when the action's meaning calls for one (plan 06
- * §4.9).
+ * §4.9). [fullWidth] makes it the screen's full-width button (the mint one at the foot of a page), capped at 480 dp and
+ * centred on wide windows.
+ *
+ * Press (Material 3 Expressive, on our shapes): the face rounds its corners a little and settles 2 % smaller on the
+ * fast spatial spring, then springs back; reduced motion keeps the ripple only.
  *
  * States: default, pressed, disabled, working Text: frame Cap: Control Motion: fill eases between
  * enabled and disabled (QUICK); Off = instant; the working mark is still under Off Replaces:
@@ -95,6 +109,7 @@ public fun KitButton(
     enabled: KitEnabled = KitEnabled.Enabled,
     working: Boolean = false,
     haptic: KitHaptic? = null,
+    fullWidth: Boolean = false,
 ) {
     kitAssert(label.isNotBlank()) { "KitButton: a button needs words (B-KIT-011)" }
     kitAssert(enabled !is KitEnabled.Disabled || enabled.reason.isNotBlank()) {
@@ -143,10 +158,25 @@ public fun KitButton(
     val wordsColor = look?.words?.takeIf { on } ?: easedWords
     val minHeight = if (role == KitButtonRole.Tertiary) tokens.minTarget else tokens.buttonHeight
     val pad = if (role == KitButtonRole.Tertiary) Space.S2 else Space.S6
+    val interactions = remember { MutableInteractionSource() }
+    val pressed by interactions.collectIsPressedAsState()
+    val reduced = KitMotion.state.reduced
+    val press by animateFloatAsState(if (pressed && on && !reduced) 1f else 0f, specs.spatial(), label = "kit-button-press")
+    val rest = (Shapes.of(KitShapeId.Button) as? Corner.Radius)?.dp ?: PRESS_ROUND_DP
     Row(
         modifier =
             modifier
+                .then(if (fullWidth) Modifier.widthIn(max = FILL_MAX_WIDTH_DP.dp).fillMaxWidth() else Modifier)
                 .heightIn(min = minHeight.dp)
+                .graphicsLayer {
+                    if (press > 0f) {
+                        val scale = 1f - PRESS_SHRINK * press
+                        scaleX = scale
+                        scaleY = scale
+                        shape = RoundedCornerShape((rest + (PRESS_ROUND_DP - rest) * press).dp)
+                        clip = role != KitButtonRole.Tertiary
+                    }
+                }
                 .kitTappable(
                     onClick = { if (!working) onClick() },
                     enabled = on,
@@ -154,6 +184,7 @@ public fun KitButton(
                     haptic = if (working) null else haptic,
                     shape = KitShapeId.Button,
                     ink = ink,
+                    interactionSource = interactions,
                 )
                 .semantics {
                     if (working) disabled()
@@ -189,6 +220,13 @@ public fun KitButton(
     }
 }
 
+/** The full-width button's cap (direction §5.6). */
+private const val FILL_MAX_WIDTH_DP = 480
+
+/** How round a pressed face gets, and how much it settles. */
+private const val PRESS_ROUND_DP = 22
+private const val PRESS_SHRINK = 0.02f
+
 /**
  * The slice-0 bridge: `enabled` + `disabledReason` as two values. New code passes [KitEnabled];
  * this overload keeps the P1/P7 call sites (`:feature:chats`, `:ui:shell`, the P7 scenes) compiling
@@ -218,6 +256,7 @@ public fun KitButton(
     action: KitAction,
     modifier: Modifier = Modifier,
     role: KitButtonRole = KitButtonRole.Primary,
+    fullWidth: Boolean = false,
 ) {
     val run = action.onClick
     kitAssert(run != null || !action.enabled.isEnabled) {
@@ -236,6 +275,7 @@ public fun KitButton(
             else action.enabled,
         working = action.working,
         haptic = action.haptic,
+        fullWidth = fullWidth,
     )
 }
 

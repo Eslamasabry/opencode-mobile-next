@@ -35,9 +35,9 @@ import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitPartGlyphs
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
-import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -51,7 +51,8 @@ public enum class KitChipKind { Plain, Action, Removable, Count }
 /**
  * A small pill with a word (Dart `KitChip`; plan 06 §7.5): 32 dp tall inside a 48 dp target, always carrying a word,
  * frame text. [KitChipKind.Removable] adds a remove control with its own label and the `kit-chip-remove` tag.
- * [selected] non-null makes it a toggle a screen reader hears as selected.
+ * [selected] non-null makes it a toggle a screen reader hears as selected. [opensMenu] ends the chip in a caret, for a
+ * chip that opens a choice ("All projects ⌄").
  *
  * States: default, pressed, selected, attention
  * Text: frame
@@ -69,6 +70,7 @@ public fun KitChip(
     count: Int? = null,
     selected: Boolean? = null,
     removeLabel: String? = null,
+    opensMenu: Boolean = false,
     onClick: (() -> Unit)? = null,
     onRemove: (() -> Unit)? = null,
 ) {
@@ -116,6 +118,7 @@ public fun KitChip(
             if (kind == KitChipKind.Count && count != null) {
                 KitText(count.toString(), role = TypeRole.Label, tone = words, kind = KitTextKind.Frame)
             }
+            if (opensMenu) KitGlyph(KitPartGlyphs.ChevronDown, inkColors.tone(words), (tokens.smallIcon - 6).dp)
             if (kind == KitChipKind.Removable && onRemove != null) {
                 // The pill stays 32 dp; the remove target keeps its 48 dp and overhangs the pill evenly.
                 Box(Modifier.size(tokens.chipHeight.dp).wrapContentSize(unbounded = true), contentAlignment = Alignment.Center) {
