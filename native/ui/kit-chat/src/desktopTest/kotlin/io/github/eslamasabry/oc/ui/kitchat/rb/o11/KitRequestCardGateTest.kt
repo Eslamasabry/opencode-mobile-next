@@ -14,9 +14,9 @@ import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
+import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
-import io.github.eslamasabry.oc.ui.kit.state.KitReceipt
-import io.github.eslamasabry.oc.ui.kit.state.KitReceiptState
 import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestAnsweredRow
 import kotlin.test.Test
 
@@ -27,7 +27,10 @@ class KitRequestCardGateTest {
             KitText("I found the failing test. Running it once more to check the fix.", role = TypeRole.Body)
             KitRequestAnsweredRow(KitIcons.permissions, "Run a shell command") {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    KitReceipt(KitReceiptState.Confirmed)
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                        KitIcon(KitIcons.check, size = KitIconSize.Small, tone = TextTone.Success)
+                        KitText("Allowed once", role = TypeRole.Secondary, tone = TextTone.Secondary)
+                    }
                     KitButton("Undo", onClick = {}, role = KitButtonRole.Tertiary)
                 }
             }

@@ -29,6 +29,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.toShape
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.state.KitNeedsYou
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.state.KitNeedsYouReason
 import io.github.eslamasabry.oc.ui.kit.style.KitSignalNeedsYou
 import io.github.eslamasabry.oc.ui.kit.style.KitSignalSlip
@@ -101,12 +102,12 @@ public fun KitRequestAnsweredRow(
     outcome: @Composable () -> Unit,
 ) {
     Row(
-        modifier.fillMaxWidth().padding(vertical = Space.S2.dp),
+        modifier.fillMaxWidth().heightIn(min = LocalKitTokens.current.rowHeightOne.dp).padding(horizontal = Space.S4.dp),
         horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        KitIcon(icon, size = KitIconSize.Large, tone = TextTone.Tertiary)
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+        KitIcon(icon, size = KitIconSize.Small, tone = TextTone.Secondary)
+        Column(Modifier.weight(1f)) {
             KitText(title, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Reading)
             outcome()
         }
