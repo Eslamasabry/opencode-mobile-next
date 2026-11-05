@@ -1,9 +1,10 @@
 package io.github.eslamasabry.oc.feature.schedules.ui
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -17,32 +18,42 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import io.github.eslamasabry.oc.engine.schedules.MissedRunPolicy
 import io.github.eslamasabry.oc.engine.schedules.RecurrenceKind
+import io.github.eslamasabry.oc.engine.schedules.ScheduleTime
 import io.github.eslamasabry.oc.feature.schedules.presentation.EditIssue
 import io.github.eslamasabry.oc.feature.schedules.presentation.EditPhase
 import io.github.eslamasabry.oc.feature.schedules.presentation.EditorFields
-import io.github.eslamasabry.oc.feature.schedules.presentation.ModelChoice
+import io.github.eslamasabry.oc.feature.schedules.presentation.EditorRules
 import io.github.eslamasabry.oc.feature.schedules.presentation.ScheduleEditActions
 import io.github.eslamasabry.oc.feature.schedules.presentation.ScheduleEditUi
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoice
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceList
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
+import io.github.eslamasabry.oc.ui.kit.choice.KitWheel
+import io.github.eslamasabry.oc.ui.kit.choice.KitWheelColumn
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
+import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
-import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
-import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
-import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
+import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -50,6 +61,7 @@ import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.scheduleNeedFuture
 import io.github.eslamasabry.oc.ui.words.res.scheduleThisConversation
 import kotlinx.coroutines.flow.drop
+import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -85,7 +97,8 @@ public fun ScheduleEditScreen(state: ScheduleEditUi, actions: ScheduleEditAction
                         if (state.saving) words.saving
                         else scheduleActionLabel(draft.fields(), state.nowMs, words),
                         { actions.save(draft.fields()) },
-                        Modifier.fillMaxWidth()
+                        Modifier.testTag("schedule-save")
+                            .fillMaxWidth()
                             .padding(
                                 horizontal = LocalKitTokens.current.gutter.dp,
                                 vertical = Space.S2.dp,
@@ -142,129 +155,222 @@ private class EditorDraft(start: EditorFields) {
 @Composable
 private fun EditorForm(state: ScheduleEditUi, draft: EditorDraft, words: ScheduleWords) {
     val enabled = if (state.saving) KitEnabled.Disabled(words.saving) else KitEnabled.Enabled
+    var targetOpen by remember { mutableStateOf(false) }
+    val promptFocus = remember { FocusRequester() }
+    LaunchedEffect(state.seed) { if (!state.editing) promptFocus.requestFocus() }
     Column(
         Modifier.fillMaxSize()
             .imePadding()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S3.dp),
-        verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+            .padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S3.dp)
     ) {
-        state.error?.let { KitErrorNotice(words.error(it)) }
         KitField(
             draft.prompt,
-            words.prompt,
+            stringResource(Res.string.scheduleAsk),
+            placeholder = stringResource(Res.string.scheduleAskHint),
             kind = KitFieldKind.Multiline,
-            helper = words.promptHelp,
+            multilineLines = 1..6, // F: lib/ui/screens/scheduling/schedule_sheet.dart:372-373
+            focusRequester = promptFocus,
             error = if (state.issue == EditIssue.PromptRequired) words.issuePrompt else null,
-            maxLength = 32_000,
+            maxLength = 32_000, // F: lib/ui/screens/scheduling/schedule_sheet.dart:375
             enabled = enabled,
         )
-        KitField(
-            draft.project,
-            words.project,
-            kind = KitFieldKind.Path,
-            placeholder = "/home/me/project",
-            error = if (state.issue == EditIssue.ProjectRequired) words.issueProject else null,
-            enabled = enabled,
-        )
-        KitSectionLabel(words.repeat)
+        Spacer(Modifier.height(Space.S4.dp))
         KitSegmented(
             listOf(
                 KitSegment(RecurrenceKind.Once, words.kindOnce),
                 KitSegment(RecurrenceKind.Daily, words.kindDaily),
                 KitSegment(RecurrenceKind.Weekdays, words.kindWeekdays),
-                KitSegment(RecurrenceKind.Interval, words.kindInterval),
+                KitSegment(RecurrenceKind.Interval, stringResource(Res.string.scheduleCustom)),
             ),
             selected = draft.kind,
-            semanticsLabel = words.repeat,
+            semanticsLabel = stringResource(Res.string.scheduleRepeat),
             enabled = enabled,
             onChange = { draft.kind = it },
         )
-        if (draft.kind == RecurrenceKind.Once) {
+        Spacer(Modifier.height(Space.S3.dp))
+        ScheduleWheel(state, draft, words, enabled)
+        val issue =
+            when (state.issue) {
+                EditIssue.FutureRequired -> stringResource(Res.string.scheduleNeedFuture)
+                EditIssue.DateInvalid -> words.issueDate
+                EditIssue.TimeInvalid -> words.issueTime
+                EditIssue.HoursInvalid -> words.issueHours
+                else -> null
+            }
+        (issue ?: state.error?.let(words::error))?.let {
+            Spacer(Modifier.height(Space.S2.dp))
+            KitText(it, role = TypeRole.Secondary)
+        }
+        Spacer(Modifier.height(Space.S3.dp))
+        // The source seed fixes the project. Retain input only when the native entry supplied none.
+        if (state.fields.project.isBlank()) {
             KitField(
-                draft.date,
-                words.date,
-                kind = KitFieldKind.Mono,
-                error = if (state.issue == EditIssue.DateInvalid) words.issueDate else null,
+                draft.project,
+                words.project,
+                kind = KitFieldKind.Path,
+                error = if (state.issue == EditIssue.ProjectRequired) words.issueProject else null,
                 enabled = enabled,
             )
         }
-        if (draft.kind != RecurrenceKind.Interval) {
-            KitField(
-                draft.time,
-                words.time,
-                kind = KitFieldKind.Mono,
-                error = if (state.issue == EditIssue.TimeInvalid) words.issueTime else null,
-                enabled = enabled,
-            )
-        }
-        if (draft.kind == RecurrenceKind.Interval) {
-            KitField(
-                draft.hours,
-                words.hours,
-                kind = KitFieldKind.Number,
-                error = if (state.issue == EditIssue.HoursInvalid) words.issueHours else null,
-                enabled = enabled,
-            )
-        }
-        KitSectionLabel(words.missed)
-        KitChoiceList(
-            listOf(
-                KitChoice(MissedRunPolicy.CatchUp, words.missedCatchUp),
-                KitChoice(MissedRunPolicy.Skip, words.missedSkip),
-            ),
-            selected = draft.missed,
-            semanticsLabel = words.missed,
-            onSelect = { draft.missed = it },
+        KitRow(
+            title =
+                draft.project.text.toString().trimEnd('/').substringAfterLast('/').ifEmpty {
+                    words.project
+                },
+            leading = KitRowLeading.Glyph(KitIcons.folderOpen),
+            supporting =
+                stringResource(
+                    if (draft.thisConversation) Res.string.scheduleInThisConversation
+                    else Res.string.scheduleNewConversation
+                ),
+            trailing =
+                if (state.canChooseConversation) KitRowTrailing.Chevron else KitRowTrailing.None,
+            onClick = if (state.canChooseConversation) ({ targetOpen = true }) else null,
+            enabled = enabled.isEnabled,
+            disabledReason = enabled.reason,
         )
-        if (state.models.isNotEmpty() || draft.model != null) {
-            KitSectionLabel(words.model)
-            val choices =
-                listOf(KitChoice<ModelChoice?>(null, words.modelDefault)) +
-                    (state.models + listOfNotNull(draft.model).filter { it !in state.models }).map {
-                        KitChoice<ModelChoice?>(it, it.label)
-                    }
+        Spacer(Modifier.height(Space.S3.dp))
+        KitText(
+            stringResource(Res.string.scheduleClosedNote),
+            role = TypeRole.Secondary,
+            tone = TextTone.Tertiary,
+        )
+        KitSheet(
+            visible = targetOpen,
+            onDismissRequest = { targetOpen = false },
+            title = stringResource(Res.string.scheduleTarget),
+            height = KitSheetHeight.Content,
+        ) {
             KitChoiceList(
-                choices,
-                selected = draft.model,
-                semanticsLabel = words.model,
-                onSelect = { draft.model = it },
-            )
-        }
-        KitRowGroup(label = words.conversation) {
-            if (state.canChooseConversation) {
-                KitChoiceList(
-                    choices =
-                        listOf(
-                            KitChoice(
-                                true,
-                                org.jetbrains.compose.resources.stringResource(
-                                    io.github.eslamasabry.oc.ui.words.res.Res.string
-                                        .scheduleThisConversation
-                                ),
-                            ),
-                            KitChoice(false, words.newEachTime),
+                choices =
+                    listOf(
+                        KitChoice(
+                            true,
+                            stringResource(Res.string.scheduleThisConversation),
+                            enabled = enabled,
                         ),
-                    selected = draft.thisConversation,
-                    semanticsLabel = words.conversation,
-                    onSelect = { draft.thisConversation = it },
-                )
-            } else KitRow(words.newEachTime)
-        }
-        if (state.issue == EditIssue.FutureRequired) {
-            io.github.eslamasabry.oc.ui.kit.KitText(
-                org.jetbrains.compose.resources.stringResource(
-                    io.github.eslamasabry.oc.ui.words.res.Res.string.scheduleNeedFuture
-                )
+                        KitChoice(
+                            false,
+                            stringResource(Res.string.scheduleNewConversation),
+                            enabled = enabled,
+                        ),
+                    ),
+                selected = draft.thisConversation,
+                semanticsLabel = words.conversation,
+                onSelect = {
+                    draft.thisConversation = it
+                    targetOpen = false
+                },
             )
         }
-        io.github.eslamasabry.oc.ui.kit.KitText(
-            org.jetbrains.compose.resources.stringResource(
-                io.github.eslamasabry.oc.ui.words.res.Res.string.scheduleClosedNote
-            )
-        )
     }
 }
+
+@Composable
+private fun ScheduleWheel(
+    state: ScheduleEditUi,
+    draft: EditorDraft,
+    words: ScheduleWords,
+    enabled: KitEnabled,
+) {
+    if (draft.kind == RecurrenceKind.Interval) {
+        val hours =
+            draft.hours.text.toString().toIntOrNull()
+                ?: 3 // F: lib/ui/screens/scheduling/schedule_sheet.dart:147
+        val values =
+            ((1..24) + hours)
+                .distinct()
+                .sorted() // F: lib/ui/screens/scheduling/schedule_sheet.dart:470
+        val labels = values.associateWith { value ->
+            org.jetbrains.compose.resources.pluralStringResource(
+                Res.plurals.scheduleRuleHours,
+                value,
+                value,
+            )
+        }
+        KitWheel(
+            listOf(
+                KitWheelColumn(
+                    values,
+                    hours,
+                    { labels.getValue(it) },
+                    { draft.hours.edit { replace(0, length, it.toString()) } },
+                    stringResource(Res.string.scheduleWheelHowOften),
+                    testTag = "schedule-wheel-hours",
+                )
+            ),
+            enabled = enabled,
+        )
+        return
+    }
+    val time =
+        EditorRules.time(draft.time.text.toString())
+            ?: (9 to 0) // F: lib/ui/screens/scheduling/schedule_sheet.dart:134
+    val minutes =
+        time.first * 60 + time.second // F: lib/ui/screens/scheduling/schedule_sheet.dart:144
+    val times =
+        ((0 until 24 * 60 step 15) + minutes)
+            .distinct()
+            .sorted() // F: lib/ui/screens/scheduling/schedule_sheet.dart:483-486
+    val platform = LocalKitPlatform.current
+    val labels = times.associateWith { value ->
+        val hour = value / 60 // F: lib/ui/screens/scheduling/schedule_sheet.dart:492
+        val minute = value % 60 // F: lib/ui/screens/scheduling/schedule_sheet.dart:492
+        platform.messageTime(ScheduleTime.todayAt(state.nowMs, hour, minute), state.nowMs)
+            ?: clockValue(value)
+    }
+    val timeColumn =
+        KitWheelColumn(
+            times,
+            minutes,
+            { labels.getValue(it) },
+            { value -> draft.time.edit { replace(0, length, clockValue(value)) } },
+            stringResource(Res.string.scheduleTime),
+            flex =
+                if (draft.kind == RecurrenceKind.Once) 2
+                else 1, // F: lib/ui/screens/scheduling/schedule_sheet.dart:528
+            testTag = "schedule-wheel-time",
+        )
+    if (draft.kind != RecurrenceKind.Once) {
+        KitWheel(listOf(timeColumn), enabled = enabled)
+        return
+    }
+    val today = LocalDate.parse(ScheduleTime.today(state.nowMs))
+    val selected = draft.date.text.toString().ifBlank { today.toString() }
+    val days =
+        ((0 until 60).map { LocalDate.fromEpochDays(today.toEpochDays() + it).toString() } +
+                selected) // F: lib/ui/screens/scheduling/schedule_sheet.dart:501-505
+            .distinct()
+            .sorted()
+    val todayLabel = stringResource(Res.string.scheduleWheelToday)
+    val tomorrowLabel = stringResource(Res.string.scheduleWheelTomorrow)
+    val tomorrow = LocalDate.fromEpochDays(today.toEpochDays() + 1).toString()
+    KitWheel(
+        listOf(
+            KitWheelColumn(
+                days,
+                selected,
+                { date ->
+                    when (date) {
+                        today.toString() -> todayLabel
+                        tomorrow -> tomorrowLabel
+                        else -> date
+                    }
+                },
+                { value -> draft.date.edit { replace(0, length, value) } },
+                stringResource(Res.string.scheduleWheelDay),
+                flex = 3, // F: lib/ui/screens/scheduling/schedule_sheet.dart:510
+                testTag = "schedule-wheel-day",
+            ),
+            timeColumn,
+        ),
+        enabled = enabled,
+    )
+}
+
+private fun clockValue(minutes: Int): String =
+    "${(minutes / 60).toString().padStart(2, '0')}:${(minutes % 60).toString().padStart(2, '0')}" // NV: ISO editor HH:mm format
 
 @Composable
 private fun scheduleActionLabel(fields: EditorFields, nowMs: Long, words: ScheduleWords): String {
