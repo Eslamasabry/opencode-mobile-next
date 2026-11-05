@@ -259,6 +259,7 @@ public fun KitRow(
                 when {
                     value != null && !valueBelow -> RowValue(value)
                     action != null && !actionBelow -> KitInlineAction(action)
+                    trailing is KitRowTrailing.Locked -> RowLockedValue(trailing)
                     trailing == KitRowTrailing.Chevron -> RowChevron()
                     trailing == KitRowTrailing.Check -> io.github.eslamasabry.oc.ui.kit.icon.KitIcon(
                         io.github.eslamasabry.oc.ui.kit.icon.KitIcons.check,

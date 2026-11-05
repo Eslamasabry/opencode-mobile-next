@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -94,6 +97,9 @@ public sealed interface KitRowTrailing {
     /** A chosen row, with the check after its words (Flutter project/model choices). */
     public data object Check : KitRowTrailing
 
+    /** The lock glyph and explanation of an always-on setting. */
+    public data class Locked(val text: String) : KitRowTrailing
+
     /**
      * A value in quiet words, optionally with the chevron. It goes under the title when it cannot
      * share the line.
@@ -179,6 +185,20 @@ internal fun RowValue(value: KitRowTrailing.Value, modifier: Modifier = Modifier
     ) {
         KitText(value.text, role = TypeRole.Secondary, tone = TextTone.Tertiary, maxLines = 1)
         if (value.chevron) RowChevron()
+    }
+}
+
+@Composable
+internal fun RowLockedValue(value: KitRowTrailing.Locked) {
+    val tokens = LocalKitTokens.current
+    Row(
+        Modifier.widthIn(max = (LocalKitWindow.current.widthDp / 2).dp) // F: lib/ui/kit/kit_row.dart:627
+            .padding(start = Space.S2.dp, end = Space.S3.dp).testTag("kit-row-locked-value"),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
+    ) {
+        KitGlyph(KitIcons.locked, LocalKitColors.current.text3, tokens.smallIcon.dp)
+        KitText(value.text, Modifier.weight(1f, fill = false), role = TypeRole.Secondary, tone = TextTone.Tertiary, maxLines = 1)
     }
 }
 

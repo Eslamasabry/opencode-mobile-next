@@ -28,6 +28,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.compositeOver
 import io.github.eslamasabry.oc.ui.design.tokens.Alphas
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.toggleableState
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.state.ToggleableState
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
@@ -98,9 +104,24 @@ public fun KitSwitchRow(
     locked: Boolean = false,
     enabled: KitEnabled = KitEnabled.Enabled,
     leading: KitRowLeading? = null,
+    lockedLabel: String? = null,
+    below: (@Composable () -> Unit)? = null,
     onCheckedChange: (Boolean) -> Unit,
 ) {
     val tokens = LocalKitTokens.current
+    if (locked && lockedLabel != null) {
+        KitRow(
+            title = title,
+            modifier = modifier.semantics { role = Role.Switch; toggleableState = ToggleableState.On; disabled() }.testTag("kit-switch-locked"),
+            supporting = supporting,
+            supportingMaxLines = 2, // F: lib/ui/kit/kit_row_parts.dart:287
+            leading = leading,
+            titleMaxLines = 2, // F: lib/ui/kit/kit_row_parts.dart:425
+            trailing = KitRowTrailing.Locked(lockedLabel),
+        )
+        if (below != null) Box(Modifier.padding(start = tokens.gutter.dp, end = tokens.gutter.dp)) { below() }
+        return
+    }
     val specs = KitMotion.specs
     val platform = LocalKitPlatform.current
     val hapticsOn = LocalKitAppearance.current.haptics
@@ -137,6 +158,7 @@ public fun KitSwitchRow(
                 (enabled.reason ?: supporting)?.let {
                     KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = 3)
                 }
+                below?.invoke()
             }
             KitSwitchTrack(checked, on && !locked)
         }

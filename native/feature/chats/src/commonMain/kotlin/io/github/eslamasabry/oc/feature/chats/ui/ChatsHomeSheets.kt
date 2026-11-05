@@ -209,25 +209,19 @@ private fun SourceChoices(state: ChatsUi, actions: ChatsActions) {
                 leading = KitRowLeading.Glyph(if (source.onThisPhone) KitIcons.phone else KitIcons.server),
                 checked = source.shown,
                 locked = source.main,
+                lockedLabel = if (source.main) stringResource(Res.string.chatsSourcesAlways) else null,
+                below = if (source.unreachable && source.shown) ({
+                    KitButton(stringResource(Res.string.refreshRetry), { actions.retrySource(source.profile) }, role = KitButtonRole.Tertiary)
+                }) else null,
                 supporting =
                     when {
-                        source.main ->
-                            stringResource(Res.string.chatsSourcesMain) +
-                                " · " +
-                                stringResource(Res.string.chatsSourcesAlways)
+                        source.main -> stringResource(Res.string.chatsSourcesMain)
                         source.unreachable -> stringResource(Res.string.chatsSourcesUnreachable)
                         source.onThisPhone -> stringResource(Res.string.chatsSourcesOnPhone)
                         else -> stringResource(Res.string.chatsSourcesElsewhere)
                     },
                 onCheckedChange = { actions.showSource(source.profile, it) },
             )
-            if (source.unreachable && source.shown) {
-                KitButton(
-                    stringResource(Res.string.kitTryAgain),
-                    { actions.retrySource(source.profile) },
-                    role = KitButtonRole.Tertiary,
-                )
-            }
         }
     }
     KitButton(
