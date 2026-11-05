@@ -1,5 +1,11 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
+import androidx.compose.ui.semantics.contentDescription
+import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
@@ -71,22 +77,54 @@ internal fun HubPage(
         state = state,
         actions = actions,
         modifier = modifier,
+        large = true,
         search = {
-            KitField(
-                field,
-                stringResource(Res.string.settingsHubSearch),
-                Modifier.testTag("settings-search"),
-            )
+            Box(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)) {
+                KitSearchField(
+                    label = stringResource(Res.string.settingsHubSearch),
+                    onSearch = {},
+                    state = field,
+                    modifier = Modifier.testTag("settings-search"),
+                )
+            }
         },
     ) {
         if (hub.query.isBlank()) {
-            KitRowGroup {
-                hub.groups.forEach { group ->
+            // Looks pass, owner pick A (2026-11-05): the five groups as flat labelled sections, each with its key
+            // rows and their current value at the end, so nobody opens a page only to read a setting. The rest of a
+            // group is one "More" row away.
+            hub.groups.forEach { group ->
+                val rows = HUB_ROWS.getValue(group).filter { it in hub.searchable }
+                val groupName = groupWords(group)
+                KitSectionLabel(groupName, Modifier.testTag("settings-group-${group.name}"))
+                if (group == SettingsGroupId.Server) {
                     KitRow(
-                        title = groupWords(group),
-                        modifier = Modifier.testTag("settings-group-${group.name}"),
-                        supporting =
-                            if (group == SettingsGroupId.Server) serverLine(state) else null,
+                        title = state.hub.server?.name ?: stringResource(Res.string.settingsHubServerNone),
+                        leading = KitRowLeading.Glyph(if (state.hub.server?.onPhone == true) KitIcons.phone else KitIcons.computer),
+                        trailing =
+                            state.hub.server?.let {
+                                KitRowTrailing.Value(
+                                    if (it.onPhone) stringResource(Res.string.settingsHubServerOnPhone)
+                                    else stringResource(Res.string.settingsV3Connected)
+                                )
+                            } ?: KitRowTrailing.Chevron,
+                        onClick = { actions.onOpen(SettingsPage.Group(group)) },
+                    )
+                }
+                rows.forEach { row ->
+                    KitRow(
+                        title = rowWords(row),
+                        modifier = Modifier.testTag(row.tag),
+                        leading = KitRowLeading.Glyph(rowGlyph(row)),
+                        trailing = rowValue(row, state)?.let { KitRowTrailing.Value(it) } ?: KitRowTrailing.Chevron,
+                        onClick = { actions.onTarget(row) },
+                    )
+                }
+                if (hub.searchable.count { it.group == group } > rows.size + (if (group == SettingsGroupId.Server) 1 else 0)) {
+                    KitRow(
+                        title = stringResource(Res.string.agentToolsTerminalMore),
+                        modifier = Modifier.semantics { contentDescription = groupName },
+                        leading = KitRowLeading.Glyph(KitIcons.more),
                         trailing = KitRowTrailing.Chevron,
                         onClick = { actions.onOpen(SettingsPage.Group(group)) },
                     )
@@ -118,14 +156,46 @@ internal fun HubPage(
     }
 }
 
-@Composable
-private fun serverLine(state: SettingsUi): String {
-    val server = state.hub.server ?: return stringResource(Res.string.settingsHubServerNone)
-    val where =
-        if (server.onPhone) stringResource(Res.string.settingsHubServerOnPhone)
-        else stringResource(Res.string.settingsV3Connected)
-    return stringResource(Res.string.settingsHubServerLine, server.name, where)
-}
+/** The rows each group shows on the hub (concept A): the ones people come to read or change most. */
+private val HUB_ROWS: Map<SettingsGroupId, List<SettingsRowId>> =
+    mapOf(
+        SettingsGroupId.Server to listOf(SettingsRowId.ThisPhone),
+        SettingsGroupId.Agent to listOf(SettingsRowId.ModelAndMode, SettingsRowId.Permissions, SettingsRowId.Usage),
+        SettingsGroupId.Conversations to listOf(SettingsRowId.ShowReasoning, SettingsRowId.ShowTimestamps, SettingsRowId.Voice),
+        SettingsGroupId.ThisApp to listOf(SettingsRowId.Appearance, SettingsRowId.Language, SettingsRowId.Notifications, SettingsRowId.Background),
+        SettingsGroupId.Help to listOf(SettingsRowId.Guide, SettingsRowId.About),
+    ).withDefault { emptyList() }
+
+/** Each row's Phosphor glyph (the Flutter Settings icons). */
+private fun rowGlyph(row: SettingsRowId) =
+    when (row) {
+        SettingsRowId.Servers -> KitIcons.server
+        SettingsRowId.ThisPhone -> KitIcons.phone
+        SettingsRowId.ModelAndMode -> KitIcons.model
+        SettingsRowId.Providers -> KitIcons.cloud
+        SettingsRowId.Usage -> KitIcons.usage
+        SettingsRowId.Tools -> KitIcons.tools
+        SettingsRowId.Agents -> KitIcons.agent
+        SettingsRowId.ShowReasoning -> KitIcons.idea
+        SettingsRowId.ShowTimestamps -> KitIcons.clock
+        SettingsRowId.PhraseChips -> KitIcons.textShort
+        SettingsRowId.DefaultShell -> KitIcons.terminal
+        SettingsRowId.Voice -> KitIcons.mic
+        SettingsRowId.Permissions -> KitIcons.shield
+        SettingsRowId.Notifications -> KitIcons.notificationImportant
+        SettingsRowId.Background -> KitIcons.batteryCharging
+        SettingsRowId.Appearance -> KitIcons.appearance
+        SettingsRowId.Language -> KitIcons.globe
+        SettingsRowId.Privacy -> KitIcons.privacy
+        SettingsRowId.Updates -> KitIcons.systemDownload
+        SettingsRowId.Storage -> KitIcons.storage
+        SettingsRowId.Guide -> KitIcons.guide
+        SettingsRowId.Tips -> KitIcons.idea
+        SettingsRowId.Capabilities -> KitIcons.checklist
+        SettingsRowId.ReportProblem -> KitIcons.bug
+        SettingsRowId.About -> KitIcons.info
+        else -> KitIcons.settings
+    }
 
 /**
  * I02: the group's rows; switch rows flip in place, the rest open their page or hand off to the

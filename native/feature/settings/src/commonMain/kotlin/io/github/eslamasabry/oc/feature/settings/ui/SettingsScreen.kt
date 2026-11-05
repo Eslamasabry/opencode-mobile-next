@@ -295,6 +295,7 @@ internal fun SettingsFrame(
     actions: SettingsActions,
     modifier: Modifier = Modifier,
     search: (@Composable () -> Unit)? = null,
+    large: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     KitScreen(
@@ -305,6 +306,7 @@ internal fun SettingsFrame(
                 exit = if (onBack != null) KitTopBarExit.Back else KitTopBarExit.None,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = onBack,
+                large = large,
             )
         },
         search = search,
