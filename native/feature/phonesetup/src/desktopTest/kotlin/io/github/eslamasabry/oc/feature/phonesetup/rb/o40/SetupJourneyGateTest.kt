@@ -22,6 +22,8 @@ class SetupJourneyGateTest {
         var started = 0
         val toggles = mutableListOf<Pair<String, Boolean>>()
         var accepted = 0
+        var resumed = 0
+        val stopCalls = mutableListOf<String>()
 
         override fun back() {}
 
@@ -41,13 +43,19 @@ class SetupJourneyGateTest {
 
         override fun customize() {}
 
-        override fun continueSetup() {}
+        override fun continueSetup() {
+            resumed++
+        }
 
-        override fun askStop() {}
+        override fun askStop() {
+            stopCalls += "ask"
+        }
 
         override fun cancelConfirm() {}
 
-        override fun confirmStop() {}
+        override fun confirmStop() {
+            stopCalls += "confirm"
+        }
 
         override fun askRemoveVoice() {}
 
@@ -165,6 +173,73 @@ class SetupJourneyGateTest {
         assertEquals(1, setupPromiseMinutes(89))
         assertEquals(2, setupPromiseMinutes(90))
         assertEquals(4, setupPromiseMinutes(240))
+    }
+
+    @Test
+    fun `restored add job names its known tools in job order and resumes the job`() =
+        runComposeUiTest {
+            val actions = Actions()
+            setContent {
+                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                    SetupJourneyScreen(
+                        state.copy(
+                            progress =
+                                SetupProgress(
+                                    SetupState.Cancelled,
+                                    listOf(ComponentProgress("python", ComponentState.Pending)),
+                                    0.0,
+                                    adding = listOf("node", "removed-tool", "python"),
+                                )
+                        ),
+                        actions,
+                    )
+                }
+            }
+            onNodeWithText("Adding Node.js and Python").assertExists()
+            onNodeWithText("Continue setup").performClick()
+            assertEquals(1, actions.resumed)
+            assertEquals(0, actions.started)
+        }
+
+    @Test
+    fun `pause dispatches the named stop flow without starting a new job`() = runComposeUiTest {
+        val actions = Actions()
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                SetupJourneyScreen(
+                    state.copy(
+                        progress =
+                            SetupProgress(
+                                SetupState.Running,
+                                listOf(ComponentProgress("node", ComponentState.Running)),
+                                .5,
+                                jobId = "current-job",
+                            )
+                    ),
+                    actions,
+                )
+            }
+        }
+        onNodeWithText("Pause setup").performClick()
+        assertEquals(listOf("ask", "confirm"), actions.stopCalls)
+        assertEquals(0, actions.started)
+    }
+
+    @Test
+    fun `continue failure is visible while the persisted job stays paused`() = runComposeUiTest {
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                SetupJourneyScreen(
+                    state.copy(
+                        progress = SetupProgress(SetupState.Cancelled, emptyList(), 0.0),
+                        failure = io.github.eslamasabry.oc.core.common.Failure.TimedOut(),
+                    ),
+                    Actions(),
+                )
+            }
+        }
+        onNodeWithText("That did not finish. Try again.").assertExists()
+        onNodeWithText("Continue setup").assertIsEnabled()
     }
 
     @Test

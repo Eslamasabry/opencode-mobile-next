@@ -66,7 +66,7 @@ public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyAction
     KitScreen(
         topBar = {
             KitTopBar(
-                stringResource(Res.string.phoneSetupStartScreenTitle),
+                journeyTitle(state),
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::back,
@@ -139,6 +139,40 @@ public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyAction
                 KitErrorNotice(stringResource(Res.string.r40SetupRemoveVoiceFailed))
         }
     }
+}
+
+/** The persisted job names its additions, in job order, even after the app is reopened. */
+@Composable
+private fun journeyTitle(state: SetupJourneyUi): String {
+    if (state.progress.adding.isEmpty())
+        return stringResource(Res.string.phoneSetupStartScreenTitle)
+    // F: lib/builtin/setup/setup_engine/progress_helpers.dart:335-356
+    val names =
+        state.progress.adding.flatMap { id ->
+            state.options
+                ?.components
+                .orEmpty()
+                .filter { it.id == id }
+                .map {
+                    if (id == SetupComponentIds.ESSENTIALS)
+                        stringResource(Res.string.phoneSetupEssentialsShort)
+                    else itemTitle(id, it.shortTitle)
+                }
+        }
+    val joined =
+        when (names.size) {
+            0 -> ""
+            1 -> names.single()
+            else ->
+                stringResource(
+                    Res.string.phoneSetupStartListPair,
+                    names
+                        .dropLast(1)
+                        .joinToString(stringResource(Res.string.phoneSetupStartListSeparator)),
+                    names.last(),
+                )
+        }
+    return stringResource(Res.string.aiteamComponentAddingTitle, joined)
 }
 
 @Composable
@@ -426,7 +460,10 @@ private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions) {
         rows.any { it.state == ComponentState.Checking }
     val measured = if (!halted) memory.measured(row) else null
     val eta = memory.eta(progress, state.options?.components.orEmpty())
-    val subject = state.options?.components?.firstOrNull { it.id == row?.id }?.shortTitle ?: row?.id.orEmpty()
+    val subject = row?.let { currentRow ->
+        if (currentRow.id == SetupComponentIds.ESSENTIALS) stringResource(Res.string.phoneSetupEssentialsShort)
+        else itemTitle(currentRow.id, state.options?.components?.firstOrNull { it.id == currentRow.id }?.shortTitle ?: currentRow.id)
+    }.orEmpty()
     val unpacking = stringResource(Res.string.phoneSetupStageUnpackingLinux)
     val title = when (progress.state) {
         SetupState.Done -> stringResource(Res.string.setupProgressViewDone)
@@ -483,6 +520,9 @@ private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions) {
             }
             Spacer(Modifier.height(Space.S3.dp))
             KitButton(stringResource(Res.string.kitDetails), { detailsOpen = true }, role = KitButtonRole.Tertiary)
+            if (state.failure != null && state.confirmStop == null && !state.confirmRemoveVoice) {
+                KitErrorNotice(stringResource(Res.string.r40SetupActionFailed))
+            }
             Spacer(Modifier.weight(1.3f)) // NV: Flutter Alignment(0,-.3) free space below
 
         }
