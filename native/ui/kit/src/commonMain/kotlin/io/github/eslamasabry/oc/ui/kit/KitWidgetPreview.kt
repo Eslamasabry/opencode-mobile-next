@@ -166,9 +166,17 @@ public fun KitWidgetPreview(
                             ) // F: lib/ui/kit/kit_widget_preview.dart:289
                         }
                         Row {
-                            PreviewChip(stringResource(Res.string.widgetV2PreviewStop), ink)
+                            PreviewChip(
+                                stringResource(Res.string.widgetV2PreviewStop),
+                                ink,
+                                Modifier.weight(1f, fill = false),
+                            )
                             Spacer(Modifier.width(Space.S2.dp))
-                            PreviewChip(stringResource(Res.string.widgetV2PreviewSteer), ink)
+                            PreviewChip(
+                                stringResource(Res.string.widgetV2PreviewSteer),
+                                ink,
+                                Modifier.weight(1f, fill = false),
+                            )
                         }
                     }
                 }
@@ -183,10 +191,11 @@ private fun PreviewDot(color: Color) {
 }
 
 @Composable
-private fun PreviewChip(text: String, accent: Color) {
+private fun PreviewChip(text: String, accent: Color, modifier: Modifier = Modifier) {
     KitText(
         text,
-        Modifier.background(
+        modifier
+            .background(
                 accent.copy(alpha = .2f),
                 RoundedCornerShape(FlutterKitTokens.BUTTON_RADIUS.dp),
             ) // F: lib/ui/kit/kit_widget_preview.dart:234
