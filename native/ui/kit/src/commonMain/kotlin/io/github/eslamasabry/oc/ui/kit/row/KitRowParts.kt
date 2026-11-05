@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -44,7 +47,7 @@ public sealed interface KitRowLeading {
      * A kit glyph (Dart `KitRow.icon`): a bare 20 dp Phosphor glyph in the secondary ink, in the lead column, the way
      * the Flutter rows draw it. [tile] keeps the old 28 dp `surface3` tile for a row that sits among tiled rows.
      */
-    public data class Glyph(val icon: ImageVector, val tile: Boolean = false) : KitRowLeading
+    public data class Glyph(val icon: ImageVector, val tile: Boolean = false, val current: Boolean = false) : KitRowLeading
 
     /**
      * Two letters in the tile, for a thing with no glyph (a server, a project). Never coloured by
@@ -91,16 +94,27 @@ public sealed interface KitRowTrailing {
     /** The row opens a page. */
     public data object Chevron : KitRowTrailing
 
+    /** A chosen row, with the check after its words (Flutter project/model choices). */
+    public data object Check : KitRowTrailing
+
+    /** The lock glyph and explanation of an always-on setting. */
+    public data class Locked(val text: String) : KitRowTrailing
+
     /**
      * A value in quiet words, optionally with the chevron. It goes under the title when it cannot
      * share the line.
      */
-    public data class Value(val text: String, val chevron: Boolean = true) : KitRowTrailing
+    public data class Value(val text: String, val chevron: Boolean = true, val prominent: Boolean = false) : KitRowTrailing
 
     /**
      * The row's one act ("Turn on"): a trailing tertiary; under the supporting line from 1.3× text.
      */
     public data class Action(val action: KitLineAction) : KitRowTrailing
+
+    /** A separately labelled glyph target, as in Flutter's timeline Fork control. */
+    public data class IconAction(val action: KitLineAction) : KitRowTrailing {
+        init { require(action.icon != null) { "An icon action needs a glyph" } }
+    }
 }
 
 @Composable
@@ -115,7 +129,7 @@ internal fun RowLeadingTile(leading: KitRowLeading, dim: Boolean) {
                 leading.icon,
                 null,
                 Modifier.size((tokens.smallIcon * minOf(kitTextScale(), TextScalePolicy.ICON_CAP)).dp),
-                colorFilter = ColorFilter.tint(if (dim) colors.text3 else colors.text2),
+                colorFilter = ColorFilter.tint(if (dim) colors.text3 else if (leading.current) colors.accent else colors.text2),
             )
         }
         return
@@ -174,8 +188,22 @@ internal fun RowValue(value: KitRowTrailing.Value, modifier: Modifier = Modifier
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
     ) {
-        KitText(value.text, role = TypeRole.Secondary, tone = TextTone.Tertiary, maxLines = 1)
+        KitText(value.text, role = if (value.prominent) TypeRole.Body else TypeRole.Secondary, tone = if (value.prominent) TextTone.Secondary else TextTone.Tertiary, maxLines = 1)
         if (value.chevron) RowChevron()
+    }
+}
+
+@Composable
+internal fun RowLockedValue(value: KitRowTrailing.Locked) {
+    val tokens = LocalKitTokens.current
+    Row(
+        Modifier.widthIn(max = (LocalKitWindow.current.widthDp / 2).dp) // F: lib/ui/kit/kit_row.dart:627
+            .padding(start = Space.S2.dp, end = Space.S3.dp).testTag("kit-row-locked-value"),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
+    ) {
+        KitGlyph(KitIcons.locked, LocalKitColors.current.text3, tokens.smallIcon.dp)
+        KitText(value.text, Modifier.weight(1f, fill = false), role = TypeRole.Secondary, tone = TextTone.Tertiary, maxLines = 1)
     }
 }
 

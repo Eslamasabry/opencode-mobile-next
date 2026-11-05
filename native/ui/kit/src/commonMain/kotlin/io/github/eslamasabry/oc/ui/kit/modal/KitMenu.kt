@@ -78,6 +78,8 @@ public data class KitMenuItem(
     val destructive: Boolean = false,
     val checked: Boolean? = null,
     val enabled: KitEnabled = KitEnabled.Enabled,
+    /** A stateful owner may retain its reviewed target while the item starts its action. */
+    val dismissOnSelect: Boolean = true,
 )
 
 /** One line of an arranged menu. */
@@ -161,7 +163,7 @@ public fun KitMenu(
                         items = items,
                         title = title,
                         onChoose = { item ->
-                            onDismissRequest()
+                            if (item.dismissOnSelect) onDismissRequest()
                             item.onSelect()
                         },
                     )

@@ -15,6 +15,7 @@ plugins { id("oc.kmp.feature") }
 kotlin {
     sourceSets.commonMain.dependencies { implementation(project(":ui:kit-chat")) }
     sourceSets.getByName("desktopTest").dependencies {
+        implementation(project(":ui:gate"))
         implementation(
             libs.compose.desktop.currentos
         ) // skiko natives for the desktop UI tests and goldens

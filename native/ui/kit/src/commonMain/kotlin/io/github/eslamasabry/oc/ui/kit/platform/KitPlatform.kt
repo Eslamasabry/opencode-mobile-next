@@ -83,6 +83,9 @@ public interface KitPlatform {
     /** The platform's short local date/time; omit the date for a message from the same local day. */
     public fun messageTime(createdMs: Long, nowMs: Long): String? = null
 
+    /** User-perceived characters for measured labels. Null keeps the full label as a conservative fit probe. */
+    public fun graphemePrefix(text: String, count: Int): String? = null
+
     /**
      * System bars (plan 06 §5.6; Dart `KitSystemBars`): a transparent status bar whose icons
      * contrast with [ground] ([darkContent] = dark icons), and no navigation-bar contrast scrim.

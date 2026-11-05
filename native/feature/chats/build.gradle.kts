@@ -2,6 +2,7 @@ plugins { id("oc.kmp.feature") }
 
 kotlin {
     sourceSets.commonMain.dependencies {
+        implementation(project(":ui:kit-chat"))
         implementation(project(":engine:git"))
         implementation(
             project(":engine:agents")
@@ -12,6 +13,9 @@ kotlin {
 }
 
 kotlin {
-    sourceSets.getByName("desktopTest").dependencies { implementation(libs.compose.desktop.currentos) }
+    sourceSets.getByName("desktopTest").dependencies {
+        implementation(libs.compose.desktop.currentos)
+        implementation(project(":ui:gate"))
+    }
 }
 apply(from = rootProject.file("gradle/desktop-golden-fonts.gradle"))

@@ -1,126 +1,128 @@
 package io.github.eslamasabry.oc.feature.chat.notes
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.key
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.ui.design.tokens.Space
-import io.github.eslamasabry.oc.ui.kit.KitButton
-import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.KitAction
+import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.frame.*
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
-import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
-import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
-import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
-import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
-import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
-import io.github.eslamasabry.oc.ui.kit.state.KitNotice
-import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
+import io.github.eslamasabry.oc.ui.kit.modal.*
+import io.github.eslamasabry.oc.ui.kit.state.*
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
-/**
- * Session note: a visible header action and a kit sheet, with Save and Remove as explicit
- * decisions.
- */
+/** Flutter's note editor: a full page, one field, and actions pinned below the scrolling words. */
 @Composable
 public fun SessionNoteScreen(state: SessionNoteUi, actions: SessionNoteActions) {
-    val working = stringResource(Res.string.stateNoteWorking)
-    val locked = stringResource(Res.string.stateNoteReloadFirst)
-    KitSheet(
-        visible = state.visible,
-        onDismissRequest = actions::closeNote,
-        title = stringResource(Res.string.stateNoteTitle),
-        closeLabel = stringResource(Res.string.kitSheetClose),
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
-            KitNotice(stringResource(Res.string.stateNoteDescription))
-            state.failure?.let { failure ->
-                val conflict =
-                    failure is Failure.Conflict ||
-                        (failure is Failure.Refused && failure.reason == RefusalReason.StaleScope)
-                KitErrorNotice(
-                    message =
-                        stringResource(
-                            if (conflict) Res.string.stateNoteChanged
-                            else Res.string.stateNoteFailed
-                        ),
-                    failure = failure,
-                )
-            }
-            if (state.loading && !state.ready) KitSkeletonRows()
-            if (state.ready) {
-                key(state.editRevision) {
-                    val field = rememberTextFieldState(state.draft)
-                    KitField(
-                        state = field,
-                        label = stringResource(Res.string.stateNoteField),
-                        kind = KitFieldKind.Multiline,
-                        enabled =
-                            if (state.loading) KitEnabled.Disabled(working) else KitEnabled.Enabled,
-                        error =
-                            if (state.tooLarge) stringResource(Res.string.stateNoteTooLarge)
-                            else null,
-                        onTextChanged = actions::changeNote,
-                        multilineLines = 4..12,
-                    )
-                }
-                state.savedReceipt?.let {
-                    KitNotice(
-                        stringResource(
-                            if (it) Res.string.stateNoteSaved else Res.string.stateNoteRemoved
-                        )
-                    )
-                }
-            }
-            KitButton(
-                label = stringResource(Res.string.stateNoteSave),
-                onClick = actions::saveNote,
-                working = state.loading,
-                enabled =
-                    if (
-                        state.ready &&
-                            !state.loading &&
-                            !state.tooLarge &&
-                            state.draft.isNotBlank() &&
-                            state.dirty
-                    )
-                        KitEnabled.Enabled
-                    else KitEnabled.Disabled(if (state.loading) working else locked),
-            )
-            if (state.saved != null)
-                KitButton(
-                    label = stringResource(Res.string.stateNoteRemove),
-                    onClick = actions::removeNote,
-                    role = KitButtonRole.Secondary,
-                    destructive = true,
-                    enabled =
-                        if (state.loading) KitEnabled.Disabled(working) else KitEnabled.Enabled,
-                )
-            KitButton(
-                label = stringResource(Res.string.stateNoteReload),
-                onClick = actions::reloadNote,
-                role = KitButtonRole.Tertiary,
-                enabled = if (state.loading) KitEnabled.Disabled(working) else KitEnabled.Enabled,
-            )
+    val title = stringResource(Res.string.sessionNoteTitle)
+    var savingHere by remember(state.visible) { mutableStateOf(false) }
+    LaunchedEffect(state.loading, state.dirty, state.savedReceipt, state.failure) {
+        if (savingHere && !state.loading && state.failure != null) savingHere = false
+        if (savingHere && !state.loading && !state.dirty && state.savedReceipt == true && state.failure == null) {
+            savingHere = false
+            actions.closeNote()
         }
     }
-    KitConfirm(
-        spec =
-            if (!state.discard) null
-            else
-                KitConfirmSpec(
-                    title = stringResource(Res.string.stateNoteDiscardTitle),
-                    confirmLabel = stringResource(Res.string.stateNoteDiscard),
-                    body = stringResource(Res.string.stateNoteDiscardBody),
-                    kind = KitConfirmKind.Destructive,
-                ),
-        onConfirm = actions::discardNote,
-        onCancel = actions::keepEditing,
-    )
+    KitPageOverlay(state.visible, title, actions::closeNote) {
+        val wait = stringResource(Res.string.sessionNoteSaving)
+        val locked = stringResource(Res.string.sessionNoteFieldLocked)
+        val conflict = state.failure is Failure.Conflict ||
+            (state.failure is Failure.Refused && state.failure.reason == RefusalReason.StaleScope)
+        val enabled = if (state.loading) KitEnabled.Disabled(wait) else if (conflict) KitEnabled.Disabled(locked) else KitEnabled.Enabled
+        KitScreen(
+            topBar = { KitTopBar(title, exit = KitTopBarExit.Back, exitLabel = stringResource(Res.string.kitTopBarBack), onExit = actions::closeNote) },
+            width = KitScreenWidth.List,
+            loading = state.ready && state.loading,
+            loadingLabel = wait,
+            bottom = if (!state.ready || (!state.dirty && state.saved == null)) null else ({
+                KitActionBlock(
+                    primary = if (!state.dirty) null else KitAction(
+                        stringResource(Res.string.sessionNoteSave),
+                        { savingHere = true; actions.saveNote() },
+                        icon = KitIcons.check,
+                        enabled = when {
+                            state.loading || conflict -> enabled
+                            state.tooLarge -> KitEnabled.Disabled(stringResource(Res.string.sessionNoteTooLarge))
+                            state.draft.isBlank() -> KitEnabled.Disabled(stringResource(if (state.saved == null) Res.string.sessionNoteWriteFirst else Res.string.sessionNoteEmptyUseDelete))
+                            else -> KitEnabled.Enabled
+                        },
+                    ),
+                    tertiary = if (state.saved == null) emptyList() else listOf(KitAction(
+                        stringResource(Res.string.sessionNoteRemove),
+                        actions::removeNote,
+                        enabled = enabled,
+                        icon = KitIcons.delete,
+                        destructive = true,
+                    )),
+                )
+            }),
+        ) {
+            if (!state.ready) {
+                if (state.failure != null) KitStateView(
+                    kind = KitStateKind.Error,
+                    title = stringResource(Res.string.sessionNoteLoadFailed),
+                    body = stringResource(if (conflict) Res.string.sessionNoteChanged else Res.string.stateNoteFailed),
+                    failure = state.failure,
+                    onRetry = actions::reloadNote,
+                ) else KitStateView(kind = KitStateKind.Loading, title = stringResource(Res.string.sessionNoteLoading), icon = KitIcons.note)
+            } else {
+                Column(
+                    Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = LocalKitTokens.current.gutter.dp).padding(top = Space.S3.dp),
+                    verticalArrangement = Arrangement.spacedBy(Space.S4.dp),
+                ) {
+                    KitText(stringResource(Res.string.sessionNoteDescription), role = TypeRole.Secondary, tone = TextTone.Secondary)
+                    state.failure?.let { failure ->
+                        KitErrorNotice(
+                            message = stringResource(if (conflict) Res.string.sessionNoteChanged else Res.string.sessionNoteSaveFailed),
+                            failure = failure,
+                            retry = KitLineAction(stringResource(Res.string.sessionNoteRefresh), actions::reloadNote),
+                        )
+                    }
+                    key(state.editRevision) {
+                        val field = rememberTextFieldState(state.draft)
+                        KitField(
+                            state = field,
+                            label = stringResource(Res.string.sessionNoteFieldLabel),
+                            placeholder = stringResource(Res.string.sessionNoteHint),
+                            kind = KitFieldKind.Multiline,
+                            enabled = enabled,
+                            error = if (state.tooLarge) stringResource(Res.string.sessionNoteTooLarge) else null,
+                            modifier = Modifier.testTag("session-note-editor"),
+                            onTextChanged = actions::changeNote,
+                        )
+                    }
+                    if (state.savedReceipt == false) KitNotice(stringResource(Res.string.sessionNoteRemoved))
+                }
+            }
+        }
+        KitConfirm(
+            spec = if (!state.discard) null else KitConfirmSpec(
+                title = stringResource(Res.string.sessionNoteDiscard),
+                body = stringResource(Res.string.sessionNoteDiscardDetail),
+                confirmLabel = stringResource(Res.string.sessionNoteDiscardAction),
+                cancelLabel = stringResource(Res.string.sessionNoteKeepEditing),
+                kind = KitConfirmKind.Discard,
+                icon = KitIcons.note,
+            ),
+            onConfirm = actions::discardNote,
+            onCancel = actions::keepEditing,
+        )
+    }
 }

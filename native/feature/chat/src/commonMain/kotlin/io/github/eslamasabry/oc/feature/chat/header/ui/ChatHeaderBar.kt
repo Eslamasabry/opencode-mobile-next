@@ -1,5 +1,10 @@
 package io.github.eslamasabry.oc.feature.chat.header.ui
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.design.type.TextTone
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
@@ -26,6 +31,7 @@ import io.github.eslamasabry.oc.feature.chat.notes.SessionNoteScreen
 import io.github.eslamasabry.oc.feature.chat.notes.SessionNoteUi
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarScope
@@ -227,20 +233,21 @@ public fun ChatHeaderTopBar(
         onExit = onBack,
         onTitleTap = actions::renameRequested,
         titleTapLabel = stringResource(Res.string.chatUiRenameSession),
-        actions = extraActions,
+        actions = emptyList(),
         more = { hidden ->
             KitChatMoreMenu(
                 label = stringResource(Res.string.kitTopBarMore),
                 expanded = state.menuOpen,
                 items =
                     items +
-                        hidden.map { extra ->
+                        (extraActions + hidden).map { extra ->
                             KitMenuItem(
                                 label = extra.label,
                                 onSelect = {
                                     actions.closeMenu()
                                     extra.onClick()
                                 },
+                                icon = extra.icon,
                                 enabled =
                                     if (extra.enabled) KitEnabled.Enabled
                                     else KitEnabled.Disabled(extra.disabledReason.orEmpty()),
@@ -324,14 +331,16 @@ public fun ChatHeaderOverlays(slot: ChatHeaderSlot) {
                         confirmLabel = stringResource(Res.string.chatUiShareSession),
                         kind = KitConfirmKind.Neutral,
                         body = stringResource(Res.string.chatUiAnyoneWithTheLinkCanViewThis),
+                        icon = KitIcons.globe,
                     )
                 HeaderConfirm.Unshare ->
                     KitConfirmSpec(
                         title = stringResource(Res.string.safetyStopSharingTitle),
                         confirmLabel = stringResource(Res.string.chatUiStopSharing),
-                        kind = KitConfirmKind.Stop,
+                        kind = KitConfirmKind.Destructive,
                         body = stringResource(Res.string.safetyStopSharingBody),
                         cancelLabel = stringResource(Res.string.safetyStopSharingKeep),
+                        icon = KitIcons.unlink,
                     )
                 is HeaderConfirm.Archive ->
                     KitConfirmSpec(
@@ -339,6 +348,7 @@ public fun ChatHeaderOverlays(slot: ChatHeaderSlot) {
                         confirmLabel = stringResource(Res.string.sessionMenuArchive),
                         kind = KitConfirmKind.Neutral,
                         body = stringResource(Res.string.sessionArchiveBody),
+                        icon = KitIcons.archive,
                     )
                 is HeaderConfirm.Delete ->
                     KitConfirmSpec(
@@ -346,6 +356,7 @@ public fun ChatHeaderOverlays(slot: ChatHeaderSlot) {
                         confirmLabel = stringResource(Res.string.sessionMenuDelete),
                         kind = KitConfirmKind.Destructive,
                         body = stringResource(Res.string.sessionDeleteBody),
+                        icon = KitIcons.delete,
                     )
             },
         onConfirm = actions::confirm,
@@ -378,6 +389,7 @@ public fun ChatHeaderOverlays(slot: ChatHeaderSlot) {
         visible = sheet is HeaderSheet.ContinueOnComputer,
         onDismissRequest = actions::closeSheet,
         title = stringResource(Res.string.handoffUiComputerTitle),
+        icon = KitIcons.computer,
         closeLabel = stringResource(Res.string.kitSheetClose),
     ) {
         (sheet as? HeaderSheet.ContinueOnComputer)?.let { ComputerBody(it, actions) }
@@ -465,21 +477,22 @@ private fun DetailsBody(facts: DetailsUi) {
 @Composable
 private fun ComputerBody(sheet: HeaderSheet.ContinueOnComputer, actions: ChatHeaderActions) {
     val command = sheet.command
-    Column(Modifier.fillMaxWidth().testTag("continue-on-computer-sheet")) {
-        KitNotice(message = stringResource(Res.string.handoffUiComputerIntro, command.binary))
+    Column(Modifier.fillMaxWidth().testTag("continue-on-computer-sheet"), verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+        KitText(stringResource(Res.string.handoffUiComputerIntro, command.binary))
         val text = command.command
         if (text != null) {
             KitSectionLabel(stringResource(Res.string.handoffUiComputerCommandLabel))
             KitCodeBlock(
                 source = text,
                 kind = KitCodeKind.Command,
+                maxLines = Int.MAX_VALUE,
                 modifier = Modifier.testTag("continue-on-computer-command"),
                 wrap = true,
                 copyLabel = stringResource(Res.string.handoffSheetCopyCommand),
                 copiedLabel = stringResource(Res.string.kitCopied),
                 onCopy = { actions.copyResumeCommand() },
             )
-            KitNotice(message = stringResource(Res.string.handoffUiComputerDirectoryNote))
+            KitText(stringResource(Res.string.handoffUiComputerDirectoryNote), role = TypeRole.Secondary, tone = TextTone.Secondary)
             KitDetailsFold(
                 label = stringResource(Res.string.kitDetails),
                 copyLabel = stringResource(Res.string.kitCopyDetails),
@@ -564,6 +577,7 @@ private fun ContinueBody(
                                     )
                                 else KitRowTrailing.Chevron,
                             enabled = !working,
+                            disabledReason = if (working) stringResource(Res.string.continueWithPreparing) else null,
                             onClick = { actions.continueWith(choice) },
                         )
                     }
@@ -577,6 +591,7 @@ private fun ContinueBody(
                                 title = choice.label,
                                 trailing = KitRowTrailing.Chevron,
                                 enabled = !working,
+                                disabledReason = if (working) stringResource(Res.string.continueWithPreparing) else null,
                                 onClick = { handoffActions.prepareHandoff(choice) },
                             )
                         }
@@ -619,6 +634,24 @@ private fun menuItems(
                     HeaderAction.CopyTranscript -> actions.copyTranscript(words, mask)
                     else -> actions.choose(action)
                 }
+            },
+            icon = when (action) {
+                HeaderAction.Find -> KitIcons.search
+                HeaderAction.Details -> KitIcons.info
+                HeaderAction.Share -> KitIcons.link
+                HeaderAction.Unshare -> KitIcons.unlink
+                HeaderAction.Fork -> KitIcons.fork
+                HeaderAction.Rename -> KitIcons.edit
+                HeaderAction.ContinueWith -> KitIcons.swap
+                HeaderAction.AgentOptions -> KitIcons.agent
+                HeaderAction.AgentHandoff -> KitIcons.forward
+                HeaderAction.CardsSettings -> KitIcons.layers
+                HeaderAction.ContinueOnComputer -> KitIcons.computer
+                HeaderAction.ImportConversation -> KitIcons.download
+                HeaderAction.Handoff -> KitIcons.forward
+                HeaderAction.CopyTranscript -> KitIcons.copy
+                HeaderAction.Archive -> KitIcons.archive
+                HeaderAction.Delete -> KitIcons.delete
             },
             group =
                 when (action) {

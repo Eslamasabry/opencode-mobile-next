@@ -52,6 +52,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.ReceiptCheckResult
 import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFailureKind
 import io.github.eslamasabry.oc.feature.chat.presentation.SelectTextUi
 import io.github.eslamasabry.oc.feature.chat.presentation.StatusPick
+import io.github.eslamasabry.oc.feature.chat.presentation.TargetKind
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestActions
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi
@@ -123,6 +124,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatFeelPictureLoading
 import io.github.eslamasabry.oc.ui.words.res.chatFeelPictureOnServer
 import io.github.eslamasabry.oc.ui.words.res.chatFeelPictureOnWeb
 import io.github.eslamasabry.oc.ui.words.res.chatFeelSelectText
+import io.github.eslamasabry.oc.ui.words.res.chatUiCopyMessageText
 import io.github.eslamasabry.oc.ui.words.res.chatFeelShare
 import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoAction
 import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoBody
@@ -148,6 +150,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiDeleteThisMessage
 import io.github.eslamasabry.oc.ui.words.res.chatUiEarlierMessageCount
 import io.github.eslamasabry.oc.ui.words.res.chatUiExpandReasoning
 import io.github.eslamasabry.oc.ui.words.res.chatUiFiles
+import io.github.eslamasabry.oc.ui.words.res.chatUiTimeline
 import io.github.eslamasabry.oc.ui.words.res.chatUiForkFromThisPrompt
 import io.github.eslamasabry.oc.ui.words.res.chatUiNotConnectedToTheServerRightNow
 import io.github.eslamasabry.oc.ui.words.res.chatUiOpenCodeIsReconnectingTryAgainShortly
@@ -390,13 +393,18 @@ public fun ChatScreen(
                                 (if (demoMode) emptyList()
                                 else
                                     listOfNotNull(
-                                        // Looks pass: Files leads, so a phone's two bar icons are Files and
-                                        // Git; the rest sit in the ⋯ menu.
+                                        // Project navigation is in the scope line; these actions stay in the session menu.
                                         KitLineAction(
                                             stringResource(Res.string.chatUiFiles),
                                             actions::openFiles,
                                             testTag = "chat-files-open",
                                                 icon = KitIcons.files,
+                                        ),
+                                        KitLineAction(
+                                            stringResource(Res.string.chatUiTimeline),
+                                            actions::openTimeline,
+                                            testTag = "chat-timeline-open",
+                                            icon = KitIcons.timeline,
                                         ),
                                         facts.tasks?.let { tasks ->
                                             KitLineAction(
@@ -491,11 +499,11 @@ public fun ChatScreen(
                             KitStatus.highest(
                                 listOf(state.status?.let { statusLine(it, actions) }, appStatus)
                             ),
-                    search = state.find?.let { find -> @Composable { FindBar(find, actions) } },
                     loading = state.phase == ChatPhase.Loading,
                     loadingLabel = stringResource(Res.string.chatLoadingConversation),
                     bottom = {
                         Column {
+                            state.find?.let { TranscriptFindBar(it, actions) }
                             replyOffer?.invoke()
                             // P12-VOICE: the reading strip (Stop, notes) and the once-per-phone
                             // consent.
@@ -566,6 +574,15 @@ public fun ChatScreen(
                                         reveal = reveal,
                                         motion = motion,
                                         onOpenMenu = actions::openMessageMenu,
+                                        onCopyReply = { footer ->
+                                            actions.messageAction(
+                                                io.github.eslamasabry.oc.feature.chat.presentation.MessageTarget(
+                                                    footer.turnId, footer.key,
+                                                    io.github.eslamasabry.oc.feature.chat.presentation.TargetKind.Reply, null,
+                                                ),
+                                                MessageAction.Copy,
+                                            )
+                                        },
                                         onRetrySend = actions::retrySend,
                                         receiptChecks = state.receiptChecks,
                                         onCheckReceipt = actions::checkReceipt,
@@ -606,11 +623,11 @@ public fun ChatScreen(
                     reads = replyReader != null,
                 )
                 ChatContextSheet(facts.context, contextOpen) { contextOpen = false }
-                ChatTasksSheet(facts.tasks, tasksOpen) { tasksOpen = false }
+                ChatTasksSheet(facts.tasks, tasksOpen, onDismiss = { tasksOpen = false }, running = state.live != null)
                 if (activeContext != null) ActiveContextSheet(activeContext)
                 SelectTextSheet(state.select, actions)
                 PictureSheet(state.picture, actions)
-                ChatTimelineSheet(state.timeline, actions)
+                ChatTimelineSheet(state.timeline, actions, facts.nowMs)
                 KitConfirm(
                     spec = confirmSpec(state.confirm),
                     onConfirm = {
@@ -675,98 +692,34 @@ private fun EarlierMessagesPill(
     }
 }
 
-@Composable
-private fun FindBar(find: FindUi, actions: ChatActions) {
-    val field = rememberTextFieldState(find.query)
-    LaunchedEffect(find.query) {
-        if (field.text.toString() != find.query) field.edit { replace(0, length, find.query) }
-    }
-    Column(
-        Modifier.fillMaxWidth().padding(horizontal = Space.S4.dp).testTag("transcript-find-bar")
-    ) {
-        KitField(
-            field,
-            stringResource(Res.string.transcriptFindHint),
-            Modifier.testTag("transcript-find-input"),
-            onTextChanged = { actions.find(it) },
-            onSubmit = actions::findNext,
-        )
-        if (find.partial) {
-            KitText(stringResource(Res.string.transcriptFindPartial))
-            KitButton(
-                stringResource(
-                    if (find.searchingAll) Res.string.transcriptFindStopSearchingAll
-                    else Res.string.transcriptFindAll
-                ),
-                if (find.searchingAll) actions::cancelSearchAll else actions::searchAllHistory,
-                Modifier.testTag(
-                    if (find.searchingAll) "transcript-find-cancel-all" else "transcript-find-older"
-                ),
-                role = KitButtonRole.Tertiary,
-            )
-        }
-        find.olderFailure?.let { HistoryReadFailure(it, actions::searchAllHistory) }
-        find.excerpt?.let { KitFindExcerpt(it, find.query) }
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            val count =
-                when {
-                    find.query.isBlank() -> ""
-                    find.count == 0 -> stringResource(Res.string.transcriptFindNone)
-                    else ->
-                        pluralStringResource(
-                            Res.plurals.transcriptFindCount,
-                            find.count,
-                            Numbers.format(find.count),
-                            find.current + 1,
-                        )
-                }
-            KitText(count, Modifier.weight(1f))
-            KitButton(
-                stringResource(Res.string.transcriptFindPrevious),
-                actions::findPrevious,
-                Modifier.testTag("transcript-find-previous"),
-                role = KitButtonRole.Tertiary,
-            )
-            KitButton(
-                stringResource(Res.string.transcriptFindNext),
-                actions::findNext,
-                Modifier.testTag("transcript-find-next"),
-                role = KitButtonRole.Tertiary,
-            )
-            KitButton(
-                stringResource(Res.string.transcriptFindClose),
-                { actions.find(null) },
-                role = KitButtonRole.Tertiary,
-            )
-        }
-    }
-}
-
 /**
  * One action list per message (plan 09 §6.6, Flutter `_messageContextActions`). Copy, Share and
  * Select text leave the app through the chat's `ChatOutside`; a list without a platform (slice 2)
  * has no Copy.
  */
 @Composable
-private fun MessageMenu(
+internal fun MessageMenu(
     menu: MessageMenuUi?,
     actions: ChatActions,
     modifier: Modifier,
     reads: Boolean = false,
 ) {
     val feel = menu?.actions?.contains(MessageAction.Share) == true
+    val prompt = menu?.target?.kind == TargetKind.Prompt
     val items =
         menu
             ?.actions
             .orEmpty()
             .filter {
-                (feel || it != MessageAction.Copy) && (reads || it != MessageAction.ReadAloud)
+                // Only replies have Copy beside More. A prompt must keep its copy action here.
+                (feel || prompt || it != MessageAction.Copy) &&
+                    (reads || it != MessageAction.ReadAloud)
             }
             .map { action ->
                 KitMenuItem(
                     label =
                         when (action) {
-                            MessageAction.Copy -> stringResource(Res.string.kitCopy)
+                            MessageAction.Copy -> stringResource(Res.string.chatUiCopyMessageText)
                             MessageAction.Share -> stringResource(Res.string.chatFeelShare)
                             MessageAction.SelectText ->
                                 stringResource(Res.string.chatFeelSelectText)
@@ -783,6 +736,18 @@ private fun MessageMenu(
                             MessageAction.Delete -> stringResource(Res.string.chatUiDeleteMessage)
                         },
                     onSelect = { menu?.let { actions.messageAction(it.target, action) } },
+                    icon = when (action) {
+                        MessageAction.Copy -> KitIcons.copy
+                        MessageAction.Share -> KitIcons.externalLink
+                        MessageAction.SelectText -> KitIcons.text
+                        MessageAction.EditAndResend -> KitIcons.edit
+                        MessageAction.ReadAloud -> KitIcons.volume
+                        MessageAction.SendAgain -> KitIcons.send
+                        MessageAction.Fork -> KitIcons.fork
+                        MessageAction.Changes -> KitIcons.review
+                        MessageAction.UndoFromHere -> KitIcons.history
+                        MessageAction.Delete -> KitIcons.delete
+                    },
                     destructive = action == MessageAction.Delete,
                 )
             }

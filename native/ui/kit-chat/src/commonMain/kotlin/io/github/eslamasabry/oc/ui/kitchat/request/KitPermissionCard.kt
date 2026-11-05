@@ -1,13 +1,12 @@
 package io.github.eslamasabry.oc.ui.kitchat.request
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -21,18 +20,22 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.platform.testTag
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
+import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
-import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
-import io.github.eslamasabry.oc.ui.kit.foundation.shape
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitMonoLtr
 
 /** Plan 09 R13 / plan 06 §8: the card height share grows at very large text. */
@@ -45,7 +48,7 @@ private const val LARGE_TEXT = 2.0f
  * engine words the ask and decides what happens; this card only draws it. The needs-you look
  * (attention surface and line), the [title], an optional [summary], the [subject] (the command or
  * the paths) in mono reading left to right and redacted, then the answers as visible buttons (R9):
- * Allow once is the primary answer, Deny is never drawn in the primary colour, and Always allow
+ * Allow once is the primary answer (secondary among list rows), Deny is never drawn in the primary colour, and Always allow
  * shows only when [alwaysLabel] and [onAlways] are given.
  *
  * The card is at most 700 dp wide and 45 % of the window tall (60 % at 2× text and above); longer
@@ -70,6 +73,7 @@ public fun KitPermissionCard(
     disabledReason: String? = null,
     modifier: Modifier = Modifier,
     targets: List<KitRequestTarget> = emptyList(),
+    secondary: Boolean = false,
 ) {
     require(enabled || disabledReason != null) {
         "KitPermissionCard: a card that cannot answer must say why"
@@ -88,6 +92,7 @@ public fun KitPermissionCard(
                 onDeny,
                 enabled,
                 reason,
+                secondary,
             )
         },
     ) {
@@ -138,61 +143,41 @@ private fun Answers(
     onDeny: () -> Unit,
     enabled: Boolean,
     reason: String?,
+    secondary: Boolean,
 ) {
+    val density = LocalDensity.current
+    val measurer = rememberTextMeasurer()
+    val style = LocalKitTypography.current.style(TypeRole.Button)
+    val availability = KitEnabled.of(enabled, reason)
+    val signal = LocalKitAppearance.current.style == KitSurfaceStyle.Signal
     Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            SecondaryAnswer(denyLabel, onDeny, enabled, reason, Modifier.weight(1f))
-            KitButton(
-                allowOnceLabel,
-                onAllowOnce,
-                Modifier.weight(1f),
-                enabled = enabled,
-                disabledReason = reason,
-            )
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val half = (maxWidth - Space.S2.dp) / 2 // F: lib/ui/kit/kit_request_card.dart:965
+            fun fits(label: String): Boolean = with(density) {
+                measurer.measure(label, style, softWrap = false, maxLines = 1).size.width.toDp() + Space.S6.dp * 2 <= half // F: lib/ui/kit/kit_request_card.dart:1092-1105
+            }
+            val allow: @Composable (Modifier) -> Unit = { modifier ->
+                KitButton(allowOnceLabel, onAllowOnce, modifier.testTag("permission-card-allow"),
+                    role = if (secondary && !signal) KitButtonRole.Secondary else KitButtonRole.Primary,
+                    enabled = availability)
+            }
+            val reject: @Composable (Modifier) -> Unit = { modifier ->
+                KitButton(denyLabel, onDeny, modifier.testTag("permission-card-reject"), role = KitButtonRole.Secondary, enabled = availability)
+            }
+            if (fits(allowOnceLabel) && fits(denyLabel)) Row(
+                horizontalArrangement = Arrangement.spacedBy(Space.S2.dp), verticalAlignment = Alignment.CenterVertically,
+            ) {
+                reject(Modifier.weight(1f))
+                allow(Modifier.weight(1f))
+            } else Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+                if (secondary) { allow(Modifier.fillMaxWidth()); reject(Modifier.fillMaxWidth()) }
+                else { reject(Modifier.fillMaxWidth()); allow(Modifier.fillMaxWidth()) }
+            }
         }
+        if (!enabled && reason != null) KitText(reason, role = TypeRole.Secondary, tone = TextTone.Secondary)
         if (alwaysLabel != null && onAlways != null) {
-            SecondaryAnswer(alwaysLabel, onAlways, enabled, reason, Modifier.fillMaxWidth())
+            KitButton(alwaysLabel, onAlways, Modifier.fillMaxWidth(), role = KitButtonRole.Secondary, enabled = availability)
         }
-    }
-}
-
-/**
- * A secondary answer: the card's own face with a hairline, primary words; never the accent fill.
- * (`:ui:kit` has no secondary button yet; when it lands this becomes it.)
- */
-@Composable
-private fun SecondaryAnswer(
-    label: String,
-    onClick: () -> Unit,
-    enabled: Boolean,
-    reason: String?,
-    modifier: Modifier,
-) {
-    val colors = LocalKitColors.current
-    val tokens = LocalKitTokens.current
-    val shape = KitShapeId.Button.shape()
-    KitTappable(
-        onClick = onClick,
-        modifier =
-            modifier
-                .heightIn(min = tokens.buttonHeight.dp)
-                .border(1.dp, colors.hairline, shape)
-                .background(colors.surface2, shape),
-        enabled = enabled,
-        disabledReason = reason,
-        shape = KitShapeId.Button,
-    ) {
-        KitText(
-            label,
-            Modifier.padding(horizontal = Space.S4.dp),
-            role = TypeRole.Button,
-            tone = if (enabled) TextTone.Primary else TextTone.Tertiary,
-            kind = KitTextKind.Frame,
-            maxLines = 2,
-        )
     }
 }
 

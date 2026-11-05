@@ -77,6 +77,8 @@ public data class KitSurfaceInput(
     val disabled: Boolean = false,
     val action: Boolean = false,
     val withinGroup: Boolean = false,
+    /** A part-specific token radius, e.g. Flutter's composerRadius / composerRadiusWide. */
+    val radius: Dp? = null,
 )
 
 private fun Color.toArgb(): Argb = Argb(
@@ -96,12 +98,15 @@ private fun KitShapeId.radiusDp(): Float =
 public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
     val style = LocalKitStyle.current
     val roles = LocalKitRoles.current
-    val shape = input.shape.shape()
     val sharp = style.spec.tokens.sharpRadius
-    val base = input.shape.radiusDp()
+    val base = input.radius?.value ?: input.shape.radiusDp()
     val sheet = input.shape == KitShapeId.Sheet
     val r = StyleResolver.corner(base, style.knobs.corners, sharp)
     val radii = if (sheet) Radii(r, r, 0f, 0f) else Radii.all(if (input.shape == KitShapeId.Square) 0f else r)
+    val shape = if (input.radius == null) input.shape.shape() else RoundedCornerShape(
+        topStart = radii.topStart.dp, topEnd = radii.topEnd.dp,
+        bottomStart = radii.bottomStart.dp, bottomEnd = radii.bottomEnd.dp,
+    )
     val request =
         SurfaceRequest(
             roles = roles,

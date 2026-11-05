@@ -76,6 +76,9 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.KitBlockKind
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitPromptBubble
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitQuietLine
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyBlock
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyFooter
+import io.github.eslamasabry.oc.ui.words.res.kitCopy
+import io.github.eslamasabry.oc.ui.words.res.kitTurnMore
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptList
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitThoughtBlock
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitMessageTimestamp
@@ -258,6 +261,7 @@ internal fun ChatTranscriptList(
     receiptChecks: ImmutableMap<Long, ReceiptCheckUi> = persistentMapOf(),
     onCheckReceipt: ((Long) -> Unit)? = null,
     display: TranscriptDisplayChoices = TranscriptDisplayChoices(),
+    onCopyReply: ((FooterRow) -> Unit)? = null,
 ) {
     val folds = rememberTranscriptFolds()
     val currentRows by rememberUpdatedState(rows)
@@ -276,6 +280,9 @@ internal fun ChatTranscriptList(
     // B0: a repeated key kills the whole screen (LazyColumn throws), so the list never sees one.
     val unique = remember(rows) { rows.distinctKeys() }
     val tables = remember(unique) { LongTable.of(unique) }
+    val copyableTurns = remember(unique) {
+        unique.filterIsInstance<BlockRow>().filter { it.text.isNotBlank() }.mapTo(hashSetOf()) { it.turnId }
+    }
     val newestKey =
         when {
             live != null -> ListKeys.LIVE
@@ -374,6 +381,7 @@ internal fun ChatTranscriptList(
                             onOpenFile,
                             reasoningExpanded,
                             onCompactAgain,
+                            onCopyReply.takeIf { row.turnId in copyableTurns },
                         )
                 } else {
                     ChatRow(
@@ -391,6 +399,7 @@ internal fun ChatTranscriptList(
                         onOpenFile,
                         reasoningExpanded,
                         onCompactAgain,
+                        onCopyReply.takeIf { row.turnId in copyableTurns },
                     )
                 }
                 if (display.timestampsVisible) {
@@ -514,6 +523,7 @@ private fun ChatRow(
         null,
     reasoningExpanded: Boolean = false,
     onCompactAgain: (() -> Unit)? = null,
+    onCopyReply: ((FooterRow) -> Unit)? = null,
 ) {
     when (row) {
         is BlockRow ->
@@ -674,25 +684,19 @@ private fun ChatRow(
                             notes = listOf(mask(reason)),
                         )
                     }
-                } else if (onOpenMenu != null && listWords != null) {
-                    KitTappable(
-                        onClick = { onOpenMenu(row.key) },
-                        onClickLabel = listWords.messageActions,
-                        role = KitTappableRole.Row,
+                } else {
+                    KitReplyFooter(
+                        copyLabel = stringResource(Res.string.kitCopy),
+                        moreLabel = stringResource(Res.string.kitTurnMore),
+                        onCopy = onCopyReply?.let { copy -> { copy(row) } },
+                        onMore = onOpenMenu?.let { menu -> { menu(row.key) } },
                         modifier = Modifier.testTag("chat-turn-footer"),
                     ) {
-                        KitQuietLine(
-                            if (row.stopped) words.stoppedFooter() else words.footer(row.failed)
-                        )
+                        if (row.failed) KitQuietLine(words.footer(true))
+                        else if (row.stopped) KitQuietLine(words.stoppedFooter())
+                        facts.reading.endNotes[row.turnId]?.let { TurnEndNote(it) }
+                        facts.reading.metadata[row.turnId]?.let { TurnMetadata(it) }
                     }
-                } else {
-                    KitQuietLine(
-                        if (row.stopped) words.stoppedFooter() else words.footer(row.failed)
-                    )
-                }
-                facts.reading.endNotes[row.turnId]?.let { TurnEndNote(it) }
-                facts.reading.metadata[row.turnId]?.let { metadata ->
-                    TurnMetadata(metadata)
                 }
                 val result = facts.results[row.turnId]
                 if (result != null && folds != null) TurnResultLine(row.turnId, result, folds)

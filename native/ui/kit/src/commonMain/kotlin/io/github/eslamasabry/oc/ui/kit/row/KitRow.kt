@@ -33,6 +33,8 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitInlineAction
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
@@ -109,6 +111,8 @@ public fun KitRow(
     onLongClickLabel: String? = null,
     state: KitRowState? = null,
     meta: String? = null,
+    titleMaxLines: Int = 1,
+    titleAccent: Boolean = false,
     onClick: (() -> Unit)? = null,
 ) {
     kitAssert(title.isNotBlank()) { "KitRow: a row needs a title" }
@@ -126,6 +130,9 @@ public fun KitRow(
         }
     val value = trailing as? KitRowTrailing.Value
     val action = (trailing as? KitRowTrailing.Action)?.action?.let {
+        if (enabled) it else it.copy(enabled = false, disabledReason = disabledReason, onClick = {})
+    }
+    val iconAction = (trailing as? KitRowTrailing.IconAction)?.action?.let {
         if (enabled) it else it.copy(enabled = false, disabledReason = disabledReason, onClick = {})
     }
     val actionBelow = action != null && large
@@ -166,7 +173,7 @@ public fun KitRow(
                 Box(Modifier.size((tokens.iconTile * minOf(scale, TextScalePolicy.ICON_CAP)).dp).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
                     Image(
                         leading.icon, null, Modifier.size(glyph),
-                        colorFilter = ColorFilter.tint(if (enabled) colors.text2 else colors.text3),
+                        colorFilter = ColorFilter.tint(if (!enabled) colors.text3 else if (leading.current) colors.accent else colors.text2),
                     )
                 }
             }
@@ -184,7 +191,7 @@ public fun KitRow(
                     softWrap = false, maxLines = 1,
                 ).size.width
                 val valueWidth = measurer.measure(
-                    value.text, style = typography.style(TypeRole.Secondary).copy(textDirection = TextDirection.Content),
+                    value.text, style = typography.style(if (value.prominent) TypeRole.Body else TypeRole.Secondary).copy(textDirection = TextDirection.Content),
                     softWrap = false, maxLines = 1,
                 ).size.width
                 val chevron = if (value.chevron) {
@@ -200,8 +207,8 @@ public fun KitRow(
                             if (titleIsFileName) kitBreakableFileName(title) else title,
                             Modifier.weight(1f).testTag("kit-row-title"),
                             role = TypeRole.RowTitle,
-                            tone = if (enabled) TextTone.Primary else TextTone.Tertiary,
-                            maxLines = if (titleIsFileName && large) Int.MAX_VALUE else kitRowTitleLines(scale),
+                            tone = if (!enabled) TextTone.Tertiary else if (titleAccent) TextTone.Accent else TextTone.Primary,
+                            maxLines = if (titleIsFileName && large) Int.MAX_VALUE else kitRowTitleLines(scale, titleMaxLines),
                         )
                         meta?.let {
                             KitText(
@@ -255,9 +262,22 @@ public fun KitRow(
                     if (actionBelow) KitInlineAction(action)
                 }
                 when {
+                    iconAction != null -> KitIconButton(
+                        icon = requireNotNull(iconAction.icon),
+                        label = iconAction.semanticsLabel ?: iconAction.label,
+                        onClick = iconAction.onClick,
+                        modifier = Modifier.testTag(iconAction.testTag ?: "kit-row-icon-action"),
+                        enabled = KitEnabled.of(iconAction.enabled, iconAction.disabledReason),
+                    )
                     value != null && !valueBelow -> RowValue(value)
                     action != null && !actionBelow -> KitInlineAction(action)
+                    trailing is KitRowTrailing.Locked -> RowLockedValue(trailing)
                     trailing == KitRowTrailing.Chevron -> RowChevron()
+                    trailing == KitRowTrailing.Check -> io.github.eslamasabry.oc.ui.kit.icon.KitIcon(
+                        io.github.eslamasabry.oc.ui.kit.icon.KitIcons.check,
+                        Modifier.testTag("kit-row-check"),
+                        size = io.github.eslamasabry.oc.ui.kit.icon.KitIconSize.Small,
+                    )
                     else -> Unit
                 }
             }

@@ -36,6 +36,7 @@ import io.github.eslamasabry.oc.ui.words.res.e7SharedToolCallsAndResults
 import io.github.eslamasabry.oc.ui.words.res.e7SharedUserPrompts
 import io.github.eslamasabry.oc.ui.words.res.kitContextRingSemantics
 import io.github.eslamasabry.oc.ui.words.res.kitContextSheetModel
+import io.github.eslamasabry.oc.ui.words.res.kitContextSheetTitle
 import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
 import io.github.eslamasabry.oc.ui.words.res.sessionContextMessagesSplit
 import io.github.eslamasabry.oc.ui.words.res.sessionContextPercent
@@ -74,7 +75,7 @@ internal fun contextVerdict(context: ContextUi): String {
  * window, messages, and the input makeup labelled as an estimate.
  */
 @Composable
-internal fun ChatContextSheet(context: ContextUi?, visible: Boolean, onDismiss: () -> Unit) {
+internal fun SessionContextDetailsSheet(context: ContextUi?, visible: Boolean, onDismiss: () -> Unit) {
     KitSheet(
         visible = visible && context != null,
         onDismissRequest = onDismiss,
@@ -163,4 +164,26 @@ private fun TokenRow(title: String, tokens: Long) {
         title = title,
         trailing = KitRowTrailing.Value(stringResource(Res.string.sessionContextTokens, Numbers.format(tokens)), chevron = false),
     )
+}
+
+/** The bar opens the small context-window summary; the session metrics are a separate page. */
+@Composable
+internal fun ChatContextSheet(context: ContextUi?, visible: Boolean, onDismiss: () -> Unit) {
+    KitSheet(
+        visible = visible && context?.sheet?.contextLimit != null,
+        onDismissRequest = onDismiss,
+        title = stringResource(Res.string.kitContextSheetTitle),
+        closeLabel = stringResource(Res.string.kitSheetDismiss),
+    ) {
+        if (context != null) {
+            val limit = context.sheet.contextLimit
+            if (limit != null) io.github.eslamasabry.oc.ui.kitchat.turn.KitContextSheet(
+                tokens = context.sheet.contextTokens,
+                limit = limit,
+                modelName = context.sheet.modelId.orEmpty(),
+                percent = context.percent,
+                level = context.level.toKit(),
+            )
+        }
+    }
 }

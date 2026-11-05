@@ -3,12 +3,13 @@ package io.github.eslamasabry.oc.ui.kitchat.composer
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
@@ -40,7 +42,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 public fun KitStopAndSendPill(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
-    val style = LocalKitTypography.current.style(TypeRole.Label).copy(color = colors.onAttentionFill)
+    val style = LocalKitTypography.current.style(TypeRole.Body).copy(color = colors.onAttentionFill)
     val shape = KitShapeId.Pill.shape()
     KitTappable(
         onClick = onClick,
@@ -52,18 +54,19 @@ public fun KitStopAndSendPill(label: String, onClick: () -> Unit, modifier: Modi
             Modifier.clearAndSetSemantics {}
                 .heightIn(min = PILL_HEIGHT_DP.dp)
                 .background(colors.attentionFill, shape)
-                .padding(horizontal = Space.S3.dp),
+                .padding(horizontal = Space.S4.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
+            horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
         ) {
-            Icon(StopGlyph, contentDescription = null, tint = colors.onAttentionFill, modifier = Modifier.size((tokens.smallIcon - 4).dp))
+            val side = FlutterKitTokens.COMPOSER_STOP_SQUARE.dp
+            Box(Modifier.size(side).background(colors.onAttentionFill, RoundedCornerShape(side / 4))) // F: lib/ui/kit/chat/kit_composer_caption.dart:171-179
             BasicText(label, style = style, maxLines = 1)
         }
     }
 }
 
 /** The pill is as tall as the Send disc it replaces. */
-private const val PILL_HEIGHT_DP = 40
+private const val PILL_HEIGHT_DP = FlutterKitTokens.COMPOSER_ACTION_SIZE
 
 /** Test handle of the pill. */
 public const val PILL_TAG: String = "kit-stop-and-send"

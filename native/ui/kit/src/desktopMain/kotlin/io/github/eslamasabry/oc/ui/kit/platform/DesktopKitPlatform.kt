@@ -28,6 +28,19 @@ public class DesktopKitPlatform : KitPlatform {
 
     override fun haptic(kind: KitHaptic): Unit = Unit // desktops have no haptics
 
+    override fun graphemePrefix(text: String, count: Int): String {
+        require(count >= 0)
+        val iterator = java.text.BreakIterator.getCharacterInstance(java.util.Locale.ROOT)
+        iterator.setText(text)
+        var end = iterator.first()
+        repeat(count) {
+            val next = iterator.next()
+            if (next == java.text.BreakIterator.DONE) return text
+            end = next
+        }
+        return text.substring(0, end)
+    }
+
     override fun messageTime(createdMs: Long, nowMs: Long): String {
         val created = java.util.Date(createdMs)
         val a = java.util.Calendar.getInstance().apply { timeInMillis = createdMs }

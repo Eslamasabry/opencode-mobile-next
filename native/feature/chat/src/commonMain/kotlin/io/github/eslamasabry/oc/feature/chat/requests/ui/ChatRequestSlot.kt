@@ -7,9 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,7 +18,6 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.CardState
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestActions
-import io.github.eslamasabry.oc.feature.chat.requests.presentation.QuestionSheetUi
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestCardUi
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.ReviewedRequestAction
@@ -31,17 +28,23 @@ import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
-import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceMark
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceRow
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
-import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
-import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
-import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
-import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.state.KitAskLine
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.text.KitBidi
+import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
+import io.github.eslamasabry.oc.ui.words.res.consentAlwaysAllowQuestion
+import io.github.eslamasabry.oc.ui.words.res.consentAlwaysAllowFailed
+import io.github.eslamasabry.oc.ui.words.res.consentAlwaysAllowDecline
+import io.github.eslamasabry.oc.ui.words.res.consentAlwaysAllowTitle
+import io.github.eslamasabry.oc.ui.words.res.chatUiAllMatchingRequests
+import io.github.eslamasabry.oc.ui.words.res.chatUiInThisChat
+import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysScope
 import io.github.eslamasabry.oc.ui.kit.state.KitReceipt
 import io.github.eslamasabry.oc.ui.kit.state.KitReceiptState
 import io.github.eslamasabry.oc.ui.kitchat.request.KitPermissionCard
@@ -49,16 +52,13 @@ import io.github.eslamasabry.oc.ui.kitchat.request.KitQuestionCard
 import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestTarget
 import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestWaitingCaption
 import io.github.eslamasabry.oc.ui.words.res.Res
-import io.github.eslamasabry.oc.ui.words.res.chatRequestAnswerRequired
 import io.github.eslamasabry.oc.ui.words.res.chatRequestIfIgnored
 import io.github.eslamasabry.oc.ui.words.res.chatRequestMoreWaiting
 import io.github.eslamasabry.oc.ui.words.res.chatRequestOtherAnswer
 import io.github.eslamasabry.oc.ui.words.res.chatRequestOtherField
 import io.github.eslamasabry.oc.ui.words.res.chatStopAfterStepUndo
 import io.github.eslamasabry.oc.ui.words.res.chatUiAlwaysAllow
-import io.github.eslamasabry.oc.ui.words.res.invitation40KeepAsking
 import io.github.eslamasabry.oc.ui.words.res.invitation40Question
-import io.github.eslamasabry.oc.ui.words.res.invitation40SaveFailed
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmCancel
 import io.github.eslamasabry.oc.ui.words.res.kitRequestAllowOnce
 import io.github.eslamasabry.oc.ui.words.res.kitRequestAnswer
@@ -66,7 +66,6 @@ import io.github.eslamasabry.oc.ui.words.res.kitRequestChangeSize
 import io.github.eslamasabry.oc.ui.words.res.kitRequestReject
 import io.github.eslamasabry.oc.ui.words.res.kitRequestReplyEmptyReason
 import io.github.eslamasabry.oc.ui.words.res.kitRequestSend
-import io.github.eslamasabry.oc.ui.words.res.kitRequestSendAnswers
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -104,30 +103,28 @@ public fun ChatRequestSlot(
                             PermissionWaiting(card, state.moreWaiting, actions)
                             state.invitationFailure?.let {
                                 KitErrorNotice(
-                                    stringResource(Res.string.invitation40SaveFailed),
+                                    stringResource(Res.string.consentAlwaysAllowFailed),
                                     failure = it,
                                 )
                             }
-                            if (card.invitation)
-                                KitNotice(
-                                    message = stringResource(Res.string.invitation40Question),
-                                    actions =
-                                        listOf(
-                                            KitLineAction(
-                                                stringResource(Res.string.chatUiAlwaysAllow),
-                                                {
-                                                    actions.performReviewed(
-                                                        card,
-                                                        ReviewedRequestAction.AskAlways,
-                                                    )
-                                                },
-                                            ),
-                                            KitLineAction(
-                                                stringResource(Res.string.invitation40KeepAsking),
-                                                { actions.keepAsking(card.id) },
-                                            ),
-                                        ),
+                            if (card.invitation) {
+                                val request = card.captured?.request
+                                val mask = rememberKitMask()
+                                val what = request?.let {
+                                    it.always.ifEmpty { it.patterns }.joinToString(", ").ifEmpty { it.permission }
+                                }
+                                KitAskLine(
+                                    icon = KitIcons.privacy,
+                                    question = if (what != null) stringResource(Res.string.consentAlwaysAllowQuestion, KitBidi.ltr(mask(what)))
+                                        else stringResource(Res.string.invitation40Question),
+                                    accept = KitAction(stringResource(Res.string.chatUiAlwaysAllow), {
+                                        actions.performReviewed(card, ReviewedRequestAction.AskAlways)
+                                    }),
+                                    decline = KitAction(stringResource(Res.string.consentAlwaysAllowDecline), {
+                                        actions.keepAsking(card.id)
+                                    }),
                                 )
+                            }
                         }
                         is RequestCardUi.Question ->
                             QuestionWaiting(card, state.moreWaiting, actions)
@@ -145,15 +142,23 @@ public fun ChatRequestSlot(
             }
         }
     }
-    state.sheet?.let { QuestionSheet(it, actions) }
+    state.sheet?.let { ChatQuestionSheet(it, actions) }
     val confirm = state.confirmAlways
     KitConfirm(
         spec =
             confirm?.let {
+                val request = it.captured?.request
+                val patterns = request?.let { ask -> ask.always.ifEmpty { ask.patterns }.joinToString(", ") }
+                val mask = rememberKitMask()
                 KitConfirmSpec(
-                    title = alwaysConfirmTitle(it.grant),
+                    title = if (it.invitation) stringResource(Res.string.consentAlwaysAllowTitle) else alwaysConfirmTitle(it.grant),
                     confirmLabel = stringResource(Res.string.chatUiAlwaysAllow),
-                    body = alwaysConfirmBody(it.grant),
+                    body = if (it.invitation && patterns != null) stringResource(
+                        Res.string.chatRequestAlwaysScope,
+                        patterns.takeIf { scope -> scope.isNotEmpty() }?.let { scope -> KitBidi.ltr(mask(scope)) }
+                            ?: stringResource(Res.string.chatUiAllMatchingRequests),
+                        stringResource(Res.string.chatUiInThisChat),
+                    ) else alwaysConfirmBody(it.grant),
                     cancelLabel = stringResource(Res.string.kitConfirmCancel),
                 )
             },
@@ -224,71 +229,6 @@ private fun QuestionWaiting(
                     if (other != null) OtherField(card, other.text, other.canSend, actions)
                 }),
     )
-}
-
-/**
- * Every prompt and every offered answer, selected locally and sent through the same guarded request
- * lane.
- */
-@Composable
-private fun QuestionSheet(state: QuestionSheetUi, actions: ChatRequestActions) {
-    val id = state.question.id
-    KitSheet(
-        visible = true,
-        onDismissRequest = { actions.closeSheet(id) },
-        title = stringResource(Res.string.kitRequestAnswer),
-        height =
-            if (state.question.prompts.size > 1) KitSheetHeight.Full else KitSheetHeight.Content,
-        primary =
-            KitAction(
-                stringResource(Res.string.kitRequestSend),
-                onClick = { actions.sendSheet(id) },
-                enabled =
-                    if (state.canSend) KitEnabled.Enabled
-                    else KitEnabled.Disabled(stringResource(Res.string.chatRequestAnswerRequired)),
-            ),
-    ) {
-        state.question.prompts.forEachIndexed { index, prompt ->
-            key(id, index) {
-                val draft = state.drafts[index]
-                if (prompt.title.isNotBlank()) KitText(prompt.title, role = TypeRole.Headline)
-                KitText(prompt.question, role = TypeRole.Body, kind = KitTextKind.Reading)
-                prompt.choices.forEach { choice ->
-                    KitChoiceRow(
-                        title = choice.label,
-                        supporting = choice.description.takeIf { it.isNotBlank() },
-                        selected = choice.label in draft.chosen,
-                        mark = if (prompt.multiple) KitChoiceMark.Check else KitChoiceMark.Radio,
-                        onClick = { actions.chooseInSheet(id, index, choice.label) },
-                    )
-                }
-                if (prompt.custom) {
-                    if (!prompt.multiple) {
-                        KitChoiceRow(
-                            title = stringResource(Res.string.chatRequestOtherAnswer),
-                            selected = draft.ownOpen,
-                            mark = KitChoiceMark.Radio,
-                            onClick = { actions.editSheetOther(id, index, draft.own) },
-                        )
-                    }
-                    if (prompt.multiple || draft.ownOpen) {
-                        val words = rememberTextFieldState(draft.own)
-                        LaunchedEffect(id, index, words) {
-                            var last = words.text.toString()
-                            snapshotFlow { words.text.toString() }
-                                .collect {
-                                    if (it != last) {
-                                        last = it
-                                        actions.editSheetOther(id, index, it)
-                                    }
-                                }
-                        }
-                        KitField(words, label = stringResource(Res.string.chatRequestOtherField))
-                    }
-                }
-            }
-        }
-    }
 }
 
 /** "Something else": the typed answer is kept as the request's draft by the model. */

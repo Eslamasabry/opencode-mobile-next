@@ -1,6 +1,11 @@
 package io.github.eslamasabry.oc.feature.chats.ui
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.tokens.Space
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -16,6 +21,10 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsWatchedKind
 import io.github.eslamasabry.oc.feature.chats.presentation.ConversationRowUi
 import io.github.eslamasabry.oc.feature.chats.presentation.RowTitle
+import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceRow
+import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceMark
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
@@ -25,8 +34,11 @@ import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitInputDialog
+import io.github.eslamasabry.oc.ui.kit.modal.KitPageOverlay
+import io.github.eslamasabry.oc.ui.kit.frame.*
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
@@ -39,7 +51,12 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 internal fun HomeFilterChips(state: ChatsUi, actions: ChatsActions) {
     KitChip(
-        label = stringResource(Res.string.chatsFilterSheetTitle),
+        label = when {
+            state.otherFoldersSelected -> stringResource(Res.string.chatsHomeOtherFolders)
+            state.filters.projectDirectory == null -> stringResource(Res.string.chatsHomeAllProjects)
+            else -> state.projectChoices.firstOrNull { it.directory == state.filters.projectDirectory }?.name
+                ?: state.filters.projectDirectory!!.trimEnd('/').substringAfterLast('/'),
+        },
         kind = KitChipKind.Action,
         selected = state.filters.projectDirectory != null || state.otherFoldersSelected,
         opensMenu = true,
@@ -47,27 +64,20 @@ internal fun HomeFilterChips(state: ChatsUi, actions: ChatsActions) {
     )
     if (state.home.sources.size > 1) {
         KitChip(
-            label = stringResource(Res.string.chatsSourcesSheetTitle),
+            label = if (state.home.sources.all { it.shown }) stringResource(Res.string.chatsSourcesAll)
+                else stringResource(Res.string.chatsSourcesSome, state.home.sources.count { it.shown }, state.home.sources.size),
             kind = KitChipKind.Action,
             onClick = actions::showSources,
         )
     }
-    val inboxCount = state.inbox.size + state.home.monitoring.requests.size
-    KitChip(
-        label =
-            if (inboxCount > 0)
-                stringResource(Res.string.homeInboxCount, Numbers.format(inboxCount))
-            else stringResource(Res.string.inboxTitle),
-        kind = KitChipKind.Action,
-        onClick = actions::showInbox,
-    )
+
 }
 
 @Composable
 internal fun ChatsHomeSheets(state: ChatsUi, actions: ChatsActions) {
     val sheet = state.sheet
     KitSheet(
-        visible = sheet != null && sheet != ChatsHomeSheet.OpenProject,
+        visible = sheet != null && sheet != ChatsHomeSheet.OpenProject && sheet != ChatsHomeSheet.Inbox,
         onDismissRequest = actions::closeHomeSheet,
         title =
             when (sheet) {
@@ -84,12 +94,15 @@ internal fun ChatsHomeSheets(state: ChatsUi, actions: ChatsActions) {
             when (sheet) {
                 ChatsHomeSheet.Projects -> ProjectChoices(state, actions)
                 ChatsHomeSheet.Sources -> SourceChoices(state, actions)
-                ChatsHomeSheet.Inbox -> InboxRows(state, actions)
+                ChatsHomeSheet.Inbox -> Unit
                 ChatsHomeSheet.Monitoring -> MonitoringSettings(state, actions)
                 ChatsHomeSheet.OpenProject,
                 null -> Unit
             }
         }
+    }
+    KitPageOverlay(sheet == ChatsHomeSheet.Inbox, stringResource(Res.string.inboxTitle), actions::closeHomeSheet) {
+        ChatsInboxScreen(state, actions)
     }
     val notAbsolute = stringResource(Res.string.p12PathNotAbsolute)
     val badParts = stringResource(Res.string.p12PathBadParts)
@@ -127,54 +140,48 @@ internal fun ChatsHomeSheets(state: ChatsUi, actions: ChatsActions) {
 
 @Composable
 private fun ProjectChoices(state: ChatsUi, actions: ChatsActions) {
-    KitRowGroup {
+    val all = state.filters.projectDirectory == null && !state.otherFoldersSelected
+    KitRowGroup(leadingTiles = true) {
         KitRow(
             title = stringResource(Res.string.chatsHomeAllProjects),
-            supporting =
-                pluralStringResource(
-                    Res.plurals.chatsFilterChatCount,
-                    state.allCount,
-                    state.allCount,
-                ),
-            selected = state.filters.projectDirectory == null && !state.otherFoldersSelected,
+            leading = KitRowLeading.Glyph(KitIcons.folderOpen, current = all),
+            supporting = pluralStringResource(Res.plurals.chatsFilterChatCount, state.allCount, state.allCount),
+            selected = all,
+            trailing = if (all) KitRowTrailing.Check else KitRowTrailing.None,
             onClick = actions::allProjects,
         )
         state.projectChoices.forEach { project ->
+            val selected = state.filters.projectDirectory == project.directory
             val parts = buildList {
-                add(
-                    pluralStringResource(
-                        Res.plurals.chatsFilterChatCount,
-                        project.chatCount,
-                        project.chatCount,
-                    )
-                )
-                if (project.runningCount > 0)
-                    add(stringResource(Res.string.chatsFilterRunningCount, project.runningCount))
-                if (project.directory in state.projectNeedsYou)
-                    add(stringResource(Res.string.chatsFilterNeedsYouWord))
+                add(pluralStringResource(Res.plurals.chatsFilterChatCount, project.chatCount, project.chatCount))
+                if (project.runningCount > 0) add(stringResource(Res.string.chatsFilterRunningCount, project.runningCount))
+                if (project.directory in state.projectNeedsYou) add(stringResource(Res.string.chatsFilterNeedsYouWord))
             }
             KitRow(
                 title = project.name,
+                leading = KitRowLeading.Glyph(KitIcons.folderOpen, current = selected),
                 supporting = parts.joinToString(" · "),
-                selected = state.filters.projectDirectory == project.directory,
+                supportingMaxLines = 2, // F: lib/ui/screens/chats/chats_project_sheet.dart:94
+                selected = selected,
+                trailing = if (selected) KitRowTrailing.Check else KitRowTrailing.None,
                 onClick = { actions.chooseProject(project.directory) },
             )
         }
-        if (state.otherFoldersCount > 0) {
-            KitRow(
-                title = stringResource(Res.string.chatsHomeOtherFolders),
-                supporting =
-                    pluralStringResource(
-                        Res.plurals.chatsFilterChatCount,
-                        state.otherFoldersCount,
-                        state.otherFoldersCount,
-                    ),
-                selected = state.otherFoldersSelected,
-                onClick = actions::otherFolders,
-            )
-        }
+        if (state.otherFoldersCount > 0) KitRow(
+            title = stringResource(Res.string.chatsHomeOtherFolders),
+            leading = KitRowLeading.Glyph(KitIcons.folderOpen, current = state.otherFoldersSelected),
+            supporting = pluralStringResource(Res.plurals.chatsFilterChatCount, state.otherFoldersCount, state.otherFoldersCount),
+            selected = state.otherFoldersSelected,
+            trailing = if (state.otherFoldersSelected) KitRowTrailing.Check else KitRowTrailing.None,
+            onClick = actions::otherFolders,
+        )
+    }
+    Spacer(Modifier.height(Space.S3.dp))
+    KitRowGroup {
         KitRow(
             title = stringResource(Res.string.chatsFilterOpenProject),
+            titleAccent = true,
+            leading = KitRowLeading.Glyph(KitIcons.folderOpen),
             trailing = KitRowTrailing.Chevron,
             onClick = actions::openFilterProject,
         )
@@ -194,76 +201,28 @@ private fun SourceChoices(state: ChatsUi, actions: ChatsActions) {
         state.home.sources.forEach { source ->
             KitSwitchRow(
                 title = source.name,
+                leading = KitRowLeading.Glyph(if (source.onThisPhone) KitIcons.phone else KitIcons.server),
                 checked = source.shown,
                 locked = source.main,
+                lockedLabel = if (source.main) stringResource(Res.string.chatsSourcesAlways) else null,
+                below = if (source.unreachable && source.shown) ({
+                    KitButton(stringResource(Res.string.refreshRetry), { actions.retrySource(source.profile) }, role = KitButtonRole.Tertiary)
+                }) else null,
                 supporting =
                     when {
-                        source.main ->
-                            stringResource(Res.string.chatsSourcesMain) +
-                                " · " +
-                                stringResource(Res.string.chatsSourcesAlways)
+                        source.main -> stringResource(Res.string.chatsSourcesMain)
                         source.unreachable -> stringResource(Res.string.chatsSourcesUnreachable)
                         source.onThisPhone -> stringResource(Res.string.chatsSourcesOnPhone)
                         else -> stringResource(Res.string.chatsSourcesElsewhere)
                     },
                 onCheckedChange = { actions.showSource(source.profile, it) },
             )
-            if (source.unreachable && source.shown) {
-                KitButton(
-                    stringResource(Res.string.kitTryAgain),
-                    { actions.retrySource(source.profile) },
-                    role = KitButtonRole.Tertiary,
-                )
-            }
         }
     }
     KitButton(
         stringResource(Res.string.homeWatchedServers),
         actions::showMonitoring,
         role = KitButtonRole.Tertiary,
-    )
-}
-
-@Composable
-private fun InboxRows(state: ChatsUi, actions: ChatsActions) {
-    if (state.inbox.isEmpty() && state.home.monitoring.requests.isEmpty()) {
-        KitStateView(kind = KitStateKind.Calm, title = stringResource(Res.string.inboxEmptyTitle))
-        if (state.finished.isNotEmpty()) {
-            KitRowGroup(label = stringResource(Res.string.inboxFinishedLabel)) {
-                state.finished.forEach { InboxRow(it, actions) }
-            }
-        }
-    } else
-        KitRowGroup {
-            state.inbox.forEach { InboxRow(it, actions) }
-            state.home.monitoring.requests.forEach { watched ->
-                KitRow(
-                    title = title(watched.title),
-                    supporting =
-                        when (watched.kind) {
-                            ChatsWatchedKind.Permission ->
-                                stringResource(Res.string.inboxAsksPermission)
-                            ChatsWatchedKind.Question,
-                            ChatsWatchedKind.Form -> stringResource(Res.string.inboxAsksQuestion)
-                        },
-                    server = watched.sourceName,
-                    trailing = KitRowTrailing.Chevron,
-                    onClick = { actions.openWatched(watched.key) },
-                )
-            }
-        }
-    state.home.monitoring.failure?.let { problem ->
-        KitStateView(
-            kind = KitStateKind.Error,
-            title = stringResource(Res.string.homeWatchedOpenFailed),
-            failure = problem,
-        )
-    }
-    KitButton(
-        stringResource(Res.string.homeRefreshWatched),
-        actions::refreshWatched,
-        role = KitButtonRole.Tertiary,
-        working = state.home.monitoring.refreshing,
     )
 }
 
@@ -310,16 +269,6 @@ private fun MonitoringSettings(state: ChatsUi, actions: ChatsActions) {
         actions::refreshWatched,
         role = KitButtonRole.Tertiary,
         working = state.home.monitoring.refreshing,
-    )
-}
-
-@Composable
-private fun InboxRow(row: ConversationRowUi, actions: ChatsActions) {
-    KitRow(
-        title = title(row.title),
-        supporting = row.project,
-        trailing = KitRowTrailing.Chevron,
-        onClick = { actions.openConversation(row.ref) },
     )
 }
 

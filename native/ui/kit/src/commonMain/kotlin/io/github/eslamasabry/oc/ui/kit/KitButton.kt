@@ -21,14 +21,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
+import io.github.eslamasabry.oc.ui.design.color.Argb
+import io.github.eslamasabry.oc.ui.design.color.RoleDerivation
+import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
 import io.github.eslamasabry.oc.ui.design.tokens.Corner
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
@@ -42,12 +49,14 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
+import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.style.LocalKitSignalInSlip
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 
 /** Dart `KitButtonRole`: primary = accent fill, secondary = surface3, tertiary = words only. */
 public enum class KitButtonRole {
@@ -110,6 +119,7 @@ public fun KitButton(
     working: Boolean = false,
     haptic: KitHaptic? = null,
     fullWidth: Boolean = false,
+    hero: Boolean = false,
 ) {
     kitAssert(label.isNotBlank()) { "KitButton: a button needs words (B-KIT-011)" }
     kitAssert(enabled !is KitEnabled.Disabled || enabled.reason.isNotBlank()) {
@@ -119,18 +129,30 @@ public fun KitButton(
     val tokens = LocalKitTokens.current
     val specs = KitMotion.specs
     val on = enabled.isEnabled
+    val heroWaits = hero && LocalKitStyle.current.style != Style.Solid
+    val heroFill = colors.accent.copy(alpha = .14f).compositeOver(colors.surface1) // F: lib/ui/kit/kit_buttons.dart:26
+    val heroWords = if (!heroWaits) colors.text3 else remember(colors) {
+        val under = colors.ground.copy(alpha = 1f)
+        val surface = colors.surface1.compositeOver(under)
+        Color(RoleDerivation.readableOn(
+            Argb(colors.accent.copy(alpha = .55f).compositeOver(surface).toArgb()), // F: lib/ui/kit/kit_buttons.dart:37
+            listOf(Argb(heroFill.compositeOver(under).toArgb())),
+            4.6, toward = Argb(colors.text1.copy(alpha = 1f).toArgb()), // F: lib/ui/kit/kit_buttons.dart:39
+        ).v)
+    }
+    val buttonShape = if (hero) KitShapeId.Pill else KitShapeId.Button
     val signalKey = LocalKitSignalInSlip.current
     val fill: Color =
         when {
             role == KitButtonRole.Tertiary -> Color.Transparent
-            !on -> colors.surface3
+            !on -> if (heroWaits) heroFill else colors.surface3
             role == KitButtonRole.Secondary -> colors.surface3
             destructive -> colors.text1
             else -> colors.accent
         }
     val words: Color =
         when {
-            !on -> colors.text3
+            !on -> if (heroWaits) heroWords else colors.text3
             role == KitButtonRole.Primary && destructive -> colors.ground
             role == KitButtonRole.Primary -> colors.onAccent
             else -> colors.text1
@@ -146,17 +168,17 @@ public fun KitButton(
             kitSurfaceLook(
                 KitSurfaceInput(
                     role = SurfaceRole.Control,
-                    shape = KitShapeId.Button,
+                    shape = buttonShape,
                     level = SurfaceLevel.Surface3,
                     ownFill = easedFill,
-                    color = if (role == KitButtonRole.Primary && on) easedFill else null,
+                    color = if ((role == KitButtonRole.Primary && on) || (!on && heroWaits)) easedFill else null,
                     disabled = !on,
                     action = true,
                 ),
             )
         }
     val wordsColor = look?.words?.takeIf { on } ?: easedWords
-    val minHeight = if (role == KitButtonRole.Tertiary) tokens.minTarget else tokens.buttonHeight
+    val minHeight = if (hero) tokens.minTarget + Space.S2 else if (role == KitButtonRole.Tertiary) tokens.minTarget else tokens.buttonHeight
     val pad = if (role == KitButtonRole.Tertiary) Space.S2 else Space.S6
     val interactions = remember { MutableInteractionSource() }
     val pressed by interactions.collectIsPressedAsState()
@@ -166,14 +188,14 @@ public fun KitButton(
     Row(
         modifier =
             modifier
-                .then(if (fullWidth) Modifier.widthIn(max = FILL_MAX_WIDTH_DP.dp).fillMaxWidth() else Modifier)
+                .then(if (hero) Modifier.kitMaxWidth(CapRole.Control).fillMaxWidth() else if (fullWidth) Modifier.widthIn(max = FILL_MAX_WIDTH_DP.dp).fillMaxWidth() else Modifier)
                 .heightIn(min = minHeight.dp)
                 .graphicsLayer {
                     if (press > 0f) {
                         val scale = 1f - PRESS_SHRINK * press
                         scaleX = scale
                         scaleY = scale
-                        shape = RoundedCornerShape((rest + (PRESS_ROUND_DP - rest) * press).dp)
+                        shape = if (hero) look?.shape ?: androidx.compose.foundation.shape.CircleShape else RoundedCornerShape((rest + (PRESS_ROUND_DP - rest) * press).dp)
                         clip = role != KitButtonRole.Tertiary
                     }
                 }
@@ -182,7 +204,7 @@ public fun KitButton(
                     enabled = on,
                     disabledReason = enabled.reason,
                     haptic = if (working) null else haptic,
-                    shape = KitShapeId.Button,
+                    shape = buttonShape,
                     ink = ink,
                     interactionSource = interactions,
                 )
@@ -191,6 +213,7 @@ public fun KitButton(
                     if (semanticsLabel != null) contentDescription = semanticsLabel
                 }
                 .then(if (look != null) look.modifier else Modifier.background(easedFill))
+                .then(if (hero) Modifier.testTag("kit-button-hero") else Modifier)
                 .then(
                     if (signalKey)
                         Modifier.drawBehind {
@@ -257,6 +280,7 @@ public fun KitButton(
     modifier: Modifier = Modifier,
     role: KitButtonRole = KitButtonRole.Primary,
     fullWidth: Boolean = false,
+    hero: Boolean = false,
 ) {
     val run = action.onClick
     kitAssert(run != null || !action.enabled.isEnabled) {
@@ -276,6 +300,7 @@ public fun KitButton(
         working = action.working,
         haptic = action.haptic,
         fullWidth = fullWidth,
+        hero = hero,
     )
 }
 

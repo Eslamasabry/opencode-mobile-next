@@ -1,0 +1,51 @@
+package io.github.eslamasabry.oc.feature.chat.rb.o42
+
+import androidx.compose.ui.test.*
+import androidx.compose.ui.test.v2.runComposeUiTest
+import io.github.eslamasabry.oc.feature.chat.notes.*
+import io.github.eslamasabry.oc.ui.kit.KitTheme
+import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
+import kotlin.test.Test
+import kotlin.test.assertEquals
+
+@OptIn(ExperimentalTestApi::class)
+class NoteScreenTest {
+    private class Actions : SessionNoteActions {
+        var removed = 0
+        var discarded = 0
+        var kept = 0
+        override fun openNote() {}
+        override fun closeNote() {}
+        override fun discardNote() { discarded++ }
+        override fun keepEditing() { kept++ }
+        override fun changeNote(value: String) {}
+        override fun saveNote() {}
+        override fun removeNote() { removed++ }
+        override fun reloadNote() {}
+    }
+    @Test fun unchangedSavedNoteHasDeleteButNoSave() = runComposeUiTest {
+        val actions = Actions()
+        setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en") { SessionNoteScreen(SessionNoteUi(visible = true, ready = true, draft = "Run the checks", saved = "Run the checks"), actions) } }
+        onNodeWithTag("kit-page-overlay").assertExists()
+        onNodeWithText("Save note").assertDoesNotExist()
+        onNodeWithText("Delete saved note").performClick()
+        assertEquals(1, actions.removed)
+    }
+    @Test fun hiddenEditorDoesNotLeaveAModalInTheTree() = runComposeUiTest {
+        setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en") { SessionNoteScreen(SessionNoteUi(), Actions()) } }
+        onNodeWithTag("kit-page-overlay").assertDoesNotExist()
+    }
+    @Test fun discardUsesTheNoteGlyphAndKeepsEditingWithoutLosingTheDraft() = runComposeUiTest {
+        val actions = Actions()
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), localeTag = "en") {
+                SessionNoteScreen(SessionNoteUi(visible = true, ready = true, draft = "Keep my edits", saved = "Old note", discard = true), actions)
+            }
+        }
+        onNodeWithText("Keep editing").performClick()
+        assertEquals(1, actions.kept)
+        assertEquals(0, actions.discarded)
+        assertEquals(0, actions.removed)
+    }
+
+}

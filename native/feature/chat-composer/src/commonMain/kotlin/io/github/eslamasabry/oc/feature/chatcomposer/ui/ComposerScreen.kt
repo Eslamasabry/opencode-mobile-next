@@ -1,18 +1,20 @@
 package io.github.eslamasabry.oc.feature.chatcomposer.ui
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -47,16 +49,28 @@ import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
-import io.github.eslamasabry.oc.ui.kit.chip.KitChipTone
+import io.github.eslamasabry.oc.ui.kit.chip.KitComposerModelChip
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
-import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerGlow
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerStatusStrip
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitStopState
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerTextBox
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerMic
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitStopAndSendPill
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerSend
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerStop
+import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
+import io.github.eslamasabry.oc.ui.words.res.kitComposerEditor
+import androidx.compose.ui.platform.testTag
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.approvalModeAskTitle
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailed
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailedKept
-import io.github.eslamasabry.oc.ui.words.res.chatStripAutoApprove
+import io.github.eslamasabry.oc.ui.words.res.chatChipAutoApproveOn
 import io.github.eslamasabry.oc.ui.words.res.chatStripAutoApprovePaused
 import io.github.eslamasabry.oc.ui.words.res.chatSubagentReadOnly
 import io.github.eslamasabry.oc.ui.words.res.chatUiNextTurnsModel
@@ -98,6 +112,7 @@ fun ComposerScreen(
 ) {
     val currentActions by rememberUpdatedState(actions)
     val focus = LocalFocusManager.current
+    var editorOpen by remember { mutableStateOf(false) }
 
     LaunchedEffect(field) { snapshotFlow { field.text.toString() }.collect { currentActions.onTextChanged(it) } }
     LaunchedEffect(state.edit?.id) {
@@ -108,25 +123,48 @@ fun ComposerScreen(
     LaunchedEffect(state.sends) { if (state.sends > 0 && !keepFocusOnSend) focus.clearFocus() }
 
     Column(
-        modifier.fillMaxWidth().navigationBarsPadding().imePadding().padding(horizontal = Space.S3.dp, vertical = Space.S2.dp),
+        modifier.fillMaxWidth().navigationBarsPadding().imePadding().padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {
-        state.note?.let { NoteLine(it, actions) }
         if (state.chips.isNotEmpty()) ChipRow(state, actions)
-        KitComposerGlow(active = state.glow) {
-        Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-            KitField(
-                state = field,
-                label = stringResource(Res.string.composerFieldLabel),
-                modifier = Modifier.weight(1f).composerKeys(field, finePointer, state.button, actions),
-                kind = KitFieldKind.Multiline,
-                placeholder = stringResource(Res.string.kitComposerField),
-                enabled = if (state.fieldEnabled) KitEnabled.Enabled else KitEnabled.Disabled(readOnlyWords()),
-            )
-            FieldButtonSlot(state.button, actions, mic)
-        }
-        }
+        KitComposerTextBox(
+            text = field.text.toString(),
+            running = state.glow,
+            wide = LocalKitWindow.current.cls.isWide,
+            allowStacking = state.fieldEnabled,
+            above = {
+                state.note?.let {
+                    Box(Modifier.padding(start = Space.S3.dp, end = Space.S3.dp, top = Space.S2.dp)) {
+                        NoteLine(it, actions)
+                    }
+                }
+            },
+            field = { multiline ->
+                val canExpand = multiline && state.fieldEnabled
+                Box {
+                    KitField(
+                        state = field,
+                        label = stringResource(Res.string.composerFieldLabel),
+                        modifier = Modifier.fillMaxWidth().padding(end = if (canExpand) LocalKitTokens.current.minTarget.dp else 0.dp).composerKeys(field, finePointer, state.button, actions),
+                        kind = KitFieldKind.Multiline,
+                        placeholder = stringResource(Res.string.kitComposerField),
+                        enabled = if (state.fieldEnabled) KitEnabled.Enabled else KitEnabled.Disabled(readOnlyWords()),
+                        labelShown = false,
+                        framed = false,
+                        composer = true,
+                        multilineLines = if (LocalKitWindow.current.short) 1..3 else 1..8, // F: lib/ui/kit/chat/kit_composer.dart:590
+                    )
+                    if (canExpand) KitIconButton(
+                        KitIcons.expand, stringResource(Res.string.kitComposerEditor), { editorOpen = true },
+                        modifier = Modifier.align(Alignment.TopEnd).testTag("composer-open-editor"),
+                    )
+                }
+            },
+            trailing = { FieldButtonSlot(state.button, actions, mic, quiet = state.glow) },
+        )
+
     }
+    PromptEditorScreen(editorOpen, field, { editorOpen = false })
 }
 
 @Composable
@@ -161,31 +199,28 @@ private fun NoteLine(note: ComposerNote, actions: ComposerActions) {
 
 @Composable
 private fun ChipRow(state: ComposerUi, actions: ComposerActions) {
-    val stop = state.chips.lastOrNull() as? ComposerChip.Stop
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-        Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-            state.chips.forEach { chip ->
-                when (chip) {
-                    is ComposerChip.Model ->
-                        KitChip(modelChipWords(chip), kind = KitChipKind.Action, onClick = actions::onModelChip)
-                    is ComposerChip.Approval ->
-                        KitChip(
-                            approvalWords(chip.mode),
-                            kind = KitChipKind.Action,
-                            tone = if (chip.mode == ApprovalMode.AutoApprove) KitChipTone.Active else KitChipTone.Neutral,
-                            onClick = actions::onApprovalChip,
-                        )
-                    is ComposerChip.Stop -> Unit // drawn at the trailing end, outside the scroller
-                }
-            }
-        }
-        // Stop never comes and goes mid-row: it is the row's trailing end for the whole running turn.
-        stop?.let {
+    val stop = state.chips.filterIsInstance<ComposerChip.Stop>().firstOrNull()
+    val approvals = state.chips.filterIsInstance<ComposerChip.Approval>()
+    val model = state.chips.filterIsInstance<ComposerChip.Model>().firstOrNull()
+    KitComposerStatusStrip(
+        hasChips = approvals.isNotEmpty(),
+        model = if (model == null) null else ({
+            KitComposerModelChip(modelChipWords(model), onClick = actions::onModelChip)
+        }),
+        stop = if (stop == null) null else ({
+            KitComposerStop(
+                stringResource(Res.string.kitTurnLiveStopShort), stringResource(Res.string.kitTurnLiveStopShort), actions::onStop,
+                state = if (stop.stuck) KitStopState.Stuck else KitStopState.Running,
+                armKey = state.sends,
+            )
+        }),
+    ) {
+        approvals.forEach { chip ->
             KitChip(
-                stringResource(Res.string.kitTurnLiveStopShort),
-                kind = KitChipKind.Action,
-                tone = if (it.stuck) KitChipTone.Attention else KitChipTone.Neutral,
-                onClick = actions::onStop,
+                approvalWords(chip.mode), kind = KitChipKind.Action,
+                icon = if (chip.mode == ApprovalMode.Paused) KitIcons.pause else KitIcons.shield,
+                selected = if (chip.mode == ApprovalMode.AutoApprove) true else null,
+                onClick = actions::onApprovalChip,
             )
         }
     }
@@ -195,36 +230,33 @@ private fun ChipRow(state: ComposerUi, actions: ComposerActions) {
 private fun approvalWords(mode: ApprovalMode): String =
     when (mode) {
         ApprovalMode.AsksFirst -> stringResource(Res.string.approvalModeAskTitle)
-        ApprovalMode.AutoApprove -> stringResource(Res.string.chatStripAutoApprove)
+        ApprovalMode.AutoApprove -> stringResource(Res.string.chatChipAutoApproveOn)
         ApprovalMode.Paused -> stringResource(Res.string.chatStripAutoApprovePaused)
     }
 
 @Composable
-private fun FieldButtonSlot(button: FieldButton, actions: ComposerActions, mic: (@Composable () -> Unit)?) {
+private fun FieldButtonSlot(button: FieldButton, actions: ComposerActions, mic: (@Composable () -> Unit)?, quiet: Boolean) {
     when (button) {
         FieldButton.None -> Unit
         FieldButton.Mic ->
-            mic?.invoke() ?: KitButton(stringResource(Res.string.kitComposerVoice), onClick = actions::onMic, role = KitButtonRole.Tertiary)
-        FieldButton.Send -> KitButton(stringResource(Res.string.kitComposerSend), onClick = actions::onSend, maxLines = 1)
-        FieldButton.AddToTurn -> KitButton(stringResource(Res.string.kitComposerAddToTurn), onClick = actions::onSend, maxLines = 1)
+            mic?.invoke() ?: KitComposerMic(stringResource(Res.string.kitComposerVoice), actions::onMic, quiet = quiet)
+        FieldButton.Send -> KitComposerSend(stringResource(Res.string.kitComposerSend), actions::onSend)
+        FieldButton.AddToTurn -> KitComposerSend(stringResource(Res.string.kitComposerAddToTurn), actions::onSend)
         FieldButton.StopAndSend ->
-            KitButton(stringResource(Res.string.kitComposerStopAndSend), onClick = actions::onSend, role = KitButtonRole.Secondary, maxLines = 1)
+            KitStopAndSendPill(stringResource(Res.string.kitComposerStopAndSend), actions::onSend)
         FieldButton.SendWhenOnline ->
-            KitButton(stringResource(Res.string.kitComposerSendOffline), onClick = actions::onSend, role = KitButtonRole.Secondary, maxLines = 1)
+            KitComposerSend(stringResource(Res.string.kitComposerSendOffline), actions::onSend)
         FieldButton.CannotSendYet ->
-            KitButton(
+            KitComposerSend(
                 stringResource(Res.string.kitComposerSend),
                 onClick = actions::onSend,
-                maxLines = 1,
                 enabled = KitEnabled.Disabled(stringResource(Res.string.kitComposerCannotSendYet)),
             )
         FieldButton.Sending ->
-            KitButton(
+            KitComposerSend(
                 stringResource(Res.string.kitComposerSending),
                 onClick = actions::onSend,
-                maxLines = 1,
                 working = true,
-                enabled = KitEnabled.Disabled(stringResource(Res.string.kitComposerSending)),
             )
     }
 }
@@ -241,7 +273,11 @@ private fun Modifier.composerKeys(
         when (event.key) {
             Key.Enter, Key.NumPadEnter -> {
                 val enter = ComposerKeys.enter(finePointer, event.isShiftPressed, event.isCtrlPressed || event.isMetaPressed)
-                if (enter == EnterKey.Send && button != FieldButton.Mic && button != FieldButton.None) {
+                val canSend = when (button) {
+                    FieldButton.Send, FieldButton.AddToTurn, FieldButton.StopAndSend, FieldButton.SendWhenOnline -> true
+                    else -> false
+                }
+                if (enter == EnterKey.Send && canSend) {
                     actions.onSend()
                     true
                 } else {

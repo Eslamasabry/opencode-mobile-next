@@ -1,8 +1,15 @@
 package io.github.eslamasabry.oc.feature.chat.relations.ui
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -13,21 +20,30 @@ import io.github.eslamasabry.oc.feature.chat.relations.presentation.RelationStat
 import io.github.eslamasabry.oc.feature.chat.relations.presentation.SessionRelationsActions
 import io.github.eslamasabry.oc.feature.chat.relations.presentation.SessionRelationsUi
 import io.github.eslamasabry.oc.ui.design.tokens.Space
-import io.github.eslamasabry.oc.ui.kit.KitAction
-import io.github.eslamasabry.oc.ui.kit.KitText
-import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
+import io.github.eslamasabry.oc.ui.kit.motion.KitRefresh
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
+import io.github.eslamasabry.oc.ui.kit.row.KitRowState
+import io.github.eslamasabry.oc.ui.kit.row.KitRowStateTone
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import org.jetbrains.compose.resources.pluralStringResource
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
-import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeBlock
@@ -42,7 +58,7 @@ public fun SessionRelationsScreen(state: SessionRelationsUi, actions: SessionRel
     KitScreen(
         topBar = {
             KitTopBar(
-                title = stringResource(Res.string.r40RelationsTitle),
+                title = stringResource(Res.string.sessionRelationsTitle),
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::back,
@@ -53,21 +69,24 @@ public fun SessionRelationsScreen(state: SessionRelationsUi, actions: SessionRel
                             KitLineAction(
                                 stringResource(Res.string.r40RelationsRefresh),
                                 actions::refresh,
+                                icon = KitIcons.retry,
                             )
                         ),
             )
         },
         width = KitScreenWidth.List,
     ) {
+        val tokens = LocalKitTokens.current
+        KitRefresh(refreshing = state.loading && state.parent != null, onRefresh = actions::refresh, enabled = !state.stale) {
         LazyColumn(
-            Modifier.testTag("session-relations-list"),
-            verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+            Modifier.fillMaxSize().testTag("session-relations-list"),
+            contentPadding = PaddingValues(top = Space.S2.dp),
         ) {
             if (state.stale) {
                 item("stale") { KitNotice(message = stringResource(Res.string.r40RelationsStale)) }
             } else {
-                state.failure?.let { failure ->
-                    if (state.menu == null && state.stopping == null)
+                state.failure?.takeIf { state.parent != null }?.let { failure ->
+                    if (state.stopping == null)
                         item("failure") {
                             KitErrorNotice(
                                 message = stringResource(Res.string.r40RelationsFailure),
@@ -83,36 +102,38 @@ public fun SessionRelationsScreen(state: SessionRelationsUi, actions: SessionRel
             }
             val parent = state.parent
             if (parent == null) {
-                if (state.loading) item("loading") { KitSkeletonRows() }
+                item("loading-or-failed") {
+                    if (state.loading) KitStateView(KitStateKind.Loading, stringResource(Res.string.sessionRelationsLoading), icon = KitIcons.nested)
+                    else KitStateView(KitStateKind.Error, stringResource(Res.string.sessionRelationsFailedTitle), failure = state.failure, onRetry = actions::refresh)
+                }
             } else {
                 item("parent") {
-                    KitRowGroup(label = stringResource(Res.string.r40RelationsParent)) {
+                    KitRowGroup(label = stringResource(Res.string.sessionRelationsStartedFrom)) {
                         RelationRowView(parent, state, actions)
                     }
                 }
+                item("section-gap") { Spacer(Modifier.height(tokens.sectionGap.dp)) }
                 if (state.children.isEmpty())
                     item("empty") {
                         KitStateView(
                             kind = KitStateKind.Calm,
                             title = stringResource(Res.string.r40RelationsEmpty),
                             body = stringResource(Res.string.r40RelationsEmptyBody),
+                            icon = KitIcons.nested,
                         )
                     }
                 else
                     item("children") {
                         KitRowGroup(
                             label =
-                                stringResource(
-                                    Res.string.r40RelationsChildren,
-                                    Numbers.format(state.children.size),
-                                )
+                                pluralStringResource(Res.plurals.sessionRelationsSubagentCount, state.children.size, state.children.size)
                         ) {
                             state.children.forEach { RelationRowView(it, state, actions) }
                         }
                     }
             }
         }
-        RelationMenu(state, actions)
+        }
         StopSheet(state, actions)
         ResumeSheet(state, actions)
         KitClipboardEffect(state.clip?.id, state.clip?.text, actions::clipDone)
@@ -121,7 +142,7 @@ public fun SessionRelationsScreen(state: SessionRelationsUi, actions: SessionRel
 
 @Composable
 private fun title(row: RelationRow): String =
-    row.title ?: stringResource(Res.string.r40RelationsUntitled)
+    row.title ?: stringResource(if (row.parent) Res.string.e7SharedParentSession else Res.string.r40RelationsUntitled)
 
 @Composable
 private fun RelationRowView(
@@ -129,6 +150,8 @@ private fun RelationRowView(
     state: SessionRelationsUi,
     actions: SessionRelationsActions,
 ) {
+    var menuOpen by remember(row.id) { mutableStateOf(false) }
+    val rowTitle = title(row)
     val age = row.ageMinutes
     val ageWords =
         when {
@@ -140,118 +163,82 @@ private fun RelationRowView(
         }
     val status =
         when (row.status) {
-            RelationStatus.NeedsYou -> stringResource(Res.string.r40RelationsNeedsYou)
+            RelationStatus.NeedsYou -> stringResource(Res.string.kitTaskNeedsYou)
             RelationStatus.Working -> stringResource(Res.string.r40RelationsWorking)
-            RelationStatus.Idle -> stringResource(Res.string.r40RelationsIdle)
-            RelationStatus.Done -> stringResource(Res.string.r40RelationsDone)
+            RelationStatus.Idle, RelationStatus.Done -> stringResource(if (row.parent) Res.string.sessionRelationsIdle else Res.string.r40RelationsDone)
         }
-    KitRow(
-        title = title(row),
-        modifier = Modifier.testTag("session-relation-${row.id.raw}"),
-        supporting =
-            listOfNotNull(
-                    status,
-                    ageWords,
-                    if (row.current) stringResource(Res.string.r40RelationsCurrent) else null,
-                    if (row.pinned) stringResource(Res.string.r40RelationsPinned) else null,
-                )
-                .joinToString(" · "),
-        selected = row.current,
-        enabled = !state.stale && !state.working,
-        disabledReason =
-            if (state.stale) stringResource(Res.string.r40RelationsStale)
-            else if (state.working) stringResource(Res.string.r40RelationsOpening) else null,
-        supportingMaxLines = 2,
-        trailing =
-            KitRowTrailing.Action(
-                KitLineAction(
-                    stringResource(Res.string.r40RelationsActions),
-                    { actions.showMenu(row.id) },
-                )
-            ),
-        onClick = if (row.current) null else ({ actions.open(row.id) }),
+    val menuLabel = stringResource(Res.string.sessionRelationsRowMenu, rowTitle)
+    val actionEnabled = when {
+        state.stale -> KitEnabled.Disabled(stringResource(Res.string.r40RelationsStale))
+        state.working -> KitEnabled.Disabled(stringResource(Res.string.sessionRelationsOpening))
+        else -> KitEnabled.Enabled
+    }
+    // The model's menu is the reviewed target. Hiding the popup must not clear it before an intent reads it.
+    fun select(action: () -> Unit) { menuOpen = false; action() }
+    val items = buildList {
+        if (!row.current) add(KitMenuItem(stringResource(Res.string.sessionRelationsOpen, rowTitle), { select { actions.open(row.id) } }, icon = KitIcons.chat, enabled = actionEnabled, dismissOnSelect = false))
+        if (state.canResume) add(KitMenuItem(stringResource(Res.string.sessionRelationsCopyHandoff, rowTitle), { select(actions::showResume) }, icon = KitIcons.copy, enabled = actionEnabled, dismissOnSelect = false))
+        if (state.canPin) add(KitMenuItem(stringResource(if (row.pinned) Res.string.sessionRelationsUnpin else Res.string.sessionRelationsPin, rowTitle), { select(actions::togglePin) }, icon = KitIcons.pin, enabled = actionEnabled, dismissOnSelect = false))
+        if (!row.parent && row.status == RelationStatus.Working) add(KitMenuItem(stringResource(Res.string.sessionRelationsStop, rowTitle), { select(actions::requestStop) }, icon = KitIcons.stopCircle, destructive = true, enabled = actionEnabled, dismissOnSelect = false))
+    }
+    KitMenu(
+        expanded = menuOpen && state.menu?.id == row.id && !state.stale,
+        items = items,
+        title = menuLabel,
+        onDismissRequest = { menuOpen = false; actions.dismissMenu() },
+        anchor = {
+            KitRow(
+                title = rowTitle,
+                titleMaxLines = 2, // F: lib/ui/screens/session_relations_screen.dart:466
+                modifier = Modifier.testTag("session-relation-${row.id.raw}"),
+                leading = when {
+                    row.status == RelationStatus.NeedsYou || row.status == RelationStatus.Working -> null
+                    row.parent -> KitRowLeading.Glyph(KitIcons.chat)
+                    else -> KitRowLeading.Glyph(KitIcons.check)
+                },
+                state = KitRowState(status, when (row.status) {
+                    RelationStatus.NeedsYou -> KitRowStateTone.NeedsYou
+                    RelationStatus.Working -> KitRowStateTone.Running
+                    else -> KitRowStateTone.Quiet
+                }),
+                supporting = if (row.status == RelationStatus.NeedsYou) stringResource(Res.string.sessionRelationsOpenToAnswer)
+                    else listOfNotNull(ageWords, if (row.current) stringResource(Res.string.sessionRelationsThisConversation) else null).joinToString(" · ").takeIf { it.isNotBlank() },
+                selected = row.current,
+                enabled = !state.stale && !state.working,
+                disabledReason =
+                    if (state.stale) stringResource(Res.string.r40RelationsStale)
+                    else if (state.working) stringResource(Res.string.sessionRelationsOpening) else null,
+                trailing =
+                    KitRowTrailing.Action(
+                        KitLineAction(
+                            stringResource(Res.string.r40RelationsActions),
+                            { menuOpen = true; actions.showMenu(row.id) },
+                            semanticsLabel = menuLabel,
+                        )
+                    ),
+                onClick = if (row.current) null else ({ actions.open(row.id) }),
+            )
+        },
     )
 }
 
 @Composable
-private fun RelationMenu(state: SessionRelationsUi, actions: SessionRelationsActions) {
-    val row = state.menu
-    KitSheet(
-        visible = row != null,
-        onDismissRequest = actions::dismissMenu,
-        title = row?.let { title(it) } ?: stringResource(Res.string.r40RelationsActions),
-        closeLabel = stringResource(Res.string.kitSheetClose),
-    ) {
-        if (row != null) {
-            state.failure?.let {
-                KitErrorNotice(
-                    message = stringResource(Res.string.r40RelationsFailure),
-                    failure = it,
-                )
-            }
-            KitRowGroup {
-                if (!row.current)
-                    KitRow(
-                        title = stringResource(Res.string.r40RelationsOpen),
-                        onClick = { actions.open(row.id) },
-                    )
-                if (state.canResume)
-                    KitRow(
-                        title = stringResource(Res.string.r40RelationsResume),
-                        onClick = actions::showResume,
-                    )
-                if (state.canPin)
-                    KitRow(
-                        title =
-                            stringResource(
-                                if (row.pinned) Res.string.r40RelationsUnpin
-                                else Res.string.r40RelationsPin
-                            ),
-                        onClick = actions::togglePin,
-                    )
-                if (!row.parent && row.status == RelationStatus.Working)
-                    KitRow(
-                        title = stringResource(Res.string.r40RelationsStop),
-                        onClick = actions::requestStop,
-                    )
-            }
-            if (state.working) KitNotice(message = stringResource(Res.string.r40RelationsOpening))
-        }
-    }
-}
-
-@Composable
 private fun StopSheet(state: SessionRelationsUi, actions: SessionRelationsActions) {
-    val row = state.stopping
-    KitSheet(
-        visible = row != null,
-        onDismissRequest = actions::cancelStop,
-        title =
-            row?.let { stringResource(Res.string.r40RelationsStopTitle, title(it)) }
-                ?: stringResource(Res.string.r40RelationsStop),
-        closeLabel = stringResource(Res.string.kitSheetClose),
-    ) {
-        KitText(stringResource(Res.string.r40RelationsStopBody))
-        state.failure?.let {
-            KitErrorNotice(message = stringResource(Res.string.r40RelationsFailure), failure = it)
-        }
-        KitActionBlock(
-            primary =
-                KitAction(
-                    stringResource(Res.string.r40RelationsStop),
-                    actions::confirmStop,
-                    working = state.working,
-                    destructive = true,
-                ),
-            tertiary =
-                listOf(
-                    KitAction(
-                        stringResource(Res.string.r40RelationsKeepRunning),
-                        actions::cancelStop,
-                    )
-                ),
-        )
-    }
+    KitConfirm(
+        spec = state.stopping?.let { row ->
+            KitConfirmSpec(
+                title = stringResource(Res.string.sessionRelationsStopTitle, title(row)),
+                body = stringResource(Res.string.sessionRelationsStopBody),
+                confirmLabel = stringResource(Res.string.sessionRelationsStopConfirm),
+                kind = KitConfirmKind.Stop,
+                icon = KitIcons.stopCircle,
+            )
+        },
+        onConfirm = actions::confirmStop,
+        onCancel = actions::cancelStop,
+        working = state.working,
+        failed = state.failure != null,
+    )
 }
 
 @Composable

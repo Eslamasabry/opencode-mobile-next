@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.interaction.DragInteraction
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -137,6 +138,7 @@ public fun KitTranscriptList(
         LazyColumn(
             state = state.lazy,
             reverseLayout = true,
+            verticalArrangement = Arrangement.Top,
             contentPadding = insetPadding,
             modifier = Modifier.fillMaxSize().testTag("transcript-list"),
             content = content,
