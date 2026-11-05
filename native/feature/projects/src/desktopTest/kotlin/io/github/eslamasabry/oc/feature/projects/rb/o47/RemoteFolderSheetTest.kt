@@ -82,4 +82,35 @@ class RemoteFolderSheetTest {
             path.performImeAction()
             assertEquals(listOf("finishPath" to listOf("/work/app")), calls)
         }
+
+    @Test
+    fun `B-ANDR-078 project creation submits the visible suggestion before starting the operation`() =
+        runComposeUiTest {
+            setContent {
+                KitTheme(
+                    platform = DesktopKitPlatform(),
+                    appearance = KitAppearance(motion = MotionLevel.Off),
+                    stillFrame = true,
+                ) {
+                    ProjectsPickerScreen(
+                        ProjectsPickerUi(
+                            phase = ProjectsPhase.Ready,
+                            askingCreate = true,
+                            canCreate = true,
+                            createName = "my-app",
+                        ),
+                        actions,
+                    )
+                }
+            }
+            onNodeWithText("Enter a folder name.").assertDoesNotExist()
+            onNodeWithText("Create").performClick()
+            assertEquals(
+                listOf(
+                    "changeCreateName" to listOf("my-app"),
+                    "createFolder" to emptyList(),
+                ),
+                calls,
+            )
+        }
 }

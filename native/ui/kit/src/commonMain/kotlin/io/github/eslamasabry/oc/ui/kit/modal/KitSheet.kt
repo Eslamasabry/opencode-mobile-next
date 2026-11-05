@@ -204,6 +204,7 @@ internal class SheetEntry {
     var dismissible: Boolean by mutableStateOf(true)
     var framed: Boolean by mutableStateOf(false)
     var loading: Boolean by mutableStateOf(false)
+    var showClose: Boolean by mutableStateOf(true)
     var secondaryDismisses: Boolean by mutableStateOf(false)
     var asking: Boolean by mutableStateOf(false)
     var onDismissRequest: () -> Unit by mutableStateOf({})
@@ -278,6 +279,7 @@ public fun KitSheet(
     tone: KitSheetTone = KitSheetTone.Neutral,
     loading: Boolean = false,
     secondaryDismisses: Boolean = false,
+    showClose: Boolean = true,
     body: @Composable ColumnScope.() -> Unit,
 ) {
     val host = LocalKitSheetHost.current
@@ -300,6 +302,7 @@ public fun KitSheet(
         entry.dismissible = dismissible
         entry.framed = framed
         entry.loading = loading
+        entry.showClose = showClose
         entry.secondaryDismisses = secondaryDismisses
         entry.onDismissRequest = onDismissRequest
         entry.body = body
@@ -551,7 +554,7 @@ private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean) {
 private fun SheetHeader(entry: SheetEntry, handle: Boolean) {
     val tokens = LocalKitTokens.current
     // The close glyph's ink ends on the rail: rail - (minTarget - glyph) / 2 - ink inset.
-    val showClose = entry.dismissible && !(entry.secondaryDismisses && entry.secondary != null) // F: lib/ui/kit/kit_sheet_modal.dart:383-385
+    val showClose = entry.showClose && entry.dismissible && !(entry.secondaryDismisses && entry.secondary != null) // F: lib/ui/kit/kit_sheet_modal.dart:383-385
     val closeEnd =
         if (showClose) {
             (FlutterKitTokens.RAIL - (tokens.minTarget - 24) / 2f - 24 * 0.1875f).coerceAtLeast(0f).dp // F: lib/ui/kit/kit_sheet.dart:616-627 lib/ui/kit/kit_optical.dart:29,34 lib/ui/app_iconography.dart:20

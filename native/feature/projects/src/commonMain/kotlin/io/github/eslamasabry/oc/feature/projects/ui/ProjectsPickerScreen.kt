@@ -24,7 +24,6 @@ import io.github.eslamasabry.oc.feature.projects.presentation.ProjectsPickerActi
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectsPickerUi
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitAction
-import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipTone
@@ -39,6 +38,7 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
+import io.github.eslamasabry.oc.ui.kit.modal.KitInputOperationDialog
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
@@ -46,6 +46,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
+import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
@@ -62,7 +63,6 @@ import io.github.eslamasabry.oc.ui.words.res.folderBrowserHomeHere
 import io.github.eslamasabry.oc.ui.words.res.folderBrowserOpenedBefore
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
-import io.github.eslamasabry.oc.ui.words.res.kitSheetClose
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
 import io.github.eslamasabry.oc.ui.words.res.p12NewProjectUnavailable
@@ -87,7 +87,6 @@ import io.github.eslamasabry.oc.ui.words.res.projectFolderOpenAction
 import io.github.eslamasabry.oc.ui.words.res.projectFolderOpenSubtitle
 import io.github.eslamasabry.oc.ui.words.res.projectFolderPathLabel
 import io.github.eslamasabry.oc.ui.words.res.serversTitle
-import io.github.eslamasabry.oc.ui.words.res.stateFolderCreating
 import io.github.eslamasabry.oc.ui.words.res.stateFolderNameCharacters
 import io.github.eslamasabry.oc.ui.words.res.stateFolderNameEmpty
 import io.github.eslamasabry.oc.ui.words.res.stateFolderNameSegment
@@ -419,50 +418,47 @@ private fun ProjectRow(project: FolderRowUi, actions: ProjectsPickerActions) {
 
 @Composable
 private fun CreateDialog(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
-    val problem =
-        when (ProjectFolderName.problem(state.createName)) {
-            ProjectFolderNameProblem.Empty -> stringResource(Res.string.stateFolderNameEmpty)
-            ProjectFolderNameProblem.NotSingleSegment ->
-                stringResource(Res.string.stateFolderNameSegment)
-            ProjectFolderNameProblem.InvalidCharacters ->
-                stringResource(Res.string.stateFolderNameCharacters)
-            null -> null
-        }
-    val working = stringResource(Res.string.stateFolderCreating)
-    KitSheet(
-        visible = state.askingCreate,
-        onDismissRequest = actions::closeCreate,
+    if (!state.askingCreate) return
+    val empty = stringResource(Res.string.stateFolderNameEmpty)
+    val segment = stringResource(Res.string.stateFolderNameSegment)
+    val characters = stringResource(Res.string.stateFolderNameCharacters)
+    val failed = stringResource(Res.string.projectFolderCreateFailedTitle)
+    KitInputOperationDialog(
+        visible = true,
         title = stringResource(Res.string.projectFolderCreate),
-        closeLabel = stringResource(Res.string.kitSheetClose),
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
-            KitNotice(stringResource(Res.string.projectFolderCreateHelper, "/root/projects"))
-            val field = rememberTextFieldState(state.createName)
-            KitField(
-                state = field,
-                label = stringResource(Res.string.projectFolderNameLabel),
-                error = problem,
-                onTextChanged = actions::changeCreateName,
-                enabled =
-                    if (state.creatingFolder) KitEnabled.Disabled(working) else KitEnabled.Enabled,
-            )
-            state.folderFailure?.let {
-                KitErrorNotice(
-                    message = stringResource(Res.string.projectFolderCreateFailedTitle),
-                    failure = it,
+        fieldLabel = stringResource(Res.string.projectFolderNameLabel),
+        confirmLabel = stringResource(Res.string.projectFolderCreateAction),
+        cancelLabel = stringResource(Res.string.projectFolderCancel),
+        initial = state.createName,
+        hint = stringResource(Res.string.projectFolderNameHint),
+        helper = stringResource(Res.string.projectFolderCreateHelper, "/root/projects"),
+        working = state.creatingFolder,
+        error = state.folderFailure?.let { failed },
+        validate = { name ->
+            when (ProjectFolderName.problem(name)) {
+                ProjectFolderNameProblem.Empty -> empty
+                ProjectFolderNameProblem.NotSingleSegment -> segment
+                ProjectFolderNameProblem.InvalidCharacters -> characters
+                null -> null
+            }
+        },
+        details = {
+            state.folderFailure?.details?.let {
+                KitDetailsFold(
+                    label = stringResource(Res.string.kitDetails),
+                    copyLabel = stringResource(Res.string.kitCopyDetails),
+                    text = it,
                 )
             }
-            KitButton(
-                label = stringResource(Res.string.projectFolderCreateAction),
-                onClick = actions::createFolder,
-                working = state.creatingFolder,
-                enabled =
-                    if (state.creatingFolder || problem != null)
-                        KitEnabled.Disabled(if (state.creatingFolder) working else problem!!)
-                    else KitEnabled.Enabled,
-            )
-        }
-    }
+        },
+        onTextChanged = actions::changeCreateName,
+        onSubmit = { name ->
+            // A supplied suggestion and a last-keystroke IME submit both use the visible name.
+            actions.changeCreateName(name)
+            actions.createFolder()
+        },
+        onDismissRequest = actions::closeCreate,
+    )
 }
 
 /**
