@@ -21,6 +21,16 @@ class AgentsGateTest {
     private class Actions : AgentsActions {
         var installed: String? = null
         var cancelled = false
+        var opened: ProfileId? = null
+        var refreshed = 0
+
+        override fun openAccount(id: ProfileId) {
+            opened = id
+        }
+
+        override fun refreshAccount() {
+            refreshed++
+        }
 
         override fun cancelAccountSignIn() {
             cancelled = true
@@ -57,6 +67,45 @@ class AgentsGateTest {
 
     private val fixtureNow = Instant.parse("2026-09-05T12:00:00Z")
     private val target = AgentAccountTarget(ProfileId("codex"), "My Codex host")
+
+    @Test
+    fun `a failed account open retries the same target instead of a missing controller`() =
+        runComposeUiTest {
+            val actions = Actions()
+            setContent {
+                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                    AgentAccountPanel(
+                        AgentsUi(accountTarget = target, accountFailed = true),
+                        actions,
+                        now = fixtureNow,
+                    )
+                }
+            }
+            onNodeWithText("Could not read the account").assertExists()
+            onNodeWithText("Try again").performClick()
+            assertEquals(target.id, actions.opened)
+            assertEquals(0, actions.refreshed)
+            onNodeWithText("Rate limits").assertDoesNotExist()
+        }
+
+    @Test
+    fun `an opening account shows one loading answer and cannot refresh twice`() =
+        runComposeUiTest {
+            val actions = Actions()
+            setContent {
+                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                    AgentAccountPanel(
+                        AgentsUi(accountTarget = target, accountOpening = true),
+                        actions,
+                        now = fixtureNow,
+                    )
+                }
+            }
+            onNodeWithContentDescription("Refresh account").assertIsNotEnabled()
+            onNodeWithText("Sign in with ChatGPT").assertDoesNotExist()
+            assertEquals(null, actions.opened)
+            assertEquals(0, actions.refreshed)
+        }
 
     @Test
     fun `device sign-in names its host and keeps copy and cancel visible`() = runComposeUiTest {
