@@ -12,6 +12,14 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class InlineStateTest {
+    @Test fun `a full allowance states the limit in words as well as its measured bar`() = runComposeUiTest {
+        setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+            io.github.eslamasabry.oc.ui.kit.state.KitProgressRow("Codex allowance", 1f, valueLabel = "100% used")
+        } }
+        onNodeWithText("100% used · Limit reached", useUnmergedTree = true).assertExists()
+        onNode(SemanticsMatcher.expectValue(androidx.compose.ui.semantics.SemanticsProperties.ProgressBarRangeInfo, androidx.compose.ui.semantics.ProgressBarRangeInfo(1f, 0f..1f)), useUnmergedTree = true).assertExists()
+    }
+
     @Test fun `an inline state reads its body and dispatches its single primary action`() = runComposeUiTest {
         var called = 0
         setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {

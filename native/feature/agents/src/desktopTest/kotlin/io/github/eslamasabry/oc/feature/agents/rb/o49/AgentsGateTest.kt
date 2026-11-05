@@ -59,7 +59,7 @@ class AgentsGateTest {
                 PhoneAgentRow("gemini", "Gemini CLI", PhoneAgentStatus.NotInstalled, installable = true),
             ))), actions)
         } }
-        onNodeWithText("Install").performClick()
+        onNodeWithContentDescription("Install or update Gemini CLI").performClick()
         assertEquals("gemini", actions.installed)
     }
 }

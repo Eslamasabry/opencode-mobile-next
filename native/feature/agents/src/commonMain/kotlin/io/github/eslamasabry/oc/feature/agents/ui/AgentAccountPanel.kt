@@ -1,5 +1,11 @@
 package io.github.eslamasabry.oc.feature.agents.ui
 
+import androidx.compose.foundation.layout.*
+import kotlin.time.Clock
+import kotlin.time.Instant
+import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
+import io.github.eslamasabry.oc.ui.kit.state.KitProgressRow
+import org.jetbrains.compose.resources.pluralStringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -70,7 +76,6 @@ internal fun AgentAccountPanel(state: AgentsUi, actions: AgentsActions) {
             Modifier.fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S3.dp),
-            verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
             if (state.accountOpening) KitText(stringResource(Res.string.agentAccountLoading))
             if (state.accountFailed) KitNotice(stringResource(Res.string.agentAccountReadFailed))
@@ -85,7 +90,7 @@ internal fun AgentAccountPanel(state: AgentsUi, actions: AgentsActions) {
                 })
                 val account = panel.account
                 if (panel.status == AccountPanelStatus.Ready && account?.signedIn == true) {
-                    KitRowGroup {
+                    KitRowGroup(leadingTiles = true) {
                         KitRow(headline, supporting = account.email?.takeIf(String::isNotBlank), leading = KitRowLeading.Glyph(KitIcons.privacy))
                         account.type?.let { type ->
                             KitRow(stringResource(Res.string.agentAccountSignInMethod), leading = KitRowLeading.Glyph(KitIcons.login),
@@ -122,7 +127,10 @@ internal fun AgentAccountPanel(state: AgentsUi, actions: AgentsActions) {
                         AccountLoginStatus.Cancelled -> Res.string.agentAccountLoginCancelled
                         AccountLoginStatus.Idle -> null
                     }
-                loginWords?.let { KitNotice(stringResource(it)) }
+                loginWords?.let {
+                    Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
+                    KitNotice(stringResource(it))
+                }
                 panel.deviceCode?.let { code ->
                     KitText(stringResource(Res.string.agentAccountCodeHint))
                     KitText(code.userCode)
@@ -140,7 +148,7 @@ internal fun AgentAccountPanel(state: AgentsUi, actions: AgentsActions) {
                         role = KitTextRole.Supporting,
                     )
                 }
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+                if (panel.canCancel) FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
                     if (panel.canCancel)
                         KitButton(
                             stringResource(Res.string.agentAccountCancel),
@@ -149,12 +157,14 @@ internal fun AgentAccountPanel(state: AgentsUi, actions: AgentsActions) {
                         )
                 }
                 if (panel.account?.signedIn == true && panel.account?.type == "chatgpt") {
-                    KitSectionLabel(stringResource(Res.string.agentAccountLimits))
+                    Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
                     val buckets = panel.limits
-                    if (buckets.isNullOrEmpty())
-                        KitText(stringResource(Res.string.agentAccountLimitsUnavailable))
+                    KitRowGroup(label = stringResource(Res.string.agentAccountLimits)) {
+                    if (panel.metricsLoading && buckets == null)
+                        KitProgressRow(stringResource(Res.string.agentAccountAllowance), null)
+                    else if (buckets.isNullOrEmpty())
+                        KitRow(stringResource(Res.string.agentAccountLimitsUnavailable), titleMaxLines = 3)
                     else
-                        KitRowGroup {
                         buckets.forEach { bucket ->
                             listOfNotNull(bucket.primary, bucket.secondary).forEach { window ->
                                 val duration = window.durationMinutes
@@ -164,19 +174,25 @@ internal fun AgentAccountPanel(state: AgentsUi, actions: AgentsActions) {
                                     duration > 0 && duration % 60 == 0 -> stringResource(Res.string.agentAccountWindowHours, duration / 60) // F: lib/ui/screens/agent_account_screen.dart:580-584
                                     else -> stringResource(Res.string.agentAccountWindowMinutes, duration)
                                 }
-                                KitRow(
+                                KitProgressRow(
                                     title = (bucket.name?.takeIf(String::isNotBlank) ?: stringResource(Res.string.agentAccountAllowance)) + " · " + windowWords,
-                                    supporting = stringResource(Res.string.agentAccountPercentUsed, window.usedPercent),
+                                    value = window.usedPercent / 100f, // F: lib/ui/screens/agent_account_screen.dart:519
+                                    valueLabel = stringResource(Res.string.agentAccountPercentUsed, window.usedPercent) + " · " + accountReset(window.resetsAtEpochMillis),
                                 )
-                                KitProgressView(KitProgress.Known((window.usedPercent / 100f).coerceIn(0f, 1f)), // F: lib/ui/screens/agent_account_screen.dart:519
-                                    semanticsLabel = stringResource(Res.string.agentAccountAllowance))
                             }
                         }
                         }
-                    KitSectionLabel(stringResource(Res.string.agentAccountUsage))
+                    val reached = buckets.orEmpty().flatMap { listOfNotNull(it.primary, it.secondary) }.firstOrNull { it.usedPercent >= 100 } // F: lib/ui/screens/agent_account_screen.dart:493
+                    reached?.let {
+                        Spacer(Modifier.height(Space.S3.dp))
+                        KitNotice(stringResource(Res.string.agentAccountLimitReached, accountReset(it.resetsAtEpochMillis, withDate = true)))
+                    }
+                    Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
                     val usage = panel.usage
-                    if (usage?.lifetimeTokens == null && usage?.peakDailyTokens == null) {
-                        KitText(stringResource(Res.string.agentAccountUsageUnavailable))
+                    KitRowGroup(label = stringResource(Res.string.agentAccountUsage)) {
+                    if (panel.metricsLoading && usage == null) KitProgressRow(stringResource(Res.string.agentAccountUsage), null)
+                    else if (usage?.lifetimeTokens == null && usage?.peakDailyTokens == null) {
+                        KitRow(stringResource(Res.string.agentAccountUsageUnavailable), titleMaxLines = 3)
                     }
                     usage?.lifetimeTokens?.let {
                         KitRow(
@@ -190,11 +206,44 @@ internal fun AgentAccountPanel(state: AgentsUi, actions: AgentsActions) {
                             trailing = KitRowTrailing.Value(Numbers.format(it), chevron = false),
                         )
                     }
+                    }
+                }
+                panel.updatedAt?.let { at ->
+                    val time = LocalKitPlatform.current.messageTime(at.toEpochMilliseconds(), Clock.System.now().toEpochMilliseconds())
+                    if (time != null) {
+                        Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
+                        KitText(stringResource(Res.string.agentAccountUpdated, time), role = io.github.eslamasabry.oc.ui.design.type.TypeRole.Caption)
+                    }
                 }
             }
+            Spacer(Modifier.height(Space.S4.dp))
             KitDetailsFold(label = stringResource(Res.string.kitDetails), copyLabel = stringResource(Res.string.kitCopyDetails),
                 notes = listOfNotNull(stringResource(Res.string.agentAccountHostNote),
                     if (panel?.account?.signedIn == true) stringResource(Res.string.agentAccountUsageNote) else null))
         }
     }
+}
+
+@Composable
+private fun accountReset(at: Long?, withDate: Boolean = false): String {
+    if (at == null) return stringResource(Res.string.agentAccountResetUnknown)
+    val now = Clock.System.now()
+    val left = Instant.fromEpochMilliseconds(at) - now
+    val relative = when {
+        left.isNegative() -> stringResource(Res.string.agentAccountResetDue)
+        left.inWholeHours >= 48 -> { // F: lib/ui/screens/agent_account_screen.dart:599
+            val days = left.inWholeDays.toInt()
+            pluralStringResource(Res.plurals.agentAccountResetInDays, days, days)
+        }
+        left.inWholeMinutes >= 60 -> { // F: lib/ui/screens/agent_account_screen.dart:601
+            val hours = left.inWholeHours.toInt()
+            pluralStringResource(Res.plurals.agentAccountResetInHours, hours, hours)
+        }
+        else -> {
+            val minutes = left.inWholeMinutes.toInt().coerceAtLeast(1) // F: lib/ui/screens/agent_account_screen.dart:603
+            pluralStringResource(Res.plurals.agentAccountResetInMinutes, minutes, minutes)
+        }
+    }
+    val time = if (withDate) LocalKitPlatform.current.messageTime(at, now.toEpochMilliseconds()) else null
+    return if (time == null) relative else stringResource(Res.string.agentAccountResetWhen, relative, time)
 }
