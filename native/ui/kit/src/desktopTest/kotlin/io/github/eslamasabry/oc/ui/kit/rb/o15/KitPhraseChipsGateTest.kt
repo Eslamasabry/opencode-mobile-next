@@ -1,12 +1,9 @@
 package io.github.eslamasabry.oc.ui.kit.rb.o15
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate
 import io.github.eslamasabry.oc.ui.kit.chip.KitPhraseChips
 import kotlin.test.Test
@@ -15,7 +12,7 @@ import kotlin.test.Test
 @OptIn(ExperimentalTestApi::class, ExperimentalComposeUiApi::class)
 class KitPhraseChipsGateTest {
     private val chips: @Composable () -> Unit = {
-        Box(Modifier.padding(top = 16.dp)) {
+        Box {
             KitPhraseChips(
                 phrases = listOf("Continue", "Run the tests", "Commit this"),
                 label = "Quick phrases",
