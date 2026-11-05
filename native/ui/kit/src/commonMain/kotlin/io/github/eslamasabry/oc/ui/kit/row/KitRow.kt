@@ -318,7 +318,7 @@ private fun RowBody(
                     if (enabled && supportingSpan != null) {
                         BasicText(
                             supportingSpan,
-                            Modifier.testTag("kit-row-supporting"),
+                            Modifier.kitMaxWidth(CapRole.Reading).testTag("kit-row-supporting"),
                             style = LocalKitTypography.current.style(TypeRole.Secondary).copy(
                                 color = colors.text2, textDirection = TextDirection.Content,
                             ),
