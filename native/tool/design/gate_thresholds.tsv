@@ -1,0 +1,12 @@
+# Gate thresholds for the native UI rebuild (docs/design/native-ui-rebuild/GOLDEN-STANDARD.md §9). Lead-only file.
+# box_pct: differing pixels inside the shot's ink box (union of the Flutter and native ink, padded 4 px), in percent.
+# blob_px: the largest 8-connected cluster of differing pixels after one 3x3 erosion (anti-aliasing and 1-2 px glyph
+# shifts erode away; a wrong, missing or moved element does not). A shot passes when both are at or under the tier's
+# numbers and the native frame has the Flutter frame's size.
+# tier	box_pct	blob_px	applies_to
+T1	1.0	16	foundation: tokens, text, icons, surfaces, dividers, tappable
+T2	2.0	36	controls, rows, states, sheets, menus, frame and navigation, school galleries
+T3	3.0	49	text-heavy parts: markdown, code, logs, terminal, diff, viewer, transcript, tool rows
+T4	4.0	100	painted parts: glow, step light, rings, charts, meters, QR, images, scenes, live backgrounds
+T5	4.0	100	screens
+T6	8.0	400	Glass goldens at GLASS_REF 1bbdc3f9c (older type scale; spec values are checked exactly by ParityTest)
