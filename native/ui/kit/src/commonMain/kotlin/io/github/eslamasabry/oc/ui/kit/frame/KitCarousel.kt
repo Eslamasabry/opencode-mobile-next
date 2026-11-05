@@ -46,7 +46,7 @@ public fun KitCarousel(
     initialIndex: Int = 0,
     share: Float = KitCarouselRules.CARD_SHARE,
     showPlace: Boolean = true,
-    growPerTextStep: Float = 140f,
+    growPerTextStep: Float = 140f, // F: lib/ui/kit/kit_carousel.dart:31
     item: @Composable (Int) -> Unit,
 ) {
     require(itemCount > 0) { "itemCount" }
@@ -54,7 +54,7 @@ public fun KitCarousel(
     val tokens = LocalKitTokens.current
     val colors = LocalKitColors.current
     val scale = LocalDensity.current.fontScale
-    val height = itemHeight + (scale - 1f).coerceIn(0f, 1.5f) * growPerTextStep
+    val height = itemHeight + (scale - 1f).coerceIn(0f, 1.5f) * growPerTextStep // F: lib/ui/kit/kit_carousel.dart:110
     val state = rememberPagerState(initialPage = initialIndex.coerceIn(0, itemCount - 1)) { itemCount }
     val nearest = state.currentPage.coerceIn(0, itemCount - 1)
     val place = stringResource(Res.string.kitCarouselPlace, nearest + 1, itemCount)
