@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -60,13 +61,13 @@ import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.layout.Layout
 import io.github.eslamasabry.oc.ui.design.style.Radii
 import io.github.eslamasabry.oc.ui.design.style.StyleResolver
-import io.github.eslamasabry.oc.ui.design.style.SurfaceLevel
 import io.github.eslamasabry.oc.ui.design.style.SurfaceRequest
 import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
 import io.github.eslamasabry.oc.ui.design.tokens.Corner
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Shapes
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitButton
@@ -83,7 +84,6 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
 import kotlin.math.floor
 import kotlin.math.max
-import kotlin.math.min
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -325,7 +325,7 @@ public fun TerminalKeyBar(
     safeArea: Boolean = false, // F: lib/ui/kit/terminal_key_bar.dart:239
 ) {
     val tokens = LocalKitTokens.current
-    val side = max(TERMINAL_KEY_HEIGHT.dp, tokens.minTarget.dp) // F: lib/ui/kit/terminal_key_bar.dart:283,343
+    val side = maxOf(TERMINAL_KEY_HEIGHT.dp, tokens.minTarget.dp) // F: lib/ui/kit/terminal_key_bar.dart:283,343
     val reason = disabledReason ?: stringResource(Res.string.e7SetupKeyUnavailable) // F: lib/ui/kit/terminal_key_bar.dart:344
     val barLabel = stringResource(Res.string.localTerminalKeysLabel) // F: lib/ui/kit/terminal_key_bar.dart:368
     val colors = LocalKitColors.current
@@ -415,7 +415,7 @@ public fun TerminalKeyBar(
                         horizontalArrangement = Arrangement.spacedBy(gap), // F: lib/ui/kit/terminal_key_bar.dart:428
                     ) {
                         compactKeys.forEach { key ->
-                            Box(Modifier.width(max(TERMINAL_KEY_COMPACT_WIDTH.dp, side))) { // F: lib/ui/kit/terminal_key_bar.dart:430
+                            Box(Modifier.width(maxOf(TERMINAL_KEY_COMPACT_WIDTH.dp, side))) { // F: lib/ui/kit/terminal_key_bar.dart:430
                                 TerminalKeyCap(
                                     key = key,
                                     latched = latched(key),
@@ -462,7 +462,7 @@ private fun TerminalKeyBarGrid(
         val columns = KitTerminalBarKey.Rows.first().size // F: lib/ui/kit/terminal_key_bar.dart:437
         val room =
             if (constraints.hasBoundedWidth) {
-                min(maxWidth, Layout.READING_WIDTH.dp) // F: lib/ui/kit/terminal_key_bar.dart:438-443
+                minOf(maxWidth, Layout.READING_WIDTH.dp) // F: lib/ui/kit/terminal_key_bar.dart:438-443
             } else {
                 Layout.READING_WIDTH.dp
             }

@@ -35,8 +35,6 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import kotlin.math.floor
-import kotlin.math.max
-import kotlin.math.min
 
 /** A key name is protocol data; its face and accessible name come from native string resources. */
 @Immutable
@@ -68,7 +66,7 @@ internal fun TerminalKeyBarSingleRow(
         val widest = tokens.minTarget.dp * 1.5f // F: lib/ui/kit/terminal_key_bar.dart:573
         val share = (full - inset * 2) / KitTerminalBarKey.SingleRowShown // F: lib/ui/kit/terminal_key_bar.dart:574
         // Whole physical pixels wide (LOOK-21), as the two-row bar snaps its columns.
-        val width = (floor(max(TERMINAL_KEY_SINGLE_ROW_MIN_WIDTH.dp, min(share, widest)).value * dpr) / dpr).dp // F: lib/ui/kit/terminal_key_bar.dart:575-582
+        val width = (floor(maxOf(TERMINAL_KEY_SINGLE_ROW_MIN_WIDTH.dp, minOf(share, widest)).value * dpr) / dpr).dp // F: lib/ui/kit/terminal_key_bar.dart:575-582
         val all = width * keys.size + inset * 2 // F: lib/ui/kit/terminal_key_bar.dart:583
         if (all <= full) {
             Box(
