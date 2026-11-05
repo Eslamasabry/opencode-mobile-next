@@ -118,7 +118,7 @@ class GlassSpecParityTest {
 
     @Test fun partsAnswerThemselves() {
         for (roles in bothModes) {
-            assertEquals(roles.ground, GlassSpec.resolve(req(roles, SurfaceRole.Ground))!!.fill)
+            assertEquals(roles.ground, GlassSpec.resolve(req(roles, SurfaceRole.Ground, level = io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel.Ground))!!.fill)
             assertEquals(roles.surface1.withAlpha(1f).over(roles.ground), GlassSpec.resolve(req(roles, SurfaceRole.Code))!!.fill)
             val field = GlassSpec.resolve(req(roles, SurfaceRole.Field))!!
             assertEquals(20f, field.frost)

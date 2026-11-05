@@ -144,7 +144,7 @@ class KitStyleParityTest {
 
     @Test fun groundIsAlwaysItsFillAlone() {
         for (s in Style.entries - Style.Solid) for (roles in bothModes) {
-            val d = StyleResolver.spec(s).resolve(req(roles, SurfaceRole.Ground))
+            val d = StyleResolver.spec(s).resolve(req(roles, SurfaceRole.Ground, level = io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel.Ground))
             assertNotNull(d)
             assertEquals(roles.ground, d.fill)
             assertEquals(0f, d.edgeWidthDp)
