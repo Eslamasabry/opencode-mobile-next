@@ -69,6 +69,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
@@ -578,8 +579,18 @@ private fun GitHubSection(state: GitUi, actions: GitActions) {
                     onClick = actions::signIn,
                     modifier = Modifier.testTag("github-sign-in"),
                 )
-            GitHubSignIn.RequestingCode ->
-                KitRow(title = stringResource(Res.string.gitHubRequestingCode))
+            GitHubSignIn.RequestingCode -> {
+                Gutter {
+                    KitNotice(
+                        stringResource(Res.string.gitHubRequestingCode),
+                        tone = StatusTone.Progress,
+                    )
+                }
+                KitRow(
+                    title = stringResource(Res.string.gitHubCancel),
+                    onClick = actions::cancelSignIn,
+                )
+            }
             is GitHubSignIn.WaitingForUser -> {
                 Gutter {
                     Column {
@@ -607,11 +618,21 @@ private fun GitHubSection(state: GitUi, actions: GitActions) {
                     onClick = actions::cancelSignIn,
                 )
             }
-            GitHubSignIn.Finishing -> KitRow(title = stringResource(Res.string.gitHubFinishing))
+            GitHubSignIn.Finishing ->
+                Gutter {
+                    KitNotice(
+                        stringResource(Res.string.gitHubFinishing),
+                        tone = StatusTone.Progress,
+                    )
+                }
             is GitHubSignIn.SignedIn -> {
-                KitRow(title = stringResource(Res.string.gitHubSignedInAs, sign.login))
+                KitRow(
+                    title = stringResource(Res.string.gitHubSignedInAs, sign.login),
+                    leading = KitRowLeading.Glyph(KitIcons.globe),
+                )
                 KitRow(
                     title = stringResource(Res.string.gitHubManageAccess),
+                    leading = KitRowLeading.Glyph(KitIcons.link),
                     trailing = KitRowTrailing.Chevron,
                     onClick = actions::manageGitHubAccess,
                 )
