@@ -34,6 +34,16 @@ import io.github.eslamasabry.oc.ui.kit.motion.kitDim
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
 import kotlin.test.Test
 
+private val MaterialTerminal: androidx.compose.ui.graphics.vector.ImageVector =
+    androidx.compose.ui.graphics.vector.ImageVector.Builder(defaultWidth = 24.dp, defaultHeight = 24.dp, viewportWidth = 24f, viewportHeight = 24f).apply {
+        addPath(
+            androidx.compose.ui.graphics.vector.PathParser().parsePathString(
+                "M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8h16v10zm-2-1h-6v-2h6v2zM7.5 17l-1.41-1.41L8.67 13l-2.59-2.59L7.5 9l4 4-4 4z",
+            ).toNodes(),
+            fill = androidx.compose.ui.graphics.SolidColor(Color.Black),
+        )
+    }.build()
+
 /** Every scene of test/goldens/kit/kit_motion_parts_golden_test.dart, with its inputs. */
 class KitMotionGateTest {
     @Composable
@@ -61,7 +71,10 @@ class KitMotionGateTest {
     private val spinFixed: @Composable () -> Unit = {
         GalleryScene("KitSpin.fixed") {
             KitSpin(0.25f) {
-                androidx.compose.foundation.Image(KitIcons.terminal, null, Modifier.size(28.dp), colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color(LocalKitRoles.current.text2.v)))
+                // The Dart scene's `Icons.terminal` is the Material glyph, not a Phosphor one: its outline, as the test input.
+                val tint = Color(LocalKitRoles.current.text2.v)
+                val glyph = androidx.compose.ui.graphics.vector.rememberVectorPainter(MaterialTerminal)
+                androidx.compose.foundation.Image(glyph, null, Modifier.size(28.dp), colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(tint))
             }
         }
     }
