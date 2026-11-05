@@ -29,6 +29,8 @@ public fun KitIconSwitchRow(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    supporting: String? = null,
+    enabled: KitEnabled = KitEnabled.Enabled,
 ) {
     val tokens = LocalKitTokens.current
     val colors = LocalKitColors.current
@@ -36,7 +38,7 @@ public fun KitIconSwitchRow(
         modifier
             .fillMaxWidth()
             .heightIn(min = tokens.rowHeightOne.dp)
-            .kitSelectTap(checked, Role.Switch, KitEnabled.Enabled, SwitchRules.haptic(!checked)) {
+            .kitSelectTap(checked, Role.Switch, enabled, SwitchRules.haptic(!checked)) {
                 onCheckedChange(!checked)
             }
             .padding(horizontal = tokens.gutter.dp, vertical = Space.S2.dp),
@@ -50,7 +52,10 @@ public fun KitIconSwitchRow(
             val size = 24.dp // F: lib/ui/kit/kit_row.dart:1085
             KitGlyph(icon, colors.text2, size)
         }
-        KitText(title, Modifier.weight(1f), role = TypeRole.RowTitle, tone = TextTone.Primary)
-        KitSwitchTrack(checked, true)
+        Column(Modifier.weight(1f)) {
+            KitText(title, role = TypeRole.RowTitle, tone = TextTone.Primary)
+            supporting?.let { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary) }
+        }
+        KitSwitchTrack(checked, enabled.isEnabled)
     }
 }

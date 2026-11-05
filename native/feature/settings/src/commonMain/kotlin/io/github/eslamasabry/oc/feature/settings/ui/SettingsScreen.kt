@@ -47,10 +47,10 @@ import io.github.eslamasabry.oc.ui.words.res.nativeBundledPrivacy
 import io.github.eslamasabry.oc.ui.words.res.nativePhraseChipsTitle
 import io.github.eslamasabry.oc.ui.words.res.notifyDismiss
 import io.github.eslamasabry.oc.ui.words.res.privacyPolicyTitle
+import io.github.eslamasabry.oc.ui.words.res.settingsHubGroupNotifications
 import io.github.eslamasabry.oc.ui.words.res.settingsHubPrivacyRow
 import io.github.eslamasabry.oc.ui.words.res.settingsHubVoice
 import io.github.eslamasabry.oc.ui.words.res.settingsV3Language
-import io.github.eslamasabry.oc.ui.words.res.settingsV3Notifications
 import io.github.eslamasabry.oc.ui.words.res.shareSessionViewsTitle
 import io.github.eslamasabry.oc.ui.words.res.whatsNewTitle
 import org.jetbrains.compose.resources.stringResource
@@ -139,7 +139,7 @@ public fun SettingsScreen(
             }
         SettingsPage.Notifications ->
             SettingsFrame(
-                stringResource(Res.string.settingsV3Notifications),
+                stringResource(Res.string.settingsHubGroupNotifications),
                 back,
                 state,
                 actions,
