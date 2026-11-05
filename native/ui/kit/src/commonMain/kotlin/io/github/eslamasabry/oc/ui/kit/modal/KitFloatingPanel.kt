@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,7 +14,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.unit.dp
-import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
 import io.github.eslamasabry.oc.ui.design.tokens.*
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
@@ -45,7 +43,6 @@ public fun KitFloatingPanel(
             label = "floating-panel",
         )
     KitBackGuard(true) { onDismiss?.invoke() }
-    val shape = RoundedCornerShape(FlutterKitTokens.SHEET_RADIUS.dp)
     val look =
         kitSurfaceLook(
             KitSurfaceInput(
@@ -53,6 +50,7 @@ public fun KitFloatingPanel(
                 KitShapeId.Sheet,
                 SurfaceLevel.Surface2,
                 ownFill = colors.surface2,
+                roundSheetBottom = true, // F: lib/ui/kit/kit_floating_panel.dart:118-120
             )
         )
     Box(modifier.fillMaxSize()) {
@@ -77,7 +75,7 @@ public fun KitFloatingPanel(
                         alpha = progress
                         translationY = (1 - progress) * 24.dp.toPx()
                     } // F: lib/ui/kit/kit_floating_panel.dart:72
-                    .clip(shape)
+                    .clip(look.shape)
                     .then(look.modifier)
                     .pointerInput(Unit) { detectTapGestures {} }
                     .padding(Space.S4.dp)

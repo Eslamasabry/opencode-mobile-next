@@ -77,6 +77,8 @@ public data class KitSurfaceInput(
     val disabled: Boolean = false,
     val action: Boolean = false,
     val withinGroup: Boolean = false,
+    /** A floating sheet-radius card rounds all corners; edge-attached sheets keep their bottom square. */
+    val roundSheetBottom: Boolean = false,
 )
 
 private fun Color.toArgb(): Argb = Argb(
@@ -96,11 +98,12 @@ private fun KitShapeId.radiusDp(): Float =
 public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
     val style = LocalKitStyle.current
     val roles = LocalKitRoles.current
-    val shape = input.shape.shape()
     val sharp = style.spec.tokens.sharpRadius
     val base = input.shape.radiusDp()
-    val sheet = input.shape == KitShapeId.Sheet
+    val sheet = input.shape == KitShapeId.Sheet && !input.roundSheetBottom
     val r = StyleResolver.corner(base, style.knobs.corners, sharp)
+    val shape = if (input.shape == KitShapeId.Sheet && input.roundSheetBottom)
+        RoundedCornerShape(r.dp) else input.shape.shape()
     val radii = if (sheet) Radii(r, r, 0f, 0f) else Radii.all(if (input.shape == KitShapeId.Square) 0f else r)
     val request =
         SurfaceRequest(
