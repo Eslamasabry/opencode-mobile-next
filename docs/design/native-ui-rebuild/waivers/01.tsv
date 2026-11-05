@@ -1,2 +1,10 @@
 kit_text_selectable_selected_light	PLATFORM_ONLY	the golden shows Android's own text-selection handles that Flutter draws; Compose draws the platform's on device and nothing on desktop
 kit_text_selectable_selected_dark	PLATFORM_ONLY	the golden shows Android's own text-selection handles that Flutter draws; Compose draws the platform's on device and nothing on desktop
+kit_signal_home_light	DEPENDS_ON 09	the home is built from KitFeedItem and the request slip (part-kit_feed_item); the page heading, groups and track match
+kit_signal_home_dark	DEPENDS_ON 09	the home is built from KitFeedItem and the request slip (part-kit_feed_item); the page heading, groups and track match
+kit_signal_home_ar_light	DEPENDS_ON 09	the home is built from KitFeedItem and the request slip (part-kit_feed_item); the page heading, groups and track match
+kit_signal_home_ar_dark	DEPENDS_ON 09	the home is built from KitFeedItem and the request slip (part-kit_feed_item); the page heading, groups and track match
+kit_signal_chat_light	DEPENDS_ON 15	the chat is built from KitStepTimeline and KitToolRow (part-kit_step_timeline); the running line matches
+kit_signal_chat_dark	DEPENDS_ON 15	the chat is built from KitStepTimeline and KitToolRow (part-kit_step_timeline); the running line matches
+kit_signal_chat_folded_light	DEPENDS_ON 15	the folded work line is part-kit_work_line and the steps part-kit_step_timeline; the running line matches
+kit_signal_chat_folded_dark	DEPENDS_ON 15	the folded work line is part-kit_work_line and the steps part-kit_step_timeline; the running line matches
