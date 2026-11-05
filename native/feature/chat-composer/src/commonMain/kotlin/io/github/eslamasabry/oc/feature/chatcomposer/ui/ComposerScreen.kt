@@ -126,12 +126,19 @@ fun ComposerScreen(
         modifier.fillMaxWidth().navigationBarsPadding().imePadding().padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {
-        state.note?.let { NoteLine(it, actions) }
         if (state.chips.isNotEmpty()) ChipRow(state, actions)
         KitComposerTextBox(
             text = field.text.toString(),
             running = state.glow,
             wide = LocalKitWindow.current.cls.isWide,
+            allowStacking = state.fieldEnabled,
+            above = {
+                state.note?.let {
+                    Box(Modifier.padding(start = Space.S3.dp, end = Space.S3.dp, top = Space.S2.dp)) {
+                        NoteLine(it, actions)
+                    }
+                }
+            },
             field = { multiline ->
                 val canExpand = multiline && state.fieldEnabled
                 Box {

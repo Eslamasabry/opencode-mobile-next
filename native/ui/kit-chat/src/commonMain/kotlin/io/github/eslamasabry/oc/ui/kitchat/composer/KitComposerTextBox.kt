@@ -26,15 +26,18 @@ public fun KitComposerTextBox(
     field: @Composable (stacked: Boolean) -> Unit,
     leading: @Composable RowScope.() -> Unit = {},
     trailing: @Composable RowScope.() -> Unit = {},
+    above: @Composable () -> Unit = {},
+    allowStacking: Boolean = true,
 ) {
     val measure = rememberTextMeasurer()
     val tokens = LocalKitTokens.current
     val style = LocalKitTypography.current.style(TypeRole.Body)
     BoxWithConstraints(modifier.kitMaxWidth(CapRole.Conversation).fillMaxWidth()) {
-        val width = maxWidth - tokens.minTarget.dp - (if (hasLeading) tokens.minTarget.dp else Space.S3.dp) - Space.S2.dp
+        val width = maxWidth - Space.S1.dp - Space.S1.dp - tokens.minTarget.dp -
+            (if (hasLeading) tokens.minTarget.dp else Space.S3.dp) - Space.S2.dp
         val px = with(LocalDensity.current) { width.roundToPx() }.coerceAtLeast(1)
         val layout = measure.measure(AnnotatedString(text), style = style, maxLines = 1, constraints = Constraints(maxWidth = px))
-        val stacked = text.contains('\n') || layout.hasVisualOverflow
-        KitComposerBox(running, { field(stacked) }, wide = wide, leading = leading, trailing = trailing, stacked = stacked)
+        val stacked = allowStacking && (text.contains('\n') || layout.hasVisualOverflow)
+        KitComposerBox(running, { field(stacked) }, wide = wide, leading = leading, trailing = trailing, stacked = stacked, above = above, hasLeading = hasLeading)
     }
 }

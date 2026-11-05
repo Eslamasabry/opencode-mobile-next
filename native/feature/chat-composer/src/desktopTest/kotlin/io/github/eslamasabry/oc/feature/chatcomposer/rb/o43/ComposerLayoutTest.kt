@@ -35,4 +35,13 @@ class ComposerLayoutTest {
         onNodeWithTag("composer-open-editor").assertIsDisplayed().performClick()
         onNodeWithText("Prompt editor").assertIsDisplayed()
     }
+    @Test fun `C19 delivery notes stay inside the floating field surface`() = runComposeUiTest {
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), localeTag = "en") {
+                ComposerScreen(ComposerUi(note = ComposerNote.ReadOnly(ReadOnlyReason.SubAgent)), RecordingActions(), TextFieldState())
+            }
+        }
+        onNode(hasText("This sub-agent answers only its main conversation. Write there.") and hasAnyAncestor(hasTestTag("kit-composer-box")), useUnmergedTree = true).assertExists()
+    }
+
 }

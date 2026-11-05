@@ -9,6 +9,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,6 +43,12 @@ import androidx.compose.ui.unit.LayoutDirection
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.design.style.StyleResolver
+import io.github.eslamasabry.oc.ui.design.style.SurfaceDecoration
+import io.github.eslamasabry.oc.ui.design.style.Radii
+import io.github.eslamasabry.oc.ui.design.style.Shadow
+import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
@@ -53,6 +60,9 @@ import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDecorated
+import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
+import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.action.KitWorkingMark
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
@@ -62,19 +72,14 @@ import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
 
 /**
- * The message box (Dart `KitComposer` classic pill, `kit_composer_classic.dart`): one 26 dp pill on `surface2` holding
- * the words on top and one row under them: [leading] (the plus), [chips] (model, approval: never a row of their own
- * above the box), then [trailing] (mic, Send or Stop). While a reply runs ([running]) the running glow travels its
- * edge (the app's signature; [KitComposerGlow] owns the motion, reduced motion and battery saver). Capped at the
- * composer width (760 dp) and centred on wide windows, where the corner drops to 18 dp.
- *
- * States: idle, typing, running (glow), disabled (host passes a disabled field)
- * Text: reading (the field), frame (the chips)
- * Cap: 760 dp
- * Motion: the glow (ambient, see [KitComposerGlow]); Send ⇄ Stop cross-fades through [KitComposerSwap]
- * Replaces: KitComposer's pill (lib/ui/kit/chat/kit_composer.dart, kit_composer_classic.dart)
+ * Flutter's composer: a school-resolved floating surface with the token phone/wide radius. The short field shares
+ * one row with its controls; growing text keeps its field slot and moves the controls below. Accessories remain
+ * inside the same face. Solid keeps KitGlass's surface2, physical hairline and floating shadow. The whole composer
+ * is capped at the conversation measure and its glow follows the resolved corners.
  */
 @Composable
 public fun KitComposerBox(
@@ -86,35 +91,58 @@ public fun KitComposerBox(
     chips: @Composable RowScope.() -> Unit = {},
     trailing: @Composable RowScope.() -> Unit = {},
     stacked: Boolean = true,
+    above: @Composable () -> Unit = {},
+    hasLeading: Boolean = false,
 ) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val appearance = LocalKitAppearance.current
-    val corner = if (wide) KitComposerGlowDefaults.WideCorner else KitComposerGlowDefaults.Corner
-    val shape = RoundedCornerShape(corner)
+    val style = LocalKitStyle.current
+    val radius = (if (wide) tokens.composerRadiusWide else tokens.composerRadius).dp
+    val corner = StyleResolver.corner(radius.value, style.knobs.corners, style.spec.tokens.sharpRadius).dp
+    val look = kitSurfaceLook(KitSurfaceInput(
+        role = SurfaceRole.Floating,
+        shape = KitShapeId.Panel,
+        level = SurfaceLevel.Surface2,
+        ownFill = colors.surface2,
+        radius = radius,
+    ))
+    val solid = style.style == Style.Solid
+    val shadow = if (!solid) Modifier else Modifier.kitDecorated(SurfaceDecoration(
+        radii = Radii.all(corner.value),
+        shadows = listOf(Shadow(
+            dxDp = FlutterKitTokens.FLOATING_SHADOWS_DX.toFloat(),
+            dyDp = FlutterKitTokens.FLOATING_SHADOWS_DY.toFloat(),
+            blurDp = FlutterKitTokens.FLOATING_SHADOWS_BLUR.toFloat(),
+            spreadDp = FlutterKitTokens.FLOATING_SHADOWS_SPREAD.toFloat(),
+            color = LocalKitRoles.current.elevationShadow.withAlpha(FlutterKitTokens.FLOATING_SHADOWS_ALPHA),
+        )),
+    ))
+    val hairline = kitHairline()
     KitComposerGlow(
         active = running,
-        modifier = modifier.widthIn(max = COMPOSER_MAX_WIDTH.dp).fillMaxWidth(),
+        modifier = modifier.kitMaxWidth(CapRole.Conversation).fillMaxWidth(),
         choice = KitGlowChoice.of(appearance.activityGlow, appearance.softGlow),
         corner = corner,
     ) {
         Column(
             Modifier.fillMaxWidth()
-                .clip(shape)
-                .background(colors.surface2, shape)
-                .then(if (colors.dark) Modifier else Modifier.background(colors.surface2))
-                .padding(horizontal = Space.S1.dp)
+                .then(shadow)
+                .then(look.modifier)
+                .then(if (solid) Modifier.border(hairline, colors.hairline, look.shape) else Modifier)
+                .clip(look.shape)
+                .padding(Space.S1.dp)
                 .testTag("kit-composer-box"),
         ) {
+            above()
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
                 if (!stacked) leading()
-                Box(Modifier.weight(1f).padding(start = Space.S3.dp, end = Space.S2.dp).heightIn(min = tokens.minTarget.dp)) { field() }
+                Box(Modifier.weight(1f).padding(start = if (!stacked && hasLeading) 0.dp else Space.S3.dp, end = Space.S2.dp).heightIn(min = tokens.minTarget.dp)) { field() }
                 if (!stacked) trailing()
             }
             if (stacked) Row(
-                Modifier.fillMaxWidth().padding(bottom = Space.S1.dp),
+                Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
             ) {
                 leading()
                 Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) { chips() }
@@ -288,6 +316,3 @@ private const val DISC = 40
 
 /** The Stop ring's outer size: the disc plus the ring, inside the 48 dp target. */
 private const val RING = 44
-
-/** The message box's hard width cap (direction §5.6). */
-private const val COMPOSER_MAX_WIDTH = 760
