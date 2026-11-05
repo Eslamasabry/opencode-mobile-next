@@ -15,3 +15,8 @@ kotlin {
         implementation(project(":ui:kit-content")) // KitLogBuffer: the program log is split into lines, bounded and counted (B-KIT-021)
     }
 }
+
+// Focused order-48 UI interactions run by the coordinator after the build pause.
+kotlin.sourceSets.getByName("desktopTest").dependencies {
+    implementation(libs.compose.desktop.currentos)
+}

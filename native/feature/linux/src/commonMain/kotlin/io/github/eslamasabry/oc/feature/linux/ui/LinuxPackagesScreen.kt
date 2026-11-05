@@ -7,6 +7,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.LaunchedEffect
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.KitAction
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
+import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
+import io.github.eslamasabry.oc.ui.words.res.linuxMgrPkgInstallDetail
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -91,6 +98,8 @@ public fun LinuxPackagesScreen(state: LinuxPackagesUi, actions: LinuxPackagesAct
     }
     val typed = rememberTextFieldState()
     var showAll by remember { mutableStateOf(false) }
+    var installOpen by remember { mutableStateOf(false) }
+    LaunchedEffect(state.confirm) { if (state.confirm != null) installOpen = false }
     val busy = KitEnabled.Disabled(stringResource(Res.string.linuxMgrProblemJob))
     KitScreen(
         topBar = {
@@ -105,6 +114,8 @@ public fun LinuxPackagesScreen(state: LinuxPackagesUi, actions: LinuxPackagesAct
         loading = state.loading && state.packages.isEmpty(),
     ) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+            if (state.loading && state.packages.isEmpty()) KitSkeletonRows()
+            else {
             state.problem?.let { problem ->
                 KitErrorNotice(
                     title = stringResource(Res.string.linuxMgrLoadFailedTitle),
@@ -113,36 +124,22 @@ public fun LinuxPackagesScreen(state: LinuxPackagesUi, actions: LinuxPackagesAct
                 )
             }
             LinuxJobPanel(state.job, actions::askStopJob, actions::dismissJob)
-            KitRowGroup {
+            KitRowGroup(leadingTiles = true) {
+                KitRow(
+                    title = stringResource(Res.string.linuxMgrPkgInstall),
+                    supporting = stringResource(Res.string.linuxMgrPkgInstallDetail),
+                    leading = KitRowLeading.Glyph(KitIcons.download), trailing = KitRowTrailing.Chevron,
+                    enabled = state.canStartJob, disabledReason = stringResource(Res.string.linuxMgrProblemJob),
+                    onClick = { installOpen = true },
+                )
                 KitRow(
                     title = stringResource(Res.string.linuxMgrPkgUpdate),
+                    leading = KitRowLeading.Glyph(KitIcons.download), trailing = KitRowTrailing.Chevron,
                     supporting = stringResource(Res.string.linuxMgrPkgUpdateDetail),
                     supportingMaxLines = 2,
                     enabled = state.canStartJob,
                     disabledReason = stringResource(Res.string.linuxMgrProblemJob),
                     onClick = actions::askUpdate,
-                )
-            }
-            Column(
-                Modifier.fillMaxWidth().padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S3.dp),
-                verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
-            ) {
-                KitField(
-                    typed,
-                    stringResource(Res.string.linuxMgrPkgInstall),
-                    placeholder = stringResource(Res.string.linuxMgrPkgName),
-                    helper = stringResource(Res.string.linuxMgrPkgNameHelper),
-                    error = if (state.notice == PackagesNotice.InvalidName) stringResource(Res.string.linuxMgrPkgNameInvalid) else null,
-                    checking = state.checking,
-                    enabled = if (state.canStartJob) KitEnabled.Enabled else busy,
-                    onSubmit = { actions.checkInstall(typed.text.toString()) },
-                )
-                KitButton(
-                    stringResource(Res.string.linuxMgrPkgCheck),
-                    { actions.checkInstall(typed.text.toString()) },
-                    role = KitButtonRole.Secondary,
-                    enabled = if (state.canStartJob) KitEnabled.Enabled else busy,
-                    working = state.checking,
                 )
             }
             val dismiss = KitLineAction(stringResource(Res.string.workspaceDismissNotice), actions::dismiss)
@@ -165,7 +162,7 @@ public fun LinuxPackagesScreen(state: LinuxPackagesUi, actions: LinuxPackagesAct
                     KitNotice(message = stringResource(Res.string.linuxMgrPkgNoMatch), liveRegion = false)
                 } else {
                     val capped = state.query.isBlank() && !showAll && shown.size > FIRST_ROWS
-                    KitRowGroup {
+                    KitRowGroup(leadingTiles = true) {
                         (if (capped) shown.take(FIRST_ROWS) else shown).forEach { PackageRow(it, state.canStartJob, actions) }
                         if (capped) {
                             KitRow(
@@ -177,7 +174,36 @@ public fun LinuxPackagesScreen(state: LinuxPackagesUi, actions: LinuxPackagesAct
                     }
                 }
             }
+            }
         }
+    }
+    KitSheet(visible = installOpen, title = stringResource(Res.string.linuxMgrPkgInstall),
+        onDismissRequest = { if (!state.checking) installOpen = false }, dismissible = !state.checking,
+        primary = KitAction(stringResource(Res.string.linuxMgrPkgCheck), { actions.checkInstall(typed.text.toString()) },
+            enabled = if (state.canStartJob) KitEnabled.Enabled else busy, working = state.checking),
+    ) {
+            Column(
+                Modifier.fillMaxWidth().padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S3.dp),
+                verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
+            ) {
+                KitField(
+                    typed,
+                    stringResource(Res.string.linuxMgrPkgInstall),
+                    placeholder = stringResource(Res.string.linuxMgrPkgName),
+                    helper = stringResource(Res.string.linuxMgrPkgNameHelper),
+                    error = when (val notice = state.notice) {
+                        PackagesNotice.InvalidName -> stringResource(Res.string.linuxMgrPkgNameInvalid)
+                        is PackagesNotice.AlreadyInstalled -> stringResource(Res.string.linuxMgrPkgAlready, names(listOf(notice.name)))
+                        is PackagesNotice.Unknown -> stringResource(Res.string.linuxMgrPkgUnknown, names(listOf(notice.name)))
+                        is PackagesNotice.BlockedPlan -> stringResource(Res.string.linuxMgrPkgBlockedPlan, names(listOf(notice.needed)))
+                        is PackagesNotice.Problem -> notice.problem.words()
+                        null -> null
+                    },
+                    checking = state.checking,
+                    enabled = if (state.canStartJob) KitEnabled.Enabled else busy,
+                    onSubmit = { actions.checkInstall(typed.text.toString()) },
+                )
+            }
     }
     val spec =
         when (val asked = state.confirm) {
@@ -216,6 +242,7 @@ private fun PackageRow(pkg: LinuxPackage, canAct: Boolean, actions: LinuxPackage
     val facts = "⁦${pkg.version}⁩ · ${size(pkg.sizeKb * 1024)}"
     KitRow(
         title = pkg.name,
+        leading = KitRowLeading.Glyph(if (pkg.locked) KitIcons.locked else KitIcons.`package`),
         titleIsFileName = true,
         supporting = if (pkg.locked) "$facts · ${stringResource(Res.string.linuxMgrPkgLocked)}" else facts,
         supportingMaxLines = 3,
