@@ -21,10 +21,9 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
-import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.row.KitTeachingRow
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
-import io.github.eslamasabry.oc.ui.kit.teaching.KitTip
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
@@ -114,29 +113,19 @@ public fun TeachingScreen(state: TeachingUi, actions: TeachingActions) {
                         state.entries
                             .filter { it.kind == kind }
                             .forEach { entry ->
-                                KitTip(
+                                KitTeachingRow(
+                                    title = teachingWords(entry.titleKey),
+                                    icon =
+                                        if (kind == TeachingKind.Tour) KitIcons.playCircle
+                                        else KitIcons.idea,
+                                    showLabel = stringResource(Res.string.tipsShowMe),
+                                    onShow = { actions.replay(entry.id) },
                                     message = teachingWords(entry.messageKey),
-                                    visible =
+                                    replaying =
                                         kind == TeachingKind.Tip && state.replay?.id == entry.id,
                                     onDismissed = actions::dismiss,
-                                ) {
-                                    KitRow(
-                                        title = teachingWords(entry.titleKey),
-                                        leading =
-                                            KitRowLeading.Glyph(
-                                                if (kind == TeachingKind.Tour) KitIcons.playCircle
-                                                else KitIcons.idea
-                                            ),
-                                        modifier = Modifier.testTag("tips-row-${entry.id.raw}"),
-                                        trailing =
-                                            KitRowTrailing.Action(
-                                                KitLineAction(
-                                                    stringResource(Res.string.tipsShowMe),
-                                                    { actions.replay(entry.id) },
-                                                )
-                                            ),
-                                    )
-                                }
+                                    modifier = Modifier.testTag("tips-row-${entry.id.raw}"),
+                                )
                             }
                     }
                 }
