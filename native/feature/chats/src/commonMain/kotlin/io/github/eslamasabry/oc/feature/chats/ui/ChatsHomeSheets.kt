@@ -42,6 +42,7 @@ internal fun HomeFilterChips(state: ChatsUi, actions: ChatsActions) {
         label = stringResource(Res.string.chatsFilterSheetTitle),
         kind = KitChipKind.Action,
         selected = state.filters.projectDirectory != null || state.otherFoldersSelected,
+        opensMenu = true,
         onClick = actions::showProjectChoices,
     )
     if (state.home.sources.size > 1) {
