@@ -1,13 +1,19 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -27,7 +33,11 @@ import io.github.eslamasabry.oc.feature.settings.presentation.SettingsRowId
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsSearch
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsSearchEntry
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsUi
+import io.github.eslamasabry.oc.ui.design.layout.Layout
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.frame.KitPaneScreen
+import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
+import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchNoMatch
@@ -39,6 +49,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.settingsHubSearch
@@ -64,6 +75,23 @@ internal fun HubPage(
     modifier: Modifier,
     onExit: (() -> Unit)?,
 ) {
+    SettingsFrame(
+        title = settingsTitle(),
+        onBack = onExit,
+        state = state,
+        actions = actions,
+        modifier = modifier,
+    ) {
+        HubBody(state, actions)
+    }
+}
+
+@Composable
+private fun ColumnScope.HubBody(
+    state: SettingsUi,
+    actions: SettingsActions,
+    selected: SettingsGroupId? = null,
+) {
     val hub = state.hub
     val entries = hub.searchable.map { SettingsSearchEntry(it, rowWords(it), aliasWords(it)) }
     LaunchedEffect(entries) { actions.onSearchEntries(entries) }
@@ -72,63 +100,56 @@ internal fun HubPage(
     LaunchedEffect(hub.query) {
         if (field.text.toString() != hub.query) field.edit { replace(0, length, hub.query) }
     }
-    SettingsFrame(
-        title = settingsTitle(),
-        onBack = onExit,
-        state = state,
-        actions = actions,
-        modifier = modifier,
-    ) {
-        Box(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)) {
-            KitSearchField(
-                label = stringResource(Res.string.settingsHubSearch),
-                onSearch = actions::onQuery,
-                onSubmit = { text ->
-                    SettingsSearch.find(text, entries).firstOrNull()?.let(actions::onTarget)
-                },
-                resultCount = hub.results.size.takeIf { hub.query.isNotBlank() && it > 0 },
-                prominent = true,
-                state = field,
-                modifier = Modifier.testTag("settings-search"),
-            )
-        }
-        Spacer(Modifier.height(Space.S4.dp))
-        if (hub.query.isBlank()) {
-            val large =
-                LocalDensity.current.fontScale * 10 >= // F: lib/ui/screens/settings_screen.dart:290
-                    18 // F: lib/ui/screens/settings_screen.dart:290
-            KitRowGroup(leadingTiles = true) {
-                hub.groups.forEach { group ->
-                    KitRow(
-                        title = groupWords(group),
-                        modifier =
-                            Modifier.heightIn(min = LocalKitTokens.current.rowHeightTwo.dp)
-                                .testTag("settings-group-${group.name}"),
-                        leading = if (large) null else KitRowLeading.Glyph(groupGlyph(group)),
-                        supporting =
-                            if (group == SettingsGroupId.Server) hubServerLine(state) else null,
-                        trailing = if (large) KitRowTrailing.None else KitRowTrailing.Chevron,
-                        onClick = { actions.onOpen(SettingsPage.Group(group)) },
-                    )
-                }
+    Box(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)) {
+        KitSearchField(
+            label = stringResource(Res.string.settingsHubSearch),
+            onSearch = actions::onQuery,
+            onSubmit = { text ->
+                SettingsSearch.find(text, entries).firstOrNull()?.let(actions::onTarget)
+            },
+            resultCount = hub.results.size.takeIf { hub.query.isNotBlank() && it > 0 },
+            prominent = true,
+            state = field,
+            modifier = Modifier.testTag("settings-search"),
+        )
+    }
+    Spacer(Modifier.height(Space.S4.dp))
+    if (hub.query.isBlank()) {
+        val large =
+            LocalDensity.current.fontScale * 10 >= // F: lib/ui/screens/settings_screen.dart:290
+                18 // F: lib/ui/screens/settings_screen.dart:290
+        KitRowGroup(leadingTiles = true) {
+            hub.groups.forEach { group ->
+                KitRow(
+                    title = groupWords(group),
+                    selected = group == selected,
+                    modifier =
+                        Modifier.heightIn(min = LocalKitTokens.current.rowHeightTwo.dp)
+                            .testTag("settings-group-${group.name}"),
+                    leading = if (large) null else KitRowLeading.Glyph(groupGlyph(group)),
+                    supporting =
+                        if (group == SettingsGroupId.Server) hubServerLine(state) else null,
+                    trailing = if (large) KitRowTrailing.None else KitRowTrailing.Chevron,
+                    onClick = { actions.onOpen(SettingsPage.Group(group)) },
+                )
             }
-        } else if (hub.results.isEmpty()) {
-            KitSearchNoMatch(
-                query = hub.query,
-                onClear = { actions.onQuery("") },
-            )
-        } else {
-            KitRowGroup {
-                hub.results.forEach { row ->
-                    KitRow(
-                        title = rowWords(row),
-                        modifier = Modifier.testTag(row.tag),
-                        supporting = groupWords(row.group),
-                        leading = KitRowLeading.Glyph(rowGlyph(row)),
-                        trailing = KitRowTrailing.Chevron,
-                        onClick = { actions.onTarget(row) },
-                    )
-                }
+        }
+    } else if (hub.results.isEmpty()) {
+        KitSearchNoMatch(
+            query = hub.query,
+            onClear = { actions.onQuery("") },
+        )
+    } else {
+        KitRowGroup {
+            hub.results.forEach { row ->
+                KitRow(
+                    title = rowWords(row),
+                    modifier = Modifier.testTag(row.tag),
+                    supporting = groupWords(row.group),
+                    leading = KitRowLeading.Glyph(rowGlyph(row)),
+                    trailing = KitRowTrailing.Chevron,
+                    onClick = { actions.onTarget(row) },
+                )
             }
         }
     }
@@ -202,92 +223,137 @@ internal fun GroupPage(
     page: SettingsPage.Group,
     modifier: Modifier,
 ) {
-    var languageOpen by remember { mutableStateOf(false) }
-    SettingsFrame(groupWords(page.id), { actions.onBack() }, state, actions, modifier) {
-        if (languageOpen) {
-            KitSheet(
-                visible = true,
-                onDismissRequest = { languageOpen = false },
-                title = stringResource(Res.string.settingsV3Language),
-            ) {
-                LanguageBody(
-                    state.language,
-                    object : SettingsActions by actions {
-                        override fun onLanguage(
-                            language:
-                                io.github.eslamasabry.oc.feature.settings.presentation.AppLanguage
-                        ) {
-                            actions.onLanguage(language)
-                            languageOpen = false
-                        }
-                    },
+    BoxWithConstraints(modifier.fillMaxSize()) {
+        val window = LocalKitWindow.current
+        if (Layout.showsDetail(window.cls, window.short, maxWidth.value)) {
+            KitPaneScreen(
+                topBar = {
+                    KitTopBar(
+                        title = settingsTitle(),
+                        exit = KitTopBarExit.Back,
+                        exitLabel = stringResource(Res.string.kitTopBarBack),
+                        onExit = { actions.onBack() },
+                    )
+                },
+                list = {
+                    Column(
+                        Modifier.fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .padding(top = Space.S2.dp, bottom = Space.S6.dp)
+                    ) {
+                        HubBody(state, actions, selected = page.id)
+                    }
+                },
+                detail = {
+                    Column(
+                        Modifier.fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            // F: lib/ui/screens/settings/settings_group_page.dart:399-401
+                            .padding(top = Space.S5.dp, bottom = Space.S6.dp)
+                    ) {
+                        GroupBody(state, actions, page)
+                    }
+                },
+                emptyDetail = {},
+            )
+        } else {
+            SettingsFrame(groupWords(page.id), { actions.onBack() }, state, actions) {
+                GroupBody(state, actions, page)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ColumnScope.GroupBody(
+    state: SettingsUi,
+    actions: SettingsActions,
+    page: SettingsPage.Group,
+) {
+    var languageOpen by remember(page.id) { mutableStateOf(false) }
+    if (languageOpen) {
+        KitSheet(
+            visible = true,
+            onDismissRequest = { languageOpen = false },
+            title = stringResource(Res.string.settingsV3Language),
+        ) {
+            LanguageBody(
+                state.language,
+                object : SettingsActions by actions {
+                    override fun onLanguage(
+                        language: io.github.eslamasabry.oc.feature.settings.presentation.AppLanguage
+                    ) {
+                        actions.onLanguage(language)
+                        languageOpen = false
+                    }
+                },
+            )
+        }
+    }
+    val rows = state.group?.rows.orEmpty()
+    KitRowGroup(leadingTiles = true) {
+        rows.forEach { row ->
+            val title = rowWords(row.id)
+            val request = remember(row.id) { BringIntoViewRequester() }
+            val focused = state.focusedRow == row.id
+            LaunchedEffect(focused) { if (focused) request.bringIntoView() }
+            val rowModifier =
+                Modifier.testTag(row.id.tag).bringIntoViewRequester(request).semantics {
+                    selected = focused
+                }
+            when {
+                row.id == SettingsRowId.PhraseChips ->
+                    KitIconSwitchRow(
+                        title = stringResource(Res.string.settingsPhraseChipsTitle),
+                        icon = KitIcons.chat,
+                        checked = state.phrases?.enabled ?: state.phraseChips,
+                        modifier = rowModifier,
+                        onCheckedChange = actions::onPhraseChips,
+                    )
+                row.door is SettingsDoor.Switch ->
+                    KitIconSwitchRow(
+                        title = title,
+                        icon = rowGlyph(row.id),
+                        checked = row.door.on,
+                        modifier = rowModifier,
+                        onCheckedChange = { actions.onRow(row.id) },
+                    )
+                else ->
+                    KitRow(
+                        title = title,
+                        modifier = rowModifier,
+                        selected = focused,
+                        leading = KitRowLeading.Glyph(rowGlyph(row.id)),
+                        trailing =
+                            rowValue(row.id, state)?.let { KitRowTrailing.Value(it) }
+                                ?: KitRowTrailing.Chevron,
+                        onClick = {
+                            if (row.id == SettingsRowId.Language) languageOpen = true
+                            else actions.onRow(row.id)
+                        },
+                    )
+            }
+        }
+    }
+    if (page.id == SettingsGroupId.Conversations)
+        state.phrases
+            ?.takeIf { it.hiddenCount > 0 && it.profile != null }
+            ?.let { phrases ->
+                KitRow(
+                    title = stringResource(Res.string.settingsPhraseChipsShowHidden),
+                    leading = KitRowLeading.Glyph(KitIcons.hidden),
+                    supporting =
+                        pluralStringResource(
+                            Res.plurals.settingsPhraseChipsHiddenCount,
+                            phrases.hiddenCount,
+                            phrases.hiddenCount,
+                        ),
+                    onClick = actions::onShowHiddenPhrases,
                 )
             }
-        }
-        val rows = state.group?.rows.orEmpty()
-        KitRowGroup(leadingTiles = true) {
-            rows.forEach { row ->
-                val title = rowWords(row.id)
-                val request = remember(row.id) { BringIntoViewRequester() }
-                val focused = state.focusedRow == row.id
-                LaunchedEffect(focused) { if (focused) request.bringIntoView() }
-                val rowModifier =
-                    Modifier.testTag(row.id.tag).bringIntoViewRequester(request).semantics {
-                        selected = focused
-                    }
-                when {
-                    row.id == SettingsRowId.PhraseChips ->
-                        KitIconSwitchRow(
-                            title = stringResource(Res.string.settingsPhraseChipsTitle),
-                            icon = KitIcons.chat,
-                            checked = state.phrases?.enabled ?: state.phraseChips,
-                            modifier = rowModifier,
-                            onCheckedChange = actions::onPhraseChips,
-                        )
-                    row.door is SettingsDoor.Switch ->
-                        KitIconSwitchRow(
-                            title = title,
-                            icon = rowGlyph(row.id),
-                            checked = row.door.on,
-                            modifier = rowModifier,
-                            onCheckedChange = { actions.onRow(row.id) },
-                        )
-                    else ->
-                        KitRow(
-                            title = title,
-                            modifier = rowModifier,
-                            selected = focused,
-                            leading = KitRowLeading.Glyph(rowGlyph(row.id)),
-                            trailing =
-                                rowValue(row.id, state)?.let { KitRowTrailing.Value(it) }
-                                    ?: KitRowTrailing.Chevron,
-                            onClick = {
-                                if (row.id == SettingsRowId.Language) languageOpen = true
-                                else actions.onRow(row.id)
-                            },
-                        )
-                }
-            }
-        }
-        if (page.id == SettingsGroupId.Conversations)
-            state.phrases
-                ?.takeIf { it.hiddenCount > 0 && it.profile != null }
-                ?.let { phrases ->
-                    KitRow(
-                        title = stringResource(Res.string.settingsPhraseChipsShowHidden),
-                        leading = KitRowLeading.Glyph(KitIcons.hidden),
-                        supporting =
-                            pluralStringResource(
-                                Res.plurals.settingsPhraseChipsHiddenCount,
-                                phrases.hiddenCount,
-                                phrases.hiddenCount,
-                            ),
-                        onClick = actions::onShowHiddenPhrases,
-                    )
-                }
-        if (page.id == SettingsGroupId.Server && state.hub.savedServers.size > 1) {
-            SavedServersBody(state, actions, null)
-        }
+    if (page.id == SettingsGroupId.Server && state.hub.savedServers.size > 1) {
+        Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
+        SavedServersBody(state, actions, null)
     }
 }
 
