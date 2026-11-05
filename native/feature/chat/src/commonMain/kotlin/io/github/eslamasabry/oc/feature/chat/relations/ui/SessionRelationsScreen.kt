@@ -58,6 +58,7 @@ public fun SessionRelationsScreen(state: SessionRelationsUi, actions: SessionRel
                             KitLineAction(
                                 stringResource(Res.string.r40RelationsRefresh),
                                 actions::refresh,
+                                icon = KitIcons.retry,
                             )
                         ),
             )
