@@ -116,4 +116,14 @@ class PermissionSettingsTest {
         onNodeWithText("Try again").performClick()
         assertEquals(listOf("refresh"), calls)
     }
+
+    @Test
+    fun `B-SEC-093 permissions confirmation works inside the page modal host`() = runComposeUiTest {
+        setContent {
+            Page(PermissionSettingsUi(facts, confirm = InFlowConsentKind.NeedsYouNotifications))
+        }
+        assertEquals(emptyList(), calls)
+        onNodeWithText("Turn on notifications").performClick()
+        assertEquals(listOf("confirm"), calls)
+    }
 }

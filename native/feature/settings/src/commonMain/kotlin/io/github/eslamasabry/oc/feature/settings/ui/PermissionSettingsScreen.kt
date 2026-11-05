@@ -159,52 +159,54 @@ internal fun PermissionSettingsContent(
                     KitGroupNote(stringResource(Res.string.settings40_no_answers))
             }
         }
-    }
-    val kind = ui.confirm
-    KitConfirm(
-        spec =
-            when {
-                ui.confirmAgain ->
-                    KitConfirmSpec(
-                        stringResource(Res.string.consentAlwaysAgainTitle),
-                        stringResource(Res.string.consentAlwaysAgainConfirm),
-                        body = stringResource(Res.string.consentAlwaysAgainBody),
-                    )
-                kind != null ->
-                    KitConfirmSpec(
-                        stringResource(
-                            when (kind) {
-                                InFlowConsentKind.BatteryExemption -> Res.string.consentBatteryTitle
-                                InFlowConsentKind.MakerAutoStart -> Res.string.consentMakerTitle
-                                InFlowConsentKind.NeedsYouNotifications ->
-                                    Res.string.firstRunNotifyTitle
-                            }
-                        ),
-                        stringResource(
-                            when (kind) {
-                                InFlowConsentKind.BatteryExemption -> Res.string.consentBatteryAllow
-                                InFlowConsentKind.MakerAutoStart -> Res.string.consentMakerAllow
-                                InFlowConsentKind.NeedsYouNotifications ->
-                                    Res.string.consentNeedsYouAllow
-                            }
-                        ),
-                        body =
+        val kind = ui.confirm
+        KitConfirm(
+            spec =
+                when {
+                    ui.confirmAgain ->
+                        KitConfirmSpec(
+                            stringResource(Res.string.consentAlwaysAgainTitle),
+                            stringResource(Res.string.consentAlwaysAgainConfirm),
+                            body = stringResource(Res.string.consentAlwaysAgainBody),
+                        )
+                    kind != null ->
+                        KitConfirmSpec(
                             stringResource(
                                 when (kind) {
                                     InFlowConsentKind.BatteryExemption ->
-                                        Res.string.consentBatteryBody
-                                    InFlowConsentKind.MakerAutoStart ->
-                                        Res.string.consentMakerBodyUnnamed
+                                        Res.string.consentBatteryTitle
+                                    InFlowConsentKind.MakerAutoStart -> Res.string.consentMakerTitle
                                     InFlowConsentKind.NeedsYouNotifications ->
-                                        Res.string.firstRunNotifyBody
+                                        Res.string.firstRunNotifyTitle
                                 }
                             ),
-                    )
-                else -> null
-            },
-        onConfirm = onConfirm,
-        onCancel = onCancel,
-    )
+                            stringResource(
+                                when (kind) {
+                                    InFlowConsentKind.BatteryExemption ->
+                                        Res.string.consentBatteryAllow
+                                    InFlowConsentKind.MakerAutoStart -> Res.string.consentMakerAllow
+                                    InFlowConsentKind.NeedsYouNotifications ->
+                                        Res.string.consentNeedsYouAllow
+                                }
+                            ),
+                            body =
+                                stringResource(
+                                    when (kind) {
+                                        InFlowConsentKind.BatteryExemption ->
+                                            Res.string.consentBatteryBody
+                                        InFlowConsentKind.MakerAutoStart ->
+                                            Res.string.consentMakerBodyUnnamed
+                                        InFlowConsentKind.NeedsYouNotifications ->
+                                            Res.string.firstRunNotifyBody
+                                    }
+                                ),
+                        )
+                    else -> null
+                },
+            onConfirm = onConfirm,
+            onCancel = onCancel,
+        )
+    }
 }
 
 @Composable
