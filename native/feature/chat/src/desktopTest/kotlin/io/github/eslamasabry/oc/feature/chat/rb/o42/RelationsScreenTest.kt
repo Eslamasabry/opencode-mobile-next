@@ -17,6 +17,8 @@ import kotlin.test.assertEquals
 class RelationsScreenTest {
     private class Actions : SessionRelationsActions {
         var refreshes = 0
+        var stops = 0
+        var cancelled = 0
         override fun back() {}
         override fun refresh() { refreshes++ }
         override fun open(id: SessionId) {}
@@ -28,8 +30,8 @@ class RelationsScreenTest {
         override fun copyResume() {}
         override fun clipDone(id: Long) {}
         override fun requestStop() {}
-        override fun cancelStop() {}
-        override fun confirmStop() {}
+        override fun cancelStop() { cancelled++ }
+        override fun confirmStop() { stops++ }
     }
 
     @Test fun `C33 needs you says the status once and refresh keeps the existing action`() = runComposeUiTest {
@@ -47,4 +49,21 @@ class RelationsScreenTest {
         onNodeWithContentDescription("Refresh subagent sessions").performClick()
         assertEquals(1, actions.refreshes)
     }
+    @Test fun `B-AGENT-221 stopping a subagent asks first and leaves Keep running available`() = runComposeUiTest {
+        val actions = Actions()
+        val parent = RelationRow(SessionId("parent"), "Main conversation", true, true, RelationStatus.Idle, null, false, null)
+        val child = RelationRow(SessionId("child"), "Review changes", false, false, RelationStatus.Working, null, false, null)
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", appearance = KitAppearance(motion = MotionLevel.Off)) {
+                SessionRelationsScreen(SessionRelationsUi(loading = false, parent = parent, children = persistentListOf(child), stopping = child), actions)
+            }
+        }
+        onNodeWithText("Stop Review changes?").assertExists()
+        onNodeWithText("Stop subagent").assertIsEnabled()
+        assertEquals(0, actions.stops)
+        onNodeWithText("Keep running").performClick()
+        assertEquals(1, actions.cancelled)
+        assertEquals(0, actions.stops)
+    }
+
 }

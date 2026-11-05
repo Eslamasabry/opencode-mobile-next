@@ -17,15 +17,15 @@ import io.github.eslamasabry.oc.feature.chat.relations.presentation.RelationStat
 import io.github.eslamasabry.oc.feature.chat.relations.presentation.SessionRelationsActions
 import io.github.eslamasabry.oc.feature.chat.relations.presentation.SessionRelationsUi
 import io.github.eslamasabry.oc.ui.design.tokens.Space
-import io.github.eslamasabry.oc.ui.kit.KitAction
-import io.github.eslamasabry.oc.ui.kit.KitText
-import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.motion.KitRefresh
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -243,36 +243,20 @@ private fun RelationMenu(state: SessionRelationsUi, actions: SessionRelationsAct
 
 @Composable
 private fun StopSheet(state: SessionRelationsUi, actions: SessionRelationsActions) {
-    val row = state.stopping
-    KitSheet(
-        visible = row != null,
-        onDismissRequest = actions::cancelStop,
-        title =
-            row?.let { stringResource(Res.string.r40RelationsStopTitle, title(it)) }
-                ?: stringResource(Res.string.r40RelationsStop),
-        closeLabel = stringResource(Res.string.kitSheetClose),
-    ) {
-        KitText(stringResource(Res.string.sessionRelationsStopBody))
-        state.failure?.let {
-            KitErrorNotice(message = stringResource(Res.string.r40RelationsFailure), failure = it)
-        }
-        KitActionBlock(
-            primary =
-                KitAction(
-                    stringResource(Res.string.r40RelationsStop),
-                    actions::confirmStop,
-                    working = state.working,
-                    destructive = true,
-                ),
-            tertiary =
-                listOf(
-                    KitAction(
-                        stringResource(Res.string.r40RelationsKeepRunning),
-                        actions::cancelStop,
-                    )
-                ),
-        )
-    }
+    KitConfirm(
+        spec = state.stopping?.let { row ->
+            KitConfirmSpec(
+                title = stringResource(Res.string.sessionRelationsStopTitle, title(row)),
+                body = stringResource(Res.string.sessionRelationsStopBody),
+                confirmLabel = stringResource(Res.string.sessionRelationsStopConfirm),
+                kind = KitConfirmKind.Stop,
+            )
+        },
+        onConfirm = actions::confirmStop,
+        onCancel = actions::cancelStop,
+        working = state.working,
+        failed = state.failure != null,
+    )
 }
 
 @Composable
