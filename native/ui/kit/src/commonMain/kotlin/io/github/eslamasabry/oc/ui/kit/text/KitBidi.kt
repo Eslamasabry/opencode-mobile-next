@@ -1,14 +1,25 @@
 package io.github.eslamasabry.oc.ui.kit.text
 
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextOverflow
+
 /**
  * Unicode isolates for technical text inside a sentence (B-L10N-006): a path, command or address
  * keeps its own order in an Arabic line. Text that is already isolated is returned as it is, and
  * empty text is left alone.
  */
 public object KitBidi {
-    private const val LRI = '⁦'
-    private const val FSI = '⁨'
-    private const val PDI = '⁩'
+    /** LEFT-TO-RIGHT ISOLATE. */
+    public const val LRI: Char = '\u2066'
+
+    /** FIRST STRONG ISOLATE: the direction follows the value's first strong character. */
+    public const val FSI: Char = '\u2068'
+
+    /** POP DIRECTIONAL ISOLATE: closes [LRI] or [FSI]. */
+    public const val PDI: Char = '\u2069'
 
     private fun isolated(text: String): Boolean =
         text.length >= 2 && (text.first() == LRI || text.first() == FSI) && text.last() == PDI
@@ -20,6 +31,19 @@ public object KitBidi {
     /** First-strong isolate: a name the person typed, in whichever script it is. */
     public fun auto(text: String): String =
         if (text.isEmpty() || isolated(text)) text else "$FSI$text$PDI"
+
+    /** A text showing [value] isolated as left-to-right; the paragraph keeps the ambient direction (Dart `ltrText`). */
+    @Composable
+    public fun ltrText(
+        value: String,
+        modifier: Modifier = Modifier,
+        style: TextStyle = TextStyle.Default,
+        maxLines: Int = Int.MAX_VALUE,
+        overflow: TextOverflow = TextOverflow.Clip,
+        softWrap: Boolean = true,
+    ) {
+        BasicText(ltr(value), modifier, style = style, overflow = overflow, softWrap = softWrap, maxLines = maxLines)
+    }
 
     private val valueRuns =
         Regex(
