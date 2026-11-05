@@ -39,7 +39,7 @@ class ServerEditorParityTest {
             ServerEditorScreen(ServerEditorUi(step = ServerEditorStep.Connect), Actions())
         } }
         onNodeWithText("Enter the address instead").assertExists().performScrollTo().performClick()
-        onNodeWithText("Server address").assertExists()
+        onNodeWithText("Server URL").assertExists()
         onNodeWithText("Password").assertExists()
     }
 }

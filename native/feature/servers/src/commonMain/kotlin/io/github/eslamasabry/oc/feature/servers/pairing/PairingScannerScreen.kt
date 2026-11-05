@@ -14,7 +14,7 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.scanner.KitScanner
 import io.github.eslamasabry.oc.ui.kit.state.KitProgress
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
-import io.github.eslamasabry.oc.ui.kit.state.KitStateView
+import io.github.eslamasabry.oc.ui.kit.scanner.KitScannerState as KitStateView
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 import kotlin.time.TimeSource
