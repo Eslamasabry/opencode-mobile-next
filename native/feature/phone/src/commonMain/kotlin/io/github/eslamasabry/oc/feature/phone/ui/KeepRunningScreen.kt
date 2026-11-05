@@ -87,7 +87,7 @@ public fun KeepRunningScreen(state: KeepRunningUi, actions: KeepRunningActions) 
                 )
             }
             KitGroupNote(stringResource(Res.string.keepRunningIntro))
-            KitRowGroup(label = stringResource(Res.string.keepRunningTitle)) {
+            KitRowGroup(label = stringResource(Res.string.keepRunningTitle), leadingTiles = true) {
                 state.steps.forEach { step ->
                     val (title, detail) = step.kind.words(state.maker, step.done)
                     val opens = step.opens != null && !step.done
