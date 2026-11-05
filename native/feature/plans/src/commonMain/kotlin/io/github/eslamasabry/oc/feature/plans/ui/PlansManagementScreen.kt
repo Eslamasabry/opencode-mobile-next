@@ -45,7 +45,7 @@ public fun PlansManagementScreen(
             when (state.page) {
                 PlanManagePage.Alerts -> Res.string.m40UsageAlerts
                 PlanManagePage.Widget -> Res.string.m40UsageWidget
-                PlanManagePage.Reader -> Res.string.m40UsageReadFrom
+                PlanManagePage.Reader -> Res.string.usageReadFromTitleHere
                 PlanManagePage.Add -> Res.string.m40UsageAdd
                 else -> Res.string.m40PlansTitle
             }
@@ -53,8 +53,12 @@ public fun PlansManagementScreen(
     KitScreen(
         topBar = {
             KitTopBar(
-                title = title,
-                subtitle = state.readerName.takeIf { state.page == PlanManagePage.Reader },
+                title =
+                    if (
+                        state.page == PlanManagePage.Reader && state.readers[state.readerId] != null
+                    )
+                        stringResource(Res.string.usageReadFrom, state.readerName)
+                    else title,
                 exit = KitTopBarExit.Back,
                 exitLabel = words.back,
                 onExit = actions::dismiss,
@@ -68,10 +72,16 @@ public fun PlansManagementScreen(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
             verticalArrangement =
                 Arrangement.spacedBy(
-                    if (state.page == PlanManagePage.Widget) 0.dp else Space.S2.dp
+                    if (state.page == PlanManagePage.Widget || state.page == PlanManagePage.Reader)
+                        0.dp
+                    else Space.S2.dp
                 ),
         ) {
-            if (state.failure != null && state.page != PlanManagePage.Widget)
+            if (
+                state.failure != null &&
+                    state.page != PlanManagePage.Widget &&
+                    state.page != PlanManagePage.Reader
+            )
                 KitErrorNotice(
                     stringResource(Res.string.m40UsageSaveFailed),
                     failure = state.failure,
@@ -81,7 +91,7 @@ public fun PlansManagementScreen(
             when (state.page) {
                 PlanManagePage.Alerts -> AlertsBody(state, plans, actions)
                 PlanManagePage.Widget -> WidgetBody(state, plans, actions)
-                PlanManagePage.Reader -> ReaderBody(state, actions)
+                PlanManagePage.Reader -> UsageReaderBody(state, plans, actions)
                 PlanManagePage.Add ->
                     KitRowGroup {
                         for (id in plans.addable) KitRow(
@@ -346,86 +356,4 @@ private fun WidgetBody(state: PlansManagementUi, plans: PlansUi, actions: PlansM
         }
     }
     Spacer(Modifier.height(Space.S6.dp))
-}
-
-@Composable
-private fun ReaderBody(state: PlansManagementUi, actions: PlansManagementActions) {
-    val words = plansWords()
-    val reader = state.readers[state.readerId]
-    if (reader == null) {
-        KitStateView(KitStateKind.Missing, stringResource(Res.string.m40UsageReaderGone))
-        return
-    }
-    val local = reader.kind == PlanReaderKind.InAppUbuntu
-    KitNotice(
-        stringResource(
-            if (local) Res.string.m40UsageReadPhoneBody else Res.string.m40UsageReadComputerBody
-        )
-    )
-    if (!local)
-        KitDetailsFold(
-            label = stringResource(Res.string.m40UsageWhatRuns),
-            copyLabel = plansWords().copyDetails,
-            notes =
-                listOf(
-                    stringResource(Res.string.m40UsageReadCommand),
-                    stringResource(Res.string.m40UsageReadPrivacy),
-                ),
-        )
-    if (reader.busy)
-        KitStateView(
-            KitStateKind.Working,
-            stringResource(
-                when (reader.phase) {
-                    PlanReaderPhase.Copying -> Res.string.m40UsageCopying
-                    PlanReaderPhase.SignIns -> Res.string.m40UsageCheckingSignIns
-                    PlanReaderPhase.Starting -> Res.string.m40UsageStarting
-                    PlanReaderPhase.Reading -> Res.string.m40UsageReading
-                    else -> Res.string.m40UsageChecking
-                }
-            ),
-        )
-    reader.problem?.let { problem ->
-        KitNotice(
-            stringResource(
-                when (problem) {
-                    PlanReaderProblem.Gone -> Res.string.m40UsageReaderGone
-                    PlanReaderProblem.NodeMissing,
-                    PlanReaderProblem.NodeTooOld -> Res.string.m40UsageNeedsNode
-                    PlanReaderProblem.LinuxNotReady -> Res.string.m40UsageLinuxNotReady
-                    PlanReaderProblem.ServerTooOld -> Res.string.m40UsageServerTooOld
-                    PlanReaderProblem.Prepare -> Res.string.m40UsagePrepareFailed
-                    PlanReaderProblem.Start -> Res.string.m40UsageStartFailed
-                    PlanReaderProblem.Remove -> Res.string.m40UsageRemoveFailed
-                    PlanReaderProblem.SaveFailed -> Res.string.m40UsageSaveFailed
-                    PlanReaderProblem.Unreachable -> Res.string.m40UsageUnreachable
-                    else -> Res.string.m40UsageNoAnswer
-                }
-            )
-        )
-    }
-    if (reader.phase == PlanReaderPhase.Ready)
-        KitNotice(
-            if (reader.foundProviderIds.isEmpty()) stringResource(Res.string.m40UsageFoundNone)
-            else
-                stringResource(
-                    Res.string.m40UsageFound,
-                    reader.foundProviderIds.joinToString(", ") { words.providerName(it) },
-                )
-        )
-    KitButton(
-        label =
-            stringResource(
-                if (reader.enabled) Res.string.m40UsageReadNow else Res.string.m40UsageTurnOn
-            ),
-        onClick = if (reader.enabled) actions::readerRead else actions::readerStart,
-        working = reader.busy || state.busy,
-    )
-    if (reader.enabled)
-        KitButton(
-            label = stringResource(Res.string.m40UsageTurnOff),
-            onClick = actions::readerOff,
-            role = KitButtonRole.Tertiary,
-            working = state.busy,
-        )
 }
