@@ -103,6 +103,39 @@ public fun KitNotice(
     liveRegion: Boolean = true,
     trailing: (@Composable () -> Unit)? = null,
 ) {
+    NoticeContent(message, modifier, title, tone, notes, actions, dismiss, liveRegion, trailing, null)
+}
+
+/** Flutter KitNotice's explicit decorative icon, without changing the original call shape. */
+@Composable
+public fun KitNotice(
+    message: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    modifier: Modifier = Modifier,
+    title: String? = null,
+    tone: StatusTone = StatusTone.Neutral,
+    notes: List<String> = emptyList(),
+    actions: List<KitLineAction> = emptyList(),
+    dismiss: KitLineAction? = null,
+    liveRegion: Boolean = true,
+    trailing: (@Composable () -> Unit)? = null,
+) {
+    NoticeContent(message, modifier, title, tone, notes, actions, dismiss, liveRegion, trailing, icon)
+}
+
+@Composable
+private fun NoticeContent(
+    message: String,
+    modifier: Modifier,
+    title: String?,
+    tone: StatusTone,
+    notes: List<String>,
+    actions: List<KitLineAction>,
+    dismiss: KitLineAction?,
+    liveRegion: Boolean,
+    trailing: (@Composable () -> Unit)?,
+    icon: androidx.compose.ui.graphics.vector.ImageVector?,
+) {
     val colors = LocalKitColors.current
     Column(
         modifier.kitMaxWidth(CapRole.Reading).fillMaxWidth().padding(vertical = Space.S1.dp).testTag("kit-notice"),
@@ -110,7 +143,10 @@ public fun KitNotice(
     ) {
         Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
             Box(Modifier.width(LEAD_SLOT.dp).padding(top = 2.dp), contentAlignment = Alignment.TopCenter) {  // NV: icon nudged onto the first text line
-                if (tone == StatusTone.Neutral) {
+                if (icon != null) {
+                    Image(icon, null, Modifier.size(LocalKitTokens.current.smallIcon.dp).clearAndSetSemantics {},
+                        colorFilter = ColorFilter.tint(glyphColor(tone, colors)))
+                } else if (tone == StatusTone.Neutral) {
                     Image(
                         KitIcons.info, null, Modifier.size(LocalKitTokens.current.smallIcon.dp).clearAndSetSemantics {},
                         colorFilter = ColorFilter.tint(glyphColor(tone, colors)), // F: kit_notice.dart _iconFor info

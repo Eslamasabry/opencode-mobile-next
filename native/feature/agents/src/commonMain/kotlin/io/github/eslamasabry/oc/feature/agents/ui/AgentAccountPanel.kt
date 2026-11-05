@@ -1,7 +1,16 @@
 package io.github.eslamasabry.oc.feature.agents.ui
 
 import androidx.compose.foundation.layout.*
-import kotlin.time.Clock
+import io.github.eslamasabry.oc.core.common.CommonBindings
+import io.github.eslamasabry.oc.core.security.ExternalLinkPolicy
+import io.github.eslamasabry.oc.core.security.LinkDecision
+import io.github.eslamasabry.oc.core.security.LinkOrigin
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfacePanel
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.design.color.StatusTone
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import kotlin.time.Instant
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.state.KitProgressRow
@@ -54,7 +63,7 @@ import org.jetbrains.compose.resources.stringResource
 
 /** One transient account panel; leaving it closes its owned login session and discards its code. */
 @Composable
-internal fun AgentAccountPanel(state: AgentsUi, actions: AgentsActions, now: Instant = Clock.System.now()) {
+internal fun AgentAccountPanel(state: AgentsUi, actions: AgentsActions, now: Instant = CommonBindings.clock().now()) {
     val panel = state.accountPanel
     KitScreen(
         topBar = {
@@ -144,39 +153,56 @@ internal fun AgentAccountPanel(state: AgentsUi, actions: AgentsActions, now: Ins
                     }
                 if (loginWords != null) Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
                 val code = panel.deviceCode
+                val cancelVisible = panel.canCancel || panel.loginStatus == AccountLoginStatus.Cancelling
+                val cancelEnabled = KitEnabled.of(panel.canCancel, stringResource(Res.string.agentAccountCancelling))
                 if (code != null) {
-                    KitSurface {
+                    KitSurfacePanel(title = loginWords?.let { stringResource(it) }, icon = KitIcons.login) {
                         Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
-                            loginWords?.let { KitText(stringResource(it), role = KitTextRole.Title) }
                             KitText(stringResource(Res.string.agentAccountCodeHint), role = KitTextRole.Supporting)
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                KitSelectable(Modifier.weight(1f)) { KitText(code.userCode, role = KitTextRole.Title) }
+                                KitSelectable(Modifier.weight(1f).clearAndSetSemantics {
+                                    contentDescription = code.userCode.toCharArray().joinToString(" ")
+                                }) { KitText(code.userCode, role = TypeRole.Title) }
                                 KitIconButtonCopy(text = { code.userCode }, label = stringResource(Res.string.agentAccountCopyCode))
                             }
                             KitButton(stringResource(Res.string.agentAccountOpenSignIn), actions::openAccountSignIn,
                                 role = KitButtonRole.Secondary, icon = KitIcons.externalLink)
                             // Only the host is shown here. The existing action owns external-link admission.
-                            KitText(code.verificationUrl.substringAfter("://").substringBefore('/').substringBefore(':'), role = KitTextRole.Supporting)
-                            if (panel.canCancel) KitButton(stringResource(Res.string.agentAccountCancel), actions::cancelAccountSignIn, role = KitButtonRole.Tertiary)
+                            val host = (ExternalLinkPolicy().check(code.verificationUrl, LinkOrigin.ServerContent) as? LinkDecision.AskFirst)?.shownHost
+                            host?.let { KitText("\u2066$it\u2069", role = TypeRole.Caption) }
+                            if (cancelVisible) KitButton(stringResource(Res.string.agentAccountCancel), actions::cancelAccountSignIn,
+                                role = KitButtonRole.Tertiary, icon = KitIcons.close, enabled = cancelEnabled)
                         }
                     }
                 } else {
-                    loginWords?.let { KitNotice(stringResource(it)) }
-                    if (panel.canCancel) {
+                    loginWords?.let { words ->
+                        if (panel.loginStatus == AccountLoginStatus.Failed)
+                            io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice(stringResource(words))
+                        else KitNotice(stringResource(words),
+                            icon = when (panel.loginStatus) {
+                                AccountLoginStatus.Completed -> KitIcons.checkCircle
+                                AccountLoginStatus.Uncertain -> KitIcons.warning
+                                else -> KitIcons.login
+                            }, tone = if (panel.loginStatus == AccountLoginStatus.Completed) StatusTone.Ok else StatusTone.Neutral)
+                    }
+                    if (cancelVisible) {
                         Spacer(Modifier.height(Space.S2.dp))
-                        KitButton(stringResource(Res.string.agentAccountCancel), actions::cancelAccountSignIn, role = KitButtonRole.Tertiary)
+                        KitButton(stringResource(Res.string.agentAccountCancel), actions::cancelAccountSignIn,
+                            role = KitButtonRole.Tertiary, icon = KitIcons.close, enabled = cancelEnabled)
                     }
                 }
                 if (panel.account?.signedIn == true && panel.account?.type == "chatgpt") {
                     Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
                     val buckets = panel.limits
+                    val windows = buckets.orEmpty().flatMap { bucket -> listOfNotNull(bucket.primary, bucket.secondary).map { bucket to it } }
                     KitRowGroup(label = stringResource(Res.string.agentAccountLimits)) {
                     if (panel.metricsLoading && buckets == null)
                         KitProgressRow(stringResource(Res.string.agentAccountAllowance), null)
-                    else if (buckets.isNullOrEmpty())
-                        KitRow(stringResource(Res.string.agentAccountLimitsUnavailable), titleMaxLines = 3) // F: lib/ui/screens/agent_account_screen.dart:508
+                    else if (windows.isEmpty())
+                        KitRow(stringResource(Res.string.agentAccountLimitsUnavailable), titleMaxLines = 3,
+                            enabled = false, disabledReason = stringResource(Res.string.agentAccountUsageNote)) // F: lib/ui/screens/agent_account_screen.dart:508
                     else
-                        buckets.forEach { bucket ->
+                        buckets.orEmpty().forEach { bucket ->
                             listOfNotNull(bucket.primary, bucket.secondary).forEach { window ->
                                 val duration = window.durationMinutes
                                 val windowWords = when {
@@ -203,7 +229,8 @@ internal fun AgentAccountPanel(state: AgentsUi, actions: AgentsActions, now: Ins
                     KitRowGroup(label = stringResource(Res.string.agentAccountUsage)) {
                     if (panel.metricsLoading && usage == null) KitProgressRow(stringResource(Res.string.agentAccountUsage), null)
                     else if (usage?.lifetimeTokens == null && usage?.peakDailyTokens == null) {
-                        KitRow(stringResource(Res.string.agentAccountUsageUnavailable), titleMaxLines = 3) // F: lib/ui/screens/agent_account_screen.dart:569
+                        KitRow(stringResource(Res.string.agentAccountUsageUnavailable), titleMaxLines = 3,
+                            enabled = false, disabledReason = stringResource(Res.string.agentAccountUsageNote)) // F: lib/ui/screens/agent_account_screen.dart:569
                     }
                     usage?.lifetimeTokens?.let {
                         KitRow(

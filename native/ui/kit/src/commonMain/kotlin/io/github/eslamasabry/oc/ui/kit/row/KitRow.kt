@@ -110,6 +110,7 @@ public fun KitRow(
     state: KitRowState? = null,
     meta: String? = null,
     onClick: (() -> Unit)? = null,
+    titleMaxLines: Int = 1,
 ) {
     kitAssert(title.isNotBlank()) { "KitRow: a row needs a title" }
     kitAssert(enabled || !disabledReason.isNullOrBlank()) { "KitRow: a disabled row must say why (B-KIT-051)" }
@@ -201,7 +202,7 @@ public fun KitRow(
                             Modifier.weight(1f).testTag("kit-row-title"),
                             role = TypeRole.RowTitle,
                             tone = if (enabled) TextTone.Primary else TextTone.Tertiary,
-                            maxLines = if (titleIsFileName && large) Int.MAX_VALUE else kitRowTitleLines(scale),
+                            maxLines = if (titleIsFileName && large) Int.MAX_VALUE else kitRowTitleLines(scale, titleMaxLines),
                         )
                         meta?.let {
                             KitText(
