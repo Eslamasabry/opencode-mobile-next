@@ -269,40 +269,45 @@ internal fun AgentAccountPanel(
                             title = loginWords?.let { stringResource(it) },
                             icon = KitIcons.login,
                         ) {
-                            Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+                            Column(Modifier.fillMaxWidth()) {
                                 KitText(
                                     stringResource(Res.string.agentAccountCodeHint),
                                     role = KitTextRole.Supporting,
                                 )
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                Spacer(Modifier.height(Space.S3.dp))
+                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                                     KitSelectable(
                                         Modifier.weight(1f).clearAndSetSemantics {
-                                            contentDescription =
-                                                code.userCode.toCharArray().joinToString(" ")
+                                            contentDescription = code.userCode.toCharArray().joinToString(" ")
                                         }
                                     ) {
-                                        KitText(code.userCode, role = TypeRole.Title)
+                                        KitText(code.userCode, role = TypeRole.Title, tabular = true)
                                     }
                                     KitIconButtonCopy(
                                         text = { code.userCode },
                                         label = stringResource(Res.string.agentAccountCopyCode),
                                     )
                                 }
+                                Spacer(Modifier.height(Space.S3.dp))
                                 KitButton(
                                     stringResource(Res.string.agentAccountOpenSignIn),
                                     actions::openAccountSignIn,
                                     role = KitButtonRole.Secondary,
                                     icon = KitIcons.externalLink,
+                                    fullWidth = true,
                                 )
                                 // Only the host is shown here. The existing action owns
                                 // external-link admission.
                                 val host =
-                                    (ExternalLinkPolicy()
-                                            .check(code.verificationUrl, LinkOrigin.ServerContent)
+                                    (ExternalLinkPolicy().check(code.verificationUrl, LinkOrigin.ServerContent)
                                             as? LinkDecision.AskFirst)
                                         ?.shownHost
-                                host?.let { KitText("\u2066$it\u2069", role = TypeRole.Caption) }
-                                if (cancelVisible)
+                                host?.let {
+                                    Spacer(Modifier.height(Space.S1.dp))
+                                    KitText("\u2066$it\u2069", role = TypeRole.Caption)
+                                }
+                                if (cancelVisible) {
+                                    Spacer(Modifier.height(Space.S2.dp))
                                     KitButton(
                                         stringResource(Res.string.agentAccountCancel),
                                         actions::cancelAccountSignIn,
@@ -310,6 +315,7 @@ internal fun AgentAccountPanel(
                                         icon = KitIcons.close,
                                         enabled = cancelEnabled,
                                     )
+                                }
                             }
                         }
                     } else {

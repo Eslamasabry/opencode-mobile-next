@@ -2,8 +2,10 @@
 
 package io.github.eslamasabry.oc.feature.agents.rb.o49
 
+import androidx.compose.foundation.layout.width
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.agents.account.*
 import io.github.eslamasabry.oc.feature.agents.hub.*
@@ -200,6 +202,70 @@ class AgentsGateTest {
         onNodeWithText("Open official sign-in").assertExists()
         onNodeWithText("Cancel sign-in").performClick()
         assertEquals(true, actions.cancelled)
+    }
+
+    @Test
+    fun `official sign-in fills the compact code panel text rail`() = runComposeUiTest {
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.width(412.dp)) {
+                    AgentAccountPanel(
+                        AgentsUi(
+                            accountTarget = target,
+                            accountPanel =
+                                AccountPanelState(
+                                    status = AccountPanelStatus.Ready,
+                                    loginStatus = AccountLoginStatus.Waiting,
+                                    account = AgentRuntimeAccount(requiresSignIn = true),
+                                    canCancel = true,
+                                    deviceCode =
+                                        AccountDeviceCode(
+                                            "https://auth.example/device",
+                                            "TEST-1234",
+                                        ),
+                                ),
+                        ),
+                        Actions(),
+                    )
+                }
+            }
+        }
+        val code =
+            onNodeWithContentDescription("T E S T - 1 2 3 4").fetchSemanticsNode().boundsInRoot
+        val copy =
+            onNodeWithContentDescription("Copy sign-in code").fetchSemanticsNode().boundsInRoot
+        val open =
+            onNode(hasText("Open official sign-in") and hasClickAction())
+                .fetchSemanticsNode()
+                .boundsInRoot
+        assertEquals(code.left, open.left, absoluteTolerance = 1f)
+        assertEquals(copy.right, open.right, absoluteTolerance = 1f)
+    }
+
+    @Test
+    fun account_code() {
+        FlutterGoldenGate.check("agent_account_code", frame = FlutterGoldenGate.Frame.Screen) {
+            AgentAccountPanel(
+                AgentsUi(
+                    accountTarget = target,
+                    accountPanel =
+                        AccountPanelState(
+                            status = AccountPanelStatus.Ready,
+                            loginStatus = AccountLoginStatus.Waiting,
+                            account = AgentRuntimeAccount(requiresSignIn = true),
+                            canCancel = true,
+                            updatedAt = fixtureNow,
+                            deviceCode =
+                                AccountDeviceCode(
+                                    "https://auth.openai.com/codex/device",
+                                    "TEST-1234",
+                                ),
+                        ),
+                ),
+                Actions(),
+                fixtureNow,
+            )
+        }
     }
 
     @Test

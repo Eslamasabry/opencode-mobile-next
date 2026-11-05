@@ -46,6 +46,7 @@ public fun KitText(
     textAlign: TextAlign? = null,
     pageTitle: Boolean = false,
     sectionLabel: Boolean = false,
+    tabular: Boolean = false,
 ) {
     // pageTitle / sectionLabel are role hints; the head typography resolves the role alone.
     val base = LocalKitTypography.current.style(role)
@@ -61,6 +62,7 @@ public fun KitText(
             color = LocalKitColors.current.tone(tone),
             textDirection = if (kind == KitTextKind.Reading) TextDirection.Content else TextDirection.Unspecified,
             textAlign = textAlign ?: TextAlign.Start,
+            fontFeatureSettings = if (tabular) "tnum" else base.fontFeatureSettings, // F: lib/ui/kit/kit_text.dart:635-636
         )
     if (kind == KitTextKind.Reading) {
         BasicText(text, modifier, style = style, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
