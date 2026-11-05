@@ -17,6 +17,7 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
@@ -112,7 +113,7 @@ class KitSeamsDesktopTest {
         }
         onNodeWithText(words.sheetTitle).assertExists()
         onNodeWithText(words.sheetBody).assertExists()
-        onNodeWithText(words.close).performClick()
+        onNodeWithContentDescription(words.close).performClick() // Flutter's X; its words are the label
         assertEquals(1, dismissed)
         onNodeWithText(words.sheetTitle).assertDoesNotExist()
 

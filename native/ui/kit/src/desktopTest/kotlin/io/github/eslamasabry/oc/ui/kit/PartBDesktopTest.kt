@@ -18,6 +18,7 @@ import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
@@ -264,7 +265,7 @@ class PartBDesktopTest {
         onNodeWithText("Keep editing").performClick()
         onNodeWithText("Discard your changes?").assertDoesNotExist()
         assertEquals(0, dismissed)
-        onNodeWithText("Close").performClick()
+        onNodeWithContentDescription("Close").performClick() // Flutter's X; its words are the label
         onNodeWithText("Discard changes").performClick()
         assertEquals(1, dismissed)
     }
