@@ -29,6 +29,14 @@ import org.jetbrains.compose.resources.stringResource
 internal fun HostSetupSheet(
     visible: Boolean,
     onDismiss: () -> Unit,
+) {
+    HostSetupContentSheet(visible = visible, onDismiss = onDismiss)
+}
+
+@Composable
+internal fun HostSetupContentSheet(
+    visible: Boolean,
+    onDismiss: () -> Unit,
     serverName: String? = null,
     port: Int = 4096, // F: lib/ui/screens/host_management_screen.dart:29
     supportsUsbHostBridge: Boolean = true,
