@@ -11,9 +11,18 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.layout.CapRole
+import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.frame.kitScrollFade
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -21,7 +30,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 /** Dart `KitFilterChips` numbers. */
 public object FilterChipsRules {
     /** An edge's fade: the gutter plus 32 dp, enough to show a word fading rather than cut. */
-    public fun fadeWidthDp(gutter: Int): Int = gutter + 32
+    public fun fadeWidthDp(gutter: Int): Int = gutter + 32 // F: lib/ui/kit/kit_filter_chips.dart:28
 }
 
 /**
@@ -40,10 +49,23 @@ public object FilterChipsRules {
 public fun KitFilterChips(modifier: Modifier = Modifier, chips: @Composable RowScope.() -> Unit) {
     val tokens = LocalKitTokens.current
     val scroll = rememberScrollState()
+    val colors = io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors.current
     Box(
-        modifier.fillMaxWidth()
+        modifier.kitMaxWidth(CapRole.Reading)
             .clipToBounds()
-            .kitScrollFade(scroll, FilterChipsRules.fadeWidthDp(tokens.gutter).dp)
+            .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+            .drawWithContent {
+                drawContent()
+                val rtl = layoutDirection == LayoutDirection.Rtl
+                val left = if (rtl) scroll.value < scroll.maxValue else scroll.value > 0
+                val right = if (rtl) scroll.value > 0 else scroll.value < scroll.maxValue
+                if (left || right) {
+                    val edge = (FilterChipsRules.fadeWidthDp(tokens.gutter).dp.toPx() / size.width).coerceIn(0f, .5f) // F: lib/ui/kit/kit_filter_chips.dart:107
+                    val solid = colors.ground.copy(alpha = 1f)
+                    val clear = solid.copy(alpha = 0f)
+                    drawRect(Brush.horizontalGradient(0f to if (left) clear else solid, edge to solid, (1f - edge) to solid, 1f to if (right) clear else solid), blendMode = BlendMode.DstIn)
+                }
+            }
             .testTag("kit-filter-chips"),
     ) {
         Row(
