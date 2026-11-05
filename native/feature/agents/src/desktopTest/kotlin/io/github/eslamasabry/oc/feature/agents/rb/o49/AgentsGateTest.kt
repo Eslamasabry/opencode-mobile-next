@@ -57,7 +57,7 @@ class AgentsGateTest {
                 account = AgentRuntimeAccount(type = "chatgpt", requiresSignIn = true),
                 limits = persistentListOf(AccountRateBucket("Codex", null, null)))), Actions(), now = fixtureNow)
         } }
-        onNodeWithText("Rate limits unavailable").assertExists()
+        onNodeWithText("Rate limits are unavailable for this account or host.").assertExists()
     }
     @Test fun `cancelling keeps a visible disabled Cancel and cannot start a second cancel`() = runComposeUiTest {
         val actions = Actions()

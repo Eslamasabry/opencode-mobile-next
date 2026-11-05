@@ -12,7 +12,7 @@ import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import kotlin.time.Instant
-import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
+import io.github.eslamasabry.oc.ui.kit.text.kitLocalTime
 import io.github.eslamasabry.oc.ui.kit.state.KitProgressRow
 import org.jetbrains.compose.resources.pluralStringResource
 import io.github.eslamasabry.oc.ui.kit.action.KitIconButtonCopy
@@ -247,7 +247,7 @@ internal fun AgentAccountPanel(state: AgentsUi, actions: AgentsActions, now: Ins
                     }
                 }
                 panel.updatedAt?.let { at ->
-                    val time = LocalKitPlatform.current.messageTime(at.toEpochMilliseconds(), now.toEpochMilliseconds())
+                    val time = kitLocalTime(at.toEpochMilliseconds(), now.toEpochMilliseconds())
                     if (time != null) {
                         Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
                         KitText(stringResource(Res.string.agentAccountUpdated, time), role = io.github.eslamasabry.oc.ui.design.type.TypeRole.Caption)
@@ -281,6 +281,6 @@ private fun accountReset(at: Long?, now: Instant, withDate: Boolean = false): St
             pluralStringResource(Res.plurals.agentAccountResetInMinutes, minutes, minutes)
         }
     }
-    val time = if (withDate) LocalKitPlatform.current.messageTime(at, now.toEpochMilliseconds()) else null
+    val time = if (withDate) kitLocalTime(at, now.toEpochMilliseconds()) else null
     return if (time == null) relative else stringResource(Res.string.agentAccountResetWhen, relative, time)
 }
