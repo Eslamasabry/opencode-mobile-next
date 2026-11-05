@@ -1,0 +1,117 @@
+package io.github.eslamasabry.oc.feature.git.rb.o46
+
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.test.*
+import androidx.compose.ui.test.v2.runComposeUiTest
+import io.github.eslamasabry.oc.engine.git.*
+import io.github.eslamasabry.oc.feature.git.presentation.*
+import io.github.eslamasabry.oc.feature.git.ui.GitScreen
+import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
+import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.kit.KitTheme
+import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
+import java.lang.reflect.Proxy
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlinx.collections.immutable.persistentListOf
+
+@OptIn(ExperimentalTestApi::class)
+class GitStepsTest {
+    private val calls = mutableListOf<Pair<String, List<Any?>>>()
+    private val actions =
+        Proxy.newProxyInstance(
+            GitActions::class.java.classLoader,
+            arrayOf(GitActions::class.java),
+        ) { proxy, method, args ->
+            when (method.name) {
+                "equals" -> proxy === args?.getOrNull(0)
+                "hashCode" -> System.identityHashCode(proxy)
+                "toString" -> "GitStepActions"
+                else -> {
+                    calls += method.name to args?.toList().orEmpty()
+                    null
+                }
+            }
+        } as GitActions
+    private val snapshot =
+        GitSnapshot(
+            status = GitStatus(GitBranchState("main", "abc", "origin/main")),
+            branches =
+                GitBranches(
+                    local =
+                        persistentListOf(
+                            GitBranch("main", remote = false, current = true),
+                            GitBranch("feature", remote = false, upstream = "origin/feature"),
+                        )
+                ),
+        )
+
+    @Composable
+    private fun Page(sheet: GitSheet, busy: GitBusy? = null) {
+        KitTheme(
+            platform = DesktopKitPlatform(),
+            appearance = KitAppearance(motion = MotionLevel.Off),
+            localeTag = "en",
+            stillFrame = true,
+        ) {
+            GitScreen(
+                GitUi(
+                    view = GitPageView.Ready(snapshot),
+                    sheet = sheet,
+                    busy = busy,
+                    directory = "/work/app",
+                ),
+                actions,
+            )
+        }
+    }
+
+    @Test
+    fun `B-NAV-020 branch list shows tracking and dispatches the chosen branch once`() =
+        runComposeUiTest {
+            setContent { Page(GitSheet.Branches) }
+            onNodeWithText("origin/feature").assertExists()
+            onNodeWithText("feature").performClick()
+            assertEquals(listOf("switchBranch" to listOf("feature")), calls)
+        }
+
+    @Test
+    fun `B-NAV-020 invalid branch is refused before the action and valid name is trimmed`() =
+        runComposeUiTest {
+            setContent { Page(GitSheet.Branches) }
+            val field = onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("git-new-branch")))
+            field.performTextInput("bad name")
+            onNodeWithText("New branch from main").assertIsNotEnabled()
+            field.performTextReplacement(" feature ")
+            onNodeWithText("New branch from main").performClick()
+            assertEquals(listOf("createBranch" to listOf("feature")), calls)
+        }
+
+    @Test
+    fun `B-NAV-020 busy branch list cannot start another switch`() = runComposeUiTest {
+        setContent { Page(GitSheet.Branches, GitBusy.Pull) }
+        onNodeWithText("feature").assertIsNotEnabled()
+        assertEquals(emptyList(), calls)
+    }
+
+    @Test
+    fun `B-BUILD-014 clone suggests a visible folder and preserves an intentionally cleared name`() =
+        runComposeUiTest {
+            setContent { Page(GitSheet.Clone) }
+            val url = onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("git-clone-url")))
+            val folder =
+                onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("git-clone-folder")))
+            url.performTextInput("https://example.invalid/repo.git")
+            folder.assertTextContains("repo")
+            folder.performTextReplacement("")
+            url.performTextReplacement("https://example.invalid/another.git")
+            folder.assertTextEquals("")
+            onNodeWithText("Clone", useUnmergedTree = true).assertIsNotEnabled()
+            folder.performTextInput("mine")
+            onNodeWithText("Clone", useUnmergedTree = true).performClick()
+            assertEquals(
+                listOf("clone" to listOf("https://example.invalid/another.git", "mine")),
+                calls,
+            )
+        }
+}
