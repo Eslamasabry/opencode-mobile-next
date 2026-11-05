@@ -528,7 +528,7 @@ private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions) {
         }
     }
     KitSheet(visible = detailsOpen, onDismissRequest = { detailsOpen = false }, title = stringResource(Res.string.phoneSetupRingDetailsTitle)) {
-        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+        Column(Modifier.fillMaxWidth()) {
             rows.forEachIndexed { index, component ->
                 val measured =
                     if ((component.bytesTotal ?: 0) > 0 && component.bytesDone != null) {
