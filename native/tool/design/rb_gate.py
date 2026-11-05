@@ -5,6 +5,8 @@ Subcommands (gate_order.sh calls them in this order; each exits non-zero on a fa
   static   --order NN          write set, numbers cited from Flutter, Material and kit-only rules, copy, signatures, commits
   fetch    --order NN          copy the order's Flutter goldens into looks-gate/flutter/<ref9>/
   modules  --order NN          print the Gradle modules whose desktopTest runs the order's gate cases
+  chunks   --order NN          one line per part: id, golden count, the part's write globs (chunks.py prints it)
+  RB_PARTS="part-a part-b"     restricts static (write set), fetch, evaluate and the manifest to those parts of NN
   evaluate --order NN          measure looks-out/gate trios (rasterisation-tolerant, RB_METRICS_JAVA), apply
                                gate_thresholds.tsv and waivers, check the matrix, post the tracker
 Standard library only; run with python3 -I from the repository root.
@@ -70,13 +72,71 @@ def header(nn):
     return h
 
 
-def manifest(nn):
+def selected_parts():
+    """RB_PARTS: the parts a single-part chunk gates (space separated tracker ids); None means the whole order."""
+    v = os.environ.get('RB_PARTS', '').split()
+    return set(v) or None
+
+
+def manifest(nn, whole=False):
     rows = []
     for line in open(os.path.join(DOC, 'orders', f'{nn}.gate.tsv'), encoding='utf-8'):
         if line.startswith('#') or not line.strip():
             continue
         rows.append(line.rstrip('\n').split('\t'))
+    sel = None if whole else selected_parts()
+    if sel:
+        unknown = sel - {r[1] for r in rows if r[0] == 'part'}
+        if unknown:
+            print(f'RB_PARTS: not parts of order {nn}: {" ".join(sorted(unknown))}')
+            sys.exit(2)
+        rows = [r for r in rows if r[1] in sel]
     return rows
+
+
+SHARED_GLOB = re.compile(r'/rb/o\d\d/|strings_rb\d\d\.xml$|/waivers/\d\d\.tsv$|/evidence/\d\d\.md$')
+
+
+def part_writes(nn):
+    """part id -> its write globs: the native files the order's table gives it, with the WRITES globs of their tests and
+    screenshots (<Name>Test.kt, screenshots/<Name>/), plus the order's shared globs (its rb/o<NN> gate cases, strings,
+    waivers and evidence). A folded part (verify only) gets the shared globs alone."""
+    writes = header(nn)['WRITES']
+    shared = [g for g in writes if SHARED_GLOB.search(g)]
+    out = {}
+    for line in open(order_file(nn), encoding='utf-8'):
+        m = re.match(r'\|\s*\d+\s*\|\s*`(part-[\w-]+)`\s*\|', line)
+        if not m:
+            continue
+        cells = [c.strip() for c in line.strip().strip('|').split('|')]
+        files = re.findall(r'`(native/[^`]+)`', cells[6] if len(cells) > 6 else '')
+        globs = []
+        for f in files:
+            stem = os.path.basename(f).rsplit('.', 1)[0]
+            globs.append(f)
+            globs += [g for g in writes if g.endswith(f'/{stem}Test.kt') or f'/screenshots/{stem}/' in g]
+        out[m.group(1)] = list(dict.fromkeys(globs + shared))
+    return out
+
+
+def write_globs(nn):
+    sel = selected_parts()
+    if not sel:
+        return header(nn)['WRITES']
+    pw = part_writes(nn)
+    return list(dict.fromkeys(g for pid in sorted(sel) for g in pw.get(pid, [])))
+
+
+def cmd_chunks(nn):
+    """One line per part of the order: <part id> TAB <golden count> TAB <write globs, space separated>."""
+    man = manifest(nn, whole=True)
+    pw = part_writes(nn)
+    for r in man:
+        if r[0] != 'part':
+            continue
+        g = sum(1 for x in man if x[0] == 'golden' and x[1] == r[1])
+        print(f'{r[1]}\t{g}\t{" ".join(pw.get(r[1], []))}')
+    return 0
 
 
 def glob_rx(g):
@@ -204,7 +264,7 @@ def compatible(old, new):
 def cmd_static(nn):
     h = header(nn)
     fails, warns = [], []
-    rxs = [glob_rx(g) for g in h['WRITES']]
+    rxs = [glob_rx(g) for g in write_globs(nn)]
     mb, added = added_lines(BASE)
     changed = set(run('git', 'diff', '--name-only', mb).split()) | {
         l[3:] for l in run('git', 'status', '--porcelain').splitlines() if l[3:] and not l[3:].startswith(('looks-gate/', 'looks-out/'))}
@@ -704,11 +764,11 @@ def cmd_evaluate(nn):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=['static', 'fetch', 'modules', 'evaluate'])
+    ap.add_argument('cmd', choices=['static', 'fetch', 'modules', 'evaluate', 'chunks'])
     ap.add_argument('--order', required=True)
     a = ap.parse_args()
     nn = f'{int(a.order):02d}'
-    sys.exit({'static': cmd_static, 'fetch': cmd_fetch, 'modules': cmd_modules, 'evaluate': cmd_evaluate}[a.cmd](nn))
+    sys.exit({'static': cmd_static, 'fetch': cmd_fetch, 'modules': cmd_modules, 'evaluate': cmd_evaluate, 'chunks': cmd_chunks}[a.cmd](nn))
 
 
 if __name__ == '__main__':
