@@ -1089,6 +1089,16 @@ final kitOverflowScenes = <KitOverflowScene>[
       ),
     ),
   ),
+  // kit_add_agent_card.dart (issue #116, 2026-11-05): the plus card that
+  // leads the New conversation agent row.
+  KitOverflowScene(
+    const ['KitAddAgentCard'],
+    'default',
+    build: (_, c) => KitAddAgentCard(
+      label: c.t('Add an agent', 'أضف وكيلًا'),
+      onPressed: () {},
+    ),
+  ),
 ];
 
 Iterable<KitOverflowScene> _testsDScenes(List<KitOverflowScene> scenes) =>
