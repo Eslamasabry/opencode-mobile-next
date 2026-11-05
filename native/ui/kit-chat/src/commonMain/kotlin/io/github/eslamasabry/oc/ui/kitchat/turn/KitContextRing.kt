@@ -46,8 +46,8 @@ public fun KitContextRing(
             KitContextLevel.Warning -> colors.attention
             KitContextLevel.Full -> colors.text1
         }
+    val large = size == 64.dp // F: lib/ui/kit/kit_context_ring.dart:116
     Canvas(modifier.size(size).semantics { contentDescription = label }) {
-        val large = size == 64.dp // F: lib/ui/kit/kit_context_ring.dart:116
         val stroke = if (large) 6.dp.toPx() else this.size.minDimension * 2.5f / 24f // F: lib/ui/kit/kit_context_ring.dart:115-116
         val radius = if (large) 24.dp.toPx() else this.size.minDimension * 9f / 24f // F: lib/ui/kit/kit_context_ring.dart:115-116
         val arcSize = androidx.compose.ui.geometry.Size(radius + radius, radius + radius)

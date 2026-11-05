@@ -53,8 +53,8 @@ public fun KitFeedItem(
             if (done) append("✓ ")
             withStyle(SpanStyle(color = statusColor, fontWeight = if (state?.tone == KitRowStateTone.NeedsYou || state?.tone == KitRowStateTone.Running) FontWeight.SemiBold else null)) { append(word) }
         }
-        if (project.isNotBlank()) { if (isNotEmpty()) append("\u00a0· "); append("\u2068$project\u2069") }
-        if (time != null) { if (isNotEmpty()) append("\u00a0· "); append(time.replace(' ', '\u00a0')) }
+        if (project.isNotBlank()) { if (length > 0) append("\u00a0· "); append("\u2068$project\u2069") }
+        if (time != null) { if (length > 0) append("\u00a0· "); append(time.replace(' ', '\u00a0')) }
     }
     val words = listOfNotNull(title, word, project.takeIf { it.isNotBlank() }, time).joinToString(", ")
     val body: @Composable () -> Unit = {
