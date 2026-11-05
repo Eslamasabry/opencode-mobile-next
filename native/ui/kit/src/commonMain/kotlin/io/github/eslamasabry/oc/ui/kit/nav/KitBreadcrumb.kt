@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.nav
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -216,16 +217,21 @@ private fun MoreCrumb(hidden: List<Int>, segments: List<String>, onSelected: (In
 private fun Current(name: String, style: androidx.compose.ui.text.TextStyle, modifier: Modifier) {
     val label = stringResource(Res.string.kitBreadcrumbCurrent, name)
     val color = LocalKitColors.current.tone(TextTone.Primary)
-    BasicText(
-        KitBidi.auto(name),
+    // F: lib/ui/kit/kit_breadcrumb.dart:299-305 (min 48 box, text centred vertically, start-aligned)
+    Box(
         modifier
             .heightIn(min = FlutterKitTokens.MIN_TARGET.dp) // F: lib/ui/kit/kit_breadcrumb.dart:300
             .padding(horizontal = Space.S2.dp)
             .clearAndSetSemantics { contentDescription = label; selected = true },
-        style = style.copy(color = color, textDirection = TextDirection.Content),
-        maxLines = 2, // F: lib/ui/kit/kit_breadcrumb.dart:314
-        overflow = TextOverflow.Ellipsis,
-    )
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        BasicText(
+            KitBidi.auto(name),
+            style = style.copy(color = color, textDirection = TextDirection.Content),
+            maxLines = 2, // F: lib/ui/kit/kit_breadcrumb.dart:314
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
 }
 
 /** `_KitCrumbMeasure.middleCut`, one line: [name] whole, or its start and end around one "…" (kit_breadcrumb.dart:446). */
