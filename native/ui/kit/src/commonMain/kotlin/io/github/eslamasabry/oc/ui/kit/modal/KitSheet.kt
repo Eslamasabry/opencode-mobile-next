@@ -18,6 +18,9 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -58,6 +61,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
@@ -88,6 +92,12 @@ public enum class KitSheetHeight {
     Content,
     Half,
     Full,
+}
+
+/** The tone of a sheet header's icon tile (Dart `KitSheetTone`). */
+public enum class KitSheetTone {
+    Neutral,
+    Attention,
 }
 
 /** Where a sheet sits for the window it is in (plan 06 §7.4, §10.1). */
@@ -178,6 +188,7 @@ internal class SheetEntry {
     var subtitle: String? by mutableStateOf(null)
     var closeLabel: String? by mutableStateOf(null)
     var icon: ImageVector? by mutableStateOf(null)
+    var tone: KitSheetTone by mutableStateOf(KitSheetTone.Neutral)
     var height: KitSheetHeight by mutableStateOf(KitSheetHeight.Content)
     var primary: KitAction? by mutableStateOf(null)
     var secondary: KitAction? by mutableStateOf(null)
@@ -249,6 +260,7 @@ public fun KitSheet(
     draft: Boolean = false,
     dismissible: Boolean = true,
     framed: Boolean = false,
+    tone: KitSheetTone = KitSheetTone.Neutral,
     body: @Composable ColumnScope.() -> Unit,
 ) {
     val host = LocalKitSheetHost.current
@@ -261,6 +273,7 @@ public fun KitSheet(
         entry.subtitle = subtitle
         entry.closeLabel = closeLabel
         entry.icon = icon
+        entry.tone = tone
         entry.height = height
         entry.primary = primary
         entry.secondary = secondary
@@ -455,17 +468,23 @@ private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean) {
             val frameHeight = maxHeight
             val scrollHeader = frameHeight < 400.dp || LocalDensity.current.fontScale >= 2f
             Column {
-                if (!scrollHeader) SheetHeader(entry)
+                if (!scrollHeader) SheetHeader(entry, handle)
                 Column(
                     Modifier.weight(1f, fill = false)
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(tokens.labelGap.dp),
                 ) {
-                    if (scrollHeader) SheetHeader(entry)
+                    if (scrollHeader) SheetHeader(entry, handle)
+                    val hasActions =
+                        entry.primary != null || entry.secondary != null || entry.tertiary.isNotEmpty()
                     Column(
-                        Modifier.padding(tokens.gutter.dp),
-                        verticalArrangement = Arrangement.spacedBy(tokens.labelGap.dp),
+                        Modifier.padding(
+                            start = FlutterKitTokens.RAIL.dp,
+                            top = Space.S2.dp,
+                            end = FlutterKitTokens.RAIL.dp,
+                            bottom = (if (hasActions) Space.S2 else FlutterKitTokens.RAIL).dp,
+                        ),
                     ) {
                         if (entry.framed) {
                             Column(
@@ -486,9 +505,10 @@ private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean) {
                         Modifier.heightIn(max = (frameHeight - 64.dp).coerceAtLeast(0.dp))
                             .verticalScroll(rememberScrollState())
                             .padding(
-                                start = tokens.gutter.dp,
-                                end = tokens.gutter.dp,
-                                bottom = tokens.gutter.dp,
+                                start = FlutterKitTokens.RAIL.dp,
+                                top = Space.S2.dp,
+                                end = FlutterKitTokens.RAIL.dp,
+                                bottom = Space.S4.dp,
                             ),
                         primary = entry.primary,
                         secondary = entry.secondary,
@@ -501,40 +521,74 @@ private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean) {
 }
 
 @Composable
-private fun SheetHeader(entry: SheetEntry) {
+private fun SheetHeader(entry: SheetEntry, handle: Boolean) {
     val tokens = LocalKitTokens.current
-    Row(
-        Modifier.fillMaxWidth().padding(start = tokens.gutter.dp, end = (tokens.gutter / 2).dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
+    // The close glyph's ink ends on the rail: rail - (minTarget - glyph) / 2 - ink inset.
+    val closeEnd =
+        if (entry.dismissible) {
+            (FlutterKitTokens.RAIL - (tokens.minTarget - 24) / 2f - 24 * 0.1875f).coerceAtLeast(0f).dp // F: lib/ui/kit/kit_sheet.dart:616-627 lib/ui/kit/kit_optical.dart:29,34 lib/ui/app_iconography.dart:20
+        } else Space.S2.dp
+    Column(
+        Modifier.fillMaxWidth()
+            .padding(
+                start = FlutterKitTokens.RAIL.dp,
+                top = if (handle) 0.dp else Space.S3.dp,
+                end = closeEnd,
+                bottom = Space.S1.dp,
+            )
     ) {
         entry.icon?.let { glyph ->
-            IconTile(glyph, tokens.iconTile.dp + Space.S2.dp)
+            IconTile(glyph, entry.tone)
+            Spacer(Modifier.height(Space.S3.dp))
         }
-        Column(Modifier.weight(1f)) {
-            KitText(entry.title, role = TypeRole.Title, kind = KitTextKind.Frame, maxLines = 2)
-            entry.subtitle?.let {
-                KitText(
-                    it,
-                    role = TypeRole.Secondary,
+        Row(Modifier.fillMaxWidth()) {
+            Column(Modifier.weight(1f).padding(top = Space.S3.dp, end = Space.S2.dp)) {
+                KitText(entry.title, role = TypeRole.Title, kind = KitTextKind.Frame)
+                entry.subtitle?.let {
+                    Spacer(Modifier.height((Space.S1 / 2f).dp)) // F: lib/ui/kit/kit_sheet.dart:604
+                    KitText(
+                        it,
+                        role = TypeRole.Secondary,
+                        tone = TextTone.Secondary,
+                        kind = KitTextKind.Frame,
+                    )
+                }
+            }
+            if (entry.dismissible) {
+                // Flutter's sheet: Close is the X glyph at the end; its words are what TalkBack says.
+                KitIconButton(
+                    icon = KitIcons.close,
+                    label = entry.closeLabel ?: stringResource(Res.string.kitSheetClose),
+                    onClick = { entry.requestDismiss() },
                     tone = TextTone.Secondary,
-                    kind = KitTextKind.Frame,
                 )
             }
-        }
-        if (entry.dismissible) {
-            // Flutter's sheet: Close is the X glyph at the end; its words are what TalkBack says.
-            KitIconButton(
-                icon = KitIcons.close,
-                label = entry.closeLabel ?: stringResource(Res.string.kitSheetClose),
-                onClick = { entry.requestDismiss() },
-                tone = TextTone.Secondary,
-            )
         }
     }
 }
 
-/** The header mark tile (LOOK-23): the glyph on `surface3`, never a solid colour block. */
+/** The header mark tile (`_KitIconTile`): the 44 dp square, neutral on `surface3`, attention tinted. */
+@Composable
+internal fun IconTile(glyph: ImageVector, tone: KitSheetTone = KitSheetTone.Neutral) {
+    val colors = LocalKitColors.current
+    val fill =
+        when (tone) {
+            KitSheetTone.Neutral -> colors.surface3
+            KitSheetTone.Attention ->
+                colors.attention.copy(alpha = FlutterKitTokens.MARK_TINT_ALPHA).compositeOver(colors.surface2)
+        }
+    val ink = if (tone == KitSheetTone.Neutral) colors.text1 else colors.attention
+    Box(
+        Modifier.size(FlutterKitTokens.MARK_SIZE.dp)
+            .clip(RoundedCornerShape(FlutterKitTokens.MARK_RADIUS.dp))
+            .background(fill),
+        contentAlignment = Alignment.Center,
+    ) {
+        KitGlyph(glyph, ink, FlutterKitTokens.MARK_ICON_SIZE.dp)
+    }
+}
+
+/** The confirm sheet's tile at a given [size] (KitConfirm keeps this call). */
 @Composable
 internal fun IconTile(glyph: ImageVector, size: Dp) {
     val colors = LocalKitColors.current
