@@ -66,7 +66,8 @@ public object PreferenceMapping {
         PersonalPrefs(
             mode = mode(p.appearance),
             pack = pack(p.themePack),
-            style = SurfaceStyle.entries.first { it.name == p.effects.surfaceStyle.name },
+            // A stored style these pages do not offer yet (Glass, until order 44) reads as Solid instead of throwing.
+            style = SurfaceStyle.entries.firstOrNull { it.name == p.effects.surfaceStyle.name } ?: SurfaceStyle.Solid,
             fineTuned = !p.effects.fineTune.isNone,
             corners = p.effects.fineTune.corners?.let { c -> KitCorners.entries.first { it.name == c.name } },
             spacing = p.effects.fineTune.density?.let { d -> Density.entries.first { it.name == d.name } },

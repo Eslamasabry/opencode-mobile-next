@@ -60,9 +60,13 @@ public enum class LiveIntensity(override val wire: String) : WireNamed {
     Subtle("subtle"), Normal("normal"), Bold("bold"),
 }
 
-/** `oc.effectsSurfaceStyle`; the retired `glass`/`crystal` names read as [Solid]. */
+/**
+ * `oc.effectsSurfaceStyle` (Flutter `KitSurfaceStyle` at GLASS_REF 1bbdc3f9c, `lib/state/effects.dart`): solid, glass,
+ * soft, brutal, paper, signal, in picker order. Glass is a school again (owner, 2026-11-05; rebuild standard §5.7); the
+ * retired `crystal` and any unknown name read as [Solid].
+ */
 public enum class SurfaceStyle(override val wire: String) : WireNamed {
-    Solid("solid"), Soft("soft"), Brutal("brutal"), Paper("paper"), Signal("signal"),
+    Solid("solid"), Glass("glass"), Soft("soft"), Brutal("brutal"), Paper("paper"), Signal("signal"),
 }
 
 public enum class Corners(override val wire: String) : WireNamed { Round("round"), Soft("soft"), Sharp("sharp") }

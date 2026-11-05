@@ -43,7 +43,7 @@ class PreferencesTest {
             "oc.effectsGlowSpeed" to 42L,
             "oc.transcript.reasoningExpanded" to true,
             "oc.transcript.timestampsVisible" to "invalid",
-            "oc.effectsSurfaceStyle" to "glass",
+            "oc.effectsSurfaceStyle" to "crystal",
             "oc.glass" to "strong",
         )
         val commitsBefore = disk.commits.size
@@ -56,7 +56,7 @@ class PreferencesTest {
         assertFalse(value.effects.celebrations)
         assertFalse(value.effects.activityGlow)
         assertEquals(GlowStyle.Classic, value.effects.glowStyle)
-        assertEquals(SurfaceStyle.Solid, value.effects.surfaceStyle, "the retired Glass style reads as Solid")
+        assertEquals(SurfaceStyle.Solid, value.effects.surfaceStyle, "the retired Crystal style reads as Solid (Glass is a school again)")
         assertEquals(FrostStrength.Strong, value.frost)
         assertTrue(value.reasoningExpanded)
         assertFalse(value.timestampsVisible)
