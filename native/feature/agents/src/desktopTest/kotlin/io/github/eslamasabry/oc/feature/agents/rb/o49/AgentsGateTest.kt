@@ -23,6 +23,17 @@ class AgentsGateTest {
         var cancelled = false
         var opened: ProfileId? = null
         var refreshed = 0
+        var reset = 0
+        var restored = 0
+        var removed = 0
+
+        override fun confirmPreviousVersion() {
+            restored++
+        }
+
+        override fun confirmSignInReset() {
+            reset++
+        }
 
         override fun openAccount(id: ProfileId) {
             opened = id
@@ -58,7 +69,9 @@ class AgentsGateTest {
 
         override fun cancelRemoval() {}
 
-        override fun confirmRemoval() {}
+        override fun confirmRemoval() {
+            removed++
+        }
 
         override fun installPhone(id: String) {
             installed = id
@@ -67,6 +80,58 @@ class AgentsGateTest {
 
     private val fixtureNow = Instant.parse("2026-09-05T12:00:00Z")
     private val target = AgentAccountTarget(ProfileId("codex"), "My Codex host")
+
+    @Test
+    fun `earlier version review renders in its own host and dispatches only restore`() =
+        runComposeUiTest {
+            val actions = Actions()
+            setContent {
+                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                    AgentsScreen(
+                        AgentsUi(
+                            revertingAgent =
+                                PhoneAgentRow(
+                                    "codex",
+                                    "Codex",
+                                    PhoneAgentStatus.Ready,
+                                    previousVersionAvailable = true,
+                                )
+                        ),
+                        actions,
+                    )
+                }
+            }
+            onNode(hasText("Use earlier Codex version") and hasClickAction()).performClick()
+            assertEquals(1, actions.restored)
+            assertEquals(0, actions.reset)
+            assertEquals(0, actions.removed)
+        }
+
+    @Test
+    fun `saved sign-in reset requires the named review action`() = runComposeUiTest {
+        val actions = Actions()
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                AgentsScreen(AgentsUi(resettingSignIns = true), actions)
+            }
+        }
+        assertEquals(0, actions.reset)
+        onNode(hasText("Reset saved sign-ins") and hasClickAction()).performClick()
+        assertEquals(1, actions.reset)
+    }
+
+    @Test
+    fun `busy maintenance review cannot send another command or dismiss it`() = runComposeUiTest {
+        val actions = Actions()
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                AgentsScreen(AgentsUi(resettingSignIns = true, busy = true), actions)
+            }
+        }
+        onNode(hasText("Reset saved sign-ins") and hasClickAction()).assertIsNotEnabled()
+        onNodeWithText("Cancel").assertIsNotEnabled()
+        assertEquals(0, actions.reset)
+    }
 
     @Test
     fun `a failed account open retries the same target instead of a missing controller`() =

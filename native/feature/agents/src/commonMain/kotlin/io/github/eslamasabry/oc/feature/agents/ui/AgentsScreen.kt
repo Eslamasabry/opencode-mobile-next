@@ -515,43 +515,70 @@ public fun AgentsScreen(
                 }
             }
         }
+        KitSheet(
+            visible = state.revertingAgent != null,
+            onDismissRequest = actions::cancelPreviousVersion,
+            title =
+                state.revertingAgent?.let { stringResource(Res.string.agentsPreviousVersion, it.name) }
+                    ?: stringResource(Res.string.agentsSectionTitle),
+            icon = KitIcons.history,
+            dismissible = !state.busy,
+            primary =
+                state.revertingAgent?.let { agent ->
+                    io.github.eslamasabry.oc.ui.kit.KitAction(
+                        stringResource(Res.string.agentsPreviousVersion, agent.name),
+                        actions::confirmPreviousVersion,
+                        destructive = true,
+                        enabled = enabled,
+                        working = state.busy,
+                    )
+                },
+            secondary =
+                io.github.eslamasabry.oc.ui.kit.KitAction(
+                    stringResource(Res.string.serversCancel),
+                    actions::cancelPreviousVersion,
+                    enabled = enabled,
+                ),
+        ) {
+            KitText(stringResource(Res.string.agentsPreviousVersionBody))
+        }
+        KitSheet(
+            visible = state.resettingSignIns,
+            onDismissRequest = actions::cancelSignInReset,
+            title = stringResource(Res.string.agentsResetSavedSignIns),
+            icon = KitIcons.login,
+            dismissible = !state.busy,
+            primary =
+                io.github.eslamasabry.oc.ui.kit.KitAction(
+                    stringResource(Res.string.agentsResetSavedSignIns),
+                    actions::confirmSignInReset,
+                    destructive = true,
+                    enabled = enabled,
+                    working = state.busy,
+                ),
+            secondary =
+                io.github.eslamasabry.oc.ui.kit.KitAction(
+                    stringResource(Res.string.serversCancel),
+                    actions::cancelSignInReset,
+                    enabled = enabled,
+                ),
+        ) {
+            KitText(stringResource(Res.string.agentsResetSavedSignInsBody))
+        }
+        KitConfirm(
+            state.removingAgent?.let { agent ->
+                KitConfirmSpec(
+                    title = stringResource(Res.string.linuxAgentPayloadRemoveTitle, agent.name),
+                    confirmLabel = stringResource(Res.string.linuxAgentPayloadRemove, agent.name),
+                    kind = KitConfirmKind.Destructive,
+                    body = stringResource(Res.string.linuxAgentPayloadRemoveBody),
+                )
+            },
+            onConfirm = actions::confirmRemoval,
+            onCancel = actions::cancelRemoval,
+            working = state.busy,
+        )
     }
-    KitConfirm(
-        state.revertingAgent?.let { agent ->
-            KitConfirmSpec(
-                title = stringResource(Res.string.agentsPreviousVersion, agent.name),
-                confirmLabel = stringResource(Res.string.agentsPreviousVersion, agent.name),
-                kind = KitConfirmKind.Destructive,
-                body = stringResource(Res.string.agentsPreviousVersionBody),
-            )
-        },
-        onConfirm = actions::confirmPreviousVersion,
-        onCancel = actions::cancelPreviousVersion,
-    )
-    KitConfirm(
-        if (state.resettingSignIns)
-            KitConfirmSpec(
-                title = stringResource(Res.string.agentsResetSavedSignIns),
-                confirmLabel = stringResource(Res.string.agentsResetSavedSignIns),
-                kind = KitConfirmKind.Destructive,
-                body = stringResource(Res.string.agentsResetSavedSignInsBody),
-            )
-        else null,
-        onConfirm = actions::confirmSignInReset,
-        onCancel = actions::cancelSignInReset,
-    )
-    KitConfirm(
-        state.removingAgent?.let { agent ->
-            KitConfirmSpec(
-                title = stringResource(Res.string.linuxAgentPayloadRemoveTitle, agent.name),
-                confirmLabel = stringResource(Res.string.linuxAgentPayloadRemove, agent.name),
-                kind = KitConfirmKind.Destructive,
-                body = stringResource(Res.string.linuxAgentPayloadRemoveBody),
-            )
-        },
-        onConfirm = actions::confirmRemoval,
-        onCancel = actions::cancelRemoval,
-    )
 }
 
 @Composable
