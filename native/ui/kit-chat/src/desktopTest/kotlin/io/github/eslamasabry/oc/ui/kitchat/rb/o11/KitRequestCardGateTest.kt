@@ -23,8 +23,8 @@ import kotlin.test.Test
 /** The answered scenes of test/goldens/kit/kit_request_card_golden_test.dart: the collapsed row between its two caption lines. */
 class KitRequestCardGateTest {
     private val answered: @Composable () -> Unit = {
-        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            KitText("I found the failing test. Running it once more to check the fix.", role = TypeRole.Body)
+        Column {
+            KitText("I found the failing test. Running it once more to check the fix.", role = TypeRole.Body, modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
             KitRequestAnsweredRow(KitIcons.permissions, "Run a shell command") {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -34,7 +34,7 @@ class KitRequestCardGateTest {
                     KitButton("Undo", onClick = {}, role = KitButtonRole.Tertiary)
                 }
             }
-            KitText("The next step waits for your answer.", role = TypeRole.Secondary, tone = TextTone.Secondary)
+            KitText("The next step waits for your answer.", role = TypeRole.Secondary, tone = TextTone.Secondary, modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
         }
     }
 
