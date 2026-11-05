@@ -40125,13 +40125,13 @@ abstract class AppLocalizations {
   /// Agent persona: Claude Code's card line, at most 28 characters
   ///
   /// In en, this message translates to:
-  /// **'Careful with big changes'**
+  /// **'Understands your codebase'**
   String get agentPersonaClaudeCodeStrength;
 
   /// Agent persona: one sentence about Claude Code, for sheets and settings
   ///
   /// In en, this message translates to:
-  /// **'Plans before it edits; good for larger changes across files.'**
+  /// **'Anthropic’s coding tool that lives in your terminal and understands your codebase.'**
   String get agentPersonaClaudeCodeAbout;
 
   /// Agent persona: what a person needs to use Claude Code
@@ -40143,13 +40143,13 @@ abstract class AppLocalizations {
   /// Agent persona: Codex's card line, at most 28 characters
   ///
   /// In en, this message translates to:
-  /// **'Fast edits and reviews'**
+  /// **'Lightweight terminal agent'**
   String get agentPersonaCodexStrength;
 
   /// Agent persona: one sentence about Codex, for sheets and settings
   ///
   /// In en, this message translates to:
-  /// **'Quick at focused fixes and reviewing changes.'**
+  /// **'OpenAI’s lightweight coding agent that runs in your terminal.'**
   String get agentPersonaCodexAbout;
 
   /// Agent persona: what a person needs to use Codex
@@ -40161,13 +40161,13 @@ abstract class AppLocalizations {
   /// Agent persona: Gemini's card line, at most 28 characters
   ///
   /// In en, this message translates to:
-  /// **'Reads a lot at once'**
+  /// **'Gemini in your terminal'**
   String get agentPersonaGeminiStrength;
 
   /// Agent persona: one sentence about Gemini, for sheets and settings
   ///
   /// In en, this message translates to:
-  /// **'Handles long files and wide questions well.'**
+  /// **'Google’s open source agent that brings Gemini into your terminal.'**
   String get agentPersonaGeminiAbout;
 
   /// Agent persona: what a person needs to use Gemini
@@ -40179,13 +40179,13 @@ abstract class AppLocalizations {
   /// Agent persona: Kilo's card line, at most 28 characters
   ///
   /// In en, this message translates to:
-  /// **'Your choice of provider'**
+  /// **'500+ models, zero markup'**
   String get agentPersonaKiloStrength;
 
   /// Agent persona: one sentence about Kilo, for sheets and settings
   ///
   /// In en, this message translates to:
-  /// **'One agent that works with many model providers.'**
+  /// **'An open agent with 500+ models at zero markup, or your own keys.'**
   String get agentPersonaKiloAbout;
 
   /// Agent persona: what a person needs to use Kilo
@@ -40197,13 +40197,13 @@ abstract class AppLocalizations {
   /// Agent persona: Cline's card line, at most 28 characters
   ///
   /// In en, this message translates to:
-  /// **'Step by step, asks first'**
+  /// **'The open agent'**
   String get agentPersonaClineStrength;
 
   /// Agent persona: one sentence about Cline, for sheets and settings
   ///
   /// In en, this message translates to:
-  /// **'Works in small steps and checks in with you.'**
+  /// **'An open source coding agent for your editor or your terminal.'**
   String get agentPersonaClineAbout;
 
   /// Agent persona: what a person needs to use Cline
@@ -40215,13 +40215,13 @@ abstract class AppLocalizations {
   /// Agent persona: OpenCode's card line, at most 28 characters
   ///
   /// In en, this message translates to:
-  /// **'Any model, free ones too'**
+  /// **'The open source coding agent'**
   String get agentPersonaOpenCodeStrength;
 
   /// Agent persona: one sentence about OpenCode, for sheets and settings
   ///
   /// In en, this message translates to:
-  /// **'Works with any provider, and has free models to start.'**
+  /// **'The open source coding agent: free models included, or connect any provider.'**
   String get agentPersonaOpenCodeAbout;
 
   /// Agent persona: what a person needs to use OpenCode
@@ -56421,13 +56421,13 @@ abstract class AppLocalizations {
   /// Agent persona: Antigravity card line, at most 28 characters
   ///
   /// In en, this message translates to:
-  /// **'Google’s terminal agent'**
+  /// **'Antigravity in your terminal'**
   String get agentPersonaAntigravityStrength;
 
   /// Agent persona: one sentence about Antigravity
   ///
   /// In en, this message translates to:
-  /// **'Works on your project with Gemini models.'**
+  /// **'Google’s terminal-first way to work with Antigravity agents.'**
   String get agentPersonaAntigravityAbout;
 
   /// Agent persona: what a person needs to use Antigravity

@@ -25395,59 +25395,61 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatsNewSeparateCopy => 'في نسخة منفصلة';
 
   @override
-  String get agentPersonaClaudeCodeStrength => 'حذر مع التغييرات الكبيرة';
+  String get agentPersonaClaudeCodeStrength => 'يفهم شيفرة مشروعك';
 
   @override
   String get agentPersonaClaudeCodeAbout =>
-      'يخطط قبل أن يعدّل؛ مناسب للتغييرات الأكبر عبر الملفات.';
+      'أداة البرمجة من Anthropic، تعمل في الطرفية وتفهم شيفرة مشروعك.';
 
   @override
   String get agentPersonaClaudeCodeNeeds => 'خطة Claude أو مفتاح Anthropic';
 
   @override
-  String get agentPersonaCodexStrength => 'تعديلات ومراجعات سريعة';
+  String get agentPersonaCodexStrength => 'وكيل برمجة خفيف في الطرفية';
 
   @override
   String get agentPersonaCodexAbout =>
-      'سريع في الإصلاحات المحددة ومراجعة التغييرات.';
+      'وكيل البرمجة الخفيف من OpenAI، يعمل في الطرفية.';
 
   @override
   String get agentPersonaCodexNeeds => 'خطة ChatGPT أو مفتاح OpenAI';
 
   @override
-  String get agentPersonaGeminiStrength => 'يقرأ الكثير دفعة واحدة';
+  String get agentPersonaGeminiStrength => 'Gemini في الطرفية';
 
   @override
   String get agentPersonaGeminiAbout =>
-      'يتعامل جيدًا مع الملفات الطويلة والأسئلة الواسعة.';
+      'وكيل مفتوح المصدر من Google يجلب Gemini إلى الطرفية.';
 
   @override
   String get agentPersonaGeminiNeeds => 'حساب Google أو مفتاح Gemini';
 
   @override
-  String get agentPersonaKiloStrength => 'تختار المزوّد بنفسك';
+  String get agentPersonaKiloStrength => 'أكثر من 500 نموذج بلا هامش';
 
   @override
-  String get agentPersonaKiloAbout => 'وكيل واحد يعمل مع مزوّدي نماذج كثيرين.';
+  String get agentPersonaKiloAbout =>
+      'وكيل مفتوح مع أكثر من 500 نموذج بلا هامش، أو بمفاتيحك أنت.';
 
   @override
   String get agentPersonaKiloNeeds => 'مفتاح من أي مزوّد مدعوم';
 
   @override
-  String get agentPersonaClineStrength => 'خطوة بخطوة ويسأل أولًا';
+  String get agentPersonaClineStrength => 'الوكيل المفتوح';
 
   @override
-  String get agentPersonaClineAbout => 'يعمل بخطوات صغيرة ويراجعك أثناء العمل.';
+  String get agentPersonaClineAbout =>
+      'وكيل برمجة مفتوح المصدر لمحررك أو للطرفية.';
 
   @override
   String get agentPersonaClineNeeds => 'مفتاح من أي مزوّد مدعوم';
 
   @override
-  String get agentPersonaOpenCodeStrength => 'أي نموذج، وبعضها مجاني';
+  String get agentPersonaOpenCodeStrength => 'وكيل البرمجة مفتوح المصدر';
 
   @override
   String get agentPersonaOpenCodeAbout =>
-      'يعمل مع أي مزوّد، وفيه نماذج مجانية للبدء.';
+      'وكيل البرمجة مفتوح المصدر: نماذج مجانية مضمنة، أو اربط أي مزوّد.';
 
   @override
   String get agentPersonaOpenCodeNeeds =>
@@ -35975,11 +35977,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatsNewAddAgent => 'إضافة وكيل';
 
   @override
-  String get agentPersonaAntigravityStrength => 'وكيل Google في الطرفية';
+  String get agentPersonaAntigravityStrength => 'Antigravity في الطرفية';
 
   @override
   String get agentPersonaAntigravityAbout =>
-      'يعمل على مشروعك باستخدام نماذج Gemini.';
+      'طريقة Google للعمل مع وكلاء Antigravity من الطرفية أولًا.';
 
   @override
   String get agentPersonaAntigravityNeeds =>

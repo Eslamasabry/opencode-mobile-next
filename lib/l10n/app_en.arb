@@ -30072,11 +30072,11 @@
   "@chatsNewSeparateCopy": {
     "description": "New conversation: the quiet option under the project chip that starts the task in a separate copy (a worktree) of the project. Shown only where the server can make one."
   },
-  "agentPersonaClaudeCodeStrength": "Careful with big changes",
+  "agentPersonaClaudeCodeStrength": "Understands your codebase",
   "@agentPersonaClaudeCodeStrength": {
     "description": "Agent persona: Claude Code's card line, at most 28 characters"
   },
-  "agentPersonaClaudeCodeAbout": "Plans before it edits; good for larger changes across files.",
+  "agentPersonaClaudeCodeAbout": "Anthropic’s coding tool that lives in your terminal and understands your codebase.",
   "@agentPersonaClaudeCodeAbout": {
     "description": "Agent persona: one sentence about Claude Code, for sheets and settings"
   },
@@ -30084,11 +30084,11 @@
   "@agentPersonaClaudeCodeNeeds": {
     "description": "Agent persona: what a person needs to use Claude Code"
   },
-  "agentPersonaCodexStrength": "Fast edits and reviews",
+  "agentPersonaCodexStrength": "Lightweight terminal agent",
   "@agentPersonaCodexStrength": {
     "description": "Agent persona: Codex's card line, at most 28 characters"
   },
-  "agentPersonaCodexAbout": "Quick at focused fixes and reviewing changes.",
+  "agentPersonaCodexAbout": "OpenAI’s lightweight coding agent that runs in your terminal.",
   "@agentPersonaCodexAbout": {
     "description": "Agent persona: one sentence about Codex, for sheets and settings"
   },
@@ -30096,11 +30096,11 @@
   "@agentPersonaCodexNeeds": {
     "description": "Agent persona: what a person needs to use Codex"
   },
-  "agentPersonaGeminiStrength": "Reads a lot at once",
+  "agentPersonaGeminiStrength": "Gemini in your terminal",
   "@agentPersonaGeminiStrength": {
     "description": "Agent persona: Gemini's card line, at most 28 characters"
   },
-  "agentPersonaGeminiAbout": "Handles long files and wide questions well.",
+  "agentPersonaGeminiAbout": "Google’s open source agent that brings Gemini into your terminal.",
   "@agentPersonaGeminiAbout": {
     "description": "Agent persona: one sentence about Gemini, for sheets and settings"
   },
@@ -30108,11 +30108,11 @@
   "@agentPersonaGeminiNeeds": {
     "description": "Agent persona: what a person needs to use Gemini"
   },
-  "agentPersonaKiloStrength": "Your choice of provider",
+  "agentPersonaKiloStrength": "500+ models, zero markup",
   "@agentPersonaKiloStrength": {
     "description": "Agent persona: Kilo's card line, at most 28 characters"
   },
-  "agentPersonaKiloAbout": "One agent that works with many model providers.",
+  "agentPersonaKiloAbout": "An open agent with 500+ models at zero markup, or your own keys.",
   "@agentPersonaKiloAbout": {
     "description": "Agent persona: one sentence about Kilo, for sheets and settings"
   },
@@ -30120,11 +30120,11 @@
   "@agentPersonaKiloNeeds": {
     "description": "Agent persona: what a person needs to use Kilo"
   },
-  "agentPersonaClineStrength": "Step by step, asks first",
+  "agentPersonaClineStrength": "The open agent",
   "@agentPersonaClineStrength": {
     "description": "Agent persona: Cline's card line, at most 28 characters"
   },
-  "agentPersonaClineAbout": "Works in small steps and checks in with you.",
+  "agentPersonaClineAbout": "An open source coding agent for your editor or your terminal.",
   "@agentPersonaClineAbout": {
     "description": "Agent persona: one sentence about Cline, for sheets and settings"
   },
@@ -30132,11 +30132,11 @@
   "@agentPersonaClineNeeds": {
     "description": "Agent persona: what a person needs to use Cline"
   },
-  "agentPersonaOpenCodeStrength": "Any model, free ones too",
+  "agentPersonaOpenCodeStrength": "The open source coding agent",
   "@agentPersonaOpenCodeStrength": {
     "description": "Agent persona: OpenCode's card line, at most 28 characters"
   },
-  "agentPersonaOpenCodeAbout": "Works with any provider, and has free models to start.",
+  "agentPersonaOpenCodeAbout": "The open source coding agent: free models included, or connect any provider.",
   "@agentPersonaOpenCodeAbout": {
     "description": "Agent persona: one sentence about OpenCode, for sheets and settings"
   },
@@ -43902,9 +43902,9 @@
   },
   "chatsNewAddAgent": "Add an agent",
   "@chatsNewAddAgent": {"description": "New conversation: visible action inside the agent grid that opens phone agent setup"},
-  "agentPersonaAntigravityStrength": "Google’s terminal agent",
+  "agentPersonaAntigravityStrength": "Antigravity in your terminal",
   "@agentPersonaAntigravityStrength": {"description": "Agent persona: Antigravity card line, at most 28 characters"},
-  "agentPersonaAntigravityAbout": "Works on your project with Gemini models.",
+  "agentPersonaAntigravityAbout": "Google’s terminal-first way to work with Antigravity agents.",
   "@agentPersonaAntigravityAbout": {"description": "Agent persona: one sentence about Antigravity"},
   "agentPersonaAntigravityNeeds": "A Google account; sign in in your browser",
   "@agentPersonaAntigravityNeeds": {"description": "Agent persona: what a person needs to use Antigravity"},

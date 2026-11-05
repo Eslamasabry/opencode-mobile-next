@@ -114,8 +114,8 @@ void main() {
       );
       await _newChat(tester, _host(agents: agents));
       expect(find.byType(KitAgentChoice), findsNWidgets(2));
-      expect(find.text('Careful with big changes'), findsOneWidget);
-      expect(find.text('Any model, free ones too'), findsOneWidget);
+      expect(find.text('Understands your codebase'), findsOneWidget);
+      expect(find.text('The open source coding agent'), findsOneWidget);
       expect(find.text('Start with Claude Code'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('chats-new-agent-opencode')));
       await tester.pumpAndSettle();

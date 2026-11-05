@@ -25319,61 +25319,61 @@ class AppLocalizationsJa extends AppLocalizations {
   String get chatsNewSeparateCopy => 'In a separate copy';
 
   @override
-  String get agentPersonaClaudeCodeStrength => 'Careful with big changes';
+  String get agentPersonaClaudeCodeStrength => 'Understands your codebase';
 
   @override
   String get agentPersonaClaudeCodeAbout =>
-      'Plans before it edits; good for larger changes across files.';
+      'Anthropic’s coding tool that lives in your terminal and understands your codebase.';
 
   @override
   String get agentPersonaClaudeCodeNeeds => 'A Claude plan or an Anthropic key';
 
   @override
-  String get agentPersonaCodexStrength => 'Fast edits and reviews';
+  String get agentPersonaCodexStrength => 'Lightweight terminal agent';
 
   @override
   String get agentPersonaCodexAbout =>
-      'Quick at focused fixes and reviewing changes.';
+      'OpenAI’s lightweight coding agent that runs in your terminal.';
 
   @override
   String get agentPersonaCodexNeeds => 'A ChatGPT plan or an OpenAI key';
 
   @override
-  String get agentPersonaGeminiStrength => 'Reads a lot at once';
+  String get agentPersonaGeminiStrength => 'Gemini in your terminal';
 
   @override
   String get agentPersonaGeminiAbout =>
-      'Handles long files and wide questions well.';
+      'Google’s open source agent that brings Gemini into your terminal.';
 
   @override
   String get agentPersonaGeminiNeeds => 'A Google account or a Gemini key';
 
   @override
-  String get agentPersonaKiloStrength => 'Your choice of provider';
+  String get agentPersonaKiloStrength => '500+ models, zero markup';
 
   @override
   String get agentPersonaKiloAbout =>
-      'One agent that works with many model providers.';
+      'An open agent with 500+ models at zero markup, or your own keys.';
 
   @override
   String get agentPersonaKiloNeeds => 'A key from any supported provider';
 
   @override
-  String get agentPersonaClineStrength => 'Step by step, asks first';
+  String get agentPersonaClineStrength => 'The open agent';
 
   @override
   String get agentPersonaClineAbout =>
-      'Works in small steps and checks in with you.';
+      'An open source coding agent for your editor or your terminal.';
 
   @override
   String get agentPersonaClineNeeds => 'A key from any supported provider';
 
   @override
-  String get agentPersonaOpenCodeStrength => 'Any model, free ones too';
+  String get agentPersonaOpenCodeStrength => 'The open source coding agent';
 
   @override
   String get agentPersonaOpenCodeAbout =>
-      'Works with any provider, and has free models to start.';
+      'The open source coding agent: free models included, or connect any provider.';
 
   @override
   String get agentPersonaOpenCodeNeeds =>
@@ -35817,11 +35817,11 @@ class AppLocalizationsJa extends AppLocalizations {
   String get chatsNewAddAgent => 'Add an agent';
 
   @override
-  String get agentPersonaAntigravityStrength => 'Google’s terminal agent';
+  String get agentPersonaAntigravityStrength => 'Antigravity in your terminal';
 
   @override
   String get agentPersonaAntigravityAbout =>
-      'Works on your project with Gemini models.';
+      'Google’s terminal-first way to work with Antigravity agents.';
 
   @override
   String get agentPersonaAntigravityNeeds =>
