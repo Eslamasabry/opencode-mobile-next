@@ -36,6 +36,8 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.input.KitSearchNoMatch
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
 import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.kit.modal.KitInputDialog
@@ -113,6 +115,9 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
     // One text state for the page, so the field keeps its words when select mode hides and brings
     // it back.
     val searchText = rememberTextFieldState(state.query)
+    LaunchedEffect(state.query) {
+        if (state.query.isEmpty() && searchText.text.isNotEmpty()) searchText.edit { replace(0, length, "") }
+    }
     val barActions =
         when {
             state.selecting ->
@@ -248,15 +253,8 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                     }
                 AllPhase.NoMatch ->
                     item(key = "no-match") {
-                        KitStateView(
-                            kind = KitStateKind.Empty,
-                            title = stringResource(Res.string.globalSessionsNoMatchTitle),
-                            primary =
-                                KitAction(
-                                    stringResource(Res.string.chatsHomeClearFilters),
-                                    actions::clearFilters,
-                                ),
-                        )
+                        KitSearchNoMatch(query = state.query, onClear = actions::clearFilters)
+
                     }
                 AllPhase.List ->
                     items(state.rows, key = { it.key }) { row ->
@@ -389,22 +387,25 @@ private fun AllRow(row: AllRowUi, selecting: Boolean, actions: ChatsAllActions) 
     var menu by remember(row.key) { mutableStateOf(false) }
     val archiveReason = stringResource(Res.string.p12ArchiveUnavailable)
     val items =
-        listOf(
-            KitMenuItem(
+        listOfNotNull(
+            if (row.pinAvailable) KitMenuItem(
                 stringResource(if (row.pinned) Res.string.stateUnpin else Res.string.statePin),
                 { actions.togglePin(row.key) },
-            ),
-            KitMenuItem(stringResource(Res.string.p12Rename), { actions.rename(row.key) }),
+                icon = if (row.pinned) KitIcons.unpin else KitIcons.pin,
+            ) else null,
+            KitMenuItem(stringResource(Res.string.p12Rename), { actions.rename(row.key) }, icon = KitIcons.edit),
             KitMenuItem(
                 stringResource(Res.string.sessionMenuArchive),
                 { actions.archive(row.key) },
+                icon = KitIcons.archive,
                 enabled =
                     if (row.canArchive) KitEnabled.Enabled else KitEnabled.Disabled(archiveReason),
             ),
-            KitMenuItem(stringResource(Res.string.p12Select), { actions.startSelecting(row.key) }),
+            KitMenuItem(stringResource(Res.string.p12Select), { actions.startSelecting(row.key) }, icon = KitIcons.checkboxChecked),
             KitMenuItem(
                 stringResource(Res.string.sessionMenuDelete),
                 { actions.delete(row.key) },
+                icon = KitIcons.delete,
                 destructive = true,
             ),
         )
