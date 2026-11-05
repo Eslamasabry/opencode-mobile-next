@@ -1,11 +1,13 @@
 package io.github.eslamasabry.oc.ui.kit.state
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,6 +31,8 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusGlyph
 import io.github.eslamasabry.oc.ui.kit.status.glyphColor
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+
+private const val LEAD_SLOT = 28
 
 /** Network or not (Dart `KitErrorKind`): decides between "Report a problem" and the network fix. */
 public enum class KitErrorKind {
@@ -95,7 +99,9 @@ public fun KitNotice(
         verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
     ) {
         Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
-            KitStatusGlyph(tone.glyph, glyphColor(tone, colors), Modifier.padding(top = 2.dp))
+            Box(Modifier.width(LEAD_SLOT.dp).padding(top = 2.dp), contentAlignment = Alignment.TopCenter) {
+                KitStatusGlyph(tone.glyph, glyphColor(tone, colors))
+            }
             Column(
                 Modifier.weight(1f).semantics(mergeDescendants = true) { if (liveRegion) this.liveRegion = LiveRegionMode.Polite },
                 verticalArrangement = Arrangement.spacedBy(2.dp),
@@ -108,15 +114,18 @@ public fun KitNotice(
                     tone = if (title == null) TextTone.Primary else TextTone.Secondary,
                 )
                 notes.forEach { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary) }
+                val shown = actions.take(2)
+                if (shown.isNotEmpty()) {
+                    FlowRow(
+                        Modifier.padding(top = Space.S2.dp),
+                        horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+                    ) {
+                        shown.forEach { KitInlineAction(it) }
+                    }
+                }
             }
             trailing?.invoke()
             dismiss?.let { KitInlineAction(it.copy(testTag = it.testTag ?: "kit-notice-dismiss")) }
-        }
-        val shown = actions.take(2)
-        if (shown.isNotEmpty()) {
-            FlowRow(Modifier.padding(start = (20 + Space.S3).dp), horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                shown.forEach { KitInlineAction(it) }
-            }
         }
     }
 }
