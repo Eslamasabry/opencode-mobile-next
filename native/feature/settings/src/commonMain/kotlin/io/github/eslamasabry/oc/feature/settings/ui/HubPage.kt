@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -28,11 +29,12 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchNoMatch
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.row.KitIconSwitchRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
-import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -195,7 +197,28 @@ internal fun GroupPage(
     page: SettingsPage.Group,
     modifier: Modifier,
 ) {
+    var languageOpen by remember { mutableStateOf(false) }
     SettingsFrame(groupWords(page.id), { actions.onBack() }, state, actions, modifier) {
+        if (languageOpen) {
+            KitSheet(
+                visible = true,
+                onDismissRequest = { languageOpen = false },
+                title = stringResource(Res.string.settingsV3Language),
+            ) {
+                LanguageBody(
+                    state.language,
+                    object : SettingsActions by actions {
+                        override fun onLanguage(
+                            language:
+                                io.github.eslamasabry.oc.feature.settings.presentation.AppLanguage
+                        ) {
+                            actions.onLanguage(language)
+                            languageOpen = false
+                        }
+                    },
+                )
+            }
+        }
         val rows = state.group?.rows.orEmpty()
         KitRowGroup {
             rows.forEach { row ->
@@ -209,17 +232,26 @@ internal fun GroupPage(
                     }
                 when (val door = row.door) {
                     is SettingsDoor.Switch ->
-                        KitSwitchRow(title = title, checked = door.on, modifier = rowModifier) {
-                            actions.onRow(row.id)
-                        }
+                        KitIconSwitchRow(
+                            title = title,
+                            icon = rowGlyph(row.id),
+                            checked = door.on,
+                            modifier = rowModifier,
+                            onCheckedChange = { actions.onRow(row.id) },
+                        )
                     else ->
                         KitRow(
                             title = title,
                             modifier = rowModifier,
                             selected = focused,
-                            supporting = rowValue(row.id, state),
-                            trailing = KitRowTrailing.Chevron,
-                            onClick = { actions.onRow(row.id) },
+                            leading = KitRowLeading.Glyph(rowGlyph(row.id)),
+                            trailing =
+                                rowValue(row.id, state)?.let { KitRowTrailing.Value(it) }
+                                    ?: KitRowTrailing.Chevron,
+                            onClick = {
+                                if (row.id == SettingsRowId.Language) languageOpen = true
+                                else actions.onRow(row.id)
+                            },
                         )
                 }
             }
@@ -255,6 +287,8 @@ internal fun androidx.compose.foundation.layout.ColumnScope.SavedServersBody(
         state.hub.savedServers.forEach { server ->
             KitRow(
                 title = server.name,
+                leading =
+                    KitRowLeading.Glyph(if (server.onPhone) KitIcons.phone else KitIcons.server),
                 supporting =
                     stringResource(
                         if (server.connected) Res.string.settingsV3Connected
@@ -271,6 +305,9 @@ internal fun androidx.compose.foundation.layout.ColumnScope.SavedServersBody(
 private fun rowValue(row: SettingsRowId, state: SettingsUi): String? {
     val servers = state.hub.savedServers
     return when (row) {
+        SettingsRowId.Language -> languageWords(state.language)
+        SettingsRowId.Appearance -> modeWords(state.appearance.mode)
+        SettingsRowId.Background -> state.notifications?.background?.let { backgroundWords(it) }
         SettingsRowId.Servers ->
             when {
                 servers.isEmpty() -> null
