@@ -18,6 +18,8 @@ import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.feature.servers.presentation.*
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.KitAction
+import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
@@ -84,13 +86,14 @@ public fun ServersScreen(
         loadingLabel = stringResource(Res.string.serversWorking),
         width = if (empty) KitScreenWidth.Reading else KitScreenWidth.List,
         bottom = {
-            KitButton(
+            val primary = KitAction(
                 label = stringResource(if (empty && phoneChoice) Res.string.onboardingTermuxSetup
                     else if (empty) Res.string.welcomeComputerConnect else Res.string.e7SetupAddServer),
                 onClick = if (empty && phoneChoice && onThisPhone != null) onThisPhone else ({ actions.edit(null) }),
-                icon = if (empty) null else KitIcons.add,
-                enabled = enabled, fullWidth = true,
+                icon = if (empty) null else KitIcons.add, enabled = enabled,
             )
+            if (empty) Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { KitButton(primary, fullWidth = true, hero = true) }
+            else KitActionBlock(primary = primary)
         },
     ) {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
