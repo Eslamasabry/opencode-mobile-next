@@ -1,8 +1,6 @@
 package io.github.eslamasabry.oc.feature.servers.ui
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -57,7 +55,7 @@ internal fun HostSetupContentSheet(
         closeLabel = stringResource(Res.string.kitSheetClose),
         height = KitSheetHeight.Full,
     ) {
-        Column(Modifier.verticalScroll(rememberScrollState())) {
+        Column {
             KitText(stringResource(Res.string.hostServiceIntro, server), tone = TextTone.Secondary)
             KitRowGroup(label = stringResource(Res.string.e7SetupHostFirstSetup)) {
                 KitContentRow(
