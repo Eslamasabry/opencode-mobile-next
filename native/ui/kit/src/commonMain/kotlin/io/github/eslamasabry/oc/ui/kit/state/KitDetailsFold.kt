@@ -112,7 +112,7 @@ public fun KitDetailsFold(
             shape = KitShapeId.Button,
         ) {
             Row(
-                Modifier.fillMaxWidth().heightIn(min = tokens.minTarget.dp).padding(horizontal = Space.S1.dp),
+                Modifier.fillMaxWidth().heightIn(min = tokens.minTarget.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
             ) {
