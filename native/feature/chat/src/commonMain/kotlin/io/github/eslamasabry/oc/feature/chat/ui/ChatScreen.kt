@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.text.Numbers
+import io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind
 import io.github.eslamasabry.oc.engine.transcript.state.NoticeKind
 import io.github.eslamasabry.oc.engine.transcript.state.WorkState
 import io.github.eslamasabry.oc.feature.chat.composer.ChatPromptsDoor
@@ -37,14 +38,6 @@ import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderOverlays
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderTopBar
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatActions
-import io.github.eslamasabry.oc.ui.words.res.phoneSharedAccessTitle
-import io.github.eslamasabry.oc.ui.words.res.phoneSharedAccessBody
-import io.github.eslamasabry.oc.ui.words.res.phoneFileInstallAction
-import io.github.eslamasabry.oc.ui.words.res.phoneFileInstallBody
-import io.github.eslamasabry.oc.ui.words.res.phoneFileInstallTitle
-import io.github.eslamasabry.oc.ui.words.res.phoneFileOpenAction
-import io.github.eslamasabry.oc.ui.words.res.phoneFileOpenBody
-import io.github.eslamasabry.oc.ui.words.res.phoneFileOpenTitle
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatConfirm
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatStatusKind
@@ -57,14 +50,6 @@ import io.github.eslamasabry.oc.feature.chat.presentation.MessageOrder
 import io.github.eslamasabry.oc.feature.chat.presentation.PictureUi
 import io.github.eslamasabry.oc.feature.chat.presentation.ReceiptCheckResult
 import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFailureKind
-import io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind
-import io.github.eslamasabry.oc.ui.words.res.chatErrorModelNotFound
-import io.github.eslamasabry.oc.ui.words.res.chatErrorContextOverflow
-import io.github.eslamasabry.oc.ui.words.res.chatErrorProviderAuth
-import io.github.eslamasabry.oc.ui.words.res.chatErrorOutputLength
-import io.github.eslamasabry.oc.ui.words.res.chatErrorContentFilter
-import io.github.eslamasabry.oc.ui.words.res.chatErrorUnknown
-
 import io.github.eslamasabry.oc.feature.chat.presentation.SelectTextUi
 import io.github.eslamasabry.oc.feature.chat.presentation.StatusPick
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
@@ -90,6 +75,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.frame.kitScreenChromePadding
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
@@ -119,6 +105,12 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.kitchat.transcript.rememberTranscriptListState
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.agentErrorOpenSettings
+import io.github.eslamasabry.oc.ui.words.res.chatErrorContentFilter
+import io.github.eslamasabry.oc.ui.words.res.chatErrorContextOverflow
+import io.github.eslamasabry.oc.ui.words.res.chatErrorModelNotFound
+import io.github.eslamasabry.oc.ui.words.res.chatErrorOutputLength
+import io.github.eslamasabry.oc.ui.words.res.chatErrorProviderAuth
+import io.github.eslamasabry.oc.ui.words.res.chatErrorUnknown
 import io.github.eslamasabry.oc.ui.words.res.chatFeelDone
 import io.github.eslamasabry.oc.ui.words.res.chatFeelEditAndResend
 import io.github.eslamasabry.oc.ui.words.res.chatFeelLinkRefused
@@ -192,7 +184,15 @@ import io.github.eslamasabry.oc.ui.words.res.kitWorkStopped
 import io.github.eslamasabry.oc.ui.words.res.kitWorkWorking
 import io.github.eslamasabry.oc.ui.words.res.mobileTasksProgress
 import io.github.eslamasabry.oc.ui.words.res.nlibTitle
+import io.github.eslamasabry.oc.ui.words.res.phoneFileInstallAction
+import io.github.eslamasabry.oc.ui.words.res.phoneFileInstallBody
+import io.github.eslamasabry.oc.ui.words.res.phoneFileInstallTitle
+import io.github.eslamasabry.oc.ui.words.res.phoneFileOpenAction
+import io.github.eslamasabry.oc.ui.words.res.phoneFileOpenBody
+import io.github.eslamasabry.oc.ui.words.res.phoneFileOpenTitle
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardStopping
+import io.github.eslamasabry.oc.ui.words.res.phoneSharedAccessBody
+import io.github.eslamasabry.oc.ui.words.res.phoneSharedAccessTitle
 import io.github.eslamasabry.oc.ui.words.res.promptStashTitle
 import io.github.eslamasabry.oc.ui.words.res.queuedDiscardUnconfirmedMessage
 import io.github.eslamasabry.oc.ui.words.res.queuedReceiptConfirmed
@@ -382,6 +382,7 @@ public fun ChatScreen(
                                         ),
                                         { contextOpen = true },
                                         testTag = "chat-context-open",
+                                                icon = KitIcons.usageRing,
                                     )
                                 }
                             val unitActions =
@@ -389,6 +390,14 @@ public fun ChatScreen(
                                 (if (demoMode) emptyList()
                                 else
                                     listOfNotNull(
+                                        // Looks pass: Files leads, so a phone's two bar icons are Files and
+                                        // Git; the rest sit in the ⋯ menu.
+                                        KitLineAction(
+                                            stringResource(Res.string.chatUiFiles),
+                                            actions::openFiles,
+                                            testTag = "chat-files-open",
+                                                icon = KitIcons.files,
+                                        ),
                                         facts.tasks?.let { tasks ->
                                             KitLineAction(
                                                 stringResource(
@@ -398,28 +407,27 @@ public fun ChatScreen(
                                                 ),
                                                 { tasksOpen = true },
                                                 testTag = "chat-tasks-open",
+                                                icon = KitIcons.checklist,
                                             )
                                         },
                                         KitLineAction(
                                             stringResource(Res.string.gitSheetTitle),
                                             actions::openGit,
                                             testTag = "chat-git-chip",
-                                        ),
-                                        KitLineAction(
-                                            stringResource(Res.string.chatUiFiles),
-                                            actions::openFiles,
-                                            testTag = "chat-files-open",
+                                                icon = KitIcons.branch,
                                         ),
                                         KitLineAction(
                                             stringResource(Res.string.chatUiChanges),
                                             actions::openChanges,
                                             testTag = "chat-changes-open",
+                                                icon = KitIcons.review,
                                         ),
                                         prompts?.let {
                                             KitLineAction(
                                                 stringResource(Res.string.promptStashTitle),
                                                 it::open,
                                                 testTag = "chat-saved-prompts-open",
+                                                icon = KitIcons.bookmarks,
                                             )
                                         },
                                         KitLineAction(
@@ -430,11 +438,13 @@ public fun ChatScreen(
                                             ),
                                             actions::toggleReasoning,
                                             testTag = "chat-reasoning-toggle",
+                                                icon = KitIcons.idea,
                                         ),
                                         KitLineAction(
                                             stringResource(Res.string.nlibTitle),
                                             actions::openTools,
                                             testTag = "chat-tools-open",
+                                                icon = KitIcons.tools,
                                         ),
                                     )) + extraActions
                             if (header != null) {
@@ -445,7 +455,7 @@ public fun ChatScreen(
                                     header,
                                     actions::leaveRequested,
                                     { actions.find(state.find?.query ?: "") },
-                                    extraActions = listOfNotNull(context) + unitActions,
+                                    extraActions = unitActions + listOfNotNull(context),
                                     onProject = actions::openFiles,
                                     onBranch = actions::openGit,
                                 )
@@ -464,6 +474,7 @@ public fun ChatScreen(
                                                 stringResource(Res.string.kitTopBarSearch),
                                                 { actions.find(state.find?.query ?: "") },
                                                 testTag = "chat-find-open",
+                                                icon = KitIcons.search,
                                             ),
                                         ) + unitActions,
                                 )

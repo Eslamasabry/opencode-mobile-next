@@ -43,15 +43,19 @@ import io.github.eslamasabry.oc.feature.chat.world.ComposerModel
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipWrap
+import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceMark
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceRow
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
@@ -64,11 +68,13 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
-import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerGlow
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerAdd
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerBox
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerChip
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerSend
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerStopRing
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerTray
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerVoice
-import io.github.eslamasabry.oc.ui.kitchat.composer.KitGlowChoice
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitTrayAction
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitTrayKind
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitVoiceField
@@ -444,53 +450,6 @@ public fun BasicComposer(
                     )
                 }
             }
-        Row(
-            Modifier.fillMaxWidth().testTag("chat-composer-controls"),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
-        ) {
-            KitButton(
-                label =
-                    modelLabel(
-                        state.models.selected?.label
-                            // QA wave 4 B13: "Server default" only once the server said so; before
-                            // the session is
-                            // read (after a restart) the chip claims nothing.
-                            ?: stringResource(
-                                if (state.models.usesDefault) Res.string.composerPreviewModelDefault
-                                else Res.string.composerPreviewModelButton
-                            ),
-                        state.models.variant,
-                        state.models.agent,
-                    ),
-                onClick = {
-                    // B3: the keyboard never stays open over the picker.
-                    focusManager.clearFocus()
-                    modelsOpen = true
-                },
-                role = KitButtonRole.Secondary,
-                semanticsLabel = stringResource(Res.string.composerPreviewModelButton),
-                // QA wave 4 N2: a long model name shrinks first, so Attach and the approval chip
-                // keep their room.
-                modifier = Modifier.weight(1f, fill = false).testTag("chat-model-button"),
-                maxLines = 1,
-            )
-            KitButton(
-                label =
-                    stringResource(
-                        if (addOpen) Res.string.kitComposerTrayClose
-                        else if (state.attachKinds.isEmpty()) Res.string.composerPreviewAttachFile
-                        else Res.string.composerFullAttach
-                    ),
-                onClick = {
-                    if (state.attachKinds.isEmpty()) actions.attachFile() else addOpen = !addOpen
-                },
-                role = KitButtonRole.Secondary,
-                working = state.pickingFile,
-                modifier = Modifier.testTag("chat-attach-button"),
-            )
-            chrome.rowChips()
-        }
         if (addOpen) {
             val choices = buildList {
                 if (state.filesAvailable)
@@ -595,111 +554,121 @@ public fun BasicComposer(
         // B8 (QA wave 1): while a reply runs, Stop and "Add to this turn" sit on their own row
         // under a full-width
         // field, so the message box never shrinks to a sliver.
-        val stopShown = busy || chrome.requestWaiting()
-        val fieldPart: @Composable (Modifier) -> Unit = { fieldModifier ->
-            // This is the production ComposerHost. The kit reads the acknowledged Appearance glow/style and
-            // applies reduced motion, Saver and the Style's line/halo policy in the same place it paints them.
-            KitComposerGlow(active = busy && !chrome.requestWaiting(), modifier = fieldModifier, corner = 9.dp) {
-            KitField(
-                state = field,
-                // While a reply runs on a steering server the words join it (B-PROTO-025).
-                label =
-                    stringResource(
-                        if (busy && state.steers) Res.string.composerFullSteerHint
-                        else Res.string.kitComposerField
-                    ),
-                kind = KitFieldKind.Multiline,
-                // B6: one line when empty, so the conversation keeps its room above the keyboard.
-                multilineLines = 1..6,
-                // QA wave 4 B6: no "Message" row above the box; the words show inside it while it
-                // is empty.
-                labelShown = false,
-                focusRequester = focus,
-                enabled =
-                    if (editorReady && state.draft.ready) KitEnabled.Enabled
-                    else KitEnabled.Disabled(stringResource(Res.string.chatDraftRestoring)),
-                onTextChanged = { accepted ->
-                    editor.userEditSerial += 1
-                    editor.lastReported = accepted
-                    repeatRevision = null
-                    actions.draftChanged(accepted)
-                },
-                modifier = fieldModifier.kitPromptOrigin().testTag("chat-composer-field"),
-            )
-            }
-        }
-        val stopPart: @Composable () -> Unit = {
-            KitButton(
-                label =
-                    stringResource(
-                        if (chrome.stopping()) Res.string.phoneServerCardStopping
-                        else Res.string.kitTurnLiveStopShort
-                    ),
-                onClick = chrome.onStop,
-                role = KitButtonRole.Secondary,
-                working = chrome.stopping(),
-                modifier = Modifier.testTag("chat-stop-button"),
-            )
-        }
-        val sendPart: @Composable () -> Unit = {
-            val label =
+        // Looks pass (owner pick, 2026-11-05): one message box. The words on top; under them the plus, the model
+        // and approval chips (never a row of their own above the box), then Send, or the ringed Stop while a reply
+        // runs. With words typed during a run, Send stays at the end (they join the turn) and Stop moves beside
+        // the plus, away from the thumb (Flutter `_stopLeads`).
+        val waitingRequest = chrome.requestWaiting()
+        val stopShown = busy || waitingRequest
+        val typed = field.text.isNotEmpty()
+        val sendReady =
+            state.available &&
+                editorReady &&
+                state.draft.ready &&
+                state.draft.failure == null &&
+                !state.draft.sendBlocked &&
+                !state.pickingFile
+        val sendLabel =
+            stringResource(
                 when {
                     state.sending -> Res.string.kitComposerSending
                     busy && state.steers -> Res.string.kitComposerAddToTurn
                     busy -> Res.string.kitComposerSendAfter
                     else -> Res.string.kitComposerSend
                 }
-            if (!chrome.requestWaiting())
-                KitButton(
-                    label = stringResource(label),
-                    onClick = send,
-                    enabled =
-                        if (
-                            state.available &&
-                                editorReady &&
-                                state.draft.ready &&
-                                state.draft.failure == null &&
-                                !state.draft.sendBlocked &&
-                                !state.pickingFile
-                        )
-                            KitEnabled.Enabled
-                        else KitEnabled.Disabled(stringResource(Res.string.kitComposerField)),
-                    working = state.sending,
-                    haptic = KitHaptic.Send,
-                    modifier = Modifier.testTag("chat-send-button"),
+            )
+        val stopLabel =
+            stringResource(if (chrome.stopping()) Res.string.phoneServerCardStopping else Res.string.kitTurnLiveStopShort)
+        val stopPart: @Composable () -> Unit = {
+            KitComposerStopRing(
+                label = stopLabel,
+                onClick = chrome.onStop,
+                stopping = chrome.stopping(),
+                modifier = Modifier.testTag("chat-stop-button"),
+            )
+        }
+        KitComposerBox(
+            running = busy && !waitingRequest,
+            field = {
+                if (!waitingRequest)
+                    KitField(
+                        state = field,
+                        // While a reply runs on a steering server the words join it (B-PROTO-025).
+                        label =
+                            stringResource(
+                                if (busy && state.steers) Res.string.composerFullSteerHint
+                                else Res.string.kitComposerField
+                            ),
+                        kind = KitFieldKind.Multiline,
+                        // B6: one line when empty, so the conversation keeps its room above the keyboard.
+                        multilineLines = 1..6,
+                        labelShown = false,
+                        framed = false,
+                        focusRequester = focus,
+                        enabled =
+                            if (editorReady && state.draft.ready) KitEnabled.Enabled
+                            else KitEnabled.Disabled(stringResource(Res.string.chatDraftRestoring)),
+                        onTextChanged = { accepted ->
+                            editor.userEditSerial += 1
+                            editor.lastReported = accepted
+                            repeatRevision = null
+                            actions.draftChanged(accepted)
+                        },
+                        modifier = Modifier.kitPromptOrigin().testTag("chat-composer-field"),
+                    )
+            },
+            leading = {
+                KitComposerAdd(
+                    label =
+                        stringResource(
+                            if (addOpen) Res.string.kitComposerTrayClose
+                            else if (state.attachKinds.isEmpty()) Res.string.composerPreviewAttachFile
+                            else Res.string.composerFullAttach
+                        ),
+                    onClick = { if (state.attachKinds.isEmpty()) actions.attachFile() else addOpen = !addOpen },
+                    open = addOpen,
+                    modifier = Modifier.testTag("chat-attach-button"),
                 )
-        }
-        val appearance = LocalKitAppearance.current
-        KitComposerGlow(
-            active = busy,
-            choice = KitGlowChoice.of(appearance.activityGlow, appearance.softGlow),
-        ) {
-            if (stopShown) {
-                // The glow holds its content in a Box: the field and the turn controls stack here.
-                Column(Modifier.fillMaxWidth()) {
-                    if (!chrome.requestWaiting()) fieldPart(Modifier.fillMaxWidth())
-                    Row(
-                        Modifier.fillMaxWidth().testTag("chat-composer-turn-controls"),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(Space.S2.dp, Alignment.End),
-                    ) {
-                        if (!chrome.requestWaiting()) voice?.Mic(voiceField, Modifier) // P12-VOICE
-                        stopPart()
-                        sendPart()
-                    }
+                if (stopShown && typed && !waitingRequest) stopPart()
+            },
+            chips = {
+                KitComposerChip(
+                    label =
+                        modelLabel(
+                            state.models.selected?.label
+                                // QA wave 4 B13: "Server default" only once the server said so.
+                                ?: stringResource(
+                                    if (state.models.usesDefault) Res.string.composerPreviewModelDefault
+                                    else Res.string.composerPreviewModelButton
+                                ),
+                            state.models.variant,
+                            state.models.agent,
+                        ),
+                    onClick = {
+                        // B3: the keyboard never stays open over the picker.
+                        focusManager.clearFocus()
+                        modelsOpen = true
+                    },
+                    semanticsLabel = stringResource(Res.string.composerPreviewModelButton),
+                    modifier = Modifier.weight(1f, fill = false).testTag("chat-model-button"),
+                )
+                chrome.rowChips()
+            },
+            trailing = {
+                if (!waitingRequest) voice?.Mic(voiceField, Modifier) // P12-VOICE
+                when {
+                    stopShown && !(typed && !waitingRequest) -> stopPart()
+                    else ->
+                        KitComposerSend(
+                            label = sendLabel,
+                            onClick = send,
+                            enabled = if (sendReady) KitEnabled.Enabled else KitEnabled.Disabled(stringResource(Res.string.kitComposerField)),
+                            working = state.sending,
+                            modifier = Modifier.testTag("chat-send-button"),
+                        )
                 }
-            } else {
-                Row(
-                    Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.Bottom,
-                    horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
-                ) {
-                    fieldPart(Modifier.weight(1f))
-                    voice?.Mic(voiceField, Modifier) // P12-VOICE
-                    sendPart()
-                }
-            }
-        }
+            },
+        )
     }
     // The model list loads when the sheet opens empty; a retry after failure is the person's own
     // tap.
@@ -771,6 +740,7 @@ public fun BasicComposer(
                         KitChoiceRow(
                             title = stringResource(Res.string.composerPreviewModelDefault),
                             selected = models.usesDefault,
+                            mark = KitChoiceMark.Tick,
                             tag = if (models.usesDefault) currentTag else null,
                             onClick = { selectAndClose(null) },
                         )
@@ -787,45 +757,50 @@ public fun BasicComposer(
                                     } ?: stringResource(Res.string.chatModelsRecent)
                         ) {
                             section.rows.forEach { pick ->
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    KitChoiceRow(
-                                        title = pick.model.label,
-                                        leading = {
-                                            KitProviderLogo(
+                                val favorite =
+                                    models.favorites.any {
+                                        it.providerId == pick.model.providerId &&
+                                            it.modelId == pick.model.modelId
+                                    }
+                                // Looks pass: Flutter's picker row — the provider mark, the name, the chosen
+                                // row banded with a mint check, and the star as the row's one icon (its words
+                                // are what TalkBack says), not a text button on every row.
+                                KitChoiceRow(
+                                    title = pick.model.label,
+                                    leading = {
+                                        KitProviderLogo(
+                                            pick.model.providerId,
+                                            pick.model.providerName,
+                                        )
+                                    },
+                                    selected = pick.current,
+                                    mark = KitChoiceMark.Tick,
+                                    // In "Recent" the provider tells equal names apart.
+                                    supporting =
+                                        if (section.providerName == null)
+                                            providerRouteName(
                                                 pick.model.providerId,
                                                 pick.model.providerName,
                                             )
-                                        },
-                                        selected = pick.current,
-                                        // In "Recent" the provider tells equal names apart.
-                                        supporting =
-                                            if (section.providerName == null)
-                                                providerRouteName(
-                                                    pick.model.providerId,
-                                                    pick.model.providerName,
-                                                )
-                                            else null,
-                                        tag = if (pick.current) currentTag else null,
-                                        onClick = { selectAndClose(pick.model) },
-                                        modifier = Modifier.weight(1f).testTag("chat-model-choice"),
-                                    )
-                                    val favorite =
-                                        models.favorites.any {
-                                            it.providerId == pick.model.providerId &&
-                                                it.modelId == pick.model.modelId
-                                        }
-                                    KitButton(
-                                        label =
-                                            stringResource(
-                                                if (favorite) Res.string.chat_model_favorite_remove
-                                                else Res.string.chat_model_favorite_add
-                                            ),
-                                        role = KitButtonRole.Tertiary,
-                                        onClick = {
-                                            scope.launch { actions.toggleModelFavorite(pick.model) }
-                                        },
-                                    )
-                                }
+                                        else null,
+                                    tag = if (pick.current) currentTag else null,
+                                    trailing = {
+                                        KitIconButton(
+                                            icon = if (favorite) KitIcons.starFilled else KitIcons.star,
+                                            label =
+                                                stringResource(
+                                                    if (favorite) Res.string.chat_model_favorite_remove
+                                                    else Res.string.chat_model_favorite_add
+                                                ),
+                                            onClick = {
+                                                scope.launch { actions.toggleModelFavorite(pick.model) }
+                                            },
+                                            tone = if (favorite) TextTone.Accent else TextTone.Secondary,
+                                        )
+                                    },
+                                    onClick = { selectAndClose(pick.model) },
+                                    modifier = Modifier.testTag("chat-model-choice"),
+                                )
                             }
                         }
                     }
