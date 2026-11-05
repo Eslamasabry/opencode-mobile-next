@@ -1,30 +1,19 @@
 package io.github.eslamasabry.oc.feature.widgetactions.ui
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.widgetactions.presentation.*
 import io.github.eslamasabry.oc.ui.design.tokens.Space
-import io.github.eslamasabry.oc.ui.kit.KitButton
-import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.ui.kit.*
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
-import io.github.eslamasabry.oc.ui.kit.frame.*
-import io.github.eslamasabry.oc.ui.kit.input.KitField
-import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
-import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
-import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
-import io.github.eslamasabry.oc.ui.kit.state.KitStateView
+import io.github.eslamasabry.oc.ui.kit.modal.KitFloatingPanel
 import io.github.eslamasabry.oc.ui.words.res.*
+import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -35,106 +24,76 @@ public fun WidgetActionScreen(state: WidgetActionUi, actions: WidgetActionAction
         field.edit { replace(length, length, if (length == 0) words else " $words") }
         actions.takeDictatedWords()
     }
-    val editing = state.phase == WidgetActionPhase.Editing && !state.listening && !state.dictating
     val sending = state.phase == WidgetActionPhase.Sending
-    KitScreen(
-        topBar = {
-            KitTopBar(
+    val phase =
+        when {
+            state.phase == WidgetActionPhase.Accepted -> KitSteerBoxPhase.Sent
+            sending -> KitSteerBoxPhase.Sending
+            state.listening || state.dictating -> KitSteerBoxPhase.Dictating
+            else -> KitSteerBoxPhase.Ready
+        }
+    val blocked =
+        when (state.phase) {
+            WidgetActionPhase.Uncertain -> stringResource(Res.string.widgetActionCheckFirst)
+            WidgetActionPhase.Rejected -> stringResource(Res.string.widgetActionRejected)
+            else -> null
+        }
+    KitFloatingPanel(
+        if (sending) null else actions::close,
+        stringResource(Res.string.widgetV2Cancel),
+    ) {
+        Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())) {
+            KitSteerBox(
                 title =
                     stringResource(
                         if (state.newConversation) Res.string.widgetV2VoiceTitle
                         else Res.string.widgetActionTitle
                     ),
-                exit = KitTopBarExit.Close,
-                exitLabel = stringResource(Res.string.widgetActionClose),
-                onExit = actions::close,
+                state = field,
+                phase = phase,
+                blockedReason = blocked,
+                message =
+                    if (state.dictationFailed)
+                        stringResource(Res.string.widgetV2DictationUnavailable)
+                    else null,
+                onSend = actions::send,
+                onDictate = actions::dictate,
+                onClose = actions::close,
+                dictationEnabled =
+                    if (state.voiceAvailable) KitEnabled.Enabled
+                    else
+                        KitEnabled.Disabled(
+                            stringResource(Res.string.widgetV2DictationUnavailable)
+                        ),
             )
-        },
-        width = KitScreenWidth.Reading,
-    ) {
-        Column(
-            Modifier.fillMaxWidth().imePadding().padding(Space.S3.dp),
-            verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
-        ) {
-            if (state.phase == WidgetActionPhase.Editing || sending) {
-                if (state.voiceAvailable)
-                    KitButton(
-                        label =
-                            stringResource(
-                                if (state.listening) Res.string.widgetPanelFinishRecording
-                                else Res.string.widgetPanelRecord
-                            ),
-                        onClick =
-                            if (state.listening) actions::finishDictation else actions::dictate,
-                        role = KitButtonRole.Secondary,
-                        working = state.dictating,
-                        enabled =
-                            if (!sending && !state.dictating) KitEnabled.Enabled
-                            else
-                                KitEnabled.Disabled(
-                                    stringResource(Res.string.widgetPanelListening)
-                                ),
-                    )
-                if (state.listening) KitGroupNote(stringResource(Res.string.widgetPanelListening))
-                if (state.dictationFailed)
-                    KitGroupNote(stringResource(Res.string.widgetV2DictationUnavailable))
-                KitGroupNote(stringResource(Res.string.widgetActionHint))
-                KitField(
-                    state = field,
-                    label = stringResource(Res.string.widgetActionMessage),
-                    kind = KitFieldKind.Multiline,
-                    maxLength = WidgetActionViewModel.MAX_TEXT,
-                    enabled =
-                        if (editing) KitEnabled.Enabled
-                        else KitEnabled.Disabled(stringResource(Res.string.widgetActionSending)),
-                )
+            // This host uses an in-app capture instead of Android's speech window; retain its
+            // visible Finish path.
+            if (state.listening) {
+                Spacer(Modifier.height(Space.S3.dp))
                 KitButton(
-                    label = stringResource(Res.string.widgetActionSend),
-                    onClick = { actions.send(field.text.toString()) },
-                    modifier = Modifier.fillMaxWidth(),
-                    working = sending,
-                    enabled =
-                        if (editing && field.text.isNotBlank()) KitEnabled.Enabled
-                        else
-                            KitEnabled.Disabled(
-                                stringResource(
-                                    if (sending) Res.string.widgetActionSending
-                                    else Res.string.widgetActionEnterMessage
-                                )
-                            ),
-                )
-            } else {
-                KitStateView(
-                    kind =
-                        if (state.phase == WidgetActionPhase.Accepted) KitStateKind.Calm
-                        else KitStateKind.Error,
-                    title =
-                        stringResource(
-                            when (state.phase) {
-                                WidgetActionPhase.Accepted -> Res.string.widgetActionAccepted
-                                WidgetActionPhase.Uncertain -> Res.string.widgetActionUncertain
-                                else -> Res.string.widgetActionRejected
-                            }
-                        ),
-                    body =
-                        stringResource(
-                            if (state.phase == WidgetActionPhase.Uncertain)
-                                Res.string.widgetActionCheckFirst
-                            else Res.string.widgetActionOpenHint
-                        ),
-                )
-                KitButton(
-                    label = stringResource(Res.string.widgetActionOpen),
-                    onClick = actions::openConversation,
-                    modifier = Modifier.fillMaxWidth(),
+                    stringResource(Res.string.widgetPanelFinishRecording),
+                    actions::finishDictation,
+                    working = state.dictating,
                     role = KitButtonRole.Secondary,
                 )
+            }
+            if (
+                state.phase == WidgetActionPhase.Rejected ||
+                    state.phase == WidgetActionPhase.Uncertain
+            ) {
+                Spacer(Modifier.height(Space.S3.dp))
                 KitButton(
-                    label = stringResource(Res.string.widgetActionClose),
-                    onClick = actions::close,
-                    modifier = Modifier.fillMaxWidth(),
+                    stringResource(Res.string.widgetActionOpen),
+                    actions::openConversation,
+                    role = KitButtonRole.Secondary,
                 )
             }
+        }
+    }
+    LaunchedEffect(state.phase) {
+        if (state.phase == WidgetActionPhase.Accepted) {
+            delay(700) // F: lib/ui/screens/widgets/widget_steer_screen.dart:21
+            actions.close()
         }
     }
 }
