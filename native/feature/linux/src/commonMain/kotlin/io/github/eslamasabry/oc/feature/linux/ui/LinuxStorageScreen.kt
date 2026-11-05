@@ -4,6 +4,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.LifecycleStartEffect
@@ -140,13 +147,20 @@ public fun LinuxStorageScreen(state: LinuxStorageUi, actions: LinuxStorageAction
                 KitNotice(message = it.words(), tone = StatusTone.Attention, dismiss = dismiss)
             }
             state.report?.let { report ->
-                KitRowGroup(
-                    label =
-                        stringResource(Res.string.linuxMgrStorageTotal, storageSize(report.total))
-                ) {
+                KitText(stringResource(Res.string.linuxMgrStorageTotal, storageSize(report.total)),
+                    modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp), role = TypeRole.Headline)
+                KitRowGroup(leadingTiles = true) {
                     LinuxStorageCategory.entries.forEach { category ->
                         KitRow(
                             title = category.title(),
+                            leading = KitRowLeading.Glyph(when (category) {
+                                LinuxStorageCategory.Base -> KitIcons.computer
+                                LinuxStorageCategory.Packages -> KitIcons.`package`
+                                LinuxStorageCategory.Tools -> KitIcons.tools
+                                LinuxStorageCategory.Agents -> KitIcons.agent
+                                LinuxStorageCategory.Projects -> KitIcons.folders
+                                LinuxStorageCategory.Temp -> KitIcons.clock
+                            }),
                             supporting = category.detail(),
                             supportingMaxLines = 2,
                             trailing =
@@ -157,12 +171,17 @@ public fun LinuxStorageScreen(state: LinuxStorageUi, actions: LinuxStorageAction
                         )
                     }
                 }
-                KitRowGroup(label = stringResource(Res.string.linuxMgrFreeUp)) {
-                    LinuxStorage.cleanups.forEach { action ->
+                val offered = LinuxStorage.cleanups.filter { (state.cleanable[it.id] ?: 0L) >= 1024L || state.cleaning == it.id } // F: lib/ui/screens/linux_manager/linux_storage_page.dart:231
+                KitRowGroup(label = stringResource(Res.string.linuxMgrFreeUp), leadingTiles = true) {
+                    if (offered.isEmpty()) KitText(
+                        stringResource(if (state.cleanable.size < LinuxStorage.cleanups.size) Res.string.linuxMgrMeasuring else Res.string.linuxMgrCleanNone),
+                        modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp), role = TypeRole.Secondary)
+                    offered.forEach { action ->
                         val bytes = state.cleanable[action.id]
                         val cleaning = state.cleaning == action.id
                         KitRow(
                             title = action.id.title(),
+                            leading = KitRowLeading.Glyph(KitIcons.delete),
                             supporting = action.id.detail(),
                             supportingMaxLines = 2,
                             trailing =
