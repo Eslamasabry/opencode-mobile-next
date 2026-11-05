@@ -107,16 +107,35 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                     selectedSection in inventory.failedSections ||
                         (state.tab == LibraryTab.Mcp && "resources" in inventory.failedSections)
                 ) {
-                    KitNotice(
-                        stringResource(Res.string.nlibLoadFailed),
-                        actions =
-                            listOf(
-                                KitLineAction(
-                                    stringResource(Res.string.nlibRefresh),
-                                    actions::refresh,
-                                )
-                            ),
-                    )
+                    val failedEmptyList =
+                        (state.tab == LibraryTab.Skills && inventory.skills.isEmpty()) ||
+                            (state.tab == LibraryTab.References && inventory.references.isEmpty())
+                    if (failedEmptyList) {
+                        KitInlineStateView(
+                            title =
+                                stringResource(
+                                    if (state.tab == LibraryTab.Skills)
+                                        Res.string.skillsScreenLoadFailed
+                                    else Res.string.referencesScreenLoadFailed
+                                ),
+                            icon = KitIcons.error,
+                            primary =
+                                KitAction(stringResource(Res.string.commonRetry), actions::refresh),
+                            modifier =
+                                Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
+                                    .padding(bottom = Space.S3.dp),
+                        )
+                    } else
+                        KitNotice(
+                            stringResource(Res.string.nlibLoadFailed),
+                            actions =
+                                listOf(
+                                    KitLineAction(
+                                        stringResource(Res.string.nlibRefresh),
+                                        actions::refresh,
+                                    )
+                                ),
+                        )
                 }
                 (state.notice ?: inventory.notice)?.let { KitNotice(noticeLabel(it)) }
                 if (inventory.hasAttemptsAtOtherSource)
@@ -415,11 +434,21 @@ private fun LibraryEmpty(
             LibraryTab.Mcp -> Res.string.e7LibraryNoMCPServersConfigured
             else -> Res.string.nlibEmpty
         }
-    KitStateView(KitStateKind.Calm, stringResource(title))
-    when (tab) {
-        LibraryTab.Skills -> KitGroupNote(stringResource(Res.string.emptyTeachSkillsMessage))
-        LibraryTab.References -> KitGroupNote(stringResource(Res.string.referencesScreenEmptyBody))
-        else -> Unit
+    if (tab == LibraryTab.Skills || tab == LibraryTab.References) {
+        KitInlineStateView(
+            title = stringResource(title),
+            icon = if (tab == LibraryTab.Skills) KitIcons.extensions else KitIcons.bookmark,
+            body =
+                stringResource(
+                    if (tab == LibraryTab.Skills) Res.string.emptyTeachSkillsMessage
+                    else Res.string.referencesScreenEmptyBody
+                ),
+            modifier =
+                Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
+                    .padding(bottom = Space.S3.dp),
+        )
+    } else {
+        KitStateView(KitStateKind.Calm, stringResource(title))
     }
 }
 

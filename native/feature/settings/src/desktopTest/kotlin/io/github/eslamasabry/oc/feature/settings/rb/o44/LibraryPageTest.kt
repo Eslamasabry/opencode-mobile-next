@@ -82,6 +82,9 @@ class LibraryPageTest {
         val actions = actions()
         setContent { SettingsThemed { LibraryScreen(state, actions) } }
         onNodeWithText("No skills available").assertDoesNotExist()
+        onNodeWithText("Couldn’t load skills").assertExists()
+        onNodeWithText("Retry").performClick()
+        assertEquals(listOf("refresh" to emptyList()), calls)
     }
 
     @Test
