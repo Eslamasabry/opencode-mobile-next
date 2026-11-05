@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -18,6 +19,7 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatActions
 import io.github.eslamasabry.oc.feature.chat.presentation.FindUi
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -40,7 +42,11 @@ import org.jetbrains.compose.resources.stringResource
 internal fun TranscriptFindBar(find: FindUi, actions: ChatActions) {
     val field = rememberTextFieldState(find.query)
     val focus = remember { FocusRequester() }
-    LaunchedEffect(Unit) { focus.requestFocus() }
+    val navigationFocus = remember { FocusRequester() }
+    LaunchedEffect(Unit) {
+        focus.requestFocus()
+        field.edit { selection = androidx.compose.ui.text.TextRange(0, length) }
+    }
     LaunchedEffect(find.query) {
         if (field.text.toString() != find.query) field.edit { replace(0, length, find.query) }
     }
@@ -49,7 +55,7 @@ internal fun TranscriptFindBar(find: FindUi, actions: ChatActions) {
         Res.plurals.transcriptFindCount, find.count, find.count, find.current + 1,
     )
     val older = KitLineAction(
-        stringResource(Res.string.transcriptFindAll), actions::searchAllHistory,
+        stringResource(Res.string.transcriptFindAll), { navigationFocus.requestFocus(); actions.searchAllHistory() },
         enabled = !find.loadingOlder,
         disabledReason = if (find.loadingOlder) stringResource(Res.string.chatLoadingConversation) else null,
         testTag = "transcript-find-older",
@@ -58,6 +64,8 @@ internal fun TranscriptFindBar(find: FindUi, actions: ChatActions) {
         Modifier.fillMaxWidth()
             .padding(start = Space.S4.dp, end = Space.S1.dp, top = Space.S2.dp, bottom = Space.S2.dp)
             .testTag("transcript-find-bar")
+            .focusRequester(navigationFocus)
+            .focusable()
             .onKeyEvent { event ->
                 if (event.type == KeyEventType.KeyDown && event.key == Key.Escape && field.text.isEmpty()) {
                     actions.find(null)
@@ -70,7 +78,7 @@ internal fun TranscriptFindBar(find: FindUi, actions: ChatActions) {
                 label = stringResource(Res.string.transcriptFindHint),
                 state = field,
                 onSearch = { actions.find(it) },
-                onSubmit = { actions.findNext() },
+                onSubmit = { navigationFocus.requestFocus(); actions.findNext() },
                 modifier = Modifier.weight(1f).focusRequester(focus).testTag("transcript-find-input"),
             )
             KitIconButton(KitIcons.close, stringResource(Res.string.transcriptFindClose), { actions.find(null) })
@@ -79,19 +87,22 @@ internal fun TranscriptFindBar(find: FindUi, actions: ChatActions) {
             Row(Modifier.fillMaxWidth().padding(end = Space.S1.dp), verticalAlignment = Alignment.CenterVertically) {
                 KitText(matches, Modifier.weight(1f).semantics { liveRegion = LiveRegionMode.Polite }, role = TypeRole.Secondary, tone = TextTone.Secondary)
                 val enabled = if (find.count > 0) KitEnabled.Enabled else KitEnabled.Disabled(none)
-                KitIconButton(KitIcons.chevronUp, stringResource(Res.string.transcriptFindPrevious), actions::findPrevious, Modifier.testTag("transcript-find-previous"), enabled = enabled)
-                KitIconButton(KitIcons.chevronDown, stringResource(Res.string.transcriptFindNext), actions::findNext, Modifier.testTag("transcript-find-next"), enabled = enabled)
+                KitIconButton(KitIcons.chevronUp, stringResource(Res.string.transcriptFindPrevious), { navigationFocus.requestFocus(); actions.findPrevious() }, Modifier.testTag("transcript-find-previous"), enabled = enabled)
+                KitIconButton(KitIcons.chevronDown, stringResource(Res.string.transcriptFindNext), { navigationFocus.requestFocus(); actions.findNext() }, Modifier.testTag("transcript-find-next"), enabled = enabled)
             }
         }
         when {
             find.olderFailure != null -> HistoryReadFailure(find.olderFailure, actions::searchAllHistory)
             find.searchingAll -> KitNotice(
                 message = stringResource(Res.string.transcriptFindPartial),
+                icon = KitIcons.history,
+                tone = StatusTone.Progress,
                 actions = listOf(KitLineAction(stringResource(Res.string.transcriptFindStopSearchingAll), actions::cancelSearchAll, testTag = "transcript-find-cancel-all")),
                 modifier = Modifier.testTag("transcript-find-searching-all"),
             )
             find.partial -> KitNotice(
                 message = stringResource(Res.string.transcriptFindPartial),
+                icon = KitIcons.history,
                 actions = listOf(older),
                 modifier = Modifier.testTag("transcript-find-partial"),
             )

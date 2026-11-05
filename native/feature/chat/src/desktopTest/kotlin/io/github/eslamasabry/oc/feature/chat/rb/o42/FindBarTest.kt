@@ -13,11 +13,47 @@ import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 @OptIn(ExperimentalTestApi::class)
 class FindBarTest {
+    @Test fun `C02 opening find selects the query and navigating releases the editor focus`() = runComposeUiTest {
+        val calls = mutableListOf<String>()
+        val presenter = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+        val actions = object : ChatActions by presenter {
+            override fun findNext() { calls += "next" }
+        }
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Off)) {
+                TranscriptFindBar(FindUi("total", 2, 0, "hit", 0, false), actions)
+            }
+        }
+        onNodeWithTag("kit-search-field").assertIsFocused().performTextInput("checkout")
+        onNodeWithTag("kit-search-field").assertTextEquals("checkout")
+        onNodeWithTag("transcript-find-next").performClick()
+        onNodeWithTag("kit-search-field").assertIsNotFocused()
+        assertEquals(listOf("next"), calls)
+    }
+
+    @Test fun `C02 searching history cannot activate its disabled notice action`() = runComposeUiTest {
+        var calls = 0
+        setContent {
+            KitTheme(platform = DesktopKitPlatform()) {
+                KitNotice(
+                    message = "Only loaded messages were searched.",
+                    icon = KitIcons.history,
+                    actions = listOf(KitLineAction("Search all history", { calls++ }, enabled = false, disabledReason = "Loading earlier messages")),
+                )
+            }
+        }
+        onNodeWithTag("kit-notice-action").assertIsNotEnabled().performClick()
+        assertEquals(0, calls)
+    }
+
     @Test fun emptySearchHidesNavigationAndCloseLeavesFind() = runComposeUiTest {
         val calls = mutableListOf<String?>()
         val presenter = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)

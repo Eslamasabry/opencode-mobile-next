@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
@@ -36,6 +37,7 @@ import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitInlineAction
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusGlyph
@@ -102,6 +104,7 @@ public fun KitNotice(
     dismiss: KitLineAction? = null,
     liveRegion: Boolean = true,
     trailing: (@Composable () -> Unit)? = null,
+    icon: ImageVector? = null,
 ) {
     val colors = LocalKitColors.current
     Column(
@@ -110,9 +113,9 @@ public fun KitNotice(
     ) {
         Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
             Box(Modifier.width(LEAD_SLOT.dp).padding(top = 2.dp), contentAlignment = Alignment.TopCenter) {  // NV: icon nudged onto the first text line
-                if (tone == StatusTone.Neutral) {
+                if (icon != null || tone == StatusTone.Neutral) {
                     Image(
-                        KitIcons.info, null, Modifier.size(LocalKitTokens.current.smallIcon.dp).clearAndSetSemantics {},
+                        icon ?: KitIcons.info, null, Modifier.size(LocalKitTokens.current.smallIcon.dp).clearAndSetSemantics {},
                         colorFilter = ColorFilter.tint(glyphColor(tone, colors)), // F: kit_notice.dart _iconFor info
                     )
                 } else {
@@ -137,7 +140,19 @@ public fun KitNotice(
                         Modifier.padding(top = Space.S2.dp),
                         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
                     ) {
-                        shown.forEach { KitButton(KitAction(it.label, it.onClick), Modifier.testTag(it.testTag ?: "kit-notice-action"), KitButtonRole.Secondary) }
+                        shown.forEach {
+                            KitButton(
+                                KitAction(
+                                    it.label,
+                                    it.onClick,
+                                    enabled = KitEnabled.of(it.enabled, it.disabledReason),
+                                    icon = it.icon,
+                                    semanticsLabel = it.semanticsLabel,
+                                ),
+                                Modifier.testTag(it.testTag ?: "kit-notice-action"),
+                                KitButtonRole.Secondary,
+                            )
+                        }
                     }
                 }
             }
