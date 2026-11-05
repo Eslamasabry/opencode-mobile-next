@@ -111,7 +111,9 @@ public fun KitComposerGlow(
     val colors = LocalKitColors.current
     val saver = LocalKitAppearance.current.saver
     val plan = glowPlan(choice, motion.level, saver, motion.stillFrame)
-    val colours = remember(colors.accent, colors.text1, colors.dark) { glowColours(colors.accent, colors.text1, colors.dark) }
+    // Live colour, not the accent: on light themes the glow stays bright mint while words and buttons keep the deep
+    // green (owner 2026-11-05).
+    val colours = remember(colors.live, colors.text1, colors.dark) { glowColours(colors.live, colors.text1, colors.dark) }
     val target = if (active && plan.draw != GlowDraw.None) plan.strength else 0f
     val strength = rememberGlowStrength(target, motion)
     val lit by remember { derivedStateOf { strength.floatValue > 0f } }
