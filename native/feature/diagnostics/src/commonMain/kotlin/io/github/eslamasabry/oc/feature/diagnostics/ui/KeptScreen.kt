@@ -1,9 +1,10 @@
 package io.github.eslamasabry.oc.feature.diagnostics.ui
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -15,6 +16,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.engine.diagnostics.crash.CrashSource
 import io.github.eslamasabry.oc.engine.diagnostics.exit.ExitKind
 import io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptActions
@@ -24,23 +26,29 @@ import io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptNotice
 import io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptUi
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitAction
-import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
-import io.github.eslamasabry.oc.ui.kit.content.log.KitLogPanel
+import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.log.KitSelectableText
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
+import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
@@ -90,7 +98,6 @@ import io.github.eslamasabry.oc.ui.words.res.diagnosticsUnavailable
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.reportProblemClearFailed
 import io.github.eslamasabry.oc.ui.words.res.reportProblemErrorsLabel
-import io.github.eslamasabry.oc.ui.words.res.reportProblemKeptLink
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -106,7 +113,7 @@ public fun KeptScreen(state: KeptUi, actions: KeptActions) {
     KitScreen(
         topBar = {
             KitTopBar(
-                title = stringResource(Res.string.reportProblemKeptLink),
+                title = stringResource(Res.string.e7SettingsUi88),
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::onBack,
@@ -117,7 +124,7 @@ public fun KeptScreen(state: KeptUi, actions: KeptActions) {
         Column(
             Modifier.fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(vertical = Space.S3.dp),
+                .padding(top = Space.S2.dp, bottom = Space.S6.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
         ) {
             state.notice?.let { notice ->
@@ -134,86 +141,88 @@ public fun KeptScreen(state: KeptUi, actions: KeptActions) {
             CrashSection(state, actions, gutter)
             ExitsSection(state.exits, actions, gutter)
         }
-    }
-    KitConfirm(
-        spec =
-            if (state.confirmDelete) {
-                KitConfirmSpec(
-                    title = stringResource(Res.string.crashReportsDeleteTitle),
-                    confirmLabel = stringResource(Res.string.crashReportsDeleteConfirm),
-                    kind = KitConfirmKind.Destructive,
-                    body =
-                        if (state.errorsKept > 0)
+        KitConfirm(
+            spec =
+                if (state.confirmDelete) {
+                    KitConfirmSpec(
+                        title = stringResource(Res.string.crashReportsDeleteTitle),
+                        confirmLabel = stringResource(Res.string.crashReportsDeleteConfirm),
+                        kind = KitConfirmKind.Destructive,
+                        body =
+                            if (state.errorsKept > 0)
+                                pluralStringResource(
+                                    Res.plurals.crashReportsDeleteBodyWithErrors,
+                                    state.errorsKept,
+                                    state.errorsKept,
+                                )
+                            else stringResource(Res.string.crashReportsDeleteBody),
+                    )
+                } else if (state.confirmClear) {
+                    KitConfirmSpec(
+                        title =
                             pluralStringResource(
-                                Res.plurals.crashReportsDeleteBodyWithErrors,
+                                Res.plurals.appDiagnosticsClearTitle,
                                 state.errorsKept,
                                 state.errorsKept,
-                            )
-                        else stringResource(Res.string.crashReportsDeleteBody),
-                )
-            } else if (state.confirmClear) {
-                KitConfirmSpec(
-                    title =
-                        pluralStringResource(
-                            Res.plurals.appDiagnosticsClearTitle,
-                            state.errorsKept,
-                            state.errorsKept,
-                        ),
-                    confirmLabel =
-                        pluralStringResource(
-                            Res.plurals.appDiagnosticsClearConfirm,
-                            state.errorsKept,
-                            state.errorsKept,
-                        ),
-                    kind = KitConfirmKind.Destructive,
-                    body =
-                        pluralStringResource(
-                            Res.plurals.appDiagnosticsClearBody,
-                            state.errorsKept,
-                            state.errorsKept,
-                        ),
-                )
-            } else {
-                null
+                            ),
+                        confirmLabel =
+                            pluralStringResource(
+                                Res.plurals.appDiagnosticsClearConfirm,
+                                state.errorsKept,
+                                state.errorsKept,
+                            ),
+                        kind = KitConfirmKind.Destructive,
+                        consequences =
+                            if (state.crashRows.isNotEmpty())
+                                listOf(stringResource(Res.string.crashReportsClearedToo))
+                            else emptyList(),
+                        body =
+                            pluralStringResource(
+                                Res.plurals.appDiagnosticsClearBody,
+                                state.errorsKept,
+                                state.errorsKept,
+                            ),
+                    )
+                } else {
+                    null
+                },
+            onConfirm = {
+                if (state.confirmDelete) actions.onConfirmDelete() else actions.onConfirmClear()
             },
-        onConfirm = {
-            if (state.confirmDelete) actions.onConfirmDelete() else actions.onConfirmClear()
-        },
-        onCancel = actions::onCancelConfirm,
-    )
+            onCancel = actions::onCancelConfirm,
+        )
+    }
 }
 
 @Composable
 private fun ErrorsSection(state: KeptUi, actions: KeptActions) {
+    if (state.errorsKept <= 0) return
     KitSectionLabel(
         pluralStringResource(
             Res.plurals.reportProblemErrorsLabel,
             state.errorsKept,
             state.errorsKept,
-        )
-    )
-    if (state.errorsKept > 0) {
-        KitRowGroup {
-            KitRow(
-                title =
-                    pluralStringResource(
-                        Res.plurals.appDiagnosticsClearConfirm,
-                        state.errorsKept,
-                        state.errorsKept,
-                    ),
+        ),
+        trailing = {
+            KitIconButton(
+                KitIcons.delete,
+                pluralStringResource(
+                    Res.plurals.appDiagnosticsClearConfirm,
+                    state.errorsKept,
+                    state.errorsKept,
+                ),
+                actions::onClearErrors,
                 modifier = Modifier.testTag("kept-clear"),
-                onClick = actions::onClearErrors,
             )
-        }
-    }
+        },
+    )
 }
 
 @Composable
 private fun CrashSection(state: KeptUi, actions: KeptActions, gutter: Modifier) {
     var selected by remember { mutableStateOf<KeptCrashRow?>(null) }
-    KitSectionLabel(stringResource(Res.string.crashReportsLabel))
     val unavailable = stringResource(Res.string.crashReportsUnavailable)
-    KitRowGroup {
+    KitRowGroup(label = stringResource(Res.string.crashReportsLabel)) {
         KitSwitchRow(
             title = stringResource(Res.string.crashReportsSwitch),
             checked = state.crashOn,
@@ -222,38 +231,7 @@ private fun CrashSection(state: KeptUi, actions: KeptActions, gutter: Modifier) 
                 if (state.crashAvailable) KitEnabled.Enabled else KitEnabled.Disabled(unavailable),
             onCheckedChange = actions::onCrashCapture,
         )
-        if (state.crashOn && state.crashRows.isEmpty()) {
-            KitRow(
-                title = stringResource(Res.string.crashReportsNone),
-                supporting = stringResource(Res.string.crashReportsNoneBody),
-                supportingMaxLines = 2,
-            )
-        }
-        state.crashRows.forEach { row ->
-            KitRow(
-                title = crashKind(row.source),
-                supporting = row.time,
-                onClick = { selected = row },
-            )
-        }
-        if (state.crashRows.isNotEmpty()) {
-            KitRow(
-                title = stringResource(Res.string.diagnosticsReportTitle),
-                modifier = Modifier.testTag("kept-preview"),
-                onClick = actions::onPreviewCrashReport,
-            )
-            KitRow(
-                title =
-                    pluralStringResource(
-                        Res.plurals.crashReportsDelete,
-                        state.crashRows.size,
-                        state.crashRows.size,
-                    ),
-                onClick = actions::onDeleteCrashReports,
-            )
-        }
     }
-    KitGroupNote(stringResource(Res.string.crashReportsNote))
     val effect =
         when {
             state.crashOn && state.crashRows.isNotEmpty() && state.errorsKept > 0 ->
@@ -279,20 +257,67 @@ private fun CrashSection(state: KeptUi, actions: KeptActions, gutter: Modifier) 
             else -> null
         }
     effect?.let { KitGroupNote(it) }
-    val record = selected?.takeIf { it in state.crashRows }
+    KitGroupNote(stringResource(Res.string.crashReportsNote))
+    if (state.crashOn) {
+        Spacer(Modifier.height(Space.S3.dp))
+        KitRowGroup(leadingTiles = true) {
+            if (state.crashRows.isEmpty())
+                KitRow(
+                    stringResource(Res.string.crashReportsNone),
+                    leading = KitRowLeading.Glyph(KitIcons.info),
+                    supporting = stringResource(Res.string.crashReportsNoneBody),
+                    supportingMaxLines = 2, // F: lib/ui/screens/crash_reports_section.dart:246
+                )
+            state.crashRows.forEach { row ->
+                KitRow(
+                    crashKind(row.source),
+                    supporting = row.time,
+                    leading =
+                        KitRowLeading.Glyph(
+                            if (row.source == CrashSource.Anr) KitIcons.timer else KitIcons.error
+                        ),
+                    onClick = { selected = row },
+                )
+            }
+            if (state.crashRows.isNotEmpty()) {
+                KitRow(
+                    stringResource(Res.string.diagnosticsReportOpen),
+                    modifier = Modifier.testTag("kept-preview"),
+                    leading = KitRowLeading.Glyph(KitIcons.upload),
+                    onClick = actions::onPreviewCrashReport,
+                )
+                KitRow(
+                    pluralStringResource(
+                        Res.plurals.crashReportsDelete,
+                        state.crashRows.size,
+                        state.crashRows.size,
+                    ),
+                    leading = KitRowLeading.Glyph(KitIcons.delete),
+                    onClick = actions::onDeleteCrashReports,
+                )
+            }
+        }
+    }
+    val record = selected?.takeIf { state.crashOn && it in state.crashRows }
     KitSheet(
         visible = record != null,
         onDismissRequest = { selected = null },
         title =
             record?.let { crashKind(it.source) } ?: stringResource(Res.string.crashReportsLabel),
         subtitle = record?.time,
+        icon = if (record?.source == CrashSource.Anr) KitIcons.timer else KitIcons.error,
         closeLabel = stringResource(Res.string.kitSheetClose),
     ) {
         record?.let { row ->
-            KitGroupNote(stringResource(Res.string.crashReportPreviewBody))
+            KitText(
+                stringResource(Res.string.crashReportPreviewBody),
+                role = TypeRole.Secondary,
+                tone = TextTone.Secondary,
+            )
+            Spacer(Modifier.height(Space.S3.dp))
             KitDetailsFold(
-                label = stringResource(Res.string.kitDetails),
-                copyLabel = stringResource(Res.string.kitCopyDetails),
+                stringResource(Res.string.kitDetails),
+                stringResource(Res.string.kitCopyDetails),
                 notes =
                     listOf(
                         "${stringResource(Res.string.crashReportDetailSource)}: crash.${row.source.wire}",
@@ -301,26 +326,48 @@ private fun CrashSection(state: KeptUi, actions: KeptActions, gutter: Modifier) 
             )
         }
     }
-    state.preview?.let { preview ->
-        KitGroupNote(stringResource(Res.string.diagnosticsReportPrivacy))
-        KitGroupNote(
-            pluralStringResource(
-                Res.plurals.diagnosticsReportSize,
-                preview.records,
-                preview.records,
-                "${preview.bytes} B",
+    SharePreview(state, actions)
+}
+
+@Composable
+private fun SharePreview(state: KeptUi, actions: KeptActions) {
+    val preview = state.preview
+    KitSheet(
+        visible = preview != null,
+        onDismissRequest = actions::onClosePreview,
+        title = stringResource(Res.string.diagnosticsReportTitle),
+        subtitle = stringResource(Res.string.diagnosticsReportPrivacy),
+        icon = KitIcons.bug,
+        height = KitSheetHeight.Full,
+        primary =
+            KitAction(
+                stringResource(Res.string.diagnosticsReportShare),
+                actions::onShareCrashReport,
+                icon = KitIcons.upload,
+                working = state.sharing,
+            ),
+    ) {
+        if (preview != null) {
+            state.notice?.let { KitNotice(noticeWords(it)) }
+            val size =
+                if (preview.bytes < 1024) "${preview.bytes} B"
+                else "${Numbers.decimal(preview.bytes / 1024.0, 1)} KB" // F:
+            // lib/ui/screens/crash_report_share.dart:164
+            KitText(
+                pluralStringResource(
+                    Res.plurals.diagnosticsReportSize,
+                    preview.records,
+                    preview.records,
+                    size,
+                ),
+                role = TypeRole.Secondary,
+                tone = TextTone.Secondary,
             )
-        )
-        KitGroupNote(stringResource(Res.string.crashReportPreviewBody))
-        Box(gutter.testTag("kept-preview-text")) { KitLogPanel(redactedText = preview.text, live = false) }
-        Box(gutter) {
-            KitActionBlock(
-                primary =
-                    KitAction(
-                        stringResource(Res.string.diagnosticsReportShare),
-                        actions::onShareCrashReport,
-                        working = state.sharing,
-                    )
+            Spacer(Modifier.height(Space.S2.dp))
+            KitSelectableText(
+                preview.text,
+                Modifier.testTag("kept-preview-text"),
+                role = TypeRole.Mono,
             )
         }
     }
@@ -328,14 +375,19 @@ private fun CrashSection(state: KeptUi, actions: KeptActions, gutter: Modifier) 
 
 @Composable
 private fun ExitsSection(exits: KeptExits, actions: KeptActions, gutter: Modifier) {
+    if (exits == KeptExits.Loading) return
+    var showAll by remember { mutableStateOf(false) }
+    var routineOpen by remember { mutableStateOf(false) }
     KitSectionLabel(stringResource(Res.string.diagnosticsExitHistoryTitle))
     when (exits) {
         KeptExits.Loading -> Unit
         KeptExits.Unsupported ->
-            KitRowGroup {
+            KitRowGroup(leadingTiles = true) {
                 KitRow(
-                    title = stringResource(Res.string.diagnosticsExitHistoryUnsupported),
+                    stringResource(Res.string.diagnosticsExitHistoryUnsupported),
+                    leading = KitRowLeading.Glyph(KitIcons.info),
                     supporting = stringResource(Res.string.diagnosticsExitHistoryUnsupportedBody),
+                    supportingMaxLines = 2, // F: lib/ui/screens/exit_history_section.dart:72
                 )
             }
         KeptExits.Failed ->
@@ -349,16 +401,64 @@ private fun ExitsSection(exits: KeptExits, actions: KeptActions, gutter: Modifie
                     ),
             )
         is KeptExits.Ready -> {
-            KitRowGroup {
-                if (exits.rows.none { it.kind.notable })
-                    KitRow(title = stringResource(Res.string.diagnosticsExitNoProblems))
-                exits.rows.forEach { row ->
-                    KitRow(title = exitWords(row.kind), supporting = row.time)
+            // Flutter considers force-stop routine here, independently of the runtime attention
+            // policy.
+            val problems =
+                exits.rows.filter {
+                    it.kind in
+                        setOf(
+                            ExitKind.Crash,
+                            ExitKind.LowMemory,
+                            ExitKind.MemoryLimit,
+                            ExitKind.Killed,
+                        )
                 }
+            val routine = exits.rows.filterNot { it in problems }
+            if (problems.isEmpty())
+                KitGroupNote(stringResource(Res.string.diagnosticsExitNoProblems))
+            KitRowGroup(leadingTiles = true) {
+                val shown =
+                    if (showAll) problems
+                    else problems.take(5) // F: lib/ui/screens/exit_history_section.dart:43
+                shown.forEach { row ->
+                    KitRow(
+                        exitWords(row.kind),
+                        supporting = row.time,
+                        leading =
+                            KitRowLeading.Glyph(
+                                if (row.kind == ExitKind.Crash) KitIcons.error else KitIcons.warning
+                            ),
+                    )
+                }
+                if (shown.size < problems.size)
+                    KitRow(
+                        pluralStringResource(
+                            Res.plurals.diagnosticsExitShowAll,
+                            problems.size,
+                            problems.size,
+                        ),
+                        leading = KitRowLeading.Glyph(KitIcons.info),
+                        onClick = { showAll = true },
+                    )
+                if (routine.isNotEmpty())
+                    KitExpandRow(
+                        pluralStringResource(
+                            Res.plurals.diagnosticsExitRoutine,
+                            routine.size,
+                            routine.size,
+                        ),
+                        routineOpen,
+                        modifier = Modifier.testTag("exit-history-routine"),
+                        onExpandedChange = { routineOpen = it },
+                    ) {
+                        routine.forEach { row ->
+                            KitRow(exitWords(row.kind), supporting = row.time)
+                        }
+                    }
             }
-            KitGroupNote(stringResource(Res.string.diagnosticsExitHistoryNote))
         }
     }
+    KitGroupNote(stringResource(Res.string.diagnosticsExitHistoryNote))
 }
 
 @Composable
