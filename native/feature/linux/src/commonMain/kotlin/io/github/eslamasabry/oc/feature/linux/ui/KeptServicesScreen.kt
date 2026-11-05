@@ -145,6 +145,7 @@ public fun KeptServicesScreen(state: KeptServicesUi, actions: KeptServicesAction
     ) {
         selected?.let { service ->
             val name = service.definition.name
+            val port = service.definition.port
             val disabled = stringResource(Res.string.keptSvcWorking)
             Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
                 KitRowGroup(leadingTiles = true) {
@@ -154,11 +155,11 @@ public fun KeptServicesScreen(state: KeptServicesUi, actions: KeptServicesAction
                         supportingMaxLines = 3)
                 }
                 KitRowGroup(leadingTiles = true) {
-                    if (service.phase == KeptPhase.Running && service.definition.port != null) KitRow(
+                    if (service.phase == KeptPhase.Running && port != null) KitRow(
                         stringResource(Res.string.keptSvcOpenNamed, service.definition.title),
                         leading = KitRowLeading.Glyph(KitIcons.externalLink), trailing = KitRowTrailing.Chevron,
                         enabled = !state.working, disabledReason = disabled,
-                        onClick = { actions.preview(service.definition.port) })
+                        onClick = { actions.preview(port) })
                     KitRow(stringResource(if (service.showsStop) Res.string.keptSvcStopNamed else Res.string.keptSvcStartNamed, service.definition.title),
                         leading = KitRowLeading.Glyph(if (service.showsStop) KitIcons.stopCircle else KitIcons.play),
                         supporting = stringResource(if (service.showsStop) Res.string.linuxSvcStopDetail else Res.string.linuxSvcStartDetail),
