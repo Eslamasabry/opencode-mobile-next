@@ -154,6 +154,10 @@ public fun ThisPhoneScreen(
     val busyWords = stringResource(Res.string.thisPhoneBusy)
     var storageOpen by remember { mutableStateOf(false) }
     val busy = state.working != null
+    var stopping by remember { mutableStateOf(false) }
+    LaunchedEffect(busy, state.serverRows, state.confirm) {
+        if (busy || ServerRow.Stop !in state.serverRows || state.confirm != null) stopping = false
+    }
     val installed = state.details.installed || state.version != null || state.serverRows.isNotEmpty()
     KitScreen(
         topBar = {
@@ -345,7 +349,7 @@ public fun ThisPhoneScreen(
                                     leading = KitRowLeading.Glyph(KitIcons.stopCircle),
                                     enabled = !busy,
                                     disabledReason = busyWords,
-                                    onClick = actions::stopServer,
+                                    onClick = { stopping = true },
                                 )
                             ServerRow.Restart ->
                                 KitRow(
@@ -592,30 +596,58 @@ public fun ThisPhoneScreen(
             }
         }
         }
+        PhoneConfirmation(state, actions, stopping, onStopDismiss = { stopping = false })
     }
+
+}
+
+@Composable
+private fun PhoneConfirmation(
+    state: ThisPhoneUi,
+    actions: ThisPhoneActions,
+    stopping: Boolean,
+    onStopDismiss: () -> Unit,
+) {
     KitConfirm(
         spec =
-            when (val asked = state.confirm) {
-                null -> null
-                is ThisPhoneConfirm.Restart ->
-                    KitConfirmSpec(
-                        title = stringResource(Res.string.thisPhoneRestartTitle),
-                        confirmLabel = stringResource(Res.string.thisPhoneRestartRow),
-                        kind = KitConfirmKind.Neutral,
-                        body =
-                            if (asked.replyRunning) stringResource(Res.string.thisPhoneRestartBusy)
-                            else null,
-                    )
-                is ThisPhoneConfirm.Update ->
-                    KitConfirmSpec(
-                        title = stringResource(Res.string.thisPhoneUpdateTitle, OPENCODE),
-                        confirmLabel = stringResource(Res.string.thisPhoneUpdate),
-                        body = stringResource(Res.string.thisPhoneUpdateBody, asked.version),
-                        consequences = listOf(stringResource(Res.string.thisPhoneUpdateKept)),
-                    )
-            },
-        onConfirm = actions::confirm,
-        onCancel = actions::dismiss,
+            if (stopping)
+                KitConfirmSpec(
+                    title = stringResource(Res.string.safetyStopLocalServerTitle),
+                    body = stringResource(Res.string.safetyStopLocalServerBody),
+                    confirmLabel = stringResource(Res.string.e7SetupStopLocal),
+                    cancelLabel = stringResource(Res.string.safetyStopLocalServerKeep),
+                    kind = KitConfirmKind.Stop,
+                )
+            else
+                when (val asked = state.confirm) {
+                    null -> null
+                    is ThisPhoneConfirm.Restart ->
+                        KitConfirmSpec(
+                            title = stringResource(Res.string.thisPhoneRestartTitle),
+                            confirmLabel = stringResource(Res.string.thisPhoneRestartRow),
+                            kind = KitConfirmKind.Neutral,
+                            body =
+                                if (asked.replyRunning)
+                                    stringResource(Res.string.thisPhoneRestartBusy)
+                                else null,
+                        )
+                    is ThisPhoneConfirm.Update ->
+                        KitConfirmSpec(
+                            title = stringResource(Res.string.thisPhoneUpdateTitle, OPENCODE),
+                            confirmLabel = stringResource(Res.string.thisPhoneUpdate),
+                            body = stringResource(Res.string.thisPhoneUpdateBody, asked.version),
+                            consequences = listOf(stringResource(Res.string.thisPhoneUpdateKept)),
+                        )
+                },
+        onConfirm = {
+            if (stopping) {
+                onStopDismiss()
+                if (state.working == null && ServerRow.Stop in state.serverRows)
+                    actions.stopServer()
+            } else actions.confirm()
+        },
+        onCancel = { if (stopping) onStopDismiss() else actions.dismiss() },
+        working = state.working != null,
     )
 }
 
