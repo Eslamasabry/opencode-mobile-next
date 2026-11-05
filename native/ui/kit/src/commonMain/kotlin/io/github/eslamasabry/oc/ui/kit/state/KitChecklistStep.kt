@@ -96,16 +96,16 @@ public fun KitChecklistStep(
             KitText(
                 title,
                 role = TypeRole.RowTitle,
-                maxLines = 2,
-            ) // F: lib/ui/kit/kit_checklist.dart:554
+                maxLines = 2, // F: lib/ui/kit/kit_checklist.dart:548
+            )
             if (supporting != null) {
                 Spacer(Modifier.height(Space.S1.dp))
                 KitText(
                     supporting,
                     role = TypeRole.Secondary,
                     tone = TextTone.Secondary,
-                    maxLines = 4,
-                ) // F: lib/ui/kit/kit_checklist.dart:556
+                    maxLines = 4, // F: lib/ui/kit/kit_checklist.dart:550
+                )
             }
         }
     }
@@ -122,7 +122,7 @@ internal fun StepMark(state: KitStepState) {
                 if (
                     listOf(colors.ground, colors.surface1, colors.surface2, colors.surface3).all {
                         wcagContrast(Argb(colors.text3.toArgb()), Argb(it.toArgb())) >=
-                            3 // F: lib/ui/kit/kit_status_mark.dart:83
+                            3 // F: lib/ui/kit/kit_status_mark.dart:78
                     }
                 )
                     colors.text3
@@ -158,8 +158,8 @@ internal fun StepMark(state: KitStepState) {
                         drawArc(
                             colors.accent,
                             0f,
-                            270f,
-                            false, // NV: indeterminate spinner arc
+                            270f, // NV: indeterminate spinner arc
+                            false,
                             Offset(stroke / 2, stroke / 2),
                             Size(size.width - stroke, size.height - stroke),
                             style = Stroke(stroke),
