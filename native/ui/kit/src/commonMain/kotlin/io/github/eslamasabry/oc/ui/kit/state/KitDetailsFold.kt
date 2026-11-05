@@ -24,7 +24,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
@@ -47,8 +46,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
-import io.github.eslamasabry.oc.ui.kit.frame.ExitGlyph
-import io.github.eslamasabry.oc.ui.kit.frame.KitExitGlyph
+import io.github.eslamasabry.oc.ui.kit.motion.KitChevron
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -112,14 +110,12 @@ public fun KitDetailsFold(
             shape = KitShapeId.Button,
         ) {
             Row(
-                Modifier.fillMaxWidth().heightIn(min = tokens.minTarget.dp).padding(horizontal = Space.S1.dp),
+                Modifier.fillMaxWidth().heightIn(min = tokens.minTarget.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
             ) {
                 KitText(label, Modifier.weight(1f), role = TypeRole.Secondary, tone = TextTone.Secondary)
-                // The chevron points to the end (mirrored in RTL), so the turn that makes it point up or down mirrors too.
-                val toEnd = if (LocalLayoutDirection.current == LayoutDirection.Rtl) -1f else 1f
-                KitExitGlyph(ExitGlyph.Chevron, colors.text2, Modifier.rotate(if (open) -90f * toEnd else 90f * toEnd))
+                KitChevron(open)
             }
         }
         AnimatedVisibility(
