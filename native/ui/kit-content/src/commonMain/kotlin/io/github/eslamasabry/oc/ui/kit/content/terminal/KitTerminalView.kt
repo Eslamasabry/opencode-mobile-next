@@ -112,6 +112,8 @@ public fun KitTerminalView(
     modifier: Modifier = Modifier,
     inputEnabled: Boolean = true,
     defaultKeyBar: Boolean = true,
+    /** False when the host exposes this choice in its visible terminal menu, as Flutter does. */
+    showAccessibleSwitch: Boolean = true,
     above: @Composable ColumnScope.() -> Unit = {},
 ) {
     val signals by LocalKitPlatform.current.signals.collectAsState()
@@ -122,15 +124,16 @@ public fun KitTerminalView(
             platformView != null,
         )
     Column(modifier) {
-        KitSwitchRow(
-            title = words.accessibleMode,
-            checked = on,
-            modifier = Modifier.testTag(KitTerminalTags.ACCESSIBLE_MODE),
-            enabled =
-                if (platformView == null) KitEnabled.Disabled(words.inputUnavailable)
-                else KitEnabled.Enabled,
-            onCheckedChange = onAccessibleModeChange,
-        )
+        if (showAccessibleSwitch)
+            KitSwitchRow(
+                title = words.accessibleMode,
+                checked = on,
+                modifier = Modifier.testTag(KitTerminalTags.ACCESSIBLE_MODE),
+                enabled =
+                    if (platformView == null) KitEnabled.Disabled(words.inputUnavailable)
+                    else KitEnabled.Enabled,
+                onCheckedChange = onAccessibleModeChange,
+            )
         above()
         if (on || platformView == null) {
             KitTerminalAccessible(

@@ -11,15 +11,18 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.LifecycleStartEffect
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
-import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalKeyChoice
-import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalKeybar
+import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
+import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalBarKey
 import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalView
 import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalWords
+import io.github.eslamasabry.oc.ui.kit.content.terminal.TerminalKeyBar
+import io.github.eslamasabry.oc.ui.kit.content.terminal.TerminalKeyBarController
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
@@ -55,25 +58,139 @@ public fun TerminalScreen(state: TerminalUi, actions: TerminalActions) {
     val canAct =
         if (state.working) KitEnabled.Disabled(stringResource(Res.string.terminal40Working))
         else KitEnabled.Enabled
+    val keys = remember { TerminalKeyBarController() }
     KitScreen(
         loading = state.phase == TerminalPhase.Opening || state.phase == TerminalPhase.Connecting,
         topBar = {
             KitTopBar(
-                title = title,
-                subtitle =
-                    listOf(state.serverName, state.directory)
-                        .filter { it.isNotBlank() }
-                        .joinToString(" · "),
+                title = selected?.title ?: title,
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::back,
                 actions =
-                    listOf(
-                        KitLineAction(
-                            stringResource(Res.string.terminal40Refresh),
-                            actions::refresh,
-                        )
-                    ),
+                    if (selected == null) emptyList()
+                    else
+                        listOf(
+                            KitLineAction(
+                                stringResource(Res.string.terminal40Copy),
+                                actions::copy,
+                                icon = KitIcons.copy,
+                            )
+                        ),
+                more = { _ ->
+                    KitMenu(
+                        expanded = menu,
+                        items =
+                            buildList {
+                                add(
+                                    KitMenuItem(
+                                        stringResource(Res.string.terminal40New),
+                                        {
+                                            menu = false
+                                            actions.create()
+                                        },
+                                        enabled = canAct,
+                                    )
+                                )
+                                if (selected != null) {
+                                    if (state.grid != null)
+                                        add(
+                                            KitMenuItem(
+                                                stringResource(Res.string.terminal40Select),
+                                                {
+                                                    menu = false
+                                                    actions.selectText()
+                                                },
+                                                checked = state.selecting,
+                                            )
+                                        )
+                                    add(
+                                        KitMenuItem(
+                                            stringResource(Res.string.terminal40Copy),
+                                            {
+                                                menu = false
+                                                actions.copy()
+                                            },
+                                        )
+                                    )
+                                    add(
+                                        KitMenuItem(
+                                            stringResource(Res.string.terminal40Paste),
+                                            {
+                                                menu = false
+                                                actions.paste()
+                                            },
+                                            enabled =
+                                                if (connected) canAct
+                                                else KitEnabled.Disabled(unavailable),
+                                        )
+                                    )
+                                    add(
+                                        KitMenuItem(
+                                            stringResource(Res.string.terminal40Reconnect),
+                                            {
+                                                menu = false
+                                                actions.reconnect()
+                                            },
+                                        )
+                                    )
+                                    add(
+                                        KitMenuItem(
+                                            stringResource(Res.string.terminal40Rename),
+                                            {
+                                                menu = false
+                                                actions.askRename()
+                                            },
+                                            enabled = canAct,
+                                        )
+                                    )
+                                    add(
+                                        KitMenuItem(
+                                            stringResource(Res.string.kitDetails),
+                                            {
+                                                menu = false
+                                                actions.details()
+                                            },
+                                        )
+                                    )
+                                    add(
+                                        KitMenuItem(
+                                            stringResource(
+                                                if (selected.running) Res.string.terminal40Stop
+                                                else Res.string.terminal40Remove
+                                            ),
+                                            {
+                                                menu = false
+                                                actions.askRemove()
+                                            },
+                                            destructive = true,
+                                            enabled = canAct,
+                                        )
+                                    )
+                                }
+                                if (state.processes.any { !it.running })
+                                    add(
+                                        KitMenuItem(
+                                            stringResource(Res.string.terminal40RemoveEnded),
+                                            {
+                                                menu = false
+                                                actions.askRemoveEnded()
+                                            },
+                                            destructive = true,
+                                            enabled = canAct,
+                                        )
+                                    )
+                            },
+                        onDismissRequest = { menu = false },
+                        anchor = {
+                            KitIconButton(
+                                KitIcons.more,
+                                stringResource(Res.string.terminal40Actions),
+                                { menu = true },
+                            )
+                        },
+                    )
+                },
             )
         },
     ) {
@@ -138,117 +255,6 @@ public fun TerminalScreen(state: TerminalUi, actions: TerminalActions) {
                     },
                 )
             }
-            KitMenu(
-                expanded = menu,
-                items =
-                    buildList {
-                        add(
-                            KitMenuItem(
-                                stringResource(Res.string.terminal40New),
-                                {
-                                    menu = false
-                                    actions.create()
-                                },
-                                enabled = canAct,
-                            )
-                        )
-                        if (selected != null) {
-                            if (state.grid != null)
-                                add(
-                                    KitMenuItem(
-                                        stringResource(Res.string.terminal40Select),
-                                        {
-                                            menu = false
-                                            actions.selectText()
-                                        },
-                                        checked = state.selecting,
-                                    )
-                                )
-                            add(
-                                KitMenuItem(
-                                    stringResource(Res.string.terminal40Copy),
-                                    {
-                                        menu = false
-                                        actions.copy()
-                                    },
-                                )
-                            )
-                            add(
-                                KitMenuItem(
-                                    stringResource(Res.string.terminal40Paste),
-                                    {
-                                        menu = false
-                                        actions.paste()
-                                    },
-                                    enabled =
-                                        if (connected) canAct else KitEnabled.Disabled(unavailable),
-                                )
-                            )
-                            add(
-                                KitMenuItem(
-                                    stringResource(Res.string.terminal40Reconnect),
-                                    {
-                                        menu = false
-                                        actions.reconnect()
-                                    },
-                                )
-                            )
-                            add(
-                                KitMenuItem(
-                                    stringResource(Res.string.terminal40Rename),
-                                    {
-                                        menu = false
-                                        actions.askRename()
-                                    },
-                                    enabled = canAct,
-                                )
-                            )
-                            add(
-                                KitMenuItem(
-                                    stringResource(Res.string.kitDetails),
-                                    {
-                                        menu = false
-                                        actions.details()
-                                    },
-                                )
-                            )
-                            add(
-                                KitMenuItem(
-                                    stringResource(
-                                        if (selected.running) Res.string.terminal40Stop
-                                        else Res.string.terminal40Remove
-                                    ),
-                                    {
-                                        menu = false
-                                        actions.askRemove()
-                                    },
-                                    destructive = true,
-                                    enabled = canAct,
-                                )
-                            )
-                        }
-                        if (state.processes.any { !it.running })
-                            add(
-                                KitMenuItem(
-                                    stringResource(Res.string.terminal40RemoveEnded),
-                                    {
-                                        menu = false
-                                        actions.askRemoveEnded()
-                                    },
-                                    destructive = true,
-                                    enabled = canAct,
-                                )
-                            )
-                    },
-                onDismissRequest = { menu = false },
-                anchor = {
-                    KitButton(
-                        stringResource(Res.string.terminal40Actions),
-                        { menu = true },
-                        role = KitButtonRole.Tertiary,
-                    )
-                },
-            )
             if (selected == null) {
                 if (state.phase != TerminalPhase.Opening)
                     KitNotice(stringResource(Res.string.terminal40Empty))
@@ -263,46 +269,6 @@ public fun TerminalScreen(state: TerminalUi, actions: TerminalActions) {
                             }
                         )
                     )
-                KitTerminalKeybar(
-                    keys =
-                        listOf(
-                            KitTerminalKeyChoice("escape", stringResource(Res.string.terminal40Escape)),
-                            KitTerminalKeyChoice("tab", stringResource(Res.string.terminal40Tab)),
-                            KitTerminalKeyChoice(
-                                "ctrl",
-                                stringResource(Res.string.terminal40Ctrl),
-                                state.control,
-                            ),
-                            KitTerminalKeyChoice(
-                                "alt",
-                                stringResource(Res.string.terminal40Alt),
-                                state.alt,
-                            ),
-                            KitTerminalKeyChoice("left", stringResource(Res.string.terminal40Left)),
-                            KitTerminalKeyChoice("up", stringResource(Res.string.terminal40Up)),
-                            KitTerminalKeyChoice("down", stringResource(Res.string.terminal40Down)),
-                            KitTerminalKeyChoice("right", stringResource(Res.string.terminal40Right)),
-                            KitTerminalKeyChoice("|", stringResource(Res.string.terminal40Pipe)),
-                            KitTerminalKeyChoice("~", stringResource(Res.string.terminal40Tilde)),
-                            KitTerminalKeyChoice("/", stringResource(Res.string.terminal40Slash)),
-                            KitTerminalKeyChoice("-", stringResource(Res.string.terminal40Dash)),
-                            KitTerminalKeyChoice("home", stringResource(Res.string.terminal40Home)),
-                            KitTerminalKeyChoice("end", stringResource(Res.string.terminal40End)),
-                            KitTerminalKeyChoice("pageUp", stringResource(Res.string.terminal40PageUp)),
-                            KitTerminalKeyChoice(
-                                "pageDown",
-                                stringResource(Res.string.terminal40PageDown),
-                            ),
-                            KitTerminalKeyChoice(
-                                "interrupt",
-                                stringResource(Res.string.terminal40Interrupt),
-                            ),
-                            KitTerminalKeyChoice("eof", stringResource(Res.string.terminal40Eof)),
-                        ),
-                    enabled =
-                        if (connected) KitEnabled.Enabled else KitEnabled.Disabled(unavailable),
-                    onKey = actions::key,
-                )
                 state.details?.let { detail ->
                     KitDetailsFold(
                         label = stringResource(Res.string.kitDetails),
@@ -341,7 +307,9 @@ public fun TerminalScreen(state: TerminalUi, actions: TerminalActions) {
                             accessibleMode = state.accessibleMode,
                             onAccessibleModeChange = actions::accessibleMode,
                             transcript = state.transcript,
-                            onSend = actions::send,
+                            onSend = { actions.send(keys.apply(it)) },
+                            defaultKeyBar = false,
+                            showAccessibleSwitch = false,
                             inputEnabled = connected,
                             words =
                                 KitTerminalWords(
@@ -355,6 +323,17 @@ public fun TerminalScreen(state: TerminalUi, actions: TerminalActions) {
                                 ),
                             modifier = Modifier.fillMaxSize(),
                         )
+                    },
+                )
+                TerminalKeyBar(
+                    controller = keys,
+                    enabled = connected,
+                    disabledReason = unavailable,
+                    interruptKeys = true,
+                    onKey = { key, ctrl, alt ->
+                        if (ctrl) actions.key("ctrl")
+                        if (alt) actions.key("alt")
+                        actions.key(terminalActionKey(key))
                     },
                 )
             }
@@ -387,3 +366,15 @@ public fun TerminalScreen(state: TerminalUi, actions: TerminalActions) {
         )
     }
 }
+
+/** The view model's existing named-key path retains the platform cursor-key mode. */
+internal fun terminalActionKey(key: KitTerminalBarKey): String =
+    when (key) {
+        KitTerminalBarKey.Esc -> "escape"
+        KitTerminalBarKey.Tab -> "tab"
+        KitTerminalBarKey.Interrupt -> "interrupt"
+        KitTerminalBarKey.EndOfInput -> "eof"
+        KitTerminalBarKey.PageUp -> "pageUp"
+        KitTerminalBarKey.PageDown -> "pageDown"
+        else -> key.text ?: key.name.replaceFirstChar { it.lowercase() }
+    }
