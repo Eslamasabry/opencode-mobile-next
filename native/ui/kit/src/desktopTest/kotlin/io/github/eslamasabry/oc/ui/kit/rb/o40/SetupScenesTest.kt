@@ -1,10 +1,20 @@
+@file:OptIn(androidx.compose.ui.test.ExperimentalTestApi::class)
+
 package io.github.eslamasabry.oc.ui.kit.rb.o40
 
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
+import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate
+import io.github.eslamasabry.oc.ui.kit.KitTheme
+import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.setup.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 
 class SetupScenesTest {
     @Test
@@ -43,6 +53,57 @@ class SetupScenesTest {
     @Test
     fun folders() {
         FlutterGoldenGate.check("kit_folders_open") { KitSetupFolders() }
+    }
+
+    @Test fun freshPhone() = phone("fresh", KitSetupPhoneMood.Fresh)
+
+    @Test fun startingPhone() = phone("starting", KitSetupPhoneMood.Starting)
+
+    @Test fun termuxPhone() = phone("termux", KitSetupPhoneMood.Termux)
+
+    @Test fun readyPhone() = phone("phone_ready", KitSetupPhoneMood.Ready)
+
+    @Test fun stoppedPhone() = phone("stopped", KitSetupPhoneMood.Stopped)
+
+    @Test fun celebration() = phone("ready", KitSetupPhoneMood.Celebration)
+
+    @Test
+    fun `motion off finishes an ambient scene without starting its loop`() = runComposeUiTest {
+        var frame: SetupSceneFrame? = null
+        setContent {
+            KitTheme(
+                platform = DesktopKitPlatform(),
+                appearance = KitAppearance(motion = MotionLevel.Off),
+            ) {
+                frame = setupSceneFrame(ambient = true)
+            }
+        }
+        runOnIdle {
+            assertEquals(1f, frame?.entrance)
+            assertEquals(0f, frame?.loop)
+            assertFalse(frame!!.looping)
+        }
+    }
+
+    @Test
+    fun `disabled celebrations show the finished frame with no waiting loop`() = runComposeUiTest {
+        var frame: SetupSceneFrame? = null
+        setContent {
+            KitTheme(
+                platform = DesktopKitPlatform(),
+                appearance = KitAppearance(celebrations = false),
+            ) {
+                frame = setupSceneFrame(ambient = false, celebration = true)
+            }
+        }
+        runOnIdle {
+            assertEquals(1f, frame?.entrance)
+            assertFalse(frame!!.looping)
+        }
+    }
+
+    private fun phone(name: String, mood: KitSetupPhoneMood) {
+        FlutterGoldenGate.check("kit_setup_$name") { KitSetupPhone(mood, Modifier.width(240.dp)) }
     }
 
     private fun strip(

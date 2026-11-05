@@ -36,6 +36,7 @@ import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.motion.CurveId
 import io.github.eslamasabry.oc.ui.kit.motion.KitEasing
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import kotlin.math.PI
 import kotlin.math.atan2
@@ -84,14 +85,14 @@ internal data class SetupSceneFrame(val entrance: Float, val loop: Float, val lo
  * loop.
  */
 @Composable
-private fun setupSceneFrame(ambient: Boolean): SetupSceneFrame {
+internal fun setupSceneFrame(ambient: Boolean, celebration: Boolean = false): SetupSceneFrame {
     val motion = KitMotion.state
-    val instant = motion.reduced || motion.stillFrame
+    val instant = motion.reduced || motion.stillFrame || (celebration && !LocalKitAppearance.current.celebrations)
     val entrance = remember { Animatable(if (instant) 1f else 0f) }
     val loop = remember { Animatable(0f) }
     LaunchedEffect(instant) {
         if (instant) entrance.snapTo(1f)
-        else entrance.animateTo(1f, tween(FlutterKitMotion.ENTRANCE_MS, easing = LinearEasing))
+        else entrance.animateTo(1f, tween(if (celebration) FlutterKitMotion.CELEBRATION_MS else FlutterKitMotion.ENTRANCE_MS, easing = LinearEasing))
     }
     val looping = ambient && motion.ambientLoops && entrance.value == 1f
     LaunchedEffect(looping) {
@@ -109,16 +110,16 @@ private fun setupSceneFrame(ambient: Boolean): SetupSceneFrame {
     )
 }
 
-private fun Color.faded(alpha: Float): Color = copy(alpha = this.alpha * alpha.coerceIn(0f, 1f))
+internal fun Color.faded(alpha: Float): Color = copy(alpha = this.alpha * alpha.coerceIn(0f, 1f))
 
-private fun scenePen(width: Float = 5f): Stroke = // F: lib/ui/kit/kit_illustration.dart:164-174
+internal fun scenePen(width: Float = 5f): Stroke = // F: lib/ui/kit/kit_illustration.dart:164-174
     Stroke(
         width,
         cap = StrokeCap.Round,
         join = StrokeJoin.Round,
     ) // F: lib/ui/kit/kit_illustration.dart:164-174
 
-private fun DrawScope.scenePath(
+internal fun DrawScope.scenePath(
     path: Path,
     value: Float,
     color: Color,
@@ -135,7 +136,7 @@ private fun DrawScope.scenePath(
 }
 
 /** SetupCast's circular bracket corners, rather than an approximation with quadratic corners. */
-private fun DrawScope.scenePortal(
+internal fun DrawScope.scenePortal(
     at: Offset,
     span: Float,
     color: Color,
