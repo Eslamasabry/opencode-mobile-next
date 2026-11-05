@@ -22,5 +22,20 @@ apply(from = rootProject.file("gradle/desktop-golden-fonts.gradle"))
 
 // looks capture only: stale existing tests in this module do not compile; compile only the capture test and fixtures.
 kotlin.sourceSets.matching { it.name == "commonTest" || it.name == "desktopTest" }.configureEach {
-    kotlin.exclude { it.file.name.endsWith("Test.kt") && it.file.name != "LooksCaptureTest.kt" }
+    kotlin.exclude { it.file.name.endsWith("Test.kt") && it.file.name != "LooksCaptureTest.kt" && !it.file.invariantSeparatorsPath.contains("/rb/o48/") }
+}
+
+// Order 48's phone catalog compiles each owned management feature in the render gate.
+kotlin.sourceSets.getByName("desktopTest") {
+    kotlin.srcDir("../../ui/gate/src/desktopMain/kotlin")
+    resources.srcDir("../../ui/gate/src/desktopMain/resources")
+    dependencies {
+        implementation(project(":feature:linux"))
+        implementation(project(":feature:background"))
+        implementation(project(":feature:manage-space"))
+    }
+}
+tasks.withType<Test>().matching { it.name == "desktopTest" }.configureEach {
+    outputs.upToDateWhen { false }
+    outputs.cacheIf { false }
 }

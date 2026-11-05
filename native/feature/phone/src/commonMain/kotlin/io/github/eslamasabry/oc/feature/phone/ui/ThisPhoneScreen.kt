@@ -1,6 +1,18 @@
 package io.github.eslamasabry.oc.feature.phone.ui
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.feature.phone.presentation.AnswerTone
+import io.github.eslamasabry.oc.feature.phone.presentation.AnswerHeadline
+import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.state.KitStatusAnswer
+import io.github.eslamasabry.oc.ui.kit.state.KitAnswerTone
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.words.res.firstRunAgentOpenCode
+import io.github.eslamasabry.oc.ui.words.res.thisPhoneHostInApp
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -137,6 +149,7 @@ public fun ThisPhoneScreen(
     val back = stringResource(Res.string.kitTopBarBack)
     val busyWords = stringResource(Res.string.thisPhoneBusy)
     val busy = state.working != null
+    val installed = state.details.installed || state.version != null || state.serverRows.isNotEmpty()
     KitScreen(
         topBar = {
             KitTopBar(
@@ -147,6 +160,7 @@ public fun ThisPhoneScreen(
             )
         },
         width = KitScreenWidth.Reading,
+        loading = state.answer.headline == AnswerHeadline.Checking,
         bottom = {
             state.answer.primary?.let { act ->
                 KitActionBlock(
@@ -160,6 +174,8 @@ public fun ThisPhoneScreen(
             }
         },
     ) {
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+        val available = maxHeight
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
             val migrationActions =
                 actions
@@ -264,11 +280,26 @@ public fun ThisPhoneScreen(
                         ),
                 )
             }
-            KitNotice(
-                message = state.answer.line?.words() ?: state.answer.headline.words(),
-                title = if (state.answer.line != null) state.answer.headline.words() else null,
-                tone = state.answer.tone.status(),
-            )
+            Box(Modifier.fillMaxWidth().heightIn(min = if (installed) 0.dp else available)
+                .padding(vertical = Space.S6.dp), contentAlignment = Alignment.Center) {
+                KitStatusAnswer(
+                    answer = state.answer.headline.words(),
+                    line = state.answer.line?.words(),
+                    tone = when (state.answer.tone) {
+                        AnswerTone.Ok -> KitAnswerTone.Ok
+                        AnswerTone.Working -> KitAnswerTone.Working
+                        AnswerTone.Off -> KitAnswerTone.Off
+                        AnswerTone.Paused -> KitAnswerTone.Paused
+                        AnswerTone.NeedsYou -> KitAnswerTone.NeedsYou
+                    },
+                )
+            }
+            if (installed) {
+            KitRowGroup {
+                KitRow(title = stringResource(Res.string.firstRunAgentOpenCode),
+                    supporting = stringResource(Res.string.thisPhoneHostInApp),
+                    leading = KitRowLeading.Glyph(KitIcons.phone))
+            }
             state.lifecycle
                 ?.takeIf { it.showNotice }
                 ?.let { report ->
@@ -327,6 +358,7 @@ public fun ThisPhoneScreen(
                             ServerRow.Stop ->
                                 KitRow(
                                     title = stringResource(Res.string.thisPhoneStop),
+                                    leading = KitRowLeading.Glyph(KitIcons.stopCircle),
                                     enabled = !busy,
                                     disabledReason = busyWords,
                                     onClick = actions::stopServer,
@@ -334,6 +366,7 @@ public fun ThisPhoneScreen(
                             ServerRow.Restart ->
                                 KitRow(
                                     title = stringResource(Res.string.thisPhoneRestartRow),
+                                    leading = KitRowLeading.Glyph(KitIcons.restart),
                                     enabled = !busy,
                                     disabledReason = busyWords,
                                     onClick = actions::askRestart,
@@ -553,6 +586,8 @@ public fun ThisPhoneScreen(
                 )
             }
             PhoneDetailsPanel(state, actions)
+            }
+        }
         }
     }
     KitConfirm(
