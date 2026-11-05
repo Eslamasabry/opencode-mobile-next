@@ -353,6 +353,10 @@ private fun PlanDetails(
     onAdd: ((String, String?) -> Unit)?,
     close: () -> Unit,
 ) {
+    val hold =
+        if (management?.busy == true)
+            KitEnabled.Disabled(stringResource(Res.string.e7AppearanceSaving))
+        else KitEnabled.Enabled
     Column(
         Modifier.verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
@@ -417,6 +421,7 @@ private fun PlanDetails(
                     true,
                     management.preferences.threshold,
                     inherited = !card.hasAlertOverride,
+                    enabled = hold,
                 ) {
                     manage.setThreshold(card.key, if (it < 0) null else it)
                 }
@@ -424,9 +429,18 @@ private fun PlanDetails(
                     title = stringResource(Res.string.m40UsageReset),
                     supporting = stringResource(Res.string.m40UsageResetHelp),
                     checked = card.notifyReset,
+                    enabled = hold,
                     onCheckedChange = { manage.setReset(card.key, it) },
                 )
             }
+        management?.failure?.let {
+            KitErrorNotice(
+                stringResource(Res.string.m40UsageSaveFailed),
+                failure = it,
+                detailsLabel = words.details,
+                copyLabel = words.copyDetails,
+            )
+        }
         if (manage != null && management != null) {
             for (connection in
                 (card.signedInOn.map { it.connection } + listOfNotNull(card.readFrom)).distinctBy {

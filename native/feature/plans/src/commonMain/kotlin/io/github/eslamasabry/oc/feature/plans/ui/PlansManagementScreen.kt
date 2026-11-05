@@ -22,6 +22,7 @@ import io.github.eslamasabry.oc.ui.kit.choice.*
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.frame.*
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.row.*
 import io.github.eslamasabry.oc.ui.kit.state.*
 import io.github.eslamasabry.oc.ui.words.res.*
@@ -112,20 +113,32 @@ public fun PlansManagementScreen(
 @Composable
 private fun AlertsBody(state: PlansManagementUi, plans: PlansUi, actions: PlansManagementActions) {
     val p = state.preferences
+    val hold =
+        if (state.busy) KitEnabled.Disabled(stringResource(Res.string.e7AppearanceSaving))
+        else KitEnabled.Enabled
     KitRowGroup {
         KitSwitchRow(
             title = stringResource(Res.string.m40UsageAlertsWatch),
             supporting = stringResource(Res.string.m40UsageAlertsEvery),
             checked = p.enabled,
+            enabled = hold,
+            supportingMaxLines = 2, // F: lib/ui/screens/usage/usage_alerts_screen.dart:135
             onCheckedChange = actions::setAlerts,
         )
     }
     if (!p.enabled) return
     KitRowGroup(label = stringResource(Res.string.m40UsageTellMe)) {
-        ThresholdChooser(p.threshold, false, null, onSelect = actions::setDefaultThreshold)
+        ThresholdChooser(
+            p.threshold,
+            false,
+            null,
+            enabled = hold,
+            onSelect = actions::setDefaultThreshold,
+        )
         KitSwitchRow(
             title = stringResource(Res.string.m40UsageReset),
             checked = p.notifyReset,
+            enabled = hold,
             onCheckedChange = actions::setDefaultReset,
         )
     }
@@ -142,12 +155,14 @@ private fun AlertsBody(state: PlansManagementUi, plans: PlansUi, actions: PlansM
                     true,
                     p.threshold,
                     inherited = !card.hasAlertOverride,
+                    enabled = hold,
                 ) {
                     actions.setThreshold(card.key, if (it < 0) null else it)
                 }
                 KitSwitchRow(
                     title = stringResource(Res.string.m40UsageReset),
                     checked = card.notifyReset,
+                    enabled = hold,
                     onCheckedChange = { actions.setReset(card.key, it) },
                 )
             }
@@ -157,6 +172,7 @@ private fun AlertsBody(state: PlansManagementUi, plans: PlansUi, actions: PlansM
             title = stringResource(Res.string.m40UsageQuiet),
             supporting = stringResource(Res.string.m40UsageQuietShared),
             checked = p.quietStart != null && p.quietEnd != null,
+            enabled = hold,
             onCheckedChange = actions::setQuiet,
         )
         if (p.quietStart != null && p.quietEnd != null) {
@@ -164,11 +180,13 @@ private fun AlertsBody(state: PlansManagementUi, plans: PlansUi, actions: PlansM
                 stringResource(Res.string.m40UsageQuietStart),
                 p.quietStart,
                 actions::setQuietStart,
+                hold,
             )
             MinuteChooser(
                 stringResource(Res.string.m40UsageQuietEnd),
                 p.quietEnd,
                 actions::setQuietEnd,
+                hold,
             )
             if (p.quietStart == p.quietEnd)
                 KitNotice(stringResource(Res.string.m40UsageQuietAllDay))
@@ -176,10 +194,19 @@ private fun AlertsBody(state: PlansManagementUi, plans: PlansUi, actions: PlansM
         KitSwitchRow(
             title = stringResource(Res.string.m40UsageWifi),
             checked = p.wifiOnly,
+            enabled = hold,
             onCheckedChange = actions::setWifi,
         )
     }
-    if (plans.cards.isEmpty()) KitNotice(stringResource(Res.string.m40UsageNothingToWatch))
+    if (
+        plans.phase == PlansPhase.Empty || (plans.phase == PlansPhase.List && plans.cards.isEmpty())
+    )
+        KitText(
+            stringResource(Res.string.m40UsageNothingToWatch),
+            Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
+            role = TypeRole.Caption,
+            tone = TextTone.Secondary,
+        )
 }
 
 @Composable
@@ -188,49 +215,91 @@ internal fun ThresholdChooser(
     inherit: Boolean,
     default: Int?,
     inherited: Boolean = false,
+    enabled: KitEnabled = KitEnabled.Enabled,
     onSelect: (Int) -> Unit,
 ) {
     var open by remember { mutableStateOf(false) }
-    KitRow(
-        title = stringResource(Res.string.m40UsageDownTo),
-        trailing = KitRowTrailing.Value(plansWords().left(100 - level)),
-        onClick = { open = !open },
-    )
-    if (open) {
+    val title = stringResource(if (inherit) Res.string.usageAlertAt else Res.string.m40UsageDownTo)
+    @Composable
+    fun label(value: Int): String =
+        if (inherit) stringResource(Res.string.usageUsedPercent, value.toString())
+        else plansWords().left(100 - value)
+    val choices = buildList {
         if (inherit && default != null)
-            KitChoiceRow(
-                title = stringResource(Res.string.m40UsageSameAsOthers, 100 - default),
-                selected = inherited,
+            add(
+                KitChoice(
+                    -1,
+                    stringResource(Res.string.usageAlertSameAsOthers, default.toString()),
+                    enabled = enabled,
+                )
+            )
+        for (value in
+            (listOf(50, 60, 70, 80, 90, 100) + level)
+                .distinct()
+                .sorted()) // F: lib/ui/screens/usage/usage_alerts_screen.dart:13
+        add(KitChoice(value, label(value), enabled = enabled))
+    }
+    KitRow(
+        title = title,
+        trailing = KitRowTrailing.Value(label(level)),
+        enabled = enabled.isEnabled,
+        disabledReason = enabled.reason,
+        onClick = { open = !open },
+        modifier = Modifier.testTag("usage-alert-threshold"),
+    )
+    if (inherit) {
+        // Subscription details still use the existing sheet; its owner must provide a page before
+        // a second sheet can replace it. Keep this available path until that navigation seam lands.
+        if (open)
+            for (choice in choices) KitChoiceRow(
+                title = choice.title,
+                selected = choice.value == if (inherited) -1 else level,
+                enabled = enabled,
                 onClick = {
                     open = false
-                    onSelect(-1)
+                    onSelect(choice.value)
                 },
             )
-        for (value in (listOf(50, 60, 70, 80, 90, 100) + level).distinct().sorted()) KitChoiceRow(
-            title = plansWords().left(100 - value),
-            selected = !inherited && value == level,
-            onClick = {
-                open = false
-                onSelect(value)
-            },
-        )
-    }
+    } else
+        KitSheet(
+            visible = open,
+            title = title,
+            onDismissRequest = { open = false },
+        ) {
+            KitChoiceList(
+                choices,
+                level,
+                title,
+                onSelect = {
+                    open = false
+                    onSelect(it)
+                },
+            )
+        }
 }
 
 @Composable
-private fun MinuteChooser(title: String, minute: Int, onSelect: (Int) -> Unit) {
+private fun MinuteChooser(
+    title: String,
+    minute: Int,
+    onSelect: (Int) -> Unit,
+    enabled: KitEnabled = KitEnabled.Enabled,
+) {
     var open by remember { mutableStateOf(false) }
     fun clock(value: Int) =
         "${(value/60).toString().padStart(2,'0')}:${(value%60).toString().padStart(2,'0')}"
     KitRow(
         title = title,
         trailing = KitRowTrailing.Value(clock(minute)),
+        enabled = enabled.isEnabled,
+        disabledReason = enabled.reason,
         onClick = { open = !open },
     )
     if (open)
         for (value in ((0 until 1440 step 30).toList() + minute).distinct().sorted()) KitChoiceRow(
             title = clock(value),
             selected = value == minute,
+            enabled = enabled,
             onClick = {
                 open = false
                 onSelect(value)
