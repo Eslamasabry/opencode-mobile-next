@@ -31,8 +31,22 @@ import io.github.eslamasabry.oc.ui.kit.motion.KitDimLevel
 import io.github.eslamasabry.oc.ui.kit.motion.KitSpin
 import io.github.eslamasabry.oc.ui.kit.motion.KitSwap
 import io.github.eslamasabry.oc.ui.kit.motion.kitDim
+import androidx.compose.ui.text.font.FontWeight
+import io.github.eslamasabry.oc.ui.kit.theme.KitFontFamilies
+import io.github.eslamasabry.oc.ui.kit.theme.KitTypography
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import kotlin.test.Test
+
+private val MaterialTerminal: androidx.compose.ui.graphics.vector.ImageVector =
+    androidx.compose.ui.graphics.vector.ImageVector.Builder(defaultWidth = 24.dp, defaultHeight = 24.dp, viewportWidth = 24f, viewportHeight = 24f).apply {
+        addPath(
+            androidx.compose.ui.graphics.vector.PathParser().parsePathString(
+                "M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8h16v10zm-2-1h-6v-2h6v2zM7.5 17l-1.41-1.41L8.67 13l-2.59-2.59L7.5 9l4 4-4 4z",
+            ).toNodes(),
+            fill = androidx.compose.ui.graphics.SolidColor(Color.Black),
+        )
+    }.build()
 
 /** Every scene of test/goldens/kit/kit_motion_parts_golden_test.dart, with its inputs. */
 class KitMotionGateTest {
@@ -61,7 +75,10 @@ class KitMotionGateTest {
     private val spinFixed: @Composable () -> Unit = {
         GalleryScene("KitSpin.fixed") {
             KitSpin(0.25f) {
-                androidx.compose.foundation.Image(KitIcons.terminal, null, Modifier.size(28.dp), colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color(LocalKitRoles.current.text2.v)))
+                // The Dart scene's `Icons.terminal` is the Material glyph, not a Phosphor one: its outline, as the test input.
+                val tint = Color(LocalKitRoles.current.text2.v)
+                val glyph = androidx.compose.ui.graphics.vector.rememberVectorPainter(MaterialTerminal)
+                androidx.compose.foundation.Image(glyph, null, Modifier.size(28.dp), colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(tint))
             }
         }
     }
@@ -97,6 +114,24 @@ class KitMotionGateTest {
 
     private fun shot(name: String, textScale: Float? = null, content: @Composable () -> Unit) { FlutterGoldenGate.check(name, textScale = textScale, content = content) }
 
+    /** The `_ar` goldens: Flutter's test loads its Noto Sans Arabic fixture, so the kit's Arabic roles use it here too. */
+    private fun shotAr(name: String, textScale: Float, content: @Composable () -> Unit) {
+        FlutterGoldenGate.check(
+            name,
+            textScale = textScale,
+            wrap = { inner ->
+                val regular = androidx.compose.ui.text.platform.Font("NotoSansArabic-Regular", fixtureBytes("NotoSansArabic-Regular.ttf"), FontWeight.Normal)
+                val bold = androidx.compose.ui.text.platform.Font("NotoSansArabic-Bold", fixtureBytes("NotoSansArabic-Bold.ttf"), FontWeight.Bold)
+                val fixture = androidx.compose.ui.text.font.FontFamily(regular, bold)
+                val families = androidx.compose.runtime.remember { KitFontFamilies(fixture, fixture) }
+                androidx.compose.runtime.CompositionLocalProvider(LocalKitTypography provides KitTypography(families, true)) { inner() }
+            },
+            content = content,
+        )
+    }
+
+    private fun fixtureBytes(name: String): ByteArray = checkNotNull(javaClass.getResourceAsStream("/fonts/$name")).readBytes()
+
     @Test fun swap_before() = shot("kit_motion_swap_before", content = swapBefore)
     @Test fun swap_after() = shot("kit_motion_swap_after", content = swapAfter)
     @Test fun spin_chevron_closed() = shot("kit_motion_spin_chevron_closed", content = chevron(false, "Show details"))
@@ -119,9 +154,9 @@ class KitMotionGateTest {
     @Test fun swap_text2_and_ar() {
         for (size in listOf("", "_1280x800")) {
             shot("kit_motion_swap_after_text2$size", content = swapAfter)
-            shot("kit_motion_swap_after_ar$size", 1.3f, swapAfterAr)
+            shotAr("kit_motion_swap_after_ar$size", 1.3f, swapAfterAr)
             shot("kit_motion_spin_chevron_open_text2$size", content = chevron(true, "Hide details"))
-            shot("kit_motion_spin_chevron_open_ar$size", 1.3f, chevron(true, "إخفاء التفاصيل"))
+            shotAr("kit_motion_spin_chevron_open_ar$size", 1.3f, chevron(true, "إخفاء التفاصيل"))
         }
     }
 

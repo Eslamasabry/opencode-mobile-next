@@ -30,6 +30,7 @@ import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.kit.KitTheme
+import io.github.eslamasabry.oc.ui.kit.foundation.LocalKitPixelRatio
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import java.awt.Color
@@ -51,7 +52,9 @@ enum class GateRef(val dir: String) { Product("8302de537"), Glass("1bbdc3f9c") }
  * Window and density per golden: an explicit `window`/`density` argument to [check], else the golden's line in
  * `looks-gate/flutter/<ref>/render.tsv` (written by `rb_gate.py fetch` from the golden's PNG size and its Flutter
  * test's capture `pixelRatio`, or an explicit `WxH@D` column in NN.gate.tsv), else the name at density 1. A shot at
- * density D renders at W x H dp into a (W·D) x (H·D) px picture, like Flutter's `toImage(pixelRatio: D)`.
+ * density D renders at W x H dp into a (W·D) x (H·D) px picture, like Flutter's `toImage(pixelRatio: D)`. The 6th
+ * render.tsv column is the test view's device pixel ratio (3 in the kit gallery, which captures at 1x), provided as
+ * `LocalKitPixelRatio` so a one-physical-pixel hairline is a third of a picture pixel, as in the golden.
  * Output, under `looks-out/gate/`:
  * `<shot>_<mode>-{flutter,native,diff}.png` and `rows/<shot>_<mode>.tsv`.
  */
@@ -82,7 +85,7 @@ object FlutterGoldenGate {
     private fun pct(d: Double): String = String.format(Locale.ROOT, "%.2f", d) // NV: two decimals, standard §8.2
 
     /** What a name asks for. */
-    internal class Axes(val rtl: Boolean, val scale: Float, val w: Int, val h: Int, val d: Float = 1f)
+    internal class Axes(val rtl: Boolean, val scale: Float, val w: Int, val h: Int, val d: Float = 1f, val ratio: Float? = null)
 
     internal fun axesOf(name: String): Axes {
         val m = nameRx.matchEntire(name)!!
@@ -90,26 +93,41 @@ object FlutterGoldenGate {
         return Axes(rtl = ar.isNotEmpty(), scale = if (text2.isNotEmpty()) TEXT2 else 1f, w = w.toIntOrNull() ?: window.first, h = h.toIntOrNull() ?: window.second)
     }
 
-    /** shot -> (w dp, h dp, density) from `<ref>/render.tsv`, read once per ref. */
-    private val renders = HashMap<GateRef, Map<String, Triple<Int, Int, Float>>>()
+    /** One line of `<ref>/render.tsv`: window in dp, picture density, and the Flutter view's device pixel ratio. */
+    internal class Render(val w: Int, val h: Int, val d: Float, val ratio: Float?)
 
-    internal fun renderOf(shot: String, ref: GateRef): Triple<Int, Int, Float>? = renders.getOrPut(ref) {
+    /** shot -> its render, from `<ref>/render.tsv`, read once per ref. */
+    private val renders = HashMap<GateRef, Map<String, Render>>()
+
+    internal fun renderOf(shot: String, ref: GateRef): Render? = renders.getOrPut(ref) {
         val f = File(flutterDir, "${ref.dir}/render.tsv")
         if (!f.isFile) emptyMap()
         else f.readLines().filter { it.isNotBlank() && !it.startsWith("#") }.map { it.split('\t') }.filter { it.size >= 4 } // NV: four columns
-            .associate { it[0] to Triple(it[1].toInt(), it[2].toInt(), it[3].toFloat()) } // NV: render.tsv columns shot, w dp, h dp, density
+            .associate { it[0] to Render(it[1].toInt(), it[2].toInt(), it[3].toFloat(), it.getOrNull(5)?.toFloatOrNull()) } // NV: columns shot, w, h, density, how, view ratio
     }[shot]
 
-    /** The axes of one shot `<name>_<mode>`: [window] and [density] win, then render.tsv, then the name. */
-    internal fun axesOf(name: String, mode: String, ref: GateRef, textScale: Float?, window: Pair<Int, Int>?, density: Float?): Axes {
+    /**
+     * The axes of one shot `<name>_<mode>`: [window], [density] and [pixelRatio] win, then render.tsv, then the name.
+     * The pixel ratio is the Flutter test view's (`LocalKitPixelRatio`: hairlines and focus rings follow it).
+     */
+    internal fun axesOf(
+        name: String,
+        mode: String,
+        ref: GateRef,
+        textScale: Float?,
+        window: Pair<Int, Int>?,
+        density: Float?,
+        pixelRatio: Float? = null,
+    ): Axes {
         val named = axesOf(name)
         val listed = renderOf("${name}_$mode", ref)
         return Axes(
             rtl = named.rtl,
             scale = textScale ?: named.scale,
-            w = window?.first ?: listed?.first ?: named.w,
-            h = window?.second ?: listed?.second ?: named.h,
-            d = density ?: listed?.third ?: 1f,
+            w = window?.first ?: listed?.w ?: named.w,
+            h = window?.second ?: listed?.h ?: named.h,
+            d = density ?: listed?.d ?: 1f,
+            ratio = pixelRatio ?: listed?.ratio,
         )
     }
 
@@ -128,12 +146,13 @@ object FlutterGoldenGate {
         textScale: Float? = null,
         window: Pair<Int, Int>? = null,
         density: Float? = null,
+        pixelRatio: Float? = null,
         act: (androidx.compose.ui.test.ComposeUiTest.() -> Unit)? = null,
         content: @Composable () -> Unit,
     ): Map<String, Double> {
         val result = LinkedHashMap<String, Double>()
         for (mode in modes) {
-            val axes = axesOf(name, mode, ref, textScale, window, density)
+            val axes = axesOf(name, mode, ref, textScale, window, density, pixelRatio)
             val native = render(axes, mode == "dark", motion, style, frame, wrap, content, act = act)
             result[mode] = compare("${name}_$mode", ref, native)
         }
@@ -161,6 +180,7 @@ object FlutterGoldenGate {
             setContent {
                 CompositionLocalProvider(
                     LocalDensity provides Density(axes.d, fontScale = scale),
+                    LocalKitPixelRatio provides axes.ratio,
                     LocalLayoutDirection provides if (rtl) LayoutDirection.Rtl else LayoutDirection.Ltr,
                 ) {
                     KitTheme(

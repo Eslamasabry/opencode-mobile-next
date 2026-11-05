@@ -1,0 +1,8 @@
+kit_foundation_work_light	DEPENDS_ON 11	part-kit_notice and part-kit_request_card: existing KitSummaryCard lacks the Flutter card APIs; rows also await order 08
+kit_foundation_work_dark	DEPENDS_ON 11	part-kit_notice and part-kit_request_card: existing KitSummaryCard lacks the Flutter card APIs; rows also await order 08
+kit_foundation_work_1280x800_light	DEPENDS_ON 11	part-kit_notice and part-kit_request_card: card APIs and painting await order 11; rows also await order 08
+kit_foundation_work_1280x800_dark	DEPENDS_ON 11	part-kit_notice and part-kit_request_card: card APIs and painting await order 11; rows also await order 08
+kit_foundation_work_ar_light	DEPENDS_ON 11	part-kit_notice and part-kit_request_card: Arabic card APIs and painting await order 11; rows also await order 08
+kit_foundation_work_ar_dark	DEPENDS_ON 11	part-kit_notice and part-kit_request_card: Arabic card APIs and painting await order 11; rows also await order 08
+kit_foundation_work_text2_light	DEPENDS_ON 11	part-kit_notice and part-kit_request_card: scaled card APIs and painting await order 11; rows also await order 08
+kit_foundation_work_text2_dark	DEPENDS_ON 11	part-kit_notice and part-kit_request_card: scaled card APIs and painting await order 11; rows also await order 08

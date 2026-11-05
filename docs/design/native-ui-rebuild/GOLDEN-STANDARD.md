@@ -297,6 +297,7 @@ Do the parts of your order in the order the order lists them. For each part:
 | `BoxShadow` | the decoration's `shadows` (spread, blur and offset copied; blur radius = Flutter `blurRadius`, sigma = blur/2) |
 | `AnimatedContainer`/`AnimationController` with `KitMotion` | `animate*AsState` / `Animatable` with `MotionTokens` durations and the same curve; under `MotionLevel.Off` or reduced motion: the end value at once |
 | `MediaQuery.textScalerOf` | `LocalDensity.current.fontScale`; chrome roles capped at 1.3 by `KitText` (`TextScalePolicy`), reading roles scale fully |
+| `KitTokens.hairlineWidth(context)`, `KitTokens.focusRingWidth(context)`, `MediaQuery.devicePixelRatioOf` | `kitHairline()`, `kitFocusRingWidth()`, `kitPixelRatio()` (`ui/kit/foundation/KitPixelRatio.kt`); never `1f / density`: the gate renders the kit gallery's DPR-3 view at density 1 and sets `LocalKitPixelRatio` to 3 (render.tsv), as Flutter draws a third-pixel hairline into its 1x golden |
 | `Directionality`/`EdgeInsetsDirectional` | `LocalLayoutDirection`; start/end padding; mirrored offsets (`hardOffset` dx) in RTL |
 | `LayoutBuilder` + `KitLayout.windowOf` | `BoxWithConstraints` + `WindowClass` |
 | `KitMaxWidth.<role>(child)` | `KitMaxWidth(CapRole.<Role>) { … }` |

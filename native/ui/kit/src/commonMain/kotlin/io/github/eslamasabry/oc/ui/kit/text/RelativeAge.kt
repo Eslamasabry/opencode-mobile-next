@@ -30,3 +30,30 @@ public fun kitRelativeAge(atMs: Long, nowMs: Long): String {
         }
     }
 }
+
+/** KitTime's locale-neutral selection; the platform supplies local calendar/clock formatting.
+ * All comparisons and formatters receive the same local value (kit_time.dart:42-57).
+ */
+public object KitTime {
+    public fun <T> clockWith(at: T, use24h: Boolean, toLocal: (T) -> T, formatTime: (T, Boolean) -> String): String =
+        formatTime(toLocal(at), use24h)
+
+    public fun <T> momentWith(
+        at: T,
+        now: T,
+        use24h: Boolean,
+        toLocal: (T) -> T,
+        sameDay: (T, T) -> Boolean,
+        sameYear: (T, T) -> Boolean,
+        formatTime: (T, Boolean) -> String,
+        formatMonthDay: (T) -> String,
+        formatDate: (T) -> String,
+    ): String {
+        val local = toLocal(at)
+        val today = toLocal(now)
+        val time = formatTime(local, use24h)
+        if (sameDay(local, today)) return time
+        val day = if (sameYear(local, today)) formatMonthDay(local) else formatDate(local)
+        return "$day, $time"
+    }
+}

@@ -19,14 +19,17 @@ public fun KitShapeId.toShape(): Shape = toShape(Corners.Round, 2f)
 
 /**
  * A named shape under the Corners knob (plan 06 §4.3, B-KIT-005): Round keeps the token, Soft takes about 60 %, Sharp
- * takes the style's `sharpRadius` (Paper 0, Signal 4, default 2). Stadiums and circles never change.
+ * takes the style's `sharpRadius`. Flutter's pillBorder becomes a sharp box under Sharp; circles stay round.
  */
 public fun KitShapeId.toShape(corners: Corners, sharpDp: Float): Shape =
     when (this) {
         KitShapeId.Circle -> CircleShape
-        KitShapeId.Pill -> RoundedCornerShape(percent = 50)
+        KitShapeId.Pill -> if (corners == Corners.Sharp) RoundedCornerShape(sharpDp.dp) else CircleShape
         KitShapeId.Square -> RectangleShape
-        KitShapeId.Sheet -> radius(corners, sharpDp).let { RoundedCornerShape(topStart = it, topEnd = it) }
+        KitShapeId.Sheet -> {
+            val sheetSharp = minOf(4f, sharpDp * 2f) // F: lib/ui/kit/kit_tokens.dart:672,688
+            radius(corners, sheetSharp).let { RoundedCornerShape(topStart = it, topEnd = it) }
+        }
         else -> RoundedCornerShape(radius(corners, sharpDp))
     }
 
