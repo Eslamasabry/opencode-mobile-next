@@ -22,7 +22,12 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
+import io.github.eslamasabry.oc.ui.kit.row.KitRowState
+import io.github.eslamasabry.oc.ui.kit.row.KitRowStateTone
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import org.jetbrains.compose.resources.pluralStringResource
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
@@ -42,7 +47,7 @@ public fun SessionRelationsScreen(state: SessionRelationsUi, actions: SessionRel
     KitScreen(
         topBar = {
             KitTopBar(
-                title = stringResource(Res.string.r40RelationsTitle),
+                title = stringResource(Res.string.sessionRelationsTitle),
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::back,
@@ -66,7 +71,7 @@ public fun SessionRelationsScreen(state: SessionRelationsUi, actions: SessionRel
             if (state.stale) {
                 item("stale") { KitNotice(message = stringResource(Res.string.r40RelationsStale)) }
             } else {
-                state.failure?.let { failure ->
+                state.failure?.takeIf { state.parent != null }?.let { failure ->
                     if (state.menu == null && state.stopping == null)
                         item("failure") {
                             KitErrorNotice(
@@ -83,10 +88,13 @@ public fun SessionRelationsScreen(state: SessionRelationsUi, actions: SessionRel
             }
             val parent = state.parent
             if (parent == null) {
-                if (state.loading) item("loading") { KitSkeletonRows() }
+                item("loading-or-failed") {
+                    if (state.loading) KitStateView(KitStateKind.Loading, stringResource(Res.string.sessionRelationsLoading), icon = KitIcons.nested)
+                    else KitStateView(KitStateKind.Error, stringResource(Res.string.r40RelationsFailure), failure = state.failure, onRetry = actions::refresh)
+                }
             } else {
                 item("parent") {
-                    KitRowGroup(label = stringResource(Res.string.r40RelationsParent)) {
+                    KitRowGroup(label = stringResource(Res.string.sessionRelationsStartedFrom)) {
                         RelationRowView(parent, state, actions)
                     }
                 }
@@ -102,10 +110,7 @@ public fun SessionRelationsScreen(state: SessionRelationsUi, actions: SessionRel
                     item("children") {
                         KitRowGroup(
                             label =
-                                stringResource(
-                                    Res.string.r40RelationsChildren,
-                                    Numbers.format(state.children.size),
-                                )
+                                pluralStringResource(Res.plurals.sessionRelationsSubagentCount, state.children.size, state.children.size)
                         ) {
                             state.children.forEach { RelationRowView(it, state, actions) }
                         }
@@ -142,20 +147,23 @@ private fun RelationRowView(
         when (row.status) {
             RelationStatus.NeedsYou -> stringResource(Res.string.r40RelationsNeedsYou)
             RelationStatus.Working -> stringResource(Res.string.r40RelationsWorking)
-            RelationStatus.Idle -> stringResource(Res.string.r40RelationsIdle)
-            RelationStatus.Done -> stringResource(Res.string.r40RelationsDone)
+            RelationStatus.Idle, RelationStatus.Done -> stringResource(if (row.parent) Res.string.sessionRelationsIdle else Res.string.r40RelationsDone)
         }
     KitRow(
         title = title(row),
         modifier = Modifier.testTag("session-relation-${row.id.raw}"),
-        supporting =
-            listOfNotNull(
-                    status,
-                    ageWords,
-                    if (row.current) stringResource(Res.string.r40RelationsCurrent) else null,
-                    if (row.pinned) stringResource(Res.string.r40RelationsPinned) else null,
-                )
-                .joinToString(" · "),
+        leading = when {
+            row.status == RelationStatus.NeedsYou || row.status == RelationStatus.Working -> null
+            row.parent -> KitRowLeading.Glyph(KitIcons.chat)
+            else -> KitRowLeading.Glyph(KitIcons.check)
+        },
+        state = KitRowState(status, when (row.status) {
+            RelationStatus.NeedsYou -> KitRowStateTone.NeedsYou
+            RelationStatus.Working -> KitRowStateTone.Running
+            else -> KitRowStateTone.Quiet
+        }),
+        supporting = if (row.status == RelationStatus.NeedsYou) stringResource(Res.string.sessionRelationsOpenToAnswer)
+            else listOfNotNull(ageWords, if (row.current) stringResource(Res.string.sessionRelationsThisConversation) else null).joinToString(" · ").takeIf { it.isNotBlank() },
         selected = row.current,
         enabled = !state.stale && !state.working,
         disabledReason =
