@@ -110,6 +110,70 @@ public fun KitRow(
     state: KitRowState? = null,
     meta: String? = null,
     onClick: (() -> Unit)? = null,
+) {
+    RowBody(
+        title = title, modifier = modifier, supporting = supporting, leading = leading, trailing = trailing,
+        server = server, titleIsFileName = titleIsFileName, supportingMaxLines = supportingMaxLines,
+        enabled = enabled, disabledReason = disabledReason, selected = selected, growKey = growKey,
+        onClickLabel = onClickLabel, onLongClick = onLongClick, onLongClickLabel = onLongClickLabel,
+        state = state, meta = meta, onClick = onClick,
+        titleMaxLines = 1,
+    )
+}
+
+/** Flutter's requested title line count; the original overload keeps trailing onClick lambdas source-compatible. */
+@Composable
+public fun KitRow(
+    title: String,
+    modifier: Modifier = Modifier,
+    supporting: String? = null,
+    leading: KitRowLeading? = null,
+    trailing: KitRowTrailing = KitRowTrailing.None,
+    server: String? = null,
+    titleIsFileName: Boolean = false,
+    supportingMaxLines: Int = 1,
+    enabled: Boolean = true,
+    disabledReason: String? = null,
+    selected: Boolean = false,
+    growKey: Any? = null,
+    onClickLabel: String? = null,
+    onLongClick: (() -> Unit)? = null,
+    onLongClickLabel: String? = null,
+    state: KitRowState? = null,
+    meta: String? = null,
+    titleMaxLines: Int,
+    onClick: (() -> Unit)? = null,
+) {
+    RowBody(
+        title = title, modifier = modifier, supporting = supporting, leading = leading, trailing = trailing,
+        server = server, titleIsFileName = titleIsFileName, supportingMaxLines = supportingMaxLines,
+        enabled = enabled, disabledReason = disabledReason, selected = selected, growKey = growKey,
+        onClickLabel = onClickLabel, onLongClick = onLongClick, onLongClickLabel = onLongClickLabel,
+        state = state, meta = meta, onClick = onClick,
+        titleMaxLines = titleMaxLines,
+    )
+}
+
+@Composable
+private fun RowBody(
+    title: String,
+    modifier: Modifier = Modifier,
+    supporting: String? = null,
+    leading: KitRowLeading? = null,
+    trailing: KitRowTrailing = KitRowTrailing.None,
+    server: String? = null,
+    titleIsFileName: Boolean = false,
+    supportingMaxLines: Int = 1,
+    enabled: Boolean = true,
+    disabledReason: String? = null,
+    selected: Boolean = false,
+    growKey: Any? = null,
+    onClickLabel: String? = null,
+    onLongClick: (() -> Unit)? = null,
+    onLongClickLabel: String? = null,
+    state: KitRowState? = null,
+    meta: String? = null,
+    onClick: (() -> Unit)? = null,
     titleMaxLines: Int = 1,
 ) {
     kitAssert(title.isNotBlank()) { "KitRow: a row needs a title" }
