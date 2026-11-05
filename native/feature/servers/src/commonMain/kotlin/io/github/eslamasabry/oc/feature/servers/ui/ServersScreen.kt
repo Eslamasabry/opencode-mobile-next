@@ -5,141 +5,32 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
-import io.github.eslamasabry.oc.engine.lifecycle.PhoneHostSupport
-import io.github.eslamasabry.oc.engine.lifecycle.PhoneOwnServers
-import io.github.eslamasabry.oc.engine.lifecycle.PhoneServerCandidate
-import io.github.eslamasabry.oc.feature.servers.pairing.PairingAnswer
-import io.github.eslamasabry.oc.feature.servers.pairing.PairingText
-import io.github.eslamasabry.oc.feature.servers.pairing.ShareLink
-import io.github.eslamasabry.oc.feature.servers.pairing.pairingProblemText
-import io.github.eslamasabry.oc.feature.servers.presentation.ServerDisconnectActions
-import io.github.eslamasabry.oc.feature.servers.presentation.ServerFailureKind
-import io.github.eslamasabry.oc.feature.servers.presentation.ServerIssue
-import io.github.eslamasabry.oc.feature.servers.presentation.ServerMonitorStatus
-import io.github.eslamasabry.oc.feature.servers.presentation.ServersActions
-import io.github.eslamasabry.oc.feature.servers.presentation.ServersUi
-import io.github.eslamasabry.oc.feature.servers.presentation.serverFailureKind
+import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.feature.servers.presentation.*
 import io.github.eslamasabry.oc.ui.design.tokens.Space
-import io.github.eslamasabry.oc.ui.kit.*
-import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
-import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
-import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
-import io.github.eslamasabry.oc.ui.kit.frame.KitServerName
-import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
-import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
-import io.github.eslamasabry.oc.ui.kit.input.KitField
-import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
-import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
-import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
-import io.github.eslamasabry.oc.ui.kit.row.KitRow
-import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
-import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
-import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
-import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.KitMonoText
+import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
+import io.github.eslamasabry.oc.ui.kit.choice.*
+import io.github.eslamasabry.oc.ui.kit.foundation.*
 import io.github.eslamasabry.oc.ui.kit.frame.*
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.modal.*
 import io.github.eslamasabry.oc.ui.kit.row.*
 import io.github.eslamasabry.oc.ui.kit.state.*
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
-import io.github.eslamasabry.oc.ui.words.res.Res
-import io.github.eslamasabry.oc.ui.words.res.addServerScan
-import io.github.eslamasabry.oc.ui.words.res.agentToolsTitle
-import io.github.eslamasabry.oc.ui.words.res.agentsSectionTitle
-import io.github.eslamasabry.oc.ui.words.res.codexNativeTitle
-import io.github.eslamasabry.oc.ui.words.res.e7SettingsDisconnectTitle
-import io.github.eslamasabry.oc.ui.words.res.e7SetupNoServerAnswer
-import io.github.eslamasabry.oc.ui.words.res.e7SetupPairAddressUnusable
-import io.github.eslamasabry.oc.ui.words.res.e7SetupPairTestFailed
-import io.github.eslamasabry.oc.ui.words.res.connectionCheckAction
-import io.github.eslamasabry.oc.ui.words.res.e7SetupPairingInstructions
-import io.github.eslamasabry.oc.ui.words.res.e7SetupRefused
-import io.github.eslamasabry.oc.ui.words.res.e7SetupTimeout
-import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
-import io.github.eslamasabry.oc.ui.words.res.kitDetails
-import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
-import io.github.eslamasabry.oc.ui.words.res.linuxHostSetupTitle
-import io.github.eslamasabry.oc.ui.words.res.linuxMgrRowDetail
-import io.github.eslamasabry.oc.ui.words.res.mcpNativeTitle
-import io.github.eslamasabry.oc.ui.words.res.monitorNativeTitle
-import io.github.eslamasabry.oc.ui.words.res.monitorOptIn
-import io.github.eslamasabry.oc.ui.words.res.monitorOptInDetail
-import io.github.eslamasabry.oc.ui.words.res.monitorServerCurrent
-import io.github.eslamasabry.oc.ui.words.res.monitorServerPaused
-import io.github.eslamasabry.oc.ui.words.res.monitorServerUnavailable
-import io.github.eslamasabry.oc.ui.words.res.monitorServerWaiting
-import io.github.eslamasabry.oc.ui.words.res.monitorServerWifiRequired
-import io.github.eslamasabry.oc.ui.words.res.previewQrLinkFilled
-import io.github.eslamasabry.oc.ui.words.res.previewQrPairFilled
-import io.github.eslamasabry.oc.ui.words.res.previewQrPairingCodeLabel
-import io.github.eslamasabry.oc.ui.words.res.protoPairingCheck
-import io.github.eslamasabry.oc.ui.words.res.safetyDisconnectBody
-import io.github.eslamasabry.oc.ui.words.res.safetyDisconnectBodyPhone
-import io.github.eslamasabry.oc.ui.words.res.secImportedSignInsTitle
-import io.github.eslamasabry.oc.ui.words.res.secSetupTitle
-import io.github.eslamasabry.oc.ui.words.res.serverDisconnectFrom
-import io.github.eslamasabry.oc.ui.words.res.serverFailureCertificate
-import io.github.eslamasabry.oc.ui.words.res.serverFailureIncompatible
-import io.github.eslamasabry.oc.ui.words.res.serverFailureNetwork
-import io.github.eslamasabry.oc.ui.words.res.serverFailureOther
-import io.github.eslamasabry.oc.ui.words.res.serverFailureRejected
-import io.github.eslamasabry.oc.ui.words.res.serverFailureSecret
-import io.github.eslamasabry.oc.ui.words.res.serverFailureServer
-import io.github.eslamasabry.oc.ui.words.res.serverFailureStorage
-import io.github.eslamasabry.oc.ui.words.res.serverFailureTimeout
-import io.github.eslamasabry.oc.ui.words.res.serverFailureUnreadableReply
-import io.github.eslamasabry.oc.ui.words.res.serversAdd
-import io.github.eslamasabry.oc.ui.words.res.serversAddress
-import io.github.eslamasabry.oc.ui.words.res.serversCancel
-import io.github.eslamasabry.oc.ui.words.res.serversCleartext
-import io.github.eslamasabry.oc.ui.words.res.serversCleartextHelp
-import io.github.eslamasabry.oc.ui.words.res.serversCleartextRequired
-import io.github.eslamasabry.oc.ui.words.res.serversConnect
-import io.github.eslamasabry.oc.ui.words.res.serversConnectFailed
-import io.github.eslamasabry.oc.ui.words.res.serversConnected
-import io.github.eslamasabry.oc.ui.words.res.serversCreate
-import io.github.eslamasabry.oc.ui.words.res.serversCreateFailed
-import io.github.eslamasabry.oc.ui.words.res.serversEmpty
-import io.github.eslamasabry.oc.ui.words.res.serversInspectSetup
-import io.github.eslamasabry.oc.ui.words.res.serversInvalidAddress
-import io.github.eslamasabry.oc.ui.words.res.serversName
-import io.github.eslamasabry.oc.ui.words.res.serversNewTitle
-import io.github.eslamasabry.oc.ui.words.res.serversPairingAnswered
-import io.github.eslamasabry.oc.ui.words.res.serversPassword
-import io.github.eslamasabry.oc.ui.words.res.serversRemoteTerminal
-import io.github.eslamasabry.oc.ui.words.res.serversRemove
-import io.github.eslamasabry.oc.ui.words.res.serversRemoveConfirm
-import io.github.eslamasabry.oc.ui.words.res.serversRemoveFailed
-import io.github.eslamasabry.oc.ui.words.res.serversSave
-import io.github.eslamasabry.oc.ui.words.res.serversSaveFailed
-import io.github.eslamasabry.oc.ui.words.res.serversSaved
-import io.github.eslamasabry.oc.ui.words.res.serversSignInFailed
-import io.github.eslamasabry.oc.ui.words.res.serversTitle
-import io.github.eslamasabry.oc.ui.words.res.serversUsername
-import io.github.eslamasabry.oc.ui.words.res.serversWorking
-import io.github.eslamasabry.oc.ui.words.res.settingsV3ThisPhone
-import io.github.eslamasabry.oc.ui.words.res.setupNativeTitle
-import io.github.eslamasabry.oc.ui.words.res.stateDemoTryOffline
-import io.github.eslamasabry.oc.ui.words.res.stateServerSchedules
-import io.github.eslamasabry.oc.ui.words.res.stateSetupTitle
-import io.github.eslamasabry.oc.ui.words.res.tailscaleTitle
-import io.github.eslamasabry.oc.ui.words.res.stateShareViewedDetail
-import io.github.eslamasabry.oc.ui.words.res.stateShareViewedSaving
-import io.github.eslamasabry.oc.ui.words.res.stateShareViewedTitle
-import io.github.eslamasabry.oc.ui.words.res.usageTabPlans
-import io.github.eslamasabry.oc.ui.words.res.usageTitle
-import kotlinx.coroutines.flow.drop
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
-/**
- * The list has one add door. Every new profile goes through the checked editor, including New chat.
- */
+/** Flutter servers_state.dart: a single ranked list, its visible row menus, and one pinned Add server. */
 @Composable
 public fun ServersScreen(
     state: ServersUi,
@@ -147,513 +38,71 @@ public fun ServersScreen(
     onThisPhone: (() -> Unit)? = null,
     onInspectSetup: ((ProfileId) -> Unit)? = null,
     onTerminal: ((ProfileId) -> Unit)? = null,
-    tailscale: io.github.eslamasabry.oc.feature.servers.presentation.TailscaleSetup? = null,
+    tailscale: TailscaleSetup? = null,
     initialHostSetup: Boolean = false,
     initialTailscaleSetup: Boolean = false,
 ) {
-    // The unsaved draft survives a page on top (Scan code) and the form leaving composition: the
-    // plain fields are
-    // saveable, the password is held in memory by the ViewModel only (never saved instance state).
-    val name = rememberTextFieldState()
-    val address = rememberTextFieldState()
-    val username = rememberTextFieldState("opencode")
-    val password = remember { TextFieldState(actions.heldPassword()) }
-    LaunchedEffect(password) {
-        snapshotFlow { password.text.toString() }.collect { actions.holdPassword(it) }
-    }
-    var removing by remember { mutableStateOf<ProfileId?>(null) }
     var hostSetup by rememberSaveable { mutableStateOf(initialHostSetup) }
     var tailscaleSetup by rememberSaveable { mutableStateOf(initialTailscaleSetup) }
-    // PREVIEW-QR: a scanned or pasted pairing code (or share link) fills the form once; the
-    // password is taken, not kept.
-    var filledFromLink by rememberSaveable { mutableStateOf<Boolean?>(null) }
-    var clearedGeneration by rememberSaveable { mutableIntStateOf(0) }
-    var confirmingDisconnect by rememberSaveable { mutableStateOf<String?>(null) }
-    // A pairing code carries a password, so it goes in a secret field (the kit's Paste lives there
-    // too).
-    val code = remember { TextFieldState() }
-    LaunchedEffect(code) {
-        snapshotFlow { code.text.toString() }
-            .collect { text ->
-                if (PairingText.looksLikePayload(text) || ShareLink.origin(text) != null) {
-                    code.edit { replace(0, length, "") }
-                    actions.pastePairing(text)
-                }
-            }
-    }
-    LaunchedEffect(state.pairingArrival) {
-        val fill = actions.takePairing() ?: return@LaunchedEffect
-        address.edit { replace(0, length, fill.address) }
-        fill.username?.let { value -> username.edit { replace(0, length, value) } }
-        fill.takePassword()?.let { value -> password.edit { replace(0, length, value) } }
-        filledFromLink = fill.fromLink
-    }
-    LaunchedEffect(state.savedGeneration) {
-        if (state.savedGeneration > clearedGeneration) {
-            clearedGeneration = state.savedGeneration
-            password.edit { replace(0, length, "") }
-        }
-    }
-    LaunchedEffect(address) {
-        // The first value is the field as it is (a restored draft keeps its consent); only a change
-        // is acted on.
-        snapshotFlow { address.text.toString() }
-            .drop(1)
-            .collect { text ->
-                // A pairing code or share link pasted into the address field is read, never saved
-                // as an address.
-                if (PairingText.looksLikePayload(text) || ShareLink.origin(text) != null) {
-                    address.edit { replace(0, length, "") }
-                    actions.pastePairing(text)
-                }
-                actions.allowCleartext(false, address.text.toString())
-            }
-    }
-    HostSetupSheet(hostSetup) { hostSetup = false }
-    ImportedSignInsSheet(state.importedSignIns, actions)
-
-    TailscaleSetupSheet(tailscaleSetup, tailscale, { tailscaleSetup = false }) { reviewed ->
-        address.edit { replace(0, length, reviewed) }
-        actions.allowCleartext(false, reviewed)
-    }
-    ConnectionCheckSheet(state.connectionCheck, actions)
-    val enabled =
-        if (state.busy) KitEnabled.Disabled(stringResource(Res.string.serversWorking))
-        else KitEnabled.Enabled
+    var phoneChoice by rememberSaveable { mutableStateOf(onThisPhone != null) }
+    val enabled = KitEnabled.of(!state.busy, stringResource(Res.string.serversWorking))
+    val empty = state.servers.isEmpty()
     KitScreen(
         topBar = {
             KitTopBar(
-                title =
-                    stringResource(
-                        if (state.newConversation) Res.string.serversNewTitle
-                        else Res.string.serversTitle
-                    ),
-                centred = state.newConversation,
-                exit = KitTopBarExit.Back,
-                exitLabel = stringResource(Res.string.kitTopBarBack),
-                onExit = actions::back,
+                title = stringResource(if (state.newConversation) Res.string.serversNewTitle else Res.string.serversTitle),
+                exit = KitTopBarExit.Back, exitLabel = stringResource(Res.string.kitTopBarBack), onExit = actions::back,
             )
         },
+        loading = state.busy,
+        loadingLabel = stringResource(Res.string.serversWorking),
+        width = if (empty) KitScreenWidth.Reading else KitScreenWidth.List,
         bottom = {
             KitButton(
-                stringResource(Res.string.serversAdd),
-                { actions.edit(null) },
-                enabled = enabled,
+                label = stringResource(if (empty && phoneChoice) Res.string.onboardingTermuxSetup
+                    else if (empty) Res.string.welcomeComputerConnect else Res.string.e7SetupAddServer),
+                onClick = if (empty && phoneChoice && onThisPhone != null) onThisPhone else ({ actions.edit(null) }),
+                icon = if (empty) null else KitIcons.add,
+                enabled = enabled, fullWidth = true,
             )
         },
-        width = KitScreenWidth.Reading,
     ) {
-        Column(
-            Modifier.fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .imePadding()
-                .padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S3.dp),
-            verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
-        ) {
-            state.issue?.let { issue ->
-                val known =
-                    state.addressProblem
-                        ?: state.failure?.details?.text?.let {
-                            io.github.eslamasabry.oc.engine.runtime.messages.SetupMessages.plain(it)
-                        }
-                val words = known?.let { setupMessageWords(it) } ?: issueWords(issue, state.failure)
-                if (issue == ServerIssue.Connected) {
-                    KitNotice(words)
-                } else {
-                    KitErrorNotice(
-                        words,
-                        failure = state.failure,
-                        detailsLabel = stringResource(Res.string.kitDetails),
-                        copyLabel = stringResource(Res.string.kitCopyDetails),
-                    )
-                }
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            state.issue?.takeIf { it != ServerIssue.Connected }?.let { issue ->
+                KitErrorNotice(issueWords(issue, state.failure),
+                    modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S1.dp),
+                    failure = state.failure, detailsLabel = stringResource(Res.string.kitDetails), copyLabel = stringResource(Res.string.kitCopyDetails))
             }
-            onThisPhone?.let {
-                KitRow(
-                    stringResource(Res.string.settingsV3ThisPhone),
-                    supporting = stringResource(Res.string.linuxMgrRowDetail),
-                    supportingMaxLines = 2,
-                    trailing = KitRowTrailing.Chevron,
-                    onClick = it,
-                )
-            }
-            KitRow(
-                stringResource(Res.string.linuxHostSetupTitle),
-                trailing = KitRowTrailing.Chevron,
-                onClick = { hostSetup = true },
-            )
-            KitRow(
-                title =
-                    stringResource(io.github.eslamasabry.oc.ui.words.res.Res.string.tailscaleTitle),
-                trailing = KitRowTrailing.Chevron,
-                onClick = { tailscaleSetup = true },
-            )
-            KitButton(
-                stringResource(Res.string.stateDemoTryOffline),
-                actions::tryOffline,
-                role = KitButtonRole.Tertiary,
-            )
-            if (state.servers.isEmpty()) KitText(stringResource(Res.string.serversEmpty))
-            else KitText(stringResource(Res.string.serversSaved))
-            // Flutter confirmDisconnectServer: the person confirms before live updates stop.
-            val confirming =
-                state.servers.firstOrNull { it.connected && it.id.raw == confirmingDisconnect }
-            KitConfirm(
-                spec =
-                    confirming?.let {
-                        KitConfirmSpec(
-                            title = stringResource(Res.string.e7SettingsDisconnectTitle, it.name),
-                            confirmLabel = stringResource(Res.string.serverDisconnectFrom, it.name),
-                            body =
-                                stringResource(
-                                    if (it.address.startsWith("http://127.0.0.1:"))
-                                        Res.string.safetyDisconnectBodyPhone
-                                    else Res.string.safetyDisconnectBody
-                                ),
+            if (empty) {
+                Column(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp).padding(top = (Space.S6 + Space.S6).dp)) {
+                    KitText(stringResource(Res.string.firstRunWhereQuestion), role = TypeRole.LargeTitle)
+                    Spacer(Modifier.height((Space.S6 + Space.S2).dp))
+                    KitChoiceCards {
+                        if (onThisPhone != null) KitChoiceCard(
+                            title = stringResource(Res.string.onboardingTermuxSetup),
+                            selected = phoneChoice, onSelect = { if (!state.busy) phoneChoice = true },
+                            icon = KitIcons.phone,
                         )
-                    },
-                onConfirm = {
-                    confirmingDisconnect = null
-                    confirming?.let { (actions as? ServerDisconnectActions)?.disconnect(it.id) }
-                },
-                onCancel = { confirmingDisconnect = null },
-            )
-            for (server in state.servers) {
-                Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-                    KitServerName(server.name)
-                    KitText(server.address)
-                    // B-NAV-040: only the phone's own servers are marked as this phone; a forwarded
-                    // loopback is a server.
-                    val support =
-                        if (onThisPhone != null) PhoneHostSupport.Android
-                        else PhoneHostSupport.Elsewhere
-                    if (
-                        PhoneOwnServers.isPhoneOwnServer(
-                            PhoneServerCandidate(server.id.raw, server.address),
-                            support,
-                        )
-                    ) {
-                        KitText(stringResource(Res.string.settingsV3ThisPhone))
-                    }
-                    if (server.connected) KitText(stringResource(Res.string.serversConnected))
-                    // 40-port-screens-3: what waits on this server (Flutter saved rows).
-                    val facts = state.rows.facts[server.id]
-                    val waitingLines = buildList {
-                        if ((facts?.waiting ?: 0) > 0)
-                            add(stringResource(Res.string.rows40Waiting, facts!!.waiting!!))
-                        if ((facts?.running ?: 0) > 0)
-                            add(stringResource(Res.string.rows40Working, facts!!.running!!))
-                        if (facts?.needsSecret == true) add(stringResource(Res.string.rows40Secret))
-                        if ((facts?.queued ?: 0) > 0)
-                            add(stringResource(Res.string.rows40Queued, facts!!.queued))
-                    }
-                    if (waitingLines.isNotEmpty()) KitText(waitingLines.joinToString(" · "))
-                    if (facts?.account == true)
-                        KitButton(
-                            stringResource(Res.string.account40Title),
-                            { actions.openAccount(server.id) },
-                            role = KitButtonRole.Tertiary,
-                            enabled = enabled,
-                        )
-                    val destination =
-                        state.rows.moveDestination
-                            ?.takeIf { it != server.id }
-                            ?.let { id -> state.servers.firstOrNull { it.id == id } }
-                    if ((facts?.queued ?: 0) > 0 && destination != null)
-                        KitButton(
-                            stringResource(Res.string.rows40Move, facts!!.queued, destination.name),
-                            { actions.moveQueued(server.id) },
-                            role = KitButtonRole.Tertiary,
-                            enabled = enabled,
-                        )
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                        KitButton(
-                            stringResource(Res.string.editor40Edit),
-                            { actions.edit(server.id) },
-                            role = KitButtonRole.Tertiary,
-                            enabled = enabled,
-                        )
-                        KitButton(
-                            stringResource(Res.string.serverSettingsTitle),
-                            { actions.settings(server.id) },
-                            role = KitButtonRole.Tertiary,
-                            enabled = enabled,
-                        )
-                        if (state.connectionCheckAvailable) {
-                            KitButton(
-                                stringResource(Res.string.connectionCheckAction),
-                                { actions.checkConnection(server.id) },
-                                role = KitButtonRole.Secondary,
-                                enabled = enabled,
-                            )
-                        }
-                        KitButton(
-                            stringResource(Res.string.secImportedSignInsTitle),
-                            { actions.reviewImportedSignIns(server.id) },
-                            role = KitButtonRole.Tertiary,
-                            enabled = enabled,
-                        )
-
-                        KitButton(
-                            stringResource(Res.string.serversCreate),
-                            { actions.create(server.id) },
-                            enabled = enabled,
-                        )
-                        // QA wave 4 B15: a connected server says Connected; Connect is offered only
-                        // when it is not.
-                        if (!server.connected) {
-                            KitButton(
-                                stringResource(Res.string.serversConnect),
-                                { actions.connect(server.id) },
-                                role = KitButtonRole.Secondary,
-                                enabled = enabled,
-                            )
-                        }
-                        val disconnect = actions as? ServerDisconnectActions
-                        if (server.connected && disconnect?.disconnectSupported == true) {
-                            KitButton(
-                                stringResource(Res.string.serverDisconnectFrom, server.name),
-                                { confirmingDisconnect = server.id.raw },
-                                role = KitButtonRole.Tertiary,
-                                enabled = enabled,
-                            )
-                        }
-                        if (server.connected) {
-                            onTerminal?.let { terminal ->
-                                KitButton(
-                                    stringResource(Res.string.serversRemoteTerminal),
-                                    { terminal(server.id) },
-                                    role = KitButtonRole.Secondary,
-                                )
-                            }
-                            onInspectSetup?.let { inspect ->
-                                KitButton(
-                                    stringResource(Res.string.serversInspectSetup),
-                                    { inspect(server.id) },
-                                    role = KitButtonRole.Secondary,
-                                )
-                            }
-                            KitButton(
-                                stringResource(Res.string.secSetupTitle),
-                                { actions.openSetup(server.id) },
-                                role = KitButtonRole.Tertiary,
-                            )
-                            KitButton(
-                                stringResource(Res.string.usageTitle),
-                                { actions.openUsage(server.id) },
-                                role = KitButtonRole.Tertiary,
-                            )
-                        }
-                        KitButton(
-                            schedulesLabel(),
-                            { actions.openSchedules(server.id) },
-                            role = KitButtonRole.Secondary,
-                            enabled = enabled,
-                        )
-                        KitButton(
-                            stringResource(Res.string.mcpNativeTitle),
-                            { actions.openConnectorCatalog(server.id) },
-                            role = KitButtonRole.Tertiary,
-                            enabled = enabled,
-                        )
-                        KitButton(
-                            stringResource(Res.string.setupNativeTitle),
-                            { actions.openSetupReview(server.id) },
-                            role = KitButtonRole.Tertiary,
-                            enabled = enabled,
-                        )
-                        KitButton(
-                            stringResource(Res.string.agentToolsTitle),
-                            { actions.openAgentTools(server.id) },
-                            role = KitButtonRole.Tertiary,
-                            enabled = enabled,
-                        )
-                        KitButton(
-                            stringResource(Res.string.monitorNativeTitle),
-                            { actions.openMonitor(server.id) },
-                            role = KitButtonRole.Tertiary,
-                            enabled = enabled,
-                        )
-                        KitButton(
-                            stringResource(Res.string.serversRemove),
-                            { removing = server.id },
-                            role = KitButtonRole.Tertiary,
-                            destructive = true,
-                            enabled = enabled,
+                        KitChoiceCard(
+                            title = stringResource(Res.string.firstRunOnComputer), supporting = stringResource(Res.string.welcomeComputerLine),
+                            selected = !phoneChoice, onSelect = { if (!state.busy) phoneChoice = false }, icon = KitIcons.computer,
                         )
                     }
-                    state.readSharing[server.id]
-                        ?.takeIf { it.available }
-                        ?.let { sharing ->
-                            KitSwitchRow(
-                                title = stringResource(Res.string.stateShareViewedTitle),
-                                supporting = stringResource(Res.string.stateShareViewedDetail),
-                                checked = sharing.enabled,
-                                enabled =
-                                    if (sharing.saving)
-                                        KitEnabled.Disabled(
-                                            stringResource(Res.string.stateShareViewedSaving)
-                                        )
-                                    else enabled,
-                                onCheckedChange = { actions.setReadSharing(server.id, it) },
-                            )
-                        }
-                    state.monitoring[server.id]?.let { monitor ->
-                        if (monitor.available) {
-                            KitSwitchRow(
-                                title = stringResource(Res.string.monitorOptIn),
-                                supporting = stringResource(Res.string.monitorOptInDetail),
-                                checked = monitor.enabled,
-                                enabled = enabled,
-                                onCheckedChange = { actions.monitor(server.id, it) },
-                            )
-                            if (monitor.enabled) {
-                                KitText(
-                                    stringResource(
-                                        when (monitor.status) {
-                                            ServerMonitorStatus.Current ->
-                                                Res.string.monitorServerCurrent
-                                            ServerMonitorStatus.Unavailable ->
-                                                Res.string.monitorServerUnavailable
-                                            ServerMonitorStatus.WifiRequired ->
-                                                Res.string.monitorServerWifiRequired
-                                            ServerMonitorStatus.Paused ->
-                                                Res.string.monitorServerPaused
-                                            ServerMonitorStatus.Waiting ->
-                                                Res.string.monitorServerWaiting
-                                        }
-                                    )
-                                )
-                            }
-                        } else KitText(stringResource(Res.string.monitorServerUnavailable))
-                    }
-                    KitButton(
-                        stringResource(Res.string.stateSetupTitle),
-                        { actions.openStateSetup(server.id) },
-                        role = KitButtonRole.Tertiary,
-                    )
-                    if (removing == server.id) {
-                        KitNotice(stringResource(Res.string.serversRemoveConfirm, server.name))
-                        FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                            KitButton(
-                                stringResource(Res.string.serversRemove),
-                                {
-                                    removing = null
-                                    actions.remove(server.id)
-                                },
-                                destructive = true,
-                                enabled = enabled,
-                            )
-                            KitButton(
-                                stringResource(Res.string.serversCancel),
-                                { removing = null },
-                                role = KitButtonRole.Tertiary,
-                            )
-                        }
+                    Spacer(Modifier.height(Space.S2.dp))
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S4.dp)) {
+                        KitButton(stringResource(Res.string.firstRunJustShowMe), actions::tryOffline, role = KitButtonRole.Tertiary, enabled = enabled)
+                        if (onThisPhone != null) KitButton(stringResource(Res.string.welcomeMoreWays), onThisPhone, role = KitButtonRole.Tertiary, enabled = enabled)
                     }
                 }
+            } else {
+                Spacer(Modifier.height(Space.S2.dp))
+                ServerSavedRows(state, actions, enabled, phoneHost = onThisPhone != null)
             }
-            KitButton(
-                stringResource(Res.string.agentsSectionTitle),
-                actions::openAgents,
-                role = KitButtonRole.Secondary,
-            )
-            KitButton(
-                stringResource(Res.string.usageTabPlans),
-                actions::openPlans,
-                role = KitButtonRole.Secondary,
-            )
-            KitButton(
-                stringResource(Res.string.codexNativeTitle),
-                actions::openCodexProbe,
-                role = KitButtonRole.Secondary,
-            )
-            KitText(stringResource(Res.string.serversAdd))
-            ComputerCommands()
-            KitButton(
-                stringResource(Res.string.addServerScan),
-                actions::scanPairing,
-                role = KitButtonRole.Secondary,
-                enabled = enabled,
-            )
-            KitField(
-                code,
-                stringResource(Res.string.previewQrPairingCodeLabel),
-                kind = KitFieldKind.Secret,
-                helper = stringResource(Res.string.e7SetupPairingInstructions),
-                enabled = enabled,
-                onSubmit = {
-                    val text = code.text.toString()
-                    code.edit { replace(0, length, "") }
-                    actions.pastePairing(text)
-                },
-            )
-            state.pairingProblem?.let { KitErrorNotice(pairingProblemText(it)) }
-            for (check in state.pairingChecks) {
-                val verdict =
-                    when (check.answer) {
-                        PairingAnswer.Works -> Res.string.serversConnected
-                        PairingAnswer.Answers -> Res.string.serversPairingAnswered
-                        PairingAnswer.NoAnswer -> Res.string.e7SetupNoServerAnswer
-                        PairingAnswer.TimedOut -> Res.string.e7SetupTimeout
-                        PairingAnswer.Refused -> Res.string.e7SetupRefused
-                        PairingAnswer.ProbeFailed -> Res.string.e7SetupPairTestFailed
-                        PairingAnswer.InvalidAddress -> Res.string.e7SetupPairAddressUnusable
-                        PairingAnswer.NeedsCleartextConsent -> Res.string.serversCleartextHelp
-                    }
-                KitNotice(
-                    stringResource(
-                        Res.string.protoPairingCheck,
-                        check.origin,
-                        stringResource(verdict),
-                    )
-                )
-            }
-            filledFromLink?.let { link ->
-                KitNotice(
-                    stringResource(
-                        if (link) Res.string.previewQrLinkFilled else Res.string.previewQrPairFilled
-                    )
-                )
-            }
-            KitField(name, stringResource(Res.string.serversName), enabled = enabled)
-            KitField(
-                address,
-                stringResource(Res.string.serversAddress),
-                kind = KitFieldKind.Url,
-                placeholder = "https://example.com:4096",
-                enabled = enabled,
-            )
-            KitField(username, stringResource(Res.string.serversUsername), enabled = enabled)
-            KitField(
-                password,
-                stringResource(Res.string.serversPassword),
-                kind = KitFieldKind.Secret,
-                enabled = enabled,
-            )
-            KitSwitchRow(
-                title = stringResource(Res.string.serversCleartext),
-                supporting = stringResource(Res.string.serversCleartextHelp),
-                checked = state.cleartextAllowed,
-                enabled = enabled,
-                onCheckedChange = { actions.allowCleartext(it, address.text.toString()) },
-            )
-            KitButton(
-                stringResource(
-                    if (state.newConversation) Res.string.serversCreate else Res.string.serversSave
-                ),
-                {
-                    actions.save(
-                        name.text.toString(),
-                        address.text.toString(),
-                        username.text.toString(),
-                        password.text.toString(),
-                    )
-                },
-                enabled = enabled,
-                working = state.busy,
-            )
         }
+        HostSetupSheet(hostSetup) { hostSetup = false }
+        TailscaleSetupSheet(tailscaleSetup, tailscale, { tailscaleSetup = false }) { actions.edit(null) }
+        ImportedSignInsSheet(state.importedSignIns, actions)
+        ConnectionCheckSheet(state.connectionCheck, actions)
     }
 }
 
