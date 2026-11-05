@@ -41,6 +41,7 @@ public fun KitInputOperationDialog(
     val field = rememberTextFieldState(initial)
     val original = remember { initial }
     val focus = remember { FocusRequester() }
+    var selectedOnOpen by remember { mutableStateOf(false) }
     var edited by remember { mutableStateOf(false) }
     val invalid = validate(field.text.toString())
     val blocked = edited && invalid != null
@@ -82,6 +83,19 @@ public fun KitInputOperationDialog(
             modifier = Modifier.testTag("kit-operation-input"),
         )
         details?.invoke()
+        // The modal body attaches after the caller registers its sheet. Request focus here,
+        // and retain the person's selection when Keep editing returns from the discard question.
+        LaunchedEffect(Unit) {
+            if (!selectedOnOpen) {
+                field.edit { selectAll() }
+                selectedOnOpen = true
+            }
+            try {
+                focus.requestFocus()
+            } catch (_: IllegalStateException) {
+                /* A detached field can be focused on the next body entry. */
+            }
+        }
     }
     KitSheet(
         visible = true,
@@ -94,13 +108,5 @@ public fun KitInputOperationDialog(
         tertiary = listOf(cancelAction),
     ) {
         input()
-    }
-    LaunchedEffect(Unit) {
-        field.edit { selectAll() }
-        try {
-            focus.requestFocus()
-        } catch (_: IllegalStateException) {
-            /* The next open retries focus. */
-        }
     }
 }

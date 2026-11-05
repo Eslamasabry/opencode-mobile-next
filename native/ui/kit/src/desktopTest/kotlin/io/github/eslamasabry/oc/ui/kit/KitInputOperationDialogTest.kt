@@ -52,6 +52,7 @@ class KitInputOperationDialogTest {
             onNodeWithText("Enter a folder name.").assertExists()
             assertEquals(emptyList(), submissions)
             val field = onNode(hasSetTextAction())
+            field.assertIsFocused()
             field.performTextInput("loyalty-app")
             field.performImeAction()
             assertEquals(listOf("loyalty-app"), submissions)
