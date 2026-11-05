@@ -171,12 +171,13 @@ fun ToolScene(words: ChatSceneWords) {
         KitToolRow(
             KitToolView("t2", KitToolKind.Shell, words.toolRan, "npm test", null, KitToolStatus.Failed, words.seconds("3.1"), null, null, words.exit),
             opened = true, onToggle = {},
-        ) {
+            body = {
             KitCommandBox(
                 command = "npm test", output = (1..14).joinToString("\n") { "  ✓ case $it" },
                 moreLabel = words.showAll, onMore = {}, exitLabel = words.exit,
             )
-        }
+            },
+        )
         KitToolRow(
             KitToolView("t3", KitToolKind.Edit, words.toolEdit, "lib/list.dart", null, KitToolStatus.Stopped, null, 4, 1, words.stopped),
             opened = false, onToggle = {},
@@ -208,12 +209,13 @@ fun DiffScene(words: ChatSceneWords) {
         KitToolRow(
             KitToolView("t4", KitToolKind.Edit, words.toolEdit, "lib/list.dart", null, KitToolStatus.Done, null, 1, 2, words.done),
             opened = true, onToggle = {},
-        ) {
+            body = {
             KitDiffView(
                 file = DiffModel.fromBeforeAfter("lib/list.dart", sceneBefore, sceneAfter),
                 hunkLabel = { a, b, _, _ -> words.lines(a, b) },
                 gapLabel = words.unchanged,
             )
-        }
+            },
+        )
     }
 }
