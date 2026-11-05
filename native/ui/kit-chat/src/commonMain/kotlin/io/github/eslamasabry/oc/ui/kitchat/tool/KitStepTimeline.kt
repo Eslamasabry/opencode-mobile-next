@@ -48,8 +48,8 @@ public fun KitStepTimeline(
     steps: @Composable () -> Unit = {},
 ) {
     val tokens = LocalKitTokens.current
-    val glyph = tokens.smallIcon.dp // F: kit_step_timeline.dart:723
-    val first = 20.dp // F: kit_step_timeline.dart:958 (rail.line(20) at 1.0 text scale)
+    val glyph = tokens.smallIcon.dp // F: lib/ui/kit/chat/kit_step_timeline.dart:723
+    val first = 20.dp // F: lib/ui/kit/chat/kit_step_timeline.dart:958 (rail.line(20) at 1.0 text scale)
     val pad = maxOf(Space.S1.dp, (tokens.minTarget.dp - first) / 2) // F: :962 glyph centred in the 48 dp target
     Column(modifier.fillMaxWidth().widthIn(max = 700.dp)) { // F: :431 KitMaxWidth.conversation
         KitTappable(
