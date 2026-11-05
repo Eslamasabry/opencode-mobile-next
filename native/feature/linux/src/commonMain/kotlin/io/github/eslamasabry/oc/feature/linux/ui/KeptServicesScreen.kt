@@ -179,7 +179,7 @@ public fun KeptServicesScreen(state: KeptServicesUi, actions: KeptServicesAction
                 val port = service.definition.port
                 val disabled = stringResource(Res.string.keptSvcWorking)
                 Column(
-                    Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+                    Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
                 ) {
                     KitRowGroup(leadingTiles = true) {
@@ -339,7 +339,7 @@ private fun AddKeptService(state: KeptServicesUi, actions: KeptServicesActions) 
             ),
     ) {
         Column(
-            Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+            Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
             KitField(
