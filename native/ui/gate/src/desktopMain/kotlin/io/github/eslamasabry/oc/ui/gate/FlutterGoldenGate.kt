@@ -46,7 +46,13 @@ enum class GateRef(val dir: String) { Product("8302de537"), Glass("1bbdc3f9c") }
  * measure how far it is from the picture, on the ink box and on the largest eroded cluster.
  *
  * Name grammar (Flutter's `kitGalleryName`): `<shot>[_ar][_text2][_<W>x<H>]`; `_ar` is locale `ar`, RTL;
- * `_text2` is font scale 2; `_<W>x<H>` is the window (default 412 x 915). Output, under `looks-out/gate/`:
+ * `_text2` is font scale 2; `_<W>x<H>` is the window (default 412 x 915).
+ *
+ * Window and density per golden: an explicit `window`/`density` argument to [check], else the golden's line in
+ * `looks-gate/flutter/<ref>/render.tsv` (written by `rb_gate.py fetch` from the golden's PNG size and its Flutter
+ * test's capture `pixelRatio`, or an explicit `WxH@D` column in NN.gate.tsv), else the name at density 1. A shot at
+ * density D renders at W x H dp into a (W·D) x (H·D) px picture, like Flutter's `toImage(pixelRatio: D)`.
+ * Output, under `looks-out/gate/`:
  * `<shot>_<mode>-{flutter,native,diff}.png` and `rows/<shot>_<mode>.tsv`.
  */
 @OptIn(ExperimentalTestApi::class)
@@ -76,12 +82,35 @@ object FlutterGoldenGate {
     private fun pct(d: Double): String = String.format(Locale.ROOT, "%.2f", d) // NV: two decimals, standard §8.2
 
     /** What a name asks for. */
-    internal class Axes(val rtl: Boolean, val scale: Float, val w: Int, val h: Int)
+    internal class Axes(val rtl: Boolean, val scale: Float, val w: Int, val h: Int, val d: Float = 1f)
 
     internal fun axesOf(name: String): Axes {
         val m = nameRx.matchEntire(name)!!
         val (_, ar, text2, w, h) = m.destructured
         return Axes(rtl = ar.isNotEmpty(), scale = if (text2.isNotEmpty()) TEXT2 else 1f, w = w.toIntOrNull() ?: window.first, h = h.toIntOrNull() ?: window.second)
+    }
+
+    /** shot -> (w dp, h dp, density) from `<ref>/render.tsv`, read once per ref. */
+    private val renders = HashMap<GateRef, Map<String, Triple<Int, Int, Float>>>()
+
+    internal fun renderOf(shot: String, ref: GateRef): Triple<Int, Int, Float>? = renders.getOrPut(ref) {
+        val f = File(flutterDir, "${ref.dir}/render.tsv")
+        if (!f.isFile) emptyMap()
+        else f.readLines().filter { it.isNotBlank() && !it.startsWith("#") }.map { it.split('\t') }.filter { it.size >= 4 } // NV: four columns
+            .associate { it[0] to Triple(it[1].toInt(), it[2].toInt(), it[3].toFloat()) } // NV: render.tsv columns shot, w dp, h dp, density
+    }[shot]
+
+    /** The axes of one shot `<name>_<mode>`: [window] and [density] win, then render.tsv, then the name. */
+    internal fun axesOf(name: String, mode: String, ref: GateRef, textScale: Float?, window: Pair<Int, Int>?, density: Float?): Axes {
+        val named = axesOf(name)
+        val listed = renderOf("${name}_$mode", ref)
+        return Axes(
+            rtl = named.rtl,
+            scale = textScale ?: named.scale,
+            w = window?.first ?: listed?.first ?: named.w,
+            h = window?.second ?: listed?.second ?: named.h,
+            d = density ?: listed?.third ?: 1f,
+        )
     }
 
     /**
@@ -97,12 +126,14 @@ object FlutterGoldenGate {
         modes: List<String> = listOf("light", "dark"),
         wrap: @Composable (@Composable () -> Unit) -> Unit = { it() },
         textScale: Float? = null,
+        window: Pair<Int, Int>? = null,
+        density: Float? = null,
         act: (androidx.compose.ui.test.ComposeUiTest.() -> Unit)? = null,
         content: @Composable () -> Unit,
     ): Map<String, Double> {
-        val axes = axesOf(name).let { if (textScale == null) it else Axes(it.rtl, textScale, it.w, it.h) }
         val result = LinkedHashMap<String, Double>()
         for (mode in modes) {
+            val axes = axesOf(name, mode, ref, textScale, window, density)
             val native = render(axes, mode == "dark", motion, style, frame, wrap, content, act = act)
             result[mode] = compare("${name}_$mode", ref, native)
         }
@@ -126,10 +157,10 @@ object FlutterGoldenGate {
         val tag = if (rtl) "ar" else "en"
         Locale.setDefault(Locale.forLanguageTag(tag))
         var native: BufferedImage? = null
-        runDesktopComposeUiTest(axes.w, axes.h) {
+        runDesktopComposeUiTest(kotlin.math.round(axes.w * axes.d).toInt(), kotlin.math.round(axes.h * axes.d).toInt()) {
             setContent {
                 CompositionLocalProvider(
-                    LocalDensity provides Density(1f, fontScale = scale),
+                    LocalDensity provides Density(axes.d, fontScale = scale),
                     LocalLayoutDirection provides if (rtl) LayoutDirection.Rtl else LayoutDirection.Ltr,
                 ) {
                     KitTheme(

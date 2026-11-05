@@ -5,6 +5,11 @@ Subcommands (gate_order.sh calls them in this order; each exits non-zero on a fa
   static   --order NN          write set, numbers cited from Flutter, Material and kit-only rules, copy, signatures, commits
   fetch    --order NN          copy the order's Flutter goldens into looks-gate/flutter/<ref9>/
   modules  --order NN          print the Gradle modules whose desktopTest runs the order's gate cases
+  tests    --order NN          one line per module: <module> TAB <--tests filters>; with RB_PARTS only the classes of
+                               those parts (<Pascal>GateTest / <Pascal>ParityTest, or a test naming the part or its goldens)
+  renders  --order NN|all      each golden's render window and density (WxH@D) and where it came from; a per-order count
+  recheck  --order NN          once order NN is done: re-gate every shot of a merged order waived DEPENDS_ON NN
+                               (gate_order.sh --recheck MM per order MM, RB_PARTS = the parts of those shots)
   chunks   --order NN          one line per part: id, golden count, the part's write globs (chunks.py prints it)
   RB_PARTS="part-a part-b"     restricts static (write set), fetch, evaluate and the manifest to those parts of NN
   evaluate --order NN          measure looks-out/gate trios (rasterisation-tolerant, RB_METRICS_JAVA), apply
@@ -44,6 +49,23 @@ CITE = re.compile(r'//\s*(FG?|NV):\s*(.*)$')
 MAIN_KT = re.compile(r'^native/.+/src/(commonMain|androidMain|desktopMain|iosMain)/.+\.kt$')
 WAIVER_CODES = {'NO_NATIVE_STATE': 'screen', 'DEFERRED': 'screen', 'PLATFORM_ONLY': 'any', 'GALLERY_FOREIGN': 'gallery'}
 WAIVER_CAP = {'kit': 0.05, 'screen': 0.25, 'gallery': 0.30}
+# DEPENDS_ON <order>: the shot's only difference comes from a part of an order that is not merged yet. Off the cap; the
+# named order must exist, be another order and have no <order>.done in RB_STATE; listed in looks-out/gate/deferred.tsv.
+DEPENDS = re.compile(r'^DEPENDS_ON\s+(\w+)$')
+STATE = os.environ.get('RB_STATE', os.path.expanduser('~/wt/ui/state'))
+RECHECK = os.environ.get('RB_RECHECK', '')  # set by `recheck`: the done order whose DEPENDS_ON waivers no longer apply
+
+
+def depends_on(code):
+    m = DEPENDS.match(code.strip())
+    if not m:
+        return None
+    v = m.group(1)
+    return f'{int(v):02d}' if v.isdigit() else v
+
+
+def order_done(o):
+    return os.path.exists(os.path.join(STATE, f'{o}.done'))
 
 
 def run(*a, check=True, cwd=ROOT):
@@ -355,8 +377,151 @@ def ref_dir(ref):
     return os.path.join(ROOT, 'looks-gate/flutter', (GREF if ref == 'glass' else FREF)[:9])
 
 
+# ------------------------------------------------------------------ render size and density
+# Each golden is rendered natively at a window (dp) and a density, chosen per golden in this order:
+#   tsv     an explicit 7th column `WxH@D` on the golden's row in NN.gate.tsv
+#   name    the PNG is exactly the name's window (`_<W>x<H>` suffix, else 412x915) at density 1: every gallery shot
+#   source  the golden's test captures with a literal `toImage(pixelRatio: D)` and the PNG divides by D
+#           (window = PNG / D; the test's boundary is its whole view, as kit_step_light_golden_test.dart's is)
+#   ratio   the PNG is an exact integer multiple D of the name's window
+#   png     anything else: window = the PNG's pixel size, density 1 (the recorded default)
+# fetch writes the result to looks-gate/flutter/<ref9>/render.tsv; FlutterGoldenGate.check reads it, and evaluate
+# divides blob (px²) and line-shift (px) by the density so the tier thresholds stay in density-1 pixels.
+GALLERY_WINDOW = (412, 915)  # F: test/goldens/kit/kit_gallery.dart:109 (kitGalleryName leaves this size out)
+RENDER_TSV = 'render.tsv'
+RENDER_COL = re.compile(r'^(\d+)x(\d+)@(\d+(?:\.\d+)?)$')
+SUFFIX = re.compile(r'_(\d+)x(\d+)$')
+RATIO = re.compile(r'toImage\([^;]*?pixelRatio:\s*(\d+(?:\.\d+)?)\s*[,)]', re.S)
+
+
+def shot_of(path):
+    return os.path.basename(path)[:-4]
+
+
+def name_window(shot):
+    m = SUFFIX.search(re.sub(r'_(dark|light)$', '', shot))
+    return (int(m.group(1)), int(m.group(2))) if m else GALLERY_WINDOW
+
+
+def png_wh(data):
+    if data[:8] != b'\x89PNG\r\n\x1a\n' or len(data) < 24:
+        return None
+    return int.from_bytes(data[16:20], 'big'), int.from_bytes(data[20:24], 'big')
+
+
+def repo_of(ref):
+    return (GLASS_REPO, GREF) if ref == 'glass' else (FLUTTER_REPO, FREF)
+
+
+def blobs(repo, sha, paths):
+    """path -> bytes at sha (missing paths left out), one `git cat-file --batch` for all of them."""
+    paths = list(dict.fromkeys(paths))
+    if not paths:
+        return {}
+    p = subprocess.run(['git', '-C', repo, 'cat-file', '--batch'], input=''.join(f'{sha}:{x}\n' for x in paths).encode(),
+                       capture_output=True)
+    out, buf, i = {}, p.stdout, 0
+    for x in paths:
+        nl = buf.index(b'\n', i)
+        head = buf[i:nl].split()
+        i = nl + 1
+        if len(head) == 3:
+            n = int(head[2])
+            out[x] = buf[i:i + n]
+            i += n + 1
+    return out
+
+
+def part_tests(nn):
+    """part id -> the Flutter golden test files the order's table names for it."""
+    out = {}
+    for line in open(order_file(nn), encoding='utf-8'):
+        m = re.match(r'\|\s*\d+\s*\|\s*`(part-[\w-]+)`\s*\|', line)
+        if m:
+            cells = [c.strip() for c in line.strip().strip('|').split('|')]
+            out[m.group(1)] = re.findall(r'(test/[\w/.-]+?\.dart)', cells[3] if len(cells) > 3 else '')
+    return out
+
+
+_ratio_cache = {}
+
+
+def capture_ratio(ref, test):
+    """The one literal toImage pixelRatio a golden test captures with, else None (none, several, or an expression)."""
+    key = (ref, test)
+    if key not in _ratio_cache:
+        repo, sha = repo_of(ref)
+        src = blobs(repo, sha, [test]).get(test, b'').decode('utf-8', 'replace')
+        vals = {float(v) for v in RATIO.findall(src)}
+        _ratio_cache[key] = vals.pop() if len(vals) == 1 else None
+    return _ratio_cache[key]
+
+
+def render_of(row, wh, tests):
+    """(w dp, h dp, density, how) for a golden manifest row, its PNG size and its part's test files."""
+    if len(row) > 6 and RENDER_COL.match(row[6]):
+        w, h, d = RENDER_COL.match(row[6]).groups()
+        return int(w), int(h), float(d), 'tsv'
+    W, H = name_window(shot_of(row[3]))
+    if wh is None or wh == (W, H):
+        return W, H, 1.0, 'name'
+    pw, ph = wh
+    for t in tests:
+        d = capture_ratio(row[2], t)
+        if d and d != 1 and pw % d == 0 and ph % d == 0:
+            return int(pw / d), int(ph / d), d, 'source'
+    if pw % W == 0 and ph % H == 0 and pw // W == ph // H > 1:
+        return W, H, float(pw // W), 'ratio'
+    return pw, ph, 1.0, 'png'
+
+
+def fmt_d(d):
+    return f'{d:g}'
+
+
+def read_renders(ref):
+    out = {}
+    f = os.path.join(ref_dir(ref), RENDER_TSV)
+    if os.path.exists(f):
+        for line in open(f, encoding='utf-8'):
+            c = line.rstrip('\n').split('\t')
+            if len(c) >= 4 and not line.startswith('#'):
+                out[c[0]] = (int(c[1]), int(c[2]), float(c[3]), c[4] if len(c) > 4 else '')
+    return out
+
+
+def cmd_renders(nn):
+    """Every golden's render (one line each, tab separated: order, shot, WxH@D, how, PNG size), then per order the count
+    of goldens that are not at a gallery window and density 1."""
+    orders = sorted(os.path.basename(f)[:2] for f in glob.glob(os.path.join(DOC, 'orders', '[0-9][0-9].gate.tsv'))) \
+        if nn == 'all' else [nn]
+    summary = []
+    for o in orders:
+        man = manifest(o, whole=True) if nn == 'all' else manifest(o)
+        tests = part_tests(o)
+        goldens = [r for r in man if r[0] == 'golden']
+        data = {}
+        for ref in ('product', 'glass'):
+            repo, sha = repo_of(ref)
+            data.update({(ref, k): v for k, v in blobs(repo, sha, [r[3] for r in goldens if r[2] == ref]).items()})
+        odd = {}
+        for r in goldens:
+            wh = png_wh(data.get((r[2], r[3]), b''))
+            w, h, d, how = render_of(r, wh, tests.get(r[1], []))
+            if how != 'name':
+                odd[how] = odd.get(how, 0) + 1
+            print(f'{o}\t{shot_of(r[3])}\t{w}x{h}@{fmt_d(d)}\t{how}\t{"x".join(map(str, wh)) if wh else "missing"}')
+        summary.append((o, len(goldens), odd))
+    print('# order\tgoldens\tnon-default\tby how')
+    for o, n, odd in summary:
+        print(f'# {o}\t{n}\t{sum(odd.values())}\t{" ".join(f"{k}={v}" for k, v in sorted(odd.items())) or "-"}')
+    return 0
+
+
 def cmd_fetch(nn):
     n = 0
+    tests = part_tests(nn)
+    renders = {}
     for r in manifest(nn):
         if r[0] != 'golden':
             continue
@@ -364,16 +529,28 @@ def cmd_fetch(nn):
         d = ref_dir(ref)
         os.makedirs(d, exist_ok=True)
         dst = os.path.join(d, os.path.basename(path))
-        if os.path.exists(dst):
-            continue
-        repo, sha = (GLASS_REPO, GREF) if ref == 'glass' else (FLUTTER_REPO, FREF)
-        data = subprocess.run(['git', '-C', repo, 'show', f'{sha}:{path}'], capture_output=True)
-        if data.returncode != 0:
-            print(f'FAIL F1 golden not found at the ref: {path} ({ref})')
-            return 1
-        open(dst, 'wb').write(data.stdout)
-        n += 1
-    print(f'fetch: {n} new goldens')
+        if not os.path.exists(dst):
+            repo, sha = repo_of(ref)
+            data = subprocess.run(['git', '-C', repo, 'show', f'{sha}:{path}'], capture_output=True)
+            if data.returncode != 0:
+                print(f'FAIL F1 golden not found at the ref: {path} ({ref})')
+                return 1
+            open(dst, 'wb').write(data.stdout)
+            n += 1
+        with open(dst, 'rb') as fh:
+            wh = png_wh(fh.read(24))
+        renders.setdefault(ref, {})[shot_of(path)] = render_of(r, wh, tests.get(r[1], []))
+    odd = 0
+    for ref, got in renders.items():
+        have = read_renders(ref)
+        have.update(got)
+        with open(os.path.join(ref_dir(ref), RENDER_TSV), 'w', encoding='utf-8') as fh:
+            fh.write('# shot\twindow w dp\twindow h dp\tdensity\thow (rb_gate.py render_of)\n')
+            for shot in sorted(have):
+                w, h, dd, how = have[shot]
+                fh.write(f'{shot}\t{w}\t{h}\t{fmt_d(dd)}\t{how}\n')
+        odd += sum(1 for v in got.values() if v[3] != 'name')
+    print(f'fetch: {n} new goldens, {odd} rendered at a non-default window or density (looks-gate/flutter/*/{RENDER_TSV})')
     return 0
 
 
@@ -387,6 +564,39 @@ def cmd_modules(nn):
         if m not in mods:
             mods.append(m)
     print(' '.join(mods))
+    return 0
+
+
+def pascal(pid):
+    return ''.join(x[:1].upper() + x[1:] for x in pid.split('-', 1)[1].replace('glass-', '').split('_'))
+
+
+def cmd_tests(nn):
+    """The Gradle desktopTest filters, one module per line. Whole order: '*.rb.o<NN>.*' in every module with gate cases.
+    RB_PARTS: only the test classes of those parts, found by name (<Pascal>GateTest.kt, <Pascal>ParityTest.kt) or by
+    content (the class names a selected part id or one of its golden stems); a module with none of them is left out."""
+    sel = selected_parts()
+    files = sorted(glob.glob(os.path.join(ROOT, 'native', '*', '*', 'src', 'desktopTest', 'kotlin', '**', 'rb', f'o{nn}', '*Test.kt'),
+                             recursive=True))
+    if sel:
+        man = manifest(nn)
+        names = {f'{pascal(p)}{k}Test' for p in sel for k in ('Gate', 'Parity')}
+        stems = {re.sub(r'_(dark|light)$', '', shot_of(r[3])) for r in man if r[0] == 'golden'}
+        keys = [f'"{p}"' for p in sel] + [f'"{x}"' for x in stems]
+    mods = {}
+    for f in files:
+        cls = os.path.basename(f)[:-3]
+        if sel and cls not in names:
+            try:
+                text = open(f, encoding='utf-8').read()
+            except OSError:
+                continue
+            if not any(k in text for k in keys):
+                continue
+        rel = os.path.relpath(f, os.path.join(ROOT, 'native')).split(os.sep)
+        mods.setdefault(f':{rel[0]}:{rel[1]}', []).append(f'*.rb.o{nn}.{cls}' if sel else f'*.rb.o{nn}.*')
+    for m, filt in mods.items():
+        print(m + '\t' + ' '.join(dict.fromkeys(filt)))
     return 0
 
 
@@ -635,17 +845,23 @@ def cmd_evaluate(nn):
     kind = 'screen' if any(r[0] == 'golden' and r[4] == 'T5' for r in man) else ('gallery' if nn in ('29', '30', '34', '36', '37') else 'kit')
     fails, per_part, results = [], {}, []
     goldens = [r for r in man if r[0] == 'golden']
-    waived = 0
+    waived, deferred = 0, []
     tm = tolerant_metrics([os.path.basename(r[3])[:-4] for r in goldens])
+    rend = {ref: read_renders(ref) for ref in ('product', 'glass')}
     for r in goldens:
         pid, ref, path, tier = r[1], r[2], r[3], r[4]
         shot = os.path.basename(path)[:-4]
         box_max, blob_max, ink_band, shift_max = T[tier]
         row = rows.get(shot)
         status, why, box = 'FAIL', 'no gate row (no test rendered it)', None
+        drawn = False  # rendered at the golden's size: only such a shot can wait for another order (DEPENDS_ON)
         m = tm.get(shot) if row else None
+        rd = rend[ref].get(shot)
+        dens = rd[2] if rd else 1.0
         if m:
             size, box, blob, ink, shift, npx = m[0], float(m[1]), int(m[2]), float(m[3]), float(m[5]), int(m[6])
+            # thresholds are density-1 pixels: a density-D shot has D² pixels per px² of blob and D per px of shift
+            blob, shift, npx = int(blob / (dens * dens)), shift / dens, int(npx / (dens * dens))
             lo, hi = 1 - ink_band, 1 / (1 - ink_band)
             bad_ = []
             # box counts only past a few scattered pixels: one-line shots have tiny ink boxes
@@ -657,21 +873,39 @@ def cmd_evaluate(nn):
                 bad_.append(f'line ink {ink:.2f}x (allowed {lo:.2f}-{hi:.2f})')
             if shift > shift_max:
                 bad_.append(f'line moved {shift:.1f} px (max {shift_max})')
+            drawn = size == 'same-size'
             if size != 'same-size':
-                why = f'size {size}'
+                why = f'size {size}' + (f' (render {rd[0]}x{rd[1]}@{fmt_d(dens)} by {rd[3]})' if rd else ' (no render.tsv: run fetch)')
             elif bad_:
                 why = ', '.join(bad_)
             else:
                 status, why = 'PASS', f'box {box:.2f}% blob {blob} px ink {ink:.2f}x moved {shift:.1f} px'
         elif row:
             box, blob, size = float(row[3]), int(row[4]), row[6]
+            drawn = size == 'same-size'
             if size != 'same-size':
                 why = f'size {size}'
             elif box > box_max or blob > blob_max:
                 why = f'box {box:.2f}% (max {box_max}) blob {blob} px (max {blob_max}) (raw rows: no PNG trio to measure)'
             else:
                 status, why = 'PASS', f'box {box:.2f}% blob {blob} px'
-        if status == 'FAIL' and shot in waivers:
+        dep = depends_on(waivers[shot][0]) if status == 'FAIL' and waivers.get(shot) else None
+        if dep:
+            reason = waivers[shot][1].strip() if len(waivers[shot]) > 1 else ''
+            if not drawn:
+                why += f' (DEPENDS_ON {dep} rejected: only a shot rendered at the golden\'s size can wait for another order)'
+            elif dep == nn or not glob.glob(os.path.join(DOC, 'orders', f'{dep}-*.md')):
+                why += f' (DEPENDS_ON {dep} rejected: not another order)'
+            elif not reason:
+                why += f' (DEPENDS_ON {dep} rejected: no reason naming the part)'
+            elif dep == RECHECK:
+                why += f' (recheck: order {dep} is done, its DEPENDS_ON waiver no longer applies)'
+            elif order_done(dep):
+                why += f' (DEPENDS_ON {dep} rejected: order {dep} is done, the shot must pass now; rb_gate.py recheck --order {dep})'
+            else:
+                status, why = 'DEFER', f'DEPENDS_ON {dep}: {reason[:80]}'
+                deferred.append((shot, dep))
+        elif status == 'FAIL' and shot in waivers:
             code = waivers[shot][0] if waivers[shot] else ''
             scope = WAIVER_CODES.get(code)
             if scope and (scope == 'any' or scope == kind) and len(waivers[shot]) > 1 and waivers[shot][1].strip():
@@ -683,6 +917,8 @@ def cmd_evaluate(nn):
         agg = per_part.setdefault(pid, {'ok': True, 'worst': -1.0, 'shot': None})
         if status == 'FAIL':
             agg['ok'] = False
+        if status == 'DEFER':
+            agg['deferred'] = agg.get('deferred', 0) + 1
         if box is not None and box > agg['worst']:
             agg['worst'], agg['shot'] = box, shot
     if goldens and waived > WAIVER_CAP[kind] * len(goldens):
@@ -737,7 +973,11 @@ def cmd_evaluate(nn):
     bad = [r for r in results if r[0] == 'FAIL']
     for f in fails:
         print('FAIL', f)
-    print(f'evaluate {oid}: {len(results)} goldens, {len(bad)} failed, {waived} waived, {len(fails)} other failures')
+    os.makedirs(OUTG, exist_ok=True)
+    with open(os.path.join(OUTG, 'deferred.tsv'), 'w', encoding='utf-8') as fh:
+        fh.write('# golden\torder\n' + ''.join(f'{g}\t{o}\n' for g, o in deferred))
+    print(f'evaluate {oid}: {len(results)} goldens, {len(bad)} failed, {waived} waived, {len(deferred)} deferred '
+          f'(DEPENDS_ON, off the cap; looks-out/gate/deferred.tsv), {len(fails)} other failures')
     # tracker
     url = os.environ.get('OC_UI_URL') or tracker_url()
     if url:
@@ -745,7 +985,7 @@ def cmd_evaluate(nn):
             if not pid.startswith('part-'):
                 continue
             body = {'id': pid, 'state': 'gate-pass' if agg['ok'] else 'gate-fail', 'agent': f'rb-{nn}-{engine}', 'engine': engine,
-                    'note': f'{oid} gate'}
+                    'note': f'{oid} gate' + (f', {agg["deferred"]} shots wait for other orders (DEPENDS_ON)' if agg.get('deferred') else '')}
             if agg['worst'] >= 0:
                 body['diff'] = round(agg['worst'], 2)
                 s = agg['shot']
@@ -762,13 +1002,53 @@ def cmd_evaluate(nn):
     return 1 if (bad or fails) else 0
 
 
+def cmd_recheck(nn):
+    """Order NN is done: re-gate every shot another order waived DEPENDS_ON NN, per waiving order MM, with
+    `RB_PARTS=<those shots' parts> RB_RECHECK=NN gate_order.sh --recheck MM` (no static checks: MM is merged). Writes
+    looks-out/recheck/NN.tsv (order, golden, status, why); exits 1 when a shot still fails."""
+    if not order_done(nn):
+        print(f'recheck: order {nn} is not done ({os.path.join(STATE, nn + ".done")} missing)')
+        return 2
+    todo = {}
+    for wf in sorted(glob.glob(os.path.join(DOC, 'waivers', '*.tsv'))):
+        mm = os.path.basename(wf)[:-4]
+        for line in open(wf, encoding='utf-8'):
+            c = line.rstrip('\n').split('\t')
+            if len(c) > 1 and not line.startswith('#') and depends_on(c[1]) == nn:
+                todo.setdefault(mm, []).append(c[0])
+    out_dir = os.path.join(ROOT, 'looks-out', 'recheck', nn)
+    os.makedirs(out_dir, exist_ok=True)
+    rows, bad = [], 0
+    for mm, shots in todo.items():
+        parts = sorted({r[1] for r in manifest(mm, whole=True) if r[0] == 'golden' and shot_of(r[3]) in shots})
+        print(f'recheck {nn}: order {mm}, {len(shots)} shots of {" ".join(parts)}', flush=True)
+        env = dict(os.environ, RB_PARTS=' '.join(parts), RB_RECHECK=nn)
+        p = subprocess.run([os.path.join(ROOT, 'native/tool/design/gate_order.sh'), '--recheck', mm], cwd=ROOT, env=env,
+                           capture_output=True, text=True)
+        open(os.path.join(out_dir, f'{mm}.log'), 'w', encoding='utf-8').write(p.stdout + p.stderr)
+        seen = {}
+        for line in p.stdout.splitlines():
+            m = re.match(r'^(PASS|FAIL|WAIVED|DEFER)\s+(\S+)\s+(.*)$', line)
+            if m:
+                seen[m.group(2)] = (m.group(1), m.group(3))
+        for shot in shots:
+            st, why = seen.get(shot, ('FAIL', f'not evaluated (gate exit {p.returncode}; looks-out/recheck/{nn}/{mm}.log)'))
+            bad += st != 'PASS'
+            rows.append((mm, shot, st, why))
+            print(f'{st:6} {mm} {shot}  {why}')
+    with open(os.path.join(ROOT, 'looks-out', 'recheck', f'{nn}.tsv'), 'w', encoding='utf-8') as fh:
+        fh.write('# order\tgolden\tstatus\twhy\n' + ''.join('\t'.join(r) + '\n' for r in rows))
+    print(f'recheck {nn}: {len(rows)} deferred shots in {len(todo)} orders, {bad} not passing (looks-out/recheck/{nn}.tsv)')
+    return 1 if bad else 0
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=['static', 'fetch', 'modules', 'evaluate', 'chunks'])
+    ap.add_argument('cmd', choices=['static', 'fetch', 'modules', 'evaluate', 'chunks', 'renders', 'tests', 'recheck'])
     ap.add_argument('--order', required=True)
     a = ap.parse_args()
-    nn = f'{int(a.order):02d}'
-    sys.exit({'static': cmd_static, 'fetch': cmd_fetch, 'modules': cmd_modules, 'evaluate': cmd_evaluate, 'chunks': cmd_chunks}[a.cmd](nn))
+    nn = 'all' if a.order == 'all' else f'{int(a.order):02d}'
+    sys.exit({'static': cmd_static, 'fetch': cmd_fetch, 'modules': cmd_modules, 'evaluate': cmd_evaluate, 'chunks': cmd_chunks, 'renders': cmd_renders, 'tests': cmd_tests, 'recheck': cmd_recheck}[a.cmd](nn))
 
 
 if __name__ == '__main__':
