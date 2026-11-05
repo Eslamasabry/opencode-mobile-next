@@ -2,8 +2,10 @@ package io.github.eslamasabry.oc.feature.git.rb.o46
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.text.AnnotatedString
 import io.github.eslamasabry.oc.engine.git.*
 import io.github.eslamasabry.oc.feature.git.presentation.*
 import io.github.eslamasabry.oc.feature.git.ui.GitScreen
@@ -78,6 +80,76 @@ class GitStepsTest {
         ) {
             GitScreen(state, actions)
         }
+    }
+
+    @Test
+    fun `B-NAV-021 failed save keeps draft and saved before failed send clears it`() =
+        runComposeUiTest {
+            val file = GitFileChange("app.kt", unstaged = GitChangeKind.Modified)
+            val ready = snapshot.copy(status = snapshot.status.copy(files = persistentListOf(file)))
+            val state =
+                mutableStateOf(
+                    GitUi(view = GitPageView.Ready(ready), selected = persistentSetOf(file.path))
+                )
+            setContent { Repository(state.value) }
+            val field = onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("git-message")))
+            field.performScrollTo().performTextReplacement("My saved work")
+            runOnIdle {
+                state.value =
+                    state.value.copy(
+                        generation = 1,
+                        result =
+                            GitActionResult.failure(
+                                GitAction.Commit,
+                                GitFailure(GitProblem.EmptyMessage),
+                            ),
+                    )
+            }
+            field.assert(
+                SemanticsMatcher.expectValue(
+                    SemanticsProperties.EditableText,
+                    AnnotatedString("My saved work"),
+                )
+            )
+            runOnIdle {
+                state.value =
+                    state.value.copy(
+                        generation = 2,
+                        savedNotSent = true,
+                        result =
+                            GitActionResult.failure(
+                                GitAction.Push,
+                                GitFailure(GitProblem.EnvironmentUnavailable),
+                            ),
+                    )
+            }
+            field.assert(
+                SemanticsMatcher.expectValue(SemanticsProperties.EditableText, AnnotatedString(""))
+            )
+        }
+
+    @Test
+    fun `B-NAV-020 explicitly edited suggestion survives changed selection`() = runComposeUiTest {
+        val file = GitFileChange("app.kt", unstaged = GitChangeKind.Modified)
+        val second = GitFileChange("other.kt", unstaged = GitChangeKind.Modified)
+        val ready =
+            snapshot.copy(status = snapshot.status.copy(files = persistentListOf(file, second)))
+        val state =
+            mutableStateOf(
+                GitUi(view = GitPageView.Ready(ready), selected = persistentSetOf(file.path))
+            )
+        setContent { Repository(state.value) }
+        val field = onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("git-message")))
+        field.performScrollTo().performTextReplacement("Update app.kt")
+        runOnIdle {
+            state.value = state.value.copy(selected = persistentSetOf(file.path, second.path))
+        }
+        field.assert(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.EditableText,
+                AnnotatedString("Update app.kt"),
+            )
+        )
     }
 
     @Test

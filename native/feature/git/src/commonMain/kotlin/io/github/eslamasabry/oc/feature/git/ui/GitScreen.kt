@@ -17,7 +17,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -97,26 +96,21 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 public fun GitScreen(state: GitUi, actions: GitActions, serverTools: @Composable () -> Unit = {}) {
     val message = remember { TextFieldState() }
-    var suggested by remember { mutableStateOf("") }
     var messageEdited by remember { mutableStateOf(false) }
     val defaultMessage =
         suggestedMessage(
             state.snapshot?.status?.files.orEmpty().filter { it.path in state.selected }
         )
-    LaunchedEffect(message) {
-        snapshotFlow { message.text.toString() }
-            .collect { if (it != suggested) messageEdited = true }
-    }
     LaunchedEffect(defaultMessage) {
         if (!messageEdited) {
-            suggested = defaultMessage
             message.edit { replace(0, length, defaultMessage) }
         }
     }
     LaunchedEffect(state.generation) {
-        val saved = state.result?.let { it.ok && it.note != null && it.commit != null } ?: false
+        val saved =
+            state.savedNotSent ||
+                (state.result?.let { it.ok && it.note != null && it.commit != null } ?: false)
         if (saved) {
-            suggested = ""
             message.edit { replace(0, length, "") }
             messageEdited = false
         }
@@ -210,7 +204,8 @@ public fun GitScreen(state: GitUi, actions: GitActions, serverTools: @Composable
                                 ),
                         )
                     }
-                is GitPageView.Ready -> Ready(view.snapshot, state, actions, enabled, message)
+                is GitPageView.Ready ->
+                    Ready(view.snapshot, state, actions, enabled, message) { messageEdited = true }
             }
             // The app's GitHub sign-in only where a push would use it; servers push with their own
             // (B-SEC-082).
@@ -269,6 +264,7 @@ private fun Ready(
     actions: GitActions,
     enabled: KitEnabled,
     message: TextFieldState,
+    onMessageEdited: () -> Unit,
 ) {
     val branch = snapshot.status.branch
     // F: lib/state/git_page_controller.dart:153-160
@@ -469,6 +465,7 @@ private fun Ready(
                     kind = KitFieldKind.Multiline,
                     enabled = enabled,
                     modifier = Modifier.testTag("git-message"),
+                    onTextChanged = { onMessageEdited() },
                 )
                 val known = files.filterNot { it.isConflicted }.map { it.path }.toSet()
                 val count = state.selected.count { it in known }
