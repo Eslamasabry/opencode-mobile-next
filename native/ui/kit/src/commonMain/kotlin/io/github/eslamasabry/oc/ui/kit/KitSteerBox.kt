@@ -80,7 +80,7 @@ public fun KitSteerBox(
                 onDictate,
                 modifier = Modifier.testTag("widget-mic"),
                 enabled =
-                    if (idle) KitEnabled.Enabled else KitEnabled.Disabled(blockedReason ?: busy),
+                    if (idle) dictationEnabled else KitEnabled.Disabled(blockedReason ?: busy),
                 working = phase == KitSteerBoxPhase.Dictating,
             )
             Spacer(Modifier.width(Space.S3.dp))
