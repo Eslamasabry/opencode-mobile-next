@@ -4,6 +4,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
+import io.github.eslamasabry.oc.ui.kit.state.KitInlineState
+import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
+import io.github.eslamasabry.oc.ui.words.res.workRefresh
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -88,12 +96,14 @@ public fun LinuxPortsScreen(state: LinuxPortsUi, actions: LinuxPortsActions) {
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::back,
+                actions = listOf(KitLineAction(stringResource(Res.string.workRefresh), actions::retry, icon = KitIcons.retry, enabled = !state.loading, disabledReason = stringResource(Res.string.linuxDevLogLoading))),
             )
         },
         width = KitScreenWidth.Reading,
         loading = state.loading,
     ) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+            if (state.loading && state.ports.isEmpty()) KitSkeletonRows()
             state.problem?.let { problem ->
                 KitErrorNotice(
                     title = stringResource(Res.string.linuxMgrLoadFailedTitle),
@@ -113,10 +123,11 @@ public fun LinuxPortsScreen(state: LinuxPortsUi, actions: LinuxPortsActions) {
                 )
             }
             if (!state.loading && state.problem == null && state.ports.isEmpty()) {
-                KitNotice(
+                KitInlineState(
                     title = stringResource(Res.string.linuxMgrPortsEmpty),
-                    message = stringResource(Res.string.linuxMgrPortsEmptyBody),
-                    liveRegion = false,
+                    body = stringResource(Res.string.linuxMgrPortsEmptyBody),
+                    icon = KitIcons.network,
+                    modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
                 )
             }
             if (state.programsFailed) {
@@ -191,7 +202,7 @@ public fun LinuxPortsScreen(state: LinuxPortsUi, actions: LinuxPortsActions) {
                 )
             }
             if (state.ports.isNotEmpty()) {
-                KitRowGroup(note = stringResource(Res.string.linuxMgrPortsNote)) {
+                KitRowGroup(note = stringResource(Res.string.linuxMgrPortsNote), leadingTiles = true) {
                     state.ports.forEach { PortRow(it, actions) }
                 }
             }
@@ -298,6 +309,13 @@ private fun PortRow(port: LinuxPort, actions: LinuxPortsActions) {
     val notPage = if (port.canPreview) null else stringResource(Res.string.linuxMgrPortNotPage)
     KitRow(
         title = stringResource(Res.string.linuxMgrPortRow, port.port),
+        leading = KitRowLeading.Glyph(when (port.kind) {
+            io.github.eslamasabry.oc.feature.linux.manager.LinuxProgramKind.OpenCodeServer -> KitIcons.server
+            io.github.eslamasabry.oc.feature.linux.manager.LinuxProgramKind.Paseo -> KitIcons.server
+            io.github.eslamasabry.oc.feature.linux.manager.LinuxProgramKind.Agent -> KitIcons.agent
+            io.github.eslamasabry.oc.feature.linux.manager.LinuxProgramKind.DevServer -> KitIcons.code
+            else -> KitIcons.network
+        }),
         supporting = listOfNotNull(owner, reach, notPage).joinToString(" · "),
         supportingMaxLines = 3,
         onClick = if (port.canPreview) ({ actions.preview(port.port) }) else null,
