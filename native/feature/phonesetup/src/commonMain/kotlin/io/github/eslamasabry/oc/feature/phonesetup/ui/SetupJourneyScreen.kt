@@ -410,11 +410,67 @@ private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions) {
     }
     KitSheet(visible = detailsOpen, onDismissRequest = { detailsOpen = false }, title = stringResource(Res.string.phoneSetupRingDetailsTitle)) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
-        rows.forEach { component ->
-            KitRow(itemTitle(component.id, state.options?.components?.firstOrNull { it.id == component.id }?.title ?: component.id),
-                supporting = component.stage,
-                trailing = if (finished(component)) KitRowTrailing.Value(component.version ?: stringResource(Res.string.phoneSetupStartInstalled), chevron = false) else KitRowTrailing.None)
-        }
+            rows.forEachIndexed { index, component ->
+                val measured =
+                    if ((component.bytesTotal ?: 0) > 0 && component.bytesDone != null) {
+                        val (received, total) =
+                            SetupProgressRules.formatBytePair(
+                                component.bytesDone!!,
+                                component.bytesTotal!!,
+                            )
+                        stringResource(Res.string.setupProgressViewBytes, received, total)
+                    } else
+                        component.percent?.let {
+                            stringResource(
+                                Res.string.setupProgressViewPercent,
+                                it.coerceIn(0.0, 100.0).toInt(),
+                            )
+                        }
+                val stage =
+                    component.stage?.let { setupMessageWords(it) }
+                        ?: if (component.state == ComponentState.Checking)
+                            stringResource(Res.string.setupProgressViewChecking)
+                        else null
+                val supporting =
+                    when (component.state) {
+                        ComponentState.Done,
+                        ComponentState.Skipped -> component.version
+                        ComponentState.Failed -> runtimeProblem(component.error ?: progress.error)
+                        ComponentState.Pending -> null
+                        else ->
+                            when {
+                                stage != null && measured != null ->
+                                    stringResource(
+                                        Res.string.setupProgressViewStageMeasured,
+                                        stage,
+                                        measured,
+                                    )
+                                else ->
+                                    measured
+                                        ?: stage
+                                        ?: stringResource(Res.string.setupProgressViewStarting)
+                            }
+                    }
+                KitChecklistStep(
+                    itemTitle(
+                        component.id,
+                        state.options?.components?.firstOrNull { it.id == component.id }?.title
+                            ?: component.id,
+                    ),
+                    state =
+                        when (component.state) {
+                            ComponentState.Done,
+                            ComponentState.Skipped -> KitStepState.Done
+                            ComponentState.Running,
+                            ComponentState.Checking -> KitStepState.Working
+                            ComponentState.Failed -> KitStepState.Failed
+                            ComponentState.Pending -> KitStepState.Waiting
+                        },
+                    index = index + 1,
+                    total = rows.size,
+                    supporting = supporting,
+                )
+            }
         KitDetailsFold(label = stringResource(Res.string.kitDetails), copyLabel = stringResource(Res.string.kitCopyDetails), text = state.details)
         }
     }

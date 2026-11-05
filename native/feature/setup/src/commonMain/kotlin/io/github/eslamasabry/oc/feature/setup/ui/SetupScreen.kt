@@ -39,6 +39,8 @@ import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.state.KitChecklistStep
+import io.github.eslamasabry.oc.ui.kit.state.KitStepState
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitProgress
@@ -141,7 +143,7 @@ public fun SetupScreen(state: SetupUi, actions: SetupActions) {
             title = stringResource(Res.string.phoneSetupRingDetailsTitle),
         ) {
             progress?.let { p ->
-                p.steps.forEach { StepRow(it) }
+                p.steps.forEachIndexed { index, step -> StepRow(step, index + 1, p.steps.size, p.failure) }
                 p.details?.let {
                     KitDetailsFold(
                         label = stringResource(Res.string.kitDetails),
@@ -239,28 +241,45 @@ private fun ProgressPage(p: SetupProgressUi, openDetails: () -> Unit) {
 }
 
 @Composable
-private fun StepRow(step: SetupStepUi) {
-    val finished = step.state == ComponentState.Done || step.state == ComponentState.Skipped
+private fun StepRow(step: SetupStepUi, index: Int, total: Int, failure: SetupFailureLine?) {
     val measured =
-        step.bytes?.let { (done, total) -> stringResource(Res.string.setupProgressViewBytes, done, total) }
-            ?: step.percent?.let { stringResource(Res.string.setupProgressViewPercent, it) }
-    val stage = step.stage ?: if (step.state == ComponentState.Checking) stringResource(Res.string.setupProgressViewChecking) else null
+        step.bytes?.let { (done, total) ->
+            stringResource(Res.string.setupProgressViewBytes, done, total)
+        } ?: step.percent?.let { stringResource(Res.string.setupProgressViewPercent, it) }
+    val stage =
+        step.stage
+            ?: if (step.state == ComponentState.Checking)
+                stringResource(Res.string.setupProgressViewChecking)
+            else null
     val supporting =
         when (step.state) {
-            ComponentState.Running, ComponentState.Checking ->
+            ComponentState.Running,
+            ComponentState.Checking ->
                 when {
-                    measured != null && stage != null -> stringResource(Res.string.setupProgressViewStageMeasured, stage, measured)
-                    else -> measured ?: stage ?: stringResource(Res.string.setupProgressViewStarting)
+                    measured != null && stage != null ->
+                        stringResource(Res.string.setupProgressViewStageMeasured, stage, measured)
+                    else ->
+                        measured ?: stage ?: stringResource(Res.string.setupProgressViewStarting)
                 }
-            else -> null
+            ComponentState.Done,
+            ComponentState.Skipped -> step.version
+            ComponentState.Failed -> failure?.let { failureLine(it) }
+            ComponentState.Pending -> null
         }
-    KitRow(
+    KitChecklistStep(
         title = step.title,
+        state =
+            when (step.state) {
+                ComponentState.Done,
+                ComponentState.Skipped -> KitStepState.Done
+                ComponentState.Running,
+                ComponentState.Checking -> KitStepState.Working
+                ComponentState.Failed -> KitStepState.Failed
+                ComponentState.Pending -> KitStepState.Waiting
+            },
+        index = index,
+        total = total,
         supporting = supporting,
-        supportingMaxLines = 2,
-        trailing =
-            if (finished) KitRowTrailing.Value(step.version ?: stringResource(Res.string.phoneSetupStartInstalled), chevron = false)
-            else KitRowTrailing.None,
     )
 }
 
