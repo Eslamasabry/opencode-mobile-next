@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.feature.chatcomposer.ui
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -51,10 +49,11 @@ import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
-import io.github.eslamasabry.oc.ui.kit.chip.KitChipTone
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerStatusStrip
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitStopState
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerTextBox
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerMic
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitStopAndSendPill
@@ -70,7 +69,7 @@ import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.approvalModeAskTitle
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailed
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailedKept
-import io.github.eslamasabry.oc.ui.words.res.chatStripAutoApprove
+import io.github.eslamasabry.oc.ui.words.res.chatChipAutoApproveOn
 import io.github.eslamasabry.oc.ui.words.res.chatStripAutoApprovePaused
 import io.github.eslamasabry.oc.ui.words.res.chatSubagentReadOnly
 import io.github.eslamasabry.oc.ui.words.res.chatUiNextTurnsModel
@@ -199,18 +198,29 @@ private fun NoteLine(note: ComposerNote, actions: ComposerActions) {
 @Composable
 private fun ChipRow(state: ComposerUi, actions: ComposerActions) {
     val stop = state.chips.filterIsInstance<ComposerChip.Stop>().firstOrNull()
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-        Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-            state.chips.filterIsInstance<ComposerChip.Approval>().forEach { chip ->
-                KitChip(approvalWords(chip.mode), kind = KitChipKind.Action, icon = if (chip.mode == ApprovalMode.AutoApprove) KitIcons.check else KitIcons.shield,
-                    tone = if (chip.mode == ApprovalMode.AutoApprove) KitChipTone.Active else KitChipTone.Neutral,
-                    onClick = actions::onApprovalChip)
-            }
+    val approvals = state.chips.filterIsInstance<ComposerChip.Approval>()
+    val model = state.chips.filterIsInstance<ComposerChip.Model>().firstOrNull()
+    KitComposerStatusStrip(
+        hasChips = approvals.isNotEmpty(),
+        model = if (model == null) null else ({
+            KitChip(modelChipWords(model), kind = KitChipKind.Action, icon = KitIcons.model, opensMenu = true, onClick = actions::onModelChip)
+        }),
+        stop = if (stop == null) null else ({
+            KitComposerStop(
+                stringResource(Res.string.kitTurnLiveStopShort), stringResource(Res.string.kitTurnLiveStopShort), actions::onStop,
+                state = if (stop.stuck) KitStopState.Stuck else KitStopState.Running,
+                armKey = state.sends,
+            )
+        }),
+    ) {
+        approvals.forEach { chip ->
+            KitChip(
+                approvalWords(chip.mode), kind = KitChipKind.Action,
+                icon = if (chip.mode == ApprovalMode.Paused) KitIcons.pause else KitIcons.shield,
+                selected = if (chip.mode == ApprovalMode.AutoApprove) true else null,
+                onClick = actions::onApprovalChip,
+            )
         }
-        state.chips.filterIsInstance<ComposerChip.Model>().forEach { chip ->
-            KitChip(modelChipWords(chip), Modifier.weight(1f, fill = false), kind = KitChipKind.Action, icon = KitIcons.model, opensMenu = true, onClick = actions::onModelChip)
-        }
-        stop?.let { KitComposerStop(stringResource(Res.string.kitTurnLiveStopShort), stringResource(Res.string.kitTurnLiveStopShort), actions::onStop) }
     }
 }
 
@@ -218,7 +228,7 @@ private fun ChipRow(state: ComposerUi, actions: ComposerActions) {
 private fun approvalWords(mode: ApprovalMode): String =
     when (mode) {
         ApprovalMode.AsksFirst -> stringResource(Res.string.approvalModeAskTitle)
-        ApprovalMode.AutoApprove -> stringResource(Res.string.chatStripAutoApprove)
+        ApprovalMode.AutoApprove -> stringResource(Res.string.chatChipAutoApproveOn)
         ApprovalMode.Paused -> stringResource(Res.string.chatStripAutoApprovePaused)
     }
 
