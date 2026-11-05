@@ -88,7 +88,7 @@ internal fun HubPage(
         Spacer(Modifier.height(Space.S2.dp))
         if (hub.query.isBlank()) {
             val large =
-                LocalDensity.current.fontScale * 10 >=
+                LocalDensity.current.fontScale * 10 >= // F: lib/ui/screens/settings_screen.dart:290
                     18 // F: lib/ui/screens/settings_screen.dart:290
             KitRowGroup {
                 hub.groups.forEach { group ->
