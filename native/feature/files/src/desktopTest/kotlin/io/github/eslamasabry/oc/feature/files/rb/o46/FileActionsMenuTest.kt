@@ -41,12 +41,20 @@ class FileActionsMenuTest {
             Proxy.newProxyInstance(
                 FolderActions::class.java.classLoader,
                 arrayOf(FolderActions::class.java),
-            ) { _, method, _ ->
+            ) { proxy, method, args ->
                 when (method.name) {
-                    "copyPath" -> copied += ui.actionsFor?.path
-                    "closeActions" -> ui = ui.copy(actionsFor = null)
+                    "equals" -> proxy === args?.getOrNull(0)
+                    "hashCode" -> System.identityHashCode(proxy)
+                    "toString" -> "TestActions"
+                    else -> {
+
+                        when (method.name) {
+                            "copyPath" -> copied += ui.actionsFor?.path
+                            "closeActions" -> ui = ui.copy(actionsFor = null)
+                        }
+                        null
+                    }
                 }
-                null
             } as FolderActions
         setContent {
             KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
