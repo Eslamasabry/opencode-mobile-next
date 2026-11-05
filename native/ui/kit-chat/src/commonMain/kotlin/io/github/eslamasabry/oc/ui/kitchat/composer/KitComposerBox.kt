@@ -211,11 +211,18 @@ public fun KitComposerSend(
                 .testTag("kit-composer-send-disc"),
             contentAlignment = Alignment.Center,
         ) {
-            if (working) KitWorkingMark(
-                ink,
-                size = tokens.smallIcon.dp,
-                modifier = Modifier.testTag("kit-composer-send-working"),
-            ) else Image(
+            if (working) Box(
+                Modifier.size(tokens.smallIcon.dp).testTag("kit-composer-send-working"),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (KitMotion.state.ambientLoops) KitWorkingMark(ink, size = tokens.smallIcon.dp)
+                else Image(
+                    KitIcons.statusDot,
+                    contentDescription = null,
+                    modifier = Modifier.matchParentSize(),
+                    colorFilter = ColorFilter.tint(ink),
+                )
+            } else Image(
                 KitIcons.send,
                 contentDescription = null,
                 modifier = Modifier.size(tokens.smallIcon.dp).graphicsLayer { scaleX = if (rtl) -1f else 1f },
