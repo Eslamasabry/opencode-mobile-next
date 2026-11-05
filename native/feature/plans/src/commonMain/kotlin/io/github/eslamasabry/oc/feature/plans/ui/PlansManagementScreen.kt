@@ -122,7 +122,7 @@ private fun AlertsBody(state: PlansManagementUi, plans: PlansUi, actions: PlansM
             supporting = stringResource(Res.string.m40UsageAlertsEvery),
             checked = p.enabled,
             enabled = hold,
-            supportingMaxLines = 2, // F: lib/ui/screens/usage/usage_alerts_screen.dart:135
+            supportingMaxLines = 2, // F: lib/ui/screens/usage/usage_alerts_screen.dart:109
             onCheckedChange = actions::setAlerts,
         )
     }
@@ -223,7 +223,7 @@ internal fun ThresholdChooser(
     @Composable
     fun label(value: Int): String =
         if (inherit) stringResource(Res.string.usageUsedPercent, value.toString())
-        else plansWords().left(100 - value)
+        else plansWords().left(100 - value) // F: lib/ui/screens/usage/usage_alerts_screen.dart:136
     val choices = buildList {
         if (inherit && default != null)
             add(
@@ -234,7 +234,8 @@ internal fun ThresholdChooser(
                 )
             )
         for (value in
-            (listOf(50, 60, 70, 80, 90, 100) + level)
+            (listOf(50, 60, 70, 80, 90, 100) +
+                    level) // F: lib/ui/screens/usage/usage_alerts_screen.dart:13
                 .distinct()
                 .sorted()) // F: lib/ui/screens/usage/usage_alerts_screen.dart:13
         add(KitChoice(value, label(value), enabled = enabled))
