@@ -40,6 +40,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.*
 import io.github.eslamasabry.oc.ui.words.res.*
 import kotlin.math.ceil
+import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.seconds
 import org.jetbrains.compose.resources.stringResource
 
@@ -70,6 +71,7 @@ public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyAction
         },
         width = KitScreenWidth.Reading,
         loading = state.checking,
+        bottom = if (idle || state.customizing || state.checking) null else ({ JobAction(state, actions) }),
     ) {
         if (!state.checking) {
             if (state.customizing || idle) StartHero(state, actions)
@@ -332,38 +334,47 @@ private fun Preflight(state: SetupJourneyUi, actions: SetupJourneyActions) {
 private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions) {
     val progress = state.progress
     var detailsOpen by remember { mutableStateOf(false) }
-    val rows = progress.components
+    val rows = progress.components.ifEmpty { state.install.map { ComponentProgress(it.id, ComponentState.Pending) } }
+    val memory = remember(progress.jobId ?: rows.joinToString { it.id }) { JourneyProgressMemory() }
     fun finished(row: ComponentProgress) = row.state == ComponentState.Done || row.state == ComponentState.Skipped
     val done = rows.count(::finished)
-    val current = rows.indexOfFirst { it.state == ComponentState.Running || it.state == ComponentState.Checking || it.state == ComponentState.Failed }
+    var current = rows.indexOfFirst { it.state == ComponentState.Running || it.state == ComponentState.Checking || it.state == ComponentState.Failed }
         .let { found -> if (found >= 0) found else rows.indexOfFirst { it.id == progress.current && !finished(it) } }
-    val row = rows.getOrNull(current)
     val halted = progress.canContinue
-    val measured = if (!halted) row?.fraction?.toFloat() else null
+    if (current < 0 && halted) current = rows.indexOfFirst { !finished(it) }
+    val row = rows.getOrNull(current)
+    val checking = rows.isNotEmpty() && rows.all { it.state == ComponentState.Checking || finished(it) } &&
+        rows.any { it.state == ComponentState.Checking }
+    val measured = if (!halted) memory.measured(row) else null
+    val eta = memory.eta(progress, state.options?.components.orEmpty())
     val subject = state.options?.components?.firstOrNull { it.id == row?.id }?.shortTitle ?: row?.id.orEmpty()
+    val unpacking = stringResource(Res.string.phoneSetupStageUnpackingLinux)
     val title = when (progress.state) {
         SetupState.Done -> stringResource(Res.string.setupProgressViewDone)
         SetupState.Failed -> stringResource(Res.string.setupProgressViewFailedTitle)
         SetupState.Interrupted -> stringResource(Res.string.phoneSetupRingInterruptedTitle)
         SetupState.Cancelled -> stringResource(Res.string.phoneSetupRingPausedTitle)
         else -> when {
-            row?.state == ComponentState.Checking -> stringResource(Res.string.phoneSetupRingChecking)
+            checking -> stringResource(Res.string.phoneSetupRingChecking)
             row == null || row.state == ComponentState.Pending -> stringResource(Res.string.setupProgressViewGettingStarted)
             row.id == SetupComponentIds.START -> stringResource(Res.string.phoneSetupStageStarting)
-            row.bytesTotal != null -> stringResource(Res.string.phoneSetupRingDownloading, subject)
+            row.stage?.let { it == unpacking || Regex("unpack|extract", RegexOption.IGNORE_CASE).containsMatchIn(it) } == true -> stringResource(Res.string.phoneSetupRingUnpacking, subject)
+            ((row.bytesTotal ?: 0) > (row.bytesDone ?: 0)) || row.stage?.let { Regex("download|fetch", RegexOption.IGNORE_CASE).containsMatchIn(it) } == true -> stringResource(Res.string.phoneSetupRingDownloading, subject)
             else -> stringResource(Res.string.phoneSetupRingInstalling, subject)
         }
     }
     val note = when (progress.state) {
         SetupState.Running, SetupState.Idle -> stringResource(Res.string.phoneSetupRingSafeToLeaveQuiet)
-        SetupState.Failed -> runtimeProblem(progress.error)
+        SetupState.Failed -> runtimeProblem(rows.firstOrNull { it.state == ComponentState.Failed }?.error ?: progress.error)
         SetupState.Interrupted, SetupState.Cancelled -> stringResource(Res.string.phoneSetupRingStoppedNote)
-        SetupState.Done -> stringResource(Res.string.phoneSetupStartReadyBody)
+        SetupState.Done -> null
     }
     val bytesDone = row?.bytesDone
     val bytesTotal = row?.bytesTotal
-    val caption = if (bytesDone != null && bytesTotal != null && bytesTotal > 0)
-        stringResource(Res.string.setupProgressViewBytes, journeySize(bytesDone), journeySize(bytesTotal)) else null
+    val caption = if (measured != null && bytesDone != null && bytesTotal != null && bytesTotal > 0) {
+        val (received, total) = SetupProgressRules.formatBytePair(bytesDone, bytesTotal)
+        stringResource(Res.string.setupProgressViewBytes, "\u2066$received\u2069", "\u2066$total\u2069")
+    } else null
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val availableHeight = maxHeight
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).heightIn(min = availableHeight)
@@ -374,33 +385,84 @@ private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions) {
                 halted = halted, caption = caption,
                 trail = rows.mapIndexed { index, step -> when {
                     finished(step) -> KitTrailMark.Done
-                    index == current -> KitTrailMark.Current
+                    index == current && !checking -> KitTrailMark.Current
                     else -> KitTrailMark.Waiting
                 } })
-            progress.etaSeconds?.takeIf { progress.state == SetupState.Running }?.let {
+            if (eta != null) {
                 Spacer(Modifier.height(Space.S6.dp))
-                val minutes = ceil(it / 60.0).toInt().coerceAtLeast(1) // NV: ETA seconds to whole minutes
-                KitText(org.jetbrains.compose.resources.pluralStringResource(Res.plurals.phoneSetupRingMinutesLeft, minutes, minutes), role = TypeRole.RowTitle, textAlign = TextAlign.Center)
+                val cost = if (eta < 60 && rows.none { it.state == ComponentState.Pending }) // F: lib/ui/screens/phone_setup/phone_setup_progress_screen.dart:300
+                    stringResource(Res.string.phoneSetupRingUnderMinute)
+                else {
+                    val minutes = (eta / 60.0).roundToInt().coerceAtLeast(1) // NV: seconds to nearest whole minute, as Flutter's cost line
+                    org.jetbrains.compose.resources.pluralStringResource(Res.plurals.phoneSetupRingMinutesLeft, minutes, minutes)
+                }
+                KitText(cost, role = TypeRole.RowTitle, tone = TextTone.Secondary, textAlign = TextAlign.Center)
             }
-            Spacer(Modifier.height(Space.S2.dp))
-            KitText(note, role = TypeRole.Secondary, tone = TextTone.Tertiary, textAlign = TextAlign.Center)
+            if (note != null) {
+                Spacer(Modifier.height(if (eta == null) Space.S6.dp else Space.S2.dp))
+                KitText(note, Modifier.widthIn(max = 320.dp), role = TypeRole.Secondary, tone = TextTone.Tertiary, textAlign = TextAlign.Center) // F: lib/ui/screens/phone_setup/phone_setup_progress_screen.dart:553
+            }
             Spacer(Modifier.height(Space.S3.dp))
             KitButton(stringResource(Res.string.kitDetails), { detailsOpen = true }, role = KitButtonRole.Tertiary)
             Spacer(Modifier.weight(1.3f)) // NV: Flutter Alignment(0,-.3) free space below
-            when {
-                progress.state == SetupState.Running -> KitButton(stringResource(Res.string.phoneSetupRingPause), { actions.askStop(); actions.confirmStop() }, fullWidth = true, role = KitButtonRole.Secondary, icon = io.github.eslamasabry.oc.ui.kit.icon.KitIcons.pause)
-                progress.canContinue -> KitButton(stringResource(Res.string.setupProgressViewContinue), actions::continueSetup, working = state.working)
-                progress.state == SetupState.Done -> KitButton(stringResource(Res.string.phoneSetupStartOpen), actions::done)
-            }
+
         }
     }
     KitSheet(visible = detailsOpen, onDismissRequest = { detailsOpen = false }, title = stringResource(Res.string.phoneSetupRingDetailsTitle)) {
+        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
         rows.forEach { component ->
             KitRow(itemTitle(component.id, state.options?.components?.firstOrNull { it.id == component.id }?.title ?: component.id),
                 supporting = component.stage,
                 trailing = if (finished(component)) KitRowTrailing.Value(component.version ?: stringResource(Res.string.phoneSetupStartInstalled), chevron = false) else KitRowTrailing.None)
         }
         KitDetailsFold(label = stringResource(Res.string.kitDetails), copyLabel = stringResource(Res.string.kitCopyDetails), text = state.details)
+        }
+    }
+}
+
+@Composable
+private fun JobAction(state: SetupJourneyUi, actions: SetupJourneyActions) {
+    when {
+        state.progress.state == SetupState.Running -> KitButton(
+            stringResource(Res.string.phoneSetupRingPause), { actions.askStop(); actions.confirmStop() },
+            fullWidth = true, role = KitButtonRole.Secondary, working = state.working,
+            icon = io.github.eslamasabry.oc.ui.kit.icon.KitIcons.pause,
+        )
+        // Ownership recovery requires an app-settings action which this contract does not expose.
+        SetupProgressRules.needsOwnershipRecovery(state.progress) -> Unit
+        state.progress.canContinue -> KitButton(
+            stringResource(Res.string.setupProgressViewContinue), actions::continueSetup, working = state.working,
+            icon = io.github.eslamasabry.oc.ui.kit.icon.KitIcons.play,
+        )
+        state.progress.state == SetupState.Done -> KitButton(stringResource(Res.string.phoneSetupStartOpen), actions::done)
+    }
+}
+
+/** UI memory from Flutter's _track / _measuredOf: a new job resets it; a new stage resets only its arc. */
+internal class JourneyProgressMemory {
+    private var measuredKey: Pair<String, String?>? = null
+    private var furthest = 0f
+    private var remaining: Int? = null
+
+    fun measured(row: ComponentProgress?): Float? {
+        if (row?.state != ComponentState.Running) return null
+        val fraction = row.fraction?.toFloat() ?: return null
+        val key = row.id to row.stage
+        furthest = if (key == measuredKey) maxOf(furthest, fraction) else fraction
+        measuredKey = key
+        return furthest
+    }
+
+    fun eta(progress: SetupProgress, registry: List<SetupComponent>): Int? {
+        if (progress.state != SetupState.Running) return null
+        progress.etaSeconds?.let { raw ->
+            val pending = progress.components.filter { it.state == ComponentState.Pending }.sumOf { row ->
+                registry.firstOrNull { it.id == row.id }?.estimatedSeconds ?: 0
+            }
+            val estimate = maxOf(raw, pending)
+            remaining = remaining?.let { minOf(it, estimate) } ?: estimate
+        }
+        return remaining
     }
 }
 
@@ -413,8 +475,12 @@ private fun runtimeProblem(error: SetupError?): String =
         is SetupError.Install -> stringResource(Res.string.phoneSetupErrorInstall, error.title)
         SetupError.NoInternet -> stringResource(Res.string.phoneSetupErrorNoInternet)
         SetupError.PackageRepair -> stringResource(Res.string.phoneSetupErrorPackageRepair)
-        SetupError.CannotStart,
-        SetupError.OwnershipUnknown -> stringResource(Res.string.phoneSetupErrorCannotStart)
+        SetupError.CannotStart -> stringResource(Res.string.phoneSetupErrorCannotStart)
+        SetupError.OwnershipUnknown -> stringResource(Res.string.inAppServerOwnershipRecoveryBody)
+        SetupError.StatusUnreadable -> stringResource(Res.string.setupRbStatusUnreadable)
+        SetupError.ToolsUncheckable -> stringResource(Res.string.setupRbToolsUncheckable)
+        SetupError.PersistenceFailure -> stringResource(Res.string.linuxSetupSavedFailed)
+        SetupError.Interrupted -> stringResource(Res.string.phoneSetupErrorInterrupted)
         SetupError.OpenCodeNoProgram -> stringResource(Res.string.phoneSetupErrorOpenCodeNoProgram)
         SetupError.OpenCodeWontRun -> stringResource(Res.string.phoneSetupErrorOpenCodeWontRun)
         SetupError.OpenCodeNoStart -> stringResource(Res.string.phoneSetupErrorOpenCodeNoStart)
