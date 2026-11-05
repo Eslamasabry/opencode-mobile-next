@@ -36,6 +36,9 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.modal.KitPageOverlay
+import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceRow
+import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceMark
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
@@ -358,13 +361,15 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
                 }
                 NewConversationSheet.Models ->
                     KitRowGroup {
-                        KitRow(
+                        KitChoiceRow(
+                            mark = KitChoiceMark.Tick,
                             title = stringResource(Res.string.p12NewDefaultModel),
                             selected = state.model == null,
                             onClick = { actions.chooseModel(null) },
                         )
                         state.setup?.models.orEmpty().forEach { model ->
-                            KitRow(
+                            KitChoiceRow(
+                            mark = KitChoiceMark.Tick,
                                 title = model.name,
                                 supporting = model.model.providerId,
                                 selected = model.model == state.model,
