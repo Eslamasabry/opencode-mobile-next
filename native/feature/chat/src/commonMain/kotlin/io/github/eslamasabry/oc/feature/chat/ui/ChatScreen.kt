@@ -623,7 +623,7 @@ public fun ChatScreen(
                     reads = replyReader != null,
                 )
                 ChatContextSheet(facts.context, contextOpen) { contextOpen = false }
-                ChatTasksSheet(facts.tasks, tasksOpen) { tasksOpen = false }
+                ChatTasksSheet(facts.tasks, tasksOpen, onDismiss = { tasksOpen = false }, running = state.live != null)
                 if (activeContext != null) ActiveContextSheet(activeContext)
                 SelectTextSheet(state.select, actions)
                 PictureSheet(state.picture, actions)
