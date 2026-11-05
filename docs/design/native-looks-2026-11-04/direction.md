@@ -188,7 +188,7 @@ the table is complete.
 | label | 13 / 18 | 500 | 0 | same: chips, section labels |
 | meta | 12 / 16 | 500 | +0.1, tabular | **new**: times, counts, sizes, step durations |
 | button | 16 / 20 | 500 | 0 | same |
-| mono | 13 / 20 | 400 | 0 | line height 19 › 20 (4 dp grid) |
+| mono | 13 / 19 | 400 | 0 | same (kept at 19: the command box caps output by line height; 2026-11-05) |
 | monoSmall | 12 / 16 | 400 | 0 | **new**: tool arguments in step rows |
 
 ### 5.3 Shape (corner radius in dp; pressed = the morph target)

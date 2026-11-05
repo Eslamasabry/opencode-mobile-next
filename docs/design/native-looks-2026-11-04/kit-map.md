@@ -130,3 +130,15 @@ looks different: 12, looks different (unverified): 58, matches: 10, missing: 20 
 | KitChatEnvironment, KitChatLocals | `ui/kit-chat/` | Chat-side composition locals |
 | PdfPageRasterizer, PdfLimits | `ui/kit-content/pdf, androidMain` | Host-side PDF decode with byte caps (Flutter used a plugin widget) |
 | Appearance, KitAppearance | `ui/design/effects/Appearance.kt` | Appearance mode model (light/dark/system) kept in design module |
+
+## Known test failures (left for the test phase)
+
+The `:ui:kit-chat` desktop tests did not compile at the base commit (2761c9e5e); once `ChatScenes.kt` was fixed
+(138046fd3), 3 of 135 fail. None of them is in code the looks pass changed:
+
+| Test | What fails | Likely cause |
+|---|---|---|
+| `KitToolRowTest` "the command box keeps the prompt sign out of the command and caps output at twelve lines" | `onMore` is never called for 20 lines | The test expects the hand-off at 20 lines; `KitCommandBox` now expands in place up to `KIT_COMMAND_INLINE_CAP` = 200 |
+| `StopGuardTest` "holding Stop opens one item, Stop after this step..." | two nodes carry "Stop after this step" | the hold menu and its screen-reader twin both match the finder |
+| `ReplyStreamFrameBenchmark` "B-CHAT-096 PB-11 a 6,000-word reply..." | times out after 1 min | a benchmark on a shared VPS |
+
