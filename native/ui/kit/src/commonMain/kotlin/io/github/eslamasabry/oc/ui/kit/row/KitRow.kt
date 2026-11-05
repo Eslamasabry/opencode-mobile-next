@@ -110,6 +110,7 @@ public fun KitRow(
     state: KitRowState? = null,
     meta: String? = null,
     titleMaxLines: Int = 1,
+    titleAccent: Boolean = false,
     onClick: (() -> Unit)? = null,
 ) {
     kitAssert(title.isNotBlank()) { "KitRow: a row needs a title" }
@@ -167,7 +168,7 @@ public fun KitRow(
                 Box(Modifier.size((tokens.iconTile * minOf(scale, TextScalePolicy.ICON_CAP)).dp).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
                     Image(
                         leading.icon, null, Modifier.size(glyph),
-                        colorFilter = ColorFilter.tint(if (enabled) colors.text2 else colors.text3),
+                        colorFilter = ColorFilter.tint(if (!enabled) colors.text3 else if (leading.current) colors.accent else colors.text2),
                     )
                 }
             }
@@ -201,7 +202,7 @@ public fun KitRow(
                             if (titleIsFileName) kitBreakableFileName(title) else title,
                             Modifier.weight(1f).testTag("kit-row-title"),
                             role = TypeRole.RowTitle,
-                            tone = if (enabled) TextTone.Primary else TextTone.Tertiary,
+                            tone = if (!enabled) TextTone.Tertiary else if (titleAccent) TextTone.Accent else TextTone.Primary,
                             maxLines = if (titleIsFileName && large) Int.MAX_VALUE else kitRowTitleLines(scale, titleMaxLines),
                         )
                         meta?.let {
@@ -259,6 +260,11 @@ public fun KitRow(
                     value != null && !valueBelow -> RowValue(value)
                     action != null && !actionBelow -> KitInlineAction(action)
                     trailing == KitRowTrailing.Chevron -> RowChevron()
+                    trailing == KitRowTrailing.Check -> io.github.eslamasabry.oc.ui.kit.icon.KitIcon(
+                        io.github.eslamasabry.oc.ui.kit.icon.KitIcons.check,
+                        Modifier.testTag("kit-row-check"),
+                        size = io.github.eslamasabry.oc.ui.kit.icon.KitIconSize.Small,
+                    )
                     else -> Unit
                 }
             }

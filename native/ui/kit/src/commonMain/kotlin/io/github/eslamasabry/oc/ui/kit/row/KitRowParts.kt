@@ -44,7 +44,7 @@ public sealed interface KitRowLeading {
      * A kit glyph (Dart `KitRow.icon`): a bare 20 dp Phosphor glyph in the secondary ink, in the lead column, the way
      * the Flutter rows draw it. [tile] keeps the old 28 dp `surface3` tile for a row that sits among tiled rows.
      */
-    public data class Glyph(val icon: ImageVector, val tile: Boolean = false) : KitRowLeading
+    public data class Glyph(val icon: ImageVector, val tile: Boolean = false, val current: Boolean = false) : KitRowLeading
 
     /**
      * Two letters in the tile, for a thing with no glyph (a server, a project). Never coloured by
@@ -91,6 +91,9 @@ public sealed interface KitRowTrailing {
     /** The row opens a page. */
     public data object Chevron : KitRowTrailing
 
+    /** A chosen row, with the check after its words (Flutter project/model choices). */
+    public data object Check : KitRowTrailing
+
     /**
      * A value in quiet words, optionally with the chevron. It goes under the title when it cannot
      * share the line.
@@ -115,7 +118,7 @@ internal fun RowLeadingTile(leading: KitRowLeading, dim: Boolean) {
                 leading.icon,
                 null,
                 Modifier.size((tokens.smallIcon * minOf(kitTextScale(), TextScalePolicy.ICON_CAP)).dp),
-                colorFilter = ColorFilter.tint(if (dim) colors.text3 else colors.text2),
+                colorFilter = ColorFilter.tint(if (dim) colors.text3 else if (leading.current) colors.accent else colors.text2),
             )
         }
         return

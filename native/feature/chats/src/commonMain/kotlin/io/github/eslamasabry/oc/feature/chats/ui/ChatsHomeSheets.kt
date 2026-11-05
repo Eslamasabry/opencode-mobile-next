@@ -2,6 +2,10 @@ package io.github.eslamasabry.oc.feature.chats.ui
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.tokens.Space
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -141,60 +145,48 @@ internal fun ChatsHomeSheets(state: ChatsUi, actions: ChatsActions) {
 
 @Composable
 private fun ProjectChoices(state: ChatsUi, actions: ChatsActions) {
-    KitRowGroup {
-        KitChoiceRow(
-            mark = KitChoiceMark.Tick,
-            leading = { KitIcon(KitIcons.folderOpen) },
+    val all = state.filters.projectDirectory == null && !state.otherFoldersSelected
+    KitRowGroup(leadingTiles = true) {
+        KitRow(
             title = stringResource(Res.string.chatsHomeAllProjects),
-            supporting =
-                pluralStringResource(
-                    Res.plurals.chatsFilterChatCount,
-                    state.allCount,
-                    state.allCount,
-                ),
-            selected = state.filters.projectDirectory == null && !state.otherFoldersSelected,
+            leading = KitRowLeading.Glyph(KitIcons.folderOpen, current = all),
+            supporting = pluralStringResource(Res.plurals.chatsFilterChatCount, state.allCount, state.allCount),
+            selected = all,
+            trailing = if (all) KitRowTrailing.Check else KitRowTrailing.None,
             onClick = actions::allProjects,
         )
         state.projectChoices.forEach { project ->
+            val selected = state.filters.projectDirectory == project.directory
             val parts = buildList {
-                add(
-                    pluralStringResource(
-                        Res.plurals.chatsFilterChatCount,
-                        project.chatCount,
-                        project.chatCount,
-                    )
-                )
-                if (project.runningCount > 0)
-                    add(stringResource(Res.string.chatsFilterRunningCount, project.runningCount))
-                if (project.directory in state.projectNeedsYou)
-                    add(stringResource(Res.string.chatsFilterNeedsYouWord))
+                add(pluralStringResource(Res.plurals.chatsFilterChatCount, project.chatCount, project.chatCount))
+                if (project.runningCount > 0) add(stringResource(Res.string.chatsFilterRunningCount, project.runningCount))
+                if (project.directory in state.projectNeedsYou) add(stringResource(Res.string.chatsFilterNeedsYouWord))
             }
-            KitChoiceRow(
-                mark = KitChoiceMark.Tick,
-                leading = { KitIcon(KitIcons.folderOpen) },
+            KitRow(
                 title = project.name,
+                leading = KitRowLeading.Glyph(KitIcons.folderOpen, current = selected),
                 supporting = parts.joinToString(" · "),
-                selected = state.filters.projectDirectory == project.directory,
+                supportingMaxLines = 2, // F: lib/ui/screens/chats/chats_project_sheet.dart:94
+                selected = selected,
+                trailing = if (selected) KitRowTrailing.Check else KitRowTrailing.None,
                 onClick = { actions.chooseProject(project.directory) },
             )
         }
-        if (state.otherFoldersCount > 0) {
-            KitChoiceRow(
-                mark = KitChoiceMark.Tick,
-                leading = { KitIcon(KitIcons.folderOpen) },
-                title = stringResource(Res.string.chatsHomeOtherFolders),
-                supporting =
-                    pluralStringResource(
-                        Res.plurals.chatsFilterChatCount,
-                        state.otherFoldersCount,
-                        state.otherFoldersCount,
-                    ),
-                selected = state.otherFoldersSelected,
-                onClick = actions::otherFolders,
-            )
-        }
+        if (state.otherFoldersCount > 0) KitRow(
+            title = stringResource(Res.string.chatsHomeOtherFolders),
+            leading = KitRowLeading.Glyph(KitIcons.folderOpen, current = state.otherFoldersSelected),
+            supporting = pluralStringResource(Res.plurals.chatsFilterChatCount, state.otherFoldersCount, state.otherFoldersCount),
+            selected = state.otherFoldersSelected,
+            trailing = if (state.otherFoldersSelected) KitRowTrailing.Check else KitRowTrailing.None,
+            onClick = actions::otherFolders,
+        )
+    }
+    Spacer(Modifier.height(Space.S3.dp))
+    KitRowGroup {
         KitRow(
             title = stringResource(Res.string.chatsFilterOpenProject),
+            titleAccent = true,
+            leading = KitRowLeading.Glyph(KitIcons.folderOpen),
             trailing = KitRowTrailing.Chevron,
             onClick = actions::openFilterProject,
         )
