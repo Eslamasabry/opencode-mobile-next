@@ -1,0 +1,50 @@
+package io.github.eslamasabry.oc.feature.chat.rb.o42
+
+import androidx.compose.ui.test.*
+import androidx.compose.ui.test.v2.runComposeUiTest
+import io.github.eslamasabry.oc.core.common.ids.SessionId
+import io.github.eslamasabry.oc.feature.chat.relations.presentation.*
+import io.github.eslamasabry.oc.feature.chat.relations.ui.SessionRelationsScreen
+import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
+import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.kit.KitTheme
+import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
+import kotlinx.collections.immutable.persistentListOf
+import kotlin.test.Test
+import kotlin.test.assertEquals
+
+@OptIn(ExperimentalTestApi::class)
+class RelationsScreenTest {
+    private class Actions : SessionRelationsActions {
+        var refreshes = 0
+        override fun back() {}
+        override fun refresh() { refreshes++ }
+        override fun open(id: SessionId) {}
+        override fun showMenu(id: SessionId) {}
+        override fun dismissMenu() {}
+        override fun togglePin() {}
+        override fun showResume() {}
+        override fun dismissResume() {}
+        override fun copyResume() {}
+        override fun clipDone(id: Long) {}
+        override fun requestStop() {}
+        override fun cancelStop() {}
+        override fun confirmStop() {}
+    }
+
+    @Test fun `C33 needs you says the status once and refresh keeps the existing action`() = runComposeUiTest {
+        val actions = Actions()
+        val parent = RelationRow(SessionId("parent"), "Main conversation", true, true, RelationStatus.Idle, null, false, null)
+        val child = RelationRow(SessionId("child"), "Review changes", false, false, RelationStatus.NeedsYou, null, false, null)
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Off)) {
+                SessionRelationsScreen(SessionRelationsUi(loading = false, parent = parent, children = persistentListOf(child)), actions)
+            }
+        }
+        onNodeWithText("Needs you · Open to answer", substring = true).assertDoesNotExist()
+        onNodeWithText("Needs you", useUnmergedTree = true).assertExists()
+        onNodeWithText(" · open to answer", useUnmergedTree = true).assertExists()
+        onNodeWithContentDescription("Refresh subagent sessions").performClick()
+        assertEquals(1, actions.refreshes)
+    }
+}

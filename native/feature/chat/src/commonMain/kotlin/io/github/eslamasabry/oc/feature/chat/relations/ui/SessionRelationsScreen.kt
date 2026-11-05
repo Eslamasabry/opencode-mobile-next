@@ -1,6 +1,10 @@
 package io.github.eslamasabry.oc.feature.chat.relations.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -22,6 +26,8 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.motion.KitRefresh
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowState
@@ -65,9 +71,11 @@ public fun SessionRelationsScreen(state: SessionRelationsUi, actions: SessionRel
         },
         width = KitScreenWidth.List,
     ) {
+        val tokens = LocalKitTokens.current
+        KitRefresh(refreshing = state.loading && state.parent != null, onRefresh = actions::refresh, enabled = !state.stale) {
         LazyColumn(
-            Modifier.testTag("session-relations-list"),
-            verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+            Modifier.fillMaxSize().testTag("session-relations-list"),
+            contentPadding = PaddingValues(top = Space.S2.dp),
         ) {
             if (state.stale) {
                 item("stale") { KitNotice(message = stringResource(Res.string.r40RelationsStale)) }
@@ -91,7 +99,7 @@ public fun SessionRelationsScreen(state: SessionRelationsUi, actions: SessionRel
             if (parent == null) {
                 item("loading-or-failed") {
                     if (state.loading) KitStateView(KitStateKind.Loading, stringResource(Res.string.sessionRelationsLoading), icon = KitIcons.nested)
-                    else KitStateView(KitStateKind.Error, stringResource(Res.string.r40RelationsFailure), failure = state.failure, onRetry = actions::refresh)
+                    else KitStateView(KitStateKind.Error, stringResource(Res.string.sessionRelationsFailedTitle), failure = state.failure, onRetry = actions::refresh)
                 }
             } else {
                 item("parent") {
@@ -99,12 +107,14 @@ public fun SessionRelationsScreen(state: SessionRelationsUi, actions: SessionRel
                         RelationRowView(parent, state, actions)
                     }
                 }
+                item("section-gap") { Spacer(Modifier.height(tokens.sectionGap.dp)) }
                 if (state.children.isEmpty())
                     item("empty") {
                         KitStateView(
                             kind = KitStateKind.Calm,
                             title = stringResource(Res.string.r40RelationsEmpty),
                             body = stringResource(Res.string.r40RelationsEmptyBody),
+                            icon = KitIcons.nested,
                         )
                     }
                 else
@@ -117,6 +127,7 @@ public fun SessionRelationsScreen(state: SessionRelationsUi, actions: SessionRel
                         }
                     }
             }
+        }
         }
         RelationMenu(state, actions)
         StopSheet(state, actions)
@@ -146,12 +157,13 @@ private fun RelationRowView(
         }
     val status =
         when (row.status) {
-            RelationStatus.NeedsYou -> stringResource(Res.string.r40RelationsNeedsYou)
+            RelationStatus.NeedsYou -> stringResource(Res.string.kitTaskNeedsYou)
             RelationStatus.Working -> stringResource(Res.string.r40RelationsWorking)
             RelationStatus.Idle, RelationStatus.Done -> stringResource(if (row.parent) Res.string.sessionRelationsIdle else Res.string.r40RelationsDone)
         }
     KitRow(
         title = title(row),
+        titleMaxLines = 2, // F: lib/ui/screens/session_relations_screen.dart:466
         modifier = Modifier.testTag("session-relation-${row.id.raw}"),
         leading = when {
             row.status == RelationStatus.NeedsYou || row.status == RelationStatus.Working -> null
@@ -169,7 +181,7 @@ private fun RelationRowView(
         enabled = !state.stale && !state.working,
         disabledReason =
             if (state.stale) stringResource(Res.string.r40RelationsStale)
-            else if (state.working) stringResource(Res.string.r40RelationsOpening) else null,
+            else if (state.working) stringResource(Res.string.sessionRelationsOpening) else null,
         supportingMaxLines = 2,
         trailing =
             KitRowTrailing.Action(
@@ -240,7 +252,7 @@ private fun StopSheet(state: SessionRelationsUi, actions: SessionRelationsAction
                 ?: stringResource(Res.string.r40RelationsStop),
         closeLabel = stringResource(Res.string.kitSheetClose),
     ) {
-        KitText(stringResource(Res.string.r40RelationsStopBody))
+        KitText(stringResource(Res.string.sessionRelationsStopBody))
         state.failure?.let {
             KitErrorNotice(message = stringResource(Res.string.r40RelationsFailure), failure = it)
         }
