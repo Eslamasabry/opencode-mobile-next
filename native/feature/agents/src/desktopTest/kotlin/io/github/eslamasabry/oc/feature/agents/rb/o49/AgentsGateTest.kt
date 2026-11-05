@@ -45,11 +45,28 @@ class AgentsGateTest {
                 account = AgentRuntimeAccount(requiresSignIn = true), canCancel = true,
                 deviceCode = AccountDeviceCode("https://auth.example/device", "DEMO-CODE"))), actions)
         } }
-        onNodeWithText("auth.example").assertExists()
+        onNodeWithText("\u2066auth.example\u2069").assertExists()
         onNodeWithContentDescription("Copy sign-in code").assertHasClickAction()
         onNodeWithText("Open official sign-in").assertExists()
         onNodeWithText("Cancel sign-in").performClick()
         assertEquals(true, actions.cancelled)
+    }
+    @Test fun `buckets with no windows say metrics are unavailable instead of drawing an empty group`() = runComposeUiTest {
+        setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+            AgentAccountPanel(AgentsUi(accountTarget = target, accountPanel = AccountPanelState(status = AccountPanelStatus.Ready,
+                account = AgentRuntimeAccount(type = "chatgpt", requiresSignIn = true),
+                limits = persistentListOf(AccountRateBucket("Codex", null, null)))), Actions(), now = fixtureNow)
+        } }
+        onNodeWithText("Rate limits unavailable").assertExists()
+    }
+    @Test fun `cancelling keeps a visible disabled Cancel and cannot start a second cancel`() = runComposeUiTest {
+        val actions = Actions()
+        setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+            AgentAccountPanel(AgentsUi(accountTarget = target, accountPanel = AccountPanelState(status = AccountPanelStatus.Ready,
+                loginStatus = AccountLoginStatus.Cancelling, account = AgentRuntimeAccount(requiresSignIn = true), canCancel = false)), actions, now = fixtureNow)
+        } }
+        onNodeWithText("Cancel sign-in").assertIsNotEnabled()
+        assertEquals(false, actions.cancelled)
     }
     @Test fun signed_out() {
         FlutterGoldenGate.check("agent_account_signed_out", frame = FlutterGoldenGate.Frame.Screen) {
