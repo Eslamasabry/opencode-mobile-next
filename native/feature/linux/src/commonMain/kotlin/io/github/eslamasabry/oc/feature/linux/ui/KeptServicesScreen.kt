@@ -1,6 +1,8 @@
 package io.github.eslamasabry.oc.feature.linux.ui
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
@@ -39,7 +41,14 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
-import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.content.log.KitLogPanel
+import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeightimport io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
@@ -64,12 +73,15 @@ public fun KeptServicesScreen(state: KeptServicesUi, actions: KeptServicesAction
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::back,
+                actions = listOf(KitLineAction(stringResource(Res.string.workRefresh), actions::refresh, icon = KitIcons.retry,
+                    enabled = !state.loading && !state.working, disabledReason = stringResource(Res.string.keptSvcWorking))),
             )
         },
         width = KitScreenWidth.Reading,
-        loading = state.loading,
+        loading = state.working,
     ) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+            if (state.loading && state.services.isEmpty()) KitSkeletonRows()
             state.failure?.let {
                 KitErrorNotice(
                     title = stringResource(Res.string.keptSvcFailed),
@@ -80,19 +92,20 @@ public fun KeptServicesScreen(state: KeptServicesUi, actions: KeptServicesAction
                     retry = KitLineAction(stringResource(Res.string.commonRetry), actions::refresh),
                 )
             }
-            KitButton(stringResource(Res.string.keptSvcAdd), actions::add, working = state.working)
-            KitButton(
-                stringResource(Res.string.commonRetry),
-                actions::refresh,
-                role = KitButtonRole.Tertiary,
-                working = state.working,
-            )
-            KitRowGroup(note = stringResource(Res.string.keptSvcKeepsRunning)) {
+            if (!state.loading) KitRowGroup(leadingTiles = true) {
+                KitRow(stringResource(Res.string.keptSvcAdd),
+                    leading = KitRowLeading.Glyph(KitIcons.addCircle),
+                    supporting = stringResource(Res.string.linuxSvcAddDetail), supportingMaxLines = 2,
+                    trailing = KitRowTrailing.Chevron, enabled = !state.working,
+                    disabledReason = stringResource(Res.string.keptSvcWorking), onClick = actions::add)
+            }
+            KitRowGroup(leadingTiles = true) {
                 if (state.services.isEmpty() && !state.loading)
                     KitText(stringResource(Res.string.keptSvcEmpty))
-                state.services.forEach { service ->
+                state.services.sortedWith(compareBy<KeptService> { it.urgency }.thenBy { it.definition.title.lowercase() }).forEach { service ->
                     KitRow(
                         title = service.definition.title,
+                        leading = KitRowLeading.Glyph(serviceGlyph(service)),
                         supporting = serviceWords(service, state.nowMs),
                         supportingMaxLines = 3,
                         trailing =
@@ -117,100 +130,55 @@ public fun KeptServicesScreen(state: KeptServicesUi, actions: KeptServicesAction
                     )
                 }
             }
-            KitNotice(message = stringResource(Res.string.keptSvcScreenOff), liveRegion = false)
+            if (state.services.isNotEmpty()) {
+                KitText(stringResource(Res.string.keptSvcKeepsRunning), Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp), role = TypeRole.Caption)
+                KitText(stringResource(Res.string.keptSvcScreenOff), Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp), role = TypeRole.Caption)
+            }
         }
     }
     val selected = state.services.firstOrNull { it.definition.name == state.selected }
     KitSheet(
         visible = selected != null,
         title = selected?.definition?.title ?: stringResource(Res.string.keptSvcTitle),
+        height = KitSheetHeight.Full,
         onDismissRequest = actions::back,
-        primary =
-            selected?.let { service ->
-                KitAction(
-                    stringResource(
-                        if (service.showsStop) Res.string.keptSvcStopNamed
-                        else Res.string.keptSvcStartNamed,
-                        service.definition.title,
-                    ),
-                    {
-                        actions.act(
-                            service.definition.name,
-                            if (service.showsStop) KeptAct.Stop else KeptAct.Start,
-                        )
-                    },
-                    working = state.working,
-                )
-            },
-        secondary =
-            selected
-                ?.takeIf {
-                    it.wanted &&
-                        it.phase in
-                            setOf(
-                                KeptPhase.Running,
-                                KeptPhase.Starting,
-                                KeptPhase.Backoff,
-                                KeptPhase.PortBusy,
-                            )
-                }
-                ?.let { service ->
-                    KitAction(
-                        stringResource(Res.string.keptSvcRestartNamed, service.definition.title),
-                        { actions.act(service.definition.name, KeptAct.Restart) },
-                        working = state.working,
-                    )
-                },
-        tertiary =
-            buildList {
-                selected?.let { service ->
-                    if (service.phase == KeptPhase.Running)
-                        service.definition.port?.let { port ->
-                            add(
-                                KitAction(
-                                    stringResource(
-                                        Res.string.keptSvcOpenNamed,
-                                        service.definition.title,
-                                    ),
-                                    { actions.preview(port) },
-                                )
-                            )
-                        }
-                    add(KitAction(stringResource(Res.string.keptSvcCopyLog), actions::copyLog))
-                    add(
-                        KitAction(
-                            stringResource(Res.string.keptSvcRemoveNamed, service.definition.title),
-                            { actions.act(service.definition.name, KeptAct.Remove) },
-                            destructive = true,
-                            working = state.working,
-                        )
-                    )
-                }
-            },
     ) {
         selected?.let { service ->
-            KitText(serviceWords(service, state.nowMs))
-            if (
-                service.restarts > 0 &&
-                    service.lastExitAt != null &&
-                    service.phase == KeptPhase.Running
-            )
-                KitText(stringResource(Res.string.keptSvcRestarts, service.restarts))
-            KitText(stringResource(Res.string.keptSvcLogTitle))
-            KitSearchField(
-                label = stringResource(Res.string.keptSvcSearchLog),
-                onSearch = actions::searchLog,
-            )
-            val lines =
-                state.log
-                    .lineSequence()
-                    .filter {
-                        state.logQuery.isBlank() || it.contains(state.logQuery, ignoreCase = true)
-                    }
-                    .toList()
-                    .map { logWords(it) }
-            if (state.log.isBlank()) KitText(stringResource(Res.string.keptSvcLogEmpty))
-            else KitViewerTextBody(lines.joinToString("\n"), Modifier.fillMaxWidth().height(360.dp))
+            val name = service.definition.name
+            val disabled = stringResource(Res.string.keptSvcWorking)
+            Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+                KitRowGroup(leadingTiles = true) {
+                    KitRow(serviceWords(service, state.nowMs), leading = KitRowLeading.Glyph(serviceGlyph(service)),
+                        supporting = if (service.restarts > 0 && service.lastExitAt != null && service.phase == KeptPhase.Running)
+                            stringResource(Res.string.keptSvcRestarts, service.restarts) else null,
+                        supportingMaxLines = 3)
+                }
+                KitRowGroup(leadingTiles = true) {
+                    if (service.phase == KeptPhase.Running && service.definition.port != null) KitRow(
+                        stringResource(Res.string.keptSvcOpenNamed, service.definition.title),
+                        leading = KitRowLeading.Glyph(KitIcons.externalLink), trailing = KitRowTrailing.Chevron,
+                        enabled = !state.working, disabledReason = disabled,
+                        onClick = { actions.preview(service.definition.port) })
+                    KitRow(stringResource(if (service.showsStop) Res.string.keptSvcStopNamed else Res.string.keptSvcStartNamed, service.definition.title),
+                        leading = KitRowLeading.Glyph(if (service.showsStop) KitIcons.stopCircle else KitIcons.play),
+                        supporting = stringResource(if (service.showsStop) Res.string.linuxSvcStopDetail else Res.string.linuxSvcStartDetail),
+                        supportingMaxLines = 2, enabled = !state.working, disabledReason = disabled,
+                        onClick = { actions.act(name, if (service.showsStop) KeptAct.Stop else KeptAct.Start) })
+                    if (service.wanted && service.phase in setOf(KeptPhase.Running, KeptPhase.Starting, KeptPhase.Backoff, KeptPhase.PortBusy)) KitRow(
+                        stringResource(Res.string.keptSvcRestartNamed, service.definition.title),
+                        leading = KitRowLeading.Glyph(KitIcons.restart), enabled = !state.working, disabledReason = disabled,
+                        onClick = { actions.act(name, KeptAct.Restart) })
+                    KitRow(stringResource(Res.string.keptSvcRemoveNamed, service.definition.title),
+                        leading = KitRowLeading.Glyph(KitIcons.removeCircle), enabled = !state.working, disabledReason = disabled,
+                        onClick = { actions.act(name, KeptAct.Remove) })
+                }
+                KitText(stringResource(Res.string.keptSvcLogTitle), role = TypeRole.Headline)
+                // AndroidKeptServices.log redacts before state.log is published. Every log operation uses this same text.
+                val lines = state.log.lines().map { logWords(it) }
+                KitLogPanel(redactedText = lines.joinToString("\n"),
+                    live = service.phase in setOf(KeptPhase.Running, KeptPhase.Starting, KeptPhase.Backoff),
+                    modifier = Modifier.fillMaxWidth().height(360.dp))
+            }
         }
     }
     AddKeptService(state, actions)
@@ -249,6 +217,7 @@ private fun AddKeptService(state: KeptServicesUi, actions: KeptServicesActions) 
     KitSheet(
         visible = true,
         title = stringResource(Res.string.keptSvcAdd),
+        height = KitSheetHeight.Full,
         onDismissRequest = actions::back,
         primary =
             KitAction(
@@ -266,6 +235,7 @@ private fun AddKeptService(state: KeptServicesUi, actions: KeptServicesActions) 
                 working = state.working,
             ),
     ) {
+        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
         KitField(
             name,
             stringResource(Res.string.keptSvcName),
@@ -280,6 +250,7 @@ private fun AddKeptService(state: KeptServicesUi, actions: KeptServicesActions) 
         KitField(
             command,
             stringResource(Res.string.keptSvcCommand),
+            helper = stringResource(Res.string.linuxSvcFieldCommandHelper),
             kind = KitFieldKind.Mono,
             maxLength = 4096,
             enabled = enabled,
@@ -317,6 +288,7 @@ private fun AddKeptService(state: KeptServicesUi, actions: KeptServicesActions) 
         )
         if (state.invalid == KeptField.Limit) KitText(stringResource(Res.string.keptSvcLimit))
         if (state.failure != null) KitText(stringResource(Res.string.keptSvcFailedBody))
+        }
     }
 }
 
@@ -370,4 +342,12 @@ private fun logWords(line: String): String {
         "stop" -> stringResource(Res.string.keptSvcOff)
         else -> line
     }
+}
+
+private fun serviceGlyph(service: KeptService) = when {
+    service.paused -> KitIcons.pause
+    service.phase == KeptPhase.Failed || service.phase == KeptPhase.PortBusy -> KitIcons.error
+    service.phase == KeptPhase.Backoff -> KitIcons.restart
+    service.phase == KeptPhase.Running || service.phase == KeptPhase.Starting -> KitIcons.checkCircle
+    else -> KitIcons.terminal
 }
