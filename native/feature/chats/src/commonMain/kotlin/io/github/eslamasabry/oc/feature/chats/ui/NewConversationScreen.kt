@@ -2,6 +2,8 @@ package io.github.eslamasabry.oc.feature.chats.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -42,6 +44,10 @@ import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceMark
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
+import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAge
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
@@ -407,85 +413,64 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
     }
 }
 
-/** "Just now" / "5 min ago" / "3h ago" / "2d ago", never a raw timestamp. */
-@Composable
-private fun importAge(ageMs: Long): String {
-    val minutes = ageMs.coerceAtLeast(0) / 60_000
-    return when {
-        minutes < 1 -> stringResource(Res.string.e7WorkspaceJustNow)
-        minutes < 60 -> stringResource(Res.string.e7WorkspaceMinutesAgo, minutes.toInt())
-        minutes < 24 * 60 -> stringResource(Res.string.e7WorkspaceHoursAgo, (minutes / 60).toInt())
-        else ->
-            stringResource(
-                Res.string.e7WorkspaceDaysAgo,
-                (minutes / (24 * 60)).coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
-            )
-    }
-}
+/** Flutter import list uses the final non-empty path segment, including a trailing slash. */
+private fun importFolder(directory: String): String = directory.trimEnd('/').substringAfterLast('/').ifEmpty { directory }
 
 @Composable
-private fun ClaudeImportBody(state: NewConversationUi, actions: NewConversationActions) {
-    KitText(
-        stringResource(
-            Res.string.claudeImportIntro,
-            state.directory?.substringAfterLast('/').orEmpty(),
-        )
-    )
-    if (state.importFailed && state.imports == null && !state.importBusy)
+internal fun ClaudeImportBody(state: NewConversationUi, actions: NewConversationActions) {
+    val found = state.imports
+    if (state.importFailed && found == null && !state.importBusy) {
         KitStateView(
             kind = KitStateKind.Error,
             title = stringResource(Res.string.claudeImportLoadFailedTitle),
             body = stringResource(Res.string.claudeImportLoadFailedBody),
-            primary =
-                KitAction(
-                    stringResource(Res.string.commonRetry),
-                    { actions.sheet(NewConversationSheet.Import) },
-                ),
+            primary = KitAction(stringResource(Res.string.commonRetry), { actions.sheet(NewConversationSheet.Import) }),
         )
-    else if (state.importFailed)
-        KitNotice(stringResource(Res.string.claudeImportFailed))
-    if (state.importBusy && state.imports == null) KitSkeletonRows()
-    else
-        state.imports?.let { found ->
-            if (found.items.isEmpty())
-                KitStateView(
-                    kind = KitStateKind.Empty,
-                    title = stringResource(Res.string.claudeImportEmptyTitle),
-                    body = stringResource(Res.string.claudeImportEmptyBody),
-                )
-            else
-                KitRowGroup {
-                    found.items.forEach { item ->
-                        KitRow(
-                            leading = KitRowLeading.Glyph(KitIcons.history),
-                            enabled = !state.importBusy,
-                            disabledReason = stringResource(Res.string.claudeImportWorking),
-                            title =
-                                item.displayTitle
-                                    ?: stringResource(
-                                        Res.string.claudeImportUntitled
-                                    ),
-                            supporting =
-                                stringResource(
-                                    Res.string.claudeImportRowDetail,
-                                    item.directory.substringAfterLast('/'),
-                                    importAge(
-                                        state.importsReadAtMs -
-                                            item.lastUsed.toEpochMilliseconds()
-                                    ),
-                                ),
-                            supportingMaxLines = 2,
-                            onClick = { actions.import(item) },
-                        )
-                    }
-                }
-            if (found.alreadyImported > 0)
-                KitText(
-                    pluralStringResource(
-                        Res.plurals.claudeImportAlready,
-                        found.alreadyImported,
-                        found.alreadyImported,
-                    )
-                )
+        return
+    }
+    if (found == null) {
+        KitSkeletonRows(count = 6) // F: lib/ui/screens/chats/claude_import_screen.dart:115
+        return
+    }
+    if (found.items.isEmpty()) {
+        KitStateView(
+            kind = KitStateKind.Empty,
+            icon = KitIcons.history,
+            title = stringResource(Res.string.claudeImportEmptyTitle),
+            body = stringResource(Res.string.claudeImportEmptyBody),
+        )
+        return
+    }
+    KitText(
+        stringResource(Res.string.claudeImportIntro, importFolder(state.directory.orEmpty())),
+        Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
+        role = TypeRole.Secondary,
+    )
+    Spacer(Modifier.height(Space.S3.dp))
+    if (state.importFailed) {
+        KitNotice(stringResource(Res.string.claudeImportFailed), tone = StatusTone.Failure,
+            modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp))
+        Spacer(Modifier.height(Space.S3.dp))
+    }
+    KitRowGroup(leadingTiles = true) {
+        found.items.forEach { item ->
+            KitRow(
+                leading = KitRowLeading.Glyph(KitIcons.history),
+                enabled = !state.importBusy,
+                disabledReason = stringResource(Res.string.claudeImportWorking),
+                title = item.displayTitle ?: stringResource(Res.string.claudeImportUntitled),
+                titleMaxLines = 2, // F: lib/ui/screens/chats/claude_import_screen.dart:162
+                supporting = stringResource(
+                    Res.string.claudeImportRowDetail,
+                    importFolder(item.directory),
+                    kitRelativeAge(item.lastUsed.toEpochMilliseconds(), state.importsReadAtMs),
+                ),
+                supportingMaxLines = 2, // F: lib/ui/screens/chats/claude_import_screen.dart:175
+                onClick = { actions.import(item) },
+            )
         }
+    }
+    if (found.alreadyImported > 0) KitGroupNote(
+        pluralStringResource(Res.plurals.claudeImportAlready, found.alreadyImported, found.alreadyImported),
+    )
 }
