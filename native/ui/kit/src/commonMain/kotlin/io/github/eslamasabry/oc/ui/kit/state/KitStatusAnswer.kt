@@ -120,7 +120,7 @@ private fun AnswerWords(text: String, scale: KitAnswerScale) {
 private fun AnswerMark(tone: KitAnswerTone) {
     val colors = LocalKitColors.current
     val edge = kitFocusRingWidth()
-    val flat = LocalKitStyle.current == Style.Solid
+    val flat = LocalKitStyle.current.style == Style.Solid
     Box(Modifier.size(32.dp).clearAndSetSemantics {}, contentAlignment = Alignment.Center) { // F: lib/ui/kit/kit_status_answer.dart:407
     if (tone == KitAnswerTone.Working) {
         KitWorkingMark(colors.text2, LocalKitTokens.current.smallIcon.dp)
