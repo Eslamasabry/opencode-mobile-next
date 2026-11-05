@@ -168,7 +168,7 @@ public fun KitWorkLine(
             // Flutter's work line: one quiet line, a mark for where the work stands, the summary in the supporting
             // grey and a caret at the end; no frame, no fill. The state words are what TalkBack adds.
             val colors = LocalKitColors.current
-            val iconSize = (16f * minOf(LocalDensity.current.fontScale, 1.4f)).dp
+            val iconSize = (16f * minOf(LocalDensity.current.fontScale, 1.4f)).dp // NV: icon box follows the person's text size, capped so the line stays one row
             KitTappable(
                 onClick = { onToggle(!expanded) },
                 modifier =
