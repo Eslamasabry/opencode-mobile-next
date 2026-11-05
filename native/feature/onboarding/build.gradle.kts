@@ -8,15 +8,10 @@ kotlin {
 }
 apply(from = rootProject.file("gradle/desktop-golden-fonts.gradle"))
 
-// Order 40 hosts the setup galleries; dependencies are test-only, never feature navigation edges.
+// Order 40 renders onboarding states in their owning module.
 kotlin.sourceSets.getByName("desktopTest") {
     kotlin.srcDir("../../ui/gate/src/desktopMain/kotlin")
     resources.srcDir("../../ui/gate/src/desktopMain/resources")
-    dependencies {
-        implementation(project(":feature:setup"))
-        implementation(project(":feature:phonesetup"))
-        implementation(project(":engine:runtime"))
-    }
 }
 tasks.withType<Test>().matching { it.name == "desktopTest" }.configureEach {
     outputs.upToDateWhen { false }
