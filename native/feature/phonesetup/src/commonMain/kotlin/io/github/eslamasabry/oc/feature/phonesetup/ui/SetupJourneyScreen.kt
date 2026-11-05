@@ -19,6 +19,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleStartEffect
 import io.github.eslamasabry.oc.core.common.text.Numbers
@@ -39,7 +43,6 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.*
 import io.github.eslamasabry.oc.ui.words.res.*
-import kotlin.math.ceil
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.seconds
 import org.jetbrains.compose.resources.stringResource
@@ -81,6 +84,7 @@ public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyAction
             visible = state.customizing,
             onDismissRequest = actions::back,
             title = stringResource(title),
+            icon = KitIcons.download,
             dismissible = !state.working,
         ) {
             Choices(state, actions)
@@ -175,7 +179,7 @@ private fun StartHero(state: SetupJourneyUi, actions: SetupJourneyActions) {
         },
         content = {
             Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                val minutes = ceil(state.seconds / 60.0).toInt().coerceAtLeast(1) // NV: estimated seconds converted to whole minutes
+                val minutes = setupPromiseMinutes(state.seconds) // NV: estimated seconds converted to whole minutes
                 val time = if (minutes == 1) stringResource(Res.string.phoneSetupStartStepsTime__eq1)
                     else org.jetbrains.compose.resources.pluralStringResource(Res.plurals.phoneSetupStartStepsTime, minutes, minutes)
                 if (!blocked) KitText(stringResource(Res.string.phoneSetupStartSteps, time), role = TypeRole.Label)
@@ -191,92 +195,167 @@ private fun StartHero(state: SetupJourneyUi, actions: SetupJourneyActions) {
 
 @Composable
 private fun Choices(state: SetupJourneyUi, actions: SetupJourneyActions) {
-    if (state.checking) {
-        KitText(stringResource(Res.string.phoneSetupStartChecking))
+    val options = state.options
+    if (options == null) {
+        if (state.checking) KitText(stringResource(Res.string.phoneSetupStartChecking))
         return
     }
-    val options = state.options ?: return
-    val choices = options.components.filter { !it.jobStep && (!state.adding || !it.required) }.sortedBy { !it.required }
-    if (!state.customizing) KitText(stringResource(Res.string.phoneSetupStartHeadline))
-    KitRowGroup {
-    for (component in choices) {
-        val installed = component.id in options.installed
-        val required = component.required
-        val included = required || installed || component.id in state.chosen
-        val supporting =
-            when {
-                installed -> stringResource(Res.string.phoneSetupStartInstalled)
-                required -> stringResource(Res.string.r40SetupRequired)
-                else -> component.summary ?: component.why
+    val choices = options.components.filter { !it.jobStep && (!state.adding || !it.required) }
+    val everythingInstalled =
+        state.adding &&
+            !state.checking &&
+            choices.isNotEmpty() &&
+            choices.all { it.id in options.installed }
+    // Flutter keeps the required base and optional tools in separate groups, in registry order.
+    for (required in listOf(true, false)) {
+        val group = choices.filter { it.required == required }
+        if (group.isEmpty()) continue
+        KitRowGroup {
+            for (component in group) {
+                val installed = component.id in options.installed
+                Column {
+                    if (required || installed) {
+                        KitLockedRow(
+                            title = itemTitle(component.id, component.title),
+                            lockedLabel =
+                                stringResource(
+                                    if (required) Res.string.phoneSetupCustomizeIncluded
+                                    else Res.string.phoneSetupStartInstalled
+                                ),
+                            supporting =
+                                if (required) component.why
+                                else if (component.app != null) component.summary else null,
+                            modifier = Modifier.testTag("phone-setup-customize-${component.id}"),
+                        )
+                    } else {
+                        val description = buildList {
+                            component.summary?.let { add(it) }
+                            component.downloadBytes
+                                ?.takeIf { it > 0 }
+                                ?.let {
+                                    add(
+                                        stringResource(
+                                                Res.string.phoneSetupStartApproxSize,
+                                                journeySize(it),
+                                            )
+                                            .replace(' ', '\u00a0')
+                                    )
+                                }
+                        }
+                            .joinToString(" · ")
+                            .ifEmpty { null }
+                        KitSwitchRow(
+                            title = itemTitle(component.id, component.title),
+                            checked = component.id in state.chosen,
+                            supporting = description,
+                            enabled =
+                                KitEnabled.of(
+                                    !state.working && !state.checking,
+                                    stringResource(
+                                        if (state.checking) Res.string.phoneSetupStartChecking
+                                        else Res.string.r40SetupWorking
+                                    ),
+                                ),
+                            modifier = Modifier.testTag("phone-setup-customize-${component.id}"),
+                            onCheckedChange = { actions.toggle(component.id, it) },
+                        )
+                    }
+                    if (installed && component.id == SetupComponentIds.VOICE) {
+                        KitButton(
+                            stringResource(Res.string.voiceComponentRemove),
+                            actions::askRemoveVoice,
+                            modifier =
+                                Modifier.padding(start = LocalKitTokens.current.gutter.dp)
+                                    .testTag("phone-setup-customize-remove-${component.id}"),
+                            role = KitButtonRole.Tertiary,
+                            icon = KitIcons.delete,
+                            destructive = true,
+                            enabled =
+                                KitEnabled.of(
+                                    !state.working && !state.checking,
+                                    stringResource(Res.string.r40SetupWorking),
+                                ),
+                        )
+                    }
+                }
             }
-        if (state.customizing) {
-            if (required || installed) KitLockedRow(
-                title = itemTitle(component.id, component.title),
-                lockedLabel = stringResource(if (required) Res.string.phoneSetupCustomizeIncluded else Res.string.phoneSetupStartInstalled),
-                supporting = if (required) component.why else component.summary,
-            ) else KitSwitchRow(
-                title = itemTitle(component.id, component.title),
-                checked = included,
-                supporting = if (installed) supporting else component.downloadBytes?.let { journeySize(it) },
-                locked = installed,
-                enabled = KitEnabled.of(!state.working, stringResource(Res.string.r40SetupWorking)),
-                modifier = Modifier.testTag("phone-setup-customize-${component.id}"),
-                onCheckedChange = { actions.toggle(component.id, it) },
+        }
+        Spacer(Modifier.height(Space.S4.dp))
+    }
+    val totalsModifier =
+        Modifier.testTag("phone-setup-customize-totals").semantics {
+            liveRegion = LiveRegionMode.Polite
+        }
+    val blocked = state.preflight?.supported == false && state.install.isNotEmpty()
+    when {
+        state.checking ->
+            KitText(
+                stringResource(Res.string.phoneSetupStartChecking),
+                totalsModifier,
+                role = TypeRole.Secondary,
+                tone = TextTone.Secondary,
             )
-            if (installed && component.id == SetupComponentIds.VOICE) {
-                KitButton(
-                    stringResource(Res.string.r40SetupRemoveVoice),
-                    actions::askRemoveVoice,
-                    role = KitButtonRole.Tertiary,
-                    enabled =
-                        KitEnabled.of(!state.working, stringResource(Res.string.r40SetupWorking)),
-                )
-            }
-        } else if (included)
-            KitRow(itemTitle(component.id, component.title), supporting = supporting)
+        everythingInstalled ->
+            KitText(
+                stringResource(Res.string.phoneSetupCustomizeAllInstalled),
+                totalsModifier,
+                role = TypeRole.Secondary,
+                tone = TextTone.Secondary,
+            )
+        state.install.isEmpty() ->
+            KitText(
+                stringResource(Res.string.phoneSetupStartNothingChosen),
+                totalsModifier,
+                role = TypeRole.Secondary,
+                tone = TextTone.Secondary,
+            )
+        blocked -> Preflight(state, actions)
+        else -> {
+            val minutes = setupPromiseMinutes(state.seconds)
+            val duration =
+                if (minutes == 1) stringResource(Res.string.phoneSetupStartAboutMinutes__eq1)
+                else
+                    org.jetbrains.compose.resources.pluralStringResource(
+                        Res.plurals.phoneSetupStartAboutMinutes,
+                        minutes,
+                        minutes,
+                    )
+            KitText(
+                stringResource(Res.string.phoneSetupStartTotals, duration, journeySize(state.bytes)),
+                totalsModifier.padding(vertical = Space.S1.dp),
+                role = TypeRole.Secondary,
+                tone = TextTone.Secondary,
+            )
+        }
     }
-    }
-    KitText(
-        if (state.adding && state.install.isEmpty())
-            stringResource(Res.string.phoneSetupStartNothingChosen)
-        else
-            stringResource(
-                Res.string.r40SetupTotals,
-                journeySize(state.bytes),
-                Numbers.format(ceil(state.seconds / 60.0).toLong().coerceAtLeast(1)),
-            ),
-        Modifier.testTag("phone-setup-customize-totals"),
-    )
-    Preflight(state, actions)
     if (state.storageUnopened) KitErrorNotice(stringResource(Res.string.r40SetupStorageUnopened))
+    Spacer(Modifier.height(Space.S4.dp))
     val disabled =
         when {
+            state.checking -> stringResource(Res.string.phoneSetupStartChecking)
             state.failure != null -> stringResource(Res.string.r40SetupCouldNotCheck)
+            everythingInstalled -> stringResource(Res.string.phoneSetupCustomizeAllInstalled)
             state.adding && state.install.isEmpty() ->
                 stringResource(Res.string.phoneSetupStartNothingChosen)
-            state.preflight?.supported == false -> stringResource(Res.string.r40SetupCheckDevice)
+            blocked -> stringResource(Res.string.r40SetupCheckDevice)
             else -> stringResource(Res.string.r40SetupWorking)
         }
     KitButton(
         stringResource(
-            when {
-                state.customizing && state.adding -> Res.string.phoneSetupStartAdd
-                state.customizing -> Res.string.phoneSetupStartDone
-                else -> Res.string.phoneSetupStartSetUp
-            }
+            if (state.adding) Res.string.phoneSetupStartAdd else Res.string.phoneSetupStartDone
         ),
-        if (state.customizing) actions::accept else actions::start,
+        actions::accept,
         modifier = Modifier.testTag("phone-setup-customize-done"),
-        enabled = KitEnabled.of(state.canConfirm && state.failure == null, disabled),
+        enabled = KitEnabled.of(state.canConfirm, disabled),
         working = state.working,
     )
-    if (!state.customizing)
-        KitButton(
-            stringResource(Res.string.phoneSetupStartCustomize),
-            actions::customize,
-            role = KitButtonRole.Secondary,
-        )
 }
+
+/** Flutter setupDurationText/setupStepsText round the registry estimate to the nearest minute. */
+internal fun setupPromiseMinutes(seconds: Long): Int =
+    (seconds / 60.0)
+        .roundToInt()
+        .coerceAtLeast(1) // F: lib/ui/screens/phone_setup/phone_setup_selection.dart:63,71
 
 @Composable
 private fun Preflight(state: SetupJourneyUi, actions: SetupJourneyActions) {
@@ -553,5 +632,5 @@ internal fun journeySize(bytes: Long): String =
     else
         stringResource(
             Res.string.phoneSetupStartMegabytes,
-            Numbers.format(ceil(bytes / 1_000_000.0).toLong()),
+            Numbers.format((bytes / 1_000_000.0).roundToInt().coerceAtLeast(1)),
         )
