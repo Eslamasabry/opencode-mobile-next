@@ -77,6 +77,7 @@ public fun KitWindowRow(
 }
 
 /** Flutter kit_window_row.dart:90-184: compact label/bar/value, stacking before words can cut. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun InlineWindow(
     title: String,

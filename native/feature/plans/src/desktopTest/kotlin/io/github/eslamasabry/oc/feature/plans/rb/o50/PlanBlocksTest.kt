@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
+import java.lang.reflect.Proxy
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.collections.immutable.persistentListOf
@@ -24,13 +25,20 @@ class PlanBlocksTest {
         runComposeUiTest {
             var reads = 0
             val actions =
-                object : PlansActions {
-                    override fun back() = Unit
-
-                    override fun refresh() {
-                        reads++
+                Proxy.newProxyInstance(
+                    PlansActions::class.java.classLoader,
+                    arrayOf(PlansActions::class.java),
+                ) { proxy, method, args ->
+                    when (method.name) {
+                        "equals" -> proxy === args?.getOrNull(0)
+                        "hashCode" -> System.identityHashCode(proxy)
+                        "toString" -> "PlanBlockActions"
+                        else -> {
+                            if (method.name == "refresh") reads++
+                            null
+                        }
                     }
-                }
+                } as PlansActions
             fun card(key: String, name: String) =
                 PlanCardUi(
                     key = key,
