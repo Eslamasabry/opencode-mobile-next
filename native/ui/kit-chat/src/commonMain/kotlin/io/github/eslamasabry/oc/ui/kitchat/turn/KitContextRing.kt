@@ -39,7 +39,7 @@ public fun KitContextRing(
     val colors = LocalKitColors.current
     val target = percent.coerceIn(0, 100) / 100f
     val sweep by animateFloatAsState(target, KitMotion.specs.quick(), label = "context-ring")
-    val track = colors.text3.copy(alpha = 0.35f) // F: lib/ui/kit/kit_context_ring.dart:332
+    val track = colors.text3.copy(alpha = 0.35f) // F: lib/ui/kit/kit_context_ring.dart:328
     val fill =
         when (level) {
             KitContextLevel.Calm -> colors.accent
@@ -50,7 +50,7 @@ public fun KitContextRing(
         val large = size == 64.dp // F: lib/ui/kit/kit_context_ring.dart:116
         val stroke = if (large) 6.dp.toPx() else this.size.minDimension * 2.5f / 24f // F: lib/ui/kit/kit_context_ring.dart:115-116
         val radius = if (large) 24.dp.toPx() else this.size.minDimension * 9f / 24f // F: lib/ui/kit/kit_context_ring.dart:115-116
-        val arcSize = androidx.compose.ui.geometry.Size(radius * 2, radius * 2)
+        val arcSize = androidx.compose.ui.geometry.Size(radius + radius, radius + radius)
         val topLeft = androidx.compose.ui.geometry.Offset(center.x - radius, center.y - radius)
         drawArc(track, 0f, 360f, false, topLeft, arcSize, style = Stroke(stroke))
         if (sweep > 0f)
