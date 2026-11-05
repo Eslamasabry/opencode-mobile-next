@@ -74,6 +74,7 @@ public fun KitComposerBox(
     leading: @Composable RowScope.() -> Unit = {},
     chips: @Composable RowScope.() -> Unit = {},
     trailing: @Composable RowScope.() -> Unit = {},
+    stacked: Boolean = true,
 ) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
@@ -94,20 +95,21 @@ public fun KitComposerBox(
                 .padding(horizontal = Space.S1.dp)
                 .testTag("kit-composer-box"),
         ) {
-            Box(Modifier.fillMaxWidth().padding(horizontal = Space.S3.dp).heightIn(min = tokens.minTarget.dp)) { field() }
-            Row(
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
+                if (!stacked) leading()
+                Box(Modifier.weight(1f).padding(start = Space.S3.dp, end = Space.S2.dp).heightIn(min = tokens.minTarget.dp)) { field() }
+                if (!stacked) trailing()
+            }
+            if (stacked) Row(
                 Modifier.fillMaxWidth().padding(bottom = Space.S1.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
             ) {
                 leading()
-                Row(
-                    Modifier.weight(1f),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
-                ) { chips() }
+                Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) { chips() }
                 trailing()
             }
+
         }
     }
 }
