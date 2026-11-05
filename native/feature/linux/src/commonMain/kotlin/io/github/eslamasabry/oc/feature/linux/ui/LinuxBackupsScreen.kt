@@ -29,6 +29,8 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
+import io.github.eslamasabry.oc.ui.kit.modal.KitConsequence
+import io.github.eslamasabry.oc.ui.kit.modal.KitConsequenceMark
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
@@ -242,51 +244,63 @@ public fun LinuxBackupsScreen(state: LinuxBackupsUi, actions: LinuxBackupsAction
             KitText(stringResource(Res.string.linuxBackupPrivacyNative),
                 Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp), role = TypeRole.Caption)
         }
-    }
-    val manifest = backup.manifest
-    val confirm =
-        when {
-            state.askingStop -> {
-                val restoring = backup.phase == LinuxBackupPhase.Restoring
-                KitConfirmSpec(
-                    title =
-                        stringResource(
-                            if (restoring) Res.string.linuxMgrJobStopRestoreTitle
-                            else Res.string.linuxMgrJobStopBackupTitle
-                        ),
-                    confirmLabel =
-                        stringResource(
-                            if (restoring) Res.string.linuxMgrJobStopRestore
-                            else Res.string.linuxMgrJobStopBackup
-                        ),
-                    kind = KitConfirmKind.Stop,
-                    body = stringResource(Res.string.linuxMgrJobStopBody),
-                )
-            }
-            backup.phase == LinuxBackupPhase.Ready && manifest != null ->
-                KitConfirmSpec(
-                    title = stringResource(Res.string.linuxRestoreTitle),
-                    confirmLabel = stringResource(Res.string.linuxRestoreConfirm),
-                    body =
-                        stringResource(
-                            Res.string.linuxRestoreBody,
+        val manifest = backup.manifest
+        val confirm =
+            when {
+                state.askingStop -> {
+                    val restoring = backup.phase == LinuxBackupPhase.Restoring
+                    KitConfirmSpec(
+                        title =
                             stringResource(
-                                if (manifest.hasProjects) Res.string.linuxBackupSetupProjects
-                                else Res.string.linuxBackupSetup
+                                if (restoring) Res.string.linuxMgrJobStopRestoreTitle
+                                else Res.string.linuxMgrJobStopBackupTitle
                             ),
-                            manifest.created,
-                        ),
-                    consequences =
-                        listOfNotNull(
-                            stringResource(Res.string.linuxRestoreKeptProjects).takeIf {
-                                manifest.hasProjects
-                            },
-                            stringResource(Res.string.linuxRestoreReplacedSettings),
-                            stringResource(Res.string.linuxRestoreAddedTools),
-                            stringResource(Res.string.linuxBackupServiceAccountsNative),
-                        ),
-                )
-            else -> null
-        }
-    KitConfirm(confirm, actions::confirm, actions::dismiss)
+                        confirmLabel =
+                            stringResource(
+                                if (restoring) Res.string.linuxMgrJobStopRestore
+                                else Res.string.linuxMgrJobStopBackup
+                            ),
+                        kind = KitConfirmKind.Stop,
+                        body = stringResource(Res.string.linuxMgrJobStopBody),
+                    )
+                }
+                backup.phase == LinuxBackupPhase.Ready && manifest != null ->
+                    KitConfirmSpec(
+                        title = stringResource(Res.string.linuxRestoreTitle),
+                        confirmLabel = stringResource(Res.string.linuxRestoreConfirm),
+                        body =
+                            stringResource(
+                                Res.string.linuxRestoreBody,
+                                stringResource(
+                                    if (manifest.hasProjects) Res.string.linuxBackupSetupProjects
+                                    else Res.string.linuxBackupSetup
+                                ),
+                                manifest.created,
+                            ),
+                        consequenceItems =
+                            listOfNotNull(
+                                if (manifest.hasProjects)
+                                    KitConsequence(
+                                        stringResource(Res.string.linuxRestoreKeptProjects),
+                                        KitConsequenceMark.Kept,
+                                    )
+                                else null,
+                                KitConsequence(
+                                    stringResource(Res.string.linuxRestoreReplacedSettings),
+                                    KitConsequenceMark.Info,
+                                ),
+                                KitConsequence(
+                                    stringResource(Res.string.linuxRestoreAddedTools),
+                                    KitConsequenceMark.Info,
+                                ),
+                                KitConsequence(
+                                    stringResource(Res.string.linuxBackupServiceAccountsNative),
+                                    KitConsequenceMark.Info,
+                                ),
+                            ),
+                    )
+                else -> null
+            }
+        KitConfirm(confirm, actions::confirm, actions::dismiss)
+    }
 }

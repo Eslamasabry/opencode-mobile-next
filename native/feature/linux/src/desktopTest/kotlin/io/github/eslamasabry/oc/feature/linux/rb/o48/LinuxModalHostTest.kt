@@ -4,6 +4,7 @@ package io.github.eslamasabry.oc.feature.linux.rb.o48
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.v2.runComposeUiTest
+import io.github.eslamasabry.oc.engine.runtime.backup.*
 import io.github.eslamasabry.oc.feature.linux.host.LinuxPresence
 import io.github.eslamasabry.oc.feature.linux.manager.LinuxCleanupId
 import io.github.eslamasabry.oc.feature.linux.presentation.*
@@ -163,6 +164,34 @@ class LinuxModalHostTest {
         onNodeWithText("Remove htop?").assertIsDisplayed()
         assertEquals(0, actions.confirmed)
         onNodeWithText("Remove htop").performClick()
+        assertEquals(1, actions.confirmed)
+    }
+
+    @Test
+    fun `checked backup opens its restore question without the shell`() = runComposeUiTest {
+        val actions = Actions()
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                LinuxBackupsScreen(
+                    LinuxBackupsUi(
+                        backup =
+                            LinuxBackupState(
+                                phase = LinuxBackupPhase.Ready,
+                                manifest =
+                                    LinuxBackupManifest("checked-backup", "Nov 6, 2026", true),
+                            )
+                    ),
+                    actions,
+                )
+            }
+        }
+        onNodeWithText("Restore this backup?").assertIsDisplayed()
+        onNodeWithText(
+                "Your projects stay. One with the same name comes back as “name (restored)”."
+            )
+            .assertExists()
+        assertEquals(0, actions.confirmed)
+        onNodeWithText("Restore").performClick()
         assertEquals(1, actions.confirmed)
     }
 }
