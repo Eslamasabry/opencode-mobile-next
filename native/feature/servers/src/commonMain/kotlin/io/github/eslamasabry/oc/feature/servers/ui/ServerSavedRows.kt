@@ -63,7 +63,7 @@ internal fun ServerSavedRows(state: ServersUi, actions: ServersActions, enabled:
             if (index > 0) KitDivider(inset = KitDividerInset.Text)
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.weight(1f)) {
-                    KitRow(title = server.name, supporting = lines.joinToString(" · "), supportingMaxLines = 2, // F: lib/ui/screens/servers/server_rows.dart:188
+                    KitRow(title = server.name, supporting = lines.joinToString(" · "), supportingMaxLines = 2, // F: lib/ui/screens/servers/server_rows.dart:191-196
                         leading = KitRowLeading.Glyph(if (phone) KitIcons.phone else KitIcons.server, tile = false),
                         selected = server.connected, enabled = enabled.isEnabled,
                         disabledReason = if (enabled.isEnabled) null else stringResource(Res.string.serversWorking),

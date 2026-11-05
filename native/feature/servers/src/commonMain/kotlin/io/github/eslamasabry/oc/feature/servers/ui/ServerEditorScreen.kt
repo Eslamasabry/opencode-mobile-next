@@ -17,6 +17,8 @@ import io.github.eslamasabry.oc.feature.servers.pairing.PairingText
 import io.github.eslamasabry.oc.feature.servers.pairing.pairingProblemText
 import io.github.eslamasabry.oc.feature.servers.presentation.*
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.*
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.frame.*
@@ -282,14 +284,28 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
             KitTopBar(
                 title =
                     stringResource(
-                        if (state.newServer) Res.string.serversAdd else Res.string.editor40Edit
+                        if (!state.newServer) Res.string.editor40Edit
+                        else if (state.step == ServerEditorStep.Connect) when (backend) {
+                            BackendKind.OpenCode2 -> Res.string.firstRunAgentOpenCode
+                            BackendKind.Codex -> Res.string.firstRunAgentCodex
+                            BackendKind.Paseo -> Res.string.firstRunPaseoTitle
+                        } else Res.string.serversAdd
                     ),
-                exit = KitTopBarExit.Close,
+                exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = { leave() },
             )
         },
         width = KitScreenWidth.Reading,
+        loading = state.loading || state.checking || state.saving,
+        bottom = if (state.step != ServerEditorStep.Connect && state.step != ServerEditorStep.Ready) null else ({
+            KitButton(
+                stringResource(if (state.step == ServerEditorStep.Ready) Res.string.editor40Open
+                    else if (state.connectOnSave) Res.string.editor40SaveConnect else Res.string.editor40SaveChanges),
+                { if (state.step == ServerEditorStep.Ready) actions.openReady() else actions.save(input()) },
+                enabled = enabled, working = state.saving, fullWidth = true,
+            )
+        }),
     ) {
         Column(
             Modifier.fillMaxSize()
@@ -298,12 +314,43 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                 .padding(LocalKitTokens.current.gutter.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
-            if (state.loading) KitNotice(stringResource(Res.string.editor40Loading))
+            if (state.newServer) {
+                val total = if (tailscale) 5 else 4 // F: lib/ui/screens/servers/profile_editor_steps.dart:26
+                val connect = if (tailscale) 3 else 2 // F: lib/ui/screens/servers/profile_editor_steps.dart:27
+                val step = when (state.step) {
+                    ServerEditorStep.Kind -> 1
+                    ServerEditorStep.Tailscale -> 2 // F: lib/ui/screens/servers/profile_editor_steps.dart:31
+                    ServerEditorStep.Connect -> if (state.checking || state.saving) connect + 1 else connect
+                    ServerEditorStep.Ready -> total
+                }
+                val label = stringResource(when {
+                    state.step == ServerEditorStep.Kind -> Res.string.addServerStepKind
+                    state.step == ServerEditorStep.Tailscale -> Res.string.addServerStepTailscale
+                    state.step == ServerEditorStep.Ready -> Res.string.addServerStepReady
+                    state.checking || state.saving -> Res.string.addServerStepCheck
+                    backend != BackendKind.OpenCode2 -> Res.string.addServerStepAddress
+                    else -> Res.string.addServerStepPair
+                })
+                KitProgressView(KitProgress.Staged(step, total, label,
+                    stepValue = if (state.step == ServerEditorStep.Ready) 1f else null),
+                    semanticsLabel = stringResource(Res.string.addServerStepsLabel))
+            }
             when (state.step) {
                 ServerEditorStep.Kind -> {
-                    KitText(stringResource(Res.string.editor40Kind))
-                    for (kind in BackendKind.entries) KitRow(
+                    KitText(stringResource(Res.string.firstRunAgentsSideBySide), role = TypeRole.Secondary)
+                    for (kind in listOf(BackendKind.OpenCode2, BackendKind.Codex, BackendKind.Paseo)) KitRow(
                         title = backendName(kind),
+                        leading = KitRowLeading.Glyph(when (kind) {
+                            BackendKind.OpenCode2 -> KitIcons.computer
+                            BackendKind.Codex -> KitIcons.code
+                            BackendKind.Paseo -> KitIcons.agent
+                        }),
+                        supporting = stringResource(when (kind) {
+                            BackendKind.OpenCode2 -> Res.string.addServerTypeOpenCodeDetail
+                            BackendKind.Codex -> Res.string.addServerTypeCodexDetail
+                            BackendKind.Paseo -> Res.string.addServerTypePaseoDetail
+                        }),
+                        supportingMaxLines = 2, // F: lib/ui/screens/servers/profile_editor_steps.dart:372
                         trailing = KitRowTrailing.Chevron,
                         onClick = {
                             backend = kind
@@ -374,15 +421,9 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                 ServerEditorStep.Ready -> {
                     KitNotice(stringResource(Res.string.editor40Ready))
                     state.failure?.let { KitErrorNotice(editorFailureWords(it), failure = it) }
-                    KitButton(
-                        stringResource(Res.string.editor40Open),
-                        actions::openReady,
-                        enabled = enabled,
-                        working = state.saving,
-                    )
+
                 }
                 ServerEditorStep.Connect -> {
-                    KitText(backendName(backend))
                     if (state.newServer) {
                         EditorCommand(
                             SetupCommands.startFor(backend),
@@ -435,14 +476,16 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                     state.pairingProblem?.let { KitErrorNotice(pairingProblemText(it)) }
                     KitField(
                         address,
-                        stringResource(Res.string.serversAddress),
+                        stringResource(if (backend == BackendKind.OpenCode2) Res.string.e7SetupServerUrl else Res.string.connectionServerAddress),
                         kind = KitFieldKind.Url,
+                        placeholder = if (backend == BackendKind.Paseo) stringResource(Res.string.paseoAddressHint)
+                            else if (backend == BackendKind.Codex) stringResource(Res.string.codexAddressHint) else null,
                         enabled = enabled,
                     )
                     if (backend != BackendKind.OpenCode2)
                         KitField(
                             directory,
-                            stringResource(Res.string.editor40Folder),
+                            stringResource(Res.string.codexProjectFolder),
                             kind = KitFieldKind.Path,
                             enabled = enabled,
                         )
@@ -490,9 +533,10 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                         password,
                         stringResource(
                             if (backend == BackendKind.OpenCode2) Res.string.serversPassword
-                            else Res.string.editor40Token
+                            else if (backend == BackendKind.Paseo) Res.string.paseoPasswordLabel else Res.string.codexTokenLabel
                         ),
                         kind = KitFieldKind.Secret,
+                        helper = stringResource(if (backend == BackendKind.Paseo) Res.string.paseoPasswordHelp else if (backend == BackendKind.Codex) Res.string.codexTokenStorageHelp else Res.string.e7SetupPasswordStartupHint),
                         enabled = enabled,
                         secretPresence =
                             if (keepSecret || heldSecret != null) SecretFieldPresence.Saved
@@ -565,15 +609,7 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                             role = KitButtonRole.Secondary,
                             enabled = enabled,
                         )
-                    KitButton(
-                        stringResource(
-                            if (state.connectOnSave) Res.string.editor40SaveConnect
-                            else Res.string.editor40SaveChanges
-                        ),
-                        { actions.save(input()) },
-                        enabled = enabled,
-                        working = state.saving,
-                    )
+
                 }
             }
         }
