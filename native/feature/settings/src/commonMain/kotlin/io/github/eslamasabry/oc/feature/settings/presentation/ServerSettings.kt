@@ -43,6 +43,7 @@ public data class ServerSettingsFacts(
     val capabilities: ServerCapabilities?,
     val tokenSignIn: Boolean = false,
     val managedOnPhone: Boolean = false,
+    val connectionFailure: Failure? = null,
 )
 
 public enum class ConnectionStep {

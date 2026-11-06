@@ -526,4 +526,11 @@
     <string name="agentBackAfterKill">أوقف Android الوكيل لأن عدد البرامج العاملة كان كبيرًا جدًا. عاد للعمل، ومحادثتك مستمرة.</string>
     <string name="browserPairingPasteHint">انسخ الرمز الذي يطبعه أمر الاقتران والصقه في حقل عنوان الخادم بلوحة المفاتيح. يحتاج زر اللصق إلى صفحة آمنة (HTTPS أو localhost).</string>
     <string name="browserAgentSocketRowUnavailable">غير متاح في المتصفح</string>
+    <string name="serverDetailsDisconnectedUnknown">هذا الخادم غير متصل. اتصل للتحقق من عنوانه وتسجيل الدخول.</string>
+    <string name="serverDetailsPasswordMissing">يحتاج هذا الخادم إلى كلمة مرور. أضفها في تسجيل الدخول.</string>
+    <string name="serverDetailsTokenMissing">يحتاج هذا الخادم إلى رمز وصول. أضفه في تسجيل الدخول.</string>
+    <string name="serverDetailsTokenRejected">لم يقبل الخادم رمز الوصول. استبدله في تسجيل الدخول.</string>
+    <string name="serverDetailsAccessDenied">رفض الخادم الوصول. تحقق من الحساب المسموح له باستخدام هذا الخادم.</string>
+    <string name="serverDetailsFixSignIn">إصلاح تسجيل الدخول</string>
+    <string name="serverDetailsLastAttempt">آخر محاولة اتصال: %1$s</string>
 </resources>

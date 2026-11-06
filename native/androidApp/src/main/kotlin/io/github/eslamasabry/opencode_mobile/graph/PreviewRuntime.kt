@@ -80,6 +80,8 @@ class PreviewRuntime(
     private val unverifiedListings = mutableSetOf<ProfileId>()
     private val listings = mutableMapOf<ProfileId, MutableStateFlow<OpenCodeListing>>()
     private val mutableSourceFailures = MutableStateFlow<Map<ProfileId, Failure>>(emptyMap())
+    internal val sourceFailureState: StateFlow<Map<ProfileId, Failure>> =
+        mutableSourceFailures.asStateFlow()
     internal val sourceFailures: Map<ProfileId, Failure>
         get() = mutableSourceFailures.value
 

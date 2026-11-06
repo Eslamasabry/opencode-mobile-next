@@ -502,4 +502,11 @@
     <string name="agentBackAfterKill">Android stopped the agent because too many programs were running. It's back; your conversation continues.</string>
     <string name="browserPairingPasteHint">Copy the code the pairing command prints and paste it into the server address field with the keyboard. The Paste button needs a secure (HTTPS or localhost) page.</string>
     <string name="browserAgentSocketRowUnavailable">Not available in the browser</string>
+    <string name="serverDetailsDisconnectedUnknown">This server is disconnected. Connect to check its address and sign-in.</string>
+    <string name="serverDetailsPasswordMissing">This server needs a password. Add it in Sign-in.</string>
+    <string name="serverDetailsTokenMissing">This server needs a token. Add it in Sign-in.</string>
+    <string name="serverDetailsTokenRejected">The server did not accept the token. Replace it in Sign-in.</string>
+    <string name="serverDetailsAccessDenied">The server refused access. Check which account can use this server.</string>
+    <string name="serverDetailsFixSignIn">Fix sign-in</string>
+    <string name="serverDetailsLastAttempt">Last connection attempt: %1$s</string>
 </resources>

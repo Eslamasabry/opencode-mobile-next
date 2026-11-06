@@ -9,6 +9,7 @@ import dev.zacsweers.metro.binding
 import io.github.eslamasabry.oc.core.common.ConnectionScope
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
+import io.github.eslamasabry.oc.core.common.NetworkWhy
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.SignInWhy
@@ -56,6 +57,7 @@ class NativeServerSettings(
     private val registry: ConnectionRegistry,
     private val connections: ServerConnections,
     private val editor: ServerEditorPort,
+    private val runtime: PreviewRuntime,
 ) : ServerSettingsSource {
     private val shellWrites = Mutex()
 
@@ -63,10 +65,13 @@ class NativeServerSettings(
     override fun watch(profile: ProfileId): Flow<ServerSettingsFacts?> = flow {
         stores.warm()
         emitAll(
-            combine(stores.profiles.profiles, registry.live) { saved, live ->
-                    saved.firstOrNull { it.id == profile } to live[profile]
+            combine(stores.profiles.profiles, registry.live, runtime.sourceFailureState) {
+                    saved,
+                    live,
+                    failures ->
+                    Triple(saved.firstOrNull { it.id == profile }, live[profile], failures[profile])
                 }
-                .flatMapLatest { (loaded, graph) ->
+                .flatMapLatest { (loaded, graph, connectionFailure) ->
                     if (loaded == null) flowOf(null)
                     else if (graph == null || graph.profile != loaded.toServerProfile())
                         flowOf(
@@ -82,15 +87,27 @@ class NativeServerSettings(
                                 loaded.profile.backend == BackendKind.OpenCode2 &&
                                     (ManagedLocalServer.isBuiltin(loaded.profile.baseUrl) ||
                                         ManagedLocalServer.isTermux(loaded.profile.baseUrl)),
+                                connectionFailure = connectionFailure,
                             )
                         )
                     else
                         graph.session.capabilities.let { capabilities ->
-                            combine(capabilities, graph.session.server.events.status) { flags, _ ->
+                            combine(capabilities, graph.session.server.events.status) {
+                                flags,
+                                status ->
+                                val connected = status == StreamStatus.Connected
+                                val failure =
+                                    when (status) {
+                                        is StreamStatus.Stopped -> status.failure
+                                        StreamStatus.WaitingForNetwork ->
+                                            Failure.Network(NetworkWhy.Offline)
+                                        StreamStatus.Connected -> null
+                                        else -> connectionFailure
+                                    }
                                 ServerSettingsFacts(
                                     loaded.profile.name,
                                     loaded.profile.baseUrl,
-                                    true,
+                                    connected,
                                     loaded.hasSecret,
                                     loaded.profile.serverVersion,
                                     !loaded.profile.usesAgentSocket,
@@ -99,6 +116,7 @@ class NativeServerSettings(
                                     loaded.profile.backend == BackendKind.OpenCode2 &&
                                         (ManagedLocalServer.isBuiltin(loaded.profile.baseUrl) ||
                                             ManagedLocalServer.isTermux(loaded.profile.baseUrl)),
+                                    connectionFailure = failure,
                                 )
                             }
                         }

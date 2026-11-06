@@ -15,6 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.SignInWhy
 import io.github.eslamasabry.oc.feature.settings.presentation.*
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
@@ -130,6 +132,10 @@ public fun ServerSettingsScreen(state: ServerSettingsUi, actions: ServerSettings
 @Composable
 private fun ServerHome(state: ServerSettingsUi, actions: ServerSettingsActions) {
     val facts = state.facts ?: return
+    val connectionFailure = facts.connectionFailure
+    val fixSignIn =
+        connectionFailure is Failure.SignIn || connectionFailure is Failure.SecretUnavailable
+    val reconnect = if (fixSignIn) actions::edit else actions::connect
     KitSectionLabel(stringResource(Res.string.settingsV3SectionConnection))
     KitRowGroup {
         KitRow(
@@ -143,11 +149,13 @@ private fun ServerHome(state: ServerSettingsUi, actions: ServerSettingsActions) 
                     }
                 ),
             supporting =
-                (state.health?.version ?: facts.lastVersion)?.let { version ->
-                    if (facts.connected && state.health != null) version
-                    else stringResource(Res.string.settingsV3NotConnectedVersion, version)
-                },
-            onClick = if (facts.connected) actions::refresh else actions::connect,
+                if (!facts.connected) {
+                    val reason = disconnectedReason(connectionFailure)
+                    if (connectionFailure == null) reason
+                    else stringResource(Res.string.serverDetailsLastAttempt, reason)
+                } else (state.health?.version ?: facts.lastVersion),
+            supportingMaxLines = 4,
+            onClick = if (facts.connected) actions::refresh else reconnect,
             enabled = !state.working && !state.checkingHealth,
             disabledReason = stringResource(Res.string.connCheckRunning),
         )
@@ -252,8 +260,11 @@ private fun ServerHome(state: ServerSettingsUi, actions: ServerSettingsActions) 
             actions =
                 listOf(
                     KitLineAction(
-                        stringResource(Res.string.serverSettingsConnect),
-                        actions::connect,
+                        stringResource(
+                            if (fixSignIn) Res.string.serverDetailsFixSignIn
+                            else Res.string.serverSettingsConnect
+                        ),
+                        reconnect,
                     )
                 ),
         )
@@ -292,6 +303,36 @@ private fun ServerHome(state: ServerSettingsUi, actions: ServerSettingsActions) 
             else KitEnabled.Enabled,
     )
 }
+
+/**
+ * Only typed connection failures choose the explanation; server and exception prose stays hidden.
+ */
+@Composable
+private fun disconnectedReason(failure: Failure?): String =
+    stringResource(
+        when (failure) {
+            null -> Res.string.serverDetailsDisconnectedUnknown
+            is Failure.SignIn ->
+                when (failure.why) {
+                    SignInWhy.PasswordMissing -> Res.string.serverDetailsPasswordMissing
+                    SignInWhy.TokenMissing -> Res.string.serverDetailsTokenMissing
+                    SignInWhy.PasswordRejected -> Res.string.productErrorSignIn
+                    SignInWhy.TokenRejected -> Res.string.serverDetailsTokenRejected
+                    SignInWhy.HostNotAllowed,
+                    SignInWhy.Forbidden -> Res.string.serverDetailsAccessDenied
+                }
+            is Failure.Network -> Res.string.serverFailureNetwork
+            is Failure.TimedOut -> Res.string.serverFailureTimeout
+            is Failure.Certificate -> Res.string.serverFailureCertificate
+            is Failure.SecretUnavailable -> Res.string.serverFailureSecret
+            is Failure.Incompatible -> Res.string.serverFailureIncompatible
+            is Failure.UnreadableReply -> Res.string.serverFailureUnreadableReply
+            is Failure.Server -> Res.string.serverFailureServer
+            is Failure.Rejected -> Res.string.serverFailureRejected
+            is Failure.StorageRefused -> Res.string.serverFailureStorage
+            else -> Res.string.serverFailureOther
+        }
+    )
 
 @Composable
 private fun IntegrationDoor(
