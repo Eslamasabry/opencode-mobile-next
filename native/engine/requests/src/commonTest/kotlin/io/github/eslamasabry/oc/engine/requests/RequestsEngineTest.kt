@@ -734,7 +734,7 @@ class RequestsEngineTest {
         }
 
     @Test
-    fun `B-CHAT-072 req-5 held answers are checked against updated prompts before claiming`() =
+    fun `B-CHAT-072 req-5 a held answer never goes out against updated prompts - the card asks again`() =
         runTest {
             serverListsAsks()
             val engine = engine()
@@ -754,7 +754,9 @@ class RequestsEngineTest {
             engine.refresh()
             engine.flushHeld(S1)
             assertEquals(emptyList(), port.replies)
-            assertIs<AnswerPhase.NotAccepted>(engine.phaseOf("q1"))
+            // Replacement content needs a fresh decision (RequestsEngine.withData): the answer given
+            // to the old prompts is dropped, not checked or sent against the new ones.
+            assertIs<AnswerPhase.Waiting>(engine.phaseOf("q1"))
             assertIs<Outcome.Failed>(engine.retry(RequestId("q1")))
             advanceTimeBy(HELD_ANSWER + 1.milliseconds)
             runCurrent()
