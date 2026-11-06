@@ -48,7 +48,9 @@ class FlutterEraLedgerSweepTest {
     fun `B-SEC-201 every per-server ledger shape and secret of the deleted server leaves each Flutter-era copy, the other server stays whole`() = runTest {
         val profileRows = ledger.filterValues { it["scope"] == "profile" }.keys
         assertEquals(107, profileRows.size, "the Flutter ledger's profile rows")
-        val appWide = ledger.filterValues { it["scope"] == "global" }.keys.filterNot { it.endsWith('.') }
+        // App-wide keys that hold embedded per-server records have their own edits (and JSON values): not seeded here.
+        val embedded = FlutterEraEdits.forCopies.flatMap { it.keys }.toSet()
+        val appWide = ledger.filterValues { it["scope"] == "global" }.keys.filterNot { it.endsWith('.') || it in embedded }
 
         val prefs = LinkedHashMap<String, PrefValue>()
         for (row in profileRows) {
