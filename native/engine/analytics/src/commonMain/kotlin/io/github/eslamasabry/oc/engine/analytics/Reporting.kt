@@ -37,13 +37,13 @@ public interface Reporting {
 public object NoReporting : Reporting {
     override val reportingConsent: StateFlow<Boolean> = MutableStateFlow(false).asStateFlow()
 
-    override fun setReportingConsent(granted: Boolean) = Unit
+    override fun setReportingConsent(granted: Boolean): Unit = Unit
 
-    override fun reportCrash(category: String, safeStack: List<String>) = Unit
+    override fun reportCrash(category: String, safeStack: List<String>): Unit = Unit
 
-    override fun reportFailure(name: String, keys: Map<String, String>) = Unit
+    override fun reportFailure(name: String, keys: Map<String, String>): Unit = Unit
 
-    override fun breadcrumb(text: String) = Unit
+    override fun breadcrumb(text: String): Unit = Unit
 }
 
 /** A report that has been through [ReportRedactor]. Every string is safe to leave the phone. */
@@ -75,11 +75,11 @@ public interface ReportSink {
 public object NoOpReportSink : ReportSink {
     override val id: SinkId get() = SinkId.None
 
-    override fun setCollectionEnabled(enabled: Boolean) = Unit
+    override fun setCollectionEnabled(enabled: Boolean): Unit = Unit
 
-    override fun breadcrumb(text: String) = Unit
+    override fun breadcrumb(text: String): Unit = Unit
 
-    override fun record(report: SafeReport) = Unit
+    override fun record(report: SafeReport): Unit = Unit
 }
 
 /**
