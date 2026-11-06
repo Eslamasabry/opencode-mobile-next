@@ -348,9 +348,24 @@ private fun ServerProjects(state: ProjectsPickerUi, actions: ProjectsPickerActio
                     title = stringResource(Res.string.e7ProjectProjectsEmpty),
                     body = stringResource(Res.string.e7ProjectProjectsEmptyDetail),
                 )
-            else -> state.projects.forEach { ProjectRow(it, actions, state.canRename) }
+            else -> {
+                val twins = sameNames(state.projects)
+                state.projects.forEach {
+                    ProjectRow(it, actions, state.canRename, tail = pathTail(it.directory).takeIf { _ -> it.name.lowercase() in twins })
+                }
+            }
         }
     }
+}
+
+/** The lower-cased names that more than one project carries. */
+private fun sameNames(projects: List<FolderRowUi>): Set<String> =
+    projects.groupingBy { it.name.lowercase() }.eachCount().filterValues { it > 1 }.keys
+
+/** The two folders above a project's own, enough to tell same-named projects apart ("…/scratch/walk"). */
+private fun pathTail(directory: String): String {
+    val parents = directory.trim().trimEnd('/', '\\').split('/', '\\').filter { it.isNotEmpty() }.dropLast(1)
+    return if (parents.isEmpty()) directory else "…/" + parents.takeLast(2).joinToString("/")
 }
 
 @Composable
@@ -358,8 +373,11 @@ private fun ProjectRow(
     project: FolderRowUi,
     actions: ProjectsPickerActions,
     canRename: Boolean = false,
+    /** Where this folder sits, shown first when another project has the same name (N-42). */
+    tail: String? = null,
 ) {
     val parts = buildList {
+        if (tail != null) add(tail)
         add(
             pluralStringResource(
                 Res.plurals.chatsFilterChatCount,
@@ -406,7 +424,7 @@ private fun ProjectRow(
                 project.kind != io.github.eslamasabry.oc.engine.files.PhoneProjectKind.Git
         )
             add(stringResource(Res.string.folderBrowserGit))
-        add(project.directory)
+        if (tail == null) add(project.directory)
     }
     KitRow(
         title = project.name,
