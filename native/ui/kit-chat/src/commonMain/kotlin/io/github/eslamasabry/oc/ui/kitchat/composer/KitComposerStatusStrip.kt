@@ -34,6 +34,7 @@ public fun KitComposerStatusStrip(
     if (!hasChips && model == null && stop == null) return
     Row(modifier.kitMaxWidth(CapRole.Conversation).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         BoxWithConstraints(Modifier.weight(1f)) {
+            val availableWidth = maxWidth
             val scroll = rememberScrollState()
             val tokens = LocalKitTokens.current
             val density = LocalDensity.current
@@ -50,7 +51,7 @@ public fun KitComposerStatusStrip(
                     horizontalArrangement = Arrangement.spacedBy(Space.S2.dp), content = chips,
                 )
                 else -> Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    val chipMax = max(maxWidth.value * .5f, maxWidth.value - Space.S2 - modelMin.value).coerceAtLeast(0f).dp // F: lib/ui/kit/chat/kit_composer_status_strip.dart:212-217
+                    val chipMax = max(availableWidth.value * .5f, availableWidth.value - Space.S2 - modelMin.value).coerceAtLeast(0f).dp // F: lib/ui/kit/chat/kit_composer_status_strip.dart:212-217
                     Row(
                         Modifier.widthIn(max = chipMax).kitScrollFade(scroll).horizontalScroll(scroll).testTag("composer-status-scroll"),
                         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp), content = chips,

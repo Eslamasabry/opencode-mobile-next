@@ -32,6 +32,7 @@ import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance

@@ -212,7 +212,9 @@ public fun LinuxStorageScreen(state: LinuxStorageUi, actions: LinuxStorageAction
                         KitDetailsFold(
                             label = stringResource(Res.string.kitDetails),
                             copyLabel = stringResource(Res.string.kitCopyDetails),
-                            text = state.scan.headings.joinToString("\n") { it.title() },
+                            notes = buildList {
+                                for (heading in state.scan.headings) add(heading.title())
+                            },
                         )
                     }
                 }
