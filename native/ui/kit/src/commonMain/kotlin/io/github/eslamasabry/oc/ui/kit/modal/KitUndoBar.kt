@@ -123,7 +123,8 @@ public fun KitUndoBar(offer: KitUndoOffer?, onUndo: () -> Unit, onTimeout: () ->
                 .background(colors.surface2)
                 .border(1.dp, colors.hairline, shape)
                 .heightIn(min = tokens.rowHeightOne.dp)
-                .padding(start = tokens.gutter.dp, end = Space.S1.dp)
+                // Undo's words keep a 12 dp margin from the bar's end (they sat 4 dp from the edge).
+                .padding(start = tokens.gutter.dp, end = Space.S3.dp)
                 .testTag("kit-undo")
                 .semantics(mergeDescendants = false) { liveRegion = LiveRegionMode.Polite },
             verticalAlignment = Alignment.CenterVertically,
