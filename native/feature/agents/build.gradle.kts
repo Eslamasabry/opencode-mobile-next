@@ -19,5 +19,7 @@ kotlin {
         implementation(project(":engine:agents"))
         implementation(project(":engine:settings"))
     }
+    // The golden-diff gate is the test-only :ui:gate module (E02-S01: no borrowed source folders).
+    sourceSets.getByName("desktopTest").dependencies { implementation(project(":ui:gate")) }
 }
 
