@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -326,6 +327,7 @@ public fun ChatScreen(
     val frost = rememberKitFrostState()
     val overlays = state.phase == ChatPhase.Live && state.status == null && state.find == null
     val headerUnder by remember(list) { derivedStateOf { list.lazy.canScrollForward } }
+    val scheduledId by actions.laterScheduled.collectAsState()
     val chrome =
         remember(actions, prompts) {
             ComposerChrome(
@@ -368,6 +370,8 @@ public fun ChatScreen(
                         }
                     },
                 sendLater = if (demoMode) null else actions::sendLater,
+                laterScheduled = { scheduledId },
+                laterShown = actions::laterShown,
                 modelPickerRequest = { modelPicker },
                 modelPickerDone = { id -> if (modelPicker == id) modelPicker = null },
             )

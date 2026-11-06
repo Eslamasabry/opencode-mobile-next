@@ -43,6 +43,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.*
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /** Flutter kit_wheel.dart: one ordered, controlled, adjustable column. */
@@ -175,6 +176,20 @@ private fun WheelColumn(
             userScroll = false
             try {
                 list.scrollToItem(column.selectedIndex)
+            } finally {
+                syncing = false
+            }
+        }
+    }
+    // N-44: once the first rows are laid out, the band must sit on the value the screen says is chosen
+    // (the button reads the same value), whatever the opening offset turned out to be.
+    LaunchedEffect(list) {
+        snapshotFlow { list.layoutInfo.visibleItemsInfo.isNotEmpty() }.first { it }
+        if (nearest() != current.selectedIndex) {
+            syncing = true
+            userScroll = false
+            try {
+                list.scrollToItem(current.selectedIndex)
             } finally {
                 syncing = false
             }

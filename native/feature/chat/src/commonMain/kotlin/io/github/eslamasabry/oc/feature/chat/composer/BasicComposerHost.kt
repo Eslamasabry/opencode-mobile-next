@@ -84,6 +84,7 @@ import io.github.eslamasabry.oc.ui.kitchat.stream.LocalKitPromptLift
 import io.github.eslamasabry.oc.ui.kitchat.stream.kitPromptOrigin
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.chatCycleNext
+import io.github.eslamasabry.oc.ui.words.res.composerLaterScheduled
 import io.github.eslamasabry.oc.ui.words.res.chatCyclePrevious
 import io.github.eslamasabry.oc.ui.words.res.chatDraftAlreadySent
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatAction
@@ -375,6 +376,19 @@ public fun BasicComposer(
     var historyOpen by remember(state.targetKey) { mutableStateOf(false) }
     // Clear draft text keeps attachments and can be undone (Flutter composer_tools.dart).
     var clearedText by remember(state.targetKey) { mutableStateOf<String?>(null) }
+    // N-44: a saved Send later schedule takes the words with it: the draft clears and one note says why.
+    var laterNote by remember(state.targetKey) { mutableStateOf(false) }
+    val laterId = chrome.laterScheduled()
+    LaunchedEffect(laterId) {
+        if (laterId != null) {
+            field.edit { replace(0, length, "") }
+            editor.userEditSerial += 1
+            editor.lastReported = ""
+            actions.draftChanged("")
+            laterNote = true
+            chrome.laterShown(laterId)
+        }
+    }
     val selectAndClose: (ComposerModel?) -> Unit = { choice ->
         scope.launch { if (actions.selectModel(choice)) modelsOpen = false }
     }
@@ -399,6 +413,17 @@ public fun BasicComposer(
                         { dismissedSave = history.saveFailure },
                     ),
                 modifier = Modifier.testTag("prompt-history-save-failed"),
+            )
+        if (laterNote)
+            KitNotice(
+                message = stringResource(Res.string.composerLaterScheduled),
+                tone = StatusTone.Neutral,
+                dismiss =
+                    KitLineAction(
+                        stringResource(Res.string.composerPreviewAttachmentDismiss),
+                        { laterNote = false },
+                    ),
+                modifier = Modifier.testTag("chat-later-scheduled"),
             )
         clearedText?.let { previous ->
             KitNotice(

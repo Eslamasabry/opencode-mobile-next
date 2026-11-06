@@ -7,6 +7,7 @@
     <string name="workExitCode">Exit code %1$d</string>
     <string name="composerClearTextTitle">Clear draft text</string>
     <string name="composerClearTextSubtitle">Keeps attachments · Undo available</string>
+    <string name="composerLaterScheduled">Scheduled. It will be sent at the time you chose.</string>
     <string name="composerDraftCleared">Draft text cleared</string>
     <string name="composerReuseTitle">Reuse a prompt</string>
     <string name="queueSaveFailed">Could not save the queued draft on this device. Your text is still here. Check available storage and try again.</string>
