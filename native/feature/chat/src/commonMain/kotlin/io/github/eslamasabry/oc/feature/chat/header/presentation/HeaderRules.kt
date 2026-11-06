@@ -50,7 +50,10 @@ public object HeaderRules {
             add(HeaderAction.Details)
             add(HeaderAction.CardsSettings)
             add(HeaderAction.AgentHandoff)
-            if (caps.sessionShare) add(if (shared) HeaderAction.Unshare else HeaderAction.Share)
+            if (caps.sessionShare) {
+                add(if (shared) HeaderAction.Unshare else HeaderAction.Share)
+                if (shared) add(HeaderAction.CopyShareLink)
+            }
             if (caps.sessionFork) add(HeaderAction.Fork)
             add(HeaderAction.Rename)
             if (
@@ -63,6 +66,7 @@ public object HeaderRules {
             if (caps.sessionImportExport) add(HeaderAction.ImportConversation)
             if (caps.agentFeatures) add(HeaderAction.AgentOptions)
             add(HeaderAction.CopyTranscript)
+            add(HeaderAction.Reload)
             if (caps.sessionArchive) add(HeaderAction.Archive)
             if (caps.sessionDelete) add(HeaderAction.Delete)
         }
