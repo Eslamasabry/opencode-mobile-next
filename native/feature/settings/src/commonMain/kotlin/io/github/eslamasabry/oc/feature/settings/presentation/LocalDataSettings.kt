@@ -9,6 +9,9 @@ import kotlinx.coroutines.flow.StateFlow
 public enum class LocalDataKind {
     Queue,
     Drafts,
+
+    /** N-48: the queued prompts kept for review (they may already have been sent), after the person confirms. */
+    QueueHeld,
 }
 
 public data class LocalDataFacts(

@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.settings.presentation.*
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
@@ -42,7 +43,17 @@ internal fun ColumnScope.LocalDataBody(ui: LocalDataUi, actions: SettingsActions
                 result.removed,
                 result.removed,
                 result.kept,
-            )
+            ),
+            // N-48: what was kept for review is never a dead end: the person may delete it too (after a confirm).
+            actions =
+                if (result.kept > 0 && result.payloadsCollected)
+                    listOf(
+                        KitLineAction(
+                            stringResource(Res.string.settings40_held_action),
+                            { actions.onAskDiscard(LocalDataKind.QueueHeld) },
+                        )
+                    )
+                else emptyList(),
         )
     }
     val facts = ui.facts
@@ -147,6 +158,14 @@ internal fun ColumnScope.LocalDataBody(ui: LocalDataUi, actions: SettingsActions
     KitConfirm(
         spec =
             ui.confirm?.let { kind ->
+                if (kind == LocalDataKind.QueueHeld)
+                    return@let KitConfirmSpec(
+                        title = stringResource(Res.string.settings40_held_question),
+                        confirmLabel =
+                            pluralStringResource(Res.plurals.privacyDeleteQueuedCount, facts.queued, facts.queued),
+                        body = stringResource(Res.string.settings40_held_body),
+                        kind = KitConfirmKind.Destructive,
+                    )
                 KitConfirmSpec(
                     title =
                         stringResource(

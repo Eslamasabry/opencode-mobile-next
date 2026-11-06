@@ -52,4 +52,7 @@
     </plurals>
     <string name="settings40_no_answers">لا توجد أسئلة على هذا الخادم تحتاج إلى إجابة بعد.</string>
     <string name="settings40_answer_failed">لم تكتمل هذه الخطوة. قد تختلف إجابتك المحفوظة عن إعدادات أندرويد. راجع الإشعارات أو الاستمرار في التشغيل، ثم أعد المحاولة.</string>
+    <string name="settings40_held_action">احذفها أيضًا</string>
+    <string name="settings40_held_question">حذف المطالبات المحفوظة للمراجعة؟</string>
+    <string name="settings40_held_body">ربما وصلت إلى الخادم بالفعل. هذا يحذفها من هذا الهاتف فقط، ولن يُرسل شيء آخر.</string>
 </resources>

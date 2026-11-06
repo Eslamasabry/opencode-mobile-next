@@ -145,10 +145,15 @@ class SettingsPrivacy(
             val result =
                 attempt({ Failure.StorageRefused() }) {
                         when (kind) {
-                            LocalDataKind.Queue -> {
+                            LocalDataKind.Queue,
+                            LocalDataKind.QueueHeld -> {
                                 when (
                                     val cleared =
-                                        queue.discardUnsent(guarded.expected, guarded.receiptIds)
+                                        queue.discardUnsent(
+                                            guarded.expected,
+                                            guarded.receiptIds,
+                                            includeHeld = kind == LocalDataKind.QueueHeld,
+                                        )
                                 ) {
                                     is Outcome.Failed -> cleared
                                     is Outcome.Ok -> {

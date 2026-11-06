@@ -69,6 +69,8 @@ public class OfflineQueueStore(private val store: KeyValueStore, private val lan
     public suspend fun discardUnsent(
         expectedJournals: Map<String, PrefValue?>,
         protectedIds: Set<String>,
+        /** N-48: the person confirmed deleting the ones kept for review too. */
+        includeHeld: Boolean = false,
     ): Outcome<Int> =
         order.withLock {
             val before = version()
@@ -77,7 +79,9 @@ public class OfflineQueueStore(private val store: KeyValueStore, private val lan
                     ?: return@withLock Outcome.Failed(
                         io.github.eslamasabry.oc.core.common.Failure.StorageRefused()
                     )
-            val kept = loadedEntries.entries.filter { it.dispatched || it.id in protectedIds }
+            val kept =
+                if (includeHeld) emptyList()
+                else loadedEntries.entries.filter { it.dispatched || it.id in protectedIds }
             val removed = loadedEntries.entries.size - kept.size
             val next = if (kept.isEmpty()) null else QueuedPromptCodec.encodeQueue(kept)
             when (
