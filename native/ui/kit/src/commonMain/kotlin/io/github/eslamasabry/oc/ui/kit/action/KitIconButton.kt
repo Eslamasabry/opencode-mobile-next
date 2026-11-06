@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
@@ -154,16 +155,21 @@ public fun KitIconButton(
 }
 
 /**
- * The copy variant (Dart `KitIconButton.copy`): copies [text] and shows a check for the copied hold.
+ * The copy variant (Dart `KitIconButton.copy`): copies [text] and shows a check for the copied hold. [mask] prepares
+ * the text just before the write; when it masked something, the button's name reads [maskedLabel] for the copied hold
+ * and is announced once (a polite live region), like Flutter's single copy announcement.
  */
 @Composable
 public fun KitIconButtonCopy(
     text: () -> String,
     modifier: Modifier = Modifier,
     label: String = "Copy",
+    mask: KitCopyMask = KitCopyVerbatim,
+    maskedLabel: String? = null,
 ) {
     val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
     var copied by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    var masked by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     androidx.compose.runtime.LaunchedEffect(copied) {
         if (copied) {
             kotlinx.coroutines.delay(io.github.eslamasabry.oc.ui.design.motion.MotionTokens.COPIED_HOLD.toLong())
@@ -172,12 +178,19 @@ public fun KitIconButtonCopy(
     }
     KitIconButton(
         if (copied) io.github.eslamasabry.oc.ui.kit.icon.KitIcons.check else io.github.eslamasabry.oc.ui.kit.icon.KitIcons.copy,
-        label,
+        if (copied && masked && maskedLabel != null) maskedLabel else label,
         onClick = {
-            clipboard.setText(androidx.compose.ui.text.AnnotatedString(text()))
+            val out = mask.apply(text())
+            clipboard.setText(androidx.compose.ui.text.AnnotatedString(out.text))
+            masked = out.masked
             copied = true
         },
-        modifier = modifier,
+        modifier =
+            if (maskedLabel == null) modifier
+            else
+                modifier.semantics {
+                    liveRegion = androidx.compose.ui.semantics.LiveRegionMode.Polite
+                },
     )
 }
 

@@ -11,6 +11,8 @@ import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.text.AnnotatedString
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.action.KitCopyButton
+import io.github.eslamasabry.oc.ui.kit.action.KitCopyMask
+import io.github.eslamasabry.oc.ui.kit.action.KitCopyText
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlin.test.*
 
@@ -49,5 +51,47 @@ class CopyButtonTest {
             )
             onNodeWithText("Copy command").assertExists()
             assertEquals(1, writes)
+        }
+
+    @Test
+    fun `B-SEC-145 a masking copy writes the mask's text and its copied state says something was hidden`() =
+        runComposeUiTest {
+            mainClock.autoAdvance = false
+            var copied: String? = null
+            val clipboard =
+                object : ClipboardManager {
+                    override fun getText(): AnnotatedString? = null
+
+                    override fun setText(annotatedString: AnnotatedString) {
+                        copied = annotatedString.text
+                    }
+                }
+            val mask = KitCopyMask { KitCopyText(it.replace("sk-fake-0000", "•••"), masked = "sk-fake-0000" in it) }
+            var value = "deploy --key sk-fake-0000"
+            setContent {
+                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                    CompositionLocalProvider(LocalClipboardManager provides clipboard) {
+                        KitCopyButton(
+                            "Copy command",
+                            "Copied",
+                            { value },
+                            mask = mask,
+                            maskedLabel = "Copied, key hidden",
+                        )
+                    }
+                }
+            }
+            onNodeWithText("Copy command").performClick()
+            mainClock.advanceTimeByFrame()
+            assertEquals("deploy --key •••", copied)
+            onNodeWithText("Copied, key hidden").assertExists()
+            mainClock.advanceTimeBy(
+                io.github.eslamasabry.oc.ui.design.motion.MotionTokens.COPIED_HOLD.toLong() + 100
+            )
+            value = "npm test"
+            onNodeWithText("Copy command").performClick()
+            mainClock.advanceTimeByFrame()
+            assertEquals("npm test", copied)
+            onNodeWithText("Copied").assertExists()
         }
 }
