@@ -506,7 +506,6 @@ public fun ChatScreen(
                     loadingLabel = stringResource(Res.string.chatLoadingConversation),
                     bottom = {
                         Column {
-                            state.find?.let { TranscriptFindBar(it, actions) }
                             // Notification opt-in is a review sheet; pending-send recovery uses the
                             // status slot.
                             replyOffer?.invoke()
@@ -527,11 +526,20 @@ public fun ChatScreen(
                                     modifier = Modifier,
                                 )
                             if (requests.card == null) formSlot?.invoke(Modifier)
+                            val find = state.find
+                            if (find != null) TranscriptFindBar(find, actions)
+                            else
+                            // Find owns the bottom input while it is open. The same entry's
+                            // composer ViewModel keeps the draft, attachments and selected model;
+                            // closing Find restores them without stacking two fields above IME.
                             composerHost.Composer(
-                                ComposerTarget(state.ref.profileId.raw, state.ref.sessionId.raw),
-                                chrome,
-                                Modifier.fillMaxWidth().padding(vertical = Space.S2.dp),
-                            )
+                                    ComposerTarget(
+                                        state.ref.profileId.raw,
+                                        state.ref.sessionId.raw,
+                                    ),
+                                    chrome,
+                                    Modifier.fillMaxWidth().padding(vertical = Space.S2.dp),
+                                )
                         }
                     },
                 ) {
