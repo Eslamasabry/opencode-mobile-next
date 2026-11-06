@@ -2,7 +2,6 @@ package io.github.eslamasabry.opencode_mobile
 
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -36,15 +35,15 @@ object WidgetV2Bridge {
                 put("action", action)
                 put("id", WidgetActionPolicy.token(this))
             }
+        // As in Flutter: the tap starts the service shell as a foreground service, so a cold tap
+        // keeps Android's user-tap start exemption and the service's admission promotes it.
         val intent =
-            Intent(context, WidgetActionReceiver::class.java).apply {
+            Intent().setClassName(context, BackgroundConnectionService.COMPONENT).apply {
                 this.action = BackgroundConnectionService.ACTION_WIDGET_ACTION
                 data = Uri.parse("opencode-widget://action/$widgetId/${payload["id"]}")
                 putExtra(EXTRA_PAYLOAD, JSONObject(payload).toString())
             }
-        // A live tap has at most the bridge's 6.5 s deadline. The private receiver's goAsync keeps that bounded
-        // dispatch alive without creating a second dataSync service or renewing the live service's promise.
-        return PendingIntent.getBroadcast(
+        return PendingIntent.getForegroundService(
             context,
             widgetId,
             intent,
@@ -235,15 +234,5 @@ object WidgetV2Bridge {
                     "busy" to (session?.optBoolean("busy") == true),
                     "teamAction" to session?.optJSONObject("team")?.optString("action"),
                 )
-    }
-}
-
-class WidgetActionReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent) {
-        val payload =
-            WidgetV2Bridge.parsePayload(intent.getStringExtra(WidgetV2Bridge.EXTRA_PAYLOAD))
-                ?: return
-        val pending = goAsync()
-        WidgetActionBridge.submit(context, payload) { pending.finish() }
     }
 }
