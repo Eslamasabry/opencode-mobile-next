@@ -23,6 +23,7 @@ import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.foundation.KitFrameText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
@@ -36,7 +37,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
  * the words, so the stop is plain before the tap (an approved amber meaning, 06 LOOK-4). It plays `KitHaptic.Send`. Its
  * wider width is taken at once (no width animation); the disc ⇄ pill change is a [KitComposerSwap] cross-fade.
  *
- * Text: frame. Motion: none of its own (press feedback from `KitTappable`).
+ * Text: frame (capped at 1.3x). Motion: none of its own (press feedback from `KitTappable`).
  */
 @Composable
 public fun KitStopAndSendPill(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -60,7 +61,9 @@ public fun KitStopAndSendPill(label: String, onClick: () -> Unit, modifier: Modi
         ) {
             val side = FlutterKitTokens.COMPOSER_STOP_SQUARE.dp
             Box(Modifier.size(side).background(colors.onAttentionFill, RoundedCornerShape(side / 4))) // F: lib/ui/kit/chat/kit_composer_caption.dart:171-179
-            BasicText(label, style = style, maxLines = 1)
+            // Frame text (E17-S03): capped at 1.3x like the rest of the composer's chrome. Uncapped, font scale 2.0
+            // drew the words at twice their size on one clipped line, cutting "Stop and send" off mid-word.
+            KitFrameText { BasicText(label, style = style, maxLines = 1) }
         }
     }
 }
