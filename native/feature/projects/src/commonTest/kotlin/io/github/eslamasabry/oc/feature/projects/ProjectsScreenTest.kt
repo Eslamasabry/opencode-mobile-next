@@ -1,6 +1,8 @@
 package io.github.eslamasabry.oc.feature.projects
 
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -19,6 +21,7 @@ import io.github.eslamasabry.oc.feature.projects.presentation.ProjectsPickerActi
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectsPickerUi
 import io.github.eslamasabry.oc.feature.projects.ui.ProjectPageScreen
 import io.github.eslamasabry.oc.feature.projects.ui.ProjectsPickerScreen
+import androidx.compose.ui.unit.dp
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -154,6 +157,24 @@ class ProjectsScreenTest {
         onNodeWithText("Theme packs").performClick()
         onNodeWithText("Load more conversations").performClick()
         assertEquals(listOf("new", "open a", "open b", "more"), actions.calls)
+    }
+
+    @Test
+    fun `B-NAV-010 the project page keeps Load more and its notice on the gutter, not the screen edge`() = runComposeUiTest {
+        val page =
+            ProjectPageUi(
+                directory = "/work/app",
+                name = "app",
+                phase = ProjectPagePhase.Ready,
+                createFailure = Failure.Server(500),
+                canLoadMore = true,
+            )
+        setContent { Themed { ProjectPageScreen(page, Page()) } }
+        val gutter = 16.dp
+        val more = onNodeWithText("Load more conversations", useUnmergedTree = true).getUnclippedBoundsInRoot()
+        assertTrue(more.left >= gutter, "Load more starts at ${more.left}")
+        val notice = onNodeWithTag("kit-notice-error").getUnclippedBoundsInRoot()
+        assertTrue(notice.left >= gutter, "the notice starts at ${notice.left}")
     }
 
     @Test

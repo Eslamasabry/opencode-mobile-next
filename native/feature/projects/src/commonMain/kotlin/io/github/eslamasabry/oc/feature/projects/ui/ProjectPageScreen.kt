@@ -206,7 +206,9 @@ public fun ProjectPageScreen(
                 }
             state.createFailure?.let { failure ->
                 item(key = "create-failed") {
+                    // N-50: a notice on the page keeps the gutter, like the button above it.
                     KitErrorNotice(
+                        modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
                         message = stringResource(Res.string.p12CreateFailed),
                         failure = failure,
                         detailsLabel = stringResource(Res.string.kitDetails),
@@ -242,7 +244,13 @@ public fun ProjectPageScreen(
                             }
                         }
                     }
-                    if (state.canLoadMore) item(key = "more") { LoadMore(state, actions) }
+                    // N-50: Load more starts on the gutter, never at the screen's edge.
+                    if (state.canLoadMore)
+                        item(key = "more") {
+                            Box(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)) {
+                                LoadMore(state, actions)
+                            }
+                        }
                     if (state.elsewhere.isNotEmpty() || state.elsewhereAttention.isNotEmpty()) {
                         item(key = "elsewhere") {
                             KitRowGroup(label = stringResource(Res.string.p12ElsewhereTitle)) {
