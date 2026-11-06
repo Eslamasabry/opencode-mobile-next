@@ -147,9 +147,11 @@ class PhoneProjectCreation(
                 is Outcome.Failed -> return listed
                 is Outcome.Ok -> listed.value
             }
+        // Real projects (Git repositories) lead; a plain folder someone opened is used only when there is nothing else.
+        val placed =
+            projects.filter { it.directory.startsWith("/") && it.directory.trimEnd('/').count { c -> c == '/' } >= 2 }
         val parent =
-            projects
-                .filter { it.directory.startsWith("/") && it.directory.trimEnd('/').count { c -> c == '/' } >= 2 }
+            (placed.filter { it.isGit == true }.ifEmpty { placed })
                 .maxByOrNull { it.updatedAtMs }
                 ?.directory
                 ?.trimEnd('/')

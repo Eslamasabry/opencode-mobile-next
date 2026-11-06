@@ -29,6 +29,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
@@ -142,15 +143,46 @@ public fun ProjectPageScreen(
                     )
                 }
             }
-            if (state.canStartIsolated)
-                item(key = "isolated-task") {
+            // N-50: the project's places in one group (separate copy, running server, Terminal, services, changes),
+            // one rhythm and one divider style, instead of four loose blocks with uneven gaps.
+            item(key = "places") {
+                KitRowGroup {
+                    if (state.canStartIsolated)
+                        KitRow(
+                            title = stringResource(Res.string.isolatedTaskTitle),
+                            supporting = stringResource(Res.string.isolatedTaskIntro),
+                            trailing = KitRowTrailing.Chevron,
+                            onClick = actions::startIsolatedTask,
+                        )
+                    state.devServerPort?.let { port ->
+                        KitRow(
+                            title = stringResource(Res.string.navProjectDevServer, port),
+                            onClick = actions::developmentServices,
+                        )
+                    }
+                    if (onTerminal != null)
+                        KitRow(
+                            title = stringResource(Res.string.terminal40Title),
+                            trailing = KitRowTrailing.Chevron,
+                            onClick = onTerminal,
+                        )
                     KitRow(
-                        title = stringResource(Res.string.isolatedTaskTitle),
-                        supporting = stringResource(Res.string.isolatedTaskIntro),
+                        title = stringResource(Res.string.servicesTitle),
+                        supporting = stringResource(Res.string.servicesSubtitle),
                         trailing = KitRowTrailing.Chevron,
-                        onClick = actions::startIsolatedTask,
+                        onClick = onDevServices ?: actions::developmentServices,
                     )
+                    if (state.workspace.available)
+                        KitRow(
+                            title =
+                                state.changesCount?.let {
+                                    stringResource(Res.string.navProjectChangesCount, it)
+                                } ?: stringResource(Res.string.agentProjectWorkspace),
+                            trailing = KitRowTrailing.Chevron,
+                            onClick = actions::openWorkspace,
+                        )
                 }
+            }
             // N-50: the project itself is not one of its separate copies; the group shows only real copies.
             val copies = state.copies.filter { it.directory.trimEnd('/') != state.directory.trimEnd('/') }
             if (state.canStartIsolated && (copies.isNotEmpty() || state.copiesFailure != null))
@@ -172,43 +204,6 @@ public fun ProjectPageScreen(
                         }
                     }
                 }
-            state.devServerPort?.let { port ->
-                item(key = "dev-server-running") {
-                    KitRow(
-                        title = stringResource(Res.string.navProjectDevServer, port),
-                        onClick = actions::developmentServices,
-                    )
-                }
-            }
-            if (onTerminal != null)
-                item(key = "terminal") {
-                    KitRow(
-                        title = stringResource(Res.string.terminal40Title),
-                        trailing = KitRowTrailing.Chevron,
-                        onClick = onTerminal,
-                    )
-                }
-            // N-50: Development services once, with what it holds (the Ready list's own row is gone).
-            item(key = "development-services") {
-                KitRow(
-                    title = stringResource(Res.string.servicesTitle),
-                    supporting = stringResource(Res.string.servicesSubtitle),
-                    trailing = KitRowTrailing.Chevron,
-                    onClick = onDevServices ?: actions::developmentServices,
-                )
-            }
-            if (state.workspace.available) {
-                item(key = "project-workspace") {
-                    KitRow(
-                        title =
-                            state.changesCount?.let {
-                                stringResource(Res.string.navProjectChangesCount, it)
-                            } ?: stringResource(Res.string.agentProjectWorkspace),
-                        trailing = KitRowTrailing.Chevron,
-                        onClick = actions::openWorkspace,
-                    )
-                }
-            }
             state.createFailure?.let { failure ->
                 item(key = "create-failed") {
                     KitErrorNotice(
@@ -240,12 +235,8 @@ public fun ProjectPageScreen(
                 ProjectPagePhase.Ready -> {
                     item(key = "here") {
                         KitRowGroup(label = stringResource(Res.string.p12ProjectConversations)) {
-                            if (state.conversations.isEmpty()) {
-                                KitText(
-                                    stringResource(Res.string.p12ProjectNoConversations),
-                                    KitTextRole.Supporting,
-                                )
-                            }
+                            if (state.conversations.isEmpty())
+                                KitGroupNote(stringResource(Res.string.p12ProjectNoConversations))
                             state.conversations.forEach {
                                 ChatRow(it, showProject = false, actions = actions)
                             }

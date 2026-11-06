@@ -354,11 +354,7 @@ private fun ServerProjects(state: ProjectsPickerUi, actions: ProjectsPickerActio
 private fun sameNames(projects: List<FolderRowUi>): Set<String> =
     projects.groupingBy { it.name.lowercase() }.eachCount().filterValues { it > 1 }.keys
 
-/** The two folders above a project's own, enough to tell same-named projects apart ("…/scratch/walk"). */
-private fun pathTail(directory: String): String {
-    val parents = directory.trim().trimEnd('/', '\\').split('/', '\\').filter { it.isNotEmpty() }.dropLast(1)
-    return if (parents.isEmpty()) directory else "…/" + parents.takeLast(2).joinToString("/")
-}
+private fun pathTail(directory: String): String = io.github.eslamasabry.oc.ui.kit.text.kitPathTail(directory)
 
 @Composable
 private fun ProjectRow(

@@ -101,8 +101,9 @@ public object ProjectRules {
         given?.takeIf { it.isNotBlank() } ?: FeedFolders.folderName(directory)
 
     /** Root conversations of the person: subagents stay with their parent, the AI Team's work on its own screen. */
+    // An archived conversation lives under All conversations › Archived, never in a project's lists.
     private fun roots(sessions: List<Session>): List<Session> =
-        sessions.filter { it.parentId == null && !isTeamFolder(it.directory) }
+        sessions.filter { it.parentId == null && !isTeamFolder(it.directory) && it.time?.archivedMs == null }
 
     private fun belongs(session: Session, directories: Set<String>): Boolean =
         session.directory?.let { normalize(it) in directories } == true
