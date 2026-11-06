@@ -522,8 +522,7 @@ public fun ChatScreen(
                                     nowMs = null,
                                     modifier = Modifier,
                                 )
-                            if (requests.card == null)
-                                formSlot?.invoke(Modifier)
+                            if (requests.card == null) formSlot?.invoke(Modifier)
                             composerHost.Composer(
                                 ComposerTarget(state.ref.profileId.raw, state.ref.sessionId.raw),
                                 chrome,
@@ -559,7 +558,11 @@ public fun ChatScreen(
                                         start.emptyEligible &&
                                         startActions != null
                                 ) {
-                                    ChatStartArea(start, startActions)
+                                    ChatStartArea(
+                                        start,
+                                        startActions,
+                                        projectName = header?.state?.projectName,
+                                    )
                                 } else
                                     ChatTranscriptList(
                                         rows = state.rows,

@@ -8,7 +8,9 @@ The review's NotificationText Android regex crash is already fixed in this branc
 
 ## U1 — instant first chat
 
-Start swaps immediately to a kit chat frame with the exact prompt and Sending… while creation/delivery runs. Definite failures offer retry on the same attempt; uncertain creation/delivery never replays. The prompt, project and model/agent choices are persisted before creation; a scoped journal fences process-death retries. A created conversation takes its initial title from the first prompt.
+Start swaps immediately to a kit chat frame with the exact prompt and Sending… while creation/delivery runs. Definite failures offer retry on the same attempt; uncertain creation/delivery never replays. The prompt, project and model/agent choices are persisted before creation; a scoped journal fences process-death retries. A created conversation takes its initial title from the first prompt. OpenCode 2 session model/mode are set and read back before dispatch; they are not fields of its prompt body.
+
+Boundary remaining: ordinary Start opens instantly. “In a separate copy” still opens the existing readiness/approval flow before chat; its draft and choices are saved before that handoff. Extending instant chat to that flow needs integration with its explicit worktree approval owner (U1 is partial for that variant).
 
 Validation: source inspection, formatter parsing and diff whitespace checks only. Compilation, tests and device/screenshot qualification are intentionally reserved for the coordinator. No push, merge, signing or release authorized.
 
@@ -43,3 +45,13 @@ The real conversation feed row and chat now share their ConversationRef key and 
 ## U9 — one mic/Send composer
 
 Frameless kit composer retains the working glow, with one round primary mic/Send slot, 150 ms fade (snap under reduced motion), five text lines, scrolling model/approval chips and a vector chevron. Free is a catalog-backed model-chip tag. Placeholder names the agent. Hold mic starts voice conversation; + menu offers the visible twin, with shared teaching, replay/reset and the existing mini tutorial. Actual binding is BasicComposerHost; the unbound FullComposer path is updated too. Source/formatter/XML checks only; no compile/tests.
+
+## U10 — project-aware empty chat
+
+Show the real project name immediately from the header and load facts from the session folder, with scoped file/inspection reads, bounded waits and stale-result fences. Only known file/Git facts are shown. Up to three starters sit above the composer, respecting overlay chrome insets. Source/formatter parsing and diff checks only; no compile/tests.
+
+## Coordinator validation remaining
+
+Compile this candidate, then validate Start success/definite failure/uncertain delivery and process death with chosen model/mode; compact layout with keyboard/large text/RTL; notice priority; message Details and teaching replay/reset; server rename; row/back gesture cancel/commit and reduced motion; empty/typed/attachment/busy/voice composer states; empty project facts and thumb-reachable starters. No runtime, screenshot, build or release qualification is claimed here.
+
+Final static receipt: all 57 changed Kotlin files parsed through ktfmt 0.64 (dry run), all eight changed XML resource files parsed, diff whitespace clean, and ten upgrade commits have the required subject suffix/body/trailers. No Gradle, Flutter, tests, emulator/device runs, pushes or releases were performed. Legacy formatting outside the edited blocks was preserved.

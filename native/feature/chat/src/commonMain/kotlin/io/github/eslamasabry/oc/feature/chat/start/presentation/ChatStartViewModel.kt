@@ -10,6 +10,9 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.domain.LocatedFileGateway
+import io.github.eslamasabry.oc.core.domain.WorktreeInspectionGateway
+import io.github.eslamasabry.oc.core.model.ServerLocation
 import io.github.eslamasabry.oc.core.model.VersionControlSetupState
 import io.github.eslamasabry.oc.engine.composer.phrases.ChatStartFacts
 import io.github.eslamasabry.oc.engine.composer.phrases.StarterKind
@@ -29,6 +32,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 public data class StartInsert(val id: Long, val text: String)
 
@@ -79,17 +83,37 @@ public class ChatStartViewModel(
         }
         if (reads != null || world.hasOlder.value) return
         reads = viewModelScope.launch {
-            registry.live.collectLatest graphRead@{ live ->
-                val graph = live[route.ref.profileId]
+            registry.live.collectLatest graphRead@{ _ ->
+                val graph = registry.graphFor(route.ref)
                 val gateway = (graph as? ChatGraphAccessors)?.chatGateway
                 if (graph == null || gateway == null) {
                     facts.value = ChatStartFacts(null)
                     return@graphRead
                 }
                 gateway.location.collectLatest locationRead@{ location ->
-                    val directory = location.directory
+                    val revision = gateway.scopeRevision
                     fun current(): Boolean =
-                        registry.graphFor(route.ref) === graph && gateway.location.value == location
+                        registry.graphFor(route.ref) === graph &&
+                            gateway.location.value == location &&
+                            gateway.scopeRevision == revision
+                    // The connection may still point at another folder (or none) while the
+                    // header already knows this conversation's folder. Read the same session.
+                    val session =
+                        withTimeoutOrNull(3_000) {
+                            (graph.session.reads.session(route.ref.sessionId) as? Outcome.Ok)?.value
+                        }
+                    if (!current()) return@locationRead
+                    val directory =
+                        session?.directory?.takeIf(String::isNotBlank) ?: location.directory
+                    val ownLocation =
+                        ServerLocation(
+                            directory = directory,
+                            workspace =
+                                session?.workspaceId?.raw
+                                    ?: location.workspace.takeIf {
+                                        directory == location.directory
+                                    },
+                        )
                     val bare = ChatStartFacts(directory)
                     facts.value = ChatStartFacts.pending(directory)
                     if (!bare.hasProject) {
@@ -102,16 +126,43 @@ public class ChatStartViewModel(
                             if (current()) facts.value = bare
                         }
                         val files = async {
-                            if (gateway.capabilities.value.fileBrowsing)
-                                (gateway.listFiles("") as? Outcome.Ok)?.value
-                            else null
+                            withTimeoutOrNull(3_000) {
+                                val fileGateway =
+                                    (gateway as? LocatedFileGateway)?.filesAt(ownLocation)
+                                        ?: gateway.takeIf { ownLocation == location }
+                                if (gateway.capabilities.value.fileBrowsing)
+                                    (fileGateway?.listFiles("") as? Outcome.Ok)?.value
+                                else null
+                            }
+                        }
+                        val project = async {
+                            withTimeoutOrNull(3_000) {
+                                if (gateway.capabilities.value.projectManagement)
+                                    ((gateway as? WorktreeInspectionGateway)?.inspectionProject(
+                                            ownLocation
+                                        ) as? Outcome.Ok)
+                                        ?.value
+                                else null
+                            }
                         }
                         val vcs = async {
-                            ((graph as ChatGraphAccessors).chatOperations.versionControlHealth()
-                                    as? Outcome.Ok)
-                                ?.value
+                            withTimeoutOrNull(3_000) {
+                                // This API has no explicit location argument. Never attach another
+                                // folder's branch or changes to this conversation.
+                                if (
+                                    gateway.capabilities.value.projectManagement &&
+                                        ownLocation == location
+                                )
+                                    ((graph as ChatGraphAccessors)
+                                            .chatOperations
+                                            .versionControlHealth() as? Outcome.Ok)
+                                        ?.value
+                                else null
+                            }
                         }
-                        val entries = files.await()?.count { it.name != ".git" }
+                        val rootFiles = files.await()
+                        val entries = rootFiles?.count { it.name != ".git" }
+                        val projectFacts = project.await()
                         val health = vcs.await()
                         fallback.cancel()
                         if (!current()) return@coroutineScope
@@ -119,7 +170,12 @@ public class ChatStartViewModel(
                             when (health?.setupState) {
                                 VersionControlSetupState.Git -> true
                                 VersionControlSetupState.Absent -> false
-                                else -> true.takeIf { !health?.branch.isNullOrBlank() }
+                                else ->
+                                    projectFacts?.isGit
+                                        ?: true.takeIf {
+                                            !health?.branch.isNullOrBlank() ||
+                                                rootFiles?.any { it.name == ".git" } == true
+                                        }
                             }
                         val branch = health?.branch?.trim().orEmpty()
                         facts.value =

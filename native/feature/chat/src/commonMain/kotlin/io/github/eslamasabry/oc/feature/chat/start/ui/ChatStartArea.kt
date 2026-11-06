@@ -27,6 +27,7 @@ import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
+import io.github.eslamasabry.oc.ui.kit.frame.kitScreenChromePadding
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.chatStartAddTests
 import io.github.eslamasabry.oc.ui.words.res.chatStartBuildWebPage
@@ -57,6 +58,8 @@ public fun ChatStartArea(
     state: ChatStartUi,
     actions: ChatStartActions,
     modifier: Modifier = Modifier,
+    /** The header's resolved name can arrive before the folder facts. */
+    projectName: String? = null,
 ) {
     val facts =
         Starters.factsLine(state.facts)
@@ -77,20 +80,23 @@ public fun ChatStartArea(
             }
             .joinToString(" · ")
     val ways = stringResource(Res.string.chatStartSuggestionsLabel)
-    Box(modifier.fillMaxSize(), contentAlignment = Alignment.BottomStart) {
+    Box(
+        modifier.fillMaxSize().padding(kitScreenChromePadding()),
+        contentAlignment = Alignment.BottomStart,
+    ) {
         Column(
             Modifier.fillMaxWidth()
                 .verticalScroll(rememberScrollState(), reverseScrolling = true)
                 .padding(vertical = Space.S4.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
-            if (state.facts.projectName == null)
-                KitText(
-                    stringResource(Res.string.chatStartServerFolder),
-                    role = TypeRole.Title,
-                    modifier =
-                        Modifier.padding(horizontal = Space.S4.dp).testTag("chat-start-name"),
-                )
+            KitText(
+                projectName?.takeIf(String::isNotBlank)
+                    ?: state.facts.projectName
+                    ?: stringResource(Res.string.chatStartServerFolder),
+                role = TypeRole.Title,
+                modifier = Modifier.padding(horizontal = Space.S4.dp).testTag("chat-start-name"),
+            )
             if (facts.isNotEmpty())
                 KitText(
                     facts,
@@ -107,13 +113,13 @@ public fun ChatStartArea(
             if (state.showSuggestions) {
                 Row(
                     Modifier.fillMaxWidth()
-                        .horizontalScroll(rememberScrollState())
                         .padding(horizontal = Space.S4.dp)
+                        .horizontalScroll(rememberScrollState())
                         .semantics { contentDescription = ways }
                         .testTag("chat-starters"),
                     horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
                 ) {
-                    Starters.suggestions(state.facts).forEach { kind ->
+                    Starters.suggestions(state.facts).take(3).forEach { kind ->
                         val label = starterLabel(kind)
                         KitChip(label = label, onClick = { actions.chooseStarter(kind, label) })
                     }
