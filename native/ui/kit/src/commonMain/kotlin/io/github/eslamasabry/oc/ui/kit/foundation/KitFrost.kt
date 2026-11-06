@@ -98,6 +98,10 @@ public fun Modifier.kitFrost(
             if (effect == null || spec == null) {
                 drawRect(tint)
             } else {
+                // N-52/N-57: the recorded content has no ground of its own (the screen paints that), so the blurred
+                // copy alone is mostly clear and the sharp content under this part showed through it. The opaque
+                // ground goes first: only the blur and the tint are seen.
+                drawRect(colors.ground.copy(alpha = 1f))
                 blur.renderEffect = effect
                 val shift = state.sourceOrigin - origin[0]
                 blur.record { translate(shift.x, shift.y) { drawLayer(state.layer) } }
