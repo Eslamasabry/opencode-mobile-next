@@ -40,6 +40,9 @@ public enum class AgentLimitation {
     /** "Needs a check on your phone before use." */
     NeedsPhoneCheck,
     GeminiHostSignIn,
+
+    /** "Sign in with Google, then check it on your phone. Starts a new chat." */
+    AntigravityGoogleSignIn,
     QwenProviderKey,
     KiloSignInOrKey,
     ClineSignIn,

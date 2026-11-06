@@ -139,6 +139,43 @@ internal const val AGENT_PINS_JSON: String = """{
       }
     },
     {
+      "id": "antigravity",
+      "name": "Antigravity",
+      "route": "acpPaseo",
+      "providerId": "antigravity",
+      "signInMethod": "browserOAuthHost",
+      "recipe": {
+        "version": "1.5.0",
+        "executable": "agy",
+        "launchArgs": [
+          "acp",
+          "--disable-telemetry"
+        ],
+        "signInArgs": [
+          "acp",
+          "--login"
+        ],
+        "artifacts": {
+          "arm64": {
+            "url": "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.0-5269980577660928/linux-arm/cli_linux_arm64.tar.gz",
+            "sha256": "87e73a5ab4ecb3a9668660d259dafd13f5443149da0113664d59129a21a62ba4",
+            "format": "tarGz",
+            "member": "antigravity",
+            "downloadBytes": 66011999,
+            "installedBytes": 227627384
+          },
+          "x64": {
+            "url": "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.0-5269980577660928/linux-x64/cli_linux_x64.tar.gz",
+            "sha256": "f65e365a67be49abdaf92f5669c3157bd4b9c569f6b9f448340b00ca261b0f01",
+            "format": "tarGz",
+            "member": "antigravity",
+            "downloadBytes": 69781910,
+            "installedBytes": 238604688
+          }
+        }
+      }
+    },
+    {
       "id": "gemini",
       "name": "Gemini CLI",
       "route": "acpPaseo",

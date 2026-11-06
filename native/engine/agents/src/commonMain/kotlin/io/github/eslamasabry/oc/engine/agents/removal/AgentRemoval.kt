@@ -38,7 +38,7 @@ public enum class RemovalRefusal {
 }
 
 /**
- * Remove an agent (AGENTS-BACKENDS-12, plan 17 §1.5). Only the catalog executables `codex gemini qwen kilo cline goose
+ * Remove an agent (AGENTS-BACKENDS-12, plan 17 §1.5). Only the catalog executables `codex gemini agy qwen kilo cline goose
  * omp fx`; keeps accounts, chats, shared tools and the gate metadata; a partial payload stays removable.
  */
 public class AgentRemoval(
@@ -70,7 +70,7 @@ public class AgentRemoval(
     }
 
     public companion object {
-        public val REMOVABLE_EXECUTABLES: Set<String> = setOf("codex", "gemini", "qwen", "kilo", "cline", "goose", "omp", "fx")
+        public val REMOVABLE_EXECUTABLES: Set<String> = setOf("codex", "gemini", "agy", "qwen", "kilo", "cline", "goose", "omp", "fx")
         public val RECEIPT: Regex = Regex("^[a-f0-9]{32}$")
     }
 }

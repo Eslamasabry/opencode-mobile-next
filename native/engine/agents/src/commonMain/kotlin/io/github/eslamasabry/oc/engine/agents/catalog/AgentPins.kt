@@ -116,6 +116,7 @@ public class AgentPins internal constructor(
         internal fun builtInLimitation(id: AgentId): AgentLimitation =
             when (id.raw) {
                 "gemini" -> AgentLimitation.GeminiHostSignIn
+                "antigravity" -> AgentLimitation.AntigravityGoogleSignIn
                 "qwen" -> AgentLimitation.QwenProviderKey
                 "kilo" -> AgentLimitation.KiloSignInOrKey
                 "cline" -> AgentLimitation.ClineSignIn

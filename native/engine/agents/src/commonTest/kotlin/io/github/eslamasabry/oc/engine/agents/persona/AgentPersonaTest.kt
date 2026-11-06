@@ -29,6 +29,10 @@ class AgentPersonaTest {
             "codex" to AgentPersonaId.Codex,
             "gemini" to AgentPersonaId.Gemini,
             "gemini-cli" to AgentPersonaId.Gemini,
+            "antigravity" to AgentPersonaId.Antigravity,
+            "Antigravity CLI" to AgentPersonaId.Antigravity,
+            "antigravity-cli" to AgentPersonaId.Antigravity,
+            "agy" to AgentPersonaId.Antigravity,
             "kilo" to AgentPersonaId.Kilo,
             "kilocode" to AgentPersonaId.Kilo,
             "cline" to AgentPersonaId.Cline,
@@ -56,8 +60,17 @@ class AgentPersonaTest {
     }
 
     @Test
-    fun `B-AGENT-023 the six named personas are distinct and each has a mark`() {
-        assertEquals(6, AgentPersona.all.map { it.id }.toSet().size)
+    fun `B-AGENT-023 the seven named personas are distinct and each has a mark`() {
+        assertEquals(7, AgentPersona.all.map { it.id }.toSet().size)
         assertTrue(AgentPersona.all.all { it.hasMark })
+    }
+
+    @Test
+    fun `B-AGENT-023 Antigravity is Google's agent and uses Google's mark, not Gemini's`() {
+        val persona = AgentPersona.of("antigravity")
+        assertEquals(AgentMaker.Google, persona.maker)
+        assertEquals("google", persona.markSlug)
+        assertEquals("google", AgentPersona.agentMarkSlug("agy"))
+        assertEquals("gemini", AgentPersona.of("gemini").markSlug)
     }
 }

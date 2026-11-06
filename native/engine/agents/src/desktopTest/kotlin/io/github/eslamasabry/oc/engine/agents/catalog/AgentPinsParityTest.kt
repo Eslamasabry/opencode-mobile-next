@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.engine.agents.catalog
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 /**
@@ -10,6 +11,12 @@ import kotlin.test.assertTrue
  * repository and compare every URL, hash, version and size byte for byte, and the generated Kotlin with the JSON file.
  */
 class AgentPinsParityTest {
+    /**
+     * Agents added to Flutter after the freeze tip that this repository's Dart sources still lack: they are checked
+     * against the commit's literal values below, not against the (older) Dart file.
+     */
+    private val postFreeze = setOf("antigravity")
+
     private val repo: File = generateSequence(File("").absoluteFile) { it.parentFile }
         .first { File(it, "lib/domain/agent_catalog.dart").isFile }
     private val dartCatalog = File(repo, "lib/domain/agent_catalog.dart").readText()
@@ -31,11 +38,12 @@ class AgentPinsParityTest {
         val dartHashes = Regex("'([a-f0-9]{64})'").findAll(dartCatalog).map { it.groupValues[1] }.toSet()
         val dartUrls = Regex("'(https://[^']+)'").findAll(dartCatalog).map { it.groupValues[1] }
             .filter { it != "https://github.com" }.toSet() // the `const github` prefix itself
-        val ourHashes = catalog.agents.flatMap { a -> a.recipe!!.artifacts.values.map { it.sha256 } }.toSet()
-        val ourUrls = catalog.agents.flatMap { a -> a.recipe!!.artifacts.values.map { it.url } }.toSet()
+        val frozen = catalog.agents.filter { it.id.raw !in postFreeze }
+        val ourHashes = frozen.flatMap { a -> a.recipe!!.artifacts.values.map { it.sha256 } }.toSet()
+        val ourUrls = frozen.flatMap { a -> a.recipe!!.artifacts.values.map { it.url } }.toSet()
         assertEquals(dartHashes, ourHashes)
         assertEquals(dartUrls, ourUrls)
-        for (agent in catalog.agents) {
+        for (agent in frozen) {
             val recipe = agent.recipe!!
             assertTrue("version: '${recipe.version}'" in dartCatalog, agent.id.raw)
             assertTrue("executable: '${recipe.executable}'" in dartCatalog, agent.id.raw)
@@ -53,6 +61,41 @@ class AgentPinsParityTest {
                 assertTrue(literal in dartCatalog, "${agent.id} $literal")
             }
         }
+    }
+
+    @Test
+    fun `B-AGENT-008 Antigravity pins equal Flutter commit 4a75d8593`() {
+        val agent = AgentPins.builtIn.catalog().byId(io.github.eslamasabry.oc.engine.agents.AgentId("antigravity"))!!
+        val recipe = agent.recipe!!
+        assertEquals("Antigravity", agent.name)
+        assertEquals(AgentRoute.AcpPaseo, agent.route)
+        assertEquals("antigravity", agent.providerId)
+        assertEquals(AgentSignInMethod.BrowserOAuthHost, agent.signInMethod)
+        assertEquals(AgentLimitation.AntigravityGoogleSignIn, agent.limitation)
+        assertEquals("1.5.0", recipe.version)
+        assertEquals("agy", recipe.executable)
+        assertEquals(listOf("acp", "--disable-telemetry"), recipe.launchArgs)
+        assertEquals(listOf("acp", "--login"), recipe.signInArgs)
+        val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
+        assertEquals(
+            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.0-5269980577660928/linux-arm/cli_linux_arm64.tar.gz",
+            arm.url,
+        )
+        assertEquals("87e73a5ab4ecb3a9668660d259dafd13f5443149da0113664d59129a21a62ba4", arm.sha256)
+        assertEquals(66011999L, arm.downloadBytes)
+        assertEquals(227627384L, arm.installedBytes)
+        assertEquals("antigravity", arm.archiveMember)
+        assertEquals(AgentArtifactFormat.TarGz, arm.format)
+        val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
+        assertEquals(
+            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.0-5269980577660928/linux-x64/cli_linux_x64.tar.gz",
+            x64.url,
+        )
+        assertEquals("f65e365a67be49abdaf92f5669c3157bd4b9c569f6b9f448340b00ca261b0f01", x64.sha256)
+        assertEquals(69781910L, x64.downloadBytes)
+        assertEquals(238604688L, x64.installedBytes)
+        // Gemini stays: the catalog only gains Antigravity.
+        assertNotNull(AgentPins.builtIn.catalog().byId(io.github.eslamasabry.oc.engine.agents.AgentId("gemini")))
     }
 
     @Test

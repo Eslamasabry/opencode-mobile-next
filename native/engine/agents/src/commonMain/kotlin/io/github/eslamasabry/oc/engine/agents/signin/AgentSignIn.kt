@@ -78,7 +78,7 @@ public class AgentSignIn(
 
 /** The allowlist the kept Kotlin enforces too (`agentSignInCommand`); checked here first so a bad call never leaves. */
 public object SignInCommandPolicy {
-    public val PROGRAMS: Set<String> = setOf("claude", "codex", "gemini", "qwen", "goose", "omp", "fx", "kilo", "cline")
+    public val PROGRAMS: Set<String> = setOf("claude", "codex", "gemini", "agy", "qwen", "goose", "omp", "fx", "kilo", "cline")
     public const val MAX_ARGS: Int = 5
     private val ARG = Regex("^[A-Za-z0-9-]{1,32}$")
 

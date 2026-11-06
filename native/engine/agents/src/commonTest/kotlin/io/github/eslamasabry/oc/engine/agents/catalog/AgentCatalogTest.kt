@@ -110,7 +110,7 @@ class AgentCatalogTest {
     fun `B-AGENT-008 seed recipes are pinned for both architectures without runtime claims`() {
         val catalog = AgentCatalog.builtIn
         assertEquals(
-            setOf("opencode2", "claude", "codex", "gemini", "qwen", "kilo", "cline", "goose", "omp-acp", "fx"),
+            setOf("opencode2", "claude", "codex", "antigravity", "gemini", "qwen", "kilo", "cline", "goose", "omp-acp", "fx"),
             catalog.agents.map { it.id.raw }.toSet(),
         )
         for (entry in catalog.agents) {
@@ -129,6 +129,11 @@ class AgentCatalogTest {
         assertEquals(listOf("auth", "login", "--claudeai"), catalog.byId(AgentId("claude"))!!.recipe!!.signInArgs)
         assertEquals(AgentLimitation.NeedsPhoneCheck, catalog.byId(AgentId("claude"))!!.limitation)
         assertEquals(AgentLimitation.GooseProvider, catalog.byId(AgentId("goose"))!!.limitation)
+        // Antigravity (agy) joins Gemini CLI in the catalog; it does not replace it.
+        assertEquals(listOf("acp", "--disable-telemetry"), catalog.byId(AgentId("antigravity"))!!.recipe!!.launchArgs)
+        assertEquals(listOf("acp", "--login"), catalog.byId(AgentId("antigravity"))!!.recipe!!.signInArgs)
+        assertEquals("agy", catalog.byId(AgentId("antigravity"))!!.recipe!!.executable)
+        assertEquals(AgentLimitation.AntigravityGoogleSignIn, catalog.byId(AgentId("antigravity"))!!.limitation)
     }
 
     @Test

@@ -25,7 +25,7 @@ public class AgentInstallGuard(public val minimumFreeBytes: Long = 0L) {
     }
 
     public companion object {
-        public val agentIds: Set<String> = setOf("codex", "gemini", "qwen", "kilo", "cline", "goose", "omp-acp", "fx")
+        public val agentIds: Set<String> = setOf("codex", "gemini", "antigravity", "qwen", "kilo", "cline", "goose", "omp-acp", "fx")
     }
 }
 

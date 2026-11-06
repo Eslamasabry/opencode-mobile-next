@@ -12,6 +12,7 @@ public object AgentRemovalScripts {
     private val executables = mapOf(
         "codex" to "codex",
         "gemini" to "gemini",
+        "antigravity" to "agy",
         "qwen" to "qwen",
         "kilo" to "kilo",
         "cline" to "cline",
@@ -67,7 +68,7 @@ public object AgentRemovalScripts {
 
     internal val REMOVE_PY: String = """import json, os, pathlib, re, shutil, stat, sys
 agent, executable, version, receipt_id = sys.argv[1:]
-allowed = {'codex': 'codex', 'gemini': 'gemini', 'qwen': 'qwen',
+allowed = {'codex': 'codex', 'gemini': 'gemini', 'antigravity': 'agy', 'qwen': 'qwen',
            'kilo': 'kilo', 'cline': 'cline', 'goose': 'goose', 'omp-acp': 'omp', 'fx': 'fx'}
 if (allowed.get(agent) != executable or
     not re.fullmatch(r'[0-9A-Za-z][0-9A-Za-z._+-]{0,79}', version) or

@@ -8,7 +8,7 @@ package io.github.eslamasabry.oc.engine.agents.persona
  * [of] takes any id, alias or icon key the app sees and returns [AgentPersonaId.Other] with the agent's own mark (or a
  * neutral one) for anything it does not know.
  */
-public enum class AgentPersonaId { ClaudeCode, Codex, Gemini, Kilo, Cline, OpenCode, Other }
+public enum class AgentPersonaId { ClaudeCode, Codex, Gemini, Antigravity, Kilo, Cline, OpenCode, Other }
 
 /** Who makes the agent, for the "by …" line. */
 public enum class AgentMaker { Anthropic, OpenAi, Google, OpenSource, Unknown }
@@ -25,6 +25,7 @@ public data class AgentPersona(
         public val ClaudeCode: AgentPersona = AgentPersona(AgentPersonaId.ClaudeCode, "claude", AgentMaker.Anthropic)
         public val Codex: AgentPersona = AgentPersona(AgentPersonaId.Codex, "codex", AgentMaker.OpenAi)
         public val Gemini: AgentPersona = AgentPersona(AgentPersonaId.Gemini, "gemini", AgentMaker.Google)
+        public val Antigravity: AgentPersona = AgentPersona(AgentPersonaId.Antigravity, "google", AgentMaker.Google)
         public val Kilo: AgentPersona = AgentPersona(AgentPersonaId.Kilo, "kilocode", AgentMaker.OpenSource)
         public val Cline: AgentPersona = AgentPersona(AgentPersonaId.Cline, "cline", AgentMaker.OpenSource)
         public val OpenCode: AgentPersona = AgentPersona(AgentPersonaId.OpenCode, "opencode", AgentMaker.OpenSource)
@@ -32,14 +33,16 @@ public data class AgentPersona(
         /** Anything else: no words of its own, a neutral mark. */
         public val Other: AgentPersona = AgentPersona(AgentPersonaId.Other, "", AgentMaker.Unknown)
 
-        /** The six named personas, in the order a picker shows them. */
-        public val all: List<AgentPersona> = listOf(ClaudeCode, Codex, Gemini, Kilo, Cline, OpenCode)
+        /** The named personas, in the order a picker shows them. */
+        public val all: List<AgentPersona> = listOf(ClaudeCode, Codex, Gemini, Antigravity, Kilo, Cline, OpenCode)
 
         private val aliases: Map<String, AgentPersona> = mapOf(
             "claude" to ClaudeCode, "claude code" to ClaudeCode, "claude-code" to ClaudeCode,
             "claude_code" to ClaudeCode, "claudecode" to ClaudeCode,
             "codex" to Codex, "openai-codex" to Codex,
             "gemini" to Gemini, "gemini cli" to Gemini, "gemini-cli" to Gemini,
+            "antigravity" to Antigravity, "antigravity cli" to Antigravity, "antigravity-cli" to Antigravity,
+            "agy" to Antigravity,
             "kilo" to Kilo, "kilocode" to Kilo, "kilo-code" to Kilo,
             "cline" to Cline,
             "opencode" to OpenCode, "opencode2" to OpenCode, "opencode1" to OpenCode, "open-code" to OpenCode,
@@ -48,7 +51,7 @@ public data class AgentPersona(
         /** lib/domain/mark_catalog.dart `_agentMarks` (agent icon key → bundled mark slug). */
         public val agentMarks: Map<String, String> = mapOf(
             "opencode" to "opencode", "opencode2" to "opencode", "claude" to "claude", "codex" to "codex",
-            "gemini" to "gemini", "qwen" to "qwen", "kilo" to "kilocode", "cline" to "cline", "goose" to "goose",
+            "gemini" to "gemini", "antigravity" to "google", "agy" to "google", "qwen" to "qwen", "kilo" to "kilocode", "cline" to "cline", "goose" to "goose",
             "pi" to "pi", "omp-acp" to "pi", "copilot" to "copilot",
         )
 
