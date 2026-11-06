@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
@@ -19,6 +20,8 @@ import androidx.compose.foundation.text.contextmenu.modifier.filterTextContextMe
 import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -314,6 +317,16 @@ public fun KitMdNest(depth: Int, content: @Composable () -> Unit) {
     else Box(Modifier.padding(start = (KIT_MD_NEST_STEP * depth.coerceAtMost(6)).dp)) { content() }
 }
 
+/**
+ * The widest marker a list item's column must fit (B-101): for a numbered item, zeros of its number's digit count
+ * (at least two) and the dot; null for bullets and checkboxes, which fit the minimum column.
+ */
+internal fun kitMdMarkerSample(ordered: Boolean, number: Int?): String? {
+    if (!ordered) return null
+    val digits = (number ?: 1).coerceAtLeast(0).toString().length.coerceAtLeast(2)
+    return "0".repeat(digits) + "."
+}
+
 @Composable
 public fun KitMarkdownListItem(
     block: KitMdBlock.ListItem,
@@ -331,12 +344,24 @@ public fun KitMarkdownListItem(
             block.ordered -> "${block.number ?: 1}."
             else -> "•"
         }
+    // B-101: every item's words start on one edge. Digits are tabular and the marker column is as wide as the widest
+    // marker of the same digit count (at least two digits), so "1." and "8." (and "9." and "10.") never shift the text.
+    val markerStyle =
+        style.copy(color = LocalKitColors.current.text2, textAlign = TextAlign.End, fontFeatureSettings = "tnum")
+    val measurer = rememberTextMeasurer()
+    val widest = kitMdMarkerSample(block.ordered, block.number)
+    val markerWidth =
+        with(LocalDensity.current) {
+            val sample = widest?.let { measurer.measure(it, markerStyle, softWrap = false, maxLines = 1).size.width }
+            // The column holds the marker and its S2 gap, as the old min-width column did.
+            maxOf(Space.S6.dp, (sample?.toDp() ?: 0.dp) + Space.S2.dp)
+        }
     Row(modifier.fillMaxWidth().padding(start = (KIT_MD_NEST_STEP * block.depth.coerceIn(0, 6)).dp)) {
         DisableSelection {
             BasicText(
                 marker,
-                Modifier.widthIn(min = Space.S6.dp).padding(end = Space.S2.dp),
-                style = style.copy(color = LocalKitColors.current.text2, textAlign = TextAlign.End),
+                Modifier.width(markerWidth).padding(end = Space.S2.dp),
+                style = markerStyle,
             )
         }
         val muted =

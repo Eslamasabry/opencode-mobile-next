@@ -9,6 +9,8 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
+import kotlin.test.assertTrue
+import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.linuxsetup.ComponentProgress
 import io.github.eslamasabry.oc.engine.linuxsetup.ComponentState
@@ -216,6 +218,19 @@ class PhoneSetupScreenTest {
         }
         show(PhoneSetupUi(checking = false, items = items, progress = done), actions)
         assertEquals(listOf("done"), actions.calls)
+    }
+
+    @Test
+    fun `B-109 the finished job's Open reaches the screen's end edge, not a narrow button at the start`() {
+        val actions = Recorder()
+        val done = SetupProgress(state = SetupState.Done, components = emptyList(), overall = 1.0, jobId = "setup-1")
+        check = {
+            val open = onNodeWithText("Open").getBoundsInRoot()
+            // The action block puts the primary at the end (full width on a phone); before B-109 it sat at the start
+            // edge as wide as its word.
+            assertTrue(open.right >= 412.dp - 32.dp, "Open at $open")
+        }
+        show(PhoneSetupUi(checking = false, items = items, progress = done), actions)
     }
 
     @Test

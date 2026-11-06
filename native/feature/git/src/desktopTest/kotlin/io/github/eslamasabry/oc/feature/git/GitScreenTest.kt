@@ -243,6 +243,14 @@ class GitScreenTest {
     }
 
     @Test
+    fun `B-104 an empty Add remote says what it needs, not a stray Address label`() = runComposeUiTest {
+        setContent { Screen(GitUi(view = GitPageView.Ready(snapshot), signIn = GitHubSignIn.SignedOut(), sheet = GitSheet.Remotes)) }
+        onNodeWithText("Type a valid name and address first").assertExists()
+        onNodeWithText("Add remote").performClick()
+        assertTrue(calls.none { it.startsWith("addRemote") })
+    }
+
+    @Test
     fun `B-NAV-020 a folder that is not a repository offers Start tracking, which acts at once`() = runComposeUiTest {
         setContent { Screen(GitUi(view = GitPageView.NotRepository, signIn = GitHubSignIn.SignedOut())) }
         onNodeWithText("Start tracking this project").performScrollTo().performClick()

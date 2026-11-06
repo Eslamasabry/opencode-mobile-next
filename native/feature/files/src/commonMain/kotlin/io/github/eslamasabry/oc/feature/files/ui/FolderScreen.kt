@@ -187,26 +187,7 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                     exit = KitTopBarExit.Back,
                     exitLabel = stringResource(Res.string.kitTopBarBack),
                     onExit = { backFromSearch(typed, state, actions) },
-                    actions =
-                        buildList {
-                            // The project's terminal, only where the server offers one.
-                            if (state.canTerminal)
-                                add(
-                                    KitLineAction(
-                                        stringResource(Res.string.libraryTerminalTitle),
-                                        actions::terminal,
-                                    )
-                                )
-                            add(
-                                KitLineAction(stringResource(Res.string.fileReload), actions::retry)
-                            )
-                            add(
-                                KitLineAction(
-                                    stringResource(Res.string.filesViewOptions),
-                                    { viewOptions = true },
-                                )
-                            )
-                        },
+                    actions = folderBarActions(state, actions) { viewOptions = true },
                     more = { hidden ->
                         if (hidden.isNotEmpty()) {
                             val moreLabel = stringResource(Res.string.kitTopBarMore)
@@ -730,3 +711,32 @@ private fun symbolKind(kind: Int): String =
             else -> Res.string.readerUiSymbolSymbol
         }
     )
+
+/**
+ * The Files bar's actions (B-097): each carries its glyph, so a phone shows icon buttons whose words
+ * are what TalkBack says, never words cut to "Ter…" or "Ref…".
+ */
+@Composable
+internal fun folderBarActions(
+    state: FolderUi,
+    actions: FolderActions,
+    onViewOptions: () -> Unit,
+): List<KitLineAction> = buildList {
+    // The project's terminal, only where the server offers one.
+    if (state.canTerminal)
+        add(
+            KitLineAction(
+                stringResource(Res.string.libraryTerminalTitle),
+                actions::terminal,
+                icon = KitIcons.terminal,
+            )
+        )
+    add(KitLineAction(stringResource(Res.string.fileReload), actions::retry, icon = KitIcons.sync))
+    add(
+        KitLineAction(
+            stringResource(Res.string.filesViewOptions),
+            onViewOptions,
+            icon = KitIcons.settings,
+        )
+    )
+}
