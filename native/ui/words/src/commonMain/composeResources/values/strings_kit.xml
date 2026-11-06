@@ -632,4 +632,7 @@
     <string name="composerPasteImage">Paste image</string>
     <string name="kitDiffSideBySide">Side by side</string>
     <string name="kitDiffUnified">Unified</string>
+    <string name="kitConsequenceLost">Will be lost</string>
+    <string name="kitConsequenceKept">Kept</string>
+    <string name="kitConsequenceInfo">Note</string>
 </resources>

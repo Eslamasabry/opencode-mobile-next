@@ -32,6 +32,8 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowState
+import io.github.eslamasabry.oc.ui.kit.row.KitRowStateTone
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitProgress
@@ -42,6 +44,9 @@ import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.diagnosticsUnavailable
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
+import io.github.eslamasabry.oc.ui.words.res.kitMarkDone
+import io.github.eslamasabry.oc.ui.words.res.kitMarkFailed
+import io.github.eslamasabry.oc.ui.words.res.kitMarkWorking
 import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.phoneServerPortBusy
@@ -254,7 +259,7 @@ private fun Job(progress: SetupProgress, state: PhoneSetupUi, actions: PhoneSetu
                             state.items.firstOrNull { it.id == component.id }?.title
                                 ?: component.id,
                         ),
-                    supporting = rowState(component.state),
+                    state = rowState(component.state),
                 )
             }
             KitButton(
@@ -307,14 +312,15 @@ private fun Job(progress: SetupProgress, state: PhoneSetupUi, actions: PhoneSetu
     }
 }
 
+/** The kit row state (word and tone mark), never a stand-in character. */
 @Composable
-private fun rowState(state: ComponentState): String? =
+private fun rowState(state: ComponentState): KitRowState? =
     when (state) {
         ComponentState.Done,
-        ComponentState.Skipped -> "✓"
+        ComponentState.Skipped -> KitRowState(stringResource(Res.string.kitMarkDone), KitRowStateTone.Quiet)
         ComponentState.Running,
-        ComponentState.Checking -> "…"
-        ComponentState.Failed -> "!"
+        ComponentState.Checking -> KitRowState(stringResource(Res.string.kitMarkWorking), KitRowStateTone.Running)
+        ComponentState.Failed -> KitRowState(stringResource(Res.string.kitMarkFailed), KitRowStateTone.Failed)
         ComponentState.Pending -> null
     }
 

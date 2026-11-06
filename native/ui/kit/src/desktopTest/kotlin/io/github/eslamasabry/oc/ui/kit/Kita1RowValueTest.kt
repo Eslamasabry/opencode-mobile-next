@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit
 
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.LocalDensity
@@ -39,7 +40,7 @@ class Kita1RowValueTest {
                         InWindow(width.value, 600) {
                             KitRow(
                                 "Connection",
-                                leading = KitRowLeading.Initials("PC"),
+                                leading = KitRowLeading.Glyph(KitIcons.computer, tile = true),
                                 trailing =
                                     KitRowTrailing.Value(
                                         if (long.value)

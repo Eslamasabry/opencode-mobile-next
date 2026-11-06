@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit
 
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -149,7 +150,7 @@ fun RowsScene(w: PartAWords) {
             KitRow(w.rowTitle, supporting = w.rowSupporting, trailing = KitRowTrailing.Chevron, onClick = {})
             KitRow(w.valueTitle, trailing = KitRowTrailing.Value(w.value), onClick = {})
             KitRow(w.disabledRow, enabled = false, disabledReason = w.disabledReason, onClick = {})
-            KitRow(w.fileName, titleIsFileName = true, leading = KitRowLeading.Initials("MD"), onClick = {})
+            KitRow(w.fileName, titleIsFileName = true, leading = KitRowLeading.Glyph(KitIcons.fileText, tile = true), onClick = {})
             KitRow(w.turnOn, supporting = w.offer, trailing = KitRowTrailing.Action(KitLineAction(w.turnOn, {})))
         }
     }
