@@ -37,6 +37,24 @@ public object AndroidMigration {
     public fun flutterEraCopies(context: Context): FlutterEraCopies? =
         context.applicationContext.filesDir.parentFile?.let { FlutterEraCopies(MigrationPaths(it)) }
 
+    /**
+     * The counts-only files Report a problem compares (E00-S15): the M5 audit and the bridge census, each null when
+     * absent or unreadable. Blocking file reads of two small files: call on the IO dispatcher.
+     */
+    public fun updateCheckFiles(context: Context): Pair<String?, String?> {
+        val dataDir = context.applicationContext.filesDir.parentFile ?: return null to null
+        val paths = MigrationPaths(dataDir)
+        fun text(file: java.io.File): String? =
+            try {
+                file.takeIf { it.isFile && it.length() <= MAX_CHECK_FILE_BYTES }?.readText(Charsets.UTF_8)
+            } catch (@Suppress("SwallowedException") e: java.io.IOException) {
+                null
+            }
+        return text(paths.audit) to text(paths.bridgeCensus)
+    }
+
+    private const val MAX_CHECK_FILE_BYTES = 256L * 1024
+
     public fun create(
         context: Context,
         secrets: MigrationSecretSink,

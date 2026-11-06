@@ -75,6 +75,8 @@ internal class M5Audit(private val paths: MigrationPaths) {
                 "stashPrompts" to p.keys("oc.promptStash.").size.toLong(),
                 "pins" to p.keys("oc.sessionPins.").size.toLong(),
                 "schedules" to p.keys("oc.scheduledPrompts.").size.toLong(),
+                // E00-S15: the schedules themselves (each key holds one server's list), for Report a problem.
+                "scheduleItems" to p.keys("oc.scheduledPrompts.").sumOf { scheduleCount(p.string(it)) },
                 "widgetTargets" to p.keys("oc.widgetTarget.").size.toLong(),
             ),
             "restoreAuthority" to m4,
@@ -84,6 +86,9 @@ internal class M5Audit(private val paths: MigrationPaths) {
                 "photoVaultFiles" to fileCount(File(paths.files, "prompt-photo-recovery-v1")),
                 "voiceModelBytes" to bytes(File(paths.files, "voice_models")),
                 "ubuntuReady" to File(paths.files, "linux/ubuntu.ready").exists(),
+                // E00-S15: one folder per project (`BuiltinProjectStorage`) and per voice pack.
+                "projects" to dirCount(File(paths.files, "projects")),
+                "voicePacks" to dirCount(File(paths.files, "voice_models")),
             ),
             "deferred" to m1["deferred"],
         )
@@ -92,6 +97,12 @@ internal class M5Audit(private val paths: MigrationPaths) {
         val line = "Update moved your data: $servers servers, $stored saved sign-ins ($flagged need the password again)."
         return Result.Done(audit, line)
     }
+
+    private fun dirCount(dir: File): Long = dir.listFiles()?.count { it.isDirectory }?.toLong() ?: 0L
+
+    /** Schedules in one server's `{schedules, runs, digest}` record (Flutter `ScheduledPromptStore`); 0 if unreadable. */
+    private fun scheduleCount(json: String?): Long =
+        ((json?.let(MiniJson::parseOrNull) as? Map<*, *>)?.get("schedules") as? List<*>)?.size?.toLong() ?: 0L
 
     private fun fileCount(dir: File): Long = if (dir.isDirectory) dir.walkTopDown().count { it.isFile }.toLong() else 0L
 
