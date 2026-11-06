@@ -169,4 +169,31 @@ class ProjectRulesTest {
             )
         assertEquals(listOf("p"), elsewhere.map { it.id.raw })
     }
+
+    @Test
+    fun `B-NAV-011 same-named projects show the shortest parent path that tells them apart`() {
+        val hints =
+            ProjectRules.sameNameHints(
+                listOf(
+                    "/a/x/y/demo-app" to "demo-app",
+                    "/b/x/y/demo-app/" to "Demo-App",
+                    "/srv/scratch/demo-app" to "demo-app",
+                    "/work/api" to "api",
+                )
+            )
+        // Two parents alike ("x/y") need the third, which is the whole path; the scratch one needs only its first.
+        assertEquals("/a/x/y", hints["/a/x/y/demo-app"])
+        assertEquals("/b/x/y", hints["/b/x/y/demo-app"])
+        assertEquals("…/scratch", hints["/srv/scratch/demo-app"])
+        // A name used once needs no hint.
+        assertNull(hints["/work/api"])
+    }
+
+    @Test
+    fun `B-NAV-011 a same-named project whose whole parent path is shared shows that whole path`() {
+        val hints = ProjectRules.sameNameHints(listOf("/a/demo" to "demo", "/x/a/demo" to "demo", "/demo" to "demo"))
+        assertEquals("/a", hints["/a/demo"])
+        assertEquals("/x/a", hints["/x/a/demo"])
+        assertEquals("/", hints["/demo"])
+    }
 }

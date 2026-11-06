@@ -62,10 +62,16 @@ public object ScheduleTime {
         at(today(nowMs, zoneId), hour, minute, zoneId)!!
 
     /** Nine in the morning, today if still ahead, otherwise the next local calendar day. */
-    public fun nextMorning(nowMs: Long, zoneId: String? = null): String {
+    public fun nextMorning(nowMs: Long, zoneId: String? = null): String = nextDay(nowMs, 9, 0, zoneId)
+
+    /**
+     * E05-S02: the first local day on which [hour]:[minute] is still ahead of [nowMs] (today or tomorrow), so an
+     * editor never opens on a time that has already passed.
+     */
+    public fun nextDay(nowMs: Long, hour: Int, minute: Int, zoneId: String? = null): String {
         val current = Instant.fromEpochMilliseconds(nowMs).toLocalDateTime(zone(zoneId))
-        val todayAtNine = at(current.date.toString(), 9, 0, zoneId)!!
-        return if (todayAtNine > nowMs) current.date.toString()
+        val todayAt = at(current.date.toString(), hour, minute, zoneId)!!
+        return if (todayAt > nowMs) current.date.toString()
         else LocalDate.fromEpochDays(current.date.toEpochDays() + 1).toString()
     }
 

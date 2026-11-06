@@ -128,4 +128,14 @@ class ScheduleModelTest {
         assertEquals(run, ScheduleCodec.decodeRun(ScheduleCodec.run(run)))
         assertFalse(run.copy(errorCode = "Connection refused by the host").valid)
     }
+
+    @Test
+    fun `B-STATE-093 a time's next day is today while it is ahead, otherwise tomorrow`() {
+        // T0 is 2026-11-02 08:00 UTC.
+        assertEquals("2026-11-02", ScheduleTime.nextDay(T0, 8, 1, "UTC"))
+        assertEquals("2026-11-03", ScheduleTime.nextDay(T0, 8, 0, "UTC")) // exactly now is not ahead
+        assertEquals("2026-11-03", ScheduleTime.nextDay(T0, 7, 45, "UTC"))
+        assertEquals("2026-11-02", ScheduleTime.nextMorning(T0, "UTC"))
+        assertEquals("2026-11-03", ScheduleTime.nextMorning(T0 + 2 * HOUR, "UTC"))
+    }
 }
