@@ -44019,5 +44019,33 @@
   "phoneSetupStageCompat": "Trying again in compatibility mode",
   "@phoneSetupStageCompat": {
     "description": "Setup stage when a program crashed and the app runs the step again more carefully"
+  },
+  "crashOfferMessage": "OpenCode Mobile closed unexpectedly last time. Send a crash report?",
+  "@crashOfferMessage": {
+    "description": "Crash report offer: the one calm notice shown once after the app crashed. Nothing is sent by itself."
+  },
+  "crashOfferReview": "Review and send",
+  "@crashOfferReview": {
+    "description": "Crash report offer: opens Report a problem with the crash details pre-filled, to review before sending."
+  },
+  "crashOfferNotNow": "Not now",
+  "@crashOfferNotNow": {
+    "description": "Crash report offer: dismisses the offer for this crash."
+  },
+  "crashOfferReportTitle": "The app closed unexpectedly",
+  "@crashOfferReportTitle": {
+    "description": "Crash report offer: heading of Report a problem and the GitHub issue title for a crash report. Fixed words, never the exception."
+  },
+  "crashOfferSection": "Crash reports",
+  "@crashOfferSection": {
+    "description": "Privacy and data: section holding the crash report offer switch."
+  },
+  "crashOfferSettingTitle": "Offer crash reports",
+  "@crashOfferSettingTitle": {
+    "description": "Privacy and data: switch that lets the app offer a crash report after it closed unexpectedly."
+  },
+  "crashOfferSettingDetail": "After the app closes unexpectedly, offer a report you can review first. Nothing is ever sent by itself.",
+  "@crashOfferSettingDetail": {
+    "description": "Privacy and data: what the crash report offer switch does."
   }
 }

@@ -19,7 +19,9 @@ import 'package:opencode_mobile/diagnostics/crash_report.dart';
 import 'package:opencode_mobile/diagnostics/failed_job_report.dart';
 import 'package:opencode_mobile/diagnostics/perf_trace.dart';
 import 'package:opencode_mobile/diagnostics/report_problem.dart';
+import 'package:opencode_mobile/feedback/crash_offer.dart';
 import 'package:opencode_mobile/feedback/problem_report.dart';
+import 'package:opencode_mobile/platform/app_exit.dart';
 import 'package:opencode_mobile/ui/kit/kit_notice.dart' show KitReport;
 import 'package:opencode_mobile/ui/kit/kit_redact.dart';
 
@@ -157,6 +159,53 @@ void main() {
     }
     // The report is public once filed: no server host or address either.
     expect(report.text, isNot(contains('vps.example.net')));
+  });
+
+  test('the crash report offer (E02-S91) holds no secret, even when every '
+      'fact it is built from carries one', () {
+    // Each source already drops free-form text (NativeCrashRecord keeps Java
+    // symbols and fixed messages, KeepAliveInfo plain words); this proves
+    // the problem report's redaction still holds if one of them did not.
+    final facts = CrashOfferFacts(
+      at: DateTime.utc(2026, 11, 6),
+      exceptionType: 'java.lang.IllegalStateException $_dirty',
+      exceptionMessage: _dirty,
+      stack: [for (final line in _dirty.split('\n')) 'at $line'],
+      exitReason: _dirty,
+      androidRelease: _dirty,
+      manufacturer: _dirty,
+      model: _dirty,
+    );
+    final kit = crashKitReport(facts, title: 'OpenCode Mobile closed');
+    final report = ProblemReport.build(
+      description: '',
+      version: '2.1.0+57',
+      platform: 'Android',
+      error: kit,
+    );
+    expectClean('crash report text', report.text);
+    expectClean('crash report title', report.title);
+    for (final length in [2048, 600]) {
+      final link = report.link(maxLength: length);
+      expectClean('crash github link ($length)', Uri.decodeFull('${link.uri}'));
+      expectClean('crash clipboard ($length)', link.clipboardText ?? '');
+    }
+    expect(report.text, isNot(contains('vps.example.net')));
+    // A device fact from Android that is not plain words never gets in.
+    final info = KeepAliveInfo.fromMap({
+      'model': _dirty,
+      'release': 'token ${_secrets['opaque token']}',
+      'manufacturer': _dirty,
+    });
+    expect(info.model, isEmpty);
+    expect(info.manufacturer, isNot(isEmpty), reason: 'kept raw for advice');
+    final withDevice = ProblemReport.build(
+      description: '',
+      version: '2.1.0+57',
+      platform: 'Android',
+      error: crashKitReport(facts.withDevice(info), title: 'Closed'),
+    );
+    expectClean('crash report with device facts', withDevice.text);
   });
 
   test('the crash report holds only fixed categories and times', () async {

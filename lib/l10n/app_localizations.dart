@@ -56579,6 +56579,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Trying again in compatibility mode'**
   String get phoneSetupStageCompat;
+
+  /// Crash report offer: the one calm notice shown once after the app crashed. Nothing is sent by itself.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenCode Mobile closed unexpectedly last time. Send a crash report?'**
+  String get crashOfferMessage;
+
+  /// Crash report offer: opens Report a problem with the crash details pre-filled, to review before sending.
+  ///
+  /// In en, this message translates to:
+  /// **'Review and send'**
+  String get crashOfferReview;
+
+  /// Crash report offer: dismisses the offer for this crash.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get crashOfferNotNow;
+
+  /// Crash report offer: heading of Report a problem and the GitHub issue title for a crash report. Fixed words, never the exception.
+  ///
+  /// In en, this message translates to:
+  /// **'The app closed unexpectedly'**
+  String get crashOfferReportTitle;
+
+  /// Privacy and data: section holding the crash report offer switch.
+  ///
+  /// In en, this message translates to:
+  /// **'Crash reports'**
+  String get crashOfferSection;
+
+  /// Privacy and data: switch that lets the app offer a crash report after it closed unexpectedly.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer crash reports'**
+  String get crashOfferSettingTitle;
+
+  /// Privacy and data: what the crash report offer switch does.
+  ///
+  /// In en, this message translates to:
+  /// **'After the app closes unexpectedly, offer a report you can review first. Nothing is ever sent by itself.'**
+  String get crashOfferSettingDetail;
 }
 
 class _AppLocalizationsDelegate

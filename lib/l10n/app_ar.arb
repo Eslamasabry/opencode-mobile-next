@@ -10960,5 +10960,12 @@
   "agentPersonaAntigravityNeeds": "حساب Google؛ سجّل الدخول في المتصفح",
   "agentsAntigravitySignInIntro": "يعرض Antigravity رابط تسجيل الدخول في الطرفية. افتحه في المتصفح وسجّل الدخول باستخدام Google، ثم الصق الرمز الذي يعرضه المتصفح في الطرفية.",
   "agentsGeminiMigrationNote": "إذا طلب منك Gemini CLI استخدام Antigravity، ارجع إلى الوكلاء وثبّت Antigravity (agy). تبقى محادثات Gemini هنا.",
-  "phoneSetupStageCompat": "جارٍ المحاولة مجددًا في وضع التوافق"
+  "phoneSetupStageCompat": "جارٍ المحاولة مجددًا في وضع التوافق",
+  "crashOfferMessage": "أُغلق OpenCode Mobile بشكل غير متوقع في المرة الماضية. هل تريد إرسال تقرير عن العطل؟",
+  "crashOfferReview": "مراجعة وإرسال",
+  "crashOfferNotNow": "ليس الآن",
+  "crashOfferReportTitle": "أُغلق التطبيق بشكل غير متوقع",
+  "crashOfferSection": "تقارير الأعطال",
+  "crashOfferSettingTitle": "عرض تقارير الأعطال",
+  "crashOfferSettingDetail": "بعد أن يُغلق التطبيق بشكل غير متوقع، يعرض عليك تقريرًا تراجعه أولًا. لا يُرسَل أي شيء تلقائيًا أبدًا."
 }

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../diagnostics/app_diagnostics.dart';
 import '../diagnostics/perf_trace.dart';
 import '../diagnostics/report_problem_startup.dart';
+import '../feedback/crash_offer.dart';
 import '../platform/app_exit.dart';
 import '../state/automation_policy.dart';
 import '../state/profiles.dart';
@@ -68,9 +69,14 @@ class AppExitNotice {
 /// `_autoStartThenConnect`), so this starts it only when another server is
 /// selected.
 class AppExitRecovery extends ChangeNotifier {
-  AppExitRecovery({required this.bridge});
+  AppExitRecovery({required this.bridge, CrashReportOffer? crashOffer})
+    : crashOffer = crashOffer ?? CrashReportOffer();
 
   final AppLifecycleBridge bridge;
+
+  /// The one-time "Send a crash report?" offer (E02-S91), decided from the
+  /// same launch report this start reads.
+  final CrashReportOffer crashOffer;
 
   bool _ran = false;
   bool _disposed = false;
@@ -134,6 +140,11 @@ class AppExitRecovery extends ChangeNotifier {
     _ran = true;
     final report = await bridge.launchReport();
     _report = report;
+    unawaited(
+      crashOffer
+          .consider(report, store.prefs, device: bridge.keepAliveInfo)
+          .catchError((Object _) {}),
+    );
     final crash = report.lastCrash;
     if (crash != null) {
       PerfTrace.mark('crash.last', attrs: crash.traceAttrs);
@@ -355,6 +366,7 @@ class AppExitRecovery extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _serverBackTimer?.cancel();
+    crashOffer.dispose();
     super.dispose();
   }
 }

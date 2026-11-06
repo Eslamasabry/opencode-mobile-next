@@ -750,5 +750,13 @@
   "oc.widgetUsageSubs": {
     "scope": "shared",
     "why": "shared blob rebuilt from the live subscriptions; cleared by UsageWidgetSnapshot when none remain"
+  },
+  "oc.crashReports.lastOffered": {
+    "scope": "global",
+    "why": "app-wide time of the last crash offered (E02-S91), not about any server"
+  },
+  "oc.crashReports.offer": {
+    "scope": "global",
+    "why": "app-wide Privacy and data switch \"Offer crash reports\" (E02-S91)"
   }
 }

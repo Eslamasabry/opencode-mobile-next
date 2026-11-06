@@ -19,6 +19,7 @@ import '../screens/servers_screen.dart' show ServersRouteRequest;
 import 'app_exit_notice.dart';
 import 'background_pause_notice.dart';
 import 'connection_status_banner.dart';
+import 'crash_offer_notice.dart';
 import 'phone_server_restart.dart';
 import 'runtime_switch_status.dart';
 import 'thermal_notice.dart';
@@ -51,6 +52,7 @@ class AppConnectionStatusScope extends ConsumerWidget {
         listenable: Listenable.merge([
           controller,
           recovery,
+          recovery.crashOffer,
           builtin,
           pause,
           ?guard,
@@ -113,6 +115,13 @@ class AppConnectionStatusScope extends ConsumerWidget {
                 serverBack: serverBack,
               ),
               thermalKitStatus(context, guard),
+              // After the exit line (same kind, ties keep the first): one
+              // calm notice at a time, the crash offer once that is gone.
+              crashOfferKitStatus(
+                context,
+                recovery.crashOffer,
+                actionContext: actionContext,
+              ),
             ],
             child: AppExitFoldOnPageChange(
               recovery: recovery,
