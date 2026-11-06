@@ -9,7 +9,9 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
@@ -57,8 +59,12 @@ class FilesScreensTest {
         val opened = mutableListOf<FileNode>()
         var toggles = 0
         var retries = 0
+        var backs = 0
+        val searches = mutableListOf<String>()
 
-        override fun back() {}
+        override fun back() {
+            backs++
+        }
 
         override fun retry() {
             retries++
@@ -72,7 +78,9 @@ class FilesScreensTest {
             toggles++
         }
 
-        override fun search(query: String) {}
+        override fun search(query: String) {
+            searches += query
+        }
     }
 
     private class FileCalls : FileActions {
@@ -182,6 +190,23 @@ class FilesScreensTest {
         onNodeWithText("Try again").performClick()
         assertEquals(1, calls.retries)
     }
+
+    @Test
+    fun `B-NAV-026 B-090 the top bar Back clears a typed search first and leaves only when nothing is typed`() =
+        runComposeUiTest {
+            // Flutter 2.1.4 files_screen.dart _handleBack: with search text, Back clears it (and shows the folder
+            // again) instead of leaving; the arrow and the system gesture behave the same.
+            val calls = FolderCalls()
+            setContent { Themed { FolderScreen(root, calls) } }
+            onNode(hasSetTextAction()).performTextInput("main")
+            waitForIdle()
+            onNodeWithContentDescription("Back").performClick()
+            waitForIdle()
+            assertEquals(0, calls.backs, "Back with a typed search must not leave the folder")
+            assertEquals("", calls.searches.last(), "Back clears the search at once")
+            onNodeWithContentDescription("Back").performClick()
+            assertEquals(1, calls.backs, "with nothing typed, Back leaves")
+        }
 
     @Test
     fun `B-NAV-026 the root reads Project in Arabic too`() = runComposeUiTest {

@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -145,6 +147,9 @@ import org.jetbrains.compose.resources.stringResource
 public fun FolderScreen(state: FolderUi, actions: FolderActions) {
     var viewOptions by remember { mutableStateOf(false) }
     var barMenuOpen by remember { mutableStateOf(false) }
+    // B-090: the top bar's Back behaves like the system gesture (KitSearchField): a typed search is cleared
+    // first, then Back leaves (Flutter files_screen.dart _handleBack).
+    val searchText = rememberTextFieldState()
     val title =
         if (state.path.isEmpty()) stringResource(Res.string.filesProjectRoot) else state.name
     val loadingSince =
@@ -168,7 +173,9 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                     subtitle = state.path.ifEmpty { null },
                     exit = KitTopBarExit.Back,
                     exitLabel = stringResource(Res.string.kitTopBarBack),
-                    onExit = actions::back,
+                    onExit = {
+                        if (searchText.text.isNotEmpty()) searchText.clearText() else actions.back()
+                    },
                     actions =
                         buildList {
                             // The project's terminal, only where the server offers one.
@@ -225,6 +232,7 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                         KitSearchField(
                             surfaceLabel,
                             actions::search,
+                            state = searchText,
                             activeFilter =
                                 if (state.surface == FileSearchSurface.Files) null
                                 else surfaceLabel,
