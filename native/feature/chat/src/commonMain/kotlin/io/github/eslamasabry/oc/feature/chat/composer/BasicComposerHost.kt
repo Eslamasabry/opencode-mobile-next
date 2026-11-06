@@ -729,7 +729,7 @@ public fun BasicComposer(
                         modelsOpen = true
                     },
                     semanticsLabel = stringResource(Res.string.composerPreviewModelButton),
-                    modifier = Modifier.weight(1f, fill = false).testTag("chat-model-button"),
+                    modifier = Modifier.testTag("chat-model-button"),
                 )
                 chrome.rowChips()
             },

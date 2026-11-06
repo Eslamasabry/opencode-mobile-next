@@ -13,8 +13,11 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -34,6 +37,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
@@ -74,6 +78,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
  * controls below. Accessories remain inside the conversation measure; the glow follows the resolved
  * corners.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 public fun KitComposerBox(
     running: Boolean,
@@ -88,6 +93,7 @@ public fun KitComposerBox(
     hasLeading: Boolean = false,
 ) {
     val tokens = LocalKitTokens.current
+    val largeText = LocalDensity.current.fontScale >= 1.5f
     val appearance = LocalKitAppearance.current
     val style = LocalKitStyle.current
     val radius = (if (wide) tokens.composerRadiusWide else tokens.composerRadius).dp
@@ -115,21 +121,34 @@ public fun KitComposerBox(
                 }
                 if (!stacked) trailing()
             }
-            if (stacked)
+            if (stacked) {
+                // At large text sizes choices get the full measure above the action targets.
+                // Flow wraps the model and approval mode instead of squeezing either into a sliver.
+                if (largeText)
+                    FlowRow(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+                        verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
+                    ) {
+                        chips()
+                    }
                 Row(
                     Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     leading()
-                    Row(
-                        Modifier.weight(1f).horizontalScroll(rememberScrollState()),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
-                    ) {
-                        chips()
-                    }
+                    if (largeText) Spacer(Modifier.weight(1f))
+                    else
+                        Row(
+                            Modifier.weight(1f).horizontalScroll(rememberScrollState()),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+                        ) {
+                            chips()
+                        }
                     trailing()
                 }
+            }
         }
     }
 }
@@ -173,7 +192,7 @@ public fun KitComposerChip(
                 Modifier.weight(1f, fill = false),
                 role = TypeRole.Label,
                 kind = KitTextKind.Frame,
-                maxLines = 1,
+                maxLines = if (LocalDensity.current.fontScale >= 1.5f) Int.MAX_VALUE else 1,
             )
             if (opensPicker)
                 Image(

@@ -459,7 +459,7 @@ private fun FieldBox(
                     placeholder,
                     role = if (technical) TypeRole.Mono else TypeRole.Body,
                     tone = TextTone.Tertiary,
-                    maxLines = 1,
+                    maxLines = if (composer) multilineLines.last.coerceAtLeast(1) else 1,
                 )
             }
             inner()
