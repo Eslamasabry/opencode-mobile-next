@@ -8,16 +8,11 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metro.binding
-import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
-import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
-import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
-import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.core.common.failed
-import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.security.Redactor
@@ -69,8 +64,6 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -102,11 +95,11 @@ class AppPhoneAgents(
     private val denied = HashSet<ProfileId>()
     private val accounts = HashMap<Pair<ProfileId, AgentId>, AuthProjection>()
     @Volatile private var needsRestart = false
-    private val mutable = MutableStateFlow(PhoneAgentsState())
+    private val catalog = AgentCatalog.builtIn
+    private val mutable = MutableStateFlow(PhoneAgentsState(agents = catalogRows()))
     override val state = mutable.asStateFlow()
     private val lane = Mutex()
     private val linux by lazy { BuiltinLinux.get(app) }
-    private val catalog = AgentCatalog.builtIn
     private val installers = HashMap<ProfileId, AgentInstaller>()
 
     private fun installation(owner: ProfileId): AgentInstaller =
@@ -142,6 +135,25 @@ class AppPhoneAgents(
             "x86_64" in Build.SUPPORTED_ABIS -> AgentArchitecture.X64
             else -> null
         }
+
+    /** Catalog discovery never needs an installed Linux or a selected phone server. */
+    private fun catalogRows() =
+        catalog.agents
+            .filter {
+                it.runsOnPhoneHost &&
+                    it.recipe != null &&
+                    it.availability != AgentAvailability.Hidden
+            }
+            .map { agent ->
+                PhoneAgentRow(
+                    id = agent.id.raw,
+                    name = agent.name,
+                    status = PhoneAgentStatus.Checking,
+                    downloadBytes = architecture()?.let(agent::artifactFor)?.downloadBytes,
+                    supportedInstallation = architecture()?.let(agent::installableOn) == true,
+                )
+            }
+            .toImmutableList()
 
     private val removal =
         AgentRemoval(
@@ -226,41 +238,56 @@ class AppPhoneAgents(
                 } else null
             PhoneAgentsState(
                 available = installed,
+                owner = owner,
                 installation = shown,
                 helperStoppedUnexpectedly = helper?.unexpectedStop == true,
                 helperMayHaveBeenStoppedByAndroid = helper?.possibleResourceKill == true,
                 agents =
-                    if (!installed) emptyList<PhoneAgentRow>().toImmutableList()
-                    else
-                        catalog.agents
-                            .filter { it.runsOnPhoneHost && it.recipe != null }
-                            .map { agent ->
-                                val present =
+                    catalog.agents
+                        .filter {
+                            it.runsOnPhoneHost &&
+                                it.recipe != null &&
+                                it.availability != AgentAvailability.Hidden
+                        }
+                        .map { agent ->
+                            val present =
+                                if (installed)
                                     PhoneAgentPayloads.present(linux, agent.recipe!!.executable)
-                                PhoneAgentRow(
-                                    agent.id.raw,
-                                    agent.name,
-                                    when (present) {
-                                        true -> signInStatus(authOwner, agent)
-                                        false -> PhoneAgentStatus.NotInstalled
-                                        null -> PhoneAgentStatus.Unavailable
-                                    },
-                                    previousVersionAvailable =
-                                        agent.id == AgentId.CLAUDE &&
-                                            present == true &&
-                                            shown?.phase != PhoneAgentInstallPhase.Installing &&
-                                            previousAvailable(agent),
-                                    removable =
-                                        removal.removable(agent.id) &&
-                                            present == true &&
-                                            shown?.phase != PhoneAgentInstallPhase.Installing,
-                                    installable =
-                                        owner != null &&
-                                            architecture()?.let(agent::installableOn) == true &&
-                                            shown?.phase != PhoneAgentInstallPhase.Installing,
-                                )
-                            }
-                            .toImmutableList(),
+                                else false
+                            PhoneAgentRow(
+                                agent.id.raw,
+                                agent.name,
+                                when (present) {
+                                    true -> signInStatus(authOwner, agent)
+                                    false -> PhoneAgentStatus.NotInstalled
+                                    null -> PhoneAgentStatus.Unavailable
+                                },
+                                previousVersionAvailable =
+                                    agent.id == AgentId.CLAUDE &&
+                                        present == true &&
+                                        shown?.phase != PhoneAgentInstallPhase.Installing &&
+                                        previousAvailable(agent),
+                                removable =
+                                    removal.removable(agent.id) &&
+                                        present == true &&
+                                        shown?.phase != PhoneAgentInstallPhase.Installing,
+                                downloadBytes =
+                                    architecture()?.let(agent::artifactFor)?.downloadBytes,
+                                supportedInstallation =
+                                    architecture()?.let(agent::installableOn) == true,
+                                signInAvailable =
+                                    owner != null &&
+                                        present == true &&
+                                        agent.signInMethod != AgentSignInMethod.None &&
+                                        shown?.phase != PhoneAgentInstallPhase.Installing,
+                                installable =
+                                    owner != null &&
+                                        present == false &&
+                                        architecture()?.let(agent::installableOn) == true &&
+                                        shown?.phase != PhoneAgentInstallPhase.Installing,
+                            )
+                        }
+                        .toImmutableList(),
             )
         }
         return when (rows) {

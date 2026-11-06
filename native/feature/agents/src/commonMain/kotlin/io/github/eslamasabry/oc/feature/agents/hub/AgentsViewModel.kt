@@ -10,6 +10,7 @@ import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
+import io.github.eslamasabry.oc.ui.routes.AgentsRoute
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.CardsSettingsRoute
 import io.github.eslamasabry.oc.ui.routes.ComputerRoute
@@ -134,6 +135,18 @@ public class AgentsViewModel(
     override fun newConversation(id: ProfileId): Unit = presenter.newConversation(id)
 
     override fun openComputer(id: ProfileId): Unit = presenter.openComputer(id)
+
+    override fun requestInstall(id: String): Unit = presenter.requestInstall(id)
+
+    override fun dismissInstall(): Unit = presenter.dismissInstall()
+
+    override fun signInPhone(id: String) {
+        if (state.value.busy) return
+        val phone = state.value.phone
+        val owner = phone.owner ?: return
+        if (phone.agents.none { it.id == id && it.signInAvailable }) return
+        nav.open(AgentsRoute.SignInTerminal(owner, id))
+    }
 
     override fun installPhone(id: String): Unit = presenter.installPhone(id)
 

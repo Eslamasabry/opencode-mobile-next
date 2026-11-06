@@ -79,6 +79,7 @@ public class AgentsPresenter(
 
     override fun back() {
         when {
+            local.value.installingAgent != null -> dismissInstall()
             local.value.draftSource != null -> closeDrafts()
             local.value.accountTarget != null -> closeAccount()
             else -> onBack()
@@ -336,6 +337,21 @@ public class AgentsPresenter(
 
     override fun openComputer(id: ProfileId): Unit = openComputerPage(id)
 
+    override fun requestInstall(id: String) {
+        if (local.value.busy) return
+        val agent =
+            phone.state.value.agents.firstOrNull {
+                it.id == id &&
+                    it.supportedInstallation &&
+                    it.status == PhoneAgentStatus.NotInstalled
+            } ?: return
+        local.update { it.copy(installingAgent = agent, installIssue = null) }
+    }
+
+    override fun dismissInstall() {
+        if (!local.value.busy) local.update { it.copy(installingAgent = null) }
+    }
+
     override fun installPhone(id: String): Unit = operation {
         if (phone.state.value.agents.none { it.id == id && it.installable }) return@operation
         val answer =
@@ -344,7 +360,13 @@ public class AgentsPresenter(
                 is Outcome.Failed ->
                     PhoneAgentInstallResult.Refused(PhoneAgentInstallIssue.Unavailable)
             }
-        local.update { it.copy(installIssue = (answer as? PhoneAgentInstallResult.Refused)?.issue) }
+        local.update {
+            it.copy(
+                installIssue = (answer as? PhoneAgentInstallResult.Refused)?.issue,
+                installingAgent =
+                    if (answer == PhoneAgentInstallResult.Started) null else it.installingAgent,
+            )
+        }
     }
 
     override fun cancelPhoneInstall(): Unit = operation {

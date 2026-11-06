@@ -6,13 +6,18 @@ import io.github.eslamasabry.oc.feature.agents.hub.AgentsActions
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsUi
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallIssue
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallPhase
+import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitLoadingBar
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.text.KitBidi
 import io.github.eslamasabry.oc.ui.words.res.*
+import kotlin.math.roundToLong
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -27,6 +32,44 @@ internal fun AgentInstallPanel(
     modifier: Modifier,
     enabled: KitEnabled,
 ) {
+    state.installingAgent?.let { agent ->
+        val size = agent.downloadBytes?.let(::agentPayloadSize)
+        val needsPhoneSetup = !state.phone.available || state.phone.owner == null
+        val installEnabled =
+            KitEnabled.of(
+                agent.installable && enabled.isEnabled,
+                stringResource(Res.string.linuxAgentInstallBusy),
+            )
+        KitSheet(
+            visible = true,
+            onDismissRequest = actions::dismissInstall,
+            dismissible = !state.busy,
+            title =
+                if (size == null) stringResource(Res.string.agentsSetupTitleNoSize, agent.name)
+                else stringResource(Res.string.agentsSetupTitle, agent.name, size),
+            primary =
+                if (needsPhoneSetup)
+                    KitAction(
+                        stringResource(Res.string.phoneSetupStartSetUp),
+                        {
+                            actions.dismissInstall()
+                            actions.openPhone()
+                        },
+                        enabled = enabled,
+                    )
+                else
+                    KitAction(
+                        stringResource(Res.string.agentsInstallAction, agent.name),
+                        { actions.installPhone(agent.id) },
+                        enabled = installEnabled,
+                        working = state.busy,
+                    ),
+        ) {
+            KitText(stringResource(Res.string.agentsSetupBody, agent.name))
+            if (size != null) KitText(stringResource(Res.string.agentsSetupSizeNote, size))
+            if (needsPhoneSetup) KitNotice(stringResource(Res.string.agentsCatalogNeedsPhoneSetup))
+        }
+    }
     state.installIssue?.let { issue ->
         KitErrorNotice(
             stringResource(
@@ -61,3 +104,17 @@ internal fun AgentInstallPanel(
             KitNotice(stringResource(Res.string.linuxAgentInstallInterrupted, name), modifier)
     }
 }
+
+/** Pinned payload only. Unknown sizes stay absent; bytes are never borrowed from another CPU. */
+internal fun agentPayloadSize(bytes: Long): String =
+    KitBidi.ltr(
+        when {
+            bytes >= 1_000_000_000L -> {
+                val tenths = (bytes / 100_000_000.0).roundToLong()
+                "${tenths / 10}.${tenths % 10} GB"
+            }
+            bytes >= 1_000_000L -> "${(bytes / 1_000_000.0).roundToLong()} MB"
+            bytes >= 1_000L -> "${(bytes / 1_000.0).roundToLong()} kB"
+            else -> "$bytes B"
+        }
+    )

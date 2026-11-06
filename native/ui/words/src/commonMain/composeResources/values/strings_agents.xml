@@ -510,4 +510,5 @@
     <string name="agentDraftEmpty">There are no conversations in this project.</string>
     <string name="agentDraftTooLarge">This conversation’s newest turn is too large to include without losing text.</string>
     <string name="agentPhoneCheck">Check phone agents</string>
+    <string name="agentsCatalogNeedsPhoneSetup">Set up the built-in server on this phone first. Then return here to install this agent.</string>
 </resources>

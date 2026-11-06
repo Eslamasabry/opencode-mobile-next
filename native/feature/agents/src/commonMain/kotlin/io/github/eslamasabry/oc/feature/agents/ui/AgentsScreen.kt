@@ -34,9 +34,8 @@ import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
-import io.github.eslamasabry.oc.ui.kit.chip.KitChip
-import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfacePanel
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
@@ -139,7 +138,8 @@ import org.jetbrains.compose.resources.stringResource
 
 /**
  * Settings › Agents (Flutter `AgentsScreen` + the Paseo pairing editor). Kit parts only. The phone
- * part is never an empty page: without a phone agent host it says where agents run in one line.
+ * catalog stays visible before phone setup and while a computer is selected. Payload sizes and
+ * actions come from the runtime owner; installation never implies readiness or sign-in.
  * Every computer row has its visible actions (Start conversation, Check agents); adding one is a
  * visible button, never a hidden gesture.
  */
@@ -273,8 +273,9 @@ public fun AgentsScreen(
                     enabled = enabled,
                 )
             }
-            val phoneAvailable = state.phone.available && hub?.connection?.usingBuiltIn != false
-            if (phoneAvailable) AgentInstallPanel(state, actions, gutter, enabled)
+            // Phone payloads belong to the runtime owner, even while a computer is selected.
+            val phoneAvailable = state.phone.available
+            AgentInstallPanel(state, actions, gutter, enabled)
             if (!phoneAvailable) {
                 KitRow(
                     title = stringResource(Res.string.agentsHubOnPhone),
@@ -284,11 +285,18 @@ public fun AgentsScreen(
                     trailing = KitRowTrailing.Chevron,
                     onClick = actions::openPhone,
                 )
-            } else {
-                PhoneAgentRows(state, actions, enabled)
             }
+            if (state.phone.agents.isNotEmpty()) PhoneAgentRows(state, actions, enabled)
 
-            if (phoneAvailable && hubActions != null) {
+            KitButton(
+                stringResource(Res.string.linuxAgentPayloadRefresh),
+                actions::refreshPhone,
+                gutter,
+                role = KitButtonRole.Tertiary,
+                enabled = enabled,
+            )
+
+            if (phoneAvailable && hub?.connection?.usingBuiltIn != false && hubActions != null) {
                 KitRow(
                     title = stringResource(Res.string.cardsFromAgentsTitle),
                     supporting = stringResource(Res.string.cardsFromAgentsSupporting),
@@ -305,12 +313,6 @@ public fun AgentsScreen(
                     morePhoneOptions,
                     onExpandedChange = { morePhoneOptions = it },
                 ) {
-                    KitButton(
-                        stringResource(Res.string.linuxAgentPayloadRefresh),
-                        actions::refreshPhone,
-                        role = KitButtonRole.Tertiary,
-                        enabled = enabled,
-                    )
                     KitButton(
                         stringResource(Res.string.agentsResetSavedSignIns),
                         actions::requestSignInReset,
@@ -610,9 +612,18 @@ private fun issueWords(issue: AgentsProblem): String =
     )
 
 @Composable
-private fun phoneStatusWords(status: PhoneAgentStatus): String =
-    stringResource(
-        when (status) {
+private fun phoneStatusWords(
+    agent: io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRow
+): String {
+    if (agent.status == PhoneAgentStatus.NotInstalled && !agent.supportedInstallation)
+        return stringResource(Res.string.agentsFailArchitecture)
+    if (agent.status == PhoneAgentStatus.NotInstalled && agent.downloadBytes != null)
+        return stringResource(
+            Res.string.agentsStateNotInstalled,
+            agentPayloadSize(agent.downloadBytes),
+        )
+    return stringResource(
+        when (agent.status) {
             PhoneAgentStatus.Ready -> Res.string.agentsStateReady
             PhoneAgentStatus.NotInstalled -> Res.string.agentsStateNotInstalledNoSize
             PhoneAgentStatus.SignInNeeded -> Res.string.agentsStateSignInNeeded
@@ -623,6 +634,7 @@ private fun phoneStatusWords(status: PhoneAgentStatus): String =
             PhoneAgentStatus.Unavailable -> Res.string.agentsStateUnavailable
         }
     )
+}
 
 /** No agent sheet is fabricated: only actions actually present in AgentsActions are offered. */
 @Composable
@@ -634,58 +646,81 @@ private fun PhoneAgentRows(state: AgentsUi, actions: AgentsActions, enabled: Kit
             Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
         )
     }
-    KitRowGroup(leadingTiles = true) {
+    Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
         for (agent in state.phone.agents) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.weight(1f)) {
-                    KitRow(
-                        title = agent.name,
-                        supporting = phoneStatusWords(agent.status),
-                        leading = KitRowLeading.Logo(agent.id, agent.name, agent = true),
-                    )
-                }
-                if (agent.installable)
-                    KitChip(
-                        label = stringResource(Res.string.agentsInstallHint),
-                        kind = KitChipKind.Action,
-                        spoken = agentInstallLabel(agent.name),
-                        onClick =
-                            if (enabled.isEnabled) ({ actions.installPhone(agent.id) }) else null,
-                    )
-                if (agent.removable || agent.previousVersionAvailable) {
-                    val menu = buildList {
-                        if (agent.previousVersionAvailable)
-                            add(
-                                KitMenuItem(
-                                    stringResource(Res.string.agentsPreviousVersion, agent.name),
-                                    { actions.requestPreviousVersion(agent.id) },
-                                    enabled = enabled,
-                                )
+            KitSurfacePanel(
+                Modifier.padding(
+                    horizontal = LocalKitTokens.current.gutter.dp,
+                    vertical = Space.S1.dp,
+                )
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.weight(1f)) {
+                            KitRow(
+                                title = agent.name,
+                                supporting = phoneStatusWords(agent),
+                                supportingMaxLines = 3,
+                                leading = KitRowLeading.Logo(agent.id, agent.name, agent = true),
                             )
-                        if (agent.removable)
-                            add(
-                                KitMenuItem(
-                                    stringResource(Res.string.linuxAgentPayloadRemove, agent.name),
-                                    { actions.requestRemoval(agent.id) },
-                                    destructive = true,
-                                    enabled = enabled,
-                                )
+                        }
+                        if (agent.removable || agent.previousVersionAvailable) {
+                            val menu = buildList {
+                                if (agent.previousVersionAvailable)
+                                    add(
+                                        KitMenuItem(
+                                            stringResource(
+                                                Res.string.agentsPreviousVersion,
+                                                agent.name,
+                                            ),
+                                            { actions.requestPreviousVersion(agent.id) },
+                                            enabled = enabled,
+                                        )
+                                    )
+                                if (agent.removable)
+                                    add(
+                                        KitMenuItem(
+                                            stringResource(
+                                                Res.string.linuxAgentPayloadRemove,
+                                                agent.name,
+                                            ),
+                                            { actions.requestRemoval(agent.id) },
+                                            destructive = true,
+                                            enabled = enabled,
+                                        )
+                                    )
+                            }
+                            KitMenu(
+                                expanded = menuFor == agent.id,
+                                items = menu,
+                                onDismissRequest = { menuFor = null },
+                                title = agent.name,
+                                anchor = {
+                                    KitIconButton(
+                                        KitIcons.more,
+                                        agent.name,
+                                        { menuFor = agent.id },
+                                        enabled = enabled,
+                                    )
+                                },
                             )
+                        }
                     }
-                    KitMenu(
-                        expanded = menuFor == agent.id,
-                        items = menu,
-                        onDismissRequest = { menuFor = null },
-                        title = agent.name,
-                        anchor = {
-                            KitIconButton(
-                                KitIcons.more,
-                                agent.name,
-                                { menuFor = agent.id },
+                    when {
+                        agent.status == PhoneAgentStatus.NotInstalled &&
+                            agent.supportedInstallation ->
+                            KitButton(
+                                agentInstallLabel(agent.name),
+                                { actions.requestInstall(agent.id) },
                                 enabled = enabled,
                             )
-                        },
-                    )
+                        agent.signInAvailable ->
+                            KitButton(
+                                stringResource(Res.string.agentsSignInAction, agent.name),
+                                { actions.signInPhone(agent.id) },
+                                enabled = enabled,
+                            )
+                    }
                 }
             }
         }

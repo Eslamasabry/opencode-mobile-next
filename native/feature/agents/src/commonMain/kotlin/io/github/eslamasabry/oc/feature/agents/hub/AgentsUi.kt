@@ -41,6 +41,7 @@ public data class AgentsUi(
     val removingAgent: PhoneAgentRow? = null,
     val removal: PhoneAgentRemoval? = null,
     val installIssue: PhoneAgentInstallIssue? = null,
+    val installingAgent: PhoneAgentRow? = null,
     val revertingAgent: PhoneAgentRow? = null,
     val previousVersionFailed: Boolean = false,
     val previousVersionRestored: Boolean = false,
@@ -100,6 +101,12 @@ public interface AgentsActions {
      * conversations).
      */
     public fun openComputer(id: ProfileId) {}
+
+    public fun requestInstall(id: String) {}
+
+    public fun dismissInstall() {}
+
+    public fun signInPhone(id: String) {}
 
     public fun installPhone(id: String) {}
 

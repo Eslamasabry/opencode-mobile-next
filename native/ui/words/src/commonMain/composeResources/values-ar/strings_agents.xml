@@ -538,4 +538,5 @@
     <string name="agentDraftEmpty">لا توجد محادثات في هذا المشروع.</string>
     <string name="agentDraftTooLarge">أحدث دور في هذه المحادثة أكبر من أن يتّسع له السجل دون فقدان نص.</string>
     <string name="agentPhoneCheck">فحص وكلاء الهاتف</string>
+    <string name="agentsCatalogNeedsPhoneSetup">أعدّ الخادم المدمج على هذا الهاتف أولًا، ثم عُد إلى هنا لتثبيت هذا الوكيل.</string>
 </resources>

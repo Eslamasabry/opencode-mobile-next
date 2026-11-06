@@ -119,8 +119,8 @@ public interface PhoneAgents {
 
 public data class PhoneAgentsState(
     /**
-     * False when this build has no built-in Linux agent host: the screen says so in one line, never
-     * an empty page.
+     * True only when the built-in Linux is installed. Android can expose its pinned catalog before
+     * setup; builds without a phone host keep an empty catalog.
      */
     val available: Boolean = false,
     val agents: ImmutableList<PhoneAgentRow> = persistentListOf(),
@@ -128,6 +128,8 @@ public data class PhoneAgentsState(
     val needsRestart: Boolean = false,
     val helperStoppedUnexpectedly: Boolean = false,
     val helperMayHaveBeenStoppedByAndroid: Boolean = false,
+    /** Runtime owner, independent of the currently selected remote server. */
+    val owner: ProfileId? = null,
 )
 
 public data class PhoneAgentRow(
@@ -137,6 +139,11 @@ public data class PhoneAgentRow(
     val removable: Boolean = false,
     val installable: Boolean = false,
     val previousVersionAvailable: Boolean = false,
+    /** Current processor's pinned payload, not an estimated complete setup size. */
+    val downloadBytes: Long? = null,
+    val supportedInstallation: Boolean = installable,
+    /** Only an installed agent with a supported sign-in method may open sign-in. */
+    val signInAvailable: Boolean = false,
 )
 
 public sealed interface PhoneAgentRemoval {

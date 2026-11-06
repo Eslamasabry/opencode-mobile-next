@@ -10,6 +10,12 @@ import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.common.ok
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertIs
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -17,32 +23,40 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertIs
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 class AgentsPresenterTest {
     private class FakeComputers : AgentComputers {
         override val computers = MutableStateFlow<ImmutableList<AgentComputer>>(persistentListOf())
-        var checkResult: Outcome<ComputerCheck> = ComputerCheck.Ready("0.8.0", persistentListOf("Claude Code")).ok()
+        var checkResult: Outcome<ComputerCheck> =
+            ComputerCheck.Ready("0.8.0", persistentListOf("Claude Code")).ok()
         var addResult: Outcome<ProfileId>? = null
-        var agentsResult: Outcome<ImmutableList<String>> = persistentListOf("Claude Code", "Pi").ok()
+        var agentsResult: Outcome<ImmutableList<String>> =
+            persistentListOf("Claude Code", "Pi").ok()
         var startResult: Outcome<ConversationRef>? = null
         val calls = mutableListOf<String>()
 
-        override suspend fun check(address: String, password: String, folder: String): Outcome<ComputerCheck> {
+        override suspend fun check(
+            address: String,
+            password: String,
+            folder: String,
+        ): Outcome<ComputerCheck> {
             calls += "check:$address:$folder"
             return checkResult
         }
 
-        override suspend fun add(name: String, address: String, password: String, folder: String): Outcome<ProfileId> {
+        override suspend fun add(
+            name: String,
+            address: String,
+            password: String,
+            folder: String,
+        ): Outcome<ProfileId> {
             calls += "add:$name:$address:$folder"
             val result = addResult ?: ProfileId("p1").ok()
             if (result is Outcome.Ok) {
-                computers.value = (computers.value + AgentComputer(result.value, name, address, folder, connected = true)).toImmutableList()
+                computers.value =
+                    (computers.value +
+                            AgentComputer(result.value, name, address, folder, connected = true))
+                        .toImmutableList()
             }
             return result
         }
@@ -62,23 +76,25 @@ class AgentsPresenterTest {
         val computers = FakeComputers()
         val opened = mutableListOf<ConversationRef>()
         var backs = 0
-        val presenter = AgentsPresenter(
-            CoroutineScopeOf(test),
-            computers,
-            NoPhoneAgents(MutableStateFlow(phone)),
-            onBack = { backs++ },
-            openChat = { opened += it },
-        )
+        val presenter =
+            AgentsPresenter(
+                CoroutineScopeOf(test),
+                computers,
+                NoPhoneAgents(MutableStateFlow(phone)),
+                onBack = { backs++ },
+                openChat = { opened += it },
+            )
     }
 
     @Test
-    fun `B-AGENT-111 without a phone agent host the phone part is a final unavailable state, never empty or loading`() = runTest {
-        val rig = Rig(this)
-        val state = rig.presenter.state.value
-        assertFalse(state.phone.available)
-        assertTrue(state.phone.agents.isEmpty())
-        assertFalse(state.busy)
-    }
+    fun `B-AGENT-111 without a phone agent host the phone part is a final unavailable state, never empty or loading`() =
+        runTest {
+            val rig = Rig(this)
+            val state = rig.presenter.state.value
+            assertFalse(state.phone.available)
+            assertTrue(state.phone.agents.isEmpty())
+            assertFalse(state.busy)
+        }
 
     @Test
     fun `B-PROTO-070 checking a computer saves nothing and shows the ready agents`() = runTest {
@@ -100,15 +116,16 @@ class AgentsPresenterTest {
     }
 
     @Test
-    fun `B-AGENT-160 a refused check keeps the typed failure for Details and never navigates`() = runTest {
-        val rig = Rig(this)
-        rig.computers.checkResult = Failure.SignIn(SignInWhy.PasswordRejected).failed()
-        rig.presenter.check("127.0.0.1:6767", "bad", "/w")
-        val issue = rig.presenter.state.value.issue!!
-        assertEquals(AgentsIssue.CheckFailed, issue.kind)
-        assertIs<Failure.SignIn>(issue.failure)
-        assertTrue(rig.opened.isEmpty())
-    }
+    fun `B-AGENT-160 a refused check keeps the typed failure for Details and never navigates`() =
+        runTest {
+            val rig = Rig(this)
+            rig.computers.checkResult = Failure.SignIn(SignInWhy.PasswordRejected).failed()
+            rig.presenter.check("127.0.0.1:6767", "bad", "/w")
+            val issue = rig.presenter.state.value.issue!!
+            assertEquals(AgentsIssue.CheckFailed, issue.kind)
+            assertIs<Failure.SignIn>(issue.failure)
+            assertTrue(rig.opened.isEmpty())
+        }
 
     @Test
     fun `B-AGENT-153 a saved computer joins the list with the agents its check found`() = runTest {
@@ -141,7 +158,10 @@ class AgentsPresenterTest {
     fun `B-AGENT-111 reading a computer's agents reaches a final list`() = runTest {
         val rig = Rig(this)
         rig.presenter.readAgents(ProfileId("p9"))
-        assertEquals(listOf("Claude Code", "Pi"), rig.presenter.state.value.ready[ProfileId("p9")]?.toList())
+        assertEquals(
+            listOf("Claude Code", "Pi"),
+            rig.presenter.state.value.ready[ProfileId("p9")]?.toList(),
+        )
         assertFalse(rig.presenter.state.value.busy)
     }
 
@@ -162,6 +182,86 @@ class AgentsPresenterTest {
     }
 
     @Test
+    fun `B-AGENT-123 opening install review does not start setup and confirmation rechecks admission`() =
+        runTest {
+            val row =
+                PhoneAgentRow(
+                    "claude",
+                    "Claude Code",
+                    PhoneAgentStatus.NotInstalled,
+                    installable = true,
+                    downloadBytes = 328459544L,
+                )
+            val calls = mutableListOf<String>()
+            val phone =
+                object : PhoneAgents {
+                    override val state =
+                        MutableStateFlow(
+                            PhoneAgentsState(
+                                available = true,
+                                agents = persistentListOf(row),
+                                owner = ProfileId("owner"),
+                            )
+                        )
+
+                    override suspend fun refresh(): Outcome<Unit> = Unit.ok()
+
+                    override suspend fun install(id: String): Outcome<PhoneAgentInstallResult> {
+                        calls += id
+                        return PhoneAgentInstallResult.Started.ok()
+                    }
+                }
+            val presenter =
+                AgentsPresenter(
+                    CoroutineScopeOf(this),
+                    FakeComputers(),
+                    phone,
+                    onBack = {},
+                    openChat = {},
+                )
+            presenter.requestInstall(row.id)
+            assertEquals(row, presenter.state.value.installingAgent)
+            assertTrue(calls.isEmpty())
+            // Another setup wins while the review is open: never use the captured enabled flag.
+            phone.state.value =
+                phone.state.value.copy(agents = persistentListOf(row.copy(installable = false)))
+            presenter.installPhone(row.id)
+            assertTrue(calls.isEmpty())
+            phone.state.value = phone.state.value.copy(agents = persistentListOf(row))
+            presenter.installPhone(row.id)
+            assertEquals(listOf(row.id), calls)
+            assertNull(presenter.state.value.installingAgent)
+        }
+
+    @Test
+    fun `B-AGENT-123 install review refuses absent unsupported and installed agents`() = runTest {
+        val rig =
+            Rig(
+                this,
+                PhoneAgentsState(
+                    agents =
+                        persistentListOf(
+                            PhoneAgentRow(
+                                "unsupported",
+                                "Unsupported",
+                                PhoneAgentStatus.NotInstalled,
+                            ),
+                            PhoneAgentRow(
+                                "installed",
+                                "Installed",
+                                PhoneAgentStatus.PhoneCheck,
+                                supportedInstallation = true,
+                            ),
+                        )
+                ),
+            )
+        for (id in listOf("absent", "unsupported", "installed")) {
+            rig.presenter.requestInstall(id)
+            assertNull(rig.presenter.state.value.installingAgent)
+        }
+    }
+
+    @Test
     fun `one tap admits one operation`() = runTest {
         val rig = Rig(this)
         rig.presenter.back()
@@ -171,4 +271,6 @@ class AgentsPresenterTest {
 
 /** Runs the presenter's work eagerly on the test scheduler. */
 private fun CoroutineScopeOf(test: TestScope): kotlinx.coroutines.CoroutineScope =
-    kotlinx.coroutines.CoroutineScope(test.backgroundScope.coroutineContext + UnconfinedTestDispatcher(test.testScheduler))
+    kotlinx.coroutines.CoroutineScope(
+        test.backgroundScope.coroutineContext + UnconfinedTestDispatcher(test.testScheduler)
+    )

@@ -1,8 +1,9 @@
 package io.github.eslamasabry.oc.feature.agents
 
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
@@ -12,13 +13,13 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import dev.zacsweers.metrox.viewmodel.metroViewModel
-import io.github.eslamasabry.oc.feature.agents.hub.AgentComputerKind
 import io.github.eslamasabry.oc.engine.settings.teaching.ShowMeTarget
 import io.github.eslamasabry.oc.engine.settings.teaching.ShowMeTargets
+import io.github.eslamasabry.oc.feature.agents.hub.AgentComputerKind
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsViewModel
-import io.github.eslamasabry.oc.feature.agents.presentation.SignInTerminalViewModel
+import io.github.eslamasabry.oc.feature.agents.presentation.PhoneSignInRouteViewModel
 import io.github.eslamasabry.oc.feature.agents.ui.AgentsScreen
-import io.github.eslamasabry.oc.feature.agents.ui.SignInTerminalScreen
+import io.github.eslamasabry.oc.feature.agents.ui.PhoneSignInScreen
 import io.github.eslamasabry.oc.ui.routes.AgentsRoute
 import io.github.eslamasabry.oc.ui.routes.CapabilityAddComputerRoute
 import io.github.eslamasabry.oc.ui.routes.CapabilityAgentAccountRoute
@@ -34,6 +35,10 @@ public class AgentsEntries(private val arrivals: ShowMeTargets) : EntryInstaller
     override fun EntryProviderScope<NavKey>.install() {
         entry<CapabilityAddComputerRoute> { route ->
             val vm = metroViewModel<AgentsViewModel>()
+            LifecycleResumeEffect(vm) {
+                vm.refreshPhone()
+                onPauseOrDispose {}
+            }
             val state by vm.state.collectAsStateWithLifecycle()
             val hubState by vm.hubState.collectAsStateWithLifecycle()
             LaunchedEffect(route) {
@@ -47,6 +52,10 @@ public class AgentsEntries(private val arrivals: ShowMeTargets) : EntryInstaller
         }
         entry<CapabilityPhoneAgentRoute> { route ->
             val vm = metroViewModel<AgentsViewModel>()
+            LifecycleResumeEffect(vm) {
+                vm.refreshPhone()
+                onPauseOrDispose {}
+            }
             val state by vm.state.collectAsStateWithLifecycle()
             val hubState by vm.hubState.collectAsStateWithLifecycle()
             val selected =
@@ -63,6 +72,10 @@ public class AgentsEntries(private val arrivals: ShowMeTargets) : EntryInstaller
         }
         entry<CapabilityAgentAccountRoute> { route ->
             val vm = metroViewModel<AgentsViewModel>()
+            LifecycleResumeEffect(vm) {
+                vm.refreshPhone()
+                onPauseOrDispose {}
+            }
             val state by vm.state.collectAsStateWithLifecycle()
             val hubState by vm.hubState.collectAsStateWithLifecycle()
             LaunchedEffect(route) { vm.openAccount(route.profile) }
@@ -70,14 +83,22 @@ public class AgentsEntries(private val arrivals: ShowMeTargets) : EntryInstaller
         }
         entry<AgentsRoute.SignInTerminal> { route ->
             val vm =
-                assistedMetroViewModel<SignInTerminalViewModel, SignInTerminalViewModel.Factory> {
+                assistedMetroViewModel<
+                    PhoneSignInRouteViewModel,
+                    PhoneSignInRouteViewModel.Factory,
+                > {
                     create(route)
                 }
             val state by vm.state.collectAsStateWithLifecycle()
-            SignInTerminalScreen(state, vm)
+            val pageHost by vm.pageHost.collectAsStateWithLifecycle()
+            PhoneSignInScreen(state, pageHost, vm)
         }
         entry<AgentsRoute.Home> {
             val vm = metroViewModel<AgentsViewModel>()
+            LifecycleResumeEffect(vm) {
+                vm.refreshPhone()
+                onPauseOrDispose {}
+            }
             val state by vm.state.collectAsStateWithLifecycle()
             val hubState by vm.hubState.collectAsStateWithLifecycle()
             val arrival by arrivals.active.collectAsStateWithLifecycle()
