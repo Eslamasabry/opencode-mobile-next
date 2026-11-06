@@ -131,7 +131,7 @@ internal fun TranscriptDetail(
             folds.open[defaultKey] = reasoningExpanded
         }
         KitExpandRow(
-            title = plain.lineSequence().first().take(80),
+            title = reasoningPreview(plain.lineSequence().first()),
             expanded = folds.open[key] ?: reasoningExpanded,
             onExpandedChange = { folds.open[key] = it },
             modifier = Modifier.testTag("assistant-reasoning-block"),
@@ -297,4 +297,17 @@ internal fun TurnEndNote(note: io.github.eslamasabry.oc.feature.chat.presentatio
             }
         )
     )
+}
+
+/**
+ * The reasoning fold's one-line preview: at most [max] characters, ended at a word with an ellipsis
+ * when it is cut (never mid-word, never silently).
+ */
+internal fun reasoningPreview(line: String, max: Int = 80): String {
+    val text = line.trim()
+    if (text.length <= max) return text
+    val cut = text.take(max)
+    val space = cut.lastIndexOf(' ')
+    val words = if (space >= max / 2) cut.take(space) else cut
+    return words.trimEnd(' ', ',', ';', ':', '.', '-', '—') + "…"
 }
