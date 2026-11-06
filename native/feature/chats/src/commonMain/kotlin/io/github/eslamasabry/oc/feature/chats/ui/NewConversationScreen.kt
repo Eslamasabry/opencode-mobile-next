@@ -356,7 +356,6 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
         closeLabel = stringResource(Res.string.kitSheetClose),
     ) {
         Column(
-            Modifier.verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
         ) {
             when (current) {
