@@ -47,6 +47,7 @@ class LinuxStartupTest {
         LinuxStartup(
             LinuxResetFlow(lifecycle, marker, Clock.System),
             AppCoroutineScope(backgroundScope.coroutineContext + UnconfinedTestDispatcher(testScheduler)),
+            io.github.eslamasabry.oc.engine.runtime.services.kept.UnavailableKeptServices(),
         ).start()
         testScheduler.runCurrent()
         assertEquals(listOf("erase", "setup"), lifecycle.calls)
@@ -59,6 +60,7 @@ class LinuxStartupTest {
         LinuxStartup(
             LinuxResetFlow(lifecycle, Marker(null), Clock.System),
             AppCoroutineScope(backgroundScope.coroutineContext + UnconfinedTestDispatcher(testScheduler)),
+            io.github.eslamasabry.oc.engine.runtime.services.kept.UnavailableKeptServices(),
         ).start()
         testScheduler.runCurrent()
         assertEquals(emptyList(), lifecycle.calls)

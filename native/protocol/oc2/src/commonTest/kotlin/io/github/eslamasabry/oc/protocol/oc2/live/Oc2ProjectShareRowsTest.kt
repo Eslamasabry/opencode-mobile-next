@@ -3,7 +3,7 @@ package io.github.eslamasabry.oc.protocol.oc2.live
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
-import io.github.eslamasabry.oc.core.model.SessionId
+import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.model.WorkspaceProject
 import io.ktor.client.engine.mock.respond
 import io.ktor.http.HttpStatusCode
