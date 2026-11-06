@@ -579,7 +579,7 @@ public class ChatsAllViewModel(
         val wanted = session.id !in pins.ids(server)
         viewModelScope.launch {
             when (val result = pins.set(server, session.id, wanted)) {
-                is Outcome.Ok ->
+                is Outcome.Ok -> {
                     model.update { cur ->
                         val old = cur.sources[server.profile] ?: return@update cur
                         cur.copy(
@@ -588,6 +588,21 @@ public class ChatsAllViewModel(
                                     (server.profile to old.copy(pinned = pins.ids(server)))
                         )
                     }
+                    // Launcher shortcuts follow the pins (a pinned conversation, one tap from the icon).
+                    val cur = model.value
+                    val pinnedNow = pins.ids(server)
+                    pins.published(
+                        server,
+                        cur.sources[server.profile]
+                            ?.sessions
+                            .orEmpty()
+                            .filter { it.id in pinnedNow }
+                            .associate { s ->
+                                s.id to
+                                    (cur.titles["${server.profile.raw}/${s.id.raw}"] ?: s.title).orEmpty()
+                            },
+                    )
+                }
                 is Outcome.Failed ->
                     model.update {
                         it.copy(problem = AllProblem(AllProblemKind.Pin, result.failure))

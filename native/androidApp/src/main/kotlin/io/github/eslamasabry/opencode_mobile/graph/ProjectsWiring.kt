@@ -165,8 +165,24 @@ class StoredOpenedFolders(private val stores: PreviewStores) : OpenedFolders {
     replaces = [io.github.eslamasabry.oc.feature.chats.presentation.NoConversationPins::class],
 )
 @Inject
-class StoredConversationPins(private val stores: PreviewStores) :
-    io.github.eslamasabry.oc.feature.chats.presentation.ConversationPins {
+class StoredConversationPins(
+    private val stores: PreviewStores,
+    private val application: android.app.Application,
+) : io.github.eslamasabry.oc.feature.chats.presentation.ConversationPins {
+    /** Pinned conversations become launcher shortcuts for this profile (B-ANDR-030). */
+    override fun published(
+        server: ConversationServer,
+        titles: Map<io.github.eslamasabry.oc.core.common.ids.SessionId, String>,
+    ) {
+        io.github.eslamasabry.oc.android.tiles.PinnedShortcuts.publish(
+            application,
+            server.profile.raw,
+            titles.map { (id, title) ->
+                io.github.eslamasabry.oc.android.tiles.PinnedSession(id.raw, title)
+            },
+        )
+    }
+
     private val pins =
         io.github.eslamasabry.oc.engine.settings.pins.SessionPinStore(stores.prefs, stores.lanes)
 
