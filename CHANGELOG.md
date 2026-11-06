@@ -2,6 +2,15 @@
 
 This project is in public alpha. Only the newest preview is supported.
 
+## 2.1.4+62 — 2026-11-06
+
+Built-in Linux sets up on phones where its unpacking tool crashes (#117): the
+app unpacks the file itself, a crashing step is retried once in a compatibility
+mode, and proot is updated. Start a Git repository and publish it to a new
+GitHub repository from the Git page (#118, thanks @Ari-Enzo). Desktop builds
+are dropped; the app is Android only. Full notes:
+[docs/releases/v2.1.4+62.md](docs/releases/v2.1.4+62.md).
+
 ## 2.1.3+61 — 2026-11-05
 
 Built-in Linux sets up on phones where its download tool crashes (#117): the
