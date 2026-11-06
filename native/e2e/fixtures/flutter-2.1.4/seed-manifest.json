@@ -1,0 +1,41 @@
+{
+ "schema": 1,
+ "status": "not seeded: fill in every null, run tools/flutter-fixtures/seed_2_1_4.sh on the PC, then check_dump.py",
+ "release": "2.1.4+62",
+ "build": {
+  "ref": "origin/master",
+  "commit": null,
+  "flutter": null,
+  "versionCode": null,
+  "minVersionCode": 4612,
+  "signerSha256": null,
+  "expectedSignerSha256": "1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C"
+ },
+ "avd": {
+  "role": "e2e",
+  "name": null,
+  "serial": "emulator-5584",
+  "snapshot": "flutter-2.1.4-seeded"
+ },
+ "reviewed": {"by": null, "at": null, "note": "every value in the dump is a fixture value; no real account, token or server"},
+ "fixturePlaintexts": ["fixture-pass-1", "fixture-paseo-1", "fixture-codex-1"],
+ "seeds": [
+  {"id": "oc2-password", "what": "OC2 server (FX-OC2) saved with password fixture-pass-1", "expect": ["oc.profiles", "oc.activeProfile", "pw."]},
+  {"id": "lan-cleartext", "what": "HTTP-on-LAN server (FX-TLS plain private name) with the cleartext consent given", "expect": ["oc.cleartextOk."]},
+  {"id": "https-pin", "what": "HTTPS server (FX-TLS cert A) with its certificate pinned", "expect": ["oc.certificatePin."]},
+  {"id": "paseo-profile", "what": "Paseo profile (FX-PASEO) with password fixture-paseo-1", "expect": ["oc.codexToken."]},
+  {"id": "codex-token", "what": "Codex profile (FX-CODEX) with token fixture-codex-1", "expect": ["oc.codexToken."]},
+  {"id": "settings-groups", "what": "every Settings group changed: style Soft, motion Calm, Arabic, text size, quiet hours 22:00-07:00, reader, transcript", "expect": ["oc.appearance", "oc.effectsMotion", "oc.appLocale", "oc.textSize", "oc.notify.quietStart", "oc.notify.quietEnd", "oc.transcript.timestampsVisible"]},
+  {"id": "always-allow", "what": "server-wide always-allow rule on the OC2 server", "expect": ["oc.autoApprove."]},
+  {"id": "offline-queued", "what": "a prompt queued while FX-OC2 is stopped", "expect": ["oc.offlineQueue"]},
+  {"id": "draft-photo", "what": "an unsent draft with a photo", "expect": ["oc.sessionDrafts", "draft-attachments-v1"]},
+  {"id": "saved-prompts", "what": "two saved prompts, one with an attachment", "expect": ["oc.promptStash.", "prompt-stash-attachments-v1"]},
+  {"id": "pinned-conversation", "what": "a pinned conversation", "expect": ["oc.sessionPins."]},
+  {"id": "learned-phrase", "what": "a learned phrase chip", "expect": ["oc.phraseChips."]},
+  {"id": "scheduled-prompt", "what": "a scheduled prompt (daily)", "expect": ["oc.scheduledPrompts.", "oc.scheduleIndex."]},
+  {"id": "linux-project-server", "what": "built-in Linux installed with a project, the phone server running", "expect": ["linux", "projects", "oc.builtinServerOwner", "builtin_server_recovery"]},
+  {"id": "phone-agent", "what": "a fixture phone agent installed and one finished agent chat", "expect": ["oc.agentHostSecret.", "oc.agentPhoneGate.", "oc.agentInstall."]},
+  {"id": "voice-pack", "what": "a small voice pack downloaded", "expect": ["voice.selected_pack", "voice_models"]},
+  {"id": "surfaces", "what": "Conversations, Status and usage widgets placed, both tiles added, a conversation shortcut pinned", "expect": ["oc.widgetSessions", "oc.attentionTile", "oc.pinnedShortcuts", ".SessionsWidgetProvider", ".StatusWidgetProvider", ".UsageWidgetProvider", ".AttentionTileService", ".PauseTileService", "oc.session:"]}
+ ]
+}
