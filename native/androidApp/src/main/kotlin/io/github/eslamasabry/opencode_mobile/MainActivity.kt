@@ -18,6 +18,7 @@ import io.github.eslamasabry.oc.ui.kit.logo.LocalKitLogoLoader
 import io.github.eslamasabry.oc.ui.kit.platform.AndroidKitPlatform
 import io.github.eslamasabry.oc.ui.shell.App
 import io.github.eslamasabry.opencode_mobile.graph.AppLocale
+import io.github.eslamasabry.opencode_mobile.graph.AppNoticesAccessors
 import io.github.eslamasabry.opencode_mobile.graph.IncomingShareHost
 import io.github.eslamasabry.opencode_mobile.graph.MigrationRoot
 import io.github.eslamasabry.opencode_mobile.graph.ProviderLogoGraph
@@ -54,6 +55,8 @@ class MainActivity : ComponentActivity() {
         graph.androidSessionImportFiles.attach(this)
         graph.projectExport.attach(this)
         graph.termuxMigration.attach(this)
+        // E09-S04: the once-only Termux notice joins the app notice slot (idempotent).
+        (graph as AppNoticesAccessors).appNotices.follow(graph.termuxMigration.moveNotice)
         // DecorView's DecorContext need not wrap this Activity; pass the actual window for
         // system-bar contrast.
         val platform = AndroidKitPlatform(window.decorView, window)
