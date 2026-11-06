@@ -1,5 +1,8 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
+import androidx.compose.foundation.focusGroup
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -416,7 +419,18 @@ public fun ChatScreen(
     // reuses this ancestor rather than creating a host scoped only to its own content.
     KitPromptLiftHost {
         KitSheetHost(modifier.fillMaxSize()) {
-            Box(Modifier.fillMaxSize()) {
+            // N-55: the shell steers a stray hardware key into the page (FocusDirection.Enter);
+            // here it lands in the message field, never on the first button.
+            Box(
+                Modifier.fillMaxSize()
+                    .focusProperties {
+                        onEnter = {
+                            if (requestedFocusDirection == FocusDirection.Enter && chrome.typing.focus())
+                                cancelFocusChange()
+                        }
+                    }
+                    .focusGroup()
+            ) {
                 KitScreen(
                     modifier = Modifier.fillMaxSize(),
                     page = true,

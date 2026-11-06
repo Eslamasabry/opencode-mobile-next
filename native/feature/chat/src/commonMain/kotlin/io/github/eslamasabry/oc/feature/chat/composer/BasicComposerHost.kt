@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -228,6 +229,11 @@ public fun BasicComposer(
             }
             editorReady = true
         }
+    }
+    // N-55: a stray hardware key steers focus here (the chat asks; the field answers).
+    DisposableEffect(focus, chrome.typing) {
+        chrome.typing.focus = { focus.requestFocus() }
+        onDispose { chrome.typing.focus = null }
     }
     // "Ready to type" (07 §2.5, B-NAV-005): focus once per arrival, then acknowledge it.
     val focusId = chrome.focusRequest()
