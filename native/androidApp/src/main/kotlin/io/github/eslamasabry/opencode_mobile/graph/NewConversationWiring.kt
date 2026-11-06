@@ -57,8 +57,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 
 /** The first message uses the same durable delivery owner as the conversation composer. */
@@ -128,12 +126,29 @@ class AndroidNewConversationHost(
     private fun reviewKey(profile: ProfileId, directory: String?): String =
         draftKey(profile, directory).replace("oc.draft.new-chat.", "oc.draft.new-chat-review.")
 
-    @Serializable
+    // androidApp has no serialization compiler plugin. Keep this tiny persisted envelope
+    // explicit: @Serializable here compiles but encodeToString fails at runtime before Send.
     private data class FirstMessageReview(
         val session: String,
         val directory: String,
         val target: String,
-    )
+    ) {
+        fun encode(): String =
+            DartJson.encode(
+                linkedMapOf("session" to session, "directory" to directory, "target" to target)
+            )
+
+        companion object {
+            fun decode(raw: String): FirstMessageReview? {
+                val fields = DartJson.decodeOrNull(raw) as? Map<*, *> ?: return null
+                return FirstMessageReview(
+                    fields["session"] as? String ?: return null,
+                    fields["directory"] as? String ?: return null,
+                    fields["target"] as? String ?: return null,
+                )
+            }
+        }
+    }
 
     private fun target(graph: ConnectionGraph, directory: String): String =
         target(graph.profile, directory)
@@ -169,7 +184,8 @@ class AndroidNewConversationHost(
                 return@withContext Outcome.Failed(Failure.StorageRefused())
             val receipt =
                 try {
-                    WireJson.decodeFromString<FirstMessageReview>(raw.value)
+                    FirstMessageReview.decode(raw.value)
+                        ?: return@withContext Outcome.Failed(Failure.StorageRefused())
                 } catch (cancelled: CancellationException) {
                     throw cancelled
                 } catch (_: Exception) {
@@ -435,10 +451,18 @@ class AndroidNewConversationHost(
                             putString(draftKey(profile, directory), text)
                             putString(
                                 reviewKey(profile, directory),
-                                WireJson.encodeToString(
-                                    FirstMessageReview(ref.sessionId.raw, directory, expectedTarget)
-                                ),
+                                FirstMessageReview(ref.sessionId.raw, directory, expectedTarget)
+                                    .encode(),
                             )
+                            // Keep the explicit choice even if delivery needs review. Waiting
+                            // until acceptance lost it whenever the first send failed.
+                            putString("oc.newChatProject.${profile.raw}", directory)
+                            if (model == null) remove("oc.model.${profile.raw}")
+                            else
+                                putString(
+                                    "oc.model.${profile.raw}",
+                                    "${model.providerId}|${model.modelId}",
+                                )
                         }
                 ) {
                     is Outcome.Failed -> return@withLock attempt.copy(failure = held.failure)
@@ -464,13 +488,6 @@ class AndroidNewConversationHost(
                         stores.prefs.commit(stores.lanes.forProfile(profile)) {
                             remove(draftKey(profile, directory))
                             remove(reviewKey(profile, directory))
-                            putString("oc.newChatProject.${profile.raw}", directory)
-                            if (model == null) remove("oc.model.${profile.raw}")
-                            else
-                                putString(
-                                    "oc.model.${profile.raw}",
-                                    "${model.providerId}|${model.modelId}",
-                                )
                         }
                         receipt.outcome?.let(delivery::acknowledge)
                         attempt.copy(dispatched = true, failure = null)
