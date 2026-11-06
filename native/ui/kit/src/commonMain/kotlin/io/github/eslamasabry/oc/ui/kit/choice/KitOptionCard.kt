@@ -36,6 +36,7 @@ import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.*
+import androidx.compose.runtime.SideEffect
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.style.KitSignalSample
@@ -166,6 +167,77 @@ public fun KitStyleOptionCard(
             Spacer(Modifier.height(Space.S2.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 KitText(label, Modifier.weight(1f), role = TypeRole.RowTitle, maxLines = 1)
+                if (selected) OptionCheck() else Spacer(Modifier.size(Space.S5.dp))
+            }
+        }
+    }
+}
+
+/**
+ * Flutter KitOptionCard.look (`lib/ui/kit/kit_option_card.dart:68-81`, `:204-262` at GLASS_REF 1bbdc3f9c): a still
+ * frame of a live look behind a tiny mock conversation, filling the card, with the look's name under it. [look] is the
+ * look's id; null is "Off" (the conversation on the plain ground). The card fills the cell its grid gives it.
+ *
+ * States: selected, disabled.
+ * Cap: reading
+ */
+@Composable
+public fun KitLookOptionCard(
+    look: String?,
+    label: String,
+    selected: Boolean,
+    onSelect: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    disabledReason: String? = null,
+) {
+    val colors = LocalKitColors.current
+    val look0 =
+        kitSurfaceLook(
+            KitSurfaceInput(
+                SurfaceRole.Content,
+                KitShapeId.Card,
+                SurfaceLevel.Surface2,
+                ownFill = colors.surface1,
+                selected = selected,
+                disabled = !enabled,
+            )
+        )
+    // A look's name may take two lines in a narrow cell at ordinary text (kit_option_card.dart:216-221).
+    val lines = if (androidx.compose.ui.platform.LocalDensity.current.fontScale < 1.5f) 2 else 1
+    KitTappable(
+        onClick = onSelect,
+        modifier =
+            modifier.kitMaxWidth(CapRole.Reading).semantics {
+                role = Role.RadioButton
+                this.selected = selected
+                contentDescription = label
+            },
+        enabled = enabled,
+        disabledReason = disabledReason,
+        shape = KitShapeId.Card,
+    ) {
+        Column(
+            Modifier.fillMaxSize()
+                .then(look0.modifier)
+                .border(
+                    if (selected) kitFocusRingWidth() else kitHairline(),
+                    if (selected) colors.accent else colors.hairline,
+                    look0.shape,
+                )
+                .padding(Space.S3.dp)
+                .clearAndSetSemantics {}
+        ) {
+            io.github.eslamasabry.oc.ui.kit.live.KitLiveLookStill(look, Modifier.fillMaxWidth().weight(1f))
+            Spacer(Modifier.height(Space.S2.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                KitText(
+                    label,
+                    Modifier.weight(1f),
+                    role = TypeRole.RowTitle,
+                    tone = if (enabled) TextTone.Primary else TextTone.Tertiary,
+                    maxLines = lines,
+                )
                 if (selected) OptionCheck() else Spacer(Modifier.size(Space.S5.dp))
             }
         }
@@ -320,11 +392,37 @@ private fun StyleSample(style: Style) {
                             ),
                     )
                 )
+            // Glass: two spots of the theme's colours on the strip, partly under the card, and the card frosting them
+            // (GLASS_REF kit_option_card.dart:660-707), so a frosted pane reads apart from an opaque one. The other
+            // samples keep their plain strip.
+            val glass = style == Style.Glass && card != null
+            val backdrop = io.github.eslamasabry.oc.ui.kit.foundation.rememberKitGlassBackdrop()
+            val accent = colors.accent
+            val partner = colors.partner
+            val ground = colors.ground
+            val strip =
+                if (!glass) {
+                    Modifier.background(ground)
+                } else {
+                    Modifier.kitGlassBackdropSource(backdrop) {
+                        val unit = Space.S1.dp.toPx()
+                        val rtl = layoutDirection == androidx.compose.ui.unit.LayoutDirection.Rtl
+                        fun x(fromStart: Float) = if (rtl) size.width - fromStart else fromStart
+                        drawRect(ground)
+                        // Accent at .7, unit * 8 across, top -unit, end unit * 2 (kit_option_card.dart:697-701).
+                        drawCircle(accent.copy(alpha = .7f), radius = unit * 4f, center = androidx.compose.ui.geometry.Offset(x(size.width - unit * 6f), unit * 3f))
+                        // Partner at .5, unit * 6 across, bottom -unit * 2, start unit * 3 (kit_option_card.dart:702-706).
+                        drawCircle(partner.copy(alpha = .5f), radius = unit * 3f, center = androidx.compose.ui.geometry.Offset(x(unit * 6f), size.height - unit))
+                    }
+                }
+            if (glass) {
+                SideEffect { backdrop.painted = true }
+            }
             Box(
                 Modifier.fillMaxWidth()
                     .height(stripHeight)
                     .clip(stripShape)
-                    .background(colors.ground)
+                    .then(strip)
                     .clearAndSetSemantics {}
                     .padding(
                         start = Space.S2.dp,
@@ -333,12 +431,16 @@ private fun StyleSample(style: Style) {
                         bottom = (Space.S2 + Space.S1).dp,
                     )
             ) {
+              CompositionLocalProvider(LocalKitGlassBackdrop provides backdrop) {
                 Column(
                     Modifier.fillMaxSize()
                         .then(
                             if (card == null)
                                 Modifier.background(colors.surface1, cardShape)
                                     .border(kitHairline(), colors.hairline, cardShape)
+                            else if (glass)
+                                // A light frost of its own, sigma 3 (kit_option_card.dart:669).
+                                Modifier.kitSurfaceGlass(card.copy(frost = 3f)).kitGlassFace(card)
                             else Modifier.kitDecorated(card)
                         )
                         .padding(Space.S2.dp),
@@ -387,6 +489,7 @@ private fun StyleSample(style: Style) {
                         )
                     }
                 }
+              }
             }
         }
     }

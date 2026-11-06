@@ -12,31 +12,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ColorMatrix
-import androidx.compose.ui.graphics.FilterQuality
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntSize
 import io.github.eslamasabry.oc.ui.design.color.Argb
 import io.github.eslamasabry.oc.ui.design.effects.AuroraImage
 import io.github.eslamasabry.oc.ui.kit.foundation.LocalKitGlassBackdrop
 import io.github.eslamasabry.oc.ui.kit.foundation.kitGlassBackdropSource
 import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitGlassBackdrop
-import io.github.eslamasabry.oc.ui.kit.res.Res
-import io.github.eslamasabry.oc.ui.kit.res.aurora_dark
-import io.github.eslamasabry.oc.ui.kit.res.aurora_light
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import kotlinx.coroutines.delay
-import org.jetbrains.compose.resources.imageResource
 import kotlin.math.min
-import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.TimeSource
 
@@ -66,15 +55,10 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, content: @Composable
     val shows =
         appearance.liveBackground && !appearance.saver && appearance.liveStyle == AuroraImage.ID && strength > 0f &&
             !motion.stillFrame
-    val image: ImageBitmap? =
-        if (shows) imageResource(if (roles.dark) Res.drawable.aurora_dark else Res.drawable.aurora_light) else null
-    val painted = image != null && image.width > 1 && image.height > 1
+    val plate = rememberAuroraPlate(if (shows) appearance.liveStyle else null)
+    val painted = plate != null
     val ground = colors.ground
     val accent = roles.accent
-    val filter =
-        remember(roles.ground, accent, roles.dark) {
-            ColorFilter.colorMatrix(ColorMatrix(AuroraImage.matrixFor(roles.ground, accent, roles.dark)))
-        }
     SideEffect {
         backdrop.painted = painted
         backdrop.frostedSpots =
@@ -100,23 +84,13 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, content: @Composable
     val alpha = AuroraImage.alphaFor(strength)
     val ground0 = if (painted) Modifier else Modifier.background(ground)
     val source =
-        if (!painted || image == null) {
+        if (plate == null) {
             Modifier
         } else {
+            val (image, filter) = plate
             Modifier.kitGlassBackdropSource(backdrop) {
                 drawRect(ground)
-                val drift = AuroraImage.driftAt(if (drifts) seconds.toDouble() else 0.0)
-                val src = AuroraImage.sourceRect(image.width.toFloat(), image.height.toFloat(), size.width, size.height, drift)
-                drawImage(
-                    image,
-                    srcOffset = IntOffset(src[0].roundToInt(), src[1].roundToInt()),
-                    srcSize = IntSize(src[2].roundToInt().coerceAtLeast(1), src[3].roundToInt().coerceAtLeast(1)),
-                    dstOffset = IntOffset.Zero,
-                    dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt()),
-                    alpha = alpha,
-                    colorFilter = filter,
-                    filterQuality = FilterQuality.Medium, // FG: lib/ui/kit/live_background/styles/kit_live_aurora_image.dart:303
-                )
+                drawAuroraPlate(image, filter, alpha, AuroraImage.driftAt(if (drifts) seconds.toDouble() else 0.0))
             }
         }
     // A touch wakes a resting drift; it never consumes the touch.
