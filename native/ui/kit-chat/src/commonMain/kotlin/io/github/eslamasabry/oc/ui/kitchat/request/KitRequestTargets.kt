@@ -72,8 +72,15 @@ public fun KitRequestTargets(
             else null
         (if (expanded) targets else targets.take(TARGET_LIMIT)).forEachIndexed { index, target ->
             if (index == 0 && copy != null)
-                Row(verticalAlignment = Alignment.Top) {
-                    KitMonoLtr(target.text, Modifier.weight(1f).padding(top = Space.S2.dp), TextTone.Primary)
+                // One line sits level with the copy mark (it sat high, over an empty lower half); several lines keep
+                // the mark at the first line's corner.
+                val oneLine = '\n' !in target.text
+                Row(verticalAlignment = if (oneLine) Alignment.CenterVertically else Alignment.Top) {
+                    KitMonoLtr(
+                        target.text,
+                        Modifier.weight(1f).padding(top = if (oneLine) 0.dp else Space.S2.dp),
+                        TextTone.Primary,
+                    )
                     KitIconButton(
                         icon = if (copy.label == copiedLabel) KitIcons.check else KitIcons.copy,
                         label = copy.label,
