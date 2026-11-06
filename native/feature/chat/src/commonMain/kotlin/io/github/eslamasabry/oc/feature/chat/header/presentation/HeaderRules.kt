@@ -58,6 +58,7 @@ public object HeaderRules {
             )
                 add(HeaderAction.ContinueWith)
             if (caps.cliSessionResume) add(HeaderAction.ContinueOnComputer)
+            add(HeaderAction.ContinueOnPhone)
             if (caps.agentHandoffFiles) add(HeaderAction.Handoff)
             if (caps.sessionImportExport) add(HeaderAction.ImportConversation)
             if (caps.agentFeatures) add(HeaderAction.AgentOptions)

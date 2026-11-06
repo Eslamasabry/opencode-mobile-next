@@ -162,6 +162,7 @@ class ChatHeaderPresenterTest {
                 HeaderAction.Rename,
                 HeaderAction.ContinueWith,
                 HeaderAction.ContinueOnComputer,
+                HeaderAction.ContinueOnPhone,
                 HeaderAction.CopyTranscript,
             ),
             menu,

@@ -10,6 +10,7 @@ kotlin {
     }
     sourceSets.commonMain.dependencies {
         implementation(project(":engine:settings"))
+        implementation(project(":engine:entry")) // the opencode-mobile:// session link for another phone
         implementation(project(":engine:delivery"))
         implementation(project(":engine:voice"))
         implementation(project(":engine:composer"))

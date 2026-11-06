@@ -61,6 +61,11 @@ import io.github.eslamasabry.oc.ui.kitchat.header.KitClipboardEffect
 import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.agentToolsTitle
+import io.github.eslamasabry.oc.ui.words.res.handoffUiPhoneTitle
+import io.github.eslamasabry.oc.ui.words.res.handoffUiPhoneIntro
+import io.github.eslamasabry.oc.ui.words.res.handoffUiPhoneLinkLabel
+import io.github.eslamasabry.oc.ui.words.res.handoffUiPhoneCopyLink
+import io.github.eslamasabry.oc.ui.words.res.handoffUiPhoneUnavailable
 import io.github.eslamasabry.oc.ui.words.res.cardsFromAgentsTitle
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderArchiveFailed
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderContext
@@ -462,6 +467,15 @@ public fun ChatHeaderOverlays(slot: ChatHeaderSlot) {
         (sheet as? HeaderSheet.ContinueOnComputer)?.let { ComputerBody(it, actions) }
     }
     KitSheet(
+        visible = sheet is HeaderSheet.ContinueOnPhone,
+        onDismissRequest = actions::closeSheet,
+        title = stringResource(Res.string.handoffUiPhoneTitle),
+        icon = KitIcons.phone,
+        closeLabel = stringResource(Res.string.kitSheetClose),
+    ) {
+        (sheet as? HeaderSheet.ContinueOnPhone)?.let { PhoneBody(it, actions) }
+    }
+    KitSheet(
         visible = sheet is HeaderSheet.ImportConversation,
         onDismissRequest = actions::closeSheet,
         title = stringResource(Res.string.importAction),
@@ -539,6 +553,36 @@ private fun DetailsBody(facts: DetailsUi) {
                     trailing = KitRowTrailing.Value(Numbers.format(it), chevron = false),
                 )
             }
+        }
+    }
+}
+
+/** Flutter `_ContinueOnPhoneBody`: the link with its own Copy, or why there is none. */
+@Composable
+private fun PhoneBody(sheet: HeaderSheet.ContinueOnPhone, actions: ChatHeaderActions) {
+    Column(
+        Modifier.fillMaxWidth().testTag("continue-on-phone-sheet"),
+        verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+    ) {
+        val link = sheet.link
+        if (link != null) {
+            KitText(stringResource(Res.string.handoffUiPhoneIntro))
+            KitSectionLabel(stringResource(Res.string.handoffUiPhoneLinkLabel))
+            KitCodeBlock(
+                source = link,
+                kind = KitCodeKind.Command,
+                maxLines = Int.MAX_VALUE,
+                modifier = Modifier.testTag("continue-on-phone-link"),
+                wrap = true,
+                copyLabel = stringResource(Res.string.handoffUiPhoneCopyLink),
+                copiedLabel = stringResource(Res.string.kitCopied),
+                onCopy = { actions.copyPhoneLink() },
+            )
+        } else {
+            KitNotice(
+                modifier = Modifier.testTag("continue-on-phone-unavailable"),
+                message = stringResource(Res.string.handoffUiPhoneUnavailable),
+            )
         }
     }
 }
@@ -733,6 +777,7 @@ private fun menuItems(
                     HeaderAction.AgentHandoff -> KitIcons.forward
                     HeaderAction.CardsSettings -> KitIcons.layers
                     HeaderAction.ContinueOnComputer -> KitIcons.computer
+                    HeaderAction.ContinueOnPhone -> KitIcons.phone
                     HeaderAction.ImportConversation -> KitIcons.download
                     HeaderAction.Handoff -> KitIcons.forward
                     HeaderAction.CopyTranscript -> KitIcons.copy
@@ -764,6 +809,7 @@ private fun menuWords(action: HeaderAction): String =
         HeaderAction.Rename -> stringResource(Res.string.chatUiRenameSession)
         HeaderAction.ContinueWith -> stringResource(Res.string.continueWithMenu)
         HeaderAction.ContinueOnComputer -> stringResource(Res.string.handoffUiComputerTitle)
+        HeaderAction.ContinueOnPhone -> stringResource(Res.string.handoffUiPhoneTitle)
         HeaderAction.ImportConversation -> stringResource(Res.string.importAction)
         HeaderAction.Handoff -> stringResource(Res.string.nativeHandoffTitle)
         HeaderAction.AgentHandoff -> stringResource(Res.string.handoffNativeTitle)

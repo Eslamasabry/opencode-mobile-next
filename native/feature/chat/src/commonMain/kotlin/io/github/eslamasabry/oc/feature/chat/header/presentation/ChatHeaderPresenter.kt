@@ -69,6 +69,7 @@ internal enum class SheetKind {
     Details,
     ContinueWith,
     ContinueOnComputer,
+    ContinueOnPhone,
     ImportConversation,
     Handoff,
 }
@@ -228,6 +229,7 @@ public class ChatHeaderPresenter(
                         l.handoffState,
                     )
                 SheetKind.ContinueOnComputer -> HeaderSheet.ContinueOnComputer(resumeCommand(facts))
+                SheetKind.ContinueOnPhone -> HeaderSheet.ContinueOnPhone(phoneLink())
                 SheetKind.ImportConversation ->
                     l.importState?.let { HeaderSheet.ImportConversation(it) }
             }
@@ -337,6 +339,8 @@ public class ChatHeaderPresenter(
                 local.update { it.copy(sheet = SheetKind.ContinueOnComputer) }
                 launcher.launch { port.refresh() }
             }
+            HeaderAction.ContinueOnPhone ->
+                local.update { it.copy(sheet = SheetKind.ContinueOnPhone) }
             HeaderAction.ImportConversation -> openImport()
             HeaderAction.Handoff -> {
                 closeSheet()
@@ -383,6 +387,18 @@ public class ChatHeaderPresenter(
             directory = facts.directory,
             workspaceId = facts.workspaceId,
         )
+
+    /** The server and conversation ids only (no address, no password); null when an id is unsafe. */
+    private fun phoneLink(): String? =
+        io.github.eslamasabry.oc.engine.entry.EntryLinkParser.sessionLink(
+            world.ref.profileId,
+            world.ref.sessionId,
+        )
+
+    override fun copyPhoneLink() {
+        val text = phoneLink() ?: return
+        local.update { it.copy(clip = HeaderClip(nextId++, text, ClipKind.PhoneLink)) }
+    }
 
     override fun copyResumeCommand() {
         val text = resumeCommand(port.facts.value).command ?: return
