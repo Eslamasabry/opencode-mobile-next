@@ -116,7 +116,7 @@ void main() {
       'url': _url,
       'token': _github,
       'key': _anthropic,
-      'path': '/home/eslam/project/secret.txt',
+      'path': '/home/someone/project/secret.txt',
       'Bad Key': 'ok',
     });
     await Future<void>.delayed(Duration.zero);
@@ -128,7 +128,7 @@ void main() {
       'TELEMURLPASS',
       'TELEMQUERY',
       'Insufficient',
-      '/home/eslam',
+      '/home/someone',
       'Bad Key',
     ]) {
       expect(all, isNot(contains(secret)));
@@ -140,7 +140,7 @@ void main() {
     final service = await _service(adapter, consent: true);
     final stack = StackTrace.fromString('''
 #0      Foo.bar (package:opencode_mobile/a/b.dart:12:3)
-#1      _secretFrame (file:///home/eslam/work/$_github/x.dart:9:9)
+#1      _secretFrame (file:///home/someone/work/$_github/x.dart:9:9)
 #2      main (package:opencode_mobile/main.dart:5:1)
 Authorization: Bearer TELEMBEARERtoken.abc
 ''');
@@ -158,7 +158,7 @@ Authorization: Bearer TELEMBEARERtoken.abc
       'TELEMGITHUB',
       'TELEMURLPASS',
       'TELEMBEARER',
-      '/home/eslam',
+      '/home/someone',
       'file://',
     ]) {
       expect(all, isNot(contains(secret)));
