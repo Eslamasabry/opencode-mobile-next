@@ -14,6 +14,14 @@ import kotlinx.serialization.json.*
 
 /** Fetched history shares content part IDs and tool mapping with the live event adapter. */
 internal class Oc2History(private val redactor: Redactor) {
+    /**
+     * N-45: OpenCode 2.2 writes `{"type":"idle","outcome":…}` into the history after every turn. It marks the end of
+     * a run (the run outcome already reaches the transcript through `session.status`), it is not something said, so
+     * the history leaves it out instead of drawing an empty "Server message" row under each reply.
+     */
+    fun isTurnEnd(value: JsonElement): Boolean =
+        ((value as? JsonObject)?.get("type") as? JsonPrimitive)?.contentOrNull == "idle"
+
     fun message(session: String, value: JsonElement): MessageWithParts? {
         val wire = Oc2Message.fromJson(value as? JsonObject ?: return null) ?: return null
         val assistant = wire as? Oc2Message.Assistant

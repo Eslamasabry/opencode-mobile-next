@@ -1059,7 +1059,9 @@ internal class Oc2Gateway(
             val rows = pageEntries(root) ?: return@read null
             val history = Oc2History(redactor)
             val messages =
-                rows.reversed().map { history.message(id.raw, data(it)) ?: return@read null }
+                rows.reversed().filterNot { history.isTurnEnd(data(it)) }.map {
+                    history.message(id.raw, data(it)) ?: return@read null
+                }
             ServerPage(
                 messages.toImmutableList(),
                 cursor(root)?.takeIf { it.isNotEmpty() && rows.size >= limit },
@@ -1100,7 +1102,7 @@ internal class Oc2Gateway(
             if (rows.size > limit) return@flatMap Failure.UnreadableReply().failed()
             val history = Oc2History(redactor)
             val seen = HashSet<String>()
-            val messages = rows.reversed().map { row ->
+            val messages = rows.reversed().filterNot { history.isTurnEnd(data(it)) }.map { row ->
                 val wire = data(row) as? JsonObject ?: return@flatMap Failure.UnreadableReply().failed()
                 if ("sessionID" in wire && wire.str("sessionID") != session.raw) {
                     return@flatMap Failure.UnreadableReply().failed()
