@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.feature.settings.presentation.AppLanguage
 import io.github.eslamasabry.oc.feature.settings.presentation.PersonalPrefs
 import io.github.eslamasabry.oc.feature.settings.presentation.QuietHours
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsFacts
+import io.github.eslamasabry.oc.feature.settings.presentation.SettingsGroupId
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPresenter
 import io.github.eslamasabry.oc.feature.settings.ui.SettingsScreen
@@ -52,6 +53,17 @@ class P12FixSettingsUiTest {
         onNodeWithText(text).performScrollTo().performClick()
         waitForIdle()
     }
+
+    @Test
+    fun `B-NAV-073 Phrase suggestions opens its page instead of only toggling the group row`() =
+        runComposeUiTest {
+            show(facts = phoneFacts().copy(phraseChips = true))
+            presenter.onOpen(SettingsPage.Group(SettingsGroupId.Conversations)); waitForIdle()
+            tap("Phrase suggestions")
+            assertEquals(SettingsPage.PhraseChips, presenter.state.value.page)
+            presenter.onBack(); waitForIdle()
+            assertEquals(SettingsPage.Group(SettingsGroupId.Conversations), presenter.state.value.page)
+        }
 
     @Test
     fun `B-L10N-008 the Language page lists every shipped language and shows a saved Spanish as chosen`() =

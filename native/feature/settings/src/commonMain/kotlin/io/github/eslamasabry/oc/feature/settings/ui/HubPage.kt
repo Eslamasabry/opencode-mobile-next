@@ -302,14 +302,6 @@ private fun ColumnScope.GroupBody(
                     selected = focused
                 }
             when {
-                row.id == SettingsRowId.PhraseChips ->
-                    KitIconSwitchRow(
-                        title = stringResource(Res.string.settingsPhraseChipsTitle),
-                        icon = KitIcons.chat,
-                        checked = state.phrases?.enabled ?: state.phraseChips,
-                        modifier = rowModifier,
-                        onCheckedChange = actions::onPhraseChips,
-                    )
                 row.door is SettingsDoor.Switch ->
                     KitIconSwitchRow(
                         title = title,
@@ -400,6 +392,11 @@ private fun rowValue(row: SettingsRowId, state: SettingsUi): String? {
     return when (row) {
         SettingsRowId.Language -> languageWords(state.language)
         SettingsRowId.Appearance -> modeWords(state.appearance.mode)
+        SettingsRowId.PhraseChips ->
+            stringResource(
+                if (state.phrases?.enabled ?: state.phraseChips) Res.string.settingsV3On
+                else Res.string.settingsV3Off
+            )
         SettingsRowId.Background -> state.notifications?.background?.let { backgroundWords(it) }
         SettingsRowId.Servers ->
             when {
