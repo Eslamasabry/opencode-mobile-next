@@ -1,7 +1,9 @@
 package io.github.eslamasabry.oc.feature.chat.composer
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -10,10 +12,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
@@ -62,6 +66,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerAdd
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerBox
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerChip
@@ -580,6 +585,15 @@ public fun BasicComposer(
                 state.draft.failure == null &&
                 !state.draft.sendBlocked &&
                 !state.pickingFile
+        // Voice: while words are drafted or the agent works, a small mic stays in the field and the
+        // big
+        // round button is Send (or Stop). The mic stays where the hold began until voice ends, so
+        // the
+        // button never changes under a finger.
+        val voiceActive = voice?.isActive(voiceField) == true
+        val inlineAtStart = remember(voiceActive) { typed || stopShown }
+        val inlineMic = if (voiceActive) inlineAtStart else typed || stopShown
+        val primaryIsStop = inlineMic && stopShown && !(typed && !waitingRequest)
         val sendLabel =
             stringResource(
                 when {
@@ -606,38 +620,60 @@ public fun BasicComposer(
             running = busy && !waitingRequest,
             field = {
                 if (!waitingRequest)
-                    KitField(
-                        state = field,
-                        // While a reply runs on a steering server the words join it (B-PROTO-025).
-                        label =
-                            if (busy && state.steers)
-                                stringResource(Res.string.composerFullSteerHint)
-                            else
-                                stringResource(
-                                    Res.string.upgradeComposerAsk,
-                                    state.models.agent?.takeUnless {
-                                        it.lowercase() in
-                                            setOf("build", "plan", "compaction", "title", "summary")
-                                    } ?: chrome.agentName(),
-                                ),
-                        kind = KitFieldKind.Multiline,
-                        // B6: one line when empty, so the conversation keeps its room above the
-                        // keyboard.
-                        multilineLines = 1..5,
-                        labelShown = false,
-                        framed = false,
-                        focusRequester = focus,
-                        enabled =
-                            if (editorReady && state.draft.ready) KitEnabled.Enabled
-                            else KitEnabled.Disabled(stringResource(Res.string.chatDraftRestoring)),
-                        onTextChanged = { accepted ->
-                            editor.userEditSerial += 1
-                            editor.lastReported = accepted
-                            repeatRevision = null
-                            actions.draftChanged(accepted)
-                        },
-                        modifier = Modifier.kitPromptOrigin().testTag("chat-composer-field"),
-                    )
+                    Box(Modifier.fillMaxWidth()) {
+                        KitField(
+                            state = field,
+                            // While a reply runs on a steering server the words join it
+                            // (B-PROTO-025).
+                            label =
+                                if (busy && state.steers)
+                                    stringResource(Res.string.composerFullSteerHint)
+                                else
+                                    stringResource(
+                                        Res.string.upgradeComposerAsk,
+                                        state.models.agent?.takeUnless {
+                                            it.lowercase() in
+                                                setOf(
+                                                    "build",
+                                                    "plan",
+                                                    "compaction",
+                                                    "title",
+                                                    "summary",
+                                                )
+                                        } ?: chrome.agentName(),
+                                    ),
+                            kind = KitFieldKind.Multiline,
+                            // B6: one line when empty, so the conversation keeps its room above the
+                            // keyboard.
+                            multilineLines = 1..5,
+                            labelShown = false,
+                            framed = false,
+                            focusRequester = focus,
+                            enabled =
+                                if (editorReady && state.draft.ready) KitEnabled.Enabled
+                                else
+                                    KitEnabled.Disabled(
+                                        stringResource(Res.string.chatDraftRestoring)
+                                    ),
+                            onTextChanged = { accepted ->
+                                editor.userEditSerial += 1
+                                editor.lastReported = accepted
+                                repeatRevision = null
+                                actions.draftChanged(accepted)
+                            },
+                            modifier =
+                                Modifier.kitPromptOrigin()
+                                    .testTag("chat-composer-field")
+                                    .padding(
+                                        end =
+                                            if (inlineMic && voice != null)
+                                                LocalKitTokens.current.minTarget.dp
+                                            else 0.dp
+                                    ),
+                        )
+                        if (inlineMic)
+                            voice?.InlineMic(voiceField, Modifier.align(Alignment.BottomEnd))
+                    }
             },
             leading = {
                 KitComposerAdd(
@@ -685,17 +721,17 @@ public fun BasicComposer(
                 chrome.rowChips()
             },
             trailing = {
-                if (stopShown && !(typed && !waitingRequest)) stopPart()
+                if (primaryIsStop) stopPart()
                 else
                     KitComposerPrimaryAction(
-                        hasMessage = typed,
+                        hasMessage = inlineMic,
                         mic = { voice?.Mic(voiceField, Modifier) },
                         send = {
                             KitComposerSend(
                                 label = sendLabel,
                                 onClick = send,
                                 enabled =
-                                    if (sendReady) KitEnabled.Enabled
+                                    if (sendReady && !voiceActive) KitEnabled.Enabled
                                     else
                                         KitEnabled.Disabled(
                                             stringResource(Res.string.kitComposerField)

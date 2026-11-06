@@ -38,3 +38,7 @@ One conflict: `NewConversationScreen.kt`. Adopt the upgrade's prompt bubble with
 ## 3. upg-liveline
 
 No textual conflicts. Retain current-step counts, gentle line transitions, accessibility announcements and plain error states. Move the new plural-resource helper to a composable top-level function so its callers use the resource API from a composable context. No existing preview-fix path is removed. History/source and formatter/diff review only; no compilation or tests.
+
+## 4. upg-voice
+
+One textual conflict: `SCREENS-UPGRADE.md`; retain both the new-chat and voice sections, giving voice its own heading. Automatic composer/voice merges reviewed for semantic conflicts: retain the upgrade in-field mic, stable hold position and dictation-without-send behavior, and retain N-05's + close callback and active conversation controls. `Actions` delegates to the same `Options` entry; that entry now uses the upgrade row design, preventing duplicate voice choices. Inline mic also installs the existing hold teaching tip. Old `startVoiceConversation` callers are removed together with the API. History/source, formatting and diff review only; no compilation or tests.

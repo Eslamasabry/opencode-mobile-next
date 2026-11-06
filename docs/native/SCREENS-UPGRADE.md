@@ -62,6 +62,10 @@ Kit: KitSheet growsInPlace, KitStartBox focusKey, KitStartingConversation phase/
 
 Gaps: “In a separate copy” still opens the project page's readiness/name step before chat (owner: feature/projects IsolatedTaskLaunch; chats cannot call it without a feature-to-feature dependency), so instant chat is still partial for that variant. Starters use project-safe suggestions only: folder facts (empty folder, history) are not readable before a conversation exists here. Back gesture on the model step closes the sheet rather than stepping back to agents. No compile, tests, goldens or device runs were done; ModelChoicesTest and NewConversationProjectTest call sites are kept source-compatible.
 
+## U12 — composer voice (dictate, never auto-send)
+
+Dictation lands in the box and is never sent for the person; live words show in the field while the mic is held and the box is restored on cancel (slide away). Empty box: big round mic (hold to dictate, tap also works). Drafting or while the agent works: a small mic stays inside the field and the round button is Send, or Stop when nothing is typed during a run (sending while working steers where the server steers). The mic keeps its place until voice ends. Long press no longer starts a voice conversation; it is the "Voice conversation" item in the + sheet. Gaps: the non-steering "Send after this reply" wording remains; the unbound FullComposer path keeps Stop in the chip row; the auto-send countdown code is unreachable but kept. Source checks only; no compile/tests.
+
 ## Coordinator validation remaining
 
 Compile this candidate, then validate Start success/definite failure/uncertain delivery and process death with chosen model/mode; compact layout with keyboard/large text/RTL; notice priority; message Details and teaching replay/reset; server rename; row/back gesture cancel/commit and reduced motion; empty/typed/attachment/busy/voice composer states; empty project facts and thumb-reachable starters. No runtime, screenshot, build or release qualification is claimed here.

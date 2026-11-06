@@ -86,7 +86,6 @@ import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveStopShort
 import io.github.eslamasabry.oc.ui.words.res.upgradeComposerAsk
 import io.github.eslamasabry.oc.ui.words.res.upgradeComposerFree
-import io.github.eslamasabry.oc.ui.words.res.voiceConversationTitle
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -115,7 +114,6 @@ fun ComposerScreen(
     mic: (@Composable () -> Unit)? = null,
     agentName: String = "OpenCode",
     freeModel: Boolean = false,
-    startVoiceConversation: (() -> Unit)? = null,
 ) {
     val currentActions by rememberUpdatedState(actions)
     val focus = LocalFocusManager.current
@@ -190,13 +188,7 @@ fun ComposerScreen(
                 }
             },
             trailing = {
-                FieldButtonSlot(
-                    state.button,
-                    actions,
-                    mic,
-                    quiet = state.glow,
-                    startVoiceConversation = startVoiceConversation,
-                )
+                FieldButtonSlot(state.button, actions, mic, quiet = state.glow)
             },
         )
     }
@@ -301,7 +293,6 @@ private fun FieldButtonSlot(
     actions: ComposerActions,
     mic: (@Composable () -> Unit)?,
     quiet: Boolean,
-    startVoiceConversation: (() -> Unit)?,
 ) {
     when (button) {
         FieldButton.None -> Unit
@@ -311,8 +302,6 @@ private fun FieldButtonSlot(
                     stringResource(Res.string.kitComposerVoice),
                     actions::onMic,
                     quiet = quiet,
-                    onLongClick = startVoiceConversation,
-                    longClickLabel = stringResource(Res.string.voiceConversationTitle),
                 )
         FieldButton.Send ->
             KitComposerSend(stringResource(Res.string.kitComposerSend), actions::onSend)

@@ -48,12 +48,24 @@ public class KitVoiceField(
 /** Contributed by `:feature:voice` (empty set = no mic, never a dead one). */
 public interface KitComposerVoice {
     /**
-     * The mic beside Send: tap to talk, hold to talk, slide away to cancel. Absent where voice
+     * The big round mic that stands in for Send while the box is empty: hold to dictate, slide away to cancel. Absent where voice
      * cannot work.
      */
     @Composable public fun Mic(field: KitVoiceField, modifier: Modifier)
 
-    /** Visible alternative to the mic's long press, drawn only while the plus menu is open. */
+    /**
+     * True while the mic is listening or writing. The composer keeps the mic where it started until
+     * this ends, so a hold is never cut by the button changing under the finger.
+     */
+    @Composable public fun isActive(field: KitVoiceField): Boolean = false
+
+    /**
+     * The small mic inside the field while a message is being drafted or the agent works: hold to
+     * dictate more. Absent where voice cannot work.
+     */
+    @Composable public fun InlineMic(field: KitVoiceField, modifier: Modifier) {}
+
+    /** The hands-free voice conversation, as its own item while the plus menu is open. */
     @Composable public fun Actions(field: KitVoiceField, modifier: Modifier) {}
 
     /**

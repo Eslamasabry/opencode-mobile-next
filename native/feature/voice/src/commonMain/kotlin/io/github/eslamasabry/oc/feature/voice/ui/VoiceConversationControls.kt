@@ -13,9 +13,12 @@ import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoice
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceList
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitVoicePill
@@ -36,14 +39,14 @@ internal fun VoiceConversationEntry(
             !state.conversation &&
             state.phase == MicPhase.Idle
     ) {
-        KitButton(
-            label = stringResource(Res.string.voiceConversationTitle),
+        KitRow(
+            title = stringResource(Res.string.voiceConversationTitle),
+            leading = KitRowLeading.Glyph(KitIcons.mic),
             onClick = {
                 onSelected()
                 presenter.startConversation()
             },
             modifier = modifier.testTag("voice-conversation-start"),
-            role = KitButtonRole.Tertiary,
         )
     }
 }

@@ -50,6 +50,9 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
  * hears [label] and [holdLabel] as the hint; holding is never the only way (a tap does the same work, ended by
  * Done).
  *
+ * [prominent] is the big round mic that stands in for Send while the box is empty; the quiet form sits inside the
+ * field while a message is being drafted, so more can be dictated.
+ *
  * States: idle, [active] (filled accent while voice runs), [enabled] false (dimmed, says [disabledReason]).
  * Motion: platform ripple; flat fill under reduced motion. Haptic: LongPress when the hold starts.
  */
@@ -66,6 +69,7 @@ public fun KitMicButton(
     holdLabel: String? = null,
     enabled: Boolean = true,
     disabledReason: String? = null,
+    prominent: Boolean = false,
 ) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
@@ -77,7 +81,8 @@ public fun KitMicButton(
     val holdEnd by rememberUpdatedState(onHoldEnd)
     val armedChanged by rememberUpdatedState(onArmedChanged)
     val interactions = remember { MutableInteractionSource() }
-    val ink = if (active) colors.onAccent else if (enabled) colors.text1 else colors.text3
+    val filled = active || prominent
+    val ink = if (filled) colors.onAccent else if (enabled) colors.text1 else colors.text3
     val indication = remember(platform, ink, reduced) { if (reduced) KitFillIndication(ink) else platform.pressIndication(ink) }
     val press =
         remember {
@@ -96,7 +101,7 @@ public fun KitMicButton(
         modifier
             .sizeIn(minWidth = tokens.minTarget.dp, minHeight = tokens.minTarget.dp)
             .clip(CircleShape)
-            .background(if (active) colors.accent else Color.Transparent)
+            .background(if (filled) colors.accent else Color.Transparent)
             .indication(interactions, indication)
             .testTag(MIC_TAG)
             .semantics {
