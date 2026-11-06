@@ -32,7 +32,15 @@ public enum class KitTrayKind {
     Clipboard,
     /** A saved or recent prompt to reuse (drawn with the document glyph). */
     History,
+    /** The commands launcher (a slash). */
+    Commands,
+    /** Clear the draft words (a cross). */
+    Clear,
+    /** Send later or repeat (a clock face). */
+    Schedule,
 }
+
+private const val PER_ROW = 4
 
 /** The caller closes the tray before running an action, preserving the editor and its keyboard. */
 public class KitTrayAction(
@@ -46,11 +54,13 @@ public class KitTrayAction(
 public fun KitComposerTray(actions: List<KitTrayAction>, modifier: Modifier = Modifier) {
     val colors = LocalKitColors.current
     Column(modifier.fillMaxWidth().testTag("kit-composer-tray")) {
+        // Four to a row: eight choices stay readable and 48 dp wide at large text sizes.
+        actions.chunked(PER_ROW).forEach { rowActions ->
         Row(
             Modifier.fillMaxWidth().padding(vertical = Space.S2.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
-            actions.forEach { action ->
+            rowActions.forEach { action ->
                 KitTappable(action.onPick, Modifier.weight(1f), onClickLabel = action.label) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -108,6 +118,44 @@ public fun KitComposerTray(actions: List<KitTrayAction>, modifier: Modifier = Mo
                                             stroke.width,
                                         )
                                     }
+                                    KitTrayKind.Commands -> {
+                                        // A slash, mirrored in right-to-left by the caller's layout.
+                                        drawLine(
+                                            colors.text1,
+                                            Offset(size.width * .34f, size.height * .86f),
+                                            Offset(size.width * .66f, size.height * .14f),
+                                            stroke.width,
+                                        )
+                                    }
+                                    KitTrayKind.Clear -> {
+                                        drawLine(
+                                            colors.text1,
+                                            Offset(size.width * .2f, size.height * .2f),
+                                            Offset(size.width * .8f, size.height * .8f),
+                                            stroke.width,
+                                        )
+                                        drawLine(
+                                            colors.text1,
+                                            Offset(size.width * .8f, size.height * .2f),
+                                            Offset(size.width * .2f, size.height * .8f),
+                                            stroke.width,
+                                        )
+                                    }
+                                    KitTrayKind.Schedule -> {
+                                        drawCircle(colors.text1, size.width * .42f, center, style = stroke)
+                                        drawLine(
+                                            colors.text1,
+                                            center,
+                                            Offset(size.width * .5f, size.height * .22f),
+                                            stroke.width,
+                                        )
+                                        drawLine(
+                                            colors.text1,
+                                            center,
+                                            Offset(size.width * .72f, size.height * .6f),
+                                            stroke.width,
+                                        )
+                                    }
                                     KitTrayKind.File,
                                     KitTrayKind.Clipboard,
                                     KitTrayKind.History -> {
@@ -136,6 +184,8 @@ public fun KitComposerTray(actions: List<KitTrayAction>, modifier: Modifier = Mo
                     }
                 }
             }
+            repeat(PER_ROW - rowActions.size) { Box(Modifier.weight(1f)) }
+        }
         }
         Box(Modifier.fillMaxWidth().size(1.dp).background(colors.hairline))
     }

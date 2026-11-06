@@ -65,7 +65,17 @@ internal class TranscriptFolds(
     val open: SnapshotStateMap<String, Boolean>,
     val full: SnapshotStateMap<String, Boolean>,
     val earlier: SnapshotStateMap<String, Int>,
-)
+) {
+    /** Something the person opened is still open (the bar shows Collapse all steps). */
+    val anyOpen: Boolean
+        get() = open.values.any { it } || full.values.any { it }
+
+    /** One tap folds every open step and fold on the page (Flutter `_collapseAllSteps`). */
+    fun collapseAll() {
+        open.keys.toList().forEach { open[it] = false }
+        full.keys.toList().forEach { full[it] = false }
+    }
+}
 
 @Composable
 internal fun rememberTranscriptFolds(): TranscriptFolds = remember {

@@ -165,6 +165,9 @@ public class ComposerVoicePresenter(
     private var sawActive = false
     private var listeningSince: Instant? = null
     private var earlyEnd: EarlyEnd? = null
+
+    /** "Insert and send": the words are written, then go through the composer's one send. */
+    private var sendAfterWrite = false
     private var countdown: AutoSendCountdown? = null
 
     /**
@@ -670,6 +673,16 @@ public class ComposerVoicePresenter(
         }
     }
 
+    /**
+     * "Insert and send" (Flutter voice composer): stop listening, write the words into the box and
+     * send them through the composer's own send. A dictation that hears nothing sends nothing.
+     */
+    public fun doneAndSend() {
+        if (mutable.value.mode == VoiceMode.Conversation) return
+        sendAfterWrite = true
+        done()
+    }
+
     /** "Cancel": the words said are dropped and the field stays as it was. */
     public fun cancel() {
         when (mutable.value.phase) {
@@ -878,7 +891,9 @@ public class ComposerVoicePresenter(
         // Dictation never sends by itself: the words wait in the box for the person to send.
         merge(words)
         previewBase = null
+        val send = sendAfterWrite
         endUi(null)
+        if (send) field?.let { f -> if (f.canSend() && f.text().isNotBlank()) f.send() }
     }
 
     /** Shows the words heard so far in the box, around where the person's cursor was. */
@@ -909,6 +924,7 @@ public class ComposerVoicePresenter(
         stopTicking()
         listeningSince = null
         earlyEnd = null
+        sendAfterWrite = false
         mutable.update {
             it.copy(
                 phase = MicPhase.Idle,

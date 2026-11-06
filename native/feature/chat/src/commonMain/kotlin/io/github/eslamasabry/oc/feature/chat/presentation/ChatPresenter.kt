@@ -365,6 +365,28 @@ public class ChatPresenter(
         launcher.launch { world.reload() }
     }
 
+    override fun retryLastPrompt() {
+        val text = newestPrompt()?.text?.takeIf { it.isNotBlank() } ?: return
+        launcher.launch { world.sendAgain(text) }
+    }
+
+    override fun undoLastPrompt() {
+        val row = newestPrompt() ?: return
+        val id = RowIds.messageIdOf(row) ?: return
+        nav.open(ReviewRoute.UndoFromHere(world.ref, id))
+    }
+
+    override fun openNewConversation() {
+        nav.open(io.github.eslamasabry.oc.ui.routes.ChatsRoute.New(profile = world.ref.profileId))
+    }
+
+    override fun openConversations() {
+        nav.land()
+    }
+
+    private fun newestPrompt(): PromptRow? =
+        world.transcript.value.rows.firstOrNull { it is PromptRow } as? PromptRow
+
     override fun stop() {
         if (local.value.stopping) return
         stopInFlight = true
@@ -391,6 +413,23 @@ public class ChatPresenter(
     internal fun settleStop() {
         if (!stopInFlight && local.value.stopping && !world.transcript.value.run.busy)
             local.update { it.copy(stopping = false) }
+    }
+
+    override fun useModelAndResend(turnId: String, providerId: String, modelId: String) {
+        val t = world.transcript.value
+        val words = t.rows.firstOrNull { it is PromptRow && it.turnId == turnId } as? PromptRow
+        val text = words?.text?.takeIf { it.isNotBlank() } ?: return
+        val choice =
+            world.models.value.choices.firstOrNull {
+                it.providerId == providerId && it.modelId == modelId
+            } ?: return
+        launcher.launch {
+            when (val picked = world.selectModel(choice)) {
+                // A refused switch keeps the old model and sends nothing.
+                is Outcome.Failed -> local.update { it.copy(actionFailure = picked.failure) }
+                is Outcome.Ok -> world.sendAgain(text)
+            }
+        }
     }
 
     override fun continueReply(words: String) {
@@ -491,6 +530,9 @@ public class ChatPresenter(
             undo = c.sessionRevert,
             changes = true,
             compact = c.sessionCompact,
+            shell = c.conversationShellOn,
+            files = c.fileBrowsing,
+            slashCommands = c.slashCommands,
         )
 
     // ---- Find (plan 09 §6.6) ----
@@ -578,6 +620,17 @@ public class ChatPresenter(
             val result = world.compact()
             if (result is Outcome.Failed) local.update { it.copy(actionFailure = result.failure) }
         }
+    }
+
+    override fun compactRequested() {
+        if (world.transcript.value.run.busy || !world.capabilities.value.sessionCompact) return
+        local.update { it.copy(confirm = ChatConfirm.Compact) }
+    }
+
+    override fun confirmCompact() {
+        if (local.value.confirm != ChatConfirm.Compact) return
+        local.update { it.copy(confirm = null) }
+        compactAgain()
     }
 
     override fun openTimeline() {

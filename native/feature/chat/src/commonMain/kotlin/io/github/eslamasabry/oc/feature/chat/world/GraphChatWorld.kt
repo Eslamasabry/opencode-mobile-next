@@ -2082,6 +2082,41 @@ internal class GraphChatWorld(
             .compactSession(sid, ModelRef(choice.providerId, choice.modelId))
     }
 
+    override suspend fun runShell(command: String): Outcome<Unit> {
+        if (readOnlyNow()) return readOnlyFailure()
+        if (command.isBlank()) return Outcome.Failed(Failure.Refused(RefusalReason.DispatchUncertain))
+        val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        if (!capabilities.value.conversationShellOn)
+            return Outcome.Failed(Failure.Unavailable(FeatureId("conversationShell")))
+        val selection =
+            models.value.selected
+                ?.takeUnless { models.value.displayOnly }
+                ?.let {
+                    ModelSelection(
+                        ModelRef(it.providerId, it.modelId),
+                        models.value.variant.takeIf { v -> v.isNotEmpty() },
+                    )
+                }
+        val agent = models.value.agent?.takeIf { it.isNotBlank() } ?: "build"
+        return (a.graph as ChatGraphAccessors).chatGateway.shell(sid, command.trim(), agent, selection)
+    }
+
+    private fun shells(): io.github.eslamasabry.oc.core.domain.ManagedShellGateway? =
+        (currentAttached()?.graph as? ChatGraphAccessors)?.chatOperations
+
+    override suspend fun runningShells() =
+        shells()?.runningShells() ?: Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+
+    override suspend fun shellOutput(id: String, cursor: Long) =
+        shells()?.managedShellOutput(id, cursor) ?: Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+
+    override suspend fun stopShell(id: String) =
+        shells()?.stopManagedShell(id) ?: Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+
+    override suspend fun setShellTimeout(id: String, timeout: kotlin.time.Duration?) =
+        shells()?.setManagedShellTimeout(id, timeout)
+            ?: Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+
     override suspend fun fork(from: MessageId): Outcome<SessionId> {
         if (readOnlyNow()) return readOnlyFailure()
         val graph =

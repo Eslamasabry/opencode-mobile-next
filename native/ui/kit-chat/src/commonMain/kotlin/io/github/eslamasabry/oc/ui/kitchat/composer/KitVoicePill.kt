@@ -57,6 +57,8 @@ public fun KitVoicePill(
     attention: Boolean = false,
     primary: KitLineAction? = null,
     secondary: KitLineAction? = null,
+    /** A third choice between Cancel and the main one (tap dictation: "Send" = insert and send). */
+    extra: KitLineAction? = null,
 ) {
     val colors = LocalKitColors.current
     val reduced = LocalKitMotion.current.reduced
@@ -85,7 +87,7 @@ public fun KitVoicePill(
         if (!words.isNullOrBlank()) {
             KitText(words, modifier = Modifier.testTag(VOICE_WORDS_TAG), role = TypeRole.Body, maxLines = 4)
         }
-        if (primary != null || secondary != null) {
+        if (primary != null || secondary != null || extra != null) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Space.S2.dp, Alignment.End)) {
                 if (secondary != null) {
                     KitButton(
@@ -93,6 +95,14 @@ public fun KitVoicePill(
                         onClick = secondary.onClick,
                         role = KitButtonRole.Tertiary,
                         modifier = secondary.testTag?.let { Modifier.testTag(it) } ?: Modifier,
+                    )
+                }
+                if (extra != null) {
+                    KitButton(
+                        label = extra.label,
+                        onClick = extra.onClick,
+                        role = KitButtonRole.Tertiary,
+                        modifier = extra.testTag?.let { Modifier.testTag(it) } ?: Modifier,
                     )
                 }
                 if (primary != null) {
