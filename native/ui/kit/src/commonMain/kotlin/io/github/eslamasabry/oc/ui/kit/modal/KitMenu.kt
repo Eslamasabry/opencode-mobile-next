@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.modal
 
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.fadeIn
@@ -151,7 +152,9 @@ public fun KitMenu(
     Box(modifier) {
         anchor()
         if (expanded && items.isNotEmpty()) {
-            val gutter = LocalKitTokens.current.labelGap
+            // The window margin is the page's gutter in pixels (a dp count used as pixels left the menu ~10 px from
+            // the screen's edge under a full-width row).
+            val gutter = with(LocalDensity.current) { LocalKitTokens.current.gutter.dp.roundToPx() }
             val provider = remember(gutter) { MenuPosition(gutter) }
             Popup(
                 popupPositionProvider = provider,
