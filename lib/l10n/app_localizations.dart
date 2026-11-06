@@ -7041,7 +7041,7 @@ abstract class AppLocalizations {
   /// About screen AI assistance provenance and experimental desktop limitation
   ///
   /// In en, this message translates to:
-  /// **'Android is the supported platform; desktop builds are experimental.'**
+  /// **'OpenCode Mobile is an Android app.'**
   String get e7SettingsAlphaBody;
 
   /// Settings and appearance user interface.

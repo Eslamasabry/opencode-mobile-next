@@ -3062,7 +3062,7 @@
   "@e7SettingsDetailUi27": {
     "description": "Settings and appearance user interface."
   },
-  "e7SettingsAlphaBody": "Android is the supported platform; desktop builds are experimental.",
+  "e7SettingsAlphaBody": "OpenCode Mobile is an Android app.",
   "@e7SettingsAlphaBody": {
     "description": "About screen AI assistance provenance and experimental desktop limitation"
   },

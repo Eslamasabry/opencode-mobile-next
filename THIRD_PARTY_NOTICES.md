@@ -431,7 +431,8 @@ lives in `packages/opencode_sdk/`, and is covered by this project's
 ### Notes on individual entries
 
 - **`dbus` (MPL-2.0)** is reached only through `flutter_secure_storage_linux`
-  and is therefore present in the Linux desktop build, not the Android APK.
+  and was present only in the Linux desktop build (dropped in 2.1.4), not the
+  Android APK.
   It is used unmodified; MPL-2.0 source for it is available from the package
   on pub.dev. Its `LICENSE` is reproduced in full at `LICENSES/MPL-2.0.txt`.
 - **`record` and every `record_*` package** ship the openapi4j-attributed

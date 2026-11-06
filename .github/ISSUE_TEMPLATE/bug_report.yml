@@ -1,5 +1,5 @@
 name: Bug report
-description: Something in the app is broken — Android today, Linux/Windows desktop in alpha
+description: Something in the Android app is broken
 labels: ["bug", "needs triage"]
 body:
   - type: markdown
@@ -8,9 +8,8 @@ body:
         **OpenCode Mobile is an independent community project — and a
         *vibecoded* one: it is built heavily with AI assistance and is in
         public alpha.** It is not built, maintained, endorsed by, or
-        affiliated with the official OpenCode team. Rough edges are expected;
-        Windows desktop in particular builds but has not been hardware-tested
-        — Windows reports are contributor testing, and they are welcome. Bugs
+        affiliated with the official OpenCode team. Rough edges are expected.
+        The app is Android only; desktop builds were dropped in 2.1.4. Bugs
         in the OpenCode server itself belong upstream, not here — see
         [SUPPORT.md](https://github.com/Eslamasabry/opencode-mobile-next/blob/master/SUPPORT.md).
 
@@ -62,14 +61,9 @@ body:
     id: platform
     attributes:
       label: Platform
-      description: |
-        Windows desktop is experimental: it builds but has not been
-        hardware-tested, so Windows reports are contributor testing.
       options:
         - Android phone
         - Android tablet
-        - Linux desktop (alpha)
-        - Windows desktop (experimental — contributor-tested)
         - Other / not sure
     validations:
       required: true

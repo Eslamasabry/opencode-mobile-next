@@ -3836,7 +3836,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get e7SettingsDetailUi27 => '引用';
 
   @override
-  String get e7SettingsAlphaBody => 'Android 是受支持的平台；桌面版仍为实验性。';
+  String get e7SettingsAlphaBody => 'OpenCode Mobile 是一款 Android 应用。';
 
   @override
   String get e7SettingsNonAffiliation =>

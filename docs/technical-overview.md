@@ -9,8 +9,11 @@ the supported server backends, building, releasing, and the code layout.
 | Platform | State |
 |---|---|
 | **Android** (phone/tablet) | Primary target. Emulator- and device-verified, 1,200+ widget/transport tests, Shorebird-patched previews. |
-| **Linux desktop** (x64) | Alpha. Builds, packages (`.deb` + tarball), CI-gated — the window has now been seen on a display (Xvfb, 1440x900, connected to a live server), but the `.deb` has still not been installed on a real machine. Contributor testing required. |
-| **Windows desktop** (x64) | Experimental. Compiled and packaged in CI; routine hands-on testing is still needed. Please file Windows reports. |
+| **Linux and Windows desktop** | Dropped in 2.1.4. The `linux/` and `windows/` targets, their CI workflows and packaging were removed; some desktop-only code paths remain in `lib/` until they are cleaned up. |
+
+A native Kotlin rewrite (Kotlin Multiplatform + Jetpack Compose) is under way
+on the `native/*` branches. The Flutter app remains the released app until the native one
+reaches parity.
 
 The app ships **English and Arabic** (`lib/l10n/app_en.arb`, `app_ar.arb`, a
 language picker in Settings); what is still English-only is listed in
@@ -203,7 +206,6 @@ there is no generated OpenCode 1 SDK or generator.
 flutter pub get
 flutter run                  # debug on device/emulator
 flutter build apk --release
-flutter build linux          # desktop build, same codebase
 ```
 
 The Flutter pin matters: release artifacts and the local test suite use
@@ -355,9 +357,8 @@ UI talks to domain gateways, never directly to `api2/`, `codex/` or `paseo/`. Se
   under OpenCode 2
 - [docs/design-inspiration.md](design-inspiration.md) — the researched
   pattern library behind the facelift
-- [docs/desktop-feasibility.md](desktop-feasibility.md) — Linux desktop
-  findings. The desktop build compiles and runs; it has no dedicated
-  interaction layer yet and should be treated as experimental.
+- [docs/desktop-feasibility.md](desktop-feasibility.md) — historical Linux
+  desktop findings; desktop builds were dropped in 2.1.4.
 - [OpenCode 2 capability gaps](opencode2-capability-gaps-ux.md) — supported
   operations and intentionally unavailable features
 - [docs/showcase-video-plan.md](showcase-video-plan.md) — the showcase

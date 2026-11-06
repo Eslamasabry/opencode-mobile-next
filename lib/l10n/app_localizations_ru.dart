@@ -4160,8 +4160,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get e7SettingsDetailUi27 => 'References';
 
   @override
-  String get e7SettingsAlphaBody =>
-      'Android is the supported platform; desktop builds are experimental.';
+  String get e7SettingsAlphaBody => 'OpenCode Mobile is an Android app.';
 
   @override
   String get e7SettingsNonAffiliation =>

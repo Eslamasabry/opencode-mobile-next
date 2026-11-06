@@ -27,12 +27,10 @@ const String nonAffiliationDisclaimer =
     'OpenCode Mobile is an independent community project. It is not built, '
     'maintained, endorsed by, or affiliated with the official OpenCode team.';
 
-/// Build provenance is independent of the Android release channel. Desktop
-/// readiness is still disclosed until those builds have hardware evidence.
+/// Build provenance is independent of the Android release channel.
 const String buildProvenanceBody =
     'This independent app is built heavily with AI assistance. '
-    'Android is the primary supported platform. Desktop builds are '
-    'experimental and have not been hardware-tested. '
+    'It is an Android app. '
     'Report what breaks to help improve the app.';
 
 /// Settings › About (target-ia §1.3 row 22): which build this is, what it
