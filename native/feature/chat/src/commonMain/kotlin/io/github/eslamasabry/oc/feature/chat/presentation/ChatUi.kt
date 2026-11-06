@@ -455,4 +455,13 @@ public interface ChatActions {
 
     /** Recovery for a missing/rejected provider credential; opens the visible settings path. */
     public fun openSignInSettings() {}
+
+    /** Error card: "Open providers" (the provider sign-ins of this conversation's server). */
+    public fun openProviders() {}
+
+    /**
+     * Error card: "Use {model} and resend". Switches this conversation to the model, then sends
+     * the failed turn's prompt again as it was ([turnId] names the turn).
+     */
+    public fun useModelAndResend(turnId: String, providerId: String, modelId: String) {}
 }

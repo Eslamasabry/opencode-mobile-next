@@ -68,4 +68,7 @@ public class ComposerChrome(
     public val rowChips: @Composable () -> Unit = {},
     public val freeModel: () -> Boolean = { false },
     public val agentName: () -> String = { "OpenCode" },
+    /** An error card's "Choose another model" asks the composer to open its model list once. */
+    public val modelPickerRequest: () -> Long? = { null },
+    public val modelPickerDone: (id: Long) -> Unit = {},
 )

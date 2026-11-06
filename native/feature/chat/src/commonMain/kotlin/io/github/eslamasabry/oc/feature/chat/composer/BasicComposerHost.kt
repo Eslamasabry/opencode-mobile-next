@@ -356,6 +356,15 @@ public fun BasicComposer(
         )
     var modelsOpen by remember(state.targetKey) { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
+    // Error card -> "Choose another model": open the list once, then acknowledge.
+    val pickerId = chrome.modelPickerRequest()
+    LaunchedEffect(pickerId) {
+        if (pickerId != null) {
+            focusManager.clearFocus()
+            modelsOpen = true
+            chrome.modelPickerDone(pickerId)
+        }
+    }
     var addOpen by remember(state.targetKey) { mutableStateOf(false) }
     var historyOpen by remember(state.targetKey) { mutableStateOf(false) }
     val selectAndClose: (ComposerModel?) -> Unit = { choice ->

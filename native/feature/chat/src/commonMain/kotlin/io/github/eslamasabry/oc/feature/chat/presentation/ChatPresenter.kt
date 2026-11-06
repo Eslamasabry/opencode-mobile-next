@@ -393,6 +393,23 @@ public class ChatPresenter(
             local.update { it.copy(stopping = false) }
     }
 
+    override fun useModelAndResend(turnId: String, providerId: String, modelId: String) {
+        val t = world.transcript.value
+        val words = t.rows.firstOrNull { it is PromptRow && it.turnId == turnId } as? PromptRow
+        val text = words?.text?.takeIf { it.isNotBlank() } ?: return
+        val choice =
+            world.models.value.choices.firstOrNull {
+                it.providerId == providerId && it.modelId == modelId
+            } ?: return
+        launcher.launch {
+            when (val picked = world.selectModel(choice)) {
+                // A refused switch keeps the old model and sends nothing.
+                is Outcome.Failed -> local.update { it.copy(actionFailure = picked.failure) }
+                is Outcome.Ok -> world.sendAgain(text)
+            }
+        }
+    }
+
     override fun continueReply(words: String) {
         if (words.isBlank()) return
         launcher.launch { world.sendAgain(words) }

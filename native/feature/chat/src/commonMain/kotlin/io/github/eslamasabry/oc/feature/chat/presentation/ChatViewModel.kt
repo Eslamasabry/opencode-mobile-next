@@ -59,6 +59,8 @@ public class ChatViewModel(
         presenter.states(viewModelScope, world.work, SharingStarted.WhileSubscribed(STOP_AFTER_MS))
 
     init {
+        // The error card suggests a model by name only once the catalog is read.
+        viewModelScope.launch { if (world.models.value.choices.isEmpty()) world.loadModels() }
         route.requestId?.let { id ->
             viewModelScope.launch {
                 world.requests.collect { model ->
@@ -105,6 +107,15 @@ public class ChatViewModel(
     override fun leaveRequested(): Unit = presenter.leaveRequested()
 
     override fun openGit(): Unit = nav.open(GitRoute(route.ref))
+
+    override fun openProviders(): Unit =
+        nav.open(io.github.eslamasabry.oc.ui.routes.ProvidersRoute(route.ref.profileId))
+
+    override fun useModelAndResend(turnId: String, providerId: String, modelId: String): Unit =
+        presenter.useModelAndResend(turnId, providerId, modelId)
+
+    /** The models the error card may suggest (safe catalog projection). */
+    public val models = world.models
 
     override fun openSignInSettings(): Unit =
         nav.open(io.github.eslamasabry.oc.ui.routes.SettingsRoute.Home)
