@@ -171,7 +171,8 @@ class AllConversationsScreenTest {
             onNodeWithText("Active").assertExists()
             onNodeWithText("Archived").performClick()
             assertEquals(listOf("archive-filter"), actions.calls)
-            onNodeWithContentDescription("Filter").performClick()
+            // The search field's filter menu: a worded button on a wide window, a round glyph on a narrow one.
+            onNode(hasContentDescription("Filter") or hasText("Filter")).performClick()
             onNodeWithText("two").performClick()
             assertEquals(listOf("archive-filter", "project:/two"), actions.calls)
         }
