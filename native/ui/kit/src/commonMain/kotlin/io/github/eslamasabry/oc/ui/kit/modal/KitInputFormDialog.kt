@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.modal
 
+import androidx.compose.foundation.text.input.selectAll
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier

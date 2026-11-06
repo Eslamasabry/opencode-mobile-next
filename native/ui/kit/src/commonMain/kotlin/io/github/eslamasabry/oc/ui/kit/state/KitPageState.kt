@@ -130,7 +130,8 @@ public fun KitPageState(
                     KitDetailsFold(
                         label = stringResource(Res.string.kitDetails),
                         copyLabel = stringResource(Res.string.kitCopyDetails),
-                        text = details,
+                        // Plain codes and short reasons; technical text goes through the Redactor's `text` slot.
+                        notes = listOf(details),
                     )
                 }
                 if (slow && onSlow.isNotEmpty()) {
