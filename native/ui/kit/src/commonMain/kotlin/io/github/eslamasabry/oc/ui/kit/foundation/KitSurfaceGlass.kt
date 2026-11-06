@@ -72,7 +72,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 
 /** The picture behind one page's glass panes. Made by `KitLiveBackground`; panes read it from [LocalKitGlassBackdrop]. */
 @Stable
-public class KitGlassBackdrop internal constructor() {
+internal class KitGlassBackdrop {
     internal var layer: GraphicsLayer? = null
     internal var origin: Offset = Offset.Zero
     internal var root: LayoutCoordinates? = null
@@ -135,6 +135,24 @@ internal fun kitGlassBlurs(backdrop: KitGlassBackdrop?): Boolean {
     if (LocalKitMotion.current.reduced || signals.highContrast) return false
     val density = LocalDensity.current.density
     return remember(platform, density) { platform.frostEffect(FrostSpec(1f, FROST_SATURATION, 0f), density) != null }
+}
+
+/**
+ * A sheet's, a dialog's or a menu's own panel under Glass: its frosted pane (role sheet, Dart `KitSurfaceRole.sheet`,
+ * `kit_style_glass.dart:62`, `:100`), or null under every other style, where the part keeps its own fill exactly as
+ * before.
+ */
+@Composable
+internal fun kitGlassSheet(shape: io.github.eslamasabry.oc.ui.design.tokens.KitShapeId, ownFill: Color): Modifier? {
+    if (LocalKitStyle.current.style != Style.Glass) return null
+    return kitSurfaceLook(
+        KitSurfaceInput(
+            io.github.eslamasabry.oc.ui.design.style.SurfaceRole.Sheet,
+            shape,
+            io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel.Surface2,
+            ownFill = ownFill,
+        )
+    ).modifier
 }
 
 /** The Glass pane's face (Dart `_KitSurfacePainter.paint`): shadows outside it, then the tint, the glow and the rim. */

@@ -1,6 +1,9 @@
 package io.github.eslamasabry.oc.ui.design.effects
 
-/** Exactly two places frost (owner rule R3, D10): the composer and the chat header. No other blur exists. */
+/**
+ * Exactly two places frost under the strength choice (owner rule R3, D10): the composer and the chat header. The Glass
+ * style (owner, 2026-11-05) blurs its own panes through the same platform effect (`KitSurfaceGlass`, order 34).
+ */
 public enum class FrostRole { Composer, ChatHeader }
 
 /**

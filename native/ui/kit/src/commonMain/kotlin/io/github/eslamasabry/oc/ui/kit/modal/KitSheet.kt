@@ -78,6 +78,7 @@ import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
+import io.github.eslamasabry.oc.ui.kit.foundation.kitGlassSheet
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
@@ -370,6 +371,7 @@ private fun SheetLayer(state: KitSheetHostState) {
                                 .predictiveShrink(back, TransformOrigin(0.5f, 1f))
                                 .clip(KitShapeId.Sheet.shape()),
                             handle = true,
+                            shape = KitShapeId.Sheet,
                         )
                     }
                 }
@@ -394,6 +396,7 @@ private fun SheetLayer(state: KitSheetHostState) {
                                 .predictiveShrink(back, TransformOrigin.Center)
                                 .clip(KitShapeId.Dialog.shape()),
                             handle = false,
+                            shape = KitShapeId.Dialog,
                         )
                     }
                 }
@@ -411,6 +414,7 @@ private fun SheetLayer(state: KitSheetHostState) {
                                 .fillMaxHeight()
                                 .predictiveShrink(back, TransformOrigin(1f, 0.5f)),
                             handle = false,
+                            shape = KitShapeId.Square,
                         )
                     }
                 }
@@ -432,12 +436,14 @@ internal fun Modifier.predictiveShrink(back: KitBackProgress, origin: TransformO
     }
 
 @Composable
-private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean) {
+private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean, shape: KitShapeId) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
+    // Glass: the sheet is a frosted pane (opaque over the page whenever nothing blurs); every other style keeps surface2.
+    val face = kitGlassSheet(shape, colors.surface2) ?: Modifier.background(colors.surface2)
     Column(
         modifier
-            .background(colors.surface2)
+            .then(face)
             .pointerInput(Unit) { detectTapGestures {} } // taps on the sheet never reach the scrim
             .semantics {
                 paneTitle = entry.title
