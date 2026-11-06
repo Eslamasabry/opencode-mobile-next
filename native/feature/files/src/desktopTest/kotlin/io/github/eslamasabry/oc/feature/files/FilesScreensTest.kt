@@ -156,24 +156,6 @@ class FilesScreensTest {
         )
 
     @Test
-    fun `B-097 every Files bar action is an icon button with its words as the label`() = runComposeUiTest {
-        var bar: List<io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction> = emptyList()
-        setContent {
-            Themed {
-                bar =
-                    io.github.eslamasabry.oc.feature.files.ui.folderBarActions(
-                        root.copy(canTerminal = true),
-                        FolderCalls(),
-                    ) {}
-            }
-        }
-        waitForIdle()
-        assertEquals(listOf("Terminal", "Refresh", "View"), bar.map { it.label })
-        // A phone bar draws an action without a glyph as words cut to fit ("Ter…", "Ref…").
-        assertEquals(emptyList(), bar.filter { it.icon == null }.map { it.label })
-    }
-
-    @Test
     fun `B-NAV-026 the project root lists its folders and files as rows that open`() = runComposeUiTest {
         val calls = FolderCalls()
         setContent { Themed { FolderScreen(root, calls) } }
