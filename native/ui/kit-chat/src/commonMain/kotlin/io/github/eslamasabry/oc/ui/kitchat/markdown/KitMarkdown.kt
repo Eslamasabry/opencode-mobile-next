@@ -700,10 +700,13 @@ private fun MdText(
                             val a = minOf(head.left, tail.left)
                             val b = maxOf(head.right, tail.right)
                             val base = layout.getLineBaseline(line)
+                            // Kept inside the reading column: a run that starts a line sat 3 dp left of the text's edge.
+                            val left = maxOf(0f, a - padX)
+                            val right = minOf(this.size.width, b + padX)
                             drawRoundRect(
                                 tint,
-                                topLeft = Offset(a - padX, base - size * .92f),
-                                size = Size(b - a + 2 * padX, size * 1.22f),
+                                topLeft = Offset(left, base - size * .92f),
+                                size = Size(right - left, size * 1.22f),
                                 cornerRadius = corner,
                             )
                         }
