@@ -399,7 +399,7 @@ public class SetupEngine(
             else ->
                 base.copy(
                     script = scriptPrelude + component.installScript,
-                    labels = mapOf("retry" to words.stageRetrying),
+                    labels = mapOf("retry" to words.stageRetrying, "compat" to words.stageCompat),
                     agentUser = component.agentUser,
                 )
         }

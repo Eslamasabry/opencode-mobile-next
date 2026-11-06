@@ -93,7 +93,7 @@ class AgentHostJobTest {
         assertTrue(AgentNode.INSTALL.startsWith("set -eu\n[ \"\$(id -u)\" = 1000 ]"))
         assertTrue("x86_64|amd64) node_arch=x64; node_sha=${AgentNode.X64_SHA256} ;;" in AgentNode.INSTALL)
         assertTrue("aarch64|arm64) node_arch=arm64; node_sha=${AgentNode.ARM64_SHA256} ;;" in AgentNode.INSTALL)
-        assertTrue(AgentNode.INSTALL.indexOf("oc_download") < AgentNode.INSTALL.indexOf("tar -xzf"))
+        assertTrue(AgentNode.INSTALL.indexOf("oc_download") < AgentNode.INSTALL.indexOf("oc_untar"))
         assertEquals(
             "set -eu\n[ \"\$(/home/oc/.local/node/bin/node --version)\" = 'v24.21.0' ]\nprintf '%s\\n' 'v24.21.0'\n",
             AgentNode.CHECK,

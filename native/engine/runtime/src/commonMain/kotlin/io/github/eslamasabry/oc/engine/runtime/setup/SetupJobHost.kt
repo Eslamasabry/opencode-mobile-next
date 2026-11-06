@@ -87,6 +87,8 @@ public data class SetupWords(
     val stageUnpackingLinux: String,
     /** phoneSetupStageRetrying */
     val stageRetrying: String,
+    /** phoneSetupStageCompat */
+    val stageCompat: String,
     /** aiteamComponentAddingTitle(names joined by phoneSetupStartListPair/Separator) */
     val addingTitle: (List<String>) -> String,
 )

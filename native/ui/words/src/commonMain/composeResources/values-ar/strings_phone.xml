@@ -560,6 +560,7 @@
     <string name="settingsV3SavedOn">يُحفظ على %1$s. التطبيقات الأخرى التي تستخدم %1$s تحصل على هذا أيضًا.</string>
     <string name="settingsV3UseMyDefaultDone">أُعيد على %1$s إلى اختياراتك: %2$s.</string>
     <string name="phoneSetupStageRetrying">توقف مؤقتًا. جارٍ المحاولة مجددًا</string>
+    <string name="phoneSetupStageCompat">جارٍ المحاولة مجددًا في وضع التوافق</string>
     <string name="linuxMgrRow">لينكس</string>
     <string name="linuxMgrRunning">ما يعمل الآن</string>
     <string name="linuxMgrRunningDetail">ما يعمل داخل لينكس وإيقافه</string>

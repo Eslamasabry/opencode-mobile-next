@@ -43,6 +43,7 @@ public data class SetupComponentTitles(
     val stageUnpackingLinux: String = "Unpacking Linux base", // phoneSetupStageUnpackingLinux
     val stageStarting: String = "Starting OpenCode", // phoneSetupStageStarting
     val stageRetrying: String = "Interrupted. Trying again", // phoneSetupStageRetrying
+    val stageCompat: String = "Trying again in compatibility mode", // phoneSetupStageCompat
     val stageAppDownloading: String = "Downloading", // setupAppStageDownloading
 )
 

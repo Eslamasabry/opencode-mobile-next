@@ -517,6 +517,7 @@
     <string name="settingsV3SavedOn">已保存在 %1$s 上。使用 %1$s 的其他应用也会应用此设置。</string>
     <string name="settingsV3UseMyDefaultDone">已将 %1$s 重置为你自己的选择：%2$s。</string>
     <string name="phoneSetupStageRetrying">已中断。正在重试</string>
+    <string name="phoneSetupStageCompat">正在以兼容模式重试</string>
     <string name="linuxMgrRow">Linux</string>
     <string name="linuxMgrRunning">运行中</string>
     <string name="linuxMgrRunningDetail">Linux 内运行的内容，以及停止它</string>

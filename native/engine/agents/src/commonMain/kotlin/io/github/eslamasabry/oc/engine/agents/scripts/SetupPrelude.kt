@@ -20,8 +20,14 @@ oc_fetch() {
   rm -f "${'$'}oc_rc_file" "${'$'}oc_http_file"
   (
     oc_r=0
-    curl -fsSL --connect-timeout 20 \
-      -C - -o "${'$'}oc_file" --write-out '%{http_code}' "${'$'}oc_url" > "${'$'}oc_http_file" || oc_r=${'$'}?
+    case ${'$'}{oc_tool:-curl} in
+      wget)
+        wget -q -c --timeout=20 -O "${'$'}oc_file" "${'$'}oc_url" || oc_r=${'$'}?
+        echo 200 > "${'$'}oc_http_file" ;;
+      *)
+        curl -fsSL --connect-timeout 20 ${'$'}{oc_curl_opts:-} \
+          -C - -o "${'$'}oc_file" --write-out '%{http_code}' "${'$'}oc_url" > "${'$'}oc_http_file" || oc_r=${'$'}? ;;
+    esac
     echo "${'$'}oc_r" > "${'$'}oc_rc_file"
   ) &
   while [ ! -s "${'$'}oc_rc_file" ]; do
@@ -33,6 +39,89 @@ oc_fetch() {
   oc_http=${'$'}(cat "${'$'}oc_http_file")
   rm -f "${'$'}oc_rc_file" "${'$'}oc_http_file"
 }
+# Asks the app to download ${'$'}oc_url into ${'$'}oc_file. The app answers with two
+# marker files next to FILE: -ack at once (an app that does not know the
+# request never writes it, so we give up after OC_ACK_POLLS polls), then
+# -done holding "ok" or "fail <reason>". Progress is the app's own
+# `::oc bytes` lines.
+oc_app_fetch() {
+  case ${'$'}oc_file in /*) oc_abs=${'$'}oc_file ;; *) oc_abs=${'$'}(pwd)/${'$'}oc_file ;; esac
+  rm -f "${'$'}oc_abs.oc-fetch-ack" "${'$'}oc_abs.oc-fetch-done"
+  printf '::oc fetch %s %s %s\n' "${'$'}oc_url" "${'$'}oc_abs" "${'$'}oc_sha"
+  oc_ack_left=${'$'}{OC_ACK_POLLS:-20}
+  while [ ! -e "${'$'}oc_abs.oc-fetch-ack" ] && [ "${'$'}oc_ack_left" -gt 0 ]; do
+    sleep "${'$'}{OC_POLL_SECONDS:-0.5}"
+    oc_ack_left=${'$'}((oc_ack_left - 1))
+  done
+  if [ ! -e "${'$'}oc_abs.oc-fetch-ack" ]; then
+    echo "[oc] The app did not take over the download."
+    return 1
+  fi
+  while [ ! -s "${'$'}oc_abs.oc-fetch-done" ]; do
+    sleep "${'$'}{OC_POLL_SECONDS:-0.5}"
+  done
+  oc_answer=${'$'}(cat "${'$'}oc_abs.oc-fetch-done")
+  rm -f "${'$'}oc_abs.oc-fetch-ack" "${'$'}oc_abs.oc-fetch-done"
+  [ "${'$'}oc_answer" = ok ] || echo "[oc] The app could not download it: ${'$'}{oc_answer#fail }"
+  [ "${'$'}oc_answer" = ok ]
+}
+# curl was killed by a signal. Same download by other means; the checksum is
+# still checked by the caller.
+oc_crash_fallback() {
+  echo "[oc] The download tool crashed (signal ${'$'}((oc_rc - 128))). Trying another way."
+  if oc_app_fetch; then oc_rc=0; return 0; fi
+  oc_tool=curl oc_curl_opts=--http1.1
+  oc_fetch
+  if [ "${'$'}oc_rc" -ge 128 ] && command -v wget >/dev/null 2>&1; then
+    oc_tool=wget oc_curl_opts=
+    oc_fetch
+  fi
+  oc_tool=curl oc_curl_opts=
+}
+# Asks the app to unpack the .tar.gz ${'$'}oc_ar into ${'$'}oc_dest (`::oc unpack`).
+# Same handshake as oc_app_fetch, with marker files next to the archive.
+oc_app_unpack() {
+  case ${'$'}oc_ar in /*) oc_abs=${'$'}oc_ar ;; *) oc_abs=${'$'}(pwd)/${'$'}oc_ar ;; esac
+  case ${'$'}oc_dest in /*) oc_dabs=${'$'}oc_dest ;; *) oc_dabs=${'$'}(pwd)/${'$'}oc_dest ;; esac
+  rm -f "${'$'}oc_abs.oc-unpack-ack" "${'$'}oc_abs.oc-unpack-done"
+  printf '::oc unpack %s %s %s %s\n' "${'$'}oc_abs" "${'$'}oc_dabs" "${'$'}oc_strip" "${'$'}{oc_mem:--}"
+  oc_ack_left=${'$'}{OC_ACK_POLLS:-20}
+  while [ ! -e "${'$'}oc_abs.oc-unpack-ack" ] && [ "${'$'}oc_ack_left" -gt 0 ]; do
+    sleep "${'$'}{OC_POLL_SECONDS:-0.5}"
+    oc_ack_left=${'$'}((oc_ack_left - 1))
+  done
+  if [ ! -e "${'$'}oc_abs.oc-unpack-ack" ]; then
+    echo "[oc] The app did not take over the unpacking."
+    return 1
+  fi
+  while [ ! -s "${'$'}oc_abs.oc-unpack-done" ]; do
+    sleep "${'$'}{OC_POLL_SECONDS:-0.5}"
+  done
+  oc_answer=${'$'}(cat "${'$'}oc_abs.oc-unpack-done")
+  rm -f "${'$'}oc_abs.oc-unpack-ack" "${'$'}oc_abs.oc-unpack-done"
+  [ "${'$'}oc_answer" = ok ] || echo "[oc] The app could not unpack it: ${'$'}{oc_answer#fail }"
+  [ "${'$'}oc_answer" = ok ]
+}
+# oc_untar ARCHIVE DEST STRIP [MEMBER]: `tar -xzf ARCHIVE -C DEST`, removing STRIP
+# leading path parts and, with MEMBER, extracting only that path. ARCHIVE has
+# already passed its pinned checksum (oc_download). When tar dies from a signal
+# (exit 128 or more, e.g. the SIGSEGV of issue #117) the app unpacks it
+# instead. Any other tar failure is returned as it is.
+oc_untar() {
+  oc_ar=${'$'}1 oc_dest=${'$'}2 oc_strip=${'$'}{3:-0} oc_mem=${'$'}{4:-}
+  oc_tar_rc=0
+  if [ -n "${'$'}oc_mem" ]; then
+    tar -xzf "${'$'}oc_ar" -C "${'$'}oc_dest" --strip-components="${'$'}oc_strip" "${'$'}oc_mem" || oc_tar_rc=${'$'}?
+  else
+    tar -xzf "${'$'}oc_ar" -C "${'$'}oc_dest" --strip-components="${'$'}oc_strip" || oc_tar_rc=${'$'}?
+  fi
+  if [ "${'$'}oc_tar_rc" -ge 128 ]; then
+    echo "[oc] The unpacking tool crashed (signal ${'$'}((oc_tar_rc - 128))). Trying another way."
+    if oc_app_unpack; then return 0; fi
+    echo "[oc] Unpacking failed: the unpacking tool crashed and the app could not do it: ${'$'}oc_ar" >&2
+  fi
+  return "${'$'}oc_tar_rc"
+}
 oc_download() {
   oc_url=${'$'}1 oc_file=${'$'}2 oc_sha=${'$'}3 oc_total=${'$'}{4:-0}
   mkdir -p "${'$'}(dirname "${'$'}oc_file")"
@@ -41,9 +130,13 @@ oc_download() {
     printf '::oc bytes %s %s\n' "${'$'}oc_have" "${'$'}oc_have"
     return 0
   fi
+  oc_probe_rc=0
   if [ "${'$'}oc_total" = 0 ]; then
-    oc_total=${'$'}(curl -fsSIL --retry 3 --connect-timeout 20 "${'$'}oc_url" 2>/dev/null |
-      tr -d '\r' |
+    oc_head=${'$'}(curl -fsSIL --retry 3 --connect-timeout 20 "${'$'}oc_url" 2>/dev/null &&
+      echo oc-rc:0 || echo "oc-rc:${'$'}?") || true
+    oc_probe_rc=${'$'}{oc_head##*oc-rc:}
+    case ${'$'}oc_probe_rc in ''|*[!0-9]*) oc_probe_rc=0 ;; esac
+    oc_total=${'$'}(printf '%s\n' "${'$'}oc_head" | tr -d '\r' |
       awk 'tolower(${'$'}1) == "content-length:" { n = ${'$'}2 } END { print n + 0 }') ||
       oc_total=0
   fi
@@ -53,13 +146,18 @@ oc_download() {
   if [ "${'$'}oc_total" -gt 0 ] && [ "${'$'}(oc_size_of "${'$'}oc_file")" -ge "${'$'}oc_total" ]; then
     rm -f "${'$'}oc_file"
   fi
-  oc_fetch
+  if [ "${'$'}oc_probe_rc" -ge 128 ]; then
+    # curl already died on the size probe; do not run it again.
+    oc_rc=${'$'}oc_probe_rc
+  else
+    oc_fetch
+  fi
   # Each attempt starts from the CURRENT file size. curl's built-in --retry
   # can rewind to the size at its first attempt, discarding bytes it received.
   # Partial transfers (18), network failures and transient HTTP failures are
   # retried here, preserving progress across attempts.
   oc_try=1
-  while [ "${'$'}oc_try" -le 4 ]; do
+  while [ "${'$'}oc_try" -le 4 ] && [ "${'$'}oc_rc" -lt 128 ]; do
     case ${'$'}oc_rc in
       6|7|18|28|35|52|55|56|92) ;;
       22) case ${'$'}oc_http in 408|429|500|502|503|504) ;; *) break ;; esac ;;
@@ -70,9 +168,16 @@ oc_download() {
     oc_fetch
     oc_try=${'$'}((oc_try + 1))
   done
+  if [ "${'$'}oc_rc" -ge 128 ]; then
+    oc_crash_fallback
+  fi
   # Never silently erase resumable progress if a server refuses Range.
   if [ "${'$'}oc_rc" = 33 ] || [ "${'$'}oc_rc" = 36 ]; then
     echo "[oc] The download server could not resume this download. Retry later." >&2
+    return "${'$'}oc_rc"
+  fi
+  if [ "${'$'}oc_rc" -ge 128 ]; then
+    echo "[oc] Download failed: the download tool crashed (signal ${'$'}((oc_rc - 128))) and the other ways did not work: ${'$'}oc_url" >&2
     return "${'$'}oc_rc"
   fi
   if [ "${'$'}oc_rc" != 0 ]; then

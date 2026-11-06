@@ -30,4 +30,26 @@ internal object SetupStepRetry {
 
     fun again(attempt: Int, cancelled: Boolean, interrupted: Boolean): Boolean =
         !cancelled && interrupted && attempt < ATTEMPTS
+
+    /** A step's script ended with a segmentation fault (128 + SIGSEGV). */
+    const val SEGFAULT_EXIT = 139
+
+    /** The shell's own report of a program killed by SIGSEGV, as it reaches the step's output. */
+    fun reportsSegfault(line: String): Boolean = line.contains("Segmentation fault")
+
+    /**
+     * A step that failed after its shell reported a segmentation fault counts
+     * as one, even when the script turned the crash into its own exit status
+     * (`if ! npm ci`, `[ "$(tool --version)" = ... ]`).
+     */
+    fun crashExit(exitCode: Int, sawSegfaultReport: Boolean): Int =
+        if (exitCode != 0 && sawSegfaultReport) SEGFAULT_EXIT else exitCode
+
+    /**
+     * Run a step once more in compatibility mode (proot without seccomp
+     * acceleration, glibc without rseq) when it died of a segmentation
+     * fault and has not been run that way yet. Issue #117.
+     */
+    fun compatibility(exitCode: Int?, alreadyCompatible: Boolean, cancelled: Boolean): Boolean =
+        !cancelled && !alreadyCompatible && exitCode == SEGFAULT_EXIT
 }

@@ -25,6 +25,13 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.json.JSONArray
 import org.json.JSONObject
 
+/** How an installer process runs: as the agent user, with secrets on stdin, in compatibility mode. */
+internal data class InstallerOptions(
+    val agentUser: Boolean = false,
+    val stdin: String? = null,
+    val compat: Boolean = false,
+)
+
 /**
  * Ubuntu inside the app, with no Termux.
  *
@@ -251,16 +258,29 @@ class BuiltinLinux(private val context: Context) {
         }
     }
 
-    /** Runs [script] with /bin/sh inside Ubuntu as root (faked by proot). */
+    /**
+     * The phone server password, written to its 0600 file in a 0700 folder. It travels on stdin:
+     * the script is a `/bin/sh -c` argument that every process of this app's user can read.
+     */
+    fun writeServerPassword(password: String, timeoutSeconds: Long = 60): Result {
+        require(password.isNotEmpty()) { "The server password is empty" }
+        return run(ServerPasswordWrite.script(), timeoutSeconds, stdin = password)
+    }
+
+    /**
+     * Runs [script] with /bin/sh inside Ubuntu as root (faked by proot). The script is a process
+     * argument, so secrets travel as [stdin] only.
+     */
     fun run(
         script: String,
         timeoutSeconds: Long = 600,
         agentUser: Boolean = false,
         logOutput: Boolean = true,
+        stdin: String? = null,
     ): Result {
         val began = SystemClock.elapsedRealtime()
         val timeoutMillis = TimeUnit.SECONDS.toMillis(timeoutSeconds).coerceAtLeast(0L)
-        val process = admitCheckProcess(script, timeoutMillis, began, agentUser)
+        val process = admitCheckProcess(script, timeoutMillis, began, agentUser, stdin)
         val output = StringBuilder()
         val readerFailed = java.util.concurrent.atomic.AtomicBoolean()
         var reader: Thread? = null
@@ -333,6 +353,7 @@ class BuiltinLinux(private val context: Context) {
         timeoutMillis: Long,
         began: Long,
         agentUser: Boolean,
+        stdin: String?,
     ): Process {
         val queueDeadline = began + timeoutMillis.coerceAtMost(RUN_ADMISSION_WINDOW_MS)
         var admitted: Process? = null
@@ -348,7 +369,7 @@ class BuiltinLinux(private val context: Context) {
                             script,
                             InstallerTarget.entries.toSet(),
                             InstallerOperation.CHECK,
-                            agentUser,
+                            InstallerOptions(agentUser, stdin),
                         )
                     } else null
                 }
@@ -669,10 +690,10 @@ class BuiltinLinux(private val context: Context) {
         script: String,
         targets: Set<InstallerTarget>,
         operation: InstallerOperation,
-        agentUser: Boolean = false,
+        options: InstallerOptions = InstallerOptions(),
     ): Process =
         try {
-            startQualifiedInstaller(script, targets, operation, agentUser)
+            startQualifiedInstaller(script, targets, operation, options)
         } catch (error: Throwable) {
             throw IllegalStateException(componentUpdateFailure, error)
         }
@@ -681,8 +702,9 @@ class BuiltinLinux(private val context: Context) {
         script: String,
         targets: Set<InstallerTarget>,
         operation: InstallerOperation,
-        agentUser: Boolean = false,
+        options: InstallerOptions,
     ): Process {
+        val (agentUser, stdin, compat) = options
         check(installed) { componentUpdateFailure }
         reclaimDeadInstaller()
         check(installerProcess == null) { componentUpdateFailure }
@@ -734,12 +756,13 @@ class BuiltinLinux(private val context: Context) {
                                 gate,
                             ),
                             agentUser,
+                            compat,
                         )
                     )
                     .redirectErrorStream(true)
                     .apply {
                         environment().clear()
-                        environment().putAll(prootEnvironment())
+                        environment().putAll(prootEnvironment(compat))
                         environment()["OC_RUNTIME_OWNER"] = nonce
                     }
                     .start()
@@ -758,6 +781,9 @@ class BuiltinLinux(private val context: Context) {
             synchronized(installerGuard) { saveInstaller(committed) }
             if (setupWorkScopes.childNeedsLease()) trackWork(launched, WorkLeases.Kind.SETUP)
             launched.outputStream.write("$nonce\n".toByteArray(Charsets.US_ASCII))
+            // The gate's `read` takes the permit line only; the rest of stdin (a secret the script
+            // must not carry as an argument) is the script's.
+            if (stdin != null) launched.outputStream.write(stdin.toByteArray(Charsets.UTF_8))
             launched.outputStream.flush()
             launched.outputStream.close()
             monitorInstallerOwnership(launched, nonce, committed)
@@ -946,12 +972,39 @@ class BuiltinLinux(private val context: Context) {
         get() = "$nativeDir/libproot.so"
 
     /**
+     * Makes /root/projects/<name> as a new git project from the app, without running anything
+     * inside Ubuntu (BuiltinNewProject.kt): once AI Team is on, the sandbox denies the chmod
+     * `git init` needs. Same result before and after. Answers "created" or "exists".
+     */
+    @Synchronized
+    fun createProject(path: String): String {
+        val name =
+            BuiltinNewProject.managedName(path)
+                ?: throw IllegalArgumentException("Not a folder in /root/projects")
+        check(installed) { "Ubuntu is not installed" }
+        check(!installingRuntime) { "Runtime installation is still running" }
+        projectStorage.prepare()
+        return BuiltinNewProject.create(
+                projects = projectStorage.projects,
+                name = name,
+                stagingRoot = File(context.filesDir, "oc-new-project-staging"),
+                defaults = BuiltinNewProject.readDefaults(rootfs),
+                epochSeconds = System.currentTimeMillis() / 1000,
+            )
+            .wire
+    }
+
+    /**
      * The proot command line that runs [program] inside Ubuntu as root, with a clean environment.
      * [start] and the local terminal (LocalTerminal.kt) both use it, so a shell sees exactly what
      * the app's scripts see.
      */
     @Synchronized
-    fun prootCommand(program: List<String>, agentUser: Boolean = false): List<String> {
+    fun prootCommand(
+        program: List<String>,
+        agentUser: Boolean = false,
+        compat: Boolean = false,
+    ): List<String> {
         prepareGuestForProot()
         val agentRoot =
             if (agentUser)
@@ -992,6 +1045,7 @@ class BuiltinLinux(private val context: Context) {
                     "TERM=xterm-256color",
                     "TMPDIR=/tmp",
                 ) +
+                (if (compat) listOf(COMPAT_GLIBC_TUNABLES) else emptyList()) +
                 program
         workLeases.observeTerminalsSoon()
         return if (prootIsConfined && protectionTier() != "proot") protectedCommand(command)
@@ -2486,13 +2540,16 @@ class BuiltinLinux(private val context: Context) {
         }
 
     /** What proot itself needs in its environment, on top of the app's own. */
-    fun prootEnvironment(): Map<String, String> {
+    fun prootEnvironment(compat: Boolean = false): Map<String, String> {
         val tmp = File(context.cacheDir, "proot-tmp").apply { mkdirs() }
-        return mapOf(
-            "PROOT_LOADER" to "$nativeDir/libproot-loader.so",
-            "PROOT_TMP_DIR" to tmp.absolutePath,
-            "LD_LIBRARY_PATH" to nativeDir,
-        )
+        val base =
+            mapOf(
+                "PROOT_LOADER" to "$nativeDir/libproot-loader.so",
+                "PROOT_TMP_DIR" to tmp.absolutePath,
+                "LD_LIBRARY_PATH" to nativeDir,
+            )
+        // Compatibility mode (issue #117): no seccomp acceleration in proot.
+        return if (compat) base + ("PROOT_NO_SECCOMP" to "1") else base
     }
 
     // ---- long-running services ---------------------------------------------
@@ -6525,6 +6582,8 @@ exec gc supervisor run
     }
 
     companion object {
+        /** Guest environment of compatibility mode (issue #117): glibc without restartable sequences. */
+        const val COMPAT_GLIBC_TUNABLES = "GLIBC_TUNABLES=glibc.pthread.rseq=0"
         private const val MILLIS_PER_SECOND = 1_000L
         private const val MAX_FAILURE_CAUSES = 6
         private const val RUN_ADMISSION_WINDOW_MS = 10_000L

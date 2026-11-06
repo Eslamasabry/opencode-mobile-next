@@ -91,7 +91,7 @@ oc_download "https://nodejs.org/dist/$NODE_VERSION/node-$NODE_VERSION-linux-${D}
 oc_stage 'Preparing Node.js'
 rm -rf "${D}node_dir.new"
 mkdir -p "${D}node_dir.new"
-tar -xzf "${D}node_part" -C "${D}node_dir.new" --strip-components=1
+oc_untar "${D}node_part" "${D}node_dir.new" 1
 [ "${D}("${D}node_dir.new/bin/node" --version)" = '$NODE_VERSION' ]
 rm -rf "${D}node_dir.old"
 if [ -d "${D}node_dir" ]; then mv "${D}node_dir" "${D}node_dir.old"; fi
