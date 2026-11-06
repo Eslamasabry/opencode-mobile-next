@@ -171,7 +171,12 @@ class QaWave1ComposerTest {
         onNodeWithContentDescription("Model").performClick()
         onNodeWithText("Z.AI Coding Plan").assertExists()
         onNodeWithText("OpenRouter").assertExists()
-        onNodeWithText("Current").assertExists()
+        // The chosen model reads once (its band and check): no "Current" word beside it.
+        onNodeWithText("Current").assertDoesNotExist()
+        onAllNodesWithText("GLM-5.3-Flash").onFirst().assertIsSelected()
+        // Server default is a choice row that says what it means.
+        onNodeWithText("Server default").assertExists()
+        onNodeWithText("The server’s own default model").assertExists()
         onNodeWithTag("chat-model-search").assertExists()
         // The second GLM row (OpenRouter's) is a different choice, not the current one.
         onAllNodesWithText("GLM-5.3-Flash").onLast().performClick()

@@ -300,9 +300,16 @@ class ComposerModelsFilesTest {
             onNodeWithText("build · Thinker · high").assertIsDisplayed()
             onNodeWithContentDescription("Model").performClick()
             onNodeWithText("Thinking").assertIsDisplayed()
-            onNodeWithText("low").performClick()
+            // The levels sit on one line (it scrolls sideways instead of wrapping), the chosen one marked.
+            val tops =
+                listOf("Default", "Low", "High").map {
+                    onNodeWithText(it).fetchSemanticsNode().boundsInRoot.top
+                }
+            assertEquals(1, tops.distinct().size, "the thinking levels never wrap")
+            onNodeWithText("High").assertIsSelected()
+            onNodeWithText("Low").performClick()
             onNodeWithText("Agent").assertIsDisplayed()
-            onNodeWithText("plan").performClick()
+            onNodeWithText("Plan").performClick()
             waitForIdle()
             assertEquals(listOf("low"), actions.variants)
             assertTrue("agent <plan>" in actions.calls)

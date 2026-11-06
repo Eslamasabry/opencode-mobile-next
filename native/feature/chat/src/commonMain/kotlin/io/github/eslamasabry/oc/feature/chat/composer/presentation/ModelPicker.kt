@@ -19,6 +19,14 @@ public data class ModelPickRow(val model: ComposerModel, val current: Boolean)
  * the provider. Pure, so the order is tested without Compose.
  */
 public object ModelPicker {
+    /** Server default is offered as the list's first choice once a model is known, and not while searching. */
+    public fun offersServerDefault(models: ComposerModels, query: String = ""): Boolean =
+        models.selected != null && query.isBlank()
+
+    /** The thinking levels on the chosen model's one line: "" (the model's default) first, then its own levels. */
+    public fun thinkingLevels(models: ComposerModels): List<String> =
+        models.selected?.variants?.takeIf { it.isNotEmpty() }?.let { listOf("") + it } ?: emptyList()
+
     public fun sections(models: ComposerModels, query: String = ""): List<ModelSection> {
         val q = query.trim().lowercase()
         val current = if (models.usesDefault) null else models.selected

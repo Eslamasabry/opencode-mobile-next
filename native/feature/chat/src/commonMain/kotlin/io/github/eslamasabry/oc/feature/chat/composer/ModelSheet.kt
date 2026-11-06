@@ -1,7 +1,5 @@
 package io.github.eslamasabry.oc.feature.chat.composer
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -12,19 +10,18 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposerActions
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.ModelPicker
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModel
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModels
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
-import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipWrap
+import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceMark
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceRow
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -38,7 +35,6 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.chatCycleNext
 import io.github.eslamasabry.oc.ui.words.res.chatCyclePrevious
-import io.github.eslamasabry.oc.ui.words.res.chatModelsCurrent
 import io.github.eslamasabry.oc.ui.words.res.chatModelsNoMatch
 import io.github.eslamasabry.oc.ui.words.res.chatModelsRecent
 import io.github.eslamasabry.oc.ui.words.res.chatModelsSearch
@@ -50,6 +46,7 @@ import io.github.eslamasabry.oc.ui.words.res.composerFullModelChangeFailed
 import io.github.eslamasabry.oc.ui.words.res.composerFullThinking
 import io.github.eslamasabry.oc.ui.words.res.composerFullThinkingDefault
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewModelDefault
+import io.github.eslamasabry.oc.ui.words.res.composerPreviewModelDefaultHint
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewModelsClose
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewModelsEmpty
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewModelsFailed
@@ -144,106 +141,85 @@ internal fun ModelSheet(
                     onSearch = { modelQuery = it },
                     modifier = Modifier.fillMaxWidth().testTag("chat-model-search"),
                 )
-                val currentTag = stringResource(Res.string.chatModelsCurrent)
                 val sections =
                     remember(models, modelQuery) { ModelPicker.sections(models, modelQuery) }
-                // The groups keep a step of air between them, so Server default, Favorites and each provider read
-                // as separate lists (and a raised style's panels never touch).
-                Column(
-                    Modifier.fillMaxWidth().testTag("chat-model-choices"),
-                    verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
-                ) {
-                    // Server default sits in a group of its own, on the same edge as the model rows.
-                    if (models.selected != null && modelQuery.isBlank()) {
-                        KitRowGroup {
-                            KitChoiceRow(
-                                title = stringResource(Res.string.composerPreviewModelDefault),
-                                selected = models.usesDefault,
-                                mark = KitChoiceMark.Tick,
-                                tag = if (models.usesDefault) currentTag else null,
-                                onClick = { selectAndClose(null) },
-                            )
-                        }
+                // Server default is a choice like any model: a row with what it means and the same check when chosen.
+                if (ModelPicker.offersServerDefault(models, modelQuery)) {
+                    KitRowGroup(Modifier.testTag("chat-model-default")) {
+                        KitChoiceRow(
+                            title = stringResource(Res.string.composerPreviewModelDefault),
+                            supporting = stringResource(Res.string.composerPreviewModelDefaultHint),
+                            selected = models.usesDefault,
+                            mark = KitChoiceMark.Tick,
+                            onClick = { selectAndClose(null) },
+                        )
                     }
-                    if (sections.isEmpty()) KitText(stringResource(Res.string.chatModelsNoMatch))
-                    sections.forEach { section ->
-                        KitRowGroup(
-                            label =
-                                if (section.favorites)
-                                    stringResource(Res.string.chat_model_favorites)
-                                else
-                                    section.providerName?.let {
-                                        providerRouteName(section.rows.first().model.providerId, it)
-                                    } ?: stringResource(Res.string.chatModelsRecent)
-                        ) {
-                            section.rows.forEach { pick ->
-                                val favorite =
-                                    models.favorites.any {
-                                        it.providerId == pick.model.providerId &&
-                                            it.modelId == pick.model.modelId
-                                    }
-                                // Looks pass: Flutter's picker row — the provider mark, the name,
-                                // the chosen
-                                // row banded with a mint check, and the star as the row's one icon
-                                // (its words
-                                // are what TalkBack says), not a text button on every row.
-                                // The provider's mark only where providers mix (Favorites, Recent); under a
-                                // provider's own heading it would repeat one glyph down the whole list.
-                                val mixed = section.providerName == null
-                                KitChoiceRow(
-                                    title = pick.model.label,
-                                    leading =
-                                        if (mixed) ({
-                                            KitProviderLogo(
-                                                pick.model.providerId,
-                                                pick.model.providerName,
-                                            )
-                                        })
-                                        else null,
-                                    selected = pick.current,
-                                    mark = KitChoiceMark.Tick,
-                                    // In "Recent" the provider tells equal names apart.
-                                    supporting =
-                                        if (section.providerName == null)
-                                            providerRouteName(
-                                                pick.model.providerId,
-                                                pick.model.providerName,
-                                            )
-                                        else null,
-                                    tag = if (pick.current) currentTag else null,
-                                    trailing = {
-                                        KitIconButton(
-                                            icon =
-                                                if (favorite) KitIcons.starFilled
-                                                else KitIcons.star,
-                                            label =
-                                                stringResource(
-                                                    if (favorite)
-                                                        Res.string.chat_model_favorite_remove
-                                                    else Res.string.chat_model_favorite_add
-                                                ),
-                                            onClick = {
-                                                scope.launch {
-                                                    actions.toggleModelFavorite(pick.model)
-                                                }
-                                            },
-                                            tone =
-                                                if (favorite) TextTone.Accent
-                                                else TextTone.Secondary,
-                                        )
-                                    },
-                                    onClick = { selectAndClose(pick.model) },
-                                    modifier = Modifier.testTag("chat-model-choice"),
-                                )
-                            }
+                }
+                if (sections.isEmpty()) KitText(stringResource(Res.string.chatModelsNoMatch))
+                // Every heading (each group, Thinking, Agent) takes the sheet's section gap, so a chosen row's band
+                // never touches the next heading.
+                sections.forEach { section ->
+                    KitRowGroup(
+                        label =
+                            if (section.favorites) stringResource(Res.string.chat_model_favorites)
+                            else
+                                section.providerName?.let {
+                                    providerRouteName(section.rows.first().model.providerId, it)
+                                } ?: stringResource(Res.string.chatModelsRecent),
+                        section = true,
+                    ) {
+                        // The provider's mark only where providers mix (Favorites, Recent); under a provider's own
+                        // heading it would repeat one glyph down the whole list.
+                        val mixed = section.providerName == null
+                        section.rows.forEach { pick ->
+                            val favorite =
+                                models.favorites.any {
+                                    it.providerId == pick.model.providerId &&
+                                        it.modelId == pick.model.modelId
+                                }
+                            // The chosen model reads once: its band and check. The star stays quieter than the
+                            // check (its words are what TalkBack says).
+                            KitChoiceRow(
+                                title = pick.model.label,
+                                leading =
+                                    if (mixed) ({
+                                        KitProviderLogo(pick.model.providerId, pick.model.providerName)
+                                    })
+                                    else null,
+                                selected = pick.current,
+                                mark = KitChoiceMark.Tick,
+                                // Where providers mix, the provider tells equal names apart.
+                                supporting =
+                                    if (mixed)
+                                        providerRouteName(pick.model.providerId, pick.model.providerName)
+                                    else null,
+                                trailing = {
+                                    KitIconButton(
+                                        icon = if (favorite) KitIcons.starFilled else KitIcons.star,
+                                        label =
+                                            stringResource(
+                                                if (favorite) Res.string.chat_model_favorite_remove
+                                                else Res.string.chat_model_favorite_add
+                                            ),
+                                        onClick = {
+                                            scope.launch { actions.toggleModelFavorite(pick.model) }
+                                        },
+                                        tone = TextTone.Secondary,
+                                    )
+                                },
+                                onClick = { selectAndClose(pick.model) },
+                                modifier = Modifier.testTag("chat-model-choice"),
+                            )
                         }
                     }
                 }
                 val selected = models.selected
-                if (selected != null && selected.variants.isNotEmpty()) {
+                val levels = ModelPicker.thinkingLevels(models)
+                if (selected != null && levels.isNotEmpty()) {
                     KitSectionLabel(stringResource(Res.string.composerFullThinking))
-                    KitChipWrap(Modifier.fillMaxWidth().testTag("chat-thinking-choices")) {
-                        (listOf("") + selected.variants).forEach { level ->
+                    // One line that scrolls sideways (never wraps), the chosen level filled.
+                    KitFilterChips(Modifier.fillMaxWidth().testTag("chat-thinking-choices")) {
+                        levels.forEach { level ->
                             KitChip(
                                 label =
                                     if (level.isEmpty())
@@ -261,6 +237,7 @@ internal fun ModelSheet(
                     KitRowGroup(
                         Modifier.testTag("chat-agent-choices"),
                         label = stringResource(Res.string.composerFullAgent),
+                        section = true,
                     ) {
                         models.agents.forEach { agent ->
                             KitChoiceRow(

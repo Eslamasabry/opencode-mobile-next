@@ -5,6 +5,7 @@ import io.github.eslamasabry.oc.feature.chat.world.ComposerModel
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModels
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -65,5 +66,32 @@ class ModelPickerTest {
     fun `B3 QA wave1 with the server default nothing else is marked current`() {
         val sections = ModelPicker.sections(ComposerModels(choices = all, selected = terra, usesDefault = true))
         assertTrue(sections.flatMap { it.rows }.none { it.current })
+    }
+
+    @Test
+    fun `Server default is a choice in the list once a model is known, not while searching`() {
+        assertTrue(ModelPicker.offersServerDefault(ComposerModels(choices = all, selected = terra)))
+        assertTrue(ModelPicker.offersServerDefault(ComposerModels(choices = all, selected = terra, usesDefault = true), "  "))
+        assertFalse(ModelPicker.offersServerDefault(ComposerModels(choices = all, selected = terra), "glm"))
+        assertFalse(ModelPicker.offersServerDefault(ComposerModels(choices = all)), "nothing known yet, nothing claimed")
+    }
+
+    @Test
+    fun `thinking levels are one line led by the model's own default`() {
+        val thinker = terra.copy(variants = listOf("minimal", "low", "medium", "high", "xhigh", "max"))
+        assertEquals(
+            listOf("", "minimal", "low", "medium", "high", "xhigh", "max"),
+            ModelPicker.thinkingLevels(ComposerModels(choices = listOf(thinker), selected = thinker)),
+        )
+        assertTrue(ModelPicker.thinkingLevels(ComposerModels(choices = all, selected = terra)).isEmpty())
+        assertTrue(ModelPicker.thinkingLevels(ComposerModels(choices = all)).isEmpty())
+    }
+
+    @Test
+    fun `B3 a favourite that is also current is marked once and listed once`() {
+        val sections = ModelPicker.sections(ComposerModels(choices = all, selected = terra, favorites = listOf(terra)))
+        val marked = sections.flatMap { it.rows }.filter { it.current }
+        assertEquals(listOf(terra), marked.map { it.model })
+        assertTrue(sections.first().favorites)
     }
 }
