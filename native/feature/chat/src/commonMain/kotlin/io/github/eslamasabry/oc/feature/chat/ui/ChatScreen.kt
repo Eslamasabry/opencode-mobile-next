@@ -986,6 +986,12 @@ private fun statusLine(line: ChatStatusUi, actions: ChatActions): KitStatus =
                 KitStatusKind.Connection,
                 stringResource(Res.string.chatUiNotConnectedToTheServerRightNow),
                 id = "chat-status-${line.id}",
+                action =
+                    KitLineAction(
+                        stringResource(Res.string.commonRetry),
+                        actions::retryLoad,
+                        testTag = "chat-offline-retry",
+                    ),
             )
         ChatStatusKind.Connecting ->
             KitStatus(
