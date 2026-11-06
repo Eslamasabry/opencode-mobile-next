@@ -345,20 +345,15 @@ private fun ServerProjects(state: ProjectsPickerUi, actions: ProjectsPickerActio
                     body = stringResource(Res.string.e7ProjectProjectsEmptyDetail),
                 )
             else -> {
-                val twins = sameNames(state.projects)
+                // N-42: same-named projects lead with the shortest parent path that tells them apart.
+                val hints = ProjectRules.sameNameHints(state.projects.map { it.directory to it.name })
                 state.projects.forEach {
-                    ProjectRow(it, actions, state.canRename, tail = pathTail(it.directory).takeIf { _ -> it.name.lowercase() in twins })
+                    ProjectRow(it, actions, state.canRename, tail = hints[ProjectRules.normalize(it.directory)])
                 }
             }
         }
     }
 }
-
-/** The lower-cased names that more than one project carries. */
-private fun sameNames(projects: List<FolderRowUi>): Set<String> =
-    projects.groupingBy { it.name.lowercase() }.eachCount().filterValues { it > 1 }.keys
-
-private fun pathTail(directory: String): String = io.github.eslamasabry.oc.ui.kit.text.kitPathTail(directory)
 
 @Composable
 private fun ProjectRow(

@@ -102,6 +102,21 @@ class ProjectsScreenTest {
     }
 
     @Test
+    fun `B-NAV-011 same-named projects lead with the shortest parent path that tells them apart`() = runComposeUiTest {
+        val twins =
+            ready.copy(
+                projects =
+                    persistentListOf(
+                        FolderRowUi("/home/me/scratch/walk/demo-app", "demo-app", conversations = 1),
+                        FolderRowUi("/home/me/projects/demo-app", "demo-app", conversations = 2),
+                    )
+            )
+        setContent { Themed { ProjectsPickerScreen(twins, Picker()) } }
+        onNodeWithText("…/walk · 1 conversation").assertExists()
+        onNodeWithText("…/projects · 2 conversations").assertExists()
+    }
+
+    @Test
     fun `a failed project list keeps a plain line with Try again`() = runComposeUiTest {
         val actions = Picker()
         setContent { Themed { ProjectsPickerScreen(ready.copy(projectsFailure = Failure.Server(500)), actions) } }

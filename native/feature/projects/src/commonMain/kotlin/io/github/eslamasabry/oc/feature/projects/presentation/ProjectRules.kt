@@ -100,6 +100,41 @@ public object ProjectRules {
     public fun name(directory: String, given: String? = null): String =
         given?.takeIf { it.isNotBlank() } ?: FeedFolders.folderName(directory)
 
+    /**
+     * N-42: for projects that share a name (ignoring case), the shortest run of parent folders that tells each one
+     * apart, keyed by directory. "…/work" when the folders just above differ, more parents only when they are needed,
+     * and the whole parent path when nothing shorter is unique. Projects with a unique name get no entry.
+     */
+    public fun sameNameHints(projects: List<Pair<String, String>>): Map<String, String> {
+        val hints = LinkedHashMap<String, String>()
+        projects
+            .map { (dir, name) -> normalize(dir) to name.lowercase() }
+            .distinctBy { it.first }
+            .groupBy({ it.second }, { it.first })
+            .values
+            .filter { it.size > 1 }
+            .forEach { group ->
+                val parents = group.associateWith { parentSegments(it) }
+                group.forEach { dir -> hints[dir] = shortestUnique(dir, parents) }
+            }
+        return hints
+    }
+
+    private fun parentSegments(directory: String): List<String> =
+        directory.split('/').filter { it.isNotEmpty() }.dropLast(1)
+
+    private fun shortestUnique(dir: String, parents: Map<String, List<String>>): String {
+        val mine = parents.getValue(dir)
+        val others = parents.filterKeys { it != dir }.values
+        for (k in 1 until mine.size) {
+            val tail = mine.takeLast(k)
+            if (others.none { it.takeLast(k) == tail }) return "…/" + tail.joinToString("/")
+        }
+        // Nothing shorter is unique: the whole parent path, absolute when the folder is.
+        val whole = mine.joinToString("/")
+        return if (dir.startsWith("/")) "/$whole" else whole.ifEmpty { dir }
+    }
+
     /** Root conversations of the person: subagents stay with their parent, the AI Team's work on its own screen. */
     // An archived conversation lives under All conversations › Archived, never in a project's lists.
     private fun roots(sessions: List<Session>): List<Session> =
