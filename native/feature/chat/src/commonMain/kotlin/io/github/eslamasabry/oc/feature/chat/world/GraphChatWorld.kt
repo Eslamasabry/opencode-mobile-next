@@ -43,6 +43,7 @@ import io.github.eslamasabry.oc.engine.delivery.LocalSendId
 import io.github.eslamasabry.oc.engine.delivery.SendOutcome
 import io.github.eslamasabry.oc.engine.delivery.SendPhase
 import io.github.eslamasabry.oc.engine.delivery.StopAnswer
+import io.github.eslamasabry.oc.engine.delivery.queue.QueueState
 import io.github.eslamasabry.oc.engine.requests.ConnectionRequests
 import io.github.eslamasabry.oc.engine.transcript.TranscriptHandle
 import io.github.eslamasabry.oc.engine.transcript.state.GatewayEvent
@@ -807,6 +808,9 @@ internal class GraphChatWorld(
                         combine(engine.pending, engine.outcomes) { _, _ -> Unit }
                             .collect { syncDelivery(delivery) }
                     }
+                },
+                scope.launch(registry.mainContext) {
+                    delivery.queue?.state?.collect { queue -> retireSettledMarkers(queue) }
                 },
                 scope.launch(registry.mainContext) {
                     handle.state.collect { s ->
@@ -1816,6 +1820,52 @@ internal class GraphChatWorld(
             Outcome.Ok(confirmed)
         } finally {
             checkingReceipts.remove(localId)
+        }
+    }
+
+    /**
+     * N-48: a possibly-sent marker whose queue entry has left (the person's Send again went through, the entry was
+     * discarded, or its arrival was confirmed) and whose words wait nowhere else in this conversation's queue is
+     * settled: its bubble and note go, and history is read again so the delivered copy shows. While the entry or a
+     * fresh copy of it still waits, the note stays.
+     */
+    private fun retireSettledMarkers(queue: QueueState) {
+        if (!queue.readable) return
+        val a = currentAttached() ?: return
+        val waiting =
+            queue.entries
+                .filter { it.profileId == ref.profileId && it.sessionId == sid }
+                .mapTo(HashSet()) { it.text.trim() }
+        val settledMarkers =
+            recoveryIds.filter { (reviewId, localId) ->
+                localId !in checkingReceipts &&
+                    queue.entries.none { it.id == reviewId } &&
+                    mutablePending.value.any { bubble ->
+                        bubble.localId == localId &&
+                            bubble.state == PendingState.Unconfirmed &&
+                            bubble.text.trim() !in waiting
+                    }
+            }
+        if (settledMarkers.isEmpty()) return
+        val gone = HashSet<Long>()
+        for ((reviewId, localId) in settledMarkers) {
+            val words = mutablePending.value.firstOrNull { it.localId == localId }?.text?.trim()
+            recoveryIds.remove(reviewId)
+            if (words != null && words in knownUserPrompts) acknowledgedDraft(localId)
+            else draftSubmissions.remove(localId)
+            sentSnapshots.remove(localId)
+            canonical.remove(localId)
+            baselines.remove(localId)
+            admitted -= localId
+            deliveryIds.remove(localId)?.let {
+                (a.graph as ChatGraphAccessors).chatDelivery.engine?.reconciled(it)
+            }
+            gone += localId
+        }
+        mutablePending.update { list -> list.filterNot { it.localId in gone }.toImmutableList() }
+        refreshDraftProtection()
+        a.graph.scope.launch(registry.mainContext) {
+            if (currentAttached() === a) readHistory(a.gateway, a.handle, P3Bridge(sid.raw))
         }
     }
 

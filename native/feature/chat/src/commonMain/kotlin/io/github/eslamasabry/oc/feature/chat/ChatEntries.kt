@@ -202,18 +202,21 @@ public class ChatEntries(
                             dismissLabel = offer.declineLabel,
                         )
                     }
+            // N-48: a send that may already have arrived is said once, under its own bubble (with Review);
+            // the status line counts only what the bubbles do not already say.
+            val unsaid = pendingSends.rows.filterNot { it.local && it.dispatched }
             val pendingStatus =
-                if (pendingSends.rows.isEmpty() && !pendingSends.failed) null
+                if (unsaid.isEmpty() && !pendingSends.failed) null
                 else
                     KitStatus(
                         KitStatusKind.Info,
-                        if (pendingSends.rows.isEmpty())
+                        if (unsaid.isEmpty())
                             stringResource(Res.string.nativePendingFailed)
                         else
                             pluralStringResource(
                                 Res.plurals.nativePendingCount,
-                                pendingSends.rows.size,
-                                pendingSends.rows.size.toString(),
+                                unsaid.size,
+                                unsaid.size.toString(),
                             ),
                         id = "chat-pending-sends",
                         tone =
@@ -390,6 +393,7 @@ public class ChatEntries(
                                     workModel = vm.work,
                                     serverCommands = serverCommandList,
                                     onLoadServerCommands = vm::loadServerCommands,
+                                    onReviewPending = { pendingOpen = true },
                                     formSlot = { modifier ->
                                         ChatFormSlot(formState, formModel, vm::openLink, modifier)
                                     },

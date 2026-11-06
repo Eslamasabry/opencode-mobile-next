@@ -263,6 +263,8 @@ public fun ChatScreen(
     serverCommands: List<io.github.eslamasabry.oc.feature.chat.world.ComposerCommand> =
         emptyList(),
     onLoadServerCommands: () -> Unit = {},
+    /** N-48: an unconfirmed bubble's Review opens the waiting sends (Send again, Discard). */
+    onReviewPending: (() -> Unit)? = null,
 ) {
     var commandsOpen by remember(state.ref) { mutableStateOf(false) }
     var workOpen by remember(state.ref) { mutableStateOf(false) }
@@ -723,6 +725,7 @@ public fun ChatScreen(
                                         onRetrySend = actions::retrySend,
                                         receiptChecks = state.receiptChecks,
                                         onCheckReceipt = actions::checkReceipt,
+                                        onReviewPending = onReviewPending,
                                         modifier = Modifier.fillMaxSize(),
                                         facts = facts,
                                         display = transcriptDisplay,
