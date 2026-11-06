@@ -2,8 +2,6 @@ package io.github.eslamasabry.oc.feature.chat.inbox.ui
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -40,7 +38,7 @@ public fun ChatInboxSlot(
     KitSheetHost {
         if (open)
             KitSheet(visible = true, title = title, onDismissRequest = onDismiss) {
-                Column(modifier.verticalScroll(rememberScrollState()).padding(16.dp)) {
+                Column(modifier.padding(16.dp)) {
                     if (state.failed)
                         KitNotice(message = stringResource(Res.string.nativePendingFailed))
                     if (state.rows.isEmpty())

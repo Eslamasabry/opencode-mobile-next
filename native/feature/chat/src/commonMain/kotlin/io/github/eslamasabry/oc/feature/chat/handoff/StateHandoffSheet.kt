@@ -2,9 +2,7 @@ package io.github.eslamasabry.oc.feature.chat.handoff
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -32,7 +30,7 @@ public fun StateHandoffSheet(state: StateHandoffUi, actions: StateHandoffActions
         title = stringResource(Res.string.stateHandoffTitle),
         closeLabel = stringResource(Res.string.kitSheetClose),
     ) {
-        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+        Column(Modifier.fillMaxWidth()) {
             if (state.loading) KitNotice(stringResource(Res.string.stateHandoffWorking))
             state.failure?.let {
                 KitErrorNotice(stringResource(Res.string.stateHandoffFailed), failure = it)

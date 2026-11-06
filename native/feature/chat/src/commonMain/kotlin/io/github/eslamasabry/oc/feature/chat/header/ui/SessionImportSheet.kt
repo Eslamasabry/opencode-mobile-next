@@ -2,9 +2,7 @@ package io.github.eslamasabry.oc.feature.chat.header.ui
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -38,11 +36,7 @@ internal fun SessionImportBody(state: SessionImportUi, actions: ChatHeaderAction
         if (state.working || state.attempted)
             KitEnabled.Disabled(if (state.working) busy else consumed)
         else KitEnabled.Enabled
-    Column(
-        Modifier.fillMaxWidth()
-            .verticalScroll(rememberScrollState())
-            .testTag("session-import-review")
-    ) {
+    Column(Modifier.fillMaxWidth().testTag("session-import-review")) {
         KitNotice(message = stringResource(Res.string.importPreserves))
         if (!state.attempted) {
             if (state.filePickerAvailable) {

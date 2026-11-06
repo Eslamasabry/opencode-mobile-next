@@ -2,9 +2,7 @@ package io.github.eslamasabry.oc.feature.chat.header.ui
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -27,11 +25,7 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 internal fun HandoffBody(sheet: HeaderSheet.Handoff, actions: ChatHeaderActions) {
-    Column(
-        Modifier.fillMaxWidth()
-            .verticalScroll(rememberScrollState())
-            .testTag("agent-handoff-review")
-    ) {
+    Column(Modifier.fillMaxWidth().testTag("agent-handoff-review")) {
         KitNotice(message = stringResource(Res.string.nativeHandoffIntro))
         val state = sheet.state
         if (state == null) {

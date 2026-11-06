@@ -1,11 +1,8 @@
 package io.github.eslamasabry.oc.feature.chat.sessiontransfer.ui
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.MediaProblem
 import io.github.eslamasabry.oc.core.common.RefusalReason
@@ -50,7 +47,7 @@ public fun SessionTransferSheet(state: SessionTransferUi, actions: SessionTransf
         title = stringResource(Res.string.sessionTransferTitle),
         height = KitSheetHeight.Full,
     ) {
-        Column(Modifier.verticalScroll(rememberScrollState())) {
+        Column {
             state.failure?.let { failure ->
                 val resource =
                     when {
