@@ -519,6 +519,7 @@ private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, state
         done = row.status == RowStatus.Done,
         growKey = row.ref,
         onClick = if (row.canOpen) ({ actions.openConversation(row.ref) }) else null,
+        pinned = state != null && row.key in state.pinned,
     )
     }
     KitMenu(

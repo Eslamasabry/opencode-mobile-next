@@ -22,11 +22,16 @@ import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.theme.*
 import io.github.eslamasabry.oc.ui.kit.motion.kitGrowSource
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.kitPinned
+import org.jetbrains.compose.resources.stringResource
 
 /** The agent a conversation belongs to: [id] is the bundled mark slug, [name] the agent's plain name. */
 public data class KitFeedAgent(val id: String, val name: String)
@@ -51,6 +56,8 @@ public fun KitFeedItem(
     live: Boolean = false,
     onLongClick: (() -> Unit)? = null,
     onLongClickLabel: String? = null,
+    /** A quiet pin after the title (and "Pinned" in what TalkBack says) for a conversation pinned to the top. */
+    pinned: Boolean = false,
 ) {
     if (LocalKitStyle.current.style == Style.Signal) {
         KitRow(
@@ -78,7 +85,8 @@ public fun KitFeedItem(
         if (!server.isNullOrBlank()) { if (length > 0) append("\u00a0· "); append("\u2068$server\u2069") }
         if (time != null) { if (length > 0) append("\u00a0· "); append(time.replace(' ', '\u00a0')) }
     }
-    val words = listOfNotNull(title, agent?.name, word, project.takeIf { it.isNotBlank() }, server?.takeIf { it.isNotBlank() }, time).joinToString(", ")
+    val pinnedWord = if (pinned) stringResource(Res.string.kitPinned) else null
+    val words = listOfNotNull(title, pinnedWord, agent?.name, word, project.takeIf { it.isNotBlank() }, server?.takeIf { it.isNotBlank() }, time).joinToString(", ")
     val body: @Composable () -> Unit = {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = tokens.gutter.dp, vertical = Space.S3.dp).clearAndSetSemantics {},
@@ -100,7 +108,11 @@ public fun KitFeedItem(
                 }
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-                KitText(title, role = TypeRole.RowTitle, maxLines = if (large) 2 else 1) // F: lib/ui/kit/kit_feed_item.dart:490
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+                    KitText(title, Modifier.weight(1f, fill = false), role = TypeRole.RowTitle, maxLines = if (large) 2 else 1) // F: lib/ui/kit/kit_feed_item.dart:490
+                    // Quiet: the secondary tone at the size of the line under it, never a badge.
+                    if (pinned) KitGlyph(KitIcons.pin, colors.text2, 14.dp)
+                }
                 if (meta.isNotEmpty()) BasicText(meta, style = LocalKitTypography.current.style(TypeRole.Secondary).copy(color = colors.text2), maxLines = if (large) Int.MAX_VALUE else 1, overflow = TextOverflow.Ellipsis)
             }
         }

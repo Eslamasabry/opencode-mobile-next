@@ -743,4 +743,5 @@
     <string name="kitConsequenceLost">سيُفقد</string>
     <string name="kitConsequenceKept">محفوظ</string>
     <string name="kitConsequenceInfo">ملاحظة</string>
+    <string name="kitPinned">مثبّتة</string>
 </resources>
