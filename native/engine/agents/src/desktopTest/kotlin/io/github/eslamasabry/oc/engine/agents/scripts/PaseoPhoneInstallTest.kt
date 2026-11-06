@@ -370,8 +370,8 @@ sync() {
 
     @Test
     fun `B-LINUX-114 every literal line of the Flutter scripts appears in the port`() {
-        val source = File(repoRoot, "lib/builtin/agents/paseo_scripts.dart").readText()
-        assertEquals(dartRawStrings("lib/builtin/agents/paseo_scripts.dart").getValue("_requireAgentUser"), PaseoPhoneScripts.REQUIRE_AGENT_USER)
+        val source = releasedSource("lib/builtin/agents/paseo_scripts.dart")
+        assertEquals(releasedDartRawStrings("lib/builtin/agents/paseo_scripts.dart").getValue("_requireAgentUser"), PaseoPhoneScripts.REQUIRE_AGENT_USER)
         val sections = Regex("'''(.*?)'''", RegexOption.DOT_MATCHES_ALL).findAll(source).map { it.groupValues[1] }.toList()
         val generated = listOf(
             PaseoPhoneScripts.nodeInstall, PaseoPhoneScripts.nodeCheck,

@@ -226,7 +226,15 @@ class LinuxProcessesTest {
     fun `B-LINUX-084 the scan script is the Flutter script, word for word`() {
         assertTrue(LINUX_PROCESS_SCAN_SCRIPT.startsWith("# oc-linux-scan\nprintf '::self %s\\n' \"$$\"\n"))
         assertTrue(LINUX_PROCESS_SCAN_SCRIPT.contains("  p=\${d#/proc/}\n"))
-        assertTrue(LINUX_PROCESS_SCAN_SCRIPT.contains("printf '::p %s\\t%s\\t%s\\n' \"\$p\" \"\$s\" \"\$c\""))
+        // Native adds a fourth column, the process's working folder, which the per-project dev-server match reads
+        // (DetectedDevServers); Flutter's three columns come first, so its parser reads the line unchanged. Tabs and
+        // newlines in a command line become spaces so they cannot split the columns.
+        assertTrue(LINUX_PROCESS_SCAN_SCRIPT.contains("c=\$(tr '\\000\\t\\n' '   ' 2>/dev/null < \"\$d/cmdline\" | head -c 600)"))
+        assertTrue(
+            LINUX_PROCESS_SCAN_SCRIPT.contains(
+                "printf '::p %s\\t%s\\t%s\\t%s\\n' \"\$p\" \"\$s\" \"\$c\" \"\$(readlink \"\$d/cwd\" 2>/dev/null"
+            )
+        )
         assertTrue(LINUX_PROCESS_SCAN_SCRIPT.endsWith("done\nexit 0\n"))
     }
 }

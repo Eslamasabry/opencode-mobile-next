@@ -113,7 +113,8 @@ class BuiltinLinuxBridgeTest {
         assertEquals(
             mapOf(
                 "script" to "serve",
-                "port" to 4097,
+                // The native phone server's default port (abf07acb1): 4098, so it runs beside Flutter's 4097.
+                "port" to 4098,
                 "restoreRecipe" to mapOf("version" to 1, "profileId" to "phone-profile", "runtime" to "openCode2"),
             ),
             channel.calls.single().arguments,

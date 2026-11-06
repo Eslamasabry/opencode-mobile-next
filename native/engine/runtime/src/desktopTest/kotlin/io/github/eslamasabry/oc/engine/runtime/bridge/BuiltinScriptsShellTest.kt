@@ -108,6 +108,15 @@ class BuiltinScriptsShellTest {
             "59638cb254ca73432b54cbb5fb8d559c05a681760bb4e7f0a042269fa850aeba",
             sha256(BuiltinScripts.installOpenCodeScript().getOrNull()!!),
         )
-        assertEquals("deac5091b852089a39d1a3ae9c115acb0a40436ad416012435b9fa7d86592fda", sha256(BuiltinScripts.serverScript().getOrNull()!!))
+        // The server script pinned on 4097 is unchanged; the native default moved to 4098 so it runs beside the
+        // Flutter app's phone server (abf07acb1), and only that port differs.
+        assertEquals(
+            "deac5091b852089a39d1a3ae9c115acb0a40436ad416012435b9fa7d86592fda",
+            sha256(BuiltinScripts.serverScript(port = 4097).getOrNull()!!),
+        )
+        assertEquals(
+            BuiltinScripts.serverScript(port = 4097).getOrNull()!!.replace("--port 4097", "--port 4098"),
+            BuiltinScripts.serverScript().getOrNull()!!,
+        )
     }
 }
