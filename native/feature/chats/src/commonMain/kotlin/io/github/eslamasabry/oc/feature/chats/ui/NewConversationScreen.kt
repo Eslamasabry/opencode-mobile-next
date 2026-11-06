@@ -50,6 +50,7 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips
 import io.github.eslamasabry.oc.ui.kit.modal.KitNewProjectDialog
+import io.github.eslamasabry.oc.ui.kit.modal.KitNewProjectRow
 import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
@@ -80,6 +81,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
@@ -149,7 +151,11 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     if (state.servers.isNotEmpty()) NewConversationChoices(state, actions)
                     // The empty prompt already says it in the field; repeating it is the stray line (N-32).
                     val promptHint = stringResource(Res.string.chatsNewBuildPrompt)
-                    if (startBlocked != null && startBlocked != promptHint && !state.busy)
+                    // N-48: an unconfirmed send already has its notice above; the reason is said once.
+                    if (
+                        startBlocked != null && startBlocked != promptHint && !state.busy &&
+                            !state.deliveryUnconfirmed && !state.creationUnconfirmed
+                    )
                         KitText(startBlocked, role = TypeRole.Secondary)
                     KitButton(
                         action =
@@ -216,13 +222,24 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                         NewConversationStarters(state, actions)
                     }
                     if (state.deliveryUnconfirmed) {
-                        KitNotice(stringResource(Res.string.p12NewDeliveryUnconfirmed))
-                        if (state.reviewConversation != null)
-                            KitButton(
-                                stringResource(Res.string.p12NewOpenCreated),
-                                actions::openCreatedConversation,
-                                role = KitButtonRole.Secondary,
-                            )
+                        // N-48: one notice with its way forward: the conversation (where it can be sent again) or
+                        // Discard, which opens this form again.
+                        KitNotice(
+                            message = stringResource(Res.string.p12NewDeliveryUnconfirmed),
+                            actions =
+                                listOfNotNull(
+                                    state.reviewConversation?.let {
+                                        KitLineAction(
+                                            stringResource(Res.string.p12NewOpenCreated),
+                                            actions::openCreatedConversation,
+                                        )
+                                    },
+                                    KitLineAction(
+                                        stringResource(Res.string.nativePendingDiscard),
+                                        actions::discardUnconfirmed,
+                                    ),
+                                ),
+                        )
                     }
                     if (state.draftFailed) KitNotice(stringResource(Res.string.p12NewDraftFailed))
                     if (state.repairing) KitNotice(stringResource(Res.string.gitRepairLooking))
@@ -386,18 +403,7 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
                     )
                 }
                 if (state.canCreateProject)
-                    KitRow(
-                        title = stringResource(Res.string.homeProjectSheetNew),
-                        supporting =
-                            if (state.creatingProject) working
-                            else stringResource(Res.string.homeProjectSheetNewDetail),
-                        leading = KitRowLeading.Glyph(KitIcons.folderAdd, tile = true),
-                        trailing = KitRowTrailing.Chevron,
-                        titleAccent = true,
-                        enabled = !state.creatingProject,
-                        disabledReason = working,
-                        onClick = actions::askNewProject,
-                    )
+                    KitNewProjectRow(actions::askNewProject, working = state.creatingProject)
             }
             state.projectFailure?.let { problem ->
                 KitErrorNotice(

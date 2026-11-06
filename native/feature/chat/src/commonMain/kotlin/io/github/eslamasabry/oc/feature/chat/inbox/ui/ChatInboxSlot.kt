@@ -7,8 +7,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.model.InboxDelivery
 import io.github.eslamasabry.oc.feature.chat.inbox.presentation.ChatInboxActions
+import io.github.eslamasabry.oc.feature.chat.inbox.presentation.ChatInboxRow
 import io.github.eslamasabry.oc.feature.chat.inbox.presentation.ChatInboxUi
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
@@ -35,6 +39,8 @@ public fun ChatInboxSlot(
         }
     }
     val title = stringResource(Res.string.nativePendingTitle)
+    // N-48: the row and the answer being confirmed (true = Send again, false = Discard).
+    var asking by remember { mutableStateOf<Pair<ChatInboxRow, Boolean>?>(null) }
     KitSheetHost {
         if (open)
             KitSheet(visible = true, title = title, onDismissRequest = onDismiss) {
@@ -77,7 +83,23 @@ public fun ChatInboxSlot(
                                         !state.busy && !row.sending,
                                     )
                                 )
-                            if (row.local && row.dispatched)
+                            // N-48: a send that may already have arrived is never a dead end: Send again (warned
+                            // it can repeat), Discard, or Check again.
+                            if (row.local && row.dispatched) {
+                                add(
+                                    KitLineAction(
+                                        stringResource(Res.string.queuedResendConfirm),
+                                        { asking = row to true },
+                                        !state.busy && !row.sending,
+                                    )
+                                )
+                                add(
+                                    KitLineAction(
+                                        stringResource(Res.string.nativePendingDiscard),
+                                        { asking = row to false },
+                                        !state.busy && !row.sending,
+                                    )
+                                )
                                 add(
                                     KitLineAction(
                                         stringResource(Res.string.nativePendingCheck),
@@ -85,10 +107,38 @@ public fun ChatInboxSlot(
                                         !state.busy && !row.sending,
                                     )
                                 )
+                            }
                         }
                         KitNotice(message = row.text, title = heading, actions = buttons)
                     }
                 }
             }
     }
+    val ask = asking
+    KitConfirm(
+        spec =
+            ask?.let { (_, again) ->
+                if (again)
+                    KitConfirmSpec(
+                        title = stringResource(Res.string.queuedResendTitle),
+                        confirmLabel = stringResource(Res.string.queuedResendConfirm),
+                        body = stringResource(Res.string.queuedResendMessage),
+                        cancelLabel = stringResource(Res.string.queuedKeepForReview),
+                    )
+                else
+                    KitConfirmSpec(
+                        title = stringResource(Res.string.nativePendingDiscardTitle),
+                        confirmLabel = stringResource(Res.string.nativePendingDiscard),
+                        kind = KitConfirmKind.Discard,
+                        body = stringResource(Res.string.queuedDiscardUnconfirmedMessage),
+                        cancelLabel = stringResource(Res.string.queuedKeepForReview),
+                    )
+            },
+        onConfirm = {
+            val (row, again) = ask ?: return@KitConfirm
+            asking = null
+            if (again) actions.sendAgain(row) else actions.discard(row)
+        },
+        onCancel = { asking = null },
+    )
 }

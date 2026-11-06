@@ -1075,12 +1075,18 @@ class PreviewRuntime(
     ): io.github.eslamasabry.oc.core.model.ServerLocation? =
         registry.live.value[profile]?.session?.server?.location?.value
 
-    override suspend fun remove(id: ProfileId): Outcome<Unit> {
+    override suspend fun remove(id: ProfileId): Outcome<Unit> = remove(id, discardHeld = false)
+
+    /**
+     * N-48: with [discardHeld] (the person confirmed it on the removal page) this server's waiting prompts go with it,
+     * a send that may already have arrived included, instead of keeping the server forever.
+     */
+    suspend fun remove(id: ProfileId, discardHeld: Boolean): Outcome<Unit> {
         val result = command {
             when (val queued = OfflineQueueStore(stores.prefs, stores.lanes.app).load()) {
                 QueueRead.Unreadable -> return@command Failure.StorageRefused().failed()
                 is QueueRead.Readable ->
-                    if (queued.entries.any { it.profileId == id })
+                    if (!discardHeld && queued.entries.any { it.profileId == id })
                         return@command Failure.Refused(RefusalReason.DispatchUncertain).failed()
             }
             val graph = registry.live.value[id]
@@ -1091,6 +1097,10 @@ class PreviewRuntime(
                     (graph as? ChatGraphAccessors)?.chatDelivery?.queue
                         ?: return@command Failure.StorageRefused().failed()
                 delivery.closeProfile(id)
+                if (discardHeld) {
+                    val swept = delivery.sweepProfile(id)
+                    if (swept is Outcome.Failed) return@command swept
+                }
             }
             registry.close(id)
             eventJobs.remove(id)?.cancel()
@@ -1106,8 +1116,14 @@ class PreviewRuntime(
             when (val queued = OfflineQueueStore(stores.prefs, stores.lanes.app).load()) {
                 QueueRead.Unreadable -> return@command Failure.StorageRefused().failed()
                 is QueueRead.Readable ->
-                    if (queued.entries.any { it.profileId == id })
-                        return@command Failure.Refused(RefusalReason.DispatchUncertain).failed()
+                    if (queued.entries.any { it.profileId == id }) {
+                        if (!discardHeld)
+                            return@command Failure.Refused(RefusalReason.DispatchUncertain).failed()
+                        // No live owner held them: the stored queue drops this server's entries itself.
+                        val kept = queued.entries.filter { it.profileId != id }
+                        if (!OfflineQueueStore(stores.prefs, stores.lanes.app).save(kept))
+                            return@command Failure.StorageRefused().failed()
+                    }
             }
             val journals =
                 deliveryStores.singleOrNull()?.journals
@@ -1116,7 +1132,7 @@ class PreviewRuntime(
             when (val receipts = journals.deletionSnapshot(id)) {
                 is Outcome.Failed -> return@command receipts
                 is Outcome.Ok ->
-                    if (receipts.value.any { !it.state.terminal })
+                    if (!discardHeld && receipts.value.any { !it.state.terminal })
                         return@command Failure.Refused(RefusalReason.DispatchUncertain).failed()
             }
             val drafts =

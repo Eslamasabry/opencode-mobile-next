@@ -9,6 +9,8 @@
   <string name="nativePendingEdit">Bring back to edit</string>
   <string name="nativePendingSteer">Join this reply</string>
   <string name="nativePendingCheck">Check again</string>
+  <string name="nativePendingDiscard">Discard</string>
+  <string name="nativePendingDiscardTitle">Discard this message?</string>
     <string name="nativePendingEmpty">No sends are waiting.</string>
   <plurals name="nativePendingCount">
     <item quantity="one">1 message is waiting to send.</item>

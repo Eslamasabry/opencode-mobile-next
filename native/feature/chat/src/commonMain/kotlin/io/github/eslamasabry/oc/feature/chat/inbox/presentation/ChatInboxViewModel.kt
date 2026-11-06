@@ -52,6 +52,16 @@ public interface ChatInboxActions {
 
     public fun check(row: ChatInboxRow)
 
+    /**
+     * N-48: the person's Send again on a send that may already have arrived (they were warned it can repeat). The
+     * queue's own resend first; when a receipt still binds the entry to its first dispatch, a fresh copy goes out
+     * under a new message id and the stuck one leaves.
+     */
+    public fun sendAgain(row: ChatInboxRow) {}
+
+    /** N-48: the person's Discard on a send that may already have arrived: it leaves the queue and stops blocking. */
+    public fun discard(row: ChatInboxRow) {}
+
     /** A device send not yet dispatched leaves the queue and returns to the composer. */
     public fun editLocal(row: ChatInboxRow)
 
@@ -191,6 +201,45 @@ public class ChatInboxViewModel(
     override fun check(row: ChatInboxRow) {
         if (!row.local || !row.dispatched) return
         action(row) { services -> services.chatDelivery.queue?.checkReceipt(row.id) == true }
+    }
+
+    override fun sendAgain(row: ChatInboxRow) {
+        if (!row.local || !row.dispatched) return
+        action(row) { services ->
+            val queue = services.chatDelivery.queue ?: return@action false
+            val entry = queue.entries().firstOrNull { it.id == row.id } ?: return@action true
+            val again = queue.resend(row.id)
+            if (again is Outcome.Ok && again.value) return@action true
+            if (queue.entries().none { it.id == row.id }) return@action true
+            val fresh =
+                io.github.eslamasabry.oc.engine.delivery.queue.QueuedPrompt(
+                    id = services.chatGateway.createPromptMessageId().raw,
+                    profileId = entry.profileId,
+                    sessionId = entry.sessionId,
+                    text = entry.text,
+                    attachments = entry.attachments,
+                    mentions = entry.mentions,
+                    modelProviderId = entry.modelProviderId,
+                    modelId = entry.modelId,
+                    agent = entry.agent,
+                    variant = entry.variant,
+                    createdAt = kotlin.time.Clock.System.now().toEpochMilliseconds(),
+                )
+            val queued = queue.queuePrompt(fresh)
+            if (queued !is Outcome.Ok || queued.value != null) return@action false
+            if (queue.remove(row.id) !is Outcome.Ok) return@action false
+            queue.flush()
+            true
+        }
+    }
+
+    override fun discard(row: ChatInboxRow) {
+        if (!row.local || !row.dispatched) return
+        action(row) { services ->
+            val queue = services.chatDelivery.queue ?: return@action false
+            val removed = queue.remove(row.id)
+            removed is Outcome.Ok && removed.value
+        }
     }
 
     override fun editLocal(row: ChatInboxRow) {

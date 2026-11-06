@@ -14,7 +14,6 @@ import io.github.eslamasabry.oc.ui.kit.*
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.frame.*
 import io.github.eslamasabry.oc.ui.kit.modal.*
-import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.*
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
@@ -27,14 +26,8 @@ public fun ServerRemovalScreen(state: ServerRemovalUi, actions: ServerRemovalAct
     val consequences = buildList {
         if (plan != null) {
             if (plan.queued > 0)
-                add(
-                    pluralStringResource(
-                        if (state.deleteQueued) Res.plurals.remove40QueueLost
-                        else Res.plurals.remove40QueueKept,
-                        plan.queued,
-                        plan.queued,
-                    )
-                )
+                // N-48: waiting prompts go with the server (keeping them was never possible); the confirm says so.
+                add(pluralStringResource(Res.plurals.remove40QueueLost, plan.queued, plan.queued))
             if (plan.uncertain > 0)
                 add(pluralStringResource(Res.plurals.remove40Uncertain, plan.uncertain, plan.uncertain))
             if (plan.drafts > 0) add(pluralStringResource(Res.plurals.remove40DraftsLost, plan.drafts, plan.drafts))
@@ -86,14 +79,6 @@ public fun ServerRemovalScreen(state: ServerRemovalUi, actions: ServerRemovalAct
             plan?.let { KitText(it.name, role = TypeRole.Headline) }
             if (plan != null) KitText(stringResource(Res.string.remove40Body), tone = TextTone.Secondary)
             KitConsequences(consequences)
-            if ((plan?.queued ?: 0) > 0)
-                KitSwitchRow(
-                    stringResource(Res.string.remove40DeleteQueue),
-                    checked = state.deleteQueued,
-                    supporting = stringResource(Res.string.remove40DeleteQueueHelp),
-                    enabled = enabled,
-                    onCheckedChange = actions::deleteQueued,
-                )
             if (plan != null)
                 KitButton(
                     stringResource(Res.string.serversRemove),

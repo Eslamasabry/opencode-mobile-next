@@ -339,6 +339,36 @@ class AndroidNewConversationHost(
             Outcome.Ok(ConversationRef(profile, SessionId(receipt.session)))
         }
 
+    override suspend fun dismissReview(profile: ProfileId, directory: String?): Outcome<Unit> =
+        withContext(serial) {
+            if (stores.profiles.profile(profile) == null) return@withContext refused()
+            val expected =
+                linkedMapOf(
+                    reviewKey(profile, directory) to stores.prefs.get(reviewKey(profile, directory)),
+                    creationKey(profile, directory) to stores.prefs.get(creationKey(profile, directory)),
+                )
+            val raw = expected.values.firstOrNull { it != null } as? PrefValue.Str
+            val reviewId =
+                raw?.value?.takeIf { it.length <= 8192 }?.let { text ->
+                    try {
+                        FirstMessageReview.decode(text)?.reviewId
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
+                    } catch (_: Exception) {
+                        null
+                    }
+                }
+            val cleared =
+                stores.prefs.compareAndCommit(stores.lanes.forProfile(profile), expected) {
+                    remove(reviewKey(profile, directory))
+                    remove(creationKey(profile, directory))
+                }
+            if (cleared is Outcome.Failed) return@withContext cleared
+            if (reviewId != null)
+                (registry.live.value[profile] as? ChatGraphAccessors)?.chatDelivery?.queue?.remove(reviewId)
+            Outcome.Ok(Unit)
+        }
+
     /** A removed queue row alone proves nothing; only the original scoped admission does. */
     private suspend fun firstMessageConfirmed(
         graph: ConnectionGraph,

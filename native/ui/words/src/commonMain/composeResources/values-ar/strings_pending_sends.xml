@@ -9,6 +9,8 @@
   <string name="nativePendingEdit">إعادة للتحرير</string>
   <string name="nativePendingSteer">الانضمام إلى هذا الرد</string>
   <string name="nativePendingCheck">التحقّق مجددًا</string>
+  <string name="nativePendingDiscard">تجاهُل</string>
+  <string name="nativePendingDiscardTitle">تجاهُل هذه الرسالة؟</string>
     <string name="nativePendingEmpty">لا توجد رسائل بانتظار الإرسال.</string>
   <plurals name="nativePendingCount">
     <item quantity="zero">لا توجد رسائل بانتظار الإرسال.</item>

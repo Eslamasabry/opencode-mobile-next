@@ -101,6 +101,12 @@ public interface NewConversationHost {
     public suspend fun review(profile: ProfileId, directory: String?): Outcome<ConversationRef?> =
         Outcome.Ok(null)
 
+    /**
+     * N-48: the person's Discard on a first message whose arrival was never confirmed: the review record leaves and
+     * so does its waiting copy in the device queue, so nothing stays locked behind it.
+     */
+    public suspend fun dismissReview(profile: ProfileId, directory: String?): Outcome<Unit> = Outcome.Ok(Unit)
+
     public suspend fun draft(profile: ProfileId, directory: String?): Outcome<String>
 
     public suspend fun saveDraft(
@@ -285,6 +291,9 @@ public data class NewConversationUi(
 
 public interface NewConversationActions {
     public fun openCreatedConversation() {}
+
+    /** N-48: Discard the unconfirmed first message: the form opens again, empty. */
+    public fun discardUnconfirmed() {}
 
     public fun shown() {}
 
@@ -479,6 +488,34 @@ public class NewConversationViewModel(
                 if (nav.top.value == route) nav.back()
                 nav.openChat(ref)
             } else mutable.update { it.copy(reviewConversation = null) }
+        }
+    }
+
+    override fun discardUnconfirmed() {
+        val shown = mutable.value
+        val profile = shown.profile ?: return
+        if (!shown.deliveryUnconfirmed && !shown.creationUnconfirmed) return
+        viewModelScope.launch {
+            edits.withLock {
+                when (val done = host.dismissReview(profile, shown.directory)) {
+                    is Outcome.Failed -> mutable.update { it.copy(failure = done.failure) }
+                    is Outcome.Ok -> {
+                        attempt = null
+                        host.saveDraft(profile, shown.directory, "")
+                        mutable.update {
+                            it.copy(
+                                deliveryUnconfirmed = false,
+                                creationUnconfirmed = false,
+                                attempted = false,
+                                reviewConversation = null,
+                                failure = null,
+                                text = "",
+                                textRevision = it.textRevision + 1,
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 

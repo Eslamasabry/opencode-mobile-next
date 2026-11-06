@@ -104,8 +104,8 @@
         <item quantity="other">%1$d waiting prompts will be kept in Saved prompts.</item>
     </plurals>
     <plurals name="remove40Uncertain">
-        <item quantity="one">1 prompt may already have been sent. A delivery that still needs review can stop removal.</item>
-        <item quantity="other">%1$d prompts may already have been sent. A delivery that still needs review can stop removal.</item>
+        <item quantity="one">1 of them may already have been sent; it is deleted from this phone too.</item>
+        <item quantity="other">%1$d of them may already have been sent; they are deleted from this phone too.</item>
     </plurals>
     <plurals name="remove40DraftsLost">
         <item quantity="one">1 saved conversation draft will be removed.</item>
