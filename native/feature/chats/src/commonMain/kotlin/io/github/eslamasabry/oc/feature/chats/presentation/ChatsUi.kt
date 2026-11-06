@@ -180,8 +180,15 @@ public data class ChatsUi(
     /** The one Undo offer after an archive; [ArchiveUndoUi.id] restarts the bar's window. */
     val archiveUndo: ArchiveUndoUi? = null,
     val archiveFailure: io.github.eslamasabry.oc.core.common.Failure? = null,
-    /** Row keys whose server can rename them (same set as [archivable]: OpenCode conversations). */
+    /** N-30: which row act [archiveFailure] belongs to (archive, delete or pin), for its words. */
+    val archiveFailureAct: RowActFailure = RowActFailure.Archive,
+    /** Row keys whose server can rename them: OpenCode conversations on a live connection (N-30). */
     val renamable: ImmutableSet<String> = persistentSetOf(),
+    /** N-30: row keys whose server deletes them. */
+    val deletable: ImmutableSet<String> = persistentSetOf(),
+    /** N-30: row keys that can be pinned on this phone, and those pinned now. */
+    val pinnable: ImmutableSet<String> = persistentSetOf(),
+    val pinned: ImmutableSet<String> = persistentSetOf(),
     /** The rename dialog (N-30: Rename from the row menu), or null. */
     val renaming: RenameUi? = null,
     val renameFailure: io.github.eslamasabry.oc.core.common.Failure? = null,
@@ -195,8 +202,11 @@ public data class ChatsUi(
         get() = home.sources.any { !it.onThisPhone }
 }
 
-/** The conversation just archived, waiting out its undo window. */
-public data class ArchiveUndoUi(val id: Int, val title: RowTitle)
+/** The conversation just archived (or, with [deleted], deleted), waiting out its undo window. */
+public data class ArchiveUndoUi(val id: Int, val title: RowTitle, val deleted: Boolean = false)
+
+/** N-30: the row act a home failure notice speaks for. */
+public enum class RowActFailure { Archive, Delete, Pin }
 
 /**
  * What a list row's menu does beyond Open and Archive (Flutter global-sessions row menu). Each
@@ -250,6 +260,12 @@ public interface ChatsActions {
     public fun finishRename(title: String?) {}
 
     public fun dismissRenameFailure() {}
+
+    /** N-30: hides the row at once and deletes it when the undo window ends (the same window as archive). */
+    public fun delete(row: ConversationRowUi) {}
+
+    /** N-30: pins or unpins the row's conversation on this phone (the same pins as All conversations). */
+    public fun togglePin(row: ConversationRowUi) {}
 
     public fun newConversation()
 

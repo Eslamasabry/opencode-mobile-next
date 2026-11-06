@@ -49,6 +49,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ConversationRowUi
 import io.github.eslamasabry.oc.feature.chats.presentation.RelativeAge
 import io.github.eslamasabry.oc.feature.chats.presentation.RowAct
+import io.github.eslamasabry.oc.feature.chats.presentation.RowActFailure
 import io.github.eslamasabry.oc.feature.chats.presentation.RowStatus
 import io.github.eslamasabry.oc.ui.words.res.chatUiShareSession
 import io.github.eslamasabry.oc.ui.words.res.sessionMenuDetails
@@ -111,6 +112,12 @@ import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAge
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.statePin
+import io.github.eslamasabry.oc.ui.words.res.stateUnpin
+import io.github.eslamasabry.oc.ui.words.res.statePinFailed
+import io.github.eslamasabry.oc.ui.words.res.p12DeleteFailed
+import io.github.eslamasabry.oc.ui.words.res.p12Deleted
+import io.github.eslamasabry.oc.ui.words.res.sessionMenuDelete
 import io.github.eslamasabry.oc.ui.words.res.appUpdateUpdate
 import io.github.eslamasabry.oc.ui.words.res.chatHomeAllow
 import io.github.eslamasabry.oc.ui.words.res.chatHomeAnswerFailed
@@ -237,7 +244,14 @@ public fun ChatsScreen(
             if (state.archiveFailure != null)
                 item(key = "archive-failure") {
                     io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice(
-                        message = stringResource(Res.string.p12ArchiveFailed),
+                        message =
+                            stringResource(
+                                when (state.archiveFailureAct) {
+                                    RowActFailure.Archive -> Res.string.p12ArchiveFailed
+                                    RowActFailure.Delete -> Res.string.p12DeleteFailed
+                                    RowActFailure.Pin -> Res.string.statePinFailed
+                                }
+                            ),
                         failure = state.archiveFailure,
                     )
                 }
@@ -356,7 +370,13 @@ public fun ChatsScreen(
                 )
             }
             val undo = state.archiveUndo
-            val message = undo?.let { stringResource(Res.string.chatsRowArchived, rowTitleText(it.title)) }
+            val message =
+                undo?.let {
+                    stringResource(
+                        if (it.deleted) Res.string.p12Deleted else Res.string.chatsRowArchived,
+                        rowTitleText(it.title),
+                    )
+                }
             KitUndoBar(
                 offer = if (undo != null && message != null) KitUndoOffer("archive-${undo.id}", message) else null,
                 onUndo = actions::undoArchive,
@@ -489,18 +509,23 @@ private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, state
     }
     KitMenu(
         expanded = menuOpen,
+        // N-30: the same acts, in the same order, as a row on All conversations (a tap already opens it).
         items = buildList {
-            if (row.canOpen) add(KitMenuItem(stringResource(Res.string.kitRequestOpen), { menuOpen = false; actions.openConversation(row.ref) }, icon = KitIcons.chat))
+            if (state != null && row.key in state.pinnable) {
+                val pinned = row.key in state.pinned
+                add(KitMenuItem(stringResource(if (pinned) Res.string.stateUnpin else Res.string.statePin), { menuOpen = false; actions.togglePin(row) }, icon = if (pinned) KitIcons.unpin else KitIcons.pin))
+            }
+            if (state != null && row.key in state.renamable) add(KitMenuItem(stringResource(Res.string.p12Rename), { menuOpen = false; actions.rename(row) }, icon = KitIcons.edit))
             if (row.canOpen) {
-                // Share, Details, Continue here, Copy handoff and Open related open the conversation's own
-                // page and run the same act its menu runs (one path to the server for each).
+                // Share, Details, Copy handoff and Open related open the conversation's own page and run the same
+                // act its menu runs (one path to the server for each).
                 add(KitMenuItem(stringResource(Res.string.chatUiShareSession), { menuOpen = false; actions.rowAct(row, RowAct.Share) }, icon = KitIcons.link))
                 add(KitMenuItem(stringResource(Res.string.sessionMenuDetails), { menuOpen = false; actions.rowAct(row, RowAct.Details) }, icon = KitIcons.info))
                 add(KitMenuItem(stringResource(Res.string.sessionOpenRelated), { menuOpen = false; actions.rowAct(row, RowAct.OpenRelated) }, icon = KitIcons.branch))
                 add(KitMenuItem(stringResource(Res.string.sessionCopyHandoff), { menuOpen = false; actions.rowAct(row, RowAct.CopyHandoff) }, icon = KitIcons.terminal))
             }
-            if (state != null && row.key in state.renamable) add(KitMenuItem(stringResource(Res.string.p12Rename), { menuOpen = false; actions.rename(row) }, icon = KitIcons.edit))
             if (canArchive) add(KitMenuItem(archiveWord, { menuOpen = false; actions.archive(row) }, icon = KitIcons.archive))
+            if (state != null && row.key in state.deletable) add(KitMenuItem(stringResource(Res.string.sessionMenuDelete), { menuOpen = false; actions.delete(row) }, icon = KitIcons.delete, destructive = true))
         },
         onDismissRequest = { menuOpen = false },
         title = title,

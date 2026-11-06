@@ -344,7 +344,9 @@ internal class Oc2Gateway(
         serverRunsTools = resolver
     }
 
-    private val mutableCapabilities = MutableStateFlow(Capabilities)
+    // N-30: the stable line (2.0.4+) archives and deletes a conversation (PATCH {archived}, DELETE); the beta did not.
+    private val mutableCapabilities =
+        MutableStateFlow(if (initialDialect == Oc2Dialect.Stable) Capabilities.stableWrites() else Capabilities)
     override val capabilities: StateFlow<ServerCapabilities> = mutableCapabilities.asStateFlow()
     override val location = MutableStateFlow(initialLocation)
     private val status = MutableStateFlow<StreamStatus>(StreamStatus.Connecting)
@@ -755,7 +757,10 @@ internal class Oc2Gateway(
                 // A changed generation is not silently installed under an already pinned
                 // connection.
                 if (known != null && known != detected) return@withLock mismatch.failed()
-                if (healthy) dialect.value = detected
+                if (healthy) {
+                    dialect.value = detected
+                    if (detected == Oc2Dialect.Stable) mutableCapabilities.update { it.stableWrites() }
+                }
                 Health(healthy, version).ok()
             }
         }
@@ -1022,6 +1027,11 @@ internal class Oc2Gateway(
 
     override suspend fun deleteSession(id: SessionId): Outcome<Unit> =
         unit("/session/${sid(id)}", HttpMethod.Delete)
+
+    /** N-30: the stable line archives through the session's own update (`archived: true`). */
+    override suspend fun archiveSession(id: SessionId): Outcome<Unit> =
+        if (dialect.value != Oc2Dialect.Stable) unavailable("sessionArchive")
+        else unit("/session/${sid(id)}", HttpMethod.Patch, buildJsonObject { put("archived", true) })
 
     override suspend fun sessionStatuses(): Outcome<ImmutableMap<SessionId, SessionStatus>> =
         read("/session/active") { root ->
@@ -2301,3 +2311,6 @@ private val FORK_PLACEHOLDER_TITLE =
             """\d{4}-\d{2}-\d{2}T[\d:.]+(?:Z|[+-]\d{2}:?\d{2})?$""",
         RegexOption.IGNORE_CASE,
     )
+
+/** N-30: what the stable line adds to the capabilities: archive and delete. */
+private fun ServerCapabilities.stableWrites(): ServerCapabilities = copy(sessionArchive = true, sessionDelete = true)

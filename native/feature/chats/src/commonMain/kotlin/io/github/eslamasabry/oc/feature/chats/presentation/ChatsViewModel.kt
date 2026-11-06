@@ -49,6 +49,7 @@ public class ChatsViewModel(
     private val permissionAnswers: Set<HomePermissionAnswers> = emptySet(),
     private val connections: ConversationServers = NoConversationServers(),
     private val appScope: AppCoroutineScope? = null,
+    private val pins: ConversationPins = NoConversationPins(),
 ) : ViewModel(), ChatsActions {
     override fun openInbox(): Unit = nav.open(MonitorInboxRoute())
 
@@ -66,9 +67,19 @@ public class ChatsViewModel(
         val pending: PendingArchive? = null,
         val offer: Int = 0,
         val failure: io.github.eslamasabry.oc.core.common.Failure? = null,
+        val failureAct: RowActFailure = RowActFailure.Archive,
     )
 
-    private data class PendingArchive(val key: String, val ref: ConversationRef, val title: RowTitle)
+    /** N-30: [delete] sends a DELETE instead of an archive when the undo window ends. */
+    private data class PendingArchive(
+        val key: String,
+        val ref: ConversationRef,
+        val title: RowTitle,
+        val delete: Boolean = false,
+    )
+
+    /** N-30: +1 whenever the stored pins change (here or on another page), so the menu's Pin/Unpin follows. */
+    private val pinTick = MutableStateFlow(0)
 
     private val archiving = MutableStateFlow(Archiving())
 
@@ -103,8 +114,9 @@ public class ChatsViewModel(
                             updateReady = update,
                             archivable = archivable(shown),
                             archiveUndo =
-                                archived.pending?.let { ArchiveUndoUi(archived.offer, it.title) },
+                                archived.pending?.let { ArchiveUndoUi(archived.offer, it.title, it.delete) },
                             archiveFailure = archived.failure,
+                            archiveFailureAct = archived.failureAct,
                         )
                 },
                 home.snapshot,
@@ -122,9 +134,17 @@ public class ChatsViewModel(
             }
             .combine(renaming) { base, rename ->
                 base.copy(
-                    renamable = base.archivable,
+                    renamable = editable(feed.snapshot.value),
                     renaming = rename.dialog,
                     renameFailure = rename.failure,
+                )
+            }
+            .combine(pinTick) { base, _ ->
+                val snapshot = feed.snapshot.value
+                base.copy(
+                    deletable = deletable(snapshot),
+                    pinnable = if (pins.supported) editable(snapshot) else kotlinx.collections.immutable.persistentSetOf(),
+                    pinned = pinnedKeys(snapshot),
                 )
             }
             .stateIn(
@@ -133,6 +153,40 @@ public class ChatsViewModel(
                 build(feed.snapshot.value, briefs.brief.value, filters.value)
                     .copy(updateReady = updates.ready.value, home = home.snapshot.value),
             )
+
+    /** N-30: OpenCode conversations on a live connection: they can be renamed and pinned. */
+    private fun editable(snapshot: ChatFeedSnapshot): kotlinx.collections.immutable.ImmutableSet<String> {
+        val live = connections.servers.value.mapTo(hashSetOf()) { it.profile }
+        return snapshot.items
+            .filter { !it.isSubagent && it.agentId == OPENCODE_AGENT_ID && it.profileId in live }
+            .mapTo(hashSetOf()) { it.identity }
+            .toImmutableSet()
+    }
+
+    /** N-30: OpenCode conversations whose server deletes them. */
+    private fun deletable(snapshot: ChatFeedSnapshot): kotlinx.collections.immutable.ImmutableSet<String> {
+        val capable =
+            connections.servers.value
+                .filter { it.gateway.capabilities.value.sessionDelete }
+                .mapTo(hashSetOf()) { it.profile }
+        return snapshot.items
+            .filter { !it.isSubagent && it.agentId == OPENCODE_AGENT_ID && it.profileId in capable }
+            .mapTo(hashSetOf()) { it.identity }
+            .toImmutableSet()
+    }
+
+    private fun pinnedKeys(snapshot: ChatFeedSnapshot): kotlinx.collections.immutable.ImmutableSet<String> {
+        if (!pins.supported) return kotlinx.collections.immutable.persistentSetOf()
+        val byProfile = connections.servers.value.associateBy { it.profile }
+        return snapshot.items
+            .filter { item -> byProfile[item.profileId]?.let { item.ref.sessionId in pins.ids(it) } == true }
+            .mapTo(hashSetOf()) { it.identity }
+            .toImmutableSet()
+    }
+
+    init {
+        viewModelScope.launch { pins.changes.collect { pinTick.update { it + 1 } } }
+    }
 
     /** Rows the person can archive: OpenCode conversations on a connection whose server offers it. */
     private fun archivable(snapshot: ChatFeedSnapshot): kotlinx.collections.immutable.ImmutableSet<String> {
@@ -200,6 +254,41 @@ public class ChatsViewModel(
         }
     }
 
+    override fun delete(row: ConversationRowUi) {
+        if (row.key !in state.value.deletable) return
+        commitArchive()
+        archiving.update {
+            it.copy(
+                hidden = it.hidden + row.key,
+                pending = PendingArchive(row.key, row.ref, row.title, delete = true),
+                offer = it.offer + 1,
+                failure = null,
+            )
+        }
+    }
+
+    override fun togglePin(row: ConversationRowUi) {
+        if (row.key !in state.value.pinnable) return
+        val server = connections.servers.value.firstOrNull { it.profile == row.ref.profileId } ?: return
+        val wanted = row.ref.sessionId !in pins.ids(server)
+        viewModelScope.launch {
+            when (val done = pins.set(server, row.ref.sessionId, wanted)) {
+                is io.github.eslamasabry.oc.core.common.Outcome.Ok -> {
+                    pinTick.update { it + 1 }
+                    // Launcher shortcuts follow the pins, as on All conversations.
+                    val ids = pins.ids(server)
+                    val titles =
+                        feed.snapshot.value.items
+                            .filter { it.profileId == server.profile && it.ref.sessionId in ids }
+                            .associate { it.ref.sessionId to SessionTitles.text(it.title) }
+                    pins.published(server, titles)
+                }
+                is io.github.eslamasabry.oc.core.common.Outcome.Failed ->
+                    archiving.update { it.copy(failure = done.failure, failureAct = RowActFailure.Pin) }
+            }
+        }
+    }
+
     override fun undoArchive() {
         archiving.update { cur ->
             val back = cur.pending ?: return@update cur
@@ -214,15 +303,24 @@ public class ChatsViewModel(
         (appScope ?: viewModelScope).launch {
             val ops =
                 connections.servers.value.firstOrNull { it.profile == job.ref.profileId }?.operations
+            val server = connections.servers.value.firstOrNull { it.profile == job.ref.profileId }
             val done: io.github.eslamasabry.oc.core.common.Outcome<Unit> =
-                ops?.archiveSession(job.ref.sessionId)
-                    ?: io.github.eslamasabry.oc.core.domain.unavailable("sessionArchive")
+                if (job.delete)
+                    server?.gateway?.deleteSession(job.ref.sessionId)
+                        ?: io.github.eslamasabry.oc.core.domain.unavailable("sessionDelete")
+                else
+                    ops?.archiveSession(job.ref.sessionId)
+                        ?: io.github.eslamasabry.oc.core.domain.unavailable("sessionArchive")
             when (done) {
                 is io.github.eslamasabry.oc.core.common.Outcome.Ok -> feed.refresh()
                 // A refusal (or a server that went away) brings the row back with its reason.
                 is io.github.eslamasabry.oc.core.common.Outcome.Failed ->
                     archiving.update {
-                        it.copy(hidden = it.hidden - job.key, failure = done.failure)
+                        it.copy(
+                            hidden = it.hidden - job.key,
+                            failure = done.failure,
+                            failureAct = if (job.delete) RowActFailure.Delete else RowActFailure.Archive,
+                        )
                     }
             }
         }
@@ -233,7 +331,7 @@ public class ChatsViewModel(
     }
 
     override fun rename(row: ConversationRowUi) {
-        if (row.key !in state.value.archivable) return
+        if (row.key !in state.value.renamable) return
         val initial = (row.title as? RowTitle.Text)?.text.orEmpty()
         renaming.value = Renaming(RenameUi(row.key, initial), row.ref, null)
     }
