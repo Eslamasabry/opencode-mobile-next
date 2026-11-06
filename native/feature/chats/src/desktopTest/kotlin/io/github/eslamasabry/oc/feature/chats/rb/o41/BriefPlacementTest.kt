@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.chats.rb.o41
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.*
+import io.github.eslamasabry.oc.feature.chats.ChatEnvironment
 import io.github.eslamasabry.oc.feature.chats.RecordingChatsActions
 import io.github.eslamasabry.oc.feature.chats.presentation.*
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsScreen
@@ -31,7 +32,7 @@ class BriefPlacementTest {
             brief = BriefUi(persistentListOf(row), 0, false),
             answering = persistentSetOf("request"),
         )
-        setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en") { ChatsScreen(state, actions) } }
+        setContent { ChatEnvironment { KitTheme(platform = DesktopKitPlatform(), localeTag = "en") { ChatsScreen(state, actions) } } }
         onNodeWithText("Allow once").assertIsNotEnabled().performClick()
         onNodeWithText("Reject").assertIsNotEnabled().performClick()
         assertEquals(emptyList(), answers)
@@ -40,7 +41,8 @@ class BriefPlacementTest {
     @Test fun aConversationInTheReturnBriefIsSaidOnce() = runComposeUiTest {
         val row = ConversationRowUi("login", ConversationRef(ProfileId("p"), SessionId("s")), RowTitle.Text("Fix login"), "alpha", RowStatus.NeedsYou, RelativeAge.Minutes(2))
         val state = ChatsUi(phase = ChatsPhase.List, today = persistentListOf(row), brief = BriefUi(persistentListOf(row), 0, false))
-        setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en") { ChatsScreen(state, RecordingChatsActions()) } }
-        onAllNodesWithContentDescription("Fix login, Needs you, alpha, 2 min ago").assertCountEquals(1)
+        setContent { ChatEnvironment { KitTheme(platform = DesktopKitPlatform(), localeTag = "en") { ChatsScreen(state, RecordingChatsActions()) } } }
+        // The brief takes the row out of the list under it: one row says the conversation, whatever else it reads.
+        onAllNodesWithContentDescription("Fix login", substring = true).assertCountEquals(1)
     }
 }
