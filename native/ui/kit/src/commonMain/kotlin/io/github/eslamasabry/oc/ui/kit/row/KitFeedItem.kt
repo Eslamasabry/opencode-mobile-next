@@ -21,7 +21,14 @@ import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
+import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.kitRowPinned
+import org.jetbrains.compose.resources.stringResource
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
@@ -51,7 +58,10 @@ public fun KitFeedItem(
     live: Boolean = false,
     onLongClick: (() -> Unit)? = null,
     onLongClickLabel: String? = null,
+    /** A pinned conversation: a quiet pin after the title (and "Pinned" in what TalkBack says). */
+    pinned: Boolean = false,
 ) {
+    val pinnedWord = if (pinned) stringResource(Res.string.kitRowPinned) else null
     if (LocalKitStyle.current.style == Style.Signal) {
         KitRow(
             title, modifier, supporting = project.ifBlank { null }, state = state, meta = time, onClick = onClick, growKey = growKey,
@@ -78,7 +88,7 @@ public fun KitFeedItem(
         if (!server.isNullOrBlank()) { if (length > 0) append("\u00a0· "); append("\u2068$server\u2069") }
         if (time != null) { if (length > 0) append("\u00a0· "); append(time.replace(' ', '\u00a0')) }
     }
-    val words = listOfNotNull(title, agent?.name, word, project.takeIf { it.isNotBlank() }, server?.takeIf { it.isNotBlank() }, time).joinToString(", ")
+    val words = listOfNotNull(title, pinnedWord, agent?.name, word, project.takeIf { it.isNotBlank() }, server?.takeIf { it.isNotBlank() }, time).joinToString(", ")
     val body: @Composable () -> Unit = {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = tokens.gutter.dp, vertical = Space.S3.dp).clearAndSetSemantics {},
@@ -100,7 +110,10 @@ public fun KitFeedItem(
                 }
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-                KitText(title, role = TypeRole.RowTitle, maxLines = if (large) 2 else 1) // F: lib/ui/kit/kit_feed_item.dart:490
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+                    KitText(title, Modifier.weight(1f, fill = false), role = TypeRole.RowTitle, maxLines = if (large) 2 else 1) // F: lib/ui/kit/kit_feed_item.dart:490
+                    if (pinned) KitIcon(KitIcons.pin, size = KitIconSize.Small, tone = TextTone.Secondary)
+                }
                 if (meta.isNotEmpty()) BasicText(meta, style = LocalKitTypography.current.style(TypeRole.Secondary).copy(color = colors.text2), maxLines = if (large) Int.MAX_VALUE else 1, overflow = TextOverflow.Ellipsis)
             }
         }
