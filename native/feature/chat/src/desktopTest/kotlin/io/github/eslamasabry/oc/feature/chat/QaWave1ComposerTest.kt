@@ -123,21 +123,22 @@ class QaWave1ComposerTest {
     @Test
     fun `B6 QA wave4 the message box has no label row above it and names itself inside`() = runComposeUiTest {
         setContent { Theme { Box(Modifier.width(360.dp)) { BasicComposer(ui(steers = false), Actions(), chrome(busy = false)) } } }
-        // "Message" shows once, inside the empty box (placeholder), not as a row of its own above it.
+        // "Ask OpenCode…" (804ce6713, Flutter `chatUiAskAgent`) shows once, inside the empty box
+        // (placeholder), not as a row of its own above it.
         val field = onNodeWithTag("chat-composer-field").fetchSemanticsNode().boundsInRoot
-        val words = onAllNodesWithText("Message", useUnmergedTree = true).fetchSemanticsNodes()
+        val words = onAllNodesWithText("Ask OpenCode…", useUnmergedTree = true).fetchSemanticsNodes()
         assertEquals(1, words.size)
         assertTrue(words.single().boundsInRoot.top >= field.top, "the words sit inside the box")
-        onNodeWithContentDescription("Message", useUnmergedTree = true).assertExists()
+        onNodeWithContentDescription("Ask OpenCode…", useUnmergedTree = true).assertExists()
     }
 
     @Test
     fun `N2 QA wave4 a long model name never pushes the approval chip off the row`() = runComposeUiTest {
         val long = ComposerModel("zai-coding-plan", "glm-5.3-flash", "GLM-5.3-Flash Extended Thinking Preview", true)
         val withChip =
-            ComposerChrome({ false }, { false }, {}, { null }, {}, { null }, {}, {}, { false }) {
+            ComposerChrome({ false }, { false }, {}, { null }, {}, { null }, {}, {}, { false }, rowChips = {
                 io.github.eslamasabry.oc.ui.kit.KitText("Ask first", Modifier.testTag("approval-chip"))
-            }
+            })
         setContent {
             Theme {
                 Box(Modifier.width(360.dp)) {
@@ -169,15 +170,17 @@ class QaWave1ComposerTest {
         val models = ComposerModels(choices = listOf(other, terra, zai), selected = zai)
         setContent { Theme { KitSheetHost { BasicComposer(ui(models = models), actions, chrome(busy = false)) } } }
         onNodeWithContentDescription("Model").performClick()
-        onNodeWithText("Z.AI Coding Plan").assertExists()
+        // Regional routes stay explicit in the one kit model sheet (kitProviderName, N-51).
+        onNodeWithText("Z.AI Coding Plan · Global").assertExists()
         onNodeWithText("OpenRouter").assertExists()
         // The chosen model reads once (its band and check): no "Current" word beside it.
         onNodeWithText("Current").assertDoesNotExist()
-        onAllNodesWithText("GLM-5.3-Flash").onFirst().assertIsSelected()
+        onAllNodes(hasText("GLM-5.3-Flash") and isSelected()).assertCountEquals(1)
         // Server default is a choice row that says what it means.
         onNodeWithText("Server default").assertExists()
         onNodeWithText("The server’s own default model").assertExists()
-        onNodeWithTag("chat-model-search").assertExists()
+        // A short list has no search field: it appears from KIT_MODEL_SEARCH_FROM (8) models.
+        onNodeWithTag("chat-model-search").assertDoesNotExist()
         // The second GLM row (OpenRouter's) is a different choice, not the current one.
         onAllNodesWithText("GLM-5.3-Flash").onLast().performClick()
         waitForIdle()

@@ -123,6 +123,10 @@ internal class StagedFake(
     }
 }
 
+/** The fake starts with no confirmed capability (ServerCapabilities.Unknown); confirm session revert. */
+internal fun FakeServerGateway.offersRevert(): FakeServerGateway =
+    apply { capabilities.value = capabilities.value.copy(sessionRevert = true) }
+
 internal fun failed(f: Failure): Outcome<Nothing> = f.failed()
 
 internal fun <T> ImmutableList<T>.paths(): List<String> = map { (it as ChangedFile).path }

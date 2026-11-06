@@ -24,6 +24,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kitchat.code.KitStandaloneRedaction
 import kotlinx.collections.immutable.persistentListOf
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -39,8 +40,10 @@ class TimelineScreenTest {
         }
         setContent {
             KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Off)) {
-                KitSheetHost {
-                    ChatTimelineSheet(TimelineUi("", persistentListOf(TimelineEntryUi("prompt", "row", true, "Fix checkout", null, true)), false, false, null), actions)
+                KitStandaloneRedaction {
+                    KitSheetHost {
+                        ChatTimelineSheet(TimelineUi("", persistentListOf(TimelineEntryUi("prompt", "row", true, "Fix checkout", null, true)), false, false, null), actions)
+                    }
                 }
             }
         }
@@ -73,8 +76,10 @@ class TimelineScreenTest {
         }
         setContent {
             KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Off)) {
-                KitSheetHost {
-                    ChatTimelineSheet(TimelineUi("", persistentListOf(), false, false, null), actions)
+                KitStandaloneRedaction {
+                    KitSheetHost {
+                        ChatTimelineSheet(TimelineUi("", persistentListOf(), false, false, null), actions)
+                    }
                 }
             }
         }

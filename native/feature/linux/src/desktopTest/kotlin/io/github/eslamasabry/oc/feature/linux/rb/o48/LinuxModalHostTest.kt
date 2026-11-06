@@ -197,7 +197,7 @@ class LinuxModalHostTest {
     }
 
     @Test
-    fun `migration stop names kept data and Keep going dismisses without confirming`() =
+    fun `migration stop names kept data and Keep copying dismisses without confirming`() =
         runComposeUiTest {
             val actions = Actions()
             setContent {

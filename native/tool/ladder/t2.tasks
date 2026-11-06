@@ -4,6 +4,7 @@
 build-logic	-p build-logic test
 # E02-S11c: every module's unit-test sources compile (desktop, JVM and, with the SDK, Android); also part of :quality:test.
 test-compile	--continue -Poc.testCompileGuard=all :quality:compileAllTestSources
+test-compile	--continue compileAllTests
 tests	--continue -Poc.werror=true desktopTest testAndroidHostTest test
 goldens	--continue verifyRoborazziAndroidHostTest
 lint	:androidApp:lintSwitchRelease

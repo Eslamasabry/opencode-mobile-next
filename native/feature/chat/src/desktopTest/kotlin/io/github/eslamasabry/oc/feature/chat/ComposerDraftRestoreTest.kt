@@ -78,8 +78,9 @@ class ComposerDraftRestoreTest {
     @Test
     fun `B-STATE-102 unread draft disables editor until restoration is ready`() = runComposeUiTest {
         setContent { Theme { BasicComposer(ui("", ready = false), Actions(), chrome) } }
-        // Disabled text fields intentionally expose no SetText action; find the labeled control instead.
-        onNodeWithContentDescription("Message", useUnmergedTree = true).assertIsNotEnabled()
+        // Disabled text fields intentionally expose no SetText action; find the labeled control instead
+        // (the box names itself "Ask <agent>…" since the one-box composer).
+        onNodeWithContentDescription("Ask OpenCode…", useUnmergedTree = true).assertIsNotEnabled()
         onAllNodes(hasSetTextAction()).assertCountEquals(0)
     }
 
@@ -185,6 +186,6 @@ class ComposerDraftRestoreTest {
                     )
             setContent { Theme { BasicComposer(state, Actions(), chrome) } }
             onAllNodesWithText("Send again").assertCountEquals(0)
-            onNodeWithTag("chat-send-button").assertIsNotEnabled()
+            onControl("chat-send-button").assertIsNotEnabled()
         }
 }

@@ -96,13 +96,13 @@ class UsageViewModelTest {
     @AfterTest fun reset() = Dispatchers.resetMain()
 
     private fun vm(source: Source, zone: String? = "Africa/Cairo", nav: Navigator = Navigator(), profile: ProfileId? = null) =
-        UsageViewModel(UsageRoute.Hub(profile), source, UsageTimeZone { zone }, clock, nav)
+        UsageViewModel(UsageRoute.Hub(profile), source, UsageTimeZone { zone }, clock, nav, emptySet())
 
     @Test
     fun `B-NAV-078 a failed refresh after the time zone changed never relabels the old totals with the new zone`() = runTest {
         val source = Source()
         var zone = "Africa/Cairo"
-        val vm = UsageViewModel(UsageRoute.Hub(null), source, UsageTimeZone { zone }, clock, Navigator())
+        val vm = UsageViewModel(UsageRoute.Hub(null), source, UsageTimeZone { zone }, clock, Navigator(), emptySet())
         assertEquals(1.0, vm.state.value.report?.cost)
         zone = "Asia/Tokyo"
         val slow = CompletableDeferred<Unit>()

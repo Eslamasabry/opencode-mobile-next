@@ -31,8 +31,9 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
     // The ledger cross-checks read the Flutter repo's own ledger file and docs/native/migration/.
-    // This is a standalone build, so rootDir is native/tools/flutter-migration-readers and the repo root is three up.
-    systemProperty("oc.repoRoot", rootDir.resolve("../../..").canonicalPath)
+    // The module runs both as a standalone build (rootDir = this folder) and inside native/ (rootDir = native/), so
+    // the repo root is found from projectDir, which is native/tools/flutter-migration-readers in both: three up.
+    systemProperty("oc.repoRoot", projectDir.resolve("../../..").canonicalPath)
     // Optional: a checkout of the released Flutter line (git worktree add <dir> origin/master). When given, the
     // store-ledger test rescans it instead of trusting only the committed snapshot.
     (providers.gradleProperty("flutterTree").orNull ?: System.getenv("OC_FLUTTER_TREE"))?.let {

@@ -54,7 +54,7 @@ class WidgetComposePanelTest {
             }
         }
         onNodeWithTag("widget-send").assertIsNotEnabled()
-        onNodeWithTag("widget-message").performTextInput("Keep the draft")
+        onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("widget-message"))).performTextInput("Keep the draft")
         onNodeWithTag("widget-send").performClick()
         onNodeWithText("Keep the draft").assertExists()
         onNodeWithTag("widget-send").assertIsNotEnabled()
@@ -101,7 +101,7 @@ class WidgetComposePanelTest {
                     }
             }
         }
-        onNodeWithTag("widget-message").performTextInput("Keep my unsent words")
+        onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("widget-message"))).performTextInput("Keep my unsent words")
         runOnIdle { shown = false }
         waitForIdle()
         runOnIdle { shown = true }

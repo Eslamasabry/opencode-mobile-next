@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.feature.chats
 
 import androidx.compose.foundation.Indication
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RenderEffect
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
@@ -71,6 +72,18 @@ internal class RecordingChatsActions : ChatsActions {
 
     override fun search(query: String) {
         calls += "search $query"
+    }
+
+    override fun openSearch() {
+        calls += "openSearch"
+    }
+
+    override fun showInbox() {
+        calls += "inbox"
+    }
+
+    override fun showProjectChoices() {
+        calls += "projectChoices"
     }
 
     override fun toggleRunning() {

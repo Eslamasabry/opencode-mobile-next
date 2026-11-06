@@ -71,7 +71,7 @@ class QuestionSheetScreenTest {
         onNodeWithText("Send answers").assertIsEnabled()
         onNodeWithText("Staging").performClick()
         field.assertTextEquals("")
-        assertEquals(listOf("Staging"), QuestionSheet.answers(question, state.value.drafts)?.single())
+        assertEquals<List<String>?>(listOf("Staging"), QuestionSheet.answers(question, state.value.drafts)?.single())
     }
 
     private open class Actions : ChatRequestActions {

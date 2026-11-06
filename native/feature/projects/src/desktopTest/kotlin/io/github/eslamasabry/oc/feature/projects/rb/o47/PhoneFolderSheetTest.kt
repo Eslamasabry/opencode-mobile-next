@@ -66,7 +66,7 @@ class PhoneFolderSheetTest {
         onNodeWithTag("phone-folder-/storage/emulated/0/app/src").performClick()
         onNodeWithContentDescription("Up one folder").performClick()
         assertEquals(
-            listOf(
+            listOf<Pair<String, List<Any?>>>(
                 "enterPhoneFolder" to listOf("/storage/emulated/0/app/src"),
                 "enterPhoneFolder" to listOf("/storage/emulated/0"),
             ),
@@ -108,6 +108,6 @@ class PhoneFolderSheetTest {
             onNodeWithText("It isn’t there any more.").assertExists()
             onNodeWithText("Open app").assertDoesNotExist()
             onNodeWithText("Try again").performClick()
-            assertEquals(listOf("enterPhoneFolder" to listOf("/work/app")), calls)
+            assertEquals(listOf<Pair<String, List<Any?>>>("enterPhoneFolder" to listOf("/work/app")), calls)
         }
 }

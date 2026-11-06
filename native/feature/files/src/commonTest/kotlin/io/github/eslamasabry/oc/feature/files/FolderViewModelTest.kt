@@ -38,7 +38,14 @@ class FolderViewModelTest {
         )
 
     private fun vm(path: String = "", connections: FakeConnections = FakeConnections(FakeFileGateway(tree))) =
-        FolderViewModel(FilesRoute.Folder(conversation, path), connections, StackNavigator(ChatRoute(conversation)))
+        FolderViewModel(
+            FilesRoute.Folder(conversation, path),
+            connections,
+            StackNavigator(ChatRoute(conversation)),
+            emptySet(),
+            FakeMentions(),
+            emptySet(),
+        )
 
     @Test
     fun `B-NAV-026 Files opened from a conversation lists that conversation's project root`() = runTest {
@@ -55,7 +62,14 @@ class FolderViewModelTest {
     fun `B-NAV-026 a folder row opens the next folder and a file row opens the viewer, both for the same chat`() =
         runTest {
             val nav = StackNavigator(ChatRoute(conversation))
-            val model = FolderViewModel(FilesRoute.Folder(conversation), FakeConnections(FakeFileGateway(tree)), nav)
+            val model = FolderViewModel(
+                    FilesRoute.Folder(conversation),
+                    FakeConnections(FakeFileGateway(tree)),
+                    nav,
+                    emptySet(),
+                    FakeMentions(),
+                    emptySet(),
+                )
             model.open(FileNode("lib", "lib", true))
             assertEquals(FilesRoute.Folder(conversation, "lib"), nav.top.value)
             model.open(FileNode("README.md", "README.md", false))

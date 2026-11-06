@@ -847,7 +847,9 @@ public fun BasicComposer(
                 if (primaryIsStop) stopPart()
                 else
                     KitComposerPrimaryAction(
-                        hasMessage = inlineMic,
+                        // Without voice the empty box shows a disabled Send, never an empty slot
+                        // (Flutter kit_composer.dart:434 `_Trailing.sendDisabled`).
+                        hasMessage = inlineMic || voice == null,
                         mic = { voice?.Mic(voiceField, Modifier) },
                         send = {
                             KitComposerSend(

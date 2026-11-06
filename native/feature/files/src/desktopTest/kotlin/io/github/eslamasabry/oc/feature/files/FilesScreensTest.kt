@@ -8,7 +8,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.onNodeWithContentDescription
-import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
@@ -77,6 +76,8 @@ class FilesScreensTest {
         override fun toggleHidden() {
             toggles++
         }
+
+        override fun toggleSourceFirst() = Unit
 
         override fun search(query: String) {
             searches += query
@@ -175,7 +176,7 @@ class FilesScreensTest {
             }
         }
         onNodeWithText("This folder has only hidden files and folders.").assertExists()
-        onNodeWithTag("files-show-hidden").performClick()
+        onNodeWithText("Show hidden files").performClick()
         assertEquals(1, calls.toggles)
     }
 

@@ -283,7 +283,7 @@ class WorldComposerFilesModelsTest {
                     object : ConnectionGraph, ChatGraphAccessors, TranscriptAccessors {
                         override val profile = p
                         override val scope = scope
-                        override val session = ConnectionSession(p, pair.live)
+                        override val session = ConnectionSession(p, pair.live, scope)
                         override val chatDelivery =
                             ConnectionDelivery(
                                 pair.live,
@@ -313,6 +313,28 @@ class WorldComposerFilesModelsTest {
         val worlds = GraphChatWorlds(registry, setOf(drafts))
         val world: ChatWorld by lazy { worlds.open(ref) }
 
+        /**
+         * The fake gateway starts with no confirmed capability (ServerCapabilities.Unknown, as a
+         * real connection before its flags are read); each test confirms what its server offers.
+         */
+        fun switchesModels() {
+            base.capabilities.value =
+                base.capabilities.value.copy(
+                    serverCatalog = true,
+                    sessionModelProviderSwitching = true,
+                    agentSelection = true,
+                    promptAgentMentions = true,
+                )
+        }
+
+        fun runsCommands() {
+            base.capabilities.value = base.capabilities.value.copy(slashCommands = true)
+        }
+
+        fun queuesPrompts() {
+            base.capabilities.value = base.capabilities.value.copy(offlinePromptQueue = true)
+        }
+
         suspend fun open() {
             base.events.connect()
             registry.open(profile)
@@ -336,6 +358,7 @@ class WorldComposerFilesModelsTest {
                     )
                 )
             f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "m1"), null))
+            f.switchesModels()
             f.open()
             assertIs<Outcome.Ok<Unit>>(f.world.loadModels())
             val models = f.world.models.value
@@ -354,6 +377,7 @@ class WorldComposerFilesModelsTest {
         f.operations.catalog =
             Outcome.Ok(snapshot(catalogModel("m1"), catalogModel("m2", attachments = false)))
         f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "m2"), null))
+        f.switchesModels()
         f.open()
         assertIs<Outcome.Ok<Unit>>(f.world.loadModels())
         val selected = f.world.models.value.selected
@@ -367,6 +391,7 @@ class WorldComposerFilesModelsTest {
             val f = Fixture(this, selection = ModelRef("prov", "m1"))
             f.operations.catalog = Outcome.Ok(snapshot(catalogModel("m1")))
             f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "m1"), null))
+            f.switchesModels()
             f.open()
             f.world.loadModels()
             f.operations.catalog =
@@ -383,6 +408,7 @@ class WorldComposerFilesModelsTest {
             val f = Fixture(this, selection = ModelRef("prov", "m1"))
             f.operations.catalog = Outcome.Ok(snapshot(catalogModel("m1"), catalogModel("m2")))
             f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "m1"), null))
+            f.switchesModels()
             f.open()
             f.world.loadModels()
             val m2 = f.world.models.value.choices.single { it.modelId == "m2" }
@@ -401,6 +427,7 @@ class WorldComposerFilesModelsTest {
             val f = Fixture(this, selection = ModelRef("prov", "m1"))
             f.operations.catalog = Outcome.Ok(snapshot(catalogModel("m1")))
             f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "m1"), null))
+            f.switchesModels()
             f.open()
             f.world.loadModels()
             assertIs<Outcome.Failed>(
@@ -416,6 +443,7 @@ class WorldComposerFilesModelsTest {
             val f = Fixture(this, selection = ModelRef("prov", "m1"))
             f.operations.catalog = Outcome.Ok(snapshot(catalogModel("m1"), catalogModel("m2")))
             f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "m2"), null))
+            f.switchesModels()
             f.open()
             f.world.loadModels()
             assertIs<Outcome.Ok<Unit>>(f.world.selectModel(null))
@@ -425,6 +453,7 @@ class WorldComposerFilesModelsTest {
             val other = Fixture(this, selection = ModelRef("prov", "m1"))
             other.operations.catalog = Outcome.Ok(snapshot(catalogModel("m1")))
             other.operations.defaults = Outcome.Ok(ChatDefaults(null, null))
+            other.switchesModels()
             other.open()
             other.world.loadModels()
             assertIs<Outcome.Failed>(other.world.selectModel(null))
@@ -490,6 +519,7 @@ class WorldComposerFilesModelsTest {
             val f = Fixture(this, selection = ModelRef("prov", "m1"))
             f.operations.catalog = Outcome.Ok(snapshot(catalogModel("m1"), catalogModel("m2")))
             f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "m1"), null))
+            f.switchesModels()
             f.open()
             assertIs<Outcome.Ok<Unit>>(f.world.loadModels())
             f.world.draftChanged("original words")
@@ -587,6 +617,7 @@ class WorldComposerFilesModelsTest {
             val f = Fixture(this, selection = ModelRef("prov", "m1"))
             f.operations.catalog = Outcome.Ok(snapshot(catalogModel("m1"), catalogModel("m2")))
             f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "m1"), null))
+            f.switchesModels()
             f.open()
             assertIs<Outcome.Ok<Unit>>(f.world.loadModels())
             val m2 = f.world.models.value.choices.single { it.modelId == "m2" }
@@ -610,6 +641,7 @@ class WorldComposerFilesModelsTest {
             f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "m1"), null))
             f.open()
             f.gateway.failReads = true
+            f.switchesModels() // after the failing read is set: no earlier load may know the choice
             assertIs<Outcome.Failed>(f.world.loadModels())
             assertNull(f.world.models.value.selected, "the real choice is unknown, not the default")
             assertNotNull(f.world.models.value.failure)
@@ -622,6 +654,7 @@ class WorldComposerFilesModelsTest {
             val f = Fixture(this, selection = null)
             f.operations.catalog = Outcome.Ok(snapshot(catalogModel("m1")))
             f.operations.defaults = Outcome.Failed(Failure.Network(NetworkWhy.Refused))
+            f.switchesModels()
             f.open()
             assertIs<Outcome.Failed>(f.world.loadModels())
             assertNull(f.world.models.value.selected)
@@ -633,6 +666,7 @@ class WorldComposerFilesModelsTest {
         val f = Fixture(this, selection = ModelRef("prov", "m1"))
         f.operations.catalog = Outcome.Ok(snapshot(catalogModel("m1"), catalogModel("m2")))
         f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "m1"), null))
+        f.switchesModels()
         f.open()
         f.world.loadModels()
         val m2 = f.world.models.value.choices.single { it.modelId == "m2" }
@@ -687,6 +721,7 @@ class WorldComposerFilesModelsTest {
         runTest {
             val first = Fixture(this)
             first.base.admission = PromptAdmission.Uncertain
+            first.queuesPrompts()
             first.open()
             first.world.draftChanged("same words")
             assertIs<Outcome.Ok<Unit>>(first.world.replaceAttachments(listOf(file("a.txt", "one"))))
@@ -703,6 +738,7 @@ class WorldComposerFilesModelsTest {
                     composerPrefs = first.composerPrefs,
                     payloads = first.payloads,
                 )
+            second.queuesPrompts()
             second.open()
             advanceTimeBy(600)
             runCurrent()
@@ -717,6 +753,7 @@ class WorldComposerFilesModelsTest {
         runTest {
             val first = Fixture(this)
             first.base.admission = PromptAdmission.Uncertain
+            first.queuesPrompts()
             first.open()
             assertIs<Outcome.Ok<Unit>>(first.world.replaceAttachments(listOf(file("a.txt", "one"))))
             assertIs<Outcome.Ok<Unit>>(first.world.send(""))
@@ -730,6 +767,7 @@ class WorldComposerFilesModelsTest {
                     composerPrefs = first.composerPrefs,
                     payloads = first.payloads,
                 )
+            second.queuesPrompts()
             second.open()
             advanceTimeBy(600)
             runCurrent()
@@ -784,6 +822,7 @@ class WorldComposerFilesModelsTest {
                         io.github.eslamasabry.oc.core.model.CommandInfo("review", "Review", null, false)
                     )
                 )
+            f.runsCommands()
             f.open()
             assertIs<Outcome.Ok<Unit>>(f.world.loadCommands())
             assertEquals(listOf("review"), f.world.commands.value.map { it.name })
@@ -802,7 +841,14 @@ class WorldComposerFilesModelsTest {
         val child = SessionId("child")
         f.base.sessionList = (f.base.sessionList + Session(child, parentId = ref.sessionId)).toImmutableList()
         f.open()
-        val port = io.github.eslamasabry.oc.feature.chat.header.world.GraphChatHeaderPort(ref, f.registry)
+        val port =
+            io.github.eslamasabry.oc.feature.chat.header.world.GraphChatHeaderPort(
+                ref,
+                f.registry,
+                f.dispatchers,
+                importFiles = null,
+                context = NoContextHistory,
+            )
         port.attach()
         runCurrent()
         f.base.events.emit(
@@ -862,6 +908,7 @@ class WorldComposerFilesModelsTest {
                     ),
                 ),
             )
+        f.switchesModels()
         f.open()
         assertIs<Outcome.Ok<Unit>>(f.world.loadModels())
         f.world.draftChanged("@helper look at this")
@@ -887,6 +934,7 @@ class WorldComposerFilesModelsTest {
                     ),
                 ),
             )
+        f.switchesModels()
         f.open()
         assertIs<Outcome.Ok<Unit>>(f.world.loadModels())
         assertEquals(listOf("explore", "reviewer"), f.world.models.value.subagents.map { it.id })
@@ -901,6 +949,7 @@ class WorldComposerFilesModelsTest {
         val f = Fixture(this, selection = ModelRef("prov", "m1"))
         f.operations.catalog = Outcome.Ok(snapshot(catalogModel("m1"), catalogModel("m2")))
         f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "m1"), null))
+        f.switchesModels()
         f.open()
         assertIs<Outcome.Ok<Unit>>(f.world.loadModels())
         assertEquals("m1", f.world.models.value.selected?.modelId)
@@ -955,6 +1004,7 @@ class WorldComposerFilesModelsTest {
         val f = Fixture(this)
         f.operations.commands =
             Outcome.Ok(persistentListOf(io.github.eslamasabry.oc.core.model.CommandInfo("review", "Review", null, false)))
+        f.runsCommands()
         f.open()
         assertIs<Outcome.Ok<Unit>>(f.world.loadCommands())
         f.world.draftChanged("/review now")
@@ -1018,10 +1068,25 @@ class WorldComposerFilesModelsTest {
         val f = Fixture(this, selection = ModelRef("prov", "m1"))
         f.operations.catalog = Outcome.Ok(snapshot(catalogModel("m1"), catalogModel("m2")))
         f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "m1"), null))
+        f.switchesModels()
         f.open()
         assertIs<Outcome.Ok<Unit>>(f.world.loadModels())
         val m2 = f.world.models.value.choices.single { it.modelId == "m2" }
         assertIs<Outcome.Ok<Unit>>(f.world.selectModel(m2))
         assertEquals(listOf("m2"), f.world.models.value.recent.map { it.modelId })
     }
+}
+
+/** The header port's context-usage memory, unused by these tests. */
+private object NoContextHistory : io.github.eslamasabry.oc.engine.settings.context.ContextUsageHistory {
+    override fun fraction(
+        profile: io.github.eslamasabry.oc.core.common.ids.ProfileId,
+        session: String,
+    ): Double? = null
+
+    override suspend fun remember(
+        profile: io.github.eslamasabry.oc.core.common.ids.ProfileId,
+        session: String,
+        fraction: Double?,
+    ): io.github.eslamasabry.oc.core.common.Outcome<Unit> = io.github.eslamasabry.oc.core.common.Outcome.Ok(Unit)
 }

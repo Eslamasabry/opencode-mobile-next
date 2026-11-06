@@ -58,7 +58,11 @@ private fun reply(id: String, at: Long, vararg edits: Pair<String, Int>) =
         }.toImmutableList(),
     )
 
-private class Fake(val base: FakeServerGateway = FakeServerGateway(listOf(Session(S)))) : ServerGateway by base, StagedRevertGateway {
+/** The fake gateway starts with no confirmed capability (ServerCapabilities.Unknown); these servers undo. */
+private fun FakeServerGateway.offersRevert(): FakeServerGateway =
+    apply { capabilities.value = capabilities.value.copy(sessionRevert = true) }
+
+private class Fake(val base: FakeServerGateway = FakeServerGateway(listOf(Session(S))).offersRevert()) : ServerGateway by base, StagedRevertGateway {
     var history = listOf(prompt("u1", 1), reply("a1", 2, "src/a.kt" to 3), prompt("u2", 3), reply("a2", 4, "src/b.kt" to 2)) // one chronological page
     var staged: SessionRevert? = null
     var stageFails: Failure? = null
@@ -178,7 +182,7 @@ class ReviewPresenterTest {
 
     @Test
     fun `B-CHAT-120 undo all is never offered where the server cannot stage`() = runTest(UnconfinedTestDispatcher()) {
-        gateways.value = ReviewGateways(FakeServerGateway(listOf(Session(S))), FakeOperationsGateway())
+        gateways.value = ReviewGateways(FakeServerGateway(listOf(Session(S))).offersRevert(), FakeOperationsGateway())
         assertEquals(UndoAllUi.Unavailable, ChangesPresenter(review(), null, nav, backgroundScope).state.value.undoAll)
     }
 

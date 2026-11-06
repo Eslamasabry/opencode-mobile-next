@@ -10,6 +10,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.integrations.usage.ApiKeyAccount
 import io.github.eslamasabry.oc.engine.integrations.usage.SignInMethod
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageConnection
@@ -35,6 +36,7 @@ import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
+import kotlinx.collections.immutable.toImmutableList
 
 /** The real Plans screen over a real merge, found by visible text. */
 @OptIn(ExperimentalTestApi::class)
@@ -52,6 +54,50 @@ class PlansScreenUiTest {
 
         override fun refresh() {
             calls += "refresh"
+        }
+
+        override fun setUpCollector() {
+            calls += "setUpCollector"
+        }
+
+        override fun turnOffCollector() {
+            calls += "turnOffCollector"
+        }
+
+        override fun editThreshold(key: String?) {
+            calls += "editThreshold"
+        }
+
+        override fun thresholdChanged(value: String) {
+            calls += "thresholdChanged"
+        }
+
+        override fun saveThreshold() {
+            calls += "saveThreshold"
+        }
+
+        override fun useDefaultThreshold() {
+            calls += "useDefaultThreshold"
+        }
+
+        override fun toggleResetNotice() {
+            calls += "toggleResetNotice"
+        }
+
+        override fun dismissEditor() {
+            calls += "dismissEditor"
+        }
+
+        override fun setAlertsOn(enabled: Boolean) {
+            calls += "setAlertsOn"
+        }
+
+        override fun askCollector(profile: ProfileId) {
+            calls += "askCollector"
+        }
+
+        override fun fix(key: String) {
+            calls += "fix"
         }
     }
 
@@ -100,9 +146,9 @@ class PlansScreenUiTest {
             val ui = state()
             assertEquals(PlansPhase.List, ui.phase)
             setContent { Themed { PlansScreen(ui, Recorder()) } }
-            onNodeWithText("Claude · This phone").assertExists()
-            onNodeWithText("Claude · Workstation").assertExists()
-            onNodeWithText("This phone: numbers read here").assertExists()
+            // Flutter usage_plan_card.dart: the plan and the connection the numbers come from sit beside the name.
+            onNodeWithText("Claude Plus · This phone").assertExists()
+            onNodeWithText("Claude Plus · Workstation").assertExists()
         }
 
     @Test
@@ -110,9 +156,9 @@ class PlansScreenUiTest {
         runComposeUiTest {
             val actions = Recorder()
             setContent { Themed { PlansScreen(state(), actions) } }
-            onNodeWithText("Getting close to the limit").assertExists()
-            onNodeWithText("Plenty left").assertExists()
-            onNodeWithText("60% left · resets in 2 h").assertExists()
+            // The compact card speaks in numbers (Flutter UsageText.planSummary): the tightest share left.
+            onNodeWithText("60% left").assertExists()
+            onNodeWithText("10% left").assertExists()
             onNodeWithText("Refresh").performClick()
             assertEquals(listOf("refresh"), actions.calls)
         }
@@ -125,10 +171,10 @@ class PlansScreenUiTest {
                     mergeUsageSubscriptions(now = now, connections = listOf(pc), readings = listOf(reading("codex", "pc", problem = UsageProblem.Broken))),
                     refreshing = false,
                     nowMs = now.toEpochMilliseconds(),
-                )
+                ).let { it.copy(cards = it.cards.map { card -> card.copy(canFix = true) }.toImmutableList()) } // PlansViewModel: Try again can always run
             val actions = Recorder()
             setContent { Themed { PlansScreen(ui, actions) } }
-            onNodeWithText("The numbers couldn't be read this time").assertExists()
+            onNodeWithText("Can’t read Codex right now").assertExists()
             onNodeWithText("Try again").performClick()
             assertEquals(listOf("refresh"), actions.calls)
         }
@@ -162,8 +208,15 @@ class PlansScreenUiTest {
     @Test
     fun `B-NAV-080 the Arabic screen labels the phone source in Arabic`() =
         runComposeUiTest {
-            setContent { Themed(locale = "ar") { PlansScreen(state(), Recorder()) } }
-            onNodeWithText("Claude · هذا الهاتف").assertExists()
-            onNodeWithText("الخطط والحدود").assertExists()
+            // The copy comes from the locale's resources, so the JVM locale is Arabic for this test.
+            val previous = java.util.Locale.getDefault()
+            java.util.Locale.setDefault(java.util.Locale.forLanguageTag("ar"))
+            try {
+                setContent { Themed(locale = "ar") { PlansScreen(state(), Recorder()) } }
+                onNodeWithText("Claude Plus · هذا الهاتف").assertExists()
+                onNodeWithText("الخطط والحدود").assertExists()
+            } finally {
+                java.util.Locale.setDefault(previous)
+            }
         }
 }

@@ -16,6 +16,9 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
@@ -127,16 +130,20 @@ class StopGuardTest {
             val actions = onNodeWithTag(STOP_TAG).fetchSemanticsNode().config.getOrNull(SemanticsActions.CustomActions)
             assertNotNull(actions)
             assertEquals(listOf("Stop after this step"), actions.map { it.label })
+            // The hold is hidden, so the same act also shows as a visible button beside Stop (a hidden path is never
+            // the only path); the hold menu's item is told apart by its menu.
+            onNodeWithText("Stop after this step").assertExists()
+            val menuItem = hasText("Stop after this step") and hasAnyAncestor(hasTestTag("kit-menu"))
             onNodeWithTag(STOP_TAG).performTouchInput { longClick() }
             waitForIdle()
             assertEquals(listOf(KitHaptic.LongPress), platform.haptics)
-            onNodeWithText("Stop after this step").performClick()
+            onNode(menuItem).performClick()
             waitForIdle()
             assertEquals(1, afterStep)
-            onNodeWithText("Stop after this step").assertDoesNotExist()
+            onNode(menuItem).assertDoesNotExist()
             onNodeWithTag(STOP_TAG).performSemanticsAction(SemanticsActions.OnLongClick)
             waitForIdle()
-            onNodeWithText("Stop after this step").assertExists()
+            onNode(menuItem).assertExists()
         }
 
     @Test

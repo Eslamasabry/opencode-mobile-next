@@ -62,7 +62,7 @@ class LocalTerminalScreenTest {
             onNodeWithText("Shell 1").assertDoesNotExist()
             runOnIdle { state.value = state.value.copy(shells = listOf(shell(1), shell(2))) }
             onNodeWithContentDescription("Shell 2").performClick()
-            assertEquals(listOf("select" to listOf(2)), calls)
+            assertEquals(listOf<Pair<String, List<Any?>>>("select" to listOf(2)), calls)
         }
 
     @Test
@@ -79,7 +79,7 @@ class LocalTerminalScreenTest {
             onNodeWithText("Ctrl").performClick()
             onNodeWithText("Tab").performClick()
             assertEquals(
-                listOf("key" to listOf(TerminalKey.Control), "key" to listOf(TerminalKey.Tab)),
+                listOf<Pair<String, List<Any?>>>("key" to listOf(TerminalKey.Control), "key" to listOf(TerminalKey.Tab)),
                 calls,
             )
         }

@@ -23,11 +23,15 @@ import kotlin.test.assertTrue
 class PaseoTransportTest {
     private class Recorder : PaseoTransportListener {
         val pushes = mutableListOf<PaseoPush>()
+
+        /** The hello answer (`status`/`server_info`) is forwarded too, so a feature withdrawal reaches the gateway. */
+        val serverInfo = mutableListOf<PaseoPush>()
         val disconnects = mutableListOf<Int>()
         val binary = mutableListOf<PaseoBinaryFrame>()
 
         override fun onPush(push: PaseoPush) {
-            pushes += push
+            if (push.type == "status" && push.payload.str("status") == "server_info") serverInfo += push
+            else pushes += push
         }
 
         override fun onDisconnect(epoch: Int) {
@@ -61,6 +65,7 @@ class PaseoTransportTest {
         t.request("archive_agent_request", jsonOf("agentId" to "a1"), mutation = true)
         runCurrent()
         assertEquals(listOf("agent_archived"), r.pushes.map { it.type })
+        assertEquals(1, r.serverInfo.size, "the hello answer reached the listener once")
     }
 
     @Test

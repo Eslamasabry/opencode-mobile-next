@@ -15,7 +15,9 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 
@@ -44,6 +46,11 @@ class VoiceSettingsPresenterTest {
         runCurrent()
         presenter.downloadSelected()
         runCurrent()
+        // A download asks first, naming its size and the network (VoiceConfirm.Download); nothing starts before.
+        assertTrue(presenter.state.value.confirm is VoiceConfirm.Download)
+        assertFalse(hub.models.calls.any { it.startsWith("download") })
+        presenter.confirm()
+        runCurrent()
         assertTrue(presenter.state.value.busy)
         hub.models.progress(PackId("base"), PackJobPhase.Downloading(50, 100))
         runCurrent()
@@ -66,10 +73,14 @@ class VoiceSettingsPresenterTest {
         hub.models.nextFailure = Failure.Media(MediaProblem.DownloadChecksum)
         presenter.downloadSelected()
         runCurrent()
+        presenter.confirm()
+        runCurrent()
         assertEquals(MediaProblem.DownloadChecksum, presenter.state.value.problem)
         presenter.dismissProblem()
         hub.models.nextFailure = Failure.Media(MediaProblem.DownloadBusy)
         presenter.downloadSelected()
+        runCurrent()
+        presenter.confirm()
         runCurrent()
         assertNull(presenter.state.value.problem)
     }
@@ -82,6 +93,8 @@ class VoiceSettingsPresenterTest {
         presenter.askDelete()
         assertNull(presenter.state.value.confirm, "nothing to delete before it is installed")
         presenter.downloadSelected()
+        runCurrent()
+        presenter.confirm()
         runCurrent()
         presenter.askDelete()
         val confirm = presenter.state.value.confirm
@@ -123,6 +136,16 @@ class VoiceSettingsPresenterTest {
 
         val ready = FakeHub(naturalVoiceAvailable = true)
         val withEngine = VoiceSettingsPresenter(ready, backgroundScope) {}
+        runCurrent()
+        // Choosing a voice that is not downloaded yet asks to download it first.
+        withEngine.setNaturalVoice(true)
+        runCurrent()
+        assertTrue(withEngine.state.value.confirm is VoiceConfirm.Download)
+        withEngine.dismissConfirm()
+        // Once its pack is on the phone, choosing turns it on.
+        ready.models.state.update {
+            it.copy(packs = (it.packs + (ready.models.naturalPack.id to PackStatus.Installed)).toImmutableMap())
+        }
         runCurrent()
         withEngine.setNaturalVoice(true)
         runCurrent()

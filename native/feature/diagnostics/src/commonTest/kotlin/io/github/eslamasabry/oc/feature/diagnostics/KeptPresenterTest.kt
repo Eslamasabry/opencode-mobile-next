@@ -1,12 +1,15 @@
 package io.github.eslamasabry.oc.feature.diagnostics
 
+import io.github.eslamasabry.oc.engine.diagnostics.crashreport.CrashReportPreview
 import io.github.eslamasabry.oc.engine.diagnostics.crashreport.CrashReportResult
+import io.github.eslamasabry.oc.engine.diagnostics.crashreport.CrashShareResult
 import io.github.eslamasabry.oc.engine.diagnostics.crashreport.DiagnosticsError
 import io.github.eslamasabry.oc.engine.diagnostics.device.DeviceExitHistory
 import io.github.eslamasabry.oc.engine.diagnostics.exit.ExitHistoryError
 import io.github.eslamasabry.oc.engine.diagnostics.exit.ExitKind
 import io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptExits
 import io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptNotice
+import io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptPreview
 import io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptPresenter
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -81,13 +84,19 @@ class KeptPresenterTest {
         val p = presenter(host)
         p.onPreviewCrashReport()
         runCurrent()
+        // The evidence changes before Share: the stale report is replaced by a fresh preview that is shown
+        // with the stale line (Flutter crash_report_share.dart `stalePreview`), and nothing is shared.
+        host.nextPreview = CrashReportResult(preview = CrashReportPreview("report-2", 8, 2))
         p.onShareCrashReport()
         runCurrent()
-        assertNull(p.state.value.preview)
+        assertEquals(KeptPreview("report-2", 2, 8), p.state.value.preview)
         assertEquals(KeptNotice.Stale, p.state.value.notice)
-        p.onShareCrashReport() // no preview: nothing to authorize
-        runCurrent()
         assertTrue(host.shared.isEmpty())
+        // Only another explicit Share tap sends the report the person now sees.
+        host.shareResult = { CrashShareResult(opened = true) }
+        p.onShareCrashReport()
+        runCurrent()
+        assertEquals(listOf("report-2"), host.shared)
     }
 
     @Test

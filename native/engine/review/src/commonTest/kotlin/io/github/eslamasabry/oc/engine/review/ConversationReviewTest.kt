@@ -46,8 +46,9 @@ class ConversationReviewTest {
 
     @Test
     fun `B-CHAT-120 the undo shape follows the server, never its name`() = runTest(UnconfinedTestDispatcher()) {
+        fake.base.offersRevert()
         assertEquals(UndoShape.Staged, review().shape())
-        val plain = FakeServerGateway()
+        val plain = FakeServerGateway().offersRevert()
         gateways.value = ReviewGateways(plain, FakeOperationsGateway())
         assertEquals(UndoShape.OneStep, review().shape())
         plain.capabilities.value = plain.capabilities.value.copy(sessionRevert = false)
@@ -207,7 +208,7 @@ class ConversationReviewTest {
 
     @Test
     fun `B-CHAT-120 one-step servers undo at once through the operations gateway`() = runTest(UnconfinedTestDispatcher()) {
-        val plain = FakeServerGateway(listOf(io.github.eslamasabry.oc.core.model.Session(S)))
+        val plain = FakeServerGateway(listOf(io.github.eslamasabry.oc.core.model.Session(S))).offersRevert()
         val reverted = mutableListOf<String>()
         val ops = object : FakeOperationsGateway() {
             override suspend fun revertSession(id: io.github.eslamasabry.oc.core.common.ids.SessionId, to: MessageId): Outcome<Unit> {

@@ -66,8 +66,11 @@ class KitComposerFieldInputTest {
             field.assertIsFocused()
             runOnIdle { assertTrue(shows > 0) }
             field.performTextInput("first")
+            // A hardware Space must not move focus away. The desktop test harness sends the key without a typed
+            // character, so the space itself arrives through the text-input path, as the IME delivers it.
             field.performKeyInput { pressKey(Key.Spacebar) }
-            field.performTextInput("second")
+            field.assertIsFocused()
+            field.performTextInput(" second")
             field.assertIsFocused()
             runOnIdle { assertEquals("first second", text.text.toString()) }
             val beforeRetap = shows

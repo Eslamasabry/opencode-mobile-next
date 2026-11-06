@@ -50,9 +50,10 @@ class NativeCrashStore(private val directory: File) {
         val handler = Thread.UncaughtExceptionHandler { thread, error ->
             try { write(error) } catch (_: Throwable) { }
             finally {
-                // Preserve the fixed outer message and Android's fatal handling, including the
-                // original cause retained by the app diagnostics handler.
-                val safe = RuntimeException("Native application error", error)
+                // Preserve Android's fatal handling, but never hand its logger (or any later
+                // handler) an exception message/cause/stack carrying credential values (B-SEC-043,
+                // Flutter NativeCrashStore.kt). The category is already recorded above.
+                val safe = RuntimeException("Native application error")
                 safe.stackTrace = emptyArray()
                 if (previous != null) previous.uncaughtException(thread, safe)
             }

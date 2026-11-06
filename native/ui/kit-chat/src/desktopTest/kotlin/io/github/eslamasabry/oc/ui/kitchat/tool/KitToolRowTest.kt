@@ -184,8 +184,33 @@ class KitToolRowTest {
             onAllNodesWithText("line 13", useUnmergedTree = true).assertCountEquals(0)
             onNodeWithText("Exit code 0", useUnmergedTree = true).assertIsDisplayed()
 
+            // 20 lines are within the inline cap (200): "Show all" unfolds them in place and opens nothing
+            // (F: lib/ui/kit/chat/kit_tool_row.dart:1400-1406).
             onNodeWithText("Show all 20 lines").performClick()
+            assertEquals(0, more)
+            onNodeWithText("line 20", useUnmergedTree = true).assertExists()
+            onAllNodesWithText("Show all 20 lines").assertCountEquals(0)
+        }
+
+    @Test
+    fun `B-CHAT-062 output past the inline cap opens the full output instead of unfolding`() =
+        runComposeUiTest {
+            var more = 0
+            val total = KIT_COMMAND_INLINE_CAP + 1
+            setContent {
+                ChatTestTheme {
+                    KitCommandBox(
+                        command = "ls -la",
+                        output = (1..total).joinToString("\n") { "line $it" },
+                        moreLabel = "Show all $total lines",
+                        onMore = { more++ },
+                        exitLabel = null,
+                    )
+                }
+            }
+            onNodeWithText("Show all $total lines").performClick()
             assertEquals(1, more)
+            onAllNodesWithText("line 13", useUnmergedTree = true).assertCountEquals(0)
         }
 
     @Test

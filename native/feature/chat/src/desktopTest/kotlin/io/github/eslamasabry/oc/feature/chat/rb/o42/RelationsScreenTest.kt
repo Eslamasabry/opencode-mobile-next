@@ -49,7 +49,8 @@ class RelationsScreenTest {
         onNodeWithText("Needs you · Open to answer", substring = true).assertDoesNotExist()
         onNodeWithText("Needs you", useUnmergedTree = true).assertExists()
         onNodeWithText(" · open to answer", useUnmergedTree = true).assertExists()
-        onNodeWithContentDescription("Refresh subagent sessions").performClick()
+        // Flutter's words (session_relations_screen.dart:284, `e7SharedRefreshSubagentSessions`).
+        onNodeWithContentDescription("Refresh subagent conversations").performClick()
         assertEquals(1, actions.refreshes)
     }
     @Test fun `B-AGENT-221 stopping a subagent asks first and leaves Keep running available`() = runComposeUiTest {

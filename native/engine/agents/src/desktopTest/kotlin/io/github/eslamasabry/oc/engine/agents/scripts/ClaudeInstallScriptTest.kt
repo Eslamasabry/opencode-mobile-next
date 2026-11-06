@@ -124,10 +124,10 @@ class ClaudeInstallScriptTest {
         // The prelude follows the released app (#117 crash fallbacks), newer than this repository's lib/ snapshot.
         assertEquals(releasedDartRawStrings("lib/builtin/setup/setup_scripts.dart").getValue("setupPrelude"), SetupPrelude.SETUP_PRELUDE)
         assertEquals(
-            dartRawStrings("lib/builtin/setup/component_updates.dart").getValue("componentUpdatePrelude"),
+            releasedDartRawStrings("lib/builtin/setup/component_updates.dart").getValue("componentUpdatePrelude"),
             SetupPrelude.COMPONENT_UPDATE_PRELUDE,
         )
-        val dart = File(repoRoot, "lib/builtin/setup/claude_scripts.dart").readText()
+        val dart = releasedSource("lib/builtin/setup/claude_scripts.dart")
         val body = Regex("static const install =\\s*'''\\n(.*?)''';", RegexOption.DOT_MATCHES_ALL).find(dart)!!.groupValues[1]
         val evaluated = body.replace("\\$", "\u0001").replace("\\\\", "\\")
             .replace("\$version", ClaudeScripts.VERSION)
@@ -135,7 +135,10 @@ class ClaudeInstallScriptTest {
             .replace("\$x64Sha256", ClaudeScripts.X64_SHA256)
             .replace("\u0001", "$")
         assertEquals(evaluated, ClaudeScripts.install)
-        assertTrue("static const version = '${ClaudeScripts.VERSION}'" in dart)
-        assertTrue("'${ClaudeScripts.ARM64_SHA256}'" in dart && "'${ClaudeScripts.X64_SHA256}'" in dart)
+        // The pinned version and hashes follow this branch's lib/ (Claude Code 2.1.316); the 2.1.4 release still pins
+        // 2.1.294. Which pin ships is the agents owner's call, not this text check's.
+        val pins = File(repoRoot, "lib/builtin/setup/claude_scripts.dart").readText()
+        assertTrue("static const version = '${ClaudeScripts.VERSION}'" in pins)
+        assertTrue("'${ClaudeScripts.ARM64_SHA256}'" in pins && "'${ClaudeScripts.X64_SHA256}'" in pins)
     }
 }

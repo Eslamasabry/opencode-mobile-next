@@ -18,6 +18,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
@@ -90,7 +91,8 @@ class KeptScreenTest {
     fun `B-SEC-042 crash reports are off by default with the switch and its privacy line`() = runComposeUiTest {
         val taps = Taps()
         setContent { Themed { KitSheetHost { KeptScreen(KeptUi(crashAvailable = true, exits = KeptExits.Ready(emptyList(), 0)), taps) } } }
-        onNodeWithText("Everything this phone kept").assertExists()
+        // Flutter app_diagnostics_kept_screen.dart:195: the page is titled App diagnostics.
+        onNodeWithText("App diagnostics").assertExists()
         onNodeWithText("Save crash reports on this phone").performClick()
         assertEquals(listOf("capture:true"), taps.taps)
         onNodeWithText("Kept on this phone. Never sent automatically.").assertExists()
@@ -99,21 +101,26 @@ class KeptScreenTest {
     @Test
     fun `B-SEC-047 the preview shows only the report text and Share report is a separate tap`() = runComposeUiTest {
         val taps = Taps()
-        val ui =
+        val base =
             KeptUi(
                 crashAvailable = true,
                 crashOn = true,
                 crashRows = listOf(KeptCrashRow("Today 12:00", "Invalid state")),
-                preview = KeptPreview("OpenCode Mobile crash report", 1, 28),
                 exits = KeptExits.Ready(listOf(KeptExitRow(ExitKind.Crash, "Today 11:00")), 1),
             )
-        setContent { Themed { KitSheetHost { KeptScreen(ui, taps) } } }
-        onNodeWithText("Category · Invalid state").assertExists()
+        val ui = mutableStateOf(base)
+        setContent { Themed { KitSheetHost { KeptScreen(ui.value, taps) } } }
+        // The list shows the time only; the category is technical and lives under Details
+        // (Flutter crash_reports_section.dart `_preview`).
+        onNodeWithText("Today 12:00").assertExists()
+        onNodeWithText("Invalid state", substring = true).assertDoesNotExist()
+        onNodeWithText("App stopped unexpectedly").performScrollTo().assertExists()
+        // Preview opens the report sheet: its exact text, and Share report is a separate tap.
+        ui.value = base.copy(preview = KeptPreview("OpenCode Mobile crash report", 1, 28))
         onNodeWithText("OpenCode Mobile crash report").performScrollTo().assertExists()
         assertEquals(emptyList(), taps.taps)
-        onNodeWithText("Share report").performScrollTo().performClick()
+        onNodeWithText("Share report").performClick()
         assertEquals(listOf("share"), taps.taps)
-        onNodeWithText("App stopped unexpectedly").performScrollTo().assertExists()
     }
 
     @Test

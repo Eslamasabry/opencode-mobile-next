@@ -35,8 +35,8 @@ class NewConversationPartsTest {
         }
         val button = onNodeWithTag("kit-button-hero")
         val bounds = button.getBoundsInRoot()
-        assertEquals(400.dp, bounds.width)
-        assertEquals(56.dp, bounds.height)
+        assertEquals(400.dp, bounds.right - bounds.left)
+        assertEquals(56.dp, bounds.bottom - bounds.top)
         button.performClick()
         assertEquals(1, starts)
         runOnIdle { enabled.value = false }

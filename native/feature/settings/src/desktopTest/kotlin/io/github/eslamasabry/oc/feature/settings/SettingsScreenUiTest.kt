@@ -104,8 +104,12 @@ class SettingsScreenUiTest {
             choices = FakeChoices(PersonalPrefs(mode = AppearanceMode.Saver))
             show()
             presenter.onOpen(SettingsPage.Appearance); waitForIdle()
-            onNodeWithTag("appearance-styles").performScrollTo()
-            tap("Brutal")
+            // In Saver the Style question says Saver holds it, in place of style cards that could not apply.
+            onNodeWithText(
+                "Saver keeps cards solid and the background still, to save battery on this screen. " +
+                    "Your style comes back when Saver is off."
+            ).performScrollTo().assertExists()
+            onNodeWithTag("appearance-style-Brutal").assertDoesNotExist()
             assertEquals(emptyList(), choices.writes)
         }
 
@@ -115,6 +119,8 @@ class SettingsScreenUiTest {
             show()
             onNodeWithTag("settings-search").performClick()
             onNode(hasSetTextAction()).performTextInput("apperance")
+            // KitSearchField searches once typing settles (SearchRules.SETTLE_MS), not on every key.
+            mainClock.advanceTimeBy(1_000)
             waitForIdle()
             tap("Appearance")
             assertEquals(SettingsPage.Appearance, presenter.state.value.page)

@@ -256,7 +256,8 @@ class KitbDesktopTest {
         setContent { Themed(MotionLevel.Off) { TabsScene(w) } }
         onNode(hasContentDescription(w.waiting)).assertExists() // no ", 0"
         onNodeWithText("0").assertDoesNotExist()
-        onNodeWithText("2").assertExists()
+        // The badge's number is picture only (its pill leaves semantics); the tab says the count with its name.
+        onNode(hasContentDescription(w.waiting)).assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, ", 2 need you"))
     }
 
     @Test
@@ -329,7 +330,9 @@ class KitbDesktopTest {
         setContent { Themed(MotionLevel.Off) { SearchScene(w) } }
         onNodeWithText("12 results").assertExists()
         onNodeWithText("4 loaded · searching the server…").assertExists()
-        onNodeWithText("Filter: ${w.symbols}").assertExists()
+        // The active filter is a removable chip in words (F: lib/ui/kit/kit_search_field.dart:506); its remove
+        // action names it. "Filter: <name>" belongs to the filter button, which shows only with filters to pick.
+        onNode(hasContentDescription(w.removeSymbols)).assertExists()
         onNodeWithText(w.notReady).assertExists()
     }
 
@@ -363,7 +366,7 @@ class KitbDesktopTest {
     fun `B-KIT-030 no match isolates the query and Clear search clears`() = runComposeUiTest {
         var cleared = 0
         setContent { Themed(MotionLevel.Off) { KitSearchNoMatch(query = w.query, onClear = { cleared++ }) } }
-        onNodeWithText("Nothing matches ⁨${w.query}⁩").assertExists()
+        onNodeWithText("Nothing matches “⁨${w.query}⁩”").assertExists()
         onNodeWithText("Clear search").performClick()
         assertEquals(1, cleared)
     }

@@ -147,12 +147,19 @@ class BackgroundScreenUiTest {
         runComposeUiTest {
             val pause = PauseFacts(PauseReason.UserStopped, clock = "09:10", day = "Nov 2", resumeFailed = true)
             val actions = page(BackgroundLiveFacts(supported = true, pause = pause))
-            onNodeWithText("Background connection stopped when the app closed on Nov 2 at 09:10.").assertExists()
+            // Flutter background_pause_notice.dart (failed phase): the failure line replaces the pause line.
+            onNodeWithText("Background connection stopped when the app closed on Nov 2 at 09:10.").assertDoesNotExist()
             onNodeWithText("Couldn't resume. Open Keep running settings.").assertExists()
             onNodeWithText("Open Keep running settings").performClick()
             waitForIdle()
             assertEquals(listOf("keepRunning"), actions.calls)
         }
+
+    @Test
+    fun `B-ANDR-018 a pause from another day names the day`() = runComposeUiTest {
+        page(BackgroundLiveFacts(supported = true, pause = PauseFacts(PauseReason.UserStopped, clock = "09:10", day = "Nov 2")))
+        onNodeWithText("Background connection stopped when the app closed on Nov 2 at 09:10.").assertExists()
+    }
 
     @Test
     fun `B-ANDR-018 while a resume is confirmed the line only says it is resuming`() = runComposeUiTest {

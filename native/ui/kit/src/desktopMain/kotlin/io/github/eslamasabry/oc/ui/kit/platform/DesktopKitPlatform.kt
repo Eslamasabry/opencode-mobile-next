@@ -30,15 +30,20 @@ public class DesktopKitPlatform : KitPlatform {
 
     override fun graphemePrefix(text: String, count: Int): String {
         require(count >= 0)
-        val iterator = java.text.BreakIterator.getCharacterInstance(java.util.Locale.ROOT)
-        iterator.setText(text)
-        var end = iterator.first()
-        repeat(count) {
-            val next = iterator.next()
-            if (next == java.text.BreakIterator.DONE) return text
-            end = next
+        // Skia's ICU iterator, as Android's: java.text.BreakIterator before JDK 20 splits emoji ZWJ sequences.
+        val iterator = org.jetbrains.skia.BreakIterator.makeCharacterInstance()
+        try {
+            iterator.setText(text)
+            var end = iterator.first()
+            repeat(count) {
+                val next = iterator.next()
+                if (next == org.jetbrains.skia.BreakIterator.DONE) return text
+                end = next
+            }
+            return text.substring(0, end)
+        } finally {
+            iterator.close()
         }
-        return text.substring(0, end)
     }
 
     override fun dateTime(atMs: Long, localeTag: String): String =

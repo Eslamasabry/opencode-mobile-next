@@ -245,7 +245,7 @@ class GitStepsTest {
             // Enabled state lives on the button's merged node, not on its inner label text.
             onNodeWithText("Clone").assertIsNotEnabled()
             folder.performTextInput("mine")
-            onNodeWithText("Clone", useUnmergedTree = true).performClick()
+            onNode(hasText("Clone") and hasClickAction()).performClick()
             assertEquals(
                 listOf<Pair<String, List<Any?>>>("clone" to listOf("https://example.invalid/another.git", "mine")),
                 calls,

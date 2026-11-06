@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.core.model.SessionStatus
 import io.github.eslamasabry.oc.core.model.WorkspaceProject
 import io.github.eslamasabry.oc.core.testing.FakeOperationsGateway
 import io.github.eslamasabry.oc.core.testing.FakeServerGateway
+import io.github.eslamasabry.oc.feature.projects.presentation.NoPhoneProjectDiscovery
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectPagePhase
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectPageViewModel
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectServer
@@ -102,7 +103,7 @@ class ProjectsViewModelTest {
             FakeServerGateway(listOf(session("a", "/work/api", 30), session("b", "/work/web", 20), session("c", "/work/api", 10)))
         gateway.statuses = persistentMapOf(SessionId("a") to SessionStatus.Busy)
         gateway.capabilities.value = ServerCapabilities(projectManagement = false)
-        val vm = ProjectsPickerViewModel(ProjectsRoute.Picker(), Nav(), Servers(listOf(ProjectServer(p1, "laptop", gateway, null))), SessionOpenedFolders())
+        val vm = ProjectsPickerViewModel(ProjectsRoute.Picker(), Nav(), Servers(listOf(ProjectServer(p1, "laptop", gateway, null))), SessionOpenedFolders(), NoPhoneProjectDiscovery())
         val ui = vm.state.value
         assertEquals(ProjectsPhase.Ready, ui.phase)
         assertEquals("laptop", ui.serverName)
@@ -127,7 +128,7 @@ class ProjectsViewModelTest {
                             WorkspaceProject("2", "", "/srv/two", persistentListOf(), 20, false),
                         ).ok()
             }
-        val vm = ProjectsPickerViewModel(ProjectsRoute.Picker(), Nav(), Servers(listOf(ProjectServer(p1, "srv", gateway, ops))), SessionOpenedFolders())
+        val vm = ProjectsPickerViewModel(ProjectsRoute.Picker(), Nav(), Servers(listOf(ProjectServer(p1, "srv", gateway, ops))), SessionOpenedFolders(), NoPhoneProjectDiscovery())
         assertNotNull(vm.state.value.projectsFailure)
         fail = false
         vm.retry()
@@ -138,7 +139,7 @@ class ProjectsViewModelTest {
     @Test
     fun `no live server says so and offers Servers`() {
         val nav = Nav()
-        val vm = ProjectsPickerViewModel(ProjectsRoute.Picker(), nav, Servers(emptyList()), SessionOpenedFolders())
+        val vm = ProjectsPickerViewModel(ProjectsRoute.Picker(), nav, Servers(emptyList()), SessionOpenedFolders(), NoPhoneProjectDiscovery())
         assertEquals(ProjectsPhase.NoServer, vm.state.value.phase)
         vm.openServers()
         assertEquals(listOf("open ${ServersRoute.Home}"), nav.calls)
@@ -151,7 +152,7 @@ class ProjectsViewModelTest {
         val one = FakeServerGateway()
         val two = FakeServerGateway()
         val servers = Servers(listOf(ProjectServer(p1, "one", one, null), ProjectServer(p2, "two", two, null)), active = p2)
-        val picker = ProjectsPickerViewModel(ProjectsRoute.Picker(), nav, servers, folders)
+        val picker = ProjectsPickerViewModel(ProjectsRoute.Picker(), nav, servers, folders, NoPhoneProjectDiscovery())
         assertEquals(listOf("one", "two"), picker.state.value.servers.map { it.name })
         assertTrue(picker.state.value.servers.single { it.selected }.profile == p2) // the active server first
         picker.askPath()
@@ -214,7 +215,7 @@ class ProjectsViewModelTest {
         val servers = Servers(listOf(ProjectServer(p1, "one", FakeServerGateway(), null)))
         val route = ProjectsRoute.Picker()
         nav.top.value = route
-        val picker = ProjectsPickerViewModel(route, nav, servers, folders)
+        val picker = ProjectsPickerViewModel(route, nav, servers, folders, NoPhoneProjectDiscovery())
         assertTrue(picker.state.value.openedBefore.isEmpty())
         picker.openProject("/work/site")
         nav.top.value = ProjectsRoute.Project(p1, "/work/site")
@@ -234,7 +235,7 @@ class ProjectsViewModelTest {
                 )
             )
         gateway.capabilities.value = ServerCapabilities(projectManagement = false)
-        val vm = ProjectsPickerViewModel(ProjectsRoute.Picker(), Nav(), Servers(listOf(ProjectServer(p1, "srv", gateway, null))), SessionOpenedFolders())
+        val vm = ProjectsPickerViewModel(ProjectsRoute.Picker(), Nav(), Servers(listOf(ProjectServer(p1, "srv", gateway, null))), SessionOpenedFolders(), NoPhoneProjectDiscovery())
         assertEquals(listOf("my-app"), vm.state.value.projects.map { it.name })
     }
 }

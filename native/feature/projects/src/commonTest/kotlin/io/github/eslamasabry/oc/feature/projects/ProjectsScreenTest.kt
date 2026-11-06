@@ -48,6 +48,34 @@ class ProjectsScreenTest {
         override fun retry() { calls += "retry" }
 
         override fun openServers() { calls += "servers" }
+
+        override fun findPhoneProjects() {
+            calls += "findPhoneProjects"
+        }
+
+        override fun cancelPhoneScan() {
+            calls += "cancelPhoneScan"
+        }
+
+        override fun browsePhone() {
+            calls += "browsePhone"
+        }
+
+        override fun enterPhoneFolder(path: String) {
+            calls += "enterPhoneFolder"
+        }
+
+        override fun closePhoneFolders() {
+            calls += "closePhoneFolders"
+        }
+
+        override fun usePhoneFolder() {
+            calls += "usePhoneFolder"
+        }
+
+        override fun allowPhoneFolderAccess() {
+            calls += "allowPhoneFolderAccess"
+        }
     }
 
     private class Page : ProjectPageActions {
@@ -84,10 +112,9 @@ class ProjectsScreenTest {
             val actions = Picker()
             setContent { Themed { ProjectsPickerScreen(ready, actions) } }
             onNodeWithText("Projects").assertExists()
-            // Rows that can't run here say why instead of being dead taps.
-            onNodeWithText("New project").assertExists()
-            onNodeWithText("This server can’t make folders from the phone. Make the folder on that computer, then open it here.")
-                .assertExists()
+            // Absent, never greyed: a server that cannot make folders has no New project row
+            // (Flutter ProjectFolderActions.canCreate). Other rows that can't run here say why instead of being dead taps.
+            onNodeWithText("New project").assertDoesNotExist()
             onNodeWithText("Folder on this phone").assertExists()
             onNodeWithText("OpenCode on this phone isn’t set up in this version yet.").assertExists()
             onNodeWithText("Opened before").assertExists()

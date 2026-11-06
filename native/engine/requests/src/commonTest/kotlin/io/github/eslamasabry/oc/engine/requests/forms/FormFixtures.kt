@@ -47,7 +47,7 @@ internal fun wireField(json: String): FormField {
     )
 }
 
-/** A scripted forms gateway: records every write; [next] answers the next write (default Ok). */
+/** A scripted forms gateway: [listed] is what the server holds; records every write; [next] answers the next write (default Ok). */
 internal class ScriptedForms(var listed: List<WireForm> = emptyList()) : FormGateway {
     val replies = mutableListOf<Pair<FormId, FormAnswer>>()
     val cancels = mutableListOf<FormId>()
@@ -58,6 +58,10 @@ internal class ScriptedForms(var listed: List<WireForm> = emptyList()) : FormGat
     var gate: CompletableDeferred<Unit>? = null
 
     override suspend fun pendingForms(): Outcome<ImmutableList<WireForm>> = listFails ?: listed.toImmutableList().ok()
+
+    /** The engine re-reads the form's session before every write (req-5): the server lists what [listed] holds. */
+    override suspend fun sessionForms(session: SessionId): Outcome<ImmutableList<WireForm>> =
+        listFails ?: listed.filter { it.sessionId == session }.toImmutableList().ok()
 
     override suspend fun replyForm(session: SessionId, form: FormId, answer: FormAnswer): Outcome<Unit> {
         gate?.await()

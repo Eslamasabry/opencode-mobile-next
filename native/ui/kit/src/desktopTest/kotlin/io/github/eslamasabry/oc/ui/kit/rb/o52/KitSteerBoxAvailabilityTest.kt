@@ -29,7 +29,8 @@ class KitSteerBoxAvailabilityTest {
                     )
                 }
             }
-            onNodeWithTag("widget-mic").assertIsNotEnabled().performTouchInput { click() }
+            // The tag sits on KitIconButton's outer box (its tooltip anchor); the button itself is the child.
+            onNode(hasParent(hasTestTag("widget-mic"))).assertIsNotEnabled().performTouchInput { click() }
             assertEquals(0, dictated)
             onNodeWithTag("widget-send").assertIsEnabled().performClick()
             assertEquals(listOf("Typed message"), sent)

@@ -7,7 +7,7 @@
     <string name="agentsHubCheckAgents">فحص الوكلاء</string>
     <string name="agentsHubFolderHint">/home/you/project</string>
     <string name="agentsHubInvalidAddress">استخدم عنوان ws:// على هذا الجهاز أو شبكتك الخاصة، أو عنوان wss://.</string>
-    <string name="agentsHubInvalidFolder">أدخل مجلد المشروع كمسار كامل، مثل ‎/home/you/project.</string>
+    <string name="agentsHubInvalidFolder">أدخل مجلد المشروع كمسار كامل، مثل \u200E/home/you/project.</string>
     <string name="agentsHubInvalidPassword">لا يمكن استخدام كلمة المرور هذه. استخدم حروفًا وأرقامًا ورموزًا بلا مسافات.</string>
     <string name="agentsHubAdded">تم الحفظ. تظهر محادثاته في المحادثات.</string>
     <string name="agentsHubAddFailed">تعذّر حفظ هذا الحاسوب. تحقّق من التفاصيل وحاول مجددًا.</string>

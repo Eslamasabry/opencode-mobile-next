@@ -159,11 +159,15 @@ class ChatHeaderPresenterTest {
             listOf(
                 HeaderAction.Find,
                 HeaderAction.Details,
+                HeaderAction.CardsSettings,
+                HeaderAction.AgentHandoff,
                 HeaderAction.Rename,
                 HeaderAction.ContinueWith,
                 HeaderAction.ContinueOnComputer,
                 HeaderAction.ContinueOnPhone,
+                HeaderAction.ImportConversation, // sessionImportExport is on by default
                 HeaderAction.CopyTranscript,
+                HeaderAction.Reload, // fbd6c9e2d: Refresh messages, a Flutter menu row
             ),
             menu,
         )
@@ -228,6 +232,10 @@ class ChatHeaderPresenterTest {
     fun `share copies the link and fork opens the new conversation`() {
         world.capabilities.value = allCaps
         p.choose(HeaderAction.Share)
+        // Flutter chat_session_actions.dart:195: sharing asks first.
+        assertEquals(HeaderConfirm.Share, p.current().confirm)
+        assertTrue(port.calls.none { it == "share" })
+        p.confirm()
         val clip = assertNotNull(p.current().clip)
         assertEquals(ClipKind.ShareLink, clip.kind)
         assertEquals("https://opncd.ai/s/abc", clip.text)

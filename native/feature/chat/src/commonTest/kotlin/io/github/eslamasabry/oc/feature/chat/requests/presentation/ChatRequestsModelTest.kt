@@ -214,7 +214,12 @@ class ChatRequestsModelTest {
 
             model.askAlwaysAllow(RequestId("p1"))
             runCurrent()
-            assertEquals(AlwaysConfirmUi(RequestId("p1"), AlwaysGrant.Named("npm install")), model.state.value.confirmAlways)
+            // The confirm also captures the exact request it answers, so compare what it names.
+            val confirm = model.state.value.confirmAlways
+            assertEquals(RequestId("p1"), confirm?.id)
+            assertEquals(AlwaysGrant.Named("npm install"), confirm?.grant)
+            assertEquals(RequestId("p1"), confirm?.captured?.id)
+            assertEquals(false, confirm?.invitation)
             passHold()
             assertEquals(emptyList(), port.replies)
 

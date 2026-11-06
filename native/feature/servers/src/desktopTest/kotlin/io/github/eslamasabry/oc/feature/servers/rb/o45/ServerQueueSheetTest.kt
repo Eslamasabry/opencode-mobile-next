@@ -8,6 +8,7 @@ import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.feature.servers.presentation.*
 import io.github.eslamasabry.oc.feature.servers.ui.ServerQueueScreen
 import io.github.eslamasabry.oc.ui.kit.KitTheme
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -58,14 +59,17 @@ class ServerQueueSheetTest {
             val actions = Actions()
             setContent {
                 KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
-                    ServerQueueScreen(
-                        ServerQueueUi(
-                            loading = false,
-                            plan = plan,
-                            selected = persistentSetOf("one", "blocked"),
-                        ),
-                        actions,
-                    )
+                    // The screen is a sheet over the window's modal layer, which the app root holds (App.kt).
+                    KitSheetHost {
+                        ServerQueueScreen(
+                            ServerQueueUi(
+                                loading = false,
+                                plan = plan,
+                                selected = persistentSetOf("one", "blocked"),
+                            ),
+                            actions,
+                        )
+                    }
                 }
             }
             onNodeWithText("From Old computer").assertExists()
@@ -83,10 +87,12 @@ class ServerQueueSheetTest {
     fun `an empty source keeps the destination visible and disables moving`() = runComposeUiTest {
         setContent {
             KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
-                ServerQueueScreen(
-                    ServerQueueUi(loading = false, plan = plan.copy(items = persistentListOf())),
-                    Actions(),
-                )
+                KitSheetHost {
+                    ServerQueueScreen(
+                        ServerQueueUi(loading = false, plan = plan.copy(items = persistentListOf())),
+                        Actions(),
+                    )
+                }
             }
         }
         onNodeWithText("Nothing waits for Old computer any more").assertExists()

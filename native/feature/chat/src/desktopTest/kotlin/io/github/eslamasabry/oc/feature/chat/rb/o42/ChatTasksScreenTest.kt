@@ -12,6 +12,7 @@ import io.github.eslamasabry.oc.feature.chat.tasks.ui.ChatTasksSheet
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.state.KitTaskItem
 import io.github.eslamasabry.oc.ui.kit.state.KitTaskItemState
@@ -40,7 +41,8 @@ class ChatTasksScreenTest {
                     localeTag = "en",
                     appearance = KitAppearance(motion = MotionLevel.Off),
                 ) {
-                    ChatTasksSheet(tasks, true, onDismiss = { closes++ }, running = false)
+                    // A kit sheet draws only inside a sheet host (KitScreen places one in the app).
+                    KitSheetHost { ChatTasksSheet(tasks, true, onDismiss = { closes++ }, running = false) }
                 }
             }
             onNodeWithText("1 of 3 done").assertExists()

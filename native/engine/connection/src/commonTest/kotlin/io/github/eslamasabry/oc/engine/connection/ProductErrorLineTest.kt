@@ -82,7 +82,8 @@ class ProductErrorLineTest {
     @Test
     fun `B-SEC-132 storage, keyring, device and native failures have their own words and hide native text`() {
         assertEquals(ProductErrorLine.Storage, productErrorText(Failure.StorageRefused()).line)
-        assertEquals(ProductErrorLine.Device, productErrorText(Failure.SecretUnavailable()).line)
+        // The keyring has its own words: the saved password could not be read, enter it again.
+        assertEquals(ProductErrorLine.Secret, productErrorText(Failure.SecretUnavailable()).line)
         val device = productErrorText(Failure.Device(Redacted("Libsecret error: Failed to unlock the keyring")))
         assertEquals(ProductErrorLine.Device, device.line)
         assertEquals("Libsecret error: Failed to unlock the keyring", device.details?.text, "native text is only the details")

@@ -65,7 +65,7 @@ class FileActionsMenuTest {
         onNodeWithText("Attach to prompt").assertExists()
         onNodeWithText("Open in Review").assertExists()
         onNodeWithText("Copy path").performClick()
-        assertEquals(listOf("lib/main.dart"), copied)
+        assertEquals(listOf<String?>("lib/main.dart"), copied)
         onNodeWithText("Copy name").assertDoesNotExist()
     }
 }

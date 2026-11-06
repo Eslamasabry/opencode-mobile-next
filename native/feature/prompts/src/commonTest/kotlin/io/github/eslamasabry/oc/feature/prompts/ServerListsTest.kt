@@ -64,7 +64,7 @@ class ServerListsTest {
         val lists = Lists(commands = ServerList.Shown(listOf(CommandItem("review", "Review changes")), "Home").ok())
         val inbox = ComposerInbox()
         val nav = StackNavigator(ChatRoute(ref), PromptsRoute.Saved(ref), PromptsRoute.Commands(ref))
-        val vm = CommandsViewModel(PromptsRoute.Commands(ref), lists, inbox, nav)
+        val vm = CommandsViewModel(PromptsRoute.Commands(ref), lists, inbox, emptySet(), nav)
         val shown = assertIs<ListPhase.Shown<CommandItem>>(vm.state.value.phase)
         assertEquals("review", shown.items.single().name)
         vm.choose("review")
@@ -78,7 +78,7 @@ class ServerListsTest {
     fun `B-NAV-051 a server without commands says so and an unknown command inserts nothing`() = runTest {
         val inbox = ComposerInbox()
         val nav = StackNavigator(ChatRoute(ref), PromptsRoute.Commands(ref))
-        val vm = CommandsViewModel(PromptsRoute.Commands(ref), Lists(commands = ServerList.NotOnServer("Home").ok()), inbox, nav)
+        val vm = CommandsViewModel(PromptsRoute.Commands(ref), Lists(commands = ServerList.NotOnServer("Home").ok()), inbox, emptySet(), nav)
         assertEquals(ListPhase.NotOnServer("Home"), vm.state.value.phase)
         vm.choose("review")
         assertNull(inbox.pendingFor(ComposerInbox.target("p1", "s1")))
@@ -88,7 +88,7 @@ class ServerListsTest {
     @Test
     fun `B-NAV-051 an offline read fails plainly and Try again reads again`() = runTest {
         val lists = Lists(commands = Failure.Network(NetworkWhy.Offline).failed())
-        val vm = CommandsViewModel(PromptsRoute.Commands(ref), lists, ComposerInbox(), StackNavigator(ChatRoute(ref)))
+        val vm = CommandsViewModel(PromptsRoute.Commands(ref), lists, ComposerInbox(), emptySet(), StackNavigator(ChatRoute(ref)))
         assertIs<ListPhase.Failed>(vm.state.value.phase)
         lists.commands = ServerList.Shown(listOf(CommandItem("init", null)), "Home").ok()
         vm.retry()

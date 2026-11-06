@@ -12,3 +12,15 @@ plugins {
     alias(libs.plugins.compose.multiplatform) apply false
     alias(libs.plugins.metro) apply false
 }
+
+// Q-TESTROT: one task that compiles every module's unit-test sources (desktop, Android host, JVM, Android unit
+// tests and :quality's secTest). T1 runs it on every change and T2 as its own step, so an API change that breaks
+// another module's tests fails the gate that made it, instead of rotting until someone runs that module.
+val unitTestCompileTask =
+    Regex("compileTestKotlinDesktop|compileAndroidHostTest|compileTestKotlin|compileSecTestKotlin|" +
+        "compile(Debug|PreviewDebug|SwitchDebug|Qa)UnitTestKotlin")
+tasks.register("compileAllTests") {
+    group = "verification"
+    description = "Compiles every module's unit-test source sets without running them."
+    subprojects.forEach { p -> dependsOn(p.tasks.matching { unitTestCompileTask.matches(it.name) }) }
+}

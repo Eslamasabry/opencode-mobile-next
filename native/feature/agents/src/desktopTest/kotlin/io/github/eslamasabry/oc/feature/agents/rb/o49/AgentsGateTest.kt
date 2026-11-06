@@ -84,6 +84,12 @@ class AgentsGateTest {
         override fun installPhone(id: String) {
             installed = id
         }
+
+        var requested: String? = null
+
+        override fun requestInstall(id: String) {
+            requested = id
+        }
     }
 
     private val fixtureNow = Instant.parse("2026-09-05T12:00:00Z")

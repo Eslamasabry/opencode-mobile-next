@@ -7,6 +7,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -30,6 +31,7 @@ import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.input.KitSecretSink
 import io.github.eslamasabry.oc.ui.kit.input.LocalKitSecretSink
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
+import java.util.Locale
 import kotlinx.collections.immutable.persistentListOf
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -124,6 +126,8 @@ class SchedulesScreenUiTest {
         val actions = Recorder()
         setContent { Themed { SchedulesScreen(list, actions) } }
         onNodeWithText("Check the nightly build").assertIsDisplayed()
+        // Flutter scheduled_prompts_screen.dart: Run now, Open conversation and Delete live in the row's More menu.
+        onNodeWithContentDescription("More · Check the nightly build").performClick()
         onNodeWithText("Run now").performClick()
         onNodeWithText("New scheduled prompt").performClick()
         assertEquals(listOf("run a1", "create"), actions.calls)
@@ -146,9 +150,17 @@ class SchedulesScreenUiTest {
 
     @Test
     fun `B-L10N-014 the Arabic list reads in plain Arabic words`() = runComposeUiTest {
-        setContent { Themed("ar") { SchedulesScreen(list, Recorder()) } }
-        onNodeWithText("الطلبات المجدولة").assertExists()
-        onNodeWithText("شغّل الآن").assertExists()
+        // The copy comes from the locale's resources, so the JVM locale is Arabic for this test.
+        val previous = Locale.getDefault()
+        Locale.setDefault(Locale.forLanguageTag("ar"))
+        try {
+            setContent { Themed("ar") { SchedulesScreen(list, Recorder()) } }
+            onNodeWithText("الطلبات المجدولة").assertExists()
+            onNodeWithContentDescription("المزيد · Check the nightly build").performClick()
+            onNodeWithText("شغّل الآن").assertExists()
+        } finally {
+            Locale.setDefault(previous)
+        }
     }
 
     @Test

@@ -2,7 +2,7 @@ package io.github.eslamasabry.opencode_mobile.graph
 
 import io.github.eslamasabry.oc.android.tiles.LaunchAction
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
-import io.github.eslamasabry.oc.ui.routes.LinuxRoute
+import io.github.eslamasabry.oc.ui.routes.PhoneSetupRoute
 import io.github.eslamasabry.opencode_mobile.release.RepoFiles
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -15,18 +15,22 @@ class SetupNotificationRouteTest {
 
     @Test
     fun `B-ANDR-050 the ongoing setup row opens the setup's progress page`() {
-        assertEquals(SetupTap.Open(LinuxRoute.Home), SetupTapRoutes.routeFor(LaunchAction.PhoneSetup, ChatsRoute.Home))
-        assertEquals(SetupTap.Open(LinuxRoute.Home), SetupTapRoutes.routeFor(LaunchAction.PhoneSetup, null))
+        // Flutter launch_route.dart: both setup actions call openPhoneSetupFromNotification; the setup page shows
+        // the job as it stands.
+        assertEquals(SetupTap.Open(PhoneSetupRoute.Setup), SetupTapRoutes.routeFor(LaunchAction.PhoneSetup, ChatsRoute.Home))
+        assertEquals(SetupTap.Open(PhoneSetupRoute.Setup), SetupTapRoutes.routeFor(LaunchAction.PhoneSetup, null))
     }
 
     @Test
     fun `B-ANDR-050 a tap while the setup page is on top changes nothing`() {
-        assertEquals(SetupTap.Stay, SetupTapRoutes.routeFor(LaunchAction.PhoneSetup, LinuxRoute.Home))
+        assertEquals(SetupTap.Stay, SetupTapRoutes.routeFor(LaunchAction.PhoneSetup, PhoneSetupRoute.Setup))
+        assertEquals(SetupTap.Stay, SetupTapRoutes.routeFor(LaunchAction.PhoneSetupDone, PhoneSetupRoute.Setup))
     }
 
     @Test
     fun `B-ANDR-050 a finished job just brings the app back and other actions are not setup taps`() {
-        assertEquals(SetupTap.Land, SetupTapRoutes.routeFor(LaunchAction.PhoneSetupDone, LinuxRoute.Home))
+        // The finished job opens the same setup page, which shows the result (Flutter phoneSetupDone).
+        assertEquals(SetupTap.Open(PhoneSetupRoute.Setup), SetupTapRoutes.routeFor(LaunchAction.PhoneSetupDone, ChatsRoute.Home))
         assertEquals(SetupTap.NotSetup, SetupTapRoutes.routeFor(LaunchAction.Connect, null))
     }
 
@@ -56,7 +60,7 @@ class SetupNotificationRouteTest {
     @Test
     fun `B-ANDR-050 the app routes both setup actions`() {
         val platform = RepoFiles.text("androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/PlatformWiring.kt")
-        assertTrue("LaunchAction.PhoneSetup, LaunchAction.PhoneSetupDone ->" in platform)
+        assertTrue(Regex("""LaunchAction\.PhoneSetup,\s*LaunchAction\.PhoneSetupDone ->""").containsMatchIn(platform))
         assertTrue("SetupTapRoutes.routeFor(action, navigator.top.value)" in platform)
     }
 }

@@ -10,6 +10,9 @@ dependencies {
     testImplementation(project(":engine:delivery"))
     testImplementation(libs.konsist)
     testImplementation(project(":desktopApp")) // desktop graph smoke
+    testImplementation(project(":feature:projects")) // DesktopAppGraph extends its IsolatedTaskBindings
+    // The smoke graph provides what only the app graphs bind (ContextUsageHistory, ScheduleEngine, SessionNotes).
+    listOf(":engine:settings", ":engine:schedules", ":engine:agents").forEach { testImplementation(project(it)) }
     listOf(
         ":core:common", ":core:security", ":core:model", ":core:domain", ":core:testing",
         ":engine:connection", ":engine:transcript", ":ui:routes", ":ui:kit", ":ui:shell", ":feature:chats",

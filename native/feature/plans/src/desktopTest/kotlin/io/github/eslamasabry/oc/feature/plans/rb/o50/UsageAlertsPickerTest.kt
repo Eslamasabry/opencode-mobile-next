@@ -61,7 +61,7 @@ class UsageAlertsPickerTest {
             onNodeWithTag("usage-alert-threshold").performClick()
             onNodeWithText("40% left").performClick()
             onNodeWithTag("kit-sheet").assertDoesNotExist()
-            assertEquals(listOf("setDefaultThreshold" to listOf(60)), calls)
+            assertEquals(listOf<Pair<String, List<Any?>>>("setDefaultThreshold" to listOf(60)), calls)
         }
 
     @Test
@@ -89,7 +89,11 @@ class UsageAlertsPickerTest {
                     localeTag = "en",
                     stillFrame = true,
                 ) {
-                    ThresholdChooser(80, true, 90, onSelect = { selected += it })
+                    // In the app the chooser's rows sit in a KitRowGroup column; alone at the root they would
+                    // all stack at one spot and a tap would land on the topmost row.
+                    androidx.compose.foundation.layout.Column {
+                        ThresholdChooser(80, true, 90, onSelect = { selected += it })
+                    }
                 }
             }
             onNodeWithText("Alert me at").performClick()

@@ -71,7 +71,7 @@
     <string name="nlibBrowserQuestion">Open this sign-in page?</string>
     <string name="nlibBrowserBody">You will leave the app. Check the destination host before continuing.</string>
     <string name="nlibDeviceCode">One-time code</string>
-    <string name="nlibRetrySave">Retry saving</string>
+    <string name="nlibRetrySave">Try saving again</string>
     <string name="nlibAddMcp">Add an MCP server</string>
     <string name="nlibMcpName">Server name</string>
     <string name="nlibMcpUrl">Server URL</string>

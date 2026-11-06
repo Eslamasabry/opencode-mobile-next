@@ -44,7 +44,7 @@ class ConnectionRegistryTest {
         pair: GatewayPair,
         override val scope: ConnectionCoroutineScope,
     ) : ConnectionGraph {
-        override val session = ConnectionSession(profile, pair.live)
+        override val session = ConnectionSession(profile, pair.live, scope)
     }
 
     @Test

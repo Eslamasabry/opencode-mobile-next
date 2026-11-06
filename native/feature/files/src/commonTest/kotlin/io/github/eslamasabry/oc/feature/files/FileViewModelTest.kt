@@ -126,6 +126,7 @@ class FileViewModelTest {
                 AppCoroutineScope(scope.backgroundScope.coroutineContext),
                 setOfNotNull(saver),
                 NoFileLinks(),
+                emptySet(),
             )
     }
 

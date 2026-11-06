@@ -11,6 +11,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.engine.integrations.usage.UsageBudgetUnit
 import io.github.eslamasabry.oc.feature.usage.presentation.UsageActions
 import io.github.eslamasabry.oc.feature.usage.presentation.UsageDay
 import io.github.eslamasabry.oc.feature.usage.presentation.UsageModel
@@ -79,6 +80,30 @@ class UsageScreenTest {
         override fun openServers() {
             calls += "servers"
         }
+
+        override fun editBudget(unit: UsageBudgetUnit) {
+            calls += "editBudget"
+        }
+
+        override fun budgetChanged(value: String) {
+            calls += "budgetChanged"
+        }
+
+        override fun saveBudget() {
+            calls += "saveBudget"
+        }
+
+        override fun removeBudget() {
+            calls += "removeBudget"
+        }
+
+        override fun closeBudget() {
+            calls += "closeBudget"
+        }
+
+        override fun clearBudgets() {
+            calls += "clearBudgets"
+        }
     }
 
     private val report =
@@ -126,7 +151,8 @@ class UsageScreenTest {
             val actions = Actions()
             setContent { Screen(ready(), actions) }
             onNodeWithText("Usage and cost").assertExists()
-            onNodeWithText("Estimated cost").assertExists()
+            // The total is labelled with the range it covers (Flutter usageSpentThirtyDays; 30 days is the default).
+            onNodeWithText("Spent in the last 30 days").assertExists()
             assertTrue(onAllNodesWithText("$4.50").fetchSemanticsNodes().isNotEmpty())
             onNodeWithText("Timezone: UTC").assertExists()
             onNodeWithText("All projects").assertExists()
@@ -162,6 +188,6 @@ class UsageScreenTest {
     fun `B-L10N-010 the usage screen reads in Arabic`() = runComposeUiTest {
         Locale.setDefault(Locale.forLanguageTag("ar"))
         setContent { Screen(ready(), Actions(), "ar") }
-        onNodeWithText("التكلفة التقديرية").assertExists()
+        onNodeWithText("إنفاق آخر 30 يومًا").assertExists()
     }
 }

@@ -233,10 +233,10 @@ class ComposerModelsFilesTest {
         val actions = Actions()
         val state = mutableStateOf(ui(pickingFile = true))
         setContent { Theme { BasicComposer(state.value, actions, chrome) } }
-        onNodeWithTag("chat-send-button").assertIsNotEnabled()
+        onControl("chat-send-button").assertIsNotEnabled()
         runOnIdle { state.value = ui(draft = DraftFacts(attachments = listOf(file("only.txt")))) }
-        onNodeWithTag("chat-send-button").assertIsEnabled()
-        onNodeWithTag("chat-send-button").performClick()
+        onControl("chat-send-button").assertIsEnabled()
+        onControl("chat-send-button").performClick()
         assertEquals(listOf("send <>"), actions.calls)
     }
 
@@ -248,7 +248,7 @@ class ComposerModelsFilesTest {
         setContent { Theme { BasicComposer(state.value, actions, chrome) } }
         onNodeWithText("This file is too large to attach.").assertIsDisplayed()
         onNodeWithText("Try again").performClick()
-        onNodeWithText("Dismiss").performClick()
+        onNodeWithContentDescription("Dismiss").performClick()
         assertEquals(listOf("attachFile", "dismiss"), actions.calls)
         runOnIdle { state.value = ui(attachmentFailure = Failure.StorageRefused()) }
         onNodeWithText("The file could not be saved on this device.").assertIsDisplayed()
@@ -301,13 +301,14 @@ class ComposerModelsFilesTest {
             onNodeWithContentDescription("Model").performClick()
             onNodeWithText("Thinking").assertIsDisplayed()
             // The levels sit on one line (it scrolls sideways instead of wrapping), the chosen one marked.
+            // A tappable kit chip speaks its word as its content description.
             val tops =
                 listOf("Default", "Low", "High").map {
-                    onNodeWithText(it).fetchSemanticsNode().boundsInRoot.top
+                    onNodeWithContentDescription(it).fetchSemanticsNode().boundsInRoot.top
                 }
             assertEquals(1, tops.distinct().size, "the thinking levels never wrap")
-            onNodeWithText("High").assertIsSelected()
-            onNodeWithText("Low").performClick()
+            onNodeWithContentDescription("High").assertIsSelected()
+            onNodeWithContentDescription("Low").performClick()
             onNodeWithText("Agent").assertIsDisplayed()
             onNodeWithText("Plan").performClick()
             waitForIdle()
@@ -341,8 +342,9 @@ class ComposerModelsFilesTest {
                         )
                 )
             setContent { Theme { KitSheetHost { BasicComposer(state, actions, chrome) } } }
-            onNodeWithText("Attach").performClick()
-            onNodeWithText("Add to prompt").assertIsDisplayed()
+            // The plus opens the tray on the message box itself (no sheet title since the one-box composer).
+            onNodeWithContentDescription("Attach").performClick()
+            onNodeWithTag("kit-composer-tray").assertIsDisplayed()
             onNodeWithText("Attach file").assertIsDisplayed()
             onNodeWithText("Take photo").assertDoesNotExist()
             onNodeWithText("Photo library").performClick()
@@ -363,7 +365,7 @@ class ComposerModelsFilesTest {
                 )
             setContent { Theme { BasicComposer(state.value, actions, chrome) } }
             onNode(hasSetTextAction()).performTextReplacement("/re")
-            onNodeWithText("/review").performClick()
+            onNodeWithContentDescription("/review").performClick()
             waitForIdle()
             onNode(hasSetTextAction()).assert(hasText("/review ", substring = true))
         }
@@ -375,7 +377,7 @@ class ComposerModelsFilesTest {
             val state = ui().copy(fileMatches = listOf("src/main.kt"))
             setContent { Theme { BasicComposer(state, actions, chrome) } }
             onNode(hasSetTextAction()).performTextReplacement("look at @ma")
-            onNodeWithText("@src/main.kt").performClick()
+            onNodeWithContentDescription("@src/main.kt").performClick()
             waitForIdle()
             onNode(hasSetTextAction()).assert(hasText("look at @src/main.kt ", substring = true))
             assertTrue("mention <src/main.kt>" in actions.calls)

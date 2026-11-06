@@ -82,8 +82,10 @@ class Kita1PaneSheetTest {
             val window = onNodeWithTag("window").getBoundsInRoot()
             assertEquals(window, onNodeWithTag("kit-sheet-scrim").getBoundsInRoot())
             assertEquals(560.dp, onNodeWithTag("kit-sheet").getBoundsInRoot().width)
-            onNodeWithTag("detail-button").performTouchInput { click() }
-            onNodeWithTag("side-button").performTouchInput { click() }
+            // The covered page leaves the semantics tree while the modal owns the window (N-22), so the taps
+            // go at the unmerged nodes: the scrim, not the semantics, is what must stop them.
+            onNodeWithTag("detail-button", useUnmergedTree = true).performTouchInput { click() }
+            onNodeWithTag("side-button", useUnmergedTree = true).performTouchInput { click() }
             assertEquals(0, calls)
             owner.navigationEventDispatcher.dispose()
         }

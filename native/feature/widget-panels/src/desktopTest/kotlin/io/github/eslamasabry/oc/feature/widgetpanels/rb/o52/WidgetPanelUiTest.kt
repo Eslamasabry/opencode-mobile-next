@@ -70,7 +70,7 @@ class WidgetPanelUiTest {
                 )
             }
             onNodeWithTag("widget-send").assertIsNotEnabled()
-            onNodeWithTag("widget-message").performTextInput("  Keep this draft  ")
+            onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("widget-message"))).performTextInput("  Keep this draft  ")
             onNodeWithTag("widget-send").performClick()
             assertEquals(listOf("send:Keep this draft"), actions.calls)
         }

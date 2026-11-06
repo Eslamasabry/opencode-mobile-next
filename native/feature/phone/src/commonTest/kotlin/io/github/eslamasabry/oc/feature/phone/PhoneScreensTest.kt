@@ -4,6 +4,9 @@ package io.github.eslamasabry.oc.feature.phone
 
 import androidx.compose.foundation.Indication
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.test.assertCountEquals
@@ -23,6 +26,8 @@ import io.github.eslamasabry.oc.feature.phone.presentation.PhoneAct
 import io.github.eslamasabry.oc.feature.phone.presentation.ProcessKind
 import io.github.eslamasabry.oc.feature.phone.presentation.ProcessRole
 import io.github.eslamasabry.oc.feature.phone.presentation.ProcessRowUi
+import io.github.eslamasabry.oc.feature.phone.presentation.PhoneDetailsUi
+import io.github.eslamasabry.oc.feature.phone.presentation.RunningRowUi
 import io.github.eslamasabry.oc.feature.phone.presentation.RunningActions
 import io.github.eslamasabry.oc.feature.phone.presentation.RunningUi
 import io.github.eslamasabry.oc.feature.phone.presentation.ServerRow
@@ -98,6 +103,10 @@ class PhoneScreensTest {
                 ThisPhoneUi(
                     answer =
                         ThisPhoneAnswer(AnswerTone.Off, AnswerHeadline.StoppedItself, primary = PhoneAct.RestartNow),
+                    // The page's rows show once OpenCode is installed here, and Running on this phone once there is
+                    // a reading (ThisPhoneScreen: `installed`, and the row's count/status guard).
+                    details = PhoneDetailsUi(installed = true),
+                    running = RunningRowUi(count = 3),
                 )
             setContent { Themed { ThisPhoneScreen(ui, calls) } }
             onNodeWithText("The server stopped by itself").assertExists()
@@ -120,6 +129,9 @@ class PhoneScreensTest {
             onNodeWithText("Everything is running").assertExists()
             onNodeWithText("Takes ⁦410 MB⁩ of storage").assertExists()
             onNodeWithText("Stop OpenCode on this phone").performClick()
+            // Stop asks Flutter's question first (6bcea0edb); the stop is sent from its confirm.
+            onNodeWithText("Stop the local server?").assertExists()
+            onNodeWithText("Stop local server").performClick()
             onNodeWithText("Restart OpenCode on this phone").performClick()
             assertEquals(listOf("stop", "askRestart"), calls.seen.filterNot { it.startsWith("shown") })
         }
@@ -128,25 +140,29 @@ class PhoneScreensTest {
     fun `B-LINUX-143 Running on this phone offers Stop only on unprotected rows, and the card hides`() =
         runComposeUiTest {
             val calls = Calls()
-            val ui =
-                RunningUi(
-                    loading = false,
-                    rows =
-                        persistentListOf(
-                            ProcessRowUi(10, "OpenCode", ProcessKind.OpenCode, null, false, ProcessRole.ServerRoot),
-                            ProcessRowUi(11, "node", ProcessKind.Other, 12, false, null),
-                        ),
-                    count = 12,
-                    childLimit = ChildLimitCardKind.OpenSettings,
+            // Both rows need attention (the o48 rule: only stoppable work needing attention gets an inline Stop);
+            // only the unprotected one may offer it.
+            val server = ProcessRowUi(10, "OpenCode", ProcessKind.OpenCode, null, false, ProcessRole.ServerRoot, heavy = true)
+            var ui by
+                mutableStateOf(
+                    RunningUi(
+                        loading = false,
+                        rows = persistentListOf(server, ProcessRowUi(11, "node", ProcessKind.Other, 12, true, null)),
+                        count = 12,
+                        childLimit = ChildLimitCardKind.OpenSettings,
+                    )
                 )
             setContent { Themed { RunningScreen(ui, calls) } }
             onAllNodesWithText("Stop").assertCountEquals(1)
-            onNodeWithText("It runs a server. Stop the server from This phone.").assertExists()
             onNodeWithText("Let agents run more programs at once").assertExists()
             onNodeWithText("Stop").performClick()
             onNodeWithTag("child-limit-open", useUnmergedTree = true).performClick()
             onNodeWithTag("child-limit-hide", useUnmergedTree = true).performClick()
             assertEquals(listOf("askStop 11", "openChildLimit", "hideChildLimit"), calls.seen.filterNot { it.startsWith("shown") })
+            // The protected row says where it is controlled, in its details.
+            ui = ui.copy(selected = server)
+            waitForIdle()
+            onNodeWithText("It runs a server. Stop the server from This phone.").assertExists()
         }
 
     @Test

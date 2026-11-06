@@ -8,7 +8,7 @@
   <string name="handoffNativeLinks">Linked conversations</string>
   <string name="handoffNativeUntitled">Untitled conversation</string>
   <string name="handoffNativeOpenOriginal">Open original</string>
-  <string name="handoffNativeOpenContinued">Open continued chat</string>
+  <string name="handoffNativeOpenContinued">Open continued conversation</string>
   <string name="handoffNativeExplanation">Choose an agent and model. You can review the shared conversation record before sending. The original chat stays available.</string>
   <string name="handoffNativeNoTargets">No qualified agent is ready for this project. Install, sign in and complete its phone check in Agents.</string>
   <string name="handoffNativeSetup">Open Agents</string>

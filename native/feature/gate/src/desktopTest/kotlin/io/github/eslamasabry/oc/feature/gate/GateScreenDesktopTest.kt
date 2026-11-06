@@ -152,7 +152,9 @@ class GateScreenDesktopTest {
         onNodeWithText("GitHub · Sign in to GitHub again").assertExists()
         onNodeWithText("Laptop · Set up again").performClick()
         onNodeWithText("Sign in to these later").performClick()
-        onNodeWithText("App content").assertExists()
+        // The state here never closes the sheet, and an open modal clears the covered page's semantics (N-22,
+        // 638bcb7d7): the app stays composed underneath, so it is found in the unmerged tree.
+        onNodeWithText("App content", useUnmergedTree = true).assertExists()
         assertEquals(listOf("reentry:Laptop", "later"), taps)
     }
 
