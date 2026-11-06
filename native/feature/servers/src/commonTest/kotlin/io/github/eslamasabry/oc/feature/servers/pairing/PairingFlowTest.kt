@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.servers.pairing
 
+import io.github.eslamasabry.oc.feature.servers.NoServerRows
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -120,7 +121,7 @@ class PairingFlowTest {
     fun `B-PROTO-064 a pasted code reaches the server form through the inbox, password never in screen state`() = runTest {
         val inbox = PairingInbox()
         val nav = Navigator()
-        val vm = ServersViewModel(null, Connections(), nav, inbox)
+        val vm = ServersViewModel(null, Connections(), nav, NoServerRows, inbox)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
         val before = vm.state.value.pairingArrival
         vm.pastePairing(code)
@@ -136,7 +137,7 @@ class PairingFlowTest {
     @Test
     fun `B-PROTO-065 a broken pasted code shows its plain problem and fills nothing`() = runTest {
         val inbox = PairingInbox()
-        val vm = ServersViewModel(null, Connections(), Navigator(), inbox)
+        val vm = ServersViewModel(null, Connections(), Navigator(), NoServerRows, inbox)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
         vm.pastePairing("""{"urls":"nope","password":"x"}""")
         assertEquals(PairingProblem.UrlsType, vm.state.value.pairingProblem)
@@ -148,7 +149,7 @@ class PairingFlowTest {
     @Test
     fun `B-SEC-124 pairing fills the form but never saves, contacts or consents to plain HTTP by itself`() = runTest {
         val connections = Connections()
-        val vm = ServersViewModel(null, connections, Navigator(), PairingInbox())
+        val vm = ServersViewModel(null, connections, Navigator(), NoServerRows, PairingInbox())
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
         vm.pastePairing("""{"urls":["http://box.lan:4096"],"password":"pw"}""")
         assertEquals(0, connections.saves)
@@ -159,7 +160,7 @@ class PairingFlowTest {
     @Test
     fun `B-PROTO-069 Scan code on the server form opens the pairing scanner`() {
         val nav = Navigator()
-        val vm = ServersViewModel(null, Connections(), nav, PairingInbox())
+        val vm = ServersViewModel(null, Connections(), nav, NoServerRows, PairingInbox())
         vm.scanPairing()
         assertEquals(PairingRoute.Scanner, nav.top.value)
     }

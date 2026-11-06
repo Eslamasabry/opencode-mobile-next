@@ -85,6 +85,9 @@ class PhoneScreensTest {
         override fun hideChildLimit() { seen += "hideChildLimit" }
         override fun resumed() { seen += "resumed" }
         override fun open(step: KeepAliveStepKind) { seen += "open $step" }
+        override fun dismissRecovery() { seen += "dismissRecovery" }
+        override fun refreshStorage() { seen += "refreshStorage" }
+        override fun measureStorage() { seen += "measureStorage" }
     }
 
     @Test

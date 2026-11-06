@@ -50,7 +50,7 @@ class LibraryPageTest {
             onNodeWithText("Pick a command, then the conversation it runs in").assertExists()
             onNodeWithText("/review · Runs with plan").assertExists()
             onNodeWithTag("library-command-review").performClick()
-            assertEquals(listOf("show" to listOf(LibrarySheet.Command(command))), calls)
+            assertEquals<List<Pair<String, List<Any?>>>>(listOf("show" to listOf(LibrarySheet.Command(command))), calls)
         }
 
     @Test
@@ -67,7 +67,7 @@ class LibraryPageTest {
         val actions = actions()
         setContent { SettingsThemed { LibraryScreen(state, actions) } }
         onNodeWithTag("library-reference-docs").performClick()
-        assertEquals(listOf("addReference" to listOf(reference)), calls)
+        assertEquals<List<Pair<String, List<Any?>>>>(listOf("addReference" to listOf(reference)), calls)
     }
 
     @Test
@@ -84,7 +84,7 @@ class LibraryPageTest {
         onNodeWithText("No skills available").assertDoesNotExist()
         onNodeWithText("Couldn’t load skills").assertExists()
         onNodeWithText("Retry").performClick()
-        assertEquals(listOf("refresh" to emptyList()), calls)
+        assertEquals<List<Pair<String, List<Any?>>>>(listOf("refresh" to emptyList()), calls)
     }
 
     @Test
@@ -109,7 +109,7 @@ class LibraryPageTest {
         setContent { SettingsThemed { LibraryScreen(state, actions) } }
         onNodeWithText("Review a change for correctness").assertExists()
         onNodeWithText("Copy /focused-review").performClick()
-        assertEquals(listOf("copy" to listOf("/focused-review")), calls)
+        assertEquals<List<Pair<String, List<Any?>>>>(listOf("copy" to listOf("/focused-review")), calls)
         onNodeWithText("Copy path").assertDoesNotExist()
     }
 
@@ -137,6 +137,6 @@ class LibraryPageTest {
                 )
                 .assertExists()
             onNodeWithText("Copy @platform-docs").performClick()
-            assertEquals(listOf("copy" to listOf("@platform-docs")), calls)
+            assertEquals<List<Pair<String, List<Any?>>>>(listOf("copy" to listOf("@platform-docs")), calls)
         }
 }

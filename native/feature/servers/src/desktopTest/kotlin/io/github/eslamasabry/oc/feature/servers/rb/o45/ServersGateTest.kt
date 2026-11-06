@@ -2,6 +2,7 @@
 
 package io.github.eslamasabry.oc.feature.servers.rb.o45
 
+import io.github.eslamasabry.oc.feature.servers.ServersTestTheme
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -114,12 +115,12 @@ class ServersGateTest {
     @Test
     fun `a waiting server leads with its attention words`() = runComposeUiTest {
         val facts =
-            state.rows.facts.put(
+            state.rows.facts.toPersistentMap().put(
                 servers[0].id,
                 state.rows.facts.getValue(servers[0].id).copy(waiting = 1),
             )
         setContent {
-            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+            ServersTestTheme {
                 ServersScreen(state.copy(rows = state.rows.copy(facts = facts)), Actions())
             }
         }
@@ -134,7 +135,7 @@ class ServersGateTest {
                     .mapValues { (_, facts) -> facts.copy(needsSecret = true, queued = 1) }
                     .toPersistentMap()
             setContent {
-                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                ServersTestTheme {
                     ServersScreen(state.copy(rows = state.rows.copy(facts = facts)), Actions())
                 }
             }
@@ -172,7 +173,7 @@ class ServersGateTest {
         runComposeUiTest {
             val actions = Actions()
             setContent {
-                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                ServersTestTheme {
                     ServersScreen(state, actions)
                 }
             }
@@ -195,11 +196,11 @@ class ServersGateTest {
                 )!!
             val actions = Actions(fill)
             setContent {
-                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                ServersTestTheme {
                     ServersScreen(state.copy(pairingArrival = 1), actions)
                 }
             }
-            onNodeWithText("Save").performClick()
+            onNodeWithText("Save and connect").performClick()
             assertEquals("https://paired.example", actions.savedAddress)
             assertEquals(true, actions.passwordWasPresent)
             assertEquals(null, fill.takePassword())

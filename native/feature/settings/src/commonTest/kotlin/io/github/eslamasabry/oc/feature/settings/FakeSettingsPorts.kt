@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.settings
 
+import kotlinx.collections.immutable.toPersistentList
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.domain.capabilities.PlatformCapabilities
@@ -117,6 +118,13 @@ class FakeNotifications(initial: NotificationFacts = NotificationFacts()) : Noti
                 is NotificationChange.Questions -> v.copy(questions = change.on)
                 is NotificationChange.WifiOnly -> v.copy(wifiOnly = change.on)
                 is NotificationChange.Quiet -> v.copy(quietHours = change.hours)
+                is NotificationChange.CheckIn -> v.copy(checkInMinutes = change.minutes)
+                is NotificationChange.ProfileWatch ->
+                    v.copy(profiles = v.profiles.map { if (it.id == change.profile) it.copy(enabled = change.on) else it }.toPersistentList())
+                is NotificationChange.ProfileNotifications ->
+                    v.copy(
+                        profiles = v.profiles.map { if (it.id == change.profile) it.copy(notifications = change.on) else it }.toPersistentList(),
+                    )
             }
         return Outcome.Ok(Unit)
     }

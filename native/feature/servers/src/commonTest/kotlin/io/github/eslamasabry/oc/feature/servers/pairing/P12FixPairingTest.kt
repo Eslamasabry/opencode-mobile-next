@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.servers.pairing
 
+import io.github.eslamasabry.oc.feature.servers.NoServerRows
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -83,7 +84,7 @@ class P12FixPairingTest {
     fun `B-PROTO-068 the form fills the first address that works, falling through ones that do not answer`() = runTest {
         val probe = Probe(mapOf("https://b.example:4096" to PairingAnswer.Works))
         val inbox = PairingInbox()
-        val vm = ServersViewModel(null, Connections(), Navigator(), inbox, probe)
+        val vm = ServersViewModel(null, Connections(), Navigator(), NoServerRows, inbox, probe)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
         vm.pastePairing(code("https://a.example:4096", "https://b.example:4096"))
         val fill = vm.takePairing()!!
@@ -113,7 +114,7 @@ class P12FixPairingTest {
 
     @Test
     fun `B-PROTO-068 when nothing answers the form still fills the best-ordered address`() = runTest {
-        val vm = ServersViewModel(null, Connections(), Navigator(), PairingInbox(), Probe(emptyMap()))
+        val vm = ServersViewModel(null, Connections(), Navigator(), NoServerRows, PairingInbox(), Probe(emptyMap()))
         vm.pastePairing(code("https://a.example:4096", "http://127.0.0.1:4096"))
         assertEquals("https://a.example:4096", vm.takePairing()?.address)
     }
@@ -147,7 +148,7 @@ class P12FixPairingTest {
 
     @Test
     fun `B-PROTO-069 the unsaved password waits in memory while the scanner is on top, never in screen state`() {
-        val vm = ServersViewModel(null, Connections(), Navigator(), PairingInbox())
+        val vm = ServersViewModel(null, Connections(), Navigator(), NoServerRows, PairingInbox())
         vm.holdPassword("s3cret")
         assertEquals("s3cret", vm.heldPassword())
         assertEquals(false, "s3cret" in vm.state.value.toString())

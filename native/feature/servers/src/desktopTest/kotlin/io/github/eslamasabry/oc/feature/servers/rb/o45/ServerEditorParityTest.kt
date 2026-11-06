@@ -2,6 +2,7 @@
 
 package io.github.eslamasabry.oc.feature.servers.rb.o45
 
+import io.github.eslamasabry.oc.feature.servers.ServersTestTheme
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.model.BackendKind
@@ -81,7 +82,7 @@ class ServerEditorParityTest {
     fun `a new OpenCode server leads with pairing and manual fields open by a visible fold`() =
         runComposeUiTest {
             setContent {
-                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                ServersTestTheme {
                     ServerEditorScreen(ServerEditorUi(step = ServerEditorStep.Connect), Actions())
                 }
             }
@@ -114,7 +115,7 @@ class ServerEditorParityTest {
         runComposeUiTest {
             val actions = Actions(draft("http://192.168.1.8:4096"))
             setContent {
-                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                ServersTestTheme {
                     ServerEditorScreen(
                         ServerEditorUi(
                             step = ServerEditorStep.Connect,
@@ -143,7 +144,7 @@ class ServerEditorParityTest {
     fun `HTTPS and loopback do not offer an HTTP trust decision`() = runComposeUiTest {
         val actions = Actions(draft("https://computer.example"))
         setContent {
-            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+            ServersTestTheme {
                 ServerEditorScreen(
                     ServerEditorUi(step = ServerEditorStep.Connect, newServer = false),
                     actions,
@@ -161,7 +162,7 @@ class ServerEditorParityTest {
     fun `Tailscale keeps the VPN to do and the next step visible`() = runComposeUiTest {
         val actions = Actions()
         setContent {
-            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+            ServersTestTheme {
                 ServerEditorScreen(
                     ServerEditorUi(
                         step = ServerEditorStep.Tailscale,
