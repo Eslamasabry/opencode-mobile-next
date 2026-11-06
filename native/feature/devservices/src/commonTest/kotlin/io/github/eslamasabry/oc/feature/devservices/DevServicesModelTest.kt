@@ -52,6 +52,10 @@ class DevServicesModelTest {
     }
 
     private class Shells : ManagedShellPort {
+        private companion object {
+            const val OUTPUT = "ready on http://localhost:5173\n"
+        }
+
         val shells = mutableMapOf<String, ManagedShell>()
         val calls = mutableListOf<String>()
 
@@ -67,7 +71,8 @@ class DevServicesModelTest {
         override suspend fun get(id: String): Outcome<ManagedShell?> = shells[id].ok()
 
         override suspend fun output(id: String, cursor: Long, limit: Int): Outcome<ManagedShellOutput> =
-            ManagedShellOutput("ready on http://localhost:5173\n", cursor, 30, false).ok()
+            // The page's cursor is where the next read starts (after this text), as the server returns it.
+            OUTPUT.let { all -> ManagedShellOutput(all.substring(cursor.toInt().coerceAtMost(all.length)), all.length.toLong(), all.length.toLong(), false).ok() }
 
         override suspend fun stop(id: String): Outcome<Unit> {
             calls += "stop $id"
