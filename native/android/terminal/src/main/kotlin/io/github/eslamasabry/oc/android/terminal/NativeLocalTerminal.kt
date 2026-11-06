@@ -199,6 +199,11 @@ class NativeLocalTerminal(
                 override fun onCopyTextToClipboard(session: TerminalSession, text: String) {
                     copyTerminalText(session, text, held.view)
                 }
+
+                /** The grid's own Paste (Termux's selection menu), after any queued typing. */
+                override fun onPasteTextFromClipboard(session: TerminalSession) {
+                    pasteNow(held)
+                }
             }
         try {
             held.session =
@@ -292,6 +297,27 @@ class NativeLocalTerminal(
         held.pendingInput.clear()
         if (sessions[held.id] === held && held.session.isRunning && bytes.isNotEmpty())
             held.session.write(bytes, 0, bytes.size)
+    }
+
+    /** The bar menu's Paste (E11-S01): same path as the grid's own Paste, then the keyboard comes back. */
+    override fun paste(id: Int): Outcome<Unit> {
+        if (Looper.myLooper() != Looper.getMainLooper()) return failed()
+        val held = sessions[id] ?: return failed()
+        if (!held.session.isRunning) return Outcome.Ok(Unit)
+        return when (pasteNow(held)) {
+            TerminalPasted.TooLong -> failed()
+            TerminalPasted.Sent -> {
+                held.view.requestFocus()
+                Outcome.Ok(Unit)
+            }
+            TerminalPasted.Nothing -> Outcome.Ok(Unit)
+        }
+    }
+
+    /** Typed text still queued goes first, so a paste lands where the person expects it. */
+    private fun pasteNow(held: Held): TerminalPasted {
+        flush(held)
+        return pasteTerminalText(held.session, held.view)
     }
 
     override fun discardInput(id: Int) {

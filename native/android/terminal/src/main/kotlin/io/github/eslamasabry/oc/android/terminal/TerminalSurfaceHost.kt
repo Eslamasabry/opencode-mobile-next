@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.core.common.terminal.TerminalLinks
 import io.github.eslamasabry.oc.core.common.terminal.TerminalPalette
 import io.github.eslamasabry.oc.core.common.terminal.TerminalRow
 import io.github.eslamasabry.oc.core.common.terminal.TerminalSurface
+import io.github.eslamasabry.oc.engine.project.terminal.TerminalPaste
 
 /** The same view seam for local PTYs, sign-in sessions and external daemon streams. */
 internal open class TerminalSurfaceHost(context: Context, protected val terminal: TerminalView) :
@@ -93,4 +94,31 @@ internal fun copyTerminalText(session: TerminalSession, text: String, shown: and
     if (text.isEmpty() || text.toByteArray(Charsets.UTF_8).size > 65_536) return
     (shown.context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager)
         ?.setPrimaryClip(ClipData.newPlainText("", text))
+}
+
+/** What [pasteTerminalText] did. */
+internal enum class TerminalPasted {
+    Sent,
+    Nothing,
+    TooLong,
+}
+
+/**
+ * E11-S01: the clipboard's text into [session], through Termux's `TerminalEmulator.paste` (escape and C1 controls
+ * removed, line ends sent as Return, wrapped in ESC[200~ … ESC[201~ when the shell turned on bracketed paste). Like
+ * [copyTerminalText], only while the terminal is on screen: a session running unseen never reads the clipboard. The
+ * text is never logged.
+ */
+internal fun pasteTerminalText(session: TerminalSession, shown: android.view.View?): TerminalPasted {
+    if (shown == null || !shown.isShown || !session.isRunning) return TerminalPasted.Nothing
+    val clipboard =
+        shown.context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+            ?: return TerminalPasted.Nothing
+    val clip =
+        clipboard.primaryClip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.coerceToText(shown.context)
+    if (clip.isNullOrEmpty()) return TerminalPasted.Nothing
+    val text = TerminalPaste.accept(clip) ?: return TerminalPasted.TooLong
+    val emulator = session.emulator ?: return TerminalPasted.Nothing
+    emulator.paste(text)
+    return TerminalPasted.Sent
 }

@@ -45,4 +45,10 @@ public interface LocalTerminalInputPort {
     public fun enqueueKey(id: Int, key: TerminalKey): Outcome<Unit>
 
     public fun discardInput(id: Int)
+
+    /**
+     * Pastes the clipboard's text into shell [id] (E11-S01), after any queued typing, bracketed when the shell asked
+     * for it. An empty clipboard sends nothing and is still Ok; a paste over [TerminalPaste.MAX_BYTES] is refused.
+     */
+    public fun paste(id: Int): Outcome<Unit>
 }
