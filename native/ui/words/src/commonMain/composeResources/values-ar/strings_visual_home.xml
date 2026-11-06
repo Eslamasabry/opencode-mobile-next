@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="homeStartWaysLabel">طرق للبدء</string>
+    <string name="homeStartOpenProject">فتح مشروع</string>
+    <string name="homeStartOpenProjectDetail">ابدأ مشروعًا جديدًا أو اختر مجلدًا</string>
+    <string name="homeStartConnectDetail">شغّل الوكيل على حاسوبك</string>
+    <string name="homeStartDemo">شاهد ما يستطيع الوكيل فعله</string>
+    <string name="homeStartDemoDetail">مثال قصير، دون أي إعداد</string>
+    <string name="homeProjectSheetNew">مشروع جديد</string>
+    <string name="homeProjectSheetNewDetail">ينشئ مجلدًا في مشاريعك، مع Git</string>
+    <string name="homeProjectSheetByPath">اختيار مجلد بمساره</string>
+</resources>

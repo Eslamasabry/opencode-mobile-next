@@ -314,6 +314,16 @@ public class ChatsViewModel(
         nav.open(ServersRoute.Home)
     }
 
+    override fun connectComputer() {
+        sheet.value = null
+        nav.open(ServersRoute.Edit())
+    }
+
+    override fun openDemo() {
+        sheet.value = null
+        nav.open(io.github.eslamasabry.oc.ui.routes.DemoRoute)
+    }
+
     override fun openFilterProject() {
         sheet.value = ChatsHomeSheet.OpenProject
     }

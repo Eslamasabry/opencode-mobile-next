@@ -94,6 +94,37 @@ public data class BriefUi(
     val overflowKeys: ImmutableSet<String> = persistentSetOf(),
 )
 
+/** The connection the home's server pill names (Flutter `KitShellControls` pill). */
+public enum class HomeConnectionState {
+    Connected,
+    Connecting,
+    NotAnswering,
+}
+
+/** The pill's words: the server new conversations start on, and how it answers now. */
+public data class HomeConnectionUi(val server: String, val state: HomeConnectionState) {
+    public companion object {
+        /**
+         * From the home's sources: the server still opening (Connecting, or Not answering when it failed), else the
+         * main source (Not answering while it is unreachable). Null when nothing is saved yet.
+         */
+        public fun of(extra: ChatsHomeExtraState): HomeConnectionUi? {
+            extra.opening?.let { opening ->
+                return HomeConnectionUi(
+                    opening.serverName,
+                    if (opening.phase == ChatsOpeningPhase.Failed) HomeConnectionState.NotAnswering
+                    else HomeConnectionState.Connecting,
+                )
+            }
+            val main = extra.sources.firstOrNull { it.main } ?: extra.sources.firstOrNull() ?: return null
+            return HomeConnectionUi(
+                main.name,
+                if (main.unreachable) HomeConnectionState.NotAnswering else HomeConnectionState.Connected,
+            )
+        }
+    }
+}
+
 /** Filters the person chose. Value equality. */
 public data class ChatsFilters(
     val projectDirectory: String? = null,
@@ -149,7 +180,15 @@ public data class ChatsUi(
     /** The one Undo offer after an archive; [ArchiveUndoUi.id] restarts the bar's window. */
     val archiveUndo: ArchiveUndoUi? = null,
     val archiveFailure: io.github.eslamasabry.oc.core.common.Failure? = null,
-)
+) {
+    /** The server pill's words; null before anything is saved. */
+    val connection: HomeConnectionUi?
+        get() = HomeConnectionUi.of(home)
+
+    /** A computer is saved (not only this phone): the first-run page then skips "Connect a computer". */
+    val hasComputer: Boolean
+        get() = home.sources.any { !it.onThisPhone }
+}
 
 /** The conversation just archived, waiting out its undo window. */
 public data class ArchiveUndoUi(val id: Int, val title: RowTitle)
@@ -229,6 +268,12 @@ public interface ChatsActions {
     public fun retryOpening() {}
 
     public fun openServers() {}
+
+    /** First run: add a computer (the server form). */
+    public fun connectComputer() {}
+
+    /** First run: the offline example conversation. */
+    public fun openDemo() {}
 
     public fun openFilterProject() {}
 
