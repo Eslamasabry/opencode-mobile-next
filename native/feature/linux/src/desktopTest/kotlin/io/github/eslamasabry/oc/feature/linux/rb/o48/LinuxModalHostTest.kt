@@ -161,9 +161,10 @@ class LinuxModalHostTest {
                 )
             }
         }
-        onNodeWithText("Remove htop?").assertIsDisplayed()
+        // The name is wrapped in invisible direction marks (LinuxWords.names) so it reads right in Arabic too.
+        onNodeWithText("Remove \u2066htop\u2069?").assertIsDisplayed()
         assertEquals(0, actions.confirmed)
-        onNodeWithText("Remove htop").performClick()
+        onNodeWithText("Remove \u2066htop\u2069").performClick()
         assertEquals(1, actions.confirmed)
     }
 
@@ -209,7 +210,8 @@ class LinuxModalHostTest {
             }
             onNodeWithText("Stop copying?").assertIsDisplayed()
             onNodeWithText("What was copied so far is kept").assertExists()
-            onNodeWithText("Keep going").performClick()
+            // Flutter's migrationKeepGoing (app_en.arb, 2.1.4+62) is "Keep copying".
+            onNodeWithText("Keep copying").performClick()
             assertEquals(1, actions.dismissed)
             assertEquals(0, actions.confirmed)
         }
