@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat.presentation
 
+import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.engine.transcript.state.BlockRow
 import io.github.eslamasabry.oc.engine.transcript.state.FooterRow
 import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
@@ -10,7 +11,6 @@ import io.github.eslamasabry.oc.engine.transcript.state.ThoughtRow
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptRow
 import io.github.eslamasabry.oc.feature.chat.world.ChatLink
 import io.github.eslamasabry.oc.feature.chat.world.ChatLoad
-import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
 import kotlinx.collections.immutable.ImmutableList
@@ -23,13 +23,15 @@ import kotlinx.collections.immutable.toImmutableList
  */
 
 /**
- * The message a row belongs to. The P3 rows carry it only in their key (`prompt:<m>`, `b:<m>/<p>:<s>`,
- * `thought:<m>/<p>`); notices, work lines and footers carry none. S2-TX request: a `messageId` field on every row.
+ * The message a row belongs to. The P3 rows carry it only in their key (`prompt:<m>`,
+ * `b:<m>/<p>:<s>`, `thought:<m>/<p>`); notices, work lines and footers carry none. S2-TX request: a
+ * `messageId` field on every row.
  */
 public object RowIds {
     public fun messageIdOf(row: TranscriptRow): String? =
         when (row) {
-            is PromptRow -> row.key.removePrefix("prompt:").takeIf { it.isNotEmpty() && it != row.key }
+            is PromptRow ->
+                row.key.removePrefix("prompt:").takeIf { it.isNotEmpty() && it != row.key }
             is BlockRow -> row.key.between("b:", "/")
             is ThoughtRow -> row.key.between("thought:", "/")
             else -> null
@@ -42,7 +44,10 @@ public object RowIds {
     }
 }
 
-/** The one status line (plan 09 §6.5 order; 07 §10.1 puts the connection first). Most urgent wins; ties keep first. */
+/**
+ * The one status line (plan 09 §6.5 order; 07 §10.1 puts the connection first). Most urgent wins;
+ * ties keep first.
+ */
 public object StatusPick {
     public fun pick(
         link: ChatLink,
@@ -58,21 +63,39 @@ public object StatusPick {
             ChatLink.Live -> Unit
         }
         // The newest bubble speaks for the sends; an older failure stays on its own bubble.
-        pending.lastOrNull { it.state == PendingState.Failed }?.let {
-            return ChatStatusUi("send-${it.localId}", ChatStatusKind.SendFailed, it.failure, it.localId)
-        }
-        pending.lastOrNull { it.state == PendingState.Unconfirmed }?.let {
-            return ChatStatusUi("send-${it.localId}", ChatStatusKind.SendUnconfirmed, null, it.localId)
-        }
+        pending
+            .lastOrNull { it.state == PendingState.Failed }
+            ?.let {
+                return ChatStatusUi(
+                    "send-${it.localId}",
+                    ChatStatusKind.SendFailed,
+                    it.failure,
+                    it.localId,
+                )
+            }
+        pending
+            .lastOrNull { it.state == PendingState.Unconfirmed }
+            ?.let {
+                return ChatStatusUi(
+                    "send-${it.localId}",
+                    ChatStatusKind.SendUnconfirmed,
+                    null,
+                    it.localId,
+                )
+            }
         if (!run.busy && run.lastOutcome is RunOutcome.Failed && !newestTurnSaysFailed(rows)) {
             return ChatStatusUi(RUN, ChatStatusKind.RunFailed)
         }
-        if (actionFailure != null) return ChatStatusUi(ACTION, ChatStatusKind.ActionFailed, actionFailure)
+        if (actionFailure != null)
+            return ChatStatusUi(ACTION, ChatStatusKind.ActionFailed, actionFailure)
         if (linkRefused) return ChatStatusUi(LINK, ChatStatusKind.LinkRefused)
         return null
     }
 
-    /** B-CHAT-071: no second error when the reply already says why (its footer is a failed one). O(newest turn). */
+    /**
+     * B-CHAT-071: no second error when the reply already says why (its footer is a failed one).
+     * O(newest turn).
+     */
     internal fun newestTurnSaysFailed(rows: List<TranscriptRow>): Boolean {
         val turn = rows.firstOrNull()?.turnId ?: return false
         for (row in rows) {
@@ -88,29 +111,43 @@ public object StatusPick {
     public const val LINK: String = "link"
 }
 
-/** One find hit: [start] until [end] in the row's own text. Hits are in reading order (oldest first). */
-public data class FindHit(val rowKey: String, val start: Int, val end: Int, val sourceId: String = rowKey)
+/**
+ * One find hit: [start] until [end] in the row's own text. Hits are in reading order (oldest
+ * first).
+ */
+public data class FindHit(
+    val rowKey: String,
+    val start: Int,
+    val end: Int,
+    val sourceId: String = rowKey,
+)
 
 /**
- * Find over the loaded rows (plan 09 §6.6; port of Flutter `TranscriptSearchIndex.search`): literal, case-insensitive,
- * non-overlapping, in reading order, over the person's prompts, reply blocks and thought lines (never app words).
- * O(rows); the ViewModel runs it off the main thread. S2-TX request: `handle.search` (B-CHAT-115) replaces it.
+ * Find over the loaded rows (plan 09 §6.6; port of Flutter `TranscriptSearchIndex.search`):
+ * literal, case-insensitive, non-overlapping, in reading order, over the person's prompts, reply
+ * blocks and thought lines (never app words). O(rows); the ViewModel runs it off the main thread.
+ * S2-TX request: `handle.search` (B-CHAT-115) replaces it.
  */
 public object TranscriptFind {
-    public fun search(state: io.github.eslamasabry.oc.engine.transcript.state.TranscriptState, query: String): ImmutableList<FindHit> {
+    public fun search(
+        state: io.github.eslamasabry.oc.engine.transcript.state.TranscriptState,
+        query: String,
+    ): ImmutableList<FindHit> {
         val q = query.trim()
         if (q.isEmpty()) return persistentListOf()
         val extra = state.searchText.groupBy { it.rowKey }
         val hits = ArrayList<FindHit>()
         for (row in state.rows.asReversed()) {
             val sources = extra[row.key]
-            if (sources == null) hits += search(listOf(row), q) else for (source in sources) {
-                var at = source.text.indexOf(q, ignoreCase = true)
-                while (at >= 0) {
-                    hits += FindHit(row.key, at, at + q.length, source.sourceId)
-                    at = source.text.indexOf(q, at + q.length, ignoreCase = true)
+            if (sources == null) hits += search(listOf(row), q)
+            else
+                for (source in sources) {
+                    var at = source.text.indexOf(q, ignoreCase = true)
+                    while (at >= 0) {
+                        hits += FindHit(row.key, at, at + q.length, source.sourceId)
+                        at = source.text.indexOf(q, at + q.length, ignoreCase = true)
+                    }
                 }
-            }
         }
         return hits.toImmutableList()
     }
@@ -140,8 +177,9 @@ public object TranscriptFind {
         }
 
     /**
-     * Flutter `_syncFind`: the current hit is kept by identity across updates (streaming, older pages, deletion);
-     * when it is gone the cursor stays at its number, clamped. Returns the new cursor (-1 with no hits).
+     * Flutter `_syncFind`: the current hit is kept by identity across updates (streaming, older
+     * pages, deletion); when it is gone the cursor stays at its number, clamped. Returns the new
+     * cursor (-1 with no hits).
      */
     public fun keep(hits: List<FindHit>, key: FindHit?, cursor: Int): Int {
         if (hits.isEmpty()) return -1
@@ -150,18 +188,25 @@ public object TranscriptFind {
     }
 
     /** Next (+1) or previous (-1), wrapping (Flutter `_navigateFind`). */
-    public fun step(size: Int, cursor: Int, by: Int): Int = if (size == 0) -1 else ((cursor + by) % size + size) % size
+    public fun step(size: Int, cursor: Int, by: Int): Int =
+        if (size == 0) -1 else ((cursor + by) % size + size) % size
 }
 
 /** One action list per message for every way in (plan 09 §6.6), in menu order, destructive last. */
 public object MessageActions {
-    public fun of(kind: TargetKind, caps: ChatCapabilitiesUi, busy: Boolean, messageId: String?, hasText: Boolean): ImmutableList<MessageAction> =
-        of(kind, caps, busy, messageId, hasText, feel = false)
+    public fun of(
+        kind: TargetKind,
+        caps: ChatCapabilitiesUi,
+        busy: Boolean,
+        messageId: String?,
+        hasText: Boolean,
+    ): ImmutableList<MessageAction> = of(kind, caps, busy, messageId, hasText, feel = false)
 
     /**
-     * P12-CHAT-FEEL, Flutter `_messageContextActions` order: Copy, Share, Select text, Edit and resend (prompt), Send
-     * again (prompt, not while a reply runs: steer, never queue), Fork (prompt), Undo from here (a saved prompt, the
-     * server undoes, not while a reply runs), Delete last. [feel] = false keeps the slice-2 list.
+     * P12-CHAT-FEEL, Flutter `_messageContextActions` order: Copy, Share, Select text, Edit and
+     * resend (prompt), Send again (prompt, not while a reply runs: steer, never queue), Fork
+     * (prompt), Undo from here (a saved prompt, the server undoes, not while a reply runs), Delete
+     * last. [feel] = false keeps the slice-2 list.
      */
     public fun of(
         kind: TargetKind,
@@ -180,7 +225,8 @@ public object MessageActions {
         if (feel && prompt && hasText) out += MessageAction.EditAndResend
         if (prompt && hasText && !busy) out += MessageAction.SendAgain
         if (prompt && caps.fork && messageId != null) out += MessageAction.Fork
-        if (kind == TargetKind.Reply && caps.changes && messageId != null) out += MessageAction.Changes
+        if (kind == TargetKind.Reply && caps.changes && messageId != null)
+            out += MessageAction.Changes
         if (prompt && caps.undo && messageId != null && !busy) out += MessageAction.UndoFromHere
         if (caps.deleteMessage && messageId != null) out += MessageAction.Delete
         return out.toImmutableList()
@@ -188,9 +234,10 @@ public object MessageActions {
 }
 
 /**
- * Copy reply (plan 09 §6.6): the turn's assistant prose in order, notices, thoughts and work lines skipped, the
- * person's words verbatim. P3 blocks drop the blank lines between them, so blocks are joined with one blank line.
- * S2-TX request: the part's own text, so the copy is byte-exact. O(rows).
+ * Copy reply (plan 09 §6.6): the turn's assistant prose in order, notices, thoughts and work lines
+ * skipped, the person's words verbatim. P3 blocks drop the blank lines between them, so blocks are
+ * joined with one blank line. S2-TX request: the part's own text, so the copy is byte-exact.
+ * O(rows).
  */
 public object ReplyText {
     public fun of(rows: List<TranscriptRow>, turnId: String): String? {
@@ -207,8 +254,10 @@ public object ReplyText {
                 previous = null
             }
             part = row.partId
-            // Chunks of one long block were cut at a line end: they join with that one newline, so a fence or a
-            // line continuation pastes back exactly as written. Separate blocks keep their blank line.
+            // Chunks of one long block were cut at a line end: they join with that one newline, so
+            // a fence or a
+            // line continuation pastes back exactly as written. Separate blocks keep their blank
+            // line.
             val sameBlock = previous != null && previous.continues && row.continued
             if (sb.isNotEmpty()) sb.append(if (sameBlock) "\n" else "\n\n")
             sb.append(row.text)
@@ -220,9 +269,10 @@ public object ReplyText {
 }
 
 /**
- * The "N earlier messages" pill (plan 09 §7.3 rule 6; Flutter `_earlierMessageCount`): the count of whole messages
- * fully above the viewport is the oldest-first ordinal of the oldest visible row's message. Built once per rows
- * instance (O(rows)), then O(1) per scroll. S2-TX request: `TranscriptState.messageOrder` makes this free.
+ * The "N earlier messages" pill (plan 09 §7.3 rule 6; Flutter `_earlierMessageCount`): the count of
+ * whole messages fully above the viewport is the oldest-first ordinal of the oldest visible row's
+ * message. Built once per rows instance (O(rows)), then O(1) per scroll. S2-TX request:
+ * `TranscriptState.messageOrder` makes this free.
  */
 public class MessageOrder(rows: List<TranscriptRow>) {
     private val ordinal = IntArray(rows.size)
@@ -242,7 +292,8 @@ public class MessageOrder(rows: List<TranscriptRow>) {
     }
 
     /** Messages fully above the row at newest-first [oldestVisibleRow]; 0 outside the rows. */
-    public fun earlierCount(oldestVisibleRow: Int): Int = if (oldestVisibleRow in ordinal.indices) ordinal[oldestVisibleRow] else 0
+    public fun earlierCount(oldestVisibleRow: Int): Int =
+        if (oldestVisibleRow in ordinal.indices) ordinal[oldestVisibleRow] else 0
 
     public companion object {
         /** Flutter shows the pill only for conversations longer than 30 messages. */
@@ -253,24 +304,40 @@ public class MessageOrder(rows: List<TranscriptRow>) {
     }
 }
 
-/** Read acknowledgement (plan 09 §6.7): only while loaded, without a load error, at the live edge. */
+/**
+ * Read acknowledgement (plan 09 §6.7): only while loaded, without a load error, at the live edge.
+ */
 public object ReadAck {
-    public fun allowed(load: ChatLoad, atLiveEdge: Boolean): Boolean = load is ChatLoad.Live && atLiveEdge
+    public fun allowed(load: ChatLoad, atLiveEdge: Boolean): Boolean =
+        load is ChatLoad.Live && atLiveEdge
 }
 
-/** `LandOnFailure` (plan 09 §6.7): the newest failed turn's footer. O(rows) worst case, once per arrival. */
+/**
+ * `LandOnFailure` (plan 09 §6.7): the newest failed turn's footer. O(rows) worst case, once per
+ * arrival.
+ */
 public object Landing {
-    public fun newestFailedKey(rows: List<TranscriptRow>): String? = rows.firstOrNull { it is FooterRow && it.failed }?.key
+    public fun newestFailedKey(rows: List<TranscriptRow>): String? =
+        rows.firstOrNull { it is FooterRow && it.failed }?.key
 }
 
-/** Who owns Back, top wins (07 §3.3): menu, dialog, the find bar, then the page's own guard (§3.4), then Nav3. */
-public enum class BackStep { CloseMenu, CloseConfirm, CloseFind, SaveDraftThenLeave, Leave }
+/**
+ * Who owns Back, top wins (07 §3.3): menu, dialog, the find bar, then the page's own guard (§3.4),
+ * then Nav3.
+ */
+public enum class BackStep {
+    CloseMenu,
+    CloseConfirm,
+    CloseFind,
+    SaveDraftThenLeave,
+    Leave,
+}
 
 /** P12-CHAT-FEEL: a code block split into chunk rows (STREAM-FIX) copies as one block. */
 public object CodeCopy {
     /**
-     * The whole fence [rowKey] belongs to, without its fence lines: walks the adjacent chunk rows of the same part
-     * (`continued`/`continues`). O(chunks of one block).
+     * The whole fence [rowKey] belongs to, without its fence lines: walks the adjacent chunk rows
+     * of the same part (`continued`/`continues`). O(chunks of one block).
      */
     public fun of(rows: List<TranscriptRow>, index: Int): String? {
         val row = rows.getOrNull(index) as? BlockRow ?: return null
@@ -293,10 +360,11 @@ public object CodeCopy {
 }
 
 /**
- * A Markdown table longer than one STREAM-FIX chunk (plan 09 §9.1; Flutter parses the whole table): only the first
- * chunk has the header and delimiter lines, so each chunk parsed alone turned the later rows into pipe-filled prose.
- * [of] maps the rows of each such block: its first chunk's key to the whole block's text (drawn there, as one table),
- * and every later chunk's key to null (drawn empty). Other rows are absent. O(rows), once per rows instance.
+ * A Markdown table longer than one STREAM-FIX chunk (plan 09 §9.1; Flutter parses the whole table):
+ * only the first chunk has the header and delimiter lines, so each chunk parsed alone turned the
+ * later rows into pipe-filled prose. [of] maps the rows of each such block: its first chunk's key
+ * to the whole block's text (drawn there, as one table), and every later chunk's key to null (drawn
+ * empty). Other rows are absent. O(rows), once per rows instance.
  */
 public object LongTable {
     private val DELIMITER = Regex("^\\s*\\|?\\s*:?-+:?\\s*(\\|\\s*:?-+:?\\s*)*\\|?\\s*$")
@@ -311,7 +379,12 @@ public object LongTable {
                 i--
                 continue
             }
-            if (head.kind == RowKind.Code || head.continued || !head.continues || !opensTable(head.text)) {
+            if (
+                head.kind == RowKind.Code ||
+                    head.continued ||
+                    !head.continues ||
+                    !opensTable(head.text)
+            ) {
                 i--
                 continue
             }
@@ -346,7 +419,11 @@ public object FenceText {
     public fun body(source: String): String {
         var lines = source.split('\n')
         if (lines.firstOrNull()?.trimStart()?.startsWith("```") == true) lines = lines.drop(1)
-        if (lines.isNotEmpty() && lines.last().trim().startsWith("```") && lines.last().trim().trim('`').isEmpty()) {
+        if (
+            lines.isNotEmpty() &&
+                lines.last().trim().startsWith("```") &&
+                lines.last().trim().trim('`').isEmpty()
+        ) {
             lines = lines.dropLast(1)
         }
         return lines.joinToString("\n")
@@ -361,7 +438,12 @@ public object FenceText {
 }
 
 public object BackOrder {
-    public fun next(menuOpen: Boolean, confirmOpen: Boolean, findOpen: Boolean, draftUnsaved: Boolean): BackStep =
+    public fun next(
+        menuOpen: Boolean,
+        confirmOpen: Boolean,
+        findOpen: Boolean,
+        draftUnsaved: Boolean,
+    ): BackStep =
         when {
             menuOpen -> BackStep.CloseMenu
             confirmOpen -> BackStep.CloseConfirm
@@ -370,15 +452,25 @@ public object BackOrder {
             else -> BackStep.Leave
         }
 
-    /** A handler that is enabled turns off the predictive preview, so it is on only while it has something to do. */
-    public fun handles(menuOpen: Boolean, confirmOpen: Boolean, findOpen: Boolean, draftUnsaved: Boolean): Boolean =
-        next(menuOpen, confirmOpen, findOpen, draftUnsaved) != BackStep.Leave
+    /**
+     * A handler that is enabled turns off the predictive preview, so it is on only while it has
+     * something to do.
+     */
+    public fun handles(
+        menuOpen: Boolean,
+        confirmOpen: Boolean,
+        findOpen: Boolean,
+        draftUnsaved: Boolean,
+    ): Boolean = next(menuOpen, confirmOpen, findOpen, draftUnsaved) != BackStep.Leave
 }
 
-/** Row kinds the person can open a message menu from (prompt long-press or tap, the reply's footer). */
+/**
+ * Row kinds the person can open a message menu from (prompt long-press or tap, the reply's footer).
+ */
 public fun TranscriptRow.targetKind(): TargetKind? =
     when (this) {
         is PromptRow -> TargetKind.Prompt
-        is FooterRow -> TargetKind.Reply
+        is FooterRow,
+        is BlockRow -> TargetKind.Reply
         else -> if (kind == RowKind.Prompt) TargetKind.Prompt else null
     }

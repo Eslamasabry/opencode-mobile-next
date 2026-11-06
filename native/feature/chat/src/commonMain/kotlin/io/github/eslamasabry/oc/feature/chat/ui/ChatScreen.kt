@@ -42,14 +42,12 @@ import io.github.eslamasabry.oc.feature.chat.presentation.ChatStatusKind
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatStatusUi
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatUi
 import io.github.eslamasabry.oc.feature.chat.presentation.MessageAction
-import io.github.eslamasabry.oc.feature.chat.presentation.MessageMenuUi
 import io.github.eslamasabry.oc.feature.chat.presentation.MessageOrder
 import io.github.eslamasabry.oc.feature.chat.presentation.PictureUi
 import io.github.eslamasabry.oc.feature.chat.presentation.ReceiptCheckResult
 import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFailureKind
 import io.github.eslamasabry.oc.feature.chat.presentation.SelectTextUi
 import io.github.eslamasabry.oc.feature.chat.presentation.StatusPick
-import io.github.eslamasabry.oc.feature.chat.presentation.TargetKind
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestActions
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi
@@ -77,7 +75,6 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
-import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
@@ -108,7 +105,6 @@ import io.github.eslamasabry.oc.ui.words.res.chatErrorOutputLength
 import io.github.eslamasabry.oc.ui.words.res.chatErrorProviderAuth
 import io.github.eslamasabry.oc.ui.words.res.chatErrorUnknown
 import io.github.eslamasabry.oc.ui.words.res.chatFeelDone
-import io.github.eslamasabry.oc.ui.words.res.chatFeelEditAndResend
 import io.github.eslamasabry.oc.ui.words.res.chatFeelLinkRefused
 import io.github.eslamasabry.oc.ui.words.res.chatFeelOpenLinkAction
 import io.github.eslamasabry.oc.ui.words.res.chatFeelOpenLinkBody
@@ -119,7 +115,6 @@ import io.github.eslamasabry.oc.ui.words.res.chatFeelPictureLoading
 import io.github.eslamasabry.oc.ui.words.res.chatFeelPictureOnServer
 import io.github.eslamasabry.oc.ui.words.res.chatFeelPictureOnWeb
 import io.github.eslamasabry.oc.ui.words.res.chatFeelSelectText
-import io.github.eslamasabry.oc.ui.words.res.chatFeelShare
 import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoAction
 import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoBody
 import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoTitle
@@ -139,17 +134,14 @@ import io.github.eslamasabry.oc.ui.words.res.chatSendFailedChanged
 import io.github.eslamasabry.oc.ui.words.res.chatUiChanges
 import io.github.eslamasabry.oc.ui.words.res.chatUiCollapseReasoning
 import io.github.eslamasabry.oc.ui.words.res.chatUiContextCompacted
-import io.github.eslamasabry.oc.ui.words.res.chatUiCopyMessageText
 import io.github.eslamasabry.oc.ui.words.res.chatUiDeleteMessage
 import io.github.eslamasabry.oc.ui.words.res.chatUiDeleteThisMessage
 import io.github.eslamasabry.oc.ui.words.res.chatUiEarlierMessageCount
 import io.github.eslamasabry.oc.ui.words.res.chatUiExpandReasoning
 import io.github.eslamasabry.oc.ui.words.res.chatUiFiles
-import io.github.eslamasabry.oc.ui.words.res.chatUiForkFromThisPrompt
 import io.github.eslamasabry.oc.ui.words.res.chatUiNotConnectedToTheServerRightNow
 import io.github.eslamasabry.oc.ui.words.res.chatUiOpenCodeIsReconnectingTryAgainShortly
 import io.github.eslamasabry.oc.ui.words.res.chatUiPromptNotAnswered
-import io.github.eslamasabry.oc.ui.words.res.chatUiSendPromptAgain
 import io.github.eslamasabry.oc.ui.words.res.chatUiTheMessageAndAllOfItsParts
 import io.github.eslamasabry.oc.ui.words.res.chatUiTimeline
 import io.github.eslamasabry.oc.ui.words.res.commandUntitledChat
@@ -198,13 +190,11 @@ import io.github.eslamasabry.oc.ui.words.res.queuedReceiptConfirmed
 import io.github.eslamasabry.oc.ui.words.res.queuedReceiptStillUncertain
 import io.github.eslamasabry.oc.ui.words.res.queuedReceiptStorageProblem
 import io.github.eslamasabry.oc.ui.words.res.returnBriefContinue
-import io.github.eslamasabry.oc.ui.words.res.revertFromHere
 import io.github.eslamasabry.oc.ui.words.res.schedulePhoneBusy
 import io.github.eslamasabry.oc.ui.words.res.schedulePhoneCheckFailed
 import io.github.eslamasabry.oc.ui.words.res.sessionInstructionsUpdated
 import io.github.eslamasabry.oc.ui.words.res.skillApplied
 import io.github.eslamasabry.oc.ui.words.res.stateDemoDisclosure
-import io.github.eslamasabry.oc.ui.words.res.voiceNativeReadAloud
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -645,6 +635,7 @@ public fun ChatScreen(
                     actions,
                     Modifier.align(Alignment.BottomEnd),
                     reads = replyReader != null,
+                    facts = facts,
                 )
                 ChatContextSheet(facts.context, contextOpen) { contextOpen = false }
                 ChatTasksSheet(
@@ -719,75 +710,6 @@ private fun EarlierMessagesPill(
             modifier = modifier.testTag("earlier-messages-pill"),
         )
     }
-}
-
-/**
- * One action list per message (plan 09 §6.6, Flutter `_messageContextActions`). Copy, Share and
- * Select text leave the app through the chat's `ChatOutside`; a list without a platform (slice 2)
- * has no Copy.
- */
-@Composable
-internal fun MessageMenu(
-    menu: MessageMenuUi?,
-    actions: ChatActions,
-    modifier: Modifier,
-    reads: Boolean = false,
-) {
-    val feel = menu?.actions?.contains(MessageAction.Share) == true
-    val prompt = menu?.target?.kind == TargetKind.Prompt
-    val items =
-        menu
-            ?.actions
-            .orEmpty()
-            .filter {
-                // Only replies have Copy beside More. A prompt must keep its copy action here.
-                (feel || prompt || it != MessageAction.Copy) &&
-                    (reads || it != MessageAction.ReadAloud)
-            }
-            .map { action ->
-                KitMenuItem(
-                    label =
-                        when (action) {
-                            MessageAction.Copy -> stringResource(Res.string.chatUiCopyMessageText)
-                            MessageAction.Share -> stringResource(Res.string.chatFeelShare)
-                            MessageAction.SelectText ->
-                                stringResource(Res.string.chatFeelSelectText)
-                            MessageAction.EditAndResend ->
-                                stringResource(Res.string.chatFeelEditAndResend)
-                            MessageAction.ReadAloud ->
-                                stringResource(Res.string.voiceNativeReadAloud)
-                            MessageAction.SendAgain ->
-                                stringResource(Res.string.chatUiSendPromptAgain)
-                            MessageAction.Fork ->
-                                stringResource(Res.string.chatUiForkFromThisPrompt)
-                            MessageAction.Changes -> stringResource(Res.string.chatUiChanges)
-                            MessageAction.UndoFromHere -> stringResource(Res.string.revertFromHere)
-                            MessageAction.Delete -> stringResource(Res.string.chatUiDeleteMessage)
-                        },
-                    onSelect = { menu?.let { actions.messageAction(it.target, action) } },
-                    icon =
-                        when (action) {
-                            MessageAction.Copy -> KitIcons.copy
-                            MessageAction.Share -> KitIcons.externalLink
-                            MessageAction.SelectText -> KitIcons.text
-                            MessageAction.EditAndResend -> KitIcons.edit
-                            MessageAction.ReadAloud -> KitIcons.volume
-                            MessageAction.SendAgain -> KitIcons.send
-                            MessageAction.Fork -> KitIcons.fork
-                            MessageAction.Changes -> KitIcons.review
-                            MessageAction.UndoFromHere -> KitIcons.history
-                            MessageAction.Delete -> KitIcons.delete
-                        },
-                    destructive = action == MessageAction.Delete,
-                )
-            }
-    KitMenu(
-        expanded = menu != null,
-        items = items,
-        onDismissRequest = actions::closeMessageMenu,
-        title = stringResource(Res.string.kitMessageActions),
-        modifier = modifier.testTag("message-menu"),
-    ) {}
 }
 
 /**

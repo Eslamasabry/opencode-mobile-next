@@ -1,0 +1,4 @@
+<resources>
+    <string name="tipMessageDetailsTitle">تفاصيل الرسالة</string>
+    <string name="tipMessageDetails">اضغط مطولاً على رسالة لفتح التفاصيل، أو استخدم زر المزيد، لرؤية النموذج والوقت المستغرق.</string>
+</resources>

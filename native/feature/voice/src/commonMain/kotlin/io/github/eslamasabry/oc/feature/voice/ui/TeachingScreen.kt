@@ -156,6 +156,8 @@ public fun TeachingScreen(state: TeachingUi, actions: TeachingActions) {
 private fun teachingWords(key: String): String =
     stringResource(
         when (key) {
+            "tipMessageDetailsTitle" -> Res.string.tipMessageDetailsTitle
+            "tipMessageDetails" -> Res.string.tipMessageDetails
             "terminal40TipTitle" -> Res.string.terminal40TipTitle
             "terminal40Tip" -> Res.string.terminal40Tip
             "tipTerminalLinksTitle" -> Res.string.tipTerminalLinksTitle

@@ -46,6 +46,7 @@ public data class TipDefinition(
 )
 
 public object TeachingIds {
+    public val MessageDetails: TipId = TipId("message-details")
     public val TerminalSelection: TipId = TipId("terminal-selection")
     public val StopAfterStep: TipId = TipId("stop-after-step")
     public val SendLater: TipId = TipId("send-later")
@@ -124,6 +125,16 @@ public class TeachingRegistry(tips: Iterable<TipDefinition>) {
         public val defaults: TeachingRegistry =
             TeachingRegistry(
                 listOf(
+                    TipDefinition(
+                        id = TeachingIds.MessageDetails,
+                        kind = TeachingKind.Tip,
+                        titleKey = "tipMessageDetailsTitle",
+                        messageKey = "tipMessageDetails",
+                        copyKeys = persistentListOf("tipMessageDetailsTitle", "tipMessageDetails"),
+                        anchors = persistentListOf("chat-turn-footer"),
+                        trigger = "the first completed reply is visible with no keyboard or question; used when message Details opens",
+                        maxCount = 2,
+                    ),
                     TipDefinition(
                         id = TeachingIds.TerminalLinks,
                         kind = TeachingKind.Tip,

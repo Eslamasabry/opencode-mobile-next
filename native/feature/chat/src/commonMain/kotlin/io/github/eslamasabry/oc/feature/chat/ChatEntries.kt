@@ -46,6 +46,8 @@ import io.github.eslamasabry.oc.feature.chat.start.presentation.ChatStartViewMod
 import io.github.eslamasabry.oc.feature.chat.relations.presentation.SessionRelationsViewModel
 import io.github.eslamasabry.oc.feature.chat.relations.ui.SessionRelationsScreen
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
+import io.github.eslamasabry.oc.feature.chat.ui.MessageTeachingScope
+import io.github.eslamasabry.oc.engine.settings.teaching.TeachingSource
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
@@ -103,6 +105,7 @@ public class ChatEntries(
     private val readers: Set<KitReplyReader>,
     private val photoSources:
         Set<io.github.eslamasabry.oc.feature.chat.composer.presentation.ComposerAttachSource>,
+    private val teaching: TeachingSource,
     private val transcriptPreferences: Set<io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayPreferences> = emptySet(),
 ) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
@@ -280,98 +283,105 @@ public class ChatEntries(
                         catalogue = { cardModel.catalogueRoute()?.let(navigator::open) },
                     )
                 }
+            MessageTeachingScope(
+                source = teaching,
+                eligible = state.rows.any { it is BlockRow } && facts.reading.metadata.isNotEmpty(),
+                blocked = slot.card != null || state.live != null || state.menu != null,
+            ) {
             CompositionLocalProvider(LocalChatCards provides cardSlot) {
                 environment.Provide {
                     KitSheetHost {
-                        ChatScreen(
-                            state,
-                            vm,
-                            composerHost,
-                            requests = slot,
-                            requestActions = requests,
-                            formWaiting = formState.form != null,
-                            formSlot = { modifier ->
-                                ChatFormSlot(formState, formModel, vm::openLink, modifier)
-                            },
-                            extraActions =
-                                listOfNotNull(
-                                    preview,
-                                    inspect.takeIf { activeContext.available() },
-                                    transferAction,
-                                    toolsAction,
-                                    KitLineAction(
-                                            stringResource(Res.string.chatQueueMoveTitle),
-                                            queueMove::open,
-                                        )
-                                        .takeIf { queueMoveAvailable },
-                                    KitLineAction(
-                                            stringResource(Res.string.webSourcesTitle),
-                                            { navigator.open(WebSourcesRoute(route.ref)) },
-                                        )
-                                        .takeIf { serverCapabilities?.webSearch == true },
-                                    KitLineAction(
-                                            stringResource(Res.string.nativePendingReview),
-                                            { pendingOpen = true },
-                                        )
-                                        .takeIf {
-                                            pendingSends.rows.isNotEmpty() || pendingSends.failed
-                                        },
-                                    // STATE: continue this conversation elsewhere.
-                                    KitLineAction(
-                                        stringResource(Res.string.stateHandoffTitle),
-                                        handoffVm::open,
+
+                            ChatScreen(
+                                state,
+                                vm,
+                                composerHost,
+                                requests = slot,
+                                requestActions = requests,
+                                formWaiting = formState.form != null,
+                                formSlot = { modifier ->
+                                    ChatFormSlot(formState, formModel, vm::openLink, modifier)
+                                },
+                                extraActions =
+                                    listOfNotNull(
+                                        preview,
+                                        inspect.takeIf { activeContext.available() },
+                                        transferAction,
+                                        toolsAction,
+                                        KitLineAction(
+                                                stringResource(Res.string.chatQueueMoveTitle),
+                                                queueMove::open,
+                                            )
+                                            .takeIf { queueMoveAvailable },
+                                        KitLineAction(
+                                                stringResource(Res.string.webSourcesTitle),
+                                                { navigator.open(WebSourcesRoute(route.ref)) },
+                                            )
+                                            .takeIf { serverCapabilities?.webSearch == true },
+                                        KitLineAction(
+                                                stringResource(Res.string.nativePendingReview),
+                                                { pendingOpen = true },
+                                            )
+                                            .takeIf {
+                                                pendingSends.rows.isNotEmpty() || pendingSends.failed
+                                            },
+                                        // STATE: continue this conversation elsewhere.
+                                        KitLineAction(
+                                            stringResource(Res.string.stateHandoffTitle),
+                                            handoffVm::open,
+                                        ),
+                                        KitLineAction(
+                                                stringResource(Res.string.r40RelationsTitle),
+                                                { navigator.open(SessionRelationsRoute(route.ref)) },
+                                                testTag = "session-relations-open",
+                                            )
+                                            .takeIf { serverCapabilities?.subagentSessions == true },
                                     ),
-                                    KitLineAction(
-                                            stringResource(Res.string.r40RelationsTitle),
-                                            { navigator.open(SessionRelationsRoute(route.ref)) },
-                                            testTag = "session-relations-open",
-                                        )
-                                        .takeIf { serverCapabilities?.subagentSessions == true },
-                                ),
-                            activeContext = activeContext,
-                            prompts = prompts,
-                            facts = facts,
-                            transcriptDisplay = display,
-                            onOpenSession = vm::openSession,
-                            header =
-                                ChatHeaderSlot(
-                                    header,
-                                    headerVm,
-                                    ApprovalChipSlot(approval, headerVm),
-                                    note,
-                                    noteVm,
-                                ),
-                            replyReader = readers.firstOrNull(),
-                            start = start,
-                            startActions = startVm,
-                            appStatus = appStatus,
-                            replyOffer = {
-                                offerContent?.invoke()
-                                // Dart `_PendingSendsStrip`: waiting sends stay visible above the
-                                // composer, not only in the overflow menu.
-                                if (pendingSends.rows.isNotEmpty() || pendingSends.failed)
-                                    KitNotice(
-                                        message =
-                                            if (pendingSends.rows.isEmpty())
-                                                stringResource(Res.string.nativePendingFailed)
-                                            else
-                                                pluralStringResource(
-                                                    Res.plurals.nativePendingCount,
-                                                    pendingSends.rows.size,
-                                                    pendingSends.rows.size.toString(),
+                                activeContext = activeContext,
+                                prompts = prompts,
+                                facts = facts,
+                                transcriptDisplay = display,
+                                onOpenSession = vm::openSession,
+                                header =
+                                    ChatHeaderSlot(
+                                        header,
+                                        headerVm,
+                                        ApprovalChipSlot(approval, headerVm),
+                                        note,
+                                        noteVm,
+                                    ),
+                                replyReader = readers.firstOrNull(),
+                                start = start,
+                                startActions = startVm,
+                                appStatus = appStatus,
+                                replyOffer = {
+                                    offerContent?.invoke()
+                                    // Dart `_PendingSendsStrip`: waiting sends stay visible above the
+                                    // composer, not only in the overflow menu.
+                                    if (pendingSends.rows.isNotEmpty() || pendingSends.failed)
+                                        KitNotice(
+                                            message =
+                                                if (pendingSends.rows.isEmpty())
+                                                    stringResource(Res.string.nativePendingFailed)
+                                                else
+                                                    pluralStringResource(
+                                                        Res.plurals.nativePendingCount,
+                                                        pendingSends.rows.size,
+                                                        pendingSends.rows.size.toString(),
+                                                    ),
+                                            title = stringResource(Res.string.nativePendingTitle),
+                                            actions =
+                                                listOf(
+                                                    KitLineAction(
+                                                        stringResource(Res.string.nativePendingReview),
+                                                        { pendingOpen = true },
+                                                    )
                                                 ),
-                                        title = stringResource(Res.string.nativePendingTitle),
-                                        actions =
-                                            listOf(
-                                                KitLineAction(
-                                                    stringResource(Res.string.nativePendingReview),
-                                                    { pendingOpen = true },
-                                                )
-                                            ),
-                                        liveRegion = false,
-                                    )
-                            },
-                        )
+                                            liveRegion = false,
+                                        )
+                                },
+                            )
+
                         ChatInboxSlot(
                             pendingSends,
                             pendingVm,
@@ -392,6 +402,7 @@ public class ChatEntries(
                         StateHandoffSheet(handoff, handoffVm)
                     }
                 }
+            }
             }
         }
     }

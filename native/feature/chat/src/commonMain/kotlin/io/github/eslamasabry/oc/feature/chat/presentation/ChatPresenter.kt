@@ -14,9 +14,9 @@ import io.github.eslamasabry.oc.feature.chat.world.ChatLoad
 import io.github.eslamasabry.oc.feature.chat.world.ChatWorld
 import io.github.eslamasabry.oc.feature.chat.world.DraftFacts
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
+import io.github.eslamasabry.oc.feature.chat.world.PendingState
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeed
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeedSource
-import io.github.eslamasabry.oc.feature.chat.world.PendingState
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.FilesRoute
 import io.github.eslamasabry.oc.ui.routes.ReviewRoute
@@ -221,13 +221,15 @@ public class ChatPresenter(
                 )
             }
         val arrival =
-            l.arrival?.takeIf { !it.landOnFailure || i.load == ChatLoad.Live }?.let { a ->
-                val land =
-                    (a.rowKey ?: if (a.landOnFailure) Landing.newestFailedKey(t.rows) else null)
-                        ?.let(t::indexOf)
-                        ?.takeIf { it >= 0 }
-                ChatArrivalUi(a.id, a.focusComposer, land)
-            }
+            l.arrival
+                ?.takeIf { !it.landOnFailure || i.load == ChatLoad.Live }
+                ?.let { a ->
+                    val land =
+                        (a.rowKey ?: if (a.landOnFailure) Landing.newestFailedKey(t.rows) else null)
+                            ?.let(t::indexOf)
+                            ?.takeIf { it >= 0 }
+                    ChatArrivalUi(a.id, a.focusComposer, land)
+                }
         return ChatUi(
             revision = ++revision,
             ref = world.ref,
@@ -423,7 +425,8 @@ public class ChatPresenter(
                             it.state == PendingState.Unconfirmed
                     }
                 val failure = (looked as? Outcome.Failed)?.failure
-                // Busy: another check of this bubble is already running and will announce its answer.
+                // Busy: another check of this bubble is already running and will announce its
+                // answer.
                 val stale =
                     (failure is Failure.Refused && failure.reason == RefusalReason.StaleScope) ||
                         failure is Failure.Busy
@@ -837,28 +840,35 @@ public class ChatPresenter(
         launcher.launch {
             when (outside?.phoneFileKind(world.ref, clean) ?: PhoneFileKind.Preview) {
                 PhoneFileKind.Preview -> previewPath(clean, line)
-                PhoneFileKind.Open -> local.update { it.copy(confirm = ChatConfirm.PhoneFile(clean, install = false)) }
-                PhoneFileKind.Install -> local.update { it.copy(confirm = ChatConfirm.PhoneFile(clean, install = true)) }
+                PhoneFileKind.Open ->
+                    local.update {
+                        it.copy(confirm = ChatConfirm.PhoneFile(clean, install = false))
+                    }
+                PhoneFileKind.Install ->
+                    local.update { it.copy(confirm = ChatConfirm.PhoneFile(clean, install = true)) }
             }
         }
     }
 
     override fun confirmPhoneFile() {
-        val path = when (val asked = local.value.confirm) {
-            is ChatConfirm.PhoneFile -> asked.path
-            is ChatConfirm.PhoneFileAccess -> asked.path
-            else -> return
-        }
+        val path =
+            when (val asked = local.value.confirm) {
+                is ChatConfirm.PhoneFile -> asked.path
+                is ChatConfirm.PhoneFileAccess -> asked.path
+                else -> return
+            }
         local.update { it.copy(confirm = null) }
         val out = outside ?: return
         launcher.launch {
             when (val handed = out.openPhoneFile(world.ref, path)) {
                 is Outcome.Failed -> local.update { it.copy(actionFailure = handed.failure) }
-                is Outcome.Ok -> when (handed.value) {
-                    PhoneFileOpen.Preview -> previewPath(path, null)
-                    PhoneFileOpen.Opened -> Unit
-                    PhoneFileOpen.AccessRequested -> local.update { it.copy(confirm = ChatConfirm.PhoneFileAccess(path)) }
-                }
+                is Outcome.Ok ->
+                    when (handed.value) {
+                        PhoneFileOpen.Preview -> previewPath(path, null)
+                        PhoneFileOpen.Opened -> Unit
+                        PhoneFileOpen.AccessRequested ->
+                            local.update { it.copy(confirm = ChatConfirm.PhoneFileAccess(path)) }
+                    }
             }
         }
     }
@@ -909,7 +919,10 @@ public class ChatPresenter(
      * names one.
      */
     private fun replyMessageId(t: TranscriptState, footerIndex: Int): String? {
-        val footer = t.rows[footerIndex] as? FooterRow ?: return null
+        val source = t.rows[footerIndex]
+        if (source is io.github.eslamasabry.oc.engine.transcript.state.BlockRow)
+            return RowIds.messageIdOf(source)
+        val footer = source as? FooterRow ?: return null
         for (i in footerIndex + 1 until t.rows.size) {
             val row = t.rows[i]
             if (row.turnId != footer.turnId || row is PromptRow) return null

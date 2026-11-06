@@ -25,7 +25,6 @@ import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
 import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitCommandBox
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolKind
-import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolOutput
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolRail
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolRow
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolStatus
@@ -138,7 +137,8 @@ internal fun TurnWorkLine(
             for (entry in entries) when (entry) {
                 is WorkEntryUi.Step -> {
                     val step = stepQueues[entry.partId]?.removeFirstOrNull() ?: continue
-                    if (skipped++ >= hidden) StepRow(step, nowMs, folds, onOpenSession, onOpenFile, reply = reply)
+                    if (skipped++ >= hidden)
+                        StepRow(step, nowMs, folds, onOpenSession, onOpenFile, reply = reply)
                 }
                 is WorkEntryUi.Detail ->
                     if (skipped >= hidden)
@@ -270,19 +270,15 @@ private fun StepRow(
 }
 
 /**
- * What a finished turn did (B-CHAT-068/100/101) and how long it took (B-CHAT-092), under its
- * footer: one quiet line ("Edited 2 files · ran 3 commands") that opens to the files with their
- * counts and the commands with their exit codes. Nothing is drawn when the turn changed and ran
- * nothing and was not timed.
+ * What a finished turn did (B-CHAT-068/100/101), under its footer: one quiet line ("Edited 2 files
+ * · ran 3 commands") that opens to the files with their counts and the commands with their exit
+ * codes. Timing (B-CHAT-092) lives in message Details. No result draws when the turn changed and
+ * ran nothing.
  */
 @Composable
 internal fun TurnResultLine(turnId: String, result: TurnResultUi, folds: TranscriptFolds) {
     val summary = resultSummary(result)
-    val timing = result.timing?.let { timingWords(it) }
-    if (summary == null) {
-        if (timing != null) KitQuietLine(timing, Modifier.testTag("chat-turn-timing"))
-        return
-    }
+    if (summary == null) return
     val key = "result:$turnId"
     // B-SEC-094 / R18: a command line is server text; a key it carries never reaches the screen.
     val mask = rememberKitMask()
@@ -290,7 +286,6 @@ internal fun TurnResultLine(turnId: String, result: TurnResultUi, folds: Transcr
         KitExpandRow(
             title = summary,
             expanded = folds.open[key] == true,
-            supporting = timing,
             onExpandedChange = { folds.open[key] = it },
         ) {
             for (file in result.files) KitQuietLine(
@@ -346,7 +341,10 @@ private fun ToolKind.toKit(): KitToolKind =
         ToolKind.Generic -> KitToolKind.Other
     }
 
-/** Only steps whose body draws its input open on input alone (ToolStepBody returns early for the rest). */
+/**
+ * Only steps whose body draws its input open on input alone (ToolStepBody returns early for the
+ * rest).
+ */
 private fun inputHasBody(kind: ToolKind, state: StepState): Boolean =
     state != StepState.NotRun &&
         state != StepState.Stopped &&
