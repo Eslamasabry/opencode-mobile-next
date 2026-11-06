@@ -225,6 +225,8 @@ public fun KitComposerChip(
     icon: ImageVector? = null,
     opensPicker: Boolean = true,
     semanticsLabel: String? = null,
+    /** A choice that is on (auto-approve): the accent's soft tint and accent words, same size and shape. */
+    active: Boolean = false,
 ) {
     val colors = LocalKitColors.current
     KitTappable(
@@ -240,7 +242,7 @@ public fun KitComposerChip(
         Row(
             Modifier.heightIn(min = 32.dp)
                 .clip(CircleShape)
-                .background(colors.surface3, RoundedCornerShape(50))
+                .background(if (active) colors.accent.copy(alpha = .14f) else colors.surface3, RoundedCornerShape(50))
                 .padding(horizontal = Space.S3.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
@@ -251,6 +253,7 @@ public fun KitComposerChip(
                 // No weight: inside the sideways chip line a weight measures to zero and left only the chevron.
                 Modifier.widthIn(max = COMPOSER_CHIP_WORDS_MAX.dp),
                 role = TypeRole.Label,
+                tone = if (active) TextTone.Accent else TextTone.Primary,
                 kind = KitTextKind.Frame,
                 maxLines = if (LocalDensity.current.fontScale >= 1.5f) Int.MAX_VALUE else 1,
             )

@@ -7,9 +7,7 @@ import androidx.compose.ui.platform.testTag
 import io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalChipActions
 import io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalChipUi
 import io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalChoice
-import io.github.eslamasabry.oc.ui.kit.chip.KitChip
-import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
-import io.github.eslamasabry.oc.ui.kit.chip.KitChipTone
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerChip
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
@@ -62,17 +60,17 @@ public fun ApprovalChip(slot: ApprovalChipSlot, modifier: Modifier = Modifier) {
         modifier = modifier,
         title = stringResource(Res.string.approvalModeMenuLabel),
     ) {
-        KitChip(
+        // The composer line's own chip, the model chip's twin (it had a different, outlined chip beside it).
+        KitComposerChip(
             label =
                 when (state.choice) {
                     ApprovalChoice.Ask -> stringResource(Res.string.approvalModeAskTitle)
                     ApprovalChoice.Auto -> stringResource(Res.string.chatChipAutoApproveOn)
                     ApprovalChoice.Everything -> stringResource(Res.string.approvalModeEverythingTitle)
                 },
-            kind = KitChipKind.Action,
-            tone = if (state.choice == ApprovalChoice.Ask) KitChipTone.Neutral else KitChipTone.Active,
             onClick = actions::openApprovalMenu,
             modifier = Modifier.testTag("chat-approval-chip"),
+            active = state.choice != ApprovalChoice.Ask,
         )
     }
     KitConfirm(
