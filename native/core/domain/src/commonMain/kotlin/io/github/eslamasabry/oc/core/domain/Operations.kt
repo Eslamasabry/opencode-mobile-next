@@ -119,6 +119,13 @@ public interface HostGateway {
     public suspend fun listProjects(): Outcome<ImmutableList<WorkspaceProject>> =
         unavailable("projectManagement")
 
+    /**
+     * N-41: makes the folder [name] inside [parent] on the server's machine and starts Git in it (an existing folder
+     * is kept as it is); answers the folder's path. [name] is one safe folder name, never a path.
+     */
+    public suspend fun makeProjectFolder(parent: String, name: String): Outcome<String> =
+        unavailable("projectFolderCreation")
+
     public suspend fun renameProject(
         projectId: String,
         projectDirectory: String,

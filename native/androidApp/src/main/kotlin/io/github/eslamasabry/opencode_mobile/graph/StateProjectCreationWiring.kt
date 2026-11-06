@@ -21,7 +21,10 @@ import io.github.eslamasabry.oc.feature.projects.presentation.ProjectServer
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-/** The same guest folder creator as Flutter, exclusively for the app's answering phone server. */
+/**
+ * The same guest folder creator as Flutter for the app's answering phone server; N-41: a computer's OpenCode 2 server
+ * makes the folder itself, beside its most recent project.
+ */
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class, replaces = [NoProjectCreation::class])
 @Inject
@@ -33,7 +36,14 @@ class PhoneProjectCreation(
 ) : ProjectCreation {
     private val lane = Mutex()
 
-    override fun available(server: ProjectServer): Boolean {
+    override fun available(server: ProjectServer): Boolean = onPhone(server) || onServer(server)
+
+    /** N-41: a live server that makes folders on its own machine. */
+    private fun onServer(server: ProjectServer): Boolean =
+        server.operations != null && server.gateway.capabilities.value.projectFolderCreation &&
+            registry.live.value[server.profile]?.session?.server === server.gateway
+
+    private fun onPhone(server: ProjectServer): Boolean {
         if (!platform.builtinLinux) return false
         val graph = registry.live.value[server.profile] ?: return false
         if (
@@ -58,6 +68,7 @@ class PhoneProjectCreation(
             val folder =
                 ProjectFolderName.validated(name)
                     ?: return@withLock Outcome.Failed(Failure.StorageRefused())
+            if (!onPhone(server)) return@withLock onServerCreate(server, folder)
             if (!available(server)) return@withLock stale()
             if (linux.presence() != LinuxPresence.Ready || !linux.serviceRunning("server"))
                 return@withLock Outcome.Failed(Failure.Folder(FolderProblem.NotInstalled))
@@ -89,7 +100,7 @@ class PhoneProjectCreation(
     /** Checked inside the app's Linux, never by asking OpenCode, so a missing folder is not remembered as broken. */
     override suspend fun exists(server: ProjectServer, path: String): Boolean? =
         lane.withLock {
-            if (!available(server) || linux.presence() != LinuxPresence.Ready) return@withLock null
+            if (!onPhone(server) || linux.presence() != LinuxPresence.Ready) return@withLock null
             if (!linux.serviceRunning("server")) return@withLock null
             val script = BuiltinScripts.folderExistsScript(path)
             if ('\n' in path || '\u0000' in path || !path.startsWith("/")) return@withLock null
@@ -101,7 +112,7 @@ class PhoneProjectCreation(
 
     override suspend fun createAt(server: ProjectServer, path: String): Outcome<String> =
         lane.withLock {
-            if (!available(server)) return@withLock stale()
+            if (!onPhone(server)) return@withLock stale()
             if (linux.presence() != LinuxPresence.Ready || !linux.serviceRunning("server"))
                 return@withLock Outcome.Failed(Failure.Folder(FolderProblem.NotInstalled))
             val script =
@@ -126,6 +137,27 @@ class PhoneProjectCreation(
                 }
             }
         }
+
+    /** N-41: beside the server's most recent project (its parent folder); refused when it has none to go by. */
+    private suspend fun onServerCreate(server: ProjectServer, folder: String): Outcome<String> {
+        val ops = server.operations ?: return stale()
+        if (!onServer(server)) return stale()
+        val projects =
+            when (val listed = ops.listProjects()) {
+                is Outcome.Failed -> return listed
+                is Outcome.Ok -> listed.value
+            }
+        val parent =
+            projects
+                .filter { it.directory.startsWith("/") && it.directory.trimEnd('/').count { c -> c == '/' } >= 2 }
+                .maxByOrNull { it.updatedAtMs }
+                ?.directory
+                ?.trimEnd('/')
+                ?.substringBeforeLast('/')
+                ?.takeIf { it.isNotEmpty() }
+                ?: return Outcome.Failed(Failure.Folder(FolderProblem.Missing))
+        return ops.makeProjectFolder(parent, folder)
+    }
 
     private fun stale(): Outcome<Nothing> =
         Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))

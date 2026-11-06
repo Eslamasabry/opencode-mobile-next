@@ -1028,6 +1028,51 @@ internal class Oc2Gateway(
     override suspend fun deleteSession(id: SessionId): Outcome<Unit> =
         unit("/session/${sid(id)}", HttpMethod.Delete)
 
+    /**
+     * N-41: one short shell in [parent] (`POST /api/shell`, located there): `mkdir -p` the folder, `git init` unless
+     * it is a repository already; then the shell's own status until it exits, at most 30 s. Exit 0 is the folder.
+     */
+    override suspend fun makeProjectFolder(parent: String, name: String): Outcome<String> {
+        val folder = name.trim()
+        if (
+            parent.isBlank() || !parent.startsWith("/") || folder.isEmpty() || folder == "." || folder == ".." ||
+                folder.any { it == '/' || it == '\\' || it == '\u0000' || it == '\n' }
+        )
+            return Failure.Rejected(null).failed()
+        val quoted = "'" + folder.replace("'", "'\\''") + "'"
+        val query = mapOf("location[directory]" to parent)
+        val command = "mkdir -p -- $quoted && cd -- $quoted && { [ -d .git ] || git init -q; }"
+        val started =
+            json(
+                "/shell",
+                HttpMethod.Post,
+                buildJsonObject {
+                    put("command", command)
+                    put("cwd", parent)
+                    put("timeout", 30_000)
+                },
+                query,
+            )
+        val id =
+            when (started) {
+                is Outcome.Failed -> return started
+                is Outcome.Ok -> (data(started.value) as? JsonObject)?.str("id") ?: return Failure.UnreadableReply().failed()
+            }
+        val path = parent.trimEnd('/') + "/" + folder
+        repeat(60) {
+            kotlinx.coroutines.delay(500)
+            val read = json("/shell/${id.encodeURLPathPart()}", query = query)
+            if (read is Outcome.Failed) return read
+            val shell = data((read as Outcome.Ok).value) as? JsonObject ?: return Failure.UnreadableReply().failed()
+            if (shell.str("status") != "running") {
+                json("/shell/${id.encodeURLPathPart()}", HttpMethod.Delete, query = query)
+                val exit = (shell["exit"] as? JsonPrimitive)?.intOrNull
+                return if (exit == 0) Outcome.Ok(path) else Failure.Folder(FolderProblem.Denied).failed()
+            }
+        }
+        return Failure.Folder(FolderProblem.Denied).failed()
+    }
+
     /** N-30: the stable line archives through the session's own update (`archived: true`). */
     override suspend fun archiveSession(id: SessionId): Outcome<Unit> =
         if (dialect.value != Oc2Dialect.Stable) unavailable("sessionArchive")
@@ -2296,6 +2341,7 @@ internal class Oc2Gateway(
                 projectsAreGitRepositories = false,
                 remoteShell = false,
                 claudeAgent = false,
+                projectFolderCreation = true,
             )
     }
 }

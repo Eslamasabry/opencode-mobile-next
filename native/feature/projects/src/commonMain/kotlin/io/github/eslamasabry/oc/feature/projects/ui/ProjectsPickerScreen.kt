@@ -39,6 +39,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitInputOperationDialog
 import io.github.eslamasabry.oc.ui.kit.modal.KitNewProjectDialog
+import io.github.eslamasabry.oc.ui.kit.modal.KitNewProjectRow
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
@@ -292,14 +293,7 @@ private fun StartRows(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
     KitRowGroup {
         // Absent, never greyed: a server that cannot make folders simply has no New project row
         // (Flutter: ProjectFolderActions.canCreate).
-        if (state.canCreate)
-            KitRow(
-                title = stringResource(Res.string.projectFolderNewProject),
-                supporting = stringResource(Res.string.projectFolderCreateHelper, "/root/projects"),
-                trailing = KitRowTrailing.Chevron,
-                onClick = actions::askCreate,
-                supportingMaxLines = 3,
-            )
+        if (state.canCreate) KitNewProjectRow(actions::askCreate, working = state.creatingFolder)
         KitRow(
             title = stringResource(Res.string.p12OpenFolder),
             supporting = stringResource(Res.string.projectFolderOpenSubtitle),

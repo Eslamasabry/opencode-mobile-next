@@ -105,6 +105,8 @@ public data class ServerCapabilities(
     val projectsAreGitRepositories: Boolean = true,
     val remoteShell: Boolean = false,
     val claudeAgent: Boolean = false,
+    /** N-41: the server makes a new project folder (with Git) on its own machine ([ServerOperationsGateway.makeProjectFolder]). */
+    val projectFolderCreation: Boolean = false,
     val agentFeatures: Boolean = false,
     val worktreeInspection: Boolean = false,
 ) {
