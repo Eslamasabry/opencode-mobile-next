@@ -27,6 +27,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationAction
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationModel
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSheet
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationUi
+import io.github.eslamasabry.oc.feature.chats.presentation.isStartableAgent
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
@@ -220,7 +221,10 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
                     ) {
                         KitChip(
-                            label = state.agent ?: state.setup?.defaultRuntime ?: "OpenCode",
+                            label =
+                                state.agent?.takeIf(::isStartableAgent)
+                                    ?: state.setup?.defaultRuntime
+                                    ?: "OpenCode",
                             icon = KitIcons.agent,
                             opensMenu = true,
                             onClick = { actions.sheet(NewConversationSheet.Agents) },
@@ -241,6 +245,21 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                             opensMenu = true,
                             onClick = { actions.sheet(NewConversationSheet.Projects) },
                         )
+                        if (
+                            state.setup?.modes?.isNotEmpty() == true &&
+                                (state.agent == null || state.agent in state.setup.modes)
+                        )
+                            KitChip(
+                                label =
+                                    stringResource(
+                                        if (state.agent?.lowercase() == "plan")
+                                            Res.string.upgradeModePlan
+                                        else Res.string.upgradeModeBuild
+                                    ),
+                                icon = KitIcons.tools,
+                                opensMenu = true,
+                                onClick = { actions.sheet(NewConversationSheet.Modes) },
+                            )
                     }
                     if (state.deliveryUnconfirmed) {
                         KitNotice(stringResource(Res.string.p12NewDeliveryUnconfirmed))
@@ -356,6 +375,7 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
                 when (current) {
                     NewConversationSheet.Models -> Res.string.agentsModelTitle
                     NewConversationSheet.Agents -> Res.string.p12NewAgent
+                    NewConversationSheet.Modes -> Res.string.upgradeMode
                     NewConversationSheet.Import -> Res.string.claudeImportTitle
                     else -> Res.string.chatsNewProjectRow
                 }
@@ -402,6 +422,22 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
+                NewConversationSheet.Modes ->
+                    KitRowGroup {
+                        state.setup?.modes.orEmpty().forEach { mode ->
+                            KitRow(
+                                title =
+                                    stringResource(
+                                        if (mode.lowercase() == "plan") Res.string.upgradeModePlan
+                                        else Res.string.upgradeModeBuild
+                                    ),
+                                selected =
+                                    state.agent == mode ||
+                                        (state.agent == null && mode.lowercase() == "build"),
+                                onClick = { actions.chooseMode(mode) },
+                            )
+                        }
+                    }
                 NewConversationSheet.Models ->
                     NewConversationModelChoices(
                         state.setup?.models.orEmpty(),
@@ -429,11 +465,11 @@ private fun NewConversationAgents(
         KitRow(
             title = defaultName,
             leading = KitRowLeading.Logo("opencode", defaultName, agent = true),
-            selected = state.agent == null,
+            selected = state.agent == null || state.agent in state.setup?.modes.orEmpty(),
             supporting = stringResource(Res.string.upgradeAgentReady),
             onClick = { actions.chooseAgent(null) },
         )
-        state.setup?.agents.orEmpty().filter(String::isNotBlank).distinct().forEach { agent ->
+        state.setup?.agents.orEmpty().filter(::isStartableAgent).distinct().forEach { agent ->
             KitRow(
                 title = agent,
                 leading = KitRowLeading.Logo(agent.lowercase(), agent, agent = true),

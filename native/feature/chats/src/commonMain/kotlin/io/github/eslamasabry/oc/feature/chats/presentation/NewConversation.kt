@@ -63,6 +63,7 @@ public data class NewConversationSetup(
     val importDirectory: String? = null,
     val canChangeProject: Boolean = true,
     val defaultRuntime: String = "OpenCode",
+    val modes: List<String> = emptyList(),
 )
 
 /** Keeps successful stages on an explicit retry: a copy or conversation is never created twice. */
@@ -178,6 +179,7 @@ public enum class NewConversationSheet {
     Projects,
     Models,
     Agents,
+    Modes,
     Import,
 }
 
@@ -233,6 +235,10 @@ public interface NewConversationActions {
     public fun chooseModel(model: ModelRef?)
 
     public fun chooseAgent(agent: String?)
+
+    public fun chooseMode(mode: String) {
+        chooseAgent(mode)
+    }
 
     public fun separateCopy(on: Boolean)
 
@@ -472,6 +478,13 @@ public class NewConversationViewModel(
     }
 
     override fun chooseAgent(agent: String?) {
+        val setup = mutable.value.setup ?: return
+        if (
+            agent != null &&
+                agent !in setup.modes &&
+                (agent !in setup.agents || !isStartableAgent(agent))
+        )
+            return
         if (!mutable.value.busy && !mutable.value.deliveryUnconfirmed)
             mutable.update { it.copy(agent = agent, sheet = null) }
         saveChoices()
@@ -688,3 +701,19 @@ public class NewConversationViewModel(
         public fun create(@Assisted route: ChatsRoute.New): NewConversationViewModel
     }
 }
+
+/** Server modes and background helpers are never peer agents in the chooser. */
+public fun isStartableAgent(name: String): Boolean =
+    name.isNotBlank() &&
+        name.trim().lowercase() !in
+            setOf(
+                "build",
+                "plan",
+                "compaction",
+                "compact",
+                "title",
+                "summary",
+                "summarize",
+                "explore",
+                "general",
+            )

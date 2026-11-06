@@ -245,12 +245,19 @@ class AndroidNewConversationHost(
                 val catalog =
                     if (caps.serverCatalog && ops != null) (ops.catalog() as? Outcome.Ok)?.value
                     else null
+                val agentCatalog = (gateway.agents() as? Outcome.Ok)?.value.orEmpty()
                 val agents =
-                    (gateway.agents() as? Outcome.Ok)
-                        ?.value
-                        .orEmpty()
+                    agentCatalog
+                        .filter { it.mode == null || it.mode == "primary" || it.mode == "all" }
+                        .map { it.name }
+                        .filter(::isStartableAgent)
+                        .distinct()
+                val modes =
+                    agentCatalog
                         .filter { it.mode != "subagent" }
                         .map { it.name }
+                        .filter { it.lowercase() == "build" || it.lowercase() == "plan" }
+                        .distinct()
                 if (registry.live.value[profile] !== graph) return@withLock refused()
                 val previous = stores.prefs.string("oc.newChatProject.${profile.raw}")
                 val current = gateway.location.value.directory
@@ -331,7 +338,8 @@ class AndroidNewConversationHost(
                                 ?: providers.providers.firstNotNullOfOrNull { p ->
                                     p.modelIds.firstOrNull()?.let { ModelRef(p.id, it) }
                                 },
-                        agent = draftChoices?.agent,
+                        agent = draftChoices?.agent?.takeIf { it in modes || it in agents },
+                        modes = modes,
                         importDirectory =
                             importer
                                 ?.takeIf { caps.hostAgentProviders && it.providerImportSupported }

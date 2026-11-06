@@ -1,4 +1,7 @@
 <resources>
     <string name="upgradeNewStart">ابدأ</string>
     <string name="upgradeAgentReady">جاهز</string>
+    <string name="upgradeMode">الوضع</string>
+    <string name="upgradeModeBuild">بناء</string>
+    <string name="upgradeModePlan">تخطيط</string>
 </resources>
