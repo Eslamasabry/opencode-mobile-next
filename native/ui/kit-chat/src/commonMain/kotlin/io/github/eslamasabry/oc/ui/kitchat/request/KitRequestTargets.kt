@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.kit.action.KitCopyButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.toShape
@@ -39,7 +40,12 @@ public data class KitRequestTarget(val text: String, val change: String? = null)
  * bounded card.
  */
 @Composable
-public fun KitRequestTargets(targets: List<KitRequestTarget>, modifier: Modifier = Modifier) {
+public fun KitRequestTargets(
+    targets: List<KitRequestTarget>,
+    modifier: Modifier = Modifier,
+    copyLabel: String? = null,
+    copiedLabel: String? = null,
+) {
     if (targets.isEmpty()) return
     var expanded by remember(targets) { mutableStateOf(false) }
     val colors = LocalKitColors.current
@@ -57,6 +63,10 @@ public fun KitRequestTargets(targets: List<KitRequestTarget>, modifier: Modifier
         (if (expanded) targets else targets.take(TARGET_LIMIT)).forEach { target ->
             KitMonoLtr(target.text, Modifier.fillMaxWidth(), TextTone.Primary)
             target.change?.let { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary) }
+        }
+        if (copyLabel != null && copiedLabel != null) {
+            // Copies every command or path exactly as asked (the full text, not the shown lines).
+            KitCopyButton(copyLabel, copiedLabel, { targets.joinToString("\n") { it.text } })
         }
         if (hidden > 0) {
             if (!expanded)
