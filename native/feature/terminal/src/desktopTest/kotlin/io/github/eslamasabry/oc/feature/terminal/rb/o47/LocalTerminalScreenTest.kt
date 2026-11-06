@@ -104,4 +104,34 @@ class LocalTerminalScreenTest {
             onNodeWithText("Restart").performClick()
             assertEquals(listOf("restart" to emptyList()), calls)
         }
+
+    @Test
+    fun `B-NAV-040 the menu pastes into the running shell it names`() = runComposeUiTest {
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                LocalTerminalScreen(
+                    LocalTerminalUi(shells = listOf(shell(1)), selected = 1, accessible = true),
+                    actions,
+                )
+            }
+        }
+        onNodeWithContentDescription("More").performClick()
+        onNodeWithText("Paste into Shell 1").performClick()
+        assertEquals(listOf("paste" to emptyList()), calls)
+    }
+
+    @Test
+    fun `B-NAV-040 an ended shell offers no Paste`() = runComposeUiTest {
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                LocalTerminalScreen(
+                    LocalTerminalUi(shells = listOf(shell(1, false)), selected = 1, accessible = true),
+                    actions,
+                )
+            }
+        }
+        onNodeWithContentDescription("More").performClick()
+        onNodeWithText("Close this shell").assertExists()
+        onNodeWithText("Paste into Shell 1").assertDoesNotExist()
+    }
 }

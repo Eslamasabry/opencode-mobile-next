@@ -88,6 +88,22 @@ public fun LocalTerminalScreen(state: LocalTerminalUi, actions: LocalTerminalAct
                                                 actions::openDevPreview,
                                             )
                                         )
+                                    // E11-S01: Flutter's "Paste into Shell N", only into a running shell.
+                                    if (selected?.running == true && nativeActions != null)
+                                        add(
+                                            KitMenuItem(
+                                                stringResource(
+                                                    Res.string.localTerminalPasteNamed,
+                                                    stringResource(
+                                                        Res.string.localTerminalShellName,
+                                                        selected.number,
+                                                    ),
+                                                ),
+                                                nativeActions::paste,
+                                                KitIcons.paste,
+                                                enabled = held,
+                                            )
+                                        )
                                     if (selected != null) {
                                         add(
                                             KitMenuItem(
