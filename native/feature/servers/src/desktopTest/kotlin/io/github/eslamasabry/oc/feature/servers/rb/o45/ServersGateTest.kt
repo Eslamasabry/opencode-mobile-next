@@ -114,7 +114,7 @@ class ServersGateTest {
     @Test
     fun `a waiting server leads with its attention words`() = runComposeUiTest {
         val facts =
-            state.rows.facts.put(
+            state.rows.facts.toPersistentMap().put(
                 servers[0].id,
                 state.rows.facts.getValue(servers[0].id).copy(waiting = 1),
             )

@@ -107,7 +107,7 @@ class ServersViewModelTest {
         val connections = Connections()
         connections.servers.value = persistentListOf(SavedServer(id, "Home", "https://example.test", connected = true))
         val nav = Navigator()
-        ServersViewModel(ChatsRoute.New(null), connections, nav)
+        ServersViewModel(ChatsRoute.New(null), connections, nav, NoServerRows)
         assertEquals(1, connections.creates)
         assertEquals(listOf(ref), nav.chats)
     }
@@ -120,7 +120,7 @@ class ServersViewModelTest {
             SavedServer(ProfileId("work"), "Work", "https://b.test", connected = true),
         )
         val nav = Navigator()
-        ServersViewModel(ChatsRoute.New(null), connections, nav)
+        ServersViewModel(ChatsRoute.New(null), connections, nav, NoServerRows)
         assertEquals(0, connections.creates)
         assertTrue(nav.chats.isEmpty())
     }
@@ -130,7 +130,7 @@ class ServersViewModelTest {
         runTest {
             val connections = Connections()
             val nav = Navigator()
-            val vm = ServersViewModel(null, connections, nav)
+            val vm = ServersViewModel(null, connections, nav, NoServerRows)
             backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
             vm.save("Server", "http://example.test:4096", "opencode", "private")
             assertEquals(false, connections.consent)
@@ -145,7 +145,7 @@ class ServersViewModelTest {
     @Test
     fun `B-SEC-153 consent for a previous address never follows an edited address`() = runTest {
         val connections = Connections()
-        val vm = ServersViewModel(null, connections, Navigator())
+        val vm = ServersViewModel(null, connections, Navigator(), NoServerRows)
         vm.allowCleartext(true, "http://first.test:4096")
         vm.save("Server", "http://second.test:4096", "opencode", "private")
         assertEquals(false, connections.consent)
@@ -156,7 +156,7 @@ class ServersViewModelTest {
         val connections =
             Connections().apply { saveResult = Outcome.Failed(Failure.StorageRefused()) }
         val nav = Navigator()
-        val vm = ServersViewModel(ChatsRoute.New(null), connections, nav)
+        val vm = ServersViewModel(ChatsRoute.New(null), connections, nav, NoServerRows)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
         vm.save("Server", "https://example.test", "opencode", "private")
         assertEquals(ServerIssue.SaveFailed, vm.state.value.issue)
@@ -171,7 +171,7 @@ class ServersViewModelTest {
         runTest {
             val connections = Connections()
             val nav = Navigator()
-            val vm = ServersViewModel(ChatsRoute.New(null), connections, nav)
+            val vm = ServersViewModel(ChatsRoute.New(null), connections, nav, NoServerRows)
             vm.save("Server", "https://example.test", "opencode", "private")
             assertEquals(1, connections.saves)
             assertEquals(1, connections.connects)
@@ -183,7 +183,7 @@ class ServersViewModelTest {
     fun `B-SEC-124 failed connection never creates a conversation or navigates`() = runTest {
         val connections = Connections().apply { connectResult = Outcome.Failed(Failure.Network()) }
         val nav = Navigator()
-        val vm = ServersViewModel(ChatsRoute.New(null), connections, nav)
+        val vm = ServersViewModel(ChatsRoute.New(null), connections, nav, NoServerRows)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
         vm.create(id)
         assertEquals(0, connections.creates)
@@ -196,7 +196,7 @@ class ServersViewModelTest {
         val wait = CompletableDeferred<Unit>()
         val connections = Connections().apply { connectWait = wait }
         val nav = Navigator()
-        val vm = ServersViewModel(ChatsRoute.New(null), connections, nav)
+        val vm = ServersViewModel(ChatsRoute.New(null), connections, nav, NoServerRows)
         vm.create(id)
         vm.create(id)
         vm.remove(id)
@@ -213,7 +213,7 @@ class ServersViewModelTest {
             val connections =
                 Connections().apply { createResult = Outcome.Failed(Failure.Server(503)) }
             val nav = Navigator()
-            val vm = ServersViewModel(ChatsRoute.New(null), connections, nav)
+            val vm = ServersViewModel(ChatsRoute.New(null), connections, nav, NoServerRows)
             backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
             vm.create(id)
             assertEquals(1, connections.creates)
