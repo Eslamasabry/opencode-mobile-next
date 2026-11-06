@@ -57,6 +57,7 @@ import io.github.eslamasabry.oc.protocol.paseo.transport.PaseoTransport
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupProfileName
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
+import io.github.eslamasabry.opencode_mobile.ServerPortBusy
 import io.github.eslamasabry.opencode_mobile.SetupPersistenceException
 import io.github.eslamasabry.opencode_mobile.SetupRunner
 import java.io.File
@@ -358,7 +359,7 @@ internal fun classifyRuntime(e: Throwable): Failure {
         }
     return Failure.Runtime(
         problem,
-        if (e is io.github.eslamasabry.opencode_mobile.ServerPortBusy)
+        if (e is ServerPortBusy)
             io.github.eslamasabry.oc.core.security.Redactor().details(e.message.orEmpty())
         else Redacted.shape(e),
     )
@@ -614,11 +615,7 @@ internal constructor(
                     if (busy is Outcome.Ok && busy.value) {
                         facts.update { it.copy(startBusyPort = PhoneServerScripts.PORT) }
                         return Outcome.Failed(
-                            classifyRuntime(
-                                io.github.eslamasabry.opencode_mobile.ServerPortBusy(
-                                    PhoneServerScripts.PORT
-                                )
-                            )
+                            classifyRuntime(ServerPortBusy(PhoneServerScripts.PORT))
                         )
                     }
                 }
