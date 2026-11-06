@@ -457,31 +457,49 @@ private fun Panes(
 
 /**
  * The overlaid bar's or bottom block's ground: frost through [frost] when given, else the page's own ground. Above the
- * bottom block the body fades into that ground over 16 dp, so a line scrolling under it is never cut in half.
+ * bottom block the body fades into that ground over 16 dp, and below the bar over 12 dp, so a line scrolling under
+ * either is never cut in half.
  */
 @Composable
 private fun Modifier.kitChromeGround(role: FrostRole, frost: KitFrostState?): Modifier {
     val ground = LocalKitColors.current.ground
+    // A short ground fade where the transcript meets the chrome: above the composer and, so text never slides under
+    // the header with a hard cut, below the header. Glass frosts what scrolls behind instead.
+    val glass =
+        io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle.current.style ==
+            io.github.eslamasabry.oc.ui.design.style.Style.Glass
     val fade =
-        if (
-            role != FrostRole.Composer ||
-                io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle.current.style ==
-                    io.github.eslamasabry.oc.ui.design.style.Style.Glass
-        )
-            Modifier
-        else
-            Modifier.drawBehind {
-                val reach = 16.dp.toPx()
-                drawRect(
-                    androidx.compose.ui.graphics.Brush.verticalGradient(
-                        0f to ground.copy(alpha = 0f),
-                        1f to ground,
-                        startY = -reach,
-                        endY = 0f,
-                    ),
-                    topLeft = androidx.compose.ui.geometry.Offset(0f, -reach),
-                    size = androidx.compose.ui.geometry.Size(size.width, reach),
-                )
-            }
+        when {
+            glass -> Modifier
+            role == FrostRole.Composer ->
+                Modifier.drawBehind {
+                    val reach = 16.dp.toPx()
+                    drawRect(
+                        androidx.compose.ui.graphics.Brush.verticalGradient(
+                            0f to ground.copy(alpha = 0f),
+                            1f to ground,
+                            startY = -reach,
+                            endY = 0f,
+                        ),
+                        topLeft = androidx.compose.ui.geometry.Offset(0f, -reach),
+                        size = androidx.compose.ui.geometry.Size(size.width, reach),
+                    )
+                }
+            role == FrostRole.ChatHeader ->
+                Modifier.drawBehind {
+                    val reach = 12.dp.toPx()
+                    drawRect(
+                        androidx.compose.ui.graphics.Brush.verticalGradient(
+                            0f to ground,
+                            1f to ground.copy(alpha = 0f),
+                            startY = size.height,
+                            endY = size.height + reach,
+                        ),
+                        topLeft = androidx.compose.ui.geometry.Offset(0f, size.height),
+                        size = androidx.compose.ui.geometry.Size(size.width, reach),
+                    )
+                }
+            else -> Modifier
+        }
     return then(fade).then(if (frost != null) Modifier.kitFrost(role, frost) else Modifier.background(ground))
 }
