@@ -50,6 +50,7 @@ import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipWrap
+import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips
 import io.github.eslamasabry.oc.ui.kit.modal.KitNewProjectDialog
 import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
