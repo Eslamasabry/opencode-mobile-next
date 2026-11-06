@@ -51,6 +51,27 @@ class ProfileSweepShapesTest {
         assertTrue(swept.none { "keeper" in it })
     }
 
+    /**
+     * E00-S08: the sign-ins a forgotten server leaves in flutter_secure_storage. `oc.codexToken.` and `oc.githubToken.`
+     * are per-server ledger rows the rule takes (a longer dotted id keeps its own); `pw.<id>` is not an `oc.` key, so
+     * the prefs rule never takes it and only the secret sweep (`ProfileKeys.SECRET_PREFIXES`) removes it.
+     */
+    @Test
+    fun `B-SEC-201 a server's secure-storage sign-ins are per-server ledger shapes and a longer dotted id keeps its own`() {
+        for (row in listOf("oc.codexToken.", "oc.githubToken.")) assertEquals("profile", ledger[row]?.get("scope"), row)
+        val names =
+            listOf(
+                "oc.codexToken.doomed",
+                "oc.githubToken.doomed",
+                "oc.codexToken.doomed.2",
+                "oc.githubToken.doomed.2",
+                "oc.codexToken.keeper",
+                "pw.doomed",
+            )
+        val swept = ProfileKeyRule.scopedKeys("doomed", names, setOf("doomed.2", "keeper"))
+        assertEquals(setOf("oc.codexToken.doomed", "oc.githubToken.doomed"), swept)
+    }
+
     @Test
     fun `B-SEC-039 every ledger row is classified with a reason and no app-wide key is ever swept`() {
         for ((key, row) in ledger) {

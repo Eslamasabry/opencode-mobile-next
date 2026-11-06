@@ -24,6 +24,13 @@ public class MigrationPaths(
     public val credentialLedger: File get() = File(nativeDir, "credential-ledger.json")
     public val fssSnapshot: File get() = File(nativeDir, "fss-snapshot.json")
     public val backupRoot: File get() = File(files, "migration")
+
+    /**
+     * The counts-only census the last Flutter (bridge) release writes before the update (05 W13, M-D2), in Dart's
+     * `getApplicationSupportDirectory()`: `{"v":1,"counts":{"servers":3,"signIns":4,"drafts":2,"queue":1,
+     * "schedules":0,"projects":2,"voicePacks":1}}`. Read only (E00-S15: Report a problem compares it with [audit]).
+     */
+    public val bridgeCensus: File get() = File(files, "migration_census_v1.json")
     public val backup: File get() = File(backupRoot, BACKUP_NAME)
 
     /** `qa` build type only (plan 05 §7.4 S0 step 3, §10.5 J2): read by `QaStepInterrupter`, never by release code. */

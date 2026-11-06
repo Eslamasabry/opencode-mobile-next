@@ -6,7 +6,19 @@ import io.github.eslamasabry.oc.android.migration.readers.json.MiniJson
 import io.github.eslamasabry.oc.android.migration.readers.migration.Fs
 import java.io.File
 
-internal data class BackupFile(val name: String, val bytes: Long, val sha256: String, val authoritative: Boolean)
+internal data class BackupFile(
+    val name: String,
+    val bytes: Long,
+    val sha256: String,
+    val authoritative: Boolean,
+    /**
+     * Set only while a server's deletion rewrites this copy (E00-S08, `FlutterEraCopies`): the size and hash the file
+     * has once the rewrite lands. Verification accepts either pair, so a kill between the file's rename and the
+     * manifest's never makes the backup look damaged.
+     */
+    val pendingBytes: Long? = null,
+    val pendingSha256: String? = null,
+)
 
 /**
  * S0 (plan 05 §7.4, ADR §9.7 step 5b): a byte-for-byte copy of the Flutter stores, published as one directory and
@@ -81,7 +93,11 @@ internal class S0Backup(
         val files = parseManifest(manifest.readText(Charsets.UTF_8)) ?: return null
         for (f in files) {
             val copy = File(paths.backup, f.name)
-            if (!copy.isFile || copy.length() != f.bytes || Fs.sha256Hex(copy) != f.sha256) return null
+            if (!copy.isFile) return null
+            val sha = Fs.sha256Hex(copy)
+            val committed = copy.length() == f.bytes && sha == f.sha256
+            val pending = copy.length() == f.pendingBytes && sha == f.pendingSha256
+            if (!committed && !pending) return null
         }
         return files
     }
@@ -114,7 +130,44 @@ internal class S0Backup(
         )
 
         fun BackupFile.toMap(): Map<String, Any?> =
-            linkedMapOf("name" to name, "bytes" to bytes, "sha256" to sha256, "authoritative" to authoritative)
+            linkedMapOf<String, Any?>("name" to name, "bytes" to bytes, "sha256" to sha256, "authoritative" to authoritative)
+                .also { m ->
+                    if (pendingBytes != null && pendingSha256 != null) {
+                        m["pendingBytes"] = pendingBytes
+                        m["pendingSha256"] = pendingSha256
+                    }
+                }
+
+        /**
+         * Records that [name] in the published backup is about to become [bytes]/[sha256] (E00-S08). Returns false when
+         * the manifest is unreadable; true when it was written, or when it does not list [name] (nothing to keep true).
+         */
+        fun markPending(backupDir: File, name: String, bytes: Long, sha256: String): Boolean =
+            rewriteManifest(backupDir) { f -> if (f.name == name) f.copy(pendingBytes = bytes, pendingSha256 = sha256) else f }
+
+        /** The rewrite of [name] landed: its pending size and hash become the recorded ones. */
+        fun commitPending(backupDir: File, name: String): Boolean =
+            rewriteManifest(backupDir) { f ->
+                if (f.name == name && f.pendingBytes != null && f.pendingSha256 != null) {
+                    f.copy(bytes = f.pendingBytes, sha256 = f.pendingSha256, pendingBytes = null, pendingSha256 = null)
+                } else {
+                    f
+                }
+            }
+
+        private fun rewriteManifest(backupDir: File, change: (BackupFile) -> BackupFile): Boolean {
+            val file = File(backupDir, MANIFEST)
+            if (!file.isFile) return true
+            val manifest = MiniJson.parseOrNull(file.readText(Charsets.UTF_8)) as? Map<*, *> ?: return false
+            val files = parseManifest(file.readText(Charsets.UTF_8)) ?: return false
+            val next = files.map(change)
+            if (next == files) return true
+            val out = LinkedHashMap<String, Any?>()
+            manifest.forEach { (k, v) -> out[k as String] = v }
+            out["files"] = next.map { it.toMap() }
+            Fs.writeAtomically(file, MiniJson.encode(out).toByteArray(Charsets.UTF_8))
+            return true
+        }
 
         fun parseManifest(text: String): List<BackupFile>? {
             val m = MiniJson.parseOrNull(text) as? Map<*, *> ?: return null
@@ -126,6 +179,8 @@ internal class S0Backup(
                     bytes = f["bytes"] as? Long ?: return null,
                     sha256 = f["sha256"] as? String ?: return null,
                     authoritative = f["authoritative"] == true,
+                    pendingBytes = f["pendingBytes"] as? Long,
+                    pendingSha256 = f["pendingSha256"] as? String,
                 )
             }
         }

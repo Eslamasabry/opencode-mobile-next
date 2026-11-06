@@ -148,7 +148,7 @@ private constructor(
          * Builds the report. [events] are newest first; errors keep their stack's first lines,
          * timings only the newest few. [connection] is the connection in words with no address or
          * name; [fallbackTitle] titles a report with no attached error and no description (the
-         * newest error kept).
+         * newest error kept). [update] is the counts-only update check (E00-S15); it leads the diagnostics.
          */
         public fun build(
             redactor: Redactor,
@@ -162,6 +162,7 @@ private constructor(
             maxErrors: Int = 10,
             maxTimings: Int = 10,
             maxStackLines: Int = 8,
+            update: MigrationCheck? = null,
         ): ProblemReport {
             fun scrub(text: String) = ProblemReports.scrub(redactor, text)
             val said = scrub(description.trim())
@@ -198,6 +199,11 @@ private constructor(
                 what.append("\nConnection: ${scrub(connection.trim())}")
 
             val lines = mutableListOf<String>()
+            // Counts and fixed words only (MigrationCheck builds no line from file content); scrubbed like the rest.
+            update?.let {
+                lines += scrub(it.text)
+                lines += ""
+            }
             // A failed job's log leads the diagnostics: it is part of the attached failure.
             error?.log?.let { log ->
                 val excerpt = scrub(log.trimEnd())

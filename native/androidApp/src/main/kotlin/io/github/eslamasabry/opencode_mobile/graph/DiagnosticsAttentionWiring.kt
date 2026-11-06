@@ -46,7 +46,9 @@ import io.github.eslamasabry.oc.engine.diagnostics.exit.LifecycleSource
 import io.github.eslamasabry.oc.engine.diagnostics.exit.PolicyExitHistory
 import io.github.eslamasabry.oc.engine.diagnostics.exit.RawLaunchReport
 import io.github.eslamasabry.oc.engine.diagnostics.perf.PerfTrace
+import io.github.eslamasabry.oc.android.migration.android.AndroidMigration
 import io.github.eslamasabry.oc.engine.diagnostics.problem.AttachedError
+import io.github.eslamasabry.oc.engine.diagnostics.problem.MigrationCheck
 import io.github.eslamasabry.oc.engine.diagnostics.problem.ProblemEventKind
 import io.github.eslamasabry.oc.engine.diagnostics.problem.ProblemReport
 import io.github.eslamasabry.oc.engine.diagnostics.problem.ProblemReportClipboard
@@ -386,6 +388,17 @@ class GitHubProblemReporter(
     private val scope = CoroutineScope(appScope.coroutineContext)
     private val policy = ExternalLinkPolicy()
 
+    /** E00-S15: the update's counts beside the bridge census, read once off the main thread; null = no section. */
+    @Volatile private var updateCheck: MigrationCheck? = null
+
+    init {
+        scope.launch(dispatchers.io) {
+            val (audit, census) = AndroidMigration.updateCheckFiles(application)
+            updateCheck = MigrationCheck.of(audit, census)
+            prepared = null
+        }
+    }
+
     /**
      * The errors Report a problem lists, oldest first: the persisted report's (they survive a
      * restart, B-STATE-075), else null so the caller keeps this run's ring. Each is (time, source,
@@ -455,6 +468,7 @@ class GitHubProblemReporter(
                 fallbackTitle =
                     if (attachment == null) latest?.message?.lineSequence()?.firstOrNull() else null,
                 events = events,
+                update = updateCheck,
             )
         return Prepared(description, problem)
     }
