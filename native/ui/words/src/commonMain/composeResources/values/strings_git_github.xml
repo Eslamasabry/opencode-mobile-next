@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Git page: GitHub repository picker, Initialize and Publish to GitHub. Words are the Flutter ARB copy (eabb3e940, 70c877432). -->
+<resources>
+    <string name="gitRemotePickGitHub">Choose from GitHub</string>
+    <string name="gitRemotePickGitHubTitle">Choose a repository</string>
+    <string name="gitRemotePickGitHubNone">No repositories on this GitHub account yet.</string>
+    <string name="gitRemoteRepoPrivate">Private</string>
+    <string name="gitProblemInvalidGitHubRepositoryName">Use a repository name with up to 100 letters, numbers, dots, dashes or underscores.</string>
+    <string name="gitProblemGitHubRepositoryNameUnavailable">That name is already used or unavailable in your GitHub account. Try another.</string>
+    <string name="gitActionInitialize">Start tracking</string>
+    <string name="gitActionPublish">Create on GitHub</string>
+    <string name="gitBusyInitialize">Starting Git in this project…</string>
+    <string name="gitBusyPublish">Creating repository on GitHub…</string>
+    <string name="gitDoneInitialized">Git is ready in this project.</string>
+    <string name="gitDoneGitHubRepositoryCreated">GitHub repository created and connected. Your project has not been sent yet.</string>
+    <string name="gitInitializeProject">Start tracking this project</string>
+    <string name="gitInitializeProjectHint">Keep these files here and start using Git.</string>
+    <string name="gitPublishToGitHub">Create a GitHub repository</string>
+    <string name="gitPublishToGitHubHint">Choose a name and who can see it.</string>
+    <string name="gitPublishTitle">Create repository</string>
+    <string name="gitPublishName">Repository name</string>
+    <string name="gitPublishNameHint">Use letters, numbers, dots, dashes or underscores.</string>
+    <string name="gitPublishVisibility">Who can see it</string>
+    <string name="gitPublishPrivate">Private</string>
+    <string name="gitPublishPublic">Public</string>
+    <string name="gitPublishPrivateHint">Only you and people you choose can see this repository.</string>
+    <string name="gitPublishPublicHint">Anyone can see this repository.</string>
+    <string name="gitPublishButton">Create repository</string>
+</resources>

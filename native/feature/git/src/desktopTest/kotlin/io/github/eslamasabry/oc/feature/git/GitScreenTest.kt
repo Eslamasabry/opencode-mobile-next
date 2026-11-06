@@ -11,6 +11,7 @@ import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -26,6 +27,7 @@ import io.github.eslamasabry.oc.engine.git.GitBranchState
 import io.github.eslamasabry.oc.engine.git.GitChangeKind
 import io.github.eslamasabry.oc.engine.git.GitFailure
 import io.github.eslamasabry.oc.engine.git.GitFileChange
+import io.github.eslamasabry.oc.engine.git.GitHubRepository
 import io.github.eslamasabry.oc.engine.git.GitHubSignIn
 import io.github.eslamasabry.oc.engine.git.GitPageView
 import io.github.eslamasabry.oc.engine.git.GitProblem
@@ -35,6 +37,7 @@ import io.github.eslamasabry.oc.engine.git.GitSnapshot
 import io.github.eslamasabry.oc.engine.git.GitStatus
 import io.github.eslamasabry.oc.engine.git.GitUnavailableReason
 import io.github.eslamasabry.oc.feature.git.presentation.GitActions
+import io.github.eslamasabry.oc.feature.git.presentation.GitRepoPicker
 import io.github.eslamasabry.oc.feature.git.presentation.GitSheet
 import io.github.eslamasabry.oc.feature.git.presentation.GitUi
 import io.github.eslamasabry.oc.feature.git.ui.GitScreen
@@ -84,6 +87,11 @@ class GitScreenTest {
             override fun openClone() { calls += "clone" }
             override fun addRemote(name: String, url: String) { calls += "addRemote $name $url" }
             override fun clone(url: String, folder: String) { calls += "clone $url $folder" }
+            override fun initialize() { calls += "initialize" }
+            override fun openPublish() { calls += "openPublish" }
+            override fun publish(name: String, isPrivate: Boolean) { calls += "publish $name $isPrivate" }
+            override fun pickGitHubRepository() { calls += "pickRepo" }
+            override fun closeRepositoryChoices() { calls += "closeRepos" }
             override fun closeSheet() {}
             override fun switchBranch(name: String) {}
             override fun createBranch(name: String) {}
@@ -232,5 +240,136 @@ class GitScreenTest {
         waitForIdle()
         onNodeWithText("Add remote").performClick()
         assertTrue(calls.none { it.startsWith("addRemote") })
+    }
+
+    @Test
+    fun `B-NAV-020 a folder that is not a repository offers Start tracking, which acts at once`() = runComposeUiTest {
+        setContent { Screen(GitUi(view = GitPageView.NotRepository, signIn = GitHubSignIn.SignedOut())) }
+        onNodeWithText("Start tracking this project").performScrollTo().performClick()
+        assertEquals(listOf("initialize"), calls)
+        onNodeWithText("Keep these files here and start using Git.").assertExists()
+        // It acts in place: no chevron row, and Clone stays beside it.
+        onNodeWithText("Clone a repository").assertExists()
+    }
+
+    @Test
+    fun `B-SEC-082 Create a GitHub repository shows only when signed in on built-in Linux with no remote`() = runComposeUiTest {
+        val bare = snapshot.copy(remotes = persistentListOf())
+        val signedIn = GitHubSignIn.SignedIn("octocat")
+        setContent { Screen(GitUi(view = GitPageView.Ready(bare), signIn = signedIn, offersGitHubSignIn = true)) }
+        onNodeWithText("Create a GitHub repository").performScrollTo().performClick()
+        assertEquals(listOf("openPublish"), calls)
+    }
+
+    @Test
+    fun `B-SEC-082 Create a GitHub repository is hidden while signed out`() = runComposeUiTest {
+        val bare = snapshot.copy(remotes = persistentListOf())
+        setContent { Screen(GitUi(view = GitPageView.Ready(bare), signIn = GitHubSignIn.SignedOut(), offersGitHubSignIn = true)) }
+        onNodeWithText("Create a GitHub repository").assertDoesNotExist()
+    }
+
+    @Test
+    fun `B-SEC-082 Create a GitHub repository is hidden on a server`() = runComposeUiTest {
+        val bare = snapshot.copy(remotes = persistentListOf())
+        setContent { Screen(GitUi(view = GitPageView.Ready(bare), signIn = GitHubSignIn.SignedIn("octocat"), offersGitHubSignIn = false)) }
+        onNodeWithText("Create a GitHub repository").assertDoesNotExist()
+    }
+
+    @Test
+    fun `B-SEC-082 Create a GitHub repository is hidden once a remote exists`() = runComposeUiTest {
+        setContent { Screen(GitUi(view = GitPageView.Ready(snapshot), signIn = GitHubSignIn.SignedIn("octocat"), offersGitHubSignIn = true)) }
+        onNodeWithText("Create a GitHub repository").assertDoesNotExist()
+    }
+
+    @Test
+    fun `B-SEC-082 the publish sheet starts from the folder name, private, and creates with the typed name`() = runComposeUiTest {
+        val bare = snapshot.copy(remotes = persistentListOf())
+        setContent {
+            Screen(
+                GitUi(
+                    view = GitPageView.Ready(bare),
+                    signIn = GitHubSignIn.SignedIn("octocat"),
+                    offersGitHubSignIn = true,
+                    sheet = GitSheet.Publish,
+                    directory = "/home/oc/my app",
+                ),
+            )
+        }
+        waitForIdle()
+        onNodeWithText("Only you and people you choose can see this repository.").assertExists()
+        onNodeWithText("my-app").assertExists()
+        onNodeWithText("Public").performClick()
+        waitForIdle()
+        onNodeWithText("Anyone can see this repository.").assertExists()
+        // The title and the button share their words; the button is the last.
+        onAllNodesWithText("Create repository").onLast().performClick()
+        assertEquals("publish my-app false", calls.last())
+    }
+
+    @Test
+    fun `B-SEC-082 a name GitHub would refuse is said in words and holds the button`() = runComposeUiTest {
+        val bare = snapshot.copy(remotes = persistentListOf())
+        setContent {
+            Screen(
+                GitUi(view = GitPageView.Ready(bare), signIn = GitHubSignIn.SignedIn("octocat"), offersGitHubSignIn = true, sheet = GitSheet.Publish, directory = "/p/app"),
+            )
+        }
+        waitForIdle()
+        onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("git-publish-name"))).performTextInput("!")
+        waitForIdle()
+        assertTrue(onAllNodesWithText("Use a repository name with up to 100 letters, numbers, dots, dashes or underscores.").fetchSemanticsNodes().isNotEmpty())
+        onAllNodesWithText("Create repository").onLast().performClick()
+        assertTrue(calls.none { it.startsWith("publish") })
+    }
+
+    @Test
+    fun `B-BUILD-014 the Remotes sheet offers Choose from GitHub only while signed in, and lists the account's repositories`() = runComposeUiTest {
+        setContent {
+            Screen(
+                GitUi(
+                    view = GitPageView.Ready(snapshot),
+                    signIn = GitHubSignIn.SignedIn("octocat"),
+                    sheet = GitSheet.Remotes,
+                    repoPicker =
+                        GitRepoPicker(
+                            choices =
+                                persistentListOf(
+                                    GitHubRepository("octocat/app", "https://github.com/octocat/app", "https://github.com/octocat/app.git", "main", true),
+                                    GitHubRepository("octocat/site", "https://github.com/octocat/site", "https://github.com/octocat/site.git", "main", false),
+                                ),
+                        ),
+                ),
+            )
+        }
+        // The list sits over the Remotes sheet; picking closes it.
+        onNodeWithText("Choose a repository").assertExists()
+        onNodeWithText("Private").assertExists()
+        onNodeWithText("site", substring = true).performClick()
+        assertEquals("closeRepos", calls.last())
+    }
+
+    @Test
+    fun `B-BUILD-014 the Remotes sheet shows Choose from GitHub while signed in`() = runComposeUiTest {
+        setContent { Screen(GitUi(view = GitPageView.Ready(snapshot), signIn = GitHubSignIn.SignedIn("octocat"), sheet = GitSheet.Remotes)) }
+        onNodeWithTag("git-remote-pick-github").assertExists()
+        onNodeWithText("Choose from GitHub").assertExists()
+    }
+
+    @Test
+    fun `B-BUILD-014 Choose from GitHub is absent when signed out`() = runComposeUiTest {
+        setContent { Screen(GitUi(view = GitPageView.Ready(snapshot), signIn = GitHubSignIn.SignedOut(), sheet = GitSheet.Remotes)) }
+        onNodeWithTag("git-remote-pick-github").assertDoesNotExist()
+    }
+
+    @Test
+    fun `B-BUILD-014 an account with no repositories says so under the button`() = runComposeUiTest {
+        setContent {
+            Screen(
+                GitUi(view = GitPageView.Ready(snapshot), signIn = GitHubSignIn.SignedIn("octocat"), sheet = GitSheet.Remotes, repoPicker = GitRepoPicker(none = true)),
+            )
+        }
+        onNodeWithText("No repositories on this GitHub account yet.").assertExists()
+        onNodeWithTag("git-remote-pick-github").performClick()
+        assertEquals("pickRepo", calls.last())
     }
 }

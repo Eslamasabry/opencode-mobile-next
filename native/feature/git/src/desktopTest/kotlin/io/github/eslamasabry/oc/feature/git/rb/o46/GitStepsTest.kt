@@ -208,7 +208,7 @@ class GitStepsTest {
             setContent { Page(GitSheet.Branches) }
             onNodeWithText("origin/feature").assertExists()
             onNodeWithText("feature").performClick()
-            assertEquals(listOf("switchBranch" to listOf("feature")), calls)
+            assertEquals(listOf<Pair<String, List<Any?>>>("switchBranch" to listOf("feature")), calls)
         }
 
     @Test
@@ -220,7 +220,7 @@ class GitStepsTest {
             onNodeWithText("New branch from main").assertIsNotEnabled()
             field.performTextReplacement(" feature ")
             onNodeWithText("New branch from main").performClick()
-            assertEquals(listOf("createBranch" to listOf("feature")), calls)
+            assertEquals(listOf<Pair<String, List<Any?>>>("createBranch" to listOf("feature")), calls)
         }
 
     @Test
@@ -246,7 +246,7 @@ class GitStepsTest {
             folder.performTextInput("mine")
             onNodeWithText("Clone", useUnmergedTree = true).performClick()
             assertEquals(
-                listOf("clone" to listOf("https://example.invalid/another.git", "mine")),
+                listOf<Pair<String, List<Any?>>>("clone" to listOf("https://example.invalid/another.git", "mine")),
                 calls,
             )
         }
@@ -273,7 +273,7 @@ class GitStepsTest {
         onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("git-identity-email")))
             .performTextInput(" owner@example.invalid ")
         save.performScrollTo().performClick()
-        assertEquals(listOf("setIdentity" to listOf("Owner", "owner@example.invalid")), calls)
+        assertEquals(listOf<Pair<String, List<Any?>>>("setIdentity" to listOf("Owner", "owner@example.invalid")), calls)
     }
 
     @Test
@@ -315,6 +315,6 @@ class GitStepsTest {
             message.performScrollTo().performTextReplacement(" Keep this message ")
             onNodeWithTag("git-save").assertIsEnabled()
             onNodeWithTag("git-save-send").performScrollTo().performClick()
-            assertEquals(listOf("commitAndPush" to listOf(" Keep this message ")), calls)
+            assertEquals(listOf<Pair<String, List<Any?>>>("commitAndPush" to listOf(" Keep this message ")), calls)
         }
 }

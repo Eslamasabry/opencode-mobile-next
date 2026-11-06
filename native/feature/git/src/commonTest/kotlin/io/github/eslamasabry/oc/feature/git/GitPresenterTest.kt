@@ -6,6 +6,7 @@ import io.github.eslamasabry.oc.core.common.RedactorApi
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
+import io.github.eslamasabry.oc.engine.git.GitHubRepository
 import io.github.eslamasabry.oc.engine.git.GitHubSignIn
 import io.github.eslamasabry.oc.engine.git.GitHubSignInControl
 import io.github.eslamasabry.oc.engine.git.GitPage
@@ -13,10 +14,12 @@ import io.github.eslamasabry.oc.engine.git.GitPageView
 import io.github.eslamasabry.oc.engine.git.GitShell
 import io.github.eslamasabry.oc.engine.git.GitShellReply
 import io.github.eslamasabry.oc.engine.git.GitUnavailableReason
+import io.github.eslamasabry.oc.engine.git.GitWorkspaces
 import io.github.eslamasabry.oc.engine.git.resolveGitWorkspace
 import io.github.eslamasabry.oc.feature.git.presentation.GitConfirm
 import io.github.eslamasabry.oc.feature.git.presentation.GitPagePorts
 import io.github.eslamasabry.oc.feature.git.presentation.GitPresenter
+import io.github.eslamasabry.oc.feature.git.presentation.GitRepoPicker
 import io.github.eslamasabry.oc.feature.git.presentation.GitSheet
 import kotlin.io.encoding.Base64
 import kotlin.test.Test
@@ -70,9 +73,17 @@ private class FakeAccount : GitHubSignInControl {
     override val state = MutableStateFlow<GitHubSignIn>(GitHubSignIn.Loading)
     var started = 0
     var signedOut = 0
+    var repos: List<GitHubRepository> = emptyList()
+    var listed = 0
+
+    override suspend fun repositories(): List<GitHubRepository> {
+        listed++
+        return repos
+    }
 
     override suspend fun load() {
-        state.value = GitHubSignIn.SignedOut()
+        // Like the real account: a stored sign-in is kept, only a first read becomes signed out.
+        if (state.value == GitHubSignIn.Loading) state.value = GitHubSignIn.SignedOut()
     }
 
     override fun startSignIn() {
@@ -105,7 +116,7 @@ class GitPresenterTest {
         )
 
     private fun TestScope.presenter(repo: Repo, account: GitHubSignInControl = FakeAccount()): GitPresenter {
-        val page = GitPage(ref) { resolveGitWorkspace(true, "/srv/app", true, "Home box") { repo } }
+        val page = GitPage(ref, GitWorkspaces { resolveGitWorkspace(true, "/srv/app", true, "Home box") { repo } })
         return GitPresenter(page, account, ports) { block -> launch { block() } }
     }
 
@@ -281,7 +292,7 @@ class GitPresenterTest {
     fun `B-NAV-022 an unavailable workspace shows its reason and runs nothing`() = runTest {
         val repo = Repo()
         // The fake reaches the real resolver: a command run on the unavailable workspace would show in its scripts.
-        val page = GitPage(ref) { resolveGitWorkspace(connected = true, directory = null, remoteShell = true) { repo } }
+        val page = GitPage(ref, GitWorkspaces { resolveGitWorkspace(connected = true, directory = null, remoteShell = true) { repo } })
         val p = GitPresenter(page, FakeAccount(), ports) { block -> launch { block() } }
         p.start()
         advanceUntilIdle()
@@ -290,5 +301,83 @@ class GitPresenterTest {
         advanceUntilIdle()
         assertEquals(GitPageView.Unavailable(GitUnavailableReason.NoProject), p.initial().view)
         assertTrue(repo.scripts.isEmpty())
+    }
+
+    private fun signedInAccount(vararg repos: GitHubRepository) =
+        FakeAccount().also {
+            it.state.value = GitHubSignIn.SignedIn("octocat")
+            it.repos = repos.toList()
+        }
+
+    private fun repo(name: String, private: Boolean = false) =
+        GitHubRepository(name, "https://github.com/$name", "https://github.com/$name.git", "main", private)
+
+    @Test
+    fun `B-BUILD-014 choosing from GitHub lists the signed-in account's repositories and nothing is asked while signed out`() = runTest {
+        val account = signedInAccount(repo("o/a"), repo("o/b", private = true))
+        val p = presenter(Repo(), account)
+        p.start()
+        advanceUntilIdle()
+        p.openRemotes()
+        p.pickGitHubRepository()
+        assertTrue(p.initial().repoPicker.loading)
+        advanceUntilIdle()
+        val picker = p.initial().repoPicker
+        assertFalse(picker.loading)
+        assertEquals(listOf("o/a", "o/b"), picker.choices?.map { it.fullName })
+        p.closeRepositoryChoices()
+        assertNull(p.initial().repoPicker.choices)
+        assertEquals(GitSheet.Remotes, p.initial().sheet)
+
+        val out = FakeAccount()
+        val q = presenter(Repo(), out)
+        q.start()
+        advanceUntilIdle()
+        q.pickGitHubRepository()
+        advanceUntilIdle()
+        assertEquals(0, out.listed)
+        assertEquals(GitRepoPicker(), q.initial().repoPicker)
+    }
+
+    @Test
+    fun `B-BUILD-014 an account with no repositories says so, and closing the Remotes sheet forgets the list`() = runTest {
+        val account = signedInAccount()
+        val p = presenter(Repo(), account)
+        p.start()
+        advanceUntilIdle()
+        p.openRemotes()
+        p.pickGitHubRepository()
+        advanceUntilIdle()
+        assertTrue(p.initial().repoPicker.none)
+        assertNull(p.initial().repoPicker.choices)
+        p.closeSheet()
+        assertEquals(GitRepoPicker(), p.initial().repoPicker)
+    }
+
+    @Test
+    fun `B-NAV-020 initialize acts at once and a second tap while it runs does nothing`() = runTest {
+        val repo = Repo()
+        val p = presenter(repo)
+        p.start()
+        advanceUntilIdle()
+        p.initialize()
+        advanceUntilIdle()
+        assertEquals(1, repo.scripts.count { "ocg_s run " in it && "init" in it })
+        assertEquals(io.github.eslamasabry.oc.engine.git.GitActionNote.Initialized, p.initial().result?.note)
+    }
+
+    @Test
+    fun `B-SEC-082 on a server the Publish step is refused with sign-in required and the sheet stays`() = runTest {
+        val p = presenter(Repo(), signedInAccount())
+        p.start()
+        advanceUntilIdle()
+        p.openPublish()
+        assertEquals(GitSheet.Publish, p.initial().sheet)
+        p.publish("app", true)
+        advanceUntilIdle()
+        assertEquals(io.github.eslamasabry.oc.engine.git.GitProblem.AuthRequired, p.initial().result?.problem)
+        assertEquals(GitSheet.Publish, p.initial().sheet)
+        p.closeSheet()
+        assertNull(p.initial().sheet)
     }
 }

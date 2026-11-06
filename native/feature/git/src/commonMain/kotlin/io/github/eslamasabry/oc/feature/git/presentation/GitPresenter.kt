@@ -10,6 +10,7 @@ import io.github.eslamasabry.oc.engine.git.GitPageView
 import io.github.eslamasabry.oc.engine.git.GitServices
 import io.github.eslamasabry.oc.engine.git.GitWorkspace
 import io.github.eslamasabry.oc.engine.git.suggestGitCloneFolder
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,6 +46,7 @@ public class GitPresenter(
         val unticked: Set<String> = emptySet(),
         val sheet: GitSheet? = null,
         val confirm: GitConfirm? = null,
+        val repoPicker: GitRepoPicker = GitRepoPicker(),
     )
 
     private val local = MutableStateFlow(Local())
@@ -83,6 +85,7 @@ public class GitPresenter(
             check = p.check,
             directory = p.directory,
             sheet = l.sheet,
+            repoPicker = l.repoPicker,
             confirm = l.confirm,
             generation = p.generation,
         )
@@ -159,6 +162,46 @@ public class GitPresenter(
         launch { page.addRemote(name.trim(), url.trim()) }
     }
 
+    public fun initialize() {
+        if (current().working) return
+        launch { page.initialize() }
+    }
+
+    public fun openPublish() {
+        local.update { it.copy(sheet = GitSheet.Publish) }
+    }
+
+    /** Creates the repository; on success the sheet closes and the status line says it worked and that nothing was sent. */
+    public fun publish(name: String, isPrivate: Boolean) {
+        if (current().working) return
+        launch {
+            val before = page.state.value.generation
+            page.publish(name.trim(), isPrivate)
+            val after = page.state.value
+            if (after.generation != before && after.result?.ok == true) local.update { it.copy(sheet = null) }
+        }
+    }
+
+    /** Lists the signed-in account's repositories for the Remotes sheet. Nothing to list is said, not hidden. */
+    public fun pickGitHubRepository() {
+        if (account.state.value !is GitHubSignIn.SignedIn || local.value.repoPicker.loading) return
+        local.update { it.copy(repoPicker = GitRepoPicker(loading = true)) }
+        launch {
+            val repos = account.repositories()
+            local.update {
+                it.copy(
+                    repoPicker =
+                        if (repos.isEmpty()) GitRepoPicker(none = true)
+                        else GitRepoPicker(choices = repos.toImmutableList()),
+                )
+            }
+        }
+    }
+
+    public fun closeRepositoryChoices() {
+        local.update { it.copy(repoPicker = it.repoPicker.copy(choices = null)) }
+    }
+
     /** Clones beside the project; on success the sheet closes and the status line says where it went. */
     public fun clone(url: String, folder: String) {
         if (current().working) return
@@ -176,7 +219,7 @@ public class GitPresenter(
     }
 
     public fun closeSheet() {
-        local.update { it.copy(sheet = null) }
+        local.update { it.copy(sheet = null, repoPicker = GitRepoPicker()) }
     }
 
     public fun switchBranch(name: String) {
