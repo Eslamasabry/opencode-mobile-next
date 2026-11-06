@@ -3,7 +3,9 @@ package io.github.eslamasabry.oc.feature.chats
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
@@ -17,6 +19,10 @@ import io.github.eslamasabry.oc.engine.agents.feed.ReturnBrief
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsFilters
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsState
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
+import io.github.eslamasabry.oc.feature.chats.presentation.ChatsHomeExtraState
+import io.github.eslamasabry.oc.feature.chats.presentation.ChatsListSourceUi
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import kotlinx.collections.immutable.persistentListOf
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsScreen
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -69,15 +75,47 @@ class ChatsScreenTest {
             listOf("Chats", "Work", "Files", "Inbox").forEach {
                 onAllNodesWithText(it).assertCountEquals(0)
             }
-            onNodeWithText("Settings").performClick()
+            // The gear is a round icon button beside Search (Flutter's shell bar); its words are what TalkBack says.
+            onNodeWithContentDescription("Settings").performClick()
             assertEquals(listOf("settings"), actions.calls.filter { it == "settings" })
             onAllNodesWithText("Servers").assertCountEquals(0)
         }
 
     @Test
+    fun `B-NAV-037 the server pill names the server and its state and opens the servers`() =
+        runComposeUiTest {
+            val actions = RecordingChatsActions()
+            val phone =
+                ChatsListSourceUi(ProfileId("p1"), "On this phone", shown = true, main = true, onThisPhone = true, unreachable = false)
+            setContent {
+                Themed { ChatsScreen(ui(*rows).copy(home = ChatsHomeExtraState(sources = persistentListOf(phone))), actions) }
+            }
+            onNodeWithContentDescription("On this phone, Connected, Switch server").performClick()
+            assertTrue("servers" in actions.calls)
+            // No overflow: the places it held are rows after the list.
+            onAllNodesWithContentDescription("More").assertCountEquals(0)
+            onNodeWithText("Show all conversations").performClick()
+            assertTrue("all" in actions.calls)
+        }
+
+    @Test
+    fun `SCREENS-NAV-27 the empty home offers ways to start as rows and New conversation once`() =
+        runComposeUiTest {
+            val actions = RecordingChatsActions()
+            setContent { Themed { ChatsScreen(ui(), actions) } }
+            onNodeWithText("No conversations yet").assertExists()
+            onAllNodesWithText("New conversation").assertCountEquals(1)
+            onNodeWithText("Open a project").performClick()
+            onNodeWithText("Connect a computer").performClick()
+            onNodeWithText("See what an agent can do").performClick()
+            onNodeWithText("New conversation").performClick()
+            assertEquals(listOf("projects", "computer", "demo", "new"), actions.calls)
+        }
+
+    @Test
     fun `B-NAV-037 without a server-management door there is no dead gear`() = runComposeUiTest {
         setContent { Themed { ChatsScreen(ui(*rows, settings = false), RecordingChatsActions()) } }
-        onAllNodesWithText("Settings").assertCountEquals(0)
+        onAllNodesWithContentDescription("Settings").assertCountEquals(0)
     }
 
     @Test
@@ -88,9 +126,10 @@ class ChatsScreenTest {
             onNodeWithText("Today").assertExists()
             onNodeWithText("Earlier").assertExists()
             onNodeWithText("Fix the reconnect loop").assertExists()
-            // The placeholder row reads "New conversation"; the top-bar action says "New chat" (B15).
-            onAllNodesWithText("New conversation").assertCountEquals(1)
-            onAllNodesWithText("New chat").assertCountEquals(1)
+            // One name for one thing (design review §2.3): the placeholder row and the floating button both say
+            // "New conversation".
+            onAllNodesWithText("New conversation").assertCountEquals(2)
+            onAllNodesWithText("New chat").assertCountEquals(0)
             onAllNodesWithText("Needs you").assertCountEquals(1)
             onNodeWithText("Theme packs").performClick()
             assertTrue("open ask" in actions.calls)
@@ -121,8 +160,7 @@ class ChatsScreenTest {
             onNodeWithText("No conversations yet").assertExists()
             onAllNodesWithText("New conversation").assertCountEquals(1)
             onNodeWithText("New conversation").performClick()
-            onNodeWithText("Show all conversations").performClick()
-            assertEquals(listOf("new", "all"), actions.calls)
+            assertEquals(listOf("new"), actions.calls)
         }
 
     @Test

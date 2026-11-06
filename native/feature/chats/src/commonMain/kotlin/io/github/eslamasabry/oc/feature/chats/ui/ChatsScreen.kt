@@ -15,13 +15,25 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
-import io.github.eslamasabry.oc.ui.kit.frame.KitHeadingLine
-import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
+import io.github.eslamasabry.oc.ui.kit.frame.KitConnectionPill
+import io.github.eslamasabry.oc.ui.kit.frame.KitConnectionTone
+import io.github.eslamasabry.oc.ui.kit.frame.KitPageHeading
+import io.github.eslamasabry.oc.ui.kit.frame.KitShellBar
+import io.github.eslamasabry.oc.ui.kit.state.KitStartState
+import io.github.eslamasabry.oc.ui.kit.state.KitStartWay
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeConnectionState
+import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceConnected
+import io.github.eslamasabry.oc.ui.words.res.phoneServerRowNotAnswering
+import io.github.eslamasabry.oc.ui.words.res.serverSwitcherOpen
+import io.github.eslamasabry.oc.ui.words.res.homeStartOpenProject
+import io.github.eslamasabry.oc.ui.words.res.homeStartOpenProjectDetail
+import io.github.eslamasabry.oc.ui.words.res.homeStartConnectDetail
+import io.github.eslamasabry.oc.ui.words.res.homeStartDemo
+import io.github.eslamasabry.oc.ui.words.res.homeStartDemoDetail
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeConnectComputer
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.words.res.kitNeedsYouSpan
-import io.github.eslamasabry.oc.ui.words.res.kitTopBarMore
-import io.github.eslamasabry.oc.ui.words.res.inboxTitle
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -60,7 +72,6 @@ import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
-import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
 import io.github.eslamasabry.oc.ui.kit.motion.KitGrowPage
@@ -136,7 +147,6 @@ import io.github.eslamasabry.oc.ui.words.res.notifStatusNeedsYou
 import io.github.eslamasabry.oc.ui.words.res.p12ProjectsTitle
 import io.github.eslamasabry.oc.ui.words.res.p12SearchTitle
 import io.github.eslamasabry.oc.ui.words.res.returnBriefContinue
-import io.github.eslamasabry.oc.ui.words.res.serversTitle
 import io.github.eslamasabry.oc.ui.words.res.stateAttentionTitle
 import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
 import kotlinx.coroutines.flow.drop
@@ -155,43 +165,57 @@ public fun ChatsScreen(
     appStatus: KitStatus? = null,
     replyOffer: (@Composable () -> Unit)? = null,
 ) {
-    // B15 (QA wave 1): short words so "Conversations" is never cut, and the door says where it goes
-    // (Settings).
+    // Flutter's home bar (KitTopBar.shell): the server pill opens the switcher; Search and Settings sit on their own
+    // round faces. No overflow: Servers is the pill, Inbox is the needs-you line, the rest are rows at the list's end.
     val settingsLabel = stringResource(Res.string.librarySettingsTitle)
     val updateLabel = stringResource(Res.string.appUpdateUpdate)
-    val showFab = state.phase == ChatsPhase.List && state.home.opening == null
-    var menuOpen by remember { mutableStateOf(false) }
-    // Looks pass (concept A): a hub's large title with icon actions; New conversation is the floating button, so
-    // the bar keeps Search and Settings in fixed positions; Servers stays in More.
+    val listed = state.phase == ChatsPhase.List || state.phase == ChatsPhase.Empty
+    val showFab = listed && state.home.opening == null
     val barActions = buildList {
         add(KitLineAction(stringResource(Res.string.kitTopBarSearch), actions::openSearch, icon = KitIcons.search))
         if (state.settingsAvailable) add(KitLineAction(settingsLabel, actions::openSettings, icon = KitIcons.settingsGear))
         if (state.updateReady) add(KitLineAction(updateLabel, actions::openUpdate, icon = KitIcons.systemDownload))
     }
     val briefKeys = state.brief?.rows.orEmpty().mapTo(hashSetOf()) { it.key }
+    val needsLine =
+        if (state.needsYou == 0) null
+        else pluralStringResource(Res.plurals.kitNeedsYouSpan, state.needsYou, Numbers.format(state.needsYou)).trimEnd().removeSuffix("·").trimEnd()
     KitScreen(
         topBar = {
-            KitTopBar(
-                title = stringResource(Res.string.chatsHomeTitle), actions = barActions, large = true,
-                scope = if (state.needsYou == 0) null else ({
-                    val line = pluralStringResource(Res.plurals.kitNeedsYouSpan, state.needsYou, Numbers.format(state.needsYou)).trimEnd().removeSuffix("·").trimEnd()
-                    KitHeadingLine(line, actions::showInbox)
-                }),
-                more = { hidden ->
-                    val items = listOf(
-                        KitMenuItem(stringResource(Res.string.inboxTitle), { actions.showInbox() }, icon = KitIcons.inbox),
-                        KitMenuItem(stringResource(Res.string.serversTitle), { actions.openServers() }, icon = KitIcons.server),
-                        KitMenuItem(stringResource(Res.string.chatsHomeShowAll), { actions.showAll() }, icon = KitIcons.chat),
-                        KitMenuItem(stringResource(Res.string.p12ProjectsTitle), { actions.openProjects() }, icon = KitIcons.projects),
-                        KitMenuItem(stringResource(Res.string.stateAttentionTitle), { actions.openAttention() }, icon = KitIcons.activity),
-                    ) + hidden.map { KitMenuItem(it.label, it.onClick, icon = it.icon) }
-                    KitMenu(menuOpen, items.map { item -> item.copy(onSelect = { menuOpen = false; item.onSelect() }) }, { menuOpen = false }, title = stringResource(Res.string.kitTopBarMore)) {
-                        KitIconButton(KitIcons.more, stringResource(Res.string.kitTopBarMore), { menuOpen = true })
+            KitShellBar(
+                actions = barActions,
+                connection = state.connection?.let { connection ->
+                    { modifier ->
+                        KitConnectionPill(
+                            server = connection.server,
+                            status = stringResource(
+                                when (connection.state) {
+                                    HomeConnectionState.Connected -> Res.string.e7WorkspaceConnected
+                                    HomeConnectionState.Connecting -> Res.string.e7WorkspaceConnecting
+                                    HomeConnectionState.NotAnswering -> Res.string.phoneServerRowNotAnswering
+                                }
+                            ),
+                            tone = when (connection.state) {
+                                HomeConnectionState.Connected -> KitConnectionTone.Ok
+                                HomeConnectionState.Connecting -> KitConnectionTone.Working
+                                HomeConnectionState.NotAnswering -> KitConnectionTone.Problem
+                            },
+                            switchLabel = stringResource(Res.string.serverSwitcherOpen),
+                            onClick = actions::openServers,
+                            modifier = modifier,
+                        )
                     }
                 },
             )
         },
-        header = if (state.phase == ChatsPhase.List || state.phase == ChatsPhase.NoMatch) ({ Filters(state, actions) }) else null,
+        header = {
+            // The page names itself under the bar (Flutter KitPageHeading); "2 need you" opens the Inbox. Nothing to
+            // filter on a list that holds nothing yet, so the chips wait for the first conversation.
+            Column {
+                KitPageHeading(stringResource(Res.string.chatsHomeTitle), line = needsLine, onLine = actions::showInbox)
+                if (state.phase == ChatsPhase.List || state.phase == ChatsPhase.NoMatch) Filters(state, actions)
+            }
+        },
         status = appStatus,
         width = KitScreenWidth.Reading,
     ) {
@@ -236,16 +260,39 @@ public fun ChatsScreen(
                 ChatsPhase.Opening -> item(key = "opening") { KitSkeletonRows() }
                 ChatsPhase.Empty ->
                     item(key = "empty") {
-                        KitStateView(
-                            kind = KitStateKind.Calm,
-                            modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
+                        // First run: what the list will hold, then the obvious next steps as rows. New conversation is
+                        // the floating button, in the same place it will always be (no slab of a button up here).
+                        KitStartState(
                             title = stringResource(Res.string.chatsHomeEmptyTitle),
                             body = stringResource(Res.string.chatsHomeEmptyCalmBody),
-                            primary =
-                                KitAction(
-                                    stringResource(Res.string.chatsHomeNewChat),
-                                    actions::newConversation,
-                                ),
+                            icon = KitIcons.chat,
+                            ways = buildList {
+                                add(
+                                    KitStartWay(
+                                        stringResource(Res.string.homeStartOpenProject),
+                                        actions::openProjects,
+                                        KitIcons.folderOpen,
+                                        stringResource(Res.string.homeStartOpenProjectDetail),
+                                    )
+                                )
+                                if (!state.hasComputer)
+                                    add(
+                                        KitStartWay(
+                                            stringResource(Res.string.chatsHomeConnectComputer),
+                                            actions::connectComputer,
+                                            KitIcons.computer,
+                                            stringResource(Res.string.homeStartConnectDetail),
+                                        )
+                                    )
+                                add(
+                                    KitStartWay(
+                                        stringResource(Res.string.homeStartDemo),
+                                        actions::openDemo,
+                                        KitIcons.sparkle,
+                                        stringResource(Res.string.homeStartDemoDetail),
+                                    )
+                                )
+                            },
                         )
                     }
                 ChatsPhase.NoMatch ->
@@ -283,6 +330,8 @@ public fun ChatsScreen(
                             if (it != earlier.last()) io.github.eslamasabry.oc.ui.kit.foundation.KitDivider(Modifier.padding(horizontal = Space.S4.dp))
                         }
                     }
+                    // The other places the old ⋯ menu hid, as plain rows after the list (obvious options first).
+                    item(key = "more-places") { MorePlaces(actions) }
                 }
             }
 
@@ -291,7 +340,7 @@ public fun ChatsScreen(
         Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth(), horizontalAlignment = Alignment.End) {
             if (showFab) {
                 KitFab(
-                    label = stringResource(Res.string.chatsHomeNewShort),
+                    label = stringResource(Res.string.chatsHomeNewChat),
                     icon = KitIcons.add,
                     onClick = actions::newConversation,
                     modifier = Modifier.padding(Space.S4.dp),
@@ -308,6 +357,33 @@ public fun ChatsScreen(
         }
       }
         ChatsHomeSheets(state, actions)
+    }
+}
+
+/** All conversations, Projects and Activity: quiet rows under the list, one tap each. */
+@Composable
+private fun MorePlaces(actions: ChatsActions) {
+    Column(Modifier.padding(top = Space.S4.dp)) {
+        KitRowGroup(leadingTiles = true) {
+            KitRow(
+                title = stringResource(Res.string.chatsHomeShowAll),
+                leading = KitRowLeading.Glyph(KitIcons.chat, tile = true),
+                trailing = KitRowTrailing.Chevron,
+                onClick = actions::showAll,
+            )
+            KitRow(
+                title = stringResource(Res.string.p12ProjectsTitle),
+                leading = KitRowLeading.Glyph(KitIcons.projects, tile = true),
+                trailing = KitRowTrailing.Chevron,
+                onClick = actions::openProjects,
+            )
+            KitRow(
+                title = stringResource(Res.string.stateAttentionTitle),
+                leading = KitRowLeading.Glyph(KitIcons.activity, tile = true),
+                trailing = KitRowTrailing.Chevron,
+                onClick = actions::openAttention,
+            )
+        }
     }
 }
 

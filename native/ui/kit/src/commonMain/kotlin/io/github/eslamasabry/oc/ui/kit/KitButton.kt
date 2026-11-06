@@ -184,6 +184,7 @@ public fun KitButton(
     val pressed by interactions.collectIsPressedAsState()
     val reduced = KitMotion.state.reduced
     val press by animateFloatAsState(if (pressed && on && !reduced) 1f else 0f, specs.spatial(), label = "kit-button-press")
+    val flatFace = LocalKitStyle.current.style == Style.Solid
     val rest = if (hero) minHeight / 2 else (Shapes.of(KitShapeId.Button) as? Corner.Radius)?.dp ?: PRESS_ROUND_DP // NV: a stadium's radius is half its height
     Row(
         modifier =
@@ -196,9 +197,12 @@ public fun KitButton(
                         scaleX = scale
                         scaleY = scale
                         shape = if (hero) look?.shape ?: androidx.compose.foundation.shape.CircleShape else RoundedCornerShape((rest + (PRESS_ROUND_DP - rest) * press).dp)
-                        clip = role != KitButtonRole.Tertiary
+                        // Solid rounds the pressed face by clipping it; a style face keeps its shape and its shadow.
+                        clip = role != KitButtonRole.Tertiary && flatFace
                     }
                 }
+                // The face (fill, edge and the style's shadow) sits outside the press clip, so its shadow is whole.
+                .then(if (look != null) look.modifier else Modifier.background(easedFill))
                 .kitTappable(
                     onClick = { if (!working) onClick() },
                     enabled = on,
@@ -212,7 +216,6 @@ public fun KitButton(
                     if (working) disabled()
                     if (semanticsLabel != null) contentDescription = semanticsLabel
                 }
-                .then(if (look != null) look.modifier else Modifier.background(easedFill))
                 .then(if (hero) Modifier.testTag("kit-button-hero") else Modifier)
                 .then(
                     if (signalKey)

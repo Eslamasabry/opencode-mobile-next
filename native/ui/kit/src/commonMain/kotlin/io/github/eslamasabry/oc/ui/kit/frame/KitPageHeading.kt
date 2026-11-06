@@ -20,7 +20,8 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
 /**
  * A page's own large title and one quiet line under it (Dart `KitPageHeading`): the body of a shell tab names itself
- * here, since the shell's bar has no title. Reading text: it follows the person's size.
+ * here, since the shell's bar has no title. Reading text: it follows the person's size. With [onLine] the line is the
+ * heading's link (KitHeadingLine, the needs-you amber with its 48 dp target).
  *
  * States: default, with line
  * Text: reading
@@ -30,7 +31,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
  * Replaces: KitPageHeading (lib/ui/kit/kit_page_heading.dart)
  */
 @Composable
-public fun KitPageHeading(title: String, modifier: Modifier = Modifier, line: String? = null) {
+public fun KitPageHeading(title: String, modifier: Modifier = Modifier, line: String? = null, onLine: (() -> Unit)? = null) {
     val tokens = LocalKitTokens.current
     Column(
         modifier
@@ -41,6 +42,10 @@ public fun KitPageHeading(title: String, modifier: Modifier = Modifier, line: St
         verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
     ) {
         KitText(title, Modifier.semantics { heading() }, role = TypeRole.LargeTitle)
-        line?.let { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary) }
+        line?.let {
+            // A line that opens something ("2 need you" → Inbox) is the heading's visible link.
+            if (onLine != null) KitHeadingLine(it, onLine)
+            else KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary)
+        }
     }
 }

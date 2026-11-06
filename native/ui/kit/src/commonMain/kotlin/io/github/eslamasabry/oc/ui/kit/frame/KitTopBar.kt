@@ -220,68 +220,80 @@ public fun KitTopBar(
         }
         return
     }
-    Row(
+    // The title sits on the Back arrow's line (Flutter's chat header); the project · branch line or the subtitle
+    // starts under the title's first letter, one left edge for both.
+    val back = exit == KitTopBarExit.Back && onExit != null
+    val titleRow: @Composable () -> Unit = {
+        Row(
+            Modifier.padding(horizontal = Space.S2.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
+        ) {
+            KitText(
+                title,
+                Modifier.weight(1f, fill = false)
+                    .semantics { heading() }
+                    .testTag("kit-top-bar-title"),
+                role = TypeRole.Headline,
+                kind = KitTextKind.Frame,
+                maxLines = if (largeText) 2 else 1,
+                pageTitle = true,
+            )
+            if (onTitleTap != null) KitExitGlyph(ExitGlyph.Chevron, colors.text2)
+        }
+    }
+    Column(
         modifier
             .fillMaxWidth()
-            .heightIn(min = tokens.rowHeightOne.dp)
             .padding(horizontal = Space.S1.dp)
             .semantics { isTraversalGroup = true }
             .testTag("kit-top-bar"),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
     ) {
-        if (exit == KitTopBarExit.Back && onExit != null)
-            ExitButton(ExitGlyph.Back, exitLabel.orEmpty(), onExit, -1f)
-        val titleBlock: @Composable () -> Unit = {
-            Column(
-                Modifier.padding(horizontal = Space.S2.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
-                ) {
-                    KitText(
-                        title,
-                        Modifier.weight(1f, fill = false)
-                            .semantics { heading() }
-                            .testTag("kit-top-bar-title"),
-                        role = TypeRole.Headline,
-                        kind = KitTextKind.Frame,
-                        maxLines = if (largeText) 2 else 1,
-                        pageTitle = true,
-                    )
-                    if (onTitleTap != null) KitExitGlyph(ExitGlyph.Chevron, colors.text2)
+        val hasLine = scope != null || subtitle != null
+        Row(
+            Modifier.fillMaxWidth().heightIn(min = (if (hasLine) tokens.minTarget else tokens.rowHeightOne).dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
+        ) {
+            if (back) ExitButton(ExitGlyph.Back, exitLabel.orEmpty(), onExit!!, -1f)
+            Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                if (onTitleTap != null) {
+                    KitTappable(
+                        onClick = onTitleTap,
+                        onClickLabel = titleTapLabel,
+                        shape = KitShapeId.Button,
+                    ) {
+                        titleRow()
+                    }
+                } else {
+                    titleRow()
                 }
-                if (scope != null) scope()
-                else
-                    subtitle?.let {
+            }
+            actionRow()
+            if (exit == KitTopBarExit.Close && onExit != null)
+                ExitButton(ExitGlyph.Close, exitLabel.orEmpty(), onExit, 1f)
+        }
+        val under: (@Composable () -> Unit)? =
+            scope
+                ?: subtitle?.let {
+                    {
                         KitText(
                             it,
+                            Modifier.padding(horizontal = Space.S2.dp),
                             role = TypeRole.Secondary,
                             tone = TextTone.Secondary,
                             kind = KitTextKind.Frame,
                             maxLines = 1,
                         )
                     }
-            }
-        }
-        Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-            if (onTitleTap != null) {
-                KitTappable(
-                    onClick = onTitleTap,
-                    onClickLabel = titleTapLabel,
-                    shape = KitShapeId.Button,
-                ) {
-                    titleBlock()
                 }
-            } else {
-                titleBlock()
-            }
+        if (under != null) {
+            // Past the Back arrow and its gap; the scope's own words keep their 8 dp inset like the title's.
+            val lead = (if (back) tokens.minTarget + Space.S1 else 0).dp + if (scope != null) Space.S1.dp else 0.dp
+            // The line's words keep their 48 dp targets, but the targets overlap the bar's empty edges by 8 dp so the
+            // line reads as the title's second line (Flutter: "my-app · master" right under the title).
+            Box(Modifier.fillMaxWidth().padding(start = lead).tuckedTarget(Space.S2.dp)) { under() }
         }
-        actionRow()
-        if (exit == KitTopBarExit.Close && onExit != null)
-            ExitButton(ExitGlyph.Close, exitLabel.orEmpty(), onExit, 1f)
     }
 }
 
@@ -306,3 +318,11 @@ private const val ACTIONS_SHARE = 0.35f
 
 /** A large bar's actions sit beside a title that may wrap, so they may take a little more. */
 private const val LARGE_ACTIONS_SHARE = 0.45f
+
+/** Reports [by] less height above and below than the content takes, so a 48 dp target can overlap empty edges. */
+private fun Modifier.tuckedTarget(by: androidx.compose.ui.unit.Dp): Modifier =
+    layout { measurable, constraints ->
+        val inset = by.roundToPx()
+        val placeable = measurable.measure(constraints)
+        layout(placeable.width, (placeable.height - 2 * inset).coerceAtLeast(0)) { placeable.place(0, -inset) }
+    }

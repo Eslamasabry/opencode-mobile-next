@@ -58,8 +58,11 @@ public fun KitRowGroup(
     // Solid and Signal run lists flat on the page; Soft and Brutal set a group on a panel with 18 dp corners.
     val panel = !LocalKitStyle.current.spec.tokens.flatLists
     val look = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Content, KitShapeId.Panel, SurfaceLevel.Surface1, ownFill = colors.surface1))
+    // A sheet's body already sits on the sheet's rail: the panel lines up with the sheet's title instead of stepping in
+    // a second gutter (the owner's project sheet, 2026-11-06).
+    val onRail = LocalKitOnRail.current
     val panelModifier =
-        if (panel) Modifier.padding(horizontal = tokens.gutter.dp).then(look.modifier).clip(KitShapeId.Panel.shape()) else Modifier
+        if (panel) Modifier.padding(horizontal = if (onRail) 0.dp else tokens.gutter.dp).then(look.modifier).clip(KitShapeId.Panel.shape()) else Modifier
     Column(modifier.kitMaxWidth(CapRole.List).fillMaxWidth().testTag("kit-row-group")) {
         label?.let { KitSectionLabel(it) }
         Column(panelModifier) {
@@ -69,6 +72,10 @@ public fun KitRowGroup(
         note?.let { KitGroupNote(it) }
     }
 }
+
+/** True inside a surface whose content already sits on a rail (a KitSheet's body): panels add no gutter of their own. */
+public val LocalKitOnRail: androidx.compose.runtime.ProvidableCompositionLocal<Boolean> =
+    androidx.compose.runtime.staticCompositionLocalOf { false }
 
 /** Where the separators go, written by the measure pass and read by the draw pass of the same node. */
 private class Seams {

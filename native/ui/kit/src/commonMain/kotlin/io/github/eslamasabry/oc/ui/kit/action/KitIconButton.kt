@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.action
 
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.dropShadow
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -61,7 +63,9 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
  * An icon-only button (Dart `KitIconButton`; plan 06 §7.5). [label] is required and is what a screen reader says (and
  * the tooltip on a fine pointer, once `KitTip` lands with S2-KITB); 48 dp target. A toggled glyph ([icon] changes)
  * cross-fades on QUICK and settles in one frame under Off (B-KIT-019). [stateLabel] is the spoken state of a toggle
- * ("On"). [tone] Accent marks the one active icon in a bar.
+ * ("On"). [tone] Accent marks the one active icon in a bar. [round] sets it on a resting circle of its own (Dart
+ * `KitIconButton.round`): `surface2` with a hairline edge in Solid, the style's raised face otherwise; the face sits
+ * outside the press clip, so a style's shadow is whole. The bar's Search and Settings use it beside the server pill.
  *
  * States: default, pressed, disabled, working
  * Text: none (label is semantics only)
@@ -84,6 +88,7 @@ public fun KitIconButton(
     destructive: Boolean = false,
     selected: Boolean? = null,
     size: Int = 24, // F: lib/ui/kit/kit_icon_button.dart:47
+    round: Boolean = false,
 ) {
     kitAssert(label.isNotBlank()) { "KitIconButton: an icon button needs a label (B-KIT-019)" }
     val colors = LocalKitColors.current
@@ -113,6 +118,7 @@ public fun KitIconButton(
     if (hovered || held) KitTooltip(anchor, label, reason, if (reason == null && fine) shortcut else null)
     Box(
         Modifier
+            .then(if (round) kitRoundFace(on) else Modifier)
             .kitTappable(
                 interactionSource = interactions,
                 onLongClick = { held = true },
@@ -210,4 +216,40 @@ private fun KitTooltip(anchor: IntRect, label: String, reason: String?, shortcut
             .padding(horizontal = 16.dp, vertical = 4.dp), // NV: Flutter Tooltip's mobile padding
         contentAlignment = Alignment.Center,
     ) { BasicText(text) }
+}
+
+/**
+ * The resting circle of a round icon button (Dart `kit_icon_button.dart` `_circle(roles.surface2, border: hairline,
+ * shadows: floatingShadows)`): Solid draws `surface2`, a hairline and, in light, the floating shadow; other styles
+ * draw their raised control face.
+ */
+@Composable
+private fun kitRoundFace(enabled: Boolean): Modifier {
+    val colors = LocalKitColors.current
+    val solid = io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle.current.style == io.github.eslamasabry.oc.ui.design.style.Style.Solid
+    val look =
+        io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook(
+            io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput(
+                role = io.github.eslamasabry.oc.ui.design.style.SurfaceRole.Control,
+                shape = KitShapeId.Circle,
+                level = io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel.Surface2,
+                ownFill = colors.surface2,
+                disabled = !enabled,
+            ),
+        )
+    val circle = androidx.compose.foundation.shape.CircleShape
+    if (!solid) return look.modifier
+    val lift =
+        if (colors.dark) Modifier
+        else
+            Modifier.dropShadow(
+                circle,
+                androidx.compose.ui.graphics.shadow.Shadow(
+                    radius = 12.dp, // F: lib/ui/kit/kit_tokens.dart:298-303 floatingShadows
+                    color = colors.elevationShadow.copy(alpha = .10f),
+                    spread = (-4).dp,
+                    offset = androidx.compose.ui.unit.DpOffset(0.dp, 4.dp),
+                ),
+            )
+    return lift.then(look.modifier).border(io.github.eslamasabry.oc.ui.kit.foundation.kitHairline(), colors.hairline, circle)
 }

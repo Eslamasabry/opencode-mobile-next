@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.ui.kitchat.composer
 
+import androidx.compose.foundation.layout.widthIn
+import io.github.eslamasabry.oc.ui.kit.foundation.kitShadowRoom
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -99,6 +101,7 @@ public fun KitComposerBox(
     val radius = (if (wide) tokens.composerRadiusWide else tokens.composerRadius).dp
     val corner =
         StyleResolver.corner(radius.value, style.knobs.corners, style.spec.tokens.sharpRadius).dp
+    val shadowRoom = io.github.eslamasabry.oc.ui.kit.foundation.kitShadowReach()
     KitComposerGlow(
         active = running,
         modifier = modifier.kitMaxWidth(CapRole.Conversation).fillMaxWidth(),
@@ -140,7 +143,11 @@ public fun KitComposerBox(
                     if (largeText) Spacer(Modifier.weight(1f))
                     else
                         Row(
-                            Modifier.weight(1f).horizontalScroll(rememberScrollState()),
+                            // The line scrolls sideways; the chips' style shadows keep their room above and below.
+                            Modifier.weight(1f)
+                                .kitShadowRoom(shadowRoom)
+                                .horizontalScroll(rememberScrollState())
+                                .padding(vertical = shadowRoom),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
                         ) {
@@ -189,7 +196,8 @@ public fun KitComposerChip(
             icon?.let { KitIcon(it, size = KitIconSize.Small, tone = TextTone.Secondary) }
             KitText(
                 label,
-                Modifier.weight(1f, fill = false),
+                // No weight: inside the sideways chip line a weight measures to zero and left only the chevron.
+                Modifier.widthIn(max = COMPOSER_CHIP_WORDS_MAX.dp),
                 role = TypeRole.Label,
                 kind = KitTextKind.Frame,
                 maxLines = if (LocalDensity.current.fontScale >= 1.5f) Int.MAX_VALUE else 1,
@@ -383,3 +391,6 @@ private const val DISC = 40
 
 /** The Stop ring's outer size: the disc plus the ring, inside the 48 dp target. */
 private const val RING = 44
+
+/** The longest a composer chip's words grow before they end in "…" (the model's name stays readable). */
+private const val COMPOSER_CHIP_WORDS_MAX = 220

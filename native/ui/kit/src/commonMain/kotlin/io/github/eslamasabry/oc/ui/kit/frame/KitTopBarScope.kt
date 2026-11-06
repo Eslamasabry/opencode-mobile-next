@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.ui.kit.frame
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,8 +30,9 @@ public fun KitTopBarScope(
     branch: String? = null,
     onBranch: (() -> Unit)? = null,
 ) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-        BoxWithConstraints(Modifier.weight(1f)) {
+    // "project · branch" read as one line (Flutter's chat header); each word keeps its own target.
+    Row(Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+        BoxWithConstraints(Modifier.weight(1f, fill = false)) {
             val style = LocalKitTypography.current.style(TypeRole.Secondary)
             val measurer = rememberTextMeasurer()
             val density = LocalDensity.current
@@ -41,7 +41,10 @@ public fun KitTopBarScope(
             val words = if (needed <= maxWidth) whole else project
             ScopeWord(words, projectLabel, onProject)
         }
-        if (branch != null) ScopeWord(branch, branch, onBranch)
+        if (branch != null) {
+            KitText("·", role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Frame, maxLines = 1)
+            ScopeWord(branch, branch, onBranch)
+        }
     }
 }
 

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="homeStartOpenProject">Open a project</string>
+    <string name="homeStartOpenProjectDetail">Start a new one or pick a folder</string>
+    <string name="homeStartConnectDetail">Run the agent on your own computer</string>
+    <string name="homeStartDemo">See what an agent can do</string>
+    <string name="homeStartDemoDetail">A short example, nothing to set up</string>
+    <string name="homeProjectSheetNew">New project</string>
+    <string name="homeProjectSheetNewDetail">Makes a folder in your projects, with Git</string>
+    <string name="homeProjectSheetByPath">Choose a folder by path</string>
+</resources>

@@ -13,6 +13,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.dropShadow
+import androidx.compose.ui.graphics.shadow.Shadow as ComposeShadow
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
@@ -161,6 +166,7 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
     // The plain look as a decoration, so Solid can fade to and from the other styles.
     val plain = SurfaceDecoration(radii = radii, circle = input.shape == KitShapeId.Circle, fill = input.ownFill?.toArgb())
     val shown = rememberSurfaceFade(decoration, plain, style.style)
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     if (shown == null) {
         if (decoration == null) {
             val own = input.ownFill
@@ -168,13 +174,13 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
             return KitSurfaceLook(modifier, words, shape, own != null && own.alpha > 0f)
         }
         val sink = if (decoration.faceShiftDp > 0f) Modifier.graphicsLayer { translationY = decoration.faceShiftDp * density } else Modifier
-        val face = if (glass) frost.kitGlassFace(decoration) else Modifier.kitDecorated(decoration)
+        val face = if (glass) frost.kitGlassFace(decoration) else Modifier.kitDecorated(decoration, rtl)
         return KitSurfaceLook(face.then(sink), words, shape, decoration.paints())
     }
     // Mid-fade: the in-between look, painted the Glass way when either end is Glass.
     val (mid, glassy) = shown
     val sink = if (mid.faceShiftDp > 0f) Modifier.graphicsLayer { translationY = mid.faceShiftDp * density } else Modifier
-    val face = if (glassy) frost.kitGlassFace(mid) else Modifier.kitDecorated(mid)
+    val face = if (glassy) frost.kitGlassFace(mid) else Modifier.kitDecorated(mid, rtl)
     return KitSurfaceLook(face.then(sink), words, shape, mid.paints() || (decoration ?: plain).paints())
 }
 
@@ -255,23 +261,45 @@ private fun SurfaceFadeState.current(plain: SurfaceDecoration): SurfaceDecoratio
 internal fun SurfaceDecoration.shape(): Shape =
     if (circle) CircleShape else RoundedCornerShape(radii.topStart.dp, radii.topEnd.dp, radii.bottomEnd.dp, radii.bottomStart.dp)
 
-/** Paints a style decoration: shadows behind, then the fill, then the edge. Blur is drawn as stacked soft layers. */
-public fun Modifier.kitDecorated(d: SurfaceDecoration): Modifier =
-    drawBehind {
-        val shape = d.shape()
-        val outline = shape.createOutline(size, layoutDirection, this)
-        val rtl = if (layoutDirection == LayoutDirection.Rtl) -1f else 1f
-        d.shadows.forEach { s -> drawSurfaceShadow(s, shape, rtl) }
+/**
+ * Paints a style decoration: shadows behind, then the fill, then the edge. A shadow with blur is a real Gaussian
+ * shadow ([dropShadow], the same blur Flutter's `BoxShadow` draws), so it fades out smoothly and never ends in hard
+ * bands; a shadow without blur (Brutal's offset block, Signal's rule, a focus ring) stays a crisp shape. [rtl] mirrors
+ * the shadows' sideways offsets (the hard shadows read the layout direction themselves).
+ */
+public fun Modifier.kitDecorated(d: SurfaceDecoration, rtl: Boolean = false): Modifier {
+    val shape = d.shape()
+    val sign = if (rtl) -1f else 1f
+    val all = buildList {
+        addAll(d.shadows)
         d.paired?.let { p ->
             if (p.inset <= 0f && (p.distanceDp > 0f || p.blurDp > 0f)) {
-                drawSurfaceShadow(Shadow(-p.distanceDp, -p.distanceDp, p.blurDp, p.light), shape, rtl)
-                drawSurfaceShadow(Shadow(p.distanceDp, p.distanceDp, p.blurDp, p.dark), shape, rtl)
+                add(Shadow(-p.distanceDp, -p.distanceDp, p.blurDp, p.light))
+                add(Shadow(p.distanceDp, p.distanceDp, p.blurDp, p.dark))
             }
         }
-        d.hardShadow?.let { hard ->
+    }.filter { it.color.v ushr 24 != 0 }
+    val (soft, hard) = all.partition { it.blurDp > 0f }
+    var m = this
+    soft.forEach { s ->
+        m = m.dropShadow(
+            shape,
+            ComposeShadow(
+                radius = s.blurDp.dp,
+                color = s.color.toColor(),
+                spread = s.spreadDp.dp,
+                offset = DpOffset((s.dxDp * sign).dp, s.dyDp.dp),
+            ),
+        )
+    }
+    return m.drawBehind {
+        val outline = shape.createOutline(size, layoutDirection, this)
+        val ltr = if (layoutDirection == LayoutDirection.Rtl) -1f else 1f
+        hard.forEach { s -> drawShadow(s, shape, ltr) }
+        d.hardShadow?.let { block ->
             if (d.hardOffsetDp > 0f) {
                 val o = d.hardOffsetDp.dp.toPx()
-                translate(o * rtl, o) { drawOutline(shape.createOutline(size, layoutDirection, this), hard.toColor()) }
+                translate(o * ltr, o) { drawOutline(shape.createOutline(size, layoutDirection, this), block.toColor()) }
             }
         }
         d.fill?.let { drawOutline(outline, it.toColor()) }
@@ -292,6 +320,7 @@ public fun Modifier.kitDecorated(d: SurfaceDecoration): Modifier =
             }
         }
     }
+}
 
 internal fun DrawScope.drawSurfaceShadow(s: Shadow, shape: Shape, rtl: Float) {
     val blur = s.blurDp.dp.toPx()
@@ -309,6 +338,54 @@ internal fun DrawScope.drawSurfaceShadow(s: Shadow, shape: Shape, rtl: Float) {
         }
     }
 }
+
+/** A shadow without blur: the shape grown by its spread, moved by its offset. */
+private fun DrawScope.drawShadow(s: Shadow, shape: Shape, rtl: Float) {
+    translate(s.dxDp.dp.toPx() * rtl, s.dyDp.dp.toPx()) {
+        drawGrown(shape, s.spreadDp.dp.toPx(), s.color.toColor())
+    }
+}
+
+/**
+ * How far the style in force paints past a [role] surface's edge, in dp (offset + blur + spread of its farthest
+ * shadow; 0 for Solid). A container that clips (a sideways scroller, a faded edge) keeps this much room so the
+ * shadows of the parts inside it are never cut into a hard rectangle.
+ */
+@Composable
+public fun kitShadowReach(role: SurfaceRole = SurfaceRole.Control): Dp {
+    val style = LocalKitStyle.current
+    val roles = LocalKitRoles.current
+    val reach = remember(style, roles, role) {
+        val decoration =
+            style.spec.resolve(SurfaceRequest(roles = roles, role = role, knobs = style.knobs, radii = Radii.all(8f)))
+        if (decoration == null) {
+            0f
+        } else {
+            val shadows = decoration.shadows.map { maxOf(kotlin.math.abs(it.dxDp), kotlin.math.abs(it.dyDp)) + it.blurDp + it.spreadDp }
+            val paired = decoration.paired?.takeIf { it.inset <= 0f }?.let { it.distanceDp + it.blurDp } ?: 0f
+            maxOf(shadows.maxOrNull() ?: 0f, paired, decoration.hardOffsetDp)
+        }
+    }
+    return Dp(kotlin.math.ceil(reach))
+}
+
+/**
+ * Grows a clipping container by [room] above and below without changing the space it takes: the content is laid out
+ * [room] taller and placed [room] higher, so a clip applied after this modifier reaches past the reported bounds. Pad
+ * the content by the same [room] vertically. Used with [kitShadowReach] so style shadows inside scrollers never clip.
+ */
+public fun Modifier.kitShadowRoom(room: Dp): Modifier =
+    if (room <= Dp(0f)) this
+    else layout { measurable, constraints ->
+        val r = room.roundToPx()
+        val grown =
+            constraints.copy(
+                minHeight = constraints.minHeight + 2 * r,
+                maxHeight = if (constraints.hasBoundedHeight) constraints.maxHeight + 2 * r else constraints.maxHeight,
+            )
+        val placeable = measurable.measure(grown)
+        layout(placeable.width, (placeable.height - 2 * r).coerceAtLeast(0)) { placeable.place(0, -r) }
+    }
 
 private fun DrawScope.drawGrown(shape: Shape, grow: Float, color: Color) {
     val w = size.width + 2 * grow

@@ -46,6 +46,9 @@ import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
+import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips
+import io.github.eslamasabry.oc.ui.kit.modal.KitInputOperationDialog
+import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
@@ -289,12 +292,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
 /** Compact upgrade choices stay beside Start while the keyboard is open. */
 @Composable
 private fun NewConversationChoices(state: NewConversationUi, actions: NewConversationActions) {
-    Row(
-        Modifier.fillMaxWidth()
-            .padding(horizontal = LocalKitTokens.current.gutter.dp)
-            .horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
-    ) {
+    KitFilterChips {
         // Three chips only: who works (with Plan when chosen), the model, the
         // project. Build/Plan lives inside the agent sheet.
         KitChip(
@@ -360,15 +358,42 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
         Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
             // The picker starts from the selected project on each visit, after setup has loaded.
             val directory = rememberTextFieldState(state.directory.orEmpty())
-            KitRowGroup {
+            var byPath by remember { mutableStateOf(false) }
+            val working = stringResource(Res.string.serversWorking)
+            // Recent projects first, one tap each; then New project as an obvious row; the typed path stays folded.
+            KitRowGroup(leadingTiles = true) {
                 state.setup?.projects.orEmpty().forEach { project ->
+                    val chosen = project.directory == state.directory
                     KitRow(
                         title = project.name,
                         supporting = project.directory,
-                        selected = project.directory == state.directory,
+                        leading = KitRowLeading.Glyph(KitIcons.folderOpen, tile = true, current = chosen),
+                        trailing = if (chosen) KitRowTrailing.Check else KitRowTrailing.None,
+                        selected = chosen,
                         onClick = { actions.chooseDirectory(project.directory) },
                     )
                 }
+                if (state.canCreateProject)
+                    KitRow(
+                        title = stringResource(Res.string.homeProjectSheetNew),
+                        supporting =
+                            if (state.creatingProject) working
+                            else stringResource(Res.string.homeProjectSheetNewDetail),
+                        leading = KitRowLeading.Glyph(KitIcons.folderAdd, tile = true),
+                        trailing = KitRowTrailing.Chevron,
+                        titleAccent = true,
+                        enabled = !state.creatingProject,
+                        disabledReason = working,
+                        onClick = actions::askNewProject,
+                    )
+            }
+            state.projectFailure?.let { problem ->
+                KitErrorNotice(
+                    message = stringResource(Res.string.projectFolderCreateFailedTitle),
+                    failure = problem,
+                    detailsLabel = stringResource(Res.string.kitDetails),
+                    copyLabel = stringResource(Res.string.kitCopyDetails),
+                )
             }
             if (state.canCopy)
                 KitSwitchRow(
@@ -383,18 +408,27 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
                     leading = KitRowLeading.Glyph(KitIcons.download),
                     onClick = { actions.sheet(NewConversationSheet.Import) },
                 )
-            KitField(
-                directory,
-                stringResource(Res.string.p12NewFolder),
-                kind = KitFieldKind.Path,
-            )
-            KitButton(
-                stringResource(Res.string.p12NewUseFolder),
-                { actions.chooseDirectory(directory.text.toString()) },
-                modifier = Modifier.fillMaxWidth(),
-            )
+            KitExpandRow(
+                title = stringResource(Res.string.homeProjectSheetByPath),
+                expanded = byPath,
+                onExpandedChange = { byPath = it },
+                leading = KitIcons.folders,
+            ) {
+                KitField(
+                    directory,
+                    stringResource(Res.string.p12NewFolder),
+                    kind = KitFieldKind.Path,
+                )
+                KitButton(
+                    stringResource(Res.string.p12NewUseFolder),
+                    { actions.chooseDirectory(directory.text.toString()) },
+                    role = KitButtonRole.Secondary,
+                    fullWidth = true,
+                )
+            }
         }
     }
+    NewProjectDialog(state, actions)
     AgentModelSheet(state, actions)
 }
 
@@ -540,13 +574,8 @@ private fun NewConversationModelStep(state: NewConversationUi, actions: NewConve
 @Composable
 private fun NewConversationStarters(state: NewConversationUi, actions: NewConversationActions) {
     val ways = stringResource(Res.string.chatStartSuggestionsLabel)
-    Row(
-        Modifier.fillMaxWidth()
-            .padding(horizontal = LocalKitTokens.current.gutter.dp)
-            .horizontalScroll(rememberScrollState())
-            .semantics { contentDescription = ways }
-            .testTag("chats-new-starters"),
-        horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+    KitFilterChips(
+        Modifier.semantics { contentDescription = ways }.testTag("chats-new-starters"),
     ) {
         newConversationStarters(state.directory).forEach { starter ->
             val label = starterLabel(starter)
@@ -749,4 +778,34 @@ internal fun ClaudeImportBody(state: NewConversationUi, actions: NewConversation
                 found.alreadyImported,
             )
         )
+}
+
+/** New project's name (the same dialog and rules as Projects › New project): a Git folder under the projects root. */
+@Composable
+private fun NewProjectDialog(state: NewConversationUi, actions: NewConversationActions) {
+    if (!state.askingProjectName) return
+    val empty = stringResource(Res.string.stateFolderNameEmpty)
+    val segment = stringResource(Res.string.stateFolderNameSegment)
+    val characters = stringResource(Res.string.stateFolderNameCharacters)
+    KitInputOperationDialog(
+        visible = true,
+        title = stringResource(Res.string.projectFolderCreate),
+        fieldLabel = stringResource(Res.string.projectFolderNameLabel),
+        confirmLabel = stringResource(Res.string.projectFolderCreateAction),
+        cancelLabel = stringResource(Res.string.projectFolderCancel),
+        initial = "",
+        hint = stringResource(Res.string.projectFolderNameHint),
+        helper = stringResource(Res.string.projectFolderCreateHelper, "/root/projects"),
+        working = state.creatingProject,
+        validate = { name ->
+            when (io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderName.problem(name)) {
+                io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderNameProblem.Empty -> empty
+                io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderNameProblem.NotSingleSegment -> segment
+                io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderNameProblem.InvalidCharacters -> characters
+                null -> null
+            }
+        },
+        onSubmit = { name -> actions.createProject(name) },
+        onDismissRequest = { actions.createProject(null) },
+    )
 }

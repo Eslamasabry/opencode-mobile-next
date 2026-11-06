@@ -441,7 +441,7 @@ private fun StyleSample(style: Style) {
                             else if (glass)
                                 // A light frost of its own, sigma 3 (kit_option_card.dart:669).
                                 Modifier.kitSurfaceGlass(card.copy(frost = 3f)).kitGlassFace(card)
-                            else Modifier.kitDecorated(card)
+                            else Modifier.kitDecorated(card, androidx.compose.ui.platform.LocalLayoutDirection.current == androidx.compose.ui.unit.LayoutDirection.Rtl)
                         )
                         .padding(Space.S2.dp),
                     verticalArrangement = Arrangement.SpaceBetween,

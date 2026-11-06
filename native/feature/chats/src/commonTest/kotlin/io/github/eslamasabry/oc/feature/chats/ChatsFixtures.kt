@@ -104,6 +104,18 @@ internal class RecordingChatsActions : ChatsActions {
     override fun openProjects() {
         calls += "projects"
     }
+
+    override fun openServers() {
+        calls += "servers"
+    }
+
+    override fun connectComputer() {
+        calls += "computer"
+    }
+
+    override fun openDemo() {
+        calls += "demo"
+    }
 }
 
 /** Plan 06 §6's fake platform (kit's own copy is test-internal there). */

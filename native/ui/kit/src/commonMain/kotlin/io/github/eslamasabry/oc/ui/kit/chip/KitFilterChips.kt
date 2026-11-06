@@ -23,6 +23,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
+import io.github.eslamasabry.oc.ui.kit.foundation.kitShadowReach
+import io.github.eslamasabry.oc.ui.kit.foundation.kitShadowRoom
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.frame.kitScrollFade
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -50,8 +52,11 @@ public fun KitFilterChips(modifier: Modifier = Modifier, chips: @Composable RowS
     val tokens = LocalKitTokens.current
     val scroll = rememberScrollState()
     val colors = io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors.current
+    // The line clips sideways for its scroll and fade; the chips' style shadows keep their room above and below.
+    val room = kitShadowReach()
     Box(
         modifier.kitMaxWidth(CapRole.Reading)
+            .kitShadowRoom(room)
             .clipToBounds()
             .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
             .drawWithContent {
@@ -69,7 +74,7 @@ public fun KitFilterChips(modifier: Modifier = Modifier, chips: @Composable RowS
             .testTag("kit-filter-chips"),
     ) {
         Row(
-            Modifier.horizontalScroll(scroll).padding(horizontal = tokens.gutter.dp),
+            Modifier.horizontalScroll(scroll).padding(horizontal = tokens.gutter.dp, vertical = room),
             horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
             verticalAlignment = Alignment.CenterVertically,
             content = chips,
