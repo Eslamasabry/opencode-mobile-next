@@ -608,7 +608,7 @@ class AgentProcesses(
     companion object {
         /** The sign-in programs a terminal may run (`BuiltinLinux.SIGN_IN_PROGRAMS`, issue #95). */
         val SIGN_IN_PROGRAMS =
-            setOf("claude", "codex", "gemini", "qwen", "goose", "omp", "fx", "kilo", "cline")
+            setOf("claude", "codex", "gemini", "agy", "qwen", "goose", "omp", "fx", "kilo", "cline")
 
         private val log = AppLog.tagged("AgentHost")
 

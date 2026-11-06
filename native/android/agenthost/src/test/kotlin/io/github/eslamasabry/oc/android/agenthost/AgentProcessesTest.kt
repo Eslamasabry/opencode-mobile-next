@@ -35,7 +35,7 @@ class AgentProcessesTest {
 
     @Test fun `B-LINUX-125 every phone agent can open its sign-in terminal`() {
         // The catalog's phone agents (PaseoNative and AcpPaseo with a recipe) and their executables (issue #95).
-        val phoneAgents = setOf("claude", "codex", "gemini", "qwen", "kilo", "cline", "goose", "omp", "fx")
+        val phoneAgents = setOf("claude", "codex", "gemini", "agy", "qwen", "kilo", "cline", "goose", "omp", "fx")
         assertTrue(AgentProcesses.SIGN_IN_PROGRAMS.containsAll(phoneAgents))
         for (program in phoneAgents) {
             val (argv, url) = processes.agentSignInCommand("qa", listOf(program, "auth", "login"))
