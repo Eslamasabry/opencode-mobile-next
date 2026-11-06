@@ -249,12 +249,14 @@ class LinuxPagesModelsTest {
     fun `B-LINUX-085 only a previewable port opens and a failed open is said`() = runTest {
         val opened = mutableListOf<String>()
         var opens = true
-        val host = FakeLinuxHost(answer = { out("::open 4097\n::open 5173\n") })
+        // The app's own server port (4098 by default since abf07acb1; it can move), never a hard-coded 4097.
+        val own = io.github.eslamasabry.oc.feature.linux.manager.LinuxPort.OWN_SERVER_PORT
+        val host = FakeLinuxHost(answer = { out("::open $own\n::open 5173\n") })
         val model = LinuxPortsModel(LinuxManager(host, VirtualRetryWait), { url -> opened += url; opens }, Nav(), backgroundScope)
         model.shown(true)
         settle()
-        assertEquals(listOf(4097, 5173), model.state.value.ports.map { it.port })
-        model.preview(4097)
+        assertEquals(listOf(own, 5173), model.state.value.ports.map { it.port })
+        model.preview(own)
         assertEquals(emptyList(), opened, "the OpenCode server is not a web page")
         model.preview(5173)
         assertEquals(listOf("http://127.0.0.1:5173/"), opened)
@@ -275,14 +277,15 @@ class LinuxPagesModelsTest {
 
     @Test
     fun `B-LINUX-089 storage measures each cleanup and a confirmed cleanup says what it freed`() = runTest {
-        var cleaned = false
+        // The scan's receipt says what the cleanup may remove (2048 KB); the cleanup reports what it freed.
         val host =
             FakeLinuxHost(
                 answer = { script ->
                     when {
-                        script.contains("apt-get clean") -> { cleaned = true; out("") }
-                        script.contains("/var/cache/apt") && script.contains("oc_du /var/cache/apt\n") ->
-                            out(if (cleaned) "::du 0 /var/cache/apt\n" else "::du 2048 /var/cache/apt\n")
+                        "printf '::cleanup " in script && "/var/cache/apt" in script ->
+                            out("::cleanup storage-cleanup.Abc123XYZ0 2048\n")
+                        "printf '::cleanup " in script -> out("::cleanup storage-cleanup.Zyx987WVU0 0\n")
+                        "printf '::freed " in script -> out("::freed 2048\n")
                         else -> out("::du 10 /usr\n")
                     }
                 },

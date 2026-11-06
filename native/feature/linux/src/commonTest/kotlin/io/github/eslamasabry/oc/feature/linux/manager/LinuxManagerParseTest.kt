@@ -30,12 +30,14 @@ class LinuxManagerParseTest {
 
     @Test
     fun `B-LINUX-085 matches an owner from the commands and the server by its port`() {
+        // The app's own server port (4098 by default since abf07acb1; it can move), never a hard-coded 4097.
+        val own = LinuxPort.OWN_SERVER_PORT
         val ports =
             LinuxPortScan.parse(
                 "::n 51 5173\n::c 51 node /root/projects/app/node_modules/.bin/vite --port 5173\n" +
-                    "::open 5173\n::open 4097\n::open 3000",
+                    "::open 5173\n::open $own\n::open 3000",
             )
-        assertEquals(listOf(3000, 4097, 5173), ports.map { it.port })
+        assertEquals(listOf(3000, own, 5173), ports.map { it.port })
         assertNull(ports[0].owner)
         assertNull(ports[0].kind)
         assertTrue(ports[0].canPreview)

@@ -6,6 +6,8 @@ import androidx.compose.foundation.Indication
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RenderEffect
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -229,9 +231,15 @@ class LinuxScreensTest {
                         ),
                 )
             setContent { Themed { LinuxPackagesScreen(ui, calls) } }
-            onNodeWithText("Remove bash").assertDoesNotExist()
+            // Remove lives in a package's details sheet (Flutter linux_packages_page.dart), opened from its row.
+            onNode(hasText("htop") and hasClickAction()).performClick()
+            waitForIdle()
             onNodeWithText("Remove htop").performClick()
+            waitForIdle()
             onNodeWithText("Update system").performClick()
+            onNode(hasText("bash") and hasClickAction()).performClick()
+            waitForIdle()
+            onNodeWithText("Remove bash").assertDoesNotExist()
             assertEquals(listOf("askRemove htop", "askUpdate"), calls.seen)
         }
 }

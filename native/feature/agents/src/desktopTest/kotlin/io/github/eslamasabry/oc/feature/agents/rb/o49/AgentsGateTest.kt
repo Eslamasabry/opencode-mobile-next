@@ -79,6 +79,12 @@ class AgentsGateTest {
         override fun installPhone(id: String) {
             installed = id
         }
+
+        var requested: String? = null
+
+        override fun requestInstall(id: String) {
+            requested = id
+        }
     }
 
     private val fixtureNow = Instant.parse("2026-09-05T12:00:00Z")
@@ -169,7 +175,8 @@ class AgentsGateTest {
                     )
                 }
             }
-            onNodeWithContentDescription("Refresh account").assertIsNotEnabled()
+            // An icon on compact and medium windows, words on wider ones (KitTopBar).
+            onNode(hasContentDescription("Refresh account") or hasText("Refresh account")).assertIsNotEnabled()
             onNodeWithText("Sign in with ChatGPT").assertDoesNotExist()
             assertEquals(null, actions.opened)
             assertEquals(0, actions.refreshed)
@@ -559,7 +566,10 @@ class AgentsGateTest {
                 )
             }
         }
-        onNodeWithContentDescription("Install or update Gemini CLI").performClick()
-        assertEquals("gemini", actions.installed)
+        // The button opens the install sheet for that agent first (its size and phone setup, as Flutter's
+        // "Set up {agent}" sheet); the sheet's own button installs it.
+        onNodeWithText("Install or update Gemini CLI").performClick()
+        assertEquals("gemini", actions.requested)
+        assertEquals(null, actions.installed)
     }
 }

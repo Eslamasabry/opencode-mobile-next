@@ -161,9 +161,10 @@ class LinuxModalHostTest {
                 )
             }
         }
-        onNodeWithText("Remove htop?").assertIsDisplayed()
+        // The package name sits in bidi isolates (LinuxWords.names) so it reads right inside Arabic copy.
+        onNodeWithText("Remove \u2066htop\u2069?").assertIsDisplayed()
         assertEquals(0, actions.confirmed)
-        onNodeWithText("Remove htop").performClick()
+        onNodeWithText("Remove \u2066htop\u2069").performClick()
         assertEquals(1, actions.confirmed)
     }
 
@@ -196,7 +197,7 @@ class LinuxModalHostTest {
     }
 
     @Test
-    fun `migration stop names kept data and Keep going dismisses without confirming`() =
+    fun `migration stop names kept data and Keep copying dismisses without confirming`() =
         runComposeUiTest {
             val actions = Actions()
             setContent {
@@ -209,7 +210,8 @@ class LinuxModalHostTest {
             }
             onNodeWithText("Stop copying?").assertIsDisplayed()
             onNodeWithText("What was copied so far is kept").assertExists()
-            onNodeWithText("Keep going").performClick()
+            // Flutter migrationKeepGoing is "Keep copying" (app_en.arb).
+            onNodeWithText("Keep copying").performClick()
             assertEquals(1, actions.dismissed)
             assertEquals(0, actions.confirmed)
         }

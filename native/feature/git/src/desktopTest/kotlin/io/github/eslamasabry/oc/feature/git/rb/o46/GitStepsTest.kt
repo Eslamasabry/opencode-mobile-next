@@ -242,9 +242,10 @@ class GitStepsTest {
             folder.performTextReplacement("")
             url.performTextReplacement("https://example.invalid/another.git")
             folder.assertTextEquals("")
-            onNodeWithText("Clone", useUnmergedTree = true).assertIsNotEnabled()
+            // The button, not its inner text node (an unmerged text node carries no enabled state).
+            onNode(hasText("Clone") and hasClickAction()).assertIsNotEnabled()
             folder.performTextInput("mine")
-            onNodeWithText("Clone", useUnmergedTree = true).performClick()
+            onNode(hasText("Clone") and hasClickAction()).performClick()
             assertEquals(
                 listOf<Pair<String, List<Any?>>>("clone" to listOf("https://example.invalid/another.git", "mine")),
                 calls,
