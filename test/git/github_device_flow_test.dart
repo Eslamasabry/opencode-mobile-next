@@ -7,11 +7,18 @@ import 'package:opencode_mobile/domain/git/github_device_flow.dart';
 
 import 'git_test_support.dart';
 
-/// Answers GitHub's three endpoints from queues; records what was sent.
+/// Answers GitHub's endpoints from queues; records what was sent.
 class _GitHub implements HttpClientAdapter {
   final codeAnswers = <Object>[];
   final tokenAnswers = <Object>[];
   Object userAnswer = {'login': 'octocat'};
+  Object createRepoAnswer = {
+    'full_name': 'octocat/alpha',
+    'html_url': 'https://github.com/octocat/alpha',
+    'clone_url': 'https://github.com/octocat/alpha.git',
+    'private': true,
+    'default_branch': 'main',
+  };
   List<Object> reposAnswer = const [
     {
       'full_name': 'octocat/alpha',
@@ -29,6 +36,7 @@ class _GitHub implements HttpClientAdapter {
     },
   ];
   int userStatus = 200;
+  int createRepoStatus = 201;
   final requests = <({String method, String url, String body, Map headers})>[];
 
   @override
@@ -58,7 +66,12 @@ class _GitHub implements HttpClientAdapter {
         answer = userAnswer;
         status = userStatus;
       case gitHubUserReposUrl:
-        answer = reposAnswer;
+        if (options.method == 'POST') {
+          answer = createRepoAnswer;
+          status = createRepoStatus;
+        } else {
+          answer = reposAnswer;
+        }
       default:
         throw StateError('unexpected ${options.uri}');
     }
@@ -172,6 +185,58 @@ void main() {
       expect(request.headers['Authorization'], 'Bearer $fakeGitHubToken');
     },
   );
+
+  test('creates a private repository without asking for its remote URL', () async {
+    final repo = await flow().createUserRepository(
+      fakeGitHubToken,
+      name: 'alpha',
+      isPrivate: true,
+    );
+    expect(repo.fullName, 'octocat/alpha');
+    expect(repo.isPrivate, isTrue);
+    expect(repo.remoteUrl, 'https://github.com/octocat/alpha.git');
+    final request = github.requests.single;
+    expect(request.method, 'POST');
+    expect(request.url, gitHubCreateUserRepoUrl);
+    expect(request.headers['Authorization'], 'Bearer $fakeGitHubToken');
+    expect(jsonDecode(request.body), {'name': 'alpha', 'private': true});
+  });
+
+  test('rejects invalid names before contacting GitHub', () async {
+    await expectLater(
+      flow().createUserRepository(
+        fakeGitHubToken,
+        name: '../alpha',
+        isPrivate: false,
+      ),
+      throwsA(
+        isA<GitHubRepositoryException>().having(
+          (e) => e.problem,
+          'problem',
+          GitHubRepositoryProblem.invalidName,
+        ),
+      ),
+    );
+    expect(github.requests, isEmpty);
+  });
+
+  test('a repository name already in use is typed', () async {
+    github.createRepoStatus = 422;
+    await expectLater(
+      flow().createUserRepository(
+        fakeGitHubToken,
+        name: 'alpha',
+        isPrivate: false,
+      ),
+      throwsA(
+        isA<GitHubRepositoryException>().having(
+          (e) => e.problem,
+          'problem',
+          GitHubRepositoryProblem.nameUnavailable,
+        ),
+      ),
+    );
+  });
 
   test('slow_down without an interval adds five seconds', () async {
     github.codeAnswers.add({..._code, 'interval': 2});

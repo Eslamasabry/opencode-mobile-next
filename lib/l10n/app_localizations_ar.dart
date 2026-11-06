@@ -33333,6 +33333,14 @@ class AppLocalizationsAr extends AppLocalizations {
       'يوجد مستودع بعيد بهذا الاسم بالفعل. اختر اسمًا آخر.';
 
   @override
+  String get gitProblemInvalidGitHubRepositoryName =>
+      'استخدم اسمًا لا يتجاوز 100 حرف أو رقم أو نقطة أو شرطة.';
+
+  @override
+  String get gitProblemGitHubRepositoryNameUnavailable =>
+      'هذا الاسم مستخدم أو غير متاح في حسابك على GitHub. جرّب اسمًا آخر.';
+
+  @override
   String get gitProblemInvalidFolderName =>
       'هذا ليس اسم مجلد صالحًا. استخدم أحرفًا أو أرقامًا أو نقاطًا أو شرطات.';
 
@@ -33346,14 +33354,33 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get gitActionClone => 'استنساخ';
 
+    @override
+    String get gitActionInitialize => 'بدء التتبّع';
+
+    @override
+    String get gitActionPublish => 'إنشاء على GitHub';
+
   @override
   String get gitBusyAddRemote => 'جارٍ إضافة المستودع البعيد…';
 
   @override
   String get gitBusyClone => 'جارٍ الاستنساخ…';
 
+    @override
+    String get gitBusyInitialize => 'جارٍ إعداد Git في هذا المشروع…';
+
+    @override
+    String get gitBusyPublish => 'جارٍ إنشاء المستودع على GitHub…';
+
   @override
   String get gitDoneRemoteAdded => 'تمت إضافة المستودع البعيد.';
+
+    @override
+    String get gitDoneInitialized => 'أصبح Git جاهزًا في هذا المشروع.';
+
+    @override
+    String get gitDoneGitHubRepositoryCreated =>
+            'تم إنشاء المستودع على GitHub وربطه. لم يتم إرسال ملفات مشروعك بعد.';
 
   @override
   String gitDoneCloned(String path) {
@@ -33457,6 +33484,47 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get gitCloneButton => 'استنساخ';
+
+  @override
+  String get gitInitializeProject => 'بدء تتبّع هذا المشروع';
+
+  @override
+  String get gitInitializeProjectHint =>
+      'احتفظ بهذه الملفات هنا وابدأ باستخدام Git.';
+
+  @override
+  String get gitPublishToGitHub => 'إنشاء مستودع على GitHub';
+
+  @override
+  String get gitPublishToGitHubHint => 'اختر اسمًا ومن يمكنه رؤيته.';
+
+  @override
+  String get gitPublishTitle => 'إنشاء مستودع';
+
+  @override
+  String get gitPublishName => 'اسم المستودع';
+
+  @override
+  String get gitPublishNameHint => 'استخدم أحرفًا أو أرقامًا أو نقاطًا أو شرطات.';
+
+  @override
+  String get gitPublishVisibility => 'من يمكنه رؤيته؟';
+
+  @override
+  String get gitPublishPrivate => 'خاص';
+
+  @override
+  String get gitPublishPublic => 'عام';
+
+  @override
+  String get gitPublishPrivateHint =>
+      'يمكنك أنت والأشخاص الذين تختارهم فقط رؤية هذا المستودع.';
+
+  @override
+  String get gitPublishPublicHint => 'يمكن لأي شخص رؤية هذا المستودع.';
+
+  @override
+  String get gitPublishButton => 'إنشاء المستودع';
 
   @override
   String get gitRemotesRow => 'المستودعات البعيدة';

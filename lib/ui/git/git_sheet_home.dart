@@ -177,7 +177,7 @@ extension _GitSheetHome on _GitSheetState {
             body: l10n.gitNotRepositoryBody,
             size: KitStateSize.inline,
           ),
-          _group([_cloneRow(l10n)]),
+          _group([_initializeRow(l10n), _cloneRow(l10n)]),
           ?_signInGroup(l10n),
           ?_ownSignInLine(l10n, tokens),
         ];
@@ -216,6 +216,7 @@ extension _GitSheetHome on _GitSheetState {
             ?_askConflictsRow(snapshot, l10n),
             _switchRow(snapshot, l10n),
           ]),
+          ?_publishRow(snapshot, l10n),
           ?_signInGroup(l10n),
           ..._more(snapshot, l10n, tokens),
         ];
@@ -465,6 +466,38 @@ extension _GitSheetHome on _GitSheetState {
     enabled: !_busy,
     onTap: _busy ? null : () => _go(_GitStep.clone),
   );
+
+  Widget _initializeRow(AppLocalizations l10n) => KitRow(
+    key: const Key('git-row-initialize'),
+    leading: KitRow.icon(context, AppIconography.branch),
+    title: l10n.gitInitializeProject,
+    supporting: TextSpan(text: l10n.gitInitializeProjectHint),
+    supportingMaxLines: 2,
+    trailing: const KitChevron(),
+    enabled: !_busy,
+    onTap: _busy ? null : () => unawaited(page.initialize()),
+  );
+
+  Widget? _publishRow(GitSnapshot snapshot, AppLocalizations l10n) {
+    final controller = account;
+    if (snapshot.hasRemote ||
+        !page.abilities.offersGitHubSignIn ||
+        controller?.state is! GitHubSignedIn) {
+      return null;
+    }
+    return _group([
+      KitRow(
+        key: const Key('git-row-publish-github'),
+        leading: KitRow.icon(context, AppIconography.github),
+        title: l10n.gitPublishToGitHub,
+        supporting: TextSpan(text: l10n.gitPublishToGitHubHint),
+        supportingMaxLines: 2,
+        trailing: const KitChevron(),
+        enabled: !_busy,
+        onTap: _busy ? null : _openPublish,
+      ),
+    ]);
+  }
 
   /// GitHub sign-in on the surface while signed out, where the app can hand
   /// a sign-in over: sending needs it first.

@@ -106,6 +106,12 @@ enum GitProblem {
   /// A remote with that name is already set up.
   remoteExists,
 
+  /// The GitHub repository name does not meet GitHub's naming rules.
+  invalidGitHubRepositoryName,
+
+  /// The signed-in account already has a repository with this name.
+  githubRepositoryNameUnavailable,
+
   /// The folder name for a clone has characters or dots it cannot have.
   invalidFolderName,
 

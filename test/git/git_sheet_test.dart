@@ -50,6 +50,8 @@ class _Account extends GitHubAccountController {
   GitHubSignInState _state;
   var started = 0;
   var cancelled = 0;
+  String? createdRepositoryName;
+  bool? createdRepositoryPrivate;
   @override
   GitHubSignInState get state => _state;
   @override
@@ -57,6 +59,21 @@ class _Account extends GitHubAccountController {
   var repos = const <GitHubRepository>[];
   @override
   Future<List<GitHubRepository>> fetchRepositories() async => repos;
+  @override
+  Future<GitHubRepository> createRepository({
+    required String name,
+    required bool isPrivate,
+  }) async {
+    createdRepositoryName = name;
+    createdRepositoryPrivate = isPrivate;
+    return GitHubRepository(
+      fullName: 'octocat/$name',
+      htmlUrl: 'https://github.com/octocat/$name',
+      cloneUrl: 'https://github.com/octocat/$name.git',
+      defaultBranch: 'main',
+      isPrivate: isPrivate,
+    );
+  }
   @override
   Future<void> startSignIn() async => started++;
   @override
@@ -137,6 +154,76 @@ Finder _text(String s) => find.byWidgetPredicate(
 );
 
 void main() {
+  testWidgets('a project without Git can start tracking its existing files', (
+    tester,
+  ) async {
+    final notRepo = envelope({
+      'status': failed(fx.notRepositoryError, exit: 128),
+    });
+    final shell = FakeGitShell([notRepo, notRepo]);
+    final page = await _open(tester, shell);
+    expect(find.byKey(const Key('git-row-initialize')), findsOneWidget);
+    expect(find.byKey(const Key('git-row-clone')), findsOneWidget);
+
+    shell.answers
+      ..clear()
+      ..addAll([
+        envelope({'run': ok()}),
+        _snapshot(status: fx.statusNoUpstream, remotes: ''),
+      ]);
+    final initializeRow = find.byKey(const Key('git-row-initialize'));
+    await tester.ensureVisible(initializeRow);
+    await tester.tap(initializeRow);
+    await tester.pumpAndSettle();
+    expect(shell.scripts.join('\n'), contains("'init'"));
+    expect(page.view, isA<GitPageReady>());
+  });
+
+  testWidgets('publishing creates origin without asking for a URL', (
+    tester,
+  ) async {
+    final shell = FakeGitShell([
+      _snapshot(status: fx.statusNoUpstream, remotes: ''),
+      _snapshot(status: fx.statusNoUpstream, remotes: ''),
+    ]);
+    final account = _Account(const GitHubSignedIn('octocat'));
+    final page = await _open(tester, shell, account: account);
+    await tester.tap(find.byKey(const Key('git-row-publish-github')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('git-publish-name')), findsOneWidget);
+    expect(find.byKey(const Key('git-remote-url')), findsNothing);
+    final visibility = tester.widget<KitSegmented<bool>>(
+      find.byKey(const Key('git-publish-visibility')),
+    );
+    expect(visibility.selected, isTrue);
+    await tester.tap(find.text('Public'));
+    await tester.pumpAndSettle();
+
+    shell.answers
+      ..clear()
+      ..addAll([
+        envelope({'run': ok()}),
+        _snapshot(
+          status: fx.statusNoUpstream,
+          remotes: 'remote.origin.url https://github.com/octocat/app.git\n',
+        ),
+      ]);
+    final publishButton = find.byKey(const Key('git-publish-button'));
+    await tester.ensureVisible(publishButton);
+    await tester.tap(publishButton);
+    await tester.pumpAndSettle();
+
+    expect(account.createdRepositoryName, 'app');
+    expect(account.createdRepositoryPrivate, isFalse);
+    expect(
+      shell.scripts.join('\n'),
+      contains("'remote' 'add' 'origin' 'https://github.com/octocat/app.git'"),
+    );
+    expect(page.snapshot?.hasRemote, isTrue);
+    expect(find.byKey(const Key('git-sheet')), findsOneWidget);
+  });
+
   testWidgets('changed files make one named main action: save and send', (
     tester,
   ) async {

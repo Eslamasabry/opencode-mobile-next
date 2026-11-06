@@ -255,6 +255,26 @@ class GitHubAccountController extends ChangeNotifier {
     }
   }
 
+  /// Creates an empty repository in this signed-in account.
+  Future<GitHubRepository> createRepository({
+    required String name,
+    required bool isPrivate,
+  }) async {
+    final token = await tokenForGit();
+    if (token == null) {
+      throw GitHubRepositoryException(
+        _credential == null
+            ? GitHubRepositoryProblem.tokenRejected
+            : GitHubRepositoryProblem.network,
+      );
+    }
+    return _flow.createUserRepository(
+      token,
+      name: name,
+      isPrivate: isPrivate,
+    );
+  }
+
   /// GitHub refused the token during a push or pull: forget it and ask for
   /// a new sign-in (feasibility doc, exact flow step 4).
   Future<void> tokenRejected() => _forget(GitHubSignInProblem.tokenRejected);

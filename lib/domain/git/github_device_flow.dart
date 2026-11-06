@@ -23,6 +23,7 @@ const gitHubDeviceCodeUrl = 'https://github.com/login/device/code';
 const gitHubAccessTokenUrl = 'https://github.com/login/oauth/access_token';
 const gitHubUserUrl = 'https://api.github.com/user';
 const gitHubUserReposUrl = 'https://api.github.com/user/repos';
+const gitHubCreateUserRepoUrl = 'https://api.github.com/user/repos';
 
 /// Where people review or revoke the app's access.
 const gitHubAuthorizedAppsUrl =
@@ -217,6 +218,30 @@ class GitHubSignInException implements Exception {
   @override
   String toString() => 'GitHubSignInException(${problem.name})';
 }
+
+enum GitHubRepositoryProblem {
+  invalidName,
+  nameUnavailable,
+  tokenRejected,
+  permissionDenied,
+  network,
+  unexpected,
+}
+
+class GitHubRepositoryException implements Exception {
+  const GitHubRepositoryException(this.problem, {this.details = ''});
+
+  final GitHubRepositoryProblem problem;
+  final String details;
+
+  @override
+  String toString() => 'GitHubRepositoryException(${problem.name})';
+}
+
+bool isValidGitHubRepositoryName(String name) =>
+    RegExp(r'^[A-Za-z0-9._-]{1,100}$').hasMatch(name) &&
+    name != '.' &&
+    name != '..';
 
 /// The HTTP side of device flow. Every network call goes through the
 /// injected [Dio], and every wait through [sleep], so tests run instantly.
@@ -461,6 +486,65 @@ class GitHubDeviceFlow {
       }
     }
     return repos;
+  }
+
+  /// Creates an empty repository in the signed-in user's account.
+  Future<GitHubRepository> createUserRepository(
+    String token, {
+    required String name,
+    required bool isPrivate,
+  }) async {
+    if (!isValidGitHubRepositoryName(name)) {
+      throw const GitHubRepositoryException(
+        GitHubRepositoryProblem.invalidName,
+      );
+    }
+    final Response<Object?> response;
+    try {
+      response = await _dio.post<Object?>(
+        gitHubCreateUserRepoUrl,
+        data: {'name': name, 'private': isPrivate},
+        options: Options(
+          headers: {
+            'Accept': 'application/vnd.github+json',
+            'Authorization': 'Bearer $token',
+            'X-GitHub-Api-Version': '2022-11-28',
+          },
+          responseType: ResponseType.json,
+          validateStatus: (_) => true,
+          receiveTimeout: _timeout,
+        ),
+      );
+    } on DioException {
+      throw const GitHubRepositoryException(GitHubRepositoryProblem.network);
+    }
+    if (response.statusCode != 201) {
+      final status = response.statusCode ?? 0;
+      final problem = switch (status) {
+        401 => GitHubRepositoryProblem.tokenRejected,
+        403 => GitHubRepositoryProblem.permissionDenied,
+        422 => GitHubRepositoryProblem.nameUnavailable,
+        >= 500 || 0 => GitHubRepositoryProblem.network,
+        _ => GitHubRepositoryProblem.unexpected,
+      };
+      throw GitHubRepositoryException(
+        problem,
+        details: 'POST /user/repos answered $status',
+      );
+    }
+    final data = response.data;
+    if (data is! Map) {
+      throw const GitHubRepositoryException(
+        GitHubRepositoryProblem.unexpected,
+      );
+    }
+    try {
+      return GitHubRepository.fromJson(data.cast<String, Object?>());
+    } on FormatException {
+      throw const GitHubRepositoryException(
+        GitHubRepositoryProblem.unexpected,
+      );
+    }
   }
 
   GitHubCredential _credential(Map<String, Object?> body) {

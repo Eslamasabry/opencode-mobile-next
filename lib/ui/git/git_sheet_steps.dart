@@ -413,6 +413,108 @@ extension _GitSheetSteps on _GitSheetState {
     _update(() => _step = _GitStep.home);
   }
 
+  // ------------------------------------------------------------ Publish
+
+  void _openPublish() {
+    _repositoryName.text = _suggestRepositoryName(
+      page.workspace?.directory ?? 'project',
+    );
+    _repositoryPrivate = true;
+    _go(_GitStep.publish);
+  }
+
+  String _suggestRepositoryName(String directory) {
+    final parts = directory.split('/')..removeWhere((part) => part.isEmpty);
+    final folder = parts.isEmpty ? 'project' : parts.last;
+    final normalized = folder
+        .replaceAll(RegExp(r'[^A-Za-z0-9._-]+'), '-')
+        .replaceAll(RegExp(r'^[.-]+|[.-]+$'), '');
+    final name = normalized.isEmpty ? 'project' : normalized;
+    return name.length > 100 ? name.substring(0, 100) : name;
+  }
+
+  Widget _publishStep(AppLocalizations l10n) {
+    final name = _repositoryName.text.trim();
+    final invalid = name.isNotEmpty && !isValidGitHubRepositoryName(name);
+    final ready = name.isNotEmpty && !invalid && !_busy;
+    final disabledReason = name.isEmpty
+        ? l10n.gitPublishNameHint
+        : invalid
+        ? gitProblemText(GitProblem.invalidGitHubRepositoryName, l10n)
+        : null;
+    return KitSheet(
+      key: const Key('git-publish'),
+      step: 'publish',
+      title: l10n.gitPublishTitle,
+      handle: false,
+      loading: _busy,
+      leading: _back(l10n),
+      onClose: _close,
+      primary: KitAction(
+        key: const Key('git-publish-button'),
+        label: l10n.gitPublishButton,
+        icon: AppIconography.github,
+        working: page.busy == GitAction.publish,
+        disabledReason: disabledReason,
+        onPressed: ready
+            ? () => unawaited(_createGitHubRepository(name))
+            : null,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ?_busyNotice(l10n),
+          ?_resultNotice(l10n),
+          KitField(
+            fieldKey: const Key('git-publish-name'),
+            label: l10n.gitPublishName,
+            controller: _repositoryName,
+            error: invalid
+                ? gitProblemText(GitProblem.invalidGitHubRepositoryName, l10n)
+                : null,
+            autofocus: true,
+            onChanged: (_) => _update(() {}),
+          ),
+          SizedBox(height: KitTokens.of(context).space3),
+          KitSectionLabel.inline(l10n.gitPublishVisibility),
+          KitSegmented<bool>(
+            key: const Key('git-publish-visibility'),
+            semanticsLabel: l10n.gitPublishVisibility,
+            selected: _repositoryPrivate,
+            segments: [
+              KitSegment<bool>(
+                value: true,
+                label: l10n.gitPublishPrivate,
+              ),
+              KitSegment<bool>(
+                value: false,
+                label: l10n.gitPublishPublic,
+              ),
+            ],
+            onChanged: (value) => _update(() => _repositoryPrivate = value),
+          ),
+          SizedBox(height: KitTokens.of(context).space2),
+          KitText(
+            _repositoryPrivate
+                ? l10n.gitPublishPrivateHint
+                : l10n.gitPublishPublicHint,
+            role: KitTextRole.secondary,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _createGitHubRepository(String name) async {
+    final result = await page.createGitHubRepository(
+      name: name,
+      isPrivate: _repositoryPrivate,
+    );
+    if (!mounted || result?.ok != true) return;
+    _update(() => _step = _GitStep.home);
+  }
+
   // ------------------------------------------------------------ Remotes
 
   /// Fills the remote address from one of the signed-in account's GitHub

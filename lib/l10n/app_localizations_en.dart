@@ -33319,6 +33319,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'A remote with that name is already set up. Choose another name.';
 
   @override
+  String get gitProblemInvalidGitHubRepositoryName =>
+      'Use a repository name with up to 100 letters, numbers, dots, dashes or underscores.';
+
+  @override
+  String get gitProblemGitHubRepositoryNameUnavailable =>
+      'That name is already used or unavailable in your GitHub account. Try another.';
+
+  @override
   String get gitProblemInvalidFolderName =>
       'That isn’t a usable folder name. Use letters, numbers, dots, dashes or underscores.';
 
@@ -33332,14 +33340,33 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get gitActionClone => 'Clone';
 
+    @override
+    String get gitActionInitialize => 'Start tracking';
+
+    @override
+    String get gitActionPublish => 'Create on GitHub';
+
   @override
   String get gitBusyAddRemote => 'Adding the remote…';
 
   @override
   String get gitBusyClone => 'Cloning…';
 
+    @override
+    String get gitBusyInitialize => 'Starting Git in this project…';
+
+    @override
+    String get gitBusyPublish => 'Creating repository on GitHub…';
+
   @override
   String get gitDoneRemoteAdded => 'Remote added.';
+
+    @override
+    String get gitDoneInitialized => 'Git is ready in this project.';
+
+    @override
+    String get gitDoneGitHubRepositoryCreated =>
+            'GitHub repository created and connected. Your project has not been sent yet.';
 
   @override
   String gitDoneCloned(String path) {
@@ -33437,6 +33464,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gitCloneButton => 'Clone';
+
+  @override
+  String get gitInitializeProject => 'Start tracking this project';
+
+  @override
+  String get gitInitializeProjectHint =>
+      'Keep these files here and start using Git.';
+
+  @override
+  String get gitPublishToGitHub => 'Create a GitHub repository';
+
+  @override
+  String get gitPublishToGitHubHint => 'Choose a name and who can see it.';
+
+  @override
+  String get gitPublishTitle => 'Create repository';
+
+  @override
+  String get gitPublishName => 'Repository name';
+
+  @override
+  String get gitPublishNameHint =>
+      'Use letters, numbers, dots, dashes or underscores.';
+
+  @override
+  String get gitPublishVisibility => 'Who can see it';
+
+  @override
+  String get gitPublishPrivate => 'Private';
+
+  @override
+  String get gitPublishPublic => 'Public';
+
+  @override
+  String get gitPublishPrivateHint =>
+      'Only you and people you choose can see this repository.';
+
+  @override
+  String get gitPublishPublicHint => 'Anyone can see this repository.';
+
+  @override
+  String get gitPublishButton => 'Create repository';
 
   @override
   String get gitRemotesRow => 'Remotes';

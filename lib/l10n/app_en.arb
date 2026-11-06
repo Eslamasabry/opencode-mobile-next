@@ -40409,6 +40409,14 @@
   "@gitProblemRemoteExists": {
     "description": "Git: remote exists"
   },
+  "gitProblemInvalidGitHubRepositoryName": "Use a repository name with up to 100 letters, numbers, dots, dashes or underscores.",
+  "@gitProblemInvalidGitHubRepositoryName": {
+    "description": "GitHub: invalid repository name"
+  },
+  "gitProblemGitHubRepositoryNameUnavailable": "That name is already used or unavailable in your GitHub account. Try another.",
+  "@gitProblemGitHubRepositoryNameUnavailable": {
+    "description": "GitHub: repository name is unavailable"
+  },
   "gitProblemInvalidFolderName": "That isn’t a usable folder name. Use letters, numbers, dots, dashes or underscores.",
   "@gitProblemInvalidFolderName": {
     "description": "Git: invalid clone folder name"
@@ -40425,6 +40433,14 @@
   "@gitActionClone": {
     "description": "Git: button"
   },
+  "gitActionInitialize": "Start tracking",
+  "@gitActionInitialize": {
+    "description": "Git: initialize the current project"
+  },
+  "gitActionPublish": "Create on GitHub",
+  "@gitActionPublish": {
+    "description": "GitHub: create and connect a repository"
+  },
   "gitBusyAddRemote": "Adding the remote…",
   "@gitBusyAddRemote": {
     "description": "Git: busy"
@@ -40433,9 +40449,25 @@
   "@gitBusyClone": {
     "description": "Git: busy"
   },
+  "gitBusyInitialize": "Starting Git in this project…",
+  "@gitBusyInitialize": {
+    "description": "Git: initializing the current project"
+  },
+  "gitBusyPublish": "Creating repository on GitHub…",
+  "@gitBusyPublish": {
+    "description": "GitHub: creating and connecting a repository"
+  },
   "gitDoneRemoteAdded": "Remote added.",
   "@gitDoneRemoteAdded": {
     "description": "Git: result"
+  },
+  "gitDoneInitialized": "Git is ready in this project.",
+  "@gitDoneInitialized": {
+    "description": "Git: initialization worked"
+  },
+  "gitDoneGitHubRepositoryCreated": "GitHub repository created and connected. Your project has not been sent yet.",
+  "@gitDoneGitHubRepositoryCreated": {
+    "description": "GitHub: repository created and connected, but local files have not been pushed"
   },
   "gitDoneCloned": "Cloned into {path}. Open it from your projects.",
   "@gitDoneCloned": {
@@ -40569,6 +40601,58 @@
   "gitCloneButton": "Clone",
   "@gitCloneButton": {
     "description": "Git clone primary"
+  },
+  "gitInitializeProject": "Start tracking this project",
+  "@gitInitializeProject": {
+    "description": "Git row: initialize Git in the open project"
+  },
+  "gitInitializeProjectHint": "Keep these files here and start using Git.",
+  "@gitInitializeProjectHint": {
+    "description": "Git row supporting: initialize Git in place"
+  },
+  "gitPublishToGitHub": "Create a GitHub repository",
+  "@gitPublishToGitHub": {
+    "description": "Git row: create and connect a GitHub repository"
+  },
+  "gitPublishToGitHubHint": "Choose a name and who can see it.",
+  "@gitPublishToGitHubHint": {
+    "description": "Git row supporting: create a repository"
+  },
+  "gitPublishTitle": "Create repository",
+  "@gitPublishTitle": {
+    "description": "GitHub repository creation step title"
+  },
+  "gitPublishName": "Repository name",
+  "@gitPublishName": {
+    "description": "GitHub repository creation field"
+  },
+  "gitPublishNameHint": "Use letters, numbers, dots, dashes or underscores.",
+  "@gitPublishNameHint": {
+    "description": "GitHub repository creation name hint"
+  },
+  "gitPublishVisibility": "Who can see it",
+  "@gitPublishVisibility": {
+    "description": "GitHub repository creation visibility control"
+  },
+  "gitPublishPrivate": "Private",
+  "@gitPublishPrivate": {
+    "description": "GitHub repository visibility option"
+  },
+  "gitPublishPublic": "Public",
+  "@gitPublishPublic": {
+    "description": "GitHub repository visibility option"
+  },
+  "gitPublishPrivateHint": "Only you and people you choose can see this repository.",
+  "@gitPublishPrivateHint": {
+    "description": "GitHub repository private visibility explanation"
+  },
+  "gitPublishPublicHint": "Anyone can see this repository.",
+  "@gitPublishPublicHint": {
+    "description": "GitHub repository public visibility explanation"
+  },
+  "gitPublishButton": "Create repository",
+  "@gitPublishButton": {
+    "description": "GitHub repository creation primary action"
   },
   "gitRemotesRow": "Remotes",
   "@gitRemotesRow": {
