@@ -21,7 +21,6 @@ import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.layout.WindowClass
-import io.github.eslamasabry.oc.ui.design.text.TextScalePolicy
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
@@ -34,7 +33,6 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitInlineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
-import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
@@ -148,7 +146,6 @@ public fun KitTopBar(
     kitAssert(hidden.isEmpty() || more != null) {
         "KitTopBar: ${hidden.size} actions past the bar's limit need the overflow"
     }
-    val largeText = TextScalePolicy.isLargeText(kitTextScale())
     val icons = window.cls == WindowClass.Compact || window.cls == WindowClass.Medium
     val actionRow: @Composable () -> Unit = {
         if (shown.isNotEmpty()) {
@@ -243,7 +240,8 @@ public fun KitTopBar(
                     .testTag("kit-top-bar-title"),
                 role = TypeRole.Headline,
                 kind = KitTextKind.Frame,
-                maxLines = if (largeText) 2 else 1,
+                // Flutter's chat header: a long title takes a second line before it ends in "…" beside the chevron.
+                maxLines = 2,
                 pageTitle = true,
             )
             if (onTitleTap != null) KitExitGlyph(ExitGlyph.Chevron, colors.text2)
