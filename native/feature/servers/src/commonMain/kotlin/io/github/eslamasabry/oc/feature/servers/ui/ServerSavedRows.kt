@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.servers.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.model.BackendKind
@@ -128,9 +129,15 @@ internal fun ServerSavedRows(
             }
             KitRow(
                 title = server.name,
-                supporting = supporting,
-                // Two saved servers whose names read the same are told apart by where they are.
-                server = if (nameKey(server.name) in lookAlike) plainAddress(server.address) else null,
+                supporting =
+                    buildAnnotatedString {
+                        // Two saved servers whose names read the same are told apart by where they are.
+                        if (nameKey(server.name) in lookAlike) {
+                            append(plainAddress(server.address))
+                            append(" · ")
+                        }
+                        append(supporting)
+                    },
                 supportingMaxLines =
                     2, // F: lib/ui/screens/servers/server_rows.dart:191-196
                 leading =
