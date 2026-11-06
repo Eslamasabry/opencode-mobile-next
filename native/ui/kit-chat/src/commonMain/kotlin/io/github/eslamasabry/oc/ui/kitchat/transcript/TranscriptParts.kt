@@ -1,6 +1,8 @@
 package io.github.eslamasabry.oc.ui.kitchat.transcript
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -18,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.FrameRateCategory
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.preferredFrameRate
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
@@ -201,6 +204,20 @@ public fun KitPromptBubble(text: String, modifier: Modifier = Modifier) {
             )
         }
     }
+}
+
+/**
+ * A turn's next steps under its quiet lines (a failed reply's "Choose another model", "Continue", Details): the same
+ * column and side inset as [KitQuietLine], so the buttons line up with the words above them and never touch the
+ * screen edge (B-099). Buttons stack with a small gap.
+ */
+@Composable
+public fun KitTranscriptActions(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+    androidx.compose.foundation.layout.Column(
+        modifier.then(Column).testTag("kit-transcript-actions"),
+        verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
+        content = content,
+    )
 }
 
 /** One quiet line: a folded thought, the work line, a notice or the turn footer. */

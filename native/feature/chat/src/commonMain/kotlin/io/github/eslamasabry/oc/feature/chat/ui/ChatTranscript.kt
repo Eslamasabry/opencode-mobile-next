@@ -86,6 +86,7 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.KitMessageActions
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitMessageTimestamp
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitPromptBubble
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitQuietLine
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptActions
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyBlock
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyFooter
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptList
@@ -733,115 +734,118 @@ private fun ChatRow(
                             KitQuietLine(headline)
                             KitQuietLine(hint)
                         }
-                        if (
-                            AgentErrorText.classify(reason)?.offersSignIn == true &&
-                                reply?.signInSettingsLabel != null
-                        ) {
-                            KitButton(
-                                reply.signInSettingsLabel,
-                                reply.onSignInSettings,
-                                role = KitButtonRole.Secondary,
-                            )
-                        }
-                        // Flutter error card: a sign-in, no-credit, wrong-model or full-context
-                        // failure always offers the way on (never a dead end).
-                        if (reply != null) {
-                            val suggestion =
-                                if (
-                                    row.errorKind == MessageErrorKind.ModelNotFound ||
-                                        kind == ReplyFailureKind.Model
-                                )
-                                    ErrorRecovery.suggestedModel(reason, reply.models)
-                                else null
-                            val showSignIn =
+                        // B-099: the ways on and Details keep the quiet lines' inset, never the screen edge.
+                        KitTranscriptActions {
+                            if (
                                 AgentErrorText.classify(reason)?.offersSignIn == true &&
-                                    reply.signInSettingsLabel != null
-                            ErrorRecovery.fixes(
-                                    row.errorKind,
-                                    kind,
-                                    reason,
-                                    suggestion != null,
-                                    reply.canCompact,
+                                    reply?.signInSettingsLabel != null
+                            ) {
+                                KitButton(
+                                    reply.signInSettingsLabel,
+                                    reply.onSignInSettings,
+                                    role = KitButtonRole.Secondary,
                                 )
-                                .forEach { fix ->
-                                    when (fix) {
-                                        ErrorFix.UseModel ->
-                                            if (suggestion != null)
-                                                KitButton(
-                                                    reply.useModelLabel(suggestion.label),
-                                                    {
-                                                        reply.onUseModel(
-                                                            row.turnId,
-                                                            suggestion.providerId,
-                                                            suggestion.modelId,
+                            }
+                            // Flutter error card: a sign-in, no-credit, wrong-model or full-context
+                            // failure always offers the way on (never a dead end).
+                            if (reply != null) {
+                                val suggestion =
+                                    if (
+                                        row.errorKind == MessageErrorKind.ModelNotFound ||
+                                            kind == ReplyFailureKind.Model
+                                    )
+                                        ErrorRecovery.suggestedModel(reason, reply.models)
+                                    else null
+                                val showSignIn =
+                                    AgentErrorText.classify(reason)?.offersSignIn == true &&
+                                        reply.signInSettingsLabel != null
+                                ErrorRecovery.fixes(
+                                        row.errorKind,
+                                        kind,
+                                        reason,
+                                        suggestion != null,
+                                        reply.canCompact,
+                                    )
+                                    .forEach { fix ->
+                                        when (fix) {
+                                            ErrorFix.UseModel ->
+                                                if (suggestion != null)
+                                                    KitButton(
+                                                        reply.useModelLabel(suggestion.label),
+                                                        {
+                                                            reply.onUseModel(
+                                                                row.turnId,
+                                                                suggestion.providerId,
+                                                                suggestion.modelId,
+                                                            )
+                                                        },
+                                                        role = KitButtonRole.Secondary,
+                                                        modifier = Modifier.testTag("error-action-use-model"),
+                                                    )
+                                            ErrorFix.ChooseModel ->
+                                                reply.chooseModelLabel?.let {
+                                                    KitButton(
+                                                        it,
+                                                        reply.onChooseModel,
+                                                        role = KitButtonRole.Secondary,
+                                                        modifier =
+                                                            Modifier.testTag("error-action-choose-model"),
+                                                    )
+                                                }
+                                            ErrorFix.Compact ->
+                                                reply.compactLabel?.let {
+                                                    KitButton(
+                                                        it,
+                                                        reply.onCompact,
+                                                        role = KitButtonRole.Secondary,
+                                                        modifier = Modifier.testTag("error-action-compact"),
+                                                    )
+                                                }
+                                            ErrorFix.OpenProviders ->
+                                                if (!showSignIn)
+                                                    reply.openProvidersLabel?.let {
+                                                        KitButton(
+                                                            it,
+                                                            reply.onOpenProviders,
+                                                            role = KitButtonRole.Secondary,
+                                                            modifier =
+                                                                Modifier.testTag(
+                                                                    "error-action-providers"
+                                                                ),
                                                         )
-                                                    },
-                                                    role = KitButtonRole.Secondary,
-                                                    modifier = Modifier.testTag("error-action-use-model"),
-                                                )
-                                        ErrorFix.ChooseModel ->
-                                            reply.chooseModelLabel?.let {
-                                                KitButton(
-                                                    it,
-                                                    reply.onChooseModel,
-                                                    role = KitButtonRole.Secondary,
-                                                    modifier =
-                                                        Modifier.testTag("error-action-choose-model"),
-                                                )
-                                            }
-                                        ErrorFix.Compact ->
-                                            reply.compactLabel?.let {
-                                                KitButton(
-                                                    it,
-                                                    reply.onCompact,
-                                                    role = KitButtonRole.Secondary,
-                                                    modifier = Modifier.testTag("error-action-compact"),
-                                                )
-                                            }
-                                        ErrorFix.OpenProviders ->
-                                            if (!showSignIn)
-                                                reply.openProvidersLabel?.let {
+                                                    }
+                                            ErrorFix.OpenAccount ->
+                                                reply.openAccountLabel?.let {
                                                     KitButton(
                                                         it,
                                                         reply.onOpenProviders,
                                                         role = KitButtonRole.Secondary,
                                                         modifier =
-                                                            Modifier.testTag(
-                                                                "error-action-providers"
-                                                            ),
+                                                            Modifier.testTag("error-action-account"),
                                                     )
                                                 }
-                                        ErrorFix.OpenAccount ->
-                                            reply.openAccountLabel?.let {
-                                                KitButton(
-                                                    it,
-                                                    reply.onOpenProviders,
-                                                    role = KitButtonRole.Secondary,
-                                                    modifier =
-                                                        Modifier.testTag("error-action-account"),
-                                                )
-                                            }
+                                        }
                                     }
-                                }
+                            }
+                            // B-AGENT-024: a lost connection's next step is a visible Continue (the
+                            // turn picks up there).
+                            val continueLabel = reply?.continueLabel
+                            if (
+                                kind == ReplyFailureKind.ConnectionLost &&
+                                    !continueLabel.isNullOrBlank()
+                            )
+                                KitButton(
+                                    label = continueLabel,
+                                    onClick = { reply.onContinue(continueLabel) },
+                                    role = KitButtonRole.Secondary,
+                                )
+                            if (reason.isNotBlank())
+                                KitDetailsFold(
+                                    label = listWords.details,
+                                    copyLabel = listWords.copyDetails,
+                                    notes = listOf(mask(reason)),
+                                )
                         }
-                        // B-AGENT-024: a lost connection's next step is a visible Continue (the
-                        // turn picks up there).
-                        val continueLabel = reply?.continueLabel
-                        if (
-                            kind == ReplyFailureKind.ConnectionLost &&
-                                !continueLabel.isNullOrBlank()
-                        )
-                            KitButton(
-                                label = continueLabel,
-                                onClick = { reply.onContinue(continueLabel) },
-                                role = KitButtonRole.Secondary,
-                            )
-                        if (reason.isNotBlank())
-                            KitDetailsFold(
-                                label = listWords.details,
-                                copyLabel = listWords.copyDetails,
-                                notes = listOf(mask(reason)),
-                            )
                     }
                 } else {
                     MessageDetailsTip(eligible = teachDetails) {

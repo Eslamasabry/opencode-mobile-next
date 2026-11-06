@@ -10,6 +10,8 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.longClick
@@ -238,6 +240,28 @@ class ChatFeelScreenTest {
             for (label in listOf("Copy", "Share", "Select text")) {
                 assertTrue(onAllNodesWithText(label).fetchSemanticsNodes().isNotEmpty(), "menu shows $label")
             }
+        }
+
+    @Test
+    fun `B-099 a failed reply's Details sit on the quiet lines' edge, not the screen edge`() =
+        runComposeUiTest {
+            val (p, _) =
+                screen(
+                    prompt("u1", "go"),
+                    io.github.eslamasabry.oc.engine.transcript.state.FooterRow("footer:u1", "u1", failed = true, reason = "provider exploded"),
+                )
+            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+            val states = p.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)
+            setContent {
+                val state by states.collectAsState()
+                Root { ChatScreen(state, p, composer) }
+            }
+            val failed = onNodeWithTag("chat-reply-failed").getBoundsInRoot()
+            val actions = onNodeWithTag("kit-transcript-actions", useUnmergedTree = true).getBoundsInRoot()
+            val details = onNodeWithText("Details").getBoundsInRoot()
+            // The quiet lines' 16 dp inset; before B-099 Details started at the column's (the screen's) edge.
+            assertTrue(details.left >= failed.left + 15.dp, "details $details in $failed")
+            assertTrue(details.left >= actions.left, "details $details in actions $actions")
         }
 
     @Test
