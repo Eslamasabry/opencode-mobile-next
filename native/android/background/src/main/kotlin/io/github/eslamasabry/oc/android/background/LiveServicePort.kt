@@ -12,6 +12,11 @@ public data class ServiceStatus(
     val batteryOptimizationIgnored: Boolean = false,
     val pause: PauseState? = null,
     val startFailure: String? = null,
+    /**
+     * E07-S01: Android refused to show its battery question, so a battery settings page opened instead (only in the
+     * answer to `requestBatteryOptimizationExemption`).
+     */
+    val batterySettingsInstead: Boolean = false,
 ) {
     public companion object {
         /**

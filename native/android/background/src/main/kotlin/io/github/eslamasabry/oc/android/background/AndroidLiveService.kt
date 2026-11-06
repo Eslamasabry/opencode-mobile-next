@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.android.background
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -94,6 +95,8 @@ public class AndroidLiveServicePort(
     private val starter: LiveServiceStarter = ComponentLiveServiceStarter(context),
     private val ackWait: Duration = 5.seconds,
     private val ackPoll: Duration = 50.milliseconds,
+    /** Starts an activity from the app context (a test passes one that refuses). */
+    private val openActivity: (Intent) -> Unit = { context.startActivity(it) },
 ) : LiveServicePort {
     @Volatile private var starting = false
 
@@ -151,20 +154,13 @@ public class AndroidLiveServicePort(
 
     override suspend fun requestBatteryOptimizationExemption(): ServiceReply<ServiceStatus> {
         val power = context.getSystemService(PowerManager::class.java)
-        if (power != null && !power.isIgnoringBatteryOptimizations(context.packageName)) {
-            try {
-                context.startActivity(
-                    Intent(
-                            Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
-                            Uri.parse("package:${context.packageName}"),
-                        )
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                )
-            } catch (_: RuntimeException) {
-                return refused(ServiceRefusal.UNKNOWN)
-            }
+        if (power == null || power.isIgnoringBatteryOptimizations(context.packageName)) return status()
+        return when (BatteryExemptionRequest.open(context.packageName, openActivity)) {
+            BatteryExemptionRequest.Opened.Question -> status()
+            BatteryExemptionRequest.Opened.SettingsInstead ->
+                ServiceReply.Ok(statusOf(signals.active).copy(batterySettingsInstead = true))
+            BatteryExemptionRequest.Opened.Nothing -> refused(ServiceRefusal.UNKNOWN)
         }
-        return status()
     }
 
     private suspend fun statusOf(enabled: Boolean): ServiceStatus {
@@ -248,6 +244,59 @@ public class LiveServiceBody(
     public fun onDestroy() {
         signals.active = false
     }
+}
+
+/**
+ * E07-S01: "Allow unrestricted battery". Android's own question first
+ * (`ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`, which needs the manifest permission); when the
+ * system refuses to show it (no activity answers, or a SecurityException), the battery
+ * optimization list, then this app's details page, so the person can still change it by hand. The
+ * caller says so when [Opened.SettingsInstead] comes back (port of the released app's
+ * `AppLifecycle` candidate list).
+ */
+public object BatteryExemptionRequest {
+    public enum class Opened {
+        /** Android's question is showing. */
+        Question,
+
+        /** The question was refused; a battery settings page opened instead. */
+        SettingsInstead,
+
+        /** Nothing could be opened. */
+        Nothing,
+    }
+
+    public fun question(packageName: String): Intent =
+        Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:$packageName"))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+    /** The pages tried, in order, when the question is refused. */
+    public fun fallbacks(packageName: String): List<Intent> =
+        listOf(
+            Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS),
+            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName")),
+        )
+            .map { it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+
+    public fun open(packageName: String, openActivity: (Intent) -> Unit): Opened {
+        if (tryOpen(question(packageName), openActivity)) return Opened.Question
+        for (page in fallbacks(packageName)) {
+            if (tryOpen(page, openActivity)) return Opened.SettingsInstead
+        }
+        return Opened.Nothing
+    }
+
+    private fun tryOpen(intent: Intent, openActivity: (Intent) -> Unit): Boolean =
+        try {
+            openActivity(intent)
+            true
+        } catch (_: ActivityNotFoundException) {
+            false
+        } catch (_: SecurityException) {
+            false
+        } catch (_: IllegalStateException) {
+            false
+        }
 }
 
 /**
