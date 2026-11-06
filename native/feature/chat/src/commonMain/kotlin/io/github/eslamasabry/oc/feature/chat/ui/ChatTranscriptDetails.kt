@@ -135,18 +135,8 @@ internal fun TranscriptDetail(
         }
         return
     }
-    if (part.type == PartType.Switch) {
-        val prefix =
-            stringResource(
-                when (kind) {
-                    "model" -> Res.string.chatUiModel
-                    "agent" -> Res.string.chatUiAgent
-                    else -> Res.string.chatUiMoved
-                }
-            )
-        KitQuietLine("$prefix → ${part.text}", Modifier.testTag("transcript-marker-$key"))
-        return
-    }
+    // U6: changes of model or agent are kept in message Details.
+    if (part.type == PartType.Switch) return
     if (part.type == PartType.Compaction) {
         when (kind) {
             "passed" -> return
@@ -178,7 +168,9 @@ internal fun TranscriptDetail(
                                 ?.let {
                                     stringResource(
                                         Res.string.chatUiCompactedFrom,
-                                        io.github.eslamasabry.oc.core.common.text.Numbers.format(it),
+                                        io.github.eslamasabry.oc.core.common.text.Numbers.format(
+                                            it
+                                        ),
                                     )
                                 },
                         )
@@ -258,11 +250,12 @@ private fun DetailMarkdown(key: String, text: String, reply: ReplyActions?) {
 internal fun TurnMetadata(
     metadata: io.github.eslamasabry.oc.feature.chat.presentation.TurnMetadataUi
 ) {
+    val mask = rememberKitMask()
     val words =
         listOfNotNull(
-            metadata.models.takeIf { it.isNotEmpty() }?.joinToString(" → "),
+            metadata.models.takeIf { it.isNotEmpty() }?.joinToString(" → ") { mask(it) },
             metadata.tokens
-                .takeIf { metadata.latest && it > 0 }
+                .takeIf { it > 0 }
                 ?.let {
                     stringResource(
                         Res.string.chatTranscriptTokens,
@@ -270,7 +263,7 @@ internal fun TurnMetadata(
                     )
                 },
             metadata.cost
-                .takeIf { metadata.latest && it > 0 }
+                .takeIf { it > 0 }
                 ?.let {
                     stringResource(
                         Res.string.chatTranscriptCost,

@@ -76,14 +76,14 @@ public fun KitStatusLine(status: KitStatus, modifier: Modifier = Modifier) {
             .drawBehind {
                 drawLine(
                     hairline,
-                    Offset(0f, size.height - 0.5f),
-                    Offset(size.width, size.height - 0.5f),
+                    Offset(tokens.gutter.dp.toPx(), size.height - 0.5f),
+                    Offset(size.width - tokens.gutter.dp.toPx(), size.height - 0.5f),
                     1f,
                 )
             }
             .padding(
                 start = tokens.gutter.dp,
-                end = Space.S1.dp,
+                end = tokens.gutter.dp,
                 top = Space.S2.dp,
                 bottom = Space.S2.dp,
             )

@@ -106,9 +106,9 @@ public fun PlansContent(
         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {
         when (state.phase) {
-            PlansPhase.Loading -> KitStateView(KitStateKind.Loading, words.loading)
+            PlansPhase.Loading -> KitStateView(KitStateKind.Loading, words.loading, modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp))
             PlansPhase.Empty ->
-                KitStateView(KitStateKind.Empty, words.emptyTitle, body = words.emptyBody)
+                KitStateView(KitStateKind.Empty, words.emptyTitle, modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp), body = words.emptyBody)
             PlansPhase.List -> {
                 // LINUX-2: the phone's own usage collector, above the plans.
                 if (state.collector.available) CollectorSetup(state.collector, actions)

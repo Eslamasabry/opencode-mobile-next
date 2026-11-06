@@ -1,8 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat.composer
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
@@ -12,7 +10,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalFocusManager
@@ -66,10 +63,11 @@ import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerAdd
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerBox
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerChip
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerPrimaryAction
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerSend
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerStopRing
-import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerTextBox
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerTray
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerVoice
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitTrayAction
@@ -92,7 +90,6 @@ import io.github.eslamasabry.oc.ui.words.res.chatModelsRecent
 import io.github.eslamasabry.oc.ui.words.res.chatModelsSearch
 import io.github.eslamasabry.oc.ui.words.res.chatPhraseHide
 import io.github.eslamasabry.oc.ui.words.res.chatSubagentReadOnly
-import io.github.eslamasabry.oc.ui.words.res.chatUiAskOpenCode
 import io.github.eslamasabry.oc.ui.words.res.chatUiOpenParentSession
 import io.github.eslamasabry.oc.ui.words.res.chat_model_favorite_add
 import io.github.eslamasabry.oc.ui.words.res.chat_model_favorite_remove
@@ -141,6 +138,8 @@ import io.github.eslamasabry.oc.ui.words.res.kitComposerTrayClose
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveStopShort
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardStopping
 import io.github.eslamasabry.oc.ui.words.res.promptHistorySaveFailed
+import io.github.eslamasabry.oc.ui.words.res.upgradeComposerAsk
+import io.github.eslamasabry.oc.ui.words.res.upgradeComposerFree
 import io.github.eslamasabry.oc.ui.words.res.workspaceDismissNotice
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
@@ -561,12 +560,19 @@ public fun BasicComposer(
                 }
             }
         }
-        // N-05: match Flutter's approval/model labels above a compact message field. Long text
-        // grows the field; Stop stays beside + while a typed steering message keeps Send at the
-        // end.
+        // B8 (QA wave 1): while a reply runs, Stop and "Add to this turn" sit on their own row
+        // under a full-width
+        // field, so the message box never shrinks to a sliver.
+        // Looks pass (owner pick, 2026-11-05): one message box. The words on top; under them the
+        // plus, the model
+        // and approval chips (never a row of their own above the box), then Send, or the ringed
+        // Stop while a reply
+        // runs. With words typed during a run, Send stays at the end (they join the turn) and Stop
+        // moves beside
+        // the plus, away from the thumb (Flutter `_stopLeads`).
         val waitingRequest = chrome.requestWaiting()
         val stopShown = busy || waitingRequest
-        val typed = field.text.isNotEmpty()
+        val typed = field.text.isNotBlank() || state.draft.attachments.isNotEmpty()
         val sendReady =
             state.available &&
                 editorReady &&
@@ -596,36 +602,7 @@ public fun BasicComposer(
                 modifier = Modifier.testTag("chat-stop-button"),
             )
         }
-        Row(
-            Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            chrome.rowChips()
-            KitComposerChip(
-                label =
-                    modelLabel(
-                        state.models.selected?.label
-                            // QA wave 4 B13: "Server default" only once the server said so.
-                            ?: stringResource(
-                                if (state.models.usesDefault) Res.string.composerPreviewModelDefault
-                                else Res.string.composerPreviewModelButton
-                            ),
-                        state.models.variant,
-                        state.models.agent,
-                    ),
-                onClick = {
-                    // B3: the keyboard never stays open over the picker.
-                    focusManager.clearFocus()
-                    modelsOpen = true
-                },
-                semanticsLabel = stringResource(Res.string.composerPreviewModelButton),
-                modifier = Modifier.weight(1f, fill = false).testTag("chat-model-button"),
-            )
-        }
-        KitComposerTextBox(
-            text = field.text.toString(),
-            hasLeading = true,
+        KitComposerBox(
             running = busy && !waitingRequest,
             field = {
                 if (!waitingRequest)
@@ -633,17 +610,22 @@ public fun BasicComposer(
                         state = field,
                         // While a reply runs on a steering server the words join it (B-PROTO-025).
                         label =
-                            stringResource(
-                                if (busy && state.steers) Res.string.composerFullSteerHint
-                                else Res.string.chatUiAskOpenCode
-                            ),
+                            if (busy && state.steers)
+                                stringResource(Res.string.composerFullSteerHint)
+                            else
+                                stringResource(
+                                    Res.string.upgradeComposerAsk,
+                                    state.models.agent?.takeUnless {
+                                        it.lowercase() in
+                                            setOf("build", "plan", "compaction", "title", "summary")
+                                    } ?: chrome.agentName(),
+                                ),
                         kind = KitFieldKind.Multiline,
                         // B6: one line when empty, so the conversation keeps its room above the
                         // keyboard.
                         multilineLines = 1..5,
                         labelShown = false,
                         framed = false,
-                        composer = true,
                         focusRequester = focus,
                         enabled =
                             if (editorReady && state.draft.ready) KitEnabled.Enabled
@@ -667,7 +649,8 @@ public fun BasicComposer(
                             else Res.string.composerFullAttach
                         ),
                     onClick = {
-                        if (state.attachKinds.isEmpty() && voice == null) actions.attachFile()
+                        if (state.attachKinds.isEmpty() && voice == null && refreshHistory == null)
+                            actions.attachFile()
                         else addOpen = !addOpen
                     },
                     open = addOpen,
@@ -675,24 +658,53 @@ public fun BasicComposer(
                 )
                 if (stopShown && typed && !waitingRequest) stopPart()
             },
+            chips = {
+                KitComposerChip(
+                    label =
+                        modelLabel(
+                            state.models.selected?.label
+                                // QA wave 4 B13: "Server default" only once the server said so.
+                                ?: stringResource(
+                                    if (state.models.usesDefault)
+                                        Res.string.composerPreviewModelDefault
+                                    else Res.string.composerPreviewModelButton
+                                ),
+                            state.models.variant,
+                            state.models.agent,
+                        ) +
+                            if (chrome.freeModel()) stringResource(Res.string.upgradeComposerFree)
+                            else "",
+                    onClick = {
+                        // B3: the keyboard never stays open over the picker.
+                        focusManager.clearFocus()
+                        modelsOpen = true
+                    },
+                    semanticsLabel = stringResource(Res.string.composerPreviewModelButton),
+                    modifier = Modifier.weight(1f, fill = false).testTag("chat-model-button"),
+                )
+                chrome.rowChips()
+            },
             trailing = {
-                if (!waitingRequest) voice?.Mic(voiceField, Modifier) // P12-VOICE
-                when {
-                    stopShown && !(typed && !waitingRequest) -> stopPart()
-                    else ->
-                        KitComposerSend(
-                            label = sendLabel,
-                            onClick = send,
-                            enabled =
-                                if (sendReady) KitEnabled.Enabled
-                                else
-                                    KitEnabled.Disabled(
-                                        stringResource(Res.string.kitComposerField)
-                                    ),
-                            working = state.sending,
-                            modifier = Modifier.testTag("chat-send-button"),
-                        )
-                }
+                if (stopShown && !(typed && !waitingRequest)) stopPart()
+                else
+                    KitComposerPrimaryAction(
+                        hasMessage = typed,
+                        mic = { voice?.Mic(voiceField, Modifier) },
+                        send = {
+                            KitComposerSend(
+                                label = sendLabel,
+                                onClick = send,
+                                enabled =
+                                    if (sendReady) KitEnabled.Enabled
+                                    else
+                                        KitEnabled.Disabled(
+                                            stringResource(Res.string.kitComposerField)
+                                        ),
+                                working = state.sending,
+                                modifier = Modifier.testTag("chat-send-button"),
+                            )
+                        },
+                    )
             },
         )
     }

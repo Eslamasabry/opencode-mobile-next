@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.*
 import io.github.eslamasabry.oc.ui.kit.input.*
 import io.github.eslamasabry.oc.ui.kit.row.*
 import io.github.eslamasabry.oc.ui.kit.state.*
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
@@ -24,6 +25,7 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Composable
 public fun ToolsScreen(state: ToolsUi, actions: ToolsActions) {
+    val gutter = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
     val name = remember { TextFieldState() }
     val target = remember { TextFieldState() }
     var local by remember { mutableStateOf(false) }
@@ -47,11 +49,13 @@ public fun ToolsScreen(state: ToolsUi, actions: ToolsActions) {
                 actions::refresh,
                 working = state.loading,
                 role = KitButtonRole.Secondary,
+                modifier = gutter,
             )
             KitButton(
                 stringResource(Res.string.protoToolsProviders),
                 actions::providers,
                 role = KitButtonRole.Secondary,
+                modifier = gutter,
             )
             state.issue?.let { KitNotice(issueWords(it)) }
             if (!state.catalogSupported && !state.loading)
@@ -160,6 +164,7 @@ public fun ToolsScreen(state: ToolsUi, actions: ToolsActions) {
                             stringResource(Res.string.protoToolsActivate),
                             actions::activate,
                             working = state.working,
+                            modifier = gutter,
                         )
                     }
                 }
@@ -176,6 +181,7 @@ public fun ToolsScreen(state: ToolsUi, actions: ToolsActions) {
                                 { actions.disconnect(server.name) },
                                 working = state.working,
                                 role = KitButtonRole.Tertiary,
+                                modifier = gutter,
                             )
                         else
                             KitButton(
@@ -183,13 +189,14 @@ public fun ToolsScreen(state: ToolsUi, actions: ToolsActions) {
                                 { actions.connect(server.name) },
                                 working = state.working,
                                 role = KitButtonRole.Tertiary,
+                                modifier = gutter,
                             )
                     }
                 }
                 if (state.canAdd)
                     KitRowGroup(label = stringResource(Res.string.protoToolsAddMcp)) {
                         KitNotice(stringResource(Res.string.protoToolsRuntimeScope))
-                        KitField(name, stringResource(Res.string.protoToolsName), maxLength = 512)
+                        KitField(name, stringResource(Res.string.protoToolsName), modifier = gutter, maxLength = 512)
                         KitSwitchRow(
                             title = stringResource(Res.string.protoToolsLocal),
                             checked = local,
@@ -202,12 +209,14 @@ public fun ToolsScreen(state: ToolsUi, actions: ToolsActions) {
                                 else Res.string.protoToolsUrl
                             ),
                             kind = if (local) KitFieldKind.Multiline else KitFieldKind.Text,
+                            modifier = gutter,
                             maxLength = 8192,
                         )
                         KitButton(
                             stringResource(Res.string.protoToolsAdd),
                             { actions.add(name.text.toString(), target.text.toString(), local) },
                             working = state.working,
+                            modifier = gutter,
                         )
                     }
             }

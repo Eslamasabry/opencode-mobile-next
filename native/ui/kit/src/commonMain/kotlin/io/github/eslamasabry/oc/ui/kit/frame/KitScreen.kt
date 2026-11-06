@@ -106,6 +106,7 @@ public fun KitScreen(
     width: KitScreenWidth = KitScreenWidth.Full,
     page: Boolean = false,
     overlayChrome: Boolean = false,
+    hideStatusWhenTyping: Boolean = false,
     body: @Composable () -> Unit,
 ) {
     val framed = topBar != null || page
@@ -218,7 +219,7 @@ public fun KitScreen(
             KitStatusContribution(status)
             inner(null, false)
         } else {
-            KitStatusSlot(status) { shown -> inner(shown, true) }
+            KitStatusSlot(status) { shown -> inner(if (hideStatusWhenTyping && kitKeyboardVisible()) null else shown, true) }
         }
     }
     if (framed) {

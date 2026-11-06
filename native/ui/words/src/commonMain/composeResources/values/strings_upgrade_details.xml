@@ -1,0 +1,4 @@
+<resources>
+    <string name="tipMessageDetailsTitle">Message details</string>
+    <string name="tipMessageDetails">Hold a message for Details, or use its More button, to see the model and timing.</string>
+</resources>

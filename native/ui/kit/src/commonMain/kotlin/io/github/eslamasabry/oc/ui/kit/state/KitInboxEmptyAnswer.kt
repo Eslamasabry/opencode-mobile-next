@@ -56,7 +56,7 @@ public fun KitInboxEmptyAnswer(
     val colors = LocalKitColors.current
     val style = LocalKitStyle.current
     BoxWithConstraints(modifier.kitMaxWidth(CapRole.Conversation).fillMaxWidth()) {
-        val margin = if (maxWidth < 360.dp) tokens.gutter else tokens.gutter + tokens.gutter // F: lib/ui/kit/kit_status_answer.dart:273-275,286
+        val margin = tokens.gutter
         KitSwap(uncertain to answer, Modifier.fillMaxWidth().padding(horizontal = margin.dp), pace = KitPace.Standard) { (shownUncertain, shownAnswer) ->
             Column(
                 Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite },

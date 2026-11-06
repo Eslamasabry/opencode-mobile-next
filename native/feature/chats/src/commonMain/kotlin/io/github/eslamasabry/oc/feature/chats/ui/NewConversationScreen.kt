@@ -1,11 +1,13 @@
 package io.github.eslamasabry.oc.feature.chats.ui
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -17,39 +19,38 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleStartEffect
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.model.ModelRef
 import io.github.eslamasabry.oc.engine.git.GitLinkRepairResult
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationActions
+import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationModel
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSheet
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationUi
-import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationModel
-import io.github.eslamasabry.oc.core.model.ModelRef
+import io.github.eslamasabry.oc.feature.chats.presentation.isStartableAgent
+import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
-import io.github.eslamasabry.oc.ui.kit.input.KitField
-import io.github.eslamasabry.oc.ui.kit.input.KitStartBox
-import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
+import io.github.eslamasabry.oc.ui.kit.input.KitStartBox
 import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
-import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitPageOverlay
-import io.github.eslamasabry.oc.ui.kit.choice.KitAgentGrid
-import io.github.eslamasabry.oc.ui.kit.choice.KitAgentGridItem
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
+import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
-import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
-import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAge
-import io.github.eslamasabry.oc.ui.design.type.TypeRole
-import io.github.eslamasabry.oc.ui.design.color.StatusTone
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
@@ -57,6 +58,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
+import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAge
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -72,6 +74,36 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
     LifecycleStartEffect(actions) {
         actions.shown()
         onStopOrDispose {}
+    }
+    if (state.openingChat) {
+        KitBackGuard(enabled = state.busy, onBack = actions::back)
+        io.github.eslamasabry.oc.ui.kitchat.transcript.KitStartingConversation(
+            text = state.text,
+            project = state.directory?.let(::importFolder).orEmpty(),
+            model =
+                state.setup?.models?.firstOrNull { it.model == state.model }?.name
+                    ?: stringResource(Res.string.modelServerDefault),
+            status =
+                stringResource(
+                    when {
+                        state.busy -> Res.string.upgradeStartSending
+                        state.deliveryUnconfirmed -> Res.string.p12NewDeliveryUnconfirmed
+                        state.creationUnconfirmed -> Res.string.p12NewCreationUnconfirmed
+                        else -> Res.string.upgradeStartFailed
+                    }
+                ),
+            backLabel = stringResource(Res.string.kitTopBarBack),
+            onBack = actions::back,
+            retryLabel = stringResource(Res.string.commonRetry),
+            onRetry =
+                if (!state.busy && !state.deliveryUnconfirmed && !state.creationUnconfirmed)
+                    actions::start
+                else null,
+            reviewLabel = stringResource(Res.string.p12NewOpenCreated),
+            onReview =
+                if (state.reviewConversation != null) actions::openCreatedConversation else null,
+        )
+        return
     }
     val field = rememberTextFieldState()
     LaunchedEffect(state.textRevision) {
@@ -113,21 +145,13 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
                 ) {
-                    // Keep required choices in the keyboard-safe footer, independent of the agent grid.
-                    if (state.servers.isNotEmpty()) NewConversationChoices(state, actions, working)
+                    if (state.servers.isNotEmpty()) NewConversationChoices(state, actions)
                     if (startBlocked != null && !state.busy)
                         KitText(startBlocked, role = TypeRole.Secondary)
                     KitButton(
                         action =
                             KitAction(
-                                label =
-                                    stringResource(
-                                        Res.string.chatsNewStartWith,
-                                        state.setup
-                                            ?.models
-                                            ?.firstOrNull { it.model == state.model }
-                                            ?.runtime ?: state.setup?.defaultRuntime ?: "OpenCode",
-                                    ),
+                                label = stringResource(Res.string.upgradeNewStart),
                                 onClick = actions::start,
                                 enabled =
                                     if (startBlocked == null) KitEnabled.Enabled
@@ -154,7 +178,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                             KitAction(stringResource(Res.string.serversAdd), actions::addServer),
                     )
                 } else {
-                    if (state.servers.size > 1 || state.profile == null)
+                    if (state.profile == null)
                         KitRowGroup {
                             state.servers.forEach { server ->
                                 KitRow(
@@ -169,36 +193,14 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     KitStartBox(
                         field,
                         stringResource(Res.string.chatsNewBuildPrompt),
-                        Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp).padding(bottom = Space.S1.dp).testTag("chats-new-field"),
+                        Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
+                            .padding(bottom = Space.S1.dp)
+                            .testTag("chats-new-field"),
                         enabled = enabled,
-                        minLines = 2, // Leave the choices and Start visible while the keyboard is open.
+                        minLines = 2,
                         autofocus = !state.busy,
                         onTextChanged = actions::draftChanged,
                     )
-                    NewConversationAgents(state, actions, enabled)
-                    KitRowGroup(leadingTiles = true) {
-                        if (state.canCopy)
-                            KitSwitchRow(
-                                title = stringResource(Res.string.chatsNewSeparateCopy),
-                                leading = KitRowLeading.Glyph(KitIcons.fork),
-                                supporting = stringResource(Res.string.chatsNewSeparateCopyDetail),
-                                checked = state.separateCopy,
-                                enabled =
-                                    if (state.attempted) KitEnabled.Disabled(working) else enabled,
-                                onCheckedChange = actions::separateCopy,
-                            )
-                        if (
-                            state.directory != null &&
-                                state.setup?.importDirectory == state.directory
-                        )
-                            KitRow(
-                                title = stringResource(Res.string.claudeImportTitle),
-                                leading = KitRowLeading.Glyph(KitIcons.download),
-                                enabled = !state.busy,
-                                disabledReason = working,
-                                onClick = { actions.sheet(NewConversationSheet.Import) },
-                            )
-                    }
                     if (state.deliveryUnconfirmed) {
                         KitNotice(stringResource(Res.string.p12NewDeliveryUnconfirmed))
                         if (state.reviewConversation != null)
@@ -243,8 +245,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                     if (state.creationUnconfirmed)
                                         Res.string.p12NewCreationUnconfirmed
                                     else if (
-                                        state.repairAvailable &&
-                                            state.failure is Failure.ProjectGit
+                                        state.repairAvailable && state.failure is Failure.ProjectGit
                                     )
                                         Res.string.gitRepairFailureWords
                                     else Res.string.chatsNewFailed
@@ -278,61 +279,83 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
     }
 }
 
-/** Model and project stay visible beside Start even when optional setup scrolls away. */
+/** Compact upgrade choices stay beside Start while the keyboard is open. */
 @Composable
-private fun NewConversationChoices(
-    state: NewConversationUi,
-    actions: NewConversationActions,
-    working: String,
-) {
-    KitRowGroup(leadingTiles = true) {
-        KitRow(
-            title = stringResource(Res.string.chatsNewModelRow),
-            leading = KitRowLeading.Glyph(KitIcons.model),
-            trailing =
-                KitRowTrailing.Value(
-                    state.setup
-                        ?.models
-                        ?.firstOrNull { it.model == state.model }
-                        ?.name ?: stringResource(Res.string.modelServerDefault),
-                    prominent = true,
-                ),
-            enabled = !state.busy,
-            disabledReason = working,
+private fun NewConversationChoices(state: NewConversationUi, actions: NewConversationActions) {
+    Row(
+        Modifier.fillMaxWidth()
+            .padding(horizontal = LocalKitTokens.current.gutter.dp)
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+    ) {
+        KitChip(
+            label =
+                state.agent?.takeIf(::isStartableAgent)
+                    ?: state.setup?.defaultRuntime
+                    ?: "OpenCode",
+            icon = KitIcons.agent,
+            opensMenu = true,
+            onClick = { actions.sheet(NewConversationSheet.Agents) },
+        )
+        KitChip(
+            label =
+                state.setup?.models?.firstOrNull { it.model == state.model }?.name
+                    ?: stringResource(Res.string.modelServerDefault),
+            icon = KitIcons.model,
+            opensMenu = true,
             onClick = { actions.sheet(NewConversationSheet.Models) },
         )
-        KitRow(
-            title = stringResource(Res.string.chatsNewProjectRow),
-            leading = KitRowLeading.Glyph(KitIcons.files),
-            trailing =
-                KitRowTrailing.Value(
-                    state.setup?.projects?.firstOrNull { it.directory == state.directory }?.name
-                        ?: state.directory?.let(::importFolder)
-                        ?: stringResource(Res.string.chatsNewChooseProject),
-                    prominent = true,
-                ),
-            enabled =
-                !state.busy &&
-                    !state.attempted &&
-                    state.setup?.canChangeProject == true,
-            disabledReason =
-                if (state.setup?.canChangeProject == false)
-                    stringResource(Res.string.p12NewBoundProject)
-                else working,
+        KitChip(
+            label =
+                state.directory?.let(::importFolder)
+                    ?: stringResource(Res.string.chatsNewProjectRow),
+            icon = KitIcons.files,
+            opensMenu = true,
             onClick = { actions.sheet(NewConversationSheet.Projects) },
         )
+        if (
+            state.setup?.modes?.isNotEmpty() == true &&
+                (state.agent == null || state.agent in state.setup.modes)
+        )
+            KitChip(
+                label =
+                    stringResource(
+                        if (state.agent?.lowercase() == "plan") Res.string.upgradeModePlan
+                        else Res.string.upgradeModeBuild
+                    ),
+                icon = KitIcons.tools,
+                opensMenu = true,
+                onClick = { actions.sheet(NewConversationSheet.Modes) },
+            )
     }
 }
 
 @Composable
 private fun NewConversationSheet(state: NewConversationUi, actions: NewConversationActions) {
     val current = state.sheet
-    KitPageOverlay(current == NewConversationSheet.Import, stringResource(Res.string.claudeImportTitle), { actions.sheet(null) }) {
+    KitPageOverlay(
+        current == NewConversationSheet.Import,
+        stringResource(Res.string.claudeImportTitle),
+        { actions.sheet(null) },
+    ) {
         KitScreen(
-            topBar = { KitTopBar(stringResource(Res.string.claudeImportTitle), exit = KitTopBarExit.Back, exitLabel = stringResource(Res.string.kitTopBarBack), onExit = { actions.sheet(null) }) },
+            topBar = {
+                KitTopBar(
+                    stringResource(Res.string.claudeImportTitle),
+                    exit = KitTopBarExit.Back,
+                    exitLabel = stringResource(Res.string.kitTopBarBack),
+                    onExit = { actions.sheet(null) },
+                )
+            },
             width = KitScreenWidth.Reading,
         ) {
-            Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = Space.S3.dp)) { ClaudeImportBody(state, actions) }
+            Column(
+                Modifier.fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(top = Space.S3.dp)
+            ) {
+                ClaudeImportBody(state, actions)
+            }
         }
     }
     KitSheet(
@@ -343,18 +366,18 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
                 when (current) {
                     NewConversationSheet.Models -> Res.string.agentsModelTitle
                     NewConversationSheet.Agents -> Res.string.p12NewAgent
+                    NewConversationSheet.Modes -> Res.string.upgradeMode
                     NewConversationSheet.Import -> Res.string.claudeImportTitle
                     else -> Res.string.chatsNewProjectRow
                 }
             ),
         closeLabel = stringResource(Res.string.kitSheetClose),
     ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
-        ) {
+        Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
             when (current) {
                 NewConversationSheet.Projects -> {
-                    // The picker starts from the selected project on each visit, after setup has loaded.
+                    // The picker starts from the selected project on each visit, after setup has
+                    // loaded.
                     val directory = rememberTextFieldState(state.directory.orEmpty())
                     KitRowGroup {
                         state.setup?.projects.orEmpty().forEach { project ->
@@ -366,6 +389,19 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
                             )
                         }
                     }
+                    if (state.canCopy)
+                        KitSwitchRow(
+                            title = stringResource(Res.string.chatsNewSeparateCopy),
+                            supporting = stringResource(Res.string.chatsNewSeparateCopyDetail),
+                            checked = state.separateCopy,
+                            onCheckedChange = actions::separateCopy,
+                        )
+                    if (state.setup?.importDirectory == state.directory && state.directory != null)
+                        KitRow(
+                            title = stringResource(Res.string.claudeImportTitle),
+                            leading = KitRowLeading.Glyph(KitIcons.download),
+                            onClick = { actions.sheet(NewConversationSheet.Import) },
+                        )
                     KitField(
                         directory,
                         stringResource(Res.string.p12NewFolder),
@@ -374,9 +410,31 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
                     KitButton(
                         stringResource(Res.string.p12NewUseFolder),
                         { actions.chooseDirectory(directory.text.toString()) },
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
-                NewConversationSheet.Models -> NewConversationModelChoices(state.setup?.models.orEmpty(), state.model, actions::chooseModel)
+                NewConversationSheet.Modes ->
+                    KitRowGroup {
+                        state.setup?.modes.orEmpty().forEach { mode ->
+                            KitRow(
+                                title =
+                                    stringResource(
+                                        if (mode.lowercase() == "plan") Res.string.upgradeModePlan
+                                        else Res.string.upgradeModeBuild
+                                    ),
+                                selected =
+                                    state.agent == mode ||
+                                        (state.agent == null && mode.lowercase() == "build"),
+                                onClick = { actions.chooseMode(mode) },
+                            )
+                        }
+                    }
+                NewConversationSheet.Models ->
+                    NewConversationModelChoices(
+                        state.setup?.models.orEmpty(),
+                        state.model,
+                        actions::chooseModel,
+                    )
                 NewConversationSheet.Agents ->
                     NewConversationAgents(state, actions, KitEnabled.Enabled)
                 NewConversationSheet.Import -> Unit
@@ -386,7 +444,7 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
     }
 }
 
-/** The visible setup entry and agent choices share the Flutter start screen's card grid. */
+/** Compact choices share the same chip-sheet flow as models and projects. */
 @Composable
 private fun NewConversationAgents(
     state: NewConversationUi,
@@ -394,37 +452,40 @@ private fun NewConversationAgents(
     enabled: KitEnabled,
 ) {
     val defaultName = state.setup?.defaultRuntime ?: "OpenCode"
-    val items = listOf(
-        KitAgentGridItem(
-            title = stringResource(Res.string.kitCapAgentA2aEnable),
-            icon = KitIcons.add,
-            onClick = actions::agents,
-            isAdd = true,
-        ),
-        KitAgentGridItem(
+    KitRowGroup {
+        KitRow(
             title = defaultName,
-            icon = KitIcons.agent,
-            selected = state.agent == null,
+            leading = KitRowLeading.Logo("opencode", defaultName, agent = true),
+            selected = state.agent == null || state.agent in state.setup?.modes.orEmpty(),
+            supporting = stringResource(Res.string.upgradeAgentReady),
             onClick = { actions.chooseAgent(null) },
-        ),
-    ) + state.setup?.agents.orEmpty().filter(String::isNotBlank).map { agent ->
-        KitAgentGridItem(
-            title = agent,
-            icon = KitIcons.agent,
-            selected = state.agent == agent,
-            onClick = { actions.chooseAgent(agent) },
+        )
+        state.setup?.agents.orEmpty().filter(::isStartableAgent).distinct().forEach { agent ->
+            KitRow(
+                title = agent,
+                leading = KitRowLeading.Logo(agent.lowercase(), agent, agent = true),
+                selected = state.agent == agent,
+                supporting = stringResource(Res.string.upgradeAgentReady),
+                onClick = { actions.chooseAgent(agent) },
+            )
+        }
+        KitRow(
+            title = stringResource(Res.string.kitCapAgentA2aEnable),
+            leading = KitRowLeading.Glyph(KitIcons.add),
+            onClick = actions::agents,
         )
     }
-    KitAgentGrid(
-        items = items,
-        enabled = enabled,
-        modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
-    )
 }
 
-/** Flutter agent_model_sheet.dart: the default first, then named models, each checked at the end. */
+/**
+ * Flutter agent_model_sheet.dart: the default first, then named models, each checked at the end.
+ */
 @Composable
-internal fun NewConversationModelChoices(models: List<NewConversationModel>, selected: ModelRef?, choose: (ModelRef?) -> Unit) {
+internal fun NewConversationModelChoices(
+    models: List<NewConversationModel>,
+    selected: ModelRef?,
+    choose: (ModelRef?) -> Unit,
+) {
     KitRowGroup {
         KitRow(
             title = stringResource(Res.string.agentsModelDefault),
@@ -432,19 +493,23 @@ internal fun NewConversationModelChoices(models: List<NewConversationModel>, sel
             trailing = if (selected == null) KitRowTrailing.Check else KitRowTrailing.None,
             onClick = { choose(null) },
         )
-        models.filter { it.model.modelId != "default" }.forEach { model ->
-            KitRow(
-                title = model.name,
-                selected = model.model == selected,
-                trailing = if (model.model == selected) KitRowTrailing.Check else KitRowTrailing.None,
-                onClick = { choose(model.model) },
-            )
-        }
+        models
+            .filter { it.model.modelId != "default" }
+            .forEach { model ->
+                KitRow(
+                    title = model.name,
+                    selected = model.model == selected,
+                    trailing =
+                        if (model.model == selected) KitRowTrailing.Check else KitRowTrailing.None,
+                    onClick = { choose(model.model) },
+                )
+            }
     }
 }
 
 /** Flutter import list uses the final non-empty path segment, including a trailing slash. */
-private fun importFolder(directory: String): String = directory.trimEnd('/').substringAfterLast('/').ifEmpty { directory }
+private fun importFolder(directory: String): String =
+    directory.trimEnd('/').substringAfterLast('/').ifEmpty { directory }
 
 @Composable
 internal fun ClaudeImportBody(state: NewConversationUi, actions: NewConversationActions) {
@@ -454,7 +519,11 @@ internal fun ClaudeImportBody(state: NewConversationUi, actions: NewConversation
             kind = KitStateKind.Error,
             title = stringResource(Res.string.claudeImportLoadFailedTitle),
             body = stringResource(Res.string.claudeImportLoadFailedBody),
-            primary = KitAction(stringResource(Res.string.commonRetry), { actions.sheet(NewConversationSheet.Import) }),
+            primary =
+                KitAction(
+                    stringResource(Res.string.commonRetry),
+                    { actions.sheet(NewConversationSheet.Import) },
+                ),
         )
         return
     }
@@ -478,8 +547,11 @@ internal fun ClaudeImportBody(state: NewConversationUi, actions: NewConversation
     )
     Spacer(Modifier.height(Space.S3.dp))
     if (state.importFailed) {
-        KitNotice(stringResource(Res.string.claudeImportFailed), tone = StatusTone.Failure,
-            modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp))
+        KitNotice(
+            stringResource(Res.string.claudeImportFailed),
+            tone = StatusTone.Failure,
+            modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
+        )
         Spacer(Modifier.height(Space.S3.dp))
     }
     KitRowGroup(leadingTiles = true) {
@@ -490,17 +562,23 @@ internal fun ClaudeImportBody(state: NewConversationUi, actions: NewConversation
                 disabledReason = stringResource(Res.string.claudeImportWorking),
                 title = item.displayTitle ?: stringResource(Res.string.claudeImportUntitled),
                 titleMaxLines = 2, // F: lib/ui/screens/chats/claude_import_screen.dart:162
-                supporting = stringResource(
-                    Res.string.claudeImportRowDetail,
-                    importFolder(item.directory),
-                    kitRelativeAge(item.lastUsed.toEpochMilliseconds(), state.importsReadAtMs),
-                ),
+                supporting =
+                    stringResource(
+                        Res.string.claudeImportRowDetail,
+                        importFolder(item.directory),
+                        kitRelativeAge(item.lastUsed.toEpochMilliseconds(), state.importsReadAtMs),
+                    ),
                 supportingMaxLines = 2, // F: lib/ui/screens/chats/claude_import_screen.dart:175
                 onClick = { actions.import(item) },
             )
         }
     }
-    if (found.alreadyImported > 0) KitGroupNote(
-        pluralStringResource(Res.plurals.claudeImportAlready, found.alreadyImported, found.alreadyImported),
-    )
+    if (found.alreadyImported > 0)
+        KitGroupNote(
+            pluralStringResource(
+                Res.plurals.claudeImportAlready,
+                found.alreadyImported,
+                found.alreadyImported,
+            )
+        )
 }

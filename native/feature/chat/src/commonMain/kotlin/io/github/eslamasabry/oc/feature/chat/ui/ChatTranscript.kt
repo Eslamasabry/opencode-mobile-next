@@ -21,6 +21,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.text.Numbers
+import io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind
 import io.github.eslamasabry.oc.engine.agents.errors.AgentErrorText
 import io.github.eslamasabry.oc.engine.transcript.state.BlockRow
 import io.github.eslamasabry.oc.engine.transcript.state.FooterRow
@@ -43,8 +44,8 @@ import io.github.eslamasabry.oc.feature.chat.presentation.LongTable
 import io.github.eslamasabry.oc.feature.chat.presentation.ReceiptCheckResult
 import io.github.eslamasabry.oc.feature.chat.presentation.ReceiptCheckUi
 import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFailureKind
+import io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
-import io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
 import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
@@ -73,16 +74,13 @@ import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
 import io.github.eslamasabry.oc.ui.kitchat.stream.RevealRegistry
 import io.github.eslamasabry.oc.ui.kitchat.stream.kitPromptLift
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitBlockKind
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitMessageActions
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitMessageTimestamp
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitPromptBubble
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitQuietLine
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyBlock
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyFooter
-import io.github.eslamasabry.oc.ui.words.res.kitCopy
-import io.github.eslamasabry.oc.ui.words.res.kitTurnMore
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptList
-import io.github.eslamasabry.oc.ui.kitchat.transcript.KitThoughtBlock
-import io.github.eslamasabry.oc.ui.kitchat.transcript.KitMessageTimestamp
-import io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.chatHomeMinutes
@@ -90,7 +88,9 @@ import io.github.eslamasabry.oc.ui.words.res.chatHomeSeconds
 import io.github.eslamasabry.oc.ui.words.res.chatReceiptCheckAgain
 import io.github.eslamasabry.oc.ui.words.res.chatReceiptChecking
 import io.github.eslamasabry.oc.ui.words.res.chatReceiptLastChecked
+import io.github.eslamasabry.oc.ui.words.res.kitCopy
 import io.github.eslamasabry.oc.ui.words.res.kitQueuedUncertain
+import io.github.eslamasabry.oc.ui.words.res.kitTurnMore
 import io.github.eslamasabry.oc.ui.words.res.queuedReceiptStillUncertain
 import io.github.eslamasabry.oc.ui.words.res.queuedReceiptStorageProblem
 import kotlin.time.Instant
@@ -280,9 +280,18 @@ internal fun ChatTranscriptList(
     // B0: a repeated key kills the whole screen (LazyColumn throws), so the list never sees one.
     val unique = remember(rows) { rows.distinctKeys() }
     val tables = remember(unique) { LongTable.of(unique) }
-    val copyableTurns = remember(unique) {
-        unique.filterIsInstance<BlockRow>().filter { it.text.isNotBlank() }.mapTo(hashSetOf()) { it.turnId }
-    }
+    val copyableTurns =
+        remember(unique) {
+            unique
+                .filterIsInstance<BlockRow>()
+                .filter { it.text.isNotBlank() }
+                .mapTo(hashSetOf()) { it.turnId }
+        }
+    val newestCompleted =
+        unique
+            .filterIsInstance<FooterRow>()
+            .firstOrNull { facts.reading.metadata[it.turnId] != null }
+            ?.key
     val newestKey =
         when {
             live != null -> ListKeys.LIVE
@@ -351,7 +360,8 @@ internal fun ChatTranscriptList(
         }
         items(unique, key = { it.key }, contentType = { it.kind }) { row ->
             Column {
-                // Keep the engine's item indices: a folded source has an empty item, not a removed list
+                // Keep the engine's item indices: a folded source has an empty item, not a removed
+                // list
                 // position.
                 val source =
                     when (row) {
@@ -382,6 +392,7 @@ internal fun ChatTranscriptList(
                             reasoningExpanded,
                             onCompactAgain,
                             onCopyReply.takeIf { row.turnId in copyableTurns },
+                            teachDetails = row.key == newestCompleted,
                         )
                 } else {
                     ChatRow(
@@ -400,6 +411,7 @@ internal fun ChatTranscriptList(
                         reasoningExpanded,
                         onCompactAgain,
                         onCopyReply.takeIf { row.turnId in copyableTurns },
+                        teachDetails = row.key == newestCompleted,
                     )
                 }
                 if (display.timestampsVisible) {
@@ -524,34 +536,43 @@ private fun ChatRow(
     reasoningExpanded: Boolean = false,
     onCompactAgain: (() -> Unit)? = null,
     onCopyReply: ((FooterRow) -> Unit)? = null,
+    teachDetails: Boolean = false,
 ) {
     when (row) {
-        is BlockRow ->
-            if (reply != null) RichBlock(row, reveal, motion, reply, copyCode)
-            else
-                KitReplyBlock(
-                    text = row.text,
-                    kind = row.kind.toKit(),
-                    live = row.live,
-                    streamed = row.origin == Origin.Streamed,
-                    revealKey = row.key,
-                    revealGroup = row.key.substringBeforeLast(':'),
-                    registry = reveal,
-                    motion = motion,
-                    continued = row.continued,
-                    continues = row.continues,
-                )
+        is BlockRow -> {
+            val content: @Composable () -> Unit = {
+                if (reply != null) RichBlock(row, reveal, motion, reply, copyCode)
+                else
+                    KitReplyBlock(
+                        text = row.text,
+                        kind = row.kind.toKit(),
+                        live = row.live,
+                        streamed = row.origin == Origin.Streamed,
+                        revealKey = row.key,
+                        revealGroup = row.key.substringBeforeLast(':'),
+                        registry = reveal,
+                        motion = motion,
+                        continued = row.continued,
+                        continues = row.continues,
+                    )
+            }
+            if (onOpenMenu != null && listWords != null) {
+                KitMessageActions(
+                    label = listWords.messageActions,
+                    onOpen = { onOpenMenu(row.key) },
+                ) {
+                    content()
+                }
+            } else content()
+        }
         is PromptRow ->
             Column {
                 if (onOpenMenu != null && listWords != null) {
                     // Tap is the visible way to the message's actions; long-press is the familiar
                     // hidden twin (06 §11.1).
-                    KitTappable(
-                        onClick = { onOpenMenu(row.key) },
-                        onClickLabel = listWords.messageActions,
-                        onLongClick = { onOpenMenu(row.key) },
-                        onLongClickLabel = listWords.messageActions,
-                        role = KitTappableRole.Row,
+                    KitMessageActions(
+                        label = listWords.messageActions,
+                        onOpen = { onOpenMenu(row.key) },
                     ) {
                         KitPromptBubble(CardAnswerDisplay.text(row.text))
                     }
@@ -678,24 +699,30 @@ private fun ChatRow(
                                 onClick = { reply.onContinue(continueLabel) },
                                 role = KitButtonRole.Secondary,
                             )
-                        if (reason.isNotBlank()) KitDetailsFold(
-                            label = listWords.details,
-                            copyLabel = listWords.copyDetails,
-                            notes = listOf(mask(reason)),
-                        )
+                        if (reason.isNotBlank())
+                            KitDetailsFold(
+                                label = listWords.details,
+                                copyLabel = listWords.copyDetails,
+                                notes = listOf(mask(reason)),
+                            )
                     }
                 } else {
-                    KitReplyFooter(
-                        copyLabel = stringResource(Res.string.kitCopy),
-                        moreLabel = stringResource(Res.string.kitTurnMore),
-                        onCopy = onCopyReply?.let { copy -> { copy(row) } },
-                        onMore = onOpenMenu?.let { menu -> { menu(row.key) } },
-                        modifier = Modifier.testTag("chat-turn-footer"),
-                    ) {
-                        if (row.failed) KitQuietLine(words.footer(true))
-                        else if (row.stopped) KitQuietLine(words.stoppedFooter())
-                        facts.reading.endNotes[row.turnId]?.let { TurnEndNote(it) }
-                        facts.reading.metadata[row.turnId]?.let { TurnMetadata(it) }
+                    MessageDetailsTip(eligible = teachDetails) {
+                        KitReplyFooter(
+                            copyLabel = stringResource(Res.string.kitCopy),
+                            moreLabel = stringResource(Res.string.kitTurnMore),
+                            onCopy = onCopyReply?.let { copy -> { copy(row) } },
+                            // No orphan More on a synthetic footer before the first real reply.
+                            onMore =
+                                if (onCopyReply != null || row.failed || row.stopped)
+                                    onOpenMenu?.let { menu -> { menu(row.key) } }
+                                else null,
+                            modifier = Modifier.testTag("chat-turn-footer"),
+                        ) {
+                            if (row.failed) KitQuietLine(words.footer(true))
+                            else if (row.stopped) KitQuietLine(words.stoppedFooter())
+                            facts.reading.endNotes[row.turnId]?.let { TurnEndNote(it) }
+                        }
                     }
                 }
                 val result = facts.results[row.turnId]

@@ -2,9 +2,7 @@ package io.github.eslamasabry.oc.feature.chat.header.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.ime
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
@@ -12,7 +10,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.text.Numbers
@@ -65,7 +62,6 @@ import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.agentToolsTitle
 import io.github.eslamasabry.oc.ui.words.res.cardsFromAgentsTitle
-import io.github.eslamasabry.oc.ui.words.res.chatFreeModelNote
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderArchiveFailed
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderContext
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderDeleteFailed
@@ -359,18 +355,6 @@ public fun ChatHeaderTopBar(
                 dismissLabel = stringResource(Res.string.kitSheetDismiss),
             )
         }
-    )
-    // "Free model, slower": one quiet line, below every real status (it never outranks a failure).
-    KitStatusContribution(
-        if (!state.freeModelNote || WindowInsets.ime.getBottom(LocalDensity.current) > 0) null
-        else
-            KitStatus(
-                KitStatusKind.Info,
-                stringResource(Res.string.chatFreeModelNote),
-                id = "chat-free-model",
-                onDismiss = actions::dismissFreeNote,
-                dismissLabel = stringResource(Res.string.kitSheetDismiss),
-            )
     )
     KitSheet(
         visible = failure != null && detailsOpen == failure.id,

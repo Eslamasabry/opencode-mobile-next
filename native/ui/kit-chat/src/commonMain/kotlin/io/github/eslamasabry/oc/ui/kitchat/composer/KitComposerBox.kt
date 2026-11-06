@@ -9,7 +9,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -29,57 +29,50 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.LayoutDirection
-import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
+import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
-import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
-import io.github.eslamasabry.oc.ui.design.style.Style
-import io.github.eslamasabry.oc.ui.design.style.StyleResolver
-import io.github.eslamasabry.oc.ui.design.style.SurfaceDecoration
-import io.github.eslamasabry.oc.ui.design.style.Radii
-import io.github.eslamasabry.oc.ui.design.style.Shadow
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
-import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
+import io.github.eslamasabry.oc.ui.design.style.StyleResolver
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
+import io.github.eslamasabry.oc.ui.kit.action.KitWorkingMark
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
-import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
-import io.github.eslamasabry.oc.ui.kit.foundation.kitDecorated
-import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
-import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
-import io.github.eslamasabry.oc.ui.kit.action.KitWorkingMark
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
+import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
 /**
- * Flutter's composer: a school-resolved floating surface with the token phone/wide radius. The short field shares
- * one row with its controls; growing text keeps its field slot and moves the controls below. Accessories remain
- * inside the same face. Solid keeps KitGlass's surface2, physical hairline and floating shadow. The whole composer
- * is capped at the conversation measure and its glow follows the resolved corners.
+ * A frameless composer: text and controls sit on the page, with only the working glow around them.
+ * The short field shares one row with its controls; growing text keeps its field slot and moves
+ * controls below. Accessories remain inside the conversation measure; the glow follows the resolved
+ * corners.
  */
 @Composable
 public fun KitComposerBox(
@@ -94,68 +87,57 @@ public fun KitComposerBox(
     above: @Composable () -> Unit = {},
     hasLeading: Boolean = false,
 ) {
-    val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val appearance = LocalKitAppearance.current
     val style = LocalKitStyle.current
     val radius = (if (wide) tokens.composerRadiusWide else tokens.composerRadius).dp
-    val corner = StyleResolver.corner(radius.value, style.knobs.corners, style.spec.tokens.sharpRadius).dp
-    val look = kitSurfaceLook(KitSurfaceInput(
-        role = SurfaceRole.Floating,
-        shape = KitShapeId.Panel,
-        level = SurfaceLevel.Surface2,
-        ownFill = colors.surface2,
-        radius = radius,
-    ))
-    val solid = style.style == Style.Solid
-    val shadow = if (!solid) Modifier else Modifier.kitDecorated(SurfaceDecoration(
-        radii = Radii.all(corner.value),
-        shadows = listOf(Shadow(
-            dxDp = FlutterKitTokens.FLOATING_SHADOWS_DX.toFloat(),
-            dyDp = FlutterKitTokens.FLOATING_SHADOWS_DY.toFloat(),
-            blurDp = FlutterKitTokens.FLOATING_SHADOWS_BLUR.toFloat(),
-            spreadDp = FlutterKitTokens.FLOATING_SHADOWS_SPREAD.toFloat(),
-            color = LocalKitRoles.current.elevationShadow.withAlpha(FlutterKitTokens.FLOATING_SHADOWS_ALPHA),
-        )),
-    ))
-    val hairline = kitHairline()
+    val corner =
+        StyleResolver.corner(radius.value, style.knobs.corners, style.spec.tokens.sharpRadius).dp
     KitComposerGlow(
         active = running,
         modifier = modifier.kitMaxWidth(CapRole.Conversation).fillMaxWidth(),
         choice = KitGlowChoice.of(appearance.activityGlow, appearance.softGlow),
         corner = corner,
     ) {
-        Column(
-            Modifier.fillMaxWidth()
-                .then(shadow)
-                .then(look.modifier)
-                .then(if (solid) Modifier.border(hairline, colors.hairline, look.shape) else Modifier)
-                .clip(look.shape)
-                .padding(Space.S1.dp)
-                .testTag("kit-composer-box"),
-        ) {
+        Column(Modifier.fillMaxWidth().padding(Space.S1.dp).testTag("kit-composer-box")) {
             above()
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
                 if (!stacked) leading()
-                Box(Modifier.weight(1f).padding(start = if (!stacked && hasLeading) 0.dp else Space.S3.dp, end = Space.S2.dp).heightIn(min = tokens.minTarget.dp)) { field() }
+                Box(
+                    Modifier.weight(1f)
+                        .padding(
+                            start = if (!stacked && hasLeading) 0.dp else Space.S3.dp,
+                            end = Space.S2.dp,
+                        )
+                        .heightIn(min = tokens.minTarget.dp)
+                ) {
+                    field()
+                }
                 if (!stacked) trailing()
             }
-            if (stacked) Row(
-                Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                leading()
-                Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) { chips() }
-                trailing()
-            }
-
+            if (stacked)
+                Row(
+                    Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    leading()
+                    Row(
+                        Modifier.weight(1f).horizontalScroll(rememberScrollState()),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+                    ) {
+                        chips()
+                    }
+                    trailing()
+                }
         }
     }
 }
 
 /**
- * A chip inside the message box's row (Dart `KitComposerChips`): the model, the approval mode. 32 dp `surface3` pill in
- * a 48 dp target, an optional leading glyph, the words in the label size, and a caret when it opens a picker.
+ * A chip inside the message box's row (Dart `KitComposerChips`): the model, the approval mode. 32
+ * dp `surface3` pill in a 48 dp target, an optional leading glyph, the words in the label size, and
+ * a caret when it opens a picker.
  */
 @Composable
 public fun KitComposerChip(
@@ -169,7 +151,12 @@ public fun KitComposerChip(
     val colors = LocalKitColors.current
     KitTappable(
         onClick = onClick,
-        modifier = modifier.then(if (semanticsLabel != null) Modifier.semantics { contentDescription = semanticsLabel } else Modifier),
+        modifier =
+            modifier.then(
+                if (semanticsLabel != null)
+                    Modifier.semantics { contentDescription = semanticsLabel }
+                else Modifier
+            ),
         shape = KitShapeId.Pill,
     ) {
         Row(
@@ -181,27 +168,52 @@ public fun KitComposerChip(
             horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
         ) {
             icon?.let { KitIcon(it, size = KitIconSize.Small, tone = TextTone.Secondary) }
-            KitText(label, Modifier.weight(1f, fill = false), role = TypeRole.Label, kind = KitTextKind.Frame, maxLines = 1)
-            if (opensPicker) KitIcon(KitIcons.chevronDown, Modifier.size(14.dp), tone = TextTone.Secondary)
+            KitText(
+                label,
+                Modifier.weight(1f, fill = false),
+                role = TypeRole.Label,
+                kind = KitTextKind.Frame,
+                maxLines = 1,
+            )
+            if (opensPicker)
+                Image(
+                    KitIcons.chevronDown,
+                    null,
+                    Modifier.size(14.dp),
+                    colorFilter = ColorFilter.tint(colors.text2),
+                )
         }
     }
 }
 
-/** The plus at the start of the message box's row (attach, photos, history): a bare glyph in a 48 dp target. */
+/**
+ * The plus at the start of the message box's row (attach, photos, history): a bare glyph in a 48 dp
+ * target.
+ */
 @Composable
-public fun KitComposerAdd(label: String, onClick: () -> Unit, modifier: Modifier = Modifier, open: Boolean = false) {
+public fun KitComposerAdd(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    open: Boolean = false,
+) {
     KitTappable(
         onClick = onClick,
         modifier = modifier.semantics { contentDescription = label },
         shape = KitShapeId.Circle,
     ) {
-        KitIcon(if (open) KitIcons.close else KitIcons.add, size = KitIconSize.Large, tone = TextTone.Primary)
+        KitIcon(
+            if (open) KitIcons.close else KitIcons.add,
+            size = KitIconSize.Large,
+            tone = TextTone.Primary,
+        )
     }
 }
 
 /**
- * Send (Dart `_Circle` send): a 40 dp mint disc with the arrow in a 48 dp target (the audit's P1: the visible disc
- * stays 40, the target is 48). Plays `KitHaptic.Send`. Disabled is a `surface3` disc with a quiet arrow and its reason.
+ * Send (Dart `_Circle` send): a 40 dp mint disc with the arrow in a 48 dp target (the audit's P1:
+ * the visible disc stays 40, the target is 48). Plays `KitHaptic.Send`. Disabled is a `surface3`
+ * disc with a quiet arrow and its reason.
  */
 @Composable
 public fun KitComposerSend(
@@ -214,14 +226,17 @@ public fun KitComposerSend(
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val on = enabled.isEnabled
-    val look = kitSurfaceLook(KitSurfaceInput(
-        role = SurfaceRole.Control,
-        shape = KitShapeId.Circle,
-        level = SurfaceLevel.Surface3,
-        ownFill = if (on) colors.accent else colors.surface3,
-        color = if (on) colors.accent else null,
-        action = true,
-    ))
+    val look =
+        kitSurfaceLook(
+            KitSurfaceInput(
+                role = SurfaceRole.Control,
+                shape = KitShapeId.Circle,
+                level = SurfaceLevel.Surface3,
+                ownFill = if (on) colors.accent else colors.surface3,
+                color = if (on) colors.accent else null,
+                action = true,
+            )
+        )
     val ink = if (on) look.words ?: colors.onAccent else colors.text3
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     KitTappable(
@@ -239,32 +254,40 @@ public fun KitComposerSend(
                 .testTag("kit-composer-send-disc"),
             contentAlignment = Alignment.Center,
         ) {
-            if (working) Box(
-                Modifier.size(tokens.smallIcon.dp).testTag("kit-composer-send-working"),
-                contentAlignment = Alignment.Center,
-            ) {
-                if (KitMotion.state.ambientLoops) KitWorkingMark(ink, size = tokens.smallIcon.dp)
-                else Image(
-                    KitIcons.statusDot,
+            if (working)
+                Box(
+                    Modifier.size(tokens.smallIcon.dp).testTag("kit-composer-send-working"),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (KitMotion.state.ambientLoops)
+                        KitWorkingMark(ink, size = tokens.smallIcon.dp)
+                    else
+                        Image(
+                            KitIcons.statusDot,
+                            contentDescription = null,
+                            modifier = Modifier.matchParentSize(),
+                            colorFilter = ColorFilter.tint(ink),
+                        )
+                }
+            else
+                Image(
+                    KitIcons.send,
                     contentDescription = null,
-                    modifier = Modifier.matchParentSize(),
+                    modifier =
+                        Modifier.size(tokens.smallIcon.dp).graphicsLayer {
+                            scaleX = if (rtl) -1f else 1f
+                        },
                     colorFilter = ColorFilter.tint(ink),
                 )
-            } else Image(
-                KitIcons.send,
-                contentDescription = null,
-                modifier = Modifier.size(tokens.smallIcon.dp).graphicsLayer { scaleX = if (rtl) -1f else 1f },
-                colorFilter = ColorFilter.tint(ink),
-            )
         }
     }
 }
 
 /**
- * Stop while a reply runs (owner decisions 11B and 02B, 2026-10-02): Send turns into a neutral disc (`text1`) with the
- * stop square, ringed by a turning arc in the live colour, so "it is working, tap to stop" reads at a glance. The ring
- * holds still under reduced motion and battery saver. Plays `KitHaptic.Commit`. [label] names the target ("Stop
- * Claude Code").
+ * Stop while a reply runs (owner decisions 11B and 02B, 2026-10-02): Send turns into a neutral disc
+ * (`text1`) with the stop square, ringed by a turning arc in the live colour, so "it is working,
+ * tap to stop" reads at a glance. The ring holds still under reduced motion and battery saver.
+ * Plays `KitHaptic.Commit`. [label] names the target ("Stop Claude Code").
  */
 @Composable
 public fun KitComposerStopRing(
@@ -280,7 +303,16 @@ public fun KitComposerStopRing(
             0.15f
         } else {
             val t = rememberInfiniteTransition(label = "kit-stop-ring")
-            val v by t.animateFloat(0f, 1f, infiniteRepeatable(tween(MotionTokens.STOP_RING_LAP, easing = LinearEasing), RepeatMode.Restart), label = "turn")
+            val v by
+                t.animateFloat(
+                    0f,
+                    1f,
+                    infiniteRepeatable(
+                        tween(MotionTokens.STOP_RING_LAP, easing = LinearEasing),
+                        RepeatMode.Restart,
+                    ),
+                    label = "turn",
+                )
             v
         }
     KitTappable(
@@ -294,17 +326,28 @@ public fun KitComposerStopRing(
                 val w = 2.dp.toPx()
                 drawArc(
                     color = colors.live.copy(alpha = 0.25f),
-                    startAngle = 0f, sweepAngle = 360f, useCenter = false,
-                    topLeft = Offset(w / 2, w / 2), size = Size(size.width - w, size.height - w), style = Stroke(w),
+                    startAngle = 0f,
+                    sweepAngle = 360f,
+                    useCenter = false,
+                    topLeft = Offset(w / 2, w / 2),
+                    size = Size(size.width - w, size.height - w),
+                    style = Stroke(w),
                 )
                 drawArc(
                     color = colors.live,
-                    startAngle = turn * 360f - 90f, sweepAngle = 100f, useCenter = false,
-                    topLeft = Offset(w / 2, w / 2), size = Size(size.width - w, size.height - w),
+                    startAngle = turn * 360f - 90f,
+                    sweepAngle = 100f,
+                    useCenter = false,
+                    topLeft = Offset(w / 2, w / 2),
+                    size = Size(size.width - w, size.height - w),
                     style = Stroke(w, cap = StrokeCap.Round),
                 )
             }
-            Box(Modifier.size((DISC - 6).dp).background(if (stopping) colors.surface3 else colors.text1, CircleShape), contentAlignment = Alignment.Center) {
+            Box(
+                Modifier.size((DISC - 6).dp)
+                    .background(if (stopping) colors.surface3 else colors.text1, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
                 Box(Modifier.size(12.dp).background(colors.ground, RoundedCornerShape(2.dp)))
             }
         }

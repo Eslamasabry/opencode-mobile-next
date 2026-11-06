@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.voice.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -23,7 +24,12 @@ import io.github.eslamasabry.oc.feature.voice.presentation.VoiceNote
 import io.github.eslamasabry.oc.feature.voice.screen.ComposerVoiceViewModel
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.teaching.KitTip
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerMic
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerVoice
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitMicButton
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitVoiceField
@@ -41,7 +47,9 @@ import io.github.eslamasabry.oc.ui.words.res.kitVoiceSend
 import io.github.eslamasabry.oc.ui.words.res.kitVoiceStarting
 import io.github.eslamasabry.oc.ui.words.res.kitVoiceTranscribing
 import io.github.eslamasabry.oc.ui.words.res.tipHoldMic
+import io.github.eslamasabry.oc.ui.words.res.upgradeComposerVoiceHold
 import io.github.eslamasabry.oc.ui.words.res.voiceAllowMicInSettings
+import io.github.eslamasabry.oc.ui.words.res.voiceConversationTitle
 import io.github.eslamasabry.oc.ui.words.res.voiceInputUnavailable
 import io.github.eslamasabry.oc.ui.words.res.voiceModeMicAllow
 import io.github.eslamasabry.oc.ui.words.res.voiceModeMicAsk
@@ -66,7 +74,24 @@ public class ComposerVoiceSlot : KitComposerVoice {
     override fun Mic(field: KitVoiceField, modifier: Modifier) {
         val presenter = presenterFor(field)
         val state by presenter.state.collectAsStateWithLifecycle()
+        LaunchedEffect(presenter, state.available, state.conversationAvailable, field.text()) {
+            presenter.offerMicTip()
+        }
+        DisposableEffect(presenter) { onDispose { presenter.dismissMicTip() } }
         VoiceMic(state, presenter, modifier)
+    }
+
+    @Composable
+    override fun Actions(field: KitVoiceField, modifier: Modifier) {
+        val presenter = presenterFor(field)
+        val state by presenter.state.collectAsStateWithLifecycle()
+        if (state.available && state.conversationAvailable && !state.conversation)
+            KitRow(
+                title = stringResource(Res.string.voiceConversationTitle),
+                leading = KitRowLeading.Glyph(KitIcons.mic),
+                onClick = presenter::startConversation,
+                modifier = modifier.testTag("voice-conversation-start"),
+            )
     }
 
     @Composable
@@ -136,16 +161,33 @@ internal fun VoiceMic(
     modifier: Modifier = Modifier,
 ) {
     if (!state.available || (state.conversation && !state.active && !state.canListen)) return
-    KitMicButton(
-        label = stringResource(Res.string.kitComposerVoice),
-        onTap = presenter::tapMic,
-        onHoldStart = presenter::holdStart,
-        onHoldEnd = presenter::holdEnd,
-        onArmedChanged = presenter::holdArmed,
-        active = state.active,
-        holdLabel = stringResource(Res.string.tipHoldMic),
-        modifier = modifier,
-    )
+    if (state.conversationAvailable) {
+        KitTip(
+            message = stringResource(Res.string.upgradeComposerVoiceHold),
+            visible = state.micTip,
+            onDismissed = presenter::dismissMicTip,
+        ) {
+            KitComposerMic(
+                label = stringResource(Res.string.kitComposerVoice),
+                onClick = presenter::tapMic,
+                modifier = modifier.testTag("composer-voice-button"),
+                onLongClick = presenter::startConversation,
+                longClickLabel = stringResource(Res.string.voiceConversationTitle),
+            )
+        }
+    } else {
+        // Draft-only fields keep dictation; there is no conversation to speak with.
+        KitMicButton(
+            label = stringResource(Res.string.kitComposerVoice),
+            onTap = presenter::tapMic,
+            onHoldStart = presenter::holdStart,
+            onHoldEnd = presenter::holdEnd,
+            onArmedChanged = presenter::holdArmed,
+            active = state.active,
+            holdLabel = stringResource(Res.string.tipHoldMic),
+            modifier = modifier,
+        )
+    }
 }
 
 /** The pill while voice runs, or the one note after it. Nothing when idle. */

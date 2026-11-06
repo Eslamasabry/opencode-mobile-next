@@ -23,6 +23,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.theme.*
+import io.github.eslamasabry.oc.ui.kit.motion.kitGrowSource
 
 /** Flutter kit_feed_item.dart: title, then one inline state/project/time line, with no leading column. */
 @Composable
@@ -34,9 +35,10 @@ public fun KitFeedItem(
     onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
     done: Boolean = false,
+    growKey: Any? = null,
 ) {
     if (LocalKitStyle.current.style == Style.Signal) {
-        KitRow(title, modifier, supporting = project.ifBlank { null }, state = state, meta = time, onClick = onClick)
+        KitRow(title, modifier, supporting = project.ifBlank { null }, state = state, meta = time, onClick = onClick, growKey = growKey)
         return
     }
     val colors = LocalKitColors.current
@@ -66,7 +68,7 @@ public fun KitFeedItem(
             if (meta.isNotEmpty()) BasicText(meta, style = LocalKitTypography.current.style(TypeRole.Secondary).copy(color = colors.text2), maxLines = if (large) Int.MAX_VALUE else 1, overflow = TextOverflow.Ellipsis)
         }
     }
-    val m = modifier.kitMaxWidth(CapRole.List).semantics(mergeDescendants = true) { contentDescription = words }
+    val m = modifier.kitMaxWidth(CapRole.List).kitGrowSource(growKey).semantics(mergeDescendants = true) { contentDescription = words }
     if (onClick == null) Box(m) { body() }
     else KitTappable(onClick, m, role = KitTappableRole.Row) { body() }
 }

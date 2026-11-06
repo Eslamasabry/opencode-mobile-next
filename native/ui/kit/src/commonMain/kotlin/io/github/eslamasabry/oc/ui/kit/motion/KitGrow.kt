@@ -50,7 +50,7 @@ public interface KitGrowHost {
     /** False while a back gesture runs or settles, and under reduced motion. Read during the transition (snapshot). */
     public val transformEnabled: Boolean
 
-    /** True when the last navigation was forward (open, 360 ms), false for a return (300 ms). */
+    /** True when the last navigation was forward (open, 250 ms), false for a return (200 ms). */
     public val opening: Boolean
 }
 
@@ -58,14 +58,14 @@ public val LocalKitGrowHost: ProvidableCompositionLocal<KitGrowHost?> = staticCo
 
 /** Kit motion values used by the transform (plan 08 §2.6 X1/X2, §5.4 tracks). */
 public object KitGrowMotion {
-    public const val OPEN_BOUNDS_MS: Int = 360
-    public const val RETURN_MS: Int = 300
-    public const val ROW_CONTENT_OUT_MS: Int = 90
-    public const val PAGE_CONTENT_IN_DELAY_MS: Int = 90
-    public const val PAGE_CONTENT_IN_MS: Int = 180
-    public const val PAGE_CONTENT_OUT_MS: Int = 120
-    public const val ROW_HANDBACK_DELAY_MS: Int = 240
-    public const val ROW_HANDBACK_MS: Int = 60
+    public const val OPEN_BOUNDS_MS: Int = 250
+    public const val RETURN_MS: Int = 200
+    public const val ROW_CONTENT_OUT_MS: Int = 150
+    public const val PAGE_CONTENT_IN_DELAY_MS: Int = 0
+    public const val PAGE_CONTENT_IN_MS: Int = 150
+    public const val PAGE_CONTENT_OUT_MS: Int = 150
+    public const val ROW_HANDBACK_DELAY_MS: Int = 0
+    public const val ROW_HANDBACK_MS: Int = 150
     public val ROW_CORNER: Dp = 20.dp
 
     /** M3 emphasized, as the cubic approximation of the path (plan 08 §2.7 `KitEasing.Emphasized`). */
@@ -140,8 +140,8 @@ internal fun Modifier.kitGrowSource(key: Any?): Modifier {
 
 /**
  * A page that grows out of the row registered with the same [growKey] (plan 08 §5.4). The box's ground is the page's
- * ground from frame 1 (the row's surface becoming the page); only the words fade (in 90–270 ms, out 0–120 ms). On the
- * return the ground hands back to the row in 240–300 ms. The page lays out once at full size and the growing box
+ * ground from frame 1 (the row's surface becoming the page); only the words fade (150 ms). On the
+ * return the ground hands back to the row within 200 ms. The page lays out once at full size and the growing box
  * reveals it (`skipToLookaheadSize`): no per-frame re-measure, no scaling (MOT-2). With no matching row (opened from
  * elsewhere, or the row is gone or off screen: P2-5) ground and words fade together instead.
  */

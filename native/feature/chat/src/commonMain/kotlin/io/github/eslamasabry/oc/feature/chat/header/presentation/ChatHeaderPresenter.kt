@@ -86,7 +86,8 @@ public class ChatHeaderPresenter(
     private val freeNotes: FreeNoteStore? = null,
     private val handoffs: io.github.eslamasabry.oc.feature.chat.header.world.ChatHandoffs? = null,
     /** The connected daemon's agent handoff (reviewed record, files, then a new conversation). */
-    private val agentHandoffs: io.github.eslamasabry.oc.feature.chat.header.world.ChatAgentHandoff? =
+    private val agentHandoffs:
+        io.github.eslamasabry.oc.feature.chat.header.world.ChatAgentHandoff? =
         null,
 ) : ChatHeaderActions, ChatAgentHandoffActions {
     private val local = MutableStateFlow(HeaderLocal())
@@ -254,7 +255,20 @@ public class ChatHeaderPresenter(
             failure = l.failure,
             clip = l.clip,
             renaming = l.renaming,
-            freeModelNote = freeNoteDue(facts, models, l),
+            agentName =
+                if (caps.hostAgentProviders)
+                    models.selected?.providerName?.takeIf(String::isNotBlank) ?: "OpenCode"
+                else "OpenCode",
+            freeModelNote = false,
+            freeModel =
+                l.freeFacts?.let { free ->
+                    FreeModel.uses(
+                        free.signedIn,
+                        models.selected?.providerId ?: facts.providerId,
+                        models.selected?.modelId ?: facts.model,
+                        free.models,
+                    )
+                } == true,
         )
     }
 

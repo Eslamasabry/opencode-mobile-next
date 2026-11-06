@@ -124,6 +124,7 @@ public data class ComposerVoiceUi(
     val canReadReply: Boolean = false,
     val replyNote: ConversationReplyNote? = null,
     val tutorialStep: Int? = null,
+    val micTip: Boolean = false,
 ) {
     val active: Boolean
         get() = phase != MicPhase.Idle
@@ -185,6 +186,7 @@ public class ComposerVoicePresenter(
     private var conversationAttached = false
     private var tips: TipController? = null
     private val visit = TipVisit()
+    private val tourVisit = TipVisit()
     private var teachingAttached = false
 
     public fun attachTeaching(hub: VoiceTeachingHub) {
@@ -193,12 +195,14 @@ public class ComposerVoicePresenter(
         scope.launch {
             val controller = hub.controller() ?: return@launch
             tips = controller
+            offerMicTip()
             controller.active.collect { active ->
                 mutable.update {
                     it.copy(
+                        micTip = active?.id == TeachingIds.VoiceMicConversation,
                         tutorialStep =
                             if (active?.id == TeachingIds.VoiceConversation) it.tutorialStep ?: 0
-                            else null
+                            else null,
                     )
                 }
             }
@@ -228,6 +232,7 @@ public class ComposerVoicePresenter(
         val handle = ref?.let(conversations::open)
         conversationHandle = handle
         mutable.update { it.copy(conversationAvailable = handle != null) }
+        offerMicTip()
         if (handle != null)
             conversationJob = scope.launch {
                 handle.session.voiceConversation.collect { snapshot ->
@@ -268,13 +273,14 @@ public class ComposerVoicePresenter(
             mutable.update { it.copy(replyNote = ConversationReplyNote.Paused) }
             return
         }
-        mutable.update { it.copy(conversation = true, replyNote = null) }
+        mutable.update { it.copy(conversation = true, replyNote = null, micTip = false) }
         tips?.offer(
             TeachingRegistry.defaults,
             TeachingIds.VoiceConversation,
-            visit,
+            tourVisit,
             TipMoment(questionWaiting = observed.requestWaiting),
         )
+        tips?.markUsed(TeachingIds.VoiceMicConversation)
         listenConversation()
     }
 
@@ -565,6 +571,7 @@ public class ComposerVoicePresenter(
                 val p = loaded.value
                 parts = p
                 mutable.update { it.copy(available = p.micAvailable) }
+                offerMicTip()
                 scope.launch {
                     p.reader.state.collect { reading ->
                         if (reading is ReadAloudState.Failed && mutable.value.speakingReply)
@@ -584,6 +591,31 @@ public class ComposerVoicePresenter(
     /** The composer's field, attached on every composition (latest wins). */
     public fun attach(port: VoiceFieldPort) {
         field = port
+    }
+
+    public fun offerMicTip() {
+        val state = mutable.value
+        if (
+            !state.available ||
+                !state.conversationAvailable ||
+                state.active ||
+                state.conversation ||
+                field?.text()?.isNotBlank() != false ||
+                observed.requestWaiting ||
+                observed.busy ||
+                !foreground
+        )
+            return
+        tips?.offer(
+            TeachingRegistry.defaults,
+            TeachingIds.VoiceMicConversation,
+            visit,
+            TipMoment(questionWaiting = observed.requestWaiting),
+        )
+    }
+
+    public fun dismissMicTip() {
+        tips?.dismiss(TeachingIds.VoiceMicConversation)
     }
 
     // ---- the mic ----
@@ -688,6 +720,7 @@ public class ComposerVoicePresenter(
      */
     public fun hostChanged(inForeground: Boolean) {
         foreground = inForeground
+        if (!inForeground) dismissMicTip()
         parts
             ?.dictation
             ?.onHostChanged(if (inForeground) VoiceHost.Foreground else VoiceHost.Background)

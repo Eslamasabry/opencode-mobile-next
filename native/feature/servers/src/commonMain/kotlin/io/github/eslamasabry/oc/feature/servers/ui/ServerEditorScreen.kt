@@ -112,6 +112,7 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
     LaunchedEffect(state.fillGeneration) {
         val fill = actions.takePairing() ?: return@LaunchedEffect
         address.fill(fill.address)
+        if (name.text.isBlank()) fill.hostname?.let { name.fill(it) }
         fill.username?.let { username.fill(it) }
         fill.takePassword()?.let {
             heldSecret = it
@@ -487,6 +488,7 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                             stringResource(Res.string.editor40OtherCommands),
                             commandsOpen,
                             onExpandedChange = { commandsOpen = it },
+                            inset = false,
                         ) {
                             EditorCommand(
                                 when (backend) {
@@ -661,15 +663,17 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                     }
                     if (state.newServer && backend == BackendKind.OpenCode2 && !tailscale) {
                         KitExpandRow(stringResource(Res.string.addServerManual), manualOpen,
-                            onExpandedChange = { manualOpen = it }) { manualFields() }
+                            onExpandedChange = { manualOpen = it }, inset = false) { manualFields() }
                     } else manualFields()
                     if (backend == BackendKind.OpenCode2) {
+                        KitField(name, stringResource(Res.string.connectionDisplayName),
+                            placeholder = stringResource(Res.string.connectionDisplayNameHint), enabled = enabled)
                         KitExpandRow(
                             stringResource(Res.string.editor40More),
                             moreOpen,
                             onExpandedChange = { moreOpen = it },
+                            inset = false,
                         ) {
-                            KitField(name, stringResource(Res.string.serversName), enabled = enabled)
                             if (backend == BackendKind.OpenCode2)
                                 KitField(
                                     username,

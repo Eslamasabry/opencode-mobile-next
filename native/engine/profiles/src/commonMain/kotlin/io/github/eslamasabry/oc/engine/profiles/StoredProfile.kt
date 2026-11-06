@@ -90,7 +90,7 @@ public object StoredProfileJson {
         }
         return StoredProfile(
             id = ProfileId(id),
-            name = plainServerName(dartToString(row["name"]) ?: ""),
+            name = plainServerName(dartToString(row["name"]) ?: "", dartToString(row["baseUrl"]) ?: ""),
             baseUrl = dartToString(row["baseUrl"]) ?: "",
             backend = backend,
             username = dartToString(row["username"]) ?: "",
@@ -140,15 +140,25 @@ public object StoredProfileJson {
 
     public fun encodeRows(rows: List<Any?>): String = DartJson.encode(rows)
 
-    /** Dart `plainServerName`: this device is "This phone"; a bare IP is "Computer at <ip>". */
-    public fun plainServerName(name: String): String {
+    /**
+     * A display name never exposes an address. Older Flutter rows used the host/IP as their
+     * name, or “Computer at <ip>”; normalize those on read without changing the stored address.
+     * A person's chosen name wins. If pairing supplies a hostname it is saved as that name.
+     */
+    public fun plainServerName(name: String, address: String = ""): String {
         val value = name.trim()
-        val unbracketed = value.replace("[", "").replace("]", "")
-        if (AddressRules.isLoopback(unbracketed)) return "This phone"
-        val ipv4 = IPV4.matches(value)
-        val ipv6 = ':' in value && IPV6ISH.matches(value)
-        if (ipv4 || ipv6) return "Computer at $unbracketed"
-        return name
+        val legacyHost = value.removePrefix("Computer at ").trim()
+        val host = (ProfileOrigins.serverOrigin(address)?.host ?: ProfileOrigins.serverOrigin(legacyHost)?.host ?: legacyHost)
+            .removeSurrounding("[", "]")
+        val bare = legacyHost.removeSurrounding("[", "]")
+        val isAddress = value.isEmpty() || value == "Computer" || value.startsWith("Computer at ") ||
+            IPV4.matches(bare) || (':' in bare && IPV6ISH.matches(bare)) || "://" in value ||
+            AddressRules.isLoopback(bare)
+        if (!isAddress) return value
+        if (AddressRules.isLoopback(host)) return "This phone"
+        if (host.isNotEmpty() && !IPV4.matches(host) && ':' !in host && HOSTNAME.matches(host))
+            return host.removeSuffix(".")
+        return "Computer"
     }
 
     /** Dart `OrchestrationConfig.fromJson` gate: a map with a non-empty string `url`; anything else is "plugin off". */
@@ -168,6 +178,7 @@ public object StoredProfileJson {
         else -> value.toString()
     }
 
+    private val HOSTNAME = Regex("""^[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9.])?$""")
     private val IPV4 = Regex("""^\d{1,3}(?:\.\d{1,3}){3}$""")
     private val IPV6ISH = Regex("""^[0-9a-fA-F:.\[\]]+$""")
 }

@@ -26,6 +26,7 @@ public class PairingFill(
      * among them.
      */
     public val candidates: List<String> = listOf(address),
+    public val hostname: String? = null,
 ) {
     /** For trusted pairing probes only; never put in observable state or saved state. */
     internal fun credentials(): ConnectionCredentials = ConnectionCredentials(username, secret)
@@ -38,7 +39,7 @@ public class PairingFill(
      * this one.
      */
     public fun at(chosen: String): PairingFill =
-        PairingFill(chosen, username, takePassword(), addresses, fromLink, candidates)
+        PairingFill(chosen, username, takePassword(), addresses, fromLink, candidates, hostname)
 
     override fun toString(): String =
         "PairingFill(address=${PairingText.safeOrigin(address)}, fromLink=$fromLink)"
@@ -57,6 +58,7 @@ public class PairingFill(
                             payload.urls.size,
                             fromLink = false,
                             ordered,
+                            payload.hostname,
                         )
                         .also { payload.consume() }
                 }

@@ -27,11 +27,11 @@ public enum class KitDividerInset { None, Gutter, Text }
 public fun KitDivider(
     modifier: Modifier = Modifier,
     inset: KitDividerInset = KitDividerInset.None,
-    endInset: Dp = 0.dp,
+    endInset: Dp? = null,
     vertical: Boolean = false,
     section: Boolean = false,
 ) {
-    require(endInset >= 0.dp)
+    require(endInset == null || endInset >= 0.dp)
     val style = LocalKitStyle.current
     val roles = LocalKitRoles.current
     val tokens = LocalKitTokens.current
@@ -42,6 +42,7 @@ public fun KitDivider(
     if (section && (look == null || look == row || look.fill == null || look.fill?.alpha == 0)) return
     val color = Color((look?.fill ?: roles.hairline).v)
     val thickness = if (section && look != null && look.edgeWidthDp > 0f) look.edgeWidthDp else if (color.alpha > 0f) style.spec.tokens.dividerWidthDp ?: hairline else hairline
+    val end = endInset ?: if (inset == KitDividerInset.None) 0.dp else tokens.gutter.dp
     val start = when (inset) {
         KitDividerInset.None -> 0.dp
         KitDividerInset.Gutter -> Space.S4.dp
@@ -50,7 +51,7 @@ public fun KitDivider(
     Canvas(
         modifier.clearAndSetSemantics {}.then(
             if (vertical) Modifier.width(thickness.dp).fillMaxHeight()
-            else Modifier.padding(start = start, end = endInset).fillMaxWidth().height(thickness.dp),
+            else Modifier.padding(start = start, end = end).fillMaxWidth().height(thickness.dp),
         ),
     ) { drawRect(color) }
 }

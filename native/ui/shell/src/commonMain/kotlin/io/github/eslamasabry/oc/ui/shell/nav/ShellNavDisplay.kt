@@ -31,6 +31,7 @@ import androidx.navigation3.ui.NavDisplay
 import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
 import io.github.eslamasabry.oc.ui.kit.motion.KitGrowHost
+import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.motion.LocalKitGrowHost
 import io.github.eslamasabry.oc.ui.routes.AppRoute
 import io.github.eslamasabry.oc.ui.routes.RouteMotion
@@ -51,7 +52,10 @@ public fun ShellNavDisplay(
     baseDecorators: List<NavEntryDecorator<NavKey>>,
     entryProvider: (NavKey) -> NavEntry<NavKey>,
 ) {
-    val levelState = rememberUpdatedState(level)
+    // Follow the same resolved policy as kit parts: the person's motion choice, system
+    // Remove animations, Saver and heat all apply to navigation too.
+    val effectiveLevel = if (KitMotion.state.travels) level else ShellMotionLevel.Off
+    val levelState = rememberUpdatedState(effectiveLevel)
     val signals = remember { GestureSignals() }
 
     // GestureStarted / GestureCancelled from the dispatcher NavDisplay registers on (plan 08 §5.4).
@@ -102,7 +106,7 @@ public fun ShellNavDisplay(
                         onDispose { signals.composedEntries-- }
                     }
                     val host = remember(contentScope) { ShellGrowHost(sharedScope, contentScope, gate, levelState) }
-                    Box(Modifier.predictiveCorners(contentScope, gate, signals, previewCornerPx)) {
+                    Box(Modifier.predictiveCorners(contentScope, gate, signals, previewCornerPx, levelState.value)) {
                         CompositionLocalProvider(LocalKitGrowHost provides host) { entry.Content() }
                     }
                 },
@@ -158,10 +162,11 @@ private fun Modifier.predictiveCorners(
     gate: RowTransformGate,
     signals: GestureSignals,
     cornerPx: Float,
+    level: ShellMotionLevel,
 ): Modifier = graphicsLayer {
     val leaving = scope.transition.targetState == EnterExitState.PostExit
     val previewing = gate.state == GateState.Gesture || gate.state == GateState.GestureSettling
-    if (leaving && previewing) {
+    if (leaving && previewing && level == ShellMotionLevel.Full) {
         val r = cornerPx * ShellMotion.PredictiveBack.transform(signals.progress.coerceIn(0f, 1f))
         shape = RoundedCornerShape(r)
         clip = true

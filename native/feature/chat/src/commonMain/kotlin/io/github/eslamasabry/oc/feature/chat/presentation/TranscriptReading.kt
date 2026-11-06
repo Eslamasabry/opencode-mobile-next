@@ -39,6 +39,8 @@ public data class TranscriptReadingUi(
     val workEntries: Map<String, List<WorkEntryUi>> = emptyMap(),
     val metadata: Map<String, TurnMetadataUi> = emptyMap(),
     val endNotes: Map<String, TurnEndNote> = emptyMap(),
+    /** Model and agent switches belong to the message details, never the transcript. */
+    val switches: Map<String, List<TranscriptDetailUi>> = emptyMap(),
 )
 
 /**
@@ -56,7 +58,7 @@ internal fun transcriptReading(
     val work = LinkedHashMap<String, List<WorkEntryUi>>()
     val metadata = LinkedHashMap<String, TurnMetadataUi>()
     val endNotes = LinkedHashMap<String, TurnEndNote>()
-    var previousModel: String? = null
+    val switches = LinkedHashMap<String, List<TranscriptDetailUi>>()
     val newestFailedCompaction =
         snapshot.messages.asReversed().firstNotNullOfOrNull { m ->
             m.parts.asReversed().firstOrNull { it.type == PartType.Compaction }
@@ -114,13 +116,11 @@ internal fun transcriptReading(
         if (!live && assistants.isNotEmpty())
             metadata[turn.turnId] =
                 TurnMetadataUi(
-                    if (models.size > 1 || models.firstOrNull() != previousModel) models
-                    else emptyList(),
+                    models,
                     assistants.sumOf { it.info.tokens.total },
                     assistants.sumOf { it.info.cost },
                     turnIndex == snapshot.turns.lastIndex,
                 )
-        if (models.isNotEmpty()) previousModel = models.last()
         val parts =
             turn.messages.flatMap { m ->
                 m.parts.filter { p ->
@@ -128,6 +128,12 @@ internal fun transcriptReading(
                         p.type in setOf(PartType.Notice, PartType.Compaction, PartType.Switch)
                 }
             }
+        switches[turn.turnId] =
+            parts
+                .filter { it.type == PartType.Switch }
+                .map {
+                    TranscriptDetailUi("switch:${it.messageId}/${it.id}", it)
+                }
         val lastWork = parts.indexOfLast {
             it.type == PartType.Tool || it.type == PartType.Reasoning
         }
@@ -174,7 +180,7 @@ internal fun transcriptReading(
         }
         if (hasTools) work[turn.turnId] = entries
     }
-    return TranscriptReadingUi(details, hidden, work, metadata, endNotes)
+    return TranscriptReadingUi(details, hidden, work, metadata, endNotes, switches)
 }
 
 private fun passingWords(text: String): Boolean {

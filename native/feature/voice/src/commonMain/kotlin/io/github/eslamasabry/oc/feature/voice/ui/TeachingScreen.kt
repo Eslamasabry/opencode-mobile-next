@@ -156,6 +156,8 @@ public fun TeachingScreen(state: TeachingUi, actions: TeachingActions) {
 private fun teachingWords(key: String): String =
     stringResource(
         when (key) {
+            "tipMessageDetailsTitle" -> Res.string.tipMessageDetailsTitle
+            "tipMessageDetails" -> Res.string.tipMessageDetails
             "terminal40TipTitle" -> Res.string.terminal40TipTitle
             "terminal40Tip" -> Res.string.terminal40Tip
             "tipTerminalLinksTitle" -> Res.string.tipTerminalLinksTitle
@@ -164,6 +166,8 @@ private fun teachingWords(key: String): String =
             "tipStopAfterStep" -> Res.string.tipStopAfterStep
             "tipSendLaterTitle" -> Res.string.tipSendLaterTitle
             "tipSendLater" -> Res.string.tipSendLater
+            "upgradeComposerVoiceHoldTitle" -> Res.string.upgradeComposerVoiceHoldTitle
+            "upgradeComposerVoiceHold" -> Res.string.upgradeComposerVoiceHold
             "tipHoldMicTitle" -> Res.string.tipHoldMicTitle
             "tipHoldMic" -> Res.string.tipHoldMic
             "tourMakeItYoursTitle" -> Res.string.tourMakeItYoursTitle

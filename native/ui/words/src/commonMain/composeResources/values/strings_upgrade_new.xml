@@ -1,0 +1,7 @@
+<resources>
+    <string name="upgradeNewStart">Start</string>
+    <string name="upgradeAgentReady">Ready</string>
+    <string name="upgradeMode">Mode</string>
+    <string name="upgradeModeBuild">Build</string>
+    <string name="upgradeModePlan">Plan</string>
+</resources>

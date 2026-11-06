@@ -28,7 +28,7 @@ public object ShellMotion {
 
     public const val QUICK: Int = 150
     public const val STANDARD: Int = 250
-    public const val PREDICTIVE_SPAN: Int = 300
+    public const val PREDICTIVE_SPAN: Int = 250
     public const val PREDICTIVE_MIN_SCALE: Float = 0.9f
     public const val PREDICTIVE_FADE_AT: Float = 0.35f
     public const val PAGE_TRAVEL_DP: Int = 30
@@ -80,7 +80,7 @@ public object ShellMotion {
     ): ContentTransform {
         if (level == ShellMotionLevel.Off) return none
         return when (motion) {
-            // Shrinks back into its row (kit shared bounds, 300 ms). With no row to land in, the page's own
+            // Shrinks back into its row (kit shared bounds, 200 ms). With no row to land in, the page's own
             // shared-bounds exit fades it out (the P2-5 fallback).
             RouteMotion.GrowFromRow -> EnterTransition.None togetherWith ExitTransition.KeepUntilTransitionsFinished
             RouteMotion.SlideUp ->
