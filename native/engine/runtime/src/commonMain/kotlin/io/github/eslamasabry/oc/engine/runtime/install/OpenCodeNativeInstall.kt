@@ -246,8 +246,10 @@ oc_started=
 oc_i=0
 while [ "${d}oc_i" -lt $probeSeconds ]; do
   for oc_path in $health; do
-    oc_code=${d}(curl -s --max-time 3 -o /dev/null -w '%{http_code}' \
-      -u "opencode:${d}oc_pw" "http://127.0.0.1:${d}oc_port${d}oc_path" 2>/dev/null) || true
+    # The credential reaches curl as config on stdin (printf is a builtin),
+    # never as an argument another process could read.
+    oc_code=${d}(printf 'user = "opencode:%s"\n' "${d}oc_pw" | curl -K - -s --max-time 3 -o /dev/null \
+      -w '%{http_code}' "http://127.0.0.1:${d}oc_port${d}oc_path" 2>/dev/null) || true
     # The probe supplies its own fresh credential. A 401 may be another
     # listener on this port, and cannot prove this candidate started.
     case "${d}oc_code" in 200) oc_alive && oc_started=1 ;; esac

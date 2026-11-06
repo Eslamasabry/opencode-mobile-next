@@ -33,6 +33,16 @@ class OpenCodeNativeInstallTest {
     }
 
     @Test
+    fun `B-LINUX-111 the start probe hands the server password to curl on stdin, never as an argument`() {
+        // Flutter 2.1.1 (c4a340f43, lib/builtin/setup/components.dart): any process of the app's user can read a
+        // process argument, so the probe's password reaches curl as config on stdin (printf is a shell builtin).
+        val script = OpenCodeInstallScripts.nativeInstall()
+        assertFalse("-u \"opencode:" in script, "the password is never a curl argument")
+        assertTrue("printf 'user = \"opencode:%s\"\\n' \"\$oc_pw\" | curl -K - -s --max-time 3" in script)
+        assertTrue("case \"\$oc_code\" in 200) oc_alive && oc_started=1 ;; esac" in script, "a 401 never proves a start")
+    }
+
+    @Test
     fun `B-LINUX-111 the in-app component uses the native install and Termux keeps its shared text`() {
         val builtin = OpenCodeInstallScripts.component(SetupHost.Builtin)
         assertEquals(OpenCodeInstallScripts.nativeInstall(), builtin.installScript)

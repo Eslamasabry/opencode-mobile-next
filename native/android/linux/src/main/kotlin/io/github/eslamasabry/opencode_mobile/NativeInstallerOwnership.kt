@@ -5,6 +5,13 @@ private const val MAX_INSTALLER_IDENTITIES = 128
 internal enum class InstallerOperation { CHECK, INSTALL }
 internal enum class InstallerTarget { OPENCODE1, OPENCODE2, PASEO, CLAUDE, LEGACY_CLAUDE }
 
+/** How an installer process runs: as the agent user, with secrets on stdin, in compatibility mode. */
+internal data class InstallerOptions(
+    val agentUser: Boolean = false,
+    val stdin: String? = null,
+    val compat: Boolean = false,
+)
+
 /** Private lifecycle metadata only: never persist a launch script, output or account values. */
 internal data class InstallerTicket(
     val id: String,

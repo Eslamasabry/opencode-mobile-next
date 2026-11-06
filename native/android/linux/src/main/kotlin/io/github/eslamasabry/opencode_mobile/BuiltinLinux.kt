@@ -25,13 +25,6 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.json.JSONArray
 import org.json.JSONObject
 
-/** How an installer process runs: as the agent user, with secrets on stdin, in compatibility mode. */
-internal data class InstallerOptions(
-    val agentUser: Boolean = false,
-    val stdin: String? = null,
-    val compat: Boolean = false,
-)
-
 /**
  * Ubuntu inside the app, with no Termux.
  *
@@ -743,6 +736,7 @@ class BuiltinLinux(private val context: Context) {
         var process: Process? = null
         var exactRoot: RuntimeProcessIdentity? = null
         var committedTicket: InstallerTicket? = null
+        var permitSent = false
         try {
             val launched =
                 ProcessBuilder(
@@ -780,6 +774,7 @@ class BuiltinLinux(private val context: Context) {
             installerPlan(committed) // No unknown previous writer can pass the workload gate.
             synchronized(installerGuard) { saveInstaller(committed) }
             if (setupWorkScopes.childNeedsLease()) trackWork(launched, WorkLeases.Kind.SETUP)
+            permitSent = true // From the first permit byte on, only the drain proof may clear the ticket.
             launched.outputStream.write("$nonce\n".toByteArray(Charsets.US_ASCII))
             // The gate's `read` takes the permit line only; the rest of stdin (a secret the script
             // must not carry as an argument) is the script's.
@@ -792,9 +787,10 @@ class BuiltinLinux(private val context: Context) {
             try {
                 process?.outputStream?.close()
             } catch (_: Throwable) {}
-            drainFailedInstaller(committedTicket, exactRoot)
+            val drained = drainFailedInstaller(committedTicket, exactRoot)
             installerProcess = null
             installerLaunchId = null
+            clearUnpermittedTicket(nonce, permitSent, drained, process)
             throw IllegalStateException(componentUpdateFailure, error)
         }
     }
@@ -893,16 +889,51 @@ class BuiltinLinux(private val context: Context) {
             }
     }
 
+    /** True only when the drain ran to completion without an error. */
     private fun drainFailedInstaller(
         committed: InstallerTicket?,
         exactRoot: RuntimeProcessIdentity?,
-    ) {
+    ): Boolean =
         try {
             committed?.let { drainInstaller(it) }
                 ?: exactRoot?.let { root ->
                     drainExactInstallerRoot(root)
                 }
-        } catch (_: Throwable) {}
+            true
+        } catch (_: Throwable) {
+            false
+        }
+
+    /**
+     * Issue #111 (Flutter 2.1.1, c4a340f43): a launch that failed before its permit was written never
+     * ran its workload (the gate exits on a closed stdin), so its own ticket can go at once. Leaving it
+     * for [reclaimDeadInstaller] made the next attempt depend on a complete same-UID inventory proof,
+     * which a peer started since can block. Never clears another launch's ticket or one whose permit
+     * was sent.
+     */
+    private fun clearUnpermittedTicket(
+        nonce: String,
+        permitSent: Boolean,
+        drained: Boolean,
+        process: Process?,
+    ) {
+        try {
+            val rootExited = process == null || process.waitFor(PROCESS_POLL_MS, TimeUnit.MILLISECONDS)
+            synchronized(installerGuard) {
+                if (
+                    NativeInstallerAdmission.unpermittedLaunchMayClear(
+                        installerTicket(),
+                        nonce,
+                        permitSent,
+                        drained,
+                        rootExited,
+                        installerProcess == null,
+                    )
+                ) {
+                    installerPreferences.edit().remove("ticket").commit()
+                }
+            }
+        } catch (_: Throwable) {} // The ticket stays; reclaim and cold recovery still apply.
     }
 
     private fun drainExactInstallerRoot(root: RuntimeProcessIdentity) {

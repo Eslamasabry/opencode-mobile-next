@@ -65,6 +65,15 @@ class SetupPlanTest {
     }
 
     @Test
+    fun `B-LINUX-200 the registry's OpenCode start probe hands the password to curl on stdin, never as an argument`() {
+        // Flutter 2.1.1 (c4a340f43, lib/builtin/setup/components.dart): a process argument is readable by every
+        // process of the app's user, so the password reaches curl as config on stdin.
+        val install = assertNotNull(SetupScripts.openCodeNativeInstall())
+        assertFalse(install.contains("-u \"opencode:"), "the password is never a curl argument")
+        assertTrue(install.contains("printf 'user = \"opencode:%s\"\\n' \"\$oc_pw\" | curl -K - -s --max-time 3"))
+    }
+
+    @Test
     fun `B-LINUX-200 the registry's OpenCode path scripts install only the pinned OpenCode 2 and check its own program`() {
         val install = assertNotNull(SetupScripts.openCodeNativeInstall())
         assertTrue(install.contains(OpenCodePins.assets.arm64.url))

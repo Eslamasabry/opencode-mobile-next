@@ -208,4 +208,21 @@ class NativeInstallerAdmissionTest {
         }
         assertEquals(0, slot.clears)
     }
+
+    @Test
+    fun failedLaunchClearsItsOwnTicketOnlyBeforeThePermit() {
+        val ticket = prepared()
+        val id = ticket.id
+        fun may(stored: InstallerTicket? = ticket, launch: String = id, permit: Boolean = false,
+            drained: Boolean = true, exited: Boolean = true, free: Boolean = true) =
+            NativeInstallerAdmission.unpermittedLaunchMayClear(stored, launch, permit, drained, exited, free)
+        assertTrue(may())
+        assertTrue(may(stored = committed())) // Committed but never permitted: no workload ran.
+        assertFalse(may(permit = true))
+        assertFalse(may(drained = false))
+        assertFalse(may(exited = false))
+        assertFalse(may(free = false))
+        assertFalse(may(stored = null))
+        assertFalse(may(launch = "d".repeat(64))) // Another launch's ticket is never touched.
+    }
 }
