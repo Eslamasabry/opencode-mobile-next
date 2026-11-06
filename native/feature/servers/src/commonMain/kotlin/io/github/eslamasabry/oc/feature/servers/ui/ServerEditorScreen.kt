@@ -119,10 +119,12 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
         backend = BackendKind.OpenCode2
         tailscale = false
     }
+    // A server is named after its host, never its IP; the person can rename it inline.
+    val suggestedName = suggestServerName(address.text.toString(), stringResource(Res.string.upgradeConnectNameFallback))
     fun input(): ServerEditorInput =
         ServerEditorInput(
             state.record?.id,
-            name.text.toString(),
+            name.text.toString().ifBlank { if (state.newServer) suggestedName else "" },
             address.text.toString(),
             username.text.toString(),
             backend,
@@ -267,7 +269,7 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
             KitButton(stringResource(Res.string.editor40EnterAddress), { actions.step(ServerEditorStep.Connect) }, fullWidth = true)
         }) else if (state.step != ServerEditorStep.Connect && state.step != ServerEditorStep.Ready) null else ({
             KitButton(
-                stringResource(if (state.step == ServerEditorStep.Ready) Res.string.editor40Open
+                stringResource(if (state.step == ServerEditorStep.Ready) (if (state.startsConversation) Res.string.upgradeReadyStart else Res.string.editor40Open)
                     else if (state.connectOnSave) Res.string.editor40SaveConnect else Res.string.editor40SaveChanges),
                 { if (state.step == ServerEditorStep.Ready) actions.openReady() else actions.save(input()) },
                 enabled = enabled, working = state.saving, fullWidth = true,
@@ -453,7 +455,15 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                 }
                 ServerEditorStep.Ready -> {
                     EditorLinkMoment(KitServersLinkState.Linked, state, address.text.toString())
-                    KitText(stringResource(Res.string.addServerReadyTitle, state.record?.name ?: name.text.toString()), role = TypeRole.Headline)
+                    val readyName = state.record?.name?.ifBlank { null } ?: name.text.toString().ifBlank { suggestedName }
+                    KitText(stringResource(Res.string.upgradeReadyTitle, readyName), role = TypeRole.Headline, pageTitle = true)
+                    // Only facts the state carries: the host, and the version and tools of the check.
+                    val facts = listOfNotNull(
+                        editorOrigin(address.text.toString())?.host,
+                        state.checked?.version?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.upgradeReadyVersion, it) },
+                        state.checked?.runtimes?.takeIf { it.isNotEmpty() }?.joinToString(", "),
+                    ).joinToString(" · ")
+                    if (facts.isNotEmpty()) KitText(facts, role = TypeRole.Secondary, tone = io.github.eslamasabry.oc.ui.design.type.TextTone.Secondary)
                     KitText(stringResource(Res.string.addServerReadyBody), tone = io.github.eslamasabry.oc.ui.design.type.TextTone.Secondary)
                     state.failure?.let { KitErrorNotice(editorFailureWords(it), failure = it) }
 
@@ -691,7 +701,10 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                     } else manualFields()
                     if (backend == BackendKind.OpenCode2) {
                         KitField(name, stringResource(Res.string.connectionDisplayName),
-                            placeholder = stringResource(Res.string.connectionDisplayNameHint), enabled = enabled)
+                            placeholder = if (state.newServer) suggestedName else stringResource(Res.string.connectionDisplayNameHint), enabled = enabled)
+                        if (state.newServer && name.text.isBlank() && address.text.isNotBlank())
+                            KitText(stringResource(Res.string.upgradeConnectNameLine, suggestedName),
+                                role = TypeRole.Secondary, tone = io.github.eslamasabry.oc.ui.design.type.TextTone.Secondary)
                         KitExpandRow(
                             stringResource(Res.string.editor40More),
                             moreOpen,
@@ -707,7 +720,7 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                         }
                     } else {
                         KitField(name, stringResource(Res.string.connectionDisplayName),
-                            placeholder = stringResource(Res.string.connectionDisplayNameHint), enabled = enabled)
+                            placeholder = if (state.newServer) suggestedName else stringResource(Res.string.connectionDisplayNameHint), enabled = enabled)
                         KitText(stringResource(if (backend == BackendKind.Paseo) Res.string.paseoSetupNotice else Res.string.codexApprovalRecoveryNotice),
                             role = TypeRole.Secondary, tone = io.github.eslamasabry.oc.ui.design.type.TextTone.Secondary)
                     }
@@ -717,6 +730,19 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
             }
         }
     }
+}
+
+/**
+ * The name a new server gets when the person typed none: the first label of its host name
+ * (`laptop.tailnet.ts.net` becomes `laptop`). An IP address is never a title, so it falls back to
+ * [fallback].
+ */
+internal fun suggestServerName(address: String, fallback: String): String {
+    val host = editorOrigin(address.replaceFirst("wss://", "https://").replaceFirst("ws://", "http://"))?.host
+        ?: return fallback
+    val bare = host.trim('[', ']')
+    val isIp = ':' in bare || bare.all { it.isDigit() || it == '.' }
+    return if (isIp || bare.isBlank()) fallback else bare.substringBefore('.')
 }
 
 internal fun editorOrigin(address: String): ServerOrigin? =
