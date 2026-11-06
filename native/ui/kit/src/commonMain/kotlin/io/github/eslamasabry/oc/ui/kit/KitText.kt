@@ -11,6 +11,12 @@ import io.github.eslamasabry.oc.ui.design.layout.CapAlign
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
@@ -65,7 +71,7 @@ public fun KitText(
             fontFeatureSettings = if (tabular) "tnum" else base.fontFeatureSettings, // F: lib/ui/kit/kit_text.dart:635-636
         )
     if (kind == KitTextKind.Reading) {
-        BasicText(text, modifier, style = style, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
+        KitCutText(text, modifier, style, maxLines)
         return
     }
     // Frame text, the Flutter way: min(platform size at the current scale, 1.3 × spec), per role size. Compose text
@@ -82,8 +88,47 @@ public fun KitText(
             letterSpacing = (style.letterSpacing.value * k).sp,
         )
     CompositionLocalProvider(LocalDensity provides Density(app.density, 1f)) {
-        BasicText(text, modifier, style = sized, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
+        KitCutText(text, modifier, sized, maxLines)
     }
+}
+
+/**
+ * Words limited to [maxLines] always say they were cut: when the platform leaves the last line of a
+ * multi-line cut without its "…" (a line that broke cleanly at a word), the text is laid out again
+ * ending at a word with one.
+ */
+@Composable
+private fun KitCutText(text: String, modifier: Modifier, style: TextStyle, maxLines: Int) {
+    var cut by remember(text, maxLines) { mutableStateOf<String?>(null) }
+    val shown = cut
+    BasicText(
+        shown ?: text,
+        modifier,
+        style = style,
+        maxLines = maxLines,
+        overflow = TextOverflow.Ellipsis,
+        onTextLayout = { layout ->
+            if (shown == null && maxLines in 2 until Int.MAX_VALUE) cut = kitCutWithEllipsis(text, layout, maxLines)
+        },
+    )
+}
+
+/** [text] ended at a word with "…" when [layout] cut it after [maxLines] lines without one; else null. */
+internal fun kitCutWithEllipsis(text: String, layout: TextLayoutResult, maxLines: Int): String? {
+    if (!layout.hasVisualOverflow || layout.lineCount == 0) return null
+    val last = minOf(layout.lineCount, maxLines) - 1
+    if (layout.isLineEllipsized(last)) return null
+    val end = layout.getLineEnd(last, visibleEnd = true).coerceIn(0, text.length)
+    if (end >= text.length) return null
+    return kitEndAtWord(text.take(end))
+}
+
+/** [kept] with its last (possibly partial) word dropped to make room, then "…" (never after a full stop). */
+internal fun kitEndAtWord(kept: String): String {
+    val trimmed = kept.trimEnd()
+    val space = trimmed.lastIndexOf(' ')
+    val head = if (space > 0) trimmed.take(space) else trimmed.dropLast(1)
+    return head.trimEnd(' ', ',', ';', ':', '.', '-', '—') + "…"
 }
 
 /** The tone a role takes when none is given: secondary for [TypeRole.Secondary], [TypeRole.Label] and [TypeRole.Caption] (Dart `KitText.defaultTone`). */
