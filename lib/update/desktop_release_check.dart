@@ -51,8 +51,11 @@ bool isNewerRelease({required int currentBuildNumber, required String tag}) {
   return tagBuild != null && tagBuild > currentBuildNumber;
 }
 
-/// Fetches the newest valid non-draft release. Pre-releases count: the
-/// preview lineage is this app's distribution channel.
+/// Fetches the newest valid published, non-pre-release release. Every new
+/// version is first published as a GitHub pre-release and is promoted to a
+/// normal release after a quiet period (`scripts/release.sh promote`), so only
+/// promoted releases are offered here. People who want pre-releases opt in on
+/// their side (Obtainium's "include pre-releases").
 class DesktopReleaseChecker {
   DesktopReleaseChecker({
     Dio? dio,
@@ -94,6 +97,7 @@ class DesktopReleaseChecker {
     for (final entry in response.data ?? const <dynamic>[]) {
       if (entry is! Map) continue;
       if (entry['draft'] == true) continue;
+      if (entry['prerelease'] != false) continue;
       final tag = entry['tag_name'];
       if (tag is! String) continue;
       final build = buildNumberFromTag(tag);
