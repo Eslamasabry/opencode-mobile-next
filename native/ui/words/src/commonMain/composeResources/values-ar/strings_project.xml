@@ -897,8 +897,8 @@
     <string name="gitNewCount">%1$d جديد</string>
     <string name="gitIdentityWhy">تحمل عمليات الحفظ في هذا المشروع هذا الاسم والبريد، فيكون عملك باسمك عند إرساله.</string>
     <string name="gitPullNotOnRemote">ليس على المستودع البعيد بعد. أرسله أولًا.</string>
-    <string name="gitPullNoRemote">أضف مستودعًا بعيدًا أدناه أولًا.</string>
-    <string name="gitSendNoRemote">لا يوجد مستودع بعيد بعد. أضف واحدًا أدناه.</string>
+    <string name="gitPullNoRemote">اضغط لإضافة مستودع بعيد أولًا.</string>
+    <string name="gitSendNoRemote">لا يوجد مستودع بعيد بعد. اضغط لإضافة واحد.</string>
     <string name="gitSendTo">إرسال إلى %1$s · %2$s</string>
     <string name="gitPlaceGitHub">GitHub</string>
     <string name="gitStateUpToDate">محدَّث</string>
