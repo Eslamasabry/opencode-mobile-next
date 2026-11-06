@@ -98,13 +98,13 @@ public class UsageViewModel(
 
     override fun chooseRange(range: UsageRange) {
         if (local.value.range == range) return
-        local.update { it.copy(range = range) }
+        local.update { it.copy(range = range, modelSearch = "", providerFilter = null) }
         read()
     }
 
     override fun chooseScope(scope: UsageScope) {
         if (local.value.scope == scope) return
-        local.update { it.copy(scope = scope) }
+        local.update { it.copy(scope = scope, modelSearch = "", providerFilter = null) }
         read()
     }
 

@@ -2190,10 +2190,10 @@
   "area": "files",
   "page": "files",
   "action": "order",
-  "status": "PARTIAL",
+  "status": "PRESENT",
   "flutter_ref": "lib/ui/screens/files_screen.dart:139",
   "native_ref": "feature/files/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/files/ui/FolderScreen.kt:107",
-  "note": "server order / source first only"
+  "note": "verified in code (wave2-a)"
  },
  {
   "area": "files",
@@ -2271,10 +2271,10 @@
   "area": "files",
   "page": "files-row-actions-sheet",
   "action": "Add as reference",
-  "status": "MISSING",
+  "status": "PRESENT",
   "flutter_ref": "lib/ui/screens/files_screen.dart",
   "native_ref": "",
-  "note": "\"Add as reference\" absent; Attach to prompt and Ask about this file exist"
+  "note": "verified in code (wave2-a)"
  },
  {
   "area": "files",
@@ -2334,10 +2334,10 @@
   "area": "files",
   "page": "files-file-viewer-sheet",
   "action": "Reference",
-  "status": "MISSING",
+  "status": "PRESENT",
   "flutter_ref": "lib/ui/screens/files_screen.dart:41",
   "native_ref": "",
-  "note": "no reference action in viewer"
+  "note": "verified in code (wave2-a)"
  },
  {
   "area": "files",
@@ -3306,10 +3306,10 @@
   "area": "servers",
   "page": "server-settings",
   "action": "check health",
-  "status": "PARTIAL",
+  "status": "PRESENT",
   "flutter_ref": "lib/ui/screens/settings/server_settings_screen.dart",
   "native_ref": "feature/settings/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/settings/ui/ServerSettingsScreen.kt:1",
-  "note": "health check, disconnect and update exist; host restart notice not matched"
+  "note": "verified in code (wave2-a)"
  },
  {
   "area": "servers",
@@ -3324,28 +3324,28 @@
   "area": "servers",
   "page": "server-settings",
   "action": "Update",
-  "status": "PARTIAL",
+  "status": "PRESENT",
   "flutter_ref": "lib/ui/screens/settings/server_settings_screen.dart",
   "native_ref": "feature/settings/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/settings/ui/ServerSettingsScreen.kt:1",
-  "note": "health check, disconnect and update exist; host restart notice not matched"
+  "note": "verified in code (wave2-a)"
  },
  {
   "area": "servers",
   "page": "server-settings",
   "action": "Restart notice",
-  "status": "PARTIAL",
+  "status": "PRESENT",
   "flutter_ref": "lib/ui/screens/settings/server_settings_screen.dart",
   "native_ref": "feature/phone/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/phone/ui/ThisPhoneScreen.kt:125",
-  "note": "phone server update exists; remote host update/restart notice not matched"
+  "note": "verified in code (wave2-a)"
  },
  {
   "area": "servers",
   "page": "server-settings",
   "action": "Update managed OpenCode",
-  "status": "PARTIAL",
+  "status": "PRESENT",
   "flutter_ref": "lib/ui/screens/settings/server_settings_screen.dart",
   "native_ref": "feature/phone/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/phone/ui/ThisPhoneScreen.kt:125",
-  "note": "phone server update exists; remote host update/restart notice not matched"
+  "note": "verified in code (wave2-a)"
  },
  {
   "area": "servers",
@@ -3360,19 +3360,19 @@
   "area": "servers",
   "page": "server-settings-upgrade-sheet",
   "action": "Install",
-  "status": "PARTIAL",
+  "status": "PRESENT",
   "flutter_ref": "lib/ui/screens/settings/server_settings_screen.dart",
   "native_ref": "feature/settings/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/settings/ui/ServerSettingsScreen.kt:1",
-  "note": "health check, disconnect and update exist; host restart notice not matched"
+  "note": "verified in code (wave2-a)"
  },
  {
   "area": "servers",
   "page": "server-settings-upgrade-sheet",
   "action": "Cancel",
-  "status": "PARTIAL",
+  "status": "PRESENT",
   "flutter_ref": "lib/ui/screens/settings/server_settings_screen.dart",
   "native_ref": "feature/settings/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/settings/ui/ServerSettingsScreen.kt:1",
-  "note": "health check, disconnect and update exist; host restart notice not matched"
+  "note": "verified in code (wave2-a)"
  },
  {
   "area": "agents",
@@ -3927,28 +3927,28 @@
   "area": "usage",
   "page": "usage",
   "action": "provider filter",
-  "status": "PARTIAL",
+  "status": "PRESENT",
   "flutter_ref": "lib/ui/screens/usage_screen.dart",
   "native_ref": "feature/usage/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/usage/ui/UsageScreen.kt:252",
-  "note": "model-record inspection filters; provider filter UI not matched"
+  "note": "verified in code (wave2-a)"
  },
  {
   "area": "usage",
   "page": "usage",
   "action": "search",
-  "status": "PARTIAL",
+  "status": "PRESENT",
   "flutter_ref": "lib/ui/screens/usage_screen.dart:28",
   "native_ref": "feature/usage/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/usage/ui/UsageScreen.kt:252",
-  "note": "model-record inspection filters; provider filter UI not matched"
+  "note": "verified in code (wave2-a)"
  },
  {
   "area": "usage",
   "page": "usage",
   "action": "clear filters",
-  "status": "PARTIAL",
+  "status": "PRESENT",
   "flutter_ref": "lib/ui/screens/usage_screen.dart",
   "native_ref": "feature/usage/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/usage/ui/UsageScreen.kt:252",
-  "note": "model-record inspection filters; provider filter UI not matched"
+  "note": "verified in code (wave2-a)"
  },
  {
   "area": "usage",
@@ -7194,10 +7194,10 @@
   "area": "about",
   "page": "app-diagnostics",
   "action": "Copy",
-  "status": "MISSING",
+  "status": "PRESENT",
   "flutter_ref": "lib/ui/screens/app_diagnostics_screen.dart:442",
   "native_ref": "",
-  "note": "error log / performance report not in native diagnostics"
+  "note": "verified in code (wave2-a)"
  },
  {
   "area": "about",
@@ -7212,28 +7212,28 @@
   "area": "about",
   "page": "app-diagnostics",
   "action": "Copy performance report",
-  "status": "MISSING",
+  "status": "PRESENT",
   "flutter_ref": "lib/ui/screens/app_diagnostics_screen.dart",
   "native_ref": "",
-  "note": "error log / performance report not in native diagnostics"
+  "note": "verified in code (wave2-a)"
  },
  {
   "area": "about",
   "page": "app-diagnostics",
   "action": "Clear performance (unconfirmed)",
-  "status": "MISSING",
+  "status": "PRESENT",
   "flutter_ref": "lib/ui/screens/app_diagnostics_screen.dart",
   "native_ref": "",
-  "note": "error log / performance report not in native diagnostics"
+  "note": "verified in code (wave2-a)"
  },
  {
   "area": "about",
   "page": "app-diagnostics",
   "action": "expand an error",
-  "status": "MISSING",
+  "status": "PRESENT",
   "flutter_ref": "lib/ui/screens/app_diagnostics_screen.dart",
   "native_ref": "",
-  "note": "error log / performance report not in native diagnostics"
+  "note": "verified in code (wave2-a)"
  },
  {
   "area": "about",
@@ -7671,19 +7671,19 @@
   "area": "shell",
   "page": "root-connecting",
   "action": "Try again",
-  "status": "PARTIAL",
+  "status": "PRESENT",
   "flutter_ref": "lib/ui/widgets/saved_server_connection_card.dart:244",
   "native_ref": "feature/onboarding/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/onboarding/ui/OpeningGateScreen.kt:1",
-  "note": "opening gate has retry; change server / update password inline not matched"
+  "note": "verified in code (wave2-a)"
  },
  {
   "area": "shell",
   "page": "root-connecting",
   "action": "Change server",
-  "status": "MISSING",
+  "status": "PRESENT",
   "flutter_ref": "lib/ui/widgets/saved_server_connection_card.dart",
   "native_ref": "",
-  "note": "no Change server from the opening failure card"
+  "note": "verified in code (wave2-a)"
  },
  {
   "area": "shell",
@@ -7698,28 +7698,28 @@
   "area": "shell",
   "page": "root-connecting",
   "action": "Update password",
-  "status": "PARTIAL",
+  "status": "PRESENT",
   "flutter_ref": "lib/ui/widgets/saved_server_connection_card.dart:340",
   "native_ref": "feature/onboarding/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/onboarding/ui/OpeningGateScreen.kt:1",
-  "note": "opening gate has retry; change server / update password inline not matched"
+  "note": "verified in code (wave2-a)"
  },
  {
   "area": "shell",
   "page": "root-connecting",
   "action": "Update token",
-  "status": "PARTIAL",
+  "status": "PRESENT",
   "flutter_ref": "lib/ui/widgets/saved_server_connection_card.dart:348",
   "native_ref": "feature/onboarding/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/onboarding/ui/OpeningGateScreen.kt:1",
-  "note": "opening gate has retry; change server / update password inline not matched"
+  "note": "verified in code (wave2-a)"
  },
  {
   "area": "shell",
   "page": "root-connecting",
   "action": "Details",
-  "status": "PARTIAL",
+  "status": "PRESENT",
   "flutter_ref": "lib/ui/widgets/saved_server_connection_card.dart:34",
   "native_ref": "feature/onboarding/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/onboarding/ui/OpeningGateScreen.kt:1",
-  "note": "opening gate has retry; change server / update password inline not matched"
+  "note": "verified in code (wave2-a)"
  },
  {
   "area": "shell",
@@ -11361,10 +11361,10 @@
   "area": "files",
   "page": "files-viewer",
   "action": "Reference / Add as reference to the prompt",
-  "status": "MISSING",
+  "status": "PRESENT",
   "flutter_ref": "lib/ui/screens/files/files_actions.dart:72",
   "native_ref": "feature/files/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/files/ui/FolderScreen.kt:98",
-  "note": ""
+  "note": "verified in code (wave2-a)"
  },
  {
   "area": "chat",

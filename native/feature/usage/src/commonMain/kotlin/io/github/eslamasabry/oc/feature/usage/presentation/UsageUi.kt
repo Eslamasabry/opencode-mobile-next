@@ -71,16 +71,16 @@ public data class UsageUi(
     val matchingModels: List<UsageModel>
         get() {
             val all = report?.models ?: return emptyList()
-            val query = modelSearch.trim().lowercase()
-            return all.filter { model ->
-                (providerFilter == null || model.providerId == providerFilter) &&
-                    (query.isEmpty() ||
-                        listOf(model.providerId, model.modelId, model.variant.orEmpty()).any {
-                            it.lowercase().contains(query)
-                        })
+            val words = modelSearch.trim().lowercase().split(' ').filter { it.isNotEmpty() }
+            return all.filter { m ->
+                (providerFilter == null || m.providerId == providerFilter) &&
+                    words.all { w ->
+                        m.providerId.lowercase().contains(w) ||
+                            m.modelId.lowercase().contains(w) ||
+                            (m.variant?.lowercase()?.contains(w) == true)
+                    }
             }
         }
-
 
     val serverName: String?
         get() = servers.firstOrNull { it.id == server }?.name
