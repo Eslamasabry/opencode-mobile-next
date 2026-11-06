@@ -44,6 +44,8 @@ public data class ServerEditorUi(
     val canScan: Boolean = false,
     val canTailscale: Boolean = false,
     val canPhone: Boolean = false,
+    /** True when the Ready step's primary action opens a new conversation, not just the list. */
+    val startsConversation: Boolean = false,
     val tailscaleApp: EditorTailscaleState? = null,
 )
 
@@ -112,6 +114,7 @@ public class ServerEditorViewModel(
                 canScan = platform.qrPairing,
                 canTailscale = platform.tailscaleHandoff,
                 canPhone = platform.builtinLinux,
+                startsConversation = route.newConversation,
             )
         )
     public val state: StateFlow<ServerEditorUi> = mutable.asStateFlow()

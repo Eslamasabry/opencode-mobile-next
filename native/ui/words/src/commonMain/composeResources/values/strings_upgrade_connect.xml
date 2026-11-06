@@ -1,0 +1,14 @@
+<resources>
+    <string name="upgradeConnectScanTitle">Scan the code from your computer</string>
+    <string name="upgradeConnectScanBody">Run the command below on your computer. It shows a code. Scan it and you are connected.</string>
+    <string name="upgradeConnectPasteBody">Run the command below on your computer, then paste the code it prints.</string>
+    <string name="upgradeConnectCommandTitle">Run this on your computer</string>
+    <string name="upgradeConnectOtherWays">Other ways to connect</string>
+    <string name="upgradeConnectTailscaleBody">Reach your computer over your private network.</string>
+    <string name="upgradeConnectManualBody">Type the address, then the password.</string>
+    <string name="upgradeConnectNameLine">Will be saved as %1$s. You can rename it below.</string>
+    <string name="upgradeConnectNameFallback">My computer</string>
+    <string name="upgradeReadyTitle">Connected to %1$s</string>
+    <string name="upgradeReadyVersion">Version %1$s</string>
+    <string name="upgradeReadyStart">Start a conversation</string>
+</resources>

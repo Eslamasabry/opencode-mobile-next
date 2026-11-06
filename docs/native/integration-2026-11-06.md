@@ -50,3 +50,7 @@ One conflict: `SCREENS-UPGRADE.md`; retain all new-chat, voice, rows and predict
 ## 6. upg-approvals
 
 No textual conflicts. Source review follows `RejectWith(note)` through captured-card validation to the existing permission-answer contract, including trimmed notes, exact-scope Always review, and `RejectedWith` presentation. Existing engine scope checks, copy actions and confirmation gates remain. Remove an incoming rows-file blank line at EOF found by the diff check. History/source and diff review only; no compilation or tests.
+
+## 7. upg-connect
+
+One conflict: `ServerEditorScreen.kt`. Use upgrade scan-first, folded command, Tailscale alternative, host-name defaults and Connected screen/Start action. Preserve N-10 inside the redesign: manual entry hides pairing/helper/command content and scrolls to the address; retain one password field immediately below the address (remove the duplicate introduced by automatic merge), HTTP review and auto-check suppression, and the shared `connectionEnabled` gate for Check/Save/Save anyway. KitScreen retains keyboard-inset ownership. New starts-conversation state and callers travel together. History/source, formatting and diff review only; no compilation or tests.
