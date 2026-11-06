@@ -166,8 +166,14 @@ internal class Harness(
     val notices: FakeNotices = FakeNotices(),
 ) {
     private var ids = 0
+
+    /** `oc.native.flutterReadable`: the Flutter build can still be restored (E00-S04). */
+    var flutterReadable = false
     val engine =
-        ScheduleEngine(backend, profiles, alarms, notices, clock::ms, { TimeZone.UTC }, { "s${++ids}" }, pollMs = 1_000)
+        ScheduleEngine(
+            backend, profiles, alarms, notices, clock::ms, { TimeZone.UTC }, { "s${++ids}" }, pollMs = 1_000,
+            flutterReadable = { flutterReadable },
+        )
     val gateway get() = profiles.gateway
 
     fun draft(recurrence: Recurrence = Recurrence.daily(9, 0), sessionId: String? = null) =

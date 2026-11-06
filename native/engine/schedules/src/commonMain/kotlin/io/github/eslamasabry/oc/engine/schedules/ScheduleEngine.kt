@@ -59,10 +59,19 @@ public class ScheduleEngine(
     private val zone: () -> TimeZone = { TimeZone.currentSystemDefault() },
     private val newId: () -> String = { Random.nextBytes(12).joinToString("") { b -> (b.toInt() and 0xff).toString(16).padStart(2, '0') } },
     pollMs: Long = 2_000,
+    /**
+     * True while the Flutter build can still be restored (`oc.native.flutterReadable`): Flutter-era fingerprints are
+     * then kept as they are in the shared store (E00-S04).
+     */
+    private val flutterReadable: suspend () -> Boolean = { false },
 ) {
     public val store: ScheduleStore = ScheduleStore(backend, nowMs, zone)
     public val claims: ScheduleClaims = ScheduleClaims(backend, nowMs)
-    private val runner = ScheduleRunner(profiles, nowMs, pollMs)
+    private val fingerprints = ScheduleFingerprints(backend)
+    private val runner =
+        ScheduleRunner(profiles, nowMs, pollMs) { schedule ->
+            fingerprints.accepts(schedule.profileId, schedule.profileFingerprint, profiles.fingerprint(schedule.profileId))
+        }
     private val runLane = Mutex()
 
     /** B-STATE-089/096: one sync at a time, each reading the store inside the lane, so an older read never wins. */
@@ -111,7 +120,7 @@ public class ScheduleEngine(
                     ScheduledPrompt(
                         id = editing?.id ?: newId(),
                         profileId = profileId,
-                        profileFingerprint = fingerprint,
+                        profileFingerprint = stampFor(profileId, fingerprint),
                         prompt = draft.prompt.trim(),
                         projectPath = draft.projectPath.trim(),
                         recurrence = draft.recurrence,
@@ -219,25 +228,53 @@ public class ScheduleEngine(
     }
 
     /**
-     * Flutter-era schedules carry the Flutter fingerprint (a bare SHA-256 of the Dart profile JSON). After the update
-     * a schedule whose legacy fingerprint still names the same saved server is re-stamped once with the native
-     * fingerprint, keeping id, revision and claims, so it keeps firing. One made for a server the profile no longer
-     * names (an edited address or account) keeps its legacy stamp and stays refused, as in Flutter (B-AGENT-218); a
-     * profile that is gone keeps its schedules refused.
+     * Flutter-era schedules carry the Flutter fingerprint (a bare SHA-256 of the Dart profile JSON). A schedule whose
+     * legacy fingerprint still names the same saved server keeps firing; one made for a server the profile no longer
+     * names (an edited address or account) stays refused, as in Flutter (B-AGENT-218); a profile that is gone keeps
+     * its schedules refused.
+     *
+     * E00-S04: while the Flutter build can still be restored, the shared store is left exactly as Flutter wrote it and
+     * the native fingerprint goes to a native-only key ([ScheduleFingerprints]). Once it cannot, the schedules are
+     * re-stamped once with the native fingerprint, keeping id, revision and claims, and that key is removed.
      */
     private suspend fun migrate(profileId: String) {
         val fingerprint = profiles.fingerprint(profileId) ?: return
-        val legacy = profiles.legacyFingerprint(profileId)?.takeIf { LEGACY_FINGERPRINT.matches(it) } ?: return
-        val changed = store.restamp(profileId, { it == legacy }, fingerprint)
-        if (changed > 0) log.i { "migrated $changed scheduled prompts" }
+        val legacy = profiles.legacyFingerprint(profileId)?.takeIf { ScheduleFingerprints.LEGACY.matches(it) }
+        if (flutterReadable()) {
+            if (legacy != null && store.load(profileId).any { it.profileFingerprint == legacy }) {
+                fingerprints.remember(profileId, fingerprint, legacy)
+            }
+            return
+        }
+        val alias = fingerprints.alias(profileId)
+        val accepted = setOfNotNull(legacy) + alias?.takeIf { it.native == fingerprint }?.legacy.orEmpty()
+        if (accepted.isNotEmpty()) {
+            val changed = store.restamp(profileId, { it in accepted }, fingerprint)
+            if (changed > 0) log.i { "migrated $changed scheduled prompts" }
+        }
+        if (alias != null) fingerprints.forget(profileId)
+    }
+
+    /**
+     * The stamp a saved schedule gets. While the Flutter build can still be restored it is the Flutter fingerprint
+     * (when known), so a schedule made on native also runs after a rollback; native accepts it through the alias.
+     */
+    private suspend fun stampFor(profileId: String, fingerprint: String): String {
+        if (!flutterReadable()) return fingerprint
+        val legacy = profiles.legacyFingerprint(profileId)?.takeIf { ScheduleFingerprints.LEGACY.matches(it) } ?: return fingerprint
+        fingerprints.remember(profileId, fingerprint, legacy)
+        return legacy
     }
 
     /** B-NAV-054: the destination of a tapped scheduled-run notification, or null to open nothing. */
     public suspend fun resolveOpen(profileId: String, scheduleId: String, sessionId: String?): ScheduledOpen? {
         if (!ScheduleIds.valid(profileId)) return null
         return safely {
+            val current = profiles.fingerprint(profileId)
+            val alias = fingerprints.alias(profileId)?.takeIf { it.native == current }
             ScheduledOpen.resolve(
-                profileId, scheduleId, sessionId, profiles.fingerprint(profileId), store.load(profileId), store.history(profileId),
+                profileId, scheduleId, sessionId, current, store.load(profileId), store.history(profileId),
+                alsoAccepted = alias?.legacy.orEmpty(),
             )
         }
     }
@@ -472,7 +509,6 @@ public class ScheduleEngine(
     public companion object {
         /** Native fingerprints carry this prefix; a bare 64-hex value is a Flutter-era one. */
         public const val FINGERPRINT_PREFIX: String = "n1:"
-        private val LEGACY_FINGERPRINT = Regex("^[0-9a-f]{64}$")
         private const val DAY_MS = 86_400_000L
         private const val DRAFT_ATTEMPTS = 5
 
