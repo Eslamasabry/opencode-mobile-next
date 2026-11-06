@@ -11,12 +11,36 @@ object PauseTileState {
     const val KEY_RUNNING: String = "oc.live.running"
     const val KEY_PAUSED_BY_USER: String = "oc.live.pausedByUser"
 
+    /** Set once the Flutter build's pause was read (E00-S05); it is never read again after that. */
+    const val KEY_FLUTTER_PAUSE_ADOPTED: String = "oc.live.pausedByUserAdopted"
+
+    /** The Flutter build's own marker (LivePauseReceiver): `oc_background_native` / `pausedByUser`. Kept as it is. */
+    internal const val FLUTTER_PREFS: String = "oc_background_native"
+    internal const val FLUTTER_KEY_PAUSED: String = "pausedByUser"
+
     enum class Mode { On, Paused, Off }
 
     fun isRunning(context: Context): Boolean = TilesComponents.prefs(context).getBoolean(KEY_RUNNING, false)
 
-    fun isPausedByUser(context: Context): Boolean =
-        TilesComponents.prefs(context).getBoolean(KEY_PAUSED_BY_USER, false)
+    fun isPausedByUser(context: Context): Boolean {
+        adoptFlutterPause(context)
+        return TilesComponents.prefs(context).getBoolean(KEY_PAUSED_BY_USER, false)
+    }
+
+    /**
+     * Once per install: a live mode the person paused on the Flutter build stays paused here. The Flutter file is only
+     * read, never changed, so a rollback to the Flutter build sees its own choice. A native choice made before this
+     * ran wins.
+     */
+    fun adoptFlutterPause(context: Context) {
+        val prefs = TilesComponents.prefs(context)
+        if (prefs.getBoolean(KEY_FLUTTER_PAUSE_ADOPTED, false)) return
+        val paused =
+            context.getSharedPreferences(FLUTTER_PREFS, Context.MODE_PRIVATE).getBoolean(FLUTTER_KEY_PAUSED, false)
+        val edit = prefs.edit().putBoolean(KEY_FLUTTER_PAUSE_ADOPTED, true)
+        if (paused && !prefs.contains(KEY_PAUSED_BY_USER)) edit.putBoolean(KEY_PAUSED_BY_USER, true)
+        edit.commit()
+    }
 
     fun setRunning(context: Context, running: Boolean) {
         TilesComponents.prefs(context).edit().putBoolean(KEY_RUNNING, running).apply()
@@ -24,6 +48,7 @@ object PauseTileState {
     }
 
     fun setPausedByUser(context: Context, paused: Boolean) {
+        adoptFlutterPause(context) // a later adoption must not undo this choice
         TilesComponents.prefs(context).edit().putBoolean(KEY_PAUSED_BY_USER, paused).apply()
         TilesComponents.requestRedraw(context, TilesComponents.PAUSE_TILE)
     }
