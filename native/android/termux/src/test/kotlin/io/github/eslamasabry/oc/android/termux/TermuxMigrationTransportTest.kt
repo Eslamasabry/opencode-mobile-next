@@ -126,7 +126,10 @@ class TermuxMigrationTransportTest {
                     loseSecond = false
                     throw IllegalStateException("connection lost")
                 }
-                val token = Regex("Authorization: Bearer ([A-Za-z0-9_=-]+)'").find(script)!!.groupValues[1]
+                // The bearer reaches curl as a private config file, never as an argument.
+                assertTrue("--header 'Authorization" !in script)
+                assertTrue("-K \"\$oc_curl_cfg\"" in script)
+                val token = Regex("Authorization: Bearer %s\"\\\\n' '([A-Za-z0-9_=-]+)'").find(script)!!.groupValues[1]
                 val url = Regex("'(http://127\\.0\\.0\\.1:\\d+/archive)'").find(script)!!.groupValues[1]
                 // A second local app cannot write without the fresh bearer.
                 assertEquals(403, put(url, token = null, offset = offset, body = null))
@@ -310,7 +313,7 @@ class TermuxMigrationTransportTest {
             val content = ByteArray(1024)
             val transport = transport { script, _ ->
                 val url = Regex("http://127\\.0\\.0\\.1:\\d+/archive").find(script)!!.value
-                val token = Regex("Authorization: Bearer ([A-Za-z0-9_=-]+)'").find(script)!!.groupValues[1]
+                val token = Regex("Authorization: Bearer %s\"\\\\n' '([A-Za-z0-9_=-]+)'").find(script)!!.groupValues[1]
                 val parsed = URI(url)
                 val rejected = Socket(parsed.host, parsed.port).use { attack ->
                     attack.soTimeout = 2000
