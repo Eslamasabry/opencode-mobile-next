@@ -144,7 +144,9 @@ fun ComposerScreen(
             wide = LocalKitWindow.current.cls.isWide,
             allowStacking = state.fieldEnabled,
             above = {
-                state.note?.let {
+                // A disabled field already says why under its words (KitField's reason, also its spoken
+                // state); the same note above it would say it twice (Flutter has one `blockedReason`).
+                state.note?.takeUnless { it is ComposerNote.ReadOnly && !state.fieldEnabled }?.let {
                     Box(
                         Modifier.padding(start = Space.S3.dp, end = Space.S3.dp, top = Space.S2.dp)
                     ) {
