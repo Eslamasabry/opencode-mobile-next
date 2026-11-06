@@ -21,6 +21,8 @@ import kotlin.math.roundToInt
  *   Solid surface it replaces.
  * - The target per tone is AA ([FLOOR]) or, where the Solid surface itself reads lower, what Solid reaches: Glass is
  *   never asked to beat Solid, and never allowed to read below it.
+ * - Where no tint reaches the target (a dark pane's smoke cannot darken it over the plain ground), the lit top-start
+ *   corner (the sheen) is dropped first, then the Solid surface itself is used. Quieter, never less legible.
  */
 public object GlassFinish {
     /** AA (4.5:1) with Flutter's small margin. */
@@ -55,8 +57,8 @@ public object GlassFinish {
             return Argb((alpha shl 24) or (ch(face.red, smoke.red) shl 16) or (ch(face.green, smoke.green) shl 8) or ch(face.blue, smoke.blue))
         }
 
-        fun reads(a: Float): Boolean {
-            for (face in listOf(fill, fillStart)) {
+        fun reads(faces: List<Argb>, a: Float): Boolean {
+            for (face in faces) {
                 for (under in spots) {
                     val seen = at(face, a).over(under.opaque())
                     for (i in texts.indices) if (wcagContrast(texts[i], seen) < targets[i] - 1e-6) return false
@@ -65,13 +67,53 @@ public object GlassFinish {
             return true
         }
 
-        if (reads(0f)) return d
-        var lo = 0f
-        var hi = 1f
-        repeat(STEPS) {
-            val mid = (lo + hi) / 2f
-            if (reads(mid)) hi = mid else lo = mid
+        // The thinnest tint at which [faces] read, or null when even the thickest does not.
+        fun thinnest(faces: List<Argb>): Float? {
+            if (reads(faces, 0f)) return 0f
+            if (!reads(faces, 1f)) return null
+            var lo = 0f
+            var hi = 1f
+            repeat(STEPS) {
+                val mid = (lo + hi) / 2f
+                if (reads(faces, mid)) hi = mid else lo = mid
+            }
+            return hi
         }
-        return d.copy(fill = at(fill, hi), fillStart = at(fillStart, hi))
+
+        val faced =
+            thinnest(listOf(fill, fillStart))?.let { a ->
+                if (a == 0f) d else d.copy(fill = at(fill, a), fillStart = at(fillStart, a))
+            }
+                // Native only (legibility over decoration): a dark pane thickens with the ground's own smoke, which
+                // cannot darken it over the plain ground, so where the lit top-start corner (the sheen) still reads
+                // below the target the corner goes, and the pane is its plain tint.
+                ?: thinnest(listOf(fill))?.let { a -> d.copy(fill = at(fill, a), fillStart = at(fill, a)) }
+                // Last: the Solid surface itself, opaque, which the target never asks more of.
+                ?: d.copy(fill = solidFace, fillStart = solidFace)
+        return withoutCostlyGlow(faced, texts, targets, spots)
     }
+
+    /**
+     * [d] without its top-edge glow where the glow, as strong as it is at a pane's first line of words (the kit's
+     * compact padding, [FIRST_LINE_DP] down a [SurfaceDecoration.INNER_GLOW_DEPTH_DP] glow), would take a tone below
+     * its target. Native only: a dark pane's light glow lowers the contrast of light words; a light pane's glow is
+     * white milk and only helps dark words, so it stays.
+     */
+    private fun withoutCostlyGlow(d: SurfaceDecoration, texts: List<Argb>, targets: List<Double>, spots: List<Argb>): SurfaceDecoration {
+        val glow = d.innerGlow
+        if (glow.alpha == 0) return d
+        val fill = d.fill ?: return d
+        val share = 1f - FIRST_LINE_DP / SurfaceDecoration.INNER_GLOW_DEPTH_DP
+        val atLine = glow.withAlpha(glow.alpha / 255f * share)
+        for (face in listOf(fill, d.fillStart ?: fill)) {
+            for (under in spots) {
+                val seen = atLine.over(face.over(under.opaque()))
+                for (i in texts.indices) if (wcagContrast(texts[i], seen) < targets[i] - 1e-6) return d.copy(innerGlow = Argb(0))
+            }
+        }
+        return d
+    }
+
+    /** Where a pane's first line of words sits: the kit's compact surface padding (Space 3). */
+    private const val FIRST_LINE_DP: Float = 12f // FG: lib/ui/kit/kit_surface.dart:187 lib/ui/kit/kit_tokens.dart:40-44
 }
