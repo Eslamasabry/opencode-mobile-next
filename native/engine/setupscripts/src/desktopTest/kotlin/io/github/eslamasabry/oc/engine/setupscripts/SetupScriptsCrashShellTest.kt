@@ -247,6 +247,6 @@ class SetupScriptsCrashShellTest {
         val bad = File(dir, "bad.tar.gz").apply { writeText("not an archive") }
         val ran = untar("oc_untar ${bad.path} ${dest("badapp").path} 1", "exit 139")
         assertEquals(139, ran.code)
-        assertTrue("The app could not unpack it" in ran.out)
+        assertTrue("The app could not unpack it" in ran.out, "out: ${ran.out} err: ${ran.err}")
     }
 }
