@@ -445,7 +445,12 @@ private fun Filters(state: ChatsUi, actions: ChatsActions) {
 @Composable
 private fun BriefBlock(brief: BriefUi, actions: ChatsActions, state: ChatsUi) {
     Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-        if (brief.unknown) KitNotice(stringResource(Res.string.chatsReturnBriefUnknown))
+        // On the gutter like the rows under it (its glyph sat on the screen's edge).
+        if (brief.unknown)
+            KitNotice(
+                stringResource(Res.string.chatsReturnBriefUnknown),
+                Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
+            )
         brief.rows.forEach { ConversationRow(it, actions, state) }
         // One line on the gutter: the rest of what finished at the start, marking it all seen at the end.
         if (brief.more > 0 || brief.rows.isNotEmpty())
