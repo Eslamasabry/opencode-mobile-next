@@ -451,6 +451,29 @@ public class AgentsPresenter(
         }
     }
 
+    override fun requestSignOut(id: String) {
+        if (local.value.busy) return
+        val agent =
+            phone.state.value.agents.firstOrNull { it.id == id && it.signOutAvailable } ?: return
+        local.update { it.copy(signingOutAgent = agent, signOutFailed = null) }
+    }
+
+    override fun cancelSignOut() {
+        if (!local.value.busy) local.update { it.copy(signingOutAgent = null) }
+    }
+
+    override fun confirmSignOut() {
+        val agent = local.value.signingOutAgent ?: return
+        operation {
+            local.update { it.copy(signingOutAgent = null, signOutFailed = null) }
+            val answer = phone.signOut(agent.id)
+            if (answer !is Outcome.Ok || !answer.value)
+                local.update { it.copy(signOutFailed = agent.name) }
+            // Re-read the real state either way; the status check decides, not the logout.
+            phone.refresh()
+        }
+    }
+
     override fun requestRemoval(id: String) {
         if (local.value.busy) return
         val agent = phone.state.value.agents.firstOrNull { it.id == id && it.removable } ?: return

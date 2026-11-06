@@ -254,14 +254,21 @@ class AppPhoneAgents(
                                 if (installed)
                                     PhoneAgentPayloads.present(linux, agent.recipe!!.executable)
                                 else false
-                            PhoneAgentRow(
-                                agent.id.raw,
-                                agent.name,
+                            val status =
                                 when (present) {
                                     true -> signInStatus(authOwner, agent)
                                     false -> PhoneAgentStatus.NotInstalled
                                     null -> PhoneAgentStatus.Unavailable
-                                },
+                                }
+                            PhoneAgentRow(
+                                agent.id.raw,
+                                agent.name,
+                                status,
+                                signOutAvailable =
+                                    owner != null &&
+                                        status == PhoneAgentStatus.PhoneCheck &&
+                                        AgentAuthScripts.supportsSignOut(agent.id) &&
+                                        shown?.phase != PhoneAgentInstallPhase.Installing,
                                 previousVersionAvailable =
                                     agent.id == AgentId.CLAUDE &&
                                         present == true &&
@@ -446,6 +453,43 @@ class AppPhoneAgents(
         if (result is Outcome.Failed) return@withLock result
         synchronized(admission) { accounts.remove(owner to agent.id) }
         refreshLocked()
+    }
+
+    /**
+     * Runs the agent's own logout, then reads the status again: signed out only when that read
+     * says so (the logout's exit code is not trusted). Conversations are not touched.
+     */
+    override suspend fun signOut(id: String): Outcome<Boolean> = lane.withLock {
+        val agent =
+            catalog.byId(AgentId(id))
+                ?: return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
+        val owner =
+            agentOwner(ownerId())
+                ?: return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
+        val script =
+            AgentAuthScripts.script(agent, AuthScriptAction.SignOut)
+                ?: return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
+        if (!AgentAuthScripts.supportsSignOut(agent.id) || synchronized(admission) { owner in denied })
+            return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
+        val ran = native {
+            linux.agentAuthProbe(
+                mapOf(
+                    "profileId" to owner.raw,
+                    "agentId" to agent.id.raw,
+                    "action" to "logout",
+                    "script" to AgentAuthScripts.forProfile(owner, script),
+                    "timeoutSeconds" to 20L,
+                )
+            )
+        }
+        if (ran is Outcome.Failed) return@withLock ran
+        synchronized(admission) { accounts.remove(owner to agent.id) }
+        val after = native { signInStatus(owner, agent) }
+        refreshLocked()
+        when (after) {
+            is Outcome.Failed -> after
+            is Outcome.Ok -> Outcome.Ok(after.value == PhoneAgentStatus.SignInNeeded)
+        }
     }
 
     /** Reset closes clients first; only the engine's allowlisted secure slots are erased. */

@@ -168,6 +168,12 @@ public class AgentsViewModel(
 
     override fun confirmSignInReset(): Unit = presenter.confirmSignInReset()
 
+    override fun requestSignOut(id: String): Unit = presenter.requestSignOut(id)
+
+    override fun cancelSignOut(): Unit = presenter.cancelSignOut()
+
+    override fun confirmSignOut(): Unit = presenter.confirmSignOut()
+
     override fun requestRemoval(id: String): Unit = presenter.requestRemoval(id)
 
     override fun cancelRemoval(): Unit = presenter.cancelRemoval()
