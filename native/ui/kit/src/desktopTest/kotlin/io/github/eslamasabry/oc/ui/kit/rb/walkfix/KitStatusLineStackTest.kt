@@ -3,6 +3,8 @@
 package io.github.eslamasabry.oc.ui.kit.rb.walkfix
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.getBoundsInRoot
@@ -75,5 +77,33 @@ class KitStatusLineStackTest {
         assertFalse(statusControlsStack(available = 400, lead = 30, message = 100, controls = listOf(80), gap = 12))
         assertTrue(statusControlsStack(available = 400, lead = 30, message = 300, controls = listOf(80, 70), gap = 12))
         assertFalse(statusControlsStack(available = 100, lead = 30, message = 900, controls = emptyList(), gap = 12))
+    }
+}
+
+/** B-102: the transcript's last line rests above the composer's ground fade, not under it. */
+class KitScreenChromeRoomTest {
+    @Test
+    fun `B-102 the body's bottom room covers the composer block and its fade`() = runComposeUiTest {
+        var room = 0.dp
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                androidx.compose.foundation.layout.Box(Modifier.width(412.dp).height(800.dp)) {
+                    io.github.eslamasabry.oc.ui.kit.frame.KitScreen(
+                        overlayChrome = true,
+                        page = true,
+                        bottom = {
+                            androidx.compose.foundation.layout.Box(Modifier.fillMaxWidth().height(80.dp))
+                        },
+                    ) {
+                        room = io.github.eslamasabry.oc.ui.kit.frame.kitScreenChromePadding().calculateBottomPadding()
+                    }
+                }
+            }
+        }
+        waitForIdle()
+        val block = onNodeWithTag("kit-screen-bottom").getBoundsInRoot()
+        val blockHeight = block.bottom - block.top
+        // Before B-102 the room was exactly the block, so the fade's 16 dp sat on the last line.
+        assertTrue(room >= blockHeight + 16.dp - 0.5.dp, "room $room for block $blockHeight")
     }
 }

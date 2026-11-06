@@ -145,8 +145,16 @@ public fun KitScreen(
             var topPx by remember { mutableIntStateOf(0) }
             var bottomPx by remember { mutableIntStateOf(0) }
             val density = LocalDensity.current
+            // B-102: the body's room includes the chrome's ground fade, so at rest the last line sits above the
+            // composer's 16 dp fade (and the first under the bar's 12 dp one) instead of being cut by it.
+            val faded = !kitChromeIsGlass()
             val padding =
-                with(density) { PaddingValues(top = topPx.toDp(), bottom = bottomPx.toDp()) }
+                with(density) {
+                    PaddingValues(
+                        top = topPx.toDp() + if (faded && topPart != null) HEADER_FADE_DP.dp else 0.dp,
+                        bottom = bottomPx.toDp() + if (faded && bottomPart != null) COMPOSER_FADE_DP.dp else 0.dp,
+                    )
+                }
             Box(
                 Modifier.fillMaxSize()
                     .then(if (framed) Modifier.windowInsetsPadding(insets) else Modifier)
@@ -455,6 +463,18 @@ private fun Panes(
     }
 }
 
+/** How far the composer's ground fades up into the body (B-102: the body keeps this much room too). */
+internal const val COMPOSER_FADE_DP = 16
+
+/** How far the chat header's ground fades down into the body. */
+internal const val HEADER_FADE_DP = 12
+
+/** Glass frosts what scrolls behind the chrome instead of fading it, so it adds no fade room. */
+@Composable
+private fun kitChromeIsGlass(): Boolean =
+    io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle.current.style ==
+        io.github.eslamasabry.oc.ui.design.style.Style.Glass
+
 /**
  * The overlaid bar's or bottom block's ground: frost through [frost] when given, else the page's own ground. Above the
  * bottom block the body fades into that ground over 16 dp, and below the bar over 12 dp, so a line scrolling under
@@ -465,15 +485,13 @@ private fun Modifier.kitChromeGround(role: FrostRole, frost: KitFrostState?): Mo
     val ground = LocalKitColors.current.ground
     // A short ground fade where the transcript meets the chrome: above the composer and, so text never slides under
     // the header with a hard cut, below the header. Glass frosts what scrolls behind instead.
-    val glass =
-        io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle.current.style ==
-            io.github.eslamasabry.oc.ui.design.style.Style.Glass
+    val glass = kitChromeIsGlass()
     val fade =
         when {
             glass -> Modifier
             role == FrostRole.Composer ->
                 Modifier.drawBehind {
-                    val reach = 16.dp.toPx()
+                    val reach = COMPOSER_FADE_DP.dp.toPx()
                     drawRect(
                         androidx.compose.ui.graphics.Brush.verticalGradient(
                             0f to ground.copy(alpha = 0f),
@@ -487,7 +505,7 @@ private fun Modifier.kitChromeGround(role: FrostRole, frost: KitFrostState?): Mo
                 }
             role == FrostRole.ChatHeader ->
                 Modifier.drawBehind {
-                    val reach = 12.dp.toPx()
+                    val reach = HEADER_FADE_DP.dp.toPx()
                     drawRect(
                         androidx.compose.ui.graphics.Brush.verticalGradient(
                             0f to ground,
