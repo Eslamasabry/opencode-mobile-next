@@ -486,6 +486,7 @@ void main() {
       // person's language (SetupStepRetry.kt).
       expect(spec(linux, 'node')['labels'], {
         'retry': en.phoneSetupStageRetrying,
+        'compat': en.phoneSetupStageCompat,
       });
       // The pinned native program, not npm (slice-builtin-opencode-pin).
       expect(

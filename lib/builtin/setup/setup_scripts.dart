@@ -26,6 +26,8 @@ import 'component_updates.dart';
 ///   `FILE.oc-fetch-ack` and `FILE.oc-fetch-done` marker files), then
 ///   `curl --http1.1`, then `wget`. The checksum is checked afterwards in
 ///   every case.
+/// - `oc_untar ARCHIVE DEST STRIP [MEMBER]`: tar -xzf; when tar dies from a
+///   signal the app unpacks it (`::oc unpack`, see SetupAppUnpack.kt).
 /// - `oc_apt_install PKG…`: `apt-get install` whose own status stream
 ///   (`APT::Status-Fd`) becomes `::oc stage` + `::oc percent`. The package
 ///   lists are refreshed only when our stamp is older than a day, and once
@@ -103,6 +105,50 @@ oc_crash_fallback() {
     oc_fetch
   fi
   oc_tool=curl oc_curl_opts=
+}
+# Asks the app to unpack the .tar.gz $oc_ar into $oc_dest (`::oc unpack`).
+# Same handshake as oc_app_fetch, with marker files next to the archive.
+oc_app_unpack() {
+  case $oc_ar in /*) oc_abs=$oc_ar ;; *) oc_abs=$(pwd)/$oc_ar ;; esac
+  case $oc_dest in /*) oc_dabs=$oc_dest ;; *) oc_dabs=$(pwd)/$oc_dest ;; esac
+  rm -f "$oc_abs.oc-unpack-ack" "$oc_abs.oc-unpack-done"
+  printf '::oc unpack %s %s %s %s\n' "$oc_abs" "$oc_dabs" "$oc_strip" "${oc_mem:--}"
+  oc_ack_left=${OC_ACK_POLLS:-20}
+  while [ ! -e "$oc_abs.oc-unpack-ack" ] && [ "$oc_ack_left" -gt 0 ]; do
+    sleep "${OC_POLL_SECONDS:-0.5}"
+    oc_ack_left=$((oc_ack_left - 1))
+  done
+  if [ ! -e "$oc_abs.oc-unpack-ack" ]; then
+    echo "[oc] The app did not take over the unpacking."
+    return 1
+  fi
+  while [ ! -s "$oc_abs.oc-unpack-done" ]; do
+    sleep "${OC_POLL_SECONDS:-0.5}"
+  done
+  oc_answer=$(cat "$oc_abs.oc-unpack-done")
+  rm -f "$oc_abs.oc-unpack-ack" "$oc_abs.oc-unpack-done"
+  [ "$oc_answer" = ok ] || echo "[oc] The app could not unpack it: ${oc_answer#fail }"
+  [ "$oc_answer" = ok ]
+}
+# oc_untar ARCHIVE DEST STRIP [MEMBER]: `tar -xzf ARCHIVE -C DEST`, removing STRIP
+# leading path parts and, with MEMBER, extracting only that path. ARCHIVE has
+# already passed its pinned checksum (oc_download). When tar dies from a signal
+# (exit 128 or more, e.g. the SIGSEGV of issue #117) the app unpacks it
+# instead. Any other tar failure is returned as it is.
+oc_untar() {
+  oc_ar=$1 oc_dest=$2 oc_strip=${3:-0} oc_mem=${4:-}
+  oc_tar_rc=0
+  if [ -n "$oc_mem" ]; then
+    tar -xzf "$oc_ar" -C "$oc_dest" --strip-components="$oc_strip" "$oc_mem" || oc_tar_rc=$?
+  else
+    tar -xzf "$oc_ar" -C "$oc_dest" --strip-components="$oc_strip" || oc_tar_rc=$?
+  fi
+  if [ "$oc_tar_rc" -ge 128 ]; then
+    echo "[oc] The unpacking tool crashed (signal $((oc_tar_rc - 128))). Trying another way."
+    if oc_app_unpack; then return 0; fi
+    echo "[oc] Unpacking failed: the unpacking tool crashed and the app could not do it: $oc_ar" >&2
+  fi
+  return "$oc_tar_rc"
 }
 oc_download() {
   oc_url=$1 oc_file=$2 oc_sha=$3 oc_total=${4:-0}

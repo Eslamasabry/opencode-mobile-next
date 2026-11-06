@@ -431,6 +431,168 @@ void main() {
     });
   });
 
+  // Issue #117: tar under proot died with SIGSEGV (exit 139) on one ROM.
+  group('oc_untar', () {
+    late String bin;
+    late String archive;
+    late String realTar;
+
+    setUp(() {
+      bin = Directory('${dir.path}/tarbin').path;
+      Directory(bin).createSync();
+      realTar = Process.runSync('sh', [
+        '-c',
+        'command -v tar',
+      ]).stdout.toString().trim();
+      final src = Directory('${dir.path}/src/pkg-1/bin')
+        ..createSync(recursive: true);
+      File('${src.path}/tool').writeAsStringSync('hello');
+      File('${dir.path}/src/pkg-1/other').writeAsStringSync('x');
+      archive = '${dir.path}/pkg.tar.gz';
+      Process.runSync('tar', ['-czf', archive, '-C', '${dir.path}/src', '.']);
+      Process.runSync('tar', [
+        '-czf',
+        archive,
+        '-C',
+        '${dir.path}/src',
+        'pkg-1',
+      ]);
+    });
+
+    Future<(int, String, String, List<String>)> run(
+      String script, {
+      required String tarBody,
+      bool app = true,
+      Map<String, String> env = const {},
+    }) async {
+      File('$bin/tar').writeAsStringSync('#!/bin/sh\n$tarBody\n');
+      Process.runSync('chmod', ['+x', '$bin/tar']);
+      final process = await Process.start(
+        'dash',
+        ['-c', 'set -eu\n${withSetupPrelude(script)}'],
+        environment: {
+          'PATH': '$bin:${Platform.environment['PATH']}',
+          'OC_POLL_SECONDS': '0.05',
+          'OC_ACK_POLLS': '4',
+          ...env,
+        },
+      );
+      final requests = <String>[];
+      final out = StringBuffer();
+      final answered = <Future<void>>[];
+      final drained = Completer<void>();
+      process.stdout
+          .transform(utf8.decoder)
+          .transform(const LineSplitter())
+          .listen((line) {
+            out.writeln(line);
+            if (line.startsWith('::oc unpack ')) {
+              requests.add(line);
+              if (app) {
+                final p = line.split(' ');
+                answered.add(() async {
+                  // The app side: unpack with the real tar, then answer.
+                  final strip = p[4];
+                  Directory(p[3]).createSync(recursive: true);
+                  final extra = p[5] == '-' ? <String>[] : [p[5]];
+                  final r = Process.runSync(realTar, [
+                    '-xzf',
+                    p[2],
+                    '-C',
+                    p[3],
+                    '--strip-components=$strip',
+                    ...extra,
+                  ]);
+                  File('${p[2]}.oc-unpack-ack').writeAsStringSync('1');
+                  File(
+                    '${p[2]}.oc-unpack-done',
+                  ).writeAsStringSync(r.exitCode == 0 ? 'ok' : 'fail bad');
+                }());
+              }
+            }
+          }, onDone: drained.complete);
+      final err = process.stderr.transform(utf8.decoder).join();
+      final code = await process.exitCode;
+      await drained.future;
+      await Future.wait(answered);
+      return (code, out.toString(), await err, requests);
+    }
+
+    test('a healthy tar is used and the app is not asked', () async {
+      final dest = '${dir.path}/ok';
+      Directory(dest).createSync();
+      final (code, _, err, requests) = await run(
+        'oc_untar $archive $dest 1',
+        tarBody: 'exec $realTar "\$@"',
+      );
+      expect(code, 0, reason: err);
+      expect(requests, isEmpty);
+      expect(File('$dest/bin/tool').readAsStringSync(), 'hello');
+    }, skip: skip);
+
+    test('a crashing tar hands the unpacking to the app', () async {
+      final dest = '${dir.path}/crash';
+      Directory(dest).createSync();
+      final (code, out, err, requests) = await run(
+        'oc_untar $archive $dest 1',
+        tarBody: 'exit 139',
+      );
+      expect(code, 0, reason: err);
+      expect(requests, ['::oc unpack $archive $dest 1 -']);
+      expect(out, contains('The unpacking tool crashed (signal 11)'));
+      expect(File('$dest/bin/tool').readAsStringSync(), 'hello');
+      expect(File('$archive.oc-unpack-done').existsSync(), isFalse);
+    }, skip: skip);
+
+    test('a member is passed on to the app', () async {
+      final dest = '${dir.path}/member';
+      Directory(dest).createSync();
+      final (code, _, err, requests) = await run(
+        'oc_untar $archive $dest 2 pkg-1/bin/tool',
+        tarBody: 'exit 139',
+      );
+      expect(code, 0, reason: err);
+      expect(requests, ['::oc unpack $archive $dest 2 pkg-1/bin/tool']);
+      expect(File('$dest/tool').readAsStringSync(), 'hello');
+      expect(File('$dest/other').existsSync(), isFalse);
+    }, skip: skip);
+
+    test('no app: the failure keeps tar crash status', () async {
+      final dest = '${dir.path}/noapp';
+      Directory(dest).createSync();
+      final (code, _, err, _) = await run(
+        'oc_untar $archive $dest 1',
+        tarBody: 'exit 139',
+        app: false,
+      );
+      expect(code, 139);
+      expect(err, contains('the unpacking tool crashed'));
+    }, skip: skip);
+
+    test('a plain tar failure is not handed to the app', () async {
+      final dest = '${dir.path}/plain';
+      Directory(dest).createSync();
+      final (code, _, _, requests) = await run(
+        'oc_untar $archive $dest 1',
+        tarBody: 'exit 2',
+      );
+      expect(code, 2);
+      expect(requests, isEmpty);
+    }, skip: skip);
+
+    test('an app that fails ends the step with the crash status', () async {
+      final dest = '${dir.path}/badapp';
+      Directory(dest).createSync();
+      File(archive).writeAsStringSync('not an archive');
+      final (code, out, _, _) = await run(
+        'oc_untar $archive $dest 1',
+        tarBody: 'exit 139',
+      );
+      expect(code, 139);
+      expect(out, contains('The app could not unpack it'));
+    }, skip: skip);
+  });
+
   group('oc_apt_install', () {
     late Directory bin;
     late Map<String, String> env;

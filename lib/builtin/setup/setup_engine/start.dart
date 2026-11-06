@@ -216,7 +216,10 @@ extension _SetupEngineStart on ChannelSetupEngine {
       'script': withSetupPrelude(component.installScript),
       // An interrupted step runs again by itself (SetupStepRetry.kt); its
       // row says so in the person's language.
-      'labels': {'retry': l10n.phoneSetupStageRetrying},
+      'labels': {
+        'retry': l10n.phoneSetupStageRetrying,
+        'compat': l10n.phoneSetupStageCompat,
+      },
       if (component.agentUser) 'agentUser': true,
     };
   }

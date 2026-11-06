@@ -23,6 +23,9 @@ void main() {
   const scenarios = [
     'interrupted-installer-retry',
     'interrupted-installer-recovers',
+    'segfault-compat-retry',
+    'segfault-report-retries',
+    'segfault-twice-fails',
     'ordered-terminal',
     'installer-routed',
     'setup-work-owned',
@@ -65,6 +68,7 @@ void main() {
       compiler: compiler,
       sources: [
         'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupAppFetch.kt',
+        'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupAppUnpack.kt',
         'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt',
         'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupScriptCompletion.kt',
         'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupWorkScopes.kt',

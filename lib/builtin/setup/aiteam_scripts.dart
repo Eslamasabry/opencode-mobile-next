@@ -297,16 +297,25 @@ exec /usr/local/bin/opencode2 "$@"
   /// each program once. Expects `gc_member`, `bd_member` and `dolt_member`
   /// (each program's path inside its archive) to be set; leaves [cache] for
   /// the caller to delete.
-  static String get unpackScript {
+  static String get unpackScript => _unpackScript(appFallback: true);
+
+  /// [unpackScript] with plain `tar`, for the Termux runtime: it has no
+  /// setup prelude and no app to answer `::oc unpack`.
+  static String get unpackScriptPlainTar => _unpackScript(appFallback: false);
+
+  static String _unpackScript({required bool appFallback}) {
     const tools = ['gc', 'bd', 'dolt'];
     final buffer = StringBuffer()
       ..writeln('rm -rf $home.new')
       ..writeln('mkdir -p $home.new/bin');
     for (final tool in tools) {
+      final strip = '"\$(printf %s "\$${tool}_member" | tr -cd / | wc -c)"';
       buffer.writeln(
-        'tar -xzf $cache/$tool.tar.gz -C $home.new/bin '
-        '--strip-components="\$(printf %s "\$${tool}_member" | tr -cd / | wc -c)" '
-        '"\$${tool}_member"',
+        appFallback
+            ? 'oc_untar $cache/$tool.tar.gz $home.new/bin $strip '
+                  '"\$${tool}_member"'
+            : 'tar -xzf $cache/$tool.tar.gz -C $home.new/bin '
+                  '--strip-components=$strip "\$${tool}_member"',
       );
     }
     buffer

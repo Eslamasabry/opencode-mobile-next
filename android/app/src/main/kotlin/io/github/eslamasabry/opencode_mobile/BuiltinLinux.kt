@@ -503,12 +503,12 @@ class BuiltinLinux(private val context: Context) {
     /** Fixed typed scope; script bytes and account/output values never enter the durable ticket. */
     @Synchronized
     internal fun startInstaller(script: String, targets: Set<InstallerTarget>, operation: InstallerOperation,
-        agentUser: Boolean = false, stdin: String? = null): Process = try {
-        startQualifiedInstaller(script, targets, operation, agentUser, stdin)
+        agentUser: Boolean = false, stdin: String? = null, compat: Boolean = false): Process = try {
+        startQualifiedInstaller(script, targets, operation, agentUser, stdin, compat)
     } catch (error: Throwable) { throw IllegalStateException(componentUpdateFailure, error) }
 
     private fun startQualifiedInstaller(script: String, targets: Set<InstallerTarget>, operation: InstallerOperation,
-        agentUser: Boolean = false, stdin: String? = null): Process {
+        agentUser: Boolean = false, stdin: String? = null, compat: Boolean = false): Process {
         check(installed) { componentUpdateFailure }
         reclaimDeadInstaller()
         check(installerProcess == null) { componentUpdateFailure }
@@ -532,9 +532,9 @@ class BuiltinLinux(private val context: Context) {
         var permitSent = false
         try {
             val launched = ProcessBuilder(prootCommand(listOf("/usr/bin/env", "OC_RUNTIME_OWNER=$nonce",
-                "/usr/bin/setsid", "/bin/sh", "-c", gate), agentUser)).redirectErrorStream(true).apply {
+                "/usr/bin/setsid", "/bin/sh", "-c", gate), agentUser, compat)).redirectErrorStream(true).apply {
                 environment().clear()
-                environment().putAll(prootEnvironment())
+                environment().putAll(prootEnvironment(compat))
                 environment()["OC_RUNTIME_OWNER"] = nonce
             }.start()
             process = launched
@@ -727,7 +727,7 @@ class BuiltinLinux(private val context: Context) {
      * both use it, so a shell sees exactly what the app's scripts see.
      */
     @Synchronized
-    fun prootCommand(program: List<String>, agentUser: Boolean = false): List<String> {
+    fun prootCommand(program: List<String>, agentUser: Boolean = false, compat: Boolean = false): List<String> {
         prepareGuestForProot()
         val agentRoot = if (agentUser) PhoneAgentPaths.prepare(context.filesDir, "linux/agent-root-view").apply {
             PhoneAgentPaths.prepare(this, "projects")
@@ -756,7 +756,7 @@ class BuiltinLinux(private val context: Context) {
                 else "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
             "TERM=xterm-256color",
             "TMPDIR=/tmp",
-        ) + program
+        ) + (if (compat) listOf(COMPAT_GLIBC_TUNABLES) else emptyList()) + program
         workLeases.observeTerminalsSoon()
         return if (prootIsConfined && protectionTier() != "proot") protectedCommand(command) else command
     }
@@ -1841,13 +1841,15 @@ class BuiltinLinux(private val context: Context) {
     }
 
     /** What proot itself needs in its environment, on top of the app's own. */
-    fun prootEnvironment(): Map<String, String> {
+    fun prootEnvironment(compat: Boolean = false): Map<String, String> {
         val tmp = File(context.cacheDir, "proot-tmp").apply { mkdirs() }
-        return mapOf(
+        val base = mapOf(
             "PROOT_LOADER" to "$nativeDir/libproot-loader.so",
             "PROOT_TMP_DIR" to tmp.absolutePath,
             "LD_LIBRARY_PATH" to nativeDir,
         )
+        // Compatibility mode (issue #117): no seccomp acceleration in proot.
+        return if (compat) base + ("PROOT_NO_SECCOMP" to "1") else base
     }
 
     // ---- long-running services ---------------------------------------------
@@ -4326,6 +4328,8 @@ class BuiltinLinux(private val context: Context) {
     }
 
     companion object {
+        /** Guest environment of compatibility mode (issue #117): glibc without restartable sequences. */
+        const val COMPAT_GLIBC_TUNABLES = "GLIBC_TUNABLES=glibc.pthread.rseq=0"
         private const val MILLIS_PER_SECOND = 1_000L
         private const val MAX_FAILURE_CAUSES = 6
         private const val RUN_ADMISSION_WINDOW_MS = 10_000L

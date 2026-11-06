@@ -6955,6 +6955,7 @@
   "phoneScanKindCpp": "C/C++",
   "phoneScanKindGit": "文件夹",
   "phoneSetupStageRetrying": "已中断。正在重试",
+  "phoneSetupStageCompat": "正在以兼容模式重试",
   "servicesTitle": "开发服务",
   "servicesCopy": "复制命令",
   "servicesSubtitle": "项目命令、日志和预览链接",

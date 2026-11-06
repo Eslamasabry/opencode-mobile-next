@@ -79,6 +79,44 @@ fun main(args: Array<String>) {
                 check(installedCurl.exists() && nodeStarted.exists()) { "retry skipped required installation" }
                 check(BuiltinLinux.installerStarts == 5 && BuiltinLinux.installerFinishes == 5)
             }
+            "segfault-compat-retry" -> {
+                val marker = File(dir, "ran-compat")
+                // Exits 139 (a segfault) unless the runner started it in compatibility mode.
+                val specs = listOf(
+                    SetupRunner.Spec("node", "[ -n \"\$OC_STUB_COMPAT\" ] || exit 139; touch '${marker.path}'", false, false,
+                        1.0, false, null, null, emptyMap(), emptyMap()),
+                )
+                val texts = SetupRunner.Texts("channel", "title", "{percent}", "done", "stopped")
+                runner.start("segv", specs, null, texts)
+                (field(runner, "worker").get(runner) as Thread).join(30000)
+                check(!runner.running) { "segfaulting step did not terminate" }
+                check(JSONObject(runner.status()!!).getString("state") == "done") { "a segfault was not retried" }
+                check(marker.exists()) { "the compatibility run did not happen" }
+                check(BuiltinLinux.installerStarts == 2 && BuiltinLinux.compatStarts == 1) { "retried more than once" }
+            }
+            "segfault-report-retries" -> {
+                val marker = File(dir, "ran-compat")
+                // The script hides the crash behind exit 1; the shell's report gives it away.
+                val specs = listOf(
+                    SetupRunner.Spec("node", "[ -n \"\$OC_STUB_COMPAT\" ] || { echo 'sh: 1: Segmentation fault'; exit 1; }; touch '${marker.path}'", false, false,
+                        1.0, false, null, null, emptyMap(), emptyMap()),
+                )
+                val texts = SetupRunner.Texts("channel", "title", "{percent}", "done", "stopped")
+                runner.start("segv3", specs, null, texts)
+                (field(runner, "worker").get(runner) as Thread).join(30000)
+                check(JSONObject(runner.status()!!).getString("state") == "done") { "a reported segfault was not retried" }
+                check(marker.exists() && BuiltinLinux.compatStarts == 1)
+            }
+            "segfault-twice-fails" -> {
+                val specs = listOf(
+                    SetupRunner.Spec("node", "exit 139", false, false, 1.0, false, null, null, emptyMap(), emptyMap()),
+                )
+                val texts = SetupRunner.Texts("channel", "title", "{percent}", "done", "stopped")
+                runner.start("segv2", specs, null, texts)
+                (field(runner, "worker").get(runner) as Thread).join(30000)
+                check(JSONObject(runner.status()!!).getString("state") == "failed") { "a second segfault was hidden" }
+                check(BuiltinLinux.installerStarts == 2 && BuiltinLinux.compatStarts == 1) { "retried more than once" }
+            }
             "interrupted-installer-recovers" -> {
                 val installedCurl = File(dir, "installed-curl")
                 val nodeStarted = File(dir, "node-started")

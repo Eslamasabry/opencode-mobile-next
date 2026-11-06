@@ -40672,13 +40672,21 @@
   },
   "gitRemoteAddTitle": "Add a remote",
   "gitRemotePickGitHub": "Choose from GitHub",
-  "@gitRemotePickGitHub": {"description": "Button on the Git remotes step: pick the remote address from the signed-in GitHub account's repositories."},
+  "@gitRemotePickGitHub": {
+    "description": "Button on the Git remotes step: pick the remote address from the signed-in GitHub account's repositories."
+  },
   "gitRemotePickGitHubTitle": "Choose a repository",
-  "@gitRemotePickGitHubTitle": {"description": "Title of the sheet listing the GitHub account's repositories."},
+  "@gitRemotePickGitHubTitle": {
+    "description": "Title of the sheet listing the GitHub account's repositories."
+  },
   "gitRemotePickGitHubNone": "No repositories on this GitHub account yet.",
-  "@gitRemotePickGitHubNone": {"description": "Shown under the button when the GitHub account has no repositories (or they could not be listed)."},
+  "@gitRemotePickGitHubNone": {
+    "description": "Shown under the button when the GitHub account has no repositories (or they could not be listed)."
+  },
   "gitRemoteRepoPrivate": "Private",
-  "@gitRemoteRepoPrivate": {"description": "Supporting line on a private repository in the GitHub repository list."},
+  "@gitRemoteRepoPrivate": {
+    "description": "Supporting line on a private repository in the GitHub repository list."
+  },
   "@gitRemoteAddTitle": {
     "description": "Git remotes step: form heading"
   },
@@ -43985,15 +43993,31 @@
     }
   },
   "chatsNewAddAgent": "Add an agent",
-  "@chatsNewAddAgent": {"description": "New conversation: visible action inside the agent grid that opens phone agent setup"},
+  "@chatsNewAddAgent": {
+    "description": "New conversation: visible action inside the agent grid that opens phone agent setup"
+  },
   "agentPersonaAntigravityStrength": "Antigravity in your terminal",
-  "@agentPersonaAntigravityStrength": {"description": "Agent persona: Antigravity card line, at most 28 characters"},
+  "@agentPersonaAntigravityStrength": {
+    "description": "Agent persona: Antigravity card line, at most 28 characters"
+  },
   "agentPersonaAntigravityAbout": "Google’s terminal-first way to work with Antigravity agents.",
-  "@agentPersonaAntigravityAbout": {"description": "Agent persona: one sentence about Antigravity"},
+  "@agentPersonaAntigravityAbout": {
+    "description": "Agent persona: one sentence about Antigravity"
+  },
   "agentPersonaAntigravityNeeds": "A Google account; sign in in your browser",
-  "@agentPersonaAntigravityNeeds": {"description": "Agent persona: what a person needs to use Antigravity"},
+  "@agentPersonaAntigravityNeeds": {
+    "description": "Agent persona: what a person needs to use Antigravity"
+  },
   "agentsAntigravitySignInIntro": "Antigravity gives you a sign-in link in the terminal. Open it in your browser and sign in with Google, then paste the browser’s code into the terminal.",
-  "@agentsAntigravitySignInIntro": {"description": "Agents: Antigravity sign-in uses its own terminal and browser code flow"},
+  "@agentsAntigravitySignInIntro": {
+    "description": "Agents: Antigravity sign-in uses its own terminal and browser code flow"
+  },
   "agentsGeminiMigrationNote": "If Gemini CLI asks you to use Antigravity, go back to Agents and install Antigravity (agy). Your Gemini conversations stay here.",
-  "@agentsGeminiMigrationNote": {"description": "Agents: way forward when the upstream Gemini CLI asks the user to switch; does not claim Gemini is unsupported by the app"}
+  "@agentsGeminiMigrationNote": {
+    "description": "Agents: way forward when the upstream Gemini CLI asks the user to switch; does not claim Gemini is unsupported by the app"
+  },
+  "phoneSetupStageCompat": "Trying again in compatibility mode",
+  "@phoneSetupStageCompat": {
+    "description": "Setup stage when a program crashed and the app runs the step again more carefully"
+  }
 }

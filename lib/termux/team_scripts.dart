@@ -91,7 +91,7 @@ abstract final class TermuxTeamScripts {
   static String get unpackScript =>
       'set -eu\n'
       ': "\${gc_member:?}" "\${bd_member:?}" "\${dolt_member:?}"\n'
-      '${AiTeamScripts.unpackScript}'
+      '${AiTeamScripts.unpackScriptPlainTar}'
       'rm -rf ${AiTeamScripts.cache}\n';
 
   /// The scripts `aiteam.sh` carries, by the name it runs them under.

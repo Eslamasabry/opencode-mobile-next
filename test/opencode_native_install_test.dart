@@ -202,7 +202,7 @@ void main() {
         expect(x64, contains(pins.x64.sha256));
         expect(
           script.indexOf('oc_download "\$oc_url" "\$oc_file" "\$oc_sha"'),
-          lessThan(script.indexOf('tar -xzf')),
+          lessThan(script.indexOf('oc_untar "\$oc_file"')),
         );
         // No npm command at all (a comment may name it).
         expect(

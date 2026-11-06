@@ -383,7 +383,7 @@ oc_download "${pins['node_base_url']}/\$node_version/node-\$node_version-linux-\
 oc_stage 'Unpacking Node.js'
 rm -rf /opt/node.new
 mkdir -p /opt/node.new
-tar -xzf "\$node_file" -C /opt/node.new --strip-components=1
+oc_untar "\$node_file" /opt/node.new 1
 rm -rf /opt/node
 mv /opt/node.new /opt/node
 for tool in node npm npx; do ln -sf /opt/node/bin/\$tool /usr/local/bin/\$tool; done
@@ -509,7 +509,7 @@ oc_download "\$oc_url" "\$oc_file" "\$oc_sha"
 oc_stage 'Unpacking OpenCode'
 rm -rf "\$oc_new"
 mkdir -p "\$oc_new/bin"
-if ! tar -xzf "\$oc_file" -C "\$oc_new" "\$oc_member" ||
+if ! oc_untar "\$oc_file" "\$oc_new" 0 "\$oc_member" ||
   [ ! -f "\$oc_new/\$oc_member" ] || [ -L "\$oc_new/\$oc_member" ]; then
   rm -rf "\$oc_new" "\$oc_file"
   oc_fail "${OpenCodeInstallFailure.noProgram}"

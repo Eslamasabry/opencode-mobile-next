@@ -611,7 +611,7 @@ void main() {
     final parts = TermuxTeamScripts.parts;
     expect(parts['check'], AiTeamScripts.checkScript);
     expect(parts['register'], BuiltinTeam.registerScript);
-    expect(parts['unpack'], contains(AiTeamScripts.unpackScript));
+    expect(parts['unpack'], contains(AiTeamScripts.unpackScriptPlainTar));
     for (final name in ['city', 'service']) {
       final part = parts[name]!;
       final original = name == 'city'

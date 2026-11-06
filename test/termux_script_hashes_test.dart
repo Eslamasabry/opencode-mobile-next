@@ -18,7 +18,8 @@ import 'package:opencode_mobile/termux/bridge.dart';
 /// script embedding the manager moved with it. Unrelated script hashes retain
 /// the original snapshot. The 2026-11-05 snapshot adds the crashed-download
 /// fallback (issue #117) to the setup prelude, which the six aiteamVerbScript
-/// payloads embed.
+/// payloads embed. The 2026-11-06 snapshot adds the `oc_untar` helper (app
+/// unpacking when tar crashes, issue #117) to the same prelude.
 /// Refresh only after reviewing intentional changes, including shared helpers;
 /// byte drift otherwise fails here, even when the bridge itself is unchanged.
 Map<String, String> _scripts() => {

@@ -20,7 +20,8 @@ class BuiltinLinux private constructor(context: Context) {
     internal fun <T> withSetupWork(scope: SetupWorkScopes.Scope, work: () -> T): T = workScopes.run(scope, work)
     fun <T> withSetupWork(work: () -> T): T = withSetupWork(prepareSetupWork(), work)
     fun start(script: String, directory: String?, agentUser: Boolean = false): Process = ProcessBuilder("sh", "-c", script).start()
-    internal fun startInstaller(script: String, targets: Set<InstallerTarget>, operation: InstallerOperation, agentUser: Boolean = false): Process {
+    internal fun startInstaller(script: String, targets: Set<InstallerTarget>, operation: InstallerOperation, agentUser: Boolean = false, compat: Boolean = false): Process {
+        if (compat) compatStarts++
         check(operation == InstallerOperation.INSTALL && targets.isNotEmpty())
         installerStarts++
         if (interruptInstallersWithZeroExit > 0) {
@@ -28,7 +29,9 @@ class BuiltinLinux private constructor(context: Context) {
             // PRoot can exit successfully after its guest shell was signalled.
             return ProcessBuilder("sh", "-c", "printf 'proot info: vpid 1: terminated with signal 15\\n'; exit 0").start()
         }
-        return ProcessBuilder("sh", "-c", script).start()
+        return ProcessBuilder("sh", "-c", script).apply {
+            if (compat) environment()["OC_STUB_COMPAT"] = "1"
+        }.start()
     }
     fun finishInstaller(process: Process) {
         check(process.waitFor(3, java.util.concurrent.TimeUnit.SECONDS))
@@ -42,6 +45,7 @@ class BuiltinLinux private constructor(context: Context) {
         @Volatile var setupWorkAcquires = 0
         @Volatile var setupWorkFinishes = 0
         var installerStarts = 0
+        var compatStarts = 0
         var installerFinishes = 0
         /** How many installer starts, from the next one, end as a signalled guest. */
         var interruptInstallersWithZeroExit = 0

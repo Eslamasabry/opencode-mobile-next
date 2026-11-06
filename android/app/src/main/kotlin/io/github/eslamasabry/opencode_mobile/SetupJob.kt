@@ -12,6 +12,7 @@ import org.json.JSONObject
  *     ::oc percent <0-100>
  *     ::oc version <text>
  *     ::oc fetch <https url> <absolute guest path> <sha256>
+ *     ::oc unpack <archive path> <dest folder> <strip count> <member or ->
  *
  * Anything else, including a malformed `::oc` line, is plain log text.
  */
@@ -23,6 +24,8 @@ object SetupProtocol {
         data class Version(val text: String) : Event()
         /** The script asks the app to download [url] to [dest] (a path inside Ubuntu). */
         data class Fetch(val url: String, val dest: String, val sha256: String) : Event()
+        /** The script asks the app to unpack the .tar.gz [archive] into [dest] (paths inside Ubuntu). */
+        data class Unpack(val archive: String, val dest: String, val strip: Int, val member: String?) : Event()
     }
 
     private const val PREFIX = "::oc "
@@ -30,6 +33,7 @@ object SetupProtocol {
     private const val MAX_STAGE_LENGTH = 120
     private const val MAX_VERSION_LENGTH = 80
     private const val FETCH_ARGUMENTS = 3
+    private const val UNPACK_ARGUMENTS = 4
     private val whitespace = Regex("\\s+")
 
     fun parse(line: String): Event? {
@@ -43,6 +47,7 @@ object SetupProtocol {
                 ?.takeIf { !it.isNaN() }
                 ?.let { Event.Percent(it.coerceIn(0.0, 100.0)) }
             "fetch" -> parseFetch(args)
+            "unpack" -> parseUnpack(args)
             "version" -> args.takeIf { it.isNotEmpty() }?.let { Event.Version(it.take(MAX_VERSION_LENGTH)) }
             else -> null
         }
@@ -53,6 +58,15 @@ object SetupProtocol {
         val done = parts.getOrNull(0)?.toLongOrNull()
         val total = parts.getOrNull(1)?.toLongOrNull() ?: 0L
         return if (done == null || done < 0 || total < 0) null else Event.Bytes(done, total)
+    }
+
+    private fun parseUnpack(args: String): Event? {
+        val parts = args.split(whitespace)
+        val strip = parts.getOrNull(2)?.toIntOrNull()
+        return if (parts.size == UNPACK_ARGUMENTS && parts[0].isNotEmpty() && parts[1].isNotEmpty() &&
+            strip != null && strip >= 0) {
+            Event.Unpack(parts[0], parts[1], strip, parts[3].takeIf { it != "-" })
+        } else null
     }
 
     private fun parseFetch(args: String): Event? {
@@ -95,7 +109,7 @@ class SetupComponentStatus(
             }
             is SetupProtocol.Event.Percent -> percent = event.value
             is SetupProtocol.Event.Version -> version = event.text
-            is SetupProtocol.Event.Fetch -> Unit
+            is SetupProtocol.Event.Fetch, is SetupProtocol.Event.Unpack -> Unit
         }
     }
 
