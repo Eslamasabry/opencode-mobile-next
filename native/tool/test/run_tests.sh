@@ -404,6 +404,7 @@ SH
   expect "ladder: Q-TESTROT t1 compiles every module's tests" 0 bash -c 'grep -q "^step test-compile: .*--continue compileAllTests$" native/build/native-t1/*/summary.txt'
   expect "ladder: E02-S03 t1 runs the switch release lint" 0 bash -c 'grep -q "^step lint: .*:androidApp:lintSwitchRelease$" native/build/native-t1/*/summary.txt'
   expect "ladder: E02-S03 t1 runs detekt on the touched module" 0 bash -c 'grep -qE "^step detekt: .*detekt.sh --base native/main :core:common$" native/build/native-t1/*/summary.txt'
+  expect "ladder: E02-S13 t1 runs the layout baseline ratchet" 0 bash -c 'grep -qE "^step layout-baseline: .*layout_baseline.sh --base native/main$" native/build/native-t1/*/summary.txt'
   echo 'val x = 1 // DETEKT_BAD' >native/core/common/D.kt
   expect "ladder: E02-S03 t1 fails on a new detekt finding" 1 "${low[@]}" OC_DETEKT_CMD="$FAKE_DETEKT" native/tool/t1.sh --base native/main --where local
   rm native/core/common/D.kt
@@ -465,6 +466,26 @@ expect_out "E02-S03 detekt: --all includes ui/kit" 'detekt :ui:kit: ok'
 expect "E02-S03 detekt: a bad cached jar is refused (2)" 2 env OC_DETEKT_CACHE_DIR="$TMP_ROOT/jarcache" bash -c \
   'mkdir -p "$OC_DETEKT_CACHE_DIR" && echo tampered >"$OC_DETEKT_CACHE_DIR/detekt-cli-1.23.8-all.jar" && native/tool/qa/detekt.sh :core:common --base native/main'
 expect_out "E02-S03 detekt: says checksum" 'checksum mismatch'
+
+# ------------------------------------------------------------------------------------ qa/layout_baseline.sh (E02-S13)
+R="$(new_repo)"; cd "$R" || exit 1
+expect "E02-S13 layout ratchet: before any baseline exists it is the adoption bootstrap" 0 native/tool/qa/layout_baseline.sh --base native/main
+expect_out "E02-S13 layout ratchet: says bootstrap" 'layout ratchet: bootstrap'
+mkdir -p native/config/layout/baseline
+printf '# header\nshot_a\tphone\tedge-text\tFlush\nshot_a\ttablet\twide-text\tLong\n' >native/config/layout/baseline/feature-x.tsv
+git add -A && git commit -q -m "chore(tool): adopt the layout guard [skip ci]" -m "Base." && git branch -f native/main HEAD
+expect "E02-S13 layout ratchet: an unchanged baseline passes" 0 native/tool/qa/layout_baseline.sh --base native/main
+printf 'shot_b\tphone\ttight\tSearch\n' >>native/config/layout/baseline/feature-x.tsv
+expect "E02-S13 layout ratchet: a baseline that grew fails" 1 native/tool/qa/layout_baseline.sh --base native/main
+expect_out "E02-S13 layout ratchet: names the added line" '\+ shot_b'
+printf '# header\nshot_a\tphone\tedge-text\tFlush\n' >native/config/layout/baseline/feature-x.tsv
+expect "E02-S13 layout ratchet: a baseline that shrank passes" 0 native/tool/qa/layout_baseline.sh --base native/main
+expect_out "E02-S13 layout ratchet: reports the shrink" 'shrank 2 -> 1'
+printf 'shot_c\tphone\tclipped\tChip\n' >native/config/layout/baseline/ui-kit.tsv
+expect "E02-S13 layout ratchet: a new baseline for a module that had none fails" 1 native/tool/qa/layout_baseline.sh --base native/main
+expect_out "E02-S13 layout ratchet: names the new baseline" 'NEW baseline .*ui-kit.tsv'
+rm native/config/layout/baseline/ui-kit.tsv
+expect "E02-S13 layout ratchet: an unknown base cannot check (2)" 2 native/tool/qa/layout_baseline.sh --base no/such/ref
 
 # --------------------------------------------------------------------------------------- version_code.sh (E01-S09)
 R="$(new_repo)"; cd "$R" || exit 1
