@@ -4,6 +4,7 @@ package io.github.eslamasabry.oc.protocol.paseo.gateway
 
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.SessionId
+import io.github.eslamasabry.oc.core.model.AgentFeatureKind
 import io.github.eslamasabry.oc.core.model.ModelRef
 import io.github.eslamasabry.oc.core.model.ModelSelection
 import io.github.eslamasabry.oc.core.model.NewSession

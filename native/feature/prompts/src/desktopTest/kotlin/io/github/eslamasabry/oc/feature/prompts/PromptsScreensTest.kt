@@ -113,6 +113,8 @@ class PromptsScreensTest {
         override fun toggleUnfinished() {
             log += "unfinished"
         }
+
+        override fun activateSkill(id: String) = Unit
     }
 
     @Composable

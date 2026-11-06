@@ -53,7 +53,7 @@ class UsageWidgetSettingsTest {
             onNodeWithText("No subscriptions yet").assertExists()
             onNodeWithText("Sign in, add key and set up rows").assertExists()
             onNodeWithText("Weekly").performClick()
-            assertEquals(listOf("setWidgetWindows" to listOf(UsageWidgetWindows.Weekly)), calls)
+            assertEquals(listOf<Pair<String, List<Any?>>>("setWidgetWindows" to listOf(UsageWidgetWindows.Weekly)), calls)
         }
 
     @Test
@@ -115,6 +115,6 @@ class UsageWidgetSettingsTest {
             }
         }
         onNodeWithTag("usage-widget-plan-claude:work").performClick()
-        assertEquals(listOf("setWidgetHidden" to listOf("claude:work", true)), calls)
+        assertEquals(listOf<Pair<String, List<Any?>>>("setWidgetHidden" to listOf("claude:work", true)), calls)
     }
 }

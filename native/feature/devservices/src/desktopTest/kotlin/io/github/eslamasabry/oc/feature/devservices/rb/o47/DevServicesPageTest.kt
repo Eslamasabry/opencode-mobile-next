@@ -77,7 +77,7 @@ class DevServicesPageTest {
             onNodeWithText("Running command · Port 5173 · npm run dev").assertExists()
             onNodeWithContentDescription("Stop Shopfront preview").performClick()
             onNodeWithTag("development-service-preview").performClick()
-            assertEquals(listOf("askStop" to listOf("preview"), "logs" to listOf("preview")), calls)
+            assertEquals(listOf<Pair<String, List<Any?>>>("askStop" to listOf("preview"), "logs" to listOf("preview")), calls)
         }
 
     @Test
@@ -87,7 +87,7 @@ class DevServicesPageTest {
         onNodeWithText("Restart").assertExists()
         onNodeWithText("Copy command").assertExists()
         onNodeWithText("Remove").performClick()
-        assertEquals(listOf("askRemove" to listOf("preview")), calls)
+        assertEquals(listOf<Pair<String, List<Any?>>>("askRemove" to listOf("preview")), calls)
     }
 
     @Test

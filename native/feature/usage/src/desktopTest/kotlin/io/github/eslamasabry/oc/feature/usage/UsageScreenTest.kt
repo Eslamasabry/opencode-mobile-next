@@ -11,6 +11,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.engine.integrations.usage.UsageBudgetUnit
 import io.github.eslamasabry.oc.feature.usage.presentation.UsageActions
 import io.github.eslamasabry.oc.feature.usage.presentation.UsageDay
 import io.github.eslamasabry.oc.feature.usage.presentation.UsageModel
@@ -78,6 +79,30 @@ class UsageScreenTest {
 
         override fun openServers() {
             calls += "servers"
+        }
+
+        override fun editBudget(unit: UsageBudgetUnit) {
+            calls += "editBudget"
+        }
+
+        override fun budgetChanged(value: String) {
+            calls += "budgetChanged"
+        }
+
+        override fun saveBudget() {
+            calls += "saveBudget"
+        }
+
+        override fun removeBudget() {
+            calls += "removeBudget"
+        }
+
+        override fun closeBudget() {
+            calls += "closeBudget"
+        }
+
+        override fun clearBudgets() {
+            calls += "clearBudgets"
         }
     }
 

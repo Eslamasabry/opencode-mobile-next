@@ -10,6 +10,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.integrations.usage.ApiKeyAccount
 import io.github.eslamasabry.oc.engine.integrations.usage.SignInMethod
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageConnection
@@ -52,6 +53,50 @@ class PlansScreenUiTest {
 
         override fun refresh() {
             calls += "refresh"
+        }
+
+        override fun setUpCollector() {
+            calls += "setUpCollector"
+        }
+
+        override fun turnOffCollector() {
+            calls += "turnOffCollector"
+        }
+
+        override fun editThreshold(key: String?) {
+            calls += "editThreshold"
+        }
+
+        override fun thresholdChanged(value: String) {
+            calls += "thresholdChanged"
+        }
+
+        override fun saveThreshold() {
+            calls += "saveThreshold"
+        }
+
+        override fun useDefaultThreshold() {
+            calls += "useDefaultThreshold"
+        }
+
+        override fun toggleResetNotice() {
+            calls += "toggleResetNotice"
+        }
+
+        override fun dismissEditor() {
+            calls += "dismissEditor"
+        }
+
+        override fun setAlertsOn(enabled: Boolean) {
+            calls += "setAlertsOn"
+        }
+
+        override fun askCollector(profile: ProfileId) {
+            calls += "askCollector"
+        }
+
+        override fun fix(key: String) {
+            calls += "fix"
         }
     }
 

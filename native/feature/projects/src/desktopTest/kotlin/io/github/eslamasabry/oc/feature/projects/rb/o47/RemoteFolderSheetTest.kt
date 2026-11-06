@@ -55,7 +55,7 @@ class RemoteFolderSheetTest {
             }
             onAllNodesWithTag("remote-folder-/work/app").assertCountEquals(1)
             onNodeWithTag("remote-folder-/work/app").performClick()
-            assertEquals(listOf("finishPath" to listOf("/work/app")), calls)
+            assertEquals(listOf<Pair<String, List<Any?>>>("finishPath" to listOf("/work/app")), calls)
         }
 
     @Test
@@ -80,7 +80,7 @@ class RemoteFolderSheetTest {
             assertEquals(emptyList(), calls)
             path.performTextReplacement(" /work/app ")
             path.performImeAction()
-            assertEquals(listOf("finishPath" to listOf("/work/app")), calls)
+            assertEquals(listOf<Pair<String, List<Any?>>>("finishPath" to listOf("/work/app")), calls)
         }
 
     @Test

@@ -72,7 +72,7 @@ class ScheduleListTest {
             onNodeWithText("Daily report").performClick()
             onNode(isToggleable() and hasContentDescription("Daily report")).performClick()
             assertEquals(
-                listOf("edit" to listOf("daily"), "setEnabled" to listOf("daily", false)),
+                listOf<Pair<String, List<Any?>>>("edit" to listOf("daily"), "setEnabled" to listOf("daily", false)),
                 calls,
             )
         }

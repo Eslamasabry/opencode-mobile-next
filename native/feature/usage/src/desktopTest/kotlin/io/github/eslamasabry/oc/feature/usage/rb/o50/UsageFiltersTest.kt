@@ -56,7 +56,7 @@ class UsageFiltersTest {
             onNodeWithTag("usage-scope").performClick()
             onNodeWithText("Shopfront").performClick()
             assertEquals(
-                listOf(
+                listOf<Pair<String, List<Any?>>>(
                     "chooseRange" to listOf(UsageRange.Today),
                     "chooseScope" to listOf(UsageScope.Project("shop")),
                 ),

@@ -48,6 +48,34 @@ class ProjectsScreenTest {
         override fun retry() { calls += "retry" }
 
         override fun openServers() { calls += "servers" }
+
+        override fun findPhoneProjects() {
+            calls += "findPhoneProjects"
+        }
+
+        override fun cancelPhoneScan() {
+            calls += "cancelPhoneScan"
+        }
+
+        override fun browsePhone() {
+            calls += "browsePhone"
+        }
+
+        override fun enterPhoneFolder(path: String) {
+            calls += "enterPhoneFolder"
+        }
+
+        override fun closePhoneFolders() {
+            calls += "closePhoneFolders"
+        }
+
+        override fun usePhoneFolder() {
+            calls += "usePhoneFolder"
+        }
+
+        override fun allowPhoneFolderAccess() {
+            calls += "allowPhoneFolderAccess"
+        }
     }
 
     private class Page : ProjectPageActions {

@@ -61,7 +61,7 @@ class UsageAlertsPickerTest {
             onNodeWithTag("usage-alert-threshold").performClick()
             onNodeWithText("40% left").performClick()
             onNodeWithTag("kit-sheet").assertDoesNotExist()
-            assertEquals(listOf("setDefaultThreshold" to listOf(60)), calls)
+            assertEquals(listOf<Pair<String, List<Any?>>>("setDefaultThreshold" to listOf(60)), calls)
         }
 
     @Test

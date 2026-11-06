@@ -6,6 +6,7 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.ImportableConversation
+import io.github.eslamasabry.oc.core.model.HostUpdatePhase
 import io.github.eslamasabry.oc.core.model.NewSession
 import io.github.eslamasabry.oc.core.model.OutgoingPrompt
 import io.github.eslamasabry.oc.core.model.ServerLocation
@@ -86,7 +87,7 @@ class PaseoHostWorkTest {
         )
         val finished = result.await().ok()
         assertFalse(finished.success)
-        assertTrue("EACCES" in finished.reason!!)
+        assertTrue("EACCES" in finished.reason!!.text)
         assertNull(finished.newVersion)
     }
 

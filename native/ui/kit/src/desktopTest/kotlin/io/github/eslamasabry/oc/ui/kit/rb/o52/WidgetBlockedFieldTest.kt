@@ -58,6 +58,7 @@ class WidgetBlockedFieldTest {
     fun `B-KIT-051 disabled field replaces its helper and restores it after the hold ends`() =
         runComposeUiTest {
             var held by mutableStateOf(true)
+            val field = TextFieldState("")
             setContent {
                 KitTheme(
                     platform = FakeKitPlatform(),
