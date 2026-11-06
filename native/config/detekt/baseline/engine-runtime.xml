@@ -1,0 +1,849 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:BuiltinScripts.kt$BuiltinScripts$line.isEmpty() || line.startsWith("#") || line.startsWith("set ") || line.startsWith("umask ") || line.startsWith("export ")</ID>
+    <ID>ComplexCondition:DetectedDevServers.kt$DefaultDetectedPhoneServers$admitted != generation || server !in mutable.value.servers || server.pid &lt;= 1 || server.command.isBlank()</ID>
+    <ID>ComplexCondition:DetectedDevelopmentServers.kt$DefaultDetectedDevelopmentServers$shell != null &amp;&amp; (shell.command != server.command || shell.directory != server.cwd || shell.startedAt != server.startedAt)</ID>
+    <ID>ComplexCondition:DevelopmentServices.kt$DevelopmentServices$busy || !isCurrent() || closed || !readable</ID>
+    <ID>ComplexCondition:DevelopmentServices.kt$DevelopmentServices$busy || !isCurrent() || disposed || !readable</ID>
+    <ID>ComplexCondition:DevelopmentServices.kt$DevelopmentServices$disposed || !isCurrent() || !supported() || !readable</ID>
+    <ID>ComplexCondition:DevelopmentServices.kt$DevelopmentServices$service.directory != directory || service.workspace != workspace || service.run != null || service.name.isBlank() || service.name.length &gt; 80 || service.command.isBlank() || service.command.length &gt; 4096</ID>
+    <ID>ComplexCondition:FailedServiceReport.kt$FailedServiceReport.Companion$run.stopped || run.ownerToken != shell.ownerToken || run.shellId != shell.id || run.startedAt != shell.startedAt || service.command != shell.command || service.directory != shell.directory</ID>
+    <ID>ComplexCondition:HeatTier.kt$HeatTierPolicy$thermal.status.atLeast(ThermalStatus.Light) || headroom &gt;= SLOW_HEADROOM || (unplugged &amp;&amp; batteryLevel != null &amp;&amp; batteryLevel &lt;= SLOW_BATTERY) || powerSave || hidden</ID>
+    <ID>ComplexCondition:HeatTier.kt$HeatTierPolicy$thermal.status.atLeast(ThermalStatus.Moderate) || headroom &gt;= HOLD_HEADROOM || (unplugged &amp;&amp; batteryLevel != null &amp;&amp; batteryLevel &lt;= HOLD_BATTERY)</ID>
+    <ID>ComplexCondition:InstallerAdmission.kt$InstallerAdmission$ticket == null || claim.ownerLive || !ownerCurrent() || readTicket() != ticket</ID>
+    <ID>ComplexCondition:KeptServices.kt$KeptServiceDef$!validName(name) || title.isBlank() || !oneLine(title) || others.any { it.name == name }</ID>
+    <ID>ComplexCondition:KeptServices.kt$KeptServiceDef$command.isBlank() || command.length &gt; 4096 || !oneLine(command) || stopSeconds !in 1..120</ID>
+    <ID>ComplexCondition:KeptServices.kt$KeptServiceDef$port != null &amp;&amp; (port !in 1024..65535 || port in reservedPorts || others.any { it.port == port })</ID>
+    <ID>ComplexCondition:LinuxProcesses.kt$LinuxProcessScan$before == null || t0 == null || t1 == null || t1 - t0 &lt; 0.5</ID>
+    <ID>ComplexCondition:LinuxProcesses.kt$LinuxProcessScan.Companion$first.startsWith("/system/") || first.startsWith("/apex/") || first.startsWith("/vendor/") || first.startsWith("/data/app/") || first == "zygote" || first == "zygote64" || first == "system_server" || first.startsWith("&lt;pre-initialized&gt;")</ID>
+    <ID>ComplexCondition:LinuxProcesses.kt$LinuxProcessScan.Companion$ppid == null || utime == null || stime == null || start == null</ID>
+    <ID>ComplexCondition:ListeningPorts.kt$ListeningPorts$port == null || port &lt; 1 || port &gt; 65535 || inode == null</ID>
+    <ID>ComplexCondition:ManagedShell.kt$ManagedShellWire$command.isBlank() || command.length &gt; 4096 || directory.isBlank() || ownerToken.isEmpty()</ID>
+    <ID>ComplexCondition:NativeRecoveryChannel.kt$NativeRecoveryChannel$!wanted || !enabled || !markerValid || attempts &gt;= 3</ID>
+    <ID>ComplexCondition:NativeRecoveryChannel.kt$NativeRecoveryChannel$boundProfile != args["profileId"] || !manualStarted || !running || !wanted</ID>
+    <ID>ComplexCondition:NativeRecoveryChannel.kt$NativeRecoveryChannel$presenceRefused || boundProfile != args["profileId"] || !running || !wanted || scheduled || budget!!["pending"] == true</ID>
+    <ID>ComplexCondition:OpenCodeUpdate.kt$OpenCodeUpdateRestart$before == null || !before.serverRunning || !before.serverRestartWanted || generation == null</ID>
+    <ID>ComplexCondition:PhoneServerHealing.kt$PhoneServerHealing$changed &amp;&amp; foreground &amp;&amp; !manualClaiming &amp;&amp; selected != null</ID>
+    <ID>ComplexCondition:PhoneServerHealing.kt$PhoneServerHealing$disposed || !foreground || connection.selectedProfileId() != profile.id || connection.hasConnectedServer() || starter.failureFor(profile.id) != null || (automatic &amp;&amp; !connection.allows(profile.id, AutomationBehavior.Reconnect))</ID>
+    <ID>ComplexCondition:PhoneServerHealing.kt$PhoneServerHealing$disposed || revision != observationRevision || owner?.id != current.id || !connection.isReadable(current.id)</ID>
+    <ID>ComplexCondition:PhoneServerHealing.kt$PhoneServerHealing$status != previous &amp;&amp; (status == LinkStatus.Disconnected || status == LinkStatus.Reconnecting) &amp;&amp; current != null &amp;&amp; foreground &amp;&amp; !manualClaiming &amp;&amp; connection.selectedProfileId() == current.id</ID>
+    <ID>ComplexCondition:ProjectFolders.kt$ProjectFolders$rootfs == null &amp;&amp; !(external != null &amp;&amp; projects) &amp;&amp; !virtualParent</ID>
+    <ID>ComplexCondition:RemoteTerminals.kt$RemoteTerminals$local.value.selected?.id != id || live == null || socket == null || !local.value.connected || !live.current()</ID>
+    <ID>ComplexCondition:ServerRecovery.kt$ServerRecovery$confirmed != null &amp;&amp; !confirmed.idleBlocks &amp;&amp; confirmed.serverRunning &amp;&amp; confirmed.serverRestartWanted</ID>
+    <ID>ComplexCondition:ServerRecovery.kt$ServerRecovery$status.idleBlocks || !status.installed || !status.serverRestartWanted || status.serverRecoveryGeneration == null</ID>
+    <ID>ComplexCondition:ServerRestartBudget.kt$ServerRestartBudget$status.idleBlocks || !status.installed || !status.serverRestartWanted || status.serverRecoveryGeneration == null</ID>
+    <ID>ComplexCondition:SetupContract.kt$DownloadSize.Companion$(size.kind == DownloadSizeKind.Exact || size.kind == DownloadSizeKind.LowerBound) &amp;&amp; bytes != null &amp;&amp; bytes &gt;= 0</ID>
+    <ID>ComplexCondition:SetupEngine.kt$SetupEngine$component != null &amp;&amp; app != null &amp;&amp; row?.state == "running" &amp;&amp; !cancelRequested</ID>
+    <ID>ComplexCondition:SetupEngine.kt$SetupEngine$saved.state != "running" &amp;&amp; saved.startedAt &gt; 0 &amp;&amp; saved.updatedAt &gt;= saved.startedAt &amp;&amp; traced.add("${saved.jobId}/")</ID>
+    <ID>ComplexCondition:SetupInspectionController.kt$SetupInspectionController$closed || !online || !current() || mine != generation.load()</ID>
+    <ID>ComplexCondition:SetupInspectionController.kt$SetupInspectionController$closed || !online || bound == null || !bound.current()</ID>
+    <ID>ComplexCondition:ShellOutput.kt$ShellOutput$page.cursor &lt; base || page.size &lt; 0 || page.cursor &gt; page.size || (page.cursor == base &amp;&amp; page.text.isNotEmpty())</ID>
+    <ID>CyclomaticComplexMethod:AppExitRecovery.kt$AppExitRecovery$public suspend fun runOnce(scene: RecoveryScene): RecoveryOutcome</ID>
+    <ID>CyclomaticComplexMethod:ComponentRemoval.kt$ComponentRemoval$private fun entry( component: RemovableComponent, presence: Map&lt;String, ComponentPresence&gt;, ): ComponentRemovalEntry</ID>
+    <ID>CyclomaticComplexMethod:DetectedDevServers.kt$DetectedDevServers$private suspend fun scan(at: Int, epoch: Int)</ID>
+    <ID>CyclomaticComplexMethod:DetectedDevelopmentServers.kt$DefaultDetectedDevelopmentServers$override suspend fun readLog(id: String): Outcome&lt;String&gt;</ID>
+    <ID>CyclomaticComplexMethod:DetectedDevelopmentServers.kt$DefaultDetectedDevelopmentServers$override suspend fun refresh(): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:DetectedDevelopmentServers.kt$DefaultDetectedDevelopmentServers$override suspend fun stop(id: String): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:DetectedDevelopmentServers.kt$DefaultDetectedDevelopmentServers$private suspend fun stopShell( server: DetectedDevelopmentServer, admitted: Long, ): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:DevelopmentFailureReports.kt$DevelopmentFailureReports$private fun decode(raw: String?): List&lt;DevelopmentService&gt;?</ID>
+    <ID>CyclomaticComplexMethod:DevelopmentFailureReports.kt$DevelopmentFailureReports$public suspend fun capture( saved: String?, current: () -&gt; Boolean, inspect: suspend (id: String, directory: String, workspace: String?) -&gt; Outcome&lt;ServerShell?&gt;?, output: suspend (id: String, directory: String, workspace: String?) -&gt; Outcome&lt;ServerOutput&gt;?, redact: (String) -&gt; String, ): List&lt;FailedServiceReport&gt;</ID>
+    <ID>CyclomaticComplexMethod:DevelopmentServices.kt$DevelopmentServices$private suspend fun reconcile(service: DevelopmentService, gateway: ManagedShellGateway, gen: Int): Step&lt;ManagedShell?&gt;</ID>
+    <ID>CyclomaticComplexMethod:DevelopmentServices.kt$DevelopmentServices$public suspend fun readLogs(id: String): Unit</ID>
+    <ID>CyclomaticComplexMethod:HeatTier.kt$HeatTierPolicy$public fun decide( thermal: ThermalReading, batteryLevel: Int? = null, charging: Boolean? = null, hidden: Boolean = false, fullSpeed: Boolean = false, powerSave: Boolean = false, ): HeatTier</ID>
+    <ID>CyclomaticComplexMethod:IdleResume.kt$IdleResume$private suspend fun steps(owner: String, at: Int): Boolean?</ID>
+    <ID>CyclomaticComplexMethod:InstallerAdmissionTest.kt$InstallerAdmissionTest$private suspend fun admission(scenario: String)</ID>
+    <ID>CyclomaticComplexMethod:InstallerAdmissionTest.kt$InstallerAdmissionTest$private suspend fun monitor(scenario: String)</ID>
+    <ID>CyclomaticComplexMethod:KeptServices.kt$KeptService.Companion$public fun combine( def: KeptServiceDef, wanted: Boolean, text: String?, running: Boolean, ): KeptService</ID>
+    <ID>CyclomaticComplexMethod:KeptServices.kt$KeptServiceDef$public fun invalid(others: List&lt;KeptServiceDef&gt;, new: Boolean): KeptField?</ID>
+    <ID>CyclomaticComplexMethod:LifecycleReport.kt$LifecycleReportController$public suspend fun refresh()</ID>
+    <ID>CyclomaticComplexMethod:LinuxProcesses.kt$LinuxProcessScan.Companion$private fun fromStat( pid: Int, stat: String, cmdline: String, uptime: Double?, selfStart: Long?, ): LinuxProcess?</ID>
+    <ID>CyclomaticComplexMethod:LinuxProcesses.kt$LinuxProcessScan.Companion$public fun parse(output: String): LinuxProcessScan</ID>
+    <ID>CyclomaticComplexMethod:ListeningPorts.kt$ListeningPorts$public fun parse(output: String): List&lt;LocalServerProcess&gt;</ID>
+    <ID>CyclomaticComplexMethod:NativeRecoveryChannel.kt$NativeRecoveryChannel$override suspend fun invoke(method: String, arguments: Map&lt;String, Any?&gt;?): ChannelReply</ID>
+    <ID>CyclomaticComplexMethod:NativeRuntimeStatus.kt$NativeRuntimeStatus$public fun read(map: Map&lt;*, *&gt;): RuntimeStatus</ID>
+    <ID>CyclomaticComplexMethod:PhoneBudgetFiles.kt$PhoneBudgetFiles$public fun settings(current: String, fullSpeed: Boolean): String?</ID>
+    <ID>CyclomaticComplexMethod:PhoneProcessWatch.kt$PhoneProcessWatch$public fun record(snapshot: RunningSnapshot, at: Instant): RunningReading</ID>
+    <ID>CyclomaticComplexMethod:PhoneProcessWatch.kt$public fun groupRunningProcesses( processes: List&lt;RunningProcess&gt;, heavy: Map&lt;Int, Duration&gt; = emptyMap(), aboutFull: Set&lt;Int&gt; = emptySet(), ): List&lt;RunningGroup&gt;</ID>
+    <ID>CyclomaticComplexMethod:PhoneServerHealing.kt$PhoneServerHealing$public suspend fun connectIfNeeded(profile: HealingProfile, automatic: Boolean = true)</ID>
+    <ID>CyclomaticComplexMethod:PhoneServerStarter.kt$PhoneServerStarter$public suspend fun start( target: StartTarget, mode: LaunchMode = LaunchMode.Manual, migrateLegacyHistory: Boolean = false, stillWanted: () -&gt; Boolean = { true }, ): StartFailure?</ID>
+    <ID>CyclomaticComplexMethod:ProjectDevServer.kt$ProjectDevServer$public suspend fun refresh(): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:ProjectFolders.kt$ProjectFolders$private suspend fun listFromFiles(ubuntuPath: String): Outcome&lt;List&lt;FolderEntry&gt;&gt;</ID>
+    <ID>CyclomaticComplexMethod:RecoveryBudget.kt$RecoveryBudget.Companion$public fun readMap(value: Any?): RecoveryBudget?</ID>
+    <ID>CyclomaticComplexMethod:RunningWords.kt$public fun runningNameKind(p: RunningProcess): RunningNameKind?</ID>
+    <ID>CyclomaticComplexMethod:ServerRecovery.kt$ServerRecovery$private suspend fun run(phone: HealingProfile, gen: Int, manual: () -&gt; Boolean)</ID>
+    <ID>CyclomaticComplexMethod:ServerRestartBudget.kt$ServerRestartBudget$private suspend fun checkOnce(profile: ProfileId, at: Int): Boolean</ID>
+    <ID>CyclomaticComplexMethod:ServerRestartBudget.kt$ServerRestartBudget$private suspend fun confirmRunning(profile: ProfileId, start: RecoveryBudget, at: Int): Boolean</ID>
+    <ID>CyclomaticComplexMethod:SetupAudit.kt$SetupAudit$public fun records(): ImmutableList&lt;SetupAuditRecord&gt;?</ID>
+    <ID>CyclomaticComplexMethod:SetupEngine.kt$SetupEngine$private fun traceFinished(saved: SetupJobRecord)</ID>
+    <ID>CyclomaticComplexMethod:SetupEngine.kt$SetupEngine$private suspend fun checkComponents( job: List&lt;SetupComponent&gt;, requireComplete: Boolean, ): Checks</ID>
+    <ID>CyclomaticComplexMethod:SetupEngine.kt$SetupEngine$private suspend fun refresh()</ID>
+    <ID>CyclomaticComplexMethod:SetupJobRecord.kt$SetupJobRecord.Companion$public fun parse(text: String?): SetupJobRecord?</ID>
+    <ID>CyclomaticComplexMethod:SetupPlanning.kt$SetupPlanning$public fun describeFailure( failed: SetupJobComponent, logTail: String, title: String, step: Boolean = false, ): Pair&lt;SetupError, SetupError&gt;</ID>
+    <ID>CyclomaticComplexMethod:SetupPlanning.kt$SetupPlanning$public fun progressFromRecord( record: SetupJobRecord, components: List&lt;SetupComponent&gt;, nowMillis: Long, redact: (String) -&gt; String, floors: MutableMap&lt;String, Double&gt;? = null, ): SetupProgress</ID>
+    <ID>CyclomaticComplexMethod:SetupPlanning.kt$SetupPlanning$public fun validParams( params: Map&lt;String, Map&lt;String, String&gt;&gt;, redact: (String) -&gt; String, allowLegacy: Boolean = false, ): Boolean</ID>
+    <ID>CyclomaticComplexMethod:SetupRegistryStore.kt$SetupRegistryStore$public suspend fun refresh(online: Boolean, query: String? = null): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:ShellOutput.kt$ShellOutput$public suspend fun refresh(): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:ThermalGuard.kt$ThermalGuard$private suspend fun pause(now: Instant, alsoStop: Boolean)</ID>
+    <ID>LargeClass:SetupEngine.kt$SetupEngine</ID>
+    <ID>LargeClass:SetupEngineTest.kt$SetupEngineTest</ID>
+    <ID>LongMethod:AptRepairScriptTest.kt$AptRepairScriptTest$@BeforeTest fun setUp()</ID>
+    <ID>LongMethod:DetectedDevServers.kt$DetectedDevServers$private suspend fun scan(at: Int, epoch: Int)</ID>
+    <ID>LongMethod:DetectedDevelopmentServers.kt$DefaultDetectedDevelopmentServers$override suspend fun refresh(): Outcome&lt;Unit&gt;</ID>
+    <ID>LongMethod:ListeningPorts.kt$ListeningPorts$public fun parse(output: String): List&lt;LocalServerProcess&gt;</ID>
+    <ID>LongMethod:NativeRecoveryChannel.kt$NativeRecoveryChannel$override suspend fun invoke(method: String, arguments: Map&lt;String, Any?&gt;?): ChannelReply</ID>
+    <ID>LongMethod:NativeRuntimeStatus.kt$NativeRuntimeStatus$public fun read(map: Map&lt;*, *&gt;): RuntimeStatus</ID>
+    <ID>LongMethod:OpenCodeNativeInstall.kt$OpenCodeInstallScripts$public fun nativeInstall( version: String? = null, assets: OpenCodeAssets? = null, root: String = "", probeSeconds: Int = 120, ): String</ID>
+    <ID>LongMethod:PhoneSetupRegistry.kt$PhoneSetupRegistry$override fun components(params: Map&lt;String, Map&lt;String, String&gt;&gt;): List&lt;SetupComponent&gt;</ID>
+    <ID>LongMethod:ServerRecovery.kt$ServerRecovery$private suspend fun run(phone: HealingProfile, gen: Int, manual: () -&gt; Boolean)</ID>
+    <ID>LongMethod:ServerRestartBudget.kt$ServerRestartBudget$private suspend fun checkOnce(profile: ProfileId, at: Int): Boolean</ID>
+    <ID>LongMethod:SetupEngine.kt$SetupEngine$private suspend fun start(ids: Set&lt;String&gt;, params: Map&lt;String, Map&lt;String, String&gt;&gt;)</ID>
+    <ID>LongMethod:SetupPlanning.kt$SetupPlanning$public fun progressFromRecord( record: SetupJobRecord, components: List&lt;SetupComponent&gt;, nowMillis: Long, redact: (String) -&gt; String, floors: MutableMap&lt;String, Double&gt;? = null, ): SetupProgress</ID>
+    <ID>LongMethod:SetupRegistryStore.kt$SetupRegistryStore$public suspend fun refresh(online: Boolean, query: String? = null): Outcome&lt;Unit&gt;</ID>
+    <ID>LongParameterList:AppExitRecovery.kt$AppExitRecovery$( private val launch: LaunchFactsPort, private val deliberateStop: DeliberateStop, automation: AutomationGate, private val autoStart: PhoneAutoStart, private val server: PhoneServerPort, private val clock: Clock, private val healing: HealingOwner? = null, private val reviveTeam: (suspend (ProfileId) -&gt; Unit)? = null, private val onRestart: (suspend (RestartAct) -&gt; Boolean)? = null, private val onNotableExit: (suspend (ExitReport) -&gt; Unit)? = null, )</ID>
+    <ID>LongParameterList:ComponentRemoval.kt$ComponentRemoval$( private val shell: LinuxShell, private val status: SetupStatusReader, registry: List&lt;RemovableComponent&gt;, /** AI Team's lifecycle API; without it AI Team is [ComponentRemovalBlock.Unsupported]. */ private val team: TeamRemover? = null, private val toolsChanged: ToolsChangedListener = ToolsChangedListener {}, /** The app's serial runtime scope keeps a shared probe alive when an individual page leaves. */ private val scope: CoroutineScope? = null, private val apps: Map&lt;String, io.github.eslamasabry.oc.engine.runtime.setup.SetupAppComponent&gt; = emptyMap(), )</ID>
+    <ID>LongParameterList:DetectedDevelopmentServers.kt$( directory: String, resolveGateway: suspend () -&gt; ManagedShellGateway?, isCurrent: () -&gt; Boolean, ownedShellIds: () -&gt; Set&lt;String&gt;, runOnPhone: (suspend (String) -&gt; Outcome&lt;String&gt;)?, clock: Clock, )</ID>
+    <ID>LongParameterList:DevelopmentServices.kt$DevelopmentServices$( private val store: DevelopmentServiceStore, public val directory: String, public val workspace: String?, private val resolveShells: suspend () -&gt; ManagedShellPort?, private val isCurrent: () -&gt; Boolean, private val supported: () -&gt; Boolean, private val newOwnerToken: () -&gt; String, )</ID>
+    <ID>LongParameterList:DevelopmentServices.kt$DevelopmentServices$( public val store: DevelopmentServiceStore, public val directory: String, public val workspace: String?, private val resolveGateway: suspend () -&gt; ManagedShellGateway?, private val isCurrent: () -&gt; Boolean, private val supported: () -&gt; Boolean, /** Display masking for the report (the kit's redactor); applied before bounding. */ private val redact: (String) -&gt; String, private val newOwnerToken: () -&gt; String = ::newId, )</ID>
+    <ID>LongParameterList:HeatTier.kt$HeatTierPolicy$( thermal: ThermalReading, batteryLevel: Int? = null, charging: Boolean? = null, hidden: Boolean = false, fullSpeed: Boolean = false, powerSave: Boolean = false, )</ID>
+    <ID>LongParameterList:LinuxProcessesTest.kt$( pid: Int, comm: String, ppid: Int, utime: Int = 0, stime: Int = 0, start: Long = 1000, rssPages: Int = 2500, state: String = "S", )</ID>
+    <ID>LongParameterList:LinuxProcessesTest.kt$(pid: Int, comm: String, ppid: Int, cmd: String, start: Long = 1000, utime: Int = 0)</ID>
+    <ID>LongParameterList:NativeRecoveryChannel.kt$( attempts: Int = 0, revision: Long = 0, pending: Boolean = false, eventId: String? = null, generation: Long? = null, confirmedAt: Long? = null, )</ID>
+    <ID>LongParameterList:OpenCodeUpdate.kt$OpenCodeAutoUpdateRule$( installedVersion: String?, pinnedVersion: String, busy: Boolean, engineRunning: Boolean, switchPending: Boolean, installProblem: Boolean, attemptedThisRun: Boolean, )</ID>
+    <ID>LongParameterList:OpenCodeUpdateTest.kt$OpenCodeUpdateTest$( installed: String? = "2.0.29", busy: Boolean = false, engineRunning: Boolean = false, switchPending: Boolean = false, installProblem: Boolean = false, attempted: Boolean = false, )</ID>
+    <ID>LongParameterList:PhoneServerHealing.kt$PhoneServerHealing$( private val connection: HealingConnection, private val host: HealingHost, public val starter: HealingStarter, public val recovery: ServerRecovery, private val scope: CoroutineScope, private val clock: Clock, /** BA's current inventory truth for the readable alias; null is unknown and acquires nothing. */ private val localAgentWorkBusy: ((String) -&gt; Boolean?)? = null, private val resumeAgentsAfterIdle: (suspend (profileId: String, expectedIdleGeneration: Long) -&gt; Outcome&lt;Unit&gt;)? = null, newLeaseId: () -&gt; String = AgentWorkLease::randomLeaseId, /** How long the launch start waits before its one retry. */ public val launchRetryDelay: Duration = 2.seconds, /** How often the launch asks a booting server whether it answers yet. */ public val launchPollInterval: Duration = 2.seconds, /** Delay before an automatic reconnect after a failed connect; doubles per failure up to [MAX_RECONNECT_BACKOFF]. */ public val reconnectBackoff: Duration = 10.seconds, )</ID>
+    <ID>LongParameterList:ProcessBudget.kt$ProcessBudget$( job: HeavyJob, running: Int, limitLifted: Boolean, thermal: ThermalReading = ThermalReading.Unknown, battery: BatteryReading = BatteryReading.Unknown, fullSpeed: Boolean = false, )</ID>
+    <ID>LongParameterList:ProcessBudgetGuard.kt$ProcessBudgetGuard$( private val readings: BudgetReadings, private val fullSpeed: () -&gt; Boolean, private val clock: Clock, private val scope: CoroutineScope, public val pollEvery: Duration = 5.seconds, public val reservationLife: Duration = 45.seconds, /** False where there is no in-app Linux to count: callers are admitted at once and nothing is read. */ public val enabled: Boolean = true, )</ID>
+    <ID>LongParameterList:ProcessBudgetTest.kt$ProcessBudgetTest$( running: Int, lifted: Boolean = false, job: HeavyJob = HeavyJob.AgentSession, thermal: ThermalReading = ThermalReading.Unknown, battery: BatteryReading = BatteryReading.Unknown, fullSpeed: Boolean = false, )</ID>
+    <ID>LongParameterList:RunningFixtures.kt$( pid: Int, ppid: Int, name: String, owner: PhoneProcessOwner = PhoneProcessOwner.OpenCode, cpu: Double = 0.0, mb: Long = 20, elapsed: Duration = 30.minutes, command: String? = null, session: String? = null, )</ID>
+    <ID>LongParameterList:SetupEngine.kt$SetupEngine$( private val host: SetupJobHost, private val registryPort: SetupRegistry, private val words: SetupWords, private val scope: CoroutineScope, private val clock: Clock, /** Put in front of every install script (`withSetupPrelude`'s prelude). */ private val scriptPrelude: String, /** The Redactor the Details text goes through before it is published. */ private val redact: (String) -&gt; String, public var finisher: SetupFinisher? = null, private val pollInterval: Duration = 500.milliseconds, private val idlePollInterval: Duration = 60.seconds, private val readTimeout: Duration = 10.seconds, private val foreground: () -&gt; Boolean = { true }, /** Receives only fixed timing names, component ids and states, never output or credentials. */ private val timing: ((SetupTiming) -&gt; Unit)? = null, )</ID>
+    <ID>LongParameterList:SetupRegistryStore.kt$SetupRegistryStore$( private val store: KeyValueStore, private val lanes: WriterLanes, private val profile: ProfileId, private val reader: SetupRegistryReader, private val redactor: Redactor, private val clock: Clock, private val present: () -&gt; Boolean, )</ID>
+    <ID>LongParameterList:ThermalGuard.kt$ThermalGuard$( private val port: HeatPausePort, private val store: ThermalGuardStore, automation: AutomationGate, private val clock: Clock, private val policy: ThermalPolicy = ThermalPolicy(), private val onReading: ((ThermalReading) -&gt; Unit)? = null, private val onAct: (suspend (HeatAct) -&gt; Unit)? = null, )</ID>
+    <ID>LoopWithTooManyJumpStatements:DevelopmentFailureReports.kt$DevelopmentFailureReports$for</ID>
+    <ID>LoopWithTooManyJumpStatements:InstallPrelude.kt$InstallPrelude$for</ID>
+    <ID>LoopWithTooManyJumpStatements:LinuxProcesses.kt$LinuxProcess$for</ID>
+    <ID>LoopWithTooManyJumpStatements:LinuxProcesses.kt$LinuxProcessScan.Companion$for</ID>
+    <ID>LoopWithTooManyJumpStatements:LinuxProcesses.kt$LinuxStopResult.Companion$for</ID>
+    <ID>LoopWithTooManyJumpStatements:ListeningPorts.kt$ListeningPorts$for</ID>
+    <ID>LoopWithTooManyJumpStatements:PhoneServerHealing.kt$PhoneServerHealing$while</ID>
+    <ID>LoopWithTooManyJumpStatements:ProcessBudgetGuard.kt$ProcessBudgetGuard$for</ID>
+    <ID>LoopWithTooManyJumpStatements:ProjectFolders.kt$ProjectFolders$for</ID>
+    <ID>LoopWithTooManyJumpStatements:SetupEngine.kt$SetupEngine$for</ID>
+    <ID>LoopWithTooManyJumpStatements:SetupEngine.kt$SetupEngine$while</ID>
+    <ID>LoopWithTooManyJumpStatements:SetupMessages.kt$SetupMessages$for</ID>
+    <ID>LoopWithTooManyJumpStatements:SetupPlanning.kt$SetupPlanning$for</ID>
+    <ID>LoopWithTooManyJumpStatements:SharedStoragePath.kt$SharedStoragePath$for</ID>
+    <ID>LoopWithTooManyJumpStatements:ThermalGuard.kt$ThermalGuard$for</ID>
+    <ID>MagicNumber:AgentThrottle.kt$AgentPriorityLevel.Hold$15</ID>
+    <ID>MagicNumber:AgentThrottle.kt$AgentPriorityLevel.Slow$10</ID>
+    <ID>MagicNumber:AgentWorkLease.kt$AgentWorkLease.Companion$0xff</ID>
+    <ID>MagicNumber:AgentWorkLease.kt$AgentWorkLease.Companion$16</ID>
+    <ID>MagicNumber:AppExitRecovery.kt$AppExitRecovery$1_000</ID>
+    <ID>MagicNumber:AppExitRecovery.kt$AppExitRecovery$1_000_000</ID>
+    <ID>MagicNumber:BuiltinLinuxBridge.kt$BuiltinLinuxBridge$60</ID>
+    <ID>MagicNumber:BuiltinLinuxBridge.kt$BuiltinLinuxBridge.Companion$80</ID>
+    <ID>MagicNumber:BuiltinScripts.kt$BuiltinScripts$1024</ID>
+    <ID>MagicNumber:BuiltinScripts.kt$BuiltinScripts$59</ID>
+    <ID>MagicNumber:BuiltinScripts.kt$BuiltinScripts$60</ID>
+    <ID>MagicNumber:BuiltinScripts.kt$BuiltinScripts$65535</ID>
+    <ID>MagicNumber:CommandNames.kt$CommandNames$3</ID>
+    <ID>MagicNumber:CommandNames.kt$CommandNames$40</ID>
+    <ID>MagicNumber:ComponentRemoval.kt$ComponentRemoval$1024</ID>
+    <ID>MagicNumber:DetectedDevServers.kt$DefaultDetectedPhoneServers$65536</ID>
+    <ID>MagicNumber:DetectedDevServers.kt$DetectedServer.Companion$3</ID>
+    <ID>MagicNumber:DetectedDevServers.kt$DetectedServer.Companion$40</ID>
+    <ID>MagicNumber:DetectedDevServers.kt$PhoneScan$3</ID>
+    <ID>MagicNumber:DetectedDevelopmentServers.kt$DefaultDetectedDevelopmentServers$16384</ID>
+    <ID>MagicNumber:DetectedDevelopmentServers.kt$DefaultDetectedDevelopmentServers$3</ID>
+    <ID>MagicNumber:DetectedDevelopmentServers.kt$DefaultDetectedDevelopmentServers$40</ID>
+    <ID>MagicNumber:DetectedDevelopmentServers.kt$DefaultDetectedDevelopmentServers$6</ID>
+    <ID>MagicNumber:DetectedDevelopmentServers.kt$DefaultDetectedDevelopmentServers$65536</ID>
+    <ID>MagicNumber:DevelopmentFailureReports.kt$DevelopmentFailureReports$100</ID>
+    <ID>MagicNumber:DevelopmentFailureReports.kt$DevelopmentFailureReports$1024</ID>
+    <ID>MagicNumber:DevelopmentFailureReports.kt$DevelopmentFailureReports$256</ID>
+    <ID>MagicNumber:DevelopmentFailureReports.kt$DevelopmentFailureReports$4096</ID>
+    <ID>MagicNumber:DevelopmentFailureReports.kt$DevelopmentFailureReports$80</ID>
+    <ID>MagicNumber:DevelopmentService.kt$DevelopmentServiceJson$100</ID>
+    <ID>MagicNumber:DevelopmentService.kt$DevelopmentServiceJson$4096</ID>
+    <ID>MagicNumber:DevelopmentService.kt$DevelopmentServiceJson$80</ID>
+    <ID>MagicNumber:DevelopmentServices.kt$DevelopmentServices$4096</ID>
+    <ID>MagicNumber:DevelopmentServices.kt$DevelopmentServices$80</ID>
+    <ID>MagicNumber:DevelopmentServices.kt$DevelopmentServices.Companion$0xff</ID>
+    <ID>MagicNumber:DevelopmentServices.kt$DevelopmentServices.Companion$16</ID>
+    <ID>MagicNumber:DevelopmentServices.kt$DevelopmentServices.Companion$24</ID>
+    <ID>MagicNumber:FailedServiceReport.kt$FailedServiceReport.Companion$256</ID>
+    <ID>MagicNumber:FailedSetupReport.kt$FailedSetupReport.Companion$2048</ID>
+    <ID>MagicNumber:FailedSetupReport.kt$FailedSetupReport.Companion$256</ID>
+    <ID>MagicNumber:InAppServerForgetting.kt$InAppServerForgetting$3</ID>
+    <ID>MagicNumber:KeptServices.kt$KeptService$3</ID>
+    <ID>MagicNumber:KeptServices.kt$KeptService$4</ID>
+    <ID>MagicNumber:KeptServices.kt$KeptService.Companion$1000</ID>
+    <ID>MagicNumber:KeptServices.kt$KeptServiceDef$1024</ID>
+    <ID>MagicNumber:KeptServices.kt$KeptServiceDef$120</ID>
+    <ID>MagicNumber:KeptServices.kt$KeptServiceDef$16</ID>
+    <ID>MagicNumber:KeptServices.kt$KeptServiceDef$4096</ID>
+    <ID>MagicNumber:KeptServices.kt$KeptServiceDef$65535</ID>
+    <ID>MagicNumber:KeptServices.kt$KeptServiceDef.Companion$10</ID>
+    <ID>MagicNumber:LeftoverNotice.kt$DurationWords.Companion$60</ID>
+    <ID>MagicNumber:LinuxLocalStorage.kt$LinuxLocalStorage.Companion$0x20</ID>
+    <ID>MagicNumber:LinuxLocalStorage.kt$LinuxLocalStorage.Companion$0x7f</ID>
+    <ID>MagicNumber:LinuxProcesses.kt$LinuxProcess$100</ID>
+    <ID>MagicNumber:LinuxProcesses.kt$LinuxProcess$1024</ID>
+    <ID>MagicNumber:LinuxProcesses.kt$LinuxProcess$3</ID>
+    <ID>MagicNumber:LinuxProcesses.kt$LinuxProcess$512</ID>
+    <ID>MagicNumber:LinuxProcesses.kt$LinuxProcessScan$0.5</ID>
+    <ID>MagicNumber:LinuxProcesses.kt$LinuxProcessScan$100</ID>
+    <ID>MagicNumber:LinuxProcesses.kt$LinuxProcessScan.Companion$100.0</ID>
+    <ID>MagicNumber:LinuxProcesses.kt$LinuxProcessScan.Companion$11</ID>
+    <ID>MagicNumber:LinuxProcesses.kt$LinuxProcessScan.Companion$12</ID>
+    <ID>MagicNumber:LinuxProcesses.kt$LinuxProcessScan.Companion$19</ID>
+    <ID>MagicNumber:LinuxProcesses.kt$LinuxProcessScan.Companion$1e12</ID>
+    <ID>MagicNumber:LinuxProcesses.kt$LinuxProcessScan.Companion$20</ID>
+    <ID>MagicNumber:LinuxProcesses.kt$LinuxProcessScan.Companion$21</ID>
+    <ID>MagicNumber:LinuxProcesses.kt$LinuxProcessScan.Companion$22</ID>
+    <ID>MagicNumber:LinuxProcesses.kt$LinuxProcessScan.Companion$3</ID>
+    <ID>MagicNumber:LinuxProcesses.kt$LinuxProcessScan.Companion$4</ID>
+    <ID>MagicNumber:LinuxProcesses.kt$LinuxProcessScan.Companion$7</ID>
+    <ID>MagicNumber:LinuxProcesses.kt$LinuxProcessScan.Companion$9</ID>
+    <ID>MagicNumber:LinuxProcesses.kt$LinuxStopResult.Companion$7</ID>
+    <ID>MagicNumber:LinuxVitals.kt$100.0</ID>
+    <ID>MagicNumber:LinuxVitals.kt$1024</ID>
+    <ID>MagicNumber:LinuxVitals.kt$LinuxVitals$50.0</ID>
+    <ID>MagicNumber:ListeningPorts.kt$1024</ID>
+    <ID>MagicNumber:ListeningPorts.kt$1313</ID>
+    <ID>MagicNumber:ListeningPorts.kt$3000</ID>
+    <ID>MagicNumber:ListeningPorts.kt$3001</ID>
+    <ID>MagicNumber:ListeningPorts.kt$3333</ID>
+    <ID>MagicNumber:ListeningPorts.kt$4000</ID>
+    <ID>MagicNumber:ListeningPorts.kt$4173</ID>
+    <ID>MagicNumber:ListeningPorts.kt$4200</ID>
+    <ID>MagicNumber:ListeningPorts.kt$4321</ID>
+    <ID>MagicNumber:ListeningPorts.kt$5000</ID>
+    <ID>MagicNumber:ListeningPorts.kt$5001</ID>
+    <ID>MagicNumber:ListeningPorts.kt$5173</ID>
+    <ID>MagicNumber:ListeningPorts.kt$5174</ID>
+    <ID>MagicNumber:ListeningPorts.kt$5500</ID>
+    <ID>MagicNumber:ListeningPorts.kt$6006</ID>
+    <ID>MagicNumber:ListeningPorts.kt$65535</ID>
+    <ID>MagicNumber:ListeningPorts.kt$7000</ID>
+    <ID>MagicNumber:ListeningPorts.kt$8000</ID>
+    <ID>MagicNumber:ListeningPorts.kt$8001</ID>
+    <ID>MagicNumber:ListeningPorts.kt$8008</ID>
+    <ID>MagicNumber:ListeningPorts.kt$8080</ID>
+    <ID>MagicNumber:ListeningPorts.kt$8081</ID>
+    <ID>MagicNumber:ListeningPorts.kt$8088</ID>
+    <ID>MagicNumber:ListeningPorts.kt$8888</ID>
+    <ID>MagicNumber:ListeningPorts.kt$9000</ID>
+    <ID>MagicNumber:ListeningPorts.kt$9090</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$10</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$1024</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$1313</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$16</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$200</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$3</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$3000</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$3001</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$32</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$3333</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$4</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$4000</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$4173</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$4200</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$4321</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$5000</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$5001</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$5173</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$5174</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$5500</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$6006</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$65535</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$7000</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$8</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$8000</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$8001</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$8008</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$8080</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$8081</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$8088</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$8888</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$9</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$9000</ID>
+    <ID>MagicNumber:ListeningPorts.kt$ListeningPorts$9090</ID>
+    <ID>MagicNumber:ManagedLocalServer.kt$ManagedLocalServer$3</ID>
+    <ID>MagicNumber:ManagedLocalServer.kt$ManagedLocalServer$4098</ID>
+    <ID>MagicNumber:ManagedLocalServer.kt$ManagedLocalServer$80</ID>
+    <ID>MagicNumber:ManagedShell.kt$ManagedShellWire$4096</ID>
+    <ID>MagicNumber:NativeRuntimeStatus.kt$NativeRuntimeStatus$60</ID>
+    <ID>MagicNumber:NativeRuntimeStatus.kt$NativeRuntimeStatus$65535</ID>
+    <ID>MagicNumber:PhoneHostRuntime.kt$PhoneHostRuntime.TermuxInstallation.Companion$3</ID>
+    <ID>MagicNumber:PhoneServerHealing.kt$PhoneServerHealing$6</ID>
+    <ID>MagicNumber:PinnedHostCommands.kt$PinnedHostCommands$65535</ID>
+    <ID>MagicNumber:ProcessBudget.kt$HeavyJob.AgentSession$4</ID>
+    <ID>MagicNumber:ProcessBudget.kt$HeavyJob.AiTeam$6</ID>
+    <ID>MagicNumber:ProcessBudget.kt$HeavyJob.SetupJob$3</ID>
+    <ID>MagicNumber:ProjectDevServer.kt$ProjectDevServer$65535</ID>
+    <ID>MagicNumber:RemoteTerminals.kt$RemoteTerminals$1000</ID>
+    <ID>MagicNumber:RemoteTerminals.kt$RemoteTerminals$100_000</ID>
+    <ID>MagicNumber:RunningWords.kt$0.05</ID>
+    <ID>MagicNumber:RunningWords.kt$10</ID>
+    <ID>MagicNumber:RunningWords.kt$30</ID>
+    <ID>MagicNumber:RunningWords.kt$5</ID>
+    <ID>MagicNumber:RuntimeStatusMap.kt$RuntimeStatusMap$60</ID>
+    <ID>MagicNumber:ServiceLifetime.kt$ServiceLifetimes$8_640_000_000_000_000L</ID>
+    <ID>MagicNumber:SetupAudit.kt$SetupAudit$100</ID>
+    <ID>MagicNumber:SetupAudit.kt$SetupAudit$40</ID>
+    <ID>MagicNumber:SetupAudit.kt$SetupAudit$65_536</ID>
+    <ID>MagicNumber:SetupContract.kt$ComponentProgress$100</ID>
+    <ID>MagicNumber:SetupEngine.kt$SetupEngine$1_000</ID>
+    <ID>MagicNumber:SetupEngine.kt$SetupEngine$1_000_000</ID>
+    <ID>MagicNumber:SetupJobEngine.kt$SetupJobEngine$1000</ID>
+    <ID>MagicNumber:SetupPlanning.kt$SetupPlanning$0.5</ID>
+    <ID>MagicNumber:SetupPlanning.kt$SetupPlanning$0.98</ID>
+    <ID>MagicNumber:SetupPlanning.kt$SetupPlanning$1000.0</ID>
+    <ID>MagicNumber:SetupPlanning.kt$SetupPlanning$1024</ID>
+    <ID>MagicNumber:SetupPlanning.kt$SetupPlanning$15</ID>
+    <ID>MagicNumber:SetupPlanning.kt$SetupPlanning$65535</ID>
+    <ID>MagicNumber:SetupProgressRules.kt$SetupProgressRules$0.5</ID>
+    <ID>MagicNumber:SetupProgressRules.kt$SetupProgressRules$10</ID>
+    <ID>MagicNumber:SetupProgressRules.kt$SetupProgressRules$10.0</ID>
+    <ID>MagicNumber:SetupProgressRules.kt$SetupProgressRules$1000</ID>
+    <ID>MagicNumber:SetupRegistryStore.kt$SetupRegistryStore$100</ID>
+    <ID>MagicNumber:SetupRegistryStore.kt$SetupRegistryStore$1000</ID>
+    <ID>MagicNumber:SetupRegistryStore.kt$SetupRegistryStore$120</ID>
+    <ID>MagicNumber:SetupRegistryStore.kt$SetupRegistryStore$200</ID>
+    <ID>MagicNumber:Thermal.kt$BatteryReading.Companion$100</ID>
+    <ID>MagicNumber:UbuntuHostScript.kt$UbuntuHostScript$65535</ID>
+    <ID>MatchingDeclarationName:ShellHarness.kt$ShellRun</ID>
+    <ID>MaxLineLength:AgentHostJob.kt$AgentHostJob$*</ID>
+    <ID>MaxLineLength:AgentHostJob.kt$AgentHostJob$Component("python", dependsOn = listOf("essentials"), checkScript = scripts.pythonCheck, installScript = scripts.pythonInstall)</ID>
+    <ID>MaxLineLength:AgentHostJob.kt$AgentHostJob$job.filter { it.agentUser == agentUser &amp;&amp; it.checkScript.isNotBlank() }.associate { it.id to it.checkScript }</ID>
+    <ID>MaxLineLength:AgentHostJobTest.kt$AgentHostJobTest$InstallPrelude.parseCombinedChecks("\n::oc-check-begin a\n1.0\n\n::oc-check-end a 0\n::oc-check-begin b\noops\n::oc-check-end b 1\n::oc-check-begin c\n")</ID>
+    <ID>MaxLineLength:AgentHostJobTest.kt$AgentHostJobTest$assertEquals(listOf("linux", "essentials", "python", "agent-user", "agent-node", "agent-paseo", "agent-claude"), ids)</ID>
+    <ID>MaxLineLength:AgentThrottle.kt$AgentThrottle$val due = inForce != applied || (inForce.slowsAgents &amp;&amp; (previous == null || now - previous &gt;= reapplyEvery))</ID>
+    <ID>MaxLineLength:AppExitRecovery.kt$AppExitRecovery$*</ID>
+    <ID>MaxLineLength:AppExitRecoveryTest.kt$AppExitRecoveryTest$fun</ID>
+    <ID>MaxLineLength:AppOpenStart.kt$LaunchLeave.PersonStopped$/** The person stopped it (Stop, the row's Stop OpenCode, the service timeout): it stays stopped (plan 11 §6.4 R6). */</ID>
+    <ID>MaxLineLength:AppOpenStart.kt$LaunchStartRules$/** The checks every step repeats: readable, installed, still wanted (never restart what the person stopped), idle. */</ID>
+    <ID>MaxLineLength:AppOpenStartTest.kt$AppOpenStartTest$/** Port of test/phone_server_healing_test.dart groups "the launch start (QA B1)" and "a running server that does not answer". */</ID>
+    <ID>MaxLineLength:AppOpenStartTest.kt$AppOpenStartTest$assertEquals(LaunchStep.Probe(now + 80.seconds), LaunchStartRules.firstLook(running.copy(serverUptime = 10.seconds), now))</ID>
+    <ID>MaxLineLength:BuiltinIdlePolicyTest.kt$BuiltinIdlePolicyTest$RuntimeStatusMap.parse(good + ("serverIdleStopped" to false) + ("serverIdleGeneration" to 0)).serverIdleReceiptValid</ID>
+    <ID>MaxLineLength:BuiltinIdlePolicyTest.kt$BuiltinIdlePolicyTest$assertEquals(Failure.Runtime(RuntimeProblem.IdleResumeUnavailable, details = null), (result as Outcome.Failed).failure)</ID>
+    <ID>MaxLineLength:BuiltinIdlePolicyTest.kt$BuiltinIdlePolicyTest$assertEquals(RuntimeProblem.IdleResumeStale, linux.completePhoneServerIdleResume("owner", generation).runtimeProblem())</ID>
+    <ID>MaxLineLength:BuiltinIdlePolicyTest.kt$BuiltinIdlePolicyTest$assertEquals(RuntimeProblem.IdleResumeStale, linux.resumeIdleStoppedPhoneServer("owner", generation).runtimeProblem())</ID>
+    <ID>MaxLineLength:BuiltinIdlePolicyTest.kt$BuiltinIdlePolicyTest$assertEquals(states.map { mapOf("profileId" to "readable_alias", "busy" to it) }, channel.calls.map { it.arguments })</ID>
+    <ID>MaxLineLength:BuiltinIdlePolicyTest.kt$BuiltinIdlePolicyTest$assertFalse(RuntimeStatusMap.parse(good + ("serverIdleGeneration" to value)).serverIdleReceiptValid, "generation=$value")</ID>
+    <ID>MaxLineLength:BuiltinIdlePolicyTest.kt$BuiltinIdlePolicyTest$assertFalse(RuntimeStatusMap.parse(good + ("serverIdleMinutes" to value)).serverIdleReceiptValid, "minutes=$value")</ID>
+    <ID>MaxLineLength:BuiltinIdlePolicyTest.kt$BuiltinIdlePolicyTest$assertFalse(desktop.setPhoneServerIdlePolicy(enabled = true, idleMinutes = 1).getOrNull()!!.serverIdlePolicySupported)</ID>
+    <ID>MaxLineLength:BuiltinIdlePolicyTest.kt$BuiltinIdlePolicyTest$for</ID>
+    <ID>MaxLineLength:BuiltinIdlePolicyTest.kt$BuiltinIdlePolicyTest$private fun Outcome&lt;*&gt;.runtimeProblem(): RuntimeProblem?</ID>
+    <ID>MaxLineLength:BuiltinLinuxBridge.kt$BuiltinLinuxBridge$/** The app is open and the server answered: native starts the restore count again, unless a restore is in flight. */</ID>
+    <ID>MaxLineLength:BuiltinLinuxBridge.kt$BuiltinLinuxBridge$if (!LEASE_ID.matches(leaseId) || !PROFILE_ID.matches(profileId)) return RuntimeProblem.WorkLeaseInvalid.failure()</ID>
+    <ID>MaxLineLength:BuiltinLinuxBridge.kt$BuiltinLinuxBridge$if (result is Outcome.Failed &amp;&amp; result.failure is Failure.Runtime) return RuntimeProblem.RemovalFailed.failure()</ID>
+    <ID>MaxLineLength:BuiltinLinuxBridge.kt$BuiltinLinuxBridge$invokeRecovery("restartServer", mapOf("script" to script, "port" to port, "expectedGeneration" to expectedGeneration))</ID>
+    <ID>MaxLineLength:BuiltinLinuxBridge.kt$BuiltinLinuxBridge$invokeRecovery(if (delete) "deleteServerRecovery" else "unbindServerRecovery", mapOf("profileId" to profileId.raw))</ID>
+    <ID>MaxLineLength:BuiltinLinuxBridge.kt$BuiltinLinuxBridge$invokeValue("holdAwakeForWork", mapOf("on" to on, "forMs" to hold.inWholeMilliseconds)).map { it as? Boolean ?: false }</ID>
+    <ID>MaxLineLength:BuiltinLinuxBridge.kt$BuiltinLinuxBridge$public suspend</ID>
+    <ID>MaxLineLength:BuiltinLinuxBridge.kt$BuiltinLinuxBridge$return</ID>
+    <ID>MaxLineLength:BuiltinLinuxBridge.kt$BuiltinLinuxBridge.Companion$public</ID>
+    <ID>MaxLineLength:BuiltinLinuxBridgeTest.kt$BuiltinLinuxBridgeTest$assertEquals(Failure.Runtime(RuntimeProblem.Generic, redacted("Could not download Ubuntu: no network")), failure)</ID>
+    <ID>MaxLineLength:BuiltinLinuxBridgeTest.kt$BuiltinLinuxBridgeTest$assertEquals(listOf("installUbuntu", "startServer", "stopServer", "serverLog", "removeRuntime"), channel.methods)</ID>
+    <ID>MaxLineLength:BuiltinLinuxBridgeTest.kt$BuiltinLinuxBridgeTest$assertEquals(mapOf("alsoDeleteProjects" to true, "confirmationName" to "OpenCode"), channel.calls.single().arguments)</ID>
+    <ID>MaxLineLength:BuiltinLinuxBridgeTest.kt$BuiltinLinuxBridgeTest$channel.answer = { if (it.method == "status") ChannelReply.Value(mapOf("installed" to true)) else ChannelReply.Value(null) }</ID>
+    <ID>MaxLineLength:BuiltinLinuxBridgeTest.kt$BuiltinLinuxBridgeTest$fun</ID>
+    <ID>MaxLineLength:BuiltinLinuxBridgeTest.kt$BuiltinLinuxBridgeTest$val status = RuntimeStatusMap.parse(mapOf("restorePhase" to "unexpected", "restoreReason" to "private native error"))</ID>
+    <ID>MaxLineLength:BuiltinRecoveryBridgeTest.kt$BuiltinRecoveryBridgeTest$assertEquals(Failure.Runtime(RuntimeProblem.RecoveryUnavailable, details = null), (attempt() as Outcome.Failed).failure)</ID>
+    <ID>MaxLineLength:BuiltinRecoveryBridgeTest.kt$BuiltinRecoveryBridgeTest$assertEquals(mapOf("script" to "serve", "port" to 4098, "expectedGeneration" to 42L), channel.calls[0].arguments)</ID>
+    <ID>MaxLineLength:BuiltinRecoveryBridgeTest.kt$BuiltinRecoveryBridgeTest$assertEquals(mapOf("script" to "serve", "port" to 4098, "expectedGeneration" to 73L), channel.calls.single().arguments)</ID>
+    <ID>MaxLineLength:BuiltinRecoveryBridgeTest.kt$BuiltinRecoveryBridgeTest$linux.startServerForLaunch("serve", expectedGeneration = 42, restoreRecipe = RestoreRecipe(ProfileId("phone")))</ID>
+    <ID>MaxLineLength:BuiltinScriptTexts.kt$BuiltinScriptTexts$" &amp;&amp; { [ ! -f \"\$oc1_dir/opencode.db-shm\" ] || cp \"\$oc1_dir/opencode.db-shm\" \"\$stage/opencode.db-shm\"; }; }; then\n"</ID>
+    <ID>MaxLineLength:BuiltinScriptTexts.kt$BuiltinScriptTexts$" &amp;&amp; { [ ! -f \"\$oc1_dir/opencode.db-wal\" ] || cp \"\$oc1_dir/opencode.db-wal\" \"\$stage/opencode.db-wal\"; } \\\n"</ID>
+    <ID>MaxLineLength:BuiltinScriptTexts.kt$BuiltinScriptTexts$" &amp;&amp; { [ ! -f \"\$stage/opencode.db-shm\" ] || mv \"\$stage/opencode.db-shm\" \"\$oc2_dir/opencode.db-shm\"; } \\\n"</ID>
+    <ID>MaxLineLength:BuiltinScriptTexts.kt$BuiltinScriptTexts$" aarch64|arm64) node_arch=arm64; node_sha=724282c3b43aec998aa9527380465b45d229e021b58035f5f4f63095eabfe5d5 ;;\n"</ID>
+    <ID>MaxLineLength:BuiltinScriptTexts.kt$BuiltinScriptTexts$" awk -v b='&lt;!-- opencode-mobile:phone-context:begin --&gt;' -v e='&lt;!-- opencode-mobile:phone-context:end --&gt;' '\n"</ID>
+    <ID>MaxLineLength:BuiltinScriptTexts.kt$BuiltinScriptTexts$" echo '[oc-history-copy-failed] Your earlier conversations could not be copied. The original data is still safe on this phone. Free some space and try again.' &gt;&amp;2\n"</ID>
+    <ID>MaxLineLength:BuiltinScriptTexts.kt$BuiltinScriptTexts$" if ! { { [ ! -f \"\$stage/opencode.db-wal\" ] || mv \"\$stage/opencode.db-wal\" \"\$oc2_dir/opencode.db-wal\"; } \\\n"</ID>
+    <ID>MaxLineLength:BuiltinScriptTexts.kt$BuiltinScriptTexts$" x86_64|amd64) node_arch=x64; node_sha=6e1db87ef58b8819e5d5402eff1536491b18edd8eb7bee5ef7897876e88dc5ff ;;\n"</ID>
+    <ID>MaxLineLength:BuiltinScriptTexts.kt$BuiltinScriptTexts$"- A server you start on 127.0.0.1:PORT opens in the phone's own browser at http://127.0.0.1:PORT; give the person that link to try a web app. Bind servers to 127.0.0.1 only, never to every network interface, unless the person asks for more.\n"</ID>
+    <ID>MaxLineLength:BuiltinScriptTexts.kt$BuiltinScriptTexts$"- Long builds (Gradle, the Android SDK, large installs) are slow here and may be stopped by Android: say so before starting one.\n"</ID>
+    <ID>MaxLineLength:BuiltinScriptTexts.kt$BuiltinScriptTexts$"- The phone's memory and CPU are limited and shared with the person's apps. Android stops background processes when an app runs more than about 32 of them, and can close this whole environment when memory runs low. Avoid many parallel processes, file watchers and leftover servers; stop what you start once it is not needed.\n"</ID>
+    <ID>MaxLineLength:BuiltinScriptTexts.kt$BuiltinScriptTexts$"- There is no visible browser here. Headless browsers (Playwright and similar) work but are slow and use a lot of memory: prefer tests, curl and logs, and close any browser you start as soon as you are done.\n"</ID>
+    <ID>MaxLineLength:BuiltinScriptTexts.kt$BuiltinScriptTexts$"- You run on the person's Android phone, inside the OpenCode Mobile app's built-in Ubuntu. The person talks to you through the OpenCode Mobile app on this same phone. There is no desktop app, no display, no window you can open, and no adb connection to this phone from here.\n"</ID>
+    <ID>MaxLineLength:BuiltinScripts.kt$BuiltinScripts$/** Prints `empty` (a git folder without a commit), `ready` (it has one) or `notgit`. Null for a non-absolute path. */</ID>
+    <ID>MaxLineLength:BuiltinScriptsShellTest.kt$BuiltinScriptsShellTest$assertEquals("8e06d46d604a993e196664dae531f06af56050e08d2de2a1c2beeebad2888352", sha256(BuiltinScriptTexts.PHONE_CONTEXT))</ID>
+    <ID>MaxLineLength:BuiltinScriptsShellTest.kt$BuiltinScriptsShellTest$assertEquals("b14970782f0daaaeccb46365605ca14abdced821b839ba33da960a58163cd1c1", sha256(BuiltinScriptTexts.HISTORY_COPY))</ID>
+    <ID>MaxLineLength:BuiltinScriptsShellTest.kt$BuiltinScriptsShellTest$assertEquals("c777eea3f666671ba72c4a130dfec804dd2766ce3336056771fa776eee541b10", sha256(BuiltinScriptTexts.UBUNTU_SETUP))</ID>
+    <ID>MaxLineLength:BuiltinScriptsShellTest.kt$BuiltinScriptsShellTest$assertEquals("deac5091b852089a39d1a3ae9c115acb0a40436ad416012435b9fa7d86592fda", sha256(BuiltinScripts.serverScript().getOrNull()!!))</ID>
+    <ID>MaxLineLength:BuiltinScriptsTest.kt$BuiltinScriptsTest$/** Port of the `server address`, `scripts` and `shared OpenCode setup script` groups of test/builtin_linux_test.dart. */</ID>
+    <ID>MaxLineLength:BuiltinScriptsTest.kt$BuiltinScriptsTest$assertEquals("find /root/projects -mindepth 1 -maxdepth 1 -type d -printf '%f\\n' | sort", BuiltinScripts.listProjectsScript().lines()[2])</ID>
+    <ID>MaxLineLength:BuiltinScriptsTest.kt$BuiltinScriptsTest$assertEquals(Failure.Unexpected(), (BuiltinScripts.installOpenCodeScript(version = "1; rm -rf /") as Outcome.Failed).failure)</ID>
+    <ID>MaxLineLength:BuiltinScriptsTest.kt$BuiltinScriptsTest$assertEquals(legacy, (BuiltinScripts.installOpenCodeScript(OpenCodeRuntime.OpenCode1) as Outcome.Failed).failure)</ID>
+    <ID>MaxLineLength:BuiltinWorkLeasesTest.kt$BuiltinWorkLeasesTest$(linux.setPhoneAgentChatWorkLease(profileId = "valid_owner", leaseId = id, on = true) as Outcome.Failed).failure</ID>
+    <ID>MaxLineLength:BuiltinWorkLeasesTest.kt$BuiltinWorkLeasesTest$(linux.setPhoneAgentChatWorkLease(profileId = id, leaseId = "agent.valid", on = true) as Outcome.Failed).failure</ID>
+    <ID>MaxLineLength:BuiltinWorkLeasesTest.kt$BuiltinWorkLeasesTest$assertEquals(WorkLeaseStatus(held = false, capped = false), linux.setChatWorkLease(leaseId = "chat.refused", on = true).status())</ID>
+    <ID>MaxLineLength:BuiltinWorkLeasesTest.kt$BuiltinWorkLeasesTest$assertEquals(WorkLeaseStatus.NotAdmitted, linux.setChatWorkLease(leaseId = "chat.safe", on = true).status(), "$reply")</ID>
+    <ID>MaxLineLength:BuiltinWorkLeasesTest.kt$BuiltinWorkLeasesTest$assertEquals(mapOf("leaseId" to "chat.opaque-1", "on" to true, "forMs" to 600_000L), channel.calls.single().arguments)</ID>
+    <ID>MaxLineLength:BuiltinWorkLeasesTest.kt$BuiltinWorkLeasesTest$assertEquals(mapOf("leaseId" to "chat.opaque-2", "on" to false, "forMs" to 120_000L), channel.calls.single().arguments)</ID>
+    <ID>MaxLineLength:BuiltinWorkLeasesTest.kt$BuiltinWorkLeasesTest$assertFalse(desktop.setPhoneAgentChatWorkLease(profileId = "owner", leaseId = "agent.valid", on = true).status().held)</ID>
+    <ID>MaxLineLength:BuiltinWorkLeasesTest.kt$BuiltinWorkLeasesTest$assertFalse(linux.setPhoneAgentChatWorkLease(profileId = "owner", leaseId = "agent.valid", on = true).status().held)</ID>
+    <ID>MaxLineLength:BuiltinWorkLeasesTest.kt$BuiltinWorkLeasesTest$val status = BuiltinLinuxBridge(channel, supported = false).setChatWorkLease(leaseId = "chat.unsupported", on = true).status()</ID>
+    <ID>MaxLineLength:ComponentScriptSyntaxTest.kt$ComponentScriptSyntaxTest$listOfNotNull(c.sizeScript?.let { "${c.id} size" to it }, c.removeScript?.let { "${c.id} remove" to it })</ID>
+    <ID>MaxLineLength:ComponentScriptSyntaxTest.kt$ComponentScriptSyntaxTest$val script = ComponentRemovalScripts.PYTHON_PRESENCE.replace("/var/lib/dpkg/status", "${fakeRoot.path}/status")</ID>
+    <ID>MaxLineLength:DetectedDevServers.kt$DetectedDevServers$is Outcome.Ok -&gt; text.value.let { if (it.length &gt; LOG_TAIL) it.substring(it.length - LOG_TAIL) else it }.ok()</ID>
+    <ID>MaxLineLength:DetectedDevServers.kt$DetectedDevServers$val sorted = found.sortedWith(compareBy&lt;DetectedServer&gt; { if (inProject(it)) 0 else 1 }.thenBy { it.firstPort ?: 0 })</ID>
+    <ID>MaxLineLength:DetectedDevServers.kt$DetectedDevServers$val stale = ports == null || (ports.isEmpty() &amp;&amp; last != null &amp;&amp; clock.now() - last &gt; 20.seconds)</ID>
+    <ID>MaxLineLength:DetectedDevServersTest.kt$DetectedDevServersTest$PhoneScan.runnerFor("http://127.0.0.1:4097", linuxSupported = true, linux = phone, transientTransport = true)</ID>
+    <ID>MaxLineLength:DevelopmentServiceStore.kt$DevelopmentServiceStore$public suspend</ID>
+    <ID>MaxLineLength:DevelopmentServices.kt$DevelopmentServices$(status(service) == DevelopmentServiceStatus.NotStarted || status(service) == DevelopmentServiceStatus.Stopped)</ID>
+    <ID>MaxLineLength:DevelopmentServices.kt$DevelopmentServices$(store.updateRun(id, DevelopmentServiceRun(owner)) as? Outcome.Failed)?.let { return ServiceError.Failed(it.failure) }</ID>
+    <ID>MaxLineLength:DevelopmentServices.kt$DevelopmentServices$/** The connection or runtime changed: everything observed (shells, logs, sources) is dropped, pending work stales. */</ID>
+    <ID>MaxLineLength:DevelopmentServices.kt$DevelopmentServices$ManagedShellStatus.Exited, ManagedShellStatus.Killed, ManagedShellStatus.Timeout -&gt; DevelopmentServiceStatus.Stopped</ID>
+    <ID>MaxLineLength:DevelopmentServices.kt$DevelopmentServices$if (tail.cursor &lt; start || tail.cursor &gt; tail.size) return@action ServiceError.Refused(ServiceRefusal.InvalidLog)</ID>
+    <ID>MaxLineLength:DevelopmentServices.kt$DevelopmentServices$private fun check(gen: Int): ServiceError?</ID>
+    <ID>MaxLineLength:DevelopmentServices.kt$DevelopmentServices$private suspend</ID>
+    <ID>MaxLineLength:DevelopmentServices.kt$DevelopmentServices$val service = services.firstOrNull { it.id == id } ?: return@action ServiceError.Refused(ServiceRefusal.UnknownService)</ID>
+    <ID>MaxLineLength:DevelopmentServices.kt$DevelopmentServices$val updated = store.updateRun(service.id, DevelopmentServiceRun(run.ownerToken, shell.id, shell.startedAt), run.ownerToken)</ID>
+    <ID>MaxLineLength:DevelopmentServices.kt$DevelopmentServices$when</ID>
+    <ID>MaxLineLength:DevelopmentServices.kt$DevelopmentServices.Companion$public</ID>
+    <ID>MaxLineLength:DevelopmentServicesFailedReportTest.kt$DevelopmentServicesFailedReportTest$ManagedShell("sh_new", sample.command, ManagedShellStatus.Exited, 2000L, exitCode = 3, directory = sample.directory, ownerToken = "replacement-owner")</ID>
+    <ID>MaxLineLength:DevelopmentServicesFailedReportTest.kt$DevelopmentServicesFailedReportTest$gateway.shells["sh_1"] = previous.copy(ownerToken = owner ?: previous.ownerToken, status = ManagedShellStatus.Exited, exitCode = 2)</ID>
+    <ID>MaxLineLength:DevelopmentServicesFailedReportTest.kt$DevelopmentServicesFailedReportTest.Gateway$override suspend</ID>
+    <ID>MaxLineLength:DevelopmentServicesFailedReportTest.kt$DevelopmentServicesFailedReportTest.Gateway$return ManagedShellOutput(bytes.copyOfRange(cursor.toInt(), end.toInt()).decodeToString(), end, bytes.size.toLong(), cursor &gt; 0).ok()</ID>
+    <ID>MaxLineLength:DevelopmentServicesFailedReportTest.kt$DevelopmentServicesFailedReportTest.Gateway$val shell = ManagedShell("sh_$starts", command, ManagedShellStatus.Running, starts * 1000L, directory = directory, ownerToken = ownerToken)</ID>
+    <ID>MaxLineLength:DevelopmentServicesFailedReportTest.kt$DevelopmentServicesFailedReportTest.Store$override suspend</ID>
+    <ID>MaxLineLength:DevelopmentServicesFailedReportTest.kt$DevelopmentServicesFailedReportTest.Store$override suspend fun remove(id: String): Outcome&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:FakeLinuxChannel.kt$FakeLinuxChannel$class</ID>
+    <ID>MaxLineLength:FakeSetupHost.kt$FakeSetupHost$override suspend</ID>
+    <ID>MaxLineLength:FakeSetupHost.kt$FakeSetupHost.Companion$is Map&lt;*, *&gt; -&gt; value.entries.joinToString(",", "{", "}") { (k, v) -&gt; "${encode(k.toString())}:${encode(v)}" }</ID>
+    <ID>MaxLineLength:HealingFakes.kt$FakeHealingConnection$override fun allows(profileId: String, behavior: AutomationBehavior): Boolean</ID>
+    <ID>MaxLineLength:HealingFakes.kt$FakeHealingHost$if (!wanted || profileId != "phone" || idleGeneration != expectedIdleGeneration) return RuntimeProblem.Generic.refused()</ID>
+    <ID>MaxLineLength:HealingFakes.kt$FakeHealingHost$is LaunchMode.ForAppOpen -&gt; if (!wanted || generation != mode.expectedGeneration) return RuntimeProblem.Generic.refused()</ID>
+    <ID>MaxLineLength:HealingFakes.kt$FakeHealingHost$override suspend</ID>
+    <ID>MaxLineLength:HealingFakes.kt$HealingWorld$val starter = HealingStarter(PhoneServerStarter(host, clock, readyTimeout = Duration.ZERO, pollInterval = Duration.ZERO))</ID>
+    <ID>MaxLineLength:HealingPorts.kt$HealingHost$public suspend</ID>
+    <ID>MaxLineLength:HealingStarter.kt$HealingStarter$if (generation == null) StartFailure.interrupted() else starter.start(profile.target, LaunchMode.ForAppOpen(generation), stillWanted = stillWanted)</ID>
+    <ID>MaxLineLength:HistoryCopyRunTest.kt$HistoryCopyRunTest$assertEquals(HistorySwitchAdmission.SeparateHistory, HistorySwitchAdmission.fromResult(result.exitCode, result.stderr))</ID>
+    <ID>MaxLineLength:HistoryCopyRunTest.kt$HistoryCopyRunTest$assertEquals(HistorySwitchAdmission.Unavailable, HistorySwitchAdmission.fromResult(result.exitCode, result.stderr))</ID>
+    <ID>MaxLineLength:HistoryCopyRunTest.kt$HistoryCopyRunTest$assertEquals(provenance + Sh.dartRaw(path, "openCode1HistorySwitchCheckScript"), HistoryCopyScripts.SWITCH_CHECK)</ID>
+    <ID>MaxLineLength:HistoryCopyScripts.kt$HistoryCopyScripts$" proot-distro login opencode-ubuntu -- sh -s 2&gt;&amp;1 &lt;&lt;'OC_HISTORY_COPY' | \"${'$'}manager\" write-log server || exit 74\n"</ID>
+    <ID>MaxLineLength:HistoryCopyScripts.kt$HistoryCopyScripts$*</ID>
+    <ID>MaxLineLength:HistoryCopyScriptsTest.kt$HistoryCopyScriptsTest$/** Port of the script-text facts of test/opencode_history_copy_test.dart (the runs on real files are in desktopTest). */</ID>
+    <ID>MaxLineLength:HistoryCopyScriptsTest.kt$HistoryCopyScriptsTest$assertTrue(server.indexOf("export OPENCODE_DB=/root/.oc-opencode2/data/opencode/opencode.db") &lt; server.indexOf(copy))</ID>
+    <ID>MaxLineLength:HistoryCopyScriptsTest.kt$HistoryCopyScriptsTest$for (write in listOf("cp ", "mv ", "rm ", "mkdir ", "printf '%s\\n' \"\$copied")) assertFalse(write in check, write)</ID>
+    <ID>MaxLineLength:HistorySwitchAdmission.kt$HistorySwitchAdmission.Companion$/** Flutter `fromResult`: exit 0 allows; exit 74 with the blocked text is a separate history; all else unavailable. */</ID>
+    <ID>MaxLineLength:HistorySwitchAdmission.kt$HistorySwitchAdmission.SeparateHistory$/** OpenCode 2 already has its own separate history; both stay untouched (l10n: the switch's separate-history line). */</ID>
+    <ID>MaxLineLength:IdleResume.kt$IdleResume$status = (host.resumeIdleStopped(owner, expected) as? Outcome.Ok)?.value ?: return if (current(owner, at)) false else null</ID>
+    <ID>MaxLineLength:IdleResume.kt$IdleResume$val completed = (host.completeIdleResume(owner, expected) as? Outcome.Ok)?.value ?: return if (current(owner, at)) false else null</ID>
+    <ID>MaxLineLength:InAppServerForgetting.kt$ForgetProblem.Left$public data</ID>
+    <ID>MaxLineLength:InAppServerForgetting.kt$InAppServerForgetting$/** `ProfileStore.profileScopedPreferenceKeys`: `oc.&lt;what&gt;.&lt;id&gt;` and `oc.&lt;what&gt;.&lt;id&gt;.&lt;item&gt;`, never app-wide keys. */</ID>
+    <ID>MaxLineLength:InAppServerForgetting.kt$InAppServerForgetting$if (store.removeProfile(id) is Outcome.Failed) return ForgetProblem.Left(profile.name, connectionKept = true, failures = emptyList())</ID>
+    <ID>MaxLineLength:InAppServerForgetting.kt$InAppServerForgetting$return if (committed.isEmpty()) null else ForgetProblem.Left(profile.name, connectionKept = false, failures = committed.distinct())</ID>
+    <ID>MaxLineLength:InAppServerForgetting.kt$InAppServerForgetting$return ownerAndItem == id || (ownerAndItem.startsWith("$id.") &amp;&amp; longer.none { ownerAndItem.startsWith("$it.") || ownerAndItem == it })</ID>
+    <ID>MaxLineLength:InAppServerForgettingTest.kt$InAppServerForgettingTest$assertEquals("", device.prefs["oc.builtinServerOwner"], "an empty pointer suppresses fallback to another profile")</ID>
+    <ID>MaxLineLength:InAppServerForgettingTest.kt$InAppServerForgettingTest$assertEquals(listOf&lt;ForgetProblem&gt;(ForgetProblem.Left("This phone", connectionKept = true, failures = listOf(LeftOver.Settings(1)))), problems)</ID>
+    <ID>MaxLineLength:InAppServerForgettingTest.kt$InAppServerForgettingTest$device.prefs.keys.filter { key -&gt; key.startsWith("oc.") &amp;&amp; key.split('.').drop(2).firstOrNull() == id &amp;&amp; !key.startsWith("oc.notify.") }</ID>
+    <ID>MaxLineLength:InstallerAdmission.kt$InstallerSlot$/** Drains the finished installer, frees its slot first, then reports a monitor stop as [InstallerFinish.Interrupted]. */</ID>
+    <ID>MaxLineLength:InstallerAdmission.kt$InstallerSlot$is Outcome.Ok -&gt; if (members.value != ticket.observed) port.saveTicket(ticket.copy(observed = members.value)) else Unit.ok()</ID>
+    <ID>MaxLineLength:InstallerAdmission.kt$InstallerSlot${ ticket -&gt; port.ownedMembers(ticket, cached, owner).let { if (it is Outcome.Ok) it.value.isEmpty().ok() else it as Outcome.Failed } }</ID>
+    <ID>MaxLineLength:InstallerAdmissionTest.kt$InstallerAdmissionTest$assertTrue(linux.clears == 1 &amp;&amp; linux.proofs == 2, "dead ticket was not twice proved quiescent: $scenario")</ID>
+    <ID>MaxLineLength:InstallerAdmissionTest.kt$InstallerAdmissionTest$assertTrue(slot.process == null &amp;&amp; slot.launchId == null &amp;&amp; linux.ticket == null, "failed launch blocked a retry")</ID>
+    <ID>MaxLineLength:InstallerAdmissionTest.kt$InstallerAdmissionTest$if ("unknown" in scenario || "uncertain" in scenario) assertEquals(unknownOwner, (admitted as Outcome.Failed).failure, scenario)</ID>
+    <ID>MaxLineLength:InstallerAdmissionTest.kt$InstallerAdmissionTest$slot.startInstaller("fixed-install", setOf(InstallerTarget.Claude), InstallerOperation.Install, agentUser = true)</ID>
+    <ID>MaxLineLength:InstallerAdmissionTest.kt$InstallerAdmissionTest.AdmissionFixture$"unknown" in scenario || "uncertain" in scenario -&gt; Failure.Runtime(RuntimeProblem.OwnershipUnknown).failed()</ID>
+    <ID>MaxLineLength:InstallerAdmissionTest.kt$InstallerAdmissionTest.AdmissionFixture$override</ID>
+    <ID>MaxLineLength:InstallerAdmissionTest.kt$InstallerAdmissionTest.MonitorFixture$override</ID>
+    <ID>MaxLineLength:LeftoverNoticeTest.kt$LeftoverNoticeTest$private</ID>
+    <ID>MaxLineLength:LeftoverNoticeTest.kt$LeftoverNoticeTest$val second = assertNotNull(watch.notice(listOf(orphan(pid = 5151, cwd = "/root/projects/FinanceHub", cpuSeconds = 720))))</ID>
+    <ID>MaxLineLength:LeftoverNoticeTest.kt$LeftoverNoticeTest$val worst = watch.notice(listOf(orphan(pid = 11, cpuSeconds = 700), orphan(pid = 12, name = "java", cpuSeconds = 900)))</ID>
+    <ID>MaxLineLength:LinuxServices.kt$LinuxServices$/** `serviceLog {name, tailBytes}`: the end of the service's log, for a failure's Details only. No reply reads "". */</ID>
+    <ID>MaxLineLength:ListeningPorts.kt$/* * Dev servers running in the in-app Linux whoever started them: the script that lists them and the parser for what it * prints (port of lib/domain/listening_ports.dart). Pure Kotlin, so Development services, the dev preview, the * conversation menu and Linux › Ports share one reading. * * Android 10+ denies apps /proc/net/tcp{,6}, so the socket tables are a bonus, not the source. The script finds the * processes that hold a socket (the fd links under /proc/&lt;pid&gt;/fd), collects the ports they name (command line, *PORT= variables, their * log file) and tries each of those plus [ListeningPorts.COMMON_DEV_PORTS] on loopback; a port is listed only when that * connection worked. The script runs under /bin/sh (dash on Ubuntu); only the loopback probe runs in bash. * * Scripts are written with `¤` for the shell's dollar sign so Kotlin templates never touch them. */</ID>
+    <ID>MaxLineLength:ListeningPorts.kt$return $$"""bash -c 'for q in $(printf "%s\n" "$@" | sort -un); do : 2&gt;/dev/null 3&lt;&gt;/dev/tcp/127.0.0.1/$q &amp;&amp; echo "$$marker$q"; done' oc-ports $${ports.joinToString(" ")} $oc_named 2&gt;/dev/null"""</ID>
+    <ID>MaxLineLength:ManagedLocalServer.kt$ManagedLocalServer$val authorityEnd = rest.indexOfFirst { it == '/' || it == '?' || it == '#' }.let { if (it &lt; 0) rest.length else it }</ID>
+    <ID>MaxLineLength:ManagedRuntime.kt$ManagedRuntime$/** Whether this runtime can be installed or started (Flutter `requireSupported`, code `opencode1_migration_required`). */</ID>
+    <ID>MaxLineLength:ManagedRuntime.kt$ManagedRuntime.Companion$/** Flutter `BuiltinLinux.runtimeForProfile` / `ManagedRuntimeFlavor.runtimeOf`: a profile still marked for the move is OpenCode 1. */</ID>
+    <ID>MaxLineLength:ManagedRuntime.kt$ManagedRuntime.Companion$/** Flutter `TermuxRuntime.parse`: a missing or empty record is OpenCode 1; an unknown one is null (`invalid_runtime`). */</ID>
+    <ID>MaxLineLength:ManagedRuntimeSwitch.kt$ManagedRuntimeSwitch$if (!ManagedLocalServer.isManagedLocal(connection.currentProfile())) return SwitchResult.Ready(disconnected = false)</ID>
+    <ID>MaxLineLength:ManagedRuntimeSwitch.kt$ManagedRuntimeSwitch$if (ManagedLocalServer.isManagedLocal(connection.currentProfile()) &amp;&amp; work.any) return SwitchBlock.LocalWorkRunning</ID>
+    <ID>MaxLineLength:ManagedRuntimeSwitch.kt$ManagedRuntimeSwitch$if (connection.clearActiveProfile() is Outcome.Failed) return SwitchResult.Blocked(SwitchBlock.SelectionNotCleared)</ID>
+    <ID>MaxLineLength:ManagedRuntimeSwitch.kt$ManagedRuntimeSwitch$if (recovery.suspendForProfile(id) is Outcome.Failed) return SwitchResult.Blocked(SwitchBlock.RecoveryNotSuspended)</ID>
+    <ID>MaxLineLength:ManagedRuntimeSwitch.kt$ManagedRuntimeSwitch$if (seen?.isCurrent == true &amp;&amp; (seen.runningCount &gt; 0 || seen.pendingCount &gt; 0)) return SwitchBlock.MonitoredWorkRunning</ID>
+    <ID>MaxLineLength:ManagedRuntimeSwitch.kt$ManagedRuntimeSwitch$private fun managedIds(): Set&lt;String&gt;</ID>
+    <ID>MaxLineLength:ManagedRuntimeSwitch.kt$SwitchConnection$/** The saved offline queue; an unreadable queue reads empty (Dart `OfflineQueueStore.load`) and is never written. */</ID>
+    <ID>MaxLineLength:ManagedRuntimeSwitchTest.kt$ManagedRuntimeSwitchTest$assertEquals(ConnectVerdict.Failed, gate.connect(remote, { Transport(false) }, { ProbeVerdict(false, unsupportedLegacy = true) }))</ID>
+    <ID>MaxLineLength:ManagedRuntimeSwitchTest.kt$ManagedRuntimeSwitchTest$for</ID>
+    <ID>MaxLineLength:ManagedRuntimeSwitchTest.kt$ManagedRuntimeSwitchTest$val verdict = gate.connect(marked, buildTransport = { builds++; Transport(true) }, probe = { ProbeVerdict(true) })</ID>
+    <ID>MaxLineLength:ManagedRuntimeSwitchTest.kt$ManagedRuntimeSwitchTest.World$override fun savedQueue(): List&lt;QueuedPromptRef&gt;</ID>
+    <ID>MaxLineLength:ManagedRuntimeSwitchTest.kt$ManagedRuntimeSwitchTest.World$queueRaw = queue.joinToString(prefix = "[", postfix = "]") { "{\"id\":\"${it.id}\",\"profileID\":\"${it.profileId}\"}" }</ID>
+    <ID>MaxLineLength:ManagedShell.kt$ManagedShellWire$/** A shell from the server's `data` object, keeping only the fields above; null when id or start time is missing. */</ID>
+    <ID>MaxLineLength:ManagedShell.kt$ManagedShellWire$status = ManagedShellStatus.entries.firstOrNull { it.name.lowercase() == status } ?: ManagedShellStatus.Unknown</ID>
+    <ID>MaxLineLength:NativeRecoveryChannel.kt$NativeRecoveryChannel$"serverRecoveryGeneration" to (if (nativeOwned &amp;&amp; running) budget!!["recoveryGeneration"] else generation)</ID>
+    <ID>MaxLineLength:NativeRecoveryChannel.kt$NativeRecoveryChannel$if (!nativeOwned &amp;&amp; budget?.get("pending") == true &amp;&amp; budget?.get("confirmedAt") == null) running = false</ID>
+    <ID>MaxLineLength:OpenCodeNativeInstall.kt$OpenCodeInstallScripts$*</ID>
+    <ID>MaxLineLength:OpenCodeNativeInstall.kt$OpenCodeInstallScripts$/** The in-app host installs the pinned native program; Termux keeps the shared npm text. Only OpenCode 2 installs. */</ID>
+    <ID>MaxLineLength:OpenCodeNativeInstallRunTest.kt$OpenCodeNativeInstallRunTest$assertFalse(Files.exists(File(root, "usr/local/bin/opencode2").toPath(), java.nio.file.LinkOption.NOFOLLOW_LINKS))</ID>
+    <ID>MaxLineLength:OpenCodeNativeInstallRunTest.kt$OpenCodeNativeInstallRunTest$install(OpenCodeAssets(arm64 = asset("arm.tgz", sha, "opencode"), x64 = asset("missing-x64.tgz", "0".repeat(64), "opencode")))</ID>
+    <ID>MaxLineLength:OpenCodeNativeInstallRunTest.kt$OpenCodeNativeInstallRunTest$private fun asset(name: String, sha: String, member: String)</ID>
+    <ID>MaxLineLength:OpenCodeNativeInstallRunTest.kt$OpenCodeNativeInstallRunTest$val check = Sh.run(listOf("dash", "-n", "-c", OpenCodeInstallScripts.nativeCheck()), mapOf("PATH" to "/usr/bin:/bin"))</ID>
+    <ID>MaxLineLength:OpenCodeNativeInstallRunTest.kt$OpenCodeNativeInstallRunTest$val parsed = Sh.run(listOf("dash", "-n", "-c", InstallPrelude.withPrelude(production)), mapOf("PATH" to "/usr/bin:/bin"))</ID>
+    <ID>MaxLineLength:OpenCodeNativeInstallRunTest.kt$OpenCodeNativeInstallRunTest$val script = OpenCodeInstallScripts.nativeInstall(assets = assets, root = root.path, probeSeconds = probeSeconds)</ID>
+    <ID>MaxLineLength:OpenCodeNativeInstallTest.kt$OpenCodeNativeInstallTest$assertEquals(OpenCodeInstallReason.Other, OpenCodeInstallReason.of("[oc] OpenCode could not finish updating. Run setup again."))</ID>
+    <ID>MaxLineLength:OpenCodeNativeInstallTest.kt$OpenCodeNativeInstallTest$for</ID>
+    <ID>MaxLineLength:OpenCodeNativeInstallTest.kt$OpenCodeNativeInstallTest$fun</ID>
+    <ID>MaxLineLength:OpenCodeUbuntuSetup.kt$OpenCodeUbuntuSetup$*</ID>
+    <ID>MaxLineLength:OpenCodeUpdate.kt$UpdateRestartResult.RolledBack$public data</ID>
+    <ID>MaxLineLength:OpenCodeUpdateTest.kt$OpenCodeUpdateTest$)</ID>
+    <ID>MaxLineLength:PhoneBudgetFiles.kt$PhoneBudgetFiles$"- Start as few background programs as you can: Android stops an app that has more than about 30 child processes.\n\n"</ID>
+    <ID>MaxLineLength:PhoneBudgetFiles.kt$PhoneBudgetFiles$if (current.isBlank()) JsonObject(emptyMap()) else Json.parseToJsonElement(current) as? JsonObject ?: return null</ID>
+    <ID>MaxLineLength:PhoneHostRuntime.kt$PhoneHostRuntime$*</ID>
+    <ID>MaxLineLength:PhoneHostRuntime.kt$PhoneHostRuntime$/** The in-app host: the saved profile's runtime, else installed-before-selection = OpenCode 1, else the new default. */</ID>
+    <ID>MaxLineLength:PhoneHostRuntime.kt$PhoneHostRuntime$installation != null &amp;&amp; (installation.runtimeSelected || installation.ubuntuInstalled) -&gt; installation.runtime</ID>
+    <ID>MaxLineLength:PhoneHostRuntime.kt$PhoneHostRuntime$public</ID>
+    <ID>MaxLineLength:PhoneHostRuntime.kt$PhoneHostRuntime.TermuxInstallation.Companion$Regex("^ubuntu=(absent|installed)\\r?\\nversion=([^\\r\\n]*)(?:\\r?\\nruntime=(opencode1|opencode2))?\\r?\\n?$")</ID>
+    <ID>MaxLineLength:PhoneHostRuntimeTest.kt$PhoneHostRuntimeTest$PhoneHostRuntime.TermuxInstallation.parse("ubuntu=${if (installed) "installed" else "absent"}\nversion=\n")</ID>
+    <ID>MaxLineLength:PhoneHostRuntimeTest.kt$PhoneHostRuntimeTest$assertEquals(ManagedRuntime.OpenCode1, PhoneHostRuntime.termux(status = null, installation = null, profile = older))</ID>
+    <ID>MaxLineLength:PhoneHostRuntimeTest.kt$PhoneHostRuntimeTest$assertEquals(ManagedRuntime.OpenCode2, PhoneHostRuntime.termux(status = null, installation = null, profile = null))</ID>
+    <ID>MaxLineLength:PhoneHostRuntimeTest.kt$PhoneHostRuntimeTest$assertNull(PhoneHostRuntime.TermuxInstallation.parse("ubuntu=absent\nversion=2.2.5\n"), "a version without Ubuntu")</ID>
+    <ID>MaxLineLength:PhoneHostRuntimeTest.kt$PhoneHostRuntimeTest$fun</ID>
+    <ID>MaxLineLength:PhoneHostRuntimeTest.kt$PhoneHostRuntimeTest$val status = PhoneHostRuntime.TermuxStatus(ManagedRuntime.OpenCode1, runtimeSelected = false, version = "1.18.0")</ID>
+    <ID>MaxLineLength:PhoneProcessWatchTest.kt$PhoneProcessWatchTest$val below = PhoneProcessWatch().record(snap(nearLimitProcesses(workers = 16)), Instant.parse("2026-01-01T00:00:00Z"))</ID>
+    <ID>MaxLineLength:PhoneProcessWatchTest.kt$PhoneProcessWatchTest$val reading = PhoneProcessWatch().record(snap(listOf(proc(1, 0, "dart", cpu = 99.0, elapsed = 3.hours))), clock.now)</ID>
+    <ID>MaxLineLength:PhoneServerHealing.kt$PhoneServerHealing$/** Delay before an automatic reconnect after a failed connect; doubles per failure up to [MAX_RECONNECT_BACKOFF]. */</ID>
+    <ID>MaxLineLength:PhoneServerHealing.kt$PhoneServerHealing$if</ID>
+    <ID>MaxLineLength:PhoneServerHealing.kt$PhoneServerHealing$private val resumeAgentsAfterIdle: (suspend (profileId: String, expectedIdleGeneration: Long) -&gt; Outcome&lt;Unit&gt;)? = null</ID>
+    <ID>MaxLineLength:PhoneServerHealing.kt$PhoneServerHealing$starter.startForLaunch(profile, admission = { launchAdmission(profile) }, stillWanted = { launchCurrent(profile, epoch) })</ID>
+    <ID>MaxLineLength:PhoneServerHealing.kt$PhoneServerHealing$val failed = !disposed &amp;&amp; connection.selectedProfileId() == profile.id &amp;&amp; !connection.hasConnectedServer() &amp;&amp; errored</ID>
+    <ID>MaxLineLength:PhoneServerHealing.kt$PhoneServerHealing.Companion$Outcome.Failed(io.github.eslamasabry.oc.core.common.Failure.Runtime(io.github.eslamasabry.oc.core.common.RuntimeProblem.IdleResumeUnavailable))</ID>
+    <ID>MaxLineLength:PhoneServerHealingTest.kt$PhoneServerHealingTest$assertEquals(listOf&lt;Pair&lt;String, Boolean?&gt;&gt;("phone" to true), w.host.observations, "native idle truth uses the readable server alias")</ID>
+    <ID>MaxLineLength:PhoneServerHealingTest.kt$PhoneServerHealingTest$fun</ID>
+    <ID>MaxLineLength:PhoneServerStarter.kt$PhoneServerStarter$if (clock.now() &gt;= deadline) return StartFailure(StartProblem.TimedOut, StartStep.Probe, timeout = readyTimeout)</ID>
+    <ID>MaxLineLength:PhoneServerStarter.kt$PhoneServerStarter$is Outcome.Ok -&gt; if (!status.value.serverRunning) return StartFailure(StartProblem.Exited, StartStep.Status)</ID>
+    <ID>MaxLineLength:PhoneServerStarter.kt$PhoneServerStarter$problem = if (call.runtimeProblem == RuntimeProblem.OwnershipUnknown) StartProblem.ComponentRecovery else StartProblem.Refused</ID>
+    <ID>MaxLineLength:PhoneServerStarter.kt$PhoneServerStarter$return if (!stillWanted()) cancelled else StartFailure(StartProblem.PasswordNotSaved, StartStep.Password, details = written.failure.details)</ID>
+    <ID>MaxLineLength:PhoneServerStarter.kt$StartFailure$get() = problem == StartProblem.Exited || problem == StartProblem.PasswordNotSaved || problem == StartProblem.Refused</ID>
+    <ID>MaxLineLength:PhoneServerStarterTest.kt$PhoneServerStarterTest$PhoneServerStarter(host, schedulerClock(), readyTimeout = 90.seconds, pollInterval = 2.seconds, renewPassword = renew)</ID>
+    <ID>MaxLineLength:PhoneSetupFinisher.kt$PhoneSetupFinisher$if (failure?.problem == StartProblem.ComponentRecovery) return Failure.Runtime(RuntimeProblem.OwnershipUnknown).failed()</ID>
+    <ID>MaxLineLength:PhoneSetupFinisher.kt$PhoneSetupFinisher$if (profiles.save(connected) is Outcome.Failed) return Failure.Runtime(RuntimeProblem.SetupPersistence).failed()</ID>
+    <ID>MaxLineLength:PhoneSetupFinisherTest.kt$PhoneSetupFinisherTest$assertTrue(finisher.finish(SetupFinishRequest(host = SetupHost.Termux, openCodeChanged = true)) is Outcome.Failed)</ID>
+    <ID>MaxLineLength:PhoneSetupFinisherTest.kt$PhoneSetupFinisherTest$fun</ID>
+    <ID>MaxLineLength:PhoneSetupFinisherTest.kt$PhoneSetupFinisherTest$val original = PhoneProfile(ProfileId("owner"), password = "synthetic-only", requiresOpenCode2Migration = true)</ID>
+    <ID>MaxLineLength:PhoneSetupRegistry.kt$PhoneSetupRegistry$*</ID>
+    <ID>MaxLineLength:PhoneSetupRegistry.kt$PhoneSetupRegistry.Companion$public</ID>
+    <ID>MaxLineLength:PhoneSetupRegistryTest.kt$PhoneSetupRegistryTest$"oc_download \"https://nodejs.org/dist/\$node_version/node-\$node_version-linux-\$node_arch.tar.gz\" \\\n"</ID>
+    <ID>MaxLineLength:PhoneSetupRegistryTest.kt$PhoneSetupRegistryTest$"set -eu\noc_apt_install curl ca-certificates git openssh-client\noc_version \"\$(git --version | cut -d ' ' -f 3)\"\n"</ID>
+    <ID>MaxLineLength:PhoneSetupRegistryTest.kt$PhoneSetupRegistryTest$"set -eu\noc_apt_install python3 python3-venv python3-pip\noc_version \"\$(python3 --version | cut -d ' ' -f 2)\"\n"</ID>
+    <ID>MaxLineLength:PhoneSetupRegistryTest.kt$PhoneSetupRegistryTest$assertEquals(listOf(30_000_000L, 45_000_000L, 25_000_000L, 58_000_000L, 50_000_000L, null), all.map { it.downloadBytes })</ID>
+    <ID>MaxLineLength:PhoneSetupRegistryTest.kt$PhoneSetupRegistryTest$assertEquals(setOf("linux", "essentials", "node", "opencode", "start"), all.filter { it.required }.map { it.id }.toSet())</ID>
+    <ID>MaxLineLength:PhoneSetupRegistryTest.kt$PhoneSetupRegistryTest$assertFalse(opencode.installScript.contains("npm install -g") || opencode.installScript.contains("OC_PROOT_SETUP"), "never npm in the app's own Ubuntu")</ID>
+    <ID>MaxLineLength:PhoneSetupRegistryTest.kt$PhoneSetupRegistryTest$assertTrue(node.installScript.contains("aarch64|arm64) node_arch=arm64; node_sha=724282c3b43aec998aa9527380465b45d229e021b58035f5f4f63095eabfe5d5 ;;"))</ID>
+    <ID>MaxLineLength:PhoneSetupRegistryTest.kt$PhoneSetupRegistryTest$assertTrue(node.installScript.contains("x86_64|amd64) node_arch=x64; node_sha=6e1db87ef58b8819e5d5402eff1536491b18edd8eb7bee5ef7897876e88dc5ff ;;"))</ID>
+    <ID>MaxLineLength:PhoneSetupRegistryTest.kt$PhoneSetupRegistryTest$engine.run(PhoneSetupRegistry.defaultSelection(registry.components(SetupJobParams.firstSetup)), SetupJobParams.firstSetup)</ID>
+    <ID>MaxLineLength:PhoneSetupRegistryTest.kt$PhoneSetupRegistryTest$fun</ID>
+    <ID>MaxLineLength:PhoneSetupRegistryTest.kt$PhoneSetupRegistryTest$val bad = registry.components(mapOf("opencode" to mapOf("version" to "1; rm -rf /"))).single { it.id == "opencode" }</ID>
+    <ID>MaxLineLength:PhoneStorage.kt$PhoneStorageSources$*</ID>
+    <ID>MaxLineLength:PhoneStorageTest.kt$PhoneStorageTest$val linux = FakeLinuxChannel { _, _ -&gt; mapOf("runtimeBytes" to 80, "projectsBytes" to 20, "measuredAtMilliseconds" to 123).ok() }</ID>
+    <ID>MaxLineLength:PhoneStorageTest.kt$PhoneStorageTest$val result = PhoneStorage(ChannelPhoneStorageSources(voice, linux), isSupported = true).read(includeBuiltinHost = true)</ID>
+    <ID>MaxLineLength:ProcessBudgetGuard.kt$ProcessBudgetGuard$private fun remove(id: Long)</ID>
+    <ID>MaxLineLength:ProcessBudgetGuard.kt$ProcessBudgetGuard$private fun reserve(job: HeavyJob)</ID>
+    <ID>MaxLineLength:ProcessBudgetGuard.kt$ProcessBudgetGuard$waiting = s.visible.waiting.map { if (it.id == current.id) it.waitingFor(decision) else it }</ID>
+    <ID>MaxLineLength:ProcessBudgetTest.kt$ProcessBudgetTest$assertNull(lastAndroidKill(mapOf("x" to ServiceExitRecord(null, false, ServiceExitReason.MemoryOrPhantomKill)), now))</ID>
+    <ID>MaxLineLength:ProjectFolders.kt$ProjectFolders$/** The phone folder that holds Ubuntu's [path], or null when it is missing, a link, or Ubuntu's files are not there. */</ID>
+    <ID>MaxLineLength:ProjectFolders.kt$ProjectFolders$entries += FolderEntry(name, if (ubuntuPath == "/") "/$name" else "$ubuntuPath/$name", hasGit("$host/$name"))</ID>
+    <ID>MaxLineLength:ProjectFolders.kt$ProjectFolders$if (external != null &amp;&amp; ubuntuPath == "/root" &amp;&amp; name == "projects") continue</ID>
+    <ID>MaxLineLength:ProjectFolders.kt$ProjectFolders$if (failure !is Failure.Folder || failure.problem != FolderProblem.NotInstalled || throughUbuntu == null) return listed</ID>
+    <ID>MaxLineLength:ProjectFolders.kt$ProjectFolders$return if (ubuntuPath == PROJECTS_DIR) emptyList&lt;FolderEntry&gt;().ok() else Failure.Folder(FolderProblem.Missing).failed()</ID>
+    <ID>MaxLineLength:ProjectFoldersTest.kt$ProjectFoldersTest$private fun Outcome&lt;*&gt;.failure(): Failure</ID>
+    <ID>MaxLineLength:ProjectFoldersTest.kt$ProjectFoldersTest$val browser = ProjectFolders(files, { rootfs.takeIf { files.nodes.containsKey(it) } }, { projects }, stoppedUbuntu)</ID>
+    <ID>MaxLineLength:ProjectLifecycleGuardTest.kt$ProjectLifecycleGuardTest$?.</ID>
+    <ID>MaxLineLength:ProjectLifecycleGuardTest.kt$ProjectLifecycleGuardTest$assertTrue("@Synchronized\n fun install(image:" !in linux, "long downloads must not hold the runtime monitor")</ID>
+    <ID>MaxLineLength:ProjectLifecycleGuardTest.kt$ProjectLifecycleGuardTest$assertTrue("require(!alsoDeleteProjects || confirmationName == \"${ProjectRemoval.DELETION_CONFIRMATION_NAME}\")" in body)</ID>
+    <ID>MaxLineLength:ProjectLifecycleGuardTest.kt$ProjectLifecycleGuardTest$private val native = repoRoot()?.let { File(it, "native/android/linux/src/main/kotlin/io/github/eslamasabry/opencode_mobile") }</ID>
+    <ID>MaxLineLength:ProjectRemoval.kt$ProjectRemoval$is Outcome.Ok -&gt; ProjectStorage.fromReply(reply.value)?.ok() ?: Failure.Runtime(RuntimeProblem.StorageUnavailable).failed()</ID>
+    <ID>MaxLineLength:ProjectRemovalTest.kt$ProjectRemovalTest$/** The removal bridge (test/builtin_project_removal_test.dart): projects kept by default, exact confirmation, measured totals. */</ID>
+    <ID>MaxLineLength:ProjectRemovalTest.kt$ProjectRemovalTest$assertEquals(Failure.Runtime(RuntimeProblem.StorageUnavailable), removal.measure().failure(), "$field = $invalid")</ID>
+    <ID>MaxLineLength:ProjectRemovalTest.kt$ProjectRemovalTest$assertEquals(listOf(FakeLinuxChannel.Call("removeRuntime", mapOf("alsoDeleteProjects" to false))), channel.calls)</ID>
+    <ID>MaxLineLength:ProjectRemovalTest.kt$ProjectRemovalTest$channel.answer = { _, _ -&gt; Failure.Runtime(RuntimeProblem.Generic, Redacted("synthetic-private-native-message")).failed() }</ID>
+    <ID>MaxLineLength:ProjectRemovalTest.kt$ProjectRemovalTest$listOf(FakeLinuxChannel.Call("removeRuntime", mapOf("alsoDeleteProjects" to true, "confirmationName" to "OpenCode")))</ID>
+    <ID>MaxLineLength:ProjectRemovalTest.kt$ProjectRemovalTest$private fun Outcome&lt;*&gt;.failure(): Failure</ID>
+    <ID>MaxLineLength:ProjectRemovalTest.kt$ProjectRemovalTest$private val valid = mapOf("runtimeBytes" to 1024, "projectsBytes" to 4096, "measuredAtMilliseconds" to 1_790_467_200_000L)</ID>
+    <ID>MaxLineLength:RunningFixtures.kt$internal</ID>
+    <ID>MaxLineLength:RunningNamesTest.kt$RunningNamesTest$CommandNames.shortCommand("FINANCEHUB_DB=/tmp/opencode/demo.db ./.venv/bin/uvicorn main:app --host 0.0.0.0")</ID>
+    <ID>MaxLineLength:RunningNamesTest.kt$RunningNamesTest$assertEquals(RunningNameKind.OpenCode, kind("MainThread", "/opt/node/bin/node /root/.oc-genui/openCode2/server.cjs"))</ID>
+    <ID>MaxLineLength:RuntimeStatusMap.kt$RuntimeStatusMap$listOf("serverIdleEnabled", "serverIdleStopped", "serverIdleHelperStopped", "serverRestartWanted", "serverRunning")</ID>
+    <ID>MaxLineLength:ServerRecovery.kt$RecoveryPhase$public enum</ID>
+    <ID>MaxLineLength:ServerRecovery.kt$ServerRecovery$if</ID>
+    <ID>MaxLineLength:ServerRestartBudget.kt$ServerRestartBudget$if</ID>
+    <ID>MaxLineLength:ServerRestartBudgetTest.kt$ServerRestartBudgetTest$boundHealthy(budgetMap(attempts = 3, revision = 5, pending = true, eventId = "native-restore:1", generation = 4))</ID>
+    <ID>MaxLineLength:ServerRestartBudgetTest.kt$ServerRestartBudgetTest$budgetMap(attempts = 2, pending = true, eventId = "legacy-confirmed", generation = 1, confirmedAt = confirmedAt.toEpochMilliseconds())</ID>
+    <ID>MaxLineLength:ServerRestartBudgetTest.kt$ServerRestartBudgetTest.&lt;no name provided&gt;$override suspend</ID>
+    <ID>MaxLineLength:ServerRestartBudgetTest.kt$ServerRestartBudgetTest.&lt;no name provided&gt;$override suspend fun confirmRecovery(expectedGeneration: Long): Outcome&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:ServerRestartBudgetTest.kt$ServerRestartBudgetTest.&lt;no name provided&gt;$override suspend fun probe(password: String)</ID>
+    <ID>MaxLineLength:ServicePerformance.kt$RuntimePerformance.Companion$if (key is String &amp;&amp; key.isNotEmpty() &amp;&amp; value is Map&lt;*, *&gt;) put(key, ServiceLifetime.fromMap(value))</ID>
+    <ID>MaxLineLength:ServicePerformance.kt$ServiceExitReason.MemoryOrPhantomKill$/** Exit 137 may be a memory or Android phantom-process kill; the code alone cannot tell those from another SIGKILL. */</ID>
+    <ID>MaxLineLength:ServicePerformanceTest.kt$ServicePerformanceTest$ServiceLifetime(false, lastExitCode = 0, lastUptimeMs = 120000, uptimeMs = null, restartCount = 0, exitReason = ServiceExitReason.Exited)</ID>
+    <ID>MaxLineLength:ServicePerformanceTest.kt$ServicePerformanceTest$ServiceLifetime(true, lastExitCode = 137, lastUptimeMs = 4000, uptimeMs = 250, restartCount = 3, exitReason = ServiceExitReason.MemoryOrPhantomKill)</ID>
+    <ID>MaxLineLength:ServicePerformanceTest.kt$ServicePerformanceTest$assertFailsWith&lt;UnsupportedOperationException&gt; { (performance.services as MutableMap&lt;String, ServiceLifetime&gt;).clear() }</ID>
+    <ID>MaxLineLength:ServicePerformanceTest.kt$ServicePerformanceTest$val filters = RuntimePerformance.fromMap(mapOf("prootFilters" to Double.NaN, "serverFilters" to Double.POSITIVE_INFINITY))</ID>
+    <ID>MaxLineLength:ServicePerformanceTest.kt$ServicePerformanceTest$val negative = ServiceLifetime.fromMap(mapOf("lastExitCode" to -1, "lastUptimeMs" to -1, "uptimeMs" to -1, "restartCount" to -1))</ID>
+    <ID>MaxLineLength:ServicePerformanceTest.kt$ServicePerformanceTest$val record = ServiceLifetime.fromMap(mapOf("lastExitCode" to 0, "lastUptimeMs" to 0, "uptimeMs" to 0, "restartCount" to 0))</ID>
+    <ID>MaxLineLength:ServicesHeatHold.kt$ServicesHeatHold$*</ID>
+    <ID>MaxLineLength:ServicesHeatHoldTest.kt$ServicesHeatHoldTest$val heat = ServicesHeatHold(readHold = { true }, setHold = { holds += it; Unit.ok() }, enabled = { false }, clock = clock)</ID>
+    <ID>MaxLineLength:SetupAudit.kt$SetupAudit.Companion$"^(?:(?:proposal|undo)-[0-9]+|[0-9a-f]{48}|(?:proposal-)?[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"</ID>
+    <ID>MaxLineLength:SetupEngineTest.kt$SetupEngineTest$assertEquals(FixtureRegistry.PRELUDE + FixtureRegistry.openCodeInstall("opencode2"), linux.spec("opencode").script)</ID>
+    <ID>MaxLineLength:SetupEngineTest.kt$SetupEngineTest$assertEquals(listOf("linux", "essentials", "python", "node", "opencode", "start"), progress.components.map { it.id })</ID>
+    <ID>MaxLineLength:SetupEngineTest.kt$SetupEngineTest$assertEquals(mapOf("retry" to fixtureWords.stageRetrying, "compat" to fixtureWords.stageCompat), linux.spec("node").labels)</ID>
+    <ID>MaxLineLength:SetupEngineTest.kt$SetupEngineTest$fun</ID>
+    <ID>MaxLineLength:SetupJob.kt$*</ID>
+    <ID>MaxLineLength:SetupJob.kt$/** A setup job's params as setup.json stores them: component id → its string facts (the native runner keeps them opaque). */</ID>
+    <ID>MaxLineLength:SetupJob.kt$Failure.Runtime(if (record.persistenceFailure) RuntimeProblem.SetupPersistence else RuntimeProblem.Generic)</ID>
+    <ID>MaxLineLength:SetupJob.kt$SetupJobRecord.Companion$*</ID>
+    <ID>MaxLineLength:SetupJob.kt$SetupJobRecord.Companion$val ids = if (order is List&lt;*&gt;) order.filterIsInstance&lt;String&gt;() else componentMap.keys.filterIsInstance&lt;String&gt;()</ID>
+    <ID>MaxLineLength:SetupJob.kt$return if (names.size &lt;= 1) names.joinToString("") else pair(names.dropLast(1).joinToString(separator), names.last())</ID>
+    <ID>MaxLineLength:SetupJobEngine.kt$SetupJobEngine$finish.finish(SetupFinishRequest(openCodeChanged = step.data["openCodeChanged"] == "true", version = version))</ID>
+    <ID>MaxLineLength:SetupJobEngine.kt$SetupJobEngine$if (!text.isNullOrBlank() &amp;&amp; record == null) Failure.Runtime(RuntimeProblem.Generic).failed() else Outcome.Ok(record)</ID>
+    <ID>MaxLineLength:SetupJobEngine.kt$SetupJobEngine$job.associate { it.id to ComponentProgress(it.id, if (it.jobStep) ComponentState.Pending else ComponentState.Checking) }</ID>
+    <ID>MaxLineLength:SetupJobEngine.kt$SetupJobEngine$private fun pending(job: List&lt;SetupPart&gt;)</ID>
+    <ID>MaxLineLength:SetupJobEngine.kt$SetupRunnerPort$public suspend fun completeSetupStep(jobId: String, id: String, ok: Boolean, error: String?, version: String?): Outcome&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:SetupJobEngineTest.kt$SetupJobEngineTest$assertEquals(listOf(id), engine.progress.value.adding, "the old record never replaces the starting job ($ended)")</ID>
+    <ID>MaxLineLength:SetupJobEngineTest.kt$SetupJobEngineTest$assertTrue(failure is Failure.Unexpected &amp;&amp; failure.details?.text?.contains("IllegalStateException") == true, "$failure")</ID>
+    <ID>MaxLineLength:SetupJobEngineTest.kt$SetupJobEngineTest$fun</ID>
+    <ID>MaxLineLength:SetupJobEngineTest.kt$SetupJobEngineTest.FakeRunner$override suspend</ID>
+    <ID>MaxLineLength:SetupJobHost.kt$SetupJobHost$/** Tells the native job how an app-run step went (`SetupRunner.completeStep`). [error] is a code or redacted text. */</ID>
+    <ID>MaxLineLength:SetupJobHost.kt$SetupJobHost$public suspend</ID>
+    <ID>MaxLineLength:SetupJobParamsTest.kt$SetupJobParamsTest$assertEquals("tail", (services.log("helper", tailBytes = 10) as? io.github.eslamasabry.oc.core.common.Outcome.Ok)?.value)</ID>
+    <ID>MaxLineLength:SetupJobParamsTest.kt$SetupJobParamsTest$assertEquals(listOf("startService", "startService", "stopService", "serviceLog"), channel.calls.map { it.method })</ID>
+    <ID>MaxLineLength:SetupJobParamsTest.kt$SetupJobParamsTest$mapOf("installed" to true, "phase" to "ready", "serverRunning" to true, "services" to listOf("server", "helper", 42)).ok()</ID>
+    <ID>MaxLineLength:SetupJobParamsTest.kt$SetupJobParamsTest$mapOf("name" to "helper", "script" to "exec helper run", "port" to 8472, "notice" to "OpenCode and the helper are running")</ID>
+    <ID>MaxLineLength:SetupJobParamsTest.kt$SetupJobParamsTest$val last = SetupJobRecord(jobId = "j", state = "interrupted", components = emptyList(), params = SetupJobParams.adding(listOf("voice")))</ID>
+    <ID>MaxLineLength:SetupJobParamsTest.kt$SetupJobParamsTest$val legacy = effectiveJobParams(mapOf(SetupIds.OPEN_CODE to mapOf("runtime" to "opencode1", "version" to "1.18.29")), null)</ID>
+    <ID>MaxLineLength:SetupMessages.kt$SetupMessageTable$"A server bound to its own 127.0.0.1 is not reachable from this phone until you bridge it — `adb reverse tcp:PORT tcp:PORT` over USB, or an SSH forward. To reach it over the network instead, put it behind HTTPS."</ID>
+    <ID>MaxLineLength:SetupMessages.kt$SetupMessageTable$"Android will not ask again, so this has to be changed in app settings: turn on Camera, then come back. Pasting the code needs no permission at all and works right now."</ID>
+    <ID>MaxLineLength:SetupMessages.kt$SetupMessageTable$"HTTP is allowed only for localhost, 127.0.0.1, [::1], or a private network address. Use HTTPS or Tailscale for other servers."</ID>
+    <ID>MaxLineLength:SetupMessages.kt$SetupMessageTable$"It drives Termux, which has no desktop equivalent. On this machine, run `opencode serve` yourself and add it as a server."</ID>
+    <ID>MaxLineLength:SetupMessages.kt$SetupMessageTable$"Password rejected. Copy the current \"server password\" line from the server output — it changes on every restart unless OPENCODE_PASSWORD is set."</ID>
+    <ID>MaxLineLength:SetupMessages.kt$SetupMessageTable$"That is far too long to be a pairing code. Copy only the line `opencode2 pair` prints, or scan its QR code."</ID>
+    <ID>MaxLineLength:SetupMessages.kt$SetupMessageTable$"That pairing code carries no server address. Check that the server is actually listening, then run `opencode2 pair` again."</ID>
+    <ID>MaxLineLength:SetupMessages.kt$SetupMessageTable$"That pairing code is the wrong shape — it should be a JSON object with `urls`, `username`, and `password`."</ID>
+    <ID>MaxLineLength:SetupMessages.kt$SetupMessageTable$"That pairing code lists more addresses than this app will try. Bind the server to one interface and pair again."</ID>
+    <ID>MaxLineLength:SetupMessages.kt$SetupMessageTable$"The browser could not reach the server. Check the address and that the server is running. A server on a different origin must allow the origin of this page (CORS), and a page loaded over https cannot use an http:// or ws:// server."</ID>
+    <ID>MaxLineLength:SetupMessages.kt$SetupMessageTable$"The camera is used only to read the QR that opencode2 pair prints, and only while this screen is open. You can paste the code instead — it does exactly the same thing."</ID>
+    <ID>MaxLineLength:SetupMessages.kt$SetupMessageTable$"The saved password is unavailable. Enter it again, or leave it empty only if this server no longer requires a password."</ID>
+    <ID>MaxLineLength:SetupMessages.kt$SetupMessageTable$"The saved password is unavailable. Enter it again, or leave it empty only if this server no longer requires one."</ID>
+    <ID>MaxLineLength:SetupMessages.kt$SetupMessageTable$"The saved profile credential differs from this runtime; restore its original saved credential before returning"</ID>
+    <ID>MaxLineLength:SetupMessages.kt$SetupMessageTable$"There is nothing to scan with. Run opencode2 pair on the server, copy the code it prints, and paste it into the server editor."</ID>
+    <ID>MaxLineLength:SetupMessages.kt$SetupMessageTable$"These commands run on the computer that hosts this server — the app cannot run them for you. Copy each one into a terminal on that machine."</ID>
+    <ID>MaxLineLength:SetupMessages.kt$SetupMessageTable$"This server uses plain HTTP, and you have not confirmed that yet. Edit the server and choose Use it anyway, or use HTTPS."</ID>
+    <ID>MaxLineLength:SetupMessages.kt$SetupMessageTable$"This version of Termux is too old for the app to control it. Install the current F-Droid or GitHub build of Termux, then check again."</ID>
+    <ID>MaxLineLength:SetupMessages.kt$SetupMessageTable$"When the server reports an update, Settings offers the native upgrade first; this is the host-side equivalent."</ID>
+    <ID>MaxLineLength:SetupMessagesTest.kt$SetupMessagesTest$/** Port of test/setup_ui_messages_test.dart (B-L10N-019); the Arabic words are read back in :ui:words SetupWordsTest. */</ID>
+    <ID>MaxLineLength:SetupPreflight.kt$SetupPreflight$/** ABI first, then RAM, then free space; RAM between the floor and comfortable is [SetupPreflightResult.MayBeSlow]. */</ID>
+    <ID>MaxLineLength:SetupPreflight.kt$SetupPreflight$if (abis.isNotEmpty() &amp;&amp; abis.none { it in supportedAbis }) return SetupPreflightResult.UnsupportedAbi(abis.first())</ID>
+    <ID>MaxLineLength:SetupPreflight.kt$SetupPreflight$public</ID>
+    <ID>MaxLineLength:SetupPreflightTest.kt$SetupPreflightTest$private fun required(download: Long, installed: Long? = null)</ID>
+    <ID>MaxLineLength:SetupProgressRulesTest.kt$SetupProgressRulesTest$components = ids.map { id -&gt; if (id == current?.id) current else ComponentProgress(id, ComponentState.Pending) }</ID>
+    <ID>MaxLineLength:SetupProgressRulesTest.kt$SetupProgressRulesTest$components = listOf(SetupJobComponent("opencode", "failed", error = "runtime_ownership_unknown: ownershipUnknown"))</ID>
+    <ID>MaxLineLength:SetupProgressRulesTest.kt$SetupProgressRulesTest$job(SetupState.Failed, current = ComponentProgress("opencode", ComponentState.Failed, error = SetupError.OwnershipUnknown))</ID>
+    <ID>MaxLineLength:SharedStoragePath.kt$SharedStoragePath$/** Whether [path] is in shared storage. `..` segments are resolved first, so `/root/projects/../../sdcard` counts. */</ID>
+    <ID>MaxLineLength:ShellOutput.kt$ShellOutput$if</ID>
+    <ID>MaxLineLength:ShellOutput.kt$ShellOutput$mutable.update { it.copy(shell = shell ?: it.shell, available = shell != null, serverRestarted = it.serverRestarted || restarted) }</ID>
+    <ID>MaxLineLength:ShellOutput.kt$ShellOutput$mutable.update { it.copy(text = text, cursor = page.cursor, size = page.size, trimmed = trimmed, failure = null) }</ID>
+    <ID>MaxLineLength:StoragePathsTest.kt$StoragePathsTest$listOf("/sdcard/CodeAnything", "/storage/emulated/0/CodeAnything", "/storage/1A2B-3C4D/Work", "/sdcard")</ID>
+    <ID>MaxLineLength:Thermal.kt$BatteryReading.Companion$/** From the kernel's power-supply files (`capacity`, `status`), the fallback when the platform has no reading. */</ID>
+    <ID>MaxLineLength:ThermalGuardTest.kt$FakePausePort$calls += "resume ${hold.target.id.raw} ${hold.sessions.joinToString(",")}" + if (hold.serviceStopped) " +service" else ""</ID>
+    <ID>MaxLineLength:ThermalGuardTest.kt$ThermalGuardTest$/** Port of test/thermal_guard_test.dart groups ThermalGuard, the supervisor policy checks, and the shell line and setting. */</ID>
+    <ID>MaxLineLength:ThermalGuardTest.kt$ThermalGuardTest$assertEquals("Resumed the AI Team — your phone has cooled down.", ThermalNoticeEnglish.notice(ThermalNoticeKind.Resumed))</ID>
+    <ID>MaxLineLength:ThermalGuardTest.kt$ThermalGuardTest$assertEquals("Your phone is hot — paused the AI Team to cool down. It resumes by itself.", ThermalNoticeEnglish.PAUSED_NOTICE)</ID>
+    <ID>MaxLineLength:ThermalGuardTest.kt$ThermalGuardTest$assertEquals(ThermalNoticeEnglish.PAUSED_NOTICE, guard.notice.value?.let { ThermalNoticeEnglish.notice(it.kind) })</ID>
+    <ID>MaxLineLength:ThermalGuardTest.kt$ThermalGuardTest$fun</ID>
+    <ID>MaxLineLength:ThermalNotices.kt$HeatAct$*</ID>
+    <ID>MaxLineLength:ThermalNotices.kt$ThermalNoticeEnglish$public const val PAUSED_NOTICE: String = "Your phone is hot — paused the AI Team to cool down. It resumes by itself."</ID>
+    <ID>MaxLineLength:UbuntuHostScriptRunTest.kt$UbuntuHostScriptRunTest$"UnsetEnvironment=OPENCODE_PASSWORD" in File(home, ".config/systemd/user/opencode-serve.service").readText()</ID>
+    <ID>MaxLineLength:UbuntuHostScriptTest.kt$UbuntuHostScriptTest$assertEquals(UpdateDecision.AlreadyCurrent, UbuntuHostScript.updateDecision("2.10.0"), "compared as versions, not text")</ID>
+    <ID>NestedBlockDepth:DetectedDevServers.kt$DetectedDevServers$private suspend fun scan(at: Int, epoch: Int)</ID>
+    <ID>NestedBlockDepth:DetectedDevServers.kt$DetectedDevServers$public suspend fun readLog(server: DetectedServer): Outcome&lt;String&gt;</ID>
+    <ID>NestedBlockDepth:ListeningPorts.kt$ListeningPorts$public fun parse(output: String): List&lt;LocalServerProcess&gt;</ID>
+    <ID>NestedBlockDepth:PhoneServerStarter.kt$PhoneServerStarter$public suspend fun start( target: StartTarget, mode: LaunchMode = LaunchMode.Manual, migrateLegacyHistory: Boolean = false, stillWanted: () -&gt; Boolean = { true }, ): StartFailure?</ID>
+    <ID>NestedBlockDepth:ServerRecovery.kt$ServerRecovery$private suspend fun run(phone: HealingProfile, gen: Int, manual: () -&gt; Boolean)</ID>
+    <ID>ReturnCount:AgentHostJob.kt$AgentHostJob$public suspend fun check(job: List&lt;Component&gt;, port: CheckPort): Map&lt;String, InstallPrelude.CheckResult&gt;?</ID>
+    <ID>ReturnCount:AgentWorkLease.kt$AgentWorkLease$public fun observe(profileId: String?, busy: Boolean?)</ID>
+    <ID>ReturnCount:AppExitRecovery.kt$AppExitRecovery$private suspend fun restart(scene: RecoveryScene, chosen: ProfileId?, eventId: String): RecoveryOutcome</ID>
+    <ID>ReturnCount:AppExitRecovery.kt$AppExitRecovery$public suspend fun runOnce(scene: RecoveryScene): RecoveryOutcome</ID>
+    <ID>ReturnCount:AppOpenStart.kt$AppOpenStart$private suspend fun admission(): Long?</ID>
+    <ID>ReturnCount:AppOpenStart.kt$AppOpenStart$private suspend fun wanted(password: String): LaunchLeave?</ID>
+    <ID>ReturnCount:AppOpenStart.kt$AppOpenStart$public suspend fun run(target: StartTarget, previous: StartFailure? = null): AppOpenResult</ID>
+    <ID>ReturnCount:AppOpenStart.kt$LaunchStartRules$public fun afterProbe(answer: ProbeAnswer, status: RuntimeStatus?, now: Instant, until: Instant): LaunchStep</ID>
+    <ID>ReturnCount:AppOpenStart.kt$LaunchStartRules$public fun firstLook(status: RuntimeStatus?, now: Instant): LaunchStep</ID>
+    <ID>ReturnCount:AutomationGate.kt$RecoveryGate$public suspend fun steps(profile: ProfileId, steps: List&lt;suspend () -&gt; Boolean&gt;): Boolean</ID>
+    <ID>ReturnCount:BridgeModels.kt$WorkLeaseStatus.Companion$public fun parse(reply: Any?): WorkLeaseStatus</ID>
+    <ID>ReturnCount:BuiltinLinuxBridge.kt$BuiltinLinuxBridge$private suspend fun idleStatus( method: String, arguments: Map&lt;String, Any?&gt;, timeout: Duration = 8.seconds, ): Outcome&lt;RuntimeStatus&gt;</ID>
+    <ID>ReturnCount:BuiltinLinuxBridge.kt$BuiltinLinuxBridge$private suspend fun startWith( method: String, script: String, port: Int, restoreRecipe: RestoreRecipe?, expectedGeneration: Long?, ): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:BuiltinLinuxBridge.kt$BuiltinLinuxBridge$public suspend fun remove(alsoDeleteProjects: Boolean = false, confirmationName: String? = null): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:BuiltinLinuxBridge.kt$BuiltinLinuxBridge$public suspend fun setChatWorkLease(leaseId: String, on: Boolean, hold: Duration = 10.minutes): Outcome&lt;WorkLeaseStatus&gt;</ID>
+    <ID>ReturnCount:BuiltinLinuxBridge.kt$BuiltinLinuxBridge$public suspend fun setPhoneAgentChatWorkLease( profileId: String, leaseId: String, on: Boolean, hold: Duration = 15.minutes, ): Outcome&lt;WorkLeaseStatus&gt;</ID>
+    <ID>ReturnCount:BuiltinLinuxBridge.kt$BuiltinLinuxBridge$public suspend fun status(): Outcome&lt;RuntimeStatus&gt;</ID>
+    <ID>ReturnCount:BuiltinLinuxBridge.kt$BuiltinLinuxBridge.Companion$public fun managesServerUrl(value: String?): Boolean</ID>
+    <ID>ReturnCount:BuiltinScripts.kt$BuiltinScripts$public fun installOpenCodeScript( runtime: OpenCodeRuntime = OpenCodeRuntime.DefaultForNewInstall, version: String? = null, ): Outcome&lt;String&gt;</ID>
+    <ID>ReturnCount:BuiltinScripts.kt$BuiltinScripts$public fun scriptLabel(script: String): String</ID>
+    <ID>ReturnCount:BuiltinScripts.kt$BuiltinScripts$public fun serverScript( runtime: OpenCodeRuntime = OpenCodeRuntime.DefaultForNewInstall, port: Int = BuiltinLinuxBridge.SERVER_PORT, ): Outcome&lt;String&gt;</ID>
+    <ID>ReturnCount:CommandNames.kt$CommandNames$public fun serverName(command: String): String</ID>
+    <ID>ReturnCount:ComponentRemoval.kt$ComponentRemoval$private fun dependsOn( component: RemovableComponent, id: String, seen: MutableSet&lt;String&gt;, ): Boolean</ID>
+    <ID>ReturnCount:ComponentRemoval.kt$ComponentRemoval$private suspend fun presenceOf(component: RemovableComponent): ComponentPresence</ID>
+    <ID>ReturnCount:ComponentRemoval.kt$ComponentRemoval$private suspend fun setupBlock(): ComponentRemovalBlock?</ID>
+    <ID>ReturnCount:ComponentRemoval.kt$ComponentRemoval$public suspend fun freedBytes(id: String, timeout: Duration = SIZE_TIMEOUT): Long?</ID>
+    <ID>ReturnCount:ComponentRemoval.kt$ComponentRemoval$public suspend fun inventory(): ImmutableList&lt;ComponentRemovalEntry&gt;</ID>
+    <ID>ReturnCount:ComponentRemoval.kt$ComponentRemoval$public suspend fun remove(id: String): RemovalResult</ID>
+    <ID>ReturnCount:ComponentRemovalTest.kt$ComponentRemovalTest.FakeLinux$override suspend fun run(script: String, timeout: Duration): Outcome&lt;ShellResult&gt;</ID>
+    <ID>ReturnCount:DetectedDevServers.kt$DetectedDevServers$private fun inProject(s: DetectedServer): Boolean</ID>
+    <ID>ReturnCount:DetectedDevServers.kt$DetectedDevServers$private suspend fun scan(at: Int, epoch: Int)</ID>
+    <ID>ReturnCount:DetectedDevServers.kt$DetectedDevServers$private suspend fun stopIn(server: DetectedServer): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:DetectedDevServers.kt$DetectedDevServers$public suspend fun readLog(server: DetectedServer): Outcome&lt;String&gt;</ID>
+    <ID>ReturnCount:DetectedDevServers.kt$DetectedDevServers$public suspend fun stop(server: DetectedServer): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:DetectedDevServers.kt$DetectedServer.Companion$public fun nameFor(command: String): String</ID>
+    <ID>ReturnCount:DetectedDevServers.kt$PhoneScan$private fun hostOf(address: String): String</ID>
+    <ID>ReturnCount:DetectedDevServers.kt$PhoneScan$public fun runnerFor( serverAddress: String?, linuxSupported: Boolean, linux: PhoneScriptRunner, transientTransport: Boolean = false, ): PhoneScriptRunner?</ID>
+    <ID>ReturnCount:DetectedDevelopmentServers.kt$DefaultDetectedDevelopmentServers$private fun nameFor(command: String): String</ID>
+    <ID>ReturnCount:DetectedDevelopmentServers.kt$DefaultDetectedDevelopmentServers$private suspend fun shellTail( gateway: ManagedShellGateway, id: String, limit: Int, admitted: Long, ): Outcome&lt;String&gt;</ID>
+    <ID>ReturnCount:DetectedDevelopmentServers.kt$DefaultDetectedDevelopmentServers$private suspend fun stopShell( server: DetectedDevelopmentServer, admitted: Long, ): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:DevelopmentFailureReports.kt$DevelopmentFailureReports$private fun decode(raw: String?): List&lt;DevelopmentService&gt;?</ID>
+    <ID>ReturnCount:DevelopmentFailureReports.kt$DevelopmentFailureReports$public suspend fun capture( saved: String?, current: () -&gt; Boolean, inspect: suspend (id: String, directory: String, workspace: String?) -&gt; Outcome&lt;ServerShell?&gt;?, output: suspend (id: String, directory: String, workspace: String?) -&gt; Outcome&lt;ServerOutput&gt;?, redact: (String) -&gt; String, ): List&lt;FailedServiceReport&gt;</ID>
+    <ID>ReturnCount:DevelopmentService.kt$DevelopmentServiceJson$fun decode(element: JsonElement): DevelopmentService?</ID>
+    <ID>ReturnCount:DevelopmentServiceStore.kt$DevelopmentServiceStore$public suspend fun load(): Outcome&lt;List&lt;DevelopmentService&gt;&gt;</ID>
+    <ID>ReturnCount:DevelopmentServices.kt$DevelopmentServices$private suspend fun gateway(gen: Int): Step&lt;ManagedShellGateway&gt;</ID>
+    <ID>ReturnCount:DevelopmentServices.kt$DevelopmentServices$private suspend fun reconcile(service: DevelopmentService, gateway: ManagedShellGateway, gen: Int): Step&lt;ManagedShell?&gt;</ID>
+    <ID>ReturnCount:DevelopmentServices.kt$DevelopmentServices$private suspend fun reconcile(service: DevelopmentService, port: ManagedShellPort, at: Int): ManagedShell?</ID>
+    <ID>ReturnCount:DevelopmentServices.kt$DevelopmentServices$private suspend fun startRun(id: String, gen: Int): ServiceError?</ID>
+    <ID>ReturnCount:DevelopmentServices.kt$DevelopmentServices$private suspend fun stopRun(id: String, gen: Int): ServiceError?</ID>
+    <ID>ReturnCount:DevelopmentServices.kt$DevelopmentServices$public fun failedReport(id: String): FailedServiceReport?</ID>
+    <ID>ReturnCount:DevelopmentServices.kt$DevelopmentServices$public fun status(service: DevelopmentService): DevelopmentServiceStatus</ID>
+    <ID>ReturnCount:FailedServiceReport.kt$FailedServiceReport.Companion$public fun of( service: DevelopmentService, shell: ManagedShell, logTail: String, redact: (String) -&gt; String, ): FailedServiceReport?</ID>
+    <ID>ReturnCount:FailedSetupReport.kt$FailedSetupReport.Companion$public fun from( job: SetupJobRecord, redact: (String) -&gt; String, componentId: String? = null, ): FailedSetupReport?</ID>
+    <ID>ReturnCount:FakeLinuxHost.kt$FakeJournal$override suspend fun activate(): Outcome&lt;String&gt;</ID>
+    <ID>ReturnCount:FakeLinuxHost.kt$FakeLinuxHost$override suspend fun launch(profile: ProfileId, mode: LaunchMode): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:FakeSetupHost.kt$FakeSetupHost$override suspend fun runCheck(script: String, agentUser: Boolean): Outcome&lt;SetupCheckRun&gt;</ID>
+    <ID>ReturnCount:FakeSetupHost.kt$FakeSetupHost$override suspend fun setupStatus(): Outcome&lt;String?&gt;</ID>
+    <ID>ReturnCount:HealingFakes.kt$FakeHealingHost$override suspend fun launch(profile: ProfileId, mode: LaunchMode): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:HeatPausable.kt$HeatHoldCodec$public fun decode(id: String, raw: String): HeatHold?</ID>
+    <ID>ReturnCount:HeatTier.kt$HeatTierPolicy$public fun decide( thermal: ThermalReading, batteryLevel: Int? = null, charging: Boolean? = null, hidden: Boolean = false, fullSpeed: Boolean = false, powerSave: Boolean = false, ): HeatTier</ID>
+    <ID>ReturnCount:IdleResume.kt$IdleResume$private suspend fun steps(owner: String, at: Int): Boolean?</ID>
+    <ID>ReturnCount:IdleResume.kt$IdleResume$public suspend fun check()</ID>
+    <ID>ReturnCount:InAppServerForgetting.kt$InAppServerForgetting$private fun owns(key: String, id: String, longer: List&lt;String&gt;): Boolean</ID>
+    <ID>ReturnCount:InAppServerForgetting.kt$InAppServerForgetting$private suspend fun forget(profile: LocalProfile): ForgetProblem?</ID>
+    <ID>ReturnCount:InstallerAdmission.kt$InstallerAdmission$public fun reclaim( claim: Claim, ownerCurrent: () -&gt; Boolean, readTicket: () -&gt; InstallerTicket?, quiescent: (InstallerTicket) -&gt; Outcome&lt;Boolean&gt;, clearTicket: (InstallerTicket) -&gt; Outcome&lt;Boolean&gt;, ): Outcome&lt;Boolean&gt;</ID>
+    <ID>ReturnCount:InstallerAdmission.kt$InstallerSlot$private fun observe(launched: InstallerLaunch, nonce: String): Outcome&lt;Unit&gt;?</ID>
+    <ID>ReturnCount:InstallerAdmission.kt$InstallerSlot$public fun finish(launch: InstallerLaunch): InstallerFinish</ID>
+    <ID>ReturnCount:InstallerAdmission.kt$InstallerSlot$public fun reclaimDeadInstaller(): Outcome&lt;Boolean&gt;</ID>
+    <ID>ReturnCount:InstallerAdmission.kt$InstallerSlot$public fun startInstaller( script: String, targets: Set&lt;InstallerTarget&gt;, operation: InstallerOperation, agentUser: Boolean, ): Outcome&lt;InstallerLaunch&gt;</ID>
+    <ID>ReturnCount:InstallerAdmission.kt$InstallerSlot$public suspend fun admitCheck( script: String, timeoutMillis: Long, began: Long, agentUser: Boolean, ): Outcome&lt;InstallerLaunch&gt;</ID>
+    <ID>ReturnCount:InstallerAdmission.kt$InstallerSlot$public suspend fun monitor(launched: InstallerLaunch, nonce: String, committed: InstallerTicket)</ID>
+    <ID>ReturnCount:KeptServices.kt$KeptServiceDef$public fun invalid(others: List&lt;KeptServiceDef&gt;, new: Boolean): KeptField?</ID>
+    <ID>ReturnCount:KeptServices.kt$KeptServiceDef.Companion$public fun decode(name: String, text: String): KeptServiceDef?</ID>
+    <ID>ReturnCount:LeftoverNotice.kt$DurationWords.Companion$public fun of(seconds: Long): DurationWords</ID>
+    <ID>ReturnCount:LeftoverNotice.kt$RunawayWatch$public fun notice(processes: List&lt;LeftoverProcess&gt;): RunawayNotice?</ID>
+    <ID>ReturnCount:LifecycleReport.kt$LifecycleReportController$public suspend fun refresh()</ID>
+    <ID>ReturnCount:LinuxLocalStorage.kt$LinuxLocalStorage.Companion$public fun normalize(path: String): String?</ID>
+    <ID>ReturnCount:LinuxProcesses.kt$LinuxProcessScan.Companion$private fun fromStat( pid: Int, stat: String, cmdline: String, uptime: Double?, selfStart: Long?, ): LinuxProcess?</ID>
+    <ID>ReturnCount:LinuxProcesses.kt$LinuxProcessScan.Companion$private fun isForeign(p: LinuxProcess): Boolean</ID>
+    <ID>ReturnCount:LinuxVitals.kt$public fun parseMemAvailable(text: String): Long?</ID>
+    <ID>ReturnCount:ListeningPorts.kt$ListeningPorts$public fun parseSocketLine(line: String): ListeningSocket?</ID>
+    <ID>ReturnCount:ListeningPorts.kt$ListeningPorts$public fun regularFileOrNull(target: String?): String?</ID>
+    <ID>ReturnCount:ManagedConnectGate.kt$ManagedConnectGate$public suspend fun connect( profile: LocalProfile, buildTransport: () -&gt; ConnectTransport, probe: suspend () -&gt; ProbeVerdict, redetect: Boolean = true, ): ConnectVerdict</ID>
+    <ID>ReturnCount:ManagedLocalServer.kt$ManagedLocalServer$private fun parse(value: String?): Pair&lt;String, Int&gt;?</ID>
+    <ID>ReturnCount:ManagedRuntimeSwitch.kt$ManagedRuntimeSwitch$private fun knownWork(): SwitchBlock?</ID>
+    <ID>ReturnCount:ManagedRuntimeSwitch.kt$ManagedRuntimeSwitch$public suspend fun prepare(): SwitchResult</ID>
+    <ID>ReturnCount:ManagedRuntimeSwitchTest.kt$ManagedRuntimeSwitchTest.World$override suspend fun suspendForProfile(profileId: String): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:ManagedShell.kt$ManagedShellWire$public fun decode(json: JsonObject): ManagedShell?</ID>
+    <ID>ReturnCount:NativeRecoveryChannel.kt$NativeRecoveryChannel$override suspend fun invoke(method: String, arguments: Map&lt;String, Any?&gt;?): ChannelReply</ID>
+    <ID>ReturnCount:OpenCodeUpdate.kt$OpenCodeAutoUpdateRule$public fun shouldUpdate( installedVersion: String?, pinnedVersion: String, busy: Boolean, engineRunning: Boolean, switchPending: Boolean, installProblem: Boolean, attemptedThisRun: Boolean, ): Boolean</ID>
+    <ID>ReturnCount:OpenCodeUpdate.kt$OpenCodeAutoUpdater$public suspend fun changed()</ID>
+    <ID>ReturnCount:OpenCodeUpdate.kt$OpenCodeUpdateRestart$public suspend fun afterInstall(target: StartTarget, idle: () -&gt; Boolean): UpdateRestartResult</ID>
+    <ID>ReturnCount:PhoneAutoStart.kt$StarterAutoStart$override suspend fun autoStartIfStopped(profile: ProfileId, mayStart: () -&gt; Boolean): Boolean</ID>
+    <ID>ReturnCount:PhoneBudgetFiles.kt$PhoneBudgetFiles$public fun settings(current: String, fullSpeed: Boolean): String?</ID>
+    <ID>ReturnCount:PhoneHostRuntime.kt$PhoneHostRuntime.TermuxInstallation.Companion$public fun parse(output: String): TermuxInstallation?</ID>
+    <ID>ReturnCount:PhoneServerHealing.kt$PhoneServerHealing$private fun observeAgentWork(force: Boolean = false)</ID>
+    <ID>ReturnCount:PhoneServerHealing.kt$PhoneServerHealing$private suspend fun claimProfile(profile: HealingProfile): Boolean</ID>
+    <ID>ReturnCount:PhoneServerHealing.kt$PhoneServerHealing$private suspend fun launchAdmission(profile: HealingProfile): Long?</ID>
+    <ID>ReturnCount:PhoneServerHealing.kt$PhoneServerHealing$private suspend fun launchStart(profile: HealingProfile)</ID>
+    <ID>ReturnCount:PhoneServerHealing.kt$PhoneServerHealing$private suspend fun launchStartWanted(profile: HealingProfile): Boolean</ID>
+    <ID>ReturnCount:PhoneServerHealing.kt$PhoneServerHealing$private suspend fun recoveryChanged(phase: RecoveryPhase, profile: HealingProfile?)</ID>
+    <ID>ReturnCount:PhoneServerHealing.kt$PhoneServerHealing$public suspend fun check(profile: HealingProfile)</ID>
+    <ID>ReturnCount:PhoneServerHealing.kt$PhoneServerHealing$public suspend fun connectIfNeeded(profile: HealingProfile, automatic: Boolean = true)</ID>
+    <ID>ReturnCount:PhoneServerStarter.kt$PhoneServerStarter$public suspend fun start( target: StartTarget, mode: LaunchMode = LaunchMode.Manual, migrateLegacyHistory: Boolean = false, stillWanted: () -&gt; Boolean = { true }, ): StartFailure?</ID>
+    <ID>ReturnCount:PhoneSetupFinisher.kt$PhoneSetupFinisher$override suspend fun finish(request: SetupFinishRequest): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:PhoneStorageFolders.kt$PhoneStorageFolders$public suspend fun list(path: String): Outcome&lt;List&lt;PhoneFolderEntry&gt;&gt;</ID>
+    <ID>ReturnCount:PhoneStorageFolders.kt$PhoneStorageFolders.Companion$public fun normalize(path: String): String?</ID>
+    <ID>ReturnCount:ProcessBudget.kt$ProcessBudget$public fun decide( job: HeavyJob, running: Int, limitLifted: Boolean, thermal: ThermalReading = ThermalReading.Unknown, battery: BatteryReading = BatteryReading.Unknown, fullSpeed: Boolean = false, ): BudgetWait?</ID>
+    <ID>ReturnCount:ProcessBudgetGuard.kt$ProcessBudgetGuard$public suspend fun admit(job: HeavyJob): BudgetAdmission</ID>
+    <ID>ReturnCount:ProjectFolders.kt$PhoneFolderLocations$public suspend fun rootfs(): String?</ID>
+    <ID>ReturnCount:ProjectFolders.kt$ProjectFolders$private suspend fun hostPath(root: String, ubuntuPath: String): HostPath</ID>
+    <ID>ReturnCount:ProjectFolders.kt$ProjectFolders$private suspend fun listFromFiles(ubuntuPath: String): Outcome&lt;List&lt;FolderEntry&gt;&gt;</ID>
+    <ID>ReturnCount:ProjectFolders.kt$ProjectFolders$public suspend fun hostDirectory(path: String): String?</ID>
+    <ID>ReturnCount:ProjectFolders.kt$ProjectFolders$public suspend fun list(path: String): Outcome&lt;List&lt;FolderEntry&gt;&gt;</ID>
+    <ID>ReturnCount:ProjectFolders.kt$ProjectFolders.Companion$public fun normalize(path: String): String?</ID>
+    <ID>ReturnCount:ProjectRemoval.kt$ProjectStorage.Companion$public fun fromReply(reply: Any?): ProjectStorage?</ID>
+    <ID>ReturnCount:RecoveryBudget.kt$RecoveryBudget.Companion$public fun readJson(raw: String?): RecoveryBudget?</ID>
+    <ID>ReturnCount:RecoveryBudget.kt$RecoveryBudget.Companion$public fun readMap(value: Any?): RecoveryBudget?</ID>
+    <ID>ReturnCount:RunningWords.kt$public fun runningNameKind(p: RunningProcess): RunningNameKind?</ID>
+    <ID>ReturnCount:RunningWords.kt$public fun runningRowStatus(reading: RunningReading): RunningRowStatus?</ID>
+    <ID>ReturnCount:ServerRecovery.kt$ServerRecovery$private suspend fun run(phone: HealingProfile, gen: Int, manual: () -&gt; Boolean)</ID>
+    <ID>ReturnCount:ServerRecovery.kt$ServerRecovery$public suspend fun check(phone: HealingProfile?)</ID>
+    <ID>ReturnCount:ServerRestartBudget.kt$ServerRestartBudget$private suspend fun checkOnce(profile: ProfileId, at: Int): Boolean</ID>
+    <ID>ReturnCount:ServerRestartBudget.kt$ServerRestartBudget$private suspend fun confirm(profile: ProfileId, budget: RecoveryBudget, at: Int): Boolean</ID>
+    <ID>ReturnCount:ServerRestartBudget.kt$ServerRestartBudget$private suspend fun confirmRunning(profile: ProfileId, start: RecoveryBudget, at: Int): Boolean</ID>
+    <ID>ReturnCount:ServerRestartBudget.kt$ServerRestartBudget$private suspend fun migrate(profile: ProfileId, at: Int): RecoveryBudget?</ID>
+    <ID>ReturnCount:ServerRestartBudget.kt$ServerRestartBudget$private suspend fun recordConfirmation(profile: ProfileId, budget: RecoveryBudget): RecoveryBudget?</ID>
+    <ID>ReturnCount:ServerRestartBudget.kt$ServerRestartBudget$private suspend fun resetForPresence(profile: ProfileId, budget: RecoveryBudget, at: Int)</ID>
+    <ID>ReturnCount:ServerRestartBudget.kt$ServerRestartBudget$public suspend fun check(profile: ProfileId?)</ID>
+    <ID>ReturnCount:ServiceLifetime.kt$ServiceLifetimes$public fun read(performance: Any?): List&lt;NamedServiceLifetime&gt;</ID>
+    <ID>ReturnCount:SetupAudit.kt$SetupAudit$public fun records(): ImmutableList&lt;SetupAuditRecord&gt;?</ID>
+    <ID>ReturnCount:SetupEngine.kt$SetupEngine$private suspend fun checkComponents( job: List&lt;SetupComponent&gt;, requireComplete: Boolean, ): Checks</ID>
+    <ID>ReturnCount:SetupEngine.kt$SetupEngine$private suspend fun read(): Outcome&lt;SetupJobRecord?&gt;</ID>
+    <ID>ReturnCount:SetupEngine.kt$SetupEngine$private suspend fun start(ids: Set&lt;String&gt;, params: Map&lt;String, Map&lt;String, String&gt;&gt;)</ID>
+    <ID>ReturnCount:SetupEngine.kt$SetupEngine$public suspend fun restore(): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:SetupEngine.kt$SetupEngine$public suspend fun run( ids: Set&lt;String&gt;, params: Map&lt;String, Map&lt;String, String&gt;&gt; = emptyMap(), )</ID>
+    <ID>ReturnCount:SetupInspectionController.kt$SetupInspectionController$public suspend fun refresh(): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:SetupJob.kt$SetupJobRecord.Companion$public fun parse(text: String?): SetupJobRecord?</ID>
+    <ID>ReturnCount:SetupJobEngine.kt$SetupJobEngine$public suspend fun poll()</ID>
+    <ID>ReturnCount:SetupJobEngine.kt$SetupJobEngine$public suspend fun run(ids: Set&lt;String&gt;, params: JobParams = emptyMap())</ID>
+    <ID>ReturnCount:SetupJobRecord.kt$SetupJobRecord.Companion$public fun parse(text: String?): SetupJobRecord?</ID>
+    <ID>ReturnCount:SetupMessages.kt$SetupMessages$private fun whole(message: String): SetupMessage.Known?</ID>
+    <ID>ReturnCount:SetupPlanning.kt$SetupPlanning$private fun fraction(progress: ComponentProgress, floors: MutableMap&lt;String, Double&gt;?): Double</ID>
+    <ID>ReturnCount:SetupPlanning.kt$SetupPlanning$public fun describeFailure( failed: SetupJobComponent, logTail: String, title: String, step: Boolean = false, ): Pair&lt;SetupError, SetupError&gt;</ID>
+    <ID>ReturnCount:SetupPlanning.kt$SetupPlanning$public fun estimateEta( components: List&lt;SetupComponent&gt;, progress: List&lt;ComponentProgress&gt;, overall: Double, elapsedMillis: Long, minimumMillis: Long = 10_000, ): Int?</ID>
+    <ID>ReturnCount:SetupPreflight.kt$SetupPreflight$public fun check(device: SetupDeviceInfo, downloadBytes: Long, installedBytes: Long? = null): SetupPreflightResult</ID>
+    <ID>ReturnCount:SetupRegistry.kt$SetupRegistry$public suspend fun refresh(query: String? = null): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:SetupRegistryStore.kt$SetupRegistryStore$public fun load()</ID>
+    <ID>ReturnCount:SetupRegistryStore.kt$SetupRegistryStore$public suspend fun refresh(online: Boolean, query: String? = null): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:ShellOutput.kt$ShellOutput$public suspend fun refresh(): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:ThermalPolicy.kt$ThermalPolicy$public fun decide(reading: ThermalReading, now: Instant, enabled: Boolean): ThermalAction</ID>
+    <ID>ReturnCount:UbuntuHostScript.kt$UbuntuHostScript$private fun compareVersions(a: String, b: String): Int</ID>
+    <ID>SwallowedException:BuiltinLinuxBridge.kt$BuiltinLinuxBridge$e: CancellationException</ID>
+    <ID>SwallowedException:PhoneSetupRegistry.kt$PhoneSetupRegistry.Companion$e: IllegalArgumentException</ID>
+    <ID>SwallowedException:RecoveryBudget.kt$RecoveryBudget.Companion$e: IllegalArgumentException</ID>
+    <ID>TooGenericExceptionCaught:BuiltinLinuxBridge.kt$BuiltinLinuxBridge$e: Throwable</ID>
+    <ID>TooManyFunctions:AgentWorkLease.kt$AgentWorkLease</ID>
+    <ID>TooManyFunctions:BuiltinLinuxBridge.kt$BuiltinLinuxBridge</ID>
+    <ID>TooManyFunctions:BuiltinScripts.kt$BuiltinScripts</ID>
+    <ID>TooManyFunctions:DetectedDevServers.kt$DetectedDevServers</ID>
+    <ID>TooManyFunctions:DetectedDevelopmentServers.kt$DefaultDetectedDevelopmentServers : DetectedDevelopmentServers</ID>
+    <ID>TooManyFunctions:DevelopmentServices.kt$DevelopmentServices</ID>
+    <ID>TooManyFunctions:HealingPorts.kt$HealingConnection</ID>
+    <ID>TooManyFunctions:ListeningPorts.kt$ListeningPorts</ID>
+    <ID>TooManyFunctions:PhoneServerHealing.kt$PhoneServerHealing</ID>
+    <ID>TooManyFunctions:RemoteTerminals.kt$RemoteTerminals</ID>
+    <ID>TooManyFunctions:ServerRecovery.kt$ServerRecovery</ID>
+    <ID>TooManyFunctions:ServerRestartBudget.kt$ServerRestartBudget</ID>
+    <ID>TooManyFunctions:SetupEngine.kt$SetupEngine</ID>
+    <ID>TooManyFunctions:SetupJobEngine.kt$SetupJobEngine</ID>
+    <ID>TooManyFunctions:SetupPlanning.kt$SetupPlanning</ID>
+    <ID>TooManyFunctions:SetupRegistryStore.kt$SetupRegistryStore</ID>
+    <ID>TooManyFunctions:ThermalGuard.kt$ThermalGuard</ID>
+    <ID>UseCheckOrError:ComponentRemovalTest.kt$ComponentRemovalTest$throw IllegalStateException("Removal failed after deleting files")</ID>
+    <ID>UseCheckOrError:ComponentRemovalTest.kt$ComponentRemovalTest.FakeLinux$throw IllegalStateException("Inventory unavailable")</ID>
+    <ID>UseCheckOrError:ComponentRemovalTest.kt$ComponentRemovalTest.FakeLinux$throw IllegalStateException("Presence unavailable")</ID>
+    <ID>UseCheckOrError:ComponentRemovalTest.kt$ComponentRemovalTest.FakeLinux$throw IllegalStateException("Unexpected script")</ID>
+    <ID>UseCheckOrError:FakeSetupHost.kt$FakeSetupHost$throw IllegalStateException("the channel failed")</ID>
+    <ID>WildcardImport:DevelopmentFailureReports.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:SetupAudit.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:SetupRegistry.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:SetupRegistryStore.kt$import kotlinx.serialization.json.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

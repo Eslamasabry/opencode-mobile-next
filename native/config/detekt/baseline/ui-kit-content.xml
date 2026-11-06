@@ -1,0 +1,364 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:KitLogPanel.kt$live &amp;&amp; !paused &amp;&amp; following &amp;&amp; safe.isNotEmpty()</ID>
+    <ID>ComplexCondition:PdfLimits.kt$PdfLimits$png[12] != 'I'.code.toByte() || png[13] != 'H'.code.toByte() || png[14] != 'D'.code.toByte() || png[15] != 'R'.code.toByte()</ID>
+    <ID>ComplexCondition:PdfLimits.kt$PdfLimits$width &lt;= 0 || height &lt;= 0 || width &gt; MAX_SIDE_PX || height &gt; MAX_SIDE_PX</ID>
+    <ID>ComplexCondition:QrEncoder.kt$QrEncoder.Builder$(i == 0 &amp;&amp; j == 0) || (i == 0 &amp;&amp; j == n - 1) || (i == n - 1 &amp;&amp; j == 0)</ID>
+    <ID>CyclomaticComplexMethod:AndroidRemoteTerminalView.kt$AndroidRemoteTerminalView$public fun key(key: String, control: Boolean, alt: Boolean)</ID>
+    <ID>CyclomaticComplexMethod:KitLogPanel.kt$@Composable public fun KitLogPanel( redactedText: String, modifier: Modifier = Modifier, live: Boolean = true, )</ID>
+    <ID>CyclomaticComplexMethod:KitTerminalKeyBar.kt$@Composable private fun TerminalKeyCap( key: KitTerminalBarKey, latched: Boolean?, onTap: (() -&gt; Unit)?, disabledReason: String, calm: Boolean, modifier: Modifier = Modifier, )</ID>
+    <ID>CyclomaticComplexMethod:KitTerminalKeyBar.kt$@Composable private fun keyLabel(key: KitTerminalBarKey): String</ID>
+    <ID>CyclomaticComplexMethod:KitTerminalKeyBar.kt$@Composable public fun TerminalKeyBar( controller: TerminalKeyBarController, onKey: (key: KitTerminalBarKey, ctrl: Boolean, alt: Boolean) -&gt; Unit, modifier: Modifier = Modifier, enabled: Boolean = true, // F: lib/ui/kit/terminal_key_bar.dart:234 compact: Boolean = false, // F: lib/ui/kit/terminal_key_bar.dart:235 interruptKeys: Boolean = false, // F: lib/ui/kit/terminal_key_bar.dart:236 singleRow: Boolean = false, // F: lib/ui/kit/terminal_key_bar.dart:237 disabledReason: String? = null, // F: lib/ui/kit/terminal_key_bar.dart:238 safeArea: Boolean = false, // F: lib/ui/kit/terminal_key_bar.dart:239 )</ID>
+    <ID>CyclomaticComplexMethod:KitTerminalKeyBar.kt$public fun terminalBarKeyInput( key: KitTerminalBarKey, ctrl: Boolean = false, alt: Boolean = false, applicationCursorKeys: Boolean = false, ): String?</ID>
+    <ID>CyclomaticComplexMethod:KitViewerDocument.kt$@Composable public fun KitViewerDocument( source: String, modifier: Modifier = Modifier, code: Boolean = false, initialLine: Int? = null, formatted: (@Composable () -&gt; Unit)? = null, lineContent: (@Composable (AnnotatedString, Modifier, Boolean) -&gt; Unit)? = null, )</ID>
+    <ID>CyclomaticComplexMethod:PdfLimits.kt$PdfLimits$public fun checkReply(png: ByteArray, width: Int, height: Int, page: Int, askedPage: Int, pageCount: Int): PdfCheck</ID>
+    <ID>CyclomaticComplexMethod:TerminalTranscript.kt$TerminalTranscript$private fun normal(rune: Int, out: StringBuilder): Int</ID>
+    <ID>EmptyFunctionBlock:ContentFakes.kt$ContentFakePlatform${}</ID>
+    <ID>LongMethod:AndroidKitTerminalSlot.kt$AndroidKitTerminalSlot$@Composable override fun Live(platformView: Any, modifier: Modifier)</ID>
+    <ID>LongMethod:KitLogPanel.kt$@Composable public fun KitLogPanel( redactedText: String, modifier: Modifier = Modifier, live: Boolean = true, )</ID>
+    <ID>LongMethod:KitTerminalKeyBar.kt$@Composable private fun TerminalKeyCap( key: KitTerminalBarKey, latched: Boolean?, onTap: (() -&gt; Unit)?, disabledReason: String, calm: Boolean, modifier: Modifier = Modifier, )</ID>
+    <ID>LongMethod:KitTerminalKeyBar.kt$@Composable public fun TerminalKeyBar( controller: TerminalKeyBarController, onKey: (key: KitTerminalBarKey, ctrl: Boolean, alt: Boolean) -&gt; Unit, modifier: Modifier = Modifier, enabled: Boolean = true, // F: lib/ui/kit/terminal_key_bar.dart:234 compact: Boolean = false, // F: lib/ui/kit/terminal_key_bar.dart:235 interruptKeys: Boolean = false, // F: lib/ui/kit/terminal_key_bar.dart:236 singleRow: Boolean = false, // F: lib/ui/kit/terminal_key_bar.dart:237 disabledReason: String? = null, // F: lib/ui/kit/terminal_key_bar.dart:238 safeArea: Boolean = false, // F: lib/ui/kit/terminal_key_bar.dart:239 )</ID>
+    <ID>LongMethod:KitTerminalKeybar.kt$@Composable internal fun TerminalKeyBarSingleRow( keys: List&lt;KitTerminalBarKey&gt;, height: Dp, inset: Dp, key: @Composable (KitTerminalBarKey) -&gt; Unit, )</ID>
+    <ID>LongMethod:KitTerminalView.kt$@Composable public fun KitTerminalAccessible( transcript: String, onSend: (String) -&gt; Unit, words: KitTerminalWords, modifier: Modifier = Modifier, inputEnabled: Boolean = true, )</ID>
+    <ID>LongMethod:KitViewerDocument.kt$@Composable public fun KitViewerDocument( source: String, modifier: Modifier = Modifier, code: Boolean = false, initialLine: Int? = null, formatted: (@Composable () -&gt; Unit)? = null, lineContent: (@Composable (AnnotatedString, Modifier, Boolean) -&gt; Unit)? = null, )</ID>
+    <ID>LongMethod:TerminalTranscript.kt$TerminalTranscript$@Suppress("CyclomaticComplexMethod") private fun strip(chunk: String): String</ID>
+    <ID>LongParameterList:KitImageView.kt$( name: String, modifier: Modifier = Modifier, image: KitImageSource? = null, icon: ImageVector? = null, size: KitAvatarSize = KitAvatarSize.Tile, decorative: Boolean = false, optionalImage: Boolean = false, )</ID>
+    <ID>LongParameterList:KitImageView.kt$( source: KitImageSource, semanticsLabel: String?, modifier: Modifier = Modifier, fit: KitImageFit = KitImageFit.Contain, shape: KitShapeId = KitShapeId.Square, width: Dp? = null, height: Dp? = null, fallback: (@Composable () -&gt; Unit)? = null, )</ID>
+    <ID>LongParameterList:KitTerminalKeyBar.kt$( controller: TerminalKeyBarController, onKey: (key: KitTerminalBarKey, ctrl: Boolean, alt: Boolean) -&gt; Unit, modifier: Modifier = Modifier, enabled: Boolean = true, // F: lib/ui/kit/terminal_key_bar.dart:234 compact: Boolean = false, // F: lib/ui/kit/terminal_key_bar.dart:235 interruptKeys: Boolean = false, // F: lib/ui/kit/terminal_key_bar.dart:236 singleRow: Boolean = false, // F: lib/ui/kit/terminal_key_bar.dart:237 disabledReason: String? = null, // F: lib/ui/kit/terminal_key_bar.dart:238 safeArea: Boolean = false, // F: lib/ui/kit/terminal_key_bar.dart:239 )</ID>
+    <ID>LongParameterList:KitTerminalKeyBar.kt$( key: KitTerminalBarKey, latched: Boolean?, onTap: (() -&gt; Unit)?, disabledReason: String, calm: Boolean, modifier: Modifier = Modifier, )</ID>
+    <ID>LongParameterList:KitTerminalKeyBar.kt$( role: SurfaceRole, level: SurfaceLevel, radiusDp: Float, ownFill: Color?, color: Color?, selected: Boolean, pressed: Boolean, )</ID>
+    <ID>LongParameterList:KitTerminalView.kt$( platformView: Any?, title: String, transcript: String, accessibleMode: Boolean?, onAccessibleModeChange: (Boolean) -&gt; Unit, onSend: (String) -&gt; Unit, words: KitTerminalWords, modifier: Modifier = Modifier, inputEnabled: Boolean = true, defaultKeyBar: Boolean = true, /** False when the host exposes this choice in its visible terminal menu, as Flutter does. */ showAccessibleSwitch: Boolean = true, above: @Composable ColumnScope.() -&gt; Unit = {}, )</ID>
+    <ID>LongParameterList:KitViewerBytes.kt$( page: Int, pageCount: Int, png: ByteArray?, failed: Boolean, modifier: Modifier = Modifier, failedReason: String? = null, onRetry: (() -&gt; Unit)? = null, )</ID>
+    <ID>LongParameterList:KitViewerDocument.kt$( source: String, modifier: Modifier = Modifier, code: Boolean = false, initialLine: Int? = null, formatted: (@Composable () -&gt; Unit)? = null, lineContent: (@Composable (AnnotatedString, Modifier, Boolean) -&gt; Unit)? = null, )</ID>
+    <ID>LongParameterList:KitViewerFrame.kt$( name: String, modifier: Modifier = Modifier, path: String? = null, primary: KitViewerAction? = null, secondary: KitViewerAction? = null, onClose: (() -&gt; Unit)? = null, body: @Composable BoxScope.() -&gt; Unit, )</ID>
+    <ID>LongParameterList:PdfLimits.kt$PdfLimits$(png: ByteArray, width: Int, height: Int, page: Int, askedPage: Int, pageCount: Int)</ID>
+    <ID>MagicNumber:AndroidRemoteTerminalView.kt$AndroidRemoteTerminalView$0x20</ID>
+    <ID>MagicNumber:AndroidRemoteTerminalView.kt$AndroidRemoteTerminalView$0x3f</ID>
+    <ID>MagicNumber:AndroidRemoteTerminalView.kt$AndroidRemoteTerminalView$0x40</ID>
+    <ID>MagicNumber:AndroidRemoteTerminalView.kt$AndroidRemoteTerminalView$0x5f</ID>
+    <ID>MagicNumber:AndroidRemoteTerminalView.kt$AndroidRemoteTerminalView$0x60</ID>
+    <ID>MagicNumber:AndroidRemoteTerminalView.kt$AndroidRemoteTerminalView$0x61</ID>
+    <ID>MagicNumber:AndroidRemoteTerminalView.kt$AndroidRemoteTerminalView$0x7a</ID>
+    <ID>MagicNumber:AndroidRemoteTerminalView.kt$AndroidRemoteTerminalView$0x7f</ID>
+    <ID>MagicNumber:AndroidRemoteTerminalView.kt$AndroidRemoteTerminalView$1000</ID>
+    <ID>MagicNumber:AndroidRemoteTerminalView.kt$AndroidRemoteTerminalView$12</ID>
+    <ID>MagicNumber:AndroidRemoteTerminalView.kt$AndroidRemoteTerminalView$14</ID>
+    <ID>MagicNumber:AndroidRemoteTerminalView.kt$AndroidRemoteTerminalView$150</ID>
+    <ID>MagicNumber:AndroidRemoteTerminalView.kt$AndroidRemoteTerminalView$2000</ID>
+    <ID>MagicNumber:AndroidRemoteTerminalView.kt$AndroidRemoteTerminalView$24</ID>
+    <ID>MagicNumber:AndroidRemoteTerminalView.kt$AndroidRemoteTerminalView$5000</ID>
+    <ID>MagicNumber:AndroidRemoteTerminalView.kt$AndroidRemoteTerminalView$80</ID>
+    <ID>MagicNumber:AndroidRemoteTerminalView.kt$AndroidRemoteTerminalView.&lt;no name provided&gt;$1024</ID>
+    <ID>MagicNumber:KitDelimitedPreview.kt$200</ID>
+    <ID>MagicNumber:KitDelimitedPreview.kt$32</ID>
+    <ID>MagicNumber:KitTerminalKeyBar.kt$.72f</ID>
+    <ID>MagicNumber:KitTerminalKeyBar.kt$0x20</ID>
+    <ID>MagicNumber:KitTerminalKeyBar.kt$0x3f</ID>
+    <ID>MagicNumber:KitTerminalKeyBar.kt$0x40</ID>
+    <ID>MagicNumber:KitTerminalKeyBar.kt$0x5f</ID>
+    <ID>MagicNumber:KitTerminalKeyBar.kt$0x60</ID>
+    <ID>MagicNumber:KitTerminalKeyBar.kt$0x61</ID>
+    <ID>MagicNumber:KitTerminalKeyBar.kt$0x7a</ID>
+    <ID>MagicNumber:KitTerminalKeyBar.kt$0x7f</ID>
+    <ID>MagicNumber:KitTerminalKeybar.kt$0.5f</ID>
+    <ID>MagicNumber:KitTerminalKeybar.kt$1.5f</ID>
+    <ID>MagicNumber:KitTerminalLinks.kt$100_000</ID>
+    <ID>MagicNumber:KitTerminalLinks.kt$160</ID>
+    <ID>MagicNumber:KitViewerDocument.kt$3</ID>
+    <ID>MagicNumber:KitViewerSvgBody.kt$1440</ID>
+    <ID>MagicNumber:KitViewerTableBody.kt$100</ID>
+    <ID>MagicNumber:KitViewerTableBody.kt$240</ID>
+    <ID>MagicNumber:KitViewerTableBody.kt$40</ID>
+    <ID>MagicNumber:KitViewerTableBody.kt$8</ID>
+    <ID>MagicNumber:KitViewerTableBody.kt$96</ID>
+    <ID>MagicNumber:KitZoom.kt$100</ID>
+    <ID>MagicNumber:PdfLimits.kt$PdfLimits$0xFF</ID>
+    <ID>MagicNumber:PdfLimits.kt$PdfLimits$10</ID>
+    <ID>MagicNumber:PdfLimits.kt$PdfLimits$119</ID>
+    <ID>MagicNumber:PdfLimits.kt$PdfLimits$12</ID>
+    <ID>MagicNumber:PdfLimits.kt$PdfLimits$13</ID>
+    <ID>MagicNumber:PdfLimits.kt$PdfLimits$14</ID>
+    <ID>MagicNumber:PdfLimits.kt$PdfLimits$15</ID>
+    <ID>MagicNumber:PdfLimits.kt$PdfLimits$16</ID>
+    <ID>MagicNumber:PdfLimits.kt$PdfLimits$20</ID>
+    <ID>MagicNumber:PdfLimits.kt$PdfLimits$24</ID>
+    <ID>MagicNumber:PdfLimits.kt$PdfLimits$26</ID>
+    <ID>MagicNumber:PdfLimits.kt$PdfLimits$3</ID>
+    <ID>MagicNumber:PdfLimits.kt$PdfLimits$71</ID>
+    <ID>MagicNumber:PdfLimits.kt$PdfLimits$78</ID>
+    <ID>MagicNumber:PdfLimits.kt$PdfLimits$8</ID>
+    <ID>MagicNumber:PdfLimits.kt$PdfLimits$80</ID>
+    <ID>MagicNumber:PdfPageRasterizer.kt$PdfPageRasterizer$100</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$0b0100</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$0x11</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$0x11D</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$0xEC</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$0xFF</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$10</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$11</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$128</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$13</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$14</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$16</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$17</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$18</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$20</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$21</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$22</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$23</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$24</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$25</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$26</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$28</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$29</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$30</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$31</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$33</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$35</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$36</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$37</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$38</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$4</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$40</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$43</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$45</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$47</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$49</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$5</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$55</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$64</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$7</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$8</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder$9</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder.BitBuffer$7</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder.BitBuffer$8</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder.Builder$0x1F25</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder.Builder$0x537</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder.Builder$0x5412</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder.Builder$10</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder.Builder$11</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder.Builder$12</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder.Builder$14</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder.Builder$15</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder.Builder$18</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder.Builder$2</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder.Builder$3</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder.Builder$4</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder.Builder$5</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder.Builder$6</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder.Builder$7</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder.Builder$8</ID>
+    <ID>MagicNumber:QrEncoder.kt$QrEncoder.Builder$9</ID>
+    <ID>MagicNumber:QrRules.kt$QrRules$10</ID>
+    <ID>MagicNumber:QrRules.kt$QrRules$100.0</ID>
+    <ID>MagicNumber:QrRules.kt$QrRules$3</ID>
+    <ID>MagicNumber:QrRules.kt$QrRules$4</ID>
+    <ID>MagicNumber:QrRules.kt$QrRules$40</ID>
+    <ID>MagicNumber:QrRules.kt$QrRules$5</ID>
+    <ID>MagicNumber:QrRules.kt$QrRules$50</ID>
+    <ID>MagicNumber:QrRules.kt$QrRules$6</ID>
+    <ID>MagicNumber:QrRules.kt$QrRules$8</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$0x10000</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$0x3FF</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$0xD800</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$0xDC00</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$0xFFFF</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$10</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$TerminalTranscript$0x07</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$TerminalTranscript$0x09</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$TerminalTranscript$0x0a</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$TerminalTranscript$0x1b</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$TerminalTranscript$0x20</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$TerminalTranscript$0x30</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$TerminalTranscript$0x40</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$TerminalTranscript$0x50</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$TerminalTranscript$0x58</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$TerminalTranscript$0x5b</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$TerminalTranscript$0x5c</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$TerminalTranscript$0x5d</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$TerminalTranscript$0x5e</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$TerminalTranscript$0x5f</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$TerminalTranscript$0x7e</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$TerminalTranscript$0x7f</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$TerminalTranscript$0x80</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$TerminalTranscript$0x90</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$TerminalTranscript$0x98</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$TerminalTranscript$0x9b</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$TerminalTranscript$0x9c</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$TerminalTranscript$0x9d</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$TerminalTranscript$0x9e</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$TerminalTranscript$0x9f</ID>
+    <ID>MagicNumber:TerminalTranscript.kt$TerminalTranscript$0xFFFF</ID>
+    <ID>MagicNumber:ViewerText.kt$ViewerText$10</ID>
+    <ID>MagicNumber:ViewerText.kt$ViewerText$1024</ID>
+    <ID>MatchingDeclarationName:ContentScenes.kt$ContentWords</ID>
+    <ID>MatchingDeclarationName:KitPdfPage.kt$KitPdfPageState</ID>
+    <ID>MatchingDeclarationName:KitTerminalKeybar.kt$KitTerminalKeyChoice</ID>
+    <ID>MatchingDeclarationName:KitZoomControls.kt$KitZoomTags</ID>
+    <ID>MaxLineLength:ContentFakes.kt$QrFixtures$add(base + "x".repeat((len - base.length).coerceAtLeast(1)).mapIndexed { k, c -&gt; if (k % 7 == 0) 'a' + (k % 26) else c }.joinToString(""))</ID>
+    <ID>MaxLineLength:ContentGoldensTest.kt$ContentGoldensTest$*</ID>
+    <ID>MaxLineLength:ContentGoldensTest.kt$ContentGoldensTest.Companion$listOf(Variant(false, "en"), Variant(true, "en"), Variant(false, "ar"), Variant(true, "ar")).map { arrayOf(it) }</ID>
+    <ID>MaxLineLength:ContentPartsDesktopTest.kt$ContentPartsDesktopTest$KitViewerBinaryBody("application/zip", (2.4 * 1024 * 1024).toLong(), action = KitViewerAction("Save", { saved++ }))</ID>
+    <ID>MaxLineLength:ContentPartsDesktopTest.kt$ContentPartsDesktopTest$SemanticsMatcher.expectValue(SemanticsProperties.Text, listOf(androidx.compose.ui.text.AnnotatedString("⁦src/main/⁩")))</ID>
+    <ID>MaxLineLength:ContentPartsDesktopTest.kt$ContentPartsDesktopTest$node.assert(SemanticsMatcher.expectValue(SemanticsProperties.ContentDescription, listOf("QR code for this chat")))</ID>
+    <ID>MaxLineLength:ContentPartsDesktopTest.kt$ContentPartsDesktopTest$onNodeWithTag("${KIT_VIEWER_LINE_TAG}200").assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))</ID>
+    <ID>MaxLineLength:ContentScenes.kt$Column</ID>
+    <ID>MaxLineLength:ContentScenes.kt$ContentWords.Companion$prose = "Notes for the release.\n\nThe viewer keeps each paragraph in its own direction.\nA mixed line keeps its order: مرحبا."</ID>
+    <ID>MaxLineLength:FlutterCapture.kt$Layout</ID>
+    <ID>MaxLineLength:FlutterCapture.kt$val input = Constraints(up(constraints.minWidth), up(constraints.maxWidth), up(constraints.minHeight), up(constraints.maxHeight))</ID>
+    <ID>MaxLineLength:KitImageGateTest.kt$KitImageGateTest$private fun failed(wide: Boolean): @Composable () -&gt; Unit</ID>
+    <ID>MaxLineLength:KitImageGateTest.kt$KitImageGateTest$private val default = list(listOf(box { KitImage(memory, "A photo", Modifier.size(120.dp, 90.dp)) }, { KitAvatar("Open AI") }))</ID>
+    <ID>MaxLineLength:KitImageView.kt$/** The badge's offset from the bottom-end corner: whole logical px (Dart `_avatarBadgeInset`, kit_image.dart:688-694). */</ID>
+    <ID>MaxLineLength:KitImageView.kt$/** The first grapheme of [name]'s first two words, folded to upper case (Dart `_avatarInitials`, kit_image.dart:701-714). */</ID>
+    <ID>MaxLineLength:KitImageView.kt$/** The loaded cross-fade shared by [KitImage] and [KitAvatar]: the first frame fades in on `quick`, none when motion is off. */</ID>
+    <ID>MaxLineLength:KitImageView.kt$Box</ID>
+    <ID>MaxLineLength:KitImageView.kt$Image(icon, null, Modifier.size(tokens.smallIcon.dp), colorFilter = ColorFilter.tint(colors.text1))</ID>
+    <ID>MaxLineLength:KitImageView.kt$Image(loaded.image, null, fade.fillMaxSize(), contentScale = ContentScale.Crop, filterQuality = FilterQuality.High)</ID>
+    <ID>MaxLineLength:KitImageView.kt$KitText(avatarInitials(name), Modifier.wrapContentSize(unbounded = true), role = role, tone = TextTone.Primary, maxLines = 1) // F: lib/ui/kit/kit_image.dart:540-546</ID>
+    <ID>MaxLineLength:KitImageView.kt$KitText(words, Modifier.padding(horizontal = inset), role = TypeRole.Secondary, textAlign = TextAlign.Center, maxLines = 2)</ID>
+    <ID>MaxLineLength:KitImageView.kt$LocalDensity provides Density(density.density, minOf(density.fontScale, FlutterKitTokens.MONOGRAM_MAX_TEXT_SCALE))</ID>
+    <ID>MaxLineLength:KitImageView.kt$constraints = Constraints(maxWidth = with(density) { (maxWidth - inset * 2).roundToPx() }.coerceAtLeast(0))</ID>
+    <ID>MaxLineLength:KitImageView.kt$else</ID>
+    <ID>MaxLineLength:KitImageView.kt$if (semanticsLabel == null) Modifier.clearAndSetSemantics {} else Modifier.semantics(mergeDescendants = true) { contentDescription = semanticsLabel }</ID>
+    <ID>MaxLineLength:KitImageView.kt$private fun String.offsetByCodePoints0(index: Int): Int</ID>
+    <ID>MaxLineLength:KitImageView.kt$val diameter = if (size == KitAvatarSize.Tile) tokens.iconTile else FlutterKitTokens.MARK_SIZE // F: lib/ui/kit/kit_image.dart:528-530</ID>
+    <ID>MaxLineLength:KitImageView.kt$val opacity by animateFloatAsState(1f, specs.quick(), label = "kit-image-fade") // F: lib/ui/kit/kit_image.dart:249-252</ID>
+    <ID>MaxLineLength:KitImageView.kt$val role = if (size == KitAvatarSize.Tile) TypeRole.Label else TypeRole.Headline // F: lib/ui/kit/kit_image.dart:531-533</ID>
+    <ID>MaxLineLength:KitLogBufferChunksTest.kt$KitLogBufferChunksTest$val chunk = (0 until random.nextInt(40) + 1).joinToString("") { listOf("a", "b", "\r", "\n")[random.nextInt(4)] }</ID>
+    <ID>MaxLineLength:KitPdfPage.kt$BoxWithConstraints</ID>
+    <ID>MaxLineLength:KitPdfPage.kt$KitPdfPageState.Failed$/** The host's own reason, already in words (for example `filePdfEncrypted`); `null` says only "Couldn't show page N". */</ID>
+    <ID>MaxLineLength:KitPdfPage.kt$if (state.reason != null) KitText(state.reason, role = TypeRole.Secondary, tone = TextTone.Secondary)</ID>
+    <ID>MaxLineLength:KitQr.kt$canvas.drawRect(androidx.compose.ui.geometry.Rect(quiet + col * module, quiet + row * module, quiet + (col + 1) * module, quiet + (row + 1) * module), paint)</ID>
+    <ID>MaxLineLength:KitQrGateTest.kt$KitQrGateTest$@Test fun kit_qr_default()</ID>
+    <ID>MaxLineLength:KitQrGateTest.kt$KitQrGateTest$@Test fun kit_qr_default_1280x800()</ID>
+    <ID>MaxLineLength:KitQrGateTest.kt$KitQrGateTest$@Test fun kit_qr_too_long()</ID>
+    <ID>MaxLineLength:KitQrGateTest.kt$KitQrGateTest$@Test fun kit_qr_too_long_1280x800()</ID>
+    <ID>MaxLineLength:KitQrGateTest.kt$KitQrGateTest$@Test fun kit_qr_too_long_text2()</ID>
+    <ID>MaxLineLength:KitQrGateTest.kt$KitQrGateTest$@Test fun kit_qr_too_long_text2_1280x800()</ID>
+    <ID>MaxLineLength:KitQrGateTest.kt$KitQrGateTest$@Test fun matrix()</ID>
+    <ID>MaxLineLength:KitQrGateTest.kt$KitQrGateTest$Column</ID>
+    <ID>MaxLineLength:KitQrGateTest.kt$KitQrGateTest$KitQr(if (long) "x".repeat(4000) else "opencode://s/shopfront/9c2f", "QR code to open this conversation on your phone")</ID>
+    <ID>MaxLineLength:KitQrGateTest.kt$KitQrGateTest$KitText("opencode://s/shopfront/9c2f", Modifier.weight(1f, fill = false), role = TypeRole.Mono, maxLines = 1)</ID>
+    <ID>MaxLineLength:KitQrGateTest.kt$KitQrGateTest$Row</ID>
+    <ID>MaxLineLength:KitQrReadabilityTest.kt$KitQrReadabilityTest$QRCodeReader().decode(BinaryBitmap(HybridBinarizer(RGBLuminanceSource(image.width, image.height, pixels))), hints).text</ID>
+    <ID>MaxLineLength:KitQrReadabilityTest.kt$KitQrReadabilityTest$appearance = KitAppearance(mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light, motion = MotionLevel.Off)</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$(floor(((room - gap * (columns - 1)) / columns).value * dpr) / dpr).dp</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$.</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$/** The full bar's rows (Dart `TerminalKeyBar`'s `LayoutBuilder`): eight columns, pixel-snapped, centred, or scrolling together. */</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$/** The order of the compact one-row bar (Dart `_compactOrder`): modifiers and arrows first, what a short screen needs most. */</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$Box</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$ClampedTextScale</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$KitTerminalBarKey.Companion$Esc</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$KitTerminalBarKey.Companion$public</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$KitTerminalBarKey.Home</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$Modifier.defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$Modifier.height(side).horizontalScroll(rememberScrollState())</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom))</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$Row</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$calm -&gt; Modifier.border(hairlineWidth, if (on) colors.accent else colors.hairline, radius)</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$hovered || pressed -&gt; Color(roles.hairline.over(roles.surface3).v)</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$if (calm &amp;&amp; key.face.any { it in 'a'..'z' || it in 'A'..'Z' }) TypeRole.Secondary else TypeRole.Mono</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$if (control != null) return terminalModifiedText(control, ctrl = true, alt = alt)</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$if (interruptKeys) add(KitTerminalBarKey.ExtraRow)</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$if (latched != null) toggleableState = if (latched) ToggleableState.On else ToggleableState.Off</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$if (text != null) return terminalModifiedText(text, ctrl = ctrl, alt = alt)</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$level = if (calm) SurfaceLevel.Surface2 else SurfaceLevel.Surface3</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$return KitSurfaceLook(Modifier.kitDecorated(decoration, androidx.compose.ui.platform.LocalLayoutDirection.current == androidx.compose.ui.unit.LayoutDirection.Rtl), words?.let { Color(it.v) }, shape)</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$ring -&gt; Modifier.border(focusRingWidth, colors.accent, radius)</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$val buttonRadius = (Shapes.of(KitShapeId.Button) as Corner.Radius).dp // F: lib/ui/kit/terminal_key_bar.dart:750-752 (tokens.buttonRadius)</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$val capColors = if (on &amp;&amp; capLook.words != null) colors.copy(onAccent = capLook.words!!) else colors // F: lib/ui/kit/terminal_key_bar.dart:706-728,799-803</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$val capRadiusDp = if (calm) buttonRadius * .72f else buttonRadius.toFloat() // F: lib/ui/kit/terminal_key_bar.dart:750-752</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$val focusRingWidth = (if (density &lt;= 1f) max(2f / density, 1f) else 2f / density).dp // F: lib/ui/kit/kit_tokens.dart:322-327 (tokens.focusRingWidth)</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$val hairlinePx = with(density) { (1f / density.density).dp.toPx() } // F: lib/ui/kit/terminal_key_bar.dart:392-395 lib/ui/kit/kit_tokens.dart:315-318</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$val modifier = if (ownFill == null) Modifier else Modifier.background(ownFill, shape) // F: lib/ui/kit/kit_surface_look.dart:171-172</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$val r = StyleResolver.corner(radiusDp, state.knobs.corners, state.spec.tokens.sharpRadius) // F: lib/ui/kit/kit_surface_look.dart:185-199 (the knob mapping the resolver applies)</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$val reason = disabledReason ?: stringResource(Res.string.e7SetupKeyUnavailable) // F: lib/ui/kit/terminal_key_bar.dart:344</ID>
+    <ID>MaxLineLength:KitTerminalKeyBar.kt$val scale = minOf(1f, constraints.maxWidth.toFloat() / maxOf(placeable.width, 1)) // NV: guard a zero-wide face</ID>
+    <ID>MaxLineLength:KitTerminalKeyBarGateTest.kt$KitTerminalKeyBarGateTest$interruptKeys = true</ID>
+    <ID>MaxLineLength:KitTerminalKeybar.kt$.</ID>
+    <ID>MaxLineLength:KitTerminalKeybar.kt$1f to if (more) Color.Transparent else solid</ID>
+    <ID>MaxLineLength:KitTerminalKeybar.kt$horizontalArrangement = Arrangement.spacedBy(Space.S1.dp)</ID>
+    <ID>MaxLineLength:KitTerminalKeybar.kt$val more by remember { derivedStateOf { scroll.maxValue == 0 || scroll.value &lt; scroll.maxValue - 1 } } // F: lib/ui/kit/terminal_key_bar.dart:548-552</ID>
+    <ID>MaxLineLength:KitTerminalKeybar.kt$val width = (floor(maxOf(TERMINAL_KEY_SINGLE_ROW_MIN_WIDTH.dp, minOf(share, widest)).value * dpr) / dpr).dp // F: lib/ui/kit/terminal_key_bar.dart:575-582</ID>
+    <ID>MaxLineLength:KitTerminalSlot.kt$KitTerminalSlot$*</ID>
+    <ID>MaxLineLength:KitViewerBinaryBody.kt$Column</ID>
+    <ID>MaxLineLength:KitViewerBinaryBody.kt$if (action != null) KitButton(action.label, action.onClick, Modifier.padding(top = Space.S2.dp).tagged(action.tag))</ID>
+    <ID>MaxLineLength:KitViewerBytes.kt$KitViewerContent.Image$override fun equals(other: Any?): Boolean</ID>
+    <ID>MaxLineLength:KitViewerBytes.kt$KitViewerContent.Image$override fun hashCode(): Int</ID>
+    <ID>MaxLineLength:KitViewerBytes.kt$KitViewerContent.Svg$/** An SVG already sanitised by the caller (`StaticSvg`); [original] is the file's own text for Show source and Copy. */</ID>
+    <ID>MaxLineLength:KitViewerBytes.kt$KitViewerKind$*</ID>
+    <ID>MaxLineLength:KitViewerBytes.kt$KitViewerSource$other is KitViewerSource &amp;&amp; other.content === content &amp;&amp; other.load === load</ID>
+    <ID>MaxLineLength:KitViewerBytes.kt$KitViewerSource$override fun hashCode(): Int</ID>
+    <ID>MaxLineLength:KitViewerBytes.kt$KitViewerSource.Companion$public</ID>
+    <ID>MaxLineLength:KitViewerBytes.kt$KitViewerSource.Companion$public operator</ID>
+    <ID>MaxLineLength:KitViewerBytes.kt$ViewerPdfPage$override fun equals(other: Any?): Boolean</ID>
+    <ID>MaxLineLength:KitViewerBytes.kt$ViewerPdfPage$override fun hashCode(): Int</ID>
+    <ID>MaxLineLength:KitViewerBytes.kt$kind != KitViewerKind.Code &amp;&amp; window == WindowClass.Compact</ID>
+    <ID>MaxLineLength:KitViewerCodeBody.kt$KitText(partial, Modifier.padding(bottom = gutter / 2), role = TypeRole.Secondary, tone = TextTone.Secondary)</ID>
+    <ID>MaxLineLength:KitViewerCodeBody.kt$val listState = rememberLazyListState(initialFirstVisibleItemIndex = mark?.let { maxOf(0, it - 1 - LINE_CONTEXT + offset) } ?: 0)</ID>
+    <ID>MaxLineLength:KitViewerContentParityTest.kt$KitViewerContentParityTest$*</ID>
+    <ID>MaxLineLength:KitViewerContentParityTest.kt$KitViewerContentParityTest$assertNull(KitViewerContent.Pdf(pageCount = 1, renderPage = { _, _ -&gt; ViewerPdfPage(ByteArray(0), 1, 1) }).copyText)</ID>
+    <ID>MaxLineLength:KitViewerFrame.kt$*</ID>
+    <ID>MaxLineLength:KitViewerFrame.kt$ContentTextAction(stringResource(Res.string.kitTopBarClose), onClose, Modifier.testTag(KitViewerTags.CLOSE))</ID>
+    <ID>MaxLineLength:KitViewerSvgBody.kt$* PORT-SCREENS-2 overload (with an [unreadable] fallback). Only sanitized static SVG from the host's bounded parser. This loader has no network fetcher. </ID>
+    <ID>MaxLineLength:KitViewerTextBody.kt$KitText(partial, Modifier.padding(bottom = gutter / 2), role = TypeRole.Secondary, tone = TextTone.Secondary)</ID>
+    <ID>MaxLineLength:KitZoom.kt$.</ID>
+    <ID>MaxLineLength:KitZoom.kt$propagateMinConstraints = true</ID>
+    <ID>MaxLineLength:KitZoom.kt$val look = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Floating, KitShapeId.Pill, SurfaceLevel.Surface2, ownFill = colors.surface2))</ID>
+    <ID>MaxLineLength:PdfLimits.kt$PdfLimits$public</ID>
+    <ID>MaxLineLength:PdfLimits.kt$PdfLimits$return min(MAX_SIDE_PX.toFloat() / max(widthPt, heightPt), sqrt(MAX_PIXELS.toFloat() / (widthPt.toFloat() * heightPt)))</ID>
+    <ID>MaxLineLength:PdfPageRasterizer.kt$PdfPageRasterizer$*</ID>
+    <ID>MaxLineLength:PdfPageRasterizer.kt$PdfPageRasterizer$if (page !in 0 until minOf(count, PdfLimits.MAX_PAGES)) return@use PdfRaster.Failed(PdfRasterFailure.PageOutOfRange)</ID>
+    <ID>MaxLineLength:QrEncoder.kt$QrEncoder$byteCount &lt; (1 shl countBits(version)) &amp;&amp; 4 + countBits(version) + 8 * byteCount &lt;= dataCodewordCount(version) * 8</ID>
+    <ID>MaxLineLength:QrEncoder.kt$QrEncoder.Builder$for (dy in -2..2) for (dx in -2..2) set(x + dx, y + dy, maxOf(kotlin.math.abs(dx), kotlin.math.abs(dy)) != 1)</ID>
+    <ID>MaxLineLength:QrPayloadTest.kt$QrPayloadTest$711</ID>
+    <ID>MaxLineLength:QrPayloadTest.kt$QrPayloadTest$if (back == data) null else "${data.encodeToByteArray().size} bytes, version ${m.version}, mask ${m.mask}"</ID>
+    <ID>MaxLineLength:QrRules.kt$QrRules$*</ID>
+    <ID>MaxLineLength:QrRules.kt$QrRules$public const</ID>
+    <ID>MaxLineLength:TerminalAccessibleModeTest.kt$TerminalAccessibleModeTest$.</ID>
+    <ID>MaxLineLength:TerminalAccessibleModeTest.kt$TerminalAccessibleModeTest$assertTrue("the reason is stated", compose.onAllNodes(says, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty())</ID>
+    <ID>MaxLineLength:TerminalTranscript.kt$TerminalTranscript$*</ID>
+    <ID>MaxLineLength:build.gradle.kts$// The golden gate writes its rows and pictures (looks-out/gate) as a side effect of the desktop tests, so Gradle must run</ID>
+    <ID>MaxLineLength:build.gradle.kts$// The golden-diff gate lives in ui/gate (desktopMain); ModuleRules has no :ui:gate edges, so it is compiled in here.</ID>
+    <ID>NestedBlockDepth:PdfPageRasterizer.kt$PdfPageRasterizer$public fun render(input: ParcelFileDescriptor, page: Int, output: OutputStream): PdfRaster</ID>
+    <ID>NestedBlockDepth:QrDecode.kt$QrDecode$fun matrix(m: QrMatrix, modulePx: Int = 4): String</ID>
+    <ID>NestedBlockDepth:QrEncoder.kt$QrEncoder.Builder$private fun drawCodewords(data: ByteArray)</ID>
+    <ID>NestedBlockDepth:QrRules.kt$QrRules$internal fun sameNeighbours(m: QrMatrix): Double</ID>
+    <ID>ReturnCount:AndroidRemoteTerminalView.kt$AndroidRemoteTerminalView$override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean</ID>
+    <ID>ReturnCount:KitTerminalKeyBar.kt$public fun terminalBarKeyInput( key: KitTerminalBarKey, ctrl: Boolean = false, alt: Boolean = false, applicationCursorKeys: Boolean = false, ): String?</ID>
+    <ID>ReturnCount:PdfLimits.kt$PdfLimits$public fun checkReply(png: ByteArray, width: Int, height: Int, page: Int, askedPage: Int, pageCount: Int): PdfCheck</ID>
+    <ID>ReturnCount:PdfPageRasterizer.kt$PdfPageRasterizer$public fun render(input: ParcelFileDescriptor, page: Int, output: OutputStream): PdfRaster</ID>
+    <ID>ReturnCount:QrEncoder.kt$QrEncoder$public fun encode(data: String): QrMatrix?</ID>
+    <ID>ReturnCount:ViewerPaths.kt$ViewerPaths$public fun folderOf(path: String, name: String): String?</ID>
+    <ID>TooManyFunctions:AndroidRemoteTerminalView.kt$AndroidRemoteTerminalView : View</ID>
+    <ID>TooManyFunctions:AndroidRemoteTerminalView.kt$QuietTerminalClient : TerminalSessionClient</ID>
+    <ID>TooManyFunctions:KitImageView.kt$io.github.eslamasabry.oc.ui.kit.content.image.KitImageView.kt</ID>
+    <ID>TooManyFunctions:KitTerminalKeyBar.kt$io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalKeyBar.kt</ID>
+    <ID>TooManyFunctions:QrEncoder.kt$QrEncoder</ID>
+    <ID>TooManyFunctions:QrEncoder.kt$QrEncoder$Builder</ID>
+    <ID>UnusedParameter:KitDelimitedPreview.kt$truncated: Boolean</ID>
+    <ID>WildcardImport:AndroidKitTerminalSlot.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:KitQrGateTest.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:KitQrGateTest.kt$import io.github.eslamasabry.oc.ui.design.tokens.*</ID>
+    <ID>WildcardImport:KitQrGateTest.kt$import io.github.eslamasabry.oc.ui.design.type.*</ID>
+    <ID>WildcardImport:KitQrGateTest.kt$import io.github.eslamasabry.oc.ui.kit.chip.*</ID>
+    <ID>WildcardImport:KitQrGateTest.kt$import io.github.eslamasabry.oc.ui.kit.foundation.*</ID>
+    <ID>WildcardImport:KitQrGateTest.kt$import io.github.eslamasabry.oc.ui.kit.icon.*</ID>
+    <ID>WildcardImport:KitQrGateTest.kt$import io.github.eslamasabry.oc.ui.kit.input.*</ID>
+    <ID>WildcardImport:KitQrGateTest.kt$import io.github.eslamasabry.oc.ui.kit.row.*</ID>
+    <ID>WildcardImport:KitQrGateTest.kt$import io.github.eslamasabry.oc.ui.kit.state.*</ID>
+    <ID>WildcardImport:KitQrGateTest.kt$import io.github.eslamasabry.oc.ui.kit.theme.*</ID>
+    <ID>WildcardImport:KitTerminalKeyBar.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:KitTerminalLinks.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:KitViewerDocument.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:KitViewerDocument.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:KitViewerDocument.kt$import androidx.compose.ui.semantics.*</ID>
+    <ID>WildcardImport:KitViewerDocument.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:KitViewerSvgBody.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:KitViewerSvgBody.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:KitViewerTableBody.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:NativeTerminalModifiersTest.kt$import io.github.eslamasabry.oc.ui.kit.content.terminal.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

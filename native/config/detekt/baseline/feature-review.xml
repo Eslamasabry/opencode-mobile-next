@@ -1,0 +1,65 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:ReviewPresenters.kt$ChangesPresenter$picked == null &amp;&amp; rows.isEmpty() &amp;&amp; messageId == null &amp;&amp; review.workingTreeAvailable()</ID>
+    <ID>ComplexCondition:ReviewPresenters.kt$ChangesPresenter$sendBack != null &amp;&amp; s.load == ReviewLoad.Ready &amp;&amp; s.files.isNotEmpty() &amp;&amp; !s.working</ID>
+    <ID>ComplexCondition:ReviewPresenters.kt$UndoFromHerePresenter$s.working || s.block != null || !s.available || s.promptUnavailable</ID>
+    <ID>ComplexCondition:ReviewScreens.kt$!patch.isNullOrBlank() &amp;&amp; !(fullContext &amp;&amp; diff.before != null &amp;&amp; diff.after != null)</ID>
+    <ID>CyclomaticComplexMethod:ReviewScreens.kt$@Composable private fun ChangesContent(state: ChangesUi, actions: ChangesActions)</ID>
+    <ID>CyclomaticComplexMethod:ReviewScreens.kt$@Composable private fun StagedContent(state: StagedUi, actions: StagedActions)</ID>
+    <ID>CyclomaticComplexMethod:ReviewScreens.kt$@Composable private fun UndoFromHereContent(state: UndoFromHereUi, actions: UndoFromHereActions)</ID>
+    <ID>CyclomaticComplexMethod:ReviewScreens.kt$@Composable public fun FileDiffScreen(state: FileDiffUi, onBack: () -&gt; Unit, onRetry: () -&gt; Unit)</ID>
+    <ID>LongMethod:ReviewPresenters.kt$ChangesPresenter$private fun load()</ID>
+    <ID>LongMethod:ReviewPresenters.kt$FileDiffPresenter$private fun load()</ID>
+    <ID>LongMethod:ReviewScreens.kt$@Composable private fun ChangesContent(state: ChangesUi, actions: ChangesActions)</ID>
+    <ID>LongMethod:ReviewScreens.kt$@Composable private fun DiffBody(diff: FileDiff, fullContext: Boolean)</ID>
+    <ID>LongMethod:ReviewScreens.kt$@Composable private fun StagedContent(state: StagedUi, actions: StagedActions)</ID>
+    <ID>LongMethod:ReviewScreens.kt$@Composable private fun UndoFromHereContent(state: UndoFromHereUi, actions: UndoFromHereActions)</ID>
+    <ID>LongMethod:ReviewScreens.kt$@Composable public fun FileDiffScreen(state: FileDiffUi, onBack: () -&gt; Unit, onRetry: () -&gt; Unit)</ID>
+    <ID>MaxLineLength:ReviewHub.kt$ReviewHub$.</ID>
+    <ID>MaxLineLength:ReviewPresenterTest.kt$Fake$override suspend</ID>
+    <ID>MaxLineLength:ReviewPresenterTest.kt$Fake$override suspend fun clearSessionRevert(session: SessionId): Outcome&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:ReviewPresenterTest.kt$Fake$override suspend fun commitSessionRevert(session: SessionId): Outcome&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:ReviewPresenterTest.kt$Fake$override suspend fun messagePage(id: SessionId, cursor: String?, limit: Int): Outcome&lt;ServerPage&lt;MessageWithParts&gt;&gt;</ID>
+    <ID>MaxLineLength:ReviewPresenterTest.kt$Fake$private</ID>
+    <ID>MaxLineLength:ReviewPresenterTest.kt$Fake$val revert = SessionRevert(message, null, "snap", persistentListOf(FileDiff("src/a.kt", patch = "@@ -1 +1 @@\n-a\n+b", additions = 1, deletions = 1)))</ID>
+    <ID>MaxLineLength:ReviewPresenterTest.kt$Fake$var history = listOf(prompt("u1", 1), reply("a1", 2, "src/a.kt" to 3), prompt("u2", 3), reply("a2", 4, "src/b.kt" to 2)) // one chronological page</ID>
+    <ID>MaxLineLength:ReviewPresenterTest.kt$MessageWithParts(MessageInfo(id, S.raw, Role.User, time = MsgTime(at, at)), persistentListOf(Part("p$id", id, S.raw, PartType.Text, "text", text = text)))</ID>
+    <ID>MaxLineLength:ReviewPresenterTest.kt$Part("t$id$path", id, S.raw, PartType.Tool, "tool", toolName = "edit", tool = ToolState(ToolStatus.Completed, input = JsonObject(mapOf("filePath" to JsonPrimitive(path))), metadata = JsonObject(mapOf("filediff" to diff))))</ID>
+    <ID>MaxLineLength:ReviewPresenterTest.kt$ReviewPresenterTest$fake.staged = SessionRevert(MessageId("u1"), null, null, persistentListOf(FileDiff("x.kt", patch = "@@ -1 +1 @@\n-a\n+b")))</ID>
+    <ID>MaxLineLength:ReviewPresenterTest.kt$ReviewPresenterTest$fake.staged = SessionRevert(MessageId("u2"), null, "snap", persistentListOf(FileDiff("src/b.kt", additions = 2, deletions = 1)))</ID>
+    <ID>MaxLineLength:ReviewPresenterTest.kt$ReviewPresenterTest$fun</ID>
+    <ID>MaxLineLength:ReviewPresenterTest.kt$ReviewPresenterTest$val file = FileDiffPresenter(review(), "lib/x.kt", null, staged = false, scope = backgroundScope, workingTree = true)</ID>
+    <ID>MaxLineLength:ReviewPresenterTest.kt$ReviewPresenterTest$val vcs = VcsFake(fake, listOf(FileDiff("lib/x.kt", patch = "@@ -1 +1 @@\n-a\n+b", additions = 1, deletions = 1)))</ID>
+    <ID>MaxLineLength:ReviewPresenterTest.kt$ReviewPresenterTest.&lt;no name provided&gt;$override suspend fun messagePage(id: SessionId, cursor: String?, limit: Int)</ID>
+    <ID>MaxLineLength:ReviewPresenterTest.kt$ReviewPresenterTest.&lt;no name provided&gt;$override suspend fun revertSession(id: SessionId, to: MessageId): Outcome&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:ReviewPresenterTest.kt$VcsFake$override suspend</ID>
+    <ID>MaxLineLength:ReviewPresenterTest.kt$val diff = JsonObject(mapOf("before" to JsonPrimitive("a\n"), "after" to JsonPrimitive("b\n"), "additions" to JsonPrimitive(n), "deletions" to JsonPrimitive(1)))</ID>
+    <ID>MaxLineLength:ReviewScreensTest.kt$ReviewScreensTest$KitTheme</ID>
+    <ID>MaxLineLength:ReviewScreensTest.kt$ReviewScreensTest$StagedUi(phase = StagedPhase.Review, prompt = "make it blue", messagesAfter = 3, files = persistentListOf(FileDiff("src/a.kt", additions = 2, deletions = 1)))</ID>
+    <ID>MaxLineLength:ReviewScreensTest.kt$ReviewScreensTest$UndoFromHereScreen(UndoFromHereUi(load = ReviewLoad.Ready, staged = false, prompt = "go", messagesAfter = 2, edited = persistentListOf("lib/a.dart")), Undo())</ID>
+    <ID>MaxLineLength:ReviewScreensTest.kt$ReviewScreensTest$setContent { Themed { ChangesScreen(ChangesUi(turn = false, load = ReviewLoad.Ready, files = files, undoAll = UndoAllUi.Offered, confirming = true), actions) } }</ID>
+    <ID>MaxLineLength:ReviewScreensTest.kt$ReviewScreensTest$setContent { Themed { ChangesScreen(ChangesUi(turn = false, load = ReviewLoad.Ready, files = files, undoAll = UndoAllUi.Unavailable), Changes()) } }</ID>
+    <ID>MaxLineLength:ReviewScreensTest.kt$ReviewScreensTest$setContent { Themed { ChangesScreen(ChangesUi(turn = true, load = ReviewLoad.Ready, files = files, undoAll = UndoAllUi.Offered), actions) } }</ID>
+    <ID>MaxLineLength:ReviewScreensTest.kt$ReviewScreensTest$setContent { Themed { StagedScreen(StagedUi(phase = StagedPhase.Review, title = "Blue app", messagesAfter = 1, confirm = StagedConfirm.Keep), Staged()) } }</ID>
+    <ID>MaxLineLength:ReviewScreensTest.kt$ReviewScreensTest$setContent { Themed { UndoFromHereScreen(UndoFromHereUi(load = ReviewLoad.Ready, staged = true, prompt = "make it blue"), actions) } }</ID>
+    <ID>MaxLineLength:ReviewScreensTest.kt$ReviewScreensTest$setContent { Themed("ar") { ChangesScreen(ChangesUi(turn = true, load = ReviewLoad.Ready, files = files, undoAll = UndoAllUi.Offered), Changes()) } }</ID>
+    <ID>MaxLineLength:ReviewScreensTest.kt$ReviewScreensTest$val ui = ChangesUi(turn = false, load = ReviewLoad.Ready, files = files, undoAll = UndoAllUi.Offered, canSendBack = true)</ID>
+    <ID>MaxLineLength:ReviewViewModels.kt$FileDiffViewModel$FileDiffPresenter(hub.review(route.ref), route.path, route.messageId, route.staged, viewModelScope, route.workingTree)</ID>
+    <ID>MaxLineLength:ReviewViewModels.kt$FileDiffViewModel$public</ID>
+    <ID>MaxLineLength:ReviewViewModels.kt$RouteNavigation$override fun openFile(path: String, staged: Boolean): Unit</ID>
+    <ID>MaxLineLength:ReviewViewModels.kt$RouteNavigation$override fun openWorkingTreeFile(path: String): Unit</ID>
+    <ID>MaxLineLength:ReviewViewModels.kt$RouteNavigation$private</ID>
+    <ID>MaxLineLength:ReviewViewModels.kt$StagedViewModel$private val presenter = StagedPresenter(hub.review(route.ref), RouteNavigation(nav, route.ref, null), viewModelScope)</ID>
+    <ID>MaxLineLength:ReviewViewModels.kt$StagedViewModel$public</ID>
+    <ID>MaxLineLength:ReviewViewModels.kt$UndoFromHereViewModel$private val presenter = UndoFromHerePresenter(hub.review(route.ref), route.messageId, RouteNavigation(nav, route.ref, null), viewModelScope)</ID>
+    <ID>MaxLineLength:ReviewViewModels.kt$UndoFromHereViewModel$public</ID>
+    <ID>ReturnCount:ReviewDrafts.kt$ReviewDrafts$private suspend fun append(drafts: ConversationDrafts, ref: ConversationRef, text: String): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:ReviewPresenters.kt$StagedPresenter$override fun confirm()</ID>
+    <ID>TooManyFunctions:ReviewPresenters.kt$ChangesActions</ID>
+    <ID>TooManyFunctions:ReviewPresenters.kt$ChangesPresenter : ChangesActions</ID>
+    <ID>TooManyFunctions:ReviewScreens.kt$io.github.eslamasabry.oc.feature.review.ui.ReviewScreens.kt</ID>
+    <ID>TooManyFunctions:ReviewViewModels.kt$ChangesViewModel : ViewModelChangesActions</ID>
+  </CurrentIssues>
+</SmellBaseline>

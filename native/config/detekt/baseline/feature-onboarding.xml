@@ -1,0 +1,40 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:OpeningGate.kt$OpeningGateViewModel$confirmationId == null || confirmationId != this.confirmationId || world.phase.value.phase != OpeningPhase.Failed || reset.value != Reset.Confirming</ID>
+    <ID>CyclomaticComplexMethod:WelcomeScreen.kt$@Composable public fun WelcomeScreen(state: WelcomeUi, actions: WelcomeActions)</ID>
+    <ID>EmptyFunctionBlock:LooksCaptureTest.kt$LooksCaptureTest.A${}</ID>
+    <ID>EmptyFunctionBlock:OpeningGateTest.kt$TestKitPlatform${}</ID>
+    <ID>EmptyFunctionBlock:WelcomeScreenTest.kt$WelcomeScreenTest.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:WelcomeScreenTest.kt$WelcomeScreenTest.Platform${}</ID>
+    <ID>LongMethod:ManagedMoveScreen.kt$@Composable public fun ManagedMoveScreen(state: ManagedMoveUi, actions: ManagedMoveActions)</ID>
+    <ID>LongMethod:OpeningGateScreen.kt$@Composable public fun OpeningGateScreen(state: OpeningGateUi, actions: OpeningGateActions)</ID>
+    <ID>LongMethod:WelcomeScreen.kt$@Composable public fun WelcomeScreen(state: WelcomeUi, actions: WelcomeActions)</ID>
+    <ID>MagicNumber:ManagedMove.kt$ManagedMoveViewModel$20_000L</ID>
+    <ID>MagicNumber:ManagedMove.kt$ManagedMoveViewModel$45_000L</ID>
+    <ID>MagicNumber:ManagedMove.kt$ManagedMoveViewModel$8_000L</ID>
+    <ID>MagicNumber:WelcomeScreen.kt$1_000_000.0</ID>
+    <ID>MagicNumber:WelcomeScreen.kt$60.0</ID>
+    <ID>MatchingDeclarationName:LooksCapture.kt$Looks</ID>
+    <ID>MaxLineLength:LooksCapture.kt$Looks$/** Capture-only: writes PNGs of a screen in light and dark at 412 x 915 dp, density 2.625 (1081 x 2402 px). No comparison. */</ID>
+    <ID>MaxLineLength:LooksCapture.kt$Looks$appearance = KitAppearance(mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light, motion = MotionLevel.Off)</ID>
+    <ID>MaxLineLength:LooksCapture.kt$Looks$fun</ID>
+    <ID>MaxLineLength:ManagedMoveTest.kt$ManagedMoveTest$ManagedMoveScreen(ManagedMoveUi(failure = ManagedMoveResult.Failed(ManagedMoveReason.SeparateHistory)), actions)</ID>
+    <ID>MaxLineLength:RootAndFirstRunTest.kt$RootAndFirstRunTest$assertEquals(RootChoice.Conversations, RootDecision.decide(RootWorld(activeProfileId = p1, savedProfileIds = setOf(p1))))</ID>
+    <ID>MaxLineLength:RootAndFirstRunTest.kt$RootAndFirstRunTest$assertEquals(RootChoice.ManagedMove, RootDecision.decide(active.copy(needsManagedMove = true, needsReentry = true)))</ID>
+    <ID>MaxLineLength:RootAndFirstRunTest.kt$RootAndFirstRunTest$assertEquals(setOf(FirstRun.STATE_KEY, FirstRun.NOTIFY_ASK_KEY), prefs.values.keys)</ID>
+    <ID>MaxLineLength:ServerAddress.kt$ServerAddress$public</ID>
+    <ID>MaxLineLength:WelcomeScreen.kt$KitText(stringResource(Res.string.phoneSetupStartHeadline), role = TypeRole.LargeTitle, pageTitle = true)</ID>
+    <ID>MaxLineLength:WelcomeScreen.kt$KitText(stringResource(Res.string.r40WelcomeSetupBody), role = TypeRole.Secondary, tone = TextTone.Secondary)</ID>
+    <ID>ReturnCount:FirstRunFlow.kt$FirstRunFlow$public suspend fun onConnected(top: AppRoute?)</ID>
+    <ID>ReturnCount:ServerAddress.kt$ServerAddress$private fun bareAuthority(raw: String): Pair&lt;String, String&gt;?</ID>
+    <ID>ReturnCount:ServerAddress.kt$ServerAddress$public fun normalize(value: String): String</ID>
+    <ID>ReturnCount:WelcomeViewModel.kt$WelcomeViewModel$override fun begin()</ID>
+    <ID>WildcardImport:ManagedMoveScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:ManagedMoveTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:ManagedMoveTest.kt$import io.github.eslamasabry.oc.feature.onboarding.presentation.*</ID>
+    <ID>WildcardImport:WelcomeScreen.kt$import io.github.eslamasabry.oc.feature.onboarding.presentation.*</ID>
+    <ID>WildcardImport:WelcomeScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

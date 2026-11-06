@@ -1,0 +1,97 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:CollectorRules.kt$CollectorRule.Companion$!hash.matches(source) || !hash.matches(account) || !hash.matches(token) || !threshold.isFinite() || threshold &lt;= 0 || threshold &gt; 100</ID>
+    <ID>ComplexCondition:CollectorRules.kt$CollectorRule.Companion$(m["quietStart"] != null &amp;&amp; (start == null || start !in 0..1439)) || (m["quietEnd"] != null &amp;&amp; (end == null || end !in 0..1439))</ID>
+    <ID>ComplexCondition:CollectorRules.kt$CollectorRule.Companion$raw.size &gt; 64 || raw.any { (k, v) -&gt; k !is String || v !is String || !hash.matches(k) || !hash.matches(v) }</ID>
+    <ID>ComplexCondition:CollectorRules.kt$CollectorRules$!snapshot.canShowWindows || snapshot.freshness != QuotaFreshness.Fresh || snapshot.isStale(now) || snapshot.fetchedAt &gt; now || snapshot.windows.any { it.resetsAt != null &amp;&amp; it.resetsAt!! &lt;= now } || account == null || !quotaCollectionAvailable(snapshot.provider)</ID>
+    <ID>ComplexCondition:ProviderQuota.kt$ProviderQuotaSnapshot.Companion$(status != ProviderQuotaStatus.Ok || !attributed) &amp;&amp; (windows.isNotEmpty() || allowed != null)</ID>
+    <ID>ComplexCondition:ProviderQuota.kt$ProviderQuotaSnapshot.Companion$text.isEmpty() || text.any { it == '.' || it == 'e' || it == 'E' }</ID>
+    <ID>CyclomaticComplexMethod:CollectorRules.kt$CollectorRule.Companion$public fun parse(value: Any?): CollectorRule?</ID>
+    <ID>CyclomaticComplexMethod:InAppQuotaCollector.kt$InAppQuotaCollector$public suspend fun setUp( profile: QuotaServerProfile, onStep: (QuotaSetupStep) -&gt; Unit = {}, ): QuotaSetupError?</ID>
+    <ID>CyclomaticComplexMethod:ProviderQuota.kt$ProviderQuotaSnapshot.Companion$private fun parse(value: JsonElement?): ProviderQuotaSnapshot</ID>
+    <ID>CyclomaticComplexMethod:ProviderQuotaClient.kt$QuotaUrl.Companion$fun parse(value: String): QuotaUrl?</ID>
+    <ID>LongMethod:InAppQuotaCollector.kt$InAppQuotaCollector$public suspend fun setUp( profile: QuotaServerProfile, onStep: (QuotaSetupStep) -&gt; Unit = {}, ): QuotaSetupError?</ID>
+    <ID>LongMethod:ProviderQuota.kt$ProviderQuotaSnapshot.Companion$private fun parse(value: JsonElement?): ProviderQuotaSnapshot</ID>
+    <ID>LongParameterList:CollectorRules.kt$CollectorRules$( id: ProfileId, source: String, snapshot: ProviderQuotaSnapshot, now: Instant, notifications: Boolean, threshold: Double, )</ID>
+    <ID>LongParameterList:InAppQuotaCollector.kt$InAppQuotaCollector$( private val prefs: KeyValueStore, private val lane: WriterLane, private val secrets: SecretStore, private val linux: QuotaLinuxHost, private val rootfs: QuotaRootfs, private val randomBytes: (Int) -&gt; ByteArray, private val loadCollector: suspend () -&gt; String, /** * The keys helper (Flutter `keysHelperSource`) ships with the app; the Android binding loads * its text. */ private val loadKeysHelper: suspend () -&gt; String, private val probe: suspend (token: String) -&gt; Boolean, private val supported: Boolean, private val probeAttempts: Int = 20, private val probeDelayMs: Long = 1_000, )</ID>
+    <ID>LongParameterList:ProviderQuota.kt$ProviderQuotaSnapshot$( public val provider: QuotaProvider, public val status: ProviderQuotaStatus, public val freshness: QuotaFreshness, public val fetchedAt: Instant, public val expiresAt: Instant, public val account: ProviderQuotaAccount, public val ordinaryUsageAllowed: Boolean?, public val windows: ImmutableList&lt;ProviderQuotaWindow&gt;, )</ID>
+    <ID>LongParameterList:ProviderQuotaClient.kt$HttpProviderQuotaGateway$( baseUrl: String, username: String, password: String, requiresPasswordReentry: Boolean = false, private val transport: QuotaTransport, public val provider: QuotaProvider = QuotaProvider.Codex, private val inAppToken: (suspend () -&gt; String?)? = null, )</ID>
+    <ID>LongParameterList:QuotaTransport.kt$QuotaRequest$( public val method: String, public val url: String, public val headers: ImmutableMap&lt;String, String&gt;, public val followRedirects: Boolean, public val maxRedirects: Int, public val connectTimeoutMs: Long, public val sendTimeoutMs: Long, public val receiveTimeoutMs: Long, )</ID>
+    <ID>MagicNumber:CollectorRules.kt$CollectorRule.Companion$100</ID>
+    <ID>MagicNumber:CollectorRules.kt$CollectorRule.Companion$100.0</ID>
+    <ID>MagicNumber:CollectorRules.kt$CollectorRule.Companion$1439</ID>
+    <ID>MagicNumber:CollectorRules.kt$CollectorRule.Companion$1439.0</ID>
+    <ID>MagicNumber:CollectorRules.kt$CollectorRule.Companion$64</ID>
+    <ID>MagicNumber:CollectorRules.kt$CollectorRules$65536</ID>
+    <ID>MagicNumber:InAppQuotaCollector.kt$InAppQuotaCollector$20</ID>
+    <ID>MagicNumber:InAppQuotaCollector.kt$InAppQuotaCollector$30_000</ID>
+    <ID>MagicNumber:InAppQuotaCollector.kt$InAppQuotaCollector$48</ID>
+    <ID>MagicNumber:InAppQuotaCollector.kt$InAppQuotaCollector$60_000</ID>
+    <ID>MagicNumber:InAppQuotaCollector.kt$InAppQuotaCollector.Companion$80</ID>
+    <ID>MagicNumber:ProviderQuota.kt$ProviderQuotaSnapshot.Companion$100</ID>
+    <ID>MagicNumber:ProviderQuota.kt$ProviderQuotaWindow$100</ID>
+    <ID>MagicNumber:ProviderQuotaClient.kt$HttpProviderQuotaGateway.Companion$200</ID>
+    <ID>MagicNumber:ProviderQuotaClient.kt$HttpProviderQuotaGateway.Companion$2048</ID>
+    <ID>MagicNumber:ProviderQuotaClient.kt$HttpProviderQuotaGateway.Companion$401</ID>
+    <ID>MagicNumber:ProviderQuotaClient.kt$HttpProviderQuotaGateway.Companion$403</ID>
+    <ID>MagicNumber:ProviderQuotaClient.kt$HttpProviderQuotaGateway.Companion$404</ID>
+    <ID>MagicNumber:ProviderQuotaClient.kt$HttpProviderQuotaGateway.Companion$405</ID>
+    <ID>MagicNumber:ProviderQuotaClient.kt$HttpProviderQuotaGateway.Companion$408</ID>
+    <ID>MagicNumber:ProviderQuotaClient.kt$HttpProviderQuotaGateway.Companion$429</ID>
+    <ID>MagicNumber:ProviderQuotaClient.kt$HttpProviderQuotaGateway.Companion$500</ID>
+    <ID>MagicNumber:ProviderQuotaClient.kt$QuotaUrl.Companion$0x7f</ID>
+    <ID>MagicNumber:ProviderQuotaClient.kt$QuotaUrl.Companion$0x9f</ID>
+    <ID>MagicNumber:ProviderQuotaClient.kt$QuotaUrl.Companion$3</ID>
+    <ID>MagicNumber:ProviderQuotaClient.kt$QuotaUrl.Companion$443</ID>
+    <ID>MagicNumber:ProviderQuotaClient.kt$QuotaUrl.Companion$5</ID>
+    <ID>MagicNumber:ProviderQuotaClient.kt$QuotaUrl.Companion$65535</ID>
+    <ID>MagicNumber:ProviderQuotaClient.kt$QuotaUrl.Companion$80</ID>
+    <ID>MaxLineLength:FakeQuotaTransport.kt$internal fun QuotaRead.snapshot(): ProviderQuotaSnapshot</ID>
+    <ID>MaxLineLength:FakeQuotaTransport.kt$internal fun basic(user: String, password: String): String</ID>
+    <ID>MaxLineLength:FakeQuotaTransport.kt$internal fun jsonResponse(value: Any? = quotaFixture(), status: Int = 200): QuotaResponse</ID>
+    <ID>MaxLineLength:InAppQuotaGatewayTest.kt$InAppQuotaGatewayTest$private val inApp = MutableProfile(baseUrl = "http://127.0.0.1:4098", username = "opencode", password = "basic-fixture-password")</ID>
+    <ID>MaxLineLength:InAppQuotaGatewayTest.kt$InAppQuotaGatewayTest$val gateway = gateway(inApp, transport, inAppToken = { "fixture-read-token-fixture-read-token-fixture-1234" })</ID>
+    <ID>MaxLineLength:ProviderQuota.kt$ProviderQuotaSnapshot.Companion$if</ID>
+    <ID>MaxLineLength:ProviderQuota.kt$ProviderQuotaSnapshot.Companion$if ((status != ProviderQuotaStatus.Ok || !attributed) &amp;&amp; (windows.isNotEmpty() || allowed != null)) invalid()</ID>
+    <ID>MaxLineLength:ProviderQuota.kt$QuotaFailureKind$CollectorAuth : QuotaFailureKind</ID>
+    <ID>MaxLineLength:ProviderQuotaClient.kt$HttpProviderQuotaGateway.Companion$internal</ID>
+    <ID>MaxLineLength:ProviderQuotaClient.kt$HttpProviderQuotaGateway.Companion$public</ID>
+    <ID>MaxLineLength:ProviderQuotaClientTest.kt$ProviderQuotaClientTest$QuotaResponse(status, flow { bodyListened = true; emit("fixture-private-response".encodeToByteArray()) })</ID>
+    <ID>MaxLineLength:ProviderQuotaClientTest.kt$ProviderQuotaClientTest$assertFalse(HttpProviderQuotaGateway.canReadProfile(profile.baseUrl, profile.username, profile.password, false))</ID>
+    <ID>MaxLineLength:ProviderQuotaClientTest.kt$ProviderQuotaClientTest$for</ID>
+    <ID>MaxLineLength:ProviderQuotaClientTest.kt$ProviderQuotaClientTest$jsonResponse(quotaFixture(provider = if (wrongProvider) QuotaProvider.Codex else QuotaProvider.Minimax))</ID>
+    <ID>MaxLineLength:ProviderQuotaClientTest.kt$ProviderQuotaClientTest$val text = json + " ".repeat(HttpProviderQuotaGateway.MAX_RESPONSE_BYTES - json.encodeToByteArray().size + extra)</ID>
+    <ID>MaxLineLength:ProviderQuotaClientTest.kt$ProviderQuotaClientTest$val transport = FakeQuotaTransport { QuotaResponse(200, flow { throw IllegalStateException("fixture-private-response") }) }</ID>
+    <ID>MaxLineLength:ProviderQuotaSnapshotTest.kt$ProviderQuotaSnapshotTest$for</ID>
+    <ID>MaxLineLength:ProviderQuotaSnapshotTest.kt$ProviderQuotaSnapshotTest$for (key in listOf("fetchedAtMs", "expiresAtMs")) rejects(quotaFixture().also { it[key] = timestamp }, "$key=$timestamp")</ID>
+    <ID>MaxLineLength:QuotaCollectorHostTest.kt$FakeSecrets$override suspend fun names(prefix: String): Outcome&lt;Set&lt;String&gt;&gt;</ID>
+    <ID>MaxLineLength:QuotaCollectorHostTest.kt$QuotaCollectorHostTest$assertEquals("// collector v1\n", w.rootfs.files.getValue(InAppQuotaCollector.COLLECTOR_PATH).decodeToString())</ID>
+    <ID>MaxLineLength:QuotaCollectorHostTest.kt$QuotaCollectorHostTest$assertEquals(listOf(QuotaSetupStep.Checking, QuotaSetupStep.Copying, QuotaSetupStep.SignIns, QuotaSetupStep.Starting), steps)</ID>
+    <ID>MaxLineLength:QuotaCollectorHostTest.kt$QuotaCollectorHostTest$script.indexOf("/root/.oc-opencode2/data/opencode/auth.json") &lt; script.indexOf("/root/.local/share/opencode/auth.json")</ID>
+    <ID>MaxLineLength:QuotaCollectorHostTest.kt$QuotaCollectorHostTest$val other = World(this).apply { assertNull(InAppQuotaCollector(prefs, lane, secrets, linux, rootfs, { Random(99).nextBytes(it) }, { "c" }, { "k" }, { true }, true, 1, 0).setUp(builtin)) }</ID>
+    <ID>MaxLineLength:QuotaFixtures.kt$internal</ID>
+    <ID>MaxLineLength:QuotaFixtures.kt$private fun assertNotNullSnapshot(s: ProviderQuotaSnapshot?): ProviderQuotaSnapshot</ID>
+    <ID>ReturnCount:CollectorRules.kt$CollectorRule.Companion$public fun parse(value: Any?): CollectorRule?</ID>
+    <ID>ReturnCount:CollectorRules.kt$CollectorRules$private fun rules(id: ProfileId): Map&lt;String, Any?&gt;?</ID>
+    <ID>ReturnCount:InAppQuotaCollector.kt$InAppQuotaCollector$public suspend fun ensureRunning(profile: QuotaServerProfile): Boolean</ID>
+    <ID>ReturnCount:InAppQuotaCollector.kt$InAppQuotaCollector$public suspend fun setUp( profile: QuotaServerProfile, onStep: (QuotaSetupStep) -&gt; Unit = {}, ): QuotaSetupError?</ID>
+    <ID>ReturnCount:InAppQuotaCollector.kt$InAppQuotaCollector$public suspend fun turnOff(profileId: ProfileId): QuotaSetupError?</ID>
+    <ID>ReturnCount:InAppQuotaCollector.kt$InAppQuotaCollector.Companion$public fun looksLikeInAppServer(profile: QuotaServerProfile?): Boolean</ID>
+    <ID>ReturnCount:ProviderQuota.kt$ProviderQuotaSnapshot.Companion$private fun int(value: JsonElement?): Long?</ID>
+    <ID>ReturnCount:ProviderQuota.kt$ProviderQuotaSnapshot.Companion$private fun number(value: JsonElement?): Double?</ID>
+    <ID>ReturnCount:ProviderQuotaClient.kt$HttpProviderQuotaGateway$private suspend fun read(authorization: String): QuotaRead</ID>
+    <ID>ReturnCount:ProviderQuotaClient.kt$HttpProviderQuotaGateway$public suspend fun readSnapshot(): QuotaRead</ID>
+    <ID>ReturnCount:ProviderQuotaClient.kt$HttpProviderQuotaGateway.Companion$internal fun validProfile(baseUrl: String, username: String, password: String, requiresPasswordReentry: Boolean): Boolean</ID>
+    <ID>ReturnCount:ProviderQuotaClient.kt$QuotaUrl.Companion$fun parse(value: String): QuotaUrl?</ID>
+    <ID>SwallowedException:InAppQuotaCollector.kt$InAppQuotaCollector$e: Exception</ID>
+    <ID>SwallowedException:ProviderQuotaClient.kt$HttpProviderQuotaGateway$e: BodyTooLarge</ID>
+    <ID>SwallowedException:ProviderQuotaClient.kt$HttpProviderQuotaGateway$e: Exception</ID>
+    <ID>SwallowedException:ProviderQuotaClient.kt$HttpProviderQuotaGateway$e: TimeoutCancellationException</ID>
+    <ID>ThrowsCount:InAppQuotaCollector.kt$InAppQuotaCollector$public suspend fun setUp( profile: QuotaServerProfile, onStep: (QuotaSetupStep) -&gt; Unit = {}, ): QuotaSetupError?</ID>
+    <ID>TooGenericExceptionCaught:InAppQuotaCollector.kt$InAppQuotaCollector$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ProviderQuotaClient.kt$HttpProviderQuotaGateway$e: Exception</ID>
+    <ID>TooManyFunctions:InAppQuotaCollector.kt$InAppQuotaCollector</ID>
+  </CurrentIssues>
+</SmellBaseline>

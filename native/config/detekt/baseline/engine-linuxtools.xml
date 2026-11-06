@@ -1,0 +1,82 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:Folders.kt$BuiltinRootfsFolders$rootfs == null &amp;&amp; !(external != null &amp;&amp; inProjects) &amp;&amp; !virtualParent</ID>
+    <ID>ComplexCondition:TermuxFolders.kt$TermuxFolders.Companion$name.isEmpty() || name == "." || name == ".." || name.startsWith(".") || name.contains('/') || name.any { it.code &lt; 0x20 || it.code == 0x7f }</ID>
+    <ID>ComplexCondition:TermuxFolders.kt$value == "." || value == ".." || value.contains('/') || value.contains('\\')</ID>
+    <ID>CyclomaticComplexMethod:Folders.kt$BuiltinRootfsFolders$public suspend fun list(path: String): FolderResult&lt;List&lt;FolderEntry&gt;&gt;</ID>
+    <ID>CyclomaticComplexMethod:TermuxFolders.kt$TermuxFolders.Companion$public fun parseListing(path: String, stdout: String): FolderResult&lt;List&lt;FolderEntry&gt;&gt;</ID>
+    <ID>CyclomaticComplexMethod:TermuxStorage.kt$TermuxStorageReport.Companion$public fun parse(json: String): TermuxStorageReport?</ID>
+    <ID>LongMethod:Folders.kt$BuiltinRootfsFolders$public suspend fun list(path: String): FolderResult&lt;List&lt;FolderEntry&gt;&gt;</ID>
+    <ID>LongMethod:TermuxStorageScriptTest.kt$TermuxStorageScriptTest$@Test fun `B-LINUX-247 scan measures every category with the right paths and flags`()</ID>
+    <ID>LoopWithTooManyJumpStatements:Folders.kt$BuiltinRootfsFolders$for</ID>
+    <ID>LoopWithTooManyJumpStatements:SharedStoragePath.kt$for</ID>
+    <ID>LoopWithTooManyJumpStatements:TermuxFolders.kt$TermuxFolders.Companion$for</ID>
+    <ID>MagicNumber:TermuxFolders.kt$0x20</ID>
+    <ID>MagicNumber:TermuxFolders.kt$4096</ID>
+    <ID>MagicNumber:TermuxFolders.kt$TermuxFolders.Companion$0x20</ID>
+    <ID>MagicNumber:TermuxFolders.kt$TermuxFolders.Companion$0x7f</ID>
+    <ID>MagicNumber:TermuxFolders.kt$TermuxFolders.Companion$3</ID>
+    <ID>MagicNumber:TermuxProcesses.kt$TermuxProcess$1024</ID>
+    <ID>MagicNumber:TermuxProcesses.kt$TermuxProcess$512</ID>
+    <ID>MagicNumber:TermuxProcesses.kt$TermuxProcessReport.Companion$4</ID>
+    <ID>MagicNumber:TermuxStorage.kt$10</ID>
+    <ID>MagicNumber:TermuxStorage.kt$10.0</ID>
+    <ID>MagicNumber:TermuxStorage.kt$1024</ID>
+    <ID>MagicNumber:TermuxStorage.kt$1024L</ID>
+    <ID>MagicNumber:TermuxStorage.kt$TermuxStorageScanStage.Companion$5</ID>
+    <ID>MaxLineLength:BuiltinFoldersTest.kt$BuiltinFoldersTest$BuiltinRootfsFolders(fs, locate = { if (rootfs.exists()) rootfs.path else null }, locateProjects = { projects.path })</ID>
+    <ID>MaxLineLength:BuiltinFoldersTest.kt$BuiltinFoldersTest$assertEquals(listOf("/root/projects" to true), folders.list("/root").valueOrNull()!!.map { it.path to it.isGit })</ID>
+    <ID>MaxLineLength:BuiltinFoldersTest.kt$BuiltinFoldersTest$assertEquals(listOf("/root/projects/demo/src"), browser.list("/root/projects/demo").valueOrNull()!!.map { it.path })</ID>
+    <ID>MaxLineLength:BuiltinFoldersTest.kt$BuiltinFoldersTest$assertEquals(listOf("/root/projects/demo/src"), folders.list("/root/projects/demo").valueOrNull()!!.map { it.path })</ID>
+    <ID>MaxLineLength:Folders.kt$BuiltinRootfsFolders$if (external != null &amp;&amp; ubuntuPath == "/root" &amp;&amp; name == "projects") continue</ID>
+    <ID>MaxLineLength:Folders.kt$BuiltinRootfsFolders$return (hostPath(external, ubuntuPath.substring(MANAGED_PROJECTS_DIRECTORY.length)) as? HostPath.Found)?.path</ID>
+    <ID>MaxLineLength:SharedStorageBindSourceTest.kt$SharedStorageBindSourceTest$File("src/commonMain/kotlin/io/github/eslamasabry/oc/engine/linuxtools/SharedStoragePath.kt").absoluteFile.readText()</ID>
+    <ID>MaxLineLength:SharedStorageBindSourceTest.kt$SharedStorageBindSourceTest$linux.substring(linux.indexOf("private fun protectedCommand"), linux.indexOf("private fun requirePhoneBoundaryKernel"))</ID>
+    <ID>MaxLineLength:SharedStoragePathTest.kt$SharedStoragePathTest$listOf("/sdcard/CodeAnything", "/storage/emulated/0/CodeAnything", "/storage/1A2B-3C4D/Work", "/sdcard")</ID>
+    <ID>MaxLineLength:ShellHarness.kt$&lt;no name provided&gt;$override</ID>
+    <ID>MaxLineLength:TermuxFolders.kt$TermuxFolders$*</ID>
+    <ID>MaxLineLength:TermuxFolders.kt$TermuxFolders.Companion$entries.add(FolderEntry(name = name, path = if (path == "/") "/$name" else "$path/$name", isGit = flag == "g"))</ID>
+    <ID>MaxLineLength:TermuxFolders.kt$TermuxFolders.Companion$if (problem == FolderListProblem.Missing &amp;&amp; path == MANAGED_PROJECTS_DIRECTORY) return FolderResult.Ok(emptyList())</ID>
+    <ID>MaxLineLength:TermuxFolders.kt$if</ID>
+    <ID>MaxLineLength:TermuxFolders.kt$return "Use letters, digits, dots, dashes or underscores, starting with a letter or digit (up to 64 characters)."</ID>
+    <ID>MaxLineLength:TermuxFoldersModelTest.kt$TermuxFoldersModelTest$TermuxFolders.parseListing("/", "oc-folders-ok\noc-dir\t-\tproc\noc-dir\t-\topt\n").valueOrNull()!!.map { it.name }</ID>
+    <ID>MaxLineLength:TermuxFoldersModelTest.kt$TermuxFoldersModelTest$assertEquals(FolderListProblem.Failed, TermuxFolders.parseListing("/root/x", "proot: something\n").problemOrNull())</ID>
+    <ID>MaxLineLength:TermuxFoldersModelTest.kt$TermuxFoldersModelTest$assertEquals(FolderListProblem.TimedOut, TermuxFolders.parseListing("/root/x", "oc-folders-timeout\n").problemOrNull())</ID>
+    <ID>MaxLineLength:TermuxFoldersModelTest.kt$TermuxFoldersModelTest$assertEquals(listOf("/root/projects/app" to true, "/root/projects/notes" to false), entries.map { it.path to it.isGit })</ID>
+    <ID>MaxLineLength:TermuxFoldersScriptTest.kt$TermuxFoldersScriptTest$val ran = runProcess(listOf("bash", "-s"), mapOf("PATH" to "${bin.path}:${System.getenv("PATH")}"), cwd ?: temp, script)</ID>
+    <ID>MaxLineLength:TermuxProcessesModelTest.kt$TermuxProcessesModelTest$assertTrue(termuxToolsCommandScript("procs-stop", "ai_team").endsWith("exec \"\$TOOLS\" procs-stop 'ai_team'\n"))</ID>
+    <ID>MaxLineLength:TermuxProcessesScriptTest.kt$TermuxProcessesScriptTest$" 900 700 5.0 00:02:00 150000 600 node node /data/data/com.termux/files/usr/lib/node_modules/@anthropic-ai/claude-code/cli.js\n"</ID>
+    <ID>MaxLineLength:TermuxProcessesScriptTest.kt$TermuxProcessesScriptTest$private fun exitedNonZero(process: Process): Boolean</ID>
+    <ID>MaxLineLength:TermuxStorage.kt$TermuxStorageRefusal$public data</ID>
+    <ID>MaxLineLength:TermuxStorage.kt$TermuxStorageReport.Companion$isStale = decoded["stale"].isTrue() || !(policy is JsonPrimitive &amp;&amp; !policy.isString &amp;&amp; policy.doubleOrNull == 2.0)</ID>
+    <ID>MaxLineLength:TermuxStorageModelTest.kt$TermuxStorageModelTest$"/data/data/com.termux/files/usr/var/lib/proot-distro/containers/opencode-ubuntu/rootfs/root/.gradle/caches"</ID>
+    <ID>MaxLineLength:TermuxStorageModelTest.kt$TermuxStorageModelTest$assertEquals(TermuxStorageScanStage.BuildCaches, TermuxStorageScanStage.reached("[oc] Build caches\n Toolchains"))</ID>
+    <ID>MaxLineLength:TermuxStorageModelTest.kt$TermuxStorageModelTest$assertTrue(TERMUX_TOOLS_SCRIPT.contains("log '${stage.heading}'"), "${stage.name} heading drifted from the script")</ID>
+    <ID>MaxLineLength:TermuxStorageScriptTest.kt$TermuxStorageScriptTest$fun</ID>
+    <ID>MaxLineLength:TermuxStorageScriptTest.kt$TermuxStorageScriptTest.Phone$fun clean(category: String): TermuxStorageCleanResult</ID>
+    <ID>MaxLineLength:TermuxStorageScriptTest.kt$TermuxStorageScriptTest.Phone$fun rel(paths: Iterable&lt;TermuxStoragePath&gt;): Set&lt;String&gt;</ID>
+    <ID>MaxLineLength:build.gradle.kts$// :engine:linuxtools (unit P12-BUILD-RUNTIME-C): the phone Linux tools (lib/termux/processes.dart, storage.dart, termux_folders.dart, lib/builtin/builtin_folders.dart, lib/domain/shared_storage_path.dart).</ID>
+    <ID>ReturnCount:Folders.kt$BuiltinFolders$public suspend fun list(path: String): FolderResult&lt;List&lt;FolderEntry&gt;&gt;</ID>
+    <ID>ReturnCount:Folders.kt$BuiltinRootfsFolders$private suspend fun hostPath(rootfs: String, ubuntuPath: String): HostPath</ID>
+    <ID>ReturnCount:Folders.kt$BuiltinRootfsFolders$public suspend fun hostDirectory(path: String): String?</ID>
+    <ID>ReturnCount:Folders.kt$BuiltinRootfsFolders$public suspend fun list(path: String): FolderResult&lt;List&lt;FolderEntry&gt;&gt;</ID>
+    <ID>ReturnCount:Folders.kt$BuiltinRootfsFolders.Companion$public fun normalize(path: String): String?</ID>
+    <ID>ReturnCount:Folders.kt$BuiltinRootfsFolders.Companion$public fun parentOf(path: String): String?</ID>
+    <ID>ReturnCount:JsonReads.kt$internal fun JsonElement?.asInt(): Int</ID>
+    <ID>ReturnCount:JsonReads.kt$internal fun JsonElement?.asLong(): Long</ID>
+    <ID>ReturnCount:TermuxFolders.kt$TermuxFolders$public suspend fun create(path: String): FolderResult&lt;CreatedFolder&gt;</ID>
+    <ID>ReturnCount:TermuxFolders.kt$TermuxFolders.Companion$public fun parseListing(path: String, stdout: String): FolderResult&lt;List&lt;FolderEntry&gt;&gt;</ID>
+    <ID>ReturnCount:TermuxFolders.kt$public fun isProtectedWorkspaceDirectory(path: String?): Boolean</ID>
+    <ID>ReturnCount:TermuxFolders.kt$public fun projectFolderNameProblem(name: String): String?</ID>
+    <ID>ReturnCount:TermuxFolders.kt$public fun workspaceDirectoryProblem(path: String?): String?</ID>
+    <ID>ReturnCount:TermuxFolders.kt$public suspend fun createProjectFolder( runner: TermuxScriptRunner, name: String, ): Outcome&lt;String&gt;</ID>
+    <ID>ReturnCount:TermuxProcesses.kt$TermuxProcess.Companion$public fun fromJson(raw: JsonElement?): TermuxProcess?</ID>
+    <ID>ReturnCount:TermuxProcesses.kt$TermuxProcessReport.Companion$public fun activityOf(process: TermuxProcess, previous: TermuxProcessReport?): PhoneProcessActivity</ID>
+    <ID>ReturnCount:TermuxProcesses.kt$TermuxProcessReport.Companion$public fun parse(json: String): TermuxProcessReport?</ID>
+    <ID>ReturnCount:TermuxProcesses.kt$TermuxProcesses$public suspend fun stopPids(pids: List&lt;Int&gt;): Outcome&lt;TermuxProcessStopResult&gt;</ID>
+    <ID>ReturnCount:TermuxStorage.kt$public fun displayTermuxPath(path: String): String</ID>
+    <ID>ReturnCount:TermuxStorage.kt$public fun splitBytes(bytes: Long): SplitBytes</ID>
+  </CurrentIssues>
+</SmellBaseline>

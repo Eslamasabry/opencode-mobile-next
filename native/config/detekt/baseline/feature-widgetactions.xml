@@ -1,0 +1,30 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:WidgetActionViewModel.kt$WidgetActionViewModel$mutable.value.phase != WidgetActionPhase.Editing || mutable.value.listening || mutable.value.dictating || text.isBlank() || text.length &gt; MAX_TEXT</ID>
+    <ID>ComplexCondition:WidgetActionViewModel.kt$WidgetActionViewModel$voice == null || mutable.value.phase != WidgetActionPhase.Editing || mutable.value.listening || mutable.value.dictating</ID>
+    <ID>CyclomaticComplexMethod:WidgetActionScreen.kt$@Composable public fun WidgetActionScreen(state: WidgetActionUi, actions: WidgetActionActions)</ID>
+    <ID>EmptyFunctionBlock:WidgetComposePanelTest.kt$WidgetComposePanelTest.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:WidgetProjectPanelTest.kt$WidgetProjectPanelTest.&lt;no name provided&gt;${}</ID>
+    <ID>LongMethod:WidgetActionScreen.kt$@Composable public fun WidgetActionScreen(state: WidgetActionUi, actions: WidgetActionActions)</ID>
+    <ID>LongMethod:WidgetPanelScreen.kt$@Composable public fun WidgetPanelScreen(state: WidgetPanelUi, actions: WidgetPanelActions)</ID>
+    <ID>MagicNumber:WidgetActionScreen.kt$700</ID>
+    <ID>WildcardImport:WidgetActionScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:WidgetActionScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:WidgetActionScreen.kt$import io.github.eslamasabry.oc.feature.widgetactions.presentation.*</ID>
+    <ID>WildcardImport:WidgetActionScreen.kt$import io.github.eslamasabry.oc.ui.kit.*</ID>
+    <ID>WildcardImport:WidgetActionScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:WidgetComposePanelTest.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:WidgetComposePanelTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:WidgetComposePanelTest.kt$import io.github.eslamasabry.oc.feature.widgetactions.presentation.*</ID>
+    <ID>WildcardImport:WidgetPanelScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:WidgetPanelScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:WidgetPanelScreen.kt$import io.github.eslamasabry.oc.feature.widgetactions.presentation.*</ID>
+    <ID>WildcardImport:WidgetPanelScreen.kt$import io.github.eslamasabry.oc.ui.kit.*</ID>
+    <ID>WildcardImport:WidgetPanelScreen.kt$import io.github.eslamasabry.oc.ui.kit.choice.*</ID>
+    <ID>WildcardImport:WidgetPanelScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:WidgetProjectPanelTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:WidgetProjectPanelTest.kt$import io.github.eslamasabry.oc.feature.widgetactions.presentation.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

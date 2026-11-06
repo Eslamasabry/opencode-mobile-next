@@ -1,0 +1,243 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:AttentionFeed.kt$AttentionFeed.Companion$previous == null || o.observedAt &gt; previous.observedAt || (o.observedAt == previous.observedAt &amp;&amp; (!previous.isFresh || o.isFresh))</ID>
+    <ID>ComplexCondition:AutomaticActivity.kt$AutomaticActivity$!HEX64.matches(id) || !HEX64.matches(location) || !ids.add(id) || summaryOf(summary).isEmpty() || summary.length &gt; 1600 || at &lt;= 0 || (session != null &amp;&amp; session.length &gt; 256) || (undone &amp;&amp; !attempted)</ID>
+    <ID>ComplexCondition:ElsewhereAttention.kt$ElsewhereAttention.Companion$key.contains("providerauth") || key.contains("needsauth") || key.contains("unauthorized") || key.contains("authentication")</ID>
+    <ID>ComplexCondition:MonitorAttentionReader.kt$MonitorAttentionReader$profile.hasPhoneEngine &amp;&amp; build != null &amp;&amp; (profile.teamEngineToken.isNotEmpty() || resolvePhoneCredentials) &amp;&amp; allowed()</ID>
+    <ID>ComplexCondition:MonitorModels.kt$ObservedBusyInterval.Companion$sessionId.isEmpty() || first == null || last == null || last &lt; first</ID>
+    <ID>ComplexCondition:MonitorRouting.kt$MonitorRequestOpener$!isReadable(route.profileId) || !monitorEnabled(route.profileId) || route.createdAt &gt; now || now - route.createdAt &gt; 1.days</ID>
+    <ID>ComplexCondition:ProfileMonitor.kt$ProfileMonitor$!finished &amp;&amp; !disposed &amp;&amp; runningAllowed &amp;&amp; p.id !in blocked &amp;&amp; isReadable(p.id) &amp;&amp; allows(p.id) &amp;&amp; (pollGenerations[p.id] ?: 0) == generation &amp;&amp; profiles.profiles().any { it.id == p.id &amp;&amp; source(it) == expectedSource }</ID>
+    <ID>ComplexCondition:ProfileMonitor.kt$ProfileMonitor$!isReadable(id) || id in blocked || !rulesFor(id).enabled || !allows(id)</ID>
+    <ID>ComplexCondition:ProfileMonitor.kt$ProfileMonitor$(id in sources &amp;&amp; !sameSource(id)) || route.createdAt &gt; now || p.baseUrl != route.serverUrl || route.sourceIdentity != routeSourceIdentity(p) || now - route.createdAt &gt; 1.days</ID>
+    <ID>ComplexCondition:ProfileMonitor.kt$ProfileMonitor$disposed || !isReadable(p.id) || !allows(p.id) || p.id in blocked</ID>
+    <ID>ComplexCondition:ProfileMonitor.kt$ProfileMonitor$disposed || !runningAllowed || id in blocked || !allows(id)</ID>
+    <ID>ComplexCondition:ProfileMonitor.kt$ProfileMonitor$disposed || id in blocked || !isReadable(id) || p == null || !supportsProfile(p)</ID>
+    <ID>ComplexCondition:ProfileMonitor.kt$ProfileMonitor$value.isCurrent &amp;&amp; (checkedAt == null || checkedAt &gt; now || now - checkedAt &gt; maxAge)</ID>
+    <ID>ComplexCondition:ProfileMonitor.kt$ProfileMonitor.Companion$ch in 'A'..'Z' || ch in 'a'..'z' || ch in '0'..'9' || ch in "-_.!~*'()"</ID>
+    <ID>CyclomaticComplexMethod:ElsewhereAttention.kt$ElsewhereAttention$public fun handle(event: AttentionEvent)</ID>
+    <ID>CyclomaticComplexMethod:ElsewhereAttention.kt$ElsewhereAttention$public suspend fun observe(envelope: GatewayEnvelope): Unit</ID>
+    <ID>CyclomaticComplexMethod:LiveStatusComposer.kt$LiveStatusComposer.Companion$public fun toolSentence(tool: String, words: LiveWords): String</ID>
+    <ID>CyclomaticComplexMethod:MonitorAttentionReader.kt$MonitorAttentionReader$@OptIn(ExperimentalCoroutinesApi::class) override suspend fun read( profile: MonitorProfile, gateway: MonitorGateway, sessions: List&lt;MonitorSession&gt;, statuses: Map&lt;String, String&gt;, current: () -&gt; Boolean, ): MonitorAttentionDetails</ID>
+    <ID>CyclomaticComplexMethod:MonitorAttentionReader.kt$MonitorAttentionReader$internal fun projectObservations( snapshot: MonitorTeamWorkspace, directory: String?, workspace: String?, ): List&lt;MonitorAttentionItem&gt;</ID>
+    <ID>CyclomaticComplexMethod:MonitorRouting.kt$MonitorRequestOpener$public suspend fun prepare(route: MonitoredRoute): Boolean</ID>
+    <ID>CyclomaticComplexMethod:ProfileMonitor.kt$ProfileMonitor$private suspend fun pollWithinDeadline(p: MonitorProfile, generation: Int)</ID>
+    <ID>CyclomaticComplexMethod:ProfileMonitor.kt$ProfileMonitor$private suspend fun publishAlerts( id: String, requests: List&lt;MonitoredRequest&gt;, current: () -&gt; Boolean, policy: () -&gt; Boolean, )</ID>
+    <ID>CyclomaticComplexMethod:ProfileMonitor.kt$ProfileMonitor$private suspend fun run()</ID>
+    <ID>CyclomaticComplexMethod:ProfileMonitor.kt$ProfileMonitor$private suspend fun writeRules( id: String, value: MonitorNotifyRules, explicitConsent: Boolean, ): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:ProfileMonitor.kt$ProfileMonitor$public fun snapshotFor(id: String): ProfileAttentionSnapshot</ID>
+    <ID>CyclomaticComplexMethod:SelectedTransportAttention.kt$SelectedTransportAttention$public fun handle(event: AttentionEvent)</ID>
+    <ID>CyclomaticComplexMethod:SelectedTransportAttention.kt$SelectedTransportAttention$public fun snapshot( profileId: String, directory: String?, workspace: String?, supportsForms: Boolean, sessions: (String) -&gt; AttentionSessionFacts? = { null }, elsewhere: ElsewhereAttention? = null, ): AttentionServerSnapshot</ID>
+    <ID>CyclomaticComplexMethod:WidgetSnapshotWriter.kt$WidgetSnapshotWriter$private suspend fun suspend(profileId: String)</ID>
+    <ID>CyclomaticComplexMethod:WidgetSnapshotWriter.kt$WidgetSnapshotWriter$public suspend fun clearForProfile(profileId: String): WidgetSnapshotClear</ID>
+    <ID>LargeClass:ProfileMonitor.kt$ProfileMonitor</ID>
+    <ID>LongMethod:ElsewhereAttention.kt$ElsewhereAttention$public fun handle(event: AttentionEvent)</ID>
+    <ID>LongMethod:ElsewhereAttention.kt$ElsewhereAttention$public suspend fun observe(envelope: GatewayEnvelope): Unit</ID>
+    <ID>LongMethod:MonitorAttentionReader.kt$MonitorAttentionReader$@OptIn(ExperimentalCoroutinesApi::class) override suspend fun read( profile: MonitorProfile, gateway: MonitorGateway, sessions: List&lt;MonitorSession&gt;, statuses: Map&lt;String, String&gt;, current: () -&gt; Boolean, ): MonitorAttentionDetails</ID>
+    <ID>LongMethod:MonitorRouting.kt$MonitorRequestOpener$public suspend fun prepare(route: MonitoredRoute): Boolean</ID>
+    <ID>LongMethod:ProfileMonitor.kt$ProfileMonitor$private suspend fun pollWithinDeadline(p: MonitorProfile, generation: Int)</ID>
+    <ID>LongMethod:SelectedTransportAttention.kt$SelectedTransportAttention$public fun snapshot( profileId: String, directory: String?, workspace: String?, supportsForms: Boolean, sessions: (String) -&gt; AttentionSessionFacts? = { null }, elsewhere: ElsewhereAttention? = null, ): AttentionServerSnapshot</ID>
+    <ID>LongParameterList:AutomaticActivity.kt$AutomaticActivity$( eventId: String, location: String, kind: AutomaticActKind, summary: String, occurredAt: Instant, sessionId: String? = null, undo: (suspend () -&gt; Boolean)? = null, )</ID>
+    <ID>LongParameterList:AutomaticActivityTest.kt$AutomaticActivityTest$( eventId: String, location: String = "/project/one", summary: String = "Reconnected automatically", occurredAt: Instant = time, sessionId: String? = null, undo: (suspend () -&gt; Boolean)? = null, )</ID>
+    <ID>LongParameterList:MonitorAttentionReader.kt$MonitorAttentionReader$( private val clock: Clock, private val cleanupScope: CoroutineScope, private val redactor: Redactor = Redactor(), /** Builds the authenticated engine client; only called when the profile has a token. */ private val phoneEngine: (suspend (MonitorProfile) -&gt; MonitorPhoneEngine)? = null, private val timeSource: TimeSource = TimeSource.Monotonic, public val timeout: Duration = 8.seconds, /** * Production factories resolve secrets inside their bounded read, never in a synchronous * profile list. */ private val resolvePhoneCredentials: Boolean = false, )</ID>
+    <ID>LongParameterList:ProfileMonitor.kt$ProfileMonitor$( id: String, statuses: Map&lt;String, String&gt;, sessions: Map&lt;String, MonitorSession&gt;, now: Instant, directory: String?, workspace: String?, )</ID>
+    <ID>LongParameterList:ProfileMonitor.kt$ProfileMonitor$( private val prefs: MonitorPrefs, private val profiles: MonitorProfiles, private val consent: MonitorConsent, private val createGateway: (MonitorProfile) -&gt; MonitorGateway, private val isReadable: (String) -&gt; Boolean, /** null means the platform cannot establish Wi-Fi policy: fail closed. */ private val networkWifi: suspend () -&gt; Boolean?, private val alerts: MonitorAlerts, private val clock: Clock, private val scope: CoroutineScope, /** The local wall-clock minute of an instant, for quiet hours. */ private val minuteOfDay: (Instant) -&gt; Int, private val alertsAllowed: ((String) -&gt; Boolean)? = null, private val readAttention: MonitorAttentionReading? = null, private val sharedRules: MonitorSharedRules = MonitorSharedRules.None, public val foregroundInterval: Duration = 1.minutes, public val backgroundInterval: Duration = 5.minutes, public val timeout: Duration = 8.seconds, )</ID>
+    <ID>LongParameterList:SelectedTransportAttention.kt$SelectedTransportAttention$( profileId: String, directory: String?, workspace: String?, supportsForms: Boolean, sessions: (String) -&gt; AttentionSessionFacts? = { null }, elsewhere: ElsewhereAttention? = null, )</ID>
+    <ID>LoopWithTooManyJumpStatements:AttentionFeed.kt$AttentionFeed.Companion$for</ID>
+    <ID>LoopWithTooManyJumpStatements:ElsewhereAttention.kt$ElsewhereAttention.Companion$for</ID>
+    <ID>LoopWithTooManyJumpStatements:MonitorAttentionReader.kt$MonitorAttentionReader$while</ID>
+    <ID>LoopWithTooManyJumpStatements:NotificationText.kt$NotificationText$for</ID>
+    <ID>LoopWithTooManyJumpStatements:ProfileMonitor.kt$ProfileMonitor$for</ID>
+    <ID>LoopWithTooManyJumpStatements:ProfileMonitor.kt$ProfileMonitor$while</ID>
+    <ID>MagicNumber:AutomaticActivity.kt$AutomaticActivity$1600</ID>
+    <ID>MagicNumber:AutomaticActivity.kt$AutomaticActivity$256</ID>
+    <ID>MagicNumber:MonitorAttentionReader.kt$MonitorAttentionReader$160</ID>
+    <ID>MagicNumber:MonitorModels.kt$MonitorNotifyRules.Companion$1440</ID>
+    <ID>MagicNumber:MonitorModels.kt$MonitorNotifyRules.Companion$24</ID>
+    <ID>MagicNumber:MonitorModels.kt$MonitorNotifyRules.Companion$60</ID>
+    <ID>MagicNumber:MonitorRouting.kt$MonitorRequestOpener$100</ID>
+    <ID>MagicNumber:NotificationText.kt$NotificationText$24</ID>
+    <ID>MagicNumber:NotificationText.kt$NotificationText$3</ID>
+    <ID>MagicNumber:ProfileMonitor.kt$ProfileMonitor$100</ID>
+    <ID>MagicNumber:ProfileMonitor.kt$ProfileMonitor$6</ID>
+    <ID>MagicNumber:ProfileMonitor.kt$ProfileMonitor$60L</ID>
+    <ID>MagicNumber:ProfileMonitor.kt$ProfileMonitor$900L</ID>
+    <ID>MagicNumber:ProfileMonitor.kt$ProfileMonitor.Companion$0xff</ID>
+    <ID>MagicNumber:ProfileMonitor.kt$ProfileMonitor.Companion$4</ID>
+    <ID>MagicNumber:WidgetSnapshotWriter.kt$WidgetSnapshotWriter$5</ID>
+    <ID>MagicNumber:WidgetSnapshotWriter.kt$WidgetSnapshotWriter$512</ID>
+    <ID>MagicNumber:WidgetText.kt$WidgetText$0xFFFF</ID>
+    <ID>MagicNumber:WidgetText.kt$WidgetText.Companion$0x061c</ID>
+    <ID>MagicNumber:WidgetText.kt$WidgetText.Companion$0x10000</ID>
+    <ID>MagicNumber:WidgetText.kt$WidgetText.Companion$0x20</ID>
+    <ID>MagicNumber:WidgetText.kt$WidgetText.Companion$0x200e</ID>
+    <ID>MagicNumber:WidgetText.kt$WidgetText.Companion$0x200f</ID>
+    <ID>MagicNumber:WidgetText.kt$WidgetText.Companion$0x202a</ID>
+    <ID>MagicNumber:WidgetText.kt$WidgetText.Companion$0x202e</ID>
+    <ID>MagicNumber:WidgetText.kt$WidgetText.Companion$0x2066</ID>
+    <ID>MagicNumber:WidgetText.kt$WidgetText.Companion$0x2069</ID>
+    <ID>MagicNumber:WidgetText.kt$WidgetText.Companion$0x7f</ID>
+    <ID>MagicNumber:WidgetText.kt$WidgetText.Companion$0xD800</ID>
+    <ID>MagicNumber:WidgetText.kt$WidgetText.Companion$0xDC00</ID>
+    <ID>MagicNumber:WidgetText.kt$WidgetText.Companion$10</ID>
+    <ID>MaxLineLength:AttentionFeed.kt$AttentionCheckState$public enum</ID>
+    <ID>MaxLineLength:AttentionFeed.kt$AttentionFeed.Companion$add(o.copy(directory = o.directory ?: snapshot.directory, workspace = o.workspace ?: snapshot.workspace))</ID>
+    <ID>MaxLineLength:AttentionFeed.kt$AttentionFeed.Companion$checks += AttentionServerCheck(server.profileId, name, AttentionCheckState.Unavailable, isFresh = false, coverageComplete = false)</ID>
+    <ID>MaxLineLength:AttentionFeed.kt$AttentionFeed.Companion$private fun recent(at: Instant?, now: Instant, maxAge: Duration): Boolean</ID>
+    <ID>MaxLineLength:AttentionFeedTest.kt$AttentionFeedTest$if (id == "profile-1") source.snapshot(id, "/work", null, supportsForms = false) else monitored(id, otherEnabled)</ID>
+    <ID>MaxLineLength:AttentionFeedTest.kt$AttentionFeedTest$listOf(AttentionServer("profile-2", "A", monitored("profile-2", true)), AttentionServer("profile-2", "B", monitored("profile-2", true)))</ID>
+    <ID>MaxLineLength:AttentionFeedTest.kt$AttentionFeedTest$private</ID>
+    <ID>MaxLineLength:AttentionFeedTest.kt$AttentionFeedTest$private val request = AttentionRequest(id = "request-1", sessionId = "same-session", kind = AttentionRequestKind.Permission)</ID>
+    <ID>MaxLineLength:AttentionModel.kt$AttentionPhase$public enum</ID>
+    <ID>MaxLineLength:AutomaticActivityTest.kt$AutomaticActivityTest$assertEquals(listOf("Reconnected automatically", "Earlier reconnect"), restored.currentActs.map { it.summary })</ID>
+    <ID>MaxLineLength:AutomaticActivityTest.kt$AutomaticActivityTest$for (index in 0 until AutomaticActivity.MAX_ENTRIES + 2) controller.rec("event-$index", occurredAt = at(index.seconds))</ID>
+    <ID>MaxLineLength:ElsewhereAttention.kt$ElsewhereAttention$kind = if (event.type.startsWith("permission.")) AttentionKind.Permission else AttentionKind.Question</ID>
+    <ID>MaxLineLength:ElsewhereAttention.kt$ElsewhereAttention$private</ID>
+    <ID>MaxLineLength:ElsewhereAttention.kt$ElsewhereAttention$waiting = waitingRequests.values.filter { it.directory == directory }.mapNotNull { it.sessionId }.toImmutableSet()</ID>
+    <ID>MaxLineLength:ElsewhereAttention.kt$ElsewhereAttention.Companion$if (key.contains("providerauth") || key.contains("needsauth") || key.contains("unauthorized") || key.contains("authentication")) return false</ID>
+    <ID>MaxLineLength:ElsewhereAttention.kt$ElsewhereAttention.Companion$setOf("permission.asked", "permission.v2.asked", "permission.updated", "question.asked", "question.updated", "question.v2.asked")</ID>
+    <ID>MaxLineLength:ElsewhereAttentionTest.kt$ElsewhereAttentionTest$assertEquals(setOf(AttentionKind.Permission, AttentionKind.Question, AttentionKind.Form), observations.map { it.kind }.toSet())</ID>
+    <ID>MaxLineLength:ElsewhereAttentionTest.kt$ElsewhereAttentionTest$for</ID>
+    <ID>MaxLineLength:ElsewhereAttentionTest.kt$ElsewhereAttentionTest$for (folder in listOf("/one", "/two")) tracker.feed("permission.asked", folder, "id" to "same-id", "sessionID" to "same-session")</ID>
+    <ID>MaxLineLength:ElsewhereAttentionTest.kt$ElsewhereAttentionTest$private</ID>
+    <ID>MaxLineLength:ElsewhereAttentionTest.kt$ElsewhereAttentionTest$tracker.feed("form.v2.cancelled", "/other", "id" to "same-id", "sessionID" to "conversation", workspace = "workspace")</ID>
+    <ID>MaxLineLength:ElsewhereAttentionTest.kt$ElsewhereAttentionTest$tracker.feed("question.v2.replied", "/other", "requestID" to "same-id", "sessionID" to "conversation", workspace = "workspace")</ID>
+    <ID>MaxLineLength:ElsewhereAttentionTest.kt$ElsewhereAttentionTest$tracker.feed("session.error", "/one", "sessionID" to "session", "error" to mapOf("name" to "MessageAbortedError"))</ID>
+    <ID>MaxLineLength:ElsewhereAttentionTest.kt$ElsewhereAttentionTest$tracker.feed("session.error", directory, "sessionID" to "session", "error" to mapOf("message" to "Raw server text must never be retained"))</ID>
+    <ID>MaxLineLength:LiveStatus.kt$LiveNotificationStatus$public fun toPayload(): Map&lt;String, Any?&gt;</ID>
+    <ID>MaxLineLength:LiveStatus.kt$LiveStatusKind$public enum</ID>
+    <ID>MaxLineLength:LiveStatus.kt$LiveStatusPublisher$*</ID>
+    <ID>MaxLineLength:LiveStatusComposer.kt$LiveStatusComposer$pending &gt; 0 -&gt; words.needsYou(pending).let { LiveNotificationStatus(LiveStatusKind.NeedsYou, it, "OpenCode · $it") }</ID>
+    <ID>MaxLineLength:LiveStatusComposer.kt$LiveStatusComposer$return LiveStatus(runningCount = running, pendingCount = pending, title = title, detail = detail, status = status)</ID>
+    <ID>MaxLineLength:LiveStatusComposer.kt$LiveStatusComposer$running == 1 -&gt; LiveNotificationStatus(LiveStatusKind.Working, detail ?: words.toolWorking, words.chatsWorking(1))</ID>
+    <ID>MaxLineLength:LiveStatusComposer.kt$LiveStatusComposer$running &gt; 1 -&gt; words.chatsWorking(running).let { LiveNotificationStatus(LiveStatusKind.SeveralWorking, it, it) }</ID>
+    <ID>MaxLineLength:LiveStatusTest.kt$LiveStatusTest$LiveStatusPublisher(r.platform, backgroundScope, testTimeSource, debounce, persistDisabled = { persisted?.add(false) })</ID>
+    <ID>MaxLineLength:LiveStatusTest.kt$LiveStatusTest$assertEquals(mapOf("runningCount" to 0, "pendingCount" to 0, "title" to null, "detail" to null), LiveStatus.Idle.toPayload())</ID>
+    <ID>MaxLineLength:LiveStatusTest.kt$LiveStatusTest$assertEquals(mapOf("runningCount" to 3, "pendingCount" to 0, "title" to null, "detail" to "Editing files…"), r.calls.last())</ID>
+    <ID>MaxLineLength:LiveStatusTest.kt$LiveStatusTest$private</ID>
+    <ID>MaxLineLength:MonitorAttentionReaderTest.kt$MonitorAttentionReaderTest$MonitorAttentionReader(clock, backgroundScope, phoneEngine = engine, timeSource = testTimeSource, timeout = timeout)</ID>
+    <ID>MaxLineLength:MonitorAttentionReaderTest.kt$MonitorAttentionReaderTest$MonitorProfile(id = "server", baseUrl = "https://server.example", hasPhoneEngine = true, teamEngineToken = token)</ID>
+    <ID>MaxLineLength:MonitorAttentionReaderTest.kt$MonitorAttentionReaderTest$MonitorTeamRequest("question", taskId = "task", title = "Choose a behavior")</ID>
+    <ID>MaxLineLength:MonitorAttentionReaderTest.kt$MonitorAttentionReaderTest$gateway.page = MonitorMessagePage(listOf(MonitorMessage("assistant-2", "assistant", finish = "length")), hasMore = true)</ID>
+    <ID>MaxLineLength:MonitorAttentionReaderTest.kt$MonitorAttentionReaderTest$private</ID>
+    <ID>MaxLineLength:MonitorAttentionReaderTest.kt$MonitorAttentionReaderTest$snapshot = MonitorTeamWorkspace(listOf(MonitorTeamProject("project", tasks = List(300) { MonitorTeamTask("$it", "task", "failed") })))</ID>
+    <ID>MaxLineLength:MonitorAttentionReaderTest.kt$MonitorAttentionReaderTest$val details = r.read(phoneProfile(token = if (missing) "" else "private-phone-token"), TestGateway(), emptyList(), emptyMap()) { true }</ID>
+    <ID>MaxLineLength:MonitorAttentionReaderTest.kt$MonitorAttentionReaderTest$val result = async { r.read(phoneProfile(), gateway, listOf(MonitorSession("a"), MonitorSession("b")), emptyMap()) { current } }</ID>
+    <ID>MaxLineLength:MonitorModels.kt$MonitorNotifyRules$*</ID>
+    <ID>MaxLineLength:MonitorModels.kt$MonitorNotifyRules$return start == end || if (start &lt; end) minuteOfDay in start until end else minuteOfDay &gt;= start || minuteOfDay &lt; end</ID>
+    <ID>MaxLineLength:MonitorModels.kt$ObservedBusyInterval$public</ID>
+    <ID>MaxLineLength:MonitorModels.kt$ObservedBusyInterval.Companion$fun listToJson(items: Collection&lt;ObservedBusyInterval&gt;): String</ID>
+    <ID>MaxLineLength:MonitorModels.kt$ProfileAttentionSnapshot$public</ID>
+    <ID>MaxLineLength:MonitorModels.kt$internal fun JsonObject.intOrNullAt(key: String): Int?</ID>
+    <ID>MaxLineLength:MonitorModels.kt$internal fun JsonObject.longAt(key: String): Long?</ID>
+    <ID>MaxLineLength:MonitorNavigationTest.kt$MonitorNavigationTest$val request = MonitoredRequest("request-1", "same-session", kind, title = "Private title", directory = "/private")</ID>
+    <ID>MaxLineLength:MonitorNavigationTest.kt$MonitorNavigationTest$val wire = MonitorAlertPayload.of("profile-1", request, "monitor:profile-1:request-1", "opaque-token").toWire()</ID>
+    <ID>MaxLineLength:MonitorTestSupport.kt$FakeProfiles$val list = MutableList(count) { i -&gt; MonitorProfile(id = "profile-${i + 1}", baseUrl = "https://server${i + 1}.example") }</ID>
+    <ID>MaxLineLength:MonitorTestSupport.kt$Harness$suspend</ID>
+    <ID>MaxLineLength:MonitorTestSupport.kt$TestGateway$override suspend fun session(id: String): Outcome&lt;MonitorSession&gt;</ID>
+    <ID>MaxLineLength:MonitorTestSupport.kt$TestGateway$return MonitorSessionPage(ids.map { MonitorSession(it, if (statuses == null) "Private title" else "Title of $it", directory, workspace) }).ok()</ID>
+    <ID>MaxLineLength:MonitorTestSupport.kt$TestGateway$var page: MonitorMessagePage = MonitorMessagePage(listOf(MonitorMessage("user-1", "user"), MonitorMessage("assistant-2", "assistant", finish = "length")))</ID>
+    <ID>MaxLineLength:NotificationText.kt$NotificationText$"""\b((?:api[_-]?key|access[_-]?key|secret|token|passwd|password|pwd|authorization|auth)[A-Za-z0-9_-]*)\s*[=:]\s*("[^"]*"|'[^']*'|\S+)"""</ID>
+    <ID>MaxLineLength:NotificationText.kt$NotificationText$/** A command's program and, when it has one, its sub-command ("npm install", "git push", "pytest"). Masked; ≤ 40. */</ID>
+    <ID>MaxLineLength:NotificationText.kt$NotificationText$Regex("""(--?(?:password|passwd|token|secret|api-key|apikey|key|auth))[ =]+("[^"]*"|\S+)""", RegexOption.IGNORE_CASE)</ID>
+    <ID>MaxLineLength:NotificationText.kt$NotificationText$Regex("""\b(bearer|basic)\s+[A-Za-z0-9._~+/=-]{6,}""", RegexOption.IGNORE_CASE) to { m -&gt; "${m.groupValues[1]} $MASK" }</ID>
+    <ID>MaxLineLength:NotificationText.kt$NotificationText$key.contains("providerauth") || key.contains("needsauth") || key.contains("unauthorized") || key.contains("authentication") -&gt; "auth"</ID>
+    <ID>MaxLineLength:NotificationText.kt$NotificationText$val lines = part.text.split('\n').map { it.replaceFirst(REPLY_PREFIX, "").trim() }.filter { it.isNotEmpty() }</ID>
+    <ID>MaxLineLength:NotificationText.kt$NotificationText.AskTitle$/** An action token (`run`, `edit`, `read`, `folder`) and its short masked target; both empty with nothing to show. */</ID>
+    <ID>MaxLineLength:NotificationText.kt$NotificationText.PermissionAsk$get() = firstString(listOf("command", "cmd")) ?: if (permission.lowercase() in COMMAND_PERMISSIONS) firstPattern() else null</ID>
+    <ID>MaxLineLength:NotificationText.kt$NotificationText.PermissionAsk$private fun firstString(keys: List&lt;String&gt;): String?</ID>
+    <ID>MaxLineLength:NotificationText.kt$PermissionShadeCopy.Companion$public</ID>
+    <ID>MaxLineLength:NotificationTextTest.kt$NotificationTextTest$NotificationText.firstReplyLine(listOf(reply("assistant", "Old reply"), reply("user", "next"), reply("assistant", "\n## Dark theme added to Settings.\nMore")))</ID>
+    <ID>MaxLineLength:NotificationTextTest.kt$NotificationTextTest$PermissionAsk("bash", mapOf("command" to """curl -H "Authorization: Bearer sk-live-ABCDEFGHIJ1234" https://api.example.com --password hunter2hunter2"""))</ID>
+    <ID>MaxLineLength:NotificationTextTest.kt$NotificationTextTest$assertEquals(AskTitle("edit", "settings.dart"), NotificationText.permissionAskOf(PermissionAsk("edit", patterns = listOf("lib/ui/settings.dart"))))</ID>
+    <ID>MaxLineLength:NotificationTextTest.kt$NotificationTextTest$assertEquals(AskTitle("folder", "api"), NotificationText.permissionAskOf(PermissionAsk("external_directory", patterns = listOf("/srv/api/"))))</ID>
+    <ID>MaxLineLength:NotificationTextTest.kt$NotificationTextTest$assertEquals(AskTitle("read", ".env"), NotificationText.permissionAskOf(PermissionAsk("read", patterns = listOf("config/.env"))))</ID>
+    <ID>MaxLineLength:NotificationTextTest.kt$NotificationTextTest$assertEquals(AskTitle("run", "npm install"), NotificationText.permissionAskOf(PermissionAsk("bash", mapOf("command" to "npm install --save left-pad"))))</ID>
+    <ID>MaxLineLength:NotificationTextTest.kt$NotificationTextTest$assertFalse(NotificationText.firstReplyLine(listOf(reply("assistant", "Set token=ghp_ABCDEFGHIJKLMNOPQRSTUV now"))).contains("ghp_"))</ID>
+    <ID>MaxLineLength:NotificationTextTest.kt$NotificationTextTest$assertTrue(NotificationText.firstReplyLine(listOf(reply("assistant", "Intro that ends with a colon:\n- ${"x".repeat(200)}")), 60).length &lt;= 60)</ID>
+    <ID>MaxLineLength:NotificationTextTest.kt$NotificationTextTest$for</ID>
+    <ID>MaxLineLength:NotificationTextTest.kt$NotificationTextTest$listOf(reply("assistant", "Done. The site now follows the system theme by default:\n\n- Light and dark both work\n- The toggle stays"))</ID>
+    <ID>MaxLineLength:NotificationTextTest.kt$NotificationTextTest$private fun reply(role: String, text: String, synthetic: Boolean = false)</ID>
+    <ID>MaxLineLength:NotificationTextTest.kt$NotificationTextTest$val copy = PermissionShadeCopy.of(PermissionAsk("bash", mapOf("command" to "npm run build")), server = null, project = "api-server", chatTitle = "Fix login")</ID>
+    <ID>MaxLineLength:ProfileMonitorAttentionTest.kt$ProfileMonitorAttentionTest$MonitorAttentionDetails(emptyList(), complete = false, checkedSessionIds = setOf("same-session"))</ID>
+    <ID>MaxLineLength:ProfileMonitorAttentionTest.kt$ProfileMonitorAttentionTest$MonitorAttentionItem(id, MonitorAttentionKind.FailedRun, MonitorWorkPhase.Failed, now, sessionId = "same-session", taskId = taskId)</ID>
+    <ID>MaxLineLength:ProfileMonitorAttentionTest.kt$ProfileMonitorAttentionTest$h.profiles.list.indices.forEach { i -&gt; h.profiles.list[i] = h.profiles.list[i].copy(baseUrl = "http://127.0.0.1:4096") }</ID>
+    <ID>MaxLineLength:ProfileMonitorAttentionTest.kt$ProfileMonitorAttentionTest$items = if (phase == 0) listOf(failedRun("session-failure", h.clock.now), failedRun("team-failure", h.clock.now, taskId = "task")) else emptyList()</ID>
+    <ID>MaxLineLength:ProfileMonitorCheckInTest.kt$ProfileMonitorCheckInTest$(ProfileMonitor.profileScopedKeys("profile-1") + c.h.consent.key("profile-1")).forEach { c.h.prefs.remove(it) }</ID>
+    <ID>MaxLineLength:ProfileMonitorCheckInTest.kt$ProfileMonitorCheckInTest$assertFalse(ProfileMonitor.isCheckInAlertKey(ProfileMonitor.alertKey("profile-1", MonitoredRequest("request-1", "ses-1", MonitoredRequestKind.Permission))))</ID>
+    <ID>MaxLineLength:ProfileMonitorCheckInTest.kt$ProfileMonitorCheckInTest$c.h.prefs.refuse = { key, value -&gt; key == ProfileMonitor.busyIntervalsKey("profile-1") &amp;&amp; value.toString().contains("\"reminderClaimed\":true") }</ID>
+    <ID>MaxLineLength:ProfileMonitorCheckInTest.kt$ProfileMonitorCheckInTest$fun</ID>
+    <ID>MaxLineLength:ProfileMonitorCheckInTest.kt$ProfileMonitorCheckInTest$if</ID>
+    <ID>MaxLineLength:ProfileMonitorCheckInTest.kt$ProfileMonitorCheckInTest.CheckIn$fun lastToken(): String</ID>
+    <ID>MaxLineLength:ProfileMonitorTest.kt$ProfileMonitorTest$assertEquals(listOf("monitor:profile-1:stale"), h.prefs.getStringList(ProfileMonitor.alertsKey("profile-1")))</ID>
+    <ID>MaxLineLength:ProfileMonitorTest.kt$ProfileMonitorTest$assertNull(restored.routeForToken(posted[0].first, posted[0].third), "a recreated monitor rejects the prior principal's route")</ID>
+    <ID>MaxLineLength:RunIdentityTest.kt$RunIdentityTest$private fun message(id: String, created: Long, vararg types: String)</ID>
+    <ID>MaxLineLength:WidgetSnapshotWriter.kt$WidgetOnDemandTarget$public data</ID>
+    <ID>MaxLineLength:WidgetSnapshotWriter.kt$WidgetSnapshotWriter$(details["requestID"] as? String)?.takeIf { it.isNotEmpty() &amp;&amp; it.length &lt;= 512 }?.let { out["requestID"] = JsonPrimitive(it) }</ID>
+    <ID>MaxLineLength:WidgetSnapshotWriter.kt$WidgetSnapshotWriter$(details["runMarker"] as? String)?.takeIf { it.isNotEmpty() &amp;&amp; it.length &lt;= 512 }?.let { out["runMarker"] = JsonPrimitive(it) }</ID>
+    <ID>MaxLineLength:WidgetSnapshotWriter.kt$WidgetSnapshotWriter$buildJsonArray { (details["onDemandActions"] as? List&lt;*&gt;)?.filter { it in ON_DEMAND_ACTIONS }?.forEach { add(JsonPrimitive(it as String)) } }</ID>
+    <ID>MaxLineLength:WidgetSnapshotWriter.kt$WidgetSnapshotWriter$if (title != null &amp;&amp; done != null) add(buildJsonObject { put("title", text.title(title)); put("done", done) })</ID>
+    <ID>MaxLineLength:WidgetSnapshotWriter.kt$WidgetSnapshotWriter$private suspend fun read(key: String): String?</ID>
+    <ID>MaxLineLength:WidgetSnapshotWriter.kt$WidgetSnapshotWriter$private suspend fun remove(key: String): Boolean</ID>
+    <ID>MaxLineLength:WidgetSnapshotWriter.kt$WidgetSnapshotWriter$val opaque = (oldTarget?.get("fingerprint") as? JsonPrimitive)?.let { buildJsonObject { put("fingerprint", it) } } ?: JsonNull</ID>
+    <ID>MaxLineLength:WidgetSnapshotWriter.kt$WidgetSnapshotWriter$val owner = (parse(raw) as? JsonObject)?.let { (it["profileID"] as? JsonPrimitive)?.contentOrNull ?: "" } ?: ""</ID>
+    <ID>MaxLineLength:WidgetSnapshotWriter.kt$WidgetSnapshotWriter$val raw = read(SNAPSHOT_KEY) ?: return@withLock if (hadTarget) WidgetSnapshotClear.Cleared else WidgetSnapshotClear.NothingToClear</ID>
+    <ID>MaxLineLength:WidgetSnapshotWriter.kt$WidgetSnapshotWriter.Companion$private fun JsonObject.string(key: String): String?</ID>
+    <ID>MaxLineLength:WidgetSnapshotWriterTest.kt$WidgetSnapshotWriterTest$"""{"profileID":"server-1","scopeToken":"scope","onDemand":{"fingerprint":"fp","directory":"/private/project","workspace":"workspace"}}"""</ID>
+    <ID>MaxLineLength:WidgetSnapshotWriterTest.kt$WidgetSnapshotWriterTest$"/private/routing"</ID>
+    <ID>MaxLineLength:WidgetSnapshotWriterTest.kt$WidgetSnapshotWriterTest$"Done registered-private-secret password=synthetic-password\nمرحبا؜‎‏‮⁧\u0001 ${"😀".repeat(250)}"</ID>
+    <ID>MaxLineLength:WidgetSnapshotWriterTest.kt$WidgetSnapshotWriterTest$WidgetOtherConversation("ask", "Needs you", "/home/secret/dir", 1, busy = false, needsYou = true)</ID>
+    <ID>MaxLineLength:WidgetSnapshotWriterTest.kt$WidgetSnapshotWriterTest$WidgetSnapshotWriter(desktop, host, redactor, TestClock(), isAndroid = false).update(rows, emptySet(), true, en)</ID>
+    <ID>MaxLineLength:WidgetSnapshotWriterTest.kt$WidgetSnapshotWriterTest$assertEquals(listOf("محادثة جديدة", "محادثة جديدة", "إصلاح تسجيل الدخول", "Fix login", "Fix auth"), titles.take(5))</ID>
+    <ID>MaxLineLength:WidgetSnapshotWriterTest.kt$WidgetSnapshotWriterTest$private fun s(id: String, title: String? = null, updated: Long? = null)</ID>
+    <ID>MaxLineLength:WidgetSnapshotWriterTest.kt$WidgetSnapshotWriterTest$private fun snapshot(): JsonObject</ID>
+    <ID>MaxLineLength:WidgetSnapshotWriterTest.kt$WidgetSnapshotWriterTest$val target = Json.parseToJsonElement(disk.data.getValue(WidgetSnapshotWriter.targetKey("server-1"))).jsonObject</ID>
+    <ID>MaxLineLength:WidgetText.kt$WidgetText.Companion$"""^(?:(?:New|Child)\s+session|Fork(?:ed)?(?:\s+session)?)?\s*[-:–]?\s*\d{4}-\d{2}-\d{2}T[\d:.]+(?:Z|[+-]\d{2}:?\d{2})?$"""</ID>
+    <ID>MaxLineLength:WidgetText.kt$WidgetText.Companion$c &lt; 0x20 || c == 0x7f || c == 0x061c || c == 0x200e || c == 0x200f || c in 0x202a..0x202e || c in 0x2066..0x2069</ID>
+    <ID>MaxLineLength:WidgetText.kt$WidgetText.Companion$val plain = title.replace(ISO_STAMP, "").replace(Regex("""\s*[-:–]\s*$"""), "").replace(Regex("""\s{2,}"""), " ").trim()</ID>
+    <ID>MaxLineLength:build.gradle.kts$// Shared widget ingress (plan 11 §11.3) plus BUILD-DIAGNOSTICS-ATTENTION's attention engine: automatic-activity history,</ID>
+    <ID>NestedBlockDepth:AttentionFeed.kt$AttentionFeed.Companion$@Suppress("CyclomaticComplexMethod", "LongMethod") public fun fromServers( savedServers: Iterable&lt;AttentionServer&gt;, now: Instant, redactor: Redactor, maxAge: Duration = DEFAULT_MAX_AGE, ): AttentionFeed</ID>
+    <ID>NestedBlockDepth:LiveStatusComposer.kt$LiveStatusComposer.Companion$public fun toolSentence(tool: String, words: LiveWords): String</ID>
+    <ID>NestedBlockDepth:MonitorAttentionReader.kt$MonitorAttentionReader$@OptIn(ExperimentalCoroutinesApi::class) override suspend fun read( profile: MonitorProfile, gateway: MonitorGateway, sessions: List&lt;MonitorSession&gt;, statuses: Map&lt;String, String&gt;, current: () -&gt; Boolean, ): MonitorAttentionDetails</ID>
+    <ID>NestedBlockDepth:NotificationText.kt$NotificationText$public fun firstReplyLine(messages: List&lt;ReplyMessage&gt;, maxLength: Int = MAX_LENGTH): String</ID>
+    <ID>ReturnCount:AutomaticActivity.kt$AutomaticActivity$@Suppress("CyclomaticComplexMethod") private fun decode(raw: String): List&lt;AutomaticAct&gt;?</ID>
+    <ID>ReturnCount:AutomaticActivity.kt$AutomaticActivity$private suspend fun save(next: List&lt;AutomaticAct&gt;): Boolean</ID>
+    <ID>ReturnCount:AutomaticActivity.kt$AutomaticActivity$public suspend fun record( eventId: String, location: String, kind: AutomaticActKind, summary: String, occurredAt: Instant, sessionId: String? = null, undo: (suspend () -&gt; Boolean)? = null, ): Boolean</ID>
+    <ID>ReturnCount:ElsewhereAttention.kt$ElsewhereAttention.Companion$public fun isAiTeamDirectory(directory: String?): Boolean</ID>
+    <ID>ReturnCount:ElsewhereAttention.kt$ElsewhereAttention.Companion$public fun sessionErrorIsStop(error: JsonElement?): Boolean</ID>
+    <ID>ReturnCount:LiveStatus.kt$LiveStatusPublisher$public suspend fun publish(status: LiveStatus)</ID>
+    <ID>ReturnCount:MonitorAttentionReader.kt$MonitorAttentionReader$internal fun projectObservations( snapshot: MonitorTeamWorkspace, directory: String?, workspace: String?, ): List&lt;MonitorAttentionItem&gt;</ID>
+    <ID>ReturnCount:MonitorAttentionReader.kt$MonitorAttentionReader$suspend fun &lt;T&gt; call(action: suspend () -&gt; Outcome&lt;T&gt;): T?</ID>
+    <ID>ReturnCount:MonitorAttentionReader.kt$MonitorAttentionReader.Companion$internal fun lastTurnFailed(messages: List&lt;MonitorMessage&gt;): Boolean</ID>
+    <ID>ReturnCount:MonitorModels.kt$MonitorNotifyRules$public fun quietAt(minuteOfDay: Int): Boolean</ID>
+    <ID>ReturnCount:MonitorModels.kt$MonitoredRoute.Companion$fun fromJson(profileId: String, value: JsonElement?): MonitoredRoute?</ID>
+    <ID>ReturnCount:MonitorModels.kt$ObservedBusyInterval.Companion$fun fromJson(value: JsonElement): ObservedBusyInterval?</ID>
+    <ID>ReturnCount:MonitorRouting.kt$MonitorRequestOpener$public suspend fun prepare(route: MonitoredRoute): Boolean</ID>
+    <ID>ReturnCount:MonitorTestSupport.kt$TestGateway$override suspend fun pendingPermissions(): Outcome&lt;List&lt;MonitorPending&gt;&gt;</ID>
+    <ID>ReturnCount:NotificationText.kt$NotificationText$public fun optionsOf(prompts: List&lt;QuestionPrompt&gt;): List&lt;String&gt;</ID>
+    <ID>ReturnCount:NotificationText.kt$NotificationText$public fun permissionAskOf(ask: PermissionAsk): AskTitle</ID>
+    <ID>ReturnCount:ProfileMonitor.kt$ProfileMonitor$internal suspend fun mergeReads( current: () -&gt; Boolean, legacy: suspend () -&gt; Outcome&lt;List&lt;MonitorPending&gt;&gt;, modern: suspend () -&gt; Outcome&lt;List&lt;MonitorPending&gt;&gt;, ): List&lt;MonitorPending&gt;?</ID>
+    <ID>ReturnCount:ProfileMonitor.kt$ProfileMonitor$private fun routes(id: String): LinkedHashMap&lt;String, JsonObject&gt;</ID>
+    <ID>ReturnCount:ProfileMonitor.kt$ProfileMonitor$private suspend fun claimCheckIn( id: String, request: MonitoredRequest, current: () -&gt; Boolean, ): Boolean</ID>
+    <ID>ReturnCount:ProfileMonitor.kt$ProfileMonitor$private suspend fun migrateConsent(p: MonitorProfile)</ID>
+    <ID>ReturnCount:ProfileMonitor.kt$ProfileMonitor$private suspend fun pollWithinDeadline(p: MonitorProfile, generation: Int)</ID>
+    <ID>ReturnCount:ProfileMonitor.kt$ProfileMonitor$private suspend fun publishAlerts( id: String, requests: List&lt;MonitoredRequest&gt;, current: () -&gt; Boolean, policy: () -&gt; Boolean, )</ID>
+    <ID>ReturnCount:ProfileMonitor.kt$ProfileMonitor$private suspend fun run()</ID>
+    <ID>ReturnCount:ProfileMonitor.kt$ProfileMonitor$private suspend fun saveRoute(id: String, request: MonitoredRequest): String?</ID>
+    <ID>ReturnCount:ProfileMonitor.kt$ProfileMonitor$public fun routeForToken(id: String, token: String): MonitoredRoute?</ID>
+    <ID>ReturnCount:ProfileMonitor.kt$ProfileMonitor$public fun snapshotFor(id: String): ProfileAttentionSnapshot</ID>
+    <ID>ReturnCount:ProfileMonitor.kt$ProfileMonitor.Companion$internal fun hostOf(url: String): String?</ID>
+    <ID>ReturnCount:SelectedTransportAttention.kt$SelectedTransportAttention$public fun handle(event: AttentionEvent)</ID>
+    <ID>ReturnCount:WidgetSnapshotWriter.kt$WidgetSnapshotWriter$private suspend fun saveTarget(profileId: String, scopeToken: String, target: WidgetOnDemandTarget?): Boolean</ID>
+    <ID>ReturnCount:WidgetSnapshotWriter.kt$WidgetSnapshotWriter$private suspend fun suspend(profileId: String)</ID>
+    <ID>SwallowedException:AutomaticActivity.kt$AutomaticActivity$e: NullPointerException</ID>
+    <ID>SwallowedException:WidgetSnapshotWriter.kt$WidgetSnapshotWriter.Companion$e: IllegalArgumentException</ID>
+    <ID>TooGenericExceptionCaught:AutomaticActivity.kt$AutomaticActivity$e: NullPointerException</ID>
+    <ID>TooManyFunctions:AutomaticActivity.kt$AutomaticActivity</ID>
+    <ID>TooManyFunctions:ElsewhereAttention.kt$ElsewhereAttention</ID>
+    <ID>TooManyFunctions:MonitorPorts.kt$MonitorGateway</ID>
+    <ID>TooManyFunctions:ProfileMonitor.kt$ProfileMonitor</ID>
+    <ID>TooManyFunctions:ProfileMonitor.kt$ProfileMonitor$Companion</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -1,0 +1,61 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:SearchIndex.kt$SearchIndex$facts.hasShell &amp;&amp; caps.fileBrowsing &amp;&amp; caps.textSearch &amp;&amp; ref != null</ID>
+    <ID>ComplexCondition:WebSourcesViewModel.kt$WebSourcesViewModel$!current() || !now.ready || now.editRevision != before.editRevision || now.text != before.text || now.attachments != before.attachments</ID>
+    <ID>ComplexCondition:WebSourcesViewModel.kt$WebSourcesViewModel$!current() || committed || query.isBlank() || query.length &gt; WebSourcesReview.MAX_QUERY</ID>
+    <ID>CyclomaticComplexMethod:ProjectHealthScreen.kt$@Composable public fun ProjectHealthScreen(state: ProjectHealthUi, actions: ProjectHealthActions)</ID>
+    <ID>CyclomaticComplexMethod:SearchIndex.kt$SearchIndex$public fun entries(profile: ProfileId, facts: SearchGoToFacts): List&lt;SearchIndexEntry&gt;</ID>
+    <ID>CyclomaticComplexMethod:SearchPlaceWords.kt$@Composable internal fun searchPlaceWords(place: SearchPlace): Pair&lt;String, String&gt;</ID>
+    <ID>CyclomaticComplexMethod:SearchScreen.kt$@Composable public fun SearchScreen( state: SearchUi, actions: SearchActions, field: TextFieldState = rememberTextFieldState(state.query), webSearch: @Composable () -&gt; Unit = {}, )</ID>
+    <ID>CyclomaticComplexMethod:WebSearchPanel.kt$@Composable public fun WebSearchPanel(state: WebSearchUi, actions: WebSearchActions)</ID>
+    <ID>CyclomaticComplexMethod:WebSourcesScreen.kt$@Composable public fun WebSourcesScreen(state: WebSourcesUi, actions: WebSourcesActions)</ID>
+    <ID>CyclomaticComplexMethod:WebSourcesViewModel.kt$WebSourcesViewModel$override fun confirm(draftLabel: String)</ID>
+    <ID>LongMethod:ProjectHealthScreen.kt$@Composable public fun ProjectHealthScreen(state: ProjectHealthUi, actions: ProjectHealthActions)</ID>
+    <ID>LongMethod:SearchIndex.kt$SearchIndex$public fun entries(profile: ProfileId, facts: SearchGoToFacts): List&lt;SearchIndexEntry&gt;</ID>
+    <ID>LongMethod:SearchPlaceWords.kt$@Composable internal fun searchPlaceWords(place: SearchPlace): Pair&lt;String, String&gt;</ID>
+    <ID>LongMethod:SearchScreen.kt$@Composable public fun SearchScreen( state: SearchUi, actions: SearchActions, field: TextFieldState = rememberTextFieldState(state.query), webSearch: @Composable () -&gt; Unit = {}, )</ID>
+    <ID>LongMethod:WebSearchPanel.kt$@Composable public fun WebSearchPanel(state: WebSearchUi, actions: WebSearchActions)</ID>
+    <ID>LongMethod:WebSourcesScreen.kt$@Composable public fun WebSourcesScreen(state: WebSourcesUi, actions: WebSourcesActions)</ID>
+    <ID>MagicNumber:WebSearchViewModel.kt$WebSearchViewModel$1000</ID>
+    <ID>MagicNumber:WebSourcesViewModel.kt$WebSourcesViewModel$5_000</ID>
+    <ID>MaxLineLength:GoToMenu.kt$GoToMenu$*</ID>
+    <ID>MaxLineLength:GoToMenu.kt$GoToMenu$input.recent.take(RECENT_LIMIT).forEach { (ref, title) -&gt; add(GoToRow(GoToSection.Recent, ref = ref, title = title)) }</ID>
+    <ID>MaxLineLength:GoToMenu.kt$GoToMenu$val tokens = words(row).flatMap { it.lowercase().split(Regex("""[^\p{L}\p{N}]+""")) }.filter { it.isNotEmpty() }</ID>
+    <ID>MaxLineLength:GoToMenuTest.kt$GoToMenuTest$assertEquals(listOf("Fix the login bug", "Add dark mode", "Explain the build"), labels(shown, GoToSection.Recent))</ID>
+    <ID>MaxLineLength:GoToMenuTest.kt$GoToMenuTest$assertEquals(listOf("Needs you", "Files", "Projects", "Settings", "Servers", "Terminal", "Help"), labels(shown, GoToSection.GoTo))</ID>
+    <ID>MaxLineLength:GoToMenuTest.kt$GoToMenuTest$private fun labels(rows: List&lt;GoToRow&gt;, section: GoToSection)</ID>
+    <ID>MaxLineLength:SearchMatch.kt$SearchMatch$public</ID>
+    <ID>MaxLineLength:SearchScreenTest.kt$SearchScreenTest$SearchUi(query = "plan", servers = servers, server = home, phase = SearchPhase.NoMatch, canLoadMore = true)</ID>
+    <ID>MaxLineLength:SearchScreenTest.kt$SearchScreenTest$fun</ID>
+    <ID>MaxLineLength:SearchScreenTest.kt$SearchScreenTest$setContent { Screen(SearchUi(query = "x", servers = servers, server = home, phase = SearchPhase.Failed), actions) }</ID>
+    <ID>MaxLineLength:SearchViewModelTest.kt$SearchViewModelTest$fun</ID>
+    <ID>MaxLineLength:SearchViewModelTest.kt$SearchViewModelTest$private</ID>
+    <ID>MaxLineLength:SearchViewModelTest.kt$SearchViewModelTest$source.scripted = mapOf("c1" to page(emptyList(), "c2"), "c2" to page(listOf(conversation("late", "plan later")), null))</ID>
+    <ID>MaxLineLength:SearchViewModelTest.kt$SearchViewModelTest.Source$override suspend</ID>
+    <ID>MaxLineLength:SearchViewModelTest.kt$SearchViewModelTest.Source$override val servers = MutableStateFlow&lt;ImmutableList&lt;SearchServer&gt;&gt;(persistentListOf(SearchServer(home, "Home")))</ID>
+    <ID>MaxLineLength:SearchViewModelTest.kt$SearchViewModelTest.Source$return Outcome.Ok(SearchConversationPage(page.toImmutableList(), next, serverSearch &amp;&amp; query.isNotEmpty(), allProjects))</ID>
+    <ID>MaxLineLength:SearchViewModelTest.kt$SearchViewModelTest.Source$val all = mutableListOf(conversation("s1", "Fix login"), conversation("s2", "Deploy notes"), conversation("s3", null))</ID>
+    <ID>ReturnCount:RecentSearchHistory.kt$RecentSearchHistory$private suspend fun restore(): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:SearchMatch.kt$SearchMatch$public fun snippet(text: String, query: String, radius: Int = SNIPPET_RADIUS): String?</ID>
+    <ID>ReturnCount:SearchViewModel.kt$SearchViewModel$override fun loadMore()</ID>
+    <ID>ReturnCount:SearchViewModel.kt$SearchViewModel$private suspend fun inside(server: ProfileId, query: String, mine: Int)</ID>
+    <ID>ReturnCount:SearchViewModel.kt$SearchViewModel$private suspend fun titles(server: ProfileId, query: String, mine: Int)</ID>
+    <ID>ReturnCount:SearchViewModelTest.kt$SearchViewModelTest.Source$override suspend fun conversations(profile: ProfileId, query: String, cursor: String?): Outcome&lt;SearchConversationPage&gt;</ID>
+    <ID>ReturnCount:WebSearchViewModel.kt$WebSearchViewModel$override fun discover()</ID>
+    <ID>ReturnCount:WebSearchViewModel.kt$WebSearchViewModel$override fun search(query: String)</ID>
+    <ID>ReturnCount:WebSourcesViewModel.kt$WebSourcesViewModel$override fun confirm(draftLabel: String)</ID>
+    <ID>TooManyFunctions:SearchUi.kt$SearchActions</ID>
+    <ID>TooManyFunctions:SearchViewModel.kt$SearchViewModel : ViewModelSearchActions</ID>
+    <ID>TooManyFunctions:WebSourcesViewModel.kt$WebSourcesViewModel : ViewModelWebSourcesActions</ID>
+    <ID>WildcardImport:ProjectHealthScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:SearchIndex.kt$import io.github.eslamasabry.oc.ui.routes.*</ID>
+    <ID>WildcardImport:WebSearchPanel.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:WebSourcesScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:WebSourcesScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:WebSourcesViewModel.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:WebSourcesViewModel.kt$import kotlinx.coroutines.flow.*</ID>
+    <ID>WildcardImport:WebSourcesViewModel.kt$import kotlinx.serialization.json.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

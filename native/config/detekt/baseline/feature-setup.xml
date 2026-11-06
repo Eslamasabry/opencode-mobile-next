@@ -1,0 +1,74 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:SetupModel.kt$SetupModel$(total &gt; 0 &amp;&amp; (current.bytesDone ?: 0) &lt; total) || stage == session?.downloadingLinuxStage || downloading.containsMatchIn(stage)</ID>
+    <ID>ComplexCondition:SetupModel.kt$SetupModel$measuredNow != null &amp;&amp; row != null &amp;&amp; (row.bytesTotal ?: 0) &gt; 0 &amp;&amp; row.bytesDone != null</ID>
+    <ID>ComplexCondition:SetupModel.kt$SetupModel$working &amp;&amp; total != null &amp;&amp; total &gt; 0 &amp;&amp; done != null</ID>
+    <ID>CyclomaticComplexMethod:SetupModel.kt$SetupModel$private fun progressOf(progress: SetupProgress): SetupProgressUi</ID>
+    <ID>CyclomaticComplexMethod:SetupModel.kt$SetupModel$private fun scene(progress: SetupProgress, rows: List&lt;ComponentProgress&gt;): SetupHeadline</ID>
+    <ID>CyclomaticComplexMethod:SetupScreen.kt$@Composable private fun ProgressPage(p: SetupProgressUi, openDetails: () -&gt; Unit)</ID>
+    <ID>CyclomaticComplexMethod:SetupScreen.kt$@Composable private fun StepRow(step: SetupStepUi, index: Int, total: Int, failure: SetupFailureLine?)</ID>
+    <ID>CyclomaticComplexMethod:SetupScreen.kt$@Composable private fun failureLine(line: SetupFailureLine): String</ID>
+    <ID>EmptyFunctionBlock:SetupGateTest.kt$SetupGateTest.Actions${}</ID>
+    <ID>LongMethod:SetupScreen.kt$@Composable private fun ProgressPage(p: SetupProgressUi, openDetails: () -&gt; Unit)</ID>
+    <ID>MagicNumber:SetupModel.kt$SetupModel$100</ID>
+    <ID>MagicNumber:SetupModel.kt$SetupModel$100.0</ID>
+    <ID>MagicNumber:SetupModel.kt$SetupModel$60.0</ID>
+    <ID>MagicNumber:SetupScreen.kt$.3f</ID>
+    <ID>MagicNumber:SetupScreen.kt$10</ID>
+    <ID>MagicNumber:SetupScreen.kt$100</ID>
+    <ID>MagicNumber:SetupScreen.kt$1000</ID>
+    <ID>MagicNumber:SetupScreen.kt$1_000_000.0</ID>
+    <ID>MaxLineLength:SetupGateTest.kt$SetupGateTest$FlutterGoldenGate.check("kit_setup_phone_ready") { KitSetupPhone(KitSetupPhoneMood.Ready, Modifier.width(240.dp)) }</ID>
+    <ID>MaxLineLength:SetupGateTest.kt$SetupGateTest$FlutterGoldenGate.check("kit_setup_ready") { KitSetupPhone(KitSetupPhoneMood.Celebration, Modifier.width(240.dp)) }</ID>
+    <ID>MaxLineLength:SetupGateTest.kt$SetupGateTest$FlutterGoldenGate.check("kit_setup_starting") { KitSetupPhone(KitSetupPhoneMood.Starting, Modifier.width(240.dp)) }</ID>
+    <ID>MaxLineLength:SetupGateTest.kt$SetupGateTest$FlutterGoldenGate.check("kit_setup_stopped") { KitSetupPhone(KitSetupPhoneMood.Stopped, Modifier.width(240.dp)) }</ID>
+    <ID>MaxLineLength:SetupModel.kt$SetupModel$*</ID>
+    <ID>MaxLineLength:SetupModel.kt$SetupModel$Local</ID>
+    <ID>MaxLineLength:SetupModel.kt$SetupModel$bytes = if (working &amp;&amp; total != null &amp;&amp; total &gt; 0 &amp;&amp; done != null) SetupProgressRules.formatBytePair(done, total) else null</ID>
+    <ID>MaxLineLength:SetupModel.kt$SetupModel$if</ID>
+    <ID>MaxLineLength:SetupModel.kt$SetupModel$it.state == ComponentState.Running || it.state == ComponentState.Checking || it.state == ComponentState.Failed</ID>
+    <ID>MaxLineLength:SetupModel.kt$SetupModel$it.state == ComponentState.Running || it.state == ComponentState.Failed || it.state == ComponentState.Checking</ID>
+    <ID>MaxLineLength:SetupModel.kt$SetupModel$percent = if (working &amp;&amp; (total == null || total &lt;= 0)) row.percent?.coerceIn(0.0, 100.0)?.toInt() else null</ID>
+    <ID>MaxLineLength:SetupModel.kt$SetupModel$return SetupStartUi(PhoneSetupRegistry.downloadBytes(chosen), PhoneSetupRegistry.includedNames(chosen).toImmutableList())</ID>
+    <ID>MaxLineLength:SetupModel.kt$SetupModel$}</ID>
+    <ID>MaxLineLength:SetupModelTest.kt$@file:OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class, io.github.eslamasabry.oc.core.common.RedactorApi::class)</ID>
+    <ID>MaxLineLength:SetupModelTest.kt$SetupModelTest$ComponentProgress("node", ComponentState.Running, stage = "Downloading Node.js 24.21.0", bytesDone = 18_000_000, bytesTotal = 30_000_000)</ID>
+    <ID>MaxLineLength:SetupModelTest.kt$SetupModelTest$SetupProgress(SetupState.Done, all.map { ComponentProgress(it, ComponentState.Done) }, 1.0, jobId = "setup-1")</ID>
+    <ID>MaxLineLength:SetupModelTest.kt$SetupModelTest$components = all.map { id -&gt; rows.firstOrNull { it.id == id } ?: ComponentProgress(id, ComponentState.Pending) }</ID>
+    <ID>MaxLineLength:SetupModelTest.kt$SetupModelTest$private</ID>
+    <ID>MaxLineLength:SetupModelTest.kt$SetupModelTest$private fun TestScope.model(): SetupModel</ID>
+    <ID>MaxLineLength:SetupModelTest.kt$SetupModelTest$source.progress.value = job(SetupState.Running, ComponentProgress("linux", ComponentState.Running), current = "linux")</ID>
+    <ID>MaxLineLength:SetupModelTest.kt$SetupModelTest$source.progress.value = job(SetupState.Running, ComponentProgress("linux", ComponentState.Running, stage = "Unpacking Linux base"), current = "linux")</ID>
+    <ID>MaxLineLength:SetupModelTest.kt$SetupModelTest.FakeSource$PhoneSetupRegistry(PhoneSetupRegistryWords(linuxTitle = "Linux base", essentialsTitle = "Git", essentialsShort = "Git and SSH", startTitle = "Start OpenCode"))</ID>
+    <ID>MaxLineLength:SetupScreen.kt$KitText(stringResource(Res.string.phoneSetupStartIncludes, joinNames(start.includes)), role = TypeRole.Secondary)</ID>
+    <ID>MaxLineLength:SetupScreen.kt$body</ID>
+    <ID>MaxLineLength:SetupScreen.kt$p.canContinue -&gt; KitButton(stringResource(Res.string.setupProgressViewContinue), actions::resume, working = working)</ID>
+    <ID>MaxLineLength:SetupScreen.kt$p.failure == SetupFailureLine.Ownership -&gt; KitButton(stringResource(Res.string.e7SetupOpenAppSettings), actions::openAppSettings)</ID>
+    <ID>MaxLineLength:SetupScreen.kt$p.running -&gt; KitButton(stringResource(Res.string.phoneSetupRingPause), actions::pause, fullWidth = true, role = KitButtonRole.Secondary, working = working, icon = io.github.eslamasabry.oc.ui.kit.icon.KitIcons.pause)</ID>
+    <ID>MaxLineLength:SetupScreen.kt$primary = KitAction(stringResource(Res.string.phoneSetupStartSetUp), onClick = actions::start, working = working)</ID>
+    <ID>MaxLineLength:SetupScreenTest.kt$@file:OptIn(androidx.compose.ui.test.ExperimentalTestApi::class, io.github.eslamasabry.oc.core.common.RedactorApi::class)</ID>
+    <ID>MaxLineLength:SetupScreenTest.kt$SetupScreenTest$SetupStepUi("node", "Node.js", ComponentState.Running, stage = "Downloading Node.js 24.21.0", bytes = "18" to "30 MB")</ID>
+    <ID>MaxLineLength:SetupScreenTest.kt$SetupScreenTest$fun</ID>
+    <ID>MaxLineLength:SetupScreenTest.kt$SetupScreenTest$onNode(hasContentDescription("Step 4 of 6 · Node.js · 18 of 30 MB · about 3 min left", substring = true)).assertExists()</ID>
+    <ID>MaxLineLength:SetupScreenTest.kt$SetupScreenTest$val state = SetupUi(phase = SetupPhase.Start(SetupStartUi(208_000_000L, persistentListOf("Git and SSH", "Python", "Node.js"))))</ID>
+    <ID>MaxLineLength:SetupSources.kt$SetupSession$/** The live progress of the current or last job; Idle when there is none. Collecting it keeps the engine reading. */</ID>
+    <ID>MaxLineLength:SetupUi.kt$SetupProgressUi$val</ID>
+    <ID>MaxLineLength:SetupViewModel.kt$SetupViewModel$/** Thin Metro ViewModel (plan 03 §13.7): hands viewModelScope to [SetupModel], whose rules are tested on virtual time. */</ID>
+    <ID>MaxLineLength:SetupViewModel.kt$SetupViewModel$public</ID>
+    <ID>ReturnCount:SetupModel.kt$SetupModel$private fun failureOf(progress: SetupProgress): SetupFailureLine</ID>
+    <ID>ReturnCount:SetupModel.kt$SetupModel$private fun measuredOf(row: ComponentProgress): Float?</ID>
+    <ID>ReturnCount:SetupModel.kt$SetupModel$private fun scene(progress: SetupProgress, rows: List&lt;ComponentProgress&gt;): SetupHeadline</ID>
+    <ID>TooManyFunctions:SetupModel.kt$SetupModel : SetupActions</ID>
+    <ID>WildcardImport:SetupGateTest.kt$import io.github.eslamasabry.oc.engine.runtime.setup.*</ID>
+    <ID>WildcardImport:SetupGateTest.kt$import io.github.eslamasabry.oc.feature.setup.presentation.*</ID>
+    <ID>WildcardImport:SetupGateTest.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:SetupGateTest.kt$import io.github.eslamasabry.oc.ui.kit.setup.*</ID>
+    <ID>WildcardImport:SetupGateTest.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:SetupScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:SetupScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:SetupScreen.kt$import io.github.eslamasabry.oc.ui.kit.setup.*</ID>
+    <ID>WildcardImport:SetupScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

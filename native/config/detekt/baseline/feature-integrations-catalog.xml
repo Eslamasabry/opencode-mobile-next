@@ -1,0 +1,8 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>LongMethod:McpCatalogScreen.kt$@Composable public fun McpCatalogScreen(state: McpCatalogState, actions: McpCatalogActions)</ID>
+    <ID>WildcardImport:McpCatalogScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

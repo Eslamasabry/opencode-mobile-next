@@ -1,0 +1,828 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:PaseoAgentTools.kt$PaseoAgentTools$importsEpoch != epoch || conversation.directory != scope || known == null || known.lastUsedMs != conversation.lastUsedMs || known.directory != conversation.directory</ID>
+    <ID>ComplexCondition:PaseoCreateMode.kt$provider in defaultProviderModes &amp;&amp; (mode == null || (listedModes.isNotEmpty() &amp;&amp; mode !in listedModes))</ID>
+    <ID>ComplexCondition:PaseoEndpoint.kt$PaseoEndpoint.Companion$parts.scheme !in setOf("ws", "wss") || parts.host.isEmpty() || parts.userInfo != null || parts.query != null || parts.fragment != null || parts.path !in setOf("", "/", "/ws")</ID>
+    <ID>ComplexCondition:PaseoFeedTypes.kt$PaseoFeedPaths$value.isEmpty() || value == "/" || value == "global" || value == "."</ID>
+    <ID>ComplexCondition:PaseoFiles.kt$PaseoFiles$!dir.startsWith('/') || dir.length &gt; 4096 || dir.any { it.code &lt; 32 || it.code == 127 }</ID>
+    <ID>ComplexCondition:PaseoFiles.kt$PaseoFiles$value.startsWith('/') &amp;&amp; root != "/" &amp;&amp; value != root &amp;&amp; !value.startsWith("$root/")</ID>
+    <ID>ComplexCondition:PaseoGateway.kt$PaseoGateway$!listening || closed || retry != null || recovering != null</ID>
+    <ID>ComplexCondition:PaseoGateway.kt$PaseoGateway$closed || id in awaitingTurn || id in turnActive || statuses[id] != SessionStatus.Busy</ID>
+    <ID>ComplexCondition:PaseoGateway.kt$PaseoGateway$creating &gt; 0 &amp;&amp; rawId != null &amp;&amp; app(rawId) !in sessions &amp;&amp; heldEvents.size &lt; 2048</ID>
+    <ID>ComplexCondition:PaseoGateway.kt$PaseoGateway$listening &amp;&amp; !closed &amp;&amp; (!transport.connected || recoveryDegraded)</ID>
+    <ID>ComplexCondition:PaseoGateway.kt$PaseoGateway$messageId.isEmpty() || messageId.length &gt; 256 || messageId.any { it.code &lt;= 0x1f || it.code == 0x7f }</ID>
+    <ID>ComplexCondition:PaseoGateway.kt$PaseoGateway$model != null &amp;&amp; model.providerId == agent.str("provider") &amp;&amp; model.modelId.isNotEmpty() &amp;&amp; model.modelId != DEFAULT_MODEL &amp;&amp; model.modelId != agent.str("model")</ID>
+    <ID>ComplexCondition:PaseoGateway.kt$PaseoGateway$provider in defaultProviderModes &amp;&amp; (mode == null || (modes.isNotEmpty() &amp;&amp; mode !in modes))</ID>
+    <ID>ComplexCondition:PaseoGateway.kt$PaseoGateway$value.isNullOrEmpty() || value.length &gt; 4096 || value.any { it.code &lt;= 0x1f || it.code == 0x7f }</ID>
+    <ID>ComplexCondition:PaseoGatewayFeedPort.kt$GatewayFeedPort$g.isClosed || id in g.drafts || g.isSubagent(id) || id in g.archivedCopies</ID>
+    <ID>ComplexCondition:PaseoGenUiHistory.kt$agent == null || agent.str("id") != realId || agent.str("cwd") != scope || real(id) != realId</ID>
+    <ID>ComplexCondition:PaseoGenUiHistory.kt$result.str("agentId") != realId || entries == null || entries.size &gt; limit || entries.any { it !is JsonObject } || historyEpoch.isNullOrEmpty() || more == null || newer == null || result["staleCursor"].boolOrNull() == true || result["gap"].boolOrNull() == true || (before == null &amp;&amp; newer) || (before != null &amp;&amp; (result["reset"].boolOrNull() == true || historyEpoch != before.str("epoch")))</ID>
+    <ID>ComplexCondition:PaseoGenUiHistory.kt$sessionId.isEmpty() || sessionId.length &gt; 512 || limit !in 1..50 || (cursor != null &amp;&amp; (cursor.isEmpty() || cursor.length &gt; 4096))</ID>
+    <ID>ComplexCondition:PaseoHandoff.kt$PaseoHandoff$!g.handoffFilesReady || directory != g.scopeDir || !Regex("[a-zA-Z0-9_-]{1,128}").matches(recordId) || markdown.isEmpty() || markdown.length &gt; 98_304 || markdown.encodeToByteArray().size &gt; 98_304 || redactor.opaqueTokens(markdown) != markdown</ID>
+    <ID>ComplexCondition:PaseoHandoff.kt$PaseoHandoff$(listing["error"] != null &amp;&amp; listing["error"] != kotlinx.serialization.json.JsonNull) || listing.str("cwd") != scope || listing.str("path") != "." || entries !is kotlinx.serialization.json.JsonArray || entries.none { it.objectOrNull()?.str("name") == ".handoff" &amp;&amp; it.objectOrNull()?.str("kind") == "directory" }</ID>
+    <ID>ComplexCondition:PaseoHandoff.kt$PaseoHandoff$(result["error"] != null &amp;&amp; result["error"] != kotlinx.serialization.json.JsonNull) || result.str("cwd") != scope || result.str("path") != path || file.str("path") != path || file.str("kind") != "text" || file.str("encoding") != "utf-8" || file.str("content") == null || file.str("modifiedAt") == null</ID>
+    <ID>ComplexCondition:PaseoHostAgents.kt$id.isNullOrEmpty() || id.length &gt; 512 || !seen.add(id) || id !in actionIds</ID>
+    <ID>ComplexCondition:PaseoHostAgents.kt$options != null &amp;&amp; options.size &lt;= 64 &amp;&amp; actions != null &amp;&amp; actions.size &lt;= 64</ID>
+    <ID>ComplexCondition:PaseoMappers.kt$!used.isFinite() || !max.isFinite() || used &lt;= 0 || max &lt;= 0</ID>
+    <ID>ComplexCondition:PaseoPermissionMapper.kt$v.isBlank() || v.length &gt; 300 || '\n' in v || key in INPUT_SHOWN_ELSEWHERE || v in said</ID>
+    <ID>ComplexCondition:PaseoProviderImport.kt$PaseoProviderImport$!isPaseoProviderId(provider) || handle.isEmpty() || handle.length &gt; 256 || handle.any(::isControl) || cwd.isEmpty() || cwd.length &gt; 4096 || cwd.any(::isControl)</ID>
+    <ID>ComplexCondition:PaseoProviderImport.kt$PaseoProviderImport$result.str("status") != "agent_resumed" || id.isNullOrEmpty() || id.length &gt; 256 || id.any(::isControl)</ID>
+    <ID>ComplexCondition:PaseoRequestBook.kt$PaseoRequestBook$(previous != null &amp;&amp; previous.permission.sessionId.raw != appId) || (previousQuestion != null &amp;&amp; previousQuestion.question.sessionId.raw != appId) || id in answered</ID>
+    <ID>ComplexCondition:PaseoRequestBook.kt$PaseoRequestBook$(previous != null &amp;&amp; previous.question.sessionId.raw != appId) || id in permissions || id in answered</ID>
+    <ID>ComplexCondition:PaseoRequestBook.kt$PaseoRequestBook$f != null &amp;&amp; f !is JsonNull &amp;&amp; !(f is JsonPrimitive &amp;&amp; !f.isString &amp;&amp; (f.content == "true" || f.content == "false"))</ID>
+    <ID>ComplexCondition:PaseoRequestBook.kt$PaseoRequestBook$pending == null || pending.question.sessionId.raw != sessionId || !host.connected || pending.epoch != host.epoch</ID>
+    <ID>ComplexCondition:PaseoRequestBook.kt$PaseoRequestBook$permissions[requestId] === pending &amp;&amp; (agent == null || agent.str("id") != realAgentId || agent.str("cwd") != scope || stillPending !is JsonArray || stillPending.any { (it as? JsonObject)?.str("id") == requestId })</ID>
+    <ID>ComplexCondition:PaseoRequestBook.kt$PaseoRequestBook$previous != null &amp;&amp; previous.epoch == pending.epoch &amp;&amp; previous.plan == pending.plan &amp;&amp; previous.canonical == pending.canonical &amp;&amp; previous.answerKeys == pending.answerKeys</ID>
+    <ID>ComplexCondition:PaseoRequestBook.kt$PaseoRequestBook$selected.size &gt; 64 || (!prompt.multiple &amp;&amp; selected.size &gt; 1) || selected.toSet().size != selected.size || selected.any { it.length &gt; 16384 || it.isBlank() } || (selected.isEmpty() &amp;&amp; !prompt.optional) || (!prompt.custom &amp;&amp; selected.any { v -&gt; prompt.choices.none { it.label == v } })</ID>
+    <ID>ComplexCondition:PaseoStream.kt$type == "user_message" &amp;&amp; correlation != null &amp;&amp; correlation.isNotEmpty() &amp;&amp; correlation.length &lt;= 256</ID>
+    <ID>ComplexCondition:PaseoTerminals.kt$PaseoTerminals$!location.workspace.isNullOrEmpty() || !dir.startsWith('/') || dir.length &gt; 4096 || dir.any { it.code &lt; 32 || it.code == 127 }</ID>
+    <ID>ComplexCondition:PaseoTransport.kt$PaseoTransport$isClosed || myEpoch != epoch || socket == null || !initialized</ID>
+    <ID>ComplexCondition:PaseoTransport.kt$PaseoTransport$settled != null &amp;&amp; settled.holds &amp;&amp; settled.result.isCompleted &amp;&amp; !settled.released.isCompleted</ID>
+    <ID>ComplexCondition:PaseoTransport.kt$PaseoTransport$text.length &gt;= BACKGROUND_DECODE_CHARS &amp;&amp; text.length &lt;= MAX_FRAME_BYTES &amp;&amp; (cap == null || text.length &lt;= cap)</ID>
+    <ID>ComplexCondition:PaseoUncertainStart.kt$realId == null || realId in appIds || entry.str("cwd") != scope || entry.str("provider") != start.provider || created == null || created &lt; start.sentAtMs - 600_000</ID>
+    <ID>ComplexCondition:PaseoWorkInventory.kt$PaseoWorkInventory$!connected || epoch != currentEpoch || !complete || !coveredParents.containsAll(parents) || brokenRevision &gt;= 0 || agents.values.contains(null) || children.values.any { it.busy == null }</ID>
+    <ID>ComplexCondition:PaseoWorkInventory.kt$PaseoWorkInventory$(error != null &amp;&amp; error !is JsonNull) || answer.str("parentAgentId") != parent || rows == null || rows.size &gt; 500</ID>
+    <ID>ComplexCondition:PaseoWorkInventory.kt$PaseoWorkInventory$rows == null || rows.size &gt; 200 || pageInfo == null || hasMore == null</ID>
+    <ID>ComplexCondition:PaseoWorkInventory.kt$PaseoWorkInventory$turns.isNotEmpty() || activeChildren.isNotEmpty() || permissions.isNotEmpty() || agents.values.contains(true) || children.values.any { it.busy == true }</ID>
+    <ID>ComplexCondition:PaseoWorkspaceTransfer.kt$!RECORD_FILE.matches(request.path) || request.content.encodeToByteArray().size &gt; MAX_TRANSFER_BYTES || !stampSafe(request.expectedModifiedAt, 128) || request.expectedRevision?.let { !stampSafe(it, 1024) } == true</ID>
+    <ID>ComplexCondition:PaseoWorkspaceTransfer.kt$app(session.raw) != id || id !in drafts || real(id) != id || !beforeSend()</ID>
+    <ID>ComplexCondition:PaseoWorkspaceTransfer.kt$closed || !transport.connected || !transport.workspaceFileEditing || directory != scopeDir || expected != workspaceTransferEpoch() || !directory.startsWith('/') || directory.split('/').any { it == "." || it == ".." }</ID>
+    <ID>CyclomaticComplexMethod:PaseoAgentFeatures.kt$internal fun parseAgentFeatures(raw: JsonElement?): List&lt;AgentFeature&gt;</ID>
+    <ID>CyclomaticComplexMethod:PaseoChatFeed.kt$PaseoChatFeed$private fun foldCopies(sessions: LinkedHashMap&lt;SessionId, Session&gt;): Pair&lt;Map&lt;String, Session&gt;, Map&lt;SessionId, String&gt;&gt;</ID>
+    <ID>CyclomaticComplexMethod:PaseoChatFeed.kt$PaseoChatFeed$private suspend fun archiveOlderCopies( olderCopies: Map&lt;SessionId, String&gt;, kept: Map&lt;String, Session&gt;, statuses: Map&lt;SessionId, SessionStatus&gt;, myRevision: Int, )</ID>
+    <ID>CyclomaticComplexMethod:PaseoChatFeed.kt$PaseoChatFeed$private suspend fun read(myRevision: Int)</ID>
+    <ID>CyclomaticComplexMethod:PaseoEndpoint.kt$PaseoUrl.Companion$fun parse(raw: String): PaseoUrl?</ID>
+    <ID>CyclomaticComplexMethod:PaseoFeedTypes.kt$PaseoFeedPaths$public fun isProtected(path: String?): Boolean</ID>
+    <ID>CyclomaticComplexMethod:PaseoGateway.kt$PaseoGateway$internal fun remember(raw: JsonObject, reconcileStatus: Boolean = true): Session?</ID>
+    <ID>CyclomaticComplexMethod:PaseoGateway.kt$PaseoGateway$internal suspend fun readProviders(): ProvidersResponse</ID>
+    <ID>CyclomaticComplexMethod:PaseoGateway.kt$PaseoGateway$internal suspend fun sendPrompt( rawSessionId: String, messageId: String, prompt: OutgoingPrompt, images: List&lt;JsonObject&gt;, existingOnly: Boolean, beforeSend: (() -&gt; Boolean)?, ): PromptAdmission</ID>
+    <ID>CyclomaticComplexMethod:PaseoGateway.kt$PaseoGateway$private fun onEvent(push: PaseoPush)</ID>
+    <ID>CyclomaticComplexMethod:PaseoGateway.kt$PaseoGateway$private suspend fun createAgent( id: String, prompt: String, messageId: String, model: ModelRef?, requestedMode: String?, variant: String?, images: List&lt;JsonObject&gt;, fence: () -&gt; Unit, )</ID>
+    <ID>CyclomaticComplexMethod:PaseoGateway.kt$PaseoGateway$private suspend fun recoverNow()</ID>
+    <ID>CyclomaticComplexMethod:PaseoGenUiHistory.kt$public suspend fun PaseoGateway.genUiHistoryPage( session: SessionId, cursor: String?, limit: Int, ): Outcome&lt;PaseoHistoryPage&gt;</ID>
+    <ID>CyclomaticComplexMethod:PaseoHandoff.kt$PaseoHandoff$suspend fun write(directory: String, recordId: String, markdown: String): Outcome&lt;String&gt;</ID>
+    <ID>CyclomaticComplexMethod:PaseoHostAgents.kt$public fun paseoHostAgentCatalog(entries: List&lt;JsonObject&gt;): HostAgentCatalog</ID>
+    <ID>CyclomaticComplexMethod:PaseoHostAgents.kt$public fun paseoHostPermission(sessionId: String, request: JsonObject, provider: String?): HostAgentPermissionRequest?</ID>
+    <ID>CyclomaticComplexMethod:PaseoLiveProofTest.kt$PaseoLiveProofTest$private suspend fun prove(target: String, scope: CoroutineScope, lane: kotlinx.coroutines.CoroutineDispatcher)</ID>
+    <ID>CyclomaticComplexMethod:PaseoMappers.kt$public fun paseoItemId(item: JsonObject, fallbackSeq: Long?): String</ID>
+    <ID>CyclomaticComplexMethod:PaseoMappers.kt$public fun paseoItemMessage( agentId: String, item: JsonObject, id: String, provider: String, createdMs: Long?, completedMs: Long?, ): MessageWithParts?</ID>
+    <ID>CyclomaticComplexMethod:PaseoMappers.kt$public fun paseoMergeToolCall(earlier: JsonObject?, later: JsonObject): JsonObject</ID>
+    <ID>CyclomaticComplexMethod:PaseoMappers.kt$public fun paseoTimeline(agentId: String, payload: JsonObject, busy: Boolean): PaseoTimeline</ID>
+    <ID>CyclomaticComplexMethod:PaseoMappers.kt$public fun paseoToolName(name: String, detail: JsonObject): String</ID>
+    <ID>CyclomaticComplexMethod:PaseoPermissionMapper.kt$public fun paseoPermission(agentId: String, request: JsonObject): PermissionRequest</ID>
+    <ID>CyclomaticComplexMethod:PaseoProviderImport.kt$PaseoProviderImport$suspend fun list(): ImportableConversations</ID>
+    <ID>CyclomaticComplexMethod:PaseoRequestBook.kt$PaseoRequestBook$private fun addQuestion(appId: String, id: String, request: JsonObject)</ID>
+    <ID>CyclomaticComplexMethod:PaseoRequestBook.kt$PaseoRequestBook$private fun parsePermission(appId: String, id: String, request: JsonObject): Permission</ID>
+    <ID>CyclomaticComplexMethod:PaseoRequestBook.kt$PaseoRequestBook$private fun parseQuestion(appId: String, id: String, request: JsonObject): Question?</ID>
+    <ID>CyclomaticComplexMethod:PaseoRequestBook.kt$PaseoRequestBook$public fun onPermissionRequest(appId: String, request: JsonObject)</ID>
+    <ID>CyclomaticComplexMethod:PaseoRequestBook.kt$PaseoRequestBook$public suspend fun answerQuestion( sessionId: String, requestId: String, answers: List&lt;List&lt;String&gt;&gt;, )</ID>
+    <ID>CyclomaticComplexMethod:PaseoRequestBook.kt$PaseoRequestBook$public suspend fun replyHostPermission(requestId: String, selectedActionId: String?)</ID>
+    <ID>CyclomaticComplexMethod:PaseoRequestBook.kt$PaseoRequestBook$public suspend fun replyPermission( requestId: String, answer: PaseoPermissionAnswer, legacySessionId: String? = null, message: String? = null, )</ID>
+    <ID>CyclomaticComplexMethod:PaseoStream.kt$internal fun PaseoGateway.onStream(id: String, event: JsonObject, payload: JsonObject)</ID>
+    <ID>CyclomaticComplexMethod:PaseoStream.kt$internal fun PaseoGateway.onTimelineItem( id: String, state: PaseoLive, raw: JsonObject, provider: String, seq: Long?, at: Long?, )</ID>
+    <ID>CyclomaticComplexMethod:PaseoSubagents.kt$PaseoSubagents$private fun upsert(descriptor: JsonObject)</ID>
+    <ID>CyclomaticComplexMethod:PaseoTerminals.kt$TerminalUtf8$fun add(bytes: ByteArray): String</ID>
+    <ID>CyclomaticComplexMethod:PaseoToolMappers.kt$internal fun toolInput(detail: JsonObject): JsonElement</ID>
+    <ID>CyclomaticComplexMethod:PaseoToolMappers.kt$internal fun toolOutput(item: JsonObject, detail: JsonObject): JsonElement</ID>
+    <ID>CyclomaticComplexMethod:PaseoTransport.kt$PaseoTransport$private suspend fun enqueue( type: String, body: JsonObject, mutation: Boolean, timeoutMs: Long?, expectedEpoch: Int?, beforeSend: (() -&gt; Unit)?, onProgress: ((String, JsonObject) -&gt; Unit)?, answerErrors: Boolean, holds: Boolean, ): Pending</ID>
+    <ID>CyclomaticComplexMethod:PaseoTransport.kt$PaseoTransport$private suspend fun handleText(myEpoch: Int, frame: String, decoded: Decoded?)</ID>
+    <ID>CyclomaticComplexMethod:PaseoTransport.kt$PaseoTransport$private suspend fun openSocket(): Int</ID>
+    <ID>CyclomaticComplexMethod:PaseoUncertainStart.kt$internal suspend fun PaseoGateway.adoptUncertainDraft(id: String): Boolean</ID>
+    <ID>CyclomaticComplexMethod:PaseoUsage.kt$public fun parseProviderUsageList( payload: JsonElement?, nowMs: Long, maxProviders: Int = 16, maxWindows: Int = 3, ): Outcome&lt;List&lt;ProviderUsageReading&gt;&gt;</ID>
+    <ID>CyclomaticComplexMethod:PaseoWorkInventory.kt$PaseoWorkInventory$private fun page(result: JsonObject, cursor: String?, currentEpoch: Int, requestRevision: Int): Scan?</ID>
+    <ID>CyclomaticComplexMethod:PaseoWorkInventory.kt$PaseoWorkInventory$private fun stream(id: String?, p: JsonObject): Boolean</ID>
+    <ID>CyclomaticComplexMethod:PaseoWorkInventory.kt$PaseoWorkInventory$private suspend fun childPage( active: Scan, parent: String, listChildren: suspend (String) -&gt; JsonObject, stillCurrent: () -&gt; Boolean, )</ID>
+    <ID>CyclomaticComplexMethod:PaseoWorkInventory.kt$PaseoWorkInventory$public fun event(push: PaseoPush)</ID>
+    <ID>CyclomaticComplexMethod:PaseoWorkspace.kt$internal fun paseoFileDiff(file: JsonObject): FileDiff</ID>
+    <ID>CyclomaticComplexMethod:PaseoWorkspaceTransfer.kt$internal suspend fun PaseoGateway.workspaceTransferRequest( directory: String, epoch: Long, request: WorkspaceTransferRequest, ): Outcome&lt;JsonObject&gt;</ID>
+    <ID>InstanceOfCheckForException:PaseoTransport.kt$PaseoTransport$e !is TimeoutCancellationException</ID>
+    <ID>InstanceOfCheckForException:PaseoTransport.kt$PaseoTransport$e is CancellationException</ID>
+    <ID>LargeClass:PaseoGateway.kt$PaseoGateway : ServerGatewaySessionSelectionGatewayCorrelatedPromptGatewayMidTurnPromptGatewayWorkspaceTransferGatewayProviderConversationImportGatewayLocatedFileGatewayLocatedVcsGatewayProviderUsageGatewayLocatedProjectGatewayAgentFeaturesGatewayReadOnlySessionsGatewayHostDaemonUpdateGatewayCachedAgentRecoveryGatewayAgentHandoffGatewayBoundedCardHistoryGatewayFencedNewSessionPromptGatewayPromptRunIdentityGateway</ID>
+    <ID>LargeClass:PaseoRequestBook.kt$PaseoRequestBook</ID>
+    <ID>LongMethod:PaseoGateway.kt$PaseoGateway$internal fun remember(raw: JsonObject, reconcileStatus: Boolean = true): Session?</ID>
+    <ID>LongMethod:PaseoGateway.kt$PaseoGateway$internal suspend fun sendPrompt( rawSessionId: String, messageId: String, prompt: OutgoingPrompt, images: List&lt;JsonObject&gt;, existingOnly: Boolean, beforeSend: (() -&gt; Boolean)?, ): PromptAdmission</ID>
+    <ID>LongMethod:PaseoGateway.kt$PaseoGateway$private suspend fun createAgent( id: String, prompt: String, messageId: String, model: ModelRef?, requestedMode: String?, variant: String?, images: List&lt;JsonObject&gt;, fence: () -&gt; Unit, )</ID>
+    <ID>LongMethod:PaseoMappers.kt$public fun paseoItemMessage( agentId: String, item: JsonObject, id: String, provider: String, createdMs: Long?, completedMs: Long?, ): MessageWithParts?</ID>
+    <ID>LongMethod:PaseoPermissionMapper.kt$public fun paseoPermission(agentId: String, request: JsonObject): PermissionRequest</ID>
+    <ID>LongMethod:PaseoRequestBook.kt$PaseoRequestBook$private fun parseQuestion(appId: String, id: String, request: JsonObject): Question?</ID>
+    <ID>LongMethod:PaseoRequestBook.kt$PaseoRequestBook$public suspend fun replyHostPermission(requestId: String, selectedActionId: String?)</ID>
+    <ID>LongMethod:PaseoStream.kt$internal fun PaseoGateway.onStream(id: String, event: JsonObject, payload: JsonObject)</ID>
+    <ID>LongMethod:PaseoStream.kt$internal fun PaseoGateway.onTimelineItem( id: String, state: PaseoLive, raw: JsonObject, provider: String, seq: Long?, at: Long?, )</ID>
+    <ID>LongMethod:PaseoTransport.kt$PaseoTransport$private suspend fun handleText(myEpoch: Int, frame: String, decoded: Decoded?)</ID>
+    <ID>LongMethod:PaseoWorkInventory.kt$PaseoWorkInventory$private fun stream(id: String?, p: JsonObject): Boolean</ID>
+    <ID>LongMethod:PaseoWorkspaceTransfer.kt$internal suspend fun PaseoGateway.workspaceTransferRequest( directory: String, epoch: Long, request: WorkspaceTransferRequest, ): Outcome&lt;JsonObject&gt;</ID>
+    <ID>LongParameterList:GatewayHarness.kt$( id: String, cwd: String = DIR, status: String = "idle", archivedAt: String? = null, pendingPermissions: List&lt;JsonObject&gt; = emptyList(), loaded: Boolean = true, updatedAt: String = "2026-09-19T03:35:31.806Z", provider: String = "claude", title: String? = "Agent $id", )</ID>
+    <ID>LongParameterList:GatewayHarness.kt$GatewayHarness$( val test: TestScope, val daemon: FakeDaemon = FakeDaemon().seedDefaults(), sockets: PaseoSocketFactory = FakeSockets(daemon), password: String = "", directory: String? = DIR, defaultProviderModes: Map&lt;String, String&gt; = emptyMap(), trackLocalWork: Boolean = false, val clock: TestClock = TestClock(Instant.parse("2026-09-19T03:36:00Z")), )</ID>
+    <ID>LongParameterList:MapperFixtures.kt$( id: String, cwd: String = "/work/app", status: String = "idle", loaded: Boolean = true, updatedAt: String? = "2026-09-19T03:35:31.806Z", provider: String = "claude", title: String? = "Agent $id", )</ID>
+    <ID>LongParameterList:PaseoChatFeed.kt$PaseoChatFeed$( private val port: PaseoFeedPort, private val scope: CoroutineScope, private val projectName: String? = null, private val isGit: Boolean = false, private val maxPages: Int = 5, private val refreshTimeoutMs: Long = 45_000, initialLastUsedProjectDirectory: String? = null, private val persistLastUsedProject: (suspend (String) -&gt; Unit)? = null, /** A waiting gen-UI card for the session (owner state); it reads as needs-you too. */ private val hasWaitingCard: ((SessionId) -&gt; Boolean)? = null, /** The title kept for a conversation (`provider:sessionId`) after its older records were archived. */ private val savedTitle: ((String) -&gt; String?)? = null, /** Keeps such a title; false when it could not be saved (the older record then stays). */ private val saveTitle: (suspend (String, String) -&gt; Boolean)? = null, /** The runtime's display name from the agent catalog (`:engine:agents`); null leaves the row unlabeled. */ private val agentLabel: (String) -&gt; String? = { null }, )</ID>
+    <ID>LongParameterList:PaseoChatFeedTest.kt$PaseoChatFeedTest$( port: FakeFeedPort, maxPages: Int = 5, refreshTimeoutMs: Long = 45_000, persist: (suspend (String) -&gt; Unit)? = null, savedTitle: ((String) -&gt; String?)? = null, saveTitle: (suspend (String, String) -&gt; Boolean)? = null, )</ID>
+    <ID>LongParameterList:PaseoEndpoint.kt$PaseoUrl$( val scheme: String, val userInfo: String?, val host: String, val port: Int?, val path: String, val query: String?, val fragment: String?, )</ID>
+    <ID>LongParameterList:PaseoGateway.kt$PaseoGateway$( id: String, prompt: String, messageId: String, model: ModelRef?, requestedMode: String?, variant: String?, images: List&lt;JsonObject&gt;, fence: () -&gt; Unit, )</ID>
+    <ID>LongParameterList:PaseoGateway.kt$PaseoGateway$( public val transport: PaseoTransport, scope: CoroutineScope, internal val lane: CoroutineDispatcher, /** Where long histories are mapped (AppDispatchers.default). */ private val mapDispatcher: CoroutineDispatcher = lane, private val clock: Clock, directory: String? = null, /** * Mode a runtime's new agent must start in (phone helper: `claude → default`, always asking). */ defaultProviderModes: Map&lt;String, String&gt; = emptyMap(), /** * Keep the helper-wide work inventory (the phone helper's gateway; plan 04 §8 `trackLocalWork = * true`). */ trackLocalWork: Boolean = false, internal val random: Random = Random.Default, /** Overridable so tests do not wait for a warming daemon. */ internal val providerWarmupAttempts: Int = 8, internal val providerWarmupIntervalMs: Long = 1_500, /** * AGENT-2: the profile/server-isolated background-work book the app shares across this server's * gateways; this gateway's own book ([backgroundTasks]) mirrors into it. */ sharedBackgroundTasks: PaseoBackgroundTasks? = null, /** AGENT-2: the phone helper's payload lease, taken around daemon work ([withPayloadLease]). */ private val payloadLease: (() -&gt; Outcome&lt;PaseoPayloadLease&gt;)? = null, )</ID>
+    <ID>LongParameterList:PaseoGateway.kt$PaseoGateway$( rawSessionId: String, messageId: String, prompt: OutgoingPrompt, images: List&lt;JsonObject&gt;, existingOnly: Boolean, beforeSend: (() -&gt; Boolean)?, )</ID>
+    <ID>LongParameterList:PaseoGatewayFactory.kt$PaseoGatewayFactory$( private val sockets: PaseoSocketFactory, private val dispatchers: AppDispatchers, private val clock: Clock, private val requestTimeoutMs: Long = 20_000, private val defaultProviderModes: Map&lt;String, String&gt; = emptyMap(), /** The phone helper's gateway keeps the helper-wide work inventory (plan 04 §8). */ private val trackLocalWork: Boolean = false, /** * The titles the app saved per server (`oc.conversationTitles.&lt;profileId&gt;`, B-AGENT-181): * installed on each connected gateway before it lists anything, so an untitled record shows its * saved title. */ private val savedTitles: ((ProfileId, String) -&gt; String?)? = null, private val backgroundTasks: ((GatewaySpec) -&gt; PaseoBackgroundTasks)? = null, private val payloadUse: ((GatewaySpec) -&gt; (() -&gt; Outcome&lt;PaseoPayloadLease&gt;)?)? = null, /** Install profile-owned native guards before listening or accepting any work. */ private val configureGateway: ((GatewaySpec, PaseoGateway) -&gt; Unit)? = null, private val localWorkForProfile: ((GatewaySpec) -&gt; Boolean)? = null, )</ID>
+    <ID>LongParameterList:PaseoMappers.kt$( agentId: String, item: JsonObject, id: String, provider: String, createdMs: Long?, completedMs: Long?, )</ID>
+    <ID>LongParameterList:PaseoRequestBook.kt$PaseoRequestBook.Permission$( val epoch: Int, val permission: PermissionRequest, val suggestions: JsonArray, val host: HostAgentPermissionRequest?, val revision: String, val displayCard: Boolean = false, var cardApproving: Boolean = false, var cardAttempted: Boolean = false, )</ID>
+    <ID>LongParameterList:PaseoStream.kt$( id: String, state: PaseoLive, raw: JsonObject, provider: String, seq: Long?, at: Long?, )</ID>
+    <ID>LongParameterList:PaseoTransport.kt$PaseoTransport$( endpoint: String, password: String = "", private val socketFactory: PaseoSocketFactory, scope: CoroutineScope, private val lane: CoroutineDispatcher, /** Where frames of [BACKGROUND_DECODE_CHARS] or more are decoded (AppDispatchers.default). */ private val decodeDispatcher: CoroutineDispatcher = lane, public val requestTimeoutMs: Long = 20_000, clientId: String? = null, random: Random = Random.Default, /** Set only on the private bounded-history connection. */ private val boundedFrameBytes: Int? = null, /** * Reads the stored password at connect time when [password] is empty (the profile's * CredentialReader, plan 04 §4.8). Null or a failed read means no password. */ private val passwordSource: (suspend () -&gt; String?)? = null, )</ID>
+    <ID>LongParameterList:PaseoTransport.kt$PaseoTransport$( type: String, body: JsonObject, mutation: Boolean = false, timeoutMs: Long? = null, expectedEpoch: Int? = null, beforeSend: (() -&gt; Unit)? = null, onProgress: ((String, JsonObject) -&gt; Unit)? = null, answerErrors: Boolean = false, )</ID>
+    <ID>LongParameterList:PaseoTransport.kt$PaseoTransport$( type: String, body: JsonObject, mutation: Boolean, timeoutMs: Long?, expectedEpoch: Int?, beforeSend: (() -&gt; Unit)?, onProgress: ((String, JsonObject) -&gt; Unit)?, answerErrors: Boolean, holds: Boolean, )</ID>
+    <ID>LongParameterList:PaseoWorkInventory.kt$PaseoWorkInventory$( result: JsonObject, cursor: String?, epoch: Int, requestRevision: Int, listChildren: suspend (parentAgentId: String) -&gt; JsonObject, stillCurrent: () -&gt; Boolean, )</ID>
+    <ID>LoopWithTooManyJumpStatements:PaseoAgentFeatures.kt$for</ID>
+    <ID>LoopWithTooManyJumpStatements:PaseoBackgroundTasks.kt$PaseoBackgroundTaskBook.Agent$for</ID>
+    <ID>LoopWithTooManyJumpStatements:PaseoChatFeed.kt$PaseoChatFeed$for</ID>
+    <ID>LoopWithTooManyJumpStatements:PaseoGateway.kt$PaseoGateway$for</ID>
+    <ID>LoopWithTooManyJumpStatements:PaseoHostAgents.kt$for</ID>
+    <ID>LoopWithTooManyJumpStatements:PaseoMappers.kt$for</ID>
+    <ID>LoopWithTooManyJumpStatements:PaseoPermissionMapper.kt$for</ID>
+    <ID>LoopWithTooManyJumpStatements:PaseoUncertainStart.kt$for</ID>
+    <ID>LoopWithTooManyJumpStatements:PaseoUsage.kt$for</ID>
+    <ID>LoopWithTooManyJumpStatements:PaseoWorkInventory.kt$PaseoWorkInventory$for</ID>
+    <ID>MagicNumber:PaseoAgentFeatures.kt$128</ID>
+    <ID>MagicNumber:PaseoAgentFeatures.kt$16</ID>
+    <ID>MagicNumber:PaseoAgentFeatures.kt$200</ID>
+    <ID>MagicNumber:PaseoAgentFeatures.kt$32</ID>
+    <ID>MagicNumber:PaseoAgentFeatures.kt$40</ID>
+    <ID>MagicNumber:PaseoAgentFeatures.kt$80</ID>
+    <ID>MagicNumber:PaseoAgentTools.kt$PaseoAgentTools$120</ID>
+    <ID>MagicNumber:PaseoAgentTools.kt$PaseoAgentTools$127</ID>
+    <ID>MagicNumber:PaseoAgentTools.kt$PaseoAgentTools$128</ID>
+    <ID>MagicNumber:PaseoAgentTools.kt$PaseoAgentTools$16</ID>
+    <ID>MagicNumber:PaseoAgentTools.kt$PaseoAgentTools$200</ID>
+    <ID>MagicNumber:PaseoAgentTools.kt$PaseoAgentTools$256</ID>
+    <ID>MagicNumber:PaseoAgentTools.kt$PaseoAgentTools$32</ID>
+    <ID>MagicNumber:PaseoAgentTools.kt$PaseoAgentTools$50</ID>
+    <ID>MagicNumber:PaseoAgentTools.kt$PaseoAgentTools$600</ID>
+    <ID>MagicNumber:PaseoAgentTools.kt$PaseoAgentTools$64</ID>
+    <ID>MagicNumber:PaseoAgentTools.kt$PaseoAgentTools$80</ID>
+    <ID>MagicNumber:PaseoBackgroundTasks.kt$PaseoBackgroundTaskBook.Agent$4</ID>
+    <ID>MagicNumber:PaseoChatFeed.kt$PaseoChatFeed$8</ID>
+    <ID>MagicNumber:PaseoCommands.kt$128</ID>
+    <ID>MagicNumber:PaseoCommands.kt$300</ID>
+    <ID>MagicNumber:PaseoEndpoint.kt$PaseoProfileRules$0x7f</ID>
+    <ID>MagicNumber:PaseoEndpoint.kt$PaseoProfileRules$0x9f</ID>
+    <ID>MagicNumber:PaseoEndpoint.kt$PaseoProfileRules$4096</ID>
+    <ID>MagicNumber:PaseoEndpoint.kt$PaseoUrl.Companion$5</ID>
+    <ID>MagicNumber:PaseoEndpoint.kt$PaseoUrl.Companion$65535</ID>
+    <ID>MagicNumber:PaseoFailure.kt$239</ID>
+    <ID>MagicNumber:PaseoFailure.kt$240</ID>
+    <ID>MagicNumber:PaseoFiles.kt$PaseoFiles$100</ID>
+    <ID>MagicNumber:PaseoFiles.kt$PaseoFiles$1024</ID>
+    <ID>MagicNumber:PaseoFiles.kt$PaseoFiles$127</ID>
+    <ID>MagicNumber:PaseoFiles.kt$PaseoFiles$32</ID>
+    <ID>MagicNumber:PaseoFiles.kt$PaseoFiles$4</ID>
+    <ID>MagicNumber:PaseoFiles.kt$PaseoFiles$4096</ID>
+    <ID>MagicNumber:PaseoGateway.kt$0x3f</ID>
+    <ID>MagicNumber:PaseoGateway.kt$0x40</ID>
+    <ID>MagicNumber:PaseoGateway.kt$0x80</ID>
+    <ID>MagicNumber:PaseoGateway.kt$0xFF</ID>
+    <ID>MagicNumber:PaseoGateway.kt$12</ID>
+    <ID>MagicNumber:PaseoGateway.kt$16</ID>
+    <ID>MagicNumber:PaseoGateway.kt$20</ID>
+    <ID>MagicNumber:PaseoGateway.kt$6</ID>
+    <ID>MagicNumber:PaseoGateway.kt$8</ID>
+    <ID>MagicNumber:PaseoGateway.kt$PaseoGateway$0x7f</ID>
+    <ID>MagicNumber:PaseoGateway.kt$PaseoGateway$1_000L</ID>
+    <ID>MagicNumber:PaseoGateway.kt$PaseoGateway$20</ID>
+    <ID>MagicNumber:PaseoGateway.kt$PaseoGateway$200</ID>
+    <ID>MagicNumber:PaseoGateway.kt$PaseoGateway$2048</ID>
+    <ID>MagicNumber:PaseoGateway.kt$PaseoGateway$256</ID>
+    <ID>MagicNumber:PaseoGateway.kt$PaseoGateway$2_000</ID>
+    <ID>MagicNumber:PaseoGateway.kt$PaseoGateway$32</ID>
+    <ID>MagicNumber:PaseoGateway.kt$PaseoGateway$4</ID>
+    <ID>MagicNumber:PaseoGateway.kt$PaseoGateway$4096</ID>
+    <ID>MagicNumber:PaseoGateway.kt$PaseoGateway$500</ID>
+    <ID>MagicNumber:PaseoGateway.kt$PaseoGateway$6</ID>
+    <ID>MagicNumber:PaseoGateway.kt$PaseoGateway$64</ID>
+    <ID>MagicNumber:PaseoGateway.kt$PaseoGateway$90</ID>
+    <ID>MagicNumber:PaseoGatewayFactory.kt$0x7f</ID>
+    <ID>MagicNumber:PaseoGatewayFactory.kt$4096</ID>
+    <ID>MagicNumber:PaseoGenUiHistory.kt$4096</ID>
+    <ID>MagicNumber:PaseoGenUiHistory.kt$50</ID>
+    <ID>MagicNumber:PaseoGenUiHistory.kt$512</ID>
+    <ID>MagicNumber:PaseoHandoff.kt$32</ID>
+    <ID>MagicNumber:PaseoHandoff.kt$PaseoHandoff$98_304</ID>
+    <ID>MagicNumber:PaseoHostAgents.kt$128</ID>
+    <ID>MagicNumber:PaseoHostAgents.kt$512</ID>
+    <ID>MagicNumber:PaseoHostAgents.kt$64</ID>
+    <ID>MagicNumber:PaseoHostUpdate.kt$600</ID>
+    <ID>MagicNumber:PaseoHostUpdate.kt$64</ID>
+    <ID>MagicNumber:PaseoJson.kt$64</ID>
+    <ID>MagicNumber:PaseoMappers.kt$0xFF</ID>
+    <ID>MagicNumber:PaseoMappers.kt$10</ID>
+    <ID>MagicNumber:PaseoMappers.kt$1024</ID>
+    <ID>MagicNumber:PaseoMappers.kt$13</ID>
+    <ID>MagicNumber:PaseoMappers.kt$137</ID>
+    <ID>MagicNumber:PaseoMappers.kt$14</ID>
+    <ID>MagicNumber:PaseoMappers.kt$200</ID>
+    <ID>MagicNumber:PaseoMappers.kt$216</ID>
+    <ID>MagicNumber:PaseoMappers.kt$255</ID>
+    <ID>MagicNumber:PaseoMappers.kt$256</ID>
+    <ID>MagicNumber:PaseoMappers.kt$26</ID>
+    <ID>MagicNumber:PaseoMappers.kt$32</ID>
+    <ID>MagicNumber:PaseoMappers.kt$58</ID>
+    <ID>MagicNumber:PaseoMappers.kt$60</ID>
+    <ID>MagicNumber:PaseoMappers.kt$71</ID>
+    <ID>MagicNumber:PaseoMappers.kt$78</ID>
+    <ID>MagicNumber:PaseoMappers.kt$8</ID>
+    <ID>MagicNumber:PaseoMappers.kt$80</ID>
+    <ID>MagicNumber:PaseoPermissionMapper.kt$1024</ID>
+    <ID>MagicNumber:PaseoPermissionMapper.kt$16</ID>
+    <ID>MagicNumber:PaseoPermissionMapper.kt$256</ID>
+    <ID>MagicNumber:PaseoPermissionMapper.kt$300</ID>
+    <ID>MagicNumber:PaseoPermissionMapper.kt$32</ID>
+    <ID>MagicNumber:PaseoPermissionMapper.kt$512</ID>
+    <ID>MagicNumber:PaseoPermissionMapper.kt$6</ID>
+    <ID>MagicNumber:PaseoPermissionMapper.kt$65536</ID>
+    <ID>MagicNumber:PaseoProviderImport.kt$PaseoProviderImport$0x7f</ID>
+    <ID>MagicNumber:PaseoProviderImport.kt$PaseoProviderImport$120</ID>
+    <ID>MagicNumber:PaseoProviderImport.kt$PaseoProviderImport$200</ID>
+    <ID>MagicNumber:PaseoProviderImport.kt$PaseoProviderImport$256</ID>
+    <ID>MagicNumber:PaseoProviderImport.kt$PaseoProviderImport$4096</ID>
+    <ID>MagicNumber:PaseoProviderImport.kt$PaseoProviderImport$50</ID>
+    <ID>MagicNumber:PaseoRequestBook.kt$PaseoRequestBook$1024</ID>
+    <ID>MagicNumber:PaseoRequestBook.kt$PaseoRequestBook$128</ID>
+    <ID>MagicNumber:PaseoRequestBook.kt$PaseoRequestBook$16384</ID>
+    <ID>MagicNumber:PaseoRequestBook.kt$PaseoRequestBook$512</ID>
+    <ID>MagicNumber:PaseoRequestBook.kt$PaseoRequestBook$64</ID>
+    <ID>MagicNumber:PaseoStream.kt$2000</ID>
+    <ID>MagicNumber:PaseoStream.kt$2048</ID>
+    <ID>MagicNumber:PaseoStream.kt$256</ID>
+    <ID>MagicNumber:PaseoStream.kt$4096</ID>
+    <ID>MagicNumber:PaseoSubAgents.kt$200</ID>
+    <ID>MagicNumber:PaseoSubAgents.kt$2048</ID>
+    <ID>MagicNumber:PaseoSubagents.kt$PaseoSubagents$200</ID>
+    <ID>MagicNumber:PaseoSubagents.kt$PaseoSubagents$2048</ID>
+    <ID>MagicNumber:PaseoSubagents.kt$PaseoSubagents$256</ID>
+    <ID>MagicNumber:PaseoSubagents.kt$PaseoSubagents$4096</ID>
+    <ID>MagicNumber:PaseoSubagents.kt$PaseoSubagents$500</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$255</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$500</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$PaseoTerminalChannel$64</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$PaseoTerminalStream$0x05</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$PaseoTerminalStream$1024</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$PaseoTerminalStream$32_768</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$PaseoTerminalStream$64</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$PaseoTerminals$127</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$PaseoTerminals$255</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$PaseoTerminals$32</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$PaseoTerminals$4096</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$PaseoTerminals$500</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$TerminalUtf8$0x10000</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$TerminalUtf8$0x10ffff</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$TerminalUtf8$0x7f</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$TerminalUtf8$0x80</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$TerminalUtf8$0x800</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$TerminalUtf8$0xbf</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$TerminalUtf8$0xc2</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$TerminalUtf8$0xd800</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$TerminalUtf8$0xdc00</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$TerminalUtf8$0xdf</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$TerminalUtf8$0xdfff</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$TerminalUtf8$0xe0</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$TerminalUtf8$0xef</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$TerminalUtf8$0xf0</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$TerminalUtf8$0xf4</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$TerminalUtf8$0xfffd</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$TerminalUtf8$0xffff</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$TerminalUtf8$10</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$TerminalUtf8$1023</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$TerminalUtf8$15</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$TerminalUtf8$255</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$TerminalUtf8$3</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$TerminalUtf8$31</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$TerminalUtf8$6</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$TerminalUtf8$63</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$TerminalUtf8$7</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$Utf8StreamDecoder$0x80</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$Utf8StreamDecoder$0xC0</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$Utf8StreamDecoder$0xE0</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$Utf8StreamDecoder$0xF0</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$Utf8StreamDecoder$0xF8</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$Utf8StreamDecoder$0xFF</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$Utf8StreamDecoder$3</ID>
+    <ID>MagicNumber:PaseoTerminals.kt$Utf8StreamDecoder$4</ID>
+    <ID>MagicNumber:PaseoToolMappers.kt$256</ID>
+    <ID>MagicNumber:PaseoToolMappers.kt$30</ID>
+    <ID>MagicNumber:PaseoToolMappers.kt$50</ID>
+    <ID>MagicNumber:PaseoTransport.kt$PaseoTransport$0xFF</ID>
+    <ID>MagicNumber:PaseoTransport.kt$PaseoTransport$200</ID>
+    <ID>MagicNumber:PaseoTransport.kt$PaseoTransport$3</ID>
+    <ID>MagicNumber:PaseoTransport.kt$PaseoTransport$64</ID>
+    <ID>MagicNumber:PaseoTransport.kt$PaseoTransport.Companion$0xFF</ID>
+    <ID>MagicNumber:PaseoTransport.kt$PaseoTransport.Companion$16</ID>
+    <ID>MagicNumber:PaseoTransport.kt$PaseoTransport.Companion$40</ID>
+    <ID>MagicNumber:PaseoUncertainStart.kt$20</ID>
+    <ID>MagicNumber:PaseoUncertainStart.kt$600_000</ID>
+    <ID>MagicNumber:PaseoUsage.kt$0.5</ID>
+    <ID>MagicNumber:PaseoUsage.kt$0x20</ID>
+    <ID>MagicNumber:PaseoUsage.kt$0x200b</ID>
+    <ID>MagicNumber:PaseoUsage.kt$0x200f</ID>
+    <ID>MagicNumber:PaseoUsage.kt$0x202a</ID>
+    <ID>MagicNumber:PaseoUsage.kt$0x202e</ID>
+    <ID>MagicNumber:PaseoUsage.kt$0x2066</ID>
+    <ID>MagicNumber:PaseoUsage.kt$0x2069</ID>
+    <ID>MagicNumber:PaseoUsage.kt$0x7f</ID>
+    <ID>MagicNumber:PaseoUsage.kt$0x9f</ID>
+    <ID>MagicNumber:PaseoUsage.kt$100</ID>
+    <ID>MagicNumber:PaseoUsage.kt$100.0</ID>
+    <ID>MagicNumber:PaseoUsage.kt$16</ID>
+    <ID>MagicNumber:PaseoUsage.kt$18000</ID>
+    <ID>MagicNumber:PaseoUsage.kt$24</ID>
+    <ID>MagicNumber:PaseoUsage.kt$3600</ID>
+    <ID>MagicNumber:PaseoUsage.kt$5</ID>
+    <ID>MagicNumber:PaseoUsage.kt$604800</ID>
+    <ID>MagicNumber:PaseoUsage.kt$64</ID>
+    <ID>MagicNumber:PaseoUsage.kt$7</ID>
+    <ID>MagicNumber:PaseoUsage.kt$86400</ID>
+    <ID>MagicNumber:PaseoWorkInventory.kt$PaseoWorkInventory$200</ID>
+    <ID>MagicNumber:PaseoWorkInventory.kt$PaseoWorkInventory$500</ID>
+    <ID>MagicNumber:PaseoWorkspace.kt$100</ID>
+    <ID>MagicNumber:PaseoWorkspaceOperations.kt$PaseoWorkspaceOperations$127</ID>
+    <ID>MagicNumber:PaseoWorkspaceOperations.kt$PaseoWorkspaceOperations$32</ID>
+    <ID>MagicNumber:PaseoWorkspaceTransfer.kt$0x7f</ID>
+    <ID>MagicNumber:PaseoWorkspaceTransfer.kt$0xffffffffL</ID>
+    <ID>MagicNumber:PaseoWorkspaceTransfer.kt$1024</ID>
+    <ID>MagicNumber:PaseoWorkspaceTransfer.kt$128</ID>
+    <ID>MagicNumber:PaseoWorkspaceTransfer.kt$32</ID>
+    <ID>MatchingDeclarationName:JdkPaseoSocket.kt$JdkPaseoSocketFactory : PaseoSocketFactory</ID>
+    <ID>MatchingDeclarationName:PaseoGenUiHistory.kt$PaseoHistoryPage</ID>
+    <ID>MatchingDeclarationName:RequestFakes.kt$FakeRequestHost : PaseoRequestHost</ID>
+    <ID>MaxLineLength:FakeDaemon.kt$fun TestScope.transport(daemon: FakeDaemon, password: String = ""): PaseoTransport</ID>
+    <ID>MaxLineLength:GatewayHarness.kt$"modes" to listOf(mapOf("id" to "plan", "label" to "Plan"), mapOf("id" to "default", "label" to "Always Ask"))</ID>
+    <ID>MaxLineLength:GatewayHarness.kt$/** Ports of the Dart test helpers `agentJson`, `writePermission`, `stream` and `timeline` (test/paseo_gateway_test.dart). */</ID>
+    <ID>MaxLineLength:GatewayHarness.kt$fun timeline(item: JsonObject): JsonObject</ID>
+    <ID>MaxLineLength:GatewayHarness.kt$if (loaded) fields["activeTurn"] = if (status == "running") mapOf("turnId" to "turn-$id", "startedAt" to updatedAt) else null</ID>
+    <ID>MaxLineLength:JdkPaseoSocket.kt$JdkPaseoSocketFactory$status == 403 -&gt; PaseoException(if (password.isEmpty()) PaseoFailureKind.HostRefused else PaseoFailureKind.Authentication)</ID>
+    <ID>MaxLineLength:PaseoAcpResumeSendTest.kt$PaseoAcpResumeSendTest$val handleless = jsonOf(*agentJson("acp1", loaded = false).filterKeys { it != "persistence" }.toList().toTypedArray())</ID>
+    <ID>MaxLineLength:PaseoAgentFeatures.kt$out += AgentFeature(id, label, description, AgentFeatureKind.Choice, selected = item.str("value"), options = options.toImmutableList())</ID>
+    <ID>MaxLineLength:PaseoAgentFeaturesTest.kt$PaseoAgentFeaturesTest$"agent" to (agentJson("new", provider = "kilo") + mapOf("model" to toJson("kilo/google/gemini-3-pro-image"))) as JsonObject</ID>
+    <ID>MaxLineLength:PaseoAgentFeaturesTest.kt$PaseoAgentFeaturesTest$"description" to "Lower latency Opus responses at higher token cost"</ID>
+    <ID>MaxLineLength:PaseoAgentFeaturesTest.kt$PaseoAgentFeaturesTest$"list_provider_features_response" to jsonOf("provider" to "claude", "features" to listOf(fast(false)), "fetchedAt" to "2026-10-10T00:00:00Z")</ID>
+    <ID>MaxLineLength:PaseoAgentFeaturesTest.kt$PaseoAgentFeaturesTest$"models" to listOf(mapOf("id" to "opus", "label" to "Opus", "aliases" to listOf("claude-opus-4-8")))</ID>
+    <ID>MaxLineLength:PaseoAgentFeaturesTest.kt$PaseoAgentFeaturesTest$"status" to jsonOf("status" to "agent_created", "agentId" to "a9", "agent" to (agentJson("a9") + mapOf("model" to JsonPrimitive("opus"))))</ID>
+    <ID>MaxLineLength:PaseoAgentFeaturesTest.kt$PaseoAgentFeaturesTest$h.daemon.handlers["fetch_agent_request"] = { "fetch_agent_response" to jsonOf("agent" to (agentJson("a1") + mapOf("model" to JsonPrimitive("claude-opus-4-8")))) }</ID>
+    <ID>MaxLineLength:PaseoAgentFeaturesTest.kt$PaseoAgentFeaturesTest$h.gateway.prompt(draft.id, OutgoingPrompt("hello", ModelSelection(ModelRef("claude", "opus")), agent = "default")).ok()</ID>
+    <ID>MaxLineLength:PaseoAgentFeaturesTest.kt$PaseoAgentFeaturesTest$val updated = h.events.filterIsInstance&lt;io.github.eslamasabry.oc.core.domain.events.GatewayEvent.SessionUpserted&gt;().single().session</ID>
+    <ID>MaxLineLength:PaseoBackgroundTasks.kt$PaseoBackgroundTaskBook.Agent$if (part.type != PartType.Tool || (part.toolName ?: "").trim().lowercase() != "task_notification") continue</ID>
+    <ID>MaxLineLength:PaseoBackgroundTasks.kt$public</ID>
+    <ID>MaxLineLength:PaseoBackgroundTasksTest.kt$PaseoBackgroundTasksTest$"detail" to mapOf("type" to "plain_text", "label" to "Background command \"Build the owner APK\" completed (exit code 0)", "icon" to "wrench")</ID>
+    <ID>MaxLineLength:PaseoBackgroundTasksTest.kt$PaseoBackgroundTasksTest$"fetch_agents_response" to jsonOf("entries" to listOf(mapOf("agent" to record)), "pageInfo" to mapOf("hasMore" to false))</ID>
+    <ID>MaxLineLength:PaseoBackgroundTasksTest.kt$PaseoBackgroundTasksTest$/** Ported from test/background_tasks_test.dart (Paseo mapper, API failure line) and test/paseo_background_tasks_test.dart. */</ID>
+    <ID>MaxLineLength:PaseoBackgroundTasksTest.kt$PaseoBackgroundTasksTest$assertEquals(jsonOf("id" to "b1x2y3", "label" to "Wait for the owner build"), named.tool!!.metadata!!.obj("backgroundTask"))</ID>
+    <ID>MaxLineLength:PaseoBackgroundTasksTest.kt$PaseoBackgroundTasksTest$book.observe("agent-1", message(jsonOf("type" to "user_message", "text" to "Continue", "messageId" to "u2"), "u2"))</ID>
+    <ID>MaxLineLength:PaseoBackgroundTasksTest.kt$PaseoBackgroundTasksTest$book.replace("agent-1", listOf(message(bashItem(), callId), said("API Error: Can't reach the API server (EAI_AGAIN)")))</ID>
+    <ID>MaxLineLength:PaseoBackgroundTasksTest.kt$PaseoBackgroundTasksTest$book.replace("agent-1", listOf(said("API Error: Request timed out."), said("Picked up again; the build is done.", id = "a10")))</ID>
+    <ID>MaxLineLength:PaseoBackgroundTasksTest.kt$PaseoBackgroundTasksTest$daemon.push("agent_stream", stream("kilo", jsonOf("type" to "timeline", "provider" to "claude", "item" to item), seq = seq))</ID>
+    <ID>MaxLineLength:PaseoBackgroundTasksTest.kt$PaseoBackgroundTasksTest$entry(1, jsonOf("type" to "user_message", "text" to "Make the owner build", "messageId" to "u1"), "2026-09-19T03:33:00Z")</ID>
+    <ID>MaxLineLength:PaseoBackgroundTasksTest.kt$PaseoBackgroundTasksTest$entry(3, jsonOf("type" to "assistant_message", "text" to lastWords, "messageId" to "a1"), "2026-09-19T03:34:00Z")</ID>
+    <ID>MaxLineLength:PaseoBackgroundTasksTest.kt$PaseoBackgroundTasksTest$fun</ID>
+    <ID>MaxLineLength:PaseoBackgroundTasksTest.kt$PaseoBackgroundTasksTest$output: String = "Command running in background with ID: b1x2y3. Output is being written to: /tmp/claude-1000/tasks/b1x2y3.output"</ID>
+    <ID>MaxLineLength:PaseoBackgroundTasksTest.kt$PaseoBackgroundTasksTest$private fun message(item: JsonObject, id: String): MessageWithParts</ID>
+    <ID>MaxLineLength:PaseoBackgroundTasksTest.kt$PaseoBackgroundTasksTest$private fun said(text: String, id: String = "a9")</ID>
+    <ID>MaxLineLength:PaseoChatFeed.kt$PaseoChatFeed$*</ID>
+    <ID>MaxLineLength:PaseoChatFeed.kt$PaseoChatFeed$/** A turn that ended on the agent's own failure reads failed; one with background work still going reads running. */</ID>
+    <ID>MaxLineLength:PaseoChatFeed.kt$PaseoChatFeed$if (!port.hasOwnTitle(newer.id) &amp;&amp; port.hasOwnTitle(older.id)) port.keepTitle(newer.id, older.title.orEmpty())</ID>
+    <ID>MaxLineLength:PaseoChatFeed.kt$PaseoChatFeed$if (session.directory == dir &amp;&amp; !PaseoFeedPaths.isTemporary(session.directory)) sessions[session.id] = session</ID>
+    <ID>MaxLineLength:PaseoChatFeed.kt$PaseoChatFeed$private</ID>
+    <ID>MaxLineLength:PaseoChatFeed.kt$PaseoChatFeed$private val changeFlow = MutableSharedFlow&lt;Unit&gt;(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)</ID>
+    <ID>MaxLineLength:PaseoChatFeedTest.kt$PaseoChatFeedTest$assertEquals(PaseoFeedRow(first.sessionId, "Conversation one", FEED_DIR, "IPTV_King", false, PaseoFeedStatus.NeedsYou, 2_000, null, "codex", "Codex"), first)</ID>
+    <ID>MaxLineLength:PaseoChatFeedTest.kt$PaseoChatFeedTest$fun</ID>
+    <ID>MaxLineLength:PaseoCheckConnectionTest.kt$PaseoCheckConnectionTest$val</ID>
+    <ID>MaxLineLength:PaseoCreateMode.kt$val send = mode != null &amp;&amp; (mode in listedModes || (listedModes.isEmpty() &amp;&amp; defaultProviderModes[provider] == mode))</ID>
+    <ID>MaxLineLength:PaseoEndpoint.kt$PaseoProfileRules$value.isEmpty() || (value.length &lt;= 4096 &amp;&amp; value.none { it.isWhitespace() || it == ',' || it.code &lt;= 0x1f || it.code in 0x7f..0x9f })</ID>
+    <ID>MaxLineLength:PaseoEndpoint.kt$PaseoUrl.Companion$portText.all(Char::isDigit) &amp;&amp; portText.length &lt;= 5 -&gt; portText.toInt().takeIf { it in 0..65535 } ?: return null</ID>
+    <ID>MaxLineLength:PaseoEndpoint.kt$PaseoUrlProblem$public enum</ID>
+    <ID>MaxLineLength:PaseoEndpointTest.kt$PaseoEndpointTest$for</ID>
+    <ID>MaxLineLength:PaseoFailure.kt$(error as? PaseoException)?.toFailure() ?: Failure.Unexpected(io.github.eslamasabry.oc.core.common.Redacted.shape(error))</ID>
+    <ID>MaxLineLength:PaseoFailure.kt$/** A daemon's error sentence made safe for a Details fold: whitespace collapsed, trimmed, capped at 240; null if empty. */</ID>
+    <ID>MaxLineLength:PaseoFailure.kt$PaseoException$PaseoFailureKind.StaleRequest, PaseoFailureKind.ScopeMismatch -&gt; Failure.Refused(RefusalReason.StaleScope, details)</ID>
+    <ID>MaxLineLength:PaseoFeedPort.kt$PaseoFeedPort$*</ID>
+    <ID>MaxLineLength:PaseoFeedTypes.kt$if (newest != 0) newest else "${a.sessionId.raw}\u0000${a.directory}".compareTo("${b.sessionId.raw}\u0000${b.directory}")</ID>
+    <ID>MaxLineLength:PaseoFiles.kt$PaseoFiles$FileNode(paseoString(entry["name"], max = 1024), paseoString(entry["path"]), entry.str("kind") == "directory")</ID>
+    <ID>MaxLineLength:PaseoFiles.kt$PaseoFiles$val reply = request("directory_suggestions_request", jsonOf("query" to text, "cwd" to directory, "includeFiles" to true, "includeDirectories" to false, "limit" to 100))</ID>
+    <ID>MaxLineLength:PaseoFiles.kt$PaseoFiles$val reply = request("file_explorer_request", jsonOf("cwd" to cwd, "path" to relative, "mode" to "file", "maxBytes" to 2 * 1024 * 1024))</ID>
+    <ID>MaxLineLength:PaseoGateway.kt$PaseoGateway$if (e.kind == PaseoFailureKind.DeliveryUnknown) uncertainStarts[id] = PaseoUncertainStart(messageId, provider, sentAt)</ID>
+    <ID>MaxLineLength:PaseoGatewayFeedTest.kt$PaseoGatewayFeedTest$"fetch_agents_response" to jsonOf("entries" to listOf(mapOf("agent" to agentJson("a3", title = null))), "pageInfo" to mapOf("hasMore" to false))</ID>
+    <ID>MaxLineLength:PaseoGatewayFeedTest.kt$PaseoGatewayFeedTest$assertEquals("Claude Code conversation", (other.gateway.allSessions() as io.github.eslamasabry.oc.core.common.Outcome.Ok).value.single().title)</ID>
+    <ID>MaxLineLength:PaseoGatewayFeedTest.kt$PaseoGatewayFeedTest$fun</ID>
+    <ID>MaxLineLength:PaseoGatewayFeedTest.kt$PaseoGatewayLocalWorkTest$"agent.provider_subagents.list.response" to jsonOf("parentAgentId" to m.str("parentAgentId"), "subagents" to emptyList&lt;Any&gt;())</ID>
+    <ID>MaxLineLength:PaseoGatewayFeedTest.kt$PaseoGatewayLocalWorkTest$fun</ID>
+    <ID>MaxLineLength:PaseoGatewayFeedTest.kt$PaseoGatewayLocalWorkTest$val quiet = GatewayHarness(this, FakeDaemon().seedDefaults().also { d -&gt; d.handlers.putAll(daemon.handlers) }, trackLocalWork = true)</ID>
+    <ID>MaxLineLength:PaseoGatewayPermissionsTest.kt$PaseoGatewayPermissionsTest$"updatedPermissions" to listOf(mapOf("type" to "setMode", "mode" to "acceptEdits", "destination" to "session"))</ID>
+    <ID>MaxLineLength:PaseoGatewayPermissionsTest.kt$PaseoGatewayPermissionsTest$jsonOf("kind" to "upsert", "agent" to agentJson("a1", status = "running", pendingPermissions = listOf(writePermission("perm-1"))))</ID>
+    <ID>MaxLineLength:PaseoGatewayPermissionsTest.kt$PaseoGatewayPermissionsTest$val again = assertIs&lt;Outcome.Failed&gt;(h.gateway.replyPermission(SessionId("a1"), RequestId("perm-1"), PermissionReply.Once, null))</ID>
+    <ID>MaxLineLength:PaseoGatewayTest.kt$PaseoGatewayTest$"item" to mapOf("type" to "assistant_message", "text" to "[System Error] Internal error: You need to sign in to use this model.")</ID>
+    <ID>MaxLineLength:PaseoGatewayTest.kt$PaseoGatewayTest$assertEquals("opencode-mobile", h.daemon.of("fetch_agents_request").single().obj("subscribe")?.str("subscriptionId"))</ID>
+    <ID>MaxLineLength:PaseoGatewayTest.kt$PaseoGatewayTest$assertEquals(listOf("r:1", "toolu_1", "r:4"), h.events.filterIsInstance&lt;GatewayEvent.MessageUpserted&gt;().map { it.message.id })</ID>
+    <ID>MaxLineLength:PaseoGatewayTest.kt$PaseoGatewayTest$assertEquals(listOf(SessionId("a1")), h.events.filterIsInstance&lt;GatewayEvent.SessionDeleted&gt;().map { it.sessionId })</ID>
+    <ID>MaxLineLength:PaseoGatewayTest.kt$PaseoGatewayTest$assertIs&lt;Outcome.Failed&gt;(h.gateway.promptWithMessageId(draft.id, MessageId("c-1"), OutgoingPrompt("x")) { true })</ID>
+    <ID>MaxLineLength:PaseoGatewayTest.kt$PaseoGatewayTest$fun</ID>
+    <ID>MaxLineLength:PaseoGatewayTest.kt$PaseoGatewayTest$h.daemon.handlers["cancel_agent_request"] = { "rpc_error" to jsonOf("error" to "secret internals", "code" to "x") }</ID>
+    <ID>MaxLineLength:PaseoGatewayTest.kt$PaseoGatewayTest$h.daemon.handlers["fetch_agent_timeline_request"] = { "fetch_agent_timeline_response" to jsonOf("entries" to emptyList&lt;Any&gt;()) }</ID>
+    <ID>MaxLineLength:PaseoGatewayTest.kt$PaseoGatewayTest$h.daemon.handlers["send_agent_message_request"] = { "send_agent_message_response" to jsonOf("accepted" to true) }</ID>
+    <ID>MaxLineLength:PaseoGatewayTest.kt$PaseoGatewayTest$h.daemon.push("agent_stream", stream("a1", jsonOf("type" to "turn_failed", "provider" to "claude", "error" to "Not logged in")))</ID>
+    <ID>MaxLineLength:PaseoGatewayTest.kt$PaseoGatewayTest$h.daemon.push("agent_stream", stream("a1", timeline(jsonOf("type" to "reasoning", "text" to " think")), seq = 2))</ID>
+    <ID>MaxLineLength:PaseoGatewayTest.kt$PaseoGatewayTest$h.daemon.push("agent_stream", stream("a1", timeline(jsonOf("type" to "reasoning", "text" to "Let me")), seq = 1))</ID>
+    <ID>MaxLineLength:PaseoGatewayTest.kt$PaseoGatewayTest$io.github.eslamasabry.oc.core.model.PromptAttachment("text/plain", "a.txt", "data:text/plain;base64,aGk=")</ID>
+    <ID>MaxLineLength:PaseoGatewayTest.kt$PaseoGatewayTest$private fun assistant(text: String, id: String)</ID>
+    <ID>MaxLineLength:PaseoGatewayTest.kt$PaseoGatewayTest$stream("real-1", timeline(jsonOf("type" to "assistant_message", "text" to "Hi", "messageId" to "msg_1")), seq = 2)</ID>
+    <ID>MaxLineLength:PaseoGatewayTest.kt$PaseoGatewayTest$stream("real-1", timeline(jsonOf("type" to "user_message", "text" to "hello", "messageId" to "u1")), seq = 1)</ID>
+    <ID>MaxLineLength:PaseoGatewayTest.kt$PaseoGatewayTest$val refused = h.gateway.promptWithMessageId(SessionId("a1"), MessageId("client-43"), OutgoingPrompt("no")) { false }</ID>
+    <ID>MaxLineLength:PaseoGatewayTest.kt$PaseoGatewayTest$val sent = gateway.prompt(draft, OutgoingPrompt("hello", ModelSelection(ModelRef("claude", "haiku")), agent = "plan")).ok()</ID>
+    <ID>MaxLineLength:PaseoGatewayTest.kt$PaseoGatewayTest${ h.daemon.push("agent_update", jsonOf("kind" to "upsert", "agent" to agentJson("real-1", status = "running"))) }</ID>
+    <ID>MaxLineLength:PaseoGatewayTest.kt$private</ID>
+    <ID>MaxLineLength:PaseoHandshakeTest.kt$PaseoHandshakeTest$assertEquals(PaseoFailureKind.IncompatibleProtocol, assertFailsWith&lt;PaseoException&gt; { incompatible.connect() }.kind)</ID>
+    <ID>MaxLineLength:PaseoHandshakeTest.kt$PaseoHandshakeTest$for (v in listOf("0.13.0", "0.13.1", "0.14.1", "0.11.3", "0.9.3", null)) assertFalse(PaseoTestedVersions.paseoSupports(v), "$v")</ID>
+    <ID>MaxLineLength:PaseoHandshakeTest.kt$PaseoHandshakeTest$for (v in listOf("0.9.2", "0.11.2", "0.12.0", "0.13.2", "0.14.0")) assertTrue(PaseoTestedVersions.paseoSupports(v), v)</ID>
+    <ID>MaxLineLength:PaseoHandshakeTest.kt$PaseoHandshakeTest$fun</ID>
+    <ID>MaxLineLength:PaseoHandshakeTest.kt$PaseoHandshakeTest$private suspend</ID>
+    <ID>MaxLineLength:PaseoHostAgents.kt$HostAgentContinuation$get() = state == HostAgentContinuationState.ResumeUnverified || state == HostAgentContinuationState.MissingHandle</ID>
+    <ID>MaxLineLength:PaseoHostAgents.kt$HostAgentContinuation$public data</ID>
+    <ID>MaxLineLength:PaseoHostAgents.kt$HostAgentPermissionRequest$for (choice in choices) require(choice.actionId.isNotBlank() &amp;&amp; ids.add(choice.actionId)) { "Permission choices need unique, nonempty IDs." }</ID>
+    <ID>MaxLineLength:PaseoHostAgents.kt$HostAgentProvider$get() = resumeSupport == HostAgentResumeSupport.LoadSession || resumeSupport == HostAgentResumeSupport.ListAndLoad</ID>
+    <ID>MaxLineLength:PaseoHostAgents.kt$HostAgentProvider$require</ID>
+    <ID>MaxLineLength:PaseoHostAgents.kt$HostAgentProvider$val selectable: Boolean get() = availability == HostAgentAvailability.Ready &amp;&amp; loginState != HostAgentLoginState.NeedsHostSignIn</ID>
+    <ID>MaxLineLength:PaseoHostAgents.kt$if</ID>
+    <ID>MaxLineLength:PaseoHostAgents.kt$val intact = handle != null &amp;&amp; handle.str("provider") == provider &amp;&amp; !handleId.isNullOrEmpty() &amp;&amp; handleId.length &lt;= 512</ID>
+    <ID>MaxLineLength:PaseoHostAgents.kt$val provider = agent.str("provider")?.takeIf { it.isNotEmpty() &amp;&amp; it.length &lt;= 128 } ?: paseoFail(PaseoFailureKind.InvalidResponse)</ID>
+    <ID>MaxLineLength:PaseoHostAgentsTest.kt$PaseoHostAgentsTest$"Failed to fetch models for fx: fx needs access to Vercel AI Gateway. Run fx login to sign in, fx setup to use an API key, or set AI_GATEWAY_API_KEY."</ID>
+    <ID>MaxLineLength:PaseoHostAgentsTest.kt$PaseoHostAgentsTest$"actions" to options.map { mapOf("id" to it["optionId"], "label" to it["name"], "behavior" to if (it["kind"]!!.startsWith("allow")) "allow" else "deny") }</ID>
+    <ID>MaxLineLength:PaseoHostAgentsTest.kt$PaseoHostAgentsTest$"models" to listOf(mapOf("provider" to id, "id" to "$id-model", "label" to "$id model", "isDefault" to true))</ID>
+    <ID>MaxLineLength:PaseoHostAgentsTest.kt$PaseoHostAgentsTest$"persistence" to if (persisted) mapOf("provider" to providerId, "sessionId" to "native-existing") else null</ID>
+    <ID>MaxLineLength:PaseoHostAgentsTest.kt$PaseoHostAgentsTest$"provider" to id</ID>
+    <ID>MaxLineLength:PaseoHostAgentsTest.kt$PaseoHostAgentsTest$HostAgentProvider("x", "x", HostAgentAvailability.Hidden, HostAgentHiddenReason.ResumeUnverified, HostAgentLoginState.Unknown, HostAgentResumeSupport.Unknown)</ID>
+    <ID>MaxLineLength:PaseoHostAgentsTest.kt$PaseoHostAgentsTest$HostAgentProvider("x", "x", HostAgentAvailability.Hidden, null, HostAgentLoginState.Unknown, HostAgentResumeSupport.Unknown)</ID>
+    <ID>MaxLineLength:PaseoHostAgentsTest.kt$PaseoHostAgentsTest$HostAgentProvider("x", "x", HostAgentAvailability.Ready, null, HostAgentLoginState.NeedsHostSignIn, HostAgentResumeSupport.Unknown)</ID>
+    <ID>MaxLineLength:PaseoHostAgentsTest.kt$PaseoHostAgentsTest$assertEquals("--- /dev/null\n+++ b/$cwd/result.txt\n@@ -0,0 +1,1 @@\n+hello", card.metadata["diff"].toString().let { kotlinx.serialization.json.Json.decodeFromString&lt;String&gt;(it) })</ID>
+    <ID>MaxLineLength:PaseoHostAgentsTest.kt$PaseoHostAgentsTest$assertEquals(HostAgentContinuationState.ExistingRoute, paseoHostAgentContinuation("existing", agent("claude"), false).state)</ID>
+    <ID>MaxLineLength:PaseoHostAgentsTest.kt$PaseoHostAgentsTest$assertEquals(HostAgentContinuationState.LiveSession, paseoHostAgentContinuation("existing", agent("gemini"), live = true).state)</ID>
+    <ID>MaxLineLength:PaseoHostAgentsTest.kt$PaseoHostAgentsTest$assertEquals(HostAgentContinuationState.LiveSession, paseoHostAgentContinuation("existing", agent("gemini", loaded = true), false).state)</ID>
+    <ID>MaxLineLength:PaseoHostAgentsTest.kt$PaseoHostAgentsTest$assertEquals(HostAgentContinuationState.MissingHandle, paseoHostAgentContinuation("existing", agent("gemini", persisted = false), false).state)</ID>
+    <ID>MaxLineLength:PaseoHostAgentsTest.kt$PaseoHostAgentsTest$assertEquals(HostAgentContinuationState.MissingHandle, paseoHostAgentContinuation("existing", foreign, false).state)</ID>
+    <ID>MaxLineLength:PaseoHostAgentsTest.kt$PaseoHostAgentsTest$assertEquals(PaseoFailureKind.Unavailable, assertFailsWith&lt;PaseoException&gt; { book.replyHostPermission("approval", null) }.kind)</ID>
+    <ID>MaxLineLength:PaseoHostAgentsTest.kt$PaseoHostAgentsTest$assertEquals(listOf(HostAgentPermissionBehavior.AllowOnce, HostAgentPermissionBehavior.RejectOnce), pending.choices.map { it.behavior })</ID>
+    <ID>MaxLineLength:PaseoHostAgentsTest.kt$PaseoHostAgentsTest$assertFailsWith&lt;PaseoException&gt; { paseoHostAgentContinuation("existing", agent("gemini").without("provider"), false) }</ID>
+    <ID>MaxLineLength:PaseoHostAgentsTest.kt$PaseoHostAgentsTest$assertFailsWith&lt;PaseoException&gt; { paseoHostPermission("a1", permission(onceAndStanding()).without("id"), "gemini") }</ID>
+    <ID>MaxLineLength:PaseoHostAgentsTest.kt$PaseoHostAgentsTest$for</ID>
+    <ID>MaxLineLength:PaseoHostAgentsTest.kt$PaseoHostAgentsTest$jsonOf("agentId" to "existing", "agent" to agent("gemini").with("pendingPermissions" to JsonArray(listOf(permission(offered)))))</ID>
+    <ID>MaxLineLength:PaseoHostAgentsTest.kt$PaseoHostAgentsTest$private</ID>
+    <ID>MaxLineLength:PaseoHostAgentsTest.kt$PaseoHostAgentsTest$private fun ask(options: List&lt;Map&lt;String, String&gt;&gt;, id: String = "approval")</ID>
+    <ID>MaxLineLength:PaseoHostAgentsTest.kt$PaseoHostAgentsTest$provider("gemini").with("capabilities" to mapOf("loadSession" to true, "sessionCapabilities" to mapOf("list" to emptyMap&lt;String, Any&gt;())), "loadSession" to true, "type" to "acp")</ID>
+    <ID>MaxLineLength:PaseoHostAgentsTest.kt$PaseoHostAgentsTest$val catalog = paseoHostAgentCatalog(listOf(provider("claude"), provider("gemini"), provider("omp"), provider("fx")))</ID>
+    <ID>MaxLineLength:PaseoHostAgentsTest.kt$PaseoHostAgentsTest$val catalog = paseoHostAgentCatalog(listOf(provider("gemini", enabled = false), provider("fx", status = "loading")))</ID>
+    <ID>MaxLineLength:PaseoHostAgentsTest.kt$PaseoHostAgentsTest$val catalog = paseoHostAgentCatalog(listOf(provider("qwen"), provider("goose"), provider("qwen", status = "loading"), provider("Bad Id")))</ID>
+    <ID>MaxLineLength:PaseoHostAgentsTest.kt$PaseoHostAgentsTest$val fx = paseoHostAgentCatalog(listOf(provider("fx", status = "error", error = "fx needs access to Vercel AI Gateway. Run fx login to sign in")))</ID>
+    <ID>MaxLineLength:PaseoHostAgentsTest.kt$PaseoHostAgentsTest$val row = paseoHostAgentCatalog(listOf(provider("gemini", status = "error", error = "AuthRequired"))).providers.single()</ID>
+    <ID>MaxLineLength:PaseoHostAgentsTest.kt$PaseoHostAgentsTest$val secret = paseoHostAgentCatalog(listOf(provider("gemini", status = "error", error = fakeSecret))).providers.single()</ID>
+    <ID>MaxLineLength:PaseoHostUpdate.kt$private fun cleanVersion(value: JsonElement?): String?</ID>
+    <ID>MaxLineLength:PaseoHostUpdate.kt$public suspend</ID>
+    <ID>MaxLineLength:PaseoHostWorkTest.kt$PaseoHostWorkTest$"fetch_agents_response" to jsonOf("entries" to listOf(mapOf("agent" to agentJson("a1"))), "pageInfo" to mapOf("hasMore" to false))</ID>
+    <ID>MaxLineLength:PaseoHostWorkTest.kt$PaseoHostWorkTest$"fetch_recent_provider_sessions_response" to jsonOf("entries" to listOf(importEntry("native-1", first = "x")))</ID>
+    <ID>MaxLineLength:PaseoHostWorkTest.kt$PaseoHostWorkTest$/** Ported from test/paseo_host_update_test.dart, test/paseo_provider_import_test.dart and test/paseo_payload_use_test.dart. */</ID>
+    <ID>MaxLineLength:PaseoHostWorkTest.kt$PaseoHostWorkTest$backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { h.gateway.events.status.collect { statuses += it } }</ID>
+    <ID>MaxLineLength:PaseoHostWorkTest.kt$PaseoHostWorkTest$h.daemon.handlers["import_agent_request"] = { "status" to jsonOf("status" to "agent_create_failed", "error" to "session file is gone") }</ID>
+    <ID>MaxLineLength:PaseoHostWorkTest.kt$PaseoHostWorkTest$h.daemon.handlers["import_agent_request"] = { "status" to jsonOf("status" to "agent_resumed", "agentId" to "imp-1", "agent" to agentJson("imp-1")) }</ID>
+    <ID>MaxLineLength:PaseoHostWorkTest.kt$PaseoHostWorkTest$handlers["fetch_agents_request"] = { "fetch_agents_response" to jsonOf("entries" to emptyList&lt;Any&gt;(), "pageInfo" to mapOf("hasMore" to false)) }</ID>
+    <ID>MaxLineLength:PaseoHostWorkTest.kt$PaseoHostWorkTest$jsonOf("requestId" to h.updateId(), "success" to false, "error" to "npm ERR! EACCES: permission denied", "previousVersion" to "0.9.1", "newVersion" to null)</ID>
+    <ID>MaxLineLength:PaseoHostWorkTest.kt$PaseoHostWorkTest$jsonOf("requestId" to h.updateId(), "success" to true, "error" to null, "previousVersion" to "0.9.1", "newVersion" to "0.9.2")</ID>
+    <ID>MaxLineLength:PaseoHostWorkTest.kt$PaseoHostWorkTest$jsonOf("requestId" to h.updateId(), "success" to true, "error" to null, "previousVersion" to "0.9.2", "newVersion" to "0.9.2")</ID>
+    <ID>MaxLineLength:PaseoHostWorkTest.kt$PaseoHostWorkTest$jsonOf("requestId" to initial.of("daemon.update.request").single()["requestId"], "success" to true, "error" to null, "previousVersion" to "0.9.1", "newVersion" to "0.9.2")</ID>
+    <ID>MaxLineLength:PaseoHostWorkTest.kt$PaseoHostWorkTest$private</ID>
+    <ID>MaxLineLength:PaseoHostWorkTest.kt$PaseoHostWorkTest$private fun GatewayHarness.updateId(): JsonPrimitive</ID>
+    <ID>MaxLineLength:PaseoHostWorkTest.kt$PaseoHostWorkTest$w.daemon.handlers["create_agent_request"] = { "create_agent_response" to jsonOf("error" to "synthetic-private-daemon-detail") }</ID>
+    <ID>MaxLineLength:PaseoHostWorkTest.kt$PaseoHostWorkTest$w.daemon.push("create_agent_response", jsonOf("requestId" to w.daemon.of("create_agent_request").single()["requestId"], "agent" to agentJson("a1")))</ID>
+    <ID>MaxLineLength:PaseoHostWorkTest.kt$PaseoHostWorkTest$w.h.gateway.promptWithMessageId(SessionId("a1"), io.github.eslamasabry.oc.core.common.ids.MessageId("answer"), OutgoingPrompt("hello")).ok()</ID>
+    <ID>MaxLineLength:PaseoHostWorkTest.kt$PaseoHostWorkTest.World$"entries" to listOf(mapOf("provider" to "claude", "status" to "ready", "models" to emptyList&lt;Any&gt;(), "modes" to emptyList&lt;Any&gt;()))</ID>
+    <ID>MaxLineLength:PaseoHostWorkTest.kt$PaseoHostWorkTest.World$d.handlers["create_agent_request"] = { trace += "rpc:create"; "create_agent_response" to jsonOf("agent" to agentJson("a1")) }</ID>
+    <ID>MaxLineLength:PaseoHostWorkTest.kt$PaseoHostWorkTest.World$d.handlers["fetch_agent_request"] = { r -&gt; trace += "rpc:fetch"; "fetch_agent_response" to jsonOf("agent" to agentJson(r.str("agentId")!!)) }</ID>
+    <ID>MaxLineLength:PaseoHostWorkTest.kt$PaseoHostWorkTest.World$d.handlers["send_agent_message_request"] = { r -&gt; trace += "rpc:send"; "send_agent_message_response" to jsonOf("agentId" to r.str("agentId"), "accepted" to true) }</ID>
+    <ID>MaxLineLength:PaseoHostWorkTest.kt$PaseoHostWorkTest.World$val rpcs: List&lt;String&gt; get() = daemon.sent.mapNotNull { it.str("type") }.filter { it != "get_providers_snapshot_request" }</ID>
+    <ID>MaxLineLength:PaseoIdleGuard.kt$PaseoIdleGuard$val newPrompt = stamp != null &amp;&amp; if (firstSight) stamp &gt; previous + TOLERANCE_MS else before == null || stamp &gt; before</ID>
+    <ID>MaxLineLength:PaseoJson.kt$(this as? JsonPrimitive)?.takeIf { !it.isString &amp;&amp; it !is JsonNull }?.let { it.longOrNull ?: it.doubleOrNull?.takeIf { d -&gt; d % 1.0 == 0.0 }?.toLong() }</ID>
+    <ID>MaxLineLength:PaseoJson.kt$public</ID>
+    <ID>MaxLineLength:PaseoJson.kt$public fun JsonElement?.numberOrNull(): Double?</ID>
+    <ID>MaxLineLength:PaseoJson.kt$public operator</ID>
+    <ID>MaxLineLength:PaseoLiveProofTest.kt$PaseoLiveProofTest$private</ID>
+    <ID>MaxLineLength:PaseoLiveProofTest.kt$PaseoLiveProofTest$step("10 a wrong password reads as sign-in needed", (wrong as? Outcome.Failed)?.failure is Failure.SignIn, wrong.toString().replace(password, "•••"))</ID>
+    <ID>MaxLineLength:PaseoLiveProofTest.kt$PaseoLiveProofTest$step("7 the turn streams and ends", ended &amp;&amp; streamed &gt; 0, "events=$streamed ${events.filterIsInstance&lt;GatewayEvent.RunEnded&gt;().map { it.outcome }}")</ID>
+    <ID>MaxLineLength:PaseoLiveProofTest.kt$PaseoLiveProofTest$step("9 delete archives the agent", archived is Outcome.Ok &amp;&amp; listed.none { it.id == draft?.id }, archived.toString())</ID>
+    <ID>MaxLineLength:PaseoLiveProofTest.kt$PaseoLiveProofTest$val connection = java.net.URI("$ctl/drop-socket").toURL().openConnection(java.net.Proxy.NO_PROXY) as java.net.HttpURLConnection</ID>
+    <ID>MaxLineLength:PaseoLiveProofTest.kt$PaseoLiveProofTest$val sent = draft?.let { g.prompt(it.id, OutgoingPrompt("Say hello from the live proof.", model?.let { m -&gt; ModelSelection(ModelRef(m.providerId, m.modelId)) })) }</ID>
+    <ID>MaxLineLength:PaseoLiveProofTest.kt$PaseoLiveProofTest$val streamed = events.count { it is GatewayEvent.MessageUpserted || it is GatewayEvent.PartUpserted || it is GatewayEvent.PartDelta }</ID>
+    <ID>MaxLineLength:PaseoLiveProofTest.kt$PaseoLiveProofTest$val transport = PaseoTransport(endpoint = url!!, password = pw, socketFactory = JdkPaseoSocketFactory(), scope = scope, lane = lane)</ID>
+    <ID>MaxLineLength:PaseoMappers.kt$/** Dart `paseoProviderName`: claude → Claude Code, codex → Codex, opencode → OpenCode, copilot → GitHub Copilot, pi → Pi. */</ID>
+    <ID>MaxLineLength:PaseoMappers.kt$MessageInfo(id = id, sessionId = agentId, role = Role.User, time = MsgTime(createdMs, completedMs ?: createdMs))</ID>
+    <ID>MaxLineLength:PaseoMappers.kt$PaseoTimeline$public</ID>
+    <ID>MaxLineLength:PaseoMappers.kt$else -&gt; if (row["completed"].let { it is JsonPrimitive &amp;&amp; !it.isString &amp;&amp; it.content == "true" }) "completed" else "pending"</ID>
+    <ID>MaxLineLength:PaseoMappers.kt$fun</ID>
+    <ID>MaxLineLength:PaseoMappers.kt$if</ID>
+    <ID>MaxLineLength:PaseoMappers.kt$if (!attachment.mime.startsWith("image/") || match == null) return PaseoImages.Refused(PaseoImageProblem.NotPicture)</ID>
+    <ID>MaxLineLength:PaseoMappers.kt$newPart(PartType.Tool, "tool", toolName = toolName, callId = id, tool = toolState(status, input, output, error, metadata))</ID>
+    <ID>MaxLineLength:PaseoMappers.kt$private</ID>
+    <ID>MaxLineLength:PaseoMappers.kt$private fun busyWord(status: JsonElement?): Boolean</ID>
+    <ID>MaxLineLength:PaseoPermissionMapper.kt$always = if (grantable) (if (covered.isEmpty()) listOf(permission) else covered).toImmutableList() else kotlinx.collections.immutable.persistentListOf()</ID>
+    <ID>MaxLineLength:PaseoPermissionMapper.kt$metadata["facts"] = JsonArray(facts.map { (k, v) -&gt; JsonObject(mapOf("key" to JsonPrimitive(k), "value" to JsonPrimitive(v))) })</ID>
+    <ID>MaxLineLength:PaseoPermissionMapper.kt$patterns = metadata.entries.take(6).map { (key, value) -&gt; "${askLabel(key)}: ${display(value)}" }.toMutableList()</ID>
+    <ID>MaxLineLength:PaseoPermissionMapper.kt$private</ID>
+    <ID>MaxLineLength:PaseoPermissionMapper.kt$val said = patterns.toSet() + metadata.values.mapNotNull { (it as? JsonPrimitive)?.takeIf { p -&gt; p.isString }?.content }</ID>
+    <ID>MaxLineLength:PaseoPermissionMapper.kt$val spaced = key.replace(CAMEL) { "${it.groupValues[1]} ${it.groupValues[2]}" }.replace(Regex("[_-]+"), " ").trim().lowercase()</ID>
+    <ID>MaxLineLength:PaseoPermissionsTest.kt$PaseoPermissionsTest$"updatedPermissions" to listOf(mapOf("type" to "setMode", "mode" to "acceptEdits", "destination" to "session"))</ID>
+    <ID>MaxLineLength:PaseoPermissionsTest.kt$PaseoPermissionsTest$assertFailsWith&lt;PaseoException&gt; { book.replyPermission("permission-one", PaseoPermissionAnswer.Once, legacySessionId = "a2") }.kind</ID>
+    <ID>MaxLineLength:PaseoPermissionsTest.kt$PaseoPermissionsTest$fun</ID>
+    <ID>MaxLineLength:PaseoPermissionsTest.kt$PaseoPermissionsTest$jsonOf("agentId" to "a1", "requestId" to "perm-1", "response" to mapOf("behavior" to "allow"), "type" to "agent_permission_response")</ID>
+    <ID>MaxLineLength:PaseoPermissionsTest.kt$PaseoPermissionsTest$jsonOf("behavior" to "allow", "updatedPermissions" to listOf(mapOf("type" to "setMode", "mode" to "acceptEdits", "destination" to "session")))</ID>
+    <ID>MaxLineLength:PaseoPermissionsTest.kt$PaseoPermissionsTest$jsonOf("id" to "p", "name" to "Bash", "kind" to "tool", "detail" to mapOf("type" to "shell", "command" to "rm -rf build"))</ID>
+    <ID>MaxLineLength:PaseoPermissionsTest.kt$PaseoPermissionsTest$jsonOf("url" to "https://example.com", "facts" to listOf(mapOf("key" to "url", "value" to "https://example.com")))</ID>
+    <ID>MaxLineLength:PaseoPermissionsTest.kt$PaseoPermissionsTest$private fun asked(): List&lt;GatewayEvent.PermissionAsked&gt;</ID>
+    <ID>MaxLineLength:PaseoPermissionsTest.kt$PaseoPermissionsTest$val stale = assertFailsWith&lt;PaseoException&gt; { book.replyPermission("permission-one", PaseoPermissionAnswer.Once) }</ID>
+    <ID>MaxLineLength:PaseoProbeAndFailureTest.kt$PaseoProbeAndFailureTest$/** The probe group of test/paseo_gateway_test.dart, Dart PaseoFailure words (paseo_files_test 760…851), first messages. */</ID>
+    <ID>MaxLineLength:PaseoProbeAndFailureTest.kt$PaseoProbeAndFailureTest$assertEquals(BusyKind.Overloaded, assertIs&lt;Failure.Busy&gt;(PaseoException(PaseoFailureKind.Overloaded).toFailure()).kind)</ID>
+    <ID>MaxLineLength:PaseoProbeAndFailureTest.kt$PaseoProbeAndFailureTest$assertEquals(RefusalReason.DispatchUncertain, assertIs&lt;Failure.Refused&gt;(PaseoException(PaseoFailureKind.DeliveryUnknown).toFailure()).reason)</ID>
+    <ID>MaxLineLength:PaseoProbeAndFailureTest.kt$PaseoProbeAndFailureTest$assertEquals(RefusalReason.StaleScope, assertIs&lt;Failure.Refused&gt;(PaseoException(PaseoFailureKind.StaleRequest).toFailure()).reason)</ID>
+    <ID>MaxLineLength:PaseoProbeAndFailureTest.kt$PaseoProbeAndFailureTest$assertFalse("git" in PaseoException(PaseoFailureKind.Unavailable, "fatal: not a git repository").message.orEmpty())</ID>
+    <ID>MaxLineLength:PaseoProbeAndFailureTest.kt$PaseoProbeAndFailureTest$assertIs&lt;Outcome.Failed&gt;(h.gateway.prompt(SessionId("a1"), OutgoingPrompt("go", ModelSelection(ModelRef("claude", "fixture-model-1"), "max"))))</ID>
+    <ID>MaxLineLength:PaseoProbeAndFailureTest.kt$PaseoProbeAndFailureTest$assertTrue(assertIs&lt;PaseoProbeResult.InvalidInput&gt;(probePaseoConnection("127.0.0.1:6767", "", "work") { _, _, _ -&gt; error("opened") }).directory)</ID>
+    <ID>MaxLineLength:PaseoProbeAndFailureTest.kt$PaseoProbeAndFailureTest$assertTrue(assertIs&lt;PaseoProbeResult.InvalidInput&gt;(probePaseoConnection("127.0.0.1:6767", "a b", DIR) { _, _, _ -&gt; error("opened") }).password)</ID>
+    <ID>MaxLineLength:PaseoProbeAndFailureTest.kt$PaseoProbeAndFailureTest$fun</ID>
+    <ID>MaxLineLength:PaseoProbeAndFailureTest.kt$PaseoProbeAndFailureTest$h.daemon.handlers["create_agent_request"] = { "rpc_error" to jsonOf("error" to "Provider claude refused: workspace is locked") }</ID>
+    <ID>MaxLineLength:PaseoProbeAndFailureTest.kt$PaseoProbeAndFailureTest$h.daemon.handlers["send_agent_message_request"] = { "send_agent_message_response" to jsonOf("accepted" to true) }</ID>
+    <ID>MaxLineLength:PaseoProbeAndFailureTest.kt$PaseoProbeAndFailureTest$h.gateway.prompt(SessionId("a1"), OutgoingPrompt("go", ModelSelection(ModelRef("claude", "fixture-model-1"), "high"))).let { assertIs&lt;Outcome.Ok&lt;*&gt;&gt;(it) }</ID>
+    <ID>MaxLineLength:PaseoProbeAndFailureTest.kt$PaseoProbeAndFailureTest$h.gateway.setSessionModel(SessionId("a1"), ModelRef("claude", "fixture-model-1"), "").let { assertIs&lt;Outcome.Ok&lt;*&gt;&gt;(it) }</ID>
+    <ID>MaxLineLength:PaseoProbeAndFailureTest.kt$PaseoProbeAndFailureTest$private fun kotlinx.serialization.json.JsonObject.obj(key: String)</ID>
+    <ID>MaxLineLength:PaseoProbeAndFailureTest.kt$PaseoProbeAndFailureTest$val failure = assertIs&lt;Outcome.Failed&gt;(h.gateway.prompt(draft.id, OutgoingPrompt("hi", ModelSelection(ModelRef("claude", "haiku"))))).failure</ID>
+    <ID>MaxLineLength:PaseoProbeAndFailureTest.kt$PaseoProbeAndFailureTest$val noCodex = assertIs&lt;Outcome.Failed&gt;(h2.gateway.prompt(draft2.id, OutgoingPrompt("hi", ModelSelection(ModelRef("codex", "gpt"))))).failure</ID>
+    <ID>MaxLineLength:PaseoProbeAndFailureTest.kt$PaseoProbeAndFailureTest$val order = h.daemon.sent.map { it.str("type") }.filter { it == "set_agent_thinking_request" || it == "send_agent_message_request" }</ID>
+    <ID>MaxLineLength:PaseoProbeAndFailureTest.kt$PaseoProbeAndFailureTest$val refused = assertIs&lt;Failure.ComputerDidNotAnswer&gt;(PaseoException(PaseoFailureKind.Unavailable, "fatal: not a git repository").toFailure())</ID>
+    <ID>MaxLineLength:PaseoQuestionsTest.kt$PaseoQuestionsTest$"answers" to mapOf("Which stack should I use?" to "Rust", "Which features do you need?" to "Search, History, Offline")</ID>
+    <ID>MaxLineLength:PaseoQuestionsTest.kt$PaseoQuestionsTest$"input" to mapOf("questions" to listOf(mapOf("header" to "Response", "question" to "Optional note", "options" to emptyList&lt;Any&gt;(), "allowEmpty" to true)))</ID>
+    <ID>MaxLineLength:PaseoQuestionsTest.kt$PaseoQuestionsTest$assertFailsWith&lt;PaseoException&gt; { book.answerQuestion("a1", "permission-question", listOf(emptyList(), listOf("Search"))) }</ID>
+    <ID>MaxLineLength:PaseoQuestionsTest.kt$PaseoQuestionsTest$assertFailsWith&lt;PaseoException&gt; { book.answerQuestion("a1", "permission-question", listOf(listOf(" "), listOf("Search"))) }</ID>
+    <ID>MaxLineLength:PaseoQuestionsTest.kt$PaseoQuestionsTest$assertFailsWith&lt;PaseoException&gt; { book.answerQuestion("a1", "permission-question", listOf(listOf("Dart"), listOf("Search"))) }</ID>
+    <ID>MaxLineLength:PaseoQuestionsTest.kt$PaseoQuestionsTest$assertFailsWith&lt;PaseoException&gt; { book.answerQuestion("a1", "permission-question", listOf(listOf("Dart", "Dart"), listOf("Search"))) }</ID>
+    <ID>MaxLineLength:PaseoQuestionsTest.kt$PaseoQuestionsTest$assertFailsWith&lt;PaseoException&gt; { book.answerQuestion("a1", "permission-question", listOf(listOf("Unknown"), listOf("Search"))) }</ID>
+    <ID>MaxLineLength:PaseoQuestionsTest.kt$PaseoQuestionsTest$assertFailsWith&lt;PaseoException&gt; { book.answerQuestion("other", "permission-question", listOf(listOf("Dart"), listOf("Search"))) }.kind</ID>
+    <ID>MaxLineLength:PaseoQuestionsTest.kt$PaseoQuestionsTest$book.onPermissionRequest("a1", questionFixture("claude").edit("input", "questions", 0, "allowOther", value = false))</ID>
+    <ID>MaxLineLength:PaseoQuestionsTest.kt$PaseoQuestionsTest$book.onPermissionRequest("a1", questionFixture("claude").edit("input", "questions", 0, "multiSelect", value = "yes"))</ID>
+    <ID>MaxLineLength:PaseoQuestionsTest.kt$PaseoQuestionsTest$book.onPermissionRequest("a1", questionFixture("claude").edit("input", "questions", 1, "header", value = "Stack"))</ID>
+    <ID>MaxLineLength:PaseoQuestionsTest.kt$PaseoQuestionsTest$book.onPermissionRequest("a1", questionFixture("claude").with("input" to mapOf("questions" to listOf(mapOf("header" to "Bad")))))</ID>
+    <ID>MaxLineLength:PaseoQuestionsTest.kt$PaseoQuestionsTest$book.onPermissionRequest("a1", questionFixture("pi").with("provider" to provider, "name" to "$provider ask_user"))</ID>
+    <ID>MaxLineLength:PaseoQuestionsTest.kt$PaseoQuestionsTest$book.onPermissionRequest("a2", questionFixture("claude").with("input" to mapOf("questions" to emptyList&lt;Any&gt;())))</ID>
+    <ID>MaxLineLength:PaseoQuestionsTest.kt$PaseoQuestionsTest$jsonOf("behavior" to "allow", "updatedInput" to mapOf("answers" to mapOf("Response" to "Rust", "Comment" to "")))</ID>
+    <ID>MaxLineLength:PaseoQuestionsTest.kt$PaseoQuestionsTest$val malformed = questionFixture("claude").with("id" to "malformed").edit("input", "questions", 0, "isOther", value = "true")</ID>
+    <ID>MaxLineLength:PaseoRequestBook.kt$PaseoRequestHost$*</ID>
+    <ID>MaxLineLength:PaseoSessionMapperTest.kt$PaseoSessionMapperTest$"lastUsage" to jsonOf("totalCostUsd" to 0.04, "contextWindowUsedTokens" to 1200, "contextWindowMaxTokens" to 200000)</ID>
+    <ID>MaxLineLength:PaseoSessionMapperTest.kt$PaseoSessionMapperTest$/** Ported from test/paseo_stale_working_test.dart (group paseoSessionStatus), paseo_title_clip_test.dart and the session shapes of paseo_gateway_test.dart. */</ID>
+    <ID>MaxLineLength:PaseoSessionMapperTest.kt$PaseoSessionMapperTest$assertEquals(kotlin.time.Instant.parse("2026-09-19T03:35:27.840Z").toEpochMilliseconds(), session.time?.createdMs)</ID>
+    <ID>MaxLineLength:PaseoSessionMapperTest.kt$PaseoSessionMapperTest$fun</ID>
+    <ID>MaxLineLength:PaseoSessionMapperTest.kt$PaseoSessionMapperTest$private fun record(status: String, ageMs: Long): JsonObject</ID>
+    <ID>MaxLineLength:PaseoSessionMapperTest.kt$PaseoSessionMapperTest$val failure = assertFailsWith&lt;PaseoException&gt;(missing) { paseoSession(JsonObject(mapperAgent("a") - missing)) }</ID>
+    <ID>MaxLineLength:PaseoSocket.kt$PaseoBinaryFrame$public</ID>
+    <ID>MaxLineLength:PaseoSubAgents.kt$for (message in timeline.messages) state.announced[message.info.id] = StringBuilder(message.parts.firstOrNull()?.text.orEmpty())</ID>
+    <ID>MaxLineLength:PaseoSubAgents.kt$if (status == SessionStatus.Idle &amp;&amp; known) emit(GatewayEvent.RunEnded(SessionId(id), io.github.eslamasabry.oc.core.domain.events.RunOutcome.Succeeded))</ID>
+    <ID>MaxLineLength:PaseoSubAgents.kt$jsonOf("parentAgentId" to subagent.parentReal, "subagentId" to subagent.subagentId, "direction" to "tail", "limit" to 200)</ID>
+    <ID>MaxLineLength:PaseoSubAgents.kt$messages.map { m -&gt; if (m.parts.none { it.type == PartType.Tool }) m else m.copy(parts = m.parts.map(::rememberAndLink).toImmutableList()) }</ID>
+    <ID>MaxLineLength:PaseoSubAgents.kt$row.objectOrNull()?.let { if (provider != null) JsonObject(LinkedHashMap(it).apply { put("provider", provider) }) else it }</ID>
+    <ID>MaxLineLength:PaseoSubAgents.kt$time = SessionTime(createdMs = paseoMillis(descriptor["createdAt"]), updatedMs = paseoMillis(descriptor["updatedAt"]))</ID>
+    <ID>MaxLineLength:PaseoSubAgents.kt$val metadata = JsonObject(LinkedHashMap(tool.metadata ?: JsonObject(emptyMap())).apply { put("sessionId", JsonPrimitive(child)) })</ID>
+    <ID>MaxLineLength:PaseoSubAgents.kt$val result = transport.request("agent.provider_subagents.list.request", jsonOf("parentAgentId" to real(parentId)), timeoutMs = 8_000)</ID>
+    <ID>MaxLineLength:PaseoSubAgents.kt$val title = listOfNotNull(descriptor.str("title"), descriptor.str("description")).map { it.trim() }.firstOrNull { it.isNotEmpty() } ?: "Sub-agent"</ID>
+    <ID>MaxLineLength:PaseoSubAgentsTest.kt$PaseoSubAgentsTest$"agent.provider_subagents.list.response" to jsonOf("parentAgentId" to "a1", "subagents" to listOf(descriptor(status = "completed")), "error" to null)</ID>
+    <ID>MaxLineLength:PaseoSubAgentsTest.kt$PaseoSubAgentsTest$"detail" to mapOf("type" to "unknown", "input" to mapOf("description" to "List the files", "subagent_type" to "Explore"))</ID>
+    <ID>MaxLineLength:PaseoSubAgentsTest.kt$PaseoSubAgentsTest$h.daemon.push("agent.provider_subagents.update", jsonOf("kind" to "upsert", "subagent" to descriptor(status = "completed")))</ID>
+    <ID>MaxLineLength:PaseoSubAgentsTest.kt$PaseoSubAgentsTest$mapOf("provider" to "claude", "seqStart" to 1, "timestamp" to "2026-10-06T10:00:00.000Z", "item" to agentCall("completed")["item"])</ID>
+    <ID>MaxLineLength:PaseoTerminals.kt$PaseoTerminalChannel$internal</ID>
+    <ID>MaxLineLength:PaseoTerminals.kt$PaseoTerminalChannel$transport.send("unsubscribe_terminal_request", jsonOf("terminalId" to terminalId), expectedEpoch = epoch)</ID>
+    <ID>MaxLineLength:PaseoTerminals.kt$jsonOf("terminalId" to paseoString(id, max = 256), "message" to mapOf("type" to "resize", "rows" to rows, "cols" to cols))</ID>
+    <ID>MaxLineLength:PaseoTerminals.kt$jsonOf("terminalId" to terminalId, "restore" to mapOf("mode" to "visible-snapshot", "scrollbackLines" to 500))</ID>
+    <ID>MaxLineLength:PaseoTerminals.kt$val payload = workspaceRequest("kill_terminal_request", jsonOf("terminalId" to paseoString(id, max = 256)), mutation = true)</ID>
+    <ID>MaxLineLength:PaseoTimelineMapperTest.kt$PaseoTimelineMapperTest$"Internal error: You need to sign in to use this model. | code=-32603 | data={\"service\":\"session\",\"errorName\":\"APIError\"}"</ID>
+    <ID>MaxLineLength:PaseoTimelineMapperTest.kt$PaseoTimelineMapperTest$/** History mapping (test/paseo_gateway_test.dart:946), test/paseo_compaction_test.dart and test/paseo_images_test.dart. */</ID>
+    <ID>MaxLineLength:PaseoTimelineMapperTest.kt$PaseoTimelineMapperTest$assertEquals("The agent could not finish this reply.", paseoItemMessage("a1", item("type" to "error"), "i:9", "claude", null, null)!!.info.errorText)</ID>
+    <ID>MaxLineLength:PaseoTimelineMapperTest.kt$PaseoTimelineMapperTest$assertEquals("agent-info", paseoItemMessage("a1", item("type" to "notification", "message" to "x"), "i:2", "claude", null, null)!!.parts.single().toolName)</ID>
+    <ID>MaxLineLength:PaseoTimelineMapperTest.kt$PaseoTimelineMapperTest$assertEquals(1, paseoTimeline("a1", jsonOf("entries" to listOf(1, mapOf("item" to "x"), entry(item("type" to "reasoning", "text" to "t"), 1))), false).messages.size)</ID>
+    <ID>MaxLineLength:PaseoTimelineMapperTest.kt$PaseoTimelineMapperTest$assertEquals(PaseoImageProblem.TooMany, (paseoImages(List(9) { attachment("image/png", "data:image/png;base64,iVBORw0KGgo=") }) as PaseoImages.Refused).problem)</ID>
+    <ID>MaxLineLength:PaseoTimelineMapperTest.kt$PaseoTimelineMapperTest$assertFalse(paseoSignInFailure("Failed to refresh OAuth token: another Claude Code process is refreshing it or exited mid-refresh."))</ID>
+    <ID>MaxLineLength:PaseoTimelineMapperTest.kt$PaseoTimelineMapperTest$assertNull(paseoItemMessage("a1", item("type" to "notification", "message" to " "), "i:3", "claude", null, null))</ID>
+    <ID>MaxLineLength:PaseoTimelineMapperTest.kt$PaseoTimelineMapperTest$entry(item("type" to "tool_call", "callId" to "c1", "name" to "Bash", "status" to "running", "detail" to mapOf("type" to "shell", "command" to "ls")), 2)</ID>
+    <ID>MaxLineLength:PaseoTimelineMapperTest.kt$PaseoTimelineMapperTest$entry(item("type" to "tool_call", "callId" to "c1", "name" to "tool", "status" to "completed", "detail" to mapOf("type" to "unknown", "output" to "a")), 4)</ID>
+    <ID>MaxLineLength:PaseoTimelineMapperTest.kt$PaseoTimelineMapperTest$item("type" to "assistant_message", "text" to "Failed to authenticate: OAuth session expired and could not be refreshed")</ID>
+    <ID>MaxLineLength:PaseoTimelineMapperTest.kt$PaseoTimelineMapperTest$item("type" to "todo", "items" to listOf(mapOf("text" to "Write tests", "status" to "in_progress"), mapOf("text" to "Ship", "completed" to true), mapOf("text" to " ")))</ID>
+    <ID>MaxLineLength:PaseoTimelineMapperTest.kt$PaseoTimelineMapperTest$listOf(jsonOf("content" to "Write tests", "status" to "in_progress"), jsonOf("content" to "Ship", "status" to "completed"))</ID>
+    <ID>MaxLineLength:PaseoTimelineMapperTest.kt$PaseoTimelineMapperTest$mapOf("provider" to "claude", "item" to mapOf("type" to "assistant_message", "text" to "Done.", "messageId" to "msg_1"), "timestamp" to "2026-09-19T03:35:47.208Z", "seqStart" to 9)</ID>
+    <ID>MaxLineLength:PaseoTimelineMapperTest.kt$PaseoTimelineMapperTest$mapOf("provider" to "claude", "item" to mapOf("type" to "reasoning", "text" to "Thinking"), "timestamp" to "2026-09-19T03:35:31.000Z", "seqStart" to 5)</ID>
+    <ID>MaxLineLength:PaseoTimelineMapperTest.kt$PaseoTimelineMapperTest$mapOf("provider" to "claude", "item" to mapOf("type" to "user_message", "text" to "Read it", "messageId" to "u1"), "timestamp" to "2026-09-19T03:35:27.922Z", "seqStart" to 1)</ID>
+    <ID>MaxLineLength:PaseoTimelineMapperTest.kt$PaseoTimelineMapperTest$val</ID>
+    <ID>MaxLineLength:PaseoTimelineMapperTest.kt$PaseoTimelineMapperTest$val advice = paseoItemMessage("a1", item("type" to "assistant_message", "text" to "You can sign in later."), "a:5", "claude", null, null)!!</ID>
+    <ID>MaxLineLength:PaseoTimelineMapperTest.kt$PaseoTimelineMapperTest$val api = paseoItemMessage("a1", item("type" to "assistant_message", "text" to "API Error: 529 {\"type\":\"overloaded_error\"}"), "a:6", "claude", null, null)!!</ID>
+    <ID>MaxLineLength:PaseoTimelineMapperTest.kt$PaseoTimelineMapperTest$val error = paseoItemMessage("a1", item("type" to "error", "message" to "Traceback: secret at /home/x"), "i:9", "claude", 10, null)!!</ID>
+    <ID>MaxLineLength:PaseoTimelineMapperTest.kt$PaseoTimelineMapperTest$val helper = paseoItemMessage("agent-1", item("type" to "assistant_message", "text" to "[System Error] Internal error: model overloaded\n\ncode: -32603"), "a:5", "kilo", null, null)!!</ID>
+    <ID>MaxLineLength:PaseoTimelineMapperTest.kt$PaseoTimelineMapperTest$val message = paseoItemMessage("agent-1", item("type" to "assistant_message", "text" to kiloSignedOut), "a:4", "kilo", null, null)!!</ID>
+    <ID>MaxLineLength:PaseoTimelineMapperTest.kt$PaseoTimelineMapperTest$val message = paseoItemMessage("agent-1", item("type" to "compaction", "status" to "completed", "trigger" to "manual", "preTokens" to 1234.4), "i:7", "claude", null, null)!!</ID>
+    <ID>MaxLineLength:PaseoTimelineMapperTest.kt$PaseoTimelineMapperTest$val ok = assertIs&lt;PaseoImages.Ok&gt;(paseoImages(listOf(attachment("image/png", "data:image/png;base64,$jpegData"))))</ID>
+    <ID>MaxLineLength:PaseoTimelineMapperTest.kt$PaseoTimelineMapperTest$val ok = assertIs&lt;PaseoImages.Ok&gt;(paseoImages(listOf(attachment("image/png", "data:image/png;base64,iVBORw0KGgo="))))</ID>
+    <ID>MaxLineLength:PaseoTimelineMapperTest.kt$PaseoTimelineMapperTest$val refused = assertIs&lt;PaseoImages.Refused&gt;(paseoImages(listOf(attachment("application/pdf", "data:application/pdf;base64,JVBERi0="))))</ID>
+    <ID>MaxLineLength:PaseoTimelineMapperTest.kt$PaseoTimelineMapperTest$val refused = assertIs&lt;PaseoImages.Refused&gt;(paseoImages(listOf(attachment("image/heic", "data:image/heic;base64,AAAAGGZ0eXBoZWlj"))))</ID>
+    <ID>MaxLineLength:PaseoTimelineMapperTest.kt$PaseoTimelineMapperTest$val running = paseoItemMessage("agent-1", item("type" to "compaction", "trigger" to "weird"), "i:8", "claude", null, null)!!.parts.single()</ID>
+    <ID>MaxLineLength:PaseoTimelineMapperTest.kt$PaseoTimelineMapperTest$val warn = paseoItemMessage("a1", item("type" to "notification", "level" to "warning", "message" to "Low disk"), "i:1", "claude", 5, null)!!</ID>
+    <ID>MaxLineLength:PaseoTitles.kt$PaseoTitles$*</ID>
+    <ID>MaxLineLength:PaseoTitlesTest.kt$PaseoTitlesTest$assertEquals("Known", PaseoTitles.withTitle(agent(""), known = "Known", savedTitle = mapOf("kilo:ses_1" to "Saved")::get).str("title"))</ID>
+    <ID>MaxLineLength:PaseoToolMapperTest.kt$PaseoToolMapperTest$"error" to mapOf("type" to "tool_result", "tool_use_id" to "toolu_1", "content" to "[Request interrupted by user for tool use]", "is_error" to true)</ID>
+    <ID>MaxLineLength:PaseoToolMapperTest.kt$PaseoToolMapperTest$"metadata" to mapOf("synthetic" to true, "source" to "claude_task_notification", "taskId" to "a1b2c3d4e5", "status" to "stopped")</ID>
+    <ID>MaxLineLength:PaseoToolMapperTest.kt$PaseoToolMapperTest$"output" to mapOf("output" to mapOf("status" to "ok", "matches" to listOf(mapOf("catalogId" to "io.github/github", "name" to "GitHub"))))</ID>
+    <ID>MaxLineLength:PaseoToolMapperTest.kt$PaseoToolMapperTest$"text" to "&lt;task-notification&gt;&lt;task-id&gt;t1&lt;/task-id&gt;&lt;status&gt;completed&lt;/status&gt;&lt;result&gt;All 12 suites pass.&lt;/result&gt;&lt;/task-notification&gt;"</ID>
+    <ID>MaxLineLength:PaseoToolMapperTest.kt$PaseoToolMapperTest$/** Ported from test/paseo_tool_names_test.dart, test/paseo_tool_output_test.dart and test/paseo_midturn_send_test.dart:494. */</ID>
+    <ID>MaxLineLength:PaseoToolMapperTest.kt$PaseoToolMapperTest$assertEquals("Example Domain", tool("WebFetch", jsonOf("type" to "fetch", "url" to "https://example.com", "result" to "Example Domain")).output)</ID>
+    <ID>MaxLineLength:PaseoToolMapperTest.kt$PaseoToolMapperTest$assertEquals("Reviewed.", tool("Skill", jsonOf("type" to "plain_text", "label" to "review", "text" to "Reviewed.")).output)</ID>
+    <ID>MaxLineLength:PaseoToolMapperTest.kt$PaseoToolMapperTest$assertEquals("a.dart:3: todo", tool("Grep", jsonOf("type" to "search", "query" to "todo", "content" to "a.dart:3: todo")).output)</ID>
+    <ID>MaxLineLength:PaseoToolMapperTest.kt$PaseoToolMapperTest$assertEquals("a.dart\nb.dart", tool("Glob", jsonOf("type" to "search", "query" to "*.dart", "filePaths" to listOf("a.dart", "b.dart"))).output)</ID>
+    <ID>MaxLineLength:PaseoToolMapperTest.kt$PaseoToolMapperTest$assertTrue(paseoDeclinedToolCall(item("status" to "failed", "error" to "my own reason", "declinedByPerson" to true)))</ID>
+    <ID>MaxLineLength:PaseoToolMapperTest.kt$PaseoToolMapperTest$entry(item("type" to "user_message", "text" to "Leave it", "messageId" to "u2"), 3, turnId = "turn-2")</ID>
+    <ID>MaxLineLength:PaseoToolMapperTest.kt$PaseoToolMapperTest$item("type" to "tool_call", "callId" to "call-1", "name" to name, "status" to status, "detail" to detail, *extra)</ID>
+    <ID>MaxLineLength:PaseoToolMapperTest.kt$PaseoToolMapperTest$item("type" to "tool_call", "callId" to "toolu_1", "name" to "Bash", "status" to status, "error" to null, "detail" to mapOf("type" to "shell", "command" to command))</ID>
+    <ID>MaxLineLength:PaseoToolMapperTest.kt$PaseoToolMapperTest$jsonOf("type" to "search", "toolName" to "web_search", "query" to "kotlin", "webResults" to listOf(mapOf("title" to "Kotlin", "url" to "https://kotlinlang.org")), "annotations" to listOf("note"))</ID>
+    <ID>MaxLineLength:PaseoToolMapperTest.kt$PaseoToolMapperTest$jsonOf("type" to "shell", "command" to "sleep 60", "output" to "Command running in background with ID: bash_7", "description" to "Wait")</ID>
+    <ID>MaxLineLength:PaseoToolMapperTest.kt$PaseoToolMapperTest$jsonOf("type" to "unknown", "input" to mapOf("query" to "github"), "output" to mapOf("output" to listOf(mapOf("type" to "tool_reference", "tool_name" to "mcp__github__search"))))</ID>
+    <ID>MaxLineLength:PaseoToolMapperTest.kt$PaseoToolMapperTest$private</ID>
+    <ID>MaxLineLength:PaseoToolMapperTest.kt$PaseoToolMapperTest$val renamed = paseoMergeToolCall(bash("running"), item("type" to "tool_call", "callId" to "toolu_1", "name" to "tool", "status" to "completed", "detail" to mapOf("type" to "unknown")))</ID>
+    <ID>MaxLineLength:PaseoToolMapperTest.kt$PaseoToolMapperTest$val state = tool("mcp__drive__search", jsonOf("type" to "unknown", "input" to mapOf("query" to "notes"), "output" to mapOf("output" to "Found 3 files")))</ID>
+    <ID>MaxLineLength:PaseoToolMapperTest.kt$PaseoToolMapperTest$val stopped = paseoItemMessage("a1", staleInterruptResult, id = "toolu_1", provider = "claude", createdMs = null, completedMs = null)!!.parts.single()</ID>
+    <ID>MaxLineLength:PaseoToolMappers.kt$detail.filter { (key, value) -&gt; key != "type" &amp;&amp; key != "output" &amp;&amp; value !is JsonObject &amp;&amp; value !is JsonArray }</ID>
+    <ID>MaxLineLength:PaseoToolMappers.kt$fun id(key: String): String?</ID>
+    <ID>MaxLineLength:PaseoToolMappers.kt$if ((type == "sub_agent" || type == "worktree_setup") &amp;&amp; detail["log"].stringOrNull() != null) return text(detail["log"])</ID>
+    <ID>MaxLineLength:PaseoToolMappers.kt$if (paths != null &amp;&amp; paths.isNotEmpty()) return JsonPrimitive(paseoText(JsonPrimitive(paths.mapNotNull { it.stringOrNull() }.joinToString("\n"))))</ID>
+    <ID>MaxLineLength:PaseoToolMappers.kt$if (status != null &amp;&amp; status.trim().isNotEmpty()) put("status", JsonPrimitive(paseoText(JsonPrimitive(status), max = 64)))</ID>
+    <ID>MaxLineLength:PaseoToolMappers.kt$internal</ID>
+    <ID>MaxLineLength:PaseoToolMappers.kt$listOfNotNull(result["title"].stringOrNull()?.let { "**$it**" }, result["url"].stringOrNull()).joinToString(" \n")</ID>
+    <ID>MaxLineLength:PaseoToolMappers.kt$val content = (error as? JsonObject)?.let { it["content"].takeUnless { c -&gt; c == null || c is JsonNull } ?: it["message"] } ?: error</ID>
+    <ID>MaxLineLength:PaseoTransportTest.kt$PaseoTransportTest$/** Request bookkeeping (plan 04 §5.4 for Paseo) and the in-order large-frame decoding of test/paseo_background_decode_test.dart. */</ID>
+    <ID>MaxLineLength:PaseoTransportTest.kt$PaseoTransportTest$assertEquals(PaseoFailureKind.StaleRequest, assertFailsWith&lt;PaseoException&gt; { t.request("x", jsonOf(), expectedEpoch = old) }.kind)</ID>
+    <ID>MaxLineLength:PaseoTransportTest.kt$PaseoTransportTest$daemon.handlers["fetch_agent_timeline_request"] = { "fetch_agent_timeline_response" to jsonOf("entries" to listOf(big)) }</ID>
+    <ID>MaxLineLength:PaseoTransportTest.kt$PaseoTransportTest$daemon.handlers["send_agent_message_request"] = { "send_agent_message_response" to jsonOf("error" to "bad s3cret-pw\nhere") }</ID>
+    <ID>MaxLineLength:PaseoTransportTest.kt$PaseoTransportTest$for</ID>
+    <ID>MaxLineLength:PaseoTransportTest.kt$PaseoTransportTest$fun</ID>
+    <ID>MaxLineLength:PaseoTransportTest.kt$PaseoTransportTest$private</ID>
+    <ID>MaxLineLength:PaseoTransportTest.kt$PaseoTransportTest$t.request("daemon.update.request", jsonOf(), onProgress = { type, payload -&gt; progress += "$type:${payload.str("phase")}" })</ID>
+    <ID>MaxLineLength:PaseoTransportTest.kt$PaseoTransportTest$val read = async { assertFailsWith&lt;PaseoException&gt; { t.request("fetch_agent_request", jsonOf(), timeoutMs = 1_000) } }</ID>
+    <ID>MaxLineLength:PaseoTransportTest.kt$PaseoTransportTest$val write = async { assertFailsWith&lt;PaseoException&gt; { t.request("send_agent_message_request", jsonOf(), mutation = true) } }</ID>
+    <ID>MaxLineLength:PaseoTransportTest.kt$PaseoTransportTest$val write = async { assertFailsWith&lt;PaseoException&gt; { t.request("send_agent_message_request", jsonOf(), mutation = true, timeoutMs = 1_000) } }</ID>
+    <ID>MaxLineLength:PaseoUncertainStart.kt$if</ID>
+    <ID>MaxLineLength:PaseoUncertainStartTest.kt$PaseoUncertainStartTest$fun</ID>
+    <ID>MaxLineLength:PaseoUsage.kt$readings += ProviderUsageReading(id, name, time(raw["fetchedAt"]) ?: listFetched ?: nowMs, emptyList(), needsSignIn = true)</ID>
+    <ID>MaxLineLength:PaseoUsage.kt$val text = buildString(raw.length) { raw.forEach { append(if (isControl(it.code)) ' ' else it) } }.replace(BLANKS, " ").trim()</ID>
+    <ID>MaxLineLength:PaseoUsage.kt$windows += ProviderUsageWindow(seconds, label ?: "", (left.coerceIn(0.0, 100.0) + 0.5).toInt(), time(item["resetsAt"]))</ID>
+    <ID>MaxLineLength:PaseoUsageMonitor.kt$UsageWidgetRow$public data</ID>
+    <ID>MaxLineLength:PaseoUsageTest.kt$PaseoUsageTest$assertEquals(UsageWidgetWindow(18000, 62, Instant.parse("2026-10-12T15:00:00Z").toEpochMilliseconds()), claude.windows.first())</ID>
+    <ID>MaxLineLength:PaseoUsageTest.kt$PaseoUsageTest$assertEquals(listOf("provider.usage.list.request"), daemon.sent.map { it["type"].let { t -&gt; (t as JsonPrimitive).content } })</ID>
+    <ID>MaxLineLength:PaseoUsageTest.kt$PaseoUsageTest$for</ID>
+    <ID>MaxLineLength:PaseoUsageTest.kt$PaseoUsageTest$mapOf("id" to "seven_day_opus", "label" to "Weekly Opus", "usedPct" to 10, "resetsAt" to "2026-10-15T00:00:00Z")</ID>
+    <ID>MaxLineLength:PaseoUsageTest.kt$PaseoUsageTest$mapOf("providerId" to "copilot", "displayName" to "Copilot", "status" to "error", "error" to "Bearer sk-secret-token failed", "windows" to emptyList&lt;Any&gt;())</ID>
+    <ID>MaxLineLength:PaseoUsageTest.kt$PaseoUsageTest$val dump = readings.flatMap { r -&gt; listOf(r.providerId, r.displayName) + r.windows.map { it.label } }.joinToString("|")</ID>
+    <ID>MaxLineLength:PaseoWorkInventory.kt$PaseoWorkInventory$*</ID>
+    <ID>MaxLineLength:PaseoWorkInventory.kt$PaseoWorkInventory$if</ID>
+    <ID>MaxLineLength:PaseoWorkInventory.kt$PaseoWorkInventory$private val changeFlow = MutableSharedFlow&lt;Unit&gt;(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)</ID>
+    <ID>MaxLineLength:PaseoWorkInventoryTest.kt$PaseoWorkInventoryTest$"subagents" to if (parent == "elsewhere") listOf(mapOf("id" to "cold-child", "parentAgentId" to "elsewhere", "status" to "running")) else emptyList()</ID>
+    <ID>MaxLineLength:PaseoWorkInventoryTest.kt$PaseoWorkInventoryTest$"subagents" to if (parent == "elsewhere") listOf(mapOf("id" to "detached-child", "parentAgentId" to "elsewhere", "status" to "running")) else emptyList()</ID>
+    <ID>MaxLineLength:PaseoWorkInventoryTest.kt$PaseoWorkInventoryTest$child.push("agent.provider_subagents.update", jsonOf("kind" to "upsert", "subagent" to mapOf("id" to "unseen-child", "parentAgentId" to "unseen-parent", "status" to status)))</ID>
+    <ID>MaxLineLength:PaseoWorkInventoryTest.kt$PaseoWorkInventoryTest$for</ID>
+    <ID>MaxLineLength:PaseoWorkInventoryTest.kt$PaseoWorkInventoryTest$loop.pages = { cursor -&gt; loop.page(if (cursor == null) listOf(loop.entries.first()) else listOf(loop.entries.last()), next = "same") }</ID>
+    <ID>MaxLineLength:PaseoWorkInventoryTest.kt$PaseoWorkInventoryTest$permission.push("agent_permission_request", jsonOf("agentId" to "unseen-parent", "request" to mapOf("id" to "new-request")))</ID>
+    <ID>MaxLineLength:PaseoWorkInventoryTest.kt$PaseoWorkInventoryTest$w.push("agent.provider_subagents.update", jsonOf("kind" to "upsert", "subagent" to mapOf("id" to "child", "parentAgentId" to "elsewhere", "status" to status)))</ID>
+    <ID>MaxLineLength:PaseoWorkInventoryTest.kt$PaseoWorkInventoryTest$w.push("agent.provider_subagents.update", jsonOf("kind" to "upsert", "subagent" to mapOf("id" to "live-child", "parentAgentId" to "elsewhere", "status" to "completed")))</ID>
+    <ID>MaxLineLength:PaseoWorkInventoryTest.kt$PaseoWorkInventoryTest$w.push("agent.provider_subagents.update", jsonOf("kind" to "upsert", "subagent" to mapOf("id" to "live-child", "parentAgentId" to "elsewhere", "status" to "running")))</ID>
+    <ID>MaxLineLength:PaseoWorkInventoryTest.kt$PaseoWorkInventoryTest.World$jsonOf("entries" to rows.map { mapOf("agent" to it) }, "pageInfo" to mapOf("hasMore" to (next != null), "nextCursor" to next))</ID>
+    <ID>MaxLineLength:PaseoWorkInventoryTest.kt$PaseoWorkInventoryTest.World$return (result["pageInfo"] as? JsonObject)?.get("nextCursor")?.let { (it as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { p -&gt; p.isString }?.content }</ID>
+    <ID>MaxLineLength:PaseoWorkInventoryTest.kt$PaseoWorkInventoryTest.World$var children: (String) -&gt; JsonObject = { parent -&gt; jsonOf("parentAgentId" to parent, "subagents" to emptyList&lt;Any&gt;(), "error" to null) }</ID>
+    <ID>MaxLineLength:PaseoWorkspaceTest.kt$PaseoWorkspaceTest$"checkout.diff.get.response" to jsonOf("cwd" to DIR, "files" to emptyList&lt;Any&gt;(), "error" to mapOf("code" to "NOT_GIT_REPO", "message" to "not a git repo /x"))</ID>
+    <ID>MaxLineLength:PaseoWorkspaceTest.kt$PaseoWorkspaceTest$"create_paseo_worktree_response" to jsonOf("workspace" to null, "error" to "git said no /x", "setupTerminalId" to null)</ID>
+    <ID>MaxLineLength:PaseoWorkspaceTest.kt$PaseoWorkspaceTest$"cwd" to DIR</ID>
+    <ID>MaxLineLength:PaseoWorkspaceTest.kt$PaseoWorkspaceTest$"directory" to if (list) mapOf("path" to "/tmp/paseo-attachments-x1", "entries" to listOf(entry(name, "file", shot))) else null</ID>
+    <ID>MaxLineLength:PaseoWorkspaceTest.kt$PaseoWorkspaceTest$"entries" to listOf(mapOf("path" to "lib/main.dart", "kind" to "file"), mapOf("path" to "lib", "kind" to "directory"))</ID>
+    <ID>MaxLineLength:PaseoWorkspaceTest.kt$PaseoWorkspaceTest$"file" to if (png) file("p.png", "image", "base64", "AAEC", "image/png") else file("x.bin", "binary", "none", null, "application/octet-stream")</ID>
+    <ID>MaxLineLength:PaseoWorkspaceTest.kt$PaseoWorkspaceTest$"list_terminals_response" to jsonOf("cwd" to DIR, "terminals" to listOf(info("t1", "npm run dev"), info("t2")))</ID>
+    <ID>MaxLineLength:PaseoWorkspaceTest.kt$PaseoWorkspaceTest$"paseo_worktree_archive_response" to jsonOf("success" to false, "error" to mapOf("code" to "UNKNOWN", "message" to "busy"))</ID>
+    <ID>MaxLineLength:PaseoWorkspaceTest.kt$PaseoWorkspaceTest$"paseo_worktree_archive_response" to jsonOf("success" to true, "removedAgents" to emptyList&lt;String&gt;(), "error" to null)</ID>
+    <ID>MaxLineLength:PaseoWorkspaceTest.kt$PaseoWorkspaceTest$"subscribe_terminal_response" to jsonOf("terminalId" to m.str("terminalId"), "error" to "Terminal not found")</ID>
+    <ID>MaxLineLength:PaseoWorkspaceTest.kt$PaseoWorkspaceTest$"subscribe_terminal_response" to jsonOf("terminalId" to m.str("terminalId"), "slot" to slot, "error" to null)</ID>
+    <ID>MaxLineLength:PaseoWorkspaceTest.kt$PaseoWorkspaceTest$assertEquals("--- a/lib/a.dart\n+++ b/lib/a.dart\n@@ -1,2 +1,3 @@\n keep\n-old\n+new\n+newer\n", diffs.single().patch)</ID>
+    <ID>MaxLineLength:PaseoWorkspaceTest.kt$PaseoWorkspaceTest$daemon.handlers["checkout.diff.get.request"] = { "checkout.diff.get.response" to jsonOf("cwd" to DIR, "files" to files, "error" to null) }</ID>
+    <ID>MaxLineLength:PaseoWorkspaceTest.kt$PaseoWorkspaceTest$h.answerDiff(listOf(diffFile("a.dart"), diffFile("new.dart", isNew = true), diffFile("gone.dart", isDeleted = true)))</ID>
+    <ID>MaxLineLength:PaseoWorkspaceTest.kt$PaseoWorkspaceTest$h.answerDiff(listOf(mapOf("path" to "logo.png", "isNew" to false, "isDeleted" to false, "additions" to 0, "deletions" to 0, "hunks" to emptyList&lt;Any&gt;(), "status" to "binary")))</ID>
+    <ID>MaxLineLength:PaseoWorkspaceTest.kt$PaseoWorkspaceTest$h.daemon.handlers["create_terminal_request"] = { "create_terminal_response" to jsonOf("terminal" to info("t9", "Terminal 1"), "error" to null) }</ID>
+    <ID>MaxLineLength:PaseoWorkspaceTest.kt$PaseoWorkspaceTest$h.daemon.handlers["kill_terminal_request"] = { m -&gt; "kill_terminal_response" to jsonOf("terminalId" to m.str("terminalId"), "success" to false) }</ID>
+    <ID>MaxLineLength:PaseoWorkspaceTest.kt$PaseoWorkspaceTest$h.daemon.handlers["kill_terminal_request"] = { m -&gt; "kill_terminal_response" to jsonOf("terminalId" to m.str("terminalId"), "success" to true) }</ID>
+    <ID>MaxLineLength:PaseoWorkspaceTest.kt$PaseoWorkspaceTest$h.daemon.handlers["list_terminals_request"] = { "list_terminals_response" to jsonOf("cwd" to DIR, "terminals" to emptyList&lt;Any&gt;()) }</ID>
+    <ID>MaxLineLength:PaseoWorkspaceTest.kt$PaseoWorkspaceTest$h.daemon.handlers["list_terminals_request"] = { "list_terminals_response" to jsonOf("cwd" to DIR, "terminals" to listOf(info("stuck"))) }</ID>
+    <ID>MaxLineLength:PaseoWorkspaceTest.kt$PaseoWorkspaceTest$h.daemon.handlers["terminal.rename.request"] = { "terminal.rename.response" to jsonOf("success" to true, "error" to null) }</ID>
+    <ID>MaxLineLength:PaseoWorkspaceTest.kt$PaseoWorkspaceTest$listOf(entry("main.dart", "file", "lib/main.dart"), entry("src", "directory", "lib/src"), entry("App.dart", "file", "lib/App.dart"))</ID>
+    <ID>MaxLineLength:PaseoWorkspaceTest.kt$PaseoWorkspaceTest$mapOf("worktreePath" to "/home/u/.paseo/worktrees/app/detached", "createdAt" to "2026-10-01T10:00:00.000Z", "branchName" to null)</ID>
+    <ID>MaxLineLength:PaseoWorkspaceTest.kt$PaseoWorkspaceTest$mapOf("worktreePath" to "/home/u/.paseo/worktrees/app/fix-login", "createdAt" to "2026-10-01T10:00:00.000Z", "branchName" to "fix-login", "head" to "abc123")</ID>
+    <ID>MaxLineLength:PaseoWorkspaceTest.kt$PaseoWorkspaceTest$private</ID>
+    <ID>MaxLineLength:RequestFakes.kt$(this as JsonElement).edit(path.toList(), if (value == null) null else io.github.eslamasabry.oc.protocol.paseo.toJson(value)) as JsonObject</ID>
+    <ID>MaxLineLength:RequestFakes.kt$fun JsonObject.with(vararg pairs: Pair&lt;String, Any?&gt;): JsonObject</ID>
+    <ID>MaxLineLength:RequestFakes.kt$if (path.size == 1 &amp;&amp; value == null) map.remove(key) else map[key] = (this[key] ?: JsonObject(emptyMap())).edit(path.drop(1), value)</ID>
+    <ID>NestedBlockDepth:PaseoChatFeed.kt$PaseoChatFeed$private suspend fun archiveOlderCopies( olderCopies: Map&lt;SessionId, String&gt;, kept: Map&lt;String, Session&gt;, statuses: Map&lt;SessionId, SessionStatus&gt;, myRevision: Int, )</ID>
+    <ID>NestedBlockDepth:PaseoChatFeed.kt$PaseoChatFeed$private suspend fun read(myRevision: Int)</ID>
+    <ID>NestedBlockDepth:PaseoHostAgents.kt$public fun paseoHostPermission(sessionId: String, request: JsonObject, provider: String?): HostAgentPermissionRequest?</ID>
+    <ID>NestedBlockDepth:PaseoPermissionMapper.kt$public fun paseoPermission(agentId: String, request: JsonObject): PermissionRequest</ID>
+    <ID>NestedBlockDepth:PaseoRequestBook.kt$PaseoRequestBook$private fun parseQuestion(appId: String, id: String, request: JsonObject): Question?</ID>
+    <ID>NestedBlockDepth:PaseoWorkInventory.kt$PaseoWorkInventory$private fun stream(id: String?, p: JsonObject): Boolean</ID>
+    <ID>NestedBlockDepth:PaseoWorkspace.kt$internal fun paseoFileDiff(file: JsonObject): FileDiff</ID>
+    <ID>ReturnCount:FakeDaemon.kt$FakeDaemon$override suspend fun send(text: String)</ID>
+    <ID>ReturnCount:PaseoAgentFeatures.kt$internal fun PaseoGateway.canonicalModelId(provider: String?, model: String?): String?</ID>
+    <ID>ReturnCount:PaseoAgentFeatures.kt$private fun featureText(value: JsonElement?, max: Int): String?</ID>
+    <ID>ReturnCount:PaseoAgentFeatures.kt$private suspend fun PaseoGateway.readAgentFeatures(id: String): List&lt;AgentFeature&gt;</ID>
+    <ID>ReturnCount:PaseoBackgroundTasks.kt$PaseoBackgroundTaskBook.Agent$private fun started(message: MessageWithParts, part: Part): Started?</ID>
+    <ID>ReturnCount:PaseoBackgroundTasks.kt$internal fun paseoTurnFailedAfter(message: MessageWithParts): Boolean?</ID>
+    <ID>ReturnCount:PaseoChatFeed.kt$PaseoChatFeed$private suspend fun read(myRevision: Int)</ID>
+    <ID>ReturnCount:PaseoCommands.kt$internal suspend fun PaseoGateway.readCommands(): ImmutableList&lt;CommandInfo&gt;</ID>
+    <ID>ReturnCount:PaseoEndpoint.kt$PaseoProfileRules$public fun validateUrl(value: String): PaseoUrlProblem?</ID>
+    <ID>ReturnCount:PaseoEndpoint.kt$PaseoUrl.Companion$fun parse(raw: String): PaseoUrl?</ID>
+    <ID>ReturnCount:PaseoFailure.kt$public fun tidyPaseoReason(raw: String?): String?</ID>
+    <ID>ReturnCount:PaseoFeedTypes.kt$PaseoFeedPaths$public fun isProtected(path: String?): Boolean</ID>
+    <ID>ReturnCount:PaseoFeedTypes.kt$PaseoFeedPaths$public fun isTemporary(directory: String?): Boolean</ID>
+    <ID>ReturnCount:PaseoGateway.kt$PaseoGateway$internal suspend fun &lt;T&gt; withPayloadLease(operation: suspend () -&gt; Outcome&lt;T&gt;): Outcome&lt;T&gt;</ID>
+    <ID>ReturnCount:PaseoGateway.kt$PaseoGateway$internal suspend fun readMessages(id: String): ImmutableList&lt;MessageWithParts&gt;</ID>
+    <ID>ReturnCount:PaseoGateway.kt$PaseoGateway$private fun onEvent(push: PaseoPush)</ID>
+    <ID>ReturnCount:PaseoGateway.kt$PaseoGateway$private fun upserted(agent: JsonObject)</ID>
+    <ID>ReturnCount:PaseoGateway.kt$PaseoGateway$private suspend fun recoverNow()</ID>
+    <ID>ReturnCount:PaseoGateway.kt$PaseoGateway$private suspend fun send( sessionId: String, messageId: String, prompt: OutgoingPrompt, existingOnly: Boolean, beforeSend: (() -&gt; Boolean)?, ): Outcome&lt;PromptAdmission&gt;</ID>
+    <ID>ReturnCount:PaseoGatewayFactory.kt$public suspend fun probePaseoConnection( baseUrl: String, password: String, directory: String, open: (url: String, password: String, directory: String) -&gt; PaseoGateway, ): PaseoProbeResult</ID>
+    <ID>ReturnCount:PaseoIdleGuard.kt$PaseoIdleGuard$public fun settle(id: String, agent: JsonObject, updatedMs: Long?, saved: (() -&gt; Long?)? = null): Long?</ID>
+    <ID>ReturnCount:PaseoJson.kt$public fun paseoMillis(value: JsonElement?): Long?</ID>
+    <ID>ReturnCount:PaseoMappers.kt$public fun paseoClippedTitle(title: String): String</ID>
+    <ID>ReturnCount:PaseoMappers.kt$public fun paseoContextUse(usage: JsonElement?): SessionContextUse?</ID>
+    <ID>ReturnCount:PaseoMappers.kt$public fun paseoDeclinedToolCall(item: JsonObject): Boolean</ID>
+    <ID>ReturnCount:PaseoMappers.kt$public fun paseoImages(attachments: List&lt;PromptAttachment&gt;): PaseoImages</ID>
+    <ID>ReturnCount:PaseoMappers.kt$public fun paseoItemMessage( agentId: String, item: JsonObject, id: String, provider: String, createdMs: Long?, completedMs: Long?, ): MessageWithParts?</ID>
+    <ID>ReturnCount:PaseoMappers.kt$public fun paseoRecordBusyUntilMs(agent: JsonObject): Long?</ID>
+    <ID>ReturnCount:PaseoMappers.kt$public fun paseoSessionStatus(agent: JsonObject, nowMs: Long): SessionStatus</ID>
+    <ID>ReturnCount:PaseoRequestBook.kt$PaseoRequestBook$private fun addQuestion(appId: String, id: String, request: JsonObject)</ID>
+    <ID>ReturnCount:PaseoRequestBook.kt$PaseoRequestBook$private fun parseQuestion(appId: String, id: String, request: JsonObject): Question?</ID>
+    <ID>ReturnCount:PaseoRequestBook.kt$PaseoRequestBook$private fun tryAllowDisplayCard( pending: Permission, previouslyShown: Boolean = false, ): Boolean</ID>
+    <ID>ReturnCount:PaseoRequestBook.kt$PaseoRequestBook$public fun onPermissionRequest(appId: String, request: JsonObject)</ID>
+    <ID>ReturnCount:PaseoRequestBook.kt$PaseoRequestBook$public fun permissionSnapshot(sessionId: String): PaseoPermissionSnapshot?</ID>
+    <ID>ReturnCount:PaseoRequestBook.kt$PaseoRequestBook$public fun questionSnapshot(sessionId: String): PaseoQuestionSnapshot?</ID>
+    <ID>ReturnCount:PaseoStream.kt$internal fun PaseoGateway.onTimelineItem( id: String, state: PaseoLive, raw: JsonObject, provider: String, seq: Long?, at: Long?, )</ID>
+    <ID>ReturnCount:PaseoSubAgents.kt$internal fun PaseoGateway.linkedToolPart(part: Part): Part</ID>
+    <ID>ReturnCount:PaseoSubAgents.kt$internal fun PaseoGateway.onSubagentUpdate(payload: JsonObject)</ID>
+    <ID>ReturnCount:PaseoSubAgents.kt$internal fun PaseoGateway.upsertSubagent(descriptor: JsonObject)</ID>
+    <ID>ReturnCount:PaseoSubagents.kt$PaseoSubagents$fun linked(part: Part): Part</ID>
+    <ID>ReturnCount:PaseoSubagents.kt$PaseoSubagents$fun push(payload: JsonObject)</ID>
+    <ID>ReturnCount:PaseoSubagents.kt$PaseoSubagents$private fun upsert(descriptor: JsonObject)</ID>
+    <ID>ReturnCount:PaseoTerminals.kt$PaseoTerminalChannel$private fun onFrame(frame: PaseoBinaryFrame)</ID>
+    <ID>ReturnCount:PaseoTerminals.kt$PaseoTerminalStream$private fun frame(frame: PaseoBinaryFrame)</ID>
+    <ID>ReturnCount:PaseoTitles.kt$PaseoTitles$public fun remembered(agent: JsonObject, savedTitle: ((String) -&gt; String?)?): String?</ID>
+    <ID>ReturnCount:PaseoTitles.kt$PaseoTitles$public fun sessionKey(agent: JsonObject?): String?</ID>
+    <ID>ReturnCount:PaseoTitles.kt$PaseoTitles$public fun withTitle(agent: JsonObject, known: String?, savedTitle: ((String) -&gt; String?)?): JsonObject</ID>
+    <ID>ReturnCount:PaseoToolMappers.kt$internal fun taskNoticeOutput(detail: JsonObject): String</ID>
+    <ID>ReturnCount:PaseoToolMappers.kt$internal fun toolOutput(item: JsonObject, detail: JsonObject): JsonElement</ID>
+    <ID>ReturnCount:PaseoToolMappers.kt$internal fun withBackgroundTask(meta: JsonObject?, toolName: String, status: ToolStatus, detail: JsonObject): JsonObject?</ID>
+    <ID>ReturnCount:PaseoTransport.kt$PaseoTransport$private suspend fun connectReady(): Int</ID>
+    <ID>ReturnCount:PaseoTransport.kt$PaseoTransport$private suspend fun handleText(myEpoch: Int, frame: String, decoded: Decoded?)</ID>
+    <ID>ReturnCount:PaseoUncertainStart.kt$internal suspend fun PaseoGateway.adoptUncertainDraft(id: String): Boolean</ID>
+    <ID>ReturnCount:PaseoUsage.kt$private fun time(value: JsonElement?): Long?</ID>
+    <ID>ReturnCount:PaseoUsage.kt$public fun cleanUsageText(value: JsonElement?, maxLength: Int): String?</ID>
+    <ID>ReturnCount:PaseoUsageMonitor.kt$PaseoUsageMonitor$public suspend fun setEnabled(id: String, value: Boolean): Boolean</ID>
+    <ID>ReturnCount:PaseoWorkInventory.kt$PaseoWorkInventory$private fun agent(raw: JsonElement?, snapshotRevision: Int? = null): Boolean</ID>
+    <ID>ReturnCount:PaseoWorkInventory.kt$PaseoWorkInventory$private fun child(raw: JsonElement?, snapshotRevision: Int? = null): Boolean</ID>
+    <ID>ReturnCount:PaseoWorkInventory.kt$PaseoWorkInventory$private fun page(result: JsonObject, cursor: String?, currentEpoch: Int, requestRevision: Int): Scan?</ID>
+    <ID>ReturnCount:PaseoWorkInventory.kt$PaseoWorkInventory$private fun stream(id: String?, p: JsonObject): Boolean</ID>
+    <ID>ReturnCount:PaseoWorkInventory.kt$PaseoWorkInventory$private suspend fun childPage( active: Scan, parent: String, listChildren: suspend (String) -&gt; JsonObject, stillCurrent: () -&gt; Boolean, )</ID>
+    <ID>ReturnCount:PaseoWorkInventory.kt$PaseoWorkInventory$public fun read(connected: Boolean, currentEpoch: Int, gatewayBusy: Boolean = false): Boolean?</ID>
+    <ID>SpreadOperator:PaseoWorkspaceOperations.kt$PaseoWorkspaceOperations$(*body.toList().toTypedArray())</ID>
+    <ID>SwallowedException:PaseoTerminals.kt$e: PaseoException</ID>
+    <ID>SwallowedException:PaseoWorkspace.kt$e: PaseoException</ID>
+    <ID>ThrowsCount:PaseoTransport.kt$PaseoTransport$private suspend fun handleText(myEpoch: Int, frame: String, decoded: Decoded?)</ID>
+    <ID>ThrowsCount:PaseoTransport.kt$PaseoTransport$private suspend fun openSocket(): Int</ID>
+    <ID>TooGenericExceptionCaught:PaseoTerminals.kt$PaseoTerminals$error: Exception</ID>
+    <ID>TooGenericExceptionCaught:PaseoTerminals.kt$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:PaseoTransport.kt$PaseoTransport$e: Throwable</ID>
+    <ID>TooManyFunctions:PaseoAgentTools.kt$PaseoAgentTools</ID>
+    <ID>TooManyFunctions:PaseoChatFeed.kt$PaseoChatFeed</ID>
+    <ID>TooManyFunctions:PaseoFeedPort.kt$PaseoFeedPort</ID>
+    <ID>TooManyFunctions:PaseoGateway.kt$PaseoGateway : ServerGatewaySessionSelectionGatewayCorrelatedPromptGatewayMidTurnPromptGatewayWorkspaceTransferGatewayProviderConversationImportGatewayLocatedFileGatewayLocatedVcsGatewayProviderUsageGatewayLocatedProjectGatewayAgentFeaturesGatewayReadOnlySessionsGatewayHostDaemonUpdateGatewayCachedAgentRecoveryGatewayAgentHandoffGatewayBoundedCardHistoryGatewayFencedNewSessionPromptGatewayPromptRunIdentityGateway</ID>
+    <ID>TooManyFunctions:PaseoGatewayFeedPort.kt$GatewayFeedPort : PaseoFeedPort</ID>
+    <ID>TooManyFunctions:PaseoJson.kt$io.github.eslamasabry.oc.protocol.paseo.PaseoJson.kt</ID>
+    <ID>TooManyFunctions:PaseoMappers.kt$io.github.eslamasabry.oc.protocol.paseo.mappers.PaseoMappers.kt</ID>
+    <ID>TooManyFunctions:PaseoOperations.kt$PaseoOperations : ServerOperationsGateway</ID>
+    <ID>TooManyFunctions:PaseoRequestBook.kt$PaseoRequestBook</ID>
+    <ID>TooManyFunctions:PaseoSubagents.kt$PaseoSubagents</ID>
+    <ID>TooManyFunctions:PaseoToolMappers.kt$io.github.eslamasabry.oc.protocol.paseo.mappers.PaseoToolMappers.kt</ID>
+    <ID>TooManyFunctions:PaseoTransport.kt$PaseoTransport</ID>
+    <ID>TooManyFunctions:PaseoUsageMonitor.kt$PaseoUsageMonitor</ID>
+    <ID>TooManyFunctions:PaseoWorkInventory.kt$PaseoWorkInventory</ID>
+    <ID>TooManyFunctions:PaseoWorkspace.kt$io.github.eslamasabry.oc.protocol.paseo.gateway.PaseoWorkspace.kt</ID>
+    <ID>TooManyFunctions:PaseoWorkspaceOperations.kt$PaseoWorkspaceOperations : ServerOperationsGateway</ID>
+    <ID>UnusedParameter:PaseoRequestBook.kt$PaseoRequestBook$id: String</ID>
+    <ID>UnusedPrivateProperty:PaseoChatFeed.kt$PaseoChatFeed$pageIndex</ID>
+    <ID>UnusedPrivateProperty:PaseoGateway.kt$PaseoGateway$val admitted = beforeAgentStart?.invoke()</ID>
+    <ID>WildcardImport:PaseoAgentTools.kt$import io.github.eslamasabry.oc.core.model.*</ID>
+    <ID>WildcardImport:PaseoAgentTools.kt$import io.github.eslamasabry.oc.protocol.paseo.*</ID>
+    <ID>WildcardImport:PaseoHandoff.kt$import io.github.eslamasabry.oc.protocol.paseo.*</ID>
+    <ID>WildcardImport:PaseoSubagents.kt$import io.github.eslamasabry.oc.protocol.paseo.*</ID>
+    <ID>WildcardImport:PaseoTerminals.kt$import io.github.eslamasabry.oc.protocol.paseo.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

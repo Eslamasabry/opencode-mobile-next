@@ -1,0 +1,62 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:FlutterGoldenGate.kt$FlutterGoldenGate$nx &lt; 0 || ny &lt; 0 || nx &gt;= w || ny &gt;= h</ID>
+    <ID>CyclomaticComplexMethod:FlutterGoldenGate.kt$FlutterGoldenGate$fun matrix( part: String, caps: Map&lt;String, String&gt; = emptyMap(), frame: Frame = Frame.Part, wrap: @Composable (@Composable () -&gt; Unit) -&gt; Unit = { it() }, content: @Composable () -&gt; Unit, )</ID>
+    <ID>CyclomaticComplexMethod:FlutterGoldenGate.kt$FlutterGoldenGate$internal fun measure(flutter: BufferedImage, native: BufferedImage): Pair&lt;Measure, BufferedImage&gt;</ID>
+    <ID>CyclomaticComplexMethod:FlutterGoldenGate.kt$FlutterGoldenGate$private fun largestEroded(diff: BooleanArray, w: Int, h: Int): Int</ID>
+    <ID>DestructuringDeclarationWithTooManyEntries:FlutterGoldenGate.kt$FlutterGoldenGate$val (_, ar, text2, w, h) = m.destructured</ID>
+    <ID>EmptyElseBlock:FlutterGoldenGate.kt$FlutterGoldenGate$if (x &lt; lo) lo = x</ID>
+    <ID>EmptyElseBlock:FlutterGoldenGate.kt$FlutterGoldenGate$if (x &lt; x0) x0 = x</ID>
+    <ID>EmptyElseBlock:FlutterGoldenGate.kt$FlutterGoldenGate$if (x &gt; hi) hi = x</ID>
+    <ID>EmptyElseBlock:FlutterGoldenGate.kt$FlutterGoldenGate$if (y &lt; y0) y0 = y</ID>
+    <ID>LongParameterList:FlutterGoldenGate.kt$FlutterGoldenGate$( axes: Axes, dark: Boolean, motion: MotionLevel, style: Style, frame: Frame, wrap: @Composable (@Composable () -&gt; Unit) -&gt; Unit, content: @Composable () -&gt; Unit, scale: Float = axes.scale, rtl: Boolean = axes.rtl, onRoot: (androidx.compose.ui.test.ComposeUiTest.() -&gt; Unit)? = null, act: (androidx.compose.ui.test.ComposeUiTest.() -&gt; Unit)? = null, )</ID>
+    <ID>LongParameterList:FlutterGoldenGate.kt$FlutterGoldenGate$( name: String, frame: Frame = Frame.Part, motion: MotionLevel = MotionLevel.Off, style: Style = Style.Solid, ref: GateRef = GateRef.Product, modes: List&lt;String&gt; = listOf("light", "dark"), wrap: @Composable (@Composable () -&gt; Unit) -&gt; Unit = { it() }, textScale: Float? = null, window: Pair&lt;Int, Int&gt;? = null, density: Float? = null, pixelRatio: Float? = null, act: (androidx.compose.ui.test.ComposeUiTest.() -&gt; Unit)? = null, content: @Composable () -&gt; Unit, )</ID>
+    <ID>LongParameterList:FlutterGoldenGate.kt$FlutterGoldenGate$( name: String, mode: String, ref: GateRef, textScale: Float?, window: Pair&lt;Int, Int&gt;?, density: Float?, pixelRatio: Float? = null, )</ID>
+    <ID>MagicNumber:FlutterGoldenGate.kt$FlutterGoldenGate$0.11</ID>
+    <ID>MagicNumber:FlutterGoldenGate.kt$FlutterGoldenGate$0.3</ID>
+    <ID>MagicNumber:FlutterGoldenGate.kt$FlutterGoldenGate$0.59</ID>
+    <ID>MagicNumber:FlutterGoldenGate.kt$FlutterGoldenGate$0xFF</ID>
+    <ID>MagicNumber:FlutterGoldenGate.kt$FlutterGoldenGate$16</ID>
+    <ID>MagicNumber:FlutterGoldenGate.kt$FlutterGoldenGate$230</ID>
+    <ID>MagicNumber:FlutterGoldenGate.kt$FlutterGoldenGate$3</ID>
+    <ID>MagicNumber:FlutterGoldenGate.kt$FlutterGoldenGate$30</ID>
+    <ID>MagicNumber:FlutterGoldenGate.kt$FlutterGoldenGate$4</ID>
+    <ID>MagicNumber:FlutterGoldenGate.kt$FlutterGoldenGate$40</ID>
+    <ID>MagicNumber:FlutterGoldenGate.kt$FlutterGoldenGate$412</ID>
+    <ID>MagicNumber:FlutterGoldenGate.kt$FlutterGoldenGate$5</ID>
+    <ID>MagicNumber:FlutterGoldenGate.kt$FlutterGoldenGate$720</ID>
+    <ID>MagicNumber:FlutterGoldenGate.kt$FlutterGoldenGate$8</ID>
+    <ID>MagicNumber:FlutterGoldenGate.kt$FlutterGoldenGate$90</ID>
+    <ID>MagicNumber:FlutterGoldenGate.kt$FlutterGoldenGate$915</ID>
+    <ID>MaxLineLength:FlutterGoldenGate.kt$FlutterGoldenGate$"FAIL\t${(t.javaClass.simpleName + ": " + (t.message ?: "")).replace('\n', ' ').replace('\t', ' ').take(DETAIL)}"</ID>
+    <ID>MaxLineLength:FlutterGoldenGate.kt$FlutterGoldenGate$"conversation=700 reading=720 list=960 sheet=640 confirm=560 dialog=480 popover=320 toast=480 state=440 lane=400 control=400 chip=320 glyph=96"</ID>
+    <ID>MaxLineLength:FlutterGoldenGate.kt$FlutterGoldenGate$(0..16 step 8).any { s -&gt; kotlin.math.abs((a shr s and 0xFF) - (b shr s and 0xFF)) &gt; CHANNEL_SLACK }</ID>
+    <ID>MaxLineLength:FlutterGoldenGate.kt$FlutterGoldenGate$.</ID>
+    <ID>MaxLineLength:FlutterGoldenGate.kt$FlutterGoldenGate$Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(vertical = 16.dp)</ID>
+    <ID>MaxLineLength:FlutterGoldenGate.kt$FlutterGoldenGate$appearance = KitAppearance(mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light, motion = motion, style = style)</ID>
+    <ID>MaxLineLength:FlutterGoldenGate.kt$FlutterGoldenGate$else</ID>
+    <ID>MaxLineLength:FlutterGoldenGate.kt$FlutterGoldenGate$for</ID>
+    <ID>MaxLineLength:FlutterGoldenGate.kt$FlutterGoldenGate$for (x in 0 until img.width) for (y in 0 until img.height) if (img.getRGB(x, y) != g) { if (x &lt; lo) lo = x; if (x &gt; hi) hi = x; break }</ID>
+    <ID>MaxLineLength:FlutterGoldenGate.kt$FlutterGoldenGate$for (y in 0 until img.height step STRIDE) for (x in 0 until img.width step STRIDE) if (img.getRGB(x, y) != g) return false</ID>
+    <ID>MaxLineLength:FlutterGoldenGate.kt$FlutterGoldenGate$img.setRGB(i % w, i / w, if (diff[i]) Color(230, 30, 30).rgb else Color(g, g, g).rgb)</ID>
+    <ID>MaxLineLength:FlutterGoldenGate.kt$FlutterGoldenGate$n.children.any { SemanticsProperties.Text in it.config || SemanticsProperties.ContentDescription in it.config }</ID>
+    <ID>MaxLineLength:FlutterGoldenGate.kt$FlutterGoldenGate$private val flutterDir: File = File(System.getProperty("oc.flutterGoldens") ?: File(root, "looks-gate/flutter").path)</ID>
+    <ID>MaxLineLength:FlutterGoldenGate.kt$FlutterGoldenGate$return Axes(rtl = ar.isNotEmpty(), scale = if (text2.isNotEmpty()) TEXT2 else 1f, w = w.toIntOrNull() ?: window.first, h = h.toIntOrNull() ?: window.second)</ID>
+    <ID>MaxLineLength:FlutterGoldenGate.kt$FlutterGoldenGate$runDesktopComposeUiTest</ID>
+    <ID>MaxLineLength:FlutterGoldenGate.kt$FlutterGoldenGate$val g = ((b shr 16 and 0xFF) * 0.3 + (b shr 8 and 0xFF) * 0.59 + (b and 0xFF) * 0.11).toInt() / 3 + 40 // NV: dimmed grey of the native pixel</ID>
+    <ID>MaxLineLength:FlutterGoldenGate.kt$FlutterGoldenGate$val img = render(base, mode == "dark", MotionLevel.Off, style, frame, wrap, content, scale = scale.toFloat(), rtl = rtl)</ID>
+    <ID>MaxLineLength:FlutterGoldenGate.kt$FlutterGoldenGate$val measure = Measure(total * PERCENT / (w.toLong() * h), inBox * PERCENT / (box.w.toLong() * box.h), largestEroded(diff, w, h), box, size)</ID>
+    <ID>MaxLineLength:FlutterGoldenGate.kt$FlutterGoldenGate$val nodes = onAllNodes(SemanticsMatcher("clickable") { SemanticsProperties.Role in it.config || androidx.compose.ui.semantics.SemanticsActions.OnClick in it.config }).fetchSemanticsNodes()</ID>
+    <ID>MaxLineLength:FlutterGoldenGate.kt$FlutterGoldenGate$val size = if (same) "same-size" else "size ${native.width}x${native.height} vs ${flutter.width}x${flutter.height}"</ID>
+    <ID>MaxLineLength:FlutterGoldenGate.kt$FlutterGoldenGate.Axes$internal</ID>
+    <ID>MayBeConst:FlutterGoldenGate.kt$FlutterGoldenGate$private val bodyCap = 720 // F: test/goldens/kit/kit_gallery.dart:769</ID>
+    <ID>MayBeConst:FlutterGoldenGate.kt$FlutterGoldenGate$private val inkPad = 4 // NV: ink box padding in px (standard §8.2)</ID>
+    <ID>NestedBlockDepth:FlutterGoldenGate.kt$FlutterGoldenGate$fun matrix( part: String, caps: Map&lt;String, String&gt; = emptyMap(), frame: Frame = Frame.Part, wrap: @Composable (@Composable () -&gt; Unit) -&gt; Unit = { it() }, content: @Composable () -&gt; Unit, )</ID>
+    <ID>NestedBlockDepth:FlutterGoldenGate.kt$FlutterGoldenGate$private fun largestEroded(diff: BooleanArray, w: Int, h: Int): Int</ID>
+    <ID>SwallowedException:FlutterGoldenGate.kt$FlutterGoldenGate$t: Throwable</ID>
+    <ID>TooGenericExceptionCaught:FlutterGoldenGate.kt$FlutterGoldenGate$t: Throwable</ID>
+    <ID>TooManyFunctions:FlutterGoldenGate.kt$FlutterGoldenGate</ID>
+  </CurrentIssues>
+</SmellBaseline>

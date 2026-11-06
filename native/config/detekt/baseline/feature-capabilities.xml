@@ -1,0 +1,8 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:CapabilitiesScreen.kt$private fun flowWords(flow: CapabilityEnableFlow): Pair&lt;StringResource, StringResource&gt;</ID>
+    <ID>LongMethod:CapabilitiesScreen.kt$private fun flowWords(flow: CapabilityEnableFlow): Pair&lt;StringResource, StringResource&gt;</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -1,0 +1,65 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:ModelChipLabel.kt$ModelNames$fun fromId(modelId: String): String</ID>
+    <ID>LongMethod:ComposerScreen.kt$@Composable fun ComposerScreen( state: ComposerUi, actions: ComposerActions, field: TextFieldState, modifier: Modifier = Modifier, finePointer: Boolean = false, keepFocusOnSend: Boolean = false, mic: (@Composable () -&gt; Unit)? = null, agentName: String = "OpenCode", freeModel: Boolean = false, )</ID>
+    <ID>LongParameterList:ComposerScreen.kt$( state: ComposerUi, actions: ComposerActions, field: TextFieldState, modifier: Modifier = Modifier, finePointer: Boolean = false, keepFocusOnSend: Boolean = false, mic: (@Composable () -&gt; Unit)? = null, agentName: String = "OpenCode", freeModel: Boolean = false, )</ID>
+    <ID>LongParameterList:FullComposerHost.kt$ComposerChromeInputs$( /** * An agent `choices` tap: (id, text); state, not a one-shot flow, so a request made * mid-transition waits. */ val pendingInsert: () -&gt; Pair&lt;Long, String&gt;?, val insertDone: (id: Long) -&gt; Unit, val onSent: () -&gt; Unit, val finePointer: Boolean = false, val keepFocusOnSend: Boolean = false, val agentName: () -&gt; String = { "OpenCode" }, val freeModel: () -&gt; Boolean = { false }, )</ID>
+    <ID>LoopWithTooManyJumpStatements:ModelChipLabel.kt$ModelNames$while</ID>
+    <ID>MaxLineLength:ComposerControlsTest.kt$ComposerControlsTest$KitTheme</ID>
+    <ID>MaxLineLength:ComposerControlsTest.kt$ComposerControlsTest$setContent { KitTheme(platform = DesktopKitPlatform()) { ComposerScreen(ComposerUi(), actions, TextFieldState()) } }</ID>
+    <ID>MaxLineLength:ComposerControlsTest.kt$ComposerControlsTest$setContent { KitTheme(platform = DesktopKitPlatform()) { ComposerScreen(ComposerUi(button = FieldButton.StopAndSend), actions, TextFieldState("Next task")) } }</ID>
+    <ID>MaxLineLength:ComposerGoldensTest.kt$ComposerGoldensTest$ComposerUi(button = FieldButton.None, note = ComposerNote.ReadOnly(ReadOnlyReason.SubAgent), fieldEnabled = false)</ID>
+    <ID>MaxLineLength:ComposerGoldensTest.kt$ComposerGoldensTest$ComposerUi(button = FieldButton.Send, chips = persistentListOf(model, ComposerChip.Approval(ApprovalMode.AutoApprove)))</ID>
+    <ID>MaxLineLength:ComposerGoldensTest.kt$ComposerGoldensTest$ComposerUi(button = FieldButton.SendWhenOnline, chips = persistentListOf(model, ComposerChip.Approval(ApprovalMode.AsksFirst)), note = ComposerNote.SendFailed)</ID>
+    <ID>MaxLineLength:ComposerGoldensTest.kt$ComposerGoldensTest$assertTrue(golden.width == image.width &amp;&amp; golden.height == image.height, "$name: size ${image.width}x${image.height} vs ${golden.width}x${golden.height}")</ID>
+    <ID>MaxLineLength:ComposerGoldensTest.kt$ComposerGoldensTest$chips = persistentListOf(model, ComposerChip.Approval(ApprovalMode.AsksFirst), ComposerChip.Stop(stuck = false))</ID>
+    <ID>MaxLineLength:ComposerGoldensTest.kt$ComposerGoldensTest$chips = persistentListOf(model, ComposerChip.Approval(ApprovalMode.Paused), ComposerChip.Stop(stuck = true))</ID>
+    <ID>MaxLineLength:ComposerGoldensTest.kt$ComposerGoldensTest$fail("$name: ${"%.3f".format(share * 100)} % of pixels differ (limit ${MAX_SHARE * 100} %); actual: $actual")</ID>
+    <ID>MaxLineLength:ComposerGoldensTest.kt$ComposerGoldensTest$scene("idle-empty", ComposerUi(button = FieldButton.Mic, chips = persistentListOf(model, ComposerChip.Approval(ApprovalMode.AsksFirst))))</ID>
+    <ID>MaxLineLength:ComposerGoldensTest.kt$ComposerGoldensTest$val far = (0..24 step 8).any { shift -&gt; abs((p shr shift and 0xFF) - (q shr shift and 0xFF)) &gt; CHANNEL_SLACK }</ID>
+    <ID>MaxLineLength:ComposerHarness.kt$/** The real kit theme on the desktop platform over the theme's ground, still frame, motion off, at the phone width of plan 06 §15.3. */</ID>
+    <ID>MaxLineLength:ComposerHarness.kt$appearance = KitAppearance(mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light, motion = MotionLevel.Off)</ID>
+    <ID>MaxLineLength:ComposerKeys.kt$ComposerKeys$/** Ctrl/Cmd+Enter sends; with a fine pointer Enter sends and Shift+Enter is a newline; on touch Enter is a newline. */</ID>
+    <ID>MaxLineLength:ComposerLayoutTest.kt$ComposerLayoutTest$ComposerScreen(ComposerUi(note = ComposerNote.ReadOnly(ReadOnlyReason.SubAgent)), RecordingActions(), TextFieldState())</ID>
+    <ID>MaxLineLength:ComposerLayoutTest.kt$ComposerLayoutTest$onNode(hasText("This sub-agent answers only its main conversation. Write there.") and hasAnyAncestor(hasTestTag("kit-composer-box")), useUnmergedTree = true).assertExists()</ID>
+    <ID>MaxLineLength:ComposerLayoutTest.kt$ComposerLayoutTest$setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en") { ComposerScreen(ComposerUi(button = FieldButton.Send), RecordingActions(), TextFieldState("First line\nSecond line")) } }</ID>
+    <ID>MaxLineLength:ComposerLayoutTest.kt$ComposerLayoutTest$setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en") { ComposerScreen(ComposerUi(button = FieldButton.Send), RecordingActions(), TextFieldState("Hello")) } }</ID>
+    <ID>MaxLineLength:ComposerLayoutTest.kt$ComposerLayoutTest$setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en") { ComposerScreen(ComposerUi(button = FieldButton.Sending), actions, field, finePointer = true) } }</ID>
+    <ID>MaxLineLength:ComposerModelChipTest.kt$ComposerModelChipTest$onNodeWithTag("kit-model-chip-label", useUnmergedTree = true).performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }</ID>
+    <ID>MaxLineLength:ComposerPresenterTest.kt$ComposerPresenterTest$ComposerFacts(model = ModelFacts(modelId = "anthropic/claude-sonnet-5"), approval = ApprovalMode.AutoApprove)</ID>
+    <ID>MaxLineLength:ComposerPresenterTest.kt$ComposerPresenterTest$assertEquals(ComposerChip.Stop(stuck = true), p.state.value.chips.last(), "a stuck step turns the same Stop amber")</ID>
+    <ID>MaxLineLength:ComposerScreenUiTest.kt$ComposerScreenUiTest$ComposerFacts(model = ModelFacts(modelId = "anthropic/claude-sonnet-5", catalogLoading = true), approval = ApprovalMode.AsksFirst)</ID>
+    <ID>MaxLineLength:ComposerScreenUiTest.kt$ComposerScreenUiTest$fun</ID>
+    <ID>MaxLineLength:ComposerSurfaceTest.kt$ComposerSurfaceTest$KitTheme</ID>
+    <ID>MaxLineLength:ComposerUi.kt$ComposerUi$/** Counts accepted sends; the screen applies the after-send focus rule ([ComposerKeys.keepFocusAfterSend]) on change. */</ID>
+    <ID>MaxLineLength:ComposerUi.kt$FieldEdit.Change.Replace$/** Replace the whole text and put the caret at [caret] (history browsing, a failed send's words coming back). */</ID>
+    <ID>MaxLineLength:FieldButtons.kt$FieldButtons$/** How a send goes now; null = it cannot go (read-only, or a turn runs and nothing is known about mid-turn sends). */</ID>
+    <ID>MaxLineLength:FieldButtonsTest.kt$FieldButtonsTest$assertEquals(listOf("Start", "Steer", "JoinTurn", "StopThenSend", "WhenOnline"), SendHow.entries.map { it.name })</ID>
+    <ID>MaxLineLength:ModelChipLabel.kt$ModelChipLabel$// While the models are read (or when the catalog lacks the model), a name seen before, else one made from the id.</ID>
+    <ID>MaxLineLength:ModelChipLabel.kt$ModelChipLabel$facts.catalogName?.trim()?.takeIf { it.isNotEmpty() &amp;&amp; !facts.catalogLoading }?.let { return ModelLabel.Named(it) }</ID>
+    <ID>MaxLineLength:ModelChipLabel.kt$ModelNames$/** Short number runs are one version ("4-1" → "4.1"); a token starting with digits ("4o", "5.3") stays as written. */</ID>
+    <ID>MaxLineLength:PromptEditorScreen.kt$Column</ID>
+    <ID>MaxLineLength:PromptEditorScreen.kt$bottom = { KitActionBlock(primary = KitAction(stringResource(Res.string.promptEditorDone), onClose, icon = KitIcons.check)) }</ID>
+    <ID>MaxLineLength:PromptEditorScreen.kt$multilineLines = if (LocalKitWindow.current.short) 3..6 else 3..18</ID>
+    <ID>MaxLineLength:PromptEditorScreen.kt$topBar = { KitTopBar(title, exit = KitTopBarExit.Close, exitLabel = stringResource(Res.string.kitSheetClose), onExit = close) }</ID>
+    <ID>ReturnCount:ComposerPresenter.kt$ComposerPresenter$private fun send(words: String)</ID>
+    <ID>ReturnCount:ModelChipLabel.kt$ModelChipLabel$fun label(facts: ModelFacts): ModelLabel</ID>
+    <ID>TooManyFunctions:ComposerPresenter.kt$ComposerPresenter : ComposerActions</ID>
+    <ID>WildcardImport:ComposerControlsTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:ComposerFieldTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:ComposerLayoutTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:ComposerLayoutTest.kt$import io.github.eslamasabry.oc.feature.chatcomposer.presentation.*</ID>
+    <ID>WildcardImport:ComposerModelChipTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:ComposerSurfaceTest.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:ComposerSurfaceTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:ComposerSurfaceTest.kt$import io.github.eslamasabry.oc.ui.kit.foundation.*</ID>
+    <ID>WildcardImport:PromptEditorScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:PromptEditorScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:PromptEditorScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:PromptEditorScreen.kt$import io.github.eslamasabry.oc.ui.kit.modal.*</ID>
+    <ID>WildcardImport:PromptEditorScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:PromptEditorTest.kt$import androidx.compose.ui.test.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

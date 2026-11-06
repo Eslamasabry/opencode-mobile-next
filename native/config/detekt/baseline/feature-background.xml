@@ -1,0 +1,16 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:BackgroundScreen.kt$@Composable private fun pauseStatus( pause: PauseFacts, resuming: Boolean, actions: BackgroundActions, ): KitStatus</ID>
+    <ID>CyclomaticComplexMethod:BackgroundScreen.kt$@Composable public fun BackgroundScreen( state: BackgroundUi, actions: BackgroundActions, )</ID>
+    <ID>EmptyFunctionBlock:BackgroundParityTest.kt$BackgroundParityTest.Actions${}</ID>
+    <ID>LongMethod:BackgroundScreen.kt$@Composable public fun BackgroundScreen( state: BackgroundUi, actions: BackgroundActions, )</ID>
+    <ID>MagicNumber:BackgroundViewModel.kt$BackgroundViewModel$5_000</ID>
+    <ID>MaxLineLength:BackgroundScreenUiTest.kt$BackgroundScreenUiTest$page(BackgroundLiveFacts(supported = true, pause = PauseFacts(PauseReason.Interrupted, clock = "15:10"), resuming = true))</ID>
+    <ID>MaxLineLength:BackgroundViewModel.kt$is Outcome.Ok -&gt; if (result.value == wanted) null else if (wanted) SwitchFailure.NotEnabled else SwitchFailure.NotDisabled</ID>
+    <ID>WildcardImport:BackgroundParityTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:BackgroundParityTest.kt$import io.github.eslamasabry.oc.feature.background.presentation.*</ID>
+    <ID>WildcardImport:BackgroundParityTest.kt$import kotlin.test.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -1,0 +1,304 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:NativeShipGateTest.kt$NativeShipGateTest$b.size &lt; 64 || b[0] != 0x7f.toByte() || b[1] != 'E'.code.toByte() || b[4] != 2.toByte() || b[5] != 1.toByte()</ID>
+    <ID>CyclomaticComplexMethod:ScopeFileTest.kt$MiniJson.Reader$fun string(): String</ID>
+    <ID>CyclomaticComplexMethod:ScopeFileTest.kt$MiniJson.Reader$fun value(): Any?</ID>
+    <ID>CyclomaticComplexMethod:ScopeFileTest.kt$ScopeFile$fun problems(): List&lt;String&gt;</ID>
+    <ID>CyclomaticComplexMethod:SecGates.kt$ExportedSurface$fun invariants(manifest: String): List&lt;Finding&gt;</ID>
+    <ID>CyclomaticComplexMethod:SecTree.kt$KotlinText$fun stripComments(src: String): String</ID>
+    <ID>EmptyElseBlock:ScopeFileTest.kt$MiniJson.Reader$if (!s.startsWith(w, i)) error("bad literal at $i")</ID>
+    <ID>EmptyElseBlock:ScopeFileTest.kt$MiniJson.Reader$if (i &gt;= s.length || s[i] != c) error("expected '$c' at $i")</ID>
+    <ID>EmptyElseBlock:ScopeFileTest.kt$MiniJson.Reader$if (s[i] == ',') { i++; continue }</ID>
+    <ID>EmptyFunctionBlock:ChatHeaderUiTest.kt$ChatHeaderUiTest.Nav${}</ID>
+    <ID>EmptyFunctionBlock:ChatHeaderUiTest.kt$ChatHeaderUiTest.World${}</ID>
+    <ID>EmptyFunctionBlock:ChatReviewUiTest.kt$ChatReviewUiTest.&lt;no name provided&gt;.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:ChatWorldReviewTest.kt$ChatWorldReviewTest.&lt;no name provided&gt;${}</ID>
+    <ID>InvalidPackageDeclaration:ChatWorldReviewTest.kt$package io.github.eslamasabry.oc.feature.chat.world</ID>
+    <ID>LongMethod:ScopeFileTest.kt$ScopeFile$fun problems(): List&lt;String&gt;</ID>
+    <ID>LongMethod:TranscriptStreamUiTest.kt$TranscriptStreamUiTest$@Test fun `P3 a 6,000-word reply streams at the live edge, and jump to latest brings a reader back`()</ID>
+    <ID>LoopWithTooManyJumpStatements:SecTree.kt$KotlinText$while</ID>
+    <ID>MaxLineLength:BuildRestGates.kt$BuildRestGates$.</ID>
+    <ID>MaxLineLength:BuildRestGates.kt$BuildRestGates$/** A feature file breaking the kit-only rules: colours and motion values live in the kit, start/end not left/right. */</ID>
+    <ID>MaxLineLength:BuildRestGates.kt$BuildRestGates$/** The concrete destinations in the route files: a class or object that extends AppRoute or a sealed route family. */</ID>
+    <ID>MaxLineLength:BuildRestGates.kt$BuildRestGates$Regex("""Alignment\.(Top|Center|Bottom)(Left|Right)\b|Arrangement\.Absolute|AbsoluteAlignment|absolutePadding|absoluteOffset""")</ID>
+    <ID>MaxLineLength:BuildRestGates.kt$BuildRestGates$files.flatMap { (path, t) -&gt; EDGE.findAll(t).map { path to Route(it.groupValues[1], it.groupValues[2]) }.toList() }</ID>
+    <ID>MaxLineLength:BuildRestGates.kt$BuildRestGates$fun</ID>
+    <ID>MaxLineLength:BuildRestGates.kt$BuildRestGates$private val BACKEND_BRANCH = Regex("""(==|!=)\s*BackendKind\.|BackendKind\.\w+\s*-&gt;|\bis BackendKind\b|when\s*\([^)]*\bbackend\b[^)]*\)""")</ID>
+    <ID>MaxLineLength:BuildRestGates.kt$BuildRestGates$private val PRODUCTION_SETS = listOf("/src/commonMain/", "/src/androidMain/", "/src/desktopMain/", "/src/main/", "/src/jvmShared/")</ID>
+    <ID>MaxLineLength:BuildRestGates.kt$BuildRestGates$val families = files.values.flatMap { t -&gt; SEALED_ROUTE.findAll(t).map { it.groupValues[1] } }.toSet() + "AppRoute"</ID>
+    <ID>MaxLineLength:BuildRestGatesTest.kt$BuildRestGatesTest$assertEquals(1, BuildRestGates.uiBuildFile("feature/x/build.gradle.kts", """implementation(project(":protocol:oc2"))""").size)</ID>
+    <ID>MaxLineLength:BuildRestGatesTest.kt$BuildRestGatesTest$assertEquals(emptySet(), BuildRestGates.NOTIFICATION_POSTERS.keys - posters, "an entry no longer posts: remove it")</ID>
+    <ID>MaxLineLength:BuildRestGatesTest.kt$BuildRestGatesTest$assertEquals(emptySet(), posters - BuildRestGates.NOTIFICATION_POSTERS.keys, "new posting path: route it through the alert shade")</ID>
+    <ID>MaxLineLength:BuildRestGatesTest.kt$BuildRestGatesTest$assertEquals(listOf("XRoute.B"), routes.filterNot { BuildRestGates.hasEntry(it, setOf("XRoute.A")) }.map { it.toString() })</ID>
+    <ID>MaxLineLength:BuildRestGatesTest.kt$BuildRestGatesTest$assertNone(buildFiles.flatMap { BuildRestGates.uiBuildFile(it.relativeTo(root).path, it.readText()) }, "UI modules on a protocol")</ID>
+    <ID>MaxLineLength:BuildRestGatesTest.kt$BuildRestGatesTest$assertNone(features.flatMap { (p, t) -&gt; BuildRestGates.featureUi(p, t) }, "feature files breaking the kit-only rules")</ID>
+    <ID>MaxLineLength:BuildRestGatesTest.kt$BuildRestGatesTest$assertNone(ui.flatMap { (p, t) -&gt; BuildRestGates.uiBoundary(p, t) }, "UI files that reach past the domain gateway")</ID>
+    <ID>MaxLineLength:BuildRestGatesTest.kt$BuildRestGatesTest$assertTrue(Regex("""\d+\.\d+\.\d+(-[a-z0-9.]+)?""").matches(version.getValue("versionName")), "versionName ${version["versionName"]}")</ID>
+    <ID>MaxLineLength:BuildRestGatesTest.kt$BuildRestGatesTest$fun</ID>
+    <ID>MaxLineLength:BuildRestGatesTest.kt$BuildRestGatesTest$private val everything by lazy { BuildRestGates.production(root, "feature", "ui", "android", "engine", "androidApp", "desktopApp") }</ID>
+    <ID>MaxLineLength:BuildRestGatesTest.kt$BuildRestGatesTest$val files = mapOf("ui/routes/R.kt" to "sealed interface XRoute : AppRoute {\n data class A(val id: String = f(1)) : XRoute\n data object B : XRoute\n}")</ID>
+    <ID>MaxLineLength:BuildRestGatesTest.kt$BuildRestGatesTest$val javas = workflows.flatMap { w -&gt; Regex("""java-version:\s*"?(\d+)"?""").findAll(w.readText()).map { w.name to it.groupValues[1] } }</ID>
+    <ID>MaxLineLength:ChatHeaderUiTest.kt$ChatHeaderUiTest$ApprovalPresenter(ref, approvalStore, MutableStateFlow(ServerCapabilities(permissionRequests = true)), asks, immediate, io.github.eslamasabry.oc.core.testing.TestClock())</ID>
+    <ID>MaxLineLength:ChatHeaderUiTest.kt$ChatHeaderUiTest$KitTheme</ID>
+    <ID>MaxLineLength:ChatHeaderUiTest.kt$ChatHeaderUiTest$assertEquals("""{"s1":{"mode":"autoOnce","inheritToChildren":false}}""", approvalStore.raw["oc.autoApprove.p1"])</ID>
+    <ID>MaxLineLength:ChatHeaderUiTest.kt$ChatHeaderUiTest$assertEquals(0, onAllNodesWithText("Share conversation").fetchSemanticsNodes().size, "gated off by the server")</ID>
+    <ID>MaxLineLength:ChatHeaderUiTest.kt$ChatHeaderUiTest$if (onAllNodesWithText(label).fetchSemanticsNodes().isEmpty()) onNodeWithContentDescription("More actions").performClick()</ID>
+    <ID>MaxLineLength:ChatHeaderUiTest.kt$ChatHeaderUiTest$private val immediate = ChatLauncher { block -&gt; block.startCoroutine(Continuation(EmptyCoroutineContext) { it.getOrThrow() }) }</ID>
+    <ID>MaxLineLength:ChatHeaderUiTest.kt$ChatHeaderUiTest$world.capabilities.value = ServerCapabilities(sessionShare = false, sessionFork = false, sessionArchive = false, sessionDelete = true)</ID>
+    <ID>MaxLineLength:ChatHeaderUiTest.kt$ChatHeaderUiTest.&lt;no name provided&gt;$override suspend fun allowOnce(id: io.github.eslamasabry.oc.core.common.ids.RequestId): Outcome&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:ChatHeaderUiTest.kt$ChatHeaderUiTest.&lt;no name provided&gt;$override val waiting = MutableStateFlow&lt;List&lt;io.github.eslamasabry.oc.core.model.PermissionRequest&gt;&gt;(emptyList())</ID>
+    <ID>MaxLineLength:ChatHeaderUiTest.kt$ChatHeaderUiTest.Port$override val facts = MutableStateFlow(HeaderFacts(serverName = "Home PC", directory = "/home/me/projects/app/", connected = true))</ID>
+    <ID>MaxLineLength:ChatReviewUiTest.kt$ChatReviewUiTest$ChatScreen(ChatUi.loading(ref).copy(phase = phase), actions&lt;ChatActions&gt; { _, _ -&gt; }, composer, requests = slot, requestActions = requests)</ID>
+    <ID>MaxLineLength:ChatReviewUiTest.kt$ChatReviewUiTest$Proxy.newProxyInstance(T::class.java.classLoader, arrayOf(T::class.java)) { _, method, args -&gt; call(method.name, args); null } as T</ID>
+    <ID>MaxLineLength:ChatReviewUiTest.kt$ChatReviewUiTest$for</ID>
+    <ID>MaxLineLength:ChatReviewUiTest.kt$ChatReviewUiTest$io.github.eslamasabry.oc.ui.kitchat.KitChatEnvironment(io.github.eslamasabry.oc.core.security.Redactor())</ID>
+    <ID>MaxLineLength:ChatReviewUiTest.kt$ChatReviewUiTest$val ask = PermissionRequest(id, ref.sessionId, "edit", kotlinx.collections.immutable.persistentListOf("*.txt"), kotlinx.serialization.json.JsonObject(emptyMap()), kotlinx.collections.immutable.persistentListOf(), null, false, null)</ID>
+    <ID>MaxLineLength:ChatReviewUiTest.kt$ChatReviewUiTest$val slot = RequestSlotUi(RequestCardUi.Permission(id, null, CardState.Waiting, PermissionAsk.of(ask), false))</ID>
+    <ID>MaxLineLength:ChatReviewUiTest.kt$ChatReviewUiTest.&lt;no name provided&gt;$BasicComposer</ID>
+    <ID>MaxLineLength:ChatReviewUiTest.kt$ChatReviewUiTest.&lt;no name provided&gt;$io.github.eslamasabry.oc.ui.kit.KitText(if (chrome.requestWaiting()) "Request owns composer" else "Ordinary composer")</ID>
+    <ID>MaxLineLength:GraphSmokeTest.kt$GraphSmokeTest$val graph = createGraphFactory&lt;SmokeGraph.Factory&gt;().create(AppBuildInfo("t", 1, Channel.Desktop, true), Redactor())</ID>
+    <ID>MaxLineLength:KSecPlantedTest.kt$KSecPlantedTest$.</ID>
+    <ID>MaxLineLength:KSecPlantedTest.kt$KSecPlantedTest$assertCaught(SecTextRules.kSec10(t.files(), SecConfig(t.root)), "K-SEC-10", 2, "evil.example.net and tracker.example.org")</ID>
+    <ID>MaxLineLength:KSecPlantedTest.kt$KSecPlantedTest$assertCaught(SecTextRules.kSec2(t.files()), "K-SEC-2", 3, "X509TrustManager, SSLContext.init, .hostnameVerifier(")</ID>
+    <ID>MaxLineLength:KSecPlantedTest.kt$KSecPlantedTest$assertCaught(SecTextRules.kSec7(t.files(), liveConfig), "K-SEC-7", 2, "getActivity and getForegroundService without FLAG_IMMUTABLE")</ID>
+    <ID>MaxLineLength:KSecPlantedTest.kt$KSecPlantedTest$assertCaught(SecTextRules.kSec9(t.files()), "K-SEC-9", 6, "WebView(, bridge, file access, universal access, mixed content, proceed")</ID>
+    <ID>MaxLineLength:KSecPlantedTest.kt$KSecPlantedTest$assertCaught(hits, "K-SEC-5", 7, "route, workDataOf, putExtra, putString, Data.Builder, SavedStateHandle, rememberSaveable")</ID>
+    <ID>MaxLineLength:KSecRulesTest.kt$KSecRulesTest$/** Live hits minus the reported ones in `ksec-pending.txt`; a pending key of this rule that no longer fires fails. */</ID>
+    <ID>MaxLineLength:KSecRulesTest.kt$KSecRulesTest$@Test fun `K-SEC-1 no autoLink or Linkify, LocalUriHandler provided only at the shell root`()</ID>
+    <ID>MaxLineLength:KSecRulesTest.kt$KSecRulesTest$@Test fun `K-SEC-10 every URL literal names a KnownHosts host or loopback`()</ID>
+    <ID>MaxLineLength:KSecRulesTest.kt$KSecRulesTest$@Test fun `K-SEC-11 analytics event properties are enums, Boolean or buckets`()</ID>
+    <ID>MaxLineLength:KSecRulesTest.kt$KSecRulesTest$@Test fun `K-SEC-12 no kotlin or java Random where tokens and passwords are made`()</ID>
+    <ID>MaxLineLength:KSecRulesTest.kt$KSecRulesTest$@Test fun `K-SEC-3 no certificate pinner, logging interceptor, Ktor Logging, retry or redirect`()</ID>
+    <ID>MaxLineLength:KSecRulesTest.kt$KSecRulesTest$@Test fun `K-SEC-6 clipboard writes only in the kit KitCopy and KitPlatform`()</ID>
+    <ID>MaxLineLength:KSecRulesTest.kt$KSecRulesTest$@Test fun `K-SEC-7 every PendingIntent is FLAG_IMMUTABLE outside the three reviewed files`()</ID>
+    <ID>MaxLineLength:KSecRulesTest.kt$KSecRulesTest$@Test fun `K-SEC-8 no parseUri, getIntent or relaunched intents from extras`()</ID>
+    <ID>MaxLineLength:KSecRulesTest.kt$KSecRulesTest$@Test fun `K-SEC-9 WebView only in KitWebPreview and never with a bridge, file access or proceed`()</ID>
+    <ID>MaxLineLength:KSecRulesTest.kt$KSecRulesTest$io.github.eslamasabry.oc.quality.sec.assertClean(stale.map { "$it: remove it from knownhosts-pending.txt (KnownHosts lists it, or no literal uses it)" }, "knownhosts-pending.txt")</ID>
+    <ID>MaxLineLength:KSecRulesTest.kt$KSecRulesTest$kotlin.test.assertTrue(data &gt; 20 &amp;&amp; events &gt; 5, "Konsist saw $data data classes and $events analytics events; the scope is wrong")</ID>
+    <ID>MaxLineLength:KSecRulesTest.kt$KSecRulesTest$val stale = config.ksecPending.filter { it.startsWith("$rule ") &amp;&amp; violations.none { v -&gt; v.key == it } }.map { "$it: fixed, remove it from ksec-pending.txt" }</ID>
+    <ID>MaxLineLength:ModuleOwnersTest.kt$ModuleOwnersTest$}</ID>
+    <ID>MaxLineLength:NativeShipGateTest.kt$NativeShipGateTest$*</ID>
+    <ID>MaxLineLength:NativeShipGateTest.kt$NativeShipGateTest$assertEquals(sha256(File(flutter, "$abi/$name")), sha256(File(linuxJni, "$abi/$name")), "$abi/$name differs from the Flutter app's")</ID>
+    <ID>MaxLineLength:NativeShipGateTest.kt$NativeShipGateTest$assertTrue("sherpa = OfflineSpeechEngine," in voice, "VoiceWiring must hand the real sherpa-onnx engine to :android:voice")</ID>
+    <ID>MaxLineLength:NativeShipGateTest.kt$NativeShipGateTest$assertTrue("useLegacyPackaging = true" in app, "proot runs from the native library folder: libraries must be extracted")</ID>
+    <ID>MaxLineLength:NativeShipGateTest.kt$NativeShipGateTest$assertTrue(align != null &amp;&amp; align &gt;= 0x4000 &amp;&amp; align % 0x4000 == 0L, "${lib.relativeTo(root)}: LOAD align $align")</ID>
+    <ID>MaxLineLength:NativeShipGateTest.kt$NativeShipGateTest$if (b.size &lt; 64 || b[0] != 0x7f.toByte() || b[1] != 'E'.code.toByte() || b[4] != 2.toByte() || b[5] != 1.toByte()) return null</ID>
+    <ID>MaxLineLength:NativeShipGateTest.kt$NativeShipGateTest$if (file.isFile) assertEquals(sums[aar], sha256(file), "run tools/vendor/fetch.sh again: the AAR does not match its pin")</ID>
+    <ID>MaxLineLength:Planted.kt$Live$val files: List&lt;SecFile&gt; by lazy { SecTree.load(root).also { assertTrue(it.size &gt; 50, "the scan saw ${it.size} files; the root is wrong") } }</ID>
+    <ID>MaxLineLength:Planted.kt$Planted$fun file(rel: String, text: String): Planted</ID>
+    <ID>MaxLineLength:Planted.kt$fun assertClean(violations: List&lt;Any&gt;, what: String)</ID>
+    <ID>MaxLineLength:RepositoryHygiene.kt$LeakGate$File(nativeRoot, "config/private-denylist.txt").takeIf { it.isFile }?.readLines()?.map { it.substringBefore('#').trim() }?.filter { it.isNotEmpty() }</ID>
+    <ID>MaxLineLength:RepositoryHygiene.kt$LeakGate$denylist.filter { it.isNotBlank() &amp;&amp; a.line.contains(it, ignoreCase = true) }.forEach { _ -&gt; add(Finding("LEAK-DENYLIST", "${a.file}: a deny-listed name in an added line")) }</ID>
+    <ID>MaxLineLength:RepositoryHygiene.kt$LeakGate$lines.filter { it.isNotBlank() }.flatMap { l -&gt; l.split('\t').filter { it != NOREPLY }.map { Finding("LEAK-IDENTITY", "a commit is authored or committed as a non-noreply address") } }</ID>
+    <ID>MaxLineLength:RepositoryHygiene.kt$LeakGate$personalMail.findAll(a.line).forEach { _ -&gt; add(Finding("LEAK-MAIL", "${a.file}: a personal mail address in an added line")) }</ID>
+    <ID>MaxLineLength:RepositoryHygiene.kt$LeakGate$private</ID>
+    <ID>MaxLineLength:RepositoryHygiene.kt$LeakGate$tailnet.findAll(a.line).filter { it.value != DOC_TAILNET }.forEach { _ -&gt; add(Finding("LEAK-TAILNET", "${a.file}: a 100.64/10 address in an added line")) }</ID>
+    <ID>MaxLineLength:RepositoryHygiene.kt$RepositoryHygiene$bannedTracked.flatMap { (what, regex) -&gt; paths.filter { regex.containsMatchIn(it) }.map { Finding("HYG-TRACKED", "$what: $it is tracked") } }</ID>
+    <ID>MaxLineLength:RepositoryHygiene.kt$RepositoryHygiene$if (NON_AFFILIATION !in text) add(Finding("HYG-AFFILIATION", "$path does not state the project is unaffiliated"))</ID>
+    <ID>MaxLineLength:RepositoryHygieneTest.kt$RepositoryHygieneTest$assertClean(RepositoryHygiene.checkIgnores(File(repo, ".gitignore").readText(), File(Live.root, ".gitignore").readText()), "ignore rules")</ID>
+    <ID>MaxLineLength:RepositoryHygieneTest.kt$RepositoryHygieneTest$assertEquals(listOf("HYG-AFFILIATION", "HYG-AFFILIATION"), RepositoryHygiene.checkGovernance(t.root).map { it.id })</ID>
+    <ID>MaxLineLength:RepositoryHygieneTest.kt$RepositoryHygieneTest$if (release) assertClean(identities, "leak gate identities") else if (identities.isNotEmpty()) println("leak gate: ${identities.size} non-noreply commit identities (fail on the release path)")</ID>
+    <ID>MaxLineLength:RepositoryHygieneTest.kt$RepositoryHygieneTest$t.file("README.md", "&gt; This project is " + RepositoryHygiene.NON_AFFILIATION.replace(" the official", "\n&gt; the **official") + "** sometimes.")</ID>
+    <ID>MaxLineLength:RepositoryHygieneTest.kt$RepositoryHygieneTest$val base = System.getProperty("oc.leakBase") ?: return println("leak gate: no -Poc.leakBase given, skipped (work-branch run)")</ID>
+    <ID>MaxLineLength:RepositoryHygieneTest.kt$RepositoryHygieneTest$val planted = listOf("native/androidApp/release.jks", "native/key.properties", "native/upload.keystore", "native/core/net/src/test/resources/c.p12", ".claude/skills/pack/SKILL.md", "native/README.md")</ID>
+    <ID>MaxLineLength:ScopeFileTest.kt$MiniJson$fun</ID>
+    <ID>MaxLineLength:ScopeFileTest.kt$MiniJson.Reader$fun word(w: String, v: Any?): Any?</ID>
+    <ID>MaxLineLength:ScopeFileTest.kt$ScopeFile$ids.getOrNull(i) != parts[0] -&gt; out += "behaviors.jsonl:${i + 1}: committed line changed (expected ${parts[0]}, found ${ids.getOrNull(i)})"</ID>
+    <ID>MaxLineLength:ScopeFileTest.kt$ScopeFile$ids.groupingBy { it }.eachCount().filterValues { it &gt; 1 }.keys.forEach { out += "behaviors.jsonl: id $it more than once" }</ID>
+    <ID>MaxLineLength:ScopeFileTest.kt$ScopeFile$if ((scopeValue != "switch" || amended != null) &amp;&amp; s.str("decision").isNullOrBlank()) out += "$id: needs a decision"</ID>
+    <ID>MaxLineLength:ScopeFileTest.kt$ScopeFile$if (amended != null &amp;&amp; s.str("amended_at")?.let(DATE::matches) != true) out += "$id: an amendment needs amended_at (YYYY-MM-DD)"</ID>
+    <ID>MaxLineLength:ScopeFileTest.kt$ScopeFile$if (catalogLines[i] != line) out += "behaviors.jsonl:${i + 1}: committed line changed (differs from the frozen plan copy)"</ID>
+    <ID>MaxLineLength:ScopeFileTest.kt$ScopeFile$if (i &gt;= catalogLines.size) { out += "behaviors.jsonl: committed line ${i + 1} removed (frozen plan copy)"; return@forEachIndexed }</ID>
+    <ID>MaxLineLength:ScopeFileTest.kt$ScopeFile$runCatching { MiniJson.obj(line) }.getOrElse { out += "behaviors.jsonl:${n + 1}: not JSON (${it.message})"; null }</ID>
+    <ID>MaxLineLength:ScopeFileTest.kt$ScopeFile$sha256(line) != parts[1] -&gt; out += "behaviors.jsonl:${i + 1}: committed line changed (${parts[0]} hash differs from behaviors.lock)"</ID>
+    <ID>MaxLineLength:ScopeFileTest.kt$ScopeFile$val s = runCatching { MiniJson.obj(line) }.getOrElse { out += "scope.jsonl:${n + 1}: not JSON (${it.message})"; return@forEachIndexed }</ID>
+    <ID>MaxLineLength:ScopeFileTest.kt$ScopeFile.Companion$MessageDigest.getInstance("SHA-256").digest(s.toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) }</ID>
+    <ID>MaxLineLength:ScopeFileTest.kt$ScopeFile.Companion$val SCOPE_KEYS = setOf("id", "scope", "slice", "module", "decision", "reason", "amended", "amended_at", "split_from")</ID>
+    <ID>MaxLineLength:ScopeFileTest.kt$ScopeFileTest$assertTrue(any { fragment in it }, "expected a problem naming '$fragment', got:\n" + take(10).joinToString("\n"))</ID>
+    <ID>MaxLineLength:ScopeFileTest.kt$ScopeFileTest$assertTrue(problems.isEmpty(), "scope.jsonl problems (${problems.size}):\n" + problems.take(40).joinToString("\n"))</ID>
+    <ID>MaxLineLength:ScopeFileTest.kt$ScopeFileTest$it.add("""{"id": "B-NAV-999", "area": "NAV", "behavior": "x", "given_when_then": "x", "native_level": "unit", "portable_e2e": false, "sources": ["test/x_test.dart:1"], "sources_commit": "fc5c1e78f"}""")</ID>
+    <ID>MaxLineLength:ScopeFileTest.kt$ScopeFileTest$planted({ val i = firstLine(it, "switch"); it[i] = it[i].replace(Regex("\"slice\":\\d"), "\"slice\":null") }, "scope")</ID>
+    <ID>MaxLineLength:SecDeclarationRules.kt$SecDeclarationRules$.</ID>
+    <ID>MaxLineLength:SecDeclarationRules.kt$SecDeclarationRules$classes().count { c -&gt; c.parents(indirectParents = true).any { it.name.substringBefore('&lt;') == "AnalyticsEvent" } }</ID>
+    <ID>MaxLineLength:SecDeclarationRules.kt$SecDeclarationRules$else</ID>
+    <ID>MaxLineLength:SecDeclarationRules.kt$SecDeclarationRules$private</ID>
+    <ID>MaxLineLength:SecDeclarationRules.kt$SecDeclarationRules$val dirs = list.map { File(root, it.rel.substringBefore("/src/") + "/src/" + it.sourceSet).absolutePath }.distinct()</ID>
+    <ID>MaxLineLength:SecDeclarationRules.kt$SecDeclarationRules$val enums = scope?.classes(includeNested = true, includeLocal = false).orEmpty().filter { it.hasEnumModifier }.map { it.name }.toSet()</ID>
+    <ID>MaxLineLength:SecDeclarationRules.kt$SecDeclarationRules$val fromProperties = properties(includeNested = false).map { Prop(it.name, it.type?.text, it.path, it.location) }</ID>
+    <ID>MaxLineLength:SecDeclarationRules.kt$SecDeclarationRules$}</ID>
+    <ID>MaxLineLength:SecDeclarationRules.kt$SecDeclarationRules.Prop$/** (name, declared type text or null, location, the class it belongs to) for every property and val/var parameter. */</ID>
+    <ID>MaxLineLength:SecGates.kt$ExportedSurface$"SURFACE-MAIN-TASKAFFINITY"</ID>
+    <ID>MaxLineLength:SecGates.kt$ExportedSurface$(actual - snapshot.toSet()).forEach { add(Finding("SURFACE-SNAPSHOT", "not in exported-surface.txt (a change needs a CR16 row): $it")) }</ID>
+    <ID>MaxLineLength:SecGates.kt$ExportedSurface$(snapshot - actual.toSet()).forEach { add(Finding("SURFACE-SNAPSHOT", "in exported-surface.txt but not in the manifest: $it")) }</ID>
+    <ID>MaxLineLength:SecGates.kt$ExportedSurface$c.tag() == "provider" -&gt; out += Finding("SURFACE-PROVIDER", "$name: a provider is never exported")</ID>
+    <ID>MaxLineLength:SecGates.kt$ExportedSurface$else -&gt; out += Finding("SURFACE-EXPORTED", "$name is exported but is not in plan 16 §1.8.1's exported list")</ID>
+    <ID>MaxLineLength:SecGates.kt$ExportedSurface$if (!ok) out += Finding("SURFACE-FILEPROVIDER", "FileProvider must be \${applicationId}.localfiles, not exported, grantUriPermissions, paths @xml/local_file_paths")</ID>
+    <ID>MaxLineLength:SecGates.kt$ExportedSurface$if ("android:debuggable" in appAttrs) out += Finding("SURFACE-DEBUGGABLE", "android:debuggable must never be set in a manifest")</ID>
+    <ID>MaxLineLength:SecGates.kt$ExportedSurface$if (a["android:launchMode"] != "singleTop") out += Finding("SURFACE-MAIN-LAUNCHMODE", ".MainActivity must be launchMode=\"singleTop\"")</ID>
+    <ID>MaxLineLength:SecGates.kt$ExportedSurface$if (a["android:taskAffinity"] != "") out += Finding("SURFACE-MAIN-TASKAFFINITY", ".MainActivity must set taskAffinity=\"\" (16 §1.8.1)")</ID>
+    <ID>MaxLineLength:SecGates.kt$ExportedSurface$if (appAttrs["android:allowBackup"] != "false") out += Finding("SURFACE-BACKUP", "&lt;application&gt; must set allowBackup=\"false\"")</ID>
+    <ID>MaxLineLength:SecGates.kt$ExportedSurface$if (hasFilter &amp;&amp; exported == null) out += Finding("SURFACE-EXPLICIT", "$name has an intent-filter but no explicit android:exported")</ID>
+    <ID>MaxLineLength:SecGates.kt$ExportedSurface$meta?.get("android:name") == "android.support.FILE_PROVIDER_PATHS"</ID>
+    <ID>MaxLineLength:SecGates.kt$ExportedSurface$root.children().filter { it.tag() == "uses-permission" &amp;&amp; it.attrs()["android:name"] == "android.permission.QUERY_ALL_PACKAGES" }</ID>
+    <ID>MaxLineLength:SecGates.kt$ExportedSurface$setOf("android.permission.BIND_QUICK_SETTINGS_TILE", "android.permission.BIND_JOB_SERVICE", "android.permission.DUMP")</ID>
+    <ID>MaxLineLength:SecGates.kt$ExportedSurface$val</ID>
+    <ID>MaxLineLength:SecGates.kt$ExportedSurface$val actions = c.children().filter { it.tag() == "intent-filter" }.flatMap { f -&gt; f.children().filter { it.tag() == "action" }.map { it.attrs()["android:name"] } }</ID>
+    <ID>MaxLineLength:SecGates.kt$ExportedSurface$val app = root.children().firstOrNull { it.tag() == "application" } ?: return listOf(Finding("SURFACE-BACKUP", "no &lt;application&gt;"))</ID>
+    <ID>MaxLineLength:SecGates.kt$ExportedSurface$val parts = f.children().map { e -&gt; "${e.tag()}=" + e.attrs().entries.sortedBy { it.key }.joinToString(",") { "${it.key.removePrefix("android:")}:${it.value}" } }.sorted()</ID>
+    <ID>MaxLineLength:SecGates.kt$ExportedSurface$val widget = c.tag() == "receiver" &amp;&amp; actions.isNotEmpty() &amp;&amp; actions.all { it == "android.appwidget.action.APPWIDGET_UPDATE" }</ID>
+    <ID>MaxLineLength:SecGates.kt$FileProviderPaths$expected.filter { it !in found }.forEach { add(Finding("FP-SHAPE", "missing root &lt;${it.first} ${it.second}&gt;")) }</ID>
+    <ID>MaxLineLength:SecGates.kt$FileProviderPaths$found.filter { it !in expected }.forEach { add(Finding("FP-SHAPE", "root not allowed: &lt;${it.first} ${it.second}&gt;")) }</ID>
+    <ID>MaxLineLength:SecGates.kt$FileProviderPaths$return if (!file.isFile) listOf(Finding("FP-ABSENT", "$PATH does not exist yet (16 §1.8.3)")) else check(file.readText())</ID>
+    <ID>MaxLineLength:SecGates.kt$LintTable$"GrantAllUris"</ID>
+    <ID>MaxLineLength:SecGates.kt$LintTable$"SetJavaScriptEnabled"</ID>
+    <ID>MaxLineLength:SecGates.kt$LintTable$"TrustAllX509TrustManager"</ID>
+    <ID>MaxLineLength:SecGates.kt$LintTable$"UnsafeIntentLaunch"</ID>
+    <ID>MaxLineLength:SecGates.kt$LintTable$(ids - ERRORS).forEach { add(Finding("LINT-CONVENTION", "LintPolicy.SECURITY_ERRORS has $it, which plan 16 §2.2 does not list")) }</ID>
+    <ID>MaxLineLength:SecGates.kt$LintTable$.</ID>
+    <ID>MaxLineLength:SecGates.kt$LintTable$/** The Android lint severity table of plan 16 §2.2: these ids are errors in `androidApp/lint.xml` and the conventions. */</ID>
+    <ID>MaxLineLength:SecGates.kt$LintTable$ERRORS.filter { severity[it] != "error" }.forEach { add(Finding("LINT-XML", "$it must be severity=\"error\" (found ${severity[it]})")) }</ID>
+    <ID>MaxLineLength:SecGates.kt$LintTable$add(Finding("LINT-XML", "$NSC_SUPPRESSED must be ignored only for src/main/res/xml/network_security_config.xml"))</ID>
+    <ID>MaxLineLength:SecGates.kt$LintTable$if</ID>
+    <ID>MaxLineLength:SecGates.kt$LintTable$if (!Regex("""abortOnError\s*=\s*true""").containsMatchIn(kotlin)) add(Finding("LINT-CONVENTION", "abortOnError must be true"))</ID>
+    <ID>MaxLineLength:SecGates.kt$LintTable$if (!xml.contains("TrustGateInterceptor is the cleartext boundary")) add(Finding("LINT-XML", "the $NSC_SUPPRESSED suppression lost its reason"))</ID>
+    <ID>MaxLineLength:SecGates.kt$LintTable$if (Regex("""\bbaseline\s*=""").containsMatchIn(KotlinText.stripComments(kotlin))) add(Finding("LINT-CONVENTION", "no lint baseline (03 §19.5)"))</ID>
+    <ID>MaxLineLength:SecGates.kt$LintTable$issues.filter { it.attrs()["id"] == "all" }.forEach { _ -&gt; add(Finding("LINT-XML", "an id=\"all\" override would hide the table")) }</ID>
+    <ID>MaxLineLength:SecGates.kt$LintTable$val ignores = nsc.flatMap { it.children() }.filter { it.tag() == "ignore" }.map { it.attrs()["path"] ?: it.attrs()["regexp"] ?: "" }</ID>
+    <ID>MaxLineLength:SecGates.kt$LintTable$val root = runCatching { Xml.parse(xml) }.getOrElse { return listOf(Finding("LINT-XML", "lint.xml does not parse")) }</ID>
+    <ID>MaxLineLength:SecGates.kt$NetworkSecurityConfig$bad += Finding("NSC-SHAPE", "&lt;base-config&gt; must carry exactly cleartextTrafficPermitted=\"true\", found ${base.attrs()}")</ID>
+    <ID>MaxLineLength:SecGates.kt$NetworkSecurityConfig$if (!ok) bad += Finding("NSC-SHAPE", "&lt;base-config&gt; may hold only &lt;certificateTransparency enabled=\"true\"/&gt; (no trust-anchors, certificates, pins), found ${inner.map { it.tag() + it.attrs() }}")</ID>
+    <ID>MaxLineLength:SecGates.kt$NetworkSecurityConfig$if (root.tag() != "network-security-config" || root.attrs().isNotEmpty()) bad += Finding("NSC-SHAPE", "root must be a bare &lt;network-security-config&gt;")</ID>
+    <ID>MaxLineLength:SecGates.kt$NetworkSecurityConfig$return check(file.readText()) + if (pointed) emptyList() else listOf(Finding("NSC-MANIFEST", "the manifest does not set android:networkSecurityConfig=\"@xml/network_security_config\""))</ID>
+    <ID>MaxLineLength:SecGates.kt$NetworkSecurityConfig$val ok = inner.isEmpty() || (inner.size == 1 &amp;&amp; inner[0].tag() == "certificateTransparency" &amp;&amp; inner[0].attrs() == mapOf("enabled" to "true"))</ID>
+    <ID>MaxLineLength:SecGates.kt$NetworkSecurityConfig$val pointed = Regex("""android:networkSecurityConfig\s*=\s*"@xml/network_security_config"""").containsMatchIn(manifest)</ID>
+    <ID>MaxLineLength:SecGates.kt$Pending$val stale = pending.filter { it in ids &amp;&amp; findings.none { f -&gt; f.id == it } }.map { "$it is listed in sec-pending.txt but holds now: remove it" }</ID>
+    <ID>MaxLineLength:SecGates.kt$QaHooks$.</ID>
+    <ID>MaxLineLength:SecGates.kt$QaHooks$Regex("""qa-hooks\.json|\b10\.0\.2\.2\b""").findAll(f.code).forEach { add(Finding("QA-MARKER", "${f.rel}:${f.lineOf(it.range.first)} carries ${it.value}")) }</ID>
+    <ID>MaxLineLength:SecGates.kt$QaHooks$else</ID>
+    <ID>MaxLineLength:SecGates.kt$QaHooks$if (f.isXml &amp;&amp; Regex("""android:debuggable\s*=\s*"true"""").containsMatchIn(f.code)) add(Finding("QA-DEBUGGABLE", "${f.rel} sets android:debuggable"))</ID>
+    <ID>MaxLineLength:SecGates.kt$QaHooks$nameRegex.findAll(f.code).forEach { add(Finding("QA-CLASS", "${f.rel}:${f.lineOf(it.range.first)} names qa-only ${it.value}")) }</ID>
+    <ID>MaxLineLength:SecGates.kt$QaHooks$val owner = sameLine ?: enclosingNames(before).firstOrNull { it !in setOf("", "kotlin", "java", "res", "resources", "assets", "manifest", "srcDir", "srcDirs", "apply", "also", "let", "run", "with", "dependencies", "sourceSets", "android", "kotlinOptions") }</ID>
+    <ID>MaxLineLength:SecGates.kt$QaHooks$val sameLine = Regex("""(?:getByName|named|maybeCreate|create)\s*\(\s*"(\w+)"\s*\)""").findAll(before.substringAfterLast('\n')).lastOrNull()?.groupValues?.get(1)</ID>
+    <ID>MaxLineLength:SecGates.kt$QaHooks$val token = Regex("""(?:getByName|named|maybeCreate|create)\s*\(\s*"(\w+)"\s*\)\s*(?:\.\s*\w+\s*)?\{|(\w+)\s*\{|\{|\}""")</ID>
+    <ID>MaxLineLength:SecGates.kt$TlsFloor$Regex(""""com\.squareup\.okhttp3:[\w-]+:([^"$]+)"""").findAll(code).filter { compare(it.groupValues[1]) &lt; 0 }</ID>
+    <ID>MaxLineLength:SecGates.kt$TlsFloor$Regex("""(?m)^\s*${Regex.escape(key)}\s*=\s*"([^"]+)"""").find(versions)?.groupValues?.get(1)?.let { key to it }</ID>
+    <ID>MaxLineLength:SecGates.kt$TlsFloor$Regex("""okhttp3[^\n]*\b(strictly|prefer|require)\s*\(\s*"([^"]+)"""").findAll(code).filter { compare(it.groupValues[2].trimStart('[', '(')) &lt; 0 }</ID>
+    <ID>MaxLineLength:SecGates.kt$TlsFloor$if (keyVersions.none { it.first == "okhttp" }) add(Finding("TLS-CATALOG", "the catalog has no okhttp version"))</ID>
+    <ID>MaxLineLength:SecGates.kt$TlsFloor$inline.filter { compare(it) &lt; 0 }.forEach { add(Finding("TLS-CATALOG", "an okhttp3 library pins $it, below 5.5.1")) }</ID>
+    <ID>MaxLineLength:SecGates.kt$TlsFloor$keyVersions.filter { compare(it.second) &lt; 0 }.forEach { add(Finding("TLS-CATALOG", "${it.first} = ${it.second} is below OkHttp 5.5.1")) }</ID>
+    <ID>MaxLineLength:SecGates.kt$TlsFloor$val inline = Regex("""module\s*=\s*"com\.squareup\.okhttp3:[^"]+"\s*,\s*version\s*=\s*"([^"]+)"""").findAll(toml).map { it.groupValues[1] }</ID>
+    <ID>MaxLineLength:SecGates.kt$TlsFloor$val refs = Regex("""module\s*=\s*"com\.squareup\.okhttp3:[^"]+"\s*,\s*version\.ref\s*=\s*"([^"]+)"""").findAll(toml).map { it.groupValues[1] }.toSet()</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$"""&lt;!DOCTYPE x [&lt;!ENTITY e SYSTEM "file:///etc/passwd"&gt;]&gt;&lt;network-security-config&gt;&amp;e;&lt;/network-security-config&gt;"""</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$"SURFACE-EXPLICIT" to manifest(mainOk.replace("&lt;receiver android:name=\".AttentionWidget\" android:exported=\"true\"&gt;", "&lt;receiver android:name=\".AttentionWidget\"&gt;"))</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$"SURFACE-EXPORTED" to manifest(mainOk.replace(".ScheduledPromptReceiver\" android:exported=\"false\"", ".ScheduledPromptReceiver\" android:exported=\"true\""))</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$"SURFACE-FILEPROVIDER" to manifest(mainOk.replace("android:grantUriPermissions=\"true\"", "android:grantUriPermissions=\"false\""))</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$"SURFACE-PROVIDER" to manifest(mainOk.replace("android:authorities=\"\${applicationId}.localfiles\" android:exported=\"false\"", "android:authorities=\"\${applicationId}.localfiles\" android:exported=\"true\""))</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$"SURFACE-QUERY-ALL" to manifest(mainOk).replace("&lt;application", "&lt;uses-permission android:name=\"android.permission.QUERY_ALL_PACKAGES\" /&gt;&lt;application")</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$.</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$SecFile("androidApp/build.gradle.kts", "configurations.all { resolutionStrategy { dependencySubstitution { } } }\ndependencies { implementation(\"com.squareup.okhttp3:okhttp\") { version { strictly(\"5.4.0\") } } }")</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$SecFile("core/net-okhttp/build.gradle.kts", "dependencies { implementation(\"com.squareup.okhttp3:okhttp:4.12.0\") }")</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$SecFile("core/net/build.gradle.kts", "dependencies { implementation(\"com.squareup.okhttp3:okhttp:5.5.1\") }")</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$append(" &lt;issue id=\"InsecureBaseConfiguration\"&gt;\n &lt;ignore path=\"src/main/res/xml/network_security_config.xml\" /&gt;\n &lt;/issue&gt;\n&lt;/lint&gt;\n")</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$assertClean(NetworkSecurityConfig.check("""&lt;network-security-config&gt;&lt;base-config cleartextTrafficPermitted="true"/&gt;&lt;/network-security-config&gt;"""), "pre-P16-2 file")</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$assertClean(QaHooks.checkSources(Planted().file("core/model/src/commonMain/kotlin/p/A.kt", "val a = 1").files(), "versionName=3.0.0\n"), "clean tree")</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$assertEquals(listOf("QA-CLASS", "QA-CLASS", "QA-MARKER", "QA-MARKER", "QA-VERSION"), ids(findings).sorted(), findings.toString())</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$assertEquals(listOf("QA-WIRED", "QA-WIRED"), ids(QaHooks.checkBuildScripts(listOf(wired))), "main and release wired, stableQa fine")</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$assertEquals(listOf("TLS-CATALOG"), ids(TlsFloor.checkCatalog("[versions]\nkotlin = \"2.4.21\"\n[libraries]\n")))</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$assertTrue("SURFACE-SNAPSHOT" in ids(ExportedSurface.checkTree(w.root, snapshot)), "a new intent filter slipped past the snapshot")</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$assertTrue(LintTable.checkConvention(ok.replace("\"GetInstance\", ", "").replace(", \"GetInstance\"", "")).isNotEmpty(), "dropped id passed")</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$assertTrue(LintTable.checkConvention(ok.replace("abortOnError = true", "abortOnError = false")).isNotEmpty(), "abortOnError false passed")</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$assertTrue(LintTable.checkConvention(ok.replace("abortOnError = true", "abortOnError = true; baseline = file(\"b.xml\")")).isNotEmpty(), "baseline passed")</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$cases.forEach { (id, xml) -&gt; assertTrue(id in ids(ExportedSurface.invariants(xml)), "planted $id passed: ${ExportedSurface.invariants(xml)}") }</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$fun</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$ids(TlsFloor.checkBundledTrust(listOf("androidApp/src/main/res/raw/corp_ca.pem", "core/net-okhttp/src/main/resources/trust.bks", "spikes/netp/src/test/resources/server.p12", "androidApp/src/main/res/xml/x.xml")))</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$ids(TlsFloor.checkCatalog("[versions]\nokhttp = \"5.5.1\"\nok4 = \"4.12.0\"\n[libraries]\nold = { module = \"com.squareup.okhttp3:okhttp\", version.ref = \"ok4\" }\n"))</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$lintOk.replace("&lt;ignore path=\"src/main/res/xml/network_security_config.xml\" /&gt;", "&lt;ignore path=\"src/main/res/xml/\" /&gt;")</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$lintOk.replace("&lt;issue id=\"AllowBackup\" severity=\"error\" /&gt;", "&lt;issue id=\"AllowBackup\" severity=\"error\"&gt;&lt;ignore path=\"src/main/AndroidManifest.xml\" /&gt;&lt;/issue&gt;")</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$lintOk.replace("&lt;issue id=\"InsecureBaseConfiguration\"&gt;", "&lt;issue id=\"InsecureBaseConfiguration\" severity=\"ignore\"&gt;")</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$lintOk.replace("&lt;issue id=\"TrustAllX509TrustManager\" severity=\"error\" /&gt;", "&lt;issue id=\"TrustAllX509TrustManager\" severity=\"warning\" /&gt;")</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$nscPlan.replace("&lt;/network-security-config&gt;", "&lt;debug-overrides&gt;&lt;trust-anchors&gt;&lt;certificates src=\"user\"/&gt;&lt;/trust-anchors&gt;&lt;/debug-overrides&gt;&lt;/network-security-config&gt;")</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$nscPlan.replace("&lt;/network-security-config&gt;", "&lt;domain-config&gt;&lt;domain&gt;example.com&lt;/domain&gt;&lt;pin-set/&gt;&lt;/domain-config&gt;&lt;/network-security-config&gt;")</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$nscPlan.replace("&lt;certificateTransparency enabled=\"true\" /&gt;", "&lt;certificateTransparency enabled=\"false\" /&gt;")</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$nscPlan.replace("&lt;certificateTransparency enabled=\"true\" /&gt;", "&lt;trust-anchors&gt;&lt;certificates src=\"@raw/ca\"/&gt;&lt;/trust-anchors&gt;")</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$nscPlan.replace("&lt;certificateTransparency enabled=\"true\" /&gt;", "&lt;trust-anchors&gt;&lt;certificates src=\"user\"/&gt;&lt;/trust-anchors&gt;")</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$nscPlan.replace("cleartextTrafficPermitted=\"true\"", "cleartextTrafficPermitted=\"true\" overridePins=\"true\"")</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$pathsPlan.replace("&lt;cache-path name=\"share\" path=\"share/\" /&gt;", "&lt;cache-path name=\"share\" path=\"/\" /&gt;")</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$planted.forEachIndexed { i, xml -&gt; assertTrue(LintTable.checkLintXml(xml).isNotEmpty(), "planted lint.xml #$i passed") }</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$planted.forEachIndexed { i, xml -&gt; assertTrue(ids(FileProviderPaths.check(xml)).contains("FP-SHAPE"), "planted paths #$i passed") }</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$planted.forEachIndexed { i, xml -&gt; assertTrue(ids(NetworkSecurityConfig.check(xml)).contains("NSC-SHAPE"), "planted NSC #$i passed") }</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$val ok = "object LintPolicy { val SECURITY_ERRORS = setOf(${LintTable.ERRORS.joinToString { "\"$it\"" }})\n fun Lint.oc() { abortOnError = true } }"</ID>
+    <ID>MaxLineLength:SecGatesPlantedTest.kt$SecGatesPlantedTest$val widened = manifest(mainOk.replace("&lt;/intent-filter&gt;\n &lt;/activity&gt;", "&lt;/intent-filter&gt;&lt;intent-filter&gt;&lt;action android:name=\"android.intent.action.VIEW\" /&gt;&lt;data android:scheme=\"https\" /&gt;&lt;/intent-filter&gt;\n &lt;/activity&gt;"))</ID>
+    <ID>MaxLineLength:SecGatesTest.kt$SecGatesTest$TlsFloor.checkCatalog(catalog) + TlsFloor.checkBuildScripts(SecTree.buildScripts(root)) + TlsFloor.checkBundledTrust(paths)</ID>
+    <ID>MaxLineLength:SecGatesTest.kt$SecGatesTest$assertClean(LintTable.checkConvention(File(root, "build-logic/convention/src/main/kotlin/oc/buildlogic/LintPolicy.kt").readText()), "LintPolicy.kt")</ID>
+    <ID>MaxLineLength:SecGatesTest.kt$SecGatesTest$assertClean(Pending.apply(ExportedSurface.checkTree(root, Live.config.exportedSurface), pending, ExportedSurface.IDS), "ExportedSurfaceTest")</ID>
+    <ID>MaxLineLength:SecGatesTest.kt$SecGatesTest$assertClean(Pending.apply(FileProviderPaths.checkTree(root), pending, FileProviderPaths.IDS), "FileProviderPathsTest")</ID>
+    <ID>MaxLineLength:SecGatesTest.kt$SecGatesTest$assertClean(Pending.apply(NetworkSecurityConfig.checkTree(root), pending, NetworkSecurityConfig.IDS), "NetworkSecurityConfigTest")</ID>
+    <ID>MaxLineLength:SecTextRules.kt$SecTextRules$"""\bCertificatePinner\b|\bHttpLoggingInterceptor\b|\binstall\s*\(\s*(Logging|HttpRequestRetry|HttpRedirect)\b"""</ID>
+    <ID>MaxLineLength:SecTextRules.kt$SecTextRules$"""|\bsetAllowUniversalAccessFromFileURLs\b|\ballowUniversalAccessFromFileURLs\b|\bMIXED_CONTENT_ALWAYS_ALLOW\b"""</ID>
+    <ID>MaxLineLength:SecTextRules.kt$SecTextRules$.</ID>
+    <ID>MaxLineLength:SecTextRules.kt$SecTextRules$Regex("""\b(rememberSaveable|rememberTextFieldState|workDataOf|putExtra|putString|putCharSequence|putParcelable|putSerializable|putByteArray|putCharArray|putStringArray|putAll)\s*(&lt;[^&gt;(]*&gt;)?\s*[({]""")</ID>
+    <ID>MaxLineLength:SecTextRules.kt$SecTextRules$Regex("""\bX509(Extended)?TrustManager\b|\bHostnameVerifier\b|\.sslSocketFactory\s*[({]|\.hostnameVerifier\s*[({]""")</ID>
+    <ID>MaxLineLength:SecTextRules.kt$SecTextRules$else</ID>
+    <ID>MaxLineLength:SecTextRules.kt$SecTextRules$everywhere(files).filter { it.isKotlin &amp;&amp; !(it.module == "ui/kit" &amp;&amp; (it.name.startsWith("KitCopy") || it.name.startsWith("KitPlatform"))) }</ID>
+    <ID>MaxLineLength:SecTextRules.kt$SecTextRules$f.module in setOf("core/security", "engine/profiles", "android/linux", "android/platform", "engine/analytics")</ID>
+    <ID>MaxLineLength:SecTextRules.kt$SecTextRules$fun kSec3(files: List&lt;SecFile&gt;): List&lt;Violation&gt;</ID>
+    <ID>MaxLineLength:SecTextRules.kt$SecTextRules$fun mentionsSecret(s: String)</ID>
+    <ID>MaxLineLength:SecTextRules.kt$SecTextRules$hits("K-SEC-12", f, randomQualified).filterNot { v -&gt; randomImport.containsMatchIn(f.code.lines()[v.line - 1]) }</ID>
+    <ID>MaxLineLength:SecTextRules.kt$SecTextRules$if ("FLAG_IMMUTABLE" in args) null else Violation("K-SEC-7", f.rel, f.lineOf(m.range.first), "PendingIntent.${m.groupValues[1]} without FLAG_IMMUTABLE")</ID>
+    <ID>MaxLineLength:SecTextRules.kt$SecTextRules$if (bad) Violation("K-SEC-8", f.rel, f.lineOf(m.range.first), "startActivity with an intent taken from extras") else null</ID>
+    <ID>MaxLineLength:SecTextRules.kt$SecTextRules$if (f.isKotlin &amp;&amp; !(f.module == "ui/shell" &amp;&amp; f.name == "App.kt")) hits("K-SEC-1", f, uriHandlerProvides) else emptyList()</ID>
+    <ID>MaxLineLength:SecTextRules.kt$SecTextRules$if (mentionsSecret(body) || generic.contains("Secret")) Violation("K-SEC-5", f.rel, f.lineOf(m.range.first), "Secret into ${m.groupValues[1]}") else null</ID>
+    <ID>MaxLineLength:SecTextRules.kt$SecTextRules$if (mentionsSecret(rest)) Violation("K-SEC-5", f.rel, f.lineOf(m.range.first), "Secret into SavedStateHandle") else null</ID>
+    <ID>MaxLineLength:SecTextRules.kt$SecTextRules$private</ID>
+    <ID>MaxLineLength:SecTextRules.kt$SecTextRules$private val fromExtras = Regex("""\b(?:val|var)\s+(\w+)\b[^\n=]*=\s*[^\n]*\bgetParcelable(Extra)?\s*(&lt;[^&gt;]*&gt;)?\s*\(""")</ID>
+    <ID>MaxLineLength:SecTextRules.kt$SecTextRules$private val savedStateSet = Regex("""\b(savedStateHandle|SavedStateHandle\b[^\n]*)\s*\[[^\]]*]\s*=\s*([^\n]+)|\bsavedStateHandle\.set\s*\(""")</ID>
+    <ID>MaxLineLength:SecTextRules.kt$SecTextRules$production(files).filter { it.isKotlin &amp;&amp; it.name !in config.secretRevealFiles }.flatMap { hits("K-SEC-4", it, reveal) { "Secret.reveal() outside secret-reveal-allowlist.txt" } }</ID>
+    <ID>MaxLineLength:SecTextRules.kt$SecTextRules$return</ID>
+    <ID>MaxLineLength:SecTextRules.kt$SecTextRules$val body = if (f.code[open] == '(') KotlinText.balancedArgs(f.code, open) else braceBody(f.code, open)</ID>
+    <ID>MaxLineLength:SecTextRules.kt$SecTextRules$val init = if (contextInit.containsMatchIn(f.code)) hits("K-SEC-2", f, initCall) { "SSLContext/TrustManagerFactory ${it.value}" } else emptyList()</ID>
+    <ID>MaxLineLength:SecTree.kt$SecConfig$/** K-SEC hits in code this unit does not own, each reported to its owner: `&lt;rule&gt; &lt;file&gt; &lt;subject&gt;`; shrink-only. */</ID>
+    <ID>MaxLineLength:SecTree.kt$SecFile$get() = PRODUCT_LAYERS.any { rel.startsWith("$it/") } || rel.startsWith("androidApp/") || rel.startsWith("desktopApp/")</ID>
+    <ID>MaxLineLength:SecTree.kt$SecTree$.</ID>
+    <ID>MaxLineLength:Stream6000.kt$Stream6000$fun sentence(n: Int)</ID>
+    <ID>MaxLineLength:Stream6000.kt$Stream6000$out += At(t, GatewayEvent.PartUpserted(Part("$turn-t", turn, SESSION, PartType.Text, text = "Write the long reply.", ended = true)))</ID>
+    <ID>MaxLineLength:Stream6000.kt$Stream6000$out += At(t, GatewayEvent.PartUpserted(Part("text-0", step, SESSION, PartType.Text, text = reply, ended = true)))</ID>
+    <ID>MaxLineLength:Stream6000.kt$Stream6000$sb.append("- ").append(sentence(6)).append("\n- ").append(sentence(7)).append("\n- ").append(sentence(5)).append("\n\n")</ID>
+    <ID>MaxLineLength:Stream6000.kt$Stream6000$val words = "the agent reads a file then edits one line and runs the tests while the list follows the newest words".split(' ')</ID>
+    <ID>MaxLineLength:TextGlyphGateTest.kt$TextGlyphGateTest$"ui/kit-content/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/content/terminal/KitTerminalKeyBar.kt"</ID>
+    <ID>MaxLineLength:TextGlyphGateTest.kt$TextGlyphGateTest$assertTrue(hits.isEmpty(), "text characters drawn as icons; use KitIcon(KitIcons.…) or nothing:\n" + hits.joinToString("\n"))</ID>
+    <ID>MaxLineLength:TextGlyphGateTest.kt$TextGlyphs$else</ID>
+    <ID>MaxLineLength:TextGlyphGateTest.kt$TextGlyphs$private val INITIALS = Regex("""\b(?:KitText|Text|BasicText)\(\s*[\w.]+\.(?:take\([12]\)|first\(\)|firstOrNull\(\))""")</ID>
+    <ID>MaxLineLength:TranscriptStreamUiTest.kt$TranscriptStreamUiTest$Stream6000.events(turn = "u2", reply = "A short second reply.\n\nWith two blocks.", seed = 7, startMs = scheduler.currentTime)</ID>
+    <ID>MaxLineLength:TranscriptStreamUiTest.kt$TranscriptStreamUiTest$clock = object : Clock { override fun now(): Instant = Instant.fromEpochMilliseconds(scheduler.currentTime) }</ID>
+    <ID>MaxLineLength:TranscriptStreamUiTest.kt$TranscriptStreamUiTest.Stats$private data</ID>
+    <ID>MaxLineLength:build.gradle.kts$":ui:kit-chat"</ID>
+    <ID>MaxLineLength:build.gradle.kts$include</ID>
+    <ID>MaxLineLength:build.gradle.kts$inputs.files(fileTree(rootDir) { include("**/src/**/*.kt", "**/build.gradle.kts", "MODULE_OWNERS"); exclude("**/build/**", "build-logic/**") })</ID>
+    <ID>NestedBlockDepth:SecGates.kt$ExportedSurface$fun invariants(manifest: String): List&lt;Finding&gt;</ID>
+    <ID>NestedBlockDepth:SecTree.kt$KotlinText$fun balancedArgs(code: String, openParen: Int): String</ID>
+    <ID>NestedBlockDepth:SecTree.kt$KotlinText$fun stripComments(src: String): String</ID>
+    <ID>ReturnCount:ScopeFileTest.kt$MiniJson.Reader$fun value(): Any?</ID>
+    <ID>WildcardImport:ChatReviewUiTest.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:ChatReviewUiTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:ChatReviewUiTest.kt$import androidx.navigationevent.*</ID>
+    <ID>WildcardImport:ChatReviewUiTest.kt$import io.github.eslamasabry.oc.core.common.ids.*</ID>
+    <ID>WildcardImport:ChatReviewUiTest.kt$import io.github.eslamasabry.oc.feature.chat.composer.*</ID>
+    <ID>WildcardImport:ChatReviewUiTest.kt$import io.github.eslamasabry.oc.feature.chat.presentation.*</ID>
+    <ID>WildcardImport:ChatReviewUiTest.kt$import io.github.eslamasabry.oc.feature.chat.requests.presentation.*</ID>
+    <ID>WildcardImport:ChatReviewUiTest.kt$import kotlin.test.*</ID>
+    <ID>WildcardImport:ChatWorldReviewTest.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:ChatWorldReviewTest.kt$import io.github.eslamasabry.oc.core.common.ids.*</ID>
+    <ID>WildcardImport:ChatWorldReviewTest.kt$import io.github.eslamasabry.oc.core.domain.*</ID>
+    <ID>WildcardImport:ChatWorldReviewTest.kt$import io.github.eslamasabry.oc.core.model.*</ID>
+    <ID>WildcardImport:ChatWorldReviewTest.kt$import io.github.eslamasabry.oc.core.model.transcript.*</ID>
+    <ID>WildcardImport:ChatWorldReviewTest.kt$import io.github.eslamasabry.oc.core.testing.*</ID>
+    <ID>WildcardImport:ChatWorldReviewTest.kt$import io.github.eslamasabry.oc.engine.connection.*</ID>
+    <ID>WildcardImport:ChatWorldReviewTest.kt$import io.github.eslamasabry.oc.engine.transcript.*</ID>
+    <ID>WildcardImport:ChatWorldReviewTest.kt$import kotlin.test.*</ID>
+    <ID>WildcardImport:ChatWorldReviewTest.kt$import kotlinx.collections.immutable.*</ID>
+    <ID>WildcardImport:ChatWorldReviewTest.kt$import kotlinx.coroutines.*</ID>
+    <ID>WildcardImport:ChatWorldReviewTest.kt$import kotlinx.coroutines.test.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -1,0 +1,243 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:LinuxLocalStoragePanel.kt$LinuxLocalStorage.normalize(it) == null || it.endsWith('/') || it.contains('\n') || it.contains('\r')</ID>
+    <ID>ComplexCondition:LinuxManager.kt$LinuxManager$parts?.size != 3 || receipt == null || !LinuxStorage.receiptName.matches(receipt) || kb == null || kb &lt; 0 || kb &gt; Long.MAX_VALUE / 1024L</ID>
+    <ID>ComplexCondition:LinuxServicesViewModel.kt$LinuxServicesViewModel$fresh == null || fresh.jobId != displayed.jobId || fresh.status != displayed.status || fresh.exitCode != displayed.exitCode</ID>
+    <ID>ComplexCondition:LinuxToolsViewModel.kt$LinuxToolsModel$current.measuring || current.confirming || current.tools.loading || current.tools.removing</ID>
+    <ID>CyclomaticComplexMethod:KeptServicesScreen.kt$@Composable private fun serviceStatus(service: KeptService, nowMs: Long): String</ID>
+    <ID>CyclomaticComplexMethod:KeptServicesScreen.kt$@Composable public fun KeptServicesScreen(state: KeptServicesUi, actions: KeptServicesActions)</ID>
+    <ID>CyclomaticComplexMethod:LinuxBackupsScreen.kt$@Composable public fun LinuxBackupsScreen(state: LinuxBackupsUi, actions: LinuxBackupsActions)</ID>
+    <ID>CyclomaticComplexMethod:LinuxHomeScreen.kt$@Composable public fun LinuxHomeScreen( state: LinuxHomeUi, actions: LinuxHomeActions, tools: io.github.eslamasabry.oc.feature.linux.presentation.LinuxToolsPanelUi? = null, toolsActions: io.github.eslamasabry.oc.feature.linux.presentation.LinuxToolsActions? = null, )</ID>
+    <ID>CyclomaticComplexMethod:LinuxJob.kt$LinuxJobState.Companion$public fun fromLog(log: String, running: Boolean): LinuxJobState</ID>
+    <ID>CyclomaticComplexMethod:LinuxLifetimesPanel.kt$@Composable public fun LinuxLifetimesPanel(state: LinuxLifetimesUi, onRefresh: () -&gt; Unit)</ID>
+    <ID>CyclomaticComplexMethod:LinuxLocalStoragePanel.kt$@Composable internal fun LinuxLocalStoragePanel(state: LinuxHomeUi, actions: LinuxHomeActions)</ID>
+    <ID>CyclomaticComplexMethod:LinuxMigrationScreen.kt$@Composable private fun migrationText(text: LinuxMigrationText): String</ID>
+    <ID>CyclomaticComplexMethod:LinuxMigrationScreen.kt$@Composable public fun LinuxMigrationScreen(state: LinuxMigrationUi, actions: LinuxMigrationActions)</ID>
+    <ID>CyclomaticComplexMethod:LinuxPackagesScreen.kt$@Composable public fun LinuxPackagesScreen(state: LinuxPackagesUi, actions: LinuxPackagesActions)</ID>
+    <ID>CyclomaticComplexMethod:LinuxPorts.kt$LinuxPortScan$public fun parse(output: String, processes: Map&lt;Int, String&gt; = emptyMap()): List&lt;LinuxPort&gt;</ID>
+    <ID>CyclomaticComplexMethod:LinuxPortsScreen.kt$@Composable private fun PortRow(port: LinuxPort, stopping: Boolean, actions: LinuxPortsActions)</ID>
+    <ID>CyclomaticComplexMethod:LinuxPortsScreen.kt$@Composable public fun LinuxPortsScreen(state: LinuxPortsUi, actions: LinuxPortsActions)</ID>
+    <ID>CyclomaticComplexMethod:LinuxServicesScreen.kt$@Composable public fun LinuxServicesScreen(state: LinuxServicesUi, actions: LinuxServicesActions)</ID>
+    <ID>CyclomaticComplexMethod:LinuxSetupPanel.kt$@Composable internal fun LinuxSetupPanel( state: LinuxHomeUi, actions: LinuxHomeActions, openAppSettings: (() -&gt; Unit)? = null, )</ID>
+    <ID>CyclomaticComplexMethod:LinuxSetupPanel.kt$@Composable private fun SetupError.words(): String</ID>
+    <ID>CyclomaticComplexMethod:LinuxStorageScreen.kt$@Composable public fun LinuxStorageScreen(state: LinuxStorageUi, actions: LinuxStorageActions)</ID>
+    <ID>CyclomaticComplexMethod:LinuxToolsPanel.kt$@Composable internal fun LinuxToolsPanel(state: LinuxToolsPanelUi, actions: LinuxToolsActions, busy: Boolean)</ID>
+    <ID>CyclomaticComplexMethod:LinuxVitalsPanel.kt$@Composable internal fun LinuxVitalsPanel(state: LinuxVitalsUi, openRunning: () -&gt; Unit)</ID>
+    <ID>CyclomaticComplexMethod:LinuxWords.kt$@Composable internal fun LinuxJobPanel(job: LinuxJobState, onStop: () -&gt; Unit, onDismiss: () -&gt; Unit)</ID>
+    <ID>EmptyFunctionBlock:KeptServicesScreenTest.kt$KeptServicesScreenTest.Actions${}</ID>
+    <ID>EmptyFunctionBlock:LinuxModalHostTest.kt$LinuxModalHostTest.Actions${}</ID>
+    <ID>EmptyFunctionBlock:LinuxPackagesScreenTest.kt$LinuxPackagesScreenTest.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:LinuxPortsScreenTest.kt$LinuxPortsScreenTest.Actions${}</ID>
+    <ID>LongMethod:KeptServicesScreen.kt$@Composable private fun AddKeptService(state: KeptServicesUi, actions: KeptServicesActions)</ID>
+    <ID>LongMethod:KeptServicesScreen.kt$@Composable public fun KeptServicesScreen(state: KeptServicesUi, actions: KeptServicesActions)</ID>
+    <ID>LongMethod:LinuxBackupScripts.kt$LinuxBackupScripts$private fun body(withProjects: Boolean): String</ID>
+    <ID>LongMethod:LinuxBackupsScreen.kt$@Composable public fun LinuxBackupsScreen(state: LinuxBackupsUi, actions: LinuxBackupsActions)</ID>
+    <ID>LongMethod:LinuxEntries.kt$LinuxEntries$override fun EntryProviderScope&lt;NavKey&gt;.install()</ID>
+    <ID>LongMethod:LinuxHomeScreen.kt$@Composable public fun LinuxHomeScreen( state: LinuxHomeUi, actions: LinuxHomeActions, tools: io.github.eslamasabry.oc.feature.linux.presentation.LinuxToolsPanelUi? = null, toolsActions: io.github.eslamasabry.oc.feature.linux.presentation.LinuxToolsActions? = null, )</ID>
+    <ID>LongMethod:LinuxLocalStoragePanel.kt$@Composable internal fun LinuxLocalStoragePanel(state: LinuxHomeUi, actions: LinuxHomeActions)</ID>
+    <ID>LongMethod:LinuxMigrationScreen.kt$@Composable private fun migrationText(text: LinuxMigrationText): String</ID>
+    <ID>LongMethod:LinuxMigrationScreen.kt$@Composable public fun LinuxMigrationScreen(state: LinuxMigrationUi, actions: LinuxMigrationActions)</ID>
+    <ID>LongMethod:LinuxPackagesScreen.kt$@Composable public fun LinuxPackagesScreen(state: LinuxPackagesUi, actions: LinuxPackagesActions)</ID>
+    <ID>LongMethod:LinuxPortsScreen.kt$@Composable private fun PortRow(port: LinuxPort, stopping: Boolean, actions: LinuxPortsActions)</ID>
+    <ID>LongMethod:LinuxPortsScreen.kt$@Composable public fun LinuxPortsScreen(state: LinuxPortsUi, actions: LinuxPortsActions)</ID>
+    <ID>LongMethod:LinuxServicesScreen.kt$@Composable public fun LinuxServicesScreen(state: LinuxServicesUi, actions: LinuxServicesActions)</ID>
+    <ID>LongMethod:LinuxSetupPanel.kt$@Composable internal fun LinuxSetupPanel( state: LinuxHomeUi, actions: LinuxHomeActions, openAppSettings: (() -&gt; Unit)? = null, )</ID>
+    <ID>LongMethod:LinuxStorageScreen.kt$@Composable public fun LinuxStorageScreen(state: LinuxStorageUi, actions: LinuxStorageActions)</ID>
+    <ID>LongMethod:LinuxToolsPanel.kt$@Composable internal fun LinuxToolsPanel(state: LinuxToolsPanelUi, actions: LinuxToolsActions, busy: Boolean)</ID>
+    <ID>LongMethod:LinuxWords.kt$@Composable internal fun LinuxJobPanel(job: LinuxJobState, onStop: () -&gt; Unit, onDismiss: () -&gt; Unit)</ID>
+    <ID>LongParameterList:LinuxHomeModel.kt$LinuxHomeModel$( private val manager: LinuxManager, private val watch: LinuxJobWatch, private val lifecycle: LinuxLifecycle, private val reset: LinuxResetFlow, private val nav: LinuxNavigator, private val scope: CoroutineScope, private val pacer: Pacer, private val storage: LinuxLocalStorage? = null, private val setupSource: LinuxSetupSource? = null, private val idleSource: LinuxIdleSource? = null, lifetimesSource: LinuxLifetimesSource? = null, vitalsSource: LinuxVitalsSource? = null, private val migrationOffers: LinuxMigrationOffers? = null, )</ID>
+    <ID>LongParameterList:LinuxViewModels.kt$LinuxHomeViewModel$( manager: LinuxManager, watch: LinuxJobWatch, lifecycle: LinuxLifecycle, reset: LinuxResetFlow, storage: io.github.eslamasabry.oc.engine.runtime.storage.LinuxLocalStorage, setup: LinuxSetupSource, idle: LinuxIdleSource, lifetimes: LinuxLifetimesSource, vitals: LinuxVitalsSource, migrationOffers: LinuxMigrationOffers, nav: LinuxNavigator, pacer: Pacer, )</ID>
+    <ID>LoopWithTooManyJumpStatements:LinuxPorts.kt$LinuxPortScan$for</ID>
+    <ID>LoopWithTooManyJumpStatements:LinuxPorts.kt$LinuxPrograms$for</ID>
+    <ID>LoopWithTooManyJumpStatements:LinuxStorage.kt$LinuxStorage$for</ID>
+    <ID>MagicNumber:KeptServicesScreen.kt$1000.0</ID>
+    <ID>MagicNumber:KeptServicesScreen.kt$3600</ID>
+    <ID>MagicNumber:LinuxBackupsScreen.kt$100f</ID>
+    <ID>MagicNumber:LinuxHomeModel.kt$LinuxHomeModel$60</ID>
+    <ID>MagicNumber:LinuxIdlePanel.kt$60</ID>
+    <ID>MagicNumber:LinuxJob.kt$LinuxJobState$75</ID>
+    <ID>MagicNumber:LinuxJob.kt$LinuxJobState.Companion$10</ID>
+    <ID>MagicNumber:LinuxJob.kt$LinuxJobState.Companion$100</ID>
+    <ID>MagicNumber:LinuxJob.kt$LinuxJobState.Companion$11</ID>
+    <ID>MagicNumber:LinuxJob.kt$LinuxJobState.Companion$124</ID>
+    <ID>MagicNumber:LinuxJob.kt$LinuxJobState.Companion$13</ID>
+    <ID>MagicNumber:LinuxJob.kt$LinuxJobState.Companion$40</ID>
+    <ID>MagicNumber:LinuxJob.kt$LinuxJobState.Companion$9</ID>
+    <ID>MagicNumber:LinuxManager.kt$LinuxManager$1024L</ID>
+    <ID>MagicNumber:LinuxManager.kt$LinuxManager$3</ID>
+    <ID>MagicNumber:LinuxManager.kt$LinuxManager$300</ID>
+    <ID>MagicNumber:LinuxMigrationScreen.kt$10</ID>
+    <ID>MagicNumber:LinuxMigrationScreen.kt$1024</ID>
+    <ID>MagicNumber:LinuxMigrationScreen.kt$1024.0</ID>
+    <ID>MagicNumber:LinuxPackages.kt$LinuxPackages$10</ID>
+    <ID>MagicNumber:LinuxPackages.kt$LinuxPackages$100</ID>
+    <ID>MagicNumber:LinuxPackages.kt$LinuxPackages$3</ID>
+    <ID>MagicNumber:LinuxPackages.kt$LinuxPackages$5</ID>
+    <ID>MagicNumber:LinuxPackages.kt$LinuxPackages$6</ID>
+    <ID>MagicNumber:LinuxPackages.kt$LinuxPackages$7</ID>
+    <ID>MagicNumber:LinuxPackagesScreen.kt$1024</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$1024</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$1313</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$16</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$3000</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$3001</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$3333</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$4</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$4000</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$4173</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$4200</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$4321</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$5000</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$5001</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$5173</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$5174</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$5500</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$6006</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$64</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$65535</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$7</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$7000</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$8000</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$8001</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$8008</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$8080</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$8081</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$8088</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$8888</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$9</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$9000</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPortScan$9090</ID>
+    <ID>MagicNumber:LinuxPorts.kt$LinuxPrograms$3</ID>
+    <ID>MagicNumber:LinuxServicesViewModel.kt$LinuxServicesViewModel$4096</ID>
+    <ID>MagicNumber:LinuxServicesViewModel.kt$LinuxServicesViewModel$80</ID>
+    <ID>MagicNumber:LinuxSize.kt$LinuxSize$10</ID>
+    <ID>MagicNumber:LinuxSize.kt$LinuxSize$1024</ID>
+    <ID>MagicNumber:LinuxSize.kt$LinuxSize$1024.0</ID>
+    <ID>MagicNumber:LinuxSize.kt$LinuxSize$1024L</ID>
+    <ID>MagicNumber:LinuxStorage.kt$LinuxStorage$1024L</ID>
+    <ID>MagicNumber:LinuxStorage.kt$LinuxStorage$5</ID>
+    <ID>MagicNumber:LinuxStorage.kt$LinuxStorageScan.Companion$32</ID>
+    <ID>MagicNumber:LinuxStorageScreen.kt$1024L</ID>
+    <ID>MagicNumber:SetupOutput.kt$200</ID>
+    <ID>MatchingDeclarationName:DesktopLinuxMigration.kt$DesktopLinuxMigrationBindings</ID>
+    <ID>MatchingDeclarationName:LinuxMigrationWords.kt$LinuxMigrationWord</ID>
+    <ID>MaxLineLength:LinuxManagerParseTest.kt$LinuxManagerParseTest$"/"</ID>
+    <ID>MaxLineLength:LinuxManagerParseTest.kt$LinuxManagerParseTest$"/home/oc"</ID>
+    <ID>MaxLineLength:LinuxManagerParseTest.kt$LinuxManagerParseTest$"/home/oc/.local/bin"</ID>
+    <ID>MaxLineLength:LinuxManagerParseTest.kt$LinuxManagerParseTest$"::pkg curl\t8\t500\t\toptional\tii \n::pkg broken\t1\t1\t\toptional\tiU \n::pkg gone\t1\t1\t\toptional\trc \ngarbage\n"</ID>
+    <ID>MaxLineLength:LinuxManagerParseTest.kt$LinuxManagerParseTest$assertEquals(90L * 1024, LinuxStorage.freedBytes(mapOf("/a" to 100L, "/b" to 50L), mapOf("/a" to 10L, "/b" to 70L)))</ID>
+    <ID>MaxLineLength:LinuxManagerParseTest.kt$LinuxManagerParseTest$assertEquals(LinuxJobStatus.Done, LinuxJobState.fromLog("::oc job update\n::oc job-exit 0\n", running = false).status)</ID>
+    <ID>MaxLineLength:LinuxManagerParseTest.kt$LinuxManagerParseTest$assertEquals(LinuxJobStatus.Interrupted, LinuxJobState.fromLog("::oc job update\n::oc stage x\n", running = false).status)</ID>
+    <ID>MaxLineLength:LinuxManagerParseTest.kt$LinuxManagerParseTest$assertEquals(LinuxJobStatus.TimedOut, LinuxJobState.fromLog("::oc job update\n::oc job-exit 124\n", running = false).status)</ID>
+    <ID>MaxLineLength:LinuxManagerParseTest.kt$LinuxManagerParseTest$for</ID>
+    <ID>MaxLineLength:LinuxManagerParseTest.kt$LinuxManagerParseTest$for (bad in listOf("", "a", "Git", "a b", "a;b", "\$(x)", "-rf", "../x", "a/b")) assertFalse(LinuxPackages.isValidName(bad), bad)</ID>
+    <ID>MaxLineLength:LinuxManagerParseTest.kt$LinuxManagerParseTest$val port = LinuxPortScan.parse("::n 9 6767\n::c 9 node /home/oc/.local/share/oc-paseo/1.2/paseo daemon\n::open 6767").single()</ID>
+    <ID>MaxLineLength:LinuxManagerParseTest.kt$LinuxManagerParseTest$val running = LinuxJobState.fromLog("::oc job install\n::oc names htop tmux\n::oc stage Installing\n::oc percent 41.6\n", running = true)</ID>
+    <ID>MaxLineLength:LinuxManagerTest.kt$LinuxManagerTest$// `sh start-server.sh 12345` starts a `node server.js` child whose own command, environment and logs name no port.</ID>
+    <ID>MaxLineLength:LinuxManagerTest.kt$LinuxManagerTest$assertEquals(LinuxProblem.Failed, assertIs&lt;LinuxAnswer.Problem&gt;(LinuxManager(host, VirtualRetryWait).installedPackages()).problem)</ID>
+    <ID>MaxLineLength:LinuxManagerTest.kt$LinuxManagerTest$assertEquals(LinuxProblem.JobRunning, assertIs&lt;LinuxAnswer.Problem&gt;(manager.startJob(LinuxJobKind.Update, emptyList(), "x")).problem)</ID>
+    <ID>MaxLineLength:LinuxManagerTest.kt$LinuxManagerTest$assertEquals(LinuxProblem.SetupRunning, assertIs&lt;LinuxAnswer.Problem&gt;(manager.cleanup(LinuxStorage.aptCache)).problem)</ID>
+    <ID>MaxLineLength:LinuxManagerTest.kt$LinuxManagerTest$assertIs&lt;LinuxAnswer.Ok&lt;Unit&gt;&gt;(manager.startJob(LinuxJobKind.Install, listOf("htop"), notice = "Installing Linux packages"))</ID>
+    <ID>MaxLineLength:LinuxManagerTest.kt$LinuxManagerTest$out(if (Regex("""(^| )12345( |$)""").containsMatchIn(script.lineSequence().first { "/dev/tcp" in it })) "::open 12345\n" else "")</ID>
+    <ID>MaxLineLength:LinuxMigrationScreen.kt$else</ID>
+    <ID>MaxLineLength:LinuxMigrationScreen.kt$else -&gt; stringResource(Res.string.migrationReviewSpace, required, migrationSize(state.availableBytes))</ID>
+    <ID>MaxLineLength:LinuxMigrationScreen.kt$enabled = KitEnabled.of(row.enabled &amp;&amp; !busy, if (busy) stringResource(Res.string.migrationKeepOpen) else detail)</ID>
+    <ID>MaxLineLength:LinuxMigrationScreen.kt$if (moves.isNotEmpty()) MigrationChoices(moves, stringResource(Res.string.migrationGroupMoves), state.busy, actions)</ID>
+    <ID>MaxLineLength:LinuxMigrationScreen.kt$it.word != LinuxMigrationWord.migrationChooseOne</ID>
+    <ID>MaxLineLength:LinuxMigrationScreen.kt$private</ID>
+    <ID>MaxLineLength:LinuxMigrationScreen.kt$state.paragraphs</ID>
+    <ID>MaxLineLength:LinuxModelsTest.kt$LinuxHomeModelTest$return LinuxHomeModel(manager, LinuxJobWatch(manager, notices), life, LinuxResetFlow(life, Marker(), FixedClock), nav, backgroundScope, Quiet)</ID>
+    <ID>MaxLineLength:LinuxModelsTest.kt$LinuxPagesModelsTest$fun</ID>
+    <ID>MaxLineLength:LinuxModelsTest.kt$LinuxPagesModelsTest$private val list = "::pkg bash\t5.2\t1400\tyes\trequired\tii \n::pkg htop\t3.3\t300\t\toptional\tii \n::pkg libx\t1\t1\t\toptional\tii \n"</ID>
+    <ID>MaxLineLength:LinuxModelsTest.kt$LinuxPagesModelsTest$val model = LinuxPortsModel(LinuxManager(host, VirtualRetryWait), { url -&gt; opened += url; opens }, Nav(), backgroundScope)</ID>
+    <ID>MaxLineLength:LinuxModelsTest.kt$LinuxResetFlowTest$assertEquals(LinuxResetResult.Reinstalling(setupStarted = false), LinuxResetFlow(life, marker, FixedClock).run())</ID>
+    <ID>MaxLineLength:LinuxModelsTest.kt$LinuxResetFlowTest$fun</ID>
+    <ID>MaxLineLength:LinuxModelsTest.kt$LinuxResetFlowTest$val life = Lifecycle(installed = false, erase = Outcome.Failed(Failure.Runtime(RuntimeProblem.RemovalFailed)), setup = Outcome.Ok(false))</ID>
+    <ID>MaxLineLength:LinuxPackages.kt$LinuxPackage$/** Removal is refused for these and for [LinuxPackages.kept]: Linux or the app's tools stop working without them. */</ID>
+    <ID>MaxLineLength:LinuxPackages.kt$LinuxPackages$"curl"</ID>
+    <ID>MaxLineLength:LinuxPackages.kt$LinuxPackages$LinuxJobKind.Remove -&gt; "oc_apt_repair || exit \$?\noc_stage \"Removing $list\"\noc_apt_run \"\" remove -y $args\n"</ID>
+    <ID>MaxLineLength:LinuxPackagesScreen.kt$(if (capped) shown.take(FIRST_ROWS) else shown).forEach { PackageRow(it) { detailName = it.name } }</ID>
+    <ID>MaxLineLength:LinuxPackagesScreen.kt$KitConfirmSpec(title = title, confirmLabel = label, kind = KitConfirmKind.Stop, body = stringResource(Res.string.linuxMgrJobStopBody))</ID>
+    <ID>MaxLineLength:LinuxPackagesScreen.kt$actions</ID>
+    <ID>MaxLineLength:LinuxPackagesScreen.kt$if (asked.alsoRemoved.isEmpty()) emptyList() else listOf(stringResource(Res.string.linuxMgrPkgAlsoRemoved, names(asked.alsoRemoved)))</ID>
+    <ID>MaxLineLength:LinuxPackagesScreen.kt$if (state.checking) KitNotice(message = stringResource(Res.string.linuxMgrPkgChecking), tone = StatusTone.Progress, liveRegion = false)</ID>
+    <ID>MaxLineLength:LinuxPackagesScreen.kt$is PackagesNotice.AlreadyInstalled -&gt; KitNotice(message = stringResource(Res.string.linuxMgrPkgAlready, names(listOf(notice.name))), dismiss = dismiss)</ID>
+    <ID>MaxLineLength:LinuxPackagesScreen.kt$is PackagesNotice.BlockedPlan -&gt; KitNotice(message = stringResource(Res.string.linuxMgrPkgBlockedPlan, names(listOf(notice.needed))), tone = StatusTone.Attention, dismiss = dismiss)</ID>
+    <ID>MaxLineLength:LinuxPackagesScreen.kt$is PackagesNotice.Problem -&gt; KitNotice(message = notice.problem.words(), tone = StatusTone.Attention, dismiss = dismiss)</ID>
+    <ID>MaxLineLength:LinuxPackagesScreen.kt$is PackagesNotice.Unknown -&gt; KitNotice(message = stringResource(Res.string.linuxMgrPkgUnknown, names(listOf(notice.name))), tone = StatusTone.Attention, dismiss = dismiss)</ID>
+    <ID>MaxLineLength:LinuxPackagesScreen.kt$notes = listOf(pkg.name, pkg.version, size(pkg.sizeKb * 1024))</ID>
+    <ID>MaxLineLength:LinuxPackagesScreen.kt$val facts = listOfNotNull("\u2066${pkg.version}\u2069", pkg.sizeKb.takeIf { it &gt; 0 }?.let { size(it * 1024) }).joinToString(" · ")</ID>
+    <ID>MaxLineLength:LinuxPackagesScreenTest.kt$LinuxPackagesScreenTest$@Test</ID>
+    <ID>MaxLineLength:LinuxPorts.kt$LinuxPort.Companion$public</ID>
+    <ID>MaxLineLength:LinuxPorts.kt$LinuxPortScan$/** Port numbers a command line names (`--port 5173`, `-p 3000`, `PORT=8081`, `host:9229`, a bare number). 1024+ only. */</ID>
+    <ID>MaxLineLength:LinuxPorts.kt$LinuxPortScan$public</ID>
+    <ID>MaxLineLength:LinuxScreensTest.kt$LinuxScreensTest$LinuxPort(5173, PortOwner(51, "node /app/node_modules/.bin/vite --port 5173"), allInterfaces = false)</ID>
+    <ID>MaxLineLength:LinuxScreensTest.kt$LinuxScreensTest$private</ID>
+    <ID>MaxLineLength:LinuxScriptsShellTest.kt$LinuxScriptsShellTest$/** "scripts parse as shell" (test/linux_manager_parse_test.dart): every generated script passes `sh -n` and `bash -n`. */</ID>
+    <ID>MaxLineLength:LinuxStorage.kt$LinuxStorage$$$"""for d in /tmp /var/tmp; do [ -d "$d" ] &amp;&amp; printf "::du %s %s\n" "$(find "$d" -mindepth 1 -mtime +1 -type f -printf "%k\n" 2&gt;/dev/null | awk '{s+=$1} END {print s+0}')" "$d"; done"""</ID>
+    <ID>MaxLineLength:LinuxStorage.kt$LinuxStorage$$$"""printf "::du %s /var/log\n" "$(find /var/log -type f -mtime +7 -printf "%k\n" 2&gt;/dev/null | awk '{s+=$1} END {print s+0}')""""</ID>
+    <ID>MaxLineLength:LinuxVitalsPanel.kt$KitVital(words, stringResource(Res.string.linuxVitalsLinuxCpu), stringResource(Res.string.linuxVitalsCpuLabel, words))</ID>
+    <ID>MaxLineLength:LinuxVitalsPanel.kt$KitVital(words, stringResource(Res.string.linuxVitalsMemoryFree), stringResource(Res.string.linuxVitalsMemoryLabel, words))</ID>
+    <ID>MaxLineLength:LinuxVitalsPanel.kt$heat?.let { KitVital(it, stringResource(Res.string.linuxVitalsHeat), stringResource(Res.string.linuxVitalsHeatLabel, it)) }</ID>
+    <ID>MaxLineLength:build.gradle.kts$implementation(project(":ui:kit-content"))</ID>
+    <ID>NestedBlockDepth:KeptServicesViewModel.kt$KeptServicesViewModel$private suspend fun read()</ID>
+    <ID>NestedBlockDepth:LinuxManagerParseTest.kt$LinuxManagerParseTest$@Test fun `B-SEC-096 every cleanup names only safe paths and its script stays inside them`()</ID>
+    <ID>ReturnCount:LinuxHomeModel.kt$LinuxHomeModel$override fun finishCreateProject(path: String?)</ID>
+    <ID>ReturnCount:LinuxJob.kt$LinuxJobState.Companion$public fun fromLog(log: String, running: Boolean): LinuxJobState</ID>
+    <ID>ReturnCount:LinuxPagesModels.kt$LinuxPortsModel$override fun askStopOwner(port: Int)</ID>
+    <ID>ReturnCount:LinuxPorts.kt$LinuxPrograms$public fun programName(cmd: String): String</ID>
+    <ID>ReturnCount:LinuxResetFlow.kt$LinuxResetFlow$public suspend fun resumeIfPending(): Boolean</ID>
+    <ID>ReturnCount:LinuxSize.kt$LinuxSize$public fun storage(bytes: Long): StorageByteAmount</ID>
+    <ID>ReturnCount:LinuxStorage.kt$LinuxStorage$public fun cleanupPathIsSafe(path: String): Boolean</ID>
+    <ID>SpreadOperator:LinuxMigrationScreen.kt$(resource, *text.arguments.toTypedArray())</ID>
+    <ID>TooManyFunctions:KeptServicesViewModel.kt$KeptServicesActions</ID>
+    <ID>TooManyFunctions:KeptServicesViewModel.kt$KeptServicesViewModel : ViewModelKeptServicesActions</ID>
+    <ID>TooManyFunctions:LinuxHomeModel.kt$LinuxHomeActions : LinuxJobActions</ID>
+    <ID>TooManyFunctions:LinuxHomeModel.kt$LinuxHomeModel : LinuxHomeNativeActions</ID>
+    <ID>TooManyFunctions:LinuxManager.kt$LinuxManager</ID>
+    <ID>TooManyFunctions:LinuxPagesModels.kt$LinuxPackagesModel : LinuxPackagesActions</ID>
+    <ID>TooManyFunctions:LinuxPagesModels.kt$LinuxPortsActions</ID>
+    <ID>TooManyFunctions:LinuxPagesModels.kt$LinuxPortsModel : LinuxPortsActions</ID>
+    <ID>TooManyFunctions:LinuxServicesViewModel.kt$LinuxServicesActions</ID>
+    <ID>TooManyFunctions:LinuxServicesViewModel.kt$LinuxServicesViewModel : ViewModelLinuxServicesActions</ID>
+    <ID>TooManyFunctions:LinuxViewModels.kt$LinuxHomeViewModel : ViewModelLinuxHomeNativeActions</ID>
+    <ID>TooManyFunctions:LinuxViewModels.kt$LinuxPackagesViewModel : ViewModelLinuxPackagesActions</ID>
+    <ID>TooManyFunctions:LinuxViewModels.kt$LinuxPortsViewModel : ViewModelLinuxPortsActions</ID>
+    <ID>TooManyFunctions:LinuxWords.kt$io.github.eslamasabry.oc.feature.linux.ui.LinuxWords.kt</ID>
+    <ID>WildcardImport:KeptServicesScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:KeptServicesScreenTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:KeptServicesScreenTest.kt$import io.github.eslamasabry.oc.engine.runtime.services.kept.*</ID>
+    <ID>WildcardImport:KeptServicesScreenTest.kt$import io.github.eslamasabry.oc.feature.linux.presentation.*</ID>
+    <ID>WildcardImport:KeptServicesScreenTest.kt$import kotlin.test.*</ID>
+    <ID>WildcardImport:LinuxBackupsScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:LinuxComponentsPanel.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:LinuxMigrationScreen.kt$import io.github.eslamasabry.oc.feature.linux.presentation.*</ID>
+    <ID>WildcardImport:LinuxMigrationScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:LinuxMigrationScreen.kt$import io.github.eslamasabry.oc.ui.kit.modal.*</ID>
+    <ID>WildcardImport:LinuxMigrationScreen.kt$import io.github.eslamasabry.oc.ui.kit.row.*</ID>
+    <ID>WildcardImport:LinuxMigrationScreen.kt$import io.github.eslamasabry.oc.ui.kit.state.*</ID>
+    <ID>WildcardImport:LinuxMigrationScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:LinuxModalHostTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:LinuxModalHostTest.kt$import io.github.eslamasabry.oc.engine.runtime.backup.*</ID>
+    <ID>WildcardImport:LinuxModalHostTest.kt$import io.github.eslamasabry.oc.feature.linux.presentation.*</ID>
+    <ID>WildcardImport:LinuxModalHostTest.kt$import io.github.eslamasabry.oc.feature.linux.ui.*</ID>
+    <ID>WildcardImport:LinuxPackagesScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:LinuxPackagesScreenTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:LinuxPackagesScreenTest.kt$import io.github.eslamasabry.oc.feature.linux.presentation.*</ID>
+    <ID>WildcardImport:LinuxPortsScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:LinuxPortsScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:LinuxPortsScreen.kt$import io.github.eslamasabry.oc.ui.kit.modal.*</ID>
+    <ID>WildcardImport:LinuxPortsScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:LinuxPortsScreenTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:LinuxServicesScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:LinuxSetupPanel.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:LinuxStorageScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:LinuxStorageScreen.kt$import io.github.eslamasabry.oc.ui.kit.*</ID>
+    <ID>WildcardImport:LinuxStorageScreen.kt$import io.github.eslamasabry.oc.ui.kit.state.*</ID>
+    <ID>WildcardImport:LinuxStorageScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:LinuxToolsPanel.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:LinuxVitalsPanel.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

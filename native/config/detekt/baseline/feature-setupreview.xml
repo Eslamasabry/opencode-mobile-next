@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:GuidedSetupContent.kt$@Composable internal fun GuidedSetupContent(state: SetupGuidedUi, actions: SetupReviewActions)</ID>
+    <ID>CyclomaticComplexMethod:SetupReviewScreen.kt$@Composable private fun SetupList(state: SetupReviewUi, actions: SetupReviewActions)</ID>
+    <ID>CyclomaticComplexMethod:SetupReviewScreen.kt$@Composable public fun SetupReviewScreen(state: SetupReviewUi, actions: SetupReviewActions)</ID>
+    <ID>LongMethod:GuidedSetupContent.kt$@Composable internal fun GuidedSetupContent(state: SetupGuidedUi, actions: SetupReviewActions)</ID>
+    <ID>LongMethod:SetupReviewScreen.kt$@Composable private fun SetupList(state: SetupReviewUi, actions: SetupReviewActions)</ID>
+    <ID>LongMethod:SetupReviewScreen.kt$@Composable public fun SetupReviewScreen(state: SetupReviewUi, actions: SetupReviewActions)</ID>
+    <ID>MagicNumber:SetupReviewScreen.kt$3</ID>
+    <ID>MagicNumber:SetupReviewScreen.kt$4</ID>
+    <ID>MagicNumber:SetupReviewViewModel.kt$SetupReviewViewModel$4096</ID>
+    <ID>WildcardImport:GuidedSetupContent.kt$import io.github.eslamasabry.oc.feature.setupreview.presentation.*</ID>
+    <ID>WildcardImport:GuidedSetupContent.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:SetupReviewScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:WidgetPanels.kt$WidgetPanelViewModel$route !is WidgetPanel.Project || current.loading || current.saving || (project.isNotEmpty() &amp;&amp; project !in current.projects)</ID>
+    <ID>CyclomaticComplexMethod:WidgetPanelScreen.kt$@Composable public fun WidgetPanelScreen(state: WidgetPanelUi, actions: WidgetPanelActions)</ID>
+    <ID>EmptyFunctionBlock:WidgetPanelGateTest.kt$WidgetCalls${}</ID>
+    <ID>LongMethod:WidgetPanelScreen.kt$@Composable public fun WidgetPanelScreen(state: WidgetPanelUi, actions: WidgetPanelActions)</ID>
+    <ID>MagicNumber:WidgetPanelScreen.kt$8000</ID>
+    <ID>MagicNumber:WidgetPanels.kt$WidgetPanelViewModel$700</ID>
+    <ID>MagicNumber:WidgetPanels.kt$WidgetPanelViewModel$8000</ID>
+    <ID>WildcardImport:WidgetPanelGateTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:WidgetPanelGateTest.kt$import io.github.eslamasabry.oc.feature.widgetpanels.presentation.*</ID>
+    <ID>WildcardImport:WidgetPanelScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:WidgetPanelScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:WidgetPanelScreen.kt$import io.github.eslamasabry.oc.feature.widgetpanels.presentation.*</ID>
+    <ID>WildcardImport:WidgetPanelScreen.kt$import io.github.eslamasabry.oc.ui.kit.*</ID>
+    <ID>WildcardImport:WidgetPanelScreen.kt$import io.github.eslamasabry.oc.ui.kit.choice.*</ID>
+    <ID>WildcardImport:WidgetPanelScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:WidgetPanelUiTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:WidgetPanelUiTest.kt$import io.github.eslamasabry.oc.feature.widgetpanels.presentation.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

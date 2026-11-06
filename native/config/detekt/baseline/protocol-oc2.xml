@@ -1,0 +1,718 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:Oc2Dialect.kt$Oc2Dialect$rest == "skill" || rest == "wait" || rest == "export" || rest == "instructions/entries" || rest.startsWith("instructions/entries/")</ID>
+    <ID>ComplexCondition:Oc2Gateway.kt$Oc2Gateway$closed || session.raw.isEmpty() || session.raw.length &gt; 512 || limit &lt; 1 || (cursor != null &amp;&amp; (cursor.isEmpty() || cursor.length &gt; 4096))</ID>
+    <ID>ComplexCondition:Oc2Gateway.kt$Oc2Gateway$key.isBlank() || key.length &gt; 256 || key.any { it.isWhitespace() } || (value as? JsonObject)?.str("type") != "running"</ID>
+    <ID>ComplexCondition:Oc2Gateway.kt$Oc2Gateway$next != null &amp;&amp; (next.isEmpty() || next.length &gt; 4096 || next == cursor)</ID>
+    <ID>ComplexCondition:Oc2Gateway.kt$Oc2Gateway$parent.isBlank() || !parent.startsWith("/") || folder.isEmpty() || folder == "." || folder == ".." || folder.any { it == '/' || it == '\\' || it == '\u0000' || it == '\n' }</ID>
+    <ID>ComplexCondition:Oc2Gateway.kt$Oc2Gateway$status == 405 || status == 501 || (f is Failure.NotFound &amp;&amp; f.tag?.raw != "SessionNotFoundError")</ID>
+    <ID>ComplexCondition:Oc2HostTools.kt$Oc2HostTools$directory.isBlank() || directory.length &gt; 4096 || (name != null &amp;&amp; (name.isBlank() || name.length &gt; 200))</ID>
+    <ID>ComplexCondition:Oc2Inbox.kt$Oc2Inbox$wire.id.isBlank() || !seen.add(wire.id) || (wire.sessionID != null &amp;&amp; wire.sessionID != session.raw)</ID>
+    <ID>ComplexCondition:Oc2Integrations.kt$Oc2Integrations$(draft.headers + draft.environment).any { (key, value) -&gt; key.isBlank() || key.any { it == '=' || it.code &lt; 32 || it.code == 127 } || value.any { it.code &lt; 32 || it.code == 127 } }</ID>
+    <ID>ComplexCondition:Oc2Integrations.kt$Oc2Integrations$draft.command.isEmpty() || draft.command.any { it.isBlank() || it.any { c -&gt; c.code &lt; 32 || c.code == 127 } }</ID>
+    <ID>ComplexCondition:Oc2Integrations.kt$Oc2Integrations$url.protocol.name !in setOf("https", "http") || url.host.isBlank() || url.user != null || url.password != null || '@' in raw.substringAfter("://").substringBefore('/')</ID>
+    <ID>ComplexCondition:Oc2Library.kt$Oc2Library$url.protocol !in setOf(URLProtocol.HTTP, URLProtocol.HTTPS) || url.host.isEmpty() || url.user != null || url.password != null</ID>
+    <ID>ComplexCondition:Oc2LibraryOps.kt$Oc2LibraryOps$!validId(id) || value.isEmpty() || value.codePointsCount() &gt; 128 || CONTROL.containsMatchIn(label)</ID>
+    <ID>ComplexCondition:Oc2LibraryOps.kt$Oc2LibraryOps$failure is Failure.Server || failure is Failure.Network || failure is Failure.TimedOut || failure is Failure.UnreadableReply</ID>
+    <ID>ComplexCondition:Oc2LibraryOps.kt$Oc2LibraryOps$parsed.protocol.name !in setOf("http", "https") || parsed.host.isBlank() || parsed.user != null || parsed.password != null || !pairs(draft.headers)</ID>
+    <ID>ComplexCondition:Oc2ManagedShells.kt$Oc2ManagedShells$command.isBlank() || command.length &gt; 4096 || directory.isBlank() || directory.length &gt; 4096 || ownerToken.isBlank() || ownerToken.length &gt; 100</ID>
+    <ID>ComplexCondition:Oc2ManagedShells.kt$Oc2ManagedShells$size &lt; 0 || next &lt; cursor || next &gt; size || next - cursor &gt; cap || text.length &gt; cap</ID>
+    <ID>ComplexCondition:Oc2Mcp.kt$Oc2Mcp$draft.kind == McpServerKind.Local &amp;&amp; (command.isEmpty() || command.any { it.isEmpty() || '\u0000' in it })</ID>
+    <ID>ComplexCondition:Oc2Mcp.kt$Oc2Mcp$parsed.protocol.name !in setOf("http", "https") || parsed.host.isEmpty() || !parsed.user.isNullOrEmpty() || !parsed.password.isNullOrEmpty()</ID>
+    <ID>ComplexCondition:Oc2Operations.kt$command.isBlank() || command.length &gt; 4096 || directory.isBlank() || ownerToken.isEmpty()</ID>
+    <ID>ComplexCondition:Oc2ProviderSignIn.kt$Oc2ProviderSignIn$!valid(id) || !valid(methodId) || inputs.size &gt; 32 || inputs.any { !valid(it.key) || it.value.length &gt; 65536 } || (label?.length ?: 0) &gt; 128</ID>
+    <ID>ComplexCondition:Oc2ProviderSignIn.kt$Oc2ProviderSignIn$!valid(id) || key.isBlank() || key.length &gt; 65536 || (label?.length ?: 0) &gt; 128</ID>
+    <ID>ComplexCondition:Oc2SetupInspection.kt$Oc2SetupInspection$key.lowercase().replace(Regex("[-_]"), "") in credentialFields &amp;&amp; item is JsonPrimitive &amp;&amp; item.isString &amp;&amp; item.content.isNotEmpty()</ID>
+    <ID>ComplexCondition:Oc2SetupReads.kt$hidden != null &amp;&amp; hidden != JsonNull &amp;&amp; (hidden !is JsonPrimitive || hidden.isString || hidden.booleanOrNull == null)</ID>
+    <ID>ComplexCondition:Oc2SetupReads.kt$member != null &amp;&amp; member != JsonNull &amp;&amp; (member !is JsonPrimitive || !member.isString)</ID>
+    <ID>ComplexCondition:Oc2SetupReads.kt$type?.isString != true || status?.isString != true || tui == null || tui.isString || tui.booleanOrNull == null</ID>
+    <ID>ComplexCondition:Oc2Terminal.kt$id.isBlank() || id.length &gt; 256 || id.any { it.code &lt; 32 || it.code == 127 }</ID>
+    <ID>ComplexCondition:Oc2Terminals.kt$Oc2Terminals$command.isBlank() || '\u0000' in command || arguments.any { '\u0000' in it } || !validTitle(title)</ID>
+    <ID>ComplexCondition:Oc2Terminals.kt$Oc2Terminals$this.location != location || gateway.location.value != location || location.directory.isNullOrBlank() || ended.running || ended.command.isBlank() || ended.directory.isBlank() || listOf(ended.command, ended.directory, *ended.arguments.toTypedArray()).any { '\u0000' in it } || ended.title.length &gt; 200 || ended.title.any { it.code &lt; 32 }</ID>
+    <ID>ComplexCondition:Oc2WebSearch.kt$Oc2WebSearch$id.isBlank() || id.length &gt; 200 || name.isBlank() || name.length &gt; 200 || !seen.add(id) || Control.containsMatchIn(id + name)</ID>
+    <ID>ComplexCondition:Oc2WebSearch.kt$Oc2WebSearch$parsed.protocol.name !in setOf("http", "https") || parsed.host.isBlank() || parsed.user != null || parsed.password != null</ID>
+    <ID>ComplexCondition:Oc2WebSearch.kt$query.isBlank() || query.length &gt; Oc2WebSearch.MAX_QUERY || providerId.isEmpty() || providerId.length &gt; 200</ID>
+    <ID>ComplexCondition:Usage.kt$Oc2UsageStatistics.Companion$variant != null &amp;&amp; variant != JsonNull &amp;&amp; (variant !is JsonPrimitive || !variant.isString)</ID>
+    <ID>ComplexCondition:WebSourcesReview.kt$WebSourcesReview$!canEdit() || !supportsSearch || discovering || searching || query.isBlank() || query.length &gt; Oc2WebSearch.MAX_QUERY || chosen == null || providers.none { it.id == chosen }</ID>
+    <ID>CyclomaticComplexMethod:Oc2CoreProjection.kt$Oc2CoreProjection$fun toCore(event: Oc2Adapted): GatewayEvent</ID>
+    <ID>CyclomaticComplexMethod:Oc2Dialect.kt$Oc2Dialect$fun route( path: String, method: HttpMethod, body: JsonObject?, query: Map&lt;String, String?&gt;, ): Oc2Route</ID>
+    <ID>CyclomaticComplexMethod:Oc2Errors.kt$Oc2Errors$public fun failureFor(status: Int, body: String?, credentialsSent: Boolean = true): Failure</ID>
+    <ID>CyclomaticComplexMethod:Oc2EventAdapter.kt$Oc2EventAdapter$private fun passThrough(e: Oc2Event.PassThrough): List&lt;Oc2Adapted&gt;</ID>
+    <ID>CyclomaticComplexMethod:Oc2Gateway.kt$Oc2Gateway$override suspend fun catalog(): Outcome&lt;CatalogSnapshot&gt;</ID>
+    <ID>CyclomaticComplexMethod:Oc2Gateway.kt$Oc2Gateway$override suspend fun health(): Outcome&lt;Health&gt;</ID>
+    <ID>CyclomaticComplexMethod:Oc2Gateway.kt$Oc2Gateway$override suspend fun importSessionDocument(body: JsonObject): Outcome&lt;Session&gt;</ID>
+    <ID>CyclomaticComplexMethod:Oc2Gateway.kt$Oc2Gateway$override suspend fun makeProjectFolder(parent: String, name: String): Outcome&lt;String&gt;</ID>
+    <ID>CyclomaticComplexMethod:Oc2Gateway.kt$Oc2Gateway$override suspend fun providers(): Outcome&lt;ProvidersResponse&gt;</ID>
+    <ID>CyclomaticComplexMethod:Oc2Gateway.kt$Oc2Gateway$private suspend fun boundedHistoryJson( path: String, query: Map&lt;String, String?&gt;, byteLimit: Int, timeoutMs: Long, ): Outcome&lt;JsonElement&gt;</ID>
+    <ID>CyclomaticComplexMethod:Oc2Gateway.kt$Oc2Gateway$private suspend fun historyPage( session: SessionId, cursor: String?, limit: Int, byteLimit: Int, timeoutMs: Long, ): Outcome&lt;BoundedHistoryPage&gt;</ID>
+    <ID>CyclomaticComplexMethod:Oc2Gateway.kt$Oc2Gateway$private suspend fun preparePermissions(session: SessionId): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:Oc2Gateway.kt$Oc2Gateway$private suspend fun readFailure(reply: io.ktor.client.statement.HttpResponse): Failure?</ID>
+    <ID>CyclomaticComplexMethod:Oc2GatewayFactory.kt$Oc2GatewayFactory$override suspend fun connect(spec: GatewaySpec): Outcome&lt;GatewayPair&gt;</ID>
+    <ID>CyclomaticComplexMethod:Oc2History.kt$Oc2History$fun message(session: String, value: JsonElement): MessageWithParts?</ID>
+    <ID>CyclomaticComplexMethod:Oc2History.kt$Oc2History$private fun special(session: String, wire: Oc2Message): Part</ID>
+    <ID>CyclomaticComplexMethod:Oc2HostTools.kt$Oc2HostTools$suspend fun createWorktree(directory: String, name: String?): Outcome&lt;WorktreeInfo&gt;</ID>
+    <ID>CyclomaticComplexMethod:Oc2Integrations.kt$Oc2Integrations$override suspend fun addMcpServer(draft: McpServerDraft, scope: McpConfigScope): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:Oc2Integrations.kt$Oc2Integrations$override suspend fun integrations(): Outcome&lt;ImmutableList&lt;IntegrationInfo&gt;&gt;</ID>
+    <ID>CyclomaticComplexMethod:Oc2Library.kt$Oc2Library$private fun draftConfig(draft: McpServerDraft): JsonObject?</ID>
+    <ID>CyclomaticComplexMethod:Oc2Library.kt$Oc2Library$suspend fun activateSkill(session: SessionId, skillId: String, resume: Boolean): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:Oc2Library.kt$Oc2Library$suspend fun plugins(): Outcome&lt;ImmutableList&lt;LibraryPlugin&gt;&gt;</ID>
+    <ID>CyclomaticComplexMethod:Oc2LibraryOps.kt$Oc2LibraryOps$override suspend fun addMcpServer(draft: McpServerDraft, scope: McpConfigScope): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:Oc2LibraryOps.kt$Oc2LibraryOps$private fun normalizePrompt(field: JsonObject): JsonObject</ID>
+    <ID>CyclomaticComplexMethod:Oc2LibraryOps.kt$Oc2LibraryOps$private suspend fun start( id: String, methodId: String, command: Boolean, inputs: Map&lt;String, String&gt;, label: String?, ): Outcome&lt;IntegrationAuthLaunch&gt;</ID>
+    <ID>CyclomaticComplexMethod:Oc2LiveGatewayTest.kt$Oc2LiveGatewayTest$@Test fun `B-PROTO-039 health negotiates beta and stable before permission and interrupt mutations`()</ID>
+    <ID>CyclomaticComplexMethod:Oc2ManagedShells.kt$Oc2ManagedShells$override suspend fun managedShellOutput( id: String, cursor: Long, limit: Int, ): Outcome&lt;ManagedShellOutput&gt;</ID>
+    <ID>CyclomaticComplexMethod:Oc2Mcp.kt$Oc2Mcp$private fun config(draft: McpServerDraft): JsonObject?</ID>
+    <ID>CyclomaticComplexMethod:Oc2Operations.kt$internal fun mcpConfig(draft: McpServerDraft): JsonObject?</ID>
+    <ID>CyclomaticComplexMethod:Oc2ParityTest.kt$Oc2ParityTest$private fun diff(path: String, expected: JsonElement, actual: JsonElement, out: MutableList&lt;String&gt;)</ID>
+    <ID>CyclomaticComplexMethod:Oc2PermissionDispatchTest.kt$Oc2PermissionDispatchTest$private fun gateway(server: Server, dialect: Oc2Dialect = Oc2Dialect.Beta): Oc2Gateway</ID>
+    <ID>CyclomaticComplexMethod:Oc2ProviderInventory.kt$Oc2ProviderInventory$fun parse(root: JsonObject): Outcome&lt;ProvidersResponse&gt;?</ID>
+    <ID>CyclomaticComplexMethod:Oc2ProviderSignIn.kt$Oc2ProviderSignIn$suspend fun integrations(): Outcome&lt;ImmutableList&lt;IntegrationInfo&gt;&gt;</ID>
+    <ID>CyclomaticComplexMethod:Oc2ProviderSignIn.kt$Oc2ProviderSignIn$suspend fun startIntegrationOAuth( id: String, methodId: String, inputs: ImmutableMap&lt;String, String&gt;, label: String?, ): Outcome&lt;IntegrationAuthLaunch&gt;</ID>
+    <ID>CyclomaticComplexMethod:Oc2ServiceReports.kt$Oc2ServiceReports$public suspend fun inspect( gateway: ServerGateway, id: String, directory: String, workspace: String?, ): Outcome&lt;ManagedShell?&gt;?</ID>
+    <ID>CyclomaticComplexMethod:Oc2SetupReads.kt$internal suspend fun Oc2Gateway.inspectPlugins(location: ServerLocation): Outcome&lt;JsonElement&gt;</ID>
+    <ID>CyclomaticComplexMethod:Oc2SetupReads.kt$internal suspend fun Oc2Gateway.readReferences(): Outcome&lt;ImmutableList&lt;ReferenceInfo&gt;&gt;</ID>
+    <ID>CyclomaticComplexMethod:Oc2Terminal.kt$internal suspend fun Oc2Gateway.terminalHandshake(id: String, cursor: Long?): Outcome&lt;Oc2TerminalHandshake&gt;</ID>
+    <ID>CyclomaticComplexMethod:Oc2TerminalConnection.kt$internal suspend fun Oc2Gateway.connectTerminalAt( id: String, cursor: Long?, at: ServerLocation, ): Outcome&lt;TerminalChannel&gt;</ID>
+    <ID>CyclomaticComplexMethod:Oc2WebSearch.kt$Oc2WebSearch$fun response(root: JsonElement, providerId: String): WebSearchResponse?</ID>
+    <ID>CyclomaticComplexMethod:Oc2WorktreeInspection.kt$Oc2WorktreeInspection$override suspend fun inspectionProject(location: ServerLocation): Outcome&lt;WorkspaceProject?&gt;</ID>
+    <ID>CyclomaticComplexMethod:Oc2WorktreeInspection.kt$Oc2WorktreeInspection$override suspend fun inspectionSessions( cursor: String?, limit: Int, includeArchived: Boolean, ): Outcome&lt;ServerPage&lt;Session&gt;&gt;</ID>
+    <ID>CyclomaticComplexMethod:Requests.kt$Oc2PermissionRequest.Companion$public fun fromJson(obj: JsonObject): Oc2PermissionRequest?</ID>
+    <ID>CyclomaticComplexMethod:WebSourcesReview.kt$WebSourcesReview$public suspend fun search(query: String)</ID>
+    <ID>EmptyFunctionBlock:Oc2MigrationTerminalRowsTest.kt$Oc2MigrationTerminalRowsTest.Echo${}</ID>
+    <ID>LargeClass:Oc2EventAdapter.kt$Oc2EventAdapter</ID>
+    <ID>LargeClass:Oc2Gateway.kt$Oc2Gateway : ServerGatewayServerOperationsGatewayTerminalCommandGatewayCorrelatedPromptGatewaySessionSelectionGatewayStagedRevertGatewaySessionReadStateGatewayFencedSessionReadStateGatewayFencedSlashCommandGatewayFencedNewSessionPromptGatewayPromptRunIdentityGatewayLocatedFileGatewayLocatedVcsGatewayLocatedManagedShellGatewayWebSearchGatewaySessionPermissionModeGatewaySessionTransferGatewaySessionNotesGatewaySetupInspectionGatewayLibraryGatewaySessionDispatchAdmissionGatewaySessionTransferImportGatewaySessionSkillGatewaySessionNoteGatewayMcpRemovalGatewayIntegrationCredentialGatewayIntegrationCommandGatewayIntegrationAuthRecoveryGatewayApiRouteGatewaySessionCreationGatewayWorktreeInspectionGatewayConfigurationGatewayBoundedHistoryGateway</ID>
+    <ID>LongMethod:LiveOc2ServerSmokeTest.kt$LiveOc2ServerSmokeTest$@Test fun `B-PROTO-042 real OC2 admits one prompt and emits a real response`()</ID>
+    <ID>LongMethod:Oc2CoreProjection.kt$Oc2CoreProjection$fun toCore(event: Oc2Adapted): GatewayEvent</ID>
+    <ID>LongMethod:Oc2Dialect.kt$Oc2Dialect$fun route( path: String, method: HttpMethod, body: JsonObject?, query: Map&lt;String, String?&gt;, ): Oc2Route</ID>
+    <ID>LongMethod:Oc2EventAdapter.kt$Oc2EventAdapter$private fun passThrough(e: Oc2Event.PassThrough): List&lt;Oc2Adapted&gt;</ID>
+    <ID>LongMethod:Oc2EventsTest.kt$Oc2EventsTest$@Test fun `B-PROTO-014 permission form status mcp vcs refresh and execution events parse`()</ID>
+    <ID>LongMethod:Oc2Gateway.kt$Oc2Gateway$override suspend fun providers(): Outcome&lt;ProvidersResponse&gt;</ID>
+    <ID>LongMethod:Oc2History.kt$Oc2History$fun message(session: String, value: JsonElement): MessageWithParts?</ID>
+    <ID>LongMethod:Oc2Integrations.kt$Oc2Integrations$override suspend fun addMcpServer(draft: McpServerDraft, scope: McpConfigScope): Outcome&lt;Unit&gt;</ID>
+    <ID>LongMethod:Oc2Integrations.kt$Oc2Integrations$override suspend fun integrations(): Outcome&lt;ImmutableList&lt;IntegrationInfo&gt;&gt;</ID>
+    <ID>LongMethod:Oc2LibraryOps.kt$Oc2LibraryOps$override suspend fun addMcpServer(draft: McpServerDraft, scope: McpConfigScope): Outcome&lt;Unit&gt;</ID>
+    <ID>LongMethod:Oc2LiveGatewayTest.kt$Oc2LiveGatewayTest$@Test fun `B-PROTO-039 health negotiates beta and stable before permission and interrupt mutations`()</ID>
+    <ID>LongMethod:Oc2ProviderInventory.kt$Oc2ProviderInventory$fun parse(root: JsonObject): Outcome&lt;ProvidersResponse&gt;?</ID>
+    <ID>LongMethod:Oc2ProviderSignIn.kt$Oc2ProviderSignIn$suspend fun integrations(): Outcome&lt;ImmutableList&lt;IntegrationInfo&gt;&gt;</ID>
+    <ID>LongParameterList:Oc2EventAdapter.kt$Oc2EventAdapter$( phase: Oc2Phase, sessionId: String, messageId: String, partId: String, kind: Oc2PartKind, delta: String?, text: String?, )</ID>
+    <ID>LongParameterList:Oc2Gateway.kt$Oc2Gateway$( internal val net: NetClient, internal val origin: ServerOrigin, private val credentials: ConnectionCredentials, private val clock: Clock, private val redactor: Redactor, initialLocation: ServerLocation = ServerLocation.Default, random: Random = Random.Default, initialDialect: Oc2Dialect? = null, private val requireDispatchAdmission: Boolean = false, )</ID>
+    <ID>LongParameterList:Oc2ServiceReports.kt$Oc2ServiceReports$( oc2: Oc2Gateway, id: String, directory: String, workspace: String?, cursor: Long, limit: Long, )</ID>
+    <ID>LoopWithTooManyJumpStatements:Oc2EventAdapter.kt$Oc2EventAdapter$for</ID>
+    <ID>LoopWithTooManyJumpStatements:Oc2Library.kt$Oc2Library$for</ID>
+    <ID>LoopWithTooManyJumpStatements:Oc2PtyOperations.kt$Oc2PtyChannel$for</ID>
+    <ID>LoopWithTooManyJumpStatements:Oc2Terminal.kt$Oc2PtyTerminalChannel$for</ID>
+    <ID>MagicNumber:Oc2ClientIds.kt$Oc2ClientIds$12</ID>
+    <ID>MagicNumber:Oc2ClientIds.kt$Oc2ClientIds$16</ID>
+    <ID>MagicNumber:Oc2ClientIds.kt$Oc2ClientIds$4096</ID>
+    <ID>MagicNumber:Oc2Dialect.kt$Oc2Dialect$3</ID>
+    <ID>MagicNumber:Oc2Errors.kt$Oc2Errors$401</ID>
+    <ID>MagicNumber:Oc2Errors.kt$Oc2Errors$403</ID>
+    <ID>MagicNumber:Oc2EventAdapter.kt$Oc2EventAdapter$4</ID>
+    <ID>MagicNumber:Oc2Gateway.kt$Oc2Gateway$100</ID>
+    <ID>MagicNumber:Oc2Gateway.kt$Oc2Gateway$1024</ID>
+    <ID>MagicNumber:Oc2Gateway.kt$Oc2Gateway$10_000</ID>
+    <ID>MagicNumber:Oc2Gateway.kt$Oc2Gateway$16_000</ID>
+    <ID>MagicNumber:Oc2Gateway.kt$Oc2Gateway$256</ID>
+    <ID>MagicNumber:Oc2Gateway.kt$Oc2Gateway$30_000</ID>
+    <ID>MagicNumber:Oc2Gateway.kt$Oc2Gateway$32</ID>
+    <ID>MagicNumber:Oc2Gateway.kt$Oc2Gateway$400</ID>
+    <ID>MagicNumber:Oc2Gateway.kt$Oc2Gateway$401</ID>
+    <ID>MagicNumber:Oc2Gateway.kt$Oc2Gateway$403</ID>
+    <ID>MagicNumber:Oc2Gateway.kt$Oc2Gateway$405</ID>
+    <ID>MagicNumber:Oc2Gateway.kt$Oc2Gateway$4096</ID>
+    <ID>MagicNumber:Oc2Gateway.kt$Oc2Gateway$413</ID>
+    <ID>MagicNumber:Oc2Gateway.kt$Oc2Gateway$50</ID>
+    <ID>MagicNumber:Oc2Gateway.kt$Oc2Gateway$500</ID>
+    <ID>MagicNumber:Oc2Gateway.kt$Oc2Gateway$501</ID>
+    <ID>MagicNumber:Oc2Gateway.kt$Oc2Gateway$512</ID>
+    <ID>MagicNumber:Oc2Gateway.kt$Oc2Gateway$60</ID>
+    <ID>MagicNumber:Oc2Gateway.kt$Oc2Gateway$65_536</ID>
+    <ID>MagicNumber:Oc2Gateway.kt$Oc2Gateway$8192</ID>
+    <ID>MagicNumber:Oc2GatewayFactory.kt$Oc2GatewayFactory$16</ID>
+    <ID>MagicNumber:Oc2GatewayFactory.kt$Oc2GatewayFactory$32</ID>
+    <ID>MagicNumber:Oc2GatewayFactory.kt$Oc2GatewayFactory$4097</ID>
+    <ID>MagicNumber:Oc2GatewayFactory.kt$Oc2GatewayFactory$4099</ID>
+    <ID>MagicNumber:Oc2GatewayFactory.kt$Oc2GatewayFactory$64</ID>
+    <ID>MagicNumber:Oc2HostTools.kt$Oc2HostTools$200</ID>
+    <ID>MagicNumber:Oc2HostTools.kt$Oc2HostTools$400</ID>
+    <ID>MagicNumber:Oc2HostTools.kt$Oc2HostTools$4096</ID>
+    <ID>MagicNumber:Oc2Integrations.kt$Oc2Integrations$127</ID>
+    <ID>MagicNumber:Oc2Integrations.kt$Oc2Integrations$159</ID>
+    <ID>MagicNumber:Oc2Integrations.kt$Oc2Integrations$160</ID>
+    <ID>MagicNumber:Oc2Integrations.kt$Oc2Integrations$2048</ID>
+    <ID>MagicNumber:Oc2Integrations.kt$Oc2Integrations$32</ID>
+    <ID>MagicNumber:Oc2Integrations.kt$Oc2Integrations$400</ID>
+    <ID>MagicNumber:Oc2Library.kt$Oc2Library$1000</ID>
+    <ID>MagicNumber:Oc2Library.kt$Oc2Library$200</ID>
+    <ID>MagicNumber:Oc2Library.kt$Oc2Library$405</ID>
+    <ID>MagicNumber:Oc2Library.kt$Oc2Library$501</ID>
+    <ID>MagicNumber:Oc2Library.kt$Oc2Library$512</ID>
+    <ID>MagicNumber:Oc2LibraryOps.kt$Oc2LibraryOps$10000</ID>
+    <ID>MagicNumber:Oc2LibraryOps.kt$Oc2LibraryOps$128</ID>
+    <ID>MagicNumber:Oc2LibraryOps.kt$Oc2LibraryOps$32</ID>
+    <ID>MagicNumber:Oc2LibraryOps.kt$Oc2LibraryOps$400</ID>
+    <ID>MagicNumber:Oc2LibraryOps.kt$Oc2LibraryOps$405</ID>
+    <ID>MagicNumber:Oc2LibraryOps.kt$Oc2LibraryOps$501</ID>
+    <ID>MagicNumber:Oc2ManagedShells.kt$Oc2ManagedShells$100</ID>
+    <ID>MagicNumber:Oc2ManagedShells.kt$Oc2ManagedShells$200</ID>
+    <ID>MagicNumber:Oc2ManagedShells.kt$Oc2ManagedShells$2000</ID>
+    <ID>MagicNumber:Oc2ManagedShells.kt$Oc2ManagedShells$4</ID>
+    <ID>MagicNumber:Oc2ManagedShells.kt$Oc2ManagedShells$400</ID>
+    <ID>MagicNumber:Oc2ManagedShells.kt$Oc2ManagedShells$405</ID>
+    <ID>MagicNumber:Oc2ManagedShells.kt$Oc2ManagedShells$4096</ID>
+    <ID>MagicNumber:Oc2ManagedShells.kt$Oc2ManagedShells$501</ID>
+    <ID>MagicNumber:Oc2ManagedShells.kt$Oc2ManagedShells$65_536</ID>
+    <ID>MagicNumber:Oc2Mcp.kt$Oc2Mcp$2000</ID>
+    <ID>MagicNumber:Oc2Mcp.kt$Oc2Mcp$256</ID>
+    <ID>MagicNumber:Oc2Mcp.kt$Oc2Mcp$400</ID>
+    <ID>MagicNumber:Oc2Mcp.kt$Oc2Mcp$4096</ID>
+    <ID>MagicNumber:Oc2Operations.kt$1000</ID>
+    <ID>MagicNumber:Oc2Operations.kt$405</ID>
+    <ID>MagicNumber:Oc2Operations.kt$4096</ID>
+    <ID>MagicNumber:Oc2Operations.kt$501</ID>
+    <ID>MagicNumber:Oc2Operations.kt$65_536</ID>
+    <ID>MagicNumber:Oc2ProviderInventory.kt$Oc2ProviderInventory$1000</ID>
+    <ID>MagicNumber:Oc2ProviderSignIn.kt$Oc2ProviderSignIn$1000</ID>
+    <ID>MagicNumber:Oc2ProviderSignIn.kt$Oc2ProviderSignIn$128</ID>
+    <ID>MagicNumber:Oc2ProviderSignIn.kt$Oc2ProviderSignIn$200</ID>
+    <ID>MagicNumber:Oc2ProviderSignIn.kt$Oc2ProviderSignIn$2000</ID>
+    <ID>MagicNumber:Oc2ProviderSignIn.kt$Oc2ProviderSignIn$32</ID>
+    <ID>MagicNumber:Oc2ProviderSignIn.kt$Oc2ProviderSignIn$512</ID>
+    <ID>MagicNumber:Oc2ProviderSignIn.kt$Oc2ProviderSignIn$64</ID>
+    <ID>MagicNumber:Oc2ProviderSignIn.kt$Oc2ProviderSignIn$65536</ID>
+    <ID>MagicNumber:Oc2ProviderSignIn.kt$Oc2ProviderSignIn$8192</ID>
+    <ID>MagicNumber:Oc2PtyOperations.kt$1000</ID>
+    <ID>MagicNumber:Oc2PtyOperations.kt$1_048_576</ID>
+    <ID>MagicNumber:Oc2PtyOperations.kt$2000</ID>
+    <ID>MagicNumber:Oc2PtyOperations.kt$Oc2PtyChannel$1_048_576</ID>
+    <ID>MagicNumber:Oc2SearchUsage.kt$Oc2SearchUsage$405</ID>
+    <ID>MagicNumber:Oc2SearchUsage.kt$Oc2SearchUsage$501</ID>
+    <ID>MagicNumber:Oc2SessionSkills.kt$Oc2SessionSkills$405</ID>
+    <ID>MagicNumber:Oc2SessionSkills.kt$Oc2SessionSkills$501</ID>
+    <ID>MagicNumber:Oc2SessionTransfer.kt$Oc2SessionTransfer$405</ID>
+    <ID>MagicNumber:Oc2SessionTransfer.kt$Oc2SessionTransfer$413</ID>
+    <ID>MagicNumber:Oc2SessionTransfer.kt$Oc2SessionTransfer$501</ID>
+    <ID>MagicNumber:Oc2SetupInspection.kt$2000</ID>
+    <ID>MagicNumber:Oc2SetupInspection.kt$Oc2SetupInspection$120</ID>
+    <ID>MagicNumber:Oc2SetupInspection.kt$Oc2SetupInspection$12000</ID>
+    <ID>MagicNumber:Oc2SetupInspection.kt$Oc2SetupInspection$2048</ID>
+    <ID>MagicNumber:Oc2SetupInspection.kt$Oc2SetupInspection$256</ID>
+    <ID>MagicNumber:Oc2SetupInspection.kt$Oc2SetupSnapshot$160</ID>
+    <ID>MagicNumber:Oc2SetupInspection.kt$Oc2SetupSnapshot$80</ID>
+    <ID>MagicNumber:Oc2SetupReads.kt$0x20</ID>
+    <ID>MagicNumber:Oc2SetupReads.kt$0x7f</ID>
+    <ID>MagicNumber:Oc2SetupReads.kt$200</ID>
+    <ID>MagicNumber:Oc2Terminal.kt$126</ID>
+    <ID>MagicNumber:Oc2Terminal.kt$127</ID>
+    <ID>MagicNumber:Oc2Terminal.kt$16_384</ID>
+    <ID>MagicNumber:Oc2Terminal.kt$16_385</ID>
+    <ID>MagicNumber:Oc2Terminal.kt$256</ID>
+    <ID>MagicNumber:Oc2Terminal.kt$32</ID>
+    <ID>MagicNumber:Oc2Terminal.kt$33</ID>
+    <ID>MagicNumber:Oc2Terminal.kt$4096</ID>
+    <ID>MagicNumber:Oc2TerminalConnection.kt$32</ID>
+    <ID>MagicNumber:Oc2TerminalConnection.kt$400</ID>
+    <ID>MagicNumber:Oc2TerminalConnection.kt$8192</ID>
+    <ID>MagicNumber:Oc2Terminals.kt$Oc2Terminals$1000</ID>
+    <ID>MagicNumber:Oc2Terminals.kt$Oc2Terminals$200</ID>
+    <ID>MagicNumber:Oc2Terminals.kt$Oc2Terminals$32</ID>
+    <ID>MagicNumber:Oc2Terminals.kt$Oc2Terminals$400</ID>
+    <ID>MagicNumber:Oc2Terminals.kt$Oc2Terminals.Companion$256</ID>
+    <ID>MagicNumber:Oc2WebSearch.kt$200</ID>
+    <ID>MagicNumber:Oc2WebSearch.kt$Oc2WebSearch$100</ID>
+    <ID>MagicNumber:Oc2WebSearch.kt$Oc2WebSearch$100_000</ID>
+    <ID>MagicNumber:Oc2WebSearch.kt$Oc2WebSearch$10_000</ID>
+    <ID>MagicNumber:Oc2WebSearch.kt$Oc2WebSearch$200</ID>
+    <ID>MagicNumber:Oc2WebSearch.kt$Oc2WebSearch$503</ID>
+    <ID>MagicNumber:Oc2WebSearch.kt$Oc2WebSearch$8192</ID>
+    <ID>MagicNumber:Oc2WorktreeInspection.kt$Oc2WorktreeInspection$127</ID>
+    <ID>MagicNumber:Oc2WorktreeInspection.kt$Oc2WorktreeInspection$200</ID>
+    <ID>MagicNumber:Oc2WorktreeInspection.kt$Oc2WorktreeInspection$2000</ID>
+    <ID>MagicNumber:Oc2WorktreeInspection.kt$Oc2WorktreeInspection$20_000</ID>
+    <ID>MagicNumber:Oc2WorktreeInspection.kt$Oc2WorktreeInspection$32</ID>
+    <ID>MagicNumber:Oc2WorktreeInspection.kt$Oc2WorktreeInspection$400</ID>
+    <ID>MagicNumber:Oc2WorktreeInspection.kt$Oc2WorktreeInspection$4096</ID>
+    <ID>MagicNumber:WebSourcesReview.kt$WebSourcesReview$100</ID>
+    <ID>MatchingDeclarationName:Errors.kt$Oc2ErrorEnvelope</ID>
+    <ID>MatchingDeclarationName:Usage.kt$Oc2UsageStatistics</ID>
+    <ID>MaxLineLength:Catalog.kt$Oc2ConfigEntry$public</ID>
+    <ID>MaxLineLength:Catalog.kt$Oc2ModelCost.Serializer$Wire(value.input, value.output, Cache(value.cacheRead, value.cacheWrite), value.tierSize?.let { Tier("context", it) })</ID>
+    <ID>MaxLineLength:Catalog.kt$Oc2ModelLimit$public</ID>
+    <ID>MaxLineLength:Common.kt$Oc2ModelRef.Serializer$val bare = if (wire.id.startsWith(prefix) &amp;&amp; wire.id.length &gt; prefix.length) wire.id.removePrefix(prefix) else wire.id</ID>
+    <ID>MaxLineLength:Common.kt$Oc2Page.Companion$val data = (obj["data"] as? kotlinx.serialization.json.JsonArray).orEmpty().mapNotNull { (it as? JsonObject)?.let(item) }</ID>
+    <ID>MaxLineLength:Common.kt$Oc2StructuredError.Companion$public fun fromJson(element: JsonElement?): Oc2StructuredError?</ID>
+    <ID>MaxLineLength:Common.kt$Oc2StructuredError.Serializer$Oc2StructuredError(obj.nonBlank("type") ?: obj.nonBlank("name"), obj.nonBlank("message"), obj.int("status"), obj)</ID>
+    <ID>MaxLineLength:ComposerFindingsModelTest.kt$ComposerFindingsModelTest$"""{"data":{"id":"opencode/glm-5.3","providerID":"opencode","name":"GLM","enabled":true,"capabilities":{"input":["text"],"output":["text"]},"limit":{},"variants":{}}}"""</ID>
+    <ID>MaxLineLength:ComposerFindingsModelTest.kt$ComposerFindingsModelTest$"""{"id":"gpt-5-high","modelID":"gpt-5","providerID":"openai","name":"GPT-5","enabled":true,"status":"active","capabilities":{"tools":true,"input":["text"],"output":["text"]},"limit":{"context":1000,"output":100},"variants":{}}"""</ID>
+    <ID>MaxLineLength:Content.kt$Oc2AssistantContentSerializer$is Oc2AssistantContent.Reasoning -&gt; withDiscriminator(Oc2AssistantContent.Reasoning.serializer(), value, "type", "reasoning")</ID>
+    <ID>MaxLineLength:Content.kt$Oc2AssistantContentSerializer$is Oc2AssistantContent.Text -&gt; withDiscriminator(Oc2AssistantContent.Text.serializer(), value, "type", "text")</ID>
+    <ID>MaxLineLength:Content.kt$Oc2AssistantContentSerializer$is Oc2AssistantContent.Tool -&gt; withDiscriminator(Oc2AssistantContent.Tool.serializer(), value, "type", "tool")</ID>
+    <ID>MaxLineLength:Content.kt$Oc2ToolResultItem.File$public</ID>
+    <ID>MaxLineLength:Content.kt$Oc2ToolState$public</ID>
+    <ID>MaxLineLength:Content.kt$Oc2ToolState.Companion$public</ID>
+    <ID>MaxLineLength:Content.kt$Oc2ToolStateSerializer$is Oc2ToolState.Completed -&gt; withDiscriminator(Oc2ToolState.Completed.serializer(), value, "status", "completed")</ID>
+    <ID>MaxLineLength:Content.kt$Oc2ToolStateSerializer$is Oc2ToolState.Streaming -&gt; withDiscriminator(Oc2ToolState.Streaming.serializer(), value, "status", "streaming")</ID>
+    <ID>MaxLineLength:CoordinatorComposerModelTest.kt$CoordinatorComposerModelTest$val catalog = assertIs&lt;Outcome.Ok&lt;*&gt;&gt;(g.catalog()).value as io.github.eslamasabry.oc.core.model.CatalogSnapshot</ID>
+    <ID>MaxLineLength:CoordinatorComposerModelTest.kt$CoordinatorComposerModelTest$val g = gateway("""{"data":[{"id":"glm-5.3-flash-free","modelID":"glm-5.3-flash-free","providerID":"opencode","name":"GLM-5.3-Flash Free","enabled":true,"status":"active","capabilities":{"tools":true,"input":["text","image"],"output":["text"]},"limit":{"context":128000,"output":8192},"variants":{},"apiKey":"TEST_SECRET_MUST_NOT_SURVIVE"}]}""")</ID>
+    <ID>MaxLineLength:CoordinatorComposerModelTest.kt$CoordinatorComposerModelTest$val g = gateway("""{"data":{"id":"s","model":{"id":"glm-5.3-flash-free","providerID":"opencode","variant":"default"},"agent":"build"}}""")</ID>
+    <ID>MaxLineLength:CoordinatorComposerModelTest.kt$CoordinatorComposerModelTest$val session = assertIs&lt;Outcome.Ok&lt;*&gt;&gt;(g.session(SessionId("s"))).value as io.github.eslamasabry.oc.core.model.Session</ID>
+    <ID>MaxLineLength:Message.kt$Oc2Message.Companion$"system" to serializer&lt;System&gt;()</ID>
+    <ID>MaxLineLength:Message.kt$Oc2MessageSerializer$override fun read(obj: JsonObject): Oc2Message</ID>
+    <ID>MaxLineLength:Oc2AskFirstTest.kt$Oc2AskFirstTest$"""{"id":"plan","hidden":false,"mode":"primary","permissions":[{"action":"edit","resource":"*","effect":"deny"}]}"""</ID>
+    <ID>MaxLineLength:Oc2AskFirstTest.kt$Oc2AskFirstTest$respond("""{"data":{"id":"inbox1","sessionID":"s","type":"user","clientMessageID":"c1"}}""", HttpStatusCode.OK)</ID>
+    <ID>MaxLineLength:Oc2ClientIds.kt$Oc2ClientIds$*</ID>
+    <ID>MaxLineLength:Oc2ConfigurationPreview.kt$Oc2ConfigurationPreview.Companion$"key|token|secret|password|credential|environment|headers|options|request|command|template|prompt|system|content"</ID>
+    <ID>MaxLineLength:Oc2CoreProjectionTest.kt$Oc2CoreProjectionTest$assertEquals(listOf&lt;GatewayEvent&gt;(GatewayEvent.RefreshHint(HintKind("catalog"))), feed("""{"type":"models-dev.refreshed","data":{}}"""))</ID>
+    <ID>MaxLineLength:Oc2CoreProjectionTest.kt$Oc2CoreProjectionTest$v2("permission.asked", """{"id":"per_1","action":"bash","resources":["ls"],"save":["ls *"],"source":{"type":"tool","messageID":"m","id":"call_1"}}""")</ID>
+    <ID>MaxLineLength:Oc2CoreProjectionTest.kt$Oc2CoreProjectionTest$v2("session.execution.failed", """{"error":{"type":"provider.auth","message":"bad key $secret"}}""").single()</ID>
+    <ID>MaxLineLength:Oc2CoreProjectionTest.kt$Oc2CoreProjectionTest$v2("session.tool.called", """{"assistantMessageID":"msg_a1","id":"call_1","input":{"pattern":"x"},"executed":false}""")</ID>
+    <ID>MaxLineLength:Oc2CoreProjectionTest.kt$Oc2CoreProjectionTest$val delta = assertIs&lt;GatewayEvent.PartDelta&gt;(v2("session.text.delta", """{"assistantMessageID":"msg_a","ordinal":1,"delta":"po"}""").single())</ID>
+    <ID>MaxLineLength:Oc2CoreProjectionTest.kt$Oc2CoreProjectionTest$val ended = assertIs&lt;GatewayEvent.PartUpserted&gt;(v2("session.reasoning.ended", """{"assistantMessageID":"msg_a","ordinal":0,"text":"think"}""").single()).part</ID>
+    <ID>MaxLineLength:Oc2CoreProjectionTest.kt$Oc2CoreProjectionTest$val interrupted = assertIs&lt;GatewayEvent.RunEnded&gt;(v2("session.execution.interrupted", """{"reason":"superseded"}""").single())</ID>
+    <ID>MaxLineLength:Oc2CoreProjectionTest.kt$Oc2CoreProjectionTest$val started = v2("session.step.started", """{"assistantMessageID":"msg_a","agent":"build","model":{"id":"gpt","providerID":"openai"}}""")</ID>
+    <ID>MaxLineLength:Oc2CoreProjectionTest.kt$Oc2CoreProjectionTest$val unknown = assertIs&lt;GatewayEvent.RunEnded&gt;(v2("session.execution.interrupted", """{"reason":" "}""").single())</ID>
+    <ID>MaxLineLength:Oc2Dialect.kt$Oc2Dialect$if (method == HttpMethod.Post &amp;&amp; PermissionReply.matches(rest)) return same(b = rename(body, "reply", "decision"))</ID>
+    <ID>MaxLineLength:Oc2Dialect.kt$Oc2Dialect$return same(b = JsonObject(if (before != null &amp;&amp; before != JsonNull) mapOf("before" to before) else emptyMap()))</ID>
+    <ID>MaxLineLength:Oc2DialectRowsTest.kt$Oc2DialectRowsTest$)</ID>
+    <ID>MaxLineLength:Oc2DialectRowsTest.kt$Oc2DialectRowsTest$Oc2Dialect.Stable.response(HttpMethod.Get, "/project/current", el("""{"directory":"/w","project":{"id":"prj_1","directory":"/w","canonical":"/w"}}"""))</ID>
+    <ID>MaxLineLength:Oc2DialectRowsTest.kt$Oc2DialectRowsTest$Oc2Dialect.Stable.response(HttpMethod.Get, "/session/s/form/f/state", el("""{"data":{"id":"f","state":{"status":"pending"}}}"""))</ID>
+    <ID>MaxLineLength:Oc2DialectRowsTest.kt$Oc2DialectRowsTest$assertEquals</ID>
+    <ID>MaxLineLength:Oc2DialectRowsTest.kt$Oc2DialectRowsTest$assertEquals(listOf(HttpMethod.Get, "/worktree", mapOf("projectID" to "prj_1"), null, null), route(HttpMethod.Get, "/worktree/prj_1"))</ID>
+    <ID>MaxLineLength:Oc2DialectRowsTest.kt$Oc2DialectRowsTest$assertEquals(listOf(method, "/experimental$path", emptyMap&lt;String, String?&gt;(), null, null), route(method, path), path)</ID>
+    <ID>MaxLineLength:Oc2DialectRowsTest.kt$Oc2DialectRowsTest$assertEquals(mapOf&lt;String, String?&gt;("resume" to "true"), route(HttpMethod.Post, "/session/ses_1/interrupt", mapOf("continue" to "true"))[2])</ID>
+    <ID>MaxLineLength:Oc2DialectRowsTest.kt$Oc2DialectRowsTest$assertEquals(obj("""{"command":"ls"}"""), route(HttpMethod.Post, "/session/ses_1/shell", body = obj("""{"command":"ls"}"""))[3])</ID>
+    <ID>MaxLineLength:Oc2DialectRowsTest.kt$Oc2DialectRowsTest$assertEquals(obj("{}"), route(HttpMethod.Post, "/session/ses_1/fork", body = obj("""{"boundary":{"type":"through"}}"""))[3])</ID>
+    <ID>MaxLineLength:Oc2DialectRowsTest.kt$Oc2DialectRowsTest$listOf(HttpMethod.Delete, "/worktree", emptyMap&lt;String, String?&gt;(), obj("""{"directory":"/w/fix","force":false,"projectID":"prj_1"}"""), null)</ID>
+    <ID>MaxLineLength:Oc2DialectRowsTest.kt$Oc2DialectRowsTest$listOf(HttpMethod.Patch, "/session/ses_1/inbox/inb_1", emptyMap&lt;String, String?&gt;(), obj("""{"delivery":"$delivery"}"""), null)</ID>
+    <ID>MaxLineLength:Oc2DialectRowsTest.kt$Oc2DialectRowsTest$listOf(HttpMethod.Post, "/worktree", emptyMap&lt;String, String?&gt;(), obj("""{"name":"fix","projectID":"prj_1"}"""), null)</ID>
+    <ID>MaxLineLength:Oc2DialectRowsTest.kt$Oc2DialectRowsTest$listOf(HttpMethod.Post, "/worktree/refresh", emptyMap&lt;String, String?&gt;(), obj("""{"projectID":"prj_1"}"""), null)</ID>
+    <ID>MaxLineLength:Oc2DialectRowsTest.kt$Oc2DialectRowsTest$route(HttpMethod.Post, "/session/ses_1/fork", body = obj("""{"boundary":{"type":"before","messageID":"msg_9"}}"""))[3]</ID>
+    <ID>MaxLineLength:Oc2DialectRowsTest.kt$Oc2DialectRowsTest$route(HttpMethod.Post, "/session/ses_1/permission/per_1/reply", body = obj("""{"reply":"once","message":"ok"}"""))[3]</ID>
+    <ID>MaxLineLength:Oc2DialectRowsTest.kt$Oc2DialectRowsTest$val health = Oc2Dialect.Stable.response(HttpMethod.Get, "/health", el("""{"version":"2.0.10","pid":42,"urls":["http://127.0.0.1:4096"]}"""))</ID>
+    <ID>MaxLineLength:Oc2Event.kt$Oc2Event.PassThrough$*</ID>
+    <ID>MaxLineLength:Oc2Event.kt$Oc2Event.Unknown$public data</ID>
+    <ID>MaxLineLength:Oc2EventAdapterTest.kt$Oc2EventAdapterTest$"""{"assistantMessageID":"msg_a1","id":"call_1","content":[{"type":"text","text":"found"}],"executed":true}"""</ID>
+    <ID>MaxLineLength:Oc2EventAdapterTest.kt$Oc2EventAdapterTest$"""{"assistantMessageID":"msg_a1","id":"call_9","content":[{"type":"text","text":"hello.txt"}],"executed":true}"""</ID>
+    <ID>MaxLineLength:Oc2EventAdapterTest.kt$Oc2EventAdapterTest$"""{"type":"session.step.started","data":{"sessionID":"ses_other","assistantMessageID":"msg_b1","agent":"build"}}"""</ID>
+    <ID>MaxLineLength:Oc2EventAdapterTest.kt$Oc2EventAdapterTest$adapter().v2("permission.asked", """{"id":"per_1","action":"bash","source":{"type":"tool","messageID":"m","id":"call_1"}}""").single()</ID>
+    <ID>MaxLineLength:Oc2EventAdapterTest.kt$Oc2EventAdapterTest$adapter().v2("session.retry.scheduled", """{"attempt":2,"at":99,"error":{"type":"api","message":"Overloaded"}}""").single()</ID>
+    <ID>MaxLineLength:Oc2EventAdapterTest.kt$Oc2EventAdapterTest$adapter.v2("session.reasoning.ended", """{"assistantMessageID":"msg_a","ordinal":0,"text":"think"}""").single()</ID>
+    <ID>MaxLineLength:Oc2EventAdapterTest.kt$Oc2EventAdapterTest$adapter.v2("session.step.started", """{"assistantMessageID":"msg_1","agent":"build","model":{"id":"gpt","providerID":"openai"}}""")</ID>
+    <ID>MaxLineLength:Oc2EventAdapterTest.kt$Oc2EventAdapterTest$adapter.v2("session.tool.input.delta", """{"assistantMessageID":"msg_a","id":"call_1","delta":"{\"a"}""").single()</ID>
+    <ID>MaxLineLength:Oc2EventAdapterTest.kt$Oc2EventAdapterTest$adapter.v2("session.tool.success", """{"assistantMessageID":"msg_a1","id":"$id","content":[],"executed":false}""")</ID>
+    <ID>MaxLineLength:Oc2EventAdapterTest.kt$Oc2EventAdapterTest$assertEquals(listOf&lt;Oc2Adapted&gt;(Oc2Adapted.RefreshHint(kind)), adapter().feed("""{"type":"$type","data":{}}"""), type)</ID>
+    <ID>MaxLineLength:Oc2EventAdapterTest.kt$Oc2EventAdapterTest$for (i in 0 until 300) adapter.v2("session.tool.input.started", """{"assistantMessageID":"msg_a1","id":"c$i","name":"t"}""")</ID>
+    <ID>MaxLineLength:Oc2EventAdapterTest.kt$Oc2EventAdapterTest$out.filterIsInstance&lt;Oc2Adapted.PartUpserted&gt;().mapNotNull { e -&gt; e.part.tool?.let { e.part.partId to it.status } }</ID>
+    <ID>MaxLineLength:Oc2EventAdapterTest.kt$Oc2EventAdapterTest$v2("session.tool.called", """{"assistantMessageID":"msg_a1","id":"$id","input":{"pattern":"$pattern"},"executed":false}""")</ID>
+    <ID>MaxLineLength:Oc2EventAdapterTest.kt$Oc2EventAdapterTest$val moved = assertIs&lt;Oc2Adapted.SessionChanged&gt;(adapter().v2("session.moved", """{"location":{"directory":"/a"}}""").single())</ID>
+    <ID>MaxLineLength:Oc2EventAdapterTest.kt$Oc2EventAdapterTest$val next = adapter().apply { twoSearches() }.v2("session.step.started", """{"assistantMessageID":"msg_a2","agent":"build"}""")</ID>
+    <ID>MaxLineLength:Oc2EventAdapterTest.kt$Oc2EventAdapterTest$val ok = adapter().feed("""{"type":"credential.switched","data":{"integrationID":"gh","credentialID":null,"secret":"x"}}""")</ID>
+    <ID>MaxLineLength:Oc2EventAdapterTest.kt$Oc2EventAdapterTest$val out = adapter.v2("session.step.failed", """{"assistantMessageID":"msg_1","error":{"type":"api","message":"","status":529}}""")</ID>
+    <ID>MaxLineLength:Oc2EventAdapterTest.kt$Oc2EventAdapterTest$val renamed = assertIs&lt;Oc2Adapted.SessionChanged&gt;(adapter().v2("session.renamed", """{"title":"New"}""").single())</ID>
+    <ID>MaxLineLength:Oc2EventRegistryDocTest.kt$Oc2EventRegistryDocTest$val documented = Regex("`([a-z][a-z0-9-]*(?:\\.[a-z0-9-]+)+)`").findAll(section).map { it.groupValues[1] }.toSet()</ID>
+    <ID>MaxLineLength:Oc2EventsTest.kt$Oc2EventsTest$"""{"type":"session.inbox.delivery.changed","data":{"sessionID":"ses_1","inboxID":"msg_1","delivery":"steer"}}"""</ID>
+    <ID>MaxLineLength:Oc2EventsTest.kt$Oc2EventsTest$"""{"type":"session.text.ended","durable":{"aggregateID":"ses_1","seq":42,"version":1},"data":{"text":"x"}}"""</ID>
+    <ID>MaxLineLength:Oc2EventsTest.kt$Oc2EventsTest$assertEquals("/w", env("""{"type":"server.connected","location":{"directory":"/w","workspace":"wrk"}}""").location?.directory)</ID>
+    <ID>MaxLineLength:Oc2EventsTest.kt$Oc2EventsTest$assertEquals("agent.updated", assertIs&lt;Oc2Event.RefreshHint&gt;(env("""{"type":"agent.updated","data":{}}""").event).topic)</ID>
+    <ID>MaxLineLength:Oc2EventsTest.kt$Oc2EventsTest$env("""{"type":"permission.replied","data":{"sessionID":"ses_1","requestID":"per_1","reply":"once"}}""").event</ID>
+    <ID>MaxLineLength:Oc2EventsTest.kt$Oc2EventsTest$val idle = assertIs&lt;Oc2Event.SessionStatus&gt;(env("""{"type":"session.idle","data":{"sessionID":"ses_1"}}""").event)</ID>
+    <ID>MaxLineLength:Oc2EventsTest.kt$Oc2EventsTest$val mcp = assertIs&lt;Oc2Event.McpChanged&gt;(env("""{"type":"mcp.status.changed","data":{"server":"github"}}""").event)</ID>
+    <ID>MaxLineLength:Oc2EventsTest.kt$Oc2EventsTest$val synced = assertIs&lt;Oc2Event.LogSynced&gt;(env("""{"type":"log.synced","aggregateID":"ses_fb53","seq":10}""").event)</ID>
+    <ID>MaxLineLength:Oc2Gateway.kt$Oc2Gateway$if (message.info.id.isEmpty() || !seen.add(message.info.id)) return@flatMap Failure.UnreadableReply().failed()</ID>
+    <ID>MaxLineLength:Oc2Gateway.kt$Oc2Gateway$is Outcome.Ok -&gt; (data(started.value) as? JsonObject)?.str("id") ?: return Failure.UnreadableReply().failed()</ID>
+    <ID>MaxLineLength:Oc2LiveGatewayTest.kt$Oc2LiveGatewayTest$"""{"data":[{"id":"a","type":"assistant","content":[{"type":"text","text":"world"},{"type":"reasoning","text":"thought"}]},{"id":"u","type":"user","text":"hello"}],"cursor":{"next":"opaque"}}"""</ID>
+    <ID>MaxLineLength:Oc2LiveGatewayTest.kt$Oc2LiveGatewayTest$"""{"data":{"messageID":"msg_1","snapshot":"snap","files":[{"file":"a.kt","patch":"@@ -1 +1 @@","additions":1,"deletions":2,"status":"modified"}]}}"""</ID>
+    <ID>MaxLineLength:Oc2LiveGatewayTest.kt$Oc2LiveGatewayTest$"""{"id":"m","type":"system","text":"private instructions","description":"Instructions updated for this session"}"""</ID>
+    <ID>MaxLineLength:Oc2LiveGatewayTest.kt$Oc2LiveGatewayTest$"""{"type":"tool","id":"c1","name":"bash","state":{"status":"completed","input":{"command":"npm test"},"content":[{"type":"text","text":"ok"}]},"time":{"created":3000,"ran":4000,"completed":8200}},"""</ID>
+    <ID>MaxLineLength:Oc2LiveGatewayTest.kt$Oc2LiveGatewayTest$"""{"type":"tool","id":"c2","name":"bash","state":{"status":"running","input":{"command":"ls"}},"time":{"created":8500}}]}"""</ID>
+    <ID>MaxLineLength:Oc2LiveGatewayTest.kt$Oc2LiveGatewayTest$"/api/session/s/message/u" -&gt; respond("""{"data":{"id":"u","type":"user","text":"make it blue"}}""", HttpStatusCode.OK)</ID>
+    <ID>MaxLineLength:Oc2LiveGatewayTest.kt$Oc2LiveGatewayTest$else -&gt; respond("""{"data":{"id":"a","type":"assistant","content":[{"type":"text","text":"done"}]}}""", HttpStatusCode.OK)</ID>
+    <ID>MaxLineLength:Oc2LiveGatewayTest.kt$Oc2LiveGatewayTest$listOf("POST /api/session/s/revert/clear", "POST /api/session/s/revert/commit", "DELETE /api/session/s/revert")</ID>
+    <ID>MaxLineLength:Oc2LiveGatewayTest.kt$Oc2LiveGatewayTest$val revert = (gateway.stageSessionRevert(SessionId("s"), MessageId("msg_1"), applyFiles = false) as Outcome.Ok).value</ID>
+    <ID>MaxLineLength:Oc2LocatedFilesTest.kt$Oc2LocatedFilesTest$NetClient(HttpClient(engine) { expectSuccess = false; followRedirects = false }, { TransportError.Other })</ID>
+    <ID>MaxLineLength:Oc2LocatedFilesTest.kt$Oc2LocatedFilesTest$request.url.encodedPath.endsWith("/fs/find") -&gt; respond("""{"data":[{"path":"a.kt","type":"file"}]}""", HttpStatusCode.OK)</ID>
+    <ID>MaxLineLength:Oc2MapperRowsTest.kt$Oc2MapperRowsTest$/** Flutter test/api2_gateway_mappers_test.dart over the same captured fixtures (B-PROTO-017), plus the B-PROTO-037 source guard. */</ID>
+    <ID>MaxLineLength:Oc2MapperRowsTest.kt$Oc2MapperRowsTest$for (banned in listOf("auth_token", "withAuthToken", "authTokenUri")) assertFalse(banned in code, "${file.name}: $banned")</ID>
+    <ID>MaxLineLength:Oc2MapperRowsTest.kt$Oc2MapperRowsTest$map("""{"id":"msg_t","type":"assistant","time":{"created":1,"completed":2},"content":[{"type":"tool","id":"call_1","name":"$name","state":$state}]}""")</ID>
+    <ID>MaxLineLength:Oc2MapperRowsTest.kt$Oc2MapperRowsTest$val code = file.readLines().filterNot { it.trimStart().startsWith("//") || it.trimStart().startsWith("*") }.joinToString("\n")</ID>
+    <ID>MaxLineLength:Oc2MapperRowsTest.kt$Oc2MapperRowsTest$val failed = map("""{"id":"msg_shell2","type":"shell","time":{"created":1,"completed":2},"command":"false","status":"exited","exit":1,"output":{"output":"boom","truncated":false}}""").parts.single()</ID>
+    <ID>MaxLineLength:Oc2MapperRowsTest.kt$Oc2MapperRowsTest$val ok = map("""{"id":"msg_shell","type":"shell","time":{"created":1,"completed":2},"shellID":"sh_1","command":"ls -la","status":"exited","exit":0,"output":{"output":"README.md\nlib\n","truncated":false}}""")</ID>
+    <ID>MaxLineLength:Oc2MapperRowsTest.kt$Oc2MapperRowsTest$val part = map("""{"id":"msg_shell3","type":"shell","time":{"created":1,"completed":2},"shellID":"sh_9","command":"sleep 900","status":"timeout","output":{"output":"","truncated":true}}""").parts.single()</ID>
+    <ID>MaxLineLength:Oc2MapperRowsTest.kt$Oc2MapperRowsTest$val state = tool("""{"status":"completed","input":{},"content":[{"type":"text","text":"first render:"},{"type":"file","uri":"file:///tmp/before.png","mime":"image/png","name":"before.png"},{"type":"text","text":"after the fix:"},{"type":"file","uri":"file:///tmp/after.png","mime":"image/png","name":"after.png"}]}""")</ID>
+    <ID>MaxLineLength:Oc2MapperRowsTest.kt$Oc2MapperRowsTest$val state = tool("""{"status":"completed","input":{},"content":[{"type":"text","text":"wrote image"},{"type":"file","uri":"file:///tmp/shot.png","mime":"image/png","name":"shot.png"}]}""")</ID>
+    <ID>MaxLineLength:Oc2MapperRowsTest.kt$Oc2MapperRowsTest$val state = tool("""{"status":"error","input":{"path":"x"},"error":{"type":"ToolError","message":"file missing"}}""", "read")</ID>
+    <ID>MaxLineLength:Oc2MigrationTerminalRowsTest.kt$Oc2MigrationTerminalRowsTest$HistoryMigrationStatus(HistoryMigrationPhase.Running, label = "Migrating sessions", done = 3, total = 12).line</ID>
+    <ID>MaxLineLength:Oc2MigrationTerminalRowsTest.kt$Oc2MigrationTerminalRowsTest$assertEquals(HistoryMigrationLine.Copying(null, null), HistoryMigrationStatus(HistoryMigrationPhase.Required).line)</ID>
+    <ID>MaxLineLength:Oc2MigrationTerminalRowsTest.kt$Oc2MigrationTerminalRowsTest$val running = read("""{"status":"running","progress":{"label":"Migrating sessions","numerator":3,"denominator":12}}""")!!</ID>
+    <ID>MaxLineLength:Oc2ModelsTest.kt$Oc2ModelsTest$obj("""{"id":"ses_1","title":42,"cost":"free","tokens":{"input":"x","output":7.9},"time":{"created":1.5}}""")</ID>
+    <ID>MaxLineLength:Oc2OperationsRowsTest.kt$Oc2OperationsRowsTest$"""{"id":"sh_a","command":"flutter test","status":"running","cwd":"/private/work","file":"/private/output","shell":"/bin/sh","metadata":{"sessionID":"ses_a"},"time":{"started":1000}}"""</ID>
+    <ID>MaxLineLength:Oc2OperationsRowsTest.kt$Oc2OperationsRowsTest$"/api/shell/sh_a" -&gt; if (seen.method == "DELETE") respond("", HttpStatusCode.NoContent) else json("""{"data":$shellJson}""")</ID>
+    <ID>MaxLineLength:Oc2OperationsRowsTest.kt$Oc2OperationsRowsTest$assertEquals("https://example.com/mcp", (seen.json as JsonObject)["config"]!!.jsonObject["url"].toString().trim('"'))</ID>
+    <ID>MaxLineLength:Oc2OperationsRowsTest.kt$Oc2OperationsRowsTest$assertEquals(ManagedShellStatus.Running, assertIs&lt;Outcome.Ok&lt;ManagedShell?&gt;&gt;(g.managedShell("sh_a")).value!!.status)</ID>
+    <ID>MaxLineLength:Oc2OperationsRowsTest.kt$Oc2OperationsRowsTest$assertEquals(Outcome.Ok(Unit), g.addMcpServer(McpServerDraft("local", McpServerKind.Local, null, persistentListOf("node", "server.js"), null, persistentMapOf(), persistentMapOf(), true, 5000), McpConfigScope.RuntimeLocation))</ID>
+    <ID>MaxLineLength:Oc2OperationsRowsTest.kt$Oc2OperationsRowsTest$assertEquals(Outcome.Ok(Unit), g.addMcpServer(docs.copy(name = "remote", timeoutMs = 7000), McpConfigScope.RuntimeLocation))</ID>
+    <ID>MaxLineLength:Oc2OperationsRowsTest.kt$Oc2OperationsRowsTest$assertEquals(obj("""{"type":"local","command":["node","server.js"],"timeout":{"startup":5000,"catalog":5000,"execution":5000}}"""), configs[0])</ID>
+    <ID>MaxLineLength:Oc2OperationsRowsTest.kt$Oc2OperationsRowsTest$assertIs&lt;Failure.Conflict&gt;(assertIs&lt;Outcome.Failed&gt;(server.gateway.addMcpServer(docs, McpConfigScope.RuntimeLocation)).failure)</ID>
+    <ID>MaxLineLength:Oc2OperationsRowsTest.kt$Oc2OperationsRowsTest$assertIs&lt;Outcome.Failed&gt;(g.addMcpServer(docs.copy(name = "bad", url = "https://user:pw@example.com/mcp"), McpConfigScope.RuntimeLocation))</ID>
+    <ID>MaxLineLength:Oc2OperationsRowsTest.kt$Oc2OperationsRowsTest$for (bad in listOf("/usr/sbin/nologin", "/nope/zsh")) assertIs&lt;Outcome.Failed&gt;(server.gateway.selectTerminalShell(bad))</ID>
+    <ID>MaxLineLength:Oc2OperationsRowsTest.kt$Oc2OperationsRowsTest$fun</ID>
+    <ID>MaxLineLength:Oc2OperationsRowsTest.kt$Oc2OperationsRowsTest$if</ID>
+    <ID>MaxLineLength:Oc2OperationsRowsTest.kt$Oc2OperationsRowsTest$json("""[{"path":"/bin/bash","name":"bash","acceptable":true},{"path":"/usr/sbin/nologin","name":"nologin","acceptable":false}]""")</ID>
+    <ID>MaxLineLength:Oc2OperationsRowsTest.kt$Oc2OperationsRowsTest$json("""{"data":[{"type":"global","info":{"shell":"/bin/sh"}},{"type":"project","info":{"shell":"/bin/bash"}},{"type":"project","info":{}}]}""")</ID>
+    <ID>MaxLineLength:Oc2OperationsRowsTest.kt$Oc2OperationsRowsTest$val created = assertIs&lt;Outcome.Ok&lt;WorktreeInfo&gt;&gt;(server.gateway.createWorktree("/root/projects/demo", "probe-a")).value</ID>
+    <ID>MaxLineLength:Oc2ParityTest.kt$Oc2ParityTest$expected != actual -&gt; out += "$path: ${expected.toString().take(120)} (Dart) vs ${actual.toString().take(120)}"</ID>
+    <ID>MaxLineLength:Oc2ParityTest.kt$Oc2ParityTest$for</ID>
+    <ID>MaxLineLength:Oc2ParityTest.kt$Oc2ParityTest$if (problems.isNotEmpty()) fail("${problems.size} differences from Dart:\n" + problems.take(40).joinToString("\n"))</ID>
+    <ID>MaxLineLength:Oc2ParityTest.kt$Oc2ParityTest$out["api2/message_assistant.json"] = d.message(Oc2Message.fromJson(Fixtures.data("api2/message_assistant.json")))</ID>
+    <ID>MaxLineLength:Oc2ParityTest.kt$Oc2ParityTest$out["api2/sessions_page.json"] = d.page(Oc2Page.decode(Fixtures.json("api2/sessions_page.json"), Oc2Session::fromJson), d::session)</ID>
+    <ID>MaxLineLength:Oc2ParityTest.kt$Oc2ParityTest$val actual = (kotlin.getValue(case) as JsonArray).map { it.jsonObject.getValue("event").jsonObject.let { e -&gt; e["v"] to e["phase"] } }</ID>
+    <ID>MaxLineLength:Oc2ParityTest.kt$Oc2ParityTest$val expected = (events as JsonArray).map { it.jsonObject.getValue("event").jsonObject.let { e -&gt; e["v"] to e["phase"] } }</ID>
+    <ID>MaxLineLength:Oc2PermissionDispatchTest.kt$Oc2PermissionDispatchTest$"""{"data":{"id":"build","permissions":[{"action":"*","resource":"*","effect":"allow"}]}}"""</ID>
+    <ID>MaxLineLength:Oc2PermissionDispatchTest.kt$Oc2PermissionDispatchTest$assertEquals(JsonPrimitive(true), (server.session["metadata"] as JsonObject)["keep"], "$kind: other metadata kept")</ID>
+    <ID>MaxLineLength:Oc2PermissionDispatchTest.kt$Oc2PermissionDispatchTest$fun</ID>
+    <ID>MaxLineLength:Oc2PermissionDispatchTest.kt$Oc2PermissionDispatchTest$if (server.failure != "readback") server.session = JsonObject(server.session + (body as JsonObject))</ID>
+    <ID>MaxLineLength:Oc2PermissionDispatchTest.kt$Oc2PermissionDispatchTest$if (server.failure == "agent") HttpStatusCode.ServiceUnavailable else HttpStatusCode.OK</ID>
+    <ID>MaxLineLength:Oc2PermissionDispatchTest.kt$Oc2PermissionDispatchTest$if (server.failure == "get") HttpStatusCode.ServiceUnavailable else HttpStatusCode.OK</ID>
+    <ID>MaxLineLength:Oc2PermissionDispatchTest.kt$Oc2PermissionDispatchTest$private fun effects(session: JsonObject)</ID>
+    <ID>MaxLineLength:Oc2PermissionDispatchTest.kt$Oc2PermissionDispatchTest$private fun freshSession()</ID>
+    <ID>MaxLineLength:Oc2PermissionDispatchTest.kt$Oc2PermissionDispatchTest$respond("""{"_tag":"NotFoundError","message":"Agent not found"}""", HttpStatusCode.NotFound)</ID>
+    <ID>MaxLineLength:Oc2PermissionDispatchTest.kt$Oc2PermissionDispatchTest$respond("""{"data":{"id":"msg_one","sessionID":"s","type":"user","payload":{"text":"write a file"}}}""", HttpStatusCode.OK)</ID>
+    <ID>MaxLineLength:Oc2PermissionDispatchTest.kt$Oc2PermissionDispatchTest$respond("", if (server.failure == "patch") HttpStatusCode.ServiceUnavailable else HttpStatusCode.NoContent)</ID>
+    <ID>MaxLineLength:Oc2PermissionDispatchTest.kt$Oc2PermissionDispatchTest$val server = Server(Json.parseToJsonElement("""{"id":"s","agent":"build","permissions":[],"metadata":{}}""").jsonObject, agentNotFoundFirst = true)</ID>
+    <ID>MaxLineLength:Oc2PermissionDispatchTest.kt$Oc2PermissionDispatchTest.Server$private</ID>
+    <ID>MaxLineLength:Oc2PermissionPolicy.kt$Oc2PermissionPolicy$(saved["version"] as? JsonPrimitive)?.contentOrNull == (expected["version"] as? JsonPrimitive)?.contentOrNull</ID>
+    <ID>MaxLineLength:Oc2PermissionPolicy.kt$Oc2PermissionPolicy.Companion$if</ID>
+    <ID>MaxLineLength:Oc2PermissionPolicyTest.kt$Oc2PermissionPolicyTest$agent("build", listOf(rule("*", "deny"), rule("read", "allow"), rule("glob", "allow"), rule("edit", "deny", "/etc/*")))</ID>
+    <ID>MaxLineLength:Oc2PermissionPolicyTest.kt$Oc2PermissionPolicyTest$assertEquals(listOf(ask, ask), session().updateForAgent(agent("build", listOf(rule("*", "allow"))), serverRuns = false)!!.permissions())</ID>
+    <ID>MaxLineLength:Oc2PermissionPolicyTest.kt$Oc2PermissionPolicyTest$assertEquals(listOf(ask, rule("*", "deny"), rule("read", "ask"), rule("glob", "ask"), rule("edit", "deny", "/etc/*")), update.permissions())</ID>
+    <ID>MaxLineLength:Oc2PermissionPolicyTest.kt$Oc2PermissionPolicyTest$assertEquals(listOf(ask, rule("shell", "deny")), fresh.updateForAgent(resolved, serverRuns = false)!!.permissions())</ID>
+    <ID>MaxLineLength:Oc2PermissionPolicyTest.kt$Oc2PermissionPolicyTest$assertNull(Oc2PermissionPolicy.defaultAgent(Json.parseToJsonElement("""{"data":[{"id":"hidden","mode":"subagent","hidden":true}]}""")))</ID>
+    <ID>MaxLineLength:Oc2PermissionPolicyTest.kt$Oc2PermissionPolicyTest$assertNull(session(List(500) { rule("edit", "deny") }).updateForAgent(agent("build", List(500) { rule("shell", "deny") }), serverRuns = false))</ID>
+    <ID>MaxLineLength:Oc2PermissionPolicyTest.kt$Oc2PermissionPolicyTest$for</ID>
+    <ID>MaxLineLength:Oc2PermissionPolicyTest.kt$Oc2PermissionPolicyTest$private</ID>
+    <ID>MaxLineLength:Oc2PermissionPolicyTest.kt$Oc2PermissionPolicyTest$val back = session(update.permissions(), metadata = update.meta()).updateForAgent(agent("build", listOf(rule("*", "allow"))), serverRuns = false)!!</ID>
+    <ID>MaxLineLength:Oc2PermissionPolicyTest.kt$Oc2PermissionPolicyTest$val badProvenance = session(metadata = buildJsonObject { put(Oc2PermissionPolicy.METADATA_KEY, buildJsonObject { put("version", 2) }) })</ID>
+    <ID>MaxLineLength:Oc2PermissionPolicyTest.kt$Oc2PermissionPolicyTest$val fresh = assertNotNull(Oc2PermissionPolicy.fromSession(Json.parseToJsonElement("""{"data":{"id":"s"}}"""), "s"))</ID>
+    <ID>MaxLineLength:Oc2PermissionPolicyTest.kt$Oc2PermissionPolicyTest$val next = session(first.permissions(), agent = "plan", metadata = first.meta()).updateForAgent(agent("plan", planRules), serverRuns = false)!!</ID>
+    <ID>MaxLineLength:Oc2PermissionPolicyTest.kt$Oc2PermissionPolicyTest$val update = session(listOf(rule("shell", "deny"))).updateForAgent(agent("build", listOf(rule("*", "allow"))), serverRuns = true)!!</ID>
+    <ID>MaxLineLength:Oc2ProbeVerdictTest.kt$Oc2ProbeVerdictTest$if (it == "/api/health") """{"healthy":true,"version":"0.0.0-beta-18600","pid":42}""" to HttpStatusCode.OK else notFound</ID>
+    <ID>MaxLineLength:Oc2ProbeVerdictTest.kt$Oc2ProbeVerdictTest$private suspend</ID>
+    <ID>MaxLineLength:Oc2ProbeVerdictTest.kt$Oc2ProbeVerdictTest$val legacy = failure(probeWith { if (it == "/global/health") """{"healthy":true,"version":"0.3.5"}""" to HttpStatusCode.OK else notFound })</ID>
+    <ID>MaxLineLength:Oc2ProbeVerdictTest.kt$Oc2ProbeVerdictTest$val ok = probeWith { if (it == "/api/info") """{"version":"2.0.10","pid":4242,"urls":["http://127.0.0.1:4096"]}""" to HttpStatusCode.OK else notFound }</ID>
+    <ID>MaxLineLength:Oc2ProbeVerdictTest.kt$Oc2ProbeVerdictTest$val starting = failure(probeWith { if (it == "/api/health") """{"code":"service_starting"}""" to HttpStatusCode.ServiceUnavailable else notFound })</ID>
+    <ID>MaxLineLength:Oc2ProbeVerdictTest.kt$Oc2ProbeVerdictTest$val unhealthy = failure(probeWith { if (it == "/api/health") """{"healthy":false,"version":"0.0.0-beta-18600"}""" to HttpStatusCode.OK else notFound })</ID>
+    <ID>MaxLineLength:Oc2ProbeVerdictTest.kt$Oc2ProbeVerdictTest$val wrong = failure(probeWith(password = "not-the-password") { if (it == "/api/health") "" to HttpStatusCode.Unauthorized else notFound })</ID>
+    <ID>MaxLineLength:Oc2PromptSend.kt$Oc2PromptSend$*</ID>
+    <ID>MaxLineLength:Oc2PromptSend.kt$Oc2PromptSend$if (start != null &amp;&amp; end != null) put("mention", mention(start, end, "@${a.mentionPath}"))</ID>
+    <ID>MaxLineLength:Oc2PromptSendTest.kt$Oc2PromptSendTest$"""[{"uri":"file:///w/src/a.kt","name":"a.kt","mention":{"start":5,"end":14,"text":"@src/a.kt"}},{"uri":"data:image/png;base64,AA=="}]"""</ID>
+    <ID>MaxLineLength:Oc2PromptSendTest.kt$Oc2PromptSendTest$PromptAttachment("text/plain", "a.kt", "file:///w/src/a.kt", mentionPath = "src/a.kt", mentionStart = 5, mentionEnd = 14)</ID>
+    <ID>MaxLineLength:Oc2PromptSendTest.kt$Oc2PromptSendTest$assertEquals("""[{"name":"helper","mention":{"start":20,"end":27,"text":"@helper"}}]""", body["agents"].toString())</ID>
+    <ID>MaxLineLength:Oc2PromptSendTest.kt$Oc2PromptSendTest$assertEquals("queue", (Oc2PromptSend.body(OutgoingPrompt("later please", delivery = PromptDelivery.Queue))["delivery"] as JsonPrimitive).content)</ID>
+    <ID>MaxLineLength:Oc2PromptSendTest.kt$Oc2PromptSendTest$assertEquals("steer", (Oc2PromptSend.body(OutgoingPrompt("now", delivery = PromptDelivery.Steer))["delivery"] as JsonPrimitive).content)</ID>
+    <ID>MaxLineLength:Oc2PromptSendTest.kt$Oc2PromptSendTest$assertEquals(listOf("/session/ses_1/inbox", "/session/ses_1/message/msg_1"), Oc2PromptSend.lookupPaths("ses_1", "msg_1"))</ID>
+    <ID>MaxLineLength:Oc2PromptSendTest.kt$Oc2PromptSendTest$private fun obj(vararg pairs: Pair&lt;String, String&gt;): JsonObject</ID>
+    <ID>MaxLineLength:Oc2PromptSendTest.kt$Oc2PromptSendTest$val staged = Oc2Session.fromJson(buildJsonObject { put("id", "ses_1"); put("revert", buildJsonObject { put("messageID", "msg_old") }) })!!</ID>
+    <ID>MaxLineLength:Oc2SearchUsageTest.kt$Oc2SearchUsageTest$"""{"directory":"/work/app","project":{"id":"prj_app","directory":"/work/app","canonical":"/work/app"}}"""</ID>
+    <ID>MaxLineLength:Oc2SearchUsageTest.kt$Oc2SearchUsageTest$"/api/session" -&gt; """{"data":[${session("ses_1", "prj_other", "/work/other")}],"cursor":{"next":"c2"}}"""</ID>
+    <ID>MaxLineLength:Oc2SearchUsageTest.kt$Oc2SearchUsageTest$val g = gateway { """{"data":[${session("ses_1", "prj_a", "/work/app", archived = 5)}],"cursor":{"next":"c2"}}""" }</ID>
+    <ID>MaxLineLength:Oc2SessionSelectionTest.kt$Oc2SessionSelectionTest$"""{"data":[{"id":"build","mode":"primary"},{"id":"sub","mode":"subagent","hidden":true}]}"""</ID>
+    <ID>MaxLineLength:Oc2SessionSelectionTest.kt$Oc2SessionSelectionTest$"""{"data":[{"id":"p","name":"P","activation":"disabled"},{"id":"q","name":"Q"},{"id":"p","name":"dup"}]}"""</ID>
+    <ID>MaxLineLength:Oc2SessionSelectionTest.kt$Oc2SessionSelectionTest$"""{"data":{"id":"new","model":{"id":"m","providerID":"p","variant":"default"},"agent":"build"}}"""</ID>
+    <ID>MaxLineLength:Oc2SessionSelectionTest.kt$Oc2SessionSelectionTest$"""{"data":{"id":"set","model":{"id":"p/m","providerID":"p","variant":"fast"},"agent":"plan"}}"""</ID>
+    <ID>MaxLineLength:Oc2StepGapTest.kt$Oc2StepGapTest$assertTrue(v2("session.step.started", """{"assistantMessageID":"msg_a1","agent":"build"}""").any { it is Oc2Adapted.RunStarted })</ID>
+    <ID>MaxLineLength:Oc2Terminal.kt$(data?.get("ticket") as? JsonPrimitive)?.takeIf { it.isString }?.content?.takeIf { it.isNotEmpty() &amp;&amp; it.length &lt;= 4096 &amp;&amp; it.all { char -&gt; char.code in 33..126 } }</ID>
+    <ID>MaxLineLength:Oc2Terminal.kt$if (id.isBlank() || id.length &gt; 256 || id.any { it.code &lt; 32 || it.code == 127 }) return Failure.UnreadableReply().failed()</ID>
+    <ID>MaxLineLength:Oc2TransportRowsTest.kt$Oc2TransportRowsTest$"""{"_tag":"SessionNotFoundError","sessionID":"ses_missing","message":"Session not found: ses_missing"}"""</ID>
+    <ID>MaxLineLength:Oc2TransportRowsTest.kt$Oc2TransportRowsTest$/** Flutter test/api2_transport_test.dart, api2_health_identity_test.dart, product_repository_server_test.dart, message_delete_transport_test.dart. */</ID>
+    <ID>MaxLineLength:Oc2TransportRowsTest.kt$Oc2TransportRowsTest$fun</ID>
+    <ID>MaxLineLength:Oc2TransportRowsTest.kt$Oc2TransportRowsTest$val anonymous = RowServer(credentials = ConnectionCredentials.None) { respondEmpty(HttpStatusCode.Unauthorized) }</ID>
+    <ID>MaxLineLength:Oc2TransportRowsTest.kt$Oc2TransportRowsTest$val failure = assertIs&lt;Failure.Network&gt;(assertIs&lt;Outcome.Failed&gt;(server.gateway.session(SessionId("s"))).failure)</ID>
+    <ID>MaxLineLength:Oc2WebSearch.kt$Oc2WebSearch$(failure is Failure.Busy &amp;&amp; failure.kind != io.github.eslamasabry.oc.core.common.BusyKind.RateLimited)</ID>
+    <ID>MaxLineLength:Oc2WebSearchRowsTest.kt$Oc2WebSearchRowsTest$"""{"id":"evt_search","created":1,"type":"websearch.updated","data":{"private":"ignored"},"location":{"directory":"/project"}}"""</ID>
+    <ID>MaxLineLength:Oc2WebSearchRowsTest.kt$Oc2WebSearchRowsTest$"""{"location":{"directory":"/project","workspaceID":"workspace"},"data":[{"id":"one","name":"One"}]}"""</ID>
+    <ID>MaxLineLength:Oc2WebSearchRowsTest.kt$Oc2WebSearchRowsTest$"""{"location":{"directory":"/project","workspaceID":"workspace"},"data":{"providerID":"one","results":[{"url":"https://example.com/doc","time":{}}]}}"""</ID>
+    <ID>MaxLineLength:Oc2WebSearchRowsTest.kt$Oc2WebSearchRowsTest$assertEquals("one", assertIs&lt;Outcome.Ok&lt;ImmutableList&lt;WebSearchProvider&gt;&gt;&gt;(g.webSearchProviders()).value.single().id)</ID>
+    <ID>MaxLineLength:Oc2WebSearchRowsTest.kt$Oc2WebSearchRowsTest$assertEquals(Json.parseToJsonElement("""{"query":"docs","providerID":"one"}""").jsonObject, server.seen.last().json)</ID>
+    <ID>MaxLineLength:Oc2WebSearchRowsTest.kt$Oc2WebSearchRowsTest$assertEquals(listOf&lt;GatewayEvent&gt;(GatewayEvent.RefreshHint(io.github.eslamasabry.oc.core.domain.events.HintKind("websearch"))), core)</ID>
+    <ID>MaxLineLength:Oc2WebSearchRowsTest.kt$Oc2WebSearchRowsTest$for (query in listOf("", " ", "a".repeat(1001))) assertIs&lt;Outcome.Failed&gt;(server.gateway.searchWeb(query, "one"))</ID>
+    <ID>MaxLineLength:Oc2WebSearchRowsTest.kt$Oc2WebSearchRowsTest$if</ID>
+    <ID>MaxLineLength:Oc2WebSearchRowsTest.kt$Oc2WebSearchRowsTest$json("""{"_tag":"ServiceUnavailableError","message":"private remote body"}""", HttpStatusCode.ServiceUnavailable)</ID>
+    <ID>MaxLineLength:Oc2WebSearchRowsTest.kt$Oc2WebSearchRowsTest$val core = adapted.map(Oc2CoreProjection { io.github.eslamasabry.oc.core.common.Redacted.shape(null, null) }::toCore)</ID>
+    <ID>MaxLineLength:Oc2WebSearchRowsTest.kt$Oc2WebSearchRowsTest$val result = if (path == "provider") server.gateway.webSearchProviders() else server.gateway.searchWeb("docs", "one")</ID>
+    <ID>MaxLineLength:ParityDescriber.kt$ParityDescriber$"durable" to e.durable?.let { o("aggregateID" to it.aggregateID, "seq" to it.seq, "version" to it.version) }</ID>
+    <ID>MaxLineLength:ParityDescriber.kt$ParityDescriber$is Oc2Message.AgentSwitched -&gt; listOf("v" to "AgentSwitched", "agent" to m.agent, "previous" to m.previous)</ID>
+    <ID>MaxLineLength:ParityDescriber.kt$ParityDescriber$o("v" to "PermissionReplied", "sessionID" to e.sessionID, "requestID" to e.requestID, "reply" to e.reply)</ID>
+    <ID>MaxLineLength:ParityDescriber.kt$ParityDescriber$o("v" to "SessionAgentSelected", "sessionID" to e.sessionID, "agent" to e.agent, "previous" to e.previous)</ID>
+    <ID>MaxLineLength:ParityDescriber.kt$ParityDescriber$o("v" to "SessionSynthetic", "sessionID" to e.sessionID, "text" to e.text, "description" to e.description)</ID>
+    <ID>MaxLineLength:ParityDescriber.kt$ParityDescriber$o("v" to "SessionUsageUpdated", "sessionID" to e.sessionID, "cost" to e.cost, "tokens" to tokens(e.tokens))</ID>
+    <ID>MaxLineLength:PermissionServer.kt$PermissionServer$"""{"id":"build","hidden":false,"mode":"primary","permissions":[{"action":"*","resource":"*","effect":"allow"}]}"""</ID>
+    <ID>MaxLineLength:PermissionServer.kt$PermissionServer$request.method == HttpMethod.Get &amp;&amp; path == "/api/agent" -&gt; respond("""{"data":[$agentJson]}""", HttpStatusCode.OK)</ID>
+    <ID>MaxLineLength:PermissionServer.kt$PermissionServer$request.method == HttpMethod.Get &amp;&amp; path == "/api/session/$sessionId" -&gt; respond(session(), HttpStatusCode.OK)</ID>
+    <ID>MaxLineLength:PermissionServer.kt$PermissionServer$request.method == HttpMethod.Get &amp;&amp; path.startsWith("/api/agent/") -&gt; respond("""{"data":$agentJson}""", HttpStatusCode.OK)</ID>
+    <ID>MaxLineLength:Session.kt$Oc2FileAttachment.Serializer$if (value.sourceType == null &amp;&amp; value.sourceUri == null) null else Source(value.sourceType, value.sourceUri)</ID>
+    <ID>MaxLineLength:TransportCredentialRedactionTest.kt$TransportCredentialRedactionTest$NetClient(HttpClient(MockEngine { requests++; respond("{}", HttpStatusCode.OK) }) { expectSuccess = false }, { TransportError.Other })</ID>
+    <ID>MaxLineLength:TransportCredentialRedactionTest.kt$TransportCredentialRedactionTest$kotlinx.serialization.json.Json.parseToJsonElement("{\"providers\":[{\"id\":\"x\",\"options\":{\"apiKey\":\"" + providerKey + "\"}}]}")</ID>
+    <ID>MaxLineLength:Usage.kt$Oc2UsageStatistics.Companion$ToolTotals(count(it["calls"]), count(it["succeeded"]), count(it["failed"]), count(it["unfinished"]))</ID>
+    <ID>MaxLineLength:Usage.kt$Oc2UsageStatistics.Companion$if (variant != null &amp;&amp; variant != JsonNull &amp;&amp; (variant !is JsonPrimitive || !variant.isString)) throw Invalid()</ID>
+    <ID>MaxLineLength:WebSourcesReviewTest.kt$WebSourcesReviewTest$assertEquals(WebSourceSelection.Built.Refused(WebSourceSelection.Problem.Url), WebSourceSelection.of("t", bad), bad)</ID>
+    <ID>MaxLineLength:WebSourcesReviewTest.kt$WebSourcesReviewTest$assertEquals(WebSourcesReview.AddProblem.Duplicate, review.add(source("Duplicate", " https://example.com/doc ")))</ID>
+    <ID>MaxLineLength:WebSourcesReviewTest.kt$WebSourcesReviewTest$for</ID>
+    <ID>MaxLineLength:WebSourcesReviewTest.kt$WebSourcesReviewTest$fun</ID>
+    <ID>NestedBlockDepth:Oc2GatewayFactory.kt$Oc2GatewayFactory$override suspend fun connect(spec: GatewaySpec): Outcome&lt;GatewayPair&gt;</ID>
+    <ID>NestedBlockDepth:Oc2Mcp.kt$Oc2Mcp$private suspend fun servers(at: ServerLocation): Outcome&lt;ImmutableList&lt;McpServerInfo&gt;&gt;</ID>
+    <ID>NestedBlockDepth:Oc2ProviderSignIn.kt$Oc2ProviderSignIn$suspend fun integrations(): Outcome&lt;ImmutableList&lt;IntegrationInfo&gt;&gt;</ID>
+    <ID>NestedBlockDepth:WebSourcesReview.kt$WebSourcesReview$public suspend fun search(query: String)</ID>
+    <ID>ReturnCount:Catalog.kt$Oc2AgentInfo.Companion$public fun fromJson(obj: JsonObject): Oc2AgentInfo?</ID>
+    <ID>ReturnCount:Catalog.kt$Oc2Skill.Companion$public fun fromJson(obj: JsonObject): Oc2Skill?</ID>
+    <ID>ReturnCount:Oc2ConfigurationPreview.kt$Oc2ConfigurationPreview$fun read(root: JsonElement): ConfigurationPreview?</ID>
+    <ID>ReturnCount:Oc2Dialect.kt$Oc2Dialect$fun response(method: HttpMethod, path: String, json: JsonElement): JsonElement</ID>
+    <ID>ReturnCount:Oc2Dialect.kt$Oc2Dialect$fun route( path: String, method: HttpMethod, body: JsonObject?, query: Map&lt;String, String?&gt;, ): Oc2Route</ID>
+    <ID>ReturnCount:Oc2Errors.kt$Oc2Errors$public fun failureFor(status: Int, body: String?, credentialsSent: Boolean = true): Failure</ID>
+    <ID>ReturnCount:Oc2EventAdapter.kt$Oc2EventAdapter$private fun refresh(topic: String, data: JsonObject): List&lt;Oc2Adapted&gt;</ID>
+    <ID>ReturnCount:Oc2Gateway.kt$Oc2Gateway$internal fun sessionValue(value: JsonElement): Session?</ID>
+    <ID>ReturnCount:Oc2Gateway.kt$Oc2Gateway$internal suspend fun json( path: String, verb: HttpMethod = HttpMethod.Get, body: JsonObject? = null, query: Map&lt;String, String?&gt; = emptyMap(), headers: Map&lt;String, String&gt; = emptyMap(), ): Outcome&lt;JsonElement&gt;</ID>
+    <ID>ReturnCount:Oc2Gateway.kt$Oc2Gateway$internal suspend fun rawBytes( path: String, query: Map&lt;String, String?&gt; = emptyMap(), ): Outcome&lt;ByteArray&gt;</ID>
+    <ID>ReturnCount:Oc2Gateway.kt$Oc2Gateway$override suspend fun activateSessionSkill( session: SessionId, skillId: String, resume: Boolean, beforeSend: () -&gt; Boolean, ): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:Oc2Gateway.kt$Oc2Gateway$override suspend fun catalog(): Outcome&lt;CatalogSnapshot&gt;</ID>
+    <ID>ReturnCount:Oc2Gateway.kt$Oc2Gateway$override suspend fun chatDefaults(): Outcome&lt;ChatDefaults&gt;</ID>
+    <ID>ReturnCount:Oc2Gateway.kt$Oc2Gateway$override suspend fun connectTerminal(id: String, cursor: Long?): Outcome&lt;TerminalChannel&gt;</ID>
+    <ID>ReturnCount:Oc2Gateway.kt$Oc2Gateway$override suspend fun createSelectedSession(defaults: SessionSelection): Outcome&lt;Session&gt;</ID>
+    <ID>ReturnCount:Oc2Gateway.kt$Oc2Gateway$override suspend fun importSessionDocument(body: JsonObject): Outcome&lt;Session&gt;</ID>
+    <ID>ReturnCount:Oc2Gateway.kt$Oc2Gateway$override suspend fun loadSessionNote( session: SessionId, location: ServerLocation, ): Outcome&lt;String?&gt;</ID>
+    <ID>ReturnCount:Oc2Gateway.kt$Oc2Gateway$override suspend fun makeProjectFolder(parent: String, name: String): Outcome&lt;String&gt;</ID>
+    <ID>ReturnCount:Oc2Gateway.kt$Oc2Gateway$override suspend fun providers(): Outcome&lt;ProvidersResponse&gt;</ID>
+    <ID>ReturnCount:Oc2Gateway.kt$Oc2Gateway$override suspend fun saveSessionNote( session: SessionId, location: ServerLocation, value: String?, beforeSend: () -&gt; Boolean, ): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:Oc2Gateway.kt$Oc2Gateway$override suspend fun viewSession( session: SessionId, idleMs: Long, beforeSend: () -&gt; Boolean, ): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:Oc2Gateway.kt$Oc2Gateway$private fun decodeForms(root: JsonElement): ImmutableList&lt;FormSpec&gt;?</ID>
+    <ID>ReturnCount:Oc2Gateway.kt$Oc2Gateway$private fun decodePermissions(root: JsonElement): ImmutableList&lt;PermissionRequest&gt;?</ID>
+    <ID>ReturnCount:Oc2Gateway.kt$Oc2Gateway$private suspend fun &lt;T&gt; admitted( session: SessionId, action: suspend () -&gt; Outcome&lt;T&gt;, ): Outcome&lt;T&gt;</ID>
+    <ID>ReturnCount:Oc2Gateway.kt$Oc2Gateway$private suspend fun historyPage( session: SessionId, cursor: String?, limit: Int, byteLimit: Int, timeoutMs: Long, ): Outcome&lt;BoundedHistoryPage&gt;</ID>
+    <ID>ReturnCount:Oc2Gateway.kt$Oc2Gateway$private suspend fun preparePermissions(session: SessionId): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:Oc2Gateway.kt$Oc2Gateway$private suspend fun rawFile( path: String, at: ServerLocation, ): Outcome&lt;Pair&lt;ByteArray, String?&gt;&gt;</ID>
+    <ID>ReturnCount:Oc2Gateway.kt$Oc2Gateway$private suspend fun readFailure(reply: io.ktor.client.statement.HttpResponse): Failure?</ID>
+    <ID>ReturnCount:Oc2Gateway.kt$Oc2Gateway$private suspend fun sendPreparedCommand( session: SessionId, command: String, args: String, beforeSend: () -&gt; Boolean, ): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:Oc2Gateway.kt$Oc2Gateway$private suspend fun sendPreparedPrompt( session: SessionId, prompt: OutgoingPrompt, clientId: String, beforeSend: () -&gt; Boolean, ): Outcome&lt;PromptAdmission&gt;</ID>
+    <ID>ReturnCount:Oc2GatewayFactory.kt$Oc2GatewayFactory$override suspend fun connect(spec: GatewaySpec): Outcome&lt;GatewayPair&gt;</ID>
+    <ID>ReturnCount:Oc2GatewayFactory.kt$Oc2GatewayFactory$override suspend fun probe(target: ProbeTarget): Outcome&lt;ProbeResult&gt;</ID>
+    <ID>ReturnCount:Oc2GatewayFactory.kt$Oc2GatewayFactory$public suspend fun checkConnection( origin: ServerOrigin, credentials: ConnectionCredentials, trust: ProfileTrust, ): Outcome&lt;Health&gt;</ID>
+    <ID>ReturnCount:Oc2History.kt$Oc2History$fun message(session: String, value: JsonElement): MessageWithParts?</ID>
+    <ID>ReturnCount:Oc2HostTools.kt$Oc2HostTools$suspend fun createWorktree(directory: String, name: String?): Outcome&lt;WorktreeInfo&gt;</ID>
+    <ID>ReturnCount:Oc2HostTools.kt$Oc2HostTools$suspend fun selectShell(value: String): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:Oc2HostTools.kt$Oc2HostTools$suspend fun shellSettings(): Outcome&lt;TerminalShellSettings&gt;</ID>
+    <ID>ReturnCount:Oc2Inbox.kt$Oc2Inbox$suspend fun list(gateway: Oc2Gateway, session: SessionId): Outcome&lt;ImmutableList&lt;InboxItem&gt;&gt;</ID>
+    <ID>ReturnCount:Oc2Integrations.kt$Oc2Integrations$override suspend fun addMcpServer(draft: McpServerDraft, scope: McpConfigScope): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:Oc2Integrations.kt$Oc2Integrations$override suspend fun cancelIntegrationOAuth(attemptId: String): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:Oc2Integrations.kt$Oc2Integrations$override suspend fun completeIntegrationOAuth(attemptId: String, code: String?): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:Oc2Integrations.kt$Oc2Integrations$override suspend fun disconnectIntegration(integration: IntegrationInfo): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:Oc2Integrations.kt$Oc2Integrations$override suspend fun integrationOAuthStatus(attemptId: String): Outcome&lt;IntegrationAuthStatus&gt;</ID>
+    <ID>ReturnCount:Oc2Integrations.kt$Oc2Integrations$override suspend fun integrations(): Outcome&lt;ImmutableList&lt;IntegrationInfo&gt;&gt;</ID>
+    <ID>ReturnCount:Oc2Integrations.kt$Oc2Integrations$override suspend fun mcpResources(): Outcome&lt;ImmutableList&lt;McpResourceInfo&gt;&gt;</ID>
+    <ID>ReturnCount:Oc2Integrations.kt$Oc2Integrations$override suspend fun startIntegrationOAuth( id: String, methodId: String, inputs: ImmutableMap&lt;String, String&gt;, label: String?, ): Outcome&lt;IntegrationAuthLaunch&gt;</ID>
+    <ID>ReturnCount:Oc2Integrations.kt$Oc2Integrations$private suspend fun mcpServersAt( at: Map&lt;String, String?&gt; ): Outcome&lt;ImmutableList&lt;McpServerInfo&gt;&gt;</ID>
+    <ID>ReturnCount:Oc2Library.kt$Oc2Library$private fun draftConfig(draft: McpServerDraft): JsonObject?</ID>
+    <ID>ReturnCount:Oc2Library.kt$Oc2Library$suspend fun addMcpServer(draft: McpServerDraft, scope: McpConfigScope): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:Oc2Library.kt$Oc2Library$suspend fun connectMcp(name: String): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:Oc2Library.kt$Oc2Library$suspend fun disconnectMcp(name: String): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:Oc2Library.kt$Oc2Library$suspend fun mcpServers(): Outcome&lt;ImmutableList&lt;McpServerInfo&gt;&gt;</ID>
+    <ID>ReturnCount:Oc2Library.kt$Oc2Library$suspend fun plugins(): Outcome&lt;ImmutableList&lt;LibraryPlugin&gt;&gt;</ID>
+    <ID>ReturnCount:Oc2Library.kt$Oc2Library$suspend fun skills(): Outcome&lt;ImmutableList&lt;SkillInfo&gt;&gt;</ID>
+    <ID>ReturnCount:Oc2LibraryOps.kt$Oc2LibraryOps$override suspend fun activateSessionSkill( session: SessionId, skillId: String, resume: Boolean, ): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:Oc2LibraryOps.kt$Oc2LibraryOps$override suspend fun addMcpServer(draft: McpServerDraft, scope: McpConfigScope): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:Oc2LibraryOps.kt$Oc2LibraryOps$override suspend fun cancelIntegrationCommand( integrationId: String, attemptId: String, ): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:Oc2LibraryOps.kt$Oc2LibraryOps$override suspend fun cancelIntegrationOAuth(attemptId: String): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:Oc2LibraryOps.kt$Oc2LibraryOps$override suspend fun completeIntegrationOAuth(attemptId: String, code: String?): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:Oc2LibraryOps.kt$Oc2LibraryOps$override suspend fun disconnectIntegration(integration: IntegrationInfo): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:Oc2LibraryOps.kt$Oc2LibraryOps$override suspend fun integrationCommandStatus( integrationId: String, attemptId: String, ): Outcome&lt;IntegrationAuthStatus&gt;</ID>
+    <ID>ReturnCount:Oc2LibraryOps.kt$Oc2LibraryOps$override suspend fun integrationOAuthStatus(attemptId: String): Outcome&lt;IntegrationAuthStatus&gt;</ID>
+    <ID>ReturnCount:Oc2LibraryOps.kt$Oc2LibraryOps$private fun hasInvalidExpiry(value: JsonObject): Boolean</ID>
+    <ID>ReturnCount:Oc2LibraryOps.kt$Oc2LibraryOps$private fun rows(root: JsonElement): List&lt;JsonObject&gt;?</ID>
+    <ID>ReturnCount:Oc2LibraryOps.kt$Oc2LibraryOps$private suspend fun start( id: String, methodId: String, command: Boolean, inputs: Map&lt;String, String&gt;, label: String?, ): Outcome&lt;IntegrationAuthLaunch&gt;</ID>
+    <ID>ReturnCount:Oc2LibraryOps.kt$Oc2LibraryOps$private suspend fun status( path: String, at: Map&lt;String, String?&gt;, ): Outcome&lt;IntegrationAuthStatus&gt;</ID>
+    <ID>ReturnCount:Oc2ManagedShells.kt$Oc2ManagedShells$override suspend fun managedShellOutput( id: String, cursor: Long, limit: Int, ): Outcome&lt;ManagedShellOutput&gt;</ID>
+    <ID>ReturnCount:Oc2ManagedShells.kt$Oc2ManagedShells$private fun decodeShell(element: JsonElement): ManagedShell?</ID>
+    <ID>ReturnCount:Oc2Mcp.kt$Oc2Mcp$override suspend fun addMcpServer(draft: McpServerDraft, scope: McpConfigScope): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:Oc2Mcp.kt$Oc2Mcp$override suspend fun mcpResources(): Outcome&lt;ImmutableList&lt;McpResourceInfo&gt;&gt;</ID>
+    <ID>ReturnCount:Oc2Mcp.kt$Oc2Mcp$private fun config(draft: McpServerDraft): JsonObject?</ID>
+    <ID>ReturnCount:Oc2Mcp.kt$Oc2Mcp$private suspend fun servers(at: ServerLocation): Outcome&lt;ImmutableList&lt;McpServerInfo&gt;&gt;</ID>
+    <ID>ReturnCount:Oc2Operations.kt$internal fun mcpConfig(draft: McpServerDraft): JsonObject?</ID>
+    <ID>ReturnCount:Oc2Operations.kt$internal suspend fun Oc2Gateway.mcpAdd( draft: McpServerDraft, scope: McpConfigScope, ): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:Oc2Operations.kt$internal suspend fun Oc2Gateway.selectShell(value: String): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:Oc2Operations.kt$internal suspend fun Oc2Gateway.shellSettings(): Outcome&lt;TerminalShellSettings&gt;</ID>
+    <ID>ReturnCount:Oc2Operations.kt$internal suspend fun Oc2Gateway.worktreeCreate( projectDirectory: String, name: String?, ): Outcome&lt;WorktreeInfo&gt;</ID>
+    <ID>ReturnCount:Oc2Operations.kt$private fun managedShellOf(json: JsonObject): ManagedShell?</ID>
+    <ID>ReturnCount:Oc2PermissionPolicy.kt$Oc2PermissionPolicy$fun confirms(update: JsonObject): Boolean</ID>
+    <ID>ReturnCount:Oc2PermissionPolicy.kt$Oc2PermissionPolicy$fun updateForAgent(agentData: JsonObject, serverRuns: Boolean): JsonObject?</ID>
+    <ID>ReturnCount:Oc2PermissionPolicy.kt$Oc2PermissionPolicy$private fun original(): List&lt;Rule&gt;?</ID>
+    <ID>ReturnCount:Oc2PermissionPolicy.kt$Oc2PermissionPolicy.Companion$fun defaultAgent(response: JsonElement): JsonObject?</ID>
+    <ID>ReturnCount:Oc2PermissionPolicy.kt$Oc2PermissionPolicy.Companion$fun fromSession(response: JsonElement, sessionId: String): Oc2PermissionPolicy?</ID>
+    <ID>ReturnCount:Oc2PermissionPolicy.kt$Oc2PermissionPolicy.Companion$fun rules(raw: JsonElement?): List&lt;Rule&gt;?</ID>
+    <ID>ReturnCount:Oc2ProviderInventory.kt$Oc2ProviderInventory$fun parse(root: JsonObject): Outcome&lt;ProvidersResponse&gt;?</ID>
+    <ID>ReturnCount:Oc2ProviderSignIn.kt$Oc2ProviderSignIn$private suspend fun status(attemptId: String): Outcome&lt;IntegrationAuthStatus&gt;</ID>
+    <ID>ReturnCount:Oc2ProviderSignIn.kt$Oc2ProviderSignIn$suspend fun integrations(): Outcome&lt;ImmutableList&lt;IntegrationInfo&gt;&gt;</ID>
+    <ID>ReturnCount:Oc2PtyOperations.kt$internal suspend fun Oc2Gateway.ptyList(): Outcome&lt;ImmutableList&lt;TerminalProcess&gt;&gt;</ID>
+    <ID>ReturnCount:Oc2PtyOperations.kt$private fun ptyRow(value: JsonElement): TerminalProcess?</ID>
+    <ID>ReturnCount:Oc2SavedPermissions.kt$internal suspend fun Oc2Gateway.savedGrants(): Outcome&lt;ImmutableList&lt;SavedPermission&gt;&gt;</ID>
+    <ID>ReturnCount:Oc2SearchUsage.kt$Oc2SearchUsage$private suspend fun currentProject(gateway: Oc2Gateway): Oc2ProjectChoice?</ID>
+    <ID>ReturnCount:Oc2SearchUsage.kt$Oc2SearchUsage$public suspend fun searchSessions( gateway: ServerGateway, search: String?, cursor: String?, limit: Int = 50, includeArchived: Boolean = false, ): Outcome&lt;ServerPage&lt;GlobalSessionResult&gt;&gt;?</ID>
+    <ID>ReturnCount:Oc2SearchUsage.kt$Oc2SearchUsage$public suspend fun usageStatistics( gateway: ServerGateway, query: Map&lt;String, String?&gt;, ): Outcome&lt;Oc2UsageStatistics&gt;?</ID>
+    <ID>ReturnCount:Oc2ServiceReports.kt$Oc2ServiceReports$public suspend fun inspect( gateway: ServerGateway, id: String, directory: String, workspace: String?, ): Outcome&lt;ManagedShell?&gt;?</ID>
+    <ID>ReturnCount:Oc2ServiceReports.kt$Oc2ServiceReports$public suspend fun output( gateway: ServerGateway, id: String, directory: String, workspace: String?, ): Outcome&lt;ManagedShellOutput&gt;?</ID>
+    <ID>ReturnCount:Oc2SessionSelection.kt$Oc2SessionSelection$fun defaultModelRef(info: Oc2ModelInfo?): ModelRef?</ID>
+    <ID>ReturnCount:Oc2SessionSelection.kt$Oc2SessionSelection$private fun catalogModelName(model: Oc2ModelInfo): String</ID>
+    <ID>ReturnCount:Oc2SessionSkills.kt$Oc2SessionSkills$suspend fun list( gateway: Oc2Gateway, location: Map&lt;String, String?&gt;, ): Outcome&lt;ImmutableList&lt;SkillInfo&gt;&gt;</ID>
+    <ID>ReturnCount:Oc2SessionTransfer.kt$Oc2SessionTransfer$suspend fun importSession(body: JsonObject): Outcome&lt;Session&gt;</ID>
+    <ID>ReturnCount:Oc2SessionTransfer.kt$Oc2SessionTransfer$suspend fun loadSessionNote(session: SessionId): Outcome&lt;String?&gt;</ID>
+    <ID>ReturnCount:Oc2SessionTransfer.kt$Oc2SessionTransfer$suspend fun saveSessionNote(session: SessionId, value: String): Outcome&lt;SessionNoteSaveResult&gt;</ID>
+    <ID>ReturnCount:Oc2SetupInspection.kt$Oc2SetupInspection$override suspend fun historyMigration(): Outcome&lt;SetupHistoryMigration&gt;</ID>
+    <ID>ReturnCount:Oc2SetupInspection.kt$Oc2SetupInspection$override suspend fun mcpInventory(): Outcome&lt;List&lt;SetupMcpStatus&gt;&gt;</ID>
+    <ID>ReturnCount:Oc2SetupInspection.kt$Oc2SetupInspection$override suspend fun readConfig(): Outcome&lt;SetupConfigSnapshot&gt;</ID>
+    <ID>ReturnCount:Oc2SetupInspection.kt$Oc2SetupReads$public suspend fun read( gateway: ServerGateway, location: ServerLocation, path: String, ): Outcome&lt;JsonElement&gt;</ID>
+    <ID>ReturnCount:Oc2SetupInspection.kt$Oc2SetupSnapshot$suspend fun read(gateway: Oc2Gateway, redactor: Redactor): Outcome&lt;SetupInspection&gt;</ID>
+    <ID>ReturnCount:Oc2SetupInspection.kt$internal suspend fun Oc2Gateway.readSetupSources(redactor: Redactor): Outcome&lt;JsonObject&gt;</ID>
+    <ID>ReturnCount:Oc2SetupReads.kt$internal suspend fun Oc2Gateway.inspectConfig( location: ServerLocation, redactor: Redactor, ): Outcome&lt;JsonElement&gt;</ID>
+    <ID>ReturnCount:Oc2SetupReads.kt$internal suspend fun Oc2Gateway.inspectMcp(location: ServerLocation): Outcome&lt;JsonElement&gt;</ID>
+    <ID>ReturnCount:Oc2SetupReads.kt$internal suspend fun Oc2Gateway.inspectPlugins(location: ServerLocation): Outcome&lt;JsonElement&gt;</ID>
+    <ID>ReturnCount:Oc2SetupReads.kt$internal suspend fun Oc2Gateway.mcpReadResources( redactor: Redactor ): Outcome&lt;ImmutableList&lt;McpResourceInfo&gt;&gt;</ID>
+    <ID>ReturnCount:Oc2SetupReads.kt$internal suspend fun Oc2Gateway.mcpReadServers( redactor: Redactor ): Outcome&lt;ImmutableList&lt;McpServerInfo&gt;&gt;</ID>
+    <ID>ReturnCount:Oc2SetupReads.kt$internal suspend fun Oc2Gateway.readReferences(): Outcome&lt;ImmutableList&lt;ReferenceInfo&gt;&gt;</ID>
+    <ID>ReturnCount:Oc2SetupReads.kt$internal suspend fun Oc2Gateway.readSkills(): Outcome&lt;ImmutableList&lt;SkillInfo&gt;&gt;</ID>
+    <ID>ReturnCount:Oc2Terminal.kt$internal suspend fun Oc2Gateway.connectTerminalWith( opener: Oc2TerminalSocketOpener, id: String, cursor: Long?, ): Outcome&lt;TerminalChannel&gt;</ID>
+    <ID>ReturnCount:Oc2Terminal.kt$internal suspend fun Oc2Gateway.terminalHandshake(id: String, cursor: Long?): Outcome&lt;Oc2TerminalHandshake&gt;</ID>
+    <ID>ReturnCount:Oc2TerminalConnection.kt$internal suspend fun Oc2Gateway.connectTerminalAt( id: String, cursor: Long?, at: ServerLocation, ): Outcome&lt;TerminalChannel&gt;</ID>
+    <ID>ReturnCount:Oc2Terminals.kt$Oc2Terminals$override suspend fun createCommandTerminal( command: String, arguments: List&lt;String&gt;, title: String, ): Outcome&lt;TerminalProcess&gt;</ID>
+    <ID>ReturnCount:Oc2Terminals.kt$Oc2Terminals$override suspend fun createTerminal(title: String?): Outcome&lt;TerminalProcess&gt;</ID>
+    <ID>ReturnCount:Oc2Terminals.kt$Oc2Terminals$override suspend fun listTerminals(): Outcome&lt;ImmutableList&lt;TerminalProcess&gt;&gt;</ID>
+    <ID>ReturnCount:Oc2Terminals.kt$Oc2Terminals$override suspend fun rerunTerminalCommand( ended: TerminalProcess, location: ServerLocation, ): Outcome&lt;TerminalProcess&gt;</ID>
+    <ID>ReturnCount:Oc2Terminals.kt$Oc2Terminals$private fun parse(value: JsonElement): TerminalProcess?</ID>
+    <ID>ReturnCount:Oc2WebSearch.kt$Oc2WebSearch$fun locationOk(root: JsonElement, sent: ServerLocation, now: ServerLocation): Boolean</ID>
+    <ID>ReturnCount:Oc2WebSearch.kt$Oc2WebSearch$fun providers(root: JsonElement): ImmutableList&lt;WebSearchProvider&gt;?</ID>
+    <ID>ReturnCount:Oc2WebSearch.kt$Oc2WebSearch$fun response(root: JsonElement, providerId: String): WebSearchResponse?</ID>
+    <ID>ReturnCount:Oc2WorktreeInspection.kt$Oc2WorktreeInspection$override suspend fun inspectionChanges( location: ServerLocation ): Outcome&lt;ImmutableList&lt;VersionControlFile&gt;&gt;</ID>
+    <ID>ReturnCount:Oc2WorktreeInspection.kt$Oc2WorktreeInspection$override suspend fun inspectionProject(location: ServerLocation): Outcome&lt;WorkspaceProject?&gt;</ID>
+    <ID>ReturnCount:Oc2WorktreeInspection.kt$Oc2WorktreeInspection$override suspend fun inspectionSessions( cursor: String?, limit: Int, includeArchived: Boolean, ): Outcome&lt;ServerPage&lt;Session&gt;&gt;</ID>
+    <ID>ReturnCount:Oc2WorktreeInspection.kt$Oc2WorktreeInspection$override suspend fun inspectionWorktrees( projectId: String ): Outcome&lt;ImmutableList&lt;WorktreeInfo&gt;&gt;</ID>
+    <ID>ReturnCount:Oc2Worktrees.kt$Oc2Worktrees$private fun project(value: JsonElement): WorkspaceProject?</ID>
+    <ID>ReturnCount:Oc2Worktrees.kt$Oc2Worktrees$private suspend fun listById(id: String): Outcome&lt;ImmutableList&lt;WorktreeInfo&gt;&gt;</ID>
+    <ID>ReturnCount:Oc2Worktrees.kt$Oc2Worktrees$suspend fun projects(): Outcome&lt;ImmutableList&lt;WorkspaceProject&gt;&gt;</ID>
+    <ID>ReturnCount:WebSourcesReview.kt$WebSourcesReview$public fun add(source: WebSourceSelection): AddProblem?</ID>
+    <ID>SpreadOperator:Oc2Terminals.kt$Oc2Terminals$(ended.command, ended.directory, *ended.arguments.toTypedArray())</ID>
+    <ID>TooManyFunctions:Oc2CoreProjection.kt$Oc2CoreProjection</ID>
+    <ID>TooManyFunctions:Oc2EventAdapter.kt$Oc2EventAdapter</ID>
+    <ID>TooManyFunctions:Oc2Gateway.kt$Oc2Gateway : ServerGatewayServerOperationsGatewayTerminalCommandGatewayCorrelatedPromptGatewaySessionSelectionGatewayStagedRevertGatewaySessionReadStateGatewayFencedSessionReadStateGatewayFencedSlashCommandGatewayFencedNewSessionPromptGatewayPromptRunIdentityGatewayLocatedFileGatewayLocatedVcsGatewayLocatedManagedShellGatewayWebSearchGatewaySessionPermissionModeGatewaySessionTransferGatewaySessionNotesGatewaySetupInspectionGatewayLibraryGatewaySessionDispatchAdmissionGatewaySessionTransferImportGatewaySessionSkillGatewaySessionNoteGatewayMcpRemovalGatewayIntegrationCredentialGatewayIntegrationCommandGatewayIntegrationAuthRecoveryGatewayApiRouteGatewaySessionCreationGatewayWorktreeInspectionGatewayConfigurationGatewayBoundedHistoryGateway</ID>
+    <ID>TooManyFunctions:Oc2Integrations.kt$Oc2Integrations : IntegrationGatewayMcpGateway</ID>
+    <ID>TooManyFunctions:Oc2LibraryOps.kt$Oc2LibraryOps : CatalogGatewayMcpGatewayIntegrationGatewayMcpRemovalGatewayIntegrationCredentialGatewayIntegrationCommandGatewayIntegrationAuthRecoveryGatewaySessionSkillGateway</ID>
+    <ID>TooManyFunctions:Oc2ManagedShells.kt$Oc2ManagedShells : ManagedShellGateway</ID>
+    <ID>TooManyFunctions:Oc2Mcp.kt$Oc2Mcp : McpGateway</ID>
+    <ID>TooManyFunctions:Oc2Operations.kt$io.github.eslamasabry.oc.protocol.oc2.live.Oc2Operations.kt</ID>
+    <ID>TooManyFunctions:Oc2ProviderSignIn.kt$Oc2ProviderSignIn</ID>
+    <ID>TooManyFunctions:Oc2SessionSelection.kt$Oc2SessionSelection</ID>
+    <ID>TooManyFunctions:Oc2SessionTransfer.kt$Oc2SessionTransfer</ID>
+    <ID>TooManyFunctions:Oc2Terminals.kt$Oc2Terminals : TerminalGatewayTerminalCommandGateway</ID>
+    <ID>TooManyFunctions:Oc2WorktreeInspection.kt$Oc2WorktreeInspection : WorktreeInspectionGateway</ID>
+    <ID>TooManyFunctions:Oc2Worktrees.kt$Oc2Worktrees</ID>
+    <ID>TooManyFunctions:WebSourcesReview.kt$WebSourcesReview</ID>
+    <ID>WildcardImport:LiveOc2ServerSmokeTest.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:LiveOc2ServerSmokeTest.kt$import io.github.eslamasabry.oc.core.domain.*</ID>
+    <ID>WildcardImport:LiveOc2ServerSmokeTest.kt$import io.github.eslamasabry.oc.core.model.*</ID>
+    <ID>WildcardImport:LiveOc2ServerSmokeTest.kt$import kotlin.test.*</ID>
+    <ID>WildcardImport:LiveOc2ServerSmokeTest.kt$import kotlinx.coroutines.*</ID>
+    <ID>WildcardImport:Oc2DialectRowsTest.kt$import kotlin.test.*</ID>
+    <ID>WildcardImport:Oc2Gateway.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:Oc2Gateway.kt$import io.github.eslamasabry.oc.core.common.ids.*</ID>
+    <ID>WildcardImport:Oc2Gateway.kt$import io.github.eslamasabry.oc.core.domain.*</ID>
+    <ID>WildcardImport:Oc2Gateway.kt$import io.github.eslamasabry.oc.core.domain.events.*</ID>
+    <ID>WildcardImport:Oc2Gateway.kt$import io.github.eslamasabry.oc.core.model.*</ID>
+    <ID>WildcardImport:Oc2Gateway.kt$import io.github.eslamasabry.oc.core.model.transcript.*</ID>
+    <ID>WildcardImport:Oc2Gateway.kt$import io.github.eslamasabry.oc.core.net.*</ID>
+    <ID>WildcardImport:Oc2Gateway.kt$import io.github.eslamasabry.oc.core.net.stream.*</ID>
+    <ID>WildcardImport:Oc2Gateway.kt$import io.github.eslamasabry.oc.protocol.oc2.adapter.*</ID>
+    <ID>WildcardImport:Oc2Gateway.kt$import io.github.eslamasabry.oc.protocol.oc2.events.*</ID>
+    <ID>WildcardImport:Oc2Gateway.kt$import io.github.eslamasabry.oc.protocol.oc2.wire.*</ID>
+    <ID>WildcardImport:Oc2Gateway.kt$import io.ktor.client.request.*</ID>
+    <ID>WildcardImport:Oc2Gateway.kt$import io.ktor.http.*</ID>
+    <ID>WildcardImport:Oc2Gateway.kt$import kotlinx.collections.immutable.*</ID>
+    <ID>WildcardImport:Oc2Gateway.kt$import kotlinx.coroutines.flow.*</ID>
+    <ID>WildcardImport:Oc2Gateway.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:Oc2GatewayFactory.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:Oc2GatewayFactory.kt$import io.github.eslamasabry.oc.core.domain.*</ID>
+    <ID>WildcardImport:Oc2GatewayFactory.kt$import io.github.eslamasabry.oc.core.model.*</ID>
+    <ID>WildcardImport:Oc2GatewayFactory.kt$import io.github.eslamasabry.oc.core.net.*</ID>
+    <ID>WildcardImport:Oc2History.kt$import io.github.eslamasabry.oc.core.model.transcript.*</ID>
+    <ID>WildcardImport:Oc2History.kt$import io.github.eslamasabry.oc.protocol.oc2.wire.*</ID>
+    <ID>WildcardImport:Oc2History.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:Oc2HostTools.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:Oc2HostTools.kt$import io.github.eslamasabry.oc.core.model.*</ID>
+    <ID>WildcardImport:Oc2HostTools.kt$import io.github.eslamasabry.oc.protocol.oc2.wire.*</ID>
+    <ID>WildcardImport:Oc2HostTools.kt$import io.ktor.http.*</ID>
+    <ID>WildcardImport:Oc2HostTools.kt$import kotlinx.collections.immutable.*</ID>
+    <ID>WildcardImport:Oc2HostTools.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:Oc2Inbox.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:Oc2Inbox.kt$import io.github.eslamasabry.oc.core.common.ids.*</ID>
+    <ID>WildcardImport:Oc2Integrations.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:Oc2Integrations.kt$import io.github.eslamasabry.oc.core.model.*</ID>
+    <ID>WildcardImport:Oc2Integrations.kt$import kotlinx.collections.immutable.*</ID>
+    <ID>WildcardImport:Oc2Integrations.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:Oc2Library.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:Oc2Library.kt$import io.github.eslamasabry.oc.core.domain.*</ID>
+    <ID>WildcardImport:Oc2Library.kt$import io.github.eslamasabry.oc.core.model.*</ID>
+    <ID>WildcardImport:Oc2Library.kt$import io.ktor.http.*</ID>
+    <ID>WildcardImport:Oc2Library.kt$import kotlinx.collections.immutable.*</ID>
+    <ID>WildcardImport:Oc2Library.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:Oc2LibraryOps.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:Oc2LibraryOps.kt$import io.github.eslamasabry.oc.core.domain.*</ID>
+    <ID>WildcardImport:Oc2LibraryOps.kt$import io.github.eslamasabry.oc.core.model.*</ID>
+    <ID>WildcardImport:Oc2LibraryOps.kt$import io.ktor.http.*</ID>
+    <ID>WildcardImport:Oc2LibraryOps.kt$import kotlinx.collections.immutable.*</ID>
+    <ID>WildcardImport:Oc2LibraryOps.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:Oc2LiveGatewayTest.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:Oc2LiveGatewayTest.kt$import io.github.eslamasabry.oc.core.common.ids.*</ID>
+    <ID>WildcardImport:Oc2LiveGatewayTest.kt$import io.github.eslamasabry.oc.core.model.*</ID>
+    <ID>WildcardImport:Oc2LiveGatewayTest.kt$import io.github.eslamasabry.oc.core.net.*</ID>
+    <ID>WildcardImport:Oc2LiveGatewayTest.kt$import io.ktor.http.*</ID>
+    <ID>WildcardImport:Oc2LiveGatewayTest.kt$import kotlin.test.*</ID>
+    <ID>WildcardImport:Oc2MapperRowsTest.kt$import io.github.eslamasabry.oc.core.model.transcript.*</ID>
+    <ID>WildcardImport:Oc2MapperRowsTest.kt$import kotlin.test.*</ID>
+    <ID>WildcardImport:Oc2MigrationTerminalRowsTest.kt$import kotlin.test.*</ID>
+    <ID>WildcardImport:Oc2OperationsRowsTest.kt$import io.github.eslamasabry.oc.core.model.*</ID>
+    <ID>WildcardImport:Oc2OperationsRowsTest.kt$import kotlin.test.*</ID>
+    <ID>WildcardImport:Oc2ProviderInventory.kt$import io.github.eslamasabry.oc.protocol.oc2.wire.*</ID>
+    <ID>WildcardImport:Oc2ProviderInventory.kt$import kotlinx.collections.immutable.*</ID>
+    <ID>WildcardImport:Oc2ProviderInventory.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:Oc2ProviderSignIn.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:Oc2ProviderSignIn.kt$import io.github.eslamasabry.oc.core.domain.*</ID>
+    <ID>WildcardImport:Oc2ProviderSignIn.kt$import io.github.eslamasabry.oc.core.model.*</ID>
+    <ID>WildcardImport:Oc2ProviderSignIn.kt$import io.ktor.http.*</ID>
+    <ID>WildcardImport:Oc2ProviderSignIn.kt$import kotlinx.collections.immutable.*</ID>
+    <ID>WildcardImport:Oc2ProviderSignIn.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:Oc2PtyOperations.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:Oc2PtyOperations.kt$import io.ktor.websocket.*</ID>
+    <ID>WildcardImport:Oc2PtyOperations.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:Oc2SavedPermissions.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:Oc2SavedPermissions.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:Oc2ServiceReports.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:Oc2SessionSelectionTest.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:Oc2SessionSelectionTest.kt$import io.github.eslamasabry.oc.core.model.*</ID>
+    <ID>WildcardImport:Oc2SessionSelectionTest.kt$import io.ktor.http.*</ID>
+    <ID>WildcardImport:Oc2SessionSelectionTest.kt$import kotlin.test.*</ID>
+    <ID>WildcardImport:Oc2SessionSkills.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:Oc2SessionSkills.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:Oc2SessionTransfer.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:Oc2SessionTransfer.kt$import io.ktor.http.*</ID>
+    <ID>WildcardImport:Oc2SessionTransfer.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:Oc2SetupInspection.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:Oc2SetupInspection.kt$import io.github.eslamasabry.oc.core.domain.*</ID>
+    <ID>WildcardImport:Oc2SetupInspection.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:Oc2SetupReads.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:Oc2SetupReads.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:Oc2TransportRowsTest.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:Oc2TransportRowsTest.kt$import kotlin.test.*</ID>
+    <ID>WildcardImport:Oc2WebSearchRowsTest.kt$import kotlin.test.*</ID>
+    <ID>WildcardImport:Oc2WorktreeInspection.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:Oc2WorktreeInspection.kt$import io.github.eslamasabry.oc.core.model.*</ID>
+    <ID>WildcardImport:Oc2WorktreeInspection.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:Oc2Worktrees.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:WebSourcesReviewTest.kt$import kotlin.test.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

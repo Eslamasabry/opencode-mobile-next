@@ -1,0 +1,16 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>LongMethod:CodexProbeScreen.kt$@Composable public fun CodexProbeScreen(state: CodexProbeUi, actions: CodexProbeActions)</ID>
+    <ID>WildcardImport:CodexProbeEntries.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:CodexProbeScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:CodexProbeScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:CodexProbeScreen.kt$import io.github.eslamasabry.oc.ui.kit.*</ID>
+    <ID>WildcardImport:CodexProbeScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:CodexProbeScreen.kt$import io.github.eslamasabry.oc.ui.kit.input.*</ID>
+    <ID>WildcardImport:CodexProbeScreen.kt$import io.github.eslamasabry.oc.ui.kitchat.code.*</ID>
+    <ID>WildcardImport:CodexProbeScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:CodexProbeViewModel.kt$import dev.zacsweers.metro.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

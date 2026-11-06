@@ -1,0 +1,16 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:SetupScreen.kt$@Composable public fun SetupScreen(state: SetupUi, actions: SetupActions)</ID>
+    <ID>LongMethod:SetupScreen.kt$@Composable public fun SetupScreen(state: SetupUi, actions: SetupActions)</ID>
+    <ID>WildcardImport:SetupEntries.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:SetupScreen.kt$import io.github.eslamasabry.oc.engine.runtime.setupassistant.*</ID>
+    <ID>WildcardImport:SetupScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:SetupScreen.kt$import io.github.eslamasabry.oc.ui.kit.row.*</ID>
+    <ID>WildcardImport:SetupScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:SetupUi.kt$import io.github.eslamasabry.oc.engine.runtime.setupassistant.*</ID>
+    <ID>WildcardImport:SetupViewModel.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:SetupViewModel.kt$import kotlinx.coroutines.flow.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

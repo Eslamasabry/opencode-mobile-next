@@ -1,0 +1,514 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$c.isLetterOrDigit() || c == '-' || c == '_' || c == '.' || c == ':'</ID>
+    <ID>ComplexCondition:FlutterPrefsModel.kt$KeyClassifier$SecretKey.entries.any { (it.form == IdForm.Exact &amp;&amp; it.pattern == logicalKey) || (it.form != IdForm.Exact &amp;&amp; logicalKey.startsWith(it.pattern)) }</ID>
+    <ID>ComplexCondition:MiniJson.kt$MiniJson.P$i &lt; s.length &amp;&amp; (s[i] == ' ' || s[i] == '\t' || s[i] == '\n' || s[i] == '\r')</ID>
+    <ID>CyclomaticComplexMethod:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$private fun readStartTag(): Token.Start</ID>
+    <ID>CyclomaticComplexMethod:AsyncBackends.kt$AsyncBackends$private fun readValue(v: Proto): RawPref?</ID>
+    <ID>CyclomaticComplexMethod:FlutterPrefsCodec.kt$FlutterPrefsCodec$public fun decodeAndroidBase64(text: String): ByteArray</ID>
+    <ID>CyclomaticComplexMethod:FlutterPrefsModel.kt$KeyClassifier$public fun classify(logicalKey: String): ClassifiedKey</ID>
+    <ID>CyclomaticComplexMethod:FlutterPrefsModel.kt$KeyClassifier$public fun classifySecret(name: String): Pair&lt;SecretKey, String?&gt;?</ID>
+    <ID>CyclomaticComplexMethod:FlutterSecureStorageReader.kt$FlutterSecureStorageReader$public fun read(stores: FssStores): FssReadResult</ID>
+    <ID>CyclomaticComplexMethod:MigrationJournal.kt$MigrationJournal.Companion$public fun fromJson(text: String): MigrationJournal</ID>
+    <ID>CyclomaticComplexMethod:MiniJson.kt$MiniJson$public fun writeString(sb: StringBuilder, s: String)</ID>
+    <ID>CyclomaticComplexMethod:MiniJson.kt$MiniJson.P$fun num(): Any</ID>
+    <ID>CyclomaticComplexMethod:MiniJson.kt$MiniJson.P$fun str(): String</ID>
+    <ID>EmptyElseBlock:AsyncBackends.kt$AsyncBackends.Proto$if (i + 4 &gt; b.size) throw ProtoException(i)</ID>
+    <ID>EmptyElseBlock:AsyncBackends.kt$AsyncBackends.Proto$if (i + 8 &gt; b.size) throw ProtoException(i)</ID>
+    <ID>LongParameterList:BackupPublisher.kt$BackupPublisher$( private val sharedPrefsDir: File, private val backupRoot: File, private val journal: JournalStore, private val faults: FaultPoints = FaultPoints.None, private val backupName: String = DEFAULT_NAME, private val fileNames: List&lt;String&gt; = DEFAULT_FILES, /** Free bytes on the data partition; `StatFs(filesDir).availableBytes` on Android. */ private val freeBytes: () -&gt; Long = { backupRoot.absoluteFile.let { f -&gt; generateSequence(f) { it.parentFile }.first { it.exists() }.usableSpace } }, private val marginBytes: Long = 16L * 1024 * 1024, )</ID>
+    <ID>LongParameterList:FlutterKey.kt$FlutterKey$( public val pattern: String, public val form: IdForm, public val type: ExpectedType, public val scope: KeyScope, public val idKind: IdKind, public val ownerModule: String, public vararg val handling: Handling, )</ID>
+    <ID>LongParameterList:FlutterPrefsModel.kt$FlutterPrefsModel$( /** Known keys that carry no profile id (app-wide, shared, opaque ids, `oc.draft.&lt;target&gt;.app`). */ public val app: Map&lt;String, AdoptedEntry&gt;, /** Known keys that carry a profile (or owner/team) id, grouped by that id. */ public val byId: Map&lt;String, Map&lt;String, AdoptedEntry&gt;&gt;, /** Keys under `flutter.` that no shape explains. Preserved and counted, never deleted or rewritten. */ public val unknown: Map&lt;String, AdoptedEntry&gt;, /** Physical keys without the `flutter.` prefix (Dart never sees them). Preserved untouched. */ public val unprefixed: Map&lt;String, RawPref&gt;, public val profiles: ProfilesRead, private val physicalOrder: List&lt;String&gt;, private val rawByPhysical: Map&lt;String, RawPref&gt;, )</ID>
+    <ID>LongParameterList:ImagePickerCache.kt$ImagePickerCache.LostResult$( public val type: String?, public val paths: List&lt;String&gt;, public val hasError: Boolean, public val pendingCameraUri: String?, public val maxWidth: Double?, public val maxHeight: Double?, public val imageQuality: Int?, )</ID>
+    <ID>LongParameterList:MigrationJournal.kt$MigrationJournal$( public var generation: StorageGeneration = StorageGeneration.PrefsV1, public var sourceKind: String? = null, public var backupState: BackupState = BackupState.None, public var backupFiles: List&lt;BackupFile&gt; = emptyList(), /** One durable compatibility barrier (audit finding 4): mirrored in `flutter.oc.native.flutterReadable`. */ public var flutterReadable: Boolean? = null, public val steps: LinkedHashMap&lt;String, StepRecord&gt; = LinkedHashMap(), public var restoreState: RestoreState = RestoreState.Idle, public var restoreAsideDir: String? = null, /** After an R2 restore: hold restored outbound work (queue flushes, schedule re-arms) for review (finding 2). */ public var outboundHold: Boolean = false, public var blocked: Blocked? = null, private val unknownFields: LinkedHashMap&lt;String, Any?&gt; = LinkedHashMap(), )</ID>
+    <ID>LongParameterList:RestoreTransaction.kt$RestoreTransaction$( private val sharedPrefsDir: File, private val migrationRoot: File, private val backup: BackupPublisher, private val journal: JournalStore, private val clockMs: () -&gt; Long, private val faults: FaultPoints = FaultPoints.None, /** Stores restored from the backup. */ private val restoredStores: List&lt;String&gt; = BackupPublisher.DEFAULT_FILES, /** Native-only stores moved aside but not restored (they did not exist before the update). */ private val nativeStores: List&lt;String&gt; = listOf(NATIVE_SECRET_STORE), )</ID>
+    <ID>MagicNumber:AndroidPrefsXml.kt$AndroidPrefsXml$0x41</ID>
+    <ID>MagicNumber:AndroidPrefsXml.kt$AndroidPrefsXml$0x42</ID>
+    <ID>MagicNumber:AndroidPrefsXml.kt$AndroidPrefsXml$0x58</ID>
+    <ID>MagicNumber:AndroidPrefsXml.kt$AndroidPrefsXml$4</ID>
+    <ID>MagicNumber:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$0x10FFFF</ID>
+    <ID>MagicNumber:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$10</ID>
+    <ID>MagicNumber:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$12</ID>
+    <ID>MagicNumber:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$16</ID>
+    <ID>MagicNumber:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$3</ID>
+    <ID>MagicNumber:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$4</ID>
+    <ID>MagicNumber:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$9</ID>
+    <ID>MagicNumber:AndroidPrefsXmlWriter.kt$AndroidPrefsXmlWriter$16</ID>
+    <ID>MagicNumber:AndroidPrefsXmlWriter.kt$AndroidPrefsXmlWriter$32</ID>
+    <ID>MagicNumber:AsyncBackends.kt$AsyncBackends$0x7F</ID>
+    <ID>MagicNumber:AsyncBackends.kt$AsyncBackends$0x80</ID>
+    <ID>MagicNumber:AsyncBackends.kt$AsyncBackends$0xFF</ID>
+    <ID>MagicNumber:AsyncBackends.kt$AsyncBackends$3</ID>
+    <ID>MagicNumber:AsyncBackends.kt$AsyncBackends$4</ID>
+    <ID>MagicNumber:AsyncBackends.kt$AsyncBackends$5</ID>
+    <ID>MagicNumber:AsyncBackends.kt$AsyncBackends$6</ID>
+    <ID>MagicNumber:AsyncBackends.kt$AsyncBackends$7</ID>
+    <ID>MagicNumber:AsyncBackends.kt$AsyncBackends$8</ID>
+    <ID>MagicNumber:AsyncBackends.kt$AsyncBackends.Proto$0x7F</ID>
+    <ID>MagicNumber:AsyncBackends.kt$AsyncBackends.Proto$0x80</ID>
+    <ID>MagicNumber:AsyncBackends.kt$AsyncBackends.Proto$0xFF</ID>
+    <ID>MagicNumber:AsyncBackends.kt$AsyncBackends.Proto$3</ID>
+    <ID>MagicNumber:AsyncBackends.kt$AsyncBackends.Proto$4</ID>
+    <ID>MagicNumber:AsyncBackends.kt$AsyncBackends.Proto$5</ID>
+    <ID>MagicNumber:AsyncBackends.kt$AsyncBackends.Proto$63</ID>
+    <ID>MagicNumber:AsyncBackends.kt$AsyncBackends.Proto$7</ID>
+    <ID>MagicNumber:AsyncBackends.kt$AsyncBackends.Proto$8</ID>
+    <ID>MagicNumber:BackupPublisher.kt$BackupPublisher$1024</ID>
+    <ID>MagicNumber:BackupPublisher.kt$BackupPublisher$16L</ID>
+    <ID>MagicNumber:FixtureGenerator.kt$FixtureGenerator$0.5</ID>
+    <ID>MagicNumber:FixtureGenerator.kt$FixtureGenerator$1.0E-7</ID>
+    <ID>MagicNumber:FixtureGenerator.kt$FixtureGenerator$1.5f</ID>
+    <ID>MagicNumber:FixtureGenerator.kt$FixtureGenerator$1234567890123L</ID>
+    <ID>MagicNumber:FixtureGenerator.kt$FixtureGenerator$1730457000000L</ID>
+    <ID>MagicNumber:FixtureGenerator.kt$FixtureGenerator$1730457001000L</ID>
+    <ID>MagicNumber:FixtureGenerator.kt$FixtureGenerator$1730457002000L</ID>
+    <ID>MagicNumber:FixtureGenerator.kt$FixtureGenerator$2.5</ID>
+    <ID>MagicNumber:FixtureGenerator.kt$FixtureGenerator$2048</ID>
+    <ID>MagicNumber:FixtureGenerator.kt$FixtureGenerator$2048.0</ID>
+    <ID>MagicNumber:FixtureGenerator.kt$FixtureGenerator$22</ID>
+    <ID>MagicNumber:FixtureGenerator.kt$FixtureGenerator$4</ID>
+    <ID>MagicNumber:FixtureGenerator.kt$FixtureGenerator$42</ID>
+    <ID>MagicNumber:FixtureGenerator.kt$FixtureGenerator$60</ID>
+    <ID>MagicNumber:FixtureGenerator.kt$FixtureGenerator$7</ID>
+    <ID>MagicNumber:FixtureGenerator.kt$FixtureGenerator$85</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec$0xFF</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec$10</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec$16</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec$256</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec$3</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec$4</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec$5</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec$6</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec$63</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec$76</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec$8</ID>
+    <ID>MagicNumber:FlutterSecureStorageReader.kt$FlutterSecureStorageReader$8</ID>
+    <ID>MagicNumber:Fs.kt$Fs$1024</ID>
+    <ID>MagicNumber:Fs.kt$Fs$64</ID>
+    <ID>MagicNumber:MiniJson.kt$MiniJson$0x20</ID>
+    <ID>MagicNumber:MiniJson.kt$MiniJson$16</ID>
+    <ID>MagicNumber:MiniJson.kt$MiniJson$1e-6</ID>
+    <ID>MagicNumber:MiniJson.kt$MiniJson$1e21</ID>
+    <ID>MagicNumber:MiniJson.kt$MiniJson$4</ID>
+    <ID>MagicNumber:MiniJson.kt$MiniJson.P$0x20</ID>
+    <ID>MagicNumber:MiniJson.kt$MiniJson.P$16</ID>
+    <ID>MagicNumber:MiniJson.kt$MiniJson.P$4</ID>
+    <ID>MagicNumber:MiniJson.kt$MiniJson.P$512</ID>
+    <ID>MaxLineLength:AndroidPrefsXml.kt$AndroidPrefsXml$if (bytes.isEmpty()) return PrefsXmlRead(LinkedHashMap(), AndroidLoad.LoadsEmpty, listOf(XmlProblem.EmptyFile), 0)</ID>
+    <ID>MaxLineLength:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$if (semi &lt; 0 || semi - i &gt; 12) throw Fatal(if (semi &lt; 0) XmlProblem.Truncated else XmlProblem.UnknownEntity, start)</ID>
+    <ID>MaxLineLength:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$is Token.End -&gt; if (t.name == "string") return sb.toString() else throw Fatal(XmlProblem.Malformed, t.offset)</ID>
+    <ID>MaxLineLength:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$is Token.Text -&gt; if (t.text.isBlank()) nextStartOrFail() else throw Fatal(XmlProblem.NoMapRoot, t.offset)</ID>
+    <ID>MaxLineLength:AndroidPrefsXml.kt$AndroidPrefsXml.Token$Start : Token</ID>
+    <ID>MaxLineLength:AndroidPrefsXmlTest.kt$AndroidPrefsXmlTest$assertEquals(AndroidLoad.Loaded, parse("&lt;?xml version='1.0' encoding='utf-8' standalone='yes' ?&gt;\n&lt;map /&gt;\n").load)</ID>
+    <ID>MaxLineLength:AndroidPrefsXmlTest.kt$AndroidPrefsXmlTest$assertEquals(listOf("flutter.s", "flutter.b", "flutter.l", "i", "f", "d", "set", "n", "empty", "selfClosed"), r.entries.keys.toList())</ID>
+    <ID>MaxLineLength:AndroidPrefsXmlTest.kt$AndroidPrefsXmlTest$assertTrue(r.problems.containsAll(listOf(XmlProblem.DuplicateName, XmlProblem.MissingName, XmlProblem.TrailingContent)))</ID>
+    <ID>MaxLineLength:AndroidPrefsXmlTest.kt$AndroidPrefsXmlTest$for</ID>
+    <ID>MaxLineLength:AndroidPrefsXmlTest.kt$AndroidPrefsXmlTest$val badLong = parse("&lt;map&gt;&lt;string name=\"ok\"&gt;1&lt;/string&gt;&lt;long name=\"x\" value=\"12abc\" /&gt;&lt;string name=\"after\"&gt;2&lt;/string&gt;&lt;/map&gt;")</ID>
+    <ID>MaxLineLength:AndroidPrefsXmlTest.kt$AndroidPrefsXmlTest$val badUtf8 = "&lt;map&gt;&lt;string name=\"k\"&gt;".toByteArray() + byteArrayOf(0xC3.toByte(), 0x28) + "&lt;/string&gt;&lt;/map&gt;".toByteArray()</ID>
+    <ID>MaxLineLength:AndroidPrefsXmlTest.kt$AndroidPrefsXmlTest$val bom = byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte()) + "&lt;map&gt;&lt;boolean name=\"b\" value=\"FALSE\" /&gt;&lt;/map&gt;".toByteArray()</ID>
+    <ID>MaxLineLength:AndroidPrefsXmlTest.kt$AndroidPrefsXmlTest$val full = AndroidPrefsXmlWriter.write(linkedMapOf("flutter.a" to RawPref.Str("1"), "flutter.b" to RawPref.Str("2"), "flutter.c" to RawPref.Str("3")))</ID>
+    <ID>MaxLineLength:AndroidPrefsXmlTest.kt$AndroidPrefsXmlTest$val r = parse("&lt;map&gt;&lt;int-array name=\"arr\" num=\"2\"&gt;&lt;item value=\"1\" /&gt;&lt;item value=\"2\" /&gt;&lt;/int-array&gt;&lt;/map&gt;")</ID>
+    <ID>MaxLineLength:AndroidPrefsXmlTest.kt$AndroidPrefsXmlTest$val r = parse("&lt;map&gt;&lt;string name=\"k\"&gt;$secretish&lt;/string&gt;&lt;set name=\"s\"&gt;&lt;string&gt;$secretish&lt;/string&gt;&lt;/set&gt;&lt;/map&gt;")</ID>
+    <ID>MaxLineLength:AndroidPrefsXmlTest.kt$AndroidPrefsXmlTest$val r = parse("&lt;map&gt;&lt;string name=\"k\"&gt;1&lt;/string&gt;&lt;string&gt;nameless&lt;/string&gt;&lt;string name=\"k\"&gt;2&lt;/string&gt;&lt;/map&gt;junk")</ID>
+    <ID>MaxLineLength:AndroidPrefsXmlWriter.kt$AndroidPrefsXmlWriter$is RawPref.Bool -&gt; sb.append("&lt;boolean name=\"").append(n).append("\" value=\"").append(value.value).append("\" /&gt;")</ID>
+    <ID>MaxLineLength:AndroidPrefsXmlWriter.kt$AndroidPrefsXmlWriter$is RawPref.F32 -&gt; sb.append("&lt;float name=\"").append(n).append("\" value=\"").append(value.value.toString()).append("\" /&gt;")</ID>
+    <ID>MaxLineLength:AndroidPrefsXmlWriter.kt$AndroidPrefsXmlWriter$is RawPref.F64 -&gt; sb.append("&lt;double name=\"").append(n).append("\" value=\"").append(value.value.toString()).append("\" /&gt;")</ID>
+    <ID>MaxLineLength:AndroidPrefsXmlWriter.kt$AndroidPrefsXmlWriter$is RawPref.Int32 -&gt; sb.append("&lt;int name=\"").append(n).append("\" value=\"").append(value.value).append("\" /&gt;")</ID>
+    <ID>MaxLineLength:AndroidPrefsXmlWriter.kt$AndroidPrefsXmlWriter$is RawPref.Int64 -&gt; sb.append("&lt;long name=\"").append(n).append("\" value=\"").append(value.value).append("\" /&gt;")</ID>
+    <ID>MaxLineLength:AndroidPrefsXmlWriter.kt$AndroidPrefsXmlWriter$is RawPref.Str -&gt; sb.append("&lt;string name=\"").append(n).append("\"&gt;").append(escape(value.value)).append("&lt;/string&gt;")</ID>
+    <ID>MaxLineLength:AsyncBackends.kt$AsyncBackends$if (sf == 1 &amp;&amp; sw == 2) strings += String(set.lengthDelimited(), Charsets.UTF_8) else set.skip(sw)</ID>
+    <ID>MaxLineLength:AsyncBackends.kt$AsyncBackends$private fun fixed64(o: ByteArrayOutputStream, v: Long)</ID>
+    <ID>MaxLineLength:AsyncBackends.kt$AsyncBackends.Census$"Census(dataStoreKeys=$dataStoreKeys, dataStoreCorrupt=$dataStoreCorrupt, defaultPrefsKeys=$defaultPrefsKeys, defaultPrefsLoadsEmpty=$defaultPrefsLoadsEmpty)"</ID>
+    <ID>MaxLineLength:AsyncBackendsAndPickerTest.kt$AsyncBackendsAndPickerTest$val errorOnly = ImagePickerCache.read(mapOf(ImagePickerCache.KEY_ERROR_CODE to RawPref.Str("no_available_camera")))</ID>
+    <ID>MaxLineLength:BackupPublisher.kt$BackupPublisher$Fs.writeAtomically(File(partialDir, MANIFEST), manifestJson(copied).toByteArray(Charsets.UTF_8), faults, "S0:manifest")</ID>
+    <ID>MaxLineLength:BackupPublisher.kt$BackupPublisher$private</ID>
+    <ID>MaxLineLength:BackupPublisher.kt$BackupPublisher$val present = fileNames.flatMap { n -&gt; listOf("$n.xml", "$n.xml.bak") }.map { File(sharedPrefsDir, it) }.filter { it.exists() }</ID>
+    <ID>MaxLineLength:BackupPublisher.kt$BackupPublisher.Companion$"files" to files.map { linkedMapOf("name" to it.name, "bytes" to it.bytes, "sha256" to it.sha256, "authoritative" to it.authoritative) }</ID>
+    <ID>MaxLineLength:BackupPublisherTest.kt$BackupPublisherTest$assertIs&lt;BackupPublisher.Outcome.Published&gt;(publisher(full).runIfNeeded(), "Try again works after freeing space")</ID>
+    <ID>MaxLineLength:BackupPublisherTest.kt$BackupPublisherTest$assertTrue(!File(full, "files/migration").exists() || File(full, "files/migration").list()!!.isEmpty(), "nothing written when space is low")</ID>
+    <ID>MaxLineLength:BackupPublisherTest.kt$BackupPublisherTest$assertTrue(second is BackupPublisher.Outcome.Published || second == BackupPublisher.Outcome.AlreadyPublished, "after $point: $second")</ID>
+    <ID>MaxLineLength:BackupPublisherTest.kt$BackupPublisherTest$private</ID>
+    <ID>MaxLineLength:CommittedFixturesTest.kt$CommittedFixturesTest$/** Reads the committed fixture files (src/test/resources/fixtures/synthetic-v1) and runs a crash-tested pipeline on them. */</ID>
+    <ID>MaxLineLength:CommittedFixturesTest.kt$CommittedFixturesTest$FixtureGenerator.keyPairFromPkcs8(Base64.getMimeDecoder().decode(File(fixture, "fixture-rsa-private.pk8.b64").readText()))</ID>
+    <ID>MaxLineLength:CommittedFixturesTest.kt$CommittedFixturesTest$assertEquals(MiniJson.parse(expectedSecrets), MiniJson.parse(File(app, "files/native/secret-store-standin.json").readText()), "after $point")</ID>
+    <ID>MaxLineLength:CommittedFixturesTest.kt$CommittedFixturesTest$assertEquals(ProfilesRead.Read(listOf(FixtureGenerator.PROFILE_A, FixtureGenerator.PROFILE_B), 0, 0), model.profiles)</ID>
+    <ID>MaxLineLength:CommittedFixturesTest.kt$CommittedFixturesTest$assertEquals(expectedPrefs, SharedPrefsFile(File(app, "shared_prefs"), FlutterPrefsCodec.FILE_NAME).read()!!.androidMap, "after $point")</ID>
+    <ID>MaxLineLength:CommittedFixturesTest.kt$CommittedFixturesTest$assertTrue(committed.contentEquals(AndroidPrefsXmlWriter.write(FixtureGenerator.prefsFixture())), "regenerate with ./gradlew generateFixtures")</ID>
+    <ID>MaxLineLength:CommittedFixturesTest.kt$CommittedFixturesTest$assertTrue(read.entries.isNotEmpty(), "our salvage finds keys while Android would see none: Blocked(PrefsUnreadable)")</ID>
+    <ID>MaxLineLength:CommittedFixturesTest.kt$CommittedFixturesTest$get() = (MiniJson.parse(File(fixture, "seed-manifest.json").readText()) as Map&lt;String, Any?&gt;)["secrets"] as Map&lt;String, String&gt;</ID>
+    <ID>MaxLineLength:CommittedFixturesTest.kt$CommittedFixturesTest$private val fixture: File = File(javaClass.getResource("/fixtures/synthetic-v1/seed-manifest.json")!!.toURI()).parentFile</ID>
+    <ID>MaxLineLength:CommittedFixturesTest.kt$CommittedFixturesTest$val before = app.walkTopDown().filter { it.isFile }.associate { it.relativeTo(app).path to Fs.sha256Hex(it) }</ID>
+    <ID>MaxLineLength:CommittedFixturesTest.kt$CommittedFixturesTest$val secrets = FlutterSecureStorageReader(SoftwareRsaOaepUnwrapper(keyPair.private)).read(FssStores.fromDirectory(shared))</ID>
+    <ID>MaxLineLength:CommittedFixturesTest.kt$CommittedFixturesTest.Pipeline$val s0 = BackupPublisher(shared, File(app, "files/migration"), journal, faults, freeBytes = { Long.MAX_VALUE }).runIfNeeded()</ID>
+    <ID>MaxLineLength:CommittedFixturesTest.kt$CommittedFixturesTest.Pipeline.&lt;no name provided&gt;$Fs.writeAtomically(secretStore, MiniJson.encode(merged).toByteArray(), faults, "secret:${p.name}")</ID>
+    <ID>MaxLineLength:CommittedFixturesTest.kt$CommittedFixturesTest.Pipeline.&lt;no name provided&gt;$return PrefsBaseline.load(baselineFile)!!.undeclaredChanges(nowMap, PrefsBaseline.V1_DECLARED_WRITES) == 0</ID>
+    <ID>MaxLineLength:CommittedFixturesTest.kt$CommittedFixturesTest.Pipeline.&lt;no name provided&gt;$secretStore.exists() &amp;&amp; (MiniJson.parse(secretStore.readText()) as Map&lt;*, *&gt;).keys == manifestSecrets.keys</ID>
+    <ID>MaxLineLength:CommittedFixturesTest.kt$CommittedFixturesTest.Pipeline.&lt;no name provided&gt;$val existing = if (secretStore.exists()) MiniJson.parse(secretStore.readText()) as Map&lt;*, *&gt; else emptyMap&lt;Any, Any&gt;()</ID>
+    <ID>MaxLineLength:CommittedFixturesTest.kt$CommittedFixturesTest.Pipeline.&lt;no name provided&gt;$val read = FlutterSecureStorageReader(SoftwareRsaOaepUnwrapper(keyPair.private)).read(FssStores.fromDirectory(backupShared))</ID>
+    <ID>MaxLineLength:CommittedFixturesTest.kt$CommittedFixturesTest.XmlBarrier$override fun read(): Boolean?</ID>
+    <ID>MaxLineLength:CredentialAndBaselineTest.kt$CredentialAndBaselineTest$after["flutter.oc.secretReentry.${FixtureGenerator.PROFILE_A}"] = RawPref.Str("""{"v":1,"names":["pw"],"reason":"UnwrapFailed","at":1}""")</ID>
+    <ID>MaxLineLength:CredentialAndBaselineTest.kt$CredentialAndBaselineTest$assertEquals(setOf("pw.1", "pw.3"), CredentialReconciler.staleLegacyEntries(native, setOf("pw.1", "pw.2", "pw.3")))</ID>
+    <ID>MaxLineLength:CredentialAndBaselineTest.kt$CredentialAndBaselineTest$listOf(ReturnAction.KeepNative("pw.1"), ReturnAction.DeleteNative("pw.2"), ReturnAction.OverwriteNative("pw.3"))</ID>
+    <ID>MaxLineLength:CredentialAndBaselineTest.kt$CredentialAndBaselineTest$val baseline = TransitionBaseline(1, mapOf("pw.1" to CredentialReconciler.fingerprint("ct-a"), "pw.2" to CredentialReconciler.fingerprint("ct-b")))</ID>
+    <ID>MaxLineLength:CredentialReconciler.kt$CredentialReconciler$public</ID>
+    <ID>MaxLineLength:FixtureGenerator.kt$FixtureGenerator$"attachments" to emptyList&lt;Any&gt;()</ID>
+    <ID>MaxLineLength:FixtureGenerator.kt$FixtureGenerator$"note" to "Synthetic fixture. Every value is made up; the RSA key is a throwaway test key standing in for the Keystore key."</ID>
+    <ID>MaxLineLength:FixtureGenerator.kt$FixtureGenerator$"oc.byoHostSecrets.$PROFILE_B" to """{"schema":2,"keyAlias":"oc.byoHostSsh.$PROFILE_B","publicKey":"ssh-ed25519 AAAAfixture","deviceToken":"dev-fixture"}"""</ID>
+    <ID>MaxLineLength:FixtureGenerator.kt$FixtureGenerator$"username" to ""</ID>
+    <ID>MaxLineLength:FixtureGenerator.kt$FixtureGenerator$"username" to "opencode"</ID>
+    <ID>MaxLineLength:FixtureGenerator.kt$FixtureGenerator$/** A legacy (pre-2.4.3 writer) Java-serialized list value: `LIST_PREFIX + Base64.DEFAULT(ObjectOutputStream(list))`. */</ID>
+    <ID>MaxLineLength:FixtureGenerator.kt$FixtureGenerator$ExpectedType.Str, ExpectedType.StrOrList -&gt; RawPref.Str(MiniJson.encode(linkedMapOf("v" to 1L, "fixture" to seed)))</ID>
+    <ID>MaxLineLength:FixtureGenerator.kt$FixtureGenerator$File(outDir, "fixture-rsa-private.pk8.b64").writeText(Base64.getMimeEncoder().encodeToString(keyPair.private.encoded) + "\n")</ID>
+    <ID>MaxLineLength:FixtureGenerator.kt$FixtureGenerator$ImagePickerCache.KEY_IMAGE_PATHS to RawPref.StrSet(linkedSetOf("/data/user/0/$PACKAGE/cache/image_picker_fixture.jpg"))</ID>
+    <ID>MaxLineLength:FixtureGenerator.kt$FixtureGenerator$ObjectOutputStream(bos).use { it.writeObject(if (arraysAsList) java.util.Arrays.asList(*list.toTypedArray()) else ArrayList(list)) }</ID>
+    <ID>MaxLineLength:FixtureGenerator.kt$FixtureGenerator$linkedMapOf</ID>
+    <ID>MaxLineLength:FixtureGenerator.kt$FixtureGenerator$put("oc.chatNoticesSeen.$PROFILE_B", RawPref.Str(javaSerializedList(listOf("auto-approve:ses_1", "auto-approve:ses_2"))))</ID>
+    <ID>MaxLineLength:FixtureGenerator.kt$FixtureGenerator$put("oc.withdrawnPrompts.$PROFILE_B", RawPref.Str(javaSerializedList(listOf("ses_1|msg_1"), arraysAsList = true)))</ID>
+    <ID>MaxLineLength:FixtureGenerator.kt$FixtureGeneratorMain$val</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ActiveProfile : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$Agent : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$AgentFeed : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$AgentHandoffs : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$AgentInstall : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$AgentModel : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$AgentPhoneGate : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$AgentSignedOut : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$AgentTurnFailures : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$AppLocale : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$Appearance : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$AppearanceAccent : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$AppearanceGuide : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$AttentionTile : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$AutoApprove : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$AutomaticActivity : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$Automation : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$BackgroundPauseDismissed : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$Budgets : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$BuiltinRecovery : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$BuiltinServerOwner : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ByoHost : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$CertificatePin : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ChatAgent : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ChatListShown : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ChatNoticesSeen : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ChatTail : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$CleartextOk : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ConsumptionBudgets : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ContextUsage : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ConversationTitles : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$DefaultNotices : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$DefaultProject : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$DesktopWindowState : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$DevFactsbook : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$DevelopmentServices : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$Draft : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$DraftAttachmentVault : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$EffectsActivityGlow : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$EffectsBackgroundOn : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$EffectsCelebrations : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$EffectsCorners : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$EffectsDensity : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$EffectsDepth : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$EffectsEdges : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$EffectsGlowColours : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$EffectsGlowSpeed : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$EffectsGlowStyle : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$EffectsLiveBackground : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$EffectsLiveHeldByStyle : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$EffectsLiveIntensity : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$EffectsLiveStyle : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$EffectsMotion : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$EffectsSurfaceStyle : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ExternalAgents : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$FactsbookNode : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$FactsbookNodeStopped : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$FirstRunNotifyAsk : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$FirstRunState : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$FreeModelNoteDismissed : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$GenuiCovered : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$GenuiEnabled : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$GenuiJournal : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$GlassLiquidActive : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$GlassLiquidOffUntil : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$GlassLiquidStrikes : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$InFlowConsent : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$KeepLiveInBackground : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$KeptQueuedPrompts : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$LastProject : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$LinuxResetPending : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$Location : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$MainFeed : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ManagedServerRecovery : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$MobileDownloadConsent : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$Model : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ModelExplicit : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ModelLibrary : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ModelNames : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$MonitorAlerts : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$MonitorBusy : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$MonitorRoutes : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$NativeFlutterReadable : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$NativeReturnedAt : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$NotifyCheckInAfterMinutes : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$NotifyFinishedRuns : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$NotifyQuietEnd : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$NotifyQuietStart : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$NotifyQuotaAlerts : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$NotifyRequests : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$NotifyRules : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$NotifyVersion : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$NotifyWifiOnly : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$NudgesFirstReplySeen : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$NudgesProjects : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$NudgesShown : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$OfflineQueue : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$OlderDraftsBackupV1 : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$Orchestration : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$PaseoUsage : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$PendingAuth : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$PendingCommands : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$PendingPromptPhoto : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$PermissionConsent : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$PhoneAgentGateMigration : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$PhoneAgentOwner : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$PhoneAgentsUsed : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$PhoneServerStopped : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$PhraseChips : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$PhraseChipsEnabled : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$PinnedShortcuts : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$Profiles : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$PromptHistory : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$PromptStash : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ProviderRuntimeRefresh : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ProviderRuntimeUnloadable : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$QuotaCollector : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$QuotaMonitor : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ReadAloudConsent : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ReadStateConsentMigration : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ReaderPreferences : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$RecentLocations : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ReplySpeedInApp : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ReturnBrief : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$SavedPromptMigrationV1 : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ScheduleClaims : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ScheduleDeleted : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ScheduleIndex : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$SchedulePhoneLease : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ScheduleReceipts : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ScheduledPrompts : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$SessionAgents : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$SessionDisplayModels : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$SessionDrafts : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$SessionInventory : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$SessionLinkBinding : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$SessionModels : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$SessionPins : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$SessionViews : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$SetupAudit : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$SetupRegistry : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ShareSessionViews : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ShareSessionViewsDefault : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ShareSessionViewsLegacy : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ShareSessionViewsOrigin : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$SharedProjects : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$SideFeed : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$StashAttachmentVault : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$Tailscale : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$TeamEditorDrafts : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$TeamEngineDeleted : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$TeamMigrationKept : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$TeamModel : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$TeamRoles : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$TeamTaskRoles : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$TeamWorkerStart : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$TeamWorkspace : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$TermuxMigration : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$TermuxMigrationOffer : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ThemePack : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ThermalGuard : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$ThermalPause : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$TranscriptReasoningExpanded : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$TranscriptTimestampsVisible : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$UsageAlertSeen : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$UsageAlerts : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$UsageComputerReader : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$UsageLast : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$UsageWidget : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$Variant : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$VoiceAutoSend : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$VoiceLanguage : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$VoiceReadAloudNatural : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$WidgetActions : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$WidgetFollowup : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$WidgetSessions : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$WidgetTarget : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$WidgetUsage : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$WidgetUsageSubs : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey$WithdrawnPrompts : FlutterKey</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey.A2aTasks$A2aTasks</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey.Companion$internal fun prefixCandidates(key: String): List&lt;FlutterKey&gt;</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey.Companion$private val exact: Map&lt;String, FlutterKey&gt; = entries.filter { it.form == IdForm.Exact }.associateBy { it.pattern }</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey.Companion$private val prefixed: List&lt;FlutterKey&gt; = entries.filter { it.form != IdForm.Exact }.sortedByDescending { it.pattern.length }</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey.NativeMovedToDb$NativeMovedToDb</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey.SecretReentry$SecretReentry</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey.VoiceSelectedPack$VoiceSelectedPack</ID>
+    <ID>MaxLineLength:FlutterKey.kt$FlutterKey.WidgetStyle$WidgetStyle</ID>
+    <ID>MaxLineLength:FlutterKey.kt$SecretKey$public enum</ID>
+    <ID>MaxLineLength:FlutterKeyRegistryTest.kt$FlutterKeyRegistryTest$"flutter.oc.chatNoticesSeen.$PROFILE_A" to RawPref.Str("VGhpcyBpcyB0aGUgcHJlZml4IGZvciBhIGxpc3Qu!{broken")</ID>
+    <ID>MaxLineLength:FlutterKeyRegistryTest.kt$FlutterKeyRegistryTest$assertEquals(188, ledger.size, "the Flutter ledger changed size: add rows to FlutterKey, then update this count")</ID>
+    <ID>MaxLineLength:FlutterKeyRegistryTest.kt$FlutterKeyRegistryTest$assertEquals(ClassifiedKey("oc.activeProfile", FlutterKey.ActiveProfile, null, null, false, null), c("oc.activeProfile"))</ID>
+    <ID>MaxLineLength:FlutterKeyRegistryTest.kt$FlutterKeyRegistryTest$assertEquals(FlutterKey.PromptStash, it.key); assertEquals(PROFILE_A, it.id); assertEquals("1730000000000000", it.qualifier)</ID>
+    <ID>MaxLineLength:FlutterKeyRegistryTest.kt$FlutterKeyRegistryTest$assertEquals(ProfilesRead.Unreadable, FlutterPrefsModelBuilder.build(mapOf("flutter.oc.profiles" to RawPref.Str("{"))).profiles)</ID>
+    <ID>MaxLineLength:FlutterKeyRegistryTest.kt$FlutterKeyRegistryTest$assertEquals(SecretKey.FactsbookNodePassphrase to null, KeyClassifier.classifySecret("oc.factsbook-node.passphrase"))</ID>
+    <ID>MaxLineLength:FlutterKeyRegistryTest.kt$FlutterKeyRegistryTest$assertEquals(SecretKey.FactsbookOwner to PROFILE_A, KeyClassifier.classifySecret("oc.factsbookOwner.$PROFILE_A"))</ID>
+    <ID>MaxLineLength:FlutterKeyRegistryTest.kt$FlutterKeyRegistryTest$assertEquals(SecretKey.OrchestrationGrant to PROFILE_A, KeyClassifier.classifySecret("oc.orchestration.$PROFILE_A.grant"))</ID>
+    <ID>MaxLineLength:FlutterKeyRegistryTest.kt$FlutterKeyRegistryTest$assertEquals(StoredKind.StringSet, model.forProfile(PROFILE_B, FlutterKey.AgentTurnFailures).single().decoded.kind)</ID>
+    <ID>MaxLineLength:FlutterKeyRegistryTest.kt$FlutterKeyRegistryTest$assertEquals(setOf("oc.futureFeature.v9", "oc.model.not a valid id", "someOtherPlugin.flag", "oc.fixture.int32", "oc.fixture.float", "oc.fixture.null", "oc.fixture.bigint", "oc.fixture.double"), model.unknown.keys)</ID>
+    <ID>MaxLineLength:FlutterKeyRegistryTest.kt$FlutterKeyRegistryTest$c("oc.draft.note.ses_x.$PROFILE_B").let { assertEquals(FlutterKey.Draft, it.key); assertEquals(PROFILE_B, it.id); assertEquals("note.ses_x", it.qualifier) }</ID>
+    <ID>MaxLineLength:FlutterKeyRegistryTest.kt$FlutterKeyRegistryTest$c("oc.schedulePhoneLease.phone").let { assertEquals(FlutterKey.SchedulePhoneLease, it.key); assertEquals("phone", it.qualifier) }</ID>
+    <ID>MaxLineLength:FlutterKeyRegistryTest.kt$FlutterKeyRegistryTest$if (shape.scope !in ledgerToScope.getValue(scope)) disagreements += "$k ledger=$scope registry=${shape.scope}"</ID>
+    <ID>MaxLineLength:FlutterKeyRegistryTest.kt$FlutterKeyRegistryTest$val ledger = MiniJson.parse(File(repoRoot, "test/fixtures/coverage/settings_preferences_ledger.json").readText()) as Map&lt;*, *&gt;</ID>
+    <ID>MaxLineLength:FlutterKeyRegistryTest.kt$FlutterKeyRegistryTest$val ledgerToScope = mapOf("profile" to setOf(KeyScope.Profile, KeyScope.Owner), "global" to setOf(KeyScope.App), "shared" to setOf(KeyScope.Shared), "other" to setOf(KeyScope.Other))</ID>
+    <ID>MaxLineLength:FlutterKeyRegistryTest.kt$FlutterKeyRegistryTest$val mixed = FlutterPrefsModelBuilder.build(mapOf("flutter.oc.profiles" to RawPref.Str("""[{"id":"1"},{"id":"bad id"},3,{}]""")))</ID>
+    <ID>MaxLineLength:FlutterPrefsCodec.kt$FlutterPrefsCodec$2 -&gt; if (d &gt;= 0) { value = (value shl 6) or d; state = 3 } else if (d == EQUALS) { out.write(value shr 4); state = 4 } else if (d != SKIP) bad()</ID>
+    <ID>MaxLineLength:FlutterPrefsCodec.kt$FlutterPrefsCodec$if (big.bitLength() &lt;= 63) PrefValue.Int64(big.toLong()) else PrefValue.Undecodable(UndecodableKind.BadBigInteger)</ID>
+    <ID>MaxLineLength:FlutterPrefsCodec.kt$FlutterPrefsCodec$public</ID>
+    <ID>MaxLineLength:FlutterPrefsCodecTest.kt$FlutterPrefsCodecTest$assertEquals(PrefValue.Undecodable(UndecodableKind.BadBigInteger), d(RawPref.Str(FlutterPrefsCodec.BIG_INTEGER_PREFIX + "!")).value)</ID>
+    <ID>MaxLineLength:FlutterPrefsCodecTest.kt$FlutterPrefsCodecTest$assertEquals(PrefValue.Undecodable(UndecodableKind.BadBigInteger), d(RawPref.Str(FlutterPrefsCodec.BIG_INTEGER_PREFIX + huge)).value)</ID>
+    <ID>MaxLineLength:FlutterPrefsCodecTest.kt$FlutterPrefsCodecTest$assertEquals(PrefValue.Undecodable(UndecodableKind.BadDouble), d(RawPref.Str(FlutterPrefsCodec.DOUBLE_PREFIX + "x1")).value)</ID>
+    <ID>MaxLineLength:FlutterPrefsCodecTest.kt$FlutterPrefsCodecTest$assertEquals(PrefValue.Undecodable(UndecodableKind.UnknownType), d(RawPref.Other("int-array", "&lt;int-array/&gt;")).value)</ID>
+    <ID>MaxLineLength:FlutterPrefsCodecTest.kt$FlutterPrefsCodecTest$assertFailsWith&lt;IllegalArgumentException&gt; { FlutterPrefsCodec.encode(PrefValue.Undecodable(UndecodableKind.BadDouble)) }</ID>
+    <ID>MaxLineLength:FlutterPrefsCodecTest.kt$FlutterPrefsCodecTest$assertTrue(FlutterPrefsCodec.decodeAndroidBase64(Base64.getEncoder().encodeToString(b)).contentEquals(b), "n=$n")</ID>
+    <ID>MaxLineLength:FlutterPrefsCodecTest.kt$FlutterPrefsCodecTest$for</ID>
+    <ID>MaxLineLength:FlutterPrefsModel.kt$AdoptedEntry$override fun toString(): String</ID>
+    <ID>MaxLineLength:FlutterPrefsModel.kt$AdoptedEntry$public</ID>
+    <ID>MaxLineLength:FlutterPrefsModel.kt$FlutterPrefsModel$public fun forProfile(id: String, key: FlutterKey): List&lt;AdoptedEntry&gt;</ID>
+    <ID>MaxLineLength:FlutterPrefsModel.kt$FlutterPrefsModelBuilder$return FlutterPrefsModel(app, byId, unknown, unprefixed, profiles, physical.keys.toList(), LinkedHashMap(physical))</ID>
+    <ID>MaxLineLength:FlutterPrefsModel.kt$KeyClassifier$if</ID>
+    <ID>MaxLineLength:FlutterPrefsModel.kt$KeyClassifier$if (ProfileIds.isValid(id)) return ClassifiedKey(logicalKey, shape, id, rest.substring(dot + 1), false, null)</ID>
+    <ID>MaxLineLength:FlutterPrefsModel.kt$KeyClassifier$if (last == ProfileIds.APP_SEGMENT) return ClassifiedKey(logicalKey, shape, null, target, false, null)</ID>
+    <ID>MaxLineLength:FlutterPrefsModel.kt$KeyClassifier$return ClassifiedKey(logicalKey, null, null, null, false, if (sawPrefix) UnknownReason.BadIdShape else UnknownReason.NoShape)</ID>
+    <ID>MaxLineLength:FlutterSecureStorageReader.kt$FlutterSecureStorageReader$if (bytes.size &lt; FssFormat.IV_BYTES + FssFormat.TAG_BITS / 8) return FlutterSecret.Failed(name, SecretFailure.TooShort)</ID>
+    <ID>MaxLineLength:FlutterSecureStorageReader.kt$FlutterSecureStorageReader$if (keyAlg == FssFormat.REMOVED_KEY_ALGORITHM || storageAlg == FssFormat.REMOVED_STORAGE_ALGORITHM) return MarkerState.Removed</ID>
+    <ID>MaxLineLength:FlutterSecureStorageReader.kt$FssFormat$/** `DEFAULT_KEY_PREFIX`; entry names are `prefix + "_" + name`. Base64 of "This is the prefix for a secure storage\n". */</ID>
+    <ID>MaxLineLength:FlutterSecureStorageReaderTest.kt$FlutterSecureStorageReaderTest$"pw.tampered" to SecretFailure.AuthFailed</ID>
+    <ID>MaxLineLength:FlutterSecureStorageReaderTest.kt$FlutterSecureStorageReaderTest$assertEquals("This is the prefix for a secure storage\n", String(Base64.getDecoder().decode(FssFormat.ENTRY_PREFIX + "==")))</ID>
+    <ID>MaxLineLength:FlutterSecureStorageReaderTest.kt$FlutterSecureStorageReaderTest$assertEquals("io.github.eslamasabry.opencode_mobile.FlutterSecureStoragePluginKeyOAEP", FssFormat.keystoreAlias(FixtureGenerator.PACKAGE))</ID>
+    <ID>MaxLineLength:FlutterSecureStorageReaderTest.kt$FlutterSecureStorageReaderTest$files.data[FssFormat.entryName("pw.short")] = RawPref.Str(FlutterPrefsCodec.encodeAndroidBase64Default(ByteArray(27)))</ID>
+    <ID>MaxLineLength:FlutterSecureStorageReaderTest.kt$FlutterSecureStorageReaderTest$files.data[FssFormat.entryName("pw.tampered")] = RawPref.Str(FlutterPrefsCodec.encodeAndroidBase64Default(tampered))</ID>
+    <ID>MaxLineLength:FlutterSecureStorageReaderTest.kt$FlutterSecureStorageReaderTest$for (v in FixtureGenerator.SECRETS.values.filter { it.length &gt;= 4 }) assertFalse(text.contains(v), "leaked a fixture secret")</ID>
+    <ID>MaxLineLength:FlutterSecureStorageReaderTest.kt$FlutterSecureStorageReaderTest$fun</ID>
+    <ID>MaxLineLength:FlutterSecureStorageReaderTest.kt$FlutterSecureStorageReaderTest$val badKey = FssStores(files.data, mapOf(FssFormat.WRAPPED_KEY_ENTRY to RawPref.Str("A")), files.configNamespaced, files.configLegacy)</ID>
+    <ID>MaxLineLength:FlutterSecureStorageReaderTest.kt$FlutterSecureStorageReaderTest$val counting = FlutterSecureStorageReader { unwrapCalls++; SoftwareRsaOaepUnwrapper(keyPair.private).unwrap(it) }</ID>
+    <ID>MaxLineLength:FlutterSecureStorageReaderTest.kt$FlutterSecureStorageReaderTest$val files = w.write(linkedMapOf("pw.ok" to "fine", "pw.tampered" to "x", "pw.short" to "y", "pw.b64" to "z", "pw.type" to "t", "pw.utf" to "u"))</ID>
+    <ID>MaxLineLength:FlutterSecureStorageReaderTest.kt$FlutterSecureStorageReaderTest$val r = FlutterSecureStorageReader { calls++; throw IllegalStateException() }.read(FssStores(emptyMap(), emptyMap(), emptyMap(), emptyMap()))</ID>
+    <ID>MaxLineLength:FlutterSecureStorageReaderTest.kt$FlutterSecureStorageReaderTest$val r = counting.read(writer().write(mapOf("pw.1" to "a", "pw.2" to "b"), FssFixtureWriter.Markers.Removed).stores())</ID>
+    <ID>MaxLineLength:FlutterSecureStorageReaderTest.kt$FlutterSecureStorageReaderTest$val tampered = FlutterPrefsCodec.decodeAndroidBase64((files.data.getValue(FssFormat.entryName("pw.tampered")) as RawPref.Str).value)</ID>
+    <ID>MaxLineLength:FlutterSecureStorageReaderTest.kt$FlutterSecureStorageReaderTest$val wrongLength = FlutterSecureStorageReader { javax.crypto.spec.SecretKeySpec(ByteArray(32), "AES") }.read(files.stores())</ID>
+    <ID>MaxLineLength:Fs.kt$Fs$public</ID>
+    <ID>MaxLineLength:ImagePickerCache.kt$ImagePickerCache.LostResult$"LostResult(type=$type, paths=${paths.size}, hasError=$hasError, pendingCameraUri=${pendingCameraUri != null})"</ID>
+    <ID>MaxLineLength:MigrationJournal.kt$JournalStore$public fun load(): MigrationJournal</ID>
+    <ID>MaxLineLength:MigrationJournal.kt$MigrationJournal$linkedMapOf("name" to it.name, "bytes" to it.bytes, "sha256" to it.sha256, "authoritative" to it.authoritative)</ID>
+    <ID>MaxLineLength:MigrationJournal.kt$MigrationJournal.Companion$/** Throws [MiniJson.ParseException] for a journal that is not JSON; the caller blocks with `JournalUnreadable`. */</ID>
+    <ID>MaxLineLength:MigrationJournal.kt$MigrationJournal.Companion$steps[k as String] = StepRecord(StepState.fromWire(sm["state"] as? String), ((sm["attempts"] as? Long) ?: 0L).toInt())</ID>
+    <ID>MaxLineLength:MigrationJournal.kt$MigrationJournal.Companion$val known = setOf("schema", "generation", "source", "backup", "barrier", "steps", "restore", "outbound", "blocked")</ID>
+    <ID>MaxLineLength:MiniJson.kt$MiniJson.P$if (s[i] == '0') i++ else if (s[i] in '1'..'9') while (i &lt; s.length &amp;&amp; s[i].isDigit()) i++ else throw ParseException("bad number", start)</ID>
+    <ID>MaxLineLength:MiniJson.kt$MiniJson.P$val code = s.substring(i, i + 4).toIntOrNull(16) ?: throw ParseException("bad unicode escape", i)</ID>
+    <ID>MaxLineLength:MiniJsonTest.kt$MiniJsonTest$1e-7 to "1e-7"</ID>
+    <ID>MaxLineLength:MiniJsonTest.kt$MiniJsonTest$MiniJson.encode(listOf("a\"b", "\\", "\b\t\n\u000C\r", "\u0001\u001f", "/", "é", "😀", "\uD800", "\uDC00x"))</ID>
+    <ID>MaxLineLength:PrefsBaseline.kt$PrefsBaseline$Fs.writeAtomically(file, MiniJson.encode(linkedMapOf("v" to 1L, "keys" to keys)).toByteArray(Charsets.UTF_8), faults, "baseline")</ID>
+    <ID>MaxLineLength:PrefsBaseline.kt$PrefsBaseline.Companion$FlutterKey.Budgets</ID>
+    <ID>MaxLineLength:PrefsBaseline.kt$PrefsBaseline.Companion$FlutterKey.NotifyQuietStart</ID>
+    <ID>MaxLineLength:PrefsBaseline.kt$PrefsBaseline.Companion$public</ID>
+    <ID>MaxLineLength:PrefsBaseline.kt$PrefsBaseline.Companion$val lines = entries.filterValues { it.shape !in names }.toSortedMap().entries.joinToString("\n") { "${it.key} ${it.value.valueHash}" }</ID>
+    <ID>MaxLineLength:RawPref.kt$RawPref.Companion$is Set&lt;*&gt; -&gt; if (value.all { it is String }) StrSet(value.filterIsInstance&lt;String&gt;().toCollection(LinkedHashSet())) else null</ID>
+    <ID>MaxLineLength:RestoreTransaction.kt$OutboundTombstones$Fs.writeAtomically(file, MiniJson.encode(linkedMapOf("v" to 1L, "ids" to ids.toList())).toByteArray(Charsets.UTF_8), faults, "tombstones")</ID>
+    <ID>MaxLineLength:RestoreTransactionTest.kt$RestoreTransactionTest$File(app.shared, "FlutterSharedPreferences.xml").writeBytes(AndroidPrefsXmlWriter.write(mapOf("flutter.native" to RawPref.Str("after"))))</ID>
+    <ID>MaxLineLength:RestoreTransactionTest.kt$RestoreTransactionTest$File(app.shared, "FlutterSharedPreferences.xml.bak").writeBytes(AndroidPrefsXmlWriter.write(mapOf("flutter.native" to RawPref.Str("bak"))))</ID>
+    <ID>MaxLineLength:RestoreTransactionTest.kt$RestoreTransactionTest$File(app.shared, "builtin_server_recovery.xml").writeText("&lt;map&gt;&lt;boolean name=\"wanted\" value=\"true\" /&gt;&lt;/map&gt;")</ID>
+    <ID>MaxLineLength:RestoreTransactionTest.kt$RestoreTransactionTest$assertEquals(listOf("queue:q2") to listOf("queue:q1"), OutboundTombstones(app.tombstones).partition(listOf("queue:q1", "queue:q2")))</ID>
+    <ID>MaxLineLength:RestoreTransactionTest.kt$RestoreTransactionTest$assertEquals(setOf("queue:q2"), OutboundTombstones(app.tombstones).load(), "$label: tombstones live outside the snapshot")</ID>
+    <ID>MaxLineLength:RestoreTransactionTest.kt$RestoreTransactionTest$assertEquals(setOf("queue:q2", "occ:${FixtureGenerator.PROFILE_A}:s1:2026-11-02T09:00"), OutboundTombstones(app.tombstones).load())</ID>
+    <ID>MaxLineLength:RestoreTransactionTest.kt$RestoreTransactionTest$assertFalse(File(app.shared, "FlutterSharedPreferences.xml.bak").exists(), "$label: a stale .bak would shadow the restored file")</ID>
+    <ID>MaxLineLength:RestoreTransactionTest.kt$RestoreTransactionTest$assertTrue(File(app.shared, "builtin_server_recovery.xml").exists(), "$label: Kotlin-owned files are not touched")</ID>
+    <ID>MaxLineLength:RestoreTransactionTest.kt$RestoreTransactionTest$assertTrue(File(aside, "FlutterSharedPreferences.xml.bak").exists() &amp;&amp; File(aside, "oc_secrets_v1.xml").exists(), label)</ID>
+    <ID>MaxLineLength:RestoreTransactionTest.kt$RestoreTransactionTest$assertTrue(out == RestoreTransaction.Outcome.Restored || out == RestoreTransaction.Outcome.NothingToResume, "$point: $out")</ID>
+    <ID>MaxLineLength:RestoreTransactionTest.kt$RestoreTransactionTest.App$fun publisher(faults: FaultPoints = FaultPoints.None)</ID>
+    <ID>MaxLineLength:SoftwareFss.kt$FssFixtureWriter$if (backupCopies) data[FssFormat.entryName(name) + FssFormat.BACKUP_SUFFIX] = RawPref.Str(encryptValue("backup-$value"))</ID>
+    <ID>MaxLineLength:SoftwareFss.kt$FssFixtureWriter$public</ID>
+    <ID>MaxLineLength:SoftwareFss.kt$FssFixtureWriter.Files$/** File name (without `.xml`) → XML bytes, for writing into a fixture `shared_prefs/` dir. Empty stores are omitted. */</ID>
+    <ID>MaxLineLength:SoftwareFss.kt$FssFixtureWriter.Files$if (configNamespaced.isNotEmpty()) put(FssFormat.CONFIG_FILE_NAMESPACED, AndroidPrefsXmlWriter.write(configNamespaced))</ID>
+    <ID>MaxLineLength:StepRunner.kt$StepRunner$StepState.Verified -&gt; return if (step.verify()) StepOutcome.AlreadyVerified else block(j, "VerifyRegressed", step.id)</ID>
+    <ID>MaxLineLength:StepRunner.kt$StepRunner$for ((id, r) in j.steps.toMap()) if (r.state == StepState.Failed || r.state == StepState.Running) j.steps[id] = StepRecord(StepState.Pending, 0)</ID>
+    <ID>MaxLineLength:StepRunnerTest.kt$StepRunnerTest$assertEquals(RollbackGuard.Decision.Blocked("Incompatible"), RollbackGuard.evaluate(false, nativeJournalExists = true))</ID>
+    <ID>MaxLineLength:StepRunnerTest.kt$StepRunnerTest$assertEquals(RollbackGuard.Decision.Blocked("Uncertain"), RollbackGuard.evaluate(null, nativeJournalExists = true))</ID>
+    <ID>MaxLineLength:StepRunnerTest.kt$StepRunnerTest$assertEquals(StepOutcome.Blocked("StepCrashed"), runner().run(LineStep("M3", dataFile)), "blocked means blocked for every step")</ID>
+    <ID>MaxLineLength:StepRunnerTest.kt$StepRunnerTest$assertEquals(listOf(StepOutcome.AlreadyVerified, StepOutcome.AlreadyVerified, StepOutcome.AlreadyVerified), runAll())</ID>
+    <ID>MaxLineLength:StepRunnerTest.kt$StepRunnerTest$assertTrue(JournalStore(journalFile).load().steps.values.all { it.state == StepState.Verified &amp;&amp; it.attempts in 1..2 })</ID>
+    <ID>MaxLineLength:StepRunnerTest.kt$StepRunnerTest$assertTrue(after.all { it == StepOutcome.Verified || it == StepOutcome.AlreadyVerified }, "after $point: $after")</ID>
+    <ID>MaxLineLength:StepRunnerTest.kt$StepRunnerTest$if (breakingStarted) assertTrue(decision is RollbackGuard.Decision.Blocked, "rollback allowed after crash at $point")</ID>
+    <ID>MaxLineLength:StepRunnerTest.kt$StepRunnerTest$journalFile.writeText("""{"schema":1,"generation":"prefs-v1","futureField":{"x":[1,2]},"steps":{"M1":{"state":"verified","attempts":1}}}""")</ID>
+    <ID>MaxLineLength:StepRunnerTest.kt$StepRunnerTest$private fun runner(faults: FaultPoints = FaultPoints.None)</ID>
+    <ID>MaxLineLength:StepRunnerTest.kt$StepRunnerTest.LineStep$private</ID>
+    <ID>MaxLineLength:build.gradle.kts$// rootDir is native/; the Flutter repo root is its parent (the ../../.. form dated from the standalone spike build).</ID>
+    <ID>NestedBlockDepth:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$private fun readStartTag(): Token.Start</ID>
+    <ID>NestedBlockDepth:AsyncBackends.kt$AsyncBackends$private fun readValue(v: Proto): RawPref?</ID>
+    <ID>NestedBlockDepth:AsyncBackends.kt$AsyncBackends$public fun readDataStore(bytes: ByteArray): DataStoreRead</ID>
+    <ID>NestedBlockDepth:FlutterPrefsModel.kt$KeyClassifier$public fun classify(logicalKey: String): ClassifiedKey</ID>
+    <ID>NestedBlockDepth:FlutterPrefsModel.kt$KeyClassifier$public fun classifySecret(name: String): Pair&lt;SecretKey, String?&gt;?</ID>
+    <ID>NestedBlockDepth:Fs.kt$Fs$public fun copyDurably(from: File, to: File): String</ID>
+    <ID>NestedBlockDepth:MiniJson.kt$MiniJson.P$fun str(): String</ID>
+    <ID>ReturnCount:AndroidPrefsXml.kt$AndroidPrefsXml$public fun parse(bytes: ByteArray): PrefsXmlRead</ID>
+    <ID>ReturnCount:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$private fun next(): Token</ID>
+    <ID>ReturnCount:BackupPublisher.kt$BackupPublisher$public fun runIfNeeded(): Outcome</ID>
+    <ID>ReturnCount:BackupPublisher.kt$BackupPublisher$public fun verifyPublished(): List&lt;BackupFile&gt;?</ID>
+    <ID>ReturnCount:BackupPublisher.kt$BackupPublisher.Companion$public fun parseManifest(text: String): List&lt;BackupFile&gt;?</ID>
+    <ID>ReturnCount:FlutterPrefsCodec.kt$FlutterPrefsCodec$private fun decodeJsonList(json: String): PrefValue</ID>
+    <ID>ReturnCount:FlutterPrefsCodec.kt$FlutterPrefsCodec$public fun decodeJavaList(base64: String): PrefValue</ID>
+    <ID>ReturnCount:FlutterPrefsModel.kt$AdoptedEntry.Companion$fun typeCheckOf(expected: ExpectedType?, d: DecodedPref): TypeCheck</ID>
+    <ID>ReturnCount:FlutterPrefsModel.kt$FlutterPrefsModelBuilder$private fun readProfiles(entry: AdoptedEntry?): ProfilesRead</ID>
+    <ID>ReturnCount:FlutterPrefsModel.kt$KeyClassifier$public fun classify(logicalKey: String): ClassifiedKey</ID>
+    <ID>ReturnCount:FlutterPrefsModel.kt$KeyClassifier$public fun classifySecret(name: String): Pair&lt;SecretKey, String?&gt;?</ID>
+    <ID>ReturnCount:FlutterSecureStorageReader.kt$FlutterSecureStorageReader$private fun decryptOne(name: String, raw: RawPref?, key: SecretKey): FlutterSecret</ID>
+    <ID>ReturnCount:FlutterSecureStorageReader.kt$FlutterSecureStorageReader$private fun marker(stores: FssStores, key: String): Pair&lt;String?, String?&gt;</ID>
+    <ID>ReturnCount:FlutterSecureStorageReader.kt$FlutterSecureStorageReader$private fun markerState(keyAlg: String?, storageAlg: String?): MarkerState</ID>
+    <ID>ReturnCount:FlutterSecureStorageReader.kt$FlutterSecureStorageReader$public fun read(stores: FssStores): FssReadResult</ID>
+    <ID>ReturnCount:MiniJson.kt$MiniJson$public fun dartDouble(d: Double): String</ID>
+    <ID>ReturnCount:PrefsBaseline.kt$PrefsBaseline.Companion$public fun load(file: File): PrefsBaseline?</ID>
+    <ID>ReturnCount:RestoreTransaction.kt$OutboundTombstones$public fun load(): Set&lt;String&gt;</ID>
+    <ID>ReturnCount:RestoreTransaction.kt$RestoreTransaction$public fun eligibility(): Outcome.Refused?</ID>
+    <ID>ReturnCount:RestoreTransaction.kt$RestoreTransaction$public fun start(): Outcome</ID>
+    <ID>ReturnCount:StepRunner.kt$StepRunner$public fun initBarrier(): StepOutcome</ID>
+    <ID>ReturnCount:StepRunner.kt$StepRunner$public fun run(step: MigrationStep): StepOutcome</ID>
+    <ID>SpreadOperator:FixtureGenerator.kt$FixtureGenerator$(*list.toTypedArray())</ID>
+    <ID>SwallowedException:AndroidPrefsXml.kt$AndroidPrefsXml$e: CharacterCodingException</ID>
+    <ID>SwallowedException:FlutterPrefsCodec.kt$FlutterPrefsCodec$e: Exception</ID>
+    <ID>SwallowedException:FlutterPrefsCodec.kt$FlutterPrefsCodec$e: IllegalArgumentException</ID>
+    <ID>SwallowedException:FlutterSecureStorageReader.kt$FlutterSecureStorageReader$e: CharacterCodingException</ID>
+    <ID>SwallowedException:FlutterSecureStorageReader.kt$FlutterSecureStorageReader$e: Exception</ID>
+    <ID>SwallowedException:FlutterSecureStorageReader.kt$FlutterSecureStorageReader$e: IllegalArgumentException</ID>
+    <ID>SwallowedException:FlutterSecureStorageReader.kt$FlutterSecureStorageReader$e: KeystoreAliasMissingException</ID>
+    <ID>SwallowedException:Fs.kt$Fs$e: AtomicMoveNotSupportedException</ID>
+    <ID>SwallowedException:Fs.kt$Fs$e: Exception</ID>
+    <ID>ThrowsCount:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$private fun expectEnd(name: String)</ID>
+    <ID>ThrowsCount:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$private fun next(): Token</ID>
+    <ID>ThrowsCount:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$private fun readDocument()</ID>
+    <ID>ThrowsCount:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$private fun readSet(): LinkedHashSet&lt;String&gt;</ID>
+    <ID>ThrowsCount:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$private fun readStartTag(): Token.Start</ID>
+    <ID>ThrowsCount:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$private fun readStringText(): String</ID>
+    <ID>ThrowsCount:AsyncBackends.kt$AsyncBackends.Proto$fun skip(wire: Int)</ID>
+    <ID>ThrowsCount:MiniJson.kt$MiniJson.P$fun num(): Any</ID>
+    <ID>ThrowsCount:MiniJson.kt$MiniJson.P$fun obj(depth: Int): LinkedHashMap&lt;String, Any?&gt;</ID>
+    <ID>ThrowsCount:MiniJson.kt$MiniJson.P$fun str(): String</ID>
+    <ID>ThrowsCount:MiniJson.kt$MiniJson.P$fun value(depth: Int): Any?</ID>
+    <ID>TooGenericExceptionCaught:FlutterPrefsCodec.kt$FlutterPrefsCodec$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:FlutterSecureStorageReader.kt$FlutterSecureStorageReader$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:Fs.kt$Fs$e: Exception</ID>
+    <ID>TooManyFunctions:AndroidPrefsXml.kt$AndroidPrefsXml$Parser</ID>
+    <ID>TooManyFunctions:AsyncBackends.kt$AsyncBackends</ID>
+    <ID>TooManyFunctions:FlutterPrefsCodec.kt$FlutterPrefsCodec</ID>
+    <ID>UseCheckOrError:FlutterSecureStorageReaderTest.kt$FlutterSecureStorageReaderTest$throw IllegalStateException()</ID>
+    <ID>UseCheckOrError:RestoreTransaction.kt$RestoreTransaction$throw IllegalStateException("backup no longer verifies")</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -1,0 +1,250 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:BackgroundTasks.kt$BackgroundAgentResult.Companion$childId == null || !CHILD_SESSION_ID.matches(childId) || agent == null || agent.isBlank() || state !in RESULT_STATES || description == null</ID>
+    <ID>ComplexCondition:ContextUsage.kt$!used.isFinite() || !max.isFinite() || used &lt;= 0 || max &lt;= 0</ID>
+    <ID>ComplexCondition:RetryStatus.kt$!recovered &amp;&amp; cause == Cause.FreeTierLimit &amp;&amp; (canShortenOrStartNew || choose)</ID>
+    <ID>ComplexCondition:StreamingBlocks.kt$StreamingBlocks$nl - i &gt;= 2 &amp;&amp; (text[i] == '-' || text[i] == '*' || text[i] == '+') &amp;&amp; text[i + 1] == ' '</ID>
+    <ID>ComplexCondition:ToolOutput.kt$(normalizedTool == "bash" || normalizedTool == "shell") &amp;&amp; outputPath != null &amp;&amp; outputPath.isNotBlank()</ID>
+    <ID>ComplexCondition:ToolOutput.kt$(path?.isNotBlank() == true &amp;&amp; hasExplicitFilePath) || (url?.isNotBlank() == true &amp;&amp; hasFileSignal) || mime?.isNotBlank() == true</ID>
+    <ID>ComplexCondition:ToolOutput.kt$(trimmed.startsWith('{') &amp;&amp; trimmed.endsWith('}')) || (trimmed.startsWith('[') &amp;&amp; trimmed.endsWith(']'))</ID>
+    <ID>ComplexCondition:ToolOutput.kt$value == null || value == JsonNull || depth &gt; 6 || files.size &gt;= 8</ID>
+    <ID>ComplexCondition:TranscriptModel.kt$TranscriptModel$cached != null &amp;&amp; pe.promptVersion == pe.version &amp;&amp; cached.turnId == turnId &amp;&amp; cached.createdMs == createdMs</ID>
+    <ID>ComplexCondition:TranscriptModel.kt$TranscriptModel$prev != null &amp;&amp; prev.start == tail.start &amp;&amp; prev.text == tail.text &amp;&amp; prev.live == live &amp;&amp; prev.kind == tail.kind &amp;&amp; prev.open == tail.open &amp;&amp; prev.continued == tail.continued &amp;&amp; prev.depth == tail.depth</ID>
+    <ID>ComplexCondition:TranscriptSettle.kt$compaction &amp;&amp; (!busy || moreFollows || i &lt; messages.lastIndex)</ID>
+    <ID>ComplexCondition:TranscriptSettle.kt$part.type == PartType.Tool &amp;&amp; tool != null &amp;&amp; (tool.status == ToolStatus.Running || tool.status == ToolStatus.Pending) &amp;&amp; tool.ran &amp;&amp; (wordsLater || !busy) &amp;&amp; !isBackground(part)</ID>
+    <ID>ComplexCondition:TurnStall.kt$TurnStallTracker$turn.revision != probe.revision || !turn.probing || turn.waiting || turn.toolRunning</ID>
+    <ID>CyclomaticComplexMethod:BackgroundTasks.kt$public fun backgroundTaskWaitsOn(command: String): String?</ID>
+    <ID>CyclomaticComplexMethod:ContextUsage.kt$private fun ctxEstimateBreakdown(messages: List&lt;MessageWithParts&gt;, inputTokens: Long): List&lt;ContextBreakdownSegment&gt;</ID>
+    <ID>CyclomaticComplexMethod:ContextUsage.kt$public fun contextReading( messages: List&lt;MessageWithParts&gt;, contextWindowOf: ((providerId: String, modelId: String) -&gt; Long?)?, ): ContextReading?</ID>
+    <ID>CyclomaticComplexMethod:Oc2Sse.kt$Oc2Sse$private fun adaptFrame(f: JsonObject): List&lt;GatewayEvent&gt;</ID>
+    <ID>CyclomaticComplexMethod:RecordedStream.kt$RecordedStream$fun build(turns: Int = 834, seed: Int = 3): Stream</ID>
+    <ID>CyclomaticComplexMethod:ReplyTiming.kt$public fun ReplyTimingState.on(event: ReplyTimingEvent, nowMs: Long): ReplyTimingState</ID>
+    <ID>CyclomaticComplexMethod:RetryStatus.kt$public fun assistantErrorState( kind: MessageErrorKind?, errorText: String?, recovered: Boolean = false, canChooseModel: Boolean = true, canShortenOrStartNew: Boolean = true, ): AssistantErrorState</ID>
+    <ID>CyclomaticComplexMethod:RetryStatus.kt$public fun unansweredTurn( messages: List&lt;MessageWithParts&gt;, refused: Boolean, running: Boolean, stoppedPromptId: String? = null, ): UnansweredTurn?</ID>
+    <ID>CyclomaticComplexMethod:RunResult.kt$public fun editedFileStats(messages: List&lt;MessageWithParts&gt;, max: Int = RunResult.MAX_CHANGED_FILES): List&lt;ChangedFile&gt;</ID>
+    <ID>CyclomaticComplexMethod:RunResult.kt$public fun editedPaths(messages: List&lt;MessageWithParts&gt;, max: Int = RunResult.MAX_CHANGED_FILES): List&lt;String&gt;</ID>
+    <ID>CyclomaticComplexMethod:RunResult.kt$public fun runResult(messages: List&lt;MessageWithParts&gt;, historyComplete: Boolean = false): RunResult?</ID>
+    <ID>CyclomaticComplexMethod:ToolFacts.kt$private fun connectorSearchDetail(state: ToolState): ToolDetail?</ID>
+    <ID>CyclomaticComplexMethod:ToolFacts.kt$public fun toolFacts(rawName: String, state: ToolState): ToolFacts</ID>
+    <ID>CyclomaticComplexMethod:ToolOutput.kt$private fun toolArtifacts(state: ToolState, toolName: String?): List&lt;ToolArtifact&gt;</ID>
+    <ID>CyclomaticComplexMethod:TranscriptModel.kt$TranscriptModel$fun derive(revision: Long): TranscriptState</ID>
+    <ID>CyclomaticComplexMethod:TranscriptModel.kt$TranscriptModel$private fun buildTurn(turnId: String, members: List&lt;MsgEntry&gt;, finished: Boolean): TurnEntry</ID>
+    <ID>CyclomaticComplexMethod:TranscriptModel.kt$TranscriptModel$private fun upsertPart(part: Part, create: MessageInfo? = null): Boolean</ID>
+    <ID>CyclomaticComplexMethod:TranscriptSettle.kt$public fun settleStaleLive( messages: List&lt;MessageWithParts&gt;, busy: Boolean, moreFollows: Boolean = false, ): List&lt;MessageWithParts&gt;</ID>
+    <ID>CyclomaticComplexMethod:TurnLedger.kt$TurnLedger$public fun load(page: List&lt;MessageWithParts&gt;, beforeVersion: Long = Long.MAX_VALUE)</ID>
+    <ID>CyclomaticComplexMethod:TurnWork.kt$private fun step(p: Part, live: Boolean): TurnStep?</ID>
+    <ID>CyclomaticComplexMethod:TurnWork.kt$private fun work( turn: LedgerTurn, newest: Boolean, busy: Boolean, stopped: Boolean, waiting: Boolean, ): TurnWork?</ID>
+    <ID>LongMethod:RecordedStream.kt$RecordedStream$fun build(turns: Int = 834, seed: Int = 3): Stream</ID>
+    <ID>LongMethod:RunResult.kt$public fun runResult(messages: List&lt;MessageWithParts&gt;, historyComplete: Boolean = false): RunResult?</ID>
+    <ID>LongMethod:ToolFacts.kt$public fun toolFacts(rawName: String, state: ToolState): ToolFacts</ID>
+    <ID>LongMethod:ToolFactsTest.kt$ToolFactsTest$@Test fun `B-CHAT-111 known tools name what they touched`()</ID>
+    <ID>LongMethod:TranscriptModel.kt$TranscriptModel$fun derive(revision: Long): TranscriptState</ID>
+    <ID>LongMethod:TranscriptModel.kt$TranscriptModel$private fun addBlocks( rows: MutableList&lt;TranscriptRow&gt;, turnId: String, pe: PartEntry, live: Boolean, )</ID>
+    <ID>LongMethod:TranscriptModel.kt$TranscriptModel$private fun buildTurn(turnId: String, members: List&lt;MsgEntry&gt;, finished: Boolean): TurnEntry</ID>
+    <ID>LongParameterList:BackgroundTasksTest.kt$BackgroundTasksTest$( callId: String = this.callId, background: Boolean = true, status: ToolStatus = ToolStatus.Completed, at: Long = started, command: String = this.command, label: String? = null, )</ID>
+    <ID>LongParameterList:BackgroundTasksTest.kt$BackgroundTasksTest$( state: String = "completed", description: String = "Check the checkout validation", body: String = "Validation now reports missing fields clearly.", child: String = "ses_child", text: String? = null, metadata: JsonObject? = null, )</ID>
+    <ID>LongParameterList:RunResultTest.kt$( id: String, name: String, status: ToolStatus = ToolStatus.Completed, input: JsonObject = obj(), metadata: JsonObject? = null, pruned: Boolean = false, executed: Boolean = true, )</ID>
+    <ID>LongParameterList:RunResultTest.kt$( id: String, role: Role, created: Long, completed: Long? = null, finish: String? = null, error: String? = null, errorKind: MessageErrorKind? = null, parts: List&lt;Part&gt; = emptyList(), )</ID>
+    <ID>LongParameterList:StreamingBlocks.kt$Block$( val start: Int, val end: Int, val kind: RowKind, val text: String, val open: Boolean, val continued: Boolean = false, val continues: Boolean = false, /** * N-49: how deep inside a list this block sits. Every list item line starts its own block, so a nested item * (" 1. First nested step") or an item's quote, table or fence is parsed alone; the row carries the nesting * the whole text gave it and the transcript indents it to match. */ val depth: Int = 0, )</ID>
+    <ID>LongParameterList:TurnLedgerTest.kt$( id: String, mid: String, name: String, status: ToolStatus, input: Map&lt;String, String&gt; = emptyMap(), start: Long? = null, end: Long? = null, output: String? = null, )</ID>
+    <ID>LoopWithTooManyJumpStatements:BackgroundTasks.kt$TaskLedger$for</ID>
+    <ID>LoopWithTooManyJumpStatements:BackgroundTasks.kt$for</ID>
+    <ID>LoopWithTooManyJumpStatements:ContextUsage.kt$for</ID>
+    <ID>LoopWithTooManyJumpStatements:RunResult.kt$for</ID>
+    <ID>LoopWithTooManyJumpStatements:TranscriptModel.kt$TranscriptModel$for</ID>
+    <ID>LoopWithTooManyJumpStatements:TranscriptSettle.kt$for</ID>
+    <ID>LoopWithTooManyJumpStatements:TurnLedger.kt$TurnLedger$for</ID>
+    <ID>LoopWithTooManyJumpStatements:TurnWork.kt$for</ID>
+    <ID>MagicNumber:BackgroundShellResult.kt$BackgroundShellResult$130</ID>
+    <ID>MagicNumber:BackgroundShellResult.kt$BackgroundShellResult$137</ID>
+    <ID>MagicNumber:BackgroundShellResult.kt$BackgroundShellResult$143</ID>
+    <ID>MagicNumber:BackgroundTasks.kt$47</ID>
+    <ID>MagicNumber:BackgroundTasks.kt$48</ID>
+    <ID>MagicNumber:BackgroundTasks.kt$63</ID>
+    <ID>MagicNumber:BackgroundTasks.kt$64</ID>
+    <ID>MagicNumber:BackgroundTasks.kt$TaskLedger$4</ID>
+    <ID>MagicNumber:ContextUsage.kt$100</ID>
+    <ID>MagicNumber:ContextUsage.kt$1e-9</ID>
+    <ID>MagicNumber:ContextUsage.kt$4.0</ID>
+    <ID>MagicNumber:RetryStatus.kt$60</ID>
+    <ID>MagicNumber:StreamingBlocks.kt$StreamingBlocks$3</ID>
+    <ID>MagicNumber:ToolDuration.kt$0x7FF</ID>
+    <ID>MagicNumber:ToolDuration.kt$0xFFFFFFFFFFFFFL</ID>
+    <ID>MagicNumber:ToolDuration.kt$10</ID>
+    <ID>MagicNumber:ToolDuration.kt$100</ID>
+    <ID>MagicNumber:ToolDuration.kt$1000</ID>
+    <ID>MagicNumber:ToolDuration.kt$1000.0</ID>
+    <ID>MagicNumber:ToolDuration.kt$1075</ID>
+    <ID>MagicNumber:ToolDuration.kt$50</ID>
+    <ID>MagicNumber:ToolDuration.kt$50L</ID>
+    <ID>MagicNumber:ToolDuration.kt$52</ID>
+    <ID>MagicNumber:ToolDuration.kt$60</ID>
+    <ID>MagicNumber:ToolDuration.kt$60_000</ID>
+    <ID>MagicNumber:ToolFacts.kt$10</ID>
+    <ID>MagicNumber:ToolFacts.kt$3</ID>
+    <ID>MagicNumber:ToolFacts.kt$32768</ID>
+    <ID>MagicNumber:ToolFacts.kt$40</ID>
+    <ID>MagicNumber:ToolOutput.kt$0x20</ID>
+    <ID>MagicNumber:ToolOutput.kt$16</ID>
+    <ID>MagicNumber:ToolOutput.kt$3</ID>
+    <ID>MagicNumber:ToolOutput.kt$4</ID>
+    <ID>MagicNumber:ToolOutput.kt$6</ID>
+    <ID>MagicNumber:ToolOutput.kt$8</ID>
+    <ID>MatchingDeclarationName:AgentRunFailure.kt$AgentRunFailureKind</ID>
+    <ID>MatchingDeclarationName:Events.kt$Ev</ID>
+    <ID>MaxLineLength:AgentNotices.kt$AgentSignInFailure.containsMatchIn(text) || (system &amp;&amp; SIGN_IN_ASK.containsMatchIn(text)) -&gt; AgentErrorClass.SignIn</ID>
+    <ID>MaxLineLength:AgentNotices.kt$private val CLAUDE_TURN_FAILURE = Regex("^\\s*(?:API Error\\b|Claude AI usage limit reached\\b|Credit balance is too low\\b)")</ID>
+    <ID>MaxLineLength:AgentRunFailureTest.kt$AgentRunFailureTest$"API Error: 529 {\"type\":\"error\",\"error\":{\"type\":\"overloaded_error\",\"message\":\"Overloaded\"}}" to Busy</ID>
+    <ID>MaxLineLength:BackgroundShellResultTest.kt$BackgroundShellResultTest$Part("n", "m", "s", PartType.Notice, rawType = "v2:notice", text = text, toolName = "synthetic", filename = filename)</ID>
+    <ID>MaxLineLength:BackgroundShellResultTest.kt$BackgroundShellResultTest$assertNotNull(BackgroundShellResult.parse("&lt;shell id=\"s\" state=\"completed\" command=\"make\"&gt;x\nCommand exited with code $code.&lt;/shell&gt;"))</ID>
+    <ID>MaxLineLength:BackgroundShellResultTest.kt$BackgroundShellResultTest$assertNull(BackgroundShellResult.fromPart(Part("t", "m", "s", PartType.Text, rawType = "text", text = "&lt;shell command=\"x\"&gt;y&lt;/shell&gt;")))</ID>
+    <ID>MaxLineLength:BackgroundShellResultTest.kt$BackgroundShellResultTest$val result = assertNotNull(BackgroundShellResult.parse("&lt;shell state=\"completed\" command=\"echo &amp;quot;hi &amp;amp; bye&amp;quot;\"&gt;hi&lt;/shell&gt;"))</ID>
+    <ID>MaxLineLength:BackgroundTasks.kt$TaskLedger$get() = "${started.keys.joinToString(",")}|${endedCalls.joinToString(",")}|${endedTasks.joinToString(",")}|$failed"</ID>
+    <ID>MaxLineLength:BackgroundTasks.kt$private fun segmentsOf(command: String): List&lt;String&gt;</ID>
+    <ID>MaxLineLength:BackgroundTasksTest.kt$BackgroundTasksTest$assertEquals(1, runningBackgroundTasks(listOf(bash(), notice(toolUseId = "toolu_other", taskId = "zz9")), now).size)</ID>
+    <ID>MaxLineLength:BackgroundTasksTest.kt$BackgroundTasksTest$assertEquals(listOf(callId, "toolu_02Tests"), runningBackgroundTasks(listOf(bash(), second), now).map { it.callId })</ID>
+    <ID>MaxLineLength:BackgroundTasksTest.kt$BackgroundTasksTest$book.observe("agent-1", message("u2", Role.User, null, Part("u2:0", "u2", "agent-1", PartType.Text, "text", text = "Continue")))</ID>
+    <ID>MaxLineLength:BackgroundTasksTest.kt$BackgroundTasksTest$if (!background) null else JsonObject(listOfNotNull("id" to JsonPrimitive("b1x2y3"), label?.let { "label" to JsonPrimitive(it) }).toMap())</ID>
+    <ID>MaxLineLength:BackgroundTasksTest.kt$BackgroundTasksTest$lastTurnFailedIn(listOf(said("API Error: Request timed out."), said("Picked up again; the build is done.", id = "a10")))</ID>
+    <ID>MaxLineLength:BackgroundTasksTest.kt$BackgroundTasksTest$text = text ?: "&lt;subagent sessionID=\"$child\" state=\"$state\" description=\"$description\"&gt;\n$body\n&lt;/subagent&gt;"</ID>
+    <ID>MaxLineLength:BackgroundTasksTest.kt$BackgroundTasksTest$val input = listOfNotNull(toolUseId?.let { "toolUseId" to it }, taskId?.let { "taskId" to it }, "status" to "completed")</ID>
+    <ID>MaxLineLength:ChatReviewRegressionTest.kt$ChatReviewRegressionTest$val handle = TranscriptHandle(Ev.S, StandardTestDispatcher(testScheduler), backgroundScope) { testScheduler.currentTime }</ID>
+    <ID>MaxLineLength:ChatReviewRegressionTest.kt$ChatReviewRegressionTest$val snapshot = listOf(MessageWithParts(MessageInfo("a", Ev.S, Role.Assistant), listOf(Part("p", "a", Ev.S, PartType.Text, "Hel"))))</ID>
+    <ID>MaxLineLength:ContextUsageTest.kt$Part(id = "p-$text".take(8), messageId = "m", sessionId = "s", type = type, rawType = type.name.lowercase(), text = text)</ID>
+    <ID>MaxLineLength:ContextUsageTest.kt$private fun close(expected: Double, actual: Double)</ID>
+    <ID>MaxLineLength:Events.kt$Ev$MessageInfo(id, S, if (i % 2 == 0) Role.User else Role.Assistant, createdMs = i + 1L, completedMs = i + 2L)</ID>
+    <ID>MaxLineLength:Oc2Sse.kt$Oc2Sse$"session.execution.interrupted" -&gt; listOf(GatewayEvent.RunEnded(sid, RunOutcome.Interrupted(d.str("reason"))))</ID>
+    <ID>MaxLineLength:Oc2Sse.kt$Oc2Sse$"session.reasoning.started" -&gt; listOf(GatewayEvent.PartUpserted(Part("reasoning-$ordinal", mid, sid, PartType.Reasoning)))</ID>
+    <ID>MaxLineLength:Oc2Sse.kt$Oc2Sse$"session.text.delta" -&gt; listOf(GatewayEvent.PartDelta(sid, mid, "text-$ordinal", DeltaField.Text, d.str("delta") ?: ""))</ID>
+    <ID>MaxLineLength:Oc2Sse.kt$Oc2Sse$"session.tool.failed" -&gt; listOf(GatewayEvent.PartUpserted(tool(d, sid, mid, ToolStatus.Error, ended = true)))</ID>
+    <ID>MaxLineLength:Oc2Sse.kt$Oc2Sse$"session.tool.success" -&gt; listOf(GatewayEvent.PartUpserted(tool(d, sid, mid, ToolStatus.Completed, ended = true)))</ID>
+    <ID>MaxLineLength:Oc2Sse.kt$Oc2Sse$GatewayEvent.MessageUpserted(MessageInfo(inboxId, sid, Role.User, createdMs = f["created"]?.jsonPrimitive?.longOrNull))</ID>
+    <ID>MaxLineLength:Oc2Sse.kt$Oc2Sse$listOf(GatewayEvent.MessageUpserted(assistant(completed = f["created"]?.jsonPrimitive?.longOrNull, finish = d.str("finish"))))</ID>
+    <ID>MaxLineLength:Oc2Sse.kt$Oc2Sse$listOf(GatewayEvent.PartDelta(sid, mid, "reasoning-$ordinal", DeltaField.Reasoning, d.str("delta") ?: ""))</ID>
+    <ID>MaxLineLength:Oc2Sse.kt$Oc2Sse$listOf(GatewayEvent.PartDelta(sid, mid, d.str("id") ?: "", DeltaField.ToolInputRaw, d.str("delta") ?: ""))</ID>
+    <ID>MaxLineLength:Oc2Sse.kt$Oc2Sse$listOf(GatewayEvent.PartUpserted(Part("reasoning-$ordinal", mid, sid, PartType.Reasoning, text = d.str("text") ?: "", ended = true)))</ID>
+    <ID>MaxLineLength:Oc2Sse.kt$Oc2Sse$listOf(GatewayEvent.PartUpserted(Part("text-$ordinal", mid, sid, PartType.Text, text = d.str("text") ?: "", ended = true)))</ID>
+    <ID>MaxLineLength:PublishCountTest.kt$PublishCountTest$assertEquals("Part 9." + "x".repeat(20), (handle.state.value.rows.first { it.key == "b:tail/p9:0" } as BlockRow).text)</ID>
+    <ID>MaxLineLength:PublishCountTest.kt$PublishCountTest$val handle = TranscriptHandle(S, StandardTestDispatcher(testScheduler), parent, nowMs = { testScheduler.currentTime })</ID>
+    <ID>MaxLineLength:RecordedStream.kt$RecordedStream$JsonObject(f + mapOf("id" to JsonPrimitive(id), "created" to JsonPrimitive(at), "data" to JsonObject(data + patch)))</ID>
+    <ID>MaxLineLength:RecordedStream.kt$RecordedStream$Shape</ID>
+    <ID>MaxLineLength:RecordedStream.kt$RecordedStream$emit(frame(f, "evt_p3_$frames", now, data, patch + ("delta" to JsonPrimitive(text.substring(i, i + n)))))</ID>
+    <ID>MaxLineLength:RecordedStream.kt$RecordedStream$private</ID>
+    <ID>MaxLineLength:RecordedStream.kt$RecordedStream$return Stream(out.toString(), Shape(turns, parts, frames, deltas, chars, now - (header.lastOrNull()?.created ?: 0L)))</ID>
+    <ID>MaxLineLength:RecordedStreamTest.kt$RecordedStreamTest$assertTrue(publishes &lt; flutterDeltaOnly.flushes + flutterDirect, "fewer rebuild triggers than Flutter today")</ID>
+    <ID>MaxLineLength:RecordedStreamTest.kt$RecordedStreamTest$private val session: String get() = Oc2Sse.adapt(RecordedStream.recordingBody()).firstNotNullOf { it.event.sessionIdOrNull }</ID>
+    <ID>MaxLineLength:RecordedStreamTest.kt$RecordedStreamTest$val handle = TranscriptHandle(sid, StandardTestDispatcher(testScheduler), parent, nowMs = { testScheduler.currentTime })</ID>
+    <ID>MaxLineLength:RetryStatus.kt$if (!recovered &amp;&amp; cause == Cause.FreeTierLimit &amp;&amp; (canShortenOrStartNew || choose)) return AssistantErrorState.FreeTier</ID>
+    <ID>MaxLineLength:RetryStatus.kt$private fun isPrompt(message: MessageWithParts): Boolean</ID>
+    <ID>MaxLineLength:RetryStatusTest.kt$RetryStatusTest$"FreeUsageLimitError: Free usage limit reached. Subscribe to OpenCode Go to keep going: https://opencode.ai/go"</ID>
+    <ID>MaxLineLength:RetryStatusTest.kt$RetryStatusTest$"ProviderModelNotFoundError: Model not found: openai/gpt-5.6-sol. Did you mean: gpt-5.6-sol, gpt-5.6-sol-pro?\n"</ID>
+    <ID>MaxLineLength:RetryStatusTest.kt$RetryStatusTest$assertEquals(AssistantErrorState.Generic, assistantErrorState(null, "Go usage limit exceeded", canChooseModel = false))</ID>
+    <ID>MaxLineLength:RetryStatusTest.kt$RetryStatusTest$assertEquals(AssistantErrorState.OutputLength, assistantErrorState(MessageErrorKind.OutputLength, "Output too long"))</ID>
+    <ID>MaxLineLength:RetryStatusTest.kt$RetryStatusTest$assertEquals(AssistantErrorState.ProviderAuth, assistantErrorState(MessageErrorKind.ProviderAuth, "Invalid API key"))</ID>
+    <ID>MaxLineLength:RetryStatusTest.kt$RetryStatusTest$assertEquals(UnansweredTurn(0, 1, UnansweredState.NotAnswered), unansweredTurn(messages, refused = false, running = false))</ID>
+    <ID>MaxLineLength:RetryStatusTest.kt$RetryStatusTest$assertEquals(UnansweredTurn(0, null, UnansweredState.NotAnswered), unansweredTurn(listOf(user("u1")), true, false))</ID>
+    <ID>MaxLineLength:RetryStatusTest.kt$RetryStatusTest$assertNull(unansweredTurn(listOf(user("u1"), assistant("a1", "aborted", MessageErrorKind.Aborted)), false, false))</ID>
+    <ID>MaxLineLength:RetryStatusTest.kt$RetryStatusTest$val messages = listOf(user("u1"), assistant("a1", errorText = modelMissing, errorKind = MessageErrorKind.Unknown))</ID>
+    <ID>MaxLineLength:RunResult.kt$RunOutcomeFact$public data</ID>
+    <ID>MaxLineLength:RunResult.kt$public</ID>
+    <ID>MaxLineLength:RunResultTest.kt$RunResultTest$assertEquals(listOf("lib/a.dart", "lib/b.dart", "lib/c.dart", "lib/d.dart"), result.changedFiles.map { it.path })</ID>
+    <ID>MaxLineLength:RunResultTest.kt$RunResultTest$assertEquals(listOf(ChangedFile("a.txt", 2, 0), ChangedFile("c.txt", null, null), ChangedFile("b.txt", 3, 1)), files)</ID>
+    <ID>MaxLineLength:RunResultTest.kt$RunResultTest$listOf(reply(edit("a", "/p/game.js", obj("additions" to 20, "deletions" to 5)), edit("b", "/p/game.js", null)))</ID>
+    <ID>MaxLineLength:RunResultTest.kt$RunResultTest$tool("c1", "bash", input = obj("command" to "flutter test test/x.dart"), metadata = obj("exit" to 0))</ID>
+    <ID>MaxLineLength:RunResultTest.kt$RunResultTest$tool("o", "write", input = obj("filePath" to "c.txt", "content" to "x"), metadata = obj("exists" to true))</ID>
+    <ID>MaxLineLength:RunResultTest.kt$RunResultTest$tool("w", "write", input = obj("filePath" to "a.txt", "content" to "one\ntwo\n"), metadata = obj("exists" to false))</ID>
+    <ID>MaxLineLength:RunResultTest.kt$RunResultTest$val result = run(msg("u", Role.User, 0), msg("a", Role.Assistant, 1, completed = 2, finish = "stop", parts = listOf(text)))</ID>
+    <ID>MaxLineLength:RunResultTest.kt$RunResultTest$val result = run(msg("u", Role.User, 0), msg("a", Role.Assistant, 1, completed = 2, finish = "stop", parts = parts))</ID>
+    <ID>MaxLineLength:RunResultTest.kt$RunResultTest$val text = Part(id = "p", messageId = "a", sessionId = "ses_1", type = PartType.Text, rawType = "text", text = "I edited three files.")</ID>
+    <ID>MaxLineLength:ToolDurationTest.kt$ToolDurationTest$assertEquals(12_400, toolDurationMs(ToolState(ToolStatus.Completed, startedAtMs = 1_000, completedAtMs = 13_400)))</ID>
+    <ID>MaxLineLength:ToolFacts.kt$public</ID>
+    <ID>MaxLineLength:ToolFactsTest.kt$ToolFactsTest$ToolState(ToolStatus.Completed, input = obj("""{"query":"kotlin"}"""), metadata = obj("""{"provider":"Exa"}"""))</ID>
+    <ID>MaxLineLength:ToolFactsTest.kt$ToolFactsTest$ToolState(ToolStatus.Completed, input = obj("""{"questions":[{},{}]}"""), metadata = obj("""{"answers":[["a"]]}"""))</ID>
+    <ID>MaxLineLength:ToolFactsTest.kt$ToolFactsTest$ToolState(ToolStatus.Completed, input = obj("""{"summary":"Background agent \"Fix login\" completed","status":"completed"}"""))</ID>
+    <ID>MaxLineLength:ToolFactsTest.kt$ToolFactsTest$input = obj("""{"summary":"Background agent \"Fix login\" didn't finish before the previous session ended"}""")</ID>
+    <ID>MaxLineLength:ToolOutputTest.kt$ToolOutputTest$ToolOutputFile(path = null, filename = null, mime = "image/png", url = "data:image/png;base64,aGVsbG8=")</ID>
+    <ID>MaxLineLength:ToolOutputTest.kt$ToolOutputTest$ToolState(ToolStatus.Completed, input = obj("""{"a":[1,"x"],"b":{}}"""), outputValue = JsonPrimitive(" ok "))</ID>
+    <ID>MaxLineLength:ToolOutputTest.kt$ToolOutputTest$ToolState(ToolStatus.Completed, output = "done", metadata = obj("""{"outputPath":"/tmp/out/log.txt"}"""))</ID>
+    <ID>MaxLineLength:ToolOutputTest.kt$ToolOutputTest$ToolState(ToolStatus.Completed, outputValue = obj("""{"filePath":"/tmp/opencode/shots/captcha-r1.png"}"""))</ID>
+    <ID>MaxLineLength:ToolOutputTest.kt$ToolOutputTest$toolOutputView(ToolState(ToolStatus.Completed, output = """ {"filePath":"/tmp/a.png"} """), "browser screenshot")</ID>
+    <ID>MaxLineLength:ToolOutputTest.kt$ToolOutputTest$toolOutputView(ToolState(ToolStatus.Pending, input = obj("""{"command":"ignored"}"""), inputRaw = raw), null)</ID>
+    <ID>MaxLineLength:TranscriptModel.kt$"^\\s*(the )?(step|run|tool execution|operation|request)?\\s*(was )?(interrupted|aborted)\\b|MessageAbortedError"</ID>
+    <ID>MaxLineLength:TranscriptReducerTest.kt$TranscriptReducerTest$apply(GatewayEvent.MessageUpserted(io.github.eslamasabry.oc.engine.transcript.state.MessageInfo(n, S, io.github.eslamasabry.oc.engine.transcript.state.Role.User)))</ID>
+    <ID>MaxLineLength:TranscriptReducerTest.kt$TranscriptReducerTest$apply(GatewayEvent.RunStarted(S), Ev.assistant("a1", completed = 5, error = "Rate limit: the request was interrupted by quota"))</ID>
+    <ID>MaxLineLength:TranscriptReducerTest.kt$TranscriptReducerTest$apply(io.github.eslamasabry.oc.engine.transcript.state.GatewayEvent.MessageUpserted(io.github.eslamasabry.oc.engine.transcript.state.MessageInfo("n1", S, io.github.eslamasabry.oc.engine.transcript.state.Role.User)))</ID>
+    <ID>MaxLineLength:TranscriptSettleTest.kt$Part(id, id, "s", PartType.Compaction, "v2:compaction", ended = true, noticeMetadata = persistentMapOf("kind" to kind))</ID>
+    <ID>MaxLineLength:TurnLedgerTest.kt$TurnLedgerTest$assertFalse(ledger.apply(GatewayEvent.PartDelta(SessionId(S), MessageId("m2"), PartId("x"), DeltaField.Text, "lo")))</ID>
+    <ID>MaxLineLength:TurnLedgerTest.kt$TurnLedgerTest$assertTrue(ledger.apply(GatewayEvent.PartDelta(SessionId(S), MessageId("m2"), PartId("x"), DeltaField.Text, "Hel")))</ID>
+    <ID>MaxLineLength:TurnLedgerTest.kt$TurnWorkTest$ledger.apply(GatewayEvent.PartUpserted(tool("t1", "m2", "bash", ToolStatus.Completed, start = 2, end = 5, output = "BUILD OK")))</ID>
+    <ID>MaxLineLength:TurnLedgerTest.kt$TurnWorkTest$ledger.load(listOf(prompt, msg(info("m2", Role.Assistant, 2, done = 7), tool("t1", "m2", "bash", ToolStatus.Completed, output = "x"))), ledger.historyVersion())</ID>
+    <ID>MaxLineLength:TurnLedgerTest.kt$TurnWorkTest$msg(info("m2", Role.Assistant, 2), tool("t1", "m2", "read", ToolStatus.Running, start = 2), text("x", "m2", "Read it."))</ID>
+    <ID>MaxLineLength:TurnLedgerTest.kt$TurnWorkTest$msg(info("x-step", Role.Assistant, 100), tool("t1", "x-step", "bash", ToolStatus.Completed, mapOf("command" to "ls"), 100, 101))</ID>
+    <ID>MaxLineLength:TurnLedgerTest.kt$TurnWorkTest$snapshot(prompt, msg(info("m2", Role.Assistant, 2, done = 5), tool("t1", "m2", "bash", ToolStatus.Error, start = 2, end = 3)))</ID>
+    <ID>MaxLineLength:TurnLedgerTest.kt$TurnWorkTest$val s = snapshot(prompt, msg(info("m2", Role.Assistant, 2), tool("t1", "m2", "bash", ToolStatus.Running, start = 2)))</ID>
+    <ID>MaxLineLength:TurnLedgerTest.kt$internal fun msg(info: MessageInfo, vararg parts: Part): MessageWithParts</ID>
+    <ID>MaxLineLength:TurnStallTest.kt$TurnStallTest$TurnStallDiagnosis(TurnStallKind.ConnectionLost, TurnStallEvidence(true, endpointReachable = false), 0).notice</ID>
+    <ID>MaxLineLength:TurnStallTest.kt$TurnStallTest$TurnStallHelperFacts(running = false, lastExitAtMs = 1, lastStopRequested = false, possibleResourceKill = true)</ID>
+    <ID>MaxLineLength:TurnStallTest.kt$TurnStallTest$assertEquals(TurnStallNotice.HelperStopped, diagnosis?.copy(evidence = killed.copy(helperStatus = null))?.notice)</ID>
+    <ID>MaxLineLength:TurnStallTest.kt$TurnStallTest$classifyTurnStall(TurnStallEvidence(transportConnected = false, helperRunning = true, endpointReachable = true))</ID>
+    <ID>MaxLineLength:TurnStallTest.kt$TurnStallTest$classifyTurnStall(TurnStallEvidence(transportConnected = true, helperRunning = false, endpointReachable = true))</ID>
+    <ID>MaxLineLength:TurnStallTest.kt$TurnStallTest$classifyTurnStall(TurnStallEvidence(transportConnected = true, helperRunning = true, endpointReachable = false))</ID>
+    <ID>MaxLineLength:TurnStallTest.kt$TurnStallTest$diagnosis?.copy(evidence = killed.copy(helperStatus = killed.helperStatus?.copy(possibleResourceKill = false)))?.notice</ID>
+    <ID>NestedBlockDepth:BackgroundTasks.kt$public fun backgroundTaskWaitsOn(command: String): String?</ID>
+    <ID>NestedBlockDepth:ContextUsage.kt$private fun ctxEstimateBreakdown(messages: List&lt;MessageWithParts&gt;, inputTokens: Long): List&lt;ContextBreakdownSegment&gt;</ID>
+    <ID>NestedBlockDepth:RecordedStream.kt$RecordedStream$fun build(turns: Int = 834, seed: Int = 3): Stream</ID>
+    <ID>NestedBlockDepth:RunResult.kt$public fun editedFileStats(messages: List&lt;MessageWithParts&gt;, max: Int = RunResult.MAX_CHANGED_FILES): List&lt;ChangedFile&gt;</ID>
+    <ID>NestedBlockDepth:RunResult.kt$public fun editedPaths(messages: List&lt;MessageWithParts&gt;, max: Int = RunResult.MAX_CHANGED_FILES): List&lt;String&gt;</ID>
+    <ID>NestedBlockDepth:RunResult.kt$public fun runResult(messages: List&lt;MessageWithParts&gt;, historyComplete: Boolean = false): RunResult?</ID>
+    <ID>NestedBlockDepth:ToolFacts.kt$public fun toolFacts(rawName: String, state: ToolState): ToolFacts</ID>
+    <ID>NestedBlockDepth:TranscriptModel.kt$TranscriptModel$fun derive(revision: Long): TranscriptState</ID>
+    <ID>NestedBlockDepth:TranscriptModel.kt$TranscriptModel$private fun buildTurn(turnId: String, members: List&lt;MsgEntry&gt;, finished: Boolean): TurnEntry</ID>
+    <ID>ReturnCount:AgentRunFailure.kt$public fun classifyAgentRunFailure(reason: String?): AgentRunFailureKind</ID>
+    <ID>ReturnCount:BackgroundShellResult.kt$BackgroundShellResult.Companion$public fun fromPart(part: Part): BackgroundShellResult?</ID>
+    <ID>ReturnCount:BackgroundShellResult.kt$BackgroundShellResult.Companion$public fun parse(text: String, fallbackCommand: String? = null): BackgroundShellResult?</ID>
+    <ID>ReturnCount:BackgroundTasks.kt$BackgroundAgentResult.Companion$public fun fromPart(part: Part): BackgroundAgentResult?</ID>
+    <ID>ReturnCount:BackgroundTasks.kt$public fun backgroundTaskBelieved(task: BackgroundTask, nowMs: Long, runtimeGapAtMs: Long? = null): Boolean</ID>
+    <ID>ReturnCount:BackgroundTasks.kt$public fun backgroundTaskStarted(message: MessageWithParts, part: Part): BackgroundTask?</ID>
+    <ID>ReturnCount:BackgroundTasks.kt$public fun backgroundTaskWaitsOn(command: String): String?</ID>
+    <ID>ReturnCount:BackgroundTasks.kt$public fun turnFailedAfter(message: MessageWithParts): Boolean?</ID>
+    <ID>ReturnCount:ContextUsage.kt$private fun ctxWindowOf(info: MessageInfo, contextWindowOf: (String, String) -&gt; Long?): Long?</ID>
+    <ID>ReturnCount:ContextUsage.kt$public fun agentContextUse(usage: JsonElement?): AgentContextUse?</ID>
+    <ID>ReturnCount:ContextUsage.kt$public fun contextReading( messages: List&lt;MessageWithParts&gt;, contextWindowOf: ((providerId: String, modelId: String) -&gt; Long?)?, ): ContextReading?</ID>
+    <ID>ReturnCount:Oc2Sse.kt$Oc2Sse$private fun adaptFrame(f: JsonObject): List&lt;GatewayEvent&gt;</ID>
+    <ID>ReturnCount:ReplyTiming.kt$private fun ReplyTimingState.replyOnUser(event: ReplyTimingEvent.UserMessageSeen, nowMs: Long): ReplyTimingState</ID>
+    <ID>ReturnCount:RetryStatus.kt$private fun refineErrorKind(kind: MessageErrorKind, text: String?): MessageErrorKind</ID>
+    <ID>ReturnCount:RetryStatus.kt$public fun assistantErrorState( kind: MessageErrorKind?, errorText: String?, recovered: Boolean = false, canChooseModel: Boolean = true, canShortenOrStartNew: Boolean = true, ): AssistantErrorState</ID>
+    <ID>ReturnCount:RetryStatus.kt$public fun unansweredTurn( messages: List&lt;MessageWithParts&gt;, refused: Boolean, running: Boolean, stoppedPromptId: String? = null, ): UnansweredTurn?</ID>
+    <ID>ReturnCount:RunResult.kt$private fun runCountOf(raw: JsonElement?): Int?</ID>
+    <ID>ReturnCount:RunResult.kt$private fun runExitOf(metadata: JsonObject?): Int?</ID>
+    <ID>ReturnCount:RunResult.kt$private fun runOutcomeOf(last: MessageInfo): RunOutcomeFact</ID>
+    <ID>ReturnCount:RunResult.kt$private fun runRefineErrorKind(kind: MessageErrorKind, text: String): MessageErrorKind</ID>
+    <ID>ReturnCount:ToolDuration.kt$public fun toolDurationMs(state: ToolState): Long?</ID>
+    <ID>ReturnCount:ToolFacts.kt$private fun connectorSearchDetail(state: ToolState): ToolDetail?</ID>
+    <ID>ReturnCount:ToolFacts.kt$private fun jsonWholeNumber(value: JsonElement?): Long?</ID>
+    <ID>ReturnCount:ToolFacts.kt$private fun summaryInBody(summary: String?, name: String?, cutOff: Boolean): Boolean</ID>
+    <ID>ReturnCount:ToolFacts.kt$public fun taskChildSessionId(metadata: JsonObject?): String?</ID>
+    <ID>ReturnCount:ToolOutput.kt$private fun decodedOutput(state: ToolState): JsonElement?</ID>
+    <ID>ReturnCount:ToolOutput.kt$private fun percentDecode(text: String): String?</ID>
+    <ID>ReturnCount:TranscriptModel.kt$TranscriptModel$private fun delta(e: GatewayEvent.PartDelta): Boolean</ID>
+    <ID>ReturnCount:TranscriptModel.kt$TurnEntry$fun matches(other: List&lt;MsgEntry&gt;): Boolean</ID>
+    <ID>ReturnCount:TurnLedger.kt$TurnLedger$private fun upsertPart(part: Part): Boolean</ID>
+    <ID>ReturnCount:TurnStall.kt$TurnStallTracker$public fun completeProbe(probe: TurnStallProbe, evidence: TurnStallEvidence, nowMs: Long): TurnStallDiagnosis?</ID>
+    <ID>ReturnCount:TurnStall.kt$TurnStallTracker$public fun takeProbe(sessionId: String, nowMs: Long): TurnStallProbe?</ID>
+    <ID>ReturnCount:TurnStall.kt$public fun classifyTurnStall(evidence: TurnStallEvidence): TurnStallKind</ID>
+    <ID>TooManyFunctions:BackgroundTasks.kt$io.github.eslamasabry.oc.engine.transcript.turnfacts.BackgroundTasks.kt</ID>
+    <ID>TooManyFunctions:ContextUsage.kt$io.github.eslamasabry.oc.engine.transcript.turnfacts.ContextUsage.kt</ID>
+    <ID>TooManyFunctions:RetryStatus.kt$io.github.eslamasabry.oc.engine.transcript.turnfacts.RetryStatus.kt</ID>
+    <ID>TooManyFunctions:RunResult.kt$io.github.eslamasabry.oc.engine.transcript.turnfacts.RunResult.kt</ID>
+    <ID>TooManyFunctions:StreamingBlocks.kt$StreamingBlocks</ID>
+    <ID>TooManyFunctions:ToolFacts.kt$io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolFacts.kt</ID>
+    <ID>TooManyFunctions:ToolOutput.kt$io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolOutput.kt</ID>
+    <ID>TooManyFunctions:TranscriptModel.kt$TranscriptModel</ID>
+    <ID>TooManyFunctions:TurnStall.kt$TurnStallTracker</ID>
+    <ID>UnusedPrivateProperty:RecordedStream.kt$RecordedStream$val sessionId = turnFrames.first().data.str("sessionID")!!</ID>
+    <ID>WildcardImport:ChatReviewRegressionTest.kt$import io.github.eslamasabry.oc.engine.transcript.state.*</ID>
+    <ID>WildcardImport:ChatReviewRegressionTest.kt$import kotlin.test.*</ID>
+    <ID>WildcardImport:ChatReviewRegressionTest.kt$import kotlinx.coroutines.test.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

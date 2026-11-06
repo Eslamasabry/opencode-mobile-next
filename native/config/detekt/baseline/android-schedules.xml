@@ -1,0 +1,26 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>MaxLineLength:ScheduleExactAlarms.kt$ScheduleExactAlarms$manager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, entry.dueAtMs, pending(entry.workName, entry))</ID>
+    <ID>MaxLineLength:ScheduleExactAlarms.kt$ScheduleExactAlarms$return PendingIntent.getBroadcast(app, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)</ID>
+    <ID>MaxLineLength:ScheduleExactAlarms.kt$ScheduleExactAlarms.Companion$public</ID>
+    <ID>MaxLineLength:ScheduleNotifications.kt$NoticeText$val line = value?.lineSequence()?.map { it.trim() }?.firstOrNull { it.isNotEmpty() }?.replace(secretLike, "…") ?: return null</ID>
+    <ID>MaxLineLength:ScheduleNotifications.kt$ScheduleNotifications$.</ID>
+    <ID>MaxLineLength:ScheduleNotifications.kt$ScheduleNotifications$?:</ID>
+    <ID>MaxLineLength:ScheduleNotifications.kt$ScheduleNotifications$NotificationChannel(CHANNEL, app.getString(R.string.oc_schedule_channel), NotificationManager.IMPORTANCE_DEFAULT)</ID>
+    <ID>MaxLineLength:ScheduleNotifications.kt$ScheduleNotifications$builder.addAction(Notification.Action.Builder(null, app.getString(R.string.oc_schedule_open), open(entry, report)).build())</ID>
+    <ID>MaxLineLength:ScheduleNotifications.kt$ScheduleNotifications$data = Uri.Builder().scheme("oc-schedule-open").authority(entry.profileId).appendPath(entry.occurrence).build()</ID>
+    <ID>MaxLineLength:ScheduleNotifications.kt$ScheduleNotifications$notify(entry, base(entry, null).setContentTitle(title(null)).setContentText(text).setOngoing(true).setOnlyAlertOnce(true))</ID>
+    <ID>MaxLineLength:ScheduleNotifications.kt$ScheduleNotifications$report?.status == "ran" -&gt; NoticeText.line(report.title, TITLE_MAX) ?: app.getString(R.string.oc_schedule_title)</ID>
+    <ID>MaxLineLength:ScheduleNotifications.kt$ScheduleNotifications$return PendingIntent.getActivity(app, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)</ID>
+    <ID>MaxLineLength:ScheduleWork.kt$ScheduleWorkPolicy$return engine.runManual(entry.profileId, entry.scheduleId, entry.revision, deadline, requestedAtMs = entry.dueAtMs)</ID>
+    <ID>MaxLineLength:ScheduleWork.kt$WorkScheduleAlarms$/** A native exact alarm fired: start that occurrence's worker now (its own name; the claim keeps it to one send). */</ID>
+    <ID>MaxLineLength:ScheduleWork.kt$WorkScheduleAlarms$SchedulePlatform(supported = true, notificationsAllowed = androidx.core.app.NotificationManagerCompat.from(app).areNotificationsEnabled())</ID>
+    <ID>MaxLineLength:ScheduleWork.kt$WorkScheduleAlarms$if (Build.VERSION.SDK_INT &gt;= EXPEDITED_MIN_SDK) builder.setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)</ID>
+    <ID>MaxLineLength:ScheduleWork.kt$WorkScheduleAlarms$val policy = if (entry.workName in ScheduleWorkPolicy.running) ExistingWorkPolicy.APPEND_OR_REPLACE else ExistingWorkPolicy.KEEP</ID>
+    <ID>ReturnCount:ScheduleExactAlarms.kt$ScheduleExactAlarms$public fun arm(entries: List&lt;ArmedEntry&gt;, nowMs: Long)</ID>
+    <ID>ReturnCount:ScheduleWork.kt$ScheduleWorkPolicy$public suspend fun run(engine: ScheduleEngine, data: Data, nowMs: Long): RunReport?</ID>
+    <ID>SwallowedException:ScheduleNotifications.kt$ScheduleNotifications$e: SecurityException</ID>
+  </CurrentIssues>
+</SmellBaseline>

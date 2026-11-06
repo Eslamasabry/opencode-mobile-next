@@ -1,0 +1,159 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:SetupAuditStore.kt$SetupAuditStore$!validId(id) || action !in ACTIONS || (operation != null &amp;&amp; operation !in OPERATIONS)</ID>
+    <ID>ComplexCondition:SetupAuditStore.kt$SetupAuditStore$id == null || !validId(id) || action !in ACTIONS || at == null || at.length &gt; 40 || (operationElement != null &amp;&amp; operation !in OPERATIONS)</ID>
+    <ID>ComplexCondition:SetupController.kt$SetupController$!confirmed || proposal == null || proposal.id != proposalId || !proposal.canApply</ID>
+    <ID>ComplexCondition:SetupController.kt$SetupController$!sameRevision(result.before, current) || result.after.targetId != current.targetId || result.after.revision == current.revision || result.undoHandle.isEmpty() || result.after.config != expected</ID>
+    <ID>ComplexCondition:SetupController.kt$SetupController$raw.length &gt; 32768 || redactor.containsSecret(raw) || raw.contains(Redactor.MASK) || SENSITIVE.containsMatchIn(edit.path.joinToString(".")) || sensitiveMap(value)</ID>
+    <ID>ComplexCondition:SetupController.kt$SetupController.Companion$exists &amp;&amp; (previous !is JsonObject || previous["type"].stringOrNull() != "remote" || previous["enabled"] != JsonPrimitive(false))</ID>
+    <ID>ComplexCondition:SetupRegistry.kt$RegistryRemote.Companion$url == null || url.scheme != "https" || url.host.isEmpty() || url.userInfo.isNotEmpty() || url.hasQuery || url.hasFragment || UNSAFE_CHARS.containsMatchIn(raw) || unsafeEncodedUrl(redactor, raw)</ID>
+    <ID>ComplexCondition:SetupRegistry.kt$text.isEmpty() || text.length &gt; 256 || !IDENTIFIER.matches(text) || redactor.containsSecret(text)</ID>
+    <ID>ComplexCondition:SetupRegistryStore.kt$SetupRegistryStore$closed || generation != this.generation || (requireExisting &amp;&amp; !prefs.containsKey(storageKey))</ID>
+    <ID>ComplexCondition:SetupUri.kt$SetupUri.Companion$uri.host.isEmpty() || uri.userInfo.isNotEmpty() || uri.hasQuery || uri.hasFragment</ID>
+    <ID>CyclomaticComplexMethod:SetupAuditStore.kt$SetupAuditStore$private fun readRecords(): List&lt;SetupAuditRecord&gt;?</ID>
+    <ID>CyclomaticComplexMethod:SetupController.kt$SetupController$public fun validate(edits: List&lt;SetupEdit&gt;): List&lt;String&gt;</ID>
+    <ID>CyclomaticComplexMethod:SetupController.kt$SetupController.Companion$fun mutationReason(base: JsonObject, edits: List&lt;SetupEdit&gt;): String?</ID>
+    <ID>CyclomaticComplexMethod:SetupPlanner.kt$SetupPlanner$private fun valid(field: String, value: JsonElement): Boolean</ID>
+    <ID>CyclomaticComplexMethod:SetupRegistry.kt$RegistryRemote.Companion$public fun fromJson(redactor: Redactor, value: JsonElement?): RegistryRemote?</ID>
+    <ID>CyclomaticComplexMethod:SetupRegistry.kt$SetupRegistryClient$public suspend fun fetch(search: String? = null, cancellation: RegistryCancellation = RegistryCancellation()): SetupOutcome&lt;List&lt;RegistryEntry&gt;&gt;</ID>
+    <ID>CyclomaticComplexMethod:SetupRegistryStore.kt$SetupRegistryStore$public suspend fun refresh(online: Boolean = true, query: String? = null)</ID>
+    <ID>CyclomaticComplexMethod:SetupUri.kt$SetupUri.Companion$fun parse(raw: String): SetupUri?</ID>
+    <ID>LongMethod:SetupRegistryStore.kt$SetupRegistryStore$public suspend fun refresh(online: Boolean = true, query: String? = null)</ID>
+    <ID>LongParameterList:SetupAssistant.kt$SetupDiff.Companion$( redactor: Redactor, path: List&lt;String&gt;, before: JsonElement?, after: JsonElement?, remove: Boolean, beforePresent: Boolean = true, afterPresent: Boolean = true, )</ID>
+    <ID>LongParameterList:SetupController.kt$SetupController$( public val gateway: SetupConfigGateway, private val audits: SetupAuditRegistry, public val profileId: String, public val locationId: String, private val redactor: Redactor, private val ids: SetupIds, private val isCurrent: () -&gt; Boolean = { true }, )</ID>
+    <ID>LoopWithTooManyJumpStatements:SetupController.kt$SetupController.Companion$for</ID>
+    <ID>LoopWithTooManyJumpStatements:SetupRegistry.kt$SetupRegistryClient$for</ID>
+    <ID>MagicNumber:Oc2SetupConfigGateway.kt$Oc2SetupConfigGateway$401</ID>
+    <ID>MagicNumber:Oc2SetupConfigGateway.kt$Oc2SetupConfigGateway$403</ID>
+    <ID>MagicNumber:SetupAuditStore.kt$SetupAuditStore$40</ID>
+    <ID>MagicNumber:SetupController.kt$SetupController$32</ID>
+    <ID>MagicNumber:SetupController.kt$SetupController$32768</ID>
+    <ID>MagicNumber:SetupController.kt$SetupIds.Companion$16</ID>
+    <ID>MagicNumber:SetupController.kt$SetupIds.Companion$24</ID>
+    <ID>MagicNumber:SetupController.kt$SetupIds.Companion$256</ID>
+    <ID>MagicNumber:SetupPlanner.kt$SetupPlanner$2048</ID>
+    <ID>MagicNumber:SetupPlanner.kt$SetupPlanner$32</ID>
+    <ID>MagicNumber:SetupRegistry.kt$10</ID>
+    <ID>MagicNumber:SetupRegistry.kt$256</ID>
+    <ID>MagicNumber:SetupRegistry.kt$RegistryEntry.Companion$1000</ID>
+    <ID>MagicNumber:SetupRegistry.kt$RegistryEntry.Companion$120</ID>
+    <ID>MagicNumber:SetupRegistry.kt$RegistryRemote.Companion$2048</ID>
+    <ID>MagicNumber:SetupRegistry.kt$SetupRegistryClient$100</ID>
+    <ID>MagicNumber:SetupRegistry.kt$SetupRegistryClient$200</ID>
+    <ID>MagicNumber:SetupRegistryStore.kt$SetupRegistryStore$100</ID>
+    <ID>MagicNumber:SetupUri.kt$SetupUri.Companion$0x20</ID>
+    <ID>MagicNumber:SetupUri.kt$SetupUri.Companion$0x7f</ID>
+    <ID>MagicNumber:SetupUri.kt$SetupUri.Companion$16</ID>
+    <ID>MagicNumber:SetupUri.kt$SetupUri.Companion$3</ID>
+    <ID>MaxLineLength:Oc2SetupConfigGateway.kt$Oc2SetupConfigGateway$"This server cannot safely restore setup changes. Its global shell setting cannot apply this proposal "</ID>
+    <ID>MaxLineLength:Oc2SetupConfigGateway.kt$Oc2SetupConfigGateway$SetupHttpReply.Network -&gt; fail(SetupFailureCode.Offline, "The server is unavailable. Reconnect and try again.")</ID>
+    <ID>MaxLineLength:Oc2SetupConfigGateway.kt$Oc2SetupConfigGateway$SetupHttpReply.RemovedInStable -&gt; fail(SetupFailureCode.Unsupported, "Setup inspection is unavailable on this server version.")</ID>
+    <ID>MaxLineLength:Oc2SetupConfigGateway.kt$Oc2SetupConfigGateway$override suspend fun patchConfig(patch: JsonObject): SetupOutcome&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:Oc2SetupConfigGateway.kt$Oc2SetupConfigGateway$public</ID>
+    <ID>MaxLineLength:Oc2SetupConfigGateway.kt$Oc2SetupConfigGateway.Companion$fun fail(code: SetupFailureCode, message: String): SetupOutcome.Failed</ID>
+    <ID>MaxLineLength:Oc2SetupConfigGatewayTest.kt$Oc2SetupConfigGatewayTest$/** Port of test/setup_config_adapter_test.dart (the dialect is the borrowed client's business, so one run covers both). */</ID>
+    <ID>MaxLineLength:Oc2SetupConfigGatewayTest.kt$Oc2SetupConfigGatewayTest$Sent</ID>
+    <ID>MaxLineLength:SetupAssistant.kt$"key|token|secret|password|credential|environment|headers|options|request|command|template|prompt|system|content"</ID>
+    <ID>MaxLineLength:SetupAuditStore.kt$SetupAuditRegistry$return SetupOutcome.Ok(owners.getOrPut(profileId) { SetupAuditStore(prefs, profileId, redactor, clock, presence) })</ID>
+    <ID>MaxLineLength:SetupAuditStore.kt$SetupAuditStore$return if (result.size &gt; MAX_RECORDS) result.subList(result.size - MAX_RECORDS, result.size).toList() else result.toList()</ID>
+    <ID>MaxLineLength:SetupAuditStore.kt$SetupAuditStore.Companion$"^(?:(?:proposal|undo)-[0-9]+|[0-9a-f]{48}|(?:proposal-)?[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-"</ID>
+    <ID>MaxLineLength:SetupAuditStore.kt$SetupAuditStore.Companion$private val STORAGE = SetupFailure(SetupFailureCode.Storage, "Setup history could not be saved. Refresh before trying again.")</ID>
+    <ID>MaxLineLength:SetupAuditStoreTest.kt$SetupAuditStoreTest$prefs.values["oc.setupAudit.audit"] = """[{"id":"proposal-0","action":"proposed","at":"2026-09-27T10:00:00Z"}]"""</ID>
+    <ID>MaxLineLength:SetupController.kt$SetupController$/** A reviewable diff. Local validation cannot prove the server accepts a schema or a package can run on its host. */</ID>
+    <ID>MaxLineLength:SetupController.kt$SetupController$abort(SetupFailureCode.Unsupported, "This server returns layered sources. Effective-config diffs are unavailable.")</ID>
+    <ID>MaxLineLength:SetupController.kt$SetupController$auditStore?.append(id, if (rejected) "rejected" else "uncertain", operation)</ID>
+    <ID>MaxLineLength:SetupController.kt$SetupController$emit(SetupSnapshot(SetupPhase.Offline, snapshot.config, snapshot.servers, reason = "Reconnect to your server to refresh or apply changes."))</ID>
+    <ID>MaxLineLength:SetupController.kt$SetupController$emit(SetupSnapshot(SetupPhase.Ready, setupRedactObject(redactor, base), snapshot.servers, canUndo = undoCommit != null))</ID>
+    <ID>MaxLineLength:SetupController.kt$SetupController$emit(SetupSnapshot(if (online) SetupPhase.Ready else SetupPhase.Offline, snapshot.config, snapshot.servers, proposal, canUndo = undoCommit != null))</ID>
+    <ID>MaxLineLength:SetupController.kt$SetupController$for (edit in edits) expected = if (edit.remove) remove(expected, edit.path) else put(expected, edit.path, edit.value ?: JsonNull)</ID>
+    <ID>MaxLineLength:SetupController.kt$SetupController$if</ID>
+    <ID>MaxLineLength:SetupController.kt$SetupController$if (!confirmed || previous == null) abort(SetupFailureCode.Invalid, "There is no confirmed change to undo in this setup session.")</ID>
+    <ID>MaxLineLength:SetupController.kt$SetupController$if (auditStore?.isAvailable != true) abort(SetupFailureCode.Storage, "Setup history is unavailable. Refresh before trying again.")</ID>
+    <ID>MaxLineLength:SetupController.kt$SetupController$if (disposed || busy) return SetupOutcome.Failed(SetupFailure(SetupFailureCode.Busy, "Setup is busy or closed."))</ID>
+    <ID>MaxLineLength:SetupController.kt$SetupController$reason = if (!writable) writeReason else unavailable ?: if (!online) "Reconnect to your server before applying." else null</ID>
+    <ID>MaxLineLength:SetupController.kt$SetupController$result.after.revision == current.revision</ID>
+    <ID>MaxLineLength:SetupController.kt$SetupController.Companion$const val NO_RESTORE = "This server has no verified atomic configuration restore endpoint. Apply and Undo are unavailable."</ID>
+    <ID>MaxLineLength:SetupController.kt$SetupController.Companion$if (value != null &amp;&amp; value["type"].stringOrNull() == "remote" &amp;&amp; value["enabled"] == JsonPrimitive(false)) continue</ID>
+    <ID>MaxLineLength:SetupController.kt$SetupController.Companion$return "Only disabled remote MCP definitions can be changed here. Runtime connections and sign-in state are not restored."</ID>
+    <ID>MaxLineLength:SetupController.kt$SetupController.Companion$return "This change would replace a containing setting. Review that setting separately before continuing."</ID>
+    <ID>MaxLineLength:SetupController.kt$SetupController.Companion$return "This setting has no reviewed reversible setup action. Use the existing server configuration or secure sign-in flow."</ID>
+    <ID>MaxLineLength:SetupController.kt$SetupController.Companion$val KNOWN_STATUS = setOf("connected", "pending", "disabled", "failed", "needs_auth", "needs_client_registration")</ID>
+    <ID>MaxLineLength:SetupController.kt$SetupController.Companion$val SENSITIVE = Regex("key|token|secret|password|credential|environment|headers|options", RegexOption.IGNORE_CASE)</ID>
+    <ID>MaxLineLength:SetupControllerTest.kt$SetupControllerTest$assertEquals(listOf("Review overlapping fields as separate proposals."), controller.validate(listOf(modelEdit, modelEdit)))</ID>
+    <ID>MaxLineLength:SetupControllerTest.kt$SetupControllerTest$assertTrue(controller.validate(listOf(SetupEdit(listOf("mcp", "demo"), json("""{"headers":{"Custom":"fake"}}""")))).isNotEmpty())</ID>
+    <ID>MaxLineLength:SetupControllerTest.kt$SetupControllerTest$assertTrue(controller.validate(listOf(SetupEdit(listOf("provider", "demo", "options", "apiKey"), JsonPrimitive("fake")))).isNotEmpty())</ID>
+    <ID>MaxLineLength:SetupControllerTest.kt$SetupControllerTest$controller.validate(listOf(SetupEdit(listOf("mcp", "x"), json("""{"type":"remote","url":"https://example.com","enabled":true}""")))).isNotEmpty()</ID>
+    <ID>MaxLineLength:SetupControllerTest.kt$SetupControllerTest$fun</ID>
+    <ID>MaxLineLength:SetupControllerTest.kt$SetupControllerTest$gateway.config + ("mcp" to json("""{"example":{"environment":{"VALUE":"fake-private-value"},"headers":{"Custom":"fake-other-value"}}}"""))</ID>
+    <ID>MaxLineLength:SetupControllerTest.kt$SetupControllerTest$val watching = launch(UnconfinedTestDispatcher(testScheduler)) { controller.changes.collect { phases += it.phase } }</ID>
+    <ID>MaxLineLength:SetupControllerTest.kt$SetupControllerTest.Gateway$JsonObject(map + (path[0] to with(map[path[0]] as? JsonObject ?: JsonObject(emptyMap()), path.drop(1), value)))</ID>
+    <ID>MaxLineLength:SetupControllerTest.kt$SetupControllerTest.Gateway$SetupOutcome.Ok(listOf(SetupMcpStatus("example", "needs_auth"), SetupMcpStatus("other", "arbitrary response body")))</ID>
+    <ID>MaxLineLength:SetupControllerTest.kt$SetupControllerTest.Gateway$for (edit in edits) config = if (edit.remove) without(config, edit.path) else with(config, edit.path, edit.value!!)</ID>
+    <ID>MaxLineLength:SetupControllerTest.kt$SetupControllerTest.Gateway$get() = SetupSupport(readConfig = true, writeConfig = writable, mcpInventory = true, reason = "Reversible writes are unavailable.")</ID>
+    <ID>MaxLineLength:SetupControllerTest.kt$SetupControllerTest.Gateway$if (commit.after.revision != "$revision") return SetupOutcome.Failed(SetupFailure(SetupFailureCode.Conflict, "Configuration changed."))</ID>
+    <ID>MaxLineLength:SetupControllerTest.kt$SetupControllerTest.Gateway$if (expected.revision != "$revision") return SetupOutcome.Failed(SetupFailure(SetupFailureCode.Conflict, "Configuration changed."))</ID>
+    <ID>MaxLineLength:SetupControllerTest.kt$SetupControllerTest.Gateway$if (path.size == 1) JsonObject(map - path[0]) else JsonObject(map + (path[0] to without(map.getValue(path[0]).jsonObject, path.drop(1))))</ID>
+    <ID>MaxLineLength:SetupControllerTest.kt$SetupControllerTest.Gateway$if (throwOnPatch) return SetupOutcome.Failed(SetupFailure(SetupFailureCode.Transport, "untrusted server body"))</ID>
+    <ID>MaxLineLength:SetupControllerTest.kt$SetupControllerTest.Gateway$override suspend</ID>
+    <ID>MaxLineLength:SetupControllerTest.kt$SetupControllerTest.Gateway$readConfig().let { SetupOutcome.Ok(SetupConfigRevision("fake-source", "$revision", (it as SetupOutcome.Ok).value)) }</ID>
+    <ID>MaxLineLength:SetupPlanner.kt$SetupPlanner$"Choose the requested values to prepare a proposed change. Guided setup runs on this device and does not "</ID>
+    <ID>MaxLineLength:SetupPlanner.kt$SetupPlanner$"Creating or editing agents is not available in guided setup. Choose an existing default agent or use "</ID>
+    <ID>MaxLineLength:SetupPlanner.kt$SetupPlanner$"Creating or editing commands is not available in guided setup. Use the server configuration tools."</ID>
+    <ID>MaxLineLength:SetupPlanner.kt$SetupPlanner$"Provider setup requires a separate secure sign-in flow. Do not enter credentials in the setup assistant."</ID>
+    <ID>MaxLineLength:SetupPlanner.kt$SetupPlanner$"Review this proposed change. Nothing has been applied. Applying requires server support and your confirmation. "</ID>
+    <ID>MaxLineLength:SetupPlannerTest.kt$SetupPlannerTest$assertEquals(obj("""{"type":"local","command":["node","/srv/mcp.js"],"enabled":false}"""), ok.edits.single().value)</ID>
+    <ID>MaxLineLength:SetupPlannerTest.kt$SetupPlannerTest$for</ID>
+    <ID>MaxLineLength:SetupPlannerTest.kt$SetupPlannerTest$val first = planner.start(SetupIntent.ChooseModel, question = fake, inputs = mapOf("model" to s("example/$fake")))</ID>
+    <ID>MaxLineLength:SetupPlannerTest.kt$SetupPlannerTest$val local = planner.start(SetupIntent.ConnectRemoteMcp, inputs = mapOf("name" to s("docs"), "url" to s("http://localhost:9000/mcp")))</ID>
+    <ID>MaxLineLength:SetupPlannerTest.kt$SetupPlannerTest$val ok = planner.start(SetupIntent.AddLocalMcp, inputs = mapOf("name" to s("local"), "command" to JsonArray(listOf(s("node"), s("/srv/mcp.js")))))</ID>
+    <ID>MaxLineLength:SetupPlannerTest.kt$SetupPlannerTest$val reply = planner.start(SetupIntent.AddLocalMcp, inputs = mapOf("name" to s("local"), "command" to command))</ID>
+    <ID>MaxLineLength:SetupPlannerTest.kt$SetupPlannerTest$val reply = planner.start(SetupIntent.ConnectRemoteMcp, inputs = mapOf("name" to s("docs"), "url" to s(url)))</ID>
+    <ID>MaxLineLength:SetupPlannerTest.kt$SetupPlannerTest$val unsupportedField = planner.continueSession(first.sessionId, inputs = mapOf("password" to s(fake), "model" to s("example/safe")))</ID>
+    <ID>MaxLineLength:SetupPrefs.kt$KeyValueSetupPrefs$override suspend fun setString(key: String, value: String): Boolean</ID>
+    <ID>MaxLineLength:SetupPrefs.kt$ProfilePresence.Companion$decoded.any { (it as? JsonObject)?.get("id").let { v -&gt; v is JsonPrimitive &amp;&amp; v.isString &amp;&amp; v.content == id } }</ID>
+    <ID>MaxLineLength:SetupRegistry.kt$RegistryPackage$/** Required runtime or package arguments exist. Their values are never retained: an argument list is a command line. */</ID>
+    <ID>MaxLineLength:SetupRegistry.kt$RegistryPackage.Companion$environment = items(value["environmentVariables"]).mapNotNull { RegistryVariable.fromJson(redactor, it) }</ID>
+    <ID>MaxLineLength:SetupRegistry.kt$SetupRegistryClient$if (reply !is RegistryHttpReply.Body || reply.status != 200 || reply.bytes.size &gt; MAX_RESPONSE_BYTES) return failed()</ID>
+    <ID>MaxLineLength:SetupRegistry.kt$SetupRegistryClient$public suspend</ID>
+    <ID>MaxLineLength:SetupRegistry.kt$SetupRegistryClient$val official = ((item["_meta"] as? JsonObject)?.get("io.modelcontextprotocol.registry/official") as? JsonObject)</ID>
+    <ID>MaxLineLength:SetupRegistry.kt$SetupRegistryClient.Companion$private fun failed(): SetupOutcome.Failed</ID>
+    <ID>MaxLineLength:SetupRegistryStore.kt$SetupRegistryStore$emit(SetupRegistrySnapshot(SetupRegistryStatus.Error, false, next.entries, next.cachedAt, reason = SAVE_FAILED))</ID>
+    <ID>MaxLineLength:SetupRegistryStore.kt$SetupRegistryStore$emit(SetupRegistrySnapshot(SetupRegistryStatus.Error, optedIn = false, reason = "The saved registry list could not be read. Set up by hand."))</ID>
+    <ID>MaxLineLength:SetupRegistryStore.kt$SetupRegistryStore$emit(SetupRegistrySnapshot(status, optedIn = true, entries = entries, cachedAt = savedAt, query = search))</ID>
+    <ID>MaxLineLength:SetupRegistryStore.kt$SetupRegistryStore$private suspend</ID>
+    <ID>MaxLineLength:SetupRegistryStore.kt$SetupRegistryStore$require(profileId.isNotEmpty() &amp;&amp; !redactor.containsSecret(profileId)) { "A non-secret profile identifier is required." }</ID>
+    <ID>MaxLineLength:SetupRegistryStore.kt$SetupRegistryStore$val entries = ((data["entries"] as? JsonArray) ?: JsonArray(emptyList())).take(100).mapNotNull { RegistryEntry.fromJson(redactor, it) }</ID>
+    <ID>MaxLineLength:SetupRegistryTest.kt$SetupRegistryTest$append("""{"servers":[{"server":$server,"_meta":{"io.modelcontextprotocol.registry/official":{"status":"deleted"}}}""")</ID>
+    <ID>MaxLineLength:SetupRegistryTest.kt$SetupRegistryTest$for</ID>
+    <ID>MaxLineLength:SetupRegistryTest.kt$SetupRegistryTest$runtimeArguments</ID>
+    <ID>NestedBlockDepth:SetupController.kt$SetupController$public fun validate(edits: List&lt;SetupEdit&gt;): List&lt;String&gt;</ID>
+    <ID>NestedBlockDepth:SetupController.kt$SetupController.Companion$fun mutationReason(base: JsonObject, edits: List&lt;SetupEdit&gt;): String?</ID>
+    <ID>ReturnCount:Oc2SetupConfigGateway.kt$Oc2SetupConfigGateway$override suspend fun listMcpServers(): SetupOutcome&lt;List&lt;SetupMcpStatus&gt;&gt;</ID>
+    <ID>ReturnCount:Oc2SetupConfigGateway.kt$Oc2SetupConfigGateway$override suspend fun readConfig(): SetupOutcome&lt;JsonObject&gt;</ID>
+    <ID>ReturnCount:SetupAuditStore.kt$SetupAuditStore$private fun readRecords(): List&lt;SetupAuditRecord&gt;?</ID>
+    <ID>ReturnCount:SetupAuditStore.kt$SetupAuditStore$public suspend fun append(id: String, action: String, operation: String? = null): SetupOutcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:SetupController.kt$SetupController$private suspend fun &lt;T&gt; act(action: suspend () -&gt; T): SetupOutcome&lt;T&gt;</ID>
+    <ID>ReturnCount:SetupController.kt$SetupController$public fun validate(edits: List&lt;SetupEdit&gt;): List&lt;String&gt;</ID>
+    <ID>ReturnCount:SetupController.kt$SetupController.Companion$fun has(map: JsonObject, path: List&lt;String&gt;): Boolean</ID>
+    <ID>ReturnCount:SetupController.kt$SetupController.Companion$fun mutationReason(base: JsonObject, edits: List&lt;SetupEdit&gt;): String?</ID>
+    <ID>ReturnCount:SetupController.kt$SetupController.Companion$fun remove(map: JsonObject, path: List&lt;String&gt;): JsonObject</ID>
+    <ID>ReturnCount:SetupControllerTest.kt$SetupControllerTest.Gateway$override suspend fun commit(expected: SetupConfigRevision, edits: List&lt;SetupEdit&gt;, operationId: String): SetupOutcome&lt;SetupConfigCommit&gt;</ID>
+    <ID>ReturnCount:SetupPlanner.kt$SetupPlanner$@Suppress("UNUSED_PARAMETER") public fun continueSession( sessionId: String, question: String? = null, inputs: Map&lt;String, JsonElement&gt; = emptyMap(), ): SetupPlannerReply</ID>
+    <ID>ReturnCount:SetupPlanner.kt$SetupPlanner$private fun valid(field: String, value: JsonElement): Boolean</ID>
+    <ID>ReturnCount:SetupRegistry.kt$RegistryEntry.Companion$public fun fromJson(redactor: Redactor, value: JsonElement?): RegistryEntry?</ID>
+    <ID>ReturnCount:SetupRegistry.kt$RegistryPackage.Companion$public fun fromJson(redactor: Redactor, value: JsonElement?): RegistryPackage?</ID>
+    <ID>ReturnCount:SetupRegistry.kt$RegistryRemote.Companion$public fun fromJson(redactor: Redactor, value: JsonElement?): RegistryRemote?</ID>
+    <ID>ReturnCount:SetupRegistry.kt$RegistryVariable.Companion$public fun fromJson(redactor: Redactor, value: JsonElement?, header: Boolean = false): RegistryVariable?</ID>
+    <ID>ReturnCount:SetupRegistry.kt$SetupRegistryClient$public suspend fun fetch(search: String? = null, cancellation: RegistryCancellation = RegistryCancellation()): SetupOutcome&lt;List&lt;RegistryEntry&gt;&gt;</ID>
+    <ID>ReturnCount:SetupRegistry.kt$internal fun registryIdentifier(redactor: Redactor, value: JsonElement?): String?</ID>
+    <ID>ReturnCount:SetupRegistryStore.kt$SetupRegistryStore$public fun load()</ID>
+    <ID>ReturnCount:SetupRegistryStore.kt$SetupRegistryStore$public suspend fun refresh(online: Boolean = true, query: String? = null)</ID>
+    <ID>ReturnCount:SetupRegistryTest.kt$SetupRegistryTest.Transport$override suspend fun get(request: RegistryRequest, cancellation: RegistryCancellation): RegistryHttpReply</ID>
+    <ID>ReturnCount:SetupUri.kt$SetupUri.Companion$fun decodeFull(raw: String): String?</ID>
+    <ID>ReturnCount:SetupUri.kt$SetupUri.Companion$fun isSafeMcpUrl(raw: String): Boolean</ID>
+    <ID>ReturnCount:SetupUri.kt$SetupUri.Companion$fun parse(raw: String): SetupUri?</ID>
+    <ID>TooManyFunctions:SetupController.kt$SetupController</ID>
+  </CurrentIssues>
+</SmellBaseline>

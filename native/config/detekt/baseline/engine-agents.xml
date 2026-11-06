@@ -1,0 +1,606 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:AgentCertification.kt$AgentCertification$record == null || helperVersion == null || !sameAgentVersion(descriptor.id, record.agentVersion, descriptor.recipe?.version) || !sameHelperVersion(record.helperVersion, helperVersion) || (record.architecture != null &amp;&amp; record.architecture != architecture)</ID>
+    <ID>ComplexCondition:AuthProjectionJson.kt$AuthProjectionJson$text == null || text.isBlank() || text.length &gt; ACCOUNT_LIMIT || CONTROL.containsMatchIn(text)</ID>
+    <ID>ComplexCondition:ClaudeAgentTrial.kt$ClaudeAgentTrial$found == null &amp;&amp; current != null &amp;&amp; lateLoadScope != current &amp;&amp; host.onPhoneServer &amp;&amp; serverVersionAtLeast(host.serverVersion, CLAUDE_AGENT_MINIMUM_SERVER)</ID>
+    <ID>ComplexCondition:FeedFolders.kt$FeedFolders$value.isEmpty() || value == "/" || value == "global" || value == "."</ID>
+    <ID>ComplexCondition:Handoff.kt$source === target.gateway &amp;&amp; sourceScope.profileId == target.scope.profileId &amp;&amp; sourceScope.origin == target.scope.origin &amp;&amp; sourceScope.directory == target.scope.directory &amp;&amp; sourceScope.workspace == target.scope.workspace &amp;&amp; !target.startNewAgent &amp;&amp; (source.capabilities.sessionModelProviderSwitching || sourceModel?.providerId == target.model.providerId)</ID>
+    <ID>ComplexCondition:HandoffLinks.kt$HandoffLinks$original.isEmpty() || original.length &gt; MAX_ID || redactor.redact(original) != original || original.any { it.code &lt; 0x20 || it.code == 0x7f }</ID>
+    <ID>ComplexCondition:HandoffRecord.kt$HandoffRecordBuilder.Companion$part.synthetic || part.type != "tool" || part.toolName?.lowercase() != "todowrite" || part.tool.status != "completed" || !part.tool.executed</ID>
+    <ID>ComplexCondition:HandoffRecord.kt$HandoffRecordBuilder.Companion$part.synthetic || part.type != "tool" || part.toolName?.lowercase() !in WRITE_TOOLS || part.tool.status != "completed" || !part.tool.executed</ID>
+    <ID>ComplexCondition:HandoffRecordFiles.kt$HandoffRecordFiles$!workspace.handoffFiles || scope == null || directory != scope || !RECORD_ID.matches(recordId) || markdown.isEmpty() || utf8Length(markdown) &gt; MAX_BYTES</ID>
+    <ID>ComplexCondition:HandoffRecordFiles.kt$HandoffRecordFiles$listing.error || listing.cwd != scope || listing.path != "." || entries == null || entries.none { it.name == HANDOFF_FOLDER &amp;&amp; it.kind == "directory" }</ID>
+    <ID>ComplexCondition:HandoffRecordFiles.kt$HandoffRecordFiles$reply.error || reply.cwd != scope || reply.path != path || file == null || file.path != path || file.kind != "text" || file.encoding != "utf-8" || file.content == null || file.modifiedAt == null</ID>
+    <ID>ComplexCondition:IsolatedTaskLaunch.kt$IsolatedTaskLaunch$!current() || confirmed.directory == null || key(confirmed.directory!!) != key(copy.directory) || confirmed.workspaceId != null || confirmed.projectId?.raw?.let { it != project.id } == true</ID>
+    <ID>ComplexCondition:ProjectFolderName.kt$ProjectFolderName$value == "." || value == ".." || '/' in value || '\\' in value</ID>
+    <ID>ComplexCondition:ReturnBrief.kt$ReturnBrief.Companion$!readStateKnown || idle == null || idle &lt;= 0 || isBusy(session.id) || !isUnread(session)</ID>
+    <ID>ComplexCondition:SessionImportDocument.kt$ImportRules$p is JsonNull || p.isString || p.content == "true" || p.content == "false"</ID>
+    <ID>ComplexCondition:SessionImportDocument.kt$SessionImportDocument.Companion$id == null || !ImportRules.validId(id, "msg_") || !ids.add(id) || !ImportRules.safeText(ImportRules.string(message["type"])) || time == null || !ImportRules.number(time["created"])</ID>
+    <ID>CyclomaticComplexMethod:ActiveContextMapper.kt$ActiveContextMapper$private fun assistant( item: JsonObject, parts: MutableList&lt;ContextContent&gt;, add: (ContextContentKind, String?, String?) -&gt; Unit, file: (String?, String?) -&gt; Unit, )</ID>
+    <ID>CyclomaticComplexMethod:ActiveContextMapper.kt$ActiveContextMapper$public fun map(message: JsonObject): ActiveContextMessage?</ID>
+    <ID>CyclomaticComplexMethod:AgentAccountController.kt$AgentAccountController$public suspend fun refresh()</ID>
+    <ID>CyclomaticComplexMethod:AgentCertification.kt$AgentCertification.Companion$private fun parseRecord(row: JsonObject): Record?</ID>
+    <ID>CyclomaticComplexMethod:AgentJson.kt$AgentJson$private fun writeString(out: StringBuilder, s: String)</ID>
+    <ID>CyclomaticComplexMethod:AgentOwnership.kt$AgentOwnership$private suspend fun adoptLegacyGates(owner: OwnerId, local: List&lt;ProfileId&gt;): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:AgentReadiness.kt$AgentReadiness$private fun build( descriptor: AgentDescriptor, architecture: AgentArchitecture, server: ServerCapabilities, runtime: PhoneAgentRuntime?, ): AgentRow</ID>
+    <ID>CyclomaticComplexMethod:AuthProjectionJson.kt$AuthProjectionJson$public fun decode(json: JsonObject): AuthProjection</ID>
+    <ID>CyclomaticComplexMethod:ClaudeAgentTrial.kt$ClaudeAgentTrial$private suspend fun run(fresh: Boolean)</ID>
+    <ID>CyclomaticComplexMethod:HandoffEngine.kt$HandoffEngine$private suspend fun prepareSteps(lastState: String): HandoffPrepared</ID>
+    <ID>CyclomaticComplexMethod:HandoffEngine.kt$HandoffEngine$private suspend fun sendSteps(review: HandoffDraft, text: String): HandoffSent</ID>
+    <ID>CyclomaticComplexMethod:HandoffHistory.kt$public suspend fun readHandoffHistory( source: HandoffHistorySource, sessionId: String, isCurrent: () -&gt; Boolean, maxPages: Int = 100, ): HandoffHistoryRead</ID>
+    <ID>CyclomaticComplexMethod:HandoffLinks.kt$HandoffLinks$private fun decode(value: Any?): HandoffLink?</ID>
+    <ID>CyclomaticComplexMethod:HandoffLinks.kt$HandoffLinks$public fun forSession( profileId: String, sessionId: String, origin: HandoffOrigin? = null, ): ImmutableList&lt;HandoffLink&gt;?</ID>
+    <ID>CyclomaticComplexMethod:HandoffLinks.kt$HandoffLinks$public suspend fun save(link: HandoffLink): Outcome&lt;HandoffLinkSave&gt;</ID>
+    <ID>CyclomaticComplexMethod:HandoffRecord.kt$HandoffRecordBuilder$public fun build( session: HandoffSession, messages: List&lt;HandoffMessage&gt;, todos: List&lt;HandoffTodo&gt; = emptyList(), files: List&lt;HandoffFileDiff&gt; = emptyList(), lastState: String, historyComplete: Boolean = true, maxBytes: Int = DEFAULT_MAX_BYTES, ): HandoffRecordResult</ID>
+    <ID>CyclomaticComplexMethod:HandoffRecordFiles.kt$HandoffRecordFiles$private suspend fun writeLeased(directory: String, recordId: String, markdown: String): Outcome&lt;HandoffFileWrite&gt;</ID>
+    <ID>CyclomaticComplexMethod:HandoffWords.kt$HandoffWords$public fun stale(reason: HandoffStaleReason, language: Language = Language.En): String</ID>
+    <ID>CyclomaticComplexMethod:IsolatedTaskLaunch.kt$IsolatedTaskLaunch$public fun open(acceptUnconfirmed: Boolean = false, acceptFailedSetup: Boolean = false)</ID>
+    <ID>CyclomaticComplexMethod:IsolatedTaskLaunch.kt$IsolatedTaskLaunch$public fun start(text: String, name: String)</ID>
+    <ID>CyclomaticComplexMethod:LocalAgentStatus.kt$LocalAgentFailureKind.Companion$public fun parse(raw: String?): LocalAgentFailureKind?</ID>
+    <ID>CyclomaticComplexMethod:ModelLibrary.kt$ModelLibrary.Companion$private fun read(raw: JsonElement?, limit: Int?): ImmutableList&lt;ModelRef&gt;</ID>
+    <ID>CyclomaticComplexMethod:ModelRecommendations.kt$public fun recommendModels( models: List&lt;CatalogModel&gt;, current: ModelRef? = null, defaults: List&lt;ModelRef&gt; = emptyList(), recent: List&lt;ModelRef&gt; = emptyList(), favorites: List&lt;ModelRef&gt; = emptyList(), limit: Int = 3, ): List&lt;ModelRecommendation&gt;</ID>
+    <ID>CyclomaticComplexMethod:PhoneCheck.kt$PhoneCheck$private suspend fun check(owner: OwnerId, agent: AgentDescriptor, automatic: Boolean): PhoneCheckResult</ID>
+    <ID>CyclomaticComplexMethod:RunningFamily.kt$RunningFamily$public fun entries( sessionId: SessionId, sessions: Map&lt;SessionId, FamilySession&gt;, busy: Set&lt;SessionId&gt;, includeIdle: Boolean = false, ): ImmutableList&lt;RunningAgentEntry&gt;</ID>
+    <ID>CyclomaticComplexMethod:ServerPlaceWords.kt$ServerPlaceWords$public fun render(text: ServerPlaceText, language: ServerPlaceLanguage): String</ID>
+    <ID>CyclomaticComplexMethod:SessionImportDocument.kt$ImportRules$fun copy(value: JsonElement, depth: Int): JsonElement?</ID>
+    <ID>CyclomaticComplexMethod:SessionImportDocument.kt$ImportRules$fun validInfo(info: JsonObject): Boolean</ID>
+    <ID>CyclomaticComplexMethod:SessionImportDocument.kt$SessionImportDocument.Companion$public fun fromJson(value: JsonElement?): SessionImportResult&lt;SessionImportDocument&gt;</ID>
+    <ID>CyclomaticComplexMethod:SessionImportEngine.kt$SessionImportEngine$public suspend fun send(): Unit</ID>
+    <ID>CyclomaticComplexMethod:SignInOutputReader.kt$SignInOutputReader$public fun read(rows: Iterable&lt;SignInRow&gt;, width: Int? = null): SignInOutput</ID>
+    <ID>EmptyElseBlock:AgentJson.kt$AgentJson$if (i &gt; 0) out.append(',')</ID>
+    <ID>LargeClass:LocalAgentsScript.kt$LocalAgentsScript</ID>
+    <ID>LongMethod:AgentPhoneScripts.kt$AgentPhoneScripts$public fun install(agent: AgentDescriptor): String</ID>
+    <ID>LongMethod:AgentReadiness.kt$AgentReadiness$private fun build( descriptor: AgentDescriptor, architecture: AgentArchitecture, server: ServerCapabilities, runtime: PhoneAgentRuntime?, ): AgentRow</ID>
+    <ID>LongMethod:HandoffEngine.kt$HandoffEngine$private suspend fun prepareSteps(lastState: String): HandoffPrepared</ID>
+    <ID>LongMethod:HandoffEngine.kt$HandoffEngine$private suspend fun sendSteps(review: HandoffDraft, text: String): HandoffSent</ID>
+    <ID>LongMethod:HandoffRecord.kt$HandoffRecordBuilder$public fun build( session: HandoffSession, messages: List&lt;HandoffMessage&gt;, todos: List&lt;HandoffTodo&gt; = emptyList(), files: List&lt;HandoffFileDiff&gt; = emptyList(), lastState: String, historyComplete: Boolean = true, maxBytes: Int = DEFAULT_MAX_BYTES, ): HandoffRecordResult</ID>
+    <ID>LongMethod:IsolatedTaskLaunch.kt$IsolatedTaskLaunch$public fun open(acceptUnconfirmed: Boolean = false, acceptFailedSetup: Boolean = false)</ID>
+    <ID>LongMethod:IsolatedTaskLaunch.kt$IsolatedTaskLaunch$public fun start(text: String, name: String)</ID>
+    <ID>LongMethod:PaseoPhoneScripts.kt$PaseoPhoneScripts$public fun install(packageLock: String, codec: PaseoLockCodec): String</ID>
+    <ID>LongParameterList:AgentReadinessTest.kt$AgentReadinessTest$( id: String = "claude", installed: Boolean = true, available: Boolean = true, qualified: Boolean = true, stopped: Boolean = false, phase: AgentSignInPhase? = AgentSignInPhase.SignedIn, capabilities: AgentCapabilities = allProof, resetAt: Long? = null, )</ID>
+    <ID>LongParameterList:AgentToolAdapter.kt$AgentToolAdapter$( /** Stable id; it names the agent's helper directory (`.oc-genui/&lt;id&gt;`), so it never changes once shipped. */ public val id: String, public val displayName: String, /** The native agent catalog id ([io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog]); null when absent. */ public val catalogAgent: AgentId?, /** The Paseo provider id of this agent's chats; null for OpenCode. */ public val paseoProvider: String? = null, /** Null when the agent cannot call MCP tools. */ public val naming: McpToolNaming? = null, /** Null when the app cannot register MCP servers for this agent yet. */ public val config: McpConfigFormat? = null, public val runsAs: AgentRunUser = AgentRunUser.AgentUser, /** Recorded runtime evidence qualifies the card transport; registration alone never sets this. */ public val cardsQualified: Boolean = false, /** The display-only card tool is pre-allowed in the agent's own permission settings. */ public val preAllowsCards: Boolean = false, public val answerKeys: NativeAnswerKeys? = null, /** The agent's own question tool ("AskUserQuestion"); null accepts its question requests as sent. */ public val questionToolName: String? = null, /** The agent's plan-approval tool ("ExitPlanMode"); null when none is answered. */ public val planToolName: String? = null, )</ID>
+    <ID>LongParameterList:Catalog.kt$AgentDescriptor$( public val id: AgentId, public val name: String, public val iconKey: String, public val route: AgentRoute, public val providerId: String, public val signInMethod: AgentSignInMethod, public val recipe: AgentInstallRecipe? = null, public val capabilities: AgentCapabilities = AgentCapabilities.None, public val availability: AgentAvailability = AgentAvailability.Limited, public val unavailableReason: AgentUnavailableReason? = null, public val limitation: AgentLimitation? = null, public val resumeReason: AgentResumeReason? = null, )</ID>
+    <ID>LongParameterList:ChatFeedTest.kt$( id: String, dir: String?, updated: Long, title: String? = "Chat $id", parent: String? = null, archived: Boolean = false, cost: Double? = null, )</ID>
+    <ID>LongParameterList:Handoff.kt$HandoffTargetPort$( sessionId: String, text: String, model: HandoffModelRef, agent: String?, variant: String?, beforeSend: () -&gt; Boolean, )</ID>
+    <ID>LongParameterList:HandoffAgentStart.kt$HandoffAgentStarter$( sessionId: String, text: String, model: HandoffModelRef, agent: String?, variant: String?, beforeSend: () -&gt; Boolean, )</ID>
+    <ID>LongParameterList:HandoffEngine.kt$HandoffEngine$( private val source: HandoffGateway, private val sourceScope: HandoffScope, private val sourceSessionId: String, private val target: HandoffTarget, private val links: HandoffLinks, private val isCurrent: () -&gt; Boolean, private val recordId: () -&gt; String, private val redactor: Redactor = Redactor(), private val records: HandoffRecordBuilder = HandoffRecordBuilder(redactor), /** Every phase in order (StateFlow conflates); for observers that must see each step. */ private val onPhase: ((HandoffPhase) -&gt; Unit)? = null, )</ID>
+    <ID>LongParameterList:HandoffLinksTest.kt$HandoffLinksTest$( id: String = "handoff-1", source: String = "phone", target: String = "claude", title: String = "Fix the parser", sourceSession: String = "session-source", targetSession: String = "session-target", sourceOrigin: HandoffOrigin = HandoffOrigin.Server, targetOrigin: HandoffOrigin = HandoffOrigin.Server, )</ID>
+    <ID>LongParameterList:HandoffRecord.kt$HandoffRecordBuilder$( session: HandoffSession, messages: List&lt;HandoffMessage&gt;, todos: List&lt;HandoffTodo&gt; = emptyList(), files: List&lt;HandoffFileDiff&gt; = emptyList(), lastState: String, historyComplete: Boolean = true, maxBytes: Int = DEFAULT_MAX_BYTES, )</ID>
+    <ID>LongParameterList:HostAgentProviders.kt$HostAgentProvider$( public val id: String, public val displayName: String, public val availability: HostAgentProviderAvailability, public val hiddenReason: HostAgentProviderHiddenReason? = null, public val loginState: HostAgentLoginState, public val resumeSupport: HostAgentResumeSupport, models: List&lt;HostAgentModel&gt; = emptyList(), )</ID>
+    <ID>LongParameterList:HostAgentProvidersTest.kt$HostAgentProvidersTest$( availability: HostAgentProviderAvailability = HostAgentProviderAvailability.Ready, hiddenReason: HostAgentProviderHiddenReason? = null, loginState: HostAgentLoginState = HostAgentLoginState.Ready, resumeSupport: HostAgentResumeSupport = HostAgentResumeSupport.LoadSession, id: String = "gemini", models: List&lt;HostAgentModel&gt; = emptyList(), )</ID>
+    <ID>LongParameterList:ModelRecommendations.kt$( models: List&lt;CatalogModel&gt;, current: ModelRef? = null, defaults: List&lt;ModelRef&gt; = emptyList(), recent: List&lt;ModelRef&gt; = emptyList(), favorites: List&lt;ModelRef&gt; = emptyList(), limit: Int = 3, )</ID>
+    <ID>LongParameterList:PaseoPhoneInstallTest.kt$PaseoPhoneInstallTest$( failNpm: Boolean = false, tamperCli: Boolean = false, tamperPayload: Boolean = false, wrongLink: Boolean = false, failLaunch: Boolean = false, wrongVersion: Boolean = false, activeFails: Boolean = false, )</ID>
+    <ID>LongParameterList:ReturnBrief.kt$ReturnBrief.Companion$( sessions: List&lt;Session&gt;, readStateKnown: Boolean, inventoryPartial: Boolean, isUnread: (Session) -&gt; Boolean, isBusy: (SessionId) -&gt; Boolean, blockerOf: (SessionId) -&gt; Pair&lt;BriefBlocker, String&gt;?, ack: ReturnBriefAck? = null, scope: BriefScope? = null, )</ID>
+    <ID>LongParameterList:ReturnBriefTest.kt$ReturnBriefTest$( sessions: List&lt;Session&gt;, unread: Set&lt;String&gt; = sessions.map { it.id.raw }.toSet(), busy: Set&lt;String&gt; = emptySet(), blocked: Map&lt;String, Pair&lt;BriefBlocker, String&gt;&gt; = emptyMap(), readStateKnown: Boolean = true, partial: Boolean = false, ack: ReturnBriefAck? = null, )</ID>
+    <ID>LongParameterList:Sh.kt$( args: List&lt;String&gt;, environment: Map&lt;String, String&gt;? = null, workingDirectory: File? = null, stdin: String? = null, timeoutSeconds: Long = 60, clearEnvironment: Boolean = false, )</ID>
+    <ID>LongParameterList:Sh.kt$( command: List&lt;String&gt;, environment: Map&lt;String, String&gt;? = null, workingDirectory: File? = null, stdin: String? = null, timeoutSeconds: Long = 60, clearEnvironment: Boolean = false, )</ID>
+    <ID>LoopWithTooManyJumpStatements:AgentCertification.kt$AgentCertification.Companion$for</ID>
+    <ID>LoopWithTooManyJumpStatements:HandoffLinks.kt$HandoffLinks$for</ID>
+    <ID>LoopWithTooManyJumpStatements:HandoffRecord.kt$HandoffRecordBuilder.Companion$for</ID>
+    <ID>LoopWithTooManyJumpStatements:ModelLibrary.kt$ModelLibrary.Companion$for</ID>
+    <ID>LoopWithTooManyJumpStatements:ModelStores.kt$ModelStore$for</ID>
+    <ID>LoopWithTooManyJumpStatements:PaseoConfig.kt$PaseoConfig$for</ID>
+    <ID>LoopWithTooManyJumpStatements:ReturnBrief.kt$ReturnBrief.Companion$for</ID>
+    <ID>MagicNumber:ActiveContext.kt$ActiveContextMessage$180</ID>
+    <ID>MagicNumber:ActiveContext.kt$ActiveContextMessage$60</ID>
+    <ID>MagicNumber:AgentHostSecret.kt$AgentHostSecret$0xff</ID>
+    <ID>MagicNumber:AgentHostSecret.kt$AgentHostSecret$16</ID>
+    <ID>MagicNumber:AgentHostSecret.kt$AgentHostSecret$32</ID>
+    <ID>MagicNumber:AgentInstallGuard.kt$1000</ID>
+    <ID>MagicNumber:AgentInstallGuard.kt$1024</ID>
+    <ID>MagicNumber:AgentInstallGuard.kt$300L</ID>
+    <ID>MagicNumber:AgentInstallGuard.kt$64L</ID>
+    <ID>MagicNumber:AgentJson.kt$AgentJson$16</ID>
+    <ID>MagicNumber:AgentJson.kt$AgentJson$4</ID>
+    <ID>MagicNumber:AgentOwnership.kt$AgentOwnership$4</ID>
+    <ID>MagicNumber:AgentPins.kt$PaseoPins$12</ID>
+    <ID>MagicNumber:AgentRemoval.kt$AgentRemoval$0xff</ID>
+    <ID>MagicNumber:AgentRemoval.kt$AgentRemoval$16</ID>
+    <ID>MagicNumber:AgentRemoval.kt$AgentRemoval$17</ID>
+    <ID>MagicNumber:Catalog.kt$AgentArtifact$12</ID>
+    <ID>MagicNumber:ClaudeAgentTrial.kt$3</ID>
+    <ID>MagicNumber:DartJsonText.kt$DartJsonText$0x20</ID>
+    <ID>MagicNumber:DartJsonText.kt$DartJsonText$16</ID>
+    <ID>MagicNumber:HandoffEngine.kt$HandoffEngine.Companion$0x3f</ID>
+    <ID>MagicNumber:HandoffEngine.kt$HandoffEngine.Companion$0x40</ID>
+    <ID>MagicNumber:HandoffEngine.kt$HandoffEngine.Companion$0x80</ID>
+    <ID>MagicNumber:HandoffEngine.kt$HandoffEngine.Companion$0xff</ID>
+    <ID>MagicNumber:HandoffEngine.kt$HandoffEngine.Companion$12</ID>
+    <ID>MagicNumber:HandoffEngine.kt$HandoffEngine.Companion$16</ID>
+    <ID>MagicNumber:HandoffEngine.kt$HandoffEngine.Companion$20</ID>
+    <ID>MagicNumber:HandoffEngine.kt$HandoffEngine.Companion$6</ID>
+    <ID>MagicNumber:HandoffEngine.kt$HandoffEngine.Companion$8</ID>
+    <ID>MagicNumber:HandoffLinks.kt$HandoffLinks$0x20</ID>
+    <ID>MagicNumber:HandoffLinks.kt$HandoffLinks$0x7f</ID>
+    <ID>MagicNumber:HandoffRecord.kt$0x80</ID>
+    <ID>MagicNumber:HandoffRecord.kt$0x800</ID>
+    <ID>MagicNumber:HandoffRecord.kt$3</ID>
+    <ID>MagicNumber:HandoffRecord.kt$4</ID>
+    <ID>MagicNumber:HandoffRecord.kt$HandoffRecordBuilder$4</ID>
+    <ID>MagicNumber:IsolatedTaskLaunch.kt$IsolatedTaskLaunch$32</ID>
+    <ID>MagicNumber:LocalAgentStatus.kt$LocalAgentStatus.Companion$1000</ID>
+    <ID>MagicNumber:LocalAgentsScript.kt$LocalAgentsScript$5000</ID>
+    <ID>MagicNumber:ModelRecommendations.kt$100</ID>
+    <ID>MagicNumber:ModelRecommendations.kt$1000</ID>
+    <ID>MagicNumber:Oc2Routes.kt$200</ID>
+    <ID>MagicNumber:Oc2Routes.kt$299</ID>
+    <ID>MagicNumber:Oc2Routes.kt$401</ID>
+    <ID>MagicNumber:Oc2Routes.kt$403</ID>
+    <ID>MagicNumber:Oc2Routes.kt$404</ID>
+    <ID>MagicNumber:Oc2Routes.kt$405</ID>
+    <ID>MagicNumber:Oc2Routes.kt$409</ID>
+    <ID>MagicNumber:Oc2Routes.kt$500</ID>
+    <ID>MagicNumber:Oc2Routes.kt$501</ID>
+    <ID>MagicNumber:Oc2Routes.kt$Oc2Routes.Companion$0x80</ID>
+    <ID>MagicNumber:Oc2Routes.kt$Oc2Routes.Companion$0xff</ID>
+    <ID>MagicNumber:Oc2Routes.kt$Oc2Routes.Companion$4</ID>
+    <ID>MagicNumber:PhoneCheck.kt$PhoneCheck$64</ID>
+    <ID>MagicNumber:PhoneGate.kt$PhoneGate$3</ID>
+    <ID>MagicNumber:PhoneGate.kt$PhoneGate$4</ID>
+    <ID>MagicNumber:PhoneGate.kt$PhoneGate$5</ID>
+    <ID>MagicNumber:PhoneGate.kt$PhoneGate$6</ID>
+    <ID>MagicNumber:SessionImportDocument.kt$ImportRules$0x20</ID>
+    <ID>MagicNumber:SessionImportDocument.kt$ImportRules$0x7f</ID>
+    <ID>MagicNumber:SessionImportDocument.kt$ImportRules$0x80</ID>
+    <ID>MagicNumber:SessionImportDocument.kt$ImportRules$0x9f</ID>
+    <ID>MagicNumber:SessionImportEngine.kt$SessionImportEngine$400</ID>
+    <ID>MagicNumber:SessionNotes.kt$SessionNotes$128</ID>
+    <ID>MagicNumber:SignInOutputReader.kt$SignInOutputReader$20</ID>
+    <ID>MagicNumber:SignInOutputReader.kt$SignInOutputReader$24</ID>
+    <ID>MagicNumber:SignInOutputReader.kt$SignInOutputReader$3</ID>
+    <ID>MagicNumber:SignInOutputReader.kt$SignInPage.Companion$16</ID>
+    <ID>MagicNumber:SignInOutputReader.kt$SignInPage.Companion$3</ID>
+    <ID>MatchingDeclarationName:AgentIds.kt$AgentId</ID>
+    <ID>MatchingDeclarationName:Sh.kt$ShResult</ID>
+    <ID>MaxLineLength:ActiveContext.kt$ActiveContextMessage$val text = candidates.firstOrNull { q.isNotEmpty() &amp;&amp; it.lowercase().contains(q) } ?: candidates.firstOrNull() ?: ""</ID>
+    <ID>MaxLineLength:ActiveContextMapper.kt$ActiveContextMapper$"location-switched" -&gt; add(ContextContentKind.Notice, (message["location"] as? JsonObject)?.str("directory"))</ID>
+    <ID>MaxLineLength:ActiveContextMapper.kt$ActiveContextMapper$(get(key) as? JsonPrimitive)?.takeIf { !it.isString }?.content?.let { if (it == "true") true else if (it == "false") false else null }</ID>
+    <ID>MaxLineLength:ActiveContextMapper.kt$ActiveContextMapper$add(ContextContentKind.ToolOutput, (state["error"] as? JsonObject)?.str("message")?.trim(), name)</ID>
+    <ID>MaxLineLength:ActiveContextMapper.kt$ActiveContextMapper$private fun JsonObject.maps(key: String): List&lt;JsonObject&gt;</ID>
+    <ID>MaxLineLength:ActiveContextTest.kt$ActiveContextTest$assertEquals(ActiveContextGateway.FEATURE, assertIs&lt;Failure.Unavailable&gt;(ops.load("ses_test").failure()).feature)</ID>
+    <ID>MaxLineLength:ActiveContextTest.kt$ActiveContextTest$files</ID>
+    <ID>MaxLineLength:ActiveContextTest.kt$ActiveContextTest$fun</ID>
+    <ID>MaxLineLength:AgentAccountControllerTest.kt$private val signedIn = AgentRuntimeAccount(type = "chatgpt", email = "person@example.com", plan = "plus", requiresSignIn = true)</ID>
+    <ID>MaxLineLength:AgentAccountSession.kt$AccountRateBucket</ID>
+    <ID>MaxLineLength:AgentArtifactSafetyTest.kt$AgentArtifactSafetyTest$AgentArtifact(url = "https://example.test/agent-1.0.0", sha256 = "a".repeat(64), format = format, archiveMember = member)</ID>
+    <ID>MaxLineLength:AgentArtifactSafetyTest.kt$AgentArtifactSafetyTest$assertFailsWith&lt;UnsupportedOperationException&gt; { (installRecipe.signInArgs as java.util.List&lt;String&gt;).add("login") }</ID>
+    <ID>MaxLineLength:AgentAuthScriptsTest.kt$AgentAuthScriptsTest$"""{"version":1,"lastUsedProvider":"anthropic","providers":{"anthropic":{"settings":{"provider":"anthropic","apiKey":"synthetic-secret"}}}}"""</ID>
+    <ID>MaxLineLength:AgentAuthScriptsTest.kt$AgentAuthScriptsTest$"""{"version":1,"lastUsedProvider":"cline","providers":{"cline":{"settings":{"provider":"cline","auth":{"accessToken":"synthetic-secret"}},"tokenSource":"oauth"}}}"""</ID>
+    <ID>MaxLineLength:AgentAuthScriptsTest.kt$AgentAuthScriptsTest$"""{"version":1,"lastUsedProvider":"cline","providers":{"cline":{"settings":{"provider":"cline","model":"m"},"tokenSource":"manual"}}}"""</ID>
+    <ID>MaxLineLength:AgentAuthScriptsTest.kt$AgentAuthScriptsTest$/** A fake `agy` that speaks just enough ACP: initialize, then one reply to session/list, then waits to be stopped. */</ID>
+    <ID>MaxLineLength:AgentAuthScriptsTest.kt$AgentAuthScriptsTest$agy("json.dumps({'jsonrpc':'2.0','id':2,'error':{'code':-32000,'message':'Authentication required','data':'synthetic-secret'}})")</ID>
+    <ID>MaxLineLength:AgentAuthScriptsTest.kt$AgentAuthScriptsTest$agy("json.dumps({'jsonrpc':'2.0','id':2,'result':{'sessions':[{'sessionId':'synthetic-secret','title':'synthetic-secret'}]}})")</ID>
+    <ID>MaxLineLength:AgentAuthScriptsTest.kt$AgentAuthScriptsTest$val fixture = Json.parseToJsonElement(File(repoRoot, "test/fixtures/agent_auth/$name-device.json").readText()).jsonObject</ID>
+    <ID>MaxLineLength:AgentAuthTest.kt$AgentAuthTest$fun</ID>
+    <ID>MaxLineLength:AgentAuthTest.kt$LegacySignInStatusTest$fun</ID>
+    <ID>MaxLineLength:AgentAuthTest.kt$TestClock$private</ID>
+    <ID>MaxLineLength:AgentCatalogTest.kt$AgentCatalogTest$AgentArtifact(url = "https://example.test/agent-1.0.0", sha256 = "a".repeat(64), format = format, archiveMember = member)</ID>
+    <ID>MaxLineLength:AgentCatalogTest.kt$AgentCatalogTest$assertEquals("6e1db87ef58b8819e5d5402eff1536491b18edd8eb7bee5ef7897876e88dc5ff", pins.node.sha256[AgentArchitecture.X64])</ID>
+    <ID>MaxLineLength:AgentCatalogTest.kt$AgentCatalogTest$assertEquals("724282c3b43aec998aa9527380465b45d229e021b58035f5f4f63095eabfe5d5", pins.node.sha256[AgentArchitecture.Arm64])</ID>
+    <ID>MaxLineLength:AgentCatalogTest.kt$AgentCatalogTest$assertEquals(AgentArtifactFormat.NpmTarGz, catalog.byId(AgentId("gemini"))!!.artifactFor(AgentArchitecture.Arm64)!!.format)</ID>
+    <ID>MaxLineLength:AgentCatalogTest.kt$AgentCatalogTest$assertFailsWith&lt;IllegalArgumentException&gt; { AgentInstallRecipe(" ", "agent", mapOf(AgentArchitecture.Arm64 to artifact())) }</ID>
+    <ID>MaxLineLength:AgentCatalogTest.kt$AgentCatalogTest$assertFailsWith&lt;IllegalArgumentException&gt; { AgentInstallRecipe("1.0.0", "Agent", mapOf(AgentArchitecture.Arm64 to artifact())) }</ID>
+    <ID>MaxLineLength:AgentCatalogTest.kt$AgentCatalogTest$assertFailsWith&lt;IllegalArgumentException&gt; { agent(installRecipe = recipe(), reason = AgentUnavailableReason.RecipeUnverified) }</ID>
+    <ID>MaxLineLength:AgentCatalogTest.kt$AgentCatalogTest$setOf("opencode2", "claude", "codex", "antigravity", "gemini", "qwen", "kilo", "cline", "goose", "omp-acp", "fx")</ID>
+    <ID>MaxLineLength:AgentCertificationTest.kt$AgentCertificationTest$"cells"</ID>
+    <ID>MaxLineLength:AgentCertificationTest.kt$AgentCertificationTest$for</ID>
+    <ID>MaxLineLength:AgentCertificationTest.kt$AgentCertificationTest$id = AgentId("unknown")</ID>
+    <ID>MaxLineLength:AgentCertificationTest.kt$AgentCertificationTest$private fun assertClosed(c: AgentCapabilities, message: String? = null)</ID>
+    <ID>MaxLineLength:AgentCertificationTest.kt$AgentCertificationTest$private fun certified(row: Map&lt;String, Any?&gt;, id: String = "claude")</ID>
+    <ID>MaxLineLength:AgentCertificationTest.kt$AgentCertificationTest$recipe = AgentInstallRecipe("${claude.recipe!!.version}-next", claude.recipe!!.executable, claude.recipe!!.artifacts)</ID>
+    <ID>MaxLineLength:AgentCertificationTest.kt$AgentCertificationTest$val cells = mutableMapOf&lt;String, Any?&gt;("cards" to mapOf("state" to "pass", "evidence" to "docs/qa/example/README.md"))</ID>
+    <ID>MaxLineLength:AgentErrorWords.kt$AgentErrorMessage$public data</ID>
+    <ID>MaxLineLength:AgentErrorWords.kt$AgentErrorWords$"Check the internet on the device running OpenCode. If the reply has stopped, check the conversation before sending again."</ID>
+    <ID>MaxLineLength:AgentErrorWords.kt$AgentErrorWords$"Long conversations are often refused on the free tier, even when you've used little today. Shortening this one or starting a new one usually helps."</ID>
+    <ID>MaxLineLength:AgentErrorWords.kt$AgentErrorWords$"تحقّق من اتصال الإنترنت على الجهاز الذي يشغّل OpenCode. إذا توقف الرد، فتحقّق من المحادثة قبل الإرسال مجددًا."</ID>
+    <ID>MaxLineLength:AgentErrorWords.kt$AgentErrorWords$"كثيرًا ما تُرفض المحادثات الطويلة في الخطة المجانية حتى لو استخدمتَ القليل اليوم. غالبًا ما يفيد تقصير هذه المحادثة أو بدء محادثة جديدة."</ID>
+    <ID>MaxLineLength:AgentHelperTest.kt$AgentHelperTest$fun</ID>
+    <ID>MaxLineLength:AgentHomeCleanerTest.kt$AgentHomeCleanerTest$"oc.phoneAgentsUsed.one"</ID>
+    <ID>MaxLineLength:AgentHomeCleanerTest.kt$AgentHomeCleanerTest$for</ID>
+    <ID>MaxLineLength:AgentHomeCleanerTest.kt$AgentHomeCleanerTest$fun</ID>
+    <ID>MaxLineLength:AgentHomeCleanerTest.kt$AgentHomeCleanerTest$val names = (AgentsSignInReset(host, AgentHostSecret(secrets, { ByteArray(it) }, {})).reset(listOf(one)) as Outcome.Ok).value</ID>
+    <ID>MaxLineLength:AgentHost.kt$AgentHost$*</ID>
+    <ID>MaxLineLength:AgentHost.kt$AgentHost$public suspend fun auth(owner: OwnerId, agent: AgentId, action: AuthAction, timeout: Duration): Outcome&lt;AuthProjection&gt;</ID>
+    <ID>MaxLineLength:AgentHost.kt$AuthProjection$public data</ID>
+    <ID>MaxLineLength:AgentHost.kt$UnavailableAgentHost$override fun signInCommand(owner: OwnerId, agent: AgentId, args: List&lt;String&gt;): Outcome&lt;GuestCommand&gt;</ID>
+    <ID>MaxLineLength:AgentHost.kt$UnavailableAgentHost$override suspend</ID>
+    <ID>MaxLineLength:AgentHost.kt$UnavailableAgentHost$override suspend fun ensureRunning(owner: OwnerId, start: HelperStart): Outcome&lt;HelperRunning&gt;</ID>
+    <ID>MaxLineLength:AgentHost.kt$UnavailableAgentHost$override suspend fun legacySignInStatus(owner: OwnerId, agent: AgentId): Outcome&lt;LegacySignInStatus&gt;</ID>
+    <ID>MaxLineLength:AgentInstallGuard.kt$AgentInstallGuard.Companion$public val agentIds: Set&lt;String&gt; = setOf("codex", "gemini", "antigravity", "qwen", "kilo", "cline", "goose", "omp-acp", "fx")</ID>
+    <ID>MaxLineLength:AgentInstallerTest.kt$AgentInstallerTest$assertEquals(InstallStart.Started, (AgentInstaller(FakeAgentPrefs(), exact).install(owner, codex, AgentArchitecture.Arm64) as Outcome.Ok).value)</ID>
+    <ID>MaxLineLength:AgentInstallerTest.kt$AgentInstallerTest$assertEquals(listOf("agent-node", "agent-paseo", "agent-codex"), jobs.started.filter { it.agentUser }.map { it.id })</ID>
+    <ID>MaxLineLength:AgentInstallerTest.kt$AgentInstallerTest$fun</ID>
+    <ID>MaxLineLength:AgentInstallerTest.kt$AgentInstallerTest$val failed = (installer.observe(owner, AgentSetupJob(codex, AgentSetupJobState.Failed, "agent-codex", 10, 20, AgentSetupFailure.Checksum)) as Outcome.Ok).value</ID>
+    <ID>MaxLineLength:AgentInstallerTest.kt$AgentInstallerTest$val unknown = (installer.observe(owner, AgentSetupJob(codex, AgentSetupJobState.Running, "agent-node", 10, null)) as Outcome.Ok).value</ID>
+    <ID>MaxLineLength:AgentInstallerTest.kt$FakeJobs$override suspend fun cancel(owner: OwnerId, agent: AgentId): Outcome&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:AgentJson.kt$AgentJson$c.isHighSurrogate() &amp;&amp; i + 1 &lt; s.length &amp;&amp; s[i + 1].isLowSurrogate() -&gt; { out.append(c).append(s[i + 1]); i++ }</ID>
+    <ID>MaxLineLength:AgentOwnership.kt$AgentOwnership$(AgentJson.parseOrNull(prefs.string(AgentKeys.agentPhoneGate(p)) ?: "{}") as? JsonObject)?.let { LinkedHashMap(it) }</ID>
+    <ID>MaxLineLength:AgentOwnership.kt$AgentOwnership$*</ID>
+    <ID>MaxLineLength:AgentOwnership.kt$AgentOwnership$/** Keys the profile sweep must keep when [profile] is removed but the home stays (`retainedPhoneAgentPreferenceKeys`). */</ID>
+    <ID>MaxLineLength:AgentOwnership.kt$AgentOwnership$if</ID>
+    <ID>MaxLineLength:AgentOwnershipTest.kt$AgentOwnershipTest$"\"omp\":{\"fingerprint\":\"omp-pin\"},\"pi\":{\"fingerprint\":\"old\"},\"invalid\":{},\"empty\":{\"fingerprint\":\"\"}}"</ID>
+    <ID>MaxLineLength:AgentOwnershipTest.kt$AgentOwnershipTest$"oc.agentPhoneGate.one" to "{\"claude\":{\"fingerprint\":\"current\"},\"pi\":{\"fingerprint\":\"owner\"}}"</ID>
+    <ID>MaxLineLength:AgentOwnershipTest.kt$AgentOwnershipTest$prefs.values["oc.agentPhoneGate.one"] = "{\"claude\":{\"fingerprint\":\"current\"},\"pi\":{\"fingerprint\":\"owner\"},\"omp\":{\"fingerprint\":\"omp-pin\"}}"</ID>
+    <ID>MaxLineLength:AgentOwnershipTest.kt$AgentOwnershipTest$val badId = FakeAgentPrefs(mapOf("oc.phoneAgentOwner.one" to "one", "oc.phoneAgentGateMigration.one" to listOf("../x")))</ID>
+    <ID>MaxLineLength:AgentPersona.kt$AgentPersona.Companion$"gemini" to "gemini"</ID>
+    <ID>MaxLineLength:AgentPhoneScriptsTest.kt$AgentPhoneScriptsTest$" m=zipfile.ZipInfo('fixture'); m.create_system=3; m.external_attr=(stat.S_IFLNK | 0o777) &lt;&lt; 16; z.writestr(m, sys.argv[2])\n"</ID>
+    <ID>MaxLineLength:AgentPhoneScriptsTest.kt$AgentPhoneScriptsTest$AgentPhoneScripts.install(fixtureAgent("0".repeat(64), format = AgentArtifactFormat.TarGz, member = "package/\$(id)"))</ID>
+    <ID>MaxLineLength:AgentPhoneScriptsTest.kt$AgentPhoneScriptsTest$AgentPhoneScripts.install(fixtureAgent(guest.hash, format = AgentArtifactFormat.TarGz, member = "fixture"))</ID>
+    <ID>MaxLineLength:AgentPhoneScriptsTest.kt$AgentPhoneScriptsTest$File(guest.payload).writeText("#!/bin/sh\ncase \"\$0\" in *\".new/\"*) printf \"1.2.3\\n\";; *) exit 2;; esac\n")</ID>
+    <ID>MaxLineLength:AgentPhoneScriptsTest.kt$AgentPhoneScriptsTest$assertFailsWith&lt;IllegalArgumentException&gt; { AgentPhoneScripts.install(fixtureAgent("0".repeat(64), version = "\$(id)")) }</ID>
+    <ID>MaxLineLength:AgentPhoneScriptsTest.kt$AgentPhoneScriptsTest$downloader = "oc_download() { [ \"\$(stat -c %s \"\$2\")\" = 12 ] || return 99; tail -c +13 ${q(guest.payload)} &gt;&gt; \"\$2\"; }"</ID>
+    <ID>MaxLineLength:AgentPhoneScriptsTest.kt$AgentPhoneScriptsTest$listOf(PosixFilePermission.OWNER_EXECUTE, PosixFilePermission.GROUP_EXECUTE, PosixFilePermission.OTHERS_EXECUTE)</ID>
+    <ID>MaxLineLength:AgentPhoneScriptsTest.kt$AgentPhoneScriptsTest$script.replace(AgentPhoneScripts.previousClaudeRecipe.artifacts.getValue(AgentArchitecture.X64).sha256, oldHash)</ID>
+    <ID>MaxLineLength:AgentPhoneScriptsTest.kt$PhoneGuest$get() = MessageDigest.getInstance("SHA-256").digest(File(payload).readBytes()).joinToString("") { "%02x".format(it) }</ID>
+    <ID>MaxLineLength:AgentPins.kt$AgentPins$/** `paseoTestedVersions` (lib/paseo/tested_versions.dart): helper versions certification evidence carries across. */</ID>
+    <ID>MaxLineLength:AgentPins.kt$AgentPins.Companion$/** The Dart `entry(…, limitation:)` overrides; every other entry says "Needs a check on your phone before use." */</ID>
+    <ID>MaxLineLength:AgentPins.kt$AgentPins.Companion$/** Throws on a malformed file: the bundled pins are build input, so a bad file is a bug, never a runtime state. */</ID>
+    <ID>MaxLineLength:AgentPins.kt$AgentPins.Companion$private fun JsonObject.str(key: String): String</ID>
+    <ID>MaxLineLength:AgentPins.kt$AgentPins.Companion$requireNotNull(AgentArchitecture.fromWire(arch)) { "Unknown architecture." } to artifact(a.jsonObject)</ID>
+    <ID>MaxLineLength:AgentPinsParityTest.kt$AgentPinsParityTest$"https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.0-5269980577660928/linux-arm/cli_linux_arm64.tar.gz"</ID>
+    <ID>MaxLineLength:AgentPinsParityTest.kt$AgentPinsParityTest$"https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.0-5269980577660928/linux-x64/cli_linux_x64.tar.gz"</ID>
+    <ID>MaxLineLength:AgentPinsParityTest.kt$AgentPinsParityTest$assertEquals(Regex("'([^']+)'").findAll(paseoTested).map { it.groupValues[1] }.toList(), pins.paseoTestedVersions)</ID>
+    <ID>MaxLineLength:AgentPinsParityTest.kt$AgentPinsParityTest$assertEquals(Regex("'([^']+)'").findAll(tested).map { it.groupValues[1] }.toList(), pins.claudeCodeTestedVersions)</ID>
+    <ID>MaxLineLength:AgentReadinessTest.kt$AgentReadinessTest$Line</ID>
+    <ID>MaxLineLength:AgentReadinessTest.kt$AgentReadinessTest$Line(runtime(available = false, phase = null), PhoneAgentStatus.Unavailable, AgentStatusKey.AgentHostStopped, AgentFixAction.Resume)</ID>
+    <ID>MaxLineLength:AgentReadinessTest.kt$AgentReadinessTest$Line(runtime(installed = false), PhoneAgentStatus.NeedsInstall, AgentStatusKey.AgentInstallToStart, AgentFixAction.Install)</ID>
+    <ID>MaxLineLength:AgentReadinessTest.kt$AgentReadinessTest$Line(runtime(phase = AgentSignInPhase.AwaitingCode), PhoneAgentStatus.SignedOut, AgentStatusKey.AgentSignedOut, AgentFixAction.SignIn)</ID>
+    <ID>MaxLineLength:AgentReadinessTest.kt$AgentReadinessTest$Line(runtime(phase = AgentSignInPhase.Failed), PhoneAgentStatus.Unavailable, AgentStatusKey.AgentSignInFix, AgentFixAction.SignIn)</ID>
+    <ID>MaxLineLength:AgentReadinessTest.kt$AgentReadinessTest$Line(runtime(phase = AgentSignInPhase.LimitReached), PhoneAgentStatus.LimitReached, AgentStatusKey.AgentUsageLimit, null)</ID>
+    <ID>MaxLineLength:AgentReadinessTest.kt$AgentReadinessTest$Line(runtime(qualified = false, stopped = true, available = false, phase = null), PhoneAgentStatus.NeedsQualification, AgentStatusKey.AgentCheckNeeded, AgentFixAction.RunPhoneCheck)</ID>
+    <ID>MaxLineLength:AgentReadinessTest.kt$AgentReadinessTest$Line(runtime(stopped = true, available = false, phase = null), PhoneAgentStatus.StoppedInBackground, AgentStatusKey.AgentStoppedInBackground, AgentFixAction.Resume)</ID>
+    <ID>MaxLineLength:AgentRemoval.kt$AgentRemoval$*</ID>
+    <ID>MaxLineLength:AgentRemoval.kt$AgentRemoval.Companion$public val REMOVABLE_EXECUTABLES: Set&lt;String&gt; = setOf("codex", "gemini", "agy", "qwen", "kilo", "cline", "goose", "omp", "fx")</ID>
+    <ID>MaxLineLength:AgentRemoval.kt$RemovalRun$/** What the fixed removal script reports. [receipt] is the bounded private receipt, read back once; null if unreadable. */</ID>
+    <ID>MaxLineLength:AgentRemovalScripts.kt$AgentRemovalScripts$" python3 - '$id' '${recipe.executable}' '${recipe.version}' '$receiptId' 2&gt;/dev/null &lt;&lt;'OC_AGENT_REMOVE'\n"</ID>
+    <ID>MaxLineLength:AgentRemovalScripts.kt$AgentRemovalScripts$*</ID>
+    <ID>MaxLineLength:AgentRemovalScriptsTest.kt$AgentRemovalScriptsTest$else</ID>
+    <ID>MaxLineLength:AgentRemovalScriptsTest.kt$AgentRemovalScriptsTest$recipe = AgentInstallRecipe(version = version, executable = executable, artifacts = guest.agent.recipe!!.artifacts)</ID>
+    <ID>MaxLineLength:AgentRemovalScriptsTest.kt$AgentRemovalScriptsTest$val script = AgentRemovalScripts.remove(AgentCatalog.builtIn.byId(AgentId(id))!!, receiptId = guest.receiptId)</ID>
+    <ID>MaxLineLength:AgentRemovalScriptsTest.kt$AgentRemovalScriptsTest$write("${guest.proc}/126/cmdline", "/bin/bash\u0000-c\u0000set -eu\noc_lock=${guest.lock}\nmkdir \"\$oc_lock\"\n\u0000")</ID>
+    <ID>MaxLineLength:AgentRemovalScriptsTest.kt$Guest$asHostOwner(AgentRemovalScripts.readReceipt(receiptId)).replace("/home/oc", home).replace("os.getuid()", uid)</ID>
+    <ID>MaxLineLength:AgentRemovalTest.kt$AgentRemovalTest$for (id in listOf("codex", "gemini", "qwen", "kilo", "cline", "goose", "omp-acp", "fx")) assertTrue(removal.removable(AgentId(id)), id)</ID>
+    <ID>MaxLineLength:AgentSelectionTest.kt$AgentSelectionTest$assertIs&lt;Outcome.Ok&lt;Unit&gt;&gt;(selection.select(profile, AgentId.OPENCODE, emptyList(), phoneAgentsAvailable = false))</ID>
+    <ID>MaxLineLength:AgentSignIn.kt$SignInCommandPolicy$public val PROGRAMS: Set&lt;String&gt; = setOf("claude", "codex", "gemini", "agy", "qwen", "goose", "omp", "fx", "kilo", "cline")</ID>
+    <ID>MaxLineLength:AgentSignInTest.kt$AgentSignInTest$assertEquals(SignInPlan.NotAvailable(AgentId("opencode2")), signIn.plan(AgentId("opencode2")), "a server is not a phone agent")</ID>
+    <ID>MaxLineLength:AgentSignInTest.kt$AgentSignInTest$assertEquals(listOf("login", "--device-auth"), assertIs&lt;SignInPlan.Terminal&gt;(signIn.plan(AgentId("codex"))).args)</ID>
+    <ID>MaxLineLength:AgentSignInTest.kt$SignInHost$return GuestCommand(agent.raw, args.toImmutableList(), persistentMapOf(), "/home/oc/.oc-profiles/${owner.raw}").ok()</ID>
+    <ID>MaxLineLength:AgentToolAdapter.kt$AgentToolAdapter$/** The native agent catalog id ([io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog]); null when absent. */</ID>
+    <ID>MaxLineLength:AgentToolAdapter.kt$AgentToolAdapters$/** The adapter of a Paseo chat's provider; null for an unknown provider or a non-string (daemon data is untrusted). */</ID>
+    <ID>MaxLineLength:AgentToolAdapterTest.kt$AgentToolAdapterTest$fun</ID>
+    <ID>MaxLineLength:AgentTurnFailureMemory.kt$AgentTurnFailureMemory$public</ID>
+    <ID>MaxLineLength:AgentTurnFailureMemory.kt$AgentTurnFailureMemory$public suspend</ID>
+    <ID>MaxLineLength:AgentTurnFailureMemory.kt$AgentTurnFailureMemory$val kept = entries(profile).filter { it.second.text("s") != sessionId }.map { it.first } + DartJsonText.encode(entry)</ID>
+    <ID>MaxLineLength:AuthProjectionFixtureTest.kt$AuthProjectionFixtureTest$val fixture = Json.parseToJsonElement(File(repo, "test/fixtures/agent_auth/$name-device.json").readText()).jsonObject</ID>
+    <ID>MaxLineLength:AuthProjectionJsonTest.kt$AuthProjectionJsonTest$assertEquals(AuthState.SignedIn, decode("""{"state":"signedIn","error":null,"accountDisplayName":null}""").state)</ID>
+    <ID>MaxLineLength:AutoApproval.kt$(this as? kotlinx.collections.immutable.PersistentSet&lt;T&gt;)?.remove(item) ?: persistentSetOf&lt;T&gt;().addAll(this).remove(item)</ID>
+    <ID>MaxLineLength:AutoApproval.kt$AutoApproval$(trimmed + AutoApprovedPermission(request.id, request.sessionId, request.action, request.patterns, at))</ID>
+    <ID>MaxLineLength:AutoApproval.kt$AutoApproval$mutable.update { state -&gt; state.copy(pending = requests.fold(state.pending) { acc, r -&gt; acc.plusEntry(r.id, r) }) }</ID>
+    <ID>MaxLineLength:AutoApproval.kt$AutoApproval$state.copy(approving = approving, failures = state.failures.plusEntry(request.id, AutoApprovalFailure.Unconfirmed))</ID>
+    <ID>MaxLineLength:AutoApproval.kt$AutoApproval$val trimmed = if (list.size &gt;= MAX_RECORDED_PER_SESSION) list.drop(list.size - MAX_RECORDED_PER_SESSION + 1) else list</ID>
+    <ID>MaxLineLength:AutoApproval.kt$AutoApprovalState$public fun recentFor(session: SessionId): ImmutableList&lt;AutoApprovedPermission&gt;</ID>
+    <ID>MaxLineLength:AutoApprovalStore.kt$AutoApprovalStore$public</ID>
+    <ID>MaxLineLength:AutoApprovalStore.kt$EffectiveAutoApproval.Companion$public val AskByDefault: EffectiveAutoApproval = EffectiveAutoApproval(SessionAutoApproval.Ask, explicit = false)</ID>
+    <ID>MaxLineLength:AutoApprovalStore.kt$SessionAutoApproval.Companion$public val AutoInherit: SessionAutoApproval = SessionAutoApproval(AutoApprovalMode.AutoOnce, inheritToChildren = true)</ID>
+    <ID>MaxLineLength:AutoApprovalStoreTest.kt$AutoApprovalStoreTest$FakeAgentPrefs(mapOf("oc.autoApprove.server-a" to """{"ses_1": {"mode": "always"}, "": {"mode": "ask"}, "ses_2": 4}"""))</ID>
+    <ID>MaxLineLength:AutoApprovalStoreTest.kt$AutoApprovalStoreTest$assertEquals("""{"ses_1":{"mode":"autoOnce","inheritToChildren":true}}""", prefs.string("oc.autoApprove.server-a"))</ID>
+    <ID>MaxLineLength:AutoApprovalStoreTest.kt$AutoApprovalStoreTest$private val parents = mapOf("child" to "parent", "grandchild" to "child", "loop-a" to "loop-b", "loop-b" to "loop-a")</ID>
+    <ID>MaxLineLength:AutoApprovalTest.kt$AutoApprovalTest$/** Port of test/session_auto_approval_controller_test.dart (engine-side decisions; the wire is the requests engine's). */</ID>
+    <ID>MaxLineLength:AutoApprovalTest.kt$AutoApprovalTest$AutoApproval(ProfileId("p"), AutoApprovalStore(prefs), port, { parents[it.raw]?.let(::SessionId) }, clock, backgroundScope)</ID>
+    <ID>MaxLineLength:AutoApprovalTest.kt$AutoApprovalTest$fun</ID>
+    <ID>MaxLineLength:Catalog.kt$AgentArtifact$require(archiveMember != null &amp;&amp; safeMember(archiveMember)) { "Archive artifacts need a safe relative member." }</ID>
+    <ID>MaxLineLength:Catalog.kt$AgentArtifact.Companion$val authority = rest.substring(0, rest.indexOfAny(charArrayOf('/', '?')).let { if (it &lt; 0) rest.length else it })</ID>
+    <ID>MaxLineLength:CatalogInventoryTest.kt$CatalogInventoryTest$"artifacts" to JsonObject(r.artifacts.entries.associate { (k, v) -&gt; k.wire to artifact(v) })</ID>
+    <ID>MaxLineLength:ChatFeed.kt$ChatFeed$val items = states.flatMap { it.items }.distinctBy { it.identity }.sortedWith(ChatFeedRules.order).toImmutableList()</ID>
+    <ID>MaxLineLength:ClaudeAgentTrialTest.kt$ClaudeAgentTrial(host, link, backgroundScope, pollInterval = Duration.ZERO, pollAttempts = 3, lateLoadDelay = lateLoad)</ID>
+    <ID>MaxLineLength:ClaudeAgentTrialTest.kt$ClaudeAgentTrialTest$assertEquals(ClaudeAgentLinkResult.LinkedWithoutResume, ClaudeAgentLink.parse(0, "oc-claude-agent:linked-without-resume"))</ID>
+    <ID>MaxLineLength:ClaudeAgentTrialTest.kt$ClaudeAgentTrialTest$for (secret in listOf(".credentials.json", "cp ", "cat \"\$home", "rm -rf")) assertFalse(secret in script, secret)</ID>
+    <ID>MaxLineLength:ClaudeAgentTrialTest.kt$IntegrationInfo(CLAUDE_AGENT_PROVIDER_ID, "Claude Agent", persistentListOf(EXTERNAL), connections.toImmutableList(), connections.size)</ID>
+    <ID>MaxLineLength:ClaudeAgentTrialTest.kt$Operations$persistentListOf(IntegrationMethodInfo("key", null, "API key", persistentListOf(), persistentListOf(), persistentMapOf()))</ID>
+    <ID>MaxLineLength:ClaudeAgentTrialTest.kt$private fun connection(id: String, status: String? = null)</ID>
+    <ID>MaxLineLength:ClaudeInstallScriptTest.kt$ClaudeInstallScriptTest$assertEquals(dartRawStrings("lib/builtin/setup/setup_scripts.dart").getValue("setupPrelude"), SetupPrelude.SETUP_PRELUDE)</ID>
+    <ID>MaxLineLength:ClaudeInstallScriptTest.kt$ClaudeInstallScriptTest$for</ID>
+    <ID>MaxLineLength:ClaudeScripts.kt$ClaudeScripts$"oc_download \"https://downloads.claude.ai/claude-code-releases/$VERSION/linux-\$claude_arch/claude\" \\\n"</ID>
+    <ID>MaxLineLength:Fakes.kt$FakeAgentHost$override suspend</ID>
+    <ID>MaxLineLength:Fakes.kt$FakeAgentHost$override suspend fun deleteHome(owner: OwnerId): Outcome&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:Fakes.kt$FakeAgentHost$override suspend fun installedVersion(agent: AgentId): Outcome&lt;InstalledAgent?&gt;</ID>
+    <ID>MaxLineLength:Fakes.kt$FakeAgentHost$override suspend fun legacySignInStatus(owner: OwnerId, agent: AgentId): Outcome&lt;LegacySignInStatus&gt;</ID>
+    <ID>MaxLineLength:Fakes.kt$FakeAgentHost$override suspend fun prepareUpdate(owner: OwnerId): Outcome&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:Fakes.kt$FakeAgentHost$override suspend fun workspaceCheck(owner: OwnerId): Outcome&lt;WorkspaceAccess&gt;</ID>
+    <ID>MaxLineLength:Fakes.kt$FakeAgentSecrets$override suspend fun names(prefix: String): Outcome&lt;Set&lt;String&gt;&gt;</ID>
+    <ID>MaxLineLength:Handoff.kt$HandoffTargetPort$*</ID>
+    <ID>MaxLineLength:HandoffAgentStart.kt$HandoffAgentStarter$HandoffAgentCreate(text, normalized.providerId, normalized.modelId, directory, agent, variant?.ifEmpty { null })</ID>
+    <ID>MaxLineLength:HandoffAgentStartTest.kt$HandoffAgentStartTest$assertEquals(HandoffAgentRefusal.Fenced, assertIs&lt;HandoffAgentStart.Refused&gt;((start as Outcome.Ok).value).reason)</ID>
+    <ID>MaxLineLength:HandoffAgentStartTest.kt$HandoffAgentStartTest$val</ID>
+    <ID>MaxLineLength:HandoffEngine.kt$HandoffEngine.Companion$return "${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20)}"</ID>
+    <ID>MaxLineLength:HandoffEngineTest.kt$HandoffEngineTest$assertTrue(Regex("^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$").matches(draft.recordId))</ID>
+    <ID>MaxLineLength:HandoffEngineTest.kt$HandoffEngineTest$for (language in HandoffWords.Language.entries) assertTrue(HandoffWords.stale(reason, language).isNotBlank())</ID>
+    <ID>MaxLineLength:HandoffEngineTest.kt$HandoffEngineTest$for (language in HandoffWords.Language.entries) assertTrue(HandoffWords.unavailable(reason, language).isNotBlank())</ID>
+    <ID>MaxLineLength:HandoffEngineTest.kt$HandoffEngineTest$private fun ready(outcome: Outcome&lt;HandoffPrepared&gt;)</ID>
+    <ID>MaxLineLength:HandoffEngineTest.kt$HandoffEngineTest$private fun sent(outcome: Outcome&lt;HandoffSent&gt;)</ID>
+    <ID>MaxLineLength:HandoffEngineTest.kt$HandoffEngineTest$target = HandoffTarget(f.source, scope, HandoffModelRef("anthropic", "opus"), "Opus", startNewAgent = false)</ID>
+    <ID>MaxLineLength:HandoffEngineTest.kt$HandoffEngineTest$val engine = f.engine(sameParent = true, sourceOrigin = HandoffOrigin.Server, targetOrigin = HandoffOrigin.PhoneAgent)</ID>
+    <ID>MaxLineLength:HandoffEngineTest.kt$HandoffEngineTest$val order = listOf(HandoffPhase.WritingFile, HandoffPhase.Creating, HandoffPhase.Sending, HandoffPhase.Linking, HandoffPhase.Complete)</ID>
+    <ID>MaxLineLength:HandoffEngineTest.kt$HandoffEngineTest.Fixture$scope = HandoffScope(if (sameParent) "p" else "q", "/project", filesystemId = filesystemId, origin = targetOrigin)</ID>
+    <ID>MaxLineLength:HandoffEngineTest.kt$HandoffEngineTest.Gateway$(if (enabled) listOf(HandoffProvider("anthropic", listOf("anthropic/opus"), mapOf("anthropic/opus" to emptyMap()))) else emptyList()).ok()</ID>
+    <ID>MaxLineLength:HandoffEngineTest.kt$HandoffEngineTest.Gateway$HandoffMessage("m2", sessionId, "assistant", listOf(HandoffPart("text", "The remaining task is the empty-input case.")))</ID>
+    <ID>MaxLineLength:HandoffEngineTest.kt$HandoffEngineTest.Gateway$override fun navigationSessionId(sessionId: String): String</ID>
+    <ID>MaxLineLength:HandoffEngineTest.kt$HandoffEngineTest.Gateway$override var capabilities = HandoffCapabilities(agentHandoffFiles = true, sessionTodos = false, sessionDiff = false)</ID>
+    <ID>MaxLineLength:HandoffEngineTest.kt$HandoffEngineTest.Gateway$return HandoffSession(id, title = "Repair parser", directory = directory, updated = if (changedSource &amp;&amp; sourceReads &gt; 1) 2 else 1).ok()</ID>
+    <ID>MaxLineLength:HandoffHistory.kt$*</ID>
+    <ID>MaxLineLength:HandoffHistoryTest.kt$HandoffHistoryTest$assertFailsWith&lt;IllegalArgumentException&gt; { readHandoffHistory(PagedSource(emptyList()), "source", { true }, maxPages = 0) }</ID>
+    <ID>MaxLineLength:HandoffHistoryTest.kt$HandoffHistoryTest$assertFailure(HandoffHistoryFailureKind.InvalidMessage, readHandoffHistory(SnapshotSource(items), "source", { true }))</ID>
+    <ID>MaxLineLength:HandoffHistoryTest.kt$HandoffHistoryTest$val source = PagedSource(listOf(page(emptyList()))).apply { error = IllegalStateException("sensitive-token-value") }</ID>
+    <ID>MaxLineLength:HandoffLinksTest.kt$HandoffLinksTest$assertEquals(HandoffOrigin.PhoneAgent, store.of("phone", "session-source", HandoffOrigin.Server).single().targetOrigin)</ID>
+    <ID>MaxLineLength:HandoffLinksTest.kt$HandoffLinksTest$assertEquals(HandoffOrigin.Server, store.of("phone", "session-target", HandoffOrigin.PhoneAgent).single().sourceOrigin)</ID>
+    <ID>MaxLineLength:HandoffLinksTest.kt$HandoffLinksTest$saved(store.save(link(id = "server-link", target = "phone", sourceSession = "shared", targetSession = "server-target")))</ID>
+    <ID>MaxLineLength:HandoffModels.kt$HandoffPart$*</ID>
+    <ID>MaxLineLength:HandoffRecord.kt$HandoffRecordBuilder$"file" -&gt; turn.text.line("Attachment contents excluded: ${writer.label(part.filename ?: "unnamed attachment")}")</ID>
+    <ID>MaxLineLength:HandoffRecordFiles.kt$HandoffEntryCreated$public data</ID>
+    <ID>MaxLineLength:HandoffRecordFiles.kt$HandoffListing$public data</ID>
+    <ID>MaxLineLength:HandoffRecordFiles.kt$HandoffRecordFiles$*</ID>
+    <ID>MaxLineLength:HandoffRecordFiles.kt$HandoffRecordFiles$if (!create(HANDOFF_FOLDER, recordId, HandoffEntryKind.Directory)) throw Stop(refused(HandoffFileRefusal.FolderExists))</ID>
+    <ID>MaxLineLength:HandoffRecordFiles.kt$HandoffRecordFiles$if (reply.cwd != scope || reply.parentPath != parent) throw Stop(refused(HandoffFileRefusal.InvalidResponse))</ID>
+    <ID>MaxLineLength:HandoffRecordFiles.kt$HandoffRecordFiles.Companion$public</ID>
+    <ID>MaxLineLength:HandoffRecordFiles.kt$HandoffWorkspace$public suspend</ID>
+    <ID>MaxLineLength:HandoffRecordFilesTest.kt$HandoffRecordFilesTest$private suspend</ID>
+    <ID>MaxLineLength:HandoffRecordFilesTest.kt$HandoffRecordFilesTest.Daemon$override suspend</ID>
+    <ID>MaxLineLength:HandoffRecordFilesTest.kt$HandoffRecordFilesTest.Daemon$return HandoffListing(directory, path, false, listOf(HandoffListEntry(".handoff", if (parentIsSymlink) "file" else "directory"))).ok()</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$HandoffMessage("compact", "source", "user", listOf(HandoffPart("v2:compaction", "Conversation shortened.")))</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$HandoffMessage(id = role, sessionId = "source", role = role, parts = listOf(HandoffPart("text", text)) + extra, errorText = error)</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$extra = (0 until 257).map { tool("write", HandoffToolState(status = "completed", input = mapOf("path" to "file_$it.dart"))) }</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$extra = listOf(tasks(listOf(mapOf("content" to "Not executed task", "status" to "pending")), status = "error"))</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$extra = listOf(tool("edit", HandoffToolState(status = "completed", input = mapOf("path" to "/repo/private-file-name"))))</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$for</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$for (omitted in listOf("Old task", "Not executed task", "abc12345", "private map field")) assertLacks(r.markdown, omitted)</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$fun tasks(rows: List&lt;Any?&gt;)</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$listOf(message("user", "Keep this question."), HandoffMessage("compact", "source", "user", listOf(HandoffPart("v2:compaction"))))</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$listOf(message("user", old), message("assistant", "Old answer"), message("user", newest), message("assistant", "Newest answer"))</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$listOf(message("user", prompt), message("assistant", "I changed the parser."), message("user", "Now check empty input."))</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$message("assistant", "", extra = listOf(tasks(listOf(mapOf("content" to "Old task", "status" to "pending")))))</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$result(listOf(message("user", "界".repeat(2000)), message("assistant", "The answer belongs to that question.")), maxBytes = 2200)</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$session = HandoffSession(id = secret, title = secret, directory = "/repo/$secret", agent = secret, model = secret)</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$todos = listOf(HandoffTodo("Fix parsing", "completed"), HandoffTodo("Check empty input", "pending", "high"))</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$tool("edit", HandoffToolState(status = "completed", input = mapOf("filePath" to "lib/committed_parser.dart")))</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$tool("write", HandoffToolState(status = "error", input = mapOf("filePath" to "lib/failed_write.dart")))</ID>
+    <ID>MaxLineLength:HandoffWords.kt$HandoffWords$HandoffUnavailableReason.TargetDispatchUnavailable -&gt; "This destination cannot start a linked conversation yet."</ID>
+    <ID>MaxLineLength:HandoffWords.kt$HandoffWords$public</ID>
+    <ID>MaxLineLength:HelperDiagnostics.kt$HelperDiagnostics.Companion$AgentHelperExit(at, if (status.possibleResourceKill) HelperExitKind.LimitOrMemory else HelperExitKind.Unexpected)</ID>
+    <ID>MaxLineLength:HelperDiagnostics.kt$HelperNotice.PossiblyStoppedByAndroid$/** "The agent helper stopped. Android may have stopped it to free memory or limit background processes. Restart it and try again." */</ID>
+    <ID>MaxLineLength:HelperDiagnosticsTest.kt$HelperDiagnosticsTest$for (requested in listOf("true", "null")) assertNull(AgentHelperStatus.fromRecord(record(requested = requested)).notice)</ID>
+    <ID>MaxLineLength:HelperDiagnosticsTest.kt$HelperDiagnosticsTest$private</ID>
+    <ID>MaxLineLength:HelperDiagnosticsTest.kt$HelperDiagnosticsTest$val other = JsonObject(record().toMutableMap().apply { put("exitReason", Json.parseToJsonElement("\"secret\"")) })</ID>
+    <ID>MaxLineLength:HelperEndpointMatch.kt$HelperEndpointMatch$val authority = rest.substring(0, rest.indexOfAny(charArrayOf('/', '?', '#')).let { if (it &lt; 0) rest.length else it })</ID>
+    <ID>MaxLineLength:HelperEndpointMatch.kt$HelperEndpointMatch.Companion$public</ID>
+    <ID>MaxLineLength:HostAgentProvidersTest.kt$HostAgentProvidersTest$assertFailsWith&lt;IllegalArgumentException&gt; { HostAgentPermissionRequest("request-2", "session-1", listOf(allow, allow)) }</ID>
+    <ID>MaxLineLength:HostAgentProvidersTest.kt$HostAgentProvidersTest$for</ID>
+    <ID>MaxLineLength:HostAgentProvidersTest.kt$HostAgentProvidersTest$provider(availability = HostAgentProviderAvailability.NeedsHostSignIn, loginState = HostAgentLoginState.Unknown)</ID>
+    <ID>MaxLineLength:LocalAgentRuntime.kt$LocalAgentRuntime$is LocalAgentResult.Done -&gt; LocalAgentResult.Done(LocalAgentSignIn.parse(SIGNED_IN.find(r.value)?.groupValues?.get(2)))</ID>
+    <ID>MaxLineLength:LocalAgentRuntime.kt$LocalAgentRuntime$r.value.split('\n').filter { it.startsWith("project=/") }.map { it.substring("project=".length).trim() }</ID>
+    <ID>MaxLineLength:LocalAgentRuntimeTest.kt$LocalAgentRuntimeTest$(if (polls &lt; 3) "phase=installing\nbusy=yes\nstep=paseo\n" else "phase=installed\nbusy=no\ninstalled=yes\n").ok()</ID>
+    <ID>MaxLineLength:LocalAgentRuntimeTest.kt$LocalAgentRuntimeTest$(if (verb == "projects") "project=/root/projects/a\nnoise\nproject=/root/projects/b\n" else "project=/root/projects/c\n").ok()</ID>
+    <ID>MaxLineLength:LocalAgentScriptFixtureTest.kt$Fixture.Companion$"#!/bin/bash\necho \"Filesystem 1024-blocks Used Available Capacity Mounted on\"\necho \"/dev/x 99999999 1 90000000 1% /\"\n"</ID>
+    <ID>MaxLineLength:LocalAgentScriptFixtureTest.kt$Fixture.Companion$val root = Files.createTempDirectory(if (shm.isDirectory) shm.toPath() else File(System.getProperty("java.io.tmpdir")).toPath(), "oc-claude-").toFile()</ID>
+    <ID>MaxLineLength:LocalAgentScriptFixtureTest.kt$LocalAgentScriptFixtureTest$File("${fx.ubuntuHome}/.claude/.credentials.json").writeText("{\"claudeAiOauth\":{\"accessToken\":\"sk-secret\"}}")</ID>
+    <ID>MaxLineLength:LocalAgentScriptFixtureTest.kt$LocalAgentScriptFixtureTest$for ((key, value) in LocalAgentsScript.pins) assertTrue("'$key': '$value'" in dart.replace(Regex(":\\s+'"), ": '"), key)</ID>
+    <ID>MaxLineLength:LocalAgentScriptFixtureTest.kt$LocalAgentScriptFixtureTest$fun</ID>
+    <ID>MaxLineLength:LocalAgentScriptFixtureTest.kt$LocalAgentScriptFixtureTest$val repo = generateSequence(File("").absoluteFile) { it.parentFile }.first { File(it, "lib/domain/agent_catalog.dart").isFile }</ID>
+    <ID>MaxLineLength:LocalAgentStatus.kt$LocalAgentPhase$public val isTransient: Boolean get() = this == Installing || this == Starting || this == Stopping || this == Removing</ID>
+    <ID>MaxLineLength:LocalAgentStatus.kt$LocalAgentStatus$get() = if (phase == LocalAgentPhase.Failed) LocalAgentFailure(failureKind ?: LocalAgentFailureKind.Other, message) else null</ID>
+    <ID>MaxLineLength:MemoryTest.kt$MemoryTest$assertEquals(listOf("""{"k":"claude:ses_1","t":"Fix the \"login\" bug"}"""), prefs.stringList("oc.conversationTitles.p1"))</ID>
+    <ID>MaxLineLength:MemoryTest.kt$MemoryTest$assertEquals(listOf("""{"s":"ses_1","r":"auth failed •••","p":"anthropic","m":"sonnet"}"""), prefs.stringList("oc.agentTurnFailures.p1"))</ID>
+    <ID>MaxLineLength:MemoryTest.kt$MemoryTest$fun</ID>
+    <ID>MaxLineLength:MemoryTest.kt$MemoryTest$memory.remember(p1, "ses_1", RememberedTurnFailure("auth failed sk-secret", provider = "anthropic", model = "sonnet"))</ID>
+    <ID>MaxLineLength:MemoryTest.kt$MemoryTest$val broken = ConversationTitleMemory(FakeAgentPrefs(mapOf("oc.conversationTitles.p1" to listOf("""{"k":"a","t":"A"}""", "{oops"))))</ID>
+    <ID>MaxLineLength:MergedChatFeedTest.kt$MergedChatFeedTest$assertEquals(listOf(other, feedProfile), items.filter { it.sessionId.raw == "same" }.map { it.ref.profileId })</ID>
+    <ID>MaxLineLength:MergedChatFeedTest.kt$MergedChatFeedTest$listOf(OpenCodeChatFeedSource(feedProfile, "Laptop", one), OpenCodeChatFeedSource(other, "Server", two))</ID>
+    <ID>MaxLineLength:MergedChatFeedTest.kt$MergedChatFeedTest$listing.value = listing.value.copy(sessions = listOf(session("a", "/work/a", 1), session("b", "/work/a", 2)))</ID>
+    <ID>MaxLineLength:MergedChatFeedTest.kt$MergedChatFeedTest$sessions = listOf(session("same", "/work/a", 10), session("run", "/work/a", 1), session("ask", "/work/a", 2))</ID>
+    <ID>MaxLineLength:ModelChoices.kt$ModelChoices$*</ID>
+    <ID>MaxLineLength:ModelLibrary.kt$ModelLibrary$favorites</ID>
+    <ID>MaxLineLength:ModelLibraryTest.kt$ModelLibraryTest$"""{"favorites":[null,2,{"providerID":"","modelID":"a"},${ref("a")},${ref("local/a")}],"recent":[$recent]}"""</ID>
+    <ID>MaxLineLength:ModelRecommendationsTest.kt$ModelRecommendationsTest$listOf(m("d", cost = c(3.0, 15.0)), m("cheap", cost = c(1.0, 1.0)), m("mine", cost = c(5.0, 25.0)), m("old", cost = c(4.0, 20.0)))</ID>
+    <ID>MaxLineLength:ModelRecommendationsTest.kt$ModelRecommendationsTest$listOf(m("sonnet", cost = c(3.0, 15.0)), m("opus", cost = c(5.0, 25.0)), m("mini", cost = c(.25, 2.0)), m("sol", cost = c(2.5, 15.0)))</ID>
+    <ID>MaxLineLength:ModelRefTest.kt$ModelRefTest$val explicit = obj("""{"id":"openai/gpt-5.6-sol","modelID":"gpt-5.6-sol","providerID":"openai","name":"GPT-5.6 Sol"}""")</ID>
+    <ID>MaxLineLength:PaseoConfig.kt$PaseoConfig$*</ID>
+    <ID>MaxLineLength:PaseoConfigGoldenTest.kt$PaseoConfigGoldenTest$assertTrue("\"antigravity\":{\"extends\":\"acp\",\"label\":\"Antigravity\",\"command\":[\"/home/oc/.local/bin/agy\",\"acp\",\"--disable-telemetry\"]}" in rendered)</ID>
+    <ID>MaxLineLength:PaseoConfigGoldenTest.kt$PaseoConfigGoldenTest$assertTrue("\"cline\":{\"extends\":\"acp\",\"label\":\"Cline\",\"command\":[\"/home/oc/.local/bin/cline\",\"--acp\"]}" in rendered)</ID>
+    <ID>MaxLineLength:PaseoConfigGoldenTest.kt$PaseoConfigGoldenTest$assertTrue("\"kilo\":{\"extends\":\"acp\",\"label\":\"Kilo\",\"command\":[\"/home/oc/.local/bin/kilo\",\"acp\"]}" in rendered)</ID>
+    <ID>MaxLineLength:PaseoConfigGoldenTest.kt$PaseoConfigGoldenTest$fun</ID>
+    <ID>MaxLineLength:PaseoPhoneInstallTest.kt$PaseoPhoneInstallTest$" ${if (failLaunch) "echo private-cli-output &gt;&amp;2; exit 42" else "echo \"--home Local daemon home\""} ;;\n"</ID>
+    <ID>MaxLineLength:PaseoPhoneInstallTest.kt$PaseoPhoneInstallTest$"mkdir -p \"\$1/node_modules/.bin\" \"\$1/node_modules/@getpaseo/cli/bin\" \"\$1/node_modules/@getpaseo/cli/dist\"\n"</ID>
+    <ID>MaxLineLength:PaseoPhoneInstallTest.kt$PaseoPhoneInstallTest$.</ID>
+    <ID>MaxLineLength:PaseoPhoneInstallTest.kt$PaseoPhoneInstallTest$assertEquals("0.11.2", packages.getValue("node_modules/@getpaseo/cli").jsonObject.getValue("version").jsonPrimitive.content)</ID>
+    <ID>MaxLineLength:PaseoPhoneInstallTest.kt$PaseoPhoneInstallTest$assertEquals("8620d03c3e7e6776c3bfc4d22a8875f92209a563612fe7cda63dea7512f83c09", PaseoPhoneScripts.PAYLOAD_SHA256)</ID>
+    <ID>MaxLineLength:PaseoPhoneInstallTest.kt$PaseoPhoneInstallTest$assertEquals("aa0467db317397425785bafc5999e9b5287b0ef4e8d799718cf509cce82a7f04", PaseoPhoneScripts.CODE_TREE_SHA256)</ID>
+    <ID>MaxLineLength:PaseoPhoneInstallTest.kt$PaseoPhoneInstallTest$assertEquals(dartRawStrings("lib/builtin/agents/paseo_scripts.dart").getValue("_requireAgentUser"), PaseoPhoneScripts.REQUIRE_AGENT_USER)</ID>
+    <ID>MaxLineLength:PaseoPhoneInstallTest.kt$PaseoPhoneInstallTest$assertTrue(value.jsonObject.getValue("resolved").jsonPrimitive.content.startsWith("https://registry.npmjs.org/"), key)</ID>
+    <ID>MaxLineLength:PaseoPhoneInstallTest.kt$PaseoPhoneInstallTest$val cliBase64 = Base64.getEncoder().encodeToString((fixtureCli + if (tamperCli) "# changed\n" else "").toByteArray())</ID>
+    <ID>MaxLineLength:PaseoPhoneInstallTest.kt$PaseoPhoneInstallTest$val payloadBase64 = Base64.getEncoder().encodeToString((fixturePayload + if (tamperPayload) "// changed\n" else "").toByteArray())</ID>
+    <ID>MaxLineLength:PaseoPhoneInstallTest.kt$PaseoPhoneInstallTest$val sections = Regex("'''(.*?)'''", RegexOption.DOT_MATCHES_ALL).findAll(source).map { it.groupValues[1] }.toList()</ID>
+    <ID>MaxLineLength:PaseoPhoneInstallTest.kt$private fun hexSha256(bytes: ByteArray): String</ID>
+    <ID>MaxLineLength:PaseoPhoneScripts.kt$PaseoPhoneScripts$if (!url.startsWith("https://registry.npmjs.org/") || !integrity.startsWith("sha512-")) throw PaseoPinUnavailable()</ID>
+    <ID>MaxLineLength:PaseoPhoneScripts.kt$PaseoPhoneScripts$val packages = (Json.parseToJsonElement(packageLock).jsonObject["packages"] as? JsonObject) ?: throw PaseoPinUnavailable()</ID>
+    <ID>MaxLineLength:PhoneAgentSignInReadTest.kt$PhoneAgentSignInReadTest$PhoneAgentSignInRead.phase(AuthProjectionJson.failed(AuthProbeError.InvalidResponse), AgentSignInPhase.SignedIn)</ID>
+    <ID>MaxLineLength:PhoneAgentSignInReadTest.kt$PhoneAgentSignInReadTest$fun</ID>
+    <ID>MaxLineLength:PhoneAgentSignInReadTest.kt$PhoneAgentSignInReadTest$val</ID>
+    <ID>MaxLineLength:PhoneAgentSignInReadTest.kt$PhoneAgentSignInReadTest$val first = PhoneAgentSignInRead.apply(claude, inspected(AgentSignInPhase.SignedIn), hostAnswersAuth = true, read)</ID>
+    <ID>MaxLineLength:PhoneAgentSignInReadTest.kt$PhoneAgentSignInReadTest$val second = PhoneAgentSignInRead.apply(claude, inspected(AgentSignInPhase.SignedIn), hostAnswersAuth = true, read)</ID>
+    <ID>MaxLineLength:PhoneAgentsSessionTest.kt$PhoneAgentRuntime(AgentId.CLAUDE, installed = true, hostAvailable = true, architectureQualified = true, signInPhase = AgentSignInPhase.SignedIn)</ID>
+    <ID>MaxLineLength:PhoneAgentsSessionTest.kt$PhoneAgentsSessionTest$assertAll(false, certification.capabilitiesFor(descriptor, AgentArchitecture.Arm64, helper), descriptor.id.raw)</ID>
+    <ID>MaxLineLength:PhoneCheck.kt$GateInspector$?:</ID>
+    <ID>MaxLineLength:PhoneCheck.kt$PhoneCheck$*</ID>
+    <ID>MaxLineLength:PhoneCheck.kt$PhoneCheck$if (PhoneGate.write(prefs, owner, gates) is Outcome.Failed) return fail(agent.id, arch, completed, PhoneCheckFailure.Storage)</ID>
+    <ID>MaxLineLength:PhoneCheck.kt$PhoneCheck$if (PhoneGate.write(prefs, owner, gates) is Outcome.Failed) return fail(agent.id, arch, completed, PhoneCheckFailure.Storage, observed)</ID>
+    <ID>MaxLineLength:PhoneCheck.kt$PhoneCheck$if (host.prepareUpdate(owner) is Outcome.Failed) return fail(agent.id, arch, completed, PhoneCheckFailure.Unavailable)</ID>
+    <ID>MaxLineLength:PhoneCheck.kt$PhoneCheck$if (observed != pins.paseo.version) return fail(agent.id, arch, completed, PhoneCheckFailure.HelperVersion, observed)</ID>
+    <ID>MaxLineLength:PhoneCheck.kt$PhoneCheck$if (status.running &amp;&amp; ports.localWorkBusy(owner) != false) return fail(agent.id, arch, completed, PhoneCheckFailure.Busy)</ID>
+    <ID>MaxLineLength:PhoneCheck.kt$PhoneCheck$if (workspace !is Outcome.Ok || !workspace.value.usable) return fail(agent.id, arch, completed, PhoneCheckFailure.Version)</ID>
+    <ID>MaxLineLength:PhoneCheck.kt$PhoneCheck$return fail(agent.id, arch, completed, if (timedOut) PhoneCheckFailure.Timeout else PhoneCheckFailure.Unavailable, observed)</ID>
+    <ID>MaxLineLength:PhoneCheck.kt$PhoneCheckPorts$/** Authenticated Paseo `hello` only, within 60 s (never a prompt or a model call). The server version it reports. */</ID>
+    <ID>MaxLineLength:PhoneCheckTest.kt$FakeCheckPorts$override suspend fun installAndWait(owner: OwnerId, agent: AgentId, helperOnly: Boolean): Outcome&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:PhoneCheckTest.kt$PhoneCheckTest$"{\"claude\":{\"fingerprint\":${io.github.eslamasabry.oc.engine.agents.json.AgentJson.encodeStrings(listOf(oldFp)).removeSurrounding("[", "]")},\"architecture\":\"arm64\",\"activeVersion\":\"2.1.294\"}}"</ID>
+    <ID>MaxLineLength:PhoneCheckTest.kt$PhoneCheckTest$assertEquals(PhoneGate.fingerprint(catalog.byId(codex)!!, AgentArchitecture.Arm64, pins), (gate["fingerprint"] as kotlinx.serialization.json.JsonPrimitive).content)</ID>
+    <ID>MaxLineLength:PhoneCheckTest.kt$PhoneCheckTest$fun</ID>
+    <ID>MaxLineLength:PhoneCheckTest.kt$PhoneCheckTest$rig.prefs.values["oc.agentPhoneGate.owner"] = "{\"codex\":{\"fingerprint\":\"old\"},\"fx\":{\"fingerprint\":\"keep\"}}"</ID>
+    <ID>MaxLineLength:PhoneCheckTest.kt$PhoneCheckTest$val ready = io.github.eslamasabry.oc.engine.agents.readiness.AgentReadiness.row(descriptor, AgentArchitecture.Arm64, server, running.toRuntime(signedIn))</ID>
+    <ID>MaxLineLength:PhoneCheckTest.kt$PhoneCheckTest$val row = io.github.eslamasabry.oc.engine.agents.readiness.AgentReadiness.row(descriptor, AgentArchitecture.Arm64, server, stopped.toRuntime(signedIn))</ID>
+    <ID>MaxLineLength:PhoneCheckTest.kt$PhoneCheckTest.Rig$val check = PhoneCheck(prefs, host, AgentHelper(host, AgentHostSecret(FakeAgentSecrets(), { ByteArray(it) }, {})), ports)</ID>
+    <ID>MaxLineLength:PhoneGate.kt$PhoneGate$internal</ID>
+    <ID>MaxLineLength:PhoneGate.kt$PhoneGate$public suspend</ID>
+    <ID>MaxLineLength:PhoneGate.kt$PhoneGate$val old = (pin["fingerprint"] as? JsonPrimitive)?.content?.let { AgentJson.parseOrNull(it) as? JsonArray } ?: return null</ID>
+    <ID>MaxLineLength:PhoneGate.kt$PhoneGate$val root = AgentJson.parseOrNull(prefs.string(AgentKeys.agentPhoneGate(owner))) as? JsonObject ?: return emptyMap()</ID>
+    <ID>MaxLineLength:PhoneGateTest.kt$PhoneGateTest$JsonObject(mapOf("fingerprint" to JsonPrimitive(AgentJson.encodeStrings(fp.toList())), "architecture" to JsonPrimitive(arch)))</ID>
+    <ID>MaxLineLength:PhoneGateTest.kt$PhoneGateTest$assertEquals("[\"a\\\"b\",\"\\\\\",\"\\n\\t\\u0001\",\"é/\",null]", AgentJson.encodeStrings(listOf("a\"b", "\\", "\n\t\u0001", "é/", null)))</ID>
+    <ID>MaxLineLength:PhoneGateTest.kt$PhoneGateTest$assertEquals(CheckRequiredReason.AgentVersion, PhoneGate.changeReason(gate("claude", "2.1.294", sha, "0.11.2", pins.paseo.packageLockSha256, "v24.21.0"), claude, pins))</ID>
+    <ID>MaxLineLength:PhoneGateTest.kt$PhoneGateTest$assertEquals(CheckRequiredReason.HelperVersion, PhoneGate.changeReason(gate("claude", v, sha, "0.11.2", pins.paseo.packageLockSha256, "v22.0.0"), claude, pins))</ID>
+    <ID>MaxLineLength:PhoneGateTest.kt$PhoneGateTest$assertEquals(CheckRequiredReason.HelperVersion, PhoneGate.changeReason(gate("claude", v, sha, "0.9.2", pins.paseo.packageLockSha256, "v24.21.0"), claude, pins))</ID>
+    <ID>MaxLineLength:PhoneGateTest.kt$PhoneGateTest$assertEquals(CheckRequiredReason.InstallationChanged, PhoneGate.changeReason(JsonObject(mapOf("fingerprint" to JsonPrimitive("broken"))), claude, pins))</ID>
+    <ID>MaxLineLength:PhoneGateTest.kt$PhoneGateTest$assertEquals(CheckRequiredReason.InstallationChanged, PhoneGate.changeReason(gate("claude", v, "0".repeat(64), "0.11.2", pins.paseo.packageLockSha256, "v24.21.0"), claude, pins))</ID>
+    <ID>MaxLineLength:ProjectFolderName.kt$ProjectFolderName$if (value == "." || value == ".." || '/' in value || '\\' in value) return ProjectFolderNameProblem.NotSingleSegment</ID>
+    <ID>MaxLineLength:RunningFamily.kt$RunningFamily$add(RunningAgentEntry(s, s.id in busy, self, if (self) RunningAgentRelation.Current else RunningAgentRelation.Sibling))</ID>
+    <ID>MaxLineLength:RunningFamily.kt$RunningFamily$val siblings = sessions.values.filter { parentId != null &amp;&amp; it.parentId == parentId }.sortedBy { it.createdMillis }</ID>
+    <ID>MaxLineLength:ServerPlaceTitlesTest.kt$ServerPlaceTitlesTest$val ar = ServerPlaceWords.render(ServerPlaceText.NewConversations(ServerPlace.of(ServerPlaceWords.phoneCardTitle(Ar), ServerPlaceWords.phoneCardTitle(Ar))), Ar)</ID>
+    <ID>MaxLineLength:ServerPlaceWords.kt$ServerPlaceWords$ServerPlace.ThisPhone -&gt; if (en) "New conversations on this phone" else "المحادثات الجديدة على هذا الهاتف"</ID>
+    <ID>MaxLineLength:ServerPlaceWords.kt$ServerPlaceWords$if (en) "Reset on this phone to your own choices: ${text.what}." else "أُعيد على هذا الهاتف إلى اختياراتك: ${text.what}."</ID>
+    <ID>MaxLineLength:ServerPlaceWords.kt$ServerPlaceWords$is ServerPlace.Named -&gt; if (en) "New conversations on ${place.name}" else "المحادثات الجديدة على ${place.name}"</ID>
+    <ID>MaxLineLength:SessionImportDocument.kt$ImportRules$return listOf("input", "output", "reasoning").all { number(t[it]) } &amp;&amp; listOf("read", "write").all { number(cache[it]) }</ID>
+    <ID>MaxLineLength:SessionImportDocument.kt$SessionImportDocument$*</ID>
+    <ID>MaxLineLength:SessionImportDocument.kt$SessionImportDocument$get() = ((info["time"] as JsonObject)["archived"] as? JsonPrimitive)?.content?.toDoubleOrNull()?.let { it &gt; 0 } ?: false</ID>
+    <ID>MaxLineLength:SessionImportDocument.kt$SessionImportDocument.Companion$if (length &gt; MAX_BYTES) SessionImportResult.Refused(SessionImportProblem.TooLarge) else SessionImportResult.Ok(Unit)</ID>
+    <ID>MaxLineLength:SessionImportDocument.kt$SessionImportDocument.Companion$public</ID>
+    <ID>MaxLineLength:SessionImportTest.kt$SessionImportTest$RouteAnswer(200, Json.parseToJsonElement("""{"data":{"id":"ses_other","location":{"directory":"/current"}}}"""))</ID>
+    <ID>MaxLineLength:SessionImportTest.kt$SessionImportTest$assertEquals("ses_transfer", transport.requests.single().body!!.jsonObject["info"]!!.jsonObject["id"]!!.jsonPrimitive.content)</ID>
+    <ID>MaxLineLength:SessionImportTest.kt$SessionImportTest$assertEquals(Json.parseToJsonElement("""{"directory":"/destination","workspaceID":"wrk_dest"}"""), body["location"])</ID>
+    <ID>MaxLineLength:SessionImportTest.kt$SessionImportTest$assertEquals(JsonObject(mapOf("directory" to JsonPrimitive("/source/private"))), secondBody["info"]!!.jsonObject["location"])</ID>
+    <ID>MaxLineLength:SessionImportTest.kt$SessionImportTest$assertEquals(SessionImportGateway.FEATURE, assertIs&lt;Failure.Unavailable&gt;((result as Outcome.Failed).failure).feature)</ID>
+    <ID>MaxLineLength:SessionImportTest.kt$SessionImportTest$mutableMapOf&lt;String, Any?&gt;("kind" to "vendor-extension", "values" to mutableListOf&lt;Any?&gt;(1, true, null))</ID>
+    <ID>MaxLineLength:SessionImportTest.kt$SessionImportTest$val transport = FakeTransport { RouteAnswer(status, JsonObject(mapOf("_tag" to JsonPrimitive("RouteNotFound")))) }</ID>
+    <ID>MaxLineLength:SessionModelScopeTest.kt$SessionModelScopeTest$choices.setCatalog(ModelCatalog(listOf(CatalogModel("opus", "anthropic", "Opus", variants = listOf(CatalogVariant("high"))))))</ID>
+    <ID>MaxLineLength:SessionModelScopeTest.kt$SessionModelScopeTest$store.setSessionModels(p1, (0 until 250).associateTo(LinkedHashMap()) { "ses_$it" to SessionModelChoice(ref("p", "m$it")) })</ID>
+    <ID>MaxLineLength:SessionSelection.kt$SelectionEvent.ModelSelected$public data</ID>
+    <ID>MaxLineLength:SessionSelection.kt$SessionSelection$*</ID>
+    <ID>MaxLineLength:SessionSelectionTest.kt$SessionSelectionTest$SelectionEvent.parse("session.model.selected", json("""{"sessionID":"unloaded","model":{"providerID":"p","id":"remote"}}"""))!!</ID>
+    <ID>MaxLineLength:SessionSelectionTest.kt$SessionSelectionTest$assertEquals("", SessionSelection.fromWireSession(json("""{"id":"a","model":{"providerID":"p","id":"one","variant":"default"}}""")).variant)</ID>
+    <ID>MaxLineLength:SessionSelectionTest.kt$SessionSelectionTest$assertNull(SelectionEvent.parse("session.model.selected", json("""{"sessionID":"unloaded","model":{"id":"x"}}""")))</ID>
+    <ID>MaxLineLength:SessionSelectionTest.kt$SessionSelectionTest$s = s.event("session.model.selected", """{"sessionID":"b","model":{"providerID":"p","id":"p/two","variant":"low"}}""")</ID>
+    <ID>MaxLineLength:SessionSelectionTest.kt$SessionSelectionTest$s = s.event("session.moved", """{"sessionID":"a","projectID":"new-project","location":{"directory":"/other"}}""")</ID>
+    <ID>MaxLineLength:SignInOutputReaderTest.kt$SignInOutputReaderTest$"\u001B[1m&gt; \u001B[22mVisit \u001B[36mhttps://vercel.com/oauth/device?user_code=ABCD-EFGH\u001B[39m to sign in.\n"</ID>
+    <ID>MayBeConst:AgentPhoneScripts.kt$AgentPhoneScripts$internal val EXTRACT_PY: String = """import os, pathlib, shutil, stat, sys, tarfile, zipfile archive, root, kind, entry = sys.argv[1:] def safe(name): if not name or len(name) &gt; 4096 or '\\' in name or any(ord(c) &lt; 32 for c in name): raise ValueError() if name.startswith('/') or '..' in name.split('/'): raise ValueError() value = pathlib.PurePosixPath(name) if str(value) == '.': return None return value try: if kind == 'executable': target = pathlib.Path(root) / safe(entry) with open(archive, 'rb') as source, open(target, 'xb') as dest: shutil.copyfileobj(source, dest) else: if kind == 'zip': handle = zipfile.ZipFile(archive) rows = [(m.filename, m.is_dir(), m.file_size, (m.external_attr &gt;&gt; 16) &amp; 0xffff, m) for m in handle.infolist()] opener = handle.open else: handle = tarfile.open(archive, mode='r:gz' if kind in ('tarGz', 'npmTarGz') else 'r:bz2') rows = [(m.name, m.isdir(), m.size, m.mode, m) for m in handle.getmembers()] if any(not (m.isdir() or m.isfile()) for m in handle.getmembers()): raise ValueError() opener = handle.extractfile if len(rows) &gt; 20000 or sum(row[2] for row in rows) &gt; 2147483648: raise ValueError() names = set() for name, directory, size, mode, member in rows: path = safe(name) if path is None: if not directory: raise ValueError() continue if path in names or size &gt; 1073741824: raise ValueError() names.add(path) if kind == 'zip' and stat.S_IFMT(mode) not in (0, stat.S_IFREG, stat.S_IFDIR): raise ValueError() for name, directory, size, mode, member in rows: path = safe(name) if path is None: continue target = pathlib.Path(root) / path if directory: target.mkdir(parents=True, exist_ok=True) else: target.parent.mkdir(parents=True, exist_ok=True) with opener(member) as source, open(target, 'xb') as dest: shutil.copyfileobj(source, dest) os.chmod(target, 0o700 if mode &amp; 0o111 else 0o600) handle.close() candidate = pathlib.Path(root) / safe(entry) if not candidate.is_file() or candidate.is_symlink(): raise ValueError() except Exception: sys.exit(1) """</ID>
+    <ID>MayBeConst:AgentRemovalScripts.kt$AgentRemovalScripts$internal val READ_RECEIPT_PY: String = """import json, os, pathlib, re, stat, sys receipt_id = sys.argv[1] if not re.fullmatch(r'[a-f0-9]{32}', receipt_id) or os.getuid() != 0: sys.exit(18) root = pathlib.Path('/home/oc') parent = root / '.local/share' name = 'oc-agent-removal-' + receipt_id fd = directory = None identity = None result = None try: for path in (root.parent, root, root / '.local', parent): if not stat.S_ISDIR(path.lstat().st_mode): raise ValueError() directory = os.open(parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW) fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory) entry = os.fstat(fd) # PRoot's root-id and change-id views project the same Android app owner # as 0 or 1000 respectively. Creation requires the fixed UID1000 view. if (not stat.S_ISREG(entry.st_mode) or entry.st_uid not in (0, 1000) or stat.S_IMODE(entry.st_mode) != 0o600 or entry.st_nlink != 1): raise ValueError() identity = (entry.st_dev, entry.st_ino) if not 1 &lt;= entry.st_size &lt;= 96: raise ValueError() data = os.read(fd, 97) if len(data) != entry.st_size or len(data) &gt; 96: raise ValueError() def unique(pairs): output = {} for key, value in pairs: if key in output: raise ValueError() output[key] = value return output value = json.loads(data.decode('ascii'), object_pairs_hook=unique) if (not isinstance(value, dict) or set(value) != {'bytes', 'absent'} or type(value['bytes']) is not int or type(value['absent']) is not int or not 0 &lt;= value['bytes'] &lt;= 9223372036854775807 or value['absent'] not in (0, 1) or (value['absent'] == 1 and value['bytes'] != 0)): raise ValueError() result = str(value['bytes']) + ' ' + str(value['absent']) except Exception: result = None finally: if fd is not None: os.close(fd) if directory is not None: try: if identity is not None: current = os.stat(name, dir_fd=directory, follow_symlinks=False) if (current.st_dev, current.st_ino) != identity: raise ValueError() os.unlink(name, dir_fd=directory) except Exception: result = None os.close(directory) if result is None: sys.exit(18) print(result) """</ID>
+    <ID>NestedBlockDepth:ActiveContextMapper.kt$ActiveContextMapper$private fun assistant( item: JsonObject, parts: MutableList&lt;ContextContent&gt;, add: (ContextContentKind, String?, String?) -&gt; Unit, file: (String?, String?) -&gt; Unit, )</ID>
+    <ID>NestedBlockDepth:ClaudeAgentTrial.kt$ClaudeAgentTrial$private suspend fun run(fresh: Boolean)</ID>
+    <ID>NestedBlockDepth:HandoffRecord.kt$HandoffRecordBuilder.Companion$private fun observedChangedPaths(messages: List&lt;HandoffMessage&gt;): Pair&lt;List&lt;String&gt;, Int&gt;</ID>
+    <ID>ReturnCount:ActiveContextGateway.kt$ActiveContextGateway$public suspend fun load(sessionId: String): Outcome&lt;List&lt;ActiveContextMessage&gt;&gt;</ID>
+    <ID>ReturnCount:ActiveContextMapper.kt$ActiveContextMapper$private fun modelId(value: JsonElement?): String?</ID>
+    <ID>ReturnCount:AgentAccountController.kt$AgentAccountController$public suspend fun refresh()</ID>
+    <ID>ReturnCount:AgentAccountController.kt$AgentAccountController$public suspend fun signIn()</ID>
+    <ID>ReturnCount:AgentAuth.kt$AgentAuth$private suspend fun probeOnce(agent: AgentId): AuthProjection</ID>
+    <ID>ReturnCount:AgentAuth.kt$AgentAuth$public suspend fun refresh(agent: AgentId): AuthProjection</ID>
+    <ID>ReturnCount:AgentAuthScripts.kt$AgentAuthScripts$public fun script(agent: AgentDescriptor, action: AuthScriptAction): String?</ID>
+    <ID>ReturnCount:AgentCertification.kt$AgentCertification$public fun certifiedForChat(agentId: AgentId): Boolean</ID>
+    <ID>ReturnCount:AgentCertification.kt$AgentCertification.Companion$private fun parseRecord(row: JsonObject): Record?</ID>
+    <ID>ReturnCount:AgentCertification.kt$AgentCertification.Companion$private fun safeEvidence(value: String?): Boolean</ID>
+    <ID>ReturnCount:AgentHelper.kt$AgentHelper$public suspend fun ensureRunning( owner: OwnerId, restartIfVersionChanged: Boolean = false, idleResume: IdleResume? = null, ): Outcome&lt;HelperRunning&gt;</ID>
+    <ID>ReturnCount:AgentHelper.kt$AgentHelper$public suspend fun rotate(owner: OwnerId): Outcome&lt;HelperRunning&gt;</ID>
+    <ID>ReturnCount:AgentHomeCleaner.kt$AgentHomeCleaner$public suspend fun clean(profile: ProfileId, phoneProfiles: List&lt;ProfileId&gt;): Outcome&lt;AgentHomeCleanup&gt;</ID>
+    <ID>ReturnCount:AgentHostSecret.kt$AgentHostSecret$public suspend fun deleteAll(): Outcome&lt;Set&lt;String&gt;&gt;</ID>
+    <ID>ReturnCount:AgentInstaller.kt$AgentInstaller$public fun requiredBytes(agentId: AgentId, architecture: AgentArchitecture): Long?</ID>
+    <ID>ReturnCount:AgentOwnership.kt$AgentOwnership$private suspend fun adoptLegacyGates(owner: OwnerId, local: List&lt;ProfileId&gt;): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:AgentOwnership.kt$AgentOwnership$public suspend fun migrate(phoneProfiles: List&lt;ProfileId&gt;): Outcome&lt;OwnerId?&gt;</ID>
+    <ID>ReturnCount:AgentPersona.kt$AgentPersona.Companion$public fun of(agentIdOrKey: String): AgentPersona</ID>
+    <ID>ReturnCount:AgentReadiness.kt$AgentReadiness$private fun build( descriptor: AgentDescriptor, architecture: AgentArchitecture, server: ServerCapabilities, runtime: PhoneAgentRuntime?, ): AgentRow</ID>
+    <ID>ReturnCount:AgentRemoval.kt$AgentRemoval$public suspend fun remove(owner: OwnerId, agent: AgentId, busy: Boolean): Outcome&lt;RemovalResult&gt;</ID>
+    <ID>ReturnCount:AgentSelection.kt$AgentSelection$private fun rowFor(agent: AgentId, rows: List&lt;AgentRow&gt;): AgentRow?</ID>
+    <ID>ReturnCount:AgentSelection.kt$AgentSelection$public fun selected(profile: ProfileId, rows: List&lt;AgentRow&gt;, phoneAgentsAvailable: Boolean): AgentId</ID>
+    <ID>ReturnCount:AgentSelection.kt$AgentSelection.Companion$private fun decode(raw: String?): Map&lt;String, String&gt;</ID>
+    <ID>ReturnCount:AgentSignIn.kt$AgentSignIn$public fun plan(agent: AgentId): SignInPlan</ID>
+    <ID>ReturnCount:AgentTurnFailureMemory.kt$AgentTurnFailureMemory$public fun read(profile: ProfileId, sessionId: String, alsoAs: Collection&lt;String&gt; = emptyList()): RememberedTurnFailure?</ID>
+    <ID>ReturnCount:AuthProjectionJson.kt$AuthProjectionJson$public fun decode(json: JsonObject): AuthProjection</ID>
+    <ID>ReturnCount:AutoApproval.kt$AutoApproval$private fun maybeAutoApprove(request: PendingRequest)</ID>
+    <ID>ReturnCount:AutoApprovalStore.kt$AutoApprovalStore$public fun effectiveFor(profile: ProfileId, session: SessionId, parentOf: (SessionId) -&gt; SessionId?): EffectiveAutoApproval</ID>
+    <ID>ReturnCount:AutoApprovalStore.kt$AutoApprovalStore.Companion$internal fun fromJson(value: JsonObject?): SessionAutoApproval?</ID>
+    <ID>ReturnCount:AutoApprovalTest.kt$AutoApprovalTest.FakePort$override suspend fun replyOnce(request: PendingRequest): Outcome&lt;AutoReplyReceipt&gt;</ID>
+    <ID>ReturnCount:Catalog.kt$AgentArtifact.Companion$public fun isHttpsWithoutCredentials(url: String): Boolean</ID>
+    <ID>ReturnCount:CatalogModel.kt$ModelCatalog$public fun variantAllowed(ref: ModelRef, variant: String): Boolean</ID>
+    <ID>ReturnCount:ClaudeAgentTrial.kt$ClaudeAgentTrial$private suspend fun run(fresh: Boolean)</ID>
+    <ID>ReturnCount:ClaudeAgentTrial.kt$ClaudeAgentTrial$private suspend fun waitForCheck(integrations: ClaudeAgentIntegrations, current: () -&gt; Boolean): Boolean</ID>
+    <ID>ReturnCount:ClaudeAgentTrial.kt$ClaudeAgentTrial$public fun stateNow(): ClaudeAgentTrialState</ID>
+    <ID>ReturnCount:ClaudeAgentTrial.kt$public fun serverVersionAtLeast(version: String?, minimum: String): Boolean</ID>
+    <ID>ReturnCount:ConnectedHandoffGateway.kt$ConnectedHandoffGateway.&lt;no name provided&gt;$override suspend fun promptHandoff( sessionId: String, text: String, model: HandoffModelRef, agent: String?, variant: String?, beforeSend: () -&gt; Boolean, ): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:ConnectedHandoffGateway.kt$ConnectedHandoffGateway.&lt;no name provided&gt;$override suspend fun writeRecord( directory: String, recordId: String, markdown: String, ): Outcome&lt;String&gt;</ID>
+    <ID>ReturnCount:ConversationTitleMemory.kt$MemoryLines$fun read(raw: List&lt;String&gt;?): List&lt;Pair&lt;String, JsonObject&gt;&gt;</ID>
+    <ID>ReturnCount:DartJsonText.kt$DartJsonText$fun JsonObject.int(key: String): Long?</ID>
+    <ID>ReturnCount:ErrorHeadline.kt$MessageErrorKind.Companion$public fun refineFromText(kind: MessageErrorKind, text: String?): MessageErrorKind</ID>
+    <ID>ReturnCount:FeedFolders.kt$FeedFolders$public fun isProtectedHome(directory: String?): Boolean</ID>
+    <ID>ReturnCount:FeedFolders.kt$FeedFolders$public fun isTemporary(directory: String?): Boolean</ID>
+    <ID>ReturnCount:FeedFolders.kt$FeedFolders$public fun otherFolderLabel(directory: String?): String</ID>
+    <ID>ReturnCount:Handoff.kt$public fun handoffRoute( source: HandoffGateway, sourceScope: HandoffScope, sourceModel: HandoffModelRef?, target: HandoffTarget, ): HandoffRoute</ID>
+    <ID>ReturnCount:Handoff.kt$public fun handoffUnavailableReason( source: HandoffGateway, sourceScope: HandoffScope, sourceModel: HandoffModelRef?, target: HandoffTarget, ): HandoffUnavailableReason?</ID>
+    <ID>ReturnCount:HandoffAgentStart.kt$HandoffAgentStarter$public suspend fun promptHandoff( sessionId: String, text: String, model: HandoffModelRef, agent: String?, variant: String?, beforeSend: () -&gt; Boolean, ): Outcome&lt;HandoffAgentStart&gt;</ID>
+    <ID>ReturnCount:HandoffEngine.kt$HandoffEngine$private suspend fun prepareSteps(lastState: String): HandoffPrepared</ID>
+    <ID>ReturnCount:HandoffEngine.kt$HandoffEngine$private suspend fun saveLink(): Stop?</ID>
+    <ID>ReturnCount:HandoffEngine.kt$HandoffEngine$private suspend fun sendSteps(review: HandoffDraft, text: String): HandoffSent</ID>
+    <ID>ReturnCount:HandoffEngine.kt$HandoffEngine$private suspend fun validateTarget(step: HandoffPhase): Stop?</ID>
+    <ID>ReturnCount:HandoffEngine.kt$HandoffEngine$public suspend fun prepare(lastState: String): Outcome&lt;HandoffPrepared&gt;</ID>
+    <ID>ReturnCount:HandoffEngine.kt$HandoffEngine$public suspend fun retryLink(): Outcome&lt;HandoffSent&gt;</ID>
+    <ID>ReturnCount:HandoffEngine.kt$HandoffEngine$public suspend fun send(editedPrompt: String): Outcome&lt;HandoffSent&gt;</ID>
+    <ID>ReturnCount:HandoffEngineTest.kt$HandoffEngineTest.Gateway$override suspend fun promptHandoff( sessionId: String, text: String, model: HandoffModelRef, agent: String?, variant: String?, beforeSend: () -&gt; Boolean, ): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:HandoffHistory.kt$public suspend fun readHandoffHistory( source: HandoffHistorySource, sessionId: String, isCurrent: () -&gt; Boolean, maxPages: Int = 100, ): HandoffHistoryRead</ID>
+    <ID>ReturnCount:HandoffLinks.kt$HandoffLinks$fun origin(name: String): HandoffOrigin?</ID>
+    <ID>ReturnCount:HandoffLinks.kt$HandoffLinks$private fun decode(value: Any?): HandoffLink?</ID>
+    <ID>ReturnCount:HandoffLinks.kt$HandoffLinks$private fun read(key: String): List&lt;HandoffLink&gt;?</ID>
+    <ID>ReturnCount:HandoffLinks.kt$HandoffLinks$public fun forSession( profileId: String, sessionId: String, origin: HandoffOrigin? = null, ): ImmutableList&lt;HandoffLink&gt;?</ID>
+    <ID>ReturnCount:HandoffLinks.kt$HandoffLinks$public suspend fun save(link: HandoffLink): Outcome&lt;HandoffLinkSave&gt;</ID>
+    <ID>ReturnCount:HandoffRecordFiles.kt$HandoffRecordFiles$private suspend fun writeLeased(directory: String, recordId: String, markdown: String): Outcome&lt;HandoffFileWrite&gt;</ID>
+    <ID>ReturnCount:HelperEndpointMatch.kt$HelperEndpointMatch$public fun matches(candidate: EndpointCandidate): Boolean</ID>
+    <ID>ReturnCount:IsolatedTaskLaunch.kt$IsolatedTaskLaunch$private fun event(envelope: GatewayEnvelope)</ID>
+    <ID>ReturnCount:IsolatedTaskLaunch.kt$IsolatedTaskLaunch$public fun open(acceptUnconfirmed: Boolean = false, acceptFailedSetup: Boolean = false)</ID>
+    <ID>ReturnCount:LocalAgentRuntime.kt$LocalAgentRuntime$private fun settled(status: LocalAgentStatus): LocalAgentResult&lt;LocalAgentStatus&gt;</ID>
+    <ID>ReturnCount:LocalAgentRuntime.kt$LocalAgentRuntime$private suspend fun dispatch(verb: String, args: List&lt;String&gt; = emptyList()): LocalAgentResult&lt;LocalAgentStatus&gt;</ID>
+    <ID>ReturnCount:ModelRecommendations.kt$fun rank(model: CatalogModel): Int</ID>
+    <ID>ReturnCount:ModelRef.kt$WireModelRef.Companion$public fun fromJson(value: JsonElement?): WireModelRef?</ID>
+    <ID>ReturnCount:ModelRef.kt$public fun catalogEntryModelId(entry: JsonObject): String?</ID>
+    <ID>ReturnCount:ModelStores.kt$ModelStore$public fun sessionModels(profile: ProfileId): Map&lt;String, SessionModelChoice&gt;</ID>
+    <ID>ReturnCount:PhoneCheck.kt$GateInspector$public suspend fun inspect(owner: OwnerId, agentId: AgentId): Outcome&lt;GateInspection&gt;</ID>
+    <ID>ReturnCount:PhoneCheck.kt$PhoneCheck$private suspend fun check(owner: OwnerId, agent: AgentDescriptor, automatic: Boolean): PhoneCheckResult</ID>
+    <ID>ReturnCount:PhoneGate.kt$PhoneGate$public fun changeReason(pin: JsonObject?, agent: AgentDescriptor, pins: AgentPins): CheckRequiredReason</ID>
+    <ID>ReturnCount:PhoneGate.kt$PhoneGate$public fun olderQualifiedVersion( pin: JsonObject?, agent: AgentDescriptor, architecture: AgentArchitecture, pins: AgentPins, ): String?</ID>
+    <ID>ReturnCount:ProjectFolderName.kt$ProjectFolderName$public fun problem(name: String): ProjectFolderNameProblem?</ID>
+    <ID>ReturnCount:ReturnBrief.kt$ReturnBrief.Companion$public fun unreviewedRun( session: Session, readStateKnown: Boolean, isUnread: (Session) -&gt; Boolean, isBusy: (SessionId) -&gt; Boolean, ack: ReturnBriefAck?, ): BriefRun?</ID>
+    <ID>ReturnCount:ReturnBrief.kt$ReturnBriefAck.Companion$public fun fromJson(raw: JsonElement?): ReturnBriefAck?</ID>
+    <ID>ReturnCount:ReturnBriefStore.kt$ReturnBriefStore$private fun decode(raw: String?): Map&lt;String, ReturnBriefAck&gt;</ID>
+    <ID>ReturnCount:RunningFamily.kt$RunningFamily$public fun entries( sessionId: SessionId, sessions: Map&lt;SessionId, FamilySession&gt;, busy: Set&lt;SessionId&gt;, includeIdle: Boolean = false, ): ImmutableList&lt;RunningAgentEntry&gt;</ID>
+    <ID>ReturnCount:SessionImportDocument.kt$ImportRules$fun copy(value: JsonElement, depth: Int): JsonElement?</ID>
+    <ID>ReturnCount:SessionImportDocument.kt$ImportRules$fun number(value: JsonElement?): Boolean</ID>
+    <ID>ReturnCount:SessionImportDocument.kt$ImportRules$fun validInfo(info: JsonObject): Boolean</ID>
+    <ID>ReturnCount:SessionImportDocument.kt$ImportRules$private fun tokens(value: JsonElement?): Boolean</ID>
+    <ID>ReturnCount:SessionImportDocument.kt$SessionImportDestination$public fun toJson(): JsonObject?</ID>
+    <ID>ReturnCount:SessionImportDocument.kt$SessionImportDocument.Companion$public fun fromJson(value: JsonElement?): SessionImportResult&lt;SessionImportDocument&gt;</ID>
+    <ID>ReturnCount:SessionImportDocument.kt$SessionImportDocument.Companion$public fun read(chunks: Sequence&lt;ByteArray&gt;, maxBytes: Long = MAX_BYTES): SessionImportResult&lt;SessionImportDocument&gt;</ID>
+    <ID>ReturnCount:SessionImportGateway.kt$SessionImportGateway$public suspend fun importSession( document: SessionImportDocument, destination: SessionImportDestination, ): Outcome&lt;ImportedSession&gt;</ID>
+    <ID>ReturnCount:SessionNotes.kt$SessionNotes$public suspend fun save(review: SessionNoteReview, value: String?): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:SessionResume.kt$SessionResumeCommand.Companion$public fun build( cli: SessionResumeCli, sessionId: String, directory: String?, workspaceId: String? = null, ): SessionResumeCommand</ID>
+    <ID>ReturnCount:SessionSelection.kt$SelectionEvent.Companion$public fun parse(type: String, data: JsonElement?): SelectionEvent?</ID>
+    <ID>ReturnCount:SignInOutputReader.kt$SignInOutputReader$private fun continuesUrl(above: Line, next: String, width: Int): Boolean</ID>
+    <ID>ReturnCount:SignInOutputReader.kt$SignInOutputReader$private fun hostOf(authority: String): String?</ID>
+    <ID>ReturnCount:SignInOutputReader.kt$SignInOutputReader$private fun signInPage(raw: String): SignInPage?</ID>
+    <ID>SwallowedException:GatewayRouteTransport.kt$GatewayRouteTransport$e: kotlinx.serialization.SerializationException</ID>
+    <ID>ThrowsCount:HandoffRecordFiles.kt$HandoffRecordFiles$suspend fun &lt;T&gt; request(block: suspend () -&gt; Outcome&lt;T&gt;): T</ID>
+    <ID>ThrowsCount:HandoffRecordFiles.kt$HandoffRecordFiles$suspend fun writeNew(parent: String, name: String, content: String)</ID>
+    <ID>ThrowsCount:PaseoPhoneScripts.kt$PaseoPhoneScripts$public fun install(packageLock: String, codec: PaseoLockCodec): String</ID>
+    <ID>TooManyFunctions:ActiveContextMapper.kt$ActiveContextMapper</ID>
+    <ID>TooManyFunctions:AgentAccountController.kt$AgentAccountController</ID>
+    <ID>TooManyFunctions:AgentKeys.kt$AgentKeys</ID>
+    <ID>TooManyFunctions:AgentPhoneScripts.kt$AgentPhoneScripts</ID>
+    <ID>TooManyFunctions:AutoApprovalStore.kt$AutoApprovalStore</ID>
+    <ID>TooManyFunctions:HandoffEngine.kt$HandoffEngine</ID>
+    <ID>TooManyFunctions:HandoffLinks.kt$HandoffLinks</ID>
+    <ID>TooManyFunctions:IsolatedTaskLaunch.kt$IsolatedTaskLaunch</ID>
+    <ID>TooManyFunctions:LocalAgentRuntime.kt$LocalAgentRuntime</ID>
+    <ID>UnusedParameter:AutoApprovalStore.kt$AutoApprovalStore$profile: ProfileId</ID>
+    <ID>WildcardImport:ConnectedHandoffGateway.kt$import kotlinx.serialization.json.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

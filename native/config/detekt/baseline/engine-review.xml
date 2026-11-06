@@ -1,0 +1,57 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:TurnChanges.kt$TurnChanges$public fun editedFiles(messages: Iterable&lt;MessageWithParts&gt;, max: Int = MAX_FILES): ImmutableList&lt;ChangedFile&gt;</ID>
+    <ID>EmptyElseBlock:ConversationReviewTest.kt$ConversationReviewTest.&lt;no name provided&gt;$if (hold) gate.await()</ID>
+    <ID>LongParameterList:ReviewFixtures.kt$(path: String, added: Int? = null, removed: Int? = null, before: String? = null, after: String? = null, diff: String? = null, status: ToolStatus = ToolStatus.Completed)</ID>
+    <ID>MaxLineLength:ConversationReview.kt$ConversationReview$/** Messages of one chronological page newer than the one at [at]: by creation time when every row has one, else by position. */</ID>
+    <ID>MaxLineLength:ConversationReview.kt$ConversationReview$ChangeSet(TurnChanges.editedFiles(steps), TurnChanges.turnPrompt(messages, messageId), read.value.complete).ok()</ID>
+    <ID>MaxLineLength:ConversationReview.kt$ConversationReview$cursor = page.value.nextCursor ?: return HistoryRead(pages.asReversed().flatten().toImmutableList(), complete = true).ok()</ID>
+    <ID>MaxLineLength:ConversationReview.kt$ConversationReview$if (mutable.value.revision != reviewed) Failure.Refused(RefusalReason.StaleScope).failed() else Unit.ok()</ID>
+    <ID>MaxLineLength:ConversationReview.kt$ConversationReview$is GatewayEvent.RunEnded -&gt; if (event.sessionId == session) mutable.update { it.copy(running = false) }</ID>
+    <ID>MaxLineLength:ConversationReview.kt$ConversationReview$is GatewayEvent.RunStarted -&gt; if (event.sessionId == session) mutable.update { it.copy(running = true) }</ID>
+    <ID>MaxLineLength:ConversationReview.kt$ConversationReview$is GatewayEvent.SessionUpserted -&gt; if (event.session.id == session) adopt(event.session.stagedRevert)</ID>
+    <ID>MaxLineLength:ConversationReview.kt$ConversationReview$is Outcome.Ok -&gt; read.value.messages.firstOrNull { it.info.id == messageId }?.takeIf(TurnChanges::isPrompt)?.let(TurnChanges::promptText).ok()</ID>
+    <ID>MaxLineLength:ConversationReview.kt$ConversationReview$items.withIndex().count { (i, m) -&gt; i != at &amp;&amp; (m.info.time!!.createdMs!! &gt; pivot || (m.info.time!!.createdMs == pivot &amp;&amp; i &gt; at)) }</ID>
+    <ID>MaxLineLength:ConversationReview.kt$ConversationReview$located.workingTreeAt(if (dir == null) g.live.location.value else ServerLocation(dir, read.value.workspaceId?.raw))</ID>
+    <ID>MaxLineLength:ConversationReview.kt$ConversationReview$mutable.update { s -&gt; if (s.loaded &amp;&amp; s.staged == staged) s else s.copy(staged = staged, revision = s.revision + 1, loaded = true) }</ID>
+    <ID>MaxLineLength:ConversationReview.kt$ReviewState$*</ID>
+    <ID>MaxLineLength:ConversationReviewTest.kt$ConversationReviewTest$assertNull((ConversationReview(S, gateways, backgroundScope, pageSize = 2, maxPages = 1).messagesAfter("u1") as Outcome.Ok).value)</ID>
+    <ID>MaxLineLength:ConversationReviewTest.kt$ConversationReviewTest$fun</ID>
+    <ID>MaxLineLength:ConversationReviewTest.kt$ConversationReviewTest$val all = (ConversationReview(S, gateways, backgroundScope, pageSize = 2, maxPages = 2).changes(null) as Outcome.Ok).value</ID>
+    <ID>MaxLineLength:ConversationReviewTest.kt$ConversationReviewTest.&lt;no name provided&gt;$object</ID>
+    <ID>MaxLineLength:ConversationReviewTest.kt$ConversationReviewTest.&lt;no name provided&gt;$override suspend</ID>
+    <ID>MaxLineLength:ReviewFixtures.kt$"filediff" to json("file" to path, "before" to before, "after" to after, "additions" to added, "deletions" to removed)</ID>
+    <ID>MaxLineLength:ReviewFixtures.kt$Part(id, "m", S.raw, PartType.Tool, "tool", toolName = name, tool = ToolState(status, input = input, metadata = metadata, completedAtMs = if (status == ToolStatus.Completed) 1 else null))</ID>
+    <ID>MaxLineLength:ReviewFixtures.kt$StagedFake$override suspend</ID>
+    <ID>MaxLineLength:ReviewFixtures.kt$StagedFake$pages.flatten().firstOrNull { it.info.id == message.raw }?.takeIf { it.info.role == Role.User }?.let(TurnChanges::promptText).ok()</ID>
+    <ID>MaxLineLength:ReviewFixtures.kt$StagedFake$var stageResult: (MessageId, Boolean) -&gt; Outcome&lt;SessionRevert&gt; = { m, _ -&gt; SessionRevert(m, null, "snap", persistentListOf(FileDiff("a.kt", additions = 1, deletions = 0))).ok() }</ID>
+    <ID>MaxLineLength:ReviewFixtures.kt$internal</ID>
+    <ID>MaxLineLength:TurnChanges.kt$ChangedFile$override fun toString(): String</ID>
+    <ID>MaxLineLength:TurnChanges.kt$ChangedFile$val</ID>
+    <ID>MaxLineLength:TurnChanges.kt$TurnChanges$(state.metadata?.get("files") as? JsonArray)?.forEach { (it as? JsonObject)?.let { obj -&gt; add(pathField(obj)) } }</ID>
+    <ID>MaxLineLength:TurnChanges.kt$TurnChanges$/** A completed, executed edit-family tool (B-CHAT-101: changed files come only from completed executed edit tools). */</ID>
+    <ID>MaxLineLength:TurnChanges.kt$TurnChanges$if (out.isEmpty()) add(state.input.string("filePath") ?: state.input.string("path") ?: state.input.string("file"))</ID>
+    <ID>MaxLineLength:TurnChanges.kt$TurnChanges$messages.withIndex().sortedWith(compareBy&lt;IndexedValue&lt;MessageWithParts&gt;&gt; { it.value.info.time?.createdMs ?: Long.MAX_VALUE }.thenBy { it.index }).map { it.value }</ID>
+    <ID>MaxLineLength:TurnChanges.kt$TurnChanges$public</ID>
+    <ID>MaxLineLength:TurnChanges.kt$TurnChanges$return message.parts.filter { it.type == PartType.File }.mapNotNull { it.filename?.takeIf(String::isNotBlank) }.joinToString(", ")</ID>
+    <ID>MaxLineLength:TurnChanges.kt$TurnChanges$status = if (file.hasPair &amp;&amp; file.before.isNullOrEmpty() &amp;&amp; file.kind == FileChangeKind.Written) "added" else null</ID>
+    <ID>MaxLineLength:TurnChanges.kt$TurnChanges$val text = message.parts.filter { it.type == PartType.Text &amp;&amp; !it.synthetic }.joinToString("\n") { it.text }.trim()</ID>
+    <ID>MaxLineLength:TurnChangesTest.kt$TurnChangesTest$assertEquals(listOf("a.kt", "b.kt"), TurnChanges.editedFiles(TurnChanges.turnSteps(history, "a1")).map { it.path })</ID>
+    <ID>MaxLineLength:TurnChangesTest.kt$TurnChangesTest$reply("a2", 3, edit("b.kt"), tool("apply_patch", metadata = json("files" to listOf(json("path" to "d.kt"), json("filePath" to "b.kt")))))</ID>
+    <ID>MaxLineLength:TurnChangesTest.kt$TurnChangesTest$val steps = listOf(reply("a1", 2, edit("a.kt", 1, 1, before = "one\n", after = "two\n"), edit("a.kt", 1, 1, before = "two\n", after = "three\n")))</ID>
+    <ID>MaxLineLength:TurnChangesTest.kt$TurnChangesTest$val steps = listOf(reply("a1", 2, edit("a.kt", diff = "@@ -1 +1 @@\n-a\n+b"), edit("a.kt", diff = "@@ -2 +2 @@\n-c\n+d")))</ID>
+    <ID>NestedBlockDepth:TurnChanges.kt$TurnChanges$public fun editedFiles(messages: Iterable&lt;MessageWithParts&gt;, max: Int = MAX_FILES): ImmutableList&lt;ChangedFile&gt;</ID>
+    <ID>NestedBlockDepth:TurnChanges.kt$TurnChanges$public fun editedPaths(messages: Iterable&lt;MessageWithParts&gt;, max: Int = MAX_FILES): ImmutableList&lt;String&gt;</ID>
+    <ID>ReturnCount:ConversationReview.kt$ConversationReview$private suspend fun &lt;T&gt; exclusive( beforeDispatch: suspend (ReviewGateways) -&gt; Outcome&lt;Unit&gt; = { Unit.ok() }, act: suspend (ReviewGateways) -&gt; Outcome&lt;T&gt;, ): Outcome&lt;T&gt;</ID>
+    <ID>ReturnCount:ConversationReview.kt$ConversationReview$public suspend fun history(): Outcome&lt;HistoryRead&gt;</ID>
+    <ID>ReturnCount:ConversationReview.kt$ConversationReview$public suspend fun messagesAfter(promptId: String): Outcome&lt;Int?&gt;</ID>
+    <ID>ReturnCount:ConversationReview.kt$ConversationReview$public suspend fun prompt(messageId: String): Outcome&lt;String?&gt;</ID>
+    <ID>ReturnCount:ConversationReview.kt$ConversationReview$public suspend fun workingTree(): Outcome&lt;ImmutableList&lt;FileDiff&gt;&gt;</ID>
+    <ID>ReturnCount:TurnChanges.kt$TurnChanges$private fun count(raw: JsonElement?): Int?</ID>
+    <ID>ReturnCount:TurnChanges.kt$TurnChanges$private fun editTool(part: Part): Pair&lt;FileChangeKind, ToolState&gt;?</ID>
+    <ID>TooManyFunctions:ConversationReview.kt$ConversationReview</ID>
+    <ID>TooManyFunctions:TurnChanges.kt$TurnChanges</ID>
+  </CurrentIssues>
+</SmellBaseline>

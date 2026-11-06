@@ -1,0 +1,101 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:KeepRunningScreen.kt$@Composable public fun KeepRunningScreen(state: KeepRunningUi, actions: KeepRunningActions)</ID>
+    <ID>CyclomaticComplexMethod:PhoneDetailsPanel.kt$@Composable internal fun PhoneDetailsPanel(state: ThisPhoneUi, actions: ThisPhoneActions)</ID>
+    <ID>CyclomaticComplexMethod:PhoneWords.kt$@Composable internal fun AnswerHeadline.words(): String</ID>
+    <ID>CyclomaticComplexMethod:PhoneWords.kt$@Composable internal fun AnswerLine.words(): String</ID>
+    <ID>CyclomaticComplexMethod:PhoneWords.kt$@Composable internal fun KeepAliveStepKind.words(maker: PhoneMaker, done: Boolean): Pair&lt;String, String&gt;</ID>
+    <ID>CyclomaticComplexMethod:ProjectStorageScreen.kt$@Composable public fun ProjectStorageScreen( state: ProjectStorageUi, actions: ProjectStorageActions, manageSpace: Boolean, )</ID>
+    <ID>CyclomaticComplexMethod:RunningProcessWords.kt$@Composable private fun RunningProcessName.words(): String</ID>
+    <ID>CyclomaticComplexMethod:RunningScreen.kt$@Composable public fun RunningScreen(state: RunningUi, actions: RunningActions)</ID>
+    <ID>CyclomaticComplexMethod:ThisPhoneAnswer.kt$PhoneServerState.Companion$public fun of(facts: PhoneServerFacts): PhoneServerState</ID>
+    <ID>CyclomaticComplexMethod:ThisPhoneAnswer.kt$ThisPhoneAnswers$public fun of( state: PhoneServerState, facts: PhoneServerFacts, now: Instant? = null, stopping: Boolean = false, ): ThisPhoneAnswer</ID>
+    <ID>CyclomaticComplexMethod:ThisPhoneScreen.kt$@Composable public fun ThisPhoneScreen( state: ThisPhoneUi, actions: ThisPhoneActions, onAddTools: (() -&gt; Unit)? = null, )</ID>
+    <ID>EmptyFunctionBlock:LooksCaptureTest.kt$LooksCaptureTest.Calls${}</ID>
+    <ID>EmptyFunctionBlock:PhoneGateTest.kt$PhoneGateTest.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:PhoneGateTest.kt$PhoneGateTest.PhoneActions${}</ID>
+    <ID>EmptyFunctionBlock:RunningDetailTest.kt$RunningDetailTest.Actions${}</ID>
+    <ID>LongMethod:KeepRunningScreen.kt$@Composable public fun KeepRunningScreen(state: KeepRunningUi, actions: KeepRunningActions)</ID>
+    <ID>LongMethod:PhoneDetailsPanel.kt$@Composable internal fun PhoneDetailsPanel(state: ThisPhoneUi, actions: ThisPhoneActions)</ID>
+    <ID>LongMethod:ProjectStorageScreen.kt$@Composable public fun ProjectStorageScreen( state: ProjectStorageUi, actions: ProjectStorageActions, manageSpace: Boolean, )</ID>
+    <ID>LongMethod:RunningScreen.kt$@Composable public fun RunningScreen(state: RunningUi, actions: RunningActions)</ID>
+    <ID>LongMethod:SharedFoldersScreen.kt$@Composable public fun SharedFoldersScreen(state: SharedFoldersUi, actions: SharedFoldersActions)</ID>
+    <ID>LongMethod:ThisPhoneAnswer.kt$ThisPhoneAnswers$public fun of( state: PhoneServerState, facts: PhoneServerFacts, now: Instant? = null, stopping: Boolean = false, ): ThisPhoneAnswer</ID>
+    <ID>LongMethod:ThisPhoneModel.kt$ThisPhoneModel$private fun build( facts: PhoneServerFacts, l: Local, exitNotice: PhoneExitNotice?, reading: PhoneDetailsUi, ): ThisPhoneUi</ID>
+    <ID>LongMethod:ThisPhoneScreen.kt$@Composable public fun ThisPhoneScreen( state: ThisPhoneUi, actions: ThisPhoneActions, onAddTools: (() -&gt; Unit)? = null, )</ID>
+    <ID>LongParameterList:PhoneViewModels.kt$ThisPhoneViewModel$( source: PhoneServerSource, settings: KeepAliveSettings, nav: PhoneNavigator, clock: Clock, pacer: Pacer, details: Set&lt;PhoneStateDetails&gt;, phoneStorage: PhoneStorageReadings = NoPhoneStorageReadings(), exits: PhoneExitNotices, processes: PhoneProcessSource, private val migration: PhoneTermuxMigration, phoneDetails: PhoneDetailsSource, )</ID>
+    <ID>LongParameterList:ThisPhoneModel.kt$ThisPhoneModel$( private val source: PhoneServerSource, private val settings: KeepAliveSettings, private val nav: PhoneNavigator, private val scope: CoroutineScope, private val clock: Clock, private val pacer: Pacer, private val details: Set&lt;PhoneStateDetails&gt; = emptySet(), private val phoneStorage: PhoneStorageReadings? = null, private val exits: PhoneExitNotices = PhoneExitNotices.Absent, private val processes: PhoneProcessSource? = null, private val phoneDetails: PhoneDetailsSource? = null, )</ID>
+    <ID>MagicNumber:PhoneDetailsPanel.kt$1000.0</ID>
+    <ID>MagicNumber:PhoneWords.kt$PhoneSizes$10</ID>
+    <ID>MagicNumber:PhoneWords.kt$PhoneSizes$10.0</ID>
+    <ID>MagicNumber:PhoneWords.kt$PhoneSizes$100</ID>
+    <ID>MagicNumber:PhoneWords.kt$PhoneSizes$1000</ID>
+    <ID>MagicNumber:PhoneWords.kt$PhoneSizes$1024</ID>
+    <ID>MagicNumber:PhoneWords.kt$PhoneSizes$1024.0</ID>
+    <ID>MagicNumber:RunningProcessWords.kt$1_048_576</ID>
+    <ID>MagicNumber:RunningScreen.kt$10</ID>
+    <ID>MagicNumber:RunningScreen.kt$1024</ID>
+    <ID>MagicNumber:RunningScreen.kt$1024.0</ID>
+    <ID>MagicNumber:RunningScreen.kt$1048576.0</ID>
+    <ID>MagicNumber:ThisPhoneAnswer.kt$AboutWait.Companion$4</ID>
+    <ID>MagicNumber:ThisPhoneAnswer.kt$AboutWait.Companion$5</ID>
+    <ID>MagicNumber:ThisPhoneAnswer.kt$AboutWait.Companion$59</ID>
+    <ID>MagicNumber:ThisPhoneAnswer.kt$AboutWait.Companion$60</ID>
+    <ID>MagicNumber:ThisPhoneModel.kt$ThisPhoneModel$149</ID>
+    <ID>MagicNumber:ThisPhoneScreen.kt$10</ID>
+    <ID>MagicNumber:ThisPhoneScreen.kt$1_024L</ID>
+    <ID>MagicNumber:ThisPhoneScreen.kt$1_048_576L</ID>
+    <ID>MagicNumber:ThisPhoneScreen.kt$1_073_741_824L</ID>
+    <ID>MatchingDeclarationName:DesktopPhoneTermuxMigration.kt$DesktopPhoneTermuxMigrationBindings</ID>
+    <ID>MatchingDeclarationName:LooksCapture.kt$Looks</ID>
+    <ID>MaxLineLength:KeepRunningModel.kt$KeepRunningModel$/** Keep running in the background, including the real phone heat-protection switch and the phone-agent full-speed preference (AI Team remains deferred). */</ID>
+    <ID>MaxLineLength:KeepRunningModelTest.kt$KeepRunningModelTest$listOf(KeepAliveStepKind.LockInRecents, KeepAliveStepKind.Background, KeepAliveStepKind.Autostart, KeepAliveStepKind.Battery)</ID>
+    <ID>MaxLineLength:KeepRunningScreen.kt$enabled = if (state.savingSpeed) KitEnabled.Disabled(stringResource(Res.string.fullSpeedSetting)) else KitEnabled.Enabled</ID>
+    <ID>MaxLineLength:LooksCapture.kt$Looks$/** Capture-only: writes PNGs of a screen in light and dark at 412 x 915 dp, density 2.625 (1081 x 2402 px). No comparison. */</ID>
+    <ID>MaxLineLength:LooksCapture.kt$Looks$appearance = KitAppearance(mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light, motion = MotionLevel.Off)</ID>
+    <ID>MaxLineLength:LooksCapture.kt$Looks$fun</ID>
+    <ID>MaxLineLength:LooksCaptureTest.kt$LooksCaptureTest$KeepAliveStepUi(KeepAliveStepKind.Background, done = false, opens = io.github.eslamasabry.oc.feature.phone.presentation.KeepAliveSetting.AppDetails)</ID>
+    <ID>MaxLineLength:PhoneScreensTest.kt$PhoneScreensTest$"On Android 15 and newer, Android allows background syncing for about 6 hours a day, even with everything "</ID>
+    <ID>MaxLineLength:PhoneScreensTest.kt$PhoneScreensTest$answer = ThisPhoneAnswer(AnswerTone.Ok, AnswerHeadline.Running, AnswerLine.Storage(410L * 1024 * 1024))</ID>
+    <ID>MaxLineLength:PhoneScreensTest.kt$PhoneScreensTest$assertEquals(listOf("act RestartNow", "openRunning", "openKeepRunning"), calls.seen.filterNot { it.startsWith("shown") })</ID>
+    <ID>MaxLineLength:PhoneScreensTest.kt$PhoneScreensTest$assertEquals(listOf("askStop 11", "openChildLimit", "hideChildLimit"), calls.seen.filterNot { it.startsWith("shown") })</ID>
+    <ID>MaxLineLength:PhoneScreensTest.kt$PhoneScreensTest$private</ID>
+    <ID>MaxLineLength:PhoneServerStateTest.kt$PhoneServerStateTest$assertEquals(PhoneServerState.NotAnswering, derive(PhoneServerFacts(status = running, probe = ProbeAnswer.NoAnswer)))</ID>
+    <ID>MaxLineLength:PhoneServerStateTest.kt$PhoneServerStateTest$val facts = PhoneServerFacts(status = installed, stoppedByPerson = true, recovery = RecoveryFacts.Waiting(1, null))</ID>
+    <ID>MaxLineLength:PhoneServerStateTest.kt$PhoneServerStateTest$val facts = PhoneServerFacts(status = installed.copy(serverIdlePolicySupported = true, serverIdleStopped = true))</ID>
+    <ID>MaxLineLength:PhoneServerStateTest.kt$PhoneServerStateTest$val facts = PhoneServerFacts(status = running.copy(bytesUsed = 410L * 1024 * 1024), probe = ProbeAnswer.Answered)</ID>
+    <ID>MaxLineLength:RunningModelTest.kt$RunningModelTest$/** Running on this phone (plan 07 F08) and the guided child-process-limit card (plan 11 §7.2; child_limit_card.dart). */</ID>
+    <ID>MaxLineLength:RunningModelTest.kt$RunningModelTest$ChildLimitCards.kind(status, recentKill = killAt != null, queuedOften = queued, hiddenAt = hiddenAt, lastKillAt = killAt)</ID>
+    <ID>MaxLineLength:RunningModelTest.kt$RunningModelTest$ChildLimitStatus(sdkInt = 34, state = ChildLimitState.Enforced, developerOptionsEnabled = true, canOpenSettings = true)</ID>
+    <ID>MaxLineLength:RunningModelTest.kt$RunningModelTest$PhoneProcess(pid = 10, parentPid = 1, name = "OpenCode", kind = ProcessKind.OpenCode, role = ProcessRole.ServerRoot)</ID>
+    <ID>MaxLineLength:RunningModelTest.kt$RunningModelTest$PhoneProcess(pid = 11, parentPid = 10, name = "Claude Code", kind = ProcessKind.ClaudeCode, cpuPercent = 41.6)</ID>
+    <ID>MaxLineLength:RunningModelTest.kt$RunningModelTest$fun</ID>
+    <ID>MaxLineLength:ThisPhoneModelTest.kt$ThisPhoneModelTest$assertEquals(listOf("open SetupStart", "open Running", "open KeepRunning", "open Linux", "back"), rig.nav.calls)</ID>
+    <ID>MaxLineLength:ThisPhoneScreen.kt$KitButton(KitAction(label = act.words(), onClick = { actions.act(act) }, working = busy), fullWidth = true, hero = true)</ID>
+    <ID>MaxLineLength:ThisPhoneScreen.kt$action = if (installed &amp;&amp; state.details.canConnect) KitAction(stringResource(Res.string.r40PhoneConnect), actions::connect, enabled = io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled.of(!busy, busyWords)) else null</ID>
+    <ID>MaxLineLength:build.gradle.kts$kotlin.exclude { it.file.name.endsWith("Test.kt") &amp;&amp; it.file.name != "LooksCaptureTest.kt" &amp;&amp; !it.file.invariantSeparatorsPath.contains("/rb/o48/") }</ID>
+    <ID>ReturnCount:ChildLimitCard.kt$ChildLimitCards$public fun kind( status: ChildLimitStatus, recentKill: Boolean, queuedOften: Boolean, hiddenAt: Instant?, lastKillAt: Instant?, ): ChildLimitCardKind?</ID>
+    <ID>ReturnCount:ThisPhoneAnswer.kt$PhoneServerState.Companion$public fun of(facts: PhoneServerFacts): PhoneServerState</ID>
+    <ID>ReturnCount:ThisPhoneAnswer.kt$ThisPhoneAnswers$public fun of( state: PhoneServerState, facts: PhoneServerFacts, now: Instant? = null, stopping: Boolean = false, ): ThisPhoneAnswer</ID>
+    <ID>ReturnCount:ThisPhoneModel.kt$ThisPhoneModel$override fun askUpdate()</ID>
+    <ID>TooManyFunctions:PhoneViewModels.kt$ThisPhoneViewModel : ViewModelThisPhoneActionsThisPhoneMigrationActions</ID>
+    <ID>TooManyFunctions:RunningModel.kt$RunningModel : RunningActions</ID>
+    <ID>TooManyFunctions:ThisPhoneModel.kt$ThisPhoneModel : ThisPhoneActions</ID>
+    <ID>TooManyFunctions:ThisPhoneUi.kt$ThisPhoneActions</ID>
+    <ID>WildcardImport:PhoneDetailsPanel.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:PhoneFirstStartConsent.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:PhoneGateTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:PhoneGateTest.kt$import io.github.eslamasabry.oc.feature.phone.presentation.*</ID>
+    <ID>WildcardImport:RunningDetailTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:RunningDetailTest.kt$import io.github.eslamasabry.oc.feature.phone.presentation.*</ID>
+    <ID>WildcardImport:RunningDetailTest.kt$import kotlin.test.*</ID>
+    <ID>WildcardImport:RunningProcessWords.kt$import io.github.eslamasabry.oc.engine.runtime.procs.*</ID>
+    <ID>WildcardImport:RunningProcessWords.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:RunningScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:ThisPhoneScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:ThisPhoneScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:ThisPhoneScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:TerminalKeys.kt$TerminalKeys$public fun bytes( key: TerminalKey, control: Boolean, alt: Boolean, applicationCursor: Boolean, ): String</ID>
+    <ID>MagicNumber:TerminalKeys.kt$TerminalKeys$31</ID>
+    <ID>MagicNumber:TerminalKeys.kt$TerminalKeys$4</ID>
+    <ID>MagicNumber:TerminalKeys.kt$TerminalKeys$96</ID>
+  </CurrentIssues>
+</SmellBaseline>

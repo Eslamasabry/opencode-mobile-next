@@ -1,0 +1,339 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:PairingPayload.kt$ShareLink$host.length &gt; 253 || labels.size != 4 || labels[2] != "ts" || labels[3] != "net"</ID>
+    <ID>ComplexCondition:ServerEditorViewModel.kt$ServerEditorViewModel$!anyway &amp;&amp; checked == null &amp;&amp; (!saveAfter || mutable.value.connectOnSave)</ID>
+    <ID>ComplexCondition:ServerQueueMove.kt$ServerQueueViewModel$mutable.value.busy || mutable.value.moved != null || mutable.value.plan?.items?.none { it.id == id &amp;&amp; it.blocked == null } != false</ID>
+    <ID>ComplexCondition:SetupScreen.kt$done != null &amp;&amp; total != null &amp;&amp; total &gt; 0 &amp;&amp; done &lt;= total</ID>
+    <ID>CyclomaticComplexMethod:AgentAccountScreen.kt$@Composable private fun Identity(panel: AccountPanelState, actions: AgentAccountActions)</ID>
+    <ID>CyclomaticComplexMethod:AgentAccountScreen.kt$@Composable public fun AgentAccountScreen(state: AgentAccountUi, actions: AgentAccountActions)</ID>
+    <ID>CyclomaticComplexMethod:ConnectionCheck.kt$ConnectionCheckUi$public fun finish(facts: ConnectionCheckFacts): ConnectionCheckUi</ID>
+    <ID>CyclomaticComplexMethod:ConnectionCheckSheet.kt$@Composable private fun checkWords(result: ConnectionCheckResult, step: ConnectionCheckStep): String</ID>
+    <ID>CyclomaticComplexMethod:Pairing.kt$PairingCode$public fun parse(raw: String): PairingParse</ID>
+    <ID>CyclomaticComplexMethod:PairingPayload.kt$PairingText$public fun normalizeCandidate(raw: String): String?</ID>
+    <ID>CyclomaticComplexMethod:PairingPayload.kt$PairingText$public fun parse(raw: String): PairingRead</ID>
+    <ID>CyclomaticComplexMethod:PairingPayload.kt$ShareLink$public fun origin(raw: String): String?</ID>
+    <ID>CyclomaticComplexMethod:ServerEditorScreen.kt$@Composable public fun ServerEditorScreen( state: ServerEditorUi, actions: ServerEditorActions, lan: LanDiscovery = NoLanDiscovery(), )</ID>
+    <ID>CyclomaticComplexMethod:ServerEditorViewModel.kt$ServerEditorViewModel$private fun probe(input: ServerEditorInput, saveAfter: Boolean, anyway: Boolean)</ID>
+    <ID>CyclomaticComplexMethod:ServerFailureKind.kt$public fun serverFailureKind(failure: Failure?): ServerFailureKind</ID>
+    <ID>CyclomaticComplexMethod:ServerQueueScreen.kt$@Composable public fun ServerQueueScreen(state: ServerQueueUi, actions: ServerQueueActions)</ID>
+    <ID>CyclomaticComplexMethod:ServerSavedRows.kt$@Composable internal fun ServerSavedRows( state: ServersUi, actions: ServersActions, enabled: KitEnabled, phoneHost: Boolean = false, )</ID>
+    <ID>CyclomaticComplexMethod:ServerSetupScreen.kt$@Composable public fun ServerSetupScreen(state: ServerSetupUi, actions: ServerSetupActions)</ID>
+    <ID>CyclomaticComplexMethod:ServersScreen.kt$@Composable private fun issueWords(issue: ServerIssue, failure: Failure?): String</ID>
+    <ID>CyclomaticComplexMethod:ServersScreen.kt$@Composable public fun ServersScreen( state: ServersUi, actions: ServersActions, onThisPhone: (() -&gt; Unit)? = null, onInspectSetup: ((ProfileId) -&gt; Unit)? = null, onTerminal: ((ProfileId) -&gt; Unit)? = null, tailscale: TailscaleSetup? = null, initialHostSetup: Boolean = false, initialTailscaleSetup: Boolean = false, )</ID>
+    <ID>CyclomaticComplexMethod:SetupScreen.kt$@Composable public fun SetupScreen(state: SetupUi, actions: SetupActions)</ID>
+    <ID>CyclomaticComplexMethod:TailscaleSetupSheet.kt$@Composable internal fun TailscaleSetupSheet( visible: Boolean, source: TailscaleSetup?, onDismiss: () -&gt; Unit, onReviewed: (String) -&gt; Unit, )</ID>
+    <ID>EmptyFunctionBlock:LooksCaptureTest.kt$LooksCaptureTest.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:PairingScannerGateTest.kt$PairingScannerGateTest.Actions${}</ID>
+    <ID>EmptyFunctionBlock:PhoneOwnServerMarkTest.kt$PhoneOwnServerMarkTest.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:QrScannerSlot.kt$NoQrScannerSlot${ }</ID>
+    <ID>EmptyFunctionBlock:ServerEditorParityTest.kt$ServerEditorParityTest.Actions${}</ID>
+    <ID>EmptyFunctionBlock:ServerFailureNoticeTest.kt$ServerFailureNoticeTest.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:ServerQueueSheetTest.kt$ServerQueueSheetTest.Actions${}</ID>
+    <ID>EmptyFunctionBlock:ServersGateTest.kt$ServersGateTest.Actions${}</ID>
+    <ID>LongMethod:AgentAccountScreen.kt$@Composable private fun Identity(panel: AccountPanelState, actions: AgentAccountActions)</ID>
+    <ID>LongMethod:AgentAccountScreen.kt$@Composable public fun AgentAccountScreen(state: AgentAccountUi, actions: AgentAccountActions)</ID>
+    <ID>LongMethod:ComputerCommands.kt$@Composable internal fun ComputerCommands()</ID>
+    <ID>LongMethod:ConnectionCheck.kt$ConnectionCheckUi$public fun finish(facts: ConnectionCheckFacts): ConnectionCheckUi</ID>
+    <ID>LongMethod:FindOnNetworkSection.kt$@Composable internal fun FindOnNetworkSection( find: FindOnNetworkUi, enabled: Boolean, onStart: () -&gt; Unit, onStop: () -&gt; Unit, onPick: (LanFinding) -&gt; Unit, onEnterAddress: () -&gt; Unit, onOpenSettings: () -&gt; Unit, )</ID>
+    <ID>LongMethod:HostSetupSheet.kt$@Composable internal fun HostSetupContentSheet( visible: Boolean, onDismiss: () -&gt; Unit, serverName: String? = null, port: Int = 4096, // F: lib/ui/screens/host_management_screen.dart:29 supportsUsbHostBridge: Boolean = true, onGuide: (() -&gt; Unit)? = null, )</ID>
+    <ID>LongMethod:PairingScannerScreen.kt$@Composable public fun PairingScannerScreen( state: PairingScannerUi, actions: PairingScannerActions, slot: QrScannerSlot, accepts: (String) -&gt; Boolean, modifier: Modifier = Modifier, )</ID>
+    <ID>LongMethod:SavedPermissionsScreen.kt$@Composable public fun SavedPermissionsScreen(state: SavedPermissionsUi, actions: SavedPermissionsActions)</ID>
+    <ID>LongMethod:ServerEditorScreen.kt$@Composable public fun ServerEditorScreen( state: ServerEditorUi, actions: ServerEditorActions, lan: LanDiscovery = NoLanDiscovery(), )</ID>
+    <ID>LongMethod:ServerEditorViewModel.kt$ServerEditorViewModel$private fun probe(input: ServerEditorInput, saveAfter: Boolean, anyway: Boolean)</ID>
+    <ID>LongMethod:ServerFailureKindTest.kt$ServerFailureKindTest$@Test fun `B-PROTO-095 every connection failure names its own category and credentials or TLS never claim network`()</ID>
+    <ID>LongMethod:ServerQueueScreen.kt$@Composable public fun ServerQueueScreen(state: ServerQueueUi, actions: ServerQueueActions)</ID>
+    <ID>LongMethod:ServerRemovalScreen.kt$@Composable public fun ServerRemovalScreen(state: ServerRemovalUi, actions: ServerRemovalActions)</ID>
+    <ID>LongMethod:ServerSavedRows.kt$@Composable internal fun ServerSavedRows( state: ServersUi, actions: ServersActions, enabled: KitEnabled, phoneHost: Boolean = false, )</ID>
+    <ID>LongMethod:ServerSetupScreen.kt$@Composable public fun ServerSetupScreen(state: ServerSetupUi, actions: ServerSetupActions)</ID>
+    <ID>LongMethod:ServersEntries.kt$ServersEntries$override fun EntryProviderScope&lt;NavKey&gt;.install()</ID>
+    <ID>LongMethod:ServersScreen.kt$@Composable public fun ServersScreen( state: ServersUi, actions: ServersActions, onThisPhone: (() -&gt; Unit)? = null, onInspectSetup: ((ProfileId) -&gt; Unit)? = null, onTerminal: ((ProfileId) -&gt; Unit)? = null, tailscale: TailscaleSetup? = null, initialHostSetup: Boolean = false, initialTailscaleSetup: Boolean = false, )</ID>
+    <ID>LongMethod:SetupScreen.kt$@Composable public fun SetupScreen(state: SetupUi, actions: SetupActions)</ID>
+    <ID>LongMethod:TailscaleSetupSheet.kt$@Composable internal fun TailscaleSetupSheet( visible: Boolean, source: TailscaleSetup?, onDismiss: () -&gt; Unit, onReviewed: (String) -&gt; Unit, )</ID>
+    <ID>LongParameterList:FindOnNetworkSection.kt$( find: FindOnNetworkUi, enabled: Boolean, onStart: () -&gt; Unit, onStop: () -&gt; Unit, onPick: (LanFinding) -&gt; Unit, onEnterAddress: () -&gt; Unit, onOpenSettings: () -&gt; Unit, )</ID>
+    <ID>LongParameterList:HostSetupSheet.kt$( visible: Boolean, onDismiss: () -&gt; Unit, serverName: String? = null, port: Int = 4096, // F: lib/ui/screens/host_management_screen.dart:29 supportsUsbHostBridge: Boolean = true, onGuide: (() -&gt; Unit)? = null, )</ID>
+    <ID>LongParameterList:PairingInbox.kt$PairingFill$( public val address: String, public val username: String?, private var secret: String?, /** The code listed this many addresses; [address] is the one a phone should try first. */ public val addresses: Int, public val fromLink: Boolean, /** * Every address of the code in the order a phone tries them ([address] first); probing picks * among them. */ public val candidates: List&lt;String&gt; = listOf(address), public val hostname: String? = null, )</ID>
+    <ID>LongParameterList:ServerEditorViewModel.kt$ServerEditorViewModel$( @Assisted private val route: ServersRoute.Edit, private val port: ServerEditorPort, private val connections: ServerConnections, private val nav: AppNavigator, private val inbox: PairingInbox, private val pairingProbe: PairingProbe, private val lan: LanDiscovery, platform: PlatformCapabilities, )</ID>
+    <ID>LongParameterList:ServersScreen.kt$( state: ServersUi, actions: ServersActions, onThisPhone: (() -&gt; Unit)? = null, onInspectSetup: ((ProfileId) -&gt; Unit)? = null, onTerminal: ((ProfileId) -&gt; Unit)? = null, tailscale: TailscaleSetup? = null, initialHostSetup: Boolean = false, initialTailscaleSetup: Boolean = false, )</ID>
+    <ID>LongParameterList:ServersViewModel.kt$ServersViewModel$( @Assisted private val route: ChatsRoute.New?, private val connections: ServerConnections, private val nav: AppNavigator, private val rows: ServerRowsPort, private val pairing: PairingInbox = PairingInbox(), /** * Picks among a code's addresses (B-PROTO-068); without one, the best-ordered address is used. */ private val probe: PairingProbe = NoPairingProbe, private val monitoring: Set&lt;ServerMonitoring&gt; = emptySet(), private val imported: ImportedProviderReview? = null, private val connectionChecks: Set&lt;ServerConnectionCheck&gt; = emptySet(), private val readSharing: Set&lt;ServerReadSharing&gt; = emptySet(), )</ID>
+    <ID>LongParameterList:TailscalePhoneContent.kt$( appState: KitStepState, appSupporting: String, canCheck: Boolean, onCheck: () -&gt; Unit, canOpen: Boolean, onOpen: () -&gt; Unit, openFailed: Boolean, getApp: (() -&gt; Unit)? = null, )</ID>
+    <ID>MagicNumber:AgentAccountScreen.kt$100</ID>
+    <ID>MagicNumber:AgentAccountScreen.kt$100f</ID>
+    <ID>MagicNumber:AgentAccountScreen.kt$1440</ID>
+    <ID>MagicNumber:AgentAccountScreen.kt$3600000</ID>
+    <ID>MagicNumber:AgentAccountScreen.kt$3600000L</ID>
+    <ID>MagicNumber:AgentAccountScreen.kt$48</ID>
+    <ID>MagicNumber:AgentAccountScreen.kt$60</ID>
+    <ID>MagicNumber:AgentAccountScreen.kt$60000</ID>
+    <ID>MagicNumber:AgentAccountScreen.kt$86400000L</ID>
+    <ID>MagicNumber:ConnectMethods.kt$ConnectMethods$3</ID>
+    <ID>MagicNumber:ConnectionCheck.kt$ConnectionCheckUi$1500</ID>
+    <ID>MagicNumber:LanSubnet.kt$LanSubnet$0xFF</ID>
+    <ID>MagicNumber:LanSubnet.kt$LanSubnet$16</ID>
+    <ID>MagicNumber:LanSubnet.kt$LanSubnet$24</ID>
+    <ID>MagicNumber:LanSubnet.kt$LanSubnet$255</ID>
+    <ID>MagicNumber:LanSubnet.kt$LanSubnet$3</ID>
+    <ID>MagicNumber:LanSubnet.kt$LanSubnet$30</ID>
+    <ID>MagicNumber:LanSubnet.kt$LanSubnet$32</ID>
+    <ID>MagicNumber:LanSubnet.kt$LanSubnet$4</ID>
+    <ID>MagicNumber:LanSubnet.kt$LanSubnet$4096</ID>
+    <ID>MagicNumber:LanSubnet.kt$LanSubnet$4097</ID>
+    <ID>MagicNumber:LanSubnet.kt$LanSubnet$65535</ID>
+    <ID>MagicNumber:LanSubnet.kt$LanSubnet$8</ID>
+    <ID>MagicNumber:Pairing.kt$PairingAddress$2048</ID>
+    <ID>MagicNumber:Pairing.kt$PairingAddress$3</ID>
+    <ID>MagicNumber:PairingPayload.kt$PairingText$253</ID>
+    <ID>MagicNumber:PairingPayload.kt$PairingText$63</ID>
+    <ID>MagicNumber:PairingPayload.kt$PairingText$65535</ID>
+    <ID>MagicNumber:PairingPayload.kt$ShareLink$0x21</ID>
+    <ID>MagicNumber:PairingPayload.kt$ShareLink$0x7e</ID>
+    <ID>MagicNumber:PairingPayload.kt$ShareLink$16</ID>
+    <ID>MagicNumber:PairingPayload.kt$ShareLink$253</ID>
+    <ID>MagicNumber:PairingPayload.kt$ShareLink$3</ID>
+    <ID>MagicNumber:PairingPayload.kt$ShareLink$4</ID>
+    <ID>MagicNumber:PairingPayload.kt$ShareLink$443</ID>
+    <ID>MagicNumber:PairingPayload.kt$ShareLink$65535</ID>
+    <ID>MagicNumber:ServerEditorScreen.kt$250</ID>
+    <ID>MagicNumber:ServerEditorScreen.kt$3</ID>
+    <ID>MagicNumber:ServerEditorScreen.kt$4</ID>
+    <ID>MagicNumber:ServerEditorScreen.kt$5</ID>
+    <ID>MagicNumber:ServerEditorScreen.kt$900</ID>
+    <ID>MagicNumber:ServerEditorViewModel.kt$ServerEditorViewModel$8_000</ID>
+    <ID>MagicNumber:ServerQueueScreen.kt$8</ID>
+    <ID>MagicNumber:ServersViewModel.kt$ServersViewModel$5_000</ID>
+    <ID>MagicNumber:TailscaleSetup.kt$2048</ID>
+    <ID>MatchingDeclarationName:LooksCapture.kt$Looks</ID>
+    <ID>MaxLineLength:CleartextRefusalWordsTest.kt$CleartextRefusalWordsTest$assertEquals(ServerFailureKind.CleartextConsent, serverFailureKind(Failure.Refused(RefusalReason.CleartextNotConfirmed)))</ID>
+    <ID>MaxLineLength:LanDiscoveryRules.kt$LanDiscoveryRules$/** Subnet arithmetic and result merging for "Find on my network". (Not named *Test.kt: this module's build excludes those.) */</ID>
+    <ID>MaxLineLength:LooksCapture.kt$Looks$/** Capture-only: writes PNGs of a screen in light and dark at 412 x 915 dp, density 2.625 (1081 x 2402 px). No comparison. */</ID>
+    <ID>MaxLineLength:LooksCapture.kt$Looks$appearance = KitAppearance(mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light, motion = MotionLevel.Off)</ID>
+    <ID>MaxLineLength:LooksCapture.kt$Looks$fun</ID>
+    <ID>MaxLineLength:LooksCaptureTest.kt$LooksCaptureTest$CompositionLocalProvider(LocalKitSecretSink provides KitSecretSink {}) { ServersScreen(ui, actions, onThisPhone = {}) }</ID>
+    <ID>MaxLineLength:P12FixFormDraftTest.kt$P12FixFormDraftTest$KitTheme</ID>
+    <ID>MaxLineLength:P12FixPairingTest.kt$P12FixPairingTest$PairingChoice.choose(urls, Probe(mapOf("https://b.example" to PairingAnswer.Answers, "https://c.example" to PairingAnswer.Works)))</ID>
+    <ID>MaxLineLength:P12FixPairingTest.kt$P12FixPairingTest$assertEquals("https://b.example", PairingChoice.choose(urls, Probe(mapOf("https://b.example" to PairingAnswer.Answers))))</ID>
+    <ID>MaxLineLength:P12FixPairingTest.kt$P12FixPairingTest$fun</ID>
+    <ID>MaxLineLength:P12FixPairingTest.kt$P12FixPairingTest.Connections$override suspend</ID>
+    <ID>MaxLineLength:Pairing.kt$PairingDialer$PairingAddressOutcome(origin.toString(), origin, probed = false, verdict = AddressVerdict.NeedsCleartextConsent)</ID>
+    <ID>MaxLineLength:Pairing.kt$PairingDialer$is Failure.Busy -&gt; if (failure.kind == BusyKind.Starting) AddressVerdict.Starting else AddressVerdict.Unhealthy</ID>
+    <ID>MaxLineLength:Pairing.kt$PairingDialer$is Failure.Network -&gt; if (failure.why == NetworkWhy.Dns) AddressVerdict.HostNotFound else AddressVerdict.Refused</ID>
+    <ID>MaxLineLength:Pairing.kt$PairingDialer$outcomes += PairingAddressOutcome(origin.toString(), origin, probed = true, verdict = AddressVerdict.Answered)</ID>
+    <ID>MaxLineLength:PairingFlowTest.kt$PairingFlowTest$fun</ID>
+    <ID>MaxLineLength:PairingFlowTest.kt$PairingFlowTest.Connections$override suspend</ID>
+    <ID>MaxLineLength:PairingScannerGateTest.kt$PairingScannerGateTest.Camera$@Composable override</ID>
+    <ID>MaxLineLength:PairingScannerScreen.kt$*</ID>
+    <ID>MaxLineLength:PairingScannerScreen.kt$primary = KitAction(stringResource(Res.string.e7SetupOpenAppSettings), { handle.settingsRequests++ }, icon = KitIcons.settings)</ID>
+    <ID>MaxLineLength:PairingScannerScreen.kt$primary = KitAction(stringResource(Res.string.isolatedTaskRetryOpen), { handle.retries++ }, icon = KitIcons.retry)</ID>
+    <ID>MaxLineLength:PairingScannerScreen.kt$primary = KitAction(stringResource(Res.string.pairingScannerAllowCamera), { handle.allowRequests++ }, icon = KitIcons.camera)</ID>
+    <ID>MaxLineLength:PairingScreensTest.kt$PairingScreensTest$KitTheme</ID>
+    <ID>MaxLineLength:PairingScreensTest.kt$PairingScreensTest$fun</ID>
+    <ID>MaxLineLength:PairingScreensTest.kt$PairingScreensTest$onNodeWithText("That QR code is not a pairing code. Point the camera at the code opencode2 pair prints.").assertExists()</ID>
+    <ID>MaxLineLength:PairingScreensTest.kt$PairingScreensTest$onNodeWithText("That pairing code has no “password” field. It may have been truncated — scan or copy the whole code.").assertExists()</ID>
+    <ID>MaxLineLength:PairingScreensTest.kt$PairingScreensTest$setContent { Themed { PairingScannerScreen(PairingScannerUi(), ScannerActions(), FakeCamera(ScanStage.Blocked), { false }) } }</ID>
+    <ID>MaxLineLength:PairingScreensTest.kt$PairingScreensTest$setContent { Themed { PairingScannerScreen(PairingScannerUi(), ScannerActions(), FakeCamera(ScanStage.Denied), { false }) } }</ID>
+    <ID>MaxLineLength:PairingScreensTest.kt$PairingScreensTest$setContent { Themed { PairingScannerScreen(PairingScannerUi(problem = PairingProblem.PasswordMissing), ScannerActions(), NoQrScannerSlot(), { false }) } }</ID>
+    <ID>MaxLineLength:PairingScreensTest.kt$PairingScreensTest$setContent { Themed { PairingScannerScreen(PairingScannerUi(rejected = true), ScannerActions(), FakeCamera(ScanStage.Scanning), { false }) } }</ID>
+    <ID>MaxLineLength:PairingScreensTest.kt$PairingScreensTest.FakeCamera$override</ID>
+    <ID>MaxLineLength:PairingScreensTest.kt$PairingScreensTest.FormActions$override fun save(name: String, address: String, username: String, password: String)</ID>
+    <ID>MaxLineLength:PairingTest.kt$PairingTest$dialer({ fail("must not be dialed: ${it.origin}") }, confirmed = setOf(ServerOrigin("http", "desk.local", 4097)))</ID>
+    <ID>MaxLineLength:PairingTest.kt$PairingTest$listOf("https://desk.example:4097" to AddressVerdict.TimedOut, "http://127.0.0.1:4097" to AddressVerdict.Refused)</ID>
+    <ID>MaxLineLength:PairingTest.kt$PairingTest$parsed(pairJson(listOf("https://pair-user:pair-password@desk.example:4097/?token=$urlSecret#fragment-$urlSecret")))</ID>
+    <ID>MaxLineLength:PairingTest.kt$PairingTest$private</ID>
+    <ID>MaxLineLength:PairingTest.kt$PairingTest$val p = parsed(pairJson(listOf("https://first.example:4097", "https://second.example:4097", "https://third.example:4097")))</ID>
+    <ID>MaxLineLength:PairingTextTest.kt$PairingTextTest$"opencode-mobile://session/v2?server=https%253A%252F%252Fbox.tail1234.ts.net&amp;instance=$instance&amp;session=ses_1"</ID>
+    <ID>MaxLineLength:PairingTextTest.kt$PairingTextTest$"opencode-mobile://session/v2?server=https%3A%2F%2Fuser%40box.tail1234.ts.net&amp;instance=$instance&amp;session=ses_1"</ID>
+    <ID>MaxLineLength:PairingTextTest.kt$PairingTextTest$"opencode-mobile://session/v2?server=https://box.tail1234.ts.net&amp;server=https://x.y.ts.net&amp;instance=$instance&amp;session=ses_1"</ID>
+    <ID>MaxLineLength:PairingTextTest.kt$PairingTextTest$assertEquals(PairingProblem.AddressLong, problem("""{"urls":["https://${"a".repeat(2100)}.example"],"password":"x"}"""))</ID>
+    <ID>MaxLineLength:PairingTextTest.kt$PairingTextTest$assertEquals(PairingProblem.UsernameType, problem("""{"urls":["https://a.example"],"username":7,"password":"x"}"""))</ID>
+    <ID>MaxLineLength:PairingTextTest.kt$PairingTextTest$fun</ID>
+    <ID>MaxLineLength:PairingTextTest.kt$PairingTextTest$listOf("http://127.0.0.1:4096", "http://localhost:4096", "https://a.example", "not a url", "https://b.example")</ID>
+    <ID>MaxLineLength:PairingTextTest.kt$PairingTextTest$listOf("https://a.example", "not a url", "https://b.example", "http://127.0.0.1:4096", "http://localhost:4096")</ID>
+    <ID>MaxLineLength:PairingTextTest.kt$PairingTextTest$val link = "opencode-mobile://session/v2?server=https%3A%2F%2Fbox.tail1234.ts.net%3A8443&amp;instance=$instance&amp;session=ses_abc123"</ID>
+    <ID>MaxLineLength:PairingTextTest.kt$PairingTextTest$val p = code("""{"urls":["https://box.tail.ts.net:4096","http://127.0.0.1:4096"],"username":"opencode","password":"s3cret"}""")</ID>
+    <ID>MaxLineLength:PairingTextTest.kt$PairingTextTest$val p = code("""{"urls":["https://user:pw@box.example:4096/path?token=abc"],"username":"mallory&lt;script&gt;","password":"hunter2"}""")</ID>
+    <ID>MaxLineLength:PairingTextTest.kt$PairingTextTest$val p = code("\n {\"urls\":[\" https://a.example \",\"https://a.example\",\"\",\"https://b.example\"],\"password\":\"x\"}\t\n")</ID>
+    <ID>MaxLineLength:PairingTextTest.kt$PairingTextTest$val read = PairingText.parse("""{"urls":["http://127.0.0.1:4096","https://box.tail.ts.net:4096"],"password":"pw"}""")</ID>
+    <ID>MaxLineLength:PairingTextTest.kt$PairingTextTest$val urls = listOf("http://127.0.0.1:4096", "https://a.example", "not a url", "http://localhost:4096", "https://b.example")</ID>
+    <ID>MaxLineLength:ServerFailureNoticeTest.kt$ServerFailureNoticeTest$io.github.eslamasabry.oc.engine.connection.SavedServer(ProfileId("a"), "Home", "https://home.test", connected = true)</ID>
+    <ID>MaxLineLength:ServerFailureNoticeTest.kt$ServerFailureNoticeTest$io.github.eslamasabry.oc.engine.connection.SavedServer(ProfileId("b"), "Work", "https://work.test", connected = false)</ID>
+    <ID>MaxLineLength:ServersScreen.kt$Column</ID>
+    <ID>MaxLineLength:ServersScreen.kt$KitButton(stringResource(Res.string.firstRunJustShowMe), actions::tryOffline, role = KitButtonRole.Tertiary, enabled = enabled)</ID>
+    <ID>MaxLineLength:ServersScreen.kt$KitField(arrivalAddress, stringResource(Res.string.serversAddress), kind = KitFieldKind.Url, enabled = enabled)</ID>
+    <ID>MaxLineLength:ServersScreen.kt$KitField(arrivalPassword, stringResource(Res.string.serversPassword), kind = KitFieldKind.Secret, enabled = enabled)</ID>
+    <ID>MaxLineLength:ServersScreen.kt$KitSwitchRow</ID>
+    <ID>MaxLineLength:ServersScreen.kt$actions.save(arrivalName.text.toString(), arrivalAddress.text.toString(), arrivalUser.text.toString(), arrivalPassword.text.toString())</ID>
+    <ID>MaxLineLength:ServersScreen.kt$detailsLabel = stringResource(Res.string.kitDetails)</ID>
+    <ID>MaxLineLength:ServersScreen.kt$failure = state.failure</ID>
+    <ID>MaxLineLength:ServersScreen.kt$if</ID>
+    <ID>MaxLineLength:ServersScreen.kt$if (onThisPhone != null) KitButton(stringResource(Res.string.welcomeMoreWays), onThisPhone, role = KitButtonRole.Tertiary, enabled = enabled)</ID>
+    <ID>MaxLineLength:ServersScreen.kt$selected = !phoneChoice</ID>
+    <ID>MaxLineLength:ServersScreen.kt$title = stringResource(Res.string.firstRunOnComputer)</ID>
+    <ID>MaxLineLength:ServersScreen.kt$title = stringResource(if (state.newConversation) Res.string.serversNewTitle else Res.string.serversTitle)</ID>
+    <ID>MaxLineLength:SetupCommands.kt$SetupCommands$"umask 077\npython3 -c 'import secrets; print(secrets.token_urlsafe(32), end=\"\")' &gt; /absolute/path/codex-capability-token\nchmod 600 /absolute/path/codex-capability-token"</ID>
+    <ID>MaxLineLength:TailscaleSetupSheet.kt$enabled = KitEnabled.of(address.text.isNotBlank(), stringResource(Res.string.tailscaleSetupContinueReason))</ID>
+    <ID>MaxLineLength:TailscaleSetupSheet.kt$placeholder = "https://computer.tailnet-name.ts.net"</ID>
+    <ID>MaxLineLength:build.gradle.kts$kotlin.exclude { it.file.name.endsWith("Test.kt") &amp;&amp; it.file.name != "LooksCaptureTest.kt" &amp;&amp; !it.file.invariantSeparatorsPath.contains("/rb/o45/") }</ID>
+    <ID>ReturnCount:AgentAccountViewModel.kt$AgentAccountViewModel$override fun copyCode()</ID>
+    <ID>ReturnCount:AgentAccountViewModel.kt$AgentAccountViewModel$private fun open(confirmed: Boolean)</ID>
+    <ID>ReturnCount:ConnectionCheckSheet.kt$@Composable private fun checkWords(result: ConnectionCheckResult, step: ConnectionCheckStep): String</ID>
+    <ID>ReturnCount:LanSubnet.kt$LanSubnet$internal fun parse(text: String): Long?</ID>
+    <ID>ReturnCount:LanSubnet.kt$LanSubnet$public fun contains(selfAddress: String, prefix: Int, candidate: String): Boolean</ID>
+    <ID>ReturnCount:LanSubnet.kt$LanSubnet$public fun hosts(selfAddress: String, prefix: Int): List&lt;String&gt;?</ID>
+    <ID>ReturnCount:Pairing.kt$PairingAddress$fun display(raw: String): String</ID>
+    <ID>ReturnCount:Pairing.kt$PairingCode$public fun parse(raw: String): PairingParse</ID>
+    <ID>ReturnCount:PairingPayload.kt$PairingText$public fun looksLikePayload(raw: String): Boolean</ID>
+    <ID>ReturnCount:PairingPayload.kt$PairingText$public fun normalizeCandidate(raw: String): String?</ID>
+    <ID>ReturnCount:PairingPayload.kt$PairingText$public fun parse(raw: String): PairingRead</ID>
+    <ID>ReturnCount:PairingPayload.kt$PairingText$public fun safeOrigin(value: String): String</ID>
+    <ID>ReturnCount:PairingPayload.kt$ShareLink$private fun decodeOnce(value: String): String?</ID>
+    <ID>ReturnCount:PairingPayload.kt$ShareLink$private fun normalizeOrigin(value: String): String?</ID>
+    <ID>ReturnCount:PairingPayload.kt$ShareLink$public fun origin(raw: String): String?</ID>
+    <ID>ReturnCount:SavedPermissionsViewModel.kt$SavedPermissionsViewModel$override fun confirmRevoke()</ID>
+    <ID>ReturnCount:ServerEditorScreen.kt$private fun requiresHttpReview( backend: BackendKind, address: String, confirmedOrigin: String?, ): Boolean</ID>
+    <ID>ReturnCount:ServerEditorViewModel.kt$ServerEditorViewModel$override fun openReady()</ID>
+    <ID>ReturnCount:ServersViewModel.kt$ServersViewModel$private suspend fun createNow(id: ProfileId)</ID>
+    <ID>ReturnCount:SetupViewModel.kt$SetupViewModel$override fun inspect()</ID>
+    <ID>ReturnCount:SetupViewModel.kt$SetupViewModel$override fun refresh(query: String?)</ID>
+    <ID>SpreadOperator:SetupMessageWords.kt$( Res.allStringResources.getValue(message.key), *message.args.toTypedArray(), )</ID>
+    <ID>TooManyFunctions:AgentAccountViewModel.kt$AgentAccountViewModel : ViewModelAgentAccountActions</ID>
+    <ID>TooManyFunctions:PairingPayload.kt$PairingText</ID>
+    <ID>TooManyFunctions:ServerEditorViewModel.kt$ServerEditorActions</ID>
+    <ID>TooManyFunctions:ServerEditorViewModel.kt$ServerEditorViewModel : ViewModelServerEditorActions</ID>
+    <ID>TooManyFunctions:ServersUi.kt$ServersActions</ID>
+    <ID>TooManyFunctions:ServersViewModel.kt$ServersViewModel : ViewModelServersActionsServerDisconnectActions</ID>
+    <ID>UnusedParameter:ServersScreen.kt$onInspectSetup: ((ProfileId) -&gt; Unit)? = null</ID>
+    <ID>UnusedParameter:ServersScreen.kt$onTerminal: ((ProfileId) -&gt; Unit)? = null</ID>
+    <ID>UnusedPrivateMember:ServersScreen.kt$@Composable private fun schedulesLabel(): String</ID>
+    <ID>WildcardImport:AgentAccountEntries.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:AgentAccountScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:AgentAccountScreen.kt$import io.github.eslamasabry.oc.engine.agents.account.*</ID>
+    <ID>WildcardImport:AgentAccountScreen.kt$import io.github.eslamasabry.oc.feature.servers.account.presentation.*</ID>
+    <ID>WildcardImport:AgentAccountScreen.kt$import io.github.eslamasabry.oc.ui.kit.*</ID>
+    <ID>WildcardImport:AgentAccountScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:AgentAccountScreen.kt$import io.github.eslamasabry.oc.ui.kit.modal.*</ID>
+    <ID>WildcardImport:AgentAccountScreen.kt$import io.github.eslamasabry.oc.ui.kit.row.*</ID>
+    <ID>WildcardImport:AgentAccountScreen.kt$import io.github.eslamasabry.oc.ui.kit.state.*</ID>
+    <ID>WildcardImport:AgentAccountScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:AgentAccountViewModel.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:AgentAccountViewModel.kt$import kotlinx.coroutines.flow.*</ID>
+    <ID>WildcardImport:ComputerCommands.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:ComputerCommands.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:ConnectionCheckSheet.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:FindOnNetworkSection.kt$import io.github.eslamasabry.oc.ui.kit.*</ID>
+    <ID>WildcardImport:FindOnNetworkSection.kt$import io.github.eslamasabry.oc.ui.kit.row.*</ID>
+    <ID>WildcardImport:FindOnNetworkSection.kt$import io.github.eslamasabry.oc.ui.kit.state.*</ID>
+    <ID>WildcardImport:FindOnNetworkSection.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:HostSetupSheet.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:HostSetupSheet.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:HostSetupSheetTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:ImportedSignInsSheet.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:PairingScannerGateTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:PairingScannerGateTest.kt$import io.github.eslamasabry.oc.feature.servers.pairing.*</ID>
+    <ID>WildcardImport:PairingScannerScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:SavedPermissionsScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:SavedPermissionsScreen.kt$import io.github.eslamasabry.oc.feature.servers.presentation.*</ID>
+    <ID>WildcardImport:SavedPermissionsScreen.kt$import io.github.eslamasabry.oc.ui.kit.*</ID>
+    <ID>WildcardImport:SavedPermissionsScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:SavedPermissionsScreen.kt$import io.github.eslamasabry.oc.ui.kit.modal.*</ID>
+    <ID>WildcardImport:SavedPermissionsScreen.kt$import io.github.eslamasabry.oc.ui.kit.state.*</ID>
+    <ID>WildcardImport:SavedPermissionsScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:SavedPermissionsViewModel.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:SavedPermissionsViewModel.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:SavedPermissionsViewModel.kt$import kotlinx.collections.immutable.*</ID>
+    <ID>WildcardImport:SavedPermissionsViewModel.kt$import kotlinx.coroutines.flow.*</ID>
+    <ID>WildcardImport:ServerEditorParityTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:ServerEditorParityTest.kt$import io.github.eslamasabry.oc.feature.servers.presentation.*</ID>
+    <ID>WildcardImport:ServerEditorScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:ServerEditorScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:ServerEditorScreen.kt$import io.github.eslamasabry.oc.feature.servers.presentation.*</ID>
+    <ID>WildcardImport:ServerEditorScreen.kt$import io.github.eslamasabry.oc.ui.kit.*</ID>
+    <ID>WildcardImport:ServerEditorScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:ServerEditorScreen.kt$import io.github.eslamasabry.oc.ui.kit.input.*</ID>
+    <ID>WildcardImport:ServerEditorScreen.kt$import io.github.eslamasabry.oc.ui.kit.modal.*</ID>
+    <ID>WildcardImport:ServerEditorScreen.kt$import io.github.eslamasabry.oc.ui.kit.row.*</ID>
+    <ID>WildcardImport:ServerEditorScreen.kt$import io.github.eslamasabry.oc.ui.kit.state.*</ID>
+    <ID>WildcardImport:ServerEditorScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:ServerEditorViewModel.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:ServerEditorViewModel.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:ServerEditorViewModel.kt$import io.github.eslamasabry.oc.feature.servers.discovery.*</ID>
+    <ID>WildcardImport:ServerEditorViewModel.kt$import io.github.eslamasabry.oc.feature.servers.pairing.*</ID>
+    <ID>WildcardImport:ServerEditorViewModel.kt$import io.github.eslamasabry.oc.ui.routes.*</ID>
+    <ID>WildcardImport:ServerEditorViewModel.kt$import kotlinx.coroutines.flow.*</ID>
+    <ID>WildcardImport:ServerFailureNoticeTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:ServerFailureNoticeTest.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:ServerQueueMove.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:ServerQueueMove.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:ServerQueueMove.kt$import io.github.eslamasabry.oc.core.common.ids.*</ID>
+    <ID>WildcardImport:ServerQueueMove.kt$import io.github.eslamasabry.oc.ui.routes.*</ID>
+    <ID>WildcardImport:ServerQueueMove.kt$import kotlinx.collections.immutable.*</ID>
+    <ID>WildcardImport:ServerQueueMove.kt$import kotlinx.coroutines.flow.*</ID>
+    <ID>WildcardImport:ServerQueueScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:ServerQueueScreen.kt$import io.github.eslamasabry.oc.feature.servers.presentation.*</ID>
+    <ID>WildcardImport:ServerQueueScreen.kt$import io.github.eslamasabry.oc.ui.kit.*</ID>
+    <ID>WildcardImport:ServerQueueScreen.kt$import io.github.eslamasabry.oc.ui.kit.choice.*</ID>
+    <ID>WildcardImport:ServerQueueScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:ServerQueueScreen.kt$import io.github.eslamasabry.oc.ui.kit.row.*</ID>
+    <ID>WildcardImport:ServerQueueScreen.kt$import io.github.eslamasabry.oc.ui.kit.state.*</ID>
+    <ID>WildcardImport:ServerQueueScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:ServerQueueSheetTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:ServerQueueSheetTest.kt$import io.github.eslamasabry.oc.feature.servers.presentation.*</ID>
+    <ID>WildcardImport:ServerQueueSheetTest.kt$import kotlinx.collections.immutable.*</ID>
+    <ID>WildcardImport:ServerRemoval.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:ServerRemoval.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:ServerRemoval.kt$import io.github.eslamasabry.oc.ui.routes.*</ID>
+    <ID>WildcardImport:ServerRemoval.kt$import kotlinx.coroutines.flow.*</ID>
+    <ID>WildcardImport:ServerRemovalScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:ServerRemovalScreen.kt$import io.github.eslamasabry.oc.feature.servers.presentation.*</ID>
+    <ID>WildcardImport:ServerRemovalScreen.kt$import io.github.eslamasabry.oc.ui.kit.*</ID>
+    <ID>WildcardImport:ServerRemovalScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:ServerRemovalScreen.kt$import io.github.eslamasabry.oc.ui.kit.modal.*</ID>
+    <ID>WildcardImport:ServerRemovalScreen.kt$import io.github.eslamasabry.oc.ui.kit.state.*</ID>
+    <ID>WildcardImport:ServerRemovalScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:ServerRows.kt$import kotlinx.collections.immutable.*</ID>
+    <ID>WildcardImport:ServerSavedRows.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:ServerSavedRows.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:ServerSavedRows.kt$import io.github.eslamasabry.oc.feature.servers.presentation.*</ID>
+    <ID>WildcardImport:ServerSavedRows.kt$import io.github.eslamasabry.oc.ui.kit.foundation.*</ID>
+    <ID>WildcardImport:ServerSavedRows.kt$import io.github.eslamasabry.oc.ui.kit.modal.*</ID>
+    <ID>WildcardImport:ServerSavedRows.kt$import io.github.eslamasabry.oc.ui.kit.row.*</ID>
+    <ID>WildcardImport:ServerSavedRows.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:ServerSetupScreen.kt$import io.github.eslamasabry.oc.feature.servers.presentation.*</ID>
+    <ID>WildcardImport:ServerSetupScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:ServerSetupScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:ServerSetupViewModel.kt$import io.github.eslamasabry.oc.engine.setupassist.*</ID>
+    <ID>WildcardImport:ServersGateTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:ServersGateTest.kt$import io.github.eslamasabry.oc.feature.servers.pairing.*</ID>
+    <ID>WildcardImport:ServersGateTest.kt$import io.github.eslamasabry.oc.feature.servers.presentation.*</ID>
+    <ID>WildcardImport:ServersGateTest.kt$import kotlinx.collections.immutable.*</ID>
+    <ID>WildcardImport:ServersScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:ServersScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:ServersScreen.kt$import io.github.eslamasabry.oc.feature.servers.presentation.*</ID>
+    <ID>WildcardImport:ServersScreen.kt$import io.github.eslamasabry.oc.ui.kit.choice.*</ID>
+    <ID>WildcardImport:ServersScreen.kt$import io.github.eslamasabry.oc.ui.kit.foundation.*</ID>
+    <ID>WildcardImport:ServersScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:ServersScreen.kt$import io.github.eslamasabry.oc.ui.kit.modal.*</ID>
+    <ID>WildcardImport:ServersScreen.kt$import io.github.eslamasabry.oc.ui.kit.row.*</ID>
+    <ID>WildcardImport:ServersScreen.kt$import io.github.eslamasabry.oc.ui.kit.state.*</ID>
+    <ID>WildcardImport:ServersScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:SetupEntries.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:SetupEntries.kt$import io.github.eslamasabry.oc.ui.routes.*</ID>
+    <ID>WildcardImport:SetupScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:SetupScreen.kt$import io.github.eslamasabry.oc.feature.servers.setup.presentation.*</ID>
+    <ID>WildcardImport:SetupScreen.kt$import io.github.eslamasabry.oc.ui.kit.*</ID>
+    <ID>WildcardImport:SetupScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:SetupScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:SetupViewModel.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:SetupViewModel.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:SetupViewModel.kt$import io.github.eslamasabry.oc.core.domain.*</ID>
+    <ID>WildcardImport:SetupViewModel.kt$import io.github.eslamasabry.oc.engine.runtime.setupinspection.*</ID>
+    <ID>WildcardImport:SetupViewModel.kt$import kotlinx.coroutines.flow.*</ID>
+    <ID>WildcardImport:TailscalePhoneContent.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:TailscalePhoneContent.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:TailscalePhoneContent.kt$import io.github.eslamasabry.oc.ui.kit.row.*</ID>
+    <ID>WildcardImport:TailscalePhoneContent.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:TailscaleSetupSheet.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:TailscaleSetupSheet.kt$import io.github.eslamasabry.oc.ui.kit.row.*</ID>
+    <ID>WildcardImport:TailscaleSetupSheet.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

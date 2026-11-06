@@ -1,0 +1,397 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:CodexAccountSession.kt$CodexAccountSession$requested &amp;&amp; !receiptKnown &amp;&amp; (e.failure is Failure.UnreadableReply || (e.failure is Failure.Refused &amp;&amp; e.failure.reason == RefusalReason.DispatchUncertain))</ID>
+    <ID>ComplexCondition:CodexAccountSession.kt$CodexAccountSession$requested &amp;&amp; !receiptKnown &amp;&amp; (e.kind == AccountFailureKind.Uncertain || e.kind == AccountFailureKind.InvalidResponse)</ID>
+    <ID>ComplexCondition:CodexAccountSession.kt$CodexAccountSession$used &gt; Int.MAX_VALUE || (duration != null &amp;&amp; duration &gt; Int.MAX_VALUE) || (reset != null &amp;&amp; reset &gt; 8_640_000_000_000)</ID>
+    <ID>ComplexCondition:CodexEndpoint.kt$CodexUrl.Companion$!PORT.matches(text) || n == null || n &lt; 1 || n &gt; 65_535</ID>
+    <ID>ComplexCondition:CodexEndpoint.kt$CodexUrl.Companion$raw.any { it.isWhitespace() || it.code &lt; 0x20 || it == '\\' || it == '%' }</ID>
+    <ID>ComplexCondition:CodexGateway.kt$CodexGateway$!listening || closed || retry != null || recovering != null</ID>
+    <ID>ComplexCondition:CodexGateway.kt$CodexGateway$approval.request.sessionId != session || approval.push.epoch != transport.epoch || turns[session.raw] != approval.turn || statuses[session.raw] != SessionStatus.Busy</ID>
+    <ID>ComplexCondition:CodexGateway.kt$CodexGateway$expected != null &amp;&amp; (expected != turnId || turns[id] != expected || statuses[id] != SessionStatus.Busy)</ID>
+    <ID>ComplexCondition:CodexGateway.kt$CodexGateway$expected != null &amp;&amp; (turn != expected || turns[id] != expected || statuses[id] != SessionStatus.Busy)</ID>
+    <ID>ComplexCondition:CodexGateway.kt$CodexGateway$id in resumed &amp;&amp; id in newEmptyThreads &amp;&amp; sessions.containsKey(id) &amp;&amp; id !in uncertain</ID>
+    <ID>ComplexCondition:CodexGateway.kt$CodexGateway$prompt.attachments.isNotEmpty() || prompt.mentions.isNotEmpty() || prompt.delivery == PromptDelivery.Queue || (agent != null &amp;&amp; agent != "codex") || id in uncertain</ID>
+    <ID>ComplexCondition:CodexGateway.kt$CodexGateway$prompt.attachments.isNotEmpty() || prompt.mentions.isNotEmpty() || prompt.delivery == PromptDelivery.Queue || (prompt.agent != null &amp;&amp; prompt.agent != "codex")</ID>
+    <ID>ComplexCondition:CodexGateway.kt$CodexGateway$prompt.text.isEmpty() || prompt.text.length &gt; 1024 * 1024 || id.isBlank() || id.length &gt; 256</ID>
+    <ID>ComplexCondition:CodexGateway.kt$CodexGateway$push.id == null || approvals.size &gt;= 64 || turns[id] != turn || statuses[id] != SessionStatus.Busy</ID>
+    <ID>ComplexCondition:CodexGateway.kt$CodexGateway$rawId == null || approvals.size &gt;= 64 || statuses[sessionId] != SessionStatus.Busy || turns[sessionId] != turnId</ID>
+    <ID>ComplexCondition:CodexGatewayFactory.kt$CodexGatewayFactory$!validCodexEndpoint(endpoint) || !dir.startsWith('/') || dir.length &gt; 4096 || dir.any { it.code &lt; 32 || it.code == 127 } || token.isEmpty() || token.length &gt; 8192 || token.any { it.code &lt; 32 || it.code == 127 }</ID>
+    <ID>ComplexCondition:CodexHandoff.kt$!isCurrent() || after.id != before.id || after.directory != before.directory || after.time?.updatedMs != before.time?.updatedMs</ID>
+    <ID>ComplexCondition:CodexHandoff.kt$exit != null &amp;&amp; (exit !is JsonPrimitive || exit.isString || exit.intOrNull == null)</ID>
+    <ID>ComplexCondition:CodexTarget.kt$CodexTarget.Companion$raw.isEmpty() || raw.length &gt; 8192 || raw.any { it.isWhitespace() || it.code &lt; 32 || it.code in 127..159 } || dir.isEmpty() || dir.length &gt; 4096 || dir.any { it.code &lt; 32 || it.code in 127..159 } || !(dir.startsWith('/') || Regex("""^[A-Za-z]:[\\/].*""").matches(dir))</ID>
+    <ID>ComplexCondition:CodexTarget.kt$CodexTarget.Companion$token.isEmpty() || token.length &gt; 16384 || token.any { it.isWhitespace() || it.code &lt; 32 || it.code in 127..159 }</ID>
+    <ID>ComplexCondition:CodexTarget.kt$CodexTarget.Companion$url.protocol.name !in setOf("ws", "wss") || !url.user.isNullOrEmpty() || !url.password.isNullOrEmpty() || url.encodedPath !in setOf("", "/") || url.parameters.names().isNotEmpty() || url.fragment.isNotEmpty() || '?' in normalized || '#' in normalized</ID>
+    <ID>ComplexCondition:CodexTransport.kt$CodexTransport$id != null &amp;&amp; (id !is JsonPrimitive || (!id.isString &amp;&amp; id.longOrNull == null))</ID>
+    <ID>ComplexCondition:CodexTransport.kt$CodexTransport$isClosed || myEpoch != epoch || socket == null || (requireInitialized &amp;&amp; !initialized)</ID>
+    <ID>ComplexCondition:CodexWire.kt$endpoint.length &gt; 4096 || endpoint.any { it.code &lt;= 32 || it.code == 127 } || endpoint.contains('@') || endpoint.contains('?') || endpoint.contains('#')</ID>
+    <ID>ComplexCondition:HandoffRecord.kt$part !is HandoffPart.Tool || part.name.lowercase() !in WRITE_TOOLS || part.status != "completed" || !part.executed</ID>
+    <ID>CyclomaticComplexMethod:CodexAccountSession.kt$CodexAccountSession$private suspend fun start(): AccountDeviceCode</ID>
+    <ID>CyclomaticComplexMethod:CodexAccountSession.kt$CodexAccountSession$public suspend fun startDeviceLogin(): Outcome&lt;CodexDeviceLogin&gt;</ID>
+    <ID>CyclomaticComplexMethod:CodexEndpoint.kt$CodexUrl.Companion$fun split(raw: String): CodexUrl?</ID>
+    <ID>CyclomaticComplexMethod:CodexGateway.kt$CodexGateway$override suspend fun prompt( session: SessionId, prompt: OutgoingPrompt, commandId: String?, ): Outcome&lt;PromptAdmission&gt;</ID>
+    <ID>CyclomaticComplexMethod:CodexGateway.kt$CodexGateway$private fun handleRpc(event: CodexRpcEvent)</ID>
+    <ID>CyclomaticComplexMethod:CodexGateway.kt$CodexGateway$private suspend fun onPush(push: CodexPush)</ID>
+    <ID>CyclomaticComplexMethod:CodexGateway.kt$CodexGateway$private suspend fun promptNow( id: String, prompt: OutgoingPrompt, fenced: Boolean = false, onDispatch: () -&gt; Unit, ): PromptAdmission</ID>
+    <ID>CyclomaticComplexMethod:CodexGateway.kt$CodexGateway$private suspend fun steer(id: String, text: String, onDispatch: () -&gt; Unit): PromptAdmission</ID>
+    <ID>CyclomaticComplexMethod:CodexGatewayFactory.kt$CodexGatewayFactory$public suspend fun checkConnection( address: String, token: String, directory: String, ): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:CodexHandoff.kt$internal fun codexHandoffMessages(thread: JsonObject): ImmutableList&lt;MessageWithParts&gt;</ID>
+    <ID>CyclomaticComplexMethod:CodexHandoff.kt$public suspend fun prepareCodexHandoffDraft( source: CodexGateway, sessionId: SessionId, target: ServerCapabilities, lastState: String, recordId: String, isCurrent: () -&gt; Boolean, redactor: Redactor = Redactor(), ): Outcome&lt;HandoffDraft&gt;</ID>
+    <ID>CyclomaticComplexMethod:CodexMappers.kt$internal fun codexItem( session: String, item: JsonObject, created: Long? = null, completed: Long? = null, turnStatus: String? = null, ): MessageWithParts</ID>
+    <ID>CyclomaticComplexMethod:CodexMappers.kt$public fun codexItemMessage( threadId: String, item: JsonObject, createdMs: Long? = null, completedMs: Long? = null, turnStatus: String? = null, ): MessageWithParts</ID>
+    <ID>CyclomaticComplexMethod:CodexReads.kt$CodexReads$public suspend fun probe(): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:CodexTarget.kt$CodexTarget.Companion$public fun parse(address: String, directory: String, token: String): Outcome&lt;CodexTarget&gt;</ID>
+    <ID>CyclomaticComplexMethod:CodexTransport.kt$CodexTransport$private fun receive(myEpoch: Int, frame: String)</ID>
+    <ID>CyclomaticComplexMethod:HandoffMessages.kt$public fun codexHandoffMessages(thread: JsonObject): List&lt;HandoffMessage&gt;</ID>
+    <ID>CyclomaticComplexMethod:HandoffRecord.kt$public fun buildHandoffRecord( session: HandoffSource, messages: List&lt;HandoffMessage&gt;, lastState: String, todos: List&lt;HandoffTodo&gt; = emptyList(), historyComplete: Boolean = true, maxBytes: Int = 98_304, redactor: Redactor = Redactor(), ): HandoffRecordResult</ID>
+    <ID>LargeClass:CodexGateway.kt$CodexGateway : ServerGatewayMidTurnPromptGateway</ID>
+    <ID>LargeClass:CodexGateway.kt$CodexGateway : ServerGatewayMidTurnPromptGatewayFencedPromptGatewayPromptRunIdentityGatewayCodexProbeGatewayInitialSessionDefaultsGateway</ID>
+    <ID>LongMethod:CodexAccountSession.kt$CodexAccountSession$public suspend fun startDeviceLogin(): Outcome&lt;CodexDeviceLogin&gt;</ID>
+    <ID>LongMethod:CodexGateway.kt$CodexGateway$private fun addApproval(event: CodexRpcEvent, sessionId: String)</ID>
+    <ID>LongMethod:CodexGateway.kt$CodexGateway$private fun handleRpc(event: CodexRpcEvent)</ID>
+    <ID>LongMethod:CodexGateway.kt$CodexGateway$private suspend fun addApproval(push: CodexPush, id: String)</ID>
+    <ID>LongMethod:CodexGateway.kt$CodexGateway$private suspend fun onPush(push: CodexPush)</ID>
+    <ID>LongMethod:CodexHandoff.kt$internal fun codexHandoffMessages(thread: JsonObject): ImmutableList&lt;MessageWithParts&gt;</ID>
+    <ID>LongMethod:CodexJourneyTest.kt$CodexJourneyTest$@Test fun `B-AGENT-067 connect, send to existing and new threads, stream, approve, abort and recover authoritatively`()</ID>
+    <ID>LongMethod:CodexMappers.kt$internal fun codexItem( session: String, item: JsonObject, created: Long? = null, completed: Long? = null, turnStatus: String? = null, ): MessageWithParts</ID>
+    <ID>LongMethod:CodexMappers.kt$public fun codexItemMessage( threadId: String, item: JsonObject, createdMs: Long? = null, completedMs: Long? = null, turnStatus: String? = null, ): MessageWithParts</ID>
+    <ID>LongMethod:CodexTarget.kt$CodexTarget.Companion$public fun parse(address: String, directory: String, token: String): Outcome&lt;CodexTarget&gt;</ID>
+    <ID>LongMethod:HandoffMessages.kt$public fun codexHandoffMessages(thread: JsonObject): List&lt;HandoffMessage&gt;</ID>
+    <ID>LongMethod:HandoffRecord.kt$public fun buildHandoffRecord( session: HandoffSource, messages: List&lt;HandoffMessage&gt;, lastState: String, todos: List&lt;HandoffTodo&gt; = emptyList(), historyComplete: Boolean = true, maxBytes: Int = 98_304, redactor: Redactor = Redactor(), ): HandoffRecordResult</ID>
+    <ID>LongParameterList:CodexEndpoint.kt$CodexUrl$( val scheme: String, val host: String, val port: Int?, val userInfo: Boolean, val path: String, val query: Boolean, val fragment: Boolean, )</ID>
+    <ID>LongParameterList:CodexHandoff.kt$( source: CodexGateway, sessionId: SessionId, target: ServerCapabilities, lastState: String, recordId: String, isCurrent: () -&gt; Boolean, redactor: Redactor = Redactor(), )</ID>
+    <ID>LongParameterList:HandoffRecord.kt$( session: HandoffSource, messages: List&lt;HandoffMessage&gt;, lastState: String, todos: List&lt;HandoffTodo&gt; = emptyList(), historyComplete: Boolean = true, maxBytes: Int = 98_304, redactor: Redactor = Redactor(), )</ID>
+    <ID>LoopWithTooManyJumpStatements:CodexHandoff.kt$for</ID>
+    <ID>LoopWithTooManyJumpStatements:HandoffMessages.kt$for</ID>
+    <ID>MagicNumber:CodexAccount.kt$100</ID>
+    <ID>MagicNumber:CodexAccount.kt$32</ID>
+    <ID>MagicNumber:CodexAccount.kt$320</ID>
+    <ID>MagicNumber:CodexAccount.kt$8640000000000L</ID>
+    <ID>MagicNumber:CodexAccountSession.kt$CodexAccountSession$100</ID>
+    <ID>MagicNumber:CodexAccountSession.kt$CodexAccountSession$1000</ID>
+    <ID>MagicNumber:CodexAccountSession.kt$CodexAccountSession$127</ID>
+    <ID>MagicNumber:CodexAccountSession.kt$CodexAccountSession$2048</ID>
+    <ID>MagicNumber:CodexAccountSession.kt$CodexAccountSession$256</ID>
+    <ID>MagicNumber:CodexAccountSession.kt$CodexAccountSession$32</ID>
+    <ID>MagicNumber:CodexAccountSession.kt$CodexAccountSession$320</ID>
+    <ID>MagicNumber:CodexAccountSession.kt$CodexAccountSession$64</ID>
+    <ID>MagicNumber:CodexAccountSession.kt$CodexAccountSession$8</ID>
+    <ID>MagicNumber:CodexAccountSession.kt$CodexAccountSession$80</ID>
+    <ID>MagicNumber:CodexAccountSession.kt$CodexAccountSession$8_640_000_000_000</ID>
+    <ID>MagicNumber:CodexAccountSession.kt$CodexAccountSession.Companion$1000</ID>
+    <ID>MagicNumber:CodexAccountSession.kt$CodexAccountSession.Companion$8_640_000_000_000</ID>
+    <ID>MagicNumber:CodexEndpoint.kt$CodexEndpoint.Companion$443</ID>
+    <ID>MagicNumber:CodexEndpoint.kt$CodexEndpoint.Companion$80</ID>
+    <ID>MagicNumber:CodexEndpoint.kt$CodexProfileRules$0x7f</ID>
+    <ID>MagicNumber:CodexEndpoint.kt$CodexProfileRules$0x9f</ID>
+    <ID>MagicNumber:CodexEndpoint.kt$CodexProfileRules$16_384</ID>
+    <ID>MagicNumber:CodexEndpoint.kt$CodexProfileRules$4096</ID>
+    <ID>MagicNumber:CodexEndpoint.kt$CodexUrl.Companion$0x20</ID>
+    <ID>MagicNumber:CodexEndpoint.kt$CodexUrl.Companion$3</ID>
+    <ID>MagicNumber:CodexEndpoint.kt$CodexUrl.Companion$65_535</ID>
+    <ID>MagicNumber:CodexGateway.kt$CodexGateway$10</ID>
+    <ID>MagicNumber:CodexGateway.kt$CodexGateway$100</ID>
+    <ID>MagicNumber:CodexGateway.kt$CodexGateway$1000</ID>
+    <ID>MagicNumber:CodexGateway.kt$CodexGateway$1000L</ID>
+    <ID>MagicNumber:CodexGateway.kt$CodexGateway$1024</ID>
+    <ID>MagicNumber:CodexGateway.kt$CodexGateway$127</ID>
+    <ID>MagicNumber:CodexGateway.kt$CodexGateway$256</ID>
+    <ID>MagicNumber:CodexGateway.kt$CodexGateway$32</ID>
+    <ID>MagicNumber:CodexGateway.kt$CodexGateway$4</ID>
+    <ID>MagicNumber:CodexGateway.kt$CodexGateway$4096</ID>
+    <ID>MagicNumber:CodexGateway.kt$CodexGateway$512</ID>
+    <ID>MagicNumber:CodexGateway.kt$CodexGateway$6</ID>
+    <ID>MagicNumber:CodexGateway.kt$CodexGateway$64</ID>
+    <ID>MagicNumber:CodexGateway.kt$CodexGateway$65536</ID>
+    <ID>MagicNumber:CodexGateway.kt$CodexGateway$8</ID>
+    <ID>MagicNumber:CodexGateway.kt$CodexGateway$9</ID>
+    <ID>MagicNumber:CodexGatewayFactory.kt$CodexGatewayFactory$127</ID>
+    <ID>MagicNumber:CodexGatewayFactory.kt$CodexGatewayFactory$32</ID>
+    <ID>MagicNumber:CodexGatewayFactory.kt$CodexGatewayFactory$4096</ID>
+    <ID>MagicNumber:CodexGatewayFactory.kt$CodexGatewayFactory$8192</ID>
+    <ID>MagicNumber:CodexHandoff.kt$1000</ID>
+    <ID>MagicNumber:CodexHandoff.kt$10000</ID>
+    <ID>MagicNumber:CodexHandoff.kt$1024</ID>
+    <ID>MagicNumber:CodexHandoff.kt$128</ID>
+    <ID>MagicNumber:CodexHandoff.kt$256</ID>
+    <ID>MagicNumber:CodexHandoff.kt$32</ID>
+    <ID>MagicNumber:CodexHandoff.kt$50</ID>
+    <ID>MagicNumber:CodexHandoff.kt$5000</ID>
+    <ID>MagicNumber:CodexJson.kt$1000</ID>
+    <ID>MagicNumber:CodexJson.kt$8_640_000_000_000</ID>
+    <ID>MagicNumber:CodexMappers.kt$1000</ID>
+    <ID>MagicNumber:CodexMappers.kt$1000L</ID>
+    <ID>MagicNumber:CodexMappers.kt$1024</ID>
+    <ID>MagicNumber:CodexMappers.kt$128</ID>
+    <ID>MagicNumber:CodexMappers.kt$256</ID>
+    <ID>MagicNumber:CodexMappers.kt$32</ID>
+    <ID>MagicNumber:CodexMappers.kt$64</ID>
+    <ID>MagicNumber:CodexMappers.kt$65536</ID>
+    <ID>MagicNumber:CodexMappers.kt$8_640_000_000_000L</ID>
+    <ID>MagicNumber:CodexReads.kt$CodexReads$100</ID>
+    <ID>MagicNumber:CodexReads.kt$CodexReads$1002</ID>
+    <ID>MagicNumber:CodexReads.kt$CodexReads$256</ID>
+    <ID>MagicNumber:CodexReads.kt$CodexReads$4096</ID>
+    <ID>MagicNumber:CodexReads.kt$CodexReads$8000</ID>
+    <ID>MagicNumber:CodexReads.kt$CodexReads$8640000000000L</ID>
+    <ID>MagicNumber:CodexTarget.kt$CodexTarget.Companion$127</ID>
+    <ID>MagicNumber:CodexTarget.kt$CodexTarget.Companion$159</ID>
+    <ID>MagicNumber:CodexTarget.kt$CodexTarget.Companion$16384</ID>
+    <ID>MagicNumber:CodexTarget.kt$CodexTarget.Companion$32</ID>
+    <ID>MagicNumber:CodexTarget.kt$CodexTarget.Companion$4096</ID>
+    <ID>MagicNumber:CodexTarget.kt$CodexTarget.Companion$8192</ID>
+    <ID>MagicNumber:CodexTransport.kt$CodexTransport$200</ID>
+    <ID>MagicNumber:CodexTransport.kt$CodexTransport$32001</ID>
+    <ID>MagicNumber:CodexTransport.kt$CodexTransport$32001L</ID>
+    <ID>MagicNumber:CodexTransport.kt$CodexTransport$32601</ID>
+    <ID>MagicNumber:CodexTransport.kt$CodexTransport$64</ID>
+    <ID>MagicNumber:CodexWire.kt$127</ID>
+    <ID>MagicNumber:CodexWire.kt$3</ID>
+    <ID>MagicNumber:CodexWire.kt$32</ID>
+    <ID>MagicNumber:CodexWire.kt$4096</ID>
+    <ID>MagicNumber:CodexWire.kt$65535</ID>
+    <ID>MagicNumber:HandoffRecord.kt$256</ID>
+    <ID>MagicNumber:HandoffRecord.kt$4</ID>
+    <ID>MagicNumber:HandoffRecord.kt$Writer$512</ID>
+    <ID>MatchingDeclarationName:CodexWire.kt$CodexWireException : Exception</ID>
+    <ID>MaxLineLength:CodexAccount.kt$AccountException$public</ID>
+    <ID>MaxLineLength:CodexAccount.kt$AccountRateBucket</ID>
+    <ID>MaxLineLength:CodexAccountSession.kt$CodexAccountSession$if</ID>
+    <ID>MaxLineLength:CodexAccountSession.kt$CodexAccountSession$if (cancelRequested &amp;&amp; !requested &amp;&amp; active) emit(AccountEvent(AccountEventKind.LoginCancelled, success = true))</ID>
+    <ID>MaxLineLength:CodexAccountSession.kt$CodexAccountSession$if (current.signedIn || !current.requiresSignIn || cancelRequested) throw AccountException(AccountFailureKind.Unavailable)</ID>
+    <ID>MaxLineLength:CodexAccountSession.kt$CodexAccountSession$private suspend</ID>
+    <ID>MaxLineLength:CodexAccountSession.kt$CodexAccountSession$val result = call("account/login/start", jsonOf("type" to "chatgptDeviceCode"), mutation = true, finishLogin = true)</ID>
+    <ID>MaxLineLength:CodexAccountSession.kt$CodexAccountSession$val result = transport.requestInEpoch("account/login/cancel", jsonOf("loginId" to id), epoch = epoch, mutation = true)</ID>
+    <ID>MaxLineLength:CodexAccountSession.kt$CodexAccountSession$val summary = call("account/usage/read", JsonObject(emptyMap()))["summary"] as? JsonObject ?: throw invalid()</ID>
+    <ID>MaxLineLength:CodexAccountSession.kt$CodexAccountSession.Companion$fun optionalText(value: JsonElement?, max: Int): String?</ID>
+    <ID>MaxLineLength:CodexAccountSessionTest.kt$CodexAccountSessionTest$JsonObject(login + ("verificationUrl" to kotlinx.serialization.json.JsonPrimitive("https" + "://auth.openai.com.evil.example/codex/device")))</ID>
+    <ID>MaxLineLength:CodexAccountSessionTest.kt$CodexAccountSessionTest$assertEquals(jsonOf("loginId" to "owned-fixture-login"), f.server.calls("account/login/cancel").single().params())</ID>
+    <ID>MaxLineLength:CodexAccountSessionTest.kt$CodexAccountSessionTest$f.server.answers["account/usage/read"] = { jsonOf("summary" to mapOf("lifetimeTokens" to 0, "peakDailyTokens" to null)) }</ID>
+    <ID>MaxLineLength:CodexAccountSessionTest.kt$CodexAccountSessionTest$fun</ID>
+    <ID>MaxLineLength:CodexAccountSessionTest.kt$CodexAccountSessionTest$if (frame["method"].toString() == "\"account/read\"") f.server.event("account/updated", jsonOf("authMode" to "chatgpt"))</ID>
+    <ID>MaxLineLength:CodexConnectionProbe.kt$CodexProbeResult.InvalidInput$public data</ID>
+    <ID>MaxLineLength:CodexConnectionProbe.kt$private</ID>
+    <ID>MaxLineLength:CodexConnectionProbeTest.kt$CodexConnectionProbeTest$CodexTransport(CodexEndpoint.parse(url)!!, token, sockets, backgroundScope, StandardTestDispatcher(testScheduler))</ID>
+    <ID>MaxLineLength:CodexConnectionProbeTest.kt$CodexConnectionProbeTest$assertIs&lt;CodexProbeResult.InvalidInput&gt;(probeCodexConnection("wss://codex.example.test", "bad token", "/work/project") { _, _, _ -&gt; error("no") })</ID>
+    <ID>MaxLineLength:CodexConnectionProbeTest.kt$CodexConnectionProbeTest$assertIs&lt;CodexProbeResult.InvalidInput&gt;(probeCodexConnection("wss://codex.example.test", "t", "relative") { _, _, _ -&gt; error("no") })</ID>
+    <ID>MaxLineLength:CodexConnectionProbeTest.kt$CodexConnectionProbeTest$val</ID>
+    <ID>MaxLineLength:CodexConnectionProbeTest.kt$CodexConnectionProbeTest$val result = probeCodexConnection("wss://codex.example.test", "super-secret-token", "/work/project") { _, _, _ -&gt; g }</ID>
+    <ID>MaxLineLength:CodexConnectionProbeTest.kt$CodexConnectionProbeTest$val server = FakeAppServer().apply { answers["thread/list"] = { jsonOf("data" to emptyList&lt;Any&gt;(), "nextCursor" to null) } }</ID>
+    <ID>MaxLineLength:CodexConnectionProbeTest.kt$CodexConnectionProbeTest.&lt;no name provided&gt;$override suspend</ID>
+    <ID>MaxLineLength:CodexEndpoint.kt$CodexUrl.Companion$val query = tail.indexOf('?').let { it in 0 until (tail.indexOf('#').takeIf { h -&gt; h &gt;= 0 } ?: tail.length) }</ID>
+    <ID>MaxLineLength:CodexGatewayFactory.kt$CodexGatewayFactory$public</ID>
+    <ID>MaxLineLength:CodexGatewayFactory.kt$CodexGatewayFactory$val transport = CodexTransport(endpoint, secret, sockets, scope, dispatchers.serial("codex-probe"), requestTimeoutMs)</ID>
+    <ID>MaxLineLength:CodexGatewayTest.kt$CodexGatewayTest$/** Recovery fixture: the replacement socket fails [failMethod] generically, or (null) answers resume with another id. */</ID>
+    <ID>MaxLineLength:CodexGatewayTest.kt$CodexGatewayTest$assertEquals(1, f.replacement.calls("thread/resume").count { it.params().str("threadId") == "thread-durable" }, label)</ID>
+    <ID>MaxLineLength:CodexGatewayTest.kt$CodexGatewayTest$assertEquals(CodexFailureKind.StaleRequest, g.replyPermission(sid, RequestId("codex:1:n:5"), PermissionReply.Once).kind())</ID>
+    <ID>MaxLineLength:CodexGatewayTest.kt$CodexGatewayTest$assertEquals(Outcome.Ok(PromptAdmission.Uncertain), g.prompt(created.id, OutgoingPrompt("First attempt")))</ID>
+    <ID>MaxLineLength:CodexGatewayTest.kt$CodexGatewayTest$assertEquals(if (uncertainFirstTurn) 1 else 0, f.replacement.calls("thread/read").count { it.params().str("threadId") == created.id.raw }, label)</ID>
+    <ID>MaxLineLength:CodexGatewayTest.kt$CodexGatewayTest$assertEquals(if (uncertainFirstTurn) CodexFailureKind.DeliveryUnknown else CodexFailureKind.Unavailable, explicit.kind(), label)</ID>
+    <ID>MaxLineLength:CodexGatewayTest.kt$CodexGatewayTest$assertIs&lt;PromptAdmission.Confirmed&gt;((g.prompt(created.id, OutgoingPrompt("after recovery")) as Outcome.Ok).value)</ID>
+    <ID>MaxLineLength:CodexGatewayTest.kt$CodexGatewayTest$assertTrue(f.replacement.calls("thread/resume").none { it.params().str("threadId") == created.id.raw }, label)</ID>
+    <ID>MaxLineLength:CodexGatewayTest.kt$CodexGatewayTest$assertTrue(f.replacement.calls("thread/start").isEmpty() &amp;&amp; f.replacement.calls("turn/start").isEmpty(), label)</ID>
+    <ID>MaxLineLength:CodexGatewayTest.kt$CodexGatewayTest$c.sessionFork</ID>
+    <ID>MaxLineLength:CodexGatewayTest.kt$CodexGatewayTest$else</ID>
+    <ID>MaxLineLength:CodexGatewayTest.kt$CodexGatewayTest$for</ID>
+    <ID>MaxLineLength:CodexGatewayTest.kt$CodexGatewayTest$fun</ID>
+    <ID>MaxLineLength:CodexGatewayTest.kt$CodexGatewayTest$if (uncertainFirstTurn) assertIs&lt;StreamStatus.Reconnecting&gt;(w.statuses.last(), label) else assertEquals(StreamStatus.Connected, w.statuses.last(), label)</ID>
+    <ID>MaxLineLength:CodexGatewayTest.kt$CodexGatewayTest$jsonOf("threadId" to "thread-1", "turnId" to "turn-1", "itemId" to "command-1", "command" to "echo fixture", "startedAtMs" to 1000)</ID>
+    <ID>MaxLineLength:CodexGatewayTest.kt$CodexGatewayTest$private suspend</ID>
+    <ID>MaxLineLength:CodexGatewayTest.kt$CodexGatewayTest$server.event("item/agentMessage/delta", jsonOf("threadId" to "thread-1", "turnId" to "turn-1", "itemId" to "agent-1", "delta" to "Hello back"))</ID>
+    <ID>MaxLineLength:CodexGatewayTest.kt$CodexGatewayTest$server.event("item/started", jsonOf("threadId" to "thread-1", "turnId" to "turn-1", "item" to mapOf("id" to "agent-1", "type" to "agentMessage", "text" to "")))</ID>
+    <ID>MaxLineLength:CodexGatewayTest.kt$CodexGatewayTest$val history = assertIs&lt;Outcome.Ok&lt;List&lt;io.github.eslamasabry.oc.core.model.transcript.MessageWithParts&gt;&gt;&gt;(g.messages(sid)).value</ID>
+    <ID>MaxLineLength:CodexGatewayTest.kt$CodexGatewayTest$val request = assertIs&lt;Outcome.Ok&lt;List&lt;io.github.eslamasabry.oc.core.model.PermissionRequest&gt;&gt;&gt;(g.pendingPermissions()).value.single()</ID>
+    <ID>MaxLineLength:CodexGatewayTest.kt$CodexGatewayTest$val server = FakeAppServer().serveThread({ thread(turns = listOf(turn(status = if (activeTurn) "inProgress" else "completed"))) })</ID>
+    <ID>MaxLineLength:CodexGatewayTest.kt$CodexGatewayTest.NewThread$id == "thread-durable" -&gt; jsonOf("thread" to JsonObject(thread(turns = listOf(turn())) + ("id" to kotlinx.serialization.json.JsonPrimitive(id))))</ID>
+    <ID>MaxLineLength:CodexGatewayTest.kt$CodexGatewayTest.NewThread$s.push(jsonOf("id" to frame["id"], "error" to mapOf("code" to -32603, "message" to "Synthetic read failure")))</ID>
+    <ID>MaxLineLength:CodexHandoff.kt$HandoffDraft$public data</ID>
+    <ID>MaxLineLength:CodexHandoff.kt$HandoffHistoryFailureKind$public enum</ID>
+    <ID>MaxLineLength:CodexHandoff.kt$if</ID>
+    <ID>MaxLineLength:CodexHandoff.kt$if (!isCurrent() || before.id != sessionId || before.directory != directory) return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))</ID>
+    <ID>MaxLineLength:CodexHandoff.kt$if (read.kind == HandoffHistoryFailureKind.StaleScope) Failure.Refused(RefusalReason.StaleScope) else Failure.UnreadableReply()</ID>
+    <ID>MaxLineLength:CodexHandoffTest.kt$CodexHandoffTest$"id" to "thread-source"</ID>
+    <ID>MaxLineLength:CodexHandoffTest.kt$CodexHandoffTest$"id" to "tool-$index"</ID>
+    <ID>MaxLineLength:CodexHandoffTest.kt$CodexHandoffTest$"malformed item" to thread(listOf(JsonObject(turn(0) + ("items" to kotlinx.serialization.json.JsonArray(listOf(JsonPrimitive("not-an-item")))))))</ID>
+    <ID>MaxLineLength:CodexHandoffTest.kt$CodexHandoffTest$buildHandoffRecord(HandoffSource("thread-source", directory = "/project"), messages(f.read()), "Waiting for you", maxBytes = 3000)</ID>
+    <ID>MaxLineLength:CodexHandoffTest.kt$CodexHandoffTest$for (text in listOf(prompt, "Answer 0", "dart analyze lib/parser.dart", "Analysis passed")) assertTrue(text in record.markdown, text)</ID>
+    <ID>MaxLineLength:CodexHandoffTest.kt$CodexHandoffTest$items[1] = JsonObject(items[1] as JsonObject + ("aggregatedOutput" to JsonPrimitive("api_key=$secret\nAnalysis passed")))</ID>
+    <ID>MaxLineLength:CodexHandoffTest.kt$CodexHandoffTest$mapOf("id" to "agent-$index", "type" to "agentMessage", "phase" to "final_answer", "text" to "Answer $index")</ID>
+    <ID>MaxLineLength:CodexHandoffTest.kt$CodexHandoffTest$mapOf("id" to "user-$index", "type" to "userMessage", "content" to listOf(mapOf("type" to "text", "text" to (userText ?: "Prompt $index"))))</ID>
+    <ID>MaxLineLength:CodexHandoffTest.kt$CodexHandoffTest$prepareCodexHandoffDraft(f.g, sid, f.g.capabilities.value, "Waiting for you", "codex-review", isCurrent = { true })</ID>
+    <ID>MaxLineLength:CodexHandoffTest.kt$CodexHandoffTest$val record = assertIs&lt;HandoffRecordResult.Built&gt;(buildHandoffRecord(HandoffSource("thread-source", directory = "/project"), m, "Waiting for you")).record</ID>
+    <ID>MaxLineLength:CodexHandoffTest.kt$CodexHandoffTest.Fixture$fun expectReadOnly()</ID>
+    <ID>MaxLineLength:CodexHandoffTest.kt$CodexHandoffTest.Fixture$suspend fun read(isCurrent: () -&gt; Boolean = { true }, maxPages: Int = 100)</ID>
+    <ID>MaxLineLength:CodexJourneyTest.kt$CodexJourneyTest$"thread-existing" to thread("thread-existing", turns = listOf(turn("turn-history", prefix = "turn-history")), name = "Existing thread")</ID>
+    <ID>MaxLineLength:CodexJourneyTest.kt$CodexJourneyTest$assertEquals(Outcome.Ok(PromptAdmission.Uncertain), g.prompt(existing, OutgoingPrompt("Delivery may be uncertain")))</ID>
+    <ID>MaxLineLength:CodexJourneyTest.kt$CodexJourneyTest$assertEquals(jsonOf("threadId" to "thread-existing", "turnId" to "turn-abort"), first.calls("turn/interrupt").last().params())</ID>
+    <ID>MaxLineLength:CodexJourneyTest.kt$CodexJourneyTest$assertIs&lt;PromptAdmission.Confirmed&gt;((g.prompt(existing, OutgoingPrompt("Inspect the existing thread")) as Outcome.Ok).value)</ID>
+    <ID>MaxLineLength:CodexJourneyTest.kt$CodexJourneyTest$assertIs&lt;PromptAdmission.Confirmed&gt;((g.prompt(existing, OutgoingPrompt("Retry after history refresh")) as Outcome.Ok).value)</ID>
+    <ID>MaxLineLength:CodexJourneyTest.kt$CodexJourneyTest$first.event("item/agentMessage/delta", jsonOf("threadId" to "thread-existing", "turnId" to "turn-retry", "itemId" to "turn-retry-agent", "delta" to "streamed answer"))</ID>
+    <ID>MaxLineLength:CodexJourneyTest.kt$CodexJourneyTest$first.event("turn/completed", jsonOf("threadId" to "thread-existing", "turn" to turn("turn-retry", prefix = "turn-retry")))</ID>
+    <ID>MaxLineLength:CodexJourneyTest.kt$CodexJourneyTest$first.event("turn/started", jsonOf("threadId" to "thread-existing", "turn" to turn("turn-retry", "inProgress", prefix = "turn-retry")))</ID>
+    <ID>MaxLineLength:CodexJourneyTest.kt$CodexJourneyTest$fun</ID>
+    <ID>MaxLineLength:CodexJourneyTest.kt$CodexJourneyTest$jsonOf("threadId" to "thread-existing", "turnId" to "turn-retry", "itemId" to "command-1", "command" to "echo approved")</ID>
+    <ID>MaxLineLength:CodexJourneyTest.kt$CodexJourneyTest$jsonOf("threadId" to "thread-existing", "turnId" to "turn-retry", "itemId" to "command-2", "command" to "echo once")</ID>
+    <ID>MaxLineLength:CodexJourneyTest.kt$CodexJourneyTest$threads["thread-existing"] = thread("thread-existing", turns = listOf(turn("turn-abort", "inProgress", prefix = "turn-abort")), name = "Existing thread")</ID>
+    <ID>MaxLineLength:CodexJourneyTest.kt$CodexJourneyTest$threads["thread-existing"] = thread("thread-existing", turns = listOf(turn("turn-history", prefix = "turn-history")), name = "Existing thread")</ID>
+    <ID>MaxLineLength:CodexJourneyTest.kt$CodexJourneyTest$val read: (JsonObject) -&gt; JsonObject? = { jsonOf("thread" to threads.getValue(it.params().str("threadId")!!)) }</ID>
+    <ID>MaxLineLength:CodexJourneyTest.kt$CodexJourneyTest$val sockets = CodexSocketFactory { _: CodexEndpoint, _: String -&gt; (if (first.closed) replacement else first) as CodexSocket }</ID>
+    <ID>MaxLineLength:CodexJson.kt$public</ID>
+    <ID>MaxLineLength:CodexJson.kt$public fun codexObject(value: JsonElement?): JsonObject</ID>
+    <ID>MaxLineLength:CodexMappers.kt$"agentMessage" -&gt; parts += part(0, PartType.Text, "text", codexString(item["text"], max = TEXT_MAX, empty = true))</ID>
+    <ID>MaxLineLength:CodexMappers.kt$else -&gt; parts += part(0, PartType.Text, "text", "Codex recorded an item that this mobile client cannot display yet.")</ID>
+    <ID>MaxLineLength:CodexMappers.kt$errorText = if (turnStatus == "failed" &amp;&amp; type != "userMessage") "The Codex turn failed. Review the server before retrying." else null</ID>
+    <ID>MaxLineLength:CodexMappers.kt$parts += part(0, PartType.Reasoning, "reasoning", summary.joinToString("\n") { codexString(it, max = 65_536, empty = true) })</ID>
+    <ID>MaxLineLength:CodexMappers.kt$state == "completed" &amp;&amp; (exit == null || exit is JsonNull || exit.intOrNull() == 0L) -&gt; ToolStatus.Completed</ID>
+    <ID>MaxLineLength:CodexMappers.kt$threadId</ID>
+    <ID>MaxLineLength:CodexMappers.kt$val output = item["aggregatedOutput"].stringOrNull()?.let { codexString(it, max = TEXT_MAX, empty = true) } ?: ""</ID>
+    <ID>MaxLineLength:CodexMappers.kt$val tool = ToolState(status, input = jsonOf("command" to codexString(item["command"], max = 65_536, empty = true)), output = output)</ID>
+    <ID>MaxLineLength:CodexSteeringTest.kt$CodexSteeringTest$"input" to listOf(mapOf("type" to "text", "text" to "Keep the public API unchanged.", "text_elements" to emptyList&lt;Any&gt;()))</ID>
+    <ID>MaxLineLength:CodexSteeringTest.kt$CodexSteeringTest$JsonObject(thread(busy = true, turns = listOf(active())) + ("id" to kotlinx.serialization.json.JsonPrimitive("thread-other")))</ID>
+    <ID>MaxLineLength:CodexSteeringTest.kt$CodexSteeringTest$assertEquals(CodexFailureKind.Unavailable, f.g.prompt(sid, OutgoingPrompt("Wait for later", delivery = PromptDelivery.Queue)).kind())</ID>
+    <ID>MaxLineLength:CodexSteeringTest.kt$CodexSteeringTest$assertEquals(jsonOf("threadId" to "thread-1", "includeTurns" to true), f.requests("thread/read").single().params())</ID>
+    <ID>MaxLineLength:CodexSteeringTest.kt$CodexSteeringTest$f.g.prompt(sid, OutgoingPrompt("Inspect attachment", delivery = PromptDelivery.Steer, attachments = persistentListOf(attachment))).kind()</ID>
+    <ID>MaxLineLength:CodexSteeringTest.kt$CodexSteeringTest$for</ID>
+    <ID>MaxLineLength:CodexSteeringTest.kt$CodexSteeringTest$private fun active(id: String = "turn-active", status: String = "inProgress")</ID>
+    <ID>MaxLineLength:CodexSteeringTest.kt$CodexSteeringTest$val attachment = PromptAttachment(mime = "text/plain", filename = "fixture.txt", url = "data:text/plain;base64,Zml4dHVyZQ==")</ID>
+    <ID>MaxLineLength:CodexTransport.kt$CodexTransport$if (error["code"].intOrNull() == -32001L) CodexFailureKind.Overloaded else CodexFailureKind.Unavailable</ID>
+    <ID>MaxLineLength:CodexTransport.kt$CodexTransport$public suspend</ID>
+    <ID>MaxLineLength:CodexTransport.kt$CodexTransport$sendRaw(jsonOf("id" to id, "error" to mapOf("code" to -32601, "message" to "Unsupported client request")), request.epoch)</ID>
+    <ID>MaxLineLength:CodexTransport.kt$CodexTransport.Pending$fun</ID>
+    <ID>MaxLineLength:CodexTransportTest.kt$CodexTransportTest$assertEquals(Failure.Refused(io.github.eslamasabry.oc.core.common.RefusalReason.DispatchUncertain), e.toFailure())</ID>
+    <ID>MaxLineLength:CodexTransportTest.kt$CodexTransportTest$for</ID>
+    <ID>MaxLineLength:CodexTransportTest.kt$CodexTransportTest$val e = assertFailsWith&lt;CodexException&gt; { t.reply(CodexRpcEvent(oldEpoch, "request", JsonObject(emptyMap()), JsonPrimitive(7)), JsonObject(emptyMap())) }</ID>
+    <ID>MaxLineLength:CodexTransportTest.kt$CodexTransportTest$val e = assertFailsWith&lt;CodexException&gt; { t.request("turn/start", jsonOf("threadId" to "thread-1"), mutation = true) }</ID>
+    <ID>MaxLineLength:CodexTransportTest.kt$CodexTransportTest$val mutation = async { assertFailsWith&lt;CodexException&gt; { t.request("turn/start", jsonOf("threadId" to "thread-1"), mutation = true) } }</ID>
+    <ID>MaxLineLength:CodexTransportTest.kt$CodexTransportTest$val second = FakeAppServer().apply { answers["thread/list"] = { jsonOf("data" to emptyList&lt;Any&gt;(), "nextCursor" to null) } }</ID>
+    <ID>MaxLineLength:FakeAppServer.kt$FakeAppServer$push(if (id == null) jsonOf("method" to method, "params" to params) else jsonOf("method" to method, "params" to params, "id" to id))</ID>
+    <ID>MaxLineLength:FakeAppServer.kt$FakeAppServer$push(jsonOf("id" to id, "error" to mapOf("code" to it, "message" to "Synthetic private remote detail sk-fixture-secret-0123456789")))</ID>
+    <ID>MaxLineLength:FakeAppServer.kt$fun</ID>
+    <ID>MaxLineLength:FakeAppServer.kt$mapOf("id" to user, "type" to "userMessage", "content" to listOf(mapOf("type" to "text", "text" to "Hello")))</ID>
+    <ID>MaxLineLength:HandoffMessages.kt$"interrupted" -&gt; listOf(HandoffPart.Text("The Codex turn was interrupted before completion."))</ID>
+    <ID>MaxLineLength:HandoffMessages.kt$else -&gt; parts += HandoffPart.Text("Codex recorded an unsupported item. Its contents are excluded from this handoff.")</ID>
+    <ID>MaxLineLength:HandoffMessages.kt$errorText = if (status == "failed") "The Codex turn failed. Check the project state before retrying." else null</ID>
+    <ID>MaxLineLength:HandoffMessages.kt$if (phaseName == null) parts += HandoffPart.Text("Codex did not record whether the following assistant message was a final answer.")</ID>
+    <ID>MaxLineLength:HandoffMessages.kt$parts += if (inputType == "text") HandoffPart.Text(text(input["text"])) else HandoffPart.File("Codex input (contents excluded)")</ID>
+    <ID>MaxLineLength:HandoffMessages.kt$val state = if (item["status"].stringOrNull() == "interrupted") "cancelled" else callStatus(item["status"])</ID>
+    <ID>MaxLineLength:HandoffRecord.kt$HandoffRecord$public data</ID>
+    <ID>MaxLineLength:HandoffRecord.kt$for (key in listOf("filePath", "file_path", "path")) part.input[key]?.takeIf { it.isNotEmpty() }?.let(paths::add)</ID>
+    <ID>MaxLineLength:HandoffRecord.kt$if (part !is HandoffPart.Tool || part.name.lowercase() !in WRITE_TOOLS || part.status != "completed" || !part.executed) continue</ID>
+    <ID>MaxLineLength:HandoffRecord.kt$is HandoffPart.File -&gt; turn.text.append("Attachment contents excluded: ${writer.label(part.filename)}\n")</ID>
+    <ID>MaxLineLength:HandoffRecord.kt$line("Credentials are masked. Reasoning and attachment contents are excluded. Tool details are compact summaries, not full logs.")</ID>
+    <ID>MaxLineLength:HandoffRecord.kt$message.errorText?.let { turn.text.append("Message ended with an error:\n").append(writer.block(it)).append('\n') }</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$"arguments" to mapOf("path" to "lib/parser.dart", "command" to "inspect parser", "url" to "excluded-tool-url", "secret" to "excluded-tool-argument")</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$"content" to listOf(mapOf("type" to "text", "text" to "Continue"), mapOf("type" to "image", "url" to "data:secret-image-excluded"))</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$"id" to "collab-1"</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$"id" to "command-1"</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$"id" to "dynamic-1"</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$"kind" to mapOf("type" to "update", "move_path" to if (status == "completed") "lib/moved.dart" else null)</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$"prompt" to "excluded-agent-prompt"</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$"status" to "completed"</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$JsonObject(turn(emptyList(), status = "failed") + ("error" to jsonOf("message" to "remote secret error excluded")))</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$for</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$for (text in listOf("dart test", "/repo", "exitCode: 1", "Failed", "status: \"error\"")) assertTrue(text in r.markdown, text)</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$invalid(thread((0 until 2).map { t -&gt; turn((0 until 5001).map { jsonOf("id" to "reason-$t-$it", "type" to "reasoning") }, id = "turn-$t") }))</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$jsonOf("id" to "compact-1", "type" to "contextCompaction", "text" to "private compaction metadata excluded")</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$jsonOf("id" to "reasoning-1", "type" to "reasoning", "summary" to listOf("private reasoning excluded"), "content" to listOf("private reasoning body excluded"))</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$jsonOf("id" to "unknown-1", "type" to "futureItem", "metadata" to "private unsupported metadata excluded")</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$mapOf("type" to "encrypted_content", "encrypted_content" to "excluded-encrypted-content")</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$mapOf("type" to "resource", "resource" to mapOf("text" to "excluded-resource-body"))</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$thread(listOf(JsonObject(turn(emptyList()) + ("itemsView" to kotlinx.serialization.json.JsonPrimitive("notLoaded")))))</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$thread(listOf(JsonObject(turn(emptyList()) + ("itemsView" to kotlinx.serialization.json.JsonPrimitive("summary")))))</ID>
+    <ID>MaxLineLength:HandoffRecordTest.kt$HandoffRecordTest$thread(listOf(turn(listOf(jsonOf("id" to "command", "type" to "commandExecution", "status" to "unknown")))))</ID>
+    <ID>NestedBlockDepth:CodexGateway.kt$CodexGateway$private suspend fun onPush(push: CodexPush)</ID>
+    <ID>NestedBlockDepth:CodexGateway.kt$CodexGateway$private suspend fun readThread( id: String, withTurns: Boolean = false, operation: Operation? = null, ): JsonObject</ID>
+    <ID>NestedBlockDepth:CodexGatewayFactory.kt$CodexGatewayFactory$public suspend fun checkConnection(spec: GatewaySpec): Outcome&lt;Unit&gt;</ID>
+    <ID>NestedBlockDepth:CodexHandoff.kt$internal fun codexHandoffMessages(thread: JsonObject): ImmutableList&lt;MessageWithParts&gt;</ID>
+    <ID>NestedBlockDepth:CodexReads.kt$CodexReads$public suspend fun probe(): Outcome&lt;Unit&gt;</ID>
+    <ID>NestedBlockDepth:HandoffMessages.kt$public fun codexHandoffMessages(thread: JsonObject): List&lt;HandoffMessage&gt;</ID>
+    <ID>NestedBlockDepth:HandoffRecord.kt$public fun buildHandoffRecord( session: HandoffSource, messages: List&lt;HandoffMessage&gt;, lastState: String, todos: List&lt;HandoffTodo&gt; = emptyList(), historyComplete: Boolean = true, maxBytes: Int = 98_304, redactor: Redactor = Redactor(), ): HandoffRecordResult</ID>
+    <ID>RethrowCaughtException:CodexReads.kt$CodexReads$throw e</ID>
+    <ID>ReturnCount:CodexAccountSession.kt$CodexAccountSession$internal suspend fun onPush(push: CodexPush)</ID>
+    <ID>ReturnCount:CodexAccountSession.kt$CodexAccountSession$private fun onRpc(event: CodexRpcEvent)</ID>
+    <ID>ReturnCount:CodexAccountSession.kt$CodexAccountSession$private suspend fun cancelOwned(): Boolean</ID>
+    <ID>ReturnCount:CodexAccountSession.kt$CodexAccountSession.Companion$fun officialDeviceUrl(url: String): Boolean</ID>
+    <ID>ReturnCount:CodexConnectionProbe.kt$public suspend fun probeCodexConnection( baseUrl: String, token: String, directory: String, open: (url: String, token: String, directory: String) -&gt; CodexProbeGateway, ): CodexProbeResult</ID>
+    <ID>ReturnCount:CodexEndpoint.kt$CodexEndpoint.Companion$public fun parse(raw: String): CodexEndpoint?</ID>
+    <ID>ReturnCount:CodexEndpoint.kt$CodexProfileRules$public fun normalizeUrl(value: String): String</ID>
+    <ID>ReturnCount:CodexEndpoint.kt$CodexProfileRules$public fun validateUrl(value: String): CodexUrlProblem?</ID>
+    <ID>ReturnCount:CodexEndpoint.kt$CodexUrl.Companion$fun split(raw: String): CodexUrl?</ID>
+    <ID>ReturnCount:CodexGateway.kt$CodexGateway$private fun handleRpc(event: CodexRpcEvent)</ID>
+    <ID>ReturnCount:CodexGateway.kt$CodexGateway$private suspend fun onPush(push: CodexPush)</ID>
+    <ID>ReturnCount:CodexGateway.kt$CodexGateway$private suspend fun promptNow( id: String, prompt: OutgoingPrompt, fenced: Boolean = false, onDispatch: () -&gt; Unit, ): PromptAdmission</ID>
+    <ID>ReturnCount:CodexGatewayFactory.kt$CodexGatewayFactory$override suspend fun connect(spec: GatewaySpec): Outcome&lt;GatewayPair&gt;</ID>
+    <ID>ReturnCount:CodexGatewayFactory.kt$CodexGatewayFactory$override suspend fun probe(target: ProbeTarget): Outcome&lt;ProbeResult&gt;</ID>
+    <ID>ReturnCount:CodexGatewayFactory.kt$CodexGatewayFactory$public suspend fun checkConnection(spec: GatewaySpec): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:CodexHandoff.kt$public suspend fun prepareCodexHandoffDraft( source: CodexGateway, sessionId: SessionId, target: ServerCapabilities, lastState: String, recordId: String, isCurrent: () -&gt; Boolean, redactor: Redactor = Redactor(), ): Outcome&lt;HandoffDraft&gt;</ID>
+    <ID>ReturnCount:CodexHandoff.kt$public suspend fun readCodexHandoffHistory( gateway: CodexGateway, sessionId: SessionId, isCurrent: () -&gt; Boolean, maxPages: Int = 100, ): HandoffHistoryRead</ID>
+    <ID>ReturnCount:CodexJson.kt$public fun JsonElement?.boolOrNull(): Boolean?</ID>
+    <ID>ReturnCount:CodexJson.kt$public fun JsonElement?.intOrNull(): Long?</ID>
+    <ID>ReturnCount:CodexMappers.kt$internal fun JsonObject.millis(key: String): Long?</ID>
+    <ID>ReturnCount:CodexReads.kt$CodexReads$public suspend fun account(): Outcome&lt;CodexAccount&gt;</ID>
+    <ID>ReturnCount:CodexReads.kt$CodexReads$public suspend fun limits(): Outcome&lt;List&lt;CodexLimitBucket&gt;&gt;</ID>
+    <ID>ReturnCount:CodexReads.kt$CodexReads$public suspend fun probe(): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:CodexReads.kt$CodexReads.Companion$public suspend fun open( target: CodexTarget, sockets: SocketConnections, owner: CoroutineScope, dispatchers: AppDispatchers, ): Outcome&lt;CodexReads&gt;</ID>
+    <ID>ReturnCount:CodexTarget.kt$CodexTarget.Companion$public fun parse(address: String, directory: String, token: String): Outcome&lt;CodexTarget&gt;</ID>
+    <ID>ReturnCount:CodexTransport.kt$CodexTransport$private fun receive(myEpoch: Int, frame: String)</ID>
+    <ID>ReturnCount:CodexTransport.kt$CodexTransport$private suspend fun connectReady(): Int</ID>
+    <ID>ReturnCount:CodexTransport.kt$CodexTransport$private suspend fun receive(generation: Int, frame: String)</ID>
+    <ID>ReturnCount:CodexWire.kt$public fun validCodexEndpoint(endpoint: String): Boolean</ID>
+    <ID>SpreadOperator:CodexJson.kt$(*pairs.map { (k, v) -&gt; k to toJson(v) }.toTypedArray())</ID>
+    <ID>SwallowedException:CodexAccountSession.kt$CodexAccountSession$e: CodexException</ID>
+    <ID>ThrowingExceptionFromFinally:CodexConnectionProbe.kt$throw e</ID>
+    <ID>ThrowsCount:CodexAccount.kt$private fun JsonObject.integer(key: String, required: Boolean = false): Long?</ID>
+    <ID>ThrowsCount:CodexAccountSession.kt$CodexAccountSession$private suspend fun start(): AccountDeviceCode</ID>
+    <ID>ThrowsCount:CodexAccountSession.kt$CodexAccountSession.Companion$fun window(value: JsonElement?): AccountRateWindow?</ID>
+    <ID>ThrowsCount:CodexTransport.kt$CodexTransport$private suspend fun openSocket(): Int</ID>
+    <ID>ThrowsCount:CodexTransport.kt$CodexTransport$private suspend fun requestRaw( method: String, params: JsonObject, mutation: Boolean, generation: Int, ): JsonObject</ID>
+    <ID>TooGenericExceptionCaught:CodexAccountSession.kt$CodexAccountSession$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CodexTransport.kt$CodexTransport$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CodexTransport.kt$CodexTransport$e: Throwable</ID>
+    <ID>TooManyFunctions:CodexAccountSession.kt$CodexAccountSession</ID>
+    <ID>TooManyFunctions:CodexGateway.kt$CodexGateway : ServerGatewayMidTurnPromptGateway</ID>
+    <ID>TooManyFunctions:CodexGateway.kt$CodexGateway : ServerGatewayMidTurnPromptGatewayFencedPromptGatewayPromptRunIdentityGatewayCodexProbeGatewayInitialSessionDefaultsGateway</ID>
+    <ID>TooManyFunctions:CodexJson.kt$io.github.eslamasabry.oc.protocol.codex.CodexJson.kt</ID>
+    <ID>TooManyFunctions:CodexTransport.kt$CodexTransport</ID>
+    <ID>TooManyFunctions:CodexWire.kt$io.github.eslamasabry.oc.protocol.codex.CodexWire.kt</ID>
+    <ID>UnusedPrivateProperty:HandoffRecord.kt$pass</ID>
+    <ID>WildcardImport:CodexAccount.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:CodexAccount.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:CodexAccountSession.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:CodexAccountSession.kt$import kotlinx.collections.immutable.*</ID>
+    <ID>WildcardImport:CodexAccountSession.kt$import kotlinx.coroutines.*</ID>
+    <ID>WildcardImport:CodexAccountSession.kt$import kotlinx.coroutines.flow.*</ID>
+    <ID>WildcardImport:CodexAccountSession.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:CodexGateway.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:CodexGateway.kt$import io.github.eslamasabry.oc.core.common.ids.*</ID>
+    <ID>WildcardImport:CodexGateway.kt$import io.github.eslamasabry.oc.core.domain.*</ID>
+    <ID>WildcardImport:CodexGateway.kt$import io.github.eslamasabry.oc.core.domain.events.*</ID>
+    <ID>WildcardImport:CodexGateway.kt$import io.github.eslamasabry.oc.core.model.*</ID>
+    <ID>WildcardImport:CodexGateway.kt$import io.github.eslamasabry.oc.core.model.transcript.*</ID>
+    <ID>WildcardImport:CodexGateway.kt$import kotlinx.collections.immutable.*</ID>
+    <ID>WildcardImport:CodexGateway.kt$import kotlinx.coroutines.*</ID>
+    <ID>WildcardImport:CodexGateway.kt$import kotlinx.coroutines.flow.*</ID>
+    <ID>WildcardImport:CodexGateway.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:CodexGatewayFactory.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:CodexGatewayFactory.kt$import io.github.eslamasabry.oc.core.domain.*</ID>
+    <ID>WildcardImport:CodexGatewayFactory.kt$import kotlinx.coroutines.*</ID>
+    <ID>WildcardImport:CodexHandoff.kt$import io.github.eslamasabry.oc.core.model.transcript.*</ID>
+    <ID>WildcardImport:CodexHandoff.kt$import kotlinx.collections.immutable.*</ID>
+    <ID>WildcardImport:CodexHandoff.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:CodexMappers.kt$import io.github.eslamasabry.oc.core.common.ids.*</ID>
+    <ID>WildcardImport:CodexMappers.kt$import io.github.eslamasabry.oc.core.model.*</ID>
+    <ID>WildcardImport:CodexMappers.kt$import io.github.eslamasabry.oc.core.model.transcript.*</ID>
+    <ID>WildcardImport:CodexMappers.kt$import kotlinx.collections.immutable.*</ID>
+    <ID>WildcardImport:CodexMappers.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:CodexReads.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:CodexReads.kt$import io.github.eslamasabry.oc.core.net.ws.*</ID>
+    <ID>WildcardImport:CodexReads.kt$import kotlinx.coroutines.*</ID>
+    <ID>WildcardImport:CodexReads.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:CodexTarget.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:CodexTransport.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:CodexTransport.kt$import kotlinx.coroutines.*</ID>
+    <ID>WildcardImport:CodexTransport.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:CodexWire.kt$import kotlinx.serialization.json.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

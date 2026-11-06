@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>LongMethod:DesktopUpdatesScreen.kt$@Composable public fun DesktopUpdatesScreen(state: DesktopUpdatesUi, actions: DesktopUpdatesActions)</ID>
+    <ID>WildcardImport:DesktopReleaseConfirmTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:DesktopReleaseConfirmTest.kt$import io.github.eslamasabry.oc.feature.desktopupdates.presentation.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

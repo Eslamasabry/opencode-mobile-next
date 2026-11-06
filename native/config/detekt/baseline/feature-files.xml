@@ -1,0 +1,87 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:FileViewModel.kt$FileViewModel$local.value.opening || !local.value.canOpenLocal || (install &amp;&amp; !local.value.canInstall)</ID>
+    <ID>ComplexCondition:FolderViewModel.kt$FolderViewModel$surface == FileSearchSurface.Text &amp;&amp; !ui.canSearchText || surface == FileSearchSurface.Symbols &amp;&amp; !ui.canSearchSymbols</ID>
+    <ID>CyclomaticComplexMethod:FileScreen.kt$@Composable private fun Body(state: FileUi, actions: FileActions)</ID>
+    <ID>CyclomaticComplexMethod:FileScreen.kt$@Composable public fun FileScreen(state: FileUi, actions: FileActions)</ID>
+    <ID>CyclomaticComplexMethod:FileViewModel.kt$FileViewModel$private fun load()</ID>
+    <ID>CyclomaticComplexMethod:FilesGraph.kt$DraftComposerMentions$override suspend fun mentionAt( ref: ConversationRef, path: String, directory: String?, line: Int?, ): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:FolderScreen.kt$@Composable private fun symbolKind(kind: Int): String</ID>
+    <ID>CyclomaticComplexMethod:FolderScreen.kt$@Composable public fun FolderScreen(state: FolderUi, actions: FolderActions)</ID>
+    <ID>CyclomaticComplexMethod:FolderScreen.kt$private fun LazyListScope.searchItems( state: FolderUi, actions: FolderActions, since: kotlin.time.TimeMark, )</ID>
+    <ID>CyclomaticComplexMethod:FolderViewModel.kt$FolderViewModel$override fun search(query: String)</ID>
+    <ID>EmptyFunctionBlock:FileViewModelTest.kt$FileViewModelTest.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:FilesScreensTest.kt$FilesScreensTest.FileCalls${}</ID>
+    <ID>EmptyFunctionBlock:FilesScreensTest.kt$FilesScreensTest.FolderCalls${}</ID>
+    <ID>EmptyFunctionBlock:FilesTestDoubles.kt$StackNavigator${}</ID>
+    <ID>EmptyFunctionBlock:LooksCaptureTest.kt$LooksCaptureTest.FileCalls${}</ID>
+    <ID>LongMethod:FileScreen.kt$@Composable private fun Body(state: FileUi, actions: FileActions)</ID>
+    <ID>LongMethod:FileScreen.kt$@Composable public fun FileScreen(state: FileUi, actions: FileActions)</ID>
+    <ID>LongMethod:FileShareSheet.kt$@Composable internal fun FileShareSheet( share: ShareSheetUi?, name: String, actions: FileActions, sizeBytes: Long?, )</ID>
+    <ID>LongMethod:FileViewModel.kt$FileViewModel$private fun load()</ID>
+    <ID>LongMethod:FolderScreen.kt$@Composable private fun EntryRow(node: FileNode, state: FolderUi, actions: FolderActions)</ID>
+    <ID>LongMethod:FolderScreen.kt$@Composable public fun FolderScreen(state: FolderUi, actions: FolderActions)</ID>
+    <ID>LongMethod:FolderScreen.kt$private fun LazyListScope.searchItems( state: FolderUi, actions: FolderActions, since: kotlin.time.TimeMark, )</ID>
+    <ID>LongMethod:FolderViewModel.kt$FolderViewModel$override fun search(query: String)</ID>
+    <ID>LongParameterList:FileViewModel.kt$FileViewModel$( @Assisted private val route: FilesRoute.File, private val connections: FilesConnections, private val mentions: ComposerMentions, private val share: WifiShare, private val handoffs: Set&lt;FileHandoff&gt;, private val pdfPages: Set&lt;PdfPages&gt;, private val nav: AppNavigator, private val appScope: AppCoroutineScope, private val savers: Set&lt;FileSaver&gt;, private val links: FileLinks, private val preferences: Set&lt;FilesReaderPreferences&gt;, private val storageAccess: Set&lt;SharedStorageAccess&gt; = emptySet(), private val phoneFiles: Set&lt;PhoneFiles&gt; = emptySet(), )</ID>
+    <ID>LongParameterList:FileViewModelTest.kt$FileViewModelTest.Setup$( scope: TestScope, path: String = "README.md", line: Int? = null, val host: Host? = Host(), val handoff: Handoff? = Handoff(), val pdf: PdfPages? = null, val connections: FakeConnections = FakeConnections(FakeFileGateway(contents = files)), val saver: FileSaver? = null, shared: WifiShare? = null, )</ID>
+    <ID>LoopWithTooManyJumpStatements:FileViewModel.kt$FileViewModel$for</ID>
+    <ID>LoopWithTooManyJumpStatements:FolderViewModel.kt$FolderViewModel$for</ID>
+    <ID>MagicNumber:FileScreen.kt$2000</ID>
+    <ID>MagicNumber:FileShareSheet.kt$1000</ID>
+    <ID>MagicNumber:FileShareSheet.kt$60</ID>
+    <ID>MagicNumber:FileShareSheet.kt$999</ID>
+    <ID>MagicNumber:FolderScreen.kt$10</ID>
+    <ID>MagicNumber:FolderScreen.kt$11</ID>
+    <ID>MagicNumber:FolderScreen.kt$12</ID>
+    <ID>MagicNumber:FolderScreen.kt$13</ID>
+    <ID>MagicNumber:FolderScreen.kt$14</ID>
+    <ID>MagicNumber:FolderScreen.kt$22</ID>
+    <ID>MagicNumber:FolderScreen.kt$23</ID>
+    <ID>MagicNumber:FolderScreen.kt$24</ID>
+    <ID>MagicNumber:FolderScreen.kt$25</ID>
+    <ID>MagicNumber:FolderScreen.kt$26</ID>
+    <ID>MagicNumber:FolderScreen.kt$3</ID>
+    <ID>MagicNumber:FolderScreen.kt$4</ID>
+    <ID>MagicNumber:FolderScreen.kt$5</ID>
+    <ID>MagicNumber:FolderScreen.kt$6</ID>
+    <ID>MagicNumber:FolderScreen.kt$7</ID>
+    <ID>MagicNumber:FolderScreen.kt$8</ID>
+    <ID>MagicNumber:FolderScreen.kt$9</ID>
+    <ID>MatchingDeclarationName:LooksCapture.kt$Looks</ID>
+    <ID>MaxLineLength:ConversationFilesTest.kt$ConversationFilesTest$val fake = FakeServerGateway(listOf(Session(SessionId("s1"), directory = "/work/a", workspaceId = WorkspaceId("w"))))</ID>
+    <ID>MaxLineLength:FileViewModelTest.kt$FileViewModelTest$"logo.png" to FileContent(Base64.encode(byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47)), "binary", "base64", null)</ID>
+    <ID>MaxLineLength:FilesScreensTest.kt$FilesScreensTest$val binary = readme.copy(path = "app.bin", body = FileBody.Binary("application/octet-stream", 2048), sizeBytes = 2048)</ID>
+    <ID>MaxLineLength:LooksCapture.kt$Looks$/** Capture-only: writes PNGs of a screen in light and dark at 412 x 915 dp, density 2.625 (1081 x 2402 px). No comparison. */</ID>
+    <ID>MaxLineLength:LooksCapture.kt$Looks$appearance = KitAppearance(mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light, motion = MotionLevel.Off)</ID>
+    <ID>MaxLineLength:LooksCapture.kt$Looks$fun</ID>
+    <ID>ReturnCount:ConversationFiles.kt$ConversationFiles$private suspend fun resolve(): Outcome&lt;Pair&lt;FileGateway, String?&gt;&gt;</ID>
+    <ID>ReturnCount:FileScreen.kt$@Composable private fun SharedStorageNotice(state: FileUi, actions: FileActions)</ID>
+    <ID>ReturnCount:FileViewModel.kt$FileViewModel$override fun openWith()</ID>
+    <ID>ReturnCount:FileViewModel.kt$FileViewModel$override fun pdfPage(index: Int)</ID>
+    <ID>ReturnCount:FileViewModel.kt$FileViewModel$override fun save()</ID>
+    <ID>ReturnCount:FileViewModel.kt$FileViewModel$override fun shareOnWifi()</ID>
+    <ID>ReturnCount:FileViewModel.kt$FileViewModel$private fun visualBody(data: FileData, original: FileBody): FileBody</ID>
+    <ID>ReturnCount:FileViewModel.kt$FileViewModel$private suspend fun checkStorage(identity: Any?, wanted: () -&gt; Boolean = { true }): Boolean</ID>
+    <ID>ReturnCount:FilesGraph.kt$DraftComposerMentions$override suspend fun attach(ref: ConversationRef, file: FileData): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:FilesGraph.kt$DraftComposerMentions$override suspend fun mentionAt( ref: ConversationRef, path: String, directory: String?, line: Int?, ): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:FilesGraph.kt$GraphFilesConnections$override suspend fun changes(ref: ConversationRef): Outcome&lt;ImmutableList&lt;VersionControlFile&gt;&gt;</ID>
+    <ID>ReturnCount:FilesGraph.kt$GraphFilesConnections$override suspend fun symbols( ref: ConversationRef, query: String, ): Outcome&lt;ImmutableList&lt;WorkspaceSymbol&gt;&gt;</ID>
+    <ID>ReturnCount:FolderViewModel.kt$FolderViewModel$override fun attach()</ID>
+    <ID>ReturnCount:FolderViewModel.kt$FolderViewModel$private fun requestStorage()</ID>
+    <ID>ReturnCount:FolderViewModel.kt$FolderViewModel$private suspend fun checkStorage( mine: Int, gateway: io.github.eslamasabry.oc.core.domain.FileGateway, )</ID>
+    <ID>TooManyFunctions:FileViewModel.kt$FileActions</ID>
+    <ID>TooManyFunctions:FileViewModel.kt$FileViewModel : ViewModelFileActions</ID>
+    <ID>TooManyFunctions:FilesGraph.kt$GraphFilesConnections : FilesConnections</ID>
+    <ID>TooManyFunctions:FolderViewModel.kt$FolderActions</ID>
+    <ID>TooManyFunctions:FolderViewModel.kt$FolderViewModel : ViewModelFolderActions</ID>
+    <ID>VariableNaming:FilesTestDoubles.kt$FakeFileGateway$val found_ = mutableListOf&lt;String&gt;()</ID>
+    <ID>WildcardImport:FileActionsMenuTest.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:FileActionsMenuTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:FileActionsMenuTest.kt$import io.github.eslamasabry.oc.core.model.*</ID>
+    <ID>WildcardImport:FileActionsMenuTest.kt$import io.github.eslamasabry.oc.feature.files.presentation.*</ID>
+    <ID>WildcardImport:FileActionsMenuTest.kt$import kotlinx.collections.immutable.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

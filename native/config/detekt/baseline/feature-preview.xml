@@ -1,0 +1,53 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:DevPreviewScreen.kt$@Composable public fun DevPreviewScreen( state: DevPreviewUi, actions: DevPreviewActions, slot: WebPreviewSlot, egress: PreviewEgress?, modifier: Modifier = Modifier, voices: List&lt;KitComposerVoice&gt; = emptyList(), )</ID>
+    <ID>CyclomaticComplexMethod:PreviewRules.kt$WebOrigin.Companion$public fun of(url: String?): WebOrigin?</ID>
+    <ID>EmptyFunctionBlock:WebPreviewSlot.kt$NoWebPreviewSlot${ }</ID>
+    <ID>LongMethod:DevPreviewScreen.kt$@Composable public fun DevPreviewScreen( state: DevPreviewUi, actions: DevPreviewActions, slot: WebPreviewSlot, egress: PreviewEgress?, modifier: Modifier = Modifier, voices: List&lt;KitComposerVoice&gt; = emptyList(), )</ID>
+    <ID>LongParameterList:DevPreviewScreen.kt$( state: DevPreviewUi, actions: DevPreviewActions, slot: WebPreviewSlot, egress: PreviewEgress?, modifier: Modifier = Modifier, voices: List&lt;KitComposerVoice&gt; = emptyList(), )</ID>
+    <ID>MagicNumber:DevPreviewScreen.kt$5_000</ID>
+    <ID>MagicNumber:PreviewRules.kt$WebOrigin.Companion$2048</ID>
+    <ID>MagicNumber:PreviewRules.kt$WebOrigin.Companion$443</ID>
+    <ID>MagicNumber:PreviewRules.kt$WebOrigin.Companion$5</ID>
+    <ID>MagicNumber:PreviewRules.kt$WebOrigin.Companion$65535</ID>
+    <ID>MagicNumber:PreviewRules.kt$WebOrigin.Companion$80</ID>
+    <ID>MagicNumber:PreviewViewModels.kt$PortsViewModel$5</ID>
+    <ID>MagicNumber:PreviewViewModels.kt$PortsViewModel$65535</ID>
+    <ID>MaxLineLength:PortsScreen.kt$message = stringResource(if (noServer) Res.string.devPreviewNoServerBody else Res.string.devPreviewNoHostBody)</ID>
+    <ID>MaxLineLength:PortsScreen.kt$title = stringResource(if (noServer) Res.string.devPreviewNoServerTitle else Res.string.devPreviewNoHostTitle)</ID>
+    <ID>MaxLineLength:PreviewRulesTest.kt$PreviewRulesTest$// Flutter lets a same-origin login form or `POST /api/...` through: the boundary is the destination, not the verb.</ID>
+    <ID>MaxLineLength:PreviewRulesTest.kt$PreviewRulesTest$assertEquals(DevPreviewTarget.Blocked(PreviewBlock.NoHost), DevPreviewTarget.resolve(link, "https://user:pw@box.example"))</ID>
+    <ID>MaxLineLength:PreviewRulesTest.kt$PreviewRulesTest$assertEquals(DevPreviewTarget.Blocked(PreviewBlock.NoServer), DevPreviewTarget.resolve(link, "https://box.example:4096", leased = true))</ID>
+    <ID>MaxLineLength:PreviewRulesTest.kt$PreviewRulesTest$assertEquals(DevPreviewTarget.Phone("http://127.0.0.1:3000/"), DevPreviewTarget.resolve(link, "http://127.0.0.1:9000", leased = true))</ID>
+    <ID>MaxLineLength:PreviewRulesTest.kt$PreviewRulesTest$assertEquals(DevPreviewTarget.Phone("http://127.0.0.1:3000/x?y=1"), DevPreviewTarget.resolve(link, "http://127.0.0.1:4096"))</ID>
+    <ID>MaxLineLength:PreviewRulesTest.kt$PreviewRulesTest$assertEquals(DevPreviewTarget.Phone("http://127.0.0.1:3000/x?y=1"), DevPreviewTarget.resolve(link, "http://localhost:4096"))</ID>
+    <ID>MaxLineLength:PreviewRulesTest.kt$PreviewRulesTest$assertEquals(PreviewLink(5173, path = "/app", query = "x=1"), PreviewLinks.parse("http://127.0.0.1:5173/app?x=1"))</ID>
+    <ID>MaxLineLength:PreviewRulesTest.kt$PreviewRulesTest$assertEquals(listOf(PreviewPort(8443, https = true), PreviewPort(5173, path = "/app?mode=demo")), route.mentioned)</ID>
+    <ID>MaxLineLength:PreviewRulesTest.kt$PreviewRulesTest$fun</ID>
+    <ID>MaxLineLength:PreviewRulesTest.kt$PreviewRulesTest$listOf("GET", "head", "POST", "PUT", "PATCH", "DELETE", "OPTIONS").forEach { assertTrue(egress.methodAllowed(it), it) }</ID>
+    <ID>MaxLineLength:PreviewRulesTest.kt$PreviewRulesTest$val route = PreviewRoute.Ports.from(null, listOf("see http://localhost:5173/app?mode=demo and https://127.0.0.1:8443"))</ID>
+    <ID>MaxLineLength:PreviewScreensTest.kt$PreviewScreensTest$KitTheme</ID>
+    <ID>MaxLineLength:PreviewScreensTest.kt$PreviewScreensTest$Themed { DevPreviewScreen(DevPreviewUi(5173, phone, shown = phone.url, leaveHost = "docs.example.com"), actions, FakeWebView, egress) }</ID>
+    <ID>MaxLineLength:PreviewScreensTest.kt$PreviewScreensTest$setContent { Themed { DevPreviewScreen(DevPreviewUi(3000, blocked = PreviewBlock.NoServer), Actions(), FakeWebView, null) } }</ID>
+    <ID>MaxLineLength:PreviewScreensTest.kt$PreviewScreensTest$setContent { Themed { DevPreviewScreen(DevPreviewUi(5173, phone, phase = PagePhase.Failed, shown = phone.url), Actions(), FakeWebView, egress) } }</ID>
+    <ID>MaxLineLength:PreviewScreensTest.kt$PreviewScreensTest$setContent { Themed { DevPreviewScreen(DevPreviewUi(5173, phone, phase = PagePhase.Ready, shown = phone.url), actions, FakeWebView, egress) } }</ID>
+    <ID>MaxLineLength:PreviewScreensTest.kt$PreviewScreensTest$setContent { Themed { DevPreviewScreen(DevPreviewUi(5173, phone, shown = phone.url), Actions(), NoWebPreviewSlot(), egress) } }</ID>
+    <ID>MaxLineLength:PreviewScreensTest.kt$PreviewScreensTest.FakeWebView$override</ID>
+    <ID>MaxLineLength:PreviewViewModelTest.kt$PreviewViewModelTest$assertEquals(DevPreviewTarget.Phone("http://127.0.0.1:5173/app?mode=demo"), page(opened, phone).state.value.target)</ID>
+    <ID>MaxLineLength:PreviewViewModelTest.kt$PreviewViewModelTest$assertEquals(DevPreviewTarget.Remote("http://box.tail.ts.net:5173/", "box.tail.ts.net"), connected.state.value.target)</ID>
+    <ID>MaxLineLength:PreviewViewModelTest.kt$PreviewViewModelTest$val ports = PortsViewModel(PreviewRoute.Ports.from(ref, listOf("open http://localhost:5173/app?mode=demo")), Connections(phone), nav)</ID>
+    <ID>MaxLineLength:PreviewViewModelTest.kt$PreviewViewModelTest.Connections$override suspend</ID>
+    <ID>MaxLineLength:WebPreviewSlot.kt$NoWebPreviewSlot$override</ID>
+    <ID>MaxLineLength:WebPreviewSlot.kt$WebPreviewSlot$*</ID>
+    <ID>MaxLineLength:WebPreviewSlot.kt$WebPreviewSlot$public</ID>
+    <ID>ReturnCount:PreviewRules.kt$DevPreviewTarget.Companion$public fun resolve( link: PreviewLink, serverAddress: String?, leased: Boolean = false, ): DevPreviewTarget</ID>
+    <ID>ReturnCount:PreviewRules.kt$PreviewEgress$public fun mayLoad(url: String): Boolean</ID>
+    <ID>ReturnCount:PreviewRules.kt$WebOrigin.Companion$public fun of(url: String?): WebOrigin?</ID>
+    <ID>ReturnCount:PreviewViewModels.kt$DevPreviewViewModel$override fun ask(text: String)</ID>
+    <ID>TooManyFunctions:PreviewUi.kt$DevPreviewActions</ID>
+    <ID>TooManyFunctions:PreviewViewModels.kt$DevPreviewViewModel : ViewModelDevPreviewActions</ID>
+    <ID>WildcardImport:DevPreviewScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

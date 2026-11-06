@@ -1,0 +1,326 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:BuiltinLinux.kt$BuiltinLinux$!OsConstants.S_ISDIR(r.st_mode) || !OsConstants.S_ISREG(m.st_mode) || m.st_size !in 1..4096 || generation != null &amp;&amp; !Regex("[0-9a-f]{64}").matches(generation)</ID>
+    <ID>ComplexCondition:BuiltinLinux.kt$BuiltinLinux$!Regex("[A-Za-z0-9_-]{1,80}").matches(owner) || !installed || installingRuntime || owner in blockedAgentProfiles</ID>
+    <ID>ComplexCondition:BuiltinLinux.kt$BuiltinLinux$code != 200 &amp;&amp; code != 206 &amp;&amp; !(code == 416 &amp;&amp; have &gt; 0)</ID>
+    <ID>ComplexCondition:BuiltinLinux.kt$BuiltinLinux$expectedGeneration &lt;= 0 || attempt.generation != expectedGeneration || !attempt.process.isAlive || current.process !== attempt.process || !restartWanted || userStopped || supervisionProfile != profileId || recoveryPreferences.getString("restoreOwner", null) != profileId || serverRecipe?.profileId != profileId || manualStartGeneration == expectedGeneration || recoveryPreferences.contains("drainOwner") || nativeRecoveryAttempt?.let { it.generation != expectedGeneration || it.process !== attempt.process } == true</ID>
+    <ID>ComplexCondition:BuiltinLinux.kt$BuiltinLinux$expectedStarts != null &amp;&amp; (expectedStarts[pid] == null || entry == null || expectedStarts[pid] != entry.startTicks)</ID>
+    <ID>ComplexCondition:BuiltinLinux.kt$BuiltinLinux$name == SERVER &amp;&amp; services[SERVER]?.let { it.process.isAlive &amp;&amp; it.port == port &amp;&amp; it.script == script } == true</ID>
+    <ID>ComplexCondition:BuiltinLinux.kt$BuiltinLinux$receipt.generation != expectedGeneration || receipt.boot != bootIdentity() || root.pid != pid || !root.sameProcess(kernelIdentity(pid))</ID>
+    <ID>ComplexCondition:BuiltinLinux.kt$BuiltinLinux$serverRunning || services.any { it.key != PHONE_ENGINE &amp;&amp; it.value.process.isAlive } || processes.any { it.isAlive } || LocalTerminal.get(context).hasLiveSessions()</ID>
+    <ID>ComplexCondition:BuiltinNewProject.kt$BuiltinNewProject$name.any { it == '/' || it == '\u0000' || it == '\n' || it == '\r' }</ID>
+    <ID>ComplexCondition:BuiltinNewProject.kt$BuiltinNewProject$name.isEmpty() || name == "." || name == ".." || name.length &gt; 255</ID>
+    <ID>ComplexCondition:PhoneAgentSignIn.kt$PhoneAgentSignIn$!data.has("loggedIn") || data.opt("loggedIn") !is Boolean || data.opt("authMethod") !is String || data.opt("apiProvider") !is String</ID>
+    <ID>ComplexCondition:PhoneAgentSignIn.kt$PhoneAgentSignIn$(run.phase != "awaitingCode" &amp;&amp; run.phase != "urlReady") || !run.acceptsCode || run.codeSubmitted || run.cancelled</ID>
+    <ID>ComplexCondition:PhoneAgentSignIn.kt$PhoneAgentSignIn$code.length &gt; 4096 || parts.size != 2 || parts.any { it.isEmpty() } || code.startsWith("sk-") || Regex("[\\x00-\\x20\\x7f]").containsMatchIn(code)</ID>
+    <ID>ComplexCondition:PhoneAgentSignIn.kt$PhoneAgentSignIn$existing.profileId != profileId || existing.agentId != agentId || existing.method != method || existing.cancelled</ID>
+    <ID>ComplexCondition:PhoneAgentSignIn.kt$PhoneAgentSignIn$run != null &amp;&amp; (run.profileId != profileId || run.agentId != agentId || run.method != method)</ID>
+    <ID>ComplexCondition:PhoneAgentSignIn.kt$PhoneAgentSignIn$synchronized(lock) { !run.acceptsCode &amp;&amp; !run.cancelled &amp;&amp; run.phase == "urlReady" } &amp;&amp; System.nanoTime() &lt; deadline</ID>
+    <ID>ComplexCondition:PhoneAgentSignIn.kt$PhoneAgentSignIn$synchronized(lock) { !run.cancelled &amp;&amp; run.phase == "awaitingCode" &amp;&amp; !run.acceptsCode &amp;&amp; run.failure == null } &amp;&amp; System.nanoTime() &lt; outcome</ID>
+    <ID>ComplexCondition:PhoneAgentSignIn.kt$PhoneAgentSignIn$synchronized(lock) { !run.cancelled &amp;&amp; run.phase == "awaitingCode" &amp;&amp; !run.acceptsCode &amp;&amp; run.failure == null } &amp;&amp; System.nanoTime() &lt; pending</ID>
+    <ID>ComplexCondition:PhoneAgentSignIn.kt$PhoneAgentSignIn$value.length &lt;= 8192 &amp;&amp; !Regex("[\\x00-\\x20\\x7f\\\\]").containsMatchIn(value) &amp;&amp; uri.scheme == "https" &amp;&amp; uri.host == "claude.com" &amp;&amp; uri.port == -1 &amp;&amp; uri.rawUserInfo == null &amp;&amp; uri.rawFragment == null &amp;&amp; uri.rawPath == "/cai/oauth/authorize"</ID>
+    <ID>ComplexCondition:PhoneEngineNative.kt$PhoneEngineNative.Companion$header.size != 64 || byte(0) != 0x7f || byte(1) != 0x45 || byte(2) != 0x4c || byte(3) != 0x46 || byte(4) != 2 || byte(5) != 1 || byte(6) != 1 || byte(16) != 3 || byte(17) != 0 || byte(20) != 1 || (21..23).any { byte(it) != 0 } || byte(52) != 64 || byte(53) != 0</ID>
+    <ID>CyclomaticComplexMethod:BuiltinLinux.kt$BuiltinLinux$@Synchronized fun captureHandoffFilesystem(owner: String): NativeHandoffFilesystem?</ID>
+    <ID>CyclomaticComplexMethod:BuiltinLinux.kt$BuiltinLinux$@Synchronized fun captureManagedHandoffSource( owner: String, sourcePort: Int, sourcePassword: String, filesystem: NativeHandoffFilesystem, ): NativeHandoffIdentity?</ID>
+    <ID>CyclomaticComplexMethod:BuiltinLinux.kt$BuiltinLinux$@Synchronized fun runPhoneEngineBoundaryProbe(): Map&lt;String, Any?&gt;</ID>
+    <ID>CyclomaticComplexMethod:BuiltinLinux.kt$BuiltinLinux$@Synchronized fun runProotTierProof(canonicalRoot: File, daemonPid: Int? = null): Map&lt;String, Any?&gt;</ID>
+    <ID>CyclomaticComplexMethod:BuiltinLinux.kt$BuiltinLinux$@Synchronized fun runProotViewBoundaryProbe(): Map&lt;String, Any?&gt;</ID>
+    <ID>CyclomaticComplexMethod:BuiltinLinux.kt$BuiltinLinux$fun run( script: String, timeoutSeconds: Long = 600, agentUser: Boolean = false, logOutput: Boolean = true, stdin: String? = null, ): Result</ID>
+    <ID>CyclomaticComplexMethod:BuiltinLinux.kt$BuiltinLinux$private fun confirmedRecoveryUndoProcess( profileId: String, expectedGeneration: Long, ): Process?</ID>
+    <ID>CyclomaticComplexMethod:BuiltinLinux.kt$BuiltinLinux$private fun download(image: Image, target: File, progress: InstallProgress)</ID>
+    <ID>CyclomaticComplexMethod:BuiltinLinux.kt$BuiltinLinux$private fun hasUnconfinedChildren(): Boolean</ID>
+    <ID>CyclomaticComplexMethod:BuiltinLinux.kt$BuiltinLinux$private fun serviceSetChanged()</ID>
+    <ID>CyclomaticComplexMethod:BuiltinLinux.kt$BuiltinLinux$private fun startPhoneEngineChecked( profile: String, port: Int, notice: String?, ): Map&lt;String, Any?&gt;</ID>
+    <ID>CyclomaticComplexMethod:BuiltinLinux.kt$BuiltinLinux$private fun unpack(archive: File, into: File, progress: InstallProgress)</ID>
+    <ID>CyclomaticComplexMethod:BuiltinNewProject.kt$BuiltinNewProject$internal fun applyConfig(start: Defaults, text: String): Defaults</ID>
+    <ID>CyclomaticComplexMethod:PhoneAgentSignIn.kt$PhoneAgentSignIn$fun cancel( profileId: String, agentId: String, runId: String, method: String, ): Map&lt;String, Any?&gt;</ID>
+    <ID>CyclomaticComplexMethod:PhoneAgentSignIn.kt$PhoneAgentSignIn$fun submit( profileId: String, agentId: String, runId: String, method: String, code: String, ): Map&lt;String, Any?&gt;</ID>
+    <ID>CyclomaticComplexMethod:PhoneAgentSignIn.kt$PhoneAgentSignIn$private fun identity( profileId: String, agentId: String, runId: String, method: String, create: Boolean, ): Run</ID>
+    <ID>CyclomaticComplexMethod:PhoneAgentSignIn.kt$PhoneAgentSignIn$private fun readLogin(run: Run, process: Process)</ID>
+    <ID>CyclomaticComplexMethod:PhoneEngineAttestation.kt$PhoneEngineAttestation$fun issue(profile: String, root: File, generation: String, policy: List&lt;String&gt;, controls: Map&lt;String, Any?&gt;): Receipt</ID>
+    <ID>CyclomaticComplexMethod:PhoneEngineNative.kt$PhoneEngineNative$fun start(profile: String, port: Int, serverRunning: Boolean, reason: String, proofFactory: (File) -&gt; PhoneEngineAttestation.Receipt?): Process</ID>
+    <ID>CyclomaticComplexMethod:PhoneEngineNative.kt$PhoneEngineNative.Companion$fun verifyBundle(context: Context, vararg names: String)</ID>
+    <ID>CyclomaticComplexMethod:PhoneEngineNative.kt$PhoneEngineNative.Companion$internal fun packagedAbi(header: ByteArray): String</ID>
+    <ID>CyclomaticComplexMethod:SetupRunner.kt$SetupRunner$private fun runJob(specs: List&lt;Spec&gt;)</ID>
+    <ID>EmptyElseBlock:PhoneEngineAttestation.kt$PhoneEngineAttestation.Companion$if (n &lt; 0) break</ID>
+    <ID>InstanceOfCheckForException:BuiltinLinux.kt$BuiltinLinux$e is PhoneEngineNative.Failure</ID>
+    <ID>LargeClass:BuiltinLinux.kt$BuiltinLinux</ID>
+    <ID>LongMethod:BuiltinLinux.kt$BuiltinLinux$@Synchronized fun resumeIdleStoppedPhoneServer(profile: String, generation: Long): Map&lt;String, Any?&gt;</ID>
+    <ID>LongMethod:BuiltinLinux.kt$BuiltinLinux$@Synchronized fun runPhoneEngineBoundaryProbe(): Map&lt;String, Any?&gt;</ID>
+    <ID>LongMethod:BuiltinLinux.kt$BuiltinLinux$@Synchronized fun runProotTierProof(canonicalRoot: File, daemonPid: Int? = null): Map&lt;String, Any?&gt;</ID>
+    <ID>LongMethod:BuiltinLinux.kt$BuiltinLinux$@Synchronized fun runProotViewBoundaryProbe(): Map&lt;String, Any?&gt;</ID>
+    <ID>LongMethod:BuiltinLinux.kt$BuiltinLinux$@Synchronized internal fun acquireScheduledPhoneServer( profile: String, password: String, deadlineEpochMs: Long, ): Map&lt;String, Any&gt;</ID>
+    <ID>LongMethod:BuiltinLinux.kt$BuiltinLinux$fun run( script: String, timeoutSeconds: Long = 600, agentUser: Boolean = false, logOutput: Boolean = true, stdin: String? = null, ): Result</ID>
+    <ID>LongMethod:BuiltinLinux.kt$BuiltinLinux$private fun download(image: Image, target: File, progress: InstallProgress)</ID>
+    <ID>LongMethod:BuiltinLinux.kt$BuiltinLinux$private fun drainPendingOwnedServer()</ID>
+    <ID>LongMethod:BuiltinLinux.kt$BuiltinLinux$private fun hasUnconfinedChildren(): Boolean</ID>
+    <ID>LongMethod:BuiltinLinux.kt$BuiltinLinux$private fun reserveColdRestore( worker: NativeRuntimeOwnership.ColdWorker, profile: String, recipe: NativeServerRecipe, event: NativeServerRestoreTicket? = null, ): Long?</ID>
+    <ID>LongMethod:BuiltinLinux.kt$BuiltinLinux$private fun serviceSetChanged()</ID>
+    <ID>LongMethod:BuiltinLinux.kt$BuiltinLinux$private fun startGatedServer( script: String, log: File, recipe: NativeServerRecipe, launch: ServiceLaunch = ServiceLaunch(), ): Process</ID>
+    <ID>LongMethod:BuiltinLinux.kt$BuiltinLinux$private fun startPhoneEngineChecked( profile: String, port: Int, notice: String?, ): Map&lt;String, Any?&gt;</ID>
+    <ID>LongMethod:BuiltinLinux.kt$BuiltinLinux$private fun startQualifiedInstaller( script: String, targets: Set&lt;InstallerTarget&gt;, operation: InstallerOperation, options: InstallerOptions, ): Process</ID>
+    <ID>LongMethod:PhoneAgentSignIn.kt$PhoneAgentSignIn$fun submit( profileId: String, agentId: String, runId: String, method: String, code: String, ): Map&lt;String, Any?&gt;</ID>
+    <ID>LongMethod:PhoneAgentSignIn.kt$PhoneAgentSignIn$private fun readLogin(run: Run, process: Process)</ID>
+    <ID>LongMethod:PhoneEngineNative.kt$PhoneEngineNative$fun start(profile: String, port: Int, serverRunning: Boolean, reason: String, proofFactory: (File) -&gt; PhoneEngineAttestation.Receipt?): Process</ID>
+    <ID>LongMethod:PhoneEngineNative.kt$PhoneEngineNative.Companion$fun verifyBundle(context: Context, vararg names: String)</ID>
+    <ID>LongMethod:SetupRunner.kt$SetupRunner$private fun runJob(specs: List&lt;Spec&gt;)</ID>
+    <ID>LongParameterList:AgentPriority.kt$AgentPriority$( level: String, uid: Int, appPid: Int, scan: (Int) -&gt; List&lt;ProcEntry&gt; = { NativeProcScan.scan(it, details = true) }, tidsOf: (Int) -&gt; List&lt;Int&gt; = { pid -&gt; File("/proc/$pid/task").list().orEmpty().mapNotNull { it.toIntOrNull() } }, set: (Int, Int) -&gt; Unit = { tid, prio -&gt; Process.setThreadPriority(tid, prio) }, groupOf: (Int) -&gt; String? = { tid -&gt; cgroupOf(tid) }, )</ID>
+    <ID>LongParameterList:AgentPriorityTest.kt$AgentPriorityTest$(pid: Int, parent: Int, name: String, tracer: Int? = 0, argv: List&lt;String&gt; = emptyList(), state: Char = 'S')</ID>
+    <ID>LongParameterList:NativeInstallerOwnership.kt$NativeInstallerOwnership$(ticket: InstallerTicket, rootfsGeneration: String, boot: String, inventory: List&lt;RuntimeProcessIdentity&gt;, registeredReaders: Set&lt;Int&gt;, absenceConfirmed: (Int) -&gt; Boolean, nonceMatches: (Int, String) -&gt; Boolean, )</ID>
+    <ID>LongParameterList:NativeRecoveryBudget.kt$NativeRecoveryBudget.Companion$(enabled: Boolean, wanted: Boolean, userStopped: Boolean, generation: Long, expectedGeneration: Long, markerValid: Boolean, policyAllowed: Boolean)</ID>
+    <ID>LongParameterList:NativeRecoveryBudget.kt$NativeRecoveryBudget.Companion$(resumed: Boolean, wanted: Boolean, userStopped: Boolean, boundProfile: String?, requestedProfile: String, manualGeneration: Long?, currentGeneration: Long, running: Boolean, nativeOwned: Boolean)</ID>
+    <ID>LongParameterList:NativeRuntimeOwnership.kt$NativeRuntimeOwnership$(receipt: NativeRuntimeReceipt, boot: String, current: List&lt;RuntimeProcessIdentity&gt;, registered: Set&lt;Int&gt;, requireCompleteInventory: Boolean = true, nonceMatches: (Int, String) -&gt; Boolean, )</ID>
+    <ID>LongParameterList:SetupJob.kt$SetupComponentStatus$( val id: String, /** pending | running | done | failed | skipped */ var state: String = "pending", val weight: Double = 1.0, var stage: String? = null, var done: Long? = null, var total: Long? = null, var percent: Double? = null, var version: String? = null, var error: String? = null, var startedAt: Long? = null, var endedAt: Long? = null, /** Opaque values the app gave the step and reads back (job steps use it). */ val data: Map&lt;String, String&gt; = emptyMap(), )</ID>
+    <ID>LongParameterList:SetupJob.kt$SetupJobState$( val jobId: String, /** running | done | failed | cancelled | interrupted */ var state: String, val components: List&lt;SetupComponentStatus&gt;, var current: String? = null, val startedAt: Long, var updatedAt: Long = startedAt, var error: String? = null, var logTail: String = "", var errorCode: String? = null, )</ID>
+    <ID>LongParameterList:SetupRunner.kt$SetupRunner.Spec$( val id: String, val script: String?, val native: Boolean, val step: Boolean, val weight: Double, val skipped: Boolean, val version: String?, val stage: String?, val labels: Map&lt;String, String&gt;, val data: Map&lt;String, String&gt;, val agentUser: Boolean = false, )</ID>
+    <ID>LoopWithTooManyJumpStatements:BuiltinLinux.kt$BuiltinLinux$for</ID>
+    <ID>LoopWithTooManyJumpStatements:BuiltinLinux.kt$BuiltinLinux$while</ID>
+    <ID>LoopWithTooManyJumpStatements:BuiltinLinux.kt$SharedStorageBinds$for</ID>
+    <ID>LoopWithTooManyJumpStatements:BuiltinNewProject.kt$BuiltinNewProject$for</ID>
+    <ID>LoopWithTooManyJumpStatements:PhoneAgentSignIn.kt$PhoneAgentSignIn$while</ID>
+    <ID>LoopWithTooManyJumpStatements:SetupRunner.kt$SetupRunner$for</ID>
+    <ID>MagicNumber:AgentPriority.kt$AgentPriority$19</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$0b110_000_000</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$0b111_000_000</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$0b111_111_111</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$0x200</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$0xFFF</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$10</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$1000</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$1024</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$128</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$16</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$19</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$20</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$200</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$2000</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$206</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$20_000</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$250</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$255</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$3</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$30</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$300</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$3000</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$32</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$384</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$399</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$4</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$4096</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$4098</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$4099</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$4100</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$416</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$4199</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$448</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$5</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$511</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$60_000</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$64</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$65535</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$65536</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$78</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$8</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$8192L</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$8472</ID>
+    <ID>MagicNumber:BuiltinNewProject.kt$BuiltinNewProject$0x20</ID>
+    <ID>MagicNumber:BuiltinNewProject.kt$BuiltinNewProject$0x7f</ID>
+    <ID>MagicNumber:BuiltinNewProject.kt$BuiltinNewProject$100</ID>
+    <ID>MagicNumber:BuiltinNewProject.kt$BuiltinNewProject$1024</ID>
+    <ID>MagicNumber:BuiltinNewProject.kt$BuiltinNewProject$128</ID>
+    <ID>MagicNumber:BuiltinNewProject.kt$BuiltinNewProject$16</ID>
+    <ID>MagicNumber:BuiltinNewProject.kt$BuiltinNewProject$24</ID>
+    <ID>MagicNumber:BuiltinNewProject.kt$BuiltinNewProject$255</ID>
+    <ID>MagicNumber:BuiltinNewProject.kt$BuiltinNewProject$4096</ID>
+    <ID>MagicNumber:BuiltinNewProject.kt$BuiltinNewProject$64</ID>
+    <ID>MagicNumber:BuiltinNewProject.kt$BuiltinNewProject$8</ID>
+    <ID>MagicNumber:NativeServerRecipe.kt$NativeServerRecipe$4098</ID>
+    <ID>MagicNumber:NativeServerRecipe.kt$NativeServerRecipe$4100</ID>
+    <ID>MagicNumber:NativeServerRecipe.kt$NativeServerRecipe$4199</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$10</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$100</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$1024</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$15</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$150</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$16</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$16384</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$2048</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$32768</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$4096</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$45</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$5</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$8192</ID>
+    <ID>MagicNumber:PhoneEngineAttestation.kt$0x80000</ID>
+    <ID>MagicNumber:PhoneEngineAttestation.kt$27</ID>
+    <ID>MagicNumber:PhoneEngineAttestation.kt$PhoneEngineAttestation.Companion$255</ID>
+    <ID>MagicNumber:PhoneEngineAttestation.kt$PhoneEngineAttestation.Companion$384</ID>
+    <ID>MagicNumber:PhoneEngineAttestation.kt$PhoneEngineAttestation.Companion$65536</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$10</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$100</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$10000</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$1024</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$200</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$2000</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$255</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$299</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$3</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$300</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$32</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$384</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$4096</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$448</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$60</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$65535</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$8192</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$8193</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$0x45</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$0x46</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$0x4c</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$0x7f</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$1024</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$16</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$17</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$18</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$183</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$19</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$20</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$21</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$23</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$255</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$26</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$3</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$4</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$5</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$52</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$53</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$6</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$62</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$64</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$65536</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$8</ID>
+    <ID>MagicNumber:SetupJob.kt$SetupComponentStatus$0.5</ID>
+    <ID>MagicNumber:SetupJob.kt$SetupComponentStatus$0.98</ID>
+    <ID>MagicNumber:SetupJob.kt$SetupComponentStatus$100</ID>
+    <ID>MagicNumber:SetupJob.kt$SetupProtocol$100.0</ID>
+    <ID>MagicNumber:SetupRunner.kt$SetupRunner$100</ID>
+    <ID>MagicNumber:SetupRunner.kt$SetupRunner$10L</ID>
+    <ID>MagicNumber:SetupRunner.kt$SetupRunner$240L</ID>
+    <ID>MagicNumber:SetupRunner.kt$SetupRunner$300</ID>
+    <ID>MagicNumber:SetupService.kt$SetupService.Companion$3</ID>
+    <ID>MaxLineLength:AgentPriorityTest.kt$AgentPriorityTest$private</ID>
+    <ID>MaxLineLength:AndroidGroupNamesTest.kt$AndroidGroupNamesTest$assertEquals("root:x:0:\naid_inet:x:3003:\naid_9997:x:9997:\n", AndroidGroupNames.merged("root:x:0:\naid_inet:x:3003:\n", listOf(3003, 3003, 9997)))</ID>
+    <ID>MaxLineLength:AndroidGroupNamesTest.kt$AndroidGroupNamesTest$assertTrue(AndroidGroupNames.merged("root:x:0:\naid_inet:x:3003:\n", listOf(3003, 3003, 9997))!!.endsWith("aid_9997:x:9997:\n"))</ID>
+    <ID>MaxLineLength:BuiltinIdleAcceptance.kt$BuiltinIdleAcceptance$?.</ID>
+    <ID>MaxLineLength:BuiltinLinux.kt$BuiltinLinux$"PATH=$guestHome/.oc-bin:/home/oc/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"</ID>
+    <ID>MaxLineLength:BuiltinProjectStorageTest.kt$BuiltinProjectStorageTest$@Test</ID>
+    <ID>MaxLineLength:BuiltinProjectStorageTest.kt$BuiltinProjectStorageTest$for</ID>
+    <ID>MaxLineLength:BuiltinProjectStorageTest.kt$BuiltinProjectStorageTest$inspect(file)?.let { if (it.kind == BuiltinProjectStorage.Kind.FILE) it.copy(bytes = Long.MAX_VALUE) else it }</ID>
+    <ID>MaxLineLength:BuiltinRestoreAcceptance.kt$BuiltinRestoreAcceptance$?.</ID>
+    <ID>MaxLineLength:LinuxBuildConfig.kt$// S1-LINUX shim (native-authored, not a twin). P12-FIX-LINUX-VOICE: renamed from BuildConfig (the app generates that FQCN); later: AppBuildInfo.qaHooks.builtinRuntime (plan 11 §4.1).</ID>
+    <ID>MaxLineLength:LinuxBuildConfig.kt$LinuxBuildConfig$/** The copies read `BuildConfig.BUILTIN_RUNTIME_QA` in the app package; this module's flag (-PocBuiltinRuntimeQa) answers. */</ID>
+    <ID>MaxLineLength:LinuxR.kt$// S1-LINUX shim (native-authored, not a twin). P12-FIX-LINUX-VOICE: renamed from R so it never clashes with the app R; the copies import it `as R`.</ID>
+    <ID>MaxLineLength:LinuxR.kt$LinuxR$*</ID>
+    <ID>MaxLineLength:LinuxR.kt$LinuxR.mipmap$/** TODO(S3-RTSPLIT): the app's launcher icon lives in :androidApp; the platform default stands in until then. */</ID>
+    <ID>MaxLineLength:LinuxR.kt$LinuxR.string$val native_phone_server_body: Int get() = io.github.eslamasabry.oc.android.linux.R.string.native_phone_server_body</ID>
+    <ID>MaxLineLength:LinuxR.kt$LinuxR.string$val native_phone_server_channel: Int get() = io.github.eslamasabry.oc.android.linux.R.string.native_phone_server_channel</ID>
+    <ID>MaxLineLength:LinuxR.kt$LinuxR.string$val native_phone_server_description: Int get() = io.github.eslamasabry.oc.android.linux.R.string.native_phone_server_description</ID>
+    <ID>MaxLineLength:LinuxR.kt$LinuxR.string$val native_status_action_new_chat: Int get() = io.github.eslamasabry.oc.android.linux.R.string.native_status_action_new_chat</ID>
+    <ID>MaxLineLength:LinuxR.kt$LinuxR.string$val native_status_action_open: Int get() = io.github.eslamasabry.oc.android.linux.R.string.native_status_action_open</ID>
+    <ID>MaxLineLength:LinuxR.kt$LinuxR.string$val native_status_action_start: Int get() = io.github.eslamasabry.oc.android.linux.R.string.native_status_action_start</ID>
+    <ID>MaxLineLength:LinuxR.kt$LinuxR.string$val native_status_action_stop_opencode: Int get() = io.github.eslamasabry.oc.android.linux.R.string.native_status_action_stop_opencode</ID>
+    <ID>MaxLineLength:LinuxR.kt$LinuxR.string$val native_status_action_stop_reply: Int get() = io.github.eslamasabry.oc.android.linux.R.string.native_status_action_stop_reply</ID>
+    <ID>MaxLineLength:LinuxR.kt$LinuxR.string$val native_status_on_this_phone: Int get() = io.github.eslamasabry.oc.android.linux.R.string.native_status_on_this_phone</ID>
+    <ID>MaxLineLength:LinuxR.kt$LinuxR.string$val native_status_paused_android_body: Int get() = io.github.eslamasabry.oc.android.linux.R.string.native_status_paused_android_body</ID>
+    <ID>MaxLineLength:LinuxR.kt$LinuxR.string$val native_status_paused_android_title: Int get() = io.github.eslamasabry.oc.android.linux.R.string.native_status_paused_android_title</ID>
+    <ID>MaxLineLength:LinuxR.kt$LinuxR.string$val native_status_paused_idle_body: Int get() = io.github.eslamasabry.oc.android.linux.R.string.native_status_paused_idle_body</ID>
+    <ID>MaxLineLength:LinuxR.kt$LinuxR.string$val native_status_paused_idle_title: Int get() = io.github.eslamasabry.oc.android.linux.R.string.native_status_paused_idle_title</ID>
+    <ID>MaxLineLength:LinuxR.kt$LinuxR.string$val native_status_public_paused: Int get() = io.github.eslamasabry.oc.android.linux.R.string.native_status_public_paused</ID>
+    <ID>MaxLineLength:LinuxR.kt$LinuxR.string$val native_status_public_ready: Int get() = io.github.eslamasabry.oc.android.linux.R.string.native_status_public_ready</ID>
+    <ID>MaxLineLength:LinuxR.kt$LinuxR.string$val native_status_ready_body: Int get() = io.github.eslamasabry.oc.android.linux.R.string.native_status_ready_body</ID>
+    <ID>MaxLineLength:LinuxR.kt$LinuxR.string$val native_status_ready_title: Int get() = io.github.eslamasabry.oc.android.linux.R.string.native_status_ready_title</ID>
+    <ID>MaxLineLength:PhoneAgentCheckOutput.kt$PhoneAgentCheckOutput$private val receipt = Regex("^::oc-check-(?:begin agent-[a-z0-9][a-z0-9_-]{0,79}|end agent-[a-z0-9][a-z0-9_-]{0,79} [0-9]{1,3})$")</ID>
+    <ID>MaxLineLength:PhoneEngineAttestation.kt$PhoneEngineAttestation$initialize</ID>
+    <ID>MaxLineLength:PhoneEngineNative.kt$PhoneEngineNative$executionAvailable = verifiedBoundary &amp;&amp; health.optJSONObject("capabilities")?.optBoolean("execution") == true</ID>
+    <ID>MaxLineLength:PhoneEngineNative.kt$PhoneEngineNative.Companion$if</ID>
+    <ID>MaxLineLength:build.gradle.kts$extensions.getByType&lt;VersionCatalogsExtension&gt;().named("libs").findLibrary(alias).map&lt;Any&gt; { it.get() }.orElse(fallback)</ID>
+    <ID>NestedBlockDepth:BuiltinLinux.kt$BuiltinLinux$@Synchronized fun stopServer(forPhoneEngineSetup: Boolean = false)</ID>
+    <ID>NestedBlockDepth:BuiltinLinux.kt$BuiltinLinux$private fun download(image: Image, target: File, progress: InstallProgress)</ID>
+    <ID>NestedBlockDepth:BuiltinLinux.kt$BuiltinLinux$private fun hasUnconfinedChildren(): Boolean</ID>
+    <ID>NestedBlockDepth:BuiltinLinux.kt$BuiltinLinux$private fun unpack(archive: File, into: File, progress: InstallProgress)</ID>
+    <ID>NestedBlockDepth:PhoneEngineNative.kt$PhoneEngineNative$private fun awaitHealth(child: Process, port: Int, token: String, profile: String): JSONObject</ID>
+    <ID>NestedBlockDepth:PhoneEngineNative.kt$PhoneEngineNative.Companion$fun verifyBundle(context: Context, vararg names: String)</ID>
+    <ID>NestedBlockDepth:SetupRunner.kt$SetupRunner$private fun runJob(specs: List&lt;Spec&gt;)</ID>
+    <ID>ReturnCount:BuiltinLinux.kt$BuiltinLinux$@Synchronized fun captureHandoffFilesystem(owner: String): NativeHandoffFilesystem?</ID>
+    <ID>ReturnCount:BuiltinLinux.kt$BuiltinLinux$@Synchronized fun captureManagedHandoffSource( owner: String, sourcePort: Int, sourcePassword: String, filesystem: NativeHandoffFilesystem, ): NativeHandoffIdentity?</ID>
+    <ID>ReturnCount:BuiltinLinux.kt$BuiltinLinux$@Synchronized fun resumeThermalTeam(recipe: String?, notice: String?): Boolean</ID>
+    <ID>ReturnCount:BuiltinLinux.kt$BuiltinLinux$@Synchronized fun undoConfirmedServerRecovery(profileId: String, expectedGeneration: Long): Boolean</ID>
+    <ID>ReturnCount:BuiltinLinux.kt$BuiltinLinux$fun serviceLogTail(name: String, tailBytes: Int): String</ID>
+    <ID>ReturnCount:BuiltinLinux.kt$BuiltinLinux$private fun confirmedRecoveryUndoProcess( profileId: String, expectedGeneration: Long, ): Process?</ID>
+    <ID>ReturnCount:BuiltinLinux.kt$BuiltinLinux$private fun hasUnconfinedChildren(): Boolean</ID>
+    <ID>ReturnCount:BuiltinLinux.kt$BuiltinLinux$private fun protectionTier(): String</ID>
+    <ID>ReturnCount:BuiltinLinux.kt$BuiltinLinux$private fun serviceSetChanged()</ID>
+    <ID>ReturnCount:BuiltinLinux.kt$BuiltinLinux$private fun sizeOf(file: File): Long</ID>
+    <ID>ReturnCount:BuiltinLinux.kt$BuiltinLinux.Companion$fun stopTree(process: Process, graceMs: Long = 3000)</ID>
+    <ID>ReturnCount:BuiltinNewProject.kt$BuiltinNewProject$fun create( projects: File, name: String, stagingRoot: File, defaults: Defaults, epochSeconds: Long, ): Outcome</ID>
+    <ID>ReturnCount:BuiltinNewProject.kt$BuiltinNewProject$fun managedName(path: String): String?</ID>
+    <ID>ReturnCount:BuiltinNewProject.kt$BuiltinNewProject$private fun readPlainFile(rootfs: File, relative: String): String?</ID>
+    <ID>ReturnCount:PhoneAgentSignIn.kt$PhoneAgentSignIn$fun cancel( profileId: String, agentId: String, runId: String, method: String, ): Map&lt;String, Any?&gt;</ID>
+    <ID>ReturnCount:PhoneAgentSignIn.kt$PhoneAgentSignIn$fun submit( profileId: String, agentId: String, runId: String, method: String, code: String, ): Map&lt;String, Any?&gt;</ID>
+    <ID>ReturnCount:PhoneEngineNative.kt$PhoneEngineNative.Companion$internal fun healthBoundaryTier(health: JSONObject, proofPresent: Boolean): String</ID>
+    <ID>ReturnCount:ServiceNoticeGate.kt$ServiceNoticeGate$@Synchronized fun decide(notice: String?, serviceShown: Boolean, nowMs: Long): Decision</ID>
+    <ID>ReturnCount:SetupRunner.kt$SetupRunner$private fun notifyProgress()</ID>
+    <ID>ReturnCount:SetupRunner.kt$SetupRunner$private fun runNative(spec: Spec, component: SetupComponentStatus): String?</ID>
+    <ID>ReturnCount:SetupRunner.kt$SetupRunner$private fun waitForStep(spec: Spec, component: SetupComponentStatus): String?</ID>
+    <ID>SwallowedException:BuiltinLinux.kt$BuiltinLinux$e: java.io.FileNotFoundException</ID>
+    <ID>SwallowedException:BuiltinLinux.kt$BuiltinLinux$error: Exception</ID>
+    <ID>SwallowedException:ScheduledPhoneRuntime.kt$ScheduledPhoneRuntime$e: Exception</ID>
+    <ID>ThrowingExceptionFromFinally:BuiltinLinux.kt$BuiltinLinux$throw PhoneEngineNative.Failure("proof_cleanup_failed")</ID>
+    <ID>ThrowsCount:BuiltinLinux.kt$BuiltinLinux$@Synchronized fun runPhoneEngineBoundaryProbe(): Map&lt;String, Any?&gt;</ID>
+    <ID>ThrowsCount:BuiltinLinux.kt$BuiltinLinux$@Synchronized fun runProotTierProof(canonicalRoot: File, daemonPid: Int? = null): Map&lt;String, Any?&gt;</ID>
+    <ID>ThrowsCount:BuiltinLinux.kt$BuiltinLinux$@Synchronized fun runProotViewBoundaryProbe(): Map&lt;String, Any?&gt;</ID>
+    <ID>ThrowsCount:BuiltinLinux.kt$BuiltinLinux$@Synchronized fun startProtectedPhoneServer(profile: String, script: String, port: Int)</ID>
+    <ID>ThrowsCount:BuiltinLinux.kt$BuiltinLinux$private fun requirePhoneBoundaryKernel()</ID>
+    <ID>ThrowsCount:BuiltinLinux.kt$BuiltinLinux$private fun startPhoneEngineChecked( profile: String, port: Int, notice: String?, ): Map&lt;String, Any?&gt;</ID>
+    <ID>ThrowsCount:PhoneAgentSignIn.kt$PhoneAgentSignIn$fun submit( profileId: String, agentId: String, runId: String, method: String, code: String, ): Map&lt;String, Any?&gt;</ID>
+    <ID>ThrowsCount:PhoneAgentSignIn.kt$PhoneAgentSignIn$private fun inspect(run: Run): Boolean</ID>
+    <ID>ThrowsCount:PhoneAgentSignIn.kt$PhoneAgentSignIn$private fun readLogin(run: Run, process: Process)</ID>
+    <ID>ThrowsCount:PhoneEngineAttestation.kt$PhoneEngineAttestation$fun issue(profile: String, root: File, generation: String, policy: List&lt;String&gt;, controls: Map&lt;String, Any?&gt;): Receipt</ID>
+    <ID>ThrowsCount:PhoneEngineNative.kt$PhoneEngineNative$fun credentials(profile: String): Map&lt;String, String&gt;</ID>
+    <ID>ThrowsCount:PhoneEngineNative.kt$PhoneEngineNative$fun delete(profile: String)</ID>
+    <ID>ThrowsCount:PhoneEngineNative.kt$PhoneEngineNative$fun start(profile: String, port: Int, serverRunning: Boolean, reason: String, proofFactory: (File) -&gt; PhoneEngineAttestation.Receipt?): Process</ID>
+    <ID>ThrowsCount:PhoneEngineNative.kt$PhoneEngineNative$private fun awaitHealth(child: Process, port: Int, token: String, profile: String): JSONObject</ID>
+    <ID>ThrowsCount:PhoneEngineNative.kt$PhoneEngineNative$private fun eraseNoLinks(file: File)</ID>
+    <ID>ThrowsCount:PhoneEngineNative.kt$PhoneEngineNative$private fun safePath(relative: String): File</ID>
+    <ID>ThrowsCount:PhoneEngineNative.kt$PhoneEngineNative.Companion$fun verifyBundle(context: Context, vararg names: String)</ID>
+    <ID>TooGenericExceptionCaught:BuiltinLinux.kt$BuiltinLinux$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:BuiltinLinux.kt$BuiltinLinux$error: Exception</ID>
+    <ID>TooGenericExceptionCaught:BuiltinLinux.kt$BuiltinLinux$error: Throwable</ID>
+    <ID>TooGenericExceptionCaught:BuiltinLinux.kt$BuiltinLinux.Companion$error: Exception</ID>
+    <ID>TooGenericExceptionCaught:BuiltinNewProject.kt$BuiltinNewProject$raced: Exception</ID>
+    <ID>TooGenericExceptionCaught:ScheduledPhoneRuntime.kt$ScheduledPhoneRuntime$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SetupRunner.kt$SetupRunner$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:SetupRunner.kt$SetupRunner$error: Exception</ID>
+    <ID>TooManyFunctions:BuiltinLinux.kt$BuiltinLinux</ID>
+    <ID>TooManyFunctions:BuiltinLinux.kt$BuiltinLinux$Companion</ID>
+    <ID>TooManyFunctions:BuiltinNewProject.kt$BuiltinNewProject</ID>
+    <ID>TooManyFunctions:BuiltinProjectStorage.kt$BuiltinProjectStorage</ID>
+    <ID>TooManyFunctions:PhoneAgentHost.kt$PhoneAgentHost</ID>
+    <ID>TooManyFunctions:PhoneAgentSignIn.kt$PhoneAgentSignIn</ID>
+    <ID>TooManyFunctions:PhoneEngineNative.kt$PhoneEngineNative</ID>
+    <ID>TooManyFunctions:SetupRunner.kt$SetupRunner</ID>
+    <ID>UnusedParameter:BuiltinLinux.kt$BuiltinLinux$legacy: Map&lt;*, *&gt;?</ID>
+    <ID>UnusedParameter:NativeRecoveryBudget.kt$NativeRecoveryBudget$at: Long</ID>
+    <ID>UseCheckOrError:BuiltinLinux.kt$BuiltinLinux$throw IllegalStateException("The agent did not stop.")</ID>
+    <ID>UseCheckOrError:BuiltinLinux.kt$BuiltinLinux$throw IllegalStateException("The agent host could not start.")</ID>
+    <ID>UseCheckOrError:BuiltinLinux.kt$BuiltinLinux$throw IllegalStateException("The agent host is unavailable.")</ID>
+    <ID>UseCheckOrError:BuiltinLinux.kt$BuiltinLinux$throw IllegalStateException("The phone service could not start.")</ID>
+    <ID>UseCheckOrError:BuiltinLinux.kt$BuiltinLinux$throw IllegalStateException("shared projects not saved")</ID>
+    <ID>UseCheckOrError:BuiltinProjectStorage.kt$BuiltinProjectStorage$throw IllegalStateException("Project storage could not be safely accessed.")</ID>
+    <ID>UseCheckOrError:BuiltinProjectStorageTest.kt$BuiltinProjectStorageTest$throw IllegalStateException("private synthetic value")</ID>
+    <ID>UseCheckOrError:PhoneAgentSignIn.kt$PhoneAgentSignIn$throw IllegalStateException("auth_cancellation_unconfirmed")</ID>
+    <ID>UseCheckOrError:PhoneAgentSignIn.kt$PhoneAgentSignIn$throw IllegalStateException("auth_invalid_profile")</ID>
+    <ID>UseCheckOrError:SetupRunner.kt$SetupRunner$throw IllegalStateException("The phone setup could not start. Try again.")</ID>
+  </CurrentIssues>
+</SmellBaseline>

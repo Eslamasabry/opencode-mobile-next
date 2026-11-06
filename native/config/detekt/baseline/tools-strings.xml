@@ -1,0 +1,218 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:Icu.kt$Icu.Parser$i &lt; s.length &amp;&amp; !s[i].isWhitespace() &amp;&amp; s[i] != '{' &amp;&amp; s[i] != '}'</ID>
+    <ID>CyclomaticComplexMethod:AndroidStrings.kt$AndroidStrings$fun decode(raw: String, formatted: Boolean, force: Boolean = false): String</ID>
+    <ID>CyclomaticComplexMethod:Converter.kt$Converter$fun convert(arbs: List&lt;ArbFile&gt;): Conversion</ID>
+    <ID>CyclomaticComplexMethod:Converter.kt$Converter$private fun render( locale: String, key: String, nodes: List&lt;IcuNode&gt;, byName: Map&lt;String, Placeholder&gt;, pluralArg: String?, exact: Set&lt;Int&gt;, promoted: Map&lt;String, MutableList&lt;String&gt;&gt;, unreachable: Map&lt;String, MutableList&lt;String&gt;&gt;, fail: (ProblemKind, String) -&gt; Unit, ): List&lt;Resource&gt;?</ID>
+    <ID>CyclomaticComplexMethod:Drift.kt$Drift$fun check(inputs: Inputs): List&lt;Finding&gt;</ID>
+    <ID>CyclomaticComplexMethod:Glossary.kt$Glossary$private fun parseIcu(s: String, start: Int, inBranch: Boolean): Pair&lt;List&lt;String&gt;, Int&gt;</ID>
+    <ID>CyclomaticComplexMethod:Hand.kt$Hand$fun expand(arbs: List&lt;ArbFile&gt;, recipes: List&lt;Recipe&gt;, template: String = "en"): Expansion</ID>
+    <ID>CyclomaticComplexMethod:Hand.kt$Hand$private fun select( r: Recipe, parsed: Map&lt;String, List&lt;IcuNode&gt;&gt;, template: String, baseMeta: Map&lt;String, PlaceholderMeta&gt;, ): Out</ID>
+    <ID>CyclomaticComplexMethod:Hand.kt$Hand$private fun split( r: Recipe, parsed: Map&lt;String, List&lt;IcuNode&gt;&gt;, template: String, baseMeta: Map&lt;String, PlaceholderMeta&gt;, unreferenced: MutableMap&lt;String, MutableSet&lt;String&gt;&gt;, ): Out</ID>
+    <ID>CyclomaticComplexMethod:HandWordsKotlin.kt$HandWordsKotlin$fun render(conversion: Conversion, expansion: Expansion, shipped: (String) -&gt; Boolean): String</ID>
+    <ID>CyclomaticComplexMethod:Icu.kt$Icu.Parser$private fun parseArgument(): IcuNode</ID>
+    <ID>CyclomaticComplexMethod:Output.kt$ReportWriter$fun markdown(c: Conversion, routing: Routing?, skippedProblems: Boolean, expansion: Expansion? = null): String</ID>
+    <ID>CyclomaticComplexMethod:Output.kt$XmlWriter$fun write( conversion: Conversion, out: Path, unusedOut: Path?, androidResOut: Path? = null, fromArb: (String) -&gt; Boolean = defaultClaim(conversion), )</ID>
+    <ID>CyclomaticComplexMethod:PluralRules.kt$PluralRules$fun category(locale: String, n: Int): String</ID>
+    <ID>CyclomaticComplexMethod:XmlText.kt$XmlText$fun escape(value: String, profile: Profile): String</ID>
+    <ID>LongMethod:Converter.kt$Converter$fun convert(arbs: List&lt;ArbFile&gt;): Conversion</ID>
+    <ID>LongMethod:Drift.kt$Drift$fun check(inputs: Inputs): List&lt;Finding&gt;</ID>
+    <ID>LongMethod:HandWordsKotlin.kt$HandWordsKotlin$fun render(conversion: Conversion, expansion: Expansion, shipped: (String) -&gt; Boolean): String</ID>
+    <ID>LongMethod:Output.kt$ReportWriter$fun markdown(c: Conversion, routing: Routing?, skippedProblems: Boolean, expansion: Expansion? = null): String</ID>
+    <ID>LongParameterList:Converter.kt$Converter$( locale: String, key: String, nodes: List&lt;IcuNode&gt;, byName: Map&lt;String, Placeholder&gt;, pluralArg: String?, exact: Set&lt;Int&gt;, promoted: Map&lt;String, MutableList&lt;String&gt;&gt;, unreachable: Map&lt;String, MutableList&lt;String&gt;&gt;, fail: (ProblemKind, String) -&gt; Unit, )</ID>
+    <ID>LoopWithTooManyJumpStatements:AndroidStrings.kt$AndroidStrings$for</ID>
+    <ID>LoopWithTooManyJumpStatements:Converter.kt$Converter$for</ID>
+    <ID>LoopWithTooManyJumpStatements:Drift.kt$Drift$for</ID>
+    <ID>LoopWithTooManyJumpStatements:Glossary.kt$Glossary$while</ID>
+    <ID>LoopWithTooManyJumpStatements:Output.kt$XmlWriter$for</ID>
+    <ID>MagicNumber:AndroidStrings.kt$AndroidStrings$16</ID>
+    <ID>MagicNumber:AndroidStrings.kt$AndroidStrings$4</ID>
+    <ID>MagicNumber:AndroidStrings.kt$AndroidStrings$6</ID>
+    <ID>MagicNumber:Drift.kt$Drift$100</ID>
+    <ID>MagicNumber:Drift.kt$Drift$60</ID>
+    <ID>MagicNumber:Main.kt$120</ID>
+    <ID>MagicNumber:Main.kt$50</ID>
+    <ID>MagicNumber:Output.kt$ReportWriter$160</ID>
+    <ID>MagicNumber:PluralRules.kt$PluralRules$10</ID>
+    <ID>MagicNumber:PluralRules.kt$PluralRules$100</ID>
+    <ID>MagicNumber:PluralRules.kt$PluralRules$11</ID>
+    <ID>MagicNumber:PluralRules.kt$PluralRules$12</ID>
+    <ID>MagicNumber:PluralRules.kt$PluralRules$14</ID>
+    <ID>MagicNumber:PluralRules.kt$PluralRules$1_000</ID>
+    <ID>MagicNumber:PluralRules.kt$PluralRules$1_000_000</ID>
+    <ID>MagicNumber:PluralRules.kt$PluralRules$3</ID>
+    <ID>MagicNumber:PluralRules.kt$PluralRules$4</ID>
+    <ID>MagicNumber:PluralRules.kt$PluralRules$99</ID>
+    <ID>MagicNumber:XmlText.kt$XmlText$16</ID>
+    <ID>MaxLineLength:AndroidStrings.kt$AndroidStrings$"string-array" -&gt; throw IllegalArgumentException("$source: &lt;string-array $name&gt; is not supported by CMP")</ID>
+    <ID>MaxLineLength:AndroidStrings.kt$AndroidStrings$Resource.Plurals(r.name, r.key, PluralRules.categories(locale).associateWithTo(LinkedHashMap()) { r.items[it] ?: other })</ID>
+    <ID>MaxLineLength:AndroidStrings.kt$AndroidStrings$val locale = if (dir.name == "values") template else langFolder.matchEntire(dir.name)?.groupValues?.get(1) ?: continue</ID>
+    <ID>MaxLineLength:AndroidStrings.kt$AndroidStrings$val other = r.items[PluralRules.OTHER] ?: throw IllegalArgumentException("$dir: &lt;plurals ${r.name}&gt; has no `other`")</ID>
+    <ID>MaxLineLength:AndroidStrings.kt$AndroidStrings$val res = dir.listDirectoryEntries("*.xml").sortedBy { it.name }.flatMap { parse(it.readText(), it.toString()) }</ID>
+    <ID>MaxLineLength:AndroidStringsTest.kt$AndroidStringsTest$XmlWriter.write(conv, out.resolve("composeResources"), out.resolve("unused"), androidResOut = out.resolve("res"))</ID>
+    <ID>MaxLineLength:AndroidStringsTest.kt$AndroidStringsTest$assertEquals(listOf("strings_os.xml"), Files.list(out.resolve("res/values")).map { it.fileName.toString() }.toList())</ID>
+    <ID>MaxLineLength:AndroidStringsTest.kt$AndroidStringsTest$assertEquals(listOf("tile_label", "usage_left", "tile_need_you", "widget_label"), native.getValue("en").map { it.name })</ID>
+    <ID>MaxLineLength:Arb.kt$Arb$if (list.first().locale != template) throw ArbFormatException("Template app_$template.arb is missing in $dir")</ID>
+    <ID>MaxLineLength:Arb.kt$Arb$throw ArbFormatException("$source declares @@locale \"$declared\" but its file name says \"$expectedLocale\"")</ID>
+    <ID>MaxLineLength:Converter.kt$Converter$for (sel in p.branches.keys) if (sel in PluralRules.ALL &amp;&amp; sel !in cats) unreachable.getValue(locale) += "$key: $sel"</ID>
+    <ID>MaxLineLength:Converter.kt$Converter$if (selects.isNotEmpty()) return ProblemKind.SELECT to selects.joinToString { "{${it.arg}, select: ${it.branches.keys.joinToString(" ")}}" }</ID>
+    <ID>MaxLineLength:Converter.kt$LocaleResult$fun keysInBase(base: (String) -&gt; String): Int</ID>
+    <ID>MaxLineLength:Converter.kt$Resource$Plurals : Resource</ID>
+    <ID>MaxLineLength:Drift.kt$Drift$for (name in have.keys) if (name !in exp &amp;&amp; claimed(name)) f(Kind.STALE, loc.locale, name, have.getValue(name).file)</ID>
+    <ID>MaxLineLength:Drift.kt$Drift$fun f(kind: Kind, locale: String, name: String, detail: String = "")</ID>
+    <ID>MaxLineLength:Drift.kt$Drift$if (ar != null) for (name in en.keys) if (!claimed(name) &amp;&amp; name !in ar) f(Kind.AR_MISSING, "ar", name, en.getValue(name).file)</ID>
+    <ID>MaxLineLength:Drift.kt$Drift$if (extra.isNotEmpty()) f(Kind.PLACEHOLDER, locale, name, "${v.file}: ${extra.joinToString { "%${it.first}\$${it.second}" }}")</ID>
+    <ID>MaxLineLength:Drift.kt$Drift$if (folder !in cmpFolders) { f(Kind.ANDROID_RES, locale, "$folder/strings_os.xml", "no CMP strings_os.xml"); continue }</ID>
+    <ID>MaxLineLength:Drift.kt$Drift$if (folder !in resFolders) { f(Kind.ANDROID_RES, locale, "$folder/strings_os.xml", "missing in Android res"); continue }</ID>
+    <ID>MaxLineLength:Drift.kt$Drift$is Value.P -&gt; v.items.values.flatMapTo(HashSet()) { t -&gt; token.findAll(t).map { it.groupValues[1] to it.groupValues[2] } }</ID>
+    <ID>MaxLineLength:Drift.kt$Drift$r is Resource.Plurals &amp;&amp; v is Value.P -&gt; if (r.items != v.items) f(Kind.CHANGED, loc.locale, name, "${v.file}: ${v.items} ≠ ${r.items}")</ID>
+    <ID>MaxLineLength:Drift.kt$Drift$r is Resource.Str &amp;&amp; v is Value.S -&gt; if (r.text != v.text) f(Kind.CHANGED, loc.locale, name, "${v.file}: \"${v.text.take(60)}\" ≠ \"${r.text.take(60)}\"")</ID>
+    <ID>MaxLineLength:Drift.kt$Drift$val android = AndroidStrings.parse(out.resolve(folder).resolve("strings_os.xml").readText(), folder).associateBy { it.name }</ID>
+    <ID>MaxLineLength:Drift.kt$Drift$val cmpFolders = inputs.words.listDirectoryEntries("values*").filter { it.resolve("strings_os.xml").exists() }.map { it.name }.toSet()</ID>
+    <ID>MaxLineLength:Drift.kt$Drift$val doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(org.xml.sax.InputSource(java.io.StringReader(text)))</ID>
+    <ID>MaxLineLength:Drift.kt$Drift$val resFolders = if (out.isDirectory()) out.listDirectoryEntries("values*").filter { it.resolve("strings_os.xml").exists() }.map { it.name }.toSet() else emptySet()</ID>
+    <ID>MaxLineLength:DriftTest.kt$DriftTest$XmlWriter.write(conv0, out.resolve("composeResources"), out.resolve("unused"), androidResOut = out.resolve("res"))</ID>
+    <ID>MaxLineLength:DriftTest.kt$DriftTest$assertTrue(f.any { it.kind == Drift.Kind.ORPHAN &amp;&amp; it.locale == "ar" &amp;&amp; it.name == "chats_titel" }, f.toString())</ID>
+    <ID>MaxLineLength:DriftTest.kt$DriftTest$edit(chat, "&lt;string name=\"chatUiReferenceAlreadyAddedX\"&gt;", "&lt;string name=\"chatUiReferenceAlreadyAdded__eq7\"&gt;")</ID>
+    <ID>MaxLineLength:Fixture.kt$Fixture$file("ui/screens/chat/parts/chat_more.dart", "part of '../chat_body.dart';\nfinal x = l.kitNeedsYouWaitingSpoken(0);\n")</ID>
+    <ID>MaxLineLength:Fixture.kt$Fixture$file("ui/screens/library_screen.dart", IMPORT + "final a = l.libraryModelsAgentsTitle; final b = l.servicesIntro;\n")</ID>
+    <ID>MaxLineLength:Fixture.kt$Fixture$file("ui/screens/terminal_screen.dart", IMPORT + "final a = l.terminalShowEarlier(1200); final b = l.aiteamBringInDone;\n")</ID>
+    <ID>MaxLineLength:Fixture.kt$Fixture$val repoRoot: Path? = System.getProperty("strings.repoRoot")?.let(::Path)?.takeIf { it.resolve("lib/l10n/app_en.arb").exists() }</ID>
+    <ID>MaxLineLength:Glossary.kt$Glossary$"""\b(convoys?|formulas?|beads?|rigs?|city|polecats?|refinery|sling|wisps?|mayor|gastown)\b|127\.0\.0\.1|\{version}|\b\d+\.\d+\.\d+\b"""</ID>
+    <ID>MaxLineLength:Glossary.kt$Glossary$*</ID>
+    <ID>MaxLineLength:Glossary.kt$Glossary$/** Every plain wording of an ICU [message]: each plural or select branch is a variant; placeholders become [SLOT]. */</ID>
+    <ID>MaxLineLength:Glossary.kt$Glossary$/** Every technical hit in [value], one per match. "Gas City" is a product name, so its "City" is not an engine word. */</ID>
+    <ID>MaxLineLength:Glossary.kt$Glossary$BANNED_NOUNS.firstOrNull { Regex("\\b" + Regex.escape(it) + "\\b", RegexOption.IGNORE_CASE).containsMatchIn(value) }</ID>
+    <ID>MaxLineLength:Glossary.kt$Glossary$ITEM.findAll(p.groupValues[2]).forEach { out["${p.groupValues[1]}#${it.groupValues[1]}"] = plain(it.groupValues[2]) }</ID>
+    <ID>MaxLineLength:Glossary.kt$Glossary$Regex("""(?:^|[\s("'`])(?:~|\.{1,2})?/[\w.-]+/[\w./-]*|~/|(?&lt;![\w/:.-])[\w.-]+/[\w./-]*\.[A-Za-z]{1,5}\b""")</ID>
+    <ID>MaxLineLength:Glossary.kt$Glossary$Regex("""\b(convoys?|formulas?|beads?|rigs?|city|polecats?|refinery|sling|wisps?|mayor|gastown|PTY|SSE)\b""", RegexOption.IGNORE_CASE)</ID>
+    <ID>MaxLineLength:Glossary.kt$Glossary$XmlText.cmpUnescape(raw.replace("&amp;lt;", "&lt;").replace("&amp;gt;", "&gt;").replace("&amp;quot;", "\"").replace("&amp;apos;", "'").replace("&amp;amp;", "&amp;")).replace(FORMAT_ARG, SLOT)</ID>
+    <ID>MaxLineLength:Glossary.kt$Glossary$listOf("teamUiCard", "teamUiHome", "teamUiRun", "teamUiTask", "teamUiAgentRole", "teamUiAgentsList", "teamUiHostPhrase", "teamBoard")</ID>
+    <ID>MaxLineLength:Glossary.kt$Glossary$valuesDir.listFiles().orEmpty().filter { it.name.startsWith("strings") &amp;&amp; it.extension == "xml" }.sortedBy { it.name }</ID>
+    <ID>MaxLineLength:Glossary.kt$Glossary$variant.replace(SLOT, " $SLOT ").split(Regex("""[\s·—–]+""")).filter { it.isNotEmpty() &amp;&amp; it.any(Char::isLetterOrDigit) || it == SLOT }</ID>
+    <ID>MaxLineLength:GlossaryTest.kt$GlossaryTest$assertEquals(listOf("address \"100.64.0.0/10\"", "address \"203.0.113.1\""), t("Blocks 100.64.0.0/10 and 203.0.113.1"))</ID>
+    <ID>MaxLineLength:GlossaryTest.kt$GlossaryTest$private val strings by lazy { Glossary.englishStrings(File(nativeRoot, "ui/words/src/commonMain/composeResources/values")) }</ID>
+    <ID>MaxLineLength:GlossaryTest.kt$GlossaryTest$val label = strings[k.removeSuffix("Title") + "Label"] ?: strings[k.removeSuffix("ConfirmTitle") + "ConfirmLabel"]</ID>
+    <ID>MaxLineLength:GoldenTest.kt$GoldenTest$XmlWriter.write(conv, out.resolve("composeResources"), out.resolve("unused"), androidResOut = out.resolve("androidRes"))</ID>
+    <ID>MaxLineLength:GoldenTest.kt$GoldenTest$assertNull(loc.files.values.flatten().firstOrNull { it.key == "runningPhoneCpu" || it.key == "e7SettingsStorageSummary" })</ID>
+    <ID>MaxLineLength:GoldenTest.kt$GoldenTest$assertTrue("Set one with \"paseo daemon set-password\". Stored in this device's secure storage." in common, common)</ID>
+    <ID>MaxLineLength:GoldenTest.kt$GoldenTest$for (rel in actual.keys) out.resolve(rel).copyTo(Fixture.goldenDir.resolve(rel).also { it.parent.createDirectories() })</ID>
+    <ID>MaxLineLength:GoldenTest.kt$GoldenTest$listOf("en:e7SettingsStorageSummary", "ar:e7SettingsStorageSummary", "es:e7SettingsStorageSummary", "zh:e7SettingsStorageSummary")</ID>
+    <ID>MaxLineLength:GoldenTest.kt$GoldenTest$s.filter { it.isRegularFile() }.toList().associate { root.relativize(it).invariantSeparatorsPathString to it.readText() }</ID>
+    <ID>MaxLineLength:Hand.kt$Hand$Icu.print(nodes.subList(0, i) + (s.branches[b] ?: s.branches.getValue("other")) + nodes.subList(i + 1, nodes.size))</ID>
+    <ID>MaxLineLength:Hand.kt$Hand$for (r in recipes) if (r.key !in en.messages) throw HandRecipeException("recipe for ${r.key}: no such key in app_$template.arb")</ID>
+    <ID>MaxLineLength:Hand.kt$Hand$if (missing.isNotEmpty()) unreferenced.getOrPut(locale) { sortedSetOf() } += missing.map { pieceNames.getValue(it) }</ID>
+    <ID>MaxLineLength:Hand.kt$Hand$meta[name] = used.associateWithTo(LinkedHashMap()) { baseMeta[it] ?: fail("{$it} has no @${r.key} placeholder metadata") }</ID>
+    <ID>MaxLineLength:Hand.kt$Hand$parsed.values.forEach { nodes -&gt; nodes.filterIsInstance&lt;Plural&gt;().filter { it.arg == a }.forEach { used += Icu.argOrder(listOf(it)) } }</ID>
+    <ID>MaxLineLength:Hand.kt$Hand$val ordered = messages.mapValues { (_, m) -&gt; order.filter { it in m }.associateWithTo(LinkedHashMap()) { m.getValue(it) } }</ID>
+    <ID>MaxLineLength:Hand.kt$Hand$val printed = parsed.values.flatMap { nodes -&gt; Icu.argOrder(nodes.flatMap { n -&gt; if (n is Select) n.branches.values.flatten() else listOf(n) }) }</ID>
+    <ID>MaxLineLength:Hand.kt$HandRecipes$requireNotNull(kind) { "$source:${n + 1}: unknown recipe \"${cols[1]}\" (${RecipeKind.entries.joinToString { it.id }})" }</ID>
+    <ID>MaxLineLength:HandTest.kt$HandTest$assertEquals("اعتُمدت المواصفات منذ %1\$s · عدد المراحل الرئيسية: %4\$d · عدد المستودعات: %5\$d", str("ar", "goal"))</ID>
+    <ID>MaxLineLength:HandTest.kt$HandTest$assertEquals(listOf("name", "role", "state"), conv.plans.getValue("kitAgentLabel__yes").placeholders.map { it.name })</ID>
+    <ID>MaxLineLength:HandTest.kt$HandTest$assertEquals(mapOf("one" to "1 queued prompt", "other" to "%1\$d queued prompts"), plurals("en", "storage__queued"))</ID>
+    <ID>MaxLineLength:HandTest.kt$HandTest$assertTrue("public suspend fun storage(total: String, queued: Int, queueBytes: String, drafts: Int, draftBytes: String, days: Int): String" in kt, kt)</ID>
+    <ID>MaxLineLength:HandWordsKotlin.kt$HandWordsKotlin$append(" * The code half of the hand-converted messages: ICU `select` messages and messages with several plurals,\n")</ID>
+    <ID>MaxLineLength:HandWordsKotlin.kt$HandWordsKotlin$append(" * which CMP XML cannot hold as one resource (plan 01 §7.5, plan 06 §13.3; native/tools/strings/report).\n")</ID>
+    <ID>MaxLineLength:HandWordsKotlin.kt$HandWordsKotlin$body.append(" /** `${h.key}`: one sentence with ${h.pluralArgs.size} counts (${h.pluralArgs.joinToString()}); each count is its own plural. */\n")</ID>
+    <ID>MaxLineLength:HandWordsKotlin.kt$HandWordsKotlin$body.append(" /** `${h.key}`: {$arg, select, ${h.branches.joinToString("|")}}. A value with no branch reads `other`, as in ICU. */\n")</ID>
+    <ID>MaxLineLength:HandWordsKotlin.kt$HandWordsKotlin$if (p.name.endsWith(Hand.PIECE_SUFFIX)) p.name.removeSuffix(Hand.PIECE_SUFFIX) + "Text" else p.name</ID>
+    <ID>MaxLineLength:HandWordsKotlin.kt$HandWordsKotlin$val (str, plural) = if (composable) "stringResource" to "pluralStringResource" else "getString" to "getPluralString"</ID>
+    <ID>MaxLineLength:Main.kt$"not convertible ${l.skipped.size}, orphans ${l.orphans.size}, missing ${l.missing.map(base).toSet().size}, "</ID>
+    <ID>MaxLineLength:Main.kt$err.println("Nothing written. Add a hand recipe (hand-recipes.tsv), or rerun with --skip-unsupported to convert the rest.")</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$"${if (sum == keysIn) "yes" else "**NO ($sum)**"} | ${l.missing.map(base).toSet().size} | $strings | $plurals | $eq | ${l.promoted.size} |"</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$"${p.key}\t${p.feature ?: LocaleResult.UNUSED}\t${readers.size}\t${readers.firstOrNull() ?: ""}\n"</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$appendLine(" ICU meaning is kept exactly: the sentence never varied with the counts, only the pieces did. A language that")</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$appendLine(" `&lt;plurals name=\"&lt;key&gt;__&lt;count&gt;\"&gt;` (+ its `__eqN`). `HandWords.&lt;key&gt;(…)` / `&lt;key&gt;Text(…)` fill the sentence.")</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$appendLine(" language without a branch reads its own `other`, as ICU does). `HandWords.&lt;key&gt;(value)` picks the string with a")</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$appendLine("${c.plans.values.count { it.exact.isNotEmpty() }} keys use `=N`; each gets `&lt;key&gt;__eqN` in every language (`exact-selectors.tsv`).")</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$appendLine("- $locale lacks ${missing.size} of the ${en.size} native names" + if (missing.isEmpty()) "." else ": " + missing.joinToString(", ") { "`$it`" })</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$appendLine("- **select** → one string `&lt;key&gt;__&lt;branch&gt;` per branch of any language (the text around the select copied in; a")</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$appendLine("- **split-plurals** → `&lt;key&gt;` keeps the sentence with `%N\$s` where each plural was, and every plural becomes")</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$appendLine("- Template keys: ${en.keysInBase(base)}. Read by Dart code: ${routing.usage.size}. Routed by key prefix only: $byPrefix.")</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$appendLine("- Unused (read by no Dart file): ${routing.unused.size}, written to `strings_unused.xml` outside composeResources for the owner to confirm.")</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$appendLine("CMP XML cannot hold these as one resource. Each key has a reviewed recipe in `hand-recipes.tsv`, applied to")</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$appendLine("From `android/app/src/main/res/values*/` (strings.xml, widget_v2_strings.xml, widget_v2_bridge_strings.xml,")</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$appendLine("ICU branches for a category the language does not have (for example `one` in zh). ICU never picks them")</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$appendLine("Missing keys fall back to `values/` at runtime. Lists: `missing-&lt;lang&gt;.txt`; dropped orphans: `orphans-&lt;lang&gt;.txt`.")</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$appendLine("These placeholders had an ARB `format` (e.g. `decimalPattern`) and became `%N\$s`: call sites must pass a")</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$appendLine("`native/tools/strings/unused/values*/strings_unused.xml`, outside composeResources, for the owner to confirm")</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$appendLine("before the ARB freeze (delete them there, or move one into a `strings_&lt;feature&gt;.xml` when a screen needs it).")</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$appendLine("every language before conversion, so plural categories, `__eqN` strings, escaping and argument numbering are the")</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$appendLine("scheduled_prompts.xml, bb_idle_strings.xml). Names kept, because pinned shortcuts and widgets reference them. Read")</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$appendLine("with aapt2's rules; `%%` became `%` and a non-positional `%d`/`%s` became `%1\$d`/`%1\$s` (same output). The")</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$appendLine("| $name | " + c.locales.joinToString(" | ") { l -&gt; l.files[f].orEmpty().map { base(it.key) }.toSet().size.toString() } + " |")</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$appendLine("| `${h.key}` | ${h.recipe.kind.id} | ${h.locales.joinToString(", ")} | ${res.joinToString(" ") { "`$it`" }} | ${h.recipe.note} |")</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$appendLine("| lang | in (ARB) | converted | unused | not convertible | orphans dropped | in = out | missing vs ${c.template} | `&lt;string&gt;` | `&lt;plurals&gt;` | `__eqN` | promoted to plurals |")</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$conversion.plans.values.filter { it.exact.isNotEmpty() }.joinToString("") { "${it.key}\t${it.exact.joinToString(",")}\n" }</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$conversion.problems.joinToString("") { "${it.locale}\t${it.key}\t${it.kind}\t${it.detail.replace('\t', ' ').replace('\n', ' ')}\n" }</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$dir.resolve("unreachable-${loc.locale}.txt").writeText(loc.unreachableBranches.joinToString("\n", postfix = "\n"))</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$for ((locale, res) in c.nativeOs) appendLine("| $locale | ${res.count { it is Resource.Str }} | ${res.count { it is Resource.Plurals }} |")</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$fun</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$if (loc.missing.isNotEmpty()) dir.resolve("missing-${loc.locale}.txt").writeText(loc.missing.joinToString("\n", postfix = "\n"))</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$if (loc.orphans.isNotEmpty()) dir.resolve("orphans-${loc.locale}.txt").writeText(loc.orphans.joinToString("\n", postfix = "\n"))</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$if (skippedProblems) appendLine("Run with `--skip-unsupported`: the ${c.problems.size} messages below were NOT converted.")</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$if (unref.isNotEmpty()) appendLine(" - no ${unref.joinToString { "`$it`" }}: this language writes the count as a number")</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$is Resource.Plurals -&gt; appendLine(" - `${r.name}` = " + r.items.entries.joinToString(" · ") { "${it.key}: `${it.value.replace("\n", "⏎").replace("|", "\\|")}`" })</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$is Resource.Str -&gt; appendLine(" - `${r.name}` = `${r.text.replace("\n", "⏎").replace("|", "\\|")}`")</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$p.placeholders.joinToString(" ") { "${it.index}:${it.name}:${it.type ?: "-"}:${it.format ?: "-"}" }</ID>
+    <ID>MaxLineLength:Output.kt$ReportWriter$val placeholders = h.names.mapNotNull { n -&gt; c.plans[n]?.let { p -&gt; "`$n`(" + p.placeholders.joinToString(", ") { "%${it.index}=${it.name}" } + ")" } }</ID>
+    <ID>MaxLineLength:Output.kt$XmlWriter$2 -&gt; if (parts[1].length == 2) "values-${parts[0]}-r${parts[1].uppercase()}" else error("Unsupported locale $locale")</ID>
+    <ID>MaxLineLength:Output.kt$XmlWriter$androidResOut.resolve(folder).createDirectories().resolve(file).writeText(renderAndroidRes(resources, source))</ID>
+    <ID>MaxLineLength:Output.kt$XmlWriter$clean(out, "strings_*.xml")</ID>
+    <ID>MaxLineLength:Output.kt$XmlWriter$for ((q, text) in r.items) sb.append(" &lt;item quantity=\"$q\"&gt;${XmlText.escape(text, profile)}&lt;/item&gt;\n")</ID>
+    <ID>MaxLineLength:Output.kt$XmlWriter$fun</ID>
+    <ID>MaxLineLength:Output.kt$XmlWriter$fun value(t: String, args: Boolean)</ID>
+    <ID>MaxLineLength:Output.kt$XmlWriter$if (feature == Conversion.OS &amp;&amp; !conversion.nativeOs[loc.locale].isNullOrEmpty()) " and android/app/src/main/res/$folder" else ""</ID>
+    <ID>MaxLineLength:Output.kt$XmlWriter$root.resolve(folder).createDirectories().resolve("strings_unused.xml").writeText(render(resources, feature, source))</ID>
+    <ID>MaxLineLength:Output.kt$XmlWriter$sb.append(" &lt;!-- Not from the ARB files: copy added in :ui:words after the conversion (kept by every rerun). --&gt;\n")</ID>
+    <ID>MaxLineLength:Output.kt$XmlWriter$sb.append(" &lt;string name=\"${r.name}\"$attrs&gt;${value(r.text, formatToken.containsMatchIn(r.text))}&lt;/string&gt;\n")</ID>
+    <ID>MaxLineLength:Output.kt$XmlWriter$sb.append(" composeResources/values*/strings_os.xml and rerun `strings convert`; `strings check` compares the two. --&gt;\n")</ID>
+    <ID>MaxLineLength:Output.kt$XmlWriter$val</ID>
+    <ID>MaxLineLength:Output.kt$XmlWriter$val features = loc.files.keys + (if (conversion.nativeOs[loc.locale].isNullOrEmpty()) emptySet() else setOf(Conversion.OS))</ID>
+    <ID>MaxLineLength:Output.kt$XmlWriter$val resources = if (feature == Conversion.OS) conversion.osResources(loc.locale) else loc.files.getValue(feature)</ID>
+    <ID>MaxLineLength:RealArbTest.kt$RealArbTest$"string" -&gt; check(strings.put(name, XmlText.cmpUnescape(el.textContent)) == null) { "duplicate $name in $dir" }</ID>
+    <ID>MaxLineLength:RealArbTest.kt$RealArbTest$/** The whole real catalogue: lib/l10n/app_*.arb read by the real Dart lib/ and native/tools/strings/feature-routes.tsv. */</ID>
+    <ID>MaxLineLength:RealArbTest.kt$RealArbTest$ReadBack</ID>
+    <ID>MaxLineLength:RealArbTest.kt$RealArbTest$assertEquals(arb.messages.keys, accounted, "${arb.locale}: every ARB key is written, skipped (listed) or an orphan (listed)")</ID>
+    <ID>MaxLineLength:RealArbTest.kt$RealArbTest$assertEquals(arb.messages.size, shipped.keys.size + unused.keys.size + loc.skipped.size + loc.orphans.size, arb.locale)</ID>
+    <ID>MaxLineLength:RealArbTest.kt$RealArbTest$assertEquals(mapOf("ar" to 1018), conv.locales.filter { it.orphans.isNotEmpty() }.associate { it.locale to it.orphans.size })</ID>
+    <ID>MaxLineLength:RealArbTest.kt$RealArbTest$assertTrue(Fixture.arbDir.listDirectoryEntries().map { it.name }.containsAll(arbs.map { "app_${it.locale}.arb" }))</ID>
+    <ID>MaxLineLength:RealArbTest.kt$RealArbTest$for ((k, v) in f.messages) assertEquals(real.messages[k], v, "${f.locale}/$k drifted; rerun fixture-tools/cut_fixture.py")</ID>
+    <ID>MaxLineLength:RealArbTest.kt$RealArbTest$for (v in values) for (m in token.findAll(v)) assertTrue(m.groupValues[1].toInt() in 1..max, "${l.locale}/${r.name}: $v")</ID>
+    <ID>MaxLineLength:RealArbTest.kt$RealArbTest$private val repo: Path = assertNotNull(Fixture.repoRoot, "run through Gradle: the tests need the repository's lib/l10n")</ID>
+    <ID>MaxLineLength:RealArbTest.kt$RealArbTest$summary.append("${arb.locale}: ${arb.messages.size} = ${shipped.keys.size} + ${unused.keys.size} + ${loc.skipped.size} + ${loc.orphans.size}\n")</ID>
+    <ID>MaxLineLength:Routing.kt$Router$for (f in filesPerKeyCount.keys) if (routes.featureForPath(f) == null) unrouted[f] = filesPerKeyCount.getValue(f)</ID>
+    <ID>MaxLineLength:Routing.kt$Routes$key.startsWith(prefix) &amp;&amp; (key.length == prefix.length || key[prefix.length].let { it.isUpperCase() || it.isDigit() })</ID>
+    <ID>MaxLineLength:Routing.kt$Routes.Companion$if (prefix.startsWith("key:")) keys += prefix.removePrefix("key:") to feature else paths += prefix to feature</ID>
+    <ID>MaxLineLength:UnitTest.kt$ConverterTest$arb("en", "a" to "{n, plural, one{{m, plural, one{x} other{y}}} other{z}}", "b" to "Hi {name}", "c" to "{n, plural, one{1} other{#}}")</ID>
+    <ID>MaxLineLength:UnitTest.kt$ConverterTest$private</ID>
+    <ID>MaxLineLength:UnitTest.kt$ConverterTest$val c = Converter({ "os" }).convert(listOf(arb("en", "a" to "{p}% used", "b" to "100% sure"), arb("ar", "a" to "{p}٪", "b" to "١٠٠٪")))</ID>
+    <ID>MaxLineLength:UnitTest.kt$EscapeTest$for (p in XmlText.Profile.entries) assertEquals(s, cmpRead(XmlText.escape(s, p)), "$p: ${s.map { it.code }}")</ID>
+    <ID>MaxLineLength:UnitTest.kt$EscapeTest$val xml = "&lt;?xml version=\"1.0\" encoding=\"utf-8\"?&gt;&lt;resources&gt;&lt;string name=\"k\"&gt;$escaped&lt;/string&gt;&lt;/resources&gt;"</ID>
+    <ID>MaxLineLength:UnitTest.kt$PluralRulesTest$assertEquals(listOf("many", "one", "few", "many", "many", "one"), listOf(0, 1, 2, 5, 11, 21).map { PluralRules.category("ru", it) })</ID>
+    <ID>MaxLineLength:UnitTest.kt$PluralRulesTest$assertEquals(listOf("one", "one", "other", "many"), listOf(0, 1, 2, 1_000_000).map { PluralRules.category("pt", it) })</ID>
+    <ID>MaxLineLength:XmlText.kt$XmlText$profile == Profile.ANDROID &amp;&amp; c == ' ' &amp;&amp; (i == 0 || i == last || value[i - 1] == ' ') -&gt; out.append(u(c))</ID>
+    <ID>NestedBlockDepth:Arb.kt$Arb$fun parse(text: String, expectedLocale: String, source: String = "&lt;arb&gt;"): ArbFile</ID>
+    <ID>NestedBlockDepth:Converter.kt$Converter$fun convert(arbs: List&lt;ArbFile&gt;): Conversion</ID>
+    <ID>NestedBlockDepth:Drift.kt$Drift$fun check(inputs: Inputs): List&lt;Finding&gt;</ID>
+    <ID>NestedBlockDepth:HandWordsKotlin.kt$HandWordsKotlin$fun render(conversion: Conversion, expansion: Expansion, shipped: (String) -&gt; Boolean): String</ID>
+    <ID>NestedBlockDepth:Output.kt$ReportWriter$private fun StringBuilder.hand(e: Expansion, c: Conversion)</ID>
+    <ID>NestedBlockDepth:Output.kt$XmlWriter$fun write( conversion: Conversion, out: Path, unusedOut: Path?, androidResOut: Path? = null, fromArb: (String) -&gt; Boolean = defaultClaim(conversion), )</ID>
+    <ID>NestedBlockDepth:RealArbTest.kt$RealArbTest$@Test fun `placeholders in a translation use only indices the template defines`()</ID>
+    <ID>NestedBlockDepth:RealArbTest.kt$RealArbTest$private fun readBack(dir: Path): ReadBack</ID>
+    <ID>ReturnCount:Converter.kt$Converter$private fun classify(nodes: List&lt;IcuNode&gt;): Pair&lt;ProblemKind, String&gt;?</ID>
+    <ID>ReturnCount:Converter.kt$Converter$private fun render( locale: String, key: String, nodes: List&lt;IcuNode&gt;, byName: Map&lt;String, Placeholder&gt;, pluralArg: String?, exact: Set&lt;Int&gt;, promoted: Map&lt;String, MutableList&lt;String&gt;&gt;, unreachable: Map&lt;String, MutableList&lt;String&gt;&gt;, fail: (ProblemKind, String) -&gt; Unit, ): List&lt;Resource&gt;?</ID>
+    <ID>ReturnCount:Drift.kt$Drift$fun localeOf(folder: String, template: String): String?</ID>
+    <ID>ReturnCount:Main.kt$Options$fun path(flag: String, default: String?): Path?</ID>
+    <ID>ReturnCount:Main.kt$fun run(args: List&lt;String&gt;, out: java.io.PrintStream, err: java.io.PrintStream): Int</ID>
+    <ID>SwallowedException:Arb.kt$Arb$e: Exception</ID>
+    <ID>ThrowsCount:Arb.kt$Arb$fun parse(text: String, expectedLocale: String, source: String = "&lt;arb&gt;"): ArbFile</ID>
+    <ID>ThrowsCount:Hand.kt$Hand$fun expand(arbs: List&lt;ArbFile&gt;, recipes: List&lt;Recipe&gt;, template: String = "en"): Expansion</ID>
+    <ID>TooGenericExceptionCaught:Arb.kt$Arb$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:Drift.kt$Drift$e: Exception</ID>
+    <ID>TooManyFunctions:Glossary.kt$Glossary</ID>
+    <ID>UseRequire:Drift.kt$Drift$throw IllegalArgumentException("$name twice")</ID>
+  </CurrentIssues>
+</SmellBaseline>

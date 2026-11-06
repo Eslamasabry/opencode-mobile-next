@@ -1,0 +1,240 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:ChatsAllScreen.kt$failed == null &amp;&amp; (!state.canLoadMore || state.loadingMore || state.phase == AllPhase.Opening)</ID>
+    <ID>ComplexCondition:ChatsViewModel.kt$ChatsViewModel$path.startsWith('/') &amp;&amp; path.split('/').none { it == ".." || it == "." } &amp;&amp; path.none { it.code &lt;= 0x1f || it.code == 0x7f }</ID>
+    <ID>ComplexCondition:NewConversation.kt$NewConversationViewModel$!shown.openingChat || shown.busy || shown.creationUnconfirmed || shown.deliveryUnconfirmed</ID>
+    <ID>ComplexCondition:NewConversation.kt$NewConversationViewModel$agent != null &amp;&amp; agent !in setup.modes &amp;&amp; (agent !in setup.agents || !isStartableAgent(agent))</ID>
+    <ID>ComplexCondition:NewConversation.kt$NewConversationViewModel$mutable.value.busy || mutable.value.attempted || mutable.value.deliveryUnconfirmed || mutable.value.setup?.canChangeProject != true || !directory.trim().startsWith('/') || directory.trim().split('/').any { it == ".." || it == "." } || directory.any { it.code &lt;= 0x1f || it.code == 0x7f }</ID>
+    <ID>ComplexCondition:NewConversation.kt$NewConversationViewModel$shown.busy || !shown.repairAvailable || shown.failure !is Failure.ProjectGit || shown.creationUnconfirmed || shown.deliveryUnconfirmed</ID>
+    <ID>ComplexCondition:NewConversation.kt$NewConversationViewModel$shown.busy || shown.openingChat || shown.deliveryUnconfirmed || shown.setup == null || shown.text.isNotBlank() || label.isBlank() || starter !in newConversationStarters(shown.directory)</ID>
+    <ID>ComplexCondition:NewConversation.kt$NewConversationViewModel$shown.busy || shown.text.isBlank() || shown.setup == null || shown.creationUnconfirmed || shown.deliveryUnconfirmed</ID>
+    <ID>ComplexCondition:NewConversationScreen.kt$!state.creationUnconfirmed &amp;&amp; !state.deliveryUnconfirmed &amp;&amp; state.repairAvailable &amp;&amp; state.failure is Failure.ProjectGit</ID>
+    <ID>ComplexCondition:NewConversationScreen.kt$startBlocked != null &amp;&amp; startBlocked != promptHint &amp;&amp; !state.busy &amp;&amp; !state.deliveryUnconfirmed &amp;&amp; !state.creationUnconfirmed</ID>
+    <ID>CyclomaticComplexMethod:AllConversationsRules.kt$AllConversationsRules$public fun build(model: AllModel): AllConversationsUi</ID>
+    <ID>CyclomaticComplexMethod:AttentionScreen.kt$@Composable public fun AttentionScreen(state: AttentionUi, actions: AttentionActions)</ID>
+    <ID>CyclomaticComplexMethod:ChatsAllScreen.kt$@Composable private fun AllRow(row: AllRowUi, selecting: Boolean, actions: ChatsAllActions)</ID>
+    <ID>CyclomaticComplexMethod:ChatsAllScreen.kt$@Composable public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions)</ID>
+    <ID>CyclomaticComplexMethod:ChatsAllViewModel.kt$ChatsAllViewModel$private suspend fun follow(server: ConversationServer, run: Int): Unit</ID>
+    <ID>CyclomaticComplexMethod:ChatsHomeSheets.kt$@Composable internal fun ChatsHomeSheets(state: ChatsUi, actions: ChatsActions)</ID>
+    <ID>CyclomaticComplexMethod:ChatsInboxScreen.kt$@Composable internal fun ChatsInboxScreen(state: ChatsUi, actions: ChatsActions)</ID>
+    <ID>CyclomaticComplexMethod:ChatsScreen.kt$@Composable private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, state: ChatsUi? = null)</ID>
+    <ID>CyclomaticComplexMethod:ChatsScreen.kt$@Composable public fun ChatsScreen( state: ChatsUi, actions: ChatsActions, appStatus: KitStatus? = null, replyOffer: (@Composable () -&gt; Unit)? = null, )</ID>
+    <ID>CyclomaticComplexMethod:MonitorInboxScreen.kt$@Composable public fun MonitorInboxScreen(state: MonitorInboxUi, actions: MonitorInboxActions)</ID>
+    <ID>CyclomaticComplexMethod:NewConversation.kt$NewConversationViewModel$override fun start()</ID>
+    <ID>CyclomaticComplexMethod:NewConversationScreen.kt$@Composable private fun StartingConversation(state: NewConversationUi, actions: NewConversationActions)</ID>
+    <ID>CyclomaticComplexMethod:NewConversationScreen.kt$@Composable public fun NewConversationScreen(state: NewConversationUi, actions: NewConversationActions)</ID>
+    <ID>EmptyFunctionBlock:AllConversationsScreenTest.kt$AllConversationsScreenTest.Actions${}</ID>
+    <ID>EmptyFunctionBlock:AllConversationsViewModelTest.kt$AllConversationsViewModelTest.Nav${}</ID>
+    <ID>EmptyFunctionBlock:ChatsFixtures.kt$TestKitPlatform${}</ID>
+    <ID>EmptyFunctionBlock:ClaudeImportScreenTest.kt$ClaudeImportScreenTest.Actions${}</ID>
+    <ID>EmptyFunctionBlock:NewConversationAddAgentTest.kt$NewConversationAddAgentTest.Actions${}</ID>
+    <ID>EmptyFunctionBlock:NewConversationProjectTest.kt$NewConversationProjectTest.Actions${}</ID>
+    <ID>EmptyFunctionBlock:UnsupportedAppNotices.kt$UnsupportedAppNotices${}</ID>
+    <ID>LargeClass:ChatsAllViewModel.kt$ChatsAllViewModel : ViewModelChatsAllActionsChatsPinActions</ID>
+    <ID>LongMethod:AllConversationsRules.kt$AllConversationsRules$public fun build(model: AllModel): AllConversationsUi</ID>
+    <ID>LongMethod:AttentionScreen.kt$@Composable public fun AttentionScreen(state: AttentionUi, actions: AttentionActions)</ID>
+    <ID>LongMethod:ChatsAllScreen.kt$@Composable private fun AllRow(row: AllRowUi, selecting: Boolean, actions: ChatsAllActions)</ID>
+    <ID>LongMethod:ChatsAllScreen.kt$@Composable public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions)</ID>
+    <ID>LongMethod:ChatsAllViewModel.kt$ChatsAllViewModel$private suspend fun firstPage(server: ConversationServer, run: Int)</ID>
+    <ID>LongMethod:ChatsAllViewModel.kt$ChatsAllViewModel$private suspend fun follow(server: ConversationServer, run: Int): Unit</ID>
+    <ID>LongMethod:ChatsEntries.kt$ChatsEntries$override fun EntryProviderScope&lt;NavKey&gt;.install()</ID>
+    <ID>LongMethod:ChatsHomeSheets.kt$@Composable internal fun ChatsHomeSheets(state: ChatsUi, actions: ChatsActions)</ID>
+    <ID>LongMethod:ChatsInboxScreen.kt$@Composable internal fun ChatsInboxScreen(state: ChatsUi, actions: ChatsActions)</ID>
+    <ID>LongMethod:ChatsScreen.kt$@Composable private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, state: ChatsUi? = null)</ID>
+    <ID>LongMethod:ChatsScreen.kt$@Composable public fun ChatsScreen( state: ChatsUi, actions: ChatsActions, appStatus: KitStatus? = null, replyOffer: (@Composable () -&gt; Unit)? = null, )</ID>
+    <ID>LongMethod:ChatsState.kt$ChatsState$public fun build( feed: ChatFeedSnapshot, brief: ReturnBrief, filters: ChatsFilters, startOfTodayMs: Long, settingsAvailable: Boolean, nowMs: Long = 0L, ): ChatsUi</ID>
+    <ID>LongMethod:MonitorInboxScreen.kt$@Composable public fun MonitorInboxScreen(state: MonitorInboxUi, actions: MonitorInboxActions)</ID>
+    <ID>LongMethod:NewConversation.kt$NewConversationViewModel$override fun start()</ID>
+    <ID>LongMethod:NewConversationScreen.kt$@Composable internal fun ClaudeImportBody(state: NewConversationUi, actions: NewConversationActions)</ID>
+    <ID>LongMethod:NewConversationScreen.kt$@Composable private fun NewConversationSheet(state: NewConversationUi, actions: NewConversationActions)</ID>
+    <ID>LongMethod:NewConversationScreen.kt$@Composable public fun NewConversationScreen(state: NewConversationUi, actions: NewConversationActions)</ID>
+    <ID>LongParameterList:AllConversationsViewModelTest.kt$AllConversationsViewModelTest$(id: String, at: Long, title: String = "Chat $id", dir: String = "/work/api", parent: String? = null, archived: Boolean = false)</ID>
+    <ID>LongParameterList:ChatsAllViewModel.kt$ChatsAllViewModel$( @Assisted private val route: ChatsRoute.All, private val nav: AppNavigator, private val connections: ConversationServers, private val appScope: AppCoroutineScope, private val pins: ConversationPins = NoConversationPins(), private val context: io.github.eslamasabry.oc.engine.settings.context.ContextUsageHistory? = null, private val previews: ConversationPreviews = NoConversationPreviews(), )</ID>
+    <ID>LongParameterList:ChatsFixtures.kt$( id: String, dir: String = "/work/api", at: Long = 1_000, title: String? = "Chat $id", status: ChatStatus = ChatStatus.Idle, parent: String? = null, unseen: Boolean = false, )</ID>
+    <ID>LongParameterList:ChatsState.kt$ChatsState$( feed: ChatFeedSnapshot, brief: ReturnBrief, filters: ChatsFilters, startOfTodayMs: Long, settingsAvailable: Boolean, nowMs: Long = 0L, )</ID>
+    <ID>LongParameterList:ChatsViewModel.kt$ChatsViewModel$( private val feed: ConversationsFeed, private val briefs: ReturnBriefFeed, private val settings: SettingsDoor, private val day: FeedDay, private val clock: Clock, private val nav: AppNavigator, private val updates: UpdateDoor = NoUpdateDoor(), private val home: ChatsHomeExtras = NoChatsHomeExtras(), private val permissionAnswers: Set&lt;HomePermissionAnswers&gt; = emptySet(), private val connections: ConversationServers = NoConversationServers(), private val appScope: AppCoroutineScope? = null, private val pins: ConversationPins = NoConversationPins(), )</ID>
+    <ID>LongParameterList:NewConversation.kt$NewConversationHost$( profile: ProfileId, directory: String, text: String, model: ModelRef?, agent: String?, separateCopy: Boolean, previous: NewConversationAttempt?, /** The session and local send exist; its composer can open while admission settles. */ onStarted: (ConversationRef) -&gt; Unit = {}, )</ID>
+    <ID>MagicNumber:AllConversationsRules.kt$AllConversationsRules$100</ID>
+    <ID>MagicNumber:ChatsAllViewModel.kt$ChatsAllViewModel$410</ID>
+    <ID>MagicNumber:ChatsHomeSheets.kt$0x7f</ID>
+    <ID>MagicNumber:ChatsInboxScreen.kt$.4f</ID>
+    <ID>MagicNumber:ChatsInboxScreen.kt$5</ID>
+    <ID>MagicNumber:ChatsUi.kt$RelativeAge.Companion$24</ID>
+    <ID>MagicNumber:ChatsUi.kt$RelativeAge.Companion$60</ID>
+    <ID>MagicNumber:ChatsUi.kt$RelativeAge.Companion$60_000L</ID>
+    <ID>MagicNumber:ChatsViewModel.kt$ChatsViewModel$0x7f</ID>
+    <ID>MagicNumber:ChatsViewModel.kt$ChatsViewModel$5_000</ID>
+    <ID>MagicNumber:NewConversation.kt$NewConversationViewModel$0x7f</ID>
+    <ID>MagicNumber:NewConversationScreen.kt$4</ID>
+    <ID>MatchingDeclarationName:LooksCapture.kt$Looks</ID>
+    <ID>MaxLineLength:AllConversationsScreenTest.kt$AllConversationsScreenTest$rows = persistentListOf(row("a", "Fix the reconnect loop", selected = true), row("b", "Theme packs"))</ID>
+    <ID>MaxLineLength:AllConversationsViewModelTest.kt$AllConversationsViewModelTest$ChatsAllViewModel(ChatsRoute.All(filter), nav, Servers(servers.toList()), AppCoroutineScope(UnconfinedTestDispatcher()))</ID>
+    <ID>MaxLineLength:AllConversationsViewModelTest.kt$AllConversationsViewModelTest$assertEquals(listOf("deleteSession a", "deleteSession b"), gateway.calls.filter { it.startsWith("deleteSession") })</ID>
+    <ID>MaxLineLength:AllConversationsViewModelTest.kt$AllConversationsViewModelTest$fun</ID>
+    <ID>MaxLineLength:AllConversationsViewModelTest.kt$AllConversationsViewModelTest$private</ID>
+    <ID>MaxLineLength:BriefPlacementTest.kt$BriefPlacementTest$"checkout"</ID>
+    <ID>MaxLineLength:BriefPlacementTest.kt$BriefPlacementTest$setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en") { ChatsScreen(state, RecordingChatsActions()) } }</ID>
+    <ID>MaxLineLength:BriefPlacementTest.kt$BriefPlacementTest$val row = ConversationRowUi("login", ConversationRef(ProfileId("p"), SessionId("s")), RowTitle.Text("Fix login"), "alpha", RowStatus.NeedsYou, RelativeAge.Minutes(2))</ID>
+    <ID>MaxLineLength:BriefPlacementTest.kt$BriefPlacementTest$val state = ChatsUi(phase = ChatsPhase.List, today = persistentListOf(row), brief = BriefUi(persistentListOf(row), 0, false))</ID>
+    <ID>MaxLineLength:ChatsAllScreen.kt$// Glyphs on the bar (the words are what TalkBack says): as words they were cut to "Ref…" and "Sel…".</ID>
+    <ID>MaxLineLength:ChatsAllScreen.kt$AllPhase.Opening -&gt; item(key = "opening") { KitSkeletonRows(count = 7) }</ID>
+    <ID>MaxLineLength:ChatsAllScreen.kt$Column</ID>
+    <ID>MaxLineLength:ChatsAllScreen.kt$KitMenuItem(stringResource(Res.string.chatUiShareSession), { actions.rowAct(row.key, RowAct.Share) }, icon = KitIcons.link)</ID>
+    <ID>MaxLineLength:ChatsAllScreen.kt$KitMenuItem(stringResource(Res.string.p12Select), { actions.startSelecting(row.key) }, icon = KitIcons.checkboxChecked)</ID>
+    <ID>MaxLineLength:ChatsAllScreen.kt$KitMenuItem(stringResource(Res.string.sessionCopyHandoff), { actions.rowAct(row.key, RowAct.CopyHandoff) }, icon = KitIcons.terminal)</ID>
+    <ID>MaxLineLength:ChatsAllScreen.kt$KitMenuItem(stringResource(Res.string.sessionMenuDetails), { actions.rowAct(row.key, RowAct.Details) }, icon = KitIcons.info)</ID>
+    <ID>MaxLineLength:ChatsAllScreen.kt$KitMenuItem(stringResource(Res.string.sessionOpenRelated), { actions.rowAct(row.key, RowAct.OpenRelated) }, icon = KitIcons.branch)</ID>
+    <ID>MaxLineLength:ChatsAllScreen.kt$add(KitMenuItem(choice.name, { actions.chooseProject(choice.directory) }, icon = KitIcons.files, checked = choice.selected))</ID>
+    <ID>MaxLineLength:ChatsAllScreen.kt$add(KitMenuItem(stringResource(Res.string.chatsHomeRunning), actions::toggleRunning, checked = state.running))</ID>
+    <ID>MaxLineLength:ChatsAllScreen.kt$body = stringResource(if (state.archived) Res.string.globalSessionsArchivedEmptyMessage else Res.string.globalSessionsEmptyMessage)</ID>
+    <ID>MaxLineLength:ChatsAllScreen.kt$body = stringResource(if (state.archived) Res.string.globalSessionsArchivedNoMatchMessage else Res.string.globalSessionsNoMatchMessage)</ID>
+    <ID>MaxLineLength:ChatsAllScreen.kt$if (row.canContinueHere) KitMenuItem(stringResource(Res.string.globalSessionsContinueHere), { actions.continueHere(row.key) }, icon = KitIcons.download) else null</ID>
+    <ID>MaxLineLength:ChatsAllScreen.kt$leading = if (row.running) null else KitRowLeading.Glyph(if (row.archived) KitIcons.archive else KitIcons.chat)</ID>
+    <ID>MaxLineLength:ChatsAllScreen.kt$modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp).padding(top = Space.S1.dp, bottom = Space.S2.dp)</ID>
+    <ID>MaxLineLength:ChatsAllScreen.kt$primary = KitAction(stringResource(Res.string.chatsHomeClearFilters), actions::clearFilters)</ID>
+    <ID>MaxLineLength:ChatsAllScreen.kt$resultCount = if (state.query.isBlank() || state.phase == AllPhase.Opening) null else state.rows.size</ID>
+    <ID>MaxLineLength:ChatsAllScreen.kt$secondary = KitAction(stringResource(Res.string.commonClearSearch), { actions.search("") })</ID>
+    <ID>MaxLineLength:ChatsAllScreen.kt$secondary = KitAction(stringResource(Res.string.globalSessionsShowActive), actions::toggleArchived)</ID>
+    <ID>MaxLineLength:ChatsAllScreen.kt$secondary = if (state.archived) KitAction(stringResource(Res.string.globalSessionsShowActive), actions::toggleArchived) else null</ID>
+    <ID>MaxLineLength:ChatsAllScreen.kt$tertiary = if (state.archived) emptyList() else listOf(KitAction(stringResource(Res.string.globalSessionsRefresh), actions::retry))</ID>
+    <ID>MaxLineLength:ChatsAllScreen.kt$title = stringResource(if (state.archived) Res.string.globalSessionsArchivedEmptyTitle else Res.string.globalSessionsEmptyTitle)</ID>
+    <ID>MaxLineLength:ChatsGateTest.kt$ChatsGateTest$ConversationRowUi(id, ConversationRef(ProfileId("p1"), SessionId(id)), RowTitle.Text(title), project, status, age)</ID>
+    <ID>MaxLineLength:ChatsGateTest.kt$ChatsGateTest$private fun shot(name: String, state: ChatsUi)</ID>
+    <ID>MaxLineLength:ChatsGateTest.kt$ChatsGateTest$projectChoices = persistentListOf(ProjectSummary("/alpha", "alpha", 2, 0, 0), ProjectSummary("/beta", "beta", 2, 1, 0), ProjectSummary("/gamma", "gamma", 2, 0, 0))</ID>
+    <ID>MaxLineLength:ChatsGateTest.kt$ChatsGateTest$row("rename", "Rename the settings page and move its tests next to it", "beta", RowStatus.None, RelativeAge.Days(3))</ID>
+    <ID>MaxLineLength:ChatsHomeSheets.kt$KitButton(stringResource(Res.string.refreshRetry), { actions.retrySource(source.profile) }, role = KitButtonRole.Tertiary)</ID>
+    <ID>MaxLineLength:ChatsHomeSheets.kt$else</ID>
+    <ID>MaxLineLength:ChatsHomeSheets.kt$if (project.runningCount &gt; 0) add(stringResource(Res.string.chatsFilterRunningCount, project.runningCount))</ID>
+    <ID>MaxLineLength:ChatsHomeSheets.kt$supporting = pluralStringResource(Res.plurals.chatsFilterChatCount, state.otherFoldersCount, state.otherFoldersCount)</ID>
+    <ID>MaxLineLength:ChatsInboxScreen.kt$Modifier.fillParentMaxHeight(if (state.finished.isEmpty()) 1f else .4f)</ID>
+    <ID>MaxLineLength:ChatsInboxScreen.kt$else</ID>
+    <ID>MaxLineLength:ChatsInboxScreen.kt$if</ID>
+    <ID>MaxLineLength:ChatsInboxScreen.kt$item("answer-failure") { KitErrorNotice(stringResource(Res.string.chatHomeAnswerFailed), failure = failure) }</ID>
+    <ID>MaxLineLength:ChatsInboxScreen.kt$item("watched-failure") { KitErrorNotice(stringResource(Res.string.homeWatchedOpenFailed), failure = failure) }</ID>
+    <ID>MaxLineLength:ChatsInboxScreen.kt$modifier = Modifier.padding(horizontal = Space.S4.dp, vertical = Space.S4.dp).testTag("inbox-request-${row.key}")</ID>
+    <ID>MaxLineLength:ChatsInboxScreen.kt$openEnabled = if (row.canOpen) KitEnabled.Enabled else KitEnabled.Disabled(stringResource(Res.string.e7WorkspaceConnecting))</ID>
+    <ID>MaxLineLength:ChatsInboxScreen.kt$openLabel = stringResource(Res.string.inboxOpenOnServer, KitBidi.auto(mask(row.sourceName)))</ID>
+    <ID>MaxLineLength:ChatsInboxScreen.kt$place = listOf(row.sourceName, conversation).joinToString(" · ") { KitBidi.auto(mask(it)) }</ID>
+    <ID>MaxLineLength:ChatsInboxScreen.kt$place = listOfNotNull(source, row.project.takeIf(String::isNotBlank), conversation).joinToString(" · ") { KitBidi.auto(mask(it)) }</ID>
+    <ID>MaxLineLength:ChatsInboxScreen.kt$subtitle = if (waiting == 0) null else pluralStringResource(Res.plurals.goToNeedsYouHint, waiting, waiting)</ID>
+    <ID>MaxLineLength:ChatsInboxScreen.kt$time</ID>
+    <ID>MaxLineLength:ChatsInboxScreen.kt$title = stringResource(if (row.kind == ChatsWatchedKind.Permission) Res.string.inboxAsksPermission else Res.string.inboxAsksQuestion)</ID>
+    <ID>MaxLineLength:ChatsInboxScreen.kt$val waiting = state.inbox.count { row -&gt; row.permission?.let { it.requestId in state.answering } != true } + watched.requests.size</ID>
+    <ID>MaxLineLength:ChatsScreen.kt$add(KitMenuItem(stringResource(Res.string.chatUiShareSession), { menuOpen = false; actions.rowAct(row, RowAct.Share) }, icon = KitIcons.link))</ID>
+    <ID>MaxLineLength:ChatsScreen.kt$add(KitMenuItem(stringResource(Res.string.sessionCopyHandoff), { menuOpen = false; actions.rowAct(row, RowAct.CopyHandoff) }, icon = KitIcons.terminal))</ID>
+    <ID>MaxLineLength:ChatsScreen.kt$add(KitMenuItem(stringResource(Res.string.sessionMenuDetails), { menuOpen = false; actions.rowAct(row, RowAct.Details) }, icon = KitIcons.info))</ID>
+    <ID>MaxLineLength:ChatsScreen.kt$add(KitMenuItem(stringResource(Res.string.sessionOpenRelated), { menuOpen = false; actions.rowAct(row, RowAct.OpenRelated) }, icon = KitIcons.branch))</ID>
+    <ID>MaxLineLength:ChatsScreen.kt$add(KitMenuItem(stringResource(if (pinned) Res.string.stateUnpin else Res.string.statePin), { menuOpen = false; actions.togglePin(row) }, icon = if (pinned) KitIcons.unpin else KitIcons.pin))</ID>
+    <ID>MaxLineLength:ChatsScreen.kt$disabledReason = if (answering) stringResource(Res.string.serversWorking) else if (!row.canOpen) stringResource(Res.string.e7WorkspaceConnecting) else null</ID>
+    <ID>MaxLineLength:ChatsScreen.kt$else</ID>
+    <ID>MaxLineLength:ChatsScreen.kt$if (canArchive) add(KitMenuItem(archiveWord, { menuOpen = false; actions.archive(row) }, icon = KitIcons.archive))</ID>
+    <ID>MaxLineLength:ChatsScreen.kt$if (it != earlier.last()) io.github.eslamasabry.oc.ui.kit.foundation.KitDivider(Modifier.padding(horizontal = Space.S4.dp))</ID>
+    <ID>MaxLineLength:ChatsScreen.kt$if (row != today.last()) io.github.eslamasabry.oc.ui.kit.foundation.KitDivider(Modifier.padding(horizontal = Space.S4.dp))</ID>
+    <ID>MaxLineLength:ChatsScreen.kt$if (state != null &amp;&amp; row.key in state.deletable) add(KitMenuItem(stringResource(Res.string.sessionMenuDelete), { menuOpen = false; actions.delete(row) }, icon = KitIcons.delete, destructive = true))</ID>
+    <ID>MaxLineLength:ChatsScreen.kt$if (state != null &amp;&amp; row.key in state.renamable) add(KitMenuItem(stringResource(Res.string.p12Rename), { menuOpen = false; actions.rename(row) }, icon = KitIcons.edit))</ID>
+    <ID>MaxLineLength:ChatsScreen.kt$if (state.settingsAvailable) add(KitLineAction(settingsLabel, actions::openSettings, icon = KitIcons.settingsGear))</ID>
+    <ID>MaxLineLength:ChatsScreenTest.kt$ChatsScreenTest$ChatsListSourceUi(ProfileId("p1"), "On this phone", shown = true, main = true, onThisPhone = true, unreachable = false)</ID>
+    <ID>MaxLineLength:ChatsScreenTest.kt$ChatsScreenTest$Themed { ChatsScreen(ui(*rows).copy(home = ChatsHomeExtraState(sources = persistentListOf(phone))), actions) }</ID>
+    <ID>MaxLineLength:ChatsStateTest.kt$ChatsStateTest$fun</ID>
+    <ID>MaxLineLength:ChatsViewModel.kt$ChatsViewModel$pinnable = if (pins.supported) editable(snapshot) else kotlinx.collections.immutable.persistentSetOf()</ID>
+    <ID>MaxLineLength:ChatsViewModelTest.kt$ChatsViewModelTest$ChatsViewModel(Feed(), Briefs(), Door(available = true), { Instant.fromEpochMilliseconds(0) }, clock, nav, door)</ID>
+    <ID>MaxLineLength:ChatsViewModelTest.kt$ChatsViewModelTest$val none = ChatsViewModel(Feed(), Briefs(), Door(available = true), { Instant.fromEpochMilliseconds(0) }, clock, nav)</ID>
+    <ID>MaxLineLength:ClaudeImportScreenTest.kt$ClaudeImportScreenTest$ClaudeImportBody(NewConversationUi(directory = "/work/shop/", imports = ImportableConversations(persistentListOf(item)), importsReadAtMs = 60_000), actions)</ID>
+    <ID>MaxLineLength:ClaudeImportScreenTest.kt$ClaudeImportScreenTest$val item = ImportableConversation("claude", "opaque-handle", "/work/shop/", Instant.fromEpochMilliseconds(0), title = "Fix checkout")</ID>
+    <ID>MaxLineLength:FeedPartsTest.kt$FeedPartsTest$setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en") { KitFeedItem("Fix login", "alpha", "2 min ago", KitRowState("Needs you", KitRowStateTone.NeedsYou), { opened++ }) } }</ID>
+    <ID>MaxLineLength:FeedPartsTest.kt$FeedPartsTest$setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en") { KitHeadingLine("2 need you", { opened++ }) } }</ID>
+    <ID>MaxLineLength:FeedPartsTest.kt$FeedPartsTest$setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en") { KitSwitchRow("Laptop", false, leading = KitRowLeading.Glyph(io.github.eslamasabry.oc.ui.kit.icon.KitIcons.server), onCheckedChange = { checked = it }) } }</ID>
+    <ID>MaxLineLength:FeedPartsTest.kt$FeedPartsTest$setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en") { KitTopBar("Conversations", large = true) } }</ID>
+    <ID>MaxLineLength:HomeConnectionTest.kt$HomeConnectionTest$ChatsListSourceUi(ProfileId(name), name, shown = true, main = main, onThisPhone = false, unreachable = unreachable)</ID>
+    <ID>MaxLineLength:HomeConnectionTest.kt$HomeConnectionTest$HomeConnectionUi.of(ChatsHomeExtraState(opening = ChatsOpeningUi(ChatsOpeningPhase.Failed, "Laptop")))?.state</ID>
+    <ID>MaxLineLength:HomeConnectionTest.kt$HomeConnectionTest$HomeConnectionUi.of(ChatsHomeExtraState(sources = persistentListOf(source("Office PC", main = true, unreachable = true))))?.state</ID>
+    <ID>MaxLineLength:HomeConnectionTest.kt$HomeConnectionTest$HomeConnectionUi.of(ChatsHomeExtraState(sources = sources, opening = ChatsOpeningUi(ChatsOpeningPhase.Connecting, "Laptop")))</ID>
+    <ID>MaxLineLength:InboxScreenTest.kt$InboxScreenTest$@Test</ID>
+    <ID>MaxLineLength:InboxScreenTest.kt$InboxScreenTest$ChatsInboxScreen(ChatsUi(inbox = persistentListOf(first, second), answering = persistentSetOf("ask2")), actions)</ID>
+    <ID>MaxLineLength:InboxScreenTest.kt$InboxScreenTest$KitInboxRequestRow</ID>
+    <ID>MaxLineLength:InboxScreenTest.kt$InboxScreenTest$val</ID>
+    <ID>MaxLineLength:InboxScreenTest.kt$InboxScreenTest$val second = first.copy(key = "two", ref = ConversationRef(P1, SessionId("two")), title = RowTitle.Text("API"), permission = FeedPermission("ask2", "npm test"))</ID>
+    <ID>MaxLineLength:LooksCapture.kt$Looks$/** Capture-only: writes PNGs of a screen in light and dark at 412 x 915 dp, density 2.625 (1081 x 2402 px). No comparison. */</ID>
+    <ID>MaxLineLength:LooksCapture.kt$Looks$appearance = KitAppearance(mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light, motion = MotionLevel.Off)</ID>
+    <ID>MaxLineLength:LooksCapture.kt$Looks$fun</ID>
+    <ID>MaxLineLength:LooksCaptureTest.kt$LooksCaptureTest$item("b", "/work/web", now - 25 * min, "Add dark mode to settings", ChatStatus.NeedsYou).copy(permission = FeedPermission("r1", "npm test -- settings"))</ID>
+    <ID>MaxLineLength:LooksCaptureTest.kt$LooksCaptureTest$val ui = ChatsState.build(ChatFeedSnapshot(items.toImmutableList()), ReturnBrief.None, ChatsFilters(), now - 6 * hour, true, now)</ID>
+    <ID>MaxLineLength:ModelChoicesTest.kt$ModelChoicesTest$val models = listOf(NewConversationModel(ModelRef("private-provider-id", "default"), "Default alias"), NewConversationModel(real, "Sonnet"))</ID>
+    <ID>MaxLineLength:NewConversationAddAgentTest.kt$NewConversationAddAgentTest$fun</ID>
+    <ID>MaxLineLength:NewConversationScreen.kt$KitAction(stringResource(Res.string.p12NewOpenCreated), actions::openCreatedConversation)</ID>
+    <ID>MaxLineLength:NewConversationScreen.kt$io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderNameProblem.InvalidCharacters -&gt; characters</ID>
+    <ID>MaxLineLength:NewConversationScreen.kt$val discard = KitAction(stringResource(Res.string.nativePendingDiscard), actions::discardUnconfirmed)</ID>
+    <ID>MaxLineLength:PermissionListCardTest.kt$PermissionListCardTest$@Test</ID>
+    <ID>MaxLineLength:PermissionListCardTest.kt$PermissionListCardTest$KitPermissionCard</ID>
+    <ID>MaxLineLength:PermissionListCardTest.kt$PermissionListCardTest${ calls++ }</ID>
+    <ID>MaxLineLength:ProjectSheetTest.kt$ProjectSheetTest$@Test</ID>
+    <ID>MaxLineLength:ProjectSheetTest.kt$ProjectSheetTest$KitRow("Open a project…", titleAccent = true, selected = true, trailing = KitRowTrailing.Check, onClick = {})</ID>
+    <ID>MaxLineLength:SessionTitlesTest.kt$SessionTitlesTest$private val leaked = "I'll run the startup sequence to check for existing work and prime the merge queue.&lt;tool_call&gt;&lt;fu…"</ID>
+    <ID>MaxLineLength:StartBoxTest.kt$StartBoxTest$setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en") { KitStartBox(field, "What would you like to build?", minLines = 4) } }</ID>
+    <ID>ReturnCount:AllConversationsRules.kt$AllConversationsRules$public fun find(model: AllModel, key: String): Pair&lt;ProfileId, Session&gt;?</ID>
+    <ID>ReturnCount:AllConversationsRules.kt$TeamFolders$public fun isTeamFolder(directory: String?): Boolean</ID>
+    <ID>ReturnCount:ChatsAllViewModel.kt$ChatsAllViewModel$override fun confirmContinueHere()</ID>
+    <ID>ReturnCount:ChatsAllViewModel.kt$ChatsAllViewModel$override fun finishRename(title: String?)</ID>
+    <ID>ReturnCount:ChatsUi.kt$HomeConnectionUi.Companion$public fun of(extra: ChatsHomeExtraState): HomeConnectionUi?</ID>
+    <ID>ReturnCount:ChatsViewModel.kt$ChatsViewModel$override fun answerPermission(row: ConversationRowUi, allow: Boolean)</ID>
+    <ID>ReturnCount:ChatsViewModel.kt$ChatsViewModel$override fun finishRename(title: String?)</ID>
+    <ID>ReturnCount:NewConversation.kt$NewConversationViewModel$override fun createProject(name: String?)</ID>
+    <ID>ReturnCount:NewConversation.kt$NewConversationViewModel$override fun import(conversation: ImportableConversation)</ID>
+    <ID>ReturnCount:NewConversation.kt$NewConversationViewModel$override fun repair()</ID>
+    <ID>ReturnCount:NewConversation.kt$NewConversationViewModel$override fun start()</ID>
+    <ID>ReturnCount:NewConversationScreen.kt$@Composable internal fun ClaudeImportBody(state: NewConversationUi, actions: NewConversationActions)</ID>
+    <ID>ReturnCount:SessionTitles.kt$SessionTitles$public fun present(raw: String?): RowTitle</ID>
+    <ID>TooManyFunctions:AllConversationsUi.kt$ChatsAllActions</ID>
+    <ID>TooManyFunctions:ChatsAllViewModel.kt$ChatsAllViewModel : ViewModelChatsAllActionsChatsPinActions</ID>
+    <ID>TooManyFunctions:ChatsUi.kt$ChatsActions</ID>
+    <ID>TooManyFunctions:ChatsViewModel.kt$ChatsViewModel : ViewModelChatsActions</ID>
+    <ID>TooManyFunctions:NewConversation.kt$NewConversationActions</ID>
+    <ID>TooManyFunctions:NewConversation.kt$NewConversationHost</ID>
+    <ID>TooManyFunctions:NewConversation.kt$NewConversationViewModel : ViewModelNewConversationActions</ID>
+    <ID>TooManyFunctions:NewConversationScreen.kt$io.github.eslamasabry.oc.feature.chats.ui.NewConversationScreen.kt</ID>
+    <ID>UnusedPrivateMember:ChatsScreen.kt$@Composable private fun SearchField(actions: ChatsActions)</ID>
+    <ID>WildcardImport:AllConversationsScreenTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:AllConversationsScreenTest.kt$import io.github.eslamasabry.oc.feature.chats.presentation.*</ID>
+    <ID>WildcardImport:AttentionScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:BriefPlacementTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:BriefPlacementTest.kt$import io.github.eslamasabry.oc.core.common.ids.*</ID>
+    <ID>WildcardImport:BriefPlacementTest.kt$import io.github.eslamasabry.oc.feature.chats.presentation.*</ID>
+    <ID>WildcardImport:ChatsAllScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:ChatsGateTest.kt$import io.github.eslamasabry.oc.core.common.ids.*</ID>
+    <ID>WildcardImport:ChatsGateTest.kt$import io.github.eslamasabry.oc.feature.chats.presentation.*</ID>
+    <ID>WildcardImport:ChatsHomeSheets.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:ChatsHomeSheets.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:ChatsInboxScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:ChatsInboxScreen.kt$import io.github.eslamasabry.oc.feature.chats.presentation.*</ID>
+    <ID>WildcardImport:ChatsInboxScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:ChatsInboxScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:ClaudeImportScreenTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:ClaudeImportScreenTest.kt$import io.github.eslamasabry.oc.feature.chats.presentation.*</ID>
+    <ID>WildcardImport:FeedPartsTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:FeedPartsTest.kt$import io.github.eslamasabry.oc.ui.kit.row.*</ID>
+    <ID>WildcardImport:InboxScreenTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:InboxScreenTest.kt$import io.github.eslamasabry.oc.feature.chats.presentation.*</ID>
+    <ID>WildcardImport:ModelChoicesTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:MonitorInboxEntries.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:MonitorInboxEntries.kt$import io.github.eslamasabry.oc.ui.routes.*</ID>
+    <ID>WildcardImport:MonitorInboxModels.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:MonitorInboxModels.kt$import io.github.eslamasabry.oc.ui.routes.*</ID>
+    <ID>WildcardImport:MonitorInboxModels.kt$import kotlinx.coroutines.flow.*</ID>
+    <ID>WildcardImport:MonitorInboxScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:MonitorInboxScreen.kt$import io.github.eslamasabry.oc.ui.kit.modal.*</ID>
+    <ID>WildcardImport:MonitorInboxScreen.kt$import io.github.eslamasabry.oc.ui.kit.row.*</ID>
+    <ID>WildcardImport:MonitorInboxScreen.kt$import io.github.eslamasabry.oc.ui.kit.state.*</ID>
+    <ID>WildcardImport:MonitorInboxScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:NewConversationAddAgentTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:NewConversationAddAgentTest.kt$import io.github.eslamasabry.oc.feature.chats.presentation.*</ID>
+    <ID>WildcardImport:NewConversationProjectTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:NewConversationProjectTest.kt$import io.github.eslamasabry.oc.feature.chats.presentation.*</ID>
+    <ID>WildcardImport:NewConversationScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:PermissionListCardTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:ProjectSheetTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:SourceSwitchTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:StartBoxTest.kt$import androidx.compose.ui.test.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

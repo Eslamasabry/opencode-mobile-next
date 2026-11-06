@@ -1,0 +1,206 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:ContextUsageMemory.kt$ContextUsageMemory$id.isNotEmpty() &amp;&amp; fraction != null &amp;&amp; fraction.isFinite() &amp;&amp; fraction in 0.0..1.0</ID>
+    <ID>ComplexCondition:ConversationNudges.kt$ConversationNudgeWatcher$usage != null &amp;&amp; usage &gt;= CONTEXT_THRESHOLD &amp;&amp; next.compactAvailable &amp;&amp; !next.busy</ID>
+    <ID>ComplexCondition:MobileDownloadConsent.kt$MobileDownloadConsentStore$bytes == null || bytes &lt; 0 || size.kind == DownloadSizeKind.Unknown || size.kind == DownloadSizeKind.Estimate || (size.kind == DownloadSizeKind.LowerBound &amp;&amp; bytes &lt;= THRESHOLD_BYTES)</ID>
+    <ID>ComplexCondition:ReadStateConsent.kt$ReadStateConsentStore$id.isEmpty() || id in s.closed || id in s.private || id in s.blocked || (s.pending[id] ?: 0) &gt; 0</ID>
+    <ID>CyclomaticComplexMethod:ConversationNudges.kt$ConversationNudgeWatcher$public fun observe(next: ConversationNudgeFacts)</ID>
+    <ID>CyclomaticComplexMethod:LocalSettingsAccess.kt$LocalSettingsAccess$private fun readConnection(id: String, target: SettingsTarget.Connection): EffectiveSetting</ID>
+    <ID>CyclomaticComplexMethod:MobileDownloadConsent.kt$MobileDownloadConsentStore$private suspend fun decide(profileId: ProfileId, size: DownloadSize, probe: NetworkRouteProbe): MobileDownloadDecision</ID>
+    <ID>CyclomaticComplexMethod:Preferences.kt$Preferences.Companion$fun readStored(store: KeyValueStore): DevicePreferences</ID>
+    <ID>CyclomaticComplexMethod:ReadStateConsent.kt$ReadStateConsentStore$public suspend fun setEnabledIfCurrent( profileId: ProfileId, value: Boolean, isCurrent: () -&gt; Boolean, ): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:SettingsScope.kt$public fun Failure.settingsReason(): SettingsFailureReason?</ID>
+    <ID>CyclomaticComplexMethod:TeachingRegistry.kt$TeachingRegistry$public fun problems(): List&lt;String&gt;</ID>
+    <ID>CyclomaticComplexMethod:TipController.kt$TipController$public fun offer( id: TipId, visit: TipVisit? = null, maxCount: Int = DEFAULT_MAX_COUNT, priority: Int = 0, moment: TipMoment = TipMoment(), ): Boolean</ID>
+    <ID>LongMethod:ReadStateConsent.kt$ReadStateConsentStore$public suspend fun setEnabledIfCurrent( profileId: ProfileId, value: Boolean, isCurrent: () -&gt; Boolean, ): Outcome&lt;Unit&gt;</ID>
+    <ID>LoopWithTooManyJumpStatements:Nudges.kt$NudgeRegistry.Companion$for</ID>
+    <ID>LoopWithTooManyJumpStatements:ReadStateConsent.kt$ReadStateConsentStore$for</ID>
+    <ID>MagicNumber:ConsentStore.kt$128</ID>
+    <ID>MagicNumber:ContextUsageMemory.kt$ContextUsageMemory$1_000</ID>
+    <ID>MagicNumber:ConversationNudges.kt$ConversationNudgeWatcher$100.0</ID>
+    <ID>MagicNumber:Nudges.kt$NudgeRegistry$16</ID>
+    <ID>MagicNumber:Nudges.kt$NudgeRegistry.Companion$1_000</ID>
+    <ID>MagicNumber:Nudges.kt$NudgeRegistry.Companion$1_000_000</ID>
+    <ID>MagicNumber:PreferenceTypes.kt$TextSize.Large$1.15</ID>
+    <ID>MagicNumber:PreferenceTypes.kt$TextSize.Small$0.92</ID>
+    <ID>MagicNumber:PreferenceTypes.kt$TextSize.Smallest$0.85</ID>
+    <ID>MagicNumber:ShowMeTargets.kt$ShowMeTargets$30_000</ID>
+    <ID>MagicNumber:TeachingRegistry.kt$TeachingRegistry$4</ID>
+    <ID>MagicNumber:TipController.kt$TipController.Companion$1_000</ID>
+    <ID>MagicNumber:TipController.kt$TipController.Companion$1_000_000</ID>
+    <ID>MatchingDeclarationName:SessionPins.kt$SessionPinStore</ID>
+    <ID>MaxLineLength:ChatAgentChoices.kt$ChatAgentChoices$public suspend</ID>
+    <ID>MaxLineLength:ConsentTestSupport.kt$TestKv$internal</ID>
+    <ID>MaxLineLength:ConsentTestSupport.kt$TestKv$override suspend</ID>
+    <ID>MaxLineLength:ConversationNudges.kt$ConversationNudgeWatcher$registry.offer(NudgeId.Compact, conversation, detail = (usage * 100).coerceIn(0.0, 100.0).roundToInt().toString())</ID>
+    <ID>MaxLineLength:DefaultNotices.kt$DefaultNotices$public suspend</ID>
+    <ID>MaxLineLength:DefaultNotices.kt$DefaultNotices.Companion$KeyShape(NOTICES_PREFIX, KeyScope.Profile, PrefType.StrList, ":engine:settings", "default notices already said")</ID>
+    <ID>MaxLineLength:DefaultNotices.kt$DefaultNotices.Companion$val rows = store.string(DefaultProfileScope.PROFILES_KEY)?.let(DartJson::decodeOrNull) as? List&lt;*&gt; ?: return emptySet()</ID>
+    <ID>MaxLineLength:DefaultNoticesTest.kt$DefaultNoticesTest$assertEquals(RefusalReason.ProfileClosing, assertIs&lt;Failure.Refused&gt;(notices.takeAnnouncement(a, DefaultKind.Delivery, delivery).refusal()).reason)</ID>
+    <ID>MaxLineLength:DefaultNoticesTest.kt$DefaultNoticesTest$assertEquals(RefusalReason.ProfileDeleted, assertIs&lt;Failure.Refused&gt;(notices.rememberProject(missing, "project").refusal()).reason)</ID>
+    <ID>MaxLineLength:DefaultNoticesTest.kt$DefaultNoticesTest$assertFalse(secret in store.get(key).let { (it as? io.github.eslamasabry.oc.core.data.kv.PrefValue.Str)?.value.orEmpty() })</ID>
+    <ID>MaxLineLength:DefaultNoticesTest.kt$DefaultNoticesTest$assertFalse(store.get(key).let { (it as? io.github.eslamasabry.oc.core.data.kv.PrefValue.StrList)?.value.orEmpty().any { v -&gt; secret in v } })</ID>
+    <ID>MaxLineLength:DefaultNoticesTest.kt$DefaultNoticesTest$assertIs&lt;Failure.Refused&gt;(notices.takeAnnouncement(missing, DefaultKind.Delivery, InteractionDefaults.delivery()).refusal())</ID>
+    <ID>MaxLineLength:DefaultNoticesTest.kt$DefaultNoticesTest$assertIs&lt;Failure.StorageRefused&gt;(notices.takeAnnouncement(a, DefaultKind.Delivery, InteractionDefaults.delivery()).refusal())</ID>
+    <ID>MaxLineLength:DefaultNoticesTest.kt$DefaultNoticesTest$assertNull(notices.takeAnnouncement(b, DefaultKind.Delivery, delivery).value(), "the other server keeps its own")</ID>
+    <ID>MaxLineLength:DefaultNoticesTest.kt$DefaultNoticesTest$fun</ID>
+    <ID>MaxLineLength:DefaultNoticesTest.kt$DefaultNoticesTest$private fun automaticModel(name: String)</ID>
+    <ID>MaxLineLength:DefaultNoticesTest.kt$DefaultNoticesTest$val first = async { notices.takeAnnouncement(a, DefaultKind.Project, InteractionDefaults.picker(listOf("p"), { it })) }</ID>
+    <ID>MaxLineLength:DefaultNoticesTest.kt$DefaultNoticesTest$val gated = GatedStore(storeOver(TestDisk(), StandardTestDispatcher(testScheduler)).withProfiles(), inLane = true)</ID>
+    <ID>MaxLineLength:DefaultNoticesTest.kt$DefaultNoticesTest$val restarted = DefaultNotices(storeOver(TestDisk(disk.persisted()), StandardTestDispatcher(testScheduler)), DefaultWriterLanes())</ID>
+    <ID>MaxLineLength:DefaultNoticesTest.kt$DefaultNoticesTest$val second = async { notices.takeAnnouncement(a, DefaultKind.Project, InteractionDefaults.picker(listOf("p"), { it })) }</ID>
+    <ID>MaxLineLength:DefaultNoticesTest.kt$DefaultNoticesTest$val writing = async { notices.takeAnnouncement(a, DefaultKind.Project, InteractionDefaults.picker(listOf("project"), { it })) }</ID>
+    <ID>MaxLineLength:DisplayPreferenceRollbackTest.kt$DisplayPreferenceRollbackTest$for</ID>
+    <ID>MaxLineLength:DisplayPreferenceRollbackTest.kt$DisplayPreferenceRollbackTest$fun</ID>
+    <ID>MaxLineLength:DisplayPreferenceRollbackTest.kt$DisplayPreferenceRollbackTest$val restarted = Preferences(storeOver(TestDisk(disk.persisted()), StandardTestDispatcher(testScheduler)), WriterLane("app"), backgroundScope)</ID>
+    <ID>MaxLineLength:InFlowConsentStoreTest.kt$InFlowConsentStoreTest$assertEquals(InFlowConsentExplanation.BatteryMayStopServer, restored.row(phone, InFlowConsentKind.BatteryExemption).explanation)</ID>
+    <ID>MaxLineLength:InFlowConsentStoreTest.kt$InFlowConsentStoreTest$assertEquals(InFlowConsentExplanation.MakerMayPreventRestart, restored.row(phone, InFlowConsentKind.MakerAutoStart).explanation)</ID>
+    <ID>MaxLineLength:InFlowConsentStoreTest.kt$InFlowConsentStoreTest$assertEquals(InFlowConsentExplanation.NeedsYouAlertsOff, consent.row(phone, InFlowConsentKind.NeedsYouNotifications).explanation)</ID>
+    <ID>MaxLineLength:InFlowConsentStoreTest.kt$InFlowConsentStoreTest$assertEquals(InFlowConsentExplanation.Unfinished, consent.row(phone, InFlowConsentKind.NeedsYouNotifications).explanation)</ID>
+    <ID>MaxLineLength:InFlowConsentStoreTest.kt$InFlowConsentStoreTest$assertEquals(emptyList&lt;InFlowConsentKind&gt;(), restored.phoneServerFirstStart(other, batteryAlreadyExempt = false, makerHasAutoStartStep = true).kinds())</ID>
+    <ID>MaxLineLength:InFlowConsentStoreTest.kt$InFlowConsentStoreTest$assertEquals(emptyList&lt;InFlowConsentKind&gt;(), restored.phoneServerFirstStart(other, batteryAlreadyExempt = true, makerHasAutoStartStep = false).kinds())</ID>
+    <ID>MaxLineLength:InFlowConsentStoreTest.kt$InFlowConsentStoreTest$assertIs&lt;Outcome.Ok&lt;Unit&gt;&gt;(consent.changeFromSettings(phone, InFlowConsentKind.NeedsYouNotifications, allow = true))</ID>
+    <ID>MaxLineLength:InFlowConsentStoreTest.kt$InFlowConsentStoreTest$fun</ID>
+    <ID>MaxLineLength:InFlowConsentStoreTest.kt$InFlowConsentStoreTest$val badChoice = store(kv(mapOf("oc.inFlowConsent.phone" to """{"version":1,"firstStart":true,"choices":{"needsYouNotifications":"maybe"}}""")))</ID>
+    <ID>MaxLineLength:InFlowConsentStoreTest.kt$InFlowConsentStoreTest$val first = async { consent.phoneServerFirstStart(phone, batteryAlreadyExempt = false, makerHasAutoStartStep = true) }</ID>
+    <ID>MaxLineLength:InFlowConsentStoreTest.kt$InFlowConsentStoreTest$val second = async { consent.phoneServerFirstStart(phone, batteryAlreadyExempt = false, makerHasAutoStartStep = true) }</ID>
+    <ID>MaxLineLength:InteractionDefaults.kt$DeliveryChoice$/** How a prompt reaches a running turn (same names as `:core:model` `PromptDelivery`; settings may not depend on it). */</ID>
+    <ID>MaxLineLength:InteractionDefaults.kt$InteractionDefaults$DefaultChoice(value, value?.let(label).orEmpty(), if (value == null) DefaultReason.Unresolved else reason, count)</ID>
+    <ID>MaxLineLength:InteractionDefaults.kt$InteractionDefaults$explicitChoice != null &amp;&amp; explicitChoice in options -&gt; choice(explicitChoice, label, DefaultReason.ExplicitChoice, options.size)</ID>
+    <ID>MaxLineLength:InteractionDefaults.kt$InteractionDefaults$public</ID>
+    <ID>MaxLineLength:InteractionDefaults.kt$InteractionDefaults$return DefaultChoice(selected?.let { DefaultProject(it.name, it) }, selected?.name.orEmpty(), reason, projects.size)</ID>
+    <ID>MaxLineLength:InteractionDefaults.kt$InteractionDefaults$return choice(if (totalMemoryMb == null) options.first() else options.last(), VoicePackOption::label, DefaultReason.DeviceMemory, options.size)</ID>
+    <ID>MaxLineLength:InteractionDefaultsTest.kt$InteractionDefaultsTest$InteractionDefaults.model(models, signedIn, serverProviderId = "provider", serverModelId = "b", explicitChoice = explicit)</ID>
+    <ID>MaxLineLength:InteractionDefaultsTest.kt$InteractionDefaultsTest$assertEquals(branch, InteractionDefaults.review(mapOf(working to 1, branch to 0), explicitChoice = branch).value)</ID>
+    <ID>MaxLineLength:InteractionDefaultsTest.kt$InteractionDefaultsTest$val packs = listOf(VoicePackOption("base", "Balanced", 1536), VoicePackOption("small", "Best", 3400), VoicePackOption("tiny", "Fast", 1024))</ID>
+    <ID>MaxLineLength:InteractionDefaultsTest.kt$InteractionDefaultsTest$val voices = listOf(VoiceOption("en", "English", "en-US"), VoiceOption("ar-eg", "Arabic Egypt", "ar-EG"), VoiceOption("ar-ae", "Arabic UAE", "ar-AE"))</ID>
+    <ID>MaxLineLength:LocalSettingsAccess.kt$LocalSettingsAccess$if</ID>
+    <ID>MaxLineLength:LocalSettingsAccess.kt$LocalSettingsAccess$if (value.state != SettingValueState.Known || !value.writable) value.reason ?: SettingsFailureReason.Unsupported else null</ID>
+    <ID>MaxLineLength:LocalSettingsAccess.kt$LocalSettingsAccess$text != null -&gt; LocaleChoice.entries.firstOrNull { it.code != null &amp;&amp; it.code == text }?.let(PreferenceChange::Locale)</ID>
+    <ID>MaxLineLength:LocalSettingsAccess.kt$LocalSettingsAccess$val signals = combine(preferences.revision, owners.revision, consent.epoch, selectionRevision, closed) { _, _, _, _, isClosed -&gt; isClosed }</ID>
+    <ID>MaxLineLength:LocalSettingsAccess.kt$LocalSettingsAccess.Companion$return SettingValue.Record(persistentMapOf("providerId" to SettingValue.Text(parts[0]), "modelId" to SettingValue.Text(parts[1])))</ID>
+    <ID>MaxLineLength:MobileDownloadConsent.kt$MobileDownloadConsentStore$// Drain: every command admitted before the close finishes (a pending probe returns Closed); a transfer is not waited for.</ID>
+    <ID>MaxLineLength:MobileDownloadConsent.kt$MobileDownloadConsentStore$ConsentChoice.Accepted -&gt; MobileDownloadDecision(MobileDownloadDecisionKind.Allowed, MobileDownloadReason.Accepted)</ID>
+    <ID>MaxLineLength:MobileDownloadConsent.kt$MobileDownloadConsentStore$ConsentChoice.Denied -&gt; MobileDownloadDecision(MobileDownloadDecisionKind.Blocked, MobileDownloadReason.Declined)</ID>
+    <ID>MaxLineLength:MobileDownloadConsent.kt$MobileDownloadConsentStore$ConsentChoice.Offered -&gt; MobileDownloadDecision(MobileDownloadDecisionKind.Blocked, MobileDownloadReason.Unfinished)</ID>
+    <ID>MaxLineLength:MobileDownloadConsent.kt$MobileDownloadConsentStore$if</ID>
+    <ID>MaxLineLength:MobileDownloadConsent.kt$MobileDownloadConsentStore$if (!isClosed(profileId)) update(entries) { it.putting(profileId.raw, Entry(it[profileId.raw]?.choice ?: ConsentChoice.Unseen, false)) }</ID>
+    <ID>MaxLineLength:MobileDownloadConsent.kt$MobileDownloadConsentStore$if (current[profileId.raw]?.generation == generation) current + (profileId.raw to Request(generation, !allow)) else current</ID>
+    <ID>MaxLineLength:MobileDownloadConsent.kt$MobileDownloadConsentStore$if (entry.choice != ConsentChoice.Offered) return@withLock Outcome.Failed(Failure.Refused(RefusalReason.AlreadyAnswered))</ID>
+    <ID>MaxLineLength:MobileDownloadConsent.kt$MobileDownloadConsentStore$is Outcome.Ok -&gt; if (!isClosed(profileId)) update(entries) { it.putting(profileId.raw, Entry(choice, writable = true)) }</ID>
+    <ID>MaxLineLength:MobileDownloadConsent.kt$MobileDownloadConsentStore$private fun unavailable(reason: MobileDownloadReason)</ID>
+    <ID>MaxLineLength:MobileDownloadConsent.kt$MobileDownloadConsentStore$private suspend</ID>
+    <ID>MaxLineLength:MobileDownloadConsent.kt$MobileDownloadConsentStore$public</ID>
+    <ID>MaxLineLength:MobileDownloadConsent.kt$MobileDownloadConsentStore$public suspend</ID>
+    <ID>MaxLineLength:MobileDownloadConsent.kt$MobileDownloadConsentStore$update(entries) { if (it.containsKey(profileId.raw) || isClosed(profileId)) it else it.putting(profileId.raw, Entry(choice, true)) }</ID>
+    <ID>MaxLineLength:MobileDownloadConsent.kt$MobileDownloadConsentStore$val written = store.commit(lanes.forProfile(profileId)) { putString(ConsentKeys.mobileDownload(profileId), encoded) }</ID>
+    <ID>MaxLineLength:MobileDownloadConsentStoreTest.kt$MobileDownloadConsentStoreTest$assertEquals(Failure.Refused(RefusalReason.ProfileClosing), (gate.changeFromSettings(phone, allow = true) as Outcome.Failed).failure)</ID>
+    <ID>MaxLineLength:MobileDownloadConsentStoreTest.kt$MobileDownloadConsentStoreTest$assertEquals(MobileDownloadDecisionKind.NeedsConsent, gate.request(phone, DownloadSize.lowerBound(50_000_001), probe(mobile)).kind)</ID>
+    <ID>MaxLineLength:MobileDownloadConsentStoreTest.kt$MobileDownloadConsentStoreTest$for</ID>
+    <ID>MaxLineLength:MobileDownloadConsentStoreTest.kt$MobileDownloadConsentStoreTest$fun</ID>
+    <ID>MaxLineLength:MobileDownloadConsentStoreTest.kt$MobileDownloadConsentStoreTest$gate.run&lt;Unit&gt;(phone, large, { entered.complete(Unit); route.await().ok() }) { fail("closed while awaiting the probe") }</ID>
+    <ID>MaxLineLength:MobileDownloadConsentStoreTest.kt$MobileDownloadConsentStoreTest$val pending = async { consent.request(id, DownloadSize.exact(60_000_000)) { entered.complete(Unit); route.await().ok() } }</ID>
+    <ID>MaxLineLength:NudgeRegistryTest.kt$NudgeRegistryTest$ConversationNudgeFacts(busy = false, hasAssistantReply = true, contextUsage = 0.9, compactAvailable = true, suppressed = true)</ID>
+    <ID>MaxLineLength:NudgeRegistryTest.kt$NudgeRegistryTest$ConversationNudgeFacts(busy = false, hasAssistantReply = true, contextUsage = usage, compactAvailable = available)</ID>
+    <ID>MaxLineLength:NudgeRegistryTest.kt$NudgeRegistryTest$TestKv((if (firstReplySeen) mapOf("oc.nudges.firstReplySeen" to true) else emptyMap()) + stored, UnconfinedTestDispatcher(testScheduler))</ID>
+    <ID>MaxLineLength:NudgeRegistryTest.kt$NudgeRegistryTest$assertEquals("""{"review-changes":{"shownAt":"2026-09-19T10:00:00.000Z","dismissed":true}}""", kv.string("oc.nudges.shown"))</ID>
+    <ID>MaxLineLength:NudgeRegistryTest.kt$NudgeRegistryTest$val changed = ConversationNudgeFacts(busy = false, hasAssistantReply = true, runChangedFiles = true, reviewAvailable = true)</ID>
+    <ID>MaxLineLength:NudgeRegistryTest.kt$NudgeRegistryTest$val waiting = ConversationNudgeFacts(busy = true, hasAssistantReply = true, finishedRunNotificationsReady = true)</ID>
+    <ID>MaxLineLength:NudgeRegistryTest.kt$NudgeRegistryTest$watcher.observe(ConversationNudgeFacts(busy = false, hasAssistantReply = true, contextUsage = 0.9, compactAvailable = true))</ID>
+    <ID>MaxLineLength:NudgeRegistryTest.kt$NudgeRegistryTest$watcher.observe(ConversationNudgeFacts(busy = false, hasAssistantReply = true, runChangedFiles = true, reviewAvailable = true))</ID>
+    <ID>MaxLineLength:NudgeRegistryTest.kt$NudgeRegistryTest$watcher.observe(ConversationNudgeFacts(busy = true, hasAssistantReply = true, finishedRunNotificationsReady = true))</ID>
+    <ID>MaxLineLength:NudgeRegistryTest.kt$NudgeRegistryTest$watcher.observe(ConversationNudgeFacts(busy = true, hasAssistantReply = true, pendingPermissions = persistentMapOf(id to "edit")))</ID>
+    <ID>MaxLineLength:Nudges.kt$NudgeRegistry$if (permissionRequests.compareAndSet(all, all.putting(conversation, byKind.putting(kind, ids)))) return ids.size</ID>
+    <ID>MaxLineLength:Nudges.kt$NudgeRegistry$if (seen.size &gt;= 2 || digest in seen) Outcome.Ok(Unit) else store.commit(lanes.app) { putStringList(PROJECTS_KEY, seen + digest) }</ID>
+    <ID>MaxLineLength:Nudges.kt$NudgeRegistry$private</ID>
+    <ID>MaxLineLength:Nudges.kt$NudgeRegistry$private inline</ID>
+    <ID>MaxLineLength:Nudges.kt$NudgeRegistry.Companion$"shownAt" to DartJson.iso8601Utc(r.shownAt.epochSeconds * 1_000_000 + r.shownAt.nanosecondsOfSecond / 1_000)</ID>
+    <ID>MaxLineLength:Preferences.kt$Preferences$*</ID>
+    <ID>MaxLineLength:Preferences.kt$Preferences$if (before.liveHeldByStyle != value.liveHeldByStyle) put(K.LIVE_HELD_BY_STYLE, if (value.liveHeldByStyle) true else null)</ID>
+    <ID>MaxLineLength:Preferences.kt$Preferences$public suspend</ID>
+    <ID>MaxLineLength:Preferences.kt$Preferences.Companion$locale = LocaleChoice.entries.firstOrNull { it.code != null &amp;&amp; it.code == language } ?: LocaleChoice.System</ID>
+    <ID>MaxLineLength:PreferencesTest.kt$PreferencesTest$assertEquals("full", (disk.persisted()["flutter.oc.effectsMotion"] as? io.github.eslamasabry.oc.core.data.kv.RawPref.Str)?.value)</ID>
+    <ID>MaxLineLength:PreferencesTest.kt$PreferencesTest$assertEquals(SurfaceStyle.Solid, value.effects.surfaceStyle, "the retired Crystal style reads as Solid (Glass is a school again)")</ID>
+    <ID>MaxLineLength:PreferencesTest.kt$PreferencesTest$fun</ID>
+    <ID>MaxLineLength:PreferencesTest.kt$PreferencesTest$val paper = Effects.Defaults.copy(surfaceStyle = SurfaceStyle.Paper, liveBackground = false, liveHeldByStyle = true)</ID>
+    <ID>MaxLineLength:PrefsTestSupport.kt$GatedStore$internal</ID>
+    <ID>MaxLineLength:PrefsTestSupport.kt$TestDisk$if (refused != null &amp;&amp; changes.any { (k, v) -&gt; refused(k.removePrefix(FlutterPrefsCodec.KEY_PREFIX), v) }) return false</ID>
+    <ID>MaxLineLength:ReadStateConsentPortAdapter.kt$ReadStateConsentPortAdapter$override suspend</ID>
+    <ID>MaxLineLength:ReadStateConsentStoreTest.kt$ReadStateConsentStoreTest$assertEquals(Failure.Refused(RefusalReason.StaleScope), port.setEnabledIfCurrent(laptop, true) { true }.failure())</ID>
+    <ID>MaxLineLength:ReadStateConsentStoreTest.kt$ReadStateConsentStoreTest$backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { consent.observe(laptop, sharing).toList(observed) }</ID>
+    <ID>MaxLineLength:ReadStateConsentStoreTest.kt$ReadStateConsentStoreTest$key == "oc.readStateConsentMigration.v1" &amp;&amp; (value as? RawPref.Str)?.value?.contains("\"complete\":true") == true</ID>
+    <ID>MaxLineLength:ReadStateConsentStoreTest.kt$ReadStateConsentStoreTest$private</ID>
+    <ID>MaxLineLength:ReadStateConsentStoreTest.kt$ReadStateConsentStoreTest$private fun TestScope.kv(initial: Map&lt;String, Any&gt; = emptyMap())</ID>
+    <ID>MaxLineLength:ReaderPreferencesTest.kt$ReaderPreferencesTest$DefaultProfileScope(kv, NoSecrets, WriterLane("sweep")).apply { ReaderPreferencesStore.register(this) }.sweep(a)</ID>
+    <ID>MaxLineLength:ReaderPreferencesTest.kt$ReaderPreferencesTest$val store = ReaderPreferencesStore(storeOver(disk, StandardTestDispatcher(testScheduler)), DefaultWriterLanes(), a)</ID>
+    <ID>MaxLineLength:ScopeTestSupport.kt$FakeReadStateConsent$override suspend</ID>
+    <ID>MaxLineLength:ScopeTestSupport.kt$ScopeFixture$internal</ID>
+    <ID>MaxLineLength:SessionAgentSettingTest.kt$SessionAgentSettingTest$assertTrue("oc.sessionAgents.laptop" in ProfileKeyRule.scopedKeys("laptop", store.keys("oc."), setOf("laptop", "phone")))</ID>
+    <ID>MaxLineLength:SessionAgentSettingTest.kt$SessionAgentSettingTest$fun</ID>
+    <ID>MaxLineLength:SessionAgentSettingTest.kt$SessionAgentSettingTest$val restarted = ChatAgentChoices(storeOver(TestDisk(disk.persisted()), StandardTestDispatcher(testScheduler)), DefaultWriterLanes())</ID>
+    <ID>MaxLineLength:SessionPins.kt$SessionPinStore.Companion$if (previous != null &amp;&amp; previous.directory == directory &amp;&amp; previous.workspace == workspace) return previous.encoded</ID>
+    <ID>MaxLineLength:SessionPins.kt$SessionPinStore.Companion$key</ID>
+    <ID>MaxLineLength:SessionPins.kt$SessionPinStore.Companion$public</ID>
+    <ID>MaxLineLength:SessionPinsTest.kt$SessionPinsTest$assertEquals(listOf(directory?.let(::JsonPrimitive) ?: JsonNull, workspace?.let(::JsonPrimitive) ?: JsonNull), decoded.toList())</ID>
+    <ID>MaxLineLength:SessionPinsTest.kt$SessionPinsTest$val pairs = listOf(null to null, "" to null, null to "", "/project" to "workspace", "/project/quoted\"" to "workspace\\nested", "/other" to "workspace")</ID>
+    <ID>MaxLineLength:SettingsAccessTest.kt$SettingsAccessTest$assertEquals(SettingValue.Record(persistentMapOf("providerId" to text("provider"), "modelId" to text("model"))), model.value)</ID>
+    <ID>MaxLineLength:SettingsAccessTest.kt$SettingsAccessTest$assertEquals(setOf("motion", "activityGlow", "glowStyle", "glowColours", "glowSpeed"), assertIs&lt;SettingValue.Record&gt;(saved.value).fields.keys)</ID>
+    <ID>MaxLineLength:SettingsAccessTest.kt$SettingsAccessTest$f.store.seed("oc.model.phone" to "provider|model", "oc.model.laptop" to "malformed", "oc.agent.phone" to "build")</ID>
+    <ID>MaxLineLength:SettingsAccessTest.kt$SettingsAccessTest$fun</ID>
+    <ID>MaxLineLength:SettingsAccessTest.kt$SettingsAccessTest$val pending = async { gated.commit(WriterLane("profile:phone")) { putString("oc.model.phone", "provider|new") } }</ID>
+    <ID>MaxLineLength:SettingsEditTokenTest.kt$SettingsEditTokenTest$assertReason(SettingsFailureReason.InvalidValue, access.write(edit, SettingValue.Record(persistentMapOf("motion" to text("off")))))</ID>
+    <ID>MaxLineLength:SettingsEditTokenTest.kt$SettingsEditTokenTest$for (reason in SettingsFailureReason.entries) assertEquals(reason, reason.asFailure().settingsReason(), reason.name)</ID>
+    <ID>MaxLineLength:SettingsPorts.kt$ReadStateConsentPort$public suspend fun setEnabledIfCurrent(profileId: ProfileId, value: Boolean, isCurrent: () -&gt; Boolean): Outcome&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:SettingsScope.kt$RefusalReason.StaleScope, RefusalReason.ProfileClosing, RefusalReason.ProfileDeleted -&gt; SettingsFailureReason.StaleTarget</ID>
+    <ID>MaxLineLength:SettingsScopeCatalogTest.kt$SettingsScopeCatalogTest$assertReason(SettingsFailureReason.Unsupported, access.beginEdit("shareReadState", SettingsTarget.Chat(PHONE, "chat")))</ID>
+    <ID>MaxLineLength:SettingsScopeCatalogTest.kt$SettingsScopeCatalogTest$for (id in listOf("tab-chats", "project-terminal", "library-import-session")) assertNull(SettingsScopeCatalog.forRow(id))</ID>
+    <ID>MaxLineLength:TeachingRegistry.kt$TeachingRegistry.Companion$"a connected terminal grid is visible, with no question open; used when Select text is chosen"</ID>
+    <ID>MaxLineLength:TeachingRegistry.kt$TeachingRegistry.Companion$"the live terminal first contains a detected link, while the keyboard is clear; done when a link is opened"</ID>
+    <ID>MaxLineLength:TeachingRegistry.kt$TeachingRegistry.Companion$"the mic was used with a tap and the box is empty again; done once the person holds the mic to talk"</ID>
+    <ID>MaxLineLength:TeachingRegistry.kt$TeachingRegistry.Companion$"the person first starts a voice conversation; a nonblocking three-step explanation beside its controls"</ID>
+    <ID>MaxLineLength:TeachingRegistry.kt$TeachingRegistry.Companion$"words wait in the box and Send offers \"Send later or repeat\"; done once the person opens it"</ID>
+    <ID>MaxLineLength:TeachingRegistry.kt$TeachingRegistry.Companion$trigger = "a conversation has an empty composer and voice is available; used once voice conversation starts"</ID>
+    <ID>MaxLineLength:TeachingRegistry.kt$TeachingRegistry.Companion$trigger = "the first completed reply is visible with no keyboard or question; used when message Details opens"</ID>
+    <ID>MaxLineLength:TipController.kt$TipController$val written = store.commit(lanes.app) { if (records.isEmpty()) remove(STORAGE_KEY) else putString(STORAGE_KEY, encode(records)) }</ID>
+    <ID>MaxLineLength:TipController.kt$TipController.Companion$r.lastShown?.let { put("last", DartJson.iso8601Utc(it.epochSeconds * 1_000_000 + it.nanosecondsOfSecond / 1_000)) }</ID>
+    <ID>MaxLineLength:TipControllerTest.kt$TipControllerTest$for</ID>
+    <ID>MaxLineLength:TipControllerTest.kt$TipControllerTest$private fun TestScope.kv(initial: Map&lt;String, Any&gt; = emptyMap())</ID>
+    <ID>MaxLineLength:TipControllerTest.kt$TipControllerTest$registry.entry(TeachingIds.HoldMic)!!.copy(id = TipId("other"), messageKey = "undeclared", maxCount = 3)</ID>
+    <ID>MaxLineLength:TipControllerTest.kt$TipControllerTest$val flutter = """{"stop-after-step":{"count":2,"last":"2026-10-20T08:15:30.123456Z"},"make-it-yours":{"count":1,"done":true},"x":5}"""</ID>
+    <ID>ReturnCount:ContextUsageMemory.kt$ContextUsageMemory$private fun values(profile: ProfileId): Map&lt;String, Double&gt;</ID>
+    <ID>ReturnCount:ConversationNudges.kt$ConversationNudgeWatcher$public fun observe(next: ConversationNudgeFacts)</ID>
+    <ID>ReturnCount:InFlowConsent.kt$InFlowConsentStore$private fun entry(profileId: ProfileId): Entry?</ID>
+    <ID>ReturnCount:InFlowConsent.kt$InFlowConsentStore$private fun load(profileId: ProfileId): Entry?</ID>
+    <ID>ReturnCount:LocalSettingsAccess.kt$LocalSettingsAccess$override suspend fun beginEdit(id: String, target: SettingsTarget): Outcome&lt;SettingsEditToken&gt;</ID>
+    <ID>ReturnCount:LocalSettingsAccess.kt$LocalSettingsAccess$override suspend fun write(edit: SettingsEditToken, value: SettingValue?): Outcome&lt;EffectiveSetting&gt;</ID>
+    <ID>ReturnCount:LocalSettingsAccess.kt$LocalSettingsAccess$private fun checkEdit(edit: SettingsEditToken): SettingsFailureReason?</ID>
+    <ID>ReturnCount:LocalSettingsAccess.kt$LocalSettingsAccess$private fun confirm(edit: SettingsEditToken, value: SettingValue?): Outcome&lt;EffectiveSetting&gt;</ID>
+    <ID>ReturnCount:LocalSettingsAccess.kt$LocalSettingsAccess$private fun effectsChange(value: SettingValue?): PreferenceChange?</ID>
+    <ID>ReturnCount:LocalSettingsAccess.kt$LocalSettingsAccess$private fun fingerprint(target: SettingsTarget): String?</ID>
+    <ID>ReturnCount:LocalSettingsAccess.kt$LocalSettingsAccess$private fun readConnection(id: String, target: SettingsTarget.Connection): EffectiveSetting</ID>
+    <ID>ReturnCount:LocalSettingsAccess.kt$LocalSettingsAccess$private suspend fun writeConsent(edit: SettingsEditToken, value: SettingValue?): Outcome&lt;EffectiveSetting&gt;</ID>
+    <ID>ReturnCount:LocalSettingsAccess.kt$LocalSettingsAccess.Companion$private fun parseModel(raw: String): SettingValue?</ID>
+    <ID>ReturnCount:MobileDownloadConsent.kt$MobileDownloadConsentStore$private fun entry(profileId: ProfileId): Entry?</ID>
+    <ID>ReturnCount:MobileDownloadConsent.kt$MobileDownloadConsentStore$private fun load(profileId: ProfileId): ConsentChoice?</ID>
+    <ID>ReturnCount:MobileDownloadConsent.kt$MobileDownloadConsentStore$private suspend fun decide(profileId: ProfileId, size: DownloadSize, probe: NetworkRouteProbe): MobileDownloadDecision</ID>
+    <ID>ReturnCount:Nudges.kt$NudgeRegistry$public fun offer(id: NudgeId, place: String, detail: String = ""): Boolean</ID>
+    <ID>ReturnCount:ReadStateConsent.kt$ReadStateConsentStore$private fun parseJournal(raw: PrefValue): Journal?</ID>
+    <ID>ReturnCount:ReadStateConsent.kt$ReadStateConsentStore$private suspend fun migrate(present: Set&lt;String&gt;): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:ReadStateConsent.kt$ReadStateConsentStore$private suspend fun pruneJournal(profileId: ProfileId): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:ReadStateConsent.kt$ReadStateConsentStore$public fun defaultFor(profileId: ProfileId): Boolean</ID>
+    <ID>ReturnCount:ReadStateConsent.kt$ReadStateConsentStore$public fun enabled(profileId: ProfileId): Boolean</ID>
+    <ID>ReturnCount:ReaderPreferences.kt$ReaderPreferencesStore.Companion$public fun read(store: KeyValueStore, id: ProfileId): ReaderPreferences</ID>
+    <ID>ReturnCount:ScopeTestSupport.kt$FakeReadStateConsent$override suspend fun setEnabledIfCurrent(profileId: ProfileId, value: Boolean, isCurrent: () -&gt; Boolean): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:SessionPins.kt$SessionPinStore$private fun load(profile: ProfileId): Map&lt;String, ImmutableSet&lt;String&gt;&gt;</ID>
+    <ID>ReturnCount:TipController.kt$TipController$public fun offer( id: TipId, visit: TipVisit? = null, maxCount: Int = DEFAULT_MAX_COUNT, priority: Int = 0, moment: TipMoment = TipMoment(), ): Boolean</ID>
+    <ID>TooManyFunctions:InFlowConsent.kt$InFlowConsentStore : ConsentStore</ID>
+    <ID>TooManyFunctions:LocalSettingsAccess.kt$LocalSettingsAccess : SettingsAccess</ID>
+    <ID>TooManyFunctions:MobileDownloadConsent.kt$MobileDownloadConsentStore : ConsentStore</ID>
+    <ID>TooManyFunctions:Nudges.kt$NudgeRegistry</ID>
+    <ID>TooManyFunctions:ReadStateConsent.kt$ReadStateConsentStore : ConsentStore</ID>
+    <ID>TooManyFunctions:TipController.kt$TipController</ID>
+    <ID>UseCheckOrError:PrefsTestSupport.kt$TestDisk$throw IllegalStateException("disk full")</ID>
+  </CurrentIssues>
+</SmellBaseline>

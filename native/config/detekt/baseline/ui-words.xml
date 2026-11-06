@@ -1,0 +1,26 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:HandWords.kt$HandWords$public fun runningPhoneName(kind: String): StringResource</ID>
+    <ID>LongParameterList:HandWords.kt$HandWords$(total: String, queued: Int, queueBytes: String, drafts: Int, draftBytes: String, days: Int)</ID>
+    <ID>MagicNumber:build.gradle.kts$100</ID>
+    <ID>MaxLineLength:HandWords.kt$HandWords$/** `activeContextMessageTitle`: {role, select, user|assistant|system|synthetic|skill|shell|compaction|change|other}. A value with no branch reads `other`, as in ICU. */</ID>
+    <ID>MaxLineLength:HandWords.kt$HandWords$/** `runningPhoneAbout`: {kind, select, leftBehind|openCode|claudeCode|agentHelper|aiTeam|terminal|setup|helpers|app|other}. A value with no branch reads `other`, as in ICU. */</ID>
+    <ID>MaxLineLength:HandWords.kt$HandWords$/** `runningPhoneGroup`: {kind, select, leftBehind|openCode|claudeCode|agentHelper|aiTeam|terminal|setup|helpers|app|other}. A value with no branch reads `other`, as in ICU. */</ID>
+    <ID>MaxLineLength:HandWords.kt$HandWords$/** `runningPhoneName`: {kind, select, flutterTest|command|linux|openCode|claudeCode|agentHelper|signIn|team|node|python|git|npm|dart|flutter|gradle|java|search|app|other}. A value with no branch reads `other`, as in ICU. */</ID>
+    <ID>MaxLineLength:HandWords.kt$HandWords$else -&gt; pluralStringResource(Res.plurals.chatAttachmentSheetAttached__sheets, sheets, Numbers.format(sheets))</ID>
+    <ID>MaxLineLength:HandWords.kt$HandWords$public</ID>
+    <ID>MaxLineLength:HandWords.kt$HandWords$public suspend</ID>
+    <ID>MaxLineLength:HandWords.kt$HandWords$return getString(Res.string.e7SettingsStorageSummary, total, queuedText, queueBytes, draftsText, draftBytes, days)</ID>
+    <ID>MaxLineLength:HandWords.kt$HandWords$return stringResource(Res.string.e7SettingsStorageSummary, total, queuedText, queueBytes, draftsText, draftBytes, days)</ID>
+    <ID>MaxLineLength:HandWords.kt$HandWords$val milestonesText = pluralStringResource(Res.plurals.teamProjectBoardSummary__milestones, milestones, Numbers.format(milestones))</ID>
+    <ID>MaxLineLength:HandWords.kt$HandWords$val milestonesText = pluralStringResource(Res.plurals.teamProjectGoalStatusDraft__milestones, milestones, Numbers.format(milestones))</ID>
+    <ID>MaxLineLength:HandWords.kt$HandWords$val milestonesText = pluralStringResource(Res.plurals.teamProjectGoalStatus__milestones, milestones, Numbers.format(milestones))</ID>
+    <ID>MaxLineLength:HandWords.kt$HandWords$val phasesText = pluralStringResource(Res.plurals.teamProjectPlanSummary__phases, phases, Numbers.format(phases))</ID>
+    <ID>MaxLineLength:HandWords.kt$HandWords$val reposText = pluralStringResource(Res.plurals.teamProjectGoalStatusDraft__repos, repos, Numbers.format(repos))</ID>
+    <ID>MaxLineLength:build.gradle.kts$.</ID>
+    <ID>MaxLineLength:build.gradle.kts$writeText("package io.github.eslamasabry.oc.ui.words\n\n/** Share of native message identities with a translation in the shipped catalogue. */\npublic object LanguageCoverage {\n public val percent: Map&lt;String, Int&gt; = mapOf(\n${rows.joinToString(",\n")}\n )\n}\n")</ID>
+    <ID>TooManyFunctions:HandWords.kt$HandWords</ID>
+  </CurrentIssues>
+</SmellBaseline>

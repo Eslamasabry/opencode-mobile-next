@@ -1,0 +1,37 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:FilePreview.kt$FilePreview$(ext in images || data.mime?.startsWith("image/") == true &amp;&amp; data.mime != "image/svg+xml") &amp;&amp; bytes.isNotEmpty() &amp;&amp; line == null</ID>
+    <ID>ComplexCondition:PhoneProjectScan.kt$PhoneProjectScanner$depth &gt; 0 &amp;&amp; (kind != null || (root.childrenAreProjects &amp;&amp; depth == 1))</ID>
+    <ID>ComplexCondition:ShareGuard.kt$ShareGuard$names[i] == ".local" &amp;&amp; i + 2 &lt; names.size &amp;&amp; names[i + 1] == "share" &amp;&amp; names[i + 2] == "opencode"</ID>
+    <ID>ComplexCondition:WifiShare.kt$WifiShareRules$ch in 'A'..'Z' || ch in 'a'..'z' || ch in '0'..'9' || ch in "-._~"</ID>
+    <ID>CyclomaticComplexMethod:FilePreview.kt$FilePreview$public fun body(data: FileData, line: Int? = null): FileBody</ID>
+    <ID>CyclomaticComplexMethod:PhoneProjectScan.kt$PhoneProjectScanner$public suspend fun scan( roots: List&lt;ProjectScanRoot&gt;, timeLimitMs: Long = 10_000, maxVisited: Int = 20_000, maxResults: Int = 200, maxDepth: Int = 5, ): ProjectScanResult</ID>
+    <ID>CyclomaticComplexMethod:ShareGuard.kt$ShareGuard$public fun looksSecret(path: String): Boolean</ID>
+    <ID>LoopWithTooManyJumpStatements:PhoneProjectScan.kt$PhoneProjectScanner$while</ID>
+    <ID>MagicNumber:WifiShare.kt$WifiShare$1_000</ID>
+    <ID>MagicNumber:WifiShare.kt$WifiShareRules$0x20</ID>
+    <ID>MagicNumber:WifiShare.kt$WifiShareRules$0x7E</ID>
+    <ID>MagicNumber:WifiShare.kt$WifiShareRules$0x7F</ID>
+    <ID>MagicNumber:WifiShare.kt$WifiShareRules$0xFF</ID>
+    <ID>MagicNumber:WifiShare.kt$WifiShareRules$10</ID>
+    <ID>MagicNumber:WifiShare.kt$WifiShareRules$16</ID>
+    <ID>MagicNumber:WifiShare.kt$WifiShareRules$168</ID>
+    <ID>MagicNumber:WifiShare.kt$WifiShareRules$172</ID>
+    <ID>MagicNumber:WifiShare.kt$WifiShareRules$192</ID>
+    <ID>MagicNumber:WifiShare.kt$WifiShareRules$255</ID>
+    <ID>MagicNumber:WifiShare.kt$WifiShareRules$3</ID>
+    <ID>MagicNumber:WifiShare.kt$WifiShareRules$31</ID>
+    <ID>MagicNumber:WifiShare.kt$WifiShareRules$4</ID>
+    <ID>MaxLineLength:ShareGuardTest.kt$ShareGuardTest$"home/.config/opencode/opencode.json"</ID>
+    <ID>MaxLineLength:WifiShare.kt$WifiShare$public suspend</ID>
+    <ID>NestedBlockDepth:PhoneProjectScan.kt$PhoneProjectScanner$public suspend fun scan( roots: List&lt;ProjectScanRoot&gt;, timeLimitMs: Long = 10_000, maxVisited: Int = 20_000, maxResults: Int = 200, maxDepth: Int = 5, ): ProjectScanResult</ID>
+    <ID>ReturnCount:FilePreview.kt$FilePreview$public fun body(data: FileData, line: Int? = null): FileBody</ID>
+    <ID>ReturnCount:PhoneProjectScan.kt$PhoneProjectScanner$public suspend fun scan( roots: List&lt;ProjectScanRoot&gt;, timeLimitMs: Long = 10_000, maxVisited: Int = 20_000, maxResults: Int = 200, maxDepth: Int = 5, ): ProjectScanResult</ID>
+    <ID>ReturnCount:ShareGuard.kt$ShareGuard$public fun looksSecret(path: String): Boolean</ID>
+    <ID>ReturnCount:WifiShare.kt$WifiShareRules$public fun decode(segment: String): String?</ID>
+    <ID>ReturnCount:WifiShare.kt$WifiShareRules$public fun isPrivateLan(address: String): Boolean</ID>
+    <ID>ReturnCount:WifiShare.kt$WifiShareRules$public fun reply(method: String, rawPath: String, token: String, name: String, data: FileData): ShareReply</ID>
+  </CurrentIssues>
+</SmellBaseline>

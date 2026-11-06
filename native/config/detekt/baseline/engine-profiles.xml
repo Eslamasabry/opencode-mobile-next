@@ -1,0 +1,152 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:CodexInput.kt$CodexInput$value.isEmpty() || value.length &gt; 16384 || hasControl(value) || value.any { it.isWhitespace() }</ID>
+    <ID>ComplexCondition:CodexInput.kt$CodexInput$value.isEmpty() || value.length &gt; 4096 || hasControl(value) || (!value.startsWith("/") &amp;&amp; !WINDOWS_ABSOLUTE.containsMatchIn(value))</ID>
+    <ID>ComplexCondition:ProfileTrust.kt$TrustCodec$!profile.usesAgentSocket &amp;&amp; ProfileOrigins.needsCleartextConsent(profile.baseUrl) &amp;&amp; wantedConsent != null &amp;&amp; wantedConsent == origin</ID>
+    <ID>ComplexCondition:ProfileTrust.kt$TrustCodec$!profile.usesAgentSocket &amp;&amp; origin != null &amp;&amp; origin.startsWith("https://") &amp;&amp; wantedPin != null &amp;&amp; wantedPin.origin == origin</ID>
+    <ID>ComplexCondition:SessionLinkBindings.kt$SessionLinkBindings$host.length &gt; 253 || labels.size != 4 || labels.takeLast(2) != listOf("ts", "net") || labels.any { !LABEL.matches(it) }</ID>
+    <ID>ComplexCondition:StoredProfile.kt$StoredProfileJson$host.isNotEmpty() &amp;&amp; !IPV4.matches(host) &amp;&amp; ':' !in host &amp;&amp; HOSTNAME.matches(host)</ID>
+    <ID>CyclomaticComplexMethod:CodexInput.kt$CodexInput$public fun validateUrl(value: String): CodexInputProblem?</ID>
+    <ID>CyclomaticComplexMethod:FlutterEraSweep.kt$FlutterEraSweep$override suspend fun clear(profileId: ProfileId, options: DeletionOptions): Outcome&lt;Int&gt;</ID>
+    <ID>CyclomaticComplexMethod:ProfileDeletion.kt$ProfileDeletion$private suspend fun run(id: ProfileId, options: DeletionOptions): Outcome&lt;DeleteProfileResult&gt;</ID>
+    <ID>CyclomaticComplexMethod:ProfileStore.kt$ProfileStore$public suspend fun upsert( profile: StoredProfile, secret: SecretEdit = SecretEdit.Keep, trust: TrustInput = TrustInput(), /** Existing editor snapshot: a deletion or concurrent edit invalidates this identity. */ expected: LoadedProfile? = null, ): Outcome&lt;LoadedProfile&gt;</ID>
+    <ID>CyclomaticComplexMethod:ProfileTransactions.kt$ProfileTransactions$suspend fun recover(): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:SessionLinkBindings.kt$SessionLinkBindings$public suspend fun save(binding: SessionLinkBinding): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:StoredProfile.kt$StoredProfileJson$public fun plainServerName(name: String, address: String = ""): String</ID>
+    <ID>CyclomaticComplexMethod:StructuralEdit.kt$EmbeddedRecordCleaner$override suspend fun clear(profileId: ProfileId, options: DeletionOptions): Outcome&lt;Int&gt;</ID>
+    <ID>EmptyFunctionBlock:ProfileDeletionTest.kt$ProfileDeletionTest.&lt;no name provided&gt;${}</ID>
+    <ID>LongMethod:ProfileDeletion.kt$ProfileDeletion$private suspend fun run(id: ProfileId, options: DeletionOptions): Outcome&lt;DeleteProfileResult&gt;</ID>
+    <ID>LongMethod:ProfileStore.kt$ProfileStore$public suspend fun upsert( profile: StoredProfile, secret: SecretEdit = SecretEdit.Keep, trust: TrustInput = TrustInput(), /** Existing editor snapshot: a deletion or concurrent edit invalidates this identity. */ expected: LoadedProfile? = null, ): Outcome&lt;LoadedProfile&gt;</ID>
+    <ID>LongMethod:SessionLinkBindings.kt$SessionLinkBindings$public suspend fun save(binding: SessionLinkBinding): Outcome&lt;Unit&gt;</ID>
+    <ID>LoopWithTooManyJumpStatements:FlutterEraSweep.kt$FlutterEraSweep$for</ID>
+    <ID>MagicNumber:CodexInput.kt$CodexInput$0x7f</ID>
+    <ID>MagicNumber:CodexInput.kt$CodexInput$0x9f</ID>
+    <ID>MagicNumber:CodexInput.kt$CodexInput$16384</ID>
+    <ID>MagicNumber:CodexInput.kt$CodexInput$3</ID>
+    <ID>MagicNumber:CodexInput.kt$CodexInput$4096</ID>
+    <ID>MagicNumber:ProfileTrust.kt$ProfileOrigins$443</ID>
+    <ID>MagicNumber:ProfileTrust.kt$ProfileOrigins$80</ID>
+    <ID>MagicNumber:SessionLinkBindings.kt$SessionLinkBindings$2048</ID>
+    <ID>MagicNumber:SessionLinkBindings.kt$SessionLinkBindings$253</ID>
+    <ID>MagicNumber:SessionLinkBindings.kt$SessionLinkBindings$4</ID>
+    <ID>MagicNumber:SessionLinkBindings.kt$SessionLinkBindings$443</ID>
+    <ID>MagicNumber:SessionLinkBindings.kt$SessionLinkBindings$65535</ID>
+    <ID>MagicNumber:StructuralEdit.kt$EmbeddedRecordCleaner$8</ID>
+    <ID>MaxLineLength:Adapters.kt$&lt;no name provided&gt;$override suspend fun clear(profileId: ProfileId, options: DeletionOptions): Outcome&lt;Int&gt;</ID>
+    <ID>MaxLineLength:CodexInput.kt$CodexInput$/** Ports of `normalizeCodexServerUrl`, `validateCodexServerUrl`, `validateCodexProjectDirectory`, `validateCodexConnectionToken`. */</ID>
+    <ID>MaxLineLength:CredentialIngressRedactionTest.kt$CredentialIngressRedactionTest$"oc.profiles" to """[{"id":"server-1","name":"Workstation","baseUrl":"https://server.example:4096","username":"dev"}]"""</ID>
+    <ID>MaxLineLength:CredentialIngressRedactionTest.kt$CredentialIngressRedactionTest$assertIs&lt;Failure.SecretUnavailable&gt;(assertIs&lt;Outcome.Failed&gt;(h.store.upsert(profile, SecretEdit.Set(changed))).failure)</ID>
+    <ID>MaxLineLength:DeferredFeatureData.kt$DeferredFeatureData$KeyShape("oc.orchestration.", KeyScope.Profile, PrefType.Str, TEAM, "AI Team plugin cache, oc.orchestration.&lt;id&gt;.&lt;field&gt;")</ID>
+    <ID>MaxLineLength:DeferredFeatureData.kt$DeferredFeatureData$KeyShape("oc.teamEditorDrafts.", KeyScope.Profile, PrefType.Str, TEAM, "team project editor drafts (no secrets)")</ID>
+    <ID>MaxLineLength:EngEmbeddedEditTest.kt$EngEmbeddedEditTest$assertIs&lt;Outcome.Failed&gt;(cleaner.clear(id("doomed"), DeletionOptions(confirmedQueue = (QueuedPromptRemovalPlan.fromSnapshot(id("doomed"), confirmed) as Outcome.Ok).value)))</ID>
+    <ID>MaxLineLength:EngEmbeddedEditTest.kt$EngEmbeddedEditTest$val clearing = async { cleaner.clear(id("doomed"), DeletionOptions(confirmedQueue = h.confirmedQueue(id("doomed")))) }</ID>
+    <ID>MaxLineLength:EngEmbeddedEditTest.kt$EngEmbeddedEditTest$val initial = listOf(mapOf("id" to "a", "profileID" to "doomed"), mapOf("id" to "b", "profileID" to "keeper"))</ID>
+    <ID>MaxLineLength:EngTransactionTest.kt$EngTransactionTest$try { h.store.upsert(profile.copy(name = "Changed"), SecretEdit.Set("replacement-canary")); fail("expected process stop") } catch (_: ProcessStopped) { }</ID>
+    <ID>MaxLineLength:EngTransactionTest.kt$EngTransactionTest$val kv = PrefsKeyValueStore(InMemoryPrefsBackend(h.backend.persisted()), FlutterPrefsCodec(JavaListDecoder.Unsupported), StateMigrationGate.alwaysOpen(), dispatcher)</ID>
+    <ID>MaxLineLength:PrivateCleartextConfirmationTest.kt$PrivateCleartextConfirmationTest$val saved = h.store.upsert(StoredProfile(id("p1"), "Desk", "http://$lan:4096"), SecretEdit.Set("pw-secret")).ok()</ID>
+    <ID>MaxLineLength:ProfileDeletionSweepTest.kt$ProfileDeletionSweepTest$"oc.offlineQueue" to PrefValue.Str(json(listOf(mapOf("id" to "q1", "profileID" to a.raw, "text" to canary))))</ID>
+    <ID>MaxLineLength:ProfileDeletionSweepTest.kt$ProfileDeletionSweepTest$for (copy in copies) assertEquals(bCopiesBefore.getValue(copy.label), copy.entries.filterKeys { b.raw in it }, copy.label)</ID>
+    <ID>MaxLineLength:ProfileDeletionSweepTest.kt$ProfileDeletionSweepTest$fun</ID>
+    <ID>MaxLineLength:ProfileDeletionSweepTest.kt$ProfileDeletionSweepTest$mapOf("id" to "q2", "profileID" to b.raw, "sessionID" to "s", "text" to "beta prompt", "createdAt" to 2)</ID>
+    <ID>MaxLineLength:ProfileDeletionSweepTest.kt$ProfileDeletionSweepTest$val</ID>
+    <ID>MaxLineLength:ProfileDeletionSweepTest.kt$ProfileDeletionSweepTest$val done = assertIs&lt;Outcome.Ok&lt;DeleteProfileResult&gt;&gt;(h.deletion(cleaners = h.embeddedCleaners() + sweep).delete(a, DeletionOptions(confirmedQueue = h.confirmedQueue(a)))).value</ID>
+    <ID>MaxLineLength:ProfileDeletionSweepTest.kt$ProfileDeletionSweepTest$val kept = assertIs&lt;Outcome.Ok&lt;DeleteProfileResult&gt;&gt;(h.deletion(cleaners = h.embeddedCleaners() + sweep).delete(a, DeletionOptions(confirmedQueue = h.confirmedQueue(a)))).value</ID>
+    <ID>MaxLineLength:ProfileDeletionSweepTest.kt$ProfileDeletionSweepTest$val perProfile = shapes.flatMap { s -&gt; listOf(keyFor(s, a.raw) to valueFor(s, a.raw), keyFor(s, b.raw) to valueFor(s, b.raw)) }</ID>
+    <ID>MaxLineLength:ProfileDeletionSweepTest.kt$ProfileDeletionSweepTest$val result = h.deletion(cleaners = h.embeddedCleaners() + sweep).delete(a, DeletionOptions(confirmedQueue = h.confirmedQueue(a)))</ID>
+    <ID>MaxLineLength:ProfileDeletionSweepTest.kt$ProfileDeletionSweepTest$val shapes = h.scope.shapes().filter { (it.scope == KeyScope.Profile || it.scope == KeyScope.Owner) &amp;&amp; it.prefix != ProfileKeys.TRANSACTION }</ID>
+    <ID>MaxLineLength:ProfileDeletionTest.kt$ProfileDeletionTest$"oc.pinnedShortcuts" to json(mapOf("profileID" to "doomed", "sessions" to listOf(mapOf("title" to "Refactor billing"))))</ID>
+    <ID>MaxLineLength:ProfileDeletionTest.kt$ProfileDeletionTest$"oc.widgetSessions" to json(mapOf("connected" to true, "sessions" to listOf(mapOf("id" to "ses_a", "title" to "Legacy"))))</ID>
+    <ID>MaxLineLength:ProfileDeletionTest.kt$ProfileDeletionTest$"oc.widgetSessions" to json(mapOf("profileID" to "doomed", "sessions" to listOf(mapOf("id" to "ses_a", "title" to "Refactor billing"))))</ID>
+    <ID>MaxLineLength:ProfileDeletionTest.kt$ProfileDeletionTest$assertEquals(Failure.Refused(RefusalReason.ProfileClosing), (h.store.upsert(StoredProfile(audit, "A", "http://localhost:1")) as Outcome.Failed).failure)</ID>
+    <ID>MaxLineLength:ProfileDeletionTest.kt$ProfileDeletionTest$assertIs&lt;Outcome.Failed&gt;(h.kv.commit(h.lanes.forProfile(id("doomed.agents"))) { putString("oc.model.doomed.agents", "late") })</ID>
+    <ID>MaxLineLength:ProfileDeletionTest.kt$ProfileDeletionTest$assertTrue(h.deletion(cleaners = h.embeddedCleaners()).delete(doomed, DeletionOptions(confirmedQueue = h.confirmedQueue(doomed))).ok().complete)</ID>
+    <ID>MaxLineLength:ProfileDeletionTest.kt$ProfileDeletionTest$for</ID>
+    <ID>MaxLineLength:ProfileDeletionTest.kt$ProfileDeletionTest$fun</ID>
+    <ID>MaxLineLength:ProfileDeletionTest.kt$ProfileDeletionTest$h.seed("oc.model.doomed.agents" to "x", "oc.sessionModels.doomed.agents" to "{}", "oc.model.keeper.agents" to "y")</ID>
+    <ID>MaxLineLength:ProfileDeletionTest.kt$ProfileDeletionTest$h.seed("oc.orchestration.doomed.lastKnown" to """{"runs":[{"id":"r1"}]}""", "oc.orchestration.keeper.lastKnown" to "{}")</ID>
+    <ID>MaxLineLength:ProfileDeletionTest.kt$ProfileDeletionTest$mapOf("id" to "doomed", "name" to "Old workstation", "baseUrl" to "https://old.example:4096", "username" to "dev", "flavor" to "v2", "serverVersion" to "0.14.2")</ID>
+    <ID>MaxLineLength:ProfileDeletionTest.kt$ProfileDeletionTest$mapOf("id" to "keeper", "name" to "Laptop", "baseUrl" to "https://keep.example:4096", "username" to "")</ID>
+    <ID>MaxLineLength:ProfileDeletionTest.kt$ProfileDeletionTest$mapOf("id" to "q1", "profileID" to "doomed", "sessionID" to "ses_a", "text" to "secret prompt", "attachments" to listOf(mapOf("url" to "data:image/png;base64,AAAA")), "createdAt" to 1)</ID>
+    <ID>MaxLineLength:ProfileDeletionTest.kt$ProfileDeletionTest$mapOf("id" to "q2", "profileID" to "doomed", "sessionID" to "ses_b", "text" to "another", "createdAt" to 2)</ID>
+    <ID>MaxLineLength:ProfileDeletionTest.kt$ProfileDeletionTest$mapOf("id" to "q3", "profileID" to "keeper", "sessionID" to "ses_c", "text" to "keep me", "createdAt" to 3)</ID>
+    <ID>MaxLineLength:ProfileDeletionTest.kt$ProfileDeletionTest$mapOf("sessionID" to "ses_a", "profileID" to "doomed", "text" to "half-written prompt", "updatedAt" to 1)</ID>
+    <ID>MaxLineLength:ProfileDeletionTest.kt$ProfileDeletionTest$mapOf("sessionID" to "ses_c", "profileID" to "keeper", "text" to "keep this draft", "updatedAt" to 3)</ID>
+    <ID>MaxLineLength:ProfileDeletionTest.kt$ProfileDeletionTest$val again = EmbeddedRecordCleaner(h.kv, h.lanes.app, FlutterEraEdits.WidgetSnapshot, 500).clear(doomed, DeletionOptions())</ID>
+    <ID>MaxLineLength:ProfileDeletionTest.kt$ProfileDeletionTest$val result = h.deletion(cleaners = h.embeddedCleaners() + broken).delete(doomed, DeletionOptions(confirmedQueue = h.confirmedQueue(doomed))).ok()</ID>
+    <ID>MaxLineLength:ProfileDeletionTest.kt$ProfileDeletionTest$val result = h.deletion(cleaners = h.embeddedCleaners()).delete(doomed, DeletionOptions(confirmedQueue = h.confirmedQueue(doomed))).ok()</ID>
+    <ID>MaxLineLength:ProfileDeletionTest.kt$ProfileDeletionTest$val result = h.deletion(cleaners = h.embeddedCleaners()).delete(keeper, DeletionOptions(confirmedQueue = h.confirmedQueue(keeper))).ok()</ID>
+    <ID>MaxLineLength:ProfileDeletionTest.kt$ProfileDeletionTest.&lt;no name provided&gt;$override suspend fun clear(profileId: ProfileId, options: DeletionOptions): Outcome&lt;Int&gt;</ID>
+    <ID>MaxLineLength:ProfileStoreTest.kt$ProfileStoreTest$"""{"provider":"gascity","url":"http://team-host.example:8080","city":"bright-lights","hostMode":"phone","""</ID>
+    <ID>MaxLineLength:ProfileStoreTest.kt$ProfileStoreTest$"oc.profiles" to """[{"id":"server-1","name":"Workstation","baseUrl":"https://server.example:4096","username":"dev"}]"""</ID>
+    <ID>MaxLineLength:ProfileStoreTest.kt$ProfileStoreTest$OpaqueJson.parse("""{"provider":"gascity","url":"http://team-laptop.example:8372","city":"","hostMode":"computer","hostKind":"laptop","front":false}""")</ID>
+    <ID>MaxLineLength:ProfileStoreTest.kt$ProfileStoreTest$assertEquals("""{"origin":"https://work.example:8443","sha256":"${sha.lowercase()}"}""", h.string("oc.certificatePin.pinned"))</ID>
+    <ID>MaxLineLength:ProfileStoreTest.kt$ProfileStoreTest$assertNull(Harness(StandardTestDispatcher(testScheduler), h.secrets, h.backend).store.load().ok().single().trust.pin)</ID>
+    <ID>MaxLineLength:ProfileStoreTest.kt$ProfileStoreTest$fun</ID>
+    <ID>MaxLineLength:ProfileStoreTest.kt$ProfileStoreTest$h.store.upsert(StoredProfile(id("codex-2"), "Codex", "wss://codex.example:4141", BackendKind.Codex, codexDirectory = "/work/acme")).ok()</ID>
+    <ID>MaxLineLength:ProfileStoreTest.kt$ProfileStoreTest$h.store.upsert(workstation.copy(name = "Original", baseUrl = "https://old.example:4096"), SecretEdit.Set("old-secret-1")).ok()</ID>
+    <ID>MaxLineLength:ProfileStoreTest.kt$ProfileStoreTest$private</ID>
+    <ID>MaxLineLength:ProfileStoreTest.kt$ProfileStoreTest$private val workstation = StoredProfile(id("server-1"), "Workstation", "https://server.example:4096", username = "dev")</ID>
+    <ID>MaxLineLength:ProfileStoreTest.kt$ProfileStoreTest$val bad = h.store.upsert(server, trust = TrustInput(pin = CertificatePinRecord("https://work.example:8443", "nothex"))).failure()</ID>
+    <ID>MaxLineLength:ProfileStoreTest.kt$ProfileStoreTest$val codex = StoredProfile(id("codex-1"), "Codex", "wss://codex.example:4141", BackendKind.Codex, codexDirectory = "/work/acme")</ID>
+    <ID>MaxLineLength:ProfileStoreTest.kt$ProfileStoreTest$val codex = StoredProfile(id("codex-3"), "Codex", "wss://codex.example:4141", BackendKind.Codex, codexDirectory = "/work/acme")</ID>
+    <ID>MaxLineLength:ProfileStoreTest.kt$ProfileStoreTest$val codex = StoredProfile(id("codex-4"), "Codex", "wss://codex.example:4141", BackendKind.Codex, codexDirectory = "/work/acme")</ID>
+    <ID>MaxLineLength:ProfileStoreTest.kt$ProfileStoreTest$val paseo = Harness(StandardTestDispatcher(testScheduler), h.secrets, h.backend).store.load().ok().first { it.id.raw == "paseo" }</ID>
+    <ID>MaxLineLength:ProfileStoreTest.kt$ProfileStoreTest$val saved = h.store.upsert(server, trust = TrustInput(pin = CertificatePinRecord("https://work.example:8443", sha))).ok()</ID>
+    <ID>MaxLineLength:ProfileTransactions.kt$ProfileTransactions$"index" to StoredProfileJson.rows(kv.string(ProfileKeys.PROFILES))?.indexOfFirst { (it as? Map&lt;*, *&gt;)?.get("id") == id.raw }?.toLong()</ID>
+    <ID>MaxLineLength:ProfileTransactions.kt$ProfileTransactions$"row" to StoredProfileJson.rows(kv.string(ProfileKeys.PROFILES))?.firstOrNull { (it as? Map&lt;*, *&gt;)?.get("id") == id.raw }</ID>
+    <ID>MaxLineLength:ProfileTransactions.kt$ProfileTransactions$(journal["row"] as? Map&lt;*, *&gt;)?.let { rows.add(((journal["index"] as? Long)?.toInt() ?: rows.size).coerceIn(0, rows.size), it) }</ID>
+    <ID>MaxLineLength:ProfileTransactions.kt$ProfileTransactions$if (kind == "save" &amp;&amp; parsed["name"] !in setOf(ProfileKeys.password(id), ProfileKeys.codexToken(id))) return null</ID>
+    <ID>MaxLineLength:ProfileTransactions.kt$ProfileTransactions$if (names.any { name -&gt; name !is String || ProfileKeys.SECRET_PREFIXES.keys.none { name == it + id.raw || name.startsWith(it + id.raw + ".") } }) return null</ID>
+    <ID>MaxLineLength:ProfileTransactions.kt$ProfileTransactions$internal</ID>
+    <ID>MaxLineLength:ProfileTransactions.kt$ProfileTransactions$putString(ProfileKeys.PROFILES, StoredProfileJson.encodeRows(rows.filterNot { (it as? Map&lt;*, *&gt;)?.get("id") == id.raw }))</ID>
+    <ID>MaxLineLength:ProfileTrust.kt$TrustCodec$fun encodePin(pin: CertificatePinRecord): String</ID>
+    <ID>MaxLineLength:ProfileTrust.kt$TrustCodec$if (!origin.startsWith("https://") || ProfileOrigins.trustOrigin(origin) != origin || !validPin(sha)) return null</ID>
+    <ID>MaxLineLength:ProfilesTestSupport.kt$Harness$val kv = PrefsKeyValueStore(backend, FlutterPrefsCodec(JavaListDecoder.Unsupported), StateMigrationGate.alwaysOpen(), io)</ID>
+    <ID>MaxLineLength:SignInReset.kt$SignInReset$if (done is Outcome.Failed || (done as Outcome.Ok).value is Outcome.Failed) return@exclusiveSignInReset refused()</ID>
+    <ID>MaxLineLength:SignInResetTest.kt$SignInResetTest$StoredProfileJson.encode(StoredProfile(id("agent"), "Saved agent", "ws://localhost:1234", BackendKind.Codex))</ID>
+    <ID>MaxLineLength:SignInResetTest.kt$SignInResetTest$assertEquals(setOf("other.signIn", "oc.orchestration.token.server", "pw", "oc.codexToken"), s.h.secrets.values.keys)</ID>
+    <ID>MaxLineLength:SignInResetTest.kt$SignInResetTest$fun</ID>
+    <ID>MaxLineLength:StoredProfile.kt$StoredProfileJson$val</ID>
+    <ID>MaxLineLength:StructuralEdit.kt$EmbeddedRecordCleaner$if (plan.records != "[]" &amp;&amp; options.confirmedQueue != plan) return Failure.Refused(RefusalReason.StaleScope).failed()</ID>
+    <ID>MaxLineLength:StructuralEdit.kt$EmbeddedRecordEdit$public</ID>
+    <ID>MaxLineLength:StructuralEdit.kt$FlutterEraEdits$/** Removes the matching elements of the JSON list at [key]; an unreadable list is [EmbeddedEditResult.Unreadable]. */</ID>
+    <ID>MaxLineLength:StructuralEdit.kt$FlutterEraEdits$/** `oc.offlineQueue`: JSON list of queued prompts; entries with `profileID == id` leave (Flutter deletion step 1). */</ID>
+    <ID>MaxLineLength:StructuralEdit.kt$FlutterEraEdits$/** `oc.widgetSessions`: the profile's snapshot, or one with no readable owner (B-STATE-061, Flutter clearForProfile). */</ID>
+    <ID>MaxLineLength:StructuralEdit.kt$FlutterEraEdits$private</ID>
+    <ID>MaxLineLength:StructuralEdit.kt$FlutterEraEdits$public</ID>
+    <ID>MaxLineLength:StructuralEdit.kt$FlutterEraEdits.&lt;no name provided&gt;$override</ID>
+    <ID>MaxLineLength:StructuralEdit.kt$ProfileStructuralEdit$public</ID>
+    <ID>MaxLineLength:StructuralEdit.kt$QueuedPromptRemovalPlan$override fun equals(other: Any?): Boolean</ID>
+    <ID>MaxLineLength:StructuralEdit.kt$QueuedPromptRemovalPlan$public</ID>
+    <ID>MaxLineLength:StructuralEdit.kt$QueuedPromptRemovalPlan.Companion$return QueuedPromptRemovalPlan(profileId, DartJson.encode(rows.filter { (it as? Map&lt;*, *&gt;)?.get("profileID") == profileId.raw })).ok()</ID>
+    <ID>MaxLineLength:StructuralEdit.kt$QueuedPromptRemovalPlan.Companion$val rows = if (raw == null) emptyList&lt;Any?&gt;() else DartJson.decodeOrNull(raw) as? List&lt;*&gt; ?: return Failure.StorageRefused().failed()</ID>
+    <ID>MaxLineLength:StructuralEdit.kt$StructuralEditReceipt$public data</ID>
+    <ID>NestedBlockDepth:ProfileTransactions.kt$ProfileTransactions$suspend fun recover(): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:CodexInput.kt$CodexInput$public fun normalizeUrl(value: String): String</ID>
+    <ID>ReturnCount:CodexInput.kt$CodexInput$public fun validateUrl(value: String): CodexInputProblem?</ID>
+    <ID>ReturnCount:ProfileDeletion.kt$ProfileDeletion$private suspend fun run(id: ProfileId, options: DeletionOptions): Outcome&lt;DeleteProfileResult&gt;</ID>
+    <ID>ReturnCount:ProfileStore.kt$ProfileStore$private fun reentryFlags(id: ProfileId): Set&lt;String&gt;</ID>
+    <ID>ReturnCount:ProfileStore.kt$ProfileStore$private suspend fun deleteAndVerify(names: List&lt;String&gt;): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:ProfileTransactions.kt$ProfileTransactions$private fun read(id: ProfileId): MutableMap&lt;String, Any?&gt;?</ID>
+    <ID>ReturnCount:ProfileTransactions.kt$ProfileTransactions$private suspend fun rollbackSave(id: ProfileId, journal: Map&lt;String, Any?&gt;): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:ProfileTransactions.kt$ProfileTransactions$suspend fun beginSave(id: ProfileId, name: String): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:ProfileTransactions.kt$ProfileTransactions$suspend fun finish(id: ProfileId, rollback: Boolean = false): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:ProfileTransactions.kt$ProfileTransactions$suspend fun recover(): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:ProfileTrust.kt$TrustCodec$fun decodePin(raw: String?): CertificatePinRecord?</ID>
+    <ID>ReturnCount:SessionLinkBindings.kt$SessionLinkBindingOwners$private fun member(profile: ProfileId): Boolean</ID>
+    <ID>ReturnCount:SessionLinkBindings.kt$SessionLinkBindingOwners$private fun owner(profile: ProfileId): Outcome&lt;SessionLinkBindings&gt;</ID>
+    <ID>ReturnCount:SessionLinkBindings.kt$SessionLinkBindingOwners$public suspend fun cancelDeletion(profile: ProfileId)</ID>
+    <ID>ReturnCount:SessionLinkBindings.kt$SessionLinkBindings$private fun canonical(value: SessionLinkBinding): SessionLinkBinding?</ID>
+    <ID>ReturnCount:StoredProfile.kt$StoredProfileJson$private fun orchestrationOf(value: Any?): OpaqueJson?</ID>
+    <ID>ReturnCount:StoredProfile.kt$StoredProfileJson$public fun plainServerName(name: String, address: String = ""): String</ID>
+    <ID>ReturnCount:StructuralEdit.kt$EmbeddedRecordCleaner$override suspend fun clear(profileId: ProfileId, options: DeletionOptions): Outcome&lt;Int&gt;</ID>
+    <ID>ReturnCount:StructuralEdit.kt$FlutterEraEdits$private fun MutableMap&lt;String, PrefValue&gt;.editList(key: String, doomed: (Any?) -&gt; Boolean): EmbeddedEditResult</ID>
+    <ID>ReturnCount:StructuralEdit.kt$FlutterEraEdits.&lt;no name provided&gt;$override fun apply(entries: MutableMap&lt;String, PrefValue&gt;, profileId: ProfileId, plan: StructuralPlan): EmbeddedEditResult</ID>
+    <ID>TooGenericExceptionCaught:ProfileDeletion.kt$ProfileDeletion$e: Throwable</ID>
+    <ID>TooManyFunctions:ProfileStore.kt$ProfileStore</ID>
+    <ID>TooManyFunctions:ProfileTransactions.kt$ProfileTransactions</ID>
+    <ID>UseCheckOrError:ProfileDeletionTest.kt$ProfileDeletionTest.&lt;no name provided&gt;$throw IllegalStateException("secret-text-must-not-leak")</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -1,0 +1,31 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:ModuleRules.kt$ModuleRules$fun violation(from: String, to: String, inTest: Boolean): String?</ID>
+    <ID>LoopWithTooManyJumpStatements:TermuxSessionFork.kt$TermuxSessionForkTransform$while</ID>
+    <ID>MagicNumber:build.gradle.kts$21</ID>
+    <ID>MaxLineLength:ExternalRules.kt$ExternalRules$"androidx.camera" to { p -&gt; p == ":ui:kit-content" || p == ":android:media" || p == ":android:camera" || p == ":androidApp" }</ID>
+    <ID>MaxLineLength:ExternalRules.kt$ExternalRules$"org.jetbrains.compose.material3:material3" to { p -&gt; p in setOf(":ui:kit", ":ui:kit-chat", ":ui:kit-content") }</ID>
+    <ID>MaxLineLength:ExternalRules.kt$ExternalRules$/** group (or group:artifact) → module paths that may declare it. Test configurations are exempt for "-mock" and "test" artifacts. */</ID>
+    <ID>MaxLineLength:ExternalRules.kt$ExternalRules$// :android:camera holds the CameraX + zxing-cpp adapters (QR-CAMERA §6); the app wiring renders its preview.</ID>
+    <ID>MaxLineLength:LintPolicy.kt$LintPolicy$"ExportedContentProvider"</ID>
+    <ID>MaxLineLength:LintPolicy.kt$LintPolicy$"UnspecifiedImmutableFlag"</ID>
+    <ID>MaxLineLength:LintPolicy.kt$LintPolicy$"WorldReadableFiles"</ID>
+    <ID>MaxLineLength:LintPolicy.kt$LintPolicy$*</ID>
+    <ID>MaxLineLength:LintPolicy.kt$LintPolicy$/** Plan 16 §2.2, in its order. Suppress a single use in code with `@SuppressLint` and a reason comment, never here. */</ID>
+    <ID>MaxLineLength:ModuleRules.kt$ModuleRules$"settings"</ID>
+    <ID>MaxLineLength:ModuleRules.kt$ModuleRules$*</ID>
+    <ID>MaxLineLength:ModuleRules.kt$ModuleRules$to in setOf(":ui:design", ":ui:words", ":ui:routes", ":core:domain", ":core:model", ":core:common")</ID>
+    <ID>MaxLineLength:OcAndroidLibraryPlugin.kt$OcAndroidLibraryPlugin$javaLauncher.set(toolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(Jdk.TEST_LAUNCHER)) })</ID>
+    <ID>MaxLineLength:OcKmpFeaturePlugin.kt$OcKmpFeaturePlugin$listOf(":ui:kit", ":ui:design", ":ui:words", ":ui:routes", ":core:domain", ":core:model", ":core:common")</ID>
+    <ID>MaxLineLength:OcKmpLibraryPlugin.kt$OcKmpLibraryPlugin$// Audit #10: Android host tests (and Robolectric) run on a JDK 21 launcher; everything else on the build JDK.</ID>
+    <ID>MaxLineLength:Sdk.kt$Jdk$/** JDK levels (ADR §8): bytecode and module toolchains on 17; Android host tests and Robolectric launch on 21 (audit #10). */</ID>
+    <ID>MaxLineLength:TermuxSessionFork.kt$TermuxSessionForkTransform$if (name == "com/termux/terminal/TerminalSession.class" || name.startsWith("com/termux/terminal/TerminalSession$")) continue</ID>
+    <ID>MaxLineLength:build.gradle.kts$register("ocAndroidApplication") { id = "oc.android.application"; implementationClass = "oc.buildlogic.OcAndroidApplicationPlugin" }</ID>
+    <ID>MaxLineLength:build.gradle.kts$register("ocAndroidLibrary") { id = "oc.android.library"; implementationClass = "oc.buildlogic.OcAndroidLibraryPlugin" }</ID>
+    <ID>MaxLineLength:build.gradle.kts$register("ocDesktopApplication") { id = "oc.desktop.application"; implementationClass = "oc.buildlogic.OcDesktopApplicationPlugin" }</ID>
+    <ID>ReturnCount:ExternalRules.kt$ExternalRules$fun violation(from: String, group: String?, name: String, inTest: Boolean): String?</ID>
+    <ID>ReturnCount:ModuleRules.kt$ModuleRules$fun violation(from: String, to: String, inTest: Boolean): String?</ID>
+  </CurrentIssues>
+</SmellBaseline>

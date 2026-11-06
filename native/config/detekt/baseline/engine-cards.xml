@@ -1,0 +1,306 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:CardBoard.kt$CardBoard$identity != null &amp;&amp; !settled &amp;&amp; (d == CardDelivery.Idle || d == CardDelivery.Failed) &amp;&amp; journaled(identity)</ID>
+    <ID>ComplexCondition:CardCodec.kt$CardCodec$!(v == 1L || v == 1.0) || envelope["cardId"] != match.groupValues[1] || (envelope["callId"] as? String).isNullOrEmpty()</ID>
+    <ID>ComplexCondition:CardCodec.kt$CardCodec$ask == null || card.callId.isEmpty() || card.messageId.isEmpty() || card.sessionId.isEmpty() || card.revision.isEmpty() || card.scope.profileId.isEmpty() || card.scope.sourceId.isEmpty() || card.scope.directory.isEmpty()</ID>
+    <ID>ComplexCondition:CardCodec.kt$CardCodec$part.type != PartType.Tool || part.synthetic || part.toolName !in CARD_TOOL_NAMES || tool == null || tool.status != ToolStatus.Completed || !tool.ran || tool.input.isEmpty() || part.callId.isNullOrEmpty() || messageId.isEmpty() || sessionId.isEmpty() || scope.profileId.isEmpty() || scope.sourceId.isEmpty() || scope.directory.isEmpty() || (part.messageId.isNotEmpty() &amp;&amp; part.messageId != messageId)</ID>
+    <ID>ComplexCondition:CardSearchPublisher.kt$CardSearchPublisher$!profilePattern.matches(profileId) || !agent.configured || port == null || port &gt; 65535 || !bearerPattern.matches(bearer)</ID>
+    <ID>ComplexCondition:CardValidator.kt$CardValidator$!((v is Long &amp;&amp; v == 1L) || (v is Int &amp;&amp; v == 1) || (v is Double &amp;&amp; v == 1.0))</ID>
+    <ID>ComplexCondition:CardValidator.kt$CardValidator$(min != null &amp;&amp; d &lt; min) || (max != null &amp;&amp; d &gt; max)</ID>
+    <ID>ComplexCondition:CardValidator.kt$CardValidator$url !is String || scalars(url) &gt; 2048 || url.any(::unsafeUrlChar) || !url.startsWith("https://", ignoreCase = true)</ID>
+    <ID>ComplexCondition:CardValidator.kt$CardValidator$value !is String || scalars(value) &gt; 2000 || (field["required"] == true &amp;&amp; dartTrim(value).isEmpty())</ID>
+    <ID>ComplexCondition:CardValidator.kt$CardValidator$y &lt; 1 || m &lt; 1 || m &gt; 12 || d &lt; 1 || d &gt; days[m - 1]</ID>
+    <ID>ComplexCondition:CardValidator.kt$SafeHttps$v6.isEmpty() || v6.any { !(it.isLetterOrDigit() &amp;&amp; it.code &lt; 128) &amp;&amp; it != ':' &amp;&amp; it != '.' }</ID>
+    <ID>CyclomaticComplexMethod:CardAnswers.kt$CardAnswers$fun summary(ask: CardAsk, value: Map&lt;String, Any?&gt;): String</ID>
+    <ID>CyclomaticComplexMethod:CardAnswers.kt$CardMapping$fun node(n: Map&lt;*, *&gt;): CardNode</ID>
+    <ID>CyclomaticComplexMethod:CardBoard.kt$CardBoard$private fun publish(busy: Boolean = mutable.value.busy, available: Boolean = mutable.value.available)</ID>
+    <ID>CyclomaticComplexMethod:CardCodec.kt$CardCodec$private fun receipt(message: MessageWithParts): Receipt?</ID>
+    <ID>CyclomaticComplexMethod:CardCodec.kt$CardCodec$public fun answerText(card: AgentCard, answer: CardAnswer): String</ID>
+    <ID>CyclomaticComplexMethod:CardCodec.kt$CardCodec$public fun fromPart(part: Part, scope: CardScope, sessionId: String, messageId: String): CardParse?</ID>
+    <ID>CyclomaticComplexMethod:CardCodec.kt$CardCodec$public fun stateFor(card: AgentCard, transcript: List&lt;MessageWithParts&gt;, tailComplete: Boolean): CardState</ID>
+    <ID>CyclomaticComplexMethod:CardJournal.kt$StoredCardJournal$private fun entries(profileId: String): List&lt;Map&lt;String, Any?&gt;&gt;?</ID>
+    <ID>CyclomaticComplexMethod:CardRecovery.kt$CardHistory$public suspend fun readTail( source: CardHistorySource, sessionId: String, limit: Int = PAGE, missingMessageIds: Set&lt;String&gt; = emptySet(), ): Outcome&lt;CardTail&gt;</ID>
+    <ID>CyclomaticComplexMethod:CardSearchPublisher.kt$CardSearchPublisher$public suspend fun publish(profileId: String, agent: CardsHelperAgent, endpoint: String, bearer: String): Boolean</ID>
+    <ID>CyclomaticComplexMethod:CardValidator.kt$CardValidator$fun bounded(input: Any?)</ID>
+    <ID>CyclomaticComplexMethod:CardValidator.kt$CardValidator$fun fieldValue(value: Any?, field: Map&lt;String, Any?&gt;): Any</ID>
+    <ID>CyclomaticComplexMethod:CardValidator.kt$CardValidator$private fun node(value: Any?): Map&lt;String, Any?&gt;</ID>
+    <ID>CyclomaticComplexMethod:CardValidator.kt$SafeHttps$fun isSafe(url: String): Boolean</ID>
+    <ID>CyclomaticComplexMethod:CardsInstaller.kt$ManagedCardsInstaller$private suspend fun apply(profileId: String, agents: List&lt;CardAgent&gt;, enabled: Boolean): CardsStatus</ID>
+    <ID>CyclomaticComplexMethod:CardsSetup.kt$CardsSetup$private suspend fun refresh(profileId: String, explicit: Boolean, gen: Int): Outcome&lt;Unit&gt;</ID>
+    <ID>LargeClass:CardToolJs.kt$CardToolJs</ID>
+    <ID>LongMethod:CardValidator.kt$CardValidator$private fun node(value: Any?): Map&lt;String, Any?&gt;</ID>
+    <ID>LongMethod:CardsInstallScriptsTest.kt$CardsInstallScriptsTest$private fun apply( owner: String, enabled: Boolean = true, failCheck: Boolean = false, verify: Boolean = false, wrongVersion: Boolean = false, requireMarker: Boolean = false, runtimes: Set&lt;String&gt; = setOf("/usr/bin/node"), unsafePath: String? = null, foreignOwner: Boolean = false, agent: CardAgent = CardAgent.OpenCode2, ): Int</ID>
+    <ID>LongParameterList:CardFixtures.kt$CardFixtures$( input: Map&lt;String, Any?&gt; = input(), call: String = "call", message: String = "assistant", name: String = "oc-ui_show", status: ToolStatus = ToolStatus.Completed, executed: Boolean = true, synthetic: Boolean = false, session: String = "session", )</ID>
+    <ID>LongParameterList:CardsInstallScriptsTest.kt$CardsInstallScriptsTest$( owner: String, enabled: Boolean = true, failCheck: Boolean = false, verify: Boolean = false, wrongVersion: Boolean = false, requireMarker: Boolean = false, runtimes: Set&lt;String&gt; = setOf("/usr/bin/node"), unsafePath: String? = null, foreignOwner: Boolean = false, agent: CardAgent = CardAgent.OpenCode2, )</ID>
+    <ID>LongParameterList:CardsPolicyTest.kt$CardsPolicyTest$(id: String = "r1", name: String? = "mcp__oc-ui__show", kind: String = "tool", provider: String? = "claude", session: String? = "claude", inLocation: Boolean = true, daemonTested: Boolean = true)</ID>
+    <ID>LongParameterList:CardsPolicyTest.kt$CardsPolicyTest$(session: String = "s", idle: Boolean? = true, stamp: String? = "p1", mayLoad: Boolean = true, journaled: Boolean = false, endpoint: String = "e")</ID>
+    <ID>LongParameterList:ShowCardNeverAutoAllowTest.kt$ShowCardNeverAutoAllowTest$( id: String = "request-1", name: String? = ShowCardPermission.CLAUDE_SHOW, kind: String = "tool", provider: String? = "claude", session: String? = "claude", inLocation: Boolean = true, daemonTested: Boolean = true, )</ID>
+    <ID>LoopWithTooManyJumpStatements:CardBoard.kt$CardBoard$for</ID>
+    <ID>LoopWithTooManyJumpStatements:CardRecovery.kt$CardHistory$for</ID>
+    <ID>MagicNumber:CardAnswers.kt$CardAnswers$12</ID>
+    <ID>MagicNumber:CardAnswers.kt$CardAnswers$2000</ID>
+    <ID>MagicNumber:CardAnswers.kt$CardAnswers$240</ID>
+    <ID>MagicNumber:CardAnswers.kt$CardAnswers$4</ID>
+    <ID>MagicNumber:CardAnswers.kt$CardAnswers$8</ID>
+    <ID>MagicNumber:CardBoard.kt$CardBoard.Companion$1024</ID>
+    <ID>MagicNumber:CardBoard.kt$CardBoard.Companion$14</ID>
+    <ID>MagicNumber:CardBoard.kt$CardBoard.Companion$3</ID>
+    <ID>MagicNumber:CardBoard.kt$CardBoard.Companion$4</ID>
+    <ID>MagicNumber:CardBoard.kt$CardBoard.Companion$4L</ID>
+    <ID>MagicNumber:CardCodec.kt$CardCodec$240</ID>
+    <ID>MagicNumber:CardCodec.kt$CardCodec$32768</ID>
+    <ID>MagicNumber:CardCodec.kt$CardCodec$34000</ID>
+    <ID>MagicNumber:CardJournal.kt$StoredCardJournal$3</ID>
+    <ID>MagicNumber:CardJournal.kt$StoredCardJournal$4</ID>
+    <ID>MagicNumber:CardJournal.kt$StoredCardJournal$5</ID>
+    <ID>MagicNumber:CardJournal.kt$StoredCardJournal$6</ID>
+    <ID>MagicNumber:CardJournal.kt$StoredCardJournal$7</ID>
+    <ID>MagicNumber:CardJson.kt$CardJson$0x20</ID>
+    <ID>MagicNumber:CardJson.kt$CardJson$21</ID>
+    <ID>MagicNumber:CardJson.kt$CardJson$4</ID>
+    <ID>MagicNumber:CardJson.kt$CardJson$5</ID>
+    <ID>MagicNumber:CardSearchPublisher.kt$CardSearchPublisher$0x3f</ID>
+    <ID>MagicNumber:CardSearchPublisher.kt$CardSearchPublisher$65535</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0x061c</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0x08</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0x09</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0x0b</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0x1680</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0x20</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0x2000</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0x200a</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0x200e</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0x200f</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0x2028</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0x2029</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0x202a</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0x202b</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0x202c</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0x202d</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0x202e</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0x202f</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0x205f</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0x2066</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0x2067</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0x2068</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0x2069</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0x3000</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0x7f</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0x85</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0x9f</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0xa0</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0xd800</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0xdbff</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0xdc00</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0xdfff</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$0xfeff</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$10</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$100</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$12</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$120</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$20</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$200</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$2000</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$2048</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$24</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$256</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$28</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$29</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$3</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$30</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$31</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$32</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$32768</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$4</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$40</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$400</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$4000</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$4096</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$500</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$6</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$60</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$65536</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$8</ID>
+    <ID>MagicNumber:CardValidator.kt$CardValidator$80</ID>
+    <ID>MagicNumber:CardValidator.kt$SafeHttps$0x80</ID>
+    <ID>MagicNumber:CardValidator.kt$SafeHttps$128</ID>
+    <ID>MagicNumber:CardValidator.kt$SafeHttps$18</ID>
+    <ID>MagicNumber:CardValidator.kt$SafeHttps$3</ID>
+    <ID>MagicNumber:CardValidator.kt$SafeHttps$65535</ID>
+    <ID>MagicNumber:CardValidator.kt$SafeHttps$8</ID>
+    <ID>MagicNumber:CardsInstaller.kt$CardsInstallOutcome.Companion$10</ID>
+    <ID>MagicNumber:CardsInstaller.kt$CardsInstallOutcome.Companion$11</ID>
+    <ID>MagicNumber:CardsInstaller.kt$CardsInstallOutcome.Companion$20</ID>
+    <ID>MagicNumber:CardsInstaller.kt$CardsInstallOutcome.Companion$21</ID>
+    <ID>MagicNumber:CardsInstaller.kt$CardsInstallOutcome.Companion$22</ID>
+    <ID>MaxLineLength:CardAnswers.kt$CardAnswers$is CardAsk.Choice -&gt; (value["choice"] as List&lt;*&gt;).joinToString(", ") { id -&gt; ask.options.first { it.id == id }.label }</ID>
+    <ID>MaxLineLength:CardAnswers.kt$CardAnswers$is CardAsk.Confirm -&gt; if (value["confirm"] == true) ask.confirmLabel ?: "Confirmed" else ask.cancelLabel ?: "Declined"</ID>
+    <ID>MaxLineLength:CardAnswers.kt$CardMapping$"choice" -&gt; CardAsk.Choice(list(a, "options").map { option(it as Map&lt;*, *&gt;) }.toImmutableList(), a["multi"] as Boolean)</ID>
+    <ID>MaxLineLength:CardAnswers.kt$CardMapping$"confirm" -&gt; CardAsk.Confirm(a["confirmLabel"] as String?, a["cancelLabel"] as String?, a["tone"] == "danger")</ID>
+    <ID>MaxLineLength:CardAnswers.kt$CardMapping$"form" -&gt; CardAsk.Form(list(a, "fields").map { field(it as Map&lt;*, *&gt;) }.toImmutableList(), a["submitLabel"] as String?)</ID>
+    <ID>MaxLineLength:CardAnswers.kt$CardMapping$CardNode.KeyValue(list(n, "rows").map { val r = it as Map&lt;*, *&gt;; CardNode.KeyValueRow(str(r, "key"), str(r, "value")) }.toImmutableList())</ID>
+    <ID>MaxLineLength:CardAnswers.kt$CardMapping$list(n, "items").map { val r = it as Map&lt;*, *&gt;; CardNode.ListItem(str(r, "text"), r["done"] as Boolean) }.toImmutableList()</ID>
+    <ID>MaxLineLength:CardAnswers.kt$CardMapping$list(n, "rows").map { row -&gt; (row as List&lt;*&gt;).map { it as String }.toImmutableList() }.toImmutableList()</ID>
+    <ID>MaxLineLength:CardAuthority.kt$CardAuthority$public</ID>
+    <ID>MaxLineLength:CardAuthority.kt$CardAuthority$val parsed = CardCodec.fromPart(part, card.scope, card.sessionId, message.info.id) as? CardParse.Parsed ?: continue</ID>
+    <ID>MaxLineLength:CardAuthorityTest.kt$CardAuthorityTest$/** Flutter `mcp_chat_card_authority_test.dart` (B-AGENT-131) and `paseo_genui_recovery_snapshot_test.dart` (B-AGENT-166). */</ID>
+    <ID>MaxLineLength:CardAuthorityTest.kt$CardAuthorityTest$authority.observe(CardFixtures.scope, "session", listOf(CardFixtures.assistant(input = connectorInput(reason))), tailComplete = true)</ID>
+    <ID>MaxLineLength:CardBoard.kt$CardBoard$if (delivery[card.identity] == CardDelivery.DeliveryUnknown || journaled(card.identity)) return CardRefusal.CheckFirst</ID>
+    <ID>MaxLineLength:CardBoard.kt$CardBoard$public</ID>
+    <ID>MaxLineLength:CardBoard.kt$CardBoard$result is Outcome.Ok || (result as Outcome.Failed).failure.let { (it as? Failure.Refused)?.reason == RefusalReason.DispatchUncertain }</ID>
+    <ID>MaxLineLength:CardBoard.kt$CardBoard$}</ID>
+    <ID>MaxLineLength:CardBoardTest.kt$CardBoardTest$assertIs&lt;Outcome.Failed&gt;(board.answer(card, CardAnswer.Photo(1), listOf(photo.copy(url = "https://example.com/a.png"))))</ID>
+    <ID>MaxLineLength:CardCodec.kt$CardCodec$card.callId.isEmpty()</ID>
+    <ID>MaxLineLength:CardCodec.kt$CardCodec$connector = (n["connector"] as Map&lt;*, *&gt;?)?.let { ConnectorSuggestion(it["catalogId"] as String, it["reason"] as String) }</ID>
+    <ID>MaxLineLength:CardCodec.kt$CardCodec$if (CardValidator.scalars(summary) &gt; 240 || '\t' in summary || CardValidator.text(summary) != summary) return null</ID>
+    <ID>MaxLineLength:CardCodec.kt$CardCodec$private</ID>
+    <ID>MaxLineLength:CardCodec.kt$CardCodec$public</ID>
+    <ID>MaxLineLength:CardCodec.kt$CardCodec$public fun problemOf(error: Throwable): CardProblem</ID>
+    <ID>MaxLineLength:CardCodec.kt$CardCodec$val parsed = fromPart(part, card.scope, card.sessionId, message.info.id) as? CardParse.Parsed ?: continue</ID>
+    <ID>MaxLineLength:CardCodecTest.kt$CardCodecTest$"options" to listOf(mapOf("id" to "a", "label" to "Alpha"), mapOf("id" to "b", "label" to "Beta"))</ID>
+    <ID>MaxLineLength:CardCodecTest.kt$CardCodecTest$"options" to listOf(mapOf("id" to "pg", "label" to "Postgres"), mapOf("id" to "sq", "label" to "SQLite"))</ID>
+    <ID>MaxLineLength:CardCodecTest.kt$CardCodecTest$CardCodec.stateFor(c, listOf(assistant(), assistant(id = "report", call = "report", input = input(ask = null))), true)</ID>
+    <ID>MaxLineLength:CardCodecTest.kt$CardCodecTest$assertEquals("[oc-ui answer example] Declined\n{\"v\":1,\"cardId\":\"example\",\"callId\":\"call\",\"value\":{\"confirm\":false}}", text)</ID>
+    <ID>MaxLineLength:CardCodecTest.kt$CardCodecTest$assertEquals(CardState.PassedOver, CardCodec.stateFor(c, listOf(assistant(), assistant(id = "second", call = "second")), true))</ID>
+    <ID>MaxLineLength:CardCodecTest.kt$CardCodecTest$assertEquals(CardState.Unknown, CardCodec.stateFor(c, listOf(assistant(input = input(title = "Changed"))), true))</ID>
+    <ID>MaxLineLength:CardCodecTest.kt$CardCodecTest$assertEquals(CardState.Waiting, CardCodec.stateFor(c, listOf(assistant(), user(text, role = Role.Assistant)), true))</ID>
+    <ID>MaxLineLength:CardCodecTest.kt$CardCodecTest$input() + ("body" to listOf(mapOf("type" to "progress", "label" to "X", "value" to Double.POSITIVE_INFINITY)))</ID>
+    <ID>MaxLineLength:CardCodecTest.kt$CardCodecTest$input(ask = null) + ("connector" to mapOf("catalogId" to "acme/postgres", "reason" to "x", "command" to "npx"))</ID>
+    <ID>MaxLineLength:CardCodecTest.kt$CardCodecTest$mapOf("id" to "number", "label" to "Number", "type" to "number", "min" to 0L, "max" to 5L)</ID>
+    <ID>MaxLineLength:CardCodecTest.kt$CardCodecTest$val confirm = card(input(ask = mapOf("kind" to "confirm", "confirmLabel" to "Run it", "cancelLabel" to "Not now")))</ID>
+    <ID>MaxLineLength:CardCodecTest.kt$CardCodecTest$val valid = input(ask = null) + ("connector" to mapOf("catalogId" to "acme/postgres", "reason" to " Reads your database "))</ID>
+    <ID>MaxLineLength:CardCorpusTest.kt$CardCorpusTest$assertEquals("""{"v":1,"id":"x","title":"T","body":[{"type":"progress","label":"Half","value":0.5}]}""", CardJson.encode(value))</ID>
+    <ID>MaxLineLength:CardCorpusTest.kt$CardCorpusTest$val card = (CardCodec.fromPart(done.parts.single(), fixtureScope, "fixture-session", "paseo-1") as CardParse.Parsed).card</ID>
+    <ID>MaxLineLength:CardCorpusTest.kt$CardCorpusTest$val problem = result.exceptionOrNull()?.let(CardCodec::problemOf) ?: fail("$label: accepted, expected $error")</ID>
+    <ID>MaxLineLength:CardDispatchTest.kt$CardDispatchTest$/** P12 review (chat-cards #3, #4): the send-once guard survives a reopen, and the last check before sending is fresh. */</ID>
+    <ID>MaxLineLength:CardDispatchTest.kt$CardDispatchTest$assertNull(StoredCardJournal(MemoryStore(flutter)).dispatched("other"), "another profile's record is corrupt here")</ID>
+    <ID>MaxLineLength:CardFixtures.kt$CardFixtures$MessageWithParts(MessageInfo(id, "session", Role.Assistant), persistentListOf(part(input, call = call, message = id)))</ID>
+    <ID>MaxLineLength:CardFixtures.kt$CardFixtures$fun</ID>
+    <ID>MaxLineLength:CardFixtures.kt$CardFixtures$persistentListOf(Part(id = "p-$id", messageId = id, sessionId = session, type = PartType.Text, rawType = "text", text = text, synthetic = synthetic))</ID>
+    <ID>MaxLineLength:CardJournal.kt$CardDispatchCheck$*</ID>
+    <ID>MaxLineLength:CardJournal.kt$StoredCardJournal$CardJson.encode(listOf(e["profile"], e["source"], e["directory"], e["workspace"], e["session"], e["message"], e["call"]))</ID>
+    <ID>MaxLineLength:CardJournal.kt$StoredCardJournal$private suspend</ID>
+    <ID>MaxLineLength:CardJson.kt$CardJson$/** Deeper than this a general tree is refused (IllegalArgumentException), never a StackOverflowError (B-CHAT-029). */</ID>
+    <ID>MaxLineLength:CardJson.kt$CardJson$LinkedHashMap&lt;String, Any?&gt;().also { map -&gt; element.forEach { (k, v) -&gt; map[k] = build(v, depth + 1, cut) } }</ID>
+    <ID>MaxLineLength:CardModel.kt$CardNode$Table : CardNode</ID>
+    <ID>MaxLineLength:CardRecovery.kt$CardCoverage.Companion$CardJson.encode(listOf(endpoint, CardJson.encode(listOf(scope.profileId, scope.sourceId, scope.directory, scope.workspace)), sessionId))</ID>
+    <ID>MaxLineLength:CardRecovery.kt$CardRecovery$return !coverage.contains(target.scope.profileId, CardCoverage.identity(target.endpoint, target.scope, target.sessionId), stamp)</ID>
+    <ID>MaxLineLength:CardRecovery.kt$IdleSnapshot$public data</ID>
+    <ID>MaxLineLength:CardSearchPublisher.kt$CardSearchPublisher$if</ID>
+    <ID>MaxLineLength:CardSearchPublisher.kt$CardSearchPublisher$val body = JsonObject(mapOf("endpoint" to JsonPrimitive(endpoint), "bearer" to JsonPrimitive(bearer))).toString()</ID>
+    <ID>MaxLineLength:CardSearchPublisherTest.kt$CardSearchPublisherTest$assertEquals("b".repeat(64), Json.parseToJsonElement(file.readText()).jsonObject["bearer"]!!.jsonPrimitive.content)</ID>
+    <ID>MaxLineLength:CardToolServerTest.kt$CardToolServerTest$"catalogId" to "com.example/design"</ID>
+    <ID>MaxLineLength:CardToolServerTest.kt$CardToolServerTest$assertEquals(listOf("v", "id", "title", "body"), schema["required"]!!.jsonArray.map { it.jsonPrimitive.content })</ID>
+    <ID>MaxLineLength:CardToolServerTest.kt$CardToolServerTest$handle(exchange.requestMethod, exchange.requestURI.path, exchange.requestHeaders.getFirst("Authorization"), body)</ID>
+    <ID>MaxLineLength:CardToolServerTest.kt$CardToolServerTest$if (reject) 400 to """{"error":"Invalid connector search request."}""" else 200 to """{"status":"ok","matches":[]}"""</ID>
+    <ID>MaxLineLength:CardToolServerTest.kt$CardToolServerTest$obj("isError" to true, "content" to JsonArray(listOf(obj("type" to "text", "text" to "Agent card unavailable or invalid."))))</ID>
+    <ID>MaxLineLength:CardToolServerTest.kt$CardToolServerTest$obj("protocolVersion" to version, "capabilities" to JsonObject(emptyMap()), "clientInfo" to obj("name" to "test", "version" to "1"))</ID>
+    <ID>MaxLineLength:CardToolServerTest.kt$CardToolServerTest.Companion$System.getenv("PATH").orEmpty().split(File.pathSeparator).map { File(it, "node") }.firstOrNull { it.canExecute() }?.path</ID>
+    <ID>MaxLineLength:CardToolServerTest.kt$CardToolServerTest.Companion$fun obj(vararg pairs: Pair&lt;String, Any?&gt;): JsonObject</ID>
+    <ID>MaxLineLength:CardToolServerTest.kt$CardToolServerTest.Helper$fun next(): JsonObject</ID>
+    <ID>MaxLineLength:CardToolServerTest.kt$CardToolServerTest.Helper$fun search(arguments: JsonObject)</ID>
+    <ID>MaxLineLength:CardValidator.kt$CardValidator$"rows" to arr(o["rows"], 0, 20).map { row -&gt; arr(row, columns.size, columns.size).map { text(it, 80) } }</ID>
+    <ID>MaxLineLength:CardValidator.kt$CardValidator$if (result.containsKey("min") &amp;&amp; result.containsKey("max") &amp;&amp; asDouble(result["min"]!!) &gt; asDouble(result["max"]!!)) fail()</ID>
+    <ID>MaxLineLength:CardValidator.kt$CardValidator$if (url !is String || scalars(url) &gt; 2048 || url.any(::unsafeUrlChar) || !url.startsWith("https://", ignoreCase = true)) fail()</ID>
+    <ID>MaxLineLength:CardValidator.kt$CardValidator$if (value !is String || scalars(value) &gt; 2000 || (field["required"] == true &amp;&amp; dartTrim(value).isEmpty())) fail()</ID>
+    <ID>MaxLineLength:CardValidator.kt$CardValidator$linkedMapOf("kind" to "choice", "options" to opts, "multi" to (if (o.containsKey("multi")) bool(o["multi"]) else false))</ID>
+    <ID>MaxLineLength:CardValidator.kt$CardValidator$linkedMapOf("kind" to "photo", "purpose" to purpose, "max" to (if (o.containsKey("max")) int(o["max"], 1, 4) else 1L))</ID>
+    <ID>MaxLineLength:CardValidator.kt$CardValidator$listOf("kind", "options", "multi", "fields", "submitLabel", "confirmLabel", "cancelLabel", "tone", "purpose", "max")</ID>
+    <ID>MaxLineLength:CardValidator.kt$CardValidator$private</ID>
+    <ID>MaxLineLength:CardValidator.kt$CardValidator$private val directional = setOf(0x061c, 0x200e, 0x200f, 0x202a, 0x202b, 0x202c, 0x202d, 0x202e, 0x2066, 0x2067, 0x2068, 0x2069)</ID>
+    <ID>MaxLineLength:CardValidator.kt$CardValidator$val o = obj(value, listOf("type", "kind", "unit", "labels", "series"), listOf("type", "kind", "labels", "series"))</ID>
+    <ID>MaxLineLength:CardValidator.kt$CardValidator$val result = linkedMapOf&lt;String, Any?&gt;("type" to "chart", "kind" to pick(o["kind"], listOf("bar", "line")))</ID>
+    <ID>MaxLineLength:CardValidator.kt$SafeHttps$if (v6.isEmpty() || v6.any { !(it.isLetterOrDigit() &amp;&amp; it.code &lt; 128) &amp;&amp; it != ':' &amp;&amp; it != '.' }) return false</ID>
+    <ID>MaxLineLength:CardsInstallScripts.kt$CardsInstallScripts$"cli" to JsonPrimitive("/home/oc/.local/share/oc-agents/claude/${pins.claudeVersion}/payload/claude")</ID>
+    <ID>MaxLineLength:CardsInstallScripts.kt$CardsInstallScripts$*</ID>
+    <ID>MaxLineLength:CardsInstallScripts.kt$CardsInstallScripts$private</ID>
+    <ID>MaxLineLength:CardsInstallScriptsTest.kt$CardsInstallScriptsTest$File(root, "config/opencode.json").writeText("""{"model":"keep","mcp":{"servers":{"other":{"disabled":true}}}}""")</ID>
+    <ID>MaxLineLength:CardsInstallScriptsTest.kt$CardsInstallScriptsTest$ProcessBuilder("/usr/bin/python3", "-", Base64.getEncoder().encodeToString(JsonObject(data).toString().encodeToByteArray()))</ID>
+    <ID>MaxLineLength:CardsInstallScriptsTest.kt$CardsInstallScriptsTest$assertEquals(22, apply("one", runtimes = setOf("/opt/node/bin/node", "/usr/bin/node"), unsafePath = "/opt/node/bin/node"))</ID>
+    <ID>MaxLineLength:CardsInstallScriptsTest.kt$CardsInstallScriptsTest$file.writeText(file.readText().replace(Regex("\"oc-ui\":\\{[^}]*\\}"), "\"oc-ui\":{\"command\":[\"user-edit\"]}"))</ID>
+    <ID>MaxLineLength:CardsInstallScriptsTest.kt$CardsInstallScriptsTest$json("""{"type":"local","command":["/opt/node/bin/node","${root.path}/managed/server.cjs"],"disabled":false,"codemode":false}""")</ID>
+    <ID>MaxLineLength:CardsInstallScriptsTest.kt$CardsInstallScriptsTest$val data = Json.parseToJsonElement(Base64.getDecoder().decode(encoded).decodeToString()).jsonObject.toMutableMap()</ID>
+    <ID>MaxLineLength:CardsInstallScriptsTest.kt$CardsInstallScriptsTest$val original = """{"theme":"dark","permissions":{"allow":["Read","mcp__other__show"],"ask":["Bash"],"deny":["Write"]}}"""</ID>
+    <ID>MaxLineLength:CardsInstallScriptsTest.kt$CardsInstallScriptsTest$val script = if (verify) CardsInstallScripts.verification(owner, agent) else CardsInstallScripts.install(owner, agent, enabled)</ID>
+    <ID>MaxLineLength:CardsInstaller.kt$ManagedCardsInstaller$CardsInstallOutcome.Failed -&gt; problem = if (enabled) CardsProblem.RegistrationFailed else CardsProblem.RemovalFailed</ID>
+    <ID>MaxLineLength:CardsInstaller.kt$ManagedCardsInstaller$if (agents.isEmpty()) return if (enabled) CardsStatus.Unavailable(CardsProblem.NotQualified) else CardsStatus.Off</ID>
+    <ID>MaxLineLength:CardsInstaller.kt$ManagedCardsInstaller$return if (changed) CardsStatus.Partial(ready.toList(), reason, affected) else CardsStatus.Failed(reason, affected)</ID>
+    <ID>MaxLineLength:CardsInstaller.kt$ManagedCardsInstaller$return if (reason == CardsProblem.NotQualified) CardsStatus.Unavailable(reason, affected) else CardsStatus.Failed(reason, affected)</ID>
+    <ID>MaxLineLength:CardsInstallerTest.kt$CardsInstallerTest$assertEquals(CardsStatus.Off, ManagedCardsInstaller(runner, verifier).setEnabled("one", listOf(CardAgent.OpenCode2), false))</ID>
+    <ID>MaxLineLength:CardsInstallerTest.kt$CardsInstallerTest$assertIs&lt;CardsStatus.Failed&gt;(ManagedCardsInstaller(runner).setEnabled("../other; touch x", listOf(CardAgent.Claude), true))</ID>
+    <ID>MaxLineLength:CardsInstallerTest.kt$CardsInstallerTest$fun</ID>
+    <ID>MaxLineLength:CardsInstallerTest.kt$CardsInstallerTest$val failed = ManagedCardsInstaller(Runner(), Verifier(emptySet())).setEnabled("one", listOf(CardAgent.Claude), true)</ID>
+    <ID>MaxLineLength:CardsInstallerTest.kt$CardsInstallerTest$val on = ManagedCardsInstaller(Runner(), Verifier(setOf(CardAgent.Claude))).setEnabled("one", listOf(CardAgent.Claude), true)</ID>
+    <ID>MaxLineLength:CardsInstallerTest.kt$CardsInstallerTest$val status = ManagedCardsInstaller(runner, Verifier(setOf(CardAgent.Claude))).setEnabled("profile-1", both, true)</ID>
+    <ID>MaxLineLength:CardsPolicyTest.kt$CardsPolicyTest$assertEquals(CardsStatus.Partial(listOf(CardAgent.Claude), CardsProblem.RegistrationFailed, listOf(CardAgent.OpenCode2)), setup.status("p"))</ID>
+    <ID>MaxLineLength:CardsPolicyTest.kt$CardsPolicyTest$assertEquals(ShowCardPermission.Decision.AllowOnce, rule.decide(request(id = "r0", provider = null)), "Claude without provider")</ID>
+    <ID>MaxLineLength:CardsPolicyTest.kt$CardsPolicyTest$assertEquals(ShowCardPermission.Decision.Ask, rule.decide(request(id = "r2")), "disable is rechecked per request")</ID>
+    <ID>MaxLineLength:CardsPolicyTest.kt$CardsPolicyTest$assertFalse(CardRecovery.needsRead(target(session = "x", mayLoad = false), coverage), "never wakes a sleeping agent")</ID>
+    <ID>MaxLineLength:CardsPolicyTest.kt$CardsPolicyTest$fun</ID>
+    <ID>MaxLineLength:CardsPolicyTest.kt$CardsPolicyTest$private</ID>
+    <ID>MaxLineLength:CardsPolicyTest.kt$CardsPolicyTest$private fun msg(id: String, role: Role = Role.Assistant)</ID>
+    <ID>MaxLineLength:CardsPolicyTest.kt$CardsPolicyTest$q.verdict = Outcome.Ok(CardsVerdict(listOf(CardAgent.Claude), CardsProblem.RegistrationFailed, listOf(CardAgent.OpenCode2)))</ID>
+    <ID>MaxLineLength:CardsPolicyTest.kt$CardsPolicyTest$val src = Pages(CardHistoryPage(listOf(msg("c"), msg("d")), "older", true), CardHistoryPage(listOf(msg("a"), msg("b")), "oldest", true))</ID>
+    <ID>MaxLineLength:CardsPolicyTest.kt$CardsPolicyTest.Qualifier$private</ID>
+    <ID>MaxLineLength:NioCardsRootFs.kt$NioCardsRootFs$Files.move(file, Path.of(directory, name), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)</ID>
+    <ID>MaxLineLength:ShowCardPermission.kt$ShowCardPermission.Request$/** The daemon reported a tested version (Paseo `paseoSupports`); an unqualified daemon never auto-allows (B-SEC-080). */</ID>
+    <ID>NestedBlockDepth:CardAnswers.kt$CardAnswers$fun structural(raw: Any?)</ID>
+    <ID>NestedBlockDepth:CardAnswers.kt$CardAnswers$fun validated(ask: CardAsk, raw: Any?): Map&lt;String, Any?&gt;</ID>
+    <ID>NestedBlockDepth:CardBoard.kt$CardBoard$private fun publish(busy: Boolean = mutable.value.busy, available: Boolean = mutable.value.available)</ID>
+    <ID>NestedBlockDepth:CardCodec.kt$CardCodec$public fun stateFor(card: AgentCard, transcript: List&lt;MessageWithParts&gt;, tailComplete: Boolean): CardState</ID>
+    <ID>ReturnCount:CardAuthority.kt$CardAuthority$public fun observedState(card: AgentCard): CardState?</ID>
+    <ID>ReturnCount:CardBoard.kt$CardBoard$private fun admit(card: AgentCard, answer: CardAnswer, photos: List&lt;PromptAttachment&gt;): CardRefusal?</ID>
+    <ID>ReturnCount:CardBoard.kt$CardBoard$private fun journaled(identity: String): Boolean</ID>
+    <ID>ReturnCount:CardBoard.kt$CardBoard$private fun photoRefusal(answer: CardAnswer, photos: List&lt;PromptAttachment&gt;): CardRefusal?</ID>
+    <ID>ReturnCount:CardBoard.kt$CardBoard$private suspend fun send(card: AgentCard, answer: CardAnswer, photos: List&lt;PromptAttachment&gt;)</ID>
+    <ID>ReturnCount:CardBoard.kt$CardBoard$public fun answer(card: AgentCard, answer: CardAnswer, photos: List&lt;PromptAttachment&gt; = emptyList()): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:CardBoard.kt$CardBoard.Companion$internal fun dataUrlBytes(url: String, mime: String): Long?</ID>
+    <ID>ReturnCount:CardCodec.kt$CardCodec$private fun receipt(message: MessageWithParts): Receipt?</ID>
+    <ID>ReturnCount:CardCodec.kt$CardCodec$public fun answerIn(message: MessageWithParts, card: AgentCard): Pair&lt;String, Map&lt;String, Any?&gt;&gt;?</ID>
+    <ID>ReturnCount:CardCodec.kt$CardCodec$public fun stateFor(card: AgentCard, transcript: List&lt;MessageWithParts&gt;, tailComplete: Boolean): CardState</ID>
+    <ID>ReturnCount:CardJournal.kt$StoredCardJournal$private fun entries(profileId: String): List&lt;Map&lt;String, Any?&gt;&gt;?</ID>
+    <ID>ReturnCount:CardJournal.kt$StoredCardJournal$private suspend fun update(profileId: String, change: (List&lt;Map&lt;String, Any?&gt;&gt;) -&gt; List&lt;Map&lt;String, Any?&gt;&gt;): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:CardJson.kt$CardJson$public fun dartDouble(d: Double): String</ID>
+    <ID>ReturnCount:CardRecovery.kt$CardCoverage$public suspend fun remember(profileId: String, identity: String, promptStamp: String): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:CardRecovery.kt$CardHistory$public suspend fun readTail( source: CardHistorySource, sessionId: String, limit: Int = PAGE, missingMessageIds: Set&lt;String&gt; = emptySet(), ): Outcome&lt;CardTail&gt;</ID>
+    <ID>ReturnCount:CardRecovery.kt$CardRecovery$public fun needsRead(target: RecoveryTarget, coverage: CardCoverage, explicit: Boolean = false): Boolean</ID>
+    <ID>ReturnCount:CardSearchPublisher.kt$CardSearchPublisher$public suspend fun publish(profileId: String, agent: CardsHelperAgent, endpoint: String, bearer: String): Boolean</ID>
+    <ID>ReturnCount:CardValidator.kt$CardValidator$fun fieldValue(value: Any?, field: Map&lt;String, Any?&gt;): Any</ID>
+    <ID>ReturnCount:CardValidator.kt$CardValidator$fun visit(x: Any?, depth: Int)</ID>
+    <ID>ReturnCount:CardValidator.kt$SafeHttps$fun isSafe(url: String): Boolean</ID>
+    <ID>ReturnCount:CardsInstaller.kt$ManagedCardsInstaller$private suspend fun apply(profileId: String, agents: List&lt;CardAgent&gt;, enabled: Boolean): CardsStatus</ID>
+    <ID>ReturnCount:CardsInstaller.kt$ManagedCardsInstaller$private suspend fun verify(profileId: String, agent: CardAgent, ready: MutableList&lt;CardAgent&gt;): CardsProblem?</ID>
+    <ID>ReturnCount:CardsSetup.kt$CardsSetup$private suspend fun recheckOwned(profileId: String): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:CardsSetup.kt$CardsSetup$private suspend fun setOwnedEnabled(profileId: String, on: Boolean): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:CardsSetup.kt$CardsSetup$public fun status(profileId: String): CardsStatus</ID>
+    <ID>ReturnCount:ShowCardPermission.kt$ShowCardPermission$private fun exact(r: Request): Boolean</ID>
+    <ID>ReturnCount:ShowCardPermission.kt$ShowCardPermission$public fun decide(request: Request): Decision</ID>
+    <ID>SwallowedException:CardBoard.kt$CardBoard$e: CardAnswerInvalid</ID>
+    <ID>SwallowedException:CardCodec.kt$CardCodec$e: CardAnswerInvalid</ID>
+    <ID>SwallowedException:CardCodec.kt$CardCodec$e: CardValidator.Invalid</ID>
+    <ID>SwallowedException:CardCodec.kt$CardCodec$e: ClassCastException</ID>
+    <ID>SwallowedException:CardCodec.kt$CardCodec$e: IllegalArgumentException</ID>
+    <ID>SwallowedException:CardCodec.kt$CardCodec$e: IndexOutOfBoundsException</ID>
+    <ID>SwallowedException:CardJournal.kt$StoredCardJournal$e: ClassCastException</ID>
+    <ID>SwallowedException:CardJournal.kt$StoredCardJournal$e: IllegalArgumentException</ID>
+    <ID>SwallowedException:CardRecovery.kt$CardCoverage$e: RuntimeException</ID>
+    <ID>SwallowedException:CardSearchPublisher.kt$CardSearchPublisher$e: Exception</ID>
+    <ID>SwallowedException:CardToolServerTest.kt$CardToolServerTest$e: Throwable</ID>
+    <ID>SwallowedException:CardsInstaller.kt$ManagedCardsInstaller$e: Exception</ID>
+    <ID>SwallowedException:NioCardsRootFs.kt$NioCardsRootFs$e: Exception</ID>
+    <ID>SwallowedException:ShowCardPermission.kt$ShowCardPermission$e: IllegalStateException</ID>
+    <ID>SwallowedException:ShowCardPermission.kt$ShowCardPermission$e: RuntimeException</ID>
+    <ID>TooGenericExceptionCaught:CardCodec.kt$CardCodec$e: IndexOutOfBoundsException</ID>
+    <ID>TooGenericExceptionCaught:CardRecovery.kt$CardCoverage$e: RuntimeException</ID>
+    <ID>TooGenericExceptionCaught:CardSearchPublisher.kt$CardSearchPublisher$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CardsInstaller.kt$ManagedCardsInstaller$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ShowCardPermission.kt$ShowCardPermission$e: RuntimeException</ID>
+    <ID>TooManyFunctions:CardBoard.kt$CardBoard</ID>
+    <ID>TooManyFunctions:CardCodec.kt$CardCodec</ID>
+    <ID>TooManyFunctions:CardJson.kt$CardJson</ID>
+    <ID>TooManyFunctions:CardValidator.kt$CardValidator</ID>
+    <ID>TooManyFunctions:CardsSetup.kt$CardsSetup</ID>
+  </CurrentIssues>
+</SmellBaseline>

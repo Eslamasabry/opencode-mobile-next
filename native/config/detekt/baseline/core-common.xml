@@ -1,0 +1,223 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:DartJson.kt$DartJson.Parser$i &lt; s.length &amp;&amp; (s[i] == ' ' || s[i] == '\t' || s[i] == '\n' || s[i] == '\r')</ID>
+    <ID>CyclomaticComplexMethod:CommonTest.kt$CommonTest$@Test fun `Failure is one flat closed list with one name per subtype (plan 03 S10_1)`()</ID>
+    <ID>CyclomaticComplexMethod:DartJson.kt$DartJson$private fun writeString(sb: StringBuilder, s: String)</ID>
+    <ID>CyclomaticComplexMethod:DartJson.kt$DartJson.Parser$fun num(): Any</ID>
+    <ID>CyclomaticComplexMethod:TerminalLinks.kt$TerminalLinks$public fun urlAt(rows: List&lt;TerminalRow&gt;, columns: Int, x: Int, y: Int): String?</ID>
+    <ID>CyclomaticComplexMethod:TerminalLinks.kt$TerminalLinks$public fun urls(output: String, columns: Int, limit: Int = 3): List&lt;String&gt;</ID>
+    <ID>CyclomaticComplexMethod:TerminalText.kt$TerminalText$private fun ansi(line: String, redact: (String) -&gt; String): List&lt;TerminalSpan&gt;</ID>
+    <ID>CyclomaticComplexMethod:TolerantJson.kt$TolerantJson$@OptIn(ExperimentalSerializationApi::class) public fun fit(value: JsonElement, descriptor: SerialDescriptor): JsonElement?</ID>
+    <ID>MagicNumber:AppLog.kt$AppLog$12</ID>
+    <ID>MagicNumber:CalendarText.ios.kt$1000.0</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$0x10000</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$0x20</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$0x3F</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$0x80</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$0x800</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$0xC0</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$0xD800</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$0xDC00</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$0xE0</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$0xF0</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$0xFF</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$0xFFFD</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$10</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$100</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$12</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$1460</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$146_096</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$146_097</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$153</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$16</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$18</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$1_000</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$1_000_000</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$1e-6</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$1e21</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$3</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$3600</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$365</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$36_524</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$4</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$400</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$5</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$6</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$60</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$719_468</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$8</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$9</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson$9999</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson.Parser$0x20</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson.Parser$16</ID>
+    <ID>MagicNumber:DartJson.kt$DartJson.Parser$4</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x06ca6351L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x0fc19dc6L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x106aa070L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x12835b01L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x14292967L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x19a4c116L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x1e376c08L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x1f83d9abL</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x240ca1ccL</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x243185beL</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x2748774cL</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x27b70a85L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x2de92c6fL</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x2e1b2138L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x34b0bcb5L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x391c0cb3L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x3956c25bL</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x3c6ef372L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x428a2f98L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x4a7484aaL</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x4d2c6dfcL</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x4ed8aa4aL</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x510e527fL</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x53380d13L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x550c7dc3L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x59f111f1L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x5b9cca4fL</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x5be0cd19L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x5cb0a9dcL</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x650a7354L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x682e6ff3L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x6a09e667L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x71374491L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x72be5d74L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x748f82eeL</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x766a0abbL</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x76f988daL</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x78a5636fL</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x80deb1feL</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x81c2c92eL</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x84c87814L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x8cc70208L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x90befffaL</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x923f82a4L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x92722c85L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x983e5152L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x9b05688cL</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0x9bdc06a7L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0xFF</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0xFFFFFFFFL</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0xa2bfe8a1L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0xa4506cebL</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0xa54ff53aL</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0xa81a664bL</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0xa831c66dL</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0xab1c5ed5L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0xb00327c8L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0xb5c0fbcfL</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0xbb67ae85L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0xbef9a3f7L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0xbf597fc7L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0xc19bf174L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0xc24b8b70L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0xc67178f2L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0xc6e00bf3L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0xc76c51a3L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0xd192e819L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0xd5a79147L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0xd6990624L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0xd807aa98L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0xe49b69c1L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0xe9b5dba5L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0xefbe4786L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$0xf40e3585L</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$10</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$11</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$13</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$15</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$16</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$17</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$18</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$19</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$22</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$24</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$25</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$3</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$4</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$5</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$6</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$63</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$64</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$7</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$8</ID>
+    <ID>MagicNumber:DartJson.kt$Sha256$9</ID>
+    <ID>MagicNumber:Numbers.kt$Numbers$10</ID>
+    <ID>MagicNumber:Numbers.kt$Numbers$3</ID>
+    <ID>MagicNumber:Numbers.kt$Numbers$9</ID>
+    <ID>MagicNumber:Pacer.kt$Cadence$0.5</ID>
+    <ID>MagicNumber:TerminalOsc52.kt$TerminalOsc52$3</ID>
+    <ID>MagicNumber:TerminalOsc52.kt$TerminalOsc52$4</ID>
+    <ID>MagicNumber:TerminalOsc52.kt$TerminalOsc52$8</ID>
+    <ID>MagicNumber:TerminalOsc52Stream.kt$TerminalOsc52Stream$27</ID>
+    <ID>MagicNumber:TerminalOsc52Stream.kt$TerminalOsc52Stream$3</ID>
+    <ID>MagicNumber:TerminalOsc52Stream.kt$TerminalOsc52Stream$4</ID>
+    <ID>MagicNumber:TerminalOsc52Stream.kt$TerminalOsc52Stream$50</ID>
+    <ID>MagicNumber:TerminalOsc52Stream.kt$TerminalOsc52Stream$53</ID>
+    <ID>MagicNumber:TerminalOsc52Stream.kt$TerminalOsc52Stream$59</ID>
+    <ID>MagicNumber:TerminalOsc52Stream.kt$TerminalOsc52Stream$64</ID>
+    <ID>MagicNumber:TerminalOsc52Stream.kt$TerminalOsc52Stream$93</ID>
+    <ID>MagicNumber:TerminalText.kt$TerminalText$22</ID>
+    <ID>MagicNumber:TerminalText.kt$TerminalText$3</ID>
+    <ID>MagicNumber:TerminalText.kt$TerminalText$30</ID>
+    <ID>MagicNumber:TerminalText.kt$TerminalText$37</ID>
+    <ID>MagicNumber:TerminalText.kt$TerminalText$38</ID>
+    <ID>MagicNumber:TerminalText.kt$TerminalText$39</ID>
+    <ID>MagicNumber:TerminalText.kt$TerminalText$4</ID>
+    <ID>MagicNumber:TerminalText.kt$TerminalText$400</ID>
+    <ID>MagicNumber:TerminalText.kt$TerminalText$48</ID>
+    <ID>MagicNumber:TerminalText.kt$TerminalText$5</ID>
+    <ID>MagicNumber:TerminalText.kt$TerminalText$6</ID>
+    <ID>MagicNumber:TerminalText.kt$TerminalText$8</ID>
+    <ID>MagicNumber:TerminalText.kt$TerminalText$90</ID>
+    <ID>MagicNumber:TerminalText.kt$TerminalText$97</ID>
+    <ID>MagicNumber:Trace.android.kt$AndroidTrace$127</ID>
+    <ID>MaxLineLength:BuildFacts.kt$AppBuildInfo</ID>
+    <ID>MaxLineLength:CommonTest.kt$CommonTest$assertEquals(listOf("Network", "Network", "Unavailable", "Rejected", "Busy", "Incompatible", "StorageRefused"), samples.map(::name))</ID>
+    <ID>MaxLineLength:DartJson.kt$DartJson$*</ID>
+    <ID>MaxLineLength:DartJson.kt$DartJson$/** Dart `Uri.encodeComponent`: keeps `A-Z a-z 0-9 - _ . ! ~ * ' ( )`, UTF-8 percent-escapes the rest, uppercase hex. */</ID>
+    <ID>MaxLineLength:DartJson.kt$DartJson$val year = if (y in 0..9999) pad(y.toLong(), 4) else (if (y &lt; 0) "-" else "+") + pad(kotlin.math.abs(y).toLong(), 6)</ID>
+    <ID>MaxLineLength:DartJson.kt$DartJson.Parser$val code = s.substring(i, i + 4).toIntOrNull(16) ?: throw ParseException("bad unicode escape", i)</ID>
+    <ID>MaxLineLength:DartJsonTest.kt$DartJsonTest$*</ID>
+    <ID>MaxLineLength:DartJsonTest.kt$DartJsonTest$assertEquals("[\"a\\\"b\\\\c\\n\\t\\b\\f\\r\\u0001\\u001f/é😀\"]", DartJson.encode(listOf("a\"b\\c\n\t\b\u000C\r\u0001\u001f/é😀")))</ID>
+    <ID>MaxLineLength:DartJsonTest.kt$DartJsonTest$assertEquals("{\"b\":1,\"a\":[true,null,1.5]}", DartJson.encode(linkedMapOf("b" to 1L, "a" to listOf(true, null, 1.5))))</ID>
+    <ID>MaxLineLength:Dispatchers.kt$CommonBindings$public</ID>
+    <ID>MaxLineLength:Failure.kt$Failure.Network$public data</ID>
+    <ID>MaxLineLength:Failure.kt$Failure.Server$public data</ID>
+    <ID>MaxLineLength:Failure.kt$MediaProblem$DownloadHttpsRequired</ID>
+    <ID>MaxLineLength:Failure.kt$MediaProblem.SaveFailed$SaveFailed</ID>
+    <ID>MaxLineLength:Failure.kt$SignInWhy$public enum</ID>
+    <ID>MaxLineLength:Pacer.kt$Cadence$listOfNotNull(foreground, hiddenWatching, hiddenIdle).forEach { require(it.isPositive()) { "periods are positive" } }</ID>
+    <ID>MaxLineLength:PacerTest.kt$PacerTest$TimerSpec("test.poll", Cadence(foreground = 5.seconds, hiddenWatching = 10.seconds, hiddenIdle = null), "keeps the test busy")</ID>
+    <ID>MaxLineLength:PacerTest.kt$PacerTest$fun</ID>
+    <ID>MaxLineLength:Platform.android.kt$internal actual fun stackFramesOf(error: Throwable): List&lt;String&gt;</ID>
+    <ID>MaxLineLength:Platform.desktop.kt$internal actual fun stackFramesOf(error: Throwable): List&lt;String&gt;</ID>
+    <ID>MaxLineLength:Platform.ios.kt$internal actual fun stackFramesOf(error: Throwable): List&lt;String&gt;</ID>
+    <ID>MaxLineLength:Redacted.kt$Redacted$/** Technical text that already went through the Redactor (plan 03 S6). P-03-3: opt-in on a value-class constructor compiles. */</ID>
+    <ID>MaxLineLength:TerminalText.kt$TerminalText$"""(?&lt;!(?:\b\d{1,9}|\bno) )\b(error|errors|failed|failure|fatal|exception|traceback|panic)\b|✗|✖|\bFAIL\b"""</ID>
+    <ID>MaxLineLength:TolerantJson.kt$TolerantJson$PrimitiveKind.STRING, SerialKind.ENUM, PrimitiveKind.CHAR -&gt; (value as? JsonPrimitive)?.takeIf { it.isString }</ID>
+    <ID>NestedBlockDepth:DartJson.kt$DartJson.Parser$@Suppress("CyclomaticComplexMethod") fun str(): String</ID>
+    <ID>NestedBlockDepth:TerminalOsc52Stream.kt$TerminalOsc52Stream$public fun feed(bytes: ByteArray, count: Int): ByteArray</ID>
+    <ID>NestedBlockDepth:TerminalText.kt$TerminalText$private fun ansi(line: String, redact: (String) -&gt; String): List&lt;TerminalSpan&gt;</ID>
+    <ID>ReturnCount:Numbers.kt$Numbers$public fun decimal(value: Double, fractionDigits: Int, symbols: NumberSymbols = symbols()): String</ID>
+    <ID>ReturnCount:TerminalLinks.kt$TerminalLinks$fun continues(row: Int): Boolean</ID>
+    <ID>ReturnCount:TerminalLinks.kt$TerminalLinks$public fun urlAt(rows: List&lt;TerminalRow&gt;, columns: Int, x: Int, y: Int): String?</ID>
+    <ID>ReturnCount:TerminalLinks.kt$TerminalLinks$public fun urls(output: String, columns: Int, limit: Int = 3): List&lt;String&gt;</ID>
+    <ID>ReturnCount:TerminalOsc52.kt$TerminalOsc52$public fun parse(args: List&lt;String&gt;): String?</ID>
+    <ID>ReturnCount:TerminalText.kt$TerminalText$public fun line(line: String, redact: (String) -&gt; String): List&lt;TerminalSpan&gt;</ID>
+    <ID>ReturnCount:TolerantJson.kt$TolerantJson$@OptIn(ExperimentalSerializationApi::class) public fun fit(value: JsonElement, descriptor: SerialDescriptor): JsonElement?</ID>
+    <ID>ReturnCount:TolerantJson.kt$TolerantJson$public fun &lt;T&gt; decode(deserializer: DeserializationStrategy&lt;T&gt;, element: JsonElement?, json: Json = WireJson): T?</ID>
+    <ID>ReturnCount:TolerantJson.kt$TolerantJson$public fun integral(value: JsonElement?, kind: SerialKind = PrimitiveKind.LONG): Long?</ID>
+    <ID>ThrowsCount:DartJson.kt$DartJson.Parser$@Suppress("CyclomaticComplexMethod") fun str(): String</ID>
+    <ID>ThrowsCount:DartJson.kt$DartJson.Parser$fun num(): Any</ID>
+    <ID>ThrowsCount:DartJson.kt$DartJson.Parser$fun obj(depth: Int): LinkedHashMap&lt;String, Any?&gt;</ID>
+    <ID>ThrowsCount:DartJson.kt$DartJson.Parser$fun value(depth: Int): Any?</ID>
+    <ID>TooGenericExceptionCaught:Outcome.kt$e: Throwable</ID>
+    <ID>TooManyFunctions:DartJson.kt$DartJson</ID>
+  </CurrentIssues>
+</SmellBaseline>

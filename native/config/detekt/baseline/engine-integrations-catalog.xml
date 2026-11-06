@@ -1,0 +1,220 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:LibraryRecoveryCodec.kt$LibraryRecoveryCodec$obj[key] != JsonNull &amp;&amp; (place(key) == null || place(key)!!.length &gt; 2048 || LOCATION_CONTROLS.containsMatchIn(place(key)!!))</ID>
+    <ID>ComplexCondition:LibrarySession.kt$LibrarySession$!validId(provider.id) || !validId(methodId) || !src.capabilities.integrationCredentials || method.type !in setOf("oauth", "command") || mutable.value.providers.none { it.id == provider.id &amp;&amp; it.methods.any { candidate -&gt; candidate.id == method.id &amp;&amp; candidate.type == method.type } }</ID>
+    <ID>ComplexCondition:LibrarySession.kt$LibrarySession$corrupt || mutable.value.storageUncertain || mutable.value.attempts.size &gt;= 16 || provider.id in mutable.value.uncertain || mutable.value.attempts.any { it.integration == provider.id &amp;&amp; sameSource(it, src) }</ID>
+    <ID>ComplexCondition:LibrarySession.kt$LibrarySession$provider != null &amp;&amp; (id == null || provider.connections.any { it.type == "credential" &amp;&amp; it.id == id })</ID>
+    <ID>ComplexCondition:McpCatalog.kt$query.isBlank() || query.takeCodePoints(101).length &gt; query.takeCodePoints(100).length || redactor.containsSecret(query) || CATALOG_URL.containsMatchIn(query) || limit !in 1..10</ID>
+    <ID>ComplexCondition:McpCatalogController.kt$McpCatalogController$selected.requiresArguments || safeName.isEmpty() || safeName.length &gt; 64 || !Regex("^[a-zA-Z0-9_-]+$").matches(safeName) || redactor.containsSecret(safeName) || original.headers.keys.any { headers[it].isNullOrBlank() } || original.environment.keys.any { environment[it].isNullOrBlank() }</ID>
+    <ID>ComplexCondition:McpChatConnect.kt$McpChatConnect$draft == null || !item.hosted || item.needsKey || item.needsSettings || draft.headers.isNotEmpty() || draft.environment.isNotEmpty() || draft.command.isNotEmpty() || CatalogUrl.parse(draft.url.orEmpty())?.scheme != "https"</ID>
+    <ID>ComplexCondition:McpChatConnect.kt$McpChatConnect$url == null || url.scheme != "https" || url.host.isEmpty() || url.userInfo.isNotEmpty() || Regex("[\\s\\x00-\\x1f\\x7f]").containsMatchIn(started.authorizationUrl) || started.oauthState.isEmpty() || url.query["state"] != started.oauthState</ID>
+    <ID>ComplexCondition:McpChatConnect.kt$input.isEmpty() || input.length &gt; 8192 || input.contains('\r') || input.contains('\n')</ID>
+    <ID>ComplexCondition:McpDrafts.kt$url == null || !url.hasAuthority || url.host.isEmpty() || (url.scheme != "https" &amp;&amp; url.scheme != "http") || url.userInfo.isNotEmpty()</ID>
+    <ID>ComplexCondition:McpRuntime.kt$name.isBlank() || name != name.trim() || CONTROL_CHARACTERS.containsMatchIn(name) || redactor.containsSecret(name)</ID>
+    <ID>ComplexCondition:ProviderSignIn.kt$trimmed.isEmpty() || trimmed.length &gt; 8192 || trimmed.any { it.isWhitespace() || it.code &lt; 32 || it.code in 127..159 || it == '\\' }</ID>
+    <ID>ComplexCondition:ProviderSignIn.kt$url.scheme != "https" || !url.hasAuthority || url.host.trim().isEmpty() || url.userInfo.isNotEmpty()</ID>
+    <ID>ComplexCondition:SessionSkills.kt$SessionSkillGateway$reply.status == 405 || reply.status == 501 || (reply.status == 404 &amp;&amp; tag != "SessionNotFoundError" &amp;&amp; tag != "SkillNotFoundError")</ID>
+    <ID>CyclomaticComplexMethod:AgentConnectorSearch.kt$AgentConnectorSearch$public suspend fun find( profile: String, request: JsonObject, current: () -&gt; Boolean, ): JsonObject</ID>
+    <ID>CyclomaticComplexMethod:ConnectorSearch.kt$public fun parseConnectorSearchResult(value: JsonElement? = null, text: String? = null): ConnectorSearchResult?</ID>
+    <ID>CyclomaticComplexMethod:LibraryRecoveryCodec.kt$LibraryRecoveryCodec$public fun parse(raw: String, profile: String, nowMs: Long): List&lt;LibraryAttempt&gt;?</ID>
+    <ID>CyclomaticComplexMethod:LibrarySession.kt$LibrarySession$private suspend fun refreshInside()</ID>
+    <ID>CyclomaticComplexMethod:LibrarySession.kt$LibrarySession$public fun attach(entry: LibraryAttempt)</ID>
+    <ID>CyclomaticComplexMethod:LibrarySession.kt$LibrarySession$public suspend fun check( entry: LibraryAttempt, code: String? = null, cancel: Boolean = false, ): IntegrationAuthState?</ID>
+    <ID>CyclomaticComplexMethod:LibrarySession.kt$LibrarySession$public suspend fun start( provider: IntegrationInfo, method: IntegrationMethodInfo, inputs: ImmutableMap&lt;String, String&gt;, ): IntegrationAuthLaunch?</ID>
+    <ID>CyclomaticComplexMethod:McpCatalog.kt$public fun parseMcpCatalogEntry(value: JsonObject, redactor: Redactor): McpCatalogEntry?</ID>
+    <ID>CyclomaticComplexMethod:McpCatalog.kt$public fun searchMcpCatalog( arguments: JsonObject, entries: List&lt;McpCatalogEntry&gt;?, connected: Map&lt;String, Boolean&gt;?, redactor: Redactor, ): JsonObject?</ID>
+    <ID>CyclomaticComplexMethod:McpCatalogController.kt$McpCatalogController$public suspend fun add( name: String, headers: Map&lt;String, String&gt;, environment: Map&lt;String, String&gt;, )</ID>
+    <ID>CyclomaticComplexMethod:McpCatalogController.kt$McpCatalogController$public suspend fun refresh(query: String? = null)</ID>
+    <ID>CyclomaticComplexMethod:McpChatConnect.kt$McpChatConnect$public suspend fun connect(serverId: String)</ID>
+    <ID>CyclomaticComplexMethod:McpChatConnect.kt$McpChatConnect$public suspend fun startOAuth()</ID>
+    <ID>CyclomaticComplexMethod:McpChatConnectors.kt$CatalogMcpChatConnectors$override suspend fun resolve( profile: String, catalogId: String, current: () -&gt; Boolean, ): McpChatSuggestion?</ID>
+    <ID>CyclomaticComplexMethod:McpDrafts.kt$public fun mcpDraftConfig(draft: McpServerDraft): McpDraftCheck</ID>
+    <ID>CyclomaticComplexMethod:PluginInventory.kt$public fun mapPluginInfo(value: JsonObject): PluginInfo?</ID>
+    <ID>CyclomaticComplexMethod:ProvidersList.kt$public fun parseProvidersResponse(json: JsonObject): ProvidersResponse</ID>
+    <ID>CyclomaticComplexMethod:SessionSkills.kt$SkillActivationGuard$public suspend fun activate(sessionId: String, skillId: String, resume: Boolean, expectedLocation: Int): SkillActivation</ID>
+    <ID>LargeClass:LibrarySession.kt$LibrarySession</ID>
+    <ID>LongMethod:AgentConnectorSearch.kt$AgentConnectorSearch$public suspend fun find( profile: String, request: JsonObject, current: () -&gt; Boolean, ): JsonObject</ID>
+    <ID>LongMethod:LibraryRecoveryCodec.kt$LibraryRecoveryCodec$public fun parse(raw: String, profile: String, nowMs: Long): List&lt;LibraryAttempt&gt;?</ID>
+    <ID>LongMethod:LibrarySession.kt$LibrarySession$private suspend fun refreshInside()</ID>
+    <ID>LongMethod:LibrarySession.kt$LibrarySession$public suspend fun check( entry: LibraryAttempt, code: String? = null, cancel: Boolean = false, ): IntegrationAuthState?</ID>
+    <ID>LongMethod:LibrarySession.kt$LibrarySession$public suspend fun start( provider: IntegrationInfo, method: IntegrationMethodInfo, inputs: ImmutableMap&lt;String, String&gt;, ): IntegrationAuthLaunch?</ID>
+    <ID>LongMethod:McpCatalog.kt$public fun encodeMcpCatalog(entries: List&lt;McpCatalogEntry&gt;): JsonArray</ID>
+    <ID>LongMethod:McpCatalog.kt$public fun parseMcpCatalogEntry(value: JsonObject, redactor: Redactor): McpCatalogEntry?</ID>
+    <ID>LongMethod:McpCatalog.kt$public fun searchMcpCatalog( arguments: JsonObject, entries: List&lt;McpCatalogEntry&gt;?, connected: Map&lt;String, Boolean&gt;?, redactor: Redactor, ): JsonObject?</ID>
+    <ID>LongMethod:McpCatalogController.kt$McpCatalogController$public suspend fun add( name: String, headers: Map&lt;String, String&gt;, environment: Map&lt;String, String&gt;, )</ID>
+    <ID>LongParameterList:McpTest.kt$( name: String, kind: McpServerKind, url: String? = null, command: List&lt;String&gt; = emptyList(), headers: Map&lt;String, String&gt; = emptyMap(), timeoutMs: Int? = null, )</ID>
+    <ID>LoopWithTooManyJumpStatements:ConnectorSearch.kt$for</ID>
+    <ID>MagicNumber:AgentConnectorSearch.kt$AgentConnectorSearch$1000L</ID>
+    <ID>MagicNumber:AgentConnectorSearch.kt$AgentConnectorSearch$24</ID>
+    <ID>MagicNumber:AgentConnectorSearch.kt$AgentConnectorSearch$4096</ID>
+    <ID>MagicNumber:AgentConnectorSearch.kt$AgentConnectorSearch$4_000</ID>
+    <ID>MagicNumber:AgentConnectorSearch.kt$AgentConnectorSearch$60</ID>
+    <ID>MagicNumber:CatalogTransport.kt$CatalogReply$200</ID>
+    <ID>MagicNumber:CatalogTransport.kt$CatalogReply$299</ID>
+    <ID>MagicNumber:CatalogUrl.kt$CatalogUrl.Companion$0x80</ID>
+    <ID>MagicNumber:CatalogUrl.kt$CatalogUrl.Companion$0xff</ID>
+    <ID>MagicNumber:CatalogUrl.kt$CatalogUrl.Companion$16</ID>
+    <ID>MagicNumber:CatalogUrl.kt$CatalogUrl.Companion$3</ID>
+    <ID>MagicNumber:CatalogUrl.kt$CatalogUrl.Companion$4</ID>
+    <ID>MagicNumber:LibraryRecoveryCodec.kt$LibraryRecoveryCodec$16</ID>
+    <ID>MagicNumber:LibraryRecoveryCodec.kt$LibraryRecoveryCodec$2048</ID>
+    <ID>MagicNumber:LibraryRecoveryCodec.kt$LibraryRecoveryCodec$256</ID>
+    <ID>MagicNumber:LibraryRecoveryCodec.kt$LibraryRecoveryCodec$524_288</ID>
+    <ID>MagicNumber:LibrarySession.kt$LibrarySession$16</ID>
+    <ID>MagicNumber:LibrarySession.kt$LibrarySession$256</ID>
+    <ID>MagicNumber:LibrarySession.kt$LibrarySession$3</ID>
+    <ID>MagicNumber:LibrarySession.kt$LibrarySession$3_000</ID>
+    <ID>MagicNumber:LibrarySession.kt$LibrarySession$524_288</ID>
+    <ID>MagicNumber:McpCatalog.kt$10</ID>
+    <ID>MagicNumber:McpCatalog.kt$100</ID>
+    <ID>MagicNumber:McpCatalog.kt$1000</ID>
+    <ID>MagicNumber:McpCatalog.kt$101</ID>
+    <ID>MagicNumber:McpCatalog.kt$120</ID>
+    <ID>MagicNumber:McpCatalog.kt$2048</ID>
+    <ID>MagicNumber:McpCatalog.kt$256</ID>
+    <ID>MagicNumber:McpCatalog.kt$300</ID>
+    <ID>MagicNumber:McpCatalog.kt$5</ID>
+    <ID>MagicNumber:McpCatalog.kt$64</ID>
+    <ID>MagicNumber:McpCatalogController.kt$McpCatalogController$20_000</ID>
+    <ID>MagicNumber:McpCatalogController.kt$McpCatalogController$64</ID>
+    <ID>MagicNumber:McpChatConnect.kt$8192</ID>
+    <ID>MagicNumber:McpChatConnectors.kt$CatalogMcpChatConnectors$4_000</ID>
+    <ID>MagicNumber:Md5.kt$Md5$0x10325476</ID>
+    <ID>MagicNumber:Md5.kt$Md5$0x67452301</ID>
+    <ID>MagicNumber:Md5.kt$Md5$0xff</ID>
+    <ID>MagicNumber:Md5.kt$Md5$10</ID>
+    <ID>MagicNumber:Md5.kt$Md5$11</ID>
+    <ID>MagicNumber:Md5.kt$Md5$12</ID>
+    <ID>MagicNumber:Md5.kt$Md5$14</ID>
+    <ID>MagicNumber:Md5.kt$Md5$15</ID>
+    <ID>MagicNumber:Md5.kt$Md5$16</ID>
+    <ID>MagicNumber:Md5.kt$Md5$17</ID>
+    <ID>MagicNumber:Md5.kt$Md5$20</ID>
+    <ID>MagicNumber:Md5.kt$Md5$21</ID>
+    <ID>MagicNumber:Md5.kt$Md5$22</ID>
+    <ID>MagicNumber:Md5.kt$Md5$23</ID>
+    <ID>MagicNumber:Md5.kt$Md5$24</ID>
+    <ID>MagicNumber:Md5.kt$Md5$3</ID>
+    <ID>MagicNumber:Md5.kt$Md5$4</ID>
+    <ID>MagicNumber:Md5.kt$Md5$4294967296.0</ID>
+    <ID>MagicNumber:Md5.kt$Md5$5</ID>
+    <ID>MagicNumber:Md5.kt$Md5$6</ID>
+    <ID>MagicNumber:Md5.kt$Md5$64</ID>
+    <ID>MagicNumber:Md5.kt$Md5$7</ID>
+    <ID>MagicNumber:Md5.kt$Md5$8</ID>
+    <ID>MagicNumber:Md5.kt$Md5$9</ID>
+    <ID>MagicNumber:PluginInventory.kt$404</ID>
+    <ID>MagicNumber:PluginInventory.kt$500</ID>
+    <ID>MagicNumber:ProviderLogoStore.kt$ProviderLogoStore$200</ID>
+    <ID>MagicNumber:ProviderSignIn.kt$127</ID>
+    <ID>MagicNumber:ProviderSignIn.kt$159</ID>
+    <ID>MagicNumber:ProviderSignIn.kt$32</ID>
+    <ID>MagicNumber:ProviderSignIn.kt$8192</ID>
+    <ID>MagicNumber:SessionSkills.kt$SessionSkillGateway$404</ID>
+    <ID>MagicNumber:SessionSkills.kt$SessionSkillGateway$405</ID>
+    <ID>MagicNumber:SessionSkills.kt$SessionSkillGateway$500</ID>
+    <ID>MagicNumber:SessionSkills.kt$SessionSkillGateway$501</ID>
+    <ID>MatchingDeclarationName:CatalogFakes.kt$FakeTransport : CatalogTransport</ID>
+    <ID>MaxLineLength:ConnectorPluginTest.kt$ConnectorPluginTest$assertEquals(ConnectorSearchStatus.CatalogueNotLoaded, parseConnectorSearchResult(text = """{"status":"catalogue_not_loaded"}""")?.status)</ID>
+    <ID>MaxLineLength:ConnectorPluginTest.kt$ConnectorPluginTest$assertEquals(ConnectorSearchStatus.Unavailable, parseConnectorSearchResult(text = """{"status":"unavailable"}""")?.status)</ID>
+    <ID>MaxLineLength:ConnectorPluginTest.kt$ConnectorPluginTest$assertEquals(listOf(ConnectorSearchMatch("GitHub", "hosted", true), ConnectorSearchMatch("io.x/y", "unavailable", null)), ok.matches)</ID>
+    <ID>MaxLineLength:ConnectorPluginTest.kt$ConnectorPluginTest$for</ID>
+    <ID>MaxLineLength:ConnectorPluginTest.kt$ConnectorPluginTest$source</ID>
+    <ID>MaxLineLength:ConnectorPluginTest.kt$ConnectorPluginTest$val local = mapPluginInfo(json("""{"status":"failed","tui":false,"source":{"type":"local","path":"/private/credentials/plugin.js"}}""") as JsonObject)!!</ID>
+    <ID>MaxLineLength:ConnectorPluginTest.kt$ConnectorPluginTest$val stable = mapPluginInfo(json("""{"id":"x","source":{"type":"sdk"},"state":{"status":"active"},"features":{"server":true}}""") as JsonObject)!!</ID>
+    <ID>MaxLineLength:ConnectorPluginTest.kt$ConnectorPluginTest$value = json("""{"status":"ok","matches":[{"name":" GitHub ","runtime":"hosted","connected":true},{"catalogId":"io.x/y"},{"name":""},5]}""")</ID>
+    <ID>MaxLineLength:ConnectorSearch.kt$ConnectorSearchMatch$/** One match in plain fields. [runtime] is `hosted`, `npx`, `uvx`, `docker` or `unavailable`; [connected] null = unknown. */</ID>
+    <ID>MaxLineLength:McpDrafts.kt$if</ID>
+    <ID>MaxLineLength:McpDrafts.kt$if (parts.isEmpty() || parts.any { it.isEmpty() }) return McpDraftCheck.Invalid(McpDraftProblem.LocalCommand)</ID>
+    <ID>MaxLineLength:McpDrafts.kt$private fun stringMap(values: Map&lt;String, String&gt;): JsonObject</ID>
+    <ID>MaxLineLength:McpRuntime.kt$if</ID>
+    <ID>MaxLineLength:McpSetupHeaders.kt$McpSetupHeaders$rows = rows.mapIndexed { i, row -&gt; if (i == index) row.copy(key = key ?: row.key, value = value ?: row.value) else row }</ID>
+    <ID>MaxLineLength:McpTest.kt$McpTest$McpChatSuggestion("design", draft("design", McpServerKind.Remote, url = "https://example.com/mcp"), hosted = true)</ID>
+    <ID>MaxLineLength:McpTest.kt$McpTest$assertEquals(McpRuntimeResult.Disconnected, disconnectMcpRuntime("docs/server", available, Redactor(), disconnect))</ID>
+    <ID>MaxLineLength:McpTest.kt$McpTest$assertEquals(McpRuntimeResult.Refused(McpRuntimeFailure.InvalidName), disconnectMcpRuntime(name, caps, Redactor(), disconnect), name)</ID>
+    <ID>MaxLineLength:McpTest.kt$McpTest$draft("creds", McpServerKind.Remote, url = "https://user:pw@mcp.example.com") to McpDraftProblem.RemoteUrl</ID>
+    <ID>MaxLineLength:McpTest.kt$McpTest$draft("header", McpServerKind.Remote, url = "https://mcp.example.com", headers = mapOf("Authorization\nInjected" to "secret"))</ID>
+    <ID>MaxLineLength:McpTest.kt$McpTest$draft("timeout", McpServerKind.Local, command = listOf("server"), timeoutMs = 0) to McpDraftProblem.Timeout</ID>
+    <ID>MaxLineLength:McpTest.kt$McpTest$if (fail) Failure.Server(500, details = Redactor().details("untrusted server response")).failed() else Unit.ok()</ID>
+    <ID>MaxLineLength:McpTest.kt$McpTest$mcpConfigWrites = false</ID>
+    <ID>MaxLineLength:McpTest.kt$McpTest$mcpConfigWrites = true</ID>
+    <ID>MaxLineLength:McpTest.kt$McpTest$val gateway = ChatGateway().apply { failure = Failure.Server(500, details = Redactor().details("secret-test-value")) }</ID>
+    <ID>MaxLineLength:McpTest.kt$McpTest$val ok = assertIs&lt;McpDraftCheck.Valid&gt;(mcpDraftConfig(draft("docs", McpServerKind.Remote, url = " https://mcp.example.com ", timeoutMs = 5)))</ID>
+    <ID>MaxLineLength:McpTest.kt$McpTest$val ok = assertIs&lt;McpDraftCheck.Valid&gt;(mcpDraftConfig(draft("x", McpServerKind.Remote, url = "https://a.example", headers = mapOf("K" to "v"))))</ID>
+    <ID>MaxLineLength:McpTest.kt$McpTest$val unsafe = ChatGateway().apply { statusAfterAdd = "needs_auth"; launch = McpAuthLaunch("javascript:alert(1)", "test-state") }</ID>
+    <ID>MaxLineLength:McpTest.kt$McpTest.&lt;no name provided&gt;$override suspend fun mcpServers(): Outcome&lt;ImmutableList&lt;McpServerInfo&gt;&gt;</ID>
+    <ID>MaxLineLength:Md5.kt$Md5$private val K = IntArray(64) { i -&gt; (kotlin.math.abs(kotlin.math.sin((i + 1).toDouble())) * 4294967296.0).toLong().toInt() }</ID>
+    <ID>MaxLineLength:PluginInventory.kt$private val NPM_PACKAGE = Regex("""^(?:@[a-z0-9][a-z0-9._-]*/)?[a-z0-9][a-z0-9._-]*(?:@[A-Za-z0-9][A-Za-z0-9._+-]*)?$""")</ID>
+    <ID>MaxLineLength:ProviderLogoStore.kt$"""&lt;\s*(?:script|foreignobject|image|use|animate|animatemotion|animatetransform|set|iframe|object|embed|style)\b"""</ID>
+    <ID>MaxLineLength:ProvidersTest.kt$"&lt;svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"&gt;&lt;path fill=\"currentColor\" d=\"M2 2h20v20H2z\"/&gt;&lt;/svg&gt;"</ID>
+    <ID>MaxLineLength:ProvidersTest.kt$ProvidersTest$assertEquals("https://login.example.com/oauth?state=abc", parseAuthorizationUrl("https://login.example.com/oauth?state=abc"))</ID>
+    <ID>MaxLineLength:ProvidersTest.kt$ProvidersTest$assertEquals("returned-code", providerOAuthCompletionCode("https://auth.example.com/callback?code=returned-code&amp;state=state-1"))</ID>
+    <ID>MaxLineLength:ProvidersTest.kt$ProvidersTest$json("""{"all":[{"id":"openai","name":"OpenAI","models":{"gpt-5.6-sol":{}}}],"connected":[],"default":{"openai":"gpt-5.6-sol"}}""")</ID>
+    <ID>MaxLineLength:ProvidersTest.kt$ProvidersTest$val bundled = ProviderLogoStore(fetch = { requests += it; null }, files = files, nowMs = { now }, loadBundled = { "&lt;svg/&gt;" })</ID>
+    <ID>MaxLineLength:SessionSkills.kt$SessionSkillGateway$val rows = ((body as? JsonObject)?.get("data") ?: body) as? JsonArray ?: return Failure.UnreadableReply().failed()</ID>
+    <ID>MaxLineLength:SessionSkills.kt$SkillActivation$/** The answer to an activation: done, refused for a fixed reason, or an answered failure (e.g. a known-missing skill). */</ID>
+    <ID>MaxLineLength:SessionSkills.kt$SkillActivationGuard$public suspend</ID>
+    <ID>MaxLineLength:SkillConversation.kt$SkillConversation$if (skillId == null || !safeIdentifier(skillId)) return SkillConversationResult(SkillConversationStatus.InvalidInput)</ID>
+    <ID>MaxLineLength:SkillConversation.kt$SkillConversation$private suspend</ID>
+    <ID>MaxLineLength:SkillConversation.kt$SkillConversationResult$/** Acknowledgement of preparation/dispatch, never proof an agent wrote a file. [sessionId] survives second-step failures. */</ID>
+    <ID>MaxLineLength:SkillsTest.kt$SkillsTest$assertEquals(JsonObject(mapOf("skill" to JsonPrimitive("review"), "resume" to JsonPrimitive(false))), transport.requests.single().body)</ID>
+    <ID>MaxLineLength:SkillsTest.kt$SkillsTest$assertEquals(JsonObject(mapOf("skill" to JsonPrimitive("wire-id"), "resume" to JsonPrimitive(false))), transport.requests[1].body)</ID>
+    <ID>MaxLineLength:SkillsTest.kt$SkillsTest$assertEquals(JsonObject(mapOf("skill" to JsonPrimitive("wire-id"), "resume" to JsonPrimitive(true))), transport.requests[2].body)</ID>
+    <ID>MaxLineLength:SkillsTest.kt$SkillsTest$if (r.method == "GET") CatalogReply(200, json("""{"data":[{"id":"wire-id","name":"Display name"}]}""")).ok() else CatalogReply(204, null).ok()</ID>
+    <ID>MaxLineLength:SkillsTest.kt$SkillsTest$suspend fun send()</ID>
+    <ID>MaxLineLength:SkillsTest.kt$SkillsTest$val pending = async { guard.activate("ses_test", "review", resume = false, expectedLocation = guard.locationRevision) }</ID>
+    <ID>MaxLineLength:SkillsTest.kt$SkillsTest$val read = async { guard.activate("ses_test", "review", resume = false, expectedLocation = guard.locationRevision) }</ID>
+    <ID>NestedBlockDepth:LibrarySession.kt$LibrarySession$private suspend fun refreshInside()</ID>
+    <ID>ReturnCount:AgentConnectorSearch.kt$AgentConnectorSearch$public suspend fun find( profile: String, request: JsonObject, current: () -&gt; Boolean, ): JsonObject</ID>
+    <ID>ReturnCount:CatalogUrl.kt$CatalogUrl.Companion$public fun parse(raw: String): CatalogUrl?</ID>
+    <ID>ReturnCount:ConnectorSearch.kt$public fun parseConnectorSearchResult(value: JsonElement? = null, text: String? = null): ConnectorSearchResult?</ID>
+    <ID>ReturnCount:ConversationSkills.kt$ConversationSkills$public suspend fun activate( ref: ConversationRef, target: SkillTarget, skill: String, ): SkillActivation</ID>
+    <ID>ReturnCount:ConversationSkills.kt$ConversationSkills$public suspend fun list(target: SkillTarget): Outcome&lt;List&lt;SkillInfo&gt;&gt;</ID>
+    <ID>ReturnCount:LibraryRecoveryCodec.kt$LibraryRecoveryCodec$public fun parse(raw: String, profile: String, nowMs: Long): List&lt;LibraryAttempt&gt;?</ID>
+    <ID>ReturnCount:LibrarySession.kt$LibrarySession$private fun current(): LibrarySource?</ID>
+    <ID>ReturnCount:LibrarySession.kt$LibrarySession$private suspend fun persist(src: LibrarySource): Boolean</ID>
+    <ID>ReturnCount:McpCatalog.kt$public fun parseMcpCatalogEntry(value: JsonObject, redactor: Redactor): McpCatalogEntry?</ID>
+    <ID>ReturnCount:McpCatalog.kt$public fun searchMcpCatalog( arguments: JsonObject, entries: List&lt;McpCatalogEntry&gt;?, connected: Map&lt;String, Boolean&gt;?, redactor: Redactor, ): JsonObject?</ID>
+    <ID>ReturnCount:McpCatalogController.kt$McpCatalogController$public suspend fun add( name: String, headers: Map&lt;String, String&gt;, environment: Map&lt;String, String&gt;, )</ID>
+    <ID>ReturnCount:McpCatalogController.kt$McpCatalogController$public suspend fun refresh(query: String? = null)</ID>
+    <ID>ReturnCount:McpChatConnect.kt$McpChatConnect$private fun check(): Boolean</ID>
+    <ID>ReturnCount:McpChatConnect.kt$McpChatConnect$private suspend fun refreshNow()</ID>
+    <ID>ReturnCount:McpChatConnect.kt$public fun parseMcpAuthorizationCode(value: String, expectedState: String): String?</ID>
+    <ID>ReturnCount:McpChatConnectors.kt$CatalogMcpChatConnectors$override suspend fun resolve( profile: String, catalogId: String, current: () -&gt; Boolean, ): McpChatSuggestion?</ID>
+    <ID>ReturnCount:McpDrafts.kt$public fun mcpDraftConfig(draft: McpServerDraft): McpDraftCheck</ID>
+    <ID>ReturnCount:McpRuntime.kt$public suspend fun disconnectMcpRuntime( name: String, capabilities: ServerCapabilities, redactor: Redactor, disconnect: suspend (String) -&gt; Outcome&lt;Unit&gt;, ): McpRuntimeResult</ID>
+    <ID>ReturnCount:PluginInventory.kt$PluginInventoryReader$public suspend fun listPlugins(): Outcome&lt;List&lt;PluginInfo&gt;&gt;</ID>
+    <ID>ReturnCount:PluginInventory.kt$public fun mapPluginInfo(value: JsonObject): PluginInfo?</ID>
+    <ID>ReturnCount:ProviderLogoStore.kt$ProviderLogoStore$private suspend fun fetchSafely(slug: String): ProviderLogoResponse?</ID>
+    <ID>ReturnCount:ProviderLogoStore.kt$ProviderLogoStore$private suspend fun resolve(slug: String): String?</ID>
+    <ID>ReturnCount:ProviderLogoStore.kt$ProviderLogoStore$public suspend fun svgFor(providerId: String): String?</ID>
+    <ID>ReturnCount:ProviderLogoStore.kt$internal fun looksLikePlainSvg(text: String): Boolean</ID>
+    <ID>ReturnCount:ProviderLogoStore.kt$public fun providerLogoSlug(providerId: String): String?</ID>
+    <ID>ReturnCount:ProviderSignIn.kt$public fun parseAuthorizationUrl(value: String): String?</ID>
+    <ID>ReturnCount:SessionSkills.kt$SessionSkillGateway$public suspend fun activateSessionSkill(sessionId: String, skillId: String, resume: Boolean): SkillActivation</ID>
+    <ID>ReturnCount:SessionSkills.kt$SessionSkillGateway$public suspend fun listSkills(): Outcome&lt;List&lt;CatalogSkill&gt;&gt;</ID>
+    <ID>ReturnCount:SessionSkills.kt$SkillActivationGuard$public suspend fun activate(sessionId: String, skillId: String, resume: Boolean, expectedLocation: Int): SkillActivation</ID>
+    <ID>ReturnCount:SessionSkills.kt$public fun skillEventHint(type: String, data: JsonElement?): CatalogHint?</ID>
+    <ID>ReturnCount:SkillConversation.kt$SkillConversation$private suspend fun start(failure: SkillConversationStatus, action: suspend (String) -&gt; Outcome&lt;Unit&gt;): SkillConversationResult</ID>
+    <ID>ReturnCount:SkillConversation.kt$SkillConversation$public suspend fun askAgentToWriteSkill(requirements: String): SkillConversationResult</ID>
+    <ID>ReturnCount:SkillConversation.kt$SkillConversation$public suspend fun useInNewConversation(skillId: String?): SkillConversationResult</ID>
+    <ID>ThrowingExceptionsWithoutMessageOrCause:AgentConnectorSearch.kt$AgentConnectorSearch$IllegalArgumentException()</ID>
+    <ID>ThrowsCount:AgentConnectorSearch.kt$AgentConnectorSearch$public suspend fun find( profile: String, request: JsonObject, current: () -&gt; Boolean, ): JsonObject</ID>
+    <ID>TooManyFunctions:LibrarySession.kt$LibrarySession</ID>
+    <ID>TooManyFunctions:McpCatalogController.kt$McpCatalogController</ID>
+    <ID>TooManyFunctions:McpChatConnect.kt$McpChatConnect</ID>
+    <ID>UseCheckOrError:McpTest.kt$McpTest.&lt;no name provided&gt;$throw IllegalStateException("secret-test-value")</ID>
+    <ID>WildcardImport:AgentConnectorSearch.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:ConversationSkills.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:LibraryRecoveryCodec.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:LibrarySession.kt$import io.github.eslamasabry.oc.core.domain.*</ID>
+    <ID>WildcardImport:LibrarySession.kt$import io.github.eslamasabry.oc.core.model.*</ID>
+    <ID>WildcardImport:LibrarySession.kt$import kotlinx.collections.immutable.*</ID>
+    <ID>WildcardImport:LibrarySession.kt$import kotlinx.coroutines.flow.*</ID>
+    <ID>WildcardImport:LibrarySession.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:McpCatalog.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:McpCatalogController.kt$import kotlinx.serialization.json.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

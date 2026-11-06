@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>LongParameterList:AgentHandoffGateway.kt$AgentHandoffGateway$( session: SessionId, text: String, model: ModelRef, agent: String?, variant: String?, beforeSend: () -&gt; Boolean, )</ID>
+    <ID>LongParameterList:SessionHistory.kt$( gateway: ServerGateway, session: SessionId, boundary: MessageId? = null, cursor: String? = null, limit: Int = 100, isCurrent: () -&gt; Boolean, )</ID>
+    <ID>MagicNumber:PromptRunIdentityGateway.kt$512</ID>
+    <ID>MatchingDeclarationName:Capabilities.kt$PlatformCapabilities</ID>
+    <ID>MaxLineLength:CapabilitySnapshotTest.kt$CapabilitySnapshotTest$val defaults = Regex("""this\.(\w+)\s*=\s*(true|false)""").findAll(ctor).map { it.groupValues[1] to (it.groupValues[2] == "true") }.toList()</ID>
+    <ID>MaxLineLength:CapabilitySnapshotTest.kt$CapabilitySnapshotTest$val encoded = Json { encodeDefaults = true }.encodeToJsonElement(ServerCapabilities.serializer(), ServerCapabilities()) as JsonObject</ID>
+    <ID>MaxLineLength:FencedPromptGateway.kt$FencedPromptGateway$public suspend fun promptFenced(session: SessionId, prompt: OutgoingPrompt, beforeSend: () -&gt; Boolean): Outcome&lt;PromptAdmission&gt;</ID>
+    <ID>MaxLineLength:PlatformFamily.kt$get() = listOfNotNull("in-app updater".takeIf { inAppUpdater }, "desktop release check".takeIf { desktopReleaseCheck })</ID>
+    <ID>MaxLineLength:ServerCapabilities.kt$ServerCapabilities$/** N-41: the server makes a new project folder (with Git) on its own machine ([ServerOperationsGateway.makeProjectFolder]). */</ID>
+    <ID>MaxLineLength:Services.kt$AppPermission</ID>
+    <ID>MaxLineLength:SessionSkillGateway.kt$SessionSkillGateway$if</ID>
+    <ID>ReturnCount:PromptRunIdentityGateway.kt$public fun lastPromptIdentity(messages: Iterable&lt;MessageWithParts&gt;): PromptRunIdentity?</ID>
+    <ID>ReturnCount:SessionHistory.kt$public suspend fun readHistoryAtStagedBoundary( gateway: ServerGateway, session: SessionId, boundary: MessageId? = null, cursor: String? = null, limit: Int = 100, isCurrent: () -&gt; Boolean, ): Outcome&lt;ServerPage&lt;MessageWithParts&gt;&gt;</ID>
+    <ID>TooManyFunctions:Operations.kt$HostGateway</ID>
+    <ID>TooManyFunctions:Operations.kt$SessionOperationsGateway</ID>
+    <ID>WildcardImport:WorktreeInspectionGateway.kt$import io.github.eslamasabry.oc.core.model.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

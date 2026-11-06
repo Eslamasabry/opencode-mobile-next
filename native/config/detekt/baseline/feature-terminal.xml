@@ -1,0 +1,29 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:TerminalScreen.kt$rowCount != null &amp;&amp; columnCount != null &amp;&amp; rowCount in 1..1000 &amp;&amp; columnCount in 1..1000</ID>
+    <ID>CyclomaticComplexMethod:LocalTerminalScreen.kt$@Composable public fun LocalTerminalScreen(state: LocalTerminalUi, actions: LocalTerminalActions)</ID>
+    <ID>CyclomaticComplexMethod:LocalTerminalScreen.kt$internal fun localTerminalKey(key: KitTerminalBarKey): TerminalKey</ID>
+    <ID>CyclomaticComplexMethod:TerminalGraph.kt$GraphRemoteTerminalSource$private suspend fun resolveAt( ref: ConversationRef, activate: Boolean, ): Outcome&lt;RemoteTerminalTarget&gt;</ID>
+    <ID>CyclomaticComplexMethod:TerminalScreen.kt$@Composable public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions)</ID>
+    <ID>LongMethod:LocalTerminalScreen.kt$@Composable public fun LocalTerminalScreen(state: LocalTerminalUi, actions: LocalTerminalActions)</ID>
+    <ID>LongMethod:TerminalScreen.kt$@Composable public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions)</ID>
+    <ID>MagicNumber:LocalTerminalViewModel.kt$LocalTerminalViewModel$15_000</ID>
+    <ID>MagicNumber:TerminalGraph.kt$GraphRemoteTerminalSource$10_000</ID>
+    <ID>MagicNumber:TerminalScreen.kt$1000</ID>
+    <ID>ReturnCount:TerminalGraph.kt$GraphRemoteTerminalSource$private suspend fun resolveAt( ref: ConversationRef, activate: Boolean, ): Outcome&lt;RemoteTerminalTarget&gt;</ID>
+    <ID>TooManyFunctions:LocalTerminalViewModel.kt$LocalTerminalActions</ID>
+    <ID>TooManyFunctions:LocalTerminalViewModel.kt$LocalTerminalViewModel : ViewModelLocalTerminalActionsLocalTerminalNativeActions</ID>
+    <ID>WildcardImport:LocalTerminalScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:LocalTerminalScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:LocalTerminalScreen.kt$import io.github.eslamasabry.oc.ui.kit.content.terminal.*</ID>
+    <ID>WildcardImport:LocalTerminalScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:LocalTerminalScreen.kt$import io.github.eslamasabry.oc.ui.kit.modal.*</ID>
+    <ID>WildcardImport:LocalTerminalScreen.kt$import io.github.eslamasabry.oc.ui.kit.state.*</ID>
+    <ID>WildcardImport:LocalTerminalScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:LocalTerminalScreenTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:LocalTerminalScreenTest.kt$import io.github.eslamasabry.oc.feature.terminal.presentation.*</ID>
+    <ID>WildcardImport:TerminalScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

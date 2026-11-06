@@ -1,0 +1,233 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:AutoSend.kt$AutoSendCountdown$fieldText != text || !foreground || sendInFlight || !mayAutoSend(text)</ID>
+    <ID>ComplexCondition:PackSupport.kt$PackSupport$(!installed || replacing) &amp;&amp; available != null &amp;&amp; available &lt; required</ID>
+    <ID>ComplexCondition:VoiceConversation.kt$VoiceReplyWatch$!proof.accepted || now.busy || now.busyCount &lt;= before.busyCount || now.idleCount &lt;= before.idleCount</ID>
+    <ID>CyclomaticComplexMethod:PackInstaller.kt$PackInstaller$private suspend fun downloadFile(spec: ModelPackSpec, file: ModelFile, progress: (Long) -&gt; Unit): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:ReadAloud.kt$ReadAloud$private suspend fun speakNatural(pack: InstalledPack, text: String): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:ReadText.kt$ReadLanguage$public fun detect(text: String, appLanguage: String?): String</ID>
+    <ID>CyclomaticComplexMethod:VoiceConversation.kt$VoiceReplyWatch$public fun decide(now: VoiceConversationSnapshot): VoiceReplyDecision</ID>
+    <ID>CyclomaticComplexMethod:VoiceSetup.kt$VoiceSetupRun$private suspend fun download(pack: PackId, allowMetered: Boolean)</ID>
+    <ID>EmptyElseBlock:PackInstallerTest.kt$PackInstallerTest$if (++calls == 1) job.cancel()</ID>
+    <ID>InstanceOfCheckForException:PackInstaller.kt$PackInstaller$e is StorageFullException</ID>
+    <ID>LongParameterList:InstallerFakes.kt$FakeResponse$( override val status: Int, private val body: ByteArray = ByteArray(0), override val contentLength: Long? = body.size.toLong(), override val contentRange: String? = null, override val location: String? = null, private val chunk: Int = 1_000, /** Stall (suspend until cancelled) once this many bytes were read. */ private val stallAfter: Int? = null, )</ID>
+    <ID>LongParameterList:PackInstaller.kt$PackInstaller$( private val root: String, private val files: ModelFiles, private val fetcher: ModelFetcher, private val dispatchers: AppDispatchers, private val clock: Clock, private val digests: DigestFactory = DigestFactory.Pure, private val stepTimeout: Duration = 15.seconds, private val idleTimeout: Duration = 20.seconds, )</ID>
+    <ID>LongParameterList:PackSupportTest.kt$( ramMb: Long? = 8000, storage: Long? = 50L * 1024 * 1024 * 1024, abis: List&lt;String&gt; = listOf("arm64-v8a"), mic: Boolean = true, memoryClassMb: Int? = 256, cpus: Int = 8, )</ID>
+    <ID>LongParameterList:ReadAloud.kt$ReadAloud$( private val audio: AudioSession, private val systemTts: SystemTts, private val synthesizer: SpeechSynthesizer, private val player: PcmPlayer, private val prefs: VoicePrefs, private val scope: CoroutineScope, /** The installed natural pack (`kokoro-en`), or null. */ private val naturalPack: suspend () -&gt; InstalledPack?, private val appLanguage: () -&gt; String?, private val cpuCount: () -&gt; Int = { 4 }, /** `PlatformCapabilities.readAloud`. */ private val available: Boolean = true, private val firstSoundWithin: Duration = 90.seconds, private val warmKeep: Duration = 20.seconds, )</ID>
+    <ID>LongParameterList:VoiceController.kt$VoiceController$( private val audio: AudioSession, private val capture: AudioCapture, private val recognizer: SpeechRecognizer, private val packs: SpeechPackSource, private val permission: MicPermission, private val probe: DeviceProbe, private val clock: Clock, private val dispatchers: AppDispatchers, private val scope: CoroutineScope, private val appLanguage: () -&gt; String?, /** Stops any reading aloud first (plan 10 §6.4 step 3). */ private val stopReading: suspend () -&gt; Unit = {}, /** `PlatformCapabilities.voice`. */ private val voiceAvailable: Boolean = true, private val warmKeep: Duration = 20.seconds, )</ID>
+    <ID>MagicNumber:AutoSend.kt$AutoSendCountdown$1000</ID>
+    <ID>MagicNumber:AutoSend.kt$AutoSendCountdown$999</ID>
+    <ID>MagicNumber:LevelMeter.kt$LevelMeter$12f</ID>
+    <ID>MagicNumber:ModelCatalog.kt$4</ID>
+    <ID>MagicNumber:ModelCatalog.kt$ModelCatalog$112_442_483</ID>
+    <ID>MagicNumber:ModelCatalog.kt$ModelCatalog$114_202_993</ID>
+    <ID>MagicNumber:ModelCatalog.kt$ModelCatalog$12_937_772</ID>
+    <ID>MagicNumber:ModelCatalog.kt$ModelCatalog$130_672_026</ID>
+    <ID>MagicNumber:ModelCatalog.kt$ModelCatalog$262_226_114</ID>
+    <ID>MagicNumber:ModelCatalog.kt$ModelCatalog$28_200_960</ID>
+    <ID>MagicNumber:ModelCatalog.kt$ModelCatalog$29_120_534</ID>
+    <ID>MagicNumber:ModelCatalog.kt$ModelCatalog$5_956_885</ID>
+    <ID>MagicNumber:ModelCatalog.kt$ModelCatalog$687</ID>
+    <ID>MagicNumber:ModelCatalog.kt$ModelCatalog$816_730</ID>
+    <ID>MagicNumber:ModelCatalog.kt$ModelCatalog$89_855_401</ID>
+    <ID>MagicNumber:ModelFiles.kt$1024</ID>
+    <ID>MagicNumber:ModelFiles.kt$64</ID>
+    <ID>MagicNumber:ModelFiles.kt$SystemModelFiles.RawByteSource$1024</ID>
+    <ID>MagicNumber:ModelFiles.kt$SystemModelFiles.RawByteSource$64</ID>
+    <ID>MagicNumber:PackInstaller.kt$PackInstaller$1024</ID>
+    <ID>MagicNumber:PackInstaller.kt$PackInstaller$200</ID>
+    <ID>MagicNumber:PackInstaller.kt$PackInstaller$206</ID>
+    <ID>MagicNumber:PackInstaller.kt$PackInstaller$300</ID>
+    <ID>MagicNumber:PackInstaller.kt$PackInstaller$399</ID>
+    <ID>MagicNumber:PackInstaller.kt$PackInstaller$64</ID>
+    <ID>MagicNumber:PackInstaller.kt$PackInstaller.Companion$3</ID>
+    <ID>MagicNumber:PackInstaller.kt$PackInstaller.ProgressThrottle$100</ID>
+    <ID>MagicNumber:PackSupport.kt$PackSupport$128</ID>
+    <ID>MagicNumber:PackSupport.kt$PackSupport$4</ID>
+    <ID>MagicNumber:Pcm16Chunker.kt$Pcm16Chunker$0x10000</ID>
+    <ID>MagicNumber:Pcm16Chunker.kt$Pcm16Chunker$0x8000</ID>
+    <ID>MagicNumber:Pcm16Chunker.kt$Pcm16Chunker$0xff</ID>
+    <ID>MagicNumber:Pcm16Chunker.kt$Pcm16Chunker$1_000_000L</ID>
+    <ID>MagicNumber:Pcm16Chunker.kt$Pcm16Chunker$32768f</ID>
+    <ID>MagicNumber:Pcm16Chunker.kt$Pcm16Chunker$8</ID>
+    <ID>MagicNumber:ReadAloud.kt$ReadAloud$4</ID>
+    <ID>MagicNumber:ReadText.kt$ReadLanguage$0x0370</ID>
+    <ID>MagicNumber:ReadText.kt$ReadLanguage$0x05FF</ID>
+    <ID>MagicNumber:ReadText.kt$ReadLanguage$0x0600</ID>
+    <ID>MagicNumber:ReadText.kt$ReadLanguage$0x06FF</ID>
+    <ID>MagicNumber:ReadText.kt$ReadLanguage$0x0700</ID>
+    <ID>MagicNumber:ReadText.kt$ReadLanguage$0x074F</ID>
+    <ID>MagicNumber:ReadText.kt$ReadLanguage$0x0750</ID>
+    <ID>MagicNumber:ReadText.kt$ReadLanguage$0x077F</ID>
+    <ID>MagicNumber:ReadText.kt$ReadLanguage$0x0780</ID>
+    <ID>MagicNumber:ReadText.kt$ReadLanguage$0x10000</ID>
+    <ID>MagicNumber:ReadText.kt$ReadLanguage$0x1FFF</ID>
+    <ID>MagicNumber:ReadText.kt$ReadLanguage$0x24F</ID>
+    <ID>MagicNumber:ReadText.kt$ReadLanguage$0x3040</ID>
+    <ID>MagicNumber:ReadText.kt$ReadLanguage$0x41</ID>
+    <ID>MagicNumber:ReadText.kt$ReadLanguage$0x5A</ID>
+    <ID>MagicNumber:ReadText.kt$ReadLanguage$0x61</ID>
+    <ID>MagicNumber:ReadText.kt$ReadLanguage$0x7A</ID>
+    <ID>MagicNumber:ReadText.kt$ReadLanguage$0xC0</ID>
+    <ID>MagicNumber:ReadText.kt$ReadLanguage$0xD7FF</ID>
+    <ID>MagicNumber:ReadText.kt$ReadLanguage$0xD800</ID>
+    <ID>MagicNumber:ReadText.kt$ReadLanguage$0xDC00</ID>
+    <ID>MagicNumber:ReadText.kt$ReadLanguage$0xFB50</ID>
+    <ID>MagicNumber:ReadText.kt$ReadLanguage$0xFDFF</ID>
+    <ID>MagicNumber:ReadText.kt$ReadLanguage$0xFE70</ID>
+    <ID>MagicNumber:ReadText.kt$ReadLanguage$0xFEFF</ID>
+    <ID>MagicNumber:ReadText.kt$ReadLanguage$0xFF00</ID>
+    <ID>MagicNumber:ReadText.kt$ReadLanguage$0xFFEF</ID>
+    <ID>MagicNumber:ReadText.kt$ReadLanguage$0xFFFF</ID>
+    <ID>MagicNumber:ReadText.kt$ReadLanguage$10</ID>
+    <ID>MagicNumber:Sha256.kt$PureSha256$0x1f83d9ab</ID>
+    <ID>MagicNumber:Sha256.kt$PureSha256$0x3c6ef372</ID>
+    <ID>MagicNumber:Sha256.kt$PureSha256$0x510e527f</ID>
+    <ID>MagicNumber:Sha256.kt$PureSha256$0x5be0cd19</ID>
+    <ID>MagicNumber:Sha256.kt$PureSha256$0x6a09e667</ID>
+    <ID>MagicNumber:Sha256.kt$PureSha256$0xff</ID>
+    <ID>MagicNumber:Sha256.kt$PureSha256$10</ID>
+    <ID>MagicNumber:Sha256.kt$PureSha256$11</ID>
+    <ID>MagicNumber:Sha256.kt$PureSha256$120</ID>
+    <ID>MagicNumber:Sha256.kt$PureSha256$13</ID>
+    <ID>MagicNumber:Sha256.kt$PureSha256$15</ID>
+    <ID>MagicNumber:Sha256.kt$PureSha256$16</ID>
+    <ID>MagicNumber:Sha256.kt$PureSha256$17</ID>
+    <ID>MagicNumber:Sha256.kt$PureSha256$18</ID>
+    <ID>MagicNumber:Sha256.kt$PureSha256$19</ID>
+    <ID>MagicNumber:Sha256.kt$PureSha256$22</ID>
+    <ID>MagicNumber:Sha256.kt$PureSha256$24</ID>
+    <ID>MagicNumber:Sha256.kt$PureSha256$25</ID>
+    <ID>MagicNumber:Sha256.kt$PureSha256$3</ID>
+    <ID>MagicNumber:Sha256.kt$PureSha256$4</ID>
+    <ID>MagicNumber:Sha256.kt$PureSha256$5</ID>
+    <ID>MagicNumber:Sha256.kt$PureSha256$56</ID>
+    <ID>MagicNumber:Sha256.kt$PureSha256$6</ID>
+    <ID>MagicNumber:Sha256.kt$PureSha256$64</ID>
+    <ID>MagicNumber:Sha256.kt$PureSha256$7</ID>
+    <ID>MagicNumber:Sha256.kt$PureSha256$8</ID>
+    <ID>MagicNumber:VoiceController.kt$VoiceController$256</ID>
+    <ID>MaxLineLength:AutoSendPolicyTest.kt$AutoSendPolicyTest$for</ID>
+    <ID>MaxLineLength:ModelCatalog.kt$ModelCatalog$/** Kokoro v1.0 int8, voice `af_heart`. Its 2000 MB total-RAM gate is enforced (M5). Arabic is not offered (D10-9). */</ID>
+    <ID>MaxLineLength:ModelCatalog.kt$ModelCatalog$ModelFile("base-decoder.int8.onnx", 130_672_026, "9759d217388a01b3a4c7c15533201067b48ae819c4daafc8624e64b9409dc02d")</ID>
+    <ID>MaxLineLength:ModelCatalog.kt$ModelCatalog$ModelFile("base-encoder.int8.onnx", 29_120_534, "0b8fb1304b6109976038efff5ace81720e00386f3ff6b54ee8c75291ca0a1e11")</ID>
+    <ID>MaxLineLength:ModelCatalog.kt$ModelCatalog$ModelFile("lexicon-us-en.txt", 5_956_885, "7daaab53a181be9885b853a8582bf1838186317e5dadacbcef9c426d6fa0da14")</ID>
+    <ID>MaxLineLength:ModelCatalog.kt$ModelCatalog$ModelFile("model.int8.onnx", 114_202_993, "75635ea3b85a32d00094dcdd61a258aba87c160f7c264c304a7b3ae9d734195e")</ID>
+    <ID>MaxLineLength:ModelCatalog.kt$ModelCatalog$ModelFile("small-decoder.int8.onnx", 262_226_114, "acad50b5c782696e91b55914cc5ab4f756f1532f76e22aa6fc615f39fb69a8ee")</ID>
+    <ID>MaxLineLength:ModelCatalog.kt$ModelCatalog$ModelFile("small-encoder.int8.onnx", 112_442_483, "4cbe7b22fa9026b843b60a68640c747de05bafb1a11b57edc0e66c232d9f33a9")</ID>
+    <ID>MaxLineLength:ModelCatalog.kt$ModelCatalog$ModelFile("tiny-decoder.int8.onnx", 89_855_401, "d2fece8dd42771f1df975c6c0445770d0c292bf7547c2cae04a6c0cc57540925")</ID>
+    <ID>MaxLineLength:ModelCatalog.kt$ModelCatalog$ModelFile("tiny-encoder.int8.onnx", 12_937_772, "d24fb083ae3b1041fc24e97971d60e280c9342201fbb67b0ab428a8b4a51a434")</ID>
+    <ID>MaxLineLength:ModelCatalog.kt$ModelCatalog$ModelFile("voices.bin", 28_200_960, "1c5a5b983d3d50d8586d437a51f3faa2da7919ce76a013c081e65671a3447c29")</ID>
+    <ID>MaxLineLength:ModelCatalog.kt$ModelPackSpec$/** The file playing [role]: "encoder" | "decoder" | "tokens" (speech); "model" | "voices" | "tokens" | "lexicon". */</ID>
+    <ID>MaxLineLength:ModelCatalog.kt$ModelPackSpec$if (kind == PackKind.Speech) listOf("encoder", "decoder", "tokens") else listOf("model", "voices", "tokens", "lexicon")</ID>
+    <ID>MaxLineLength:ModelCatalogTest.kt$ModelCatalogTest$assertEquals("https://huggingface.co/${pack.repo}/resolve/${pack.revision}/${file.name}", pack.urlFor(file))</ID>
+    <ID>MaxLineLength:ModelCatalogTest.kt$ModelCatalogTest$assertEquals(listOf("base-encoder.int8.onnx", "base-decoder.int8.onnx", "base-tokens.txt"), base.files.map { it.name })</ID>
+    <ID>MaxLineLength:ModelCatalogTest.kt$ModelCatalogTest$assertEquals(listOf("model.int8.onnx", "voices.bin", "tokens.txt", "lexicon-us-en.txt"), kokoro.files.map { it.name })</ID>
+    <ID>MaxLineLength:ModelCatalogTest.kt$ModelCatalogTest$assertTrue(tokens.all { it.bytes == 816_730L &amp;&amp; it.sha256 == "b34b360dbb493e781e479794586d661700670d65564001f23024971d1f2fa126" })</ID>
+    <ID>MaxLineLength:ModelPacksTest.kt$ModelPacksTest$PrefsKeyValueStore(backend, FlutterPrefsCodec(JavaListDecoder.Unsupported), StateMigrationGate.alwaysOpen(), StandardTestDispatcher(testScheduler))</ID>
+    <ID>MaxLineLength:ModelPacksTest.kt$ModelPacksTest$assertEquals("arabic", (backend.load()["flutter.voice.language"] as? io.github.eslamasabry.oc.core.data.kv.RawPref.Str)?.value)</ID>
+    <ID>MaxLineLength:ModelPacksTest.kt$ModelPacksTest$assertEquals(MediaProblem.PackMemoryTooSmall, problem(packs().first.also { probe.result = device(ramMb = 1000) }.download(PackId("base"))))</ID>
+    <ID>MaxLineLength:ModelPacksTest.kt$ModelPacksTest$private val fetcher = FakeFetcher((bodiesOf(base, speechContents) + bodiesOf(small, speechContents) + bodiesOf(natural, speechContents)).toMutableMap())</ID>
+    <ID>MaxLineLength:ModelPacksTest.kt$ModelPacksTest$testPack("kokoro-en", speechContents).copy(kind = PackKind.NaturalVoice, minTotalRamMb = 2000, natural = ModelCatalog.kokoroEn.natural)</ID>
+    <ID>MaxLineLength:ModelPacksTest.kt$ModelPacksTest$val installer = PackInstaller(root, SystemModelFiles(), fetcher, TestDispatchers(StandardTestDispatcher(testScheduler)), SchedulerClock(testScheduler))</ID>
+    <ID>MaxLineLength:ModelPacksTest.kt$ModelPacksTest$val restarted = ModelPacks(installer, probe, KeyValueVoicePrefs(store(), WriterLane("voice")), backgroundScope)</ID>
+    <ID>MaxLineLength:PackInstaller.kt$PackInstaller$/** Bytes already in the pack's `.part` files (each capped at its pinned length), for resume and the storage check. */</ID>
+    <ID>MaxLineLength:PackInstaller.kt$PackInstaller$/** The full check after a recognizer load failure (plan 10 §6.3): false deletes the marker (pack becomes Missing). */</ID>
+    <ID>MaxLineLength:PackInstaller.kt$PackInstaller$if (e is StorageFullException) media(MediaProblem.DownloadNoSpace, e) else media(MediaProblem.DownloadIncomplete, e)</ID>
+    <ID>MaxLineLength:PackInstaller.kt$PackInstaller$private suspend fun lockOf(spec: ModelPackSpec): Mutex</ID>
+    <ID>MaxLineLength:PackInstaller.kt$PackInstaller$private suspend fun verifyFilesFully(spec: ModelPackSpec): Boolean</ID>
+    <ID>MaxLineLength:PackInstallerTest.kt$PackInstallerTest$"""{"pack":"base","revision":"rev1","files":[{"name":"enc.int8.onnx","length":3000,"sha256":"${pack.files[0].sha256}"},"""</ID>
+    <ID>MaxLineLength:PackInstallerTest.kt$PackInstallerTest$fetcher.script = { r -&gt; if (r.url.endsWith("enc.int8.onnx")) FakeResponse(200, contents[0], contentLength = null).ok() else null }</ID>
+    <ID>MaxLineLength:PackInstallerTest.kt$PackInstallerTransportTest$assertEquals(Failure.Media(MediaProblem.DownloadClosed, Redacted.shape(FetchFailure(MediaProblem.DownloadClosed))), installer.install(pack).failureOrNull())</ID>
+    <ID>MaxLineLength:PackInstallerTest.kt$PackInstallerTransportTest$val installer = PackInstaller(root, SystemModelFiles(), fetcher, TestDispatchers(StandardTestDispatcher(testScheduler)), SchedulerClock(testScheduler))</ID>
+    <ID>MaxLineLength:PackSupport.kt$AutomaticPack$public</ID>
+    <ID>MaxLineLength:PackSupportTest.kt$PackSupportTest$assertEquals(375_485_327L + 128 * mib, PackSupport.requiredStorageBytes(ModelCatalog.small))</ID>
+    <ID>MaxLineLength:PackSupportTest.kt$PackSupportTest$assertEquals(PackBlock.Storage, (PackSupport.supportFor(pack, device(storage = 1), installed = true, replacing = true) as Support.Blocked).block)</ID>
+    <ID>MaxLineLength:PackSupportTest.kt$PackSupportTest$assertEquals(Support.Blocked(PackBlock.Abi), PackSupport.supportFor(ModelCatalog.base, device(abis = listOf("mips"))))</ID>
+    <ID>MaxLineLength:PackSupportTest.kt$PackSupportTest$assertEquals(Support.Blocked(PackBlock.Platform), PackSupport.supportFor(ModelCatalog.base, DeviceProbeResult.Unsupported))</ID>
+    <ID>MaxLineLength:PackSupportTest.kt$PackSupportTest$assertEquals(Support.Supported, PackSupport.supportFor(ModelCatalog.small, device(ramMb = null)))</ID>
+    <ID>MaxLineLength:PackSupportTest.kt$PackSupportTest$fun resolve(ram: Long?, explicit: String? = null)</ID>
+    <ID>MaxLineLength:Pcm16Chunker.kt$Pcm16Chunker$/** Adds bytes from [start] until the chunk is full; returns how many bytes it took (the rest is the next chunk's). */</ID>
+    <ID>MaxLineLength:ReadAloud.kt$ReadAloud$is Outcome.Failed -&gt; ReadAloudState.Failed((result.failure as? Failure.Media)?.problem ?: MediaProblem.SpeechEngineUnavailable)</ID>
+    <ID>MaxLineLength:ReadAloud.kt$ReadAloud$mutableState.value = ReadAloudState.Speaking(request.utteranceId, if (natural.pack != null) ReadEngine.Natural else ReadEngine.System, natural.fallback)</ID>
+    <ID>MaxLineLength:ReadAloud.kt$ReadAloud$val speaking = async { if (natural.pack != null) speakNatural(natural.pack, request.text) else systemTts.speak(request.text, request.voiceId) }</ID>
+    <ID>MaxLineLength:ReadAloud.kt$ReadAloud$withContext(NonCancellable) { if (mutableState.value is ReadAloudState.Speaking) mutableState.value = ReadAloudState.Idle }</ID>
+    <ID>MaxLineLength:ReadAloud.kt$ReadRequest$public data</ID>
+    <ID>MaxLineLength:ReadAloudSeams.kt$SynthesisSession$/** Calls [sink] with float samples as they are made; returns when the text is done. Cancel stops at the next callback. */</ID>
+    <ID>MaxLineLength:ReadAloudSeams.kt$SynthesisSession$public suspend</ID>
+    <ID>MaxLineLength:ReadAloudTest.kt$FakeSynth.&lt;no name provided&gt;$override suspend</ID>
+    <ID>MaxLineLength:ReadAloudTest.kt$ReadAloudTest$assertEquals(Failure.Media(MediaProblem.ReadAloudTooLong).failed(), speech.read(reply.copy(text = "a".repeat(12_001))))</ID>
+    <ID>MaxLineLength:ReadAloudTest.kt$ReadAloudTest$assertEquals(listOf&lt;Pair&lt;String, String?&gt;&gt;("The reply prose." to null), tts.spoken)</ID>
+    <ID>MaxLineLength:ReadAloudTest.kt$ReadAloudTest$fun</ID>
+    <ID>MaxLineLength:ReadText.kt$ReadLanguage$private val nonLatinApp = setOf("ar", "fa", "ur", "he", "iw", "ru", "uk", "el", "hi", "bn", "ta", "zh", "ja", "ko", "th")</ID>
+    <ID>MaxLineLength:ReadText.kt$ReadLanguage$rune in 0x0600..0x06FF || rune in 0x0750..0x077F || rune in 0xFB50..0xFDFF || rune in 0xFE70..0xFEFF -&gt; arabic++</ID>
+    <ID>MaxLineLength:ReadTextTest.kt$ReadTextTest$val voices = listOf(TtsVoice("en", "English", "en-US"), TtsVoice("ar-eg", "Arabic Egypt", "ar-EG"), TtsVoice("ar-ae", "Arabic UAE", "ar-AE"))</ID>
+    <ID>MaxLineLength:SpeechSeams.kt$RecognizerSession$/** One ≤ 30 s chunk of 16 kHz float samples. Cancellation stops waiting; a decode inside JNI finishes, discarded. */</ID>
+    <ID>MaxLineLength:VoiceController.kt$VoiceController$if (!recording.stopping) interrupt(recording, MediaProblem.RecordingInterrupted)</ID>
+    <ID>MaxLineLength:VoiceController.kt$VoiceController$mutableState.value = if (keepWords &amp;&amp; text.isNotEmpty()) VoiceState.Done(text, VoiceEnd.Person) else VoiceState.Idle</ID>
+    <ID>MaxLineLength:VoiceController.kt$VoiceController.Recording$private inner</ID>
+    <ID>MaxLineLength:VoiceControllerTest.kt$VoiceControllerTest$recognizer.result = { i -&gt; if (i == 3) Failure.Media(MediaProblem.ChunkNotTranscribed).failed() else "w${i + 1}".ok() }</ID>
+    <ID>MaxLineLength:VoiceControllerTest.kt$internal</ID>
+    <ID>MaxLineLength:VoiceFakes.kt$FakeMemoryProbe$internal</ID>
+    <ID>MaxLineLength:VoiceLanguage.kt$VoiceLanguage.Companion$/** The named language for an app-locale language code, or null when Whisper has none (`iw`, `nb`/`nn`, `in` fold). */</ID>
+    <ID>MaxLineLength:VoicePrefs.kt$KeyValueVoicePrefs$override suspend fun setAutoSend(on: Boolean): Outcome&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:VoicePrefs.kt$KeyValueVoicePrefs$override suspend fun setLanguage(storedId: String): Outcome&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:VoicePrefs.kt$KeyValueVoicePrefs$override suspend fun setSelectedPack(id: String): Outcome&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:VoiceSetup.kt$VoiceSetupRun$if (packs.downloading != null) return set(VoiceSetupStage.Problem(MediaProblem.DownloadBusy))</ID>
+    <ID>MaxLineLength:VoiceSetup.kt$VoiceSetupRun$if (packs.select(choice.id) is Outcome.Failed) return set(VoiceSetupStage.Problem(MediaProblem.DownloadBusy))</ID>
+    <ID>MaxLineLength:VoiceSetup.kt$VoiceSetupRun$private suspend</ID>
+    <ID>MaxLineLength:VoiceSetup.kt$VoiceSetupRun$return (PackSupport.supportFor(smallest, device) as? Support.Blocked)?.block?.problem ?: MediaProblem.MemoryUnknown</ID>
+    <ID>MaxLineLength:VoiceSetup.kt$VoiceSetupRun$val pause = now == SetupNetwork.Offline || (!allowMetered &amp;&amp; (now == SetupNetwork.Metered || now == SetupNetwork.Unknown))</ID>
+    <ID>MaxLineLength:VoiceSetup.kt$VoiceSetupRun$val support = PackSupport.supportFor(choice, device, installed = false, partialBytes = packs.partialBytes(choice.id))</ID>
+    <ID>MaxLineLength:VoiceSetup.kt$VoiceSetupStage.NeedsConsent$public data</ID>
+    <ID>MaxLineLength:VoiceSetupNotices.kt$VoiceSetupNotices$public suspend</ID>
+    <ID>MaxLineLength:VoiceSetupNoticesTest.kt$VoiceSetupNoticesTest.Sink$override suspend</ID>
+    <ID>MaxLineLength:VoiceSetupTest.kt$VoiceSetupTest$private val fetcher = FakeFetcher((bodiesOf(base, contents) + bodiesOf(small, contents) + bodiesOf(tiny, contents)).toMutableMap())</ID>
+    <ID>MaxLineLength:VoiceSetupTest.kt$VoiceSetupTest$val installer = PackInstaller(root, SystemModelFiles(), fetcher, TestDispatchers(StandardTestDispatcher(testScheduler)), SchedulerClock(testScheduler))</ID>
+    <ID>NestedBlockDepth:PackInstaller.kt$PackInstaller$private suspend fun downloadFile(spec: ModelPackSpec, file: ModelFile, progress: (Long) -&gt; Unit): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:AutoSend.kt$AutoSendCountdown$public fun decide( now: Instant, fieldText: String, foreground: Boolean, sendInFlight: Boolean, sendNow: Boolean = false, ): Decision</ID>
+    <ID>ReturnCount:InstallerFakes.kt$FakeFetcher$override suspend fun open(request: FetchRequest): Outcome&lt;FetchResponse&gt;</ID>
+    <ID>ReturnCount:ModelPacks.kt$ModelPacks$private suspend fun downloadFor( pack: PackId, replaceExisting: Boolean, owner: String?, ): Outcome&lt;InstalledPack&gt;</ID>
+    <ID>ReturnCount:ModelPacks.kt$ModelPacks$private suspend fun statusOf(pack: ModelPackSpec, device: DeviceProbeResult): PackStatus</ID>
+    <ID>ReturnCount:ModelPacks.kt$ModelPacks$public suspend fun discardPartial(pack: PackId): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:ModelPacks.kt$ModelPacks$public suspend fun remove(pack: PackId): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:ModelPacks.kt$ModelPacks$public suspend fun setNaturalVoice(on: Boolean): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:PackInstaller.kt$PackInstaller$private fun stampMatches(spec: ModelPackSpec): Boolean</ID>
+    <ID>ReturnCount:PackInstaller.kt$PackInstaller$private suspend fun downloadFile(spec: ModelPackSpec, file: ModelFile, progress: (Long) -&gt; Unit): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:PackInstaller.kt$PackInstaller$private suspend fun openFollowingRedirects(firstUrl: String, rangeStart: Long?): Outcome&lt;FetchResponse&gt;</ID>
+    <ID>ReturnCount:PackInstaller.kt$PackInstaller.Companion$fun resolveLocation(current: String, location: String): String?</ID>
+    <ID>ReturnCount:PackSupport.kt$AutomaticPack$public fun choose( selected: PackId, device: DeviceProbeResult, isInstalled: (PackId) -&gt; Boolean, partialBytes: (PackId) -&gt; Long = { 0 }, packs: List&lt;ModelPackSpec&gt; = ModelCatalog.speech, ): ModelPackSpec?</ID>
+    <ID>ReturnCount:PackSupport.kt$AutomaticPack$public fun defaultFor(totalRamMb: Long?, supported: List&lt;ModelPackSpec&gt;, explicitId: String? = null): ModelPackSpec?</ID>
+    <ID>ReturnCount:PackSupport.kt$PackSupport$public fun supportFor( pack: ModelPackSpec, device: DeviceProbeResult, installed: Boolean = false, partialBytes: Long = 0, replacing: Boolean = false, ): Support</ID>
+    <ID>ReturnCount:ReadAloud.kt$ReadAloud$private suspend fun chooseNatural(text: String): NaturalChoice</ID>
+    <ID>ReturnCount:ReadAloud.kt$ReadAloud$private suspend fun speakNatural(pack: InstalledPack, text: String): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:ReadAloud.kt$ReadAloud$public suspend fun read(request: ReadRequest): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:ReadAloud.kt$ReadAloud$public suspend fun voices(): Outcome&lt;ImmutableList&lt;TtsVoice&gt;&gt;</ID>
+    <ID>ReturnCount:ReadText.kt$ReadLanguage$public fun detect(text: String, appLanguage: String?): String</ID>
+    <ID>ReturnCount:ReadText.kt$VoicePick$public fun forLocale(voices: List&lt;TtsVoice&gt;, localeTag: String): TtsVoice?</ID>
+    <ID>ReturnCount:SilenceDetector.kt$SilenceDetector$public fun add(level: Float, span: Duration): Boolean</ID>
+    <ID>ReturnCount:VoiceController.kt$VoiceController$private suspend fun closeBetweenChunks(): Boolean</ID>
+    <ID>ReturnCount:VoiceController.kt$VoiceController$private suspend fun transcribeLoop(recording: Recording)</ID>
+    <ID>ReturnCount:VoiceController.kt$VoiceController$public suspend fun cancel(keepWords: Boolean)</ID>
+    <ID>ReturnCount:VoiceController.kt$VoiceController$public suspend fun finish(endedBy: VoiceEnd = VoiceEnd.Person): Outcome&lt;String&gt;</ID>
+    <ID>ReturnCount:VoiceConversation.kt$VoiceReplyWatch$public fun decide(now: VoiceConversationSnapshot): VoiceReplyDecision</ID>
+    <ID>ReturnCount:VoiceLanguage.kt$VoiceLanguageNote.Companion$public fun of(chosen: VoiceLanguage, pack: PackId, appLanguageCode: String): VoiceLanguageNote?</ID>
+    <ID>ReturnCount:VoiceSetup.kt$VoiceSetupRun$private suspend fun check()</ID>
+    <ID>ReturnCount:VoiceSetup.kt$VoiceSetupRun$public suspend fun consent(attemptId: Long, allowMetered: Boolean)</ID>
+    <ID>TooGenericExceptionCaught:PackInstaller.kt$PackInstaller$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:PackInstaller.kt$PackInstaller$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:VoiceController.kt$VoiceController$e: Exception</ID>
+    <ID>TooManyFunctions:ModelPacks.kt$ModelPacks</ID>
+    <ID>TooManyFunctions:PackInstaller.kt$PackInstaller</ID>
+    <ID>TooManyFunctions:ReadAloud.kt$ReadAloud</ID>
+    <ID>TooManyFunctions:VoiceController.kt$VoiceController</ID>
+    <ID>TooManyFunctions:VoicePrefs.kt$InMemoryVoicePrefs : VoicePrefs</ID>
+    <ID>TooManyFunctions:VoiceSetup.kt$VoiceSetupRun</ID>
+    <ID>UnusedPrivateProperty:VoiceController.kt$VoiceController$private val dispatchers: AppDispatchers</ID>
+    <ID>UseCheckOrError:InstallerFakes.kt$FlakyFiles$throw IllegalStateException("delete refused")</ID>
+    <ID>UseCheckOrError:InstallerFakes.kt$FlakyFiles$throw IllegalStateException("move refused")</ID>
+    <ID>UseCheckOrError:VoiceSetupTest.kt$FakeHost$throw IllegalStateException("no notification permission bridge")</ID>
+  </CurrentIssues>
+</SmellBaseline>

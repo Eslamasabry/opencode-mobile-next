@@ -1,0 +1,105 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:EntryRouter.kt$DefaultEntryRouter$private suspend fun apply(effect: EntryEffect, target: EntryTarget): EntryTarget?</ID>
+    <ID>MagicNumber:EntryIntentParser.kt$EntryIntentParser$3</ID>
+    <ID>MagicNumber:EntryLinks.kt$EntryLinkParser$3</ID>
+    <ID>MagicNumber:EntryLinks.kt$EntryValidators$0x21</ID>
+    <ID>MagicNumber:EntryLinks.kt$EntryValidators$0x7e</ID>
+    <ID>MagicNumber:EntryLinks.kt$EntryValidators$3</ID>
+    <ID>MaxLineLength:AppBootstrap.kt$BootstrapSteps$*</ID>
+    <ID>MaxLineLength:EntryDecider.kt$EntryDecider$/** B-NAV-077: Claude on this phone → agent sign-in; set_up → Read usage from; everything else → provider sign-in. */</ID>
+    <ID>MaxLineLength:EntryDecider.kt$EntryDecider$EntryEffect.CreateSession(active, focusComposer = true, onFailure = Fallback(null, EntryNotice.ShareFailed))</ID>
+    <ID>MaxLineLength:EntryDecider.kt$EntryDecider$EntryTarget.SwitchServerThen(profile, SwitchReason.Alert, EntryTarget.Chat(ref, landOn = LandOn.OldestRequest))</ID>
+    <ID>MaxLineLength:EntryDecider.kt$EntryDecider$Go(EntryTarget.Servers(ServersRequestTarget.Edit(profile, focusPassword = true)), notice = EntryNotice.SignInAgain)</ID>
+    <ID>MaxLineLength:EntryDecider.kt$EntryDecider$Go(chat, listOf(EntryEffect.ResolveRef(ref, Fallback(EntryTarget.Land(null), EntryNotice.ConversationNotFound))))</ID>
+    <ID>MaxLineLength:EntryDecider.kt$EntryDecider$Go(plans, listOf(EntryEffect.VerifyQuotaToken(request.profileId, quotaToken, Fallback(plans, EntryNotice.PlanChanged))))</ID>
+    <ID>MaxLineLength:EntryDecider.kt$EntryDecider$listOf(EntryEffect.Connect(info.profileId, Fallback(list, null)), EntryEffect.ResolveRef(ref, Fallback(list, null)))</ID>
+    <ID>MaxLineLength:EntryDecider.kt$EntryDecider$listOf(EntryEffect.ResolveMonitoredRequest(token, profile, session, Fallback(null, EntryNotice.RequestGone)))</ID>
+    <ID>MaxLineLength:EntryDecider.kt$EntryDecider$onFailure = Fallback(EntryTarget.Conversations(ConversationsFilter.None), EntryNotice.CreateFailed)</ID>
+    <ID>MaxLineLength:EntryDecider.kt$EntryDecider$return openChat(world, ConversationRef(active, request.sessionId), EntryTarget.Chat(ConversationRef(active, request.sessionId)))</ID>
+    <ID>MaxLineLength:EntryDeciderTest.kt$EntryDeciderTest$EntryTarget.SwitchServerThen(P2, SwitchReason.Alert, EntryTarget.Chat(ConversationRef(P2, S1), landOn = LandOn.OldestRequest))</ID>
+    <ID>MaxLineLength:EntryDeciderTest.kt$EntryDeciderTest$Go(EntryTarget.Servers(ServersRequestTarget.Edit(P1, focusPassword = true)), notice = EntryNotice.SignInAgain)</ID>
+    <ID>MaxLineLength:EntryDeciderTest.kt$EntryDeciderTest$Go(EntryTarget.SwitchServerThen(P2, SwitchReason.Alert, EntryTarget.Chat(ConversationRef(P2, S1), focusComposer = true)))</ID>
+    <ID>MaxLineLength:EntryDeciderTest.kt$EntryDeciderTest$assertEquals(Go(EntryTarget.Chat(ref), listOf(EntryEffect.ResolveRef(ref, Fallback(list, null)))), decide(scheduled("sch_1"), world))</ID>
+    <ID>MaxLineLength:EntryDeciderTest.kt$EntryDeciderTest$assertEquals(Go(EntryTarget.Chat(ref), listOf(resolve)), decide(link("opencode-mobile://session?profile=p1&amp;session=ses_1")))</ID>
+    <ID>MaxLineLength:EntryDeciderTest.kt$EntryDeciderTest$assertEquals(Go(EntryTarget.Conversations(ConversationsFilter.Running)), decide(link("opencode-mobile://team/run/p1/run_1")))</ID>
+    <ID>MaxLineLength:EntryDeciderTest.kt$EntryDeciderTest$assertEquals(Go(EntryTarget.ProviderSignIn(P1, "anthropic")), decide(usage(UsageTargetKind.SignIn, "anthropic"), usageWorld))</ID>
+    <ID>MaxLineLength:EntryDeciderTest.kt$EntryDeciderTest$assertEquals(Go(EntryTarget.ProviderSignIn(P1, "glm")), decide(usage(UsageTargetKind.AddKey, "glm"), usageWorld))</ID>
+    <ID>MaxLineLength:EntryDeciderTest.kt$EntryDeciderTest$assertEquals(Go(EntryTarget.ScheduledPrompts(P1, ProjectDir("/w/app"), "morning")), decide(scheduled("morning"), world))</ID>
+    <ID>MaxLineLength:EntryDeciderTest.kt$EntryDeciderTest$assertEquals(Go(EntryTarget.Servers(null), notice = EntryNotice.AddServerFirst), decide(launch(action), empty))</ID>
+    <ID>MaxLineLength:EntryDeciderTest.kt$EntryDeciderTest$assertEquals(Go(EntryTarget.Servers(null), notice = EntryNotice.ChooseServerFirst), decide(launch(action), saved))</ID>
+    <ID>MaxLineLength:EntryDeciderTest.kt$EntryDeciderTest$assertEquals(Go(EntryTarget.Settings(SettingsSectionTarget.Background)), decide(EntryRequest.TilePreferences(TileId.Pause, T0)))</ID>
+    <ID>MaxLineLength:EntryDeciderTest.kt$EntryDeciderTest$assertEquals(Go(EntryTarget.Settings(SettingsSectionTarget.Notifications)), decide(EntryRequest.TilePreferences(TileId.Attention, T0)))</ID>
+    <ID>MaxLineLength:EntryDeciderTest.kt$EntryDeciderTest$assertEquals(Go(EntryTarget.UsageReadFrom(P1, "anthropic")), decide(usage(UsageTargetKind.SetUp, "anthropic"), usageWorld))</ID>
+    <ID>MaxLineLength:EntryDeciderTest.kt$EntryDeciderTest$assertEquals(Wait(WaitReason.Connection, P1), decide(internal, readyWorld(links = mapOf(P1 to LinkState.Connecting))))</ID>
+    <ID>MaxLineLength:EntryDeciderTest.kt$EntryDeciderTest$assertEquals(Wait(WaitReason.Connection, P1), decide(share, readyWorld(links = mapOf(P1 to LinkState.Connecting))))</ID>
+    <ID>MaxLineLength:EntryDeciderTest.kt$EntryDeciderTest$assertEquals(listOf(EntryEffect.CreateSession::class, EntryEffect.SeedDraft::class), go.effects.map { it::class })</ID>
+    <ID>MaxLineLength:EntryDeciderTest.kt$EntryDeciderTest$decide(link("opencode-mobile://session?profile=p1&amp;session=ses_1"), readyWorld(links = mapOf(P1 to LinkState.NeedsReentry)))</ID>
+    <ID>MaxLineLength:EntryDeciderTest.kt$EntryDeciderTest$for</ID>
+    <ID>MaxLineLength:EntryDeciderTest.kt$EntryDeciderTest$for (request in requests) assertEquals(Wait(WaitReason.Bootstrap), decide(request, world), "$request in $world")</ID>
+    <ID>MaxLineLength:EntryDeciderTest.kt$EntryDeciderTest$listOf(EntryEffect.ResolveWidgetConversation(P2, S1, true, Fallback(EntryTarget.Land(null), EntryNotice.ConversationNotFound)))</ID>
+    <ID>MaxLineLength:EntryDeciderTest.kt$EntryDeciderTest$private fun decide(request: EntryRequest, world: EntryWorld = readyWorld())</ID>
+    <ID>MaxLineLength:EntryDeciderTest.kt$EntryDeciderTest$private val resolve = EntryEffect.ResolveRef(ref, Fallback(EntryTarget.Land(null), EntryNotice.ConversationNotFound))</ID>
+    <ID>MaxLineLength:EntryDeciderTest.kt$EntryDeciderTest$val go = assertIs&lt;Go&gt;(decide(alert(AlertKind.Complete, profile = P2, reply = true, origin = EntryOrigin.Internal)))</ID>
+    <ID>MaxLineLength:EntryDeciderTest.kt$EntryDeciderTest$val internal = decide(launch(LaunchAction.UsageTarget(UsageTargetKind.SignIn, "openai", P2), EntryOrigin.Internal), usageWorld)</ID>
+    <ID>MaxLineLength:EntryDeciderTest.kt$EntryDeciderTest$}</ID>
+    <ID>MaxLineLength:EntryFixtures.kt$FakeEffects$override suspend</ID>
+    <ID>MaxLineLength:EntryFixtures.kt$FakeEffects$return if (token == TOKEN) Outcome.Ok(ConversationRef(profileId, sessionId)) else Outcome.Failed(Failure.Unexpected())</ID>
+    <ID>MaxLineLength:EntryIntentParserTest.kt$EntryIntentParserTest$EntryExtras.ALERT_SESSION_ID</ID>
+    <ID>MaxLineLength:EntryIntentParserTest.kt$EntryIntentParserTest$EntryExtras.SCHEDULED_PROFILE</ID>
+    <ID>MaxLineLength:EntryIntentParserTest.kt$EntryIntentParserTest$EntryExtras.SHORTCUT</ID>
+    <ID>MaxLineLength:EntryIntentParserTest.kt$EntryIntentParserTest$IntentFields(action = EntryExtras.ACTION_SEND, type = type, strings = mapOf(EntryExtras.TEXT to text, EntryExtras.SUBJECT to subject))</ID>
+    <ID>MaxLineLength:EntryIntentParserTest.kt$EntryIntentParserTest$assertEquals("Title and body", (parse(send("Title and body", "Title")).single() as EntryRequest.SharedText).text)</ID>
+    <ID>MaxLineLength:EntryIntentParserTest.kt$EntryIntentParserTest$assertEquals(TOKEN, (parse(alert("permission", token = TOKEN.raw)).single() as EntryRequest.AlertOpen).monitorToken)</ID>
+    <ID>MaxLineLength:EntryIntentParserTest.kt$EntryIntentParserTest$assertEquals(emptyList(), parse(extras(EntryExtras.SHORTCUT_PROFILE to "p1", EntryExtras.SHORTCUT_SESSION to "-x")))</ID>
+    <ID>MaxLineLength:EntryIntentParserTest.kt$EntryIntentParserTest$assertEquals(listOf&lt;EntryRequest&gt;(EntryRequest.Launch(action, T0)), parse(extras(EntryExtras.SHORTCUT to " $value ")))</ID>
+    <ID>MaxLineLength:EntryIntentParserTest.kt$EntryIntentParserTest$assertEquals(listOf&lt;EntryRequest&gt;(EntryRequest.TilePreferences(TileId.Attention, T0)), parse(tile(EntryExtras.APP_PACKAGE, EntryExtras.ATTENTION_TILE)))</ID>
+    <ID>MaxLineLength:EntryIntentParserTest.kt$EntryIntentParserTest$assertEquals(listOf&lt;EntryRequest&gt;(EntryRequest.TilePreferences(TileId.Pause, T0)), parse(tile(EntryExtras.APP_PACKAGE, EntryExtras.PAUSE_TILE)))</ID>
+    <ID>MaxLineLength:EntryIntentParserTest.kt$EntryIntentParserTest$extras(EntryExtras.SCHEDULED_PROFILE to profile, EntryExtras.SCHEDULED_PROMPT to schedule, EntryExtras.SCHEDULED_SESSION to session)</ID>
+    <ID>MaxLineLength:EntryIntentParserTest.kt$EntryIntentParserTest$for</ID>
+    <ID>MaxLineLength:EntryIntentParserTest.kt$EntryIntentParserTest$fun</ID>
+    <ID>MaxLineLength:EntryIntentParserTest.kt$EntryIntentParserTest$fun tile(pkg: String, cls: String)</ID>
+    <ID>MaxLineLength:EntryIntentParserTest.kt$EntryIntentParserTest$listOf&lt;EntryRequest&gt;(EntryRequest.AlertOpen(AlertKind.Complete, ProfileId("p1"), SessionId("ses_1"), null, true, T0))</ID>
+    <ID>MaxLineLength:EntryIntentParserTest.kt$EntryIntentParserTest$listOf&lt;EntryRequest&gt;(EntryRequest.Launch(LaunchAction.UsageTarget(UsageTargetKind.AddKey, "glm", ProfileId("p.1")), T0))</ID>
+    <ID>MaxLineLength:EntryIntentParserTest.kt$EntryIntentParserTest$private fun parse(fields: IntentFields, origin: EntryOrigin = EntryOrigin.Untrusted)</ID>
+    <ID>MaxLineLength:EntryIntentParserTest.kt$EntryIntentParserTest$val link = IntentFields(action = EntryExtras.ACTION_VIEW, data = "opencode-mobile://session?profile=p&amp;session=s")</ID>
+    <ID>MaxLineLength:EntryLinkParserTest.kt$EntryLinkParserTest$assertEquals(ParsedLink.Session(ProfileId("1730000000000"), SessionId("ses_abc.1-x")), EntryLinkParser.parse(link!!))</ID>
+    <ID>MaxLineLength:EntryLinkParserTest.kt$EntryLinkParserTest$assertEquals(ParsedLink.TeamGate(ProfileId("p1"), "bead:w-1"), EntryLinkParser.parse("opencode-mobile://team/gate/p1/bead:w-1"))</ID>
+    <ID>MaxLineLength:EntryLinkParserTest.kt$EntryLinkParserTest$assertEquals(ParsedLink.TeamRun(ProfileId("p1"), "run_1"), EntryLinkParser.parse("opencode-mobile://team/run/p1/run_1"))</ID>
+    <ID>MaxLineLength:EntryRouter.kt$DefaultEntryRouter$// Rule 5: a newer request on this channel arrived while effects ran → it wins, this result is dropped.</ID>
+    <ID>MaxLineLength:EntryRouter.kt$DefaultEntryRouter$call { effects.verifyQuotaToken(effect.profileId, effect.token) }?.let { belongs -&gt; if (belongs) target else null }</ID>
+    <ID>MaxLineLength:EntryRouter.kt$DefaultEntryRouter$is EntryEffect.ResolveRef -&gt; call { effects.resolveRef(effect.ref) }?.let { target.replacingRef(effect.ref, it) }</ID>
+    <ID>MaxLineLength:EntryRouter.kt$DefaultEntryRouter$outcome.value?.let { EntryTarget.Chat(it, focusComposer = effect.focusComposer) } ?: EntryTarget.Land(null)</ID>
+    <ID>MaxLineLength:EntryRouter.kt$DefaultEntryRouter$val found = attempt({ Failure.Unexpected() }) { effects.resolveWidgetConversation(effect.profileId, effect.sessionId) }</ID>
+    <ID>MaxLineLength:EntryRouter.kt$DefaultEntryRouter$val ordered = slots.value.byChannel.values.sortedWith(compareBy&lt;Slot&gt; { it.request.receivedAt }.thenBy { it.generation })</ID>
+    <ID>MaxLineLength:EntryRouterTest.kt$EntryRouterTest$assertEquals(EntryTarget.Chat(ConversationRef(P1, SessionId("ses_new")), focusComposer = true, opened = Opened.NewlyCreated), handoff.target)</ID>
+    <ID>MaxLineLength:EntryRouterTest.kt$EntryRouterTest$assertEquals(setOf(EntryTarget.Settings(SettingsSectionTarget.Background), EntryTarget.NeedsYou), seen.toSet())</ID>
+    <ID>MaxLineLength:EntryRouterTest.kt$EntryRouterTest$rig.router.submit(EntryRequest.AlertOpen(AlertKind.Permission, P2, S1, MonitorToken("b".repeat(64)), false, T0))</ID>
+    <ID>MaxLineLength:EntryRouterTest.kt$EntryRouterTest$val actions = EntryValidators.launchActions.values + LaunchAction.UsageTarget(UsageTargetKind.SignIn, "openai", P2)</ID>
+    <ID>MaxLineLength:EntryRouterTest.kt$EntryRouterTest.Rig$DefaultEntryRouter(world, effects, clock, scope.backgroundScope, StandardTestDispatcher(scope.testScheduler))</ID>
+    <ID>MaxLineLength:EntryTypes.kt$EntryRequest.SharedText$override fun toString(): String</ID>
+    <ID>MaxLineLength:EntryTypes.kt$EntryTarget.SessionAddress$/** The address sheet for a link naming a server this phone has not saved; [linkTicket] keys [EntryRouter.linkFor]. */</ID>
+    <ID>MaxLineLength:EntryWorld.kt$BootstrapPhase$/** ADR §9.7 start-up, as the router sees it. Every request waits for [Ready] AND [EntryWorld.gateOpen] (07 §7.3 rule 3). */</ID>
+    <ID>MaxLineLength:build.gradle.kts$// bootstrap and the migration gate open, is decided by a pure table (EntryDecider) and handed to the shell exactly once.</ID>
+    <ID>ReturnCount:EntryDecider.kt$EntryDecider$private fun alert(request: EntryRequest.AlertOpen, world: EntryWorld): EntryDecision</ID>
+    <ID>ReturnCount:EntryDecider.kt$EntryDecider$private fun chatAlert(request: EntryRequest.AlertOpen, world: EntryWorld): EntryDecision</ID>
+    <ID>ReturnCount:EntryDecider.kt$EntryDecider$private fun newTask(origin: EntryOrigin, world: EntryWorld): EntryDecision</ID>
+    <ID>ReturnCount:EntryDecider.kt$EntryDecider$private fun pinned(request: EntryRequest.PinnedSession, world: EntryWorld): EntryDecision</ID>
+    <ID>ReturnCount:EntryDecider.kt$EntryDecider$private fun scheduled(request: EntryRequest.ScheduledOpen, world: EntryWorld, now: Instant): EntryDecision</ID>
+    <ID>ReturnCount:EntryDecider.kt$EntryDecider$private fun usageTarget(action: LaunchAction.UsageTarget, origin: EntryOrigin, world: EntryWorld): EntryDecision</ID>
+    <ID>ReturnCount:EntryIntentParser.kt$EntryIntentParser$internal fun alert(fields: IntentFields, origin: EntryOrigin, now: Instant): EntryRequest.AlertOpen?</ID>
+    <ID>ReturnCount:EntryIntentParser.kt$EntryIntentParser$internal fun launch(fields: IntentFields, origin: EntryOrigin, now: Instant): EntryRequest.Launch?</ID>
+    <ID>ReturnCount:EntryIntentParser.kt$EntryIntentParser$internal fun link(fields: IntentFields, now: Instant): EntryRequest.Link?</ID>
+    <ID>ReturnCount:EntryIntentParser.kt$EntryIntentParser$internal fun scheduled(fields: IntentFields, origin: EntryOrigin, now: Instant): EntryRequest.ScheduledOpen?</ID>
+    <ID>ReturnCount:EntryIntentParser.kt$EntryIntentParser$internal fun tile(fields: IntentFields, now: Instant): EntryRequest.TilePreferences?</ID>
+    <ID>ReturnCount:EntryLinks.kt$EntryLinkParser$private fun session(parts: Parts): ParsedLink?</ID>
+    <ID>ReturnCount:EntryLinks.kt$EntryLinkParser$private fun split(text: String): Parts?</ID>
+    <ID>ReturnCount:EntryLinks.kt$EntryLinkParser$private fun team(parts: Parts): ParsedLink?</ID>
+    <ID>ReturnCount:EntryLinks.kt$EntryLinkParser$public fun parse(raw: String): ParsedLink?</ID>
+    <ID>ReturnCount:EntryLinks.kt$EntryValidators$public fun launchAction(value: String): LaunchAction?</ID>
+    <ID>TooManyFunctions:EntryDecider.kt$EntryDecider</ID>
+    <ID>TooManyFunctions:EntryRouter.kt$DefaultEntryRouter : EntryRouter</ID>
+  </CurrentIssues>
+</SmellBaseline>
