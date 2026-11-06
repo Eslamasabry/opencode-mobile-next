@@ -75,6 +75,7 @@ import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownBlock
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdBlock
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdReveal
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdSource
+import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdNest
 import io.github.eslamasabry.oc.ui.kitchat.markdown.settle
 import io.github.eslamasabry.oc.ui.kitchat.markdown.takesCaret
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
@@ -569,7 +570,7 @@ private fun ChatRow(
     when (row) {
         is BlockRow -> {
             val content: @Composable () -> Unit = {
-                if (reply != null) RichBlock(row, reveal, motion, reply, copyCode)
+                if (reply != null) KitMdNest(row.depth) { RichBlock(row, reveal, motion, reply, copyCode) }
                 else
                     KitReplyBlock(
                         text = row.text,

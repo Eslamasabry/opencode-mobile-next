@@ -410,7 +410,15 @@ public object LongTable {
 public object FenceText {
     public fun body(source: String): String {
         var lines = source.split('\n')
-        if (lines.firstOrNull()?.trimStart()?.startsWith("```") == true) lines = lines.drop(1)
+        // N-49: a fence inside a list item is indented with it; CommonMark takes that indent off every body line.
+        val fenced = lines.firstOrNull()?.trimStart()?.startsWith("```") == true
+        val indent = if (fenced) lines.first().let { it.length - it.trimStart(' ').length } else 0
+        if (fenced) lines = lines.drop(1)
+        if (indent > 0)
+            lines = lines.map { line ->
+                val lead = line.length - line.trimStart(' ').length
+                line.substring(minOf(lead, indent))
+            }
         if (
             lines.isNotEmpty() &&
                 lines.last().trim().startsWith("```") &&

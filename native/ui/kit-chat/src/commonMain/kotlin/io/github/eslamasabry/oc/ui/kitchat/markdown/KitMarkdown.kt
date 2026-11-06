@@ -292,6 +292,26 @@ public fun KitMarkdownHeading(
     )
 }
 
+/**
+ * N-49: one level of list nesting: the width of a list marker's column, so a nested item's marker (and an item's
+ * quote, table or code) starts under its parent's words, not under its parent's marker.
+ */
+internal const val KIT_MD_NEST_STEP: Int = Space.S6 + Space.S2
+
+/**
+ * N-49: a reply block that sits [depth] levels inside a list. The transcript shows a reply one block per row, so a
+ * nested item (or an item's quote, table or fence) arrives alone and is indented here to the depth the whole text
+ * gave it. Depth 0 draws [content] unchanged.
+ *
+ * States: none
+ * Motion: none (the indent is part of the layout)
+ */
+@Composable
+public fun KitMdNest(depth: Int, content: @Composable () -> Unit) {
+    if (depth <= 0) content()
+    else Box(Modifier.padding(start = (KIT_MD_NEST_STEP * depth.coerceAtMost(6)).dp)) { content() }
+}
+
 @Composable
 public fun KitMarkdownListItem(
     block: KitMdBlock.ListItem,
@@ -309,7 +329,7 @@ public fun KitMarkdownListItem(
             block.ordered -> "${block.number ?: 1}."
             else -> "•"
         }
-    Row(modifier.fillMaxWidth().padding(start = (Space.S4 * block.depth.coerceIn(0, 8)).dp)) {
+    Row(modifier.fillMaxWidth().padding(start = (KIT_MD_NEST_STEP * block.depth.coerceIn(0, 6)).dp)) {
         DisableSelection {
             BasicText(
                 marker,

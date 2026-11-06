@@ -655,6 +655,7 @@ internal class TranscriptModel(
                     origin,
                     b.continued,
                     b.continues,
+                    b.depth,
                 )
         }
         rows.addAll(pe.settledRows)
@@ -673,7 +674,8 @@ internal class TranscriptModel(
                     prev.live == live &&
                     prev.kind == tail.kind &&
                     prev.open == tail.open &&
-                    prev.continued == tail.continued
+                    prev.continued == tail.continued &&
+                    prev.depth == tail.depth
             ) {
                 prev
             } else {
@@ -688,6 +690,7 @@ internal class TranscriptModel(
                     tail.open,
                     origin,
                     tail.continued,
+                    depth = tail.depth,
                 )
             }
         pe.tailRow = row

@@ -15,6 +15,12 @@ internal class Block(
     val open: Boolean,
     val continued: Boolean = false,
     val continues: Boolean = false,
+    /**
+     * N-49: how deep inside a list this block sits. Every list item line starts its own block, so a nested item
+     * ("   1. First nested step") or an item's quote, table or fence is parsed alone; the row carries the nesting
+     * the whole text gave it and the transcript indents it to match.
+     */
+    val depth: Int = 0,
 )
 
 /** STREAM-FIX: how many lines one row of a long block holds. */
@@ -56,6 +62,12 @@ internal class StreamingBlocks {
     private var continued = false
     private var blockKind = RowKind.Prose
 
+    /** N-49: the open list items around the current line, outermost first: (marker column, content column). */
+    private val openItems = ArrayList<IntArray>()
+
+    /** N-49: the list nesting of the current block, found at its first line. */
+    private var blockDepth = 0
+
     var tailReparses: Int = 0
         private set
 
@@ -96,6 +108,8 @@ internal class StreamingBlocks {
         inFence = false
         lines = 0
         continued = false
+        openItems.clear()
+        blockDepth = 0
         tail = null
         fullParses++
         generation++
@@ -125,6 +139,7 @@ internal class StreamingBlocks {
                     text.substring(blockStart, text.length).trimEnd('\n'),
                     inFence,
                     continued,
+                    depth = blockDepth,
                 )
             }
         return tail
@@ -154,6 +169,7 @@ internal class StreamingBlocks {
         when {
             startsWithFence(ls, nl) -> {
                 emitPending(ls)
+                blockDepth = contentDepth(ls, nl)
                 blockStart = ls
                 inFence = true
                 lines = 1
@@ -165,17 +181,20 @@ internal class StreamingBlocks {
             }
             text[firstNonSpace(ls, nl)] == '#' -> {
                 emitPending(ls)
+                blockDepth = contentDepth(ls, nl)
                 emit(ls, nl + 1, RowKind.Heading)
                 blockStart = nl + 1
                 lines = 0
             }
             isListItem(ls, nl) -> {
                 emitPending(ls)
+                blockDepth = itemDepth(ls, nl)
                 blockStart = ls
                 lines = 1
             }
             else -> {
                 if (lines > 0) cutIfFull(ls, if (continued) blockKind else kindOfLine(blockStart))
+                else blockDepth = contentDepth(ls, nl)
                 lines++
             }
         }
@@ -197,6 +216,7 @@ internal class StreamingBlocks {
                 open = false,
                 continued = continued,
                 continues = true,
+                depth = blockDepth,
             )
         blockStart = ls
         blockKind = kind
@@ -220,8 +240,38 @@ internal class StreamingBlocks {
                 text.substring(start, end).trimEnd('\n'),
                 open = false,
                 continued = continued,
+                depth = blockDepth,
             )
         continued = false
+    }
+
+    /**
+     * N-49: a list item line at column `i` closes the items whose marker sits at or right of it; what is left open
+     * is its nesting. Its own content column (past the marker and one space) is remembered for the lines under it.
+     */
+    private fun itemDepth(ls: Int, nl: Int): Int {
+        val i = firstNonSpace(ls, nl)
+        val column = i - ls
+        while (openItems.isNotEmpty() && openItems.last()[0] >= column) openItems.removeAt(openItems.lastIndex)
+        val depth = openItems.size.coerceAtMost(MAX_DEPTH)
+        var j = i
+        while (j < nl && text[j].isDigit()) j++
+        val content = (if (j > i) j + 2 else i + 2) - ls
+        openItems += intArrayOf(column, content)
+        return depth
+    }
+
+    /** N-49: any other block belongs to the innermost open item whose content column it reaches; none at column 0. */
+    private fun contentDepth(ls: Int, nl: Int): Int {
+        val column = firstNonSpace(ls, nl) - ls
+        // Lines are indented by 2+ under an item even when its marker is wider ("10. "), so allow one short.
+        while (openItems.isNotEmpty() && column < openItems.last()[1] - 1) openItems.removeAt(openItems.lastIndex)
+        return openItems.size.coerceAtMost(MAX_DEPTH)
+    }
+
+    private companion object {
+        /** Deeper lists draw at this level, like the parser's own limit. */
+        const val MAX_DEPTH = 6
     }
 
     private fun kindOfLine(ls: Int): RowKind {

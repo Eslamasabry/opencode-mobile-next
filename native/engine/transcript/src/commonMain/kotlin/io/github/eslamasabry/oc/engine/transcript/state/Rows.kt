@@ -78,6 +78,8 @@ public data class BlockRow(
      */
     val continued: Boolean = false,
     val continues: Boolean = false,
+    /** N-49: list nesting of this block (a nested item, or a quote/table/fence inside an item); 0 at the margin. */
+    val depth: Int = 0,
 ) : TranscriptRow
 
 public data class ThoughtRow(
