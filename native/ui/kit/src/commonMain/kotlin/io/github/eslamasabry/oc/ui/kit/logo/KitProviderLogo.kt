@@ -45,6 +45,8 @@ public fun KitProviderLogo(
     name: String,
     agent: Boolean = false,
     modifier: Modifier = Modifier,
+    /** The mark's own size; a row's tile passes its glyph size so the mark sits inside it like a glyph. */
+    markSize: androidx.compose.ui.unit.Dp = 24.dp,
 ) {
     val source = LocalKitLogoLoader.current
     var svg by remember(id, agent, source) { mutableStateOf<String?>(null) }
@@ -61,12 +63,12 @@ public fun KitProviderLogo(
                     .build()
             }
         }
-    Box(modifier.size(28.dp).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
+    Box(modifier.size(maxOf(28.dp, markSize)).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
         if (request != null)
             AsyncImage(
                 model = request,
                 contentDescription = null,
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(markSize),
                 colorFilter = ColorFilter.tint(LocalKitColors.current.text1),
             )
     }

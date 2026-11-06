@@ -152,7 +152,14 @@ internal fun RowLeadingTile(leading: KitRowLeading, dim: Boolean) {
                     ),
                     colorFilter = ColorFilter.tint(colors.tone(tone)),
                 )
-            is KitRowLeading.Logo -> KitProviderLogo(leading.id, leading.name, leading.agent)
+            is KitRowLeading.Logo ->
+                KitProviderLogo(
+                    leading.id,
+                    leading.name,
+                    leading.agent,
+                    Modifier.size(tile.dp),
+                    markSize = (tokens.smallIcon * minOf(kitTextScale(), TextScalePolicy.ICON_CAP)).dp,
+                )
             is KitRowLeading.Svg -> {
                 val platform = LocalKitPlatform.current
                 val size = (tokens.smallIcon * minOf(kitTextScale(), TextScalePolicy.ICON_CAP)).dp

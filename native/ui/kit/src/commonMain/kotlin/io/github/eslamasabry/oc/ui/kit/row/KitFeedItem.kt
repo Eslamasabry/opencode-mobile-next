@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.Alignment
-import io.github.eslamasabry.oc.ui.kit.logo.KitProviderLogo
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -88,7 +87,9 @@ public fun KitFeedItem(
         ) {
             if (agent != null) {
                 Box {
-                    KitProviderLogo(agent.id, agent.name, agent = true)
+                    // N-54: the agent's mark in the rows' own tile, so it lines up with the tiles under the list and
+                    // reads as a mark, not a stray shape.
+                    RowLeadingTile(KitRowLeading.Logo(agent.id, agent.name, agent = true), dim = false)
                     if (live) {
                         Box(
                             Modifier.align(Alignment.TopEnd).size(10.dp)
