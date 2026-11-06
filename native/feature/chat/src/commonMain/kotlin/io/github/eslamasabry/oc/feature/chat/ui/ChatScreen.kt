@@ -564,6 +564,7 @@ public fun ChatScreen(
                                 body = stringResource(Res.string.chatLoadFailedBody),
                                 failure = phase.failure,
                                 onRetry = actions::retryLoad,
+                                retryLabel = stringResource(Res.string.commonRetry),
                                 modifier = Modifier.testTag("chat-load-error"),
                             )
                         ChatPhase.Live ->
