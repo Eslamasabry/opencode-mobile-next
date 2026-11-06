@@ -56,7 +56,15 @@ public data class AllModel(
     val problem: AllProblem? = null,
     val renaming: RenameUi? = null,
     val archiveCapable: Set<ProfileId> = emptySet(),
+    /** Servers that can move a conversation into the open project (`sessionSteal`). */
+    val stealCapable: Set<ProfileId> = emptySet(),
+    /** The folder each server is open on now, trimmed; "Continue here" moves into it. */
+    val openFolders: Map<ProfileId, String> = emptyMap(),
+    val moving: MovingHere? = null,
 )
+
+/** The "Continue here" question for one row; [working] while the server moves it, [failed] keeps it open. */
+public data class MovingHere(val key: String, val working: Boolean = false, val failed: Boolean = false)
 
 /** A server's id and the name the person gave it. */
 public data class ServerName(val profile: ProfileId, val name: String)
@@ -160,6 +168,13 @@ public object AllConversationsRules {
                         model.sources[e.profile]?.preview != true,
                 readOnly = model.sources[e.profile]?.preview == true,
                 pinned = e.session.id in model.sources[e.profile]?.pinned.orEmpty(),
+                canContinueHere =
+                    e.profile in model.stealCapable &&
+                        !archivedOf(e) &&
+                        model.sources[e.profile]?.preview != true &&
+                        e.session.directory?.trim()?.trimEnd('/').let { dir ->
+                            !dir.isNullOrEmpty() && dir != model.openFolders[e.profile]
+                        },
                 contextPercent =
                     model.sources[e.profile]?.contextUsage?.get(e.session.id)?.let {
                         (it * 100).toInt()
@@ -223,6 +238,22 @@ public object AllConversationsRules {
                     .map { it.name }
                     .toImmutableList(),
             problem = model.problem,
+            moveHere =
+                model.moving?.let { moving ->
+                    val row = rows.firstOrNull { it.key == moving.key }
+                    val entry = entries.firstOrNull { key(it.profile, it.session.id) == moving.key }
+                    if (row == null || entry == null) null
+                    else
+                        MoveHereUi(
+                            key = moving.key,
+                            title = row.title,
+                            from = row.project,
+                            to = projectName(model.openFolders[entry.profile]),
+                            sessionWorking = row.running,
+                            working = moving.working,
+                            failed = moving.failed,
+                        )
+                },
             renaming = model.renaming,
             undo =
                 if (model.pending.isEmpty()) null

@@ -40,7 +40,6 @@ import io.github.eslamasabry.oc.feature.chats.presentation.RowAct
 import io.github.eslamasabry.oc.feature.chats.presentation.RowStatus
 import io.github.eslamasabry.oc.ui.words.res.chatUiShareSession
 import io.github.eslamasabry.oc.ui.words.res.sessionMenuDetails
-import io.github.eslamasabry.oc.ui.words.res.globalSessionsContinueHere
 import io.github.eslamasabry.oc.ui.words.res.sessionOpenRelated
 import io.github.eslamasabry.oc.ui.words.res.sessionCopyHandoff
 import io.github.eslamasabry.oc.feature.chats.presentation.RowTitle
@@ -416,7 +415,6 @@ private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, state
                 // page and run the same act its menu runs (one path to the server for each).
                 add(KitMenuItem(stringResource(Res.string.chatUiShareSession), { menuOpen = false; actions.rowAct(row, RowAct.Share) }, icon = KitIcons.link))
                 add(KitMenuItem(stringResource(Res.string.sessionMenuDetails), { menuOpen = false; actions.rowAct(row, RowAct.Details) }, icon = KitIcons.info))
-                add(KitMenuItem(stringResource(Res.string.globalSessionsContinueHere), { menuOpen = false; actions.rowAct(row, RowAct.ContinueHere) }, icon = KitIcons.download))
                 add(KitMenuItem(stringResource(Res.string.sessionOpenRelated), { menuOpen = false; actions.rowAct(row, RowAct.OpenRelated) }, icon = KitIcons.branch))
                 add(KitMenuItem(stringResource(Res.string.sessionCopyHandoff), { menuOpen = false; actions.rowAct(row, RowAct.CopyHandoff) }, icon = KitIcons.terminal))
             }

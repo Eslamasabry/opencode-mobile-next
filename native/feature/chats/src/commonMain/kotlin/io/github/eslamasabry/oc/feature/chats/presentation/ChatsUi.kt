@@ -162,8 +162,6 @@ public data class ArchiveUndoUi(val id: Int, val title: RowTitle)
 public enum class RowAct(internal val headerAction: String?) {
     Details("Details"),
     Share("Share"),
-    /** "Continue here": adopt a conversation from another place (the import sheet). */
-    ContinueHere("ImportConversation"),
     /** "Copy handoff": the command that resumes it on a computer. */
     CopyHandoff("ContinueOnComputer"),
     /** "Open related": the parent and sub-agent conversations. */

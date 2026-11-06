@@ -138,6 +138,23 @@ public class ChatsAllViewModel(
                         }
                         .map { it.profile }
                         .toSet(),
+                stealCapable =
+                    live
+                        .filter {
+                            it.operations != null && it.gateway.capabilities.value.sessionSteal
+                        }
+                        .map { it.profile }
+                        .toSet(),
+                openFolders =
+                    live
+                        .mapNotNull { server ->
+                            server.gateway.location.value.directory
+                                ?.trim()
+                                ?.trimEnd('/')
+                                ?.takeIf { it.isNotEmpty() }
+                                ?.let { server.profile to it }
+                        }
+                        .toMap(),
             )
         }
         if (before != after) reload()
@@ -514,6 +531,39 @@ public class ChatsAllViewModel(
         val target = ConversationRef(profile, session.id)
         connections.prefetch(target)
         nav.openChat(target)
+    }
+
+    override fun continueHere(key: String) {
+        val row = AllConversationsRules.find(model.value, key) ?: return
+        if (row.first !in model.value.stealCapable) return
+        model.update { it.copy(moving = MovingHere(key)) }
+    }
+
+    override fun cancelContinueHere() {
+        if (model.value.moving?.working == true) return
+        model.update { it.copy(moving = null) }
+    }
+
+    override fun confirmContinueHere() {
+        val moving = model.value.moving ?: return
+        if (moving.working) return
+        val (profile, session) = AllConversationsRules.find(model.value, moving.key) ?: return
+        val operations = serverOf(moving.key)?.operations
+        if (operations == null) {
+            model.update { it.copy(moving = moving.copy(failed = true)) }
+            return
+        }
+        model.update { it.copy(moving = moving.copy(working = true, failed = false)) }
+        viewModelScope.launch {
+            when (val result = operations.stealSessionIntoWorkspace(session.id)) {
+                is Outcome.Ok -> {
+                    model.update { it.copy(moving = null) }
+                    nav.openChat(ConversationRef(profile, result.value))
+                }
+                is Outcome.Failed ->
+                    model.update { it.copy(moving = moving.copy(working = false, failed = true)) }
+            }
+        }
     }
 
     override fun rowAct(key: String, act: RowAct) {

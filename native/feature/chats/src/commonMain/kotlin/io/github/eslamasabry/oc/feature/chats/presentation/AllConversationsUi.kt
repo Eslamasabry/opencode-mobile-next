@@ -87,6 +87,21 @@ public data class AllRowUi(
     val pinned: Boolean = false,
     val contextPercent: Int? = null,
     val readOnly: Boolean = false,
+    /** Its server can move it into the project that is open (Flutter "Continue here"). */
+    val canContinueHere: Boolean = false,
+)
+
+/**
+ * The "Continue here" question: names both projects, says a working conversation is interrupted.
+ */
+public data class MoveHereUi(
+    val key: String,
+    val title: RowTitle,
+    val from: String?,
+    val to: String?,
+    val sessionWorking: Boolean,
+    val working: Boolean,
+    val failed: Boolean,
 )
 
 /** The rename dialog for one row; [initial] is the readable title the field starts with. */
@@ -136,6 +151,7 @@ public data class AllConversationsUi(
     val incomplete: ImmutableList<String> = persistentListOf(),
     val problem: AllProblem? = null,
     val renaming: RenameUi? = null,
+    val moveHere: MoveHereUi? = null,
     val undo: DeleteUndoUi? = null,
 )
 
@@ -164,7 +180,14 @@ public interface ChatsAllActions {
 
     public fun rename(key: String)
 
-    /** A row's Share, Details, Continue here, Copy handoff or Open related. */
+    /** Asks "Move to this project?" for the row; nothing moves until [confirmContinueHere]. */
+    public fun continueHere(key: String) {}
+
+    public fun confirmContinueHere() {}
+
+    public fun cancelContinueHere() {}
+
+    /** A row's Share, Details, Copy handoff or Open related. */
     public fun rowAct(key: String, act: RowAct) {}
 
     /** A row's Share, Details, Continue here, Copy handoff or Open related. */
