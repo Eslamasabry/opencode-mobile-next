@@ -574,14 +574,6 @@ public class ChatsAllViewModel(
         nav.openRowAct(ConversationRef(profile, session.id), act)
     }
 
-    override fun rowAct(key: String, act: RowAct) {
-        val m = model.value
-        if (m.selecting) return
-        val (profile, session) = AllConversationsRules.find(m, key) ?: return
-        commitDelete()
-        nav.openRowAct(ConversationRef(profile, session.id), act)
-    }
-
     override fun startSelecting(key: String?): Unit = model.update {
         it.copy(selecting = true, selected = if (key != null) setOf(key) else emptySet())
     }

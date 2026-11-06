@@ -190,9 +190,6 @@ public interface ChatsAllActions {
     /** A row's Share, Details, Copy handoff or Open related. */
     public fun rowAct(key: String, act: RowAct) {}
 
-    /** A row's Share, Details, Continue here, Copy handoff or Open related. */
-    public fun rowAct(key: String, act: RowAct) {}
-
     public fun renameSelected()
 
     public fun togglePin(key: String) {}

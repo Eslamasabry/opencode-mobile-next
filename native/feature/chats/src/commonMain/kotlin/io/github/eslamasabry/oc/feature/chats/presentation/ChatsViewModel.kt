@@ -169,12 +169,6 @@ public class ChatsViewModel(
         nav.openRowAct(row.ref, act)
     }
 
-    override fun rowAct(row: ConversationRowUi, act: RowAct) {
-        if (!row.canOpen || state.value.home.opening != null) return
-        sheet.value = null
-        nav.openRowAct(row.ref, act)
-    }
-
     override fun archive(row: ConversationRowUi) {
         if (row.key !in state.value.archivable) return
         // One offer at a time: a new archive sends the earlier one first.

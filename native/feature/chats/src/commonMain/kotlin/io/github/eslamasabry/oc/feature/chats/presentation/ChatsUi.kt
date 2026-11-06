@@ -178,37 +178,8 @@ internal fun io.github.eslamasabry.oc.ui.routes.AppNavigator.openRowAct(
     else open(io.github.eslamasabry.oc.ui.routes.ChatRoute(ref, thenAction = name))
 }
 
-/**
- * What a list row's menu does beyond Open and Archive (Flutter global-sessions row menu). Each
- * opens the conversation's own page and runs the same act the conversation menu runs, so there is
- * one path to the server for each.
- */
-public enum class RowAct(internal val headerAction: String?) {
-    Details("Details"),
-    Share("Share"),
-    /** "Continue here": adopt a conversation from another place (the import sheet). */
-    ContinueHere("ImportConversation"),
-    /** "Copy handoff": the command that resumes it on a computer. */
-    CopyHandoff("ContinueOnComputer"),
-    /** "Open related": the parent and sub-agent conversations. */
-    OpenRelated(null),
-}
-
-/** Opens [ref] for [act]; shared by the home list and All conversations. */
-internal fun io.github.eslamasabry.oc.ui.routes.AppNavigator.openRowAct(
-    ref: ConversationRef,
-    act: RowAct,
-) {
-    val name = act.headerAction
-    if (name == null) open(io.github.eslamasabry.oc.ui.routes.SessionRelationsRoute(ref))
-    else open(io.github.eslamasabry.oc.ui.routes.ChatRoute(ref, thenAction = name))
-}
-
 /** Methods are intents, never widget names (ADR §9.1). */
 public interface ChatsActions {
-    /** A row's menu act other than Open and Archive; no-op where the list cannot offer it. */
-    public fun rowAct(row: ConversationRowUi, act: RowAct) {}
-
     /** A row's menu act other than Open and Archive; no-op where the list cannot offer it. */
     public fun rowAct(row: ConversationRowUi, act: RowAct) {}
 
