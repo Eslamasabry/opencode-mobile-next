@@ -168,7 +168,9 @@ class ReviewPresenterTest {
         p.confirmUndoAll()
         assertEquals(Failure.Server(500), p.state.value.actionFailure)
         assertTrue(nav.went.isEmpty())
-        assertFalse(p.state.value.confirming)
+        // Flutter showKitConfirm(action:) keeps the question open with the failure and Try again.
+        assertTrue(p.state.value.confirming)
+        assertFalse(p.state.value.working)
     }
 
     @Test
