@@ -55,14 +55,18 @@ fun main() {
         }
         Window(onCloseRequest = ::exitApplication, title = "OpenCode native (desktop preview)") {
             KitDesktopSettingsMenu(settingsTitle, updatesTitle) { showUpdates = true }
-            App(graph.shell, platform, graph.metroViewModelFactory)
+            graph.kitChatEnvironment.Provide {
+                App(graph.shell, platform, graph.metroViewModelFactory)
+            }
         }
         if (showUpdates) {
             DialogWindow(onCloseRequest = { showUpdates = false }, title = updatesTitle) {
-                CompositionLocalProvider(LocalKitPlatform provides platform) {
-                    KitTheme {
-                        val state by updatesVm.state.collectAsState()
-                        DesktopUpdatesScreen(state, updatesVm)
+                graph.kitChatEnvironment.Provide {
+                    CompositionLocalProvider(LocalKitPlatform provides platform) {
+                        KitTheme {
+                            val state by updatesVm.state.collectAsState()
+                            DesktopUpdatesScreen(state, updatesVm)
+                        }
                     }
                 }
             }

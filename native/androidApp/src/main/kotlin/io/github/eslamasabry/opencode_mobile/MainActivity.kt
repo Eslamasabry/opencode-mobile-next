@@ -10,12 +10,10 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.withFrameNanos
 import io.github.eslamasabry.oc.ui.kit.content.terminal.AndroidKitTerminalSlot
 import io.github.eslamasabry.oc.ui.kit.content.terminal.LocalKitTerminalSlot
-import androidx.compose.runtime.withFrameNanos
 import io.github.eslamasabry.oc.ui.kit.content.terminal.LocalTerminalLinkHost
-import io.github.eslamasabry.oc.ui.kit.input.KitSecretSink
-import io.github.eslamasabry.oc.ui.kit.input.LocalKitSecretSink
 import io.github.eslamasabry.oc.ui.kit.logo.LocalKitLogoLoader
 import io.github.eslamasabry.oc.ui.kit.platform.AndroidKitPlatform
 import io.github.eslamasabry.oc.ui.shell.App
@@ -63,46 +61,48 @@ class MainActivity : ComponentActivity() {
         val settings = graph as SettingsAppGraph
         settings.firstRunStarter.start()
         setContent {
-            val appearance by settings.appPreferences.appearance.collectAsState()
-            LaunchedEffect(Unit) {
-                settings.appPreferences.storedLocaleTag.collect { tag ->
-                    if (AppLocale.changed(tag)) recreate()
+            graph.kitChatEnvironment.Provide {
+                val appearance by settings.appPreferences.appearance.collectAsState()
+                LaunchedEffect(Unit) {
+                    settings.appPreferences.storedLocaleTag.collect { tag ->
+                        if (AppLocale.changed(tag)) recreate()
+                    }
                 }
-            }
-            CompositionLocalProvider(
-                LocalKitSecretSink provides KitSecretSink(graph.redactor::registerSecret),
-                LocalKitTerminalSlot provides AndroidKitTerminalSlot,
-                LocalTerminalLinkHost provides (graph as TerminalLinksGraph).terminalLinkHost,
-                LocalKitLogoLoader provides (graph as ProviderLogoGraph).kitLogoLoader,
-            ) {
-                MigrationRoot(graph.migration, graph.shell.navigator, platform) {
-                    App(
-                        graph.shell,
-                        platform,
-                        graph.metroViewModelFactory,
-                        appearance,
-                        AppLocale.applied,
-                        windowContent = { shell ->
-                            UpdateNoticeHost((graph as UpdateNoticeAccessors).updateNotices) {
-                                IncomingShareHost(platformHub.incomingShare, shell)
-                            }
-                        },
-                    )
-                    // A parked launch is handed over only after the migration gate and shell
-                    // have actually composed. This effect dies with its Activity's composition.
-                    LaunchedEffect(Unit) {
-                        withFrameNanos {}
-                        if (!isDestroyed) {
-                            shellReady = true
-                            if (
-                                savedInstanceState == null &&
-                                    intent.action == Intent.ACTION_MAIN &&
-                                    intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0
-                            )
-                                settings.whatsNewStarter.start()
-                            if (routeWhenReady) {
-                                routeWhenReady = false
-                                platformHub.route(intent)
+                CompositionLocalProvider(
+                    LocalKitTerminalSlot provides AndroidKitTerminalSlot,
+                    LocalTerminalLinkHost provides (graph as TerminalLinksGraph).terminalLinkHost,
+                    LocalKitLogoLoader provides (graph as ProviderLogoGraph).kitLogoLoader,
+                ) {
+                    MigrationRoot(graph.migration, graph.shell.navigator, platform) {
+                        App(
+                            graph.shell,
+                            platform,
+                            graph.metroViewModelFactory,
+                            appearance,
+                            AppLocale.applied,
+                            windowContent = { shell ->
+                                UpdateNoticeHost((graph as UpdateNoticeAccessors).updateNotices) {
+                                    IncomingShareHost(platformHub.incomingShare, shell)
+                                }
+                            },
+                        )
+                        // A parked launch is handed over only after the migration gate and shell
+                        // have actually composed. This effect dies with its Activity's composition.
+                        LaunchedEffect(Unit) {
+                            withFrameNanos {}
+                            if (!isDestroyed) {
+                                shellReady = true
+                                if (
+                                    savedInstanceState == null &&
+                                        intent.action == Intent.ACTION_MAIN &&
+                                        intent.flags and
+                                            Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0
+                                )
+                                    settings.whatsNewStarter.start()
+                                if (routeWhenReady) {
+                                    routeWhenReady = false
+                                    platformHub.route(intent)
+                                }
                             }
                         }
                     }

@@ -25,6 +25,7 @@ interface AndroidAppGraph : ViewModelGraph {
     val application: Application
     val buildInfo: AppBuildInfo
     val redactor: Redactor
+    val kitChatEnvironment: io.github.eslamasabry.oc.ui.kitchat.KitChatEnvironment
     val launchMode: LaunchMode
     val appScope: AppCoroutineScope
     val previewRuntime: PreviewRuntime

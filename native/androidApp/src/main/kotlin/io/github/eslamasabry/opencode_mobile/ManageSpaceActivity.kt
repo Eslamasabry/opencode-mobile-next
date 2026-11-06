@@ -16,8 +16,6 @@ import io.github.eslamasabry.oc.feature.phone.storage.ProjectStorageActions
 import io.github.eslamasabry.oc.feature.phone.storage.ProjectStorageScreen
 import io.github.eslamasabry.oc.feature.phone.storage.ProjectStorageViewModel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
-import io.github.eslamasabry.oc.ui.kit.input.KitSecretSink
-import io.github.eslamasabry.oc.ui.kit.input.LocalKitSecretSink
 import io.github.eslamasabry.oc.ui.kit.platform.AndroidKitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.opencode_mobile.graph.AppLocale
@@ -45,30 +43,31 @@ class ManageSpaceActivity : ComponentActivity() {
         val platform = AndroidKitPlatform(window.decorView, window)
         val settings = graph as SettingsAppGraph
         setContent {
-            val appearance by settings.appPreferences.appearance.collectAsState()
-            CompositionLocalProvider(
-                LocalKitPlatform provides platform,
-                LocalMetroViewModelFactory provides graph.metroViewModelFactory,
-                LocalKitSecretSink provides KitSecretSink(graph.redactor::registerSecret),
-            ) {
-                MigrationRoot(graph.migration, graph.shell.navigator, platform) {
-                    KitTheme(
-                        appearance = appearance,
-                        platform = platform,
-                        localeTag = AppLocale.applied ?: "en",
-                    ) {
-                        val vm = metroViewModel<ProjectStorageViewModel>()
-                        val state by vm.state.collectAsState()
-                        val actions =
-                            remember(vm) {
-                                object : ProjectStorageActions by vm {
-                                    override fun back() {
-                                        vm.stopExport()
-                                        finish()
+            graph.kitChatEnvironment.Provide {
+                val appearance by settings.appPreferences.appearance.collectAsState()
+                CompositionLocalProvider(
+                    LocalKitPlatform provides platform,
+                    LocalMetroViewModelFactory provides graph.metroViewModelFactory,
+                ) {
+                    MigrationRoot(graph.migration, graph.shell.navigator, platform) {
+                        KitTheme(
+                            appearance = appearance,
+                            platform = platform,
+                            localeTag = AppLocale.applied ?: "en",
+                        ) {
+                            val vm = metroViewModel<ProjectStorageViewModel>()
+                            val state by vm.state.collectAsState()
+                            val actions =
+                                remember(vm) {
+                                    object : ProjectStorageActions by vm {
+                                        override fun back() {
+                                            vm.stopExport()
+                                            finish()
+                                        }
                                     }
                                 }
-                            }
-                        ProjectStorageScreen(state, actions, manageSpace = true)
+                            ProjectStorageScreen(state, actions, manageSpace = true)
+                        }
                     }
                 }
             }

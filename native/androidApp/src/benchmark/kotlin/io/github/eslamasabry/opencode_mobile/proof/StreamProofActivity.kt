@@ -18,7 +18,6 @@ import androidx.compose.ui.Modifier
 import io.github.eslamasabry.oc.core.common.CommonBindings
 import io.github.eslamasabry.oc.core.common.ConnectionCoroutineScope
 import io.github.eslamasabry.oc.core.domain.ServerGateway
-import java.lang.reflect.Proxy
 import io.github.eslamasabry.oc.engine.transcript.TranscriptEngine
 import io.github.eslamasabry.oc.engine.transcript.TranscriptHandle
 import io.github.eslamasabry.oc.engine.transcript.state.GatewayEvent
@@ -35,6 +34,8 @@ import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
 import io.github.eslamasabry.oc.ui.kitchat.stream.rememberRevealRegistry
 import io.github.eslamasabry.oc.ui.kitchat.transcript.rememberTranscriptListState
+import io.github.eslamasabry.opencode_mobile.graph.appGraph
+import java.lang.reflect.Proxy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
@@ -54,10 +55,11 @@ private object ProofWords : ChatTranscriptWords {
 }
 
 /**
- * Slice-0 P3 on a device (benchmark build type only). `scenario=history5000`: the recorded 5,004-part OC2 stream; every
- * event older than the last [LIVE_MS] is fed at once (history), then on Start the last [LIVE_MS] of the recording is
- * replayed at its recorded times into the live transcript. `scenario=stream6000`: the 6,000-word reply with the open
- * 400-line fence, replayed at its recorded times. The Macrobenchmark taps Start and waits for "Done".
+ * Slice-0 P3 on a device (benchmark build type only). `scenario=history5000`: the recorded
+ * 5,004-part OC2 stream; every event older than the last [LIVE_MS] is fed at once (history), then
+ * on Start the last [LIVE_MS] of the recording is replayed at its recorded times into the live
+ * transcript. `scenario=stream6000`: the 6,000-word reply with the open 400-line fence, replayed at
+ * its recorded times. The Macrobenchmark taps Start and waits for "Done".
  */
 class StreamProofActivity : ComponentActivity() {
     private val dispatchers = CommonBindings.dispatchers()
@@ -80,19 +82,24 @@ class StreamProofActivity : ComponentActivity() {
         val platform = AndroidKitPlatform(window.decorView)
         work.launch { prepare(scenario, engine) }
         setContent {
-            CompositionLocalProvider(LocalKitPlatform provides platform) {
-                KitTheme {
-                    val text by status
-                    Column(Modifier.fillMaxSize().safeDrawingPadding()) {
-                        KitText(text, KitTextRole.Supporting)
-                        KitButton(label = "Start", onClick = ::start)
-                        if (::handle.isInitialized) {
-                            val state by handle.state.collectAsState()
-                            Box(Modifier.weight(1f)) {
-                                ChatTranscript(
-                                    state, ProofWords, rememberTranscriptListState(), rememberRevealRegistry(),
-                                    KitMotionLevel.Full,
-                                )
+            appGraph.kitChatEnvironment.Provide {
+                CompositionLocalProvider(LocalKitPlatform provides platform) {
+                    KitTheme {
+                        val text by status
+                        Column(Modifier.fillMaxSize().safeDrawingPadding()) {
+                            KitText(text, KitTextRole.Supporting)
+                            KitButton(label = "Start", onClick = ::start)
+                            if (::handle.isInitialized) {
+                                val state by handle.state.collectAsState()
+                                Box(Modifier.weight(1f)) {
+                                    ChatTranscript(
+                                        state,
+                                        ProofWords,
+                                        rememberTranscriptListState(),
+                                        rememberRevealRegistry(),
+                                        KitMotionLevel.Full,
+                                    )
+                                }
                             }
                         }
                     }
@@ -113,15 +120,21 @@ class StreamProofActivity : ComponentActivity() {
                 RecordedStream.recording = assets.open("oc2/events.sse").bufferedReader().readText()
                 val stream = RecordedStream.build()
                 val timed = Oc2Sse.adapt(stream.sse)
-                val session = timed.firstNotNullOf { (it.event as? GatewayEvent.PartUpserted)?.part?.sessionId }
+                val session = timed.firstNotNullOf {
+                    (it.event as? GatewayEvent.PartUpserted)?.part?.sessionId
+                }
                 val split = timed.last().atMs - LIVE_MS
                 handle = engine.open(session)
                 timed.filter { it.atMs < split }.forEach { handle.submit(it.event) }
                 handle.awaitIdle()
                 live = timed.filter { it.atMs >= split }.map { it.atMs to it.event }
                 RecordedStream.recording = ""
-                Runtime.getRuntime().gc() // drop the fixture text and JSON before anything is measured
-                Log.i(TAG, "history parts=${stream.shape.parts} events=${timed.size} live=${live.size} rows=${handle.state.value.rows.size}")
+                Runtime.getRuntime()
+                    .gc() // drop the fixture text and JSON before anything is measured
+                Log.i(
+                    TAG,
+                    "history parts=${stream.shape.parts} events=${timed.size} live=${live.size} rows=${handle.state.value.rows.size}",
+                )
             }
         }
         Log.i(TAG, "prepared $scenario in ${SystemClock.uptimeMillis() - t0} ms")
@@ -141,7 +154,10 @@ class StreamProofActivity : ComponentActivity() {
             }
             handle.awaitIdle()
             delay(1_000) // let the reveal and fades finish
-            Log.i(TAG, "done publishes=${handle.counters.publishes} rows=${handle.state.value.rows.size}")
+            Log.i(
+                TAG,
+                "done publishes=${handle.counters.publishes} rows=${handle.state.value.rows.size}",
+            )
             status.value = "Done"
         }
     }
@@ -151,10 +167,14 @@ class StreamProofActivity : ComponentActivity() {
         super.onDestroy()
     }
 
-    /** The P3 handle never reads through the gateway (history is fed by the caller); any call is a proof bug. */
+    /**
+     * The P3 handle never reads through the gateway (history is fed by the caller); any call is a
+     * proof bug.
+     */
     private fun noGateway(): ServerGateway =
-        Proxy.newProxyInstance(classLoader, arrayOf(ServerGateway::class.java)) { _, m, _ -> error("gateway.${m.name} unused") }
-            as ServerGateway
+        Proxy.newProxyInstance(classLoader, arrayOf(ServerGateway::class.java)) { _, m, _ ->
+            error("gateway.${m.name} unused")
+        } as ServerGateway
 
     private companion object {
         const val TAG = "P3Proof"

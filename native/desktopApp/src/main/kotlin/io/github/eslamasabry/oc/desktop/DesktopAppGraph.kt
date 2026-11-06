@@ -20,6 +20,7 @@ interface DesktopAppGraph : ViewModelGraph {
     val dispatchers: io.github.eslamasabry.oc.core.common.AppDispatchers
     val buildInfo: AppBuildInfo
     val redactor: Redactor
+    val kitChatEnvironment: io.github.eslamasabry.oc.ui.kitchat.KitChatEnvironment
     val connections: ConnectionRegistry
     val shell: ShellDependencies
 

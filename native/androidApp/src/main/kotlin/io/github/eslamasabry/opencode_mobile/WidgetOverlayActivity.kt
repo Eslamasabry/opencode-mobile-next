@@ -109,64 +109,66 @@ open class WidgetOverlayActivity : ComponentActivity() {
         val settings = appGraph as SettingsAppGraph
         val platform = AndroidKitPlatform(window.decorView, window)
         setContent {
-            val appearance by settings.appPreferences.appearance.collectAsState()
-            CompositionLocalProvider(LocalKitPlatform provides platform) {
-                KitTheme(
-                    appearance = appearance,
-                    platform = platform,
-                    localeTag =
-                        AppLocale.applied ?: resources.configuration.locales[0].toLanguageTag(),
-                ) {
-                    if (panelModel != null) {
-                        val state by panelModel.state.collectAsState()
-                        LaunchedEffect(state.closed) {
-                            if (state.closed) {
-                                if (state.saved)
-                                    setResult(
-                                        RESULT_OK,
-                                        Intent()
-                                            .putExtra(
-                                                AppWidgetManager.EXTRA_APPWIDGET_ID,
-                                                widgetId,
-                                            ),
+            appGraph.kitChatEnvironment.Provide {
+                val appearance by settings.appPreferences.appearance.collectAsState()
+                CompositionLocalProvider(LocalKitPlatform provides platform) {
+                    KitTheme(
+                        appearance = appearance,
+                        platform = platform,
+                        localeTag =
+                            AppLocale.applied ?: resources.configuration.locales[0].toLanguageTag(),
+                    ) {
+                        if (panelModel != null) {
+                            val state by panelModel.state.collectAsState()
+                            LaunchedEffect(state.closed) {
+                                if (state.closed) {
+                                    if (state.saved)
+                                        setResult(
+                                            RESULT_OK,
+                                            Intent()
+                                                .putExtra(
+                                                    AppWidgetManager.EXTRA_APPWIDGET_ID,
+                                                    widgetId,
+                                                ),
+                                        )
+                                    finish()
+                                }
+                            }
+                            WidgetPanelEntries.Content(panelModel)
+                        } else if (messageModel != null && target != null) {
+                            val state by messageModel.state.collectAsState()
+                            LaunchedEffect(state.destination) {
+                                val destination = state.destination ?: return@LaunchedEffect
+                                messageModel.acknowledgeDestination()
+                                if (destination == WidgetActionDestination.Conversation) {
+                                    startActivity(
+                                        Intent(this@WidgetOverlayActivity, MainActivity::class.java)
+                                            .apply {
+                                                addFlags(
+                                                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                                                        Intent.FLAG_ACTIVITY_SINGLE_TOP
+                                                )
+                                                if (target.sessionId.isNotEmpty()) {
+                                                    putExtra(
+                                                        "io.github.eslamasabry.opencode_mobile.extra.CODING_ALERT_KIND",
+                                                        "complete",
+                                                    )
+                                                    putExtra(
+                                                        "io.github.eslamasabry.opencode_mobile.extra.CODING_ALERT_SESSION_ID",
+                                                        target.sessionId,
+                                                    )
+                                                    putExtra(
+                                                        "io.github.eslamasabry.opencode_mobile.extra.CODING_ALERT_PROFILE_ID",
+                                                        target.profileId,
+                                                    )
+                                                }
+                                            }
                                     )
+                                }
                                 finish()
                             }
+                            WidgetActionEntries.Content(messageModel)
                         }
-                        WidgetPanelEntries.Content(panelModel)
-                    } else if (messageModel != null && target != null) {
-                        val state by messageModel.state.collectAsState()
-                        LaunchedEffect(state.destination) {
-                            val destination = state.destination ?: return@LaunchedEffect
-                            messageModel.acknowledgeDestination()
-                            if (destination == WidgetActionDestination.Conversation) {
-                                startActivity(
-                                    Intent(this@WidgetOverlayActivity, MainActivity::class.java)
-                                        .apply {
-                                            addFlags(
-                                                Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                                                    Intent.FLAG_ACTIVITY_SINGLE_TOP
-                                            )
-                                            if (target.sessionId.isNotEmpty()) {
-                                                putExtra(
-                                                    "io.github.eslamasabry.opencode_mobile.extra.CODING_ALERT_KIND",
-                                                    "complete",
-                                                )
-                                                putExtra(
-                                                    "io.github.eslamasabry.opencode_mobile.extra.CODING_ALERT_SESSION_ID",
-                                                    target.sessionId,
-                                                )
-                                                putExtra(
-                                                    "io.github.eslamasabry.opencode_mobile.extra.CODING_ALERT_PROFILE_ID",
-                                                    target.profileId,
-                                                )
-                                            }
-                                        }
-                                )
-                            }
-                            finish()
-                        }
-                        WidgetActionEntries.Content(messageModel)
                     }
                 }
             }
