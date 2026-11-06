@@ -15,6 +15,8 @@ kotlin {
 kotlin {
     sourceSets.getByName("desktopTest").dependencies {
         implementation(libs.compose.desktop.currentos)
+        // ChatsGateTest renders the real Conversations screen through the golden-diff gate (test-only module).
+        implementation(project(":ui:gate"))
     }
 }
 apply(from = rootProject.file("gradle/desktop-golden-fonts.gradle"))
