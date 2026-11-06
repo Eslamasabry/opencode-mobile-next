@@ -34101,4 +34101,27 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get phoneSetupStageCompat => '正在以兼容模式重试';
+
+  @override
+  String get crashOfferMessage =>
+      'OpenCode Mobile closed unexpectedly last time. Send a crash report?';
+
+  @override
+  String get crashOfferReview => 'Review and send';
+
+  @override
+  String get crashOfferNotNow => 'Not now';
+
+  @override
+  String get crashOfferReportTitle => 'The app closed unexpectedly';
+
+  @override
+  String get crashOfferSection => 'Crash reports';
+
+  @override
+  String get crashOfferSettingTitle => 'Offer crash reports';
+
+  @override
+  String get crashOfferSettingDetail =>
+      'After the app closes unexpectedly, offer a report you can review first. Nothing is ever sent by itself.';
 }

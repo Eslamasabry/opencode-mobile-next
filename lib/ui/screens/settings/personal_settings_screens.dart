@@ -22,6 +22,21 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
 
   ConnectionController get _controller => widget.controller;
 
+  /// "Offer to send crash reports" (E02-S91): only whether the app offers a
+  /// report after a crash; it never sends one by itself.
+  late bool _offerCrashReports = CrashReportOffer.enabled(
+    _controller.store.prefs,
+  );
+
+  Future<void> _setOfferCrashReports(bool value) async {
+    setState(() => _offerCrashReports = value);
+    try {
+      await CrashReportOffer.setEnabled(_controller.store.prefs, value);
+    } catch (_) {
+      if (mounted) setState(() => _offerCrashReports = !value);
+    }
+  }
+
   /// Rounded the way a phone's storage screens round: one decimal past a
   /// kilobyte, and never "0 B" for something that exists.
   static String formatBytes(int bytes) {
@@ -245,6 +260,21 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
                 ],
               );
             },
+          ),
+          SizedBox(height: tokens.sectionGap),
+          KitRowGroup(
+            label: copy.crashOfferSection,
+            children: [
+              KitSwitchRow(
+                key: const ValueKey('privacy-offer-crash-reports'),
+                leading: KitRow.icon(context, AppIconography.bug),
+                title: copy.crashOfferSettingTitle,
+                supporting: copy.crashOfferSettingDetail,
+                supportingMaxLines: 3,
+                value: _offerCrashReports,
+                onChanged: (value) => unawaited(_setOfferCrashReports(value)),
+              ),
+            ],
           ),
           // The policy itself: About's old Privacy tab lives here now
           // (P3.10), so what the app keeps and what it sends sit together.

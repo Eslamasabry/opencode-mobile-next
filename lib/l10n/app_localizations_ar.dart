@@ -36066,4 +36066,27 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get phoneSetupStageCompat => 'جارٍ المحاولة مجددًا في وضع التوافق';
+
+  @override
+  String get crashOfferMessage =>
+      'أُغلق OpenCode Mobile بشكل غير متوقع في المرة الماضية. هل تريد إرسال تقرير عن العطل؟';
+
+  @override
+  String get crashOfferReview => 'مراجعة وإرسال';
+
+  @override
+  String get crashOfferNotNow => 'ليس الآن';
+
+  @override
+  String get crashOfferReportTitle => 'أُغلق التطبيق بشكل غير متوقع';
+
+  @override
+  String get crashOfferSection => 'تقارير الأعطال';
+
+  @override
+  String get crashOfferSettingTitle => 'عرض تقارير الأعطال';
+
+  @override
+  String get crashOfferSettingDetail =>
+      'بعد أن يُغلق التطبيق بشكل غير متوقع، يعرض عليك تقريرًا تراجعه أولًا. لا يُرسَل أي شيء تلقائيًا أبدًا.';
 }

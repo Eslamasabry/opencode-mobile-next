@@ -14,6 +14,7 @@ import '../../builtin/setup/phone_setup.dart';
 import '../../builtin/setup/setup_contract.dart' show SetupProgress;
 import '../../diagnostics/perf_trace.dart';
 import '../../diagnostics/report_problem_startup.dart';
+import '../../feedback/crash_offer.dart' show CrashReportOffer;
 import '../../l10n/app_localizations.dart';
 import '../../platform/platform_capabilities.dart';
 import '../../state/app_locale.dart' show AppLocaleStore;
