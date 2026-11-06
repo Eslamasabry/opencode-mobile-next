@@ -580,6 +580,17 @@ public class ChatPresenter(
         }
     }
 
+    override fun compactRequested() {
+        if (world.transcript.value.run.busy || !world.capabilities.value.sessionCompact) return
+        local.update { it.copy(confirm = ChatConfirm.Compact) }
+    }
+
+    override fun confirmCompact() {
+        if (local.value.confirm != ChatConfirm.Compact) return
+        local.update { it.copy(confirm = null) }
+        compactAgain()
+    }
+
     override fun openTimeline() {
         local.update { it.copy(timelineQuery = "", olderFailure = null) }
     }

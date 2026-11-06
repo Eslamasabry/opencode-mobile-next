@@ -134,6 +134,10 @@ import io.github.eslamasabry.oc.ui.words.res.chatSendFailed
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailedChanged
 import io.github.eslamasabry.oc.ui.words.res.chatUiChanges
 import io.github.eslamasabry.oc.ui.words.res.chatUiCollapseReasoning
+import io.github.eslamasabry.oc.ui.words.res.chatUiCompactConfirmAction
+import io.github.eslamasabry.oc.ui.words.res.chatUiCompactConfirmBody
+import io.github.eslamasabry.oc.ui.words.res.chatUiCompactConfirmTitle
+import io.github.eslamasabry.oc.ui.words.res.chatUiCompactSession
 import io.github.eslamasabry.oc.ui.words.res.chatUiContextCompacted
 import io.github.eslamasabry.oc.ui.words.res.chatUiDeleteMessage
 import io.github.eslamasabry.oc.ui.words.res.chatUiDeleteThisMessage
@@ -384,6 +388,15 @@ public fun ChatScreen(
                                             testTag = "chat-timeline-open",
                                             icon = KitIcons.timeline,
                                         ),
+                                        if (state.capabilities.compact)
+                                            KitLineAction(
+                                                stringResource(Res.string.chatUiCompactSession),
+                                                actions::compactRequested,
+                                                enabled = state.live == null,
+                                                testTag = "chat-compact-open",
+                                                icon = KitIcons.layers,
+                                            )
+                                        else null,
                                         facts.tasks?.let { tasks ->
                                             KitLineAction(
                                                 stringResource(
@@ -659,6 +672,7 @@ public fun ChatScreen(
                             is ChatConfirm.DeleteMessage -> actions.confirmDelete()
                             ChatConfirm.LeaveUnsaved -> actions.confirmLeave()
                             is ChatConfirm.UndoFrom -> actions.confirmUndo()
+                            ChatConfirm.Compact -> actions.confirmCompact()
                             is ChatConfirm.OpenLink -> actions.confirmOpenLink()
                             is ChatConfirm.PhoneFile,
                             is ChatConfirm.PhoneFileAccess -> actions.confirmPhoneFile()
@@ -779,6 +793,12 @@ private fun confirmSpec(confirm: ChatConfirm?): KitConfirmSpec? =
                 confirmLabel = stringResource(Res.string.draftLeaveAction),
                 kind = KitConfirmKind.Discard,
                 body = stringResource(Res.string.draftLeaveMessage),
+            )
+        ChatConfirm.Compact ->
+            KitConfirmSpec(
+                title = stringResource(Res.string.chatUiCompactConfirmTitle),
+                confirmLabel = stringResource(Res.string.chatUiCompactConfirmAction),
+                body = stringResource(Res.string.chatUiCompactConfirmBody),
             )
         is ChatConfirm.UndoFrom ->
             KitConfirmSpec(

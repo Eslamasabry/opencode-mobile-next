@@ -268,6 +268,9 @@ public sealed interface ChatConfirm {
 
     /** Android asked for file access; the person comes back and tries again (visible Retry). */
     public data class PhoneFileAccess(val path: String) : ChatConfirm
+
+    /** Flutter `compact` in the session menu: "Shorten this conversation?" before it runs. */
+    public data object Compact : ChatConfirm
 }
 
 /**
@@ -355,6 +358,12 @@ public interface ChatActions {
     public fun toggleReasoning() {}
 
     public fun compactAgain() {}
+
+    /** The menu's "Shorten conversation": asks first (nothing runs until [confirmCompact]). */
+    public fun compactRequested() {}
+
+    /** The person said yes to "Shorten this conversation?". */
+    public fun confirmCompact() {}
 
     /**
      * From a prompt (tap or long-press) or a reply's footer; the ViewModel resolves the message.

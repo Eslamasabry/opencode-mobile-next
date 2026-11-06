@@ -138,6 +138,10 @@ public class ChatViewModel(
 
     override fun compactAgain(): Unit = presenter.compactAgain()
 
+    override fun compactRequested(): Unit = presenter.compactRequested()
+
+    override fun confirmCompact(): Unit = presenter.confirmCompact()
+
     override fun openTimeline(): Unit = presenter.openTimeline()
 
     override fun closeTimeline(): Unit = presenter.closeTimeline()
