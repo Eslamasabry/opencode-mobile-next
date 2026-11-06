@@ -14,6 +14,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.RefusalReason
@@ -119,8 +121,11 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions) 
         width = KitScreenWidth.Full,
     ) {
         Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+            // The page's notices keep the gutter; they never start on the screen's edge.
+            val inset = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
             state.failure?.let {
                 KitErrorNotice(
+                    modifier = inset,
                     message = terminalFailureText(it),
                     failure = it,
                     detailsLabel = stringResource(Res.string.kitDetails),
@@ -165,10 +170,11 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions) 
                 }
             } else {
                 if (!state.connected) {
-                    KitNotice(message = stringResource(Res.string.remoteTerminalOffline))
+                    KitNotice(message = stringResource(Res.string.remoteTerminalOffline), modifier = inset)
                     KitButton(
                         stringResource(Res.string.remoteTerminalReconnect),
                         { actions.select(terminal.id) },
+                        modifier = inset,
                         working = state.working,
                     )
                 }
