@@ -34,6 +34,7 @@ internal fun ServerSavedRows(
 ) {
     var detailsFor by remember { mutableStateOf<ProfileId?>(null) }
     val ordered = savedServersByUrgency(state)
+    val lookAlike = lookAlikeNames(ordered.map { it.name })
     KitRowGroup(leadingTiles = true) {
         ordered.forEach { server ->
             val facts = state.rows.facts[server.id]
@@ -122,6 +123,8 @@ internal fun ServerSavedRows(
             KitRow(
                 title = server.name,
                 supporting = supporting,
+                // Two saved servers whose names read the same are told apart by where they are.
+                server = if (nameKey(server.name) in lookAlike) plainAddress(server.address) else null,
                 supportingMaxLines =
                     2, // F: lib/ui/screens/servers/server_rows.dart:191-196
                 leading =
@@ -189,3 +192,17 @@ internal fun savedServersByUrgency(
 /** Flutter strips the daemon's explanatory label, keeping a reported prerelease/build suffix. */
 internal fun plainServerVersion(raw: String): String =
     Regex("""\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?""").find(raw)?.value ?: raw.trim()
+
+/** The comparison form of a server name: case, spacing and punctuation do not tell two servers apart. */
+internal fun nameKey(name: String): String = name.lowercase().filter { it.isLetterOrDigit() }
+
+/** The [nameKey]s shared by more than one saved server. */
+internal fun lookAlikeNames(names: List<String>): Set<String> =
+    names.groupingBy(::nameKey).eachCount().filterValues { it > 1 }.keys
+
+/** An address as a person reads it: host, port and path, without scheme, sign-in part, query or trailing slash. */
+internal fun plainAddress(address: String): String {
+    val rest = address.substringAfter("://").substringBefore('?').substringBefore('#')
+    val host = rest.substringBefore('/')
+    return (host.substringAfterLast('@') + rest.removePrefix(host)).trimEnd('/')
+}
