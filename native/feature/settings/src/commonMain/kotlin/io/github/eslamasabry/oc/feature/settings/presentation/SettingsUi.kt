@@ -165,7 +165,15 @@ public data class NotificationFacts(
     val quietHours: QuietHours? = null,
     val wifiOnly: Boolean = false,
     val background: BackgroundState? = null,
-)
+    /** Android channel availability, separate from the saved notification choices. */
+    val finishedWorkAllowed: Boolean = true,
+    val questionsAllowed: Boolean = true,
+) {
+    /** A saved switch alone cannot promise that Android will deliver a notification. */
+    val enabled: Boolean
+        get() =
+            !blocked && ((finishedWork && finishedWorkAllowed) || (questions && questionsAllowed))
+}
 
 public sealed interface NotificationChange {
     public data class ProfileWatch(

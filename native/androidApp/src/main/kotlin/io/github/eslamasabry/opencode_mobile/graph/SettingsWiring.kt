@@ -662,6 +662,10 @@ class AndroidNotificationSettings(
             blocked = !manager.areNotificationsEnabled(),
             finishedWork = flag(NotificationKeys.FINISHED, true),
             questions = flag(NotificationKeys.REQUESTS, true),
+            finishedWorkAllowed = channelAllowed(NotifyChannel.CodingStatus),
+            questionsAllowed =
+                channelAllowed(NotifyChannel.CodingAction) ||
+                    channelAllowed(NotifyChannel.CodingActionQuiet),
             quietHours =
                 NotificationKeys.quiet(
                     minute(NotificationKeys.QUIET_START),
@@ -670,6 +674,10 @@ class AndroidNotificationSettings(
             wifiOnly = flag(NotificationKeys.WIFI_ONLY, false),
         )
     }
+
+    private fun channelAllowed(channel: NotifyChannel): Boolean =
+        manager.getNotificationChannel(channel.id)?.importance !=
+            NotificationManager.IMPORTANCE_NONE
 
     /**
      * Android's on/off can change outside the app (its settings, a long-press on a notification).

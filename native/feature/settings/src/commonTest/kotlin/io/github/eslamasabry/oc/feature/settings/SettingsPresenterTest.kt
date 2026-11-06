@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.settings
 
 import io.github.eslamasabry.oc.feature.settings.presentation.NotificationChange
+import io.github.eslamasabry.oc.feature.settings.presentation.NotificationFacts
 import io.github.eslamasabry.oc.feature.settings.presentation.PersonalChange
 import io.github.eslamasabry.oc.feature.settings.presentation.PersonalPrefs
 import io.github.eslamasabry.oc.feature.settings.presentation.ServerLine
@@ -62,6 +63,31 @@ class SettingsPresenterTest {
         facts: SettingsFacts = phoneFacts(),
         body: suspend Rig.() -> Unit,
     ) = runTest { Rig(this, prefs, facts).apply { settle() }.body() }
+
+    @Test
+    fun `B-ANDR-013 notification summary requires permission and an available enabled channel`() {
+        assertTrue(NotificationFacts().enabled)
+        assertFalse(NotificationFacts(blocked = true).enabled)
+        assertFalse(NotificationFacts(finishedWork = false, questions = false).enabled)
+        assertFalse(NotificationFacts(finishedWorkAllowed = false, questionsAllowed = false).enabled)
+        assertFalse(NotificationFacts(finishedWork = false, questionsAllowed = false).enabled)
+        assertTrue(NotificationFacts(finishedWorkAllowed = false).enabled)
+    }
+
+    @Test
+    fun `B-ANDR-013 This app refreshes Android notification state on entry and resume`() =
+        rig {
+            notifications.androidBlocked = true
+            p.onOpen(SettingsPage.Group(SettingsGroupId.ThisApp)); settle()
+            assertEquals(false, ui.notifications?.enabled)
+            notifications.androidBlocked = false
+            p.onResume(); settle()
+            assertEquals(true, ui.notifications?.enabled)
+            notifications.androidBlocked = true
+            p.onBack(); settle()
+            p.onResume(); settle()
+            assertEquals(false, ui.notifications?.enabled)
+        }
 
     @Test
     fun `B-NAV-068 the hub lists the five groups and the server's one value line`() =

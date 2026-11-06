@@ -425,13 +425,10 @@ private fun rowValue(row: SettingsRowId, state: SettingsUi): String? {
         SettingsRowId.Notifications -> {
             val notify = state.notifications ?: return null
             val different = notify.profiles.count { it.enabled && !it.notifications }
-            if (different > 0)
+            if (!notify.enabled) stringResource(Res.string.settingsV3Off)
+            else if (different > 0)
                 pluralStringResource(Res.plurals.settingsV3DifferentOn, different, different)
-            else
-                stringResource(
-                    if (notify.questions || notify.finishedWork) Res.string.settingsV3On
-                    else Res.string.settingsV3Off
-                )
+            else stringResource(Res.string.settingsV3On)
         }
         SettingsRowId.DefaultShell,
         SettingsRowId.ModelAndMode,

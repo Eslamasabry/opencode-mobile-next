@@ -531,7 +531,11 @@ public class SettingsPresenter(
         }
         if (page == SettingsPage.ReportProblem) loadReport()
         if (page == SettingsPage.Storage) onRefreshLocalModels()
-        if (page == SettingsPage.Notifications) notifications?.refresh()
+        if (
+            page == SettingsPage.Notifications ||
+                page == SettingsPage.Group(SettingsGroupId.ThisApp)
+        )
+            notifications?.refresh()
         if (page == SettingsPage.Privacy) localData?.refresh()
     }
 
@@ -558,7 +562,8 @@ public class SettingsPresenter(
 
     override fun onResume() {
         if (local.value.stack.last() == SettingsPage.Storage) onRefreshLocalModels()
-        if (local.value.stack.last() == SettingsPage.Notifications) notifications?.refresh()
+        // The hub and This app summary also show Android's current permission state.
+        notifications?.refresh()
     }
 
     override fun onQuietHours(on: Boolean) {
