@@ -127,6 +127,11 @@ object SchedulesBindings {
             alarms = alarms,
             notices = ScheduleNotifications(application, ScheduleOpenActivity::class.java),
             nowMs = now,
+            // E00-S04: while the Flutter build can still be restored, schedules stay readable by it.
+            flutterReadable = {
+                stores.warm()
+                (stores.prefs.get("oc.native.flutterReadable") as? PrefValue.Bool)?.value == true
+            },
         )
     }
 }

@@ -22,11 +22,13 @@ public sealed interface ScheduledOpen {
             currentFingerprint: String?,
             schedules: List<ScheduledPrompt>,
             history: List<ScheduledRun>,
+            /** Flutter-era stamps the profile's native fingerprint still accepts (E00-S04). */
+            alsoAccepted: Collection<String> = emptyList(),
         ): ScheduledOpen? {
             val digest = scheduleId == ScheduleIds.DIGEST || scheduleId.isEmpty()
             val schedule = if (digest) schedules.firstOrNull() else schedules.firstOrNull { it.id == scheduleId }
             if (schedule == null || currentFingerprint == null || schedule.profileId != profileId ||
-                schedule.profileFingerprint != currentFingerprint
+                (schedule.profileFingerprint != currentFingerprint && schedule.profileFingerprint !in alsoAccepted)
             ) {
                 return null
             }

@@ -34,6 +34,8 @@ public class ScheduleRunner(
     private val profiles: ScheduleProfiles,
     private val nowMs: () -> Long,
     private val pollMs: Long = 2_000,
+    /** Whether the profile still names the server the schedule was made for (its stamp or an accepted alias). */
+    private val accepts: suspend (ScheduledPrompt) -> Boolean = { profiles.fingerprint(it.profileId) == it.profileFingerprint },
 ) {
     /**
      * [skip]: the run stopped before any mutation for a reason the person need not act on (Flutter
@@ -115,9 +117,8 @@ public class ScheduleRunner(
 
         suspend fun checkProfile() {
             guard()
-            val current =
-                withTimeoutOrNull(remaining()) { profiles.fingerprint(schedule.profileId) }
-            if (current != schedule.profileFingerprint) throw Stop("stale_target", skip = true)
+            val current = withTimeoutOrNull(remaining()) { accepts(schedule) }
+            if (current != true) throw Stop("stale_target", skip = true)
         }
 
         suspend fun busy(gateway: ServerGateway, id: String): Boolean {
