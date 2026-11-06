@@ -735,7 +735,6 @@
     <string name="productErrorFileDenied">لا يسمح الحاسوب لهذا التطبيق بقراءة هذا الملف.</string>
     <string name="productErrorFileUnreadable">لا يمكن عرض هذا النوع من الملفات هنا.</string>
     <string name="productErrorAgentUpdating">يجري تحديث وكلائك، لذا لم يبدأ هذا بعد. حاول بعد قليل؛ رسالتك محفوظة.</string>
-    <string name="linuxSvcTitle">الخدمات</string>
     <string name="linuxSvcAddTitle">إضافة خدمة</string>
     <string name="starRowTitle">قيّم بنجمة على GitHub</string>
     <string name="shareRowTitle">شارك التطبيق</string>

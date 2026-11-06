@@ -907,12 +907,9 @@
     <string name="linuxSvcHubOff__eq1">1 service, off</string>
     <string name="linuxSvcHubOff__eq2">%1$d services, all off</string>
     <string name="linuxSvcHubCrashed">%1$s stopped after crashing</string>
-    <string name="linuxSvcAdd">Add a service</string>
     <string name="linuxSvcAddDetail">Run a command of your own and keep it running</string>
-    <string name="linuxSvcEmpty">Nothing runs on its own yet. Add your own command and it keeps running, even after a crash or when the app restarts.</string>
     <string name="linuxSvcKeepsRunning">A service you start keeps running: it comes back after a crash and when the app restarts, until you stop it.</string>
     <string name="linuxSvcScreenOff">While the screen is off, services may pause unless the phone is charging.</string>
-    <string name="linuxSvcRunning">Running</string>
     <string name="linuxSvcRunningFor">Running for %1$s</string>
     <string name="linuxSvcPort">port %1$s</string>
     <string name="linuxSvcOff">Off</string>
@@ -929,7 +926,6 @@
     <string name="linuxSvcGaveUpNoCount">Stopped after crashing · %1$s</string>
     <string name="linuxSvcExited">Finished (exit %1$d)</string>
     <string name="linuxSvcPortBusy">Port %1$s is already in use. Trying again soon</string>
-    <string name="linuxSvcStart">Start</string>
     <string name="linuxSvcStop">Stop</string>
     <string name="linuxSvcStartNamed">Start %1$s</string>
     <string name="linuxSvcStopNamed">Stop %1$s</string>
@@ -945,8 +941,6 @@
     </plurals>
     <string name="linuxSvcCameBack__eq1">Came back once after a crash, at %2$s</string>
     <string name="linuxSvcCameBack__eq2">Came back %1$d times after a crash, last at %2$s</string>
-    <string name="linuxSvcRemoveTitle">Remove %1$s?</string>
-    <string name="linuxSvcRemoveBody">It stops now and is no longer kept running.</string>
     <string name="linuxSvcRemoveGoes">Its log and settings are deleted</string>
     <string name="linuxSvcRemoveStays">The program stays installed</string>
     <string name="linuxSvcLogTitle">Log</string>

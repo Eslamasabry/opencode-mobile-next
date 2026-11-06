@@ -22,7 +22,7 @@ import io.github.eslamasabry.oc.ui.words.res.migrationStorageDelete
 import io.github.eslamasabry.oc.ui.words.res.migrationStorageDeleteBody
 import io.github.eslamasabry.oc.ui.words.res.migrationStorageDeleteTitle
 import io.github.eslamasabry.oc.ui.words.res.migrationStorageEmpty
-import io.github.eslamasabry.oc.ui.words.res.migrationStorageFailed
+import io.github.eslamasabry.oc.ui.words.res.localModelSaveFailed
 import io.github.eslamasabry.oc.ui.words.res.migrationStorageTitle
 import org.jetbrains.compose.resources.stringResource
 
@@ -32,8 +32,8 @@ internal fun LocalModelsBody(state: LocalModelStorageFacts, actions: SettingsAct
     when {
         state.loading || state.deleting -> KitStateView(kind = KitStateKind.Loading, title = stringResource(Res.string.migrationStorageTitle))
         state.failed -> KitErrorNotice(
-            title = stringResource(Res.string.migrationStorageFailed),
-            message = stringResource(Res.string.migrationStorageFailed),
+            title = stringResource(Res.string.localModelSaveFailed),
+            message = stringResource(Res.string.localModelSaveFailed),
             retry = KitLineAction(stringResource(Res.string.commonRetry), actions::onRefreshLocalModels),
         )
         !state.present -> KitStateView(kind = KitStateKind.Empty, title = stringResource(Res.string.migrationStorageEmpty))

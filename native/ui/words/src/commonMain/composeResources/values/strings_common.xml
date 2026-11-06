@@ -691,7 +691,6 @@
     <string name="productErrorFileDenied">The computer won't let this app read that file.</string>
     <string name="productErrorFileUnreadable">This kind of file can't be shown here.</string>
     <string name="productErrorAgentUpdating">Your agents are being updated, so this could not start yet. Try again in a moment; your message is kept.</string>
-    <string name="linuxSvcTitle">Services</string>
     <string name="linuxSvcAddTitle">Add a service</string>
     <string name="starRowTitle">Star on GitHub</string>
     <string name="shareRowTitle">Share the app</string>

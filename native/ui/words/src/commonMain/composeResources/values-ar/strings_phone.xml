@@ -987,12 +987,9 @@
     <string name="linuxSvcHubOff__eq1">خدمة واحدة، متوقفة</string>
     <string name="linuxSvcHubOff__eq2">خدمتان، متوقفتان</string>
     <string name="linuxSvcHubCrashed">توقفت %1$s بعد أعطال متكررة</string>
-    <string name="linuxSvcAdd">إضافة خدمة</string>
     <string name="linuxSvcAddDetail">شغّل أمرًا من عندك وأبقه يعمل</string>
-    <string name="linuxSvcEmpty">لا شيء يعمل من تلقاء نفسه بعد. أضف أمرًا من عندك وسيبقى يعمل، حتى بعد عطل أو عند إعادة تشغيل التطبيق.</string>
     <string name="linuxSvcKeepsRunning">الخدمة التي تشغّلها تبقى تعمل: تعود بعد أي عطل وعند إعادة تشغيل التطبيق، إلى أن توقفها.</string>
     <string name="linuxSvcScreenOff">عند إطفاء الشاشة قد تتوقف الخدمات مؤقتًا ما لم يكن الهاتف يشحن.</string>
-    <string name="linuxSvcRunning">تعمل</string>
     <string name="linuxSvcRunningFor">تعمل منذ %1$s</string>
     <string name="linuxSvcPort">المنفذ %1$s</string>
     <string name="linuxSvcOff">متوقفة</string>
@@ -1013,7 +1010,6 @@
     <string name="linuxSvcGaveUpNoCount">توقفت بعد عطل · %1$s</string>
     <string name="linuxSvcExited">انتهت (الرمز %1$d)</string>
     <string name="linuxSvcPortBusy">المنفذ %1$s مستخدم بالفعل. ستُعاد المحاولة قريبًا</string>
-    <string name="linuxSvcStart">تشغيل</string>
     <string name="linuxSvcStop">إيقاف</string>
     <string name="linuxSvcStartNamed">تشغيل %1$s</string>
     <string name="linuxSvcStopNamed">إيقاف %1$s</string>
@@ -1033,8 +1029,6 @@
     </plurals>
     <string name="linuxSvcCameBack__eq1">عادت مرة واحدة بعد عطل، عند %2$s</string>
     <string name="linuxSvcCameBack__eq2">عادت مرتين بعد عطل، آخرها عند %2$s</string>
-    <string name="linuxSvcRemoveTitle">حذف %1$s؟</string>
-    <string name="linuxSvcRemoveBody">ستتوقف الآن ولن تبقى تعمل بعد ذلك.</string>
     <string name="linuxSvcRemoveGoes">يُحذف سجلها وإعداداتها</string>
     <string name="linuxSvcRemoveStays">يبقى البرنامج مثبّتًا</string>
     <string name="linuxSvcLogTitle">السجل</string>

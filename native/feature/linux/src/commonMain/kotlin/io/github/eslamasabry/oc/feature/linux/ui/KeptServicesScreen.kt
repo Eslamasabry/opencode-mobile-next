@@ -116,7 +116,7 @@ public fun KeptServicesScreen(state: KeptServicesUi, actions: KeptServicesAction
                 }
             KitRowGroup(leadingTiles = true) {
                 if (state.services.isEmpty() && !state.loading)
-                    KitText(stringResource(Res.string.linuxSvcEmpty))
+                    KitText(stringResource(Res.string.keptSvcEmpty))
                 state.services
                     .sortedWith(
                         compareBy<KeptService> { it.urgency }
@@ -411,7 +411,7 @@ private fun serviceStatus(service: KeptService, nowMs: Long): String =
                     Res.string.linuxSvcRunningFor,
                     kitDurationWords((nowMs - it.toEpochMilliseconds()).milliseconds),
                 )
-            } ?: stringResource(Res.string.linuxSvcRunning)
+            } ?: stringResource(Res.string.keptSvcRunning)
         KeptPhase.Stopping -> stringResource(Res.string.linuxSvcStopping)
         KeptPhase.Backoff ->
             stringResource(
