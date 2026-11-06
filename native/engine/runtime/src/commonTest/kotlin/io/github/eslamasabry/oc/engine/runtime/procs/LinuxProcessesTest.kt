@@ -53,6 +53,25 @@ class LinuxProcessesTest {
     private val byPid = scan.processes.associateBy { it.pid }
 
     @Test
+    fun `B-LINUX-082 Antigravity's launcher and installed payload are agents, not protected`() {
+        val agents =
+            LinuxProcessScan.parse(
+                listOf(
+                    scanRow(40, "agy", 10, "/home/oc/.local/bin/agy --acp"),
+                    scanRow(
+                        41, "antigravity", 10,
+                        "/home/oc/.local/share/oc-agents/antigravity/1.5.0/payload/antigravity --acp",
+                    ),
+                ).joinToString("\n"),
+            ).processes
+        assertEquals(2, agents.size)
+        for (agent in agents) {
+            assertEquals(LinuxProcessKind.Agent, agent.kind, agent.pid.toString())
+            assertEquals(false, agent.protected)
+        }
+    }
+
+    @Test
     fun `B-LINUX-082 the process list leaves out Android, proot, the scan itself and zombies`() {
         assertEquals(setOf(20, 30, 40, 50, 51, 60), byPid.keys)
     }

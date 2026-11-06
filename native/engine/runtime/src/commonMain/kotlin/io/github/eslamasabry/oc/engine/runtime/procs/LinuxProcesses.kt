@@ -102,7 +102,7 @@ public data class LinuxProcess(
         val PASEO = Regex("""(^|[/ ])paseo( |$)|oc-paseo|/paseo/""")
         val AGENT =
             Regex(
-                """(^|[/ ])(claude|claude-code|codex|gemini|aider|goose)( |$)|""" +
+                """(^|[/ ])(claude|claude-code|codex|gemini|agy|antigravity|aider|goose)( |$)|""" +
                     """@anthropic-ai/claude-code|/opt/oc-claude|/opt/aiteam|(^|[/ ])(gc|dolt|bd)( |$)|""" +
                     """(^|[/ ])opencode2? (acp|run)( |$)"""
             )
