@@ -28,6 +28,20 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
     _controller.store.prefs,
   );
 
+  /// "Send crash reports to the developer (Google Firebase)": off until the
+  /// person turns it on; drives the vendor-neutral telemetry consent.
+  late final Telemetry _telemetry = telemetryOf(context);
+  late bool _sendTelemetry = _telemetry.consented;
+
+  Future<void> _setSendTelemetry(bool value) async {
+    setState(() => _sendTelemetry = value);
+    try {
+      await _telemetry.setConsent(value);
+    } catch (_) {
+      if (mounted) setState(() => _sendTelemetry = !value);
+    }
+  }
+
   Future<void> _setOfferCrashReports(bool value) async {
     setState(() => _offerCrashReports = value);
     try {
@@ -274,6 +288,16 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
                 value: _offerCrashReports,
                 onChanged: (value) => unawaited(_setOfferCrashReports(value)),
               ),
+              if (_telemetry.available)
+                KitSwitchRow(
+                  key: const ValueKey('privacy-send-telemetry'),
+                  leading: KitRow.icon(context, AppIconography.shield),
+                  title: copy.telemetrySettingTitle,
+                  supporting: copy.telemetrySettingDetail,
+                  supportingMaxLines: 5,
+                  value: _sendTelemetry,
+                  onChanged: (value) => unawaited(_setSendTelemetry(value)),
+                ),
             ],
           ),
           // The policy itself: About's old Privacy tab lives here now

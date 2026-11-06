@@ -101,6 +101,8 @@ dependencies:
   screen_retriever: ^0.2.0
 
   path: ^1.9.1
+  firebase_core: ^5.1.0
+  firebase_crashlytics: ^6.0.1
 dev_dependencies:
   cross_file: 0.3.5+5
   local_auth_platform_interface: 1.1.0

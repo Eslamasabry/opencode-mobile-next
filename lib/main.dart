@@ -26,6 +26,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'background/live_background.dart';
+import 'telemetry/firebase_crashlytics_adapter.dart';
+import 'telemetry/telemetry.dart';
+import 'telemetry/telemetry_provider.dart';
 import 'builtin/app_exit_recovery.dart';
 import 'builtin/builtin_server.dart';
 import 'builtin/linux_manager/linux_reset_flow.dart';
@@ -155,8 +158,16 @@ Future<void> main() async {
   final diagnostics = AppDiagnosticsController();
   installAppErrorCapture(
     diagnostics,
-    crashCapture: (error, stack, source) =>
-        CrashDiagnosticsStartup.capture(diagnostics, error, stack, source),
+    crashCapture: (error, stack, source) {
+      CrashDiagnosticsStartup.capture(diagnostics, error, stack, source);
+      // Opt-in vendor reporting: inert unless the person turned it on; only
+      // the error's category and code locations are passed on.
+      AppTelemetry.current.recordCrash(
+        appErrorCategory(error),
+        stack,
+        fatal: source == 'platform',
+      );
+    },
   );
   runApp(AppBootstrapGate(diagnostics: diagnostics));
   WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -169,6 +180,13 @@ Future<void> main() async {
     // Capture imports buffered errors/timings when the store attaches, so
     // installing in-memory error capture above still protects early failures.
     unawaited(ReportProblemStartup.start(diagnostics));
+    unawaited(
+      TelemetryStartup.start(
+        !kIsWeb && Platform.isAndroid
+            ? FirebaseCrashlyticsAdapter()
+            : const NoOpTelemetryAdapter(),
+      ),
+    );
   });
 }
 

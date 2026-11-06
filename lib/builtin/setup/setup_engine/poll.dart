@@ -382,6 +382,18 @@ extension _SetupEnginePoll on ChannelSetupEngine {
     );
   }
 
+  /// The exit code a failed step reported (`data.exit`, or "exit 127" in its
+  /// error text); null when it gave none. Only the number is ever reported.
+  static int? _exitCodeOf(SetupJobComponent component) {
+    final fromData = int.tryParse(component.data['exit'] ?? '');
+    if (fromData != null) return fromData;
+    final match = RegExp(
+      r'\bexit(?: code| status)?[ :=]+(\d{1,3})\b',
+      caseSensitive: false,
+    ).firstMatch(component.error ?? '');
+    return match == null ? null : int.parse(match.group(1)!);
+  }
+
   /// Records each finished component, and the finished job, as spans timed
   /// by the native runner's own clock (setup.json's startedAt/endedAt).
   void _traceFinished(SetupJobRecord record) {
@@ -393,6 +405,12 @@ extension _SetupEnginePoll on ChannelSetupEngine {
           (component.state != 'done' && component.state != 'failed') ||
           !_traced.add('${record.jobId}/${component.id}')) {
         continue;
+      }
+      if (component.state == 'failed') {
+        AppTelemetry.failure('setup_step_failed', {
+          'step': component.id,
+          'exit': _exitCodeOf(component),
+        });
       }
       PerfTrace.recordDuration(
         'setup.component',

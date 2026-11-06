@@ -117,7 +117,7 @@ The app is being rebuilt in native Kotlin, with Kotlin Multiplatform and Jetpack
 
 ## Privacy
 
-The app connects only to the servers you choose. Passwords stay in Android's keystore, voice is transcribed on the device, and diagnostics leave the phone only when you send a report yourself, with secrets removed. See [PRIVACY.md](PRIVACY.md).
+The app connects only to the servers you choose. Passwords stay in Android's keystore, voice is transcribed on the device, and diagnostics leave the phone only when you send a report yourself, with secrets removed. Crash and error reports can also go to the developer through Google Firebase Crashlytics, but only if you turn on **Settings > Privacy and data > Send crash reports to the developer (Google Firebase)**; it is off by default, sends only the kind of error, code locations and device model, and turning it off stops it. See [PRIVACY.md](PRIVACY.md).
 
 ## Development
 

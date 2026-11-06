@@ -233,6 +233,24 @@ dart run tool/prompt_test.dart http://127.0.0.1:4097   # needs model auth
 Stop only the scratch process you started; never target an owner server.
 
 
+### Crash reporting (opt-in)
+
+`lib/telemetry/` is the app's own reporting layer; app code depends only on
+`Telemetry`, and Firebase Crashlytics is one `TelemetryAdapter`
+(`firebase_crashlytics_adapter.dart`). Consent is off by default
+(Settings > Privacy and data) and nothing reaches an adapter without it.
+
+The private Firebase file `google-services-io.github.eslamasabry.opencode_mobile.json`
+is never in git. `android/app/build.gradle.kts` looks for it in
+`OC_GOOGLE_SERVICES_DIR` (Gradle property or environment variable; default
+`~/.config/oc-app/firebase`), copies it to the git-ignored
+`android/app/google-services.json` and applies the Google Services and
+Crashlytics Gradle plugins only then. Without it the app builds, the switch is
+not shown and the no-op reporter is used. For CI, `android-release.yml` would
+need the file from a secret (for example a base64 secret written into a
+directory named by `OC_GOOGLE_SERVICES_DIR` before the build); the workflow is
+unchanged until that secret exists.
+
 ## Releases and code push
 
 Every installable release is a Shorebird release, so later Dart-only fixes

@@ -36089,4 +36089,12 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get crashOfferSettingDetail =>
       'بعد أن يُغلق التطبيق بشكل غير متوقع، يعرض عليك تقريرًا تراجعه أولًا. لا يُرسَل أي شيء تلقائيًا أبدًا.';
+
+  @override
+  String get telemetrySettingTitle =>
+      'إرسال تقارير الأعطال إلى المطوّر (Google Firebase)';
+
+  @override
+  String get telemetrySettingDetail =>
+      'يرسل تقارير الأعطال والإخفاقات إلى Google Firebase Crashlytics: نوع الخطأ ومواضع الشيفرة التي وقع فيها، وطراز هاتفك وإصدار أندرويد وإصدار التطبيق. لا رسائل ولا ملفات ولا عناوين ولا كلمات مرور.';
 }

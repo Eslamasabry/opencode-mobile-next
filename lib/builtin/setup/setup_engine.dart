@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart' show AppLifecycleState, WidgetsBinding;
 
 import '../../diagnostics/perf_trace.dart';
+import '../../telemetry/telemetry_provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../termux/bridge.dart' show TermuxRuntime;
 import '../../ui/kit/kit_redact.dart';
