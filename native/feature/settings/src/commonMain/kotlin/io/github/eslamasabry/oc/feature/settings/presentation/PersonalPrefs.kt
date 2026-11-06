@@ -7,8 +7,19 @@ import io.github.eslamasabry.oc.ui.design.style.Corners
 import io.github.eslamasabry.oc.ui.design.text.AppTextSize
 import io.github.eslamasabry.oc.ui.design.tokens.Density
 
-/** The five styles (B-KIT-037), in picker order; stored as `oc.effectsSurfaceStyle` by `:engine:settings`. */
-public enum class SurfaceStyle { Solid, Soft, Brutal, Paper, Signal }
+/**
+ * The six styles (B-KIT-037), in picker order (Glass back in its GLASS_REF place, after Solid; rebuild standard §5.1);
+ * stored as `oc.effectsSurfaceStyle` by `:engine:settings`. Solid stays the default; Glass is only ever the person's
+ * own choice.
+ */
+public enum class SurfaceStyle { Solid, Glass, Soft, Brutal, Paper, Signal }
+
+/** Background › How strong? (`oc.effectsLiveIntensity`; Dart `KitLiveIntensity`): Subtle .7, Normal 1, Bold 1.6. */
+public enum class LiveStrength(public val strength: Float) {
+    Subtle(.7f), // FG: lib/state/effects.dart:45
+    Normal(1f), // FG: lib/state/effects.dart:46
+    Bold(1.6f), // FG: lib/state/effects.dart:47
+}
 
 /**
  * The personal choices these pages show (the `Device`-owned slice of `:engine:settings` `DevicePreferences`).
@@ -33,6 +44,11 @@ public data class PersonalPrefs(
     val textSize: AppTextSize = AppTextSize.Normal,
     /** The app language (`oc.appLocale`); [AppLanguage.System] follows the phone (B-L10N-001). */
     val language: AppLanguage = AppLanguage.System,
+    /** Background on (`oc.effectsBackgroundOn`); off by default: the page its plain colour. */
+    val liveBackground: Boolean = false,
+    /** The chosen look's id (`oc.effectsLiveStyle`, Dart `KitLiveStyle.id`). */
+    val liveStyle: String = "aurora",
+    val liveStrength: LiveStrength = LiveStrength.Normal,
 ) {
     public val saver: Boolean get() = mode == AppearanceMode.Saver
 }
@@ -64,6 +80,12 @@ public sealed interface PersonalChange {
     public data class TextSize(val size: AppTextSize) : PersonalChange
 
     public data class Language(val language: AppLanguage) : PersonalChange
+
+    /** Background › Look: a look's id turns the background on with it; null turns it off (Dart `_lookBody`). */
+    public data class LiveLook(val id: String?) : PersonalChange
+
+    /** Background › How strong? */
+    public data class LiveIntensity(val strength: LiveStrength) : PersonalChange
 }
 
 /**

@@ -44,6 +44,7 @@ import io.github.eslamasabry.oc.ui.words.res.appearanceSurfaceBrutal
 import io.github.eslamasabry.oc.ui.words.res.appearanceSurfacePaper
 import io.github.eslamasabry.oc.ui.words.res.appearanceSurfaceSoft
 import io.github.eslamasabry.oc.ui.words.res.appearanceSurfaceSolid
+import io.github.eslamasabry.oc.ui.words.res.rb34AppearanceSurfaceGlass
 import io.github.eslamasabry.oc.ui.words.res.capabilityScreenTitle
 import io.github.eslamasabry.oc.ui.words.res.configInspectionTitle
 import io.github.eslamasabry.oc.ui.words.res.diagnosticsReportShareFailed
@@ -227,6 +228,7 @@ internal fun styleWords(style: SurfaceStyle): String =
     stringResource(
         when (style) {
             SurfaceStyle.Solid -> Res.string.appearanceSurfaceSolid
+            SurfaceStyle.Glass -> Res.string.rb34AppearanceSurfaceGlass
             SurfaceStyle.Soft -> Res.string.appearanceSurfaceSoft
             SurfaceStyle.Brutal -> Res.string.appearanceSurfaceBrutal
             SurfaceStyle.Paper -> Res.string.appearanceSurfacePaper

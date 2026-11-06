@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- Order 34-glass: copied from lib/l10n/app_ar.arb at GLASS_REF 1bbdc3f9c (appearanceSurfaceGlass, liveStyleAuroraImage). -->
+<resources>
+    <string name="rb34AppearanceSurfaceGlass">زجاج</string>
+    <string name="rb34LiveStyleAuroraImage">شفق مرسوم</string>
+</resources>

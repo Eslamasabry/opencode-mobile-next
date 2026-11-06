@@ -50,6 +50,7 @@ import io.github.eslamasabry.oc.ui.design.layout.Layout
 import io.github.eslamasabry.oc.ui.design.layout.WindowClass
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
+import io.github.eslamasabry.oc.ui.kit.live.KitLiveBackground
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.modal.LocalKitSheetHost
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
@@ -236,8 +237,11 @@ public fun KitScreen(
         }
     }
     if (framed) {
-        ScreenSheetHost(modifier.fillMaxSize().background(LocalKitColors.current.ground)) {
-            content()
+        // The page's ground: flat, or the person's live background (Glass panes blur only that picture).
+        KitLiveBackground(modifier.fillMaxSize()) {
+            ScreenSheetHost(Modifier.fillMaxSize()) {
+                content()
+            }
         }
     } else {
         Box(modifier) { content() }
@@ -395,43 +399,45 @@ private fun Panes(
             else size.width - 0.5f
         drawLine(hairline, Offset(x, 0f), Offset(x, size.height), 1f)
     }
-    ScreenSheetHost(modifier.fillMaxSize().background(LocalKitColors.current.ground)) {
-        Row(Modifier.fillMaxSize()) {
-            Box(
-                Modifier.width(Layout.PANE_LIST_WIDTH.dp)
-                    .fillMaxHeight()
-                    .endRule()
-                    .semantics { isTraversalGroup = true }
-                    .testTag("kit-screen-pane-list")
-            ) {
-                listPane()
-            }
-            Box(
-                Modifier.weight(1f)
-                    .fillMaxHeight()
-                    .semantics { isTraversalGroup = true }
-                    .testTag("kit-screen-pane-detail"),
-                contentAlignment = Alignment.TopCenter,
-            ) {
-                Box(Modifier.widthIn(max = Layout.PANE_DETAIL_MAX_WIDTH.dp).fillMaxSize()) {
-                    (detail ?: emptyDetail)()
-                }
-            }
-            if (showsSide && side != null) {
+    KitLiveBackground(modifier.fillMaxSize()) {
+        ScreenSheetHost(Modifier.fillMaxSize()) {
+            Row(Modifier.fillMaxSize()) {
                 Box(
-                    Modifier.width(Layout.PANE_SIDE_WIDTH.dp)
+                    Modifier.width(Layout.PANE_LIST_WIDTH.dp)
                         .fillMaxHeight()
-                        .drawBehind {
-                            val x =
-                                if (layoutDirection == androidx.compose.ui.unit.LayoutDirection.Rtl)
-                                    size.width - 0.5f
-                                else 0.5f
-                            drawLine(hairline, Offset(x, 0f), Offset(x, size.height), 1f)
-                        }
+                        .endRule()
                         .semantics { isTraversalGroup = true }
-                        .testTag("kit-screen-pane-side")
+                        .testTag("kit-screen-pane-list")
                 ) {
-                    side()
+                    listPane()
+                }
+                Box(
+                    Modifier.weight(1f)
+                        .fillMaxHeight()
+                        .semantics { isTraversalGroup = true }
+                        .testTag("kit-screen-pane-detail"),
+                    contentAlignment = Alignment.TopCenter,
+                ) {
+                    Box(Modifier.widthIn(max = Layout.PANE_DETAIL_MAX_WIDTH.dp).fillMaxSize()) {
+                        (detail ?: emptyDetail)()
+                    }
+                }
+                if (showsSide && side != null) {
+                    Box(
+                        Modifier.width(Layout.PANE_SIDE_WIDTH.dp)
+                            .fillMaxHeight()
+                            .drawBehind {
+                                val x =
+                                    if (layoutDirection == androidx.compose.ui.unit.LayoutDirection.Rtl)
+                                        size.width - 0.5f
+                                    else 0.5f
+                                drawLine(hairline, Offset(x, 0f), Offset(x, size.height), 1f)
+                            }
+                            .semantics { isTraversalGroup = true }
+                            .testTag("kit-screen-pane-side")
+                    ) {
+                        side()
+                    }
                 }
             }
         }

@@ -13,10 +13,12 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceGroup
 import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceQuestion
 import io.github.eslamasabry.oc.feature.settings.presentation.AppearanceUi
+import io.github.eslamasabry.oc.feature.settings.presentation.LiveStrength
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
 import io.github.eslamasabry.oc.feature.settings.presentation.SurfaceStyle
 import io.github.eslamasabry.oc.ui.design.color.Accents
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
+import io.github.eslamasabry.oc.ui.design.effects.AuroraImage
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Corners
 import io.github.eslamasabry.oc.ui.design.style.Style
@@ -28,6 +30,7 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.choice.KitLookOptionCard
 import io.github.eslamasabry.oc.ui.kit.choice.KitPlainOptionCard
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
@@ -69,8 +72,9 @@ import org.jetbrains.compose.resources.stringResource
 
 /**
  * I04's supported Appearance questions. Theme cards apply at once and style cards draw their own
- * samples. The existing guide record selects a question; Saver holds Style and Motion. Background,
- * glow and Glass selection need the presentation fields recorded in evidence/44.md.
+ * samples (Glass among them, order 34). The existing guide record selects a question; Saver holds
+ * Style, Background and Motion. Background offers the looks the native app draws: Off and the
+ * painted aurora (order 35); the glow question still needs its presentation fields (evidence/44.md).
  */
 @Composable
 internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActions) {
@@ -99,13 +103,18 @@ private fun AppearanceOnePage(ui: AppearanceUi, actions: SettingsActions) {
                 AppearanceSection(ui, actions, AppearanceGroup.Style, first = false)
             }
             Column(Modifier.weight(1f)) {
-                // Background belongs above Comfort once its state/actions exist; see evidence/44.
-                AppearanceSection(ui, actions, AppearanceGroup.Comfort, first = true)
+                AppearanceSection(ui, actions, AppearanceGroup.Background, first = true)
+                AppearanceSection(ui, actions, AppearanceGroup.Comfort, first = false)
             }
         }
     } else {
         Column {
-            listOf(AppearanceGroup.Colours, AppearanceGroup.Style, AppearanceGroup.Comfort)
+            listOf(
+                    AppearanceGroup.Colours,
+                    AppearanceGroup.Style,
+                    AppearanceGroup.Background,
+                    AppearanceGroup.Comfort,
+                )
                 .forEachIndexed { index, group ->
                     AppearanceSection(ui, actions, group, first = index == 0)
                 }
@@ -125,12 +134,17 @@ private fun ColumnScope.AppearanceSection(
         Spacer(Modifier.height(Space.S6.dp))
         KitDivider()
     }
-    if (group == AppearanceGroup.Style && ui.heldBySaver) {
+    if ((group == AppearanceGroup.Style || group == AppearanceGroup.Background) && ui.heldBySaver) {
         AppearanceQuestionHeading(
             appearanceGroupWords(group),
             if (first) Space.S2.dp else Space.S6.dp,
         )
-        KitGroupNote(stringResource(Res.string.appearanceSaverHoldsStyle))
+        KitGroupNote(
+            stringResource(
+                if (group == AppearanceGroup.Style) Res.string.appearanceSaverHoldsStyle
+                else Res.string.appearanceSaverHoldsBackground
+            )
+        )
         return
     }
     val supported =
@@ -140,6 +154,8 @@ private fun ColumnScope.AppearanceSection(
             AppearanceQuestion.AccentColour,
             AppearanceQuestion.Style,
             AppearanceQuestion.Shape,
+            AppearanceQuestion.Look,
+            AppearanceQuestion.Strength,
             AppearanceQuestion.Text,
             AppearanceQuestion.Motion,
         )
@@ -365,6 +381,72 @@ private fun ColumnScope.AppearanceControls(
         }
     }
 
+    if (question == null || question == AppearanceQuestion.Look) {
+        // Background › Look (GLASS_REF appearance_screen.dart:1041-1083): Off and every look the app draws, each a
+        // still frame behind a tiny conversation. A look the native app does not draw yet is not offered.
+        AppearanceControlHeading(
+            stringResource(Res.string.appearanceAskLook),
+            question,
+            onePage,
+            top,
+        )
+        val held =
+            if (ui.heldBySaver)
+                KitEnabled.Disabled(stringResource(Res.string.appearanceSaverHoldsBackground))
+            else KitEnabled.Enabled
+        val scale = LocalDensity.current.fontScale
+        Box(gutter) {
+            AppearanceGrid(
+                listOf(null, AuroraImage.ID),
+                3, // FG: lib/ui/screens/settings/appearance_screen.dart:1055
+                (136 + 44 * scale).dp, // FG: lib/ui/screens/settings/appearance_screen.dart:1055
+            ) { look ->
+                KitLookOptionCard(
+                    look = look,
+                    label =
+                        stringResource(
+                            if (look == null) Res.string.appearanceLookOff
+                            else Res.string.rb34LiveStyleAuroraImage
+                        ),
+                    selected = ui.liveLook == look,
+                    onSelect = { actions.onLiveLook(look) },
+                    modifier = Modifier.fillMaxSize().testTag("appearance-look-${look ?: "off"}"),
+                    enabled = held.isEnabled,
+                    disabledReason = held.reason,
+                )
+            }
+        }
+        if (ui.heldBySaver) KitGroupNote(stringResource(Res.string.appearanceSaverHoldsBackground))
+    }
+    if (question == null || question == AppearanceQuestion.Strength) {
+        // Background › How strong? (GLASS_REF appearance_screen.dart:1085-1117).
+        AppearanceControlHeading(
+            stringResource(Res.string.appearanceAskStrength),
+            question,
+            onePage,
+            top,
+        )
+        if (ui.liveLook == null) {
+            KitGroupNote(stringResource(Res.string.appearanceStrengthNeedsLook))
+        } else {
+            val held =
+                if (ui.heldBySaver)
+                    KitEnabled.Disabled(stringResource(Res.string.appearanceSaverHoldsBackground))
+                else KitEnabled.Enabled
+            Box(gutter) {
+                KitSegmented(
+                    segments = LiveStrength.entries.map { KitSegment(it, strengthWords(it)) },
+                    selected = ui.liveStrength,
+                    semanticsLabel = stringResource(Res.string.appearanceAskStrength),
+                    modifier = Modifier.testTag("appearance-strength"),
+                    enabled = held,
+                    onChange = actions::onLiveStrength,
+                )
+            }
+            KitGroupNote(stringResource(Res.string.appearanceIntensityHelp))
+        }
+    }
+
     if (question == null || question == AppearanceQuestion.Text) {
         // B-KIT-059: Default until chosen; applies at the app root at once, this page included.
         AppearanceControlHeading(
@@ -521,3 +603,13 @@ private fun motionIcon(level: MotionLevel) =
         MotionLevel.Calm -> KitIcons.waveform
         MotionLevel.Off -> KitIcons.stopCircle
     }
+
+@Composable
+private fun strengthWords(strength: LiveStrength): String =
+    stringResource(
+        when (strength) {
+            LiveStrength.Subtle -> Res.string.liveIntensitySubtle
+            LiveStrength.Normal -> Res.string.liveIntensityNormal
+            LiveStrength.Bold -> Res.string.liveIntensityBold
+        }
+    )

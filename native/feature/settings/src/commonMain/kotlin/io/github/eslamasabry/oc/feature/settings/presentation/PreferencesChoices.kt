@@ -6,6 +6,8 @@ import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.engine.settings.prefs.AppearanceChoice
 import io.github.eslamasabry.oc.engine.settings.prefs.DevicePreferences
+import io.github.eslamasabry.oc.engine.settings.prefs.Effects
+import io.github.eslamasabry.oc.engine.settings.prefs.LiveIntensity as StoredIntensity
 import io.github.eslamasabry.oc.engine.settings.prefs.LocaleChoice
 import io.github.eslamasabry.oc.engine.settings.prefs.MotionLevel as StoredMotion
 import io.github.eslamasabry.oc.engine.settings.prefs.PreferenceChange
@@ -28,6 +30,7 @@ import kotlinx.coroutines.flow.stateIn
 import io.github.eslamasabry.oc.ui.design.style.Corners as KitCorners
 import io.github.eslamasabry.oc.ui.design.style.FineTuneChoice as KitFineTune
 import io.github.eslamasabry.oc.ui.design.style.Style as KitStyle
+import io.github.eslamasabry.oc.ui.design.style.StyleResolver
 import io.github.eslamasabry.oc.engine.settings.prefs.Corners as StoredCorners
 import io.github.eslamasabry.oc.engine.settings.prefs.Density as StoredDensity
 
@@ -66,7 +69,7 @@ public object PreferenceMapping {
         PersonalPrefs(
             mode = mode(p.appearance),
             pack = pack(p.themePack),
-            // A stored style these pages do not offer yet (Glass, until order 44) reads as Solid instead of throwing.
+            // Every stored style is offered (Glass included, order 34); an unknown one reads as Solid.
             style = SurfaceStyle.entries.firstOrNull { it.name == p.effects.surfaceStyle.name } ?: SurfaceStyle.Solid,
             fineTuned = !p.effects.fineTune.isNone,
             corners = p.effects.fineTune.corners?.let { c -> KitCorners.entries.first { it.name == c.name } },
@@ -77,6 +80,9 @@ public object PreferenceMapping {
             timestamps = p.timestampsVisible,
             textSize = textSize(p.textSize),
             language = language(p.locale),
+            liveBackground = p.effects.liveBackground,
+            liveStyle = p.effects.liveStyle,
+            liveStrength = strength(p.effects.liveIntensity),
         )
 
     /**
@@ -94,11 +100,26 @@ public object PreferenceMapping {
                     ThemePack.entries.firstOrNull { it.wire == change.pack.storageName }
                         ?: ThemePack.OpenCode
                 )
-            // B-KIT-040: a new style starts at its own Fine-tune defaults.
+            // B-KIT-040: a new style starts at its own Fine-tune defaults; it may also move the background.
             is PersonalChange.Style ->
                 PreferenceChange.SetEffects(
-                    current.effects.withSurfaceStyle(
-                        StoredStyle.entries.first { it.name == change.style.name }
+                    chooseStyle(current.effects, StoredStyle.entries.first { it.name == change.style.name })
+                )
+            is PersonalChange.LiveLook -> {
+                val on = change.id != null
+                val held = if (on == current.effects.liveBackground) current.effects.liveHeldByStyle else false
+                PreferenceChange.SetEffects(
+                    current.effects.copy(
+                        liveBackground = on,
+                        liveHeldByStyle = held,
+                        liveStyle = change.id ?: current.effects.liveStyle,
+                    )
+                )
+            }
+            is PersonalChange.LiveIntensity ->
+                PreferenceChange.SetEffects(
+                    current.effects.copy(
+                        liveIntensity = StoredIntensity.entries.first { it.name == change.strength.name }
                     )
                 )
             is PersonalChange.Motion ->
@@ -150,7 +171,36 @@ public object PreferenceMapping {
             softGlow =
                 p.effects.glowStyle ==
                     io.github.eslamasabry.oc.engine.settings.prefs.GlowStyle.SoftRing,
+            liveBackground = p.effects.liveBackground,
+            liveHeldByStyle = p.effects.liveHeldByStyle,
+            liveStyle = p.effects.liveStyle,
+            liveStrength = strength(p.effects.liveIntensity).strength,
         )
+
+    /**
+     * [effects] with [style] chosen (Dart `KitSurfaceLook.choose`, `lib/ui/kit/kit_surface_look.dart:144-162` at
+     * GLASS_REF): Fine-tune resets; a style with a look of its own picks it (Glass: the painted aurora,
+     * `lookWhenChosen`) without turning the background on; leaving it puts the default look back. A style that starts
+     * without the background (Paper, Signal) turns it off and remembers it did; choosing another style gives it back.
+     * One the person turned off stays off.
+     */
+    private fun chooseStyle(effects: Effects, style: StoredStyle): Effects {
+        val previous = KitStyle.entries.first { it.storageName == effects.surfaceStyle.wire }
+        val next = KitStyle.entries.first { it.storageName == style.wire }
+        if (style == effects.surfaceStyle) return effects.withSurfaceStyle(style)
+        val held = effects.liveHeldByStyle && !effects.liveBackground
+        val look = StyleResolver.liveLookAfterChoosing(previous, next, effects.liveStyle, Effects.DEFAULT_LIVE_STYLE)
+        val moved = effects.withSurfaceStyle(style).copy(liveStyle = look)
+        return when {
+            StyleResolver.offWhenChosen(next) ->
+                moved.copy(liveBackground = false, liveHeldByStyle = held || effects.liveBackground)
+            held -> moved.copy(liveBackground = true, liveHeldByStyle = false)
+            else -> moved.copy(liveHeldByStyle = false)
+        }
+    }
+
+    private fun strength(intensity: StoredIntensity): LiveStrength =
+        LiveStrength.entries.firstOrNull { it.name == intensity.name } ?: LiveStrength.Normal
 
     /**
      * The chosen language's tag, or null to follow the phone. A stored language the native app has

@@ -55,6 +55,16 @@ import io.github.eslamasabry.oc.ui.design.tokens.Shapes
 import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.LaunchedEffect
+import io.github.eslamasabry.oc.ui.design.color.over
+import io.github.eslamasabry.oc.ui.design.style.GlassFinish
+import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.design.style.SurfaceFade
+import io.github.eslamasabry.oc.ui.kit.motion.KitEasing
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 
 /**
  * What the style in force says about one surface (plan 06 §4.3, hooks H1-H11): [modifier] paints the style's fill, edge
@@ -129,24 +139,120 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
             withinGroup = input.withinGroup,
             action = input.action,
         )
-    val decoration = remember(request, style) { style.spec.resolve(request) }
+    val resolved = remember(request, style) { style.spec.resolve(request) }
     val words = remember(request, style) { style.spec.onColor(request)?.toColor() }
-    if (decoration == null) {
-        val own = input.ownFill
-        val modifier = if (own == null) Modifier else Modifier.background(own, shape)
-        return KitSurfaceLook(modifier, words, shape, own != null && own.alpha > 0f)
+    val glass = style.style == Style.Glass && resolved != null
+    // Glass: the pane thickens until its words read as on the Solid surface it stands for, over the ground and, while
+    // it blurs a picture, over the picture's spots (GlassFinish; Dart thickenedOver, kit_surface_look.dart:814-889).
+    val backdrop = LocalKitGlassBackdrop.current
+    val blurs = kitGlassBlurs(if (glass) backdrop else null)
+    val decoration =
+        if (!glass) {
+            resolved
+        } else {
+            val ground = roles.ground.withAlpha(1f)
+            val spots = if (blurs && backdrop != null) listOf(ground) + backdrop.frostedSpots else listOf(ground)
+            val solid = (input.ownFill?.toArgb() ?: request.levelFill).over(ground)
+            remember(resolved, spots, solid, roles) { GlassFinish.thickened(resolved!!, roles, solid, spots) }
+        }
+    // The frost under the face is decided by the decoration the surface settles on, never a fading one, so the tree
+    // holds through a fade (kit_surface_look.dart:1257-1266).
+    val frost = Modifier.kitSurfaceGlass(if (glass) decoration else null)
+    // The plain look as a decoration, so Solid can fade to and from the other styles.
+    val plain = SurfaceDecoration(radii = radii, circle = input.shape == KitShapeId.Circle, fill = input.ownFill?.toArgb())
+    val shown = rememberSurfaceFade(decoration, plain, style.style)
+    if (shown == null) {
+        if (decoration == null) {
+            val own = input.ownFill
+            val modifier = if (own == null) Modifier else Modifier.background(own, shape)
+            return KitSurfaceLook(modifier, words, shape, own != null && own.alpha > 0f)
+        }
+        val sink = if (decoration.faceShiftDp > 0f) Modifier.graphicsLayer { translationY = decoration.faceShiftDp * density } else Modifier
+        val face = if (glass) frost.kitGlassFace(decoration) else Modifier.kitDecorated(decoration)
+        return KitSurfaceLook(face.then(sink), words, shape, decoration.paints())
     }
-    val sink = if (decoration.faceShiftDp > 0f) Modifier.graphicsLayer { translationY = decoration.faceShiftDp * density } else Modifier
-    val paints = decoration.fill?.let { it.v ushr 24 != 0 } == true ||
-        (decoration.edgeWidthDp > 0f &&
-            (decoration.edgeStart?.let { it.v ushr 24 != 0 } == true ||
-                decoration.edgeEnd?.let { it.v ushr 24 != 0 } == true)) ||
-        decoration.shadows.isNotEmpty() || decoration.hardShadow?.let { it.v ushr 24 != 0 } == true ||
-        decoration.paired?.let { it.distanceDp > 0f && (it.light.v ushr 24 != 0 || it.dark.v ushr 24 != 0) } == true
-    return KitSurfaceLook(Modifier.kitDecorated(decoration).then(sink), words, shape, paints)
+    // Mid-fade: the in-between look, painted the Glass way when either end is Glass.
+    val (mid, glassy) = shown
+    val sink = if (mid.faceShiftDp > 0f) Modifier.graphicsLayer { translationY = mid.faceShiftDp * density } else Modifier
+    val face = if (glassy) frost.kitGlassFace(mid) else Modifier.kitDecorated(mid)
+    return KitSurfaceLook(face.then(sink), words, shape, mid.paints() || (decoration ?: plain).paints())
 }
 
-private fun SurfaceDecoration.shape(): Shape =
+private fun SurfaceDecoration.paints(): Boolean =
+    fill?.let { it.v ushr 24 != 0 } == true ||
+        (edgeWidthDp > 0f &&
+            (edgeStart?.let { it.v ushr 24 != 0 } == true ||
+                edgeEnd?.let { it.v ushr 24 != 0 } == true)) ||
+        shadows.isNotEmpty() || hardShadow?.let { it.v ushr 24 != 0 } == true ||
+        paired?.let { it.distanceDp > 0f && (it.light.v ushr 24 != 0 || it.dark.v ushr 24 != 0) } == true
+
+/** One surface's cross-fade (Dart `_KitSurfaceBoxState.didUpdateWidget`, kit_surface_look.dart:1207-1229). */
+private class SurfaceFadeState(var to: SurfaceDecoration?, var style: Style) {
+    var from: SurfaceDecoration? = null
+    var fromGlass: Boolean = false
+    var ms: Int = 0
+    var pending: Boolean = false
+    var token: Int = 0
+    val progress: Animatable<Float, AnimationVector1D> = Animatable(1f)
+}
+
+/**
+ * The look to paint while [target] fades in, with whether to paint it the Glass way; null at rest (paint [target]
+ * itself). A change of Style fades over 200 ms ([SurfaceFade.STYLE_FADE_MS]); a state change (pressed, chosen) fades
+ * over 120 ms under Glass only ([SurfaceFade.STATE_FADE_MS]; the other styles keep their instant state changes);
+ * reduced motion and motion Off change at once (`Duration.zero`). The curve is Flutter's pulse
+ * (kit_surface_look.dart:1238).
+ */
+@Composable
+private fun rememberSurfaceFade(target: SurfaceDecoration?, plain: SurfaceDecoration, style: Style): Pair<SurfaceDecoration, Boolean>? {
+    val reduced = LocalKitMotion.current.reduced
+    val fade = remember { SurfaceFadeState(target, style) }
+    if (fade.to != target || fade.style != style) {
+        val styleChanged = fade.style != style
+        val ms =
+            when {
+                reduced -> 0
+                styleChanged -> SurfaceFade.STYLE_FADE_MS
+                style == Style.Glass -> SurfaceFade.STATE_FADE_MS
+                else -> 0
+            }
+        val now = fade.current(plain)
+        fade.fromGlass = fade.style == Style.Glass || (fade.fromGlass && now != null)
+        fade.from = if (ms > 0) (now ?: fade.to ?: plain) else null
+        fade.to = target
+        fade.style = style
+        fade.ms = ms
+        fade.pending = ms > 0
+        fade.token++
+    }
+    // A surface that never changes look launches nothing.
+    if (fade.token > 0) {
+        LaunchedEffect(fade.token) {
+            if (fade.pending) {
+                fade.pending = false
+                fade.progress.snapTo(0f)
+                fade.progress.animateTo(1f, tween(fade.ms, easing = KitEasing.Pulse))
+            } else {
+                fade.progress.snapTo(1f)
+            }
+            fade.from = null
+        }
+    }
+    val from = fade.from ?: return null
+    val t = if (fade.pending) 0f else fade.progress.value
+    if (t >= 1f) return null
+    return SurfaceFade.between(from, target ?: plain, t) to (fade.fromGlass || style == Style.Glass)
+}
+
+/** The look on screen now, mid-fade; null at rest. */
+private fun SurfaceFadeState.current(plain: SurfaceDecoration): SurfaceDecoration? {
+    val from = from ?: return null
+    val t = if (pending) 0f else progress.value
+    if (t >= 1f) return null
+    return SurfaceFade.between(from, to ?: plain, t)
+}
+
+internal fun SurfaceDecoration.shape(): Shape =
     if (circle) CircleShape else RoundedCornerShape(radii.topStart.dp, radii.topEnd.dp, radii.bottomEnd.dp, radii.bottomStart.dp)
 
 /** Paints a style decoration: shadows behind, then the fill, then the edge. Blur is drawn as stacked soft layers. */
@@ -155,11 +261,11 @@ public fun Modifier.kitDecorated(d: SurfaceDecoration): Modifier =
         val shape = d.shape()
         val outline = shape.createOutline(size, layoutDirection, this)
         val rtl = if (layoutDirection == LayoutDirection.Rtl) -1f else 1f
-        d.shadows.forEach { s -> drawShadow(s, shape, rtl) }
+        d.shadows.forEach { s -> drawSurfaceShadow(s, shape, rtl) }
         d.paired?.let { p ->
             if (p.inset <= 0f && (p.distanceDp > 0f || p.blurDp > 0f)) {
-                drawShadow(Shadow(-p.distanceDp, -p.distanceDp, p.blurDp, p.light), shape, rtl)
-                drawShadow(Shadow(p.distanceDp, p.distanceDp, p.blurDp, p.dark), shape, rtl)
+                drawSurfaceShadow(Shadow(-p.distanceDp, -p.distanceDp, p.blurDp, p.light), shape, rtl)
+                drawSurfaceShadow(Shadow(p.distanceDp, p.distanceDp, p.blurDp, p.dark), shape, rtl)
             }
         }
         d.hardShadow?.let { hard ->
@@ -187,7 +293,7 @@ public fun Modifier.kitDecorated(d: SurfaceDecoration): Modifier =
         }
     }
 
-private fun DrawScope.drawShadow(s: Shadow, shape: Shape, rtl: Float) {
+internal fun DrawScope.drawSurfaceShadow(s: Shadow, shape: Shape, rtl: Float) {
     val blur = s.blurDp.dp.toPx()
     val spread = s.spreadDp.dp.toPx()
     val color = s.color.toColor()
