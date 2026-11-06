@@ -71,7 +71,7 @@ public fun KitRequestTargets(
                 rememberKitCopyAction(copyLabel, copiedLabel, { targets.joinToString("\n") { it.text } })
             else null
         (if (expanded) targets else targets.take(TARGET_LIMIT)).forEachIndexed { index, target ->
-            if (index == 0 && copy != null)
+            if (index == 0 && copy != null) {
                 // One line sits level with the copy mark (it sat high, over an empty lower half); several lines keep
                 // the mark at the first line's corner.
                 val oneLine = '\n' !in target.text
@@ -88,7 +88,7 @@ public fun KitRequestTargets(
                         tone = TextTone.Secondary,
                     )
                 }
-            else KitMonoLtr(target.text, Modifier.fillMaxWidth(), TextTone.Primary)
+            } else KitMonoLtr(target.text, Modifier.fillMaxWidth(), TextTone.Primary)
             target.change?.let { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary) }
         }
         if (hidden > 0) {
