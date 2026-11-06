@@ -12,7 +12,8 @@ public object NotificationText {
     public const val MAX_LINE: Int = 140
     public const val MAX_HEAD: Int = 40
 
-    private val whitespace = Regex("(?U)\\s+")
+    // Android's ICU engine rejects the (?U) flag (the class then never loads: NoClassDefFoundError); ICU's \s is Unicode-aware already.
+    private val whitespace = Regex("\\s+")
 
     private val secretPatterns: List<Pair<Regex, (MatchResult) -> String>> =
         listOf(
