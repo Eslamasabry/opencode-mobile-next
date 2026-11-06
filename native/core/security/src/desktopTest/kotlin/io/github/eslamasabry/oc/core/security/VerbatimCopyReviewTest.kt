@@ -24,10 +24,62 @@ class VerbatimCopyReviewTest {
                 (1 to "a reply or code block the person chose to copy: their own conversation content"),
             "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/SettingsWiring.kt" to
                 (1 to "the problem report text, already built from scrubbed diagnostics facts"),
+            // Dart twin: lib/ui/kit/kit_terminal_view.dart `_KitTerminalOscHost` (redact: false, reviewed in
+            // test/redaction_test.dart). Masking here would corrupt a copy the person's own program made on purpose.
+            "android/terminal/src/main/kotlin/io/github/eslamasabry/oc/android/terminal/TerminalSurfaceHost.kt" to
+                (1 to "copyTerminalText: a text selection the person copied, or OSC 52 from their own terminal " +
+                    "program (their shell, their content); honoured only while the terminal is on screen, ≤ 64 KiB"),
+            "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/AgentAccountWiring.kt" to
+                (1 to "a one-time device code for the person to type (1–64 chars, no controls, current profile), flagged sensitive"),
+            "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/AgentTerminalWiring.kt" to
+                (1 to "SignInClipboard.copySensitive: only the sign-in code found in the agent terminal, flagged sensitive"),
+            "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/DiagnosticsAttentionWiring.kt" to
+                (1 to "the problem report, built by ProblemReports.scrub with events masked by redact and opaqueTokens"),
+            "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/HandoffDraftWiring.kt" to
+                (1 to "handoff markdown from HandoffRecordBuilder, which masks every piece with redact and opaqueTokens"),
+            "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/IncomingShare.kt" to
+                (1 to "the words the person shared into the app from another app: their own text"),
+            "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/KeptServicesWiring.kt" to
+                (1 to "copyLog copies log(name), which already ran the log tail through redactor.redact"),
+            "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/LinuxAddressCopyWiring.kt" to
+                (1 to "only an address matching ^http://127.0.0.1:<port>/$ that the app built itself"),
+            "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/PhoneSignInWiring.kt" to
+                (1 to "SignInClipboard: the terminal sign-in code for the person to type, flagged sensitive"),
+            "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/PlansSignInWiring.kt" to
+                (1 to "a one-time code of 4–24 A–Z, 0–9 or '-' (cannot be a key), flagged sensitive"),
+            "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/ServerIntegrationsWiring.kt" to
+                (1 to "rawCopy holds the app's own install and adb commands (port only) and redacted names; fallback is redacted"),
+            "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/TerminalWiring.kt" to
+                (1 to "the person's own terminal selection or transcript (Dart kit_terminal_view.dart, verbatim there too)"),
+            "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/TermuxMigrationWiring.kt" to
+                (1 to "a fixed, app-written Termux allow-external-apps command with no secret in it"),
+            "feature/agents/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/agents/tools/ui/ToolsScreen.kt" to
+                (1 to "the tool parameter schema after KitRedact.text"),
+            "feature/diagnostics/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/diagnostics/ui/KeptScreen.kt" to
+                (2 to "Diagnostics.reportText and PerfTrace.reportText, both built from fields scrubbed when stored"),
+            "ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/diff/KitDiffView.kt" to
+                (1 to "selected lines of the person's own diff (Dart kit_diff_view.dart, verbatim there too)"),
+            "ui/kit-content/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/content/log/KitLogPanel.kt" to
+                (1 to "takes already-redacted text; its one caller passes the Kept services log redacted by KeptServicesWiring"),
+            "ui/kit-content/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/content/viewer/KitViewerDocument.kt" to
+                (1 to "Copy contents of the person's own project file (Dart kit_viewer.dart, verbatim there too)"),
+            "ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/log/KitLogPanel.kt" to
+                (1 to "copies mask(text); every production caller passes rememberKitMask (the Redactor)"),
         )
 
-    /** Known unmasked copies awaiting a fix; each names its owner. Empty today. */
-    private val findings: Map<String, Pair<Int, String>> = emptyMap()
+    /**
+     * Known unmasked copies awaiting a fix; each names its owner. Native has no redacting copy path
+     * yet (Dart's KitCopy.copy masks unless `redact: false`), so these copy server text as it is.
+     */
+    private val findings: Map<String, Pair<Int, String>> =
+        mapOf(
+            "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/LibraryWiring.kt" to
+                (1 to "owner coordinator (caller :feature:settings LibraryScreen): raw server skill markdown, its code blocks and MCP resource URIs are copied unmasked; Dart masks kit copies by default"),
+            "ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/action/KitCopyButton.kt" to
+                (1 to "owner kit-chat-owner / chat-lead: via KitRequestTargets a permission prompt copies the agent's requested command unmasked (could carry an inline key)"),
+            "ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/action/KitIconButton.kt" to
+                (1 to "owner kit-chat-owner / chat-lead: via KitContextMessagePart, Active Context copies raw tool input/output and reasoning unmasked"),
+        )
 
     private val copyCall = Regex("""\.(setPrimaryClip|setClipEntry)\(|\bclipboard\w*\.setText\(""")
 
