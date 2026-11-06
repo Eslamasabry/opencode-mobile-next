@@ -23,6 +23,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatQueueMoveSelectionNote
 import io.github.eslamasabry.oc.ui.words.res.chatQueueMoveTitle
 import io.github.eslamasabry.oc.ui.words.res.commandUntitledChat
 import io.github.eslamasabry.oc.ui.words.res.kitSheetClose
+import io.github.eslamasabry.oc.ui.words.res.sessionTransferWait
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -73,6 +74,10 @@ public fun QueueMoveScreen(state: QueueMoveUi, actions: QueueMoveActions) {
                                         destination.title
                                             ?: stringResource(Res.string.commandUntitledChat),
                                     enabled = !state.working,
+                                    disabledReason =
+                                        if (state.working)
+                                            stringResource(Res.string.sessionTransferWait)
+                                        else null,
                                     onClick = { actions.move(destination.ref) },
                                 )
                             }
