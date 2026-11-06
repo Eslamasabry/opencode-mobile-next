@@ -1,10 +1,14 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.core.model.transcript.PartType
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.BackgroundAgentResult
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.BackgroundShellOutcome
@@ -107,7 +111,8 @@ internal fun TranscriptDetail(
         return
     }
     if (part.type == PartType.Text) {
-        DetailMarkdown(key, part.text, reply)
+        // Words between steps sit on the reply's 16 dp edge like the rest of the reply, never on the screen's.
+        Box(Modifier.padding(horizontal = Space.S4.dp)) { DetailMarkdown(key, part.text, reply) }
         return
     }
     if (part.type == PartType.Reasoning) {

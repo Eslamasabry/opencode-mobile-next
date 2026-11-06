@@ -296,7 +296,7 @@ public fun KitMarkdownHeading(
  * N-49: one level of list nesting: the width of a list marker's column, so a nested item's marker (and an item's
  * quote, table or code) starts under its parent's words, not under its parent's marker.
  */
-internal const val KIT_MD_NEST_STEP: Int = Space.S6 + Space.S2
+internal const val KIT_MD_NEST_STEP: Int = Space.S6
 
 /**
  * N-49: a reply block that sits [depth] levels inside a list. The transcript shows a reply one block per row, so a

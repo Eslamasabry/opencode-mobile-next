@@ -849,8 +849,11 @@ private fun ChatRow(
                         }
                     }
                 }
+                // N-45: a turn with a work line already says what it edited and ran there (its steps carry each
+                // file's counts and each command); a second "Edited … · ran …" row under the footer repeated it.
                 val result = facts.results[row.turnId]
-                if (result != null && folds != null) TurnResultLine(row.turnId, result, folds)
+                if (result != null && folds != null && facts.work[row.turnId] == null)
+                    TurnResultLine(row.turnId, result, folds)
             }
     }
 }

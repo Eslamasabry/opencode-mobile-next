@@ -123,6 +123,8 @@ private fun work(
     val steps = ArrayList<TurnStep>()
     var counts = WorkCounts()
     var modelSteps = 0
+    // N-45: "edited N files" counts files, not edits; a file written then edited is one file.
+    val editedFiles = HashSet<String>()
     for (m in turn.messages) {
         if (m.info.role != Role.Assistant) continue
         for (rawPart in m.parts) {
@@ -133,7 +135,7 @@ private fun work(
             if (isBackgroundTaskNotice(p.toolName ?: "")) continue
             val step = step(p, live = newest && busy) ?: continue
             steps += step
-            counts = count(counts, p, step)
+            counts = count(counts, p, step, editedFiles)
         }
     }
     if (steps.isEmpty()) return null
@@ -199,7 +201,7 @@ private fun step(p: Part, live: Boolean): TurnStep? {
     )
 }
 
-private fun count(c: WorkCounts, p: Part, step: TurnStep): WorkCounts {
+private fun count(c: WorkCounts, p: Part, step: TurnStep, editedFiles: MutableSet<String>): WorkCounts {
     if (step.state == StepState.NotRun) return c.copy(notRun = c.notRun + 1)
     return when (p.toolName?.trim()?.lowercase() ?: "") {
         "read" -> c.copy(read = c.read + 1)
@@ -210,7 +212,10 @@ private fun count(c: WorkCounts, p: Part, step: TurnStep): WorkCounts {
         "write",
         "patch",
         "apply_patch",
-        "multiedit" -> c.copy(edited = c.edited + 1)
+        "multiedit" -> {
+            val path = step.facts.subject?.trim()?.takeIf { it.isNotEmpty() }
+            if (path == null || editedFiles.add(path)) c.copy(edited = c.edited + 1) else c
+        }
         "bash",
         "shell" -> c.copy(ran = c.ran + 1)
         "webfetch",

@@ -187,7 +187,8 @@ public fun KitWorkLine(
                 shape = KitShapeId.Tile,
             ) {
                 Row(
-                    Modifier.fillMaxWidth().heightIn(min = 40.dp).padding(vertical = 4.dp),
+                    // On the reply's own edge (16 dp, like its words): the mark and the caret never touch the screen.
+                    Modifier.fillMaxWidth().heightIn(min = 40.dp).padding(horizontal = 16.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
