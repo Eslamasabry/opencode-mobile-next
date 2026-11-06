@@ -163,6 +163,12 @@ public class ChatsViewModel(
         nav.openChat(ref)
     }
 
+    override fun rowAct(row: ConversationRowUi, act: RowAct) {
+        if (!row.canOpen || state.value.home.opening != null) return
+        sheet.value = null
+        nav.openRowAct(row.ref, act)
+    }
+
     override fun archive(row: ConversationRowUi) {
         if (row.key !in state.value.archivable) return
         // One offer at a time: a new archive sends the earlier one first.
@@ -307,6 +313,12 @@ public class ChatsViewModel(
 
     override fun retryOpening() {
         viewModelScope.launch { home.retryOpening() }
+    }
+
+    override fun editOpeningServer() {
+        val profile = state.value.home.opening?.profile ?: return
+        sheet.value = null
+        nav.open(ServersRoute.Edit(profile))
     }
 
     override fun openServers() {

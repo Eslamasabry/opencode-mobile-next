@@ -34,6 +34,8 @@ public data class ChatsOpeningUi(
     val serverName: String,
     val rows: ImmutableList<ChatsOpeningRow> = persistentListOf(),
     val failure: Failure? = null,
+    /** The server that is opening, so its sign-in can be edited from the failure card. */
+    val profile: ProfileId? = null,
 )
 
 public data class ChatsListSourceUi(

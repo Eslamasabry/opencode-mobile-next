@@ -30,6 +30,12 @@ public interface ConversationPins {
         id: SessionId,
         pinned: Boolean,
     ): Outcome<Unit>
+
+    /**
+     * The pins as they stand after a change, with the titles the list shows, so the launcher can
+     * offer each pinned conversation as a shortcut. Hosts without a launcher ignore it.
+     */
+    public fun published(server: ConversationServer, titles: Map<SessionId, String>) {}
 }
 
 @ContributesBinding(AppScope::class)

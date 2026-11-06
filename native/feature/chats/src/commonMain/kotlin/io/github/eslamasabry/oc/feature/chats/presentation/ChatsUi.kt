@@ -154,8 +154,35 @@ public data class ChatsUi(
 /** The conversation just archived, waiting out its undo window. */
 public data class ArchiveUndoUi(val id: Int, val title: RowTitle)
 
+/**
+ * What a list row's menu does beyond Open and Archive (Flutter global-sessions row menu). Each
+ * opens the conversation's own page and runs the same act the conversation menu runs, so there is
+ * one path to the server for each.
+ */
+public enum class RowAct(internal val headerAction: String?) {
+    Details("Details"),
+    Share("Share"),
+    /** "Copy handoff": the command that resumes it on a computer. */
+    CopyHandoff("ContinueOnComputer"),
+    /** "Open related": the parent and sub-agent conversations. */
+    OpenRelated(null),
+}
+
+/** Opens [ref] for [act]; shared by the home list and All conversations. */
+internal fun io.github.eslamasabry.oc.ui.routes.AppNavigator.openRowAct(
+    ref: ConversationRef,
+    act: RowAct,
+) {
+    val name = act.headerAction
+    if (name == null) open(io.github.eslamasabry.oc.ui.routes.SessionRelationsRoute(ref))
+    else open(io.github.eslamasabry.oc.ui.routes.ChatRoute(ref, thenAction = name))
+}
+
 /** Methods are intents, never widget names (ADR §9.1). */
 public interface ChatsActions {
+    /** A row's menu act other than Open and Archive; no-op where the list cannot offer it. */
+    public fun rowAct(row: ConversationRowUi, act: RowAct) {}
+
     public fun answerPermission(row: ConversationRowUi, allow: Boolean) {}
     public fun openInbox() {}
 
@@ -229,6 +256,9 @@ public interface ChatsActions {
     public fun retryOpening() {}
 
     public fun openServers() {}
+
+    /** Edit the sign-in (password or token) of the server that is failing to open, inline in its form. */
+    public fun editOpeningServer() {}
 
     public fun openFilterProject() {}
 

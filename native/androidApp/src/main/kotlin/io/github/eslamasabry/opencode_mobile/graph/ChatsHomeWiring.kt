@@ -105,6 +105,7 @@ class AppChatsHome(
                     serverName = owner.profile.name,
                     rows = readInventory(owner).toImmutableList(),
                     failure = runtime.sourceFailures[active],
+                    profile = active,
                 )
             } else null
         mutable.value = ChatsHomeExtraState(sources, opening, actionFailure, monitor.snapshot.value)

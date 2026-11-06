@@ -290,6 +290,30 @@ internal fun OpeningStatus(opening: ChatsOpeningUi, actions: ChatsActions) {
             if (opening.phase == ChatsOpeningPhase.Failed)
                 KitAction(stringResource(Res.string.kitTryAgain), actions::retryOpening)
             else null,
+        // A rejected or missing sign-in is fixed where it is typed; any failure can switch server.
+        secondary =
+            if (opening.phase == ChatsOpeningPhase.Failed) {
+                val why = (opening.failure as? io.github.eslamasabry.oc.core.common.Failure.SignIn)?.why
+                when {
+                    opening.profile != null && why != null ->
+                        KitAction(
+                            stringResource(
+                                when (why) {
+                                    io.github.eslamasabry.oc.core.common.SignInWhy.TokenMissing,
+                                    io.github.eslamasabry.oc.core.common.SignInWhy.TokenRejected ->
+                                        Res.string.updateConnectionToken
+                                    else -> Res.string.e7BannerUpdatePassword
+                                }
+                            ),
+                            actions::editOpeningServer,
+                        )
+                    else -> null
+                }
+            } else null,
+        tertiary =
+            if (opening.phase == ChatsOpeningPhase.Failed)
+                listOf(KitAction(stringResource(Res.string.openingChangeServer), actions::openServers))
+            else emptyList(),
     )
 }
 

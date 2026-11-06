@@ -122,6 +122,8 @@ public class ChatHeaderViewModel(
 
     override fun copyResumeCommand(): Unit = presenter.copyResumeCommand()
 
+    override fun copyPhoneLink(): Unit = presenter.copyPhoneLink()
+
     override fun handoffSelect(choice: ContinueChoice): Unit = presenter.handoffSelect(choice)
 
     override fun handoffSend(prompt: String): Unit = presenter.handoffSend(prompt)

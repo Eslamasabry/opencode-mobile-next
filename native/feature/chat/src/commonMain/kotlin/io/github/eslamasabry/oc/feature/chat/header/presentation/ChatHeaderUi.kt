@@ -60,6 +60,9 @@ public enum class HeaderAction {
      * command.
      */
     ContinueOnComputer,
+
+    /** "Open on another phone": the link (Flutter `continueOnPhone`, session_handoff_sheets). */
+    ContinueOnPhone,
     ImportConversation,
     Handoff,
     CopyTranscript,
@@ -100,6 +103,9 @@ public sealed interface HeaderSheet {
      * none.
      */
     public data class ContinueOnComputer(val command: SessionResumeCommand) : HeaderSheet
+
+    /** The link the app on another phone opens; null when an id is unsafe to put in a link. */
+    public data class ContinueOnPhone(val link: String?) : HeaderSheet
 }
 
 public data class DetailsUi(
@@ -142,6 +148,7 @@ public enum class ClipKind {
     Transcript,
     ShareLink,
     ResumeCommand,
+    PhoneLink,
 }
 
 public data class HeaderClip(val id: Long, val text: String, val kind: ClipKind)
@@ -199,6 +206,8 @@ public interface ChatHeaderActions {
 
     /** Copy the "Continue on computer" command (only writes the clipboard; nothing is sent). */
     public fun copyResumeCommand() {}
+
+    public fun copyPhoneLink() {}
 }
 
 /** Optional handoff intents; implemented only by the production header with a concrete host. */

@@ -36,7 +36,12 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatsPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ConversationRowUi
 import io.github.eslamasabry.oc.feature.chats.presentation.RelativeAge
+import io.github.eslamasabry.oc.feature.chats.presentation.RowAct
 import io.github.eslamasabry.oc.feature.chats.presentation.RowStatus
+import io.github.eslamasabry.oc.ui.words.res.chatUiShareSession
+import io.github.eslamasabry.oc.ui.words.res.sessionMenuDetails
+import io.github.eslamasabry.oc.ui.words.res.sessionOpenRelated
+import io.github.eslamasabry.oc.ui.words.res.sessionCopyHandoff
 import io.github.eslamasabry.oc.feature.chats.presentation.RowTitle
 import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -405,6 +410,14 @@ private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, state
         expanded = menuOpen,
         items = buildList {
             if (row.canOpen) add(KitMenuItem(stringResource(Res.string.kitRequestOpen), { menuOpen = false; actions.openConversation(row.ref) }, icon = KitIcons.chat))
+            if (row.canOpen) {
+                // Share, Details, Continue here, Copy handoff and Open related open the conversation's own
+                // page and run the same act its menu runs (one path to the server for each).
+                add(KitMenuItem(stringResource(Res.string.chatUiShareSession), { menuOpen = false; actions.rowAct(row, RowAct.Share) }, icon = KitIcons.link))
+                add(KitMenuItem(stringResource(Res.string.sessionMenuDetails), { menuOpen = false; actions.rowAct(row, RowAct.Details) }, icon = KitIcons.info))
+                add(KitMenuItem(stringResource(Res.string.sessionOpenRelated), { menuOpen = false; actions.rowAct(row, RowAct.OpenRelated) }, icon = KitIcons.branch))
+                add(KitMenuItem(stringResource(Res.string.sessionCopyHandoff), { menuOpen = false; actions.rowAct(row, RowAct.CopyHandoff) }, icon = KitIcons.terminal))
+            }
             if (canArchive) add(KitMenuItem(archiveWord, { menuOpen = false; actions.archive(row) }, icon = KitIcons.archive))
         },
         onDismissRequest = { menuOpen = false },

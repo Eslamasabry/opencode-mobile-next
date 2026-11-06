@@ -21,6 +21,11 @@ import io.github.eslamasabry.oc.feature.chats.presentation.AllPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.AllProblemKind
 import io.github.eslamasabry.oc.feature.chats.presentation.AllRowUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsAllActions
+import io.github.eslamasabry.oc.feature.chats.presentation.RowAct
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
+import io.github.eslamasabry.oc.ui.kit.modal.KitConsequence
+import io.github.eslamasabry.oc.ui.kit.modal.KitConsequenceMark
 import io.github.eslamasabry.oc.feature.chats.presentation.RowTitle
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitAction
@@ -314,6 +319,7 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
             }
         }
         RenameDialog(state, actions)
+        ContinueHereDialog(state, actions)
     }
 }
 
@@ -356,6 +362,43 @@ private fun RenameDialog(state: AllConversationsUi, actions: ChatsAllActions) {
         validate = { if (it.isBlank()) emptyTitle else null },
         operationKey = renaming?.key,
         onResult = actions::finishRename,
+    )
+}
+
+/** "Continue here" (Flutter `global-sessions-continue-here-sheet`): names both projects; the move runs inside it. */
+@Composable
+private fun ContinueHereDialog(state: AllConversationsUi, actions: ChatsAllActions) {
+    val offer = state.moveHere
+    val unknown = stringResource(Res.string.e7WorkspaceUnknownProject)
+    val from = offer?.from ?: unknown
+    val to = offer?.to ?: unknown
+    val title = offer?.let { rowTitle(it.title) }.orEmpty()
+    KitConfirm(
+        spec =
+            offer?.let {
+                KitConfirmSpec(
+                    title = stringResource(Res.string.globalSessionsMoveTitle, to),
+                    confirmLabel =
+                        stringResource(
+                            if (it.failed) Res.string.kitTryAgain else Res.string.e7SharedMoveSession
+                        ),
+                    body = stringResource(Res.string.globalSessionsMoveBody, title, from, to),
+                    consequenceItems =
+                        listOfNotNull(
+                            if (it.sessionWorking)
+                                KitConsequence(
+                                    stringResource(Res.string.globalSessionsMoveWhileWorking),
+                                    KitConsequenceMark.Lost,
+                                )
+                            else null,
+                            KitConsequence(stringResource(Res.string.globalSessionsMoveBack, from)),
+                        ),
+                )
+            },
+        onConfirm = actions::confirmContinueHere,
+        onCancel = actions::cancelContinueHere,
+        working = offer?.working == true,
+        failed = offer?.failed == true,
     )
 }
 
@@ -440,6 +483,11 @@ private fun AllRow(row: AllRowUi, selecting: Boolean, actions: ChatsAllActions) 
                 icon = if (row.pinned) KitIcons.unpin else KitIcons.pin,
             ) else null,
             KitMenuItem(stringResource(Res.string.p12Rename), { actions.rename(row.key) }, icon = KitIcons.edit),
+            KitMenuItem(stringResource(Res.string.chatUiShareSession), { actions.rowAct(row.key, RowAct.Share) }, icon = KitIcons.link),
+            KitMenuItem(stringResource(Res.string.sessionMenuDetails), { actions.rowAct(row.key, RowAct.Details) }, icon = KitIcons.info),
+            if (row.canContinueHere) KitMenuItem(stringResource(Res.string.globalSessionsContinueHere), { actions.continueHere(row.key) }, icon = KitIcons.download) else null,
+            KitMenuItem(stringResource(Res.string.sessionOpenRelated), { actions.rowAct(row.key, RowAct.OpenRelated) }, icon = KitIcons.branch),
+            KitMenuItem(stringResource(Res.string.sessionCopyHandoff), { actions.rowAct(row.key, RowAct.CopyHandoff) }, icon = KitIcons.terminal),
             KitMenuItem(
                 stringResource(Res.string.sessionMenuArchive),
                 { actions.archive(row.key) },

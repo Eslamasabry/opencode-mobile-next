@@ -138,6 +138,23 @@ public class ChatsAllViewModel(
                         }
                         .map { it.profile }
                         .toSet(),
+                stealCapable =
+                    live
+                        .filter {
+                            it.operations != null && it.gateway.capabilities.value.sessionSteal
+                        }
+                        .map { it.profile }
+                        .toSet(),
+                openFolders =
+                    live
+                        .mapNotNull { server ->
+                            server.gateway.location.value.directory
+                                ?.trim()
+                                ?.trimEnd('/')
+                                ?.takeIf { it.isNotEmpty() }
+                                ?.let { server.profile to it }
+                        }
+                        .toMap(),
             )
         }
         if (before != after) reload()
@@ -516,6 +533,47 @@ public class ChatsAllViewModel(
         nav.openChat(target)
     }
 
+    override fun continueHere(key: String) {
+        val row = AllConversationsRules.find(model.value, key) ?: return
+        if (row.first !in model.value.stealCapable) return
+        model.update { it.copy(moving = MovingHere(key)) }
+    }
+
+    override fun cancelContinueHere() {
+        if (model.value.moving?.working == true) return
+        model.update { it.copy(moving = null) }
+    }
+
+    override fun confirmContinueHere() {
+        val moving = model.value.moving ?: return
+        if (moving.working) return
+        val (profile, session) = AllConversationsRules.find(model.value, moving.key) ?: return
+        val operations = serverOf(moving.key)?.operations
+        if (operations == null) {
+            model.update { it.copy(moving = moving.copy(failed = true)) }
+            return
+        }
+        model.update { it.copy(moving = moving.copy(working = true, failed = false)) }
+        viewModelScope.launch {
+            when (val result = operations.stealSessionIntoWorkspace(session.id)) {
+                is Outcome.Ok -> {
+                    model.update { it.copy(moving = null) }
+                    nav.openChat(ConversationRef(profile, result.value))
+                }
+                is Outcome.Failed ->
+                    model.update { it.copy(moving = moving.copy(working = false, failed = true)) }
+            }
+        }
+    }
+
+    override fun rowAct(key: String, act: RowAct) {
+        val m = model.value
+        if (m.selecting) return
+        val (profile, session) = AllConversationsRules.find(m, key) ?: return
+        commitDelete()
+        nav.openRowAct(ConversationRef(profile, session.id), act)
+    }
+
     override fun startSelecting(key: String?): Unit = model.update {
         it.copy(selecting = true, selected = if (key != null) setOf(key) else emptySet())
     }
@@ -563,7 +621,7 @@ public class ChatsAllViewModel(
         val wanted = session.id !in pins.ids(server)
         viewModelScope.launch {
             when (val result = pins.set(server, session.id, wanted)) {
-                is Outcome.Ok ->
+                is Outcome.Ok -> {
                     model.update { cur ->
                         val old = cur.sources[server.profile] ?: return@update cur
                         cur.copy(
@@ -572,6 +630,21 @@ public class ChatsAllViewModel(
                                     (server.profile to old.copy(pinned = pins.ids(server)))
                         )
                     }
+                    // Launcher shortcuts follow the pins (a pinned conversation, one tap from the icon).
+                    val cur = model.value
+                    val pinnedNow = pins.ids(server)
+                    pins.published(
+                        server,
+                        cur.sources[server.profile]
+                            ?.sessions
+                            .orEmpty()
+                            .filter { it.id in pinnedNow }
+                            .associate { s ->
+                                s.id to
+                                    (cur.titles["${server.profile.raw}/${s.id.raw}"] ?: s.title).orEmpty()
+                            },
+                    )
+                }
                 is Outcome.Failed ->
                     model.update {
                         it.copy(problem = AllProblem(AllProblemKind.Pin, result.failure))
