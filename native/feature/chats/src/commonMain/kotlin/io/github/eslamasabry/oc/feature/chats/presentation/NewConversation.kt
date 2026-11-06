@@ -268,22 +268,9 @@ public class NewConversationViewModel(
         }
     }
 
-    override fun shown() {
-        val shown = mutable.value
-        val profile = shown.profile ?: return
-        if (shown.setup == null || shown.busy || shown.draftFailed) return
-        viewModelScope.launch {
-            edits.withLock {
-                val now = mutable.value
-                if (now.profile != profile || now.directory != shown.directory) return@withLock
-                val saved = host.draft(profile, shown.directory)
-                if (saved is Outcome.Ok && saved.value != now.text)
-                    mutable.update {
-                        it.copy(text = saved.value, textRevision = it.textRevision + 1)
-                    }
-            }
-        }
-    }
+    // This entry owns its draft in memory while pickers or other pages cover it. A new entry
+    // starts empty; resuming must never import another conversation's old project draft.
+    override fun shown() {}
 
     override fun back() {
         val shown = mutable.value
@@ -368,7 +355,9 @@ public class NewConversationViewModel(
                         }
                 }
             }
-            if (before.text.isNotEmpty()) return
+            // Only an unresolved first-send receipt may restore persisted words on a fresh
+            // entry: these belong to the conversation offered for review, not a new prompt.
+            if (before.text.isNotEmpty() || !mutable.value.deliveryUnconfirmed) return
             when (val saved = host.draft(profile, directory)) {
                 is Outcome.Failed -> mutable.update { it.copy(draftFailed = true) }
                 is Outcome.Ok ->
