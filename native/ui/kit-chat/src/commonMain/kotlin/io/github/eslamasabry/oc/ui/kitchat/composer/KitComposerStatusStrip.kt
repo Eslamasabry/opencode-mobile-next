@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.ui.kitchat.composer
 
+import androidx.compose.foundation.layout.padding
+import io.github.eslamasabry.oc.ui.kit.foundation.kitShadowRoom
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -43,17 +45,19 @@ public fun KitComposerStatusStrip(
                 measurer.measure("000000…", LocalKitTypography.current.style(TypeRole.Secondary), softWrap = false, maxLines = 1).size.width.toDp()
             }
             val glyph = tokens.smallIcon.dp * density.fontScale.coerceAtMost(tokens.maxIconScale)
+            // The scroller clips; the chips' style shadows keep their room above and below.
+            val room = io.github.eslamasabry.oc.ui.kit.foundation.kitShadowReach()
             val modelMin = Space.S3.dp * 2 + glyph * 2 + Space.S2.dp + Space.S1.dp + labelWidth + 1.dp // F: lib/ui/kit/chat/kit_composer_status_strip.dart:303-308
             when {
                 !hasChips -> Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) { model?.invoke() }
                 model == null -> Row(
-                    Modifier.fillMaxWidth().kitScrollFade(scroll).horizontalScroll(scroll).testTag("composer-status-scroll"),
+                    Modifier.fillMaxWidth().kitShadowRoom(room).kitScrollFade(scroll).horizontalScroll(scroll).padding(vertical = room).testTag("composer-status-scroll"),
                     horizontalArrangement = Arrangement.spacedBy(Space.S2.dp), content = chips,
                 )
                 else -> Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     val chipMax = max(availableWidth.value * .5f, availableWidth.value - Space.S2 - modelMin.value).coerceAtLeast(0f).dp // F: lib/ui/kit/chat/kit_composer_status_strip.dart:212-217
                     Row(
-                        Modifier.widthIn(max = chipMax).kitScrollFade(scroll).horizontalScroll(scroll).testTag("composer-status-scroll"),
+                        Modifier.widthIn(max = chipMax).kitShadowRoom(room).kitScrollFade(scroll).horizontalScroll(scroll).padding(vertical = room).testTag("composer-status-scroll"),
                         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp), content = chips,
                     )
                     Spacer(Modifier.width(Space.S2.dp))

@@ -555,7 +555,7 @@ private fun terminalSurfaceLook(
         val modifier = if (ownFill == null) Modifier else Modifier.background(ownFill, shape) // F: lib/ui/kit/kit_surface_look.dart:171-172
         return KitSurfaceLook(modifier, words?.let { Color(it.v) }, shape)
     }
-    return KitSurfaceLook(Modifier.kitDecorated(decoration), words?.let { Color(it.v) }, shape)
+    return KitSurfaceLook(Modifier.kitDecorated(decoration, androidx.compose.ui.platform.LocalLayoutDirection.current == androidx.compose.ui.unit.LayoutDirection.Rtl), words?.let { Color(it.v) }, shape)
 }
 
 /**

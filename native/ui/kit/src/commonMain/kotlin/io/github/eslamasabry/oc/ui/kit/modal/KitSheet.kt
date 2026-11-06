@@ -611,7 +611,7 @@ private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean, s
                                 verticalArrangement = Arrangement.spacedBy(tokens.labelGap.dp),
                                 content = entry.body,
                             )
-                        } else entry.body(this)
+                        } else androidx.compose.runtime.CompositionLocalProvider(io.github.eslamasabry.oc.ui.kit.row.LocalKitOnRail provides true) { entry.body(this) }
                     }
                 }
                 if (

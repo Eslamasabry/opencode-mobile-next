@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
+import io.github.eslamasabry.oc.ui.kit.foundation.kitShadowReach
+import io.github.eslamasabry.oc.ui.kit.foundation.kitShadowRoom
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
@@ -44,9 +46,13 @@ public fun KitPhraseChips(
     onEdit: ((String) -> Unit)? = null,
 ) {
     if (phrases.isEmpty()) return
+    // The scroller clips; the chips' style shadows keep their room above and below.
+    val room = kitShadowReach()
     Row(
         modifier.kitMaxWidth(CapRole.Conversation).fillMaxWidth().padding(bottom = Space.S2.dp)
-            .horizontalScroll(rememberScrollState()).semantics { contentDescription = label },
+            .kitShadowRoom(room)
+            .horizontalScroll(rememberScrollState()).semantics { contentDescription = label }
+            .padding(vertical = room),
         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
