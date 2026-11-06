@@ -1,0 +1,30 @@
+<resources>
+    <plurals name="liveStepReading">
+        <item quantity="one">Reading 1 file</item>
+        <item quantity="other">Reading %1$d files</item>
+    </plurals>
+    <plurals name="liveStepSearching">
+        <item quantity="one">Searching the project</item>
+        <item quantity="other">Searching the project, %1$d searches</item>
+    </plurals>
+    <plurals name="liveStepListing">
+        <item quantity="one">Looking through 1 folder</item>
+        <item quantity="other">Looking through %1$d folders</item>
+    </plurals>
+    <plurals name="liveStepEditing">
+        <item quantity="one">Editing 1 file</item>
+        <item quantity="other">Editing %1$d files</item>
+    </plurals>
+    <plurals name="liveStepFetching">
+        <item quantity="one">Fetching 1 page</item>
+        <item quantity="other">Fetching %1$d pages</item>
+    </plurals>
+    <plurals name="liveStepDelegating">
+        <item quantity="one">Handing off 1 task</item>
+        <item quantity="other">Handing off %1$d tasks</item>
+    </plurals>
+    <string name="liveStepRunning">Running %1$s</string>
+    <string name="liveStepRunningCommand">Running a command</string>
+    <string name="liveFailedStillWorking">The agent is still working. You don't need to do anything yet.</string>
+    <string name="liveFailedStopped">The agent has stopped. Send a message to ask it to carry on.</string>
+</resources>
