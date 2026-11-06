@@ -6,6 +6,9 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
+import io.github.eslamasabry.oc.engine.delivery.receipts.CommandReceipt
+import io.github.eslamasabry.oc.engine.delivery.receipts.CommandReceiptState
+import io.github.eslamasabry.oc.engine.delivery.receipts.PendingCommandJournal
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -123,6 +126,44 @@ class PromptDeliveryTest {
             assertTrue(w.queue.entries().isEmpty(), "no review entry: nothing left")
             assertTrue(w.link.attempts.isEmpty() && w.link.lookups.isEmpty())
         }
+    }
+
+    private fun journalOf(w: World) =
+        (w.journals.forProfile(P1) as Outcome.Ok).value.read().let { (it as Outcome.Ok).value }
+
+    @Test
+    fun `B-STATE-052 B-112 a full receipt journal never blocks an online send, and a confirmed send adds no entry`() = runTest {
+        // 1000 settled receipts: the journal's cap, kept as tombstones by design.
+        val scope = FakeLink().scope.receiptScope
+        val full = (0 until PendingCommandJournal.MAX_ENTRIES).map {
+            CommandReceipt("queue:online-$it", "msg_$it", S1.raw, S1.raw, scope, NOW_MS - 10_000, CommandReceiptState.Confirmed)
+        }
+        val disk = Disk(
+            mapOf(
+                io.github.eslamasabry.oc.core.data.kv.FlutterPrefsCodec.physicalKey("${PendingCommandJournal.KEY_PREFIX}${P1.raw}") to
+                    io.github.eslamasabry.oc.core.data.kv.RawPref.Str(PendingCommandJournal.encode(full)),
+            ),
+        )
+        val w = World(disk, this, link = receiptLink())
+        val d = w.delivery()
+        d.send(req("hello"))
+        testScheduler.runCurrent()
+        assertIs<SendOutcome.Accepted>(d.outcomes.value.single(), "the 1001st message is sent")
+        assertEquals(listOf("hello"), w.link.deliveredTexts())
+        assertEquals(full, journalOf(w), "no receipt for a confirmed online send")
+    }
+
+    @Test
+    fun `B-STATE-043 B-112 only an unconfirmed online send records its receipt, for Check again`() = runTest {
+        val w = World(Disk(), this, link = receiptLink())
+        val d = w.delivery()
+        d.send(req("confirmed"))
+        testScheduler.runCurrent()
+        assertTrue(journalOf(w).isEmpty())
+        w.link.answer = { FakeLink.Answer.LostResponse }
+        d.send(req("lost"))
+        testScheduler.runCurrent()
+        assertEquals(listOf(CommandReceiptState.Uncertain), journalOf(w).map { it.state })
     }
 
     @Test

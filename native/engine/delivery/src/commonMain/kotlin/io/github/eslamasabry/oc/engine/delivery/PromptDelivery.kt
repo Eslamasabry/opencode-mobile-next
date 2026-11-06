@@ -27,9 +27,7 @@ import io.github.eslamasabry.oc.engine.delivery.queue.QueueErrors
 import io.github.eslamasabry.oc.engine.delivery.queue.QueueRefusal
 import io.github.eslamasabry.oc.engine.delivery.queue.QueuedPrompt
 import io.github.eslamasabry.oc.engine.delivery.receipts.CommandReceipt
-import io.github.eslamasabry.oc.engine.delivery.receipts.CommandReceiptController
 import io.github.eslamasabry.oc.engine.delivery.receipts.CommandReceiptState
-import io.github.eslamasabry.oc.engine.delivery.receipts.DispatchProof
 import io.github.eslamasabry.oc.engine.delivery.receipts.DispatchScope
 import io.github.eslamasabry.oc.engine.delivery.receipts.PendingCommandJournals
 import kotlin.jvm.JvmInline
@@ -547,44 +545,36 @@ public class PromptDelivery(
                     null
                 }
             }
-        // Like Flutter (queue.dart:843), only queued sends are journalled: the journal is
-        // bounded (MAX_ENTRIES) and never pruned, so journalling every online send would
-        // permanently refuse sending after 1000 messages on one server.
-        if (
-            bubble.reviewId != null &&
-                clientId != null &&
-                link.capabilities.commandReceipts &&
-                journal != null
-        ) {
-            val receipt =
-                CommandReceipt(
-                    commandId = CommandReceipt.queueCommandId(bubble.reviewId),
-                    receiptId = clientId.raw,
-                    sessionId = ref.sessionId.raw,
-                    tabId = ref.sessionId.raw,
-                    scope = origin.receiptScope,
-                    createdAt = bubble.createdAtMs,
-                    state = CommandReceiptState.Sent,
+        // B-112: like Flutter (queue.dart:843), an online send is not journalled before it goes
+        // out: the journal is bounded (MAX_ENTRIES) and keeps every entry as a tombstone, so a
+        // receipt per online send refused every send on that server after 1000 messages. Only a
+        // send that may have arrived unconfirmed is recorded, after the fact, so Check again can
+        // look it up; a confirmed or never-sent one leaves no entry. (Queued sends still claim
+        // their receipt before dispatch, in OfflineQueue.)
+        val r =
+            link.prompt(ref.sessionId, prompt) { wire(fence() && journal?.isOpen != false) }
+        accepted = confirms(r, clientId?.raw)
+        if (!accepted) {
+            failure = (r as? Outcome.Failed)?.failure
+            if (
+                reachedWire &&
+                    bubble.reviewId != null &&
+                    clientId != null &&
+                    link.capabilities.commandReceipts &&
+                    journal != null
+            )
+                recordUncertain(
+                    journal,
+                    CommandReceipt(
+                        commandId = CommandReceipt.queueCommandId(bubble.reviewId),
+                        receiptId = clientId.raw,
+                        sessionId = ref.sessionId.raw,
+                        tabId = ref.sessionId.raw,
+                        scope = origin.receiptScope,
+                        createdAt = bubble.createdAtMs,
+                        state = CommandReceiptState.Sent,
+                    ),
                 )
-            val sent =
-                CommandReceiptController(journal).send(receipt) { rid ->
-                    val r =
-                        link.prompt(ref.sessionId, prompt.copy(clientMessageId = MessageId(rid))) {
-                            wire(fence() && journal.isOpen)
-                        }
-                    if (confirms(r, rid)) DispatchProof.Confirmed
-                    else if (r is Outcome.Failed && !reachedWire)
-                        DispatchProof.NotSent.also { failure = r.failure }
-                    else DispatchProof.Uncertain.also { failure = (r as? Outcome.Failed)?.failure }
-                }
-            accepted = sent is Outcome.Ok && sent.value.state == CommandReceiptState.Confirmed
-            if (sent is Outcome.Failed)
-                failure =
-                    Failure.Refused(RefusalReason.DispatchUncertain) // claim refused: nothing sent
-        } else {
-            val r = link.prompt(ref.sessionId, prompt) { wire(fence()) }
-            accepted = confirms(r, clientId?.raw)
-            if (!accepted) failure = (r as? Outcome.Failed)?.failure
         }
         if (accepted) {
             // 9. Accepted.
@@ -628,6 +618,23 @@ public class PromptDelivery(
             }
             failed(bubble, request, putBack, reason, left)
         }
+    }
+
+    /**
+     * B-112: the receipt of an online send that may have arrived without a confirmation, so Check
+     * again can look it up. A full or unavailable journal only costs that lookup (the send stays
+     * "couldn't confirm" and is never sent again).
+     */
+    private suspend fun recordUncertain(
+        journal: io.github.eslamasabry.oc.engine.delivery.receipts.PendingCommandJournal,
+        receipt: CommandReceipt,
+    ) {
+        val claimed = journal.claim(receipt)
+        val recorded =
+            claimed is Outcome.Ok &&
+                claimed.value &&
+                journal.update(receipt.withState(CommandReceiptState.Uncertain)) is Outcome.Ok
+        if (!recorded) log.w { "an unconfirmed send's receipt could not be recorded" }
     }
 
     private suspend fun failed(
