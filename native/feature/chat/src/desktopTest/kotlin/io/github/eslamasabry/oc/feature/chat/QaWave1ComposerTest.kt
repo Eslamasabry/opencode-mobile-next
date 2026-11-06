@@ -91,11 +91,18 @@ class QaWave1ComposerTest {
     @Test
     fun `B8 QA wave1 while a reply runs the message box keeps the full width`() = runComposeUiTest {
         setContent { Theme { Box(Modifier.width(360.dp)) { BasicComposer(ui(), Actions(), chrome(busy = true)) } } }
-        onNodeWithText("Stop").assertIsDisplayed()
-        onNodeWithText("Add to this turn").assertIsDisplayed()
+        // Looks pass (owner pick, 2026-11-05): one message box, the words on top and the controls on the row
+        // under them. Stop is the ringed round button; with words typed during a run Send joins the turn
+        // ("Add to this turn") and Stop moves beside the plus. Neither ever shares the words' line.
+        onNodeWithContentDescription("Stop", useUnmergedTree = true).assertIsDisplayed()
+        onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("chat-composer-field")), useUnmergedTree = true)
+            .performTextInput("Also check the docs")
+        waitForIdle()
+        onNodeWithContentDescription("Stop", useUnmergedTree = true).assertIsDisplayed()
+        onNodeWithContentDescription("Add to this turn", useUnmergedTree = true).assertIsDisplayed()
         val field = onNodeWithTag("chat-composer-field").fetchSemanticsNode().size.width
-        val controls = onNodeWithTag("chat-composer-controls").fetchSemanticsNode().size.width
-        assertTrue(field >= controls * 9 / 10, "the field is $field px of $controls px: Stop and steer never squeeze it")
+        val box = onNodeWithTag("kit-composer-box", useUnmergedTree = true).fetchSemanticsNode().size.width
+        assertTrue(field >= box * 8 / 10, "the field is $field px of $box px: Stop and steer never squeeze it")
     }
 
     @Test
@@ -146,9 +153,13 @@ class QaWave1ComposerTest {
                 }
             }
         }
-        val row = onNodeWithTag("chat-composer-controls").fetchSemanticsNode().boundsInRoot
+        // The controls share the message box's lower row with Send at its end (N-52): the approval chip stays
+        // whole and clear of Send, because the model chip's words are capped.
+        val box = onNodeWithTag("kit-composer-box", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        val send = onNodeWithTag("chat-send-button", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
         val chip = onNodeWithTag("approval-chip", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
-        assertTrue(chip.right <= row.right + 0.5f && chip.width > 20f, "chip $chip inside row $row")
+        assertTrue(chip.right <= box.right + 0.5f && chip.width > 20f, "chip $chip inside box $box")
+        assertTrue(chip.right <= send.left + 0.5f, "chip $chip never under Send $send")
     }
 
     @Test

@@ -47,9 +47,11 @@ class TimelineScreenTest {
                 }
             }
         }
-        onNodeWithTag("timeline-fork-prompt").performClick()
+        // KitRow reads as one node; the fork glyph is its own target under it (clicked where it is drawn).
+        onNodeWithTag("timeline-fork-prompt", useUnmergedTree = true).performClick()
         assertEquals(listOf("prompt" to true), selections)
-        onNodeWithText("Fork from this prompt").assertDoesNotExist()
+        // The glyph forks at once: no menu or second step opens.
+        onNodeWithTag("kit-menu").assertDoesNotExist()
         onNodeWithTag("timeline-row-prompt").performClick()
         assertEquals(listOf("prompt" to true, "prompt" to false), selections)
     }
