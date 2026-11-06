@@ -82,15 +82,15 @@ public object EditorRules {
             project = schedule.projectPath,
             kind = rec.kind,
             time = "${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}",
+            // E05-S02 (N-44): the editor never opens on a passed time. A once schedule whose time has gone, and a
+            // repeating one switched to Once, start on the next day that time is still ahead.
             date =
-                if (rec.kind == RecurrenceKind.Once && at != null) {
-                    if (
-                        nowMs != null &&
-                            ScheduleTime.moment(rec.atMs!!, nowMs, zoneId).dayOffset < 0
-                    )
-                        ScheduleTime.today(nowMs, zoneId)
-                    else at.date
-                } else "",
+                when {
+                    rec.kind == RecurrenceKind.Once && at != null && (nowMs == null || rec.atMs!! > nowMs) ->
+                        at.date
+                    nowMs != null -> ScheduleTime.nextDay(nowMs, hour, minute, zoneId)
+                    else -> ""
+                },
             hours = if (rec.kind == RecurrenceKind.Interval) rec.hours.toString() else "3",
             missed = schedule.missedPolicy,
             thisConversation = schedule.sessionId != null,

@@ -6,6 +6,8 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.engine.schedules.ArmedEntry
 import io.github.eslamasabry.oc.engine.schedules.MissedRunPolicy
+import io.github.eslamasabry.oc.engine.schedules.Recurrence
+import io.github.eslamasabry.oc.engine.schedules.ScheduledPrompt
 import io.github.eslamasabry.oc.engine.schedules.RecurrenceKind
 import io.github.eslamasabry.oc.engine.schedules.RunReport
 import io.github.eslamasabry.oc.engine.schedules.ScheduleAlarms
@@ -19,6 +21,7 @@ import io.github.eslamasabry.oc.engine.schedules.ScheduleProfiles
 import io.github.eslamasabry.oc.feature.schedules.presentation.ConversationSeed
 import io.github.eslamasabry.oc.feature.schedules.presentation.EditIssue
 import io.github.eslamasabry.oc.feature.schedules.presentation.EditPhase
+import io.github.eslamasabry.oc.feature.schedules.presentation.EditorRules
 import io.github.eslamasabry.oc.feature.schedules.presentation.ModelChoice
 import io.github.eslamasabry.oc.feature.schedules.presentation.ScheduleEditViewModel
 import io.github.eslamasabry.oc.feature.schedules.presentation.ScheduleServers
@@ -279,6 +282,51 @@ class SchedulesViewModelTest {
         assertEquals("2026-11-01", edit.state.value.fields.date)
         assertEquals(0, nav.backs)
         assertNull(alarms.armed["p1"]?.firstOrNull())
+    }
+
+    @Test
+    fun `B-NAV-055 Send later opens on the next valid slot, never a time already past`() = runTest {
+        servers.seed = ConversationSeed("/work/app", "Fix login", null, null, null)
+        val ref = ConversationRef(pid, SessionId("ses_7"))
+        // Before nine and after nine (any device zone): the seeded day and time are ahead of now.
+        for (now in listOf(t0, t0 + 3 * 3_600_000L, t0 + 15 * 3_600_000L)) {
+            val edit = ScheduleEditViewModel(SchedulesRoute.Edit(pid, from = ref), engine, servers, nav, FixedClock(now))
+            val fields = edit.state.value.fields
+            assertEquals(RecurrenceKind.Once, fields.kind)
+            assertEquals("09:00", fields.time)
+            val (rec, issue) = EditorRules.recurrence(fields.copy(prompt = "Ship it"), now)
+            assertNull(issue)
+            assertTrue(rec!!.atMs!! > now, "seeded ${fields.date} ${fields.time} is not after $now")
+            assertTrue(rec.atMs!! - now <= 24 * 3_600_000L, "seeded slot is more than a day away")
+        }
+    }
+
+    @Test
+    fun `B-NAV-055 an expired once schedule and a repeating one switched to Once reopen on a time still ahead`() {
+        val utc = "UTC"
+        val base =
+            ScheduledPrompt(
+                id = "a1",
+                profileId = "p1",
+                profileFingerprint = "n1:a",
+                prompt = "Check the build",
+                projectPath = "/work/app",
+                recurrence = Recurrence.once(t0 - 2 * 3_600_000L), // 06:00 today, already gone
+                createdAtMs = t0 - 86_400_000L,
+            )
+        val expired = EditorRules.fields(base, emptyList(), utc, nowMs = t0)
+        assertEquals("06:00", expired.time)
+        assertEquals("2026-11-03", expired.date) // today's 06:00 has passed: tomorrow
+        assertEquals(RecurrenceKind.Once, EditorRules.recurrence(expired, t0, utc).first?.kind)
+        // Earlier today but later than now keeps today.
+        val later = EditorRules.fields(base.copy(recurrence = Recurrence.once(t0 + 3_600_000L)), emptyList(), utc, nowMs = t0)
+        assertEquals("2026-11-02", later.date)
+        // A daily 07:30 switched to Once starts on the next day 07:30 is ahead, not on a blank date.
+        val daily = EditorRules.fields(base.copy(recurrence = Recurrence.daily(7, 30)), emptyList(), utc, nowMs = t0)
+        assertEquals("2026-11-03", daily.date)
+        val (rec, issue) = EditorRules.recurrence(daily.copy(kind = RecurrenceKind.Once), t0, utc)
+        assertNull(issue)
+        assertTrue(rec!!.atMs!! > t0)
     }
 
     @Test
