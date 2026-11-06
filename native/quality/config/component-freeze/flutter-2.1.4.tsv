@@ -1,0 +1,68 @@
+# E00-S13 / ADR §9.9 component freeze. Names Android stores or binds to, taken from the released Flutter app
+# 2.1.4+62 (origin/master 2dec68a250fe: android/app/src/main/AndroidManifest.xml, res/xml/shortcuts.xml and the Kotlin
+# sources under android/app/src/main/kotlin). ComponentFreezeTest checks every line against the shipped (same-package
+# 'switch' release) manifest and the native Kotlin sources. Never edit a line to make the test pass: a name here that
+# changes breaks widgets, tiles, shortcuts, alarms, scheduled work or notification settings on the update.
+# Columns: kind<TAB>name<TAB>detail. Placeholders in braces stand for any value.
+#
+# component: <manifest tag>:<FQCN>; detail lists intent actions it must still declare.
+component	receiver:io.github.eslamasabry.opencode_mobile.ScheduledPromptReceiver	android.intent.action.BOOT_COMPLETED,android.intent.action.MY_PACKAGE_REPLACED,android.intent.action.TIME_SET,android.intent.action.TIMEZONE_CHANGED,android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED
+component	activity:io.github.eslamasabry.opencode_mobile.MainActivity	android.intent.action.MAIN,android.intent.action.SEND,android.intent.action.VIEW
+component	activity:io.github.eslamasabry.opencode_mobile.ManageSpaceActivity	
+component	activity:io.github.eslamasabry.opencode_mobile.WidgetConfigureActivity	android.appwidget.action.APPWIDGET_CONFIGURE
+component	activity:io.github.eslamasabry.opencode_mobile.WidgetRouteActivity	
+component	activity:io.github.eslamasabry.opencode_mobile.WidgetOverlayActivity	
+component	receiver:io.github.eslamasabry.opencode_mobile.WidgetActionReceiver	
+component	service:io.github.eslamasabry.opencode_mobile.TermuxResultService	
+component	service:io.github.eslamasabry.opencode_mobile.BuiltinServerService	
+component	service:io.github.eslamasabry.opencode_mobile.SetupService	
+component	service:io.github.eslamasabry.opencode_mobile.BackgroundConnectionService	
+component	receiver:io.github.eslamasabry.opencode_mobile.CodingActionReceiver	
+component	receiver:io.github.eslamasabry.opencode_mobile.StatusActionReceiver	
+component	receiver:io.github.eslamasabry.opencode_mobile.LivePauseReceiver	
+component	service:io.github.eslamasabry.opencode_mobile.LocalPdfService	
+component	receiver:io.github.eslamasabry.opencode_mobile.BuiltinRestoreReceiver	android.intent.action.BOOT_COMPLETED,android.intent.action.MY_PACKAGE_REPLACED
+component	receiver:io.github.eslamasabry.opencode_mobile.BuiltinIdleReceiver	
+# widget: an app-widget provider (APPWIDGET_UPDATE + android.appwidget.provider meta-data). Placed widgets name it.
+widget	io.github.eslamasabry.opencode_mobile.SessionsWidgetProvider	
+widget	io.github.eslamasabry.opencode_mobile.SessionsWideWidgetProvider	
+widget	io.github.eslamasabry.opencode_mobile.SessionsListWidgetProvider	
+widget	io.github.eslamasabry.opencode_mobile.SessionsStripWidgetProvider	
+widget	io.github.eslamasabry.opencode_mobile.UsageWidgetProvider	
+widget	io.github.eslamasabry.opencode_mobile.UsageWideWidgetProvider	
+widget	io.github.eslamasabry.opencode_mobile.StatusWidgetProvider	
+# tile: a Quick Settings tile service (BIND_QUICK_SETTINGS_TILE + QS_TILE). Added tiles name it.
+tile	io.github.eslamasabry.opencode_mobile.AttentionTileService	
+tile	io.github.eslamasabry.opencode_mobile.PauseTileService	
+# meta: application meta-data the widget code reads.
+meta	io.github.eslamasabry.opencode_mobile.WIDGET_OVERLAY_READY	
+# shortcut: a static launcher shortcut id (pinned copies keep the id); it must open MainActivity.
+shortcut	connect	
+shortcut	new_task	
+# scheme: a deep link MainActivity's VIEW filter accepts.
+scheme	opencode-mobile://session	
+scheme	opencode-mobile://team	
+# channel: a notification channel id (the person's sound/importance/off choices live under it). The Flutter
+# QA-only channel bb9_qa_producer is not part of the shipped app and is left out.
+channel	opencode_live_connection	
+channel	opencode_coding_action	
+channel	opencode_coding_action_quiet	
+channel	opencode_coding_status	
+channel	opencode_team_progress	
+channel	opencode_builtin_server	
+channel	opencode_voice_setup	
+channel	opencode_phone_setup	
+channel	opencode_scheduled_prompts	
+# worker: a WorkManager worker class name (WorkManager stores it with every enqueued request).
+worker	io.github.eslamasabry.opencode_mobile.ScheduledPromptWorker	
+worker	io.github.eslamasabry.opencode_mobile.WidgetStatusWorker	
+# work-name / work-tag: unique-work names and tags the Flutter app enqueued; the native app must still name them
+# (to keep, replace or cancel that work).
+work-name	oc.schedule.{profile}.{occurrence}.alarm	ScheduledPromptScheduler.kt:70
+work-name	oc.schedule.{profile}.{occurrence}.fallback	ScheduledPromptScheduler.kt:70
+work-name	widget-status-{profile}-{session}	WidgetStatusScheduler.kt:15
+work-tag	oc.schedule.{profile}	ScheduledPromptScheduler.kt:92
+work-tag	widget-status-profile-{profile}	WidgetStatusScheduler.kt:14
+# authority: a FileProvider authority. The Flutter app declared no FileProvider of its own; the native one is frozen
+# from its first release so URIs already granted to other apps keep resolving, and it follows the application id.
+authority	{applicationId}.files	

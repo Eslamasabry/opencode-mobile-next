@@ -30,6 +30,15 @@ tasks.test {
     inputs.files(fileTree(rootDir) { include("**/src/**/*.kt", "**/build.gradle.kts", "MODULE_OWNERS"); exclude("**/build/**", "build-logic/**") })
         .withPropertyName("sources").withPathSensitivity(PathSensitivity.RELATIVE)
     systemProperty("oc.root", rootDir.absolutePath)
+    // E00-S13: T2's component-freeze step checks the merged same-package release manifest ("required", or a path).
+    inputs.files(fileTree(rootDir) {
+        include("**/src/**/AndroidManifest.xml", "**/src/**/res/xml/*.xml", "quality/config/component-freeze/**")
+        exclude("**/build/**")
+    }).withPropertyName("freezeSources").withPathSensitivity(PathSensitivity.RELATIVE)
+    providers.gradleProperty("oc.mergedManifest").orNull?.let {
+        systemProperty("oc.mergedManifest", it)
+        outputs.upToDateWhen { false } // the merged manifest lives under build/: always re-read it
+    }
 }
 
 // S1-SECGATES (plan 16 §2): the K-SEC rules and the security gates. A separate suite that compiles no project module,

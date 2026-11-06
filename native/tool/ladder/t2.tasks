@@ -6,5 +6,6 @@ tests	--continue -Poc.werror=true desktopTest testAndroidHostTest test
 goldens	--continue verifyRoborazziAndroidHostTest
 lint	:androidApp:lintStableRelease
 assemble	-Poc.debugSignRelease=true :androidApp:assembleStableRelease :androidApp:assemblePreviewRelease
+component-freeze	:androidApp:processSwitchReleaseMainManifest :quality:test --tests *ComponentFreeze* -Poc.mergedManifest=required
 r8-config	:androidApp:analyzeStableReleaseR8Config
 catalog-report	:quality:catalogReport
