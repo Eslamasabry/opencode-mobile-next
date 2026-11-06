@@ -140,7 +140,7 @@ internal fun TurnWorkLine(
         modifier = Modifier.testTag("chat-work-line"),
     ) {
         if (entries.isEmpty()) {
-            val shown = work.steps.drop(hidden)
+            val shown = work.steps.drop(hidden).distinctBy(::stepIdentity)
             shown.forEachIndexed { index, step ->
                 StepRow(
                     step,
@@ -154,10 +154,13 @@ internal fun TurnWorkLine(
             }
         } else {
             var skipped = 0
+            // N-45: the same step reported twice (same part, same command, same state) is one row.
+            val seen = HashSet<String>()
             val stepQueues = work.steps.groupBy { it.partId }.mapValues { ArrayDeque(it.value) }
             for (entry in entries) when (entry) {
                 is WorkEntryUi.Step -> {
                     val step = stepQueues[entry.partId]?.removeFirstOrNull() ?: continue
+                    if (!seen.add(stepIdentity(step))) continue
                     if (skipped++ >= hidden)
                         StepRow(step, nowMs, folds, onOpenSession, onOpenFile, reply = reply)
                 }
@@ -175,6 +178,10 @@ internal fun TurnWorkLine(
         }
     }
 }
+
+/** What makes two step rows the same step: its part, its kind, what it ran and how it ended. */
+private fun stepIdentity(step: TurnStep): String =
+    "${step.partId}|${step.facts.kind}|${step.facts.subject}|${step.state}"
 
 @Composable
 private fun nowWords(step: TurnStep, counts: WorkCounts): String {

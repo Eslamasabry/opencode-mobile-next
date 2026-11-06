@@ -187,6 +187,9 @@ internal fun TranscriptDetail(
         }
         return
     }
+    // N-45: a part with no words and no name of its own has nothing to show; it must not become a bare
+    // "Server message" row under the turn.
+    if (kind == null && part.filename == null && part.text.isBlank()) return
     if (kind == "unknown" && Regex("^[a-z][a-z0-9._-]*$").matches(part.text.trim())) return
     val header =
         when (kind) {

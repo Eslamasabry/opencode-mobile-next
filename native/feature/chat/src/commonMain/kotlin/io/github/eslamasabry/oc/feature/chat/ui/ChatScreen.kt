@@ -421,7 +421,9 @@ public fun ChatScreen(
                                 .kitFrost(
                                     FrostRole.ChatHeader,
                                     frost,
-                                    shown = overlays && headerUnder,
+                                    // N-45: the header is always a solid surface; scrolled rows drew over its title
+                                    // when it was only a blur. (The blur returns once its tint keeps the title readable.)
+                                    shown = false,
                                 )
                         ) {
                             // CHAT-TRANSCRIPT (B-CHAT-019): the context reading folds into the
