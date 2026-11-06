@@ -1,6 +1,8 @@
 package io.github.eslamasabry.oc.feature.chats.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -155,7 +157,7 @@ import io.github.eslamasabry.oc.ui.words.res.notifStatusMore
 import io.github.eslamasabry.oc.ui.words.res.notifStatusNeedsYou
 import io.github.eslamasabry.oc.ui.words.res.p12ProjectsTitle
 import io.github.eslamasabry.oc.ui.words.res.p12SearchTitle
-import io.github.eslamasabry.oc.ui.words.res.returnBriefContinue
+import io.github.eslamasabry.oc.ui.words.res.returnBriefSeen
 import io.github.eslamasabry.oc.ui.words.res.stateAttentionTitle
 import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
 import kotlinx.coroutines.flow.drop
@@ -445,20 +447,27 @@ private fun BriefBlock(brief: BriefUi, actions: ChatsActions, state: ChatsUi) {
     Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
         if (brief.unknown) KitNotice(stringResource(Res.string.chatsReturnBriefUnknown))
         brief.rows.forEach { ConversationRow(it, actions, state) }
-        if (brief.more > 0) {
-            KitButton(
-                label = stringResource(Res.string.chatsReturnBriefMore, brief.more),
-                onClick = { actions.showBriefOverflow(brief) },
-                role = KitButtonRole.Tertiary,
-            )
-        }
-        if (brief.rows.isNotEmpty()) {
-            KitButton(
-                label = stringResource(Res.string.returnBriefContinue),
-                onClick = { actions.dismissBrief(brief.acknowledgement) },
-                role = KitButtonRole.Tertiary,
-            )
-        }
+        // One line on the gutter: the rest of what finished at the start, marking it all seen at the end.
+        if (brief.more > 0 || brief.rows.isNotEmpty())
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = LocalKitTokens.current.gutter.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (brief.more > 0)
+                    KitButton(
+                        label = stringResource(Res.string.chatsReturnBriefMore, brief.more),
+                        onClick = { actions.showBriefOverflow(brief) },
+                        role = KitButtonRole.Tertiary,
+                    )
+                else Spacer(Modifier)
+                if (brief.rows.isNotEmpty())
+                    KitButton(
+                        label = stringResource(Res.string.returnBriefSeen),
+                        onClick = { actions.dismissBrief(brief.acknowledgement) },
+                        role = KitButtonRole.Tertiary,
+                    )
+            }
     }
 }
 

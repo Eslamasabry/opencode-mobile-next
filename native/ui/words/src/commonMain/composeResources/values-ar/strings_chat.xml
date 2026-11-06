@@ -164,6 +164,7 @@
     </plurals>
     <string name="queuedBannerReview__eq1">مسودة واحدة بإرسال غير مؤكد تحتاج إلى مراجعة.</string>
     <string name="returnBriefContinue">متابعة</string>
+    <string name="returnBriefSeen">تعليم الكل كمقروء</string>
     <string name="markdownReaderTitle">قارئ الشيفرة</string>
     <string name="workStartedInBackground">بدأ في الخلفية</string>
     <string name="e7PermissionAction1">تشغيل أمر في الطرفية</string>

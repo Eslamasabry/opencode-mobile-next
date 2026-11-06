@@ -148,6 +148,7 @@
     </plurals>
     <string name="queuedBannerReview__eq1">1 draft with an unconfirmed send to review.</string>
     <string name="returnBriefContinue">Continue</string>
+    <string name="returnBriefSeen">Mark all seen</string>
     <string name="markdownReaderTitle">Code reader</string>
     <string name="workStartedInBackground">Started in background</string>
     <string name="e7PermissionAction1">Run a shell command</string>
