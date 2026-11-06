@@ -384,9 +384,12 @@ oc_stage 'Unpacking Node.js'
 rm -rf /opt/node.new
 mkdir -p /opt/node.new
 oc_untar "\$node_file" /opt/node.new 1
+oc_stage 'Setting up Node.js'
 rm -rf /opt/node
 mv /opt/node.new /opt/node
 for tool in node npm npx; do ln -sf /opt/node/bin/\$tool /usr/local/bin/\$tool; done
+oc_stage 'Checking that Node.js starts'
+/opt/node/bin/node --version
 npm config set prefix /usr/local
 rm -f "\$node_file"
 oc_version "\$(node --version | sed 's/^v//')"
