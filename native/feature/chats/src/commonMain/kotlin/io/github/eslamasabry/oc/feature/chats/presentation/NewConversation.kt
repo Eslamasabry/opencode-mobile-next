@@ -100,6 +100,13 @@ public interface NewConversationHost {
 
     public suspend fun setup(profile: ProfileId): Outcome<NewConversationSetup>
 
+    /** N-51: the server's favourite models, the same list the chat's model sheet stars. */
+    public fun favorites(profile: ProfileId): List<ModelRef> = emptyList()
+
+    /** Stars or unstars [model]; choosing it is separate. */
+    public suspend fun toggleFavorite(profile: ProfileId, model: ModelRef): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("modelFavorites")))
+
     public suspend fun review(profile: ProfileId, directory: String?): Outcome<ConversationRef?> =
         Outcome.Ok(null)
 
@@ -248,8 +255,60 @@ public fun filterNewConversationModels(
     }
 }
 
-/** Long lists get a search field in the model step. */
-public const val NEW_CONVERSATION_MODEL_SEARCH_FROM: Int = 8
+/** One model row of the model sheet; [current] is the chosen model. */
+public data class NewConversationModelRow(
+    val model: NewConversationModel,
+    val current: Boolean,
+    val favorite: Boolean,
+)
+
+/** A heading of the model sheet: Favorites ([favorites]) or one provider ([providerName]). */
+public data class NewConversationModelSection(
+    val providerName: String?,
+    val rows: List<NewConversationModelRow>,
+    val favorites: Boolean = false,
+)
+
+/**
+ * N-51: the chat's model order: Favorites first, then each provider (the chosen model's provider
+ * first, then by name) with the chosen model leading its group; each model shows once.
+ */
+public fun newConversationModelSections(
+    models: List<NewConversationModel>,
+    selected: ModelRef?,
+    favorites: List<ModelRef>,
+    query: String,
+): List<NewConversationModelSection> {
+    val shown = filterNewConversationModels(models, query)
+    fun row(m: NewConversationModel) =
+        NewConversationModelRow(m, current = m.model == selected, favorite = m.model in favorites)
+    val starred = favorites.mapNotNull { ref -> shown.firstOrNull { it.model == ref } }.distinct()
+    val out = ArrayList<NewConversationModelSection>()
+    if (starred.isNotEmpty())
+        out += NewConversationModelSection(null, starred.map(::row), favorites = true)
+    shown
+        .filter { it !in starred }
+        .groupBy { it.providerName ?: it.model.providerId }
+        .entries
+        .sortedWith(
+            compareBy<Map.Entry<String, List<NewConversationModel>>>(
+                { entry -> entry.value.none { it.model == selected } },
+                { it.key.lowercase() },
+            )
+        )
+        .forEach { (provider, group) ->
+            out +=
+                NewConversationModelSection(
+                    provider,
+                    group
+                        .sortedWith(
+                            compareBy<NewConversationModel>({ it.model != selected }, { it.name.lowercase() })
+                        )
+                        .map(::row),
+                )
+        }
+    return out
+}
 
 public data class NewConversationUi(
     val servers: List<NewConversationServer> = emptyList(),
@@ -261,6 +320,8 @@ public data class NewConversationUi(
     /** Bumped when a starter fills the prompt: the field takes the cursor back. */
     val focusRevision: Long = 0,
     val model: ModelRef? = null,
+    /** N-51: starred models, shown first in the model sheet. */
+    val favorites: List<ModelRef> = emptyList(),
     val agent: String? = null,
     val separateCopy: Boolean = false,
     val busy: Boolean = false,
@@ -312,6 +373,9 @@ public interface NewConversationActions {
     public fun chooseDirectory(directory: String)
 
     public fun chooseModel(model: ModelRef?)
+
+    /** N-51: the model sheet's star; it never chooses the model. */
+    public fun toggleFavorite(model: ModelRef) {}
 
     public fun chooseAgent(agent: String?)
 
@@ -412,6 +476,7 @@ public class NewConversationViewModel(
                                 setup = setup,
                                 directory = setup.directory,
                                 model = setup.model,
+                                favorites = host.favorites(profile),
                                 agent = setup.agent,
                                 busy = false,
                                 repairAvailable =
@@ -584,6 +649,14 @@ public class NewConversationViewModel(
         // The model is the last choice of the sheet: picking one closes it.
         mutable.update { it.copy(model = model, sheet = null) }
         saveChoices()
+    }
+
+    override fun toggleFavorite(model: ModelRef) {
+        val profile = mutable.value.profile ?: return
+        viewModelScope.launch {
+            if (host.toggleFavorite(profile, model) is Outcome.Ok && mutable.value.profile == profile)
+                mutable.update { it.copy(favorites = host.favorites(profile)) }
+        }
     }
 
     override fun chooseStarter(starter: NewConversationStarter, label: String) {

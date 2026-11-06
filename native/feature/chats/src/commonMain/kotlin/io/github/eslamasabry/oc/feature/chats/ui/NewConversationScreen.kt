@@ -11,12 +11,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,14 +29,14 @@ import androidx.lifecycle.compose.LifecycleStartEffect
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.model.ModelRef
 import io.github.eslamasabry.oc.engine.git.GitLinkRepairResult
-import io.github.eslamasabry.oc.feature.chats.presentation.NEW_CONVERSATION_MODEL_SEARCH_FROM
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationActions
-import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationModel
+import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationModelSection
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSheet
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationStarter
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationUi
 import io.github.eslamasabry.oc.feature.chats.presentation.filterNewConversationModels
 import io.github.eslamasabry.oc.feature.chats.presentation.isStartableAgent
+import io.github.eslamasabry.oc.feature.chats.presentation.newConversationModelSections
 import io.github.eslamasabry.oc.feature.chats.presentation.newConversationStarters
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -62,15 +60,16 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
-import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
-import io.github.eslamasabry.oc.ui.kit.input.KitSearchNoMatch
 import io.github.eslamasabry.oc.ui.kit.input.KitStartBox
 import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.kit.modal.KitPageOverlay
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
-import io.github.eslamasabry.oc.ui.kit.modal.KitSheetStep
+import io.github.eslamasabry.oc.ui.kit.modal.KitModelChoice
+import io.github.eslamasabry.oc.ui.kit.modal.KitModelGroup
+import io.github.eslamasabry.oc.ui.kit.modal.KitModelGroupKind
+import io.github.eslamasabry.oc.ui.kit.modal.KitModelSheet
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
@@ -82,8 +81,6 @@ import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
-import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceMark
-import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceRow
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
@@ -452,51 +449,22 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
     AgentModelSheet(state, actions)
 }
 
-/**
- * One sheet for who works and how: at half height the agents a person can start, Build/Plan as a
- * stepped control and the model row; the model step grows the same sheet to full height in place
- * (search when the list is long) instead of opening a second sheet.
- */
+/** Who works and how, at half height: the agents a person can start, Build/Plan and the model row. */
 @Composable
 private fun AgentModelSheet(state: NewConversationUi, actions: NewConversationActions) {
-    val step =
-        state.sheet?.takeIf {
-            it == NewConversationSheet.Agents || it == NewConversationSheet.Models
-        }
-    // While the sheet leaves, it keeps showing the step it had.
-    var lastStep by remember { mutableStateOf(NewConversationSheet.Agents) }
-    if (step != null && step != lastStep) SideEffect { lastStep = step }
-    val shown = step ?: lastStep
-    val models = shown == NewConversationSheet.Models
     KitSheet(
-        visible = step != null,
+        visible = state.sheet == NewConversationSheet.Agents,
         onDismissRequest = { actions.sheet(null) },
-        title =
-            stringResource(
-                if (models) Res.string.agentsModelTitle else Res.string.upgNewChatChoicesTitle
-            ),
+        title = stringResource(Res.string.upgNewChatChoicesTitle),
         closeLabel = stringResource(Res.string.kitSheetClose),
-        height = if (models) KitSheetHeight.Full else KitSheetHeight.Half,
-        growsInPlace = true,
-        leading =
-            if (models)
-                KitAction(
-                    label = stringResource(Res.string.upgNewChatBackToAgents),
-                    onClick = { actions.sheet(NewConversationSheet.Agents) },
-                    icon = KitIcons.back,
-                )
-            else null,
-        primary =
-            if (models) null
-            else KitAction(stringResource(Res.string.upgNewChatDone), { actions.sheet(null) }),
+        height = KitSheetHeight.Half,
+        primary = KitAction(stringResource(Res.string.upgNewChatDone), { actions.sheet(null) }),
     ) {
-        KitSheetStep(shown) { current ->
-            Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
-                if (current == NewConversationSheet.Models) NewConversationModelStep(state, actions)
-                else NewConversationAgentStep(state, actions)
-            }
+        Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+            NewConversationAgentStep(state, actions)
         }
     }
+    NewConversationModelSheet(state, actions)
 }
 
 /** Half height: the agents a person can start, then Build/Plan, then the model row that grows. */
@@ -563,32 +531,31 @@ private fun NewConversationAgentStep(state: NewConversationUi, actions: NewConve
     }
 }
 
-/** Full height: every model the server offers, with search once the list is long. */
+/**
+ * N-51: the chat's own model sheet (one kit sheet): close, search, Server default, Favorites with
+ * their stars, then each provider with the chosen model first.
+ */
 @Composable
-private fun NewConversationModelStep(state: NewConversationUi, actions: NewConversationActions) {
+private fun NewConversationModelSheet(state: NewConversationUi, actions: NewConversationActions) {
     val models = state.setup?.models.orEmpty()
-    val named = filterNewConversationModels(models, "")
-    val search = rememberTextFieldState()
-    var query by remember { mutableStateOf("") }
-    if (named.size >= NEW_CONVERSATION_MODEL_SEARCH_FROM)
-        KitSearchField(
-            // N-51: the chat's model sheet's own words.
-            label = stringResource(Res.string.chatModelsSearch),
-            onSearch = { query = it },
-            state = search,
-            modifier = Modifier.fillMaxWidth(),
-        )
-    if (query.isNotBlank() && filterNewConversationModels(models, query).isEmpty())
-        KitSearchNoMatch(
-            query = query,
-            onClear = {
-                search.clearText()
-                query = ""
-            },
-        )
-    else NewConversationModelChoices(models, state.model, actions::chooseModel, query)
-    if (named.isEmpty())
-        KitText(stringResource(Res.string.upgNewChatModelsNone), role = TypeRole.Secondary)
+    val none = filterNewConversationModels(models, "").isEmpty()
+    KitModelSheet(
+        visible = state.sheet == NewConversationSheet.Models,
+        onDismissRequest = { actions.sheet(null) },
+        groups = { query ->
+            newConversationModelSections(models, state.model, state.favorites, query).map {
+                it.kitGroup()
+            }
+        },
+        usesDefault = state.model == null,
+        onChoose = { choice -> actions.chooseModel(choice?.let { ModelRef(it.providerId, it.modelId) }) },
+        onFavorite = { choice -> actions.toggleFavorite(ModelRef(choice.providerId, choice.modelId)) },
+        listShown = !none,
+        resetKey = state.profile,
+        above = {
+            if (none) KitText(stringResource(Res.string.upgNewChatModelsNone), role = TypeRole.Secondary)
+        },
+    )
 }
 
 /** Ways to start: each fills the empty prompt and leaves sending to Start. */
@@ -693,45 +660,25 @@ private fun StartingConversation(state: NewConversationUi, actions: NewConversat
     )
 }
 
-/**
- * Flutter agent_model_sheet.dart: the default first, then named models, each checked at the end.
- * [query] narrows the list by what each row shows; the default row is hidden while searching.
- */
-@Composable
-internal fun NewConversationModelChoices(
-    models: List<NewConversationModel>,
-    selected: ModelRef?,
-    choose: (ModelRef?) -> Unit,
-    query: String = "",
-) {
-    // N-51: the same list as the chat's model sheet: Server default with what it means, then each provider's models
-    // under its name, the chosen one ticked.
-    if (query.isBlank())
-        KitRowGroup {
-            KitChoiceRow(
-                title = stringResource(Res.string.composerPreviewModelDefault),
-                supporting = stringResource(Res.string.composerPreviewModelDefaultHint),
-                selected = selected == null,
-                mark = KitChoiceMark.Tick,
-                onClick = { choose(null) },
-            )
-        }
-    filterNewConversationModels(models, query)
-        .groupBy { it.providerName ?: it.model.providerId }
-        .forEach { (provider, group) ->
-            KitRowGroup(label = provider, section = true) {
-                group.sortedBy { it.name.lowercase() }.forEach { model ->
-                    KitChoiceRow(
-                        title = model.name,
-                        supporting = model.runtime?.takeIf { it != provider },
-                        selected = model.model == selected,
-                        mark = KitChoiceMark.Tick,
-                        onClick = { choose(model.model) },
-                    )
-                }
-            }
-        }
-}
+/** A model sheet heading as the kit shows it; inside a provider, a model's host app tells equal names apart. */
+internal fun NewConversationModelSection.kitGroup(): KitModelGroup =
+    KitModelGroup(
+        kind = if (favorites) KitModelGroupKind.Favorites else KitModelGroupKind.Provider,
+        name = providerName.orEmpty(),
+        choices =
+            rows.map { row ->
+                val provider = row.model.providerName ?: row.model.model.providerId
+                KitModelChoice(
+                    providerId = row.model.model.providerId,
+                    modelId = row.model.model.modelId,
+                    label = row.model.name,
+                    providerName = provider,
+                    current = row.current,
+                    favorite = row.favorite,
+                    detail = row.model.runtime?.takeIf { it != provider },
+                )
+            },
+    )
 
 /** Flutter import list uses the final non-empty path segment, including a trailing slash. */
 private fun importFolder(directory: String): String =

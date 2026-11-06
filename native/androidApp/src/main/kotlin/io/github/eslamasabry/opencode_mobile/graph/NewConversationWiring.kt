@@ -7,6 +7,7 @@ import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.WireJson
@@ -78,6 +79,7 @@ class AndroidNewConversationHost(
     private val stores: PreviewStores,
     private val gitRepair: GitLinkRepairService,
     private val deliveryStores: Set<DeliveryStorage>,
+    private val modelLibraries: Set<io.github.eslamasabry.oc.feature.chat.world.RecentModelsBacking>,
     private val projectServers: io.github.eslamasabry.oc.feature.projects.presentation.ProjectServers,
     private val projectCreation: io.github.eslamasabry.oc.feature.projects.presentation.ProjectCreation,
     appScope: AppCoroutineScope,
@@ -89,6 +91,16 @@ class AndroidNewConversationHost(
         connections.servers
             .map { rows -> rows.map { NewConversationServer(it.id, it.name, it.connected) } }
             .stateIn(appScope, SharingStarted.Eagerly, emptyList())
+
+    // N-51: the same saved favourites the chat's model sheet stars (Flutter `oc.modelLibrary.<profileId>`).
+    override fun favorites(profile: ProfileId): List<ModelRef> =
+        modelLibraries.firstOrNull()?.favorites(profile.raw).orEmpty().map { (provider, model) ->
+            ModelRef(provider, model)
+        }
+
+    override suspend fun toggleFavorite(profile: ProfileId, model: ModelRef): Outcome<Unit> =
+        modelLibraries.firstOrNull()?.toggleFavorite(profile.raw, model.providerId, model.modelId)
+            ?: Outcome.Failed(Failure.Unavailable(FeatureId("modelFavorites")))
 
     override fun canRepair(profile: ProfileId, directory: String): Boolean =
         gitRepair.availableProject(profile, directory)
