@@ -82,6 +82,19 @@ import io.github.eslamasabry.oc.ui.kitchat.composer.KitVoiceField
 import io.github.eslamasabry.oc.ui.kitchat.stream.LocalKitPromptLift
 import io.github.eslamasabry.oc.ui.kitchat.stream.kitPromptOrigin
 import io.github.eslamasabry.oc.ui.words.res.Res
+import androidx.compose.foundation.layout.Arrangement
+import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.words.res.modelEffortNone
+import io.github.eslamasabry.oc.ui.words.res.modelEffortMinimal
+import io.github.eslamasabry.oc.ui.words.res.modelEffortLow
+import io.github.eslamasabry.oc.ui.words.res.modelEffortMedium
+import io.github.eslamasabry.oc.ui.words.res.modelEffortHigh
+import io.github.eslamasabry.oc.ui.words.res.modelEffortExtraHigh
+import io.github.eslamasabry.oc.ui.words.res.modelEffortMax
+import io.github.eslamasabry.oc.ui.words.res.modelPickerAgentBuildName
+import io.github.eslamasabry.oc.ui.words.res.modelPickerAgentPlanName
+import io.github.eslamasabry.oc.ui.words.res.modelPickerAgentBuild
+import io.github.eslamasabry.oc.ui.words.res.modelPickerAgentPlan
 import io.github.eslamasabry.oc.ui.words.res.chatCycleNext
 import io.github.eslamasabry.oc.ui.words.res.chatCyclePrevious
 import io.github.eslamasabry.oc.ui.words.res.chatDraftAlreadySent
@@ -822,15 +835,23 @@ public fun BasicComposer(
                 val currentTag = stringResource(Res.string.chatModelsCurrent)
                 val sections =
                     remember(models, modelQuery) { ModelPicker.sections(models, modelQuery) }
-                Column(Modifier.fillMaxWidth().testTag("chat-model-choices")) {
+                // The groups keep a step of air between them, so Server default, Favorites and each provider read
+                // as separate lists (and a raised style's panels never touch).
+                Column(
+                    Modifier.fillMaxWidth().testTag("chat-model-choices"),
+                    verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+                ) {
+                    // Server default sits in a group of its own, on the same edge as the model rows.
                     if (models.selected != null && modelQuery.isBlank()) {
-                        KitChoiceRow(
-                            title = stringResource(Res.string.composerPreviewModelDefault),
-                            selected = models.usesDefault,
-                            mark = KitChoiceMark.Tick,
-                            tag = if (models.usesDefault) currentTag else null,
-                            onClick = { selectAndClose(null) },
-                        )
+                        KitRowGroup {
+                            KitChoiceRow(
+                                title = stringResource(Res.string.composerPreviewModelDefault),
+                                selected = models.usesDefault,
+                                mark = KitChoiceMark.Tick,
+                                tag = if (models.usesDefault) currentTag else null,
+                                onClick = { selectAndClose(null) },
+                            )
+                        }
                     }
                     if (sections.isEmpty()) KitText(stringResource(Res.string.chatModelsNoMatch))
                     sections.forEach { section ->
@@ -854,14 +875,19 @@ public fun BasicComposer(
                                 // row banded with a mint check, and the star as the row's one icon
                                 // (its words
                                 // are what TalkBack says), not a text button on every row.
+                                // The provider's mark only where providers mix (Favorites, Recent); under a
+                                // provider's own heading it would repeat one glyph down the whole list.
+                                val mixed = section.providerName == null
                                 KitChoiceRow(
                                     title = pick.model.label,
-                                    leading = {
-                                        KitProviderLogo(
-                                            pick.model.providerId,
-                                            pick.model.providerName,
-                                        )
-                                    },
+                                    leading =
+                                        if (mixed) ({
+                                            KitProviderLogo(
+                                                pick.model.providerId,
+                                                pick.model.providerName,
+                                            )
+                                        })
+                                        else null,
                                     selected = pick.current,
                                     mark = KitChoiceMark.Tick,
                                     // In "Recent" the provider tells equal names apart.
@@ -910,7 +936,7 @@ public fun BasicComposer(
                                 label =
                                     if (level.isEmpty())
                                         stringResource(Res.string.composerFullThinkingDefault)
-                                    else level,
+                                    else effortWords(level),
                                 kind = KitChipKind.Action,
                                 selected = level == models.variant,
                                 onClick = { scope.launch { actions.selectModel(selected, level) } },
@@ -919,13 +945,17 @@ public fun BasicComposer(
                     }
                 }
                 if (models.agents.isNotEmpty()) {
-                    KitSectionLabel(stringResource(Res.string.composerFullAgent))
-                    KitChipWrap(Modifier.fillMaxWidth().testTag("chat-agent-choices")) {
+                    // Flutter's agent rows: the built-in agents by name with what they do, never the server's id.
+                    KitRowGroup(
+                        Modifier.testTag("chat-agent-choices"),
+                        label = stringResource(Res.string.composerFullAgent),
+                    ) {
                         models.agents.forEach { agent ->
-                            KitChip(
-                                label = agent.id,
-                                kind = KitChipKind.Action,
+                            KitChoiceRow(
+                                title = agentTitle(agent.id),
+                                supporting = agentSupporting(agent.id, agent.description),
                                 selected = agent.id == models.agent,
+                                mark = KitChoiceMark.Tick,
                                 onClick = { scope.launch { actions.selectAgent(agent.id) } },
                             )
                         }
@@ -978,6 +1008,39 @@ public fun BasicComposer(
         )
     }
 }
+
+/** A thinking level as people read it (Flutter `presentedEffort`): "Extra high" for `xhigh`; unknown ids as they are. */
+@Composable
+private fun effortWords(id: String): String =
+    when (id.trim().lowercase()) {
+        "none" -> stringResource(Res.string.modelEffortNone)
+        "minimal" -> stringResource(Res.string.modelEffortMinimal)
+        "low" -> stringResource(Res.string.modelEffortLow)
+        "medium" -> stringResource(Res.string.modelEffortMedium)
+        "high" -> stringResource(Res.string.modelEffortHigh)
+        "xhigh" -> stringResource(Res.string.modelEffortExtraHigh)
+        "max" -> stringResource(Res.string.modelEffortMax)
+        else -> id
+    }
+
+/** The built-in agents by name ("Build", "Plan"); any other agent by the name its server gave it (Flutter). */
+@Composable
+private fun agentTitle(id: String): String =
+    when (id) {
+        "build" -> stringResource(Res.string.modelPickerAgentBuildName)
+        "plan" -> stringResource(Res.string.modelPickerAgentPlanName)
+        else -> id
+    }
+
+/** What an agent does: the server's description, else the built-in words (Flutter `_agentSupporting`). */
+@Composable
+private fun agentSupporting(id: String, description: String?): String? =
+    description?.trim()?.takeIf { it.isNotEmpty() }
+        ?: when (id) {
+            "build" -> stringResource(Res.string.modelPickerAgentBuild)
+            "plan" -> stringResource(Res.string.modelPickerAgentPlan)
+            else -> null
+        }
 
 /** "Model · level · agent": the level and agent only when chosen (Flutter composer.dart:795). */
 private fun modelLabel(model: String, level: String, agent: String?): String =

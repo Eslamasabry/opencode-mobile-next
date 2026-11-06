@@ -500,7 +500,13 @@ public fun ChatScreen(
                             )
                         else
                             KitStatus.highest(
-                                listOf(state.status?.let { statusLine(it, actions) }, appStatus)
+                                listOf(
+                                    // An unconfirmed send is said once, on its own bubble with Check again.
+                                    state.status
+                                        ?.takeUnless { it.kind == ChatStatusKind.SendUnconfirmed }
+                                        ?.let { statusLine(it, actions) },
+                                    appStatus,
+                                )
                             ),
                     loading = state.phase == ChatPhase.Loading,
                     loadingLabel = stringResource(Res.string.chatLoadingConversation),

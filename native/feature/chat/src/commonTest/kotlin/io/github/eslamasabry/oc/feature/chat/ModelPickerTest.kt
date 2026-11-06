@@ -51,6 +51,17 @@ class ModelPickerTest {
     }
 
     @Test
+    fun `B3 a favourite or recent model shows once, not again in its provider's group`() {
+        val models = ComposerModels(choices = all, selected = terra, favorites = listOf(terra), recent = listOf(glmZai, terra))
+        val sections = ModelPicker.sections(models)
+        val shown = sections.flatMap { it.rows }.map { it.model }
+        assertEquals(shown.distinct(), shown, "no model is listed twice")
+        assertEquals(listOf(terra), sections.first().rows.map { it.model })
+        assertTrue(sections.first().favorites)
+        assertEquals(listOf(glmZai), sections[1].rows.map { it.model }, "Recent leaves out the favourite")
+    }
+
+    @Test
     fun `B3 QA wave1 with the server default nothing else is marked current`() {
         val sections = ModelPicker.sections(ComposerModels(choices = all, selected = terra, usesDefault = true))
         assertTrue(sections.flatMap { it.rows }.none { it.current })

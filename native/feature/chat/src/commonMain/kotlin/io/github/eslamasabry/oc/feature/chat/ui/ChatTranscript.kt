@@ -55,6 +55,9 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.style.KitRunningFeedLine
@@ -493,10 +496,26 @@ private fun ReceiptCheckLine(localId: Long, check: ReceiptCheckUi?, onCheck: (()
                 stringResource(Res.string.queuedReceiptStillUncertain)
             else -> stringResource(Res.string.kitQueuedUncertain)
         }
-    Column(
-        Modifier.testTag("chat-receipt-$localId").semantics { liveRegion = LiveRegionMode.Polite }
-    ) {
-        KitQuietLine(words)
+    // One notice under the bubble, with Check again as its real action (owner 2026-11-06: the same problem was
+    // said twice, and "Check again" read as a heading). The screen's status line leaves this to the bubble.
+    val checkAgain = stringResource(Res.string.chatReceiptCheckAgain)
+    Column(Modifier.testTag("chat-receipt-$localId")) {
+        KitNotice(
+            message = words,
+            tone = StatusTone.Attention,
+            actions =
+                if (onCheck == null) emptyList()
+                else
+                    listOf(
+                        KitLineAction(
+                            checkAgain,
+                            onCheck,
+                            enabled = !checking,
+                            disabledReason = words,
+                            testTag = "chat-receipt-check-$localId",
+                        )
+                    ),
+        )
         check?.checkedAtMs?.let { at ->
             val time =
                 Instant.fromEpochMilliseconds(at)
@@ -509,15 +528,6 @@ private fun ReceiptCheckLine(localId: Long, check: ReceiptCheckUi?, onCheck: (()
                         time.minute.toString().padStart(2, '0')
                 )
             KitQuietLine(stringResource(Res.string.chatReceiptLastChecked, label))
-        }
-        if (onCheck != null) {
-            KitButton(
-                label = stringResource(Res.string.chatReceiptCheckAgain),
-                onClick = onCheck,
-                role = KitButtonRole.Tertiary,
-                working = checking,
-                modifier = Modifier.testTag("chat-receipt-check-$localId"),
-            )
         }
     }
 }

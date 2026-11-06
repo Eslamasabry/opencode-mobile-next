@@ -36,13 +36,18 @@ public object ModelPicker {
                     m.modelId == current.modelId,
             )
         val out = ArrayList<ModelSection>()
-        val favorites = models.favorites.filter(::matches)
+        // Each model shows once (owner 2026-11-06): a favourite or a recent pick is not repeated in its provider's
+        // group below.
+        fun key(m: ComposerModel) = m.providerId + "/" + m.modelId
+        val listed = HashSet<String>()
+        val favorites = models.favorites.filter(::matches).filter { listed.add(key(it)) }
         if (favorites.isNotEmpty())
             out += ModelSection(null, favorites.map(::row), favorites = true)
-        val recent = models.recent.filter(::matches)
+        val recent = models.recent.filter(::matches).filter { listed.add(key(it)) }
         if (recent.isNotEmpty()) out += ModelSection(null, recent.map(::row))
         models.choices
             .filter(::matches)
+            .filter { key(it) !in listed }
             .groupBy { it.providerId }
             .map { (_, list) -> list }
             .sortedWith(
