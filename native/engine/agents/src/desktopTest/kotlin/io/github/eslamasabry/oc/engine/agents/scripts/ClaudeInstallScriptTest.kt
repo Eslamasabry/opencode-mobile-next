@@ -121,7 +121,8 @@ class ClaudeInstallScriptTest {
 
     @Test
     fun `B-LINUX-053 the ported installer and preludes equal the Flutter source byte for byte`() {
-        assertEquals(dartRawStrings("lib/builtin/setup/setup_scripts.dart").getValue("setupPrelude"), SetupPrelude.SETUP_PRELUDE)
+        // The prelude follows the released app (#117 crash fallbacks), newer than this repository's lib/ snapshot.
+        assertEquals(releasedDartRawStrings("lib/builtin/setup/setup_scripts.dart").getValue("setupPrelude"), SetupPrelude.SETUP_PRELUDE)
         assertEquals(
             dartRawStrings("lib/builtin/setup/component_updates.dart").getValue("componentUpdatePrelude"),
             SetupPrelude.COMPONENT_UPDATE_PRELUDE,
