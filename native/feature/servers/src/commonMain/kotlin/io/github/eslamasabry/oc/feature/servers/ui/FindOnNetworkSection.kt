@@ -4,12 +4,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.servers.discovery.LanFinding
 import io.github.eslamasabry.oc.feature.servers.presentation.FindOnNetworkUi
 import io.github.eslamasabry.oc.feature.servers.presentation.FindPhase
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.*
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.row.*
@@ -50,7 +52,7 @@ internal fun FindOnNetworkSection(
                     stringResource(Res.string.upgradeFindAllow),
                     onStart,
                     role = KitButtonRole.Secondary,
-                    enabled = enabled,
+                    enabled = KitEnabled.of(enabled, stringResource(Res.string.serversWorking)),
                     fullWidth = true,
                 )
                 KitButton(
@@ -117,7 +119,7 @@ internal fun FindOnNetworkSection(
                         stringResource(Res.string.upgradeFindSearchAgain),
                         onStart,
                         role = KitButtonRole.Tertiary,
-                        enabled = enabled,
+                        enabled = KitEnabled.of(enabled, stringResource(Res.string.serversWorking)),
                         fullWidth = true,
                     )
             }
