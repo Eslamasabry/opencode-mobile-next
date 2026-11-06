@@ -42,7 +42,7 @@ public object AuroraImage {
 
     /**
      * The person's Intensity (Dart `KitLiveIntensity.strength`): Subtle .7, Normal 1, Bold 1.6
-     * (`lib/state/effects.dart`). The picture is drawn at `strength` clamped to 1, so Normal and Bold show it whole and
+     * (FG: lib/state/effects.dart:45-47). The picture is drawn at `strength` clamped to 1, so Normal and Bold show it whole and
      * Subtle lets the ground through (`kit_live_aurora_image.dart:305-312`).
      */
     public fun alphaFor(strength: Float): Float = strength.coerceIn(0f, 1f)

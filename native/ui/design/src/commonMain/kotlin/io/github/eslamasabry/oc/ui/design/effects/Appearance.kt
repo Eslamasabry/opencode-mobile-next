@@ -52,6 +52,11 @@ public data class KitAppearance(
     val liveBackground: Boolean = false,
     val liveHeldByStyle: Boolean = false,
     val liveStyle: String = "aurora",
+    /**
+     * `oc.effectsLiveIntensity` as Flutter's `KitLiveIntensity.strength`: Subtle .7, Normal 1, Bold 1.6 (FG:
+     * lib/state/effects.dart:45-47 at GLASS_REF). A style may cap it (`LivePolicy.cap`).
+     */
+    val liveStrength: Float = 1f,
 ) {
     public val saver: Boolean
         get() = mode == AppearanceMode.Saver
