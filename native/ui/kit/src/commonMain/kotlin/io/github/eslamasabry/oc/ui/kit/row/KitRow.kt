@@ -331,7 +331,8 @@ private fun RowBody(
                             supportLine?.let {
                                 KitText(
                                     " · $it",
-                                    Modifier.weight(1f, fill = false).testTag("kit-row-supporting"),
+                                    Modifier.weight(1f, fill = false).testTag("kit-row-supporting")
+                                        .kitMayTruncate("row-supporting"),
                                     role = TypeRole.Secondary,
                                     tone = TextTone.Secondary,
                                     maxLines = 1,
@@ -342,7 +343,7 @@ private fun RowBody(
                         supportLine?.let {
                             KitText(
                                 it,
-                                Modifier.testTag("kit-row-supporting"),
+                                Modifier.testTag("kit-row-supporting").kitMayTruncate("row-supporting"),
                                 role = TypeRole.Secondary,
                                 tone = TextTone.Secondary,
                                 maxLines = if (!enabled) Int.MAX_VALUE else kitRowSupportingLines(scale, supportingMaxLines),

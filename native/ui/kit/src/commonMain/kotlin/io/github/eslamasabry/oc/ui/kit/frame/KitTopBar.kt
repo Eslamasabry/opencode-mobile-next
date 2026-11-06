@@ -261,7 +261,10 @@ public fun KitTopBar(
             horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
         ) {
             if (back) ExitButton(ExitGlyph.Back, exitLabel.orEmpty(), onExit!!, -1f)
-            Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+            // No exit: the title's words start on the gutter, like the page's first row (Flutter kit_top_bar.dart,
+            // "the title starts on the gutter"); the bar's 4 dp and the title row's 8 dp leave 4 dp to add.
+            val titleStart = if (back) 0.dp else (tokens.gutter - Space.S1 - Space.S2).dp
+            Row(Modifier.weight(1f).padding(start = titleStart), verticalAlignment = Alignment.CenterVertically) {
                 if (onTitleTap != null) {
                     KitTappable(
                         onClick = onTitleTap,

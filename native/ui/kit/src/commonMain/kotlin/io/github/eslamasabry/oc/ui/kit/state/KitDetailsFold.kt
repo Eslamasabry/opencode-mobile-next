@@ -44,6 +44,7 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitInlineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
+import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.motion.KitChevron
@@ -107,6 +108,8 @@ public fun KitDetailsFold(
                 Modifier.fillMaxWidth().semantics {
                     if (open) collapse { open = false; true } else expand { open = true; true }
                 }.testTag("kit-details-toggle"),
+            // A disclosure row: its highlight may bleed (native/docs/kit/LAYOUT-RULES.md §2).
+            role = KitTappableRole.Row,
             shape = KitShapeId.Button,
         ) {
             Row(

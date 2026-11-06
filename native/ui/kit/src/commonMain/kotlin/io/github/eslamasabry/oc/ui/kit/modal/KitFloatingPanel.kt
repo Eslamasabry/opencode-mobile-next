@@ -23,6 +23,8 @@ import io.github.eslamasabry.oc.ui.kit.foundation.*
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.*
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEdge
+import io.github.eslamasabry.oc.ui.kit.foundation.kitEdge
 
 /** Flutter's widget window: a 440 dp floating card, inset on all sides, above the keyboard. */
 @Composable
@@ -61,6 +63,7 @@ public fun KitFloatingPanel(
                     onDismiss?.invoke()
                 }
                 .testTag("floating-panel-scrim")
+                .kitEdge(KitEdge.Chrome) // the scrim covers the window (native/docs/kit/LAYOUT-RULES.md §2)
         )
         Box(
             Modifier.fillMaxSize()
