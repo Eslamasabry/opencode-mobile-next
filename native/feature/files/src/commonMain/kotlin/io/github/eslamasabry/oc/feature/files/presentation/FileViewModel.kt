@@ -76,6 +76,8 @@ public enum class FileNotice {
     SaveFailed,
     Attached,
     AttachFailed,
+    /** "Added <file> to the prompt": the reference is in the draft and the person stays here. */
+    Referenced,
     PreferencesFailed,
     LinkRefused,
 }
@@ -157,6 +159,9 @@ public interface FileActions {
      * conversation.
      */
     public fun ask()
+
+    /** Add as reference: puts the file in the draft's references and stays in the viewer. */
+    public fun addReference() {}
 
     public fun attach() {}
 
@@ -606,6 +611,33 @@ public class FileViewModel(
                     attaching = false,
                     notice =
                         if (result is Outcome.Ok) FileNotice.Attached else FileNotice.AttachFailed,
+                )
+            }
+        }
+    }
+
+    override fun addReference() {
+        if (
+            local.value.phase != FilePhase.Ready ||
+                local.value.storageBlock != SharedStorageBlock.None ||
+                local.value.asking
+        )
+            return
+        val identity = connections.sourceIdentity(route.from)
+        val run = loads
+        local.update { it.copy(asking = true, notice = null) }
+        viewModelScope.launch {
+            if (!checkStorage(identity) { run == loads }) return@launch
+            if (connections.sourceIdentity(route.from) !== identity) return@launch
+            val directory = projectDirectory ?: connections.directory(route.from)
+            val result = mentions.mentionAt(route.from, local.value.path, directory, route.line)
+            if (connections.sourceIdentity(route.from) !== identity) return@launch
+            local.update {
+                it.copy(
+                    asking = false,
+                    notice =
+                        if (result is Outcome.Ok) FileNotice.Referenced
+                        else FileNotice.MentionFailed,
                 )
             }
         }

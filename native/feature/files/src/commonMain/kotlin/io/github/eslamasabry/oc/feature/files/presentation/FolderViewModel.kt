@@ -79,6 +79,8 @@ public data class FolderUi(
     val canAttach: Boolean = false,
     val attaching: Boolean = false,
     val attachNotice: FileNotice? = null,
+    /** The file just added as a reference, for the notice's words. */
+    val referencedName: String? = null,
     val storageBlock: FilesStorageBlock = FilesStorageBlock.None,
     val requestingStorage: Boolean = false,
     val confirmingStorage: Boolean = false,
@@ -137,6 +139,9 @@ public interface FolderActions {
     public fun ask() {}
 
     public fun attach() {}
+
+    /** Add as reference: the file goes to the draft and the person stays in the list. */
+    public fun addReference() {}
 
     public fun allowStorage() {}
 
@@ -476,6 +481,24 @@ public class FolderViewModel(
             if (result is Outcome.Ok) nav.openChat(route.from, focusComposer = true)
             else if (result is Outcome.Failed)
                 local.update { it.copy(actionFailure = result.failure) }
+        }
+    }
+
+    override fun addReference() {
+        val node = local.value.actionsFor ?: return
+        if (node.isDir) return
+        closeActions()
+        local.update { it.copy(attachNotice = null, referencedName = null) }
+        viewModelScope.launch {
+            val result = mentions.mention(route.from, node.path, connections.directory(route.from))
+            local.update {
+                it.copy(
+                    attachNotice =
+                        if (result is Outcome.Ok) FileNotice.Referenced
+                        else FileNotice.MentionFailed,
+                    referencedName = node.name,
+                )
+            }
         }
     }
 

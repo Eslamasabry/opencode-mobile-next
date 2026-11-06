@@ -53,7 +53,9 @@ import io.github.eslamasabry.oc.ui.words.res.chatStartEmptyFolder
 import io.github.eslamasabry.oc.ui.words.res.fileReload
 import io.github.eslamasabry.oc.ui.words.res.filesAccessNeededBody
 import io.github.eslamasabry.oc.ui.words.res.filesAccessNeededTitle
+import io.github.eslamasabry.oc.ui.words.res.filesAddReference
 import io.github.eslamasabry.oc.ui.words.res.filesAskAboutFile
+import io.github.eslamasabry.oc.ui.words.res.readerUiReferenceAdded
 import io.github.eslamasabry.oc.ui.words.res.filesAttachFailed
 import io.github.eslamasabry.oc.ui.words.res.filesAttachmentReady
 import io.github.eslamasabry.oc.ui.words.res.filesChangeAdded
@@ -274,11 +276,18 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                 if (state.attachNotice != null)
                     item("attach-notice") {
                         KitNotice(
-                            stringResource(
-                                if (state.attachNotice == FileNotice.Attached)
-                                    Res.string.filesAttachmentReady
-                                else Res.string.filesAttachFailed
-                            )
+                            when (state.attachNotice) {
+                                FileNotice.Attached ->
+                                    stringResource(Res.string.filesAttachmentReady)
+                                FileNotice.Referenced ->
+                                    stringResource(
+                                        Res.string.readerUiReferenceAdded,
+                                        state.referencedName.orEmpty(),
+                                    )
+                                FileNotice.MentionFailed ->
+                                    stringResource(Res.string.filesMentionFailed)
+                                else -> stringResource(Res.string.filesAttachFailed)
+                            }
                         )
                     }
                 if (state.preferencesFailed)
@@ -611,6 +620,13 @@ private fun EntryRow(node: FileNode, state: FolderUi, actions: FolderActions) {
                     stringResource(Res.string.filesAskAboutFile),
                     actions::ask,
                     icon = KitIcons.chat,
+                )
+            )
+            add(
+                KitMenuItem(
+                    stringResource(Res.string.filesAddReference),
+                    actions::addReference,
+                    icon = KitIcons.link,
                 )
             )
             if (state.canAttach && !state.attaching)
