@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="homeStartWaysLabel">Ways to start</string>
     <string name="homeStartOpenProject">Open a project</string>
     <string name="homeStartOpenProjectDetail">Start a new one or pick a folder</string>
     <string name="homeStartConnectDetail">Run the agent on your own computer</string>

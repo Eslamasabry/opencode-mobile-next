@@ -25,7 +25,6 @@ import io.github.eslamasabry.oc.feature.chats.presentation.HomeConnectionState
 import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceConnected
 import io.github.eslamasabry.oc.ui.words.res.phoneServerRowNotAnswering
 import io.github.eslamasabry.oc.ui.words.res.serverSwitcherOpen
-import io.github.eslamasabry.oc.ui.words.res.homeStartWaysLabel
 import io.github.eslamasabry.oc.ui.words.res.homeStartOpenProject
 import io.github.eslamasabry.oc.ui.words.res.homeStartOpenProjectDetail
 import io.github.eslamasabry.oc.ui.words.res.homeStartConnectDetail
@@ -262,7 +261,6 @@ public fun ChatsScreen(
                             title = stringResource(Res.string.chatsHomeEmptyTitle),
                             body = stringResource(Res.string.chatsHomeEmptyCalmBody),
                             icon = KitIcons.chat,
-                            waysLabel = stringResource(Res.string.homeStartWaysLabel),
                             ways = buildList {
                                 add(
                                     KitStartWay(
