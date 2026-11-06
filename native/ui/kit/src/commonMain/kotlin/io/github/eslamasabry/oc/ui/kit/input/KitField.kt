@@ -2,6 +2,8 @@ package io.github.eslamasabry.oc.ui.kit.input
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -39,11 +41,15 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.editableText
 import androidx.compose.ui.semantics.error
@@ -52,7 +58,6 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.password
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -210,18 +215,20 @@ public fun KitField(
      */
     onTextChanged: ((String) -> Unit)? = null,
     /**
-     * Multiline only: the field's height in lines, from empty to its scroll point. A message box starts at one line
-     * (QA wave 1 B6: three empty lines left the conversation no room above the keyboard).
+     * Multiline only: the field's height in lines, from empty to its scroll point. A message box
+     * starts at one line (QA wave 1 B6: three empty lines left the conversation no room above the
+     * keyboard).
      */
     multilineLines: IntRange = 3..8,
     /**
-     * QA wave 4 B6: false draws no label row above the box; the label is then the empty field's placeholder (unless
-     * [placeholder] is given) and stays the field's accessible name. For a message box that must stay one row tall.
+     * QA wave 4 B6: false draws no label row above the box; the label is then the empty field's
+     * placeholder (unless [placeholder] is given) and stays the field's accessible name. For a
+     * message box that must stay one row tall.
      */
     labelShown: Boolean = true,
     /**
-     * False draws the words only, with no fill, edge or inner padding: for a field that sits inside another part's
-     * face (the message box pill). The host draws the face and the focus cue.
+     * False draws the words only, with no fill, edge or inner padding: for a field that sits inside
+     * another part's face (the message box pill). The host draws the face and the focus cue.
      */
     framed: Boolean = true,
     /** Flutter KitField.composer: center text in the control target and omit an empty footer. */
@@ -236,7 +243,13 @@ public fun KitField(
         "KitField: a saved secret needs onReplaceSecret"
     }
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-        if (labelShown) KitText(label, role = TypeRole.Label, tone = TextTone.Secondary, kind = KitTextKind.Frame)
+        if (labelShown)
+            KitText(
+                label,
+                role = TypeRole.Label,
+                tone = TextTone.Secondary,
+                kind = KitTextKind.Frame,
+            )
         if (kind == KitFieldKind.Secret && secretPresence == SecretFieldPresence.Saved) {
             SavedSecretLine(onReplace = { onReplaceSecret?.invoke() })
         } else {
@@ -263,7 +276,10 @@ public fun KitField(
         val length = state.text.length
         val counter = KitFieldRules.showCounter(length, maxLength)
         if (!composer || checking || note != null || counter) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+            ) {
                 Box(Modifier.weight(1f)) {
                     when {
                         checking -> CheckingLine()
@@ -271,9 +287,13 @@ public fun KitField(
                             KitText(
                                 note,
                                 Modifier.semantics {
-                                    liveRegion = LiveRegionMode.Polite
-                                    if (error != null) error(error)
-                                }.then(if (disabledNote) Modifier.clearAndSetSemantics {} else Modifier),
+                                        liveRegion = LiveRegionMode.Polite
+                                        if (error != null) error(error)
+                                    }
+                                    .then(
+                                        if (disabledNote) Modifier.clearAndSetSemantics {}
+                                        else Modifier
+                                    ),
                                 role = TypeRole.Secondary,
                                 tone = if (error != null) TextTone.Primary else TextTone.Secondary,
                                 kind = KitTextKind.Frame,
@@ -282,7 +302,12 @@ public fun KitField(
                 }
                 if (counter) {
                     KitText(
-                        pluralStringResource(Res.plurals.kitFieldCount, length, Numbers.format(length), Numbers.format(maxLength ?: 0)),
+                        pluralStringResource(
+                            Res.plurals.kitFieldCount,
+                            length,
+                            Numbers.format(length),
+                            Numbers.format(maxLength ?: 0),
+                        ),
                         Modifier.semantics { liveRegion = LiveRegionMode.Polite },
                         role = TypeRole.Caption,
                         tone = TextTone.Secondary,
@@ -316,6 +341,13 @@ private fun FieldBox(
     val typography = LocalKitTypography.current
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
+    val fieldFocus = focusRequester ?: remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+    // A composer explicitly owns the IME. Showing it after the focus interaction lets the
+    // text-input session start first, including when a hardware keyboard is connected.
+    LaunchedEffect(focused, composer) {
+        if (composer && focused) keyboardController?.show()
+    }
     val on = enabled.isEnabled
     val technical =
         kind == KitFieldKind.Mono ||
@@ -328,9 +360,12 @@ private fun FieldBox(
             color = if (on) colors.text1 else colors.text3,
             textDirection = if (technical) TextDirection.Ltr else TextDirection.Content,
         )
-    val composerPadding = with(LocalDensity.current) {
-        ((tokens.minTarget.dp - style.lineHeight.toDp()) / 2).coerceAtLeast(0.dp) // F: lib/ui/kit/kit_field.dart:737
-    }
+    val composerPadding =
+        with(LocalDensity.current) {
+            ((tokens.minTarget.dp - style.lineHeight.toDp()) / 2).coerceAtLeast(
+                0.dp
+            ) // F: lib/ui/kit/kit_field.dart:737
+        }
     // Flutter's field radius is the control's (14), not the icon tile's.
     val shape = KitShapeId.Button.shape()
     val fieldLook = rememberFieldLook(colors.surface1, focused || hasError)
@@ -347,6 +382,7 @@ private fun FieldBox(
                     KeyboardCapitalization.Sentences
                 else KeyboardCapitalization.None,
             autoCorrectEnabled = kind == KitFieldKind.Text || kind == KitFieldKind.Multiline,
+            showKeyboardOnFocus = true,
             keyboardType =
                 when (kind) {
                     KitFieldKind.Url -> KeyboardType.Uri
@@ -381,21 +417,40 @@ private fun FieldBox(
         Modifier.semantics {
                 if (!on && !hasError) enabled.reason?.let { stateDescription = it }
             }
-            .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
+            .focusRequester(fieldFocus)
+            .then(
+                if (composer && on)
+                    Modifier.pointerInput(fieldFocus, keyboardController) {
+                        // Observe without consuming: selection, cursor placement and long-press
+                        // stay
+                        // with BasicTextField. A repeat tap reopens a previously dismissed
+                        // keyboard.
+                        awaitEachGesture {
+                            awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Final)
+                            fieldFocus.requestFocus()
+                            keyboardController?.show()
+                        }
+                    }
+                else Modifier
+            )
             .fillMaxWidth()
             .heightIn(min = tokens.minTarget.dp)
             .then(
                 when {
                     composer -> Modifier.padding(vertical = composerPadding)
                     !framed -> Modifier.padding(vertical = Space.S3.dp)
-                    // The style draws the field (B-KIT-043..045); Solid keeps the surface1 fill and the edge above.
+                    // The style draws the field (B-KIT-043..045); Solid keeps the surface1 fill and
+                    // the edge above.
                     fieldLook.isSolid ->
                         Modifier.clip(shape)
                             .background(colors.surface1)
                             .border(if (focused || hasError) 2.dp else 1.dp, edge, shape)
                             .padding(horizontal = Space.S3.dp, vertical = Space.S3.dp)
-                    else -> Modifier.clip(shape).then(fieldLook.look.modifier).padding(horizontal = Space.S3.dp, vertical = Space.S3.dp)
-                },
+                    else ->
+                        Modifier.clip(shape)
+                            .then(fieldLook.look.modifier)
+                            .padding(horizontal = Space.S3.dp, vertical = Space.S3.dp)
+                }
             )
     val decorator: @Composable (inner: @Composable () -> Unit) -> Unit = { inner ->
         Box(Modifier.fillMaxWidth()) {
@@ -432,8 +487,10 @@ private fun FieldBox(
                     modifier =
                         Modifier.weight(1f).testTag("kit-field-secret").semantics {
                             contentDescription = label
-                            // QA wave 4 N6: the accessibility tree gets dots, never the value (any accessibility
-                            // service could read it); the password flag makes TalkBack say "password".
+                            // QA wave 4 N6: the accessibility tree gets dots, never the value (any
+                            // accessibility
+                            // service could read it); the password flag makes TalkBack say
+                            // "password".
                             password()
                             val exposed =
                                 if (revealed) AnnotatedString(state.text.toString())
@@ -474,7 +531,8 @@ private fun FieldBox(
         if (kind == KitFieldKind.Multiline)
             TextFieldLineLimits.MultiLine(
                 minHeightInLines = multilineLines.first.coerceAtLeast(1),
-                maxHeightInLines = multilineLines.last.coerceAtLeast(multilineLines.first.coerceAtLeast(1)),
+                maxHeightInLines =
+                    multilineLines.last.coerceAtLeast(multilineLines.first.coerceAtLeast(1)),
             )
         else TextFieldLineLimits.SingleLine
     BasicTextField(
@@ -584,6 +642,14 @@ private class FieldLook(val look: KitSurfaceLook, val isSolid: Boolean)
 private fun rememberFieldLook(ownFill: Color, selected: Boolean): FieldLook {
     val style = LocalKitStyle.current
     val look =
-        kitSurfaceLook(KitSurfaceInput(SurfaceRole.Field, KitShapeId.Tile, SurfaceLevel.Surface1, ownFill = ownFill, selected = selected))
+        kitSurfaceLook(
+            KitSurfaceInput(
+                SurfaceRole.Field,
+                KitShapeId.Tile,
+                SurfaceLevel.Surface1,
+                ownFill = ownFill,
+                selected = selected,
+            )
+        )
     return FieldLook(look, style.style == Style.Solid)
 }

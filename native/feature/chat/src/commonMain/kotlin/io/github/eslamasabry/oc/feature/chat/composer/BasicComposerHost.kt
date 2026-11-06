@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.zacsweers.metro.AppScope
@@ -646,6 +647,18 @@ public fun BasicComposer(
                             // B6: one line when empty, so the conversation keeps its room above the
                             // keyboard.
                             multilineLines = 1..5,
+                            composer = true,
+                            imeAction = ImeAction.Send,
+                            onSubmit = {
+                                if (
+                                    sendReady &&
+                                        typed &&
+                                        !voiceActive &&
+                                        !state.sending &&
+                                        !waitingRequest
+                                )
+                                    send()
+                            },
                             labelShown = false,
                             framed = false,
                             focusRequester = focus,
