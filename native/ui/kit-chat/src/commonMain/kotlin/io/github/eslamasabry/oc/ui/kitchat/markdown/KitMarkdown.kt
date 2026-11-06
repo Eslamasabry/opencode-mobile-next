@@ -66,6 +66,7 @@ import io.github.eslamasabry.oc.ui.kitchat.code.CodeLanguage
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeBlock
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeKind
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
+import io.github.eslamasabry.oc.ui.kitchat.stream.caretOffset
 import io.github.eslamasabry.oc.ui.kitchat.stream.RevealRegistry
 import io.github.eslamasabry.oc.ui.kitchat.stream.drive
 import io.github.eslamasabry.oc.ui.kitchat.stream.growOnly
@@ -672,7 +673,14 @@ private fun MdText(
         if (revealing) Modifier.kitFreshFade({ holder.layout }, state) else Modifier
     if (caret) {
         val colors = LocalKitColors.current
-        textModifier = textModifier.kitStreamCaret({ holder.layout }, { visible.length }, colors)
+        // The caret stays at the end of the words that read as shown, never ahead of the fading-in ones.
+        val fading = state.takeIf { revealing }
+        textModifier =
+            textModifier.kitStreamCaret(
+                { holder.layout },
+                { fading?.caretOffset(visible) ?: visible.length },
+                colors,
+            )
     }
     val codeRuns = remember(visible) { visible.getStringAnnotations(KIT_MD_CODE_TAG, 0, visible.length) }
     if (codeRuns.isNotEmpty()) {

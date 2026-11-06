@@ -54,6 +54,23 @@ public fun Modifier.kitFreshFade(layout: () -> TextLayoutResult?, state: RevealS
     }
 
 /**
+ * Where the stream caret stands in [text] (the shown characters): after the last words that already
+ * read as shown. A word still more than half faded in is not visible yet, so the caret waits before it
+ * (and before the space ahead of it) instead of running ahead. Read in the draw phase only.
+ */
+public fun RevealState.caretOffset(text: CharSequence): Int {
+    val now = frameNanos
+    var at = text.length
+    for (r in runs) {
+        val age = ((now - r.bornNanos).toFloat() / RevealPace.FADE_NS).coerceIn(0f, 1f)
+        if (1f - EaseOutCubic.transform(age) > .5f) at = minOf(at, r.start)
+    }
+    if (at >= text.length) return text.length
+    while (at > 0 && text[at - 1].isWhitespace()) at--
+    return at
+}
+
+/**
  * Smooth growth of the live block (plan 08 §5.1 step 6; plan 09 §8.4 names `animateContentSize`, whose fallback this
  * is — 08 is more precise: growth only, a shrink is taken at once, velocity carries when the next line lands).
  * The height is clamped to the content height plus a 4 dp descender allowance; pair with clipToBounds.
