@@ -100,3 +100,95 @@ It is opt-in: the repository installs no git hook, because a hook in a
 shared `.git` (or `core.hooksPath`) would run on every agent's commits in
 every worktree. Its `--message-file` mode can back a personal commit-msg hook
 in a checkout only you use.
+
+# ARM smoke before a release (E02-S92)
+
+Two checks that cost nothing and run on real ARM hardware. Neither is part of
+CI; run them by hand on the release candidate before it ships.
+
+## Phone smoke over adb: `phone_smoke.sh`
+
+```bash
+tool/qa/phone_smoke.sh <adb-serial> build/vps-apk/app-release-<build>.apk
+```
+
+What it does, in order, printing one `PASS <check>` or `FAIL <check>: <why>` line
+per check and `RESULT: PASS|FAIL` last:
+
+| Check | How |
+|---|---|
+| `install_same_signer` | Pulls the installed `base.apk`, compares its signer SHA-256 with the APK's (`apksigner verify --print-certs`), and only when they are equal runs `adb install -r`. A different signer, or no installed app, is `REFUSED` before anything is installed. |
+| `phone_connected` | Opens the app, taps through `--phone-path` (default `Settings>Servers`) and expects the `On this phone` row to show `Connected`. |
+| `new_chat_reply_ok` | Taps through `--new-chat-path` (default `New conversation>armsmoke`), types "Reply with just the word ok" and waits for an `ok` reply. |
+| `shell_git_uname_arm` | Asks the agent to run `git --version; uname -m`; expects `git version N.N` and an ARM machine name (`aarch64`, `arm64`, `armv8l`, `armv7l`). |
+| `tar_roundtrip_tmp` | Asks the agent to `tar -czf` a file in `/tmp/armsmoke<random>`, delete it, `tar -xzf` it back and print it; expects the uppercased random token. |
+| `cleanup` | Asks the agent to `rm -rf` that `/tmp` folder (expects `REMOVED`), then deletes the scratch conversation through `--delete-path` (default `More options>Delete conversation>Delete`) and checks it is no longer listed. Runs even when an earlier check failed. |
+
+Safety rules the script enforces:
+
+- It never uninstalls, never runs `pm clear` and never captures the screen
+  (no `screencap`/`screenrecord`; owner rule: read text only). The adb wrapper
+  refuses those commands outright.
+- Every tap, text entry, swipe and key press first checks that
+  `io.github.eslamasabry.opencode_mobile` holds the foreground (both
+  `dumpsys window` focus and the dumped window's package). If something else
+  holds it, such as an incoming call or the notification shade, for 8 s, it stops
+  with `REFUSED: foreground is <package>` and exit 3 without tapping, and says
+  what to clean up by hand.
+- Nodes are found by visible text or content-desc from `uiautomator dump`;
+  coordinates are always computed from the node's bounds.
+- It prints only check names, expected tokens and short signer digests, never
+  other screen text. One run per phone at a time (a lock file in `$TMPDIR`).
+
+Exit codes: 0 all PASS, 1 a check failed, 2 refused before touching the app
+(wrong signer, app not installed, not ARM, phone not connected), 3 another app
+took the foreground.
+
+One-time setup on the phone: install the app from the same signer as the
+candidate APK (see the signer list in AGENTS.md), connect it to its own
+server so `On this phone` shows `Connected`, sign in to a model, and create a
+scratch project named `armsmoke` (any empty folder). On the computer you need
+`adb` and `apksigner` (Android build-tools) on PATH, or set `ADB=` and
+`APKSIGNER=`. If a label differs on your build, override it, for example
+`--phone-path 'Settings>Server'` or `--delete-path 'Conversation options>Delete conversation>Delete'`;
+`>` separates taps.
+
+## Firebase Test Lab on the free Spark plan: `testlab_smoke.sh`
+
+```bash
+tool/qa/testlab_smoke.sh <firebase-project-id> build/vps-apk/app-release-<build>.apk
+```
+
+Runs one Robo smoke (5 min) of the APK on 3 ARM (`arm64-v8a`) physical
+devices: the newest-API models in the Test Lab catalog, or exactly three from
+`TESTLAB_DEVICES='model=a15,version=35 model=e3q,version=34 model=oriole,version=33'`.
+It fails closed:
+
+- it reads the project's billing state with `gcloud billing projects describe`
+  and refuses (`REFUSED: ...`, exit 2, nothing uploaded) when a billing
+  account is attached or billing is enabled, which is the Blaze plan and could
+  be charged. It also refuses when the billing state cannot be read;
+- Spark allows 5 physical-device tests per day, and one run uses 3. The script
+  counts today's runs from this machine in `build/testlab/` and, when another run
+  would go over, prints `NOT RUN: free quota used` and exits 0. When Test Lab
+  itself answers with a quota error it prints the same marker and exits 0;
+- the last line is always one of `TESTLAB: PASS`, `TESTLAB: FAIL (...)` (exit 1),
+  `REFUSED: ...` (exit 2) or `NOT RUN: free quota used (...)` (exit 0).
+  `TESTLAB_DRY_RUN=1` prints the `gcloud` command instead of running it.
+
+One-time setup the owner does (the script creates no projects or accounts):
+
+1. In the Firebase console, create a project and leave it on the free **Spark**
+   plan. Do not add a billing account. Note its project id.
+2. Install the Google Cloud CLI, then `gcloud auth login` with the same Google
+   account.
+3. Enable the APIs Test Lab and the plan check need, all free on Spark:
+   `gcloud services enable testing.googleapis.com toolresults.googleapis.com cloudbilling.googleapis.com --project <id>`.
+4. Dry-run once: `TESTLAB_DRY_RUN=1 tool/qa/testlab_smoke.sh <id> <apk>`.
+
+The APK is uploaded to Google's Test Lab for the run, and Robo takes its own
+screenshots on Google's devices; that is the point of this check, so run it
+only on a build the owner has agreed to upload.
+
+Tests for both scripts' refusal paths use fake `adb`, `apksigner` and `gcloud`:
+`python3 -m unittest tool.qa.test_phone_smoke tool.qa.test_testlab_smoke`.
