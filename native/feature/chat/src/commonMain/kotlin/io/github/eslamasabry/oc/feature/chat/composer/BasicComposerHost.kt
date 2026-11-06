@@ -576,6 +576,8 @@ public fun BasicComposer(
                                 KitTrayKind.Schedule,
                             ) {
                                 addOpen = false
+                                // N-44: the keyboard goes first, so the sheet's wheel is never under its button.
+                                focusManager.clearFocus()
                                 later(words)
                             }
                         )
@@ -834,7 +836,11 @@ public fun BasicComposer(
                                     chrome.sendLater
                                         ?.takeIf { typed && sendReady }
                                         ?.let { later ->
-                                            { later(field.text.toString()) }
+                                            {
+                                                // N-44: the keyboard goes first (the wheel stays in sight).
+                                                focusManager.clearFocus()
+                                                later(field.text.toString())
+                                            }
                                         },
                                 onLongClickLabel = stringResource(Res.string.tipSendLaterTitle),
                                 modifier = Modifier.testTag("chat-send-button"),

@@ -44,9 +44,16 @@ internal fun lastLine(last: LastRunUi, nowMs: Long, words: ScheduleWords): Strin
 }
 
 /** "Today 09:00", "Tomorrow 07:30", "Fri 18:00" within a week, else the date. Device time zone unless [zoneId]. */
-internal fun moment(ms: Long, nowMs: Long, words: ScheduleWords, zoneId: String? = null): String {
+internal fun moment(
+    ms: Long,
+    nowMs: Long,
+    words: ScheduleWords,
+    zoneId: String? = null,
+    /** N-44: the clock as the screen's own time wheel writes it ("9:00 AM"), so the two never disagree. */
+    clockWords: String? = null,
+): String {
     val at = ScheduleTime.moment(ms, nowMs, zoneId)
-    val clock = "${at.hour.toString().padStart(2, '0')}:${at.minute.toString().padStart(2, '0')}"
+    val clock = clockWords ?: "${at.hour.toString().padStart(2, '0')}:${at.minute.toString().padStart(2, '0')}"
     val day =
         when (at.dayOffset) {
             0L -> words.today

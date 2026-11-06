@@ -391,7 +391,15 @@ private fun scheduleActionLabel(fields: EditorFields, nowMs: Long, words: Schedu
                     time.first,
                     time.second,
                 )
-                ?.let { moment(it, nowMs, words) } ?: return words.save
+                ?.let { at ->
+                    // The wheel's own clock words (it formats a time of day the same way).
+                    val wheelClock =
+                        LocalKitPlatform.current.messageTime(
+                            io.github.eslamasabry.oc.engine.schedules.ScheduleTime.todayAt(nowMs, time.first, time.second),
+                            nowMs,
+                        )
+                    moment(at, nowMs, words, clockWords = wheelClock)
+                } ?: return words.save
         } else clock
     return stringResource(Res.string.scheduleActionWhen, whenText)
 }
