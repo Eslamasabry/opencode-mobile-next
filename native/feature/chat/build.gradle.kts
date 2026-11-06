@@ -7,7 +7,6 @@ plugins { id("oc.kmp.feature") }
 kotlin {
     sourceSets.getByName("desktopTest").dependencies {
         implementation(libs.compose.desktop.currentos)
-        implementation(project(":ui:gate"))
     }
     sourceSets.commonMain.dependencies {
         implementation(project(":engine:settings"))

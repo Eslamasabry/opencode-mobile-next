@@ -21,13 +21,3 @@ kotlin {
     }
 }
 
-// Order 49's golden cases render the real hub and account surfaces with immutable fixture state.
-kotlin.sourceSets.getByName("desktopTest") {
-    kotlin.srcDir("../../ui/gate/src/desktopMain/kotlin")
-    resources.srcDir("../../ui/gate/src/desktopMain/resources")
-    dependencies { implementation(libs.compose.desktop.currentos) }
-}
-tasks.withType<Test>().matching { it.name == "desktopTest" }.configureEach {
-    outputs.upToDateWhen { false }
-    outputs.cacheIf { false }
-}
