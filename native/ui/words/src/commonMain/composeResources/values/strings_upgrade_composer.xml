@@ -2,5 +2,6 @@
     <string name="upgradeComposerAsk">Ask %1$s…</string>
     <string name="upgradeComposerFree"> · Free</string>
     <string name="upgradeComposerVoiceHoldTitle">Talk with the agent</string>
-    <string name="upgradeComposerVoiceHold">Hold the mic for a voice conversation, or open + and choose Voice conversation.</string>
+    <string name="upgradeComposerVoiceHold">Hold the mic and talk; let go to put your words in the box. For a voice conversation, open + and choose Voice conversation.</string>
+    <string name="upgradeComposerHoldDictate">Hold to dictate</string>
 </resources>
