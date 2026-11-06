@@ -6,6 +6,8 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.domain.*
 import io.github.eslamasabry.oc.feature.agents.tools.presentation.*
@@ -15,6 +17,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.*
 import io.github.eslamasabry.oc.ui.kit.input.*
 import io.github.eslamasabry.oc.ui.kit.row.*
 import io.github.eslamasabry.oc.ui.kit.state.*
+import io.github.eslamasabry.oc.ui.kit.text.KitRedact
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
@@ -88,6 +91,22 @@ public fun ToolsScreen(state: ToolsUi, actions: ToolsActions) {
                         val parameters = toolParameters(tool.parameters)
                         if (parameters.isEmpty())
                             KitRow(stringResource(Res.string.nativeToolsNoParameters))
+                        tool.parameters?.let { schema ->
+                            var copied by remember(tool.id) { mutableStateOf(false) }
+                            @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
+                            KitButton(
+                                stringResource(Res.string.e7LibraryCopyParameterSchema),
+                                {
+                                    clipboard.setText(
+                                        AnnotatedString(KitRedact.text(schema.toString()))
+                                    )
+                                    copied = true
+                                },
+                                role = KitButtonRole.Secondary,
+                                modifier = gutter,
+                            )
+                            if (copied) KitNotice(stringResource(Res.string.kitCopied))
+                        }
                         for (parameter in parameters) KitRow(
                             title = parameter.name,
                             supporting =
