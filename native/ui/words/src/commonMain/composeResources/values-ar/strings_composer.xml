@@ -252,7 +252,7 @@
     <string name="voiceAutoSetupDownloadMobile">تنزيل %1$s عبر بيانات الهاتف</string>
     <string name="voiceDownloadNetworkUnknown">لا يستطيع هذا الهاتف معرفة ما إذا كان هذا الاتصال يُحتسب من باقة بيانات.</string>
     <string name="voiceDownloadStarting">جارٍ بدء التنزيل</string>
-    <string name="voiceDownloadProgressPercent">%1$s من %2$s · %3$d%%</string>
+    <string name="voiceDownloadProgressPercent">%1$s من %2$s · %3$d٪</string>
     <string name="naturalVoiceDownloadTitle">تنزيل الصوت الطبيعي؟</string>
     <string name="voiceDownloadPackTitle">تنزيل %1$s؟</string>
     <string name="voiceDownloadStopped">توقّف التنزيل</string>

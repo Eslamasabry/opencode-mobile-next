@@ -276,7 +276,8 @@ private fun <T> StackedSegments(segments: List<KitSegment<T>>, selected: T, enab
     val panel = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Content, KitShapeId.Panel, SurfaceLevel.Surface1, ownFill = colors.surface1))
     Column(Modifier.fillMaxWidth().clip(panel.shape).then(panel.modifier).selectableGroup()) {
         segments.forEachIndexed { i, s ->
-            val segEnabled = if (!enabled.isEnabled) enabled else s.enabled
+            // The whole control's reason shows once under the stack, never on every row.
+            val segEnabled = if (!enabled.isEnabled) KitEnabled.Disabled("") else s.enabled
             if (i > 0) {
                 Box(
                     Modifier.padding(start = (tokens.gutter + tokens.smallIcon + Space.S3).dp)

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -158,9 +159,14 @@ public fun VoiceSettingsScreen(state: VoiceSettingsUi, actions: VoiceSettingsPre
         // One rail: rows and groups bring their own 16 dp gutter, so the column adds none and every other part pads
         // itself by the same gutter (owner 2026-11-07: the cards sat a second gutter further in than the labels).
         val gutter = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
+        val scroll = rememberScrollState()
+        // A download started from the pinned button, or a problem that just arrived, shows at the top: bring it
+        // into view instead of leaving the person scrolled down among locked choices.
+        val headline = state.busy || state.problem != null
+        LaunchedEffect(headline) { if (headline) scroll.animateScrollTo(0) }
         Column(
             Modifier.fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scroll)
                 .padding(top = Space.S2.dp, bottom = Space.S6.dp)
                 .testTag("voice-settings-list")
         ) {
@@ -365,7 +371,12 @@ private fun DownloadProgress(state: VoiceSettingsUi, actions: VoiceSettingsPrese
 
 @Composable
 private fun Models(state: VoiceSettingsUi, actions: VoiceSettingsPresenter) {
-    KitRowGroup(label = stringResource(Res.string.voiceSetupModelLabel), section = true) {
+    // While a download runs the models are locked for one reason, said once under the list.
+    KitRowGroup(
+        label = stringResource(Res.string.voiceSetupModelLabel),
+        note = if (state.busy) stringResource(Res.string.voiceSetupBusyChoice) else null,
+        section = true,
+    ) {
         KitChoiceList(
             choices = state.packs.map { row -> packChoice(row, state.busy) },
             selected = state.selected,
@@ -425,7 +436,7 @@ private fun packChoice(
         enabled =
             when {
                 row.unsupported -> KitEnabled.Disabled(unsupportedReason(row))
-                busy -> KitEnabled.Disabled(stringResource(Res.string.voiceSetupBusyChoice))
+                busy -> KitEnabled.Disabled("") // the group's note says why
                 else -> KitEnabled.Enabled
             },
     )
@@ -436,13 +447,21 @@ private fun unsupportedReason(row: PackRowUi): String {
     val problem =
         (row.status as? PackStatus.Unsupported)?.problem
             ?: return stringResource(Res.string.voiceInputUnavailable)
+    // Too little memory is a fact about this phone, not a failed download: say what it needs and what it has.
+    val phone = row.phoneRamMb
+    if (problem == io.github.eslamasabry.oc.core.common.MediaProblem.PackMemoryTooSmall && phone != null)
+        return stringResource(Res.string.voiceAutoSetupDetailMemoryValue, row.needsRamMb.toInt(), phone.toInt())
     return problemWords(problem)
 }
 
 @Composable
 private fun ReadAloudVoice(state: VoiceSettingsUi, actions: VoiceSettingsPresenter) {
     val natural = state.natural ?: return
-    KitRowGroup(label = stringResource(Res.string.readAloudVoiceTitle), section = true) {
+    KitRowGroup(
+        label = stringResource(Res.string.readAloudVoiceTitle),
+        note = if (state.busy && natural.available) stringResource(Res.string.voiceSetupBusyChoice) else null,
+        section = true,
+    ) {
         KitChoiceList(
             choices =
                 listOf(
@@ -467,10 +486,7 @@ private fun ReadAloudVoice(state: VoiceSettingsUi, actions: VoiceSettingsPresent
                                     KitEnabled.Disabled(
                                         stringResource(Res.string.voiceNativeNaturalNeedsEngine)
                                     )
-                                state.busy ->
-                                    KitEnabled.Disabled(
-                                        stringResource(Res.string.voiceSetupBusyChoice)
-                                    )
+                                state.busy -> KitEnabled.Disabled("") // the group's note says why
                                 else -> KitEnabled.Enabled
                             },
                     ),

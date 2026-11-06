@@ -240,7 +240,7 @@
     <string name="voiceAutoSetupDownloadMobile">Download %1$s on mobile data</string>
     <string name="voiceDownloadNetworkUnknown">This phone can't tell whether this connection costs data.</string>
     <string name="voiceDownloadStarting">Starting the download</string>
-    <string name="voiceDownloadProgressPercent">%1$s of %2$s · %3$d%%</string>
+    <string name="voiceDownloadProgressPercent">%1$s of %2$s · %3$d%</string>
     <string name="naturalVoiceDownloadTitle">Download the natural voice?</string>
     <string name="voiceDownloadPackTitle">Download %1$s?</string>
     <string name="voiceDownloadStopped">The download stopped</string>

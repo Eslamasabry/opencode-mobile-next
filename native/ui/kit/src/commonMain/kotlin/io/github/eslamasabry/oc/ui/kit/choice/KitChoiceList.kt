@@ -240,7 +240,9 @@ public fun KitChoiceRow(
                 role = TypeRole.RowTitle,
                 tone = if (on) TextTone.Primary else TextTone.Tertiary,
             )
-            val line = enabled.reason ?: supporting
+            // A blank reason means the group states it once (KitSegmented's stack, a list locked by one cause):
+            // the row keeps its own line instead of repeating the reason.
+            val line = enabled.reason?.takeIf { it.isNotBlank() } ?: supporting
             line?.let {
                 KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = 3)
             }

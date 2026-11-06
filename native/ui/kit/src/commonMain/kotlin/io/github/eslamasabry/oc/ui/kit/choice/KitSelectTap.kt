@@ -52,7 +52,7 @@ internal fun Modifier.kitSelectTap(
     val base =
         this.sizeIn(minWidth = tokens.minTarget.dp, minHeight = tokens.minTarget.dp)
             .clip(shape.shape())
-            .semantics { enabled.reason?.let { stateDescription = it } }
+            .semantics { enabled.reason?.takeIf { it.isNotBlank() }?.let { stateDescription = it } }
     return if (role == Role.Checkbox || role == Role.Switch) {
         base.toggleable(
             value = selected,
