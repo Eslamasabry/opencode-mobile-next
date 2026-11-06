@@ -71,7 +71,7 @@ class ScheduleWordsTest {
     @Test
     fun `editor rules turn typed fields into a recurrence or one plain issue`() {
         val utc = "UTC"
-        val base = EditorFields(prompt = "Hi", project = "/w", time = "9:05")
+        val base = EditorFields(prompt = "Hi", project = "/w", kind = RecurrenceKind.Daily, time = "9:05") // the editor itself starts on Once
         assertEquals(Recurrence.daily(9, 5), EditorRules.recurrence(base, t0, utc).first)
         assertEquals(EditIssue.ProjectRequired, EditorRules.recurrence(base.copy(project = ""), t0, utc).second)
         assertEquals(EditIssue.TimeInvalid, EditorRules.recurrence(base.copy(time = "25:00"), t0, utc).second)

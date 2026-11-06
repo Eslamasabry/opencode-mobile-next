@@ -182,7 +182,8 @@ class DevServicesModelTest {
         runCurrent()
         page.logs(id)
         runCurrent()
-        assertEquals("ready on http://localhost:5173\n", page.state.value.services.single().log)
+        // AGENT-2: a service run in a server shell opens that shell's live output (colour codes stripped for display).
+        assertEquals("ready on http://localhost:5173", page.state.value.output?.displayText?.trimEnd())
     }
 
     @Test

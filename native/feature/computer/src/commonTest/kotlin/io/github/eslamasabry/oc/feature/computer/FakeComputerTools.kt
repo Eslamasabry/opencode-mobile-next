@@ -28,6 +28,8 @@ class FakeComputerTools : ComputerTools {
     override suspend fun update(profile: ProfileId, onStep: (UpdateStep) -> Unit): Outcome<UpdateAnswer> {
         calls += "update"
         steps.forEach { seenSteps += it; onStep(it) }
+        // After a finished update the restarted helper reports its new version.
+        (updateAnswer as? Outcome.Ok)?.value?.let { if (it is UpdateAnswer.Done) versionAnswer = Outcome.Ok(it.version) }
         return updateAnswer
     }
 

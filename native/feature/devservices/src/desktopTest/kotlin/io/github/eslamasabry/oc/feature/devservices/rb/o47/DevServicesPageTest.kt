@@ -86,7 +86,7 @@ class DevServicesPageTest {
         onNodeWithContentDescription("More · Shopfront preview").performClick()
         onNodeWithText("Restart").assertExists()
         onNodeWithText("Copy command").assertExists()
-        onNodeWithText("Remove").performClick()
+        onNodeWithText("Remove configuration").performClick() // Flutter servicesRemove
         assertEquals(listOf<Pair<String, List<Any?>>>("askRemove" to listOf("preview")), calls)
     }
 

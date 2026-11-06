@@ -12,7 +12,6 @@ import io.github.eslamasabry.oc.engine.schedules.RecurrenceKind
 import io.github.eslamasabry.oc.engine.schedules.RunReport
 import io.github.eslamasabry.oc.engine.schedules.ScheduleAlarms
 import io.github.eslamasabry.oc.engine.schedules.ScheduleBackend
-import io.github.eslamasabry.oc.engine.schedules.ScheduleCode
 import io.github.eslamasabry.oc.engine.schedules.ScheduleConnection
 import io.github.eslamasabry.oc.engine.schedules.ScheduleEngine
 import io.github.eslamasabry.oc.engine.schedules.ScheduleNotices
@@ -157,7 +156,12 @@ class SchedulesViewModelTest {
     private fun editor(route: SchedulesRoute.Edit = SchedulesRoute.Edit(pid)) = ScheduleEditViewModel(route, engine, servers, nav, clock)
 
     private fun daily(prompt: String = "Check the nightly build") =
-        io.github.eslamasabry.oc.feature.schedules.presentation.EditorFields(prompt = prompt, project = "/work/app", time = "09:00")
+        io.github.eslamasabry.oc.feature.schedules.presentation.EditorFields(
+            prompt = prompt,
+            project = "/work/app",
+            kind = RecurrenceKind.Daily, // the editor itself starts on Once (Flutter schedule_sheet.dart)
+            time = "09:00",
+        )
 
     @Test
     fun `SCREENS-NAV-98 an empty server offers one way to make a scheduled prompt`() = runTest {
@@ -277,8 +281,12 @@ class SchedulesViewModelTest {
         assertEquals(EditIssue.PromptRequired, edit.state.value.issue)
         edit.save(daily().copy(time = "9h"))
         assertEquals(EditIssue.TimeInvalid, edit.state.value.issue)
-        edit.save(daily().copy(kind = RecurrenceKind.Once, date = "2026-11-01"))
-        assertEquals(ScheduleCode.ScheduleExpired, edit.state.value.error)
+        // A once time already past is caught before the engine, as Flutter's schedule_sheet.dart `save` does.
+        val past = daily().copy(kind = RecurrenceKind.Once, date = "2026-11-01")
+        edit.edited(past)
+        edit.save(past)
+        assertEquals(EditIssue.FutureRequired, edit.state.value.issue)
+        assertNull(edit.state.value.error)
         assertEquals("2026-11-01", edit.state.value.fields.date)
         assertEquals(0, nav.backs)
         assertNull(alarms.armed["p1"]?.firstOrNull())

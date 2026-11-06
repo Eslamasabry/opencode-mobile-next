@@ -8,6 +8,7 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FolderProblem
@@ -282,6 +283,8 @@ private fun PathDialog(state: ProjectsPickerUi, actions: ProjectsPickerActions) 
             helper = stringResource(Res.string.projectFolderOpenMessage),
             error = if (submitted) problem else null,
             modifier = Modifier.testTag("open-folder-path"),
+            // The keyboard's action key opens the folder, like the sheet's Open (Flutter onSubmitted).
+            imeAction = ImeAction.Done,
             onTextChanged = { submitted = false },
             onSubmit = ::submit,
         )

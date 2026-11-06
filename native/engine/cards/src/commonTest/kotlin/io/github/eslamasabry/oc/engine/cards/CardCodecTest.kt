@@ -53,7 +53,7 @@ class CardCodecTest {
                 part(status = ToolStatus.Pending),
                 part(status = ToolStatus.Running),
                 part(status = ToolStatus.Error),
-                part(executed = false),
+                part(status = ToolStatus.Running, executed = false),
                 part(synthetic = true),
                 part(call = ""),
                 part(message = "other"),
@@ -62,6 +62,9 @@ class CardCodecTest {
         for (p in refused) assertNull(CardCodec.fromPart(p, scope, "session", "assistant"), p.toString())
         assertIs<CardParse.Parsed>(CardCodec.fromPart(part(name = "mcp__oc-ui__show"), scope, "session", "assistant"))
         assertIs<CardParse.Parsed>(CardCodec.fromPart(part(), scope, "session", "assistant"))
+        // The outcome wins over a beta `executed:false` stamp (Flutter models_messages.dart `_toolRan`, trap T2):
+        // a completed call ran, so it is admitted like any other.
+        assertIs<CardParse.Parsed>(CardCodec.fromPart(part(executed = false), scope, "session", "assistant"))
     }
 
     @Test

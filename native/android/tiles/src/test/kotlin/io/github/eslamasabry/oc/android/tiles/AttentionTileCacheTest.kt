@@ -49,10 +49,11 @@ class AttentionTileCacheTest {
     }
 
     @Test
-    fun `B-ANDR-010 a confirmed unchanged count is restamped before it can go stale`() {
+    fun `B-ANDR-010 a confirmed unchanged count is not rewritten, however much later`() {
+        // Flutter attention_tile_snapshot.dart `update`: writes only when the count or profile changed; no restamp.
         AttentionTileCache.write(context, 1, "p1", now)
-        assertTrue(AttentionTileCache.write(context, 1, "p1", now + AttentionTileCache.RESTAMP_AFTER_MS))
-        assertEquals(now + AttentionTileCache.RESTAMP_AFTER_MS, JSONObject(stored()!!).getLong("updatedAt"))
+        assertFalse(AttentionTileCache.write(context, 1, "p1", now + AttentionTileCache.RESTAMP_AFTER_MS))
+        assertEquals(now, JSONObject(stored()!!).getLong("updatedAt"))
     }
 
     @Test

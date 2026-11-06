@@ -4,11 +4,13 @@ package io.github.eslamasabry.oc.feature.devservices
 
 import androidx.compose.foundation.Indication
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
+import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.runtime.services.commands.DevelopmentServiceStatus
 import io.github.eslamasabry.oc.feature.devservices.presentation.DevServicesActions
 import io.github.eslamasabry.oc.feature.devservices.presentation.DevServicesUi
@@ -22,6 +24,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitFillIndication
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatformFamily
 import io.github.eslamasabry.oc.ui.kit.platform.KitSystemSignals
+import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -42,8 +45,12 @@ class DevServicesScreenTest {
         override fun frostEffect(spec: FrostSpec, density: Float): RenderEffect? = null
     }
 
+    // Window roots provide the graph's redactor (0d38a8abc); mono command text never draws without one.
     @Composable
-    private fun Themed(content: @Composable () -> Unit) = KitTheme(platform = TestPlatform, localeTag = "en", stillFrame = true, content = content)
+    private fun Themed(content: @Composable () -> Unit) =
+        CompositionLocalProvider(LocalKitRedactor provides Redactor()) {
+            KitTheme(platform = TestPlatform, localeTag = "en", stillFrame = true, content = content)
+        }
 
     private class Calls : DevServicesActions {
         val seen = mutableListOf<String>()

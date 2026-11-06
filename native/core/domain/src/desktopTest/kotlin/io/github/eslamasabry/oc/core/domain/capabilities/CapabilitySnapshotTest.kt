@@ -21,13 +21,22 @@ class CapabilitySnapshotTest {
         return Json.parseToJsonElement(text).jsonObject.entries.map { (k, v) -> k to v.jsonPrimitive.boolean }
     }
 
+    /**
+     * Native-only flags, appended after Dart's 86 (N-41 `projectFolderCreation`; Paseo agent features; the
+     * project worktree inspection pane). Dart has no twin for them; each defaults to false.
+     */
+    private val nativeOnly = listOf("projectFolderCreation", "agentFeatures", "worktreeInspection")
+
     @Test
     fun `capability snapshot - every Kotlin default equals the Dart vector file, in Dart order`() {
-        val kotlin = ServerCapabilities.Unknown.flags().entries.map { it.key to it.value }
+        // Dart's `const ServerCapabilities()` defaults are the constructor defaults, not the native-only Unknown.
+        val kotlin = ServerCapabilities().flags().entries.map { it.key to it.value }
         val dart = snapshot()
-        assertEquals(dart.map { it.first }, kotlin.map { it.first }, "flag names or order differ")
-        assertEquals(dart, kotlin)
-        assertEquals(86, kotlin.size)
+        assertEquals(86, dart.size)
+        val shared = kotlin.take(dart.size)
+        assertEquals(dart.map { it.first }, shared.map { it.first }, "flag names or order differ")
+        assertEquals(dart, shared)
+        assertEquals(nativeOnly.map { it to false }, kotlin.drop(dart.size), "native-only flags differ")
     }
 
     @Test
@@ -46,6 +55,6 @@ class CapabilitySnapshotTest {
     fun `flags() is the serial form, so names cannot drift from the properties`() {
         val encoded = Json { encodeDefaults = true }.encodeToJsonElement(ServerCapabilities.serializer(), ServerCapabilities()) as JsonObject
         assertEquals(encoded.keys.toList(), ServerCapabilities.Unknown.flags().keys.toList())
-        assertTrue(ServerCapabilities.Unknown.flags().getValue("promptAttachments"))
+        assertTrue(ServerCapabilities().flags().getValue("promptAttachments"))
     }
 }

@@ -151,7 +151,8 @@ class UsageScreenTest {
             val actions = Actions()
             setContent { Screen(ready(), actions) }
             onNodeWithText("Usage and cost").assertExists()
-            onNodeWithText("Estimated cost").assertExists()
+            // The total is labelled with the range it covers (Flutter usageSpentThirtyDays; 30 days is the default).
+            onNodeWithText("Spent in the last 30 days").assertExists()
             assertTrue(onAllNodesWithText("$4.50").fetchSemanticsNodes().isNotEmpty())
             onNodeWithText("Timezone: UTC").assertExists()
             onNodeWithText("All projects").assertExists()
@@ -187,6 +188,6 @@ class UsageScreenTest {
     fun `B-L10N-010 the usage screen reads in Arabic`() = runComposeUiTest {
         Locale.setDefault(Locale.forLanguageTag("ar"))
         setContent { Screen(ready(), Actions(), "ar") }
-        onNodeWithText("التكلفة التقديرية").assertExists()
+        onNodeWithText("إنفاق آخر 30 يومًا").assertExists()
     }
 }

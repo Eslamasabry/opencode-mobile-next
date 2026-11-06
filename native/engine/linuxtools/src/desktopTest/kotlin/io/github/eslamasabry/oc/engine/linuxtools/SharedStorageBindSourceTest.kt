@@ -17,12 +17,20 @@ class SharedStorageBindSourceTest {
         assertTrue(linux.contains("--bind=/storage\""))
         assertTrue(linux.contains(":/sdcard\""))
         assertTrue(Regex("""sharedStorageBinds\(\)\s*\+\s*fakeProcBinds""").containsMatchIn(linux))
-        // Confined (AI Team on): only the folders the person opened, bound and allowed by exact path.
+        // Confined (AI Team on): only the folders the person opened (plus the app's Download/OpenCode outbox), bound and
+        // allowed by exact path. Whole storage needs the person's broad-access choice, and never under AI Team.
         assertTrue(linux.contains("object SharedStorageBinds"))
-        assertTrue(linux.contains("SharedStorageBinds.binds(sharedProjectRoots(), prootIsConfined)"))
+        assertTrue(
+            Regex("""SharedStorageBinds\.binds\(\s*sharedStorageRootsForLaunch\(\),\s*confined = !sharedStorageBroadAccess\(\),?\s*\)""")
+                .containsMatchIn(linux),
+        )
+        assertTrue(Regex("""fun sharedStorageBroadAccess\(\): Boolean =\s*!prootIsConfined &&""").containsMatchIn(linux))
+        val launchRoots = linux.substring(linux.indexOf("private fun sharedStorageRootsForLaunch"), linux.indexOf("private fun sharedStorageBinds"))
+        assertTrue(launchRoots.contains("sharedProjectRoots()"))
+        assertFalse(launchRoots.contains("\"/storage\""))
         val protectedBody =
             linux.substring(linux.indexOf("private fun protectedCommand"), linux.indexOf("private fun requirePhoneBoundaryKernel"))
-        assertTrue(protectedBody.contains("sharedProjectRoots()"))
+        assertTrue(protectedBody.contains("sharedStorageRootsForLaunch()"))
         assertFalse(protectedBody.contains("\"/storage\""))
         assertFalse(protectedBody.contains("sdcard"))
     }

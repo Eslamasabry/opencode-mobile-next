@@ -29,8 +29,9 @@ class CapabilitiesTest {
 
     @Test
     fun `a flag looks up by its FeatureId name`() {
-        assertEquals(true, ServerCapabilities.Unknown.flag("sessionFork"))
-        assertEquals(false, ServerCapabilities.Unknown.flag("forms"))
+        assertEquals(true, ServerCapabilities().flag("sessionFork"))
+        assertEquals(false, ServerCapabilities.Unknown.flag("sessionFork"))
+        assertEquals(false, ServerCapabilities().flag("forms"))
         assertEquals(null, ServerCapabilities.Unknown.flag("noSuchFlag"))
     }
 }

@@ -9,6 +9,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -125,7 +126,7 @@ class SearchScreenTest {
         setContent { Screen(SearchUi(servers = servers, server = home, recent = persistentListOf("deploy")), actions) }
         assertTrue(onAllNodesWithText("Search conversations").fetchSemanticsNodes().isNotEmpty())
         onNodeWithText("Recent searches").assertExists()
-        onNodeWithText("deploy").assertExists()
+        onNodeWithContentDescription("deploy").assertExists() // the kit chip speaks its label as one node
         onNodeWithText("Also search inside recent conversations").assertExists()
         onNodeWithText("Clear recent searches").performClick()
         assertEquals(listOf("clear"), actions.calls)
