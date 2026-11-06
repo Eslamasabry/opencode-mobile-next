@@ -78,6 +78,9 @@ class SettingsPrivacy(
         val bytes =
             (queue.version() as? PrefValue.Str)?.value?.encodeToByteArray()?.size?.toLong() ?: 0
         val profiles = stores.profiles.profiles.value.map { it.id }.toImmutableList()
+        // N-48: the ones Clear queued prompts would keep for review (dispatched or bound to a receipt).
+        val protectedIds = (guard() as? Outcome.Ok)?.value?.receiptIds.orEmpty()
+        val held = q?.entries?.count { it.dispatched || it.id in protectedIds } ?: 0
         var shared = 0
         for (id in profiles) if (consent.snapshot(id).enabled) shared++
         mutable.value =
@@ -85,6 +88,7 @@ class SettingsPrivacy(
                 q?.entries?.size ?: 0,
                 bytes,
                 q != null,
+                held,
                 d?.count ?: 0,
                 d?.bytes ?: 0,
                 d?.readable == true,
