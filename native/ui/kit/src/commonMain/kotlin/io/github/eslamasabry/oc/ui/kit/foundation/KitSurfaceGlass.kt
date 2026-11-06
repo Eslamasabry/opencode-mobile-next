@@ -40,8 +40,10 @@ import androidx.compose.ui.node.invalidateDraw
 import androidx.compose.ui.node.requireGraphicsContext
 import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.toIntSize
 import io.github.eslamasabry.oc.ui.design.color.Argb
 import io.github.eslamasabry.oc.ui.design.effects.FrostSpec
 import io.github.eslamasabry.oc.ui.design.style.Style
@@ -245,6 +247,17 @@ internal fun Modifier.kitGlassFace(d: SurfaceDecoration): Modifier =
         }
     }
 
+/**
+ * Records [block] into [layer] in the layer's own draw scope, with a snapshot of this scope's density, direction and
+ * size. The `DrawScope.record { }` shorthand instead re-enters the node's own (shared) draw scope with that very scope
+ * as its density, so the scope's density points back at itself and any `toPx()` in [block] recurses until the stack
+ * overflows (N-29: Settings > Appearance > Style). Nothing recorded here can reach the scope recording it.
+ */
+private fun DrawScope.recordDetached(layer: GraphicsLayer, block: DrawScope.() -> Unit) {
+    val snapshot = Density(density, fontScale)
+    layer.record(snapshot, layoutDirection, size.toIntSize(), block)
+}
+
 /** Shared by both Glass nodes: the nearest one up the tree tells a pane whether it is nested. */
 private object GlassTraverseKey
 
@@ -286,7 +299,9 @@ private class BackdropSourceNode(
     override fun ContentDrawScope.draw() {
         val layer = own ?: requireGraphicsContext().createGraphicsLayer().also { own = it }
         backdrop.layer = layer
-        layer.record { paint() }
+        // Recorded in the layer's own scope, never through this node's: the picture cannot draw into, or ask for its
+        // density from, the scope that is drawing it (N-29, a sample's paint reading toPx() recursed for ever).
+        recordDetached(layer, paint)
         drawLayer(layer)
         drawContent()
     }
@@ -357,7 +372,7 @@ private class GlassFrostNode(
                 val layer = blur ?: requireGraphicsContext().createGraphicsLayer().also { blur = it }
                 layer.renderEffect = fx
                 val shift = bd.origin - c.positionInRoot()
-                layer.record { translate(shift.x, shift.y) { drawLayer(picture) } }
+                recordDetached(layer) { translate(shift.x, shift.y) { drawLayer(picture) } }
                 clipPath(Path().apply { addOutline(outline) }) { drawLayer(layer) }
             } else {
                 drawOutline(outline, ground)
