@@ -455,7 +455,33 @@ private fun Panes(
     }
 }
 
-/** The overlaid bar's or bottom block's ground: frost through [frost] when given, else the page's own ground. */
+/**
+ * The overlaid bar's or bottom block's ground: frost through [frost] when given, else the page's own ground. Above the
+ * bottom block the body fades into that ground over 16 dp, so a line scrolling under it is never cut in half.
+ */
 @Composable
-private fun Modifier.kitChromeGround(role: FrostRole, frost: KitFrostState?): Modifier =
-    if (frost != null) kitFrost(role, frost) else background(LocalKitColors.current.ground)
+private fun Modifier.kitChromeGround(role: FrostRole, frost: KitFrostState?): Modifier {
+    val ground = LocalKitColors.current.ground
+    val fade =
+        if (
+            role != FrostRole.Composer ||
+                io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle.current.style ==
+                    io.github.eslamasabry.oc.ui.design.style.Style.Glass
+        )
+            Modifier
+        else
+            Modifier.drawBehind {
+                val reach = 16.dp.toPx()
+                drawRect(
+                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                        0f to ground.copy(alpha = 0f),
+                        1f to ground,
+                        startY = -reach,
+                        endY = 0f,
+                    ),
+                    topLeft = androidx.compose.ui.geometry.Offset(0f, -reach),
+                    size = androidx.compose.ui.geometry.Size(size.width, reach),
+                )
+            }
+    return then(fade).then(if (frost != null) Modifier.kitFrost(role, frost) else Modifier.background(ground))
+}
