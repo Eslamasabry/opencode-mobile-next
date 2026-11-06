@@ -245,6 +245,15 @@ internal fun VoicePanel(
                         )
                     else null,
                 secondary = cancel.takeIf { state.mode != VoiceMode.Hold },
+                // Review the words in the box first, or send them in the same step.
+                extra =
+                    if (state.mode == VoiceMode.Tap)
+                        KitLineAction(
+                            stringResource(Res.string.kitVoiceSend),
+                            presenter::doneAndSend,
+                            testTag = "voice-done-send",
+                        )
+                    else null,
             )
         }
         MicPhase.Writing ->
