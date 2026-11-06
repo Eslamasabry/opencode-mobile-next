@@ -77,7 +77,9 @@ import io.github.eslamasabry.oc.ui.words.res.fileSave
 import io.github.eslamasabry.oc.ui.words.res.fileShareAction
 import io.github.eslamasabry.oc.ui.words.res.fileReload
 import io.github.eslamasabry.oc.ui.words.res.fileSource
+import io.github.eslamasabry.oc.ui.words.res.filesAddReference
 import io.github.eslamasabry.oc.ui.words.res.filesAskAboutFile
+import io.github.eslamasabry.oc.ui.words.res.readerUiReferenceAdded
 import io.github.eslamasabry.oc.ui.words.res.filesAttachFailed
 import io.github.eslamasabry.oc.ui.words.res.filesLinkRefused
 import io.github.eslamasabry.oc.ui.words.res.filesMentionFailed
@@ -262,6 +264,13 @@ public fun FileScreen(state: FileUi, actions: FileActions) {
                             actions.review()
                         },
                     )
+                KitRow(
+                    stringResource(Res.string.filesAddReference),
+                    onClick = {
+                        more = false
+                        actions.addReference()
+                    },
+                )
                 if (state.canAttach)
                     KitRow(
                         stringResource(Res.string.readerUiAttachPrompt),
@@ -549,6 +558,7 @@ private fun noticeWords(notice: FileNotice, name: String): String =
         FileNotice.Saved -> stringResource(Res.string.readerUiSavedDevice, name)
         FileNotice.SaveFailed -> stringResource(Res.string.filesSaveFailed)
         FileNotice.LinkRefused -> stringResource(Res.string.chatFeelLinkRefused)
+        FileNotice.Referenced -> stringResource(Res.string.readerUiReferenceAdded, name)
         FileNotice.Attached -> stringResource(Res.string.readerUiAttached, name)
         FileNotice.AttachFailed -> stringResource(Res.string.filesAttachFailed)
         FileNotice.PreferencesFailed -> stringResource(Res.string.filesPreferencesFailed)

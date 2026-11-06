@@ -17,6 +17,8 @@ public data class ProjectSummary(
     val running: Int,
     val updatedMs: Long,
     val isGit: Boolean? = null,
+    /** The server's project id, when it keeps a project list. */
+    val id: String? = null,
 )
 
 /** Pure rules of the projects picker and the project page (Dart projects_screen, project_folder_actions). */
@@ -123,6 +125,7 @@ public object ProjectRules {
                     running = mine.count { it.id in running },
                     updatedMs = p.updatedAtMs,
                     isGit = p.isGit,
+                    id = p.id,
                 )
             }
 

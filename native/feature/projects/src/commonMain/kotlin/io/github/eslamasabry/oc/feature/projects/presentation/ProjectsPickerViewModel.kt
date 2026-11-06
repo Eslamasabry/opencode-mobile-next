@@ -50,6 +50,7 @@ public class ProjectsPickerViewModel(
     private var generation = 0
     private var scanJob: kotlinx.coroutines.Job? = null
     private var phoneGeneration = 0
+    private val runner = NewProjectRunner(creator, opened)
 
     init {
         viewModelScope.launch {
@@ -110,6 +111,9 @@ public class ProjectsPickerViewModel(
                 canFindPhoneProjects = discovery.available(server.profile),
                 pathStart = pathStart(before),
                 canCreate = creator.available(server),
+                canRename =
+                    server.operations != null &&
+                        server.gateway.capabilities.value.projectManagement,
                 canBrowsePhone = server.phoneFolders,
                 canBrowseBuiltin =
                     server.phoneFolders && phoneFolders.builtinAvailable(server.profile),
@@ -178,7 +182,14 @@ public class ProjectsPickerViewModel(
             }
         return Outcome.Ok(
             summaries.map {
-                FolderRowUi(it.directory, it.name, it.conversations, it.running, it.isGit)
+                FolderRowUi(
+                    it.directory,
+                    it.name,
+                    it.conversations,
+                    it.running,
+                    it.isGit,
+                    it.id,
+                )
             }
         )
     }
@@ -357,28 +368,16 @@ public class ProjectsPickerViewModel(
     override fun createFolder() {
         val server = current() ?: return
         if (state.value.creatingFolder || !creator.available(server)) return
-        val name =
-            io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderName.validated(
-                state.value.createName
-            ) ?: return
+        val name = state.value.createName
         val run = generation
         mutable.update { it.copy(creatingFolder = true, folderFailure = null) }
         viewModelScope.launch {
-            val result = creator.create(server, name)
+            val result = runner.create(server, name)
             if (run != generation || current()?.gateway !== server.gateway) return@launch
             when (result) {
                 is Outcome.Ok -> {
-                    val saved = opened.remember(server.profile, result.value)
-                    if (run != generation || current()?.gateway !== server.gateway) return@launch
-                    mutable.update {
-                        it.copy(askingCreate = saved is Outcome.Failed, creatingFolder = false)
-                    }
-                    when (saved) {
-                        is Outcome.Ok ->
-                            nav.open(ProjectsRoute.Project(server.profile, result.value))
-                        is Outcome.Failed ->
-                            mutable.update { it.copy(folderFailure = saved.failure) }
-                    }
+                    mutable.update { it.copy(askingCreate = false, creatingFolder = false) }
+                    nav.open(ProjectsRoute.Project(server.profile, result.value))
                 }
                 is Outcome.Failed ->
                     mutable.update {
@@ -388,10 +387,95 @@ public class ProjectsPickerViewModel(
         }
     }
 
+    override fun createMissing() {
+        val server = current() ?: return
+        val path = state.value.missingPath ?: return
+        if (state.value.creatingMissing || !creator.available(server)) return
+        val run = generation
+        mutable.update { it.copy(creatingMissing = true, missingFailure = null) }
+        viewModelScope.launch {
+            val result = runner.createAt(server, path)
+            if (run != generation || current()?.gateway !== server.gateway) return@launch
+            when (result) {
+                is Outcome.Ok -> {
+                    mutable.update { it.copy(missingPath = null, creatingMissing = false) }
+                    nav.open(ProjectsRoute.Project(server.profile, result.value))
+                }
+                is Outcome.Failed ->
+                    mutable.update {
+                        it.copy(creatingMissing = false, missingFailure = result.failure)
+                    }
+            }
+        }
+    }
+
+    override fun dismissMissing() {
+        if (!state.value.creatingMissing)
+            mutable.update { it.copy(missingPath = null, missingFailure = null) }
+    }
+
+    override fun askRename(project: FolderRowUi) {
+        if (!state.value.canRename || project.id == null) return
+        mutable.update { it.copy(renaming = project, renameFailure = null) }
+    }
+
+    override fun closeRename() {
+        if (!state.value.renamingWorking) mutable.update { it.copy(renaming = null) }
+    }
+
+    override fun renameProject(name: String) {
+        val server = current() ?: return
+        val project = state.value.renaming ?: return
+        val id = project.id ?: return
+        val ops = server.operations ?: return
+        if (state.value.renamingWorking) return
+        val typed = name.trim()
+        if (typed == project.name) {
+            mutable.update { it.copy(renaming = null) }
+            return
+        }
+        // Blank, or the folder's own name, clears the server's custom name (Flutter does the same).
+        val sent = if (typed.isEmpty() || typed == ProjectRules.name(project.directory)) "" else typed
+        val run = generation
+        mutable.update { it.copy(renamingWorking = true, renameFailure = null) }
+        viewModelScope.launch {
+            val result = ops.renameProject(id, project.directory, sent)
+            if (run != generation || current()?.gateway !== server.gateway) return@launch
+            when (result) {
+                is Outcome.Ok -> {
+                    val shown = ProjectRules.name(result.value.directory, result.value.name)
+                    all = all.map { if (it.id == id) it.copy(name = shown) else it }
+                    mutable.update { it.copy(renaming = null, renamingWorking = false) }
+                    publish()
+                }
+                is Outcome.Failed ->
+                    mutable.update {
+                        it.copy(renamingWorking = false, renameFailure = result.failure)
+                    }
+            }
+        }
+    }
+
     override fun finishPath(path: String?) {
         mutable.update { it.copy(askingPath = false) }
         if (path == null || ProjectRules.pathProblem(path) != null) return
-        openProject(ProjectRules.normalize(path))
+        val normal = ProjectRules.normalize(path)
+        val server = current()
+        if (server == null || !creator.available(server)) {
+            openProject(normal)
+            return
+        }
+        // A server that makes folders is asked first, so a typo is not remembered as a project.
+        val run = generation
+        viewModelScope.launch {
+            val there = creator.exists(server, normal)
+            if (run != generation || current()?.gateway !== server.gateway) return@launch
+            if (there == false)
+                mutable.update {
+                    it.copy(missingPath = normal, missingFailure = null, creatingMissing = false)
+                }
+            else openProject(normal)
+        }
     }
 
     override fun openProject(directory: String) {

@@ -91,6 +91,8 @@ public data class ChangesUi(
      * "review opens the view that has changes", said once).
      */
     val workingTree: Boolean = false,
+    /** The server can show the folder's uncommitted changes too, so the change-scope picker is offered. */
+    val canPickScope: Boolean = false,
     /** "Send back with a note" is offered (a conversation's message can take it). */
     val canSendBack: Boolean = false,
     /** The note field is open. */

@@ -964,6 +964,7 @@
     <string name="gitGetNewFrom__eq1">جلب تغيير جديد واحد من %2$s · %3$s</string>
     <string name="gitSavedSignInFirst">تم الحفظ هنا، ولم يُرسل بعد. يطلب %1$s تسجيل الدخول أولًا.</string>
     <string name="filesAskAboutFile">اسأل عن هذا الملف</string>
+    <string name="filesAddReference">أضِفه كمرجع</string>
     <plurals name="filesMenuChanges">
         <item quantity="zero">التغييرات</item>
         <item quantity="one">التغييرات · ملف واحد</item>

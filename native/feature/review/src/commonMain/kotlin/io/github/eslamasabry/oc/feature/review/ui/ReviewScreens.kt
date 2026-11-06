@@ -8,7 +8,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import io.github.eslamasabry.oc.ui.kit.action.rememberKitCopyAction
+import io.github.eslamasabry.oc.ui.kit.chip.KitChip
+import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
+import io.github.eslamasabry.oc.ui.kit.chip.KitChipTone
+import io.github.eslamasabry.oc.ui.kit.chip.KitChipWrap
+import io.github.eslamasabry.oc.ui.words.res.kitDiffHideUnchanged
+import io.github.eslamasabry.oc.ui.words.res.reviewCopyFile
+import io.github.eslamasabry.oc.ui.words.res.reviewCopyPatch
+import io.github.eslamasabry.oc.ui.words.res.reviewExpandContext
+import io.github.eslamasabry.oc.ui.words.res.s40iCopied
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -288,6 +301,32 @@ private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
                                 role = TypeRole.Title,
                             )
                         }
+                        if (state.canPickScope)
+                            KitChipWrap {
+                                val conversation =
+                                    stringResource(
+                                        if (state.turn) Res.string.reviewTurnTitle
+                                        else Res.string.chatUiChanges
+                                    )
+                                KitChip(
+                                    label = conversation,
+                                    kind = KitChipKind.Action,
+                                    tone =
+                                        if (!state.workingTree) KitChipTone.Active
+                                        else KitChipTone.Neutral,
+                                    selected = !state.workingTree,
+                                    onClick = { actions.chooseWorkingTree(false) },
+                                )
+                                KitChip(
+                                    label = stringResource(Res.string.readerUiWorkingTree),
+                                    kind = KitChipKind.Action,
+                                    tone =
+                                        if (state.workingTree) KitChipTone.Active
+                                        else KitChipTone.Neutral,
+                                    selected = state.workingTree,
+                                    onClick = { actions.chooseWorkingTree(true) },
+                                )
+                            }
                         if (state.workingTree) {
                             KitNotice(
                                 stringResource(
@@ -380,8 +419,46 @@ private fun ChangeRow(row: ChangeRowUi, actions: ChangesActions) {
  */
 @Composable
 public fun FileDiffScreen(state: FileDiffUi, onBack: () -> Unit, onRetry: () -> Unit) {
+    val current = state.diff
+    // Copy is verbatim (a diff is the person's own content): the patch, and the updated file.
+    val copyPatch =
+        rememberKitCopyAction(
+            stringResource(Res.string.reviewCopyPatch),
+            stringResource(Res.string.s40iCopied),
+            { current?.patch.orEmpty() },
+        )
+    val copyFile =
+        rememberKitCopyAction(
+            stringResource(Res.string.reviewCopyFile),
+            stringResource(Res.string.s40iCopied),
+            { current?.after.orEmpty() },
+        )
+    // Surrounding lines can be opened only where the whole file is known (before and after).
+    val canExpand =
+        current != null && !current.patch.isNullOrBlank() && current.before != null && current.after != null
+    var fullContext by remember(state.path) { mutableStateOf(false) }
+    val expandLabel =
+        stringResource(
+            if (fullContext) Res.string.kitDiffHideUnchanged else Res.string.reviewExpandContext
+        )
     KitScreen(
-        topBar = { TopBar(state.name, onBack) },
+        topBar = {
+            KitTopBar(
+                title = state.name,
+                exit = KitTopBarExit.Back,
+                exitLabel = stringResource(Res.string.kitTopBarBack),
+                onExit = onBack,
+                actions =
+                    buildList {
+                        if (current != null && !current.patch.isNullOrBlank())
+                            add(KitLineAction(copyPatch.label, { copyPatch.onClick?.invoke() }))
+                        if (current != null && !current.after.isNullOrEmpty())
+                            add(KitLineAction(copyFile.label, { copyFile.onClick?.invoke() }))
+                        if (canExpand)
+                            add(KitLineAction(expandLabel, { fullContext = !fullContext }))
+                    },
+            )
+        },
         loading = state.load == ReviewLoad.Loading,
     ) {
         when (val load = state.load) {
@@ -401,7 +478,7 @@ public fun FileDiffScreen(state: FileDiffUi, onBack: () -> Unit, onRetry: () -> 
                         KitStateView(KitStateKind.Calm, stringResource(Res.string.reviewFileGone))
                     diff == null || state.noDiff ->
                         KitStateView(KitStateKind.Calm, stringResource(Res.string.reviewNoDiff))
-                    else -> DiffBody(diff)
+                    else -> DiffBody(diff, fullContext)
                 }
             }
         }
@@ -409,8 +486,8 @@ public fun FileDiffScreen(state: FileDiffUi, onBack: () -> Unit, onRetry: () -> 
 }
 
 @Composable
-private fun DiffBody(diff: FileDiff) {
-    val file = remember(diff) { diffFile(diff) }
+private fun DiffBody(diff: FileDiff, fullContext: Boolean) {
+    val file = remember(diff, fullContext) { diffFile(diff, fullContext) }
     Column(
         Modifier.fillMaxSize()
             .verticalScroll(rememberScrollState())
@@ -477,7 +554,7 @@ private fun DiffBody(diff: FileDiff) {
 
 private const val MAX_DIFF_LINES = 4000
 
-private fun diffFile(diff: FileDiff): DiffFile {
+private fun diffFile(diff: FileDiff, fullContext: Boolean = false): DiffFile {
     val status =
         when (diff.status) {
             "added" -> DiffFileStatus.Added
@@ -485,7 +562,8 @@ private fun diffFile(diff: FileDiff): DiffFile {
             else -> null
         }
     val patch = diff.patch
-    return if (!patch.isNullOrBlank()) DiffModel.parseFilePatch(diff.file, patch, status)
+    return if (!patch.isNullOrBlank() && !(fullContext && diff.before != null && diff.after != null))
+        DiffModel.parseFilePatch(diff.file, patch, status)
     else DiffModel.fromBeforeAfter(diff.file, diff.before, diff.after, status)
 }
 

@@ -61,6 +61,8 @@ public class ChangesViewModel(
 
     override fun openStaged(): Unit = presenter.openStaged()
 
+    override fun chooseWorkingTree(on: Boolean): Unit = presenter.chooseWorkingTree(on)
+
     override fun sendBack(): Unit = presenter.sendBack()
 
     override fun sendBackNote(note: String?): Unit = presenter.sendBackNote(note)

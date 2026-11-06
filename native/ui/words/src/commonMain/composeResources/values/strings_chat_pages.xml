@@ -123,6 +123,7 @@
     <string name="isolatedTaskKeepWaiting">Keep waiting</string>
     <string name="reviewCopyFile">Copy updated file</string>
     <string name="reviewCopyPatch">Copy patch</string>
+    <string name="reviewExpandContext">Show surrounding lines</string>
     <string name="reviewTitle">Review</string>
     <string name="e7SharedOpenCodeIsReconnectingTryAgain">OpenCode is reconnecting. Try again.</string>
     <string name="e7SharedSessionContext">Conversation context</string>

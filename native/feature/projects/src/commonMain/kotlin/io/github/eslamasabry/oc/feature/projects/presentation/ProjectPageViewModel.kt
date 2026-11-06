@@ -657,6 +657,15 @@ public class ProjectPageViewModel(
 
     override fun cancelWorktreeRemoval() = workspace.cancelWorktreeRemoval()
 
+    override fun inspectWorktreeReset(directory: String) =
+        workspace.inspectWorktreeReset(directory)
+
+    override fun confirmWorktreeReset() = workspace.confirmWorktreeReset()
+
+    override fun cancelWorktreeReset() = workspace.cancelWorktreeReset()
+
+    override fun openWorktree(directory: String) = openCopy(directory)
+
     override fun openWorkspaceDiff(path: String) = workspace.openWorkspaceDiff(path)
 
     override fun closeWorkspaceDiff() = workspace.closeWorkspaceDiff()

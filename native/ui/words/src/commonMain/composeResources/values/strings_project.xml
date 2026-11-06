@@ -888,6 +888,7 @@
     <string name="gitGetNewFrom__eq1">Get 1 new change from %2$s · %3$s</string>
     <string name="gitSavedSignInFirst">Saved here, not sent yet. %1$s needs you to sign in first.</string>
     <string name="filesAskAboutFile">Ask about this file</string>
+    <string name="filesAddReference">Add as reference</string>
     <plurals name="filesMenuChanges">
         <item quantity="one">Changes · 1 file</item>
         <item quantity="other">Changes · %1$d files</item>

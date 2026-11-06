@@ -35,6 +35,8 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitInputOperationDialog
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
@@ -49,6 +51,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitInlineStateView
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
+import io.github.eslamasabry.oc.ui.kit.state.KitTechnicalValue
 import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.chatsFilterChatCount
 import io.github.eslamasabry.oc.ui.words.res.chatsFilterRunningCount
@@ -62,7 +65,6 @@ import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
-import io.github.eslamasabry.oc.ui.words.res.p12NewProjectUnavailable
 import io.github.eslamasabry.oc.ui.words.res.p12NoServerBody
 import io.github.eslamasabry.oc.ui.words.res.p12NoServerTitle
 import io.github.eslamasabry.oc.ui.words.res.p12OpenFolder
@@ -210,6 +212,8 @@ public fun ProjectsPickerScreen(state: ProjectsPickerUi, actions: ProjectsPicker
         }
         PathDialog(state, actions)
         CreateDialog(state, actions)
+        MissingFolderDialog(state, actions)
+        RenameDialog(state, actions)
         PhoneFolderSheet(state, actions)
     }
 }
@@ -287,21 +291,16 @@ private fun PathDialog(state: ProjectsPickerUi, actions: ProjectsPickerActions) 
 @Composable
 private fun StartRows(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
     KitRowGroup {
-        // OpenCode 2 has no folder-making call; Flutter offered New project only for servers it ran
-        // on the phone.
-        KitRow(
-            title = stringResource(Res.string.projectFolderNewProject),
-            enabled = state.canCreate,
-            disabledReason =
-                if (state.canCreate) null else stringResource(Res.string.p12NewProjectUnavailable),
-            supporting =
-                if (state.canCreate)
-                    stringResource(Res.string.projectFolderCreateHelper, "/root/projects")
-                else null,
-            trailing = KitRowTrailing.Chevron,
-            onClick = actions::askCreate,
-            supportingMaxLines = 3,
-        )
+        // Absent, never greyed: a server that cannot make folders simply has no New project row
+        // (Flutter: ProjectFolderActions.canCreate).
+        if (state.canCreate)
+            KitRow(
+                title = stringResource(Res.string.projectFolderNewProject),
+                supporting = stringResource(Res.string.projectFolderCreateHelper, "/root/projects"),
+                trailing = KitRowTrailing.Chevron,
+                onClick = actions::askCreate,
+                supportingMaxLines = 3,
+            )
         KitRow(
             title = stringResource(Res.string.p12OpenFolder),
             supporting = stringResource(Res.string.projectFolderOpenSubtitle),
@@ -348,13 +347,17 @@ private fun ServerProjects(state: ProjectsPickerUi, actions: ProjectsPickerActio
                     title = stringResource(Res.string.e7ProjectProjectsEmpty),
                     body = stringResource(Res.string.e7ProjectProjectsEmptyDetail),
                 )
-            else -> state.projects.forEach { ProjectRow(it, actions) }
+            else -> state.projects.forEach { ProjectRow(it, actions, state.canRename) }
         }
     }
 }
 
 @Composable
-private fun ProjectRow(project: FolderRowUi, actions: ProjectsPickerActions) {
+private fun ProjectRow(
+    project: FolderRowUi,
+    actions: ProjectsPickerActions,
+    canRename: Boolean = false,
+) {
     val parts = buildList {
         add(
             pluralStringResource(
@@ -410,6 +413,66 @@ private fun ProjectRow(project: FolderRowUi, actions: ProjectsPickerActions) {
         supportingMaxLines = 2,
         trailing = KitRowTrailing.Chevron,
         onClick = { actions.openProject(project.directory) },
+        // Rename is a long-press (Flutter), told to TalkBack as a custom action; only where the
+        // server keeps names.
+        onLongClick = if (canRename && project.id != null) ({ actions.askRename(project) }) else null,
+        onLongClickLabel =
+            if (canRename && project.id != null)
+                stringResource(Res.string.e7ProjectProjectRenameAction, project.name)
+            else null,
+    )
+}
+
+/** "Create this folder?" when a typed path is not there yet (Flutter project_folder_actions). */
+@Composable
+private fun MissingFolderDialog(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
+    val path = state.missingPath
+    var kept by remember { mutableStateOf<String?>(null) }
+    if (path != null) kept = path
+    val shown = path ?: kept
+    KitConfirm(
+        spec =
+            if (path == null || shown == null) null
+            else
+                KitConfirmSpec(
+                    title = stringResource(Res.string.projectFolderMissingTitle),
+                    confirmLabel = stringResource(Res.string.projectFolderCreateIt),
+                    body = stringResource(Res.string.projectFolderMissing),
+                    icon = KitIcons.folderAdd,
+                    details = listOf(KitTechnicalValue(stringResource(Res.string.projectFolderPathLabel), shown)),
+                ),
+        onConfirm = actions::createMissing,
+        onCancel = actions::dismissMissing,
+        working = state.creatingMissing,
+        failed = state.missingFailure != null,
+    )
+}
+
+@Composable
+private fun RenameDialog(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
+    val project = state.renaming ?: return
+    val failed = stringResource(Res.string.e7ProjectProjectRenameFailed, "")
+    KitInputOperationDialog(
+        visible = true,
+        title = stringResource(Res.string.e7ProjectProjectRenameTitle),
+        fieldLabel = stringResource(Res.string.e7ProjectProjectNameLabel),
+        confirmLabel = stringResource(Res.string.e7ProjectProjectSave),
+        cancelLabel = stringResource(Res.string.projectFolderCancel),
+        initial = project.name,
+        helper = stringResource(Res.string.e7ProjectProjectNameHint),
+        working = state.renamingWorking,
+        error = state.renameFailure?.let { failed.trimEnd(' ', ':') },
+        details = {
+            state.renameFailure?.details?.let {
+                KitDetailsFold(
+                    label = stringResource(Res.string.kitDetails),
+                    copyLabel = stringResource(Res.string.kitCopyDetails),
+                    text = it,
+                )
+            }
+        },
+        onSubmit = actions::renameProject,
+        onDismissRequest = actions::closeRename,
     )
 }
 
