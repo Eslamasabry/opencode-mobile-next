@@ -34,6 +34,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.logo.KitProviderLogo
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -48,15 +49,10 @@ public sealed interface KitRowLeading {
     public data class Glyph(val icon: ImageVector, val tile: Boolean = false, val current: Boolean = false) : KitRowLeading
 
     /**
-     * Two letters in the tile, for a thing with no glyph (a server, a project). Never coloured by
-     * identity.
+     * A bounded static provider mark. A missing or refused picture leaves the tile empty at the same size: never a
+     * stand-in letter (owner 2026-11-06).
      */
-    public data class Initials(val text: String) : KitRowLeading
-
-    /**
-     * A bounded static provider mark. A missing or refused picture displays [fallback]'s initials.
-     */
-    public data class Svg(val text: String, val fallback: String) : KitRowLeading
+    public data class Svg(val text: String) : KitRowLeading
 
     public data class Logo(val id: String, val name: String, val agent: Boolean = false) :
         KitRowLeading
@@ -112,6 +108,13 @@ public sealed interface KitRowTrailing {
      */
     public data class Action(val action: KitLineAction) : KitRowTrailing
 
+    /**
+     * The row's own ⋯ menu, drawn inside the row so a selected or pressed highlight spans the whole row, menu
+     * included (owner 2026-11-06). [label] names the button for screen readers (usually the row's name); [title]
+     * heads the menu on a phone.
+     */
+    public data class Menu(val label: String, val items: List<KitMenuItem>, val title: String? = null) : KitRowTrailing
+
     /** A separately labelled glyph target, as in Flutter's timeline Fork control. */
     public data class IconAction(val action: KitLineAction) : KitRowTrailing {
         init { require(action.icon != null) { "An icon action needs a glyph" } }
@@ -150,8 +153,6 @@ internal fun RowLeadingTile(leading: KitRowLeading, dim: Boolean) {
                     colorFilter = ColorFilter.tint(colors.tone(tone)),
                 )
             is KitRowLeading.Logo -> KitProviderLogo(leading.id, leading.name, leading.agent)
-            is KitRowLeading.Initials ->
-                KitText(leading.text.take(2), role = TypeRole.Label, tone = tone, maxLines = 1)
             is KitRowLeading.Svg -> {
                 val platform = LocalKitPlatform.current
                 val size = (tokens.smallIcon * minOf(kitTextScale(), TextScalePolicy.ICON_CAP)).dp
@@ -162,21 +163,13 @@ internal fun RowLeadingTile(leading: KitRowLeading, dim: Boolean) {
                     remember(leading.text, platform, pixels) {
                         platform.svgPainter(leading.text, pixels)
                     }
-                if (painter == null) {
-                    KitText(
-                        leading.fallback.take(2),
-                        role = TypeRole.Label,
-                        tone = tone,
-                        maxLines = 1,
-                    )
-                } else {
+                if (painter != null)
                     Image(
                         painter,
                         null,
                         Modifier.size(size),
                         colorFilter = ColorFilter.tint(colors.tone(tone)),
                     )
-                }
             }
         }
     }

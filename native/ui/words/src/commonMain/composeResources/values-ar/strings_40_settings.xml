@@ -6,7 +6,14 @@
     <string name="settings40_local_work">العمل غير المرسل على هذا الهاتف</string>
     <string name="settings40_queue_title">المطالبات في الانتظار</string>
     <string name="settings40_drafts_title">مسودات المحادثات</string>
-    <string name="settings40_storage_size">%1$d عناصر · %2$s</string>
+    <plurals name="settings40_storage_size">
+        <item quantity="zero">%1$d عناصر · %2$s</item>
+        <item quantity="one">عنصر واحد · %2$s</item>
+        <item quantity="two">عنصران · %2$s</item>
+        <item quantity="few">%1$d عناصر · %2$s</item>
+        <item quantity="many">%1$d عنصرًا · %2$s</item>
+        <item quantity="other">%1$d عنصر · %2$s</item>
+    </plurals>
     <string name="settings40_storage_unknown">تعذّر قراءة هذا التخزين. تم الاحتفاظ بكل شيء.</string>
     <string name="settings40_storage_reading">جارٍ قراءة التخزين المحلي…</string>
     <string name="settings40_discard_queue">حذف المطالبات المنتظرة غير المرسلة</string>
@@ -19,9 +26,30 @@
     <string name="settings40_drafts_question">حذف مسودات المحادثات؟</string>
     <string name="settings40_drafts_body">يحذف الكلمات المحفوظة ومرفقات المسودات على هذا الهاتف. تُحدَّث المحادثات المفتوحة أيضًا. يمنع العمل الذي لا يزال يُرسل أو يُفحص الحذف. لا يمكن التراجع عن هذا.</string>
     <string name="settings40_discard_failed">تعذّر إتمام الحذف. قد يمنع الحذفَ عملٌ جارٍ إرساله أو عملٌ غير مؤكد أو تخزين غير مقروء أو تغيير أثناء الحفظ. راجع الأعداد وحاول مجددًا.</string>
-    <string name="settings40_discard_done">تم حذف %1$d عناصر.</string>
-    <string name="settings40_discard_kept">تم حذف %1$d عناصر. تم الاحتفاظ بـ %2$d مطالبات تحتاج إلى مراجعة.</string>
-    <string name="settings40_discard_cleanup">تم حذف %1$d مسودات. تعذّر حذف بعض ملفات المرفقات. حاول حذف المسودات مجددًا للإكمال.</string>
+    <plurals name="settings40_discard_done">
+        <item quantity="zero">تم حذف %1$d عناصر.</item>
+        <item quantity="one">تم حذف عنصر واحد.</item>
+        <item quantity="two">تم حذف عنصرين.</item>
+        <item quantity="few">تم حذف %1$d عناصر.</item>
+        <item quantity="many">تم حذف %1$d عنصرًا.</item>
+        <item quantity="other">تم حذف %1$d عنصر.</item>
+    </plurals>
+    <plurals name="settings40_discard_kept">
+        <item quantity="zero">تم حذف %1$d عناصر. مطالبات محفوظة للمراجعة: %2$d.</item>
+        <item quantity="one">تم حذف عنصر واحد. مطالبات محفوظة للمراجعة: %2$d.</item>
+        <item quantity="two">تم حذف عنصرين. مطالبات محفوظة للمراجعة: %2$d.</item>
+        <item quantity="few">تم حذف %1$d عناصر. مطالبات محفوظة للمراجعة: %2$d.</item>
+        <item quantity="many">تم حذف %1$d عنصرًا. مطالبات محفوظة للمراجعة: %2$d.</item>
+        <item quantity="other">تم حذف %1$d عنصر. مطالبات محفوظة للمراجعة: %2$d.</item>
+    </plurals>
+    <plurals name="settings40_discard_cleanup">
+        <item quantity="zero">تم حذف %1$d مسودات. تعذّر حذف بعض ملفات المرفقات. حاول حذف المسودات مجددًا للإكمال.</item>
+        <item quantity="one">تم حذف مسودة واحدة. تعذّر حذف بعض ملفات المرفقات. حاول حذف المسودات مجددًا للإكمال.</item>
+        <item quantity="two">تم حذف مسودتين. تعذّر حذف بعض ملفات المرفقات. حاول حذف المسودات مجددًا للإكمال.</item>
+        <item quantity="few">تم حذف %1$d مسودات. تعذّر حذف بعض ملفات المرفقات. حاول حذف المسودات مجددًا للإكمال.</item>
+        <item quantity="many">تم حذف %1$d مسودة. تعذّر حذف بعض ملفات المرفقات. حاول حذف المسودات مجددًا للإكمال.</item>
+        <item quantity="other">تم حذف %1$d مسودة. تعذّر حذف بعض ملفات المرفقات. حاول حذف المسودات مجددًا للإكمال.</item>
+    </plurals>
     <string name="settings40_no_answers">لا توجد أسئلة على هذا الخادم تحتاج إلى إجابة بعد.</string>
     <string name="settings40_answer_failed">لم تكتمل هذه الخطوة. قد تختلف إجابتك المحفوظة عن إعدادات أندرويد. راجع الإشعارات أو الاستمرار في التشغيل، ثم أعد المحاولة.</string>
 </resources>

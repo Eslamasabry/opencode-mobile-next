@@ -45,6 +45,8 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
+import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
@@ -60,6 +62,9 @@ import io.github.eslamasabry.oc.ui.words.res.kitConfirmKeepEditing
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmKeepRunning
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmTypeName
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmTypeNameReason
+import io.github.eslamasabry.oc.ui.words.res.kitConsequenceInfo
+import io.github.eslamasabry.oc.ui.words.res.kitConsequenceKept
+import io.github.eslamasabry.oc.ui.words.res.kitConsequenceLost
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
@@ -371,18 +376,34 @@ public fun KitMarkedConsequences(items: List<KitConsequence>, modifier: Modifier
                 verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
             ) {
-                KitText(
-                    when (item.mark) {
-                        KitConsequenceMark.Lost -> "−"
-                        KitConsequenceMark.Kept -> "✓"
-                        KitConsequenceMark.Info -> "i"
-                        KitConsequenceMark.Neutral -> "•"
-                    },
-                    role = TypeRole.Body,
-                )
+                KitConsequenceGlyph(item.mark)
                 KitText(item.text, Modifier.weight(1f), role = TypeRole.Body)
             }
         }
+    }
+}
+
+/** A real glyph per mark, tinted by meaning and named for screen readers; the neutral mark is the plain dot. */
+@Composable
+private fun KitConsequenceGlyph(mark: KitConsequenceMark) {
+    when (mark) {
+        KitConsequenceMark.Lost ->
+            KitIcon(KitIcons.removeCircle, size = KitIconSize.Small, tone = TextTone.Attention,
+                label = stringResource(Res.string.kitConsequenceLost))
+        KitConsequenceMark.Kept ->
+            KitIcon(KitIcons.checkCircle, size = KitIconSize.Small, tone = TextTone.Success,
+                label = stringResource(Res.string.kitConsequenceKept))
+        KitConsequenceMark.Info ->
+            KitIcon(KitIcons.info, size = KitIconSize.Small, tone = TextTone.Secondary,
+                label = stringResource(Res.string.kitConsequenceInfo))
+        KitConsequenceMark.Neutral ->
+            Box(Modifier.size(KitIconSize.Small.dp.dp), contentAlignment = Alignment.Center) {
+                Box(
+                    Modifier.size(6.dp)
+                        .clip(KitShapeId.Circle.shape())
+                        .background(LocalKitColors.current.text2)
+                )
+            }
     }
 }
 

@@ -27,5 +27,12 @@
     <string name="agentProjectCreate">إنشاء شجرة العمل</string>
     <string name="agentProjectRemoveQuestion">إزالة «%1$s»؟</string>
     <string name="agentProjectRemoveBody">تؤرشف شجرة العمل ومحادثاتها، وتزيل مجلدها: %1$s</string>
-    <string name="agentProjectRemoveChanges">تحتوي شجرة العمل هذه على %1$d ملفات متغيّرة. ستُزال مع المجلد.</string>
+    <plurals name="agentProjectRemoveChanges">
+        <item quantity="zero">تحتوي شجرة العمل هذه على %1$d ملفات متغيّرة. ستُزال مع المجلد.</item>
+        <item quantity="one">تحتوي شجرة العمل هذه على ملف متغيّر واحد. سيُزال مع المجلد.</item>
+        <item quantity="two">تحتوي شجرة العمل هذه على ملفين متغيّرين. سيُزالان مع المجلد.</item>
+        <item quantity="few">تحتوي شجرة العمل هذه على %1$d ملفات متغيّرة. ستُزال مع المجلد.</item>
+        <item quantity="many">تحتوي شجرة العمل هذه على %1$d ملفًا متغيّرًا. ستُزال مع المجلد.</item>
+        <item quantity="other">تحتوي شجرة العمل هذه على %1$d ملف متغيّر. ستُزال مع المجلد.</item>
+    </plurals>
 </resources>

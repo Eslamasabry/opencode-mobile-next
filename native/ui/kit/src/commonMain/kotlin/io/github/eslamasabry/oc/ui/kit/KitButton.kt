@@ -57,6 +57,8 @@ import io.github.eslamasabry.oc.ui.kit.style.LocalKitSignalInSlip
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.unit.Dp
 
 /** Dart `KitButtonRole`: primary = accent fill, secondary = surface3, tertiary = words only. */
 public enum class KitButtonRole {
@@ -155,11 +157,16 @@ public fun KitButton(
             !on -> if (heroWaits) heroWords else colors.text3
             role == KitButtonRole.Primary && destructive -> colors.ground
             role == KitButtonRole.Primary -> colors.onAccent
+            // A text action is in the accent, as KitInlineAction is, so it never reads as plain text.
+            role == KitButtonRole.Tertiary && !destructive -> colors.accent
             else -> colors.text1
         }
     val easedFill by animateColorAsState(fill, specs.quick(), label = "kit-button-fill")
     val easedWords by animateColorAsState(words, specs.quick(), label = "kit-button-words")
-    val ink = if (role == KitButtonRole.Primary && !destructive) TextTone.OnAccent else TextTone.Primary
+    val ink =
+        if (role == KitButtonRole.Primary && !destructive) TextTone.OnAccent
+        else if (role == KitButtonRole.Tertiary && !destructive) TextTone.Accent
+        else TextTone.Primary
     // The style decides the face (B-KIT-043..045); Solid keeps the fill above. A tertiary button has no face.
     val look =
         if (role == KitButtonRole.Tertiary) {
@@ -188,7 +195,10 @@ public fun KitButton(
     val rest = if (hero) minHeight / 2 else (Shapes.of(KitShapeId.Button) as? Corner.Radius)?.dp ?: PRESS_ROUND_DP // NV: a stadium's radius is half its height
     Row(
         modifier =
-            modifier
+            // A text action's words sit on the column's edge, like the fields and words around it; its padding and
+            // touch target reach into the gutter on both sides, so a centred one stays centred.
+            (if (role == KitButtonRole.Tertiary && !hero) Modifier.kitBleed(pad.dp) else Modifier)
+                .then(modifier)
                 .then(if (hero) Modifier.kitMaxWidth(CapRole.Control).fillMaxWidth() else if (fullWidth) Modifier.widthIn(max = FILL_MAX_WIDTH_DP.dp).fillMaxWidth() else Modifier)
                 .heightIn(min = minHeight.dp)
                 .graphicsLayer {
@@ -245,6 +255,22 @@ public fun KitButton(
         KitButtonWords(label, wordsColor, maxLines)
     }
 }
+
+/** Measures [x] wider on each side than offered and places the content [x] towards the start, reporting the offered size. */
+private fun Modifier.kitBleed(x: Dp): Modifier =
+    layout { measurable, constraints ->
+        val px = x.roundToPx()
+        val grow = if (constraints.hasBoundedWidth) 2 * px else 0
+        val placeable =
+            measurable.measure(
+                constraints.copy(
+                    minWidth = (constraints.minWidth + grow).coerceAtMost(constraints.maxWidth + grow),
+                    maxWidth = constraints.maxWidth + grow,
+                )
+            )
+        val width = (placeable.width - 2 * px).coerceIn(constraints.minWidth, constraints.maxWidth)
+        layout(width, placeable.height) { placeable.placeRelative(-px, 0) }
+    }
 
 /** The full-width button's cap (direction §5.6). */
 private const val FILL_MAX_WIDTH_DP = 480

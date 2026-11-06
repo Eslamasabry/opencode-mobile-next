@@ -2,7 +2,6 @@ package io.github.eslamasabry.oc.feature.servers.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -15,12 +14,12 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitMonoText
 import io.github.eslamasabry.oc.ui.kit.KitText
-import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.foundation.*
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.*
 import io.github.eslamasabry.oc.ui.kit.row.*
 import io.github.eslamasabry.oc.ui.words.res.*
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -34,9 +33,9 @@ internal fun ServerSavedRows(
     enabled: KitEnabled,
     phoneHost: Boolean = false,
 ) {
-    var menuFor by remember { mutableStateOf<ProfileId?>(null) }
     var detailsFor by remember { mutableStateOf<ProfileId?>(null) }
     val ordered = savedServersByUrgency(state)
+    val lookAlike = lookAlikeNames(ordered.map { it.name })
     KitRowGroup(leadingTiles = true) {
         ordered.forEach { server ->
             val facts = state.rows.facts[server.id]
@@ -94,7 +93,12 @@ internal fun ServerSavedRows(
                 if ((facts?.queued ?: 0) > 0 && destination != null)
                     add(
                         KitMenuItem(
-                            stringResource(Res.string.rows40Move, facts!!.queued, destination.name),
+                            pluralStringResource(
+                                Res.plurals.rows40Move,
+                                facts!!.queued,
+                                facts.queued,
+                                destination.name,
+                            ),
                             { actions.moveQueued(server.id) },
                             enabled = enabled,
                         )
@@ -122,47 +126,32 @@ internal fun ServerSavedRows(
                     )
                 )
             }
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.weight(1f)) {
-                    KitRow(
-                        title = server.name,
-                        supporting = supporting,
-                        supportingMaxLines =
-                            2, // F: lib/ui/screens/servers/server_rows.dart:191-196
-                        leading =
-                            if (waiting <= 0)
-                                KitRowLeading.Glyph(
-                                    if (phone) KitIcons.phone else KitIcons.server,
-                                    tile = false,
-                                )
-                            else null,
-                        state = if (waiting > 0) KitRowState(null, KitRowStateTone.NeedsYou) else null,
-                        selected = server.connected,
-                        enabled = enabled.isEnabled,
-                        disabledReason =
-                            if (enabled.isEnabled) null
-                            else stringResource(Res.string.serversWorking),
-                        onClick = {
-                            if (state.newConversation) actions.create(server.id)
-                            else actions.settings(server.id)
-                        },
-                    )
-                }
-                KitMenu(
-                    expanded = menuFor == server.id,
-                    items = items,
-                    onDismissRequest = { menuFor = null },
-                    title = server.name,
-                    anchor = {
-                        KitIconButton(
-                            KitIcons.more,
-                            server.name,
-                            { menuFor = server.id },
-                            enabled = enabled,
+            KitRow(
+                title = server.name,
+                supporting = supporting,
+                // Two saved servers whose names read the same are told apart by where they are.
+                server = if (nameKey(server.name) in lookAlike) plainAddress(server.address) else null,
+                supportingMaxLines =
+                    2, // F: lib/ui/screens/servers/server_rows.dart:191-196
+                leading =
+                    if (waiting <= 0)
+                        KitRowLeading.Glyph(
+                            if (phone) KitIcons.phone else KitIcons.server,
+                            tile = false,
                         )
-                    },
-                )
-            }
+                    else null,
+                state = if (waiting > 0) KitRowState(null, KitRowStateTone.NeedsYou) else null,
+                selected = server.connected,
+                enabled = enabled.isEnabled,
+                disabledReason =
+                    if (enabled.isEnabled) null
+                    else stringResource(Res.string.serversWorking),
+                onClick = {
+                    if (state.newConversation) actions.create(server.id)
+                    else actions.settings(server.id)
+                },
+                trailing = KitRowTrailing.Menu(server.name, items, title = server.name),
+            )
         }
     }
     val details = state.servers.firstOrNull { it.id == detailsFor }
@@ -209,3 +198,17 @@ internal fun savedServersByUrgency(
 /** Flutter strips the daemon's explanatory label, keeping a reported prerelease/build suffix. */
 internal fun plainServerVersion(raw: String): String =
     Regex("""\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?""").find(raw)?.value ?: raw.trim()
+
+/** The comparison form of a server name: case, spacing and punctuation do not tell two servers apart. */
+internal fun nameKey(name: String): String = name.lowercase().filter { it.isLetterOrDigit() }
+
+/** The [nameKey]s shared by more than one saved server. */
+internal fun lookAlikeNames(names: List<String>): Set<String> =
+    names.groupingBy(::nameKey).eachCount().filterValues { it > 1 }.keys
+
+/** An address as a person reads it: host, port and path, without scheme, sign-in part, query or trailing slash. */
+internal fun plainAddress(address: String): String {
+    val rest = address.substringAfter("://").substringBefore('?').substringBefore('#')
+    val host = rest.substringBefore('/')
+    return (host.substringAfterLast('@') + rest.removePrefix(host)).trimEnd('/')
+}

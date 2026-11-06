@@ -3,7 +3,10 @@
     <string name="linuxGitRepairDetail">Restore verified Git objects from this project or its old Termux store. Project files are kept.</string>
     <string name="linuxGitRepairWorking">Repairing Git files…</string>
     <string name="linuxGitRepairHealthy">Git can read this project. No object files needed repair.</string>
-    <string name="linuxGitRepairRestored">%1$d Git object files restored. Git can read the project again.</string>
+    <plurals name="linuxGitRepairRestored">
+        <item quantity="one">1 Git object file restored. Git can read the project again.</item>
+        <item quantity="other">%1$d Git object files restored. Git can read the project again.</item>
+    </plurals>
     <string name="linuxGitRepairMissing">Some Git objects could not be recovered or verified. Clone the project again or restore a copy.</string>
     <string name="linuxGitRepairTermuxMissing">Termux is not installed. These Git object files are missing. Clone the project again or restore a copy.</string>
     <string name="linuxGitRepairPermission">Termux command permission is needed. No object files were changed. In app settings, allow Run commands in Termux, then enable allow-external-apps in Termux and repair again.</string>

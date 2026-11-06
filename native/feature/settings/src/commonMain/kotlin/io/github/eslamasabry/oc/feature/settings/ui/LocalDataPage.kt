@@ -33,12 +33,13 @@ internal fun ColumnScope.LocalDataBody(ui: LocalDataUi, actions: SettingsActions
     if (ui.failed) KitNotice(stringResource(Res.string.settings40_discard_failed))
     ui.result?.let { result ->
         KitNotice(
-            stringResource(
+            pluralStringResource(
                 when {
-                    !result.payloadsCollected -> Res.string.settings40_discard_cleanup
-                    result.kept > 0 -> Res.string.settings40_discard_kept
-                    else -> Res.string.settings40_discard_done
+                    !result.payloadsCollected -> Res.plurals.settings40_discard_cleanup
+                    result.kept > 0 -> Res.plurals.settings40_discard_kept
+                    else -> Res.plurals.settings40_discard_done
                 },
+                result.removed,
                 result.removed,
                 result.kept,
             )

@@ -15,6 +15,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
@@ -38,6 +42,8 @@ import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitInlineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
@@ -231,7 +237,13 @@ private fun RowBody(
             }
             .then(if (selected) Modifier.background(colors.surface3) else Modifier)
             .heightIn(min = (if (supportLine != null || state != null) tokens.rowHeightTwo else tokens.rowHeightOne).dp)
-            .padding(horizontal = tokens.gutter.dp, vertical = Space.S2.dp)
+            // A row menu's 48 dp target ends near the edge, so its glyph lines up with the chevrons of the rows around it.
+            .padding(
+                start = tokens.gutter.dp,
+                end = if (trailing is KitRowTrailing.Menu) Space.S1.dp else tokens.gutter.dp,
+                top = Space.S2.dp,
+                bottom = Space.S2.dp,
+            )
             .testTag("kit-row")
     Row(base, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
         when {
@@ -346,6 +358,7 @@ private fun RowBody(
                         modifier = Modifier.testTag(iconAction.testTag ?: "kit-row-icon-action"),
                         enabled = KitEnabled.of(iconAction.enabled, iconAction.disabledReason),
                     )
+                    trailing is KitRowTrailing.Menu -> RowMenu(trailing, enabled, disabledReason)
                     value != null && !valueBelow -> RowValue(value)
                     action != null && !actionBelow -> KitInlineAction(action)
                     trailing is KitRowTrailing.Locked -> RowLockedValue(trailing)
@@ -364,5 +377,20 @@ private fun RowBody(
                 }
             }
         }
+    }
+}
+
+/** [KitRowTrailing.Menu]: the ⋯ button and its menu, owned by the row so the highlight covers both. */
+@Composable
+private fun RowMenu(menu: KitRowTrailing.Menu, enabled: Boolean, disabledReason: String?) {
+    var open by remember { mutableStateOf(false) }
+    KitMenu(expanded = open, items = menu.items, onDismissRequest = { open = false }, title = menu.title) {
+        KitIconButton(
+            KitIcons.more,
+            menu.label,
+            { open = true },
+            Modifier.testTag("kit-row-menu"),
+            enabled = KitEnabled.of(enabled, disabledReason),
+        )
     }
 }

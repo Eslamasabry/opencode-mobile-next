@@ -2,7 +2,13 @@ package io.github.eslamasabry.oc.ui.kit.foundation
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.FocusInteraction
+import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.Interaction
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filter
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.sizeIn
@@ -78,6 +84,7 @@ internal fun Modifier.kitTappable(
     shape: KitShapeId = KitShapeId.Button,
     ink: TextTone = TextTone.Primary,
     interactionSource: MutableInteractionSource? = null,
+    focusFill: Boolean = true,
 ): Modifier {
     val platform = LocalKitPlatform.current
     val appearance = LocalKitAppearance.current
@@ -93,14 +100,24 @@ internal fun Modifier.kitTappable(
             if (reduced) KitFillIndication(inkColor) else platform.pressIndication(inkColor)
         }
     val interactions = interactionSource ?: remember { MutableInteractionSource() }
+    // A part that marks focus itself (the bar's exit ring) keeps the press fill but not a resting focus fill.
+    val drawn: InteractionSource =
+        if (focusFill) interactions
+        else remember(interactions) {
+            val all = interactions.interactions
+            object : InteractionSource {
+                override val interactions: Flow<Interaction> = all.filter { it !is FocusInteraction }
+            }
+        }
     val hapticsOn = appearance.haptics
     return this
         .sizeIn(minWidth = tokens.minTarget.dp, minHeight = tokens.minTarget.dp)
         .clip(shape.shape())
         .semantics { if (!enabled && disabledReason != null) stateDescription = disabledReason }
+        .then(if (focusFill) Modifier else Modifier.indication(drawn, indication))
         .combinedClickable(
             interactionSource = interactions,
-            indication = indication,
+            indication = if (focusFill) indication else null,
             enabled = enabled,
             onClickLabel = onClickLabel,
             role = role.toSemantics(),

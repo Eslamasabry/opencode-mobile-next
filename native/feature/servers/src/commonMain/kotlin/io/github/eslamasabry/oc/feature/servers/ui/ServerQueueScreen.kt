@@ -226,14 +226,15 @@ public fun ServerQueueScreen(state: ServerQueueUi, actions: ServerQueueActions) 
                                     plan.destinationName,
                                 )
                         } else
-                            stringResource(
-                                Res.string.queue40Moved,
+                            pluralStringResource(
+                                Res.plurals.queue40Moved,
+                                moved.count,
                                 moved.count,
                                 moved.skipped,
                                 moved.reset,
                             )
                     )
-                    state.undone?.let { KitNotice(stringResource(Res.string.queue40Undone, it)) }
+                    state.undone?.let { KitNotice(pluralStringResource(Res.plurals.queue40Undone, it, it)) }
                 }
                 if (!state.loading && (plan == null || state.failure != null))
                     KitButton(

@@ -112,6 +112,7 @@
     <string name="draftLeaveTitle">Your draft isn't saved</string>
     <string name="draftLeaveMessage">Copy your text to keep it, or try saving again. If you leave without saving, your latest changes may be lost.</string>
     <string name="draftLeaveAction">Leave without saving</string>
+    <string name="draftLeaveQuestion">Leave without saving?</string>
     <string name="draftUnsaved">Unsaved</string>
     <string name="draftAttachmentsLocal">Attachments save with this draft on this device.</string>
     <string name="draftAttachmentsFailed">Attachments need recovery or could not be saved. Retry before sending.</string>

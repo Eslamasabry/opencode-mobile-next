@@ -38,6 +38,13 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
+import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 
 /**
  * How the bar leaves the page: Back at the start, Close at the end (LAY-8), or nothing at a root or
@@ -297,19 +304,31 @@ public fun KitTopBar(
     }
 }
 
+/**
+ * The one exit control of every bar: a bare glyph on a 48 dp circle target. Pressing fills the circle; keyboard
+ * focus draws a ring instead of a resting fill, so Back looks the same on every screen however it was reached.
+ */
 @Composable
 private fun ExitButton(glyph: ExitGlyph, label: String, onExit: () -> Unit, order: Float) {
-    KitTappable(
-        onClick = onExit,
-        modifier =
-            Modifier.semantics {
-                    contentDescription = label
-                    traversalIndex = order
-                }
-                .testTag("kit-top-bar-exit"),
-        shape = KitShapeId.Circle,
+    val interactions = remember { MutableInteractionSource() }
+    val focused by interactions.collectIsFocusedAsState()
+    val colors = LocalKitColors.current
+    Box(
+        Modifier.semantics {
+                contentDescription = label
+                traversalIndex = order
+            }
+            .testTag("kit-top-bar-exit")
+            .kitTappable(
+                onClick = onExit,
+                shape = KitShapeId.Circle,
+                interactionSource = interactions,
+                focusFill = false,
+            )
+            .then(if (focused) Modifier.border(2.dp, colors.accent, KitShapeId.Circle.shape()) else Modifier),
+        contentAlignment = Alignment.Center,
     ) {
-        KitExitGlyph(glyph, LocalKitColors.current.text1)
+        KitExitGlyph(glyph, colors.text1)
     }
 }
 

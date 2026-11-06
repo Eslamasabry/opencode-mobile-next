@@ -4,6 +4,13 @@
     <string name="linuxPortCopiedAddress">نسخ العنوان</string>
     <string name="linuxPortOwnerStop">إيقاف %1$s</string>
     <string name="linuxPortOwnerQuestion">إيقاف %1$s؟</string>
-    <string name="linuxPortOwnerStopBody">إيقاف البرنامج المحدد وعملياته المساعدة (%1$d عملية)، بعد مطابقة هوية كل عملية. لن يُعاد تشغيله تلقائيًا.</string>
+    <plurals name="linuxPortOwnerStopBody">
+        <item quantity="zero">إيقاف البرنامج المحدد وعملياته المساعدة (%1$d عمليات)، بعد مطابقة هوية كل عملية. لن يُعاد تشغيله تلقائيًا.</item>
+        <item quantity="one">إيقاف البرنامج المحدد وعملياته المساعدة (عملية واحدة)، بعد مطابقة هوية كل عملية. لن يُعاد تشغيله تلقائيًا.</item>
+        <item quantity="two">إيقاف البرنامج المحدد وعملياته المساعدة (عمليتان)، بعد مطابقة هوية كل عملية. لن يُعاد تشغيله تلقائيًا.</item>
+        <item quantity="few">إيقاف البرنامج المحدد وعملياته المساعدة (%1$d عمليات)، بعد مطابقة هوية كل عملية. لن يُعاد تشغيله تلقائيًا.</item>
+        <item quantity="many">إيقاف البرنامج المحدد وعملياته المساعدة (%1$d عملية)، بعد مطابقة هوية كل عملية. لن يُعاد تشغيله تلقائيًا.</item>
+        <item quantity="other">إيقاف البرنامج المحدد وعملياته المساعدة (%1$d عملية)، بعد مطابقة هوية كل عملية. لن يُعاد تشغيله تلقائيًا.</item>
+    </plurals>
     <string name="linuxPortOwnerResult">انتهت: %1$d · أُجبرت على الإيقاف: %2$d · ما زالت تعمل: %3$d · تغيّرت هويتها وبقيت: %4$d</string>
 </resources>

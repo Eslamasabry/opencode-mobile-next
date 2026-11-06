@@ -274,9 +274,15 @@ public fun ServerIntegrationScreen(state: ServerIntegrationUi, actions: ServerIn
         }
         KitConfirm(
             state.question?.let {
+                val credential = it.kind == ServerIntegrationKind.Credential
                 KitConfirmSpec(
-                    stringResource(Res.string.s40iDisconnectQuestion),
-                    stringResource(Res.string.s40iConfirm),
+                    stringResource(
+                        if (credential) Res.string.s40iRemoveCredentialQuestion
+                        else Res.string.s40iDisconnectQuestion
+                    ),
+                    stringResource(
+                        if (credential) Res.string.s40iRemoveCredential else Res.string.s40iDisconnect
+                    ),
                     kind = KitConfirmKind.Destructive,
                     body = stringResource(Res.string.s40iDisconnectBody, it.title),
                 )

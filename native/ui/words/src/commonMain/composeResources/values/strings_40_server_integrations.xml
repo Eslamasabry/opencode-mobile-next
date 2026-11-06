@@ -24,8 +24,8 @@
     <string name="s40iSaveLabel">Save label</string>
     <string name="s40iRemoveCredential">Remove credential</string>
     <string name="s40iDisconnect">Disconnect</string>
-    <string name="s40iDisconnectQuestion">Disconnect or remove this saved credential?</string>
-    <string name="s40iConfirm">Confirm</string>
+    <string name="s40iDisconnectQuestion">Disconnect this integration?</string>
+    <string name="s40iRemoveCredentialQuestion">Remove this saved credential?</string>
     <string name="s40iDisconnectBody">This affects %1$s on this server. It does not remove MCP configuration. Sign in or connect again to use it later.</string>
     <string name="s40iMcpAddHint">Choose either a remote URL or a local executable. The server saves this configuration for this project location; it does not install missing software.</string>
     <string name="s40iName">Tool server name</string>

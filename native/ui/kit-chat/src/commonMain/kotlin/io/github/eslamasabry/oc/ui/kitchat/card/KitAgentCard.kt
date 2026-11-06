@@ -64,6 +64,10 @@ import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.decodeToImageBitmap
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
+import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import androidx.compose.foundation.layout.size
 
 // Agent cards (plan 09 §13.7, Flutter `KitAgentCard` + agent_card_nodes/asks/form). Kit-local
 // models only: the chat
@@ -298,14 +302,24 @@ public fun KitCardBody(
                 is KitCardNode.Checklist ->
                     Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
                         node.items.forEach { (text, done) ->
-                            val mark = if (!node.checks) "•" else if (done) "☑" else "☐"
-                            Row(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                                KitText(
-                                    mark,
-                                    role = TypeRole.Body,
-                                    tone = TextTone.Secondary,
-                                    kind = KitTextKind.Frame,
-                                )
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                if (node.checks)
+                                    KitIcon(
+                                        if (done) KitIcons.checkboxChecked else KitIcons.checkboxEmpty,
+                                        size = KitIconSize.Small,
+                                        tone = if (done) TextTone.Success else TextTone.Secondary,
+                                    )
+                                else
+                                    Box(Modifier.size(KitIconSize.Small.dp.dp), contentAlignment = Alignment.Center) {
+                                        Box(
+                                            Modifier.size(6.dp)
+                                                .clip(KitShapeId.Circle.shape())
+                                                .background(LocalKitColors.current.text2)
+                                        )
+                                    }
                                 KitText(
                                     text,
                                     role = TypeRole.Body,

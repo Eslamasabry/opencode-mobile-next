@@ -285,9 +285,10 @@ internal fun ProjectWorkspaceSheet(state: ProjectWorkspaceUi, actions: ProjectWo
                     body = stringResource(Res.string.agentProjectRemoveBody, tree.directory),
                     consequences =
                         listOf(
-                            stringResource(
-                                Res.string.agentProjectRemoveChanges,
+                            pluralStringResource(
+                                Res.plurals.agentProjectRemoveChanges,
                                 state.removalChanges!!.size,
+                                state.removalChanges.size,
                             )
                         ) + state.removalChanges.map { it.path },
                     typedName = tree.name,

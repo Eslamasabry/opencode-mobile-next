@@ -8,8 +8,14 @@
     <string name="stateStorageTitle">App storage</string>
     <string name="stateStorageServer">Linux and OpenCode</string>
     <string name="stateStoragePrivate">Saved sign-ins, settings and conversations</string>
-    <string name="stateStorageProject">%1$s · %2$d files · %3$d private files</string>
-    <string name="stateStorageSavedServers">%1$d saved servers</string>
+    <plurals name="stateStorageProject">
+        <item quantity="one">%1$s · 1 file · %3$d private</item>
+        <item quantity="other">%1$s · %2$d files · %3$d private</item>
+    </plurals>
+    <plurals name="stateStorageSavedServers">
+        <item quantity="one">1 saved server</item>
+        <item quantity="other">%1$d saved servers</item>
+    </plurals>
     <string name="stateStorageEmpty">No Linux or projects are stored on this phone.</string>
     <string name="stateStorageFailed">Storage could not be measured. Try again.</string>
     <string name="stateStorageRefresh">Measure storage again</string>

@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.frame.*
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
@@ -86,9 +87,8 @@ public fun IntegrationsScreen(
                                         else Res.string.intNotConnected
                                     ),
                                 leading =
-                                    provider.logo?.let {
-                                        KitRowLeading.Svg(it, provider.name.take(2))
-                                    } ?: KitRowLeading.Initials(provider.name.take(2)),
+                                    provider.logo?.let { KitRowLeading.Svg(it) }
+                                        ?: KitRowLeading.Glyph(KitIcons.extensions, tile = true),
                                 selected = provider.id == state.selected,
                                 onClick = { actions.chooseProvider(provider.id) },
                             )

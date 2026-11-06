@@ -740,4 +740,7 @@
     <string name="composerPasteImage">لصق صورة</string>
     <string name="kitDiffSideBySide">جنبًا إلى جنب</string>
     <string name="kitDiffUnified">موحّد</string>
+    <string name="kitConsequenceLost">سيُفقد</string>
+    <string name="kitConsequenceKept">محفوظ</string>
+    <string name="kitConsequenceInfo">ملاحظة</string>
 </resources>

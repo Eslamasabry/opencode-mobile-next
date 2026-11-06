@@ -42,6 +42,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.Res
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -104,8 +105,9 @@ public fun KitLogPanel(
         )
         if (needle.isNotBlank()) {
             KitText(
-                stringResource(
-                    Res.string.p12LogMatches,
+                pluralStringResource(
+                    Res.plurals.p12LogMatches,
+                    matches.size,
                     if (matches.isEmpty()) 0 else Math.floorModCompat(match, matches.size) + 1,
                     matches.size,
                 )

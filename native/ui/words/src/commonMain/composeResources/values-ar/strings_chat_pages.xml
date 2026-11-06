@@ -260,6 +260,7 @@
     <string name="reviewRevertKeepConsequenceMessages">يُحذف الطلب المخفي وكل رسالة تليه</string>
     <string name="reviewRevertKeepConsequenceFiles">تبقى الملفات على حالتها الحالية</string>
     <string name="reviewRevertRestoreConfirmTitle">استعادة «%1$s»؟</string>
+    <string name="reviewRevertPutBackQuestion">استعادة كل شيء من «%1$s»؟</string>
     <string name="reviewRevertRestoreConfirmBody">تعود الرسائل المخفية، وتعود الملفات في هذا التراجع إلى حالتها عند إعداده. يمكنك التراجع بدءًا من طلب مجددًا لاحقًا.</string>
     <string name="reviewRevertRestoreConsequenceMessages">تعود الرسائل المخفية</string>
     <plurals name="reviewRevertRestoreConsequenceFiles">

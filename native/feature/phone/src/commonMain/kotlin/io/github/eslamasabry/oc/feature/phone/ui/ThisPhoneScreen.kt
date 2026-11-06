@@ -130,6 +130,7 @@ import io.github.eslamasabry.oc.ui.words.res.thisPhoneUpdateKept
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneUpdateTitle
 import io.github.eslamasabry.oc.ui.words.res.workRunawaySeeRunning
 import io.github.eslamasabry.oc.ui.words.res.workspaceDismissNotice
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /** The runtime's name in "Update OpenCode?" (the product name, not copy). */
@@ -509,8 +510,9 @@ public fun ThisPhoneScreen(
                     for (project in storage.projects) KitRow(
                         title = project.name,
                         supporting =
-                            stringResource(
-                                Res.string.stateStorageProject,
+                            pluralStringResource(
+                                Res.plurals.stateStorageProject,
+                                project.files,
                                 storageSize(project.bytes),
                                 project.files,
                                 project.privateFiles,
@@ -518,8 +520,9 @@ public fun ThisPhoneScreen(
                     )
                     KitRow(
                         title =
-                            stringResource(
-                                Res.string.stateStorageSavedServers,
+                            pluralStringResource(
+                                Res.plurals.stateStorageSavedServers,
+                                storage.savedServers,
                                 storage.savedServers,
                             )
                     )

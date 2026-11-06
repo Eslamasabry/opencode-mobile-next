@@ -8,7 +8,10 @@
     <string name="sessionTransferSave">Save JSON file</string>
     <string name="sessionTransferImport">Import a conversation</string>
     <string name="sessionTransferChoose">Choose JSON file</string>
-    <string name="sessionTransferRecords">%1$d message records</string>
+    <plurals name="sessionTransferRecords">
+        <item quantity="one">1 message record</item>
+        <item quantity="other">%1$d message records</item>
+    </plurals>
     <string name="sessionTransferRedacted">This copy includes hidden values. Import keeps those placeholders.</string>
     <string name="sessionTransferDestination">Import into this server folder</string>
     <string name="sessionTransferDestinationRequired">Choose a destination folder first.</string>
@@ -17,7 +20,10 @@
     <string name="sessionTransferLoadNote">Read current note</string>
     <string name="sessionTransferSaveNote">Save note</string>
     <string name="sessionTransferRemoveNote">Remove note</string>
-    <string name="sessionTransferNoteLimit">The note must fit within %1$d encoded bytes. Shorten it and try again.</string>
+    <plurals name="sessionTransferNoteLimit">
+        <item quantity="one">The note must fit within 1 encoded byte. Shorten it and try again.</item>
+        <item quantity="other">The note must fit within %1$d encoded bytes. Shorten it and try again.</item>
+    </plurals>
     <string name="sessionTransferSaved">Conversation saved.</string>
     <string name="sessionTransferImported">Conversation imported.</string>
     <string name="sessionTransferNoteSaved">Note saved.</string>

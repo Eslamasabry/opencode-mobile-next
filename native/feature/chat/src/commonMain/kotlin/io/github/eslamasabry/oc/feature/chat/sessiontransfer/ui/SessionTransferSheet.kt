@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.words.res.*
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -127,7 +128,7 @@ public fun SessionTransferSheet(state: SessionTransferUi, actions: SessionTransf
                 )
                 state.reviewCount?.let { count ->
                     state.reviewTitle?.let { KitText(it) }
-                    KitText(stringResource(Res.string.sessionTransferRecords, count))
+                    KitText(pluralStringResource(Res.plurals.sessionTransferRecords, count, count))
                     if (state.redacted)
                         KitNotice(stringResource(Res.string.sessionTransferRedacted))
                     KitField(
@@ -169,7 +170,7 @@ public fun SessionTransferSheet(state: SessionTransferUi, actions: SessionTransf
                         onTextChanged = actions::note,
                         error =
                             state.noteLimit?.let {
-                                stringResource(Res.string.sessionTransferNoteLimit, it)
+                                pluralStringResource(Res.plurals.sessionTransferNoteLimit, it, it)
                             },
                     )
                     KitButton(

@@ -1,4 +1,7 @@
 <resources>
     <string name="scheduleActionWhen">Schedule for %1$s</string>
-    <string name="scheduleActionHours">Schedule every %1$d hours</string>
+    <plurals name="scheduleActionHours">
+        <item quantity="one">Schedule every hour</item>
+        <item quantity="other">Schedule every %1$d hours</item>
+    </plurals>
 </resources>

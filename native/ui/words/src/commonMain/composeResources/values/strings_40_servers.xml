@@ -47,11 +47,20 @@
     <string name="editor40TailscaleOpen">Open Tailscale</string>
     <string name="editor40TailscaleInstall">Get Tailscale</string>
     <string name="editor40TailscaleRefresh">Check Tailscale again</string>
-    <string name="rows40Waiting">%1$d need you</string>
+    <plurals name="rows40Waiting">
+        <item quantity="one">1 needs you</item>
+        <item quantity="other">%1$d need you</item>
+    </plurals>
     <string name="rows40Working">%1$d working</string>
     <string name="rows40Secret">Enter the saved sign-in again</string>
-    <string name="rows40Queued">%1$d prompts waiting</string>
-    <string name="rows40Move">Move %1$d waiting prompts to %2$s</string>
+    <plurals name="rows40Queued">
+        <item quantity="one">1 prompt waiting</item>
+        <item quantity="other">%1$d prompts waiting</item>
+    </plurals>
+    <plurals name="rows40Move">
+        <item quantity="one">Move 1 waiting prompt to %2$s</item>
+        <item quantity="other">Move %1$d waiting prompts to %2$s</item>
+    </plurals>
     <string name="rows40Schedules">Scheduled prompts</string>
     <string name="queue40Title">Move waiting prompts</string>
     <string name="queue40Loading">Reading waiting prompts and destination conversations…</string>
@@ -67,20 +76,41 @@
     <string name="queue40Destination">Destination conversation</string>
     <string name="queue40NewConversation">Start a new conversation</string>
     <string name="queue40Untitled">Untitled conversation</string>
-    <string name="queue40Move">Move %1$d prompts to %2$s</string>
+    <plurals name="queue40Move">
+        <item quantity="one">Move 1 prompt to %2$s</item>
+        <item quantity="other">Move %1$d prompts to %2$s</item>
+    </plurals>
     <string name="queue40Select">Choose at least one movable prompt.</string>
-    <string name="queue40Moved">Moved %1$d prompts. %2$d stayed on the original server. %3$d use the destination’s model or agent choice. Nothing was sent.</string>
+    <plurals name="queue40Moved">
+        <item quantity="one">Moved 1 prompt. Stayed on the original server: %2$d. Using the destination’s model or agent choice: %3$d. Nothing was sent.</item>
+        <item quantity="other">Moved %1$d prompts. Stayed on the original server: %2$d. Using the destination’s model or agent choice: %3$d. Nothing was sent.</item>
+    </plurals>
     <string name="queue40Undo">Undo move</string>
     <string name="queue40Open">Open destination conversation</string>
-    <string name="queue40Undone">Returned %1$d prompts that were still waiting. Prompts already sending stayed where they were.</string>
+    <plurals name="queue40Undone">
+        <item quantity="one">Returned 1 prompt that was still waiting. Prompts already sending stayed where they were.</item>
+        <item quantity="other">Returned %1$d prompts that were still waiting. Prompts already sending stayed where they were.</item>
+    </plurals>
     <string name="queue40Refresh">Refresh waiting prompts</string>
-    <string name="remove40Title">Forget this server</string>
-    <string name="remove40ConfirmTitle">Forget %1$s?</string>
+    <string name="remove40Title">Remove this server</string>
+    <string name="remove40ConfirmTitle">Remove %1$s?</string>
     <string name="remove40Body">This removes this app’s saved connection and local data. It does not delete conversations from the server.</string>
-    <string name="remove40QueueLost">%1$d waiting prompts will be deleted from this phone.</string>
-    <string name="remove40QueueKept">%1$d waiting prompts will be kept in Saved prompts.</string>
-    <string name="remove40Uncertain">%1$d prompts may already have been sent. A delivery that still needs review can stop removal.</string>
-    <string name="remove40DraftsLost">%1$d saved conversation drafts will be removed.</string>
+    <plurals name="remove40QueueLost">
+        <item quantity="one">1 waiting prompt will be deleted from this phone.</item>
+        <item quantity="other">%1$d waiting prompts will be deleted from this phone.</item>
+    </plurals>
+    <plurals name="remove40QueueKept">
+        <item quantity="one">1 waiting prompt will be kept in Saved prompts.</item>
+        <item quantity="other">%1$d waiting prompts will be kept in Saved prompts.</item>
+    </plurals>
+    <plurals name="remove40Uncertain">
+        <item quantity="one">1 prompt may already have been sent. A delivery that still needs review can stop removal.</item>
+        <item quantity="other">%1$d prompts may already have been sent. A delivery that still needs review can stop removal.</item>
+    </plurals>
+    <plurals name="remove40DraftsLost">
+        <item quantity="one">1 saved conversation draft will be removed.</item>
+        <item quantity="other">%1$d saved conversation drafts will be removed.</item>
+    </plurals>
     <string name="remove40Active">The current connection will close. You will return to your saved servers.</string>
     <string name="remove40ServerKeeps">The server keeps its conversations and files.</string>
     <string name="remove40Loading">Checking what this phone keeps for the server…</string>

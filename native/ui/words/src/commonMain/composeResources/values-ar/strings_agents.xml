@@ -531,7 +531,14 @@
     <string name="agentDraftLoading">قراءة المحادثة</string>
     <string name="agentDraftFailed">تعذّر إعداد السجل الكامل. تحقّق من الاتصال واختر المحادثة مجددًا.</string>
     <string name="agentDraftReview">مراجعة السجل</string>
-    <string name="agentDraftOmitted">استُبعدت %1$d رسائل قديمة لتناسب حجم السجل. احتُفظ بأحدث دور كاملًا.</string>
+    <plurals name="agentDraftOmitted">
+        <item quantity="zero">استُبعدت %1$d رسائل قديمة لتناسب حجم السجل. احتُفظ بأحدث دور كاملًا.</item>
+        <item quantity="one">استُبعدت رسالة قديمة واحدة لتناسب حجم السجل. احتُفظ بأحدث دور كاملًا.</item>
+        <item quantity="two">استُبعدت رسالتان قديمتان لتناسب حجم السجل. احتُفظ بأحدث دور كاملًا.</item>
+        <item quantity="few">استُبعدت %1$d رسائل قديمة لتناسب حجم السجل. احتُفظ بأحدث دور كاملًا.</item>
+        <item quantity="many">استُبعدت %1$d رسالة قديمة لتناسب حجم السجل. احتُفظ بأحدث دور كاملًا.</item>
+        <item quantity="other">استُبعدت %1$d رسالة قديمة لتناسب حجم السجل. احتُفظ بأحدث دور كاملًا.</item>
+    </plurals>
     <string name="agentDraftMasked">أُخفيت بيانات الدخول. تحقّق من السجل قبل مشاركته.</string>
     <string name="agentDraftCopy">نسخ السجل بعد مراجعته</string>
     <string name="agentDraftCopied">نُسخ السجل.</string>

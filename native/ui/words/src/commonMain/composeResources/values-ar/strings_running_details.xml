@@ -3,7 +3,14 @@
     <string name="runningDetailMemory">ذاكرة %1$d MB</string>
     <string name="runningDetailElapsed">تعمل منذ %1$d دقيقة</string>
     <string name="runningDetailPid">العملية %1$d</string>
-    <string name="runningDetailHelpers">تتوقف أيضًا عملياتها المساعدة وعددها %1$d، بعد التحقق من هوية كل عملية مجددًا.</string>
+    <plurals name="runningDetailHelpers">
+        <item quantity="zero">تتوقف أيضًا عملياتها المساعدة وعددها %1$d، بعد التحقق من هوية كل عملية مجددًا.</item>
+        <item quantity="one">تتوقف أيضًا عمليتها المساعدة الوحيدة، بعد التحقق من هويتها مجددًا.</item>
+        <item quantity="two">تتوقف أيضًا عمليتاها المساعدتان، بعد التحقق من هوية كل عملية مجددًا.</item>
+        <item quantity="few">تتوقف أيضًا عملياتها المساعدة وعددها %1$d، بعد التحقق من هوية كل عملية مجددًا.</item>
+        <item quantity="many">تتوقف أيضًا عملياتها المساعدة وعددها %1$d، بعد التحقق من هوية كل عملية مجددًا.</item>
+        <item quantity="other">تتوقف أيضًا عملياتها المساعدة وعددها %1$d، بعد التحقق من هوية كل عملية مجددًا.</item>
+    </plurals>
     <string name="runningDetailBusy">مشغولة</string>
     <string name="runningDetailIdle">خاملة</string>
 </resources>

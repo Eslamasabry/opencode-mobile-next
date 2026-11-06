@@ -20,11 +20,23 @@
     <string name="monitor40Number">Enter a number.</string>
     <string name="monitor40Integer">Enter a whole number.</string>
     <string name="monitor40NotOffered">Choose an offered answer or enter a value the form accepts.</string>
-    <string name="monitor40MinLength">Enter at least %1$d characters.</string>
-    <string name="monitor40MaxLength">Use at most %1$d characters.</string>
+    <plurals name="monitor40MinLength">
+        <item quantity="one">Enter at least 1 character.</item>
+        <item quantity="other">Enter at least %1$d characters.</item>
+    </plurals>
+    <plurals name="monitor40MaxLength">
+        <item quantity="one">Use at most 1 character.</item>
+        <item quantity="other">Use at most %1$d characters.</item>
+    </plurals>
     <string name="monitor40Range">Enter a value within the allowed bounds: %1$s to %2$s.</string>
-    <string name="monitor40MinItems">Choose at least %1$d answers.</string>
-    <string name="monitor40MaxItems">Choose at most %1$d answers.</string>
+    <plurals name="monitor40MinItems">
+        <item quantity="one">Choose at least 1 answer.</item>
+        <item quantity="other">Choose at least %1$d answers.</item>
+    </plurals>
+    <plurals name="monitor40MaxItems">
+        <item quantity="one">Choose at most 1 answer.</item>
+        <item quantity="other">Choose at most %1$d answers.</item>
+    </plurals>
     <string name="monitor40QuestionCount">Questions: %1$d</string>
     <string name="monitor40Answer">Answer</string>
 </resources>

@@ -1,4 +1,7 @@
 <resources>
-    <string name="linuxProcessMembers">%1$d processes</string>
+    <plurals name="linuxProcessMembers">
+        <item quantity="one">1 process</item>
+        <item quantity="other">%1$d processes</item>
+    </plurals>
     <string name="linuxProcessHeavy">Heavy use</string>
 </resources>

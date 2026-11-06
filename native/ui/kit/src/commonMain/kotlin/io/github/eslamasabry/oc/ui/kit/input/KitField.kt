@@ -584,8 +584,20 @@ private fun PasteButton(state: TextFieldState, on: Boolean, maxLength: Int?, sin
 @Composable
 private fun SavedSecretLine(onReplace: () -> Unit) {
     val tokens = LocalKitTokens.current
+    val colors = LocalKitColors.current
+    // The saved state wears the field's own frame, so "Saved" sits where the typed text would and lines up with the
+    // fields above and below it; Replace is the field's trailing action, like Paste.
+    val shape = KitShapeId.Button.shape()
+    val fieldLook = rememberFieldLook(colors.surface1, false)
     Row(
-        Modifier.fillMaxWidth().heightIn(min = tokens.minTarget.dp),
+        Modifier.fillMaxWidth()
+            .heightIn(min = tokens.minTarget.dp)
+            .clip(shape)
+            .then(
+                if (fieldLook.isSolid) Modifier.background(colors.surface1).border(1.dp, colors.hairline, shape)
+                else fieldLook.look.modifier
+            )
+            .padding(start = Space.S3.dp, end = Space.S1.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {

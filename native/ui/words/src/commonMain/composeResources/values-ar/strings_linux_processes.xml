@@ -1,4 +1,11 @@
 <resources>
-    <string name="linuxProcessMembers">%1$d عمليات</string>
+    <plurals name="linuxProcessMembers">
+        <item quantity="zero">%1$d عمليات</item>
+        <item quantity="one">عملية واحدة</item>
+        <item quantity="two">عمليتان</item>
+        <item quantity="few">%1$d عمليات</item>
+        <item quantity="many">%1$d عملية</item>
+        <item quantity="other">%1$d عملية</item>
+    </plurals>
     <string name="linuxProcessHeavy">استخدام كثيف</string>
 </resources>

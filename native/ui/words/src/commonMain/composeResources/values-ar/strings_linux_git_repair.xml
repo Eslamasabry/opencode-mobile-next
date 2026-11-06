@@ -3,7 +3,14 @@
     <string name="linuxGitRepairDetail">استعد كائنات Git الموثقة من هذا المشروع أو مخزنه القديم في Termux. تبقى ملفات المشروع محفوظة.</string>
     <string name="linuxGitRepairWorking">جارٍ إصلاح ملفات Git…</string>
     <string name="linuxGitRepairHealthy">يمكن لـ Git قراءة هذا المشروع. لم تحتج ملفات الكائنات إلى إصلاح.</string>
-    <string name="linuxGitRepairRestored">تمت استعادة %1$d من ملفات كائنات Git. يمكن لـ Git قراءة المشروع من جديد.</string>
+    <plurals name="linuxGitRepairRestored">
+        <item quantity="zero">تمت استعادة %1$d من ملفات كائنات Git. يمكن لـ Git قراءة المشروع من جديد.</item>
+        <item quantity="one">تمت استعادة ملف واحد من ملفات كائنات Git. يمكن لـ Git قراءة المشروع من جديد.</item>
+        <item quantity="two">تمت استعادة ملفين من ملفات كائنات Git. يمكن لـ Git قراءة المشروع من جديد.</item>
+        <item quantity="few">تمت استعادة %1$d من ملفات كائنات Git. يمكن لـ Git قراءة المشروع من جديد.</item>
+        <item quantity="many">تمت استعادة %1$d من ملفات كائنات Git. يمكن لـ Git قراءة المشروع من جديد.</item>
+        <item quantity="other">تمت استعادة %1$d من ملفات كائنات Git. يمكن لـ Git قراءة المشروع من جديد.</item>
+    </plurals>
     <string name="linuxGitRepairMissing">تعذر استرداد بعض كائنات Git أو التحقق منها. انسخ المشروع مجددًا أو استعد نسخة منه.</string>
     <string name="linuxGitRepairTermuxMissing">Termux غير مثبت. ملفات كائنات Git هذه مفقودة. انسخ المشروع مجددًا أو استعد نسخة منه.</string>
     <string name="linuxGitRepairPermission">يلزم إذن تشغيل أوامر Termux. لم تتغير ملفات الكائنات. اسمح بتشغيل الأوامر في Termux من إعدادات التطبيق، ثم فعّل allow-external-apps في Termux وأعد الإصلاح.</string>

@@ -21,6 +21,7 @@ import io.github.eslamasabry.oc.ui.words.res.linuxGitRepairPermission
 import io.github.eslamasabry.oc.ui.words.res.linuxGitRepairRestored
 import io.github.eslamasabry.oc.ui.words.res.linuxGitRepairTermuxMissing
 import io.github.eslamasabry.oc.ui.words.res.linuxGitRepairWorking
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /** A visible repair path on the real Git page, including its failed/NotRepository states. */
@@ -44,7 +45,7 @@ internal fun GitRepairPanel(state: GitUi, actions: GitActions) {
             when (report.result) {
                 GitLinkRepairResult.Healthy -> stringResource(Res.string.linuxGitRepairHealthy)
                 GitLinkRepairResult.Repaired ->
-                    stringResource(Res.string.linuxGitRepairRestored, report.restored)
+                    pluralStringResource(Res.plurals.linuxGitRepairRestored, report.restored, report.restored)
                 GitLinkRepairResult.MissingObjects ->
                     stringResource(Res.string.linuxGitRepairMissing)
                 GitLinkRepairResult.TermuxMissing ->

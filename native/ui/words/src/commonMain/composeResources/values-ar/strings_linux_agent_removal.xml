@@ -3,7 +3,14 @@
     <string name="linuxAgentPayloadRemove">إزالة %1$s</string>
     <string name="linuxAgentPayloadRemoveTitle">إزالة %1$s من هذا الهاتف؟</string>
     <string name="linuxAgentPayloadRemoveBody">يزيل البرنامج الذي تم تنزيله والتنزيلات غير المكتملة. تبقى حساباتك ومحادثاتك والأدوات المشتركة على هذا الهاتف.</string>
-    <string name="linuxAgentPayloadRemoved">تمت إزالة البرنامج. تم تحرير %1$d بايت.</string>
+    <plurals name="linuxAgentPayloadRemoved">
+        <item quantity="zero">تمت إزالة البرنامج. تم تحرير %1$d بايت.</item>
+        <item quantity="one">تمت إزالة البرنامج. تم تحرير بايت واحد.</item>
+        <item quantity="two">تمت إزالة البرنامج. تم تحرير بايتين.</item>
+        <item quantity="few">تمت إزالة البرنامج. تم تحرير %1$d بايت.</item>
+        <item quantity="many">تمت إزالة البرنامج. تم تحرير %1$d بايت.</item>
+        <item quantity="other">تمت إزالة البرنامج. تم تحرير %1$d بايت.</item>
+    </plurals>
     <string name="linuxAgentPayloadBusy">الوكيل أو إعداد آخر للهاتف قيد التشغيل. أوقفه ثم حاول مجددًا.</string>
     <string name="linuxAgentPayloadUnsafe">هذه الملفات لا تطابق تثبيتًا يملكه التطبيق. لم تتم إزالة أي شيء.</string>
     <string name="linuxAgentPayloadUnconfirmed">تعذر تأكيد الإزالة. حدّث القائمة قبل المحاولة مجددًا.</string>
