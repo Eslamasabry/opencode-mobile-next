@@ -43,6 +43,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitInputDialog
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenuDismissal
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuGroup
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
@@ -127,6 +128,7 @@ import io.github.eslamasabry.oc.ui.words.res.importAction
 import io.github.eslamasabry.oc.ui.words.res.kitCopied
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
+import io.github.eslamasabry.oc.ui.words.res.kitMore
 import io.github.eslamasabry.oc.ui.words.res.kitSheetClose
 import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
@@ -169,6 +171,15 @@ public class ChatHeaderSlot(
 )
 
 /**
+ * Presentation-only menu navigation; every action retains its existing target and capability gate.
+ */
+private enum class HeaderMenuPage {
+    Main,
+    GoTo,
+    More,
+}
+
+/**
  * The conversation's bar (Flutter chat_top_bar.dart): Back, the title (tap to rename), "server ·
  * project" under it, then Find and the ⋯ conversation menu. No new bar level: it replaces the
  * chat's plain bar in place.
@@ -178,9 +189,7 @@ public fun ChatHeaderTopBar(
     slot: ChatHeaderSlot,
     onBack: () -> Unit,
     onFind: () -> Unit,
-    // Bar actions other units add (git, saved prompts, preview, the context reading): inline up to
-    // the window's
-    // limit, the rest at the end of the same ⋯ menu.
+    // Other units contribute destinations to Go to; primary conversation actions stay first.
     extraActions: List<KitLineAction> = emptyList(),
     onProject: (() -> Unit)? = null,
     onBranch: (() -> Unit)? = null,
@@ -194,8 +203,36 @@ public fun ChatHeaderTopBar(
             else -> state.serverName ?: state.projectName
         }
     val transcriptWords = transcriptWords()
-    val items =
-        menuItems(state, actions, onFind, transcriptWords) +
+    var menuPage by remember(actions) { mutableStateOf(HeaderMenuPage.Main) }
+    val primaryActions =
+        listOf(
+                HeaderAction.Find,
+                HeaderAction.Rename,
+                HeaderAction.Fork,
+                HeaderAction.CopyTranscript,
+            )
+            .filter { it in state.menu }
+    val primary =
+        menuItems(state, actions, onFind, transcriptWords, primaryActions).map {
+            it.copy(group = null)
+        }
+    val secondary =
+        menuItems(
+            state,
+            actions,
+            onFind,
+            transcriptWords,
+            state.menu.filterNot { it in primaryActions || it == HeaderAction.Details },
+        )
+    val goTo = KitMenuGroup("go-to", stringResource(Res.string.sessionMenuGoTo))
+    val destinations =
+        menuItems(
+            state,
+            actions,
+            onFind,
+            transcriptWords,
+            state.menu.filter { it == HeaderAction.Details },
+        ) +
             listOfNotNull(
                 slot.noteActions
                     ?.takeIf { slot.note?.available == true }
@@ -206,6 +243,8 @@ public fun ChatHeaderTopBar(
                                 actions.closeMenu()
                                 noteActions.openNote()
                             },
+                            icon = KitIcons.edit,
+                            group = goTo,
                         )
                     }
             )
@@ -239,26 +278,65 @@ public fun ChatHeaderTopBar(
         titleTapLabel = stringResource(Res.string.chatUiRenameSession),
         actions = emptyList(),
         more = { hidden ->
+            val places =
+                destinations +
+                    (extraActions + hidden).map { extra ->
+                        KitMenuItem(
+                            label = extra.label,
+                            onSelect = {
+                                actions.closeMenu()
+                                extra.onClick()
+                            },
+                            icon = extra.icon,
+                            group = goTo,
+                            enabled =
+                                if (extra.enabled) KitEnabled.Enabled
+                                else KitEnabled.Disabled(extra.disabledReason.orEmpty()),
+                        )
+                    }
+            val back =
+                KitMenuItem(
+                    stringResource(Res.string.kitTopBarBack),
+                    { menuPage = HeaderMenuPage.Main },
+                    dismissal = KitMenuDismissal.ByAction,
+                )
+            val menu =
+                when (menuPage) {
+                    HeaderMenuPage.Main ->
+                        primary +
+                            listOfNotNull(
+                                if (places.isEmpty()) null
+                                else
+                                    KitMenuItem(
+                                        stringResource(Res.string.sessionMenuGoTo),
+                                        { menuPage = HeaderMenuPage.GoTo },
+                                        icon = KitIcons.files,
+                                        dismissal = KitMenuDismissal.ByAction,
+                                    ),
+                                if (secondary.isEmpty()) null
+                                else
+                                    KitMenuItem(
+                                        stringResource(Res.string.kitMore),
+                                        { menuPage = HeaderMenuPage.More },
+                                        icon = KitIcons.tools,
+                                        dismissal = KitMenuDismissal.ByAction,
+                                    ),
+                            )
+                    HeaderMenuPage.GoTo -> listOf(back) + places
+                    HeaderMenuPage.More -> listOf(back) + secondary
+                }
             KitChatMoreMenu(
                 label = stringResource(Res.string.kitTopBarMore),
                 expanded = state.menuOpen,
-                items =
-                    items +
-                        (extraActions + hidden).map { extra ->
-                            KitMenuItem(
-                                label = extra.label,
-                                onSelect = {
-                                    actions.closeMenu()
-                                    extra.onClick()
-                                },
-                                icon = extra.icon,
-                                enabled =
-                                    if (extra.enabled) KitEnabled.Enabled
-                                    else KitEnabled.Disabled(extra.disabledReason.orEmpty()),
-                            )
-                        },
-                onOpen = actions::openMenu,
-                onDismissRequest = actions::closeMenu,
+                items = menu,
+                onOpen = {
+                    menuPage = HeaderMenuPage.Main
+                    actions.openMenu()
+                },
+                onDismissRequest = {
+                    menuPage = HeaderMenuPage.Main
+                    actions.closeMenu()
+                },
             )
         },
     )
@@ -624,13 +702,14 @@ private fun menuItems(
     actions: ChatHeaderActions,
     onFind: () -> Unit,
     words: TranscriptWords,
+    offered: List<HeaderAction> = state.menu,
 ): List<KitMenuItem> {
     val goTo = KitMenuGroup("go-to", stringResource(Res.string.sessionMenuGoTo))
     val act = KitMenuGroup("do", stringResource(Res.string.sessionMenuDo))
     val needsPrompt = stringResource(Res.string.sessionMenuNeedsPrompt)
     val mask = rememberKitMask()
     val working = stringResource(Res.string.kitTurnLiveWorking)
-    return state.menu.map { action ->
+    return offered.map { action ->
         val enabled =
             when {
                 state.working == action -> KitEnabled.Disabled(working)
