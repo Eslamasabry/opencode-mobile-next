@@ -75,4 +75,7 @@ public class ComposerChrome(
     public val openCommands: (() -> Unit)? = null,
     /** Send later or repeat for the words given (Hold Send, and its visible tray twin). */
     public val sendLater: ((words: String) -> Unit)? = null,
+    /** A new id when a Send later schedule was just saved from this chat: clear the draft and say so once. */
+    public val laterScheduled: () -> Long? = { null },
+    public val laterShown: (id: Long) -> Unit = {},
 )

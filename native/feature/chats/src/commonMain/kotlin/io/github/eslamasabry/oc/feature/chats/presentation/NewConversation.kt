@@ -30,6 +30,8 @@ import kotlin.time.Clock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.dropWhile
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -809,6 +811,7 @@ public class NewConversationViewModel(
                                                 // composer and the engine's pending bubble.
                                                 openedConversation = ref
                                                 nav.openChat(ref)
+                                                leaveWhenChatCloses()
                                             }
                                         },
                                     )
@@ -857,6 +860,17 @@ public class NewConversationViewModel(
                         reviewConversation = result.ref.takeIf { result.deliveryUnconfirmed },
                     )
                 }
+        }
+    }
+
+    /**
+     * N-43: this form stays alive under the new chat until the receipt settles, but Back from that chat goes to where
+     * the person came from, never to the emptied form: once the form is on top again it steps off.
+     */
+    private fun leaveWhenChatCloses() {
+        viewModelScope.launch {
+            nav.top.dropWhile { it == route }.first { it == route }
+            nav.back()
         }
     }
 

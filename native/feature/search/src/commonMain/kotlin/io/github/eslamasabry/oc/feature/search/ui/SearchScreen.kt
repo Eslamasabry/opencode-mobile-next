@@ -81,6 +81,7 @@ import io.github.eslamasabry.oc.ui.words.res.p12SearchSearching
 import io.github.eslamasabry.oc.ui.words.res.p12SearchTitle
 import io.github.eslamasabry.oc.ui.words.res.p12SearchTitles
 import io.github.eslamasabry.oc.ui.words.res.p12SearchTryAgain
+import io.github.eslamasabry.oc.ui.words.res.remoteTerminalTitle
 import io.github.eslamasabry.oc.ui.words.res.settingsV3Servers
 import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
 import org.jetbrains.compose.resources.stringResource
@@ -260,8 +261,8 @@ private fun goToLabel(place: GoToPlace): String =
             GoToPlace.Settings -> Res.string.librarySettingsTitle
             GoToPlace.Servers -> Res.string.settingsV3Servers
             GoToPlace.AddServer -> Res.string.kitCapServerAnyEnable
+            GoToPlace.Terminal -> Res.string.remoteTerminalTitle
             GoToPlace.Files,
-            GoToPlace.Terminal,
             GoToPlace.Help -> error("not an openable place")
             GoToPlace.NewConversation -> Res.string.workspaceNewSession
         }

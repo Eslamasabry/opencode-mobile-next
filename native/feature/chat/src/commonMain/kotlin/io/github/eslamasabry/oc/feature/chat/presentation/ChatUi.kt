@@ -463,6 +463,13 @@ public interface ChatActions {
     /** Hold Send / "Send later or repeat": opens the schedule editor for this conversation. */
     public fun sendLater(words: String) {}
 
+    /** N-44: set (a new id each time) once a Send later schedule was saved from this chat; the composer clears its draft. */
+    public val laterScheduled: kotlinx.coroutines.flow.StateFlow<Long?>
+        get() = kotlinx.coroutines.flow.MutableStateFlow(null)
+
+    /** The composer showed the Send later confirmation for [id]. */
+    public fun laterShown(id: Long) {}
+
     /** Commands launcher: Retry last prompt (the newest prompt's words alone, once more). */
     public fun retryLastPrompt() {}
 

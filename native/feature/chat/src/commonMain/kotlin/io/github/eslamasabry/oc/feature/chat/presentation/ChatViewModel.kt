@@ -27,6 +27,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.dropWhile
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
@@ -112,6 +114,27 @@ public class ChatViewModel(
 
     override fun openGit(): Unit = nav.open(GitRoute(route.ref))
 
+    private val scheduledSignal = kotlinx.coroutines.flow.MutableStateFlow<Long?>(null)
+    private var scheduledCount = 0L
+
+    override val laterScheduled: kotlinx.coroutines.flow.StateFlow<Long?> = scheduledSignal
+
+    override fun laterShown(id: Long) {
+        if (scheduledSignal.value == id) scheduledSignal.value = null
+    }
+
+    /** N-44: when the person comes back from the schedule editor with a new schedule, the composer says so and clears. */
+    private fun watchSavedSchedule(profile: String) {
+        val before = schedules.state(profile).value.schedules.map { it.id }.toSet()
+        viewModelScope.launch {
+            nav.top.dropWhile { it == route }.first { it == route }
+            if (schedules.state(profile).value.schedules.any { it.id !in before }) {
+                scheduledCount += 1
+                scheduledSignal.value = scheduledCount
+            }
+        }
+    }
+
     override fun sendLater(words: String) {
         if (words.isBlank() || openingSchedule) return
         openingSchedule = true
@@ -125,6 +148,7 @@ public class ChatViewModel(
                     presenter.actionFailed(Failure.StorageRefused())
                     return@launch
                 }
+                watchSavedSchedule(profile)
                 nav.open(
                     io.github.eslamasabry.oc.ui.routes.SchedulesRoute.Edit(
                         profileId = route.ref.profileId,

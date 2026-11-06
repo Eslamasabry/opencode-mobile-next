@@ -124,6 +124,8 @@ public class ChatPresenter(
         )
     private var revision = 0L
     private var lastHits: ImmutableList<FindHit> = persistentListOf()
+    private var lastLive: TranscriptState? = null
+    private var lastTitle: String? = null
     private var readAllowed = false
     private var readBusy = false
     private var stopInFlight = false
@@ -202,7 +204,12 @@ public class ChatPresenter(
 
     internal fun present(i: ChatInputs, l: ChatLocal, hits: ImmutableList<FindHit>): ChatUi {
         lastHits = hits
-        val t = i.transcript
+        // N-47: when the server goes away after the conversation was read, keep the last transcript and title on
+        // screen with one offline line (Try again retries the load) instead of replacing them with an error.
+        if (i.load == ChatLoad.Live && i.transcript.rows.isNotEmpty()) lastLive = i.transcript
+        i.title?.let { lastTitle = it }
+        val kept = if (i.load is ChatLoad.Failed) lastLive else null
+        val t = kept ?: i.transcript
         val cursor = TranscriptFind.keep(hits, l.findKey, l.findCursor)
         val hit = hits.getOrNull(cursor)
         val find =
@@ -233,9 +240,9 @@ public class ChatPresenter(
         return ChatUi(
             revision = ++revision,
             ref = world.ref,
-            title = i.title,
+            title = i.title ?: lastTitle,
             status =
-                StatusPick.pick(i.link, i.pending, t.run, t.rows, l.actionFailure, l.linkRefused)
+                (if (kept != null) ChatStatusUi(KEPT_OFFLINE_STATUS, ChatStatusKind.Offline) else null) ?: StatusPick.pick(i.link, i.pending, t.run, t.rows, l.actionFailure, l.linkRefused)
                     ?: l.receiptResult?.let {
                         ChatStatusUi(
                             RECEIPT_STATUS,
@@ -247,7 +254,8 @@ public class ChatPresenter(
                 when (val load = i.load) {
                     ChatLoad.Loading -> ChatPhase.Loading
                     ChatLoad.Live -> ChatPhase.Live
-                    is ChatLoad.Failed -> ChatPhase.Failed(load.failure)
+                    is ChatLoad.Failed ->
+                        if (kept != null) ChatPhase.Live else ChatPhase.Failed(load.failure)
                 },
             rows = t.rows,
             newestRowKey = t.newestKey,
@@ -1001,3 +1009,4 @@ private const val MAX_PATH_CHECKS = 256
 private val PICTURE_NAME = Regex("\\.(png|jpe?g|gif|webp|bmp)$", RegexOption.IGNORE_CASE)
 
 private const val RECEIPT_STATUS: String = "chat-receipt-check"
+private const val KEPT_OFFLINE_STATUS: String = "chat-kept-offline"

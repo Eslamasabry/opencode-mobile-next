@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.ProjectsRoute
+import io.github.eslamasabry.oc.ui.routes.RemoteTerminalRoute
 import io.github.eslamasabry.oc.ui.routes.SearchRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.ui.routes.SettingsRoute
@@ -157,8 +158,8 @@ public class SearchViewModel(
             GoToPlace.Servers,
             GoToPlace.AddServer -> nav.open(ServersRoute.Home)
             GoToPlace.NewConversation -> nav.open(ChatsRoute.New(server))
+            GoToPlace.Terminal -> if (server != null) nav.open(RemoteTerminalRoute(server))
             GoToPlace.Files,
-            GoToPlace.Terminal,
             GoToPlace.Help -> Unit
         }
     }

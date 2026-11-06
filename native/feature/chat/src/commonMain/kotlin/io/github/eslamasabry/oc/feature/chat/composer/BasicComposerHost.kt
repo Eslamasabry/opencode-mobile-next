@@ -58,6 +58,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerAdd
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerBox
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerFieldRow
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerChip
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerPrimaryAction
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerSend
@@ -70,6 +71,7 @@ import io.github.eslamasabry.oc.ui.kitchat.composer.KitVoiceField
 import io.github.eslamasabry.oc.ui.kitchat.stream.LocalKitPromptLift
 import io.github.eslamasabry.oc.ui.kitchat.stream.kitPromptOrigin
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.composerLaterScheduled
 import io.github.eslamasabry.oc.ui.words.res.chatDraftAlreadySent
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatAction
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatBody
@@ -343,6 +345,19 @@ public fun BasicComposer(
     var historyOpen by remember(state.targetKey) { mutableStateOf(false) }
     // Clear draft text keeps attachments and can be undone (Flutter composer_tools.dart).
     var clearedText by remember(state.targetKey) { mutableStateOf<String?>(null) }
+    // N-44: a saved Send later schedule takes the words with it: the draft clears and one note says why.
+    var laterNote by remember(state.targetKey) { mutableStateOf(false) }
+    val laterId = chrome.laterScheduled()
+    LaunchedEffect(laterId) {
+        if (laterId != null) {
+            field.edit { replace(0, length, "") }
+            editor.userEditSerial += 1
+            editor.lastReported = ""
+            actions.draftChanged("")
+            laterNote = true
+            chrome.laterShown(laterId)
+        }
+    }
     // Picking from the strip edits the field like typing would, then reports it (one draft truth).
     val replaceTail: (Int, String) -> Unit = { start, words ->
         field.edit { replace(start.coerceIn(0, length), length, words) }
@@ -364,6 +379,17 @@ public fun BasicComposer(
                         { dismissedSave = history.saveFailure },
                     ),
                 modifier = Modifier.testTag("prompt-history-save-failed"),
+            )
+        if (laterNote)
+            KitNotice(
+                message = stringResource(Res.string.composerLaterScheduled),
+                tone = StatusTone.Neutral,
+                dismiss =
+                    KitLineAction(
+                        stringResource(Res.string.composerPreviewAttachmentDismiss),
+                        { laterNote = false },
+                    ),
+                modifier = Modifier.testTag("chat-later-scheduled"),
             )
         clearedText?.let { previous ->
             KitNotice(
@@ -673,7 +699,12 @@ public fun BasicComposer(
             field = {
                 // Keep the editor mounted while an approval or form waits. Submission stays
                 // gated below; hiding it leaves an open conversation with only chips.
-                Box(Modifier.fillMaxWidth()) {
+                KitComposerFieldRow(
+                    tail =
+                        if (inlineMic && voice != null) {
+                            { voice.InlineMic(voiceField, Modifier) }
+                        } else null
+                ) {
                     KitField(
                         state = field,
                         // While a reply runs on a steering server the words join it
@@ -723,17 +754,8 @@ public fun BasicComposer(
                             repeatRevision = null
                             actions.draftChanged(accepted)
                         },
-                        modifier =
-                            Modifier.kitPromptOrigin()
-                                .testTag("chat-composer-field")
-                                .padding(
-                                    end =
-                                        if (inlineMic && voice != null)
-                                            LocalKitTokens.current.minTarget.dp
-                                        else 0.dp
-                                ),
+                        modifier = Modifier.kitPromptOrigin().testTag("chat-composer-field"),
                     )
-                    if (inlineMic) voice?.InlineMic(voiceField, Modifier.align(Alignment.BottomEnd))
                 }
             },
             leading = {

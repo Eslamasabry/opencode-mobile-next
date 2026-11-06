@@ -841,8 +841,8 @@
     <string name="gitNewCount">%1$d new</string>
     <string name="gitIdentityWhy">Saves in this project carry this name and email, so your work is yours when you send it.</string>
     <string name="gitPullNotOnRemote">Not on the remote yet. Send it first.</string>
-    <string name="gitPullNoRemote">Add a remote below first.</string>
-    <string name="gitSendNoRemote">No remote yet. Add one below.</string>
+    <string name="gitPullNoRemote">Tap to add a remote first.</string>
+    <string name="gitSendNoRemote">No remote yet. Tap to add one.</string>
     <string name="gitSendTo">Send to %1$s · %2$s</string>
     <string name="gitPlaceGitHub">GitHub</string>
     <string name="gitStateUpToDate">Up to date</string>

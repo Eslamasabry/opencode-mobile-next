@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -333,6 +334,7 @@ public fun ChatScreen(
     val frost = rememberKitFrostState()
     val overlays = state.phase == ChatPhase.Live && state.status == null && state.find == null
     val headerUnder by remember(list) { derivedStateOf { list.lazy.canScrollForward } }
+    val scheduledId by actions.laterScheduled.collectAsState()
     val chrome =
         remember(actions, prompts) {
             ComposerChrome(
@@ -375,6 +377,8 @@ public fun ChatScreen(
                         }
                     },
                 sendLater = if (demoMode) null else actions::sendLater,
+                laterScheduled = { scheduledId },
+                laterShown = actions::laterShown,
                 modelPickerRequest = { modelPicker },
                 modelPickerDone = { id -> if (modelPicker == id) modelPicker = null },
             )
@@ -424,7 +428,9 @@ public fun ChatScreen(
                                 .kitFrost(
                                     FrostRole.ChatHeader,
                                     frost,
-                                    shown = overlays && headerUnder,
+                                    // N-45: the header is always a solid surface; scrolled rows drew over its title
+                                    // when it was only a blur. (The blur returns once its tint keeps the title readable.)
+                                    shown = false,
                                 )
                         ) {
                             // CHAT-TRANSCRIPT (B-CHAT-019): the context reading folds into the
@@ -1024,6 +1030,12 @@ private fun statusLine(line: ChatStatusUi, actions: ChatActions): KitStatus =
                 KitStatusKind.Connection,
                 stringResource(Res.string.chatUiNotConnectedToTheServerRightNow),
                 id = "chat-status-${line.id}",
+                action =
+                    KitLineAction(
+                        stringResource(Res.string.commonRetry),
+                        actions::retryLoad,
+                        testTag = "chat-offline-retry",
+                    ),
             )
         ChatStatusKind.Connecting ->
             KitStatus(
