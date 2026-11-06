@@ -1,0 +1,4 @@
+<resources>
+    <string name="upgradeStartSending">جارٍ الإرسال…</string>
+    <string name="upgradeStartFailed">تم حفظ رسالتك. حاول مرة أخرى عندما تكون مستعدًا.</string>
+</resources>

@@ -1,0 +1,4 @@
+<resources>
+    <string name="upgradeStartSending">Sending…</string>
+    <string name="upgradeStartFailed">Your message is saved. Try again when you’re ready.</string>
+</resources>

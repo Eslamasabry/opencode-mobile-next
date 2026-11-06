@@ -21,6 +21,7 @@ import io.github.eslamasabry.oc.core.domain.ImportableConversation
 import io.github.eslamasabry.oc.core.domain.ImportableConversations
 import io.github.eslamasabry.oc.core.domain.ProviderConversationImportGateway
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
+import io.github.eslamasabry.oc.core.domain.SessionSelectionGateway
 import io.github.eslamasabry.oc.core.domain.facet
 import io.github.eslamasabry.oc.core.model.ModelRef
 import io.github.eslamasabry.oc.core.model.ModelSelection
@@ -125,8 +126,38 @@ class AndroidNewConversationHost(
             }
         }
 
+    @Serializable
+    private data class DraftChoices(
+        val provider: String? = null,
+        val model: String? = null,
+        val agent: String? = null,
+    )
+
+    private fun choicesKey(profile: ProfileId, directory: String?): String =
+        draftKey(profile, directory).replace("oc.draft.new-chat.", "oc.draft.new-chat-choices.")
+
+    override suspend fun saveChoices(
+        profile: ProfileId,
+        directory: String?,
+        model: ModelRef?,
+        agent: String?,
+    ): Outcome<Unit> =
+        withContext(serial) {
+            if (stores.profiles.profile(profile) == null) return@withContext refused()
+            stores.prefs.commit(stores.lanes.forProfile(profile)) {
+                putString(
+                    choicesKey(profile, directory),
+                    WireJson.encodeToString(DraftChoices(model?.providerId, model?.modelId, agent)),
+                )
+                if (directory != null) putString("oc.newChatProject.${profile.raw}", directory)
+            }
+        }
+
     private fun reviewKey(profile: ProfileId, directory: String?): String =
         draftKey(profile, directory).replace("oc.draft.new-chat.", "oc.draft.new-chat-review.")
+
+    private fun creationKey(profile: ProfileId, directory: String?): String =
+        draftKey(profile, directory).replace("oc.draft.new-chat.", "oc.draft.new-chat-creation.")
 
     @Serializable
     private data class FirstMessageReview(
@@ -163,6 +194,7 @@ class AndroidNewConversationHost(
             if (stores.profiles.profile(profile) == null) return@withContext refused()
             val raw =
                 stores.prefs.get(reviewKey(profile, directory))
+                    ?: stores.prefs.get(creationKey(profile, directory))
                     ?: return@withContext Outcome.Ok(null)
             val graph = registry.live.value[profile] ?: return@withContext refused()
             if (raw !is PrefValue.Str || raw.value.length > 8192 || directory == null)
@@ -230,6 +262,21 @@ class AndroidNewConversationHost(
                             !candidate.startsWith("/tmp/")
                     }
                 val importer = gateway.facet<ProviderConversationImportGateway>()
+                val draftChoices =
+                    stores.prefs.string(choicesKey(profile, directory))?.let { raw ->
+                        try {
+                            WireJson.decodeFromString<DraftChoices>(raw)
+                        } catch (cancelled: CancellationException) {
+                            throw cancelled
+                        } catch (_: Exception) {
+                            return@withLock Outcome.Failed(Failure.StorageRefused())
+                        }
+                    }
+                val draftModel = draftChoices?.let { choice ->
+                    choice.provider?.let { provider ->
+                        choice.model?.let { ModelRef(provider, it) }
+                    }
+                }
                 val savedModel =
                     stores.prefs.string("oc.model.${profile.raw}")?.let { raw ->
                         val fields = raw.split('|', limit = 2)
@@ -276,10 +323,12 @@ class AndroidNewConversationHost(
                             },
                         agents = agents,
                         model =
-                            savedModel
+                            draftModel
+                                ?: savedModel
                                 ?: providers.defaultProviderId?.let { p ->
                                     providers.defaultModelId?.let { ModelRef(p, it) }
                                 },
+                        agent = draftChoices?.agent,
                         importDirectory =
                             importer
                                 ?.takeIf { caps.hostAgentProviders && it.providerImportSupported }
@@ -325,15 +374,17 @@ class AndroidNewConversationHost(
                             targetIdentity = expectedTarget,
                         )
                     is Outcome.Ok ->
-                        held.value?.let { ref ->
-                            return@withLock NewConversationAttempt(
-                                directory,
-                                ref = ref,
-                                deliveryUnconfirmed = true,
-                                failure = Failure.Refused(RefusalReason.DispatchUncertain),
-                                targetIdentity = expectedTarget,
-                            )
-                        }
+                        held.value
+                            ?.takeUnless { previous?.ref == it && previous?.deliveryUnconfirmed == false }
+                            ?.let { ref ->
+                                return@withLock NewConversationAttempt(
+                                    directory,
+                                    ref = ref,
+                                    deliveryUnconfirmed = true,
+                                    failure = Failure.Refused(RefusalReason.DispatchUncertain),
+                                    targetIdentity = expectedTarget,
+                                )
+                            }
                 }
                 var attempt =
                     previous ?: NewConversationAttempt(directory, targetIdentity = expectedTarget)
@@ -366,20 +417,63 @@ class AndroidNewConversationHost(
                         return@withLock attempt.copy(
                             failure = Failure.Refused(RefusalReason.DispatchUncertain)
                         )
+                    // Journal before the create call: a killed process must never retry an
+                    // uncertain creation and silently make a second conversation.
+                    when (
+                        val journal =
+                            stores.prefs.commit(stores.lanes.forProfile(profile)) {
+                                putString(
+                                    creationKey(profile, directory),
+                                    WireJson.encodeToString(
+                                        FirstMessageReview("", directory, expectedTarget)
+                                    ),
+                                )
+                            }
+                    ) {
+                        is Outcome.Failed -> return@withLock attempt.copy(failure = journal.failure)
+                        is Outcome.Ok -> Unit
+                    }
                     attempt = attempt.copy(creationAttempted = true)
                     when (
                         val created =
                             gateway.createSession(
-                                NewSession(location = ServerLocation(directory = attempt.directory))
+                                NewSession(
+                                    title = text.lineSequence().firstOrNull()?.take(80),
+                                    location = ServerLocation(directory = attempt.directory),
+                                )
                             )
                     ) {
-                        is Outcome.Failed ->
+                        is Outcome.Failed -> {
+                            if (created.failure is Failure.ProjectGit)
+                                stores.prefs.commit(stores.lanes.forProfile(profile)) {
+                                    remove(creationKey(profile, directory))
+                                }
                             return@withLock attempt.copy(
                                 failure = created.failure,
                                 creationAttempted = created.failure !is Failure.ProjectGit,
                             )
-                        is Outcome.Ok ->
+                        }
+                        is Outcome.Ok -> {
                             attempt = attempt.copy(ref = ConversationRef(profile, created.value.id))
+                            val journal =
+                                stores.prefs.commit(stores.lanes.forProfile(profile)) {
+                                    putString(
+                                        creationKey(profile, directory),
+                                        WireJson.encodeToString(
+                                            FirstMessageReview(
+                                                created.value.id.raw,
+                                                directory,
+                                                expectedTarget,
+                                            )
+                                        ),
+                                    )
+                                }
+                            if (journal is Outcome.Failed)
+                                return@withLock attempt.copy(
+                                    failure = journal.failure,
+                                    deliveryUnconfirmed = true,
+                                )
+                        }
                     }
                 }
                 if (
@@ -401,6 +495,49 @@ class AndroidNewConversationHost(
                         !DirectoryPaths.same(located.directory, attempt.directory)
                 )
                     return@withLock attempt.copy(failure = refused().failure)
+                // V2 model/agent choices live on the session, never in the prompt body.
+                // Keep the created ref on failure, and read the chosen state back before send.
+                if (gateway.capabilities.value.sessionModelProviderSwitching) {
+                    val selection =
+                        gateway.facet<SessionSelectionGateway>()
+                            ?: return@withLock attempt.copy(
+                                failure = Failure.Refused(RefusalReason.StaleScope)
+                            )
+                    if (model != null && located.selection?.model != model) {
+                        when (val chosen = selection.setSessionModel(ref.sessionId, model, "")) {
+                            is Outcome.Failed ->
+                                return@withLock attempt.copy(failure = chosen.failure)
+                            is Outcome.Ok -> Unit
+                        }
+                        if (!currentTarget(graph, directory))
+                            return@withLock attempt.copy(failure = refused().failure)
+                    }
+                    if (agent != null && located.selection?.agent != agent) {
+                        when (val chosen = selection.setSessionAgent(ref.sessionId, agent)) {
+                            is Outcome.Failed ->
+                                return@withLock attempt.copy(failure = chosen.failure)
+                            is Outcome.Ok -> Unit
+                        }
+                        if (!currentTarget(graph, directory))
+                            return@withLock attempt.copy(failure = refused().failure)
+                    }
+                    val confirmed =
+                        when (val read = gateway.session(ref.sessionId)) {
+                            is Outcome.Failed ->
+                                return@withLock attempt.copy(failure = read.failure)
+                            is Outcome.Ok -> read.value
+                        }
+                    if (
+                        !currentTarget(graph, directory) ||
+                            confirmed.directory == null ||
+                            !DirectoryPaths.same(confirmed.directory, attempt.directory) ||
+                            (model != null && confirmed.selection?.model != model) ||
+                            (agent != null && confirmed.selection?.agent != agent)
+                    )
+                        return@withLock attempt.copy(
+                            failure = Failure.Refused(RefusalReason.DispatchUncertain)
+                        )
+                }
                 val delivery =
                     (graph as? ChatGraphAccessors)?.chatDelivery?.engine
                         ?: return@withLock attempt.copy(failure = Failure.StorageRefused())
@@ -448,6 +585,7 @@ class AndroidNewConversationHost(
                     is FirstMessage.Accepted -> {
                         stores.prefs.commit(stores.lanes.forProfile(profile)) {
                             remove(draftKey(profile, directory))
+                            remove(creationKey(profile, directory))
                             remove(reviewKey(profile, directory))
                             putString("oc.newChatProject.${profile.raw}", directory)
                         }

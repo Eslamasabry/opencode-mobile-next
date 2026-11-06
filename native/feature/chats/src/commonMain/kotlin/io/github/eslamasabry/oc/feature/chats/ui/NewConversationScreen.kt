@@ -76,6 +76,27 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
         actions.shown()
         onStopOrDispose {}
     }
+    if (state.openingChat) {
+        KitBackGuard(enabled = state.busy, onBack = actions::back)
+        io.github.eslamasabry.oc.ui.kitchat.transcript.KitStartingConversation(
+            text = state.text,
+            project = state.directory?.let(::importFolder).orEmpty(),
+            model = state.setup?.models?.firstOrNull { it.model == state.model }?.name ?: stringResource(Res.string.modelServerDefault),
+            status = stringResource(when {
+                state.busy -> Res.string.upgradeStartSending
+                state.deliveryUnconfirmed -> Res.string.p12NewDeliveryUnconfirmed
+                state.creationUnconfirmed -> Res.string.p12NewCreationUnconfirmed
+                else -> Res.string.upgradeStartFailed
+            }),
+            backLabel = stringResource(Res.string.kitTopBarBack),
+            onBack = actions::back,
+            retryLabel = stringResource(Res.string.commonRetry),
+            onRetry = if (!state.busy && !state.deliveryUnconfirmed && !state.creationUnconfirmed) actions::start else null,
+            reviewLabel = stringResource(Res.string.p12NewOpenCreated),
+            onReview = if (state.reviewConversation != null) actions::openCreatedConversation else null,
+        )
+        return
+    }
     val field = rememberTextFieldState()
     LaunchedEffect(state.textRevision) {
         if (field.text.toString() != state.text) field.edit { replace(0, length, state.text) }

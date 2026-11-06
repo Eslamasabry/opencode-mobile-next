@@ -99,6 +99,14 @@ public interface NewConversationHost {
         text: String,
     ): Outcome<Unit>
 
+    /** Saved with the project draft; changing screens never discards the selected model. */
+    public suspend fun saveChoices(
+        profile: ProfileId,
+        directory: String?,
+        model: ModelRef?,
+        agent: String?,
+    ): Outcome<Unit> = Outcome.Ok(Unit)
+
     public suspend fun start(
         profile: ProfileId,
         directory: String,
@@ -184,6 +192,7 @@ public data class NewConversationUi(
     val agent: String? = null,
     val separateCopy: Boolean = false,
     val busy: Boolean = false,
+    val openingChat: Boolean = false,
     val failure: Failure? = null,
     val sheet: NewConversationSheet? = null,
     val imports: ImportableConversations? = null,
@@ -452,17 +461,31 @@ public class NewConversationViewModel(
                 }
             }
             if (before.text.isEmpty()) restore(profile, directory.trim())
+            host.saveChoices(profile, directory.trim(), before.model, before.agent)
         }
     }
 
     override fun chooseModel(model: ModelRef?) {
         if (!mutable.value.busy && !mutable.value.deliveryUnconfirmed)
             mutable.update { it.copy(model = model, sheet = null) }
+        saveChoices()
     }
 
     override fun chooseAgent(agent: String?) {
         if (!mutable.value.busy && !mutable.value.deliveryUnconfirmed)
             mutable.update { it.copy(agent = agent, sheet = null) }
+        saveChoices()
+    }
+
+    private fun saveChoices() {
+        val shown = mutable.value
+        val profile = shown.profile ?: return
+        viewModelScope.launch {
+            edits.withLock {
+                val saved = host.saveChoices(profile, shown.directory, shown.model, shown.agent)
+                if (saved is Outcome.Failed) mutable.update { it.copy(draftFailed = true) }
+            }
+        }
     }
 
     override fun separateCopy(on: Boolean) {
@@ -567,31 +590,71 @@ public class NewConversationViewModel(
         )
             return
         if (shown.separateCopy) {
-            nav.open(
-                ProjectsRoute.Project(
-                    profile,
-                    directory,
-                    initialTask = shown.text.trim(),
-                    autoStartIsolated = true,
-                    taskProvider = shown.model?.providerId,
-                    taskModel = shown.model?.modelId,
-                    taskAgent = shown.agent,
-                )
-            )
+            // The separate-copy readiness review remains explicit. Save the exact first
+            // prompt and choices before handing it to that owner, just as for ordinary Start.
+            mutable.update { it.copy(busy = true, failure = null) }
+            viewModelScope.launch {
+                val saved = edits.withLock {
+                    when (val draft = host.saveDraft(profile, directory, shown.text)) {
+                        is Outcome.Failed -> draft
+                        is Outcome.Ok ->
+                            host.saveChoices(profile, directory, shown.model, shown.agent)
+                    }
+                }
+                mutable.update { it.copy(busy = false, draftFailed = saved is Outcome.Failed) }
+                if (saved is Outcome.Ok)
+                    nav.open(
+                        ProjectsRoute.Project(
+                            profile,
+                            directory,
+                            initialTask = shown.text.trim(),
+                            autoStartIsolated = true,
+                            taskProvider = shown.model?.providerId,
+                            taskModel = shown.model?.modelId,
+                            taskAgent = shown.agent,
+                        )
+                    )
+            }
             return
         }
-        mutable.update { it.copy(busy = true, failure = null, attempted = true) }
+        mutable.update {
+            it.copy(busy = true, openingChat = true, failure = null, attempted = true)
+        }
         viewModelScope.launch {
             val result = edits.withLock {
-                host.start(
-                    profile,
-                    directory,
-                    shown.text.trim(),
-                    shown.model,
-                    shown.agent,
-                    shown.separateCopy,
-                    attempt,
-                )
+                val saved = host.saveDraft(profile, directory, shown.text)
+                val choices = host.saveChoices(profile, directory, shown.model, shown.agent)
+                when {
+                    saved is Outcome.Failed ->
+                        NewConversationAttempt(directory, failure = saved.failure)
+                    choices is Outcome.Failed ->
+                        NewConversationAttempt(directory, failure = choices.failure)
+                    else ->
+                        when (
+                            val started =
+                                io.github.eslamasabry.oc.core.common.attempt({
+                                    Failure.StorageRefused()
+                                }) {
+                                    host.start(
+                                        profile,
+                                        directory,
+                                        shown.text.trim(),
+                                        shown.model,
+                                        shown.agent,
+                                        shown.separateCopy,
+                                        attempt,
+                                    )
+                                }
+                        ) {
+                            is Outcome.Ok -> started.value
+                            is Outcome.Failed ->
+                                NewConversationAttempt(
+                                    directory,
+                                    failure = started.failure,
+                                    deliveryUnconfirmed = true,
+                                )
+                        }
+                }
             }
             attempt = result
             if (result.dispatched && result.ref != null) {
