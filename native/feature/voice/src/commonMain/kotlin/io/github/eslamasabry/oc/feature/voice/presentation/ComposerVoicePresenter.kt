@@ -16,7 +16,6 @@ import io.github.eslamasabry.oc.engine.voice.conversation.VoiceReplyWatch
 import io.github.eslamasabry.oc.engine.voice.dictation.AutoSendCountdown
 import io.github.eslamasabry.oc.engine.voice.dictation.DraftMerge
 import io.github.eslamasabry.oc.engine.voice.dictation.VoiceStart
-import io.github.eslamasabry.oc.engine.voice.dictation.mayAutoSend
 import io.github.eslamasabry.oc.engine.voice.dictation.stopsOnSilence
 import io.github.eslamasabry.oc.engine.voice.readaloud.ReadRequest
 import io.github.eslamasabry.oc.engine.voice.state.ReadAloudState
@@ -185,6 +184,12 @@ public class ComposerVoicePresenter(
     private var observed = VoiceConversationSnapshot()
     private var conversationAttached = false
     private var tips: TipController? = null
+
+    /**
+     * The field as it was when dictation began: live words are merged around this each time they
+     * change, and cancelling puts it back. Null when nothing is being dictated into the field.
+     */
+    private var previewBase: Triple<String, Int, Int>? = null
     private val visit = TipVisit()
     private val tourVisit = TipVisit()
     private var teachingAttached = false
@@ -755,6 +760,11 @@ public class ComposerVoicePresenter(
         val p = parts ?: return
         if (field == null || !mutable.value.available) return
         clearCountdown()
+        previewBase =
+            field?.takeIf { mode != VoiceMode.Conversation }?.let {
+                val selection = it.selection()
+                Triple(it.text(), selection?.first ?: -1, selection?.last ?: -1)
+            }
         owner = true
         sawActive = false
         earlyEnd = null
@@ -812,6 +822,7 @@ public class ComposerVoicePresenter(
                     startTicking()
                 }
                 mutable.update { it.copy(phase = MicPhase.Listening, words = s.words) }
+                preview(s.words)
                 when (earlyEnd.also { earlyEnd = null }) {
                     EarlyEnd.Finish -> {
                         if (mutable.value.mode == VoiceMode.Hold) discard()
@@ -824,6 +835,7 @@ public class ComposerVoicePresenter(
             is VoiceState.Writing -> {
                 if (!sawActive) return
                 mutable.update { it.copy(phase = MicPhase.Writing, words = s.words) }
+                preview(s.words)
             }
             VoiceState.Cancelling -> Unit
             is VoiceState.Done -> {
@@ -834,7 +846,10 @@ public class ComposerVoicePresenter(
             is VoiceState.Failed -> {
                 if (!sawActive) return
                 owner = false
-                if (s.wordsKept.isNotBlank()) merge(s.wordsKept)
+                if (s.wordsKept.isNotBlank()) {
+                    merge(s.wordsKept)
+                    previewBase = null
+                }
                 endUi(noteFor(Failure.Media(s.problem)))
             }
             VoiceState.NeedsModel -> {
@@ -860,40 +875,37 @@ public class ComposerVoicePresenter(
             sendConversation(words.trim())
             return
         }
-        val merged = merge(words) ?: return endUi(null)
-        if (endedBy == VoiceEnd.Silence && mode == VoiceMode.Tap && field?.dictationOnly != true) {
-            // B-MEDIA-016: the spoken words must be sendable by themselves (Flutter
-            // `mayAutoSend(voice.draft)`); a
-            // rejected transcript never sends a draft that was already in the box.
-            val counted =
-                if (mayAutoSend(words))
-                    AutoSendCountdown.startIfAllowed(
-                        merged,
-                        stoppedBySilence = true,
-                        now = clock.now(),
-                    )
-                else null
-            if (counted != null) {
-                startCountdown(counted)
-                return
-            }
-            endUi(VoiceNote.StoppedAfterPause)
-            return
-        }
+        // Dictation never sends by itself: the words wait in the box for the person to send.
+        merge(words)
+        previewBase = null
         endUi(null)
+    }
+
+    /** Shows the words heard so far in the box, around where the person's cursor was. */
+    private fun preview(words: String) {
+        val base = previewBase ?: return
+        val f = field ?: return
+        val next = if (words.isBlank()) base.first else DraftMerge.merge(base.first, base.second, base.third, words)
+        if (next != f.text()) f.replace(next)
     }
 
     /** Merges [words] into the field around its selection; returns the new field text. */
     private fun merge(words: String): String? {
         val f = field ?: return null
+        val base = previewBase
         val current = f.text()
         val selection = f.selection()
-        val merged = DraftMerge.merge(current, selection?.first ?: -1, selection?.last ?: -1, words)
+        val merged =
+            if (base != null) DraftMerge.merge(base.first, base.second, base.third, words)
+            else DraftMerge.merge(current, selection?.first ?: -1, selection?.last ?: -1, words)
         if (merged != current) f.replace(merged)
         return merged
     }
 
     private fun endUi(note: VoiceNote?) {
+        // Anything still previewed was not kept (cancelled, nothing heard): the box is as it was.
+        previewBase?.let { base -> field?.takeIf { it.text() != base.first }?.replace(base.first) }
+        previewBase = null
         stopTicking()
         listeningSince = null
         earlyEnd = null
