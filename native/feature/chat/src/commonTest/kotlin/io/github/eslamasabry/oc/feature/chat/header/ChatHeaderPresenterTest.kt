@@ -386,7 +386,7 @@ class ChatHeaderPresenterTest {
     }
 
     @Test
-    fun `B-CHAT-015 the note shows once per conversation and a dismissal is kept for this server`() {
+    fun `B-CHAT-015 the free model is a chip tag, never a banner, and a dismissal is still kept for this server`() {
         val store =
             object : FreeNoteStore {
                 val kept = mutableListOf<String>()
@@ -405,12 +405,16 @@ class ChatHeaderPresenterTest {
         port.facts.value = port.facts.value.copy(providerId = "opencode", model = "big-pickle")
         val presenter = ChatHeaderPresenter(world, freePort, nav, Immediate, store)
         presenter.states(kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Unconfined), kotlinx.coroutines.flow.SharingStarted.Eagerly)
-        assertTrue(presenter.current().freeModelNote)
+        // Screens-upgrade U4 (81338d0cc): chat keeps one status slot, so the "Free model" banner is gone and the
+        // catalog truth rides on the model chip instead, independent of any dismissal.
+        assertTrue(presenter.current().freeModel)
+        assertFalse(presenter.current().freeModelNote, "no competing banner")
         presenter.dismissFreeNote()
-        assertFalse(presenter.current().freeModelNote)
+        assertTrue(presenter.current().freeModel, "the chip tag never depends on a dismissal")
         assertEquals(listOf("s1"), store.kept)
         val again = ChatHeaderPresenter(world, freePort, nav, Immediate, store)
         again.states(kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Unconfined), kotlinx.coroutines.flow.SharingStarted.Eagerly)
-        assertFalse(again.current().freeModelNote, "a dismissed conversation never shows it again")
+        assertTrue(again.current().freeModel)
+        assertFalse(again.current().freeModelNote)
     }
 }

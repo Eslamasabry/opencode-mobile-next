@@ -346,7 +346,7 @@ class WorldComposerFilesModelsTest {
     // ---- Model choices ----
 
     @Test
-    fun `B-CHAT-105 loadModels maps only enabled models of enabled providers and never raw config`() =
+    fun `B-CHAT-105 loadModels maps models of enabled providers, marks disabled ones, never raw config`() =
         runTest {
             val f = Fixture(this, selection = ModelRef("prov", "m1"))
             f.operations.catalog =
@@ -362,10 +362,15 @@ class WorldComposerFilesModelsTest {
             f.open()
             assertIs<Outcome.Ok<Unit>>(f.world.loadModels())
             val models = f.world.models.value
-            assertEquals(listOf("m1"), models.choices.map { it.modelId })
-            assertEquals("prov", models.choices.single().providerId)
-            assertEquals("Model One", models.choices.single().label)
-            assertTrue(models.choices.single().supportsAttachments)
+            // Flutter's model picker (pickers_catalog_models.dart) lists a disabled model greyed out with
+            // "unavailable"; a model of a disabled provider is not listed at all.
+            assertEquals(listOf("m1", "m2"), models.choices.map { it.modelId })
+            val one = models.choices.first { it.modelId == "m1" }
+            assertEquals("prov", one.providerId)
+            assertEquals("Model One", one.label)
+            assertTrue(one.supportsAttachments)
+            assertTrue(one.enabled)
+            assertFalse(models.choices.first { it.modelId == "m2" }.enabled)
             assertEquals("m1", models.selected?.modelId)
             assertFalse(models.loading)
             assertNull(models.failure)
