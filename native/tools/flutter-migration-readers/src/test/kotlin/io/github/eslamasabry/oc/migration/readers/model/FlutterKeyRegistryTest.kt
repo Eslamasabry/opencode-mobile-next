@@ -5,12 +5,17 @@ import io.github.eslamasabry.oc.migration.readers.fixtures.FixtureGenerator.ORPH
 import io.github.eslamasabry.oc.migration.readers.fixtures.FixtureGenerator.PROFILE_A
 import io.github.eslamasabry.oc.migration.readers.fixtures.FixtureGenerator.PROFILE_B
 import io.github.eslamasabry.oc.migration.readers.json.MiniJson
+import io.github.eslamasabry.oc.migration.readers.ledger.FlutterStoreScanner
+import io.github.eslamasabry.oc.migration.readers.ledger.LedgerStatus
+import io.github.eslamasabry.oc.migration.readers.ledger.NamesSnapshot
+import io.github.eslamasabry.oc.migration.readers.ledger.StoreLedger
 import io.github.eslamasabry.oc.migration.readers.prefs.PrefValue
 import io.github.eslamasabry.oc.migration.readers.prefs.StoredKind
 import io.github.eslamasabry.oc.migration.readers.xml.AndroidPrefsXml
 import io.github.eslamasabry.oc.migration.readers.xml.AndroidPrefsXmlWriter
 import io.github.eslamasabry.oc.migration.readers.xml.RawPref
 import java.io.File
+import kotlin.io.path.createTempDirectory
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -18,6 +23,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
+import org.junit.jupiter.api.Assumptions.assumeTrue
 
 class FlutterKeyRegistryTest {
 
@@ -176,5 +182,115 @@ class FlutterKeyRegistryTest {
         }
         // The app-wide draft is never swept.
         assertTrue(ProfileSweep.scopedKeys("app", logical).all { it.startsWith("oc.draft.") && it.endsWith(".app") })
+    }
+
+    // ---- store ledger (docs/native/migration/store-ledger.json), E00-S01 ----
+
+    private val ledger by lazy { StoreLedger.load(repoRoot) }
+    private val snapshot by lazy { NamesSnapshot.load(repoRoot) }
+
+    @Test
+    fun `B-MIGR-005 every name the released 2_1_4 tree writes has a store ledger row`() {
+        assertEquals("2.1.4+62", snapshot.release)
+        assertEquals(ledger.flutterCommit, snapshot.commit, "the ledger and the snapshot must describe the same Flutter commit")
+        val unmapped = ledger.unmapped(snapshot.names.map { it.name })
+        if (unmapped.isNotEmpty()) fail("names the Flutter app writes with no row in ${StoreLedger.PATH}: $unmapped")
+    }
+
+    @Test
+    fun `B-MIGR-005 rescanning a Flutter checkout finds the snapshot and nothing unmapped`() {
+        val tree = System.getProperty("oc.flutterTree")
+        assumeTrue(tree != null, "set -PflutterTree=<checkout of origin/master> to rescan the released tree")
+        val scanned = FlutterStoreScanner.scan(File(tree!!))
+        val unmapped = ledger.unmapped(scanned.map { it.name })
+        if (unmapped.isNotEmpty()) fail("names the Flutter app writes with no row in ${StoreLedger.PATH}: $unmapped")
+        assertEquals(snapshot.names.map { it.name }, scanned.map { it.name }, "the tree differs from the snapshot: run scanFlutterTree")
+    }
+
+    @Test
+    fun `B-MIGR-005 a key added to the Flutter tree without a ledger row fails the check`() {
+        val tree = createTempDirectory("flutter-tree").toFile()
+        try {
+            File(tree, "lib/state").mkdirs()
+            File(tree, "lib/state/new_thing.dart").writeText(
+                """
+                const localAgentOfferSkippedKey = 'local_agents_offer_skipped';
+                Future<void> save(SharedPreferences prefs, String id) async {
+                  await prefs.setBool('oc.brandNewThing.${'$'}id', true);
+                  await prefs.setString('oc.model.${'$'}id', 'x');
+                  await prefs.setInt('plainCounter', 1);
+                }
+                """.trimIndent(),
+            )
+            File(tree, "android/app/src/main/kotlin/x").mkdirs()
+            File(tree, "android/app/src/main/kotlin/x/NewStore.kt").writeText(
+                """
+                object NewStore {
+                    private const val PREFS = "oc_new_native_file"
+                    fun open(c: Context) = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                    fun file(c: Context) = File(c.filesDir, "new-thing-v1.json")
+                }
+                """.trimIndent(),
+            )
+            val scanned = FlutterStoreScanner.scan(tree).map { it.name }
+            assertEquals(listOf("local_agents_offer_skipped", "new-thing-v1.json", "oc.brandNewThing.", "oc.model.", "oc_new_native_file", "plainCounter"), scanned)
+            assertEquals(listOf("new-thing-v1.json", "oc.brandNewThing.", "oc_new_native_file", "plainCounter"), ledger.unmapped(scanned))
+        } finally {
+            tree.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun `B-MIGR-005 each ledger row names its writer, its native reader or decision, and the fallback words`() {
+        val problems = mutableListOf<String>()
+        assertEquals(ledger.rows.size, ledger.rows.map { it.id }.toSet().size, "row ids are unique")
+        val names = ledger.rows.flatMap { r -> (listOf(r.name) + r.aliases).map { r.kind to it } }
+        assertEquals(names.size, names.toSet().size, "a name or alias belongs to one row of each kind")
+        for (r in ledger.rows) {
+            if (r.decision.isBlank()) problems += "${r.id}: no decision"
+            if (r.nativeReader.isBlank()) problems += "${r.id}: no native reader or decision words"
+            when (r.status) {
+                LedgerStatus.READ -> if (!r.nativeReader.startsWith("same as ") && !File(repoRoot, r.nativeReader).isFile) {
+                    problems += "${r.id}: reader ${r.nativeReader} does not exist"
+                }
+                LedgerStatus.MISSING -> if (r.nativeReader != "none yet") problems += "${r.id}: MISSING rows read 'none yet'"
+                LedgerStatus.KEPT -> if (r.nativeReader != "kept untouched") problems += "${r.id}: KEPT rows read 'kept untouched'"
+                LedgerStatus.DEFERRED -> if (!r.nativeReader.startsWith("deferred")) problems += "${r.id}: DEFERRED rows read 'deferred'"
+                LedgerStatus.DROPPED -> if (!r.nativeReader.startsWith("dropped")) problems += "${r.id}: DROPPED rows read 'dropped'"
+                LedgerStatus.NOT_STORED, LedgerStatus.NEW -> Unit
+            }
+            if (r.status != LedgerStatus.NOT_STORED && r.fallback.isNullOrBlank()) problems += "${r.id}: no fallback words"
+            if (r.status != LedgerStatus.NEW && r.flutterWriter.isNullOrBlank()) problems += "${r.id}: no Flutter writer"
+        }
+        assertEquals(emptyList(), problems)
+    }
+
+    @Test
+    fun `B-MIGR-007 every registry shape and secret name has a store ledger row`() {
+        val missing = FlutterKey.entries.map { it.pattern }.filter { p -> ledger.rowsFor(p).none { it.kind == "pref" } } +
+            SecretKey.entries.map { it.pattern }.filter { p -> ledger.rowsFor(p).none { it.kind == "secret" } }
+        assertEquals(emptyList(), missing)
+        for (k in FlutterKey.entries) {
+            val r = ledger.rowsFor(k.pattern).single { it.kind == "pref" }
+            val expected = when {
+                Handling.D in k.handling -> setOf(LedgerStatus.DEFERRED)
+                Handling.X in k.handling || Handling.R in k.handling || Handling.I in k.handling -> setOf(LedgerStatus.DROPPED)
+                Handling.N in k.handling -> setOf(LedgerStatus.NOT_STORED)
+                k.isNew -> setOf(LedgerStatus.NEW)
+                else -> setOf(LedgerStatus.READ, LedgerStatus.MISSING)
+            }
+            assertTrue(r.status in expected, "${k.pattern}: ledger says ${r.status}, registry handling ${k.handling.toList()}")
+        }
+    }
+
+    @Test
+    fun `B-MIGR-005 the 2026-11-06 audit gaps are MISSING rows`() {
+        val gaps = listOf(
+            "oc.chatTail.", "oc.lastProject.", "oc.chatNoticesSeen.", "oc.withdrawnPrompts.", "oc.providerRuntimeRefresh.v1.",
+            "oc.providerRuntimeUnloadable.", "oc.scheduleReceipts.", "local_agents_offer_skipped", "oc_background_native",
+            "oc_background_native/pausedByUser", "camera_permissions", "voice_permissions", "termux-setup-v2.json", ".TermuxResultService",
+        )
+        val wrong = gaps.filter { g -> ledger.rowsFor(g).none { it.status == LedgerStatus.MISSING && it.audit != null } }
+        assertEquals(emptyList(), wrong, "audit gaps must stay MISSING (with the audit named) until a native reader lands")
     }
 }

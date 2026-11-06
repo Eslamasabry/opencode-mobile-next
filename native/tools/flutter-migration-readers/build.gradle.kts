@@ -30,9 +30,14 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
-    // The ledger cross-check reads the Flutter repo's own ledger file.
+    // The ledger cross-checks read the Flutter repo's own ledger file and docs/native/migration/.
     // This is a standalone build, so rootDir is native/tools/flutter-migration-readers and the repo root is three up.
     systemProperty("oc.repoRoot", rootDir.resolve("../../..").canonicalPath)
+    // Optional: a checkout of the released Flutter line (git worktree add <dir> origin/master). When given, the
+    // store-ledger test rescans it instead of trusting only the committed snapshot.
+    (providers.gradleProperty("flutterTree").orNull ?: System.getenv("OC_FLUTTER_TREE"))?.let {
+        systemProperty("oc.flutterTree", file(it).canonicalPath)
+    }
     testLogging {
         events("failed")
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
@@ -47,4 +52,20 @@ tasks.register<JavaExec>("generateFixtures") {
     classpath = sourceSets["main"].runtimeClasspath
     mainClass.set("io.github.eslamasabry.oc.migration.readers.fixtures.FixtureGeneratorMain")
     args(layout.buildDirectory.dir("fixtures").get().asFile.absolutePath)
+}
+
+// Rescans a checkout of the released Flutter line and rewrites docs/native/migration/flutter-2.1.4-names.json.
+//   git worktree add ../flutter-2.1.4 origin/master
+//   ./gradlew scanFlutterTree -PflutterTree=../flutter-2.1.4 -PflutterCommit=$(git rev-parse origin/master)
+tasks.register<JavaExec>("scanFlutterTree") {
+    group = "verification"
+    description = "Rewrite the committed store-ledger snapshot from a Flutter checkout"
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("io.github.eslamasabry.oc.migration.readers.ledger.FlutterStoreScannerMain")
+    val tree = providers.gradleProperty("flutterTree")
+    val commit = providers.gradleProperty("flutterCommit")
+    val out = rootDir.resolve("../../../docs/native/migration/flutter-2.1.4-names.json").canonicalPath
+    argumentProviders += CommandLineArgumentProvider {
+        listOf(file(tree.get()).canonicalPath, out, "2.1.4+62", "origin/master", commit.get())
+    }
 }
