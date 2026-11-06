@@ -21,6 +21,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.AllPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.AllProblemKind
 import io.github.eslamasabry.oc.feature.chats.presentation.AllRowUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsAllActions
+import io.github.eslamasabry.oc.feature.chats.presentation.RowAct
 import io.github.eslamasabry.oc.feature.chats.presentation.RowTitle
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitAction
@@ -440,6 +441,11 @@ private fun AllRow(row: AllRowUi, selecting: Boolean, actions: ChatsAllActions) 
                 icon = if (row.pinned) KitIcons.unpin else KitIcons.pin,
             ) else null,
             KitMenuItem(stringResource(Res.string.p12Rename), { actions.rename(row.key) }, icon = KitIcons.edit),
+            KitMenuItem(stringResource(Res.string.chatUiShareSession), { actions.rowAct(row.key, RowAct.Share) }, icon = KitIcons.link),
+            KitMenuItem(stringResource(Res.string.sessionMenuDetails), { actions.rowAct(row.key, RowAct.Details) }, icon = KitIcons.info),
+            KitMenuItem(stringResource(Res.string.globalSessionsContinueHere), { actions.rowAct(row.key, RowAct.ContinueHere) }, icon = KitIcons.download),
+            KitMenuItem(stringResource(Res.string.sessionOpenRelated), { actions.rowAct(row.key, RowAct.OpenRelated) }, icon = KitIcons.branch),
+            KitMenuItem(stringResource(Res.string.sessionCopyHandoff), { actions.rowAct(row.key, RowAct.CopyHandoff) }, icon = KitIcons.terminal),
             KitMenuItem(
                 stringResource(Res.string.sessionMenuArchive),
                 { actions.archive(row.key) },

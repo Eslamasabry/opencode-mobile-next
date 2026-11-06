@@ -10,6 +10,11 @@ public data class ChatRoute(
     val focusComposer: Boolean = false,
     val requestId: String? = null,
     val landOnFailure: Boolean = false,
+    /**
+     * A conversation-menu act to run once the page is up (a list row's Share, Details, Copy
+     * handoff or Continue here): the name of a chat `HeaderAction`; unknown names do nothing.
+     */
+    val thenAction: String? = null,
 ) : AppRoute {
     override val motion: RouteMotion
         get() = RouteMotion.GrowFromRow

@@ -8,6 +8,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalDensity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -273,6 +274,21 @@ public class ChatEntries(
                     create(route)
                 }
             val header by headerVm.state.collectAsStateWithLifecycle()
+
+            // A list row's act (Share, Details, Copy handoff, Continue here) runs once the page is up.
+            var thenDone by rememberSaveable(route) { mutableStateOf(false) }
+            LaunchedEffect(route) {
+                val act =
+                    route.thenAction?.let { name ->
+                        io.github.eslamasabry.oc.feature.chat.header.presentation.HeaderAction
+                            .entries
+                            .firstOrNull { it.name == name }
+                    }
+                if (act != null && !thenDone) {
+                    thenDone = true
+                    headerVm.choose(act)
+                }
+            }
             val noteVm =
                 assistedMetroViewModel<SessionNoteViewModel, SessionNoteViewModel.Factory> {
                     create(route)
