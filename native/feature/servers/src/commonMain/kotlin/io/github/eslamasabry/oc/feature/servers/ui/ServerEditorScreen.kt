@@ -72,6 +72,10 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
     var tailscaleOpened by remember { mutableStateOf(false) }
     var tailscaleReturned by remember { mutableStateOf(false) }
     var manualOpen by remember { mutableStateOf(!state.newServer || restored?.address?.isNotBlank() == true) }
+    val scroll = rememberScrollState()
+    LaunchedEffect(manualOpen, state.step) {
+        if (manualOpen) scroll.scrollTo(0)
+    }
     LaunchedEffect(state.failure, state.record?.needsSecret, state.fillGeneration) {
         if (state.failure != null || state.record?.needsSecret == true || state.fillGeneration > 0) manualOpen = true
     }
@@ -207,7 +211,9 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                 delay(900)
                 if (backend != BackendKind.OpenCode2 && directory.text.isBlank())
                     return@collectLatest
-                // The adapter refuses unconfirmed HTTP before any network call.
+                // Explain the transport choice before checking; the adapter still enforces it.
+                if (requiresHttpReview(backend, address.text.toString(), confirmedOrigin))
+                    return@collectLatest
                 actions.check(input())
             }
     }
@@ -231,6 +237,11 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
     val enabled =
         if (state.saving || state.loading)
             KitEnabled.Disabled(stringResource(Res.string.serversWorking))
+        else KitEnabled.Enabled
+    val connectionEnabled =
+        if (!enabled.isEnabled) enabled
+        else if (requiresHttpReview(backend, address.text.toString(), confirmedOrigin))
+            KitEnabled.Disabled(stringResource(Res.string.serversCleartextRequired))
         else KitEnabled.Enabled
     val discard =
         if (state.discard)
@@ -268,7 +279,8 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                 stringResource(if (state.step == ServerEditorStep.Ready) Res.string.editor40Open
                     else if (state.connectOnSave) Res.string.editor40SaveConnect else Res.string.editor40SaveChanges),
                 { if (state.step == ServerEditorStep.Ready) actions.openReady() else actions.save(input()) },
-                enabled = enabled, working = state.saving, fullWidth = true,
+                enabled = if (state.step == ServerEditorStep.Ready) enabled else connectionEnabled,
+                working = state.saving, fullWidth = true,
             )
         }),
     ) {
@@ -340,8 +352,7 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
         }
         Column(
             Modifier.fillMaxSize()
-                .imePadding()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scroll)
                 .padding(LocalKitTokens.current.gutter.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
@@ -457,7 +468,9 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
 
                 }
                 ServerEditorStep.Connect -> {
-                    if (state.newServer) {
+                    // Once manual entry is open, keep the address and password at the top.
+                    // Closing its visible fold brings the pairing instructions back.
+                    if (state.newServer && !manualOpen) {
                         EditorLinkMoment(when {
                             state.checking || state.saving -> KitServersLinkState.Linking
                             state.failure != null -> KitServersLinkState.Failed
@@ -494,7 +507,7 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                                 )
                         }
                     }
-                    if (backend == BackendKind.OpenCode2 && !tailscale) {
+                    if (backend == BackendKind.OpenCode2 && !tailscale && !manualOpen) {
                         KitText(stringResource(if (state.canScan) Res.string.firstRunPairingNextScan else Res.string.firstRunPairingNextPaste),
                             role = TypeRole.Secondary, tone = io.github.eslamasabry.oc.ui.design.type.TextTone.Secondary)
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
@@ -522,6 +535,28 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                                 helper = if (backend == BackendKind.OpenCode2)
                                     stringResource(if (tailscale) Res.string.tailscaleAddressDetail else Res.string.e7SetupHttpsHint) else null,
                                 enabled = enabled,
+                            )
+                            KitField(
+                                password,
+                                stringResource(
+                                    if (state.record?.needsSecret == true) {
+                                        if (backend == BackendKind.OpenCode2) Res.string.e7SetupReenterPassword else Res.string.codexTokenReentry
+                                    } else if (backend == BackendKind.OpenCode2) Res.string.e7SetupServerPassword
+                                    else if (backend == BackendKind.Paseo) Res.string.paseoPasswordLabel else Res.string.codexTokenLabel
+                                ),
+                                kind = KitFieldKind.Secret,
+                                helper = stringResource(if (backend == BackendKind.Paseo) Res.string.paseoPasswordHelp else if (backend == BackendKind.Codex) Res.string.codexTokenStorageHelp
+                                    else if (state.record?.needsSecret == true) Res.string.e7SetupEmptyPasswordHint else Res.string.e7SetupPasswordStartupHint),
+                                enabled = enabled,
+                                secretPresence =
+                                    if (keepSecret || heldSecret != null) SecretFieldPresence.Saved
+                                    else SecretFieldPresence.Editing,
+                                onReplaceSecret = {
+                                    keepSecret = false
+                                    heldSecret = null
+                                    password.fill("")
+                                    actions.changed()
+                                },
                             )
                             val origin = editorOrigin(address.text.toString())
                             if (backend == BackendKind.OpenCode2 && origin != null && AddressRules.needsCleartextConsent(origin)) {
@@ -601,28 +636,6 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                                     )
                                 }
                             }
-                            KitField(
-                                password,
-                                stringResource(
-                                    if (state.record?.needsSecret == true) {
-                                        if (backend == BackendKind.OpenCode2) Res.string.e7SetupReenterPassword else Res.string.codexTokenReentry
-                                    } else if (backend == BackendKind.OpenCode2) Res.string.e7SetupServerPassword
-                                    else if (backend == BackendKind.Paseo) Res.string.paseoPasswordLabel else Res.string.codexTokenLabel
-                                ),
-                                kind = KitFieldKind.Secret,
-                                helper = stringResource(if (backend == BackendKind.Paseo) Res.string.paseoPasswordHelp else if (backend == BackendKind.Codex) Res.string.codexTokenStorageHelp
-                                    else if (state.record?.needsSecret == true) Res.string.e7SetupEmptyPasswordHint else Res.string.e7SetupPasswordStartupHint),
-                                enabled = enabled,
-                                secretPresence =
-                                    if (keepSecret || heldSecret != null) SecretFieldPresence.Saved
-                                    else SecretFieldPresence.Editing,
-                                onReplaceSecret = {
-                                    keepSecret = false
-                                    heldSecret = null
-                                    password.fill("")
-                                    actions.changed()
-                                },
-                            )
                             if (state.slow) KitNotice(stringResource(Res.string.editor40Slow))
                             if (state.checking)
                                 KitButton(
@@ -634,7 +647,7 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                                 stringResource(Res.string.editor40Check),
                                 { actions.check(input()) },
                                 role = KitButtonRole.Tertiary,
-                                enabled = enabled,
+                                enabled = connectionEnabled,
                                 working = state.checking,
                             )
                             if (state.failedCheck)
@@ -642,7 +655,7 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                                     stringResource(Res.string.editor40SaveAnyway),
                                     { actions.save(input(), true) },
                                     role = KitButtonRole.Secondary,
-                                    enabled = enabled,
+                                    enabled = connectionEnabled,
                                 )
                         }
                     }
@@ -680,6 +693,17 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
 
 internal fun editorOrigin(address: String): ServerOrigin? =
     (AddressRules.normalize(address) as? Outcome.Ok)?.value
+
+private fun requiresHttpReview(
+    backend: BackendKind,
+    address: String,
+    confirmedOrigin: String?,
+): Boolean {
+    if (backend != BackendKind.OpenCode2) return false
+    val origin = editorOrigin(address) ?: return false
+    return AddressRules.needsCleartextConsent(origin) &&
+        editorOrigin(confirmedOrigin.orEmpty()) != origin
+}
 
 @Composable
 private fun httpWarning(origin: ServerOrigin): String =
