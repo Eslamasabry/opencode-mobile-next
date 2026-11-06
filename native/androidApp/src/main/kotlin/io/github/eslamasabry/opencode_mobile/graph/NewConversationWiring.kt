@@ -217,12 +217,15 @@ class AndroidNewConversationHost(
                     if (caps.serverCatalog && ops != null)
                         (ops.chatDefaults() as? Outcome.Ok)?.value
                     else null
+                // Primary-only modes (Build/Plan) belong to the runtime; hidden helpers
+                // (Compaction/Title/Summary) are never user-startable agent choices.
+                // Unlike the generic agent list, the catalog retains authoritative visibility.
                 val agents =
-                    (gateway.agents() as? Outcome.Ok)
-                        ?.value
-                        .orEmpty()
-                        .filter { it.mode != "subagent" }
-                        .map { it.name }
+                    catalog?.agents.orEmpty()
+                        .filter { !it.hidden && it.mode == "all" }
+                        .map { it.id }
+                        .filter(String::isNotBlank)
+                        .distinct()
                 if (registry.live.value[profile] !== graph) return@withLock refused()
                 val previous = stores.prefs.string("oc.newChatProject.${profile.raw}")
                 val current = gateway.location.value.directory

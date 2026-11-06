@@ -461,7 +461,12 @@ public class NewConversationViewModel(
     }
 
     override fun chooseAgent(agent: String?) {
-        if (!mutable.value.busy && !mutable.value.deliveryUnconfirmed)
+        val shown = mutable.value
+        if (
+            !shown.busy &&
+                !shown.deliveryUnconfirmed &&
+                (agent == null || agent in shown.setup?.agents.orEmpty())
+        )
             mutable.update { it.copy(agent = agent, sheet = null) }
     }
 
