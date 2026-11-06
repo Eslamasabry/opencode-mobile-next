@@ -107,7 +107,7 @@ class ComponentRemovalTest {
     private fun configure(registry: List<RemovableComponent>) {
         linux = FakeLinux().apply { register(registry) }
         team = FakeTeam(linux, registry.firstOrNull { it.id == ComponentIds.AITEAM }?.presenceScript)
-        service = ComponentRemoval(linux, linux, registry, team) { changed++ }
+        service = ComponentRemoval(linux, linux, registry, team, toolsChanged = { changed++ })
     }
 
     private fun blocked(code: ComponentRemovalBlock) = RemovalResult.Blocked(code)
