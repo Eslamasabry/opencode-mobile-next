@@ -204,7 +204,7 @@ internal fun savedServersByUrgency(
 
 /** Flutter strips the daemon's explanatory label, keeping a reported prerelease/build suffix. */
 internal fun plainServerVersion(raw: String): String =
-    Regex("""\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?""").find(raw)?.value ?: raw.trim()
+    Regex("""\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?""").find(raw)?.value ?: raw.trim()
 
 /** The comparison form of a server name: case, spacing and punctuation do not tell two servers apart. */
 internal fun nameKey(name: String): String = name.lowercase().filter { it.isLetterOrDigit() }

@@ -1,4 +1,4 @@
-package io.github.eslamasabry.oc.quality
+package io.github.eslamasabry.oc.quality.sec
 
 import java.io.File
 import kotlin.test.Test

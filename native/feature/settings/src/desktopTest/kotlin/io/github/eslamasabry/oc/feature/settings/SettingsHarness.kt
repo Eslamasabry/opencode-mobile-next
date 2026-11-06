@@ -4,9 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.analytics.AnalyticsSink
 import io.github.eslamasabry.oc.engine.analytics.Delivery
 import io.github.eslamasabry.oc.engine.analytics.SinkId
@@ -26,6 +28,7 @@ import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 
 /** The real kit theme on the desktop platform over the theme's ground, still frame, motion off, at plan 06 §15.3's phone size. */
 @Composable
@@ -36,7 +39,10 @@ fun SettingsThemed(dark: Boolean = false, locale: String = "en", content: @Compo
         localeTag = locale,
         stillFrame = true,
     ) {
-        Box(Modifier.size(412.dp, 915.dp).background(LocalKitColors.current.ground)) { content() }
+        // The app provides its redactor around every screen; the Library's mono parts refuse to draw without it.
+        CompositionLocalProvider(LocalKitRedactor provides Redactor()) {
+            Box(Modifier.size(412.dp, 915.dp).background(LocalKitColors.current.ground)) { content() }
+        }
     }
 }
 

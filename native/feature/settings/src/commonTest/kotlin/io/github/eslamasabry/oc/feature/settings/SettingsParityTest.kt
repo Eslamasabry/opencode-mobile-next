@@ -136,7 +136,8 @@ class SettingsParityTest {
         assertTrue(agent.isEmpty(), "model, providers, usage, tools and agents have no native page yet")
         assertFalse(SettingsGroupId.Agent in SettingsStructure.groups(facts))
         val server = SettingsStructure.rows(SettingsGroupId.Server, facts, reasoning = false, timestamps = false)
-        assertEquals(listOf(SettingsRowId.Servers), server.map { it.id })
+        // Server capabilities is a page this module draws itself, so the host's places never hide it.
+        assertEquals(listOf(SettingsRowId.Servers, SettingsRowId.ServerCapabilities), server.map { it.id })
         // Pages this module draws itself are never hidden by the host's places.
         val thisApp = SettingsStructure.rows(SettingsGroupId.ThisApp, facts, reasoning = false, timestamps = false).map { it.id }
         assertTrue(SettingsRowId.Appearance in thisApp && SettingsRowId.Language in thisApp && SettingsRowId.Privacy in thisApp)

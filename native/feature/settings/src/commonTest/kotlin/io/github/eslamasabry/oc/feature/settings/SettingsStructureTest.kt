@@ -20,7 +20,7 @@ class SettingsStructureTest {
     fun `B-NAV-068 one server shows the five groups in order with their rows`() {
         val facts = phoneFacts()
         assertEquals<List<SettingsGroupId>>(SettingsGroupId.entries.toList(), SettingsStructure.groups(facts))
-        assertEquals(listOf(SettingsRowId.Servers, SettingsRowId.ThisPhone), ids(SettingsGroupId.Server, facts))
+        assertEquals(listOf(SettingsRowId.Servers, SettingsRowId.ServerCapabilities, SettingsRowId.ThisPhone), ids(SettingsGroupId.Server, facts))
         assertEquals(
             listOf(
                 SettingsRowId.Notifications, SettingsRowId.Background, SettingsRowId.Appearance, SettingsRowId.Language,
@@ -29,7 +29,7 @@ class SettingsStructureTest {
             ids(SettingsGroupId.ThisApp, facts),
         )
         assertEquals(
-            listOf(SettingsRowId.Guide, SettingsRowId.Tips, SettingsRowId.ReportProblem, SettingsRowId.About),
+            listOf(SettingsRowId.Guide, SettingsRowId.Tips, SettingsRowId.Capabilities, SettingsRowId.ReportProblem, SettingsRowId.About),
             ids(SettingsGroupId.Help, facts),
         )
     }
@@ -48,7 +48,7 @@ class SettingsStructureTest {
     @Test
     fun `B-XPLAT-003 desktop has no Android-only rows`() {
         val facts = SettingsFacts(platform = desktop)
-        assertEquals(listOf(SettingsRowId.Servers), ids(SettingsGroupId.Server, facts))
+        assertEquals(listOf(SettingsRowId.Servers, SettingsRowId.ServerCapabilities), ids(SettingsGroupId.Server, facts))
         val thisApp = ids(SettingsGroupId.ThisApp, facts)
         assertFalse(SettingsRowId.Background in thisApp)
         assertFalse(SettingsRowId.Updates in thisApp)
