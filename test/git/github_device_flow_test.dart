@@ -186,21 +186,24 @@ void main() {
     },
   );
 
-  test('creates a private repository without asking for its remote URL', () async {
-    final repo = await flow().createUserRepository(
-      fakeGitHubToken,
-      name: 'alpha',
-      isPrivate: true,
-    );
-    expect(repo.fullName, 'octocat/alpha');
-    expect(repo.isPrivate, isTrue);
-    expect(repo.remoteUrl, 'https://github.com/octocat/alpha.git');
-    final request = github.requests.single;
-    expect(request.method, 'POST');
-    expect(request.url, gitHubCreateUserRepoUrl);
-    expect(request.headers['Authorization'], 'Bearer $fakeGitHubToken');
-    expect(jsonDecode(request.body), {'name': 'alpha', 'private': true});
-  });
+  test(
+    'creates a private repository without asking for its remote URL',
+    () async {
+      final repo = await flow().createUserRepository(
+        fakeGitHubToken,
+        name: 'alpha',
+        isPrivate: true,
+      );
+      expect(repo.fullName, 'octocat/alpha');
+      expect(repo.isPrivate, isTrue);
+      expect(repo.remoteUrl, 'https://github.com/octocat/alpha.git');
+      final request = github.requests.single;
+      expect(request.method, 'POST');
+      expect(request.url, gitHubUserReposUrl);
+      expect(request.headers['Authorization'], 'Bearer $fakeGitHubToken');
+      expect(jsonDecode(request.body), {'name': 'alpha', 'private': true});
+    },
+  );
 
   test('rejects invalid names before contacting GitHub', () async {
     await expectLater(
@@ -222,6 +225,12 @@ void main() {
 
   test('a repository name already in use is typed', () async {
     github.createRepoStatus = 422;
+    github.createRepoAnswer = {
+      'message': 'Repository creation failed.',
+      'errors': [
+        {'resource': 'Repository', 'code': 'already_exists', 'field': 'name'},
+      ],
+    };
     await expectLater(
       flow().createUserRepository(
         fakeGitHubToken,
@@ -233,6 +242,30 @@ void main() {
           (e) => e.problem,
           'problem',
           GitHubRepositoryProblem.nameUnavailable,
+        ),
+      ),
+    );
+  });
+
+  test('any other refused field is not called a taken name', () async {
+    github.createRepoStatus = 422;
+    github.createRepoAnswer = {
+      'message': 'Validation Failed',
+      'errors': [
+        {'resource': 'Repository', 'code': 'custom', 'field': 'name'},
+      ],
+    };
+    await expectLater(
+      flow().createUserRepository(
+        fakeGitHubToken,
+        name: 'alpha',
+        isPrivate: false,
+      ),
+      throwsA(
+        isA<GitHubRepositoryException>().having(
+          (e) => e.problem,
+          'problem',
+          GitHubRepositoryProblem.invalidName,
         ),
       ),
     );

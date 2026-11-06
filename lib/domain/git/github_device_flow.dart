@@ -23,7 +23,6 @@ const gitHubDeviceCodeUrl = 'https://github.com/login/device/code';
 const gitHubAccessTokenUrl = 'https://github.com/login/oauth/access_token';
 const gitHubUserUrl = 'https://api.github.com/user';
 const gitHubUserReposUrl = 'https://api.github.com/user/repos';
-const gitHubCreateUserRepoUrl = 'https://api.github.com/user/repos';
 
 /// Where people review or revoke the app's access.
 const gitHubAuthorizedAppsUrl =
@@ -502,7 +501,7 @@ class GitHubDeviceFlow {
     final Response<Object?> response;
     try {
       response = await _dio.post<Object?>(
-        gitHubCreateUserRepoUrl,
+        gitHubUserReposUrl,
         data: {'name': name, 'private': isPrivate},
         options: Options(
           headers: {
@@ -523,7 +522,10 @@ class GitHubDeviceFlow {
       final problem = switch (status) {
         401 => GitHubRepositoryProblem.tokenRejected,
         403 => GitHubRepositoryProblem.permissionDenied,
-        422 => GitHubRepositoryProblem.nameUnavailable,
+        422 =>
+          _nameTaken(response.data)
+              ? GitHubRepositoryProblem.nameUnavailable
+              : GitHubRepositoryProblem.invalidName,
         >= 500 || 0 => GitHubRepositoryProblem.network,
         _ => GitHubRepositoryProblem.unexpected,
       };
@@ -534,17 +536,24 @@ class GitHubDeviceFlow {
     }
     final data = response.data;
     if (data is! Map) {
-      throw const GitHubRepositoryException(
-        GitHubRepositoryProblem.unexpected,
-      );
+      throw const GitHubRepositoryException(GitHubRepositoryProblem.unexpected);
     }
     try {
       return GitHubRepository.fromJson(data.cast<String, Object?>());
     } on FormatException {
-      throw const GitHubRepositoryException(
-        GitHubRepositoryProblem.unexpected,
-      );
+      throw const GitHubRepositoryException(GitHubRepositoryProblem.unexpected);
     }
+  }
+
+  /// GitHub answers 422 for any refused field; only `already_exists` on the
+  /// name means the account has a repository called that already.
+  static bool _nameTaken(Object? body) {
+    if (body is! Map) return false;
+    final errors = body['errors'];
+    if (errors is! List) return false;
+    return errors.any(
+      (e) => e is Map && e['code'] == 'already_exists' && e['field'] == 'name',
+    );
   }
 
   GitHubCredential _credential(Map<String, Object?> body) {

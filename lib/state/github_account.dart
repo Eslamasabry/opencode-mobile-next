@@ -262,17 +262,13 @@ class GitHubAccountController extends ChangeNotifier {
   }) async {
     final token = await tokenForGit();
     if (token == null) {
-      throw GitHubRepositoryException(
-        _credential == null
-            ? GitHubRepositoryProblem.tokenRejected
-            : GitHubRepositoryProblem.network,
+      // No usable token (signed out, or a refresh GitHub refused): the way
+      // forward is signing in again, not checking the network.
+      throw const GitHubRepositoryException(
+        GitHubRepositoryProblem.tokenRejected,
       );
     }
-    return _flow.createUserRepository(
-      token,
-      name: name,
-      isPrivate: isPrivate,
-    );
+    return _flow.createUserRepository(token, name: name, isPrivate: isPrivate);
   }
 
   /// GitHub refused the token during a push or pull: forget it and ask for

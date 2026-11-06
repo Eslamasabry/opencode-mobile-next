@@ -33354,11 +33354,11 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get gitActionClone => 'استنساخ';
 
-    @override
-    String get gitActionInitialize => 'بدء التتبّع';
+  @override
+  String get gitActionInitialize => 'بدء التتبّع';
 
-    @override
-    String get gitActionPublish => 'إنشاء على GitHub';
+  @override
+  String get gitActionPublish => 'إنشاء على GitHub';
 
   @override
   String get gitBusyAddRemote => 'جارٍ إضافة المستودع البعيد…';
@@ -33366,21 +33366,21 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get gitBusyClone => 'جارٍ الاستنساخ…';
 
-    @override
-    String get gitBusyInitialize => 'جارٍ إعداد Git في هذا المشروع…';
+  @override
+  String get gitBusyInitialize => 'جارٍ إعداد Git في هذا المشروع…';
 
-    @override
-    String get gitBusyPublish => 'جارٍ إنشاء المستودع على GitHub…';
+  @override
+  String get gitBusyPublish => 'جارٍ إنشاء المستودع على GitHub…';
 
   @override
   String get gitDoneRemoteAdded => 'تمت إضافة المستودع البعيد.';
 
-    @override
-    String get gitDoneInitialized => 'أصبح Git جاهزًا في هذا المشروع.';
+  @override
+  String get gitDoneInitialized => 'أصبح Git جاهزًا في هذا المشروع.';
 
-    @override
-    String get gitDoneGitHubRepositoryCreated =>
-            'تم إنشاء المستودع على GitHub وربطه. لم يتم إرسال ملفات مشروعك بعد.';
+  @override
+  String get gitDoneGitHubRepositoryCreated =>
+      'تم إنشاء المستودع على GitHub وربطه. لم يتم إرسال ملفات مشروعك بعد.';
 
   @override
   String gitDoneCloned(String path) {
@@ -33505,7 +33505,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gitPublishName => 'اسم المستودع';
 
   @override
-  String get gitPublishNameHint => 'استخدم أحرفًا أو أرقامًا أو نقاطًا أو شرطات.';
+  String get gitPublishNameHint =>
+      'استخدم أحرفًا أو أرقامًا أو نقاطًا أو شرطات.';
 
   @override
   String get gitPublishVisibility => 'من يمكنه رؤيته؟';

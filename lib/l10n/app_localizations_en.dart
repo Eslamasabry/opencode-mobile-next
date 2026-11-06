@@ -33340,11 +33340,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get gitActionClone => 'Clone';
 
-    @override
-    String get gitActionInitialize => 'Start tracking';
+  @override
+  String get gitActionInitialize => 'Start tracking';
 
-    @override
-    String get gitActionPublish => 'Create on GitHub';
+  @override
+  String get gitActionPublish => 'Create on GitHub';
 
   @override
   String get gitBusyAddRemote => 'Adding the remote…';
@@ -33352,21 +33352,21 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get gitBusyClone => 'Cloning…';
 
-    @override
-    String get gitBusyInitialize => 'Starting Git in this project…';
+  @override
+  String get gitBusyInitialize => 'Starting Git in this project…';
 
-    @override
-    String get gitBusyPublish => 'Creating repository on GitHub…';
+  @override
+  String get gitBusyPublish => 'Creating repository on GitHub…';
 
   @override
   String get gitDoneRemoteAdded => 'Remote added.';
 
-    @override
-    String get gitDoneInitialized => 'Git is ready in this project.';
+  @override
+  String get gitDoneInitialized => 'Git is ready in this project.';
 
-    @override
-    String get gitDoneGitHubRepositoryCreated =>
-            'GitHub repository created and connected. Your project has not been sent yet.';
+  @override
+  String get gitDoneGitHubRepositoryCreated =>
+      'GitHub repository created and connected. Your project has not been sent yet.';
 
   @override
   String gitDoneCloned(String path) {

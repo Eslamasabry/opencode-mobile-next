@@ -115,20 +115,24 @@ void main() {
     );
   });
 
-  test('initializes Git in the current project and refreshes its status', () async {
-    final shell = FakeGitShell([
-      envelope({'status': failed(fx.notRepositoryError, exit: 128)}),
-      envelope({'run': ok()}),
-      _snapshot(status: fx.statusNoUpstream, remotes: ''),
-    ]);
-    final page = _controller(shell);
-    await page.refresh();
-    expect(page.view, isA<GitPageNotRepository>());
-    final result = await page.initialize();
-    expect(result?.note, GitActionNote.initialized);
-    expect(shell.scripts[1], contains("'init'"));
-    expect(page.view, isA<GitPageReady>());
-  });
+  test(
+    'initializes Git in the current project and refreshes its status',
+    () async {
+      final shell = FakeGitShell([
+        envelope({'status': failed(fx.notRepositoryError, exit: 128)}),
+        envelope({'run': ok()}),
+        _snapshot(status: fx.statusNoUpstream, remotes: ''),
+      ]);
+      final page = _controller(shell);
+      await page.refresh();
+      expect(page.view, isA<GitPageNotRepository>());
+      final result = await page.initialize();
+      expect(result?.note, GitActionNote.initialized);
+      expect(shell.scripts[1], contains("'init'"));
+      expect(shell.scripts[1], contains("'-b' 'main'"));
+      expect(page.view, isA<GitPageReady>());
+    },
+  );
 
   test('creates a GitHub repository and connects it as origin', () async {
     final account = _Account()
@@ -162,7 +166,9 @@ void main() {
     expect(account.createdPrivate, isFalse);
     expect(
       shell.scripts[1],
-      contains("'remote' 'add' 'origin' 'https://github.com/octocat/alpha.git'"),
+      contains(
+        "'remote' 'add' 'origin' 'https://github.com/octocat/alpha.git'",
+      ),
     );
     expect(page.snapshot?.hasRemote, isTrue);
   });

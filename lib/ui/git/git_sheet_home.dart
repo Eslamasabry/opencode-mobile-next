@@ -473,7 +473,7 @@ extension _GitSheetHome on _GitSheetState {
     title: l10n.gitInitializeProject,
     supporting: TextSpan(text: l10n.gitInitializeProjectHint),
     supportingMaxLines: 2,
-    trailing: const KitChevron(),
+    // Acts in place (no page opens), so no chevron.
     enabled: !_busy,
     onTap: _busy ? null : () => unawaited(page.initialize()),
   );

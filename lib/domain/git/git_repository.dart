@@ -780,12 +780,15 @@ class GitRepository {
     });
   }
 
-  /// Initializes Git in the current project without changing its files.
-  Future<GitActionResult> initialize() => _single(
-    GitAction.initialize,
-    [..._git, 'init'],
-    GitActionNote.initialized,
-  );
+  /// Initializes Git in the current project without changing its files. The
+  /// first branch is `main`, as on a new GitHub repository, whatever the
+  /// server's own git defaults to.
+  Future<GitActionResult> initialize() => _single(GitAction.initialize, [
+    ..._git,
+    'init',
+    '-b',
+    'main',
+  ], GitActionNote.initialized);
 
   /// `git remote add <name> <url>`. The address is checked first and never
   /// may carry a password.

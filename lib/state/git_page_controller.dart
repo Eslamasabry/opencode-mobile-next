@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../domain/git/git_models.dart';
 import '../domain/git/git_problem.dart';
 import '../domain/git/git_repository.dart';
+import '../domain/git/github_device_flow.dart';
 import 'git_workspace.dart';
 import 'github_account.dart';
 
@@ -334,7 +335,8 @@ class GitPageController extends ChangeNotifier {
           GitAction.publish,
           GitFailure(
             added.problem ?? GitProblem.unknown,
-            details: 'GitHub created ${githubRepo.fullName}, but the project '
+            details:
+                'GitHub created ${githubRepo.fullName}, but the project '
                 'could not be connected as origin. ${added.failure?.details}',
           ),
         );
@@ -350,8 +352,7 @@ class GitPageController extends ChangeNotifier {
           GitProblem.invalidGitHubRepositoryName,
         GitHubRepositoryProblem.nameUnavailable =>
           GitProblem.githubRepositoryNameUnavailable,
-        GitHubRepositoryProblem.tokenRejected =>
-          GitProblem.gitHubTokenRejected,
+        GitHubRepositoryProblem.tokenRejected => GitProblem.gitHubTokenRejected,
         GitHubRepositoryProblem.permissionDenied => GitProblem.noPermission,
         GitHubRepositoryProblem.network => GitProblem.network,
         GitHubRepositoryProblem.unexpected => GitProblem.unknown,
