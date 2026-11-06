@@ -17,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import io.github.eslamasabry.oc.ui.kit.frame.KitHeadingLine
 import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
+import io.github.eslamasabry.oc.ui.kit.modal.KitInputDialog
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.words.res.kitNeedsYouSpan
@@ -78,6 +79,11 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitUndoOffer
 import io.github.eslamasabry.oc.ui.words.res.chatsRowActions
 import io.github.eslamasabry.oc.ui.words.res.chatsRowArchived
 import io.github.eslamasabry.oc.ui.words.res.p12ArchiveFailed
+import io.github.eslamasabry.oc.ui.words.res.p12Rename
+import io.github.eslamasabry.oc.ui.words.res.p12RenameEmpty
+import io.github.eslamasabry.oc.ui.words.res.p12RenameFailed
+import io.github.eslamasabry.oc.ui.words.res.p12RenameField
+import io.github.eslamasabry.oc.ui.words.res.p12RenameTitle
 import io.github.eslamasabry.oc.ui.words.res.sessionMenuArchive
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRowWorking
@@ -215,6 +221,13 @@ public fun ChatsScreen(
                         failure = state.archiveFailure,
                     )
                 }
+            if (state.renameFailure != null)
+                item(key = "rename-failure") {
+                    io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice(
+                        message = stringResource(Res.string.p12RenameFailed),
+                        failure = state.renameFailure,
+                    )
+                }
             if (state.answerFailure != null)
                 item(key = "answer-failure") {
                     io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice(
@@ -308,6 +321,17 @@ public fun ChatsScreen(
         }
       }
         ChatsHomeSheets(state, actions)
+        val emptyTitle = stringResource(Res.string.p12RenameEmpty)
+        KitInputDialog(
+            visible = state.renaming != null,
+            title = stringResource(Res.string.p12RenameTitle),
+            fieldLabel = stringResource(Res.string.p12RenameField),
+            confirmLabel = stringResource(Res.string.p12Rename),
+            initial = state.renaming?.initial.orEmpty(),
+            validate = { if (it.isBlank()) emptyTitle else null },
+            operationKey = state.renaming?.key,
+            onResult = actions::finishRename,
+        )
     }
 }
 
@@ -418,6 +442,7 @@ private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, state
                 add(KitMenuItem(stringResource(Res.string.sessionOpenRelated), { menuOpen = false; actions.rowAct(row, RowAct.OpenRelated) }, icon = KitIcons.branch))
                 add(KitMenuItem(stringResource(Res.string.sessionCopyHandoff), { menuOpen = false; actions.rowAct(row, RowAct.CopyHandoff) }, icon = KitIcons.terminal))
             }
+            if (state != null && row.key in state.renamable) add(KitMenuItem(stringResource(Res.string.p12Rename), { menuOpen = false; actions.rename(row) }, icon = KitIcons.edit))
             if (canArchive) add(KitMenuItem(archiveWord, { menuOpen = false; actions.archive(row) }, icon = KitIcons.archive))
         },
         onDismissRequest = { menuOpen = false },

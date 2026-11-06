@@ -149,6 +149,11 @@ public data class ChatsUi(
     /** The one Undo offer after an archive; [ArchiveUndoUi.id] restarts the bar's window. */
     val archiveUndo: ArchiveUndoUi? = null,
     val archiveFailure: io.github.eslamasabry.oc.core.common.Failure? = null,
+    /** Row keys whose server can rename them (same set as [archivable]: OpenCode conversations). */
+    val renamable: ImmutableSet<String> = persistentSetOf(),
+    /** The rename dialog (N-30: Rename from the row menu), or null. */
+    val renaming: RenameUi? = null,
+    val renameFailure: io.github.eslamasabry.oc.core.common.Failure? = null,
 )
 
 /** The conversation just archived, waiting out its undo window. */
@@ -198,6 +203,14 @@ public interface ChatsActions {
     public fun commitArchive() {}
 
     public fun dismissArchiveFailure() {}
+
+    /** Opens the rename dialog for [row]; no-op where its server cannot rename. */
+    public fun rename(row: ConversationRowUi) {}
+
+    /** The dialog's answer: the new title, or null when the person cancelled. */
+    public fun finishRename(title: String?) {}
+
+    public fun dismissRenameFailure() {}
 
     public fun newConversation()
 

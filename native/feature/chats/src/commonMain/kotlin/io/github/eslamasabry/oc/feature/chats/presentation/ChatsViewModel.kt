@@ -72,6 +72,15 @@ public class ChatsViewModel(
 
     private val archiving = MutableStateFlow(Archiving())
 
+    /** Rename in flight: the open dialog, and the last refusal. */
+    private data class Renaming(
+        val dialog: RenameUi? = null,
+        val ref: ConversationRef? = null,
+        val failure: io.github.eslamasabry.oc.core.common.Failure? = null,
+    )
+
+    private val renaming = MutableStateFlow(Renaming())
+
     public val state: StateFlow<ChatsUi> =
         combine(
                 combine(feed.snapshot, briefs.brief, filters, updates.ready, archiving) {
@@ -109,6 +118,13 @@ public class ChatsViewModel(
                     answerFailure = answering.second,
                     sheet = open,
                     confirmWatched = extra.monitoring.requests.firstOrNull { it.key == selected },
+                )
+            }
+            .combine(renaming) { base, rename ->
+                base.copy(
+                    renamable = base.archivable,
+                    renaming = rename.dialog,
+                    renameFailure = rename.failure,
                 )
             }
             .stateIn(
@@ -214,6 +230,33 @@ public class ChatsViewModel(
 
     override fun dismissArchiveFailure() {
         archiving.update { it.copy(failure = null) }
+    }
+
+    override fun rename(row: ConversationRowUi) {
+        if (row.key !in state.value.archivable) return
+        val initial = (row.title as? RowTitle.Text)?.text.orEmpty()
+        renaming.value = Renaming(RenameUi(row.key, initial), row.ref, null)
+    }
+
+    override fun finishRename(title: String?) {
+        val asked = renaming.value
+        val dialog = asked.dialog ?: return
+        val ref = asked.ref
+        renaming.value = Renaming()
+        val wanted = title?.trim().orEmpty()
+        if (ref == null || wanted.isEmpty() || wanted == dialog.initial) return
+        val server = connections.servers.value.firstOrNull { it.profile == ref.profileId } ?: return
+        (appScope ?: viewModelScope).launch {
+            when (val done = server.gateway.renameSession(ref.sessionId, wanted)) {
+                is io.github.eslamasabry.oc.core.common.Outcome.Ok -> feed.refresh()
+                is io.github.eslamasabry.oc.core.common.Outcome.Failed ->
+                    renaming.value = Renaming(failure = done.failure)
+            }
+        }
+    }
+
+    override fun dismissRenameFailure() {
+        renaming.update { it.copy(failure = null) }
     }
 
     override fun onCleared() {
