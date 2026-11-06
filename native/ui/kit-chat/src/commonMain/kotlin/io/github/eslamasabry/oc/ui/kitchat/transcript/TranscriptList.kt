@@ -1,5 +1,14 @@
 package io.github.eslamasabry.oc.ui.kitchat.transcript
 
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -144,6 +153,29 @@ public fun KitTranscriptList(
             modifier = Modifier.fillMaxSize().testTag("transcript-list"),
             content = content,
         )
+        // The pill's own lane: while it shows, the page's ground rises behind it (fading in over 16 dp above), so
+        // the words scroll away under the lane and the pill never sits on them (owner 2026-11-06).
+        val ground = LocalKitColors.current.ground
+        val lane by
+            animateFloatAsState(
+                if (state.awayFromLatest) 1f else 0f,
+                if (motion == KitMotionLevel.Off) snap() else tween(MotionTokens.STANDARD),
+                label = "jump-lane",
+            )
+        if (lane > 0f)
+            Box(
+                Modifier.align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .height(chrome.calculateBottomPadding() + Space.S2.dp + LocalKitTokens.current.minTarget.dp + 16.dp)
+                    .drawBehind {
+                        val reach = 16.dp.toPx()
+                        drawRect(
+                            Brush.verticalGradient(0f to ground.copy(alpha = 0f), 1f to ground, startY = 0f, endY = reach),
+                            alpha = lane,
+                        )
+                        drawRect(ground, topLeft = Offset(0f, reach), alpha = lane)
+                    }
+            )
         KitJumpToLatest(
             state,
             jumpLabel,
