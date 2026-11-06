@@ -784,4 +784,6 @@
     <string name="browserModeSecureContextMissing">Opened over plain HTTP from a network address, which the browser does not treat as secure. Server passwords cannot be saved here and the Paste buttons cannot read the clipboard. Open the app over HTTPS or from localhost to lift both limits. Servers without a password still work, and you can still paste into fields with the keyboard.</string>
     <string name="browserModeMixedContent">A page opened over HTTPS can only reach HTTPS servers; the browser blocks plain-HTTP connections from it.</string>
     <string name="browserModeCors">The server must allow this page’s origin. If a connection test fails at once here while the same address works from the phone app, the server is refusing browser requests from this origin.</string>
+    <!-- E07-S01: Android refused its battery question; its battery settings page opened instead. -->
+    <string name="backgroundBatterySettingsInstead">Android didn't show its question, so its battery settings opened instead. Set this app to Unrestricted there.</string>
 </resources>

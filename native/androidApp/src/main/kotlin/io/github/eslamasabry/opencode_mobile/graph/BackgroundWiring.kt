@@ -207,6 +207,7 @@ class BackgroundHub(
             busy = s.busy,
             stoppedByAndroid = s.stoppedByAndroidTimeout,
             batteryUnrestricted = s.batteryOptimizationIgnored,
+            batterySettingsOpened = s.batterySettingsOpenedInstead,
             pause =
                 n?.let {
                     val at = java.time.Instant.ofEpochMilli(it.atMs).atZone(ZoneId.systemDefault())

@@ -31,6 +31,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
+import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
@@ -57,6 +58,7 @@ import io.github.eslamasabry.oc.ui.words.res.e7SettingsUi25
 import io.github.eslamasabry.oc.ui.words.res.e7SettingsUi26
 import io.github.eslamasabry.oc.ui.words.res.e7SettingsUi27
 import io.github.eslamasabry.oc.ui.words.res.e7SettingsUi28
+import io.github.eslamasabry.oc.ui.words.res.backgroundBatterySettingsInstead
 import io.github.eslamasabry.oc.ui.words.res.e7SettingsUi29
 import io.github.eslamasabry.oc.ui.words.res.e7SettingsUi30
 import io.github.eslamasabry.oc.ui.words.res.e7SettingsUi31
@@ -171,6 +173,21 @@ public fun BackgroundScreen(
                             onClick =
                                 if (state.batteryUnrestricted) null else actions::onAllowBattery,
                         )
+                        // E07-S01: Android refused its own question and its battery page opened
+                        // instead; say so, so the person knows what to change there.
+                        KitReveal(visible = state.batterySettingsNotice) {
+                            Box(
+                                Modifier.fillMaxWidth()
+                                    .padding(horizontal = LocalKitTokens.current.gutter.dp)
+                            ) {
+                                KitNotice(
+                                    message =
+                                        stringResource(Res.string.backgroundBatterySettingsInstead),
+                                    tone = StatusTone.Attention,
+                                    modifier = Modifier.testTag("background-battery-settings"),
+                                )
+                            }
+                        }
                     }
                     val restart = stringResource(Res.string.notifyRestartBackground)
                     KitRow(
