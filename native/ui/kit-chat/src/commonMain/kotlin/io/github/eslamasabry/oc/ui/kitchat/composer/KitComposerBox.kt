@@ -241,6 +241,9 @@ public fun KitComposerSend(
     modifier: Modifier = Modifier,
     enabled: KitEnabled = KitEnabled.Enabled,
     working: Boolean = false,
+    /** Hold Send (Flutter send later / repeat). Hidden gesture: the caller gives it a visible twin. */
+    onLongClick: (() -> Unit)? = null,
+    onLongClickLabel: String? = null,
 ) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
@@ -260,6 +263,8 @@ public fun KitComposerSend(
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     KitTappable(
         onClick = onClick,
+        onLongClick = onLongClick,
+        onLongClickLabel = onLongClickLabel,
         modifier = modifier.semantics { contentDescription = label },
         enabled = on && !working,
         disabledReason = if (working) label else enabled.reason,

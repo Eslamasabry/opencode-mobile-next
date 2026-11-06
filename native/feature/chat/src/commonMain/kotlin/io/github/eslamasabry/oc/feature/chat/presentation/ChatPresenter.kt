@@ -365,6 +365,28 @@ public class ChatPresenter(
         launcher.launch { world.reload() }
     }
 
+    override fun retryLastPrompt() {
+        val text = newestPrompt()?.text?.takeIf { it.isNotBlank() } ?: return
+        launcher.launch { world.sendAgain(text) }
+    }
+
+    override fun undoLastPrompt() {
+        val row = newestPrompt() ?: return
+        val id = RowIds.messageIdOf(row) ?: return
+        nav.open(ReviewRoute.UndoFromHere(world.ref, id))
+    }
+
+    override fun openNewConversation() {
+        nav.open(io.github.eslamasabry.oc.ui.routes.ChatsRoute.New(profile = world.ref.profileId))
+    }
+
+    override fun openConversations() {
+        nav.land()
+    }
+
+    private fun newestPrompt(): PromptRow? =
+        world.transcript.value.rows.firstOrNull { it is PromptRow } as? PromptRow
+
     override fun stop() {
         if (local.value.stopping) return
         stopInFlight = true
@@ -508,6 +530,9 @@ public class ChatPresenter(
             undo = c.sessionRevert,
             changes = true,
             compact = c.sessionCompact,
+            shell = c.conversationShellOn,
+            files = c.fileBrowsing,
+            slashCommands = c.slashCommands,
         )
 
     // ---- Find (plan 09 §6.6) ----

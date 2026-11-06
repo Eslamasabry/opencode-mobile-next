@@ -280,8 +280,8 @@ internal fun ChatTranscriptList(
     onCheckReceipt: ((Long) -> Unit)? = null,
     display: TranscriptDisplayChoices = TranscriptDisplayChoices(),
     onCopyReply: ((FooterRow) -> Unit)? = null,
+    folds: TranscriptFolds = rememberTranscriptFolds(),
 ) {
-    val folds = rememberTranscriptFolds()
     val currentRows by rememberUpdatedState(rows)
     // B-SEC-094 / R18: a code block's Copy hands over what the block shows (redacted), never the
     // raw fence; only

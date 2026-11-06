@@ -142,6 +142,8 @@ public class ChatEntries(
             val gateway = (liveGraphs[route.ref.profileId] as? ChatGraphAccessors)?.chatGateway
             val serverCapabilities = gateway?.capabilities?.collectAsStateWithLifecycle()?.value
             val errorModels by vm.models.collectAsStateWithLifecycle()
+            val workUi by vm.work.state.collectAsStateWithLifecycle()
+            val serverCommandList by vm.serverCommands.collectAsStateWithLifecycle()
             val pendingVm =
                 assistedMetroViewModel<ChatInboxViewModel, ChatInboxViewModel.Factory> {
                     create(route)
@@ -366,6 +368,10 @@ public class ChatEntries(
                                     requestActions = requests,
                                     formWaiting = formState.form != null,
                                     modelChoices = errorModels.choices,
+                                    work = workUi,
+                                    workModel = vm.work,
+                                    serverCommands = serverCommandList,
+                                    onLoadServerCommands = vm::loadServerCommands,
                                     formSlot = { modifier ->
                                         ChatFormSlot(formState, formModel, vm::openLink, modifier)
                                     },

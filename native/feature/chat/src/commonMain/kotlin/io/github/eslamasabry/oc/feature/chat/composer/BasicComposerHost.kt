@@ -82,6 +82,11 @@ import io.github.eslamasabry.oc.ui.kitchat.composer.KitVoiceField
 import io.github.eslamasabry.oc.ui.kitchat.stream.LocalKitPromptLift
 import io.github.eslamasabry.oc.ui.kitchat.stream.kitPromptOrigin
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.composerClearTextTitle
+import io.github.eslamasabry.oc.ui.words.res.tipSendLaterTitle
+import io.github.eslamasabry.oc.ui.words.res.composerFullCommands
+import io.github.eslamasabry.oc.ui.words.res.kitUndoAction
+import io.github.eslamasabry.oc.ui.words.res.composerDraftCleared
 import io.github.eslamasabry.oc.ui.words.res.chatCycleNext
 import io.github.eslamasabry.oc.ui.words.res.chatCyclePrevious
 import io.github.eslamasabry.oc.ui.words.res.chatDraftAlreadySent
@@ -367,6 +372,8 @@ public fun BasicComposer(
     }
     var addOpen by remember(state.targetKey) { mutableStateOf(false) }
     var historyOpen by remember(state.targetKey) { mutableStateOf(false) }
+    // Clear draft text keeps attachments and can be undone (Flutter composer_tools.dart).
+    var clearedText by remember(state.targetKey) { mutableStateOf<String?>(null) }
     val selectAndClose: (ComposerModel?) -> Unit = { choice ->
         scope.launch { if (actions.selectModel(choice)) modelsOpen = false }
     }
@@ -392,6 +399,34 @@ public fun BasicComposer(
                     ),
                 modifier = Modifier.testTag("prompt-history-save-failed"),
             )
+        clearedText?.let { previous ->
+            KitNotice(
+                message = stringResource(Res.string.composerDraftCleared),
+                tone = StatusTone.Neutral,
+                actions =
+                    listOf(
+                        KitLineAction(
+                            stringResource(Res.string.kitUndoAction),
+                            {
+                                if (field.text.isEmpty()) {
+                                    field.edit { replace(0, length, previous) }
+                                    editor.userEditSerial += 1
+                                    editor.lastReported = previous
+                                    actions.draftChanged(previous)
+                                }
+                                clearedText = null
+                            },
+                            testTag = "chat-draft-clear-undo",
+                        )
+                    ),
+                dismiss =
+                    KitLineAction(
+                        stringResource(Res.string.composerPreviewAttachmentDismiss),
+                        { clearedText = null },
+                    ),
+                modifier = Modifier.testTag("chat-draft-cleared"),
+            )
+        }
         if (insertRefused) {
             KitNotice(
                 title = stringResource(Res.string.composerKeptRestoreTitle),
@@ -528,7 +563,48 @@ public fun BasicComposer(
                         }
                     )
             }
-            KitComposerTray(choices)
+            val words = field.text.toString()
+            val tools = buildList {
+                chrome.openCommands?.let { open ->
+                    add(
+                        KitTrayAction(
+                            stringResource(Res.string.composerFullCommands),
+                            KitTrayKind.Commands,
+                        ) {
+                            addOpen = false
+                            open()
+                        }
+                    )
+                }
+                chrome.sendLater?.let { later ->
+                    if (words.isNotBlank())
+                        add(
+                            KitTrayAction(
+                                stringResource(Res.string.tipSendLaterTitle),
+                                KitTrayKind.Schedule,
+                            ) {
+                                addOpen = false
+                                later(words)
+                            }
+                        )
+                }
+                if (words.isNotEmpty())
+                    add(
+                        KitTrayAction(
+                            stringResource(Res.string.composerClearTextTitle),
+                            KitTrayKind.Clear,
+                        ) {
+                            addOpen = false
+                            clearedText = words
+                            field.edit { replace(0, length, "") }
+                            editor.userEditSerial += 1
+                            editor.lastReported = ""
+                            repeatRevision = null
+                            actions.draftChanged("")
+                        }
+                    )
+            }
+            KitComposerTray(choices + tools)
             voice?.Options(voiceField, Modifier.fillMaxWidth()) { addOpen = false }
         }
         voice?.Panel(voiceField, Modifier.fillMaxWidth())
@@ -707,7 +783,13 @@ public fun BasicComposer(
                             else Res.string.composerFullAttach
                         ),
                     onClick = {
-                        if (state.attachKinds.isEmpty() && voice == null && refreshHistory == null)
+                        if (
+                            state.attachKinds.isEmpty() &&
+                                voice == null &&
+                                refreshHistory == null &&
+                                chrome.openCommands == null &&
+                                chrome.sendLater == null
+                        )
                             actions.attachFile()
                         else addOpen = !addOpen
                     },
@@ -759,6 +841,11 @@ public fun BasicComposer(
                                             stringResource(Res.string.kitComposerField)
                                         ),
                                 working = state.sending,
+                                onLongClick =
+                                    chrome.sendLater?.takeIf { typed && sendReady }?.let { later ->
+                                        { later(field.text.toString()) }
+                                    },
+                                onLongClickLabel = stringResource(Res.string.tipSendLaterTitle),
                                 modifier = Modifier.testTag("chat-send-button"),
                             )
                         },

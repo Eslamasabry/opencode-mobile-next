@@ -209,6 +209,33 @@ public interface ChatWorld {
     public suspend fun compact(): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("sessionCompact")))
 
+    /**
+     * Runs one shell command in this conversation's project, by its agent and model (Flutter
+     * `_runShellCommand`). Gate on `ServerCapabilities.conversationShellOn`.
+     */
+    public suspend fun runShell(command: String): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("conversationShell")))
+
+    /** The server's background commands (all of them; [ManagedShell.sessionId] says whose). */
+    public suspend fun runningShells(): Outcome<io.github.eslamasabry.oc.core.model.ManagedShellList> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("developmentServices")))
+
+    public suspend fun shellOutput(
+        id: String,
+        cursor: Long,
+    ): Outcome<io.github.eslamasabry.oc.core.model.ManagedShellOutput> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("developmentServices")))
+
+    public suspend fun stopShell(id: String): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("developmentServices")))
+
+    /** null [timeout] = no timeout. */
+    public suspend fun setShellTimeout(
+        id: String,
+        timeout: kotlin.time.Duration?,
+    ): Outcome<io.github.eslamasabry.oc.core.model.ManagedShell> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("developmentServices")))
+
     /** A new conversation that starts from [from]; its id. */
     public suspend fun fork(from: MessageId): Outcome<SessionId>
 

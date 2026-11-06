@@ -310,6 +310,10 @@ public data class ChatCapabilitiesUi(
     /** A reply's turn can list its changed files (P12-REVIEW). */
     val changes: Boolean = false,
     val compact: Boolean = false,
+    /** `conversationShellOn`: Run shell command. */
+    val shell: Boolean = false,
+    val files: Boolean = false,
+    val slashCommands: Boolean = false,
 )
 
 /** Intents, named after what the person wants (ADR §9.1), never after widgets. */
@@ -455,6 +459,20 @@ public interface ChatActions {
 
     /** Recovery for a missing/rejected provider credential; opens the visible settings path. */
     public fun openSignInSettings() {}
+
+    /** Hold Send / "Send later or repeat": opens the schedule editor for this conversation. */
+    public fun sendLater(words: String) {}
+
+    /** Commands launcher: Retry last prompt (the newest prompt's words alone, once more). */
+    public fun retryLastPrompt() {}
+
+    /** Commands launcher: Revert last prompt (opens the Undo from here page for the newest prompt). */
+    public fun undoLastPrompt() {}
+
+    /** Commands launcher: /new and /sessions, the app's own commands. */
+    public fun openNewConversation() {}
+
+    public fun openConversations() {}
 
     /** Error card: "Open providers" (the provider sign-ins of this conversation's server). */
     public fun openProviders() {}

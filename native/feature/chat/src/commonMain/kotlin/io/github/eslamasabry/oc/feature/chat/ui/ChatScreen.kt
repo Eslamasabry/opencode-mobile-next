@@ -134,6 +134,9 @@ import io.github.eslamasabry.oc.ui.words.res.chatSendFailed
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailedChanged
 import io.github.eslamasabry.oc.ui.words.res.chatUiChanges
 import io.github.eslamasabry.oc.ui.words.res.chatUiCollapseReasoning
+import io.github.eslamasabry.oc.ui.words.res.chatCollapseAllSteps
+import io.github.eslamasabry.oc.ui.words.res.composerFullCommands
+import io.github.eslamasabry.oc.ui.words.res.workCount
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailureAccountAction
 import io.github.eslamasabry.oc.ui.words.res.chatUiChooseAnotherModel
 import io.github.eslamasabry.oc.ui.words.res.chatUiOpenProviders
@@ -248,8 +251,23 @@ public fun ChatScreen(
         io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices(),
     /** The models the error card may suggest ("Use {model} and resend"). */
     modelChoices: List<io.github.eslamasabry.oc.feature.chat.world.ComposerModel> = emptyList(),
+    /** Background commands, Stop command and Run shell command (null = not offered here). */
+    work: io.github.eslamasabry.oc.feature.chat.work.ChatWorkUi =
+        io.github.eslamasabry.oc.feature.chat.work.ChatWorkUi(),
+    workModel: io.github.eslamasabry.oc.feature.chat.work.ChatWorkModel? = null,
+    serverCommands: List<io.github.eslamasabry.oc.feature.chat.world.ComposerCommand> =
+        emptyList(),
+    onLoadServerCommands: () -> Unit = {},
 ) {
+    var commandsOpen by remember(state.ref) { mutableStateOf(false) }
+    var workOpen by remember(state.ref) { mutableStateOf(false) }
+    var commandInsert by
+        remember(state.ref) {
+            mutableStateOf<io.github.eslamasabry.oc.feature.chat.composer.InsertRequest?>(null)
+        }
+    var commandInsertId by remember(state.ref) { mutableStateOf(0L) }
     var modelPicker by remember(state.ref) { mutableStateOf<Long?>(null) }
+    val folds = rememberTranscriptFolds()
     var contextOpen by remember { mutableStateOf(false) }
     var tasksOpen by remember(state.ref) { mutableStateOf(false) }
     var barMenuOpen by remember(state.ref) { mutableStateOf(false) }
@@ -319,7 +337,8 @@ public fun ChatScreen(
                 // acknowledgement goes back to the side that offered it. Agent ```choices arrive
                 // with cards (S5).
                 pendingInsert = {
-                    latest.insert?.let { InsertRequest(it.id, it.text, replace = true) }
+                    commandInsert
+                        ?: latest.insert?.let { InsertRequest(it.id, it.text, replace = true) }
                         ?: startState.insert?.let {
                             InsertRequest(it.id, it.text, replace = true, onlyIfEmpty = true)
                         }
@@ -327,6 +346,7 @@ public fun ChatScreen(
                 },
                 insertDone = { id ->
                     when {
+                        commandInsert?.id == id -> commandInsert = null
                         latest.insert?.id == id -> actions.insertDone(id)
                         startState.insert?.id == id -> currentStartActions?.insertDone(id)
                         else -> prompts?.done(id)
@@ -339,10 +359,47 @@ public fun ChatScreen(
                 rowChips = { headerState?.approval?.let { ApprovalChip(it) } },
                 freeModel = { headerState?.state?.freeModel == true },
                 agentName = { headerState?.state?.agentName ?: "OpenCode" },
+                openCommands =
+                    if (demoMode) null
+                    else {
+                        {
+                            onLoadServerCommands()
+                            commandsOpen = true
+                        }
+                    },
+                sendLater = if (demoMode) null else actions::sendLater,
                 modelPickerRequest = { modelPicker },
                 modelPickerDone = { id -> if (modelPicker == id) modelPicker = null },
             )
         }
+
+    val commandEntries =
+        rememberChatCommandEntries(
+            state = state,
+            actions = actions,
+            work = workModel,
+            serverCommands = serverCommands,
+            serverGroup = header?.state?.agentName ?: "OpenCode",
+            onFind = { actions.find(state.find?.query ?: "") },
+            onTasks = {
+                if (workModel != null && work.shells.isNotEmpty()) {
+                    workModel.refresh()
+                    workOpen = true
+                } else tasksOpen = true
+            },
+            onChooseModel = { modelPicker = (modelPicker ?: 0L) + 1L },
+            onRename = header?.actions?.let { h -> { h.renameRequested() } },
+            onInsert = { text ->
+                // Negative ids: never equal to the chat's or the saved prompts' own.
+                commandInsertId -= 1
+                commandInsert =
+                    io.github.eslamasabry.oc.feature.chat.composer.InsertRequest(
+                        commandInsertId,
+                        text,
+                        replace = true,
+                    )
+            },
+        )
 
     // The frame, its sibling menu and its confirmation share one modal layer. KitScreen
     // reuses this ancestor rather than creating a host scoped only to its own content.
@@ -397,6 +454,34 @@ public fun ChatScreen(
                                             testTag = "chat-timeline-open",
                                             icon = KitIcons.timeline,
                                         ),
+                                        KitLineAction(
+                                            stringResource(Res.string.composerFullCommands),
+                                            {
+                                                onLoadServerCommands()
+                                                commandsOpen = true
+                                            },
+                                            testTag = "chat-commands-open",
+                                            icon = KitIcons.terminal,
+                                        ),
+                                        if (workModel != null && work.running > 0)
+                                            KitLineAction(
+                                                stringResource(Res.string.workCount, work.running),
+                                                {
+                                                    workModel.refresh()
+                                                    workOpen = true
+                                                },
+                                                testTag = "chat-work-open",
+                                                icon = KitIcons.branch,
+                                            )
+                                        else null,
+                                        if (folds.anyOpen)
+                                            KitLineAction(
+                                                stringResource(Res.string.chatCollapseAllSteps),
+                                                folds::collapseAll,
+                                                testTag = "chat-collapse-all",
+                                                icon = KitIcons.unfoldLess,
+                                            )
+                                        else null,
                                         if (state.capabilities.compact)
                                             KitLineAction(
                                                 stringResource(Res.string.chatUiCompactSession),
@@ -599,6 +684,7 @@ public fun ChatScreen(
                                     )
                                 } else
                                     ChatTranscriptList(
+                                        folds = folds,
                                         rows = state.rows,
                                         live = state.live,
                                         pending = state.pending,
@@ -680,6 +766,18 @@ public fun ChatScreen(
                     onDismiss = { tasksOpen = false },
                     running = state.live != null,
                 )
+                ChatCommandsSheet(
+                    visible = commandsOpen,
+                    entries = commandEntries,
+                    onDismiss = { commandsOpen = false },
+                )
+                if (workModel != null) {
+                    ChatWorkSheet(work, workOpen, workModel) {
+                        workOpen = false
+                        workModel.closeOutput()
+                    }
+                    ChatShellDialog(work, workModel)
+                }
                 if (activeContext != null) ActiveContextSheet(activeContext)
                 SelectTextSheet(state.select, actions)
                 PictureSheet(state.picture, actions)

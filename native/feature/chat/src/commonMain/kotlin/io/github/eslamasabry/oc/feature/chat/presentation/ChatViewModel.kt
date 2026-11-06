@@ -108,6 +108,36 @@ public class ChatViewModel(
 
     override fun openGit(): Unit = nav.open(GitRoute(route.ref))
 
+    override fun sendLater(words: String): Unit =
+        nav.open(
+            io.github.eslamasabry.oc.ui.routes.SchedulesRoute.Edit(
+                profileId = route.ref.profileId,
+                from = route.ref,
+            )
+        )
+
+    override fun retryLastPrompt(): Unit = presenter.retryLastPrompt()
+
+    override fun undoLastPrompt(): Unit = presenter.undoLastPrompt()
+
+    override fun openNewConversation(): Unit = presenter.openNewConversation()
+
+    override fun openConversations(): Unit = presenter.openConversations()
+
+    /** Background commands, Stop command and Run shell command (Flutter running-work sheet). */
+    public val work: io.github.eslamasabry.oc.feature.chat.work.ChatWorkModel =
+        io.github.eslamasabry.oc.feature.chat.work.ChatWorkModel(world) { block ->
+                viewModelScope.launch { block() }
+            }
+            .also { it.poll() }
+
+    /** The server's own slash commands for the launcher. */
+    public val serverCommands = world.commands
+
+    public fun loadServerCommands() {
+        viewModelScope.launch { world.loadCommands() }
+    }
+
     override fun openProviders(): Unit =
         nav.open(io.github.eslamasabry.oc.ui.routes.ProvidersRoute(route.ref.profileId))
 
