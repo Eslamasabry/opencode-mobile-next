@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.android.termux
 
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -11,11 +12,23 @@ import kotlin.test.assertTrue
 import kotlin.test.fail
 
 // Flutter test/termux_migration_profile_test.dart, case for case, over a memory profile store and connection.
+// One deliberate difference: Flutter's in-app server listens on 4097, the native one on 4098 by default (the app
+// reads the selected port through configureBuiltinServerPort) so both apps' phone servers can run side by side.
 class TermuxMigrationProfileTest {
+    init {
+        configureBuiltinServerPort { NATIVE_DEFAULT_PORT }
+    }
+
     private data class Location(val directory: String?, val workspace: String?)
 
     private var source = MigrationProfile(id = "termux", openCode = true, baseUrl = TERMUX_MANAGED_SERVER_URL, flavor = "v2")
-    private val destination = MigrationProfile(id = "builtin", openCode = true, baseUrl = "http://127.0.0.1:4097", flavor = "v2")
+    private val destination =
+        MigrationProfile(
+            id = "builtin",
+            openCode = true,
+            baseUrl = "http://127.0.0.1:$NATIVE_DEFAULT_PORT",
+            flavor = "v2",
+        )
     private val saved = mutableListOf<MigrationProfile>()
     private val locations = HashMap<String, Location>()
     private val prefs = HashMap<String, String>()
@@ -70,6 +83,11 @@ class TermuxMigrationProfileTest {
         saved.add(source)
         activeId = source.id
         switcher = TermuxMigrationProfileSwitcher(profiles)
+    }
+
+    @After
+    fun tearDown() {
+        configureBuiltinServerPort { NATIVE_DEFAULT_PORT }
     }
 
     private suspend fun run(paths: Map<String, String> = emptyMap()): String = switcher.switchProfile(source.id, { wanted }, paths)
@@ -158,13 +176,25 @@ class TermuxMigrationProfileTest {
     }
 
     @Test
-    fun `B-LINUX-235 the in-app server URL rule matches only plain http on 127_0_0_1 port 4097`() {
-        assertTrue(builtinManagesServerUrl("http://127.0.0.1:4097"))
+    fun `B-LINUX-235 the in-app server URL rule matches only plain http on 127_0_0_1 at the selected in-app port`() {
+        assertTrue(builtinManagesServerUrl("http://127.0.0.1:4098"))
+        assertFalse(builtinManagesServerUrl("http://127.0.0.1:4097"), "Flutter's phone server is not the native one")
         assertFalse(builtinManagesServerUrl(TERMUX_MANAGED_SERVER_URL))
-        assertFalse(builtinManagesServerUrl("https://127.0.0.1:4097"))
-        assertFalse(builtinManagesServerUrl("http://localhost:4097"))
+        assertFalse(builtinManagesServerUrl("https://127.0.0.1:4098"))
+        assertFalse(builtinManagesServerUrl("http://localhost:4098"))
         assertFalse(builtinManagesServerUrl(null))
         assertTrue(termuxMigrationEligible(source))
         assertFalse(termuxMigrationEligible(source.copy(openCode = false)))
+    }
+
+    @Test
+    fun `B-LINUX-235 a busy default port moves the in-app server rule to the port the app selected`() {
+        configureBuiltinServerPort { 4100 }
+        assertTrue(builtinManagesServerUrl("http://127.0.0.1:4100"))
+        assertFalse(builtinManagesServerUrl("http://127.0.0.1:4098"))
+    }
+
+    private companion object {
+        const val NATIVE_DEFAULT_PORT = 4098
     }
 }
