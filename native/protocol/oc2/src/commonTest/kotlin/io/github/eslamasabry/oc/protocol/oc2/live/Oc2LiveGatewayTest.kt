@@ -438,12 +438,23 @@ class Oc2LiveGatewayTest {
     }
 
     @Test
-    fun `B-PROTO-024 forms remain unavailable without network on either dialect`() = runTest {
+    fun `B-PROTO-024 forms are advertised on either dialect and cancel sends one dialect route`() = runTest {
+        // Flutter 2.1.4 lib/api2/gateway_mappers.dart: `forms: true`; client.dart cancelForm posts
+        // /session/<id>/form/<id>/cancel. The old row expected no network, before forms shipped.
         for (dialect in Oc2Dialect.entries) {
-            val engine = MockEngine { error("Unsupported form mutation reached transport") }
+            val seen = mutableListOf<Pair<HttpMethod, String>>()
+            val engine = MockEngine { request ->
+                seen += request.method to request.url.encodedPath
+                respond("true", HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+            }
             val gateway = gateway(engine, dialect)
-            assertFalse(gateway.capabilities.value.forms)
-            assertIs<Outcome.Failed>(gateway.cancelForm(SessionId("s"), FormId("f")))
+            assertTrue(gateway.capabilities.value.forms, "$dialect")
+            assertEquals(Outcome.Ok(Unit), gateway.cancelForm(SessionId("s"), FormId("f")))
+            // Beta keeps Flutter's route; Stable's dialect maps it to DELETE (Oc2Dialect FormCancel).
+            val route =
+                if (dialect == Oc2Dialect.Stable) HttpMethod.Delete to "/api/session/s/form/f"
+                else HttpMethod.Post to "/api/session/s/form/f/cancel"
+            assertEquals(listOf(route), seen, "$dialect")
             gateway.close()
         }
     }
