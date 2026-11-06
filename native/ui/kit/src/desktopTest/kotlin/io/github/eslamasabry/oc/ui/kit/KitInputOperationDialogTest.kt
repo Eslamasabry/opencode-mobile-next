@@ -51,7 +51,8 @@ class KitInputOperationDialogTest {
             onNodeWithText("Create").performClick()
             onNodeWithText("Enter a folder name.").assertExists()
             assertEquals(emptyList(), submissions)
-            val field = onNode(hasSetTextAction())
+            // Found by its label: a disabled field (while creating) no longer offers SetText.
+            val field = onNodeWithContentDescription("Folder name")
             field.assertIsFocused()
             field.performTextInput("loyalty-app")
             field.performImeAction()

@@ -44,7 +44,6 @@ public fun KitInputOperationDialog(
     var selectedOnOpen by remember { mutableStateOf(false) }
     var edited by remember { mutableStateOf(false) }
     val invalid = validate(field.text.toString())
-    val blocked = edited && invalid != null
     val busyReason = stringResource(Res.string.kitWorking)
     val cancel = cancelLabel ?: stringResource(Res.string.kitConfirmCancel)
     val held = if (working) KitEnabled.Disabled(busyReason) else KitEnabled.Enabled
@@ -55,15 +54,10 @@ public fun KitInputOperationDialog(
         }
     }
     val close = { if (!working) onDismissRequest() }
-    val primary =
-        KitAction(
-            confirmLabel,
-            onClick = submit,
-            working = working,
-            enabled =
-                if (working) held
-                else if (blocked) KitEnabled.Disabled(invalid!!) else KitEnabled.Enabled,
-        )
+    // Invalid text is said once, under the field (Flutter: the field's error, no button reason). A
+    // disabled primary would repeat the same words under the button, so it stays tappable; submit
+    // checks again and sends nothing while the text is invalid.
+    val primary = KitAction(confirmLabel, onClick = submit, working = working, enabled = held)
     val cancelAction = KitAction(cancel, close, enabled = held)
     val input: @Composable () -> Unit = {
         KitField(
