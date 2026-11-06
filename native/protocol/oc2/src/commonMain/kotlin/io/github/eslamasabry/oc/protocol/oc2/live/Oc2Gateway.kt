@@ -277,6 +277,8 @@ internal class Oc2Gateway(
             is Failure.Rejected -> "Rejected.${f.status}.${f.tag?.raw?.take(32)}"
             is Failure.Refused -> "Refused.${f.reason.name}"
             is Failure.Network -> "Network.${f.why.name}"
+            is Failure.NotFound -> "NotFound.${f.tag?.raw?.take(40)}"
+            is Failure.Conflict -> "Conflict.${f.tag?.raw?.take(40)}"
             else -> f::class.simpleName ?: "Failure"
         }
 
@@ -1326,6 +1328,20 @@ internal class Oc2Gateway(
                 is Outcome.Failed -> "failed ${diagKind(posted.failure)}"
             }
         log.w { "B063 prompt prepare=${prepareMs}ms post=${postMs}ms $postKind" }
+        if (posted is Outcome.Failed) {
+            // What the session asks the server to run: agent name and model ref only.
+            val facts = (json("/session/${sid(session)}") as? Outcome.Ok)?.value?.let { data(it) as? JsonObject }
+            val agentName = facts?.str("agent")?.take(40)
+            val model = facts?.get("model") as? JsonObject
+            val agents =
+                (json("/agent", query = locationQuery()) as? Outcome.Ok)?.value?.let { data(it) as? kotlinx.serialization.json.JsonArray }
+                    ?.mapNotNull { (it as? JsonObject)?.str("id") ?: (it as? JsonObject)?.str("name") }
+            log.w {
+                "B063 session agent=$agentName model=${model?.str("providerID")}/${model?.str("id")?.take(60)} " +
+                    "agentKnown=${agentName == null || agents?.contains(agentName) == true} agents=${agents?.size} " +
+                    "located=${location.value.directory != null}"
+            }
+        }
         return when (val result = posted) {
             is Outcome.Failed ->
                 if (
