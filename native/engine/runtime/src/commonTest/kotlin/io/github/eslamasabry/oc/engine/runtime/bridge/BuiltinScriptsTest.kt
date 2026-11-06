@@ -75,12 +75,12 @@ class BuiltinScriptsTest {
     }
 
     @Test
-    fun `B-LINUX-023 the password is quoted and never in the server script`() {
-        val write = BuiltinScripts.writePasswordScript("it's-secret")!!
+    fun `B-LINUX-023 the password script holds no password and the server script never has it`() {
+        val write = BuiltinScripts.writePasswordScript()
         assertContains(write, "umask 077")
-        assertContains(write, "'it'\"'\"'s-secret'")
+        assertContains(write, "cat > '/root/.oc-builtin/server.password.tmp'")
+        assertFalse(write.contains("chmod"), "the protected sandbox denies chmod")
         assertFalse(server().contains("secret"))
-        assertNull(BuiltinScripts.writePasswordScript(""))
         assertEquals("write-password", BuiltinScripts.scriptLabel(write))
     }
 

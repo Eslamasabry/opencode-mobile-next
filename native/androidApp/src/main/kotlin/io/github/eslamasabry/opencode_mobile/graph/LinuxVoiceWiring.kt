@@ -201,20 +201,6 @@ internal object PhoneServerScripts {
     fun quote(value: String): String = "'" + value.replace("'", "'\"'\"'") + "'"
 
     /**
-     * Flutter `BuiltinLinux.writePasswordScript`: the password never reaches a command line or a
-     * log.
-     */
-    fun writePassword(password: String): String {
-        require(password.isNotEmpty()) { "Must not be empty." }
-        val dir = PASSWORD_FILE.substringBeforeLast('/')
-        return "set -eu\n" +
-            "umask 077\n" +
-            "mkdir -p $dir\n" +
-            "printf '%s' ${quote(password)} > $PASSWORD_FILE.tmp\n" +
-            "mv $PASSWORD_FILE.tmp $PASSWORD_FILE\n"
-    }
-
-    /**
      * Flutter `BuiltinLinux.serverScript(runtime = opencode2)`: started in /root/projects, bound to
      * 127.0.0.1 only, Basic auth `opencode` + the password read from the root-only file, OpenCode
      * 2's isolated XDG folders, and the OpenCode 1 history copy before the first start. Deviation:
@@ -465,6 +451,9 @@ internal constructor(
                     linux.run(script, timeoutSeconds).let { ShellRun(it.exitCode, it.output) }
                 }
 
+            override suspend fun createProject(path: String): Outcome<String> =
+                mutation { linux.createProject(path) }
+
             override suspend fun setupRunning(): Boolean =
                 withContext(io) {
                     try {
@@ -533,7 +522,8 @@ internal constructor(
                     val ran = blocking {
                         facts.update { it.copy(startBusyPort = null) }
                         linux.beginServerStart()
-                        linux.run(PhoneServerScripts.writePassword(password), 60)
+                        // The password travels on stdin, never in the script (a process argument).
+                        linux.writeServerPassword(password, 60)
                     }
                 ) {
                     is Outcome.Failed -> ran

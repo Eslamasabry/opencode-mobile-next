@@ -21,8 +21,8 @@ public enum class OpenCodeRuntime(public val wireName: String, public val pinned
 
 /**
  * The shell scripts that run inside the built-in Ubuntu (port of the static half of lib/builtin/builtin_linux.dart;
- * B-LINUX-023, B-LINUX-024). Every value a script embeds is single-quoted; the server password only ever goes into
- * [writePasswordScript], never into the long-running server's command line or log.
+ * B-LINUX-023, B-LINUX-024). Every value a script embeds is single-quoted; the server password never goes into any
+ * script: it is the input of [writePasswordScript]'s run, and the server reads it from its 0600 file inside Ubuntu.
  */
 public object BuiltinScripts {
     /** The Ubuntu working directory the server starts in: never the home folder, which OpenCode would scan whole. */
@@ -135,15 +135,20 @@ public object BuiltinScripts {
             "echo committed\n"
     }
 
-    /** Saves the server password inside Ubuntu, readable by its root only. Null for an empty password. */
-    public fun writePasswordScript(password: String): String? {
-        if (password.isEmpty()) return null
+    /**
+     * Saves stdin as the server password inside Ubuntu, 0600 in a 0700 folder (`umask 077`; no chmod, which the
+     * protected sandbox denies). The script holds no secret: it runs as a `/bin/sh -c` argument that every process of
+     * this app's user can read, so the password travels as the run's input. An empty input fails with 78 and leaves the
+     * old file alone. Port of the Flutter `BuiltinLinux.writePasswordScript` (2.1.1).
+     */
+    public fun writePasswordScript(): String {
         val dir = PASSWORD_FILE.substring(0, PASSWORD_FILE.lastIndexOf('/'))
         return "set -eu\n" +
             "umask 077\n" +
-            "mkdir -p $dir\n" +
-            "printf '%s' ${quote(password)} > $PASSWORD_FILE.tmp\n" +
-            "mv $PASSWORD_FILE.tmp $PASSWORD_FILE\n"
+            "mkdir -p '$dir'\n" +
+            "cat > '$PASSWORD_FILE.tmp'\n" +
+            "[ -s '$PASSWORD_FILE.tmp' ] || { rm -f '$PASSWORD_FILE.tmp'; exit 78; }\n" +
+            "mv '$PASSWORD_FILE.tmp' '$PASSWORD_FILE'\n"
     }
 
     /**
