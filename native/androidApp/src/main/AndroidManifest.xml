@@ -15,6 +15,10 @@
     <!-- Settings › Notifications: Android 13+ lets the app notify only with this declared (P12-SETTINGS). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
+    <!-- Connect › Find on my network: reads the Wi-Fi's address range and looks for OpenCode on it. ACCESS_LOCAL_NETWORK is
+         the Android 17 runtime permission for LAN access; it is asked only when the person taps "Find on my network". -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
 
     <!-- P12-VOICE: voice typing uses the phone's speech recognizer; Android 11+ hides the service without this. -->
     <queries>
