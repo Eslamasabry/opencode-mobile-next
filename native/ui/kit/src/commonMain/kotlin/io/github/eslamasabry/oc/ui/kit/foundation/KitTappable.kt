@@ -113,6 +113,7 @@ internal fun Modifier.kitTappable(
     return this
         .sizeIn(minWidth = tokens.minTarget.dp, minHeight = tokens.minTarget.dp)
         .clip(shape.shape())
+        .then(role.edgeMark())
         .semantics { if (!enabled && disabledReason != null) stateDescription = disabledReason }
         .then(if (focusFill) Modifier else Modifier.indication(drawn, indication))
         .combinedClickable(
@@ -136,6 +137,10 @@ internal fun Modifier.kitTappable(
             },
         )
 }
+
+/** A row's highlight runs edge to edge; its words keep the gutter (native/docs/kit/LAYOUT-RULES.md §2). */
+private fun KitTappableRole.edgeMark(): Modifier =
+    if (this == KitTappableRole.Row) Modifier.kitEdge(KitEdge.Bleed) else Modifier
 
 private fun KitTappableRole.toSemantics(): Role =
     when (this) {
