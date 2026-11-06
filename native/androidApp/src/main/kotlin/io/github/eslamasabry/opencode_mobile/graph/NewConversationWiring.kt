@@ -7,6 +7,7 @@ import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.WireJson
@@ -49,6 +50,7 @@ import io.github.eslamasabry.oc.engine.delivery.receipts.CommandReceiptState
 import io.github.eslamasabry.oc.engine.git.GitLinkRepairReport
 import io.github.eslamasabry.oc.engine.git.GitLinkRepairService
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
+import io.github.eslamasabry.oc.feature.chat.world.RecentModelsBacking
 import io.github.eslamasabry.oc.feature.chats.presentation.*
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.io.encoding.Base64
@@ -80,6 +82,8 @@ class AndroidNewConversationHost(
     private val deliveryStores: Set<DeliveryStorage>,
     private val projectServers: io.github.eslamasabry.oc.feature.projects.presentation.ProjectServers,
     private val projectCreation: io.github.eslamasabry.oc.feature.projects.presentation.ProjectCreation,
+    /** N-51: the store behind the chat's model favourites (`oc.modelLibrary.<profileId>`). */
+    private val modelLibraries: Set<RecentModelsBacking>,
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
 ) : NewConversationHost {
@@ -615,10 +619,26 @@ class AndroidNewConversationHost(
                                     .firstOrNull { it.id == providers.defaultProviderId }
                                     ?.name ?: "OpenCode"
                             else "OpenCode",
+                        favorites = favoriteModels(profile),
                     )
                 )
             }
         }
+
+    private fun favoriteModels(profile: ProfileId): List<ModelRef> =
+        modelLibraries.firstOrNull()?.favorites(profile.raw).orEmpty().map { (provider, model) ->
+            ModelRef(provider, model)
+        }
+
+    override suspend fun toggleFavorite(profile: ProfileId, model: ModelRef): Outcome<List<ModelRef>> {
+        val library =
+            modelLibraries.firstOrNull()
+                ?: return Outcome.Failed(Failure.Unavailable(FeatureId("modelFavorites")))
+        return when (val done = library.toggleFavorite(profile.raw, model.providerId, model.modelId)) {
+            is Outcome.Failed -> done
+            is Outcome.Ok -> Outcome.Ok(favoriteModels(profile))
+        }
+    }
 
     override suspend fun start(
         profile: ProfileId,

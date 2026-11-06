@@ -68,6 +68,8 @@ public data class NewConversationSetup(
     val canChangeProject: Boolean = true,
     val defaultRuntime: String = "OpenCode",
     val modes: List<String> = emptyList(),
+    /** N-51: this server's favourite models, as the chat's model sheet shows them. */
+    val favorites: List<ModelRef> = emptyList(),
 )
 
 /** Keeps successful stages on an explicit retry: a copy or conversation is never created twice. */
@@ -116,6 +118,13 @@ public interface NewConversationHost {
         directory: String?,
         text: String,
     ): Outcome<Unit>
+
+    /**
+     * N-51: adds or removes [model] from [profile]'s favourite models (the store the chat's model sheet
+     * uses) and answers the favourites as they now are.
+     */
+    public suspend fun toggleFavorite(profile: ProfileId, model: ModelRef): Outcome<List<ModelRef>> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("modelFavorites")))
 
     /** Saved with the project draft; changing screens never discards the selected model. */
     public suspend fun saveChoices(
@@ -196,8 +205,8 @@ public class NoNewConversationHost : NewConversationHost {
 }
 
 /**
- * [Agents] and [Models] are two steps of one growing sheet (half height: who works and how, then
- * full height: every model), never two sheets.
+ * [Agents] is who works and how; [Models] is the kit's one model sheet (N-51), the same sheet a
+ * conversation's model chip opens.
  */
 public enum class NewConversationSheet {
     Projects,
@@ -248,9 +257,6 @@ public fun filterNewConversationModels(
     }
 }
 
-/** Long lists get a search field in the model step. */
-public const val NEW_CONVERSATION_MODEL_SEARCH_FROM: Int = 8
-
 public data class NewConversationUi(
     val servers: List<NewConversationServer> = emptyList(),
     val profile: ProfileId? = null,
@@ -261,6 +267,8 @@ public data class NewConversationUi(
     /** Bumped when a starter fills the prompt: the field takes the cursor back. */
     val focusRevision: Long = 0,
     val model: ModelRef? = null,
+    /** N-51: this server's favourite models; the model sheet's stars change them. */
+    val favorites: List<ModelRef> = emptyList(),
     val agent: String? = null,
     val separateCopy: Boolean = false,
     val busy: Boolean = false,
@@ -312,6 +320,9 @@ public interface NewConversationActions {
     public fun chooseDirectory(directory: String)
 
     public fun chooseModel(model: ModelRef?)
+
+    /** N-51: a model sheet star: adds or removes [model] from this server's favourites. */
+    public fun toggleFavorite(model: ModelRef) {}
 
     public fun chooseAgent(agent: String?)
 
@@ -412,6 +423,7 @@ public class NewConversationViewModel(
                                 setup = setup,
                                 directory = setup.directory,
                                 model = setup.model,
+                                favorites = setup.favorites,
                                 agent = setup.agent,
                                 busy = false,
                                 repairAvailable =
@@ -584,6 +596,16 @@ public class NewConversationViewModel(
         // The model is the last choice of the sheet: picking one closes it.
         mutable.update { it.copy(model = model, sheet = null) }
         saveChoices()
+    }
+
+    override fun toggleFavorite(model: ModelRef) {
+        val profile = mutable.value.profile ?: return
+        viewModelScope.launch {
+            val now = host.toggleFavorite(profile, model)
+            // A star that could not be saved stays as it was; the list never claims what the store refused.
+            if (now is Outcome.Ok && mutable.value.profile == profile)
+                mutable.update { it.copy(favorites = now.value) }
+        }
     }
 
     override fun chooseStarter(starter: NewConversationStarter, label: String) {
