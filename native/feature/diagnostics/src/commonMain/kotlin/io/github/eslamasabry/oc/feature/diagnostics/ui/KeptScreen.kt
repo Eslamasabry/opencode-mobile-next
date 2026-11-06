@@ -236,6 +236,13 @@ private fun ErrorsSection(state: KeptUi, actions: KeptActions) {
         },
     )
     if (copied) KitNotice(stringResource(Res.string.kitCopied))
+    // The kept errors, expandable in place: the host's text is already redacted.
+    val lines = remember(state.errorsKept) { actions.errorLogText().lines().filter { it.isNotBlank() } }
+    KitDetailsFold(
+        stringResource(Res.string.kitDetails),
+        stringResource(Res.string.kitCopyDetails),
+        notes = lines,
+    )
 }
 
 /** Where time went in this run (Flutter `PerfTraceSection`): steps by name, Copy and Clear. */
