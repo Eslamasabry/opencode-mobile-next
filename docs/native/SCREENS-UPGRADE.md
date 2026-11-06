@@ -50,6 +50,18 @@ Frameless kit composer retains the working glow, with one round primary mic/Send
 
 Show the real project name immediately from the header and load facts from the session folder, with scoped file/inspection reads, bounded waits and stale-result fences. Only known file/Git facts are shown. Up to three starters sit above the composer, respecting overlay chrome insets. Source/formatter parsing and diff checks only; no compile/tests.
 
+## U11 — new conversation start flow (native/upg-newchat)
+
+First message: Start swaps to the kit chat frame with the prompt as the first bubble and the chosen agent and model chips under it; one politely announced status line says Sending…, not sent or not sure. A definite failure offers Try again (same attempt) and Edit (back to the form with the words, agent, model and project; when nothing was created yet, server and project may change too; a created conversation keeps its project and Retry reuses it). Redacted Details fold under the plain words. Unsure outcomes still only open the made conversation. Success opens the chat before clearing state, so no empty or failed frame flashes, and resets the attempt.
+
+Starters: “Ways to start” chips under the chip row while the prompt is empty; a tap fills the prompt (ellipsis labels end in a space), brings the cursor back, and never sends. The chat's empty-state starters already only fill the composer.
+
+One agent/model sheet: the chip row is agent (with Plan beside it when chosen) · model · project. The agent chip opens one sheet at half height with startable agents, Build/Plan as a KitSegmented control (disabled with its reason for a named agent) and a Model row; the model row or model chip grows the same sheet to full height in place (KitSheet growsInPlace, spatial spring, snap under reduced motion; stays the centred panel on expanded windows), with search from eight models and “Back to agents”. Picking a model closes it; agents and modes apply in place, Done closes.
+
+Kit: KitSheet growsInPlace, KitStartBox focusKey, KitStartingConversation phase/agent/reason/details/Edit.
+
+Gaps: “In a separate copy” still opens the project page's readiness/name step before chat (owner: feature/projects IsolatedTaskLaunch; chats cannot call it without a feature-to-feature dependency), so instant chat is still partial for that variant. Starters use project-safe suggestions only: folder facts (empty folder, history) are not readable before a conversation exists here. Back gesture on the model step closes the sheet rather than stepping back to agents. No compile, tests, goldens or device runs were done; ModelChoicesTest and NewConversationProjectTest call sites are kept source-compatible.
+
 ## Coordinator validation remaining
 
 Compile this candidate, then validate Start success/definite failure/uncertain delivery and process death with chosen model/mode; compact layout with keyboard/large text/RTL; notice priority; message Details and teaching replay/reset; server rename; row/back gesture cancel/commit and reduced motion; empty/typed/attachment/busy/voice composer states; empty project facts and thumb-reachable starters. No runtime, screenshot, build or release qualification is claimed here.
