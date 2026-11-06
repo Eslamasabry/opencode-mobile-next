@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
@@ -156,7 +157,10 @@ class UsageScreenTest {
             assertTrue(onAllNodesWithText("$4.50").fetchSemanticsNodes().isNotEmpty())
             onNodeWithText("Timezone: UTC").assertExists()
             onNodeWithText("All projects").assertExists()
+            // Range and project are picker rows (Flutter KitPickerRow): open each, then choose.
+            onNodeWithTag("usage-range").performClick()
             onNodeWithText("Today").performClick()
+            onNodeWithTag("usage-scope").performClick()
             onNodeWithText("app").performClick()
             assertEquals(listOf("range:Today", "scope:prj_app"), actions.calls)
         }
