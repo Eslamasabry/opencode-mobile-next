@@ -401,6 +401,7 @@ SH
   expect_out "ladder: t2 names the missing task" 'MISSING: .*analyzeStableReleaseR8Config'
   echo x >native/core/common/C.kt
   expect "ladder: t1 runs the touched module's tasks, lint and detekt locally (E02-S03)" 0 "${low[@]}" OC_DETEKT_CMD="$FAKE_DETEKT" native/tool/t1.sh --base native/main --globs 'native/**' --where local
+  expect "ladder: Q-TESTROT t1 compiles every module's tests" 0 bash -c 'grep -q "^step test-compile: .*--continue compileAllTests$" native/build/native-t1/*/summary.txt'
   expect "ladder: E02-S03 t1 runs the switch release lint" 0 bash -c 'grep -q "^step lint: .*:androidApp:lintSwitchRelease$" native/build/native-t1/*/summary.txt'
   expect "ladder: E02-S03 t1 runs detekt on the touched module" 0 bash -c 'grep -qE "^step detekt: .*detekt.sh --base native/main :core:common$" native/build/native-t1/*/summary.txt'
   echo 'val x = 1 // DETEKT_BAD' >native/core/common/D.kt
@@ -420,6 +421,7 @@ else
 fi
 expect "ladder: t2 dry run lists every step" 0 native/tool/t2.sh --dry-run --where local
 expect_out "ladder: t2 includes the assemble step" 'step assemble: ./gradlew :androidApp:assembleSwitchRelease :androidApp:assemblePreviewRelease'
+expect_out "ladder: Q-TESTROT t2 compiles every module's tests" 'step test-compile: ./gradlew --continue compileAllTests'
 expect_out "ladder: t2 lints the switch release" 'step lint: ./gradlew :androidApp:lintSwitchRelease'
 expect_out "ladder: t2 analyzes the switch release R8 config" 'step r8-config: ./gradlew :androidApp:analyzeSwitchReleaseR8Config'
 expect "ladder: t2 names no stable flavor and no undefined property (E02-S07)" 1 \

@@ -7,7 +7,7 @@ Every script follows the plan 02 §8 contract: exit `0` pass, `1` a test or gate
 | Script | Who, when | What |
 |---|---|---|
 | `t0.sh <module> [filter] [--android] [--vps]` | builder, while editing (foreground) | one module's `desktopTest` (or Android host test), filtered by a catalog id or name part |
-| `t1.sh [--base R] [--brief F \| --globs G] [--record M] [--where vps\|local] [--detach]` | builder, once when ready | touched modules + write set on the PC; their tests, Roborazzi verify, `:quality:test`, `:androidApp:lintSwitchRelease`, strings drift, detekt + baseline ratchet |
+| `t1.sh [--base R] [--brief F \| --globs G] [--record M] [--where vps\|local] [--detach]` | builder, once when ready | touched modules + write set on the PC; their tests, every module's test compile (`compileAllTests`), Roborazzi verify, `:quality:test`, `:androidApp:lintSwitchRelease`, strings drift, detekt + baseline ratchet |
 | `t2.sh [--where vps\|local] [--steps a,b] [--detach] [--resolve]` | coordinator, checkpoints | the steps in `ladder/t2.tasks`; a missing gate task is a failure; `--resolve` only looks every task up (`gradlew --dry-run`), never a T2 result |
 | `t3.sh <apk> --signer <sha256> [--flows L] [--upgrade <apk>] [--detach]` | emulator lane holder | versionCode and signer, emulator lock, flows (animations off), E2E-05 with animations on, instrumented classes, S-28 sweep, upgrade journey |
 | `t4.sh --apks <dir> [--journeys L] [--detach]` | performance lane holder | quiet-PC checks, `restore_device.sh`, Macrobenchmark journeys from `tool/perf/journeys.tsv`, `compare.py` |

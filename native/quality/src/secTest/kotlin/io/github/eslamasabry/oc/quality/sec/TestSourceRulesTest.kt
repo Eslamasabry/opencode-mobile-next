@@ -17,13 +17,7 @@ object TestSourceRules {
      * Modules whose owners still have to bring their excluded tests back; the list only shrinks. Each entry names
      * the owner and why it is not fixed in E02-S01.
      */
-    val PENDING: Map<String, String> =
-        mapOf(
-            "feature/files/build.gradle.kts" to
-                "P12-FILES owns :feature:files; outside E02-S01's modules, its stale tests come back in its own story",
-            "feature/chat/build.gradle.kts" to
-                "chat-lead owns the single-owner :feature:chat; outside E02-S01's modules, its owner restores the tests",
-        )
+    val PENDING: Map<String, String> = emptyMap() // Q-TESTROT brought :feature:chat's and :feature:files' tests back
 
     private val exclude = Regex("""\bexclude\s*[({]""")
     private val borrowed = Regex("""\bsrcDirs?\s*\(\s*"(\.\./|[^"]*ui/gate)""")

@@ -2,6 +2,7 @@
 # records every step; a task Gradle cannot find is reported as MISSING, which is a failure, never a skip.
 # The coordinator adds a line when the gate it names exists (size gate, R8 config analysis, catalog report ...).
 build-logic	-p build-logic test
+test-compile	--continue compileAllTests
 tests	--continue -Poc.werror=true desktopTest testAndroidHostTest test
 goldens	--continue verifyRoborazziAndroidHostTest
 lint	:androidApp:lintSwitchRelease

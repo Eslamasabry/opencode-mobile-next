@@ -12,6 +12,8 @@
 #     goldens), `test` for JVM modules, overrides in tool/ladder/tasks.tsv;
 #   - build-logic touched: `./gradlew -p build-logic test`;
 #   - Konsist and the repository gates: `:quality:test` (always);
+#   - every module's unit-test sources compile: `compileAllTests` (always, Q-TESTROT: a change that breaks another
+#     module's tests fails here, not weeks later in that module);
 #   - strings touched (:ui:words, :tools:strings): the :tools:strings drift check;
 #   - Android lint as CI runs it: `:androidApp:lintSwitchRelease` (strict LintPolicy; always, E02-S03);
 #   - detekt on the touched modules plus the baseline ratchet (tool/qa/detekt.sh, plan 03 check 11; always, E02-S03);
@@ -92,7 +94,7 @@ done
 # Release lint, as CI runs it (E02-S03): a separate Gradle step so a lint failure never hides a test result.
 lint_task=:androidApp:lintSwitchRelease
 oc_say "tasks: ${tasks[*]}"
-oc_say "lint: $lint_task; detekt: ${modules[*]:-(ratchet only)}"
+oc_say "test-compile: compileAllTests (every module); lint: $lint_task; detekt: ${modules[*]:-(ratchet only)}"
 
 if ((dry)); then oc_say "dry run: nothing started"; exit 0; fi
 
@@ -122,6 +124,7 @@ fi
 
 ((build_logic)) && run_gradle build-logic -p build-logic test
 run_gradle tests --continue "${tasks[@]}"
+run_gradle test-compile --continue compileAllTests
 run_gradle lint "$lint_task"
 if ((strings)); then
   # This check also reads the frozen Flutter inputs outside native/.
