@@ -816,7 +816,7 @@ private fun RemotesSheet(state: GitUi, actions: GitActions) {
         if (state.offersGitHubSignIn && remotes.any { it.kind == GitRemoteKind.GitHubSsh })
             KitText(
                 stringResource(Res.string.gitHubPushOverHttps),
-                Modifier.padding(top = Space.S2.dp),
+                modifier = Modifier.padding(top = Space.S2.dp),
                 role = KitTextRole.Supporting,
             )
         Column(

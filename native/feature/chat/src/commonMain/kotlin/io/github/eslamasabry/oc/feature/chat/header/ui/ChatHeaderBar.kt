@@ -29,6 +29,7 @@ import io.github.eslamasabry.oc.feature.chat.header.presentation.TranscriptWords
 import io.github.eslamasabry.oc.feature.chat.notes.SessionNoteActions
 import io.github.eslamasabry.oc.feature.chat.notes.SessionNoteScreen
 import io.github.eslamasabry.oc.feature.chat.notes.SessionNoteUi
+import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons

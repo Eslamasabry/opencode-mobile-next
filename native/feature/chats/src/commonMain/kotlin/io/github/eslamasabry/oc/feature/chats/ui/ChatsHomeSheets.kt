@@ -55,7 +55,7 @@ internal fun HomeFilterChips(state: ChatsUi, actions: ChatsActions) {
             state.otherFoldersSelected -> stringResource(Res.string.chatsHomeOtherFolders)
             state.filters.projectDirectory == null -> stringResource(Res.string.chatsHomeAllProjects)
             else -> state.projectChoices.firstOrNull { it.directory == state.filters.projectDirectory }?.name
-                ?: state.filters.projectDirectory!!.trimEnd('/').substringAfterLast('/'),
+                ?: state.filters.projectDirectory!!.trimEnd('/').substringAfterLast('/')
         },
         kind = KitChipKind.Action,
         selected = state.filters.projectDirectory != null || state.otherFoldersSelected,
