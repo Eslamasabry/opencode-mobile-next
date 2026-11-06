@@ -725,10 +725,20 @@ public class RequestsEngine(
         // A replacement may reuse the wire id; the old decision owns only its captured phase.
         if (phaseOf(id) !== sending) return Unit.ok()
         if (written is Outcome.Ok) {
+            var sent: AnswerPhase.Sent? = null
             state.update { list ->
                 list.mapEntry(id) {
-                    if (it.phase === sending) it.withPhase(AnswerPhase.Sent(sending.answer, now()))
+                    if (it.phase === sending)
+                        it.withPhase(AnswerPhase.Sent(sending.answer, now()).also { s -> sent = s })
                     else it
+                }
+            }
+            // N-53: the server took the answer; the card says so for a moment and then leaves, instead of waiting
+            // (up to the next reread, ~40 s on OpenCode 2.2) for an event the server may never send.
+            sent?.let { shown ->
+                scope.launch(lane) {
+                    kotlinx.coroutines.delay(SENT_SHOWN_MS)
+                    if (phaseOf(id) === shown) remove(id)
                 }
             }
             return written
@@ -906,6 +916,9 @@ public class RequestsEngine(
     private companion object {
         /** Settled ids remembered so a stale refetch cannot bring them back. */
         const val SETTLED_KEPT = 256
+
+        /** N-53: how long an answered card shows its answer before it leaves. */
+        const val SENT_SHOWN_MS: Long = 1_200
 
         /** Dart keeps 64 first-seen times per connection. */
         const val SHOWN_KEPT = 64
