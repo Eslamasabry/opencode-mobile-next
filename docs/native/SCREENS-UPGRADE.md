@@ -31,3 +31,7 @@ Pairing hostname or address DNS name supplies the default; IP-only connections h
 ## U6 — readable transcript, message Details
 
 Model switches, token/model metadata and reply timing moved into message Details. Reply Copy and More remain visible; tap/hold opens the same menu. The contextual tip appears after a reply with no keyboard/question/menu, at most twice; Help Tips replays and resets it. Added a kit reading interaction wrapper, preserving link/code targets. Source/formatter/XML checks only; no compile/tests.
+
+## U7 — one gutter
+
+16 dp inset for list/group seams, status lines, empty states and Tools controls. Server editor accordions share the form edge. Chat bottom controls reuse the frame gutter; creation chips keep their fixed gutter while scrolling. Source/formatter parsing and diff checks only; no compile/tests.

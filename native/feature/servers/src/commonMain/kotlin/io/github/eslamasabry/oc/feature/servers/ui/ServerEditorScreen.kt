@@ -475,6 +475,7 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                             stringResource(Res.string.editor40OtherCommands),
                             commandsOpen,
                             onExpandedChange = { commandsOpen = it },
+                            inset = false,
                         ) {
                             EditorCommand(
                                 when (backend) {
@@ -649,7 +650,7 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                     }
                     if (state.newServer && backend == BackendKind.OpenCode2 && !tailscale) {
                         KitExpandRow(stringResource(Res.string.addServerManual), manualOpen,
-                            onExpandedChange = { manualOpen = it }) { manualFields() }
+                            onExpandedChange = { manualOpen = it }, inset = false) { manualFields() }
                     } else manualFields()
                     if (backend == BackendKind.OpenCode2) {
                         KitField(name, stringResource(Res.string.connectionDisplayName),
@@ -658,6 +659,7 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                             stringResource(Res.string.editor40More),
                             moreOpen,
                             onExpandedChange = { moreOpen = it },
+                            inset = false,
                         ) {
                             if (backend == BackendKind.OpenCode2)
                                 KitField(

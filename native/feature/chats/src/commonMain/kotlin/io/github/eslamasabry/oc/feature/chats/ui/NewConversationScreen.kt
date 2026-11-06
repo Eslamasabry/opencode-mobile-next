@@ -133,7 +133,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
             loadingLabel = working,
             bottom = {
                 Box(
-                    Modifier.fillMaxWidth().padding(horizontal = LocalKitTokens.current.gutter.dp),
+                    Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center,
                 ) {
                     KitButton(
@@ -216,8 +216,8 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     )
                     Row(
                         Modifier.fillMaxWidth()
-                            .horizontalScroll(rememberScrollState())
-                            .padding(horizontal = LocalKitTokens.current.gutter.dp),
+                            .padding(horizontal = LocalKitTokens.current.gutter.dp)
+                            .horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
                     ) {
                         KitChip(

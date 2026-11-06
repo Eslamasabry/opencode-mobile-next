@@ -197,6 +197,7 @@ public fun UsageContent(state: UsageUi, actions: UsageActions) {
             item(key = "no-server") {
                 KitStateView(
                     kind = KitStateKind.Missing,
+                    modifier = Modifier.padding(horizontal = gutter.dp),
                     title = stringResource(Res.string.p12SearchNoServerTitle),
                     body = stringResource(Res.string.p12UsageNoServerBody),
                     primary =

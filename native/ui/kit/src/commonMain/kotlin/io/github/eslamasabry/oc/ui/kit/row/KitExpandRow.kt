@@ -45,7 +45,8 @@ private const val HALF_TURN = 180f
 /**
  * A row that unfolds more below it (Dart `KitExpandRow`; plan 06 §7.5): the title and one supporting line, a chevron at
  * the end that turns as it opens, and [content] revealed under it (the one layout animation the kit allows, `KitReveal`).
- * The screen holds [expanded]; a screen reader hears expand / collapse actions.
+ * The screen holds [expanded]; a screen reader hears expand / collapse actions. Use [inset] = false inside a
+ * form that already owns its horizontal gutter, so the title and revealed fields share one left edge.
  *
  * States: collapsed, expanded
  * Text: reading
@@ -61,10 +62,12 @@ public fun KitExpandRow(
     supporting: String? = null,
     onExpandedChange: (Boolean) -> Unit,
     leading: ImageVector? = null,
+    inset: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
+    val horizontalGutter = if (inset) tokens.gutter.dp else 0.dp
     val specs = KitMotion.specs
     val turn by animateFloatAsState(if (expanded) HALF_TURN else 0f, specs.quick(), label = "expand-chevron")
     Column(modifier.fillMaxWidth()) {
@@ -75,7 +78,7 @@ public fun KitExpandRow(
                 .semantics {
                     if (expanded) collapse { onExpandedChange(false); true } else expand { onExpandedChange(true); true }
                 }
-                .padding(horizontal = tokens.gutter.dp, vertical = Space.S2.dp),
+                .padding(horizontal = horizontalGutter, vertical = Space.S2.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
@@ -94,7 +97,7 @@ public fun KitExpandRow(
             exit = shrinkVertically(specs.exit()) + fadeOut(specs.exit()),
         ) {
             Column(
-                Modifier.fillMaxWidth().padding(horizontal = tokens.gutter.dp, vertical = Space.S2.dp),
+                Modifier.fillMaxWidth().padding(horizontal = horizontalGutter, vertical = Space.S2.dp),
                 verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
                 content = content,
             )

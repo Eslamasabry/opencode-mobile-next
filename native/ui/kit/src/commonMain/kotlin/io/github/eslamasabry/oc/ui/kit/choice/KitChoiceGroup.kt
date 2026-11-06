@@ -45,7 +45,7 @@ public fun <T> KitChoiceGroup(
                 .then(if (multiple) Modifier else Modifier.selectableGroup())
         ) {
             choices.forEachIndexed { index, choice ->
-                if (index > 0) KitDivider(Modifier.padding(start = inset))
+                if (index > 0) KitDivider(Modifier.padding(start = inset, end = tokens.gutter.dp))
                 KitChoiceRow(
                     title = choice.title,
                     supporting = choice.supporting,

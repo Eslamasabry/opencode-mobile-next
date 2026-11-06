@@ -32,7 +32,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
  * Rows that belong together (Dart `KitRowGroup`). In Solid, lists are flat (`StyleTokens.flatLists`): full width on the
  * ground, rows separated by one-pixel hairlines inset to the text rail (16 dp, or past the lead tile when the rows lead
  * with one: [leadingTiles]). [label] heads it (`KitSectionLabel`), [note] follows it (`KitGroupNote`). Rows that delete
- * or end something go in [destructive]: always last, after a full-width hairline (§4.2). Other styles' panels (18 dp
+ * or end something go in [destructive]: always last, after a gutter-inset hairline (§4.2). Other styles' panels (18 dp
  * corners) join in S4.
  *
  * States: default, with label, with note, destructive
@@ -63,8 +63,8 @@ public fun KitRowGroup(
     Column(modifier.kitMaxWidth(CapRole.List).fillMaxWidth().testTag("kit-row-group")) {
         label?.let { KitSectionLabel(it) }
         Column(panelModifier) {
-            HairlineColumn(inset, hairline, rows)
-            destructive?.let { HairlineColumn(0.dp, hairline, it, ruleAbove = true) }
+            HairlineColumn(inset, tokens.gutter.dp, hairline, rows)
+            destructive?.let { HairlineColumn(tokens.gutter.dp, tokens.gutter.dp, hairline, it, ruleAbove = true) }
         }
         note?.let { KitGroupNote(it) }
     }
@@ -75,9 +75,9 @@ private class Seams {
     var ys: IntArray = IntArray(0)
 }
 
-/** Stacks [content] and draws one physical-pixel hairline between consecutive children, inset at the start. */
+/** Stacks [content] and draws one physical-pixel hairline between consecutive children, inset on both reading edges. */
 @Composable
-private fun HairlineColumn(inset: Dp, hairline: Color, content: @Composable () -> Unit, ruleAbove: Boolean = false) {
+private fun HairlineColumn(inset: Dp, endInset: Dp, hairline: Color, content: @Composable () -> Unit, ruleAbove: Boolean = false) {
     val seams = remember { Seams() }
     Layout(
         content = content,
@@ -85,14 +85,12 @@ private fun HairlineColumn(inset: Dp, hairline: Color, content: @Composable () -
             Modifier.fillMaxWidth().drawWithContent {
                 drawContent()
                 val start = inset.toPx()
+                val end = endInset.toPx()
                 val rtl = layoutDirection == LayoutDirection.Rtl
-                val (x0, x1) = if (rtl) 0f to size.width - start else start to size.width
+                val (x0, x1) = if (rtl) end to size.width - start else start to size.width - end
                 val ys = if (ruleAbove) intArrayOf(0) + seams.ys else seams.ys
-                ys.forEachIndexed { i, y ->
-                    val full = ruleAbove && i == 0
-                    val a = if (full) 0f else x0
-                    val b = if (full) size.width else x1
-                    drawLine(hairline, Offset(a, y + 0.5f), Offset(b, y + 0.5f), 1f)
+                ys.forEach { y ->
+                    if (x1 > x0) drawLine(hairline, Offset(x0, y + 0.5f), Offset(x1, y + 0.5f), 1f)
                 }
             },
     ) { measurables, constraints ->

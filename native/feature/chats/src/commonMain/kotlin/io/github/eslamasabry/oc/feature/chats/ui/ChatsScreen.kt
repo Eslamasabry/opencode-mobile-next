@@ -219,6 +219,7 @@ public fun ChatsScreen(
                     item(key = "empty") {
                         KitStateView(
                             kind = KitStateKind.Calm,
+                            modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
                             title = stringResource(Res.string.chatsHomeEmptyTitle),
                             body = stringResource(Res.string.chatsHomeEmptyCalmBody),
                             primary =
@@ -232,6 +233,7 @@ public fun ChatsScreen(
                     item(key = "no-match") {
                         KitStateView(
                             kind = KitStateKind.Empty,
+                            modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
                             title = stringResource(Res.string.chatsHomeNoMatchTitle),
                             body = stringResource(Res.string.chatsHomeNoMatchBody),
                             primary =

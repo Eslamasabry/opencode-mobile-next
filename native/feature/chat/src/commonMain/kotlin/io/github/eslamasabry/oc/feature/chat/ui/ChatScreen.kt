@@ -517,7 +517,7 @@ public fun ChatScreen(
                             replyReader?.Reader(
                                 state.readAloud?.let { KitReadRequest(it.id, it.rowKey, it.text) },
                                 actions::readAloudDone,
-                                Modifier.padding(horizontal = Space.S4.dp),
+                                Modifier,
                             )
                             monitoredForm?.invoke()
                             if (requestActions != null)
@@ -525,10 +525,10 @@ public fun ChatScreen(
                                     requests,
                                     requestActions,
                                     nowMs = null,
-                                    modifier = Modifier.padding(horizontal = Space.S4.dp),
+                                    modifier = Modifier,
                                 )
                             if (requests.card == null)
-                                formSlot?.invoke(Modifier.padding(horizontal = Space.S4.dp))
+                                formSlot?.invoke(Modifier)
                             composerHost.Composer(
                                 ComposerTarget(state.ref.profileId.raw, state.ref.sessionId.raw),
                                 chrome,
@@ -538,7 +538,7 @@ public fun ChatScreen(
                                         frost,
                                         shown = overlays && composerUnder,
                                     )
-                                    .padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
+                                    .padding(vertical = Space.S2.dp),
                             )
                         }
                     },
