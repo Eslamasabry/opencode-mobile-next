@@ -283,7 +283,6 @@ private fun PerformanceSection(state: KeptUi, actions: KeptActions, gutter: Modi
         onClick = {
             copied = false
             actions.onClearPerformance()
-            }
         },
     )
     if (copied) KitNotice(stringResource(Res.string.perfTraceCopied), gutter)

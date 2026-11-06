@@ -45,6 +45,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
+import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeBlock
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeKind
 import io.github.eslamasabry.oc.ui.words.res.*
@@ -262,7 +263,10 @@ internal fun ProjectWorkspaceSheet(state: ProjectWorkspaceUi, actions: ProjectWo
                     typedName = tree.name.takeIf { changes.isNotEmpty() },
                     details =
                         listOf(
-                            KitTechnicalValue(stringResource(Res.string.worktreesFolder), tree.directory)
+                            KitTechnicalValue(
+                                stringResource(Res.string.worktreesFolder),
+                                LocalKitRedactor.current.details(tree.directory),
+                            )
                         ),
                 )
             },

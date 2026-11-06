@@ -37,7 +37,7 @@ public class ProjectsEntries(
                     create(route)
                 }
             val state by vm.state.collectAsStateWithLifecycle()
-            ProjectsPickerScreen(state, vm)
+            chatEnvironment.Provide { ProjectsPickerScreen(state, vm) }
         }
         entry<ProjectsRoute.Project> { route ->
             val vm =

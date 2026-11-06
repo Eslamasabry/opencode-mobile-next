@@ -52,6 +52,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.state.KitTechnicalValue
+import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.chatsFilterChatCount
 import io.github.eslamasabry.oc.ui.words.res.chatsFilterRunningCount
@@ -439,7 +440,13 @@ private fun MissingFolderDialog(state: ProjectsPickerUi, actions: ProjectsPicker
                     confirmLabel = stringResource(Res.string.projectFolderCreateIt),
                     body = stringResource(Res.string.projectFolderMissing),
                     icon = KitIcons.folderAdd,
-                    details = listOf(KitTechnicalValue(stringResource(Res.string.projectFolderPathLabel), shown)),
+                    details =
+                        listOf(
+                            KitTechnicalValue(
+                                stringResource(Res.string.projectFolderPathLabel),
+                                LocalKitRedactor.current.details(shown),
+                            )
+                        ),
                 ),
         onConfirm = actions::createMissing,
         onCancel = actions::dismissMissing,
