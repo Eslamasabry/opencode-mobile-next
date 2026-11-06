@@ -74,8 +74,8 @@
     <string name="queue40Open">فتح المحادثة الوجهة</string>
     <string name="queue40Undone">أُعيد %1$d من الطلبات التي كانت لا تزال منتظرة. بقيت الطلبات التي بدأ إرسالها في مكانها.</string>
     <string name="queue40Refresh">تحديث الطلبات المنتظرة</string>
-    <string name="remove40Title">نسيان هذا الخادم</string>
-    <string name="remove40ConfirmTitle">نسيان %1$s؟</string>
+    <string name="remove40Title">إزالة هذا الخادم</string>
+    <string name="remove40ConfirmTitle">إزالة %1$s؟</string>
     <string name="remove40Body">سيُحذف الاتصال المحفوظ والبيانات المحلية من هذا التطبيق. لن تُحذف المحادثات من الخادم.</string>
     <string name="remove40QueueLost">سيُحذف %1$d من الطلبات المنتظرة من هذا الهاتف.</string>
     <string name="remove40QueueKept">سيُحتفظ بـ %1$d من الطلبات المنتظرة في الطلبات المحفوظة.</string>

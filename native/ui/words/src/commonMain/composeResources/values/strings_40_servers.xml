@@ -74,8 +74,8 @@
     <string name="queue40Open">Open destination conversation</string>
     <string name="queue40Undone">Returned %1$d prompts that were still waiting. Prompts already sending stayed where they were.</string>
     <string name="queue40Refresh">Refresh waiting prompts</string>
-    <string name="remove40Title">Forget this server</string>
-    <string name="remove40ConfirmTitle">Forget %1$s?</string>
+    <string name="remove40Title">Remove this server</string>
+    <string name="remove40ConfirmTitle">Remove %1$s?</string>
     <string name="remove40Body">This removes this app’s saved connection and local data. It does not delete conversations from the server.</string>
     <string name="remove40QueueLost">%1$d waiting prompts will be deleted from this phone.</string>
     <string name="remove40QueueKept">%1$d waiting prompts will be kept in Saved prompts.</string>

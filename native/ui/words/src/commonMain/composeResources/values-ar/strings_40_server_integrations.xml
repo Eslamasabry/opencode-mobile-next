@@ -24,8 +24,8 @@
     <string name="s40iSaveLabel">حفظ التسمية</string>
     <string name="s40iRemoveCredential">إزالة بيانات الدخول</string>
     <string name="s40iDisconnect">قطع الاتصال</string>
-    <string name="s40iDisconnectQuestion">هل تريد قطع الاتصال أو إزالة بيانات الدخول المحفوظة؟</string>
-    <string name="s40iConfirm">تأكيد</string>
+    <string name="s40iDisconnectQuestion">هل تريد قطع الاتصال بهذا التكامل؟</string>
+    <string name="s40iRemoveCredentialQuestion">هل تريد إزالة بيانات الدخول المحفوظة هذه؟</string>
     <string name="s40iDisconnectBody">سيؤثر هذا في %1$s على هذا الخادم. لن يزيل إعدادات MCP. سجّل الدخول أو اتصل مجددًا لاستخدامه لاحقًا.</string>
     <string name="s40iMcpAddHint">اختر عنوانًا بعيدًا أو ملفًا تنفيذيًا محليًا. يحفظ الخادم الإعدادات لموقع المشروع هذا، ولا يثبّت البرامج الناقصة.</string>
     <string name="s40iName">اسم خادم الأدوات</string>

@@ -175,7 +175,7 @@ internal fun VoiceConversationControls(
                             stringResource(Res.string.readAloudConsentHeard),
                             stringResource(Res.string.readAloudConsentEngine),
                         ),
-                    confirmLabel = stringResource(Res.string.voiceConversationNativeAllowReplies),
+                    confirmLabel = stringResource(Res.string.readAloudContinue),
                     cancelLabel = stringResource(Res.string.e7VoiceUiNotNow),
                 ),
             onConfirm = presenter::consentToReplies,

@@ -124,6 +124,7 @@
     <string name="draftLeaveTitle">تعذّر حفظ المسودة</string>
     <string name="draftLeaveMessage">تابع التحرير لنسخ نصك أو إعادة محاولة الحفظ. قد تؤدي المغادرة الآن إلى فقدان تغييراتك غير المحفوظة.</string>
     <string name="draftLeaveAction">مغادرة دون حفظ</string>
+    <string name="draftLeaveQuestion">هل تريد المغادرة دون حفظ؟</string>
     <string name="draftUnsaved">غير محفوظة</string>
     <string name="draftAttachmentsLocal">تُحفظ المرفقات مع هذه المسودة على هذا الجهاز.</string>
     <string name="draftAttachmentsFailed">تحتاج المرفقات إلى استرداد أو تعذّر حفظها. أعد المحاولة قبل الإرسال.</string>

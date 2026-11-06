@@ -164,6 +164,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiTimeline
 import io.github.eslamasabry.oc.ui.words.res.commandUntitledChat
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.draftLeaveAction
+import io.github.eslamasabry.oc.ui.words.res.draftLeaveQuestion
 import io.github.eslamasabry.oc.ui.words.res.draftLeaveMessage
 import io.github.eslamasabry.oc.ui.words.res.e7SharedHTTPIsNotEncryptedOtherDevicesOn
 import io.github.eslamasabry.oc.ui.words.res.e7SharedOpenHTTPLink
@@ -176,7 +177,6 @@ import io.github.eslamasabry.oc.ui.words.res.kitCopied
 import io.github.eslamasabry.oc.ui.words.res.markdownReaderTitle
 import io.github.eslamasabry.oc.ui.words.res.terminalOpenFull
 import io.github.eslamasabry.oc.ui.words.res.kitCopy
-import io.github.eslamasabry.oc.ui.words.res.kitDiscardTitle
 import io.github.eslamasabry.oc.ui.words.res.kitJumpLatest
 import io.github.eslamasabry.oc.ui.words.res.kitMessageActions
 import io.github.eslamasabry.oc.ui.words.res.kitMessageThought
@@ -956,7 +956,7 @@ private fun confirmSpec(confirm: ChatConfirm?): KitConfirmSpec? =
             )
         ChatConfirm.LeaveUnsaved ->
             KitConfirmSpec(
-                title = stringResource(Res.string.kitDiscardTitle),
+                title = stringResource(Res.string.draftLeaveQuestion),
                 confirmLabel = stringResource(Res.string.draftLeaveAction),
                 kind = KitConfirmKind.Discard,
                 body = stringResource(Res.string.draftLeaveMessage),
