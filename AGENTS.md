@@ -149,7 +149,7 @@ flutter test --concurrency=1    # serial in the phone-hosted container; a workst
   (which loses local data) gets past it. Ask for the installed certificate's
   SHA-256 and compare it with `apksigner verify --print-certs` before delivery.
   Known signers: public CI sideload releases `842284B27AA297FB74CF831779FD16498517E1BC2104451459FEC2EA7AC11D1C`
-  (2.0.0+56, 2.1.0+57), older stable CI `2D010C2103CB2F78ABAACA690EAD4D45F8003A6C0A02082CD2A2AE62FD18D0EC`,
+  (2.0.0+56, 2.1.0+57), Legacy CI (pre-2.0 stable; plan 15 calls it "CI test") `2D010C2103CB2F78ABAACA690EAD4D45F8003A6C0A02082CD2A2AE62FD18D0EC`,
   local release key `1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C`.
   Never substitute or rotate a signer.
 - `master` is fast-forwarded only at approved milestones — see
