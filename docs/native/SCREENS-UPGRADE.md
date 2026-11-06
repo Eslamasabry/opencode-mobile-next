@@ -50,6 +50,16 @@ Frameless kit composer retains the working glow, with one round primary mic/Send
 
 Show the real project name immediately from the header and load facts from the session folder, with scoped file/inspection reads, bounded waits and stale-result fences. Only known file/Git facts are shown. Up to three starters sit above the composer, respecting overlay chrome insets. Source/formatter parsing and diff checks only; no compile/tests.
 
+## U11 — Conversations rows: mark, live dot, server, swipe to archive
+
+Each home row leads with the agent's monochrome mark (persona table: OpenCode, Claude Code, Codex, Gemini, Kilo, Cline; other agents get initials), a dot on the mark while it is working or needs you (the status word stays in the line, so colour is never the only cue), the server name after the project when the feed carries one, and the time. Swipe toward the end of the line (mirrors in RTL) past 40% archives; the row folds away (150 ms, instant under reduced motion), the Undo bar rises at the bottom, and the archive is sent when the window ends (app scope, so leaving the page still sends it). A refusal brings the row back with a plain notice. Long-press opens Open and Archive; Archive is also a custom accessibility action on the row. Only OpenCode rows on a server with `sessionArchive` can be archived. New: `KitSwipeRow`, `KitFeedItem` agent/live/server/long-press, `ChatsActions.archive/undoArchive/commitArchive`. Source only; not compiled or run.
+
+Gaps: `ChatFeedItem.sourceLabel` is set only when the merged feed holds more than one source, so a single-server list shows no server name; `agentLabel` is never filled by any source, so names come from the persona table; the archive failure notice has no dismiss; the long-press menu has no visible twin beyond the accessibility action and the All conversations screen; Paseo/Codex rows are not archivable here.
+
+## U12 — predictive back from a chat
+
+Already in place from U8, checked against the pinned versions: Navigation3 1.2.0 with navigationevent 1.1.0 (`native/gradle/libs.versions.toml`). `ShellMotion.predictivePop` uses Android's published values: scale to 90%, fade starting at 35% progress, edge shift of width/20 minus 8 dp, 28 dp corners, and the gesture clears back to the page when abandoned (`GestureCancelled` in `RowTransformGate`). Compose shared bounds do not follow a seeked gesture, so the shared element runs on the forward tap and the back button/tap, and the gesture uses the plain predictive-back preview (the shell switches shared bounds off while a gesture is in progress). The chat therefore shrinks toward the swiped edge during the gesture, not toward its row. I did not find a Nav3 1.2.0 switch that changes this; no code changed for this item.
+
 ## Coordinator validation remaining
 
 Compile this candidate, then validate Start success/definite failure/uncertain delivery and process death with chosen model/mode; compact layout with keyboard/large text/RTL; notice priority; message Details and teaching replay/reset; server rename; row/back gesture cancel/commit and reduced motion; empty/typed/attachment/busy/voice composer states; empty project facts and thumb-reachable starters. No runtime, screenshot, build or release qualification is claimed here.
