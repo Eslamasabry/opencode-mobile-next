@@ -3,6 +3,8 @@ package io.github.eslamasabry.oc.feature.chats.ui
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,6 +23,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -46,7 +49,7 @@ import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
-import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips
+import io.github.eslamasabry.oc.ui.kit.chip.KitChipWrap
 import io.github.eslamasabry.oc.ui.kit.modal.KitInputOperationDialog
 import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
@@ -145,7 +148,9 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
                 ) {
                     if (state.servers.isNotEmpty()) NewConversationChoices(state, actions)
-                    if (startBlocked != null && !state.busy)
+                    // The empty prompt already says it in the field; repeating it is the stray line (N-32).
+                    val promptHint = stringResource(Res.string.chatsNewBuildPrompt)
+                    if (startBlocked != null && startBlocked != promptHint && !state.busy)
                         KitText(startBlocked, role = TypeRole.Secondary)
                     KitButton(
                         action =
@@ -291,8 +296,16 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
 
 /** Compact upgrade choices stay beside Start while the keyboard is open. */
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 private fun NewConversationChoices(state: NewConversationUi, actions: NewConversationActions) {
-    KitFilterChips {
+    // N-31: the keyboard goes first, so the sheet opens at its full size instead of squashed.
+    val focus = LocalFocusManager.current
+    val open: (NewConversationSheet) -> Unit = { sheet ->
+        focus.clearFocus()
+        actions.sheet(sheet)
+    }
+    // N-32: chips wrap onto a second line instead of running off the right edge.
+    KitChipWrap(Modifier.fillMaxWidth().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
         // Three chips only: who works (with Plan when chosen), the model, the
         // project. Build/Plan lives inside the agent sheet.
         KitChip(
@@ -300,14 +313,14 @@ private fun NewConversationChoices(state: NewConversationUi, actions: NewConvers
             icon = KitIcons.agent,
             opensMenu = true,
             expanded = state.sheet == NewConversationSheet.Agents,
-            onClick = { actions.sheet(NewConversationSheet.Agents) },
+            onClick = { open(NewConversationSheet.Agents) },
         )
         KitChip(
             label = modelLabel(state),
             icon = KitIcons.model,
             opensMenu = true,
             expanded = state.sheet == NewConversationSheet.Models,
-            onClick = { actions.sheet(NewConversationSheet.Models) },
+            onClick = { open(NewConversationSheet.Models) },
         )
         KitChip(
             label =
@@ -316,7 +329,7 @@ private fun NewConversationChoices(state: NewConversationUi, actions: NewConvers
             icon = KitIcons.files,
             opensMenu = true,
             expanded = state.sheet == NewConversationSheet.Projects,
-            onClick = { actions.sheet(NewConversationSheet.Projects) },
+            onClick = { open(NewConversationSheet.Projects) },
         )
     }
 }
