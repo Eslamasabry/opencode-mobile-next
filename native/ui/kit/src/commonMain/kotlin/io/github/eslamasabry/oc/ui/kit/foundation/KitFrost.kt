@@ -59,7 +59,7 @@ public fun Modifier.kitFrostSource(state: KitFrostState): Modifier =
  * by [kitFrostSource] is drawn through the platform's blur + saturation effect (Android API 31+),
  * then the role's tint at the strength's alpha, then the role's edge line. Solid — the tint colour,
  * opaque — when the platform has no effect (below API 31, desktop) or a hold applies (Saver,
- * reduced motion, high contrast, a Style other than Solid).
+ * reduced motion, high contrast, a Style other than Glass).
  */
 @Composable
 public fun Modifier.kitFrost(
@@ -78,14 +78,15 @@ public fun Modifier.kitFrost(
             appearance.saver,
             reduced,
             signals.highContrast,
-            // Plan 06: non-Solid styles (the style actually drawn) hold frost solid.
-            styleAllows = LocalKitStyle.current.style == Style.Solid,
+            // N-57: only Glass frosts (owner: Solid stays opaque, "no glass"); every other style lies on its ground.
+            styleAllows = LocalKitStyle.current.style == Style.Glass,
         )
     val spec =
         if (shown) FrostPolicy.spec(role, appearance.frost, colors.dark, conditions) else null
     val effect =
         remember(spec, density, platform) { spec?.let { platform.frostEffect(it, density) } }
-    val tint = if (role == FrostRole.ChatHeader) colors.ground else colors.surface2
+    // N-52: the frameless composer lies on the page's ground like the header, never on a grey band of its own.
+    val tint = colors.ground
     val edge: Color =
         if (role == FrostRole.ChatHeader) colors.text1.copy(alpha = FrostPolicy.HEADER_EDGE_ALPHA)
         else Color.White.copy(alpha = FrostPolicy.HIGHLIGHT_ALPHA)

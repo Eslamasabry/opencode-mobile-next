@@ -49,7 +49,10 @@ import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.layout.Layout
 import io.github.eslamasabry.oc.ui.design.layout.WindowClass
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.foundation.KitFrostState
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFrost
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
+import io.github.eslamasabry.oc.ui.design.effects.FrostRole
 import io.github.eslamasabry.oc.ui.kit.live.KitLiveBackground
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.modal.LocalKitSheetHost
@@ -110,6 +113,12 @@ public fun KitScreen(
     page: Boolean = false,
     overlayChrome: Boolean = false,
     hideStatusWhenTyping: Boolean = false,
+    /**
+     * N-52/N-57: what [body] records for the overlaid bar and bottom block ([kitFrostSource]). The two always lie
+     * on the page's ground, edge to edge, so the body never draws through them; under Glass they frost what scrolls
+     * behind instead.
+     */
+    frost: KitFrostState? = null,
     body: @Composable () -> Unit,
 ) {
     val framed = topBar != null || page
@@ -148,9 +157,10 @@ public fun KitScreen(
                 }
                 topPart?.let {
                     Box(
-                        Modifier.align(Alignment.TopCenter).fillMaxWidth().onSizeChanged {
-                            topPx = it.height
-                        }
+                        Modifier.align(Alignment.TopCenter)
+                            .fillMaxWidth()
+                            .onSizeChanged { topPx = it.height }
+                            .kitChromeGround(FrostRole.ChatHeader, frost)
                     ) {
                         it()
                     }
@@ -160,6 +170,7 @@ public fun KitScreen(
                         Modifier.align(Alignment.BottomCenter)
                             .fillMaxWidth()
                             .onSizeChanged { bottomPx = it.height }
+                            .kitChromeGround(FrostRole.Composer, frost)
                             .padding(
                                 horizontal = LocalKitTokens.current.gutter.dp,
                                 vertical = Space.S2.dp,
@@ -443,3 +454,8 @@ private fun Panes(
         }
     }
 }
+
+/** The overlaid bar's or bottom block's ground: frost through [frost] when given, else the page's own ground. */
+@Composable
+private fun Modifier.kitChromeGround(role: FrostRole, frost: KitFrostState?): Modifier =
+    if (frost != null) kitFrost(role, frost) else background(LocalKitColors.current.ground)

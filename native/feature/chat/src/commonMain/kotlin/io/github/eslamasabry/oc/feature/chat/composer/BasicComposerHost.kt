@@ -784,20 +784,24 @@ public fun BasicComposer(
                 if (stopShown && typed && !waitingRequest) stopPart()
             },
             chips = {
+                val named =
+                    modelLabel(
+                        state.models.selected?.label
+                            // QA wave 4 B13: "Server default" only once the server said so.
+                            ?: stringResource(
+                                if (state.models.usesDefault) Res.string.composerPreviewModelDefault
+                                else Res.string.composerPreviewModelButton
+                            ),
+                        state.models.variant,
+                        state.models.agent,
+                    )
+                // N-52: "DeepSeek V4.1 Flash Free · Free" said it twice and pushed Ask first under the mic.
+                val free = stringResource(Res.string.upgradeComposerFree)
+                val freeWord = free.trimStart(' ', '·').trim()
                 KitComposerChip(
                     label =
-                        modelLabel(
-                            state.models.selected?.label
-                                // QA wave 4 B13: "Server default" only once the server said so.
-                                ?: stringResource(
-                                    if (state.models.usesDefault)
-                                        Res.string.composerPreviewModelDefault
-                                    else Res.string.composerPreviewModelButton
-                                ),
-                            state.models.variant,
-                            state.models.agent,
-                        ) +
-                            if (chrome.freeModel()) stringResource(Res.string.upgradeComposerFree)
+                        named +
+                            if (chrome.freeModel() && !named.contains(freeWord, ignoreCase = true)) free
                             else "",
                     onClick = {
                         // B3: the keyboard never stays open over the picker.

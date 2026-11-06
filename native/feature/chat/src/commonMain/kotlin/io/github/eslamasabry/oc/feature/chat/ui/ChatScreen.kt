@@ -58,14 +58,12 @@ import io.github.eslamasabry.oc.feature.chat.start.presentation.ChatStartUi
 import io.github.eslamasabry.oc.feature.chat.start.ui.ChatStartArea
 import io.github.eslamasabry.oc.feature.chat.tasks.ui.ChatTasksSheet
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
-import io.github.eslamasabry.oc.ui.design.effects.FrostRole
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
-import io.github.eslamasabry.oc.ui.kit.foundation.kitFrost
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFrostSource
 import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitFrostState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
@@ -422,17 +420,11 @@ public fun ChatScreen(
                     page = true,
                     overlayChrome = overlays,
                     hideStatusWhenTyping = true,
+                    // N-52/N-57: the header and the composer lie on the page's ground (frosted under Glass), so the
+                    // transcript never draws through them.
+                    frost = frost,
                     topBar = {
-                        Box(
-                            Modifier.fillMaxWidth()
-                                .kitFrost(
-                                    FrostRole.ChatHeader,
-                                    frost,
-                                    // N-45: the header is always a solid surface; scrolled rows drew over its title
-                                    // when it was only a blur. (The blur returns once its tint keeps the title readable.)
-                                    shown = false,
-                                )
-                        ) {
+                        Box(Modifier.fillMaxWidth()) {
                             // CHAT-TRANSCRIPT (B-CHAT-019): the context reading folds into the
                             // bar's
                             // actions.

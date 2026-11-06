@@ -32,7 +32,7 @@ public enum class FrostStrength(
 /** What holds frost solid regardless of the choice (Settings says why). Dart `KitFrostHold`. */
 public enum class FrostHold { Saver, Motion, Contrast, Style }
 
-/** The conditions frost depends on. `styleAllows` is false for every Style except Solid. */
+/** The conditions frost depends on. `styleAllows` is false for every Style except Glass (N-57). */
 public data class FrostConditions(
     val saver: Boolean = false,
     val reducedMotion: Boolean = false,

@@ -38,6 +38,8 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -102,6 +104,7 @@ public fun KitComposerBox(
     val corner =
         StyleResolver.corner(radius.value, style.knobs.corners, style.spec.tokens.sharpRadius).dp
     val shadowRoom = io.github.eslamasabry.oc.ui.kit.foundation.kitShadowReach()
+    val chipScroll = rememberScrollState()
     KitComposerGlow(
         active = running,
         modifier = modifier.kitMaxWidth(CapRole.Conversation).fillMaxWidth(),
@@ -144,9 +147,12 @@ public fun KitComposerBox(
                     else
                         Row(
                             // The line scrolls sideways; the chips' style shadows keep their room above and below.
+                            // N-52: a chip that does not fit fades out at the edge it scrolls under (the mic, Send)
+                            // instead of being cut by it.
                             Modifier.weight(1f)
                                 .kitShadowRoom(shadowRoom)
-                                .horizontalScroll(rememberScrollState())
+                                .kitComposerChipsFade(chipScroll)
+                                .horizontalScroll(chipScroll)
                                 .padding(vertical = shadowRoom),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
@@ -394,4 +400,27 @@ private const val DISC = 40
 private const val RING = 44
 
 /** The longest a composer chip's words grow before they end in "…" (the model's name stays readable). */
-private const val COMPOSER_CHIP_WORDS_MAX = 220
+private const val COMPOSER_CHIP_WORDS_MAX = 180
+
+/** The chips line's edge fade (as `KitFilterChips`): an edge with more chips past it fades over 24 dp. */
+private fun Modifier.kitComposerChipsFade(scroll: androidx.compose.foundation.ScrollState): Modifier =
+    graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }
+        .drawWithContent {
+            drawContent()
+            val rtl = layoutDirection == androidx.compose.ui.unit.LayoutDirection.Rtl
+            val left = if (rtl) scroll.value < scroll.maxValue else scroll.value > 0
+            val right = if (rtl) scroll.value > 0 else scroll.value < scroll.maxValue
+            if (!left && !right) return@drawWithContent
+            val edge = (24.dp.toPx() / size.width).coerceIn(0f, .5f)
+            val solid = Color.Black
+            val clear = Color.Transparent
+            drawRect(
+                androidx.compose.ui.graphics.Brush.horizontalGradient(
+                    0f to if (left) clear else solid,
+                    edge to solid,
+                    (1f - edge) to solid,
+                    1f to if (right) clear else solid,
+                ),
+                blendMode = androidx.compose.ui.graphics.BlendMode.DstIn,
+            )
+        }
