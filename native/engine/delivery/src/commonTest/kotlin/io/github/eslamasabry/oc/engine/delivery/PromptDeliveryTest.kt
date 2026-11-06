@@ -105,6 +105,27 @@ class PromptDeliveryTest {
     }
 
     @Test
+    fun `B-STATE-040 a failure before the prompt reached the wire puts the words back at once, never a possibly-sent marker`() = runTest {
+        // B-063 (owner's phone, "This phone"): the phone server's permission layer or dispatch admission failed
+        // before the POST. The bubble sat on "Sending" for two minutes, then "couldn't confirm", and the composer
+        // was locked behind "may already have been sent" for a prompt the server never received.
+        for (link in listOf(FakeLink(), receiptLink())) {
+            val w = World(Disk(), this, link = link)
+            w.link.failBeforeWire = Failure.Server(500)
+            val d = w.delivery()
+            d.send(req("Hi"))
+            testScheduler.runCurrent()
+            val back = assertIs<SendOutcome.PutBack>(d.outcomes.value.single(), "receipts=${link.capabilities.commandReceipts}")
+            assertEquals("Hi", back.text)
+            assertEquals(Failure.Server(500), back.reason, "the real cause stays for Details")
+            assertTrue(d.pending.value.isEmpty())
+            assertTrue(d.unconfirmedTexts(REF).isEmpty(), "the draft is not protected as possibly sent")
+            assertTrue(w.queue.entries().isEmpty(), "no review entry: nothing left")
+            assertTrue(w.link.attempts.isEmpty() && w.link.lookups.isEmpty())
+        }
+    }
+
+    @Test
     fun `B-STATE-040 nothing left the device, the words go back once, and a chip send never puts them back`() = runTest {
         val w = World(Disk(), this)
         w.link.transport = { Failure.TimedOut().failed() }

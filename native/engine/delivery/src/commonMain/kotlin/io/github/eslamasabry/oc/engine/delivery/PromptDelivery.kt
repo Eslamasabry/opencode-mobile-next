@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.engine.delivery
 
+import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.NetworkWhy
@@ -234,6 +235,7 @@ public class PromptDelivery(
     private val clock: Clock,
     private val scope: CoroutineScope,
 ) {
+    private val log = AppLog.tagged("delivery")
     private val mutablePending = MutableStateFlow<ImmutableList<PendingSend>>(persistentListOf())
     public val pending: StateFlow<ImmutableList<PendingSend>> = mutablePending
 
@@ -519,9 +521,15 @@ public class PromptDelivery(
                 delivery = bubble.route.wireDelivery,
                 clientMessageId = clientId,
             )
+        // B-063: [SendLink.prompt] runs the fence immediately before the prompt's bytes leave.
+        // A failure while it never passed (dispatch admission, permission layer) sent nothing:
+        // the words go back with Try again instead of a two-minute wait for an echo that cannot
+        // come, a "possibly sent" marker and a locked composer.
+        var reachedWire = false
         fun fence(): Boolean =
             sameTarget(link, origin) &&
                 (bubble.reviewId == null || queue.canDispatchOnline(bubble.reviewId))
+        fun wire(passed: Boolean): Boolean = passed.also { if (it) reachedWire = true }
         var failure: Failure? = null
         val accepted: Boolean
         val journal =
@@ -562,9 +570,11 @@ public class PromptDelivery(
                 CommandReceiptController(journal).send(receipt) { rid ->
                     val r =
                         link.prompt(ref.sessionId, prompt.copy(clientMessageId = MessageId(rid))) {
-                            fence() && journal.isOpen
+                            wire(fence() && journal.isOpen)
                         }
                     if (confirms(r, rid)) DispatchProof.Confirmed
+                    else if (r is Outcome.Failed && !reachedWire)
+                        DispatchProof.NotSent.also { failure = r.failure }
                     else DispatchProof.Uncertain.also { failure = (r as? Outcome.Failed)?.failure }
                 }
             accepted = sent is Outcome.Ok && sent.value.state == CommandReceiptState.Confirmed
@@ -572,7 +582,7 @@ public class PromptDelivery(
                 failure =
                     Failure.Refused(RefusalReason.DispatchUncertain) // claim refused: nothing sent
         } else {
-            val r = link.prompt(ref.sessionId, prompt) { fence() }
+            val r = link.prompt(ref.sessionId, prompt) { wire(fence()) }
             accepted = confirms(r, clientId?.raw)
             if (!accepted) failure = (r as? Outcome.Failed)?.failure
         }
@@ -608,10 +618,15 @@ public class PromptDelivery(
             if (stopAfterDispatch.remove(bubble.localId) && sameTarget(link, origin))
                 stopNow(ref) // Stop pressed while on the wire: stop again now
         } else {
-            // 10. Failed. A refusal the port promises sent nothing; anything else may have been
-            // delivered.
-            val left = failure?.nothingSent != true
-            failed(bubble, request, putBack, failure, left)
+            // 10. Failed. A refusal the port promises sent nothing, and so does any failure
+            // before the fence passed; anything else may have been delivered.
+            val reason = failure
+            val left = reachedWire && reason?.nothingSent != true
+            if (!reachedWire && reason != null) {
+                val kind = reason::class.simpleName
+                log.w { "prompt not sent: it failed before the wire ($kind)" }
+            }
+            failed(bubble, request, putBack, reason, left)
         }
     }
 

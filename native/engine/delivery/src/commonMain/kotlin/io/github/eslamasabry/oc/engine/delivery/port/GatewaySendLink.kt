@@ -156,7 +156,14 @@ public class GatewaySendLink(
         val correlatedGateway = correlatedGateway
         if (id != null && correlatedGateway != null) {
             val origin = scope
-            val result = correlatedGateway.promptWithMessageId(session, id, prompt, beforeSend)
+            // B-063: the gateway calls [beforeSend] immediately before the prompt's bytes leave
+            // (the SendLink contract). A failure while it was never passed — the phone's dispatch
+            // admission, the permission layer read or its PATCH — sent no prompt at all.
+            var reachedWire = false
+            val result =
+                correlatedGateway.promptWithMessageId(session, id, prompt) {
+                    beforeSend().also { if (it) reachedWire = true }
+                }
             if (scope == origin && observed.contains(origin, session, id)) {
                 return PromptAdmission.Confirmed(id.raw).ok()
             }
@@ -166,8 +173,9 @@ public class GatewaySendLink(
             val confirmed = (result as? Outcome.Ok)?.value as? PromptAdmission.Confirmed
             val failure = (result as? Outcome.Failed)?.failure
             val refusedBeforeSend =
-                failure?.nothingSent == true &&
-                    (failure as? Failure.Refused)?.reason != RefusalReason.DispatchUncertain
+                (failure != null && !reachedWire) ||
+                    failure?.nothingSent == true &&
+                        (failure as? Failure.Refused)?.reason != RefusalReason.DispatchUncertain
             if (confirmed == null && !refusedBeforeSend) {
                 val found =
                     withTimeoutOrNull(ADMISSION_RECONCILE_MS) {

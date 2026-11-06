@@ -40,6 +40,9 @@ class GatewaySendLinkTest {
         val reads = mutableListOf<String>()
         var promptResult: Outcome<PromptAdmission>? = null
 
+        /** A failure the gateway answers before its fence runs (admission, permission layer). */
+        var failBeforeWire: io.github.eslamasabry.oc.core.common.Failure? = null
+
         override fun createPromptMessageId(): MessageId =
             MessageId("msg_04acb4989000AAAAAAAAAAAAAA")
 
@@ -49,6 +52,7 @@ class GatewaySendLinkTest {
             prompt: OutgoingPrompt,
             beforeSend: () -> Boolean,
         ): Outcome<PromptAdmission> {
+            failBeforeWire?.let { return Outcome.Failed(it) }
             if (!beforeSend())
                 return io.github.eslamasabry.oc.core.common.Failure.Refused(
                         io.github.eslamasabry.oc.core.common.RefusalReason.StaleScope
@@ -238,5 +242,29 @@ class GatewaySendLinkTest {
             testScheduler.runCurrent()
             assertEquals(Outcome.Ok(PromptAdmission.Uncertain), send.await())
             assertEquals(listOf(id), g.correlatedSends)
+        }
+
+    @Test
+    fun `B-STATE-040 a failure before the prompt reached the wire answers at once and never waits for an echo`() =
+        runTest {
+            // B-063: the phone server's permission layer or dispatch admission failed before the
+            // POST. Nothing left, so there is no echo or receipt to wait two minutes for.
+            val g = Gateway()
+            g.fake.capabilities.value =
+                ServerCapabilities(clientPromptMessageID = true, commandReceipts = true)
+            g.failBeforeWire = io.github.eslamasabry.oc.core.common.Failure.NotFound()
+            val link = GatewaySendLink(P1, "http://127.0.0.1:4100", g)
+            val id = link.newClientMessageId()!!
+            val send = async {
+                link.prompt(S1, OutgoingPrompt("Hi", clientMessageId = id)) { true }
+            }
+            testScheduler.runCurrent()
+            assertTrue(send.isCompleted, "no reconciliation window for a prompt that never left")
+            assertEquals(
+                Outcome.Failed(io.github.eslamasabry.oc.core.common.Failure.NotFound()),
+                send.await(),
+            )
+            assertTrue(g.reads.isEmpty(), "no receipt lookups")
+            assertTrue(g.correlatedSends.isEmpty())
         }
 }

@@ -269,6 +269,8 @@ internal class Oc2Gateway(
 
     private val dispatchAdmission = MutableStateFlow<DispatchAdmission?>(null)
 
+    private val log = AppLog.tagged("oc2")
+
     override fun setSessionDispatchAdmission(
         admit: suspend (SessionId) -> Outcome<Unit>,
         settled: (SessionId) -> Unit,
@@ -290,7 +292,11 @@ internal class Oc2Gateway(
                     } ?: return Failure.Refused(RefusalReason.ConsentMissing).failed()
                 else return action()
         val accepted = admission.enter(session)
-        if (accepted is Outcome.Failed) return accepted
+        if (accepted is Outcome.Failed) {
+            val kind = accepted.failure::class.simpleName
+            log.w { "the phone's dispatch admission refused a request before it left ($kind)" }
+            return accepted
+        }
         return try {
             action()
         } finally {
@@ -1283,7 +1289,13 @@ internal class Oc2Gateway(
         beforeSend: () -> Boolean,
     ): Outcome<PromptAdmission> {
         val prepared = preparePermissions(session)
-        if (prepared is Outcome.Failed) return prepared
+        if (prepared is Outcome.Failed) {
+            // B-063: nothing was posted; the delivery engine reads this as "not sent" because
+            // [beforeSend] never ran. The kind names the failed step for Report a problem.
+            val kind = prepared.failure::class.simpleName
+            log.w { "prompt not sent: the session's permission layer could not be prepared ($kind)" }
+            return prepared
+        }
         if (!beforeSend()) return Failure.Refused(RefusalReason.StaleScope).failed()
         return when (
             val result =

@@ -6,8 +6,11 @@ import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ok
 
-/** What one dispatch proved. Never "completed". */
-public enum class DispatchProof { Confirmed, Uncertain }
+/**
+ * What one dispatch proved. Never "completed". [NotSent]: it failed before the request could leave
+ * (B-063), so the receipt ends `failed` and nothing waits for it.
+ */
+public enum class DispatchProof { Confirmed, Uncertain, NotSent }
 
 /**
  * At most one dispatch per durable command id; a retry only reads the server (port of `CommandReceiptController`,
@@ -39,6 +42,7 @@ public class CommandReceiptController(private val journal: PendingCommandJournal
         val outcome = when (dispatch(receipt.receiptId)) {
             DispatchProof.Confirmed -> receipt.withState(CommandReceiptState.Confirmed)
             DispatchProof.Uncertain -> receipt.withState(CommandReceiptState.Uncertain)
+            DispatchProof.NotSent -> receipt.withState(CommandReceiptState.Failed)
         }
         // A refused update leaves `sent` on disk, which reads as unconfirmed: never a resend.
         journal.update(outcome)

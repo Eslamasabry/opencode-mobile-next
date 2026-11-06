@@ -130,7 +130,11 @@ internal class FakeLink(
 
     override fun newClientMessageId(): MessageId? = if (correlated) MessageId("msg_client_${nextId++}") else null
 
+    /** Answered before the fence runs (the gateway's dispatch admission or permission layer failed): nothing left. */
+    var failBeforeWire: Failure? = null
+
     override suspend fun prompt(session: SessionId, prompt: OutgoingPrompt, beforeSend: () -> Boolean): Outcome<PromptAdmission> {
+        failBeforeWire?.let { return it.failed() }
         if (!beforeSend()) return Failure.Refused(RefusalReason.StaleScope).failed()
         val sent = Sent(session, prompt)
         attempts += sent
