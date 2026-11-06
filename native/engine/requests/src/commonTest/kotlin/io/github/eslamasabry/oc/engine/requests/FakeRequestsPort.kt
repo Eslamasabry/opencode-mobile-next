@@ -59,6 +59,18 @@ internal class FakeRequestsPort : RequestsPort {
         return snapshot.ok()
     }
 
+    /** Asks in another folder: the location-wide list never has them, their own session's read does (N-40). */
+    var elsewhere: List<PermissionRequest> = emptyList()
+
+    override suspend fun sessionPermissions(session: SessionId): Outcome<ImmutableList<PermissionRequest>> {
+        val extra = elsewhere.filter { it.sessionId == session }
+        calls += "sessionPermissions ${session.raw}"
+        return when (val here = pendingPermissions()) {
+            is Outcome.Ok -> (here.value.filter { it.sessionId == session } + extra).distinctBy { it.id }.toImmutableList().ok()
+            is Outcome.Failed -> here
+        }
+    }
+
     override suspend fun pendingQuestions(): Outcome<ImmutableList<PendingQuestion>> {
         calls += "pendingQuestions"
         return questions.toImmutableList().ok()

@@ -1569,21 +1569,32 @@ internal class Oc2Gateway(
     ): Outcome<Unit> = Oc2Inbox.delivery(this, session, item, delivery)
 
     override suspend fun pendingPermissions(): Outcome<ImmutableList<PermissionRequest>> =
-        read("/permission/request", query = locationQuery()) { root ->
-            val rows = data(root) as? JsonArray ?: return@read null
-            val projection = Oc2CoreProjection(redactor::details)
-            rows
-                .map { row ->
-                    val wire =
-                        (row as? JsonObject)?.let { Oc2PermissionRequest.fromJson(it) }
-                            ?: return@read null
-                    if (wire.sessionID.isNullOrBlank()) return@read null
-                    (projection.toCore(Oc2Adapted.PermissionAsked(wire, wire.source?.id))
-                            as GatewayEvent.PermissionAsked)
-                        .request
-                }
-                .toImmutableList()
-        }
+        read("/permission/request", query = locationQuery(), decode = ::decodePermissions)
+
+    /**
+     * N-40: the location-wide list covers only the pinned (or default) folder; a chat in another
+     * folder is read by its own session.
+     */
+    override suspend fun sessionPermissions(
+        session: SessionId
+    ): Outcome<ImmutableList<PermissionRequest>> =
+        read("/session/${sid(session)}/permission", decode = ::decodePermissions)
+
+    /** Decode through the same projection as live `permission.asked`, so both agree on identity. */
+    private fun decodePermissions(root: JsonElement): ImmutableList<PermissionRequest>? {
+        val rows = data(root) as? JsonArray ?: return null
+        val projection = Oc2CoreProjection(redactor::details)
+        return rows
+            .map { row ->
+                val wire =
+                    (row as? JsonObject)?.let { Oc2PermissionRequest.fromJson(it) } ?: return null
+                if (wire.sessionID.isNullOrBlank()) return null
+                (projection.toCore(Oc2Adapted.PermissionAsked(wire, wire.source?.id))
+                        as GatewayEvent.PermissionAsked)
+                    .request
+            }
+            .toImmutableList()
+    }
 
     override suspend fun replyPermission(
         session: SessionId,

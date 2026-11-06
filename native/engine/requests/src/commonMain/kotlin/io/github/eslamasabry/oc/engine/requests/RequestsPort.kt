@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.engine.requests
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
+import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvents
@@ -10,6 +11,7 @@ import io.github.eslamasabry.oc.core.model.PendingQuestion
 import io.github.eslamasabry.oc.core.model.PermissionReply
 import io.github.eslamasabry.oc.core.model.PermissionRequest
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -24,7 +26,15 @@ public interface RequestsPort {
     /** Dart `prepareActionTransport`: every reply waits for a woken link first (B-PROTO-048). */
     public suspend fun awaitActionTransport(): Outcome<Unit>
 
+    /** The pinned (or the server's default) folder's waiting asks. */
     public suspend fun pendingPermissions(): Outcome<ImmutableList<PermissionRequest>>
+
+    /** One session's waiting asks, wherever its folder is (N-40). */
+    public suspend fun sessionPermissions(session: SessionId): Outcome<ImmutableList<PermissionRequest>> =
+        when (val all = pendingPermissions()) {
+            is Outcome.Ok -> all.value.filter { it.sessionId == session }.toImmutableList().ok()
+            is Outcome.Failed -> all
+        }
 
     public suspend fun replyPermission(session: SessionId, request: RequestId, reply: PermissionReply, note: String?): Outcome<Unit>
 
@@ -45,6 +55,9 @@ public fun ServerGateway.asRequestsPort(): RequestsPort =
         override suspend fun awaitActionTransport(): Outcome<Unit> = gateway.awaitActionTransport()
 
         override suspend fun pendingPermissions(): Outcome<ImmutableList<PermissionRequest>> = gateway.pendingPermissions()
+
+        override suspend fun sessionPermissions(session: SessionId): Outcome<ImmutableList<PermissionRequest>> =
+            gateway.sessionPermissions(session)
 
         override suspend fun replyPermission(session: SessionId, request: RequestId, reply: PermissionReply, note: String?): Outcome<Unit> =
             gateway.replyPermission(session, request, reply, note)

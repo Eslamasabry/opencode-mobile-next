@@ -19,5 +19,17 @@ public object RequestsTimers {
             rows = listOf("B-PROTO-034", "B-CHAT-075"),
         )
 
-    public val ALL: List<TimerSpec> = listOf(REREAD)
+    /**
+     * N-40 (Flutter `turnStallRereadEvery`): while a watched chat's turn runs with no activity for
+     * [QUIET_RUN_AFTER], its own asks are re-read. Checks are cheap; the read happens only when quiet.
+     */
+    public val QUIET_RUN: TimerSpec =
+        TimerSpec(
+            name = "requests.quietRun",
+            cadence = Cadence(foreground = 5.seconds, hiddenWatching = 5.seconds, hiddenIdle = null),
+            reason = "an ask lost on the stream leaves a running turn waiting with no card until Stop",
+            rows = listOf("B-CHAT-075"),
+        )
+
+    public val ALL: List<TimerSpec> = listOf(REREAD, QUIET_RUN)
 }

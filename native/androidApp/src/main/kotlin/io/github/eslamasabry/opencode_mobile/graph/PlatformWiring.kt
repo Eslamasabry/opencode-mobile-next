@@ -459,6 +459,7 @@ class PlatformHub(
         appScope.launch { watchFeed() }
         appScope.launch { watchRunEvents() }
         appScope.launch { watchProfiles() }
+        appScope.launch { rereadAsksOnResume() }
         // A pin or active-server change need not change any feed row. Observe the acknowledged
         // preference save too.
         appScope.launch {
@@ -695,6 +696,24 @@ class PlatformHub(
                 // Last: its bounded detail reads (up to four) must never hold back an alert.
                 publishWidgets(feed, waiting)
             }
+    }
+
+    /**
+     * N-40: back on screen, every live connection re-reads its waiting asks. A stream that stayed
+     * up while hidden never replays an ask it lost.
+     */
+    private suspend fun rereadAsksOnResume() {
+        val foreground = io.github.eslamasabry.oc.core.common.pace.Visibility.Foreground
+        var shown = appVisibility.state.value == foreground
+        appVisibility.state.collect { now ->
+            val visibleNow = now == foreground
+            if (visibleNow && !shown) {
+                registry.live.value.values.forEach {
+                    (it as? ChatGraphAccessors)?.chatRequests?.resumed()
+                }
+            }
+            shown = visibleNow
+        }
     }
 
     /**

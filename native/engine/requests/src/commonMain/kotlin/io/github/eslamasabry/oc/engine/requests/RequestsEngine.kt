@@ -22,6 +22,7 @@ import kotlin.concurrent.atomics.AtomicLong
 import kotlin.concurrent.atomics.incrementAndFetch
 import kotlin.time.Clock
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CompletableDeferred
@@ -53,6 +54,11 @@ import kotlinx.coroutines.withContext
  * - Asks are never replayed: every Connected refetches, and [RequestsTimers.REREAD] re-reads while
  *   the person can act. A refetch never resurrects a request that settled while it was in flight
  *   (B-PROTO-048).
+ * - N-40: the location-wide list covers only the pinned (or the server's default) folder. An open
+ *   chat ([watchSession]) is also read by its own session, and its asks leave only when that
+ *   session's own list no longer has them, so a chat in another folder never loses its card to a
+ *   reread of the pinned folder.
+ *   A watched turn that runs with no activity for [QUIET_RUN_AFTER] is re-read too.
  *
  * Structure changes (add, remove, the settled ledger) run on the engine's serial lane; phase
  * changes are atomic updates from any thread. The connection graph owns [scope] and cancels it on
@@ -216,6 +222,12 @@ public class RequestsEngine(
      */
     private val firstShown = MutableStateFlow<Map<RequestId, Long>>(emptyMap())
 
+    /** Lane-only: open chats, by how many screens hold each. */
+    private val watched = HashMap<SessionId, Int>()
+
+    /** Running watched turns and when each last showed activity (any thread). */
+    private val runs = MutableStateFlow<Map<SessionId, Long>>(emptyMap())
+
     /** Every waiting request of this connection, oldest first. */
     public val pending: StateFlow<ImmutableList<PendingRequest>> = state.asStateFlow()
 
@@ -236,7 +248,84 @@ public class RequestsEngine(
                 }
             }
         }
+        scope.launch(lane) {
+            // An open chat outside the pinned folder still gets its own asks live (N-40). The
+            // project collector may deliver the same event too; upsert and remove are idempotent.
+            port.events.all.collect { envelope ->
+                when (val event = envelope.event) {
+                    is GatewayEvent.PermissionAsked ->
+                        if (event.request.sessionId in watched)
+                            upsert(PendingRequest.Permission(event.request))
+                    is GatewayEvent.PermissionSettled ->
+                        if (event.sessionId in watched) remove(event.requestId)
+                    else -> Unit
+                }
+            }
+        }
         scope.launch(lane) { pacer.ticks(RequestsTimers.REREAD).collect { refresh() } }
+        scope.launch(lane) { pacer.ticks(RequestsTimers.QUIET_RUN).collect { quietCheck() } }
+    }
+
+    /**
+     * A chat for [session] opened ([open]) or closed. The first open reads that session's asks at
+     * once: an ask the server emitted before this phone subscribed still gets its card.
+     */
+    public fun watchSession(session: SessionId, open: Boolean) {
+        scope.launch(lane) {
+            val previous = watched[session] ?: 0
+            val next = (previous + if (open) 1 else -1).coerceAtLeast(0)
+            if (next == 0) {
+                watched.remove(session)
+                runs.update { it - session }
+            } else watched[session] = next
+            if (open && previous == 0) refreshSession(session)
+        }
+    }
+
+    /**
+     * The open chat's transcript changed: [running] says whether its turn still runs. A running
+     * turn that stays quiet for [QUIET_RUN_AFTER] is re-read (an ask lost on the stream looks
+     * exactly like a long tool).
+     */
+    public fun runActivity(session: SessionId, running: Boolean) {
+        val now = now()
+        runs.update { if (running) it + (session to now) else it - session }
+    }
+
+    /** Reads one session's waiting asks and reconciles only that session's cards. */
+    public suspend fun refreshSession(session: SessionId): Outcome<Unit> =
+        withContext(lane) {
+            if (!port.capabilities.value.permissionRequests) return@withContext Unit.ok()
+            val epoch = readEpoch
+            val start = seq
+            val read = port.sessionPermissions(session)
+            if (readEpoch != epoch)
+                return@withContext Failure.Refused(RefusalReason.StaleScope).failed()
+            when (read) {
+                is Outcome.Failed -> read
+                is Outcome.Ok -> {
+                    reconcilePermissions(
+                        read.value,
+                        mapOf(session to read.value),
+                        locationRead = false,
+                        start = start,
+                    )
+                    Unit.ok()
+                }
+            }
+        }
+
+    private suspend fun quietCheck() {
+        val now = now()
+        val quiet = QUIET_RUN_AFTER.inWholeMilliseconds
+        for ((session, last) in runs.value) {
+            if (session !in watched || now - last < quiet) continue
+            // A card already waits: the turn is quiet because it waits on the person.
+            if (state.value.any { it.sessionId == session && it.phase == AnswerPhase.Waiting })
+                continue
+            runs.update { if (session in it) it + (session to now) else it }
+            refreshSession(session)
+        }
     }
 
     /**
@@ -443,19 +532,36 @@ public class RequestsEngine(
         val caps = port.capabilities.value
         val start = seq
         val permissions = if (caps.permissionRequests) port.pendingPermissions() else null
+        val bySession = LinkedHashMap<SessionId, List<PermissionRequest>>()
+        var sessionFailure: Outcome.Failed? = null
+        if (caps.permissionRequests) {
+            for (session in watched.keys.toList()) {
+                when (val read = port.sessionPermissions(session)) {
+                    is Outcome.Ok -> bySession[session] = read.value
+                    is Outcome.Failed -> sessionFailure = sessionFailure ?: read
+                }
+            }
+        }
+        val located = (permissions as? Outcome.Ok)?.value.orEmpty()
         val questions = if (caps.legacyQuestionRequests) port.pendingQuestions() else null
         if (readEpoch != epoch) return Failure.Refused(RefusalReason.StaleScope).failed()
-        if (permissions is Outcome.Ok) {
-            reconcile(permissions.value.map { PendingRequest.Permission(it) }, start) {
-                it is PendingRequest.Permission
-            }
+        if (permissions is Outcome.Ok || bySession.isNotEmpty()) {
+            reconcilePermissions(
+                located + bySession.values.flatten(),
+                bySession,
+                locationRead = permissions is Outcome.Ok,
+                start = start,
+            )
         }
         if (questions is Outcome.Ok) {
             reconcile(questions.value.map { PendingRequest.Question(it) }, start) {
                 it is PendingRequest.Question
             }
         }
-        return (permissions as? Outcome.Failed) ?: (questions as? Outcome.Failed) ?: Unit.ok()
+        return (permissions as? Outcome.Failed)
+            ?: sessionFailure
+            ?: (questions as? Outcome.Failed)
+            ?: Unit.ok()
     }
 
     // ---- writes
@@ -665,7 +771,9 @@ public class RequestsEngine(
     private suspend fun stillListed(entry: PendingRequest): Boolean? =
         when (entry) {
             is PendingRequest.Permission ->
-                (port.pendingPermissions() as? Outcome.Ok)?.value?.any { it.id == entry.id }
+                (port.sessionPermissions(entry.sessionId) as? Outcome.Ok)?.value?.any {
+                    it.id == entry.id
+                }
             is PendingRequest.Question ->
                 (port.pendingQuestions() as? Outcome.Ok)?.value?.any { it.id == entry.id }
         }
@@ -738,6 +846,36 @@ public class RequestsEngine(
         state.update { list -> list.filterNot { it.id == id }.toImmutableList() }
     }
 
+    /**
+     * Permissions only: [listed] joins (once, oldest first). An ask of an open chat leaves only
+     * when [bySession] holds a read of its own session that no longer lists it: the location-wide
+     * list does not cover chats in other folders (N-40). Any other ask leaves when a successful
+     * [locationRead] no longer lists it, as before.
+     */
+    private fun reconcilePermissions(
+        listed: List<PermissionRequest>,
+        bySession: Map<SessionId, List<PermissionRequest>>,
+        locationRead: Boolean,
+        start: Long,
+    ) {
+        val unique = listed.distinctBy { it.id }
+        val ids = unique.mapTo(HashSet()) { it.id }
+        state.value.filterIsInstance<PendingRequest.Permission>().forEach { entry ->
+            val authoritative =
+                entry.sessionId in bySession || (locationRead && entry.sessionId !in watched)
+            val keep =
+                entry.id in ids ||
+                    !authoritative ||
+                    entry.phase is AnswerPhase.Sending ||
+                    (addedAt[entry.id] ?: 0L) > start
+            if (!keep) remove(entry.id)
+        }
+        unique.forEach { request ->
+            if (request.id !in settled && (addedAt[request.id] ?: 0L) <= start)
+                upsert(PendingRequest.Permission(request))
+        }
+    }
+
     private fun reconcile(
         listed: List<PendingRequest>,
         start: Long,
@@ -773,6 +911,11 @@ public class RequestsEngine(
         const val SHOWN_KEPT = 64
     }
 }
+
+/**
+ * Flutter `turnStallRereadEvery`: a watched turn quiet this long is re-read for a lost ask (N-40).
+ */
+public val QUIET_RUN_AFTER: Duration = 15.seconds
 
 private inline fun ImmutableList<PendingRequest>.mapEntry(
     id: RequestId,

@@ -718,7 +718,9 @@ internal class GraphChatWorld(
         val services = graph as ChatGraphAccessors
         val delivery = services.chatDelivery
         syncDelivery(delivery)
-        services.chatRequests.watching(true)
+        // N-40: the chat's own asks are read by session, so a folder other than the pinned one
+        // keeps its card, and an ask emitted before this subscription is still shown.
+        services.chatRequests.watchingSession(sid, true)
         mutableRequests.value =
             ChatRequestsModel(
                 services.chatRequests.engine,
@@ -814,6 +816,7 @@ internal class GraphChatWorld(
                             s.rows.filterIsInstance<PromptRow>().map { it.text.trim() }
                         refreshDraftProtection()
                         delivery.running(ref, s.run.busy)
+                        services.chatRequests.engine.runActivity(sid, s.run.busy)
                         syncDelivery(delivery)
                         settlePending(s)
                         reconcilePendingReceipts()
@@ -996,7 +999,7 @@ internal class GraphChatWorld(
         val services = a.graph as ChatGraphAccessors
         val model = mutableRequests.value
         mutableRequests.value = null
-        services.chatRequests.watching(false)
+        services.chatRequests.watchingSession(sid, false)
         if (flushHeld && model != null) a.graph.scope.launch(registry.mainContext) { model.leave() }
         a.stop()
         a.handle.close()

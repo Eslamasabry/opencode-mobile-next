@@ -37,6 +37,7 @@ import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.StateFlow
 
 /*
@@ -118,7 +119,18 @@ public interface PromptGateway {
  * backends accept and ignore it, so callers need no protocol branch.
  */
 public interface PermissionGateway {
+    /** Every waiting ask of the pinned location (OpenCode 2: the server's default folder when unpinned). */
     public suspend fun pendingPermissions(): Outcome<ImmutableList<PermissionRequest>>
+
+    /**
+     * The asks one session waits on, wherever its folder is. Backends without a session-scoped read
+     * filter the location-wide list.
+     */
+    public suspend fun sessionPermissions(session: SessionId): Outcome<ImmutableList<PermissionRequest>> =
+        when (val all = pendingPermissions()) {
+            is Outcome.Ok -> all.value.filter { it.sessionId == session }.toImmutableList().ok()
+            is Outcome.Failed -> all
+        }
 
     public suspend fun replyPermission(
         session: SessionId,
