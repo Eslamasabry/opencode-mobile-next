@@ -7,6 +7,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.padding
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.feature.settings.presentation.*
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -31,9 +33,13 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Composable
 internal fun ColumnScope.LocalDataBody(ui: LocalDataUi, actions: SettingsActions) {
-    if (ui.failed) KitNotice(stringResource(Res.string.settings40_discard_failed))
+    // The page's notices keep the gutter like its rows, never running into the screen edge.
+    val gutter = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
+    if (ui.failed) KitNotice(stringResource(Res.string.settings40_discard_failed), gutter)
     ui.result?.let { result ->
         KitNotice(
+            modifier = gutter,
+            message =
             pluralStringResource(
                 when {
                     !result.payloadsCollected -> Res.plurals.settings40_discard_cleanup

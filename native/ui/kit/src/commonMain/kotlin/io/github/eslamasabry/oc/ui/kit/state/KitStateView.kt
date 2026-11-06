@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
@@ -204,7 +205,8 @@ public fun KitStateView(
             Triple(primary, secondary, tertiary + if (slow) onSlow else emptyList())
         }
 
-    Box(modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+    // The state keeps the gutter itself: in a list or a bare page its words and buttons never touch the screen edges.
+    Box(modifier.fillMaxWidth().padding(horizontal = tokens.gutter.dp), contentAlignment = Alignment.TopCenter) {
         Column(
             Modifier.widthIn(max = STATE_MAX_WIDTH_DP.dp).fillMaxWidth().testTag("kit-state-view"),
             horizontalAlignment = Alignment.CenterHorizontally,

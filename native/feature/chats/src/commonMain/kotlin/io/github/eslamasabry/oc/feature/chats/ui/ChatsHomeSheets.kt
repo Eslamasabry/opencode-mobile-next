@@ -318,7 +318,8 @@ internal fun OpeningStatus(opening: ChatsOpeningUi, actions: ChatsActions) {
 
 @Composable
 internal fun OpeningRow(row: ChatsOpeningRow) {
-    KitRow(title = title(row.title))
+    // A saved title reads as a conversation (the glyph All conversations uses), quiet until its server answers.
+    KitRow(title = title(row.title), leading = KitRowLeading.Glyph(KitIcons.chat))
 }
 
 @Composable
