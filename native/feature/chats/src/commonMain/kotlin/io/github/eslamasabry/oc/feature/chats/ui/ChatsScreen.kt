@@ -59,6 +59,7 @@ import io.github.eslamasabry.oc.ui.words.res.sessionOpenRelated
 import io.github.eslamasabry.oc.ui.words.res.sessionCopyHandoff
 import io.github.eslamasabry.oc.feature.chats.presentation.RowTitle
 import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
+import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitButton
@@ -163,6 +164,8 @@ import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
 import kotlinx.coroutines.flow.drop
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
+import io.github.eslamasabry.oc.ui.words.res.agentPersonaOtherName
+import io.github.eslamasabry.oc.ui.words.res.workspaceDismissNotice
 
 /**
  * The Conversations home (07 §5 B01). Arranges kit parts only (Konsist K1). One list by urgency in
@@ -245,7 +248,8 @@ public fun ChatsScreen(
             state.brief?.let { brief -> item(key = "brief") { BriefBlock(brief, actions, state) } }
             if (state.archiveFailure != null)
                 item(key = "archive-failure") {
-                    io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice(
+                    // E04-S05: the row is already back in the list, so closing the notice changes nothing real.
+                    KitNotice(
                         message =
                             stringResource(
                                 when (state.archiveFailureAct) {
@@ -254,7 +258,12 @@ public fun ChatsScreen(
                                     RowActFailure.Pin -> Res.string.statePinFailed
                                 }
                             ),
-                        failure = state.archiveFailure,
+                        tone = StatusTone.Failure,
+                        dismiss =
+                            KitLineAction(
+                                stringResource(Res.string.workspaceDismissNotice),
+                                actions::dismissArchiveFailure,
+                            ),
                     )
                 }
             if (state.renameFailure != null)
@@ -508,7 +517,7 @@ private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, state
     KitFeedItem(
         title = title,
         project = row.project,
-        agent = KitFeedAgent(row.agentMark, row.agentName ?: title),
+        agent = KitFeedAgent(row.agentMark, row.agentName ?: stringResource(Res.string.agentPersonaOtherName)),
         server = row.server,
         live = needsAttention,
         onLongClick = if (row.canOpen || canArchive) ({ menuOpen = true }) else null,

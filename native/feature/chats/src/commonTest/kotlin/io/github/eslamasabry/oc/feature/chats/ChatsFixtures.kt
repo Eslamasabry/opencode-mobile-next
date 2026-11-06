@@ -116,6 +116,10 @@ internal class RecordingChatsActions : ChatsActions {
     override fun openDemo() {
         calls += "demo"
     }
+
+    override fun dismissArchiveFailure() {
+        calls += "dismissArchiveFailure"
+    }
 }
 
 /** Plan 06 §6's fake platform (kit's own copy is test-internal there). */

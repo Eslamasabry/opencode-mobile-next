@@ -262,4 +262,29 @@ class ChatsScreenTest {
             onNodeWithText("Can't tell what's new on this server").assertExists()
             onNodeWithText("Continue").assertExists()
         }
+
+    @Test
+    fun `SCREENS-ROWS-01 an agent with no name reads Another agent, not the conversation's title`() =
+        runComposeUiTest {
+            val mystery = item("m", title = "Tidy the logs").copy(agentId = "hermes")
+            setContent { Themed { ChatsScreen(ui(mystery), RecordingChatsActions()) } }
+            onNodeWithContentDescription("Tidy the logs, Another agent", substring = true).assertExists()
+            onAllNodesWithContentDescription("Tidy the logs, Tidy the logs", substring = true).assertCountEquals(0)
+        }
+
+    @Test
+    fun `B-NAV-037 an archive that failed says so and the notice can be closed`() = runComposeUiTest {
+        val actions = RecordingChatsActions()
+        setContent {
+            Themed {
+                ChatsScreen(
+                    ui(*rows).copy(archiveFailure = io.github.eslamasabry.oc.core.common.Failure.Device()),
+                    actions,
+                )
+            }
+        }
+        onNodeWithText("Couldn’t archive the conversation.").assertExists()
+        onNodeWithContentDescription("Dismiss").performClick()
+        assertEquals(listOf("dismissArchiveFailure"), actions.calls)
+    }
 }
