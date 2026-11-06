@@ -23,13 +23,6 @@ import java.security.MessageDigest
 import java.util.concurrent.TimeUnit
 import java.util.zip.GZIPInputStream
 
-/** How an installer process runs: as the agent user, with secrets on stdin, in compatibility mode. */
-internal data class InstallerOptions(
-    val agentUser: Boolean = false,
-    val stdin: String? = null,
-    val compat: Boolean = false,
-)
-
 /**
  * Ubuntu inside the app, with no Termux.
  *

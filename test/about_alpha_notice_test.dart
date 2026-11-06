@@ -84,12 +84,7 @@ void main() {
     expect(find.byKey(const ValueKey('about-alpha-report-bug')), findsNothing);
     expect(find.text('Report a bug on GitHub'), findsNothing);
     expect(find.text('About this build'), findsOneWidget);
-    expect(
-      find.text(
-        'Android is the supported platform; desktop builds are experimental.',
-      ),
-      findsOneWidget,
-    );
+    expect(find.text('OpenCode Mobile is an Android app.'), findsOneWidget);
     expect(find.byKey(const Key('about-non-affiliation')), findsOneWidget);
     // The package id sits under Details, folded.
     expect(find.text('com.example.opencode_mobile'), findsNothing);
@@ -206,13 +201,13 @@ void main() {
   });
 
   test(
-    'the notice retains provenance and desktop limits without a channel claim',
+    'the notice retains provenance, says Android only, and makes no channel claim',
     () {
-      // Android publication must not overstate readiness on other platforms.
+      // Desktop builds were dropped in 2.1.4: no other platform is offered.
       expect(buildProvenanceBody, contains('AI assistance'));
-      expect(buildProvenanceBody, contains('Android is the primary supported'));
+      expect(buildProvenanceBody, contains('It is an Android app.'));
       expect(buildProvenanceBody, isNot(contains('public alpha')));
-      expect(buildProvenanceBody, contains('not been hardware-tested'));
+      expect(buildProvenanceBody, isNot(contains('Desktop')));
     },
   );
 
