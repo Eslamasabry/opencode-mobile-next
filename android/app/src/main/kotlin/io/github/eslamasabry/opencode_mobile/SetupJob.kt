@@ -34,6 +34,8 @@ object SetupProtocol {
     private const val MAX_VERSION_LENGTH = 80
     private const val FETCH_ARGUMENTS = 3
     private const val UNPACK_ARGUMENTS = 4
+    private const val UNPACK_STRIP_INDEX = 2
+    private const val UNPACK_MEMBER_INDEX = 3
     private val whitespace = Regex("\\s+")
 
     fun parse(line: String): Event? {
@@ -62,10 +64,10 @@ object SetupProtocol {
 
     private fun parseUnpack(args: String): Event? {
         val parts = args.split(whitespace)
-        val strip = parts.getOrNull(2)?.toIntOrNull()
-        return if (parts.size == UNPACK_ARGUMENTS && parts[0].isNotEmpty() && parts[1].isNotEmpty() &&
-            strip != null && strip >= 0) {
-            Event.Unpack(parts[0], parts[1], strip, parts[3].takeIf { it != "-" })
+        val strip = parts.getOrNull(UNPACK_STRIP_INDEX)?.toIntOrNull()?.takeIf { it >= 0 }
+        val named = parts.size == UNPACK_ARGUMENTS && parts[0].isNotEmpty() && parts[1].isNotEmpty()
+        return if (named && strip != null) {
+            Event.Unpack(parts[0], parts[1], strip, parts[UNPACK_MEMBER_INDEX].takeIf { it != "-" })
         } else null
     }
 

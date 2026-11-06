@@ -8,6 +8,7 @@ import java.io.OutputStream
 import java.net.MalformedURLException
 import java.net.HttpURLConnection
 import java.net.URL
+import java.nio.file.Files
 import java.security.MessageDigest
 
 /**
@@ -26,6 +27,7 @@ import java.security.MessageDigest
 class SetupAppFetch(
     private val rootfs: File,
     private val allowInsecure: Boolean = false,
+    private val allowed: List<String>? = null,
     private val connect: (URL) -> HttpURLConnection = { it.openConnection() as HttpURLConnection },
 ) {
     /** Never throws for a failed download; the answer is in the `.oc-fetch-done` file. */
@@ -35,11 +37,11 @@ class SetupAppFetch(
         progress: (done: Long, total: Long) -> Unit,
     ) {
         // No ack is possible without a safe place to put the file.
-        val target = RootfsPaths(rootfs).resolve(request.dest) ?: return
+        val target = RootfsPaths(rootfs, allowed).resolve(request.dest) ?: return
         target.parentFile?.mkdirs()
         val done = File(target.path + ".oc-fetch-done")
-        done.delete()
-        File(target.path + ".oc-fetch-ack").writeText("1")
+        Files.deleteIfExists(done.toPath())
+        RootfsPaths.writeFresh(File(target.path + ".oc-fetch-ack"), "1")
         val answer = try {
             download(request, target, cancelled, progress)
             "ok"
@@ -51,8 +53,8 @@ class SetupAppFetch(
             "fail ${FetchFailure("the request was not valid", error).plain}"
         }
         val tmp = File(target.path + ".oc-fetch-tmp")
-        tmp.writeText(answer)
-        if (!tmp.renameTo(done)) done.writeText(answer)
+        RootfsPaths.writeFresh(tmp, answer)
+        if (!tmp.renameTo(done)) RootfsPaths.writeFresh(done, answer)
     }
 
     class FetchFailure(val plain: String, cause: Throwable? = null) : Exception(plain, cause)
@@ -207,11 +209,17 @@ private fun fileSha256(file: File): String {
     return digest.digest().joinToString("") { "%02x".format(it) }
 }
 
-/** Maps guest paths into the root filesystem, refusing anything that would leave it. */
-class RootfsPaths(private val rootfs: File) {
+/**
+ * Maps guest paths into the root filesystem, refusing anything that would leave it.
+ * [allowed], when set, limits requests to those guest folders (each ends in `/`):
+ * steps that run as the agent user only get the folders they install into, so
+ * code running as that user cannot have the app write into root-owned places.
+ */
+class RootfsPaths(private val rootfs: File, private val allowed: List<String>? = null) {
     /** [dest] is a guest path; it must stay inside the root filesystem. */
     fun resolve(dest: String): File? {
-        if (!isSafeGuestPath(dest)) return null
+        val permitted = isSafeGuestPath(dest) && (allowed == null || allowed.any { dest.startsWith(it) })
+        if (!permitted) return null
         val base = rootfs.canonicalFile
         val target = File(base, dest.removePrefix("/"))
         return target.takeIf { insideRootfs(base, it) }
@@ -220,11 +228,26 @@ class RootfsPaths(private val rootfs: File) {
     private fun isSafeGuestPath(dest: String): Boolean =
         dest.startsWith("/") && !dest.contains('\u0000') && dest.split('/').none { it == ".." }
 
-    /** Resolves symlinks of the nearest existing folder so a guest link cannot lead outside. */
+    /**
+     * Resolves symlinks of the target, or of its nearest existing folder, so a
+     * guest link cannot lead outside. A link at the target itself is refused
+     * outright: writing to it would follow it, wherever it points.
+     */
     private fun insideRootfs(base: File, target: File): Boolean {
-        var existing: File? = target.parentFile
+        var existing: File? = target
         while (existing != null && !existing.exists()) existing = existing.parentFile
-        val real = existing?.canonicalFile ?: return false
-        return real == base || real.path.startsWith(base.path + File.separator)
+        val real = if (Files.isSymbolicLink(target.toPath())) null else existing?.canonicalFile
+        return real != null && (real == base || real.path.startsWith(base.path + File.separator))
+    }
+
+    companion object {
+        /** Guest folders an agent-user step (uid 1000) installs into. */
+        val AGENT_USER_FOLDERS = listOf("/home/oc/", "/opt/oc-claude/")
+
+        /** Writes [text] to a new file at [file]; a link already there is removed, never followed. */
+        fun writeFresh(file: File, text: String) {
+            Files.deleteIfExists(file.toPath())
+            file.writeText(text)
+        }
     }
 }

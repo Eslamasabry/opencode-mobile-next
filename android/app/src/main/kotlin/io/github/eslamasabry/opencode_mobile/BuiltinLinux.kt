@@ -23,6 +23,13 @@ import java.security.MessageDigest
 import java.util.concurrent.TimeUnit
 import java.util.zip.GZIPInputStream
 
+/** How an installer process runs: as the agent user, with secrets on stdin, in compatibility mode. */
+internal data class InstallerOptions(
+    val agentUser: Boolean = false,
+    val stdin: String? = null,
+    val compat: Boolean = false,
+)
+
 /**
  * Ubuntu inside the app, with no Termux.
  *
@@ -279,7 +286,8 @@ class BuiltinLinux(private val context: Context) {
                     check(SystemClock.elapsedRealtime() - began <= timeoutMillis) {
                         "Another phone task is running. Wait a moment and try again."
                     }
-                    startInstaller(script, InstallerTarget.entries.toSet(), InstallerOperation.CHECK, agentUser, stdin)
+                    startInstaller(script, InstallerTarget.entries.toSet(), InstallerOperation.CHECK,
+                        InstallerOptions(agentUser, stdin))
                 } else null
             }
             if (admitted == null) {
@@ -503,12 +511,13 @@ class BuiltinLinux(private val context: Context) {
     /** Fixed typed scope; script bytes and account/output values never enter the durable ticket. */
     @Synchronized
     internal fun startInstaller(script: String, targets: Set<InstallerTarget>, operation: InstallerOperation,
-        agentUser: Boolean = false, stdin: String? = null, compat: Boolean = false): Process = try {
-        startQualifiedInstaller(script, targets, operation, agentUser, stdin, compat)
+        options: InstallerOptions = InstallerOptions()): Process = try {
+        startQualifiedInstaller(script, targets, operation, options)
     } catch (error: Throwable) { throw IllegalStateException(componentUpdateFailure, error) }
 
     private fun startQualifiedInstaller(script: String, targets: Set<InstallerTarget>, operation: InstallerOperation,
-        agentUser: Boolean = false, stdin: String? = null, compat: Boolean = false): Process {
+        options: InstallerOptions): Process {
+        val (agentUser, stdin, compat) = options
         check(installed) { componentUpdateFailure }
         reclaimDeadInstaller()
         check(installerProcess == null) { componentUpdateFailure }

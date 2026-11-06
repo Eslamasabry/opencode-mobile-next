@@ -74,7 +74,7 @@ Candidates, in order of how well they fit:
 Nothing is skipped silently: a failing fallback leaves the original exit status and a plain
 message. A retried step starts from a clean `.new` directory in every case above.
 
-## Tests (worktree /home/eslam/Storage2/wt/fix-117-unpack)
+## Tests (in the fix worktree)
 All with the pinned Flutter 3.47.1, serial.
 
 - `flutter test --concurrency=1 test/setup_scripts_test.dart`: 27 passed (new group `oc_untar`, 6 tests:

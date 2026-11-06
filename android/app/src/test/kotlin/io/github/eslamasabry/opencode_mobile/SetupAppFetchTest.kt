@@ -87,6 +87,23 @@ class SetupAppFetchTest {
         assertNull(RootfsPaths(rootfs).resolve("relative/path"))
     }
 
+    @Test fun refusesATargetThatIsALinkAndKeepsAgentStepsInTheirFolders() {
+        val outside = java.nio.file.Files.createTempFile("oc-victim", ".txt").toFile().apply { writeText("keep") }
+        try {
+            File(rootfs, "tmp").mkdirs()
+            java.nio.file.Files.createSymbolicLink(File(rootfs, "tmp/x").toPath(), outside.toPath())
+            assertNull(RootfsPaths(rootfs).resolve("/tmp/x"))
+            val url = "http://127.0.0.1:${server.address.port}/blob"
+            fetch().run(SetupProtocol.Event.Fetch(url, "/tmp/x", sha), { false }) { _, _ -> }
+            assertEquals("keep", outside.readText())
+        } finally { outside.delete() }
+        val agent = RootfsPaths(rootfs, RootfsPaths.AGENT_USER_FOLDERS)
+        assertNull(agent.resolve("/usr/local/bin/x"))
+        assertNull(agent.resolve("/home/ocx/x"))
+        org.junit.Assert.assertNotNull(agent.resolve("/home/oc/.cache/x"))
+        org.junit.Assert.assertNotNull(agent.resolve("/opt/oc-claude/claude.new"))
+    }
+
     @Test fun cancellingStopsWithAFailureAnswer() {
         fetch().run(request(), { true }) { _, _ -> }
         assertEquals("fail cancelled", doneFile().readText())

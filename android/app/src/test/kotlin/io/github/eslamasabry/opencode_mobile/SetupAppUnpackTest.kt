@@ -45,6 +45,7 @@ class SetupAppUnpackTest {
         fun file(name: String, text: String, mode: Int = 0x1A4) = entry(name, '0', mode, text.toByteArray())
         fun dir(name: String) = entry(name, '5', 0x1ED)
         fun symlink(name: String, target: String) = entry(name, '2', 0x1FF, link = target)
+        fun hardlink(name: String, target: String) = entry(name, '1', 0x1A4, link = target)
 
         fun gz(): ByteArray {
             out.write(ByteArray(1024))
@@ -121,6 +122,55 @@ class SetupAppUnpackTest {
         assertEquals("ok", File(rootfs, "opt/node.new/f").readText())
         // A request outside the rootfs gets no answer and no file.
         SetupAppUnpack(rootfs).run(SetupProtocol.Event.Unpack("/var/cache/a.tar.gz", "/../x", 0, null)) { false }
+    }
+
+    @Test fun refusesADestinationThatIsALinkLeavingTheRootfs() {
+        val outside = Files.createTempDirectory("oc-outside").toFile()
+        try {
+            val file = archive { file("f", "x") }
+            File(rootfs, "opt").mkdirs()
+            Files.createSymbolicLink(File(rootfs, "opt/node.new").toPath(), outside.toPath())
+            val request = SetupProtocol.Event.Unpack("/var/cache/a.tar.gz", "/opt/node.new", 0, null)
+            SetupAppUnpack(rootfs).run(request) { false }
+            assertFalse(File(outside, "f").exists())
+            assertFalse(File(file.path + ".oc-unpack-ack").exists())
+        } finally { outside.deleteRecursively() }
+    }
+
+    @Test fun refusesAHardLinkThatReadsThroughALink() {
+        val outside = Files.createTempFile("oc-secret", ".txt").toFile().apply { writeText("secret") }
+        try {
+            val file = archive { symlink("s", outside.path); hardlink("h", "s") }
+            try {
+                SetupAppUnpack(rootfs).unpack(file, File(rootfs, "opt/x"), 0, null) { false }
+                fail()
+            } catch (_: SetupAppUnpack.UnpackFailure) { }
+            assertFalse(File(rootfs, "opt/x/h").isFile && File(rootfs, "opt/x/h").readText() == "secret")
+        } finally { outside.delete() }
+    }
+
+    @Test fun aMarkerFileLinkIsReplacedNotFollowed() {
+        val victim = Files.createTempFile("oc-victim", ".txt").toFile().apply { writeText("keep") }
+        try {
+            val file = archive { file("f", "x") }
+            Files.createSymbolicLink(File(file.path + ".oc-unpack-ack").toPath(), victim.toPath())
+            Files.createSymbolicLink(File(file.path + ".oc-unpack-tmp").toPath(), victim.toPath())
+            SetupAppUnpack(rootfs).run(SetupProtocol.Event.Unpack("/var/cache/a.tar.gz", "/opt/y", 0, null)) { false }
+            assertEquals("keep", victim.readText())
+            assertEquals("ok", File(file.path + ".oc-unpack-done").readText())
+        } finally { victim.delete() }
+    }
+
+    @Test fun agentUserRequestsStayInTheAgentFolders() {
+        val agent = SetupAppUnpack(rootfs, RootfsPaths.AGENT_USER_FOLDERS)
+        val file = archive { file("f", "x") }
+        agent.run(SetupProtocol.Event.Unpack("/var/cache/a.tar.gz", "/usr/local/bin", 0, null)) { false }
+        assertFalse(File(rootfs, "usr/local/bin/f").exists())
+        assertFalse(File(file.path + ".oc-unpack-ack").exists())
+        val mine = File(rootfs, "home/oc/.cache/a.tar.gz").apply { parentFile!!.mkdirs(); writeBytes(file.readBytes()) }
+        agent.run(SetupProtocol.Event.Unpack("/home/oc/.cache/a.tar.gz", "/home/oc/.local/node.new", 0, null)) { false }
+        assertEquals("ok", File(mine.path + ".oc-unpack-done").readText())
+        assertEquals("x", File(rootfs, "home/oc/.local/node.new/f").readText())
     }
 
     @Test fun damagedArchiveFailsPlainly() {

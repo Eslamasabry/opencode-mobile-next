@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Emulator proof for issue #117 part 2. Run it INSIDE the emulator lock:
-#   flock /home/eslam/Storage2/wt/emu.lock tool... or hold the lock yourself, then
+#   flock <your emulator lock file> tool... or hold the lock yourself, then
 #   docs/qa/issue-117-unpack-2026-11-06/emulator-proof.sh path/to/app-release.apk
 # It installs over the existing app (same signer, never uninstalls), makes the guest's
 # `tar` die with a real SIGSEGV, makes `ln` die with SIGSEGV unless GLIBC_TUNABLES is set
@@ -8,7 +8,7 @@
 # the Update OpenCode / setup run from the app must show: unpack fallback + compatibility
 # retry + Node installed. Restores the real tools at the end (`restore` argument).
 set -euo pipefail
-ADB=${ADB:-/home/eslam/Android/Sdk/platform-tools/adb}
+ADB=${ADB:-adb}
 PKG=io.github.eslamasabry.opencode_mobile
 ROOT=/data/data/$PKG/files/linux/ubuntu
 case ${1:-} in
