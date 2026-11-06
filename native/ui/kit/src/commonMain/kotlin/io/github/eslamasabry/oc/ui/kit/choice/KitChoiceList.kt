@@ -231,7 +231,9 @@ public fun KitChoiceRow(
         horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
     ) {
         leading?.invoke()
-        if (mark != KitChoiceMark.None) ChoiceMarkGlyph(mark, selected, on)
+        // A tick marks the chosen row at its end and reserves no room on the others, so titles start on one edge
+        // (owner's model sheet, 2026-11-06: an empty tick slot left a big gap before every name).
+        if (mark != KitChoiceMark.None && mark != KitChoiceMark.Tick) ChoiceMarkGlyph(mark, selected, on)
         Column(Modifier.weight(1f)) {
             KitText(
                 title,
@@ -252,6 +254,7 @@ public fun KitChoiceRow(
                 maxLines = 1,
             )
         }
+        if (mark == KitChoiceMark.Tick && selected) ChoiceMarkGlyph(mark, true, on)
         trailing?.invoke()
     }
 }
