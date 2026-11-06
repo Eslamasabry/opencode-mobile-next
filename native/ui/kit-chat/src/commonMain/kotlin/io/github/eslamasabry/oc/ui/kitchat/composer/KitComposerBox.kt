@@ -11,6 +11,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDecorated
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -77,10 +79,11 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
 /**
- * A frameless composer: text and controls sit on the page, with only the working glow around them.
- * The short field shares one row with its controls; growing text keeps its field slot and moves
- * controls below. Accessories remain inside the conversation measure; the glow follows the resolved
- * corners.
+ * Flutter's composer: the input box on its own school-resolved floating surface (surface2 with the token phone/wide
+ * radius; Solid adds KitGlass's hairline and floating shadow), inside the running glow. The short field shares one
+ * row with its controls; growing text keeps its field slot and moves the controls below. Accessories stay inside the
+ * same face, capped at the conversation measure; the glow follows the resolved corners. (Owner 2026-11-06: the
+ * frameless try read as stray words on the page, not as the box it is.)
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -111,7 +114,50 @@ public fun KitComposerBox(
         choice = KitGlowChoice.of(appearance.activityGlow, appearance.softGlow),
         corner = corner,
     ) {
-        Column(Modifier.fillMaxWidth().padding(Space.S1.dp).testTag("kit-composer-box")) {
+        val colors = LocalKitColors.current
+        val look =
+            kitSurfaceLook(
+                KitSurfaceInput(
+                    role = SurfaceRole.Floating,
+                    shape = KitShapeId.Panel,
+                    level = io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel.Surface2,
+                    ownFill = colors.surface2,
+                    radius = radius,
+                )
+            )
+        val solid = style.style == io.github.eslamasabry.oc.ui.design.style.Style.Solid
+        val shadow =
+            if (!solid) Modifier
+            else
+                Modifier.kitDecorated(
+                    io.github.eslamasabry.oc.ui.design.style.SurfaceDecoration(
+                        radii = io.github.eslamasabry.oc.ui.design.style.Radii.all(corner.value),
+                        shadows =
+                            listOf(
+                                io.github.eslamasabry.oc.ui.design.style.Shadow(
+                                    dxDp = FlutterKitTokens.FLOATING_SHADOWS_DX.toFloat(),
+                                    dyDp = FlutterKitTokens.FLOATING_SHADOWS_DY.toFloat(),
+                                    blurDp = FlutterKitTokens.FLOATING_SHADOWS_BLUR.toFloat(),
+                                    spreadDp = FlutterKitTokens.FLOATING_SHADOWS_SPREAD.toFloat(),
+                                    color =
+                                        io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles.current.elevationShadow
+                                            .withAlpha(FlutterKitTokens.FLOATING_SHADOWS_ALPHA),
+                                )
+                            ),
+                    )
+                )
+        val hairline = io.github.eslamasabry.oc.ui.kit.foundation.kitHairline()
+        Column(
+            Modifier.fillMaxWidth()
+                .then(shadow)
+                .then(look.modifier)
+                .then(
+                    if (solid) Modifier.border(hairline, colors.hairline, look.shape) else Modifier
+                )
+                .clip(look.shape)
+                .padding(Space.S1.dp)
+                .testTag("kit-composer-box")
+        ) {
             above()
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
                 if (!stacked) leading()
