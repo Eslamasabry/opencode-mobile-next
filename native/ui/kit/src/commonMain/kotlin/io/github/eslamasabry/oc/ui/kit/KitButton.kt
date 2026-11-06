@@ -154,7 +154,8 @@ public fun KitButton(
         }
     val words: Color =
         when {
-            !on -> if (heroWaits) heroWords else colors.text3
+            // A waiting hero (Start) stays readable: its words in text2, never the near-invisible text3.
+            !on -> if (heroWaits) heroWords else if (hero) colors.text2 else colors.text3
             role == KitButtonRole.Primary && destructive -> colors.ground
             role == KitButtonRole.Primary -> colors.onAccent
             // A text action is in the accent, as KitInlineAction is, so it never reads as plain text.
