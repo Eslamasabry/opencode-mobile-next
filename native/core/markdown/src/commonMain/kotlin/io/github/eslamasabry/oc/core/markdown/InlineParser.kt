@@ -34,11 +34,23 @@ public object InlineParser {
         val out = StringBuilder()
         val spans = ArrayList<InlineSpan>()
         val lines = source.split('\n')
-        for ((i, line) in lines.withIndex()) {
+        for ((i, raw) in lines.withIndex()) {
             if (i > 0) out.append('\n')
-            line(line, out, spans)
+            line(if (i < lines.lastIndex) withoutBreakMark(raw) else raw, out, spans)
         }
         return Inlines(out.toString(), spans.sortedWith(compareBy({ it.start }, { -it.end })).toImmutableList())
+    }
+
+    /**
+     * A line that is followed by another one: trailing spaces (a hard break, or padding before a soft one) and a
+     * final backslash (a hard break; `\\` is an escaped backslash) are not words. Both breaks are drawn as the line
+     * break the text already has.
+     */
+    private fun withoutBreakMark(line: String): String {
+        val spaces = line.trimEnd(' ', '\t')
+        var slashes = 0
+        while (slashes < spaces.length && spaces[spaces.length - 1 - slashes] == '\\') slashes++
+        return if (slashes % 2 == 1 && spaces.length == line.length) spaces.dropLast(1) else spaces
     }
 
     private fun line(src: String, out: StringBuilder, spans: MutableList<InlineSpan>) {

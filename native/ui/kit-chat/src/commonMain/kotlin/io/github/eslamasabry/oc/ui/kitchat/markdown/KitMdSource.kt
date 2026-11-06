@@ -55,6 +55,7 @@ public object KitMdSource {
                     b.number,
                     b.depth,
                     inlines(b.inlines),
+                    checked = b.checked,
                     children = b.children.mapNotNull(::toKit).toImmutableList(),
                 )
             is Block.Code -> KitMdBlock.Code(b.key, b.info, b.text, b.open)

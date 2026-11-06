@@ -17,7 +17,7 @@ internal fun dump(block: Block): String =
                 "Q[" + block.children.joinToString(" ; ") { dump(it) } + "]"
             }
         is Block.ListItem ->
-            "LI ${if (block.ordered) "${block.number}." else "•"} d${block.depth}${if (block.firstInList) " first" else ""} " +
+            "LI ${if (block.ordered) "${block.number}." else "•"} d${block.depth}${if (block.firstInList) " first" else ""}${if (block.checked == true) " [x]" else if (block.checked == false) " [ ]" else ""} " +
                 q(block.inlines.text) +
                 if (block.children.isEmpty()) "" else " {" + block.children.joinToString(" ; ") { dump(it) } + "}"
         is Block.Code -> "C[${block.info ?: ""}]${if (block.open) " open" else ""} ${q(block.text)}"

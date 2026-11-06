@@ -72,6 +72,8 @@ internal class BlockParser(private val partId: String, private val src: ParseLin
     private val bullet = Regex("""^(\s*)[-*+]\s+""")
     private val ordered = Regex("""^(\s*)(\d{1,9})[.)]\s+""")
     private val quoteMark = Regex("""^\s*>\s?""")
+    private val setext = Regex("""^ {0,3}(=+|-{2,})[ \t]*$""")
+    private val taskBox = Regex("""^\[([ xX])\](?:[ \t]+|$)""")
     private val space = Regex("""\s+""")
 
     private val n = src.size
@@ -142,6 +144,20 @@ internal class BlockParser(private val partId: String, private val src: ParseLin
                         ),
                     ),
                 )
+                i++
+                continue
+            }
+
+            // A paragraph underlined by `===` or `---` is a heading (setext). One dash is a list marker's start.
+            if (paragraph.isNotEmpty() && setext.matchEntire(line) != null) {
+                val start = src.start(paragraphFirst)
+                val level = if (line.trim()[0] == '=') 1 else 2
+                val text = paragraph.joinToString("\n") { it.trimStart() }
+                groups += Group(
+                    paragraphFirst,
+                    listOf(Block.Heading(key(start), start, src.end(i), level, InlineParser.parse(text))),
+                )
+                paragraph.clear()
                 i++
                 continue
             }
@@ -301,8 +317,10 @@ internal class BlockParser(private val partId: String, private val src: ParseLin
             val m = marker.find(src.line(i)) ?: break
             val itemIndent = m.groupValues[1].length
             val content = m.range.last + 1
+            // A task list item starts with `[ ]` or `[x]`; the box is not part of its words.
+            val task = taskBox.find(src.line(i).substring(content))
             val index = arrayListOf(i)
-            val cut = arrayListOf(content)
+            val cut = arrayListOf(content + (task?.value?.length ?: 0))
             var last = i
             var j = i + 1
             while (j < n) {
@@ -328,7 +346,8 @@ internal class BlockParser(private val partId: String, private val src: ParseLin
                 last = j
                 j++
             }
-            val items = item(m, count == 0, startNumber + count, isOrdered, SubLines(src, index.toIntArray(), cut.toIntArray()), i, last)
+            val checked = task?.let { it.groupValues[1] != " " }
+            val items = item(count == 0, startNumber + count, isOrdered, checked, SubLines(src, index.toIntArray(), cut.toIntArray()), i, last)
             out += items
             count++
             listEnd = last + 1
@@ -345,10 +364,10 @@ internal class BlockParser(private val partId: String, private val src: ParseLin
     }
 
     private fun item(
-        m: MatchResult,
         firstInList: Boolean,
         number: Int,
         isOrdered: Boolean,
+        checked: Boolean?,
         sub: SubLines,
         firstLine: Int,
         lastLine: Int,
@@ -366,6 +385,7 @@ internal class BlockParser(private val partId: String, private val src: ParseLin
                 depth = 0,
                 firstInList = firstInList,
                 inlines = head?.inlines ?: Inlines("", persistentListOf()),
+                checked = checked,
             )
         val emitted = arrayListOf<Block.ListItem>(own)
         for (b in if (head != null) inner.drop(1) else inner) {

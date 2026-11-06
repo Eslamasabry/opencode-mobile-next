@@ -24,7 +24,7 @@ public sealed interface Block {
         val inlines: Inlines,
     ) : Block
 
-    /** `#`…`######`. Levels 1–2 use the headline role, 3–6 the row-title role. */
+    /** `#`…`######`, or a paragraph underlined with `===` (level 1) or `---` (level 2). Levels 1–2 use the headline role, 3–6 the row-title role. */
     public data class Heading(
         override val key: String,
         override val start: Int,
@@ -54,7 +54,8 @@ public sealed interface Block {
      * [inlines] is the item's first paragraph. Everything else that belongs to the item and is not a nested list
      * item (a fenced block under a numbered step, a second paragraph, a quote, a table) is in [children]; blocks
      * that follow a nested list inside the same item are kept in the last nested item's [children], so order holds.
-     * An item that holds nested items spans them ([end]).
+     * An item that holds nested items spans them ([end]). [checked] is set for a task list item (`- [ ] todo`,
+     * `- [x] done`): false for `[ ]`, true for `[x]`; the box itself is not in [inlines].
      */
     public data class ListItem(
         override val key: String,
@@ -66,6 +67,7 @@ public sealed interface Block {
         val firstInList: Boolean,
         val inlines: Inlines,
         val children: ImmutableList<Block> = persistentListOf(),
+        val checked: Boolean? = null,
     ) : Block
 
     /**

@@ -98,6 +98,7 @@ class StreamingMarkdownTest {
                 "- ", "* ", "1. ", "2) ", "  ", "    ", "> ", "# ", "### ", "```", "~~~", "````", "---", "| ", " | ",
                 "|---|---|", "| --- | :---: |", "![a](/tmp/a.png)", "![b](https://x.dev/b.png)", "**", "*", "`", "~~",
                 "[l](https://a.dev)", "word", "more words", "lib/a.dart:3", "<!-- c -->", "<!--", "-->", "\n", "\n",
+                "===", "  \n", "\\\n", "_", "__", "&amp;", "<https://a.dev>",
                 "\n", "\n\n", "\r\n", "choices", "[x] ", "[ ] ",
             )
         val random = Random(42)
