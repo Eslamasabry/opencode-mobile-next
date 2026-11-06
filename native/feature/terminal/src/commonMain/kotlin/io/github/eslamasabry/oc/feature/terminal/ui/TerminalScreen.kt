@@ -20,17 +20,22 @@ import io.github.eslamasabry.oc.feature.terminal.presentation.TerminalActions
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalView
 import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalWords
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
@@ -48,6 +53,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions) {
     val terminal = state.selected
+    var barMenuOpen by remember { mutableStateOf(false) }
     var rename by remember(terminal?.id) { mutableStateOf(false) }
     var remove by remember(terminal?.id) { mutableStateOf(false) }
     var resize by remember(terminal?.id) { mutableStateOf(false) }
@@ -80,6 +86,31 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions) 
                             add(KitLineAction(stopLabel, { remove = true }))
                         }
                     },
+                more = { hidden ->
+                    if (hidden.isNotEmpty()) {
+                        val moreLabel = stringResource(Res.string.kitTopBarMore)
+                        KitMenu(
+                            expanded = barMenuOpen,
+                            items =
+                                hidden.map { action ->
+                                    KitMenuItem(
+                                        action.label,
+                                        {
+                                            barMenuOpen = false
+                                            action.onClick()
+                                        },
+                                        icon = action.icon,
+                                        enabled =
+                                            KitEnabled.of(action.enabled, action.disabledReason),
+                                    )
+                                },
+                            onDismissRequest = { barMenuOpen = false },
+                            title = moreLabel,
+                        ) {
+                            KitIconButton(KitIcons.more, moreLabel, { barMenuOpen = true })
+                        }
+                    }
+                },
             )
         },
         width = KitScreenWidth.Full,

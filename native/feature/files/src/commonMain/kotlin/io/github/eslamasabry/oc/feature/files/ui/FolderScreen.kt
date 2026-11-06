@@ -24,6 +24,8 @@ import io.github.eslamasabry.oc.feature.files.presentation.FolderPhase
 import io.github.eslamasabry.oc.feature.files.presentation.FolderUi
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitAction
+import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
@@ -34,8 +36,8 @@ import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
-import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuDismissal
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
@@ -90,6 +92,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarClose
+import io.github.eslamasabry.oc.ui.words.res.kitTopBarMore
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
 import io.github.eslamasabry.oc.ui.words.res.libraryTerminalTitle
 import io.github.eslamasabry.oc.ui.words.res.readerUiAttachPrompt
@@ -139,6 +142,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 public fun FolderScreen(state: FolderUi, actions: FolderActions) {
     var viewOptions by remember { mutableStateOf(false) }
+    var barMenuOpen by remember { mutableStateOf(false) }
     val title =
         if (state.path.isEmpty()) stringResource(Res.string.filesProjectRoot) else state.name
     val loadingSince =
@@ -183,6 +187,34 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                                 )
                             )
                         },
+                    more = { hidden ->
+                        if (hidden.isNotEmpty()) {
+                            val moreLabel = stringResource(Res.string.kitTopBarMore)
+                            KitMenu(
+                                expanded = barMenuOpen,
+                                items =
+                                    hidden.map { action ->
+                                        KitMenuItem(
+                                            action.label,
+                                            {
+                                                barMenuOpen = false
+                                                action.onClick()
+                                            },
+                                            icon = action.icon,
+                                            enabled =
+                                                KitEnabled.of(
+                                                    action.enabled,
+                                                    action.disabledReason,
+                                                ),
+                                        )
+                                    },
+                                onDismissRequest = { barMenuOpen = false },
+                                title = moreLabel,
+                            ) {
+                                KitIconButton(KitIcons.more, moreLabel, { barMenuOpen = true })
+                            }
+                        }
+                    },
                 )
             },
             search =
