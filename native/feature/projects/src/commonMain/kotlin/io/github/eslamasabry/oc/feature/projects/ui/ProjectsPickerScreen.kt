@@ -233,9 +233,12 @@ private fun PathDialog(state: ProjectsPickerUi, actions: ProjectsPickerActions) 
             PathProblem.HomeOrRoot -> stringResource(Res.string.folderBrowserHomeHere)
             null -> null
         }
+    // Reads the field when called: the compiler memoizes `::submit` without tracking a local
+    // function's captures, so a captured `problem` stayed the first frame's (empty path) forever.
     fun submit() {
         submitted = true
-        if (problem == null) actions.finishPath(typed)
+        val now = path.text.toString().trim()
+        if (ProjectRules.pathProblem(now) == null) actions.finishPath(now)
     }
     val recent = state.openedBefore.distinctBy { it.directory }
     val projects =

@@ -8,6 +8,9 @@ import io.github.eslamasabry.oc.engine.schedules.ArmedEntry
 import io.github.eslamasabry.oc.engine.schedules.MissedRunPolicy
 import io.github.eslamasabry.oc.engine.schedules.Recurrence
 import io.github.eslamasabry.oc.engine.schedules.ScheduledPrompt
+import io.github.eslamasabry.oc.feature.schedules.presentation.LastRunUi
+import io.github.eslamasabry.oc.engine.schedules.RunStatus
+import io.github.eslamasabry.oc.engine.schedules.ScheduledRun
 import io.github.eslamasabry.oc.engine.schedules.RecurrenceKind
 import io.github.eslamasabry.oc.engine.schedules.RunReport
 import io.github.eslamasabry.oc.engine.schedules.ScheduleAlarms
@@ -255,6 +258,19 @@ class SchedulesViewModelTest {
         assertEquals(2, saved.revision)
         assertEquals(RecurrenceKind.Weekdays, saved.recurrence.kind)
         assertEquals(MissedRunPolicy.Skip, saved.missedPolicy)
+    }
+
+    @Test
+    fun `B-NAV-055 the editor shows the last run and what to do about its failure`() = runTest {
+        editor().save(daily())
+        val id = engine.store.load("p1").single().id
+        engine.store.recordRun(
+            "p1",
+            ScheduledRun("r1", id, t0, t0, RunStatus.Failed, finishedAtMs = t0 + 1_000, errorCode = "needs_you"),
+        )
+        val edit = editor(SchedulesRoute.Edit(pid, id))
+        assertEquals(LastRunUi(RunStatus.Failed, "needs_you", t0 + 1_000, null, false), edit.state.value.lastRun)
+        assertNull(editor().state.value.lastRun) // a new schedule has no history
     }
 
     @Test

@@ -10,7 +10,7 @@ import io.github.eslamasabry.oc.feature.projects.ui.ProjectWorkspaceSheet
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
-import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -49,14 +49,17 @@ class WorktreeRemovalTest {
                     stillFrame = true,
                     localeTag = "en",
                 ) {
-                    KitScreen { ProjectWorkspaceSheet(state.value, actions) }
+                    // A bare KitScreen (no top bar, not a page) hosts no sheets; the real screen does.
+                    KitSheetHost { ProjectWorkspaceSheet(state.value, actions) }
                 }
             }
-            onNode(hasSetTextAction()).performTextInput(tree.name)
-            onNodeWithText("Remove", useUnmergedTree = true).performClick()
+            // Found by its label: the field is disabled (no SetText) while the removal runs.
+            val typed = onNodeWithContentDescription("Type review-copy to confirm")
+            typed.performTextInput(tree.name)
+            onNodeWithText("Remove worktree", useUnmergedTree = true).performClick()
             onNodeWithText("Remove “review-copy”?", useUnmergedTree = true).assertExists()
-            onNode(hasSetTextAction()).assertTextContains(tree.name)
-            onNodeWithText("Cancel", useUnmergedTree = true).assertIsNotEnabled()
+            typed.assertTextContains(tree.name)
+            onNodeWithText("Cancel").assertIsNotEnabled()
             assertEquals(listOf("remove"), calls)
             runOnIdle {
                 state.value = state.value.copy(visible = false, removal = null, busy = false)

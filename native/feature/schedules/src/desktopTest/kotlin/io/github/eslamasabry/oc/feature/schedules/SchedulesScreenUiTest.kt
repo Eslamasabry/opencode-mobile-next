@@ -135,7 +135,17 @@ class SchedulesScreenUiTest {
 
     @Test
     fun `B-NAV-055 a failed run says what happened and what to do next`() = runComposeUiTest {
-        setContent { Themed { SchedulesScreen(list, Recorder()) } }
+        // Flutter shows the reason in the schedule's sheet (its last-run row); the list keeps one state line.
+        val state =
+            ScheduleEditUi(
+                phase = EditPhase.Ready,
+                editing = true,
+                fields = EditorFields(prompt = "Check the nightly build", project = "/work/app"),
+                seed = 1,
+                nowMs = t0,
+                lastRun = row.last,
+            )
+        setContent { Themed { ScheduleEditScreen(state, Recorder()) } }
         onNodeWithText("It's waiting for your answer. Open the conversation to continue.").assertExists()
     }
 

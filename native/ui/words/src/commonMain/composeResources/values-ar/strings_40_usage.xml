@@ -32,7 +32,7 @@
     <string name="m40PlansMonth">هذا الشهر</string>
     <string name="m40PlansLimit">الحد</string>
     <string name="m40PlansTools">الأدوات</string>
-    <string name="m40PlansLeft">متبقٍّ %1$d%%</string>
+    <string name="m40PlansLeft">متبقٍّ %1$d%</string>
     <string name="m40PlansResetNow">يُعاد الآن</string>
     <string name="m40PlansResetMinutes">يُعاد بعد %1$d دقيقة</string>
     <string name="m40PlansResetHours">يُعاد بعد %1$d ساعة</string>
@@ -46,7 +46,7 @@
     </plurals>
     <string name="m40PlansResetSince">أُعيد ضبطه منذ قراءة هذه الأرقام.</string>
     <string name="m40PlansPlan">الخطة: %1$s</string>
-    <string name="m40PlansAlertAt">تنبيه عند استخدام %1$d%%</string>
+    <string name="m40PlansAlertAt">تنبيه عند استخدام %1$d%</string>
     <string name="m40PlansOfflineShort">غير متصل</string>
     <string name="m40PlansExpiredShort">انتهى تسجيل الدخول</string>
     <string name="m40PlansNotSignedInShort">غير مسجّل</string>

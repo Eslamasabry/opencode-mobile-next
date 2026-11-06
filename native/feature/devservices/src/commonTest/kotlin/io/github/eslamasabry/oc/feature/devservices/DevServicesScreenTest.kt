@@ -7,12 +7,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RenderEffect
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.runtime.services.commands.DevelopmentServiceStatus
 import io.github.eslamasabry.oc.feature.devservices.presentation.DevServicesActions
+import io.github.eslamasabry.oc.feature.devservices.presentation.DevServicesProblem
 import io.github.eslamasabry.oc.feature.devservices.presentation.DevServicesUi
 import io.github.eslamasabry.oc.feature.devservices.presentation.FoundRowUi
 import io.github.eslamasabry.oc.feature.devservices.presentation.ServiceRowUi
@@ -88,11 +90,14 @@ class DevServicesScreenTest {
                 Themed { DevServicesScreen(DevServicesUi(directory = "/work/shopfront", supported = true, loading = false, services = persistentListOf(web)), calls) }
             }
             onNodeWithText("Development services").assertExists()
-            onNodeWithText("/work/shopfront").assertExists()
             onNodeWithText("Not started · npm run dev", substring = true).assertExists()
-            onNodeWithText("Start").performClick()
+            // Flutter: Start is the row's icon button, named for the service.
+            onNodeWithContentDescription("Start web").performClick()
             onNodeWithText("Register service").performClick()
             assertEquals(listOf("start s1", "add"), calls.seen)
+            // Flutter keeps the project folder in the folded Details, under "Project folder".
+            onNodeWithText("Details").performClick()
+            onNodeWithText("/work/shopfront", substring = true).assertExists()
         }
 
     @Test
@@ -114,16 +119,19 @@ class DevServicesScreenTest {
             }
             onNodeWithText("Also running").assertExists()
             onNodeWithText("Found by the ports they listen on", substring = true).assertExists()
-            onNodeWithText("Preview port 5173", substring = true).assertExists()
-            onNodeWithText("Stop").performClick()
+            // Flutter's found row: "Running command · Port 5173" ("Preview port" names a menu entry when there are several).
+            onNodeWithText("Running command · Port 5173", substring = true).assertExists()
+            onNodeWithContentDescription("Stop vite").performClick()
             assertEquals(listOf("askStopFound p:42"), calls.seen)
         }
 
     @Test
     fun `B-LINUX-063 with no live server the page says the server is not answering`() =
         runComposeUiTest {
-            setContent { Themed { DevServicesScreen(DevServicesUi(available = false, loading = false), Calls()) } }
+            // Offline is a problem on a loaded page (Flutter servicesOffline); available = false is the
+            // scope-changed state. Registering stays possible, as in Flutter (_canRegister ignores the connection).
+            setContent { Themed { DevServicesScreen(DevServicesUi(supported = true, loading = false, problem = DevServicesProblem.Offline), Calls()) } }
             onNodeWithText("The server is not answering", substring = true).assertExists()
-            onNodeWithText("Register service").assertDoesNotExist()
+            onNodeWithText("The server or project changed", substring = true).assertDoesNotExist()
         }
 }
