@@ -44,8 +44,8 @@ import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitPageOverlay
-import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceRow
-import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceMark
+import io.github.eslamasabry.oc.ui.kit.choice.KitAgentGrid
+import io.github.eslamasabry.oc.ui.kit.choice.KitAgentGridItem
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
@@ -176,10 +176,11 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                         stringResource(Res.string.chatsNewBuildPrompt),
                         Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp).padding(bottom = Space.S1.dp).testTag("chats-new-field"),
                         enabled = enabled,
-                        minLines = 4, // F: lib/ui/screens/chats/new_chat_screen.dart:537
+                        minLines = 2, // The agent cards are the hero beside the first message.
                         autofocus = !state.busy,
                         onTextChanged = actions::draftChanged,
                     )
+                    NewConversationAgents(state, actions, enabled)
                     KitRowGroup(leadingTiles = true, note = if (state.directory == null) stringResource(Res.string.chatsNewNeedProject) else null) {
                         KitRow(
                             title = stringResource(Res.string.chatsNewModelRow),
@@ -214,17 +215,6 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                 else working,
                             onClick = { actions.sheet(NewConversationSheet.Projects) },
                         )
-                        if (!state.setup?.agents.isNullOrEmpty())
-                            KitRow(
-                                title = stringResource(Res.string.p12NewAgent),
-                                trailing =
-                                    KitRowTrailing.Value(
-                                        state.agent ?: stringResource(Res.string.p12NewDefaultAgent)
-                                    ),
-                                enabled = !state.busy,
-                                disabledReason = working,
-                                onClick = { actions.sheet(NewConversationSheet.Agents) },
-                            )
                         if (state.canCopy)
                             KitSwitchRow(
                                 title = stringResource(Res.string.chatsNewSeparateCopy),
@@ -235,10 +225,6 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                     if (state.attempted) KitEnabled.Disabled(working) else enabled,
                                 onCheckedChange = actions::separateCopy,
                             )
-                        KitRow(
-                            title = stringResource(Res.string.agentsSectionTitle),
-                            onClick = actions::agents,
-                        )
                         if (
                             state.directory != null &&
                                 state.setup?.importDirectory == state.directory
@@ -384,25 +370,48 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
                 }
                 NewConversationSheet.Models -> NewConversationModelChoices(state.setup?.models.orEmpty(), state.model, actions::chooseModel)
                 NewConversationSheet.Agents ->
-                    KitRowGroup {
-                        KitRow(
-                            title = stringResource(Res.string.p12NewDefaultAgent),
-                            selected = state.agent == null,
-                            onClick = { actions.chooseAgent(null) },
-                        )
-                        state.setup?.agents.orEmpty().forEach { agent ->
-                            KitRow(
-                                title = agent,
-                                selected = agent == state.agent,
-                                onClick = { actions.chooseAgent(agent) },
-                            )
-                        }
-                    }
+                    NewConversationAgents(state, actions, KitEnabled.Enabled)
                 NewConversationSheet.Import -> Unit
                 null -> Unit
             }
         }
     }
+}
+
+/** The visible setup entry and agent choices share the Flutter start screen's card grid. */
+@Composable
+private fun NewConversationAgents(
+    state: NewConversationUi,
+    actions: NewConversationActions,
+    enabled: KitEnabled,
+) {
+    val defaultName = state.setup?.defaultRuntime ?: "OpenCode"
+    val items = listOf(
+        KitAgentGridItem(
+            title = stringResource(Res.string.kitCapAgentA2aEnable),
+            icon = KitIcons.add,
+            onClick = actions::agents,
+            isAdd = true,
+        ),
+        KitAgentGridItem(
+            title = defaultName,
+            icon = KitIcons.agent,
+            selected = state.agent == null,
+            onClick = { actions.chooseAgent(null) },
+        ),
+    ) + state.setup?.agents.orEmpty().filter(String::isNotBlank).map { agent ->
+        KitAgentGridItem(
+            title = agent,
+            icon = KitIcons.agent,
+            selected = state.agent == agent,
+            onClick = { actions.chooseAgent(agent) },
+        )
+    }
+    KitAgentGrid(
+        items = items,
+        enabled = enabled,
+        modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
+    )
 }
 
 /** Flutter agent_model_sheet.dart: the default first, then named models, each checked at the end. */
