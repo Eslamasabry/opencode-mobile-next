@@ -188,16 +188,13 @@ public class ChatsViewModel(
         viewModelScope.launch { pins.changes.collect { pinTick.update { it + 1 } } }
     }
 
-    /** Rows the person can archive: OpenCode conversations on a connection whose server offers it. */
+    /** Rows the person can archive: any agent's conversation on a connection whose server offers it (E04-S05). */
     private fun archivable(snapshot: ChatFeedSnapshot): kotlinx.collections.immutable.ImmutableSet<String> {
         val capable =
             connections.servers.value
                 .filter { it.operations != null && it.gateway.capabilities.value.sessionArchive }
                 .mapTo(hashSetOf()) { it.profile }
-        return snapshot.items
-            .filter { !it.isSubagent && it.agentId == OPENCODE_AGENT_ID && it.profileId in capable }
-            .mapTo(hashSetOf()) { it.identity }
-            .toImmutableSet()
+        return ChatsState.archivable(snapshot.items, capable)
     }
 
     private fun build(snapshot: ChatFeedSnapshot, brief: ReturnBrief, chosen: ChatsFilters) =

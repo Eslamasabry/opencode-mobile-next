@@ -110,7 +110,7 @@ public object ChatsState {
             updatedAtMs = item.lastActivityMs.takeIf { it > 0 },
             canOpen = item.canReopen,
             agentMark = AgentPersona.of(item.agentId).markSlug,
-            agentName = item.agentLabel ?: brandName(AgentPersona.of(item.agentId).id),
+            agentName = agentName(item),
             server = item.sourceLabel,
             status =
                 when (item.status) {
@@ -124,6 +124,25 @@ public object ChatsState {
             permission = item.permission,
             observedAtMs = nowMs,
         )
+
+    /**
+     * E04-S05, Flutter `_agentLabel`: a known agent by its maker's name (whatever the connection calls it), another
+     * by the name its connection gave; null when it has none, and the screen says "Another agent" in the person's
+     * language. Never the conversation's title.
+     */
+    private fun agentName(item: ChatFeedItem): String? =
+        brandName(AgentPersona.of(item.agentId).id) ?: item.agentLabel?.trim()?.takeIf { it.isNotEmpty() }
+
+    /**
+     * E04-S05: the rows that can be archived: every top-level conversation, OpenCode or an agent's (Paseo), whose
+     * server says it archives ([capable]: `sessionArchive` with operations). Codex says it does not, so its rows
+     * are never offered Archive. Sub-agent runs belong to their parent and are never archived alone.
+     */
+    public fun archivable(
+        items: List<ChatFeedItem>,
+        capable: Set<io.github.eslamasabry.oc.core.common.ids.ProfileId>,
+    ): kotlinx.collections.immutable.ImmutableSet<String> =
+        items.filter { !it.isSubagent && it.profileId in capable }.mapTo(hashSetOf()) { it.identity }.toImmutableSet()
 
     /** Product names are proper nouns, not copy: the same in every language. */
     private fun brandName(id: AgentPersonaId): String? =

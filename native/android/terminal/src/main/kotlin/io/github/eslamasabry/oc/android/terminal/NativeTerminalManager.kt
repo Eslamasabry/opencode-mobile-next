@@ -312,8 +312,8 @@ class NativeTerminalManager(
 }
 
 /**
- * Library diagnostics are discarded; valid bounded OSC 52 writes use the system clipboard, only
- * while [shownView] is on screen.
+ * Library diagnostics are discarded; valid bounded OSC 52 writes use the system clipboard, and Paste
+ * reads it, only while [shownView] is on screen.
  * Clipboard queries are removed by TerminalSession before VT decoding.
  */
 internal open class QuietSessionClient(
@@ -329,7 +329,10 @@ internal open class QuietSessionClient(
         copyTerminalText(session, text, shownView())
     }
 
-    override fun onPasteTextFromClipboard(session: TerminalSession) = Unit
+    /** The grid's own Paste (Termux's selection menu): the clipboard into this session, while it is shown. */
+    override fun onPasteTextFromClipboard(session: TerminalSession) {
+        pasteTerminalText(session, shownView())
+    }
 
     override fun onBell(session: TerminalSession) = Unit
 

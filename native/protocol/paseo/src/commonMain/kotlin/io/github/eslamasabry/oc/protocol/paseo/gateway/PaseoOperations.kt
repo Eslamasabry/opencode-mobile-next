@@ -28,6 +28,12 @@ public class PaseoOperations(private val gateway: PaseoGateway) : ServerOperatio
             gateway.subagentChildren(id.raw)
         }
 
+    /**
+     * E04-S05, Dart `PaseoGateway.archiveSession => deleteSession`: the daemon only archives (B-AGENT-164), so the
+     * Conversations list's Archive sends the same `archive_agent_request` as the gateway's delete.
+     */
+    override suspend fun archiveSession(id: SessionId): Outcome<Unit> = gateway.deleteSession(id)
+
     override suspend fun commands():
         Outcome<ImmutableList<io.github.eslamasabry.oc.core.model.CommandInfo>> = gateway.laneCall {
         gateway.readCommands()

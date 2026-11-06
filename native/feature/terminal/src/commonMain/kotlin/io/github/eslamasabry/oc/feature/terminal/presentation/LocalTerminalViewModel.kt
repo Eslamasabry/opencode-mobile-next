@@ -53,6 +53,9 @@ public data class LocalTerminalUi(
 public interface LocalTerminalNativeActions {
     public fun key(key: TerminalKey)
 
+    /** The bar menu's Paste into the shown shell (E11-S01). */
+    public fun paste()
+
     public fun server(id: ProfileId)
 }
 
@@ -241,6 +244,16 @@ public class LocalTerminalViewModel(
         val id = state.value.selected ?: return
         val input = port as? LocalTerminalInputPort ?: return
         if (input.enqueueKey(id, key) is Outcome.Failed) local.update { it.copy(failed = true) }
+    }
+
+    /**
+     * The clipboard is read on the device side, never here. A paste that is refused (too long to send whole) leaves
+     * the shell as it was; it is not a failed terminal, so the error page stays away.
+     */
+    override fun paste() {
+        val id = state.value.selected ?: return
+        if (state.value.shells.none { it.id == id && it.running }) return
+        (port as? LocalTerminalInputPort)?.paste(id)
     }
 
     override fun server(id: ProfileId) {

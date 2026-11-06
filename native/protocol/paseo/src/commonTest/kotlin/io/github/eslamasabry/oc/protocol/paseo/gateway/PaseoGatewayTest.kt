@@ -421,6 +421,18 @@ class PaseoGatewayTest {
     }
 
     @Test
+    fun `B-AGENT-164 Archive from the conversations list archives on the daemon`() = runTest {
+        val h = harness()
+        h.gateway.allSessions().ok()
+        h.daemon.handlers["archive_agent_request"] = { m ->
+            "agent_archived" to jsonOf("agentId" to m.str("agentId"), "archivedAt" to "2026-09-19T05:00:00.000Z")
+        }
+        PaseoOperations(h.gateway).archiveSession(SessionId("a1")).ok()
+        assertEquals("a1", h.daemon.of("archive_agent_request").single().str("agentId"))
+        assertTrue(h.daemon.of("delete_agent_request").isEmpty())
+    }
+
+    @Test
     fun `B-AGENT-164 delete archives, and an archive elsewhere removes the session`() = runTest {
         val h = harness()
         h.gateway.allSessions().ok()
