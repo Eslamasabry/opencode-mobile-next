@@ -71,6 +71,7 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
     var moreOpen by remember { mutableStateOf(false) }
     var tailscaleOpened by remember { mutableStateOf(false) }
     var tailscaleReturned by remember { mutableStateOf(false) }
+    var pairCommandOpen by remember { mutableStateOf(false) }
     var manualOpen by remember { mutableStateOf(!state.newServer || restored?.address?.isNotBlank() == true) }
     LaunchedEffect(state.failure, state.record?.needsSecret, state.fillGeneration) {
         if (state.failure != null || state.record?.needsSecret == true || state.fillGeneration > 0) manualOpen = true
@@ -458,6 +459,9 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
 
                 }
                 ServerEditorStep.Connect -> {
+                    // OpenCode on a computer leads with the fastest way: scan (or paste) the code the
+                    // computer shows. The run-this command sits below the buttons, not above them.
+                    val pairingFirst = state.newServer && backend == BackendKind.OpenCode2 && !tailscale
                     if (state.newServer) {
                         EditorLinkMoment(when {
                             state.checking || state.saving -> KitServersLinkState.Linking
@@ -465,45 +469,19 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                             state.checked != null -> KitServersLinkState.Linked
                             else -> KitServersLinkState.Idle
                         }, state, address.text.toString())
-                        EditorCommand(
-                            SetupCommands.startFor(backend),
-                            copyLabel,
-                            copiedLabel,
-                            copy,
-                        )
-                        KitExpandRow(
-                            stringResource(Res.string.editor40OtherCommands),
-                            commandsOpen,
-                            onExpandedChange = { commandsOpen = it },
-                            inset = false,
-                        ) {
-                            EditorCommand(
-                                when (backend) {
-                                    BackendKind.OpenCode2 -> SetupCommands.SERVE
-                                    BackendKind.Paseo -> SetupCommands.PASEO_START_PRIVATE_NETWORK
-                                    BackendKind.Codex -> SetupCommands.CODEX_USB
-                                },
-                                copyLabel,
-                                copiedLabel,
-                                copy,
-                            )
-                            if (backend == BackendKind.Codex)
-                                EditorCommand(
-                                    SetupCommands.CODEX_TOKEN,
-                                    copyLabel,
-                                    copiedLabel,
-                                    copy,
-                                )
-                        }
                     }
                     if (backend == BackendKind.OpenCode2 && !tailscale) {
-                        KitText(stringResource(if (state.canScan) Res.string.firstRunPairingNextScan else Res.string.firstRunPairingNextPaste),
+                        if (pairingFirst) {
+                            KitText(stringResource(Res.string.upgradeConnectScanTitle), role = TypeRole.Headline)
+                            KitText(stringResource(if (state.canScan) Res.string.upgradeConnectScanBody else Res.string.upgradeConnectPasteBody),
+                                role = TypeRole.Secondary, tone = io.github.eslamasabry.oc.ui.design.type.TextTone.Secondary)
+                        } else KitText(stringResource(if (state.canScan) Res.string.firstRunPairingNextScan else Res.string.firstRunPairingNextPaste),
                             role = TypeRole.Secondary, tone = io.github.eslamasabry.oc.ui.design.type.TextTone.Secondary)
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
                             if (state.canScan) KitButton(
                                 stringResource(Res.string.addServerScan),
                                 { actions.keepDraft(input()); actions.scan() },
-                                modifier = Modifier.weight(1f), role = KitButtonRole.Secondary,
+                                modifier = Modifier.weight(1f), role = KitButtonRole.Primary,
                                 icon = KitIcons.qrCode, enabled = enabled, fullWidth = true,
                             )
                             KitPasteButton(
@@ -511,8 +489,65 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                                 actions::paste, modifier = Modifier.weight(1f), enabled = enabled,
                             )
                         }
+                        state.pairingProblem?.let { KitErrorNotice(pairingProblemText(it)) }
                     }
-                    state.pairingProblem?.let { KitErrorNotice(pairingProblemText(it)) }
+                    if (state.newServer) {
+                        val commands: @Composable () -> Unit = {
+                            EditorCommand(
+                                SetupCommands.startFor(backend),
+                                copyLabel,
+                                copiedLabel,
+                                copy,
+                            )
+                            KitExpandRow(
+                                stringResource(Res.string.editor40OtherCommands),
+                                commandsOpen,
+                                onExpandedChange = { commandsOpen = it },
+                                inset = false,
+                            ) {
+                                EditorCommand(
+                                    when (backend) {
+                                        BackendKind.OpenCode2 -> SetupCommands.SERVE
+                                        BackendKind.Paseo -> SetupCommands.PASEO_START_PRIVATE_NETWORK
+                                        BackendKind.Codex -> SetupCommands.CODEX_USB
+                                    },
+                                    copyLabel,
+                                    copiedLabel,
+                                    copy,
+                                )
+                                if (backend == BackendKind.Codex)
+                                    EditorCommand(
+                                        SetupCommands.CODEX_TOKEN,
+                                        copyLabel,
+                                        copiedLabel,
+                                        copy,
+                                    )
+                            }
+                        }
+                        if (pairingFirst) KitExpandRow(
+                            stringResource(Res.string.upgradeConnectCommandTitle),
+                            pairCommandOpen,
+                            onExpandedChange = { pairCommandOpen = it },
+                            inset = false,
+                        ) { Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) { commands() } }
+                        else commands()
+                    }
+                    if (pairingFirst && state.canTailscale)
+                        KitRowGroup(label = stringResource(Res.string.upgradeConnectOtherWays)) {
+                            KitRow(
+                                title = stringResource(Res.string.tailscaleTitle),
+                                leading = KitRowLeading.Glyph(KitIcons.secureNetwork),
+                                supporting = stringResource(Res.string.upgradeConnectTailscaleBody),
+                                supportingMaxLines = 2,
+                                trailing = KitRowTrailing.Chevron,
+                                onClick = {
+                                    actions.keepDraft(input())
+                                    tailscale = true
+                                    actions.step(ServerEditorStep.Tailscale)
+                                },
+                            )
+                        }
+                    if (backend != BackendKind.OpenCode2 || tailscale) state.pairingProblem?.let { KitErrorNotice(pairingProblemText(it)) }
                     val manualFields: @Composable () -> Unit = {
                         Column(verticalArrangement = Arrangement.spacedBy(Space.S4.dp)) {
                             KitField(
@@ -542,6 +577,30 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                                     },
                                 ) else KitNotice(stringResource(Res.string.addServerCleartextConfirmed))
                             }
+                            // The password sits right under the address and its warning, so both
+                            // fit on one screen without scrolling.
+                            KitField(
+                                password,
+                                stringResource(
+                                    if (state.record?.needsSecret == true) {
+                                        if (backend == BackendKind.OpenCode2) Res.string.e7SetupReenterPassword else Res.string.codexTokenReentry
+                                    } else if (backend == BackendKind.OpenCode2) Res.string.e7SetupServerPassword
+                                    else if (backend == BackendKind.Paseo) Res.string.paseoPasswordLabel else Res.string.codexTokenLabel
+                                ),
+                                kind = KitFieldKind.Secret,
+                                helper = stringResource(if (backend == BackendKind.Paseo) Res.string.paseoPasswordHelp else if (backend == BackendKind.Codex) Res.string.codexTokenStorageHelp
+                                    else if (state.record?.needsSecret == true) Res.string.e7SetupEmptyPasswordHint else Res.string.e7SetupPasswordStartupHint),
+                                enabled = enabled,
+                                secretPresence =
+                                    if (keepSecret || heldSecret != null) SecretFieldPresence.Saved
+                                    else SecretFieldPresence.Editing,
+                                onReplaceSecret = {
+                                    keepSecret = false
+                                    heldSecret = null
+                                    password.fill("")
+                                    actions.changed()
+                                },
+                            )
                             if (backend != BackendKind.OpenCode2)
                                 KitField(
                                     directory,
@@ -603,28 +662,6 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                                     )
                                 }
                             }
-                            KitField(
-                                password,
-                                stringResource(
-                                    if (state.record?.needsSecret == true) {
-                                        if (backend == BackendKind.OpenCode2) Res.string.e7SetupReenterPassword else Res.string.codexTokenReentry
-                                    } else if (backend == BackendKind.OpenCode2) Res.string.e7SetupServerPassword
-                                    else if (backend == BackendKind.Paseo) Res.string.paseoPasswordLabel else Res.string.codexTokenLabel
-                                ),
-                                kind = KitFieldKind.Secret,
-                                helper = stringResource(if (backend == BackendKind.Paseo) Res.string.paseoPasswordHelp else if (backend == BackendKind.Codex) Res.string.codexTokenStorageHelp
-                                    else if (state.record?.needsSecret == true) Res.string.e7SetupEmptyPasswordHint else Res.string.e7SetupPasswordStartupHint),
-                                enabled = enabled,
-                                secretPresence =
-                                    if (keepSecret || heldSecret != null) SecretFieldPresence.Saved
-                                    else SecretFieldPresence.Editing,
-                                onReplaceSecret = {
-                                    keepSecret = false
-                                    heldSecret = null
-                                    password.fill("")
-                                    actions.changed()
-                                },
-                            )
                             if (state.slow) KitNotice(stringResource(Res.string.editor40Slow))
                             if (state.checking)
                                 KitButton(
