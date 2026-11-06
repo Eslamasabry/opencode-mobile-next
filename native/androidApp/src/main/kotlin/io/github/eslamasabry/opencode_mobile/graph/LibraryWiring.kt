@@ -20,6 +20,7 @@ import io.github.eslamasabry.oc.engine.integrations.catalog.*
 import io.github.eslamasabry.oc.engine.profiles.ProfileKeys
 import io.github.eslamasabry.oc.feature.settings.presentation.LibraryHost
 import io.github.eslamasabry.oc.feature.settings.presentation.LibraryLink
+import io.github.eslamasabry.oc.ui.kitchat.KitCopy
 import java.io.File
 import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
@@ -278,14 +279,20 @@ class AndroidLibraryHost(
         return SkillConversation(ports, redactor, ::current)
     }
 
-    override suspend fun copy(text: String): Outcome<Unit> =
-        withContext(dispatchers.main) {
+    /**
+     * Skill text, code blocks and MCP addresses come from the server: any key, token or password is masked through the
+     * one redacting copy before the clipboard sees it (Flutter KitCopy.copy, redact: true; E15-S04).
+     */
+    override suspend fun copy(text: String): Outcome<Unit> {
+        val safe = KitCopy.safeText(redactor, text).text
+        return withContext(dispatchers.main) {
             attempt({ Failure.Device() }) {
                 application
                     .getSystemService(ClipboardManager::class.java)
-                    .setPrimaryClip(ClipData.newPlainText("", text))
+                    .setPrimaryClip(ClipData.newPlainText("", safe))
             }
         }
+    }
 
     override fun checkLink(url: String): LibraryLink? =
         when (val decision = policy.check(url, LinkOrigin.ServerContent)) {

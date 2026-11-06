@@ -15,9 +15,13 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitMonoText
 import io.github.eslamasabry.oc.ui.kit.KitText
-import io.github.eslamasabry.oc.ui.kit.action.KitIconButtonCopy
+import io.github.eslamasabry.oc.ui.kitchat.KitRedactedCopyIconButton
 
-/** Flutter active_context_screen.dart's _Part: a label and Copy, followed by selectable plain or mono text. */
+/**
+ * Flutter active_context_screen.dart's _Part: a label and Copy, followed by selectable plain or mono text. Copy masks
+ * any key, token or password first (Flutter KitCopy.copy, redact: true; E15-S04): parts are server text (tool input and
+ * output, reasoning).
+ */
 @Composable
 public fun KitContextMessagePart(
     heading: String,
@@ -31,7 +35,7 @@ public fun KitContextMessagePart(
     Column(modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             KitText(heading, Modifier.weight(1f), role = TypeRole.Label)
-            if (text.isNotEmpty() && !dropped) KitIconButtonCopy(text = { text }, label = copyLabel)
+            if (text.isNotEmpty() && !dropped) KitRedactedCopyIconButton(text = { text }, label = copyLabel)
         }
         Spacer(Modifier.height(Space.S2.dp))
         if (!dropped) {

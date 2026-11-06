@@ -6,9 +6,10 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * Port of the "redact: false is only for the person's own content (SEC-13)" group in test/redaction_test.dart. Native
- * has no `redact:` flag: every clipboard write hands text to the platform verbatim, so each write site in production
- * Kotlin is reviewed here, the reviewed counts only shrink, and each entry says why it is safe.
+ * Port of the "redact: false is only for the person's own content (SEC-13)" group in test/redaction_test.dart. Every
+ * clipboard write site in production Kotlin is reviewed here, the reviewed counts only shrink, and each entry says why
+ * it is safe: the person's own content, text already masked, or the one redacting copy (`KitCopy` in :ui:kit-chat, the
+ * port of Flutter's `KitCopy.copy` with its default `redact: true`).
  */
 class VerbatimCopyReviewTest {
     /** path (from native/) → (count, why the text is the person's own or already masked). */
@@ -68,18 +69,44 @@ class VerbatimCopyReviewTest {
         )
 
     /**
-     * Known unmasked copies awaiting a fix; each names its owner. Native has no redacting copy path
-     * yet (Dart's KitCopy.copy masks unless `redact: false`), so these copy server text as it is.
+     * Writes that put only the result of the one redacting copy on the clipboard (E15-S04; Flutter `KitCopy.copy`,
+     * `redact: true`). The kit copy parts write `mask.apply(text)`: the mask defaults to verbatim, and every caller in
+     * the server-text modules must pass the redacting `KitCopy` mask ([serverTextCopies] and the module scan below).
      */
-    private val findings: Map<String, Pair<Int, String>> =
+    private val redacting: Map<String, Pair<Int, String>> =
         mapOf(
             "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/LibraryWiring.kt" to
-                (1 to "owner coordinator (caller :feature:settings LibraryScreen): raw server skill markdown, its code blocks and MCP resource URIs are copied unmasked; Dart masks kit copies by default"),
+                (1 to "copies KitCopy.safeText(redactor, text) only: skill markdown, code blocks and MCP URIs masked"),
             "ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/action/KitCopyButton.kt" to
-                (1 to "owner kit-chat-owner / chat-lead: via KitRequestTargets a permission prompt copies the agent's requested command unmasked (could carry an inline key)"),
+                (1 to "writes mask.apply(text()); the permission prompt's command passes the redacting KitCopy mask"),
             "ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/action/KitIconButton.kt" to
-                (1 to "owner kit-chat-owner / chat-lead: via KitContextMessagePart, Active Context copies raw tool input/output and reasoning unmasked"),
+                (1 to "writes mask.apply(text()); Active Context tool input/output and reasoning pass the redacting mask"),
         )
+
+    /** Known unmasked copies awaiting a fix; each names its owner. Empty: E15-S04 fixed the last three. */
+    private val findings: Map<String, Pair<Int, String>> = emptyMap()
+
+    /** Server-text copy sites (E15-S04) → what each must call, and the verbatim calls it must not make. */
+    private val serverTextCopies: Map<String, Pair<List<String>, List<String>>> =
+        mapOf(
+            "ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/request/KitRequestTargets.kt" to
+                (listOf("rememberKitRedactedCopyAction(") to VERBATIM_PARTS),
+            "ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/transcript/KitContextMessagePart.kt" to
+                (listOf("KitRedactedCopyIconButton(") to VERBATIM_PARTS),
+            "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/LibraryWiring.kt" to
+                (listOf("KitCopy.safeText(redactor, text)", "ClipData.newPlainText(\"\", safe)") to
+                    listOf("ClipData.newPlainText(\"\", text)")),
+            "ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/action/KitCopyButton.kt" to
+                (listOf("mask.apply(text())", "AnnotatedString(out.text)") to listOf("AnnotatedString(text())")),
+            "ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/action/KitIconButton.kt" to
+                (listOf("mask.apply(text())", "AnnotatedString(out.text)") to listOf("AnnotatedString(text())")),
+        )
+
+    /** Modules whose copies are server text: a kit copy part used there without the redacting mask fails. */
+    private val serverTextModules = listOf("ui/kit-chat/src/commonMain", "feature/chat/src/commonMain")
+
+    /** The one file allowed to call the kit copy parts directly in [serverTextModules]: it adds the redacting mask. */
+    private val redactingHelper = "ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/KitCopy.kt"
 
     private val copyCall = Regex("""\.(setPrimaryClip|setClipEntry)\(|\bclipboard\w*\.setText\(""")
 
@@ -109,7 +136,7 @@ class VerbatimCopyReviewTest {
     @Test
     fun `B-SEC-145 every verbatim copy in the app is reviewed and the reviewed lists only shrink`() {
         val sites = copySites()
-        val reviewed = reviewedOwnContent + findings
+        val reviewed = reviewedOwnContent + redacting + findings
         val problems = mutableListOf<String>()
         for ((path, count) in sites) {
             val entry = reviewed[path]
@@ -125,12 +152,40 @@ class VerbatimCopyReviewTest {
 
     @Test
     fun `B-SEC-145 every reviewed entry gives a real reason and findings name their owner`() {
-        for ((path, entry) in reviewedOwnContent + findings) {
+        for ((path, entry) in reviewedOwnContent + redacting + findings) {
             assertTrue(entry.first > 0, path)
             assertTrue(entry.second.trim().length > 10, path)
         }
         for ((path, entry) in findings) assertTrue("owner" in entry.second, "$path: a finding names its owner")
         assertTrue(reviewedOwnContent.keys.intersect(findings.keys).isEmpty())
+        assertTrue(redacting.keys.intersect(reviewedOwnContent.keys + findings.keys).isEmpty())
+    }
+
+    @Test
+    fun `B-SEC-145 server text copies through the one redacting copy (E15-S04)`() {
+        val root = nativeRoot()
+        val problems = mutableListOf<String>()
+        for ((path, rule) in serverTextCopies) {
+            val file = File(root, path)
+            if (!file.isFile) {
+                problems += "$path: missing — move its rule with the file"
+                continue
+            }
+            val code = stripComments(file.readText())
+            for (needed in rule.first) if (needed !in code) problems += "$path: must copy through `$needed`"
+            for (banned in rule.second) if (banned in code) problems += "$path: copies verbatim via `$banned`"
+        }
+        for (module in serverTextModules) {
+            File(root, module).walkTopDown().filter { it.isFile && it.extension == "kt" }.forEach { file ->
+                val path = file.relativeTo(root).path
+                if (path == redactingHelper) return@forEach
+                val code = stripComments(file.readText())
+                for (part in VERBATIM_PARTS) if (part in code)
+                    problems += "$path: `$part` copies server text verbatim — use KitCopy (rememberKitRedactedCopyAction, " +
+                        "KitRedactedCopyIconButton)"
+            }
+        }
+        assertEquals(emptyList(), problems, problems.joinToString("\n"))
     }
 
     @Test
@@ -141,5 +196,10 @@ class VerbatimCopyReviewTest {
                 "clipboard.setText(AnnotatedString(text))\n" +
                 "manager.setPrimaryClip(ClipData.newPlainText(\"l\", text))"
         assertEquals(2, copyCall.findAll(stripComments(sample)).count())
+    }
+
+    private companion object {
+        /** The kit copy parts called without a mask (their default is verbatim). */
+        val VERBATIM_PARTS = listOf("KitIconButtonCopy(", "rememberKitCopyAction(", "KitCopyButton(")
     }
 }
