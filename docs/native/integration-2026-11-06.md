@@ -30,3 +30,7 @@ Read both conflict sides and their commit history (`git log -p`). Resolutions:
 - `ChatStartArea.kt`, `ChatScreen.kt`: upgrade project-aware empty state and overlay spacing win; KitScreen retains identical movable slots across layouts, preserving send lifetime (N-14).
 
 Automatic merges also preserve Settings in the home header, server transport review, voice active controls and other fixes. NotificationText regex, isolated phone ports/current-start bind classification, original-error crash logging and N-18 server recovery are outside this upgrade's replaced code and remain intact.
+
+## 2. upg-newchat
+
+One conflict: `NewConversationScreen.kt`. Adopt the upgrade's prompt bubble with Try again/Edit, starters and one growing agent/model sheet; keep its three agent/model/project chips in the keyboard-safe footer from N-03. Remove the obsolete fourth Modes chip and use the shared sheet's Build/Plan control. Preserve the blocked reason, fresh blank entry rule, explicit codecs and send lifetime protections from merge 1. Reviewed both histories, formatted the resolved file, checked the diff; no compilation or tests.

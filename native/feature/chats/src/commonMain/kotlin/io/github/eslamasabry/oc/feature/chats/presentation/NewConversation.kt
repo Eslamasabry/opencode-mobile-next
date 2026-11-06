@@ -175,13 +175,61 @@ public class NoNewConversationHost : NewConversationHost {
     ): Outcome<ConversationRef> = unavailable()
 }
 
+/**
+ * [Agents] and [Models] are two steps of one growing sheet (half height: who works and how, then
+ * full height: every model), never two sheets.
+ */
 public enum class NewConversationSheet {
     Projects,
     Models,
     Agents,
-    Modes,
     Import,
 }
+
+/** Ways to start that fill the prompt and never send; the words live in `:ui:words`. */
+public enum class NewConversationStarter {
+    ExplainProject,
+    FindBug,
+    AddTests,
+    ListFolder,
+}
+
+/**
+ * The starters for [directory]. Folder facts are not read on this screen (no listing before the
+ * conversation exists), so only starters that hold for any project are offered.
+ */
+public fun newConversationStarters(directory: String?): List<NewConversationStarter> {
+    val name = directory?.trim()?.replace('\\', '/')?.split('/')?.lastOrNull { it.isNotEmpty() }
+    val projectsRoot = directory?.trim()?.trimEnd('/')?.endsWith("/root/projects") == true
+    return if (name == null || projectsRoot)
+        listOf(NewConversationStarter.ListFolder, NewConversationStarter.FindBug)
+    else
+        listOf(
+            NewConversationStarter.ExplainProject,
+            NewConversationStarter.FindBug,
+            NewConversationStarter.AddTests,
+        )
+}
+
+/** A label ending in an ellipsis starts a sentence: the field gets it with a trailing space. */
+public fun starterInsertText(label: String): String =
+    if (label.endsWith('…')) label.dropLast(1).trimEnd() + " " else label
+
+/** Search over what each model row shows (its name and its host app), never hidden ids. */
+public fun filterNewConversationModels(
+    models: List<NewConversationModel>,
+    query: String,
+): List<NewConversationModel> {
+    val q = query.trim().lowercase()
+    val named = models.filter { it.model.modelId != "default" }
+    if (q.isEmpty()) return named
+    return named.filter { model ->
+        model.name.lowercase().contains(q) || model.runtime?.lowercase()?.contains(q) == true
+    }
+}
+
+/** Long lists get a search field in the model step. */
+public const val NEW_CONVERSATION_MODEL_SEARCH_FROM: Int = 8
 
 public data class NewConversationUi(
     val servers: List<NewConversationServer> = emptyList(),
@@ -190,6 +238,8 @@ public data class NewConversationUi(
     val directory: String? = null,
     val text: String = "",
     val textRevision: Long = 0,
+    /** Bumped when a starter fills the prompt: the field takes the cursor back. */
+    val focusRevision: Long = 0,
     val model: ModelRef? = null,
     val agent: String? = null,
     val separateCopy: Boolean = false,
@@ -239,6 +289,12 @@ public interface NewConversationActions {
     public fun chooseMode(mode: String) {
         chooseAgent(mode)
     }
+
+    /** A starter fills an empty prompt; it never sends. */
+    public fun chooseStarter(starter: NewConversationStarter, label: String) {}
+
+    /** From a first message that was definitely not sent: back to its words and choices. */
+    public fun editPrompt() {}
 
     public fun separateCopy(on: Boolean)
 
@@ -461,9 +517,50 @@ public class NewConversationViewModel(
     }
 
     override fun chooseModel(model: ModelRef?) {
-        if (!mutable.value.busy && !mutable.value.deliveryUnconfirmed)
-            mutable.update { it.copy(model = model, sheet = null) }
+        if (mutable.value.busy || mutable.value.deliveryUnconfirmed) return
+        // The model is the last choice of the sheet: picking one closes it.
+        mutable.update { it.copy(model = model, sheet = null) }
         saveChoices()
+    }
+
+    override fun chooseStarter(starter: NewConversationStarter, label: String) {
+        val shown = mutable.value
+        if (
+            shown.busy ||
+                shown.openingChat ||
+                shown.deliveryUnconfirmed ||
+                shown.setup == null ||
+                shown.text.isNotBlank() ||
+                label.isBlank() ||
+                starter !in newConversationStarters(shown.directory)
+        )
+            return
+        draftChanged(starterInsertText(label))
+        mutable.update {
+            it.copy(textRevision = it.textRevision + 1, focusRevision = it.focusRevision + 1)
+        }
+    }
+
+    override fun editPrompt() {
+        val shown = mutable.value
+        if (
+            !shown.openingChat ||
+                shown.busy ||
+                shown.creationUnconfirmed ||
+                shown.deliveryUnconfirmed
+        )
+            return
+        // Nothing was made yet: the person may also change server or project. A made conversation
+        // keeps its project; its words, agent and model stay editable and Retry reuses it.
+        val nothingMade = attempt?.ref == null && attempt?.creationAttempted != true
+        if (nothingMade) attempt = null
+        mutable.update {
+            it.copy(
+                openingChat = false,
+                attempted = if (nothingMade) false else it.attempted,
+                textRevision = it.textRevision + 1,
+            )
+        }
     }
 
     override fun chooseAgent(agent: String?) {
@@ -474,8 +571,9 @@ public class NewConversationViewModel(
                 (agent !in setup.agents || !isStartableAgent(agent))
         )
             return
+        // The sheet stays open: Build/Plan and the model are the next choices in the same sheet.
         if (!mutable.value.busy && !mutable.value.deliveryUnconfirmed)
-            mutable.update { it.copy(agent = agent, sheet = null) }
+            mutable.update { it.copy(agent = agent) }
         saveChoices()
     }
 
@@ -660,16 +758,20 @@ public class NewConversationViewModel(
             }
             attempt = result
             if (result.dispatched && result.ref != null) {
+                // Open the chat first: the starting frame never flashes an empty or failed state.
+                if (nav.top.value == route) nav.back()
+                nav.openChat(result.ref)
+                // A screen left lower in the stack starts the next conversation afresh.
+                attempt = null
                 mutable.update {
                     it.copy(
                         text = "",
                         textRevision = it.textRevision + 1,
                         busy = false,
                         attempted = false,
+                        openingChat = false,
                     )
                 }
-                if (nav.top.value == route) nav.back()
-                nav.openChat(result.ref)
             } else
                 mutable.update {
                     it.copy(

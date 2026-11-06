@@ -1,0 +1,14 @@
+<resources>
+    <string name="upgNewChatKept">كلماتك واختياراتك محفوظة. حاول مرة أخرى، أو عدّلها أولًا.</string>
+    <string name="upgNewChatEdit">تعديل</string>
+    <string name="upgNewChatAgentMode">%1$s · %2$s</string>
+    <string name="upgNewChatChoicesTitle">الوكيل والنموذج</string>
+    <string name="upgNewChatAgents">من يعمل عليها</string>
+    <string name="upgNewChatModeHint">التخطيط يناقش الفكرة أولًا. البناء ينفّذ التغييرات.</string>
+    <string name="upgNewChatModeOnlyFor">البناء والتخطيط خاصّان بـ %1$s.</string>
+    <string name="upgNewChatModel">النموذج</string>
+    <string name="upgNewChatModelsSearch">ابحث في النماذج</string>
+    <string name="upgNewChatBackToAgents">رجوع إلى الوكلاء</string>
+    <string name="upgNewChatDone">تم</string>
+    <string name="upgNewChatModelsNone">لا توجد نماذج أخرى على هذا الخادم.</string>
+</resources>
