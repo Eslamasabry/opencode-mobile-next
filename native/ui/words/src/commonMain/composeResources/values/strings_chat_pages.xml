@@ -247,7 +247,8 @@
     <string name="reviewRevertKeepConfirmAction">Delete hidden messages</string>
     <string name="reviewRevertKeepConsequenceMessages">The hidden prompt and every message after it are deleted</string>
     <string name="reviewRevertKeepConsequenceFiles">Files stay as they are now</string>
-    <string name="reviewRevertRestoreConfirmTitle">Put everything back from “%1$s”?</string>
+    <string name="reviewRevertRestoreConfirmTitle">Restore “%1$s”?</string>
+    <string name="reviewRevertPutBackQuestion">Put everything back from “%1$s”?</string>
     <string name="reviewRevertRestoreConfirmBody">The hidden messages come back, and the files in this undo return to how they were when you set it up. You can undo from a prompt again later.</string>
     <string name="reviewRevertRestoreConsequenceMessages">The hidden messages come back</string>
     <plurals name="reviewRevertRestoreConsequenceFiles">

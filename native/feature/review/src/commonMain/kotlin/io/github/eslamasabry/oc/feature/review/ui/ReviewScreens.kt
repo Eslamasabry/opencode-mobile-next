@@ -120,7 +120,7 @@ import io.github.eslamasabry.oc.ui.words.res.reviewRevertNoneBody
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertNoneTitle
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertPromptLabel
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertRestoreConfirmBody
-import io.github.eslamasabry.oc.ui.words.res.reviewRevertRestoreConfirmTitle
+import io.github.eslamasabry.oc.ui.words.res.reviewRevertPutBackQuestion
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertRestoreConsequenceFiles
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertRestoreConsequenceMessages
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertRestoreConsequenceUnknownFiles
@@ -877,7 +877,7 @@ private fun StagedContent(state: StagedUi, actions: StagedActions) {
                 )
             StagedConfirm.PutBack ->
                 KitConfirmSpec(
-                    title = stringResource(Res.string.reviewRevertRestoreConfirmTitle, title),
+                    title = stringResource(Res.string.reviewRevertPutBackQuestion, title),
                     confirmLabel = stringResource(Res.string.reviewRevertRestoreTitle),
                     // Files go back to the saved snapshot: edits made since are replaced, so that
                     // is the error tone.
