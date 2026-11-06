@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.gate.ui
 
+import io.github.eslamasabry.oc.feature.gate.GateDeferredFeature
 import io.github.eslamasabry.oc.feature.gate.GateFailureScreen
 import io.github.eslamasabry.oc.feature.gate.GatePresenter
 import io.github.eslamasabry.oc.feature.gate.GateReentry
@@ -29,7 +30,10 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import io.github.eslamasabry.oc.feature.gate.GateEntry
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.motion.KitSwap
+import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import kotlin.reflect.KClass
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -49,7 +53,12 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.migration_close
+import io.github.eslamasabry.oc.ui.words.res.migration_deferred_ai_team
+import io.github.eslamasabry.oc.ui.words.res.migration_deferred_dismiss
+import io.github.eslamasabry.oc.ui.words.res.migration_deferred_gemma
+import io.github.eslamasabry.oc.ui.words.res.migration_deferred_memory
 import io.github.eslamasabry.oc.ui.words.res.migration_deferred_notice
+import io.github.eslamasabry.oc.ui.words.res.migration_deferred_separator
 import io.github.eslamasabry.oc.ui.words.res.migration_details
 import io.github.eslamasabry.oc.ui.words.res.migration_failed_body
 import io.github.eslamasabry.oc.ui.words.res.migration_failed_title
@@ -107,6 +116,7 @@ public fun UpdateGate(presenter: GatePresenter, content: @Composable () -> Unit)
         onReentrySubmit = presenter::onReentrySubmit,
         onReentryBack = presenter::onReentryBack,
         onReentryOpen = presenter::onReentryOpen,
+        onDismissDeferredNotice = presenter::onDismissDeferredNotice,
         content = content,
     )
 }
@@ -123,6 +133,7 @@ public fun GateScreen(
     onReentrySubmit: (String) -> Unit = {},
     onReentryBack: () -> Unit = {},
     onReentryOpen: () -> Unit = {},
+    onDismissDeferredNotice: () -> Unit = {},
     content: @Composable () -> Unit,
 ) {
     val draw: @Composable (GateUi) -> Unit = { state ->
@@ -131,7 +142,17 @@ public fun GateScreen(
                 WaitingScreen(if (state.wordless) null else stringResource(Res.string.migration_opening), state.offerRetry, onRow)
             is GateUi.Updating -> WaitingScreen(stringResource(Res.string.migration_updating), state.offerRetry, onRow)
             is GateUi.Failed -> FailedScreen(state, onRow, onConfirm, onCancelConfirm)
-            is GateUi.Open -> OpenFrame(state, onReentry, onReentryLater, onReentrySubmit, onReentryBack, onReentryOpen, content)
+            is GateUi.Open ->
+                OpenFrame(
+                    state,
+                    onReentry,
+                    onReentryLater,
+                    onReentrySubmit,
+                    onReentryBack,
+                    onReentryOpen,
+                    onDismissDeferredNotice,
+                    content,
+                )
         }
     }
     // The kit's cross-fade between screens (instant under reduced motion, 05 §8.2). Keyed by the screen kind, so a
@@ -217,7 +238,25 @@ private fun FailedScreen(state: GateUi.Failed, onRow: (GateRow) -> Unit, onConfi
     }
 }
 
-/** The app with the one status-line notice above it and the one-time re-enter sheet over it. */
+/** The kept features in the person's language, in the notice's order (AI Team, Memory, the on-phone model). */
+@Composable
+private fun deferredNames(features: List<GateDeferredFeature>): String {
+    val separator = stringResource(Res.string.migration_deferred_separator)
+    val names =
+        features.map { feature ->
+            when (feature) {
+                GateDeferredFeature.AiTeam -> stringResource(Res.string.migration_deferred_ai_team)
+                GateDeferredFeature.Memory -> stringResource(Res.string.migration_deferred_memory)
+                GateDeferredFeature.Gemma -> stringResource(Res.string.migration_deferred_gemma)
+            }
+        }
+    return names.joinToString(separator)
+}
+
+/**
+ * The app with the one deferred-features notice above it (until dismissed) and the one-time re-enter sheet over it.
+ * The app's box is the same node with or without the notice, so dismissing it never rebuilds the app.
+ */
 @Composable
 private fun OpenFrame(
     state: GateUi.Open,
@@ -226,28 +265,35 @@ private fun OpenFrame(
     onSubmit: (String) -> Unit,
     onBack: () -> Unit,
     onOpen: () -> Unit,
+    onDismissNotice: () -> Unit,
     content: @Composable () -> Unit,
 ) {
     KitSheetHost(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
-            if (state.deferredNotice) {
-                val top = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
-                KitText(
-                    stringResource(Res.string.migration_deferred_notice),
+            val top = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
+            // The features named while it folds away are the last ones shown (kit fold: STANDARD in, QUICK out, off
+            // under reduced motion).
+            val shown = remember { arrayOf(state.deferred) }
+            if (state.deferred.isNotEmpty()) shown[0] = state.deferred
+            val named = shown[0]
+            KitReveal(state.deferredNotice) {
+                KitNotice(
+                    stringResource(Res.string.migration_deferred_notice, deferredNames(named)),
                     Modifier
                         .fillMaxWidth()
                         .windowInsetsPadding(top)
                         .padding(horizontal = Space.S4.dp, vertical = Space.S2.dp)
-                        .semantics { liveRegion = LiveRegionMode.Polite }
                         .testTag("gate-notice"),
-                    role = TypeRole.Secondary,
-                    tone = TextTone.Secondary,
-                    kind = KitTextKind.Frame,
+                    dismiss =
+                        KitLineAction(
+                            stringResource(Res.string.migration_deferred_dismiss),
+                            onDismissNotice,
+                            testTag = "gate-notice-dismiss",
+                        ),
                 )
-                Box(Modifier.weight(1f).consumeWindowInsets(top)) { content() }
-            } else {
-                Box(Modifier.weight(1f)) { content() }
             }
+            val inset = if (state.deferredNotice) Modifier.consumeWindowInsets(top) else Modifier
+            Box(Modifier.weight(1f).then(inset)) { content() }
         }
         KitSheet(
             visible = state.reenter.isNotEmpty(),

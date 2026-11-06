@@ -14,14 +14,17 @@ public sealed interface GateInput {
     public data class Running(val step: String) : GateInput
 
     /**
-     * The gate is open. [reenter] lists what needs the person again (asked once, §8.2); [deferredDataFound] is the
-     * census flag for AI Team, Memory or Gemma data (02 §3.7 item 4).
+     * The gate is open. [reenter] lists what needs the person again (asked once, §8.2; each target and need once);
+     * [deferred] names the features whose data the census found and this version keeps untouched (AI Team, Memory,
+     * Gemma; 02 §3.7 item 4). Empty once the notice was acknowledged.
      */
     public data class Open(
         val firstNativeLaunch: Boolean,
         val reenter: List<GateReentry> = emptyList(),
-        val deferredDataFound: Boolean = false,
-    ) : GateInput
+        val deferred: Set<GateDeferredFeature> = emptySet(),
+    ) : GateInput {
+        val deferredDataFound: Boolean get() = deferred.isNotEmpty()
+    }
 
     /**
      * The migration stopped. [detail] is the step id and failure class only (for example `M2 · UnwrapFailed ×1`,
@@ -41,6 +44,12 @@ public sealed interface GateInput {
 public enum class GateBlockReason {
     LowSpace, PrefsUnreadable, WriteRefused, AuthorityChanged, StepCrashed, BackupInvalid,
 }
+
+/**
+ * A feature whose Flutter data this version keeps untouched until it is ported (01 D6/D7): the deferred-features
+ * notice names each one found, in this order.
+ */
+public enum class GateDeferredFeature { AiTeam, Memory, Gemma }
 
 /** Plan 05 §7.3 `ReentryKind`: only things the person must do; app-made secrets are renewed silently. */
 public enum class GateReentryKind { Password, Token, GitHubSignIn, ByoSetup }

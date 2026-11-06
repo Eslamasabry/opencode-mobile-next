@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.gate
 
+import io.github.eslamasabry.oc.engine.migration.DeferredFeature
 import io.github.eslamasabry.oc.engine.migration.MigrationBlock
 import io.github.eslamasabry.oc.engine.migration.MigrationEngine
 import io.github.eslamasabry.oc.engine.migration.MigrationProgress
@@ -42,15 +43,17 @@ public fun gateInputOf(view: MigrationView): GateInput =
         is MigrationProgress.Open ->
             GateInput.Open(
                 firstNativeLaunch = p.firstNativeLaunch,
+                // Each saved server (or GitHub) and what it needs is listed once, however many stores asked for it.
                 reenter =
-                    p.reenter.map { item ->
-                        GateReentry(
-                            profileId = item.profileId,
-                            targetName = item.profileId?.let { view.names[it] } ?: GITHUB.takeIf { item.profileId == null },
-                            kind = kindOf(item.need),
-                        )
-                    },
-                deferredDataFound = p.deferred.isNotEmpty(),
+                    p.reenter
+                        .map { item ->
+                            GateReentry(
+                                profileId = item.profileId,
+                                targetName = item.profileId?.let { view.names[it] } ?: GITHUB.takeIf { item.profileId == null },
+                                kind = kindOf(item.need),
+                            )
+                        }.distinctBy { it.profileId to it.kind },
+                deferred = p.deferred.mapTo(LinkedHashSet()) { deferredOf(it) },
             )
         is MigrationProgress.Blocked ->
             GateInput.Blocked(
@@ -94,6 +97,13 @@ private fun kindOf(need: ReentryNeed): GateReentryKind =
         ReentryNeed.Token -> GateReentryKind.Token
         ReentryNeed.GitHubSignIn -> GateReentryKind.GitHubSignIn
         ReentryNeed.ByoSetup -> GateReentryKind.ByoSetup
+    }
+
+private fun deferredOf(feature: DeferredFeature): GateDeferredFeature =
+    when (feature) {
+        DeferredFeature.AiTeam -> GateDeferredFeature.AiTeam
+        DeferredFeature.Memory -> GateDeferredFeature.Memory
+        DeferredFeature.Gemma -> GateDeferredFeature.Gemma
     }
 
 private fun reasonOf(block: MigrationBlock): GateBlockReason =

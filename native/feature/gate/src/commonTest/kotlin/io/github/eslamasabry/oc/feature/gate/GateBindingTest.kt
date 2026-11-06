@@ -134,4 +134,45 @@ class GateBindingTest {
         assertEquals(listOf<Pair<String?, Int>>("p1" to 6, "p2" to 3), saved)
         assertFalse(GatePlatform.None.saveSecret(GateReentry("p1", "Home", GateReentryKind.Password), "x"))
     }
+
+    @Test
+    fun `B-MIGR-006 the re-enter sheet lists each server and what it needs once, by name, never a value`() {
+        val view = MigrationView(
+            MigrationProgress.Open(
+                firstNativeLaunch = true,
+                // Two stores of the same server asked for its password (the profile secret and a legacy copy).
+                reenter = listOf(
+                    ReentryItem("1", ReentryNeed.Password),
+                    ReentryItem("1", ReentryNeed.Password),
+                    ReentryItem("1", ReentryNeed.Token),
+                    ReentryItem(null, ReentryNeed.GitHubSignIn),
+                    ReentryItem(null, ReentryNeed.GitHubSignIn),
+                ),
+            ),
+            names = mapOf("1" to "Home"),
+        )
+        val open = assertIs<GateInput.Open>(gateInputOf(view))
+        assertEquals(
+            listOf(
+                GateReentry("1", "Home", GateReentryKind.Password),
+                GateReentry("1", "Home", GateReentryKind.Token),
+                GateReentry(null, "GitHub", GateReentryKind.GitHubSignIn),
+            ),
+            open.reenter,
+        )
+        // A row carries the target, its name and what is needed: nothing that could hold a secret.
+        assertEquals("GateReentry(profileId=1, targetName=Home, kind=Password)", open.reenter.first().toString())
+    }
+
+    @Test
+    fun `B-MIGR-009 every deferred feature the census finds reaches the notice`() {
+        val view = MigrationView(
+            MigrationProgress.Open(
+                firstNativeLaunch = false,
+                deferred = setOf(DeferredFeature.AiTeam, DeferredFeature.Memory, DeferredFeature.Gemma),
+            ),
+        )
+        val open = assertIs<GateInput.Open>(gateInputOf(view))
+        assertEquals(setOf(GateDeferredFeature.AiTeam, GateDeferredFeature.Memory, GateDeferredFeature.Gemma), open.deferred)
+    }
 }

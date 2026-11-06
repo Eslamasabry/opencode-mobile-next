@@ -206,7 +206,7 @@ class GatePresenterTest {
 
         h.presenter.onReentryOpen()
         runCurrent()
-        assertEquals(GateUi.Open(emptyList(), deferredNotice = false), h.ui)
+        assertEquals(GateUi.Open(emptyList()), h.ui)
         assertEquals(listOf("open:Home server:GitHubSignIn"), h.actions.calls) // no "ack": asked again next start
     }
 
@@ -226,7 +226,7 @@ class GatePresenterTest {
         h.presenter.onReentryOpen() // nothing to open for a BYO row
         h.presenter.onReentryBack()
         runCurrent()
-        assertEquals(GateUi.Open(listOf(unnamed, byo), deferredNotice = false), h.ui)
+        assertEquals(GateUi.Open(listOf(unnamed, byo)), h.ui)
         assertEquals(emptyList(), h.actions.calls)
     }
 
@@ -263,7 +263,7 @@ class GatePresenterTest {
         h.presenter.onReentrySubmit("tok")
         runCurrent()
         // The last row saved closes the sheet and records it, once.
-        assertEquals(GateUi.Open(emptyList(), deferredNotice = false), h.ui)
+        assertEquals(GateUi.Open(emptyList()), h.ui)
         assertEquals(listOf("save:Home server:6", "save:Work:3", "ack"), h.actions.calls)
     }
 
@@ -287,7 +287,7 @@ class GatePresenterTest {
 
         h.presenter.onReentryBack() // back to the list; the row is still there
         runCurrent()
-        assertEquals(GateUi.Open(listOf(home), deferredNotice = false), h.ui)
+        assertEquals(GateUi.Open(listOf(home)), h.ui)
         assertTrue("ack" !in h.actions.calls)
     }
 
@@ -298,21 +298,21 @@ class GatePresenterTest {
         h.presenter.onReentryLater()
         runCurrent()
         assertEquals(listOf("ack"), h.actions.calls)
-        assertEquals(GateUi.Open(emptyList(), deferredNotice = false), h.ui)
+        assertEquals(GateUi.Open(emptyList()), h.ui)
     }
 
     /** No catalog row yet (02 §3.7 item 4; S2-GATEUI report, catalog requests). */
     @Test
     fun `02-3_7-4 the deferred-features notice shows while it is unacknowledged and is recorded once`() = runTest {
         val h = Harness(this, GateInput.Running("M6"))
-        h.input.value = GateInput.Open(firstNativeLaunch = true, deferredDataFound = true)
+        h.input.value = GateInput.Open(firstNativeLaunch = true, deferred = setOf(GateDeferredFeature.Memory))
         runCurrent()
         assertTrue(assertIs<GateUi.Open>(h.ui).deferredNotice)
-        h.input.value = GateInput.Open(firstNativeLaunch = true, deferredDataFound = true, reenter = emptyList())
+        h.input.value = GateInput.Open(firstNativeLaunch = true, deferred = setOf(GateDeferredFeature.Memory), reenter = emptyList())
         runCurrent()
         assertEquals(1, h.actions.calls.count { it == "ackDeferred" })
 
-        val none = Harness(this, GateInput.Open(firstNativeLaunch = true, deferredDataFound = false))
+        val none = Harness(this, GateInput.Open(firstNativeLaunch = true, deferred = emptySet()))
         runCurrent()
         assertFalse(assertIs<GateUi.Open>(none.ui).deferredNotice)
         assertEquals(emptyList(), none.actions.calls)
@@ -325,9 +325,34 @@ class GatePresenterTest {
      */
     @Test
     fun `B-MIGR-009 the deferred-features notice still shows when the migration finished in a background start`() = runTest {
-        val later = Harness(this, GateInput.Open(firstNativeLaunch = false, deferredDataFound = true))
+        val later = Harness(this, GateInput.Open(firstNativeLaunch = false, deferred = setOf(GateDeferredFeature.Memory)))
         runCurrent()
         assertTrue(assertIs<GateUi.Open>(later.ui).deferredNotice)
         assertEquals(listOf("ackDeferred"), later.actions.calls)
+    }
+
+    @Test
+    fun `B-MIGR-009 the deferred-features notice names each kept feature once and stays dismissed`() = runTest {
+        val h = Harness(this, GateInput.Running("M6"))
+        h.input.value =
+            GateInput.Open(firstNativeLaunch = true, deferred = setOf(GateDeferredFeature.Gemma, GateDeferredFeature.AiTeam))
+        runCurrent()
+        // Named in the notice's own order, whatever order the census found them in.
+        assertEquals(listOf(GateDeferredFeature.AiTeam, GateDeferredFeature.Gemma), assertIs<GateUi.Open>(h.ui).deferred)
+
+        // The runner drops the set once it is acknowledged: the notice keeps what it named until it is dismissed.
+        h.input.value = GateInput.Open(firstNativeLaunch = true)
+        runCurrent()
+        assertTrue(assertIs<GateUi.Open>(h.ui).deferredNotice)
+
+        h.presenter.onDismissDeferredNotice()
+        runCurrent()
+        assertFalse(assertIs<GateUi.Open>(h.ui).deferredNotice)
+
+        // A later emission that still carries the set (the runner records it with the sheet) does not bring it back.
+        h.input.value = GateInput.Open(firstNativeLaunch = true, deferred = setOf(GateDeferredFeature.Memory))
+        runCurrent()
+        assertEquals(GateUi.Open(emptyList()), h.ui)
+        assertEquals(1, h.actions.calls.count { it == "ackDeferred" })
     }
 }

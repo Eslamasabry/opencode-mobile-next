@@ -287,10 +287,17 @@ class FlutterKeyRegistryTest {
     fun `B-MIGR-005 the 2026-11-06 audit gaps are MISSING rows`() {
         val gaps = listOf(
             "oc.chatTail.", "oc.lastProject.", "oc.chatNoticesSeen.", "oc.withdrawnPrompts.", "oc.providerRuntimeRefresh.v1.",
-            "oc.providerRuntimeUnloadable.", "oc.scheduleReceipts.", "local_agents_offer_skipped", "oc_background_native",
+            "oc.providerRuntimeUnloadable.", "oc.scheduleReceipts.", "oc_background_native",
             "oc_background_native/pausedByUser", "camera_permissions", "voice_permissions", "termux-setup-v2.json", ".TermuxResultService",
         )
         val wrong = gaps.filter { g -> ledger.rowsFor(g).none { it.status == LedgerStatus.MISSING && it.audit != null } }
         assertEquals(emptyList(), wrong, "audit gaps must stay MISSING (with the audit named) until a native reader lands")
+    }
+
+    @Test
+    fun `B-MIGR-005 local_agents_offer_skipped is read by the onboarding offer (E00-S06)`() {
+        val row = ledger.rowsFor("local_agents_offer_skipped").single()
+        assertEquals(LedgerStatus.READ, row.status)
+        assertTrue(File(repoRoot, row.nativeReader).readText().contains("\"local_agents_offer_skipped\""), row.nativeReader)
     }
 }

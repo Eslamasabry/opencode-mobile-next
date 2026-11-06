@@ -1,0 +1,14 @@
+<resources>
+    <string name="upgradeConnectScanTitle">امسح الرمز من حاسوبك</string>
+    <string name="upgradeConnectScanBody">شغّل الأمر أدناه على حاسوبك. سيعرض رمزًا. امسحه وستكون متصلًا.</string>
+    <string name="upgradeConnectPasteBody">شغّل الأمر أدناه على حاسوبك، ثم الصق الرمز الذي يطبعه.</string>
+    <string name="upgradeConnectCommandTitle">شغّل هذا على حاسوبك</string>
+    <string name="upgradeConnectOtherWays">طرق أخرى للاتصال</string>
+    <string name="upgradeConnectTailscaleBody">الوصول إلى حاسوبك عبر شبكتك الخاصة.</string>
+    <string name="upgradeConnectManualBody">اكتب العنوان، ثم كلمة المرور.</string>
+    <string name="upgradeConnectNameLine">سيُحفظ باسم %1$s. يمكنك تغيير الاسم أدناه.</string>
+    <string name="upgradeConnectNameFallback">حاسوبي</string>
+    <string name="upgradeReadyTitle">متصل بـ %1$s</string>
+    <string name="upgradeReadyVersion">الإصدار %1$s</string>
+    <string name="upgradeReadyStart">ابدأ محادثة</string>
+</resources>

@@ -38,5 +38,10 @@
     <string name="migration_save_failed_title">تعذّر الحفظ على هذا الهاتف</string>
     <string name="migration_open_storage_row">فتح إعدادات التخزين</string>
     <string name="migration_close">إغلاق</string>
-    <string name="migration_deferred_notice">«فريق الذكاء الاصطناعي» و«الذاكرة» غير متوفرين في هذا الإصدار بعد. تبقى مشاريعك وملاحظاتك على هذا الهاتف.</string>
+    <string name="migration_deferred_notice">غير متوفر في هذا الإصدار بعد: %1$s. ما حفظته لها يبقى على هذا الهاتف كما هو.</string>
+    <string name="migration_deferred_ai_team">«فريق الذكاء الاصطناعي»</string>
+    <string name="migration_deferred_memory">«الذاكرة»</string>
+    <string name="migration_deferred_gemma">نموذج الذكاء الاصطناعي على الهاتف</string>
+    <string name="migration_deferred_separator">، </string>
+    <string name="migration_deferred_dismiss">إخفاء الملاحظة عن الميزات غير المتوفرة في هذا الإصدار</string>
 </resources>
