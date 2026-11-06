@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.engine.analytics.WhatWeCollect
 import io.github.eslamasabry.oc.feature.settings.presentation.PrivacyUi
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
+import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
@@ -36,6 +37,19 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Composable
 internal fun ColumnScope.PrivacyBody(privacy: PrivacyUi?, actions: SettingsActions) {
+    if (privacy != null) {
+        KitRowGroup {
+            KitRow(
+                title = PendingWords.WHAT_WE_COLLECT,
+                leading = KitRowLeading.Glyph(KitIcons.info),
+                supporting = sendingLine(privacy.collect),
+                supportingMaxLines = 3,
+                trailing = KitRowTrailing.Chevron,
+                onClick = { actions.onOpen(SettingsPage.WhatWeCollect) },
+            )
+            DetailedSwitch(privacy, actions)
+        }
+    }
     KitRowGroup {
         KitRow(
             title = stringResource(Res.string.privacyPolicyTitle),
