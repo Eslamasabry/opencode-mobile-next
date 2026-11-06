@@ -7,6 +7,8 @@ import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.InboxItemId
+import io.github.eslamasabry.oc.core.domain.CorrelatedPromptGateway
+import io.github.eslamasabry.oc.core.domain.facet
 import io.github.eslamasabry.oc.core.model.InboxDelivery
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.delivery.live.InboxProjection
@@ -211,9 +213,12 @@ public class ChatInboxViewModel(
             val again = queue.resend(row.id)
             if (again is Outcome.Ok && again.value) return@action true
             if (queue.entries().none { it.id == row.id }) return@action true
+            val messageId =
+                services.chatGateway.facet<CorrelatedPromptGateway>()?.createPromptMessageId()
+                    ?: return@action false
             val fresh =
                 io.github.eslamasabry.oc.engine.delivery.queue.QueuedPrompt(
-                    id = services.chatGateway.createPromptMessageId().raw,
+                    id = messageId.raw,
                     profileId = entry.profileId,
                     sessionId = entry.sessionId,
                     text = entry.text,
