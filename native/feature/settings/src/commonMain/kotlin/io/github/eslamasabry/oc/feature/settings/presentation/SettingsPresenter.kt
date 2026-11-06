@@ -379,6 +379,8 @@ public class SettingsPresenter(
             accent = p.accent,
             motion = p.motion,
             textSize = p.textSize,
+            liveLook = if (p.liveBackground) p.liveStyle else null,
+            liveStrength = p.liveStrength,
             styles = f.surfaceStyles,
             heldBySaver = p.saver,
             systemMotionOff = f.systemMotionOff,
@@ -736,6 +738,19 @@ public class SettingsPresenter(
             write(PersonalChange.Accent(id), SettingsNote.AppearanceNotSaved)
     }
 
+    override fun onLiveLook(id: String?) {
+        val p = prefs.value
+        if (p.saver) return
+        val shown = if (p.liveBackground) p.liveStyle else null
+        if (shown != id) write(PersonalChange.LiveLook(id), SettingsNote.AppearanceNotSaved)
+    }
+
+    override fun onLiveStrength(strength: LiveStrength) {
+        val p = prefs.value
+        if (p.saver || p.liveStrength == strength) return
+        write(PersonalChange.LiveIntensity(strength), SettingsNote.AppearanceNotSaved)
+    }
+
     private fun ownKnobs(p: PersonalPrefs) =
         StyleResolver.spec(Style.entries.first { it.name == p.style.name }).tokens.defaults
 
@@ -932,6 +947,8 @@ public class SettingsPresenter(
                     is PersonalChange.Style -> AppearanceQuestion.Style
                     is PersonalChange.Motion -> AppearanceQuestion.Motion
                     is PersonalChange.TextSize -> AppearanceQuestion.Text
+                    is PersonalChange.LiveLook -> AppearanceQuestion.Look
+                    is PersonalChange.LiveIntensity -> AppearanceQuestion.Strength
                     else -> null
                 }?.let(::changedAppearance)
                 Unit

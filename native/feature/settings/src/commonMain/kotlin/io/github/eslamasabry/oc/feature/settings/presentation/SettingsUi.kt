@@ -88,7 +88,11 @@ public data class AppearanceUi(
     val accent: String? = null,
     val motion: MotionLevel = MotionLevel.Full,
     val textSize: AppTextSize = AppTextSize.Normal,
-    /** The five styles are listed only where the app draws them ([SettingsFacts.surfaceStyles]). */
+    /** Background › Look: the look shown as chosen, or null when the background is off (Dart `_lookBody`). */
+    val liveLook: String? = null,
+    /** Background › How strong? */
+    val liveStrength: LiveStrength = LiveStrength.Normal,
+    /** The six styles are listed only where the app draws them ([SettingsFacts.surfaceStyles]). */
     val styles: Boolean = true,
     /** Saver holds Style and Motion (B-KIT-008): shown, not changeable, with the reason. */
     val heldBySaver: Boolean = false,

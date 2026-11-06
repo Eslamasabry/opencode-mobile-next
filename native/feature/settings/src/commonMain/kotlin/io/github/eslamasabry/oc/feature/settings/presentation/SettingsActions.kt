@@ -91,6 +91,12 @@ public interface SettingsActions {
     /** Appearance › Accent: a swatch id, or null for Match theme (B-KIT-049). */
     public fun onAccent(id: String?) {}
 
+    /** Appearance › Background › Look: a look's id turns the background on with it; null is Off. */
+    public fun onLiveLook(id: String?) {}
+
+    /** Appearance › Background › How strong? */
+    public fun onLiveStrength(strength: LiveStrength) {}
+
     public fun onReadAloud(on: Boolean)
 
     public fun onNotification(change: NotificationChange)
