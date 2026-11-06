@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -11,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
@@ -19,7 +21,9 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitButton
-import io.github.eslamasabry.oc.ui.kit.action.KitCopyButton
+import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
+import io.github.eslamasabry.oc.ui.kit.action.rememberKitCopyAction
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.toShape
@@ -60,13 +64,25 @@ public fun KitRequestTargets(
             .padding(Space.S3.dp),
         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {
-        (if (expanded) targets else targets.take(TARGET_LIMIT)).forEach { target ->
-            KitMonoLtr(target.text, Modifier.fillMaxWidth(), TextTone.Primary)
+        // Copies every command or path exactly as asked (the full text, not the shown lines): a compact copy mark in
+        // the box's corner beside the first line, like a code block's, never a long button under the command.
+        val copy =
+            if (copyLabel != null && copiedLabel != null)
+                rememberKitCopyAction(copyLabel, copiedLabel, { targets.joinToString("\n") { it.text } })
+            else null
+        (if (expanded) targets else targets.take(TARGET_LIMIT)).forEachIndexed { index, target ->
+            if (index == 0 && copy != null)
+                Row(verticalAlignment = Alignment.Top) {
+                    KitMonoLtr(target.text, Modifier.weight(1f).padding(top = Space.S2.dp), TextTone.Primary)
+                    KitIconButton(
+                        icon = if (copy.label == copiedLabel) KitIcons.check else KitIcons.copy,
+                        label = copy.label,
+                        onClick = copy.onClick ?: {},
+                        tone = TextTone.Secondary,
+                    )
+                }
+            else KitMonoLtr(target.text, Modifier.fillMaxWidth(), TextTone.Primary)
             target.change?.let { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary) }
-        }
-        if (copyLabel != null && copiedLabel != null) {
-            // Copies every command or path exactly as asked (the full text, not the shown lines).
-            KitCopyButton(copyLabel, copiedLabel, { targets.joinToString("\n") { it.text } })
         }
         if (hidden > 0) {
             if (!expanded)
