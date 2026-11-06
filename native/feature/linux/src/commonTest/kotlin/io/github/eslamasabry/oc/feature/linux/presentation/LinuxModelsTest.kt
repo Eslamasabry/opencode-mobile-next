@@ -249,12 +249,13 @@ class LinuxPagesModelsTest {
     fun `B-LINUX-085 only a previewable port opens and a failed open is said`() = runTest {
         val opened = mutableListOf<String>()
         var opens = true
-        val host = FakeLinuxHost(answer = { out("::open 4097\n::open 5173\n") })
+        // 4098: the phone server's own port on native (ManagedLocalServer.BUILTIN_PORT), not Flutter's 4097.
+        val host = FakeLinuxHost(answer = { out("::open 4098\n::open 5173\n") })
         val model = LinuxPortsModel(LinuxManager(host, VirtualRetryWait), { url -> opened += url; opens }, Nav(), backgroundScope)
         model.shown(true)
         settle()
-        assertEquals(listOf(4097, 5173), model.state.value.ports.map { it.port })
-        model.preview(4097)
+        assertEquals(listOf(4098, 5173), model.state.value.ports.map { it.port })
+        model.preview(4098)
         assertEquals(emptyList(), opened, "the OpenCode server is not a web page")
         model.preview(5173)
         assertEquals(listOf("http://127.0.0.1:5173/"), opened)
@@ -275,14 +276,15 @@ class LinuxPagesModelsTest {
 
     @Test
     fun `B-LINUX-089 storage measures each cleanup and a confirmed cleanup says what it freed`() = runTest {
-        var cleaned = false
+        // Each cleanup is measured by its own receipt scan; only the apt cache has files here.
         val host =
             FakeLinuxHost(
                 answer = { script ->
                     when {
-                        script.contains("apt-get clean") -> { cleaned = true; out("") }
-                        script.contains("/var/cache/apt") && script.contains("oc_du /var/cache/apt\n") ->
-                            out(if (cleaned) "::du 0 /var/cache/apt\n" else "::du 2048 /var/cache/apt\n")
+                        script.contains("printf '::freed ") -> out("::freed 2048\n")
+                        script.contains("printf '::cleanup ") && script.contains("collect /var/cache/apt/archives") ->
+                            out("::cleanup storage-cleanup.Apt0000001 2048\n")
+                        script.contains("printf '::cleanup ") -> out("::cleanup storage-cleanup.Other00001 0\n")
                         else -> out("::du 10 /usr\n")
                     }
                 },

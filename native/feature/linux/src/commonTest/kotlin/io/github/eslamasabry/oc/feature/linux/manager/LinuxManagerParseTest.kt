@@ -33,9 +33,10 @@ class LinuxManagerParseTest {
         val ports =
             LinuxPortScan.parse(
                 "::n 51 5173\n::c 51 node /root/projects/app/node_modules/.bin/vite --port 5173\n" +
-                    "::open 5173\n::open 4097\n::open 3000",
+                    "::open 5173\n::open 4098\n::open 3000",
             )
-        assertEquals(listOf(3000, 4097, 5173), ports.map { it.port })
+        // The phone server's own port is the native default 4098 (ManagedLocalServer.BUILTIN_PORT), not Flutter's 4097.
+        assertEquals(listOf(3000, 4098, 5173), ports.map { it.port })
         assertNull(ports[0].owner)
         assertNull(ports[0].kind)
         assertTrue(ports[0].canPreview)
