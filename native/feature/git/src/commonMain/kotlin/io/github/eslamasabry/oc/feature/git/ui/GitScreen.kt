@@ -827,7 +827,7 @@ private fun RemotesSheet(state: GitUi, actions: GitActions) {
                     when {
                         busyReason != null -> KitEnabled.Disabled(busyReason)
                         !ready ->
-                            KitEnabled.Disabled(stringResource(Res.string.gitRemoteAddressLabel))
+                            KitEnabled.Disabled(stringResource(Res.string.gitRemoteAddNeedsFields))
                         else -> KitEnabled.Enabled
                     },
             ),

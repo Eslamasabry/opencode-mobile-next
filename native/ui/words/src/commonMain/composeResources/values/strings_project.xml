@@ -824,6 +824,7 @@
     <string name="gitRemoteAddTitle">Add a remote</string>
     <string name="gitRemoteNameLabel">Name</string>
     <string name="gitRemoteAddressLabel">Address</string>
+    <string name="gitRemoteAddNeedsFields">Type a valid name and address first</string>
     <string name="gitIdentityTitle">Your name on saves</string>
     <string name="gitHubSignedOutHint">Sign in once with a code. There is no token to paste.</string>
     <string name="gitHubSignInTitle">GitHub sign-in</string>

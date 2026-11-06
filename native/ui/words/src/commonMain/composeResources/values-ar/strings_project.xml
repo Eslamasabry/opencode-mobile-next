@@ -876,6 +876,7 @@
     <string name="gitRemoteAddTitle">إضافة مستودع بعيد</string>
     <string name="gitRemoteNameLabel">الاسم</string>
     <string name="gitRemoteAddressLabel">العنوان</string>
+    <string name="gitRemoteAddNeedsFields">اكتب اسمًا وعنوانًا صالحين أولًا</string>
     <string name="gitIdentityTitle">اسمك على الحفظ</string>
     <string name="gitHubSignedOutHint">سجّل الدخول مرة واحدة بالرمز. لا حاجة للصق رمز وصول.</string>
     <string name="gitHubSignInTitle">تسجيل الدخول إلى GitHub</string>
