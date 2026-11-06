@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.testTag
 import io.github.eslamasabry.oc.engine.transcript.ledger.StepState
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnStep
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnWork
+import io.github.eslamasabry.oc.engine.transcript.ledger.WorkCounts
 import io.github.eslamasabry.oc.engine.transcript.ledger.WorkLineState
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ConnectorSearchOutcome
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact
@@ -42,6 +43,15 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiGeneratedFile
 import io.github.eslamasabry.oc.ui.words.res.kitCodeShowAll
 import io.github.eslamasabry.oc.ui.words.res.kitToolOpenConversation
 import io.github.eslamasabry.oc.ui.words.res.kitWorkEarlierSteps
+import io.github.eslamasabry.oc.ui.words.res.liveStepDelegating
+import io.github.eslamasabry.oc.ui.words.res.liveStepEditing
+import io.github.eslamasabry.oc.ui.words.res.liveStepFetching
+import io.github.eslamasabry.oc.ui.words.res.liveStepListing
+import io.github.eslamasabry.oc.ui.words.res.liveStepReading
+import io.github.eslamasabry.oc.ui.words.res.liveStepRunning
+import io.github.eslamasabry.oc.ui.words.res.liveStepRunningCommand
+import io.github.eslamasabry.oc.ui.words.res.liveStepSearching
+import org.jetbrains.compose.resources.PluralStringResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -94,7 +104,8 @@ internal fun TurnWorkLine(
     val expanded = folds.open[key] ?: kitState.opensByDefault
     val summary = workSummary(work.counts)
     val now = work.now
-    val label = if (now != null && !expanded) nowWords(now) else summary
+    // The line names the real current step, with its count, while the turn runs; open or folded.
+    val label = if (now != null) nowWords(now, work.counts) else summary
     val hidden =
         if (work.state == WorkLineState.Running)
             (work.steps.size - KIT_WORK_STEP_CAP - (folds.earlier[key] ?: 0)).coerceAtLeast(0)
@@ -156,14 +167,43 @@ internal fun TurnWorkLine(
 }
 
 @Composable
-private fun nowWords(step: TurnStep): String {
-    val title = stepTitle(step.facts)
-    val subject = step.facts.subject
+private fun nowWords(step: TurnStep, counts: WorkCounts): String {
+    val f = step.facts
     // B-SEC-094 / R18: the subject is a command or path the agent wrote; it reads redacted like
     // every mono surface.
     val mask = rememberKitMask()
-    return if (subject.isNullOrBlank()) title else "$title · ${mask(subject)}"
+    // "Reading 6 files", "Editing 2 files": the count is the steps of that kind so far this turn
+    // (the engine counts steps, not distinct files; the words follow the step count).
+    return when (f.kind) {
+        ToolKind.Read,
+        ToolKind.Lsp -> liveStepCount(Res.plurals.liveStepReading, counts.read)
+        ToolKind.Grep,
+        ToolKind.Glob,
+        ToolKind.ConnectorSearch -> liveStepCount(Res.plurals.liveStepSearching, counts.searched)
+        ToolKind.List -> liveStepCount(Res.plurals.liveStepListing, counts.listed)
+        ToolKind.Edit,
+        ToolKind.Write,
+        ToolKind.Patch -> liveStepCount(Res.plurals.liveStepEditing, counts.edited)
+        ToolKind.WebFetch,
+        ToolKind.WebSearch -> liveStepCount(Res.plurals.liveStepFetching, counts.fetched)
+        ToolKind.Task,
+        ToolKind.AgentMessage -> liveStepCount(Res.plurals.liveStepDelegating, counts.delegated)
+        ToolKind.Shell -> {
+            val command = f.subject?.lineSequence()?.firstOrNull { it.isNotBlank() }?.trim()
+            if (command.isNullOrBlank()) stringResource(Res.string.liveStepRunningCommand)
+            else stringResource(Res.string.liveStepRunning, mask(command))
+        }
+        else -> {
+            val title = stepTitle(f)
+            val subject = f.subject
+            if (subject.isNullOrBlank()) title else "$title · ${mask(subject)}"
+        }
+    }
 }
+
+@Composable
+private fun liveStepCount(res: PluralStringResource, count: Int): String =
+    pluralStringResource(res, count.coerceAtLeast(1), count.coerceAtLeast(1))
 
 @Composable
 private fun StepRow(

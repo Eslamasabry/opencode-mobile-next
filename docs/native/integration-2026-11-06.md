@@ -34,3 +34,7 @@ Automatic merges also preserve Settings in the home header, server transport rev
 ## 2. upg-newchat
 
 One conflict: `NewConversationScreen.kt`. Adopt the upgrade's prompt bubble with Try again/Edit, starters and one growing agent/model sheet; keep its three agent/model/project chips in the keyboard-safe footer from N-03. Remove the obsolete fourth Modes chip and use the shared sheet's Build/Plan control. Preserve the blocked reason, fresh blank entry rule, explicit codecs and send lifetime protections from merge 1. Reviewed both histories, formatted the resolved file, checked the diff; no compilation or tests.
+
+## 3. upg-liveline
+
+No textual conflicts. Retain current-step counts, gentle line transitions, accessibility announcements and plain error states. Move the new plural-resource helper to a composable top-level function so its callers use the resource API from a composable context. No existing preview-fix path is removed. History/source and formatter/diff review only; no compilation or tests.

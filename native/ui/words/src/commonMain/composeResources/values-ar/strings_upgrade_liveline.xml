@@ -1,0 +1,54 @@
+<resources>
+    <plurals name="liveStepReading">
+        <item quantity="zero">جارٍ قراءة %1$d ملفًا</item>
+        <item quantity="one">جارٍ قراءة ملف</item>
+        <item quantity="two">جارٍ قراءة ملفين</item>
+        <item quantity="few">جارٍ قراءة %1$d ملفًا</item>
+        <item quantity="many">جارٍ قراءة %1$d ملفًا</item>
+        <item quantity="other">جارٍ قراءة %1$d ملفًا</item>
+    </plurals>
+    <plurals name="liveStepSearching">
+        <item quantity="zero">جارٍ البحث في المشروع، %1$d عملية بحث</item>
+        <item quantity="one">جارٍ البحث في المشروع</item>
+        <item quantity="two">جارٍ البحث في المشروع، بحثان</item>
+        <item quantity="few">جارٍ البحث في المشروع، %1$d عملية بحث</item>
+        <item quantity="many">جارٍ البحث في المشروع، %1$d عملية بحث</item>
+        <item quantity="other">جارٍ البحث في المشروع، %1$d عملية بحث</item>
+    </plurals>
+    <plurals name="liveStepListing">
+        <item quantity="zero">جارٍ استعراض %1$d مجلدًا</item>
+        <item quantity="one">جارٍ استعراض مجلد</item>
+        <item quantity="two">جارٍ استعراض مجلدين</item>
+        <item quantity="few">جارٍ استعراض %1$d مجلدًا</item>
+        <item quantity="many">جارٍ استعراض %1$d مجلدًا</item>
+        <item quantity="other">جارٍ استعراض %1$d مجلدًا</item>
+    </plurals>
+    <plurals name="liveStepEditing">
+        <item quantity="zero">جارٍ تعديل %1$d ملفًا</item>
+        <item quantity="one">جارٍ تعديل ملف</item>
+        <item quantity="two">جارٍ تعديل ملفين</item>
+        <item quantity="few">جارٍ تعديل %1$d ملفًا</item>
+        <item quantity="many">جارٍ تعديل %1$d ملفًا</item>
+        <item quantity="other">جارٍ تعديل %1$d ملفًا</item>
+    </plurals>
+    <plurals name="liveStepFetching">
+        <item quantity="zero">جارٍ جلب %1$d صفحة</item>
+        <item quantity="one">جارٍ جلب صفحة</item>
+        <item quantity="two">جارٍ جلب صفحتين</item>
+        <item quantity="few">جارٍ جلب %1$d صفحة</item>
+        <item quantity="many">جارٍ جلب %1$d صفحة</item>
+        <item quantity="other">جارٍ جلب %1$d صفحة</item>
+    </plurals>
+    <plurals name="liveStepDelegating">
+        <item quantity="zero">جارٍ تسليم %1$d مهمة</item>
+        <item quantity="one">جارٍ تسليم مهمة</item>
+        <item quantity="two">جارٍ تسليم مهمتين</item>
+        <item quantity="few">جارٍ تسليم %1$d مهمة</item>
+        <item quantity="many">جارٍ تسليم %1$d مهمة</item>
+        <item quantity="other">جارٍ تسليم %1$d مهمة</item>
+    </plurals>
+    <string name="liveStepRunning">جارٍ تشغيل %1$s</string>
+    <string name="liveStepRunningCommand">جارٍ تشغيل أمر</string>
+    <string name="liveFailedStillWorking">الوكيل ما زال يعمل. لا تحتاج إلى فعل شيء الآن.</string>
+    <string name="liveFailedStopped">توقف الوكيل. أرسل رسالة ليكمل من حيث توقف.</string>
+</resources>

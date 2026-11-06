@@ -21,8 +21,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.collapse
 import androidx.compose.ui.semantics.expand
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
@@ -41,6 +43,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
+import io.github.eslamasabry.oc.ui.kit.motion.KitSwap
 import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -149,7 +152,12 @@ public fun KitWorkLine(
                                 )
                         }
                     }
-                    KitText(label, Modifier.weight(1f), role = TypeRole.Mono, maxLines = 2)
+                    KitText(
+                        label,
+                        Modifier.weight(1f).liveLabel(state),
+                        role = TypeRole.Mono,
+                        maxLines = 2,
+                    )
                     KitText(
                         stringResource(
                                 if (expanded) Res.string.signalHide else Res.string.signalShow
@@ -194,14 +202,19 @@ public fun KitWorkLine(
                         KitWorkState.Stopped -> KitIcon(KitIcons.stopCircle, Modifier.size(iconSize), tone = TextTone.Secondary)
                         KitWorkState.Done -> KitIcon(KitIcons.fileText, Modifier.size(iconSize), tone = TextTone.Secondary)
                     }
-                    KitText(
-                        label,
-                        Modifier.weight(1f),
-                        role = TypeRole.Secondary,
-                        tone = if (state == KitWorkState.Running) TextTone.Primary else TextTone.Secondary,
-                        kind = KitTextKind.Reading,
-                        maxLines = 1,
-                    )
+                    // One live line: when the step changes the new words fade in over the old (QUICK; instant
+                    // under reduced motion). While running it is one polite live region, so the screen reader
+                    // says the new step once, never per token.
+                    KitSwap(label, Modifier.weight(1f).liveLabel(state), alignment = Alignment.CenterStart) { shown ->
+                        KitText(
+                            shown,
+                            Modifier.fillMaxWidth(),
+                            role = TypeRole.Secondary,
+                            tone = if (state == KitWorkState.Running) TextTone.Primary else TextTone.Secondary,
+                            kind = KitTextKind.Reading,
+                            maxLines = 1,
+                        )
+                    }
                     KitIcon(if (expanded) KitIcons.chevronUp else KitIcons.chevronDown, Modifier.size(iconSize), tone = TextTone.Secondary)
                 }
             }
@@ -215,3 +228,7 @@ public fun KitWorkLine(
         }
     }
 }
+
+/** A running line is a polite live region (the step changed); a settled one is just text. */
+private fun Modifier.liveLabel(state: KitWorkState): Modifier =
+    if (state == KitWorkState.Running) semantics { liveRegion = LiveRegionMode.Polite } else this
