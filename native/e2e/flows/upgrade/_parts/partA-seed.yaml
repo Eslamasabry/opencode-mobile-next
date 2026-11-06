@@ -220,8 +220,49 @@ tags: [linux-setup]
     timeout: 120000
 - back
 
-# NEEDS-HOOK: place-widget: put the Conversations widget on the launcher home screen (05 §10.4 does it with the
-#   UIAutomator script e2e/seed/surfaces.py); without it Part C's widget check is skipped.
+# The voice pack, set up from the composer's mic as E2E-13 does (real download, pinned by hash in the app).
+# adb: permission
+- runScript:
+    file: ../../_hooks/adb.js
+    env:
+      HOOK: permission
+      ARGS: '{"perm": "RECORD_AUDIO", "grant": true}'
+- tapOn: "Upgrade pin two"  # literal-ok: title seeded through the fixture above
+- tapOn: ${output.s.kitComposerVoice}
+- extendedWaitUntil:
+    visible: ${output.s.voiceAutoSetupTitle}
+    timeout: 30000
+- tapOn: ${output.re.voiceAutoSetupDownload}
+- repeat:
+    times: 3
+    while:
+      notVisible: ${output.s.kitVoiceListening}
+    commands:
+      - extendedWaitUntil:
+          visible: ${output.s.kitVoiceListening}
+          timeout: 300000
+          optional: true
+- tapOn: ${output.s.kitVoiceDone}
+- back
+
+# Both Quick Settings tiles (the upgrade gate checks they are still placed afterwards).
+# adb: qs-tile
+- runScript:
+    file: ../../_hooks/adb.js
+    env:
+      HOOK: qs-tile
+      ARGS: '{"action": "add", "component": ".AttentionTileService"}'
+# adb: qs-tile
+- runScript:
+    file: ../../_hooks/adb.js
+    env:
+      HOOK: qs-tile
+      ARGS: '{"action": "add", "component": ".PauseTileService"}'
+
+# The Conversations widget on the launcher home screen. Optional steps: when the launcher differs, Part A goes on and
+# the upgrade gate's widget check fails, naming the missing widget.
+- runFlow: ../../_sub/place-widget.yaml
+- launchApp
 # The two pinned conversations above are the app's launcher shortcuts.
 
 # Arabic last.

@@ -14,6 +14,11 @@ tags: [parity, slice-6, g6, upgrade, linux-setup]
 # Snapshot base, not flutter-final-seeded: Part A is the seed and must itself be proven on Flutter (step 2), and a
 # snapshot named for one app is not loaded for the other (run.py loads "<app>-<snapshot>"). Part A sets up built-in
 # Linux, so this flow is tagged linux-setup (waits up to 300 s).
+# The upgrade gate (native/tool/qa/upgrade_e2e.sh, E00-S09) drives the bridge: it restores the snapshot
+# flutter-2.1.4-seeded when the AVD has it and passes SEEDED=true, so Part A is not repeated; otherwise Part A seeds a
+# wiped AVD and the gate saves that snapshot just before the native install. The install-native hook writes the
+# OS-held state (grants, channels, shortcuts, widgets, tiles, alarms, rootfs inode count, voice files) before the
+# install, the upgrade-capture hook after the first native launch; the gate compares them on the host.
 
 # S1 Part A on the Flutter app: connect FX-OC2 with a password; set Arabic and Smallest text, style Soft with a tweak;
 #    turn on finished-reply notifications; save a draft with an attachment, a saved prompt, a stash, and an offline
@@ -22,7 +27,11 @@ tags: [parity, slice-6, g6, upgrade, linux-setup]
 # S1 []
 - runFlow:
     file: _parts/partA-seed.yaml
+    when:
+      true: ${SEEDED != 'true'}
     label: "S1 Part A: seed the Flutter app"
+# Part C names its screenshots after the app it is judging.
+- evalScript: ${output.phase = 'flutter'}
 # confirm: "a saved prompt" and "a stash" are one feature on Flutter R (Saved prompts, filled by "Save prompt for
 #   later"); Part A makes one. The widget needs a place-widget hook (see Part A).
 
@@ -47,11 +56,13 @@ tags: [parity, slice-6, g6, upgrade, linux-setup]
           env:
             HOOK: install-native
       - assertTrue: ${output.hook.installed == true}
+      - evalScript: ${output.phase = 'native'}
 
 # S10 runs here, before S4: it needs the very first launch after the install.
 # S10 [adb] kill the native app during the first launch of a fresh upgrade and relaunch: the migration resumes,
 #     nothing is duplicated, and the Flutter source data is still present until verified. [B-MIGR-010]
 # S10 [B-MIGR-010]
+# adb: upgrade-capture
 - runFlow:
     when:
       true: ${APP == 'native'}
@@ -63,6 +74,13 @@ tags: [parity, slice-6, g6, upgrade, linux-setup]
       - extendedWaitUntil:
           visible: ${output.s.x_ar_chats_home}
           timeout: 60000
+      # adb: upgrade-capture
+      - runScript:
+          file: ../_hooks/adb.js
+          env:
+            HOOK: upgrade-capture
+            ARGS: '{"phase": "after-migration"}'
+      - assertTrue: ${output.hook.captured != null}
 # Nothing duplicated: Part C (S4) checks the pinned rows appear once.
 # UNIT-ONLY: the Flutter source data stays until verified (MigrationJournal tests; the J2 journey checks files as
 #   root).
@@ -128,6 +146,20 @@ tags: [parity, slice-6, g6, upgrade, linux-setup]
       - assertTrue: ${output.fxr.count == 1}
       - back
 
+# The upgrade gate's own Part C checks (E00-S09); Part C ran them on Flutter in Part B first.
+- runFlow:
+    when:
+      true: ${APP == 'native'}
+    label: "UC-chat-messages a seeded conversation shows its earlier messages"
+    commands:
+      - assertTrue: ${output.pc.chatMessages == true}
+- runFlow:
+    when:
+      true: ${APP == 'native'}
+    label: "UC-send-prompt a new prompt sends and its reply arrives"
+    commands:
+      - assertTrue: ${output.pc.sendPrompt == true}
+
 # S8 Part C: the in-app Linux and its project and server are there without reinstall; the server starts.
 #    [B-MIGR-008]
 # S8 [B-MIGR-008]
@@ -137,6 +169,18 @@ tags: [parity, slice-6, g6, upgrade, linux-setup]
     label: "S8 Linux, project and server kept; the server starts [B-MIGR-008]"
     commands:
       - assertTrue: ${output.pc.S8 == true}
+- runFlow:
+    when:
+      true: ${APP == 'native'}
+    label: "UC-terminal pwd && ls runs in the seeded project's terminal"
+    commands:
+      - assertTrue: ${output.pc.terminal == true}
+- runFlow:
+    when:
+      true: ${APP == 'native'}
+    label: "UC-voice-ready the voice pack shows ready, not downloaded again"
+    commands:
+      - assertTrue: ${output.pc.voiceReady == true}
 
 # S9 Part C: attachments, voice model and reports from the old documents directory are readable and not
 #    re-downloaded. [B-MIGR-009]
@@ -170,6 +214,12 @@ tags: [parity, slice-6, g6, upgrade, linux-setup]
     label: "S12 schedule fires, shortcuts republished [B-MIGR-013]"
     commands:
       - assertTrue: ${output.pc.S12 == true}
+- runFlow:
+    when:
+      true: ${APP == 'native'}
+    label: "UC-schedule-listed the scheduled prompt is still listed"
+    commands:
+      - assertTrue: ${output.pc.scheduleListed == true}
 # UNIT-ONLY: the Quick Settings tile is republished (TileService request is not observable from Maestro).
 
 # S13 Open Settings > About: a new native release notice still appears through the in-app update line and opens the

@@ -12,6 +12,7 @@ appId: ${APP_ID}
     visible: ${output.s.x_ar_chats_home}
     timeout: 60000
 - assertNotVisible: ${output.s.welcomeComputerConnect}
+- takeScreenshot: ${(output.phase || 'flutter') + '-conversations'}
 - evalScript: ${output.pc.S4 = true}
 
 # Language Arabic as set; switch to English for the checks below (restored at the end).
@@ -80,6 +81,7 @@ appId: ${APP_ID}
 - assertNotVisible: ${output.s.e7SetupServerPassword}
 - assertNotVisible: ${output.c.e7SetupCertificate}
 - assertNotVisible: ${output.s.e7ConnectionFailure20}
+- takeScreenshot: ${(output.phase || 'flutter') + '-servers'}
 - back
 - back
 - evalScript: ${output.pc.S6 = true}
@@ -97,6 +99,10 @@ appId: ${APP_ID}
     visible: "upgrade draft text"  # literal-ok: the draft typed in Part A
     timeout: 30000
 - assertVisible: ${'.*' + output.fx.fileNotes.replace(/\./g, '\\.') + '.*'}  # literal-ok: built from fixture data (the attachment chip)
+# The conversation still shows its earlier messages: the prompt Part A sent here.
+- assertVisible: ".*e2e:ask-shell ls.*"  # literal-ok: the prompt Part A sent in this conversation
+- takeScreenshot: ${(output.phase || 'flutter') + '-chat'}
+- evalScript: ${output.pc.chatMessages = true}
 - tapOn: ${output.s.kitComposerTools}
 - tapOn: ${output.s.promptStashTitle}
 - assertVisible: ".*upgrade saved prompt.*"  # literal-ok: the saved prompt from Part A
@@ -119,6 +125,22 @@ appId: ${APP_ID}
 - back
 - evalScript: ${output.pc.S7 = true}
 
+# A new prompt sends and its reply arrives. The prompt names the app under test, so Part B's reply never counts here.
+- tapOn: "Upgrade pin one"  # literal-ok: title seeded in Part A
+- extendedWaitUntil:
+    visible: ${output.s.kitComposerField}
+    timeout: 30000
+- runFlow:
+    file: ../../_sub/send-prompt.yaml
+    env:
+      PROMPT: ${'e2e:echo sent on ' + (output.phase || 'flutter')}  # literal-ok: stub-model magic prompt
+- extendedWaitUntil:
+    visible: ${'.*ECHO sent on ' + (output.phase || 'flutter') + '.*'}  # literal-ok: the stub model's reply
+    timeout: 60000
+- takeScreenshot: ${(output.phase || 'flutter') + '-send'}
+- back
+- evalScript: ${output.pc.sendPrompt = true}
+
 # Built-in Linux, project app and its server are there without reinstall; the server starts.
 - runFlow: ../../_sub/open-settings.yaml
 - scrollUntilVisible:
@@ -128,12 +150,79 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: ${output.s.thisPhoneAnswerRunning}
     timeout: 60000
+- takeScreenshot: ${(output.phase || 'flutter') + '-linux'}
 - back
 - back
 - tapOn: ${output.s.chatsHomeAllProjects}
 - assertVisible: ${output.fx.projectApp}
 - back
 - evalScript: ${output.pc.S8 = true}
+
+# `pwd && ls` in the project's terminal on this phone (the E2E-16 path), then back to Conversations.
+- tapOn: ${output.s.shellTabFiles}
+- tapOn: ${output.s.libraryTerminalTitle}
+- runFlow:
+    when:
+      visible: ${output.s.terminalScreenUsePhone}
+    commands:
+      - tapOn: ${output.s.terminalScreenUsePhone}
+- tapOn: ${output.s.localTerminalNewShell}
+- extendedWaitUntil:
+    visible: ${output.s.localTerminalSemantics}
+    timeout: 60000
+- tapOn: ${output.s.localTerminalSemantics}
+- inputText: "pwd && ls"  # literal-ok: the shell command under test
+- pressKey: Enter
+# confirm: the terminal exposes its screen text to accessibility, on Flutter R and on native.
+- extendedWaitUntil:
+    visible: ${'(?s).*/' + output.fx.projectApp + '\\b.*'}  # literal-ok: pwd prints the project folder
+    timeout: 30000
+- takeScreenshot: ${(output.phase || 'flutter') + '-terminal'}
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+- evalScript: ${output.pc.terminal = true}
+
+# The voice pack Part A set up is ready: Voice typing offers to remove it, not to download it.
+- runFlow: ../../_sub/open-settings.yaml
+- runFlow:
+    file: ../../_sub/settings-search.yaml
+    env:
+      QUERY: ${output.t.voiceComponentTitle}
+- tapOn:
+    text: ${output.s.voiceComponentTitle}
+    index: 1
+# confirm: the installed Voice typing item shows its remove action (and no download) once the pack is ready.
+- extendedWaitUntil:
+    visible: ${output.s.voiceComponentRemove}
+    timeout: 15000
+- assertNotVisible: ${output.re.voiceAutoSetupDownload}
+- takeScreenshot: ${(output.phase || 'flutter') + '-voice'}
+- evalScript: ${output.pc.voiceReady = true}
+
+# The scheduled prompt is still listed.
+- stopApp
+- launchApp
+- runFlow: ../../_sub/open-settings.yaml
+- runFlow:
+    file: ../../_sub/settings-search.yaml
+    env:
+      QUERY: ${output.t.scheduleTitle}
+- tapOn:
+    text: ${output.s.scheduleTitle}
+    index: 1
+- extendedWaitUntil:
+    visible: ".*e2e:echo daily upgrade.*"  # literal-ok: the schedule Part A made
+    timeout: 15000
+- takeScreenshot: ${(output.phase || 'flutter') + '-schedule'}
+- evalScript: ${output.pc.scheduleListed = true}
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
 
 # The draft's attachment from the old documents directory opens.
 - tapOn: "Upgrade draft"  # literal-ok: title seeded in Part A
