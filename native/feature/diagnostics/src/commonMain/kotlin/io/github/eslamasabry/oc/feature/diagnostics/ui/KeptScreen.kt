@@ -276,6 +276,17 @@ private fun ErrorsSection(state: KeptUi, actions: KeptActions) {
                 }
             }
         }
+    else {
+        // Hosts without structured rows still expose their redacted log in place.
+        val lines = remember(state.errorsKept) {
+            actions.errorLogText().lines().filter { it.isNotBlank() }
+        }
+        KitDetailsFold(
+            stringResource(Res.string.kitDetails),
+            stringResource(Res.string.kitCopyDetails),
+            notes = lines,
+        )
+    }
 }
 
 /** The plain title of a kept error, chosen by where it came from; the technical text stays under Details. */

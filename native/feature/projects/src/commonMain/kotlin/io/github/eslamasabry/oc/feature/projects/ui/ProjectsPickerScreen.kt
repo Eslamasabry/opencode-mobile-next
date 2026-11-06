@@ -38,6 +38,7 @@ import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitInputOperationDialog
+import io.github.eslamasabry.oc.ui.kit.modal.KitNewProjectDialog
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
@@ -76,11 +77,8 @@ import io.github.eslamasabry.oc.ui.words.res.p12PhoneFolderUnavailable
 import io.github.eslamasabry.oc.ui.words.res.p12ProjectsLoadFailed
 import io.github.eslamasabry.oc.ui.words.res.p12ProjectsOnServer
 import io.github.eslamasabry.oc.ui.words.res.p12ProjectsTitle
-import io.github.eslamasabry.oc.ui.words.res.projectFolderCreate
-import io.github.eslamasabry.oc.ui.words.res.projectFolderCreateAction
 import io.github.eslamasabry.oc.ui.words.res.projectFolderCreateFailedTitle
 import io.github.eslamasabry.oc.ui.words.res.projectFolderCreateHelper
-import io.github.eslamasabry.oc.ui.words.res.projectFolderNameLabel
 import io.github.eslamasabry.oc.ui.words.res.projectFolderNewProject
 import io.github.eslamasabry.oc.ui.words.res.projectFolderOpen
 import io.github.eslamasabry.oc.ui.words.res.projectFolderOpenAction
@@ -508,15 +506,8 @@ private fun CreateDialog(state: ProjectsPickerUi, actions: ProjectsPickerActions
     val segment = stringResource(Res.string.stateFolderNameSegment)
     val characters = stringResource(Res.string.stateFolderNameCharacters)
     val failed = stringResource(Res.string.projectFolderCreateFailedTitle)
-    KitInputOperationDialog(
-        visible = true,
-        title = stringResource(Res.string.projectFolderCreate),
-        fieldLabel = stringResource(Res.string.projectFolderNameLabel),
-        confirmLabel = stringResource(Res.string.projectFolderCreateAction),
-        cancelLabel = stringResource(Res.string.projectFolderCancel),
+    KitNewProjectDialog(
         initial = state.createName,
-        hint = stringResource(Res.string.projectFolderNameHint),
-        helper = stringResource(Res.string.projectFolderCreateHelper, "/root/projects"),
         working = state.creatingFolder,
         error = state.folderFailure?.let { failed },
         validate = { name ->

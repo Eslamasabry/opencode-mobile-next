@@ -139,6 +139,7 @@ public fun ConnectionFormScreen(state: ConnectionFormUi, actions: ConnectionForm
                                         else Res.string.monitor40Sending
                                     ),
                             modifier = Modifier.weight(1f),
+                            scrollBody = true,
                         ) {
                             KitForm(
                                 fields,

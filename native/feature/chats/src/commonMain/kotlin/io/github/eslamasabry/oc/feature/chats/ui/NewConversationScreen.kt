@@ -50,7 +50,7 @@ import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipWrap
-import io.github.eslamasabry.oc.ui.kit.modal.KitInputOperationDialog
+import io.github.eslamasabry.oc.ui.kit.modal.KitNewProjectDialog
 import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
@@ -800,15 +800,8 @@ private fun NewProjectDialog(state: NewConversationUi, actions: NewConversationA
     val empty = stringResource(Res.string.stateFolderNameEmpty)
     val segment = stringResource(Res.string.stateFolderNameSegment)
     val characters = stringResource(Res.string.stateFolderNameCharacters)
-    KitInputOperationDialog(
-        visible = true,
-        title = stringResource(Res.string.projectFolderCreate),
-        fieldLabel = stringResource(Res.string.projectFolderNameLabel),
-        confirmLabel = stringResource(Res.string.projectFolderCreateAction),
-        cancelLabel = stringResource(Res.string.projectFolderCancel),
+    KitNewProjectDialog(
         initial = "",
-        hint = stringResource(Res.string.projectFolderNameHint),
-        helper = stringResource(Res.string.projectFolderCreateHelper, "/root/projects"),
         working = state.creatingProject,
         validate = { name ->
             when (io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderName.problem(name)) {

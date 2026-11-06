@@ -39,8 +39,9 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
  * shows a refused answer above the answers (400 keeps the form open). [sending] ("Sending your answers") shows Send
  * working and is the reason Decline waits.
  *
- * Height is the host sheet's call (content height for ≤ 4 declared fields, full height otherwise: the engine's
- * `FormRules.prefersFullHeight`); this body fills what it is given and keeps the answers in sight.
+ * Height and scrolling belong to the host sheet (content height for ≤ 4 declared fields, full height otherwise:
+ * the engine's `FormRules.prefersFullHeight`). A full-page host can set [scrollBody] to keep its answers pinned while
+ * the fields scroll; leave it false inside `KitSheet`, which already scrolls its body.
  */
 @Composable
 public fun KitFormSheetBody(
@@ -54,11 +55,13 @@ public fun KitFormSheetBody(
     blockedReason: String? = null,
     error: String? = null,
     sending: String? = null,
+    scrollBody: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
         Column(
-            Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
+            if (scrollBody) Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())
+            else Modifier,
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
             KitText(

@@ -47,7 +47,6 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
 import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
-import io.github.eslamasabry.oc.ui.kit.modal.KitInputDialog
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.modal.KitUndoBar
@@ -96,10 +95,7 @@ import io.github.eslamasabry.oc.ui.words.res.p12MoreFor
 import io.github.eslamasabry.oc.ui.words.res.p12NoServerBody
 import io.github.eslamasabry.oc.ui.words.res.p12NoServerTitle
 import io.github.eslamasabry.oc.ui.words.res.p12Rename
-import io.github.eslamasabry.oc.ui.words.res.p12RenameEmpty
 import io.github.eslamasabry.oc.ui.words.res.p12RenameFailed
-import io.github.eslamasabry.oc.ui.words.res.p12RenameField
-import io.github.eslamasabry.oc.ui.words.res.p12RenameTitle
 import io.github.eslamasabry.oc.ui.words.res.p12Select
 import io.github.eslamasabry.oc.ui.words.res.p12SelectCancel
 import io.github.eslamasabry.oc.ui.words.res.serversTitle
@@ -318,7 +314,7 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                 }
             }
         }
-        RenameDialog(state, actions)
+        ConversationRenameDialog(state.renaming, actions::finishRename)
         ContinueHereDialog(state, actions)
     }
 }
@@ -346,23 +342,6 @@ internal fun AllConversationsPagingTail(state: AllConversationsUi, onLoadMore: (
             )
         }
     }
-}
-
-/** Inside the KitScreen body, so the dialog finds the screen's KitSheetHost. */
-@Composable
-private fun RenameDialog(state: AllConversationsUi, actions: ChatsAllActions) {
-    val renaming = state.renaming
-    val emptyTitle = stringResource(Res.string.p12RenameEmpty)
-    KitInputDialog(
-        visible = renaming != null,
-        title = stringResource(Res.string.p12RenameTitle),
-        fieldLabel = stringResource(Res.string.p12RenameField),
-        confirmLabel = stringResource(Res.string.p12Rename),
-        initial = renaming?.initial.orEmpty(),
-        validate = { if (it.isBlank()) emptyTitle else null },
-        operationKey = renaming?.key,
-        onResult = actions::finishRename,
-    )
 }
 
 /** "Continue here" (Flutter `global-sessions-continue-here-sheet`): names both projects; the move runs inside it. */
