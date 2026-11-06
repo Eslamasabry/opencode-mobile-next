@@ -32,4 +32,6 @@
     <string name="hostSecStepLinger">شغّل الأمر الأول مرة واحدة بصلاحية المسؤول. يقرأ المثبّت قيمة Linger ويتطلب yes ثم يتحقّق من عمل systemctl --user. لا يفعّل linger بنفسه ولا يطلب كلمة مرور sudo.</string>
     <string name="hostSecStepPolicy">أبقِ جلسة مسؤول مفتوحة. استبدل PHONE_TAILSCALE_IP وMACHINE_TAILSCALE_IP بالعنوانين الرقميين الفعليين. تحقّق قبل إعادة التحميل؛ فقد تتجاوز تعليمات SSH السابقة هذا الملف. يفحص المثبّت تحويل TCP المحلي وتعطيل التحويل العكسي وتحويل المقابس وأجهزة الأنفاق، وقيم UseDNS no وDisableForwarding no وتسجيل الدخول بالمفتاح العام ومسار authorized_keys المعتاد. لا يثبت تحليل الإعدادات أن الخادم العامل حمّلها؛ تحقّق من إعادة التحميل بنفسك.</string>
     <string name="hostSecStepIdentity">قارن الناتج مع التطبيق في جلسة مستقلة على الجهاز قبل الوثوق به. يحسب التطبيق بصمة Ed25519 SHA256 ويمنع تغييرات الهوية اللاحقة.</string>
+    <string name="hostSecRevokeQuestion">إلغاء وصول هذا الهاتف وإزالة الجهاز؟</string>
+    <string name="hostSecForgetQuestion">نسيان بيانات الجهاز المحلية؟</string>
 </resources>

@@ -32,4 +32,6 @@
     <string name="hostSecStepLinger">Run the first command once with administrator access. The installer reads Linger and requires yes, then checks that systemctl --user works. It never enables linger itself or requests a sudo password.</string>
     <string name="hostSecStepPolicy">Keep an administrator session open. Replace PHONE_TAILSCALE_IP and MACHINE_TAILSCALE_IP with the actual numeric addresses. Validate before reload. Earlier SSH directives may override this file. The installer checks local TCP forwarding, disabled reverse and socket forwarding, no tunnel devices, UseDNS no, DisableForwarding no, public-key login and the standard authorized_keys path. Parsing settings does not prove the running daemon loaded them; verify the reload yourself.</string>
     <string name="hostSecStepIdentity">Compare this output with the app in an independent machine session before trusting it. The app computes the Ed25519 SHA256 fingerprint and blocks later identity changes.</string>
+    <string name="hostSecRevokeQuestion">Revoke this phone and remove the host?</string>
+    <string name="hostSecForgetQuestion">Forget local host data?</string>
 </resources>

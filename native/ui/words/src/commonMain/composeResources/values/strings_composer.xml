@@ -230,7 +230,7 @@
     <string name="voiceSetupDone">Done</string>
     <string name="modelPickerThinkingChip">Thinking: %1$s</string>
     <string name="modelPickerAgentChip">Agent: %1$s</string>
-    <string name="voiceAutoSetupTitle">Voice typing</string>
+    <string name="voiceAutoSetupTitle">Set up voice typing?</string>
     <string name="voiceAutoSetupChecking">Checking what this phone can run</string>
     <string name="voiceAutoSetupOffer">Speak instead of typing. Speech turns into text on this phone, even offline, and audio never leaves it. It needs a one-time download.</string>
     <string name="voiceAutoSetupPicked">%1$s speech model, picked for this phone's memory</string>

@@ -27,8 +27,8 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
@@ -43,9 +43,9 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
-import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
@@ -62,8 +62,8 @@ import io.github.eslamasabry.oc.ui.words.res.kitConfirmTypeName
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmTypeNameReason
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
-import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWorking
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
+import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWorking
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -102,9 +102,9 @@ public data class KitConfirmSpec(
 public object ConfirmRules {
     private val vague = setOf("ok", "yes", "continue", "confirm")
 
-    /** The title is a question, in English or Arabic. */
+    /** The title is a question, in the active language. */
     public fun titleIsQuestion(title: String): Boolean =
-        title.trimEnd().let { it.endsWith("?") || it.endsWith("؟") }
+        title.trimEnd().let { it.endsWith("?") || it.endsWith("؟") || it.endsWith("？") }
 
     /** The confirm names the act. */
     public fun labelNamesTheAct(label: String): Boolean = label.trim().lowercase() !in vague
@@ -129,8 +129,8 @@ public object ConfirmRules {
 /**
  * A confirmation as screen state (Dart `showKitConfirm`, `KitConfirmSheet`, `KitConsequences`; plan
  * 06 §7.4): shown while [spec] is non-null. A sheet on compact windows, a 480 dp dialog on wide
- * ones. The header mark tile above the question, its body, the consequences, the typed-name field when
- * asked, then the confirm with a secondary Cancel (Keep running for a stop, Keep editing for a
+ * ones. The header mark tile above the question, its body, the consequences, the typed-name field
+ * when asked, then the confirm with a secondary Cancel (Keep running for a stop, Keep editing for a
  * discard). Back, the scrim and Cancel call [onCancel]. A stop, destructive or discard confirm
  * plays `Commit` through the kit seam. Works at 200 % text: everything scrolls and the actions
  * stack.
@@ -152,7 +152,7 @@ public fun KitConfirm(
 ) {
     if (spec != null) {
         kitAssert(ConfirmRules.titleIsQuestion(spec.title)) {
-            "KitConfirm: the title is a question ending in ? or ؟ (B-KIT-015)"
+            "KitConfirm: the title is a question ending in ?, ؟ or ？ (B-KIT-015)"
         }
         kitAssert(ConfirmRules.labelNamesTheAct(spec.confirmLabel)) {
             "KitConfirm: the confirm names the act, not OK/Yes/Continue/Confirm"
@@ -192,15 +192,18 @@ public fun KitConfirm(
                     }
                     else -> false
                 }
-            },
+            }
         ) {
             Box(Modifier.testTag("kit-confirm-mark")) {
-                IconTile(shown.icon ?: when (shown.kind) {
-                    KitConfirmKind.Neutral -> KitIcons.info
-                    KitConfirmKind.Stop -> KitIcons.stop
-                    KitConfirmKind.Destructive -> KitIcons.delete
-                    KitConfirmKind.Discard -> KitIcons.editOff
-                })
+                IconTile(
+                    shown.icon
+                        ?: when (shown.kind) {
+                            KitConfirmKind.Neutral -> KitIcons.info
+                            KitConfirmKind.Stop -> KitIcons.stop
+                            KitConfirmKind.Destructive -> KitIcons.delete
+                            KitConfirmKind.Discard -> KitIcons.editOff
+                        }
+                )
             }
             Spacer(Modifier.height(Space.S3.dp))
             KitText(
@@ -213,11 +216,17 @@ public fun KitConfirm(
                 Spacer(Modifier.height(Space.S2.dp))
                 KitText(it, role = TypeRole.Body, tone = TextTone.Secondary)
             }
-            val consequences = shown.consequenceItems.ifEmpty {
-                shown.consequences.mapIndexed { index, fact ->
-                    KitConsequence(fact, if (index == 0 && shown.kind != KitConfirmKind.Neutral) KitConsequenceMark.Lost else KitConsequenceMark.Info)
+            val consequences =
+                shown.consequenceItems.ifEmpty {
+                    shown.consequences.mapIndexed { index, fact ->
+                        KitConsequence(
+                            fact,
+                            if (index == 0 && shown.kind != KitConfirmKind.Neutral)
+                                KitConsequenceMark.Lost
+                            else KitConsequenceMark.Info,
+                        )
+                    }
                 }
-            }
             if (consequences.isNotEmpty()) {
                 Spacer(Modifier.height(Space.S4.dp))
                 KitMarkedConsequences(consequences)
@@ -228,8 +237,11 @@ public fun KitConfirm(
                     state = typed,
                     label = stringResource(Res.string.kitConfirmTypeName, name),
                     kind = KitFieldKind.Mono,
-                    enabled = KitEnabled.of(!working, stringResource(Res.string.kitTurnLiveWorking)),
-                    imeAction = if (ConfirmRules.enterConfirms(shown.kind)) ImeAction.Done else ImeAction.None,
+                    enabled =
+                        KitEnabled.of(!working, stringResource(Res.string.kitTurnLiveWorking)),
+                    imeAction =
+                        if (ConfirmRules.enterConfirms(shown.kind)) ImeAction.Done
+                        else ImeAction.None,
                     onSubmit = if (ConfirmRules.enterConfirms(shown.kind) && on) confirm else null,
                 )
             }
@@ -238,33 +250,52 @@ public fun KitConfirm(
                 KitNotice(
                     stringResource(Res.string.kitConfirmFailed),
                     tone = io.github.eslamasabry.oc.ui.design.color.StatusTone.Failure,
-                    actions = listOf(KitLineAction(
-                        stringResource(Res.string.kitTryAgain), confirm,
-                        enabled = on && !working,
-                        disabledReason = if (!on) reason else if (working) stringResource(Res.string.kitTurnLiveWorking) else null,
-                    )),
+                    actions =
+                        listOf(
+                            KitLineAction(
+                                stringResource(Res.string.kitTryAgain),
+                                confirm,
+                                enabled = on && !working,
+                                disabledReason =
+                                    if (!on) reason
+                                    else if (working) stringResource(Res.string.kitTurnLiveWorking)
+                                    else null,
+                            )
+                        ),
                 )
             }
             Spacer(Modifier.height(Space.S5.dp))
             ConfirmAnswers(
-                confirm = KitAction(
-                    label = shown.confirmLabel,
-                    onClick = confirm,
-                    working = working,
-                    enabled = if (on) KitEnabled.Enabled else KitEnabled.Disabled(reason),
-                    destructive = shown.kind != KitConfirmKind.Neutral,
-                    haptic = ConfirmRules.haptic(shown.kind),
-                ),
-                cancel = KitAction(
-                    cancel, onClick = cancelAction,
-                    enabled = if (working) KitEnabled.Disabled(cancel) else KitEnabled.Enabled,
-                ),
-                alternatives = listOfNotNull(shown.alternative, alternative).map { action ->
-                    action.copy(
-                        onClick = if (working) null else action.onClick?.let { click -> { onCancel(); click() } },
-                        enabled = if (working) KitEnabled.Disabled(cancel) else action.enabled,
-                    )
-                },
+                confirm =
+                    KitAction(
+                        label = shown.confirmLabel,
+                        onClick = confirm,
+                        working = working,
+                        enabled = if (on) KitEnabled.Enabled else KitEnabled.Disabled(reason),
+                        destructive = shown.kind != KitConfirmKind.Neutral,
+                        haptic = ConfirmRules.haptic(shown.kind),
+                    ),
+                cancel =
+                    KitAction(
+                        cancel,
+                        onClick = cancelAction,
+                        enabled = if (working) KitEnabled.Disabled(cancel) else KitEnabled.Enabled,
+                    ),
+                alternatives =
+                    listOfNotNull(shown.alternative, alternative).map { action ->
+                        action.copy(
+                            onClick =
+                                if (working) null
+                                else
+                                    action.onClick?.let { click ->
+                                        {
+                                            onCancel()
+                                            click()
+                                        }
+                                    },
+                            enabled = if (working) KitEnabled.Disabled(cancel) else action.enabled,
+                        )
+                    },
             )
             if (shown.details.isNotEmpty()) {
                 Spacer(Modifier.height(Space.S2.dp))

@@ -227,7 +227,7 @@
     <string name="voiceSetupDone">完成</string>
     <string name="modelPickerThinkingChip">思考：%1$s</string>
     <string name="modelPickerAgentChip">智能体：%1$s</string>
-    <string name="voiceAutoSetupTitle">语音输入</string>
+    <string name="voiceAutoSetupTitle">设置语音输入？</string>
     <string name="voiceAutoSetupChecking">正在检查此手机能运行哪些模型</string>
     <string name="voiceAutoSetupOffer">用说话代替打字。语音会在此手机上转为文字，即使离线也可以，音频绝不会离开设备。需要一次性下载。</string>
     <string name="voiceAutoSetupPicked">已按此手机的内存挑选 %1$s 语音模型</string>

@@ -168,7 +168,8 @@ internal fun HostPanel(state: HostPanelUi, actions: HostPanelActions) {
             KitConfirmSpec(
                 title =
                     stringResource(
-                        if (revoke) Res.string.hostSecRevoke else Res.string.hostSecForget
+                        if (revoke) Res.string.hostSecRevokeQuestion
+                        else Res.string.hostSecForgetQuestion
                     ),
                 confirmLabel = stringResource(Res.string.hostSecRemoveConfirm),
                 kind = KitConfirmKind.Destructive,
