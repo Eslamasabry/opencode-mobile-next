@@ -70,6 +70,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerAdd
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerBox
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerFieldRow
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerChip
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerPrimaryAction
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerSend
@@ -707,7 +708,12 @@ public fun BasicComposer(
             field = {
                 // Keep the editor mounted while an approval or form waits. Submission stays
                 // gated below; hiding it leaves an open conversation with only chips.
-                Box(Modifier.fillMaxWidth()) {
+                KitComposerFieldRow(
+                    tail =
+                        if (inlineMic && voice != null) {
+                            { voice.InlineMic(voiceField, Modifier) }
+                        } else null
+                ) {
                     KitField(
                         state = field,
                         // While a reply runs on a steering server the words join it
@@ -757,17 +763,8 @@ public fun BasicComposer(
                             repeatRevision = null
                             actions.draftChanged(accepted)
                         },
-                        modifier =
-                            Modifier.kitPromptOrigin()
-                                .testTag("chat-composer-field")
-                                .padding(
-                                    end =
-                                        if (inlineMic && voice != null)
-                                            LocalKitTokens.current.minTarget.dp
-                                        else 0.dp
-                                ),
+                        modifier = Modifier.kitPromptOrigin().testTag("chat-composer-field"),
                     )
-                    if (inlineMic) voice?.InlineMic(voiceField, Modifier.align(Alignment.BottomEnd))
                 }
             },
             leading = {
