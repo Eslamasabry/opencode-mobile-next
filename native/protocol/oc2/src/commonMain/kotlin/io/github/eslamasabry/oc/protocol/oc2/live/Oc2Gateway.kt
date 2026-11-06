@@ -305,6 +305,19 @@ internal class Oc2Gateway(
 
     override suspend fun currentProject(): Outcome<WorkspaceProject?> = worktrees.current()
 
+    /** E03-S02: Flutter ops_projects.dart renameProject (`PATCH /api/project/{id}`). */
+    override suspend fun renameProject(
+        projectId: String,
+        projectDirectory: String,
+        name: String,
+    ): Outcome<WorkspaceProject> =
+        worktrees.rename(projectId, projectDirectory, name, clock.now().toEpochMilliseconds())
+
+    /** Flutter ops_sessions.dart: OpenCode 2 makes no share link (`sessionShare` is off). */
+    override suspend fun shareSession(id: SessionId): Outcome<String?> = unavailable("sessionShare")
+
+    override suspend fun unshareSession(id: SessionId): Outcome<Unit> = unavailable("sessionShare")
+
     override suspend fun listProjectDirectories(
         projectId: String
     ): Outcome<ImmutableList<ProjectDirectoryInfo>> = worktrees.directories(projectId)
