@@ -78,6 +78,7 @@ class ScheduleWordsTest {
         assertEquals(EditIssue.DateInvalid, EditorRules.recurrence(base.copy(kind = RecurrenceKind.Once, date = "tomorrow"), t0, utc).second)
         assertEquals(t0 + 24 * hour + 65 * 60_000L, EditorRules.recurrence(base.copy(kind = RecurrenceKind.Once, date = "2026-11-03"), t0, utc).first!!.atMs)
         assertEquals(EditIssue.HoursInvalid, EditorRules.recurrence(base.copy(kind = RecurrenceKind.Interval, hours = "0"), t0, utc).second)
-        assertEquals(Recurrence.interval(4, t0 + 65 * 60_000L), EditorRules.recurrence(base.copy(kind = RecurrenceKind.Interval, hours = "4"), t0, utc).first)
+        // Flutter schedule_sheet.dart: an every-N-hours schedule first runs N hours from now (anchor = now + hours).
+        assertEquals(Recurrence.interval(4, t0 + 4 * hour), EditorRules.recurrence(base.copy(kind = RecurrenceKind.Interval, hours = "4"), t0, utc).first)
     }
 }
