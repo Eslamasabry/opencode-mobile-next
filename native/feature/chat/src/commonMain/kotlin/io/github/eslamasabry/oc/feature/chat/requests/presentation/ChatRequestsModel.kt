@@ -288,6 +288,20 @@ public class ChatRequestsModel(
                         reviewed,
                     )
                 }
+            is ReviewedRequestAction.RejectWith ->
+                if (
+                    reviewed is PendingRequest.Permission &&
+                        card.state == CardState.Waiting &&
+                        action.note.isNotBlank()
+                ) {
+                    // The note rides on the reject reply (gateway `replyPermission(..., note)`); where a server
+                    // ignores it (see RequestAnswer.Permission) the person's steer is not delivered.
+                    engine.answer(
+                        reviewed.id,
+                        RequestAnswer.Permission(PermissionReply.Reject, action.note.trim()),
+                        reviewed,
+                    )
+                }
             ReviewedRequestAction.AskAlways ->
                 if (
                     reviewed is PendingRequest.Permission &&
@@ -502,7 +516,8 @@ public class ChatRequestsModel(
                 when (answer.reply) {
                     PermissionReply.Once -> AnswerWords.Allowed
                     PermissionReply.Always -> AnswerWords.AlwaysAllowed
-                    PermissionReply.Reject -> AnswerWords.Rejected
+                    PermissionReply.Reject ->
+                        answer.note?.takeIf { it.isNotBlank() }?.let(AnswerWords::RejectedWith) ?: AnswerWords.Rejected
                 }
             is RequestAnswer.Question ->
                 AnswerWords.Chose(answer.answers.flatten().joinToString(", "))

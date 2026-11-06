@@ -8,7 +8,21 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import io.github.eslamasabry.oc.ui.kit.input.KitField
+import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,6 +52,19 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitMonoLtr
+
+/**
+ * The words and the callback of the inline "Tell it what to do instead" reply that Deny opens.
+ * [onSend] gets the typed note (never blank); [justDeny] words the choice that denies with no note.
+ */
+public class KitDenyReply(
+    public val fieldLabel: String,
+    public val sendLabel: String,
+    public val justDenyLabel: String,
+    public val backLabel: String,
+    public val emptyReason: String,
+    public val onSend: (String) -> Unit,
+)
 
 /** Plan 09 R13 / plan 06 §8: the card height share grows at very large text. */
 private const val HEIGHT_SHARE = 0.45f
@@ -75,6 +102,10 @@ public fun KitPermissionCard(
     modifier: Modifier = Modifier,
     targets: List<KitRequestTarget> = emptyList(),
     secondary: Boolean = false,
+    toolLabel: String? = null,
+    copyLabel: String? = null,
+    copiedLabel: String? = null,
+    denyReply: KitDenyReply? = null,
 ) {
     require(enabled || disabledReason != null) {
         "KitPermissionCard: a card that cannot answer must say why"
@@ -94,6 +125,8 @@ public fun KitPermissionCard(
                 enabled,
                 reason,
                 secondary,
+                denyReply,
+                onDenyJustDeny = onDeny,
             )
         },
     ) {
@@ -115,8 +148,11 @@ public fun KitPermissionCard(
                 kind = KitTextKind.Reading,
             )
         }
+        if (!toolLabel.isNullOrEmpty()) {
+            KitText(toolLabel, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Reading)
+        }
         if (targets.isNotEmpty()) {
-            KitRequestTargets(targets)
+            KitRequestTargets(targets, copyLabel = copyLabel, copiedLabel = copiedLabel)
         } else if (!subject.isNullOrEmpty()) {
             Box(
                 Modifier.fillMaxWidth()
@@ -136,6 +172,75 @@ public fun KitPermissionCard(
  */
 @Composable
 private fun Answers(
+    allowOnceLabel: String,
+    alwaysLabel: String?,
+    denyLabel: String,
+    onAllowOnce: () -> Unit,
+    onAlways: (() -> Unit)?,
+    onDeny: () -> Unit,
+    enabled: Boolean,
+    reason: String?,
+    secondary: Boolean,
+    denyReply: KitDenyReply?,
+    onDenyJustDeny: () -> Unit,
+) {
+    var replying by rememberSaveable { mutableStateOf(false) }
+    val specs = KitMotion.specs
+    val reduced = specs.state.reduced
+    Column {
+        // Deny with a reply: the buttons give way to the small field; 150-250 ms, instant when motion is reduced.
+        AnimatedVisibility(
+            visible = replying && denyReply != null,
+            enter = if (reduced) EnterTransition.None else expandVertically(specs.enter()) + fadeIn(specs.enter()),
+            exit = if (reduced) ExitTransition.None else shrinkVertically(specs.quick()) + fadeOut(specs.quick()),
+        ) {
+            if (denyReply != null) DenyReplyPanel(denyReply, enabled, reason, onDenyJustDeny) { replying = false }
+        }
+        AnimatedVisibility(
+            visible = !(replying && denyReply != null),
+            enter = if (reduced) EnterTransition.None else expandVertically(specs.enter()) + fadeIn(specs.enter()),
+            exit = if (reduced) ExitTransition.None else shrinkVertically(specs.quick()) + fadeOut(specs.quick()),
+        ) {
+            AnswerButtons(
+                allowOnceLabel, alwaysLabel, denyLabel, onAllowOnce, onAlways,
+                if (denyReply != null) ({ replying = true }) else onDeny,
+                enabled, reason, secondary,
+            )
+        }
+    }
+}
+
+/** The inline reply: one field, "Deny and send" (needs words), "Just deny" and Back. */
+@Composable
+private fun DenyReplyPanel(
+    reply: KitDenyReply,
+    enabled: Boolean,
+    reason: String?,
+    onJustDeny: () -> Unit,
+    onBack: () -> Unit,
+) {
+    val field = rememberTextFieldState()
+    val note = field.text.toString().trim()
+    val availability = KitEnabled.of(enabled, reason)
+    val canSend = enabled && note.isNotEmpty()
+    Column(Modifier.fillMaxWidth().testTag("permission-card-reply"), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+        KitField(field, label = reply.fieldLabel, onSubmit = { if (canSend) reply.onSend(note) })
+        KitButton(
+            reply.sendLabel,
+            { reply.onSend(note) },
+            Modifier.fillMaxWidth().testTag("permission-card-reply-send"),
+            role = KitButtonRole.Primary,
+            enabled = if (canSend) KitEnabled.Enabled else KitEnabled.Disabled(reason ?: reply.emptyReason),
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp), verticalAlignment = Alignment.CenterVertically) {
+            KitButton(reply.justDenyLabel, onJustDeny, Modifier.weight(1f).testTag("permission-card-reply-just-deny"), role = KitButtonRole.Secondary, enabled = availability)
+            KitButton(reply.backLabel, onBack, Modifier.weight(1f), role = KitButtonRole.Tertiary)
+        }
+    }
+}
+
+@Composable
+private fun AnswerButtons(
     allowOnceLabel: String,
     alwaysLabel: String?,
     denyLabel: String,

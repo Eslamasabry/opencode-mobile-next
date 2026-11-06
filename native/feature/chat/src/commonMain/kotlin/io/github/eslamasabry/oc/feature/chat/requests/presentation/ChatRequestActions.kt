@@ -12,6 +12,8 @@ public interface ChatRequestActions {
         when (action) {
             ReviewedRequestAction.AllowOnce -> allowOnce(card.id)
             ReviewedRequestAction.Reject -> reject(card.id)
+            // Engines/tests that only know reject() lose the note; the production model sends it.
+            is ReviewedRequestAction.RejectWith -> reject(card.id)
             ReviewedRequestAction.AskAlways -> askAlwaysAllow(card.id)
             is ReviewedRequestAction.Choose -> choose(card.id, action.option)
             ReviewedRequestAction.OpenOther -> openOther(card.id)
@@ -82,6 +84,9 @@ public sealed interface ReviewedRequestAction {
     public data object AllowOnce : ReviewedRequestAction
 
     public data object Reject : ReviewedRequestAction
+
+    /** Deny, and tell the agent what to do instead ([note] is never blank). */
+    public data class RejectWith(val note: String) : ReviewedRequestAction
 
     public data object AskAlways : ReviewedRequestAction
 

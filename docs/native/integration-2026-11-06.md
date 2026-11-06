@@ -46,3 +46,7 @@ One textual conflict: `SCREENS-UPGRADE.md`; retain both the new-chat and voice s
 ## 5. upg-rows
 
 One conflict: `SCREENS-UPGRADE.md`; retain all new-chat, voice, rows and predictive-back notes under distinct headings. Source merges keep the agent mark/live dot/server metadata, archive capability gates, swipe/Undo and app-scope completion/failure restoration. N-15's Search/Settings/optional Update header order remains unchanged. New action methods retain defaults for existing callers. History/source and diff review only; no compilation or tests.
+
+## 6. upg-approvals
+
+No textual conflicts. Source review follows `RejectWith(note)` through captured-card validation to the existing permission-answer contract, including trimmed notes, exact-scope Always review, and `RejectedWith` presentation. Existing engine scope checks, copy actions and confirmation gates remain. Remove an incoming rows-file blank line at EOF found by the diff check. History/source and diff review only; no compilation or tests.

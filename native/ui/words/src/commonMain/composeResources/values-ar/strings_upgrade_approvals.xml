@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="approvalToolLabel">الأداة: %1$s</string>
+    <string name="approvalToolTerminal">أمر في الطرفية</string>
+    <string name="approvalToolEdit">تغيير في ملف</string>
+    <string name="approvalToolRead">قراءة ملف</string>
+    <string name="approvalToolWeb">طلب من الويب</string>
+    <string name="approvalToolOutside">خارج هذا المشروع</string>
+    <string name="approvalToolOther">أداة أخرى</string>
+    <string name="approvalCopyAsk">نسخ ما يطلب تشغيله</string>
+    <string name="approvalCopied">تم النسخ</string>
+    <string name="approvalAllow">سماح</string>
+    <string name="approvalAlwaysAllowExact">السماح دائمًا بـ %1$s</string>
+    <string name="approvalDeny">رفض</string>
+    <string name="approvalReplyLabel">أخبره بما يفعله بدلًا من ذلك</string>
+    <string name="approvalReplySend">رفض وإرسال</string>
+    <string name="approvalReplyJustDeny">رفض فقط</string>
+    <string name="approvalReplyBack">رجوع</string>
+    <string name="approvalReplyEmpty">اكتب ما يجب أن يفعله بدلًا من ذلك، أو اختر رفض فقط.</string>
+    <string name="approvalAllowedWhat">تم السماح: %1$s</string>
+    <string name="approvalAlwaysAllowedWhat">سماح دائم: %1$s</string>
+    <string name="approvalDenied">تم الرفض</string>
+    <string name="approvalDeniedInstead">تم الرفض، وطُلب منه فعل هذا بدلًا من ذلك: %1$s</string>
+</resources>

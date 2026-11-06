@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="approvalToolLabel">Tool: %1$s</string>
+    <string name="approvalToolTerminal">Terminal command</string>
+    <string name="approvalToolEdit">File change</string>
+    <string name="approvalToolRead">File read</string>
+    <string name="approvalToolWeb">Web request</string>
+    <string name="approvalToolOutside">Outside this project</string>
+    <string name="approvalToolOther">Other tool</string>
+    <string name="approvalCopyAsk">Copy what it asks to run</string>
+    <string name="approvalCopied">Copied</string>
+    <string name="approvalAllow">Allow</string>
+    <string name="approvalAlwaysAllowExact">Always allow %1$s</string>
+    <string name="approvalDeny">Deny</string>
+    <string name="approvalReplyLabel">Tell it what to do instead</string>
+    <string name="approvalReplySend">Deny and send</string>
+    <string name="approvalReplyJustDeny">Just deny</string>
+    <string name="approvalReplyBack">Back</string>
+    <string name="approvalReplyEmpty">Write what it should do instead, or choose Just deny.</string>
+    <string name="approvalAllowedWhat">Allowed: %1$s</string>
+    <string name="approvalAlwaysAllowedWhat">Always allowed: %1$s</string>
+    <string name="approvalDenied">Denied</string>
+    <string name="approvalDeniedInstead">Denied, asked to do this instead: %1$s</string>
+</resources>
