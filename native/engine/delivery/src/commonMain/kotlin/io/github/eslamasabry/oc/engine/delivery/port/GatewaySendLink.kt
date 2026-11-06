@@ -175,7 +175,7 @@ public class GatewaySendLink(
             val confirmed = (result as? Outcome.Ok)?.value as? PromptAdmission.Confirmed
             val failure = (result as? Outcome.Failed)?.failure
             val refusedBeforeSend =
-                (failure != null && !reachedWire) ||
+                (failure != null && (!reachedWire || failure.refusedByServer)) ||
                     failure?.nothingSent == true &&
                         (failure as? Failure.Refused)?.reason != RefusalReason.DispatchUncertain
             if (confirmed == null && !refusedBeforeSend) {
@@ -208,16 +208,11 @@ public class GatewaySendLink(
                         }
                         accepted
                     } == true
-                // B-063 diagnostics: kinds and booleans only (no ids, text or addresses).
-                val resultKind =
-                    when (result) {
-                        is Outcome.Ok -> result.value::class.simpleName
-                        is Outcome.Failed -> "failed=${result.failure::class.simpleName}"
+                if (!found)
+                    log.w {
+                        "send unconfirmed after ${polls} checks (last lookup $lastLookup, " +
+                            "answer ${(result as? Outcome.Failed)?.failure?.let { it::class.simpleName } ?: "uncertain"})"
                     }
-                log.w {
-                    "B063 reconcile result=$resultKind found=$found polls=$polls lookup=$lastLookup " +
-                        "scopeSame=${scope == origin} stream=${gateway.events.status.value::class.simpleName}"
-                }
                 if (
                     found && scope == origin && gateway.events.status.value !is StreamStatus.Stopped
                 )

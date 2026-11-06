@@ -267,4 +267,25 @@ class GatewaySendLinkTest {
             assertTrue(g.reads.isEmpty(), "no receipt lookups")
             assertTrue(g.correlatedSends.isEmpty())
         }
+
+    @Test
+    fun `B-STATE-040 B-063 a prompt the server refused after the POST answers at once, without a receipt search`() =
+        runTest {
+            val g = Gateway()
+            g.fake.capabilities.value =
+                ServerCapabilities(clientPromptMessageID = true, commandReceipts = true)
+            val missingFolder =
+                io.github.eslamasabry.oc.core.common.Failure.NotFound(
+                    io.github.eslamasabry.oc.core.common.WireTag("LocationNotFoundError")
+                )
+            g.promptResult = Outcome.Failed(missingFolder)
+            val link = GatewaySendLink(P1, "http://127.0.0.1:4100", g)
+            val id = link.newClientMessageId()!!
+            val send = async { link.prompt(S1, OutgoingPrompt("Hi", clientMessageId = id)) { true } }
+            testScheduler.runCurrent()
+            assertTrue(send.isCompleted, "no two-minute reconcile for a refused prompt")
+            assertEquals(Outcome.Failed(missingFolder), send.await())
+            assertEquals(listOf(id), g.correlatedSends, "the POST left once")
+            assertTrue(g.reads.isEmpty(), "no receipt lookups")
+        }
 }

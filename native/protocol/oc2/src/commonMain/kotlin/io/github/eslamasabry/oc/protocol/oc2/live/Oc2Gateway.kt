@@ -305,7 +305,7 @@ internal class Oc2Gateway(
         val enterStart = clock.now()
         val accepted = admission.enter(session)
         val enterMs = (clock.now() - enterStart).inWholeMilliseconds
-        if (enterMs > 1_000) log.w { "B063 phone dispatch admission took ${enterMs}ms" }
+        if (enterMs > 5_000) log.w { "the phone dispatch admission took ${enterMs}ms" }
         if (accepted is Outcome.Failed) {
             val kind = accepted.failure::class.simpleName
             log.w { "the phone's dispatch admission refused a request before it left ($kind)" }
@@ -1317,30 +1317,11 @@ internal class Oc2Gateway(
         val postStart = clock.now()
         val posted =
             json("/session/${sid(session)}/prompt", HttpMethod.Post, Oc2PromptSend.body(prompt, clientId))
-        // B-063 diagnostics: kinds, timings and id equality only; never text, ids or addresses.
-        val postMs = (clock.now() - postStart).inWholeMilliseconds
-        val postKind =
-            when (posted) {
-                is Outcome.Ok -> {
-                    val r = (data(posted.value) as? JsonObject)?.let { Oc2InboxItem.fromJson(it) }
-                    "ok receipt=${r != null} idMatch=${r?.id == clientId} sessionMatch=${r?.sessionID == session.raw} type=${r?.type?.take(12)}"
-                }
-                is Outcome.Failed -> "failed ${diagKind(posted.failure)}"
-            }
-        log.w { "B063 prompt prepare=${prepareMs}ms post=${postMs}ms $postKind" }
+        // B-063: a refused prompt names its kind and the server's tag (never text, ids or
+        // addresses), e.g. LocationNotFoundError when the project's folder is gone.
         if (posted is Outcome.Failed) {
-            // What the session asks the server to run: agent name and model ref only.
-            val facts = (json("/session/${sid(session)}") as? Outcome.Ok)?.value?.let { data(it) as? JsonObject }
-            val agentName = facts?.str("agent")?.take(40)
-            val model = facts?.get("model") as? JsonObject
-            val agents =
-                (json("/agent", query = locationQuery()) as? Outcome.Ok)?.value?.let { data(it) as? kotlinx.serialization.json.JsonArray }
-                    ?.mapNotNull { (it as? JsonObject)?.str("id") ?: (it as? JsonObject)?.str("name") }
-            log.w {
-                "B063 session agent=$agentName model=${model?.str("providerID")}/${model?.str("id")?.take(60)} " +
-                    "agentKnown=${agentName == null || agents?.contains(agentName) == true} agents=${agents?.size} " +
-                    "located=${location.value.directory != null}"
-            }
+            val postMs = (clock.now() - postStart).inWholeMilliseconds
+            log.w { "prompt answered ${diagKind(posted.failure)} after ${postMs}ms (prepared in ${prepareMs}ms)" }
         }
         return when (val result = posted) {
             is Outcome.Failed ->

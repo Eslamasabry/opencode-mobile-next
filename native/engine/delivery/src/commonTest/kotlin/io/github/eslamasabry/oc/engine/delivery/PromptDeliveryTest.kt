@@ -167,6 +167,38 @@ class PromptDeliveryTest {
     }
 
     @Test
+    fun `B-STATE-040 B-063 a prompt the server refused, like a missing project folder, is not sent and never waits`() = runTest {
+        // The owner's phone: POST /session/{id}/prompt answers 404 LocationNotFoundError (the project's folder is
+        // gone). The server holds nothing, so no two-minute wait, no possibly-sent marker, no locked composer.
+        val missingFolder = Failure.NotFound(io.github.eslamasabry.oc.core.common.WireTag("LocationNotFoundError"))
+        for (link in listOf(FakeLink(), receiptLink())) {
+            val w = World(Disk(), this, link = link)
+            w.link.answer = { FakeLink.Answer.Refused(missingFolder) }
+            val d = w.delivery()
+            d.send(req("Hi"))
+            testScheduler.runCurrent()
+            val back = assertIs<SendOutcome.PutBack>(d.outcomes.value.single(), "receipts=${link.capabilities.commandReceipts}")
+            assertEquals(missingFolder, back.reason, "the real cause stays for the words and Details")
+            assertTrue(d.unconfirmedTexts(REF).isEmpty())
+            assertTrue(w.queue.entries().isEmpty(), "no review entry")
+            assertEquals(1, w.link.attempts.size, "one POST, never repeated")
+            assertTrue(w.link.lookups.isEmpty())
+        }
+    }
+
+    @Test
+    fun `B-STATE-043 B-063 a conflict or a server error after the POST still may have arrived`() = runTest {
+        for (failure in listOf(Failure.Conflict(), Failure.Server(502))) {
+            val w = World(Disk(), this)
+            w.link.answer = { FakeLink.Answer.Refused(failure) }
+            val d = w.delivery()
+            d.send(req("Hi"))
+            testScheduler.runCurrent()
+            assertIs<SendOutcome.Unconfirmed>(d.outcomes.value.single(), "$failure")
+        }
+    }
+
+    @Test
     fun `B-STATE-040 nothing left the device, the words go back once, and a chip send never puts them back`() = runTest {
         val w = World(Disk(), this)
         w.link.transport = { Failure.TimedOut().failed() }
