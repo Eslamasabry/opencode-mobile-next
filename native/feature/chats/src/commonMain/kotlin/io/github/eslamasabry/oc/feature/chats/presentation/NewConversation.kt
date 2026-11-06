@@ -85,6 +85,13 @@ public interface NewConversationHost {
 
     public fun openRepairSettings() {}
 
+    /** Whether [profile] can make a new project folder here (the app's own phone server only, as in Projects). */
+    public fun canCreateProject(profile: ProfileId): Boolean = false
+
+    /** Makes a project folder named [name] with Git under the projects root; answers its path. */
+    public suspend fun createProject(profile: ProfileId, name: String): Outcome<String> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("projectFolderCreation")))
+
     public val servers: StateFlow<List<NewConversationServer>>
 
     public suspend fun setup(profile: ProfileId): Outcome<NewConversationSetup>
@@ -260,6 +267,12 @@ public data class NewConversationUi(
     val repairAvailable: Boolean = false,
     val repair: GitLinkRepairReport? = null,
     val repairing: Boolean = false,
+    /** The project sheet offers New project (the app's own phone server can make a Git folder under its projects). */
+    val canCreateProject: Boolean = false,
+    /** The New project name dialog is open. */
+    val askingProjectName: Boolean = false,
+    val creatingProject: Boolean = false,
+    val projectFailure: Failure? = null,
 ) {
     val canCopy: Boolean
         get() = setup?.projects?.any { it.directory == directory && it.separateCopy } == true
@@ -309,6 +322,12 @@ public interface NewConversationActions {
     public fun repairSettings() {}
 
     public fun retryLoad()
+
+    /** New project in the project sheet: asks for its name. */
+    public fun askNewProject() {}
+
+    /** The name dialog's answer: makes the folder with Git and picks it; null closes the dialog. */
+    public fun createProject(name: String?) {}
 }
 
 @AssistedInject
@@ -594,8 +613,44 @@ public class NewConversationViewModel(
     }
 
     override fun sheet(sheet: NewConversationSheet?) {
-        mutable.update { it.copy(sheet = sheet) }
+        val profile = mutable.value.profile
+        mutable.update {
+            it.copy(
+                sheet = sheet,
+                canCreateProject =
+                    if (sheet == NewConversationSheet.Projects && profile != null) host.canCreateProject(profile)
+                    else it.canCreateProject,
+                projectFailure = if (sheet == NewConversationSheet.Projects) null else it.projectFailure,
+            )
+        }
         if (sheet == NewConversationSheet.Import) loadImports()
+    }
+
+    override fun askNewProject() {
+        val shown = mutable.value
+        if (!shown.canCreateProject || shown.creatingProject || shown.setup?.canChangeProject != true) return
+        mutable.update { it.copy(askingProjectName = true, projectFailure = null) }
+    }
+
+    override fun createProject(name: String?) {
+        val shown = mutable.value
+        val profile = shown.profile
+        if (name == null || profile == null) {
+            if (!shown.creatingProject) mutable.update { it.copy(askingProjectName = false) }
+            return
+        }
+        if (shown.creatingProject) return
+        val folder = io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderName.validated(name) ?: return
+        mutable.update { it.copy(askingProjectName = false, creatingProject = true, projectFailure = null) }
+        viewModelScope.launch {
+            val made = host.createProject(profile, folder)
+            if (mutable.value.profile != profile) return@launch
+            mutable.update { it.copy(creatingProject = false) }
+            when (made) {
+                is Outcome.Ok -> chooseDirectory(made.value)
+                is Outcome.Failed -> mutable.update { it.copy(projectFailure = made.failure) }
+            }
+        }
     }
 
     private fun loadImports() {

@@ -69,6 +69,8 @@ class AndroidNewConversationHost(
     private val connections: ServerConnections,
     private val stores: PreviewStores,
     private val gitRepair: GitLinkRepairService,
+    private val projectServers: io.github.eslamasabry.oc.feature.projects.presentation.ProjectServers,
+    private val projectCreation: io.github.eslamasabry.oc.feature.projects.presentation.ProjectCreation,
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
 ) : NewConversationHost {
@@ -88,6 +90,18 @@ class AndroidNewConversationHost(
     ): Outcome<GitLinkRepairReport> = gitRepair.repairProject(profile, directory)
 
     override fun openRepairSettings(): Unit = gitRepair.openTermuxSettings()
+
+    private fun projectServer(profile: ProfileId) =
+        projectServers.servers.value.firstOrNull { it.profile == profile }
+
+    // New project in the picker: the same phone-server folder creator as Projects (a Git folder under /root/projects).
+    override fun canCreateProject(profile: ProfileId): Boolean =
+        projectServer(profile)?.let(projectCreation::available) == true
+
+    override suspend fun createProject(profile: ProfileId, name: String): Outcome<String> {
+        val server = projectServer(profile) ?: return refused()
+        return projectCreation.create(server, name)
+    }
 
     private fun refused(): Outcome.Failed =
         Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
