@@ -338,12 +338,12 @@ class SetupScriptsShellTest {
     }
 
     @Test
-    fun `B-LINUX-215 the prelude twins match the Flutter source byte for byte`() {
-        var root: File? = File("").absoluteFile
-        while (root != null && !File(root, "lib/builtin/setup/setup_scripts.dart").isFile) root = root.parentFile
-        if (root == null) return // the Flutter tree is gone after the switch; the twin then stands alone
+    fun `B-LINUX-215 the prelude twins match the released Flutter source byte for byte`() {
+        // The released 2.1.4 copies (resources/flutter-2.1.4): this branch's lib/ is an older snapshot.
         fun raw(path: String, name: String): String {
-            val text = File(root, path).readText()
+            val text =
+                checkNotNull(javaClass.getResource("/flutter-2.1.4/$path.txt")) { "missing released twin $path" }
+                    .readText()
             val start = text.indexOf("const $name = r'''") + "const $name = r'''".length
             return text.substring(start, text.indexOf("''';", start))
         }
