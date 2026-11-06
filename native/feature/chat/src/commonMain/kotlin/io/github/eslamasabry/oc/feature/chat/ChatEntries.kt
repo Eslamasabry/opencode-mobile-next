@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.chat
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.ime
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -7,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalDensity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
@@ -25,11 +28,11 @@ import io.github.eslamasabry.oc.feature.chat.cards.ModelCardSlotHost
 import io.github.eslamasabry.oc.feature.chat.composer.ChatPromptsDoor
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
 import io.github.eslamasabry.oc.feature.chat.context.ActiveContextModel
-import io.github.eslamasabry.oc.feature.chat.handoff.StateHandoffSheet
-import io.github.eslamasabry.oc.feature.chat.handoff.StateHandoffViewModel
+import io.github.eslamasabry.oc.feature.chat.forms.*
 import io.github.eslamasabry.oc.feature.chat.forms.ChatFormSlot
 import io.github.eslamasabry.oc.feature.chat.forms.ChatForms
-import io.github.eslamasabry.oc.feature.chat.forms.*
+import io.github.eslamasabry.oc.feature.chat.handoff.StateHandoffSheet
+import io.github.eslamasabry.oc.feature.chat.handoff.StateHandoffViewModel
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderViewModel
 import io.github.eslamasabry.oc.feature.chat.header.ui.ApprovalChipSlot
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
@@ -40,14 +43,15 @@ import io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatViewModel
 import io.github.eslamasabry.oc.feature.chat.queuemove.QueueMoveScreen
 import io.github.eslamasabry.oc.feature.chat.queuemove.QueueMoveViewModel
+import io.github.eslamasabry.oc.feature.chat.relations.presentation.SessionRelationsViewModel
+import io.github.eslamasabry.oc.feature.chat.relations.ui.SessionRelationsScreen
 import io.github.eslamasabry.oc.feature.chat.sessiontransfer.presentation.SessionTransferViewModel
 import io.github.eslamasabry.oc.feature.chat.sessiontransfer.ui.SessionTransferSheet
 import io.github.eslamasabry.oc.feature.chat.start.presentation.ChatStartViewModel
-import io.github.eslamasabry.oc.feature.chat.relations.presentation.SessionRelationsViewModel
-import io.github.eslamasabry.oc.feature.chat.relations.ui.SessionRelationsScreen
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
@@ -61,23 +65,24 @@ import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.ConnectionFormRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.PreviewRoute
+import io.github.eslamasabry.oc.ui.routes.SessionRelationsRoute
 import io.github.eslamasabry.oc.ui.routes.ToolsRoute
 import io.github.eslamasabry.oc.ui.routes.WebSourcesRoute
-import io.github.eslamasabry.oc.ui.routes.SessionRelationsRoute
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.activeContextTitle
 import io.github.eslamasabry.oc.ui.words.res.chatQueueMoveTitle
 import io.github.eslamasabry.oc.ui.words.res.devPreviewMenu
+import io.github.eslamasabry.oc.ui.words.res.firstRunNotifyTitle
 import io.github.eslamasabry.oc.ui.words.res.nativePendingCount
 import io.github.eslamasabry.oc.ui.words.res.nativePendingFailed
 import io.github.eslamasabry.oc.ui.words.res.nativePendingReview
 import io.github.eslamasabry.oc.ui.words.res.nativePendingTitle
 import io.github.eslamasabry.oc.ui.words.res.protoToolsTitle
+import io.github.eslamasabry.oc.ui.words.res.r40RelationsTitle
 import io.github.eslamasabry.oc.ui.words.res.sessionTransferTitle
 import io.github.eslamasabry.oc.ui.words.res.stateHandoffTitle
 import io.github.eslamasabry.oc.ui.words.res.webSourcesTitle
 import org.jetbrains.compose.resources.pluralStringResource
-import io.github.eslamasabry.oc.ui.words.res.r40RelationsTitle
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -103,7 +108,9 @@ public class ChatEntries(
     private val readers: Set<KitReplyReader>,
     private val photoSources:
         Set<io.github.eslamasabry.oc.feature.chat.composer.presentation.ComposerAttachSource>,
-    private val transcriptPreferences: Set<io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayPreferences> = emptySet(),
+    private val transcriptPreferences:
+        Set<io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayPreferences> =
+        emptySet(),
 ) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
         entry<ConnectionFormRoute> { route ->
@@ -152,7 +159,7 @@ public class ChatEntries(
             LaunchedEffect(startVisible) { startVm.visible(startVisible) }
             val appNotice by appNotices.status.collectAsStateWithLifecycle()
             val replyOffer by appNotices.replyOffer.collectAsStateWithLifecycle()
-            val appStatus = appNotice?.let { notice ->
+            val appNoticeStatus = appNotice?.let { notice ->
                 KitStatus(
                     if (notice.stoppedApp) KitStatusKind.AppStopped else KitStatusKind.Info,
                     notice.message,
@@ -167,31 +174,65 @@ public class ChatEntries(
                     dismissLabel = notice.dismissLabel,
                 )
             }
+            var offerDetails by remember(route) { mutableStateOf(false) }
+            val keyboardOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+            val offerStatus =
+                replyOffer
+                    ?.takeUnless { keyboardOpen }
+                    ?.let { offer ->
+                        KitStatus(
+                            KitStatusKind.Info,
+                            if (offer.failed) offer.message
+                            else stringResource(Res.string.firstRunNotifyTitle),
+                            id = "chat-reply-notification-offer",
+                            action =
+                                if (offer.busy || offer.failed) null
+                                else KitLineAction(offer.acceptLabel, { offerDetails = true }),
+                            onDismiss =
+                                if (offer.busy) null else ({ appNotices.answerReplyOffer(false) }),
+                            dismissLabel = offer.declineLabel,
+                        )
+                    }
+            val appStatus = KitStatus.highest(listOf(appNoticeStatus, offerStatus))
+            // The explanation and opt-in belong in a sheet, never a tall transcript banner.
+            // The compact strip only opens the review; enabling still requires its explicit action.
             val offerContent: (@androidx.compose.runtime.Composable () -> Unit)? =
                 replyOffer?.let { offer ->
                     {
-                        KitNotice(
-                            message = offer.message,
-                            actions =
-                                if (offer.busy) emptyList()
-                                else if (offer.failed) emptyList()
-                                else
-                                    listOf(
+                        KitSheet(
+                            visible = offerDetails,
+                            onDismissRequest = { offerDetails = false },
+                            title = stringResource(Res.string.firstRunNotifyTitle),
+                            closeLabel = offer.declineLabel,
+                        ) {
+                            KitNotice(
+                                message = offer.message,
+                                actions =
+                                    if (offer.busy || offer.failed) emptyList()
+                                    else
+                                        listOf(
+                                            KitLineAction(
+                                                offer.acceptLabel,
+                                                { appNotices.answerReplyOffer(true) },
+                                            )
+                                        ),
+                                dismiss =
+                                    if (offer.busy) null
+                                    else
                                         KitLineAction(
-                                            offer.acceptLabel,
-                                            { appNotices.answerReplyOffer(true) },
-                                        )
-                                    ),
-                            dismiss =
-                                if (offer.busy) null
-                                else
-                                    KitLineAction(
-                                        offer.declineLabel,
-                                        { appNotices.answerReplyOffer(false) },
-                                    ),
-                        )
+                                            offer.declineLabel,
+                                            {
+                                                offerDetails = false
+                                                appNotices.answerReplyOffer(false)
+                                            },
+                                        ),
+                            )
+                        }
                     }
                 }
+            LaunchedEffect(replyOffer) {
+                if (replyOffer == null) offerDetails = false
+            }
             val requests by vm.requests.collectAsStateWithLifecycle()
             val slot =
                 requests?.state?.collectAsStateWithLifecycle()?.value

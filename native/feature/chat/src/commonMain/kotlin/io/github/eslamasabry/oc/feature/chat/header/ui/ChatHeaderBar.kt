@@ -1,12 +1,10 @@
 package io.github.eslamasabry.oc.feature.chat.header.ui
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.ui.unit.dp
-import io.github.eslamasabry.oc.ui.design.tokens.Space
-import io.github.eslamasabry.oc.ui.design.type.TypeRole
-import io.github.eslamasabry.oc.ui.design.type.TextTone
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
@@ -14,7 +12,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.engine.agents.resume.SessionResumeUnavailable
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ContextLevel
@@ -29,13 +29,16 @@ import io.github.eslamasabry.oc.feature.chat.header.presentation.TranscriptWords
 import io.github.eslamasabry.oc.feature.chat.notes.SessionNoteActions
 import io.github.eslamasabry.oc.feature.chat.notes.SessionNoteScreen
 import io.github.eslamasabry.oc.feature.chat.notes.SessionNoteUi
+import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
-import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarScope
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
@@ -281,7 +284,7 @@ public fun ChatHeaderTopBar(
     )
     // "Free model, slower": one quiet line, below every real status (it never outranks a failure).
     KitStatusContribution(
-        if (!state.freeModelNote) null
+        if (!state.freeModelNote || WindowInsets.ime.getBottom(LocalDensity.current) > 0) null
         else
             KitStatus(
                 KitStatusKind.Info,
@@ -478,7 +481,10 @@ private fun DetailsBody(facts: DetailsUi) {
 @Composable
 private fun ComputerBody(sheet: HeaderSheet.ContinueOnComputer, actions: ChatHeaderActions) {
     val command = sheet.command
-    Column(Modifier.fillMaxWidth().testTag("continue-on-computer-sheet"), verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+    Column(
+        Modifier.fillMaxWidth().testTag("continue-on-computer-sheet"),
+        verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+    ) {
         KitText(stringResource(Res.string.handoffUiComputerIntro, command.binary))
         val text = command.command
         if (text != null) {
@@ -493,7 +499,11 @@ private fun ComputerBody(sheet: HeaderSheet.ContinueOnComputer, actions: ChatHea
                 copiedLabel = stringResource(Res.string.kitCopied),
                 onCopy = { actions.copyResumeCommand() },
             )
-            KitText(stringResource(Res.string.handoffUiComputerDirectoryNote), role = TypeRole.Secondary, tone = TextTone.Secondary)
+            KitText(
+                stringResource(Res.string.handoffUiComputerDirectoryNote),
+                role = TypeRole.Secondary,
+                tone = TextTone.Secondary,
+            )
             KitDetailsFold(
                 label = stringResource(Res.string.kitDetails),
                 copyLabel = stringResource(Res.string.kitCopyDetails),
@@ -578,7 +588,9 @@ private fun ContinueBody(
                                     )
                                 else KitRowTrailing.Chevron,
                             enabled = !working,
-                            disabledReason = if (working) stringResource(Res.string.continueWithPreparing) else null,
+                            disabledReason =
+                                if (working) stringResource(Res.string.continueWithPreparing)
+                                else null,
                             onClick = { actions.continueWith(choice) },
                         )
                     }
@@ -592,7 +604,9 @@ private fun ContinueBody(
                                 title = choice.label,
                                 trailing = KitRowTrailing.Chevron,
                                 enabled = !working,
-                                disabledReason = if (working) stringResource(Res.string.continueWithPreparing) else null,
+                                disabledReason =
+                                    if (working) stringResource(Res.string.continueWithPreparing)
+                                    else null,
                                 onClick = { handoffActions.prepareHandoff(choice) },
                             )
                         }
@@ -636,24 +650,25 @@ private fun menuItems(
                     else -> actions.choose(action)
                 }
             },
-            icon = when (action) {
-                HeaderAction.Find -> KitIcons.search
-                HeaderAction.Details -> KitIcons.info
-                HeaderAction.Share -> KitIcons.link
-                HeaderAction.Unshare -> KitIcons.unlink
-                HeaderAction.Fork -> KitIcons.fork
-                HeaderAction.Rename -> KitIcons.edit
-                HeaderAction.ContinueWith -> KitIcons.swap
-                HeaderAction.AgentOptions -> KitIcons.agent
-                HeaderAction.AgentHandoff -> KitIcons.forward
-                HeaderAction.CardsSettings -> KitIcons.layers
-                HeaderAction.ContinueOnComputer -> KitIcons.computer
-                HeaderAction.ImportConversation -> KitIcons.download
-                HeaderAction.Handoff -> KitIcons.forward
-                HeaderAction.CopyTranscript -> KitIcons.copy
-                HeaderAction.Archive -> KitIcons.archive
-                HeaderAction.Delete -> KitIcons.delete
-            },
+            icon =
+                when (action) {
+                    HeaderAction.Find -> KitIcons.search
+                    HeaderAction.Details -> KitIcons.info
+                    HeaderAction.Share -> KitIcons.link
+                    HeaderAction.Unshare -> KitIcons.unlink
+                    HeaderAction.Fork -> KitIcons.fork
+                    HeaderAction.Rename -> KitIcons.edit
+                    HeaderAction.ContinueWith -> KitIcons.swap
+                    HeaderAction.AgentOptions -> KitIcons.agent
+                    HeaderAction.AgentHandoff -> KitIcons.forward
+                    HeaderAction.CardsSettings -> KitIcons.layers
+                    HeaderAction.ContinueOnComputer -> KitIcons.computer
+                    HeaderAction.ImportConversation -> KitIcons.download
+                    HeaderAction.Handoff -> KitIcons.forward
+                    HeaderAction.CopyTranscript -> KitIcons.copy
+                    HeaderAction.Archive -> KitIcons.archive
+                    HeaderAction.Delete -> KitIcons.delete
+                },
             group =
                 when (action) {
                     HeaderAction.Find,
