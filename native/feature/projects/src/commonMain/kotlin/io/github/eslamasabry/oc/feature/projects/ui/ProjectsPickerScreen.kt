@@ -297,6 +297,8 @@ private fun StartRows(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
         KitRow(
             title = stringResource(Res.string.p12OpenFolder),
             supporting = stringResource(Res.string.projectFolderOpenSubtitle),
+            // Every start row has its tile, so the titles share the New project row's edge.
+            leading = KitRowLeading.Glyph(KitIcons.folderOpen, tile = true),
             trailing = KitRowTrailing.Chevron,
             onClick = actions::askPath,
         )
@@ -305,12 +307,14 @@ private fun StartRows(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
                 title = stringResource(Res.string.secBuiltinFolders),
                 supporting = stringResource(Res.string.secBuiltinFoldersBody),
                 supportingMaxLines = 2,
+                leading = KitRowLeading.Glyph(KitIcons.folders, tile = true),
                 trailing = KitRowTrailing.Chevron,
                 onClick = actions::browseBuiltin,
             )
         }
         KitRow(
             title = stringResource(Res.string.p12PhoneFolder),
+            leading = KitRowLeading.Glyph(KitIcons.phone, tile = true),
             enabled = state.canBrowsePhone,
             trailing = KitRowTrailing.Chevron,
             onClick = actions::browsePhone,
