@@ -33,7 +33,8 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
  * ground, rows separated by one-pixel hairlines inset to the text rail (16 dp, or past the lead tile when the rows lead
  * with one: [leadingTiles]). [label] heads it (`KitSectionLabel`), [note] follows it (`KitGroupNote`). Rows that delete
  * or end something go in [destructive]: always last, after a gutter-inset hairline (§4.2). Other styles' panels (18 dp
- * corners) join in S4.
+ * corners) join in S4. A labelled group that follows other parts in one column (a sheet's lists) sets [section]: its
+ * label takes the section gap above it, as a standalone `KitSectionLabel` does, so no row touches the next heading.
  *
  * States: default, with label, with note, destructive
  * Text: none (its rows bring their own)
@@ -49,6 +50,7 @@ public fun KitRowGroup(
     note: String? = null,
     leadingTiles: Boolean = false,
     destructive: (@Composable () -> Unit)? = null,
+    section: Boolean = false,
     rows: @Composable () -> Unit,
 ) {
     val tokens = LocalKitTokens.current
@@ -64,7 +66,7 @@ public fun KitRowGroup(
     val panelModifier =
         if (panel) Modifier.padding(horizontal = if (onRail) 0.dp else tokens.gutter.dp).then(look.modifier).clip(KitShapeId.Panel.shape()) else Modifier
     Column(modifier.kitMaxWidth(CapRole.List).fillMaxWidth().testTag("kit-row-group")) {
-        label?.let { KitSectionLabel(it) }
+        label?.let { KitSectionLabel(it, gapBefore = if (section) tokens.sectionGap.dp else null) }
         Column(panelModifier) {
             HairlineColumn(inset, tokens.gutter.dp, hairline, rows)
             destructive?.let { HairlineColumn(tokens.gutter.dp, tokens.gutter.dp, hairline, it, ruleAbove = true) }
