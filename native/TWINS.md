@@ -81,12 +81,12 @@ entry verbatim.
 | native/android/linux/src/main/kotlin/io/github/eslamasabry/opencode_mobile/ScheduledPromptPolicy.kt | android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/ScheduledPromptPolicy.kt | e44b581a | e44b581a | S runtime |
 | native/android/linux/src/main/kotlin/io/github/eslamasabry/opencode_mobile/ServiceDiagnostics.kt | android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/ServiceDiagnostics.kt | 15fef911 | 15fef911 | S runtime |
 | native/android/linux/src/main/kotlin/io/github/eslamasabry/opencode_mobile/ServiceNoticeGate.kt | android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/ServiceNoticeGate.kt | 580803d4 | 580803d4 | S runtime |
-| native/android/linux/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupJob.kt | android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupJob.kt | 15fef911 | 15fef911 | S runtime |
+| native/android/linux/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupJob.kt | android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupJob.kt | 15fef911 | cd11845a | S runtime |
 | native/android/linux/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupPersistence.kt | android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupPersistence.kt | 15fef911 | 15fef911 | S runtime |
-| native/android/linux/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt | android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt | cf86762f | cf86762f | S runtime |
+| native/android/linux/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt | android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt | cf86762f | cd11845a | S runtime |
 | native/android/linux/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupScriptCompletion.kt | android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupScriptCompletion.kt | 65f2b037 | 65f2b037 | S runtime |
 | native/android/linux/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupService.kt | android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupService.kt | 65f2b037 | 65f2b037 | S runtime |
-| native/android/linux/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupStepRetry.kt | android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupStepRetry.kt | cf86762f | cf86762f | S runtime |
+| native/android/linux/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupStepRetry.kt | android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupStepRetry.kt | cf86762f | cd11845a | S runtime |
 | native/android/linux/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupWorkScopes.kt | android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupWorkScopes.kt | 15fef911 | 15fef911 | S runtime |
 | native/android/linux/src/main/kotlin/io/github/eslamasabry/opencode_mobile/StatusNotification.kt | android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/StatusNotification.kt | 65f2b037 | 65f2b037 | S runtime |
 | native/android/linux/src/main/kotlin/io/github/eslamasabry/opencode_mobile/StatusNotificationModel.kt | android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/StatusNotificationModel.kt | e44b581a | e44b581a | S runtime |
@@ -122,9 +122,26 @@ entry verbatim.
 | native/android/linux/src/test/kotlin/io/github/eslamasabry/opencode_mobile/ServiceDiagnosticsTest.kt | android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/ServiceDiagnosticsTest.kt | 15fef911 | 15fef911 | S runtime |
 | native/android/linux/src/test/kotlin/io/github/eslamasabry/opencode_mobile/ServiceNoticeGateTest.kt | android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/ServiceNoticeGateTest.kt | 580803d4 | 580803d4 | S runtime |
 | native/android/linux/src/test/kotlin/io/github/eslamasabry/opencode_mobile/SetupScriptCompletionTest.kt | android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/SetupScriptCompletionTest.kt | 65f2b037 | 65f2b037 | S runtime |
-| native/android/linux/src/test/kotlin/io/github/eslamasabry/opencode_mobile/SetupStepRetryTest.kt | android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/SetupStepRetryTest.kt | cf86762f | cf86762f | S runtime |
+| native/android/linux/src/test/kotlin/io/github/eslamasabry/opencode_mobile/SetupStepRetryTest.kt | android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/SetupStepRetryTest.kt | cf86762f | cd11845a | S runtime |
 | native/android/linux/src/test/kotlin/io/github/eslamasabry/opencode_mobile/SetupWorkScopesTest.kt | android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/SetupWorkScopesTest.kt | 15fef911 | 15fef911 | S runtime |
 | native/android/linux/src/test/kotlin/io/github/eslamasabry/opencode_mobile/StatusNotificationModelTest.kt | android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/StatusNotificationModelTest.kt | e44b581a | e44b581a | S runtime |
 | native/android/linux/src/test/kotlin/io/github/eslamasabry/opencode_mobile/WorkLeasesTest.kt | android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/WorkLeasesTest.kt | 15fef911 | 15fef911 | S runtime |
 | native/android/linux/src/main/res/values/strings.xml | android/app/src/main/res/values/strings.xml | e44b581a | e44b581a | S runtime |
 | native/android/linux/src/main/res/values-ar/strings.xml | android/app/src/main/res/values-ar/strings.xml | e44b581a | e44b581a | S runtime |
+
+## Flutter 2.1.4 sync (native/sync-linux, 2026-11-06)
+
+Copied from release/2.1.4 at cd11845a (the #117 fetch/unpack fallbacks, compat retry, link-following
+security fix, app-made projects, password on stdin). BuiltinLinux.kt took these changes by hand, not as a copy:
+Flutter 276c7bda moved InstallerOptions into NativeInstallerOwnership.kt afterwards, which native has not mirrored yet.
+
+| Native path | Flutter source path | Source commit at copy | Last synced Flutter commit | Native owner |
+|---|---|---|---|---|
+| native/android/linux/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupAppFetch.kt | android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupAppFetch.kt | cd11845a | cd11845a | android-linux |
+| native/android/linux/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupAppUnpack.kt | android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupAppUnpack.kt | cd11845a | cd11845a | android-linux |
+| native/android/linux/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinNewProject.kt | android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinNewProject.kt | cd11845a | cd11845a | android-linux |
+| native/android/linux/src/main/kotlin/io/github/eslamasabry/opencode_mobile/ServerPasswordWrite.kt | android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/ServerPasswordWrite.kt | cd11845a | cd11845a | android-linux |
+| native/android/linux/src/test/kotlin/io/github/eslamasabry/opencode_mobile/SetupAppFetchTest.kt | android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/SetupAppFetchTest.kt | cd11845a | cd11845a | android-linux |
+| native/android/linux/src/test/kotlin/io/github/eslamasabry/opencode_mobile/SetupAppUnpackTest.kt | android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/SetupAppUnpackTest.kt | cd11845a | cd11845a | android-linux |
+| native/android/linux/src/test/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinNewProjectTest.kt | android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinNewProjectTest.kt | cd11845a | cd11845a | android-linux |
+| native/android/linux/src/test/kotlin/io/github/eslamasabry/opencode_mobile/ServerPasswordWriteTest.kt | android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/ServerPasswordWriteTest.kt | cd11845a | cd11845a | android-linux |
