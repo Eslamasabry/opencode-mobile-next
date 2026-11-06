@@ -364,6 +364,12 @@ SH
   echo 'val x = 1 // DETEKT_BAD' >native/core/common/D.kt
   expect "ladder: E02-S03 t1 fails on a new detekt finding" 1 "${low[@]}" OC_DETEKT_CMD="$FAKE_DETEKT" native/tool/t1.sh --base native/main --where local
   rm native/core/common/D.kt
+  printf 'versionName=3.0.0-dev\nversionCode=10003\n' >native/version.properties
+  printf '# B\n\n## Ledger\n\n| versionCode | kind | date | for |\n|---|---|---|---|\n| 10003 | seen | 2026-11-03 | previews |\n' >native/BUILD_NUMBERS.md
+  expect "ladder: E01-S09 t1 fails when version.properties is not above a known number" 1 "${low[@]}" OC_DETEKT_CMD="$FAKE_DETEKT" native/tool/t1.sh --base native/main --where local
+  native/tool/version_code.sh allocate --kind build --for "dev line" >/dev/null
+  expect "ladder: E01-S09 t1 passes once the number is allocated" 0 "${low[@]}" OC_DETEKT_CMD="$FAKE_DETEKT" native/tool/t1.sh --base native/main --where local
+  rm native/version.properties native/BUILD_NUMBERS.md
   exec 8>"$H/build.lock"; flock 8
   expect "ladder: t1 with the build slot held cannot run (2)" 2 "${low[@]}" OC_LOCK_WAIT=1 OC_DETEKT_CMD="$FAKE_DETEKT" native/tool/t1.sh --base native/main --where local
   exec 8>&-
@@ -410,6 +416,72 @@ expect_out "E02-S03 detekt: --all includes ui/kit" 'detekt :ui:kit: ok'
 expect "E02-S03 detekt: a bad cached jar is refused (2)" 2 env OC_DETEKT_CACHE_DIR="$TMP_ROOT/jarcache" bash -c \
   'mkdir -p "$OC_DETEKT_CACHE_DIR" && echo tampered >"$OC_DETEKT_CACHE_DIR/detekt-cli-1.23.8-all.jar" && native/tool/qa/detekt.sh :core:common --base native/main'
 expect_out "E02-S03 detekt: says checksum" 'checksum mismatch'
+
+# --------------------------------------------------------------------------------------- version_code.sh (E01-S09)
+R="$(new_repo)"; cd "$R" || exit 1
+ledger_rows() { grep -cE '^\| [0-9]+ \|' native/BUILD_NUMBERS.md; }
+printf 'versionName=3.0.0-dev\nversionCode=10003\n' >native/version.properties
+cat >native/BUILD_NUMBERS.md <<'EOF'
+# Build numbers
+
+## Ledger
+
+| versionCode | kind | date | for |
+|---|---|---|---|
+| 10003 | seen | 2026-11-03 | native preview on an emulator |
+| 900058 | seen | 2026-10-15 | Flutter VPS build on an emulator |
+EOF
+vc=(env OC_TODAY=2026-11-06)
+expect "B-MIGR-004 versions: a tree below a number a device holds fails the check" 1 "${vc[@]}" native/tool/version_code.sh check
+expect_out "B-MIGR-004 versions: names the higher number" 'not above 900058'
+expect "B-MIGR-004 versions: next build is above every known number" 0 native/tool/version_code.sh next
+expect_out "B-MIGR-004 versions: 900059" '^900059$'
+expect "B-MIGR-004 versions: next writes nothing" 0 grep -q '^versionCode=10003$' native/version.properties
+expect "B-MIGR-004 versions: a release is the next multiple of 10" 0 native/tool/version_code.sh next --kind release
+expect_out "B-MIGR-004 versions: 900060" '^900060$'
+expect "B-MIGR-004 versions: allocate takes the number" 0 "${vc[@]}" native/tool/version_code.sh allocate --kind build --for "dev line"
+expect "B-MIGR-004 versions: allocate writes version.properties" 0 grep -q '^versionCode=900059$' native/version.properties
+expect "B-MIGR-004 versions: allocate keeps versionName" 0 grep -q '^versionName=3.0.0-dev$' native/version.properties
+expect "B-MIGR-004 versions: allocate keeps the final newline" 0 bash -c '[[ "$(tail -c 1 native/version.properties | od -An -c | tr -d " ")" == "\\n" ]]'
+expect "B-MIGR-004 versions: allocate adds the ledger row" 0 grep -q '^| 900059 | build | 2026-11-06 | dev line |$' native/BUILD_NUMBERS.md
+expect "B-MIGR-004 versions: the allocated tree passes the check" 0 native/tool/version_code.sh check
+expect "B-MIGR-004 versions: a release after a build" 0 "${vc[@]}" native/tool/version_code.sh allocate --kind release --for "owner candidate 1"
+expect_out "B-MIGR-004 versions: 900060 after 900059" '^900060$'
+expect "B-MIGR-004 versions: a release after a release is +10" 0 "${vc[@]}" native/tool/version_code.sh allocate --kind release --for "owner candidate 2"
+expect_out "B-MIGR-004 versions: 900070" '^900070$'
+rows="$(ledger_rows)"
+expect "B-MIGR-004 versions: asking for a used number is refused" 1 "${vc[@]}" native/tool/version_code.sh allocate --kind build --for x --code 900070
+expect_out "B-MIGR-004 versions: says never twice" 'never handed out twice'
+expect "B-MIGR-004 versions: asking for a lower number is refused" 1 "${vc[@]}" native/tool/version_code.sh allocate --kind build --for x --code 900065
+expect_out "B-MIGR-004 versions: says downgrade" 'downgrade'
+expect "B-MIGR-004 versions: a refused allocation writes nothing" 0 test "$(ledger_rows)" = "$rows"
+expect "B-MIGR-004 versions: and leaves version.properties" 0 grep -q '^versionCode=900070$' native/version.properties
+expect "B-MIGR-004 versions: a seen number already in the ledger is refused" 1 native/tool/version_code.sh seen --code 900058 --for again
+mkdir -p "$R/bin"; printf '#!/usr/bin/env bash\n[[ "$*" == *opencode_mobile.native ]] && echo "    versionCode=900200 minSdk=26" || echo "    versionCode=62 minSdk=26"\n' >"$R/bin/adb"
+chmod +x "$R/bin/adb"
+expect "B-MIGR-004 versions: a device holding a higher number raises the next one" 0 "${vc[@]}" OC_ADB="$R/bin/adb" native/tool/version_code.sh allocate --kind build --for "proof build" --device emulator-5584
+expect_out "B-MIGR-004 versions: 900201" '^900201$'
+expect "B-MIGR-004 versions: the device's number is recorded as seen" 0 grep -qE '^\| 900200 \| seen \|' native/BUILD_NUMBERS.md
+expect "B-MIGR-004 versions: a device adb cannot read is could-not-run (2)" 2 env OC_ADB=false native/tool/version_code.sh next --device emulator-5584
+echo '| 900201 | build | 2026-11-06 | merged twice |' >>native/BUILD_NUMBERS.md
+expect "B-MIGR-004 versions: a number used twice fails the check" 1 native/tool/version_code.sh check
+expect_out "B-MIGR-004 versions: says used twice" '900201: used twice'
+expect "B-MIGR-004 versions: and allocation refuses until it is fixed" 1 "${vc[@]}" native/tool/version_code.sh allocate --kind build --for x
+expect "B-MIGR-004 versions: no arguments is a usage error (2)" 2 native/tool/version_code.sh
+R="$(new_repo)"; cd "$R" || exit 1
+printf 'versionName=3.0.0-dev\nversionCode=10003\n' >native/version.properties
+printf '# Build numbers\n\n## Ledger\n\n| versionCode | kind | date | for |\n|---|---|---|---|\n| 4610 | seen | 2026-11-06 | owner phone |\n| 10003 | seen | 2026-11-03 | previews |\n| 900058 | retired | 2026-10-15 | wiped AVD |\n' >native/BUILD_NUMBERS.md
+expect "B-MIGR-004 versions: a retired number does not raise the next build" 0 native/tool/version_code.sh next
+expect_out "B-MIGR-004 versions: 10004" '^10004$'
+expect "B-MIGR-004 versions: the first release after the dev line is 10010" 0 native/tool/version_code.sh next --kind release
+expect_out "B-MIGR-004 versions: 10010" '^10010$'
+expect "B-MIGR-004 versions: a retired number is never handed out again" 1 env OC_TODAY=2026-11-06 native/tool/version_code.sh allocate --kind build --for x --code 900058
+expect "B-MIGR-004 versions: a device still holding a retired number shows up" 0 native/tool/version_code.sh next --installed 900058
+expect_out "B-MIGR-004 versions: 900059" '^900059$'
+printf '| 900057 | seen | 2026-11-06 | a lab device |\n' >>native/BUILD_NUMBERS.md
+sed -i '/900058 | retired/d' native/BUILD_NUMBERS.md; printf '| 900058 | retired | 2026-10-15 | wiped AVD |\n' >>native/BUILD_NUMBERS.md
+expect "B-MIGR-004 versions: the counter skips a retired number" 0 native/tool/version_code.sh next
+expect_out "B-MIGR-004 versions: 900059 not 900058" '^900059$'
 
 expect "GATES review: offline regression suite" 0 python3 "$TOOL_SRC/test/test_gates_review.py"
 

@@ -18,6 +18,7 @@ Every script follows the plan 02 §8 contract: exit `0` pass, `1` a test or gate
 | `scan_push.sh [--push <remote> <refspec>]` | before every push | blocks key material, tokens, watched/personal e-mail, private addresses and hosts, forbidden files, non-noreply authors |
 | `snapshot_push.sh [--dry-run] \| --release ...` | coordinator | tree-equal snapshot commit with the no-reply identity, scanned, then pushed (plan 15 §11.0) |
 | `qa/detekt.sh [<module>...] [--all] [--base R] [--create-baseline]` | T1; builder after fixing findings | pinned detekt 1.23.8 per module against `config/detekt/baseline/<module>.xml`, and the ratchet: no baseline grows or appears (E02-S03) |
+| `version_code.sh next \| allocate \| seen \| check` | coordinator and builders before an APK | the versionCode allocator over `BUILD_NUMBERS.md`: above every known number, never reused (E01-S09) |
 | `test/run_tests.sh` | after editing any of the above | planted-violation self-tests (no Gradle, no network) |
 
 Environment: `OC_BASE` (default `native/main`), `OC_VPS_HOST` (never committed), `OC_BUILD_LOCK_FILE`,
