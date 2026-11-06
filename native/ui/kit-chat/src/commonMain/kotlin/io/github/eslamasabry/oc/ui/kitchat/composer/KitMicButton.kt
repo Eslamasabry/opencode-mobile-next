@@ -1,7 +1,8 @@
 package io.github.eslamasabry.oc.ui.kitchat.composer
 
+import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.indication
@@ -100,8 +101,16 @@ public fun KitMicButton(
     Box(
         modifier
             .sizeIn(minWidth = tokens.minTarget.dp, minHeight = tokens.minTarget.dp)
+            // The filled mic is Send's 40 dp disc inside the 48 dp target, so it keeps the box's inner margin
+            // instead of filling the target to the box's edge.
+            .drawBehind {
+                if (filled)
+                    drawCircle(
+                        colors.accent,
+                        radius = minOf(FlutterKitTokens.COMPOSER_ACTION_SIZE.dp.toPx(), size.minDimension) / 2f,
+                    )
+            }
             .clip(CircleShape)
-            .background(if (filled) colors.accent else Color.Transparent)
             .indication(interactions, indication)
             .testTag(MIC_TAG)
             .semantics {
