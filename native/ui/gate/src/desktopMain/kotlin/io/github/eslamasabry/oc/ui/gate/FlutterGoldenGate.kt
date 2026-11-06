@@ -313,7 +313,10 @@ object FlutterGoldenGate {
     private fun compare(shot: String, ref: GateRef, native: BufferedImage): Double {
         val goldenFile = goldenFile(shot, ref)
         ImageIO.write(native, "png", File(out, "$shot-native.png"))
-        check(goldenFile.isFile) { "missing Flutter golden $goldenFile" }
+        check(goldenFile.isFile) {
+            "missing Flutter golden $goldenFile — setup, not a visual failure: run " +
+                "native/tool/design/fetch_all_goldens.sh (needs FLUTTER_REPO and GLASS_REPO, see rb_gate.py)"
+        }
         val flutter = ImageIO.read(goldenFile)
         ImageIO.write(flutter, "png", File(out, "$shot-flutter.png"))
         val (m, img) = measure(flutter, native)

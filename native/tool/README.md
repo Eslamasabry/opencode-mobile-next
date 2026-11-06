@@ -11,6 +11,7 @@ Every script follows the plan 02 §8 contract: exit `0` pass, `1` a test or gate
 | `t2.sh [--where vps\|local] [--steps a,b] [--detach] [--resolve]` | coordinator, checkpoints | the steps in `ladder/t2.tasks`; a missing gate task is a failure; `--resolve` only looks every task up (`gradlew --dry-run`), never a T2 result |
 | `t3.sh <apk> --signer <sha256> [--flows L] [--upgrade <apk>] [--detach]` | emulator lane holder | versionCode and signer, emulator lock, flows (animations off), E2E-05 with animations on, instrumented classes, S-28 sweep, upgrade journey |
 | `t4.sh --apks <dir> [--journeys L] [--detach]` | performance lane holder | quiet-PC checks, `restore_device.sh`, Macrobenchmark journeys from `tool/perf/journeys.tsv`, `compare.py` |
+| `design/fetch_all_goldens.sh` | anyone, once per checkout (PC, VPS, CI) | copies every Flutter reference golden the native golden gates use into `looks-gate/flutter/<ref9>/` with `render.tsv`, from the pinned refs in `rb_gate.py`; a missing reference otherwise fails a gate with "missing Flutter golden … setup, not a visual failure" |
 | `vps_gradle.sh [--unit U] -- <gradle args>` | the ladder | per-worktree VPS workspace, one remote lease across sync/build/collection, reports and selected recorded screenshots pulled back |
 | `check_write_set.sh <brief.md> \| --globs G` | builder before reporting; coordinator before merging | every path changed since the merge-base is inside the write set |
 | `check_commits.sh [<base> [<head>]]` | before a push or merge | plan 02 §9.1 message rules |
