@@ -213,6 +213,10 @@ class AndroidNewConversationHost(
                 val catalog =
                     if (caps.serverCatalog && ops != null) (ops.catalog() as? Outcome.Ok)?.value
                     else null
+                val defaults =
+                    if (caps.serverCatalog && ops != null)
+                        (ops.chatDefaults() as? Outcome.Ok)?.value
+                    else null
                 val agents =
                     (gateway.agents() as? Outcome.Ok)
                         ?.value
@@ -223,12 +227,15 @@ class AndroidNewConversationHost(
                 val previous = stores.prefs.string("oc.newChatProject.${profile.raw}")
                 val current = gateway.location.value.directory
                 val directory =
-                    listOf(previous, current).firstOrNull { candidate ->
-                        !candidate.isNullOrBlank() &&
-                            candidate != "/" &&
-                            candidate != "/root" &&
-                            !candidate.startsWith("/tmp/")
-                    }
+                    // A fresh profile has no saved project and the server may report only its
+                    // catch-all root. Use its first real project rather than leaving Start blocked.
+                    (listOf(previous, current) + projects.map { it.directory })
+                        .firstOrNull { candidate ->
+                            !candidate.isNullOrBlank() &&
+                                candidate != "/" &&
+                                candidate != "/root" &&
+                                !candidate.startsWith("/tmp/")
+                        }
                 val importer = gateway.facet<ProviderConversationImportGateway>()
                 val savedModel =
                     stores.prefs.string("oc.model.${profile.raw}")?.let { raw ->
@@ -277,6 +284,11 @@ class AndroidNewConversationHost(
                         agents = agents,
                         model =
                             savedModel
+                                ?: defaults?.model?.takeIf { model ->
+                                    providers.providers.any {
+                                        it.id == model.providerId && model.modelId in it.modelIds
+                                    }
+                                }
                                 ?: providers.defaultProviderId?.let { p ->
                                     providers.defaultModelId?.let { ModelRef(p, it) }
                                 },
@@ -450,6 +462,12 @@ class AndroidNewConversationHost(
                             remove(draftKey(profile, directory))
                             remove(reviewKey(profile, directory))
                             putString("oc.newChatProject.${profile.raw}", directory)
+                            if (model == null) remove("oc.model.${profile.raw}")
+                            else
+                                putString(
+                                    "oc.model.${profile.raw}",
+                                    "${model.providerId}|${model.modelId}",
+                                )
                         }
                         receipt.outcome?.let(delivery::acknowledge)
                         attempt.copy(dispatched = true, failure = null)

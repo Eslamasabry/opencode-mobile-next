@@ -1,8 +1,6 @@
 package io.github.eslamasabry.oc.feature.chats.ui
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -30,7 +28,6 @@ import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
-import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
@@ -85,6 +82,17 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
         if (state.deliveryUnconfirmed)
             KitEnabled.Disabled(stringResource(Res.string.p12NewDeliveryUnconfirmed))
         else if (state.busy) KitEnabled.Disabled(working) else KitEnabled.Enabled
+    val startBlocked =
+        when {
+            state.busy -> working
+            state.deliveryUnconfirmed -> stringResource(Res.string.p12NewDeliveryUnconfirmed)
+            state.creationUnconfirmed -> stringResource(Res.string.p12NewCreationUnconfirmed)
+            state.setup == null ->
+                if (state.failure != null) stringResource(Res.string.chatsNewFailed) else working
+            state.directory.isNullOrBlank() -> stringResource(Res.string.chatsNewNeedProject)
+            state.text.isBlank() -> stringResource(Res.string.chatsNewBuildPrompt)
+            else -> null
+        }
     KitBackGuard(enabled = state.sheet == null && state.profile != null, onBack = actions::back)
     KitSheetHost(Modifier.fillMaxSize()) {
         KitScreen(
@@ -101,7 +109,14 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
             loading = state.busy,
             loadingLabel = working,
             bottom = {
-                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Column(
+                    Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
+                ) {
+                    // Keep required choices in the keyboard-safe footer, independent of the agent grid.
+                    if (state.servers.isNotEmpty()) NewConversationChoices(state, actions, working)
+                    if (startBlocked != null && !state.busy)
+                        KitText(startBlocked, role = TypeRole.Secondary)
                     KitButton(
                         action =
                             KitAction(
@@ -115,28 +130,8 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                     ),
                                 onClick = actions::start,
                                 enabled =
-                                    if (
-                                        !state.busy &&
-                                            !state.creationUnconfirmed &&
-                                            !state.deliveryUnconfirmed &&
-                                            state.setup != null &&
-                                            state.directory != null &&
-                                            state.text.isNotBlank()
-                                    )
-                                        KitEnabled.Enabled
-                                    else
-                                        KitEnabled.Disabled(
-                                            when {
-                                                state.busy -> working
-                                                state.deliveryUnconfirmed ->
-                                                    stringResource(Res.string.p12NewDeliveryUnconfirmed)
-                                                state.creationUnconfirmed ->
-                                                    stringResource(Res.string.p12NewCreationUnconfirmed)
-                                                state.directory == null ->
-                                                    stringResource(Res.string.chatsNewNeedProject)
-                                                else -> stringResource(Res.string.chatsNewBuildPrompt)
-                                            }
-                                        ),
+                                    if (startBlocked == null) KitEnabled.Enabled
+                                    else KitEnabled.Disabled(startBlocked),
                                 working = state.busy,
                             ),
                         modifier = Modifier.fillMaxWidth(),
@@ -148,7 +143,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
             Column(
                 Modifier.fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(top = Space.S6.dp, bottom = Space.S4.dp),
+                    .padding(top = Space.S3.dp, bottom = Space.S3.dp),
                 verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
             ) {
                 if (state.servers.isEmpty()) {
@@ -176,45 +171,12 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                         stringResource(Res.string.chatsNewBuildPrompt),
                         Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp).padding(bottom = Space.S1.dp).testTag("chats-new-field"),
                         enabled = enabled,
-                        minLines = 4, // F: lib/ui/screens/chats/new_chat_screen.dart:537
+                        minLines = 2, // Leave the choices and Start visible while the keyboard is open.
                         autofocus = !state.busy,
                         onTextChanged = actions::draftChanged,
                     )
                     NewConversationAgents(state, actions, enabled)
-                    KitRowGroup(leadingTiles = true, note = if (state.directory == null) stringResource(Res.string.chatsNewNeedProject) else null) {
-                        KitRow(
-                            title = stringResource(Res.string.chatsNewModelRow),
-                            leading = KitRowLeading.Glyph(KitIcons.model),
-                            trailing =
-                                KitRowTrailing.Value(
-                                    state.setup
-                                        ?.models
-                                        ?.firstOrNull { it.model == state.model }
-                                        ?.name ?: stringResource(Res.string.modelServerDefault),
-                                    prominent = true,
-                                ),
-                            enabled = !state.busy,
-                            disabledReason = working,
-                            onClick = { actions.sheet(NewConversationSheet.Models) },
-                        )
-                        KitRow(
-                            title = stringResource(Res.string.chatsNewProjectRow),
-                            leading = KitRowLeading.Glyph(KitIcons.files),
-                            trailing =
-                                KitRowTrailing.Value(
-                                    state.directory?.let(::importFolder) ?: stringResource(Res.string.chatsNewChooseProject),
-                                    prominent = true,
-                                ),
-                            enabled =
-                                !state.busy &&
-                                    !state.attempted &&
-                                    state.setup?.canChangeProject == true,
-                            disabledReason =
-                                if (state.setup?.canChangeProject == false)
-                                    stringResource(Res.string.p12NewBoundProject)
-                                else working,
-                            onClick = { actions.sheet(NewConversationSheet.Projects) },
-                        )
+                    KitRowGroup(leadingTiles = true) {
                         if (state.canCopy)
                             KitSwitchRow(
                                 title = stringResource(Res.string.chatsNewSeparateCopy),
@@ -313,6 +275,52 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
             }
         }
         NewConversationSheet(state, actions)
+    }
+}
+
+/** Model and project stay visible beside Start even when optional setup scrolls away. */
+@Composable
+private fun NewConversationChoices(
+    state: NewConversationUi,
+    actions: NewConversationActions,
+    working: String,
+) {
+    KitRowGroup(leadingTiles = true) {
+        KitRow(
+            title = stringResource(Res.string.chatsNewModelRow),
+            leading = KitRowLeading.Glyph(KitIcons.model),
+            trailing =
+                KitRowTrailing.Value(
+                    state.setup
+                        ?.models
+                        ?.firstOrNull { it.model == state.model }
+                        ?.name ?: stringResource(Res.string.modelServerDefault),
+                    prominent = true,
+                ),
+            enabled = !state.busy,
+            disabledReason = working,
+            onClick = { actions.sheet(NewConversationSheet.Models) },
+        )
+        KitRow(
+            title = stringResource(Res.string.chatsNewProjectRow),
+            leading = KitRowLeading.Glyph(KitIcons.files),
+            trailing =
+                KitRowTrailing.Value(
+                    state.setup?.projects?.firstOrNull { it.directory == state.directory }?.name
+                        ?: state.directory?.let(::importFolder)
+                        ?: stringResource(Res.string.chatsNewChooseProject),
+                    prominent = true,
+                ),
+            enabled =
+                !state.busy &&
+                    !state.attempted &&
+                    state.setup?.canChangeProject == true,
+            disabledReason =
+                if (state.setup?.canChangeProject == false)
+                    stringResource(Res.string.p12NewBoundProject)
+                else working,
+            onClick = { actions.sheet(NewConversationSheet.Projects) },
+        )
     }
 }
 
