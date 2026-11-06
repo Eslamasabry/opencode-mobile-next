@@ -20,8 +20,6 @@ import coil3.compose.LocalPlatformContext
 import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.svg.SvgDecoder
-import io.github.eslamasabry.oc.ui.design.type.TypeRole
-import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 
 /**
@@ -37,7 +35,10 @@ public val LocalKitLogoLoader: ProvidableCompositionLocal<KitLogoLoader?> =
         null
     }
 
-/** Decorative monochrome provider or agent mark, with initials while loading or unavailable. */
+/**
+ * Decorative monochrome provider or agent mark. While it loads, or when there is none, the slot stays empty at the same
+ * size: no stand-in letter (owner 2026-11-06), so rows keep one edge and never show a stray glyph.
+ */
 @Composable
 public fun KitProviderLogo(
     id: String,
@@ -47,7 +48,6 @@ public fun KitProviderLogo(
 ) {
     val source = LocalKitLogoLoader.current
     var svg by remember(id, agent, source) { mutableStateOf<String?>(null) }
-    var drawn by remember(id, agent, source) { mutableStateOf(false) }
     LaunchedEffect(id, agent, source) { svg = source?.svg(id, agent) }
     val context = LocalPlatformContext.current
     val request =
@@ -61,33 +61,13 @@ public fun KitProviderLogo(
                     .build()
             }
         }
-    val initials =
-        remember(name) {
-            name
-                .split(Regex("[^\\p{L}\\p{N}]+"))
-                .filter { it.isNotEmpty() }
-                .take(2)
-                .joinToString("") { word ->
-                    word.take(
-                        if (
-                            word.length > 1 && word[0].isHighSurrogate() && word[1].isLowSurrogate()
-                        )
-                            2
-                        else 1
-                    )
-                }
-                .uppercase()
-        }
     Box(modifier.size(28.dp).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
-        if (!drawn) KitText(initials, role = TypeRole.Label, maxLines = 1)
         if (request != null)
             AsyncImage(
                 model = request,
                 contentDescription = null,
                 modifier = Modifier.size(24.dp),
                 colorFilter = ColorFilter.tint(LocalKitColors.current.text1),
-                onSuccess = { drawn = true },
-                onError = { drawn = false },
             )
     }
 }
