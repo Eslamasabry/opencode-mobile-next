@@ -25,8 +25,8 @@ import kotlinx.coroutines.launch
  * - The re-enter sheet is asked once: closing it, choosing Later or saving its last row acknowledges it, and it does
  *   not come back. A password or token row of a saved server asks for it in the sheet and saves it on that same
  *   server. A GitHub row says where GitHub is signed in again (a chat's Git page) and "Open chats" goes there without
- *   answering the sheet; a BYO set-up row says this version cannot set it up. The deferred-features notice is
- *   acknowledged the first time it shows.
+ *   answering the sheet; a BYO set-up row says this version cannot set it up. The deferred-features notice names
+ *   each kept feature, is acknowledged the first time it shows and stays hidden once dismissed.
  *
  * [scope] is the owner's (the shell's ViewModel scope, or a test scope); time comes from its dispatcher.
  */
@@ -39,8 +39,9 @@ public class GatePresenter(
     private val confirming = MutableStateFlow<GateRow?>(null)
     private val sheet = MutableStateFlow(SheetState())
     private val running = mutableSetOf<Any>()
-    private var noticeLatched = false
+    private var noticeLatched: List<GateDeferredFeature> = emptyList()
     private var noticeAcknowledged = false
+    private val noticeDismissed = MutableStateFlow(false)
 
     private val slow: StateFlow<Boolean> =
         input
@@ -55,10 +56,16 @@ public class GatePresenter(
             }.stateIn(scope, SharingStarted.Eagerly, false)
 
     public val ui: StateFlow<GateUi> =
-        combine(input, slow, confirming, sheet) { i, s, c, sh -> reduce(i, s, c, sh) }
-            .stateIn(scope, SharingStarted.Eagerly, reduce(input.value, false, null, SheetState()))
+        combine(input, slow, confirming, sheet, noticeDismissed) { i, s, c, sh, d -> reduce(i, s, c, sh, d) }
+            .stateIn(scope, SharingStarted.Eagerly, reduce(input.value, false, null, SheetState(), false))
 
-    private fun reduce(input: GateInput, slow: Boolean, confirming: GateRow?, sheet: SheetState): GateUi =
+    private fun reduce(
+        input: GateInput,
+        slow: Boolean,
+        confirming: GateRow?,
+        sheet: SheetState,
+        noticeDismissed: Boolean,
+    ): GateUi =
         when (input) {
             is GateInput.Closed -> GateUi.Opening(wordless = !input.localeKnown && !slow, offerRetry = slow)
             is GateInput.Running -> GateUi.Updating(offerRetry = slow)
@@ -76,21 +83,31 @@ public class GatePresenter(
                 // The runner keeps the deferred set only until it is acknowledged, so the set alone means "not shown
                 // yet". `firstNativeLaunch` is not asked: a migration finished in a background start (a widget, a
                 // scheduled prompt) records the first open before any screen (Codex review p12/migration #5).
-                if (input.deferredDataFound) latchNotice()
+                if (input.deferredDataFound) latchNotice(input.deferred)
+                val notice = if (noticeDismissed) emptyList() else noticeLatched
                 if (sheet.closed) {
-                    GateUi.Open(reenter = emptyList(), deferredNotice = noticeLatched)
+                    GateUi.Open(reenter = emptyList(), deferred = notice)
                 } else {
-                    GateUi.Open(input.reenter - sheet.saved, deferredNotice = noticeLatched, entry = sheet.entry)
+                    GateUi.Open(input.reenter - sheet.saved, deferred = notice, entry = sheet.entry)
                 }
             }
         }
 
-    private fun latchNotice() {
-        noticeLatched = true
+    /**
+     * The notice keeps the features it first named for this run, even after the runner drops the acknowledged set, so
+     * it does not vanish under the person's eyes; Dismiss hides it, and the acknowledgement keeps it from coming back.
+     */
+    private fun latchNotice(found: Set<GateDeferredFeature>) {
+        if (noticeLatched.isEmpty()) noticeLatched = GateDeferredFeature.entries.filter { it in found }
         if (!noticeAcknowledged) {
             noticeAcknowledged = true
             once("notice") { actions.acknowledgeDeferredNotice() }
         }
+    }
+
+    /** Dismiss on the deferred-features notice: hidden now; it was recorded when it first showed, so it stays away. */
+    public fun onDismissDeferredNotice() {
+        noticeDismissed.value = true
     }
 
     /** A row on a failure screen, or Try again on a waiting screen. */

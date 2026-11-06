@@ -39,5 +39,10 @@
     <string name="migration_save_failed_title">Couldn't save on this phone</string>
     <string name="migration_open_storage_row">Open storage settings</string>
     <string name="migration_close">Close</string>
-    <string name="migration_deferred_notice">AI Team and Memory aren't in this version yet. Your projects and notes stay on this phone.</string>
+    <string name="migration_deferred_notice">Not in this version yet: %1$s. What you saved for them stays on this phone, untouched.</string>
+    <string name="migration_deferred_ai_team">AI Team</string>
+    <string name="migration_deferred_memory">Memory</string>
+    <string name="migration_deferred_gemma">the on-phone AI model</string>
+    <string name="migration_deferred_separator">, </string>
+    <string name="migration_deferred_dismiss">Dismiss the note about features not in this version</string>
 </resources>

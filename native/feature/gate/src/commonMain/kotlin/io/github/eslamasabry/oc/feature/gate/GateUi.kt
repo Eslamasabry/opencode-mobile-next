@@ -21,14 +21,17 @@ public sealed interface GateUi {
     ) : GateUi
 
     /**
-     * The app shows. [reenter] non-empty → the one-time sheet; [deferredNotice] → the one status-line notice
-     * (02 §3.7 item 4). [entry] → the sheet asks for one row's password or token in place of the list.
+     * The app shows. [reenter] non-empty → the one-time sheet; [deferred] non-empty → the one notice above the app
+     * naming each kept feature (02 §3.7 item 4), until it is dismissed. [entry] → the sheet asks for one row's
+     * password or token in place of the list.
      */
     public data class Open(
         val reenter: List<GateReentry>,
-        val deferredNotice: Boolean,
+        val deferred: List<GateDeferredFeature> = emptyList(),
         val entry: GateEntry? = null,
-    ) : GateUi
+    ) : GateUi {
+        val deferredNotice: Boolean get() = deferred.isNotEmpty()
+    }
 }
 
 /**

@@ -144,7 +144,7 @@ class GateScreenDesktopTest {
             GateReentry(null, "GitHub", GateReentryKind.GitHubSignIn),
             GateReentry("p3", "Laptop", GateReentryKind.ByoSetup),
         )
-        setContent(ui { Gate(GateUi.Open(items, deferredNotice = false)) })
+        setContent(ui { Gate(GateUi.Open(items)) })
         waitForIdle()
         onNodeWithText("A few sign-ins need you again").assertExists()
         onNodeWithText("Home server · Enter password").assertExists()
@@ -157,13 +157,56 @@ class GateScreenDesktopTest {
     }
 
     @Test
-    fun `02-3_7-4 the deferred-features notice reads above the app`() = runComposeUiTest {
+    fun `02-3_7-4 the deferred-features notice reads above the app and names each kept feature`() = runComposeUiTest {
         Locale.setDefault(Locale.ENGLISH)
-        setContent(ui { Gate(GateUi.Open(emptyList(), deferredNotice = true)) })
-        onNodeWithTag("gate-notice").assertExists()
-        onNodeWithText("AI Team and Memory aren't in this version yet. Your projects and notes stay on this phone.")
-            .assertExists()
+        val all = listOf(GateDeferredFeature.AiTeam, GateDeferredFeature.Memory, GateDeferredFeature.Gemma)
+        setContent(ui { Gate(GateUi.Open(emptyList(), deferred = all)) })
+        onNodeWithText(
+            "Not in this version yet: AI Team, Memory, the on-phone AI model. " +
+                "What you saved for them stays on this phone, untouched.",
+        ).assertExists()
         onNodeWithText("App content").assertExists()
+    }
+
+    @Test
+    fun `B-MIGR-009 Dismiss on the deferred-features notice hides it and keeps the app`() = runComposeUiTest {
+        Locale.setDefault(Locale.ENGLISH)
+        var state by mutableStateOf<GateUi>(GateUi.Open(emptyList(), deferred = listOf(GateDeferredFeature.Memory)))
+        setContent(
+            ui {
+                GateScreen(
+                    ui = state,
+                    onRow = {},
+                    onConfirm = {},
+                    onCancelConfirm = {},
+                    onReentry = {},
+                    onReentryLater = {},
+                    onDismissDeferredNotice = {
+                        taps += "dismiss"
+                        state = GateUi.Open(emptyList())
+                    },
+                    content = { KitText("App content") },
+                )
+            },
+        )
+        onNodeWithText("Not in this version yet: Memory. What you saved for them stays on this phone, untouched.")
+            .assertExists()
+        onNodeWithTag("gate-notice-dismiss").performClick()
+        waitForIdle()
+        onAllNodesWithText("Not in this version yet: Memory. What you saved for them stays on this phone, untouched.")
+            .assertCountEquals(0)
+        onNodeWithText("App content").assertExists()
+        assertEquals(listOf("dismiss"), taps)
+    }
+
+    @Test
+    fun `B-L10N-010 the deferred-features notice reads Arabic in an Arabic app`() = runComposeUiTest {
+        Locale.setDefault(Locale.forLanguageTag("ar"))
+        val two = listOf(GateDeferredFeature.AiTeam, GateDeferredFeature.Memory)
+        setContent(ui("ar") { Gate(GateUi.Open(emptyList(), deferred = two)) })
+        onNodeWithText(
+            "غير متوفر في هذا الإصدار بعد: «فريق الذكاء الاصطناعي»، «الذاكرة». ما حفظته لها يبقى على هذا الهاتف كما هو.",
+        ).assertExists()
     }
 
     @Test
@@ -180,7 +223,7 @@ class GateScreenDesktopTest {
     fun `B-MIGR-006 a password row asks for the password in the sheet and never shows it`() = runComposeUiTest {
         Locale.setDefault(Locale.ENGLISH)
         val home = GateReentry("p1", "Home server", GateReentryKind.Password)
-        var state by mutableStateOf<GateUi>(GateUi.Open(listOf(home), deferredNotice = false, entry = GateEntry(home)))
+        var state by mutableStateOf<GateUi>(GateUi.Open(listOf(home), entry = GateEntry(home)))
         val registered = mutableListOf<String>()
         val sink = KitSecretSink { registered += it }
         setContent(ui { CompositionLocalProvider(LocalKitSecretSink provides sink) { Gate(state) } })
@@ -193,7 +236,7 @@ class GateScreenDesktopTest {
         onNodeWithText("Back to the list").performClick()
         assertEquals(listOf("submit:6", "back"), taps)
 
-        state = GateUi.Open(listOf(home), deferredNotice = false, entry = GateEntry(home, failed = true))
+        state = GateUi.Open(listOf(home), entry = GateEntry(home, failed = true))
         waitForIdle()
         onNodeWithText("Couldn't save it on this phone. Try again.").assertExists()
     }
@@ -203,7 +246,7 @@ class GateScreenDesktopTest {
     fun `B-MIGR-006 a GitHub row says where to sign in again and offers the chats`() = runComposeUiTest {
         Locale.setDefault(Locale.ENGLISH)
         val gh = GateReentry("p1", "Home server", GateReentryKind.GitHubSignIn)
-        setContent(ui { Gate(GateUi.Open(listOf(gh), deferredNotice = false, entry = GateEntry(gh))) })
+        setContent(ui { Gate(GateUi.Open(listOf(gh), entry = GateEntry(gh))) })
         waitForIdle()
         onNodeWithText("To sign in to GitHub again for Home server, open one of its chats, then Git.").assertExists()
         onNodeWithText("Open chats").performClick()
@@ -216,7 +259,7 @@ class GateScreenDesktopTest {
     fun `B-MIGR-007 a BYO set-up row says plainly it is not in this version`() = runComposeUiTest {
         Locale.setDefault(Locale.forLanguageTag("ar"))
         val byo = GateReentry("p3", "Laptop", GateReentryKind.ByoSetup)
-        setContent(ui("ar") { Gate(GateUi.Open(listOf(byo), deferredNotice = false, entry = GateEntry(byo))) })
+        setContent(ui("ar") { Gate(GateUi.Open(listOf(byo), entry = GateEntry(byo))) })
         waitForIdle()
         onNodeWithText("لا يمكن إعداد Laptop مجددًا في هذا الإصدار بعد. تبقى تفاصيله المحفوظة على هذا الهاتف.").assertExists()
         onNodeWithText("Open chats").assertDoesNotExist()
