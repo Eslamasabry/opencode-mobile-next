@@ -693,13 +693,17 @@ private fun MdText(
                             val from = maxOf(run.start, layout.getLineStart(line))
                             val to = minOf(end, layout.getLineEnd(line, visibleEnd = true))
                             if (to <= from) continue
-                            val a = layout.getHorizontalPosition(from, usePrimaryDirection = true)
-                            val b = layout.getHorizontalPosition(to, usePrimaryDirection = true)
+                            // The run's own glyph boxes on this line: an offset at a soft wrap belongs to the next
+                            // line, so a horizontal position there jumped back to the start and tinted the words before.
+                            val head = layout.getBoundingBox(from)
+                            val tail = layout.getBoundingBox(to - 1)
+                            val a = minOf(head.left, tail.left)
+                            val b = maxOf(head.right, tail.right)
                             val base = layout.getLineBaseline(line)
                             drawRoundRect(
                                 tint,
-                                topLeft = Offset(minOf(a, b) - padX, base - size * .92f),
-                                size = Size(kotlin.math.abs(b - a) + 2 * padX, size * 1.22f),
+                                topLeft = Offset(a - padX, base - size * .92f),
+                                size = Size(b - a + 2 * padX, size * 1.22f),
                                 cornerRadius = corner,
                             )
                         }
