@@ -135,9 +135,9 @@ class QaWave1ComposerTest {
     fun `N2 QA wave4 a long model name never pushes the approval chip off the row`() = runComposeUiTest {
         val long = ComposerModel("zai-coding-plan", "glm-5.3-flash", "GLM-5.3-Flash Extended Thinking Preview", true)
         val withChip =
-            ComposerChrome({ false }, { false }, {}, { null }, {}, { null }, {}, {}, { false }) {
+            ComposerChrome({ false }, { false }, {}, { null }, {}, { null }, {}, {}, { false }, rowChips = {
                 io.github.eslamasabry.oc.ui.kit.KitText("Ask first", Modifier.testTag("approval-chip"))
-            }
+            })
         setContent {
             Theme {
                 Box(Modifier.width(360.dp)) {

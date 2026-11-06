@@ -283,7 +283,7 @@ class WorldComposerFilesModelsTest {
                     object : ConnectionGraph, ChatGraphAccessors, TranscriptAccessors {
                         override val profile = p
                         override val scope = scope
-                        override val session = ConnectionSession(p, pair.live)
+                        override val session = ConnectionSession(p, pair.live, scope)
                         override val chatDelivery =
                             ConnectionDelivery(
                                 pair.live,
@@ -802,7 +802,14 @@ class WorldComposerFilesModelsTest {
         val child = SessionId("child")
         f.base.sessionList = (f.base.sessionList + Session(child, parentId = ref.sessionId)).toImmutableList()
         f.open()
-        val port = io.github.eslamasabry.oc.feature.chat.header.world.GraphChatHeaderPort(ref, f.registry)
+        val port =
+            io.github.eslamasabry.oc.feature.chat.header.world.GraphChatHeaderPort(
+                ref,
+                f.registry,
+                f.dispatchers,
+                importFiles = null,
+                context = NoContextHistory,
+            )
         port.attach()
         runCurrent()
         f.base.events.emit(
@@ -1024,4 +1031,18 @@ class WorldComposerFilesModelsTest {
         assertIs<Outcome.Ok<Unit>>(f.world.selectModel(m2))
         assertEquals(listOf("m2"), f.world.models.value.recent.map { it.modelId })
     }
+}
+
+/** The header port's context-usage memory, unused by these tests. */
+private object NoContextHistory : io.github.eslamasabry.oc.engine.settings.context.ContextUsageHistory {
+    override fun fraction(
+        profile: io.github.eslamasabry.oc.core.common.ids.ProfileId,
+        session: String,
+    ): Double? = null
+
+    override suspend fun remember(
+        profile: io.github.eslamasabry.oc.core.common.ids.ProfileId,
+        session: String,
+        fraction: Double?,
+    ): io.github.eslamasabry.oc.core.common.Outcome<Unit> = io.github.eslamasabry.oc.core.common.Outcome.Ok(Unit)
 }

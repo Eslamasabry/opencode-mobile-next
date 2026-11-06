@@ -15,6 +15,7 @@ kotlin {
 kotlin {
     sourceSets.getByName("desktopTest").dependencies {
         implementation(libs.compose.desktop.currentos)
+        implementation(project(":ui:gate")) // order 41 golden-diff cases (rb/o41)
     }
 }
 apply(from = rootProject.file("gradle/desktop-golden-fonts.gradle"))

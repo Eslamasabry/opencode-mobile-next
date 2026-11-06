@@ -78,6 +78,8 @@ class FilesScreensTest {
             toggles++
         }
 
+        override fun toggleSourceFirst() = Unit
+
         override fun search(query: String) {
             searches += query
         }

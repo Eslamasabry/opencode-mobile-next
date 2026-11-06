@@ -7,6 +7,7 @@ plugins { id("oc.kmp.feature") }
 kotlin {
     sourceSets.getByName("desktopTest").dependencies {
         implementation(libs.compose.desktop.currentos)
+        implementation(project(":ui:gate")) // order 42 golden-diff cases (rb/o42)
     }
     sourceSets.commonMain.dependencies {
         implementation(project(":engine:settings"))
@@ -34,15 +35,3 @@ kotlin {
         ) // P12-BUILD-AGENTS: the Continue on computer resume command
     }
 }
-
-// looks capture only: stale existing tests in this module do not compile; compile only the capture
-// test and fixtures.
-kotlin.sourceSets
-    .matching { it.name == "commonTest" || it.name == "desktopTest" }
-    .configureEach {
-        kotlin.exclude {
-            it.file.name.endsWith("Test.kt") &&
-                it.file.name != "LooksCaptureTest.kt" &&
-                !it.file.invariantSeparatorsPath.contains("/rb/o42/")
-        }
-    }

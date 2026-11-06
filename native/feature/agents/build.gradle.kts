@@ -21,3 +21,6 @@ kotlin {
     }
 }
 
+
+// Order 49 compares the agents screens against the frozen Flutter scenes (the test-only :ui:gate module).
+kotlin.sourceSets.getByName("desktopTest").dependencies { implementation(project(":ui:gate")) }
