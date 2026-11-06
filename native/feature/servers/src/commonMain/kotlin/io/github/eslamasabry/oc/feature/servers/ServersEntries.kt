@@ -36,6 +36,7 @@ import io.github.eslamasabry.oc.ui.routes.ServersRoute
 public class ServersEntries(
     private val navigator: AppNavigator,
     private val platform: PlatformCapabilities,
+    private val lan: io.github.eslamasabry.oc.feature.servers.discovery.LanDiscovery,
     private val tailscale: io.github.eslamasabry.oc.feature.servers.presentation.TailscaleSetup? =
         null,
 ) : EntryInstaller {
@@ -77,7 +78,7 @@ public class ServersEntries(
                     create(route)
                 }
             val state by vm.state.collectAsStateWithLifecycle()
-            ServerEditorScreen(state, vm)
+            ServerEditorScreen(state, vm, lan)
         }
         entry<CapabilityServerSetupRoute> { route ->
             val vm =

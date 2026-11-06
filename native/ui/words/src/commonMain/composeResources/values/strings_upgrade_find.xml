@@ -1,0 +1,19 @@
+<resources>
+    <string name="upgradeFindTitle">Find on my network</string>
+    <string name="upgradeFindBody">Look for OpenCode on computers on this Wi-Fi.</string>
+    <string name="upgradeFindReason">To find your computer, the app looks at devices on your Wi-Fi network. It sends no password and only asks nearby addresses.</string>
+    <string name="upgradeFindScanning">Looking on this Wi-Fi…</string>
+    <string name="upgradeFindStop">Stop</string>
+    <string name="upgradeFindSearchAgain">Search again</string>
+    <string name="upgradeFindResultsLabel">Computers found on your network</string>
+    <string name="upgradeFindNeedsPassword">Needs password</string>
+    <string name="upgradeFindVersion">Version %1$s</string>
+    <string name="upgradeFindPickLabel">Use %1$s</string>
+    <string name="upgradeFindEmptyTitle">Nothing found</string>
+    <string name="upgradeFindEmptyBody">Start OpenCode on your computer with `opencode serve --mdns`, make sure both are on the same Wi-Fi, or enter the address yourself.</string>
+    <string name="upgradeFindEnterAddress">Enter the address</string>
+    <string name="upgradeFindDeniedBody">Without access to your local network the app cannot look for your computer. You can allow it and try again, or enter the address yourself.</string>
+    <string name="upgradeFindAllow">Allow and search</string>
+    <string name="upgradeFindBlockedBody">Local network access is turned off for this app. Turn it on in the app settings, or enter the address yourself.</string>
+    <string name="upgradeFindOpenSettings">Open app settings</string>
+</resources>

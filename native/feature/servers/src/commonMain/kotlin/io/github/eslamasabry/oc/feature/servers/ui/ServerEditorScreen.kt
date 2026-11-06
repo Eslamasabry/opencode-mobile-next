@@ -8,6 +8,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.text.style.TextAlign
 import io.github.eslamasabry.oc.ui.kit.setup.KitServersLink
 import io.github.eslamasabry.oc.ui.kit.setup.KitServersLinkState
@@ -20,6 +21,9 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.core.model.ServerOrigin
+import io.github.eslamasabry.oc.feature.servers.discovery.LanAccess
+import io.github.eslamasabry.oc.feature.servers.discovery.LanDiscovery
+import io.github.eslamasabry.oc.feature.servers.discovery.NoLanDiscovery
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingText
 import io.github.eslamasabry.oc.feature.servers.pairing.pairingProblemText
 import io.github.eslamasabry.oc.feature.servers.presentation.*
@@ -47,7 +51,11 @@ import org.jetbrains.compose.resources.stringResource
 
 /** Secrets are held in memory and shown as Saved · Replace; none is a saved-state field. */
 @Composable
-public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorActions) {
+public fun ServerEditorScreen(
+    state: ServerEditorUi,
+    actions: ServerEditorActions,
+    lan: LanDiscovery = NoLanDiscovery(),
+) {
     val restored = remember { actions.takeDraft() }
     val name = rememberTextFieldState(restored?.name.orEmpty())
     val address = rememberTextFieldState(restored?.address.orEmpty())
@@ -75,6 +83,17 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
     var manualOpen by remember { mutableStateOf(!state.newServer || restored?.address?.isNotBlank() == true) }
     LaunchedEffect(state.failure, state.record?.needsSecret, state.fillGeneration) {
         if (state.failure != null || state.record?.needsSecret == true || state.fillGeneration > 0) manualOpen = true
+    }
+    val passwordFocus = remember { FocusRequester() }
+    LaunchedEffect(state.passwordFocusGeneration) {
+        if (state.passwordFocusGeneration > 0) {
+            delay(250) // after the fields have opened and the pick has filled the address
+            try { passwordFocus.requestFocus() } catch (_: IllegalStateException) { }
+        }
+    }
+    // Ports the person already used are searched too; the request asks the system only when tapped.
+    val findRequest = lan.rememberAccess { access ->
+        actions.findAccess(access, listOfNotNull(editorOrigin(address.text.toString())?.port).toSet())
     }
     var clip by remember { mutableStateOf<String?>(null) }
     var clipId by remember { mutableLongStateOf(0L) }
@@ -500,6 +519,17 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                             )
                         }
                         state.pairingProblem?.let { KitErrorNotice(pairingProblemText(it)) }
+                        // The second way in: look for the computer on this Wi-Fi.
+                        if (pairingFirst && state.canFind)
+                            FindOnNetworkSection(
+                                find = state.find,
+                                enabled = enabled.isEnabled,
+                                onStart = { findRequest.ask() },
+                                onStop = actions::stopFind,
+                                onPick = actions::pickFound,
+                                onEnterAddress = { manualOpen = true },
+                                onOpenSettings = actions::openAccessSettings,
+                            )
                     }
                     if (state.newServer) {
                         val commands: @Composable () -> Unit = {
@@ -598,6 +628,7 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                                     else if (backend == BackendKind.Paseo) Res.string.paseoPasswordLabel else Res.string.codexTokenLabel
                                 ),
                                 kind = KitFieldKind.Secret,
+                                focusRequester = passwordFocus,
                                 helper = stringResource(if (backend == BackendKind.Paseo) Res.string.paseoPasswordHelp else if (backend == BackendKind.Codex) Res.string.codexTokenStorageHelp
                                     else if (state.record?.needsSecret == true) Res.string.e7SetupEmptyPasswordHint else Res.string.e7SetupPasswordStartupHint),
                                 enabled = enabled,

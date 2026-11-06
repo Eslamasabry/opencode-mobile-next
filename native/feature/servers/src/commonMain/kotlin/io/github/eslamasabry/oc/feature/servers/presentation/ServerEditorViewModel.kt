@@ -9,6 +9,7 @@ import io.github.eslamasabry.oc.core.common.*
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.capabilities.PlatformCapabilities
 import io.github.eslamasabry.oc.engine.connection.ServerConnections
+import io.github.eslamasabry.oc.feature.servers.discovery.*
 import io.github.eslamasabry.oc.feature.servers.pairing.*
 import io.github.eslamasabry.oc.ui.routes.*
 import kotlinx.coroutines.Job
@@ -47,6 +48,29 @@ public data class ServerEditorUi(
     /** True when the Ready step's primary action opens a new conversation, not just the list. */
     val startsConversation: Boolean = false,
     val tailscaleApp: EditorTailscaleState? = null,
+    /** "Find on my network" is offered (the platform can look at the local network). */
+    val canFind: Boolean = false,
+    val find: FindOnNetworkUi = FindOnNetworkUi(),
+    /** Bumped when a found computer needs its password typed next; the screen focuses that field. */
+    val passwordFocusGeneration: Int = 0,
+)
+
+public enum class FindPhase {
+    Idle,
+    Scanning,
+    Done,
+
+    /** The system refused local-network access this time; asking again is honest. */
+    Denied,
+
+    /** The system will not ask again; only app settings can change it. */
+    Blocked,
+}
+
+/** The live list of "Find on my network". Holds addresses and versions only, never a credential. */
+public data class FindOnNetworkUi(
+    val phase: FindPhase = FindPhase.Idle,
+    val findings: List<LanFinding> = emptyList(),
 )
 
 public interface ServerEditorActions {
@@ -91,6 +115,16 @@ public interface ServerEditorActions {
     public fun agents()
 
     public fun openReady()
+
+    /** The system answered the local-network question; on [LanAccess.Granted] the search starts. */
+    public fun findAccess(access: LanAccess, extraPorts: Set<Int>)
+
+    public fun stopFind()
+
+    public fun openAccessSettings()
+
+    /** Fills the form from a found computer. */
+    public fun pickFound(finding: LanFinding)
 }
 
 @AssistedInject
@@ -101,6 +135,7 @@ public class ServerEditorViewModel(
     private val nav: AppNavigator,
     private val inbox: PairingInbox,
     private val pairingProbe: PairingProbe,
+    private val lan: LanDiscovery,
     platform: PlatformCapabilities,
 ) : ViewModel(), ServerEditorActions {
     private val mutable =
@@ -114,11 +149,13 @@ public class ServerEditorViewModel(
                 canScan = platform.qrPairing,
                 canTailscale = platform.tailscaleHandoff,
                 canPhone = platform.builtinLinux,
+                canFind = lan.supported,
                 startsConversation = route.newConversation,
             )
         )
     public val state: StateFlow<ServerEditorUi> = mutable.asStateFlow()
     private var work: Job? = null
+    private var finding: Job? = null
     private var generation = 0
     private var fill: PairingFill? = null
     private var resultFor: ServerEditorInput? = null
@@ -397,7 +434,84 @@ public class ServerEditorViewModel(
         }
     }
 
+    override fun findAccess(access: LanAccess, extraPorts: Set<Int>) {
+        if (!mutable.value.canFind || mutable.value.saving) return
+        when (access) {
+            LanAccess.Granted -> startFind(extraPorts)
+            LanAccess.Denied -> setFind(FindOnNetworkUi(FindPhase.Denied))
+            LanAccess.Blocked -> setFind(FindOnNetworkUi(FindPhase.Blocked))
+        }
+    }
+
+    private fun setFind(find: FindOnNetworkUi) = mutable.update { it.copy(find = find) }
+
+    private fun startFind(extraPorts: Set<Int>) {
+        finding?.cancel()
+        setFind(FindOnNetworkUi(FindPhase.Scanning))
+        finding =
+            viewModelScope.launch {
+                try {
+                    lan.scan(extraPorts).collect { found ->
+                        mutable.update {
+                            it.copy(
+                                find =
+                                    it.find.copy(
+                                        findings =
+                                            LanFindings.sorted(
+                                                LanFindings.merge(it.find.findings, found)
+                                            )
+                                    )
+                            )
+                        }
+                    }
+                    mutable.update { it.copy(find = it.find.copy(phase = FindPhase.Done)) }
+                } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                    throw cancelled
+                } catch (_: Exception) {
+                    mutable.update { it.copy(find = it.find.copy(phase = FindPhase.Done)) }
+                }
+            }
+    }
+
+    override fun stopFind() {
+        finding?.cancel()
+        finding = null
+        mutable.update {
+            if (it.find.phase == FindPhase.Scanning) it.copy(find = it.find.copy(phase = FindPhase.Done))
+            else it
+        }
+    }
+
+    override fun openAccessSettings() = lan.openAccessSettings()
+
+    override fun pickFound(finding: LanFinding) {
+        stopFind()
+        changed()
+        fill?.takePassword()
+        // Nothing was sent to this computer; only its address and name fill the form.
+        fill =
+            PairingFill(
+                address = finding.address,
+                username = null,
+                secret = null,
+                addresses = 1,
+                fromLink = false,
+                hostname = finding.name,
+            )
+        mutable.update {
+            it.copy(
+                step = ServerEditorStep.Connect,
+                pairingProblem = null,
+                fillGeneration = it.fillGeneration + 1,
+                passwordFocusGeneration =
+                    if (finding.needsPassword) it.passwordFocusGeneration + 1
+                    else it.passwordFocusGeneration,
+            )
+        }
+    }
+
     override fun onCleared() {
+        finding?.cancel()
         fill?.takePassword()
         resultFor = null
         draft = null
