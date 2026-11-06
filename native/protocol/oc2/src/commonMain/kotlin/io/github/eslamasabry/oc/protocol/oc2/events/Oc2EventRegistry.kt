@@ -185,9 +185,9 @@ public object Oc2EventRegistry {
         put("permission.asked") { _, data ->
             Oc2PermissionRequest.fromJson(data)?.let(Oc2Event::PermissionAsked)
         }
-        put("permission.updated") { _, data ->
-            Oc2PermissionRequest.fromJson(data)?.let(Oc2Event::PermissionAsked)
-        }
+        // No `permission.updated`: it is the OpenCode 1 permission shape. Flutter's api2 union does
+        // not model it and its OC2 adapter drops it, so here it decodes to Unknown like any type
+        // this client does not know.
         put("permission.replied") { _, data ->
             val id = data.str("requestID") ?: data.str("permissionID") ?: ""
             if (id.isBlank()) null
