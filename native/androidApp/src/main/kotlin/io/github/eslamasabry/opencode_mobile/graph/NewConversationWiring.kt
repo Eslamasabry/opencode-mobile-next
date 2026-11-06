@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.core.common.WireJson
 import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.common.ids.MessageId
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
@@ -32,12 +33,19 @@ import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.connection.DirectoryPaths
 import io.github.eslamasabry.oc.engine.connection.ServerConnections
+import io.github.eslamasabry.oc.engine.delivery.DeliveryStorage
 import io.github.eslamasabry.oc.engine.delivery.LocalSendId
 import io.github.eslamasabry.oc.engine.delivery.PromptDelivery
+import io.github.eslamasabry.oc.engine.delivery.ReceiptLook
 import io.github.eslamasabry.oc.engine.delivery.SendOutcome
+import io.github.eslamasabry.oc.engine.delivery.SendOutcomeId
 import io.github.eslamasabry.oc.engine.delivery.SendPhase
 import io.github.eslamasabry.oc.engine.delivery.SendRequest
+import io.github.eslamasabry.oc.engine.delivery.port.GatewaySendLink
 import io.github.eslamasabry.oc.engine.delivery.port.nothingSent
+import io.github.eslamasabry.oc.engine.delivery.receipts.CommandReceipt
+import io.github.eslamasabry.oc.engine.delivery.receipts.CommandReceiptController
+import io.github.eslamasabry.oc.engine.delivery.receipts.CommandReceiptState
 import io.github.eslamasabry.oc.engine.git.GitLinkRepairReport
 import io.github.eslamasabry.oc.engine.git.GitLinkRepairService
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
@@ -46,11 +54,11 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlin.io.encoding.Base64
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -69,6 +77,7 @@ class AndroidNewConversationHost(
     private val connections: ServerConnections,
     private val stores: PreviewStores,
     private val gitRepair: GitLinkRepairService,
+    private val deliveryStores: Set<DeliveryStorage>,
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
 ) : NewConversationHost {
@@ -182,19 +191,41 @@ class AndroidNewConversationHost(
         val session: String,
         val directory: String,
         val target: String,
+        val reviewId: String? = null,
+        val draftDigest: String? = null,
     ) {
         fun encode(): String =
             DartJson.encode(
-                linkedMapOf("session" to session, "directory" to directory, "target" to target)
+                linkedMapOf(
+                    "session" to session,
+                    "directory" to directory,
+                    "target" to target,
+                    "reviewId" to reviewId,
+                    "draftDigest" to draftDigest,
+                )
             )
 
         companion object {
             fun decode(raw: String): FirstMessageReview? {
                 val fields = DartJson.decodeOrNull(raw) as? Map<*, *> ?: return null
+                val reviewId = fields["reviewId"]
+                if (
+                    reviewId != null &&
+                        (reviewId !is String || !Regex("^[a-zA-Z0-9_:-]{1,256}$").matches(reviewId))
+                )
+                    return null
+                val draftDigest = fields["draftDigest"]
+                if (
+                    draftDigest != null &&
+                        (draftDigest !is String || !Regex("^[a-f0-9]{64}$").matches(draftDigest))
+                )
+                    return null
                 return FirstMessageReview(
                     fields["session"] as? String ?: return null,
                     fields["directory"] as? String ?: return null,
                     fields["target"] as? String ?: return null,
+                    reviewId as? String,
+                    draftDigest as? String,
                 )
             }
         }
@@ -226,9 +257,17 @@ class AndroidNewConversationHost(
     override suspend fun review(profile: ProfileId, directory: String?): Outcome<ConversationRef?> =
         withContext(serial) {
             if (stores.profiles.profile(profile) == null) return@withContext refused()
+            val expected =
+                linkedMapOf(
+                    reviewKey(profile, directory) to
+                        stores.prefs.get(reviewKey(profile, directory)),
+                    creationKey(profile, directory) to
+                        stores.prefs.get(creationKey(profile, directory)),
+                    draftKey(profile, directory) to stores.prefs.get(draftKey(profile, directory)),
+                )
             val raw =
-                stores.prefs.get(reviewKey(profile, directory))
-                    ?: stores.prefs.get(creationKey(profile, directory))
+                expected[reviewKey(profile, directory)]
+                    ?: expected[creationKey(profile, directory)]
                     ?: return@withContext Outcome.Ok(null)
             val graph = registry.live.value[profile] ?: return@withContext refused()
             if (raw !is PrefValue.Str || raw.value.length > 8192 || directory == null)
@@ -250,8 +289,126 @@ class AndroidNewConversationHost(
                     !currentTarget(graph, directory)
             )
                 return@withContext refused()
+            if (firstMessageConfirmed(graph, receipt)) {
+                if (!currentTarget(graph, directory) || target(graph, directory) != receipt.target)
+                    return@withContext refused()
+                val cleared =
+                    stores.prefs.compareAndCommit(stores.lanes.forProfile(profile), expected) {
+                        if (
+                            currentTarget(graph, directory) &&
+                                target(graph, directory) == receipt.target
+                        ) {
+                            remove(reviewKey(profile, directory))
+                            remove(creationKey(profile, directory))
+                            // A newer draft may already occupy this project slot. Only a digest
+                            // bound before the original send can authorize deleting its words.
+                            val draft =
+                                (expected[draftKey(profile, directory)] as? PrefValue.Str)?.value
+                            if (
+                                receipt.draftDigest != null &&
+                                    draft != null &&
+                                    DartJson.sha256Hex(draft) == receipt.draftDigest
+                            )
+                                remove(draftKey(profile, directory))
+                        }
+                    }
+                if (cleared is Outcome.Failed) return@withContext cleared
+                if (!currentTarget(graph, directory) || target(graph, directory) != receipt.target)
+                    return@withContext refused()
+                if (
+                    (cleared as Outcome.Ok).value &&
+                        stores.prefs.get(reviewKey(profile, directory)) == null &&
+                        stores.prefs.get(creationKey(profile, directory)) == null
+                )
+                    return@withContext Outcome.Ok(null)
+            }
             Outcome.Ok(ConversationRef(profile, SessionId(receipt.session)))
         }
+
+    /** A removed queue row alone proves nothing; only the original scoped admission does. */
+    private suspend fun firstMessageConfirmed(
+        graph: ConnectionGraph,
+        binding: FirstMessageReview,
+    ): Boolean {
+        val journals = deliveryStores.singleOrNull()?.journals ?: return false
+        val journal = (journals.forProfile(graph.profile.id) as? Outcome.Ok)?.value ?: return false
+        val rows = (journal.read() as? Outcome.Ok)?.value ?: return false
+        val link =
+            GatewaySendLink(graph.profile.id, graph.profile.origin.toString(), graph.session.server)
+        val origin = link.scope
+        val candidates = rows.filter {
+            it.scope == origin.receiptScope &&
+                it.sessionId == binding.session &&
+                it.tabId == binding.session &&
+                it.commandId.startsWith("queue:") &&
+                (binding.reviewId == null ||
+                    it.commandId == CommandReceipt.queueCommandId(binding.reviewId))
+        }
+        // Old envelopes had no marker id. Only a unique exact-session journal binding can
+        // recover those safely; several historical sends remain ambiguous.
+        val original = candidates.singleOrNull() ?: return false
+        fun current(): Boolean =
+            currentTarget(graph, binding.directory) &&
+                target(graph, binding.directory) == binding.target &&
+                link.scope == origin &&
+                journal.isOpen
+        if (!current()) return false
+        if (original.state == CommandReceiptState.Confirmed) return true
+        if (binding.reviewId == null) return false
+        val checked =
+            CommandReceiptController(journal).retry(original.commandId) { receipt ->
+                val found =
+                    link.lookupAdmission(
+                        SessionId(receipt.sessionId),
+                        MessageId(receipt.receiptId),
+                    )
+                current() && found is Outcome.Ok && found.value
+            }
+        val confirmed = (checked as? Outcome.Ok)?.value ?: return false
+        return current() &&
+            confirmed.sameIdentity(original) &&
+            confirmed.state == CommandReceiptState.Confirmed
+    }
+
+    private suspend fun bindFirstMessageReview(
+        delivery: PromptDelivery,
+        localId: LocalSendId,
+        ref: ConversationRef,
+        directory: String,
+        expectedTarget: String,
+    ): Outcome<Unit> {
+        val reviewId =
+            delivery.pending.value.firstOrNull { it.localId == localId && it.ref == ref }?.reviewId
+                ?: delivery.outcomes.value
+                    .filterIsInstance<SendOutcome.Unconfirmed>()
+                    .firstOrNull { it.localId == localId && it.ref == ref }
+                    ?.reviewId
+                ?: return Outcome.Ok(Unit)
+        val key = reviewKey(ref.profileId, directory)
+        val before = stores.prefs.get(key)
+        val original =
+            (before as? PrefValue.Str)?.value?.let(FirstMessageReview::decode)
+                ?: return Outcome.Failed(Failure.StorageRefused())
+        if (
+            original.session != ref.sessionId.raw ||
+                original.directory != directory ||
+                original.target != expectedTarget
+        )
+            return refused()
+        return when (
+            val bound =
+                stores.prefs.compareAndCommit(
+                    stores.lanes.forProfile(ref.profileId),
+                    mapOf(key to before),
+                ) {
+                    putString(key, original.copy(reviewId = reviewId).encode())
+                }
+        ) {
+            is Outcome.Failed -> bound
+            is Outcome.Ok ->
+                if (bound.value) Outcome.Ok(Unit) else Outcome.Failed(Failure.StorageRefused())
+        }
+    }
 
     override suspend fun setup(profile: ProfileId): Outcome<NewConversationSetup> =
         withContext(serial) {
@@ -426,6 +583,7 @@ class AndroidNewConversationHost(
         agent: String?,
         separateCopy: Boolean,
         previous: NewConversationAttempt?,
+        onStarted: (ConversationRef) -> Unit,
     ): NewConversationAttempt =
         withContext(serial) {
             lane.withLock {
@@ -629,7 +787,12 @@ class AndroidNewConversationHost(
                             putString(draftKey(profile, directory), text)
                             putString(
                                 reviewKey(profile, directory),
-                                FirstMessageReview(ref.sessionId.raw, directory, expectedTarget)
+                                FirstMessageReview(
+                                        ref.sessionId.raw,
+                                        directory,
+                                        expectedTarget,
+                                        draftDigest = DartJson.sha256Hex(text),
+                                    )
                                     .encode(),
                             )
                             // Keep the explicit choice even if delivery needs review. Waiting
@@ -654,7 +817,15 @@ class AndroidNewConversationHost(
                         agent = agent,
                     )
                 val receipt =
-                    awaitFirstMessage(delivery, graph, ref, directory, expectedTarget, request)
+                    awaitFirstMessage(
+                        delivery,
+                        graph,
+                        ref,
+                        directory,
+                        expectedTarget,
+                        request,
+                        onStarted,
+                    )
                 if (!currentTarget(graph, directory) || target(graph, directory) != expectedTarget)
                     return@withLock attempt.copy(
                         ref = null,
@@ -663,10 +834,47 @@ class AndroidNewConversationHost(
                     )
                 when (receipt) {
                     is FirstMessage.Accepted -> {
-                        stores.prefs.commit(stores.lanes.forProfile(profile)) {
-                            remove(draftKey(profile, directory))
-                            remove(creationKey(profile, directory))
-                            remove(reviewKey(profile, directory))
+                        val expected =
+                            linkedMapOf(
+                                reviewKey(profile, directory) to
+                                    stores.prefs.get(reviewKey(profile, directory)),
+                                creationKey(profile, directory) to
+                                    stores.prefs.get(creationKey(profile, directory)),
+                                draftKey(profile, directory) to
+                                    stores.prefs.get(draftKey(profile, directory)),
+                            )
+                        fun binding(key: String): FirstMessageReview? =
+                            (expected[key] as? PrefValue.Str)
+                                ?.value
+                                ?.let(FirstMessageReview::decode)
+                        fun original(binding: FirstMessageReview?): Boolean =
+                            binding != null &&
+                                binding.session == ref.sessionId.raw &&
+                                binding.directory == directory &&
+                                binding.target == expectedTarget
+                        val review = binding(reviewKey(profile, directory))
+                        val creation = binding(creationKey(profile, directory))
+                        val draft =
+                            (expected[draftKey(profile, directory)] as? PrefValue.Str)?.value
+                        // Confirmation belongs to this send even if another New screen has
+                        // already replaced its project draft or metadata. Cleanup is best effort;
+                        // a refused CAS must never turn that confirmed send into a failed send.
+                        stores.prefs.compareAndCommit(stores.lanes.forProfile(profile), expected) {
+                            if (
+                                currentTarget(graph, directory) &&
+                                    target(graph, directory) == expectedTarget
+                            ) {
+                                if (original(review)) remove(reviewKey(profile, directory))
+                                if (original(creation)) remove(creationKey(profile, directory))
+                                if (
+                                    review != null &&
+                                        original(review) &&
+                                        review.draftDigest == DartJson.sha256Hex(text) &&
+                                        draft != null &&
+                                        DartJson.sha256Hex(draft) == review.draftDigest
+                                )
+                                    remove(draftKey(profile, directory))
+                            }
                         }
                         receipt.outcome?.let(delivery::acknowledge)
                         attempt.copy(dispatched = true, failure = null)
@@ -692,16 +900,17 @@ class AndroidNewConversationHost(
         }
 
     private sealed interface FirstMessage {
-        data class Accepted(
-            val outcome: io.github.eslamasabry.oc.engine.delivery.SendOutcomeId? = null
-        ) : FirstMessage
+        data class Accepted(val outcome: SendOutcomeId? = null) : FirstMessage
 
         data class PutBack(
             val failure: Failure,
-            val outcome: io.github.eslamasabry.oc.engine.delivery.SendOutcomeId? = null,
+            val outcome: SendOutcomeId? = null,
         ) : FirstMessage
 
-        data class Unknown(val failure: Failure? = null) : FirstMessage
+        data class Unknown(
+            val failure: Failure? = null,
+            val outcome: SendOutcomeId? = null,
+        ) : FirstMessage
     }
 
     private data class FirstMessageObservations(
@@ -720,6 +929,7 @@ class AndroidNewConversationHost(
         directory: String,
         expectedTarget: String,
         request: SendRequest,
+        onStarted: (ConversationRef) -> Unit,
     ): FirstMessage = coroutineScope {
         val observed = MutableStateFlow(FirstMessageObservations())
         val observer =
@@ -748,7 +958,9 @@ class AndroidNewConversationHost(
                                         }
                                     is SendOutcome.Unconfirmed ->
                                         outcome.localId?.let {
-                                            receipts[it] = FirstMessage.Unknown(outcome.reason)
+                                            if (receipts[it] !is FirstMessage.Accepted)
+                                                receipts[it] =
+                                                    FirstMessage.Unknown(outcome.reason, outcome.id)
                                         }
                                     is SendOutcome.Queued ->
                                         receipts[LocalSendId(outcome.entryId)] =
@@ -778,6 +990,28 @@ class AndroidNewConversationHost(
                     else FirstMessage.Unknown(sent.failure)
                 }
                 is Outcome.Ok -> {
+                    when (
+                        val bound =
+                            bindFirstMessageReview(
+                                delivery,
+                                sent.value,
+                                ref,
+                                directory,
+                                expectedTarget,
+                            )
+                    ) {
+                        is Outcome.Failed ->
+                            return@coroutineScope FirstMessage.Unknown(bound.failure)
+                        is Outcome.Ok -> Unit
+                    }
+                    // The engine owns the pending send now. Open its real conversation with
+                    // the composer immediately while this owner reconciles its first receipt.
+                    if (
+                        observed.value.current &&
+                            currentTarget(owner, directory) &&
+                            target(owner, directory) == expectedTarget
+                    )
+                        onStarted(ref)
                     // Commands return only after their synchronous gateway receipt, with no
                     // bubble/outcome row.
                     if (
@@ -787,18 +1021,42 @@ class AndroidNewConversationHost(
                     )
                         FirstMessage.Accepted()
                     else {
-                        val state =
-                            withTimeoutOrNull(95_000) {
-                                observed.first { !it.current || sent.value in it.receipts }
+                        // An Unconfirmed transport outcome is provisional. The receipt can
+                        // arrive after the POST response (especially when this phone hosts the
+                        // server too). Keep observing the exact send and check its journalled
+                        // message id; both paths read only, and neither resends the words.
+                        withTimeoutOrNull(240_000) {
+                            while (
+                                observed.value.current &&
+                                    currentTarget(owner, directory) &&
+                                    target(owner, directory) == expectedTarget
+                            ) {
+                                val state = observed.value
+                                when (val receipt = state.receipts[sent.value]) {
+                                    is FirstMessage.Accepted -> return@withTimeoutOrNull receipt
+                                    is FirstMessage.PutBack -> return@withTimeoutOrNull receipt
+                                    is FirstMessage.Unknown -> {
+                                        val checked = delivery.checkAgain(sent.value)
+                                        if (
+                                            checked is Outcome.Ok &&
+                                                checked.value == ReceiptLook.Confirmed &&
+                                                currentTarget(owner, directory) &&
+                                                target(owner, directory) == expectedTarget
+                                        )
+                                            return@withTimeoutOrNull FirstMessage.Accepted(
+                                                receipt.outcome
+                                            )
+                                    }
+                                    null -> Unit
+                                }
+                                delay(2_000)
                             }
-                        if (
-                            state == null ||
-                                !state.current ||
-                                !currentTarget(owner, directory) ||
-                                target(owner, directory) != expectedTarget
-                        )
                             FirstMessage.Unknown()
-                        else state.receipts[sent.value] ?: FirstMessage.Unknown()
+                        }
+                            ?: observed.value.receipts[sent.value]?.let {
+                                if (it is FirstMessage.Unknown) it else FirstMessage.Unknown()
+                            }
+                            ?: FirstMessage.Unknown()
                     }
                 }
             }

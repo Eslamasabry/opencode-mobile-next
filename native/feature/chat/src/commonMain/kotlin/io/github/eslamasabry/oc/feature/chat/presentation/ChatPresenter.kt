@@ -437,6 +437,11 @@ public class ChatPresenter(
         launcher.launch { world.sendAgain(words) }
     }
 
+    /** A contributed chat action failed before navigation or dispatch. */
+    public fun actionFailed(failure: Failure) {
+        local.update { it.copy(actionFailure = failure) }
+    }
+
     override fun checkReceipt(localId: Long) {
         val target =
             world.pending.value.firstOrNull {
@@ -496,7 +501,9 @@ public class ChatPresenter(
                                 localId,
                                 ReceiptCheckUi(checkedAtMs = checkedAt, result = result),
                             ),
-                        receiptResult = result,
+                        // A remaining bubble already presents this check's result and button.
+                        // Only confirmation, which removes the bubble, needs a status notice.
+                        receiptResult = result.takeIf { confirmed },
                     )
                 }
             } finally {

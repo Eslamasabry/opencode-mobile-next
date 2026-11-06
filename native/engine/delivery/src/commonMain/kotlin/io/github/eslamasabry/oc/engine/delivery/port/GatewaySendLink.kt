@@ -25,6 +25,8 @@ import io.github.eslamasabry.oc.core.model.StreamStatus
 import io.github.eslamasabry.oc.core.model.transcript.Role
 import io.github.eslamasabry.oc.engine.delivery.PromptTracing
 import io.github.eslamasabry.oc.engine.delivery.receipts.DispatchScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * [SendLink] over one connected `ServerGateway` and its facets (the app graph builds one per
@@ -145,7 +147,11 @@ public class GatewaySendLink(
         return result
     }
 
-    private suspend fun admit(session: SessionId, prompt: OutgoingPrompt, beforeSend: () -> Boolean): Outcome<PromptAdmission> {
+    private suspend fun admit(
+        session: SessionId,
+        prompt: OutgoingPrompt,
+        beforeSend: () -> Boolean,
+    ): Outcome<PromptAdmission> {
         val id = prompt.clientMessageId
         val correlatedGateway = correlatedGateway
         if (id != null && correlatedGateway != null) {
@@ -153,6 +159,39 @@ public class GatewaySendLink(
             val result = correlatedGateway.promptWithMessageId(session, id, prompt, beforeSend)
             if (scope == origin && observed.contains(origin, session, id)) {
                 return PromptAdmission.Confirmed(id.raw).ok()
+            }
+            // A phone running both client and server can return before its user echo is
+            // published. An uncertain HTTP response is not a failed send: keep the original
+            // client id and reconcile by reads only. Never repeat the POST or match text.
+            val confirmed = (result as? Outcome.Ok)?.value as? PromptAdmission.Confirmed
+            val failure = (result as? Outcome.Failed)?.failure
+            val refusedBeforeSend =
+                failure?.nothingSent == true &&
+                    (failure as? Failure.Refused)?.reason != RefusalReason.DispatchUncertain
+            if (confirmed == null && !refusedBeforeSend) {
+                val found =
+                    withTimeoutOrNull(ADMISSION_RECONCILE_MS) {
+                        var accepted = false
+                        while (
+                            scope == origin && gateway.events.status.value !is StreamStatus.Stopped
+                        ) {
+                            if (
+                                observed.contains(origin, session, id) ||
+                                    (capabilities.commandReceipts &&
+                                        (lookupAdmission(session, id) as? Outcome.Ok)?.value ==
+                                            true)
+                            ) {
+                                accepted = true
+                                break
+                            }
+                            delay(ADMISSION_POLL_MS)
+                        }
+                        accepted
+                    } == true
+                if (
+                    found && scope == origin && gateway.events.status.value !is StreamStatus.Stopped
+                )
+                    return PromptAdmission.Confirmed(id.raw).ok()
             }
             return result
         }
@@ -240,6 +279,8 @@ public class GatewaySendLink(
 
     public companion object {
         public const val MAX_PAGES: Int = 100
+        public const val ADMISSION_RECONCILE_MS: Long = 120_000
+        public const val ADMISSION_POLL_MS: Long = 2_000
 
         /** The real server answers `user` (plan 04 N4-D13); Flutter's check expected `prompt`. */
         public val PROMPT_TYPES: Set<String> = setOf("user", "prompt")

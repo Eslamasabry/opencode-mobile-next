@@ -73,16 +73,8 @@ public object StatusPick {
                     it.localId,
                 )
             }
-        pending
-            .lastOrNull { it.state == PendingState.Unconfirmed }
-            ?.let {
-                return ChatStatusUi(
-                    "send-${it.localId}",
-                    ChatStatusKind.SendUnconfirmed,
-                    null,
-                    it.localId,
-                )
-            }
+        // An uncertain send owns its notice and Check again button on the pending bubble.
+        // Repeating it here makes one send look like two failures.
         if (!run.busy && run.lastOutcome is RunOutcome.Failed && !newestTurnSaysFailed(rows)) {
             return ChatStatusUi(RUN, ChatStatusKind.RunFailed)
         }

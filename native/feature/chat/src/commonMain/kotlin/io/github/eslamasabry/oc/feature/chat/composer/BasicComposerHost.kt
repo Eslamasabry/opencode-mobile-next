@@ -82,11 +82,6 @@ import io.github.eslamasabry.oc.ui.kitchat.composer.KitVoiceField
 import io.github.eslamasabry.oc.ui.kitchat.stream.LocalKitPromptLift
 import io.github.eslamasabry.oc.ui.kitchat.stream.kitPromptOrigin
 import io.github.eslamasabry.oc.ui.words.res.Res
-import io.github.eslamasabry.oc.ui.words.res.composerClearTextTitle
-import io.github.eslamasabry.oc.ui.words.res.tipSendLaterTitle
-import io.github.eslamasabry.oc.ui.words.res.composerFullCommands
-import io.github.eslamasabry.oc.ui.words.res.kitUndoAction
-import io.github.eslamasabry.oc.ui.words.res.composerDraftCleared
 import io.github.eslamasabry.oc.ui.words.res.chatCycleNext
 import io.github.eslamasabry.oc.ui.words.res.chatCyclePrevious
 import io.github.eslamasabry.oc.ui.words.res.chatDraftAlreadySent
@@ -105,9 +100,12 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiOpenParentSession
 import io.github.eslamasabry.oc.ui.words.res.chat_model_favorite_add
 import io.github.eslamasabry.oc.ui.words.res.chat_model_favorite_remove
 import io.github.eslamasabry.oc.ui.words.res.chat_model_favorites
+import io.github.eslamasabry.oc.ui.words.res.composerClearTextTitle
+import io.github.eslamasabry.oc.ui.words.res.composerDraftCleared
 import io.github.eslamasabry.oc.ui.words.res.composerFullAgent
 import io.github.eslamasabry.oc.ui.words.res.composerFullAttach
 import io.github.eslamasabry.oc.ui.words.res.composerFullAttachmentsLocal
+import io.github.eslamasabry.oc.ui.words.res.composerFullCommands
 import io.github.eslamasabry.oc.ui.words.res.composerFullDraftFull
 import io.github.eslamasabry.oc.ui.words.res.composerFullModelChangeFailed
 import io.github.eslamasabry.oc.ui.words.res.composerFullPasteEmpty
@@ -147,8 +145,10 @@ import io.github.eslamasabry.oc.ui.words.res.kitComposerSendAfter
 import io.github.eslamasabry.oc.ui.words.res.kitComposerSending
 import io.github.eslamasabry.oc.ui.words.res.kitComposerTrayClose
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveStopShort
+import io.github.eslamasabry.oc.ui.words.res.kitUndoAction
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardStopping
 import io.github.eslamasabry.oc.ui.words.res.promptHistorySaveFailed
+import io.github.eslamasabry.oc.ui.words.res.tipSendLaterTitle
 import io.github.eslamasabry.oc.ui.words.res.upgradeComposerAsk
 import io.github.eslamasabry.oc.ui.words.res.upgradeComposerFree
 import io.github.eslamasabry.oc.ui.words.res.workspaceDismissNotice
@@ -705,73 +705,70 @@ public fun BasicComposer(
         KitComposerBox(
             running = busy && !waitingRequest,
             field = {
-                if (!waitingRequest)
-                    Box(Modifier.fillMaxWidth()) {
-                        KitField(
-                            state = field,
-                            // While a reply runs on a steering server the words join it
-                            // (B-PROTO-025).
-                            label =
-                                if (busy && state.steers)
-                                    stringResource(Res.string.composerFullSteerHint)
-                                else
-                                    stringResource(
-                                        Res.string.upgradeComposerAsk,
-                                        state.models.agent?.takeUnless {
-                                            it.lowercase() in
-                                                setOf(
-                                                    "build",
-                                                    "plan",
-                                                    "compaction",
-                                                    "title",
-                                                    "summary",
-                                                )
-                                        } ?: chrome.agentName(),
-                                    ),
-                            kind = KitFieldKind.Multiline,
-                            // B6: one line when empty, so the conversation keeps its room above the
-                            // keyboard.
-                            multilineLines = 1..5,
-                            composer = true,
-                            imeAction = ImeAction.Send,
-                            onSubmit = {
-                                if (
-                                    sendReady &&
-                                        typed &&
-                                        !voiceActive &&
-                                        !state.sending &&
-                                        !waitingRequest
-                                )
-                                    send()
-                            },
-                            labelShown = false,
-                            framed = false,
-                            focusRequester = focus,
-                            enabled =
-                                if (editorReady && state.draft.ready) KitEnabled.Enabled
-                                else
-                                    KitEnabled.Disabled(
-                                        stringResource(Res.string.chatDraftRestoring)
-                                    ),
-                            onTextChanged = { accepted ->
-                                editor.userEditSerial += 1
-                                editor.lastReported = accepted
-                                repeatRevision = null
-                                actions.draftChanged(accepted)
-                            },
-                            modifier =
-                                Modifier.kitPromptOrigin()
-                                    .testTag("chat-composer-field")
-                                    .padding(
-                                        end =
-                                            if (inlineMic && voice != null)
-                                                LocalKitTokens.current.minTarget.dp
-                                            else 0.dp
-                                    ),
-                        )
-                        if (inlineMic)
-                            voice?.InlineMic(voiceField, Modifier.align(Alignment.BottomEnd))
-                    }
+                // Keep the editor mounted while an approval or form waits. Submission stays
+                // gated below; hiding it leaves an open conversation with only chips.
+                Box(Modifier.fillMaxWidth()) {
+                    KitField(
+                        state = field,
+                        // While a reply runs on a steering server the words join it
+                        // (B-PROTO-025).
+                        label =
+                            if (busy && state.steers)
+                                stringResource(Res.string.composerFullSteerHint)
+                            else
+                                stringResource(
+                                    Res.string.upgradeComposerAsk,
+                                    state.models.agent?.takeUnless {
+                                        it.lowercase() in
+                                            setOf(
+                                                "build",
+                                                "plan",
+                                                "compaction",
+                                                "title",
+                                                "summary",
+                                            )
+                                    } ?: chrome.agentName(),
+                                ),
+                        kind = KitFieldKind.Multiline,
+                        // B6: one line when empty, so the conversation keeps its room above the
+                        // keyboard.
+                        multilineLines = 1..5,
+                        composer = true,
+                        imeAction = ImeAction.Send,
+                        onSubmit = {
+                            if (
+                                sendReady &&
+                                    typed &&
+                                    !voiceActive &&
+                                    !state.sending &&
+                                    !waitingRequest
+                            )
+                                send()
+                        },
+                        labelShown = false,
+                        framed = false,
+                        focusRequester = focus,
+                        enabled =
+                            if (editorReady && state.draft.ready) KitEnabled.Enabled
+                            else KitEnabled.Disabled(stringResource(Res.string.chatDraftRestoring)),
+                        onTextChanged = { accepted ->
+                            editor.userEditSerial += 1
+                            editor.lastReported = accepted
+                            repeatRevision = null
+                            actions.draftChanged(accepted)
+                        },
+                        modifier =
+                            Modifier.kitPromptOrigin()
+                                .testTag("chat-composer-field")
+                                .padding(
+                                    end =
+                                        if (inlineMic && voice != null)
+                                            LocalKitTokens.current.minTarget.dp
+                                        else 0.dp
+                                ),
+                    )
+                    if (inlineMic) voice?.InlineMic(voiceField, Modifier.align(Alignment.BottomEnd))
+                }
             },
             leading = {
                 KitComposerAdd(
@@ -842,9 +839,11 @@ public fun BasicComposer(
                                         ),
                                 working = state.sending,
                                 onLongClick =
-                                    chrome.sendLater?.takeIf { typed && sendReady }?.let { later ->
-                                        { later(field.text.toString()) }
-                                    },
+                                    chrome.sendLater
+                                        ?.takeIf { typed && sendReady }
+                                        ?.let { later ->
+                                            { later(field.text.toString()) }
+                                        },
                                 onLongClickLabel = stringResource(Res.string.tipSendLaterTitle),
                                 modifier = Modifier.testTag("chat-send-button"),
                             )

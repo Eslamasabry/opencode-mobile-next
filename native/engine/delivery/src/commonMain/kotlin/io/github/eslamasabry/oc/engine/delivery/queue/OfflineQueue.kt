@@ -563,7 +563,20 @@ public class OfflineQueue(
         val journal = (journals.forProfile(origin.profileId) as? Outcome.Ok)?.value ?: return false
         val commandId = CommandReceipt.queueCommandId(id)
         val receipts = (journal.read() as? Outcome.Ok)?.value ?: return false
-        if (receipts.none { it.commandId == commandId && it.scope == origin.receiptScope })
+        val expectedReceipt =
+            receipts.singleOrNull {
+                it.commandId == commandId && it.scope == origin.receiptScope
+            } ?: return false
+        val originalEntries = queue().filter { it.id == id }
+        if (!store.readable || originalEntries.size > 1) return false
+        val originalEntry = originalEntries.singleOrNull()
+        if (
+            expectedReceipt.tabId != expectedReceipt.sessionId ||
+                (originalEntry != null &&
+                    (originalEntry.profileId != origin.profileId ||
+                        originalEntry.sessionId.raw != expectedReceipt.sessionId ||
+                        !originalEntry.dispatched))
+        )
             return false
         fun same(): Boolean = connection.link.value?.epoch === link.epoch && link.scope == origin
         val checked =
@@ -573,21 +586,33 @@ public class OfflineQueue(
                 same() && found is Outcome.Ok && found.value
             }
         val receipt = (checked as? Outcome.Ok)?.value ?: return false
-        if (!same() || receipt.state != CommandReceiptState.Confirmed) return false
+        if (
+            !same() ||
+                receipt.state != CommandReceiptState.Confirmed ||
+                !receipt.sameIdentity(expectedReceipt)
+        )
+            return false
         val removed = changes.withLock {
             if (!same()) return@withLock false
             val q = queue()
-            val kept = q.filter {
-                it.id != id ||
-                    it.profileId != origin.profileId ||
-                    it.sessionId.raw != receipt.sessionId ||
-                    !it.dispatched
-            }
-            if (kept.size == q.size || !store.save(kept)) return@withLock false
+            if (!store.readable) return@withLock false
+            val currentEntries = q.filter { it.id == id }
+            // Host and chat may reconcile the same receipt concurrently. Once its exact
+            // scoped journal proof is confirmed, another observer removing the marker is
+            // also success. A new/replaced entry with the reserved id is never that success.
+            if (currentEntries.isEmpty()) return@withLock true
+            if (
+                currentEntries.size != 1 ||
+                    originalEntry == null ||
+                    currentEntries.single() != originalEntry
+            )
+                return@withLock false
+            val kept = q.filterNot { it.id == id }
+            if (!store.save(kept)) return@withLock false
             cache = kept
             cacheStamp = store.loadedStamp
             publish()
-            true
+            same()
         }
         if (removed) {
             acceptedUnrecorded -= id

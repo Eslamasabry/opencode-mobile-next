@@ -55,23 +55,58 @@ class ChatRulesTest {
             ),
             hits,
         )
-        assertEquals(listOf(FindHit("prompt:u2", 3, 6)), TranscriptFind.search(s.rows, "+c?"), "literal, never a pattern")
+        assertEquals(
+            listOf(FindHit("prompt:u2", 3, 6)),
+            TranscriptFind.search(s.rows, "+c?"),
+            "literal, never a pattern",
+        )
         assertTrue(TranscriptFind.search(s.rows, "   ").isEmpty(), "a blank query finds nothing")
-        assertEquals(1, TranscriptFind.search(stateOf(block("t", "m", "p", 0, "aaaa")).rows, "aaa").size, "non-overlapping")
+        assertEquals(
+            1,
+            TranscriptFind.search(stateOf(block("t", "m", "p", 0, "aaaa")).rows, "aaa").size,
+            "non-overlapping",
+        )
     }
 
     @Test
     fun `B-CHAT-115 find keeps the current hit across streaming, an older page and a deletion`() {
-        val before = TranscriptFind.search(stateOf(*turn(1, answer = "x").toTypedArray(), *turn(2, answer = "x").toTypedArray()).rows, "x")
+        val before =
+            TranscriptFind.search(
+                stateOf(
+                        *turn(1, answer = "x").toTypedArray(),
+                        *turn(2, answer = "x").toTypedArray(),
+                    )
+                    .rows,
+                "x",
+            )
         val current = before[1] // the second turn's hit
         // Streaming adds a newer hit: the current one keeps its place by identity.
-        val streamed = TranscriptFind.search(stateOf(*turn(1, answer = "x").toTypedArray(), *turn(2, answer = "x").toTypedArray(), *turn(3, answer = "x").toTypedArray()).rows, "x")
+        val streamed =
+            TranscriptFind.search(
+                stateOf(
+                        *turn(1, answer = "x").toTypedArray(),
+                        *turn(2, answer = "x").toTypedArray(),
+                        *turn(3, answer = "x").toTypedArray(),
+                    )
+                    .rows,
+                "x",
+            )
         assertEquals(1, TranscriptFind.keep(streamed, current, 1))
         // An older page lands above: the same hit moves to a new number.
-        val older = TranscriptFind.search(stateOf(*turn(0, answer = "x").toTypedArray(), *turn(1, answer = "x").toTypedArray(), *turn(2, answer = "x").toTypedArray()).rows, "x")
+        val older =
+            TranscriptFind.search(
+                stateOf(
+                        *turn(0, answer = "x").toTypedArray(),
+                        *turn(1, answer = "x").toTypedArray(),
+                        *turn(2, answer = "x").toTypedArray(),
+                    )
+                    .rows,
+                "x",
+            )
         assertEquals(2, TranscriptFind.keep(older, current, 1))
         // Its message was deleted: the cursor keeps its number, clamped.
-        val deleted = TranscriptFind.search(stateOf(*turn(1, answer = "x").toTypedArray()).rows, "x")
+        val deleted =
+            TranscriptFind.search(stateOf(*turn(1, answer = "x").toTypedArray()).rows, "x")
         assertEquals(0, TranscriptFind.keep(deleted, current, 1))
         assertEquals(-1, TranscriptFind.keep(emptyList(), current, 1))
     }
@@ -86,7 +121,8 @@ class ChatRulesTest {
 
     // ---- The one status line (plan 09 §6.5, 07 §10.1) ----
 
-    private val failedSend = PendingSend(2, "hi", PendingState.Failed, Failure.Network(NetworkWhy.Offline))
+    private val failedSend =
+        PendingSend(2, "hi", PendingState.Failed, Failure.Network(NetworkWhy.Offline))
     private val olderFailedSend = PendingSend(1, "older", PendingState.Failed)
     private val unconfirmed = PendingSend(3, "maybe", PendingState.Unconfirmed)
 
@@ -94,21 +130,55 @@ class ChatRulesTest {
     fun `07-10_1 this backend's connection outranks every line of the chat`() {
         val all = listOf(olderFailedSend, failedSend)
         val failedRun = RunFacts(busy = false, lastOutcome = RunOutcome.Failed(null))
-        assertEquals(ChatStatusKind.Offline, StatusPick.pick(ChatLink.Offline, all, failedRun, emptyList(), Failure.Unknown())?.kind)
-        assertEquals(ChatStatusKind.Connecting, StatusPick.pick(ChatLink.Connecting, all, failedRun, emptyList(), null)?.kind)
-        assertNull(StatusPick.pick(ChatLink.Live, emptyList(), RunFacts(), emptyList(), null), "nothing to say: no line")
+        assertEquals(
+            ChatStatusKind.Offline,
+            StatusPick.pick(ChatLink.Offline, all, failedRun, emptyList(), Failure.Unknown())?.kind,
+        )
+        assertEquals(
+            ChatStatusKind.Connecting,
+            StatusPick.pick(ChatLink.Connecting, all, failedRun, emptyList(), null)?.kind,
+        )
+        assertNull(
+            StatusPick.pick(ChatLink.Live, emptyList(), RunFacts(), emptyList(), null),
+            "nothing to say: no line",
+        )
     }
 
     @Test
     fun `09-6_5 a failed send outranks a lost answer and a failed reply, and the newest bubble speaks`() {
         val failedRun = RunFacts(lastOutcome = RunOutcome.Failed(null))
-        val line = StatusPick.pick(ChatLink.Live, listOf(olderFailedSend, unconfirmed, failedSend), failedRun, emptyList(), null)
+        val line =
+            StatusPick.pick(
+                ChatLink.Live,
+                listOf(olderFailedSend, unconfirmed, failedSend),
+                failedRun,
+                emptyList(),
+                null,
+            )
         assertEquals(ChatStatusKind.SendFailed, line?.kind)
         assertEquals(2L, line?.localId)
         assertEquals("send-2", line?.id)
-        assertEquals(ChatStatusKind.SendUnconfirmed, StatusPick.pick(ChatLink.Live, listOf(unconfirmed), failedRun, emptyList(), null)?.kind)
-        assertEquals(ChatStatusKind.RunFailed, StatusPick.pick(ChatLink.Live, emptyList(), failedRun, emptyList(), Failure.Unknown())?.kind)
-        assertEquals(ChatStatusKind.ActionFailed, StatusPick.pick(ChatLink.Live, emptyList(), RunFacts(), emptyList(), Failure.Unknown())?.kind)
+        assertEquals(
+            ChatStatusKind.RunFailed,
+            StatusPick.pick(ChatLink.Live, listOf(unconfirmed), failedRun, emptyList(), null)?.kind,
+        )
+        assertEquals(
+            ChatStatusKind.RunFailed,
+            StatusPick.pick(ChatLink.Live, emptyList(), failedRun, emptyList(), Failure.Unknown())
+                ?.kind,
+        )
+        assertEquals(
+            ChatStatusKind.ActionFailed,
+            StatusPick.pick(ChatLink.Live, emptyList(), RunFacts(), emptyList(), Failure.Unknown())
+                ?.kind,
+        )
+    }
+
+    @Test
+    fun `B-CHAT-071 an uncertain send has only its bubble notice and check action`() {
+        assertNull(
+            StatusPick.pick(ChatLink.Live, listOf(unconfirmed), RunFacts(), emptyList(), null)
+        )
     }
 
     @Test
@@ -118,12 +188,26 @@ class ChatRulesTest {
         assertNull(StatusPick.pick(ChatLink.Live, emptyList(), failedRun, saysWhy.rows, null))
         // The prompt got no answer at all: nothing in the transcript says so, the line does.
         val noAnswer = stateOf(*turn(1).toTypedArray(), prompt("u2", "hello"))
-        assertEquals(ChatStatusKind.RunFailed, StatusPick.pick(ChatLink.Live, emptyList(), failedRun, noAnswer.rows, null)?.kind)
+        assertEquals(
+            ChatStatusKind.RunFailed,
+            StatusPick.pick(ChatLink.Live, emptyList(), failedRun, noAnswer.rows, null)?.kind,
+        )
         // An older failed turn does not hide the newest turn's failure.
         val olderFailed = stateOf(*turn(1, failed = true).toTypedArray(), prompt("u2", "hello"))
-        assertEquals(ChatStatusKind.RunFailed, StatusPick.pick(ChatLink.Live, emptyList(), failedRun, olderFailed.rows, null)?.kind)
+        assertEquals(
+            ChatStatusKind.RunFailed,
+            StatusPick.pick(ChatLink.Live, emptyList(), failedRun, olderFailed.rows, null)?.kind,
+        )
         // While the next reply runs, the last failure is not news.
-        assertNull(StatusPick.pick(ChatLink.Live, emptyList(), failedRun.copy(busy = true), noAnswer.rows, null))
+        assertNull(
+            StatusPick.pick(
+                ChatLink.Live,
+                emptyList(),
+                failedRun.copy(busy = true),
+                noAnswer.rows,
+                null,
+            )
+        )
     }
 
     // ---- Message actions (plan 09 §6.6) ----
@@ -132,38 +216,100 @@ class ChatRulesTest {
     fun `B-CHAT-061 a prompt's menu offers copy, send again, fork and delete, delete last, each only when it can run`() {
         val all = ChatCapabilitiesUi(fork = true, deleteMessage = true)
         assertEquals(
-            listOf(MessageAction.Copy, MessageAction.SendAgain, MessageAction.Fork, MessageAction.Delete),
-            MessageActions.of(TargetKind.Prompt, all, busy = false, messageId = "u1", hasText = true),
+            listOf(
+                MessageAction.Copy,
+                MessageAction.SendAgain,
+                MessageAction.Fork,
+                MessageAction.Delete,
+            ),
+            MessageActions.of(
+                TargetKind.Prompt,
+                all,
+                busy = false,
+                messageId = "u1",
+                hasText = true,
+            ),
         )
         assertEquals(
             listOf(MessageAction.Copy, MessageAction.Fork, MessageAction.Delete),
-            MessageActions.of(TargetKind.Prompt, all, busy = true, messageId = "u1", hasText = true),
+            MessageActions.of(
+                TargetKind.Prompt,
+                all,
+                busy = true,
+                messageId = "u1",
+                hasText = true,
+            ),
             "no Send again while a reply runs",
         )
         assertEquals(
             listOf(MessageAction.Copy, MessageAction.SendAgain),
-            MessageActions.of(TargetKind.Prompt, ChatCapabilitiesUi(), busy = false, messageId = "u1", hasText = true),
+            MessageActions.of(
+                TargetKind.Prompt,
+                ChatCapabilitiesUi(),
+                busy = false,
+                messageId = "u1",
+                hasText = true,
+            ),
             "absent, never disabled: no fork or delete without the capability",
         )
-        assertEquals(listOf(MessageAction.Copy, MessageAction.ReadAloud, MessageAction.Delete), MessageActions.of(TargetKind.Reply, all, false, "a1", hasText = true))
-        assertEquals(listOf(MessageAction.Copy, MessageAction.ReadAloud), MessageActions.of(TargetKind.Reply, all, false, messageId = null, hasText = true))
-        assertTrue(MessageActions.of(TargetKind.Reply, ChatCapabilitiesUi(), false, null, hasText = false).isEmpty())
+        assertEquals(
+            listOf(MessageAction.Copy, MessageAction.ReadAloud, MessageAction.Delete),
+            MessageActions.of(TargetKind.Reply, all, false, "a1", hasText = true),
+        )
+        assertEquals(
+            listOf(MessageAction.Copy, MessageAction.ReadAloud),
+            MessageActions.of(TargetKind.Reply, all, false, messageId = null, hasText = true),
+        )
+        assertTrue(
+            MessageActions.of(TargetKind.Reply, ChatCapabilitiesUi(), false, null, hasText = false)
+                .isEmpty()
+        )
     }
 
     @Test
     fun `B-CHAT-120 undo from here is on a prompt only where the server undoes, never while a reply runs`() {
-        val review = ChatCapabilitiesUi(fork = true, deleteMessage = true, undo = true, changes = true)
+        val review =
+            ChatCapabilitiesUi(fork = true, deleteMessage = true, undo = true, changes = true)
         assertEquals(
-            listOf(MessageAction.Copy, MessageAction.SendAgain, MessageAction.Fork, MessageAction.UndoFromHere, MessageAction.Delete),
-            MessageActions.of(TargetKind.Prompt, review, busy = false, messageId = "u1", hasText = true),
+            listOf(
+                MessageAction.Copy,
+                MessageAction.SendAgain,
+                MessageAction.Fork,
+                MessageAction.UndoFromHere,
+                MessageAction.Delete,
+            ),
+            MessageActions.of(
+                TargetKind.Prompt,
+                review,
+                busy = false,
+                messageId = "u1",
+                hasText = true,
+            ),
         )
         assertEquals(
             listOf(MessageAction.Copy, MessageAction.Fork, MessageAction.Delete),
-            MessageActions.of(TargetKind.Prompt, review, busy = true, messageId = "u1", hasText = true),
+            MessageActions.of(
+                TargetKind.Prompt,
+                review,
+                busy = true,
+                messageId = "u1",
+                hasText = true,
+            ),
         )
         assertEquals(
-            listOf(MessageAction.Copy, MessageAction.ReadAloud, MessageAction.Changes, MessageAction.Delete),
-            MessageActions.of(TargetKind.Reply, review, busy = false, messageId = "a1", hasText = true),
+            listOf(
+                MessageAction.Copy,
+                MessageAction.ReadAloud,
+                MessageAction.Changes,
+                MessageAction.Delete,
+            ),
+            MessageActions.of(
+                TargetKind.Reply,
+                review,
+                busy = false,
+                messageId = "a1",
+                hasText = true,
+            ),
             "a reply's turn opens its changed files (P12-REVIEW), it can be read aloud (P12-VOICE); delete stays last",
         )
         assertEquals(
@@ -193,9 +339,17 @@ class ChatRulesTest {
     fun `09-6_6 copy reply joins the chunks of one long block with its own newline, not a blank line`() {
         fun chunk(start: Int, text: String, continued: Boolean, continues: Boolean) =
             io.github.eslamasabry.oc.engine.transcript.state.BlockRow(
-                "b:a2/p:$start", "u2", io.github.eslamasabry.oc.engine.transcript.state.RowKind.Code, "p", start, text,
-                false, false, io.github.eslamasabry.oc.engine.transcript.state.Origin.Loaded,
-                continued = continued, continues = continues,
+                "b:a2/p:$start",
+                "u2",
+                io.github.eslamasabry.oc.engine.transcript.state.RowKind.Code,
+                "p",
+                start,
+                text,
+                false,
+                false,
+                io.github.eslamasabry.oc.engine.transcript.state.Origin.Loaded,
+                continued = continued,
+                continues = continues,
             )
         val s =
             stateOf(
@@ -217,14 +371,24 @@ class ChatRulesTest {
         val order = MessageOrder(s.rows)
         assertEquals(40, order.messageCount)
         assertEquals(0, order.earlierCount(s.rows.size - 1), "the oldest row: nothing above it")
-        assertEquals(39, order.earlierCount(0), "the newest footer belongs to the newest reply: 39 messages above")
+        assertEquals(
+            39,
+            order.earlierCount(0),
+            "the newest footer belongs to the newest reply: 39 messages above",
+        )
         val reply5 = s.indexOf("b:a5/p5:0")
         assertEquals(9, order.earlierCount(reply5), "u1,a1 … u4,a4 and u5 sit above reply a5")
         assertEquals(9, order.earlierCount(s.indexOf("footer:u5")), "a footer counts as its reply")
         assertEquals(0, order.earlierCount(-1))
         assertTrue(MessageOrder.pillVisible(awayFromLatest = true, messageCount = 40, earlier = 9))
-        assertFalse(MessageOrder.pillVisible(awayFromLatest = false, messageCount = 40, earlier = 9), "only while away")
-        assertFalse(MessageOrder.pillVisible(awayFromLatest = true, messageCount = 30, earlier = 9), "only past 30 messages")
+        assertFalse(
+            MessageOrder.pillVisible(awayFromLatest = false, messageCount = 40, earlier = 9),
+            "only while away",
+        )
+        assertFalse(
+            MessageOrder.pillVisible(awayFromLatest = true, messageCount = 30, earlier = 9),
+            "only past 30 messages",
+        )
         assertFalse(MessageOrder.pillVisible(awayFromLatest = true, messageCount = 40, earlier = 0))
     }
 
@@ -241,12 +405,23 @@ class ChatRulesTest {
 
     @Test
     fun `07-3_3 Back closes the menu, then a dialog, then find, then guards an unsaved draft, then leaves`() {
-        assertEquals(BackStep.CloseMenu, BackOrder.next(menuOpen = true, confirmOpen = true, findOpen = true, draftUnsaved = true))
+        assertEquals(
+            BackStep.CloseMenu,
+            BackOrder.next(
+                menuOpen = true,
+                confirmOpen = true,
+                findOpen = true,
+                draftUnsaved = true,
+            ),
+        )
         assertEquals(BackStep.CloseConfirm, BackOrder.next(false, true, true, true))
         assertEquals(BackStep.CloseFind, BackOrder.next(false, false, true, true))
         assertEquals(BackStep.SaveDraftThenLeave, BackOrder.next(false, false, false, true))
         assertEquals(BackStep.Leave, BackOrder.next(false, false, false, false))
-        assertFalse(BackOrder.handles(false, false, false, false), "nothing to protect: the predictive preview plays")
+        assertFalse(
+            BackOrder.handles(false, false, false, false),
+            "nothing to protect: the predictive preview plays",
+        )
         assertTrue(DraftFacts(text = "half a thought").unsaved)
         assertFalse(DraftFacts(text = "  \n").unsaved, "whitespace is nothing to lose")
         assertFalse(DraftFacts(text = "kept", saved = "kept").unsaved)
@@ -262,7 +437,12 @@ class ChatRulesTest {
 
     @Test
     fun `09-6_7 landing on a failure goes to the newest failed turn`() {
-        val s = stateOf(*turn(1, failed = true).toTypedArray(), *turn(2, failed = true).toTypedArray(), *turn(3).toTypedArray())
+        val s =
+            stateOf(
+                *turn(1, failed = true).toTypedArray(),
+                *turn(2, failed = true).toTypedArray(),
+                *turn(3).toTypedArray(),
+            )
         assertEquals("footer:u2", Landing.newestFailedKey(s.rows))
         assertNull(Landing.newestFailedKey(stateOf(*turn(1).toTypedArray()).rows))
     }

@@ -61,6 +61,8 @@ import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -243,6 +245,8 @@ internal class GraphChatWorld(
     )
 
     private val sentSnapshots = HashMap<Long, SentSnapshot>()
+    private var receiptRefreshJob: Job? = null
+    private var adoptedInitialDelivery = false
 
     /**
      * Visible sub-agents of the loaded catalog: an `@name` of one rides the prompt as a mention
@@ -760,9 +764,22 @@ internal class GraphChatWorld(
         mutableLoad.value = ChatLoad.Loading
         if (connects > 0) handle.submit(GatewayEvent.Connected)
         val stops = ArrayList<() -> Unit>()
-        attached = Attached(graph, gateway, handle) { stops.forEach { it() } }
+        attached =
+            Attached(graph, gateway, handle) {
+                receiptRefreshJob?.cancel()
+                receiptRefreshJob = null
+                stops.forEach { it() }
+            }
         val jobs =
             listOf(
+                scope.launch(registry.mainContext) {
+                    // A missed SSE echo is common when client and server share a busy phone.
+                    // Reads are bounded; later history/events can still trigger another check.
+                    repeat(60) {
+                        reconcilePendingReceipts()
+                        delay(2_000)
+                    }
+                },
                 scope.launch(registry.mainContext) {
                     mutableRequests.value?.state?.collect { publishVoiceConversation() }
                 },
@@ -799,6 +816,7 @@ internal class GraphChatWorld(
                         delivery.running(ref, s.run.busy)
                         syncDelivery(delivery)
                         settlePending(s)
+                        reconcilePendingReceipts()
                     }
                 },
                 scope.launch(registry.mainContext) {
@@ -864,6 +882,14 @@ internal class GraphChatWorld(
                         // Voice watches final identities and lifecycle events; volatile token
                         // deltas need no second snapshot.
                         if (event !is CoreEvent.PartDelta) publishVoiceConversation()
+                        if (
+                            (event is CoreEvent.MessageUpserted &&
+                                event.message.sessionId == sid.raw &&
+                                event.message.role ==
+                                    io.github.eslamasabry.oc.core.model.transcript.Role.User) ||
+                                (event is CoreEvent.InboxChanged && event.sessionId == sid)
+                        )
+                            reconcilePendingReceipts()
                         bridge.event(event)?.let(handle::submit)
                         if (event is CoreEvent.RevertChanged && event.sessionId == sid) {
                             readHistory(gateway, handle, bridge)
@@ -1724,6 +1750,26 @@ internal class GraphChatWorld(
         return dispatch(localId, bubble.text, original, expected)
     }
 
+    /** Coalesces read-only checks; neither an event nor the timer can repeat a send. */
+    private fun reconcilePendingReceipts() {
+        val a = currentAttached() ?: return
+        if (receiptRefreshJob?.isActive == true || recoveryIds.isEmpty()) return
+        val ids =
+            mutablePending.value
+                .filter {
+                    it.state == PendingState.Unconfirmed && it.canCheckReceipt
+                }
+                .map { it.localId }
+        if (ids.isEmpty()) return
+        receiptRefreshJob =
+            a.graph.scope.launch(registry.mainContext) {
+                for (id in ids) {
+                    if (currentAttached() !== a) return@launch
+                    checkReceipt(id)
+                }
+            }
+    }
+
     override suspend fun checkReceipt(localId: Long): Outcome<Boolean> {
         val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
         val bubble =
@@ -1737,20 +1783,21 @@ internal class GraphChatWorld(
         val reviewId =
             recoveryIds.entries.firstOrNull { it.value == localId }?.key
                 ?: return Outcome.Failed(Failure.Unavailable(FeatureId("commandReceipts")))
-        val entry =
-            queue.entries().firstOrNull {
-                it.id == reviewId &&
-                    it.profileId == ref.profileId &&
-                    it.sessionId == sid &&
-                    it.dispatched
-            } ?: return Outcome.Failed(STALE)
+        val entry = queue.entries().firstOrNull { it.id == reviewId }
+        if (
+            entry != null &&
+                (entry.profileId != ref.profileId || entry.sessionId != sid || !entry.dispatched)
+        )
+            return Outcome.Failed(STALE)
         if (!a.gateway.capabilities.value.commandReceipts)
             return Outcome.Failed(Failure.Unavailable(FeatureId("commandReceipts")))
         if (!checkingReceipts.add(localId)) return Outcome.Failed(Failure.Busy())
         return try {
             // The queue validates the receipt's profile, session and location again on its serial
             // lane.
-            val confirmed = queue.checkReceipt(entry.id)
+            // The first-send observer can have cleared the marker already. Only the original
+            // scoped journal receipt may confirm that case; absence alone proves nothing.
+            val confirmed = queue.checkReceipt(reviewId)
             if (currentAttached() !== a || mutablePending.value.none { it === bubble })
                 return Outcome.Failed(STALE)
             if (confirmed) {
@@ -1758,6 +1805,8 @@ internal class GraphChatWorld(
                 acknowledgedDraft(localId)
                 recoveryIds.remove(reviewId)
                 sentSnapshots.remove(localId)
+                canonical.remove(localId)
+                baselines.remove(localId)
                 deliveryIds.remove(localId)?.let { delivery.engine?.reconciled(it) }
                 readHistory(a.gateway, a.handle, P3Bridge(sid.raw))
             }
@@ -1824,6 +1873,21 @@ internal class GraphChatWorld(
 
     private fun syncDelivery(delivery: ConnectionDelivery) {
         val engine = delivery.engine ?: return
+        if (!adoptedInitialDelivery) {
+            adoptedInitialDelivery = true
+            // Instant Start admits its first send before opening this world. Adopt that
+            // existing engine bubble; the chat must show Sending while its composer is usable.
+            for (send in engine.pending.value.filter { it.ref == ref }) {
+                if (send.localId in deliveryIds.values) continue
+                val localId = nextLocalId++
+                deliveryIds[localId] = send.localId
+                sentSnapshots[localId] = SentSnapshot(send.attachments, null)
+                baselines[localId] = emptySet()
+                mutablePending.update {
+                    (it + PendingSend(localId, send.text, PendingState.Sending)).toImmutableList()
+                }
+            }
+        }
         val queuedLocalIds = ArrayList<Long>()
         for ((localId, id) in deliveryIds) {
             val bubble = engine.pending.value.firstOrNull { it.localId == id }
@@ -1835,7 +1899,18 @@ internal class GraphChatWorld(
                             bubble.phase == SendPhase.Accepted || voiceProof?.accepted == true,
                     )
             }
-            bubble?.reviewId?.let { recoveryIds[it] = localId }
+            bubble?.reviewId?.let { review ->
+                recoveryIds[review] = localId
+                // Adopted first sends retain their original selection for a definite-failure
+                // retry just as sends created by the composer do.
+                val entry = delivery.queue?.entries()?.firstOrNull { it.id == review }
+                if (entry != null && sentSnapshots[localId]?.model == null)
+                    sentSnapshots[localId] =
+                        SentSnapshot(
+                            entry.attachments,
+                            entry.model?.let { ModelSelection(it, entry.variant) },
+                        )
+            }
             bubble?.dispatchedMessageId?.let { canonical[localId] = "prompt:${it.raw}" }
             if (bubble?.phase == SendPhase.Accepted) {
                 recordPhrase(localId)
@@ -1892,14 +1967,6 @@ internal class GraphChatWorld(
         }
         delivered.forEach(::retireFailedTwins)
         delivered.clear()
-        val receiptEntries =
-            delivery.queue
-                ?.entries()
-                .orEmpty()
-                .filter {
-                    it.profileId == ref.profileId && it.sessionId == sid && it.dispatched
-                }
-                .mapTo(HashSet()) { it.id }
         val supportsReceipts =
             currentAttached()?.gateway?.capabilities?.value?.commandReceipts == true
         mutablePending.update { list ->
@@ -1908,9 +1975,7 @@ internal class GraphChatWorld(
                     val canCheck =
                         supportsReceipts &&
                             pending.state == PendingState.Unconfirmed &&
-                            recoveryIds.any { (review, id) ->
-                                id == pending.localId && review in receiptEntries
-                            }
+                            recoveryIds.any { (_, id) -> id == pending.localId }
                     if (pending.canCheckReceipt == canCheck) pending
                     else pending.copy(canCheckReceipt = canCheck)
                 }
@@ -1991,6 +2056,16 @@ internal class GraphChatWorld(
                         }
                         ?.key
             if (matchKey == null) continue
+            if (
+                bubble.state == PendingState.Unconfirmed &&
+                    bubble.canCheckReceipt &&
+                    recoveryIds.any { (_, localId) -> localId == bubble.localId }
+            ) {
+                // Retire the durable marker along with this bubble. A transcript match alone
+                // must not leave a second recovery bubble behind on the next open.
+                reconcilePendingReceipts()
+                continue
+            }
             settled += matchKey
             retireFailedTwins(bubble.localId)
             acknowledgedDraft(bubble.localId)
@@ -2084,7 +2159,8 @@ internal class GraphChatWorld(
 
     override suspend fun runShell(command: String): Outcome<Unit> {
         if (readOnlyNow()) return readOnlyFailure()
-        if (command.isBlank()) return Outcome.Failed(Failure.Refused(RefusalReason.DispatchUncertain))
+        if (command.isBlank())
+            return Outcome.Failed(Failure.Refused(RefusalReason.DispatchUncertain))
         val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
         if (!capabilities.value.conversationShellOn)
             return Outcome.Failed(Failure.Unavailable(FeatureId("conversationShell")))
@@ -2098,7 +2174,9 @@ internal class GraphChatWorld(
                     )
                 }
         val agent = models.value.agent?.takeIf { it.isNotBlank() } ?: "build"
-        return (a.graph as ChatGraphAccessors).chatGateway.shell(sid, command.trim(), agent, selection)
+        return (a.graph as ChatGraphAccessors)
+            .chatGateway
+            .shell(sid, command.trim(), agent, selection)
     }
 
     private fun shells(): io.github.eslamasabry.oc.core.domain.ManagedShellGateway? =
@@ -2108,7 +2186,8 @@ internal class GraphChatWorld(
         shells()?.runningShells() ?: Outcome.Failed(Failure.Network(NetworkWhy.Offline))
 
     override suspend fun shellOutput(id: String, cursor: Long) =
-        shells()?.managedShellOutput(id, cursor) ?: Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        shells()?.managedShellOutput(id, cursor)
+            ?: Outcome.Failed(Failure.Network(NetworkWhy.Offline))
 
     override suspend fun stopShell(id: String) =
         shells()?.stopManagedShell(id) ?: Outcome.Failed(Failure.Network(NetworkWhy.Offline))

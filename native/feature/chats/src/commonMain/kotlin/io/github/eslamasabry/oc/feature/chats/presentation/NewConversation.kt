@@ -116,6 +116,8 @@ public interface NewConversationHost {
         agent: String?,
         separateCopy: Boolean,
         previous: NewConversationAttempt?,
+        /** The session and local send exist; its composer can open while admission settles. */
+        onStarted: (ConversationRef) -> Unit = {},
     ): NewConversationAttempt
 
     public suspend fun imports(
@@ -157,6 +159,7 @@ public class NoNewConversationHost : NewConversationHost {
         agent: String?,
         separateCopy: Boolean,
         previous: NewConversationAttempt?,
+        onStarted: (ConversationRef) -> Unit,
     ): NewConversationAttempt =
         NewConversationAttempt(
             directory,
@@ -721,6 +724,7 @@ public class NewConversationViewModel(
             it.copy(busy = true, openingChat = true, failure = null, attempted = true)
         }
         viewModelScope.launch {
+            var openedConversation: ConversationRef? = null
             val result = edits.withLock {
                 val saved = host.saveDraft(profile, directory, shown.text)
                 val choices = host.saveChoices(profile, directory, shown.model, shown.agent)
@@ -743,6 +747,15 @@ public class NewConversationViewModel(
                                         shown.agent,
                                         shown.separateCopy,
                                         attempt,
+                                        onStarted = { ref ->
+                                            if (nav.top.value == route) {
+                                                // Keep this entry's ViewModel alive until the
+                                                // receipt settles, while the real chat owns the
+                                                // composer and the engine's pending bubble.
+                                                openedConversation = ref
+                                                nav.openChat(ref)
+                                            }
+                                        },
                                     )
                                 }
                         ) {
@@ -757,19 +770,26 @@ public class NewConversationViewModel(
                 }
             }
             attempt = result
-            if (result.dispatched && result.ref != null) {
-                // Open the chat first: the starting frame never flashes an empty or failed state.
-                if (nav.top.value == route) nav.back()
-                nav.openChat(result.ref)
+            if ((result.dispatched || result.deliveryUnconfirmed) && result.ref != null) {
+                // Once the session exists, its chat owns the receipt and always has an editor.
+                // An uncertain send must not strand the person on the chip-only starting frame.
+                if (openedConversation == null && nav.top.value == route) {
+                    nav.back()
+                    nav.openChat(result.ref)
+                }
                 // A screen left lower in the stack starts the next conversation afresh.
                 attempt = null
                 mutable.update {
                     it.copy(
-                        text = "",
+                        // Preserve the saved first prompt until its receipt is confirmed. Never
+                        // insert it into the chat editor, where Send could duplicate it.
+                        text = if (result.dispatched) "" else it.text,
                         textRevision = it.textRevision + 1,
                         busy = false,
-                        attempted = false,
+                        attempted = !result.dispatched,
                         openingChat = false,
+                        deliveryUnconfirmed = result.deliveryUnconfirmed,
+                        reviewConversation = result.ref.takeIf { result.deliveryUnconfirmed },
                     )
                 }
             } else
