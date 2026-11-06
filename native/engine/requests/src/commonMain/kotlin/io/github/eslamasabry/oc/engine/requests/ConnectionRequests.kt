@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 @Inject
 public class ConnectionRequests(
     gateway: ServerGateway,
-    scope: ConnectionCoroutineScope,
+    private val scope: ConnectionCoroutineScope,
     dispatchers: AppDispatchers,
     clock: Clock,
 ) {
@@ -84,6 +84,21 @@ public class ConnectionRequests(
     /** A form action belongs to the exact connection generation, even if its screen leaves. */
     public fun formAction(action: suspend (FormRequests) -> Unit) {
         formScope.launch { action(forms) }
+    }
+
+    /**
+     * One chat opened or closed: it keeps the reread pace up and reads [session]'s own asks (N-40),
+     * wherever its folder is.
+     */
+    public fun watchingSession(session: SessionId, open: Boolean) {
+        watching(open)
+        engine.watchSession(session, open)
+    }
+
+    /** The app came back on screen: asks may have been lost while the stream idled (N-40). */
+    public fun resumed() {
+        scope.launch { engine.refresh() }
+        formScope.launch { if (formGateway.capabilities.value.forms) refreshForms() }
     }
 
     public fun watching(open: Boolean) {
