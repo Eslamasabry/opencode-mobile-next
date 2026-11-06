@@ -63,6 +63,8 @@ public fun KitExpandRow(
     onExpandedChange: (Boolean) -> Unit,
     leading: ImageVector? = null,
     inset: Boolean = true,
+    /** A preview title (a thought's first line) ends with "…" where it is cut, never mid-word with nothing. */
+    titleMaxLines: Int = Int.MAX_VALUE,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val colors = LocalKitColors.current
@@ -86,7 +88,7 @@ public fun KitExpandRow(
                 Box(Modifier.size(tokens.iconTile.dp), contentAlignment = Alignment.Center) { KitIcon(icon, size = KitIconSize.Small) }
             }
             Column(Modifier.weight(1f)) {
-                KitText(title, role = TypeRole.RowTitle)
+                KitText(title, role = TypeRole.RowTitle, maxLines = titleMaxLines)
                 supporting?.let { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = 3) }
             }
             KitGlyph(KitPartGlyphs.ChevronDown, colors.text2, tokens.smallIcon.dp, Modifier.graphicsLayer { rotationZ = turn })

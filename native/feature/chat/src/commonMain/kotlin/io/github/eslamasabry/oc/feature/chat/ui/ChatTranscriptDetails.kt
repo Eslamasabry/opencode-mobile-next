@@ -131,7 +131,9 @@ internal fun TranscriptDetail(
             folds.open[defaultKey] = reasoningExpanded
         }
         KitExpandRow(
-            title = plain.lineSequence().first().take(80),
+            // The whole first line, cut by the layout with an ellipsis (a character count cut words in half).
+            title = plain.lineSequence().first().trim(),
+            titleMaxLines = 2,
             expanded = folds.open[key] ?: reasoningExpanded,
             onExpandedChange = { folds.open[key] = it },
             modifier = Modifier.testTag("assistant-reasoning-block"),
