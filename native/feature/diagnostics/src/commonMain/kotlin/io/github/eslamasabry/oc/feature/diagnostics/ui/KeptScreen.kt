@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.feature.diagnostics.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -14,7 +15,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.engine.diagnostics.crash.CrashSource
@@ -140,6 +143,7 @@ public fun KeptScreen(state: KeptUi, actions: KeptActions) {
                 )
             }
             ErrorsSection(state, actions)
+            PerformanceSection(state, actions, gutter)
             CrashSection(state, actions, gutter)
             ExitsSection(state.exits, actions, gutter)
         }
@@ -199,6 +203,8 @@ public fun KeptScreen(state: KeptUi, actions: KeptActions) {
 @Composable
 private fun ErrorsSection(state: KeptUi, actions: KeptActions) {
     if (state.errorsKept <= 0) return
+    var copied by remember { mutableStateOf(false) }
+    @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
     KitSectionLabel(
         pluralStringResource(
             Res.plurals.reportProblemErrorsLabel,
@@ -206,6 +212,16 @@ private fun ErrorsSection(state: KeptUi, actions: KeptActions) {
             state.errorsKept,
         ),
         trailing = {
+            Row {
+            KitIconButton(
+                KitIcons.copy,
+                stringResource(Res.string.reportProblemCopyShort),
+                {
+                    clipboard.setText(AnnotatedString(actions.errorLogText()))
+                    copied = true
+                },
+                modifier = Modifier.testTag("kept-copy-errors"),
+            )
             KitIconButton(
                 KitIcons.delete,
                 pluralStringResource(
@@ -216,8 +232,61 @@ private fun ErrorsSection(state: KeptUi, actions: KeptActions) {
                 actions::onClearErrors,
                 modifier = Modifier.testTag("kept-clear"),
             )
+            }
         },
     )
+    if (copied) KitNotice(stringResource(Res.string.kitCopied))
+}
+
+/** Where time went in this run (Flutter `PerfTraceSection`): steps by name, Copy and Clear. */
+@Composable
+private fun PerformanceSection(state: KeptUi, actions: KeptActions, gutter: Modifier) {
+    var copied by remember { mutableStateOf(false) }
+    @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
+    KitSectionLabel(stringResource(Res.string.perfTraceTitle))
+    KitText(stringResource(Res.string.perfTraceBody), gutter, role = TypeRole.Secondary, tone = TextTone.Secondary)
+    if (state.perf.isEmpty()) {
+        KitText(stringResource(Res.string.perfTraceEmpty), gutter, role = TypeRole.Secondary, tone = TextTone.Secondary)
+        return
+    }
+    KitRowGroup(label = stringResource(Res.string.perfTraceSlowest)) {
+        for (step in state.perf.take(12)) {
+            KitRow(
+                title = step.name,
+                titleMaxLines = 2,
+                supporting =
+                    stringResource(
+                        Res.string.perfTraceStatLine,
+                        step.count,
+                        step.typical,
+                        step.slow,
+                        step.longest,
+                    ) +
+                        if (step.errors > 0)
+                            " · " + pluralStringResource(Res.plurals.perfTraceFailed, step.errors, step.errors)
+                        else "",
+                supportingMaxLines = 3,
+            )
+        }
+    }
+    KitRow(
+        title = stringResource(Res.string.perfTraceCopy),
+        leading = KitRowLeading.Glyph(KitIcons.copy),
+        onClick = {
+            clipboard.setText(AnnotatedString(actions.performanceText()))
+            copied = true
+        },
+    )
+    KitRow(
+        title = stringResource(Res.string.perfTraceClearTimings),
+        leading = KitRowLeading.Glyph(KitIcons.delete),
+        onClick = {
+            copied = false
+            actions.onClearPerformance()
+            }
+        },
+    )
+    if (copied) KitNotice(stringResource(Res.string.perfTraceCopied), gutter)
 }
 
 @Composable

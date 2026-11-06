@@ -55,7 +55,9 @@ import io.github.eslamasabry.oc.engine.diagnostics.problem.ProblemReports
 import io.github.eslamasabry.oc.engine.diagnostics.report.AppErrorCapture
 import io.github.eslamasabry.oc.engine.diagnostics.report.ProblemThermalReadings
 import io.github.eslamasabry.oc.engine.diagnostics.report.ReportProblemStartup
+import io.github.eslamasabry.oc.engine.diagnostics.perf.formatMs
 import io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptDiagnosticsHost
+import io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptPerfRow
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.reportProblemDiagnosticsCopied
 import io.github.eslamasabry.oc.ui.words.res.reportProblemLinkCopiesWhole
@@ -289,6 +291,7 @@ class AppKeptDiagnosticsHost(
     private val device: DeviceDiagnostics,
     private val report: ReportProblemStartup,
     private val diagnostics: Diagnostics,
+    private val trace: PerfTrace,
     private val dispatchers: AppDispatchers,
     appScope: AppCoroutineScope,
 ) : KeptDiagnosticsHost {
@@ -334,6 +337,25 @@ class AppKeptDiagnosticsHost(
         }
 
     override fun timeLabel(at: Instant): String = format.format(Date(at.toEpochMilliseconds()))
+
+    /** The sanitized error entries (the same redaction every report uses). */
+    override fun errorLogText(): String = diagnostics.reportText()
+
+    override fun performanceSteps(): List<KeptPerfRow> =
+        trace.stats().map {
+            KeptPerfRow(
+                it.name,
+                it.count,
+                it.errors,
+                formatMs(it.p50Ms),
+                formatMs(it.p95Ms),
+                formatMs(it.maxMs),
+            )
+        }
+
+    override fun performanceReport(): String = trace.reportText()
+
+    override fun clearPerformance() = trace.clear()
 }
 
 /**

@@ -21,6 +21,12 @@ public class KeptViewModel(host: KeptDiagnosticsHost, nav: AppNavigator) : ViewM
 
     override fun onBack(): Unit = presenter.onBack()
 
+    override fun errorLogText(): String = presenter.errorLogText()
+
+    override fun performanceText(): String = presenter.performanceText()
+
+    override fun onClearPerformance(): Unit = presenter.onClearPerformance()
+
     override fun onCrashCapture(on: Boolean): Unit = presenter.onCrashCapture(on)
 
     override fun onPreviewCrashReport(): Unit = presenter.onPreviewCrashReport()

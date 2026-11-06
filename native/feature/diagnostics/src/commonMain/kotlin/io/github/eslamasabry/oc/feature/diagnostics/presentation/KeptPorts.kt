@@ -36,6 +36,17 @@ public interface KeptDiagnosticsHost {
     /** Clears the kept errors (memory, the saved report and any pending write) and the restored crash evidence. */
     public suspend fun clearErrors(): Outcome<Unit>
 
+    /** The redacted text of the errors kept on this phone, for Copy. Empty when there are none. */
+    public fun errorLogText(): String = ""
+
+    /** Where time went in this run, grouped by step, slowest first. Times are already worded. */
+    public fun performanceSteps(): List<KeptPerfRow> = emptyList()
+
+    /** The plain-text timing report: names and timings only. */
+    public fun performanceReport(): String = ""
+
+    public fun clearPerformance() {}
+
     /** "Today 14:05" style words come from the app's locale; the feature never formats a date itself. */
     public fun timeLabel(at: Instant): String
 }
