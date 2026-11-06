@@ -14,6 +14,18 @@ import io.github.eslamasabry.oc.engine.requests.ask.AskVerb
 import io.github.eslamasabry.oc.engine.requests.ask.AskView
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.AnswerWords
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.approvalAllowedWhat
+import io.github.eslamasabry.oc.ui.words.res.approvalAlwaysAllowExact
+import io.github.eslamasabry.oc.ui.words.res.approvalAlwaysAllowedWhat
+import io.github.eslamasabry.oc.ui.words.res.approvalDenied
+import io.github.eslamasabry.oc.ui.words.res.approvalDeniedInstead
+import io.github.eslamasabry.oc.ui.words.res.approvalToolEdit
+import io.github.eslamasabry.oc.ui.words.res.approvalToolLabel
+import io.github.eslamasabry.oc.ui.words.res.approvalToolOther
+import io.github.eslamasabry.oc.ui.words.res.approvalToolOutside
+import io.github.eslamasabry.oc.ui.words.res.approvalToolRead
+import io.github.eslamasabry.oc.ui.words.res.approvalToolTerminal
+import io.github.eslamasabry.oc.ui.words.res.approvalToolWeb
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysAllowAnyCommand
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysAllowCommands
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysAllowEdits
@@ -166,6 +178,7 @@ internal fun answerWords(words: AnswerWords): String =
         AnswerWords.Allowed -> stringResource(Res.string.chatRequestAnswerAllowed)
         AnswerWords.AlwaysAllowed -> stringResource(Res.string.chatRequestAlwaysOn)
         AnswerWords.Rejected, AnswerWords.Dismissed -> stringResource(Res.string.chatRequestAnswerRejected)
+        is AnswerWords.RejectedWith -> stringResource(Res.string.approvalDeniedInstead, words.note)
         is AnswerWords.Chose -> words.answer
     }
 
@@ -191,5 +204,52 @@ internal fun waitedWords(waitedMs: Long): String {
             } else {
                 stringResource(Res.string.kitDurationDaysHours, Numbers.format(e.days), Numbers.format(e.hours))
             }
+    }
+}
+
+/** The one thing a request is about, short enough for a one-line receipt ("npm test", "src/game.js"). */
+internal fun askWhat(ask: AskView): String? {
+    val text = ask.name ?: ask.targets.firstOrNull()?.text ?: return null
+    val line = text.lineSequence().first().trim()
+    return if (line.length > 80) line.take(79) + "\u2026" else line
+}
+
+/** "Tool: Terminal command": what kind of thing is asking, in plain words (never the tool id). */
+@Composable
+internal fun askToolLine(ask: AskView): String {
+    val kind =
+        when (ask.verb) {
+            AskVerb.Run -> stringResource(Res.string.approvalToolTerminal)
+            AskVerb.Edit, AskVerb.Create, AskVerb.Delete -> stringResource(Res.string.approvalToolEdit)
+            AskVerb.Read -> stringResource(Res.string.approvalToolRead)
+            AskVerb.Fetch, AskVerb.WebSearch -> stringResource(Res.string.approvalToolWeb)
+            AskVerb.OutsideRead, AskVerb.OutsideWrite, AskVerb.OutsideRun, AskVerb.Outside ->
+                stringResource(Res.string.approvalToolOutside)
+            else -> stringResource(Res.string.approvalToolOther)
+        }
+    return stringResource(Res.string.approvalToolLabel, kind)
+}
+
+/** "Always allow <exact scope>": the request's own patterns, else the grant's family name. */
+@Composable
+internal fun alwaysExactLabel(grant: AlwaysGrant?, patterns: List<String>, mask: (String) -> String): String {
+    val exact = patterns.map { it.trim() }.filter { it.isNotEmpty() }.joinToString(", ")
+    return if (exact.isNotEmpty() && grant !is AlwaysGrant.Named)
+        stringResource(Res.string.approvalAlwaysAllowExact, ltr(mask(exact)))
+    else alwaysLabel(grant)
+}
+
+/**
+ * The collapsed receipt line: "Allowed: npm test", "Always allowed: npm test", "Denied, asked to do this instead: ...".
+ * A request with nothing to name falls back to the plain answer words.
+ */
+@Composable
+internal fun answerLine(words: AnswerWords, ask: AskView?, mask: (String) -> String): String {
+    val what = ask?.let(::askWhat)?.let { ltr(mask(it)) }
+    return when {
+        what != null && words == AnswerWords.Allowed -> stringResource(Res.string.approvalAllowedWhat, what)
+        what != null && words == AnswerWords.AlwaysAllowed -> stringResource(Res.string.approvalAlwaysAllowedWhat, what)
+        words == AnswerWords.Rejected -> stringResource(Res.string.approvalDenied)
+        else -> answerWords(words)
     }
 }

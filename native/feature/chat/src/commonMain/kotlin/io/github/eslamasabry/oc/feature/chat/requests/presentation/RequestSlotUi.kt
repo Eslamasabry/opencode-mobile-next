@@ -105,6 +105,9 @@ public sealed interface AnswerWords {
 
     public data object Dismissed : AnswerWords
 
+    /** Denied with a reply: what the person asked it to do instead. */
+    public data class RejectedWith(val note: String) : AnswerWords
+
     /** The chosen option or typed answer, as the person gave it. */
     public data class Chose(val answer: String) : AnswerWords
 }

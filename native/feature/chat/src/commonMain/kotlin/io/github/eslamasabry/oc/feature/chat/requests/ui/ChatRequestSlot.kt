@@ -52,6 +52,16 @@ import io.github.eslamasabry.oc.ui.kitchat.request.KitQuestionCard
 import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestTarget
 import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestWaitingCaption
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.approvalAllow
+import io.github.eslamasabry.oc.ui.words.res.approvalCopied
+import io.github.eslamasabry.oc.ui.words.res.approvalCopyAsk
+import io.github.eslamasabry.oc.ui.words.res.approvalDeny
+import io.github.eslamasabry.oc.ui.words.res.approvalReplyBack
+import io.github.eslamasabry.oc.ui.words.res.approvalReplyEmpty
+import io.github.eslamasabry.oc.ui.words.res.approvalReplyJustDeny
+import io.github.eslamasabry.oc.ui.words.res.approvalReplyLabel
+import io.github.eslamasabry.oc.ui.words.res.approvalReplySend
+import io.github.eslamasabry.oc.ui.kitchat.request.KitDenyReply
 import io.github.eslamasabry.oc.ui.words.res.chatRequestIfIgnored
 import io.github.eslamasabry.oc.ui.words.res.chatRequestMoreWaiting
 import io.github.eslamasabry.oc.ui.words.res.chatRequestOtherAnswer
@@ -60,10 +70,8 @@ import io.github.eslamasabry.oc.ui.words.res.chatStopAfterStepUndo
 import io.github.eslamasabry.oc.ui.words.res.chatUiAlwaysAllow
 import io.github.eslamasabry.oc.ui.words.res.invitation40Question
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmCancel
-import io.github.eslamasabry.oc.ui.words.res.kitRequestAllowOnce
 import io.github.eslamasabry.oc.ui.words.res.kitRequestAnswer
 import io.github.eslamasabry.oc.ui.words.res.kitRequestChangeSize
-import io.github.eslamasabry.oc.ui.words.res.kitRequestReject
 import io.github.eslamasabry.oc.ui.words.res.kitRequestReplyEmptyReason
 import io.github.eslamasabry.oc.ui.words.res.kitRequestSend
 import org.jetbrains.compose.resources.pluralStringResource
@@ -130,13 +138,13 @@ public fun ChatRequestSlot(
                             QuestionWaiting(card, state.moreWaiting, actions)
                     }
                 }
-                is CardState.Held -> HeldLine(card, answerWords(phase.words), actions)
+                is CardState.Held -> HeldLine(card, receiptWords(card, phase.words), actions)
                 is CardState.Sending ->
-                    AnsweredLine(answerWords(phase.words), KitReceiptState.Sending, null)
+                    AnsweredLine(receiptWords(card, phase.words), KitReceiptState.Sending, null)
                 is CardState.Sent ->
-                    AnsweredLine(answerWords(phase.words), KitReceiptState.Sent, null)
+                    AnsweredLine(receiptWords(card, phase.words), KitReceiptState.Sent, null)
                 is CardState.NotAccepted ->
-                    AnsweredLine(answerWords(phase.words), KitReceiptState.Refused(null)) {
+                    AnsweredLine(receiptWords(card, phase.words), KitReceiptState.Refused(null)) {
                         actions.performReviewed(card, ReviewedRequestAction.Retry)
                     }
             }
@@ -168,13 +176,32 @@ public fun ChatRequestSlot(
 }
 
 @Composable
+private fun receiptWords(card: RequestCardUi, words: AnswerWords): String =
+    answerLine(words, (card as? RequestCardUi.Permission)?.ask, rememberKitMask())
+
+@Composable
 private fun PermissionWaiting(
     card: RequestCardUi.Permission,
     moreWaiting: Int,
     actions: ChatRequestActions,
 ) {
+    val mask = rememberKitMask()
+    val always = card.canAlwaysAllow && !card.invitation
+    val request = card.captured?.request
     KitPermissionCard(
         title = askQuestion(card.ask),
+        toolLabel = askToolLine(card.ask),
+        copyLabel = stringResource(Res.string.approvalCopyAsk),
+        copiedLabel = stringResource(Res.string.approvalCopied),
+        denyReply =
+            KitDenyReply(
+                fieldLabel = stringResource(Res.string.approvalReplyLabel),
+                sendLabel = stringResource(Res.string.approvalReplySend),
+                justDenyLabel = stringResource(Res.string.approvalReplyJustDeny),
+                backLabel = stringResource(Res.string.approvalReplyBack),
+                emptyReason = stringResource(Res.string.approvalReplyEmpty),
+                onSend = { actions.performReviewed(card, ReviewedRequestAction.RejectWith(it)) },
+            ),
         summary = waitsLine(moreWaiting),
         subject = null,
         targets =
@@ -188,10 +215,16 @@ private fun PermissionWaiting(
                     else null,
                 )
             },
-        allowOnceLabel = stringResource(Res.string.kitRequestAllowOnce),
+        allowOnceLabel = stringResource(Res.string.approvalAllow),
         alwaysLabel =
-            if (card.canAlwaysAllow && !card.invitation) alwaysLabel(card.ask.always) else null,
-        denyLabel = stringResource(Res.string.kitRequestReject),
+            if (always)
+                alwaysExactLabel(
+                    card.ask.always,
+                    request?.always?.ifEmpty { request.patterns }.orEmpty(),
+                    mask,
+                )
+            else null,
+        denyLabel = stringResource(Res.string.approvalDeny),
         onAllowOnce = { actions.performReviewed(card, ReviewedRequestAction.AllowOnce) },
         onAlways =
             if (card.canAlwaysAllow && !card.invitation)
