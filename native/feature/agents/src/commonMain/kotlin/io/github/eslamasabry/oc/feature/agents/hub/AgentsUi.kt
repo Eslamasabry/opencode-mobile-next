@@ -50,6 +50,8 @@ public data class AgentsUi(
     val helperConnected: Boolean = false,
     val resettingSignIns: Boolean = false,
     val resetFailed: Boolean = false,
+    val signingOutAgent: PhoneAgentRow? = null,
+    val signOutFailed: String? = null,
 )
 
 public interface AgentsActions {
@@ -127,6 +129,12 @@ public interface AgentsActions {
     public fun cancelSignInReset() {}
 
     public fun confirmSignInReset() {}
+
+    public fun requestSignOut(id: String) {}
+
+    public fun cancelSignOut() {}
+
+    public fun confirmSignOut() {}
 
     public fun requestRemoval(id: String)
 

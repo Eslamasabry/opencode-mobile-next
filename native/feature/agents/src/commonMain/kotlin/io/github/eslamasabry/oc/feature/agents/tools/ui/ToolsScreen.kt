@@ -6,6 +6,8 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.domain.*
 import io.github.eslamasabry.oc.feature.agents.tools.presentation.*
@@ -13,8 +15,10 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.*
 import io.github.eslamasabry.oc.ui.kit.frame.*
 import io.github.eslamasabry.oc.ui.kit.input.*
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.row.*
 import io.github.eslamasabry.oc.ui.kit.state.*
+import io.github.eslamasabry.oc.ui.kit.text.KitRedact
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
@@ -57,6 +61,7 @@ public fun ToolsScreen(state: ToolsUi, actions: ToolsActions) {
                 role = KitButtonRole.Secondary,
                 modifier = gutter,
             )
+            var pluginDetail by remember { mutableStateOf<LibraryPlugin?>(null) }
             state.issue?.let { KitNotice(issueWords(it)) }
             if (!state.catalogSupported && !state.loading)
                 KitNotice(stringResource(Res.string.protoToolsUnavailable))
@@ -88,6 +93,22 @@ public fun ToolsScreen(state: ToolsUi, actions: ToolsActions) {
                         val parameters = toolParameters(tool.parameters)
                         if (parameters.isEmpty())
                             KitRow(stringResource(Res.string.nativeToolsNoParameters))
+                        tool.parameters?.let { schema ->
+                            var copied by remember(tool.id) { mutableStateOf(false) }
+                            @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
+                            KitButton(
+                                stringResource(Res.string.e7LibraryCopyParameterSchema),
+                                {
+                                    clipboard.setText(
+                                        AnnotatedString(KitRedact.text(schema.toString()))
+                                    )
+                                    copied = true
+                                },
+                                role = KitButtonRole.Secondary,
+                                modifier = gutter,
+                            )
+                            if (copied) KitNotice(stringResource(Res.string.kitCopied))
+                        }
                         for (parameter in parameters) KitRow(
                             title = parameter.name,
                             supporting =
@@ -116,6 +137,8 @@ public fun ToolsScreen(state: ToolsUi, actions: ToolsActions) {
                     )
                         KitRow(stringResource(Res.string.protoToolsEmpty))
                     for (plugin in state.plugins) KitRow(
+                        trailing = KitRowTrailing.Chevron,
+                        onClick = { pluginDetail = plugin },
                         title = plugin.id ?: stringResource(Res.string.protoToolsUnnamedPlugin),
                         supporting =
                             listOf(
@@ -128,6 +151,7 @@ public fun ToolsScreen(state: ToolsUi, actions: ToolsActions) {
                         supportingMaxLines = 3,
                     )
                 }
+            PluginDetailSheet(pluginDetail) { pluginDetail = null }
             if (state.catalogSupported) {
                 KitRowGroup(label = stringResource(Res.string.protoToolsSkills)) {
                     if (!state.hasSession)
@@ -277,3 +301,31 @@ private fun mcpStatus(status: String): String =
             else -> Res.string.protoToolsUnknown
         }
     )
+
+/** What a person may want about one server plugin: state, where it comes from, and its id. */
+@Composable
+private fun PluginDetailSheet(plugin: LibraryPlugin?, onDismiss: () -> Unit) {
+    KitSheet(
+        visible = plugin != null,
+        onDismissRequest = onDismiss,
+        title = plugin?.id ?: stringResource(Res.string.pluginsUnnamed),
+        closeLabel = stringResource(Res.string.kitSheetClose),
+    ) {
+        plugin?.let { p ->
+            KitText(pluginStatus(p.status))
+            if (p.status == LibraryPluginStatus.Failed)
+                KitText(stringResource(Res.string.pluginsFailureDetail))
+            KitText(listOfNotNull(pluginSource(p.source), p.packageName.takeIf { it != p.id }).joinToString(" · "))
+            if (p.terminalUi) KitText(stringResource(Res.string.pluginsTerminalUi))
+            KitDetailsFold(
+                stringResource(Res.string.kitDetails),
+                stringResource(Res.string.kitCopyDetails),
+                notes =
+                    listOf(
+                        "${stringResource(Res.string.pluginsDetailsId)}: " +
+                            (p.id ?: stringResource(Res.string.pluginsUnnamed))
+                    ),
+            )
+        }
+    }
+}

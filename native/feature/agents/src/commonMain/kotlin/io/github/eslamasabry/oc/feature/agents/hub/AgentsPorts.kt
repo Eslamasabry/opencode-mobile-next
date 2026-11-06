@@ -113,6 +113,13 @@ public interface PhoneAgents {
 
     public suspend fun cancelInstall(): Outcome<Unit> = Outcome.Ok(Unit)
 
+    /**
+     * Runs the agent's own logout. `true` only when a fresh status read says it is signed out;
+     * `false` means not confirmed. Conversations are never touched.
+     */
+    public suspend fun signOut(id: String): Outcome<Boolean> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("phoneAgentSignOut")))
+
     public suspend fun remove(id: String): Outcome<PhoneAgentRemoval> =
         Outcome.Ok(PhoneAgentRemoval.Refused(PhoneAgentRemovalIssue.Unavailable))
 }
@@ -144,6 +151,8 @@ public data class PhoneAgentRow(
     val supportedInstallation: Boolean = installable,
     /** Only an installed agent with a supported sign-in method may open sign-in. */
     val signInAvailable: Boolean = false,
+    /** Signed in now, and the agent's bridge can run its own logout. */
+    val signOutAvailable: Boolean = false,
 )
 
 public sealed interface PhoneAgentRemoval {

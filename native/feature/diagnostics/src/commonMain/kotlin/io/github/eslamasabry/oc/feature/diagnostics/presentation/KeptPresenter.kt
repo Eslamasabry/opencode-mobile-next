@@ -37,6 +37,20 @@ public class KeptPresenter(
                 }
         }
         loadExits()
+        refreshPerformance()
+    }
+
+    private fun refreshPerformance() {
+        local.update { it.copy(perf = host.performanceSteps()) }
+    }
+
+    override fun errorLogText(): String = host.errorLogText()
+
+    override fun performanceText(): String = host.performanceReport()
+
+    override fun onClearPerformance() {
+        host.clearPerformance()
+        refreshPerformance()
     }
 
     private fun KeptUi.withCrash(crash: CrashDiagnosticsState?): KeptUi {

@@ -255,6 +255,9 @@ public fun AgentsScreen(
                     copyLabel = stringResource(Res.string.kitCopyDetails),
                 )
             }
+            state.signOutFailed?.let { name ->
+                KitErrorNotice(stringResource(Res.string.agentsSignOutFailed, name), gutter)
+            }
             if (state.previousVersionFailed)
                 KitErrorNotice(stringResource(Res.string.agentsPreviousVersionFailed), gutter)
             if (state.previousVersionRestored)
@@ -276,6 +279,19 @@ public fun AgentsScreen(
             // Phone payloads belong to the runtime owner, even while a computer is selected.
             val phoneAvailable = state.phone.available
             AgentInstallPanel(state, actions, gutter, enabled)
+            if (
+                !phoneAvailable && hub?.connection?.builtInAvailable == true && hubActions != null
+            ) {
+                KitButton(
+                    stringResource(Res.string.agentsSwitchToBuiltIn),
+                    hubActions::switchToBuiltIn,
+                    gutter,
+                    enabled =
+                        if (hub.working) KitEnabled.Disabled(stringResource(Res.string.serversWorking))
+                        else enabled,
+                    working = hub.working,
+                )
+            }
             if (!phoneAvailable) {
                 KitRow(
                     title = stringResource(Res.string.agentsHubOnPhone),
@@ -561,6 +577,21 @@ public fun AgentsScreen(
             KitText(stringResource(Res.string.agentsResetSavedSignInsBody))
         }
         KitConfirm(
+            state.signingOutAgent?.let { agent ->
+                KitConfirmSpec(
+                    title = stringResource(Res.string.agentsSignOutTitle, agent.name),
+                    confirmLabel = stringResource(Res.string.agentsSignOutAction, agent.name),
+                    kind = KitConfirmKind.Destructive,
+                    body = stringResource(Res.string.agentsSignOutBody, agent.name),
+                    consequences = listOf(stringResource(Res.string.agentsSignOutKept, agent.name)),
+                    icon = KitIcons.personRemove,
+                )
+            },
+            onConfirm = actions::confirmSignOut,
+            onCancel = actions::cancelSignOut,
+            working = state.busy,
+        )
+        KitConfirm(
             state.removingAgent?.let { agent ->
                 KitConfirmSpec(
                     title = stringResource(Res.string.linuxAgentPayloadRemoveTitle, agent.name),
@@ -664,8 +695,19 @@ private fun PhoneAgentRows(state: AgentsUi, actions: AgentsActions, enabled: Kit
                                 leading = KitRowLeading.Logo(agent.id, agent.name, agent = true),
                             )
                         }
-                        if (agent.removable || agent.previousVersionAvailable) {
+                        if (agent.removable || agent.previousVersionAvailable || agent.signOutAvailable) {
                             val menu = buildList {
+                                if (agent.signOutAvailable)
+                                    add(
+                                        KitMenuItem(
+                                            stringResource(
+                                                Res.string.agentsSignOutAction,
+                                                agent.name,
+                                            ),
+                                            { actions.requestSignOut(agent.id) },
+                                            enabled = enabled,
+                                        )
+                                    )
                                 if (agent.previousVersionAvailable)
                                     add(
                                         KitMenuItem(

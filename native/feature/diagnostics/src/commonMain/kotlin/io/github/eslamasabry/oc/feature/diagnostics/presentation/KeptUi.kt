@@ -27,6 +27,16 @@ public sealed interface KeptExits {
     public data class Ready(val rows: List<KeptExitRow>, val helperDeaths: Int) : KeptExits
 }
 
+/** One timing step: [typical], [slow] and [longest] arrive formatted. Never a message. */
+public data class KeptPerfRow(
+    val name: String,
+    val count: Int,
+    val errors: Int,
+    val typical: String,
+    val slow: String,
+    val longest: String,
+)
+
 /** A fixed plain outcome line (B-SEC-053): never report text or a private error. */
 public enum class KeptNotice {
     CrashUnavailable,
@@ -57,6 +67,7 @@ public data class KeptUi(
     val sharing: Boolean = false,
     val confirmDelete: Boolean = false,
     val confirmClear: Boolean = false,
+    val perf: List<KeptPerfRow> = emptyList(),
 )
 
 /** What the page can do. Each name says its one target. */
@@ -84,4 +95,12 @@ public interface KeptActions {
     public fun onRetryExits()
 
     public fun onDismissNotice()
+
+    /** The redacted text behind Copy on the errors line. */
+    public fun errorLogText(): String = ""
+
+    /** The text behind Copy timing report. */
+    public fun performanceText(): String = ""
+
+    public fun onClearPerformance() {}
 }

@@ -64,6 +64,17 @@ internal fun AgentInstallPanel(
                         enabled = installEnabled,
                         working = state.busy,
                     ),
+            secondary =
+                if (state.phone.installation?.let {
+                        it.id == agent.id && it.phase == PhoneAgentInstallPhase.Installing
+                    } == true
+                )
+                    KitAction(
+                        stringResource(Res.string.agentsCancelSetup),
+                        actions::cancelPhoneInstall,
+                        enabled = enabled,
+                    )
+                else null,
         ) {
             KitText(stringResource(Res.string.agentsSetupBody, agent.name))
             if (size != null) KitText(stringResource(Res.string.agentsSetupSizeNote, size))
