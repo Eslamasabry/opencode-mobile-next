@@ -47,19 +47,20 @@ public fun KitComposerMic(
             )
         )
     val ink = if (quiet) colors.text2 else look.words ?: colors.onAccent
-    KitTappable(
-        onClick = onClick,
-        onLongClick = onLongClick,
-        onLongClickLabel = longClickLabel,
-        modifier = modifier.semantics { contentDescription = label },
-        shape = KitShapeId.Circle,
-        ink = if (quiet) TextTone.Secondary else TextTone.OnAccent,
-    ) {
+    // The disc (fill and the style's shadow) sits under the press target, outside its clip, so its shadow is whole.
+    Box(modifier, contentAlignment = Alignment.Center) {
         Box(
             Modifier.size(FlutterKitTokens.COMPOSER_ACTION_SIZE.dp)
                 .then(look.modifier)
-                .testTag("kit-composer-mic-disc"),
-            contentAlignment = Alignment.Center,
+                .testTag("kit-composer-mic-disc")
+        )
+        KitTappable(
+            onClick = onClick,
+            onLongClick = onLongClick,
+            onLongClickLabel = longClickLabel,
+            modifier = Modifier.semantics { contentDescription = label },
+            shape = KitShapeId.Circle,
+            ink = if (quiet) TextTone.Secondary else TextTone.OnAccent,
         ) {
             Image(
                 KitIcons.mic,

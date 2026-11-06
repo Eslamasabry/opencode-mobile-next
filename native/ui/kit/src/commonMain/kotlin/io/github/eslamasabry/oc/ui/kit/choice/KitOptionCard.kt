@@ -144,25 +144,25 @@ public fun KitStyleOptionCard(
     KitTappable(
         onClick = onSelect,
         modifier =
-            modifier.kitMaxWidth(CapRole.Reading).semantics {
-                role = Role.RadioButton
-                this.selected = selected
-                contentDescription = label
-            },
-        enabled = enabled,
-        disabledReason = disabledReason,
-        shape = KitShapeId.Card,
-    ) {
-        Column(
-            Modifier.fillMaxWidth()
+            modifier
+                .kitMaxWidth(CapRole.Reading)
+                .semantics {
+                    role = Role.RadioButton
+                    this.selected = selected
+                    contentDescription = label
+                }
+                // The face (fill, edge and the style's shadow) sits outside the press clip, so its shadow is whole.
                 .then(look.modifier)
                 .border(
                     if (selected) kitFocusRingWidth() else kitHairline(),
                     if (selected) colors.accent else colors.hairline,
                     look.shape,
-                )
-                .padding(Space.S3.dp)
-        ) {
+                ),
+        enabled = enabled,
+        disabledReason = disabledReason,
+        shape = KitShapeId.Card,
+    ) {
+        Column(Modifier.fillMaxWidth().padding(Space.S3.dp)) {
             StyleSample(style)
             Spacer(Modifier.height(Space.S2.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -283,26 +283,26 @@ public fun KitPlainOptionCard(
     KitTappable(
         onClick = onSelect,
         modifier =
-            modifier.kitMaxWidth(CapRole.Reading).fillMaxWidth().semantics {
-                role = Role.RadioButton
-                this.selected = selected
-                contentDescription = label
-            },
-        enabled = enabled.isEnabled,
-        disabledReason = enabled.reason,
-        shape = KitShapeId.Card,
-    ) {
-        Column(
-            Modifier.fillMaxWidth()
+            modifier
+                .kitMaxWidth(CapRole.Reading)
+                .fillMaxWidth()
+                .semantics {
+                    role = Role.RadioButton
+                    this.selected = selected
+                    contentDescription = label
+                }
+                // The face sits outside the press clip, so the style's shadow is whole.
                 .then(look.modifier)
                 .border(
                     if (selected) kitFocusRingWidth() else kitHairline(),
                     if (selected) colors.accent else colors.hairline,
                     look.shape,
-                )
-                .padding(Space.S3.dp)
-                .clearAndSetSemantics {}
-        ) {
+                ),
+        enabled = enabled.isEnabled,
+        disabledReason = enabled.reason,
+        shape = KitShapeId.Card,
+    ) {
+        Column(Modifier.fillMaxWidth().padding(Space.S3.dp).clearAndSetSemantics {}) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 KitGlyph(icon, if (selected) colors.accent else colors.text2, tokens.smallIcon.dp)
                 Spacer(Modifier.weight(1f))

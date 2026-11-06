@@ -1,6 +1,7 @@
 <resources>
     <string name="composerPreviewModelButton">Model</string>
     <string name="composerPreviewModelDefault">Server default</string>
+    <string name="composerPreviewModelDefaultHint">The server’s own default model</string>
     <string name="composerPreviewModelsTitle">Choose a model</string>
     <string name="composerPreviewModelsLoading">Loading models…</string>
     <string name="composerPreviewModelsEmpty">No models are available right now.</string>

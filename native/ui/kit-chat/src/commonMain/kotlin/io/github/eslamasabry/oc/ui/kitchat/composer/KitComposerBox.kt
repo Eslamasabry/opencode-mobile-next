@@ -269,22 +269,23 @@ public fun KitComposerSend(
         )
     val ink = if (on) look.words ?: colors.onAccent else colors.text3
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-    KitTappable(
-        onClick = onClick,
-        onLongClick = onLongClick,
-        onLongClickLabel = onLongClickLabel,
-        modifier = modifier.semantics { contentDescription = label },
-        enabled = on && !working,
-        disabledReason = if (working) label else enabled.reason,
-        haptic = KitHaptic.Send,
-        shape = KitShapeId.Circle,
-        ink = if (on) TextTone.OnAccent else TextTone.Tertiary,
-    ) {
+    // The disc sits under the press target, outside its clip, so the style's shadow is whole (as the mic's).
+    Box(modifier, contentAlignment = Alignment.Center) {
         Box(
             Modifier.size(FlutterKitTokens.COMPOSER_ACTION_SIZE.dp)
                 .then(look.modifier)
-                .testTag("kit-composer-send-disc"),
-            contentAlignment = Alignment.Center,
+                .testTag("kit-composer-send-disc")
+        )
+        KitTappable(
+            onClick = onClick,
+            onLongClick = onLongClick,
+            onLongClickLabel = onLongClickLabel,
+            modifier = Modifier.semantics { contentDescription = label },
+            enabled = on && !working,
+            disabledReason = if (working) label else enabled.reason,
+            haptic = KitHaptic.Send,
+            shape = KitShapeId.Circle,
+            ink = if (on) TextTone.OnAccent else TextTone.Tertiary,
         ) {
             if (working)
                 Box(
