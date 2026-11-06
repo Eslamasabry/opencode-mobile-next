@@ -45,6 +45,8 @@ import io.github.eslamasabry.oc.feature.chat.presentation.ReceiptCheckResult
 import io.github.eslamasabry.oc.feature.chat.presentation.ReceiptCheckUi
 import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFailureKind
 import io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices
+import io.github.eslamasabry.oc.engine.transcript.ledger.WorkLineState
+import io.github.eslamasabry.oc.feature.chat.presentation.LiveNoticeUi
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
@@ -89,6 +91,8 @@ import io.github.eslamasabry.oc.ui.words.res.chatReceiptCheckAgain
 import io.github.eslamasabry.oc.ui.words.res.chatReceiptChecking
 import io.github.eslamasabry.oc.ui.words.res.chatReceiptLastChecked
 import io.github.eslamasabry.oc.ui.words.res.kitCopy
+import io.github.eslamasabry.oc.ui.words.res.liveFailedStillWorking
+import io.github.eslamasabry.oc.ui.words.res.liveFailedStopped
 import io.github.eslamasabry.oc.ui.words.res.kitQueuedUncertain
 import io.github.eslamasabry.oc.ui.words.res.kitTurnMore
 import io.github.eslamasabry.oc.ui.words.res.queuedReceiptStillUncertain
@@ -663,6 +667,20 @@ private fun ChatRow(
                                 KitQuietLine(words.footer(row.failed))
                             }
                         else KitQuietLine(words.footer(row.failed))
+                        // Say plainly whether the agent is still going: a retry or a step still
+                        // running means yes; otherwise it has stopped and a message carries it on.
+                        val stillWorking =
+                            facts.live is LiveNoticeUi.Retry ||
+                                facts.work[row.turnId]?.state == WorkLineState.Running
+                        KitQuietLine(
+                            stringResource(
+                                if (stillWorking) Res.string.liveFailedStillWorking
+                                else Res.string.liveFailedStopped
+                            ),
+                            modifier = Modifier.semantics {
+                                liveRegion = LiveRegionMode.Polite
+                            },
+                        )
                         val kind = ReplyFailureKind.of(reason)
                         // The server's typed error class reads first (rest-1); the reason text only
                         // drives the generic words when there is no typed class.
