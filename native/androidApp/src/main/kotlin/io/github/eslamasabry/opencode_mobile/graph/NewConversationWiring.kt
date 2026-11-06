@@ -255,11 +255,11 @@ class AndroidNewConversationHost(
                 val previous = stores.prefs.string("oc.newChatProject.${profile.raw}")
                 val current = gateway.location.value.directory
                 val directory =
-                    listOf(previous, current).firstOrNull { candidate ->
+                    (listOf(previous, current) + projects.map { it.directory }).firstOrNull {
+                        candidate ->
                         !candidate.isNullOrBlank() &&
-                            candidate != "/" &&
-                            candidate != "/root" &&
-                            !candidate.startsWith("/tmp/")
+                            candidate.startsWith('/') &&
+                            candidate.none { it.code <= 0x1f || it.code == 0x7f }
                     }
                 val importer = gateway.facet<ProviderConversationImportGateway>()
                 val draftChoices =
@@ -327,6 +327,9 @@ class AndroidNewConversationHost(
                                 ?: savedModel
                                 ?: providers.defaultProviderId?.let { p ->
                                     providers.defaultModelId?.let { ModelRef(p, it) }
+                                }
+                                ?: providers.providers.firstNotNullOfOrNull { p ->
+                                    p.modelIds.firstOrNull()?.let { ModelRef(p.id, it) }
                                 },
                         agent = draftChoices?.agent,
                         importDirectory =
@@ -375,7 +378,9 @@ class AndroidNewConversationHost(
                         )
                     is Outcome.Ok ->
                         held.value
-                            ?.takeUnless { previous?.ref == it && previous?.deliveryUnconfirmed == false }
+                            ?.takeUnless {
+                                previous?.ref == it && previous?.deliveryUnconfirmed == false
+                            }
                             ?.let { ref ->
                                 return@withLock NewConversationAttempt(
                                     directory,

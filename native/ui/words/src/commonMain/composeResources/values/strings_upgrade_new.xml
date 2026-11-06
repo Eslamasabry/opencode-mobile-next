@@ -1,0 +1,4 @@
+<resources>
+    <string name="upgradeNewStart">Start</string>
+    <string name="upgradeAgentReady">Ready</string>
+</resources>
