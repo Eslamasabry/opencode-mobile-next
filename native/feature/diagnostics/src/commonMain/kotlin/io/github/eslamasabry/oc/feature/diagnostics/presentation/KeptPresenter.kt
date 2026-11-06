@@ -33,7 +33,7 @@ public class KeptPresenter(
         scope.launch {
             combine(host.crash, host.errorsKept) { crash, errors -> crash to errors }
                 .collect { (crash, errors) ->
-                    local.update { it.withCrash(crash).copy(errorsKept = errors) }
+                    local.update { it.withCrash(crash).copy(errorsKept = errors, errors = host.errorEntries()) }
                 }
         }
         loadExits()

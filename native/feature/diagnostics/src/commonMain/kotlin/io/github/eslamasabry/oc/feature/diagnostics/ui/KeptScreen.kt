@@ -236,7 +236,68 @@ private fun ErrorsSection(state: KeptUi, actions: KeptActions) {
         },
     )
     if (copied) KitNotice(stringResource(Res.string.kitCopied))
+    var open by remember { mutableStateOf(emptySet<Long>()) }
+    if (state.errors.isNotEmpty())
+        KitRowGroup {
+            state.errors.forEach { row ->
+                KitExpandRow(
+                    title = errorTitle(row.source),
+                    expanded = row.id in open,
+                    modifier = Modifier.testTag("kept-error-${row.id}"),
+                    supporting =
+                        if (row.occurrences > 1)
+                            row.time +
+                                " · " +
+                                stringResource(
+                                    Res.string.e7SettingsDiagnosticOccurrences,
+                                    row.occurrences,
+                                )
+                        else row.time,
+                    onExpandedChange = { on -> open = if (on) open + row.id else open - row.id },
+                ) {
+                    Column(
+                        Modifier.padding(
+                            horizontal = LocalKitTokens.current.gutter.dp,
+                            vertical = Space.S2.dp,
+                        )
+                    ) {
+                        KitDetailsFold(
+                            stringResource(Res.string.kitDetails),
+                            stringResource(Res.string.kitCopyDetails),
+                            notes =
+                                listOfNotNull(
+                                    "${stringResource(Res.string.crashReportDetailSource)}: ${row.source}",
+                                    row.message,
+                                    row.stack.takeIf { it.isNotEmpty() },
+                                ),
+                            initiallyExpanded = true,
+                        )
+                    }
+                }
+            }
+        }
 }
+
+/** The plain title of a kept error, chosen by where it came from; the technical text stays under Details. */
+@Composable
+private fun errorTitle(source: String): String =
+    stringResource(
+        when {
+            source == "sse" || source.startsWith("sse.") || source == "events" ->
+                Res.string.recentErrorConnection
+            source == "thermal" || source.startsWith("thermal.") || source == "android.thermal" ->
+                Res.string.recentErrorTemperature
+            source == "flutter" || source == "widget" || source == "crash.widget" ->
+                Res.string.recentErrorScreen
+            source == "crash.last" || source == "crash.native" -> Res.string.crashKindClosed
+            source == "crash.anr" -> Res.string.crashKindNotResponding
+            source == "android.exit" -> Res.string.recentErrorAndroidExit
+            source == "bootstrap" || source == "bootstrap-reset" || source == "notify-migration" ->
+                Res.string.recentErrorStartup
+            source == "report-problem" -> Res.string.recentErrorReportStore
+            else -> Res.string.recentErrorGeneric
+        }
+    )
 
 /** Where time went in this run (Flutter `PerfTraceSection`): steps by name, Copy and Clear. */
 @Composable

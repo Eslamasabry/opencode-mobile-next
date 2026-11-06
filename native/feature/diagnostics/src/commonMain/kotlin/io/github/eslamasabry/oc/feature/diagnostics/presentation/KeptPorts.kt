@@ -39,6 +39,9 @@ public interface KeptDiagnosticsHost {
     /** The redacted text of the errors kept on this phone, for Copy. Empty when there are none. */
     public fun errorLogText(): String = ""
 
+    /** The kept errors, newest first, redacted, with their times worded. Empty when the host lists none. */
+    public fun errorEntries(): List<KeptErrorRow> = emptyList()
+
     /** Where time went in this run, grouped by step, slowest first. Times are already worded. */
     public fun performanceSteps(): List<KeptPerfRow> = emptyList()
 
