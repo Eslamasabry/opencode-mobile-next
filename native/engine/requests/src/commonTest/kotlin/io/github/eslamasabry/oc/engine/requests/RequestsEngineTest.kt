@@ -57,6 +57,78 @@ class RequestsEngineTest {
     private fun RequestsEngine.phaseOf(id: String): AnswerPhase? = pending.value.firstOrNull { it.id == RequestId(id) }?.phase
 
     @Test
+    fun `B-CHAT-050 acknowledged Stop retires captured asks and cancels their held answers`() =
+        runTest {
+            port.capabilities.value = ServerCapabilities.Unknown.copy(permissionRequests = true)
+            val engine = engine()
+            ask(permission("p1"), permission("p2", session = S2))
+            val captured = engine.pending.value.filter { it.sessionId == S1 }
+            engine.answer(RequestId("p1"), RequestAnswer.Permission(PermissionReply.Once))
+
+            engine.discardStopped(captured)
+            assertEquals(listOf("p2"), engine.pending.value.map { it.id.raw })
+            assertIs<Outcome.Failed>(engine.answer(RequestId("p1"), RequestAnswer.Permission(PermissionReply.Once), captured.single()))
+            advanceTimeBy(HELD_ANSWER + 1.milliseconds)
+            runCurrent()
+            engine.refresh() // A stale server list must not restore the stopped approval.
+            assertEquals(listOf("p2"), engine.pending.value.map { it.id.raw })
+            assertTrue(port.replies.isEmpty())
+        }
+
+    @Test
+    fun `B-PROTO-048 acknowledged Stop preserves a replacement ask with the same wire id`() =
+        runTest {
+            val engine = engine()
+            ask(permission("p1"))
+            val captured = engine.pending.value.toList()
+            ask(permission("p1", patterns = listOf("different command")))
+
+            engine.discardStopped(captured)
+            val replacement = assertIs<PendingRequest.Permission>(engine.pending.value.single())
+            assertEquals(listOf("different command"), replacement.request.patterns)
+            assertEquals(AnswerPhase.Waiting, replacement.phase)
+        }
+
+    @Test
+    fun `B-CHAT-074 acknowledged Stop cancels a claimed answer still waiting for transport`() =
+        runTest {
+            val engine = engine()
+            ask(permission("p1"))
+            val captured = engine.pending.value.toList()
+            val gate = CompletableDeferred<Unit>()
+            port.wakeGate = gate
+            val answer = async { engine.answerNow(RequestId("p1"), RequestAnswer.Permission(PermissionReply.Once)) }
+            runCurrent()
+            assertIs<AnswerPhase.Sending>(engine.phaseOf("p1"))
+            assertTrue(port.replies.isEmpty())
+
+            engine.discardStopped(captured)
+            assertNull(engine.phaseOf("p1"))
+            gate.complete(Unit)
+            assertEquals(Outcome.Ok(Unit), answer.await())
+            assertTrue(port.replies.isEmpty())
+        }
+
+    @Test
+    fun `B-CHAT-074 acknowledged Stop keeps the real receipt of a reply already dispatched`() =
+        runTest {
+            val engine = engine()
+            ask(permission("p1"))
+            val captured = engine.pending.value.toList()
+            val gate = CompletableDeferred<Unit>()
+            port.replyGate = gate
+            val answer = async { engine.answerNow(RequestId("p1"), RequestAnswer.Permission(PermissionReply.Once)) }
+            runCurrent()
+            assertEquals(listOf("reply p1 Once"), port.replies)
+
+            engine.discardStopped(captured)
+            assertIs<AnswerPhase.Sending>(engine.phaseOf("p1"))
+            gate.complete(Unit)
+            assertEquals(Outcome.Ok(Unit), answer.await())
+            assertIs<AnswerPhase.Sent>(engine.phaseOf("p1"))
+        }
+
+    @Test
     fun `B-CHAT-123 asked permissions wait one card per chat, oldest first, with how many more wait`() =
         runTest {
             val engine = engine()

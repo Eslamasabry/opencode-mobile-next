@@ -70,6 +70,8 @@ public class RequestsEngine(
     private val log = AppLog.tagged("requests")
     private val state = MutableStateFlow(NoRequests)
     private val tokens = AtomicLong(0)
+    /** Serial-lane only: a claim waiting for transport is not yet a dispatched reply. */
+    private val dispatched = mutableSetOf<AnswerPhase.Sending>()
 
     private data class Invitation(
         val request: PermissionRequest,
@@ -191,8 +193,8 @@ public class RequestsEngine(
                     PendingRequest.Permission(invite.request),
                 )
                 .also {
-                if (it is Outcome.Failed) confirmedInvitations.update { all -> all - id }
-            }
+                    if (it is Outcome.Failed) confirmedInvitations.update { all -> all - id }
+                }
         }
 
     // Lane-confined bookkeeping.
@@ -373,6 +375,33 @@ public class RequestsEngine(
             ?: Failure.Refused(RefusalReason.AlreadyAnswered).failed()
     }
 
+    /**
+     * Acknowledged Stop retires only the asks captured before that interrupt. A late answer to one
+     * of them must not run a command after the person stopped the turn. A newer request that reuses
+     * an id belongs to its own turn, and an already-dispatched reply keeps its real receipt. Call
+     * only after the server accepted Stop; a failed or uncertain interrupt changes nothing.
+     */
+    public suspend fun discardStopped(captured: List<PendingRequest>): Unit =
+        withContext(lane) {
+            val retired = mutableListOf<RequestId>()
+            state.update { current ->
+                retired.clear()
+                current
+                    .filterNot { entry ->
+                        val retire =
+                            dispatched.none { it === entry.phase } &&
+                                captured.any { it.id == entry.id && entry.sameIncarnation(it) }
+                        if (retire) retired += entry.id
+                        retire
+                    }
+                    .toImmutableList()
+            }
+            // The atomic removal above wins against answer()/answerNow() claims; their delayed
+            // jobs check the captured phase and send nothing once it is gone. Remember settlement
+            // before a reread can bring an old server snapshot back.
+            retired.forEach(::remove)
+        }
+
     /** Leaving the chat: its held answers go now (plan 09 §5.1). */
     public suspend fun flushHeld(session: SessionId) {
         flush { it.sessionId == session }
@@ -487,17 +516,21 @@ public class RequestsEngine(
             scope.launch(lane) {
                 // Settlement can remove a claimed entry before this job starts or while the
                 // transport wakes.
-                val written =
-                    if (phaseOf(id) !== sending) Unit.ok()
-                    else {
-                        val transport = port.awaitActionTransport()
-                        when {
-                            phaseOf(id) !== sending -> Unit.ok()
-                            transport is Outcome.Failed -> transport
-                            else -> reply(entry, answer)
+                try {
+                    val written =
+                        if (phaseOf(id) !== sending) Unit.ok()
+                        else {
+                            val transport = port.awaitActionTransport()
+                            when {
+                                phaseOf(id) !== sending -> Unit.ok()
+                                transport is Outcome.Failed -> transport
+                                else -> reply(entry, answer)
+                            }
                         }
-                    }
-                sending.result.complete(settleWrite(entry, sending, written))
+                    sending.result.complete(settleWrite(entry, sending, written))
+                } finally {
+                    dispatched.remove(sending)
+                }
             }
         // Also runs if the connection was cancelled before the job could start. Never replay an
         // uncertain write.
@@ -537,6 +570,7 @@ public class RequestsEngine(
                     )
                         return Failure.Refused(RefusalReason.StaleScope).failed()
                 }
+                if (!markDispatched(entry)) return Unit.ok()
                 val result =
                     port.replyPermission(entry.sessionId, entry.id, answer.reply, answer.note)
                 // Only the actual successful transport acknowledgement records acceptance. A 404,
@@ -549,19 +583,31 @@ public class RequestsEngine(
                 result
             }
             is RequestAnswer.Question ->
-                port.answerQuestion(entry.sessionId, entry.id, answer.answers)
+                if (markDispatched(entry))
+                    port.answerQuestion(entry.sessionId, entry.id, answer.answers)
+                else Unit.ok()
             RequestAnswer.Decline ->
-                when (entry) {
-                    is PendingRequest.Permission ->
-                        port.replyPermission(
-                            entry.sessionId,
-                            entry.id,
-                            PermissionReply.Reject,
-                            null,
-                        )
-                    is PendingRequest.Question -> port.rejectQuestion(entry.sessionId, entry.id)
-                }
+                if (!markDispatched(entry)) Unit.ok()
+                else
+                    when (entry) {
+                        is PendingRequest.Permission ->
+                            port.replyPermission(
+                                entry.sessionId,
+                                entry.id,
+                                PermissionReply.Reject,
+                                null,
+                            )
+                        is PendingRequest.Question -> port.rejectQuestion(entry.sessionId, entry.id)
+                    }
         }
+    }
+
+    /** Called on the lane immediately before transport dispatch, after any suspending checks. */
+    private fun markDispatched(entry: PendingRequest): Boolean {
+        val sending = entry.phase as? AnswerPhase.Sending ?: return false
+        if (phaseOf(entry.id) !== sending) return false
+        dispatched += sending
+        return true
     }
 
     private suspend fun settleWrite(

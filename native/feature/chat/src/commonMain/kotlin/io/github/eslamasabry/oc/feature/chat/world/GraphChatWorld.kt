@@ -996,7 +996,9 @@ internal class GraphChatWorld(
             else {
                 val session = gateway.session(sid)
                 if (session is Outcome.Failed) {
-                    if (currentAttached()?.handle === handle && mutableLoad.value !is ChatLoad.Live) {
+                    if (
+                        currentAttached()?.handle === handle && mutableLoad.value !is ChatLoad.Live
+                    ) {
                         mutableLoad.value = ChatLoad.Failed(session.failure)
                     }
                     return session
@@ -1007,13 +1009,15 @@ internal class GraphChatWorld(
                 val details = (session as Outcome.Ok).value
                 if (details.id != sid) {
                     val failure = Failure.UnreadableReply()
-                    if (mutableLoad.value !is ChatLoad.Live) mutableLoad.value = ChatLoad.Failed(failure)
+                    if (mutableLoad.value !is ChatLoad.Live)
+                        mutableLoad.value = ChatLoad.Failed(failure)
                     return Outcome.Failed(failure)
                 }
                 details.stagedRevert?.messageId
             }
         val read =
-            if (boundary == null) a.graph.session.reads.tail(sid, cursor = cursor, limit = HISTORY_PAGE)
+            if (boundary == null)
+                a.graph.session.reads.tail(sid, cursor = cursor, limit = HISTORY_PAGE)
             else
                 readHistoryAtStagedBoundary(
                     gateway,
@@ -1021,7 +1025,9 @@ internal class GraphChatWorld(
                     boundary = boundary,
                     cursor = cursor,
                     limit = HISTORY_PAGE,
-                    isCurrent = { currentAttached()?.handle === handle && gateway.location.value == at },
+                    isCurrent = {
+                        currentAttached()?.handle === handle && gateway.location.value == at
+                    },
                 )
         return when (val page = read) {
             is Outcome.Ok -> {
@@ -2015,13 +2021,20 @@ internal class GraphChatWorld(
     override suspend fun stopTurn(): Outcome<Boolean> {
         if (readOnlyNow()) return readOnlyFailure()
         val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
-        (a.graph as ChatGraphAccessors).chatDelivery.engine?.let {
+        val graph = a.graph as ChatGraphAccessors
+        val requests = graph.chatRequests.engine
+        val capturedRequests = requests.pending.value.filter { it.sessionId == sid }
+        graph.chatDelivery.engine?.let {
             // The engine calls off waiting sends and records the person's Stop, then interrupts.
             val stopped = it.stopTurn(ref)
             // Codex chat-bugs 2: a tap inside the guard after a send asked nothing; Stop stays
             // usable.
             when (stopped) {
-                is Outcome.Ok -> return Outcome.Ok(stopped.value == StopAnswer.Asked)
+                is Outcome.Ok -> {
+                    val asked = stopped.value == StopAnswer.Asked
+                    if (asked) requests.discardStopped(capturedRequests)
+                    return Outcome.Ok(asked)
+                }
                 // B10: a stale fence there asked the server nothing; the running turn is still owed
                 // its interrupt.
                 is Outcome.Failed ->
@@ -2029,7 +2042,10 @@ internal class GraphChatWorld(
             }
         }
         return when (val r = a.gateway.stop(sid)) {
-            is Outcome.Ok -> Outcome.Ok(true)
+            is Outcome.Ok -> {
+                requests.discardStopped(capturedRequests)
+                Outcome.Ok(true)
+            }
             is Outcome.Failed -> r
         }
     }
