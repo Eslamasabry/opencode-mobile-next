@@ -17,8 +17,8 @@ that carry it can never update again without an uninstall, which deletes their p
 
 | Lineage | Short fingerprint | Signs | Where the key lives |
 |---|---|---|---|
-| Owner local | `1DE5BF08…D60C` | The owner's phone (NX721J) and every test build installed on it, Flutter and native | The PC's `~/.android/debug.keystore` (alias `androiddebugkey`); encrypted backups on the PC's second disk and the VPS (2026-11-06) |
-| Public CI | `842284B2…1D1C` | Every public GitHub release since 2.0.0+56, including 2.1.4+62; the public native 3.x line | GitHub Actions secret, used only by `android-release.yml` |
+| Owner local | `1DE5BF08…D60C` | The owner's phone and every test build installed on it, Flutter and native | The maintainer's build machine only, with encrypted backups kept privately (2026-11-06) |
+| Public CI | `842284B2…1D1C` | Every public GitHub release since 2.0.0+56, including 2.1.4+62; the public native 3.x line | A CI secret, used only by the release workflow |
 | Legacy CI | `2D010C21…D0EC` | Old stable releases before 2.0.0 only | CI history; not used for any current or future build |
 
 Naming: `AGENTS.md` calls `2D010C21…` "older stable CI" and plan 15 §11.2 calls it "CI test". They are the same
@@ -54,6 +54,6 @@ Rules:
 
 | Id | Question | Owner answer (2026-11-06) |
 |---|---|---|
-| D-01 | Which lineage does the owner's phone carry, and which does public 3.0 use? | Owner phone stays on Owner local; public on Public CI; never rotate; back up the local key (done, encrypted) |
+| D-01 | Which lineage does the owner's phone carry, and which does public 3.0 use? | Owner phone stays on Owner local; public on Public CI; never rotate; the local key is backed up |
 | D-02 | How does native ship and get fixes without Shorebird? | GitHub releases plus the in-app updater, fixing forward with a new version code (+10). Flutter keeps its Shorebird build tooling only until the switch, with no patches |
 | D-10 | Ship native for 32-bit phones? | Pending |
