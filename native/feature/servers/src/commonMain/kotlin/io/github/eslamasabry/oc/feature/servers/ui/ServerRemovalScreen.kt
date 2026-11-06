@@ -8,6 +8,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.servers.presentation.*
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.*
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.frame.*
@@ -45,8 +47,6 @@ public fun ServerRemovalScreen(state: ServerRemovalUi, actions: ServerRemovalAct
                 stringResource(Res.string.remove40ConfirmTitle, plan.name),
                 stringResource(Res.string.serversRemove),
                 kind = KitConfirmKind.Destructive,
-                body = stringResource(Res.string.remove40Body),
-                consequences = consequences,
             )
         else null,
         actions::confirm,
@@ -81,8 +81,9 @@ public fun ServerRemovalScreen(state: ServerRemovalUi, actions: ServerRemovalAct
                     copyLabel = stringResource(Res.string.kitCopyDetails),
                 )
             }
-            plan?.let { KitText(it.name) }
-            consequences.forEach { KitText(it) }
+            plan?.let { KitText(it.name, role = TypeRole.Headline) }
+            if (plan != null) KitText(stringResource(Res.string.remove40Body), tone = TextTone.Secondary)
+            KitConsequences(consequences)
             if ((plan?.queued ?: 0) > 0)
                 KitSwitchRow(
                     stringResource(Res.string.remove40DeleteQueue),

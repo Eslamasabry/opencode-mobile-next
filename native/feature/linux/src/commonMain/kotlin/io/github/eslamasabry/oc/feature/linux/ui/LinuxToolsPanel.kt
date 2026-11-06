@@ -103,8 +103,6 @@ internal fun LinuxToolsPanel(state: LinuxToolsPanelUi, actions: LinuxToolsAction
         if (python != null && python.presence != ComponentPresence.Absent) {
             KitRow(
                 title = stringResource(Res.string.linuxToolsRemovePython),
-                supporting = stringResource(Res.string.linuxToolsRemoveBody),
-                supportingMaxLines = 3,
                 enabled = !working && python.canRemove,
                 disabledReason = if (working) wait else python.block?.words(),
                 onClick = actions::askRemove,
