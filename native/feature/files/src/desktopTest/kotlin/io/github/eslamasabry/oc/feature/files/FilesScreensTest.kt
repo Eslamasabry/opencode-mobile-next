@@ -6,10 +6,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
@@ -57,8 +59,12 @@ class FilesScreensTest {
         val opened = mutableListOf<FileNode>()
         var toggles = 0
         var retries = 0
+        var backs = 0
+        val searches = mutableListOf<String>()
 
-        override fun back() {}
+        override fun back() {
+            backs++
+        }
 
         override fun retry() {
             retries++
@@ -72,7 +78,9 @@ class FilesScreensTest {
             toggles++
         }
 
-        override fun search(query: String) {}
+        override fun search(query: String) {
+            searches += query
+        }
     }
 
     private class FileCalls : FileActions {
@@ -181,6 +189,36 @@ class FilesScreensTest {
             .assertExists()
         onNodeWithText("Try again").performClick()
         assertEquals(1, calls.retries)
+    }
+
+    @Test
+    fun `B-NAV-026 (B-090 twin) the bar's Back closes a search first and the second Back leaves the folder`() = runComposeUiTest {
+        val calls = FolderCalls()
+        setContent { Themed { FolderScreen(root, calls) } }
+        onNode(hasSetTextAction()).performTextInput("read")
+        mainClock.advanceTimeBy(1_000)
+        waitForIdle()
+        assertEquals(listOf("read"), calls.searches)
+
+        onNodeWithContentDescription("Back").performClick()
+        mainClock.advanceTimeBy(1_000)
+        waitForIdle()
+        assertEquals(0, calls.backs, "the first Back closes the search, it does not leave")
+        assertEquals(listOf("read", ""), calls.searches)
+
+        onNodeWithContentDescription("Back").performClick()
+        waitForIdle()
+        assertEquals(1, calls.backs, "with no search left, Back leaves the folder")
+    }
+
+    @Test
+    fun `B-NAV-026 (B-090 twin) Back with a search the screen still shows clears it rather than leaving`() = runComposeUiTest {
+        val calls = FolderCalls()
+        setContent { Themed { FolderScreen(root.copy(query = "lib"), calls) } }
+        onNodeWithContentDescription("Back").performClick()
+        waitForIdle()
+        assertEquals(0, calls.backs)
+        assertEquals(listOf(""), calls.searches)
     }
 
     @Test
