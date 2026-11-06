@@ -129,9 +129,21 @@ class AndroidLanDiscovery(
 
     private fun wifi(): Wifi? {
         val manager = application.getSystemService(ConnectivityManager::class.java) ?: return null
-        val network = manager.activeNetwork ?: return null
-        val caps = manager.getNetworkCapabilities(network) ?: return null
+        val active = manager.activeNetwork ?: return null
+        val caps = manager.getNetworkCapabilities(active) ?: return null
         if (!caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) return null
+        // A VPN over Wi-Fi (Tailscale) is the default network and carries the Wi-Fi transport, but its own address is
+        // a /32 on the tunnel: the subnet to sweep is the Wi-Fi network's underneath it.
+        val network =
+            if (!caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) active
+            else
+                @Suppress("DEPRECATION") // allNetworks: the one call that lists the VPN's underlying Wi-Fi on API 26+
+                manager.allNetworks.firstOrNull { candidate ->
+                    manager.getNetworkCapabilities(candidate)?.let {
+                        it.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) &&
+                            !it.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
+                    } == true
+                } ?: return null
         val link = manager.getLinkProperties(network) ?: return null
         val own = link.linkAddresses.firstOrNull { it.address is Inet4Address } ?: return null
         return Wifi(own.address.hostAddress ?: return null, own.prefixLength)

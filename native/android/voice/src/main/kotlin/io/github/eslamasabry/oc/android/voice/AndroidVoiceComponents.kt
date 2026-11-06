@@ -9,6 +9,7 @@ import io.github.eslamasabry.oc.android.voice.device.AndroidSetupNetwork
 import io.github.eslamasabry.oc.android.voice.files.AndroidModelFiles
 import io.github.eslamasabry.oc.android.voice.files.PlatformDigests
 import io.github.eslamasabry.oc.android.voice.net.HttpsModelFetcher
+import io.github.eslamasabry.oc.engine.voice.models.ModelFetcher
 import io.github.eslamasabry.oc.android.voice.speech.SherpaRuntime
 import io.github.eslamasabry.oc.android.voice.speech.SherpaSpeechRecognizer
 import io.github.eslamasabry.oc.android.voice.speech.SherpaSpeechSynthesizer
@@ -47,6 +48,8 @@ public class AndroidVoiceComponents(
     appLanguage: () -> String?,
     voiceAvailable: Boolean = true,
     readAloudAvailable: Boolean = true,
+    /** The model download's HTTP client; the app passes one that races IPv6 and IPv4 (see its OkHttpModelFetcher). */
+    fetcher: ModelFetcher = HttpsModelFetcher(dispatchers.io),
 ) {
     private val app = context.applicationContext
     private val speechLane = dispatchers.io.limitedParallelism(1, "voice.speech")
@@ -57,7 +60,7 @@ public class AndroidVoiceComponents(
         PackInstaller(
             root = File(app.filesDir, PackKind.Speech.root).path,
             files = AndroidModelFiles(),
-            fetcher = HttpsModelFetcher(dispatchers.io),
+            fetcher = fetcher,
             dispatchers = dispatchers,
             clock = clock,
             digests = PlatformDigests,

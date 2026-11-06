@@ -238,6 +238,14 @@
     <string name="voiceAutoSetupMaybeMetered">This connection may count against a data plan.</string>
     <string name="voiceAutoSetupDownload">Download %1$s</string>
     <string name="voiceAutoSetupDownloadMobile">Download %1$s on mobile data</string>
+    <string name="voiceDownloadNetworkUnknown">This phone can't tell whether this connection costs data.</string>
+    <string name="voiceDownloadStarting">Starting the download</string>
+    <string name="voiceDownloadProgressPercent">%1$s of %2$s · %3$d%%</string>
+    <string name="naturalVoiceDownloadTitle">Download the natural voice?</string>
+    <string name="voiceDownloadPackTitle">Download %1$s?</string>
+    <string name="voiceDownloadStopped">The download stopped</string>
+    <string name="voiceDownloadDetailCode">Problem code: %1$s</string>
+    <string name="voiceSetupBusyChoice">You can change this when the download finishes</string>
     <string name="voiceAutoSetupOtherModel">Choose another speech model</string>
     <string name="voiceAutoSetupNotified">Progress also shows in your notifications. Listening starts when it's done.</string>
     <string name="voiceAutoSetupStartsAfter">Listening starts when it's done.</string>

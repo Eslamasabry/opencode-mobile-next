@@ -132,6 +132,16 @@ class FakeModels(autoSend: Boolean = false) : VoiceModels {
         calls += "cancel"
     }
 
+    var network: io.github.eslamasabry.oc.engine.voice.models.SetupNetwork =
+        io.github.eslamasabry.oc.engine.voice.models.SetupNetwork.Unmetered
+
+    override suspend fun downloadNetwork(): io.github.eslamasabry.oc.engine.voice.models.SetupNetwork = network
+
+    override fun clearProblem() {
+        calls += "clearProblem"
+        state.update { it.copy(lastProblem = null, lastProblemPack = null) }
+    }
+
     override suspend fun remove(pack: PackId): Outcome<Unit> {
         calls += "remove:${pack.raw}"
         state.update { it.copy(packs = (it.packs + (pack to PackStatus.Missing)).toImmutableMap()) }

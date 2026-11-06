@@ -134,6 +134,7 @@ class AndroidVoiceHub(
                 appLanguage = { Locale.getDefault().language },
                 voiceAvailable = hasMic,
                 readAloudAvailable = true,
+                fetcher = OkHttpModelFetcher(dispatchers.io),
             )
         val models =
             NotifyingVoiceModels(

@@ -19,7 +19,8 @@ class RulesTest {
         cellular: Boolean = false,
         vpn: Boolean = false,
         metered: Boolean = false,
-    ) = NetworkFacts(manager, network, internet, validated, cellular, vpn, metered)
+        notMetered: Boolean = !metered,
+    ) = NetworkFacts(manager, network, internet, validated, cellular, vpn, metered, notMetered)
 
     @Test
     fun `B-ANDR-101 network state is reported and missing or failed probes never allow free data`() {
@@ -30,8 +31,19 @@ class RulesTest {
         assertEquals(SetupNetwork.Offline, SetupNetworkRules.classify(facts(internet = false)))
         assertEquals(SetupNetwork.Unknown, SetupNetworkRules.classify(facts(validated = false)))
         assertEquals(SetupNetwork.Metered, SetupNetworkRules.classify(facts(cellular = true))) // even on an unmetered plan
-        assertEquals(SetupNetwork.Unknown, SetupNetworkRules.classify(facts(vpn = true)))
         assertEquals(SetupNetwork.Metered, SetupNetworkRules.classify(facts(metered = true)))
+    }
+
+    @Test
+    fun `B-ANDR-101 a VPN is read by what Android says about its underlying networks`() {
+        // Tailscale over home Wi-Fi (the owner's phone, 2026-11-07): Transports WIFI|VPN, NOT_METERED, not metered.
+        assertEquals(SetupNetwork.Unmetered, SetupNetworkRules.classify(facts(vpn = true)))
+        // A VPN over mobile data: the cellular transport is carried onto the VPN, or Android calls it metered.
+        assertEquals(SetupNetwork.Metered, SetupNetworkRules.classify(facts(vpn = true, cellular = true, metered = false, notMetered = true)))
+        assertEquals(SetupNetwork.Metered, SetupNetworkRules.classify(facts(vpn = true, metered = true)))
+        // The two answers disagree, or an unvalidated VPN: never free data.
+        assertEquals(SetupNetwork.Unknown, SetupNetworkRules.classify(facts(vpn = true, metered = false, notMetered = false)))
+        assertEquals(SetupNetwork.Unknown, SetupNetworkRules.classify(facts(vpn = true, validated = false)))
     }
 
     @Test

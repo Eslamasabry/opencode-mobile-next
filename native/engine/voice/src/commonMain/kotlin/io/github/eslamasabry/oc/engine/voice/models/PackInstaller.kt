@@ -112,10 +112,15 @@ public class PackInstaller(
             ok
         }
 
-    /** Downloads (resuming kept `.part` files), verifies twice, publishes with rollback, then writes the marker. */
+    /**
+     * Downloads (resuming kept `.part` files), verifies twice, publishes with rollback, then writes the marker.
+     * [onActivity] runs on every answer from the network (a response, each body chunk), unthrottled: the manager's
+     * stall watch reads it, since [onProgress] is throttled to 1 % steps.
+     */
     public suspend fun install(
         spec: ModelPackSpec,
         replaceExisting: Boolean = false,
+        onActivity: () -> Unit = {},
         onProgress: (InstallProgress) -> Unit = {},
     ): Outcome<InstalledPack> =
         lockOf(spec).withLock {
@@ -126,7 +131,8 @@ public class PackInstaller(
                 val progress = ProgressThrottle(spec.totalBytes, clock, onProgress)
                 var before = 0L
                 for (file in spec.files) {
-                    val result = downloadFile(spec, file) { received -> progress.report(before + received) }
+                    val result =
+                        downloadFile(spec, file, onActivity) { received -> progress.report(before + received) }
                     if (result is Outcome.Failed) return@withLock result
                     before += file.bytes
                 }
@@ -172,7 +178,12 @@ public class PackInstaller(
 
     // ---- download one file
 
-    private suspend fun downloadFile(spec: ModelPackSpec, file: ModelFile, progress: (Long) -> Unit): Outcome<Unit> {
+    private suspend fun downloadFile(
+        spec: ModelPackSpec,
+        file: ModelFile,
+        activity: () -> Unit,
+        progress: (Long) -> Unit,
+    ): Outcome<Unit> {
         val part = partPath(spec, file)
         var offset = withContext(dispatchers.io) { files.size(part) ?: 0L }
         if (offset > file.bytes) {
@@ -184,7 +195,7 @@ public class PackInstaller(
             return Unit.ok() // already complete: no request, straight to verify
         }
         val response =
-            when (val opened = openFollowingRedirects(spec.urlFor(file), offset.takeIf { it > 0 })) {
+            when (val opened = openFollowingRedirects(spec.urlFor(file), offset.takeIf { it > 0 }, activity)) {
                 is Outcome.Failed -> return opened
                 is Outcome.Ok -> opened.value
             }
@@ -209,6 +220,7 @@ public class PackInstaller(
                     val n = readWithIdleTimeout(response, buffer) ?: return media(MediaProblem.DownloadTimedOut)
                     if (n < 0) break
                     if (offset + n > file.bytes) return media(MediaProblem.DownloadLength) // past the pin: abort now
+                    activity()
                     withContext(dispatchers.io) { sink.write(buffer, 0, n) }
                     offset += n
                     progress(offset)
@@ -234,7 +246,7 @@ public class PackInstaller(
         }
 
     /** HTTPS only; at most 5 redirects, each hop `https` (plan 10 §7.4 "Scheme"). */
-    private suspend fun openFollowingRedirects(firstUrl: String, rangeStart: Long?): Outcome<FetchResponse> {
+    private suspend fun openFollowingRedirects(firstUrl: String, rangeStart: Long?, activity: () -> Unit): Outcome<FetchResponse> {
         var url = firstUrl
         var hops = 0
         while (true) {
@@ -252,6 +264,7 @@ public class PackInstaller(
                     is Outcome.Failed -> return opened
                     is Outcome.Ok -> opened.value
                 }
+            activity()
             if (response.status !in 300..399) return response.ok()
             response.close()
             hops++

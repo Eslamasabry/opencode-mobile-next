@@ -84,8 +84,13 @@ public data class VoiceSettingsUi(
     val packs: List<PackRowUi> = emptyList(),
     val selected: PackId = PackId("base"),
     val job: PackJobUi? = null,
-    /** Why the last download or action failed (one plain line + Details). */
+    /**
+     * Why the last download or action failed (one plain line + Details): this page's own action, or the shared model
+     * manager's last download problem, so a failure that happened while the page was closed still shows.
+     */
     val problem: MediaProblem? = null,
+    /** The pack "Try again" downloads; null when the problem was not a download (a delete, a setting). */
+    val retryPack: PackId? = null,
     val language: VoiceLanguage = VoiceLanguage.Auto,
     val languagePicking: Boolean = false,
     val autoSend: Boolean = false,
@@ -117,6 +122,7 @@ public class VoiceSettingsPresenter(
     private var parts: VoiceParts? = null
     private var device: DeviceProbeResult? = null
     private val ownProblem = MutableStateFlow<MediaProblem?>(null)
+    private var ownRetry: PackId? = null
 
     init {
         scope.launch { load() }
@@ -169,7 +175,14 @@ public class VoiceSettingsPresenter(
                 packs = rows,
                 selected = s.selected,
                 job = job,
-                problem = ownProblem.value,
+                problem = if (job != null) null else ownProblem.value ?: s.shownProblem,
+                retryPack =
+                    when {
+                        job != null -> null
+                        ownProblem.value != null -> ownRetry
+                        s.shownProblem != null -> s.lastProblemPack
+                        else -> null
+                    },
                 language = s.language,
                 autoSend = s.autoSend,
                 natural =
@@ -210,7 +223,8 @@ public class VoiceSettingsPresenter(
             val network = models.downloadNetwork()
             if (network == SetupNetwork.Offline) {
                 ownProblem.value = MediaProblem.DownloadOffline
-                mutable.update { it.copy(problem = MediaProblem.DownloadOffline) }
+                ownRetry = pack
+                mutable.update { it.copy(problem = MediaProblem.DownloadOffline, retryPack = pack) }
             } else {
                 val spec =
                     (models.speechPacks + models.naturalPack).firstOrNull { it.id == pack }
@@ -250,7 +264,11 @@ public class VoiceSettingsPresenter(
         mutable.update { it.copy(confirm = null) }
         when (pending) {
             is VoiceConfirm.Download ->
-                act {
+                act(
+                    retry = pending.pack,
+                    // The connection changed to one that may cost data: ask again with its words.
+                    onNetworkChanged = { askDownload(pending.pack, pending.replaceExisting) },
+                ) {
                     it.downloadConsented(
                         pending.pack,
                         pending.replaceExisting,
@@ -301,17 +319,42 @@ public class VoiceSettingsPresenter(
 
     public fun dismissProblem() {
         ownProblem.value = null
-        mutable.update { it.copy(problem = null) }
+        ownRetry = null
+        parts?.models?.clearProblem()
+        mutable.update { it.copy(problem = null, retryPack = null) }
     }
 
-    private fun act(block: suspend (VoiceModels) -> Outcome<Unit>) {
+    /** "Try again" on a download problem: asks again (the connection may have changed), then downloads. */
+    public fun retry() {
+        val pack = mutable.value.retryPack ?: return
+        dismissProblem()
+        askDownload(pack, replaceExisting = false)
+    }
+
+    private fun act(
+        retry: PackId? = null,
+        onNetworkChanged: (() -> Unit)? = null,
+        block: suspend (VoiceModels) -> Outcome<Unit>,
+    ) {
         val p = parts ?: return
         ownProblem.value = null
-        mutable.update { it.copy(problem = null) }
+        ownRetry = null
+        if (retry != null) p.models.clearProblem() // a new download replaces the old download's problem
+        mutable.update {
+            if (retry != null) it.copy(problem = null, retryPack = null)
+            else {
+                val shown = p.models.state.value.shownProblem
+                it.copy(problem = shown, retryPack = shown?.let { _ -> p.models.state.value.lastProblemPack })
+            }
+        }
         scope.launch {
             when (val result = block(p.models)) {
                 is Outcome.Ok -> Unit
                 is Outcome.Failed -> {
+                    if (result.failure is Failure.Network && onNetworkChanged != null) {
+                        onNetworkChanged()
+                        return@launch
+                    }
                     val problem =
                         when (val f = result.failure) {
                             is Failure.Media -> f.problem
@@ -322,10 +365,15 @@ public class VoiceSettingsPresenter(
                     // progress says it.
                     if (problem != MediaProblem.DownloadBusy) {
                         ownProblem.value = problem
-                        mutable.update { it.copy(problem = problem) }
+                        ownRetry = retry
+                        mutable.update { it.copy(problem = problem, retryPack = retry) }
                     }
                 }
             }
         }
     }
 }
+
+/** The manager's last download problem, as this page shows it: another download running is not a problem. */
+private val ModelPacksState.shownProblem: MediaProblem?
+    get() = lastProblem?.takeIf { it != MediaProblem.DownloadBusy }

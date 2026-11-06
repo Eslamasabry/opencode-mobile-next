@@ -98,8 +98,10 @@ public object SegmentedRules {
 }
 
 /**
- * Two to four mutually exclusive values on one line (Dart `KitSegmented`; plan 06 §7.5). The chosen one is the filled
- * block (accent, its words on the accent), so it is told apart by shape, not colour alone. A tap on another enabled
+ * Two to four mutually exclusive values on one line (Dart `KitSegmented`; plan 06 §7.5). The chosen one is a raised
+ * step (surface 2 in light, 3 in dark) with the accent check and primary words in every style, so it is told apart by
+ * shape and the check, not colour alone (owner 2026-11-07: a bright accent block read as a pressed button, and stayed
+ * bright when the control was disabled). A tap on another enabled
  * segment calls [onChange] once and plays `Select` through the kit seam; a tap on the chosen one does nothing. When a
  * word does not fit its share, or at 2× text, the control stacks into choice rows. A disabled control shows its reason
  * under it; a disabled segment says its own.
@@ -195,10 +197,10 @@ private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled:
             val chosen = s.value == selected
             val segEnabled = if (!enabled.isEnabled) enabled else s.enabled
             val on = segEnabled.isEnabled
-            val fill by animateColorAsState(if (chosen) (if (solid) step else colors.accent) else Color.Transparent, specs.quick(), label = "segment")
+            val fill by animateColorAsState(if (chosen) step else Color.Transparent, specs.quick(), label = "segment")
             val words = when {
                 !on -> TextTone.Tertiary
-                chosen -> if (solid) TextTone.Primary else TextTone.OnAccent
+                chosen -> TextTone.Primary
                 else -> TextTone.Secondary
             }
             val thumb =
@@ -208,15 +210,15 @@ private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled:
                         shape = KitShapeId.Tile,
                         level = SurfaceLevel.Surface3,
                         ownFill = fill,
-                        color = if (chosen) (if (solid) step else colors.accent) else null,
+                        color = if (chosen) step else null,
                         selected = chosen,
                         disabled = !on,
                     ),
                 )
-            val inkColors = thumb.words?.takeIf { chosen && !solid }?.let { w -> colors.copy(onAccent = w) } ?: colors
+            val inkColors = colors
             val ink = inkColors.tone(words)
-            // Solid's chosen glyph and check take the accent, its one accent mark.
-            val glyph = if (solid && chosen && on) colors.accent else ink
+            // The chosen glyph and check take the accent, the control's one accent mark.
+            val glyph = if (chosen && on) colors.accent else ink
             val seam = i < segments.size - 1 && tall && i != selectedIndex && i + 1 != selectedIndex
             val seamColor = colors.hairline
             Box(
@@ -247,7 +249,7 @@ private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled:
                     } else {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
                             Box(Modifier.padding(end = Space.S1.dp).alpha(if (chosen) 1f else 0f)) {
-                                KitGlyph(KitIcons.check, if (!on) colors.text3 else if (solid) colors.accent else inkColors.onAccent, tokens.smallIcon.dp)
+                                KitGlyph(KitIcons.check, if (!on) colors.text3 else colors.accent, tokens.smallIcon.dp)
                             }
                             s.icon?.let {
                                 KitGlyph(it, glyph, tokens.smallIcon.dp)

@@ -88,7 +88,12 @@ public data class ModelPacksState(
     /** `voice.read_aloud_natural`: true only once the natural voice is installed. */
     val naturalVoice: Boolean = false,
     val job: PackJob? = null,
+    /**
+     * Why the last download stopped (a failure, a stall, the connection dropping), kept until a new download starts
+     * or the person dismisses it, so a page opened later still says what happened. [lastProblemPack] is the pack.
+     */
     val lastProblem: MediaProblem? = null,
+    val lastProblemPack: PackId? = null,
 )
 
 public enum class ReadEngine { System, Natural }

@@ -14,6 +14,9 @@ import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import io.github.eslamasabry.oc.engine.voice.models.SetupNetwork
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 
@@ -126,4 +129,87 @@ class VoiceSettingsScreenTest {
                     .assertDoesNotExist()
             }
         }
+
+    private fun ComposeUiTest.show(state: VoiceSettingsUi, presenter: VoiceSettingsPresenter) {
+        setContent {
+            KitTheme(
+                platform = DesktopKitPlatform(),
+                appearance = KitAppearance(motion = MotionLevel.Off),
+                localeTag = "en",
+                stillFrame = true,
+            ) {
+                VoiceSettingsScreen(state, presenter)
+            }
+        }
+    }
+
+    @Test
+    fun `B-MEDIA-019 a connection the phone cannot vouch for never says mobile data`() = runTest {
+        val presenter = VoiceSettingsPresenter(FakeHub(), backgroundScope) {}
+        runCurrent()
+        val state =
+            presenter.state.value.copy(
+                confirm = VoiceConfirm.Download(PackId("kokoro-en"), 148_000_000, false, SetupNetwork.Unknown)
+            )
+        runComposeUiTest {
+            show(state, presenter)
+            onNodeWithText("Download the natural voice?").assertExists()
+            onNodeWithText("This phone can't tell whether this connection costs data.").assertExists()
+            onNodeWithText("Download 148 MB").assertExists()
+            onAllNodesWithText("mobile data", substring = true).assertCountEquals(0)
+        }
+    }
+
+    @Test
+    fun `B-MEDIA-019 only a metered connection says mobile data`() = runTest {
+        val presenter = VoiceSettingsPresenter(FakeHub(), backgroundScope) {}
+        runCurrent()
+        val state =
+            presenter.state.value.copy(
+                confirm = VoiceConfirm.Download(PackId("base"), 161_000_000, false, SetupNetwork.Metered)
+            )
+        runComposeUiTest {
+            show(state, presenter)
+            onNodeWithText("Download Balanced?").assertExists()
+            onNodeWithText("Download 161 MB on mobile data").assertExists()
+        }
+    }
+
+    @Test
+    fun `B-MEDIA-020 nothing received yet shows a moving start, then megabytes and percent`() = runTest {
+        val presenter = VoiceSettingsPresenter(FakeHub(), backgroundScope) {}
+        runCurrent()
+        val starting = presenter.state.value.copy(job = PackJobUi(PackId("base"), 0, 161_000_000, false))
+        runComposeUiTest {
+            show(starting, presenter)
+            onNodeWithText("Starting the download").assertExists()
+            onAllNodesWithText("0 MB", substring = true).assertCountEquals(0)
+        }
+        val moving = presenter.state.value.copy(job = PackJobUi(PackId("base"), 40_000_000, 161_000_000, false))
+        runComposeUiTest {
+            show(moving, presenter)
+            onNodeWithText("40 MB of 161 MB · 24%").assertExists()
+        }
+    }
+
+    @Test
+    fun `B-MEDIA-013 a stopped download says why with Try again and keeps the code under Details`() = runTest {
+        val hub = FakeHub()
+        hub.models.state.update {
+            it.copy(lastProblem = io.github.eslamasabry.oc.core.common.MediaProblem.DownloadTimedOut, lastProblemPack = PackId("base"))
+        }
+        val presenter = VoiceSettingsPresenter(hub, backgroundScope) {}
+        runCurrent()
+        val state = presenter.state.value
+        runComposeUiTest {
+            show(state, presenter)
+            onNodeWithText("The download stopped").assertExists()
+            onNodeWithText("The model download timed out. Check the connection and try again.").assertExists()
+            onNodeWithText("DownloadTimedOut", substring = true).assertDoesNotExist()
+            onNodeWithText("Details").assertExists()
+            onNodeWithTag("voice-download-retry").performClick()
+        }
+        runCurrent()
+        assertTrue(presenter.state.value.confirm is VoiceConfirm.Download)
+    }
 }

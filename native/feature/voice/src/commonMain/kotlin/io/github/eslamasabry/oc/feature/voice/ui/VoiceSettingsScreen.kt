@@ -48,7 +48,11 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
+import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitProgress
@@ -82,9 +86,7 @@ import io.github.eslamasabry.oc.ui.words.res.readAloudVoiceTitle
 import io.github.eslamasabry.oc.ui.words.res.settingsV3VoiceTyping
 import io.github.eslamasabry.oc.ui.words.res.voiceAutoSetupDownload
 import io.github.eslamasabry.oc.ui.words.res.voiceAutoSetupDownloadMobile
-import io.github.eslamasabry.oc.ui.words.res.voiceAutoSetupMaybeMetered
 import io.github.eslamasabry.oc.ui.words.res.voiceAutoSetupMobileData
-import io.github.eslamasabry.oc.ui.words.res.voiceAutoSetupTitle
 import io.github.eslamasabry.oc.ui.words.res.voiceInputUnavailable
 import io.github.eslamasabry.oc.ui.words.res.voiceNativeNaturalNeedsEngine
 import io.github.eslamasabry.oc.ui.words.res.voiceNativePartial
@@ -153,42 +155,37 @@ public fun VoiceSettingsScreen(state: VoiceSettingsUi, actions: VoiceSettingsPre
                 }
             } else null,
     ) {
+        // One rail: rows and groups bring their own 16 dp gutter, so the column adds none and every other part pads
+        // itself by the same gutter (owner 2026-11-07: the cards sat a second gutter further in than the labels).
+        val gutter = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
         Column(
             Modifier.fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = LocalKitTokens.current.gutter.dp)
                 .padding(top = Space.S2.dp, bottom = Space.S6.dp)
                 .testTag("voice-settings-list")
         ) {
             if (!state.available) {
                 KitNotice(
                     stringResource(Res.string.voiceInputUnavailable),
+                    modifier = gutter,
                     tone = StatusTone.Failure,
                 )
                 return@Column
             }
             KitText(
                 stringResource(Res.string.voiceSetupSubtitle),
+                gutter,
                 role = TypeRole.Secondary,
                 tone = TextTone.Secondary,
             )
             Spacer(Modifier.height(Space.S4.dp))
-            // What is happening comes first (STATE-1): the running download or why it failed.
+            // What is happening comes first (STATE-1): the running download or why it stopped.
             if (state.busy) {
-                DownloadProgress(state, actions)
+                DownloadProgress(state, actions, gutter)
                 Spacer(Modifier.height(Space.S4.dp))
             }
             state.problem?.let { problem ->
-                KitNotice(
-                    message =
-                        stringResource(Res.string.e7VoiceUiSetupFailed, problemWords(problem)),
-                    tone = StatusTone.Failure,
-                    dismiss =
-                        KitLineAction(
-                            stringResource(Res.string.e7VoiceUiNotNow),
-                            actions::dismissProblem,
-                        ),
-                )
+                DownloadProblem(problem, state.retryPack != null, actions, gutter)
                 Spacer(Modifier.height(Space.S3.dp))
             }
             KitNotice(
@@ -198,55 +195,17 @@ public fun VoiceSettingsScreen(state: VoiceSettingsUi, actions: VoiceSettingsPre
                             Res.string.voiceNativePhoneEngine
                         else Res.string.e7VoiceUiPrivacyDownload
                     ),
+                modifier = gutter,
                 icon = KitIcons.locked,
                 liveRegion = false,
             )
             if (!state.hasMicrophone) {
                 Spacer(Modifier.height(Space.S3.dp))
-                KitNotice(stringResource(Res.string.e7VoiceUiNoBuiltInMic))
+                KitNotice(stringResource(Res.string.e7VoiceUiNoBuiltInMic), modifier = gutter)
             }
-            Spacer(Modifier.height(Space.S4.dp))
             Models(state, actions)
-            Spacer(Modifier.height(Space.S4.dp))
-            KitText(stringResource(Res.string.e7VoiceUiLanguage), role = TypeRole.Label)
-            Spacer(Modifier.height(Space.S2.dp))
-            val sourceLanguages =
-                listOf(VoiceLanguage.Detect, VoiceLanguage.English, VoiceLanguage.Arabic)
-            val shownLanguages =
-                if (state.language in sourceLanguages) sourceLanguages
-                else sourceLanguages + state.language
-            KitSegmented(
-                segments =
-                    shownLanguages.map { language ->
-                        KitSegment(
-                            language,
-                            when (language) {
-                                VoiceLanguage.Detect -> stringResource(Res.string.e7VoiceUiAuto)
-                                VoiceLanguage.English -> stringResource(Res.string.rb51VoiceEnglish)
-                                VoiceLanguage.Arabic -> stringResource(Res.string.rb51VoiceArabic)
-                                else -> languageName(language)
-                            },
-                        )
-                    },
-                selected = state.language,
-                semanticsLabel = stringResource(Res.string.e7VoiceUiLanguage),
-                enabled =
-                    if (state.busy)
-                        KitEnabled.Disabled(stringResource(Res.string.voiceSetupBusyReason))
-                    else KitEnabled.Enabled,
-                onChange = actions::chooseLanguage,
-                modifier = Modifier.testTag("voice-model-language"),
-            )
-            KitButton(
-                stringResource(Res.string.rb51VoiceMoreLanguages),
-                actions::openLanguages,
-                role = KitButtonRole.Tertiary,
-                enabled =
-                    if (state.busy)
-                        KitEnabled.Disabled(stringResource(Res.string.voiceSetupBusyReason))
-                    else KitEnabled.Enabled,
-            )
-            Spacer(Modifier.height(Space.S4.dp))
+            Language(state, actions, gutter)
+            Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
             KitRowGroup {
                 KitSwitchRow(
                     title = stringResource(Res.string.vpttAutoSendTitle),
@@ -256,7 +215,6 @@ public fun VoiceSettingsScreen(state: VoiceSettingsUi, actions: VoiceSettingsPre
                     modifier = Modifier.testTag("voice-auto-send"),
                 )
             }
-            Spacer(Modifier.height(Space.S4.dp))
             ReadAloudVoice(state, actions)
         }
         // Inside the frame: KitScreen places the sheet host these overlays register with.
@@ -265,11 +223,89 @@ public fun VoiceSettingsScreen(state: VoiceSettingsUi, actions: VoiceSettingsPre
     }
 }
 
+/** Why the last download stopped: plain words, Try again, and the problem code under Details (never raw text). */
 @Composable
-private fun DownloadProgress(state: VoiceSettingsUi, actions: VoiceSettingsPresenter) {
+private fun DownloadProblem(
+    problem: io.github.eslamasabry.oc.core.common.MediaProblem,
+    canRetry: Boolean,
+    actions: VoiceSettingsPresenter,
+    gutter: Modifier,
+) {
+    Column(gutter.testTag("voice-download-problem")) {
+        KitNotice(
+            title = stringResource(Res.string.voiceDownloadStopped).takeIf { canRetry },
+            message =
+                if (canRetry) problemWords(problem)
+                else stringResource(Res.string.e7VoiceUiSetupFailed, problemWords(problem)),
+            tone = StatusTone.Failure,
+            actions =
+                if (canRetry)
+                    listOf(
+                        KitLineAction(
+                            stringResource(Res.string.e7VoiceUiRetry),
+                            actions::retry,
+                            testTag = "voice-download-retry",
+                        )
+                    )
+                else emptyList(),
+            dismiss = KitLineAction(stringResource(Res.string.e7VoiceUiNotNow), actions::dismissProblem),
+        )
+        KitDetailsFold(
+            label = stringResource(Res.string.kitDetails),
+            copyLabel = stringResource(Res.string.kitCopyDetails),
+            notes = listOf(stringResource(Res.string.voiceDownloadDetailCode, problem.name)),
+        )
+    }
+}
+
+@Composable
+private fun Language(state: VoiceSettingsUi, actions: VoiceSettingsPresenter, gutter: Modifier) {
+    KitSectionLabel(stringResource(Res.string.e7VoiceUiLanguage), gapBefore = LocalKitTokens.current.sectionGap.dp)
+    val sourceLanguages = listOf(VoiceLanguage.Detect, VoiceLanguage.English, VoiceLanguage.Arabic)
+    val shownLanguages =
+        if (state.language in sourceLanguages) sourceLanguages else sourceLanguages + state.language
+    KitSegmented(
+        segments =
+            shownLanguages.map { language ->
+                KitSegment(
+                    language,
+                    when (language) {
+                        VoiceLanguage.Detect -> stringResource(Res.string.e7VoiceUiAuto)
+                        VoiceLanguage.English -> stringResource(Res.string.rb51VoiceEnglish)
+                        VoiceLanguage.Arabic -> stringResource(Res.string.rb51VoiceArabic)
+                        else -> languageName(language)
+                    },
+                )
+            },
+        selected = state.language,
+        semanticsLabel = stringResource(Res.string.e7VoiceUiLanguage),
+        enabled =
+            if (state.busy) KitEnabled.Disabled(stringResource(Res.string.voiceSetupBusyChoice))
+            else KitEnabled.Enabled,
+        onChange = actions::chooseLanguage,
+        modifier = gutter.testTag("voice-model-language"),
+    )
+    // The rest of the languages are one row away: a row that opens the list, not a loose link.
+    if (!state.busy) {
+        KitRowGroup {
+            KitRow(
+                title = stringResource(Res.string.rb51VoiceMoreLanguages),
+                trailing = KitRowTrailing.Chevron,
+                onClick = actions::openLanguages,
+                modifier = Modifier.testTag("voice-more-languages"),
+            )
+        }
+    }
+}
+
+@Composable
+private fun DownloadProgress(state: VoiceSettingsUi, actions: VoiceSettingsPresenter, gutter: Modifier) {
     val job = state.job ?: return
     val natural = state.natural?.downloading == true
     val fraction = job.fraction
+    // Nothing has arrived yet: a moving bar and "Starting the download", never a still grey track at 0 MB.
+    val started = !job.verifying && fraction != null && job.received > 0
+    val percent = kotlin.math.floor((fraction ?: 0f) * 100).toInt()
     val announcement =
         if (job.verifying) stringResource(Res.string.e7VoiceUiVerifying)
         else
@@ -278,8 +314,8 @@ private fun DownloadProgress(state: VoiceSettingsUi, actions: VoiceSettingsPrese
                 kotlin.math.floor((fraction ?: 0f) * 10).toInt() * 10,
             ) // F: lib/voice/voice_ui.dart:363
     Column(
+        gutter.testTag("voice-download-progress"),
         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
-        modifier = Modifier.testTag("voice-download-progress"),
     ) {
         Column(
             Modifier.clearAndSetSemantics {
@@ -298,17 +334,21 @@ private fun DownloadProgress(state: VoiceSettingsUi, actions: VoiceSettingsPrese
             )
             KitProgressView(
                 progress =
-                    if (job.verifying || fraction == null) KitProgress.Waiting()
-                    else
-                        KitProgress.Known(
-                            fraction.coerceIn(0f, 1f),
-                            caption =
-                                stringResource(
-                                    Res.string.e7VoiceUiDownloadProgress,
-                                    sizeWords(job.received),
-                                    sizeWords(job.total),
-                                ),
-                        )
+                    when {
+                        job.verifying -> KitProgress.Waiting()
+                        !started -> KitProgress.Waiting(stringResource(Res.string.voiceDownloadStarting))
+                        else ->
+                            KitProgress.Known(
+                                fraction!!.coerceIn(0f, 1f),
+                                caption =
+                                    stringResource(
+                                        Res.string.voiceDownloadProgressPercent,
+                                        sizeWords(job.received),
+                                        sizeWords(job.total),
+                                        percent,
+                                    ),
+                            )
+                    }
             )
         }
         if (!job.verifying)
@@ -324,22 +364,25 @@ private fun DownloadProgress(state: VoiceSettingsUi, actions: VoiceSettingsPrese
 
 @Composable
 private fun Models(state: VoiceSettingsUi, actions: VoiceSettingsPresenter) {
-    KitText(stringResource(Res.string.voiceSetupModelLabel), role = TypeRole.Label)
-    Spacer(Modifier.height(Space.S1.dp))
-    KitChoiceList(
-        choices = state.packs.map { row -> packChoice(row, state.busy) },
-        selected = state.selected,
-        semanticsLabel = stringResource(Res.string.voiceSetupModelLabel),
-        loading = state.loading,
-        empty = {},
-        onSelect = actions::choose,
-    )
+    KitRowGroup(label = stringResource(Res.string.voiceSetupModelLabel), section = true) {
+        KitChoiceList(
+            choices = state.packs.map { row -> packChoice(row, state.busy) },
+            selected = state.selected,
+            semanticsLabel = stringResource(Res.string.voiceSetupModelLabel),
+            loading = state.loading,
+            empty = {},
+            onSelect = actions::choose,
+        )
+    }
     val row = state.selectedRow ?: return
     if (state.busy) return
     val name = packName(row.id)
     val size = sizeWords(row.bytes)
     if (row.installed) {
-        Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+        Column(
+            Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
+            verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
+        ) {
             KitButton(
                 label = stringResource(Res.string.voiceSetupRedownloadPack, name),
                 onClick = actions::downloadAgain,
@@ -381,7 +424,7 @@ private fun packChoice(
         enabled =
             when {
                 row.unsupported -> KitEnabled.Disabled(unsupportedReason(row))
-                busy -> KitEnabled.Disabled(line)
+                busy -> KitEnabled.Disabled(stringResource(Res.string.voiceSetupBusyChoice))
                 else -> KitEnabled.Enabled
             },
     )
@@ -398,7 +441,7 @@ private fun unsupportedReason(row: PackRowUi): String {
 @Composable
 private fun ReadAloudVoice(state: VoiceSettingsUi, actions: VoiceSettingsPresenter) {
     val natural = state.natural ?: return
-    KitRowGroup(label = stringResource(Res.string.readAloudVoiceTitle)) {
+    KitRowGroup(label = stringResource(Res.string.readAloudVoiceTitle), section = true) {
         KitChoiceList(
             choices =
                 listOf(
@@ -425,7 +468,7 @@ private fun ReadAloudVoice(state: VoiceSettingsUi, actions: VoiceSettingsPresent
                                     )
                                 state.busy ->
                                     KitEnabled.Disabled(
-                                        stringResource(Res.string.voiceSetupBusyReason)
+                                        stringResource(Res.string.voiceSetupBusyChoice)
                                     )
                                 else -> KitEnabled.Enabled
                             },
@@ -438,6 +481,7 @@ private fun ReadAloudVoice(state: VoiceSettingsUi, actions: VoiceSettingsPresent
     }
     if (natural.installed && !state.busy) {
         KitButton(
+            modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
             label = stringResource(Res.string.naturalVoiceRemove, sizeWords(natural.bytes)),
             onClick = actions::askRemoveNatural,
             role = KitButtonRole.Tertiary,
@@ -486,20 +530,24 @@ private fun VoiceConfirmView(state: VoiceSettingsUi, actions: VoiceSettingsPrese
             is VoiceConfirm.Download -> {
                 val size = sizeWords(pending.bytes)
                 KitConfirmSpec(
-                    title = stringResource(Res.string.voiceAutoSetupTitle),
+                    title =
+                        if (pending.pack == NATURAL)
+                            stringResource(Res.string.naturalVoiceDownloadTitle)
+                        else stringResource(Res.string.voiceDownloadPackTitle, packName(pending.pack)),
+                    // Only a network Android calls metered is "mobile data"; one it can't vouch for says so.
                     body =
                         when (pending.network) {
-                            SetupNetwork.Unmetered ->
-                                stringResource(Res.string.e7VoiceUiPrivacyDownload)
                             SetupNetwork.Metered ->
                                 stringResource(Res.string.voiceAutoSetupMobileData)
-                            else -> stringResource(Res.string.voiceAutoSetupMaybeMetered)
+                            SetupNetwork.Unmetered ->
+                                stringResource(Res.string.e7VoiceUiPrivacyDownload)
+                            else -> stringResource(Res.string.voiceDownloadNetworkUnknown)
                         },
                     confirmLabel =
                         stringResource(
-                            if (pending.network == SetupNetwork.Unmetered)
-                                Res.string.voiceAutoSetupDownload
-                            else Res.string.voiceAutoSetupDownloadMobile,
+                            if (pending.network == SetupNetwork.Metered)
+                                Res.string.voiceAutoSetupDownloadMobile
+                            else Res.string.voiceAutoSetupDownload,
                             size,
                         ),
                     cancelLabel = stringResource(Res.string.e7VoiceUiNotNow),
@@ -533,3 +581,6 @@ private fun VoiceConfirmView(state: VoiceSettingsUi, actions: VoiceSettingsPrese
     if (spec != null)
         KitConfirm(spec = spec, onConfirm = actions::confirm, onCancel = actions::dismissConfirm)
 }
+
+/** The natural voice's pack id (the confirm names it differently from a speech model). */
+private val NATURAL = io.github.eslamasabry.oc.engine.voice.models.ModelCatalog.kokoroEn.id

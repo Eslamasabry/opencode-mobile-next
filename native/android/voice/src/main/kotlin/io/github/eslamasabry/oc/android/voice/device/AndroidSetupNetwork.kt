@@ -22,11 +22,16 @@ public data class NetworkFacts(
     val cellular: Boolean,
     val vpn: Boolean,
     val activeMetered: Boolean,
+    /** The active network's NET_CAPABILITY_NOT_METERED; for a VPN, Android derives it from the underlying networks. */
+    val notMetered: Boolean = !activeMetered,
 )
 
 /**
  * Network class for download consent (plan 10 §7.6, B-ANDR-101): missing or failed probes never allow free data.
- * Cellular is always Metered (even on an unmetered plan); a VPN is Unknown.
+ * Cellular is always Metered (even on an unmetered plan). A VPN is read through what Android says about it: since
+ * API 29 a VPN network carries its underlying networks' transports and is NOT_METERED only when they all are, and
+ * `isActiveNetworkMetered` follows the same rule. So Tailscale over home Wi-Fi is Unmetered, a VPN over mobile data is
+ * Metered, and a VPN whose two answers disagree is Unknown (never free data).
  */
 public object SetupNetworkRules {
     public fun classify(facts: NetworkFacts?): SetupNetwork {
@@ -34,7 +39,13 @@ public object SetupNetworkRules {
         if (!facts.hasActiveNetwork || !facts.internet) return SetupNetwork.Offline
         if (!facts.validated) return SetupNetwork.Unknown
         if (facts.cellular) return SetupNetwork.Metered
-        if (facts.vpn) return SetupNetwork.Unknown
+        if (facts.vpn) {
+            return when {
+                facts.activeMetered -> SetupNetwork.Metered
+                facts.notMetered -> SetupNetwork.Unmetered
+                else -> SetupNetwork.Unknown
+            }
+        }
         if (facts.activeMetered) return SetupNetwork.Metered
         return SetupNetwork.Unmetered
     }
@@ -79,7 +90,7 @@ public class AndroidSetupNetwork(private val context: Context) : SetupNetworkSou
 
     private fun facts(): NetworkFacts? =
         try {
-            val cm = manager ?: return NetworkFacts(false, false, false, false, false, false, false)
+            val cm = manager ?: return NetworkFacts(false, false, false, false, false, false, true, notMetered = false)
             val network = cm.activeNetwork
             val caps = network?.let { cm.getNetworkCapabilities(it) }
             NetworkFacts(
@@ -90,6 +101,7 @@ public class AndroidSetupNetwork(private val context: Context) : SetupNetworkSou
                 cellular = caps?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true,
                 vpn = caps?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true,
                 activeMetered = cm.isActiveNetworkMetered,
+                notMetered = caps?.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED) == true,
             )
         } catch (_: RuntimeException) {
             null

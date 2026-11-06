@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.feature.voice.presentation
 
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
+import io.github.eslamasabry.oc.core.common.MediaProblem
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.engine.voice.dictation.VoiceController
@@ -88,7 +89,12 @@ public interface VoiceModels {
     /** Native network probe; an unavailable probe never promises a free download. */
     public suspend fun downloadNetwork(): SetupNetwork = SetupNetwork.Unknown
 
-    /** A choice for this attempt only, after the screen names the data cost. */
+    /**
+     * A choice for this attempt only, after the screen names the data cost. When the connection changes to one that
+     * may cost data and this attempt had no consent for that, the download pauses (the `.part` files stay) and this
+     * returns `Failure.Network(NetworkWhy.Unknown)`: the screen asks again with the new connection's words. Losing
+     * the connection ends it with `DownloadOffline`.
+     */
     public suspend fun downloadConsented(
         pack: PackId,
         replaceExisting: Boolean,
@@ -96,6 +102,12 @@ public interface VoiceModels {
     ): Outcome<Unit> = download(pack, replaceExisting)
 
     public suspend fun cancelDownload()
+
+    /** Stops the running download because of [problem]; unlike [cancelDownload], the page says why. */
+    public suspend fun interruptDownload(problem: MediaProblem): Unit = cancelDownload()
+
+    /** The person dismissed the last download problem ([ModelPacksState.lastProblem]). */
+    public fun clearProblem() {}
 
     /**
      * Capability-neutral default: only the real shared model manager supports owned setup
@@ -150,6 +162,10 @@ public fun ModelPacks.asVoiceModels(): VoiceModels =
             packs.download(pack, replaceExisting).map {}
 
         override suspend fun cancelDownload() = packs.cancelDownload()
+
+        override suspend fun interruptDownload(problem: MediaProblem) = packs.interruptDownload(problem)
+
+        override fun clearProblem() = packs.clearProblem()
 
         override suspend fun downloadOwned(pack: PackId, owner: String): Outcome<Unit> =
             packs.downloadOwned(pack, owner).map {}

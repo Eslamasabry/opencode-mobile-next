@@ -15,8 +15,14 @@ import io.github.eslamasabry.oc.engine.voice.state.PackJobPhase
 import io.github.eslamasabry.oc.engine.voice.state.PackStatus
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.collections.immutable.toImmutableMap
+import io.github.eslamasabry.oc.core.common.Redacted
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,6 +45,8 @@ public class ModelPacks(
     private val prefs: VoicePrefs,
     private val scope: CoroutineScope,
     private val catalog: List<ModelPackSpec> = ModelCatalog.all,
+    /** No answer from the network for this long while downloading = stalled (see [watchForStall]). */
+    private val stallTimeout: Duration = 60.seconds,
 ) {
     private val mutableState =
         MutableStateFlow(
@@ -57,11 +65,15 @@ public class ModelPacks(
     private var device: DeviceProbeResult? = null
     private var running: Running? = null
 
-    private class Running(
-        val pack: PackId,
-        val deferred: Deferred<Outcome<InstalledPack>>,
-        val owner: String? = null,
-    )
+    /** One admitted download. [result] is what the caller gets: the install's own outcome, or the interruption's. */
+    private class Running(val pack: PackId, val owner: String?) {
+        lateinit var deferred: Deferred<Outcome<InstalledPack>>
+        val result = CompletableDeferred<Outcome<InstalledPack>>()
+
+        /** Bumped on every answer from the network; the stall watch compares it between two looks. */
+        var activity = 0L
+        var interruptedBy: MediaProblem? = null
+    }
 
     public val speechPacks: List<ModelPackSpec>
         get() = catalog.filter { it.kind == PackKind.Speech }
@@ -203,7 +215,7 @@ public class ModelPacks(
     ): Outcome<InstalledPack> {
         val spec = specOf(pack) ?: return busy()
         val probed = device()
-        val job =
+        val run =
             lane.withLock {
                 if (closed) return@withLock null
                 if (running != null) return busy()
@@ -213,7 +225,7 @@ public class ModelPacks(
                     PackSupport.supportFor(spec, probed, installedNow, partial, replaceExisting)
                 if (support is Support.Blocked) {
                     val problem = support.block.problem
-                    mutableState.update { it.copy(lastProblem = problem) }
+                    mutableState.update { it.copy(lastProblem = problem, lastProblemPack = problem?.let { spec.id }) }
                     return if (problem == null) Failure.Unavailable(FeatureId("voice")).failed()
                     else Failure.Media(problem).failed()
                 }
@@ -222,28 +234,58 @@ public class ModelPacks(
                     it.copy(
                         job = PackJob(spec.id, PackJobPhase.Downloading(partial, spec.totalBytes)),
                         lastProblem = null,
+                        lastProblemPack = null,
                     )
                 }
-                val deferred = scope.async { runInstall(spec, replaceExisting) }
-                Running(spec.id, deferred, owner).also { running = it }
+                Running(spec.id, owner).also { r ->
+                    r.deferred = scope.async { runInstall(spec, replaceExisting, r) }
+                    running = r
+                }
             } ?: return Failure.Unavailable(FeatureId("voice")).failed()
-        return job.deferred.await()
+        val watch = scope.launch { watchForStall(run) }
+        return try {
+            run.result.await()
+        } finally {
+            if (run.result.isCompleted) watch.cancel()
+        }
     }
 
+    /**
+     * The backstop under the installer's own timeouts: a platform socket that ignores cancellation (a connect stuck
+     * on an address that never answers) would otherwise leave "0 MB of 148 MB" on screen for minutes. When nothing
+     * came from the network for [stallTimeout] while downloading, the download stops with `DownloadTimedOut`.
+     */
+    private suspend fun watchForStall(run: Running) {
+        var seen = run.activity
+        while (!run.result.isCompleted) {
+            delay(stallTimeout)
+            if (run.result.isCompleted) return
+            val phase = state.value.job?.takeIf { it.pack == run.pack }?.phase
+            val now = run.activity
+            if (phase is PackJobPhase.Downloading && now == seen) {
+                interrupt(run, MediaProblem.DownloadTimedOut)
+                return
+            }
+            seen = now
+        }
+    }
+
+    @Suppress("TooGenericExceptionCaught") // the last line of defence: any surprise ends the job as a failure
     private suspend fun runInstall(
         spec: ModelPackSpec,
         replaceExisting: Boolean,
+        run: Running,
     ): Outcome<InstalledPack> {
         val result =
             try {
-                installer.install(spec, replaceExisting) { progress ->
+                installer.install(spec, replaceExisting, onActivity = { run.activity++ }) { progress ->
                     val phase =
                         when (progress) {
                             is InstallProgress.Downloading ->
                                 PackJobPhase.Downloading(progress.received, progress.total)
                             InstallProgress.Verifying -> PackJobPhase.Verifying
                         }
-                    mutableState.update { it.copy(job = PackJob(spec.id, phase)) }
+                    if (running === run) mutableState.update { it.copy(job = PackJob(spec.id, phase)) }
                 }
             } catch (e: CancellationException) {
                 withContext(NonCancellable) {
@@ -251,46 +293,84 @@ public class ModelPacks(
                     val status =
                         if (partial > 0) PackStatus.Partial(partial, spec.totalBytes)
                         else PackStatus.Missing
-                    lane.withLock {
-                        running = null
-                        mutableState.update {
-                            it.copy(job = null, packs = it.packs.with(spec.id, status))
-                        }
-                    }
+                    lane.withLock { settle(run, spec, status, run.interruptedBy) }
                 }
+                if (run.interruptedBy == null) run.result.cancel(e)
                 throw e
+            } catch (e: Exception) {
+                // An exception no layer expected must still end the job: a page left on "Downloading" forever is
+                // worse than a plain failure.
+                Failure.Media(MediaProblem.DownloadIncomplete, Redacted.shape(e)).failed()
             }
         lane.withLock {
-            running = null
             when (result) {
                 is Outcome.Ok -> {
-                    mutableState.update {
-                        it.copy(job = null, packs = it.packs.with(spec.id, PackStatus.Installed))
-                    }
+                    settle(run, spec, PackStatus.Installed, null)
                     if (spec.kind == PackKind.NaturalVoice) {
                         mutableState.update { it.copy(naturalVoice = true) }
                         prefs.setReadAloudNatural(true)
                     }
                 }
                 is Outcome.Failed -> {
-                    val problem = (result.failure as? Failure.Media)?.problem
+                    val problem = (result.failure as? Failure.Media)?.problem ?: MediaProblem.DownloadIncomplete
                     val partial = installer.partialBytes(spec)
-                    mutableState.update {
-                        it.copy(
-                            job = null,
-                            lastProblem = problem,
-                            packs =
-                                it.packs.with(
-                                    spec.id,
-                                    if (partial > 0) PackStatus.Partial(partial, spec.totalBytes)
-                                    else PackStatus.Missing,
-                                ),
-                        )
-                    }
+                    settle(
+                        run,
+                        spec,
+                        if (partial > 0) PackStatus.Partial(partial, spec.totalBytes) else PackStatus.Missing,
+                        problem,
+                    )
                 }
             }
         }
+        run.result.complete(result)
         return result
+    }
+
+    /** Under [lane]: ends [run]'s job (unless a newer one already replaced it) and records the pack's new row. */
+    private fun settle(run: Running, spec: ModelPackSpec, status: PackStatus, problem: MediaProblem?) {
+        val current = running === run
+        if (current) running = null
+        val newerSamePack = !current && running?.pack == spec.id
+        mutableState.update {
+            it.copy(
+                job = if (current || it.job?.pack == spec.id && running == null) null else it.job,
+                packs = if (newerSamePack) it.packs else it.packs.with(spec.id, status),
+                lastProblem = if (problem != null && running == null) problem else it.lastProblem,
+                lastProblemPack = if (problem != null && running == null) spec.id else it.lastProblemPack,
+            )
+        }
+    }
+
+    /**
+     * Stops the running download because of [problem] (the connection dropped, the download stalled): unlike
+     * [cancelDownload], the caller gets a failure and the page says why. The `.part` files stay. The job ends at once,
+     * even when the platform takes a while to let go of a stuck socket.
+     */
+    public suspend fun interruptDownload(problem: MediaProblem) {
+        val run = lane.withLock { running } ?: return
+        interrupt(run, problem)
+    }
+
+    private suspend fun interrupt(run: Running, problem: MediaProblem) {
+        val spec = specOf(run.pack) ?: return
+        val partial = installer.partialBytes(spec)
+        val ended =
+            lane.withLock {
+                if (running !== run || run.result.isCompleted) return@withLock false
+                generation++
+                run.interruptedBy = problem
+                settle(run, spec, if (partial > 0) PackStatus.Partial(partial, spec.totalBytes) else PackStatus.Missing, problem)
+                true
+            }
+        if (!ended) return
+        run.result.complete(Failure.Media(problem).failed())
+        run.deferred.cancel()
+    }
+
+    /** The person read the problem ("Not now"): it is not shown again. */
+    public fun clearProblem() {
+        mutableState.update { it.copy(lastProblem = null, lastProblemPack = null) }
     }
 
     /** Stops the running download; its `.part` files stay for the next attempt (M3). */
@@ -298,6 +378,18 @@ public class ModelPacks(
         val job = lane.withLock { running?.also { generation++ } } ?: return
         job.deferred.cancel()
         job.deferred.join()
+        endUnstarted(job)
+    }
+
+    /** A download cancelled before its first step never ran [runInstall]: end its job here so nothing waits on it. */
+    private suspend fun endUnstarted(run: Running) {
+        if (run.result.isCompleted) return
+        val spec = specOf(run.pack) ?: return
+        val partial = installer.partialBytes(spec)
+        lane.withLock {
+            settle(run, spec, if (partial > 0) PackStatus.Partial(partial, spec.totalBytes) else PackStatus.Missing, null)
+        }
+        run.result.cancel()
     }
 
     public suspend fun ownsDownload(owner: String): Boolean = lane.withLock {
@@ -313,6 +405,7 @@ public class ModelPacks(
             lane.withLock { running?.takeIf { it.owner == owner }?.also { generation++ } } ?: return
         job.deferred.cancel()
         job.deferred.join()
+        endUnstarted(job)
     }
 
     /**
@@ -365,6 +458,7 @@ public class ModelPacks(
             running
         }
         job?.deferred?.cancel()
+        job?.result?.cancel()
     }
 
     private suspend fun setStatus(pack: PackId, status: PackStatus) {

@@ -159,4 +159,83 @@ class VoiceSettingsPresenterTest {
         assertFalse(presenter.state.value.available)
         assertFalse(presenter.state.value.loading)
     }
+
+    @Test
+    fun `B-MEDIA-013 a download that fails while the page is open says why and offers Try again`() = runTest {
+        val hub = FakeHub()
+        val gate = CompletableDeferred<io.github.eslamasabry.oc.core.common.Outcome<Unit>>()
+        hub.models.downloadGate = gate
+        val presenter = VoiceSettingsPresenter(hub, backgroundScope) {}
+        runCurrent()
+        presenter.downloadSelected()
+        runCurrent()
+        presenter.confirm()
+        runCurrent()
+        assertTrue(presenter.state.value.busy)
+        // The model manager gives up (a stall or a timeout) and records why.
+        hub.models.state.update {
+            it.copy(job = null, lastProblem = MediaProblem.DownloadTimedOut, lastProblemPack = PackId("base"))
+        }
+        gate.complete(Failure.Media(MediaProblem.DownloadTimedOut).let { io.github.eslamasabry.oc.core.common.Outcome.Failed(it) })
+        runCurrent()
+        val ui = presenter.state.value
+        assertFalse(ui.busy, "never a progress bar left after the job ended")
+        assertEquals(MediaProblem.DownloadTimedOut, ui.problem)
+        assertEquals(PackId("base"), ui.retryPack)
+        presenter.retry()
+        runCurrent()
+        assertNull(presenter.state.value.problem)
+        val again = presenter.state.value.confirm
+        assertTrue(again is VoiceConfirm.Download && again.pack == PackId("base"), "Try again asks again, then downloads")
+    }
+
+    @Test
+    fun `B-MEDIA-013 a download that failed while the page was closed is reported when it opens`() = runTest {
+        val hub = FakeHub(naturalVoiceAvailable = true)
+        hub.models.state.update {
+            it.copy(lastProblem = MediaProblem.DownloadTimedOut, lastProblemPack = PackId("kokoro-en"))
+        }
+        val presenter = VoiceSettingsPresenter(hub, backgroundScope) {}
+        runCurrent()
+        assertEquals(MediaProblem.DownloadTimedOut, presenter.state.value.problem)
+        assertEquals(PackId("kokoro-en"), presenter.state.value.retryPack)
+        presenter.dismissProblem()
+        runCurrent()
+        assertNull(presenter.state.value.problem)
+        assertNull(hub.models.state.value.lastProblem, "Not now clears it for every page")
+    }
+
+    @Test
+    fun `B-MEDIA-026 a running download hides an older problem and a stall reported by the manager replaces the bar`() = runTest {
+        val hub = FakeHub()
+        val presenter = VoiceSettingsPresenter(hub, backgroundScope) {}
+        runCurrent()
+        hub.models.progress(PackId("base"), io.github.eslamasabry.oc.engine.voice.state.PackJobPhase.Downloading(0, 100))
+        runCurrent()
+        assertTrue(presenter.state.value.busy)
+        assertNull(presenter.state.value.problem)
+        hub.models.state.update {
+            it.copy(job = null, lastProblem = MediaProblem.DownloadTimedOut, lastProblemPack = PackId("base"))
+        }
+        runCurrent()
+        assertFalse(presenter.state.value.busy)
+        assertEquals(MediaProblem.DownloadTimedOut, presenter.state.value.problem)
+    }
+
+    @Test
+    fun `B-MEDIA-019 a connection that changes to one that may cost data asks again with its words`() = runTest {
+        val hub = FakeHub()
+        val presenter = VoiceSettingsPresenter(hub, backgroundScope) {}
+        runCurrent()
+        presenter.downloadSelected()
+        runCurrent()
+        // Asked on Wi-Fi; the download then pauses because the phone moved to mobile data (NotifyingVoiceModels).
+        hub.models.network = io.github.eslamasabry.oc.engine.voice.models.SetupNetwork.Metered
+        hub.models.nextFailure = Failure.Network(io.github.eslamasabry.oc.core.common.NetworkWhy.Unknown)
+        presenter.confirm()
+        runCurrent()
+        val asked = presenter.state.value.confirm
+        assertTrue(asked is VoiceConfirm.Download && asked.network == io.github.eslamasabry.oc.engine.voice.models.SetupNetwork.Metered)
+        assertNull(presenter.state.value.problem, "a pause is not a failure")
+    }
 }

@@ -16,6 +16,7 @@ import io.github.eslamasabry.oc.android.notifications.NotifyWords
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.MediaProblem
+import io.github.eslamasabry.oc.core.common.NetworkWhy
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.core.common.failed
@@ -34,6 +35,8 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -210,11 +213,12 @@ internal class NotifyingVoiceModels(
             // Recheck after the permission dialog: a Wi-Fi observation before the dialog authorizes
             // no mobile data.
             val connection = network.current()
-            if (
-                connection == SetupNetwork.Offline ||
-                    (connection != SetupNetwork.Unmetered && !allowMetered)
-            ) {
+            if (connection == SetupNetwork.Offline) {
                 return Failure.Media(MediaProblem.DownloadOffline).failed()
+            }
+            if (connection != SetupNetwork.Unmetered && !allowMetered) {
+                // The connection changed since the screen asked: it asks again with the new words.
+                return Failure.Network(NetworkWhy.Unknown).failed()
             }
             return coroutineScope {
                 val progress =
@@ -233,25 +237,43 @@ internal class NotifyingVoiceModels(
                             }
                         }
                     }
+                // A dropped connection ends the download with a reason; a change to a connection that may cost
+                // data without this attempt's consent pauses it (the .part files stay) and the screen asks again.
+                var pausedFor: SetupNetwork? = null
                 val networkWatch = launch {
                     network.changes.collect { current ->
-                        if (
-                            current == SetupNetwork.Offline ||
-                                (current != SetupNetwork.Unmetered && !allowMetered)
-                        ) {
-                            models.cancelDownload()
+                        if (pausedFor != null) return@collect
+                        when {
+                            current == SetupNetwork.Offline -> {
+                                pausedFor = current
+                                models.interruptDownload(MediaProblem.DownloadOffline)
+                            }
+                            current != SetupNetwork.Unmetered && !allowMetered -> {
+                                pausedFor = current
+                                models.cancelDownload()
+                            }
                         }
                     }
                 }
                 var terminal = false
                 try {
-                    val result = models.download(pack, replaceExisting)
+                    val result =
+                        try {
+                            models.download(pack, replaceExisting)
+                        } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+                            currentCoroutineContext().ensureActive() // our own caller cancelled: rethrow
+                            if (pausedFor == null) throw e // the person's Cancel
+                            Failure.Network(NetworkWhy.Unknown).failed()
+                        }
                     progress.cancelAndJoin()
-                    val phase =
-                        if (result is Outcome.Ok) VoiceSetupNoticePhase.Complete
-                        else VoiceSetupNoticePhase.Failed
-                    notices.show(phase, 0, 0)
-                    terminal = true
+                    val paused = (result as? Outcome.Failed)?.failure is Failure.Network
+                    if (!paused) {
+                        val phase =
+                            if (result is Outcome.Ok) VoiceSetupNoticePhase.Complete
+                            else VoiceSetupNoticePhase.Failed
+                        notices.show(phase, 0, 0)
+                        terminal = true
+                    }
                     result
                 } finally {
                     withContext(NonCancellable) {

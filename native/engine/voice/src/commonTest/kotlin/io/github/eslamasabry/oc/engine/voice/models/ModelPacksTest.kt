@@ -20,7 +20,13 @@ import io.github.eslamasabry.oc.engine.voice.state.PackId
 import io.github.eslamasabry.oc.engine.voice.state.PackJobPhase
 import io.github.eslamasabry.oc.engine.voice.state.PackStatus
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.currentTime
+import kotlinx.coroutines.withContext
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -224,5 +230,104 @@ class ModelPacksTest {
             assertEquals(MediaProblem.PackMemoryTooSmall, problem(packs.setNaturalVoice(true)))
             advanceUntilIdle()
             assertTrue(fetcher.requests.isEmpty())
+        }
+
+    @Test
+    fun `B-MEDIA-026 a download that hears nothing from the network for a minute stops with a timeout`() =
+        runTest {
+            // A connect that ignores cancellation, as HttpURLConnection does on an address that never answers
+            // (the owner's phone: IPv6 to the model host black-holed behind the Tailscale VPN, 2026-11-07).
+            val socket = CompletableDeferred<Unit>()
+            fetcher.script = {
+                withContext(NonCancellable) { socket.await() }
+                null
+            }
+            val (packs, _) = packs()
+            val download = async { packs.download(PackId("base")) }
+            runCurrent()
+            assertEquals(PackJobPhase.Downloading(0, base.totalBytes), packs.state.value.job?.phase)
+            advanceTimeBy(59.seconds)
+            runCurrent()
+            assertNotNull(packs.state.value.job, "still trying before the minute is up")
+            advanceTimeBy(2.seconds)
+            runCurrent()
+            assertEquals(MediaProblem.DownloadTimedOut, problem(download.await()))
+            assertNull(packs.state.value.job, "the page leaves 0 MB at once, while the socket is still stuck")
+            assertNull(packs.downloading)
+            assertEquals(MediaProblem.DownloadTimedOut, packs.state.value.lastProblem)
+            assertEquals(PackId("base"), packs.state.value.lastProblemPack)
+            // The stuck socket letting go later publishes nothing over that, and the next attempt works.
+            fetcher.script = null
+            socket.complete(Unit)
+            advanceUntilIdle()
+            assertNull(packs.state.value.job)
+            assertEquals(MediaProblem.DownloadTimedOut, packs.state.value.lastProblem)
+            assertIs<Outcome.Ok<InstalledPack>>(packs.download(PackId("base")))
+            assertNull(packs.state.value.lastProblem, "a new download replaces the old problem")
+        }
+
+    @Test
+    fun `B-MEDIA-026 a slow download that keeps receiving is never called stalled`() =
+        runTest {
+            val (packs, _) = packs()
+            // Every 1 kB arrives 19 s after the last: 8 reads, over two minutes in all, never a minute of silence.
+            var reads = 0
+            fetcher.script = { request ->
+                val body = fetcher.bodies.getValue(request.url)
+                object : FetchResponse {
+                    private var position = 0
+                    override val status = 200
+                    override val contentLength: Long = body.size.toLong()
+                    override val contentRange: String? = null
+                    override val location: String? = null
+
+                    override suspend fun read(buffer: ByteArray): Int {
+                        if (position >= body.size) return -1
+                        delay(19.seconds)
+                        reads++
+                        val n = minOf(1_000, body.size - position)
+                        body.copyInto(buffer, 0, position, position + n)
+                        position += n
+                        return n
+                    }
+
+                    override fun close() = Unit
+                }.ok()
+            }
+            val download = async { packs.download(PackId("base")) }
+            advanceUntilIdle()
+            assertIs<Outcome.Ok<InstalledPack>>(download.await())
+            assertEquals(8, reads)
+            assertTrue(currentTime >= 150_000, "it took over two minutes")
+        }
+
+    @Test
+    fun `B-MEDIA-013 an exception nobody expected ends the job as a plain failure instead of leaving it running`() =
+        runTest {
+            fetcher.script = { throw IllegalStateException("platform surprise") }
+            val (packs, _) = packs()
+            assertEquals(MediaProblem.DownloadIncomplete, problem(packs.download(PackId("base"))))
+            assertNull(packs.state.value.job)
+            assertNull(packs.downloading)
+            assertEquals(MediaProblem.DownloadIncomplete, packs.state.value.lastProblem)
+            fetcher.script = null
+            assertIs<Outcome.Ok<InstalledPack>>(packs.download(PackId("base")), "nothing is left busy")
+        }
+
+    @Test
+    fun `B-MEDIA-013 a dropped connection ends the download with its reason and keeps the partial`() =
+        runTest {
+            fetcher.stallAfter = 1_000
+            val (packs, _) = packs()
+            val download = async { packs.download(PackId("base")) }
+            runCurrent()
+            packs.interruptDownload(MediaProblem.DownloadOffline)
+            assertEquals(MediaProblem.DownloadOffline, problem(download.await()))
+            advanceUntilIdle()
+            assertNull(packs.state.value.job)
+            assertEquals(PackStatus.Partial(1_000, base.totalBytes), packs.state.value.packs[PackId("base")])
+            assertEquals(MediaProblem.DownloadOffline, packs.state.value.lastProblem)
+            packs.clearProblem()
+            assertNull(packs.state.value.lastProblem)
         }
 }
