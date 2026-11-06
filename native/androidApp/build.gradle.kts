@@ -6,6 +6,42 @@ import java.util.zip.ZipFile
 
 plugins { id("oc.android.application") }
 
+// Crash reporting vendor adapter (Crashlytics). The private Firebase config is never in git: the Google Services and
+// Crashlytics plugins are applied only when it exists. OC_GOOGLE_SERVICES_DIR (Gradle property or environment, default
+// ~/.config/oc-app/firebase) holds google-services-<applicationId>.json; the matching file is copied next to each flavor
+// at configure time (both copies are git-ignored). Without it the build works and the app reports through the no-op sink.
+run {
+    val dir =
+        File(
+            providers.gradleProperty("OC_GOOGLE_SERVICES_DIR").orNull
+                ?: System.getenv("OC_GOOGLE_SERVICES_DIR")
+                ?: "${System.getProperty("user.home")}/.config/oc-app/firebase"
+        )
+    val flavorIds =
+        mapOf(
+            "preview" to "io.github.eslamasabry.opencode_mobile.native",
+            "switch" to "io.github.eslamasabry.opencode_mobile",
+        )
+    var found = false
+    for ((flavor, id) in flavorIds) {
+        val source = File(dir, "google-services-$id.json")
+        val target = file("src/$flavor/google-services.json")
+        if (source.isFile) {
+            target.parentFile.mkdirs()
+            source.copyTo(target, overwrite = true)
+            found = true
+        } else {
+            target.delete()
+        }
+    }
+    if (found) {
+        apply(plugin = "com.google.gms.google-services")
+        apply(plugin = "com.google.firebase.crashlytics")
+    } else {
+        logger.lifecycle("No Firebase config in $dir: crash reports use the no-op sink.")
+    }
+}
+
 android {
     buildFeatures { buildConfig = true }
     defaultConfig {
@@ -193,6 +229,8 @@ dependencies {
             ":engine:setupassist",
         )
         .forEach { implementation(project(it)) }
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.crashlytics) // :androidApp only; see telemetry/CrashlyticsSink
     implementation(libs.androidx.activity.compose)
     implementation(libs.compose.runtime)
     implementation(libs.compose.ui)

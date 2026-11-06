@@ -6,6 +6,7 @@ import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.MediaProblem
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.engine.analytics.Reporting
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupAppComponent
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupAppProgress
 import io.github.eslamasabry.oc.engine.voice.models.AutomaticPack
@@ -25,7 +26,8 @@ import org.jetbrains.compose.resources.getString
 /** Setup and Settings use the same verified, resumable app-private model manager. */
 @Inject
 @SingleIn(AppScope::class)
-class NativeVoiceSetup(private val hub: VoiceHub) : SetupAppComponent {
+class NativeVoiceSetup(private val hub: VoiceHub, private val reporting: Reporting) :
+    SetupAppComponent {
     private var selected: ModelPackSpec? = null
     private var installing: VoiceModels? = null
     val downloadBytes: Long
@@ -110,12 +112,26 @@ class NativeVoiceSetup(private val hub: VoiceHub) : SetupAppComponent {
             try {
                 // The visible setup action names the model download; consent belongs to this
                 // attempt.
-                models.downloadConsented(pack.id, replaceExisting = false, allowMetered = true)
+                models
+                    .downloadConsented(pack.id, replaceExisting = false, allowMetered = true)
+                    .also { reportDownloadFailure(it) }
             } finally {
                 observer.cancel()
                 installing = null
             }
         }
+
+    /** A non-fatal for the developer: which kind of problem, never a URL, path or message. */
+    private fun reportDownloadFailure(result: Outcome<*>) {
+        val failure = (result as? Outcome.Failed)?.failure as? Failure.Media ?: return
+        reporting.reportFailure(
+            "voice_model_download_failed",
+            mapOf(
+                "problem" to failure.problem.name.replace(Regex("([a-z0-9])([A-Z])"), "$1_$2").lowercase(),
+                "pack" to (selected?.id?.raw ?: "none").lowercase(),
+            ),
+        )
+    }
 
     override suspend fun cancel() {
         installing?.cancelDownload()

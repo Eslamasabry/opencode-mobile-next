@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.settings.presentation
 
+import io.github.eslamasabry.oc.engine.analytics.Reporting
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.zacsweers.metro.AppScope
@@ -61,6 +62,10 @@ public interface SettingsHost {
         get() = null
 
     public val diagnostics: DiagnosticsExport?
+
+    /** Crash and error reports to the developer (vendor-neutral layer); null hides the switch. */
+    public val reporting: Reporting?
+        get() = null
 }
 
 /**
@@ -91,6 +96,7 @@ public class SettingsViewModel(host: SettingsHost, private val nav: AppNavigator
             host.licenses,
             serverPage = host.serverPage,
             localData = host.localData,
+            reporting = host.reporting,
         )
 
     public val state: StateFlow<SettingsUi> = presenter.state

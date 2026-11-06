@@ -71,3 +71,7 @@ tool/qa/build-server.env
 # native UI rebuild gate output
 /looks-gate/
 /looks-out/
+
+# Private Firebase config (never commit)
+google-services.json
+native/androidApp/src/*/google-services.json

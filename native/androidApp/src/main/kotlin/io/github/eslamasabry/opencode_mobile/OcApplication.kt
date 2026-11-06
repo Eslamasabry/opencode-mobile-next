@@ -19,7 +19,9 @@ import io.github.eslamasabry.opencode_mobile.graph.AppExitAccessors
 import io.github.eslamasabry.opencode_mobile.graph.AppNoticesAccessors
 import io.github.eslamasabry.opencode_mobile.graph.AttentionRuntimeAccessors
 import io.github.eslamasabry.opencode_mobile.graph.BackgroundAccessors
+import io.github.eslamasabry.oc.engine.analytics.Reporting
 import io.github.eslamasabry.opencode_mobile.graph.CrashAccessors
+import io.github.eslamasabry.opencode_mobile.telemetry.Telemetry
 import io.github.eslamasabry.opencode_mobile.graph.DiagnosticsAttentionAccessors
 import io.github.eslamasabry.opencode_mobile.graph.DiagnosticsLogSink
 import io.github.eslamasabry.opencode_mobile.graph.GraphOwner
@@ -39,9 +41,10 @@ import io.github.eslamasabry.opencode_mobile.graph.PlatformAccessors
 class OcApplication : Application(), GraphOwner {
     private lateinit var buildInfo: AppBuildInfo
     private lateinit var redactor: Redactor
+    private lateinit var reporting: Reporting
     override val appGraph: AndroidAppGraph by lazy {
         createGraphFactory<AndroidAppGraph.Factory>()
-            .create(this, buildInfo, redactor, LaunchMode.Normal)
+            .create(this, buildInfo, redactor, LaunchMode.Normal, reporting)
     }
     private var productStarted = false
 
@@ -49,8 +52,12 @@ class OcApplication : Application(), GraphOwner {
         super.onCreate()
         // 1. B-SEC-043, as the Flutter OcApplication: the category-only handler goes in before
         // anything else can crash; it stores nothing until crash capture is turned on.
+        // Crash reports go through the vendor-neutral Reporting layer (consent + redaction) before any vendor sees them.
+        reporting = Telemetry.init(this, previewFlavor = BuildConfig.FLAVOR == "preview")
         try {
-            NativeCrashStore(filesDir).install()
+            NativeCrashStore(filesDir).install { category, frames ->
+                reporting.reportCrash(category, frames)
+            }
         } catch (_: Throwable) {}
         redactor = Redactor() // 2. before any secret is read
         AppLog.install(

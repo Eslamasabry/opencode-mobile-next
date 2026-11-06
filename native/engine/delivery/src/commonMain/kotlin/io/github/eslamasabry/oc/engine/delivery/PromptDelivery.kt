@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.engine.delivery
 
+import io.github.eslamasabry.oc.engine.analytics.NoReporting
+import io.github.eslamasabry.oc.engine.analytics.Reporting
 import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
@@ -232,6 +234,7 @@ public class PromptDelivery(
     private val stopMemory: StopMemory,
     private val clock: Clock,
     private val scope: CoroutineScope,
+    private val reporting: Reporting = NoReporting,
 ) {
     private val log = AppLog.tagged("delivery")
     private val mutablePending = MutableStateFlow<ImmutableList<PendingSend>>(persistentListOf())
@@ -556,6 +559,7 @@ public class PromptDelivery(
         accepted = confirms(r, clientId?.raw)
         if (!accepted) {
             failure = (r as? Outcome.Failed)?.failure
+            reportNotAccepted(bubble, failure, reachedWire)
             if (
                 reachedWire &&
                     bubble.reviewId != null &&
@@ -636,6 +640,24 @@ public class PromptDelivery(
                 journal.update(receipt.withState(CommandReceiptState.Uncertain)) is Outcome.Ok
         if (!recorded) log.w { "an unconfirmed send's receipt could not be recorded" }
     }
+
+    /**
+     * A non-fatal for the developer: the server did not accept a prompt. Only the step, the failure's type and the
+     * elapsed time leave the phone, through the analytics layer (never the words, a path, a URL or a message).
+     */
+    private fun reportNotAccepted(bubble: PendingSend, failure: Failure?, reachedWire: Boolean) {
+        reporting.reportFailure(
+            "prompt_not_accepted",
+            mapOf(
+                "step" to if (reachedWire) "after_send" else "before_send",
+                "failure" to (failure?.let { it::class.simpleName } ?: "none").toSnakeCase(),
+                "elapsed_ms" to (clock.now().toEpochMilliseconds() - bubble.createdAtMs).coerceAtLeast(0).toString(),
+            ),
+        )
+    }
+
+    private fun String.toSnakeCase(): String =
+        replace(Regex("([a-z0-9])([A-Z])"), "$1_$2").lowercase().ifEmpty { "none" }
 
     private suspend fun failed(
         bubble: PendingSend,

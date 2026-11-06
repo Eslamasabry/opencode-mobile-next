@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="telemetryCrashReportsTitle">إرسال تقارير الأعطال إلى المطوّر (Google Firebase)</string>
+    <string name="telemetryCrashReportsBody">عند تعطّل التطبيق أو فشل خطوة، يُرسل نوع المشكلة وإصدار التطبيق وأندرويد وقائمة قصيرة بمواضع الشيفرة. لا يُرسل رسائلك ولا ملفاتك ولا عناوينك ولا مفاتيحك أبدًا.</string>
+</resources>

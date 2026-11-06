@@ -6,5 +6,11 @@
         <activity
             android:name=".LanguageProofActivity"
             android:exported="true" />
+        <!-- Debug-only "send test report" for the crash-reporting proof (preview builds are debug builds). -->
+        <receiver android:name=".TestReportReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="io.github.eslamasabry.opencode_mobile.native.TEST_REPORT" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

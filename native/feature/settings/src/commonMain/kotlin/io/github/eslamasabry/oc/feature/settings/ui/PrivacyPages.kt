@@ -26,6 +26,8 @@ import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.e7SettingsUi93
 import io.github.eslamasabry.oc.ui.words.res.privacyPolicyTitle
 import io.github.eslamasabry.oc.ui.words.res.settingsV3Off
+import io.github.eslamasabry.oc.ui.words.res.telemetryCrashReportsBody
+import io.github.eslamasabry.oc.ui.words.res.telemetryCrashReportsTitle
 import io.github.eslamasabry.oc.ui.words.res.settingsV3On
 import org.jetbrains.compose.resources.stringResource
 
@@ -45,6 +47,17 @@ internal fun ColumnScope.PrivacyBody(privacy: PrivacyUi?, actions: SettingsActio
             trailing = KitRowTrailing.Chevron,
             onClick = { actions.onOutside(SettingsOutside.PrivacyPolicy) },
         )
+    }
+    privacy?.crashReports?.let { on ->
+        KitRowGroup {
+            KitSwitchRow(
+                title = stringResource(Res.string.telemetryCrashReportsTitle),
+                checked = on,
+                modifier = Modifier.testTag("privacy-crash-reports"),
+                supporting = stringResource(Res.string.telemetryCrashReportsBody),
+                onCheckedChange = actions::onCrashReports,
+            )
+        }
     }
 }
 

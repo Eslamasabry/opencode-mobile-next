@@ -43,6 +43,9 @@
         android:localeConfig="@xml/locales_config"
         android:supportsRtl="true"
         android:theme="@style/NativeAppTheme">
+        <!-- Crash reports are opt-in at run time (Settings > Privacy); nothing is collected until the person's answer is applied. -->
+        <meta-data android:name="firebase_crashlytics_collection_enabled" android:value="false" />
+        <meta-data android:name="firebase_analytics_collection_deactivated" android:value="true" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
