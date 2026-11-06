@@ -444,6 +444,7 @@ internal class Oc2Gateway(
                         is StreamSignal.Status -> {
                             status.value = signal.status
                             if (signal.status == StreamStatus.Connected) {
+                                lastConnectedAtMs = clock.now().toEpochMilliseconds()
                                 connects.value += 1
                                 envelopes.emit(
                                     GatewayEnvelope(
@@ -1372,17 +1373,36 @@ internal class Oc2Gateway(
 
     /**
      * The server answers 404 for an existing agent for a moment after an idle restart; a short
-     * retry rides it.
+     * retry rides it. B-111: on a phone the server boots slowly after an idle stop or an app
+     * update, so while the event stream has not connected yet, or connected less than
+     * [AGENT_BOOT_WINDOW_MS] ago, the retry backs off up to [AGENT_BOOT_BUDGET_MS] in all. Any
+     * other time a missing agent is real and fails after the short retry. Only a not-found is
+     * retried; the last answer is returned as it is (the caller then sends nothing).
      */
     private suspend fun readAgent(agent: String): Outcome<JsonElement> {
+        val booting = agentBootWindowOpen()
         var attempt = 0
+        var waited = 0L
         while (true) {
             val result = json("/agent/${agent.encodeURLPathPart()}", query = locationQuery())
-            if (result !is Outcome.Failed || result.failure !is Failure.NotFound || attempt >= 2)
-                return result
+            if (result !is Outcome.Failed || result.failure !is Failure.NotFound) return result
+            val pause =
+                if (booting) (AGENT_BOOT_RETRY_MS shl attempt).coerceAtMost(AGENT_BOOT_MAX_STEP_MS)
+                else AGENT_BOOT_RETRY_MS
+            val limit = if (booting) AGENT_BOOT_BUDGET_MS else AGENT_BOOT_RETRY_MS * 2
+            if (waited + pause > limit) return result
             attempt++
-            kotlinx.coroutines.delay(AGENT_BOOT_RETRY_MS)
+            waited += pause
+            kotlinx.coroutines.delay(pause)
         }
+    }
+
+    /** The epoch-ms of the event stream's latest connect; null before the first. */
+    @kotlin.concurrent.Volatile internal var lastConnectedAtMs: Long? = null
+
+    private fun agentBootWindowOpen(): Boolean {
+        val at = lastConnectedAtMs ?: return true
+        return clock.now().toEpochMilliseconds() - at < AGENT_BOOT_WINDOW_MS
     }
 
     override suspend fun stop(session: SessionId, resume: Boolean): Outcome<StopResult> =
@@ -2372,6 +2392,9 @@ internal class Oc2Gateway(
 }
 
 private const val AGENT_BOOT_RETRY_MS = 500L
+private const val AGENT_BOOT_MAX_STEP_MS = 4_000L
+private const val AGENT_BOOT_BUDGET_MS = 20_000L
+private const val AGENT_BOOT_WINDOW_MS = 60_000L
 private const val ADMISSION_WAIT_MS = 5_000L
 
 private val FORK_TITLE_MARKERS = listOf("<tool_call", "</tool_call", "<tool_use", "<function", "</function", "<|")

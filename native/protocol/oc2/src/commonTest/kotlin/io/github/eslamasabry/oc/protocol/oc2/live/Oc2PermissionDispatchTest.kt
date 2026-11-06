@@ -35,7 +35,13 @@ class Oc2PermissionDispatchTest {
     private val askAll = """{"action":"*","resource":"*","effect":"ask"}"""
 
     /** One session `s` as an OC2 server keeps it; [failure] picks which preparation step breaks. */
-    private class Server(var session: JsonObject, val failure: String? = null, val agentNotFoundFirst: Boolean = false) {
+    private class Server(
+        var session: JsonObject,
+        val failure: String? = null,
+        agentNotFoundFirst: Boolean = false,
+        /** How many agent reads answer 404 first (the server still booting the project). */
+        val agentNotFoundReads: Int = if (agentNotFoundFirst) 1 else 0,
+    ) {
         val requests = mutableListOf<String>()
         val bodies = mutableListOf<JsonElement?>()
         var sessionReads = 0
@@ -54,7 +60,7 @@ class Oc2PermissionDispatchTest {
                         when {
                             request.method == HttpMethod.Get && path == "/api/agent/build" -> {
                                 server.agentReads++
-                                if (server.agentNotFoundFirst && server.agentReads == 1) {
+                                if (server.agentReads <= server.agentNotFoundReads) {
                                     respond("""{"_tag":"NotFoundError","message":"Agent not found"}""", HttpStatusCode.NotFound)
                                 } else {
                                     respond(
@@ -171,6 +177,44 @@ class Oc2PermissionDispatchTest {
         assertIs<Outcome.Ok<*>>(g.prompt(SessionId("s"), OutgoingPrompt("hi"), "c1"))
         assertEquals(2, server.agentReads)
         assertEquals("POST", server.requests.last())
+        g.close()
+    }
+
+    private fun agentSession() = Json.parseToJsonElement("""{"id":"s","agent":"build","permissions":[],"metadata":{}}""").jsonObject
+
+    @Test
+    fun `B-PROTO-028 B-111 right after a restart the agent read backs off for up to 20 s before the message is sent`() = runTest {
+        // The phone server after an idle stop or an app update: 404 on the agent for about 10 s.
+        val server = Server(agentSession(), agentNotFoundReads = 5)
+        val g = gateway(server) // the event stream has not connected yet: the server is booting
+        val started = testScheduler.currentTime
+        assertIs<Outcome.Ok<*>>(g.prompt(SessionId("s"), OutgoingPrompt("hi"), "c1"))
+        assertEquals(6, server.agentReads)
+        assertEquals("POST", server.requests.last())
+        assertTrue(testScheduler.currentTime - started <= 20_000, "bounded wait")
+        g.close()
+    }
+
+    @Test
+    fun `B-PROTO-028 B-111 an agent still missing after the boot window is not sent, with the real reason`() = runTest {
+        val server = Server(agentSession(), agentNotFoundReads = Int.MAX_VALUE)
+        val g = gateway(server)
+        val started = testScheduler.currentTime
+        val sent = assertIs<Outcome.Failed>(g.prompt(SessionId("s"), OutgoingPrompt("hi"), "c1"))
+        assertIs<io.github.eslamasabry.oc.core.common.Failure.NotFound>(sent.failure)
+        assertTrue(server.requests.none { it == "POST" }, "nothing sent")
+        assertTrue(testScheduler.currentTime - started in 15_000..20_000, "waited ${testScheduler.currentTime - started} ms")
+        g.close()
+    }
+
+    @Test
+    fun `B-PROTO-028 B-111 long after the stream connected a missing agent fails after the short retry`() = runTest {
+        val server = Server(agentSession(), agentNotFoundReads = 5)
+        val g = gateway(server)
+        g.lastConnectedAtMs = 1_000L - 120_000L // connected two minutes ago: not a boot
+        assertIs<Outcome.Failed>(g.prompt(SessionId("s"), OutgoingPrompt("hi"), "c1"))
+        assertEquals(3, server.agentReads)
+        assertTrue(server.requests.none { it == "POST" })
         g.close()
     }
 
