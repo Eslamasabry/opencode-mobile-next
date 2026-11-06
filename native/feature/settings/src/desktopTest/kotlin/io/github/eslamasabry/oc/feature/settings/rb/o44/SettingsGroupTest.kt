@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.feature.settings.presentation.*
 import io.github.eslamasabry.oc.feature.settings.ui.SettingsScreen
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.row.KitIconSwitchRow
 import io.github.eslamasabry.oc.ui.kit.theme.KitWindowInfo
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
@@ -46,7 +47,8 @@ class SettingsGroupTest {
                     ),
             )
         setContent {
-            KitTheme(stillFrame = true) {
+            // The app root provides the platform (KitPlatform is provided once at the app root).
+            KitTheme(platform = DesktopKitPlatform(), stillFrame = true) {
                 CompositionLocalProvider(LocalKitWindow provides KitWindowInfo(1000f, 800f)) {
                     Box(Modifier.requiredSize(1000.dp, 800.dp)) { SettingsScreen(state, actions) }
                 }

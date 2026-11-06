@@ -171,7 +171,8 @@ class AllConversationsScreenTest {
             onNodeWithText("Active").assertExists()
             onNodeWithText("Archived").performClick()
             assertEquals(listOf("archive-filter"), actions.calls)
-            onNodeWithContentDescription("Filter").performClick()
+            // KitSearchField's filter is a worded "Filter" button in a wide window and an icon button on a phone.
+            onNode(hasText("Filter") or hasContentDescription("Filter")).performClick()
             onNodeWithText("two").performClick()
             assertEquals(listOf("archive-filter", "project:/two"), actions.calls)
         }

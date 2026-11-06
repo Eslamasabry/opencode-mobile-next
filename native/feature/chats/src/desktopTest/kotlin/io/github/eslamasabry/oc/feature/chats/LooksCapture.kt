@@ -20,6 +20,8 @@ import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import java.io.File
 import java.util.Locale
 import javax.imageio.ImageIO
@@ -41,7 +43,10 @@ internal object Looks {
                         localeTag = "en",
                         stillFrame = true,
                     ) {
-                        Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) { content(dark) }
+                        // The app's window roots provide the redactor (0d38a8abc); mono chat parts need it.
+                        CompositionLocalProvider(LocalKitRedactor provides Redactor()) {
+                            Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) { content(dark) }
+                        }
                     }
                   }
                 }

@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.feature.chats
 
 import androidx.compose.foundation.Indication
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RenderEffect
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
@@ -20,6 +21,8 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitFillIndication
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatformFamily
 import io.github.eslamasabry.oc.ui.kit.platform.KitSystemSignals
+import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
+import io.github.eslamasabry.oc.core.security.Redactor
 import kotlinx.coroutines.flow.MutableStateFlow
 
 internal val P1 = ProfileId("p1")
@@ -69,6 +72,18 @@ internal class RecordingChatsActions : ChatsActions {
 
     override fun search(query: String) {
         calls += "search $query"
+    }
+
+    override fun openSearch() {
+        calls += "openSearch"
+    }
+
+    override fun showInbox() {
+        calls += "inbox"
+    }
+
+    override fun showProjectChoices() {
+        calls += "projectChoices"
     }
 
     override fun toggleRunning() {
@@ -143,6 +158,8 @@ internal fun Themed(content: @Composable () -> Unit) {
         platform = TestKitPlatform(),
         localeTag = "en",
         stillFrame = true,
-        content = content,
-    )
+    ) {
+        // The app's window roots provide the redactor (0d38a8abc); mono chat parts refuse to draw without one.
+        CompositionLocalProvider(LocalKitRedactor provides Redactor(), content = content)
+    }
 }

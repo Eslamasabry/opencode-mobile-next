@@ -144,8 +144,11 @@ class ServerFailureNoticeTest {
                 }
             }
         }
-        onAllNodesWithText("Connected").assertCountEquals(1)
-        onAllNodesWithText("Connect").assertCountEquals(1) // only for Work
+        // Flutter server_rows.dart:168: "Connected" leads the connected row's line ("Connected · OpenCode"); the
+        // other row says "Not connected" (lower-case c, so this finds only the one).
+        onAllNodesWithText("Connected", substring = true).assertCountEquals(1)
+        // Connect is a named act in each row's menu (server_rows.dart:124), never a word beside a row.
+        onAllNodesWithText("Connect").assertCountEquals(0)
     }
 }
 

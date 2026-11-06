@@ -10,18 +10,21 @@ import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
-import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
-import io.github.eslamasabry.oc.core.common.ids.ProfileId
-import io.github.eslamasabry.oc.feature.servers.presentation.ServersActions
-import io.github.eslamasabry.oc.feature.servers.presentation.ServersUi
-import io.github.eslamasabry.oc.feature.servers.ui.ServersScreen
+import io.github.eslamasabry.oc.feature.servers.discovery.LanAccess
+import io.github.eslamasabry.oc.feature.servers.discovery.LanFinding
+import io.github.eslamasabry.oc.feature.servers.presentation.ServerEditorActions
+import io.github.eslamasabry.oc.feature.servers.presentation.ServerEditorInput
+import io.github.eslamasabry.oc.feature.servers.presentation.ServerEditorStep
+import io.github.eslamasabry.oc.feature.servers.presentation.ServerEditorUi
+import io.github.eslamasabry.oc.feature.servers.ui.ServerEditorScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
@@ -36,8 +39,9 @@ import kotlin.test.assertEquals
 
 /**
  * P12-FIX-PREVIEWQR (Codex review previewqr #3): opening Scan code puts a page on top of the server form, which leaves
- * composition; closing the scanner must find the unsaved draft as it was. Navigation keeps a page's saveable state
- * (`rememberSaveableStateHolderNavEntryDecorator`), which this test stands in for.
+ * composition; closing the scanner must find the unsaved draft as it was. The form is the server editor now (its pairing
+ * doors moved there with the Flutter port); it hands its draft to the ViewModel (keepDraft) and takes it back when it
+ * returns (takeDraft), the password in memory only.
  */
 @OptIn(ExperimentalTestApi::class)
 class P12FixFormDraftTest {
@@ -50,30 +54,64 @@ class P12FixFormDraftTest {
 
     @AfterTest fun after() = Locale.setDefault(previous)
 
-    /** Holds the password like the ViewModel does: memory only. */
-    private class DraftActions : ServersActions {
+    /** Holds the draft like the ViewModel does: memory only. */
+    private class DraftActions : ServerEditorActions {
+        var kept: ServerEditorInput? = null
         val saves = mutableListOf<String>()
-        private var held = ""
 
-        override fun back() = Unit
-
-        override fun allowCleartext(allowed: Boolean, address: String) = Unit
-
-        override fun save(name: String, address: String, username: String, password: String) {
-            saves += "$name|$address|$username|$password"
+        override fun keepDraft(input: ServerEditorInput) {
+            kept = input
         }
 
-        override fun connect(id: ProfileId) = Unit
+        override fun takeDraft(): ServerEditorInput? = kept
 
-        override fun create(id: ProfileId) = Unit
+        override fun refreshTailscale() {}
 
-        override fun remove(id: ProfileId) = Unit
+        override fun openTailscale() {}
 
-        override fun holdPassword(text: String) {
-            held = text
+        override fun installTailscale() {}
+
+        override fun back(dirty: Boolean) {}
+
+        override fun discard() {}
+
+        override fun keepEditing() {}
+
+        override fun step(step: ServerEditorStep) {}
+
+        override fun changed() {}
+
+        override fun check(input: ServerEditorInput) {}
+
+        override fun save(input: ServerEditorInput, anyway: Boolean) {
+            saves += "${input.name}|${input.address}|${input.username}|${input.secret?.reveal()}"
         }
 
-        override fun heldPassword(): String = held
+        override fun cancelCheck() {}
+
+        override fun inspect(address: String) {}
+
+        override fun dismissCertificate() {}
+
+        override fun scan() {}
+
+        override fun paste(text: String?) {}
+
+        override fun takePairing(): PairingFill? = null
+
+        override fun phone() {}
+
+        override fun agents() {}
+
+        override fun openReady() {}
+
+        override fun findAccess(access: LanAccess, extraPorts: Set<Int>) {}
+
+        override fun stopFind() {}
+
+        override fun openAccessSettings() {}
+
+        override fun pickFound(finding: LanFinding) {}
     }
 
     @Composable
@@ -89,17 +127,17 @@ class P12FixFormDraftTest {
     fun `B-PROTO-069 closing the scanner finds the unsaved server draft as it was`() = runComposeUiTest {
         val actions = DraftActions()
         var formShown by mutableStateOf(true)
+        val ui = ServerEditorUi(step = ServerEditorStep.Connect, newServer = false, connectOnSave = false)
         setContent {
             Themed {
                 val pages = rememberSaveableStateHolder()
-                if (formShown) pages.SaveableStateProvider("servers") { ServersScreen(ServersUi(), actions) }
+                if (formShown) pages.SaveableStateProvider("server-editor") { ServerEditorScreen(ui, actions) }
             }
         }
-        val fields = onAllNodes(hasSetTextAction())
-        // Pairing code, Name, Address, Username, Password: the order on screen.
-        fields[1].performTextInput("laptop")
-        fields[2].performTextInput("https://box.example:4096")
-        fields[4].performTextInput("pw")
+        fun field(label: String) = onNode(hasSetTextAction() and hasContentDescription(label))
+        field("Display name (optional)").performScrollTo().performTextInput("laptop")
+        field("Server URL").performScrollTo().performTextInput("https://box.example:4096")
+        field("Server password").performScrollTo().performTextInput("pw")
         waitForIdle()
 
         formShown = false // Scan code: the scanner page is on top, the form leaves composition
@@ -109,7 +147,7 @@ class P12FixFormDraftTest {
 
         onNodeWithText("laptop").assertExists()
         onNodeWithText("https://box.example:4096").assertExists()
-        onAllNodesWithText("Save and connect")[0].performScrollTo().performClick()
+        onNodeWithText("Save changes").performClick()
         assertEquals(listOf("laptop|https://box.example:4096|opencode|pw"), actions.saves)
     }
 }

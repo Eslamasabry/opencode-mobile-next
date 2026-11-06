@@ -74,7 +74,7 @@ class WidgetPanelGateTest {
             frame = FlutterGoldenGate.Frame.Screen,
             act =
                 if (draft == null) null
-                else ({ onNodeWithTag("widget-message").performTextInput(draft) }),
+                else ({ onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("widget-message"))).performTextInput(draft) }),
         ) {
             Scene(state)
         }

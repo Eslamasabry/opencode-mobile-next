@@ -177,7 +177,9 @@ class AllConversationsScreenTest {
     fun `SCREENS-NAV-34 a search with no loaded match still offers Load more while older pages remain`() =
         runComposeUiTest {
             val actions = Recording()
-            setContent { Themed { ChatsAllScreen(noMatch.copy(loadingMore = true), actions) } }
+            // While a page is being read the screen's loading bar owns progress and the button steps aside (o41 B12
+            // "paging control yields to loading"); between reads it is offered.
+            setContent { Themed { ChatsAllScreen(noMatch, actions) } }
             onNodeWithText("No matching conversations").assertExists()
             onNodeWithText("Load more conversations").assertExists()
         }

@@ -113,9 +113,11 @@ class ChatsViewModelTest {
     fun `SCREENS-NAV-27 rows open their chat, New conversation slides up, the gear opens Settings only when it can`() {
         val nav = RecordingNavigator()
         val closed = Door(available = false)
+        // A row opens only when the feed holds it and it can be reopened (ChatsViewModel.openConversation).
+        val feed = Feed().apply { snapshot.value = ChatFeedSnapshot(persistentListOf(item("s1"))) }
         val vm =
             ChatsViewModel(
-                Feed(),
+                feed,
                 Briefs(),
                 closed,
                 { Instant.fromEpochMilliseconds(0) },
@@ -129,7 +131,10 @@ class ChatsViewModelTest {
             ConversationRef(P1, io.github.eslamasabry.oc.core.common.ids.SessionId("s1"))
         )
         vm.newConversation()
-        assertEquals(listOf("openChat s1", "open ${ChatsRoute.New(null)}"), nav.calls)
+        // ChatsRoute.New carries a fresh command and tab id each time, so only its profile is compared.
+        assertEquals(2, nav.calls.size, nav.calls.toString())
+        assertEquals("openChat s1", nav.calls[0])
+        assertTrue(nav.calls[1].startsWith("open New(profile=null,"), nav.calls[1])
 
         val open = Door(available = true)
         val withDoor =

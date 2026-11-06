@@ -2,7 +2,10 @@ package io.github.eslamasabry.oc.feature.chats.rb.o41
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.*
@@ -25,9 +28,12 @@ class PermissionListCardTest {
         setContent {
             KitTheme(platform = DesktopKitPlatform()) {
                 fill = LocalKitColors.current.surface3
-                Box(Modifier.width(400.dp)) {
-                    KitPermissionCard("Run tests?", null, "flutter test", "Allow once", null, "Reject",
-                        { allows++ }, null, { rejects++ }, secondary = true)
+                // The app's window roots provide the redactor (0d38a8abc); the command's mono line needs it.
+                CompositionLocalProvider(LocalKitRedactor provides Redactor()) {
+                    Box(Modifier.width(400.dp)) {
+                        KitPermissionCard("Run tests?", null, "flutter test", "Allow once", null, "Reject",
+                            { allows++ }, null, { rejects++ }, secondary = true)
+                    }
                 }
             }
         }

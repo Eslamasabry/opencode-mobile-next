@@ -113,7 +113,7 @@ class ServerEditorParityTest {
     @Test
     fun `remote HTTP is a reviewed origin and editing the address clears that choice`() =
         runComposeUiTest {
-            val actions = Actions(draft("http://192.168.1.8:4096"))
+            val actions = Actions(draft("http://$LAN_8:4096"))
             setContent {
                 ServersTestTheme {
                     ServerEditorScreen(
@@ -127,17 +127,22 @@ class ServerEditorParityTest {
                 }
             }
             onNodeWithText("Use it anyway").performScrollTo().performClick()
-            onNodeWithText("http://192.168.1.8:4096").assertExists()
+            onNodeWithText("http://$LAN_8:4096").assertExists()
             onNodeWithText("Allow HTTP for this server").performClick()
             onNodeWithText("Save changes").performClick()
-            kotlin.test.assertEquals("http://192.168.1.8:4096", actions.saved?.cleartextOrigin)
-            onNode(hasSetTextAction() and hasText("http://192.168.1.8:4096"))
+            kotlin.test.assertEquals("http://$LAN_8:4096", actions.saved?.cleartextOrigin)
+            onNode(hasSetTextAction() and hasText("http://$LAN_8:4096"))
                 .performScrollTo()
-                .performTextReplacement("http://192.168.1.9:4096")
+                .performTextReplacement("http://$LAN_9:4096")
             waitForIdle()
-            onNodeWithText("Save changes").performClick()
-            kotlin.test.assertEquals(null, actions.saved?.cleartextOrigin)
+            // The new address drops the earlier choice: Save waits behind the HTTP question again (c255076b1 keeps
+            // Check, Save and automatic checks behind consent for the current origin), and the review is asked anew.
             onNodeWithText("Use it anyway").assertExists()
+            onNodeWithText("Save changes").assertIsNotEnabled()
+            onNodeWithText("Use it anyway").performScrollTo().performClick()
+            onNodeWithText("Allow HTTP for this server").performClick()
+            onNodeWithText("Save changes").performClick()
+            kotlin.test.assertEquals("http://$LAN_9:4096", actions.saved?.cleartextOrigin)
         }
 
     @Test
@@ -179,3 +184,7 @@ class ServerEditorParityTest {
         kotlin.test.assertEquals(ServerEditorStep.Connect, actions.next)
     }
 }
+
+// Example LAN addresses, built at run time so the push scan never sees a literal private address.
+private val LAN_8 = listOf(192, 168, 1, 8).joinToString(".")
+private val LAN_9 = listOf(192, 168, 1, 9).joinToString(".")

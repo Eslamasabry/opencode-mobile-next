@@ -83,7 +83,8 @@ class LibraryPageTest {
         setContent { SettingsThemed { LibraryScreen(state, actions) } }
         onNodeWithText("No skills available").assertDoesNotExist()
         onNodeWithText("Couldn’t load skills").assertExists()
-        onNodeWithText("Retry").performClick()
+        // commonRetry is Flutter's "Try again" (lib/l10n/app_en.arb commonRetry).
+        onNodeWithText("Try again").performClick()
         assertEquals<List<Pair<String, List<Any?>>>>(listOf("refresh" to emptyList()), calls)
     }
 

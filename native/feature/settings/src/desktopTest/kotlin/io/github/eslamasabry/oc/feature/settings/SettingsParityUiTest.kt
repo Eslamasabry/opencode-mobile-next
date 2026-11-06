@@ -6,7 +6,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -81,9 +87,14 @@ class SettingsParityUiTest {
         runComposeUiTest {
             show()
             presenter.onOpen(SettingsPage.Appearance); waitForIdle()
-            onNodeWithText("Text size").performScrollTo().assertExists()
-            onNodeWithText("Default").assertExists()
-            tap("Large")
+            // Flutter's text-size step slider (94d86c48f): asked as "How big should text be?", the slider reads
+            // "Text size" with its step as its state, and a step is chosen by moving it.
+            onNodeWithText("How big should text be?").performScrollTo().assertExists()
+            onNodeWithContentDescription("Text size")
+                .performScrollTo()
+                .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Default"))
+                .performSemanticsAction(SemanticsActions.SetProgress) { it(AppTextSize.Large.ordinal.toFloat()) }
+            waitForIdle()
             assertEquals(AppTextSize.Large, choices.value.value.textSize)
         }
 

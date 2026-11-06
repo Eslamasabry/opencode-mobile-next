@@ -48,7 +48,8 @@ class ClaudeImportScreenTest {
         setContent { KitTheme(platform = DesktopKitPlatform()) { Column {
             ClaudeImportBody(NewConversationUi(importFailed = true), actions)
         } } }
-        onNodeWithText("Retry").performClick()
+        // Flutter claude_import_screen.dart:105 uses commonRetry, "Try again".
+        onNodeWithText("Try again").performClick()
         assertEquals(NewConversationSheet.Import, actions.sheet)
         assertEquals(null, actions.imported)
     }

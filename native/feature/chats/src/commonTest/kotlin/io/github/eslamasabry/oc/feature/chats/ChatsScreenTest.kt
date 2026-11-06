@@ -2,13 +2,13 @@ package io.github.eslamasabry.oc.feature.chats
 
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
-import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.model.Session
@@ -125,13 +125,19 @@ class ChatsScreenTest {
             setContent { Themed { ChatsScreen(ui(*rows), actions) } }
             onNodeWithText("Today").assertExists()
             onNodeWithText("Earlier").assertExists()
-            onNodeWithText("Fix the reconnect loop").assertExists()
+            // A feed row reads as one sentence (KitFeedItem: title, agent, state word, project, time), so its words
+            // are its content description, not separate texts.
+            onNode(hasContentDescription("Fix the reconnect loop", substring = true)).assertExists()
             // One name for one thing (design review §2.3): the placeholder row and the floating button both say
             // "New conversation".
-            onAllNodesWithText("New conversation").assertCountEquals(2)
+            onAllNodes(hasText("New conversation") or hasContentDescription("New conversation", substring = true))
+                .assertCountEquals(2)
             onAllNodesWithText("New chat").assertCountEquals(0)
-            onAllNodesWithText("Needs you").assertCountEquals(1)
-            onNodeWithText("Theme packs").performClick()
+            onAllNodes(hasContentDescription("New chat", substring = true)).assertCountEquals(0)
+            // One status word on the row that needs you.
+            onAllNodes(hasContentDescription("Needs you", substring = true)).assertCountEquals(1)
+            onNode(hasContentDescription("Theme packs", substring = true) and hasContentDescription("Needs you", substring = true))
+                .performClick()
             assertTrue("open ask" in actions.calls)
         }
 
@@ -140,16 +146,13 @@ class ChatsScreenTest {
         runComposeUiTest {
             val actions = RecordingChatsActions()
             setContent { Themed { ChatsScreen(ui(*rows), actions) } }
-            onNode(hasSetTextAction()).performTextInput("api")
-            onAllNodesWithText("Running")[0].performClick() // the chip; the running row says it too
-            onNodeWithText("1 needs you").performClick()
-            onAllNodesWithText("web")[0]
-                .performClick() // the project chip; the row names its project too
-            assertTrue("search api" in actions.calls, actions.calls.toString())
-            assertTrue(
-                actions.calls.containsAll(listOf("running", "needsYou", "project /work/web")),
-                actions.calls.toString(),
-            )
+            // Flutter's home: Search is a round bar button that opens search, "Needs you" under the title opens the
+            // Inbox, and the projects chip opens the project choices (the field and per-project chips are gone).
+            onNodeWithContentDescription("Search").performClick()
+            onNodeWithText("Running").performClick()
+            onNodeWithText("Needs you").performClick()
+            onNodeWithText("All projects").performClick()
+            assertEquals(listOf("openSearch", "running", "inbox", "projectChoices"), actions.calls)
         }
 
     @Test
@@ -186,8 +189,9 @@ class ChatsScreenTest {
                     scope = BRIEF_SCOPE,
                 )
             setContent { Themed { ChatsScreen(ui(*rows, brief = brief), actions) } }
-            onAllNodesWithText("Done").assertCountEquals(1)
-            onNodeWithText("Continue").performClick()
+            // The brief's finished row reads "Done" in its row sentence; the dismiss says what it does (456459651).
+            onAllNodes(hasContentDescription("Done", substring = true)).assertCountEquals(1)
+            onNodeWithText("Mark all seen").performClick()
             assertEquals(listOf("dismiss"), actions.calls)
         }
 
@@ -206,7 +210,7 @@ class ChatsScreenTest {
                 )
             setContent { Themed { ChatsScreen(ui(brief = unknown), RecordingChatsActions()) } }
             onNodeWithText("Can't tell what's new on this server").assertExists()
-            onAllNodesWithText("Continue").assertCountEquals(0)
+            onAllNodesWithText("Mark all seen").assertCountEquals(0)
         }
 
     @Test
@@ -260,7 +264,7 @@ class ChatsScreenTest {
                 Themed { ChatsScreen(ui(item("known"), brief = brief), RecordingChatsActions()) }
             }
             onNodeWithText("Can't tell what's new on this server").assertExists()
-            onNodeWithText("Continue").assertExists()
+            onNodeWithText("Mark all seen").assertExists()
         }
 
     @Test

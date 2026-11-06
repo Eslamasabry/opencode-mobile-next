@@ -121,11 +121,21 @@ class SetupScreenTest {
         val actions = Recorder()
         setContent { Themed { SetupScreen(downloading, actions) } }
         onNodeWithText("Downloading Node.js").assertIsDisplayed()
-        onNode(hasContentDescription("Step 4 of 6 · Node.js · 18 of 30 MB · about 3 min left", substring = true)).assertExists()
-        onNodeWithText("Downloading Node.js 24.21.0 · 18 of 30 MB").assertExists()
-        onNodeWithText("24.04").assertExists()
+        // The progress ring (Flutter phone_setup_progress_screen.dart: KitProgressRing.measured) speaks its label,
+        // the measured share and the byte caption; the time left is its own line.
+        onNode(
+            hasContentDescription("Setup progress", substring = true) and
+                hasContentDescription("18 of 30 MB", substring = true),
+        ).assertExists()
+        onNodeWithText("About 3 min left").assertExists()
         onNodeWithText("Pause setup").performClick()
         assertEquals(listOf("pause"), actions.calls)
+        // The step list moved under Details (a sheet), as in Flutter; each step reads as one sentence.
+        onNodeWithText("Details").performClick()
+        onNode(hasContentDescription("Node.js", substring = true) and
+            hasContentDescription("Downloading Node.js 24.21.0 · 18 of 30 MB", substring = true)).assertExists()
+        onNode(hasContentDescription("Linux base", substring = true) and
+            hasContentDescription("24.04", substring = true)).assertExists()
     }
 
     @Test
@@ -150,10 +160,14 @@ class SetupScreenTest {
         onNodeWithText("Setup didn't finish").assertIsDisplayed()
         onNodeWithText("Could not download Git and SSH: no internet connection").assertIsDisplayed()
         onNodeWithText("E: Failed to fetch", substring = true).assertDoesNotExist()
-        onNodeWithText("Details").performClick()
-        onNodeWithText("E: Failed to fetch", substring = true).assertExists()
         onNodeWithText("Continue setup").performClick()
         assertEquals(listOf("resume"), actions.calls)
+        // Details opens the setup-details sheet (the page's actions sit under it); the log is in its own fold.
+        onNodeWithText("Details").performClick()
+        onNodeWithText("Setup details").assertExists()
+        onNodeWithText("E: Failed to fetch", substring = true).assertDoesNotExist()
+        onNodeWithText("Details").performClick()
+        onNodeWithText("E: Failed to fetch", substring = true).assertExists()
     }
 
     @Test
@@ -168,7 +182,9 @@ class SetupScreenTest {
             )
         setContent { Themed { SetupScreen(done, actions) } }
         onNodeWithText("All set").assertIsDisplayed()
-        onNodeWithText("OpenCode is ready on this phone").assertIsDisplayed()
+        // Flutter's finished ring (phone_setup_progress_screen.dart:436, KitProgressRing.finished) has no note line;
+        // "OpenCode is ready on this phone" belongs to the ready page Flutter opens next.
+        onNode(hasContentDescription("Setup progress, Finished")).assertExists()
         onNodeWithText("Done").performClick()
         assertEquals(listOf("back"), actions.calls)
     }
