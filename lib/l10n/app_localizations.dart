@@ -52680,6 +52680,18 @@ abstract class AppLocalizations {
   /// **'A remote with that name is already set up. Choose another name.'**
   String get gitProblemRemoteExists;
 
+  /// GitHub: invalid repository name
+  ///
+  /// In en, this message translates to:
+  /// **'Use a repository name with up to 100 letters, numbers, dots, dashes or underscores.'**
+  String get gitProblemInvalidGitHubRepositoryName;
+
+  /// GitHub: repository name is unavailable
+  ///
+  /// In en, this message translates to:
+  /// **'That name is already used or unavailable in your GitHub account. Try another.'**
+  String get gitProblemGitHubRepositoryNameUnavailable;
+
   /// Git: invalid clone folder name
   ///
   /// In en, this message translates to:
@@ -52704,6 +52716,18 @@ abstract class AppLocalizations {
   /// **'Clone'**
   String get gitActionClone;
 
+  /// Git: initialize the current project
+  ///
+  /// In en, this message translates to:
+  /// **'Start tracking'**
+  String get gitActionInitialize;
+
+  /// GitHub: create and connect a repository
+  ///
+  /// In en, this message translates to:
+  /// **'Create on GitHub'**
+  String get gitActionPublish;
+
   /// Git: busy
   ///
   /// In en, this message translates to:
@@ -52716,11 +52740,35 @@ abstract class AppLocalizations {
   /// **'Cloning…'**
   String get gitBusyClone;
 
+  /// Git: initializing the current project
+  ///
+  /// In en, this message translates to:
+  /// **'Starting Git in this project…'**
+  String get gitBusyInitialize;
+
+  /// GitHub: creating and connecting a repository
+  ///
+  /// In en, this message translates to:
+  /// **'Creating repository on GitHub…'**
+  String get gitBusyPublish;
+
   /// Git: result
   ///
   /// In en, this message translates to:
   /// **'Remote added.'**
   String get gitDoneRemoteAdded;
+
+  /// Git: initialization worked
+  ///
+  /// In en, this message translates to:
+  /// **'Git is ready in this project.'**
+  String get gitDoneInitialized;
+
+  /// GitHub: repository created and connected, but local files have not been pushed
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub repository created and connected. Your project has not been sent yet.'**
+  String get gitDoneGitHubRepositoryCreated;
 
   /// Git: clone worked; path is the new folder
   ///
@@ -52853,6 +52901,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clone'**
   String get gitCloneButton;
+
+  /// Git row: initialize Git in the open project
+  ///
+  /// In en, this message translates to:
+  /// **'Start tracking this project'**
+  String get gitInitializeProject;
+
+  /// Git row supporting: initialize Git in place
+  ///
+  /// In en, this message translates to:
+  /// **'Keep these files here and start using Git.'**
+  String get gitInitializeProjectHint;
+
+  /// Git row: create and connect a GitHub repository
+  ///
+  /// In en, this message translates to:
+  /// **'Create a GitHub repository'**
+  String get gitPublishToGitHub;
+
+  /// Git row supporting: create a repository
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a name and who can see it.'**
+  String get gitPublishToGitHubHint;
+
+  /// GitHub repository creation step title
+  ///
+  /// In en, this message translates to:
+  /// **'Create repository'**
+  String get gitPublishTitle;
+
+  /// GitHub repository creation field
+  ///
+  /// In en, this message translates to:
+  /// **'Repository name'**
+  String get gitPublishName;
+
+  /// GitHub repository creation name hint
+  ///
+  /// In en, this message translates to:
+  /// **'Use letters, numbers, dots, dashes or underscores.'**
+  String get gitPublishNameHint;
+
+  /// GitHub repository creation visibility control
+  ///
+  /// In en, this message translates to:
+  /// **'Who can see it'**
+  String get gitPublishVisibility;
+
+  /// GitHub repository visibility option
+  ///
+  /// In en, this message translates to:
+  /// **'Private'**
+  String get gitPublishPrivate;
+
+  /// GitHub repository visibility option
+  ///
+  /// In en, this message translates to:
+  /// **'Public'**
+  String get gitPublishPublic;
+
+  /// GitHub repository private visibility explanation
+  ///
+  /// In en, this message translates to:
+  /// **'Only you and people you choose can see this repository.'**
+  String get gitPublishPrivateHint;
+
+  /// GitHub repository public visibility explanation
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone can see this repository.'**
+  String get gitPublishPublicHint;
+
+  /// GitHub repository creation primary action
+  ///
+  /// In en, this message translates to:
+  /// **'Create repository'**
+  String get gitPublishButton;
 
   /// Git row title
   ///

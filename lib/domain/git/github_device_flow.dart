@@ -218,6 +218,30 @@ class GitHubSignInException implements Exception {
   String toString() => 'GitHubSignInException(${problem.name})';
 }
 
+enum GitHubRepositoryProblem {
+  invalidName,
+  nameUnavailable,
+  tokenRejected,
+  permissionDenied,
+  network,
+  unexpected,
+}
+
+class GitHubRepositoryException implements Exception {
+  const GitHubRepositoryException(this.problem, {this.details = ''});
+
+  final GitHubRepositoryProblem problem;
+  final String details;
+
+  @override
+  String toString() => 'GitHubRepositoryException(${problem.name})';
+}
+
+bool isValidGitHubRepositoryName(String name) =>
+    RegExp(r'^[A-Za-z0-9._-]{1,100}$').hasMatch(name) &&
+    name != '.' &&
+    name != '..';
+
 /// The HTTP side of device flow. Every network call goes through the
 /// injected [Dio], and every wait through [sleep], so tests run instantly.
 class GitHubDeviceFlow {
@@ -461,6 +485,75 @@ class GitHubDeviceFlow {
       }
     }
     return repos;
+  }
+
+  /// Creates an empty repository in the signed-in user's account.
+  Future<GitHubRepository> createUserRepository(
+    String token, {
+    required String name,
+    required bool isPrivate,
+  }) async {
+    if (!isValidGitHubRepositoryName(name)) {
+      throw const GitHubRepositoryException(
+        GitHubRepositoryProblem.invalidName,
+      );
+    }
+    final Response<Object?> response;
+    try {
+      response = await _dio.post<Object?>(
+        gitHubUserReposUrl,
+        data: {'name': name, 'private': isPrivate},
+        options: Options(
+          headers: {
+            'Accept': 'application/vnd.github+json',
+            'Authorization': 'Bearer $token',
+            'X-GitHub-Api-Version': '2022-11-28',
+          },
+          responseType: ResponseType.json,
+          validateStatus: (_) => true,
+          receiveTimeout: _timeout,
+        ),
+      );
+    } on DioException {
+      throw const GitHubRepositoryException(GitHubRepositoryProblem.network);
+    }
+    if (response.statusCode != 201) {
+      final status = response.statusCode ?? 0;
+      final problem = switch (status) {
+        401 => GitHubRepositoryProblem.tokenRejected,
+        403 => GitHubRepositoryProblem.permissionDenied,
+        422 =>
+          _nameTaken(response.data)
+              ? GitHubRepositoryProblem.nameUnavailable
+              : GitHubRepositoryProblem.invalidName,
+        >= 500 || 0 => GitHubRepositoryProblem.network,
+        _ => GitHubRepositoryProblem.unexpected,
+      };
+      throw GitHubRepositoryException(
+        problem,
+        details: 'POST /user/repos answered $status',
+      );
+    }
+    final data = response.data;
+    if (data is! Map) {
+      throw const GitHubRepositoryException(GitHubRepositoryProblem.unexpected);
+    }
+    try {
+      return GitHubRepository.fromJson(data.cast<String, Object?>());
+    } on FormatException {
+      throw const GitHubRepositoryException(GitHubRepositoryProblem.unexpected);
+    }
+  }
+
+  /// GitHub answers 422 for any refused field; only `already_exists` on the
+  /// name means the account has a repository called that already.
+  static bool _nameTaken(Object? body) {
+    if (body is! Map) return false;
+    final errors = body['errors'];
+    if (errors is! List) return false;
+    return errors.any(
+      (e) => e is Map && e['code'] == 'already_exists' && e['field'] == 'name',
+    );
   }
 
   GitHubCredential _credential(Map<String, Object?> body) {

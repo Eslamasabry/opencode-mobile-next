@@ -56,6 +56,10 @@ String gitProblemText(
   GitProblem.remoteAddressHasPassword =>
     l10n.gitProblemRemoteAddressHasPassword,
   GitProblem.remoteExists => l10n.gitProblemRemoteExists,
+  GitProblem.invalidGitHubRepositoryName =>
+    l10n.gitProblemInvalidGitHubRepositoryName,
+  GitProblem.githubRepositoryNameUnavailable =>
+    l10n.gitProblemGitHubRepositoryNameUnavailable,
   GitProblem.invalidFolderName => l10n.gitProblemInvalidFolderName,
   GitProblem.folderExists => l10n.gitProblemFolderExists,
   GitProblem.unknown => l10n.gitProblemUnknown,
@@ -72,6 +76,7 @@ String gitUnavailableText(GitUnavailableReason reason, AppLocalizations l10n) =>
 /// The busy line while [action] runs.
 String gitBusyText(GitAction action, AppLocalizations l10n) => switch (action) {
   GitAction.refresh => l10n.gitBusyRefresh,
+  GitAction.initialize => l10n.gitBusyInitialize,
   GitAction.pull => l10n.gitBusyPull,
   GitAction.push => l10n.gitBusyPush,
   GitAction.commit => l10n.gitBusyCommit,
@@ -81,12 +86,14 @@ String gitBusyText(GitAction action, AppLocalizations l10n) => switch (action) {
   GitAction.setIdentity => l10n.gitBusySaveIdentity,
   GitAction.addRemote => l10n.gitBusyAddRemote,
   GitAction.clone => l10n.gitBusyClone,
+  GitAction.publish => l10n.gitBusyPublish,
 };
 
 /// The button label for [action].
 String gitActionLabel(GitAction action, AppLocalizations l10n) =>
     switch (action) {
       GitAction.refresh => l10n.gitActionRefresh,
+      GitAction.initialize => l10n.gitActionInitialize,
       GitAction.pull => l10n.gitActionPull,
       GitAction.push => l10n.gitActionPush,
       GitAction.commit => l10n.gitActionCommit,
@@ -96,6 +103,7 @@ String gitActionLabel(GitAction action, AppLocalizations l10n) =>
       GitAction.setIdentity => l10n.gitActionSaveIdentity,
       GitAction.addRemote => l10n.gitActionAddRemote,
       GitAction.clone => l10n.gitActionClone,
+      GitAction.publish => l10n.gitActionPublish,
     };
 
 /// The status line for a finished action: what worked, or the problem.
@@ -128,8 +136,10 @@ String gitResultText(
     GitActionNote.created => l10n.gitDoneCreated,
     GitActionNote.discarded => l10n.gitDoneDiscarded,
     GitActionNote.identitySaved => l10n.gitDoneIdentitySaved,
+    GitActionNote.initialized => l10n.gitDoneInitialized,
     GitActionNote.remoteAdded => l10n.gitDoneRemoteAdded,
     GitActionNote.cloned => l10n.gitDoneCloned(result.clonedTo ?? ''),
+    GitActionNote.githubRepositoryCreated => l10n.gitDoneGitHubRepositoryCreated,
   };
 }
 

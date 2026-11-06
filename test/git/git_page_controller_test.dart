@@ -61,12 +61,25 @@ class _Account extends GitHubAccountController {
       );
 
   var rejected = 0;
+  GitHubRepository? repositoryToCreate;
+  String? createdName;
+  bool? createdPrivate;
 
   @override
   Future<String?> tokenForGit() async => fakeGitHubToken;
 
   @override
   Future<void> tokenRejected() async => rejected++;
+
+  @override
+  Future<GitHubRepository> createRepository({
+    required String name,
+    required bool isPrivate,
+  }) async {
+    createdName = name;
+    createdPrivate = isPrivate;
+    return repositoryToCreate!;
+  }
 }
 
 void main() {
@@ -100,6 +113,64 @@ void main() {
       (broken.view as GitPageFailed).failure.problem,
       GitProblem.gitMissing,
     );
+  });
+
+  test(
+    'initializes Git in the current project and refreshes its status',
+    () async {
+      final shell = FakeGitShell([
+        envelope({'status': failed(fx.notRepositoryError, exit: 128)}),
+        envelope({'run': ok()}),
+        _snapshot(status: fx.statusNoUpstream, remotes: ''),
+      ]);
+      final page = _controller(shell);
+      await page.refresh();
+      expect(page.view, isA<GitPageNotRepository>());
+      final result = await page.initialize();
+      expect(result?.note, GitActionNote.initialized);
+      expect(shell.scripts[1], contains("'init'"));
+      expect(shell.scripts[1], contains("'-b' 'main'"));
+      expect(page.view, isA<GitPageReady>());
+    },
+  );
+
+  test('creates a GitHub repository and connects it as origin', () async {
+    final account = _Account()
+      ..repositoryToCreate = const GitHubRepository(
+        fullName: 'octocat/alpha',
+        htmlUrl: 'https://github.com/octocat/alpha',
+        cloneUrl: 'https://github.com/octocat/alpha.git',
+        defaultBranch: 'main',
+        isPrivate: false,
+      );
+    final shell = FakeGitShell([
+      _snapshot(status: fx.statusNoUpstream, remotes: ''),
+      envelope({'run': ok()}),
+      _snapshot(
+        status: fx.statusNoUpstream,
+        remotes: 'remote.origin.url https://github.com/octocat/alpha.git\n',
+      ),
+    ]);
+    final page = _controller(
+      shell,
+      drop: FakeCredentialDrop(),
+      account: account,
+    );
+    await page.refresh();
+    final result = await page.createGitHubRepository(
+      name: 'alpha',
+      isPrivate: false,
+    );
+    expect(result?.note, GitActionNote.githubRepositoryCreated);
+    expect(account.createdName, 'alpha');
+    expect(account.createdPrivate, isFalse);
+    expect(
+      shell.scripts[1],
+      contains(
+        "'remote' 'add' 'origin' 'https://github.com/octocat/alpha.git'",
+      ),
+    );
+    expect(page.snapshot?.hasRemote, isTrue);
   });
 
   test('a failed refresh keeps the last snapshot and reports it', () async {
