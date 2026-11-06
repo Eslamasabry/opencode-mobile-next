@@ -46,6 +46,7 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipWrap
+import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.input.KitField
@@ -100,6 +101,7 @@ import io.github.eslamasabry.oc.ui.words.res.composerKeptRestoreTitle
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachFile
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachmentDismiss
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachmentFailed
+import io.github.eslamasabry.oc.ui.words.res.chatUiDelegateThisPrompt
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachmentRemove
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachmentRetry
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachmentStorage
@@ -627,6 +629,26 @@ public fun BasicComposer(
                         label = "/${command.name}",
                         kind = KitChipKind.Action,
                         onClick = { replaceTail(0, "/${command.name} ") },
+                    )
+                }
+            }
+        }
+        // E04-S01: sub-agents lead the `@` strip (Flutter order); a pick writes `@id ` over the word being typed
+        // and the send turns it into an agent part. TalkBack hears the agent and what it does.
+        val agentsShown = state.agentMatches.isNotEmpty() && query is ComposerQuery.File
+        KitReveal(agentsShown) {
+            KitChipWrap(Modifier.fillMaxWidth().testTag("chat-agent-suggestions")) {
+                val delegate = stringResource(Res.string.chatUiDelegateThisPrompt)
+                state.agentMatches.forEach { agent ->
+                    KitChip(
+                        label = "@${agent.id}",
+                        kind = KitChipKind.Action,
+                        spoken = "@${agent.id}, ${agent.description?.takeIf { it.isNotBlank() } ?: delegate}",
+                        onClick = {
+                            val start = (ComposerQuery.of(field.text.toString()) as? ComposerQuery.File)?.start
+                            if (start != null) replaceTail(start, "@${agent.id} ")
+                        },
+                        modifier = Modifier.testTag("chat-agent-${agent.id}"),
                     )
                 }
             }

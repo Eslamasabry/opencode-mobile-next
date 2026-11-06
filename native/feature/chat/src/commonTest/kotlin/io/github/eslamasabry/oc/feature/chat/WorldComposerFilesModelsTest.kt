@@ -874,6 +874,29 @@ class WorldComposerFilesModelsTest {
     }
 
     @Test
+    fun `B-CHAT-087 the at strip gets visible sub-agents only where the server takes agent mentions`() = runTest {
+        val f = Fixture(this, selection = ModelRef("prov", "m1"))
+        f.operations.catalog =
+            Outcome.Ok(
+                snapshot(catalogModel("m1")).copy(
+                    agents = persistentListOf(
+                        io.github.eslamasabry.oc.core.model.CatalogAgent("build", "primary", null, false, null, null, null),
+                        io.github.eslamasabry.oc.core.model.CatalogAgent("reviewer", "subagent", null, false, null, null, null),
+                        io.github.eslamasabry.oc.core.model.CatalogAgent("explore", "subagent", null, false, null, null, null),
+                        io.github.eslamasabry.oc.core.model.CatalogAgent("secret", "subagent", null, true, null, null, null),
+                    ),
+                ),
+            )
+        f.open()
+        assertIs<Outcome.Ok<Unit>>(f.world.loadModels())
+        assertEquals(listOf("explore", "reviewer"), f.world.models.value.subagents.map { it.id })
+        f.base.capabilities.value = f.base.capabilities.value.copy(promptAgentMentions = false)
+        runCurrent()
+        f.world.loadModels()
+        assertEquals(emptyList(), f.world.models.value.subagents)
+    }
+
+    @Test
     fun `B-STATE-118 Codex composer 4 a model changed by another client becomes the chip's choice`() = runTest {
         val f = Fixture(this, selection = ModelRef("prov", "m1"))
         f.operations.catalog = Outcome.Ok(snapshot(catalogModel("m1"), catalogModel("m2")))

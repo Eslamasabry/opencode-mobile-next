@@ -12,7 +12,9 @@ import io.github.eslamasabry.oc.feature.chat.composer.presentation.ComposerAttac
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.ComposerQuery
 import io.github.eslamasabry.oc.feature.chat.world.ChatWorld
 import io.github.eslamasabry.oc.feature.chat.world.ChatWorlds
+import io.github.eslamasabry.oc.feature.chat.world.ComposerAgent
 import io.github.eslamasabry.oc.feature.chat.world.ComposerCommand
+import io.github.eslamasabry.oc.feature.chat.world.ComposerModels
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -33,6 +35,16 @@ import kotlinx.coroutines.test.setMain
 class ComposerSuggestionsTest {
     private class SuggestWorld : FakeChatWorld() {
         override val commands = MutableStateFlow<List<ComposerCommand>>(emptyList())
+        override val models =
+            MutableStateFlow(
+                ComposerModels(
+                    subagents =
+                        listOf(
+                            ComposerAgent("explore", "Searches the code base"),
+                            ComposerAgent("reviewer", "Reads a diff and lists risks"),
+                        )
+                )
+            )
         val searched = mutableListOf<String>()
         val mentioned = mutableListOf<String>()
         var files =
@@ -144,6 +156,29 @@ class ComposerSuggestionsTest {
                 cancelAndIgnoreRemainingEvents()
             }
         }
+
+    @Test
+    fun `B-CHAT-087 an at lists sub-agents before files and typing filters them`() = runTest {
+        val world = SuggestWorld()
+        val vm = BasicComposerViewModel(ComposerTarget("p1", "s1"), Worlds(world), emptySet())
+        vm.state.test {
+            awaitItem()
+            vm.draftChanged("ask @")
+            var item = awaitItem()
+            while (item.agentMatches.isEmpty()) item = awaitItem()
+            assertEquals(listOf("explore", "reviewer"), item.agentMatches.map { it.id })
+            assertTrue(item.fileMatches.isEmpty(), "a bare @ lists agents only, as in Flutter")
+            vm.draftChanged("ask @rev")
+            while (item.agentMatches.size != 1) item = awaitItem()
+            assertEquals("reviewer", item.agentMatches.single().id)
+            advanceTimeBy(200)
+            while (item.fileMatches.isEmpty()) item = awaitItem()
+            assertTrue(item.fileMatches.size <= 4, "files fill the strip rows the agents leave")
+            vm.draftChanged("ask @reviewer now")
+            while (item.agentMatches.isNotEmpty()) item = awaitItem()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
 
     @Test
     fun `B-CHAT-009 a clipboard picture is attached and an empty clipboard says so`() = runTest {
