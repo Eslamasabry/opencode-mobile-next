@@ -7,6 +7,7 @@ import io.github.eslamasabry.oc.core.common.getOrNull
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -223,10 +224,35 @@ class LinuxProcessesTest {
     }
 
     @Test
-    fun `B-LINUX-084 the scan script is the Flutter script, word for word`() {
-        assertTrue(LINUX_PROCESS_SCAN_SCRIPT.startsWith("# oc-linux-scan\nprintf '::self %s\\n' \"$$\"\n"))
-        assertTrue(LINUX_PROCESS_SCAN_SCRIPT.contains("  p=\${d#/proc/}\n"))
-        assertTrue(LINUX_PROCESS_SCAN_SCRIPT.contains("printf '::p %s\\t%s\\t%s\\n' \"\$p\" \"\$s\" \"\$c\""))
-        assertTrue(LINUX_PROCESS_SCAN_SCRIPT.endsWith("done\nexit 0\n"))
+    fun `B-LINUX-084 the scan script is the Flutter script plus the working folder column`() {
+        // lib/builtin/linux_manager/linux_processes.dart linuxProcessScanScript at the 2.1.4+62 release.
+        val flutter = $$"""# oc-linux-scan
+printf '::self %s\n' "$$"
+printf '::uptime %s\n' "$(cut -d ' ' -f1 /proc/uptime)"
+for d in /proc/[0-9]*; do
+  p=${d#/proc/}
+  s=
+  IFS= read -r s 2>/dev/null < "$d/stat" || continue
+  c=$(tr '\000' ' ' 2>/dev/null < "$d/cmdline" | head -c 600)
+  printf '::p %s\t%s\t%s\n' "$p" "$s" "$c"
+done
+exit 0
+"""
+        // Native adds a fourth column, the process's working folder, which detected dev servers use to match a
+        // program to its project (DetectedDevServers). Tabs and newlines in the command line become spaces so that
+        // column can't shift; nothing else differs from the Flutter script.
+        val native =
+            flutter
+                .replace(
+                    $$"""c=$(tr '\000' ' ' 2>/dev/null""",
+                    $$"""c=$(tr '\000\t\n' '   ' 2>/dev/null""",
+                )
+                .replace(
+                    $$"""printf '::p %s\t%s\t%s\n' "$p" "$s" "$c"""" + "\n",
+                    $$"""printf '::p %s\t%s\t%s\t%s\n' "$p" "$s" "$c" """ +
+                        $$""""$(readlink "$d/cwd" 2>/dev/null | tr -d '\n' | tr '\t' ' ')"""" + "\n",
+                )
+        assertNotEquals(flutter, native)
+        assertEquals(native, LINUX_PROCESS_SCAN_SCRIPT)
     }
 }
