@@ -244,13 +244,16 @@ can ship as patches. There are two ways to make one:
   `shorebird release android --build-name x.y.z --build-number N
   --flutter-version 3.47.1 --artifact apk`, with the same version derivation as
   `scripts/release.sh`. It signs with the `RELEASE_*` keystore secrets, checks
-  the APK signer, package and version, and stages a draft GitHub release. The
-  draft notes record `Shorebird release <version>, Flutter 3.47.1 (Shorebird
-  engine)`. Only a tag run uploads to Shorebird. A manual dispatch on a branch
-  builds with `--dry-run` and uploads nothing. `./scripts/release.sh github`
-  will not publish that draft unless the build run ran on the candidate tag and
-  its `Build and upload Shorebird release APK` step succeeded. It also refuses
-  a plain `flutter build apk` or a dry-run build.
+  the APK signer, package and version, and publishes a GitHub **pre-release**
+  (never "latest"). The notes record `Shorebird release <version>, Flutter
+  3.47.1 (Shorebird engine)`. Only a tag run uploads to Shorebird. A manual
+  dispatch on a branch builds with `--dry-run` and uploads nothing.
+  `./scripts/release.sh github` (verify only) proves the pre-release came from
+  a run on the candidate tag whose `Build and upload Shorebird release APK`
+  step succeeded, and refuses a plain `flutter build apk` or a dry-run build.
+- **Promotion** (E02-S90): after 1–2 quiet days,
+  `./scripts/release.sh promote v<x.y.z+N>` re-verifies SHA256SUMS and the
+  signer (dry-run); add `--publish` to make it non-pre-release and latest.
 - **Local sideload**: `./scripts/release.sh sideload --publish`.
 
 Shorebird accepts each version once. Once a tag run's Shorebird step has

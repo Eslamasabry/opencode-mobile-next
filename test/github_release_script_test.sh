@@ -90,7 +90,9 @@ def release():
         assets.append(dict(id=3, name='unverified.apk'))
     if flag('MOCK_DUPLICATE_ASSET'):
         assets.append(dict(id=4, name='opencode-mobile-1.0.43+49.apk'))
-    return dict(id=int(os.getenv('MOCK_PAYLOAD_ID', '1')), tag_name=os.getenv('MOCK_RELEASE_TAG', 'v1.0.43+49'), assets=assets, draft=not ((root/'published').exists() or flag('MOCK_PUBLISHED')), prerelease=flag('MOCK_PRERELEASE'), body='wrong notes' if flag('MOCK_NOTES') else notes)
+    # CI publishes a pre-release; MOCK_DRAFT is a hand-made draft and
+    # MOCK_PUBLISHED one that was already promoted.
+    return dict(id=int(os.getenv('MOCK_PAYLOAD_ID', '1')), tag_name=os.getenv('MOCK_RELEASE_TAG', 'v1.0.43+49'), assets=assets, draft=flag('MOCK_DRAFT'), prerelease=not flag('MOCK_PUBLISHED'), body='wrong notes' if flag('MOCK_NOTES') else notes)
 def quality_jobs():
     """Jobs of one android-quality run; MOCK_JOBS selects a broken variant."""
     import re
@@ -130,7 +132,7 @@ def release_jobs():
     secrets = 'Require the release signing and Shorebird secrets'
     upload = 'Build and upload Shorebird release APK'
     dry_run = 'Build Shorebird dry-run APK (nothing uploaded)'
-    tail = ['Verify APK signer and version', 'Prepare stable release notes', 'Upload signed APK', 'Create draft stable GitHub release']
+    tail = ['Verify APK signer and version', 'Prepare stable release notes', 'Upload signed APK', 'Publish GitHub pre-release']
     steps = {
         'shorebird': [(secrets, 'success'), (upload, 'success'), (dry_run, 'skipped')] + [(name, 'success') for name in tail],
         # The pre-Shorebird workflow: an unpatchable plain `flutter build apk`.
@@ -172,7 +174,8 @@ if args[0] == 'api':
             data['id'] = 2
         print(json.dumps(data))
     elif path.endswith('/releases/latest'):
-        print(json.dumps(release()))
+        latest = dict(id=7, tag_name=os.getenv('MOCK_LATEST_TAG', 'v1.0.42+47'))
+        print(latest['tag_name'] if '--jq' in args else json.dumps(latest))
     else:
         raise RuntimeError(path)
 elif args[:2] in (['run', 'download'], ['release', 'download']):
@@ -195,9 +198,14 @@ elif args[:2] in (['run', 'download'], ['release', 'download']):
         sums = ['0'*64+'  opencode-mobile-1.0.43+49.apk' if line.endswith('  opencode-mobile-1.0.43+49.apk') else line for line in sums]
         (target/'SHA256SUMS').write_text('\n'.join(sums)+'\n')
 elif args[:2] == ['release', 'view']:
+    fields = args[args.index('--json')+1]
+    if fields == 'isDraft,isPrerelease':
+        # The workflow's check after publishing.
+        print(json.dumps(dict(isDraft=False, isPrerelease=not flag('MOCK_STAGED_STABLE'))))
+        raise SystemExit(0)
     if flag('MOCK_RELEASE_ABSENT'):
         raise SystemExit(1)
-    if args[args.index('--json')+1] == 'databaseId':
+    if fields == 'databaseId':
         assert args[2] == 'v1.0.43+49'
         assert args[args.index('--repo')+1] == 'Eslamasabry/opencode-mobile-next'
         assert args[args.index('--jq')+1] == '.databaseId'
@@ -205,14 +213,17 @@ elif args[:2] == ['release', 'view']:
     else:
         print(json.dumps(dict(isDraft=not flag('MOCK_PUBLISHED'))))
 elif args[:2] == ['release', 'edit']:
+    # Nothing in this contract may make a release latest: only promote does.
+    assert '--latest' not in args and '--prerelease=false' not in args
     if '--draft=false' in args:
-        assert all(value in args for value in ['--prerelease=false', '--latest'])
+        assert all(value in args for value in ['--prerelease', '--latest=false'])
         (root/'published').touch()
     else:
-        assert all(value in args for value in ['--draft', '--prerelease=false'])
+        assert all(value in args for value in ['--draft', '--prerelease'])
         (root/'draft-touched').touch()
 elif args[:2] == ['release', 'create']:
-    assert all(value in args for value in ['--verify-tag', '--draft', '--prerelease=false'])
+    assert all(value in args for value in ['--verify-tag', '--prerelease', '--latest=false'])
+    assert '--draft' not in args and '--prerelease=false' not in args
     (root/'draft-touched').touch()
 elif args[:2] == ['release', 'upload']:
     (root/'draft-touched').touch()
@@ -266,81 +277,90 @@ run_case_body() {
     echo "FAIL: case $case_number expected $expected, exit $result" >&2
     exit 1
   fi
-  if [[ "$expected" == pass && "$mode" == publish ]]; then
-    [[ -f "$task_root/published" ]] || { echo 'Publication did not occur'; exit 1; }
-    [[ "$(cat "$task_root/release-fetch-count")" == 3 ]] || { echo 'Release ID was not rechecked through publication'; exit 1; }
-    [[ "$(grep -c -- '--json databaseId' "$task_root/commands.log")" == 1 ]] || { echo 'Release ID was resolved more than once'; exit 1; }
-  else
-    [[ ! -f "$task_root/published" ]] || { echo 'Unexpected publication'; exit 1; }
+  # github only verifies; promotion is release.sh promote's job.
+  [[ ! -f "$task_root/published" ]] || { echo 'Unexpected publication'; exit 1; }
+  if grep -q '^release edit' "$task_root/commands.log"; then
+    echo 'github changed the release'; exit 1
+  fi
+  if [[ "$mode" == publish ]]; then
+    grep -q 'promote v1.0.43+49 --publish' "$task_root/result.log" || {
+      cat "$task_root/result.log"; echo 'github --publish did not point at promote'; exit 1; }
   fi
   if grep -q '/releases/tags/' "$task_root/commands.log"; then
     echo 'Draft lookup used the published-only tag endpoint'; exit 1
   fi
 }
-# Both success cases run against a mock whose by-tag release endpoint is 404.
+# The success case runs against a mock whose by-tag release endpoint is 404.
 run_case pass dry
-run_case pass publish
-run_case fail publish MOCK_BRANCH=dev
-run_case fail publish MOCK_DIRTY=' M pubspec.yaml'
-run_case fail publish MOCK_COUNTS='1 0'
-run_case fail publish MOCK_REMOTE=https://github.com/Eslamasabry/opencode-mobile.git
-run_case fail publish MOCK_TAG_MISSING=true
-run_case fail publish MOCK_TAG_HEAD=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
-run_case fail publish MOCK_CI_HEAD=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
-run_case fail publish MOCK_CI_FAILED=true
+# github never publishes any more: CI publishes a pre-release and
+# `release.sh promote` makes it latest (tool/release/test_release_promote.py).
+run_case fail publish
+run_case fail dry MOCK_BRANCH=dev
+run_case fail dry MOCK_DIRTY=' M pubspec.yaml'
+run_case fail dry MOCK_COUNTS='1 0'
+run_case fail dry MOCK_REMOTE=https://github.com/Eslamasabry/opencode-mobile.git
+run_case fail dry MOCK_TAG_MISSING=true
+run_case fail dry MOCK_TAG_HEAD=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+run_case fail dry MOCK_CI_HEAD=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+run_case fail dry MOCK_CI_FAILED=true
 # Release evidence: the APK must come from an uploaded Shorebird release built
 # on the candidate tag, never a plain flutter build or a dry-run.
 for variant in flutter-build dry-run mixed upload-skipped missing duplicate; do
-  run_case fail publish MOCK_BUILD_JOBS="$variant"
+  run_case fail dry MOCK_BUILD_JOBS="$variant"
 done
-run_case fail publish MOCK_BUILD_REF=master
-run_case fail publish MOCK_BUILD_REF=v1.0.42+47
-run_case fail publish MOCK_NO_PROVENANCE=true
+run_case fail dry MOCK_BUILD_REF=master
+run_case fail dry MOCK_BUILD_REF=v1.0.42+47
+run_case fail dry MOCK_NO_PROVENANCE=true
 # Quality evidence: one run whose checks, build, gate and every test shard of
 # the workflow passed. The old single-job shape and partial runs are refused.
 for variant in apk-only legacy shard-missing shard-failed shard-test-skipped \
   fewer-shards duplicate-shard lint-skipped build-unverified gate-failed \
   gate-missing truncated; do
-  run_case fail publish MOCK_JOBS="$variant"
+  run_case fail dry MOCK_JOBS="$variant"
 done
-run_case fail publish MOCK_PUBLISHED=true
-run_case fail publish MOCK_PRERELEASE=true
-run_case fail publish MOCK_NOTES=true
-run_case fail publish MOCK_DRAFT_DIFFERENT=true
-run_case fail publish MOCK_BAD_CHECKSUM=true
-run_case fail publish MOCK_UNEXPECTED_APK=true
-run_case fail publish MOCK_DUPLICATE_ASSET=true
-run_case fail publish MOCK_CERT=2D010C2103CB2F78ABAACA690EAD4D45F8003A6C0A02082CD2A2AE62FD18D0EC
-run_case fail publish MOCK_PACKAGE=other.application
-run_case fail publish MOCK_CODE=48
-run_case fail publish OC_RELEASE_BUILD_RUN_ID=
-run_case fail publish MOCK_RELEASE_ID=0
-run_case fail publish MOCK_RELEASE_ID=-1
-run_case fail publish MOCK_RELEASE_ID=null
-run_case fail publish MOCK_RELEASE_ID=1.5
-run_case fail publish MOCK_RELEASE_ID=
-run_case fail publish MOCK_PAYLOAD_ID=2
-run_case fail publish MOCK_RECHECK_ID_MISMATCH=true
-run_case fail publish MOCK_RELEASE_TAG=v1.0.42+47
-# Execute the actual workflow draft-staging shell with the same no-network gh.
+run_case fail dry MOCK_PUBLISHED=true
+run_case fail dry MOCK_DRAFT=true
+run_case fail dry MOCK_NOTES=true
+run_case fail dry MOCK_DRAFT_DIFFERENT=true
+run_case fail dry MOCK_BAD_CHECKSUM=true
+run_case fail dry MOCK_UNEXPECTED_APK=true
+run_case fail dry MOCK_DUPLICATE_ASSET=true
+run_case fail dry MOCK_CERT=2D010C2103CB2F78ABAACA690EAD4D45F8003A6C0A02082CD2A2AE62FD18D0EC
+run_case fail dry MOCK_PACKAGE=other.application
+run_case fail dry MOCK_CODE=48
+run_case fail dry OC_RELEASE_BUILD_RUN_ID=
+run_case fail dry MOCK_RELEASE_ID=0
+run_case fail dry MOCK_RELEASE_ID=-1
+run_case fail dry MOCK_RELEASE_ID=null
+run_case fail dry MOCK_RELEASE_ID=1.5
+run_case fail dry MOCK_RELEASE_ID=
+run_case fail dry MOCK_PAYLOAD_ID=2
+run_case fail dry MOCK_RELEASE_TAG=v1.0.42+47
+# Execute the actual workflow pre-release publishing shell with the same no-network gh.
 python3 - "$repo_root" "$task_root" <<'PYWORKFLOW'
 from pathlib import Path
 import sys
 source = (Path(sys.argv[1])/'.github/workflows/android-release.yml').read_text()
-body = source.split('      - name: Create draft stable GitHub release\n', 1)[1].split('        run: |\n', 1)[1]
+body = source.split('      - name: Publish GitHub pre-release\n', 1)[1].split('        run: |\n', 1)[1]
 (Path(sys.argv[2])/'stage-draft.sh').write_text('\n'.join(line[10:] if line.startswith('          ') else line for line in body.splitlines())+'\n')
 PYWORKFLOW
 run_draft_case_body() {
   local case_number="$1" expected="$2"
   shift 2
-  rm -f "$task_root/draft-touched"
+  rm -f "$task_root/draft-touched" "$task_root/published"
   local result=0
   env PATH="$task_root/mock-bin:$PATH" MOCK_ROOT="$task_root" \
-    GITHUB_REF_NAME=v1.0.43+49 RUNNER_TEMP="$task_root" "$@" \
+    GITHUB_REF_NAME=v1.0.43+49 GITHUB_REPOSITORY=Eslamasabry/opencode-mobile-next \
+    RUNNER_TEMP="$task_root" "$@" \
     bash "$task_root/stage-draft.sh" > "$task_root/result.log" 2>&1 || result=$?
   if [[ "$expected" == pass ]]; then
     [[ "$result" == 0 && -f "$task_root/draft-touched" ]] || {
-      cat "$task_root/result.log"; echo 'Draft staging failed'; exit 1;
+      cat "$task_root/result.log"; echo 'Pre-release publishing failed'; exit 1;
+    }
+  elif [[ "$expected" == unproven ]]; then
+    # Published, but the outcome check must stop the run.
+    [[ "$result" != 0 ]] || {
+      cat "$task_root/result.log"; echo 'Unproven pre-release passed'; exit 1;
     }
   else
     [[ "$result" != 0 && ! -f "$task_root/draft-touched" ]] || {
@@ -351,6 +371,8 @@ run_draft_case_body() {
 run_draft_case pass
 run_draft_case pass MOCK_RELEASE_ABSENT=true
 run_draft_case fail MOCK_PUBLISHED=true
+run_draft_case unproven MOCK_RELEASE_ABSENT=true MOCK_STAGED_STABLE=true
+run_draft_case unproven MOCK_RELEASE_ABSENT=true MOCK_LATEST_TAG=v1.0.43+49
 wait
 if [[ -e "$cases_root/failed" ]]; then
   echo 'FAIL: a publication contract case failed (output above)' >&2

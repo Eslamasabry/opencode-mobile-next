@@ -440,8 +440,11 @@ void main() {
     expect(wrapper, contains('gradle-9.5.0-all.zip'));
     expect(example, contains('storeFile=/absolute/path/'));
     expect(example, contains('keyAlias=upload'));
-    expect(workflow, contains('Create draft stable GitHub release'));
-    expect(workflow, contains('--draft --prerelease=false'));
+    // E02-S90: CI publishes a pre-release; only `release.sh promote` makes
+    // it latest.
+    expect(workflow, contains('Publish GitHub pre-release'));
+    expect(workflow, contains('--verify-tag --prerelease --latest=false'));
+    expect(workflow, isNot(contains('--prerelease=false')));
     expect(workflow, contains('dist/SHA256SUMS'));
     expect(workflow, contains('Signer SHA-256'));
   });
