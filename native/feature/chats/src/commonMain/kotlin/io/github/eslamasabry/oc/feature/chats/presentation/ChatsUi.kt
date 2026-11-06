@@ -288,6 +288,9 @@ public interface ChatsActions {
 
     public fun openServers() {}
 
+    /** Edit the sign-in (password or token) of the server that is failing to open, inline in its form. */
+    public fun editOpeningServer() {}
+
     public fun openFilterProject() {}
 
     public fun finishFilterProject(directory: String?) {}

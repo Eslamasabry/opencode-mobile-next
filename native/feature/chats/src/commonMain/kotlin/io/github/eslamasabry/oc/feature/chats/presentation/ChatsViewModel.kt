@@ -321,6 +321,12 @@ public class ChatsViewModel(
         viewModelScope.launch { home.retryOpening() }
     }
 
+    override fun editOpeningServer() {
+        val profile = state.value.home.opening?.profile ?: return
+        sheet.value = null
+        nav.open(ServersRoute.Edit(profile))
+    }
+
     override fun openServers() {
         sheet.value = null
         nav.open(ServersRoute.Home)
