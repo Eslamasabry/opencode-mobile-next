@@ -21,15 +21,13 @@ public fun KitComposerFieldRow(
     tail: (@Composable () -> Unit)? = null,
     field: @Composable () -> Unit,
 ) {
-    if (tail == null) {
-        Box(modifier.fillMaxWidth()) { field() }
-        return
-    }
+    // One shape with or without the control: the first typed letter brings the quiet mic, and a field that moved
+    // from a Box into a Row was rebuilt, lost focus and sent the next letters to the page (focus jumped to Back).
     Row(
         modifier.fillMaxWidth().heightIn(min = LocalKitTokens.current.minTarget.dp),
         verticalAlignment = Alignment.Bottom,
     ) {
         Box(Modifier.weight(1f)) { field() }
-        tail()
+        tail?.invoke()
     }
 }
