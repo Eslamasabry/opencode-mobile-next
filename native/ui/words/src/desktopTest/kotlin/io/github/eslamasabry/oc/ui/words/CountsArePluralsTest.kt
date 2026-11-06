@@ -130,13 +130,12 @@ class CountsArePluralsTest {
         "secHistoryEntry" to NAME, "setupNativeSourceOrder" to NAME, "teamChatWorkerNumbered" to NAME,
         "teamProjectPlanFor" to NAME, "teamProjectPlanPhase" to NAME, "teamProjectPromoteAccepted" to NAME,
         "teamProjectPromoteMilestone" to NAME, "toolCardExitFailed" to NAME, "workExitCode" to NAME,
-        // label: value (17)
+        // label: value (15)
         "activeContextAllCount" to LABEL, "activeContextTypeCount" to LABEL, "agentToolsAlreadyImported" to LABEL,
         "agentToolsMonitorCount" to LABEL, "kitQueuedTitle" to LABEL, "linuxLifetimeExit" to LABEL,
         "linuxLifetimeRestarts" to LABEL, "linuxPortOwnerResult" to LABEL, "modelPickerAllModels" to LABEL,
         "monitor40QuestionCount" to LABEL, "monitorNativePending" to LABEL, "monitorNativeRunning" to LABEL,
-        "navProjectChangesCount" to LABEL, "servicesExit" to LABEL, "teamProjectGoalStatus" to LABEL,
-        "teamProjectGoalStatusDraft" to LABEL, "terminal40Details" to LABEL,
+        "navProjectChangesCount" to LABEL, "servicesExit" to LABEL, "terminal40Details" to LABEL,
         // no noun to agree with (48)
         "agentElsewhereCounts" to NO_NOUN, "agentProjectLineChanges" to NO_NOUN, "chatsFilterRunningCount" to NO_NOUN,
         "chatsReturnBriefMore" to NO_NOUN, "e7SharedDetail726" to NO_NOUN, "e7SharedDetail754" to NO_NOUN,
