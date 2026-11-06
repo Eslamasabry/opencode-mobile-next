@@ -90,10 +90,7 @@ public class SchedulesViewModel(
                     nextRunAtMs = schedule.nextRunAtMs,
                     enabled = schedule.enabled,
                     continuesConversation = schedule.sessionId != null,
-                    last =
-                        last?.let {
-                            LastRunUi(it.status, it.errorCode, it.finishedAtMs ?: it.startedAtMs, it.sessionId, it.late)
-                        },
+                    last = last?.toLastRunUi(),
                 )
             }
         return SchedulesUi(

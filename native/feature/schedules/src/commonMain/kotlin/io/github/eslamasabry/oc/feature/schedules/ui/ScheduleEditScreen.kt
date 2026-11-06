@@ -231,6 +231,16 @@ private fun EditorForm(state: ScheduleEditUi, draft: EditorDraft, words: Schedul
             enabled = enabled.isEnabled,
             disabledReason = enabled.reason,
         )
+        // B-NAV-055 (Flutter schedule_sheet.dart `schedule-last-run`): what the last run did, and
+        // for a failure what happened and what to do next.
+        state.lastRun?.let { run ->
+            KitRow(
+                title = lastLine(run, state.nowMs, words),
+                leading = KitRowLeading.Glyph(KitIcons.clock),
+                supporting = run.errorCode?.let(words::why),
+                supportingMaxLines = 3,
+            )
+        }
         Spacer(Modifier.height(Space.S3.dp))
         KitText(
             stringResource(Res.string.scheduleClosedNote),

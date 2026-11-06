@@ -7,6 +7,7 @@ import io.github.eslamasabry.oc.engine.schedules.Recurrence
 import io.github.eslamasabry.oc.engine.schedules.RecurrenceKind
 import io.github.eslamasabry.oc.engine.schedules.RunStatus
 import io.github.eslamasabry.oc.engine.schedules.ScheduleCode
+import io.github.eslamasabry.oc.engine.schedules.ScheduledRun
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -71,6 +72,10 @@ public data class LastRunUi(
     val sessionId: String?,
     val late: Boolean,
 )
+
+/** A run as its row and the editor's last-run line read it. */
+internal fun ScheduledRun.toLastRunUi(): LastRunUi =
+    LastRunUi(status, errorCode, finishedAtMs ?: startedAtMs, sessionId, late)
 
 public data class ScheduleRowUi(
     val id: String,
@@ -168,6 +173,8 @@ public data class ScheduleEditUi(
     val error: ScheduleCode? = null,
     val saving: Boolean = false,
     val nowMs: Long = 0,
+    /** B-NAV-055: the schedule's last run, with what happened (Flutter schedule_sheet's last-run row). */
+    val lastRun: LastRunUi? = null,
 )
 
 public interface ScheduleEditActions {

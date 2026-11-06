@@ -146,10 +146,10 @@ public class ScheduleEditViewModel(
         }
         val models = servers.models(route.profileId)
         engine.load(profile)
-        val existing =
-            route.scheduleId?.let { id ->
-                engine.state(profile).value.schedules.firstOrNull { it.id == id }
-            }
+        val loaded = engine.state(profile).value
+        val existing = route.scheduleId?.let { id -> loaded.schedules.firstOrNull { it.id == id } }
+        // Runs are newest first, as the list reads them.
+        val lastRun = existing?.let { e -> loaded.runs.firstOrNull { it.scheduleId == e.id } }
         val fields =
             if (existing != null) {
                 editing = existing
@@ -197,6 +197,7 @@ public class ScheduleEditViewModel(
                 continuesConversation = sessionId != null,
                 canChooseConversation = sessionId != null,
                 conversationTitle = title,
+                lastRun = lastRun?.toLastRunUi(),
             )
         }
     }
