@@ -26,11 +26,12 @@ how the native app reads it. Story E00-S01.
 storage files, and the image-picker cache. A key that native names but does not adopt (the `pausedByUser` tile flag
 lives under a new native key) is `MISSING` with a note.
 
-## Gaps this ledger records (`MISSING`, 22 rows)
+## Gaps this ledger records (`MISSING`, 21 rows)
 
 - Audit 2026-11-06: `oc.chatTail.`, `oc.lastProject.`, `oc.chatNoticesSeen.`, `oc.withdrawnPrompts.`,
   `oc.providerRuntimeRefresh.v1.`, `oc.providerRuntimeUnloadable.`, `oc.scheduleReceipts.`,
-  `local_agents_offer_skipped` (also missing from plan 05 Appendix A and from `FlutterKey`),
+  `local_agents_offer_skipped` (now READ by `:feature:onboarding` `LocalAgentsOffer` and in Appendix A.3, E00-S06;
+  still missing from `FlutterKey`),
   `oc_background_native` / `pausedByUser`, `camera_permissions` / `camera_requested`, `voice_permissions` /
   `microphone_requested`, `files/termux-setup-v2.json`, `TermuxResultService` (and its `oc.executionId` and
   `oc.setupToken` extras).

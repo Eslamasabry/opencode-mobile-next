@@ -2182,6 +2182,7 @@ transaction; `other` = see note. "secret" rows are secure-storage names the ledg
 | `voice.auto_send` | B | app | `:engine:media` | A | default false |
 | `voice.read_aloud_natural` | B | app | `:engine:media` | A | default false |
 | `desktop_window_state_v1` | S | app | desktop phase | N | Linux/Windows/macOS Flutter builds only |
+| `local_agents_offer_skipped` | B | app | `:feature:onboarding` | A | Dart `localAgentOfferSkippedKey`, set true on the local agents offer's Not now; `LocalAgentsOffer` reads it so the offer stays hidden after the update (E00-S06; added 2026-11-06 store audit) |
 
 ### A.4 New native keys **[new]**
 
