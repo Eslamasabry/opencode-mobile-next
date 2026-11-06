@@ -21,11 +21,14 @@ class ConfirmLayoutTest {
         var kept = 0
         setContent {
             KitTheme(platform = DesktopKitPlatform(), localeTag = "en", appearance = KitAppearance(motion = MotionLevel.Off)) {
-                KitSheetHost {
-                    KitConfirm(
-                        KitConfirmSpec("Discard your note changes?", "Discard changes", KitConfirmKind.Discard, body = "Your edits will be lost."),
-                        { discarded++ }, { kept++ },
-                    )
+                // The default test window is 1024 dp wide (an expanded window); pin the phone rail this row is about.
+                CompositionLocalProvider(LocalKitWindow provides KitWindowInfo.Phone) {
+                    KitSheetHost {
+                        KitConfirm(
+                            KitConfirmSpec("Discard your note changes?", "Discard changes", KitConfirmKind.Discard, body = "Your edits will be lost."),
+                            { discarded++ }, { kept++ },
+                        )
+                    }
                 }
             }
         }
