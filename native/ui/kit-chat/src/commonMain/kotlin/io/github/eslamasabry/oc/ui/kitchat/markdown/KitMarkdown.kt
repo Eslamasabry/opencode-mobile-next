@@ -672,7 +672,14 @@ private fun MdText(
         if (revealing) Modifier.kitFreshFade({ holder.layout }, state) else Modifier
     if (caret) {
         val colors = LocalKitColors.current
-        textModifier = textModifier.kitStreamCaret({ holder.layout }, { visible.length }, colors)
+        // The caret follows the words as they fade in, not the laid-out end ahead of them.
+        val revealState = state.takeIf { revealing }
+        textModifier =
+            textModifier.kitStreamCaret(
+                { holder.layout },
+                { revealState?.caretAt(visible.length) ?: visible.length },
+                colors,
+            )
     }
     val codeRuns = remember(visible) { visible.getStringAnnotations(KIT_MD_CODE_TAG, 0, visible.length) }
     if (codeRuns.isNotEmpty()) {

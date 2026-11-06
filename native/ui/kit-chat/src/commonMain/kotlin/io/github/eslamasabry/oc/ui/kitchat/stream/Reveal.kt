@@ -72,6 +72,18 @@ internal constructor(initialShown: Int, private val predecessor: RevealState?) {
     public val active: Boolean
         get() = shown < targetLength || runs.isNotEmpty()
 
+    /**
+     * Where the stream caret stands: after the words a reader can see, never ahead of words still fading in. A run
+     * past half of its fade counts as seen. Read in the draw phase only (it reads the frame clock).
+     */
+    internal fun caretAt(laidOut: Int): Int {
+        val now = frameNanos
+        for (r in runs) {
+            if (now - r.bornNanos < RevealPace.FADE_NS / 2) return r.start.coerceIn(0, laidOut)
+        }
+        return laidOut
+    }
+
     /** Words never appear out of order: a block waits for the block before it in the same part. */
     internal val predecessorDone: Boolean
         get() = predecessor?.let { it.shown >= it.targetLength } ?: true
