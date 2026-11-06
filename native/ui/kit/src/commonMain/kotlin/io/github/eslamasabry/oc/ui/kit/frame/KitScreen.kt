@@ -462,14 +462,14 @@ private fun Panes(
 @Composable
 private fun Modifier.kitChromeGround(role: FrostRole, frost: KitFrostState?): Modifier {
     val ground = LocalKitColors.current.ground
+    val glass =
+        io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle.current.style ==
+            io.github.eslamasabry.oc.ui.design.style.Style.Glass
+    // The words scrolling under the chrome fade into its ground over a short reach instead of being cut at a hard
+    // line: above the composer, and below the chat header. Glass draws its own frosted edge.
     val fade =
-        if (
-            role != FrostRole.Composer ||
-                io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle.current.style ==
-                    io.github.eslamasabry.oc.ui.design.style.Style.Glass
-        )
-            Modifier
-        else
+        if (glass) Modifier
+        else if (role == FrostRole.Composer)
             Modifier.drawBehind {
                 val reach = 16.dp.toPx()
                 drawRect(
@@ -483,5 +483,20 @@ private fun Modifier.kitChromeGround(role: FrostRole, frost: KitFrostState?): Mo
                     size = androidx.compose.ui.geometry.Size(size.width, reach),
                 )
             }
+        else if (role == FrostRole.ChatHeader)
+            Modifier.drawBehind {
+                val reach = 12.dp.toPx()
+                drawRect(
+                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                        0f to ground,
+                        1f to ground.copy(alpha = 0f),
+                        startY = size.height,
+                        endY = size.height + reach,
+                    ),
+                    topLeft = androidx.compose.ui.geometry.Offset(0f, size.height),
+                    size = androidx.compose.ui.geometry.Size(size.width, reach),
+                )
+            }
+        else Modifier
     return then(fade).then(if (frost != null) Modifier.kitFrost(role, frost) else Modifier.background(ground))
 }
