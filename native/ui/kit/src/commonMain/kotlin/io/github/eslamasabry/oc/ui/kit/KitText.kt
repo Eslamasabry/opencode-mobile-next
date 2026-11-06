@@ -57,6 +57,9 @@ public fun KitText(
         else -> CapAlign.Start
     }
     val modifier = modifier.kitMaxWidth(CapRole.Reading, align)
+    // A title cut to a few lines must end in "…": the layout marks a cut only inside a line, never at a hard line
+    // break, so a cut title's line breaks read as spaces.
+    val text = if (maxLines != Int.MAX_VALUE && role in TITLE_ROLES) kitTitleLine(text) else text
     val style =
         base.copy(
             color = LocalKitColors.current.tone(tone),
@@ -85,6 +88,15 @@ public fun KitText(
         BasicText(text, modifier, style = sized, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
     }
 }
+
+private val TITLE_ROLES = setOf(TypeRole.LargeTitle, TypeRole.Title, TypeRole.Headline, TypeRole.RowTitle)
+
+private val LINE_BREAKS = Regex("\\s*[\\r\\n\\u2028\\u2029]+\\s*")
+
+/** [text] as one paragraph: each run of line breaks (and the spaces around it) becomes one space. */
+public fun kitTitleLine(text: String): String =
+    if (text.none { it == '\n' || it == '\r' || it == '\u2028' || it == '\u2029' }) text
+    else text.replace(LINE_BREAKS, " ").trim()
 
 /** The tone a role takes when none is given: secondary for [TypeRole.Secondary], [TypeRole.Label] and [TypeRole.Caption] (Dart `KitText.defaultTone`). */
 public fun defaultTone(role: TypeRole): TextTone =
