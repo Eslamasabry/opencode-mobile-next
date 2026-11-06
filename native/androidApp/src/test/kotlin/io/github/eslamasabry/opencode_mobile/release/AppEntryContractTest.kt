@@ -73,8 +73,11 @@ class AppEntryContractTest {
         assertEquals(
             setOf(
                 ".MainActivity",
+                ".IdleStartActivity",
+                ".ManageSpaceActivity",
                 ".WidgetRouteActivity",
                 ".WidgetOverlayActivity",
+                ".WidgetConfigureActivity",
                 "io.github.eslamasabry.opencode_mobile.graph.ScheduleOpenActivity",
             ),
             names,
@@ -86,7 +89,12 @@ class AppEntryContractTest {
         assertTrue(main.contains("setContent {"))
         assertTrue(!main.contains("setContentView("), "a plain View root would bring the platform highlight back")
         // The notification trampoline shows nothing: translucent, no history, no content, finishes in onCreate.
-        val trampoline = activities.single { it.second.getAttributeNS(ns, "name").endsWith("ScheduleOpenActivity") }.second
+        // :android:schedules declares it; the app manifest only swaps its theme (tools:replace), so read the library's.
+        val trampoline =
+            activities.single {
+                it.second.getAttributeNS(ns, "name").endsWith("ScheduleOpenActivity") &&
+                    "android/schedules" in it.first.invariantSeparatorsPath
+            }.second
         assertEquals("@android:style/Theme.Translucent.NoTitleBar", trampoline.getAttributeNS(ns, "theme"))
         assertEquals("true", trampoline.getAttributeNS(ns, "noHistory"))
         val schedules = RepoFiles.text("androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/SchedulesWiring.kt")
@@ -103,6 +111,21 @@ class AppEntryContractTest {
         val overlay = RepoFiles.text("androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/WidgetOverlayActivity.kt")
         assertTrue(overlay.contains("class WidgetOverlayActivity : ComponentActivity()"))
         assertTrue(overlay.contains("setContent {") && !overlay.contains("setContentView("))
+        // The widget configure window is the overlay (a Compose host).
+        assertTrue(overlay.contains("class WidgetConfigureActivity : WidgetOverlayActivity()"))
+        // Storage settings' "Manage space" page is a Compose host.
+        val space = RepoFiles.text("androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/ManageSpaceActivity.kt")
+        assertTrue(space.contains("class ManageSpaceActivity : ComponentActivity()"))
+        assertTrue(space.contains("setContent {") && !space.contains("setContentView("))
+        // The idle-start trampoline shows nothing: no content, finishes, and its theme turns the highlight off.
+        val idle = activities.single { it.second.getAttributeNS(ns, "name") == ".IdleStartActivity" }.second
+        assertEquals("@style/NativeTrampolineTheme", idle.getAttributeNS(ns, "theme"))
+        assertEquals("true", idle.getAttributeNS(ns, "noHistory"))
+        val idleSource = RepoFiles.text("androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/IdleStartActivity.kt")
+        assertTrue(idleSource.contains("finish()"))
+        assertTrue(!idleSource.contains("setContent") && !idleSource.contains("setContentView"))
+        val styles = RepoFiles.text("androidApp/src/main/res/values/styles.xml")
+        assertTrue(styles.contains("<item name=\"android:defaultFocusHighlightEnabled\">false</item>"))
     }
 
     @Test

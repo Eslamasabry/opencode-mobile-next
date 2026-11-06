@@ -18,7 +18,13 @@ class ReleaseBlockersTest {
     fun `B-ANDR-068 cleartext - the platform policy is open on purpose and code decides, with no private address pinned`() {
         // Android cannot express 100.64.0.0/10, so (as in the Flutter app's network config) the platform policy is
         // open and the address rule in code asks before any plain-HTTP server that is not this phone.
-        assertTrue(manifest.contains("android:usesCleartextTraffic=\"true\""))
+        // As Flutter's release_blockers_test.dart ("Android cleartext and launch resources are release-safe"): the
+        // manifest attribute is false and the network config's base-config opens it, documented there.
+        assertTrue(manifest.contains("android:usesCleartextTraffic=\"false\""))
+        assertTrue(manifest.contains("@xml/network_security_config"))
+        val network = RepoFiles.text("androidApp/src/main/res/xml/network_security_config.xml")
+        assertTrue(network.contains("<base-config cleartextTrafficPermitted=\"true\""))
+        assertFalse(network.contains(listOf(192, 168).joinToString(".") + "."))
         assertTrue(AddressRules.needsCleartextConsent(ServerOrigin("http", listOf(100, 101, 102, 103).joinToString("."), 8373)))
         assertTrue(AddressRules.needsCleartextConsent(ServerOrigin("http", listOf(192, 168, 1, 20).joinToString("."), 4096)))
         assertFalse(AddressRules.needsCleartextConsent(ServerOrigin("http", "127.0.0.1", 4096)))

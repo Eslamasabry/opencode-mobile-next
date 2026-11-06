@@ -46,6 +46,9 @@ class StashDeletionCleanerTest {
         prefs.refuse = true
         assertIs<Outcome.Failed>(StashDeletionCleaner(shelf).clear(ProfileId("p1"), DeletionOptions()))
         prefs.refuse = false
+        // The deletion closed the shelf's admission; a failed deletion reopens it through the profile closer
+        // (ProfileCloser.reopen, called by the deletion coordinator), so the kept server saves prompts again.
+        StashDeletionCloser(shelf).reopen(ProfileId("p1"))
         assertIs<Outcome.Ok<Unit>>(shelf.stash("p1", StashedPrompt(id = "2", text = "still usable", createdAt = 2)))
     }
 }
