@@ -5,7 +5,7 @@
 # OpenCode Mobile
 
 **Coding agents on your Android phone.**
-Ten agents, including Claude Code, Codex, Gemini CLI, Qwen Code, Kilo, Cline, Goose and OpenCode, in a Linux the app installs itself.
+Ten agents, including Claude Code, Codex, Antigravity, Qwen Code, Kilo, Cline, Goose and OpenCode, in a Linux the app installs itself.
 No computer, no Termux. Or connect to the agent on your computer.
 
 [![Latest release](https://img.shields.io/github/v/release/Eslamasabry/opencode-mobile-next?label=release&color=55D187)](https://github.com/Eslamasabry/opencode-mobile-next/releases/latest)
@@ -16,7 +16,7 @@ No computer, no Termux. Or connect to the agent on your computer.
 **[Download for Android](https://github.com/Eslamasabry/opencode-mobile-next/releases/latest)**
 &nbsp;·&nbsp; [Website](https://eslamasabry.github.io/opencode-mobile-next/)
 &nbsp;·&nbsp; [Get it on Obtainium](https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/Eslamasabry/opencode-mobile-next)
-&nbsp;·&nbsp; [What's new in 2.0](docs/releases/v2.0.0+56.md)
+&nbsp;·&nbsp; [What's new](CHANGELOG.md)
 
 <a href="https://eslamasabry.github.io/opencode-mobile-next/assets/video/launch-720.mp4">
   <img src="docs/demo.gif" alt="Demo, first seconds: a neon brick-breaker game is built from one prompt and played in the app's preview. Select it to watch the full video." width="240">
@@ -40,8 +40,8 @@ AndCode facts come from its public README, checked 2026-10-31; the Termux column
 
 | | OpenCode Mobile | Termux + an agent CLI | [AndCode](https://github.com/yuga-hashimoto/and-code) |
 | --- | --- | --- | --- |
-| What it is | Android app with chat, diff, terminal and widgets | Terminal emulator and Linux environment; the agent is a command-line tool you install | Android GUI app for coding agents |
-| Agents on the phone | Ten: Claude Code, Codex, Gemini CLI, Qwen Code, Kilo, Cline, Goose, Oh My Pi, fx, OpenCode | Whichever agent CLI you install and can run | OpenCode, Claude Code, Google Antigravity, Codex |
+| What it is | Android app with chat, diff, Git, terminal and widgets | Terminal emulator and Linux environment; the agent is a command-line tool you install | Android GUI app for coding agents |
+| Agents on the phone | Ten: Claude Code, Codex, Antigravity, Qwen Code, Kilo, Cline, Goose, Oh My Pi, fx, OpenCode | Whichever agent CLI you install and can run | OpenCode, Claude Code, Google Antigravity, Codex |
 | Linux setup | Guided in-app install of Ubuntu, Git and Node | By hand, in a terminal | Guided in-app install through PRoot (Alpine; Debian for Antigravity) |
 | Connect to a computer | OpenCode 2, Codex, or Claude Code through Paseo | Over SSH, by hand | Remote OpenCode |
 | Approve a command from a notification or widget | Yes | Depends on the agent CLI | Tool approvals in the app |
@@ -52,14 +52,17 @@ OpenCode Mobile is a younger project and several of its agents are less tested o
 
 ## Highlights
 
-- **Ten agents, one app.** Pick Claude Code, Codex, Gemini CLI, Qwen Code, Kilo, Cline, Goose, Oh My Pi, fx or OpenCode for each conversation. Claude Code and OpenCode are the best proven on a phone; the others are newer. OpenCode's free models work without an API key.
+- **Ten agents, one app.** Pick Claude Code, Codex, Antigravity, Qwen Code, Kilo, Cline, Goose, Oh My Pi, fx or OpenCode for each conversation. Claude Code and OpenCode are the best proven on a phone; the others are newer. OpenCode's free models work without an API key.
 - **Real Linux on the phone.** The app installs its own Ubuntu with Git and Node, runs the agent there, and keeps your projects inside the app. A full terminal is built in.
 - **Approve from anywhere.** Allow or reject a command from the notification, the home-screen widget or the chat, or turn on auto-approve and let it run.
 - **Steer mid-task.** Send a new instruction while the agent works, instead of waiting for it to finish.
 - **See the result.** Open the agent's dev server in the in-app preview, then send a screenshot back into the chat.
 - **Review every line.** A phone-sized diff, change by change, before anything is committed.
+- **Git in the conversation.** Commit, send and pull from the chat. Turn a folder into a repository and publish it to a new GitHub repository without leaving the app.
+- **One Inbox.** Everything that waits on you, in one list.
 - **Scheduled prompts.** Run a prompt at a time you choose, once or repeating, even with the app closed.
-- **Widgets in five sizes.** See what your agents are doing and act on requests from the home screen.
+- **Home-screen widgets.** Conversations and Status widgets show what your agents are doing and let you act on requests.
+- **Make it yours.** Five styles (Solid, Soft, Brutal, Paper and Signal), light and dark.
 - **Private by design.** The app talks only to servers you choose. Voice is transcribed on the phone.
 
 ## Screens
@@ -93,11 +96,10 @@ Coming from Termux? **Move from Termux** copies your projects into the app. More
 | --- | --- |
 | Android | 8 or newer; on-phone agents need a 64-bit phone |
 | OpenCode | OpenCode 2 only; OpenCode 1 is no longer supported |
-| Claude Code, Codex, Gemini CLI, Qwen Code, Kilo, Cline, Goose, Oh My Pi, fx | On the phone, in the built-in Linux (newer ones are less tested on real phones) |
+| Claude Code, Codex, Antigravity, Qwen Code, Kilo, Cline, Goose, Oh My Pi, fx | On the phone, in the built-in Linux (newer ones are less tested on real phones) |
 | Agents on your computer | OpenCode 2, Codex directly, or Claude Code through [Paseo](https://github.com/getpaseo/paseo) |
-| Languages | English and Arabic, with partial Spanish, Japanese, Portuguese, Russian and Chinese |
-| Linux and Windows desktop | Experimental builds |
-| iOS and macOS | Not available |
+| Languages | English, Arabic and Simplified Chinese, with partial Spanish, Japanese, Portuguese and Russian |
+| iOS, macOS, Linux and Windows | Not available; desktop builds were dropped in 2.1.4 |
 
 ## Updating
 
@@ -109,13 +111,17 @@ Android updates an app in place only when the new APK has the same signature. Pu
 
 so each release installs over the previous one and keeps your servers, sign-ins and settings. You can check the installed signer in **Settings → About**. Do not uninstall to fix a failed update: projects on the phone live inside the app and would be deleted.
 
+## Coming next: a native Kotlin app
+
+The app is being rebuilt in native Kotlin, with Kotlin Multiplatform and Jetpack Compose, on the `native/*` branches of this repository. The goal is a faster, more Android-native app: smoother scrolling and motion, lower memory use, and closer use of the phone's own features. It is still in progress and not yet released. Until it has everything the current app has, the Flutter app stays the one you download and update, and it keeps getting fixes.
+
 ## Privacy
 
 The app connects only to the servers you choose. Passwords stay in Android's keystore, voice is transcribed on the device, and diagnostics leave the phone only when you send a report yourself, with secrets removed. See [PRIVACY.md](PRIVACY.md).
 
 ## Development
 
-The app is Flutter with native Android parts in Kotlin. Start with:
+The released app is Flutter with native Android parts in Kotlin; the native Kotlin rewrite is on the `native/*` branches. Start with:
 
 - [docs/technical-overview.md](docs/technical-overview.md): architecture, server protocols, building and releasing
 - [CONTRIBUTING.md](CONTRIBUTING.md): the pinned toolchain, checks and code boundaries
