@@ -7,6 +7,7 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metro.binding
+import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
@@ -31,33 +32,15 @@ import io.github.eslamasabry.oc.feature.computer.ImportItem
 import io.github.eslamasabry.oc.feature.computer.ImportList
 import io.github.eslamasabry.oc.feature.computer.UpdateAnswer
 import io.github.eslamasabry.oc.feature.computer.UpdateStep
-import io.github.eslamasabry.oc.protocol.codex.CodexEndpoint
-import io.github.eslamasabry.oc.protocol.codex.CodexException
-import io.github.eslamasabry.oc.protocol.codex.CodexFailureKind
 import io.github.eslamasabry.oc.protocol.codex.gateway.CodexGatewayFactory
-import io.github.eslamasabry.oc.protocol.codex.transport.CodexSocket
-import io.github.eslamasabry.oc.protocol.codex.transport.CodexSocketFactory
-import io.github.eslamasabry.oc.protocol.codex.transport.CodexTransport
 import io.github.eslamasabry.oc.core.model.HostUpdatePhase
 import io.github.eslamasabry.oc.protocol.paseo.gateway.PaseoGateway
 import io.github.eslamasabry.oc.protocol.paseo.gateway.updateHostDaemon
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.collections.immutable.toImmutableList
-import java.net.Proxy
-import java.util.concurrent.TimeUnit
 import kotlin.time.Clock
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.ReceiveChannel
-import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
-import okhttp3.WebSocket
-import okhttp3.WebSocketListener
-import okio.ByteString
 
 /*
  * Unit BUILD-PROTOCOLS: Android bindings for the Codex app-server backend (:protocol:codex). With this factory in the
@@ -66,110 +49,22 @@ import okio.ByteString
  */
 
 /**
- * The app-server socket on OkHttp (Dart `connectCodexSocket`): redirects off, no proxy, ping every 20 s, a message cap,
- * and the token only as `Authorization: Bearer <secret>` to the host the endpoint rules checked.
- */
-class OkHttpCodexSockets(private val maxMessageBytes: Int = CodexTransport.MAX_FRAME_BYTES) : CodexSocketFactory {
-    private val client =
-        OkHttpClient.Builder()
-            .proxy(Proxy.NO_PROXY)
-            .followRedirects(false)
-            .followSslRedirects(false)
-            .connectTimeout(8, TimeUnit.SECONDS)
-            .readTimeout(0, TimeUnit.SECONDS)
-            .pingInterval(20, TimeUnit.SECONDS)
-            .build()
-
-    override suspend fun open(endpoint: CodexEndpoint, secret: String): CodexSocket {
-        // OkHttp wants http(s) for a websocket request; the upgrade itself keeps the ws/wss meaning.
-        val http = endpoint.url.replaceFirst("wss://", "https://").replaceFirst("ws://", "http://")
-        val url = http.toHttpUrlOrNull()
-        // B-SEC-113: the token goes only to the host the rules checked.
-        if (url == null || url.host.lowercase().trim('[', ']') != endpoint.host.lowercase()) {
-            throw CodexException(CodexFailureKind.InvalidEndpoint)
-        }
-        val request = Request.Builder().url(url).header("Authorization", "Bearer $secret").build()
-        val socket = OkHttpCodexSocket(maxMessageBytes)
-        socket.ws = client.newWebSocket(request, socket.listener)
-        socket.opened.await()
-        return socket
-    }
-}
-
-private class OkHttpCodexSocket(private val maxMessageBytes: Int) : CodexSocket {
-    private val channel = Channel<String>(Channel.UNLIMITED)
-    val opened = CompletableDeferred<Unit>()
-    lateinit var ws: WebSocket
-    override val incoming: ReceiveChannel<String> get() = channel
-
-    val listener =
-        object : WebSocketListener() {
-            override fun onOpen(webSocket: WebSocket, response: Response) {
-                opened.complete(Unit)
-            }
-
-            override fun onMessage(webSocket: WebSocket, text: String) {
-                if (text.length > maxMessageBytes) {
-                    webSocket.close(1009, null)
-                    channel.close()
-                } else {
-                    channel.trySend(text)
-                }
-            }
-
-            // The app-server speaks text frames only; a binary frame is a protocol error.
-            override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
-                webSocket.close(1003, null)
-                channel.close()
-            }
-
-            override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
-                webSocket.close(code, null)
-                channel.close()
-            }
-
-            override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-                channel.close()
-            }
-
-            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-                if (!opened.isCompleted) {
-                    val status = response?.code
-                    val kind =
-                        when {
-                            status == 401 || status == 403 -> CodexFailureKind.Authentication
-                            response != null -> CodexFailureKind.InvalidResponse
-                            else -> CodexFailureKind.Disconnected
-                        }
-                    opened.completeExceptionally(CodexException(kind))
-                }
-                response?.close()
-                channel.close()
-            }
-        }
-
-    override suspend fun send(text: String) {
-        if (!ws.send(text)) throw CodexException(CodexFailureKind.Disconnected)
-    }
-
-    override suspend fun close() {
-        if (!::ws.isInitialized) return
-        if (!ws.close(1000, null)) ws.cancel()
-        channel.close()
-    }
-}
-
-/**
  * The Codex backend for the ConnectionRegistry. A saved Codex profile keeps its project folder in `codexDirectory`
  * (the Flutter format); the gateway is pinned to it unless the restored location names one, so threads from other
- * projects never enter the list (B-AGENT-063).
+ * projects never enter the list (B-AGENT-063). It is the only Codex factory: the Agents hub's add/check
+ * (AgentsWiring) and the server editor's check use this same instance.
  */
 @SingleIn(AppScope::class)
 @Inject
 @ContributesIntoSet(AppScope::class, binding = binding<GatewayFactory>())
-class AppCodexGatewayFactory(dispatchers: AppDispatchers, clock: Clock, private val profiles: ProfileStore) :
-    GatewayFactory {
-    val codex = CodexGatewayFactory(OkHttpCodexSockets(), dispatchers, clock)
+class AppCodexGatewayFactory(
+    dispatchers: AppDispatchers,
+    clock: Clock,
+    appScope: AppCoroutineScope,
+    private val profiles: ProfileStore,
+) : GatewayFactory {
+    /** The one Codex client: chats, the Agents hub, pairing checks and probes all open it. */
+    val codex = CodexGatewayFactory(AndroidCodexSockets(dispatchers, appScope), dispatchers, clock)
 
     override val backend: BackendKind = BackendKind.Codex
 

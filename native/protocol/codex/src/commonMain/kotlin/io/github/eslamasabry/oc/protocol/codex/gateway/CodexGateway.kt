@@ -61,6 +61,7 @@ import io.github.eslamasabry.oc.protocol.codex.codexObject
 import io.github.eslamasabry.oc.protocol.codex.codexString
 import io.github.eslamasabry.oc.protocol.codex.handoff.HandoffMessage
 import io.github.eslamasabry.oc.protocol.codex.handoff.codexHandoffMessages
+import io.github.eslamasabry.oc.protocol.codex.handoff.codexHandoffTranscript
 import io.github.eslamasabry.oc.protocol.codex.jsonOf
 import io.github.eslamasabry.oc.protocol.codex.probe.CodexProbeGateway
 import io.github.eslamasabry.oc.protocol.codex.stringOrNull
@@ -90,6 +91,15 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+
+/**
+ * One immutable persisted read (`thread/read(includeTurns)`) supplying both the conversation's
+ * metadata and its full handoff history, so a review never mixes two reads.
+ */
+public data class CodexHandoffSnapshot(
+    val session: Session,
+    val messages: ImmutableList<MessageWithParts>,
+)
 
 /**
  * The Codex gateway, pinned to app-server 0.153.4 (port of lib/codex/gateway.dart).
@@ -503,6 +513,29 @@ public class CodexGateway(
         if (thread["id"].stringOrNull() != id.raw) codexFail(CodexFailureKind.InvalidResponse)
         codexSession(thread, op.scope)
         codexHandoffMessages(thread)
+    }
+
+    /**
+     * The handoff review's source read: one `thread/read(includeTurns)`, never `thread/resume` or a
+     * subscription, so reviewing a conversation never changes it (B-AGENT-055). The thread must
+     * belong to this folder before any transcript text is mapped; the transcript is the
+     * handoff-only projection ([codexHandoffTranscript]).
+     */
+    public suspend fun handoffSnapshot(id: SessionId): Outcome<CodexHandoffSnapshot> = onLane {
+        codexString(id.raw, max = 256)
+        val op = captureOperation()
+        checkOperation(op)
+        val result =
+            transport.requestInEpoch(
+                "thread/read",
+                jsonOf("threadId" to id.raw, "includeTurns" to true),
+                epoch = op.transportEpoch,
+            )
+        checkOperation(op)
+        val thread = codexObject(result["thread"])
+        if (thread["id"].stringOrNull() != id.raw) codexFail(CodexFailureKind.InvalidResponse)
+        val session = codexSession(thread, op.scope)
+        CodexHandoffSnapshot(session, codexHandoffTranscript(thread))
     }
 
     // ---- prompts, steering and stop

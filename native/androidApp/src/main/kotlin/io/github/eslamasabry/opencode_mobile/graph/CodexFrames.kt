@@ -2,13 +2,12 @@ package io.github.eslamasabry.opencode_mobile.graph
 
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
-import io.github.eslamasabry.oc.core.common.Failure
-import io.github.eslamasabry.oc.core.common.RefusalReason
-import io.github.eslamasabry.oc.core.common.SignInWhy
-import io.github.eslamasabry.oc.protocol.codex.CodexWireException
-import io.github.eslamasabry.oc.protocol.codex.CodexSocket
-import io.github.eslamasabry.oc.protocol.codex.CodexTransport
-import io.github.eslamasabry.oc.protocol.codex.validCodexEndpoint
+import io.github.eslamasabry.oc.protocol.codex.CodexEndpoint
+import io.github.eslamasabry.oc.protocol.codex.CodexException
+import io.github.eslamasabry.oc.protocol.codex.CodexFailureKind
+import io.github.eslamasabry.oc.protocol.codex.CodexProfileRules
+import io.github.eslamasabry.oc.protocol.codex.transport.CodexSocket
+import io.github.eslamasabry.oc.protocol.codex.transport.CodexTransport
 import java.net.Proxy
 import java.net.URI
 import java.nio.ByteBuffer
@@ -44,32 +43,35 @@ import okio.ByteString.Companion.toByteString
 import okio.buffer
 
 /**
- * B-AGENT-062/067: a redirect-free HTTP/1.1 upgrade with no compression, followed by a bounded RFC
- * 6455 reader. OkHttp's standard WebSocket is intentionally not used: it buffers an unbounded
- * message before delivering it.
+ * B-AGENT-062/067: the one Codex app-server socket (every Codex connection, pairing check and
+ * probe). A redirect-free, proxy-free HTTP/1.1 upgrade with no compression, extension or
+ * sub-protocol, the token only as `Authorization: Bearer` to the host the endpoint rules checked,
+ * followed by a bounded RFC 6455 reader. OkHttp's standard WebSocket is intentionally not used: it
+ * buffers a message of up to 16 MiB before delivering it. Errors follow the
+ * [io.github.eslamasabry.oc.protocol.codex.transport.CodexSocketFactory] contract: 401/403 →
+ * Authentication, a bad upgrade → InvalidResponse, anything else → Disconnected.
  */
 internal suspend fun openCodexFrames(
-    endpoint: String,
+    endpoint: CodexEndpoint,
     token: String,
     dispatchers: AppDispatchers,
     appScope: AppCoroutineScope,
 ): CodexSocket =
     withContext(dispatchers.io) {
-        fun invalid(): Nothing = throw CodexWireException(Failure.Refused(RefusalReason.InvalidAddress))
-        if (
-            !validCodexEndpoint(endpoint) ||
-                token.isEmpty() ||
-                token.length > 8192 ||
-                token.any { it.code <= 32 || it.code == 127 }
-        )
-            invalid()
-        val uri = URI(endpoint)
+        fun invalid(): Nothing = throw CodexException(CodexFailureKind.InvalidEndpoint)
+        if (!CodexProfileRules.tokenAcceptable(token)) invalid()
+        val uri = URI(endpoint.url)
         val http =
-            endpoint
+            endpoint.url
                 .replaceFirst("wss://", "https://")
                 .replaceFirst("ws://", "http://")
                 .toHttpUrlOrNull() ?: invalid()
-        if (uri.host?.removeSurrounding("[", "]")?.lowercase() != http.host.lowercase()) invalid()
+        // B-SEC-113: the token goes only to the host the rules checked.
+        if (
+            uri.host?.removeSurrounding("[", "]")?.lowercase() != http.host.lowercase() ||
+                http.host.lowercase() != endpoint.host
+        )
+            invalid()
         val client =
             OkHttpClient.Builder()
                 .proxy(Proxy.NO_PROXY)
@@ -104,7 +106,7 @@ internal suspend fun openCodexFrames(
                             override fun onFailure(call: Call, error: java.io.IOException) {
                                 if (waiting.isActive)
                                     waiting.resumeWithException(
-                                        CodexWireException(Failure.ComputerDidNotAnswer())
+                                        CodexException(CodexFailureKind.Disconnected)
                                     )
                             }
 
@@ -125,8 +127,8 @@ internal suspend fun openCodexFrames(
                 throw error
             }
         try {
-            if (response.code == 401) throw CodexWireException(Failure.SignIn(SignInWhy.TokenRejected))
-            if (response.code == 403) throw CodexWireException(Failure.SignIn(SignInWhy.Forbidden))
+            if (response.code == 401 || response.code == 403)
+                throw CodexException(CodexFailureKind.Authentication)
             val expected =
                 (key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11").encodeUtf8().sha1().base64()
             val connection = response.headers("Connection").flatMap { it.split(',') }
@@ -138,8 +140,9 @@ internal suspend fun openCodexFrames(
                     response.headers("Sec-WebSocket-Extensions").isNotEmpty() ||
                     response.headers("Sec-WebSocket-Protocol").isNotEmpty()
             )
-                throw CodexWireException(Failure.UnreadableReply())
-            val socket = response.socket ?: throw CodexWireException(Failure.UnreadableReply())
+                throw CodexException(CodexFailureKind.InvalidResponse)
+            val socket =
+                response.socket ?: throw CodexException(CodexFailureKind.InvalidResponse)
             BoundedCodexFrames(socket, client, dispatchers, appScope, random)
         } catch (error: Exception) {
             response.socket?.cancel()
@@ -176,10 +179,10 @@ private class BoundedCodexFrames(
                     readFrames()
                 } catch (error: CancellationException) {
                     throw error
-                } catch (error: CodexWireException) {
+                } catch (error: CodexException) {
                     frames.close(error)
                 } catch (_: Exception) {
-                    frames.close(CodexWireException(Failure.ComputerDidNotAnswer()))
+                    frames.close(CodexException(CodexFailureKind.Disconnected))
                 } finally {
                     finish()
                 }
@@ -208,7 +211,7 @@ private class BoundedCodexFrames(
         reader.invokeOnCompletion { pinger.cancel() }
     }
 
-    private fun unreadable(): Nothing = throw CodexWireException(Failure.UnreadableReply())
+    private fun unreadable(): Nothing = throw CodexException(CodexFailureKind.InvalidResponse)
 
     private suspend fun readFrames() {
         val message = Buffer()
@@ -298,7 +301,7 @@ private class BoundedCodexFrames(
         }
 
     private suspend fun writeFrame(opcode: Int, payload: ByteArray): Unit = writes.withLock {
-        if (closed.get()) throw CodexWireException(Failure.ComputerDidNotAnswer())
+        if (closed.get()) throw CodexException(CodexFailureKind.Disconnected)
         val mask = ByteArray(4).also(random::nextBytes)
         sink.writeByte(128 or opcode)
         when {

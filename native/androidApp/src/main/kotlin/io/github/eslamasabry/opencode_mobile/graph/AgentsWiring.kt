@@ -322,7 +322,7 @@ class AppAgentComputers(
     private val connections: ServerConnections,
     private val registry: ConnectionRegistry,
     private val factory: AppPaseoGatewayFactory,
-    private val codexFactory: AgentCodexGatewayFactory,
+    private val codexFactory: AppCodexGatewayFactory,
     appScope: AppCoroutineScope,
 ) : AgentComputers {
     override val computers: StateFlow<ImmutableList<AgentComputer>> =
@@ -409,8 +409,17 @@ class AppAgentComputers(
         kind: AgentComputerKind,
     ): Outcome<ComputerCheck> {
         if (kind == AgentComputerKind.Paseo) return check(address, password, folder)
-        return codexFactory.codex.checkConnection(address, password, folder).map { result ->
-            ComputerCheck.Ready(null, kotlinx.collections.immutable.persistentListOf("Codex"))
+        // The same Codex client as chats: health plus one scoped conversation page, then closed.
+        return when (
+            val answer = codexFactory.codex.checkConnection(address.trim(), password, folder.trim())
+        ) {
+            is io.github.eslamasabry.oc.protocol.codex.probe.CodexProbeResult.Verified ->
+                ComputerCheck.Ready(null, kotlinx.collections.immutable.persistentListOf("Codex"))
+                    .ok()
+            is io.github.eslamasabry.oc.protocol.codex.probe.CodexProbeResult.NotVerified ->
+                answer.failure.failed()
+            is io.github.eslamasabry.oc.protocol.codex.probe.CodexProbeResult.InvalidInput ->
+                Failure.Refused(RefusalReason.InvalidAddress).failed()
         }
     }
 
@@ -423,7 +432,7 @@ class AppAgentComputers(
     ): Outcome<ProfileId> {
         if (kind == AgentComputerKind.Paseo) return add(name, address, password, folder)
         if (
-            !io.github.eslamasabry.oc.protocol.codex.validCodexEndpoint(address.trim()) ||
+            io.github.eslamasabry.oc.protocol.codex.CodexEndpoint.parse(address) == null ||
                 !folder.startsWith("/")
         )
             return Failure.Refused(RefusalReason.InvalidAddress).failed()

@@ -13,7 +13,7 @@ import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.agents.handoff.*
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.feature.agents.hub.*
-import io.github.eslamasabry.oc.protocol.codex.CodexGateway
+import io.github.eslamasabry.oc.protocol.codex.gateway.CodexGateway
 import kotlinx.collections.immutable.*
 import kotlinx.coroutines.flow.*
 

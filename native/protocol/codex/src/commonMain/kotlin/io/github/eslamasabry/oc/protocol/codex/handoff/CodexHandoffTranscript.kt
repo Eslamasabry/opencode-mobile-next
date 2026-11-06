@@ -1,16 +1,24 @@
-package io.github.eslamasabry.oc.protocol.codex
+package io.github.eslamasabry.oc.protocol.codex.handoff
 
 import io.github.eslamasabry.oc.core.model.transcript.*
+import io.github.eslamasabry.oc.protocol.codex.CodexFailureKind
+import io.github.eslamasabry.oc.protocol.codex.codexFail
+import io.github.eslamasabry.oc.protocol.codex.codexList
+import io.github.eslamasabry.oc.protocol.codex.codexMillis
+import io.github.eslamasabry.oc.protocol.codex.codexObject
+import io.github.eslamasabry.oc.protocol.codex.codexString
 import kotlinx.collections.immutable.*
 import kotlinx.serialization.json.*
 
 /**
- * Handoff-only persisted projection. No reasoning, patch body, source, credential metadata or
- * remote failure body enters this result. Text remains whole until the common record builder masks
- * secrets and budgets whole turns. The English notices are the transfer document's wire format, not
- * app UI copy.
+ * Handoff-only persisted projection of one `thread/read(includeTurns)` reply, as transcript
+ * messages for the shared handoff record builder (the Agents hub's review and draft). No
+ * reasoning, patch body, source, credential metadata or remote failure body enters this result.
+ * Text remains whole until the common record builder masks secrets and budgets whole turns. The
+ * English notices are the transfer document's wire format, not app UI copy. A malformed thread
+ * throws `CodexException(InvalidResponse)`.
  */
-internal fun codexHandoffMessages(thread: JsonObject): ImmutableList<MessageWithParts> {
+public fun codexHandoffTranscript(thread: JsonObject): ImmutableList<MessageWithParts> {
     val threadId = thread["id"].str(256)
     if (thread.text("historyMode") !in setOf("legacy", "paginated")) malformed()
     val result = mutableListOf<MessageWithParts>()
@@ -310,3 +318,28 @@ private fun textChunks(value: JsonElement?, type: String): String {
     if (omitted) chunks += "Non-text result content excluded."
     return chunks.joinToString("\n")
 }
+
+// The wire helpers of this projection: every shape error is InvalidResponse.
+private fun malformed(): Nothing = codexFail(CodexFailureKind.InvalidResponse)
+
+private fun JsonElement?.obj(): JsonObject = codexObject(this)
+
+private fun JsonElement?.str(max: Int = 4096, empty: Boolean = false): String =
+    codexString(this, max, empty)
+
+private fun JsonElement?.list(max: Int = 10_000): JsonArray = codexList(this, max)
+
+private fun JsonObject.text(key: String): String? =
+    (this[key] as? JsonPrimitive)?.takeIf { it.isString }?.content
+
+private fun JsonObject.millis(key: String): Long? {
+    val raw = this[key] ?: return null
+    if (raw == JsonNull) return null
+    if (raw is JsonPrimitive && raw.isString) malformed()
+    return codexMillis(raw)
+}
+
+private fun json(vararg fields: Pair<String, JsonElement?>): JsonObject =
+    JsonObject(fields.filter { it.second != null }.associate { it.first to it.second!! })
+
+private fun s(value: String): JsonPrimitive = JsonPrimitive(value)

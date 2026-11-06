@@ -20,7 +20,7 @@ import io.github.eslamasabry.oc.engine.connection.*
 import io.github.eslamasabry.oc.engine.profiles.*
 import io.github.eslamasabry.oc.feature.agents.hub.AgentHandoffDrafts
 import io.github.eslamasabry.oc.feature.handoff.presentation.*
-import io.github.eslamasabry.oc.protocol.codex.CodexGateway
+import io.github.eslamasabry.oc.protocol.codex.gateway.CodexGateway
 import io.github.eslamasabry.oc.protocol.paseo.work.PaseoPayloadLease
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import io.github.eslamasabry.opencode_mobile.SetupRunner

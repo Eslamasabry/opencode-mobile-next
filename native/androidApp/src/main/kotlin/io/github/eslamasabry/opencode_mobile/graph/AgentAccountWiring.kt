@@ -208,7 +208,7 @@ class AndroidAgentAccountPort(
  * Exact model adaptation only; all reading, login ownership and cancellation stay in the protocol
  * session.
  */
-private class AccountSessionBridge(
+internal class AccountSessionBridge(
     private val raw: CodexAccountSession,
     private val valid: () -> Boolean,
 ) : AgentAccountSession {
