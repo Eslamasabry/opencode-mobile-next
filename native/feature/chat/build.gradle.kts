@@ -10,10 +10,13 @@ kotlin {
     }
     sourceSets.commonMain.dependencies {
         implementation(project(":engine:settings"))
-        implementation(project(":engine:entry")) // the opencode-mobile:// session link for another phone
+        implementation(
+            project(":engine:entry")
+        ) // the opencode-mobile:// session link for another phone
         implementation(project(":engine:delivery"))
         implementation(project(":engine:voice"))
         implementation(project(":engine:composer"))
+        implementation(project(":engine:schedules")) // seed Send later before opening its editor
         implementation(
             project(":engine:connection")
         ) // ← engines this feature reads (public API only)
@@ -32,7 +35,14 @@ kotlin {
     }
 }
 
-// looks capture only: stale existing tests in this module do not compile; compile only the capture test and fixtures.
-kotlin.sourceSets.matching { it.name == "commonTest" || it.name == "desktopTest" }.configureEach {
-    kotlin.exclude { it.file.name.endsWith("Test.kt") && it.file.name != "LooksCaptureTest.kt" && !it.file.invariantSeparatorsPath.contains("/rb/o42/") }
-}
+// looks capture only: stale existing tests in this module do not compile; compile only the capture
+// test and fixtures.
+kotlin.sourceSets
+    .matching { it.name == "commonTest" || it.name == "desktopTest" }
+    .configureEach {
+        kotlin.exclude {
+            it.file.name.endsWith("Test.kt") &&
+                it.file.name != "LooksCaptureTest.kt" &&
+                !it.file.invariantSeparatorsPath.contains("/rb/o42/")
+        }
+    }

@@ -9,10 +9,12 @@ import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.SessionId
+import io.github.eslamasabry.oc.engine.schedules.ScheduleEngine
 import io.github.eslamasabry.oc.engine.transcript.ledger.latest
-import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.feature.chat.world.ChatWorlds
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeed
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeedSource
@@ -39,8 +41,10 @@ public class ChatViewModel(
     private val nav: AppNavigator,
     clock: Clock,
     outside: ChatOutside,
+    private val schedules: ScheduleEngine,
 ) : ViewModel(), ChatActions {
     private val world = worlds.open(route.ref)
+    private var openingSchedule = false
     private val presenter =
         ChatPresenter(
             world,
@@ -108,13 +112,30 @@ public class ChatViewModel(
 
     override fun openGit(): Unit = nav.open(GitRoute(route.ref))
 
-    override fun sendLater(words: String): Unit =
-        nav.open(
-            io.github.eslamasabry.oc.ui.routes.SchedulesRoute.Edit(
-                profileId = route.ref.profileId,
-                from = route.ref,
-            )
-        )
+    override fun sendLater(words: String) {
+        if (words.isBlank() || openingSchedule) return
+        openingSchedule = true
+        viewModelScope.launch {
+            try {
+                val profile = route.ref.profileId.raw
+                // Seed the editor's existing draft before navigation. Its regular restore path then
+                // keeps subsequent edits across recreation without replaying the original words.
+                schedules.setPromptDraft(profile, null, words)
+                if (schedules.promptDraft(profile, null) != words) {
+                    presenter.actionFailed(Failure.StorageRefused())
+                    return@launch
+                }
+                nav.open(
+                    io.github.eslamasabry.oc.ui.routes.SchedulesRoute.Edit(
+                        profileId = route.ref.profileId,
+                        from = route.ref,
+                    )
+                )
+            } finally {
+                openingSchedule = false
+            }
+        }
+    }
 
     override fun retryLastPrompt(): Unit = presenter.retryLastPrompt()
 
@@ -126,7 +147,8 @@ public class ChatViewModel(
 
     /** Background commands, Stop command and Run shell command (Flutter running-work sheet). */
     public val work: io.github.eslamasabry.oc.feature.chat.work.ChatWorkModel =
-        io.github.eslamasabry.oc.feature.chat.work.ChatWorkModel(world) { block ->
+        io.github.eslamasabry.oc.feature.chat.work
+            .ChatWorkModel(world) { block ->
                 viewModelScope.launch { block() }
             }
             .also { it.poll() }
