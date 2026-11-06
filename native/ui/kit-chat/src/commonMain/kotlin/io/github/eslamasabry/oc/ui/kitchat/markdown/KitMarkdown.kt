@@ -28,6 +28,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.isSpecified
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
@@ -671,6 +673,39 @@ private fun MdText(
     if (caret) {
         val colors = LocalKitColors.current
         textModifier = textModifier.kitStreamCaret({ holder.layout }, { visible.length }, colors)
+    }
+    val codeRuns = remember(visible) { visible.getStringAnnotations(KIT_MD_CODE_TAG, 0, visible.length) }
+    if (codeRuns.isNotEmpty()) {
+        val tint = LocalKitColors.current.text1.copy(alpha = .07f)
+        val fontSize = style.fontSize
+        textModifier =
+            Modifier.drawBehind {
+                    val layout = holder.layout ?: return@drawBehind
+                    val size = if (fontSize.isSpecified) fontSize.toPx() else 14.sp.toPx()
+                    val padX = 3.dp.toPx()
+                    val corner = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx())
+                    for (run in codeRuns) {
+                        val end = run.end.coerceAtMost(layout.layoutInput.text.length)
+                        if (end <= run.start) continue
+                        val first = layout.getLineForOffset(run.start)
+                        val last = layout.getLineForOffset(end - 1)
+                        for (line in first..last) {
+                            val from = maxOf(run.start, layout.getLineStart(line))
+                            val to = minOf(end, layout.getLineEnd(line, visibleEnd = true))
+                            if (to <= from) continue
+                            val a = layout.getHorizontalPosition(from, usePrimaryDirection = true)
+                            val b = layout.getHorizontalPosition(to, usePrimaryDirection = true)
+                            val base = layout.getLineBaseline(line)
+                            drawRoundRect(
+                                tint,
+                                topLeft = Offset(minOf(a, b) - padX, base - size * .92f),
+                                size = Size(kotlin.math.abs(b - a) + 2 * padX, size * 1.22f),
+                                cornerRadius = corner,
+                            )
+                        }
+                    }
+                }
+                .then(textModifier)
     }
     Box(m) {
         BasicText(

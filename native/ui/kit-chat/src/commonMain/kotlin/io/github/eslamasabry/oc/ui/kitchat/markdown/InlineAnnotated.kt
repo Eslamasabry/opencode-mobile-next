@@ -82,7 +82,12 @@ public fun inlineAnnotated(
             KitSpanKind.Bold -> builder.addStyle(SpanStyle(fontWeight = FontWeight.SemiBold), from, to)
             KitSpanKind.Italic -> builder.addStyle(SpanStyle(fontStyle = FontStyle.Italic), from, to)
             KitSpanKind.Strike -> builder.addStyle(SpanStyle(textDecoration = TextDecoration.LineThrough), from, to)
-            KitSpanKind.Code -> builder.addStyle(SpanStyle(fontFamily = style.mono, background = style.codeFill), from, to)
+            // The mono face marks code; its soft tint is drawn by MdText around the glyphs (KIT_MD_CODE_TAG), one
+            // rounded run per line, never a line-tall span background with hard white edges.
+            KitSpanKind.Code -> {
+                builder.addStyle(SpanStyle(fontFamily = style.mono), from, to)
+                builder.addStringAnnotation(KIT_MD_CODE_TAG, "", from, to)
+            }
             is KitSpanKind.Link ->
                 builder.addLink(
                     LinkAnnotation.Clickable(
@@ -102,7 +107,8 @@ public fun inlineAnnotated(
                     to,
                 )
             is KitSpanKind.Path -> {
-                builder.addStyle(SpanStyle(fontFamily = style.mono, background = style.pathFill), from, to)
+                builder.addStyle(SpanStyle(fontFamily = style.mono), from, to)
+                builder.addStringAnnotation(KIT_MD_CODE_TAG, "", from, to)
                 if (confirmed(kind.path)) {
                     builder.addLink(
                         LinkAnnotation.Clickable(tag = kind.path, styles = TextLinkStyles(SpanStyle(color = style.link))) {
@@ -117,3 +123,6 @@ public fun inlineAnnotated(
     }
     return builder.toAnnotatedString()
 }
+
+/** Marks a code or path run in a built string; MdText draws its tint. */
+internal const val KIT_MD_CODE_TAG: String = "kit-md-code"
