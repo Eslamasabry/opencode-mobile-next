@@ -238,10 +238,10 @@ public class SettingsPresenter(
     }
 
     override fun onAskDiscard(kind: LocalDataKind) {
-        if (!local.value.discardBusy && localData != null)
-            local.update {
-                it.copy(discardConfirm = kind, discardFailed = false, discardResult = null)
-            }
+        val port = localData ?: return
+        if (local.value.discardBusy) return
+        val asked = localDataQuestion(kind, port.facts.value)
+        local.update { it.copy(discardConfirm = asked, discardFailed = false, discardResult = null) }
     }
 
     override fun onCancelDiscard() {

@@ -166,10 +166,19 @@ internal fun ColumnScope.LocalDataBody(ui: LocalDataUi, actions: SettingsActions
             ui.confirm?.let { kind ->
                 if (kind == LocalDataKind.QueueHeld)
                     return@let KitConfirmSpec(
-                        title = stringResource(Res.string.settings40_held_question),
+                        // N-48: one question; when unsent prompts go too it is the plain delete question, and the
+                        // body names how many may already have reached the server.
+                        title =
+                            stringResource(
+                                if (facts.held in 1 until facts.queued) Res.string.e7SettingsUi80
+                                else Res.string.settings40_held_question
+                            ),
                         confirmLabel =
                             pluralStringResource(Res.plurals.privacyDeleteQueuedCount, facts.queued, facts.queued),
-                        body = stringResource(Res.string.settings40_held_body),
+                        body =
+                            if (facts.held in 1 until facts.queued)
+                                pluralStringResource(Res.plurals.settings40_queue_held_body, facts.held, facts.held)
+                            else stringResource(Res.string.settings40_held_body),
                         kind = KitConfirmKind.Destructive,
                     )
                 KitConfirmSpec(

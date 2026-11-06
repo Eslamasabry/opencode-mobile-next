@@ -25,9 +25,11 @@ import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusScope
 import io.github.eslamasabry.oc.ui.routes.AppRoute
+import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.RouteSaving
 import io.github.eslamasabry.oc.ui.shell.nav.RowTransformGate
+import io.github.eslamasabry.oc.ui.shell.nav.ShellKeyPark
 import io.github.eslamasabry.oc.ui.shell.nav.ShellNavDisplay
 import io.github.eslamasabry.oc.ui.shell.nav.motionLevelOf
 
@@ -92,14 +94,17 @@ public fun NavShell(
     val scale by deps.motion.animatorScale.collectAsState()
     val conditions = deps.statusSources.mapNotNull { it.status() }
     KitStatusScope(conditions) {
-        // App-wide questions get their own modal host above every route (each KitScreen hosts its
-        // own modals inside); with none contributed the tree is unchanged.
-        if (deps.overlays.isEmpty()) {
-            ShellNav(backStack, gate, scale, deps, provider)
-        } else {
-            KitSheetHost(Modifier.fillMaxSize()) {
+        // N-55: a hardware key nothing on the page used never presses a button or turns into Back.
+        ShellKeyPark(onChat = { backStack.lastOrNull() is ChatRoute }) {
+            // App-wide questions get their own modal host above every route (each KitScreen hosts
+            // its own modals inside); with none contributed the tree is unchanged.
+            if (deps.overlays.isEmpty()) {
                 ShellNav(backStack, gate, scale, deps, provider)
-                deps.overlays.forEach { it.Content() }
+            } else {
+                KitSheetHost(Modifier.fillMaxSize()) {
+                    ShellNav(backStack, gate, scale, deps, provider)
+                    deps.overlays.forEach { it.Content() }
+                }
             }
         }
     }

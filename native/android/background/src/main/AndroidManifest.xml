@@ -1,3 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- :android:background declares no component: BackgroundConnectionService is a shell in :androidApp. -->
-<manifest />
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- E07-S01: live mode's "Allow unrestricted battery" asks Android directly (the released app's manifest line);
+         without it the system drops ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS and no dialog shows. -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+</manifest>

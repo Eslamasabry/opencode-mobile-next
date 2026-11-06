@@ -18,6 +18,11 @@ public data class LocalDataFacts(
     val queued: Int = 0,
     val queueBytes: Long = 0,
     val queueReadable: Boolean = true,
+    /**
+     * N-48: of [queued], the ones kept for review (they may already have reached the server). With any, Clear queued
+     * prompts asks once, names them, and deletes them all.
+     */
+    val held: Int = 0,
     val drafts: Int = 0,
     val draftBytes: Long = 0,
     val draftsReadable: Boolean = true,
@@ -46,3 +51,10 @@ public interface LocalDataSettings {
 
     public suspend fun discard(kind: LocalDataKind): Outcome<LocalDeleteResult>
 }
+
+/**
+ * N-48: the question Clear queued prompts asks. With prompts kept for review it is one question that names them and
+ * deletes them all ([LocalDataKind.QueueHeld]); never a second confirm for what the first already covered.
+ */
+public fun localDataQuestion(kind: LocalDataKind, facts: LocalDataFacts?): LocalDataKind =
+    if (kind == LocalDataKind.Queue && (facts?.held ?: 0) > 0) LocalDataKind.QueueHeld else kind

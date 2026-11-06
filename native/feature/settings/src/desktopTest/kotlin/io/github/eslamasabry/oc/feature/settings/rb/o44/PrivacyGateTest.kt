@@ -76,6 +76,36 @@ class PrivacyGateTest {
         }
 
     @Test
+    fun `B-STATE-080 a queue with prompts kept for review asks one question that names them`() =
+        runComposeUiTest {
+            var deletes = 0
+            val asked =
+                privacy().let {
+                    it.copy(
+                        localData =
+                            LocalDataUi(
+                                it.localData!!.facts!!.copy(held = 1),
+                                confirm = LocalDataKind.QueueHeld,
+                            )
+                    )
+                }
+            val actions =
+                object : SettingsActions by RecordingActions() {
+                    override fun onConfirmDiscard() {
+                        deletes++
+                    }
+                }
+            setContent { SettingsThemed { SettingsScreen(asked, actions) } }
+            onNodeWithText("Delete queued prompts?").assertExists()
+            onNodeWithText(
+                "1 of them may already have reached the server. Deleting only removes them from this phone, " +
+                    "and nothing more is sent."
+            ).assertExists()
+            onNodeWithText("Delete 3 queued prompts").performClick()
+            assertEquals(1, deletes)
+        }
+
+    @Test
     fun `B-STATE-080 unreadable storage does not enable an unsupported destructive path`() =
         runComposeUiTest {
             setContent {

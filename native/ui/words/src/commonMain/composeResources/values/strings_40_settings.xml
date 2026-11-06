@@ -39,4 +39,9 @@
     <string name="settings40_held_action">Delete these too</string>
     <string name="settings40_held_question">Delete the prompts kept for review?</string>
     <string name="settings40_held_body">They may already have reached the server. This only removes them from this phone, and nothing more is sent.</string>
+    <!-- N-48: Clear queued prompts when some of them may already have been sent (one confirm for all). -->
+    <plurals name="settings40_queue_held_body">
+        <item quantity="one">1 of them may already have reached the server. Deleting only removes them from this phone, and nothing more is sent.</item>
+        <item quantity="other">%1$d of them may already have reached the server. Deleting only removes them from this phone, and nothing more is sent.</item>
+    </plurals>
 </resources>

@@ -106,6 +106,16 @@ class BackgroundScreenUiTest {
     }
 
     @Test
+    fun `B-ANDR-012 when Android refuses its battery question the page says its settings opened instead`() =
+        runComposeUiTest {
+            page(BackgroundLiveFacts(supported = true, enabled = true, active = true, batterySettingsOpened = true))
+            onNodeWithText(
+                "Android didn't show its question, so its battery settings opened instead. " +
+                    "Set this app to Unrestricted there."
+            ).assertExists()
+        }
+
+    @Test
     fun `B-ANDR-012 a refused start says Android did not enable it, in plain words`() = runComposeUiTest {
         page(BackgroundLiveFacts(supported = true), SwitchFailure.NotEnabled)
         onNodeWithText("Android did not enable background mode.").assertExists()

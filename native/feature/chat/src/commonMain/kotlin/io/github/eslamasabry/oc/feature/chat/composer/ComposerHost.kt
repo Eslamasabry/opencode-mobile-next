@@ -78,4 +78,17 @@ public class ComposerChrome(
     /** A new id when a Send later schedule was just saved from this chat: clear the draft and say so once. */
     public val laterScheduled: () -> Long? = { null },
     public val laterShown: (id: Long) -> Unit = {},
+    /**
+     * N-55: the chat's hook for a stray hardware key (typed while nothing had focus): the composer
+     * registers how to take focus; the chat steers focus there.
+     */
+    public val typing: ComposerTypingTarget = ComposerTypingTarget(),
 )
+
+/** N-55: how the message field takes focus, registered by the composer while it is shown. */
+public class ComposerTypingTarget {
+    internal var focus: (() -> Boolean)? = null
+
+    /** True when the message field took focus. */
+    public fun focus(): Boolean = focus?.invoke() ?: false
+}

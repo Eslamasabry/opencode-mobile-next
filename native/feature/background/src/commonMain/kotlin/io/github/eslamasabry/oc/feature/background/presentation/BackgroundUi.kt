@@ -48,6 +48,11 @@ public data class BackgroundLiveFacts(
     /** Android's foreground-service time limit turned live mode off (B-ANDR-014). */
     val stoppedByAndroid: Boolean = false,
     val batteryUnrestricted: Boolean = false,
+    /**
+     * E07-S01: Android refused to show its battery question, so its battery settings page opened
+     * instead (cleared once battery use is unrestricted).
+     */
+    val batterySettingsOpened: Boolean = false,
     val pause: PauseFacts? = null,
     val resuming: Boolean = false,
 )
@@ -102,6 +107,8 @@ public data class BackgroundUi(
     val switchEnabled: Boolean,
     val batteryRow: Boolean,
     val batteryUnrestricted: Boolean,
+    /** E07-S01: say under the battery row that the settings page opened instead of Android's question. */
+    val batterySettingsNotice: Boolean = false,
     val status: LiveStatusLine,
     /** Restart is offered on the status row only after Android stopped it. */
     val restart: Boolean,
@@ -122,6 +129,8 @@ public fun backgroundUi(facts: BackgroundLiveFacts, failure: SwitchFailure? = nu
         switchEnabled = !facts.busy,
         batteryRow = facts.enabled,
         batteryUnrestricted = facts.batteryUnrestricted,
+        batterySettingsNotice =
+            facts.enabled && !facts.batteryUnrestricted && facts.batterySettingsOpened,
         status =
             when {
                 stopped -> LiveStatusLine.StoppedByAndroid

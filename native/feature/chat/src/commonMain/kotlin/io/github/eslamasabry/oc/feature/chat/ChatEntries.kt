@@ -203,8 +203,12 @@ public class ChatEntries(
                         )
                     }
             // N-48: a send that may already have arrived is said once, under its own bubble (with Review);
-            // the status line counts only what the bubbles do not already say.
-            val unsaid = pendingSends.rows.filterNot { it.local && it.dispatched }
+            // the status line counts only what the bubbles do not already say (its Send again copy included).
+            val unsaid =
+                io.github.eslamasabry.oc.feature.chat.inbox.presentation.PendingNotice.unsaid(
+                    pendingSends.rows,
+                    state.pending,
+                )
             val pendingStatus =
                 if (unsaid.isEmpty() && !pendingSends.failed) null
                 else

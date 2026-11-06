@@ -31,6 +31,20 @@ class BackgroundUiTest {
     }
 
     @Test
+    fun `B-ANDR-012 the battery page opening instead of Android's question is said under the battery row`() {
+        assertFalse(backgroundUi(on).batterySettingsNotice)
+        assertTrue(backgroundUi(on.copy(batterySettingsOpened = true)).batterySettingsNotice)
+        assertFalse(
+            backgroundUi(on.copy(batterySettingsOpened = true, batteryUnrestricted = true)).batterySettingsNotice,
+            "allowed: nothing left to say",
+        )
+        assertFalse(
+            backgroundUi(on.copy(enabled = false, batterySettingsOpened = true)).batterySettingsNotice,
+            "no battery row while off",
+        )
+    }
+
+    @Test
     fun `B-ANDR-012 a busy start cannot be toggled again until it settles`() {
         assertFalse(backgroundUi(on.copy(busy = true)).switchEnabled)
         assertTrue(backgroundUi(on).switchEnabled)

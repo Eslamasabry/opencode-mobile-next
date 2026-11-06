@@ -39,6 +39,12 @@ public data class LiveModeState(
      * is turned back on. Not an error: nothing can be retried right now.
      */
     val stoppedByAndroidTimeout: Boolean = false,
+    /**
+     * E07-S01: the last "Allow unrestricted battery" could not show Android's question, so the
+     * battery settings page opened instead; the screen says so until battery use is unrestricted
+     * or the next request.
+     */
+    val batterySettingsOpenedInstead: Boolean = false,
 ) {
     /**
      * A coding alert may be posted only while live mode is on and Android lets the app notify
@@ -72,6 +78,7 @@ public class LiveModeController(
     internal var active: Boolean = false
     internal var notificationGranted: Boolean = false
     internal var batteryOptimizationIgnored: Boolean = false
+    internal var batterySettingsOpenedInstead: Boolean = false
     internal var busy: Boolean = false
     internal var lastError: LiveModeError? = null
     internal var pause: PauseState = PauseState.Unsupported
@@ -270,6 +277,7 @@ public class LiveModeController(
         markActive(status.active)
         notificationGranted = status.notificationGranted
         batteryOptimizationIgnored = status.batteryOptimizationIgnored
+        if (batteryOptimizationIgnored) batterySettingsOpenedInstead = false
         if (status.enabled != null && !signIn.preservesUserClaim) enabled = status.enabled
         val receipt = status.pause
         if (receipt != null) {
@@ -326,12 +334,16 @@ public class LiveModeController(
                     // (B-ANDR-012).
                     val confirmed = method != Method.Enable || reply.value.active
                     applyStatus(if (confirmed) reply.value else reply.value.copy(enabled = false))
+                    if (method == Method.BatteryExemption)
+                        batterySettingsOpenedInstead =
+                            reply.value.batterySettingsInstead && !batteryOptimizationIgnored
                     if (!confirmed) lastError = LiveModeError.CouldNotChange
                     if (method == Method.Disable) applyPauseState(PauseState.Off)
                     if (persist) optIn.write(enabled)
                     true
                 }
                 is ServiceReply.Refused -> {
+                    if (method == Method.BatteryExemption) batterySettingsOpenedInstead = false
                     lastError =
                         when (reply.refusal.code) {
                             ServiceRefusal.NOTIFICATION_DENIED ->
@@ -372,6 +384,7 @@ public class LiveModeController(
             notificationGranted = notificationGranted,
             batteryOptimizationIgnored = batteryOptimizationIgnored,
             busy = busy,
+            batterySettingsOpenedInstead = batterySettingsOpenedInstead,
             lastError = lastError,
             pause = pause,
             stoppedByAndroidTimeout = stoppedByAndroidTimeout,
