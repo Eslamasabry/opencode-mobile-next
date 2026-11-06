@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.PowerManager
+import android.util.Log
 import android.widget.Toast
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
@@ -243,10 +244,21 @@ class DiagnosticsAttentionStartup(
         started = true
         val capture = AppErrorCapture(diagnostics)
         val previous = Thread.getDefaultUncaughtExceptionHandler()
-        // A fatal error leaves only its category (B-STATE-074); the platform handler then ends the
-        // process as before.
+        // Keep the original failure before capture replaces its user-facing text with a category.
+        // Diagnostics.record redacts both fields and synchronously notifies the persisted report.
         Thread.setDefaultUncaughtExceptionHandler { thread, error ->
+            Log.e("NativeCrash", "Uncaught native application error", error)
+            try {
+                diagnostics.record(
+                    AppErrorCapture.FRAMEWORK_SOURCE,
+                    "${error.javaClass.name}: ${error.message.orEmpty()}",
+                    error.stackTrace.take(15).joinToString("\n") { "at $it" },
+                )
+            } catch (_: Exception) {
+                // A diagnostics failure must not replace the throwable that ended the process.
+            }
             val safe = capture.capture(error)
+            safe.initCause(error)
             previous?.uncaughtException(thread, safe)
         }
         crash.start()

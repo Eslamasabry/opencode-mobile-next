@@ -50,9 +50,9 @@ class NativeCrashStore(private val directory: File) {
         val handler = Thread.UncaughtExceptionHandler { thread, error ->
             try { write(error) } catch (_: Throwable) { }
             finally {
-                // Preserve Android's fatal handling, but never hand its logger
-                // an exception message/cause/stack carrying credential values.
-                val safe = RuntimeException("Native application error")
+                // Preserve the fixed outer message and Android's fatal handling, including the
+                // original cause retained by the app diagnostics handler.
+                val safe = RuntimeException("Native application error", error)
                 safe.stackTrace = emptyArray()
                 if (previous != null) previous.uncaughtException(thread, safe)
             }
