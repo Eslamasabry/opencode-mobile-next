@@ -57,6 +57,7 @@ import io.github.eslamasabry.oc.engine.diagnostics.report.ProblemThermalReadings
 import io.github.eslamasabry.oc.engine.diagnostics.report.ReportProblemStartup
 import io.github.eslamasabry.oc.engine.diagnostics.perf.formatMs
 import io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptDiagnosticsHost
+import io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptErrorRow
 import io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptPerfRow
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.reportProblemDiagnosticsCopied
@@ -340,6 +341,12 @@ class AppKeptDiagnosticsHost(
 
     /** The sanitized error entries (the same redaction every report uses). */
     override fun errorLogText(): String = diagnostics.reportText()
+
+    /** The ring's entries, newest first; the engine already redacted every field. */
+    override fun errorEntries(): List<KeptErrorRow> =
+        diagnostics.errors.value.asReversed().map {
+            KeptErrorRow(it.id, timeLabel(it.at), it.source, it.message, it.stack, it.occurrences)
+        }
 
     override fun performanceSteps(): List<KeptPerfRow> =
         trace.stats().map {

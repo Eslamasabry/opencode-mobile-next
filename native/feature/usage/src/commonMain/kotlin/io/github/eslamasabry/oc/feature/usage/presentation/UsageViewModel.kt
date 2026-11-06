@@ -111,10 +111,30 @@ public class UsageViewModel(
     override fun chooseServer(id: ProfileId) {
         if (local.value.server == id || local.value.servers.none { it.id == id }) return
         local.update {
-            it.copy(server = id, scope = UsageScope.AllProjects, projects = persistentListOf())
+            it.copy(
+                server = id,
+                scope = UsageScope.AllProjects,
+                projects = persistentListOf(),
+                modelSearch = "",
+                providerFilter = null,
+            )
         }
         loadProjects()
         read()
+    }
+
+    override fun searchRecords(query: String) {
+        if (local.value.modelSearch == query) return
+        local.update { it.copy(modelSearch = query) }
+    }
+
+    override fun chooseProvider(providerId: String?) {
+        if (local.value.providerFilter == providerId) return
+        local.update { it.copy(providerFilter = providerId) }
+    }
+
+    override fun clearRecordFilters() {
+        local.update { it.copy(modelSearch = "", providerFilter = null) }
     }
 
     override fun editBudget(unit: UsageBudgetUnit) {

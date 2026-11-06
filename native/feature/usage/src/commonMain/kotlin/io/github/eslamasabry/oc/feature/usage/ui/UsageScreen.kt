@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.*
 import androidx.compose.runtime.key
@@ -48,7 +50,10 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitInputFormDialog
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
+import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
+import io.github.eslamasabry.oc.ui.kit.input.KitSearchNoMatch
 import io.github.eslamasabry.oc.ui.kit.row.KitMetricGrid
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
@@ -192,6 +197,11 @@ public fun UsageScreen(state: UsageUi, actions: UsageActions) {
 @Composable
 public fun UsageContent(state: UsageUi, actions: UsageActions) {
     val gutter = LocalKitTokens.current.gutter
+    val recordsField = rememberTextFieldState(state.modelSearch)
+    // Clearing from the state (no-match Clear, another server) empties the field too.
+    LaunchedEffect(state.modelSearch) {
+        if (state.modelSearch.isEmpty() && recordsField.text.isNotEmpty()) recordsField.clearText()
+    }
     LazyColumn(contentPadding = PaddingValues(top = Space.S3.dp, bottom = Space.S6.dp)) {
         if (state.phase == UsagePhase.NoServer) {
             item(key = "no-server") {
@@ -227,7 +237,7 @@ public fun UsageContent(state: UsageUi, actions: UsageActions) {
                 Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
                 Budgets(state, actions)
             }
-        state.report?.let { report -> breakdowns(report) }
+        state.report?.let { report -> breakdowns(report, state, actions, recordsField) }
         if (state.report != null)
             item(key = "disclosure") {
                 Column(
@@ -601,7 +611,12 @@ private fun Status(state: UsageUi, actions: UsageActions) {
         )
 }
 
-private fun LazyListScope.breakdowns(report: UsageReport) {
+private fun LazyListScope.breakdowns(
+    report: UsageReport,
+    state: UsageUi,
+    actions: UsageActions,
+    recordsField: TextFieldState,
+) {
     if (report.empty) return
     item(key = "counts") {
         Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
@@ -671,7 +686,39 @@ private fun LazyListScope.breakdowns(report: UsageReport) {
             }
         }
     }
-    val providers = UsageFigures.providers(report.models)
+    val matching = state.matchingModels
+    val providerIds =
+        (report.models.map { it.providerId } + listOfNotNull(state.providerFilter))
+            .distinct()
+            .sorted()
+    if (report.models.isNotEmpty() || state.hasRecordFilters) {
+        item(key = "records-search") {
+            Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
+            KitSearchField(
+                label = stringResource(Res.string.usageSearchRecords),
+                onSearch = actions::searchRecords,
+                state = recordsField,
+                modifier =
+                    Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
+                        .testTag("usage-search"),
+                resultCount = if (state.hasRecordFilters) matching.size else null,
+                filters =
+                    providerIds.map { id ->
+                        KitMenuItem(
+                            label = id,
+                            onSelect = {
+                                actions.chooseProvider(if (state.providerFilter == id) null else id)
+                            },
+                            checked = state.providerFilter == id,
+                        )
+                    },
+                activeFilter = state.providerFilter,
+                removeFilterLabel = stringResource(Res.string.kitSearchClear),
+                onClearFilter = { actions.chooseProvider(null) },
+            )
+        }
+    }
+    val providers = UsageFigures.providers(matching)
     if (providers.isNotEmpty()) {
         item(key = "providers") {
             KitRowGroup(label = stringResource(Res.string.usageProviders)) {
@@ -696,8 +743,40 @@ private fun LazyListScope.breakdowns(report: UsageReport) {
         }
     }
     item(key = "models") {
-        KitRowGroup(label = stringResource(Res.string.usageModels)) {
-            val models = UsageFigures.models(report.models)
+        val modelsLabel = stringResource(Res.string.usageModels)
+        val models = UsageFigures.models(matching)
+        if (models.isEmpty() && state.hasRecordFilters) {
+            KitSearchNoMatch(
+                query = state.modelSearch.ifBlank { state.providerFilter.orEmpty() },
+                onClear = actions::clearRecordFilters,
+                what = modelsLabel,
+                modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
+            )
+            return@item
+        }
+        if (state.hasRecordFilters) {
+            val subtotal = models.sumOf { it.cost }
+            KitSectionLabel(
+                listOf(
+                        stringResource(
+                            Res.string.usageMatchingRecords,
+                            UsageFigures.count(models.size.toLong()),
+                        ),
+                        if (subtotal.isFinite()) cost(subtotal)
+                        else stringResource(Res.string.usageProviderCostUnavailable),
+                        stringResource(
+                            Res.string.usageModelSteps,
+                            UsageFigures.count(models.sumOf { it.steps }),
+                        ),
+                        stringResource(
+                            Res.string.usageModelTokens,
+                            UsageFigures.count(models.sumOf { it.tokens.total }),
+                        ),
+                    )
+                    .joinToString(" · ")
+            )
+        }
+        KitRowGroup(label = modelsLabel) {
             if (models.isEmpty()) {
                 KitText(
                     stringResource(Res.string.usageNoModels),

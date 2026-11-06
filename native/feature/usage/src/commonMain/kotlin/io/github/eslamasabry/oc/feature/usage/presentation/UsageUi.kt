@@ -58,7 +58,30 @@ public data class UsageUi(
     val budgetSaving: Boolean = false,
     val budgetFailed: Boolean = false,
     val budgetInvalid: Boolean = false,
+    /** The records search (Flutter `UsageOverview.modelSearch`): provider, model or variant text. */
+    val modelSearch: String = "",
+    /** The one provider the records are narrowed to, or null. */
+    val providerFilter: String? = null,
 ) {
+    /** True while a search or a provider narrows the records (Flutter `hasInspectionFilters`). */
+    val hasRecordFilters: Boolean
+        get() = providerFilter != null || modelSearch.isNotBlank()
+
+    /** The server's model records that pass the search and the provider filter; the report is not changed. */
+    val matchingModels: List<UsageModel>
+        get() {
+            val all = report?.models ?: return emptyList()
+            val query = modelSearch.trim().lowercase()
+            return all.filter { model ->
+                (providerFilter == null || model.providerId == providerFilter) &&
+                    (query.isEmpty() ||
+                        listOf(model.providerId, model.modelId, model.variant.orEmpty()).any {
+                            it.lowercase().contains(query)
+                        })
+            }
+        }
+
+
     val serverName: String?
         get() = servers.firstOrNull { it.id == server }?.name
 
@@ -90,4 +113,13 @@ public interface UsageActions {
     public fun clearBudgets()
 
     public fun openServers()
+
+    /** Narrows the model records by text; the report's date and project scope are unchanged. */
+    public fun searchRecords(query: String) {}
+
+    /** Narrows the records to one provider; null removes the filter. */
+    public fun chooseProvider(providerId: String?) {}
+
+    /** Removes the search text and the provider filter together. */
+    public fun clearRecordFilters() {}
 }

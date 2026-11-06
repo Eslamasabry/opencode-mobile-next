@@ -10,6 +10,19 @@ public data class KeptCrashRow(
         io.github.eslamasabry.oc.engine.diagnostics.crash.CrashSource.Platform,
 )
 
+/**
+ * One kept error, already redacted by the diagnostics ring: [source] and [message] are technical and live under the
+ * row's Details; the row's title is chosen from [source] by the screen.
+ */
+public data class KeptErrorRow(
+    val id: Long,
+    val time: String,
+    val source: String,
+    val message: String,
+    val stack: String,
+    val occurrences: Int = 1,
+)
+
 /** One Android exit row: its kind in words (the screen maps [kind]) and when. */
 public data class KeptExitRow(val kind: ExitKind, val time: String)
 
@@ -59,6 +72,8 @@ public data class KeptUi(
     val crashRows: List<KeptCrashRow> = emptyList(),
     val exits: KeptExits = KeptExits.Loading,
     val errorsKept: Int = 0,
+    /** The kept errors, newest first, each one expandable to its Details. */
+    val errors: List<KeptErrorRow> = emptyList(),
     val preview: KeptPreview? = null,
     val notice: KeptNotice? = null,
     /**
