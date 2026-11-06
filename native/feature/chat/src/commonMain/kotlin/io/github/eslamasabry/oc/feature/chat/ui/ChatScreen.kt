@@ -249,6 +249,8 @@ public fun ChatScreen(
     demoMode: Boolean = false,
     appStatus: KitStatus? = null,
     replyOffer: (@Composable () -> Unit)? = null,
+    /** N-48: opens the waiting sends (Send again, Discard) from a bubble that may have arrived. */
+    onReviewSends: (() -> Unit)? = null,
     formWaiting: Boolean = false,
     formSlot: (@Composable (Modifier) -> Unit)? = null,
     monitoredForm: (@Composable () -> Unit)? = null,
@@ -723,6 +725,7 @@ public fun ChatScreen(
                                         onRetrySend = actions::retrySend,
                                         receiptChecks = state.receiptChecks,
                                         onCheckReceipt = actions::checkReceipt,
+                                        onReviewSend = onReviewSends,
                                         modifier = Modifier.fillMaxSize(),
                                         facts = facts,
                                         display = transcriptDisplay,

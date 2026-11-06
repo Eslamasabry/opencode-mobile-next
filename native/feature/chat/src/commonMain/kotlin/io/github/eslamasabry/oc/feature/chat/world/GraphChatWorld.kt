@@ -786,6 +786,11 @@ internal class GraphChatWorld(
                     mutableRequests.value?.state?.collect { publishVoiceConversation() }
                 },
                 scope.launch(registry.mainContext) {
+                    // N-48: Send again, Discard or Check again in the waiting sends can settle a send
+                    // that may have arrived; its note under the bubble leaves with it.
+                    delivery.queue?.state?.collect { retireSettledMarkers(delivery) }
+                },
+                scope.launch(registry.mainContext) {
                     graph.session.reads.missing.collect { missing ->
                         if (sid in missing && currentAttached()?.graph === graph) {
                             mutableTitle.value = null
@@ -1771,6 +1776,44 @@ internal class GraphChatWorld(
                     checkReceipt(id)
                 }
             }
+    }
+
+    /**
+     * N-48: a "may have arrived" bubble whose queue entry is gone (its resend was confirmed, it was
+     * discarded, or its receipt was confirmed from the waiting sends) leaves, and the transcript is
+     * read again so the delivered words show once, as a sent message.
+     */
+    private fun retireSettledMarkers(delivery: ConnectionDelivery) {
+        val a = currentAttached() ?: return
+        if (recoveryIds.isEmpty()) return
+        val queue = delivery.queue ?: return
+        // The queue's own read, not the published list: an unreadable queue proves nothing left.
+        val queued = queue.entries().mapTo(HashSet()) { it.id }
+        if (!queue.state.value.readable) return
+        val unconfirmed =
+            mutablePending.value
+                .filter { it.state == PendingState.Unconfirmed }
+                .mapTo(HashSet()) { it.localId }
+        val gone =
+            recoveryIds.filter { (review, localId) ->
+                review !in queued && localId in unconfirmed && localId !in checkingReceipts
+            }
+        if (gone.isEmpty()) return
+        val leaving = gone.values.toSet()
+        gone.keys.forEach(recoveryIds::remove)
+        for (localId in leaving) {
+            sentSnapshots.remove(localId)
+            canonical.remove(localId)
+            baselines.remove(localId)
+            deliveryIds.remove(localId)?.let { delivery.engine?.reconciled(it) }
+        }
+        mutablePending.update { list ->
+            list.filterNot { it.localId in leaving }.toImmutableList()
+        }
+        refreshDraftProtection()
+        a.graph.scope.launch(registry.mainContext) {
+            if (currentAttached() === a) readHistory(a.gateway, a.handle, P3Bridge(sid.raw))
+        }
     }
 
     override suspend fun checkReceipt(localId: Long): Outcome<Boolean> {

@@ -100,6 +100,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitCopy
 import io.github.eslamasabry.oc.ui.words.res.liveFailedStillWorking
 import io.github.eslamasabry.oc.ui.words.res.liveFailedStopped
 import io.github.eslamasabry.oc.ui.words.res.kitQueuedUncertain
+import io.github.eslamasabry.oc.ui.words.res.nativePendingReview
 import io.github.eslamasabry.oc.ui.words.res.kitTurnMore
 import io.github.eslamasabry.oc.ui.words.res.queuedReceiptStillUncertain
 import io.github.eslamasabry.oc.ui.words.res.queuedReceiptStorageProblem
@@ -282,6 +283,7 @@ internal fun ChatTranscriptList(
     onCompactAgain: (() -> Unit)? = null,
     receiptChecks: ImmutableMap<Long, ReceiptCheckUi> = persistentMapOf(),
     onCheckReceipt: ((Long) -> Unit)? = null,
+    onReviewSend: (() -> Unit)? = null,
     display: TranscriptDisplayChoices = TranscriptDisplayChoices(),
     onCopyReply: ((FooterRow) -> Unit)? = null,
     folds: TranscriptFolds = rememberTranscriptFolds(),
@@ -377,6 +379,7 @@ internal fun ChatTranscriptList(
                     onCheck =
                         if (p.canCheckReceipt) onCheckReceipt?.let { check -> { check(p.localId) } }
                         else null,
+                    onReview = onReviewSend,
                 )
             }
         }
@@ -468,12 +471,13 @@ private fun PendingBubble(
     onRetry: () -> Unit,
     check: ReceiptCheckUi? = null,
     onCheck: (() -> Unit)? = null,
+    onReview: (() -> Unit)? = null,
 ) {
     Column {
         KitPromptBubble(p.text, Modifier.kitPromptLift(p.localId, p.text))
         when (p.state) {
             PendingState.Sending -> KitQuietLine(words.sending)
-            PendingState.Unconfirmed -> ReceiptCheckLine(p.localId, check, onCheck)
+            PendingState.Unconfirmed -> ReceiptCheckLine(p.localId, check, onCheck, onReview)
             PendingState.Failed -> {
                 KitQuietLine(words.notSent)
                 p.failure?.let { failure ->
@@ -500,7 +504,12 @@ private fun PendingBubble(
 
 /** The unconfirmed bubble looks only: its action can never resend it. */
 @Composable
-private fun ReceiptCheckLine(localId: Long, check: ReceiptCheckUi?, onCheck: (() -> Unit)?) {
+private fun ReceiptCheckLine(
+    localId: Long,
+    check: ReceiptCheckUi?,
+    onCheck: (() -> Unit)?,
+    onReview: (() -> Unit)?,
+) {
     val checking = check?.checking == true
     val words =
         when {
@@ -514,23 +523,26 @@ private fun ReceiptCheckLine(localId: Long, check: ReceiptCheckUi?, onCheck: (()
     // One notice under the bubble, with Check again as its real action (owner 2026-11-06: the same problem was
     // said twice, and "Check again" read as a heading). The screen's status line leaves this to the bubble.
     val checkAgain = stringResource(Res.string.chatReceiptCheckAgain)
+    val review = stringResource(Res.string.nativePendingReview)
     // On the reply's own 16 dp edge, never against the screen's.
     Column(Modifier.padding(horizontal = Space.S4.dp).testTag("chat-receipt-$localId")) {
         KitNotice(
             message = words,
             tone = StatusTone.Attention,
+            // N-48: the screen says this once, here; Review holds Send again and Discard.
             actions =
-                if (onCheck == null) emptyList()
-                else
-                    listOf(
+                listOfNotNull(
+                    onCheck?.let {
                         KitLineAction(
                             checkAgain,
-                            onCheck,
+                            it,
                             enabled = !checking,
                             disabledReason = words,
                             testTag = "chat-receipt-check-$localId",
                         )
-                    ),
+                    },
+                    onReview?.let { KitLineAction(review, it, testTag = "chat-receipt-review-$localId") },
+                ),
         )
         check?.checkedAtMs?.let { at ->
             val time =

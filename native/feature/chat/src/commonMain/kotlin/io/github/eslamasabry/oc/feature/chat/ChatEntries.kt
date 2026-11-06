@@ -202,8 +202,12 @@ public class ChatEntries(
                             dismissLabel = offer.declineLabel,
                         )
                     }
+            // N-48: sends that may already have arrived are said once, under their bubbles (with Check again
+            // and Review); the strip speaks only for sends the transcript does not show.
             val pendingStatus =
                 if (pendingSends.rows.isEmpty() && !pendingSends.failed) null
+                else if (!pendingSends.failed && pendingSends.rows.all { it.local && it.dispatched })
+                    null
                 else
                     KitStatus(
                         KitStatusKind.Info,
@@ -464,6 +468,7 @@ public class ChatEntries(
                                     startActions = startVm,
                                     appStatus = appStatus,
                                     replyOffer = offerContent,
+                                    onReviewSends = { pendingOpen = true },
                                 )
                             }
                             ChatInboxSlot(
