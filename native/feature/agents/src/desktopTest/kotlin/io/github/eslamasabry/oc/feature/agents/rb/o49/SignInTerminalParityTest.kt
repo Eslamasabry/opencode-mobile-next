@@ -66,7 +66,8 @@ class SignInTerminalParityTest {
             }
             onNodeWithText("Sign-in has ended", substring = true).assertExists()
             onNodeWithText("Open sign-in page").assertDoesNotExist()
-            onNodeWithText("Sign in with Codex").performClick()
+            // The title says "Sign in with Codex" too (Flutter agent_sign_in_terminal.dart); the retry is the button.
+            onNode(hasText("Sign in with Codex") and hasClickAction()).performClick()
             assertEquals(1, actions.restarted)
             assertEquals(0, actions.left)
         }
@@ -100,7 +101,7 @@ class SignInTerminalParityTest {
                 }
             }
             onNodeWithText("Sign-in isn't ready on this phone yet").assertExists()
-            onNodeWithText("Sign in with Codex").assertDoesNotExist()
+            onNode(hasText("Sign in with Codex") and hasClickAction()).assertDoesNotExist()
             onNodeWithText("Open sign-in page").assertDoesNotExist()
             assertEquals(0, actions.restarted)
         }
@@ -125,7 +126,7 @@ class SignInTerminalParityTest {
             onNodeWithText("sign-in-start").assertDoesNotExist()
             onNodeWithText("Details").performScrollTo().performClick()
             onNodeWithText("sign-in-start", substring = true).assertExists()
-            onNodeWithText("Sign in with Codex").performScrollTo().performClick()
+            onNode(hasText("Sign in with Codex") and hasClickAction()).performScrollTo().performClick()
             assertEquals(1, actions.restarted)
         }
 
