@@ -238,6 +238,48 @@ twins "$B" "$A"
 expect "twins: last synced older than the copy is invalid" 1 native/tool/twin_check.sh
 twins "$A" "$B"
 expect "twins: --kind res skips Kotlin rows" 0 native/tool/twin_check.sh --kind res
+# Two Flutter lines (E20-S06): a freeze snapshot S whose parent is the fork point, and a release line with fix F.
+cp android/app/src/A.kt native/android/linux/A.kt; twins "$B" "$B"; commit "chore(tool): synced [skip ci]" "Body." "${GOOD_TRAILERS[@]}"
+Y="$(git rev-parse --short HEAD)"
+git branch -q release
+echo "class A-freeze" >android/app/src/A.kt; commit "chore(tool): snapshot freeze [skip ci]" "Body." "${GOOD_TRAILERS[@]}"
+S="$(git rev-parse --short HEAD)"
+git checkout -q release
+echo "class A-fix" >android/app/src/A.kt; commit "fix(tool): release fix [skip ci]" "Body." "${GOOD_TRAILERS[@]}"
+F="$(git rev-parse --short HEAD)"
+echo "docs" >notes.md; commit "docs(tool): release notes [skip ci]" "Body." "${GOOD_TRAILERS[@]}"
+D="$(git rev-parse --short HEAD)"
+git checkout -q work
+twins "$S" "$S"
+expect "twins: a row synced on the freeze line shows the release fix as drift, not as invalid" 1 native/tool/twin_check.sh --ref release
+expect_out "twins: the release fix is listed" "$F"
+expect_no_out "twins: the cross-line row is not invalid" "INVALID"
+twins "$S" "$F"
+expect "twins: a freeze-line copy synced to the release fix passes" 0 native/tool/twin_check.sh --ref release
+git checkout -q --orphan lone && echo lone >android/app/src/A.kt && commit "chore(tool): orphan [skip ci]" "Body." "${GOOD_TRAILERS[@]}"
+O="$(git rev-parse --short HEAD)"; git checkout -q -f work
+twins "$S" "$O"
+expect "twins: a last synced commit with no shared history is invalid" 1 native/tool/twin_check.sh --ref release
+expect_out "twins: says unrelated" "older than \(or unrelated to\)"
+expect "twins: the ref defaults to origin/master when it exists" 0 bash -c \
+  "git update-ref refs/remotes/origin/master release && native/tool/twin_check.sh --list-only | grep -q 'against origin/master'"
+git update-ref -d refs/remotes/origin/master
+# The fix ledger: every Flutter commit since the freeze fork point has a row.
+twins "$S" "$F"
+expect "fixes: no start is a cannot-check (2)" 2 native/tool/twin_check.sh --fixes --ref release
+printf '\n<!-- fix-ledger since=%s -->\n| Flutter commit | Subject | Native twin |\n|---|---|---|\n' "$Y" >>native/TWINS.md
+expect "fixes: commits without a row fail" 1 native/tool/twin_check.sh --fixes --ref release
+expect_out "fixes: lists the missing fix" "MISSING $F"
+expect_out "fixes: lists the missing docs commit" "MISSING $D"
+printf '| %s | fix(tool): release fix [skip ci] | native/android/linux/A.kt |\n' "$F" >>native/TWINS.md
+expect "fixes: one row still missing fails" 1 native/tool/twin_check.sh --fixes --ref release
+expect_no_out "fixes: the covered fix is not listed" "MISSING $F"
+printf '| 0000000 | docs(tool): release notes [skip ci] | not applicable: docs only |\n' >>native/TWINS.md
+expect "fixes: a rebased commit matches by subject; all covered passes" 0 native/tool/twin_check.sh --fixes --ref release
+printf '| %s | fix(tool): release fix [skip ci] |  |\n' "$F" >>native/TWINS.md
+expect "fixes: a row with no twin and no reason is invalid" 1 native/tool/twin_check.sh --fixes --ref release
+: >"$R/empty.md"
+expect "fixes: --since overrides the marker" 0 native/tool/twin_check.sh --fixes --ref release --since "$D" --twins "$R/empty.md"
 
 # ------------------------------------------------------------------------------------------------- ladder plumbing
 R="$(new_repo)"; cd "$R" || exit 1

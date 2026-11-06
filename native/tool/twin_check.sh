@@ -3,6 +3,7 @@
 #
 #   native/tool/twin_check.sh [--kind kotlin|res|arb|pins|other|all] [--flutter-repo <dir>] [--ref <rev>]
 #                             [--twins <TWINS.md>] [--verify-copy] [--list-only]
+#   native/tool/twin_check.sh --fixes [--since <rev>] [--flutter-repo <dir>] [--ref <rev>] [--twins <TWINS.md>]
 #
 # For every row of native/TWINS.md (| Native path | Flutter source path | Source commit at copy | Last synced Flutter
 # commit | Native owner |) it checks that:
@@ -12,15 +13,27 @@
 #      mirrors it within the week and updates the "last synced" column);
 #   4. with --verify-copy, Kotlin/Java twins are byte-equal to the source at the last synced commit
 #      (resource twins are subsets by design and are not compared).
+# Two Flutter lines feed native: the 2.2.0 freeze snapshot (a commit whose parent is the release line's fork point)
+# and the release line (master, 2.1.x). A row synced on one line and checked against the other is fine while the two
+# share history: <last synced>..<ref> is then exactly the ref line's commits the copy has not seen. Only a commit with
+# no shared history (an orphan snapshot) is invalid.
+#
+# --fixes is the fix ledger (E20-S06): every non-merge Flutter commit in <since>..<ref> needs a row in TWINS.md's
+# "Flutter fix ledger" table (| Flutter commit | Subject | Native twin or not-applicable reason |) with a non-empty
+# third column. A row matches by SHA, or by identical subject when the commit was rebased since (its SHA changed).
+# <since>: --since, $OC_FLUTTER_FREEZE, else the `<!-- fix-ledger since=<rev> -->` marker in TWINS.md.
 # Flutter repository: --flutter-repo, $OC_FLUTTER_REPO, else this repository (the Flutter tree sits beside native/).
-# Ref: --ref, $OC_FLUTTER_REF, else HEAD of that repository (the coordinator passes int/freeze-2026-11-01).
+# Ref: --ref, $OC_FLUTTER_REF, else origin/master (the released app, the source of truth) when it exists, else HEAD
+# of that repository (the coordinator passes int/freeze-2026-11-01 to check the freeze line).
 # --kind kotlin is what tool/native/kotlin-drift.sh wraps (plan 03 S9). --list-only reports drift but exits 0 for it.
-# Exit: 0 no drift and every row valid, 1 drift or an invalid row, 2 cannot check (no repo, shallow history).
+# Exit: 0 no drift and every row valid, 1 drift or an invalid row (--fixes: a commit without a row), 2 cannot check
+# (no repo, shallow history).
 set -uo pipefail
 # shellcheck source=lib/common.sh
 source "$(dirname "$0")/lib/common.sh"
 
 kind=all repo="${OC_FLUTTER_REPO:-}" ref="${OC_FLUTTER_REF:-}" twins="$OC_NATIVE/TWINS.md" verify=0 list_only=0
+fixes=0 since="${OC_FLUTTER_FREEZE:-}"
 while (($#)); do
   case "$1" in
     --kind) kind="${2:-}"; shift 2 ;;
@@ -29,8 +42,10 @@ while (($#)); do
     --twins) twins="${2:-}"; shift 2 ;;
     --verify-copy) verify=1; shift ;;
     --list-only) list_only=1; shift ;;
-    -h | --help) sed -n '2,21p' "$0"; exit 0 ;;
-    *) oc_usage "twin_check.sh [--kind K] [--flutter-repo DIR] [--ref REV] [--twins FILE] [--verify-copy] [--list-only]" ;;
+    --fixes) fixes=1; shift ;;
+    --since) since="${2:-}"; shift 2 ;;
+    -h | --help) sed -n '2,33p' "$0"; exit 0 ;;
+    *) oc_usage "twin_check.sh [--kind K] [--flutter-repo DIR] [--ref REV] [--twins FILE] [--verify-copy] [--list-only] | --fixes [--since REV]" ;;
   esac
 done
 case "$kind" in kotlin | res | arb | pins | other | all) ;; *) oc_die2 "unknown kind: $kind" ;; esac
@@ -38,10 +53,55 @@ case "$kind" in kotlin | res | arb | pins | other | all) ;; *) oc_die2 "unknown 
 top="$(oc_repo_root)" || oc_die2 "no git repository for the native tree"
 repo="${repo:-$top}"
 git -C "$repo" rev-parse --git-dir >/dev/null 2>&1 || oc_die2 "not a git repository: $repo"
-ref="${ref:-HEAD}"
+if [[ -z "$ref" ]]; then
+  ref=HEAD
+  git -C "$repo" rev-parse --verify --quiet "origin/master^{commit}" >/dev/null && ref=origin/master
+fi
 ref_sha="$(git -C "$repo" rev-parse --verify --quiet "$ref^{commit}")" || oc_die2 "unknown Flutter ref: $ref"
 [[ -f "$twins" ]] || oc_die2 "no twins file: $twins"
 shallow="$(git -C "$repo" rev-parse --is-shallow-repository 2>/dev/null)"
+trim() { sed 's/^[[:space:]]*//; s/[[:space:]]*$//' <<<"$1"; }
+
+# ------------------------------------------------------------------------------------------------ --fixes (ledger)
+if ((fixes)); then
+  if [[ -z "$since" ]]; then
+    since="$(sed -n 's/.*<!-- *fix-ledger since=\([0-9A-Za-z._/-]*\) *-->.*/\1/p' "$twins" | head -n1)"
+  fi
+  [[ -n "$since" ]] || oc_die2 "no fix-ledger start: pass --since, set OC_FLUTTER_FREEZE or add the marker to $twins"
+  since_sha="$(git -C "$repo" rev-parse --verify --quiet "$since^{commit}")" || {
+    [[ "$shallow" == true ]] && oc_die2 "fix-ledger start $since not in this shallow clone (git fetch --unshallow)"
+    echo "INVALID fix-ledger start '$since' is not a commit in the Flutter repository"; exit 1
+  }
+  git -C "$repo" merge-base --is-ancestor "$since_sha" "$ref_sha" || {
+    echo "INVALID fix-ledger start $since is not on the history of $ref"; exit 1
+  }
+  declare -A ledger_sha ledger_subject
+  ledger_rows=0 ledger_bad=0
+  while IFS='|' read -r _ lsha lsubject ltwin _; do
+    lsha="$(trim "$lsha")"
+    [[ "$lsha" =~ ^[0-9a-f]{7,40}$ ]] || continue
+    lsubject="$(trim "$lsubject")"; ltwin="$(trim "$ltwin")"
+    ledger_rows=$((ledger_rows + 1))
+    if [[ -z "$ltwin" ]]; then
+      echo "INVALID fix-ledger row $lsha has no native twin and no not-applicable reason"; ledger_bad=$((ledger_bad + 1))
+      continue
+    fi
+    full="$(git -C "$repo" rev-parse --verify --quiet "$lsha^{commit}" 2>/dev/null)" && ledger_sha[$full]=1
+    [[ -n "$lsubject" ]] && ledger_subject[$lsubject]=1
+  done <"$twins"
+  total=0 missing=0
+  while IFS=$'\t' read -r sha short date subject; do
+    [[ -n "$sha" ]] || continue
+    total=$((total + 1))
+    [[ -n "${ledger_sha[$sha]:-}" || -n "${ledger_subject[$subject]:-}" ]] && continue
+    missing=$((missing + 1))
+    echo "MISSING $short $date $subject"
+  done < <(git -C "$repo" log --no-merges --reverse --format=$'%H\t%h\t%ad\t%s' --date=short "$since_sha..$ref_sha")
+  echo "twin_check --fixes: $total Flutter commit(s) in ${since}..${ref} (${ref_sha:0:12}), $ledger_rows ledger row(s)"
+  echo "twin_check --fixes: $missing commit(s) without a TWINS.md row, $ledger_bad invalid row(s)"
+  ((missing || ledger_bad)) && exit 1
+  exit 0
+fi
 
 kind_of() {
   case "$1" in
@@ -56,9 +116,9 @@ kind_of() {
 rows=0 checked=0 drift_rows=0 bad=0 cannot=0
 declare -A seen_commit
 while IFS='|' read -r _ npath fpath at_copy synced owner _; do
-  npath="$(xargs <<<"$npath")"; fpath="$(xargs <<<"$fpath")"
-  at_copy="$(xargs <<<"$at_copy")"; synced="$(xargs <<<"$synced")"; owner="$(xargs <<<"$owner")"
-  [[ "$npath" == native/* ]] || continue
+  npath="$(trim "$npath")"
+  [[ "$npath" == native/* ]] || continue # Other tables (the fix ledger) hold free text: never parse it here.
+  fpath="$(trim "$fpath")"; at_copy="$(trim "$at_copy")"; synced="$(trim "$synced")"; owner="$(trim "$owner")"
   rows=$((rows + 1))
   k="$(kind_of "$npath")"
   [[ "$kind" == all || "$kind" == "$k" ]] || continue
@@ -73,8 +133,13 @@ while IFS='|' read -r _ npath fpath at_copy synced owner _; do
       continue 2
     fi
   done
+  # Not older: the copy commit is on the synced commit's history, or the two sit on sibling lines (the freeze
+  # snapshot and the release line) that share a fork point. Older or unrelated is invalid.
   if ! git -C "$repo" merge-base --is-ancestor "$at_copy" "$synced" 2>/dev/null; then
-    echo "INVALID $npath: last synced $synced is older than (or unrelated to) the copy commit $at_copy"; bad=$((bad + 1))
+    if git -C "$repo" merge-base --is-ancestor "$synced" "$at_copy" 2>/dev/null ||
+      ! git -C "$repo" merge-base "$at_copy" "$synced" >/dev/null 2>&1; then
+      echo "INVALID $npath: last synced $synced is older than (or unrelated to) the copy commit $at_copy"; bad=$((bad + 1))
+    fi
   fi
   if ! git -C "$repo" cat-file -e "$synced:$fpath" 2>/dev/null; then
     echo "INVALID $npath: source $fpath does not exist at $synced"; bad=$((bad + 1)); continue
@@ -86,9 +151,11 @@ while IFS='|' read -r _ npath fpath at_copy synced owner _; do
       echo "DIFFERS $npath: not byte-equal to $fpath at $synced"; bad=$((bad + 1))
     fi
   fi
-  # A drift range is only meaningful when the last synced commit is on the ref's history (a shallow clone or a
-  # snapshot history, plan 15 §11.0, breaks that; then `git log A..B` would list unrelated commits).
-  if ! git -C "$repo" merge-base --is-ancestor "$synced" "$ref_sha" 2>/dev/null; then
+  # A drift range is only meaningful when the last synced commit shares history with the ref: on the ref's own
+  # history, or on a sibling line forked from it (the freeze snapshot's parent is the release line's fork point, so
+  # <synced>..<ref> is exactly the release commits the copy has not seen). A shallow clone or an orphan snapshot
+  # history (plan 15 §11.0) breaks that; then `git log A..B` would list unrelated commits.
+  if ! git -C "$repo" merge-base "$synced" "$ref_sha" >/dev/null 2>&1; then
     if [[ "$shallow" == true ]]; then
       echo "CANNOT  $npath: $synced is not an ancestor of $ref in this shallow clone (git fetch --unshallow)"
       cannot=$((cannot + 1))
