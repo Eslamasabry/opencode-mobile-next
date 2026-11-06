@@ -129,4 +129,18 @@ class LinuxVoiceWiringTest {
         assertTrue(first.all { it.isLetterOrDigit() || it == '-' || it == '_' })
         assertFalse(first == second)
     }
+
+    @Test
+    fun `B-LINUX-034 B-093 a refresh asks a running server whoever started it, so This phone never stays on Checking`() =
+        kotlinx.coroutines.test.runTest {
+            val asked = mutableListOf<String>()
+            val probe: suspend (String) -> ProbeAnswer = { asked += it; ProbeAnswer.Answered }
+            assertEquals(ProbeAnswer.Answered, PhoneServerScripts.refreshedProbe(true, "pw", probe))
+            assertEquals(listOf("pw"), asked, "one authenticated probe with the profile's password")
+            assertNull(PhoneServerScripts.refreshedProbe(false, "pw", probe), "a stopped server has no answer")
+            assertNull(PhoneServerScripts.refreshedProbe(true, null, probe), "no profile, no probe")
+            assertEquals(1, asked.size)
+            val refused: suspend (String) -> ProbeAnswer = { ProbeAnswer.NeedsPassword }
+            assertEquals(ProbeAnswer.NeedsPassword, PhoneServerScripts.refreshedProbe(true, "old", refused))
+        }
 }

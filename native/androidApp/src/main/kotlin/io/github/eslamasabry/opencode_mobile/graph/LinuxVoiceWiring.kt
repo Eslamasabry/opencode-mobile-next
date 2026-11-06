@@ -322,6 +322,18 @@ fi
      * `/global/health`).
      */
     val PROBE_PATHS: List<String> = listOf("/api/health", "/api/info", "/global/health")
+
+    /**
+     * B-093: what a status refresh records as the server's answer. A running server is asked with
+     * its password whoever started it (app open, recovery, an update, a manual start); a stopped one
+     * has no answer. Without this only a manual start recorded one, so This phone stayed on
+     * "Checking the server" after every automatic start.
+     */
+    suspend fun refreshedProbe(
+        running: Boolean,
+        password: String?,
+        probe: suspend (String) -> ProbeAnswer,
+    ): ProbeAnswer? = if (running && password != null) probe(password) else null
 }
 
 /**
@@ -1257,6 +1269,13 @@ internal constructor(
         val target = target()
         if (target != null && target.profile.raw !in closedProfiles) reconcileRecovery(target)
         publish()
+        val answer =
+            PhoneServerScripts.refreshedProbe(
+                facts.value.status?.serverRunning == true,
+                target?.password,
+                port::probe,
+            )
+        facts.update { it.copy(probe = answer) }
     }
 
     /**
