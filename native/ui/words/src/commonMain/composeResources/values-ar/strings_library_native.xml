@@ -71,7 +71,7 @@
     <string name="nlibBrowserQuestion">فتح صفحة تسجيل الدخول هذه؟</string>
     <string name="nlibBrowserBody">ستغادر التطبيق. تحقّق من وجهة الموقع قبل المتابعة.</string>
     <string name="nlibDeviceCode">الرمز لمرة واحدة</string>
-    <string name="nlibRetrySave">إعادة محاولة الحفظ</string>
+    <string name="nlibRetrySave">حاول الحفظ مرة أخرى</string>
     <string name="nlibAddMcp">إضافة خادم MCP</string>
     <string name="nlibMcpName">اسم الخادم</string>
     <string name="nlibMcpUrl">عنوان الخادم</string>

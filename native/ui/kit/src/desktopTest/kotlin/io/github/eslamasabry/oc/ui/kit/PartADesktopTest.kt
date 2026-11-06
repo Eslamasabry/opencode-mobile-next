@@ -23,6 +23,8 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -483,7 +485,9 @@ class PartADesktopTest {
         assertEquals(6, rows.size)
         val last = rows.maxBy { it.boundsInRoot.top }
         assertTrue(last.config.getOrNull(SemanticsProperties.Text).orEmpty().joinToString().contains(w.delete))
-        onNodeWithTag("kit-section-label").assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+        // The heading is the label's words, not its padded box (F: lib/ui/kit/kit_section_label.dart:110 header on words).
+        onNode(hasAnyAncestor(hasTestTag("kit-section-label")) and SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+            .assertExists()
         assertTrue(onNodeWithTag("kit-group-note").getBoundsInRoot().top >= last.boundsInRoot.bottom.let { androidx.compose.ui.unit.Dp(it) })
     }
 

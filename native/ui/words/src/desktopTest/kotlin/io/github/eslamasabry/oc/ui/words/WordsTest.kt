@@ -88,7 +88,7 @@ class WordsTest {
         lang("ar")
         assertEquals("أُرفق a.xlsx كنص · ورقتان، 3 صفوف", HandWords.chatAttachmentSheetAttached("a.xlsx", 2, 3))
         assertEquals(
-            "اعتُمدت المواصفات منذ يومين · عدد المراحل الرئيسية: 2 · عدد المستودعات: 3",
+            "اعتُمدت المواصفات منذ يومين · مرحلتان رئيسيتان · 3 مستودعات",
             HandWords.teamProjectGoalStatus("يومين", 2, 3),
         )
         lang("zh")

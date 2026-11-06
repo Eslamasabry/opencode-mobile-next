@@ -12,6 +12,7 @@ import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
@@ -34,7 +35,10 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
-/** The composer screen over the real presenter and a fake port, on the desktop JVM. */
+/**
+ * The composer screen over the real presenter and a fake port, on the desktop JVM. The round field buttons (mic, Send,
+ * Add to this turn, Stop and send), Stop and the chips speak their words as their description (804ce6713).
+ */
 @OptIn(ExperimentalTestApi::class)
 class ComposerScreenUiTest {
     private val clock = TestClock()
@@ -64,11 +68,11 @@ class ComposerScreenUiTest {
     @Test
     fun `P09-10_2 the mic gives way to Send as soon as there are words`() = runComposeUiTest {
         show()
-        onNodeWithText("Talk instead of typing").performClick()
+        onNodeWithContentDescription("Talk instead of typing").performClick()
         assertEquals(listOf("voice"), openers.opened)
         type("fix the login test")
-        onNodeWithText("Send").assertExists()
-        onNodeWithText("Talk instead of typing").assertDoesNotExist()
+        onNodeWithContentDescription("Send").assertExists()
+        onNodeWithContentDescription("Talk instead of typing").assertDoesNotExist()
         assertTrue("draft:fix the login test" in port.calls)
     }
 
@@ -77,12 +81,12 @@ class ComposerScreenUiTest {
         port.facts.value = ComposerFacts(busy = true, steering = true)
         show()
         type("also run the linter")
-        onNodeWithText("Add to this turn").performClick()
+        onNodeWithContentDescription("Add to this turn").performClick()
         waitForIdle()
         assertEquals(listOf("also run the linter" to SendHow.Steer), port.sent)
         assertEquals("", field.text.toString(), "the field empties once the steer is handed over")
         clock.now += 1.seconds
-        onNodeWithText("Stop").performClick()
+        onNodeWithContentDescription("Stop").performClick()
         waitForIdle()
         assertTrue("stop" in port.calls)
     }
@@ -92,10 +96,10 @@ class ComposerScreenUiTest {
         port.facts.value = ComposerFacts(busy = true, midTurn = MidTurnPrompt.RestartsTurn)
         show()
         type("start over")
-        onNodeWithText("Stop and send").assertExists()
+        onNodeWithContentDescription("Stop and send").assertExists()
         port.facts.value = ComposerFacts(busy = true)
         waitForIdle()
-        onNodeWithText("Send").assertIsNotEnabled()
+        onNodeWithContentDescription("Send").assertIsNotEnabled()
     }
 
     @Test
@@ -103,8 +107,8 @@ class ComposerScreenUiTest {
         port.facts.value =
             ComposerFacts(model = ModelFacts(modelId = "anthropic/claude-sonnet-5", catalogLoading = true), approval = ApprovalMode.AsksFirst)
         show()
-        onNodeWithText("Sonnet 5").performClick()
-        onNodeWithText("Ask first").performClick()
+        onNodeWithContentDescription("Sonnet 5").performClick()
+        onNodeWithContentDescription("Ask first").performClick()
         assertEquals(listOf("model", "approvals"), openers.opened)
         onNodeWithText("anthropic/claude-sonnet-5", substring = true).assertDoesNotExist()
     }
@@ -129,7 +133,7 @@ class ComposerScreenUiTest {
         onNode(hasSetTextAction()).performClick()
         type("ship it")
         onNode(hasSetTextAction()).assertIsFocused()
-        onNodeWithText("Send").performClick()
+        onNodeWithContentDescription("Send").performClick()
         waitForIdle()
         onNode(hasSetTextAction()).assertIsNotFocused()
     }
@@ -150,7 +154,7 @@ class ComposerScreenUiTest {
         show()
         type("ship it")
         port.failNextSend = true
-        onNodeWithText("Send").performClick()
+        onNodeWithContentDescription("Send").performClick()
         waitForIdle()
         assertEquals("ship it", field.text.toString())
         onNodeWithText("Your message wasn't sent", substring = true).assertExists()

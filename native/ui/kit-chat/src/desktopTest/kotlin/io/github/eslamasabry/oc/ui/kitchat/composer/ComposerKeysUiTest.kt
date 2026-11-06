@@ -85,7 +85,8 @@ class ComposerKeysUiTest {
             mainClock.advanceTimeBy(200)
             val stop = onNodeWithTag(STOP_TAG).getBoundsInRoot()
             assertEquals(before.right, stop.right, "the Stop sits at the trailing end")
-            onNodeWithText("Sonnet").assertExists()
+            // A plain chip speaks as one node (its words are its description); the words are its child.
+            onNodeWithText("Sonnet", useUnmergedTree = true).assertExists()
         }
 
     @Test

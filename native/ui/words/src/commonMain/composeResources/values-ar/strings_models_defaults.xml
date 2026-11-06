@@ -11,7 +11,7 @@
     <string name="modelDefaultsRecent">اختيار حديث</string>
     <string name="modelDefaultsCheapest">الأقل سعرًا</string>
     <string name="modelDefaultsFree">مجاني</string>
-    <string name="modelDefaultsPrice">الإدخال ‎$%1$s · الإخراج ‎$%2$s لكل مليون رمز</string>
+    <string name="modelDefaultsPrice">الإدخال \u200E$%1$s · الإخراج \u200E$%2$s لكل مليون رمز</string>
     <string name="modelDefaultsSelected">محدد</string>
     <string name="modelDefaultsSaving">جارٍ حفظ اختيار النموذج</string>
 </resources>

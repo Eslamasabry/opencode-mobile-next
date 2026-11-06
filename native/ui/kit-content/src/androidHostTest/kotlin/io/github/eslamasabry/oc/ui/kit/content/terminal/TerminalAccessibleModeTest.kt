@@ -2,7 +2,6 @@ package io.github.eslamasabry.oc.ui.kit.content.terminal
 
 import android.view.View
 import android.widget.TextView
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -28,6 +27,7 @@ import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.content.ContentFakePlatform
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.KitSystemSignals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -77,7 +77,8 @@ class TerminalAccessibleModeTest {
                 stillFrame = true,
             ) {
                 CompositionLocalProvider(LocalKitTerminalSlot provides AndroidKitTerminalSlot) {
-                    Box(Modifier.fillMaxSize()) {
+                    // The live slot keeps its link-review confirm, which needs the host a KitScreen places.
+                    KitSheetHost(Modifier.fillMaxSize()) {
                         KitTerminalView(
                             platformView = if (withGrid) grid else null,
                             title = "claude",

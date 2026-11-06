@@ -38,6 +38,7 @@ class RowMultilineTest {
         setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
             KitRow("Allowance could not be read from this computer", Modifier.width(180.dp), titleMaxLines = 3)
         } }
-        onNodeWithTag("kit-row-title").assertHeightIsAtLeast(40.dp)
+        // A row speaks as one merged node; its title is a child of it.
+        onNodeWithTag("kit-row-title", useUnmergedTree = true).assertHeightIsAtLeast(40.dp)
     }
 }

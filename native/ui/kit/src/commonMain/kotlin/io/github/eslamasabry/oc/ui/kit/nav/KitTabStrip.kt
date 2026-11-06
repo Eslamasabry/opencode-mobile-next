@@ -58,6 +58,7 @@ import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.selectableGroup
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.graphics.Color
@@ -92,9 +93,12 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.kitNeedsYouBadgeSuffix
+import io.github.eslamasabry.oc.ui.words.res.kitNeedsYouBadgeSuffix__eq1
 import io.github.eslamasabry.oc.ui.words.res.kitTabLabel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /** One tab of a strip (Dart `KitTab`). [count] null while the first answer comes: no number, never "0". */
@@ -223,6 +227,14 @@ public fun KitTabStrip(
                 val keyboard = LocalInputModeManager.current.inputMode == InputMode.Keyboard
                 val count = TabRules.countWords(tab.count)
                 val spoken = if (count != null) stringResource(Res.string.kitTabLabel, tab.label, count) else tab.label
+                // The badge is picture only; its count is spoken with the tab, as KitNeedsYouBadge does
+                // (F: lib/ui/kit/kit_needs_you.dart kitNeedsYouBadgeSuffix).
+                val needsYouWords =
+                    when {
+                        tab.needsYou <= 0 -> null
+                        tab.needsYou == 1 -> stringResource(Res.string.kitNeedsYouBadgeSuffix__eq1)
+                        else -> pluralStringResource(Res.plurals.kitNeedsYouBadgeSuffix, tab.needsYou, tab.needsYou)
+                    }
                 val look = kitSurfaceLook(KitSurfaceInput(role = SurfaceRole.Control, shape = pill, level = SurfaceLevel.Surface3, ownFill = colors.surface3, selected = true))
                 val ringColor = colors.accent
                 val ringWidth = kitFocusRingWidth()
@@ -250,6 +262,7 @@ public fun KitTabStrip(
                         .semantics(mergeDescendants = true) {
                             this.selected = chosen
                             contentDescription = spoken
+                            if (needsYouWords != null) stateDescription = needsYouWords
                         }
                         .padding(horizontal = Space.S3.dp),
                     verticalAlignment = Alignment.CenterVertically,

@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -120,7 +121,9 @@ class KitSeamsDesktopTest {
         open = true
         waitForIdle()
         onNodeWithText(words.sheetTitle).assertExists()
-        onNodeWithText(words.screenTitle).performClick() // the scrim covers the screen: a tap there dismisses
+        // The scrim covers the screen: a tap there dismisses. The covered page is out of semantics while the sheet
+        // owns the window (N-22), so the tap is aimed at its unmerged node.
+        onNodeWithText(words.screenTitle, useUnmergedTree = true).performClick()
         assertEquals(2, dismissed)
         onNodeWithText(words.sheetBody).assertDoesNotExist()
     }
@@ -151,7 +154,8 @@ class KitSeamsDesktopTest {
         var platform by mutableStateOf(FakeKitPlatform(frost = false))
         var ground = 0
         setContent {
-            Themed(platform, appearance = KitAppearance()) {
+            // N-57: only Glass frosts; every other style lies on its ground whatever the platform can do.
+            Themed(platform, appearance = KitAppearance(style = Style.Glass)) {
                 ground = argbOf(LocalKitColors.current.ground)
                 FrostScene(words)
             }
