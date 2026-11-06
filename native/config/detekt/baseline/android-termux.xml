@@ -214,7 +214,6 @@
     <ID>MaxLineLength:TermuxMigrationControllerTest.kt$TermuxMigrationControllerTest$mapOf("config" to JsonObject(mapOf("bytes" to JsonPrimitive(ARCHIVE.bytes), "sha256" to JsonPrimitive(ARCHIVE.sha256))))</ID>
     <ID>MaxLineLength:TermuxMigrationProfileTest.kt$TermuxMigrationProfileTest$expectFailure(TermuxMigrationFailure.invalidSelection) { run(mapOf("/root/projects/repo" to "/root/projects/../secret")) }</ID>
     <ID>MaxLineLength:TermuxMigrationProfileTest.kt$TermuxMigrationProfileTest$private suspend fun run(paths: Map&lt;String, String&gt; = emptyMap()): String</ID>
-    <ID>MaxLineLength:TermuxMigrationProfileTest.kt$TermuxMigrationProfileTest$private val destination = MigrationProfile(id = "builtin", openCode = true, baseUrl = "http://127.0.0.1:4097", flavor = "v2")</ID>
     <ID>MaxLineLength:TermuxMigrationProfileTest.kt$TermuxMigrationProfileTest$private var source = MigrationProfile(id = "termux", openCode = true, baseUrl = TERMUX_MANAGED_SERVER_URL, flavor = "v2")</ID>
     <ID>MaxLineLength:TermuxMigrationProviderNamesTest.kt$TermuxMigrationProviderNamesTest$config(".oc-opencode2/config/opencode/opencode.jsonc", """{/* isolated */"provider":{"openai":{},"google":{},},}""")</ID>
     <ID>MaxLineLength:TermuxMigrationProviderNamesTest.kt$TermuxMigrationProviderNamesTest$parseMigrationProviderNames(buildJsonObject { put("model", "$secret/anthropic"); put("small_model", "custom/openai") }.toString())</ID>
