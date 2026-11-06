@@ -357,10 +357,7 @@ private fun PlanDetails(
         if (management?.busy == true)
             KitEnabled.Disabled(stringResource(Res.string.e7AppearanceSaving))
         else KitEnabled.Enabled
-    Column(
-        Modifier.verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
-    ) {
+    Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
         KitRowGroup {
             KitRow(
                 title = words.state(card.state, card.providerId),

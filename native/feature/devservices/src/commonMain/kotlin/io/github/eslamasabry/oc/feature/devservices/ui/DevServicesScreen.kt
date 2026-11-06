@@ -295,7 +295,8 @@ private fun Output(state: DevServicesUi, actions: DevServicesActions) {
                     if (output?.hasMore == true) Res.string.workMoreOutput
                     else Res.string.workRefresh
                 ),
-                actions::refreshOutput.takeIf { output?.refreshing == false },
+                actions::refreshOutput,
+                working = output?.refreshing == true,
             ),
     ) {
         if (output != null) {
@@ -321,7 +322,7 @@ private fun Output(state: DevServicesUi, actions: DevServicesActions) {
                         ),
                 )
             }
-            Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+            Column(Modifier.fillMaxWidth()) {
                 KitText(
                     output.displayText.ifBlank { stringResource(Res.string.servicesLogEmpty) },
                     role = TypeRole.Mono,
