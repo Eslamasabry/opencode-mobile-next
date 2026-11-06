@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # T2 (plan 02 §8): the coordinator's integration gate, on the VPS, at checkpoints and on every candidate.
 #
-#   native/tool/t2.sh [--where vps|local] [--steps a,b] [--detach] [--dry-run]
+#   native/tool/t2.sh [--where vps|local] [--steps a,b] [--detach] [--dry-run | --resolve]
 #
 # Runs the steps in tool/ladder/t2.tasks in order (all JVM and Robolectric tests with -Poc.werror=true, Konsist and the
 # repository gates in :quality, Roborazzi verify, lint, both release assembles, the R8 config analysis, the catalog
@@ -9,6 +9,8 @@
 # Refuses to start without ~/.oc-native-t2.lock (one T2 at a time) and >= $OC_T2_MIN_DISK_GB (30) GB free disk
 # (plan 02 §7.8). --steps runs a subset for debugging; such a run is PARTIAL and never a T2 result.
 # A clean full pass on a committed tree prints the line for native/LAST_GREEN (the coordinator writes it, §9.3).
+# --resolve runs every step as `./gradlew --dry-run <args>` here (build slot held, no T2 lock or disk floor): each task
+# must resolve, a MISSING one fails; nothing is built or tested, so it is never a T2 result either (E02-S07).
 # Default --where: vps when $OC_VPS_HOST is set, else local. Detached with --detach: wait for build/native-t2/<id>/exit-code.
 # Exit: 0 pass, 1 a step failed or is missing, 2 could not run.
 # shellcheck disable=SC2088 # "~/..." paths are expanded on the VPS, not here
@@ -17,17 +19,20 @@ set -uo pipefail
 source "$(dirname "$0")/lib/common.sh"
 oc_maybe_detach native-t2 "$@"
 
-where="" only="" dry=0
+where="" only="" dry=0 resolve=0
 while (($#)); do
   case "$1" in
     --where) where="${2:-}"; shift 2 ;;
     --steps) only="${2:-}"; shift 2 ;;
     --dry-run) dry=1; shift ;;
-    -h | --help) sed -n '2,15p' "$0"; exit 0 ;;
-    *) oc_usage "t2.sh [--where vps|local] [--steps a,b] [--detach] [--dry-run]" ;;
+    --resolve) resolve=1; shift ;;
+    -h | --help) sed -n '2,17p' "$0"; exit 0 ;;
+    *) oc_usage "t2.sh [--where vps|local] [--steps a,b] [--detach] [--dry-run | --resolve]" ;;
   esac
 done
 where="${where:-$([[ -n "${OC_VPS_HOST:-}" ]] && echo vps || echo local)}"
+((dry && resolve)) && oc_usage "t2.sh: --dry-run and --resolve exclude each other"
+((resolve)) && where=local
 min_disk="${OC_T2_MIN_DISK_GB:-30}"
 
 top="$(oc_repo_root)" || oc_die2 "t2 runs from a git checkout (it records the tree it ran on)"
@@ -39,7 +44,7 @@ oc_say "tree: $sha$dirty; where: $where"
 mapfile -t lines < <(grep -vE '^\s*(#|$)' "$OC_TOOL_DIR/ladder/t2.tasks")
 total=${#lines[@]} ran=0 failed=() missing=()
 
-if ((!dry)); then
+if ((!dry && !resolve)); then
   if [[ "$where" == local ]]; then
     exec {t2fd}>"$HOME/.oc-native-t2.lock"
     flock -w "${OC_LOCK_WAIT:-1800}" "$t2fd" || { oc_say "lock: ~/.oc-native-t2.lock busy (one T2 at a time)"; oc_status 2; exit 2; }
@@ -65,6 +70,7 @@ for line in "${lines[@]}"; do
   name="${line%%$'\t'*}"; args_s="${line#*$'\t'}"
   if [[ -n "$only" && ",$only," != *",$name,"* ]]; then continue; fi
   read -r -a args <<<"$args_s"
+  ((resolve)) && args=(--dry-run "${args[@]}")
   ran=$((ran + 1))
   if ((dry)); then oc_say "step $name: ./gradlew $args_s (dry run)"; continue; fi
   if [[ "$where" == vps ]]; then
@@ -90,7 +96,8 @@ done
 
 oc_say "steps: $ran of $total run; failed: ${failed[*]:-none}; missing: ${missing[*]:-none}"
 [[ -n "$only" ]] && oc_say "PARTIAL run (--steps $only): not a T2 result"
-if ((!dry)); then
+((resolve)) && oc_say "RESOLVE run: every task was looked up, none run; not a T2 result"
+if ((!dry && !resolve)); then
   fails="$(oc_failing_tests)"
   [[ -n "$fails" ]] && { oc_say "failing tests:"; sed 's/^/  /' <<<"$fails" | tee -a "$OC_SUMMARY"; }
   oc_say "tests run: $(oc_tests_count)"

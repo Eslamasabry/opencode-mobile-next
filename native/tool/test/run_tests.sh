@@ -336,7 +336,12 @@ else
   echo "skip local ladder tests: no java"
 fi
 expect "ladder: t2 dry run lists every step" 0 native/tool/t2.sh --dry-run --where local
-expect_out "ladder: t2 includes the assemble step" 'step assemble: ./gradlew -Poc.debugSignRelease=true'
+expect_out "ladder: t2 includes the assemble step" 'step assemble: ./gradlew :androidApp:assembleSwitchRelease :androidApp:assemblePreviewRelease'
+expect_out "ladder: t2 lints the switch release" 'step lint: ./gradlew :androidApp:lintSwitchRelease'
+expect_out "ladder: t2 analyzes the switch release R8 config" 'step r8-config: ./gradlew :androidApp:analyzeSwitchReleaseR8Config'
+expect "ladder: t2 names no stable flavor and no undefined property (E02-S07)" 1 \
+  grep -nE 'Stable|debugSignRelease' native/tool/ladder/t2.tasks
+expect "ladder: t2 --resolve and --dry-run exclude each other" 2 native/tool/t2.sh --dry-run --resolve
 expect "ladder: a run writes exit-code" 0 bash -c 'ls native/build/native-t2/*/exit-code >/dev/null'
 
 expect "GATES review: offline regression suite" 0 python3 "$TOOL_SRC/test/test_gates_review.py"

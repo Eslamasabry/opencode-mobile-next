@@ -4,7 +4,7 @@
 build-logic	-p build-logic test
 tests	--continue -Poc.werror=true desktopTest testAndroidHostTest test
 goldens	--continue verifyRoborazziAndroidHostTest
-lint	:androidApp:lintStableRelease
-assemble	-Poc.debugSignRelease=true :androidApp:assembleStableRelease :androidApp:assemblePreviewRelease
-r8-config	:androidApp:analyzeStableReleaseR8Config
+lint	:androidApp:lintSwitchRelease
+assemble	:androidApp:assembleSwitchRelease :androidApp:assemblePreviewRelease
+r8-config	:androidApp:analyzeSwitchReleaseR8Config
 catalog-report	:quality:catalogReport
