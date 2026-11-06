@@ -77,6 +77,7 @@ internal fun AgentInstallPanel(
                 else null,
         ) {
             KitText(stringResource(Res.string.agentsSetupBody, agent.name))
+            if (agent.id == "gemini") KitNotice(stringResource(Res.string.agentsGeminiMigrationNote))
             if (size != null) KitText(stringResource(Res.string.agentsSetupSizeNote, size))
             if (needsPhoneSetup) KitNotice(stringResource(Res.string.agentsCatalogNeedsPhoneSetup))
         }

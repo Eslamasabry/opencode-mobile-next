@@ -59,7 +59,12 @@ public class SignInTerminalPresenter(
         when (val plan = agents.plan(agent)) {
             is SignInPlan.Terminal -> {
                 ui.update {
-                    it.copy(agentName = plan.agentName, usesClaudeAccount = plan.usesClaudeAccount)
+                    it.copy(
+                        agentName = plan.agentName,
+                        usesClaudeAccount = plan.usesClaudeAccount,
+                        pastesBrowserCode = agent.id == "antigravity",
+                        offersAntigravityNote = agent.id == "gemini",
+                    )
                 }
                 when (val built = agents.command(owner, agent)) {
                     is Outcome.Ok -> {
