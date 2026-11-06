@@ -176,7 +176,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                         stringResource(Res.string.chatsNewBuildPrompt),
                         Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp).padding(bottom = Space.S1.dp).testTag("chats-new-field"),
                         enabled = enabled,
-                        minLines = 2, // The agent cards are the hero beside the first message.
+                        minLines = 4, // F: lib/ui/screens/chats/new_chat_screen.dart:537
                         autofocus = !state.busy,
                         onTextChanged = actions::draftChanged,
                     )
