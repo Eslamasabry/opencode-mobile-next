@@ -87,13 +87,18 @@ public interface AgentsActions {
 
     public fun add(name: String, address: String, password: String, folder: String)
 
+    public fun openPhone() {}
+
     public fun checkPhoneAgents() {}
 
     public fun readAgents(id: ProfileId)
 
     public fun newConversation(id: ProfileId)
 
-    /** BUILD-PROTOCOLS: opens the computer's page (update its agents, import Claude Code conversations). */
+    /**
+     * BUILD-PROTOCOLS: opens the computer's page (update its agents, import Claude Code
+     * conversations).
+     */
     public fun openComputer(id: ProfileId) {}
 
     public fun installPhone(id: String) {}

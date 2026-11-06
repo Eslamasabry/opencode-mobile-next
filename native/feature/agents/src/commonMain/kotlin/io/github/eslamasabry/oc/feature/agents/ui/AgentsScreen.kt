@@ -54,8 +54,6 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
-import io.github.eslamasabry.oc.ui.kit.state.KitPageState
-import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.teaching.KitTip
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
@@ -108,7 +106,6 @@ import io.github.eslamasabry.oc.ui.words.res.agentsStateReady
 import io.github.eslamasabry.oc.ui.words.res.agentsStateSignInNeeded
 import io.github.eslamasabry.oc.ui.words.res.agentsStateStopped
 import io.github.eslamasabry.oc.ui.words.res.agentsStateUnavailable
-import io.github.eslamasabry.oc.ui.words.res.agentsSwitchToBuiltIn
 import io.github.eslamasabry.oc.ui.words.res.cardsFromAgentsSupporting
 import io.github.eslamasabry.oc.ui.words.res.cardsFromAgentsTitle
 import io.github.eslamasabry.oc.ui.words.res.codexProjectFolder
@@ -279,18 +276,13 @@ public fun AgentsScreen(
             val phoneAvailable = state.phone.available && hub?.connection?.usingBuiltIn != false
             if (phoneAvailable) AgentInstallPanel(state, actions, gutter, enabled)
             if (!phoneAvailable) {
-                KitPageState(
-                    kind = KitStateKind.Missing,
-                    title = stringResource(Res.string.agentsRunOnBuiltIn),
-                    icon = KitIcons.phone,
-                    primary =
-                        if (hub?.connection?.builtInAvailable == true && hubActions != null)
-                            io.github.eslamasabry.oc.ui.kit.KitAction(
-                                stringResource(Res.string.agentsSwitchToBuiltIn),
-                                hubActions::switchToBuiltIn,
-                                working = hub.working,
-                            )
-                        else null,
+                KitRow(
+                    title = stringResource(Res.string.agentsHubOnPhone),
+                    supporting = stringResource(Res.string.agentsRunOnBuiltIn),
+                    supportingMaxLines = 3,
+                    leading = KitRowLeading.Glyph(KitIcons.phone),
+                    trailing = KitRowTrailing.Chevron,
+                    onClick = actions::openPhone,
                 )
             } else {
                 PhoneAgentRows(state, actions, enabled)
@@ -519,8 +511,9 @@ public fun AgentsScreen(
             visible = state.revertingAgent != null,
             onDismissRequest = actions::cancelPreviousVersion,
             title =
-                state.revertingAgent?.let { stringResource(Res.string.agentsPreviousVersion, it.name) }
-                    ?: stringResource(Res.string.agentsSectionTitle),
+                state.revertingAgent?.let {
+                    stringResource(Res.string.agentsPreviousVersion, it.name)
+                } ?: stringResource(Res.string.agentsSectionTitle),
             icon = KitIcons.history,
             dismissible = !state.busy,
             primary =

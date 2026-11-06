@@ -13,9 +13,11 @@ import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.CardsSettingsRoute
 import io.github.eslamasabry.oc.ui.routes.ComputerRoute
+import io.github.eslamasabry.oc.ui.routes.PhoneRoute
+import io.github.eslamasabry.oc.ui.routes.PhoneSetupRoute
+import kotlin.time.Clock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlin.time.Clock
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
@@ -121,6 +123,9 @@ public class AgentsViewModel(
 
     override fun add(name: String, address: String, password: String, folder: String): Unit =
         presenter.add(name, address, password, folder)
+
+    override fun openPhone(): Unit =
+        nav.open(if (state.value.phone.available) PhoneRoute.ThisPhone else PhoneSetupRoute.Setup)
 
     override fun checkPhoneAgents(): Unit = presenter.checkPhoneAgents()
 
