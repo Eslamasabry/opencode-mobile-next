@@ -107,7 +107,7 @@ class ChatWorldReviewTest {
                     object : ConnectionGraph, ChatGraphAccessors, TranscriptAccessors {
                         override val profile = p
                         override val scope = scope
-                        override val session = ConnectionSession(p, pair.live)
+                        override val session = ConnectionSession(p, pair.live, scope)
                         override val chatDelivery =
                             io.github.eslamasabry.oc.engine.delivery.ConnectionDelivery(
                                 pair.live,

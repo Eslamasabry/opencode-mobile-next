@@ -68,6 +68,26 @@ class GraphSmokeTest {
 
         @Provides @IntoSet fun fakeBackend(): GatewayFactory = fake
 
+        // The app graphs bind these in their own modules (androidApp ProjectsWiring / MonitorInboxWiring); the smoke
+        // graph only needs them resolvable.
+        @Provides
+        fun contextUsage(): io.github.eslamasabry.oc.engine.settings.context.ContextUsageHistory = NoContextUsage
+
+        @Provides
+        fun monitorInbox(): io.github.eslamasabry.oc.feature.chats.monitor.MonitorInboxSource = NoMonitorInbox
+
+        @Provides fun teaching(): io.github.eslamasabry.oc.engine.settings.teaching.TeachingSource = io.github.eslamasabry.oc.engine.settings.teaching.TeachingSource { null }
+
+        @Provides fun servers(): io.github.eslamasabry.oc.engine.connection.ServerConnections = inert()
+
+        @Provides
+        fun notes(registry: ConnectionRegistry): io.github.eslamasabry.oc.engine.agents.notes.SessionNotes =
+            io.github.eslamasabry.oc.engine.agents.notes.SessionNotes(registry)
+
+        @Provides
+        fun schedules(): io.github.eslamasabry.oc.engine.schedules.ScheduleEngine =
+            io.github.eslamasabry.oc.engine.schedules.ScheduleEngine(inert(), inert(), inert(), inert(), nowMs = { 0L })
+
         @DependencyGraph.Factory
         fun interface Factory {
             fun create(@Provides buildInfo: AppBuildInfo, @Provides redactor: Redactor): SmokeGraph
@@ -104,3 +124,29 @@ class GraphSmokeTest {
         assertTrue(graph.registry.live.value.isEmpty())
     }
 }
+
+private object NoContextUsage : io.github.eslamasabry.oc.engine.settings.context.ContextUsageHistory {
+    override fun fraction(profile: ProfileId, session: String): Double? = null
+
+    override suspend fun remember(profile: ProfileId, session: String, fraction: Double?): Outcome<Unit> = Outcome.Ok(Unit)
+}
+
+private object NoMonitorInbox : io.github.eslamasabry.oc.feature.chats.monitor.MonitorInboxSource {
+    private val unavailable = io.github.eslamasabry.oc.core.common.Failure.Unavailable(io.github.eslamasabry.oc.core.common.FeatureId("monitor-inbox"))
+    override val facts: kotlinx.coroutines.flow.StateFlow<io.github.eslamasabry.oc.feature.chats.monitor.MonitorInboxFacts> =
+        kotlinx.coroutines.flow.MutableStateFlow(io.github.eslamasabry.oc.feature.chats.monitor.MonitorInboxFacts(loaded = true, failure = unavailable))
+
+    override suspend fun refresh(): Outcome<Unit> = Outcome.Failed(unavailable)
+
+    override suspend fun open(key: String, allowSwitch: Boolean): Outcome<io.github.eslamasabry.oc.feature.chats.monitor.MonitoredOpen> =
+        Outcome.Failed(unavailable)
+
+    override suspend fun token(profileId: String, sessionId: String, token: String): Outcome<String> = Outcome.Failed(unavailable)
+}
+
+/** A stand-in for a port only the Android app binds: the smoke graph builds it, and any call fails loudly. */
+private inline fun <reified T : Any> inert(): T =
+    java.lang.reflect.Proxy.newProxyInstance(T::class.java.classLoader, arrayOf(T::class.java)) { _, method, _ ->
+        if (method.name == "toString") "inert ${T::class.simpleName}"
+        else throw UnsupportedOperationException("${T::class.simpleName}.${method.name} is not bound in the smoke graph")
+    } as T
