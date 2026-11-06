@@ -58,7 +58,28 @@ public data class UsageUi(
     val budgetSaving: Boolean = false,
     val budgetFailed: Boolean = false,
     val budgetInvalid: Boolean = false,
+    /** Inspection filter over the returned model records (Flutter `UsageOverview.modelSearch`). */
+    val modelSearch: String = "",
+    val providerFilter: String? = null,
 ) {
+    val hasInspectionFilters: Boolean
+        get() = modelSearch.isNotBlank() || providerFilter != null
+
+    /** The model records that match the search words and the provider filter. */
+    val matchingModels: List<UsageModel>
+        get() {
+            val all = report?.models ?: return emptyList()
+            val words = modelSearch.trim().lowercase().split(' ').filter { it.isNotEmpty() }
+            return all.filter { m ->
+                (providerFilter == null || m.providerId == providerFilter) &&
+                    words.all { w ->
+                        m.providerId.lowercase().contains(w) ||
+                            m.modelId.lowercase().contains(w) ||
+                            (m.variant?.lowercase()?.contains(w) == true)
+                    }
+            }
+        }
+
     val serverName: String?
         get() = servers.firstOrNull { it.id == server }?.name
 
@@ -76,6 +97,12 @@ public interface UsageActions {
     public fun chooseScope(scope: UsageScope)
 
     public fun chooseServer(id: ProfileId)
+
+    public fun searchModels(query: String)
+
+    public fun filterProvider(providerId: String?)
+
+    public fun clearInspectionFilters()
 
     public fun editBudget(unit: io.github.eslamasabry.oc.engine.integrations.usage.UsageBudgetUnit)
 

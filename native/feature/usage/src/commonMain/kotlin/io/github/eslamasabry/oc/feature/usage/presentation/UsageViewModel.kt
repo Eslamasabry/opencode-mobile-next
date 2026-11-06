@@ -98,20 +98,38 @@ public class UsageViewModel(
 
     override fun chooseRange(range: UsageRange) {
         if (local.value.range == range) return
-        local.update { it.copy(range = range) }
+        local.update { it.copy(range = range, modelSearch = "", providerFilter = null) }
         read()
     }
 
     override fun chooseScope(scope: UsageScope) {
         if (local.value.scope == scope) return
-        local.update { it.copy(scope = scope) }
+        local.update { it.copy(scope = scope, modelSearch = "", providerFilter = null) }
         read()
+    }
+
+    override fun searchModels(query: String) {
+        local.update { it.copy(modelSearch = query) }
+    }
+
+    override fun filterProvider(providerId: String?) {
+        local.update { it.copy(providerFilter = providerId) }
+    }
+
+    override fun clearInspectionFilters() {
+        local.update { it.copy(modelSearch = "", providerFilter = null) }
     }
 
     override fun chooseServer(id: ProfileId) {
         if (local.value.server == id || local.value.servers.none { it.id == id }) return
         local.update {
-            it.copy(server = id, scope = UsageScope.AllProjects, projects = persistentListOf())
+            it.copy(
+                server = id,
+                scope = UsageScope.AllProjects,
+                projects = persistentListOf(),
+                modelSearch = "",
+                providerFilter = null,
+            )
         }
         loadProjects()
         read()

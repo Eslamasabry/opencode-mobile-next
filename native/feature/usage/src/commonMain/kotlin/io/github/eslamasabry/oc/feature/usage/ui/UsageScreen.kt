@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.*
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
@@ -43,7 +44,10 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
+import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
+import io.github.eslamasabry.oc.ui.kit.input.KitSearchNoMatch
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitInputFormDialog
@@ -106,7 +110,9 @@ import io.github.eslamasabry.oc.ui.words.res.usageInvalidResponse
 import io.github.eslamasabry.oc.ui.words.res.usageLoading
 import io.github.eslamasabry.oc.ui.words.res.usageModelSteps
 import io.github.eslamasabry.oc.ui.words.res.usageModelTokens
+import io.github.eslamasabry.oc.ui.words.res.usageMatchingRecords
 import io.github.eslamasabry.oc.ui.words.res.usageModels
+import io.github.eslamasabry.oc.ui.words.res.usageSearchRecords
 import io.github.eslamasabry.oc.ui.words.res.usageNoFinishedTools
 import io.github.eslamasabry.oc.ui.words.res.usageNoModels
 import io.github.eslamasabry.oc.ui.words.res.usageNoTools
@@ -227,7 +233,7 @@ public fun UsageContent(state: UsageUi, actions: UsageActions) {
                 Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
                 Budgets(state, actions)
             }
-        state.report?.let { report -> breakdowns(report) }
+        state.report?.let { report -> breakdowns(report, state, actions) }
         if (state.report != null)
             item(key = "disclosure") {
                 Column(
@@ -601,7 +607,7 @@ private fun Status(state: UsageUi, actions: UsageActions) {
         )
 }
 
-private fun LazyListScope.breakdowns(report: UsageReport) {
+private fun LazyListScope.breakdowns(report: UsageReport, state: UsageUi, actions: UsageActions) {
     if (report.empty) return
     item(key = "counts") {
         Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
@@ -671,7 +677,43 @@ private fun LazyListScope.breakdowns(report: UsageReport) {
             }
         }
     }
-    val providers = UsageFigures.providers(report.models)
+    item(key = "search") {
+        Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
+        val field = rememberTextFieldState(state.modelSearch)
+        // A new range, scope or server (or Clear) resets the words; the field follows.
+        LaunchedEffect(state.modelSearch) {
+            if (field.text.toString() != state.modelSearch)
+                field.setTextAndPlaceCursorAtEnd(state.modelSearch)
+        }
+        val ids = (UsageFigures.providers(report.models).map { it.providerId } +
+                listOfNotNull(state.providerFilter))
+            .distinct()
+            .sorted()
+        Column(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)) {
+            KitSearchField(
+                label = stringResource(Res.string.usageSearchRecords),
+                onSearch = actions::searchModels,
+                state = field,
+                resultCount =
+                    if (state.hasInspectionFilters) state.matchingModels.size else null,
+                activeFilter = state.providerFilter,
+                onClearFilter = { actions.filterProvider(null) },
+                filters =
+                    ids.map { id ->
+                        KitMenuItem(
+                            label = id,
+                            checked = state.providerFilter == id,
+                            onSelect = {
+                                actions.filterProvider(if (state.providerFilter == id) null else id)
+                            },
+                        )
+                    },
+            )
+        }
+    }
+    val matching = state.matchingModels
+    val matchingIds = matching.map { it.providerId }.toSet()
+    val providers = UsageFigures.providers(report.models).filter { it.providerId in matchingIds }
     if (providers.isNotEmpty()) {
         item(key = "providers") {
             KitRowGroup(label = stringResource(Res.string.usageProviders)) {
@@ -696,32 +738,50 @@ private fun LazyListScope.breakdowns(report: UsageReport) {
         }
     }
     item(key = "models") {
-        KitRowGroup(label = stringResource(Res.string.usageModels)) {
-            val models = UsageFigures.models(report.models)
-            if (models.isEmpty()) {
-                KitText(
-                    stringResource(Res.string.usageNoModels),
-                    role = KitTextRole.Supporting,
-                    modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
+        val gutter = LocalKitTokens.current.gutter
+        val models = UsageFigures.models(matching)
+        if (models.isEmpty() && state.hasInspectionFilters) {
+            Column(Modifier.padding(horizontal = gutter.dp)) {
+                KitSearchNoMatch(
+                    query = state.modelSearch.ifBlank { state.providerFilter.orEmpty() },
+                    onClear = actions::clearInspectionFilters,
+                    what = stringResource(Res.string.usageModels),
                 )
             }
-            for (m in models) {
-                val name =
-                    if (m.variant.isNullOrBlank()) m.modelId else "${m.modelId} · ${m.variant}"
-                KitRow(
-                    title = name,
-                    supporting =
-                        stringResource(Res.string.usageModelSteps, UsageFigures.count(m.steps)) +
-                            " · " +
-                            stringResource(
-                                Res.string.usageModelTokens,
-                                UsageFigures.compact(m.tokens.total),
-                            ),
-                    server = m.providerId,
-                    trailing = KitRowTrailing.Value(cost(m.cost), chevron = false),
-                )
+        } else
+            KitRowGroup(
+                label =
+                    if (state.hasInspectionFilters)
+                        stringResource(
+                            Res.string.usageMatchingRecords,
+                            UsageFigures.count(models.size.toLong()),
+                        )
+                    else stringResource(Res.string.usageModels)
+            ) {
+                if (models.isEmpty()) {
+                    KitText(
+                        stringResource(Res.string.usageNoModels),
+                        role = KitTextRole.Supporting,
+                        modifier = Modifier.padding(horizontal = gutter.dp),
+                    )
+                }
+                for (m in models) {
+                    val name =
+                        if (m.variant.isNullOrBlank()) m.modelId else "${m.modelId} · ${m.variant}"
+                    KitRow(
+                        title = name,
+                        supporting =
+                            stringResource(Res.string.usageModelSteps, UsageFigures.count(m.steps)) +
+                                " · " +
+                                stringResource(
+                                    Res.string.usageModelTokens,
+                                    UsageFigures.compact(m.tokens.total),
+                                ),
+                        server = m.providerId,
+                        trailing = KitRowTrailing.Value(cost(m.cost), chevron = false),
+                    )
+                }
             }
-        }
     }
     item(key = "tools") {
         KitRowGroup(label = stringResource(Res.string.usageToolReliability)) {
