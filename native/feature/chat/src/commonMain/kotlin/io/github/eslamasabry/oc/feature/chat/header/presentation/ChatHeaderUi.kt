@@ -113,6 +113,8 @@ public data class DetailsUi(
     val contextPercent: Int?,
     val contextLevel: ContextLevel?,
     val totalTokens: Long?,
+    /** Full server-reported folder, alongside the short project name. */
+    val directory: String? = null,
 )
 
 public data class ContinueChoice(

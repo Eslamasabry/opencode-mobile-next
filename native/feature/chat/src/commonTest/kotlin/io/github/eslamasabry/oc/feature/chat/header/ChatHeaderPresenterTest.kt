@@ -296,6 +296,21 @@ class ChatHeaderPresenterTest {
     }
 
     @Test
+    fun `B-CHAT-019 Go to Details closes the menu and opens reported facts before refresh completes`() {
+        val pending = mutableListOf<suspend () -> Unit>()
+        val presenter = ChatHeaderPresenter(world, port, nav, { pending += it })
+        presenter.openMenu()
+        presenter.choose(HeaderAction.Details)
+        val state = presenter.current()
+        assertFalse(state.menuOpen)
+        val details = assertIs<HeaderSheet.Details>(state.sheet).facts
+        assertEquals("Home PC", details.serverName)
+        assertEquals("/home/me/projects/app/", details.directory)
+        assertEquals(1, pending.size)
+        assertFalse("refresh" in port.calls)
+    }
+
+    @Test
     fun `B-CHAT-019 Codex header 8 Details reads the context from the replies when the session has none`() {
         val reply =
             io.github.eslamasabry.oc.core.model.transcript.MessageWithParts(

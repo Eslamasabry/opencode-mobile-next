@@ -196,6 +196,7 @@ public class ChatHeaderPresenter(
                         DetailsUi(
                             serverName = facts.serverName,
                             projectName = project,
+                            directory = facts.directory,
                             model = models.selected?.label ?: facts.model,
                             agent = models.agent ?: facts.agent,
                             contextPercent = percent,
@@ -305,6 +306,13 @@ public class ChatHeaderPresenter(
     }
 
     override fun choose(action: HeaderAction) {
+        // Go to → Details is a single state transition. Closing the menu must not be an
+        // intermediate frame with no destination, and refreshing facts must never gate opening.
+        if (action == HeaderAction.Details) {
+            local.update { it.copy(menuOpen = false, sheet = SheetKind.Details) }
+            launcher.launch { port.refresh() }
+            return
+        }
         local.update { it.copy(menuOpen = false) }
         when (action) {
             HeaderAction.AgentHandoff ->
@@ -316,10 +324,7 @@ public class ChatHeaderPresenter(
                     io.github.eslamasabry.oc.ui.routes.AgentToolsRoute(ref.profileId, ref.sessionId)
                 )
             HeaderAction.Find -> Unit // the chat screen's own find bar
-            HeaderAction.Details -> {
-                local.update { it.copy(sheet = SheetKind.Details) }
-                launcher.launch { port.refresh() }
-            }
+            HeaderAction.Details -> Unit // handled atomically above
             HeaderAction.Rename -> renameRequested()
             HeaderAction.ContinueWith -> {
                 local.update { it.copy(sheet = SheetKind.ContinueWith, continueFailure = null) }

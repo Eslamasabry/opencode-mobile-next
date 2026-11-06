@@ -130,6 +130,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarMore
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWorking
+import io.github.eslamasabry.oc.ui.words.res.mentionProjectFolder
 import io.github.eslamasabry.oc.ui.words.res.nativeHandoffTitle
 import io.github.eslamasabry.oc.ui.words.res.safetyStopSharingBody
 import io.github.eslamasabry.oc.ui.words.res.safetyStopSharingKeep
@@ -493,6 +494,12 @@ private fun DetailsBody(facts: DetailsUi) {
                 stringResource(Res.string.continueWithFactProject),
                 trailing = KitRowTrailing.Value(facts.projectName ?: none, chevron = false),
             )
+            facts.directory?.let { directory ->
+                KitRow(
+                    stringResource(Res.string.mentionProjectFolder),
+                    supporting = directory,
+                )
+            }
             KitRow(
                 stringResource(Res.string.chatUiModel),
                 trailing = KitRowTrailing.Value(facts.model ?: none, chevron = false),
@@ -741,6 +748,7 @@ private fun menuItems(
                 },
             destructive = action == HeaderAction.Delete,
             enabled = enabled,
+            dismissal = KitMenuDismissal.ByAction,
         )
     }
 }
