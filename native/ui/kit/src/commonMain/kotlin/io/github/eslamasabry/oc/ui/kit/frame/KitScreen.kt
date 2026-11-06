@@ -120,10 +120,11 @@ public fun KitScreen(
     val movableTop = remember { movableContentOf { latestTop.value?.invoke() } }
     val movableBottom = remember { movableContentOf { latestBottom.value?.invoke() } }
     val movableBody = remember { movableContentOf { latestBody.value() } }
-    val topPart: (@Composable () -> Unit)? = topBar?.let { if (overlayChrome) movableTop else it }
-    val bottomPart: (@Composable () -> Unit)? =
-        bottom?.let { if (overlayChrome) movableBottom else it }
-    val bodyPart: @Composable () -> Unit = if (overlayChrome) movableBody else body
+    // Both layouts must invoke the same movable content. Switching from a raw slot to a
+    // movable slot disposes it: the first optimistic chat bubble used to cancel its own send.
+    val topPart: (@Composable () -> Unit)? = topBar?.let { movableTop }
+    val bottomPart: (@Composable () -> Unit)? = bottom?.let { movableBottom }
+    val bodyPart: @Composable () -> Unit = movableBody
     val inner: @Composable (line: KitStatus?, ownsLine: Boolean) -> Unit = { line, ownsLine ->
         val insets =
             LocalKitScreenInsets.current ?: WindowInsets.safeDrawing.union(WindowInsets.ime)

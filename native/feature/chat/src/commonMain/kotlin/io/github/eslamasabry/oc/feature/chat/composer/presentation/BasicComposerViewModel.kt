@@ -32,6 +32,7 @@ import io.github.eslamasabry.oc.feature.chat.world.DraftFacts
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeed
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeedSource
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -526,22 +527,33 @@ public class BasicComposerViewModel(
             text
         ) // capture exact editor whitespace before the dispatch text is normalized
         sending.value = true
-        return try {
-            w.send(text.trim()) is Outcome.Ok
-        } finally {
-            sending.value = false
-        }
+        // Admission belongs to the entry's ViewModel, not the composable that received the tap.
+        // Moving the composer between the empty/chat frames must not cancel its send halfway
+        // through preflight and leave an optimistic bubble with no dispatch or terminal outcome.
+        return viewModelScope
+            .async {
+                try {
+                    w.send(text.trim()) is Outcome.Ok
+                } finally {
+                    sending.value = false
+                }
+            }
+            .await()
     }
 
     override suspend fun sendAgain(text: String, expectedRevision: Long): Boolean {
         val w = world ?: return false
         if (busy() || !state.value.canRepeat) return false
         sending.value = true
-        return try {
-            w.sendRepeated(text, expectedRevision) is Outcome.Ok
-        } finally {
-            sending.value = false
-        }
+        return viewModelScope
+            .async {
+                try {
+                    w.sendRepeated(text, expectedRevision) is Outcome.Ok
+                } finally {
+                    sending.value = false
+                }
+            }
+            .await()
     }
 
     override fun retrySave() {
