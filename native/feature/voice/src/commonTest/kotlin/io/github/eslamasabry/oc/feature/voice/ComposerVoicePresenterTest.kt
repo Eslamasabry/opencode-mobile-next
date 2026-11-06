@@ -100,32 +100,32 @@ class ComposerVoicePresenterTest {
         assertEquals("fix the crash", rig.field.value)
     }
 
+    // The pause countdown and its Send now / Don't send were removed on the owner's order
+    // (efaaaaab0, "Keep dictated words in the box instead of sending them"); released Flutter 2.1.4
+    // never auto-sends dictation either. These rows now pin that a pause never sends.
     @Test
-    fun `B-MEDIA-017 a pause with the setting on counts down three seconds then sends through the one send path`() = runTest {
-        val rig = Rig(this, autoSend = true)
-        runCurrent()
-        rig.presenter.tapMic()
-        runCurrent()
-        rig.listening("run the tests")
-        runCurrent()
-        rig.dictation.state.value = VoiceState.Done("run the tests", VoiceEnd.Silence)
-        runCurrent()
-        val ui = rig.presenter.state.value
-        assertEquals(MicPhase.Countdown, ui.phase)
-        assertEquals(3, ui.secondsLeft)
-        assertEquals("run the tests", rig.field.value)
-        advanceTimeBy(1_100)
-        assertEquals(2, rig.presenter.state.value.secondsLeft)
-        assertTrue(rig.field.sent.isEmpty())
-        advanceTimeBy(2_100)
-        runCurrent()
-        assertEquals(listOf("run the tests"), rig.field.sent)
-        assertEquals(MicPhase.Idle, rig.presenter.state.value.phase)
-        assertNull(rig.presenter.state.value.secondsLeft)
-    }
+    fun `B-MEDIA-017 a pause with the setting on stops, keeps the words in the box and says why without sending`() =
+        runTest {
+            val rig = Rig(this, autoSend = true)
+            runCurrent()
+            rig.presenter.tapMic()
+            runCurrent()
+            rig.listening("run the tests")
+            runCurrent()
+            rig.dictation.state.value = VoiceState.Done("run the tests", VoiceEnd.Silence)
+            runCurrent()
+            advanceTimeBy(5_000)
+            runCurrent()
+            val ui = rig.presenter.state.value
+            assertEquals(MicPhase.Idle, ui.phase)
+            assertNull(ui.secondsLeft)
+            assertEquals(VoiceNote.StoppedAfterPause, ui.note)
+            assertEquals("run the tests", rig.field.value)
+            assertTrue(rig.field.sent.isEmpty())
+        }
 
     @Test
-    fun `B-MEDIA-017 Send now sends at once and Don't send keeps the words unsent`() = runTest {
+    fun `B-MEDIA-017 after a pause the old Send now and Don't send do nothing and the words stay unsent`() = runTest {
         val rig = Rig(this, autoSend = true)
         runCurrent()
         rig.presenter.tapMic()
@@ -135,22 +135,12 @@ class ComposerVoicePresenterTest {
         rig.dictation.state.value = VoiceState.Done("ship it", VoiceEnd.Silence)
         runCurrent()
         rig.presenter.sendNow()
-        assertEquals(listOf("ship it"), rig.field.sent)
-
-        val keep = Rig(this, autoSend = true)
-        runCurrent()
-        keep.presenter.tapMic()
-        runCurrent()
-        keep.listening("not yet")
-        runCurrent()
-        keep.dictation.state.value = VoiceState.Done("not yet", VoiceEnd.Silence)
-        runCurrent()
-        keep.presenter.dontSend()
+        rig.presenter.dontSend()
         advanceTimeBy(5_000)
         runCurrent()
-        assertTrue(keep.field.sent.isEmpty())
-        assertEquals("not yet", keep.field.value)
-        assertEquals(MicPhase.Idle, keep.presenter.state.value.phase)
+        assertTrue(rig.field.sent.isEmpty())
+        assertEquals("ship it", rig.field.value)
+        assertEquals(MicPhase.Idle, rig.presenter.state.value.phase)
     }
 
     @Test
