@@ -23,6 +23,7 @@ import kotlinx.collections.immutable.persistentListOf
 class AgentsGateTest {
     private class Actions : AgentsActions {
         var installed: String? = null
+        var installRequested: String? = null
         var cancelled = false
         var opened: ProfileId? = null
         var refreshed = 0
@@ -74,6 +75,10 @@ class AgentsGateTest {
 
         override fun confirmRemoval() {
             removed++
+        }
+
+        override fun requestInstall(id: String) {
+            installRequested = id
         }
 
         override fun installPhone(id: String) {
@@ -169,7 +174,9 @@ class AgentsGateTest {
                     )
                 }
             }
-            onNodeWithContentDescription("Refresh account").assertIsNotEnabled()
+            // Compact and medium bars show Refresh as an icon (its label is the description); wide bars show the words.
+            onNode(hasContentDescription("Refresh account") or hasText("Refresh account"))
+                .assertIsNotEnabled()
             onNodeWithText("Sign in with ChatGPT").assertDoesNotExist()
             assertEquals(null, actions.opened)
             assertEquals(0, actions.refreshed)
@@ -559,7 +566,9 @@ class AgentsGateTest {
                 )
             }
         }
-        onNodeWithContentDescription("Install or update Gemini CLI").performClick()
-        assertEquals("gemini", actions.installed)
+        // The row's button opens the install review for that agent (Flutter's setup sheet); the review starts it.
+        onNode(hasText("Install or update Gemini CLI") and hasClickAction()).performClick()
+        assertEquals("gemini", actions.installRequested)
+        assertEquals(null, actions.installed)
     }
 }
