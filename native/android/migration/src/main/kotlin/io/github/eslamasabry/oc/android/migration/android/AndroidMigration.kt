@@ -8,6 +8,7 @@ import io.github.eslamasabry.oc.android.migration.MigrationSecretSink
 import io.github.eslamasabry.oc.android.migration.MigrationSignals
 import io.github.eslamasabry.oc.android.migration.StartFreshTransaction
 import io.github.eslamasabry.oc.android.migration.StepInterrupters
+import io.github.eslamasabry.oc.android.migration.sweep.FlutterEraCopies
 import io.github.eslamasabry.oc.core.security.Redactor
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlin.time.Clock
@@ -28,6 +29,13 @@ public object AndroidMigration {
         val fresh = StartFreshTransaction(MigrationPaths(dataDir), now = { clock.now().toEpochMilliseconds() })
         return fresh.recoverSafely() == StartFreshTransaction.Recovery.Finished
     }
+
+    /**
+     * The Flutter-era copies a server deletion must sweep (E00-S08): the live secure-storage file, the S0 backup and
+     * every Start fresh copy. Listing and editing are blocking file work: call them on the IO dispatcher.
+     */
+    public fun flutterEraCopies(context: Context): FlutterEraCopies? =
+        context.applicationContext.filesDir.parentFile?.let { FlutterEraCopies(MigrationPaths(it)) }
 
     public fun create(
         context: Context,

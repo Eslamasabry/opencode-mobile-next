@@ -52,6 +52,14 @@ internal class PrefsXmlRead(
     val problems: List<XmlProblem>,
     /** Character offset of the first fatal problem, for diagnostics (never the content around it). */
     val firstFatalOffset: Int?,
+    /**
+     * Where each named top-level element sits in the decoded text, `[start, end)` from its `<` to the end of its
+     * close tag, every occurrence in file order (a duplicate name has several). Lets an editor remove or replace one
+     * entry and leave every other byte as it was ([PrefsXmlEdit]).
+     */
+    val spans: Map<String, List<IntRange>> = emptyMap(),
+    /** Offset of the `</map>` close tag, or null for `<map />` or a file that did not load. */
+    val mapEndOffset: Int? = null,
 ) {
     /** The map Android would hand to the app. */
     val androidMap: Map<String, RawPref> get() = if (load == AndroidLoad.Loaded) entries else emptyMap()
@@ -117,6 +125,8 @@ internal object AndroidPrefsXml {
     private class Parser(private val s: String, private val problems: MutableList<XmlProblem>) {
         private var i = 0
         private val entries = LinkedHashMap<String, RawPref>()
+        private val spans = LinkedHashMap<String, MutableList<IntRange>>()
+        private var mapEnd: Int? = null
         private var firstFatal: Pair<XmlProblem, Int>? = null
 
         fun run(): PrefsXmlRead {
@@ -127,7 +137,7 @@ internal object AndroidPrefsXml {
                 fatal(f.problem, f.offset)
             }
             val load = if (firstFatal == null) AndroidLoad.Loaded else AndroidLoad.LoadsEmpty
-            return PrefsXmlRead(entries, load, problems.distinct(), firstFatal?.second)
+            return PrefsXmlRead(entries, load, problems.distinct(), firstFatal?.second, spans, mapEnd)
         }
 
         private fun fatal(p: XmlProblem, offset: Int) {
@@ -161,9 +171,17 @@ internal object AndroidPrefsXml {
             while (true) {
                 when (val t = next()) {
                     Token.Eof -> throw Fatal(XmlProblem.Truncated, i)
-                    is Token.End -> if (t.name == "map") return else throw Fatal(XmlProblem.Malformed, t.offset)
+                    is Token.End -> if (t.name == "map") {
+                        mapEnd = t.offset
+                        return
+                    } else {
+                        throw Fatal(XmlProblem.Malformed, t.offset)
+                    }
                     is Token.Text -> Unit // XmlUtils ignores text between values (whitespace in practice)
-                    is Token.Start -> readValue(t)
+                    is Token.Start -> {
+                        readValue(t)
+                        t.attrs["name"]?.let { spans.getOrPut(it) { mutableListOf() } += t.offset until i }
+                    }
                 }
             }
         }
