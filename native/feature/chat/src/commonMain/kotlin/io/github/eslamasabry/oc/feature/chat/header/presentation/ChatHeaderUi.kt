@@ -48,6 +48,12 @@ public enum class HeaderAction {
     Details,
     Share,
     Unshare,
+
+    /** "Copy share link" (Flutter `chatUiCopyShareLink`): offered while the conversation is shared. */
+    CopyShareLink,
+
+    /** "Refresh messages" (Flutter `chatUiReloadMessages`): read the conversation again. */
+    Reload,
     Fork,
     Rename,
     ContinueWith,

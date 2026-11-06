@@ -87,10 +87,14 @@ import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitReadRequest
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitReplyReader
+import io.github.eslamasabry.oc.ui.kitchat.code.CodeLanguage
+import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeBlock
+import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeKind
 import io.github.eslamasabry.oc.ui.kitchat.header.KitChatMoreMenu
 import io.github.eslamasabry.oc.ui.kitchat.image.KitPictureContent
 import io.github.eslamasabry.oc.ui.kitchat.image.KitPictureView
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownActions
+import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdBlock
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownSelection
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitPromptLiftHost
@@ -168,6 +172,8 @@ import io.github.eslamasabry.oc.ui.words.res.gitSheetTitle
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmFailed
 import io.github.eslamasabry.oc.ui.words.res.kitContextRingSemantics
 import io.github.eslamasabry.oc.ui.words.res.kitCopied
+import io.github.eslamasabry.oc.ui.words.res.markdownReaderTitle
+import io.github.eslamasabry.oc.ui.words.res.terminalOpenFull
 import io.github.eslamasabry.oc.ui.words.res.kitCopy
 import io.github.eslamasabry.oc.ui.words.res.kitDiscardTitle
 import io.github.eslamasabry.oc.ui.words.res.kitJumpLatest
@@ -267,6 +273,7 @@ public fun ChatScreen(
         }
     var commandInsertId by remember(state.ref) { mutableStateOf(0L) }
     var modelPicker by remember(state.ref) { mutableStateOf<Long?>(null) }
+    var codeReader by remember(state.ref) { mutableStateOf<KitMdBlock.Code?>(null) }
     val folds = rememberTranscriptFolds()
     var contextOpen by remember { mutableStateOf(false) }
     var tasksOpen by remember(state.ref) { mutableStateOf(false) }
@@ -732,6 +739,7 @@ public fun ChatScreen(
                                                 onChooseModel = {
                                                     modelPicker = (modelPicker ?: 0L) + 1L
                                                 },
+                                                onOpenCode = { codeReader = it },
                                             ),
                                         onOpenFile = { file -> openArtifact(actions, file) },
                                         reasoningExpanded = state.reasoningExpanded,
@@ -787,6 +795,7 @@ public fun ChatScreen(
                 if (activeContext != null) ActiveContextSheet(activeContext)
                 SelectTextSheet(state.select, actions)
                 PictureSheet(state.picture, actions)
+                CodeReaderSheet(codeReader, actions) { codeReader = null }
                 ChatTimelineSheet(state.timeline, actions, facts.nowMs)
                 KitConfirm(
                     spec = confirmSpec(state.confirm),
@@ -869,6 +878,35 @@ private fun SelectTextSheet(select: SelectTextUi?, actions: ChatActions) {
             KitMarkdownSelection(Modifier.fillMaxWidth().testTag("chat-select-text")) {
                 KitText(select.text)
             }
+        }
+    }
+}
+
+/**
+ * "Code reader" (Flutter markdown_code_reader): a reply's code block in full, every line, with
+ * Copy and Wrap lines on the block itself.
+ */
+@Composable
+private fun CodeReaderSheet(code: KitMdBlock.Code?, actions: ChatActions, onClose: () -> Unit) {
+    KitSheet(
+        visible = code != null,
+        onDismissRequest = onClose,
+        title = stringResource(Res.string.markdownReaderTitle),
+        closeLabel = stringResource(Res.string.chatFeelDone),
+        height = io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight.Full,
+    ) {
+        if (code != null) {
+            KitCodeBlock(
+                source = code.text,
+                kind = KitCodeKind.Code,
+                language = CodeLanguage.of(code.info),
+                open = code.open,
+                maxLines = Int.MAX_VALUE,
+                copyLabel = stringResource(Res.string.kitCopy),
+                onCopy = actions::copyText,
+                copiedLabel = stringResource(Res.string.kitCopied),
+                modifier = Modifier.testTag("chat-code-reader"),
+            )
         }
     }
 }
@@ -1075,7 +1113,9 @@ internal fun rememberReplyActions(
     models: List<io.github.eslamasabry.oc.feature.chat.world.ComposerModel> = emptyList(),
     canCompact: Boolean = false,
     onChooseModel: () -> Unit = {},
+    onOpenCode: (KitMdBlock.Code) -> Unit = {},
 ): ReplyActions {
+    val openFullCode = stringResource(Res.string.terminalOpenFull, "\u0000")
     val chooseModel = stringResource(Res.string.chatUiChooseAnotherModel)
     val useModelTemplate = stringResource(Res.string.chatUiUseModelAndResend, "\u0000")
     val openProviders = stringResource(Res.string.chatUiOpenProviders)
@@ -1107,6 +1147,8 @@ internal fun rememberReplyActions(
         openProviders,
         openAccount,
         compactLabel,
+        openFullCode,
+        onOpenCode,
     ) {
         ReplyActions(
             copiedLabel = copied,
@@ -1119,6 +1161,8 @@ internal fun rememberReplyActions(
                     confirmedPaths = confirmedPaths,
                     copyCodeLabel = copy,
                     onCopyCode = actions::copyText,
+                    moreCodeLabel = { hidden -> openFullCode.replace("\u0000", hidden.toString()) },
+                    onOpenCode = onOpenCode,
                     onPicture = { p ->
                         val url = p.url
                         val path = p.path

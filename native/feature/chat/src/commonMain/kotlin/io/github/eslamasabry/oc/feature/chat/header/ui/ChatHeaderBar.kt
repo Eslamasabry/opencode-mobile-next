@@ -86,7 +86,9 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiAgent
 import io.github.eslamasabry.oc.ui.words.res.chatUiAnyoneWithTheLinkCanViewThis
 import io.github.eslamasabry.oc.ui.words.res.chatUiAssistant
 import io.github.eslamasabry.oc.ui.words.res.chatUiAttachment
+import io.github.eslamasabry.oc.ui.words.res.chatUiCopyShareLink
 import io.github.eslamasabry.oc.ui.words.res.chatUiCopyTranscript
+import io.github.eslamasabry.oc.ui.words.res.chatUiReloadMessages
 import io.github.eslamasabry.oc.ui.words.res.chatUiError
 import io.github.eslamasabry.oc.ui.words.res.chatUiFile
 import io.github.eslamasabry.oc.ui.words.res.chatUiForkSession
@@ -770,6 +772,8 @@ private fun menuItems(
                     HeaderAction.Details -> KitIcons.info
                     HeaderAction.Share -> KitIcons.link
                     HeaderAction.Unshare -> KitIcons.unlink
+                    HeaderAction.CopyShareLink -> KitIcons.copy
+                    HeaderAction.Reload -> KitIcons.sync
                     HeaderAction.Fork -> KitIcons.fork
                     HeaderAction.Rename -> KitIcons.edit
                     HeaderAction.ContinueWith -> KitIcons.swap
@@ -805,6 +809,8 @@ private fun menuWords(action: HeaderAction): String =
         HeaderAction.Details -> stringResource(Res.string.sessionMenuDetails)
         HeaderAction.Share -> stringResource(Res.string.chatUiShareSession)
         HeaderAction.Unshare -> stringResource(Res.string.chatUiStopSharing)
+        HeaderAction.CopyShareLink -> stringResource(Res.string.chatUiCopyShareLink)
+        HeaderAction.Reload -> stringResource(Res.string.chatUiReloadMessages)
         HeaderAction.Fork -> stringResource(Res.string.chatUiForkSession)
         HeaderAction.Rename -> stringResource(Res.string.chatUiRenameSession)
         HeaderAction.ContinueWith -> stringResource(Res.string.continueWithMenu)

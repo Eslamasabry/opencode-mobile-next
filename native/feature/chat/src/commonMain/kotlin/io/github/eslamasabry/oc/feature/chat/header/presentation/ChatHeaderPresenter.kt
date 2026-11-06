@@ -358,6 +358,11 @@ public class ChatHeaderPresenter(
                     local.update { it.copy(confirm = HeaderConfirm.Unshare) }
                 }
             }
+            HeaderAction.CopyShareLink ->
+                port.facts.value.shareUrl?.let { url ->
+                    local.update { it.copy(clip = HeaderClip(nextId++, url, ClipKind.ShareLink)) }
+                }
+            HeaderAction.Reload -> run(action) { world.reload() }
             HeaderAction.Fork ->
                 run(action) {
                     when (val r = port.fork()) {
