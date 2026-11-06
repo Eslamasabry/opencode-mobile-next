@@ -66,4 +66,6 @@ public class ComposerChrome(
      * Never a new bar.
      */
     public val rowChips: @Composable () -> Unit = {},
+    public val freeModel: () -> Boolean = { false },
+    public val agentName: () -> String = { "OpenCode" },
 )

@@ -341,6 +341,7 @@ public fun ChatScreen(
                 onStop = actions::stop,
                 stopping = { latest.live?.stopping == true },
                 rowChips = { headerState?.approval?.let { ApprovalChip(it) } },
+                freeModel = { headerState?.state?.freeModel == true },
             )
         }
 
@@ -353,6 +354,7 @@ public fun ChatScreen(
                     modifier = Modifier.fillMaxSize(),
                     page = true,
                     overlayChrome = overlays,
+                    hideStatusWhenTyping = true,
                     topBar = {
                         Box(
                             Modifier.fillMaxWidth()
@@ -519,7 +521,7 @@ public fun ChatScreen(
                     bottom = {
                         Column {
                             state.find?.let { TranscriptFindBar(it, actions) }
-                            replyOffer?.invoke()
+                            // Optional permission asks never compete with the conversation.
                             // P12-VOICE: the reading strip (Stop, notes) and the once-per-phone
                             // consent.
                             replyReader?.Reader(

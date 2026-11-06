@@ -61,7 +61,6 @@ import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.agentToolsTitle
 import io.github.eslamasabry.oc.ui.words.res.cardsFromAgentsTitle
-import io.github.eslamasabry.oc.ui.words.res.chatFreeModelNote
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderArchiveFailed
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderContext
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderDeleteFailed
@@ -278,18 +277,6 @@ public fun ChatHeaderTopBar(
                 dismissLabel = stringResource(Res.string.kitSheetDismiss),
             )
         }
-    )
-    // "Free model, slower": one quiet line, below every real status (it never outranks a failure).
-    KitStatusContribution(
-        if (!state.freeModelNote) null
-        else
-            KitStatus(
-                KitStatusKind.Info,
-                stringResource(Res.string.chatFreeModelNote),
-                id = "chat-free-model",
-                onDismiss = actions::dismissFreeNote,
-                dismissLabel = stringResource(Res.string.kitSheetDismiss),
-            )
     )
     KitSheet(
         visible = failure != null && detailsOpen == failure.id,

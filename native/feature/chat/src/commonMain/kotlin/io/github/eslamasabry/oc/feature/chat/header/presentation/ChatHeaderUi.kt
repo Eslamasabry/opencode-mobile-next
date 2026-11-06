@@ -35,6 +35,8 @@ public data class ChatHeaderUi(
     val clip: HeaderClip? = null,
     /** "Free model, slower": once per conversation until dismissed (B-CHAT-015). */
     val freeModelNote: Boolean = false,
+    /** Catalog truth for the model chip; independent of notice dismissal. */
+    val freeModel: Boolean = false,
     /** The rename dialog is open with this text. */
     val renaming: String? = null,
 )
