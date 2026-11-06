@@ -1,6 +1,9 @@
 package io.github.eslamasabry.oc.ui.kit.modal
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
+import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -37,6 +40,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
@@ -207,6 +211,7 @@ internal class SheetEntry {
     var showClose: Boolean by mutableStateOf(true)
     var leading: KitAction? by mutableStateOf(null)
     var secondaryDismisses: Boolean by mutableStateOf(false)
+    var grows: Boolean by mutableStateOf(false)
     var asking: Boolean by mutableStateOf(false)
     var onDismissRequest: () -> Unit by mutableStateOf({})
     var body: @Composable ColumnScope.() -> Unit by mutableStateOf({})
@@ -254,11 +259,14 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
  * until answered (no Close, scrim or Back). The window decides the shape: a bottom sheet capped at
  * 640 dp; from an expanded window a centred 560 dp panel, or a 440 dp end sheet when [height] is
  * `Full`. "Closes when answered elsewhere" is the owning ViewModel's job: it sets [visible] false
- * (B-KIT-032).
+ * (B-KIT-032). [growsInPlace]: one sheet whose second step needs more room changes [height] from
+ * `Half` to `Full` and grows taller where it is, on the spatial spring (snap under reduced motion),
+ * instead of a second sheet replacing it; from an expanded window it stays the centred panel and
+ * grows there, never jumping to the end sheet.
  *
- * States: closed, open, asking (discard), predictive back Text: frame (header), reading (body) Cap:
- * Sheet (640 / 560 / 440) Motion: rises on the spatial spring, scrim fades STANDARD; back gesture
- * shrinks it; Off = instant Replaces: showKitSheet, KitSheet, KitSheetHeight, showKitFramedSheet
+ * States: closed, open, asking (discard), predictive back, grown Text: frame (header), reading
+ * (body) Cap: Sheet (640 / 560 / 440) Motion: rises on the spatial spring, scrim fades STANDARD;
+ * Half → Full grows on the spatial spring; back gesture shrinks it; Off = instant Replaces: showKitSheet, KitSheet, KitSheetHeight, showKitFramedSheet
  * (lib/ui/kit/kit_sheet*.dart)
  */
 @Composable
@@ -282,6 +290,7 @@ public fun KitSheet(
     secondaryDismisses: Boolean = false,
     showClose: Boolean = true,
     leading: KitAction? = null,
+    growsInPlace: Boolean = false,
     body: @Composable ColumnScope.() -> Unit,
 ) {
     val host = LocalKitSheetHost.current
@@ -307,6 +316,7 @@ public fun KitSheet(
         entry.showClose = showClose
         entry.leading = leading
         entry.secondaryDismisses = secondaryDismisses
+        entry.grows = growsInPlace
         entry.onDismissRequest = onDismissRequest
         entry.body = body
     }
@@ -344,9 +354,15 @@ private fun SheetLayer(state: KitSheetHostState) {
         )
     }
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val placement = SheetLayout.placement(maxWidth.value, entry.height)
+        // A growing sheet keeps one place for both of its heights.
+        val placement =
+            SheetLayout.placement(
+                maxWidth.value,
+                if (entry.grows) KitSheetHeight.Half else entry.height,
+            )
         val maxSheet = maxHeight * SheetLayout.CONTENT_MAX_SHARE
         val half = maxHeight * 0.5f
+        val growth = sheetGrowth(entry, half, maxSheet)
         when (placement) {
             KitSheetPlacement.Bottom ->
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
@@ -357,10 +373,13 @@ private fun SheetLayer(state: KitSheetHostState) {
                         exit = still.exit { slideOutVertically(specs.exit<IntOffset>()) { it } },
                     ) {
                         val sized =
-                            when (entry.height) {
-                                KitSheetHeight.Content -> Modifier.heightIn(max = maxSheet)
-                                KitSheetHeight.Half -> Modifier.height(half)
-                                KitSheetHeight.Full -> Modifier.height(maxSheet)
+                            when {
+                                entry.grows && entry.height != KitSheetHeight.Content ->
+                                    Modifier.grownHeight(growth)
+                                entry.height == KitSheetHeight.Content ->
+                                    Modifier.heightIn(max = maxSheet)
+                                entry.height == KitSheetHeight.Half -> Modifier.height(half)
+                                else -> Modifier.height(maxSheet)
                             }
                         SheetPanel(
                             entry,
@@ -390,7 +409,11 @@ private fun SheetLayer(state: KitSheetHostState) {
                             entry,
                             Modifier.widthIn(max = SheetLayout.CENTRED_MAX_DP.dp)
                                 .fillMaxWidth()
-                                .heightIn(max = maxSheet)
+                                .then(
+                                    if (entry.grows && entry.height != KitSheetHeight.Content)
+                                        Modifier.grownHeight(growth)
+                                    else Modifier.heightIn(max = maxSheet)
+                                )
                                 .predictiveShrink(back, TransformOrigin.Center)
                                 .clip(KitShapeId.Dialog.shape()),
                             handle = false,
@@ -416,6 +439,32 @@ private fun SheetLayer(state: KitSheetHostState) {
                 }
         }
     }
+}
+
+/**
+ * The growing sheet's height. A change of [SheetEntry.height] (Half ↔ Full) springs on `Spatial`;
+ * a change of the window (rotation, split screen) snaps, so only the person's step moves.
+ */
+@Composable
+private fun sheetGrowth(entry: SheetEntry, half: Dp, full: Dp): Animatable<Dp, AnimationVector1D> {
+    val specs = KitMotion.specs
+    val target = if (entry.height == KitSheetHeight.Full) full else half
+    val grow = remember(entry) { Animatable(target, Dp.VectorConverter) }
+    val shown = remember(entry) { mutableStateOf(entry.height) }
+    LaunchedEffect(entry, target) {
+        if (shown.value != entry.height) {
+            shown.value = entry.height
+            grow.animateTo(target, specs.spatial())
+        } else grow.snapTo(target)
+    }
+    return grow
+}
+
+/** Reads the growing height in the layout phase: the spring never recomposes the sheet's body. */
+private fun Modifier.grownHeight(grow: Animatable<Dp, AnimationVector1D>): Modifier = layout { measurable, constraints ->
+    val h = grow.value.roundToPx().coerceIn(constraints.minHeight, constraints.maxHeight)
+    val placeable = measurable.measure(constraints.copy(minHeight = h, maxHeight = h))
+    layout(placeable.width, h) { placeable.place(0, 0) }
 }
 
 /**
