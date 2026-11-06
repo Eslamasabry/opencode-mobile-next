@@ -1,0 +1,6 @@
+<resources>
+    <string name="upgradeComposerAsk">اسأل %1$s…</string>
+    <string name="upgradeComposerFree"> · مجاني</string>
+    <string name="upgradeComposerVoiceHoldTitle">تحدث مع الوكيل</string>
+    <string name="upgradeComposerVoiceHold">اضغط مطولًا على الميكروفون لمحادثة صوتية، أو افتح + واختر محادثة صوتية.</string>
+</resources>

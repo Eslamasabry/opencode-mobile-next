@@ -166,6 +166,8 @@ private fun teachingWords(key: String): String =
             "tipStopAfterStep" -> Res.string.tipStopAfterStep
             "tipSendLaterTitle" -> Res.string.tipSendLaterTitle
             "tipSendLater" -> Res.string.tipSendLater
+            "upgradeComposerVoiceHoldTitle" -> Res.string.upgradeComposerVoiceHoldTitle
+            "upgradeComposerVoiceHold" -> Res.string.upgradeComposerVoiceHold
             "tipHoldMicTitle" -> Res.string.tipHoldMicTitle
             "tipHoldMic" -> Res.string.tipHoldMic
             "tourMakeItYoursTitle" -> Res.string.tourMakeItYoursTitle

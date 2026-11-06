@@ -50,6 +50,7 @@ public object TeachingIds {
     public val TerminalSelection: TipId = TipId("terminal-selection")
     public val StopAfterStep: TipId = TipId("stop-after-step")
     public val SendLater: TipId = TipId("send-later")
+    public val VoiceMicConversation: TipId = TipId("voice-mic-conversation")
     public val HoldMic: TipId = TipId("hold-mic")
     public val VoiceConversation: TipId = TipId("voice-conversation")
     public val MakeItYours: TipId = TipId("make-it-yours")
@@ -181,6 +182,16 @@ public class TeachingRegistry(tips: Iterable<TipDefinition>) {
                         priority = 1,
                     ),
                     TipDefinition(
+                        id = TeachingIds.VoiceMicConversation,
+                        kind = TeachingKind.Tip,
+                        titleKey = "upgradeComposerVoiceHoldTitle",
+                        messageKey = "upgradeComposerVoiceHold",
+                        copyKeys = persistentListOf("upgradeComposerVoiceHoldTitle", "upgradeComposerVoiceHold"),
+                        anchors = persistentListOf("composer-voice-button"),
+                        trigger = "a conversation has an empty composer and voice is available; used once voice conversation starts",
+                        priority = 1,
+                    ),
+                    TipDefinition(
                         id = TeachingIds.HoldMic,
                         kind = TeachingKind.Tip,
                         titleKey = "tipHoldMicTitle",
@@ -194,6 +205,7 @@ public class TeachingRegistry(tips: Iterable<TipDefinition>) {
                     TipDefinition(
                         id = TeachingIds.VoiceConversation,
                         kind = TeachingKind.Tour,
+                        priority = 2,
                         titleKey = "voiceConversationTitle",
                         messageKey = "voiceConversationNativeTourSpeak",
                         copyKeys =

@@ -39,3 +39,7 @@ Model switches, token/model metadata and reply timing moved into message Details
 ## U8 — framework row/chat motion
 
 The real conversation feed row and chat now share their ConversationRef key and KitGrowPage, using Compose SharedTransitionLayout and Nav3's predictive back. Open/return settle at 250/200 ms; content fades take 150 ms. Effective reduced-motion policy also controls navigation and predictive corners. Source/diff checks only; coordinator must compile and qualify gesture cancel/commit, RTL and reduced motion on device.
+
+## U9 — one mic/Send composer
+
+Frameless kit composer retains the working glow, with one round primary mic/Send slot, 150 ms fade (snap under reduced motion), five text lines, scrolling model/approval chips and a vector chevron. Free is a catalog-backed model-chip tag. Placeholder names the agent. Hold mic starts voice conversation; + menu offers the visible twin, with shared teaching, replay/reset and the existing mini tutorial. Actual binding is BasicComposerHost; the unbound FullComposer path is updated too. Source/formatter/XML checks only; no compile/tests.

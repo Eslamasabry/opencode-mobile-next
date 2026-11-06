@@ -30,29 +30,43 @@ public fun KitComposerMic(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     quiet: Boolean = false,
+    onLongClick: (() -> Unit)? = null,
+    longClickLabel: String? = null,
 ) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
-    val look = kitSurfaceLook(KitSurfaceInput(
-        role = SurfaceRole.Control,
-        shape = KitShapeId.Circle,
-        level = SurfaceLevel.Surface3,
-        ownFill = if (quiet) colors.surface3 else colors.accent,
-        color = if (quiet) null else colors.accent,
-        action = true,
-    ))
+    val look =
+        kitSurfaceLook(
+            KitSurfaceInput(
+                role = SurfaceRole.Control,
+                shape = KitShapeId.Circle,
+                level = SurfaceLevel.Surface3,
+                ownFill = if (quiet) colors.surface3 else colors.accent,
+                color = if (quiet) null else colors.accent,
+                action = true,
+            )
+        )
     val ink = if (quiet) colors.text2 else look.words ?: colors.onAccent
     KitTappable(
         onClick = onClick,
+        onLongClick = onLongClick,
+        onLongClickLabel = longClickLabel,
         modifier = modifier.semantics { contentDescription = label },
         shape = KitShapeId.Circle,
         ink = if (quiet) TextTone.Secondary else TextTone.OnAccent,
     ) {
         Box(
-            Modifier.size(FlutterKitTokens.COMPOSER_ACTION_SIZE.dp).then(look.modifier).testTag("kit-composer-mic-disc"),
+            Modifier.size(FlutterKitTokens.COMPOSER_ACTION_SIZE.dp)
+                .then(look.modifier)
+                .testTag("kit-composer-mic-disc"),
             contentAlignment = Alignment.Center,
         ) {
-            Image(KitIcons.mic, null, Modifier.size(tokens.smallIcon.dp), colorFilter = ColorFilter.tint(ink))
+            Image(
+                KitIcons.mic,
+                null,
+                Modifier.size(tokens.smallIcon.dp),
+                colorFilter = ColorFilter.tint(ink),
+            )
         }
     }
 }

@@ -53,6 +53,9 @@ public interface KitComposerVoice {
      */
     @Composable public fun Mic(field: KitVoiceField, modifier: Modifier)
 
+    /** Visible alternative to the mic's long press, drawn only while the plus menu is open. */
+    @Composable public fun Actions(field: KitVoiceField, modifier: Modifier) {}
+
     /**
      * Above the field while voice is active: what is heard, the countdown, the notes. Draws nothing
      * when idle.

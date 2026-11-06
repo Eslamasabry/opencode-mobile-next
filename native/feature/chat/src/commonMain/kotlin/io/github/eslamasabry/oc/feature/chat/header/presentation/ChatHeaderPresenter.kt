@@ -255,6 +255,10 @@ public class ChatHeaderPresenter(
             failure = l.failure,
             clip = l.clip,
             renaming = l.renaming,
+            agentName =
+                if (caps.hostAgentProviders)
+                    models.selected?.providerName?.takeIf(String::isNotBlank) ?: "OpenCode"
+                else "OpenCode",
             freeModelNote = false,
             freeModel =
                 l.freeFacts?.let { free ->

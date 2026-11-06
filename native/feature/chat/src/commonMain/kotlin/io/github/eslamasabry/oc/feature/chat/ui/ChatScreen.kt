@@ -295,12 +295,6 @@ public fun ChatScreen(
 
     val frost = rememberKitFrostState()
     val overlays = state.phase == ChatPhase.Live && state.status == null && state.find == null
-    val composerUnder by
-        remember(list) {
-            derivedStateOf {
-                list.lazy.firstVisibleItemIndex > 0 || list.lazy.firstVisibleItemScrollOffset > 0
-            }
-        }
     val headerUnder by remember(list) { derivedStateOf { list.lazy.canScrollForward } }
     val chrome =
         remember(actions, prompts) {
@@ -332,6 +326,7 @@ public fun ChatScreen(
                 stopping = { latest.live?.stopping == true },
                 rowChips = { headerState?.approval?.let { ApprovalChip(it) } },
                 freeModel = { headerState?.state?.freeModel == true },
+                agentName = { headerState?.state?.agentName ?: "OpenCode" },
             )
         }
 
@@ -532,13 +527,7 @@ public fun ChatScreen(
                             composerHost.Composer(
                                 ComposerTarget(state.ref.profileId.raw, state.ref.sessionId.raw),
                                 chrome,
-                                Modifier.fillMaxWidth()
-                                    .kitFrost(
-                                        FrostRole.Composer,
-                                        frost,
-                                        shown = overlays && composerUnder,
-                                    )
-                                    .padding(vertical = Space.S2.dp),
+                                Modifier.fillMaxWidth().padding(vertical = Space.S2.dp),
                             )
                         }
                     },

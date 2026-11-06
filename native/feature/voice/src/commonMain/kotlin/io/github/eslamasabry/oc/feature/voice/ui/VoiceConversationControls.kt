@@ -32,12 +32,6 @@ internal fun VoiceConversationControls(
     if (!state.conversationAvailable || !state.available) return
     if (!state.conversation) {
         if (state.phase == MicPhase.Idle) {
-            KitButton(
-                label = stringResource(Res.string.voiceConversationTitle),
-                onClick = presenter::startConversation,
-                modifier = modifier.testTag("voice-conversation-start"),
-                role = KitButtonRole.Tertiary,
-            )
             state.replyNote?.let { KitNotice(conversationNote(it), modifier) }
         }
         return
