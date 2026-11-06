@@ -77,7 +77,7 @@ message. A retried step starts from a clean `.new` directory in every case above
 ## Tests (worktree /home/eslam/Storage2/wt/fix-117-unpack)
 All with the pinned Flutter 3.47.1, serial.
 
-- `flutter test --concurrency=1 test/setup_scripts_test.dart`: 33 passed (new group `oc_untar`, 6 tests:
+- `flutter test --concurrency=1 test/setup_scripts_test.dart`: 27 passed (new group `oc_untar`, 6 tests:
   healthy tar not handed on; crashing tar handed to the app with the exact `::oc unpack` line;
   member + strip passed on; no app answers -> exit 139 and plain message; plain tar failure
   (exit 2) not handed on; app failing -> exit 139 and "The app could not unpack it").
