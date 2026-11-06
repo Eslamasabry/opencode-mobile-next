@@ -53,6 +53,8 @@ public data class NewConversationModel(
     val model: ModelRef,
     val name: String,
     val runtime: String? = null,
+    /** N-51: the provider's name, the heading its models sit under (as in the chat's model sheet). */
+    val providerName: String? = null,
 )
 
 public data class NewConversationSetup(

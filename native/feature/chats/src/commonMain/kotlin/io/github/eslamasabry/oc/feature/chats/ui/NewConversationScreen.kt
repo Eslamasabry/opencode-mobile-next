@@ -81,6 +81,8 @@ import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceMark
+import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceRow
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
@@ -701,25 +703,33 @@ internal fun NewConversationModelChoices(
     choose: (ModelRef?) -> Unit,
     query: String = "",
 ) {
-    KitRowGroup {
-        if (query.isBlank())
-            KitRow(
-                title = stringResource(Res.string.agentsModelDefault),
+    // N-51: the same list as the chat's model sheet: Server default with what it means, then each provider's models
+    // under its name, the chosen one ticked.
+    if (query.isBlank())
+        KitRowGroup {
+            KitChoiceRow(
+                title = stringResource(Res.string.composerPreviewModelDefault),
+                supporting = stringResource(Res.string.composerPreviewModelDefaultHint),
                 selected = selected == null,
-                trailing = if (selected == null) KitRowTrailing.Check else KitRowTrailing.None,
+                mark = KitChoiceMark.Tick,
                 onClick = { choose(null) },
             )
-        filterNewConversationModels(models, query).forEach { model ->
-            KitRow(
-                title = model.name,
-                supporting = model.runtime,
-                selected = model.model == selected,
-                trailing =
-                    if (model.model == selected) KitRowTrailing.Check else KitRowTrailing.None,
-                onClick = { choose(model.model) },
-            )
         }
-    }
+    filterNewConversationModels(models, query)
+        .groupBy { it.providerName ?: it.model.providerId }
+        .forEach { (provider, group) ->
+            KitRowGroup(label = provider, section = true) {
+                group.forEach { model ->
+                    KitChoiceRow(
+                        title = model.name,
+                        supporting = model.runtime?.takeIf { it != provider },
+                        selected = model.model == selected,
+                        mark = KitChoiceMark.Tick,
+                        onClick = { choose(model.model) },
+                    )
+                }
+            }
+        }
 }
 
 /** Flutter import list uses the final non-empty path segment, including a trailing slash. */

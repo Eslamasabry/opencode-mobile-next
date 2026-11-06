@@ -583,6 +583,7 @@ class AndroidNewConversationHost(
                                             }
                                             ?.name ?: model,
                                         if (caps.hostAgentProviders) p.name else null,
+                                        providerName = p.name.ifBlank { null },
                                     )
                                 }
                             },
