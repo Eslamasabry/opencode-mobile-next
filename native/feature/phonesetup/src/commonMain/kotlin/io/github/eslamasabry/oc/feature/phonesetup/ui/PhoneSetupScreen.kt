@@ -20,8 +20,10 @@ import io.github.eslamasabry.oc.feature.phonesetup.presentation.PhoneSetupAction
 import io.github.eslamasabry.oc.feature.phonesetup.presentation.PhoneSetupUi
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
@@ -274,7 +276,9 @@ private fun Job(progress: SetupProgress, state: PhoneSetupUi, actions: PhoneSetu
                 message = stringResource(Res.string.phoneSetupStartReadyBody),
                 tone = StatusTone.Ok,
             )
-            KitButton(stringResource(Res.string.phoneSetupStartOpen), actions::done)
+            // B-109: the screen's one next step is the kit's action block (full width on a phone, at the end from
+            // medium up), never a narrow button left at the start edge.
+            KitActionBlock(primary = KitAction(stringResource(Res.string.phoneSetupStartOpen), actions::done))
         }
         SetupState.Failed,
         SetupState.Interrupted,
@@ -296,16 +300,17 @@ private fun Job(progress: SetupProgress, state: PhoneSetupUi, actions: PhoneSetu
                 copyLabel = stringResource(Res.string.kitCopyDetails),
             )
             if (state.reportFailed) KitNotice(stringResource(Res.string.diagnosticsUnavailable))
-            if (progress.state == SetupState.Failed)
-                KitButton(
-                    stringResource(Res.string.kitReportProblem),
-                    actions::reportFailure,
-                    role = KitButtonRole.Secondary,
-                )
-            KitButton(
-                stringResource(Res.string.setupProgressViewContinue),
-                actions::continueSetup,
-                working = state.starting,
+            KitActionBlock(
+                primary =
+                    KitAction(
+                        stringResource(Res.string.setupProgressViewContinue),
+                        actions::continueSetup,
+                        working = state.starting,
+                    ),
+                secondary =
+                    if (progress.state == SetupState.Failed)
+                        KitAction(stringResource(Res.string.kitReportProblem), actions::reportFailure)
+                    else null,
             )
         }
         SetupState.Idle -> Unit
