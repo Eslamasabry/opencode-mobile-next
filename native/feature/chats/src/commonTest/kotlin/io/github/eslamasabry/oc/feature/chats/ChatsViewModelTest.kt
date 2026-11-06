@@ -40,8 +40,11 @@ class ChatsViewModelTest {
         val calls = mutableListOf<String>()
         override val top: StateFlow<AppRoute?> = MutableStateFlow(null)
 
+        val routes = mutableListOf<AppRoute>()
+
         override fun open(route: AppRoute) {
             calls += "open $route"
+            routes += route
         }
 
         override fun openChat(ref: ConversationRef, focusComposer: Boolean) {
@@ -113,9 +116,13 @@ class ChatsViewModelTest {
     fun `SCREENS-NAV-27 rows open their chat, New conversation slides up, the gear opens Settings only when it can`() {
         val nav = RecordingNavigator()
         val closed = Door(available = false)
+        // Only a row the feed lists, and that can be reopened, opens (a stale or unresumable ref stays shut).
+        val feed = Feed().apply {
+            snapshot.value = ChatFeedSnapshot(persistentListOf(item("s1"), item("gone").copy(canReopen = false)))
+        }
         val vm =
             ChatsViewModel(
-                Feed(),
+                feed,
                 Briefs(),
                 closed,
                 { Instant.fromEpochMilliseconds(0) },
@@ -128,8 +135,12 @@ class ChatsViewModelTest {
         vm.openConversation(
             ConversationRef(P1, io.github.eslamasabry.oc.core.common.ids.SessionId("s1"))
         )
+        vm.openConversation(ConversationRef(P1, io.github.eslamasabry.oc.core.common.ids.SessionId("gone")))
+        vm.openConversation(ConversationRef(P1, io.github.eslamasabry.oc.core.common.ids.SessionId("unlisted")))
         vm.newConversation()
-        assertEquals(listOf("openChat s1", "open ${ChatsRoute.New(null)}"), nav.calls)
+        // Each New route carries fresh command and tab ids, so compare what it is, not one instance.
+        assertEquals(listOf("openChat s1", "open New"), nav.calls.map { it.substringBefore('(') })
+        assertEquals(null, (nav.routes.single() as ChatsRoute.New).profile)
 
         val open = Door(available = true)
         val withDoor =

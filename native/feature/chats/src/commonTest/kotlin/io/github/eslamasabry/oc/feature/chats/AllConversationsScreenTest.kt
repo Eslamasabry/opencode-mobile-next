@@ -177,9 +177,19 @@ class AllConversationsScreenTest {
     fun `SCREENS-NAV-34 a search with no loaded match still offers Load more while older pages remain`() =
         runComposeUiTest {
             val actions = Recording()
-            setContent { Themed { ChatsAllScreen(noMatch.copy(loadingMore = true), actions) } }
+            setContent { Themed { ChatsAllScreen(noMatch, actions) } }
             onNodeWithText("No matching conversations").assertExists()
-            onNodeWithText("Load more conversations").assertExists()
+            onNodeWithText("Load more conversations").performClick()
+            assertTrue("more" in actions.calls)
+        }
+
+    @Test
+    fun `SCREENS-NAV-34 while an older page is loading the loading bar shows progress, not Load more`() =
+        runComposeUiTest {
+            // Flutter global_sessions_screen.dart:1005 offers the button only when not loading more.
+            setContent { Themed { ChatsAllScreen(noMatch.copy(loadingMore = true), Recording()) } }
+            onNodeWithText("No matching conversations").assertExists()
+            onAllNodesWithText("Load more conversations").assertCountEquals(0)
         }
 
     @Test

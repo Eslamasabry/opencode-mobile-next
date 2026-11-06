@@ -11,6 +11,8 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
@@ -29,6 +31,15 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlin.test.Test
 import kotlin.test.assertEquals
+
+/**
+ * The words TalkBack says, without the bidi isolate marks the Inbox puts around a conversation name (KitBidi.auto keeps
+ * an Arabic or Latin title reading in its own direction; screen readers do not speak the marks).
+ */
+private fun spoken(words: String) = SemanticsMatcher("says \"$words\"") { node ->
+    node.config.getOrNull(SemanticsProperties.ContentDescription).orEmpty()
+        .any { it.filterNot { c -> c in "\u2066\u2067\u2068\u2069" } == words }
+}
 
 @OptIn(ExperimentalTestApi::class)
 class InboxScreenTest {
@@ -74,8 +85,8 @@ class InboxScreenTest {
         onNode(hasText("Allow once") and hasAnyAncestor(hasTestTag("inbox-request-one"))).performClick()
         assertEquals(listOf("one" to true), answers)
         onNode(hasText("Allow once") and hasAnyAncestor(hasTestTag("inbox-request-two"))).assertIsNotEnabled()
-        onNodeWithContentDescription("Open API").assertIsEnabled()
-        onNodeWithContentDescription("Open Checkout").performClick()
+        onNode(spoken("Open API")).assertIsEnabled()
+        onNode(spoken("Open Checkout")).performClick()
         assertEquals(listOf("open one"), recorded.calls)
     }
     @Test fun `B-KIT-003 Inbox answer caps large type on a narrow page and offers retry for an unread source`() = runComposeUiTest {

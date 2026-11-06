@@ -35,6 +35,7 @@ internal object Looks {
             runDesktopComposeUiTest(1081, 2402) {
                 setContent {
                   CompositionLocalProvider(LocalDensity provides Density(2.625f)) {
+                   ChatEnvironment {
                     KitTheme(
                         appearance = KitAppearance(mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light, motion = MotionLevel.Off),
                         platform = DesktopKitPlatform(),
@@ -43,6 +44,7 @@ internal object Looks {
                     ) {
                         Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) { content(dark) }
                     }
+                   }
                   }
                 }
                 waitForIdle()

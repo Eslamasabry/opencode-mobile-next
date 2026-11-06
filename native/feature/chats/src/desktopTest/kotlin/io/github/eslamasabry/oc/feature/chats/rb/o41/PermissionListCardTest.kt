@@ -8,6 +8,8 @@ import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.Composable
+import io.github.eslamasabry.oc.feature.chats.ChatEnvironment
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -16,13 +18,17 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
+/** The app root provides kit-chat's redactor; a permission card's command line is a mono part that needs it. */
+@OptIn(ExperimentalTestApi::class)
+private fun ComposeUiTest.setChatContent(content: @Composable () -> Unit) = setContent { ChatEnvironment(content) }
+
 @OptIn(ExperimentalTestApi::class)
 class PermissionListCardTest {
     @Test fun `B02 list answers are neutral and dispatch only the displayed choice`() = runComposeUiTest {
         var allows = 0
         var rejects = 0
         var fill = Color.Unspecified
-        setContent {
+        setChatContent {
             KitTheme(platform = DesktopKitPlatform()) {
                 fill = LocalKitColors.current.surface3
                 Box(Modifier.width(400.dp)) {
@@ -40,7 +46,7 @@ class PermissionListCardTest {
 
     @Test fun `B02 narrow list answers stack Allow before Reject and explain their disabled state`() = runComposeUiTest {
         var calls = 0
-        setContent {
+        setChatContent {
             KitTheme(platform = DesktopKitPlatform()) {
                 Box(Modifier.width(220.dp)) {
                     KitPermissionCard("Run tests?", null, null, "Run this command once", null, "Do not run this command",

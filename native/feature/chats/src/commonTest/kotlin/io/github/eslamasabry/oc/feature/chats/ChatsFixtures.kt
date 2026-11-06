@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.RenderEffect
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
+import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedItem
 import io.github.eslamasabry.oc.engine.agents.feed.ChatStatus
 import io.github.eslamasabry.oc.engine.agents.feed.FeedFolders
@@ -20,6 +21,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitFillIndication
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatformFamily
 import io.github.eslamasabry.oc.ui.kit.platform.KitSystemSignals
+import io.github.eslamasabry.oc.ui.kitchat.KitChatEnvironment
 import kotlinx.coroutines.flow.MutableStateFlow
 
 internal val P1 = ProfileId("p1")
@@ -120,6 +122,18 @@ internal class RecordingChatsActions : ChatsActions {
     override fun dismissArchiveFailure() {
         calls += "dismissArchiveFailure"
     }
+
+    override fun openSearch() {
+        calls += "openSearch"
+    }
+
+    override fun showProjectChoices() {
+        calls += "projectChoices"
+    }
+
+    override fun showInbox() {
+        calls += "inbox"
+    }
 }
 
 /** Plan 06 §6's fake platform (kit's own copy is test-internal there). */
@@ -136,13 +150,24 @@ internal class TestKitPlatform : KitPlatform {
     override fun frostEffect(spec: FrostSpec, density: Float): RenderEffect? = null
 }
 
+/**
+ * What the app root gives every screen (MainActivity: graph.kitChatEnvironment.Provide): the redactor that kit-chat's
+ * mono parts require. Without it a conversation row, the brief and the inbox throw instead of drawing.
+ */
+@Composable
+internal fun ChatEnvironment(content: @Composable () -> Unit) {
+    KitChatEnvironment(Redactor()).Provide(content)
+}
+
 @Composable
 internal fun Themed(content: @Composable () -> Unit) {
-    KitTheme(
-        appearance = KitAppearance(motion = MotionLevel.Off),
-        platform = TestKitPlatform(),
-        localeTag = "en",
-        stillFrame = true,
-        content = content,
-    )
+    ChatEnvironment {
+        KitTheme(
+            appearance = KitAppearance(motion = MotionLevel.Off),
+            platform = TestKitPlatform(),
+            localeTag = "en",
+            stillFrame = true,
+            content = content,
+        )
+    }
 }
