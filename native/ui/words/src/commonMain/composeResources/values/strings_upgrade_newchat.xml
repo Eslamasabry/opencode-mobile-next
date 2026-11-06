@@ -1,0 +1,14 @@
+<resources>
+    <string name="upgNewChatKept">Your words and choices are kept. Try again, or edit them first.</string>
+    <string name="upgNewChatEdit">Edit</string>
+    <string name="upgNewChatAgentMode">%1$s · %2$s</string>
+    <string name="upgNewChatChoicesTitle">Agent and model</string>
+    <string name="upgNewChatAgents">Who works on it</string>
+    <string name="upgNewChatModeHint">Plan talks it through first. Build makes the changes.</string>
+    <string name="upgNewChatModeOnlyFor">Build and Plan are for %1$s.</string>
+    <string name="upgNewChatModel">Model</string>
+    <string name="upgNewChatModelsSearch">Search models</string>
+    <string name="upgNewChatBackToAgents">Back to agents</string>
+    <string name="upgNewChatDone">Done</string>
+    <string name="upgNewChatModelsNone">This server has no other models.</string>
+</resources>

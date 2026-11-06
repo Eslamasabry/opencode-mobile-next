@@ -11,23 +11,35 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleStartEffect
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.model.ModelRef
 import io.github.eslamasabry.oc.engine.git.GitLinkRepairResult
+import io.github.eslamasabry.oc.feature.chats.presentation.NEW_CONVERSATION_MODEL_SEARCH_FROM
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationActions
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationModel
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSheet
+import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationStarter
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationUi
+import io.github.eslamasabry.oc.feature.chats.presentation.filterNewConversationModels
 import io.github.eslamasabry.oc.feature.chats.presentation.isStartableAgent
+import io.github.eslamasabry.oc.feature.chats.presentation.newConversationStarters
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
@@ -36,6 +48,8 @@ import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
+import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
+import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
@@ -44,16 +58,22 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
+import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
+import io.github.eslamasabry.oc.ui.kit.input.KitSearchNoMatch
 import io.github.eslamasabry.oc.ui.kit.input.KitStartBox
 import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.kit.modal.KitPageOverlay
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheetStep
+import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
@@ -62,6 +82,8 @@ import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAge
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitStartingConversation
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitStartingPhase
 import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.Res
 import org.jetbrains.compose.resources.pluralStringResource
@@ -78,33 +100,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
         onStopOrDispose {}
     }
     if (state.openingChat) {
-        KitBackGuard(enabled = state.busy, onBack = actions::back)
-        io.github.eslamasabry.oc.ui.kitchat.transcript.KitStartingConversation(
-            text = state.text,
-            project = state.directory?.let(::importFolder).orEmpty(),
-            model =
-                state.setup?.models?.firstOrNull { it.model == state.model }?.name
-                    ?: stringResource(Res.string.modelServerDefault),
-            status =
-                stringResource(
-                    when {
-                        state.busy -> Res.string.upgradeStartSending
-                        state.deliveryUnconfirmed -> Res.string.p12NewDeliveryUnconfirmed
-                        state.creationUnconfirmed -> Res.string.p12NewCreationUnconfirmed
-                        else -> Res.string.upgradeStartFailed
-                    }
-                ),
-            backLabel = stringResource(Res.string.kitTopBarBack),
-            onBack = actions::back,
-            retryLabel = stringResource(Res.string.commonRetry),
-            onRetry =
-                if (!state.busy && !state.deliveryUnconfirmed && !state.creationUnconfirmed)
-                    actions::start
-                else null,
-            reviewLabel = stringResource(Res.string.p12NewOpenCreated),
-            onReview =
-                if (state.reviewConversation != null) actions::openCreatedConversation else null,
-        )
+        StartingConversation(state, actions)
         return
     }
     val field = rememberTextFieldState()
@@ -213,6 +209,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                         minLines = 2,
                         autofocus = !state.busy,
                         onTextChanged = actions::draftChanged,
+                        focusKey = state.focusRevision.takeIf { it > 0 },
                     )
                     Row(
                         Modifier.fillMaxWidth()
@@ -220,21 +217,20 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                             .horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
                     ) {
+                        // Three chips only: who works (with Plan when chosen), the model, the
+                        // project. Build/Plan lives inside the agent sheet.
                         KitChip(
-                            label =
-                                state.agent?.takeIf(::isStartableAgent)
-                                    ?: state.setup?.defaultRuntime
-                                    ?: "OpenCode",
+                            label = agentChipLabel(state),
                             icon = KitIcons.agent,
                             opensMenu = true,
+                            expanded = state.sheet == NewConversationSheet.Agents,
                             onClick = { actions.sheet(NewConversationSheet.Agents) },
                         )
                         KitChip(
-                            label =
-                                state.setup?.models?.firstOrNull { it.model == state.model }?.name
-                                    ?: stringResource(Res.string.modelServerDefault),
+                            label = modelLabel(state),
                             icon = KitIcons.model,
                             opensMenu = true,
+                            expanded = state.sheet == NewConversationSheet.Models,
                             onClick = { actions.sheet(NewConversationSheet.Models) },
                         )
                         KitChip(
@@ -243,23 +239,19 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                     ?: stringResource(Res.string.chatsNewProjectRow),
                             icon = KitIcons.files,
                             opensMenu = true,
+                            expanded = state.sheet == NewConversationSheet.Projects,
                             onClick = { actions.sheet(NewConversationSheet.Projects) },
                         )
-                        if (
-                            state.setup?.modes?.isNotEmpty() == true &&
-                                (state.agent == null || state.agent in state.setup.modes)
-                        )
-                            KitChip(
-                                label =
-                                    stringResource(
-                                        if (state.agent?.lowercase() == "plan")
-                                            Res.string.upgradeModePlan
-                                        else Res.string.upgradeModeBuild
-                                    ),
-                                icon = KitIcons.tools,
-                                opensMenu = true,
-                                onClick = { actions.sheet(NewConversationSheet.Modes) },
-                            )
+                    }
+                    // Ways to start fill the empty prompt; nothing is sent until Start.
+                    KitReveal(
+                        visible =
+                            state.text.isBlank() &&
+                                state.setup != null &&
+                                !state.busy &&
+                                !state.deliveryUnconfirmed
+                    ) {
+                        NewConversationStarters(state, actions)
                     }
                     if (state.deliveryUnconfirmed) {
                         KitNotice(stringResource(Res.string.p12NewDeliveryUnconfirmed))
@@ -368,112 +360,121 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
         }
     }
     KitSheet(
-        visible = current != null && current != NewConversationSheet.Import,
+        visible = current == NewConversationSheet.Projects,
         onDismissRequest = { actions.sheet(null) },
-        title =
-            stringResource(
-                when (current) {
-                    NewConversationSheet.Models -> Res.string.agentsModelTitle
-                    NewConversationSheet.Agents -> Res.string.p12NewAgent
-                    NewConversationSheet.Modes -> Res.string.upgradeMode
-                    NewConversationSheet.Import -> Res.string.claudeImportTitle
-                    else -> Res.string.chatsNewProjectRow
-                }
-            ),
+        title = stringResource(Res.string.chatsNewProjectRow),
         closeLabel = stringResource(Res.string.kitSheetClose),
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-            when (current) {
-                NewConversationSheet.Projects -> {
-                    // The picker starts from the selected project on each visit, after setup has
-                    // loaded.
-                    val directory = rememberTextFieldState(state.directory.orEmpty())
-                    KitRowGroup {
-                        state.setup?.projects.orEmpty().forEach { project ->
-                            KitRow(
-                                title = project.name,
-                                supporting = project.directory,
-                                selected = project.directory == state.directory,
-                                onClick = { actions.chooseDirectory(project.directory) },
-                            )
-                        }
-                    }
-                    if (state.canCopy)
-                        KitSwitchRow(
-                            title = stringResource(Res.string.chatsNewSeparateCopy),
-                            supporting = stringResource(Res.string.chatsNewSeparateCopyDetail),
-                            checked = state.separateCopy,
-                            onCheckedChange = actions::separateCopy,
-                        )
-                    if (state.setup?.importDirectory == state.directory && state.directory != null)
-                        KitRow(
-                            title = stringResource(Res.string.claudeImportTitle),
-                            leading = KitRowLeading.Glyph(KitIcons.download),
-                            onClick = { actions.sheet(NewConversationSheet.Import) },
-                        )
-                    KitField(
-                        directory,
-                        stringResource(Res.string.p12NewFolder),
-                        kind = KitFieldKind.Path,
-                    )
-                    KitButton(
-                        stringResource(Res.string.p12NewUseFolder),
-                        { actions.chooseDirectory(directory.text.toString()) },
-                        modifier = Modifier.fillMaxWidth(),
+            // The picker starts from the selected project on each visit, after setup has loaded.
+            val directory = rememberTextFieldState(state.directory.orEmpty())
+            KitRowGroup {
+                state.setup?.projects.orEmpty().forEach { project ->
+                    KitRow(
+                        title = project.name,
+                        supporting = project.directory,
+                        selected = project.directory == state.directory,
+                        onClick = { actions.chooseDirectory(project.directory) },
                     )
                 }
-                NewConversationSheet.Modes ->
-                    KitRowGroup {
-                        state.setup?.modes.orEmpty().forEach { mode ->
-                            KitRow(
-                                title =
-                                    stringResource(
-                                        if (mode.lowercase() == "plan") Res.string.upgradeModePlan
-                                        else Res.string.upgradeModeBuild
-                                    ),
-                                selected =
-                                    state.agent == mode ||
-                                        (state.agent == null && mode.lowercase() == "build"),
-                                onClick = { actions.chooseMode(mode) },
-                            )
-                        }
-                    }
-                NewConversationSheet.Models ->
-                    NewConversationModelChoices(
-                        state.setup?.models.orEmpty(),
-                        state.model,
-                        actions::chooseModel,
-                    )
-                NewConversationSheet.Agents ->
-                    NewConversationAgents(state, actions, KitEnabled.Enabled)
-                NewConversationSheet.Import -> Unit
-                null -> Unit
+            }
+            if (state.canCopy)
+                KitSwitchRow(
+                    title = stringResource(Res.string.chatsNewSeparateCopy),
+                    supporting = stringResource(Res.string.chatsNewSeparateCopyDetail),
+                    checked = state.separateCopy,
+                    onCheckedChange = actions::separateCopy,
+                )
+            if (state.setup?.importDirectory == state.directory && state.directory != null)
+                KitRow(
+                    title = stringResource(Res.string.claudeImportTitle),
+                    leading = KitRowLeading.Glyph(KitIcons.download),
+                    onClick = { actions.sheet(NewConversationSheet.Import) },
+                )
+            KitField(
+                directory,
+                stringResource(Res.string.p12NewFolder),
+                kind = KitFieldKind.Path,
+            )
+            KitButton(
+                stringResource(Res.string.p12NewUseFolder),
+                { actions.chooseDirectory(directory.text.toString()) },
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+    AgentModelSheet(state, actions)
+}
+
+/**
+ * One sheet for who works and how: at half height the agents a person can start, Build/Plan as a
+ * stepped control and the model row; the model step grows the same sheet to full height in place
+ * (search when the list is long) instead of opening a second sheet.
+ */
+@Composable
+private fun AgentModelSheet(state: NewConversationUi, actions: NewConversationActions) {
+    val step =
+        state.sheet?.takeIf {
+            it == NewConversationSheet.Agents || it == NewConversationSheet.Models
+        }
+    // While the sheet leaves, it keeps showing the step it had.
+    var lastStep by remember { mutableStateOf(NewConversationSheet.Agents) }
+    if (step != null && step != lastStep) SideEffect { lastStep = step }
+    val shown = step ?: lastStep
+    val models = shown == NewConversationSheet.Models
+    KitSheet(
+        visible = step != null,
+        onDismissRequest = { actions.sheet(null) },
+        title =
+            stringResource(
+                if (models) Res.string.agentsModelTitle else Res.string.upgNewChatChoicesTitle
+            ),
+        closeLabel = stringResource(Res.string.kitSheetClose),
+        height = if (models) KitSheetHeight.Full else KitSheetHeight.Half,
+        growsInPlace = true,
+        leading =
+            if (models)
+                KitAction(
+                    label = stringResource(Res.string.upgNewChatBackToAgents),
+                    onClick = { actions.sheet(NewConversationSheet.Agents) },
+                    icon = KitIcons.back,
+                )
+            else null,
+        primary =
+            if (models) null
+            else KitAction(stringResource(Res.string.upgNewChatDone), { actions.sheet(null) }),
+    ) {
+        KitSheetStep(shown) { current ->
+            Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+                if (current == NewConversationSheet.Models) NewConversationModelStep(state, actions)
+                else NewConversationAgentStep(state, actions)
             }
         }
     }
 }
 
-/** Compact choices share the same chip-sheet flow as models and projects. */
+/** Half height: the agents a person can start, then Build/Plan, then the model row that grows. */
 @Composable
-private fun NewConversationAgents(
-    state: NewConversationUi,
-    actions: NewConversationActions,
-    enabled: KitEnabled,
-) {
+private fun NewConversationAgentStep(state: NewConversationUi, actions: NewConversationActions) {
     val defaultName = state.setup?.defaultRuntime ?: "OpenCode"
-    KitRowGroup {
+    val modes = state.setup?.modes.orEmpty()
+    val namedAgent = state.agent != null && state.agent !in modes
+    KitRowGroup(label = stringResource(Res.string.upgNewChatAgents)) {
         KitRow(
             title = defaultName,
             leading = KitRowLeading.Logo("opencode", defaultName, agent = true),
-            selected = state.agent == null || state.agent in state.setup?.modes.orEmpty(),
+            selected = !namedAgent,
+            trailing = if (!namedAgent) KitRowTrailing.Check else KitRowTrailing.None,
             supporting = stringResource(Res.string.upgradeAgentReady),
-            onClick = { actions.chooseAgent(null) },
+            // Already the default: a tap keeps the chosen Build or Plan.
+            onClick = { if (namedAgent) actions.chooseAgent(null) },
         )
         state.setup?.agents.orEmpty().filter(::isStartableAgent).distinct().forEach { agent ->
             KitRow(
                 title = agent,
                 leading = KitRowLeading.Logo(agent.lowercase(), agent, agent = true),
                 selected = state.agent == agent,
+                trailing = if (state.agent == agent) KitRowTrailing.Check else KitRowTrailing.None,
                 supporting = stringResource(Res.string.upgradeAgentReady),
                 onClick = { actions.chooseAgent(agent) },
             )
@@ -484,35 +485,201 @@ private fun NewConversationAgents(
             onClick = actions::agents,
         )
     }
+    // The server's own Build/Plan: a stepped control inside this sheet, never a chip of its own.
+    if (modes.size in 2..4) {
+        val modeWord = stringResource(Res.string.upgradeMode)
+        KitSectionLabel(modeWord)
+        KitSegmented(
+            segments = modes.map { mode -> KitSegment(mode, modeLabel(mode)) },
+            selected =
+                state.agent?.takeIf { it in modes }
+                    ?: modes.firstOrNull { it.lowercase() == "build" }
+                    ?: modes.first(),
+            semanticsLabel = modeWord,
+            enabled =
+                if (namedAgent)
+                    KitEnabled.Disabled(
+                        stringResource(Res.string.upgNewChatModeOnlyFor, defaultName)
+                    )
+                else KitEnabled.Enabled,
+            onChange = actions::chooseMode,
+        )
+        if (!namedAgent)
+            KitText(stringResource(Res.string.upgNewChatModeHint), role = TypeRole.Secondary)
+    }
+    KitRowGroup {
+        KitRow(
+            title = stringResource(Res.string.upgNewChatModel),
+            leading = KitRowLeading.Glyph(KitIcons.model),
+            trailing = KitRowTrailing.Value(modelLabel(state)),
+            onClick = { actions.sheet(NewConversationSheet.Models) },
+        )
+    }
+}
+
+/** Full height: every model the server offers, with search once the list is long. */
+@Composable
+private fun NewConversationModelStep(state: NewConversationUi, actions: NewConversationActions) {
+    val models = state.setup?.models.orEmpty()
+    val named = filterNewConversationModels(models, "")
+    val search = rememberTextFieldState()
+    var query by remember { mutableStateOf("") }
+    if (named.size >= NEW_CONVERSATION_MODEL_SEARCH_FROM)
+        KitSearchField(
+            label = stringResource(Res.string.upgNewChatModelsSearch),
+            onSearch = { query = it },
+            state = search,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    if (query.isNotBlank() && filterNewConversationModels(models, query).isEmpty())
+        KitSearchNoMatch(
+            query = query,
+            onClear = {
+                search.clearText()
+                query = ""
+            },
+        )
+    else NewConversationModelChoices(models, state.model, actions::chooseModel, query)
+    if (named.isEmpty())
+        KitText(stringResource(Res.string.upgNewChatModelsNone), role = TypeRole.Secondary)
+}
+
+/** Ways to start: each fills the empty prompt and leaves sending to Start. */
+@Composable
+private fun NewConversationStarters(state: NewConversationUi, actions: NewConversationActions) {
+    val ways = stringResource(Res.string.chatStartSuggestionsLabel)
+    Row(
+        Modifier.fillMaxWidth()
+            .padding(horizontal = LocalKitTokens.current.gutter.dp)
+            .horizontalScroll(rememberScrollState())
+            .semantics { contentDescription = ways }
+            .testTag("chats-new-starters"),
+        horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+    ) {
+        newConversationStarters(state.directory).forEach { starter ->
+            val label = starterLabel(starter)
+            KitChip(label = label, onClick = { actions.chooseStarter(starter, label) })
+        }
+    }
+}
+
+@Composable
+private fun starterLabel(starter: NewConversationStarter): String =
+    stringResource(
+        when (starter) {
+            NewConversationStarter.ExplainProject -> Res.string.chatStartExplainProject
+            NewConversationStarter.FindBug -> Res.string.chatStartFindBug
+            NewConversationStarter.AddTests -> Res.string.chatStartAddTests
+            NewConversationStarter.ListFolder -> Res.string.chatStartListFolder
+        }
+    )
+
+@Composable
+private fun modeLabel(mode: String): String =
+    stringResource(
+        if (mode.lowercase() == "plan") Res.string.upgradeModePlan else Res.string.upgradeModeBuild
+    )
+
+/**
+ * The agent chip: the agent's name, with Plan beside it when Plan is chosen (Build is the norm).
+ */
+@Composable
+private fun agentChipLabel(state: NewConversationUi): String {
+    val name = state.agent?.takeIf(::isStartableAgent) ?: state.setup?.defaultRuntime ?: "OpenCode"
+    return if (state.agent?.lowercase() == "plan")
+        stringResource(
+            Res.string.upgNewChatAgentMode,
+            name,
+            stringResource(Res.string.upgradeModePlan),
+        )
+    else name
+}
+
+@Composable
+private fun modelLabel(state: NewConversationUi): String =
+    state.setup?.models?.firstOrNull { it.model == state.model }?.name
+        ?: stringResource(Res.string.modelServerDefault)
+
+/**
+ * The chat frame from the moment Start is tapped: the prompt is already the first bubble, the
+ * chosen agent and model stay with it, and a definite failure offers Try again and Edit.
+ */
+@Composable
+private fun StartingConversation(state: NewConversationUi, actions: NewConversationActions) {
+    KitBackGuard(enabled = state.busy, onBack = actions::back)
+    val phase =
+        when {
+            state.busy -> KitStartingPhase.Sending
+            state.deliveryUnconfirmed || state.creationUnconfirmed -> KitStartingPhase.Unconfirmed
+            else -> KitStartingPhase.NotSent
+        }
+    val notSent = phase == KitStartingPhase.NotSent
+    KitStartingConversation(
+        text = state.text,
+        project = state.directory?.let(::importFolder).orEmpty(),
+        model = modelLabel(state),
+        agent = agentChipLabel(state),
+        phase = phase,
+        status =
+            stringResource(
+                when {
+                    state.busy -> Res.string.upgradeStartSending
+                    state.deliveryUnconfirmed -> Res.string.p12NewDeliveryUnconfirmed
+                    state.creationUnconfirmed -> Res.string.p12NewCreationUnconfirmed
+                    else -> Res.string.chatSendFailed
+                }
+            ),
+        reason =
+            if (!notSent) null
+            else
+                stringResource(
+                    if (state.repairAvailable && state.failure is Failure.ProjectGit)
+                        Res.string.gitRepairFailureWords
+                    else Res.string.upgNewChatKept
+                ),
+        details = state.failure?.details?.takeIf { notSent },
+        detailsLabel = stringResource(Res.string.kitDetails),
+        copyLabel = stringResource(Res.string.kitCopyDetails),
+        backLabel = stringResource(Res.string.kitTopBarBack),
+        onBack = actions::back,
+        retryLabel = stringResource(Res.string.commonRetry),
+        onRetry = if (notSent) actions::start else null,
+        editLabel = stringResource(Res.string.upgNewChatEdit),
+        onEdit = if (notSent) actions::editPrompt else null,
+        reviewLabel = stringResource(Res.string.p12NewOpenCreated),
+        onReview = if (state.reviewConversation != null) actions::openCreatedConversation else null,
+    )
 }
 
 /**
  * Flutter agent_model_sheet.dart: the default first, then named models, each checked at the end.
+ * [query] narrows the list by what each row shows; the default row is hidden while searching.
  */
 @Composable
 internal fun NewConversationModelChoices(
     models: List<NewConversationModel>,
     selected: ModelRef?,
     choose: (ModelRef?) -> Unit,
+    query: String = "",
 ) {
     KitRowGroup {
-        KitRow(
-            title = stringResource(Res.string.agentsModelDefault),
-            selected = selected == null,
-            trailing = if (selected == null) KitRowTrailing.Check else KitRowTrailing.None,
-            onClick = { choose(null) },
-        )
-        models
-            .filter { it.model.modelId != "default" }
-            .forEach { model ->
-                KitRow(
-                    title = model.name,
-                    selected = model.model == selected,
-                    trailing =
-                        if (model.model == selected) KitRowTrailing.Check else KitRowTrailing.None,
-                    onClick = { choose(model.model) },
-                )
-            }
+        if (query.isBlank())
+            KitRow(
+                title = stringResource(Res.string.agentsModelDefault),
+                selected = selected == null,
+                trailing = if (selected == null) KitRowTrailing.Check else KitRowTrailing.None,
+                onClick = { choose(null) },
+            )
+        filterNewConversationModels(models, query).forEach { model ->
+            KitRow(
+                title = model.name,
+                supporting = model.runtime,
+                selected = model.model == selected,
+                trailing =
+                    if (model.model == selected) KitRowTrailing.Check else KitRowTrailing.None,
+                onClick = { choose(model.model) },
+            )
+        }
     }
 }
 
