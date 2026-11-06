@@ -33,6 +33,8 @@
         <item quantity="other">Archive %1$d conversations</item>
     </plurals>
     <string name="p12Deleted">Deleted “%1$s”</string>
+    <string name="chatsRowArchived">Archived “%1$s”</string>
+    <string name="chatsRowActions">Conversation actions</string>
     <plurals name="p12DeletedMany">
         <item quantity="one">1 conversation deleted</item>
         <item quantity="other">%1$d conversations deleted</item>

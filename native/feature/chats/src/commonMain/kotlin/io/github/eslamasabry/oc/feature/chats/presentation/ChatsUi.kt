@@ -47,6 +47,11 @@ public data class ConversationRowUi(
     val observedAtMs: Long = 0,
     val updatedAtMs: Long? = null,
     val canOpen: Boolean = true,
+    /** The agent's bundled mark slug (empty: a neutral mark) and its plain name, from the persona table. */
+    val agentMark: String = "",
+    val agentName: String? = null,
+    /** The server's name, set only when the list holds more than one source. */
+    val server: String? = null,
 )
 
 /**
@@ -139,7 +144,15 @@ public data class ChatsUi(
     val confirmWatched: ChatsWatchedRequestUi? = null,
     val answering: ImmutableSet<String> = persistentSetOf(),
     val answerFailure: io.github.eslamasabry.oc.core.common.Failure? = null,
+    /** Row keys whose server can archive them (OpenCode conversations on a server with `sessionArchive`). */
+    val archivable: ImmutableSet<String> = persistentSetOf(),
+    /** The one Undo offer after an archive; [ArchiveUndoUi.id] restarts the bar's window. */
+    val archiveUndo: ArchiveUndoUi? = null,
+    val archiveFailure: io.github.eslamasabry.oc.core.common.Failure? = null,
 )
+
+/** The conversation just archived, waiting out its undo window. */
+public data class ArchiveUndoUi(val id: Int, val title: RowTitle)
 
 /** Methods are intents, never widget names (ADR §9.1). */
 public interface ChatsActions {
@@ -147,6 +160,17 @@ public interface ChatsActions {
     public fun openInbox() {}
 
     public fun openConversation(ref: ConversationRef)
+
+    /** Hides the row at once and archives it when the undo window ends; one offer at a time. */
+    public fun archive(row: ConversationRowUi) {}
+
+    /** Brings the row back and cancels its archive. */
+    public fun undoArchive() {}
+
+    /** The undo window ended (or another offer replaced it): send the archive now. */
+    public fun commitArchive() {}
+
+    public fun dismissArchiveFailure() {}
 
     public fun newConversation()
 

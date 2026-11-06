@@ -1,6 +1,8 @@
 package io.github.eslamasabry.oc.feature.chats.presentation
 
 import io.github.eslamasabry.oc.core.model.Session
+import io.github.eslamasabry.oc.engine.agents.persona.AgentPersona
+import io.github.eslamasabry.oc.engine.agents.persona.AgentPersonaId
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedFilter
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedItem
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedRules
@@ -107,6 +109,9 @@ public object ChatsState {
             project = item.projectName,
             updatedAtMs = item.lastActivityMs.takeIf { it > 0 },
             canOpen = item.canReopen,
+            agentMark = AgentPersona.of(item.agentId).markSlug,
+            agentName = item.agentLabel ?: brandName(AgentPersona.of(item.agentId).id),
+            server = item.sourceLabel,
             status =
                 when (item.status) {
                     ChatStatus.NeedsYou -> RowStatus.NeedsYou
@@ -119,6 +124,18 @@ public object ChatsState {
             permission = item.permission,
             observedAtMs = nowMs,
         )
+
+    /** Product names are proper nouns, not copy: the same in every language. */
+    private fun brandName(id: AgentPersonaId): String? =
+        when (id) {
+            AgentPersonaId.ClaudeCode -> "Claude Code"
+            AgentPersonaId.Codex -> "Codex"
+            AgentPersonaId.Gemini -> "Gemini"
+            AgentPersonaId.Kilo -> "Kilo Code"
+            AgentPersonaId.Cline -> "Cline"
+            AgentPersonaId.OpenCode -> "OpenCode"
+            AgentPersonaId.Other -> null
+        }
 
     /**
      * Brief rows are the feed rows of the sessions it names (same profile); nothing when it has

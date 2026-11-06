@@ -41,6 +41,8 @@
         <item quantity="other">أرشفة %1$d محادثة</item>
     </plurals>
     <string name="p12Deleted">حُذفت «%1$s»</string>
+    <string name="chatsRowArchived">أُرشفت «%1$s»</string>
+    <string name="chatsRowActions">إجراءات المحادثة</string>
     <plurals name="p12DeletedMany">
         <item quantity="zero">حُذفت %1$d محادثات</item>
         <item quantity="one">حُذفت محادثة واحدة</item>

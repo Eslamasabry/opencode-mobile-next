@@ -146,4 +146,3 @@ public fun KitSwipeRow(
     }
 }
 
-private fun Modifier.matchParentSize(): Modifier = fillMaxSize()
