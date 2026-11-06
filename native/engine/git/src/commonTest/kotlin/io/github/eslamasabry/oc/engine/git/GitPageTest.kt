@@ -24,7 +24,7 @@ class GitPageTest {
         )
 
     private fun page(shell: GitShell) =
-        GitPage(ref) { resolveGitWorkspace(connected = true, directory = "/p", remoteShell = true) { shell } }
+        GitPage(ref, GitWorkspaces { resolveGitWorkspace(connected = true, directory = "/p", remoteShell = true) { shell } })
 
     @Test
     fun `B-NAV-022 resolution follows connection, project and the capability, never the flavor`() {
@@ -55,7 +55,7 @@ class GitPageTest {
 
         // The shell is handed to the real resolver, so a command run on an unavailable workspace would show here.
         val shell = FakeShell.steps(*snapshotSteps)
-        val off = GitPage(ref) { resolveGitWorkspace(connected = false, directory = "/p", remoteShell = true) { shell } }
+        val off = GitPage(ref, GitWorkspaces { resolveGitWorkspace(connected = false, directory = "/p", remoteShell = true) { shell } })
         off.refresh()
         off.pull()
         assertEquals(GitPageView.Unavailable(GitUnavailableReason.NotConnected), off.state.value.view)

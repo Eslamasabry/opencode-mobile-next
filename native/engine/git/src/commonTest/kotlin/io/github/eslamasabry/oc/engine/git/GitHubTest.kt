@@ -17,6 +17,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
@@ -48,7 +49,33 @@ private class FakeGitHub : GitHubHttp {
     }
 
     override suspend fun getUser(token: String): GitHubReply = user
+
+    var repos: GitHubReply = GitHubReply.Answer(200, null, JsonArray(emptyList()))
+    var created: GitHubReply = GitHubReply.Answer(201, repoJson("octocat/new"))
+    val listed = mutableListOf<Pair<String, Int>>()
+    val creates = mutableListOf<Triple<String, String, Boolean>>()
+
+    override suspend fun listRepositories(token: String, perPage: Int): GitHubReply {
+        listed += token to perPage
+        return repos
+    }
+
+    override suspend fun createRepository(token: String, name: String, isPrivate: Boolean): GitHubReply {
+        creates += Triple(token, name, isPrivate)
+        return created
+    }
 }
+
+private fun repoJson(fullName: String, private: Boolean = true, clone: String = "https://github.com/$fullName.git"): JsonObject =
+    JsonObject(
+        mapOf(
+            "full_name" to JsonPrimitive(fullName),
+            "html_url" to JsonPrimitive("https://github.com/$fullName"),
+            "clone_url" to JsonPrimitive(clone),
+            "default_branch" to JsonPrimitive("main"),
+            "private" to JsonPrimitive(private),
+        ),
+    )
 
 internal class MemorySecrets : SecretStore {
     val values = LinkedHashMap<String, String>()
@@ -276,5 +303,135 @@ class GitHubTest {
         scope.testScheduler.advanceUntilIdle()
         assertFalse("oc.githubToken.gone" in secrets.values)
         assertEquals(GitHubSignIn.SignedOut(), acct.state.value)
+    }
+
+    @Test
+    fun `B-SEC-084 repository list asks GitHub for the newest hundred and skips entries without a name`() = runTest {
+        github.repos =
+            GitHubReply.Answer(
+                200,
+                null,
+                JsonArray(listOf(repoJson("o/a", private = false), JsonObject(mapOf("html_url" to JsonPrimitive("x"))), repoJson("o/b", clone = ""))),
+            )
+        val listed = assertIs<GitHubResult.Ok<List<GitHubRepository>>>(flow.fetchRepositories("gho_tok"))
+        assertEquals(listOf("gho_tok" to 100), github.listed)
+        assertEquals(listOf("o/a", "o/b"), listed.value.map { it.fullName })
+        assertFalse(listed.value[0].isPrivate)
+        assertTrue(listed.value[1].isPrivate)
+        assertEquals("https://github.com/o/a.git", listed.value[0].remoteUrl)
+        // No clone_url: the page address with .git.
+        assertEquals("https://github.com/o/b.git", listed.value[1].remoteUrl)
+        assertEquals("main", listed.value[0].defaultBranch)
+    }
+
+    @Test
+    fun `B-SEC-084 repository list failures are typed, a refused token reads as rejected`() = runTest {
+        github.repos = GitHubReply.Answer(401, null)
+        assertEquals(GitHubSignInProblem.TokenRejected, assertIs<GitHubResult.Problem>(flow.fetchRepositories("t")).problem)
+        github.repos = GitHubReply.Unreachable
+        assertEquals(GitHubSignInProblem.Network, assertIs<GitHubResult.Problem>(flow.fetchRepositories("t")).problem)
+        github.repos = GitHubReply.Answer(500, null)
+        val unexpected = assertIs<GitHubResult.Problem>(flow.fetchRepositories("t"))
+        assertEquals(GitHubSignInProblem.Unexpected, unexpected.problem)
+        assertEquals("GET /user/repos answered 500", unexpected.details)
+    }
+
+    @Test
+    fun `B-SEC-084 repository names follow GitHub's rules and a folder name becomes a suggestion`() {
+        for (ok in listOf("a", "my-app_1.2", "x".repeat(100))) assertTrue(isValidGitHubRepositoryName(ok), ok)
+        for (bad in listOf("", ".", "..", "my app", "x".repeat(101), "ü")) assertFalse(isValidGitHubRepositoryName(bad), bad)
+        assertEquals("my-project", suggestGitHubRepositoryName("/home/oc/my-project"))
+        assertEquals("My-Project", suggestGitHubRepositoryName("/srv/My Project/"))
+        assertEquals("project", suggestGitHubRepositoryName("/srv/..."))
+        assertEquals("project", suggestGitHubRepositoryName(null))
+        assertEquals(100, suggestGitHubRepositoryName("/" + "a".repeat(150)).length)
+    }
+
+    @Test
+    fun `B-SEC-084 creating a repository sends only the name and visibility and returns the new repository`() = runTest {
+        val made = assertIs<GitHubCreateResult.Created>(flow.createRepository("gho_tok", "new", true))
+        assertEquals(listOf(Triple("gho_tok", "new", true)), github.creates)
+        assertEquals("octocat/new", made.repository.fullName)
+        flow.createRepository("gho_tok", "pub", false)
+        assertEquals(Triple("gho_tok", "pub", false), github.creates.last())
+    }
+
+    @Test
+    fun `B-SEC-084 an invalid name is refused before GitHub is asked`() = runTest {
+        val failed = assertIs<GitHubCreateResult.Failed>(flow.createRepository("gho_tok", "bad name", true))
+        assertEquals(GitHubRepositoryProblem.InvalidName, failed.problem)
+        assertTrue(github.creates.isEmpty())
+    }
+
+    private suspend fun failedCreate(reply: GitHubReply): GitHubCreateResult.Failed {
+        github.created = reply
+        return assertIs<GitHubCreateResult.Failed>(flow.createRepository("gho_tok", "new", true))
+    }
+
+    private fun taken() =
+        GitHubReply.Answer(
+            422,
+            JsonObject(
+                mapOf(
+                    "errors" to
+                        JsonArray(
+                            listOf(JsonObject(mapOf("code" to JsonPrimitive("already_exists"), "field" to JsonPrimitive("name")))),
+                        ),
+                ),
+            ),
+        )
+
+    @Test
+    fun `B-SEC-084 a 422 reads name already taken only for already_exists on the name field`() = runTest {
+        assertEquals(GitHubRepositoryProblem.NameUnavailable, failedCreate(taken()).problem)
+        val other =
+            GitHubReply.Answer(
+                422,
+                JsonObject(
+                    mapOf(
+                        "errors" to
+                            JsonArray(
+                                listOf(JsonObject(mapOf("code" to JsonPrimitive("already_exists"), "field" to JsonPrimitive("other")))),
+                            ),
+                    ),
+                ),
+            )
+        assertEquals(GitHubRepositoryProblem.InvalidName, failedCreate(other).problem)
+        assertEquals(GitHubRepositoryProblem.InvalidName, failedCreate(GitHubReply.Answer(422, null)).problem)
+    }
+
+    @Test
+    fun `B-SEC-084 other create answers map to token, permission, network and unexpected`() = runTest {
+        assertEquals(GitHubRepositoryProblem.TokenRejected, failedCreate(GitHubReply.Answer(401, null)).problem)
+        assertEquals(GitHubRepositoryProblem.PermissionDenied, failedCreate(GitHubReply.Answer(403, null)).problem)
+        assertEquals(GitHubRepositoryProblem.Network, failedCreate(GitHubReply.Answer(502, null)).problem)
+        assertEquals(GitHubRepositoryProblem.Network, failedCreate(GitHubReply.Unreachable).problem)
+        val odd = failedCreate(GitHubReply.Answer(418, null))
+        assertEquals(GitHubRepositoryProblem.Unexpected, odd.problem)
+        // Details name the call and status, never the token.
+        assertEquals("POST /user/repos answered 418", odd.details)
+        assertFalse("gho_tok" in odd.details)
+    }
+
+    @Test
+    fun `B-SEC-084 a signed-out account has no repositories and cannot create one, a rejected list forgets the token`() = runTest {
+        val secrets = MemorySecrets()
+        val acct = account(this, secrets)
+        acct.load()
+        assertTrue(acct.repositories().isEmpty())
+        assertEquals(GitHubRepositoryProblem.TokenRejected, assertIs<GitHubCreateResult.Failed>(acct.createRepository("x", true)).problem)
+        assertTrue(github.listed.isEmpty() && github.creates.isEmpty())
+
+        github.answers += listOf(code(), token())
+        acct.startSignIn()
+        advanceUntilIdle()
+        github.repos = GitHubReply.Answer(200, null, JsonArray(listOf(repoJson("octocat/app"))))
+        assertEquals(listOf("octocat/app"), acct.repositories().map { it.fullName })
+        assertEquals("gho_token_abcdef", github.listed.single().first)
+
+        github.repos = GitHubReply.Answer(401, null)
+        assertTrue(acct.repositories().isEmpty())
+        assertEquals(GitHubSignInProblem.TokenRejected, assertIs<GitHubSignIn.SignedOut>(acct.state.value).problem)
+        assertTrue(secrets.values.isEmpty())
     }
 }
