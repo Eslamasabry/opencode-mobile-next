@@ -229,9 +229,18 @@ class LinuxScreensTest {
                         ),
                 )
             setContent { Themed { LinuxPackagesScreen(ui, calls) } }
-            onNodeWithText("Remove bash").assertDoesNotExist()
+            // As Flutter's _details: Remove lives in the package's sheet (Remove closes it), and a package Linux needs
+            // has no Remove there, only why.
+            onNodeWithText("Remove htop").assertDoesNotExist()
+            onNodeWithText("htop").performClick()
+            waitForIdle()
             onNodeWithText("Remove htop").performClick()
+            waitForIdle()
             onNodeWithText("Update system").performClick()
+            onNodeWithText("bash").performClick()
+            waitForIdle()
+            onNodeWithText("Linux or your tools need it. Tools are removed from This phone.").assertExists()
+            onNodeWithText("Remove bash").assertDoesNotExist()
             assertEquals(listOf("askRemove htop", "askUpdate"), calls.seen)
         }
 }

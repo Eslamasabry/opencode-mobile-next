@@ -50,27 +50,44 @@ class LinuxManagerTest {
         assertEquals(LinuxProblem.Failed, assertIs<LinuxAnswer.Problem>(LinuxManager(host, VirtualRetryWait).installedPackages()).problem)
     }
 
+    /**
+     * Native cleanup runs only on the one-use receipt an explicit scan wrote (approved hardening,
+     * docs/native/parity/approvals/30-build-LINUX-3.md), not Flutter's two `du` readings; the receipt's script
+     * measures what it removed and prints `::freed`.
+     */
     @Test
-    fun `B-LINUX-089 cleanup waits for setup and reports the bytes freed from two readings`() = runTest {
-        var readings = 0
+    fun `B-LINUX-089 cleanup waits for setup, runs only on a scanned receipt and reports the bytes freed`() = runTest {
         val host =
             FakeLinuxHost(
                 answer = { script ->
-                    if (script.contains("oc_du") || script.contains("::du")) {
-                        readings++
-                        out(if (readings == 1) "::du 300 /var/cache/apt\n" else "::du 100 /var/cache/apt\n")
-                    } else {
-                        out("")
+                    when {
+                        script.contains("printf '::freed ") -> out("::freed 200\n")
+                        script.contains("printf '::cleanup ") -> out("::cleanup storage-cleanup.Abc123XYZ0 300\n")
+                        else -> out("::du 10 /usr\n")
                     }
                 },
             )
-        host.setup = true
         val manager = LinuxManager(host, VirtualRetryWait)
+        assertEquals(LinuxProblem.Failed, assertIs<LinuxAnswer.Problem>(manager.cleanup(LinuxStorage.aptCache)).problem)
+        assertTrue(host.scripts.isEmpty(), "no scan, no receipt: nothing ran")
+
+        assertIs<LinuxAnswer.Ok<LinuxStorageReport>>(manager.measureStorage())
+        assertEquals(300L * 1024, assertIs<LinuxAnswer.Ok<Long>>(manager.cleanableBytes(LinuxStorage.aptCache)).value)
+        host.setup = true
+        val ran = host.scripts.size
         assertEquals(LinuxProblem.SetupRunning, assertIs<LinuxAnswer.Problem>(manager.cleanup(LinuxStorage.aptCache)).problem)
-        assertTrue(host.scripts.isEmpty(), "nothing ran while setup ran")
+        assertEquals(ran, host.scripts.size, "nothing ran while setup ran")
         host.setup = false
+        assertEquals(
+            LinuxProblem.Failed,
+            assertIs<LinuxAnswer.Problem>(manager.cleanup(LinuxStorage.aptCache)).problem,
+            "the refused try used the receipt up",
+        )
+
+        manager.measureStorage()
+        manager.cleanableBytes(LinuxStorage.aptCache)
         assertEquals(200L * 1024, assertIs<LinuxAnswer.Ok<Long>>(manager.cleanup(LinuxStorage.aptCache)).value)
-        assertEquals(3, host.scripts.size)
+        assertTrue(host.scripts.last().contains("storage-cleanup.Abc123XYZ0"), "the clean names the scanned receipt")
     }
 
     @Test

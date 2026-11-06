@@ -39,7 +39,10 @@ class OpenCodeNativeInstallTest {
         val script = OpenCodeInstallScripts.nativeInstall()
         assertFalse("-u \"opencode:" in script, "the password is never a curl argument")
         assertTrue("printf 'user = \"opencode:%s\"\\n' \"\$oc_pw\" | curl -K - -s --max-time 3" in script)
-        assertTrue("case \"\$oc_code\" in 200) oc_alive && oc_started=1 ;; esac" in script, "a 401 never proves a start")
+        assertTrue(
+            "case \"\$oc_code\" in 200) oc_alive && oc_started=1 ;; esac" in script,
+            "a 401 never proves a start",
+        )
     }
 
     @Test

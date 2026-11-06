@@ -41,6 +41,49 @@ tasks.test {
     }
 }
 
+// E02-S11c: a module whose unit-test sources stop compiling fails the gate. T1 runs only the touched modules' tests, so
+// a change to a shared API could leave another module's tests uncompilable until T2. `:quality:test` runs at every
+// T1 and T2 (component-freeze), so it depends on compiling every module's unit-test sources:
+//   - desktop/JVM: compileTestKotlinDesktop (KMP), compileTestKotlin (JVM modules, :desktopApp);
+//   - Android: compileAndroidHostTest (AGP-KMP host tests) and compile<Variant>DebugUnitTestKotlin (Android modules,
+//     debug variants only), when an Android SDK is configured (ANDROID_HOME, ANDROID_SDK_ROOT or local.properties
+//     sdk.dir). Without one only the desktop/JVM half runs and the task says so; -Poc.testCompileGuard=all forces the
+//     Android half (it then fails without an SDK), =jvm skips it.
+// Compiling is incremental and build-cached, so after the first run this costs only what changed.
+val testCompileGuard = providers.gradleProperty("oc.testCompileGuard").orElse("auto")
+val androidSdkConfigured =
+    providers.environmentVariable("ANDROID_HOME")
+        .orElse(providers.environmentVariable("ANDROID_SDK_ROOT"))
+        .map { true }
+        .orElse(
+            providers.fileContents(rootProject.layout.projectDirectory.file("local.properties")).asText
+                .map { text -> text.lineSequence().any { it.trim().startsWith("sdk.dir=") } }
+                .orElse(false),
+        )
+val compileAndroidTests =
+    testCompileGuard.zip(androidSdkConfigured) { mode, sdk ->
+        when (mode) {
+            "all" -> true
+            "jvm" -> false
+            "auto" -> sdk
+            else -> error("oc.testCompileGuard is auto, all or jvm (got \"$mode\")")
+        }
+    }
+val jvmTestCompiles = setOf("compileTestKotlinDesktop", "compileTestKotlin")
+val androidTestCompile = Regex("compileAndroidHostTest|compile\\w*DebugUnitTestKotlin")
+val compileAllTestSources =
+    tasks.register("compileAllTestSources") {
+        group = "verification"
+        description = "Compiles every module's unit-test sources, so a module whose tests no longer compile fails the gate."
+        val android = compileAndroidTests.get()
+        rootProject.subprojects.filter { it != project }.forEach { other ->
+            dependsOn(other.tasks.matching { it.name in jvmTestCompiles || (android && androidTestCompile.matches(it.name)) })
+        }
+        val note = if (android) "desktop, JVM and Android" else "desktop and JVM only (no Android SDK, or oc.testCompileGuard=jvm)"
+        doLast { logger.lifecycle("test sources compiled: $note") }
+    }
+tasks.test { dependsOn(compileAllTestSources) }
+
 // S1-SECGATES (plan 16 §2): the K-SEC rules and the security gates. A separate suite that compiles no project module,
 // so it runs while the rest of the tree is being reconciled: `./gradlew :quality:secTest`.
 testing {
