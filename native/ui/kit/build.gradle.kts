@@ -31,11 +31,8 @@ kotlin {
         // Official static Android renderer; only the kit's no-external-resource SVG seam uses it.
         implementation("com.caverock:androidsvg-aar:1.4")
     }
-    // The golden-diff gate lives in ui/gate (desktopMain); ModuleRules has no :ui:gate edges, so it is compiled in here.
-    sourceSets.getByName("desktopTest") {
-        kotlin.srcDir("../gate/src/desktopMain/kotlin")
-        resources.srcDir("../gate/src/desktopMain/resources")
-    }
+    // The golden-diff gate is the test-only :ui:gate module (E02-S01: no borrowed source folders).
+    sourceSets.getByName("desktopTest").dependencies { implementation(project(":ui:gate")) }
     sourceSets.getByName("androidHostTest").dependencies {
         implementation(libs.junit4)
         implementation(libs.robolectric)

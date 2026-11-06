@@ -25,11 +25,8 @@ kotlin {
         implementation(project(":engine:settings"))
         implementation(project(":ui:kit-chat"))
     }
-    sourceSets.getByName("desktopTest") {
-        kotlin.srcDir("../../ui/gate/src/desktopMain/kotlin")
-        resources.srcDir("../../ui/gate/src/desktopMain/resources")
-    }
     sourceSets.getByName("desktopTest").dependencies {
+        implementation(project(":ui:gate")) // the golden-diff gate (order 44)
         implementation(
             libs.compose.desktop.currentos
         ) // skiko natives for the desktop UI tests and goldens
@@ -51,19 +48,6 @@ tasks.withType<Test>().configureEach {
 
 // Keep the Linux desktop golden fallback identical to the recording environment.
 apply(from = rootProject.file("gradle/desktop-golden-fonts.gradle"))
-
-// looks capture only: stale existing tests in this module do not compile; compile only the capture
-// test and fixtures.
-kotlin.sourceSets
-    .matching { it.name == "commonTest" || it.name == "desktopTest" }
-    .configureEach {
-        kotlin.exclude {
-            (it.file.name.endsWith("Test.kt") &&
-                it.file.name != "LooksCaptureTest.kt" &&
-                !it.file.path.replace('\\', '/').contains("/rb/o44/")) ||
-                it.file.name == "FakeSettingsPorts.kt"
-        }
-    }
 
 // Each vgate invocation must produce fresh comparison pictures for this candidate.
 tasks

@@ -11,11 +11,10 @@ kotlin {
     }
 }
 
-// The setup journey and its controls are tested in their owning feature.
-kotlin.sourceSets.getByName("desktopTest") {
-    kotlin.srcDir("../../ui/gate/src/desktopMain/kotlin")
-    resources.srcDir("../../ui/gate/src/desktopMain/resources")
-    dependencies { implementation(libs.compose.desktop.currentos) }
+// The setup journey and its controls are tested in their owning feature, through the golden-diff gate.
+kotlin.sourceSets.getByName("desktopTest").dependencies {
+    implementation(project(":ui:gate"))
+    implementation(libs.compose.desktop.currentos)
 }
 tasks.withType<Test>().matching { it.name == "desktopTest" }.configureEach {
     outputs.upToDateWhen { false }

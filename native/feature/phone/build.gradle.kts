@@ -16,20 +16,13 @@ kotlin {
 }
 
 kotlin {
-    sourceSets.getByName("desktopTest").dependencies { implementation(libs.compose.desktop.currentos) }
+    sourceSets.getByName("desktopTest").dependencies {
+        implementation(project(":ui:gate")) // order 48 renders phone-owned screens through the golden-diff gate
+        implementation(libs.compose.desktop.currentos)
+    }
 }
 apply(from = rootProject.file("gradle/desktop-golden-fonts.gradle"))
 
-// looks capture only: stale existing tests in this module do not compile; compile only the capture test and fixtures.
-kotlin.sourceSets.matching { it.name == "commonTest" || it.name == "desktopTest" }.configureEach {
-    kotlin.exclude { it.file.name.endsWith("Test.kt") && it.file.name != "LooksCaptureTest.kt" && !it.file.invariantSeparatorsPath.contains("/rb/o48/") }
-}
-
-// Order 48 renders phone-owned screens here; Linux and other features retain separate test modules.
-kotlin.sourceSets.getByName("desktopTest") {
-    kotlin.srcDir("../../ui/gate/src/desktopMain/kotlin")
-    resources.srcDir("../../ui/gate/src/desktopMain/resources")
-}
 tasks.withType<Test>().matching { it.name == "desktopTest" }.configureEach {
     outputs.upToDateWhen { false }
     outputs.cacheIf { false }

@@ -10,13 +10,8 @@ kotlin {
     }
     sourceSets.getByName("desktopTest").dependencies {
         implementation(libs.compose.desktop.currentos) // skiko natives for the desktop UI tests
+        implementation(project(":ui:gate")) // the setup screen's own order-40 golden cases
     }
-}
-
-// The setup screen's own order-40 golden cases cannot be hosted by another feature (ADR §6.1).
-kotlin.sourceSets.getByName("desktopTest") {
-    kotlin.srcDir("../../ui/gate/src/desktopMain/kotlin")
-    resources.srcDir("../../ui/gate/src/desktopMain/resources")
 }
 tasks.withType<Test>().matching { it.name == "desktopTest" }.configureEach {
     outputs.upToDateWhen { false }

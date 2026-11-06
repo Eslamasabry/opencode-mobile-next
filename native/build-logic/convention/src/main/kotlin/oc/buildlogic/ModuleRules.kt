@@ -24,7 +24,7 @@ internal object ModuleRules {
             ":core:data", ":core:db", ":core:net", ":core:markdown",
         )
     private val kits = setOf(":ui:kit", ":ui:kit-chat", ":ui:kit-content")
-    private val testOnly = setOf(":core:testing", ":ui:testing")
+    private val testOnly = setOf(":core:testing", ":ui:testing", ":ui:gate")
 
     /** null = allowed. [inTest] is true for any configuration whose name contains "test" (case-insensitive). */
     fun violation(from: String, to: String, inTest: Boolean): String? {
@@ -66,7 +66,8 @@ internal object ModuleRules {
                             ":ui:design", ":ui:words", ":ui:routes", ":engine:entry", ":engine:attention",
                             ":engine:settings", ":core:domain", ":core:model", ":core:common",
                         )
-                from == ":ui:testing" ->
+                // :ui:gate (the golden-diff gate, E02-S01) is test-only and sits where :ui:testing sits.
+                from == ":ui:testing" || from == ":ui:gate" ->
                     to in kits || to in setOf(":ui:design", ":ui:words", ":ui:routes", ":core:common", ":core:model")
                 from.startsWith(":feature:") ->
                     to in kits ||
@@ -95,7 +96,7 @@ internal object ModuleRules {
     val platformSourceSets =
         setOf(
             ":core:common", ":core:data", ":core:net", ":core:db",
-            ":ui:kit", ":ui:kit-chat", ":ui:kit-content", ":ui:shell", ":ui:testing",
+            ":ui:kit", ":ui:kit-chat", ":ui:kit-content", ":ui:shell", ":ui:testing", ":ui:gate",
         )
 
     fun layerOf(path: String): Layer =

@@ -105,6 +105,7 @@ class KonsistRulesTest {
                 "ui/kit-content",
                 "ui/shell",
                 "ui/testing",
+                "ui/gate",
             )
         val offenders =
             listOf("core", "protocol", "engine", "ui", "feature").flatMap { layer ->

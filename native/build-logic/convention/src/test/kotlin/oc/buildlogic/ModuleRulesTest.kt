@@ -107,6 +107,13 @@ class ModuleRulesTest {
         assertNotNull(ExternalRules.violation(":ui:routes", "org.jetbrains.compose.material3", "material3", false))
     }
 
+    @Test fun `E02-S01 the golden gate is test-only and reaches the kit, never a feature`() {
+        allowed(":feature:servers", ":ui:gate", inTest = true); denied(":feature:servers", ":ui:gate")
+        allowed(":ui:kit", ":ui:gate", inTest = true)
+        allowed(":ui:gate", ":ui:kit"); allowed(":ui:gate", ":ui:design")
+        denied(":ui:gate", ":feature:servers"); denied(":ui:gate", ":engine:connection")
+    }
+
     @Test fun `namespaces drop hyphens`() =
         assertEquals("io.github.eslamasabry.oc.ui.kitchat", Namespaces.of(":ui:kit-chat"))
 }
