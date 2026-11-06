@@ -11,6 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.CompositingStrategy
@@ -48,14 +49,33 @@ public object FilterChipsRules {
  * Replaces: KitFilterChips, KitFilterChip (lib/ui/kit/kit_filter_chips.dart)
  */
 @Composable
-public fun KitFilterChips(modifier: Modifier = Modifier, chips: @Composable RowScope.() -> Unit) {
+public fun KitFilterChips(
+    modifier: Modifier = Modifier,
+    bleed: Boolean = false,
+    chips: @Composable RowScope.() -> Unit,
+) {
     val tokens = LocalKitTokens.current
     val scroll = rememberScrollState()
     val colors = io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors.current
     // The line clips sideways for its scroll and fade; the chips' style shadows keep their room above and below.
     val room = kitShadowReach()
+    // [bleed]: the line sits in a block that already keeps the gutter (a screen's bottom block); it reaches out over
+    // that gutter to the screen's edges, so the chips still start on the gutter and scroll out of sight at the edge.
+    val reach =
+        if (!bleed) Modifier
+        else
+            Modifier.layout { measurable, constraints ->
+                val extra = tokens.gutter.dp.roundToPx() * 2
+                val wide =
+                    if (constraints.hasBoundedWidth)
+                        constraints.copy(minWidth = constraints.minWidth + extra, maxWidth = constraints.maxWidth + extra)
+                    else constraints
+                val placeable = measurable.measure(wide)
+                val shown = if (constraints.hasBoundedWidth) placeable.width - extra else placeable.width
+                layout(shown, placeable.height) { placeable.place(if (constraints.hasBoundedWidth) -extra / 2 else 0, 0) }
+            }
     Box(
-        modifier.kitMaxWidth(CapRole.Reading)
+        modifier.then(reach).kitMaxWidth(CapRole.Reading)
             .kitShadowRoom(room)
             .clipToBounds()
             .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }

@@ -4,7 +4,6 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -49,7 +48,6 @@ import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
-import io.github.eslamasabry.oc.ui.kit.chip.KitChipWrap
 import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips
 import io.github.eslamasabry.oc.ui.kit.modal.KitNewProjectDialog
 import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
@@ -305,8 +303,8 @@ private fun NewConversationChoices(state: NewConversationUi, actions: NewConvers
         focus.clearFocus()
         actions.sheet(sheet)
     }
-    // N-32: chips wrap onto a second line instead of running off the right edge.
-    KitChipWrap(Modifier.fillMaxWidth().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
+    // N-32: one compact line above Start; it scrolls sideways when the names are long (never a stack of rows).
+    KitFilterChips(Modifier.testTag("chats-new-choices"), bleed = true) {
         // Three chips only: who works (with Plan when chosen), the model, the
         // project. Build/Plan lives inside the agent sheet.
         KitChip(
