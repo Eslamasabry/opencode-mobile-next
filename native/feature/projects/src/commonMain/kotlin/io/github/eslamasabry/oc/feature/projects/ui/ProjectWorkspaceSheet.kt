@@ -5,6 +5,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.runtime.key
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import io.github.eslamasabry.oc.core.model.WorktreeInfo
+import io.github.eslamasabry.oc.ui.kit.action.rememberKitCopyAction
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
+import io.github.eslamasabry.oc.ui.kit.state.KitTechnicalValue
+import org.jetbrains.compose.resources.pluralStringResource
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.model.VcsDiffMode
 import io.github.eslamasabry.oc.core.model.VersionControlSetupState
@@ -179,32 +189,10 @@ internal fun ProjectWorkspaceSheet(state: ProjectWorkspaceUi, actions: ProjectWo
                     KitRowGroup(label = stringResource(Res.string.agentProjectWorktrees)) {
                         if (!state.busy && state.failure == null && state.worktrees.isEmpty())
                             KitText(stringResource(Res.string.agentProjectNoWorktrees))
-                        for (tree in state.worktrees) KitRow(
-                            title = tree.name,
-                            leading = KitRowLeading.Glyph(KitIcons.branch),
-                            supporting =
-                                listOfNotNull(
-                                        tree.branch,
-                                        tree.directory,
-                                        stringResource(Res.string.agentProjectReady).takeIf {
-                                            tree.ready
-                                        },
-                                    )
-                                    .joinToString(" · "),
-                            supportingMaxLines = 3,
-                            trailing =
-                                KitRowTrailing.Action(
-                                    KitLineAction(
-                                        label = stringResource(Res.string.agentProjectRemove),
-                                        onClick = {
-                                            actions.inspectWorktreeRemoval(tree.directory)
-                                        },
-                                        enabled = !state.busy,
-                                        disabledReason =
-                                            stringResource(Res.string.agentProjectWorking),
-                                    )
-                                ),
-                        )
+                        state.resetDone?.let {
+                            KitNotice(stringResource(Res.string.e7LibraryResetToTheDefaultBranch, it))
+                        }
+                        for (tree in state.worktrees) WorktreeRow(tree, state, actions)
                     }
                 }
                 if (state.canCreate)
@@ -246,6 +234,42 @@ internal fun ProjectWorkspaceSheet(state: ProjectWorkspaceUi, actions: ProjectWo
         operationKey = "project-worktree-name",
         onResult = actions::finishWorktreeName,
     )
+    val resetting = state.resetting?.takeIf { state.visible && state.resetChanges != null }
+    KitConfirm(
+        spec =
+            resetting?.let { tree ->
+                val changes = state.resetChanges!!
+                KitConfirmSpec(
+                    title = stringResource(Res.string.e7LibraryReset, tree.name),
+                    confirmLabel = stringResource(Res.string.e7LibraryResetWorktree),
+                    kind = KitConfirmKind.Destructive,
+                    body =
+                        stringResource(
+                            Res.string.e7LibraryThisPermanentlyDiscardsTrackedChangesAndDeletes
+                        ),
+                    icon = KitIcons.restart,
+                    consequences =
+                        if (changes.isEmpty()) emptyList()
+                        else
+                            listOf(
+                                pluralStringResource(
+                                    Res.plurals.e7LibraryChangedFilesDetected,
+                                    changes.size,
+                                    changes.size,
+                                )
+                            ) + changes.map { it.path },
+                    // Typed name only when changes would be lost (Flutter worktrees_screen).
+                    typedName = tree.name.takeIf { changes.isNotEmpty() },
+                    details =
+                        listOf(
+                            KitTechnicalValue(stringResource(Res.string.worktreesFolder), tree.directory)
+                        ),
+                )
+            },
+        onConfirm = actions::confirmWorktreeReset,
+        onCancel = actions::cancelWorktreeReset,
+        working = state.busy,
+    )
     val removing = state.removal?.takeIf { state.visible && state.removalChanges != null }
     KitConfirm(
         spec =
@@ -269,6 +293,84 @@ internal fun ProjectWorkspaceSheet(state: ProjectWorkspaceUi, actions: ProjectWo
         onCancel = actions::cancelWorktreeRemoval,
         working = state.busy,
     )
+}
+
+/**
+ * One worktree. A tap opens its actions (Open, Start in it is the project page, Copy folder path,
+ * Reset); Remove stays the visible row action.
+ */
+@Composable
+private fun WorktreeRow(
+    tree: WorktreeInfo,
+    state: ProjectWorkspaceUi,
+    actions: ProjectWorkspaceActions,
+) {
+    var open by remember(tree.directory) { mutableStateOf(false) }
+    val copy =
+        rememberKitCopyAction(
+            stringResource(Res.string.worktreesCopyFolder),
+            stringResource(Res.string.s40iCopied),
+            { tree.directory },
+        )
+    val working = stringResource(Res.string.agentProjectWorking)
+    val held = if (state.busy) KitEnabled.Disabled(working) else KitEnabled.Enabled
+    val menu = buildList {
+        add(
+            KitMenuItem(
+                stringResource(Res.string.globalSessionsOpen),
+                { actions.openWorktree(tree.directory) },
+                icon = KitIcons.externalLink,
+                enabled = held,
+            )
+        )
+        add(
+            KitMenuItem(
+                stringResource(Res.string.worktreesCopyFolder),
+                { copy.onClick?.invoke() },
+                icon = KitIcons.copy,
+            )
+        )
+        if (state.canReset && tree.ready)
+            add(
+                KitMenuItem(
+                    stringResource(Res.string.e7LibraryReset2),
+                    { actions.inspectWorktreeReset(tree.directory) },
+                    icon = KitIcons.restart,
+                    destructive = true,
+                    enabled = held,
+                )
+            )
+    }
+    KitMenu(
+        expanded = open,
+        items = menu,
+        title = stringResource(Res.string.e7LibraryWorktreeActions),
+        onDismissRequest = { open = false },
+    ) {
+        KitRow(
+            title = tree.name,
+            leading = KitRowLeading.Glyph(KitIcons.branch),
+            supporting =
+                listOfNotNull(
+                        tree.branch,
+                        tree.directory,
+                        stringResource(Res.string.agentProjectReady).takeIf { tree.ready },
+                    )
+                    .joinToString(" · "),
+            supportingMaxLines = 3,
+            onClickLabel = stringResource(Res.string.e7LibraryWorktreeActions),
+            onClick = { open = true },
+            trailing =
+                KitRowTrailing.Action(
+                    KitLineAction(
+                        label = stringResource(Res.string.agentProjectRemove),
+                        onClick = { actions.inspectWorktreeRemoval(tree.directory) },
+                        enabled = !state.busy,
+                        disabledReason = working,
+                    )
+                ),
+        )
+    }
 }
 
 /** Retains each sheet section's composition identity without adding another scrolling container. */

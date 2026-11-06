@@ -40,6 +40,13 @@ public data class ProjectWorkspaceUi(
     val worktrees: ImmutableList<WorktreeInfo> = persistentListOf(),
     val askingName: Boolean = false,
     val removal: WorktreeInfo? = null,
+    /** Reset is offered only where the server can do it (`worktreeReset`). */
+    val canReset: Boolean = false,
+    val resetting: WorktreeInfo? = null,
+    /** Null means inspection is incomplete; it must never enable Reset. */
+    val resetChanges: ImmutableList<VersionControlFile>? = null,
+    /** The name of the worktree that was just reset, for a one-line confirmation. */
+    val resetDone: String? = null,
     /** Null means inspection is incomplete; it must never enable Remove. */
     val removalChanges: ImmutableList<VersionControlFile>? = null,
     val selectedDiff: String? = null,
@@ -74,6 +81,15 @@ public interface ProjectWorkspaceActions {
     public fun confirmWorktreeRemoval() {}
 
     public fun cancelWorktreeRemoval() {}
+
+    public fun inspectWorktreeReset(directory: String) {}
+
+    public fun confirmWorktreeReset() {}
+
+    public fun cancelWorktreeReset() {}
+
+    /** Opens the worktree as a project of its own (Flutter: tap a worktree). */
+    public fun openWorktree(directory: String) {}
 
     public fun openWorkspaceDiff(path: String) {}
 
@@ -123,6 +139,7 @@ internal class ProjectWorkspace(
                 canReadChanges = read,
                 canReadWorktrees = trees,
                 canCreate = trees && caps?.worktreeCreate == true,
+                canReset = trees && caps?.worktreeReset == true,
             )
         )
     }
@@ -384,6 +401,90 @@ internal class ProjectWorkspace(
                 is Outcome.Ok -> set(state.copy(busy = false, removalChanges = inspected.value))
                 is Outcome.Failed ->
                     set(state.copy(busy = false, failure = inspected.failure, removal = null))
+            }
+        }
+    }
+
+    override fun inspectWorktreeReset(directory: String) {
+        val live = server ?: return
+        val ops = live.operations ?: return
+        val target = state.worktrees.firstOrNull { it.directory == directory } ?: return
+        if (
+            state.busy ||
+                !state.visible ||
+                !state.canReset ||
+                !live.gateway.capabilities.value.worktreeReset
+        )
+            return
+        val run = ++generation
+        set(
+            state.copy(
+                busy = true,
+                failure = null,
+                resetDone = null,
+                resetting = target,
+                resetChanges = null,
+            )
+        )
+        scope.launch {
+            val inspected = ops.listWorktreeFileStatuses(target.directory)
+            if (!current(run, live)) return@launch
+            when (inspected) {
+                is Outcome.Ok -> set(state.copy(busy = false, resetChanges = inspected.value))
+                is Outcome.Failed ->
+                    set(state.copy(busy = false, failure = inspected.failure, resetting = null))
+            }
+        }
+    }
+
+    override fun cancelWorktreeReset() {
+        if (!state.busy) set(state.copy(resetting = null, resetChanges = null))
+    }
+
+    override fun confirmWorktreeReset() {
+        val live = server ?: return
+        val ops = live.operations ?: return
+        val target = state.resetting ?: return
+        val inspected = state.resetChanges ?: return
+        if (state.busy || !state.visible || !live.gateway.capabilities.value.worktreeReset) return
+        val run = ++generation
+        set(state.copy(busy = true, failure = null))
+        scope.launch {
+            // Same friction as removal: the confirmation belongs to this exact inspection.
+            val fresh = ops.listWorktreeFileStatuses(target.directory)
+            if (!current(run, live)) return@launch
+            val failure: Failure? =
+                when {
+                    fresh is Outcome.Failed -> fresh.failure
+                    fresh is Outcome.Ok && fresh.value != inspected ->
+                        Failure.Refused(RefusalReason.StaleScope)
+                    else -> null
+                }
+            if (failure != null) {
+                set(state.copy(busy = false, failure = failure, resetting = null, resetChanges = null))
+                return@launch
+            }
+            when (val reset = ops.resetWorktree(directory, target.directory)) {
+                is Outcome.Failed ->
+                    if (current(run, live))
+                        set(
+                            state.copy(
+                                busy = false,
+                                failure = reset.failure,
+                                resetting = null,
+                                resetChanges = null,
+                            )
+                        )
+                is Outcome.Ok ->
+                    if (current(run, live))
+                        set(
+                            state.copy(
+                                busy = false,
+                                resetting = null,
+                                resetChanges = null,
+                                resetDone = target.name,
+                            )
+                        )
             }
         }
     }
