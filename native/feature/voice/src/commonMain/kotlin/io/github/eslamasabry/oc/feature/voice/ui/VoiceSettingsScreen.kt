@@ -308,6 +308,7 @@ private fun DownloadProgress(state: VoiceSettingsUi, actions: VoiceSettingsPrese
     val percent = kotlin.math.floor((fraction ?: 0f) * 100).toInt()
     val announcement =
         if (job.verifying) stringResource(Res.string.e7VoiceUiVerifying)
+        else if (!started) stringResource(Res.string.voiceDownloadStarting)
         else
             stringResource(
                 Res.string.e7VoiceUiDownloadPercent,

@@ -182,13 +182,14 @@ class VoiceSettingsScreenTest {
         val starting = presenter.state.value.copy(job = PackJobUi(PackId("base"), 0, 161_000_000, false))
         runComposeUiTest {
             show(starting, presenter)
-            onNodeWithText("Starting the download").assertExists()
-            onAllNodesWithText("0 MB", substring = true).assertCountEquals(0)
+            // The bar and its line are one announcement (the caption itself is drawn, not a separate node).
+            onNodeWithContentDescription("Starting the download").assertExists()
+            onAllNodesWithContentDescription("0 percent", substring = true).assertCountEquals(0)
         }
         val moving = presenter.state.value.copy(job = PackJobUi(PackId("base"), 40_000_000, 161_000_000, false))
         runComposeUiTest {
             show(moving, presenter)
-            onNodeWithText("40 MB of 161 MB · 24%").assertExists()
+            onNodeWithContentDescription("Downloading voice model 20 percent").assertExists()
         }
     }
 
