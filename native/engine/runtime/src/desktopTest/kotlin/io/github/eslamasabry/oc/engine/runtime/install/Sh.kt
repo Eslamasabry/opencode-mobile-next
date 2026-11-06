@@ -49,8 +49,32 @@ object Sh {
     }
 
     /** A Dart raw string constant's text, as Dart reads it (a first whitespace-only line is dropped). */
-    fun dartRaw(path: String, name: String): String {
-        val text = File(repo, path).readText()
+    fun dartRaw(path: String, name: String): String = dartRawIn(File(repo, path).readText(), path, name)
+
+    /**
+     * The released Flutter app (tag v2.1.4+62), the source of truth for behaviour. This branch's own lib/ is an older
+     * snapshot of the Flutter tree, so a "byte for byte" check reads the release from git, not the working tree.
+     */
+    const val RELEASED_FLUTTER: String = "2dec68a250fec08909593fd3b1a8125de908f0c2"
+
+    /** [path] as the released Flutter app has it. Fails, naming the fix, in a clone without that commit. */
+    fun releasedText(path: String): String {
+        val shown =
+            run(
+                listOf("git", "-C", repo.path, "show", "$RELEASED_FLUTTER:$path"),
+                mapOf("PATH" to "/usr/local/bin:/usr/bin:/bin", "HOME" to System.getProperty("java.io.tmpdir")),
+            )
+        check(shown.exitCode == 0) {
+            "$path at the released Flutter app ($RELEASED_FLUTTER, v2.1.4+62) is not in this clone: " +
+                "git fetch origin master"
+        }
+        return shown.stdout
+    }
+
+    /** A Dart raw string constant's text in the released Flutter app (see [releasedText]). */
+    fun releasedDartRaw(path: String, name: String): String = dartRawIn(releasedText(path), path, name)
+
+    private fun dartRawIn(text: String, path: String, name: String): String {
         val match =
             Regex(
                 "(?:const )?" + Regex.escape(name) + "\\s*=\\s*(?:\\n\\s*)?(?:\\w+\\s*\\+\\s*)?r'''(.*?)'''",
