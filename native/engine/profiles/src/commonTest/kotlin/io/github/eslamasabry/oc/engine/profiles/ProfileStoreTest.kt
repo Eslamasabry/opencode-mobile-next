@@ -350,10 +350,15 @@ class ProfileStoreTest {
     }
 
     @Test
-    fun `B-STATE-065 a plain address as a name reads as This phone or Computer at`() {
+    fun `B-STATE-065 server titles keep names and never expose an IP`() {
         assertEquals("This phone", StoredProfileJson.plainServerName("127.0.0.1"))
         assertEquals("This phone", StoredProfileJson.plainServerName("[::1]"))
-        assertEquals("Computer at 203.0.113.4", StoredProfileJson.plainServerName("203.0.113.4"))
+        assertEquals("Computer", StoredProfileJson.plainServerName("203.0.113.4"))
+        assertEquals("Computer", StoredProfileJson.plainServerName("Computer at 203.0.113.4"))
+        assertEquals("Computer", StoredProfileJson.plainServerName("2001:db8::8"))
+        assertEquals("office.local", StoredProfileJson.plainServerName("Computer", "https://office.local:4096"))
+        assertEquals("This phone", StoredProfileJson.plainServerName("", "http://127.0.0.1:4096"))
+        assertEquals("Office PC", StoredProfileJson.plainServerName("Office PC", "https://203.0.113.4"))
         assertEquals("Workstation", StoredProfileJson.plainServerName("Workstation"))
     }
 }

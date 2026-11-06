@@ -266,7 +266,7 @@ class NativeServerEditor(
                     return@withLock invalid()
                 val next =
                     (previous ?: StoredProfile(id, "", origin.toString())).copy(
-                        name = input.name.trim().ifEmpty { origin.host },
+                        name = StoredProfileJson.plainServerName(input.name, origin.toString()),
                         baseUrl = origin.toString(),
                         backend = input.backend,
                         username = input.username.trim().ifEmpty { "opencode" },

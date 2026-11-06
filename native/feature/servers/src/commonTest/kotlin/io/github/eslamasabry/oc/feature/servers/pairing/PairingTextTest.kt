@@ -23,6 +23,16 @@ class PairingTextTest {
     }
 
     @Test
+    fun `B-PROTO-064 a pairing hostname reaches the editor and survives address selection`() {
+        val read = PairingText.parse("""{"urls":["https://192.0.2.10"],"password":"pw","hostname":"office-laptop"}""")
+        val fill = PairingFill.of(read)!!
+        assertEquals("office-laptop", fill.hostname)
+        assertEquals("office-laptop", fill.at("https://192.0.2.10").hostname)
+        assertNull(code("""{"urls":["https://a.example"],"password":"pw","hostname":"192.0.2.10"}""").hostname)
+        assertNull(code("""{"urls":["https://a.example"],"password":"pw","hostname":"bad\nname"}""").hostname)
+    }
+
+    @Test
     fun `B-PROTO-064 addresses are trimmed and de-duplicated and clipboard whitespace is tolerated`() {
         val p = code("\n  {\"urls\":[\" https://a.example \",\"https://a.example\",\"\",\"https://b.example\"],\"password\":\"x\"}\t\n")
         assertEquals(listOf("https://a.example", "https://b.example"), p.urls)

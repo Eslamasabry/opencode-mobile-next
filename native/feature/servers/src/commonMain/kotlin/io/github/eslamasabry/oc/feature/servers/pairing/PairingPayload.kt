@@ -35,7 +35,13 @@ public enum class PairingProblem {
  * the reference once the form has it. [urls] cannot be changed.
  */
 public class PairingPayload
-internal constructor(urls: List<String>, public val username: String, password: String) {
+internal constructor(
+    urls: List<String>,
+    public val username: String,
+    password: String,
+    /** Optional computer name in newer pairing envelopes; never inferred from an IP. */
+    public val hostname: String? = null,
+) {
     public val urls: List<String> = urls.toImmutableList()
     private var secret: String? = password
 
@@ -152,6 +158,8 @@ public object PairingText {
                 urls,
                 username?.takeIf { it.isNotEmpty() } ?: PairingPayload.DEFAULT_USERNAME,
                 password,
+                (decoded["hostname"] as? JsonPrimitive)?.takeIf { it.isString }?.content
+                    ?.trim()?.takeIf { validHostname(it) },
             )
         )
     }
@@ -251,6 +259,13 @@ public object PairingText {
             h == "0.0.0.0" ||
             h.startsWith("127.")
     }
+
+    private fun validHostname(value: String): Boolean =
+        value.length in 1..253 && value.any { it.isLetter() } &&
+            value.split('.').all { label ->
+                label.length in 1..63 && label.first().isLetterOrDigit() &&
+                    label.last().isLetterOrDigit() && label.all { it.isLetterOrDigit() || it == '-' }
+            }
 
     private fun problem(p: PairingProblem): PairingRead = PairingRead.Problem(p)
 
