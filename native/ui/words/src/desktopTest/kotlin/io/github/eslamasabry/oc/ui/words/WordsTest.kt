@@ -1,6 +1,9 @@
 package io.github.eslamasabry.oc.ui.words
 
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.account40ResetInDays
+import io.github.eslamasabry.oc.ui.words.res.account40ResetInHours
+import io.github.eslamasabry.oc.ui.words.res.account40ResetInMinutes
 import io.github.eslamasabry.oc.ui.words.res.chatUiReferenceAlreadyAdded
 import io.github.eslamasabry.oc.ui.words.res.e7SettingsStorageSummary__queued
 import io.github.eslamasabry.oc.ui.words.res.teamProjectGoalStatus__milestones
@@ -37,11 +40,31 @@ class WordsTest {
     }
 
     @Test
+    fun `B-L10N-010 E17-S03 Arabic reset times and goal counts agree with their number`() = runTest {
+        lang("ar")
+        val days = Res.plurals.account40ResetInDays
+        assertEquals("يُعاد تعيين الحد بعد يومين", getPluralString(days, 2, 2))
+        assertEquals("يُعاد تعيين الحد بعد 3 أيام", getPluralString(days, 3, 3))
+        assertEquals("يُعاد تعيين الحد بعد 11 يومًا", getPluralString(days, 11, 11))
+        assertEquals("يُعاد تعيين الحد بعد 100 يوم", getPluralString(days, 100, 100))
+        assertEquals("يُعاد تعيين الحد بعد ساعتين", getPluralString(Res.plurals.account40ResetInHours, 2, 2))
+        assertEquals("يُعاد تعيين الحد بعد 15 دقيقة", getPluralString(Res.plurals.account40ResetInMinutes, 15, 15))
+        // Was a "count: N" label in Arabic and an English fallback for the pieces; now each count is its own plural.
+        assertEquals("مرحلتان رئيسيتان", getPluralString(Res.plurals.teamProjectGoalStatus__milestones, 2, 2))
+        assertEquals(
+            "مسودة المواصفات · 3 مراحل رئيسية · مستودع واحد",
+            HandWords.teamProjectGoalStatusDraft(3, 1),
+        )
+        assertEquals(
+            "اعتُمدت المواصفات منذ أمس · مرحلة رئيسية واحدة · 11 مستودعًا",
+            HandWords.teamProjectGoalStatus("أمس", 1, 11),
+        )
+    }
+
+    @Test
     fun `B-L10N-010 a translated message reads in its language, a missing one reads English`() = runTest {
         lang("ar")
         assertEquals("‎@x موجود بالفعل في الطلب", getString(Res.string.chatUiReferenceAlreadyAdded, "x"))
-        // Arabic writes this count as a number, so it has no piece: CMP falls back to English, not to another language.
-        assertEquals("2 milestones", getPluralString(Res.plurals.teamProjectGoalStatus__milestones, 2, 2))
         lang("ja")
         assertEquals("@x is already in the prompt", getString(Res.string.chatUiReferenceAlreadyAdded, "x"))
     }

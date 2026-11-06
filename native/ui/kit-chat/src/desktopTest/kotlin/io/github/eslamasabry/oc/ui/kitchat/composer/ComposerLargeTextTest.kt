@@ -3,10 +3,14 @@ package io.github.eslamasabry.oc.ui.kitchat.composer
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.Density
@@ -16,6 +20,7 @@ import androidx.compose.ui.unit.width
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitText
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
@@ -51,5 +56,24 @@ class ComposerLargeTextTest {
             modelBounds.height > modeBounds.height,
             "The full model label wraps over multiple lines",
         )
+    }
+
+    @Test
+    fun `B-CHAT-006 E17-S03 Stop and send keeps frame-sized words at font scale 2`() = runComposeUiTest {
+        var scale by mutableStateOf(1.3f)
+        setContent {
+            MotionTheme(level = MotionLevel.Off) {
+                CompositionLocalProvider(LocalDensity provides Density(1f, scale)) {
+                    Box(Modifier.width(320.dp)) { KitStopAndSendPill("Stop and send", onClick = {}) }
+                }
+            }
+        }
+        // The pill hugs its words, so its size is the words' size (its row clears inner semantics).
+        val atCap = onNodeWithTag(PILL_TAG, useUnmergedTree = true).getBoundsInRoot()
+        scale = 2f
+        waitForIdle()
+        val atTwo = onNodeWithTag(PILL_TAG, useUnmergedTree = true).getBoundsInRoot()
+        assertEquals(atCap.width, atTwo.width, "frame words stop growing at 1.3x")
+        assertEquals(atCap.height, atTwo.height, "the pill stays as tall as the Send disc")
     }
 }

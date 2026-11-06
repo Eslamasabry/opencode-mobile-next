@@ -19,6 +19,8 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.platform.PromptFilePicker
 import io.github.eslamasabry.oc.core.model.PromptAttachment
+import io.github.eslamasabry.oc.engine.composer.input.AgentSuggestions
+import io.github.eslamasabry.oc.engine.composer.input.MentionAgent
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerTarget
 import io.github.eslamasabry.oc.feature.chat.composer.history.ComposerHistory
 import io.github.eslamasabry.oc.feature.chat.composer.history.ComposerHistoryRules
@@ -67,8 +69,10 @@ public data class BasicComposerUi(
     val filesAvailable: Boolean = false,
     /** Server slash commands matching a `/word` field (B-NAV-049). */
     val commandMatches: List<ComposerCommand> = emptyList(),
-    /** Project files matching the `@word` being typed (B-CHAT-087). */
+    /** Project files matching the `@word` being typed (B-CHAT-087); they fill the strip after the agents. */
     val fileMatches: List<String> = emptyList(),
+    /** E04-S01: sub-agents matching the `@word` being typed, shown before the files (Flutter order). */
+    val agentMatches: List<io.github.eslamasabry.oc.feature.chat.world.ComposerAgent> = emptyList(),
     /** The extra ways to attach this platform offers besides the document picker. */
     val attachKinds: Set<AttachKind> = emptySet(),
     val readOnly: io.github.eslamasabry.oc.feature.chat.world.ReadOnlyChat? = null,
@@ -163,6 +167,23 @@ public sealed interface ComposerQuery {
             return (prefix + contains + rest).take(limit)
         }
     }
+}
+
+/** One frame of the suggestion strip: `/` commands, or `@` agents then files. */
+private data class Suggestions(
+    val commands: List<ComposerCommand> = emptyList(),
+    val agents: List<io.github.eslamasabry.oc.feature.chat.world.ComposerAgent> = emptyList(),
+    val files: List<String> = emptyList(),
+)
+
+/** E04-S01: the sub-agents an `@word` matches, ranked as Flutter ranks them. */
+private fun mentionAgents(
+    query: String,
+    subagents: List<io.github.eslamasabry.oc.feature.chat.world.ComposerAgent>,
+): List<io.github.eslamasabry.oc.feature.chat.world.ComposerAgent> {
+    val byId = subagents.associateBy { it.id }
+    return AgentSuggestions.rank(query, subagents.map { MentionAgent(it.id, it.description) })
+        .mapNotNull { byId[it.id] }
 }
 
 /** Pure send gate, so the never-twice rule is table-tested without a ViewModel. */
@@ -306,7 +327,11 @@ public class BasicComposerViewModel(
                                 picking to committing
                             }
                         val suggestions =
-                            combine(query, world.commands, fileMatches) { q, commands, files ->
+                            combine(query, world.commands, fileMatches, world.models) {
+                                q,
+                                commands,
+                                files,
+                                models ->
                                 when (q) {
                                     is ComposerQuery.Command ->
                                         commands
@@ -322,14 +347,27 @@ public class BasicComposerViewModel(
                                                         it.name.contains(q.query, ignoreCase = true)
                                                 }
                                             )
-                                            .take(MAX_COMMANDS) to emptyList()
-                                    is ComposerQuery.File -> emptyList<ComposerCommand>() to files
-                                    null -> emptyList<ComposerCommand>() to emptyList()
+                                            .take(MAX_COMMANDS)
+                                            .let { Suggestions(commands = it) }
+                                    is ComposerQuery.File -> {
+                                        val agents = mentionAgents(q.query, models.subagents)
+                                        Suggestions(
+                                            agents = agents,
+                                            files =
+                                                if (q.query.isEmpty()) emptyList()
+                                                else files.take(AgentSuggestions.fileRoom(agents.size)),
+                                        )
+                                    }
+                                    null -> Suggestions()
                                 }
                             }
                         combine(
                             combine(gated, suggestions) { ui, s ->
-                                ui.copy(commandMatches = s.first, fileMatches = s.second)
+                                ui.copy(
+                                    commandMatches = s.commands,
+                                    fileMatches = s.files,
+                                    agentMatches = s.agents,
+                                )
                             },
                             world.models,
                             filesBusy,

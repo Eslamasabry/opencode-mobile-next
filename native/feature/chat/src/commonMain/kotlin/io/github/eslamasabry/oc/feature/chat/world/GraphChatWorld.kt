@@ -1292,6 +1292,14 @@ internal class GraphChatWorld(
                 }
                 .map { ComposerAgent(it.id, it.description) }
         subagentNames = snapshot.agents.filter { !it.hidden && it.mode == "subagent" }.map { it.id }
+        // E04-S01: the `@` strip offers the same sub-agents a send turns into agent parts (Flutter `_subagents`).
+        val subagents =
+            if (!a.gateway.capabilities.value.promptAgentMentions) emptyList()
+            else
+                snapshot.agents
+                    .filter { !it.hidden && it.mode == "subagent" }
+                    .map { ComposerAgent(it.id, it.description) }
+                    .sortedBy { it.id }
         // What the session holds; an absent model means the server default. A failed read (of the
         // session, or of the default it falls back on) leaves the choice unknown, never guessed.
         val session = (readback as? Outcome.Ok)?.value?.selection
@@ -1323,6 +1331,7 @@ internal class GraphChatWorld(
                 variant =
                     if (newer || failure != null) previous.variant else session?.variant.orEmpty(),
                 agents = agents,
+                subagents = subagents,
                 agent = if (newer) previous.agent else session?.agent ?: catalogDefaults?.agent,
                 usesDefault =
                     if (newer) previous.usesDefault else session?.model == null && failure == null,

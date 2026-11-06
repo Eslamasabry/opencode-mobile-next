@@ -54,16 +54,28 @@
     <string name="account40ResetDue">يُعاد تعيين الحد في أي لحظة</string>
     <string name="account40ResetWhen">%1$s (%2$s)</string>
     <plurals name="account40ResetInDays">
+        <item quantity="zero">يُعاد تعيين الحد بعد %1$d يوم</item>
         <item quantity="one">يُعاد تعيين الحد بعد يوم واحد</item>
-        <item quantity="other">يُعاد تعيين الحد بعد %1$d أيام</item>
+        <item quantity="two">يُعاد تعيين الحد بعد يومين</item>
+        <item quantity="few">يُعاد تعيين الحد بعد %1$d أيام</item>
+        <item quantity="many">يُعاد تعيين الحد بعد %1$d يومًا</item>
+        <item quantity="other">يُعاد تعيين الحد بعد %1$d يوم</item>
     </plurals>
     <plurals name="account40ResetInHours">
+        <item quantity="zero">يُعاد تعيين الحد بعد %1$d ساعة</item>
         <item quantity="one">يُعاد تعيين الحد بعد ساعة واحدة</item>
-        <item quantity="other">يُعاد تعيين الحد بعد %1$d ساعات</item>
+        <item quantity="two">يُعاد تعيين الحد بعد ساعتين</item>
+        <item quantity="few">يُعاد تعيين الحد بعد %1$d ساعات</item>
+        <item quantity="many">يُعاد تعيين الحد بعد %1$d ساعة</item>
+        <item quantity="other">يُعاد تعيين الحد بعد %1$d ساعة</item>
     </plurals>
     <plurals name="account40ResetInMinutes">
+        <item quantity="zero">يُعاد تعيين الحد بعد %1$d دقيقة</item>
         <item quantity="one">يُعاد تعيين الحد بعد دقيقة واحدة</item>
-        <item quantity="other">يُعاد تعيين الحد بعد %1$d دقائق</item>
+        <item quantity="two">يُعاد تعيين الحد بعد دقيقتين</item>
+        <item quantity="few">يُعاد تعيين الحد بعد %1$d دقائق</item>
+        <item quantity="many">يُعاد تعيين الحد بعد %1$d دقيقة</item>
+        <item quantity="other">يُعاد تعيين الحد بعد %1$d دقيقة</item>
     </plurals>
     <string name="account40Back">رجوع</string>
     <string name="account40Details">التفاصيل</string>

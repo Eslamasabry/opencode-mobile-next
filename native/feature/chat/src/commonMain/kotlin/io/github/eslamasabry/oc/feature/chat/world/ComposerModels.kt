@@ -143,6 +143,8 @@ public data class ComposerModels(
     /** The session's thinking level; "" is the model's default. */
     val variant: String = "",
     val agents: List<ComposerAgent> = emptyList(),
+    /** E04-S01: visible sub-agents the `@` strip offers; empty where the server takes no agent mentions. */
+    val subagents: List<ComposerAgent> = emptyList(),
     /** The session's agent; null = the server's default. */
     val agent: String? = null,
     /** The session names no model: the server default applies. */
