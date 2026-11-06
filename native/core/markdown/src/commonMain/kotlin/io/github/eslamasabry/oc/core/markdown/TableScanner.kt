@@ -2,7 +2,8 @@ package io.github.eslamasabry.oc.core.markdown
 
 /** GitHub pipe tables (Flutter `kit_markdown_table.dart` scanner). */
 internal object TableScanner {
-    private val delimiterCell = Regex(""":?-{3,}:?""")
+    /** A delimiter cell: one or more dashes, a colon at either end for alignment (GFM: `-`, `:-`, `-:`, `:-:` …). */
+    private val delimiterCell = Regex(""":?-+:?""")
 
     /** The cells of a row: outer pipes optional, `\|` is a literal pipe, cells trimmed. Empty when no `|`. */
     fun cells(line: String): List<String> {
@@ -45,7 +46,7 @@ internal object TableScanner {
 
     fun isDelimiter(line: String): Boolean {
         val cells = cells(line)
-        return cells.size >= 2 && cells.all { delimiterCell.matchEntire(it) != null }
+        return cells.isNotEmpty() && cells.all { delimiterCell.matchEntire(it) != null }
     }
 
     fun align(cell: String): Align {

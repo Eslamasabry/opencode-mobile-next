@@ -319,16 +319,34 @@ public fun KitMarkdownListItem(
         }
         val muted =
             block.checked == true // done checklist items are muted, never struck through (§9.1)
-        MdText(
-            block.key,
-            block.inlines,
-            if (muted) style.copy(color = LocalKitColors.current.text3) else style,
-            actions,
-            Modifier.weight(1f),
-            live,
-            caret,
-            reveal,
-        )
+        // The item's own words, then whatever else it holds (a fence under a step, a quote) inside the same column,
+        // so it lines up with the words and not with the marker.
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+            if (block.inlines.text.isNotEmpty() || block.children.isEmpty()) {
+                MdText(
+                    block.key,
+                    block.inlines,
+                    if (muted) style.copy(color = LocalKitColors.current.text3) else style,
+                    actions,
+                    Modifier,
+                    live && block.children.isEmpty(),
+                    caret && block.children.isEmpty(),
+                    reveal,
+                )
+            }
+            val last = block.children.lastIndex
+            block.children.forEachIndexed { i, child ->
+                key(child.key) {
+                    KitMarkdownBlock(
+                        child,
+                        actions,
+                        live = live && i == last,
+                        caret = caret && i == last,
+                        reveal = reveal,
+                    )
+                }
+            }
+        }
     }
 }
 

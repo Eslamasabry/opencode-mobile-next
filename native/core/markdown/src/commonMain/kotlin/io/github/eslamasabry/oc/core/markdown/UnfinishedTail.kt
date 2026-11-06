@@ -9,7 +9,8 @@ package io.github.eslamasabry.oc.core.markdown
 public object UnfinishedTail {
     private const val DOT = Dart.DOT
     private const val END = Dart.END
-    private val fence = Regex("""^ {0,3}(`{3,}|~{3,})($DOT*)$END""")
+    // A fence may sit inside a list item or a quote: any indent, and `>` marks before it.
+    private val fence = Regex("""^(?:[ \t]*>)*[ \t]*(`{3,}|~{3,})($DOT*)$END""")
     private val prefix = Regex("""^\s*(?:(?:#{1,6}|>|[-*+]|\d{1,9}[.)])\s+|>)*""")
     private val markChars = Regex("""[*_~`\[]""")
     private val wordBefore = Regex("""[A-Za-z0-9_\])]""")
@@ -147,61 +148,30 @@ public object UnfinishedTail {
         return s.substring(0, at) + label
     }
 
-    /** [s] without a trailing mark that opens nothing; the marks left open are pushed on [stack] (outermost first). */
+    private val trailingMarks = Regex("""(^|\s)[*_~]+$""")
+
+    /**
+     * [s] without a trailing mark that opens nothing; the marks left open are pushed on [stack] (outermost first).
+     * The inline scanner ([InlineParser.leftovers]) decides which marks are open, so a mark it would draw as text
+     * (`2 * 3`, `a*b`, `__init__.py`) is never closed here.
+     */
     private fun closeEmphasis(s: String, stack: MutableList<String>): String {
-        var out = s
-        val openAt = ArrayList<Int>()
-        var i = 0
-        while (i < out.length) {
-            val c = out[i]
-            if (c == '\\') {
-                i += 2
-                continue
-            }
-            if (c == '`') {
-                val close = out.indexOf('`', i + 1)
-                i = if (close < 0) out.length else close + 1
-                continue
-            }
-            var mark: String? = null
-            if (c == '*') {
-                mark = if (out.startsWith("***", i)) "***" else if (out.startsWith("**", i)) "**" else "*"
-            } else if (c == '_' && out.startsWith("__", i)) {
-                mark = "__"
-            } else if (c == '~' && out.startsWith("~~", i)) {
-                mark = "~~"
-            } else if ((c == '~' || c == '_') && i == out.length - 1) {
-                // The first half of `~~` or `__`: a lone one at a word start.
-                if (i == 0 || out[i - 1].isWhitespace()) out = out.substring(0, i)
-                break
-            }
-            if (mark == null) {
-                i++
-                continue
-            }
-            val end = i + mark.length
-            val spaceBefore = i == 0 || out[i - 1].isWhitespace()
-            val spaceAfter = end >= out.length || out[end].isWhitespace()
-            val top = stack.lastIndexOf(mark)
-            if (top >= 0 && !spaceBefore) {
-                stack.subList(top, stack.size).clear()
-                openAt.subList(top, openAt.size).clear()
-            } else if (!spaceAfter) {
-                stack += mark
-                openAt += i
-            } else if (end >= out.length) {
-                // A mark at the very end that closes nothing: nothing to show.
-                out = out.substring(0, i)
-                break
-            }
-            i = end
+        // A lone mark at a word's start, or a run of them, with nothing after: the first half of `**`, `~~`, `__`.
+        var out = trailingMarks.replace(s, "$1")
+        var leftovers = InlineParser.leftovers(out)
+        // A `*` or `~~` run closing nothing at the very end shows nothing (a `_` run may be part of a name).
+        val tail = leftovers.lastOrNull()
+        if (tail != null && tail.mark != '_' && tail.count == tail.orig && tail.offset + tail.orig == out.length) {
+            out = out.substring(0, tail.offset)
+            leftovers = InlineParser.leftovers(out)
         }
+        var open = leftovers.filter { it.open }
         // A mark opened right at the end has no words yet.
-        while (stack.isNotEmpty() && openAt.last() + stack.last().length >= out.length) {
-            out = out.substring(0, openAt.last())
-            stack.removeAt(stack.lastIndex)
-            openAt.removeAt(openAt.lastIndex)
+        while (open.isNotEmpty() && open.last().offset + open.last().orig >= out.length) {
+            out = out.substring(0, open.last().offset)
+            open = InlineParser.leftovers(out).filter { it.open }
         }
+        for (mark in open) stack += mark.mark.toString().repeat(mark.count)
         return out
     }
 }

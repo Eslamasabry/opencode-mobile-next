@@ -69,6 +69,8 @@ public sealed interface KitMdBlock {
         val depth: Int,
         val inlines: KitInlines,
         val checked: Boolean? = null,
+        /** What else is in the item besides its first paragraph (a fence under a step, a quote, a table). */
+        val children: ImmutableList<KitMdBlock> = persistentListOf(),
     ) : KitMdBlock
 
     /** A fenced block. [open] while the closing fence has not arrived: drawn plain, never coloured. */
@@ -97,5 +99,6 @@ public data class KitPicture(val label: String?, val url: String? = null, val pa
 
 /** Whether a block ends in text a caret can follow (a reply ending in code, a table or a rule shows no caret). */
 public val KitMdBlock.takesCaret: Boolean
-    get() = this is KitMdBlock.Prose || this is KitMdBlock.Heading || this is KitMdBlock.ListItem ||
+    get() = this is KitMdBlock.Prose || this is KitMdBlock.Heading ||
+        (this is KitMdBlock.ListItem && (children.isEmpty() || children.last().takesCaret)) ||
         (this is KitMdBlock.Quote && children.lastOrNull()?.takesCaret == true)

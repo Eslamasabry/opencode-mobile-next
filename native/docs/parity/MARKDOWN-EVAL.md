@@ -149,3 +149,6 @@ The kit-only rule says every visible part comes from `lib/ui/kit` (here `ui/kit-
 3. Table leniency (8), task lists (12), setext and indented code (9, 10).
 4. Add a conformance ratchet test that runs `cases/` (a checked-in subset) so the pass count only goes up.
 5. Remove or document the dead `markdown = "0.7.18"` catalog entry.
+
+## 5. Status after `native/markdown-fixes` (2026-11-06)
+Fixed in the engine, each with commonTest cases from the spec examples: nested lists and quotes (blocks inside items and quotes, class 1-4), the delimiter-run inline scanner with escapes, entities, multi-backtick spans and balanced parentheses (5-7, 11), table leniency (8), task items, setext headings and hard breaks (9, 11, 12). Not done: indented code (10), reference links, loose-list `<p>` semantics, lazy quote continuation, emphasis across lines. Deliberate deviations from CommonMark: `*`/`_` between two ASCII word characters is text (`a*b*c`, `x**2`), `__init__.py` stays literal, a line without a `|` ends a table, raw HTML stays text.
