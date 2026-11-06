@@ -1,0 +1,28 @@
+# Layout guard baseline of one module (native/docs/kit/LAYOUT-RULES.md). Only shrinks.
+# shot	window	rule	subject
+kit_request_card_answered	phone	tight	Undo
+kit_request_card_answered	tablet	tight	Undo
+kit_step_glow_finish_tick	tablet	wide-text	lib/a.dart
+kit_step_glow_finish_tick	tablet	wide-text	lib/b.dart
+kit_step_glow_first_t40	tablet	wide-text	lib/a.dart
+kit_step_glow_first_t40	tablet	wide-text	lib/b.dart
+kit_step_glow_reduced	tablet	wide-text	lib/a.dart
+kit_step_glow_reduced	tablet	wide-text	lib/b.dart
+kit_step_glow_running_t10	tablet	wide-text	lib/a.dart
+kit_step_glow_running_t10	tablet	wide-text	lib/b.dart
+kit_step_glow_running_t40_ar_text2	tablet	wide-text	lib/a.dart
+kit_step_glow_running_t40_ar_text2	tablet	wide-text	lib/b.dart
+kit_step_glow_waiting_breathe	phone	clipped	
+kit_step_glow_waiting_breathe	tablet	clipped	
+kit_step_glow_waiting_breathe	tablet	wide-text	lib/a.dart
+kit_step_glow_waiting_breathe	tablet	wide-text	lib/b.dart
+kit_step_timeline_collapsed	phone	tight	Read # file · searched once · edited # file · ra
+kit_step_timeline_collapsed	phone	tight	The screen is in and the route points to it.
+kit_step_timeline_collapsed	tablet	tight	Read # file · searched once · edited # file · ra
+kit_step_timeline_collapsed	tablet	tight	The screen is in and the route points to it.
+kit_step_timeline_collapsed	tablet	wide-control	Read # file · searched once · edited # file · ra
+kit_work_line_default_text2	phone	clipped	
+kit_work_line_default_text2	phone	clipped	
+kit_work_line_default_text2	tablet	clipped	
+kit_work_line_default_text2	tablet	clipped	
+kit_work_line_default_text2	tablet	wide-row	

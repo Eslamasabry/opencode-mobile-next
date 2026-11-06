@@ -132,8 +132,9 @@ object FlutterGoldenGate {
     }
 
     /**
-     * Renders [content] once per mode as the Flutter golden `<name>_<mode>` and records the comparison. Throws only
-     * when the golden file is missing or the content throws; thresholds are applied by gate_order.sh.
+     * Renders [content] once per mode as the Flutter golden `<name>_<mode>` and records the comparison. Throws when
+     * [LayoutGuard] finds a layout rule broken that the baseline does not list, when the golden file is missing or when
+     * the content throws; picture thresholds are applied by gate_order.sh.
      */
     fun check(
         name: String,
@@ -150,6 +151,9 @@ object FlutterGoldenGate {
         act: (androidx.compose.ui.test.ComposeUiTest.() -> Unit)? = null,
         content: @Composable () -> Unit,
     ): Map<String, Double> {
+        // Every gate shot is also held to the layout rules (E02-S13, native/docs/kit/LAYOUT-RULES.md); a finding the
+        // module's baseline does not list fails here, before the picture comparison.
+        LayoutGuard.check(name, LayoutGuard.Scene(frame, style, wrap, act, content))
         val result = LinkedHashMap<String, Double>()
         for (mode in modes) {
             val axes = axesOf(name, mode, ref, textScale, window, density, pixelRatio)
