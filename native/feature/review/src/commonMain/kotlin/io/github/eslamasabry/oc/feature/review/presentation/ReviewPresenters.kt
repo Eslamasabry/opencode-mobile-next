@@ -41,6 +41,13 @@ public interface ChangesActions {
     /** An undo is waiting: review it. */
     public fun openStaged()
 
+    /**
+     * The change-scope picker: true shows the folder's uncommitted changes, false the changes this
+     * conversation (or turn) made. Flutter also has "since base branch"; the review engine has no
+     * branch read yet.
+     */
+    public fun chooseWorkingTree(on: Boolean) {}
+
     /** "Send back with a note": opens the note field. */
     public fun sendBack()
 
@@ -69,6 +76,9 @@ public class ChangesPresenter(
      * The undo boundary the rows were read against: Undo all refuses once it moved (B-CHAT-105).
      */
     private var basis: Long? = null
+
+    /** The person's scope choice; null keeps the automatic one (the folder's changes when the tools reported none). */
+    private var pickedTree: Boolean? = null
 
     init {
         scope.launch {
@@ -107,7 +117,31 @@ public class ChangesPresenter(
                     // conversation's view gives way
                     // to the folder's uncommitted changes, where the server has them (B-NAV-053).
                     var working = false
-                    if (rows.isEmpty() && messageId == null && review.workingTreeAvailable()) {
+                    val picked = pickedTree
+                    if (picked == true && review.workingTreeAvailable()) {
+                        when (val tree = review.workingTree()) {
+                            is Outcome.Failed -> {
+                                mutable.update { it.copy(load = ReviewLoad.Failed(tree.failure)) }
+                                return@launch
+                            }
+                            is Outcome.Ok -> {
+                                working = true
+                                rows = tree.value.map { d ->
+                                    workingRow(
+                                        d.file,
+                                        d.additions,
+                                        d.deletions,
+                                        !d.patch.isNullOrBlank(),
+                                    )
+                                }
+                            }
+                        }
+                    } else if (
+                        picked == null &&
+                            rows.isEmpty() &&
+                            messageId == null &&
+                            review.workingTreeAvailable()
+                    ) {
                         val tree = (review.workingTree() as? Outcome.Ok)?.value.orEmpty()
                         if (tree.isNotEmpty()) {
                             working = true
@@ -125,6 +159,7 @@ public class ChangesPresenter(
                         it.copy(
                             load = ReviewLoad.Ready,
                             workingTree = working,
+                            canPickScope = review.workingTreeAvailable(),
                             files = rows.toImmutableList(),
                             complete = set.complete,
                             added = rows.sumOrNull { r -> r.added },
@@ -148,6 +183,13 @@ public class ChangesPresenter(
     override fun back(): Unit = nav.back()
 
     override fun retry(): Unit = load()
+
+    override fun chooseWorkingTree(on: Boolean) {
+        val s = state.value
+        if (s.working || s.load == ReviewLoad.Loading || s.workingTree == on) return
+        pickedTree = on
+        load()
+    }
 
     override fun openFile(path: String) {
         val s = state.value

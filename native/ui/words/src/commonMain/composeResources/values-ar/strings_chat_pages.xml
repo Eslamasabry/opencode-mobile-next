@@ -123,6 +123,7 @@
     <string name="isolatedTaskKeepWaiting">متابعة الانتظار</string>
     <string name="reviewCopyFile">نسخ الملف المحدّث</string>
     <string name="reviewCopyPatch">نسخ الرقعة</string>
+    <string name="reviewExpandContext">عرض الأسطر المحيطة</string>
     <string name="reviewTitle">مراجعة</string>
     <string name="e7SharedOpenCodeIsReconnectingTryAgain">يعيد OpenCode الاتصال. حاول مرة أخرى.</string>
     <string name="e7SharedSessionContext">سياق المحادثة</string>
