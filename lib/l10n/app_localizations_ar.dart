@@ -36063,4 +36063,7 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get agentsGeminiMigrationNote =>
       'إذا طلب منك Gemini CLI استخدام Antigravity، ارجع إلى الوكلاء وثبّت Antigravity (agy). تبقى محادثات Gemini هنا.';
+
+  @override
+  String get phoneSetupStageCompat => 'جارٍ المحاولة مجددًا في وضع التوافق';
 }

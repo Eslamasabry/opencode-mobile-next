@@ -35986,4 +35986,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get agentsGeminiMigrationNote =>
       'If Gemini CLI asks you to use Antigravity, go back to Agents and install Antigravity (agy). Your Gemini conversations stay here.';
+
+  @override
+  String get phoneSetupStageCompat => 'Trying again in compatibility mode';
 }

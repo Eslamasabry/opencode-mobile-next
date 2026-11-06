@@ -56573,6 +56573,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'If Gemini CLI asks you to use Antigravity, go back to Agents and install Antigravity (agy). Your Gemini conversations stay here.'**
   String get agentsGeminiMigrationNote;
+
+  /// Setup stage when a program crashed and the app runs the step again more carefully
+  ///
+  /// In en, this message translates to:
+  /// **'Trying again in compatibility mode'**
+  String get phoneSetupStageCompat;
 }
 
 class _AppLocalizationsDelegate

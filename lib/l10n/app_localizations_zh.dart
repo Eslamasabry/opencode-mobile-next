@@ -34098,4 +34098,7 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get agentsGeminiMigrationNote =>
       'If Gemini CLI asks you to use Antigravity, go back to Agents and install Antigravity (agy). Your Gemini conversations stay here.';
+
+  @override
+  String get phoneSetupStageCompat => '正在以兼容模式重试';
 }
