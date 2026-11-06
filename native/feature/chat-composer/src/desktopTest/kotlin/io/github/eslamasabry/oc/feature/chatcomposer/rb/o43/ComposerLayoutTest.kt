@@ -43,5 +43,25 @@ class ComposerLayoutTest {
         }
         onNode(hasText("This sub-agent answers only its main conversation. Write there.") and hasAnyAncestor(hasTestTag("kit-composer-box")), useUnmergedTree = true).assertExists()
     }
+    @Test fun `P09-10_2 a read-only composer says why once`() = runComposeUiTest {
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), localeTag = "en") {
+                ComposerScreen(
+                    ComposerUi(
+                        button = FieldButton.None,
+                        note = ComposerNote.ReadOnly(ReadOnlyReason.SubAgent),
+                        fieldEnabled = false,
+                    ),
+                    RecordingActions(),
+                    TextFieldState(),
+                )
+            }
+        }
+        val why = "This sub-agent answers only its main conversation. Write there."
+        // The disabled field draws its reason under the words and speaks it as its state (KitField); a note
+        // above the field with the same words would say it a second time.
+        onNode(hasStateDescription(why)).assertIsNotEnabled()
+        onAllNodesWithText(why, useUnmergedTree = true).assertCountEquals(0)
+    }
 
 }

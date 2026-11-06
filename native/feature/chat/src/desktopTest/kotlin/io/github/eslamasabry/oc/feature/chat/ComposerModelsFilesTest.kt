@@ -189,41 +189,28 @@ class ComposerModelsFilesTest {
             val actions = Actions()
             val draft = DraftFacts(attachments = listOf(file("notes.txt"), file("more.txt")))
             setContent { Theme { BasicComposer(ui(draft = draft), actions, chrome) } }
-            onNodeWithText("notes.txt").assertIsDisplayed()
-            onNodeWithText("more.txt").assertIsDisplayed()
-            onAllNodesWithContentDescription("Remove").onFirst().performClick()
+            // The chip's face is one node; its words are drawn text under it.
+            onNodeWithText("notes.txt", useUnmergedTree = true).assertIsDisplayed()
+            onNodeWithText("more.txt", useUnmergedTree = true).assertIsDisplayed()
+            // Each remove control names its file (Flutter kitChipRemove), never a bare "Remove".
+            onAllNodesWithContentDescription("Remove").assertCountEquals(0)
+            onNodeWithContentDescription("Remove more.txt").assertExists()
+            onNodeWithContentDescription("Remove notes.txt").performClick()
             assertEquals(listOf("remove 0"), actions.calls)
         }
 
     @Test
-    fun `09-10_6 attach is explained-disabled without a picker or when the chosen model refuses files`() =
+    fun `09-10_6 the plus is never a dead control and opens the file picker when files are its only choice`() =
         runComposeUiTest {
+            // Flutter's composer plus always opens (attachments are gated on the server's capability, not on the
+            // chosen model, chat_attachments.dart); the owner's one-box composer dropped the native-only
+            // explained-disabled plus. With files the only choice, the plus says so and opens the picker directly.
             val actions = Actions()
             val state =
                 mutableStateOf(ui(models = ComposerModels(choices = listOf(mini, big), selected = big)))
             setContent { Theme { BasicComposer(state.value, actions, chrome) } }
-            onNodeWithTag("chat-attach-button").assertIsNotEnabled()
-            assertTrue(
-                onNodeWithTag("chat-attach-button")
-                    .fetchSemanticsNode()
-                    .config[SemanticsProperties.StateDescription]
-                    .let { listOf(it) }
-                    .any { "does not accept files" in it },
-                "the disabled attach button must say why in plain words"
-            )
-            runOnIdle {
-                state.value = ui(models = ComposerModels(choices = listOf(mini, big), selected = mini), filesAvailable = false)
-            }
-            onNodeWithTag("chat-attach-button").assertIsNotEnabled()
-            assertTrue(
-                onNodeWithTag("chat-attach-button")
-                    .fetchSemanticsNode()
-                    .config[SemanticsProperties.StateDescription]
-                    .let { listOf(it) }
-                    .any { "cannot attach files" in it }
-            )
-            runOnIdle { state.value = ui(models = ComposerModels(choices = listOf(mini, big), selected = mini)) }
             onNodeWithTag("chat-attach-button").assertIsEnabled()
+            onNodeWithContentDescription("Attach file").assertExists()
             onNodeWithTag("chat-attach-button").performClick()
             assertEquals(listOf("attachFile"), actions.calls)
         }

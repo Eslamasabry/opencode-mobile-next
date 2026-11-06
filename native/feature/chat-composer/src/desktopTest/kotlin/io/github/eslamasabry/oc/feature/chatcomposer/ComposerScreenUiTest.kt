@@ -86,6 +86,9 @@ class ComposerScreenUiTest {
         assertEquals(listOf("also run the linter" to SendHow.Steer), port.sent)
         assertEquals("", field.text.toString(), "the field empties once the steer is handed over")
         clock.now += 1.seconds
+        // KitComposerStop has its own guard on the frame clock (STOP_IGNORE_AFTER_SEND after each send), as the
+        // presenter has on its Clock: both must pass before a tap stops the turn.
+        mainClock.advanceTimeBy(1_000)
         onNodeWithContentDescription("Stop").performClick()
         waitForIdle()
         assertTrue("stop" in port.calls)

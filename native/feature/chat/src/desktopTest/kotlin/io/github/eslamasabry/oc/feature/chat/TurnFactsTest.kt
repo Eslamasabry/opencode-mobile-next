@@ -351,13 +351,16 @@ class TurnFactsTest {
         }
 
     @Test
-    fun `B-CHAT-068 B-CHAT-101 the turn result names the changed file and the command`() =
+    fun `B-CHAT-068 B-CHAT-101 the turn's work line names the changed file and the command, said once`() =
         runComposeUiTest {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(screenState(), actions, composer, facts = screenFacts()) } }
-            onNodeWithText("Edited 1 file · ran 1 command").assertIsDisplayed().performClick()
-            onNodeWithText("/p/src/a.kt", substring = true).assertIsDisplayed()
-            onNodeWithText("$ npm test", substring = true).assertIsDisplayed()
+            // N-45: a turn with a work line says what it edited and ran there; no second "Edited … · ran …" row.
+            onNodeWithTag("chat-turn-result").assertDoesNotExist()
+            onNodeWithText("Read 1 file · edited 1 file · ran 1 command").assertIsDisplayed().performClick()
+            // The read step and the edit step both name the file; the shell step names the command.
+            onAllNodesWithText("a.kt", substring = true).assertCountEquals(2)[1].assertIsDisplayed()
+            onNodeWithText("npm test", substring = true).assertIsDisplayed()
         }
 
     @Test
@@ -423,8 +426,11 @@ class TurnFactsTest {
             val facts = TurnFactsPresenter(FixedClock).present(k.feed.value, 5_000)
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(screenState(), actions, composer, facts = facts) } }
-            onNodeWithTag("chat-turn-result").onChildren().filterToOne(hasClickAction()).performClick()
-            onNodeWithText("$ curl -H 'Authorization:", substring = true).assertIsDisplayed()
+            // N-45: the command is read on the work line's shell step (no separate turn result row).
+            onNodeWithText("Ran 1 command", substring = true, ignoreCase = true).performClick()
+            onNodeWithTag("chat-step-t1").performClick()
+            waitForIdle()
+            onAllNodesWithText("curl -H 'Authorization:", substring = true).onFirst().assertIsDisplayed()
             onAllNodesWithText(bearerTail, substring = true).assertCountEquals(0)
         }
 

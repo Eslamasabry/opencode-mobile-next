@@ -50,7 +50,10 @@ class RelationsScreenTest {
         onNodeWithText("Needs you", useUnmergedTree = true).assertExists()
         onNodeWithText(" · open to answer", useUnmergedTree = true).assertExists()
         // Flutter's words (session_relations_screen.dart:284, `e7SharedRefreshSubagentSessions`).
-        onNodeWithContentDescription("Refresh subagent conversations").performClick()
+        // KitTopBar draws an action as an icon (spoken by its description) on compact and medium windows and as
+        // its words on a wide one; the desktop test window is wide.
+        val refresh = "Refresh subagent conversations"
+        onNode(hasContentDescription(refresh) or hasText(refresh)).performClick()
         assertEquals(1, actions.refreshes)
     }
     @Test fun `B-AGENT-221 stopping a subagent asks first and leaves Keep running available`() = runComposeUiTest {

@@ -103,7 +103,6 @@ import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachFile
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachmentDismiss
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachmentFailed
 import io.github.eslamasabry.oc.ui.words.res.chatUiDelegateThisPrompt
-import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachmentRemove
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachmentRetry
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachmentStorage
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachmentTooLarge
@@ -616,7 +615,8 @@ public fun BasicComposer(
                     KitChip(
                         label = attachment.filename,
                         kind = KitChipKind.Removable,
-                        removeLabel = stringResource(Res.string.composerPreviewAttachmentRemove),
+                        // The kit's "Remove <name>" (Flutter kit_composer_chips.dart:907 kitChipRemove), so
+                        // TalkBack says which file goes.
                         onRemove = { actions.removeAttachment(index) },
                         modifier = Modifier.testTag("chat-attachment-$index"),
                     )
