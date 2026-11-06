@@ -28,7 +28,7 @@ body:
       options:
         - label: I am on the current preview release (older previews are not supported)
           required: true
-        - label: I understand this is an alpha, vibecoded project — desktop support is contributor-tested and may not work yet
+        - label: I understand this is an alpha, vibecoded project
           required: true
         - label: I searched existing issues
           required: true
