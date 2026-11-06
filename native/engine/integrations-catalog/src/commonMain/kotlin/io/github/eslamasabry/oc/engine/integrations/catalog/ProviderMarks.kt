@@ -200,6 +200,8 @@ public object ProviderMarks {
             "claude" to "claude",
             "codex" to "codex",
             "gemini" to "gemini",
+            "antigravity" to "google",
+            "agy" to "google",
             "qwen" to "qwen",
             "kilo" to "kilocode",
             "cline" to "cline",
