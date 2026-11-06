@@ -116,7 +116,7 @@ internal class BlockParser(private val partId: String, private val src: ParseLin
 
             if (i + 1 < n) {
                 val headers = TableScanner.cells(line)
-                if (headers.size >= 2) {
+                if (headers.isNotEmpty()) {
                     val next = src.line(i + 1)
                     if (headers.size == TableScanner.cells(next).size && TableScanner.isDelimiter(next)) {
                         flushParagraph()
@@ -226,12 +226,13 @@ internal class BlockParser(private val partId: String, private val src: ParseLin
 
     private fun table(first: Int, headers: List<String>): Int {
         val delimiter = TableScanner.cells(src.line(first + 1))
+        val width = headers.size
         val rows = ArrayList<List<Inlines>>()
         var i = first + 2
-        while (i < n) {
-            val cells = TableScanner.cells(src.line(i))
-            if (src.line(i).isBlank() || cells.size < 2) break
-            rows += cells.map(InlineParser::parse)
+        while (i < n && continuesTable(src.line(i))) {
+            // GFM: a short row is padded with empty cells, cells past the header's count are ignored.
+            val cells = TableScanner.cells(src.line(i)).take(width)
+            rows += cells.map(InlineParser::parse) + List(width - cells.size) { InlineParser.parse("") }
             i++
         }
         val start = src.start(first)
@@ -249,6 +250,17 @@ internal class BlockParser(private val partId: String, private val src: ParseLin
             ),
         )
         return i
+    }
+
+    /**
+     * Whether [line] is a body row of the table above it: it has a `|` and some content (one cell is enough), and
+     * it does not start another block (a fence, heading, rule or quote), which ends the table.
+     */
+    private fun continuesTable(line: String): Boolean {
+        val cells = TableScanner.cells(line)
+        if (cells.isEmpty() || (cells.size == 1 && cells[0].isEmpty())) return false
+        if (fencePattern.find(line) != null || heading.matchEntire(line) != null || rule.matchEntire(line) != null) return false
+        return !line.trimStart().startsWith(">")
     }
 
     /** [sub] (a container's content) parsed again as blocks. */

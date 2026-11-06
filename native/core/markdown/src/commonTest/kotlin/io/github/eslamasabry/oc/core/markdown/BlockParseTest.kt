@@ -178,7 +178,8 @@ class BlockParseTest {
     @Test
     fun `CHAT-GENUI-16 a header without its delimiter row is a paragraph`() {
         assertEquals(listOf("P \"| a | b |\""), dump(parse("| a | b |")))
-        assertEquals(listOf("P \"| a | b |\\n| - | - |\""), dump(parse("| a | b |\n| - | - |")))
+        // A delimiter row with a different number of cells is not one (GFM 203).
+        assertEquals(listOf("P \"| a | b |\\n| --- |\""), dump(parse("| a | b |\n| --- |")))
     }
 
     @Test
