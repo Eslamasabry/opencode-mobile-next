@@ -68,6 +68,7 @@ public class ScheduleEngine(
     public val store: ScheduleStore = ScheduleStore(backend, nowMs, zone)
     public val claims: ScheduleClaims = ScheduleClaims(backend, nowMs)
     private val fingerprints = ScheduleFingerprints(backend)
+    private val receipts = ScheduleReceipts(backend, store, nowMs, zone)
     private val runner =
         ScheduleRunner(profiles, nowMs, pollMs) { schedule ->
             fingerprints.accepts(schedule.profileId, schedule.profileFingerprint, profiles.fingerprint(schedule.profileId))
@@ -102,6 +103,8 @@ public class ScheduleEngine(
         }
         return guarded(profileId, platform) {
             migrate(profileId)
+            // E00-S05: failed runs the Flutter worker could only leave as receipts show in the history.
+            receipts.merge(profileId)
             sync(profileId)
         }
     }

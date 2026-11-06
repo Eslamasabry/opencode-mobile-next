@@ -54,6 +54,11 @@ public object ScheduleKeys {
 
     public fun nativeFingerprint(profileId: String): String = NATIVE_FINGERPRINT_PREFIX + checked(profileId)
 
+    /** The Flutter worker's failed-run receipts (ScheduledPromptReceipts.kt), merged into history and removed. */
+    public const val RECEIPTS_PREFIX: String = "oc.scheduleReceipts."
+
+    public fun receipts(profileId: String): String = RECEIPTS_PREFIX + checked(profileId)
+
     /** The editor's typed prompt (Flutter `KitDraft` target `schedule.<id|new>`), swept with the profile (`oc.draft.`). */
     public const val DRAFT_PREFIX: String = "oc.draft.schedule."
 
@@ -64,7 +69,7 @@ public object ScheduleKeys {
         if (key.startsWith(DRAFT_PREFIX)) {
             key.substringAfterLast('.').takeIf(ScheduleIds::valid)
         } else {
-            listOf(STORE_PREFIX, CLAIMS_PREFIX, INDEX_PREFIX, NATIVE_FINGERPRINT_PREFIX)
+            listOf(STORE_PREFIX, CLAIMS_PREFIX, INDEX_PREFIX, NATIVE_FINGERPRINT_PREFIX, RECEIPTS_PREFIX)
                 .firstOrNull { key.startsWith(it) }
                 ?.let { key.removePrefix(it) }
                 ?.takeIf(ScheduleIds::valid)
