@@ -198,6 +198,7 @@ public class ConnectionDelivery(
                 val event = envelope.event
                 val current = connection.link.value
                 val location = envelope.location
+                diagnose(event, location, current)
                 if (
                     event is GatewayEvent.MessageUpserted &&
                         current != null &&
@@ -247,6 +248,44 @@ public class ConnectionDelivery(
                     }
                 }
         }
+    }
+
+    private val diagLog = io.github.eslamasabry.oc.core.common.AppLog.tagged("delivery")
+    private var diagEvents = 0
+
+    /**
+     * B-063 diagnostics: while a send to a session is in flight, which event types arrive for it and
+     * whether a user echo would match (kinds and booleans only; never ids, text or addresses).
+     */
+    private fun diagnose(
+        event: GatewayEvent,
+        location: io.github.eslamasabry.oc.core.model.EventLocation?,
+        current: io.github.eslamasabry.oc.engine.delivery.port.SendLink?,
+    ) {
+        val inFlight =
+            engine?.pending?.value?.filter { it.phase != SendPhase.Accepted }?.map { it.ref.sessionId.raw }
+                ?: return
+        if (inFlight.isEmpty()) return
+        val session =
+            when (event) {
+                is GatewayEvent.MessageUpserted -> event.message.sessionId
+                is GatewayEvent.PartUpserted -> event.part.sessionId
+                is GatewayEvent.PartDelta -> event.sessionId.raw
+                is GatewayEvent.RunStarted -> event.sessionId.raw
+                is GatewayEvent.RunEnded -> event.sessionId.raw
+                is GatewayEvent.InboxChanged -> event.sessionId.raw
+                else -> null
+            }
+        if (session != null && session !in inFlight) return
+        if (diagEvents++ > 60) return
+        val detail =
+            if (event is GatewayEvent.MessageUpserted)
+                " role=${event.message.role} echo=${event.userEcho != null} " +
+                    "echoParts=${event.userEcho?.parts?.size} " +
+                    "dirMatch=${location?.directory == null || location.directory == current?.scope?.directory} " +
+                    "wsMatch=${location?.workspace == null || location.workspace == current?.scope?.workspace}"
+            else ""
+        diagLog.w { "B063 event ${event::class.simpleName} forSend=${session != null}$detail" }
     }
 
     public fun running(ref: ConversationRef, busy: Boolean) {

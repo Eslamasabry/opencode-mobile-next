@@ -45,6 +45,8 @@ public class GatewaySendLink(
     private val observed: ObservedPromptReceipts = ObservedPromptReceipts(),
     private val admitInteractive: suspend () -> Outcome<Unit> = { Outcome.Ok(Unit) },
 ) : SendLink {
+    private val log = io.github.eslamasabry.oc.core.common.AppLog.tagged("delivery")
+
     /** One gateway is one connection epoch; a status-change wrapper over it is the same target. */
     override val epoch: Any
         get() = gateway
@@ -177,17 +179,27 @@ public class GatewaySendLink(
                     failure?.nothingSent == true &&
                         (failure as? Failure.Refused)?.reason != RefusalReason.DispatchUncertain
             if (confirmed == null && !refusedBeforeSend) {
+                var polls = 0
+                var lastLookup = "none"
                 val found =
                     withTimeoutOrNull(ADMISSION_RECONCILE_MS) {
                         var accepted = false
                         while (
                             scope == origin && gateway.events.status.value !is StreamStatus.Stopped
                         ) {
+                            polls++
+                            val looked =
+                                if (capabilities.commandReceipts) lookupAdmission(session, id)
+                                else null
+                            lastLookup =
+                                when (looked) {
+                                    null -> "off"
+                                    is Outcome.Ok -> "ok=${looked.value}"
+                                    is Outcome.Failed -> "failed=${looked.failure::class.simpleName}"
+                                }
                             if (
                                 observed.contains(origin, session, id) ||
-                                    (capabilities.commandReceipts &&
-                                        (lookupAdmission(session, id) as? Outcome.Ok)?.value ==
-                                            true)
+                                    (looked as? Outcome.Ok)?.value == true
                             ) {
                                 accepted = true
                                 break
@@ -196,6 +208,16 @@ public class GatewaySendLink(
                         }
                         accepted
                     } == true
+                // B-063 diagnostics: kinds and booleans only (no ids, text or addresses).
+                val resultKind =
+                    when (result) {
+                        is Outcome.Ok -> result.value::class.simpleName
+                        is Outcome.Failed -> "failed=${result.failure::class.simpleName}"
+                    }
+                log.w {
+                    "B063 reconcile result=$resultKind found=$found polls=$polls lookup=$lastLookup " +
+                        "scopeSame=${scope == origin} stream=${gateway.events.status.value::class.simpleName}"
+                }
                 if (
                     found && scope == origin && gateway.events.status.value !is StreamStatus.Stopped
                 )
