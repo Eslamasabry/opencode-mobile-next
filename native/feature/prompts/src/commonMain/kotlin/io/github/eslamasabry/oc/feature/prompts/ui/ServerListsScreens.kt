@@ -42,6 +42,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiTodos
 import io.github.eslamasabry.oc.ui.words.res.externalAgentsNoTasksTitle
 import io.github.eslamasabry.oc.ui.words.res.kitCapNotOnHost
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
+import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
 import io.github.eslamasabry.oc.ui.words.res.mobileTaskCancelled
 import io.github.eslamasabry.oc.ui.words.res.mobileTaskCompleted
 import io.github.eslamasabry.oc.ui.words.res.mobileTaskInProgress
@@ -105,6 +106,7 @@ private fun Failed(failure: Failure, title: String, onRetry: () -> Unit) {
             else title,
         failure = failure,
         onRetry = onRetry,
+        retryLabel = stringResource(Res.string.kitTryAgain),
         modifier = Modifier.testTag("prompts-list-error"),
     )
 }
