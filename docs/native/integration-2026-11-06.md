@@ -54,3 +54,17 @@ No textual conflicts. Source review follows `RejectWith(note)` through captured-
 ## 7. upg-connect
 
 One conflict: `ServerEditorScreen.kt`. Use upgrade scan-first, folded command, Tailscale alternative, host-name defaults and Connected screen/Start action. Preserve N-10 inside the redesign: manual entry hides pairing/helper/command content and scrolls to the address; retain one password field immediately below the address (remove the duplicate introduced by automatic merge), HTTP review and auto-check suppression, and the shared `connectionEnabled` gate for Check/Save/Save anyway. KitScreen retains keyboard-inset ownership. New starts-conversation state and callers travel together. History/source, formatting and diff review only; no compilation or tests.
+
+## 8. upg-discovery
+
+One conflicted file: `ServerEditorScreen.kt` (imports and password focus). Retain AddressRules and the LAN imports, and attach discovery's focus requester to the single N-10 password field. Keep scan-first and Find on my network with the manual-entry recovery and HTTP gates. Update the existing `ServerEditorParityTest` action fake with the four required LAN methods; the test was not run. Remote scan ports 4096/4097 remain distinct from native-owned phone ports 4098/4100.
+
+Final integration source review also closes a merge-1 hidden-agent fallback gap: when a supported authoritative catalog read fails, do not substitute the visibility-free generic list. Backends without a catalog retain the generic startable-agent path. Both code paths retain Build/Plan where the server reports them.
+
+Final notice reconciliation restores the notification review-sheet callback removed by the upgrade, and moves pending-send review into the single status slot rather than losing that action or adding another banner. Typing folds optional Info/Update notices while retaining connection/app-stopped/heat/risky-switch/work states and failure/attention tones (N-06). Failed/unconfirmed chat statuses now carry those tones; pending-send status uses the same Info priority so it cannot outrank the current chat failure.
+
+### Coordinator follow-up
+
+No compilation, tests, APKs, runtime checks, pushes or releases were performed. Existing upgrade notes retain their known product gaps. In the incoming discovery implementation, advertised mDNS addresses reach TCP probing without the sweep's subnet-membership guard; private-network classification occurs after TCP open. This is an upstream branch concern found during source review, not runtime-qualified discovery behavior. Coordinator should review the stated own-subnet contract before qualifying the feature.
+
+Final handoff checks: all eight source tips are ancestors in the requested first-parent merge order; merge subjects/trailers, conflict markers, whitespace and working-tree state inspected. Critical untouched regex/port/startup/crash/recovery paths compared with the starting candidate; send ownership and movable-slot protections retained. These are source/Git checks only.

@@ -79,7 +79,6 @@ import io.github.eslamasabry.oc.ui.words.res.firstRunNotifyTitle
 import io.github.eslamasabry.oc.ui.words.res.nativePendingCount
 import io.github.eslamasabry.oc.ui.words.res.nativePendingFailed
 import io.github.eslamasabry.oc.ui.words.res.nativePendingReview
-import io.github.eslamasabry.oc.ui.words.res.nativePendingTitle
 import io.github.eslamasabry.oc.ui.words.res.protoToolsTitle
 import io.github.eslamasabry.oc.ui.words.res.r40RelationsTitle
 import io.github.eslamasabry.oc.ui.words.res.sessionTransferTitle
@@ -197,7 +196,31 @@ public class ChatEntries(
                             dismissLabel = offer.declineLabel,
                         )
                     }
-            val appStatus = KitStatus.highest(listOf(appNoticeStatus, offerStatus))
+            val pendingStatus =
+                if (pendingSends.rows.isEmpty() && !pendingSends.failed) null
+                else
+                    KitStatus(
+                        KitStatusKind.Info,
+                        if (pendingSends.rows.isEmpty())
+                            stringResource(Res.string.nativePendingFailed)
+                        else
+                            pluralStringResource(
+                                Res.plurals.nativePendingCount,
+                                pendingSends.rows.size,
+                                pendingSends.rows.size.toString(),
+                            ),
+                        id = "chat-pending-sends",
+                        tone =
+                            if (pendingSends.failed)
+                                io.github.eslamasabry.oc.ui.design.color.StatusTone.Failure
+                            else io.github.eslamasabry.oc.ui.design.color.StatusTone.Attention,
+                        action =
+                            KitLineAction(
+                                stringResource(Res.string.nativePendingReview),
+                                { pendingOpen = true },
+                            ),
+                    )
+            val appStatus = KitStatus.highest(listOf(appNoticeStatus, pendingStatus, offerStatus))
             // The explanation and opt-in belong in a sheet, never a tall transcript banner.
             // The compact strip only opens the review; enabling still requires its explicit action.
             val offerContent: (@androidx.compose.runtime.Composable () -> Unit)? =
@@ -403,38 +426,7 @@ public class ChatEntries(
                                     start = start,
                                     startActions = startVm,
                                     appStatus = appStatus,
-                                    replyOffer = {
-                                        offerContent?.invoke()
-                                        // Dart `_PendingSendsStrip`: waiting sends stay visible
-                                        // above the
-                                        // composer, not only in the overflow menu.
-                                        if (pendingSends.rows.isNotEmpty() || pendingSends.failed)
-                                            KitNotice(
-                                                message =
-                                                    if (pendingSends.rows.isEmpty())
-                                                        stringResource(
-                                                            Res.string.nativePendingFailed
-                                                        )
-                                                    else
-                                                        pluralStringResource(
-                                                            Res.plurals.nativePendingCount,
-                                                            pendingSends.rows.size,
-                                                            pendingSends.rows.size.toString(),
-                                                        ),
-                                                title =
-                                                    stringResource(Res.string.nativePendingTitle),
-                                                actions =
-                                                    listOf(
-                                                        KitLineAction(
-                                                            stringResource(
-                                                                Res.string.nativePendingReview
-                                                            ),
-                                                            { pendingOpen = true },
-                                                        )
-                                                    ),
-                                                liveRegion = false,
-                                            )
-                                    },
+                                    replyOffer = offerContent,
                                 )
                             }
                             ChatInboxSlot(

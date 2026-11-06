@@ -56,6 +56,7 @@ import io.github.eslamasabry.oc.feature.chat.start.presentation.ChatStartActions
 import io.github.eslamasabry.oc.feature.chat.start.presentation.ChatStartUi
 import io.github.eslamasabry.oc.feature.chat.start.ui.ChatStartArea
 import io.github.eslamasabry.oc.feature.chat.tasks.ui.ChatTasksSheet
+import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.effects.FrostRole
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -506,6 +507,9 @@ public fun ChatScreen(
                     bottom = {
                         Column {
                             state.find?.let { TranscriptFindBar(it, actions) }
+                            // Notification opt-in is a review sheet; pending-send recovery uses the
+                            // status slot.
+                            replyOffer?.invoke()
                             // Optional permission asks never compete with the conversation.
                             // P12-VOICE: the reading strip (Stop, notes) and the once-per-phone
                             // consent.
@@ -843,6 +847,7 @@ private fun statusLine(line: ChatStatusUi, actions: ChatActions): KitStatus =
                 KitStatusKind.Info,
                 stringResource(Res.string.chatSendFailed),
                 id = "chat-status-${line.id}",
+                tone = StatusTone.Failure,
                 action =
                     line.localId?.let { id ->
                         KitLineAction(
@@ -857,6 +862,7 @@ private fun statusLine(line: ChatStatusUi, actions: ChatActions): KitStatus =
                 KitStatusKind.Info,
                 stringResource(Res.string.queuedDiscardUnconfirmedMessage),
                 id = "chat-status-${line.id}",
+                tone = StatusTone.Attention,
             )
         ChatStatusKind.ReceiptChecked ->
             KitStatus(
@@ -870,6 +876,12 @@ private fun statusLine(line: ChatStatusUi, actions: ChatActions): KitStatus =
                     }
                 ),
                 id = "chat-status-${line.id}",
+                tone =
+                    when (line.receiptResult) {
+                        ReceiptCheckResult.Confirmed -> StatusTone.Neutral
+                        ReceiptCheckResult.StorageProblem -> StatusTone.Failure
+                        else -> StatusTone.Attention
+                    },
                 onDismiss = { actions.dismissStatus(line.id) },
                 dismissLabel = stringResource(Res.string.kitSheetDismiss),
             )
@@ -878,12 +890,14 @@ private fun statusLine(line: ChatStatusUi, actions: ChatActions): KitStatus =
                 KitStatusKind.Info,
                 stringResource(Res.string.chatUiPromptNotAnswered),
                 id = "chat-status-${line.id}",
+                tone = StatusTone.Failure,
             )
         ChatStatusKind.ActionFailed ->
             KitStatus(
                 KitStatusKind.Info,
                 stringResource(Res.string.kitConfirmFailed),
                 id = "chat-status-${line.id}",
+                tone = StatusTone.Failure,
                 onDismiss = { actions.dismissStatus(StatusPick.ACTION) },
                 dismissLabel = stringResource(Res.string.kitSheetDismiss),
             )
@@ -892,6 +906,7 @@ private fun statusLine(line: ChatStatusUi, actions: ChatActions): KitStatus =
                 KitStatusKind.Info,
                 stringResource(Res.string.chatFeelLinkRefused),
                 id = "chat-status-${line.id}",
+                tone = StatusTone.Failure,
                 onDismiss = { actions.dismissStatus(StatusPick.LINK) },
                 dismissLabel = stringResource(Res.string.kitSheetDismiss),
             )

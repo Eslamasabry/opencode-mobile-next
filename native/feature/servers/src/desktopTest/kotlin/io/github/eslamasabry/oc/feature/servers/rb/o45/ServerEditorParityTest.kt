@@ -5,6 +5,8 @@ package io.github.eslamasabry.oc.feature.servers.rb.o45
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.model.BackendKind
+import io.github.eslamasabry.oc.feature.servers.discovery.LanAccess
+import io.github.eslamasabry.oc.feature.servers.discovery.LanFinding
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingFill
 import io.github.eslamasabry.oc.feature.servers.presentation.*
 import io.github.eslamasabry.oc.feature.servers.ui.ServerEditorScreen
@@ -65,6 +67,14 @@ class ServerEditorParityTest {
         override fun agents() {}
 
         override fun openReady() {}
+
+        override fun findAccess(access: LanAccess, extraPorts: Set<Int>) {}
+
+        override fun stopFind() {}
+
+        override fun openAccessSettings() {}
+
+        override fun pickFound(finding: LanFinding) {}
     }
 
     @Test

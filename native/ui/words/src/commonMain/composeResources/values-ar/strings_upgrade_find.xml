@@ -1,0 +1,19 @@
+<resources>
+    <string name="upgradeFindTitle">ابحث في شبكتي</string>
+    <string name="upgradeFindBody">ابحث عن OpenCode على الحواسيب المتصلة بهذه الشبكة اللاسلكية.</string>
+    <string name="upgradeFindReason">للعثور على حاسوبك، يفحص التطبيق الأجهزة على شبكة الواي فاي لديك. لا يرسل أي كلمة مرور ويسأل العناوين القريبة فقط.</string>
+    <string name="upgradeFindScanning">جارٍ البحث في هذه الشبكة…</string>
+    <string name="upgradeFindStop">إيقاف</string>
+    <string name="upgradeFindSearchAgain">ابحث مرة أخرى</string>
+    <string name="upgradeFindResultsLabel">الحواسيب التي وُجدت على شبكتك</string>
+    <string name="upgradeFindNeedsPassword">يحتاج إلى كلمة مرور</string>
+    <string name="upgradeFindVersion">الإصدار %1$s</string>
+    <string name="upgradeFindPickLabel">استخدم %1$s</string>
+    <string name="upgradeFindEmptyTitle">لم يُعثر على شيء</string>
+    <string name="upgradeFindEmptyBody">شغّل OpenCode على حاسوبك بالأمر `opencode serve --mdns`، وتأكد أن الجهازين على الشبكة اللاسلكية نفسها، أو أدخل العنوان بنفسك.</string>
+    <string name="upgradeFindEnterAddress">أدخل العنوان</string>
+    <string name="upgradeFindDeniedBody">من دون الوصول إلى شبكتك المحلية لا يستطيع التطبيق البحث عن حاسوبك. يمكنك السماح ثم المحاولة مجددًا، أو إدخال العنوان بنفسك.</string>
+    <string name="upgradeFindAllow">اسمح وابحث</string>
+    <string name="upgradeFindBlockedBody">الوصول إلى الشبكة المحلية متوقف لهذا التطبيق. فعّله من إعدادات التطبيق، أو أدخل العنوان بنفسك.</string>
+    <string name="upgradeFindOpenSettings">فتح إعدادات التطبيق</string>
+</resources>

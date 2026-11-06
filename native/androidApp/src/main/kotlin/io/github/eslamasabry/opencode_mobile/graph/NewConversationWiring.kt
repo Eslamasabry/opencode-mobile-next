@@ -287,7 +287,11 @@ class AndroidNewConversationHost(
                 // Primary-only modes (Build/Plan) belong to the runtime; hidden helpers
                 // (Compaction/Title/Summary) are never user-startable agent choices.
                 // Unlike the generic agent list, the catalog retains authoritative visibility.
-                val agentCatalog = (gateway.agents() as? Outcome.Ok)?.value.orEmpty()
+                // A supported catalog that failed is unknown, not permission to expose hidden
+                // agents.
+                val agentCatalog =
+                    if (caps.serverCatalog) emptyList()
+                    else (gateway.agents() as? Outcome.Ok)?.value.orEmpty()
                 val agents =
                     (catalog
                             ?.agents

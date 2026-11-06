@@ -44,6 +44,7 @@ import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.layout.Layout
 import io.github.eslamasabry.oc.ui.design.layout.WindowClass
@@ -53,6 +54,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.modal.LocalKitSheetHost
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusContribution
+import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusLineFold
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusSlot
 import io.github.eslamasabry.oc.ui.kit.status.kitStatusSlotAbove
@@ -219,7 +221,18 @@ public fun KitScreen(
             KitStatusContribution(status)
             inner(null, false)
         } else {
-            KitStatusSlot(status) { shown -> inner(if (hideStatusWhenTyping && kitKeyboardVisible()) null else shown, true) }
+            KitStatusSlot(status) { shown ->
+                // Fold optional information while typing; connection, recovery and failures stay
+                // visible.
+                val optional =
+                    shown?.kind in setOf(KitStatusKind.Update, KitStatusKind.Info) &&
+                        shown?.tone != StatusTone.Failure &&
+                        shown?.tone != StatusTone.Attention
+                inner(
+                    if (hideStatusWhenTyping && kitKeyboardVisible() && optional) null else shown,
+                    true,
+                )
+            }
         }
     }
     if (framed) {
