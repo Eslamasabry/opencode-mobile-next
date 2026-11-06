@@ -95,6 +95,23 @@ class AndroidTermuxMigration(
     private val bridge = TermuxBridge(true, channel, redactor, TermuxRetryWait { delay(it) })
     private val migrationOwner = TermuxMigrationOwner(this.scope) { createController() }
 
+    /** E09-S04: the once-only "Termux is no longer managed here" notice, shown in the app's notice slot. */
+    val moveNotice =
+        TermuxMoveNotice(
+            TermuxLegacySetupFile.inApp(app.filesDir),
+            TermuxLateResults.inApp(app.filesDir),
+            object : TermuxMoveNoticeMemory {
+                override suspend fun seen(): Boolean =
+                    stores.warm() is Outcome.Ok && stores.prefs.bool(MOVE_NOTICE_SEEN) == true
+
+                override suspend fun markSeen() {
+                    if (stores.warm() is Outcome.Ok)
+                        stores.prefs.commit(stores.lanes.app) { putBool(MOVE_NOTICE_SEEN, true) }
+                }
+            },
+            dispatchers,
+        )
+
     init {
         profileScope.register(
             KeyShape(
@@ -123,9 +140,19 @@ class AndroidTermuxMigration(
                 "Android run-command denial",
             )
         )
+        profileScope.register(
+            KeyShape(
+                MOVE_NOTICE_SEEN,
+                KeyScope.App,
+                PrefType.Bool,
+                ":android:termux",
+                "Termux move notice closed",
+            )
+        )
         this.scope.launch {
             if (stores.warm() is Outcome.Ok) {
                 blocked = stores.prefs.bool(ACCESS_BLOCKED) == true
+                moveNotice.check()
                 stores.profiles.profiles.collect { refresh() }
             }
         }
@@ -150,7 +177,10 @@ class AndroidTermuxMigration(
     fun activate(activity: ComponentActivity) {
         active = activity
         scope.launch {
-            if (stores.warm() is Outcome.Ok) refresh()
+            if (stores.warm() is Outcome.Ok) {
+                refresh()
+                moveNotice.check()
+            }
             sessions.toList().forEach { if (!migrationOwner.busy) it.open() }
         }
     }
@@ -585,6 +615,7 @@ class AndroidTermuxMigration(
     private companion object {
         const val PERMISSION = "com.termux.permission.RUN_COMMAND"
         const val ACCESS_BLOCKED = "oc.termuxRunAccessBlocked"
+        const val MOVE_NOTICE_SEEN = "oc.termuxMoveNoticeSeen"
     }
 }
 

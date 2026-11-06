@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- :android:termux declares nothing yet: the RUN_COMMAND permission, the com.termux <queries> entry and
-     TermuxResultService stay in :androidApp until the RUN_COMMAND bridge moves here. -->
-<manifest />
+<!-- :android:termux. The RUN_COMMAND permission and the com.termux <queries> entry stay in :androidApp until the
+     RUN_COMMAND bridge moves here. E09-S04: TermuxResultService keeps the Flutter app's frozen class name
+     (io.github.eslamasabry.opencode_mobile.*, as :android:linux does for its components) so a Termux result issued
+     before the update reaches a live component after it. Merged into :androidApp. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <service
+            android:name="io.github.eslamasabry.opencode_mobile.TermuxResultService"
+            android:exported="false" />
+    </application>
+</manifest>

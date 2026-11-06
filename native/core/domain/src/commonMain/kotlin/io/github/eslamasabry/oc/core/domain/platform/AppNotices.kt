@@ -15,6 +15,9 @@ public data class AppNotice(
 public enum class AppNoticeAction {
     ResumeBackground,
     KeepRunning,
+
+    /** E09-S04: the Termux move notice's "Set up built-in Linux" (opens This phone). */
+    SetUpBuiltInLinux,
 }
 
 /** The one-time question, offered only after a real reply has completed. */

@@ -31,4 +31,7 @@
     <string name="andr_notifyEnableFailed">لم يبدأ الاتصال في الخلفية. افتح إعدادات الخلفية للمحاولة مرة أخرى.</string>
     <string name="andr_pauseBackground">إيقاف الاتصال في الخلفية مؤقتًا</string>
     <string name="andr_notifySaveFailed">تعذّر حفظ اختيارك، لذلك لم يُشغَّل أي شيء. حاول مرة أخرى.</string>
+    <string name="andr_termuxMoveNotice">لم يعد هذا الإصدار يُعِدّ Termux أو يديره. يظل خادم Termux متصلًا ما دام Termux يشغّله. يشغّل لينكس المدمج OpenCode داخل هذا التطبيق بدلًا من ذلك.</string>
+    <string name="andr_termuxMoveNoticeSetupRunning">لم يعد هذا الإصدار يُعِدّ Termux أو يديره. كان إعداد Termux لا يزال جاريًا أثناء التحديث؛ وهو يستمر في Termux، ويتصل خادم Termux عندما يصبح جاهزًا. يشغّل لينكس المدمج OpenCode داخل هذا التطبيق بدلًا من ذلك.</string>
+    <string name="andr_termuxMoveNoticeSetUpBuiltin">إعداد لينكس المدمج</string>
 </resources>
