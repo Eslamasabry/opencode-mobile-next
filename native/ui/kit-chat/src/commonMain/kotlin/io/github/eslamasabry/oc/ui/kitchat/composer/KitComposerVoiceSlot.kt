@@ -58,6 +58,10 @@ public interface KitComposerVoice {
      * when idle.
      */
     @Composable public fun Panel(field: KitVoiceField, modifier: Modifier)
+
+    /** Optional voice mode entry in the visible + tray, without an idle row above the field. */
+    @Composable
+    public fun Options(field: KitVoiceField, modifier: Modifier, onSelected: () -> Unit) {}
 }
 
 /**

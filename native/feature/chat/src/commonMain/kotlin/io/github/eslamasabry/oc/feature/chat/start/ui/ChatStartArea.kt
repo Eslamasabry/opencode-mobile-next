@@ -77,7 +77,7 @@ public fun ChatStartArea(
             }
             .joinToString(" · ")
     val ways = stringResource(Res.string.chatStartSuggestionsLabel)
-    Box(modifier.fillMaxSize(), contentAlignment = Alignment.BottomStart) {
+    Box(modifier.fillMaxSize(), contentAlignment = Alignment.CenterStart) {
         Column(
             Modifier.fillMaxWidth()
                 .verticalScroll(rememberScrollState(), reverseScrolling = true)
@@ -87,7 +87,8 @@ public fun ChatStartArea(
             if (state.facts.projectName == null)
                 KitText(
                     stringResource(Res.string.chatStartServerFolder),
-                    role = TypeRole.Title,
+                    role = TypeRole.Secondary,
+                    tone = TextTone.Secondary,
                     modifier =
                         Modifier.padding(horizontal = Space.S4.dp).testTag("chat-start-name"),
                 )

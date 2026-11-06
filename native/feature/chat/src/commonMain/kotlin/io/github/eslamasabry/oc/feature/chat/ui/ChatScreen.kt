@@ -304,7 +304,11 @@ public fun ChatScreen(
     }
 
     val frost = rememberKitFrostState()
-    val overlays = state.phase == ChatPhase.Live && state.status == null && state.find == null
+    val overlays =
+        state.phase == ChatPhase.Live &&
+            state.status == null &&
+            state.find == null &&
+            (state.rows.isNotEmpty() || state.pending.isNotEmpty() || state.live != null)
     val composerUnder by
         remember(list) {
             derivedStateOf {
@@ -578,7 +582,11 @@ public fun ChatScreen(
                                         start.emptyEligible &&
                                         startActions != null
                                 ) {
-                                    ChatStartArea(start, startActions)
+                                    ChatStartArea(
+                                        start,
+                                        startActions,
+                                        Modifier.padding(kitScreenChromePadding()),
+                                    )
                                 } else
                                     ChatTranscriptList(
                                         rows = state.rows,

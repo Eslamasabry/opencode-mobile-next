@@ -22,6 +22,32 @@ import io.github.eslamasabry.oc.ui.kitchat.composer.KitVoicePill
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
+/** Voice mode is a visible choice in the composer's + tray, rather than permanent chrome. */
+@Composable
+internal fun VoiceConversationEntry(
+    state: ComposerVoiceUi,
+    presenter: ComposerVoicePresenter,
+    modifier: Modifier,
+    onSelected: () -> Unit,
+) {
+    if (
+        state.conversationAvailable &&
+            state.available &&
+            !state.conversation &&
+            state.phase == MicPhase.Idle
+    ) {
+        KitButton(
+            label = stringResource(Res.string.voiceConversationTitle),
+            onClick = {
+                onSelected()
+                presenter.startConversation()
+            },
+            modifier = modifier.testTag("voice-conversation-start"),
+            role = KitButtonRole.Tertiary,
+        )
+    }
+}
+
 /** Conversation mode uses the same kit pill as dictation; every action is visible. */
 @Composable
 internal fun VoiceConversationControls(
@@ -32,12 +58,6 @@ internal fun VoiceConversationControls(
     if (!state.conversationAvailable || !state.available) return
     if (!state.conversation) {
         if (state.phase == MicPhase.Idle) {
-            KitButton(
-                label = stringResource(Res.string.voiceConversationTitle),
-                onClick = presenter::startConversation,
-                modifier = modifier.testTag("voice-conversation-start"),
-                role = KitButtonRole.Tertiary,
-            )
             state.replyNote?.let { KitNotice(conversationNote(it), modifier) }
         }
         return

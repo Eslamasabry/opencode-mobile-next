@@ -89,6 +89,13 @@ public class ComposerVoiceSlot : KitComposerVoice {
     }
 
     @Composable
+    override fun Options(field: KitVoiceField, modifier: Modifier, onSelected: () -> Unit) {
+        val presenter = presenterFor(field)
+        val state by presenter.state.collectAsStateWithLifecycle()
+        VoiceConversationEntry(state, presenter, modifier, onSelected)
+    }
+
+    @Composable
     private fun presenterFor(field: KitVoiceField): ComposerVoicePresenter {
         val vm =
             assistedMetroViewModel<ComposerVoiceViewModel, ComposerVoiceViewModel.Factory>(
