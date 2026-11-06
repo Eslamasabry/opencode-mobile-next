@@ -105,16 +105,53 @@ All with the pinned Flutter 3.47.1, serial.
 
 
 ## Emulator proof
-**Not run.** The emulator lock `/home/eslam/Storage2/wt/emu.lock` was held by another agent for the
-whole time I waited (about 25 minutes), so I did not touch the emulator. The APK is built
-(`build/app/outputs/flutter-apk/app-release.apk` in the worktree, 4601, local signer) and
-`emulator-proof.sh` next to this file does the whole procedure (wrap `tar` and `ln` with real
-SIGSEGV, remove /opt/node, install over the existing app, restore afterwards) for whoever holds the lock.
-What is proven instead: the shell handshake against a fake crashing tar with the app side played by the
-real tar (oc_untar tests), the real Kotlin unpacker on generated archives, and the real SetupRunner's
-retry decisions on the JVM. The real `::oc unpack` path through the running app and proot is the part
-still unproven on a device.
+Emulator OC_API37 (Android 17, x86_64), release APKs signed with the local key (1DE5BF08...), installed
+over the previous build with `adb install -r` (no uninstall, no clear). The lock was held only while the
+emulator was in use. Crashes are simulated with wrappers in the guest that kill themselves with a real SIGSEGV.
+
+### A. Unpack fallback and compatibility retry (build 4601, proot 5.1.107.94)
+`tar` replaced by `kill -SEGV $$`; `ln` replaced by a wrapper that segfaults unless `GLIBC_TUNABLES` is
+set; `/opt/node` removed; AI Team added from the app (it runs the Node step first).
+`setup-log-node-step.txt`, `02-setup-details-node-done.png` (Details: Node.js step 3 of 6 Done, 24.21.0):
+```
+==> Downloading Node.js 24.21.0
+==> Unpacking Node.js
+Segmentation fault
+[oc] The unpacking tool crashed (signal 11). Trying another way.
+==> The app is unpacking this itself
+Segmentation fault                      <- the later `ln` step: exit 139
+==> Trying again in compatibility mode
+==> Downloading Node.js 24.21.0         <- cached archive, checksum re-verified
+==> Unpacking Node.js
+Segmentation fault
+[oc] The unpacking tool crashed (signal 11). Trying another way.
+==> The app is unpacking this itself    <- ln works now (GLIBC_TUNABLES set): step done
+```
+Result: Node.js 24.21.0 installed and OpenCode 2.1.1 still done; both the unpack fallback and the
+compatibility retry ran on the device. (The AI Team step then failed because my blanket `tar` wrapper
+also broke `dpkg-deb`; that is the test sabotage, not the fix. It also left dpkg's status file dangling
+after killed dpkg-deb runs, which the from-scratch reinstall below cleaned up.)
+
+### B. proot 5.1.107.102 (build 4602), full setup from scratch
+Done through the app: Servers > More > Remove from this phone > "Remove OpenCode, keep my projects"
+(deletes the Linux rootfs; `files/linux` gone), then "Set up OpenCode on this phone" with the new proot.
+`setup-log-fresh-new-proot.txt`, `11-fresh-setup-new-proot-ready.png`: setup.json state `done`:
+linux 24.04.5, essentials (Git and SSH) 2.43.0, python 3.12.3, node 24.21.0, opencode 2.1.1, start 2.1.1.
+apt/dpkg ran, Node and OpenCode unpacked and ran, the server started; no "Segmentation fault" anywhere in the log.
+The APK's `libproot.so` reports `5.1.107.102` (x86_64 checked in the APK). arm64 (the phone) was not
+available on the emulator: the arm64 binary is verified only by its SHA-256 pin and ELF checks
+(`test/native_libs_page_alignment_test.dart`: 16 KB alignment passed).
+
+### C. Both together on the new proot (build 4602)
+With the healthy rootfs, `tar` wrapped to segfault only on `-xzf` (dpkg-deb keeps working), `/opt/aiteam`
+removed, AI Team added from the app: `setup-log-aiteam-app-unpack.txt`, `12-aiteam-added-with-tar-crashing.png`:
+three times `The unpacking tool crashed` -> `The app is unpacking this itself`, then AI Team 1.4.1 done
+(its gc, bd and dolt programs ran, so executable bits were kept). `tar` restored afterwards.
 
 ## Not done / open
 - Not run on the owner's Poco M4 Pro. The crash was simulated with a `kill -SEGV` wrapper.
-- libproot is not upgraded (see hypothesis 1); that is the next real fix, and needs a native release.
+- proot was upgraded to 5.1.107.102 in a separate commit of this branch (see below); whether it removes the owner's crash is unknown until the owner's Poco M4 Pro runs a build with it.
+- arm64 proot only checked statically; the emulator is x86_64.
+
+## proot upgrade (separate commit)
+`tool/builtin_linux/fetch_proot.sh` now pins Termux proot 5.1.107.102 and libtalloc 2.5.0 (both ABIs, SHA-256 from the Termux package index, verified by the script); libproot.so, libproot-loader.so, libtalloc.so refreshed in `android/app/src/main/jniLibs/{arm64-v8a,x86_64}`; libandroid-shmem unchanged. Native change: ships only in a full release. To roll back: revert that one commit.
