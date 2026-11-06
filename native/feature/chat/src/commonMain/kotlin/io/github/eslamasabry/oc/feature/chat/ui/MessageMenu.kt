@@ -3,8 +3,6 @@ package io.github.eslamasabry.oc.feature.chat.ui
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -126,11 +124,8 @@ internal fun MessageMenu(
     ) {
         val turn = detailsTurn
         val mask = rememberKitMask()
-        Column(
-            Modifier.fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(vertical = Space.S2.dp)
-        ) {
+        // KitSheet already scrolls its body (N-38: a nested vertical scroll crashes).
+        Column(Modifier.fillMaxWidth().padding(vertical = Space.S2.dp)) {
             if (turn != null) {
                 facts.reading.metadata[turn]?.let { TurnMetadata(it) }
                 facts.reading.switches[turn].orEmpty().forEach { detail ->

@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.Space
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import io.github.eslamasabry.oc.core.common.text.Numbers
@@ -90,7 +88,8 @@ internal fun ChatsHomeSheets(state: ChatsUi, actions: ChatsActions) {
             },
         closeLabel = stringResource(Res.string.kitTopBarClose),
     ) {
-        Column(Modifier.verticalScroll(rememberScrollState())) {
+        // KitSheet scrolls its body; a second vertical scroll here measured with infinite height (N-38).
+        Column {
             when (sheet) {
                 ChatsHomeSheet.Projects -> ProjectChoices(state, actions)
                 ChatsHomeSheet.Sources -> SourceChoices(state, actions)
