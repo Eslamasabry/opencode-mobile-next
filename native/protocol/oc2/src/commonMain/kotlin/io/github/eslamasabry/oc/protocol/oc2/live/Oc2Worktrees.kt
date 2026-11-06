@@ -9,6 +9,7 @@ import io.github.eslamasabry.oc.core.model.WorktreeInfo
 import io.ktor.http.HttpMethod
 import io.ktor.http.encodeURLPathPart
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.json.*
 
@@ -75,6 +76,38 @@ internal class Oc2Worktrees(private val owner: Oc2Gateway) {
                 else
                     project(reply.value)?.let { Outcome.Ok(it) }
                         ?: Outcome.Failed(Failure.UnreadableReply())
+        }
+    }
+
+    /**
+     * ops_projects.dart renameProject: `PATCH /project/{id}` with `{name}`; a blank name clears the
+     * custom name. A reply without a project (204, `{}`) keeps what was sent, stamped [nowMs].
+     */
+    suspend fun rename(
+        id: String,
+        directory: String,
+        typed: String,
+        nowMs: Long,
+    ): Outcome<WorkspaceProject> {
+        // No project to address: nothing is sent.
+        if (id.isBlank()) return Outcome.Failed(Failure.NotFound())
+        val body = buildJsonObject { put("name", typed) }
+        return when (
+            val reply = owner.json("/project/${id.encodeURLPathPart()}", HttpMethod.Patch, body)
+        ) {
+            is Outcome.Failed -> reply
+            is Outcome.Ok ->
+                Outcome.Ok(
+                    project(reply.value)
+                        ?: WorkspaceProject(
+                            id,
+                            typed.trim().ifEmpty { name(directory) },
+                            directory,
+                            persistentListOf(),
+                            nowMs,
+                            null,
+                        )
+                )
         }
     }
 
