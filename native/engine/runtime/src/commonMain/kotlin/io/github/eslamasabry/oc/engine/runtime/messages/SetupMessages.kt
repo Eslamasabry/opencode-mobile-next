@@ -92,6 +92,13 @@ public object SetupMessages {
     }
 
     private fun whole(message: String): SetupMessage.Known? {
+        if (message == "start_failed" || message == "start_unavailable")
+            return SetupMessage.Known("phoneSetupErrorCannotStart")
+        Regex("""Another OpenCode server is already using port (\d+) on this phone\.""")
+            .matchEntire(message)
+            ?.let {
+                return SetupMessage.Known("phoneServerPortBusy", listOf(it.groupValues[1]))
+            }
         probeHttp.matchEntire(message)?.let {
             return SetupMessage.Known("e7SetupProbeHttp", listOf(it.groupValues[1]))
         }

@@ -235,7 +235,7 @@ class NativeServerRecipeTest {
             "export OPENCODE_SERVER_PASSWORD=\"\$password\"\n" +
             "export OPENCODE_PASSWORD=\"\$password\"\n" +
             "unset password\n" +
-            "exec $binary serve --hostname 127.0.0.1 --port 4097\n"
+            "exec $binary serve --hostname 127.0.0.1 --port 4098\n"
 
     private fun request(
         profile: String = "phone_1-A",

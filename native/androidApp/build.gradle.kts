@@ -15,6 +15,7 @@ android {
                 ?: if (requestedAgentFloor?.matches(Regex("[+]?[0-9]+")) == true) Long.MAX_VALUE
                 else 0L
         buildConfigField("long", "AGENT_INSTALL_MIN_FREE_BYTES", "${agentInstallFloor}L")
+        buildConfigField("int", "PHONE_SERVER_PORT", "4098")
     }
     // Slice-0 proofs P3 and start-up (native/proof-p3-2026-11-01): a release build that the shell
     // may profile, signed
@@ -65,6 +66,7 @@ android {
         }
     }
     productFlavors {
+        getByName("preview") { buildConfigField("int", "PHONE_SERVER_PORT", "4100") }
         create("switch") {
             dimension = "channel"
         }

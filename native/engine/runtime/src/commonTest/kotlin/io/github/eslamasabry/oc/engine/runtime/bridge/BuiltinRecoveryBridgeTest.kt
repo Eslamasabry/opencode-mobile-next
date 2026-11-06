@@ -45,7 +45,7 @@ class BuiltinRecoveryBridgeTest {
         linux.confirmServerRecovery(expectedGeneration = 42)
         linux.cancelServerRecovery()
         assertEquals(listOf("restartServer", "confirmServerRecovery", "cancelServerRecovery"), channel.methods)
-        assertEquals(mapOf("script" to "serve", "port" to 4097, "expectedGeneration" to 42L), channel.calls[0].arguments)
+        assertEquals(mapOf("script" to "serve", "port" to 4098, "expectedGeneration" to 42L), channel.calls[0].arguments)
         assertEquals(mapOf("expectedGeneration" to 42L), channel.calls[1].arguments)
         assertNull(channel.calls[2].arguments)
     }
@@ -54,7 +54,7 @@ class BuiltinRecoveryBridgeTest {
     fun `B-LINUX-031 a launch replacement carries its own native admission token`() = runTest {
         linux.startServerForLaunch("serve", expectedGeneration = 73)
         assertEquals("startServerForLaunch", channel.calls.single().method)
-        assertEquals(mapOf("script" to "serve", "port" to 4097, "expectedGeneration" to 73L), channel.calls.single().arguments)
+        assertEquals(mapOf("script" to "serve", "port" to 4098, "expectedGeneration" to 73L), channel.calls.single().arguments)
     }
 
     @Test
@@ -63,7 +63,7 @@ class BuiltinRecoveryBridgeTest {
         assertEquals(
             mapOf(
                 "script" to "serve",
-                "port" to 4097,
+                "port" to 4098,
                 "expectedGeneration" to 73L,
                 "restoreRecipe" to mapOf("version" to 1, "profileId" to "phone", "runtime" to "openCode2"),
             ),

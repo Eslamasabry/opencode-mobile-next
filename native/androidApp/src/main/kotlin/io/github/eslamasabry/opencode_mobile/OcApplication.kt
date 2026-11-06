@@ -28,6 +28,7 @@ import io.github.eslamasabry.opencode_mobile.graph.MonitorRuntimeAccessors
 import io.github.eslamasabry.opencode_mobile.graph.NativeExitAccessors
 import io.github.eslamasabry.opencode_mobile.graph.NativeHealingAccessors
 import io.github.eslamasabry.opencode_mobile.graph.PhoneDetailsAccessors
+import io.github.eslamasabry.opencode_mobile.graph.PhoneServerScripts
 import io.github.eslamasabry.opencode_mobile.graph.PlatformAccessors
 
 /**
@@ -70,7 +71,10 @@ class OcApplication : Application(), GraphOwner {
         // tiles, widgets) may be the first thing in a cold process and relies on the started
         // product, as before. The isolated PDF parser in ":local_pdf" never warms profiles,
         // connects, or starts Linux.
-        if (isMainProcess()) startProduct()
+        if (isMainProcess()) {
+            PhoneServerScripts.configurePort { BuiltinLinux.get(this).selectedServerPort }
+            startProduct()
+        }
     }
 
     private fun isMainProcess(): Boolean {
@@ -109,12 +113,11 @@ class OcApplication : Application(), GraphOwner {
         (appGraph as io.github.eslamasabry.opencode_mobile.graph.PhoneBudgetAccessors)
             .nativePhoneBudget
             .start() // restore the saved phone speed budget
-        appGraph
-            .resumedActivities // P12-VOICE: follow the resumed activity from the start (mic
-                               // permission)
+        appGraph.resumedActivities // P12-VOICE: follow the resumed activity from the start (mic
+        // permission)
         appGraph
             .builtinRuntime // P12-FIX-LINUX-VOICE: the built-in Linux follows the activity; phone
-                            // server comes back
+        // server comes back
         (appGraph as NativeHealingAccessors).nativePhoneHealing.start()
         (appGraph as io.github.eslamasabry.opencode_mobile.graph.AgentWidgetAccessors)
             .agentWidgets

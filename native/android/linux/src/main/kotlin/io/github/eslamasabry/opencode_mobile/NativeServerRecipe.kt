@@ -26,7 +26,8 @@ internal data class NativeServerRecipe(
         this.packageVersion == packageVersion && this.rootfsGeneration == rootfsGeneration
 
     /** Only app-authored commands are reconstructed; the private password stays in Ubuntu. */
-    fun restorationScript(): String {
+    fun restorationScript(port: Int = 4098): String {
+        require(port == 4098 || port in 4100..4199) { SAFE_ERROR }
         val isolated =
             "mkdir -p /root/.oc-opencode2/data/opencode /root/.oc-opencode2/cache " +
                 "/root/.oc-opencode2/state /root/.oc-opencode2/config/opencode\n" +
@@ -54,7 +55,7 @@ internal data class NativeServerRecipe(
             "export OPENCODE_SERVER_PASSWORD=\"\$password\"\n" +
             "export OPENCODE_PASSWORD=\"\$password\"\n" +
             "unset password\n" +
-            "exec $binary serve --hostname 127.0.0.1 --port 4097\n"
+            "exec $binary serve --hostname 127.0.0.1 --port $port\n"
     }
 
     companion object {

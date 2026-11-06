@@ -25,6 +25,7 @@ import io.github.eslamasabry.oc.ui.words.res.linuxSetupFailed
 import io.github.eslamasabry.oc.ui.words.res.linuxSetupStart
 import io.github.eslamasabry.oc.ui.words.res.linuxSetupStop
 import io.github.eslamasabry.oc.ui.words.res.linuxSetupWorking
+import io.github.eslamasabry.oc.ui.words.res.phoneServerPortBusy
 import kotlin.time.Duration.Companion.seconds
 import org.jetbrains.compose.resources.stringResource
 
@@ -180,6 +181,7 @@ private fun SetupError.words(): String =
         SetupError.HostMismatch -> stringResource(Res.string.linuxSetupHostMismatch)
         SetupError.ToolsUncheckable -> stringResource(Res.string.linuxToolsInventoryFailed)
         SetupError.PackageRepair -> stringResource(Res.string.phoneSetupErrorPackageRepair)
+        is SetupError.PortBusy -> stringResource(Res.string.phoneServerPortBusy, port.toString())
         SetupError.CannotStart -> stringResource(Res.string.phoneSetupErrorCannotStart)
         SetupError.OpenCodeNoProgram -> stringResource(Res.string.phoneSetupErrorOpenCodeNoProgram)
         SetupError.OpenCodeWontRun -> stringResource(Res.string.phoneSetupErrorOpenCodeWontRun)

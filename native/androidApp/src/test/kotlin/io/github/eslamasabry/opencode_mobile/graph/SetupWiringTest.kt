@@ -33,12 +33,13 @@ class SetupWiringTest {
 
     @Test
     fun `B-LINUX-205 only the phone server's own address is taken as the setup's profile`() {
-        assertTrue(BuiltinSetupFinisher.managesServerUrl("http://127.0.0.1:4097"))
-        assertTrue(BuiltinSetupFinisher.managesServerUrl("http://127.0.0.1:4097/"))
-        assertFalse(BuiltinSetupFinisher.managesServerUrl("https://127.0.0.1:4097"))
+        assertFalse(BuiltinSetupFinisher.managesServerUrl("http://127.0.0.1:4097"))
+        assertTrue(BuiltinSetupFinisher.managesServerUrl("http://127.0.0.1:${PhoneServerScripts.PORT}"))
+        assertTrue(BuiltinSetupFinisher.managesServerUrl("http://127.0.0.1:${PhoneServerScripts.PORT}/"))
+        assertFalse(BuiltinSetupFinisher.managesServerUrl("https://127.0.0.1:${PhoneServerScripts.PORT}"))
         assertFalse(BuiltinSetupFinisher.managesServerUrl("http://127.0.0.1:4096"))
-        assertFalse(BuiltinSetupFinisher.managesServerUrl("http://localhost:4097"))
-        assertFalse(BuiltinSetupFinisher.managesServerUrl("http://laptop.local:4097"))
+        assertFalse(BuiltinSetupFinisher.managesServerUrl("http://localhost:${PhoneServerScripts.PORT}"))
+        assertFalse(BuiltinSetupFinisher.managesServerUrl("http://laptop.local:${PhoneServerScripts.PORT}"))
         assertFalse(BuiltinSetupFinisher.managesServerUrl("not a url"))
         assertFalse(BuiltinSetupFinisher.managesServerUrl(null))
     }

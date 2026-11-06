@@ -391,7 +391,7 @@ class BuiltinSetupFinisher(
     internal companion object {
         const val OWNER_KEY = "oc.builtinServerOwner"
         const val USERNAME = PhoneServerScripts.USERNAME
-        const val SERVER_URL = "http://127.0.0.1:4097"
+        val SERVER_URL: String get() = "http://127.0.0.1:${PhoneServerScripts.PORT}"
 
         /** Flutter `BuiltinLinux.managesServerUrl`: plain HTTP to 127.0.0.1 on the phone server's port. */
         fun managesServerUrl(value: String?): Boolean {

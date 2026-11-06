@@ -758,4 +758,5 @@
     <string name="browserModeTitle">وضع المتصفح</string>
     <string name="browserEditorInsecureOrigin">فُتحت هذه الصفحة عبر HTTP عادي من عنوان على الشبكة، لذلك لن يحتفظ المتصفح بكلمة مرور الخادم. اترك كلمة المرور فارغة لخادم لا يملك واحدة، أو افتح التطبيق عبر HTTPS أو من localhost لحفظها.</string>
     <string name="browserAgentSocketUnavailable">اتصالات Codex وPaseo غير متاحة في المتصفح. تسجّل الدخول برأس WebSocket لا تستطيع المتصفحات إرساله، ولا يوجد حتى الآن تسجيل دخول مدعوم في المتصفح. استخدم تطبيق الهاتف أو سطح المكتب لها؛ أما خوادم OpenCode فتعمل هنا.</string>
+    <string name="phoneServerPortBusy">خادم OpenCode آخر يستخدم المنفذ %1$s على هذا الهاتف بالفعل.</string>
 </resources>

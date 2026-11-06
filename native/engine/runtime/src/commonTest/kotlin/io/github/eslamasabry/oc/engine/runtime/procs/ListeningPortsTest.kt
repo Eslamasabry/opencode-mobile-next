@@ -17,8 +17,8 @@ class ListeningPortsTest {
         const val ANY = "   1: 00000000:1F90 00000000:0000 0A 00000000:00000000 00:00000000 " +
             "00000000  1000        0 5002 1 0000000000000000 100 0 0 10 0"
 
-        // Port 4097 (0x1001): the in-app OpenCode server.
-        const val OWN = "   2: 0100007F:1001 00000000:0000 0A 00000000:00000000 00:00000000 " +
+        // Port 4098 (0x1002): the in-app OpenCode server.
+        const val OWN = "   2: 0100007F:1002 00000000:0000 0A 00000000:00000000 00:00000000 " +
             "00000000  1000        0 5003 1 0000000000000000 100 0 0 10 0"
 
         // An established connection (state 01), not a listener.
@@ -45,7 +45,7 @@ lrwx------ 1 root root 64 Oct 16 10:00 /proc/44/fd/9 -> socket:[5005]
 #C
 41${'\t'}node /root/projects/shop/node_modules/.bin/vite --port 5173 ${'\t'}/root/projects/shop${'\t'}/root/projects/shop/dev.log
 42${'\t'}python3 -m http.server 8080 ${'\t'}/root/projects/shop${'\t'}/dev/pts/0
-43${'\t'}opencode serve --port 4097 ${'\t'}/root${'\t'}pipe:[1]
+43${'\t'}opencode serve --port 4098 ${'\t'}/root${'\t'}pipe:[1]
 44${'\t'}node server.js ${'\t'}/root/other${'\t'}pipe:[2]
 #P
 ${probe.joinToString("\n")}
@@ -88,13 +88,13 @@ ${probe.joinToString("\n")}
     @Test
     fun `B-LINUX-086 the in-app server and its own port are never listed`() {
         val found = ListeningPorts.parse(output())
-        assertFalse(found.flatMap { it.ports }.contains(4097))
+        assertFalse(found.flatMap { it.ports }.contains(4098))
         assertTrue(found.none { it.command.startsWith("opencode") })
     }
 
     @Test
     fun `B-LINUX-086 a probed port with no process is listed once, without a pid`() {
-        val found = ListeningPorts.parse(output(probe = listOf("5173", "4200", "4097")))
+        val found = ListeningPorts.parse(output(probe = listOf("5173", "4200", "4098")))
         val extra = found.filter { !it.hasProcess }
         assertEquals(listOf(4200), extra.map { it.ports.single() })
         assertEquals("", extra.single().command)

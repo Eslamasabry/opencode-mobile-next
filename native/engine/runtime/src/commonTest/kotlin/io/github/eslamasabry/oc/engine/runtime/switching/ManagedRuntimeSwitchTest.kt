@@ -174,7 +174,7 @@ class ManagedRuntimeSwitchTest {
     @Test
     fun `B-LINUX-104 managed addresses are exactly the two loopback ports over http`() {
         assertTrue(ManagedLocalServer.isTermux("http://127.0.0.1:4096"))
-        assertTrue(ManagedLocalServer.isBuiltin("http://127.0.0.1:4097/"))
+        assertTrue(ManagedLocalServer.isBuiltin("http://127.0.0.1:4098/"))
         assertFalse(ManagedLocalServer.isTermux("https://127.0.0.1:4096"))
         assertFalse(ManagedLocalServer.isTermux("http://localhost:4096"))
         assertFalse(ManagedLocalServer.isBuiltin("http://127.0.0.1:4999"))
@@ -184,7 +184,7 @@ class ManagedRuntimeSwitchTest {
 
     @Test
     fun `B-LINUX-105 the in-app managed server also blocks a move while work is running`() = runTest {
-        replaceLocal(local.copy(baseUrl = "http://127.0.0.1:4097"))
+        replaceLocal(local.copy(baseUrl = "http://127.0.0.1:4098"))
         world.work = LocalWork(busySessions = 1)
         assertEquals(SwitchResult.Blocked(SwitchBlock.LocalWorkRunning), switch.prepare())
         assertEquals(Stream.Connected, world.status)

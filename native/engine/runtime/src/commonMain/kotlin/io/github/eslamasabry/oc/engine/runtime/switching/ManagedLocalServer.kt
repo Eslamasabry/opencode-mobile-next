@@ -24,9 +24,11 @@ public object ManagedLocalServer {
     public const val TERMUX_PORT: Int = 4096
 
     /** The in-app (built-in Linux) OpenCode: not Termux's 4096, so both can run at once. */
-    public const val BUILTIN_PORT: Int = 4097
+    private var nativePort: () -> Int = { 4098 }
+    public fun configureNativePort(read: () -> Int) { nativePort = read }
+    public val BUILTIN_PORT: Int get() = nativePort()
 
-    public const val BUILTIN_URL: String = "http://127.0.0.1:4097"
+    public val BUILTIN_URL: String get() = "http://127.0.0.1:$BUILTIN_PORT"
 
     /** `http://127.0.0.1:<port>` exactly (default port 80); `localhost` or another port is not managed. */
     public fun managesUrl(value: String?, port: Int): Boolean {

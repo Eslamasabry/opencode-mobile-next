@@ -86,7 +86,7 @@ public data class LinuxPort(
 
     public companion object {
         /** The in-app OpenCode server's own port. */
-        public const val OWN_SERVER_PORT: Int = 4097
+        public val OWN_SERVER_PORT: Int get() = io.github.eslamasabry.oc.engine.runtime.switching.ManagedLocalServer.BUILTIN_PORT
     }
 }
 

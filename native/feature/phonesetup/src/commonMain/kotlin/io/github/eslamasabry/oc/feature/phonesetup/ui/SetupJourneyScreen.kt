@@ -795,6 +795,7 @@ private fun runtimeProblem(error: SetupError?): String =
         is SetupError.Install -> stringResource(Res.string.phoneSetupErrorInstall, error.title)
         SetupError.NoInternet -> stringResource(Res.string.phoneSetupErrorNoInternet)
         SetupError.PackageRepair -> stringResource(Res.string.phoneSetupErrorPackageRepair)
+        is SetupError.PortBusy -> stringResource(Res.string.phoneServerPortBusy, error.port.toString())
         SetupError.CannotStart -> stringResource(Res.string.phoneSetupErrorCannotStart)
         SetupError.OwnershipUnknown -> stringResource(Res.string.inAppServerOwnershipRecoveryBody)
         SetupError.StatusUnreadable -> stringResource(Res.string.setupRbStatusUnreadable)

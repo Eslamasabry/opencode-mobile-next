@@ -97,7 +97,7 @@ internal class FakeRootfs : QuotaRootfs {
 
 /** Ports the secrets group of test/quota_collector_host_test.dart (row B-SEC-141) plus its set-up order checks. */
 class QuotaCollectorHostTest {
-    private val builtin = QuotaServerProfile(ProfileId("builtin"), "http://127.0.0.1:4097", isOpenCode = true)
+    private val builtin = QuotaServerProfile(ProfileId("builtin"), "http://127.0.0.1:4098", isOpenCode = true)
 
     private class World(scope: TestScope) {
         val backend = InMemoryPrefsBackend()

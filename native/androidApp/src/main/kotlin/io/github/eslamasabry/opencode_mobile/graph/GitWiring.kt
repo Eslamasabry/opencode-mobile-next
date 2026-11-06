@@ -176,7 +176,7 @@ private class ServerGitWorkspaces(
         fun ownsLinux(): Boolean =
             try {
                 registry.graphFor(ref) === graph &&
-                    profile.origin == ServerOrigin("http", "127.0.0.1", 4097) &&
+                    profile.origin == ServerOrigin("http", "127.0.0.1", PhoneServerScripts.PORT) &&
                     (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value ==
                         profile.id.raw
             } catch (_: Exception) {

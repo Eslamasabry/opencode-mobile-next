@@ -38,7 +38,6 @@ import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
-import kotlinx.collections.immutable.toImmutableList
 import io.github.eslamasabry.oc.core.domain.capabilities.PlatformCapabilities
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.analytics.AnalyticsEngine
@@ -86,7 +85,6 @@ import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.BackgroundRoute
 import io.github.eslamasabry.oc.ui.routes.DiagnosticsRoute
 import io.github.eslamasabry.oc.ui.routes.LibraryRoute
-import io.github.eslamasabry.oc.ui.routes.ProvidersRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.ui.routes.SettingsRoute
 import io.github.eslamasabry.oc.ui.routes.TeachingRoute
@@ -98,6 +96,7 @@ import io.github.eslamasabry.oc.ui.words.res.shareAppMessage
 import java.io.File
 import java.util.Locale
 import kotlin.time.Clock
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -311,7 +310,7 @@ class AndroidSettingsHost(
             val owner = (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value
             owner == id.raw &&
                 stores.profiles.profile(id)?.profile?.baseUrl?.trimEnd('/') ==
-                    io.github.eslamasabry.oc.engine.lifecycle.PhoneOwnServers.IN_APP_URL
+                    "http://127.0.0.1:${PhoneServerScripts.PORT}"
         } catch (_: io.github.eslamasabry.oc.core.data.kv.GateNotOpen) {
             false
         }

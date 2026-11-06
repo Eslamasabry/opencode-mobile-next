@@ -234,7 +234,7 @@ class AppScheduleProfiles(
                 owner == profileId &&
                 saved.origin.scheme == "http" &&
                 saved.origin.host == "127.0.0.1" &&
-                saved.origin.port == 4097
+                saved.origin.port == PhoneServerScripts.PORT
         val server = saved.copy(managedOnPhone = phoneOwner)
         val factory =
             factories.firstOrNull { it.backend == server.backend }

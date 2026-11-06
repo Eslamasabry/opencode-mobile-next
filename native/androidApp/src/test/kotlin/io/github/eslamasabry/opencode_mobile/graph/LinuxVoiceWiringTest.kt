@@ -58,8 +58,8 @@ class LinuxVoiceWiringTest {
     @Test
     fun `B-LINUX-023 the in-app server has its own port and binds loopback and reads the password from the root-only file`() {
         val script = PhoneServerScripts.server()
-        assertEquals(4097, PhoneServerScripts.PORT)
-        assertTrue(script.endsWith("exec opencode2 serve --hostname 127.0.0.1 --port 4097\n"))
+        assertEquals(io.github.eslamasabry.opencode_mobile.BuildConfig.PHONE_SERVER_PORT, PhoneServerScripts.PORT)
+        assertTrue(script.endsWith("exec opencode2 serve --hostname 127.0.0.1 --port ${PhoneServerScripts.PORT}\n"))
         assertTrue("cd /root/projects\n" in script)
         assertTrue("[ -s /root/.oc-builtin/server.password ] ||" in script)
         assertTrue("export OPENCODE_SERVER_USERNAME=opencode\n" in script)

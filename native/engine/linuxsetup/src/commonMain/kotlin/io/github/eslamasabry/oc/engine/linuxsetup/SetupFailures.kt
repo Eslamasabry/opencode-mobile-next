@@ -18,6 +18,7 @@ public sealed interface SetupProblem {
     public data class Install(val name: String) : SetupProblem
     public data object PackageRepair : SetupProblem
     public data object CannotStart : SetupProblem
+    public data class PortBusy(val port: Int) : SetupProblem
     public data object OpenCodeNoProgram : SetupProblem
     public data object OpenCodeWontRun : SetupProblem
     public data object OpenCodeNoStart : SetupProblem
@@ -53,6 +54,7 @@ public object SetupProblemWordsEn {
             is SetupProblem.Install -> "Could not install ${problem.name}" // phoneSetupErrorInstall
             SetupProblem.PackageRepair -> // phoneSetupErrorPackageRepair
                 "Some Linux packages need repair. Continue setup to try again. Details show what stopped it."
+            is SetupProblem.PortBusy -> "Another OpenCode server is already using port ${problem.port} on this phone."
             SetupProblem.CannotStart -> // phoneSetupErrorCannotStart
                 "OpenCode is installed but is not answering. Continue setup to try again. Details show what stopped it."
             SetupProblem.OpenCodeNoProgram -> // phoneSetupErrorOpenCodeNoProgram
@@ -105,6 +107,9 @@ public fun describeSetupFailure(
     fun both(problem: SetupProblem) = SetupFailureText(problem, problem)
     if (isRuntimeOwnershipFailure(reason)) return both(SetupProblem.RuntimeOwnershipUnknown)
     if (packageRepairMarkers.any { reason.startsWith(it) }) return both(SetupProblem.PackageRepair)
+    Regex("""Another OpenCode server is already using port (\d+) on this phone\.""")
+        .find(reason)?.groupValues?.get(1)?.toIntOrNull()?.takeIf { it in 1024..65535 }
+        ?.let { return both(SetupProblem.PortBusy(it)) }
     if (step) return both(SetupProblem.CannotStart)
     when {
         reason.startsWith(OpenCodeInstallFailure.NO_PROGRAM) -> return both(SetupProblem.OpenCodeNoProgram)

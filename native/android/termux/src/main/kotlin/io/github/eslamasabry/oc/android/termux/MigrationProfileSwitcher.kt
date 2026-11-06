@@ -44,7 +44,9 @@ public interface MigrationProfiles {
 public const val TERMUX_MANAGED_SERVER_URL: String = "http://127.0.0.1:4096"
 
 /** The in-app server's port (Flutter `BuiltinLinux.serverPort`); Termux's is 4096, so both can run at once. */
-public const val BUILTIN_SERVER_PORT: Int = 4097
+private var nativeServerPort: () -> Int = { 4098 }
+public fun configureBuiltinServerPort(read: () -> Int) { nativeServerPort = read }
+public val BUILTIN_SERVER_PORT: Int get() = nativeServerPort()
 
 /** Flutter `BuiltinLinux.managesServerUrl`: plain http to 127.0.0.1 on the in-app port. */
 public fun builtinManagesServerUrl(value: String?): Boolean {

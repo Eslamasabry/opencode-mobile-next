@@ -51,7 +51,10 @@ class RuntimeProfileOwner(
     override val guardsSweep: Boolean = true
 
     suspend fun claim(profile: ProfileId, origin: ServerOrigin): Outcome<Unit> {
-        if (!platform.builtinLinux || origin != ServerOrigin("http", "127.0.0.1", 4097))
+        if (
+            !platform.builtinLinux ||
+                origin != ServerOrigin("http", "127.0.0.1", PhoneServerScripts.PORT)
+        )
             return Unit.ok()
         return pointer.claim(profile.raw) { stores.profiles.profile(profile) != null }
     }

@@ -168,7 +168,24 @@ internal object BuiltinDiscovery {
  * JVM.
  */
 internal object PhoneServerScripts {
-    const val PORT = 4097
+    private var selectedPort: () -> Int = {
+        io.github.eslamasabry.opencode_mobile.BuildConfig.PHONE_SERVER_PORT
+    }
+    val PORT: Int
+        get() = selectedPort()
+
+    fun configurePort(read: () -> Int) {
+        selectedPort = read
+        io.github.eslamasabry.oc.android.termux.configureBuiltinServerPort(read)
+        io.github.eslamasabry.oc.engine.lifecycle.PhoneOwnServers.configureNativePort(read)
+        io.github.eslamasabry.oc.engine.runtime.switching.ManagedLocalServer.configureNativePort(
+            read
+        )
+        io.github.eslamasabry.oc.engine.integrations.quota.InAppQuotaCollector.configureNativePort(
+            read
+        )
+    }
+
     const val USERNAME = "opencode"
     const val PROJECTS_DIR = "/root/projects"
     const val PASSWORD_FILE = "/root/.oc-builtin/server.password"
@@ -339,7 +356,12 @@ internal fun classifyRuntime(e: Throwable): Failure {
                 RuntimeProblem.RecoveryUnavailable
             else -> RuntimeProblem.Generic
         }
-    return Failure.Runtime(problem, Redacted.shape(e))
+    return Failure.Runtime(
+        problem,
+        if (e is io.github.eslamasabry.opencode_mobile.ServerPortBusy)
+            io.github.eslamasabry.oc.core.security.Redactor().details(e.message.orEmpty())
+        else Redacted.shape(e),
+    )
 }
 
 /** The status the phone pages read, from BuiltinLinux's live values. Pure: tested on the JVM. */
@@ -515,41 +537,83 @@ internal constructor(
                         else Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
                 }
 
-            override suspend fun launch(profile: ProfileId, mode: LaunchMode): Outcome<Unit> =
-                mutation {
-                    check(profile.raw !in closedProfiles) { "The phone server could not restart." }
-                    val recipe =
-                        mapOf("version" to 1, "profileId" to profile.raw, "runtime" to "openCode2")
-                    val script = PhoneServerScripts.server()
-                    when (mode) {
-                        LaunchMode.Manual ->
-                            linux.startServer(script, PhoneServerScripts.PORT, recipe)
-                        is LaunchMode.ForAppOpen ->
-                            linux.startServerForLaunch(
-                                script,
-                                PhoneServerScripts.PORT,
-                                mode.expectedGeneration,
-                                recipe,
+            override suspend fun launch(profile: ProfileId, mode: LaunchMode): Outcome<Unit> {
+                if (!readable(profile))
+                    return Outcome.Failed(Failure.Runtime(RuntimeProblem.InvalidProfile))
+                try {
+                    val selected = blocking { linux.chooseServerPort() }
+                    if (selected is Outcome.Failed) return selected
+                    val loaded =
+                        profiles.profile(profile)
+                            ?: return Outcome.Failed(Failure.Runtime(RuntimeProblem.InvalidProfile))
+                    if (!readable(profile))
+                        return Outcome.Failed(Failure.Runtime(RuntimeProblem.InvalidProfile))
+                    val saved =
+                        profiles.upsert(
+                            loaded.profile.copy(
+                                baseUrl = "http://127.0.0.1:${PhoneServerScripts.PORT}"
+                            ),
+                            SecretEdit.Keep,
+                        )
+                    if (saved is Outcome.Failed) return saved
+                    return mutation {
+                        check(profile.raw !in closedProfiles) {
+                            "The phone server could not restart."
+                        }
+                        val recipe =
+                            mapOf(
+                                "version" to 1,
+                                "profileId" to profile.raw,
+                                "runtime" to "openCode2",
                             )
-                        is LaunchMode.Recovery ->
-                            linux.restartServer(
-                                script,
-                                PhoneServerScripts.PORT,
-                                mode.expectedGeneration,
-                            )
-                        is LaunchMode.AfterUpdate ->
-                            linux.restartServer(
-                                script,
-                                PhoneServerScripts.PORT,
-                                mode.expectedGeneration,
-                            )
+                        val script = PhoneServerScripts.server()
+                        when (mode) {
+                            LaunchMode.Manual ->
+                                linux.startServer(script, PhoneServerScripts.PORT, recipe)
+                            is LaunchMode.ForAppOpen ->
+                                linux.startServerForLaunch(
+                                    script,
+                                    PhoneServerScripts.PORT,
+                                    mode.expectedGeneration,
+                                    recipe,
+                                )
+                            is LaunchMode.Recovery ->
+                                linux.restartServer(
+                                    script,
+                                    PhoneServerScripts.PORT,
+                                    mode.expectedGeneration,
+                                )
+                            is LaunchMode.AfterUpdate ->
+                                linux.restartServer(
+                                    script,
+                                    PhoneServerScripts.PORT,
+                                    mode.expectedGeneration,
+                                )
+                        }
                     }
+                } finally {
+                    statusRevision.incrementAndGet()
                 }
+            }
 
             override suspend fun probe(password: String): ProbeAnswer =
                 withContext(io) { probeLoopback(password) }
 
-            override suspend fun refreshStatus(): Outcome<RuntimeStatus> = runtimeStatus()
+            override suspend fun refreshStatus(): Outcome<RuntimeStatus> {
+                val status = runtimeStatus()
+                if (status is Outcome.Ok && !status.value.serverRunning) {
+                    val busy = blocking { linux.serverPortBusy() }
+                    if (busy is Outcome.Ok && busy.value)
+                        return Outcome.Failed(
+                            classifyRuntime(
+                                io.github.eslamasabry.opencode_mobile.ServerPortBusy(
+                                    PhoneServerScripts.PORT
+                                )
+                            )
+                        )
+                }
+                return status
+            }
 
             override suspend fun confirmRecovery(expectedGeneration: Long): Outcome<Unit> =
                 blocking {
@@ -1366,7 +1430,8 @@ internal constructor(
     }
 
     suspend fun drainProfile(profile: String): Outcome<Unit> = lane.withLock {
-        // Revocation is reversible: keep the native budget, recipe and saved policy until the row commits.
+        // Revocation is reversible: keep the native budget, recipe and saved policy until the row
+        // commits.
         blocking { linux.unbindServerRecovery(profile) }
     }
 
@@ -1376,12 +1441,16 @@ internal constructor(
 
     fun reopenProfile(profile: String) {
         closedProfiles.remove(profile)
-        if (ownerId()?.raw == profile) scope.launch {
-            lane.withLock {
-                if (profile !in closedProfiles && stores.profiles.profile(ProfileId(profile)) != null)
-                    recovery.bind(ProfileId(profile))
+        if (ownerId()?.raw == profile)
+            scope.launch {
+                lane.withLock {
+                    if (
+                        profile !in closedProfiles &&
+                            stores.profiles.profile(ProfileId(profile)) != null
+                    )
+                        recovery.bind(ProfileId(profile))
+                }
             }
-        }
     }
 
     /** A folder-access restart may never be redirected to a newly selected phone owner. */

@@ -69,7 +69,7 @@ class AndroidQuotaCollector(
                 platform.builtinLinux &&
                     stores.lanes.forProfile(it.id).isAdmitting &&
                     it.profile.backend == BackendKind.OpenCode2 &&
-                    it.profile.baseUrl.trimEnd('/') == "http://127.0.0.1:4097"
+                    it.profile.baseUrl.trimEnd('/') == "http://127.0.0.1:${PhoneServerScripts.PORT}"
             }
             ?.let { QuotaServerProfile(it.id, it.profile.baseUrl, isOpenCode = true) }
 
@@ -301,7 +301,8 @@ class AndroidQuotaCollector(
             if (wasOn && !options.linuxGone) {
                 idle?.cancel()
                 idle = null
-                // Best effort, as in Flutter: a leftover folder is guarded by the token removed below.
+                // Best effort, as in Flutter: a leftover folder is guarded by the token removed
+                // below.
                 if (linux.stopService(InAppQuotaCollector.SERVICE_NAME) is Outcome.Ok)
                     linux.run("rm -rf ${InAppQuotaCollector.DIR} && echo 'qc removed'", 60)
             }

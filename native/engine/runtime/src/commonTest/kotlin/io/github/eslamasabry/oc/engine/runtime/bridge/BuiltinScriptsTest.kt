@@ -21,21 +21,21 @@ class BuiltinScriptsTest {
 
     @Test
     fun `B-LINUX-023 the in-app server is its own port, never the Termux-managed one`() {
-        assertEquals("http://127.0.0.1:4097", BuiltinLinuxBridge.SERVER_URL)
+        assertEquals("http://127.0.0.1:4098", BuiltinLinuxBridge.SERVER_URL)
         assertTrue(BuiltinLinuxBridge.managesServerUrl(BuiltinLinuxBridge.SERVER_URL))
         // The Termux-managed server (TermuxBridge.managedServerUrl) is 127.0.0.1:4096.
         assertFalse(BuiltinLinuxBridge.managesServerUrl("http://127.0.0.1:4096"))
-        assertFalse(BuiltinLinuxBridge.managesServerUrl("http://0.0.0.0:4097"))
-        assertFalse(BuiltinLinuxBridge.managesServerUrl("https://127.0.0.1:4097"))
+        assertFalse(BuiltinLinuxBridge.managesServerUrl("http://0.0.0.0:4098"))
+        assertFalse(BuiltinLinuxBridge.managesServerUrl("https://127.0.0.1:4098"))
         assertFalse(BuiltinLinuxBridge.managesServerUrl(null))
-        assertTrue(BuiltinLinuxBridge.managesServerUrl("http://127.0.0.1:4097/api"))
+        assertTrue(BuiltinLinuxBridge.managesServerUrl("http://127.0.0.1:4098/api"))
     }
 
     @Test
     fun `B-LINUX-023 fresh script defaults install and start OpenCode 2 at its pin`() {
         assertContains(install(), "export OC_RUNTIME='opencode2'")
         assertContains(install(), "export OC_REQUESTED_VERSION='2.2.5'")
-        assertContains(server(), "exec opencode2 serve --hostname 127.0.0.1 --port 4097")
+        assertContains(server(), "exec opencode2 serve --hostname 127.0.0.1 --port 4098")
     }
 
     @Test
@@ -52,7 +52,7 @@ class BuiltinScriptsTest {
     @Test
     fun `B-LINUX-023 the server binds 127_0_0_1 only and reads its password file`() {
         val script = server()
-        assertContains(script, "exec opencode2 serve --hostname 127.0.0.1 --port 4097\n")
+        assertContains(script, "exec opencode2 serve --hostname 127.0.0.1 --port 4098\n")
         assertContains(script, "cd /root/projects")
         assertContains(script, "export OPENCODE_SERVER_USERNAME=opencode")
         assertContains(script, "export OPENCODE_SERVER_PASSWORD=\"\$password\"")

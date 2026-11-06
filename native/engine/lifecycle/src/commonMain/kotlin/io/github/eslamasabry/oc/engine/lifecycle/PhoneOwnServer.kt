@@ -21,8 +21,10 @@ public data class PhoneHostSupport(val inAppLinux: Boolean, val termux: Boolean)
 
 public object PhoneOwnServers {
     /** The in-app server's port (BuiltinLinux.serverPort); not Termux's. */
-    public const val IN_APP_PORT: Int = 4097
-    public const val IN_APP_URL: String = "http://127.0.0.1:$IN_APP_PORT"
+    private var nativePort: () -> Int = { 4098 }
+    public fun configureNativePort(read: () -> Int) { nativePort = read }
+    public val IN_APP_PORT: Int get() = nativePort()
+    public val IN_APP_URL: String get() = "http://127.0.0.1:$IN_APP_PORT"
 
     /** The server this app runs in Termux (termuxManagedServerPort). */
     public const val TERMUX_PORT: Int = 4096

@@ -274,6 +274,15 @@ public object SetupPlanning {
         ) {
             return both(SetupError.PackageRepair)
         }
+        Regex("""Another OpenCode server is already using port (\d+) on this phone\.""")
+            .find(reason)
+            ?.groupValues
+            ?.get(1)
+            ?.toIntOrNull()
+            ?.takeIf { it in 1024..65535 }
+            ?.let {
+                return both(SetupError.PortBusy(it))
+            }
         if (step) return both(SetupError.CannotStart)
         if (reason.startsWith(OpenCodeInstallFailure.NO_PROGRAM))
             return both(SetupError.OpenCodeNoProgram)

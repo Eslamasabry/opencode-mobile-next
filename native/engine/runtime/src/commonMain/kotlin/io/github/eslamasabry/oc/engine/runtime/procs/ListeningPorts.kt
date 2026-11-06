@@ -119,7 +119,8 @@ public fun loopbackProbeShell(fixed: Iterable<Int>, marker: String = ""): String
 /** The one place that knows the script and how to read its answer. */
 public object ListeningPorts {
     /** The in-app OpenCode server's own port: never listed as a dev server. */
-    public const val OWN_SERVER_PORT: Int = 4097
+    public val OWN_SERVER_PORT: Int
+        get() = io.github.eslamasabry.oc.engine.runtime.switching.ManagedLocalServer.BUILTIN_PORT
 
     /** Program names that are the machine's own plumbing, not dev servers. */
     private val PLUMBING =

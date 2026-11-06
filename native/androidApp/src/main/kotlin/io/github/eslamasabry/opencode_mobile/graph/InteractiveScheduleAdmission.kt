@@ -31,7 +31,11 @@ class InteractiveScheduleAdmission(
         if (current != profile) return stale()
         // Agent sockets and remote servers do not use the scheduled OpenCode phone runtime.
         val address = URI(profile.origin.toString())
-        if (saved.profile.usesAgentSocket || address.host !in LOOPBACK || address.port != 4097)
+        if (
+            saved.profile.usesAgentSocket ||
+                address.host !in LOOPBACK ||
+                address.port != PhoneServerScripts.PORT
+        )
             return Outcome.Ok(Unit)
         val reading =
             withContext(dispatchers.io) {

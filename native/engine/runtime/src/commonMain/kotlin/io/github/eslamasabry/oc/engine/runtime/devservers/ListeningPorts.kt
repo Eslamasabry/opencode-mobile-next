@@ -36,7 +36,8 @@ public data class LocalServerProcess(
 
 public object ListeningPorts {
     /** The in-app OpenCode server's own port: never listed as a dev server. */
-    public const val OWN_SERVER_PORT: Int = 4097
+    public val OWN_SERVER_PORT: Int
+        get() = io.github.eslamasabry.oc.engine.runtime.switching.ManagedLocalServer.BUILTIN_PORT
 
     /**
      * The usual dev-server ports, always tried: framework defaults (Vite, Next, Astro, Storybook,

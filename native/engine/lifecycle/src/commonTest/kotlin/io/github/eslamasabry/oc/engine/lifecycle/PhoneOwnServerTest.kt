@@ -24,7 +24,7 @@ class PhoneOwnServerTest {
         val daemon = at("agents", "ws://localhost:6767", PhoneServerBackend.Paseo)
         assertTrue(PhoneOwnServers.isPhoneOwnServer(daemon, PhoneHostSupport.Android))
         assertFalse(PhoneOwnServers.isPhoneOwnServer(at("agents2", "ws://localhost:6768", PhoneServerBackend.Paseo), PhoneHostSupport.Android))
-        assertFalse(PhoneOwnServers.isPhoneOwnServer(at("https-in-app", "https://127.0.0.1:4097"), PhoneHostSupport.Android))
+        assertFalse(PhoneOwnServers.isPhoneOwnServer(at("https-in-app", "https://127.0.0.1:4098"), PhoneHostSupport.Android))
         assertFalse(PhoneOwnServers.isPhoneOwnServer(at("in-app", PhoneOwnServers.IN_APP_URL), PhoneHostSupport.Elsewhere))
         assertFalse(PhoneOwnServers.isPhoneOwnServer(daemon, PhoneHostSupport.Elsewhere))
     }

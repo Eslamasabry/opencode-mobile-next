@@ -307,7 +307,15 @@ public class InAppQuotaCollector(
         public const val OWNER: String = ":engine:integrations"
 
         /** The in-app OpenCode server address (BuiltinLinux.serverUrl). */
-        public const val IN_APP_SERVER_PORT: Int = 4097
+        private var nativePort: () -> Int = { 4098 }
+
+        public fun configureNativePort(read: () -> Int) {
+            nativePort = read
+        }
+
+        public val IN_APP_SERVER_PORT: Int
+            get() = nativePort()
+
         private const val TOKEN_MIN_LENGTH = 48
 
         private const val NODE_CHECK =

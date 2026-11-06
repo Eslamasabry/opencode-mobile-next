@@ -12,8 +12,8 @@ import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.capabilities.PlatformCapabilities
 import io.github.eslamasabry.oc.engine.files.PhoneProjectScanner
-import io.github.eslamasabry.oc.engine.files.ProjectScanFiles
 import io.github.eslamasabry.oc.engine.files.ProjectScanEnd
+import io.github.eslamasabry.oc.engine.files.ProjectScanFiles
 import io.github.eslamasabry.oc.engine.files.ProjectScanResult
 import io.github.eslamasabry.oc.engine.files.ProjectScanRoot
 import io.github.eslamasabry.oc.engine.files.ScanEntry
@@ -37,7 +37,7 @@ class AndroidPhoneProjectDiscovery(
     override fun available(profile: ProfileId): Boolean {
         if (!platform.builtinLinux) return false
         val url = stores.profiles.profile(profile)?.profile?.baseUrl ?: return false
-        return url.trimEnd('/') == "http://127.0.0.1:4097"
+        return url.trimEnd('/') == "http://127.0.0.1:${PhoneServerScripts.PORT}"
     }
 
     override suspend fun scan(profile: ProfileId): ProjectScanResult =

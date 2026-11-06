@@ -11,7 +11,7 @@ import kotlin.test.assertTrue
 
 /** Ports test/in_app_quota_gateway_test.dart (row B-PROTO-058). */
 class InAppQuotaGatewayTest {
-    private val inApp = MutableProfile(baseUrl = "http://127.0.0.1:4097", username = "opencode", password = "basic-fixture-password")
+    private val inApp = MutableProfile(baseUrl = "http://127.0.0.1:4098", username = "opencode", password = "basic-fixture-password")
     private val remote = MutableProfile(baseUrl = "https://collector.example:8443", password = "basic-fixture-password")
 
     @Test

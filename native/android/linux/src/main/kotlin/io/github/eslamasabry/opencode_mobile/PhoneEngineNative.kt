@@ -72,7 +72,7 @@ internal class PhoneEngineNative(private val context: Context) {
     fun start(profile: String, port: Int, serverRunning: Boolean, reason: String,
         proofFactory: (File) -> PhoneEngineAttestation.Receipt?): Process {
         validateProfile(profile)
-        if (port !in 1024..65535 || port == 4097) throw Failure("invalid_port")
+        if (port !in 1024..65535 || port == BuiltinLinux.get(context).selectedServerPort) throw Failure("invalid_port")
         prepareFreshStart(profile)
         // Interrupted deletion is completed before a new profile generation is
         // allowed to recreate state. Tombstones never carry credentials.
@@ -124,7 +124,7 @@ internal class PhoneEngineNative(private val context: Context) {
                 .put("guestRoot", "/root/projects")))
             .put("port", 0).put("authTokenFile", tokenFile.absolutePath)
             .put("serverCredentialFile", credentials.absolutePath)
-            .put("serverBaseUrl", "http://127.0.0.1:4097")
+            .put("serverBaseUrl", "http://127.0.0.1:${BuiltinLinux.get(context).selectedServerPort}")
             .put("boundary", boundary)
             .toString())
         // No secrets in argv, environment, logs or exception text. Only the

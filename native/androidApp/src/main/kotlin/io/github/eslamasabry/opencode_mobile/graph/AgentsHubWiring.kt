@@ -79,7 +79,7 @@ class AgentsHubWiring(
     private fun isBuiltIn(address: String): Boolean =
         try {
             val uri = URI(address)
-            uri.scheme == "http" && uri.host == "127.0.0.1" && uri.port == 4097
+            uri.scheme == "http" && uri.host == "127.0.0.1" && uri.port == PhoneServerScripts.PORT
         } catch (_: IllegalArgumentException) {
             false
         } catch (_: java.net.URISyntaxException) {

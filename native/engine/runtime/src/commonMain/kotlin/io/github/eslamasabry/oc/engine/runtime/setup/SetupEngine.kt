@@ -817,10 +817,12 @@ public class SetupEngine(
          * Persisted as the start step's error when no finisher is set (shown as
          * [SetupError.CannotStart]).
          */
-        public const val START_UNAVAILABLE: String = "start_unavailable"
+        public const val START_UNAVAILABLE: String =
+            "OpenCode is installed but is not answering. Continue setup to try again. Details show what stopped it."
 
         /** Persisted when a finisher failed without details. */
-        public const val START_FAILED: String = "start_failed"
+        public const val START_FAILED: String =
+            "OpenCode is installed but is not answering. Continue setup to try again. Details show what stopped it."
 
         /** `TermuxRuntime.parse(...).wireName` for the values a job can hold. */
         internal fun runtimeWireName(value: String?): String =

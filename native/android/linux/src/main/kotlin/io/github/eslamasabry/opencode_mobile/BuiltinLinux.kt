@@ -2951,7 +2951,13 @@ class BuiltinLinux(private val context: Context) {
                     idleActivityEpoch = epoch,
                 )
             val process =
-                launchService(SERVER, recipe.restorationScript(), SERVER_DEFAULT_PORT, null, launch)
+                launchService(
+                    SERVER,
+                    recipe.restorationScript(selectedServerPort),
+                    selectedServerPort,
+                    null,
+                    launch,
+                )
             try {
                 synchronized(recoveryLock) {
                     check(idleResumeCurrent(profile, generation, epoch) && process.isAlive)
@@ -4197,8 +4203,8 @@ class BuiltinLinux(private val context: Context) {
                 withColdRestoreAdmission(worker, profile, event) {}
                 launchService(
                     SERVER,
-                    recipe.restorationScript(),
-                    SERVER_DEFAULT_PORT,
+                    recipe.restorationScript(selectedServerPort),
+                    selectedServerPort,
                     null,
                     ServiceLaunch(
                         nativeOwned = true,
@@ -5238,6 +5244,64 @@ class BuiltinLinux(private val context: Context) {
         }
     }
 
+    @Volatile private var selectedPortBusy = false
+
+    /** Native packages keep their own loopback address; Flutter continues to own 4097. */
+    val selectedServerPort: Int
+        get() =
+            recoveryPreferences.getInt("nativeServerPort", defaultServerPort).takeIf {
+                it == 4098 || it in 4100..4199
+            } ?: defaultServerPort
+
+    private val defaultServerPort: Int
+        get() = if (context.packageName.endsWith(".native")) 4100 else SERVER_DEFAULT_PORT
+
+    /** Only select a port while our tracked server is stopped; never take over another listener. */
+    @Synchronized
+    fun chooseServerPort(): Int {
+        port?.let {
+            return it
+        }
+        val chosen =
+            (listOf(selectedServerPort) + (4100..4199)).distinct().firstOrNull { candidate ->
+                try {
+                    java.net.ServerSocket().use { socket ->
+                        socket.reuseAddress = false
+                        socket.bind(java.net.InetSocketAddress("127.0.0.1", candidate))
+                    }
+                    true
+                } catch (_: java.io.IOException) {
+                    false
+                }
+            }
+                ?: run {
+                    selectedPortBusy = true
+                    throw ServerPortBusy(selectedServerPort)
+                }
+        selectedPortBusy = false
+        check(recoveryPreferences.edit().putInt("nativeServerPort", chosen).commit()) {
+            "The phone server setting could not be saved."
+        }
+        return chosen
+    }
+
+    /** Classify our own run's bounded log; output never becomes UI text. */
+    fun serverPortBusy(): Boolean =
+        selectedPortBusy ||
+            try {
+                serverLog.isFile &&
+                    java.io.RandomAccessFile(serverLog, "r").use { log ->
+                        val size = minOf(log.length(), 8192L).toInt()
+                        log.seek(log.length() - size)
+                        val bytes = ByteArray(size)
+                        log.readFully(bytes)
+                        Regex("EADDRINUSE|[Pp]ort .*in use|[Aa]ddress already in use")
+                            .containsMatchIn(bytes.toString(Charsets.UTF_8))
+                    }
+            } catch (_: java.io.IOException) {
+                false
+            }
+
     val serverLog = File(home, "server.log")
 
     val serverRunning: Boolean
@@ -5315,7 +5379,7 @@ exec gc supervisor run
     @Synchronized
     fun startServer(script: String, port: Int, restoreRecipe: Map<*, *>? = null) {
         val requested = restoreRecipe?.let {
-            check(port == SERVER_DEFAULT_PORT) { "The phone server could not restart." }
+            check(port == selectedServerPort) { "The phone server could not restart." }
             NativeServerRecipe.fromRequest(
                 it,
                 it["profileId"] as? String,
@@ -5412,7 +5476,7 @@ exec gc supervisor run
         val existing = services[SERVER]?.takeIf { it.process.isAlive }
         if (existing != null) {
             check(scheduledPhoneProcesses.values.none { it === existing.process }) { "unavailable" }
-            check(existing.port == SERVER_DEFAULT_PORT) { "unavailable" }
+            check(existing.port == selectedServerPort) { "unavailable" }
             return mapOf("started" to false, "token" to "")
         }
         // Do not rewrite an owner's authentication or recovery metadata. The
@@ -5442,7 +5506,7 @@ exec gc supervisor run
         val seconds = (budget + MILLIS_PER_SECOND - 1) / MILLIS_PER_SECOND
         val script =
             recipe
-                .restorationScript()
+                .restorationScript(selectedServerPort)
                 .replace(
                     "exec opencode2 serve",
                     "exec timeout --signal=TERM --kill-after=5s ${seconds}s opencode2 serve",
@@ -5452,7 +5516,7 @@ exec gc supervisor run
         scheduledPhoneLease.begin(profile, token, budget, scheduledPhoneClock())
         val process = start(script, serviceLogFile(SERVER))
         process.outputStream.close()
-        services[SERVER] = serviceStarted(SERVER, process, SERVER_DEFAULT_PORT, null, script)
+        services[SERVER] = serviceStarted(SERVER, process, selectedServerPort, null, script)
         scheduledPhoneProcesses[token] = process
         recordRunning()
         // The lease watchdog is independent of Dart and its engine lifetime.
@@ -5940,7 +6004,9 @@ exec gc supervisor run
     fun agentPriority(level: String): Map<String, Any?>? =
         AgentPriority.apply(level, AndroidProcess.myUid(), AndroidProcess.myPid())?.toMap()
 
-    /** This app user's processes now, for "What's running on this phone" (see [NativeProcessList]). */
+    /**
+     * This app user's processes now, for "What's running on this phone" (see [NativeProcessList]).
+     */
     fun processTable(): Map<String, Any?> {
         val uid = AndroidProcess.myUid()
         val began = SystemClock.elapsedRealtime()
@@ -6460,7 +6526,7 @@ exec gc supervisor run
         private const val MAX_RESTART_DELAY_MS = 60_000L
         private const val MAX_RECEIPT_CHARS = 131_072
         private const val MAX_ENV_BYTES = 131_072
-        private const val SERVER_DEFAULT_PORT = 4097
+        private const val SERVER_DEFAULT_PORT = 4098
         private const val CPU_SAMPLE_MS = 1_000L
         private const val STOP_GRACE_MS = 2_000L
         private const val MAX_STOP_PIDS = 256

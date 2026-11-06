@@ -714,4 +714,5 @@
     <string name="browserModeTitle">Browser mode</string>
     <string name="browserEditorInsecureOrigin">This page was opened over plain HTTP from a network address, so the browser will not keep a server password. Leave the password empty for a server that has none, or open the app over HTTPS or from localhost to save one.</string>
     <string name="browserAgentSocketUnavailable">Codex and Paseo connections are not available in the browser. They sign in with a WebSocket header that browsers cannot send, and no browser sign-in is supported yet. Use the phone or desktop app for them; OpenCode servers work here.</string>
+    <string name="phoneServerPortBusy">Another OpenCode server is already using port %1$s on this phone.</string>
 </resources>

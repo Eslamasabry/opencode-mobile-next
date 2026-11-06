@@ -13,7 +13,6 @@ import io.github.eslamasabry.oc.core.common.*
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.*
 import io.github.eslamasabry.oc.core.data.scope.*
-import io.github.eslamasabry.oc.engine.lifecycle.PhoneOwnServers
 import io.github.eslamasabry.oc.engine.profiles.*
 import io.github.eslamasabry.oc.engine.runtime.paths.SharedStoragePath
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerSource
@@ -51,7 +50,7 @@ class AndroidProjectStorageAccess(
     private fun owns(id: ProfileId): Boolean {
         val p = stores.profiles.profile(id)?.profile ?: return false
         return stores.prefs.string("oc.builtinServerOwner") == id.raw &&
-            p.baseUrl.trimEnd('/') == PhoneOwnServers.IN_APP_URL
+            p.baseUrl.trimEnd('/') == "http://127.0.0.1:${PhoneServerScripts.PORT}"
     }
 
     private fun granted(): Boolean =
@@ -167,7 +166,9 @@ class AndroidProjectStorageAccess(
         return push()
     }
 
-    /** One writer for the runtime's root list (NativeSharedProjectFolders), never a second formula. */
+    /**
+     * One writer for the runtime's root list (NativeSharedProjectFolders), never a second formula.
+     */
     private suspend fun push(excluding: ProfileId? = null): Outcome<Unit> =
         folders.publish(excluding)
 

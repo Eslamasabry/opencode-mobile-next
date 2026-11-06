@@ -21,7 +21,6 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.security.Redactor
-import io.github.eslamasabry.oc.engine.lifecycle.PhoneOwnServers
 import io.github.eslamasabry.oc.engine.linuxsetup.FinishProfile
 import io.github.eslamasabry.oc.engine.linuxsetup.FinishProfiles
 import io.github.eslamasabry.oc.engine.linuxsetup.FinishServer
@@ -232,7 +231,14 @@ object PhoneSetupWiring {
                             SetupComponentIds.START,
                             ok = failure == null,
                             error =
-                                failure?.let { "[oc] OpenCode was installed but did not start" },
+                                failure?.let {
+                                    val runtime =
+                                        io.github.eslamasabry.opencode_mobile.BuiltinLinux.get(app)
+                                    if (runtime.serverPortBusy())
+                                        "Another OpenCode server is already using port ${PhoneServerScripts.PORT} on this phone."
+                                    else
+                                        "OpenCode is installed but is not answering. Continue setup to try again. Details show what stopped it."
+                                },
                             version = null,
                         )
                 }
@@ -349,8 +355,10 @@ object PhoneSetupWiring {
             server = phone,
             connect = { null },
             isConnectedTo = { it.id == owner },
-            serverUrl = PhoneOwnServers.IN_APP_URL,
-            managesServerUrl = { url -> url.trimEnd('/') == PhoneOwnServers.IN_APP_URL },
+            serverUrl = "http://127.0.0.1:${PhoneServerScripts.PORT}",
+            managesServerUrl = { url ->
+                url.trimEnd('/') == "http://127.0.0.1:${PhoneServerScripts.PORT}"
+            },
             newId = { UUID.randomUUID().toString() },
             newPassword = { PhoneServerScripts.newPassword(SecureRandom()) },
             profileName = name,

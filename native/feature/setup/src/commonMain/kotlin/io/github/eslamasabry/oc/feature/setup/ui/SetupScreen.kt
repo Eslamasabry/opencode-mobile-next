@@ -57,6 +57,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.linuxSetupSavedFailed
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorCannotStart
+import io.github.eslamasabry.oc.ui.words.res.phoneServerPortBusy
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorChecksum
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorInstall
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorInterrupted
@@ -353,7 +354,8 @@ private fun failureLine(line: SetupFailureLine): String =
                 SetupError.ToolsUncheckable -> stringResource(Res.string.setupRbToolsUncheckable)
                 SetupError.PersistenceFailure -> stringResource(Res.string.linuxSetupSavedFailed)
                 SetupError.PackageRepair -> stringResource(Res.string.phoneSetupErrorPackageRepair)
-                SetupError.CannotStart -> stringResource(Res.string.phoneSetupErrorCannotStart)
+                is SetupError.PortBusy -> stringResource(Res.string.phoneServerPortBusy, e.port.toString())
+        SetupError.CannotStart -> stringResource(Res.string.phoneSetupErrorCannotStart)
                 SetupError.OpenCodeNoProgram -> stringResource(Res.string.phoneSetupErrorOpenCodeNoProgram)
                 SetupError.OpenCodeWontRun -> stringResource(Res.string.phoneSetupErrorOpenCodeWontRun)
                 SetupError.OpenCodeNoStart -> stringResource(Res.string.phoneSetupErrorOpenCodeNoStart)

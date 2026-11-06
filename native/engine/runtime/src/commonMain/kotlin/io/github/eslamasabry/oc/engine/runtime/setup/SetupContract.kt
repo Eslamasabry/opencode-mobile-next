@@ -151,6 +151,8 @@ public sealed interface SetupError {
     /** `phoneSetupErrorCannotStart`. */
     public data object CannotStart : SetupError
 
+    public data class PortBusy(val port: Int) : SetupError
+
     /** `phoneSetupErrorOpenCodeNoProgram`. */
     public data object OpenCodeNoProgram : SetupError
 

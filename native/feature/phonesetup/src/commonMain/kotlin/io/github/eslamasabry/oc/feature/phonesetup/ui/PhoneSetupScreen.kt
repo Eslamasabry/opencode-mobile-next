@@ -44,6 +44,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
+import io.github.eslamasabry.oc.ui.words.res.phoneServerPortBusy
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorCannotStart
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorChecksum
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorInstall
@@ -82,7 +83,6 @@ import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartReadyBody
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartScreenTitle
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartSetUp
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartTitle
-import io.github.eslamasabry.oc.ui.words.res.voiceComponentTitle
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewCancel
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewCancelled
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewContinue
@@ -91,6 +91,7 @@ import io.github.eslamasabry.oc.ui.words.res.setupProgressViewFailedUnknown
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewGettingStarted
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewInterrupted
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewOverallLabel
+import io.github.eslamasabry.oc.ui.words.res.voiceComponentTitle
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.seconds
 import org.jetbrains.compose.resources.stringResource
@@ -345,6 +346,8 @@ internal fun problemWords(problem: SetupProblem): String =
         is SetupProblem.Checksum -> stringResource(Res.string.phoneSetupErrorChecksum, problem.name)
         is SetupProblem.Install -> stringResource(Res.string.phoneSetupErrorInstall, problem.name)
         SetupProblem.PackageRepair -> stringResource(Res.string.phoneSetupErrorPackageRepair)
+        is SetupProblem.PortBusy ->
+            stringResource(Res.string.phoneServerPortBusy, problem.port.toString())
         SetupProblem.CannotStart,
         SetupProblem.RuntimeOwnershipUnknown ->
             stringResource(Res.string.phoneSetupErrorCannotStart)
