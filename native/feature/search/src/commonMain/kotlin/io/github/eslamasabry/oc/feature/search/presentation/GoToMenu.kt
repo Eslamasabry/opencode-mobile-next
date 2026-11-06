@@ -14,8 +14,8 @@ public enum class GoToPlace {
     Help,
     NewConversation;
 
-    /** Files, Terminal and Help have no stand-alone page to open from here; they are not offered. */
-    public val openable: Boolean get() = this != Files && this != Terminal && this != Help
+    /** Files and Help have no stand-alone page to open from here; they are not offered. */
+    public val openable: Boolean get() = this != Files && this != Help
 }
 
 /** Where a row sits: the Go to places, the recent conversations, or an action found only once typed. */

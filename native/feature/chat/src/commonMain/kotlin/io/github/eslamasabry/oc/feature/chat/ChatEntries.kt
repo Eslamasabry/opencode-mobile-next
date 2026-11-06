@@ -70,6 +70,7 @@ import io.github.eslamasabry.oc.ui.routes.ConnectionFormRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.PreviewRoute
 import io.github.eslamasabry.oc.ui.routes.SessionRelationsRoute
+import io.github.eslamasabry.oc.ui.routes.TerminalRoute
 import io.github.eslamasabry.oc.ui.routes.ToolsRoute
 import io.github.eslamasabry.oc.ui.routes.WebSourcesRoute
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -81,6 +82,7 @@ import io.github.eslamasabry.oc.ui.words.res.nativePendingCount
 import io.github.eslamasabry.oc.ui.words.res.nativePendingFailed
 import io.github.eslamasabry.oc.ui.words.res.nativePendingReview
 import io.github.eslamasabry.oc.ui.words.res.protoToolsTitle
+import io.github.eslamasabry.oc.ui.words.res.remoteTerminalTitle
 import io.github.eslamasabry.oc.ui.words.res.r40RelationsTitle
 import io.github.eslamasabry.oc.ui.words.res.sessionTransferTitle
 import io.github.eslamasabry.oc.ui.words.res.stateHandoffTitle
@@ -397,6 +399,17 @@ public class ChatEntries(
                                             inspect.takeIf { activeContext.available() },
                                             transferAction,
                                             toolsAction,
+                                            // N-24: the server terminal in this conversation's project.
+                                            KitLineAction(
+                                                    stringResource(Res.string.remoteTerminalTitle),
+                                                    {
+                                                        navigator.open(
+                                                            TerminalRoute.Conversation(route.ref)
+                                                        )
+                                                    },
+                                                    testTag = "chat-terminal-open",
+                                                )
+                                                .takeIf { serverCapabilities?.terminal == true },
                                             KitLineAction(
                                                     stringResource(Res.string.chatQueueMoveTitle),
                                                     queueMove::open,
