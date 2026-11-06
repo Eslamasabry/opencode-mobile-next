@@ -66,6 +66,7 @@ class LinuxScreensTest {
         override fun shown(visible: Boolean) = Unit
         override fun open(page: LinuxPage) { seen += "open $page" }
         override fun askRepair() { seen += "askRepair" }
+        override fun refreshComponents() { seen += "refreshComponents" }
         override fun askReset() { seen += "askReset" }
         override fun confirm() { seen += "confirm" }
         override fun dismiss() { seen += "dismiss" }

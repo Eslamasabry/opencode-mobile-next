@@ -182,6 +182,8 @@ class SetupScriptsCrashShellTest {
     /** The app's side: unpack with the real tar, then answer through the marker files. */
     private fun appUnpacking(request: List<String>) {
         val (archivePath, dest, strip, member) = request.drop(2)
+        // Like the real app, take the request over at once; the script gives up on a slow answer to this.
+        File("$archivePath.oc-unpack-ack").writeText("1")
         File(dest).mkdirs()
         val extra = if (member == "-") emptyList() else listOf(member)
         val ok =
@@ -192,7 +194,6 @@ class SetupScriptsCrashShellTest {
                     it.inputStream.readBytes()
                     it.waitFor() == 0
                 }
-        File("$archivePath.oc-unpack-ack").writeText("1")
         File("$archivePath.oc-unpack-done").writeText(if (ok) "ok" else "fail bad")
     }
 
