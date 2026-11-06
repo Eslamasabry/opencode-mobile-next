@@ -2,7 +2,7 @@
     <string name="remoteTerminalTitle">الطرفية</string>
     <string name="remoteTerminalWorking">جارٍ العمل…</string>
     <string name="remoteTerminalUnavailable">اتصل بخادم يدعم الطرفيات لاستخدام هذه الصفحة.</string>
-    <string name="remoteTerminalFailed">تعذّر الوصول إلى الطرفية. أعد الاتصال بالخادم وحاول مجددًا.</string>
+    <string name="remoteTerminalFailed">تعذّر إكمال طلب الطرفية. حاول مجددًا.</string>
     <string name="remoteTerminalInputUncertain">انقطع الاتصال أثناء إرسال الإدخال. تحقّق من الطرفية قبل إرساله مجددًا.</string>
     <string name="remoteTerminalIntro">تُنفَّذ الأوامر على هذا الخادم. مغادرة الصفحة تفصل العرض فقط؛ استخدم إنهاء الطرفية لإيقاف الصدفة.</string>
     <string name="remoteTerminalCreate">طرفية جديدة</string>
@@ -34,4 +34,8 @@
     <string name="remoteTerminalColumns">الأعمدة</string>
     <string name="remoteTerminalApplySize">تطبيق الحجم</string>
     <string name="remoteTerminalSizeRange">اختر عددًا من ١ إلى ١٠٠٠ للصفوف والأعمدة.</string>
+    <string name="remoteTerminalServiceUnavailable">هذا الخادم لا يوفّر خدمة طرفية.</string>
+    <string name="remoteTerminalProjectChanged">تغيّر مشروع هذه المحادثة. ارجع وافتح الطرفية مجددًا.</string>
+    <string name="remoteTerminalSignInRequired">سجّل الدخول إلى هذا الخادم مجددًا لاستخدام طرفيته.</string>
+    <string name="remoteTerminalServiceNoAnswer">لم تستجب خدمة الطرفية. حاول مجددًا.</string>
 </resources>

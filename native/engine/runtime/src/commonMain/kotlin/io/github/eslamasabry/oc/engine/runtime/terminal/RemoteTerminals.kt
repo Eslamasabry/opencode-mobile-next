@@ -31,6 +31,9 @@ public class RemoteTerminalTarget(
 )
 
 public fun interface RemoteTerminalSource {
+    /** Explicit page entry may select its conversation's project once; commands never do. */
+    public suspend fun activate(ref: ConversationRef): Outcome<RemoteTerminalTarget> = resolve(ref)
+
     public suspend fun resolve(ref: ConversationRef): Outcome<RemoteTerminalTarget>
 }
 
@@ -61,10 +64,14 @@ public class RemoteTerminals(
     private var reader: Job? = null
     private var target: RemoteTerminalTarget? = null
     private var generation = 0
+    private var entered = false
 
     public suspend fun refresh(): Unit = lane.withLock {
         local.update { it.copy(loading = true, failure = null) }
-        when (val live = source.resolve(ref)) {
+        val admission = if (entered) source.resolve(ref) else source.activate(ref)
+        // Activation is a page-entry action, never an automatic retry after scope changes.
+        entered = true
+        when (val live = admission) {
             is Outcome.Failed -> fail(live.failure)
             is Outcome.Ok ->
                 when (val listed = live.value.gateway.listTerminals()) {

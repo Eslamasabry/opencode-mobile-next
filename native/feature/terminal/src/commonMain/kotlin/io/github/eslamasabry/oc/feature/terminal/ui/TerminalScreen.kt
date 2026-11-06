@@ -15,6 +15,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.engine.runtime.terminal.RemoteTerminalState
 import io.github.eslamasabry.oc.feature.terminal.presentation.TerminalActions
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -53,6 +55,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions) {
     val terminal = state.selected
+    val canCreate = !state.loading && !state.working && state.failure == null
     var barMenuOpen by remember { mutableStateOf(false) }
     var rename by remember(terminal?.id) { mutableStateOf(false) }
     var remove by remember(terminal?.id) { mutableStateOf(false) }
@@ -78,7 +81,7 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions) 
                 onExit = actions::back,
                 actions =
                     buildList {
-                        add(KitLineAction(newLabel, actions::create))
+                        if (canCreate) add(KitLineAction(newLabel, actions::create))
                         if (terminal != null) {
                             add(KitLineAction(listLabel, actions::showList))
                             add(KitLineAction(renameLabel, { rename = true }))
@@ -118,17 +121,25 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions) 
         Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
             state.failure?.let {
                 KitErrorNotice(
-                    message = stringResource(Res.string.remoteTerminalFailed),
+                    message = terminalFailureText(it),
                     failure = it,
                     detailsLabel = stringResource(Res.string.kitDetails),
                     copyLabel = stringResource(Res.string.kitCopyDetails),
-                    retry = KitLineAction(stringResource(Res.string.kitTryAgain), actions::refresh),
+                    retry =
+                        if (
+                            it is Failure.Unavailable ||
+                                (it is Failure.Refused && it.reason == RefusalReason.StaleScope)
+                        )
+                            null
+                        else
+                            KitLineAction(stringResource(Res.string.kitTryAgain), actions::refresh),
                 )
             }
             if (terminal == null) {
                 LazyColumn(Modifier.fillMaxSize()) {
                     when {
                         state.loading -> item { KitSkeletonRows() }
+                        state.failure != null && state.terminals.isEmpty() -> Unit
                         state.terminals.isEmpty() ->
                             item {
                                 KitStateView(
@@ -224,6 +235,23 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions) 
         }
     }
 }
+
+/** The project/scope and optional terminal service can fail while chat remains connected. */
+@Composable
+private fun terminalFailureText(failure: Failure): String =
+    stringResource(
+        when {
+            failure is Failure.Unavailable -> Res.string.remoteTerminalServiceUnavailable
+            failure is Failure.Refused && failure.reason == RefusalReason.StaleScope ->
+                Res.string.remoteTerminalProjectChanged
+            failure is Failure.SignIn || failure is Failure.SecretUnavailable ->
+                Res.string.remoteTerminalSignInRequired
+            failure is Failure.Network ||
+                failure is Failure.TimedOut ||
+                failure is Failure.ComputerDidNotAnswer -> Res.string.remoteTerminalServiceNoAnswer
+            else -> Res.string.remoteTerminalFailed
+        }
+    )
 
 @Composable
 private fun RenameTerminal(

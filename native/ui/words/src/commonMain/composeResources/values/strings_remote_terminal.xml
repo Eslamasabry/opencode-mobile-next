@@ -2,7 +2,7 @@
     <string name="remoteTerminalTitle">Terminal</string>
     <string name="remoteTerminalWorking">Working…</string>
     <string name="remoteTerminalUnavailable">Connect to a server that supports terminals to use this page.</string>
-    <string name="remoteTerminalFailed">The terminal could not be reached. Reconnect to the server and try again.</string>
+    <string name="remoteTerminalFailed">The terminal request failed. Try again.</string>
     <string name="remoteTerminalInputUncertain">The connection stopped while sending input. Check the terminal before sending it again.</string>
     <string name="remoteTerminalIntro">Commands run on this server. Leaving this page disconnects the view; use End terminal to stop its shell.</string>
     <string name="remoteTerminalCreate">New terminal</string>
@@ -34,4 +34,8 @@
     <string name="remoteTerminalColumns">Columns</string>
     <string name="remoteTerminalApplySize">Apply size</string>
     <string name="remoteTerminalSizeRange">Choose between 1 and 1000 rows and columns.</string>
+    <string name="remoteTerminalServiceUnavailable">This server does not provide a terminal service.</string>
+    <string name="remoteTerminalProjectChanged">This conversation’s project changed. Go back and open Terminal again.</string>
+    <string name="remoteTerminalSignInRequired">Sign in to this server again to use its terminal.</string>
+    <string name="remoteTerminalServiceNoAnswer">The terminal service did not answer. Try again.</string>
 </resources>

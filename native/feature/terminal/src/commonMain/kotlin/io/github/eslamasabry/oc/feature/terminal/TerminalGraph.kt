@@ -16,6 +16,8 @@ import io.github.eslamasabry.oc.core.model.ServerLocation
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.runtime.terminal.RemoteTerminalSource
 import io.github.eslamasabry.oc.engine.runtime.terminal.RemoteTerminalTarget
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 
 @ContributesTo(ConnectionScope::class)
 public interface TerminalGraphAccessors {
@@ -28,7 +30,16 @@ public interface TerminalGraphAccessors {
 @ContributesBinding(AppScope::class)
 public class GraphRemoteTerminalSource(private val registry: ConnectionRegistry) :
     RemoteTerminalSource {
-    override suspend fun resolve(ref: ConversationRef): Outcome<RemoteTerminalTarget> {
+    override suspend fun activate(ref: ConversationRef): Outcome<RemoteTerminalTarget> =
+        resolveAt(ref, activate = true)
+
+    override suspend fun resolve(ref: ConversationRef): Outcome<RemoteTerminalTarget> =
+        resolveAt(ref, activate = false)
+
+    private suspend fun resolveAt(
+        ref: ConversationRef,
+        activate: Boolean,
+    ): Outcome<RemoteTerminalTarget> {
         val graph =
             registry.graphFor(ref)
                 ?: return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
@@ -38,15 +49,34 @@ public class GraphRemoteTerminalSource(private val registry: ConnectionRegistry)
         val gateway = services.terminalGateway
         if (!gateway.capabilities.value.terminal)
             return Outcome.Failed(Failure.Unavailable(FeatureId("terminal")))
+        val before = gateway.location.value
         val read = gateway.session(ref.sessionId)
         if (read is Outcome.Failed) return read
         val session = (read as Outcome.Ok).value
-        val at = gateway.location.value
+        // A project change during the session read cannot authorize switching it back.
+        if (registry.graphFor(ref) !== graph || gateway.location.value != before)
+            return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+        val at = before
         val expected =
             ServerLocation(
                 session.directory ?: at.directory,
                 session.workspaceId?.raw ?: at.workspace,
             )
+        if (activate && expected != at) {
+            if (!gateway.capabilities.value.terminal)
+                return Outcome.Failed(Failure.Unavailable(FeatureId("terminal")))
+            // Like the explicit project-terminal route, enter the conversation's project once.
+            // A later refresh or command only validates; it never changes the active project.
+            gateway.setLocation(expected)
+            services.terminalOperations.setLocation(expected)
+            val arrived =
+                withTimeoutOrNull(10_000) {
+                    gateway.location.first { it != at }
+                }
+            if (arrived == null) return Outcome.Failed(Failure.TimedOut())
+            if (arrived != expected)
+                return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+        }
         fun current(): Boolean =
             registry.graphFor(ref) === graph &&
                 gateway.location.value == expected &&
