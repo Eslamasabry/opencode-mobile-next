@@ -23,6 +23,8 @@ public data class FolderRowUi(
     val conversations: Int = 0,
     val running: Int = 0,
     val isGit: Boolean? = null,
+    /** The server's project id, when it keeps a project list (needed to rename). */
+    val id: String? = null,
     val kind: io.github.eslamasabry.oc.engine.files.PhoneProjectKind? = null,
 )
 
@@ -52,6 +54,16 @@ public data class ProjectsPickerUi(
     val createName: String = "",
     val creatingFolder: Boolean = false,
     val folderFailure: Failure? = null,
+    /** A typed path that does not exist yet: "Create this folder?" is asked for it. */
+    val missingPath: String? = null,
+    val creatingMissing: Boolean = false,
+    val missingFailure: Failure? = null,
+    /** The project being renamed (its directory), and the rename's state. */
+    val renaming: FolderRowUi? = null,
+    val renamingWorking: Boolean = false,
+    val renameFailure: Failure? = null,
+    /** True when this server keeps a project list whose names can be changed. */
+    val canRename: Boolean = false,
     /** The folder used last, so the path field starts next to it. */
     val pathStart: String = "",
     val canBrowsePhone: Boolean = false,
@@ -82,6 +94,18 @@ public interface ProjectsPickerActions {
     public fun closeCreate() {}
 
     public fun createFolder() {}
+
+    /** "Create this folder?" answered yes / no. */
+    public fun createMissing() {}
+
+    public fun dismissMissing() {}
+
+    public fun askRename(project: FolderRowUi) {}
+
+    public fun closeRename() {}
+
+    /** [name] blank = use the folder's own name. */
+    public fun renameProject(name: String) {}
 
     public fun browseBuiltin() {}
 

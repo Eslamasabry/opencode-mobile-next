@@ -86,6 +86,47 @@ class PhoneProjectCreation(
             }
         }
 
+    /** Checked inside the app's Linux, never by asking OpenCode, so a missing folder is not remembered as broken. */
+    override suspend fun exists(server: ProjectServer, path: String): Boolean? =
+        lane.withLock {
+            if (!available(server) || linux.presence() != LinuxPresence.Ready) return@withLock null
+            if (!linux.serviceRunning("server")) return@withLock null
+            val script = BuiltinScripts.folderExistsScript(path)
+            if ('\n' in path || '\u0000' in path || !path.startsWith("/")) return@withLock null
+            when (val result = linux.run(script, timeoutSeconds = 20)) {
+                is Outcome.Failed -> null
+                is Outcome.Ok -> result.value.exitCode == 0
+            }
+        }
+
+    override suspend fun createAt(server: ProjectServer, path: String): Outcome<String> =
+        lane.withLock {
+            if (!available(server)) return@withLock stale()
+            if (linux.presence() != LinuxPresence.Ready || !linux.serviceRunning("server"))
+                return@withLock Outcome.Failed(Failure.Folder(FolderProblem.NotInstalled))
+            val script =
+                BuiltinScripts.createFolderScript(path)
+                    ?: return@withLock Outcome.Failed(Failure.StorageRefused())
+            when (val result = linux.run(script, timeoutSeconds = 45)) {
+                is Outcome.Failed -> result
+                is Outcome.Ok -> {
+                    if (!available(server)) return@withLock stale()
+                    val last =
+                        result.value.output
+                            .lineSequence()
+                            .map(String::trim)
+                            .filter(String::isNotEmpty)
+                            .lastOrNull()
+                    if (
+                        result.value.exitCode == 0 &&
+                            (last == "created $path" || last == "exists $path")
+                    )
+                        Outcome.Ok(path)
+                    else Outcome.Failed(Failure.Folder(FolderProblem.Denied))
+                }
+            }
+        }
+
     private fun stale(): Outcome<Nothing> =
         Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
 }
