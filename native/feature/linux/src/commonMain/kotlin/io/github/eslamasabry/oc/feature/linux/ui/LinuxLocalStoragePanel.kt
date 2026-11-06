@@ -12,6 +12,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
+import io.github.eslamasabry.oc.ui.words.res.linuxComponentsBusy
 import io.github.eslamasabry.oc.ui.words.res.linuxLocalClose
 import io.github.eslamasabry.oc.ui.words.res.linuxLocalCreate
 import io.github.eslamasabry.oc.ui.words.res.linuxLocalCreatePath
@@ -40,6 +41,7 @@ internal fun LinuxLocalStoragePanel(state: LinuxHomeUi, actions: LinuxHomeAction
             KitRow(
                 title = stringResource(Res.string.linuxLocalCreate),
                 enabled = !state.working && !state.job.running,
+                disabledReason = stringResource(Res.string.linuxComponentsBusy),
                 onClick = actions::askCreateProject,
             )
         KitRow(
@@ -53,6 +55,7 @@ internal fun LinuxLocalStoragePanel(state: LinuxHomeUi, actions: LinuxHomeAction
             title = stringResource(Res.string.linuxLocalMeasure),
             onClick = actions::measureRemoval,
             enabled = !state.working && !state.job.running,
+            disabledReason = stringResource(Res.string.linuxComponentsBusy),
         )
     }
     state.folderPath?.let { path ->

@@ -64,6 +64,7 @@ internal fun LinuxComponentsPanel(state: LinuxHomeUi, actions: LinuxHomeActions)
         KitRow(
             title = stringResource(Res.string.linuxComponentsRefresh),
             enabled = !busy && !state.componentsLoading,
+            disabledReason = stringResource(Res.string.linuxComponentsBusy),
             onClick = actions::refreshComponents,
         )
         state.components.forEach { entry ->
@@ -81,6 +82,7 @@ internal fun LinuxComponentsPanel(state: LinuxHomeUi, actions: LinuxHomeActions)
                 KitRow(
                     title = stringResource(Res.string.linuxComponentsRemove, name),
                     enabled = !busy && !state.componentsLoading,
+                    disabledReason = stringResource(Res.string.linuxComponentsBusy),
                     onClick = { actions.askRemoveComponent(entry.component.id) },
                 )
             }

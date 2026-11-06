@@ -124,6 +124,7 @@ internal fun PermissionSettingsContent(
                                         )
                                     ),
                                 enabled = !ui.busy,
+                                disabledReason = stringResource(Res.string.automationSaving),
                                 onClick = onAskAgain,
                             )
                         answers
@@ -146,6 +147,7 @@ internal fun PermissionSettingsContent(
                                 2, // F: lib/ui/screens/automation_settings_screen.dart:360
                             trailing = KitRowTrailing.Chevron,
                             enabled = !ui.busy,
+                            disabledReason = stringResource(Res.string.automationSaving),
                             onClick = onGrants,
                         )
                     }
@@ -257,6 +259,10 @@ private fun PermissionAnswer(
                 )
             ),
         enabled = !busy && (accepted || writable),
+        disabledReason =
+            stringResource(
+                if (busy) Res.string.automationSaving else Res.string.consentStorageFailed
+            ),
         onClick = { onAnswer(row.kind) },
     )
 }

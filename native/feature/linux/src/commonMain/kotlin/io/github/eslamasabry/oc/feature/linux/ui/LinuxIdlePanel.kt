@@ -40,6 +40,7 @@ internal fun LinuxIdlePanel(state: LinuxHomeUi, actions: LinuxHomeActions) {
                 title = stringResource(Res.string.linuxIdleMinutes),
                 supporting = stringResource(Res.string.linuxIdleMinutesValue, minutes),
                 enabled = !state.idleWorking,
+                disabledReason = working,
                 onClick = actions::askIdleMinutes,
             )
         }
@@ -47,6 +48,7 @@ internal fun LinuxIdlePanel(state: LinuxHomeUi, actions: LinuxHomeActions) {
             KitRow(
                 title = stringResource(Res.string.linuxIdleResume),
                 enabled = !state.idleWorking,
+                disabledReason = working,
                 onClick = actions::resumeIdle,
             )
     }

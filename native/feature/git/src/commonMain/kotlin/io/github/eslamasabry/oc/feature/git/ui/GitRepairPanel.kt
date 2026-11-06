@@ -20,6 +20,7 @@ import io.github.eslamasabry.oc.ui.words.res.linuxGitRepairNotProject
 import io.github.eslamasabry.oc.ui.words.res.linuxGitRepairPermission
 import io.github.eslamasabry.oc.ui.words.res.linuxGitRepairRestored
 import io.github.eslamasabry.oc.ui.words.res.linuxGitRepairTermuxMissing
+import io.github.eslamasabry.oc.ui.words.res.linuxGitRepairWorking
 import org.jetbrains.compose.resources.stringResource
 
 /** A visible repair path on the real Git page, including its failed/NotRepository states. */
@@ -33,6 +34,7 @@ internal fun GitRepairPanel(state: GitUi, actions: GitActions) {
             supporting = stringResource(Res.string.linuxGitRepairDetail),
             supportingMaxLines = 3,
             enabled = !state.working,
+            disabledReason = stringResource(Res.string.linuxGitRepairWorking),
             onClick = actions::repairObjects,
         )
     }
