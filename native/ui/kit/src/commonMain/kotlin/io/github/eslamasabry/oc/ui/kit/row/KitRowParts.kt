@@ -34,6 +34,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.logo.KitProviderLogo
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -106,6 +107,13 @@ public sealed interface KitRowTrailing {
      * The row's one act ("Turn on"): a trailing tertiary; under the supporting line from 1.3× text.
      */
     public data class Action(val action: KitLineAction) : KitRowTrailing
+
+    /**
+     * The row's own ⋯ menu, drawn inside the row so a selected or pressed highlight spans the whole row, menu
+     * included (owner 2026-11-06). [label] names the button for screen readers (usually the row's name); [title]
+     * heads the menu on a phone.
+     */
+    public data class Menu(val label: String, val items: List<KitMenuItem>, val title: String? = null) : KitRowTrailing
 
     /** A separately labelled glyph target, as in Flutter's timeline Fork control. */
     public data class IconAction(val action: KitLineAction) : KitRowTrailing {

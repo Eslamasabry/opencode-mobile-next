@@ -352,7 +352,6 @@ public fun LinuxPortsScreen(state: LinuxPortsUi, actions: LinuxPortsActions) {
 
 @Composable
 private fun PortRow(port: LinuxPort, stopping: Boolean, actions: LinuxPortsActions) {
-    var menuOpen by remember(port.port) { mutableStateOf(false) }
     val owner =
         when {
             port.kind == LinuxProgramKind.OpenCodeServer ->
@@ -401,49 +400,28 @@ private fun PortRow(port: LinuxPort, stopping: Boolean, actions: LinuxPortsActio
                 )
             )
     }
-    Row(
-        Modifier.fillMaxWidth(),
-        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-    ) {
-        Box(Modifier.weight(1f)) {
-            KitRow(
+    KitRow(
+        title = stringResource(Res.string.linuxMgrPortRow, port.port),
+        leading =
+            KitRowLeading.Glyph(
+                when (port.kind) {
+                    LinuxProgramKind.OpenCodeServer,
+                    LinuxProgramKind.Paseo -> KitIcons.server
+                    LinuxProgramKind.Agent -> KitIcons.agent
+                    LinuxProgramKind.DevServer -> KitIcons.code
+                    else -> KitIcons.network
+                }
+            ),
+        supporting = supporting,
+        supportingMaxLines = 3, // F: lib/ui/screens/linux_manager/linux_ports_page.dart:253
+        onClick = if (port.canPreview) ({ actions.preview(port.port) }) else null,
+        trailing =
+            KitRowTrailing.Menu(
+                stringResource(Res.string.linuxPortActions),
+                items,
                 title = stringResource(Res.string.linuxMgrPortRow, port.port),
-                leading =
-                    KitRowLeading.Glyph(
-                        when (port.kind) {
-                            LinuxProgramKind.OpenCodeServer,
-                            LinuxProgramKind.Paseo -> KitIcons.server
-                            LinuxProgramKind.Agent -> KitIcons.agent
-                            LinuxProgramKind.DevServer -> KitIcons.code
-                            else -> KitIcons.network
-                        }
-                    ),
-                supporting = supporting,
-                supportingMaxLines = 3, // F: lib/ui/screens/linux_manager/linux_ports_page.dart:253
-                onClick = if (port.canPreview) ({ actions.preview(port.port) }) else null,
-                trailing =
-                    if (port.canPreview)
-                        KitRowTrailing.Value(
-                            stringResource(Res.string.linuxMgrPortPreview),
-                            chevron = true,
-                        )
-                    else KitRowTrailing.None,
-            )
-        }
-        KitMenu(
-            expanded = menuOpen,
-            onDismissRequest = { menuOpen = false },
-            items = items,
-            title = stringResource(Res.string.linuxMgrPortRow, port.port),
-            anchor = {
-                KitIconButton(
-                    KitIcons.more,
-                    stringResource(Res.string.linuxPortActions),
-                    { menuOpen = true },
-                )
-            },
-        )
-    }
+            ),
+    )
 }
 
 private const val LOG_LINES = 200

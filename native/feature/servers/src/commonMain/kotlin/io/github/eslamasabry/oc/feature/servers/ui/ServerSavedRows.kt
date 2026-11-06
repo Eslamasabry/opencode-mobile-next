@@ -2,7 +2,6 @@ package io.github.eslamasabry.oc.feature.servers.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -15,7 +14,6 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitMonoText
 import io.github.eslamasabry.oc.ui.kit.KitText
-import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.foundation.*
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.*
@@ -34,7 +32,6 @@ internal fun ServerSavedRows(
     enabled: KitEnabled,
     phoneHost: Boolean = false,
 ) {
-    var menuFor by remember { mutableStateOf<ProfileId?>(null) }
     var detailsFor by remember { mutableStateOf<ProfileId?>(null) }
     val ordered = savedServersByUrgency(state)
     KitRowGroup(leadingTiles = true) {
@@ -122,47 +119,30 @@ internal fun ServerSavedRows(
                     )
                 )
             }
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.weight(1f)) {
-                    KitRow(
-                        title = server.name,
-                        supporting = supporting,
-                        supportingMaxLines =
-                            2, // F: lib/ui/screens/servers/server_rows.dart:191-196
-                        leading =
-                            if (waiting <= 0)
-                                KitRowLeading.Glyph(
-                                    if (phone) KitIcons.phone else KitIcons.server,
-                                    tile = false,
-                                )
-                            else null,
-                        state = if (waiting > 0) KitRowState(null, KitRowStateTone.NeedsYou) else null,
-                        selected = server.connected,
-                        enabled = enabled.isEnabled,
-                        disabledReason =
-                            if (enabled.isEnabled) null
-                            else stringResource(Res.string.serversWorking),
-                        onClick = {
-                            if (state.newConversation) actions.create(server.id)
-                            else actions.settings(server.id)
-                        },
-                    )
-                }
-                KitMenu(
-                    expanded = menuFor == server.id,
-                    items = items,
-                    onDismissRequest = { menuFor = null },
-                    title = server.name,
-                    anchor = {
-                        KitIconButton(
-                            KitIcons.more,
-                            server.name,
-                            { menuFor = server.id },
-                            enabled = enabled,
+            KitRow(
+                title = server.name,
+                supporting = supporting,
+                supportingMaxLines =
+                    2, // F: lib/ui/screens/servers/server_rows.dart:191-196
+                leading =
+                    if (waiting <= 0)
+                        KitRowLeading.Glyph(
+                            if (phone) KitIcons.phone else KitIcons.server,
+                            tile = false,
                         )
-                    },
-                )
-            }
+                    else null,
+                state = if (waiting > 0) KitRowState(null, KitRowStateTone.NeedsYou) else null,
+                selected = server.connected,
+                enabled = enabled.isEnabled,
+                disabledReason =
+                    if (enabled.isEnabled) null
+                    else stringResource(Res.string.serversWorking),
+                onClick = {
+                    if (state.newConversation) actions.create(server.id)
+                    else actions.settings(server.id)
+                },
+                trailing = KitRowTrailing.Menu(server.name, items, title = server.name),
+            )
         }
     }
     val details = state.servers.firstOrNull { it.id == detailsFor }

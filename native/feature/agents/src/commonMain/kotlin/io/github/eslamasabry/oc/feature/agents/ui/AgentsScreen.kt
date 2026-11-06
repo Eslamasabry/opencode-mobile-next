@@ -670,7 +670,6 @@ private fun phoneStatusWords(
 /** No agent sheet is fabricated: only actions actually present in AgentsActions are offered. */
 @Composable
 private fun PhoneAgentRows(state: AgentsUi, actions: AgentsActions, enabled: KitEnabled) {
-    var menuFor by remember { mutableStateOf<String?>(null) }
     if (state.phone.agents.isEmpty()) {
         KitText(
             stringResource(Res.string.agentsChecking),
@@ -686,68 +685,51 @@ private fun PhoneAgentRows(state: AgentsUi, actions: AgentsActions, enabled: Kit
                 )
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.weight(1f)) {
-                            KitRow(
-                                title = agent.name,
-                                supporting = phoneStatusWords(agent),
-                                supportingMaxLines = 3,
-                                leading = KitRowLeading.Logo(agent.id, agent.name, agent = true),
-                            )
-                        }
-                        if (agent.removable || agent.previousVersionAvailable || agent.signOutAvailable) {
-                            val menu = buildList {
-                                if (agent.signOutAvailable)
-                                    add(
-                                        KitMenuItem(
-                                            stringResource(
-                                                Res.string.agentsSignOutAction,
-                                                agent.name,
-                                            ),
-                                            { actions.requestSignOut(agent.id) },
-                                            enabled = enabled,
-                                        )
-                                    )
-                                if (agent.previousVersionAvailable)
-                                    add(
-                                        KitMenuItem(
-                                            stringResource(
-                                                Res.string.agentsPreviousVersion,
-                                                agent.name,
-                                            ),
-                                            { actions.requestPreviousVersion(agent.id) },
-                                            enabled = enabled,
-                                        )
-                                    )
-                                if (agent.removable)
-                                    add(
-                                        KitMenuItem(
-                                            stringResource(
-                                                Res.string.linuxAgentPayloadRemove,
-                                                agent.name,
-                                            ),
-                                            { actions.requestRemoval(agent.id) },
-                                            destructive = true,
-                                            enabled = enabled,
-                                        )
-                                    )
-                            }
-                            KitMenu(
-                                expanded = menuFor == agent.id,
-                                items = menu,
-                                onDismissRequest = { menuFor = null },
-                                title = agent.name,
-                                anchor = {
-                                    KitIconButton(
-                                        KitIcons.more,
+                    val menu = buildList {
+                        if (agent.signOutAvailable)
+                            add(
+                                KitMenuItem(
+                                    stringResource(
+                                        Res.string.agentsSignOutAction,
                                         agent.name,
-                                        { menuFor = agent.id },
-                                        enabled = enabled,
-                                    )
-                                },
+                                    ),
+                                    { actions.requestSignOut(agent.id) },
+                                    enabled = enabled,
+                                )
                             )
-                        }
+                        if (agent.previousVersionAvailable)
+                            add(
+                                KitMenuItem(
+                                    stringResource(
+                                        Res.string.agentsPreviousVersion,
+                                        agent.name,
+                                    ),
+                                    { actions.requestPreviousVersion(agent.id) },
+                                    enabled = enabled,
+                                )
+                            )
+                        if (agent.removable)
+                            add(
+                                KitMenuItem(
+                                    stringResource(
+                                        Res.string.linuxAgentPayloadRemove,
+                                        agent.name,
+                                    ),
+                                    { actions.requestRemoval(agent.id) },
+                                    destructive = true,
+                                    enabled = enabled,
+                                )
+                            )
                     }
+                    KitRow(
+                        title = agent.name,
+                        supporting = phoneStatusWords(agent),
+                        supportingMaxLines = 3,
+                        leading = KitRowLeading.Logo(agent.id, agent.name, agent = true),
+                        trailing =
+                            if (menu.isEmpty()) KitRowTrailing.None
+                            else KitRowTrailing.Menu(agent.name, menu, title = agent.name),
+                    )
                     when {
                         agent.status == PhoneAgentStatus.NotInstalled &&
                             agent.supportedInstallation ->
