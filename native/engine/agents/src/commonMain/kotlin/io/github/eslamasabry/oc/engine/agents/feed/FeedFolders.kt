@@ -52,6 +52,14 @@ public object FeedFolders {
         return parts.last()
     }
 
+    /**
+     * N-54: the project words on a conversation row. A conversation with no folder, or at the server's root, names
+     * no project (the row says only its server and time) instead of a bare "/".
+     */
+    public fun rowLabel(directory: String?): String =
+        if (isOtherFolder(directory)) otherFolderLabel(directory).takeUnless { it == "/" }.orEmpty()
+        else folderName(directory!!)
+
     /** A project's display name from its folder: the last segment. */
     public fun folderName(directory: String): String =
         normalize(directory).split('/').lastOrNull { it.isNotEmpty() } ?: directory

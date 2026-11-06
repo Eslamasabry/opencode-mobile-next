@@ -92,8 +92,7 @@ public object AllConversationsRules {
     public fun projectName(directory: String?): String? =
         when {
             directory.isNullOrBlank() -> null
-            FeedFolders.isOtherFolder(directory) -> FeedFolders.otherFolderLabel(directory)
-            else -> FeedFolders.folderName(directory)
+            else -> FeedFolders.rowLabel(directory).ifEmpty { null }
         }
 
     /**

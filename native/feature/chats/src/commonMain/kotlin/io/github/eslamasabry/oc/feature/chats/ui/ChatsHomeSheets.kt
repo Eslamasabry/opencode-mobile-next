@@ -322,9 +322,4 @@ internal fun OpeningRow(row: ChatsOpeningRow) {
 }
 
 @Composable
-private fun title(value: RowTitle): String =
-    when (value) {
-        is RowTitle.Text -> value.text
-        RowTitle.New,
-        RowTitle.Untitled -> stringResource(Res.string.workspaceNewSession)
-    }
+private fun title(value: RowTitle): String = rowTitleWords(value)

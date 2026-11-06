@@ -443,12 +443,7 @@ private fun BriefBlock(brief: BriefUi, actions: ChatsActions, state: ChatsUi) {
 }
 
 @Composable
-private fun rowTitleText(t: RowTitle): String =
-    when (t) {
-        is RowTitle.Text -> t.text
-        RowTitle.New,
-        RowTitle.Untitled -> stringResource(Res.string.workspaceNewSession)
-    }
+private fun rowTitleText(t: RowTitle): String = rowTitleWords(t)
 
 @Composable
 private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, state: ChatsUi? = null) {

@@ -120,9 +120,7 @@ public class OpenCodeChatFeedSource(
             sessionId = session.id,
             title = session.title,
             directory = directory,
-            projectName =
-                if (FeedFolders.isOtherFolder(directory)) FeedFolders.otherFolderLabel(directory)
-                else FeedFolders.folderName(directory!!),
+            projectName = FeedFolders.rowLabel(directory),
             status = chatStatus,
             lastActivityMs = session.time?.updatedMs ?: session.time?.createdMs ?: 0L,
             parentId = session.parentId,

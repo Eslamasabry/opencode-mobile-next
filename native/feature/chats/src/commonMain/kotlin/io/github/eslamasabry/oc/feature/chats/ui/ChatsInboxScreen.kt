@@ -164,7 +164,4 @@ private fun InboxRequest(row: ConversationRowUi, state: ChatsUi, actions: ChatsA
 }
 
 @Composable
-private fun inboxTitle(value: RowTitle): String = when (value) {
-    is RowTitle.Text -> value.text
-    RowTitle.New, RowTitle.Untitled -> stringResource(Res.string.workspaceNewSession)
-}
+private fun inboxTitle(value: RowTitle): String = rowTitleWords(value)

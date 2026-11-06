@@ -407,12 +407,7 @@ private fun Filters(state: AllConversationsUi, actions: ChatsAllActions) {
 }
 
 @Composable
-private fun rowTitle(title: RowTitle): String =
-    when (title) {
-        is RowTitle.Text -> title.text
-        RowTitle.New -> stringResource(Res.string.workspaceNewSession)
-        RowTitle.Untitled -> stringResource(Res.string.globalSessionsUntitled)
-    }
+private fun rowTitle(title: RowTitle): String = rowTitleWords(title)
 
 @Composable
 private fun AllRow(row: AllRowUi, selecting: Boolean, actions: ChatsAllActions) {
