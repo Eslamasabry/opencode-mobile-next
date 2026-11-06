@@ -1,0 +1,142 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:InlineScan.kt$InlineScan$at &gt; 0 &amp;&amp; stop &lt; src.length &amp;&amp; isAsciiWord(at - 1) &amp;&amp; isAsciiWord(stop)</ID>
+    <ID>ComplexCondition:InlineScan.kt$InlineScan$c.isWhitespace() || c == '&lt;' || c == '&gt;' || c == '[' || c == ']' || c == '`' || pictures.containsKey(j)</ID>
+    <ID>ComplexCondition:InlineScan.kt$InlineScan$closer == null || !closer.active || !closer.canClose || closer.count == 0</ID>
+    <ID>ComplexCondition:InlineScan.kt$InlineScan$code.length &gt;= 2 &amp;&amp; code.startsWith(" ") &amp;&amp; code.endsWith(" ") &amp;&amp; code.any { it != ' ' }</ID>
+    <ID>ComplexCondition:InlineScan.kt$InlineScan$j &lt; end &amp;&amp; (src[j] == '"' || src[j] == '\'' || src[j] == '(')</ID>
+    <ID>ComplexCondition:InlineScan.kt$InlineScan$o != null &amp;&amp; o.active &amp;&amp; o.ch == closer.ch &amp;&amp; o.canOpen &amp;&amp; o.count &gt; 0</ID>
+    <ID>ComplexCondition:InlineScan.kt$InlineScan$scheme == 0 || url.length == scheme || url.any { it.isWhitespace() || it == '&lt;' }</ID>
+    <ID>ComplexCondition:UnfinishedTail.kt$UnfinishedTail$t.isEmpty() || t == "x" || t == "X" || dartInt.matches(t)</ID>
+    <ID>ComplexCondition:UnfinishedTail.kt$UnfinishedTail$tail != null &amp;&amp; tail.mark != '_' &amp;&amp; tail.count == tail.orig &amp;&amp; tail.offset + tail.orig == out.length</ID>
+    <ID>CyclomaticComplexMethod:BlockParser.kt$BlockParser$fun parse(from: Int): List&lt;Group&gt;</ID>
+    <ID>CyclomaticComplexMethod:BlockParser.kt$BlockParser$private fun list(first: Int, isOrdered: Boolean): Int</ID>
+    <ID>CyclomaticComplexMethod:Dump.kt$internal fun dump(block: Block): String</ID>
+    <ID>CyclomaticComplexMethod:InlineScan.kt$InlineScan$private fun bareUrl(at: Int): Int</ID>
+    <ID>CyclomaticComplexMethod:InlineScan.kt$InlineScan$private fun delimiterRun(at: Int): Int</ID>
+    <ID>CyclomaticComplexMethod:InlineScan.kt$InlineScan$private fun linkTarget(from: Int): Pair&lt;String, Int&gt;?</ID>
+    <ID>CyclomaticComplexMethod:InlineScan.kt$InlineScan$private fun matchingBracket(open: Int): Int</ID>
+    <ID>CyclomaticComplexMethod:InlineScan.kt$InlineScan$private fun pairEmphasis()</ID>
+    <ID>CyclomaticComplexMethod:InlineScan.kt$InlineScan$private fun scan()</ID>
+    <ID>CyclomaticComplexMethod:InlineScan.kt$InlineScan.Companion$fun decodeEntity(name: String): String?</ID>
+    <ID>CyclomaticComplexMethod:InlineScanTest.kt$InlineScanTest$private fun fmt(source: String): String</ID>
+    <ID>CyclomaticComplexMethod:PictureScanner.kt$PictureScanner$private fun destinationAt(s: String, open: Int): Pair&lt;String, Int&gt;?</ID>
+    <ID>CyclomaticComplexMethod:PictureScanner.kt$PictureScanner$private fun pathOf(target: String): String?</ID>
+    <ID>CyclomaticComplexMethod:PictureScanner.kt$PictureScanner$public fun scan(source: String): List&lt;PicturePart&gt;</ID>
+    <ID>CyclomaticComplexMethod:PictureScanner.kt$SimpleUri.Companion$fun parse(text: String): SimpleUri?</ID>
+    <ID>CyclomaticComplexMethod:Speech.kt$public fun proseForSpeech(text: String): String</ID>
+    <ID>CyclomaticComplexMethod:UnfinishedTail.kt$UnfinishedTail$private fun closeLink(s: String): String</ID>
+    <ID>LongMethod:BlockParser.kt$BlockParser$fun parse(from: Int): List&lt;Group&gt;</ID>
+    <ID>LongParameterList:BlockParser.kt$BlockParser$( firstInList: Boolean, number: Int, isOrdered: Boolean, checked: Boolean?, sub: SubLines, firstLine: Int, lastLine: Int, )</ID>
+    <ID>LongParameterList:InlineScan.kt$InlineScan.Delim$( val ch: Char, val srcStart: Int, val orig: Int, var count: Int, val canOpen: Boolean, val canClose: Boolean, /** A `_` run glued to a dotted name (`__init__.py`): no pair reaches across it. */ val barrier: Boolean = false, )</ID>
+    <ID>LoopWithTooManyJumpStatements:BlockParser.kt$BlockParser$while</ID>
+    <ID>LoopWithTooManyJumpStatements:InlineScan.kt$InlineScan$while</ID>
+    <ID>LoopWithTooManyJumpStatements:PictureScanner.kt$PictureScanner$while</ID>
+    <ID>LoopWithTooManyJumpStatements:Speech.kt$for</ID>
+    <ID>LoopWithTooManyJumpStatements:TableScanner.kt$TableScanner$while</ID>
+    <ID>LoopWithTooManyJumpStatements:UnfinishedTail.kt$UnfinishedTail$while</ID>
+    <ID>MagicNumber:BlockParser.kt$BlockParser$3</ID>
+    <ID>MagicNumber:BlockParser.kt$BlockParser.Companion$3</ID>
+    <ID>MagicNumber:BlockParser.kt$BlockParser.Companion$4</ID>
+    <ID>MagicNumber:InlineScan.kt$InlineScan$0x20</ID>
+    <ID>MagicNumber:InlineScan.kt$InlineScan$128</ID>
+    <ID>MagicNumber:InlineScan.kt$InlineScan$3</ID>
+    <ID>MagicNumber:InlineScan.kt$InlineScan$33</ID>
+    <ID>MagicNumber:InlineScan.kt$InlineScan$7</ID>
+    <ID>MagicNumber:InlineScan.kt$InlineScan$8</ID>
+    <ID>MagicNumber:InlineScan.kt$InlineScan.Companion$0x10000</ID>
+    <ID>MagicNumber:InlineScan.kt$InlineScan.Companion$0x10FFFF</ID>
+    <ID>MagicNumber:InlineScan.kt$InlineScan.Companion$0x3FF</ID>
+    <ID>MagicNumber:InlineScan.kt$InlineScan.Companion$0xD800</ID>
+    <ID>MagicNumber:InlineScan.kt$InlineScan.Companion$0xDC00</ID>
+    <ID>MagicNumber:InlineScan.kt$InlineScan.Companion$0xDFFF</ID>
+    <ID>MagicNumber:InlineScan.kt$InlineScan.Companion$0xFFFD</ID>
+    <ID>MagicNumber:InlineScan.kt$InlineScan.Companion$10</ID>
+    <ID>MagicNumber:InlineScan.kt$InlineScan.Companion$128</ID>
+    <ID>MagicNumber:InlineScan.kt$InlineScan.Companion$16</ID>
+    <ID>MagicNumber:InlineScan.kt$InlineScan.Companion$6</ID>
+    <ID>MagicNumber:InlineScan.kt$InlineScan.Companion$7</ID>
+    <ID>MagicNumber:PathChipScanner.kt$PathChipScanner$300</ID>
+    <ID>MagicNumber:PathChipScanner.kt$PathChipScanner$4</ID>
+    <ID>MagicNumber:PathChipScanner.kt$PathChipScanner$9</ID>
+    <ID>MagicNumber:PictureScanner.kt$PictureScanner$1024</ID>
+    <ID>MagicNumber:PictureScanner.kt$PictureScanner$2048</ID>
+    <ID>MagicNumber:PictureScanner.kt$SimpleUri.Companion$127</ID>
+    <ID>MagicNumber:PictureScanner.kt$SimpleUri.Companion$16</ID>
+    <ID>MagicNumber:PictureScanner.kt$SimpleUri.Companion$3</ID>
+    <ID>MagicNumber:PictureScanner.kt$SimpleUri.Companion$443</ID>
+    <ID>MagicNumber:PictureScanner.kt$SimpleUri.Companion$80</ID>
+    <ID>MagicNumber:Speech.kt$12_000</ID>
+    <ID>MagicNumber:Speech.kt$3</ID>
+    <ID>MagicNumber:Speech.kt$4</ID>
+    <ID>MagicNumber:Speech.kt$5</ID>
+    <ID>MagicNumber:Speech.kt$6</ID>
+    <ID>MagicNumber:Speech.kt$7</ID>
+    <ID>MagicNumber:StreamingMarkdown.kt$StreamingMarkdown$3</ID>
+    <ID>MatchingDeclarationName:Speech.kt$SpeechTooLongException : IllegalArgumentException</ID>
+    <ID>MaxLineLength:BlockParser.kt$BlockParser$if (fencePattern.find(line) != null || heading.matchEntire(line) != null || rule.matchEntire(line) != null) return false</ID>
+    <ID>MaxLineLength:BlockParser.kt$BlockParser$private</ID>
+    <ID>MaxLineLength:BlockParser.kt$BlockParser$val items = item(count == 0, startNumber + count, isOrdered, checked, SubLines(src, index.toIntArray(), cut.toIntArray()), i, last)</ID>
+    <ID>MaxLineLength:Blocks.kt$Block.Heading$/** `#`…`######`, or a paragraph underlined with `===` (level 1) or `---` (level 2). Levels 1–2 use the headline role, 3–6 the row-title role. */</ID>
+    <ID>MaxLineLength:Dump.kt$"LI ${if (block.ordered) "${block.number}." else "•"} d${block.depth}${if (block.firstInList) " first" else ""}${if (block.checked == true) " [x]" else if (block.checked == false) " [ ]" else ""} "</ID>
+    <ID>MaxLineLength:Dump.kt$block.items.joinToString(",") { item -&gt; (if (item.done == true) "x:" else if (item.done == false) "o:" else "") + item.text }</ID>
+    <ID>MaxLineLength:Dump.kt$is Block.ListItem -&gt; (listOf(block.inlines.text) + block.children.map { drawn(listOf(it)) }).joinToString("\n")</ID>
+    <ID>MaxLineLength:InlineParserTest.kt$InlineParserTest$fun range(kind: SpanKind)</ID>
+    <ID>MaxLineLength:InlineScan.kt$InlineScan$/** A bare address runs to white space or `&lt;&gt;[]` or a backtick; its parentheses must balance, and trailing punctuation is left out. */</ID>
+    <ID>MaxLineLength:InlineScan.kt$InlineScan$/** `[label](target "title")`; the label is scanned again, so it can hold emphasis and code. Anything else is text. */</ID>
+    <ID>MaxLineLength:InlineScan.kt$InlineScan$if (c.isWhitespace() || c == '&lt;' || c == '&gt;' || c == '[' || c == ']' || c == '`' || pictures.containsKey(j)) break</ID>
+    <ID>MaxLineLength:InlineScanTest.kt$InlineScanTest$assertEquals(SpanKind.PathCandidate("lib/a.dart", 12), i.spans.single { it.kind is SpanKind.PathCandidate }.kind)</ID>
+    <ID>MaxLineLength:InlineScanTest.kt$InlineScanTest$assertEquals(listOf("here"), pic.spans.filter { it.kind == SpanKind.Bold }.map { pic.text.substring(it.start, it.end) })</ID>
+    <ID>MaxLineLength:InlineScanTest.kt$InlineScanTest$assertEquals(listOf("see \uFFFC"), inside.spans.filter { it.kind == SpanKind.Bold }.map { inside.text.substring(it.start, it.end) })</ID>
+    <ID>MaxLineLength:InlineScanTest.kt$InlineScanTest$check("&amp;nbsp &amp;x; &amp;#; &amp;#x; &amp;#87654321; &amp;#abcdef0; &amp;ThisIsNotDefined; &amp;hi?;", "&amp;nbsp &amp;x; &amp;#; &amp;#x; &amp;#87654321; &amp;#abcdef0; &amp;ThisIsNotDefined; &amp;hi?;")</ID>
+    <ID>MaxLineLength:InlineScanTest.kt$InlineScanTest$check("https://en.wikipedia.org/wiki/Foo_(bar)", "&lt;a https://en.wikipedia.org/wiki/Foo_(bar)&gt;https://en.wikipedia.org/wiki/Foo_(bar)&lt;/a&gt;")</ID>
+    <ID>MaxLineLength:InlineScanTest.kt$InlineScanTest$while (open.isNotEmpty() &amp;&amp; open.last().end == pos) out.append(tag(open.removeAt(open.lastIndex).kind, true))</ID>
+    <ID>MaxLineLength:InlineScanTest.kt$InlineStreamingTest$"See [Foo](https://en.wikipedia.org/wiki/Foo_(bar)) or https://en.wikipedia.org/wiki/Foo_(bar). &lt;https://x.dev/a&gt;"</ID>
+    <ID>MaxLineLength:NestedBlocksTest.kt$NestedBlocksTest$*</ID>
+    <ID>MaxLineLength:NestedStreamingTest.kt$NestedStreamingTest$listOf("LI 1. d0 first \"Step\"", "LI • d1 \"sub more words\"", "LI • d1 \"second sub\"", "LI 2. d0 \"Next\"")</ID>
+    <ID>MaxLineLength:StreamingMarkdownTest.kt$StreamingMarkdownTest$"# Title\n\n### Small\n\nSome **bold** and `code` here.\n\n- one\n- two\n\n&gt; quoted\n\n---\n\n[site](https://example.com)"</ID>
+    <ID>MaxLineLength:StreamingMarkdownTest.kt$StreamingMarkdownTest$"1. Collect.\n2. Ask only for details needed to understand\n impact.\n3. Draft.\n ```sh\n gh issue create\n ```\n"</ID>
+    <ID>MaxLineLength:StreamingMarkdownTest.kt$StreamingMarkdownTest$"&lt;!-- hidden --&gt;\n# Report\n\nAdd `&lt;!-- TODO --&gt;` here\n\n&lt;!--\nmulti\n--&gt;\n\nAfter.\n\n```html\n&lt;!-- keep --&gt;\n```\n"</ID>
+    <ID>MaxLineLength:StreamingMarkdownTest.kt$StreamingMarkdownTest$"Shots:\n\n![Home](/tmp/home.png)\n\n![Home again](/tmp/home.png)\n![Set](/tmp/set.png)\n\nDone ![x](/a.png) inline."</ID>
+    <ID>MaxLineLength:StreamingMarkdownTest.kt$StreamingMarkdownTest$assertEquals(MarkdownBlocks.parse("p", sent, streaming = true), md.blocks, "after \"${sent.takeLast(40)}\"")</ID>
+    <ID>MaxLineLength:StreamingMarkdownTest.kt$StreamingMarkdownTest$for</ID>
+    <ID>MaxLineLength:TableTest.kt$TableTest$for</ID>
+    <ID>MaxLineLength:TaskSetextBreakTest.kt$TaskSetextBreakTest$assertEquals(listOf("H1 \"Foo bar\"", "H2 \"Foo bar\""), dump(parse("Foo *bar*\n=========\n\nFoo *bar*\n---------")))</ID>
+    <ID>MaxLineLength:TaskSetextBreakTest.kt$TaskSetextBreakTest$assertEquals(listOf("H2 \"Foo\"", "H2 \"Foo\"", "H1 \"Foo\""), dump(parse(" Foo\n---\n\n Foo\n-----\n\n Foo\n ===")))</ID>
+    <ID>MaxLineLength:TaskSetextBreakTest.kt$TaskSetextBreakTest$assertEquals(listOf("LI • d0 first {H2 \"Sub\"}"), dump(parse("- \n Sub\n ---")).map { it.replace("\"\" ", "") })</ID>
+    <ID>NestedBlockDepth:BlockParser.kt$BlockParser$fun parse(from: Int): List&lt;Group&gt;</ID>
+    <ID>NestedBlockDepth:BlockParser.kt$BlockParser.Companion$fun blankComments(lines: MutableList&lt;String&gt;)</ID>
+    <ID>NestedBlockDepth:InlineParser.kt$InlineParser$private fun line(src: String, out: StringBuilder, spans: MutableList&lt;InlineSpan&gt;)</ID>
+    <ID>NestedBlockDepth:InlineScan.kt$InlineScan$private fun linkTarget(from: Int): Pair&lt;String, Int&gt;?</ID>
+    <ID>NestedBlockDepth:InlineScan.kt$InlineScan$private fun matchingBracket(open: Int): Int</ID>
+    <ID>NestedBlockDepth:InlineScan.kt$InlineScan$private fun pairEmphasis()</ID>
+    <ID>NestedBlockDepth:PictureScanner.kt$PictureScanner$private fun destinationAt(s: String, open: Int): Pair&lt;String, Int&gt;?</ID>
+    <ID>NestedBlockDepth:PictureScanner.kt$SimpleUri.Companion$fun parse(text: String): SimpleUri?</ID>
+    <ID>NestedBlockDepth:Speech.kt$public fun proseForSpeech(text: String): String</ID>
+    <ID>ReturnCount:BlockParser.kt$BlockParser$private fun continuesTable(line: String): Boolean</ID>
+    <ID>ReturnCount:InlineScan.kt$InlineScan$private fun autolink(at: Int): Int</ID>
+    <ID>ReturnCount:InlineScan.kt$InlineScan$private fun entity(at: Int): Int</ID>
+    <ID>ReturnCount:InlineScan.kt$InlineScan$private fun isBareUrlStart(at: Int): Boolean</ID>
+    <ID>ReturnCount:InlineScan.kt$InlineScan$private fun link(at: Int): Int</ID>
+    <ID>ReturnCount:InlineScan.kt$InlineScan$private fun linkTarget(from: Int): Pair&lt;String, Int&gt;?</ID>
+    <ID>ReturnCount:InlineScan.kt$InlineScan.Companion$fun decodeEntity(name: String): String?</ID>
+    <ID>ReturnCount:PathChipScanner.kt$PathChipScanner$public fun looksLikeFilePath(s: String): Boolean</ID>
+    <ID>ReturnCount:PictureScanner.kt$PictureScanner$private fun closingBracket(s: String, open: Int): Int</ID>
+    <ID>ReturnCount:PictureScanner.kt$PictureScanner$private fun destinationAt(s: String, open: Int): Pair&lt;String, Int&gt;?</ID>
+    <ID>ReturnCount:PictureScanner.kt$PictureScanner$private fun imageAt(s: String, start: Int): Pair&lt;MarkdownPicture, Int&gt;?</ID>
+    <ID>ReturnCount:PictureScanner.kt$PictureScanner$private fun linkedImageAt(s: String, start: Int): Pair&lt;MarkdownPicture, Int&gt;?</ID>
+    <ID>ReturnCount:PictureScanner.kt$PictureScanner$private fun pathOf(target: String): String?</ID>
+    <ID>ReturnCount:PictureScanner.kt$PictureScanner$private fun webAddress(value: String?): String?</ID>
+    <ID>ReturnCount:PictureScanner.kt$PictureScanner$public fun only(line: String): List&lt;MarkdownPicture&gt;?</ID>
+    <ID>ReturnCount:PictureScanner.kt$SimpleUri.Companion$fun decodeFull(text: String): String?</ID>
+    <ID>ReturnCount:StreamingMarkdown.kt$StreamingMarkdown$private fun growOpenFence(oldLines: Int): BlockDelta?</ID>
+    <ID>ReturnCount:StreamingMarkdown.kt$StreamingMarkdown$public fun append(chunk: String): BlockDelta</ID>
+    <ID>ReturnCount:UnfinishedTail.kt$UnfinishedTail$internal fun closeLast(previous: String?, last: String, inOpenFence: () -&gt; Boolean): String</ID>
+    <ID>ReturnCount:UnfinishedTail.kt$UnfinishedTail$private fun closeLink(s: String): String</ID>
+    <ID>TooManyFunctions:BlockParser.kt$BlockParser</ID>
+    <ID>TooManyFunctions:InlineScan.kt$InlineScan</ID>
+    <ID>TooManyFunctions:PictureScanner.kt$PictureScanner</ID>
+  </CurrentIssues>
+</SmellBaseline>

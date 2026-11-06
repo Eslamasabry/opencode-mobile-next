@@ -1,0 +1,173 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:BoundedWsSession.kt$owner == null || !owner.isActive || spec.maxMessageBytes !in 1..16 * 1024 * 1024 || spec.handshakeTimeoutMs !in 1..60_000 || spec.pingIntervalMs &lt; 1 || spec.pongTimeoutMs &lt; 1</ID>
+    <ID>ComplexCondition:OkHttpTerminalChannel.kt$!response.header("Upgrade").equals("websocket", true) || connection.none { it.trim().equals("upgrade", true) } || response.header("Sec-WebSocket-Accept") != expected || response.header("Sec-WebSocket-Extensions") != null || response.header("Sec-WebSocket-Protocol") != null</ID>
+    <ID>ComplexCondition:OkHttpTerminalChannel.kt$OkHttpTerminalChannel$length &gt; MAX_MESSAGE || length &lt; 0 || (opcode &gt;= 8 &amp;&amp; (!final || length &gt; 125))</ID>
+    <ID>ComplexCondition:OkHttpTerminalChannel.kt$OkHttpTerminalChannel$opcode == 0 &amp;&amp; !fragmented || opcode != 0 &amp;&amp; fragmented</ID>
+    <ID>ComplexCondition:OkHttpWebSockets.kt$OkHttpWebSockets$spec.maxMessageBytes !in 1..MAX_MESSAGE || spec.incomingByteBudget !in spec.maxMessageBytes..(2 * MAX_MESSAGE) || spec.pingIntervalMs !in 1_000..60_000 || spec.pongTimeoutMs !in 1_000..60_000 || spec.handshakeTimeoutMs !in 1_000..60_000</ID>
+    <ID>CyclomaticComplexMethod:BoundedWsSession.kt$BoundedWsSession$private suspend fun read()</ID>
+    <ID>CyclomaticComplexMethod:EventStreamLoop.kt$EventStreamLoop$private suspend fun ProducerScope&lt;StreamSignal&gt;.run()</ID>
+    <ID>CyclomaticComplexMethod:NoResendTest.kt$CountingServer$private fun serve(client: Socket, id: Int): Unit</ID>
+    <ID>CyclomaticComplexMethod:OkHttpTerminalChannel.kt$OkHttpTerminalChannel$private suspend fun readLoop()</ID>
+    <ID>CyclomaticComplexMethod:OkHttpTerminalChannel.kt$internal suspend fun openTerminalSocket( client: OkHttpClient, spec: TerminalSocketSpec, owner: CoroutineScope, dispatchers: AppDispatchers, classify: (Throwable) -&gt; TransportError, ): Outcome&lt;TerminalChannel&gt;</ID>
+    <ID>CyclomaticComplexMethod:OkHttpWebSockets.kt$BoundedWsSession$private suspend fun read()</ID>
+    <ID>CyclomaticComplexMethod:OkHttpWebSockets.kt$OkHttpWebSockets$suspend fun connect( client: OkHttpClient, spec: WsSpec, owner: CoroutineScope, dispatchers: AppDispatchers, classify: (Throwable) -&gt; TransportError, ): Outcome&lt;WsSession&gt;</ID>
+    <ID>CyclomaticComplexMethod:SseParser.kt$SseParser$private fun processLine(length: Int)</ID>
+    <ID>CyclomaticComplexMethod:SseParserTest.kt$FuzzStream.Companion$fun generate(random: Random, max: Int): FuzzStream</ID>
+    <ID>InstanceOfCheckForException:OkHttpEngineFactory.kt$StaleConnectionRetry.Retry$error !is InterruptedIOException</ID>
+    <ID>InstanceOfCheckForException:OkHttpEngineFactory.kt$StaleConnectionRetry.Retry$error !is ResendRefusedException</ID>
+    <ID>InstanceOfCheckForException:OkHttpEngineFactory.kt$StaleConnectionRetry.Retry$error !is TrustRefusal</ID>
+    <ID>InstanceOfCheckForException:OkHttpEngineFactory.kt$StaleConnectionRetry.Retry$error is StaleSocketException</ID>
+    <ID>InstanceOfCheckForException:TrustGate.kt$TrustGateInterceptor$e is SSLHandshakeException</ID>
+    <ID>InstanceOfCheckForException:TrustGate.kt$TrustGateInterceptor$e is TrustRefusal</ID>
+    <ID>LongMethod:BoundedWsSession.kt$BoundedWsSession$private suspend fun read()</ID>
+    <ID>LongMethod:EventStreamLoop.kt$EventStreamLoop$private suspend fun ProducerScope&lt;StreamSignal&gt;.run()</ID>
+    <ID>LongMethod:OkHttpTerminalChannel.kt$OkHttpTerminalChannel$private suspend fun readLoop()</ID>
+    <ID>LongMethod:OkHttpTerminalChannel.kt$internal suspend fun openTerminalSocket( client: OkHttpClient, spec: TerminalSocketSpec, owner: CoroutineScope, dispatchers: AppDispatchers, classify: (Throwable) -&gt; TransportError, ): Outcome&lt;TerminalChannel&gt;</ID>
+    <ID>LongMethod:OkHttpWebSockets.kt$OkHttpWebSockets$suspend fun connect( client: OkHttpClient, spec: WsSpec, owner: CoroutineScope, dispatchers: AppDispatchers, classify: (Throwable) -&gt; TransportError, ): Outcome&lt;WsSession&gt;</ID>
+    <ID>LongMethod:PlatformWsConnections.kt$PlatformWsConnections$override suspend fun open(spec: SocketSpec): Outcome&lt;SocketSession&gt;</ID>
+    <ID>LongParameterList:EventStreamLoop.kt$EventStreamLoop$( private val connector: SseConnector, private val policy: BackoffPolicy, private val hostClass: HostClass, private val gate: NetworkGate, private val clock: Clock, private val random: Random, /** Plan 13 §11.1, bound from `LinkDemand` at graph level; picks the hidden pace (A2). */ private val visibility: StateFlow&lt;Visibility&gt; = MutableStateFlow(Visibility.Foreground), private val resume: ResumeMode = ResumeMode.None, private val readBufferBytes: Int = 16 * 1024, /** N4-D21, from `GatewaySpec.reconnectAllowed`: whether the loop may dial again on its own. */ private val reconnectAllowed: StateFlow&lt;Boolean&gt; = MutableStateFlow(true), )</ID>
+    <ID>LongParameterList:EventStreamLoopTest.kt$EventStreamLoopTest$( host: HostClass = HostClass.Public, policy: BackoffPolicy = BackoffPolicy.OpenCode2, online: Online = Online.Yes, resume: ResumeMode = ResumeMode.None, scripts: List&lt;Script&gt; = emptyList(), reconnectAllowed: MutableStateFlow&lt;Boolean&gt; = MutableStateFlow(true), )</ID>
+    <ID>LongParameterList:OkHttpTerminalChannel.kt$OkHttpTerminalChannel$( private val input: InputStream, private val writer: OutputStream, initialCursor: Long, owner: CoroutineScope, private val dispatchers: AppDispatchers, private val random: SecureRandom, private val releaseSocket: () -&gt; Unit, )</ID>
+    <ID>LongParameterList:Sockets.kt$SocketSpec$( public val transport: TransportSpec, public val url: String, public val headers: List&lt;Pair&lt;String, String&gt;&gt;, public val owner: CoroutineScope, public val subprotocol: String? = null, public val maxMessageBytes: Int = 4 * 1024 * 1024, public val handshakeTimeoutMs: Long = 8_000, public val pingIntervalMs: Long = 20_000, public val pongTimeoutMs: Long = 15_000, )</ID>
+    <ID>LongParameterList:WebSockets.kt$WsSpec$( public val url: String, public val headers: Map&lt;String, String&gt;, public val subprotocol: String? = null, public val maxMessageBytes: Long = 16L * 1024 * 1024, public val incomingByteBudget: Long = 2 * maxMessageBytes, public val pingIntervalMs: Long = 20_000, public val pongTimeoutMs: Long = 15_000, public val handshakeTimeoutMs: Long = 8_000, )</ID>
+    <ID>LoopWithTooManyJumpStatements:EventStreamLoop.kt$EventStreamLoop$while</ID>
+    <ID>LoopWithTooManyJumpStatements:OkHttpTerminalChannel.kt$OkHttpTerminalChannel$while</ID>
+    <ID>LoopWithTooManyJumpStatements:OkHttpWebSockets.kt$BoundedWsSession$for</ID>
+    <ID>MagicNumber:BackoffPolicy.kt$BackoffPolicy$120_000L</ID>
+    <ID>MagicNumber:BackoffPolicy.kt$BackoffPolicy$60_000L</ID>
+    <ID>MagicNumber:BoundedWsChannels.kt$64</ID>
+    <ID>MagicNumber:BoundedWsChannels.kt$8</ID>
+    <ID>MagicNumber:BoundedWsSession.kt$1024</ID>
+    <ID>MagicNumber:BoundedWsSession.kt$16</ID>
+    <ID>MagicNumber:BoundedWsSession.kt$60_000</ID>
+    <ID>MagicNumber:BoundedWsSession.kt$BoundedWsSession$1000</ID>
+    <ID>MagicNumber:BoundedWsSession.kt$BoundedWsSession$1001</ID>
+    <ID>MagicNumber:BoundedWsSession.kt$BoundedWsSession$1002</ID>
+    <ID>MagicNumber:BoundedWsSession.kt$BoundedWsSession$1007</ID>
+    <ID>MagicNumber:BoundedWsSession.kt$BoundedWsSession$1009</ID>
+    <ID>MagicNumber:BoundedWsSession.kt$BoundedWsSession$200</ID>
+    <ID>MagicNumber:BoundedWsSession.kt$BoundedWsSession$255</ID>
+    <ID>MagicNumber:BoundedWsSession.kt$BoundedWsSession$4096</ID>
+    <ID>MagicNumber:BoundedWsSession.kt$BoundedWsSession$8</ID>
+    <ID>MagicNumber:EventStreamLoop.kt$EventStreamLoop$1024</ID>
+    <ID>MagicNumber:EventStreamLoop.kt$EventStreamLoop$16</ID>
+    <ID>MagicNumber:Http.kt$HttpClientFactory$1_048_576</ID>
+    <ID>MagicNumber:Http.kt$StatusMapping$401</ID>
+    <ID>MagicNumber:Http.kt$StatusMapping$403</ID>
+    <ID>MagicNumber:Http.kt$StatusMapping$404</ID>
+    <ID>MagicNumber:Http.kt$StatusMapping$408</ID>
+    <ID>MagicNumber:Http.kt$StatusMapping$409</ID>
+    <ID>MagicNumber:Http.kt$StatusMapping$410</ID>
+    <ID>MagicNumber:Http.kt$StatusMapping$429</ID>
+    <ID>MagicNumber:Http.kt$StatusMapping$500</ID>
+    <ID>MagicNumber:Http.kt$StatusMapping$503</ID>
+    <ID>MagicNumber:OkHttpEngineFactory.kt$10</ID>
+    <ID>MagicNumber:OkHttpEngineFactory.kt$5</ID>
+    <ID>MagicNumber:OkHttpEngineFactory.kt$64</ID>
+    <ID>MagicNumber:OkHttpTerminalChannel.kt$101</ID>
+    <ID>MagicNumber:OkHttpTerminalChannel.kt$15_000</ID>
+    <ID>MagicNumber:OkHttpTerminalChannel.kt$16</ID>
+    <ID>MagicNumber:OkHttpTerminalChannel.kt$5_000</ID>
+    <ID>MagicNumber:OkHttpTerminalChannel.kt$OkHttpTerminalChannel$10</ID>
+    <ID>MagicNumber:OkHttpTerminalChannel.kt$OkHttpTerminalChannel$112</ID>
+    <ID>MagicNumber:OkHttpTerminalChannel.kt$OkHttpTerminalChannel$125</ID>
+    <ID>MagicNumber:OkHttpTerminalChannel.kt$OkHttpTerminalChannel$126</ID>
+    <ID>MagicNumber:OkHttpTerminalChannel.kt$OkHttpTerminalChannel$126L</ID>
+    <ID>MagicNumber:OkHttpTerminalChannel.kt$OkHttpTerminalChannel$127</ID>
+    <ID>MagicNumber:OkHttpTerminalChannel.kt$OkHttpTerminalChannel$127L</ID>
+    <ID>MagicNumber:OkHttpTerminalChannel.kt$OkHttpTerminalChannel$128</ID>
+    <ID>MagicNumber:OkHttpTerminalChannel.kt$OkHttpTerminalChannel$15</ID>
+    <ID>MagicNumber:OkHttpTerminalChannel.kt$OkHttpTerminalChannel$15_000</ID>
+    <ID>MagicNumber:OkHttpTerminalChannel.kt$OkHttpTerminalChannel$20_000</ID>
+    <ID>MagicNumber:OkHttpTerminalChannel.kt$OkHttpTerminalChannel$24</ID>
+    <ID>MagicNumber:OkHttpTerminalChannel.kt$OkHttpTerminalChannel$3</ID>
+    <ID>MagicNumber:OkHttpTerminalChannel.kt$OkHttpTerminalChannel$4</ID>
+    <ID>MagicNumber:OkHttpTerminalChannel.kt$OkHttpTerminalChannel$5_000</ID>
+    <ID>MagicNumber:OkHttpTerminalChannel.kt$OkHttpTerminalChannel$65_535</ID>
+    <ID>MagicNumber:OkHttpTerminalChannel.kt$OkHttpTerminalChannel$8</ID>
+    <ID>MagicNumber:OkHttpTerminalChannel.kt$OkHttpTerminalChannel$8_192</ID>
+    <ID>MagicNumber:OkHttpTerminalChannel.kt$OkHttpTerminalChannel$9</ID>
+    <ID>MagicNumber:OkHttpWebSockets.kt$BoundedWsSession$1001</ID>
+    <ID>MagicNumber:OkHttpWebSockets.kt$BoundedWsSession$1009</ID>
+    <ID>MagicNumber:OkHttpWebSockets.kt$BoundedWsSession$2_000</ID>
+    <ID>MagicNumber:OkHttpWebSockets.kt$OkHttpWebSockets$101</ID>
+    <ID>MagicNumber:OkHttpWebSockets.kt$OkHttpWebSockets$16</ID>
+    <ID>MagicNumber:OkHttpWebSockets.kt$OkHttpWebSockets$1_000</ID>
+    <ID>MagicNumber:OkHttpWebSockets.kt$OkHttpWebSockets$60_000</ID>
+    <ID>MagicNumber:Sockets.kt$SocketSpec$1024</ID>
+    <ID>MagicNumber:Sockets.kt$SocketSpec$4</ID>
+    <ID>MagicNumber:SseConnector.kt$KtorSseConnector$200</ID>
+    <ID>MagicNumber:SseConnector.kt$KtorSseConnector$299</ID>
+    <ID>MagicNumber:SseConnector.kt$KtorSseConnector$401</ID>
+    <ID>MagicNumber:SseConnector.kt$KtorSseConnector$403</ID>
+    <ID>MagicNumber:SseParser.kt$SseParser$256</ID>
+    <ID>MagicNumber:TrustGate.kt$TrustGateInterceptor$8</ID>
+    <ID>MagicNumber:WebSockets.kt$WsSpec$1024</ID>
+    <ID>MagicNumber:WebSockets.kt$WsSpec$16L</ID>
+    <ID>MatchingDeclarationName:Network.kt$NetworkGate</ID>
+    <ID>MaxLineLength:BackoffPolicy.kt$BackoffPolicy.Companion$/** Flutter `sse2.dart` + `reconnect_backoff.dart`: 1, 2, 4, 8, 16 s cap, no jitter; hidden: 1, 2, then 60–120 s. */</ID>
+    <ID>MaxLineLength:EventStreamLoopTest.kt$EventStreamLoopTest$// Connected while hidden, then dropped: the same pace applies to the reconnects (attempt counted from the drop).</ID>
+    <ID>MaxLineLength:EventStreamLoopTest.kt$EventStreamLoopTest$Script.Body(listOf(0L to frame("a"), 31_000L to frame("b")), Script.End.Error)</ID>
+    <ID>MaxLineLength:EventStreamLoopTest.kt$EventStreamLoopTest$Script.Body(listOf(0L to frame("c"), 5_000L to frame("d")), Script.End.Error)</ID>
+    <ID>MaxLineLength:EventStreamLoopTest.kt$EventStreamLoopTest$assertEquals</ID>
+    <ID>MaxLineLength:EventStreamLoopTest.kt$EventStreamLoopTest$fun</ID>
+    <ID>MaxLineLength:EventStreamLoopTest.kt$EventStreamLoopTest$scripts = listOf(Script.Fail(Failure.SignIn(SignInWhy.PasswordRejected), stop = true), Script.Body(emptyList(), Script.End.Hang))</ID>
+    <ID>MaxLineLength:EventStreamLoopTest.kt$EventStreamLoopTest$val h = harness(online = Online.No, scripts = listOf(Script.Body(listOf(0L to frame("x")), Script.End.Hang)))</ID>
+    <ID>MaxLineLength:EventStreamLoopTest.kt$EventStreamLoopTest$val h = harness(scripts = listOf(Script.Body(listOf(0L to frame("a"), 10_000L to frame("b")), Script.End.Error)))</ID>
+    <ID>MaxLineLength:EventStreamLoopTest.kt$EventStreamLoopTest$val h = harness(scripts = listOf(Script.Fail(rejected), Script.Fail(rejected), Script.Body(emptyList(), Script.End.Hang)))</ID>
+    <ID>MaxLineLength:Http.kt$NetClient$public suspend</ID>
+    <ID>MaxLineLength:HttpCallObserverTest.kt$HttpCallObserverTest$val out = net.exchange({ method = HttpMethod.Get; url("http://host:4097/session/ses_abc123XYZ/message?directory=%2Fhome%2Fme%2Fprivate-project") }) { it.status.value }</ID>
+    <ID>MaxLineLength:HttpTest.kt$HttpTest$fun</ID>
+    <ID>MaxLineLength:HttpTest.kt$HttpTest$val connector = KtorSseConnector(sseClient(engine)) { id -&gt; url("http://127.0.0.1/api/event"); id?.let { headers.append("Last-Event-ID", it) } }</ID>
+    <ID>MaxLineLength:HttpTest.kt$HttpTest$val connector = KtorSseConnector(sseClient(engine), stopOnAuthFailure = true) { url("http://127.0.0.1/api/event") }</ID>
+    <ID>MaxLineLength:HttpTest.kt$HttpTest$val engine = MockEngine { respond("", HttpStatusCode.Unauthorized, headersOf(HttpHeaders.ContentType, "text/event-stream")) }</ID>
+    <ID>MaxLineLength:Network.kt$NetworkGate$public fun isUsable(host: HostClass): Boolean</ID>
+    <ID>MaxLineLength:NoResendTest.kt$CountingServer$"HTTP/1.1 ${reply.code} X\r\n" + reply.headers.joinToString("") { "${it.first}: ${it.second}\r\n" }</ID>
+    <ID>MaxLineLength:NoResendTest.kt$CountingServer$out.write("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nTransfer-Encoding: chunked\r\n\r\n".toByteArray())</ID>
+    <ID>MaxLineLength:NoResendTest.kt$NoResendTest$TransportSpec(ServerOrigin("http", "127.0.0.1", server.port), HostClass.Loopback, cleartextPermitted = true)</ID>
+    <ID>MaxLineLength:NoResendTest.kt$NoResendTest$assertEquals("warm", net.exchange({ url(server.url("/warm")) }) { it.bodyAsText() }.let { (it as Outcome.Ok).value })</ID>
+    <ID>MaxLineLength:NoResendTest.kt$NoResendTest$val</ID>
+    <ID>MaxLineLength:NoResendTest.kt$NoResendTest$val outcome = net.exchange({ method = HttpMethod.Post; url(server.url("/prompt")); setBody("{}") }) { it.bodyAsText() }</ID>
+    <ID>MaxLineLength:SseConnector.kt$KtorSseConnector$is io.github.eslamasabry.oc.core.common.Outcome.Failed -&gt; SseConnectResult.Failed(outcome.failure, stop = false)</ID>
+    <ID>MaxLineLength:SseParser.kt$SseParser$*</ID>
+    <ID>MaxLineLength:SseParser.kt$SseParser$if (needed &gt; line.size) line = line.copyOf(maxOf(needed, minOf(line.size.toLong() * 2, maxFrameBytes.toLong()).toInt()))</ID>
+    <ID>MaxLineLength:SseParserTest.kt$SseParserTest$assertEquals(listOf(SseFrame("ping", null, "{\"a\":1}"), SseFrame(null, null, "{\"b\":2}")), frames, "chunk $size")</ID>
+    <ID>MaxLineLength:SseParserTest.kt$SseParserTest$private</ID>
+    <ID>MaxLineLength:StaleConnectionTest.kt$StaleConnectionTest$assertEquals("/api/session/s1/prompt", assertIs&lt;Outcome.Ok&lt;String&gt;&gt;(net.post(server, "/api/session/s1/prompt")).value)</ID>
+    <ID>MaxLineLength:StaleConnectionTest.kt$StaleConnectionTest$fun</ID>
+    <ID>MaxLineLength:TransportReuseDecodeTest.kt$TransportReuseDecodeTest$headersOf(HttpHeaders.ContentType to listOf("application/json"), HttpHeaders.ContentLength to listOf("${payload.encodeToByteArray().size}"))</ID>
+    <ID>MaxLineLength:TransportReuseDecodeTest.kt$TransportReuseDecodeTest$suspend fun health()</ID>
+    <ID>MaxLineLength:TransportReuseDecodeTest.kt$TransportReuseDecodeTest$val decoded = assertIs&lt;Outcome.Ok&lt;JsonArray&gt;&gt;(net.exchange({ url("http://localhost/sessions") }) { Json.parseToJsonElement(it.bodyAsText()) as JsonArray }).value</ID>
+    <ID>MaxLineLength:TransportReuseDecodeTest.kt$TransportReuseDecodeTest$val net = NetClient(HttpClient(MockEngine { respond(payload, HttpStatusCode.OK, headers) }) { expectSuccess = false }, { TransportError.Other })</ID>
+    <ID>MaxLineLength:TransportTrustTest.kt$SelfSignedLeaf$val keys = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm()).apply { init(keyStore, PASSWORD) }</ID>
+    <ID>MaxLineLength:TransportTrustTest.kt$TransportTrustTest$fun</ID>
+    <ID>MaxLineLength:TransportTrustTest.kt$TransportTrustTest$val outcome = net(spec("http", server.port, cleartext = true, pin = ByteArray(32))).get(server.url("/api/health"))</ID>
+    <ID>MaxLineLength:TransportTrustTest.kt$TransportTrustTest$val socket = leaf.serverContext().serverSocketFactory.createServerSocket(0, 50, InetAddress.getLoopbackAddress())</ID>
+    <ID>MaxLineLength:TrustGate.kt$PinnedLeafTrustManager$override fun checkClientTrusted(chain: Array&lt;out X509Certificate&gt;?, authType: String?): Unit</ID>
+    <ID>MaxLineLength:TrustGate.kt$PinnedLeafTrustManager$override fun checkServerTrusted(chain: Array&lt;out X509Certificate&gt;?, authType: String?, engine: SSLEngine?)</ID>
+    <ID>MaxLineLength:TrustGate.kt$PinnedLeafTrustManager$override fun checkServerTrusted(chain: Array&lt;out X509Certificate&gt;?, authType: String?, socket: Socket?)</ID>
+    <ID>NestedBlockDepth:BoundedWsSession.kt$BoundedWsSession$private suspend fun read()</ID>
+    <ID>NestedBlockDepth:NoResendTest.kt$CountingServer$private fun serve(client: Socket, id: Int): Unit</ID>
+    <ID>NestedBlockDepth:OkHttpTerminalChannel.kt$OkHttpTerminalChannel$private suspend fun readLoop()</ID>
+    <ID>NestedBlockDepth:OkHttpWebSockets.kt$BoundedWsSession$private suspend fun read()</ID>
+    <ID>ReturnCount:BoundedWsSession.kt$BoundedWsSession$override suspend fun sendText(text: String): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:BoundedWsSession.kt$BoundedWsSession$private suspend fun read()</ID>
+    <ID>ReturnCount:BoundedWsSession.kt$internal suspend fun openBoundedWs( spec: SocketSpec, dispatchers: AppDispatchers, openRaw: suspend (CoroutineScope) -&gt; Outcome&lt;RawWsSocket&gt;, ): Outcome&lt;SocketSession&gt;</ID>
+    <ID>ReturnCount:EventStreamLoop.kt$EventStreamLoop$private suspend fun ProducerScope&lt;StreamSignal&gt;.pump(body: SseBody, generation: Int, onId: (String) -&gt; Unit): End</ID>
+    <ID>ReturnCount:OkHttpTerminalChannel.kt$internal suspend fun openTerminalSocket( client: OkHttpClient, spec: TerminalSocketSpec, owner: CoroutineScope, dispatchers: AppDispatchers, classify: (Throwable) -&gt; TransportError, ): Outcome&lt;TerminalChannel&gt;</ID>
+    <ID>ReturnCount:OkHttpWebSockets.kt$BoundedWsSession$override suspend fun sendText(text: String): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:SseParser.kt$SseParser$private fun isField(name: ByteArray, fieldEnd: Int): Boolean</ID>
+    <ID>ReturnCount:SseParser.kt$SseParser$private fun processLine(length: Int)</ID>
+    <ID>ReturnCount:TrustGate.kt$TrustGateInterceptor$private fun certificateWhy(e: Throwable): CertificateWhy?</ID>
+    <ID>ThrowsCount:OkHttpTerminalChannel.kt$OkHttpTerminalChannel$private suspend fun readLoop()</ID>
+    <ID>ThrowsCount:OkHttpWebSockets.kt$OkHttpWebSockets$private fun validate(response: Response, key: String, spec: WsSpec)</ID>
+    <ID>ThrowsCount:OkHttpWebSockets.kt$OkHttpWebSockets$suspend fun connect( client: OkHttpClient, spec: WsSpec, owner: CoroutineScope, dispatchers: AppDispatchers, classify: (Throwable) -&gt; TransportError, ): Outcome&lt;WsSession&gt;</ID>
+    <ID>TooGenericExceptionCaught:BoundedWsSession.kt$BoundedWsSession$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:OkHttpWebSockets.kt$OkHttpWebSockets$error: Throwable</ID>
+    <ID>TooManyFunctions:EventStreamLoop.kt$EventStreamLoop</ID>
+    <ID>TooManyFunctions:SseParser.kt$SseParser</ID>
+  </CurrentIssues>
+</SmellBaseline>

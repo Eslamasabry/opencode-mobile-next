@@ -1,0 +1,28 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:ConnectionRegistry.kt$ConnectionRegistry$previous.profile == profile &amp;&amp; previous.credentials == credentials &amp;&amp; previous.currentOwner() &amp;&amp; graph.session.server.location.value == location</ID>
+    <ID>CyclomaticComplexMethod:ConnectionFailures.kt$private fun Failure.withDetails(details: Redacted): Failure</ID>
+    <ID>CyclomaticComplexMethod:ConnectionFailures.kt$private fun stageDiagnostics(stage: ConnectionStage, failure: Failure): String</ID>
+    <ID>CyclomaticComplexMethod:ConnectionReads.kt$ConnectionReads$private suspend fun tail( id: SessionId, cursor: String?, limit: Int, prefetch: Boolean, ): Outcome&lt;ServerPage&lt;MessageWithParts&gt;&gt;</ID>
+    <ID>CyclomaticComplexMethod:ConnectionRegistry.kt$ConnectionRegistry$public suspend fun open(profile: ServerProfile): Outcome&lt;ConnectionGraph&gt;</ID>
+    <ID>CyclomaticComplexMethod:ConnectionRegistry.kt$ConnectionRegistry$public suspend fun openTransient( profile: ServerProfile, credentials: ConnectionCredentials, ownerProfileId: ProfileId, currentOwner: () -&gt; Boolean, location: ServerLocation = ServerLocation.Default, ): Outcome&lt;ConnectionGraph&gt;</ID>
+    <ID>CyclomaticComplexMethod:ProductErrorLine.kt$public fun productErrorText(failure: Failure): ProductErrorText</ID>
+    <ID>LongMethod:ConnectionFailures.kt$private fun stageDiagnostics(stage: ConnectionStage, failure: Failure): String</ID>
+    <ID>LongMethod:ConnectionRegistry.kt$ConnectionRegistry$public suspend fun openTransient( profile: ServerProfile, credentials: ConnectionCredentials, ownerProfileId: ProfileId, currentOwner: () -&gt; Boolean, location: ServerLocation = ServerLocation.Default, ): Outcome&lt;ConnectionGraph&gt;</ID>
+    <ID>LongParameterList:ConnectionRegistry.kt$ConnectionRegistry$( private val factories: Set&lt;GatewayFactory&gt;, private val graphFactory: ConnectionGraph.Factory, public val appScope: AppCoroutineScope, private val dispatchers: AppDispatchers, private val credentialSources: Set&lt;ConnectionCredentialSource&gt; = emptySet(), private val transientSources: Set&lt;TransientConnectionSource&gt; = emptySet(), private val transientOwners: TransientOwners = TransientOwners(), )</ID>
+    <ID>MagicNumber:ConnectionRegistry.kt$ConnectionRegistry$4099</ID>
+    <ID>MatchingDeclarationName:ConnectionFailures.kt$ConnectionStage</ID>
+    <ID>MaxLineLength:ProductErrorLineTest.kt$ProductErrorLineTest$assertEquals("Libsecret error: Failed to unlock the keyring", device.details?.text, "native text is only the details")</ID>
+    <ID>MaxLineLength:ProductErrorLineTest.kt$ProductErrorLineTest$assertEquals(ProductErrorLine.StagedRevert, productErrorText(Failure.Rejected(409, revertTag, details = prose)).line)</ID>
+    <ID>MaxLineLength:ProductErrorLineTest.kt$ProductErrorLineTest$assertEquals(ProductErrorLine.Termux, productErrorText(Failure.Termux(Redacted("bash: line 3: opencode: command not found"))).line)</ID>
+    <ID>MaxLineLength:ProductErrorLineTest.kt$ProductErrorLineTest$assertEquals(ProductErrorLine.Unreachable, productErrorText(Failure.Network(why)).line, "socket errors collapse to one line")</ID>
+    <ID>MaxLineLength:ProductErrorLineTest.kt$ProductErrorLineTest$for</ID>
+    <ID>MaxLineLength:ProductErrorWordsTest.kt$ProductErrorWordsTest$.</ID>
+    <ID>ReturnCount:ConnectionReads.kt$ConnectionReads$private suspend fun tail( id: SessionId, cursor: String?, limit: Int, prefetch: Boolean, ): Outcome&lt;ServerPage&lt;MessageWithParts&gt;&gt;</ID>
+    <ID>ReturnCount:ConnectionRegistry.kt$ConnectionRegistry$public suspend fun recoverTransient(ref: ConversationRef): Outcome&lt;ConnectionGraph?&gt;</ID>
+    <ID>ReturnCount:DirectoryPaths.kt$DirectoryPaths$fun coversOne(candidate: String): Boolean</ID>
+    <ID>TooGenericExceptionCaught:ConnectionRegistry.kt$ConnectionRegistry$error: Throwable</ID>
+  </CurrentIssues>
+</SmellBaseline>

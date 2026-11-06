@@ -1,0 +1,36 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:AgentHandoffScreen.kt$path != null &amp;&amp; !state.busy &amp;&amp; state.prompt.isEmpty() &amp;&amp; reviewing</ID>
+    <ID>CyclomaticComplexMethod:AgentHandoffScreen.kt$@Composable public fun AgentHandoffScreen(state: AgentHandoffUi, actions: AgentHandoffActions)</ID>
+    <ID>LongMethod:AgentHandoffScreen.kt$@Composable public fun AgentHandoffScreen(state: AgentHandoffUi, actions: AgentHandoffActions)</ID>
+    <ID>ReturnCount:AgentHandoffViewModel.kt$AgentHandoffViewModel$override fun editPrompt(value: String)</ID>
+    <ID>ReturnCount:AgentHandoffViewModel.kt$AgentHandoffViewModel$override fun prepare()</ID>
+    <ID>ReturnCount:AgentHandoffViewModel.kt$AgentHandoffViewModel$private fun usable(): AgentHandoffSession?</ID>
+    <ID>TooManyFunctions:AgentHandoffUi.kt$AgentHandoffActions</ID>
+    <ID>TooManyFunctions:AgentHandoffViewModel.kt$AgentHandoffViewModel : ViewModelAgentHandoffActions</ID>
+    <ID>WildcardImport:AgentHandoffEntries.kt$import androidx.navigation3.runtime.*</ID>
+    <ID>WildcardImport:AgentHandoffEntries.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:AgentHandoffEntries.kt$import io.github.eslamasabry.oc.ui.routes.*</ID>
+    <ID>WildcardImport:AgentHandoffHost.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:AgentHandoffHost.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:AgentHandoffHost.kt$import io.github.eslamasabry.oc.engine.agents.handoff.*</ID>
+    <ID>WildcardImport:AgentHandoffScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:AgentHandoffScreen.kt$import io.github.eslamasabry.oc.engine.agents.handoff.*</ID>
+    <ID>WildcardImport:AgentHandoffScreen.kt$import io.github.eslamasabry.oc.feature.handoff.presentation.*</ID>
+    <ID>WildcardImport:AgentHandoffScreen.kt$import io.github.eslamasabry.oc.ui.kit.*</ID>
+    <ID>WildcardImport:AgentHandoffScreen.kt$import io.github.eslamasabry.oc.ui.kit.foundation.*</ID>
+    <ID>WildcardImport:AgentHandoffScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:AgentHandoffScreen.kt$import io.github.eslamasabry.oc.ui.kit.input.*</ID>
+    <ID>WildcardImport:AgentHandoffScreen.kt$import io.github.eslamasabry.oc.ui.kit.row.*</ID>
+    <ID>WildcardImport:AgentHandoffScreen.kt$import io.github.eslamasabry.oc.ui.kit.state.*</ID>
+    <ID>WildcardImport:AgentHandoffScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:AgentHandoffViewModel.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:AgentHandoffViewModel.kt$import dev.zacsweers.metrox.viewmodel.*</ID>
+    <ID>WildcardImport:AgentHandoffViewModel.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:AgentHandoffViewModel.kt$import io.github.eslamasabry.oc.engine.agents.handoff.*</ID>
+    <ID>WildcardImport:AgentHandoffViewModel.kt$import io.github.eslamasabry.oc.ui.routes.*</ID>
+    <ID>WildcardImport:AgentHandoffViewModel.kt$import kotlinx.coroutines.flow.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

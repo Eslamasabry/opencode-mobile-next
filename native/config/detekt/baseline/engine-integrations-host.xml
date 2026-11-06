@@ -1,0 +1,157 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:ByoHostController.kt$ByoHostController$!byoHostSafeId(d.hostId) || d.port !in 1024..65535 || !SEMVER.matches(d.bundleVersion) || !SEMVER.matches(d.openCodeVersion)</ID>
+    <ID>ComplexCondition:ByoHostController.kt$ByoHostController$d.hostId != record.hostId || d.port != record.remotePort || d.bundleVersion != record.bundleVersion || d.openCodeVersion != record.openCodeVersion</ID>
+    <ID>ComplexCondition:ByoHostController.kt$ByoHostController$existing != null &amp;&amp; (existing.phase != ByoHostPhase.NeedsTrust || existing.hostKey.publicKey != key.publicKey || existing.target != target)</ID>
+    <ID>ComplexCondition:ByoHostModel.kt$ByoHostBundle.Companion$!SEMVER.matches(version) || !SEMVER.matches(openCodeVersion) || artifacts.isEmpty() || artifacts.keys.any { it != "x64" &amp;&amp; it != "arm64" }</ID>
+    <ID>ComplexCondition:ByoHostModel.kt$ByoHostTarget.Companion$!USER.matches(user) || !HOST.matches(host) || ".." in host || port !in 1..65535</ID>
+    <ID>ComplexCondition:ByoHostSigner.kt$ChannelByoHostSigner$!USER.matches(user) || !SOCKET.matches(socketPath) || "/../" in socketPath || "/./" in socketPath</ID>
+    <ID>ComplexCondition:ByoHostSshRunner.kt$BuiltinByoHostSshRunner.Companion$id == null || bundle == null || version == null || port == null || !byoHostSafeId(id) || !SEMVER.matches(bundle) || !SEMVER.matches(version) || port !in 1..65535</ID>
+    <ID>ComplexCondition:ByoHostStore.kt$PersistentByoHostStore.Companion$json["schema"].int() != 1 || id == null || !byoHostSafeId(id) || id != profileId</ID>
+    <ID>ComplexCondition:ByoHostTailnet.kt$ByoHostTailnetResolver.Companion$b[1] == 100 &amp;&amp; (b[2] == 0 || b[2] == 100) || b[1] == 115 &amp;&amp; (b[2] == 92 || b[2] == 93) || b[1] == 101 &amp;&amp; b[2] == 102 &amp;&amp; b[3] == 103</ID>
+    <ID>ComplexCondition:ByoHostTailnet.kt$HostAddress.Companion$g.isEmpty() || g.length &gt; 4 || !g.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }</ID>
+    <ID>CyclomaticComplexMethod:ByoHostSshRunner.kt$BuiltinByoHostSshRunner$override suspend fun install( profileId: String, target: ByoHostTarget, hostKey: ByoHostKey, login: ByoHostLogin, identity: ByoHostIdentity, deviceToken: String, bundle: ByoHostBundle, ): HostResult&lt;ByoHostDescriptor&gt;</ID>
+    <ID>CyclomaticComplexMethod:ByoHostSshRunner.kt$BuiltinByoHostSshRunner.Companion$internal fun installFailure(output: String): ByoHostFailureCode</ID>
+    <ID>CyclomaticComplexMethod:ByoHostStore.kt$PersistentByoHostStore.Companion$internal fun decodeRecord(profileId: String, raw: String): ByoHostRecord</ID>
+    <ID>CyclomaticComplexMethod:ByoHostTailnet.kt$ByoHostTailnetResolver.Companion$public fun isTailnetAddress(address: HostAddress): Boolean</ID>
+    <ID>CyclomaticComplexMethod:ByoHostTailnet.kt$HostAddress.Companion$private fun parseV6(text: String): ByteArray?</ID>
+    <ID>EmptyFunctionBlock:ByoHostControllerTest.kt$FakeRunner${}</ID>
+    <ID>EmptyFunctionBlock:HostFakes.kt$TestTunnel${}</ID>
+    <ID>LongMethod:ByoHostSetup.kt$public fun byoHostOwnerSetup(target: ByoHostTarget): ImmutableList&lt;ByoHostSetupStep&gt;</ID>
+    <ID>LongMethod:ByoHostSshRunner.kt$BuiltinByoHostSshRunner$override suspend fun install( profileId: String, target: ByoHostTarget, hostKey: ByoHostKey, login: ByoHostLogin, identity: ByoHostIdentity, deviceToken: String, bundle: ByoHostBundle, ): HostResult&lt;ByoHostDescriptor&gt;</ID>
+    <ID>LongMethod:ByoHostSshRunner.kt$BuiltinByoHostSshRunner$private suspend fun ssh( work: PrivateWork, target: ByoHostTarget, pin: ByoHostKey, login: ByoHostLogin, agentSocket: String? = null, publicKey: String? = null, ): String</ID>
+    <ID>LongParameterList:ByoHostController.kt$ByoHostController$( public val profileId: String, private val runner: ByoHostSshRunner, private val store: ByoHostStore, private val bundle: ByoHostBundle? = null, private val clearLocalData: (suspend (String) -&gt; Boolean)? = null, private val enabled: Boolean = false, private val random: HostRandom = HostRandom.Secure, )</ID>
+    <ID>LongParameterList:ByoHostSshRunner.kt$BuiltinByoHostSshRunner$( private val shell: HostLocalShell, private val files: HostPrivateFiles, private val signer: ByoHostSigner, private val tailnet: ByoHostTailnetResolver, private val ports: LoopbackPorts, private val http: LoopbackHttp, private val random: HostRandom = HostRandom.Secure, )</ID>
+    <ID>LongParameterList:ByoHostSshRunner.kt$BuiltinByoHostSshRunner$( work: PrivateWork, target: ByoHostTarget, pin: ByoHostKey, login: ByoHostLogin, agentSocket: String? = null, publicKey: String? = null, )</ID>
+    <ID>LongParameterList:ByoHostSshRunner.kt$ByoHostSshRunner$( profileId: String, target: ByoHostTarget, hostKey: ByoHostKey, login: ByoHostLogin, identity: ByoHostIdentity, deviceToken: String, bundle: ByoHostBundle, )</ID>
+    <ID>LoopWithTooManyJumpStatements:ByoHostSshRunner.kt$BuiltinByoHostSshRunner$for</ID>
+    <ID>MagicNumber:ByoHostController.kt$ByoHostController$1024</ID>
+    <ID>MagicNumber:ByoHostController.kt$ByoHostController$32</ID>
+    <ID>MagicNumber:ByoHostController.kt$ByoHostController$65535</ID>
+    <ID>MagicNumber:ByoHostModel.kt$16</ID>
+    <ID>MagicNumber:ByoHostModel.kt$ByoHostKey.Companion$51</ID>
+    <ID>MagicNumber:ByoHostModel.kt$ByoHostTarget.Companion$65535</ID>
+    <ID>MagicNumber:ByoHostPorts.kt$HostRandom.Companion$16</ID>
+    <ID>MagicNumber:ByoHostService.kt$ByoHostService$0xff</ID>
+    <ID>MagicNumber:ByoHostService.kt$ByoHostService$16</ID>
+    <ID>MagicNumber:ByoHostService.kt$ByoHostService$8</ID>
+    <ID>MagicNumber:ByoHostSshRunner.kt$BuiltinByoHostSshRunner$0xff</ID>
+    <ID>MagicNumber:ByoHostSshRunner.kt$BuiltinByoHostSshRunner$100</ID>
+    <ID>MagicNumber:ByoHostSshRunner.kt$BuiltinByoHostSshRunner$12</ID>
+    <ID>MagicNumber:ByoHostSshRunner.kt$BuiltinByoHostSshRunner$16</ID>
+    <ID>MagicNumber:ByoHostSshRunner.kt$BuiltinByoHostSshRunner$200</ID>
+    <ID>MagicNumber:ByoHostSshRunner.kt$BuiltinByoHostSshRunner$24</ID>
+    <ID>MagicNumber:ByoHostSshRunner.kt$BuiltinByoHostSshRunner$3</ID>
+    <ID>MagicNumber:ByoHostSshRunner.kt$BuiltinByoHostSshRunner$300</ID>
+    <ID>MagicNumber:ByoHostSshRunner.kt$BuiltinByoHostSshRunner$40</ID>
+    <ID>MagicNumber:ByoHostSshRunner.kt$BuiltinByoHostSshRunner$65535</ID>
+    <ID>MagicNumber:ByoHostSshRunner.kt$BuiltinByoHostSshRunner.Companion$65535</ID>
+    <ID>MagicNumber:ByoHostSshRunner.kt$PrivateWork$10_000</ID>
+    <ID>MagicNumber:ByoHostSshRunner.kt$PrivateWork$65_536</ID>
+    <ID>MagicNumber:ByoHostTailnet.kt$ByoHostTailnetResolver$10_000</ID>
+    <ID>MagicNumber:ByoHostTailnet.kt$ByoHostTailnetResolver.Companion$0x53</ID>
+    <ID>MagicNumber:ByoHostTailnet.kt$ByoHostTailnetResolver.Companion$0xff</ID>
+    <ID>MagicNumber:ByoHostTailnet.kt$ByoHostTailnetResolver.Companion$100</ID>
+    <ID>MagicNumber:ByoHostTailnet.kt$ByoHostTailnetResolver.Companion$101</ID>
+    <ID>MagicNumber:ByoHostTailnet.kt$ByoHostTailnetResolver.Companion$102</ID>
+    <ID>MagicNumber:ByoHostTailnet.kt$ByoHostTailnetResolver.Companion$103</ID>
+    <ID>MagicNumber:ByoHostTailnet.kt$ByoHostTailnetResolver.Companion$115</ID>
+    <ID>MagicNumber:ByoHostTailnet.kt$ByoHostTailnetResolver.Companion$127</ID>
+    <ID>MagicNumber:ByoHostTailnet.kt$ByoHostTailnetResolver.Companion$15</ID>
+    <ID>MagicNumber:ByoHostTailnet.kt$ByoHostTailnetResolver.Companion$16</ID>
+    <ID>MagicNumber:ByoHostTailnet.kt$ByoHostTailnetResolver.Companion$3</ID>
+    <ID>MagicNumber:ByoHostTailnet.kt$ByoHostTailnetResolver.Companion$6</ID>
+    <ID>MagicNumber:ByoHostTailnet.kt$ByoHostTailnetResolver.Companion$64</ID>
+    <ID>MagicNumber:ByoHostTailnet.kt$ByoHostTailnetResolver.Companion$92</ID>
+    <ID>MagicNumber:ByoHostTailnet.kt$ByoHostTailnetResolver.Companion$93</ID>
+    <ID>MagicNumber:ByoHostTailnet.kt$HostAddress$4</ID>
+    <ID>MagicNumber:ByoHostTailnet.kt$HostAddress.Companion$0xff</ID>
+    <ID>MagicNumber:ByoHostTailnet.kt$HostAddress.Companion$12</ID>
+    <ID>MagicNumber:ByoHostTailnet.kt$HostAddress.Companion$16</ID>
+    <ID>MagicNumber:ByoHostTailnet.kt$HostAddress.Companion$255</ID>
+    <ID>MagicNumber:ByoHostTailnet.kt$HostAddress.Companion$3</ID>
+    <ID>MagicNumber:ByoHostTailnet.kt$HostAddress.Companion$4</ID>
+    <ID>MagicNumber:ByoHostTailnet.kt$HostAddress.Companion$7</ID>
+    <ID>MagicNumber:ByoHostTailnet.kt$HostAddress.Companion$8</ID>
+    <ID>MatchingDeclarationName:ByoHostSetup.kt$ByoHostSetupStep</ID>
+    <ID>MaxLineLength:ByoHostController.kt$ByoHostController$(existing.phase != ByoHostPhase.NeedsTrust || existing.hostKey.publicKey != key.publicKey || existing.target != target)</ID>
+    <ID>MaxLineLength:ByoHostController.kt$ByoHostController$if</ID>
+    <ID>MaxLineLength:ByoHostController.kt$ByoHostController$if (result.code == ByoHostFailureCode.RevocationFailed &amp;&amp; tunnel != null) ByoHostPhase.Ready else ByoHostPhase.Failed</ID>
+    <ID>MaxLineLength:ByoHostController.kt$ByoHostController$if (state.value.phase != ByoHostPhase.Ready || t == null || s == null) return HostResult.Failed(ByoHostFailureCode.Transport)</ID>
+    <ID>MaxLineLength:ByoHostController.kt$ByoHostController$if (target == null || key == null || key.fingerprint != verifiedFingerprint) abort(ByoHostFailureCode.NeedsTrust)</ID>
+    <ID>MaxLineLength:ByoHostController.kt$ByoHostController$if (target == null || key == null || verifiedFingerprint != key.fingerprint) abort(ByoHostFailureCode.NeedsTrust)</ID>
+    <ID>MaxLineLength:ByoHostController.kt$ByoHostController$private</ID>
+    <ID>MaxLineLength:ByoHostController.kt$ByoHostController$private suspend</ID>
+    <ID>MaxLineLength:ByoHostController.kt$ByoHostController$return HostResult.Ok(ByoHostConnection(profileId, "http://127.0.0.1:${t.localPort}", profileId, s.deviceToken, state.value.record?.openCodeVersion))</ID>
+    <ID>MaxLineLength:ByoHostController.kt$ByoHostController$runner.forward(profileId, record.target, record.hostKey, secrets.identity, record.remotePort ?: abort(ByoHostFailureCode.Storage)).orAbort()</ID>
+    <ID>MaxLineLength:ByoHostController.kt$ByoHostController$runner.install(profileId, record.target, record.hostKey, login, secrets.identity, secrets.deviceToken, pkg).orAbort()</ID>
+    <ID>MaxLineLength:ByoHostController.kt$ByoHostController$store.saveRecord(pending ?: record.copy(phase = ByoHostPhase.Removing, revoked = revokeAccess || record.revoked))</ID>
+    <ID>MaxLineLength:ByoHostControllerTest.kt$ByoHostControllerTest$private val bundle = ByoHostBundle.of("1.1.0", "2.1.1", mapOf("x64" to ByoHostArtifact.of("https://example.invalid/bundle.tar.gz", "a".repeat(64))!!))!!</ID>
+    <ID>MaxLineLength:ByoHostControllerTest.kt$FakeRunner$override suspend fun describe(tunnel: ByoHostTunnel, deviceId: String, deviceToken: String): HostResult&lt;ByoHostDescriptor&gt;</ID>
+    <ID>MaxLineLength:ByoHostControllerTest.kt$MemoryStore$override suspend fun listRecords(): HostResult&lt;ImmutableList&lt;ByoHostRecord&gt;&gt;</ID>
+    <ID>MaxLineLength:ByoHostControllerTest.kt$MemoryStore$override suspend fun saveRecord(record: ByoHostRecord): HostResult&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:ByoHostControllerTest.kt$MemoryStore$override suspend fun saveSecrets(profileId: String, secrets: ByoHostSecrets): HostResult&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:ByoHostModel.kt$ByoHostBundle.Companion$public</ID>
+    <ID>MaxLineLength:ByoHostModel.kt$ByoHostDescriptor$public data</ID>
+    <ID>MaxLineLength:ByoHostModel.kt$ByoHostPhase$public enum</ID>
+    <ID>MaxLineLength:ByoHostModel.kt$internal fun hexBytes(hex: String): ByteArray</ID>
+    <ID>MaxLineLength:ByoHostSetup.kt$"sudo /usr/sbin/sshd -T -C 'user=$user,host=PHONE_TAILSCALE_IP,addr=PHONE_TAILSCALE_IP,laddr=MACHINE_TAILSCALE_IP,lport=${target.port}'"</ID>
+    <ID>MaxLineLength:ByoHostSetup.kt$"sudo tee /etc/ssh/sshd_config.d/00-oc-byo-host.conf &gt;/dev/null &lt;&lt;'OC_BYO_SSH'\nUseDNS no\nMatch User $user\n AllowTcpForwarding local\n AllowStreamLocalForwarding no\n PermitTunnel no\n DisableForwarding no\n PubkeyAuthentication yes\n AuthorizedKeysFile .ssh/authorized_keys\n PermitListen none\nMatch all\nOC_BYO_SSH"</ID>
+    <ID>MaxLineLength:ByoHostSetup.kt$"sudo tee /etc/ssh/sshd_config.d/00-oc-byo-listen.conf &gt;/dev/null &lt;&lt;'OC_BYO_LISTEN'\nListenAddress MACHINE_TAILSCALE_IP\nOC_BYO_LISTEN"</ID>
+    <ID>MaxLineLength:ByoHostSetup.kt$commands = listOf("cat /etc/os-release", "id -u", "command -v python3 curl tar ss sshd ssh-keygen loginctl systemctl")</ID>
+    <ID>MaxLineLength:ByoHostSetup.kt$copy = "Compare this fingerprint with the app before signing in. Use an independent session on the machine."</ID>
+    <ID>MaxLineLength:ByoHostSetup.kt$copy = "Do this from a rescue session before setup. Replace MACHINE_TAILSCALE_IP with the machine’s numeric Tailscale address. Remove other ListenAddress directives that allow public or wildcard listeners. This changes access for the whole SSH daemon."</ID>
+    <ID>MaxLineLength:ByoHostSetup.kt$copy = "Keep an administrator session open while changing SSH settings. Apply these settings for this dedicated account, check them, and reload SSH only after the check passes."</ID>
+    <ID>MaxLineLength:ByoHostSetup.kt$copy = "Run this once on the machine with administrator access. Your sessions can then keep running after you close the phone."</ID>
+    <ID>MaxLineLength:ByoHostSetup.kt$copy = "Sign in to your Tailscale on the phone and machine. Use the machine’s Tailscale address. Public addresses are not supported."</ID>
+    <ID>MaxLineLength:ByoHostSetup.kt$verification = "Replace PHONE_TAILSCALE_IP and MACHINE_TAILSCALE_IP with the actual numeric addresses. The app checks the effective sshd -T settings for the connection: local TCP forwarding allowed; reverse and Unix-socket forwarding denied; tunnel devices denied; UseDNS no; DisableForwarding no; public-key login enabled; standard authorized_keys path. Existing earlier directives can override the drop-in. The owner must verify the reload and keep rescue access; parsing settings does not prove the running daemon loaded them."</ID>
+    <ID>MaxLineLength:ByoHostSetup.kt$verification = "The app computes the SHA256 fingerprint of the offered Ed25519 host key and requires your confirmation. Later changes are blocked; there is no automatic replacement."</ID>
+    <ID>MaxLineLength:ByoHostSetup.kt$verification = "The app resolves the entered address once and accepts only machine addresses in the Tailscale ranges. It then connects to that numeric address and verifies the pinned SSH identity. Address syntax or a Tailscale app being installed does not prove VPN membership."</ID>
+    <ID>MaxLineLength:ByoHostSetup.kt$verification = "The installer checks Ubuntu 24.04, a nonroot UID, architecture, Python and the user service manager before pairing. Missing tools require owner preparation; setup does not install OS packages with sudo."</ID>
+    <ID>MaxLineLength:ByoHostSetup.kt$verification = "The installer reads actual listening sockets on the selected SSH port using ss -H -ltn. Any wildcard, public or ordinary LAN listener is refused. The app never changes daemon bindings, socket activation or firewall rules. Keep rescue access and verify every SSH port separately; the app checks its selected port only."</ID>
+    <ID>MaxLineLength:ByoHostSetup.kt$verification = "The installer reads loginctl show-user --property=Linger --value and requires yes, then verifies that systemctl --user is usable. It never enables linger or asks for a sudo password."</ID>
+    <ID>MaxLineLength:ByoHostSshRunner.kt$BuiltinByoHostSshRunner$"ulimit -f 128; exec $ssh -o ExitOnForwardFailure=yes -N -L ${q("127.0.0.1:$port:127.0.0.1:$remotePort")} "</ID>
+    <ID>MaxLineLength:ByoHostSshRunnerTest.kt$ByoHostSshRunnerTest$ByoHostBundle.of("1.1.0", "1.18.32", mapOf("x64" to ByoHostArtifact.of("https://downloads.example.invalid/pinned.tar.gz", "a".repeat(64))!!))!!</ID>
+    <ID>MaxLineLength:ByoHostSshRunnerTest.kt$ByoHostSshRunnerTest$assertEquals("Basic " + Base64.encode("profile_1:${"t".repeat(32)}".encodeToByteArray()), request.authorization)</ID>
+    <ID>MaxLineLength:ByoHostSshRunnerTest.kt$ByoHostSshRunnerTest$assertEquals("SHA256:" + Base64.encode(hexBytes(DartJson.sha256Hex(wire))).replace("=", ""), key.fingerprint)</ID>
+    <ID>MaxLineLength:ByoHostSshRunnerTest.kt$ByoHostSshRunnerTest$assertEquals(HostResult.Failed(ByoHostFailureCode.Protocol), runner.describe(TestTunnel(41_001), "profile_1", "t".repeat(32)))</ID>
+    <ID>MaxLineLength:ByoHostSshRunnerTest.kt$ByoHostSshRunnerTest$for</ID>
+    <ID>MaxLineLength:ByoHostSshRunnerTest.kt$ByoHostSshRunnerTest$for (secret in listOf("PASSWORD_SENTINEL", "DEVICE_KEY_SENTINEL", "DEVICE_TOKEN_SENTINEL")) assertFalse(secret in scripts)</ID>
+    <ID>MaxLineLength:ByoHostSshRunnerTest.kt$ByoHostSshRunnerTest$private suspend</ID>
+    <ID>MaxLineLength:ByoHostSshRunnerTest.kt$ByoHostSshRunnerTest$private suspend fun forward(target: ByoHostTarget = server)</ID>
+    <ID>MaxLineLength:ByoHostStore.kt$PersistentByoHostStore.Companion$ByoHostIdentity(json["keyAlias"].str() ?: abort(ByoHostFailureCode.Storage), json["publicKey"].str() ?: abort(ByoHostFailureCode.Storage))</ID>
+    <ID>MaxLineLength:ByoHostStore.kt$PersistentByoHostStore.Companion$if (json["schema"].int() != 1 || id == null || !byoHostSafeId(id) || id != profileId) abort(ByoHostFailureCode.Storage)</ID>
+    <ID>MaxLineLength:ByoHostStore.kt$PersistentByoHostStore.Companion$phase = ByoHostPhase.entries.firstOrNull { it.wire() == phaseName } ?: abort(ByoHostFailureCode.Storage)</ID>
+    <ID>MaxLineLength:ByoHostStoreTest.kt$ByoHostStoreTest$FlakyKv(PrefsKeyValueStore(disk, FlutterPrefsCodec(JavaListDecoder.Unsupported), StateMigrationGate.alwaysOpen(), StandardTestDispatcher(testScheduler)))</ID>
+    <ID>MaxLineLength:ByoHostStoreTest.kt$ByoHostStoreTest$prefs.commit(lane) { putString("oc.byoHost.invalid.id", PersistentByoHostStore.encodeRecord(record("one"))) }</ID>
+    <ID>MaxLineLength:ByoHostStoreTest.kt$ByoHostStoreTest$private fun secrets(id: String)</ID>
+    <ID>MaxLineLength:ByoHostStoreTest.kt$Vault$override suspend fun names(prefix: String): Outcome&lt;Set&lt;String&gt;&gt;</ID>
+    <ID>MaxLineLength:ByoHostTailnet.kt$ByoHostTailnetResolver$(withTimeoutOrNull(10_000) { lookup.lookup(target.host) } ?: abort(ByoHostFailureCode.TailnetRequired)).map { HostAddress.parse(it) ?: abort(ByoHostFailureCode.TailnetRequired) }</ID>
+    <ID>MaxLineLength:ByoHostTailnet.kt$ByoHostTailnetResolver$if (addresses.isEmpty() || addresses.any { !isTailnetAddress(it) }) abort(ByoHostFailureCode.TailnetRequired)</ID>
+    <ID>MaxLineLength:ByoHostTailnet.kt$ByoHostTailnetResolver$val first = addresses.sortedWith(compareBy&lt;HostAddress&gt; { if (it.isV4) 0 else 1 }.thenBy { it.text }).first()</ID>
+    <ID>MaxLineLength:ByoHostTailnet.kt$HostAddress.Companion$if (g.isEmpty() || g.length &gt; 4 || !g.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }) return null</ID>
+    <ID>MaxLineLength:ByoHostTailnet.kt$HostAddress.Companion$public</ID>
+    <ID>MaxLineLength:ByoHostTailnetTest.kt$ByoHostTailnetTest$ip4(100, 100, 100, 100)</ID>
+    <ID>MaxLineLength:ByoHostTailnetTest.kt$ByoHostTailnetTest$ip4(8, 8, 8, 8)</ID>
+    <ID>MaxLineLength:ByoHostTailnetTest.kt$ByoHostTailnetTest$ip6("fd7a", "115c", "a1e1", "", "1")</ID>
+    <ID>MaxLineLength:HostFakes.kt$Base64.encode(text("ecdsa-sha2-nistp256") + text("nistp256") + byteArrayOf(0, 0, 0, point.size.toByte()) + point)</ID>
+    <ID>MaxLineLength:HostFakes.kt$MemFs$nodes.keys.filter { it.startsWith("$path/") &amp;&amp; '/' !in it.removePrefix("$path/") }.map { it.removePrefix("$path/") }</ID>
+    <ID>ReturnCount:ByoHostController.kt$ByoHostController$private suspend fun &lt;T&gt; action(block: suspend () -&gt; T): HostResult&lt;T&gt;</ID>
+    <ID>ReturnCount:ByoHostModel.kt$ByoHostKey.Companion$private fun wire(base64: String): ByteArray?</ID>
+    <ID>ReturnCount:ByoHostModel.kt$ByoHostKey.Companion$public fun fromPublicKey(publicKey: String): ByoHostKey?</ID>
+    <ID>ReturnCount:ByoHostModel.kt$ByoHostKey.Companion$public fun parse(publicKey: String, fingerprint: String): ByoHostKey?</ID>
+    <ID>ReturnCount:ByoHostStoreTest.kt$Disk$override fun commit(changes: Map&lt;String, RawPref?&gt;): Boolean</ID>
+    <ID>ReturnCount:ByoHostTailnet.kt$ByoHostTailnetResolver.Companion$public fun isTailnetAddress(address: HostAddress): Boolean</ID>
+    <ID>ReturnCount:ByoHostTailnet.kt$HostAddress.Companion$private fun parseV4(text: String): ByteArray?</ID>
+    <ID>ReturnCount:ByoHostTailnet.kt$HostAddress.Companion$private fun parseV6(text: String): ByteArray?</ID>
+    <ID>ReturnCount:HostFakes.kt$FakeShell$override suspend fun run(script: String, timeoutMs: Long): Int</ID>
+    <ID>TooGenericExceptionCaught:ByoHostController.kt$ByoHostController$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:ByoHostSshRunner.kt$BuiltinByoHostSshRunner$e: Throwable</ID>
+    <ID>TooManyFunctions:ByoHostController.kt$ByoHostController</ID>
+    <ID>TooManyFunctions:ByoHostSshRunner.kt$BuiltinByoHostSshRunner : ByoHostSshRunner</ID>
+    <ID>TooManyFunctions:ByoHostStore.kt$PersistentByoHostStore$Companion</ID>
+    <ID>UnusedPrivateProperty:ByoHostSshRunner.kt$BuiltinByoHostSshRunner$attempt</ID>
+  </CurrentIssues>
+</SmellBaseline>

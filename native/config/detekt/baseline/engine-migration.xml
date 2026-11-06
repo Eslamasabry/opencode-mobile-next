@@ -1,0 +1,11 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>MaxLineLength:MigrationEngine.kt$MigrationEngine.Companion$notices = MigrationNotices(progress.reenter.mapNotNull { it.profileId }.distinct().map(::ProfileId))</ID>
+    <ID>MaxLineLength:MigrationEngineTest.kt$MigrationEngineTest$assertEquals(GateState.Open(firstNativeLaunch = false, notices = io.github.eslamasabry.oc.core.data.migration.MigrationNotices()), engine.gate.state.value)</ID>
+    <ID>MaxLineLength:MigrationEngineTest.kt$MigrationEngineTest$fun</ID>
+    <ID>MaxLineLength:MigrationEngineTest.kt$MigrationEngineTest$runner.progress.value = MigrationProgress.Open(firstNativeLaunch = true, deferred = setOf(DeferredFeature.AiTeam))</ID>
+    <ID>MaxLineLength:MigrationProgress.kt$MigrationBlock$public enum</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -38,6 +38,17 @@ Rules for the native (Kotlin Multiplatform) rewrite. Binding sources: `docs/desi
 | App APK (preview id `io.github.eslamasabry.opencode_mobile.native`) | `./gradlew :androidApp:assembleDebug` |
 | Desktop compile | `./gradlew :desktopApp:compileKotlin` |
 | iOS klibs (VPS nightly only) | `tool/qa/ios-klib-nightly.sh` |
+| detekt (pinned 1.23.8, as the Flutter Kotlin check; T1 runs it on touched modules) | `tool/qa/detekt.sh <module>...` or `--all` |
+| Release lint as CI runs it (strict LintPolicy; T1 runs it) | `./gradlew :androidApp:lintSwitchRelease` |
+| Next versionCode / take one (ledger `BUILD_NUMBERS.md`) | `tool/version_code.sh next` / `allocate --kind build\|release --for "<what>"` |
+
+detekt: config `config/detekt/detekt.yml`, one baseline per module in `config/detekt/baseline/<module>.xml`. A baseline
+may only shrink: `tool/qa/detekt.sh` compares each with the merge-base and fails on a new entry or a new baseline file
+(T1 runs that check every time). Fix a new finding; never re-baseline it. After fixing old ones, shrink the module's
+baseline with `tool/qa/detekt.sh <module> --create-baseline` and commit it.
+
+versionCode: every APK number comes from `tool/version_code.sh` (never a hand edit of `version.properties`); it is
+above every number in the ledger, including builds seen on the owner's phone and emulators, and is never reused.
 
 Desktop compile per change vs nightly (ADR §4 row 17): decided by P8 on the PC and the VPS; until then, a local T0
 compiles one target and the T1/T2 runs compile both (slice-0 container numbers are in the P1 report).

@@ -1,0 +1,76 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:SetupJourneyScreen.kt$measured != null &amp;&amp; bytesDone != null &amp;&amp; bytesTotal != null &amp;&amp; bytesTotal &gt; 0</ID>
+    <ID>CyclomaticComplexMethod:PhoneSetupScreen.kt$@Composable internal fun problemWords(problem: SetupProblem): String</ID>
+    <ID>CyclomaticComplexMethod:PhoneSetupScreen.kt$@Composable private fun Job(progress: SetupProgress, state: PhoneSetupUi, actions: PhoneSetupActions)</ID>
+    <ID>CyclomaticComplexMethod:SetupJourneyScreen.kt$@Composable private fun Choices(state: SetupJourneyUi, actions: SetupJourneyActions)</ID>
+    <ID>CyclomaticComplexMethod:SetupJourneyScreen.kt$@Composable private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions)</ID>
+    <ID>CyclomaticComplexMethod:SetupJourneyScreen.kt$@Composable private fun StartHero(state: SetupJourneyUi, actions: SetupJourneyActions)</ID>
+    <ID>CyclomaticComplexMethod:SetupJourneyScreen.kt$@Composable private fun runtimeProblem(error: SetupError?): String</ID>
+    <ID>CyclomaticComplexMethod:SetupJourneyScreen.kt$@Composable public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyActions)</ID>
+    <ID>EmptyFunctionBlock:SetupJourneyGateTest.kt$SetupJourneyGateTest.Actions${}</ID>
+    <ID>LongMethod:PhoneSetupScreen.kt$@Composable private fun Job(progress: SetupProgress, state: PhoneSetupUi, actions: PhoneSetupActions)</ID>
+    <ID>LongMethod:PhoneSetupScreen.kt$@Composable private fun Start(state: PhoneSetupUi, actions: PhoneSetupActions)</ID>
+    <ID>LongMethod:SetupJourneyScreen.kt$@Composable private fun Choices(state: SetupJourneyUi, actions: SetupJourneyActions)</ID>
+    <ID>LongMethod:SetupJourneyScreen.kt$@Composable private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions)</ID>
+    <ID>LongMethod:SetupJourneyScreen.kt$@Composable public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyActions)</ID>
+    <ID>MagicNumber:PhoneSetupScreen.kt$10.0</ID>
+    <ID>MagicNumber:PhoneSetupScreen.kt$100</ID>
+    <ID>MagicNumber:PhoneSetupScreen.kt$1000</ID>
+    <ID>MagicNumber:PhoneSetupScreen.kt$1_000_000.0</ID>
+    <ID>MagicNumber:SetupJourneyScreen.kt$.3f</ID>
+    <ID>MagicNumber:SetupJourneyScreen.kt$100.0</ID>
+    <ID>MagicNumber:SetupJourneyScreen.kt$1_000_000.0</ID>
+    <ID>MagicNumber:SetupJourneyScreen.kt$1_000_000_000</ID>
+    <ID>MagicNumber:SetupJourneyScreen.kt$1_000_000_000.0</ID>
+    <ID>MagicNumber:SetupJourneyScreen.kt$60</ID>
+    <ID>MagicNumber:SetupJourneyScreen.kt$60.0</ID>
+    <ID>MaxLineLength:PhoneSetupModelTest.kt$PhoneSetupModelTest$job("failed", "opencode", c("linux", "done") + "," + c("opencode", "failed"), log = "curl: (6) Could not resolve host")</ID>
+    <ID>MaxLineLength:PhoneSetupModelTest.kt$PhoneSetupModelTest$private</ID>
+    <ID>MaxLineLength:PhoneSetupModelTest.kt$PhoneSetupModelTest$private fun c(id: String, state: String, extra: String = ""): String</ID>
+    <ID>MaxLineLength:PhoneSetupModelTest.kt$PhoneSetupModelTest$return</ID>
+    <ID>MaxLineLength:PhoneSetupModelTest.kt$PhoneSetupModelTest$rig.host.statusJson = job("running", "node", c("linux", "done") + "," + c("node", "running", ""","percent":40"""))</ID>
+    <ID>MaxLineLength:PhoneSetupModelTest.kt$PhoneSetupModelTest$val fake = "sk" + "-abcdefghijklmnopqrstuvwxyz0123456789" // a fake key, split so the push scan does not match it</ID>
+    <ID>MaxLineLength:PhoneSetupModelTest.kt$PhoneSetupModelTest$val running = job("running", "start", c("linux", "done") + "," + c("opencode", "done") + "," + c("start", "running"))</ID>
+    <ID>MaxLineLength:PhoneSetupScreenTest.kt$PhoneSetupScreenTest$"OpenCode needs a phone with at least 1800 MB of memory; this one has 1024 MB. Run it on a computer instead and connect this phone to it."</ID>
+    <ID>MaxLineLength:PhoneSetupScreenTest.kt$PhoneSetupScreenTest$PhoneSetupUi(checking = false, preflight = SetupPreflightResult.UnsupportedAbi("armeabi-v7a"), items = items)</ID>
+    <ID>MaxLineLength:PhoneSetupScreenTest.kt$PhoneSetupScreenTest$onNodeWithText("This app's Ubuntu only runs on a 64-bit Arm or Intel phone; this one reports armeabi-v7a.").assertExists()</ID>
+    <ID>MaxLineLength:PhoneSetupScreenTest.kt$PhoneSetupScreenTest$persistentListOf(SetupItemUi("linux", "Linux base"), SetupItemUi("node", "Node.js"), SetupItemUi("opencode", "OpenCode"))</ID>
+    <ID>MaxLineLength:PhoneSetupScreenTest.kt$PhoneSetupScreenTest$show(PhoneSetupUi(checking = false, preflight = SetupPreflightResult.LowMemory(1024), items = items), Recorder())</ID>
+    <ID>MaxLineLength:PhoneSetupScreenTest.kt$PhoneSetupScreenTest$show(PhoneSetupUi(checking = false, preflight = SetupPreflightResult.LowSpace(1_200_000_000), items = items), actions)</ID>
+    <ID>MaxLineLength:PhoneSetupScreenTest.kt$PhoneSetupScreenTest$show(PhoneSetupUi(checking = false, preflight = SetupPreflightResult.MayBeSlow(2048), items = items), Recorder())</ID>
+    <ID>MaxLineLength:PhoneSetupScreenTest.kt$PhoneSetupScreenTest$show(PhoneSetupUi(checking = false, preflight = SetupPreflightResult.Ok, items = items, downloadBytes = 350_000_000), Recorder(), "ar")</ID>
+    <ID>MaxLineLength:PhoneSetupScreenTest.kt$PhoneSetupScreenTest$show(PhoneSetupUi(checking = false, preflight = SetupPreflightResult.Ok, items = items, downloadBytes = 350_000_000), actions)</ID>
+    <ID>MaxLineLength:SetupJourneyScreen.kt$.</ID>
+    <ID>MaxLineLength:SetupJourneyScreen.kt$else</ID>
+    <ID>MaxLineLength:SetupJourneyScreen.kt$if</ID>
+    <ID>MaxLineLength:SetupJourneyScreen.kt$if (check is SetupPreflightResult.LowSpace) add(KitAction(stringResource(Res.string.phoneSetupPreflightOpenStorage), actions::openStorage))</ID>
+    <ID>MaxLineLength:SetupJourneyScreen.kt$if (check is SetupPreflightResult.MayBeSlow) KitText(stringResource(Res.string.phoneSetupPreflightMayBeSlow, Numbers.format(check.totalMemoryMb)), role = TypeRole.Secondary)</ID>
+    <ID>MaxLineLength:SetupJourneyScreen.kt$is SetupPreflightResult.LowMemory -&gt; stringResource(Res.string.phoneSetupPreflightLowMemoryBody, Numbers.format(SetupPreflight.MINIMUM_MEMORY_MB), Numbers.format(check.totalMemoryMb))</ID>
+    <ID>MaxLineLength:SetupJourneyScreen.kt$is SetupPreflightResult.LowSpace -&gt; stringResource(Res.string.phoneSetupPreflightLowSpaceBody, journeySize(check.bytesToFree))</ID>
+    <ID>MaxLineLength:SetupJourneyScreen.kt$is SetupPreflightResult.UnsupportedAbi -&gt; stringResource(Res.string.phoneSetupPreflightUnsupportedBody, check.reportedAbi)</ID>
+    <ID>MaxLineLength:SetupJourneyScreen.kt$state.progress.state == SetupState.Done -&gt; KitButton(stringResource(Res.string.phoneSetupStartOpen), actions::done)</ID>
+    <ID>MaxLineLength:SetupJourneyScreen.kt$val</ID>
+    <ID>ReturnCount:SetupJourneyScreen.kt$@Composable private fun journeyFailure(state: SetupJourneyUi): String</ID>
+    <ID>ReturnCount:SetupJourneyScreen.kt$JourneyProgressMemory$fun measured(row: ComponentProgress?): Float?</ID>
+    <ID>ReturnCount:SetupJourneyViewModel.kt$SetupJourneyViewModel$override fun toggle(id: String, checked: Boolean)</ID>
+    <ID>SpreadOperator:SetupMessageWords.kt$( Res.allStringResources.getValue(message.key), *message.args.toTypedArray(), )</ID>
+    <ID>TooManyFunctions:PhoneSetupModel.kt$PhoneSetupModel : PhoneSetupActions</ID>
+    <ID>TooManyFunctions:SetupJourneyScreen.kt$io.github.eslamasabry.oc.feature.phonesetup.ui.SetupJourneyScreen.kt</ID>
+    <ID>TooManyFunctions:SetupJourneyViewModel.kt$SetupJourneyActions</ID>
+    <ID>TooManyFunctions:SetupJourneyViewModel.kt$SetupJourneyViewModel : ViewModelSetupJourneyActions</ID>
+    <ID>UnusedParameter:SetupJourneyScreen.kt$actions: SetupJourneyActions</ID>
+    <ID>WildcardImport:SetupJourneyGateTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:SetupJourneyGateTest.kt$import io.github.eslamasabry.oc.engine.runtime.setup.*</ID>
+    <ID>WildcardImport:SetupJourneyGateTest.kt$import io.github.eslamasabry.oc.feature.phonesetup.presentation.*</ID>
+    <ID>WildcardImport:SetupJourneyScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:SetupJourneyScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:SetupJourneyScreen.kt$import io.github.eslamasabry.oc.engine.runtime.setup.*</ID>
+    <ID>WildcardImport:SetupJourneyScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:SetupJourneyScreen.kt$import io.github.eslamasabry.oc.ui.kit.setup.*</ID>
+    <ID>WildcardImport:SetupJourneyScreen.kt$import io.github.eslamasabry.oc.ui.kit.state.*</ID>
+    <ID>WildcardImport:SetupJourneyScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

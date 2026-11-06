@@ -1,0 +1,303 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:LibraryScreen.kt$current.state != IntegrationAuthState.Pending || (current.command &amp;&amp; current.checkAfterMs &gt; 0) || (!current.command &amp;&amp; current.mode == IntegrationAuthMode.Auto)</ID>
+    <ID>ComplexCondition:LibraryScreen.kt$name.text.isBlank() || (if (local) args.isEmpty() else url.text.isBlank()) || variables.any { it.value.text.isBlank() } || (timeout.text.isNotBlank() &amp;&amp; timeout.text.toString().toIntOrNull()?.let { it &gt; 0 } != true)</ID>
+    <ID>ComplexCondition:ModelDefaultsViewModel.kt$ModelDefaultsViewModel$state.value.saving || state.value.loading || (model != null &amp;&amp; state.value.models.none { it.model.sameModel(model) })</ID>
+    <ID>ComplexCondition:PermissionSettingsScreen.kt$facts.writable &amp;&amp; facts.declined != null &amp;&amp; answers.isEmpty() &amp;&amp; declined == 0 &amp;&amp; !facts.savedGrants</ID>
+    <ID>ComplexCondition:ServerIntegrationScreen.kt$shown.isEmpty() &amp;&amp; !state.loading &amp;&amp; state.available &amp;&amp; !(state.page == ServerIntegrationPage.Tools &amp;&amp; !state.toolsListed)</ID>
+    <ID>ComplexCondition:SettingsPorts.kt$NotificationKeys$start != null &amp;&amp; end != null &amp;&amp; start in 0 until DAY &amp;&amp; end in 0 until DAY</ID>
+    <ID>ComplexCondition:SettingsPresenter.kt$SettingsPresenter$!facts.loading &amp;&amp; !facts.deleting &amp;&amp; !facts.failed &amp;&amp; facts.present</ID>
+    <ID>ComplexCondition:SettingsSearch.kt$SettingsSearch$i &gt; 1 &amp;&amp; j &gt; 1 &amp;&amp; a[i - 1] == b[j - 2] &amp;&amp; a[i - 2] == b[j - 1]</ID>
+    <ID>CyclomaticComplexMethod:AppearancePage.kt$@Composable private fun ColumnScope.AppearanceControls( ui: AppearanceUi, actions: SettingsActions, question: AppearanceQuestion?, onePage: Boolean = false, top: Dp = Space.S6.dp, )</ID>
+    <ID>CyclomaticComplexMethod:AutomationSection.kt$@Composable public fun ColumnScope.AutomationSection(state: AutomationUi, actions: AutomationActions)</ID>
+    <ID>CyclomaticComplexMethod:CrashBody.kt$@Composable internal fun ColumnScope.CrashBody(state: CrashUi, actions: SettingsActions)</ID>
+    <ID>CyclomaticComplexMethod:FakeSettingsPorts.kt$FakeChoices$override suspend fun set(change: PersonalChange): Outcome&lt;PersonalPrefs&gt;</ID>
+    <ID>CyclomaticComplexMethod:HubPage.kt$@Composable private fun rowValue(row: SettingsRowId, state: SettingsUi): String?</ID>
+    <ID>CyclomaticComplexMethod:HubPage.kt$private fun rowGlyph(row: SettingsRowId)</ID>
+    <ID>CyclomaticComplexMethod:LibraryRegistrySheet.kt$@Composable internal fun LibraryRegistrySheet(state: LibraryUi, actions: LibraryActions)</ID>
+    <ID>CyclomaticComplexMethod:LibraryScreen.kt$@Composable private fun AddMcpSheet( state: LibraryUi, actions: LibraryActions, enabled: KitEnabled, prefill: McpServerDraft?, )</ID>
+    <ID>CyclomaticComplexMethod:LibraryScreen.kt$@Composable private fun LibrarySheetBody(sheet: LibrarySheet, state: LibraryUi, actions: LibraryActions)</ID>
+    <ID>CyclomaticComplexMethod:LibraryScreen.kt$@Composable private fun MethodSheet( provider: IntegrationInfo, method: IntegrationMethodInfo, state: LibraryUi, actions: LibraryActions, enabled: KitEnabled, )</ID>
+    <ID>CyclomaticComplexMethod:LibraryScreen.kt$@Composable private fun ProviderSheet(provider: IntegrationInfo, state: LibraryUi, actions: LibraryActions)</ID>
+    <ID>CyclomaticComplexMethod:LibraryScreen.kt$@Composable private fun SignInSheet( attempt: LibraryAttempt, state: LibraryUi, actions: LibraryActions, enabled: KitEnabled, )</ID>
+    <ID>CyclomaticComplexMethod:LibraryScreen.kt$@Composable private fun SkillSheet( skill: SkillInfo, state: LibraryUi, actions: LibraryActions, enabled: KitEnabled, )</ID>
+    <ID>CyclomaticComplexMethod:LibraryScreen.kt$@Composable public fun LibraryScreen(state: LibraryUi, actions: LibraryActions)</ID>
+    <ID>CyclomaticComplexMethod:LibraryViewModel.kt$LibraryViewModel$override fun useSkillInNewConversation(skill: SkillInfo)</ID>
+    <ID>CyclomaticComplexMethod:LocalDataPage.kt$@Composable internal fun ColumnScope.LocalDataBody(ui: LocalDataUi, actions: SettingsActions)</ID>
+    <ID>CyclomaticComplexMethod:MonitoringSection.kt$@Composable public fun ColumnScope.MonitoringSection(state: MonitoringUi, actions: MonitoringActions)</ID>
+    <ID>CyclomaticComplexMethod:PendingWords.kt$PendingWords$fun never(item: NeverCollected): String</ID>
+    <ID>CyclomaticComplexMethod:PermissionSettingsScreen.kt$@Composable internal fun PermissionSettingsContent( ui: PermissionSettingsUi, onBack: () -&gt; Unit, onRefresh: () -&gt; Unit, onAnswer: (InFlowConsentKind) -&gt; Unit, onAskAgain: () -&gt; Unit, onGrants: () -&gt; Unit, onConfirm: () -&gt; Unit, onCancel: () -&gt; Unit, )</ID>
+    <ID>CyclomaticComplexMethod:PermissionSettingsScreen.kt$@Composable private fun PermissionAnswer( row: InFlowConsentRow, writable: Boolean, busy: Boolean, onAnswer: (InFlowConsentKind) -&gt; Unit, )</ID>
+    <ID>CyclomaticComplexMethod:PreferencesChoices.kt$PreferenceMapping$public fun change(change: PersonalChange, current: DevicePreferences): PreferenceChange</ID>
+    <ID>CyclomaticComplexMethod:ServerCapabilitiesPage.kt$@Composable private fun featureWords(id: ServerFeatureId): Pair&lt;String, String&gt;</ID>
+    <ID>CyclomaticComplexMethod:ServerIntegrationScreen.kt$@Composable public fun ServerIntegrationScreen(state: ServerIntegrationUi, actions: ServerIntegrationActions)</ID>
+    <ID>CyclomaticComplexMethod:ServerSettingsScreen.kt$@Composable private fun ServerHome(state: ServerSettingsUi, actions: ServerSettingsActions)</ID>
+    <ID>CyclomaticComplexMethod:ServerSettingsScreen.kt$@Composable private fun disconnectedReason(failure: Failure?): String</ID>
+    <ID>CyclomaticComplexMethod:ServerSettingsScreen.kt$@Composable private fun resultWords(result: ConnectionResult): String?</ID>
+    <ID>CyclomaticComplexMethod:ServerSettingsScreen.kt$@Composable public fun ServerSettingsScreen(state: ServerSettingsUi, actions: ServerSettingsActions)</ID>
+    <ID>CyclomaticComplexMethod:SettingsPresenter.kt$SettingsPresenter$override fun onRow(row: SettingsRowId)</ID>
+    <ID>CyclomaticComplexMethod:SettingsScreen.kt$@Composable public fun SettingsScreen( state: SettingsUi, actions: SettingsActions, modifier: Modifier = Modifier, onExit: (() -&gt; Unit)? = null, monitoring: (@Composable ColumnScope.() -&gt; Unit)? = null, )</ID>
+    <ID>CyclomaticComplexMethod:SettingsStructure.kt$SettingsStructure$public fun rows( group: SettingsGroupId, facts: SettingsFacts, reasoning: Boolean, timestamps: Boolean, ): ImmutableList&lt;SettingsRowUi&gt;</ID>
+    <ID>CyclomaticComplexMethod:SettingsWords.kt$@Composable internal fun aliasWords(row: SettingsRowId): String</ID>
+    <ID>CyclomaticComplexMethod:SettingsWords.kt$@Composable internal fun rowWords(row: SettingsRowId): String</ID>
+    <ID>CyclomaticComplexMethod:VoiceNotificationsPages.kt$@Composable internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: SettingsActions)</ID>
+    <ID>LargeClass:SettingsPresenter.kt$SettingsPresenter : SettingsActions</ID>
+    <ID>LongMethod:AppearanceGuide.kt$@Composable internal fun ColumnScope.AppearanceGuideHeader(ui: AppearanceUi, actions: SettingsActions)</ID>
+    <ID>LongMethod:AppearancePage.kt$@Composable private fun ColumnScope.AppearanceControls( ui: AppearanceUi, actions: SettingsActions, question: AppearanceQuestion?, onePage: Boolean = false, top: Dp = Space.S6.dp, )</ID>
+    <ID>LongMethod:AutomationSection.kt$@Composable public fun ColumnScope.AutomationSection(state: AutomationUi, actions: AutomationActions)</ID>
+    <ID>LongMethod:CrashBody.kt$@Composable internal fun ColumnScope.CrashBody(state: CrashUi, actions: SettingsActions)</ID>
+    <ID>LongMethod:HubPage.kt$@Composable private fun ColumnScope.GroupBody( state: SettingsUi, actions: SettingsActions, page: SettingsPage.Group, )</ID>
+    <ID>LongMethod:HubPage.kt$@Composable private fun ColumnScope.HubBody( state: SettingsUi, actions: SettingsActions, selected: SettingsGroupId? = null, )</ID>
+    <ID>LongMethod:LibraryRegistry.kt$public fun libraryRegistryItem(entry: RegistryEntry): LibraryRegistryItem</ID>
+    <ID>LongMethod:LibraryRegistrySheet.kt$@Composable internal fun LibraryRegistrySheet(state: LibraryUi, actions: LibraryActions)</ID>
+    <ID>LongMethod:LibraryScreen.kt$@Composable private fun AddMcpSheet( state: LibraryUi, actions: LibraryActions, enabled: KitEnabled, prefill: McpServerDraft?, )</ID>
+    <ID>LongMethod:LibraryScreen.kt$@Composable private fun LibrarySheetBody(sheet: LibrarySheet, state: LibraryUi, actions: LibraryActions)</ID>
+    <ID>LongMethod:LibraryScreen.kt$@Composable private fun MethodSheet( provider: IntegrationInfo, method: IntegrationMethodInfo, state: LibraryUi, actions: LibraryActions, enabled: KitEnabled, )</ID>
+    <ID>LongMethod:LibraryScreen.kt$@Composable private fun ProviderSheet(provider: IntegrationInfo, state: LibraryUi, actions: LibraryActions)</ID>
+    <ID>LongMethod:LibraryScreen.kt$@Composable private fun SignInSheet( attempt: LibraryAttempt, state: LibraryUi, actions: LibraryActions, enabled: KitEnabled, )</ID>
+    <ID>LongMethod:LibraryScreen.kt$@Composable private fun SkillSheet( skill: SkillInfo, state: LibraryUi, actions: LibraryActions, enabled: KitEnabled, )</ID>
+    <ID>LongMethod:LibraryScreen.kt$@Composable public fun LibraryScreen(state: LibraryUi, actions: LibraryActions)</ID>
+    <ID>LongMethod:LocalDataPage.kt$@Composable internal fun ColumnScope.LocalDataBody(ui: LocalDataUi, actions: SettingsActions)</ID>
+    <ID>LongMethod:PermissionSettingsScreen.kt$@Composable internal fun PermissionSettingsContent( ui: PermissionSettingsUi, onBack: () -&gt; Unit, onRefresh: () -&gt; Unit, onAnswer: (InFlowConsentKind) -&gt; Unit, onAskAgain: () -&gt; Unit, onGrants: () -&gt; Unit, onConfirm: () -&gt; Unit, onCancel: () -&gt; Unit, )</ID>
+    <ID>LongMethod:ServerCapabilitiesPage.kt$@Composable private fun featureWords(id: ServerFeatureId): Pair&lt;String, String&gt;</ID>
+    <ID>LongMethod:ServerFeatures.kt$ServerFeatures$public fun project( name: String, s: ServerCapabilities, p: PlatformCapabilities, usage: Boolean, ): ServerCapabilitiesUi</ID>
+    <ID>LongMethod:ServerIntegrationScreen.kt$@Composable public fun ServerIntegrationScreen(state: ServerIntegrationUi, actions: ServerIntegrationActions)</ID>
+    <ID>LongMethod:ServerSettingsScreen.kt$@Composable private fun ServerHome(state: ServerSettingsUi, actions: ServerSettingsActions)</ID>
+    <ID>LongMethod:ServerSettingsScreen.kt$@Composable public fun ServerSettingsScreen(state: ServerSettingsUi, actions: ServerSettingsActions)</ID>
+    <ID>LongMethod:SettingsEntries.kt$SettingsEntries$override fun EntryProviderScope&lt;NavKey&gt;.install()</ID>
+    <ID>LongMethod:SettingsPresenter.kt$SettingsPresenter$private fun build( l: Local, f: SettingsFacts, p: PersonalPrefs, e: Engines, guide: AppearanceGuideRecord?, ): SettingsUi</ID>
+    <ID>LongMethod:SettingsScreen.kt$@Composable public fun SettingsScreen( state: SettingsUi, actions: SettingsActions, modifier: Modifier = Modifier, onExit: (() -&gt; Unit)? = null, monitoring: (@Composable ColumnScope.() -&gt; Unit)? = null, )</ID>
+    <ID>LongMethod:SettingsStructure.kt$SettingsStructure$public fun rows( group: SettingsGroupId, facts: SettingsFacts, reasoning: Boolean, timestamps: Boolean, ): ImmutableList&lt;SettingsRowUi&gt;</ID>
+    <ID>LongMethod:UpdatesAboutPages.kt$@Composable internal fun ColumnScope.AboutBody( about: AboutFacts, actions: SettingsActions, voiceLicenses: Boolean = false, updates: UpdateFacts? = null, )</ID>
+    <ID>LongMethod:UpdatesAboutPages.kt$@Composable internal fun ColumnScope.UpdatesBody(u: UpdateFacts, actions: SettingsActions)</ID>
+    <ID>LongMethod:VoiceNotificationsPages.kt$@Composable internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: SettingsActions)</ID>
+    <ID>LongParameterList:PermissionSettingsScreen.kt$( ui: PermissionSettingsUi, onBack: () -&gt; Unit, onRefresh: () -&gt; Unit, onAnswer: (InFlowConsentKind) -&gt; Unit, onAskAgain: () -&gt; Unit, onGrants: () -&gt; Unit, onConfirm: () -&gt; Unit, onCancel: () -&gt; Unit, )</ID>
+    <ID>LongParameterList:SettingsPresenter.kt$SettingsPresenter$( private val scope: CoroutineScope, facts: StateFlow&lt;SettingsFacts&gt;, private val choices: PersonalChoices, private val openers: SettingsOpeners, private val analytics: AnalyticsChoices? = null, private val voice: VoiceSettings? = null, private val notifications: NotificationSettings? = null, private val updates: UpdateSettings? = null, private val about: AboutFacts = AboutFacts(), private val diagnostics: DiagnosticsExport? = null, private val crashes: CrashSettings? = null, private val phrases: PhraseSettings? = null, private val appearanceGuide: AppearanceGuideMemory? = null, private val exitWhatsNew: () -&gt; Unit = {}, private val localModels: LocalModelStorage? = null, private val licenses: VoiceLicenseSource? = null, private val serverPage: SettingsServerDoor? = null, private val localData: LocalDataSettings? = null, )</ID>
+    <ID>LongParameterList:SettingsScreen.kt$( title: String, onBack: (() -&gt; Unit)?, state: SettingsUi, actions: SettingsActions, modifier: Modifier = Modifier, search: (@Composable () -&gt; Unit)? = null, large: Boolean = false, footer: (@Composable () -&gt; Unit)? = null, content: @Composable ColumnScope.() -&gt; Unit, )</ID>
+    <ID>MagicNumber:AppearancePage.kt$136</ID>
+    <ID>MagicNumber:AppearancePage.kt$3</ID>
+    <ID>MagicNumber:AppearancePage.kt$30</ID>
+    <ID>MagicNumber:AppearancePage.kt$44</ID>
+    <ID>MagicNumber:AppearancePage.kt$6</ID>
+    <ID>MagicNumber:AppearancePage.kt$64</ID>
+    <ID>MagicNumber:AppearancePage.kt$84</ID>
+    <ID>MagicNumber:HubPage.kt$10</ID>
+    <ID>MagicNumber:HubPage.kt$18</ID>
+    <ID>MagicNumber:LanguageReportPages.kt$100</ID>
+    <ID>MagicNumber:LibraryRegistry.kt$64</ID>
+    <ID>MagicNumber:LibraryScreen.kt$3</ID>
+    <ID>MagicNumber:LibraryScreen.kt$32</ID>
+    <ID>MagicNumber:LibraryViewModel.kt$24</ID>
+    <ID>MagicNumber:LibraryViewModel.kt$4</ID>
+    <ID>MagicNumber:LibraryViewModel.kt$LibraryViewModel$500</ID>
+    <ID>MagicNumber:LocalDataPage.kt$10</ID>
+    <ID>MagicNumber:LocalDataPage.kt$1024L</ID>
+    <ID>MagicNumber:LocalDataPage.kt$14</ID>
+    <ID>MagicNumber:MonitoringSection.kt$120</ID>
+    <ID>MagicNumber:MonitoringSection.kt$15</ID>
+    <ID>MagicNumber:MonitoringSection.kt$30</ID>
+    <ID>MagicNumber:MonitoringSection.kt$60</ID>
+    <ID>MagicNumber:PersonalPrefs.kt$LiveStrength.Bold$1.6f</ID>
+    <ID>MagicNumber:PersonalPrefs.kt$LiveStrength.Subtle$.7f</ID>
+    <ID>MagicNumber:ServerIntegrationScreen.kt$8</ID>
+    <ID>MagicNumber:SettingsUi.kt$QuietHours.Companion$24</ID>
+    <ID>MagicNumber:SettingsUi.kt$QuietHours.Companion$30</ID>
+    <ID>MagicNumber:SettingsUi.kt$QuietHours.Companion$60</ID>
+    <ID>MagicNumber:VoiceNotificationsPages.kt$120</ID>
+    <ID>MagicNumber:VoiceNotificationsPages.kt$15</ID>
+    <ID>MagicNumber:VoiceNotificationsPages.kt$30</ID>
+    <ID>MagicNumber:VoiceNotificationsPages.kt$60</ID>
+    <ID>MatchingDeclarationName:LibraryRegistry.kt$LibraryRegistryItem</ID>
+    <ID>MatchingDeclarationName:LooksCapture.kt$Looks</ID>
+    <ID>MaxLineLength:DiagnosticsReport.kt$DiagnosticsReport$/** The report text (Flutter Report a problem's diagnostics block): fixed English labels, since it is read by maintainers. */</ID>
+    <ID>MaxLineLength:LocalModelsPage.kt$!state.present -&gt; KitStateView(kind = KitStateKind.Empty, title = stringResource(Res.string.migrationStorageEmpty))</ID>
+    <ID>MaxLineLength:LocalModelsPage.kt$state.loading || state.deleting -&gt; KitStateView(kind = KitStateKind.Loading, title = stringResource(Res.string.migrationStorageTitle))</ID>
+    <ID>MaxLineLength:LooksCapture.kt$Looks$/** Capture-only: writes PNGs of a screen in light and dark at 412 x 915 dp, density 2.625 (1081 x 2402 px). No comparison. */</ID>
+    <ID>MaxLineLength:LooksCapture.kt$Looks$appearance = KitAppearance(mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light, motion = MotionLevel.Off)</ID>
+    <ID>MaxLineLength:LooksCapture.kt$Looks$fun</ID>
+    <ID>MaxLineLength:LooksCaptureTest.kt$LooksCaptureTest$val ui = SettingsUi(hub = HubUi(groups = SettingsGroupId.entries.toImmutableList(), server = ServerLine("Home laptop", onPhone = false), searchable = SettingsRowId.entries.toImmutableList()))</ID>
+    <ID>MaxLineLength:P12FixSettingsTest.kt$P12FixSettingsTest$HandledErrors.fromLog(LogEntry(Severity.Error, "scope", "uncaught failure in scope", ErrorShape("IllegalStateException", emptyList())))</ID>
+    <ID>MaxLineLength:P12FixSettingsTest.kt$P12FixSettingsTest$assertEquals(HandledError("Requests", "a reply was not accepted"), HandledErrors.fromLog(LogEntry(Severity.Warn, "Requests", "a reply was not accepted", null)))</ID>
+    <ID>MaxLineLength:P12FixSettingsTest.kt$P12FixSettingsTest$assertEquals(HandledError("connection", "connection lost after 6 tries"), HandledErrors.fromStream(StreamStatus.Reconnecting(5, null), lost))</ID>
+    <ID>MaxLineLength:P12FixSettingsTest.kt$P12FixSettingsTest$assertEquals(HandledError("connection", "connection stopped: SignIn"), HandledErrors.fromStream(StreamStatus.Connected, stopped))</ID>
+    <ID>MaxLineLength:P12FixSettingsTest.kt$P12FixSettingsTest$assertFalse(SettingsRowId.ShowReasoning in SettingsStructure.searchable(ignores), "absent rows stay out of search")</ID>
+    <ID>MaxLineLength:P12FixSettingsTest.kt$P12FixSettingsTest$assertTrue(follows.any { it.id == SettingsRowId.ShowReasoning } &amp;&amp; follows.any { it.id == SettingsRowId.ShowTimestamps })</ID>
+    <ID>MaxLineLength:P12FixSettingsTest.kt$P12FixSettingsTest$private</ID>
+    <ID>MaxLineLength:P12FixSettingsTest.kt$P12FixSettingsTest$val follows = SettingsStructure.rows(SettingsGroupId.Conversations, phoneFacts(), reasoning = false, timestamps = false)</ID>
+    <ID>MaxLineLength:P12FixSettingsTest.kt$P12FixSettingsTest.Rig$private</ID>
+    <ID>MaxLineLength:P12FixSettingsTest.kt$P12FixSettingsTest.Rig$val p = SettingsPresenter(scope.backgroundScope, MutableStateFlow(facts), choices, RecordingOpeners(), notifications = notifications)</ID>
+    <ID>MaxLineLength:P12FixSettingsUiTest.kt$P12FixSettingsUiTest$SettingsPresenter(scope, MutableStateFlow(facts), choices, RecordingOpeners(), notifications = notifications)</ID>
+    <ID>MaxLineLength:P12FixSettingsUiTest.kt$P12FixSettingsUiTest$listOf("Use system language", "English", "العربية", "Español", "日本語", "Português (Brasil)", "Русский", "简体中文")</ID>
+    <ID>MaxLineLength:PendingWords.kt$PendingWords$const val NOT_SENT_YET = "Not sent yet. Basic reports wait on this phone, at most 90 days, until a service is chosen."</ID>
+    <ID>MaxLineLength:PendingWordsTest.kt$PendingWordsTest$val missing = (view.basicEvents + view.detailedEvents).map { it.name }.filter { PendingWords.events[it].isNullOrBlank() }</ID>
+    <ID>MaxLineLength:PreferencesChoices.kt$PreferenceMapping$PreferenceChange.SetEffects(current.effects.copy(motion = StoredMotion.entries.first { it.name == change.motion.name }))</ID>
+    <ID>MaxLineLength:PreferencesChoices.kt$PreferenceMapping$density = p.effects.fineTune.density?.let { d -&gt; Density.entries.firstOrNull { it.name == d.name } } ?: Density.Comfortable</ID>
+    <ID>MaxLineLength:PreferencesChoices.kt$PreferenceMapping$fineTune = current.effects.fineTune.copy(corners = change.corners?.let { c -&gt; StoredCorners.entries.first { it.name == c.name } })</ID>
+    <ID>MaxLineLength:PreferencesChoices.kt$PreferenceMapping$fineTune = current.effects.fineTune.copy(density = change.spacing?.let { d -&gt; StoredDensity.entries.first { it.name == d.name } })</ID>
+    <ID>MaxLineLength:PreferencesChoicesTest.kt$PreferencesChoicesTest$fun</ID>
+    <ID>MaxLineLength:PreferencesChoicesTest.kt$PreferencesChoicesTest.Rig$val store = PrefsKeyValueStore(disk, FlutterPrefsCodec(JavaListDecoder.Unsupported), StateMigrationGate.alwaysOpen(), StandardTestDispatcher(scope.testScheduler))</ID>
+    <ID>MaxLineLength:SettingsGoldensTest.kt$SettingsGoldensTest$NotificationFacts(blocked = true, quietHours = QuietHours(22 * 60, 8 * 60), background = BackgroundState.Running)</ID>
+    <ID>MaxLineLength:SettingsGoldensTest.kt$SettingsGoldensTest$SettingsUi(hub = HubUi(groups = SettingsGroupId.entries.toImmutableList(), server = ServerLine("laptop", onPhone = false)))</ID>
+    <ID>MaxLineLength:SettingsGoldensTest.kt$SettingsGoldensTest$assertTrue(golden.width == image.width &amp;&amp; golden.height == image.height, "$name: size ${image.width}x${image.height} vs ${golden.width}x${golden.height}")</ID>
+    <ID>MaxLineLength:SettingsGoldensTest.kt$SettingsGoldensTest$fail("$name: ${"%.3f".format(share * 100)} % of pixels differ (limit ${MAX_SHARE * 100} %); actual: $actual")</ID>
+    <ID>MaxLineLength:SettingsGoldensTest.kt$SettingsGoldensTest$mode = AppearanceMode.Dark</ID>
+    <ID>MaxLineLength:SettingsGoldensTest.kt$SettingsGoldensTest$on(SettingsPage.Updates, SettingsUi(updates = UpdateFacts("3.0.0", "10001", state = UpdateState.Available("3.1.0", "41"))))</ID>
+    <ID>MaxLineLength:SettingsGoldensTest.kt$SettingsGoldensTest$on(SettingsPage.WhatWeCollect, SettingsUi(privacy = PrivacyUi(WhatWeCollectSource.build(ConsentState(), RemoteSink))))</ID>
+    <ID>MaxLineLength:SettingsGoldensTest.kt$SettingsGoldensTest$setContent { SettingsThemed(dark = variant.dark, locale = variant.locale) { SettingsScreen(state, RecordingActions()) } }</ID>
+    <ID>MaxLineLength:SettingsHarness.kt$/** The real kit theme on the desktop platform over the theme's ground, still frame, motion off, at plan 06 §15.3's phone size. */</ID>
+    <ID>MaxLineLength:SettingsHarness.kt$appearance = KitAppearance(mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light, motion = MotionLevel.Off)</ID>
+    <ID>MaxLineLength:SettingsParityTest.kt$SettingsParityTest$assertTrue(SettingsRowId.Appearance in thisApp &amp;&amp; SettingsRowId.Language in thisApp &amp;&amp; SettingsRowId.Privacy in thisApp)</ID>
+    <ID>MaxLineLength:SettingsParityTest.kt$SettingsParityTest$fun</ID>
+    <ID>MaxLineLength:SettingsParityTest.kt$SettingsParityTest$val errors = (1..25).map { ReportError("2026-11-02T10:00:${it.toString().padStart(2, '0')}Z", "chat", "failed $it") }</ID>
+    <ID>MaxLineLength:SettingsParityTest.kt$SettingsParityTest$val thisApp = SettingsStructure.rows(SettingsGroupId.ThisApp, facts, reasoning = false, timestamps = false).map { it.id }</ID>
+    <ID>MaxLineLength:SettingsParityTest.kt$SettingsParityTest.Rig$val p = SettingsPresenter(scope.backgroundScope, MutableStateFlow(facts), choices, openers, diagnostics = export)</ID>
+    <ID>MaxLineLength:SettingsParityUiTest.kt$SettingsParityUiTest$val p = remember { SettingsPresenter(scope, facts, choices, openers, diagnostics = export).also { presenter = it } }</ID>
+    <ID>MaxLineLength:SettingsParityUiTest.kt$SettingsParityUiTest.&lt;no name provided&gt;$override suspend fun report(): Outcome&lt;String&gt;</ID>
+    <ID>MaxLineLength:SettingsPorts.kt$/* * The ports the Settings pages talk through. Analytics consent is a real engine today (`:engine:analytics`) and gets a * one-line adapter below. Personal choices belong to `:engine:settings` `Preferences`, which does not compile on this * tip; the adapter is a field-for-field mapping (see [PersonalChoices]). Voice, notifications and updates have no engine * yet (S4-NOTIFY, S5-MODELS, the updater): their ports are the contract those engines implement. */</ID>
+    <ID>MaxLineLength:SettingsPresenterTest.kt$SettingsPresenterTest$assertEquals(listOf(PersonalChange.Mode(AppearanceMode.Light), PersonalChange.Pack(PackId.Nord)), choices.writes)</ID>
+    <ID>MaxLineLength:SettingsScreenUiTest.kt$SettingsScreenUiTest$SettingsPresenter(scope, facts, choices, openers, analytics, notifications = notifications, updates = updates)</ID>
+    <ID>MaxLineLength:SettingsScreenUiTest.kt$SettingsScreenUiTest$for (group in listOf("Server", "Agent", "Conversations", "This app", "Help")) onNodeWithText(group).assertExists()</ID>
+    <ID>MaxLineLength:SettingsScreenUiTest.kt$SettingsScreenUiTest.Companion$const val PENDING_NOT_SENT = "Not sent yet. Basic reports wait on this phone, at most 90 days, until a service is chosen."</ID>
+    <ID>MaxLineLength:SettingsSearch.kt$SettingsSearch$/** One edit apart, or one swap of neighbours (optimal string alignment ≤ 1); or one edit from a prefix of [word]. */</ID>
+    <ID>MaxLineLength:SettingsSearch.kt$SettingsSearch$if (i &gt; 1 &amp;&amp; j &gt; 1 &amp;&amp; a[i - 1] == b[j - 2] &amp;&amp; a[i - 2] == b[j - 1]) d[i][j] = minOf(d[i][j], d[i - 2][j - 2] + 1)</ID>
+    <ID>MaxLineLength:SettingsSearch.kt$SettingsSearch$words.all { w -&gt; hay.any { it.startsWith(w) } || (w.length &gt;= FUZZY_FROM &amp;&amp; hay.any { near(w, it) }) }</ID>
+    <ID>MaxLineLength:SettingsSearchTest.kt$SettingsSearchTest$assertEquals(listOf(SettingsRowId.Notifications, SettingsRowId.Background), SettingsSearch.find("battery", entries))</ID>
+    <ID>MaxLineLength:SettingsStructureTest.kt$SettingsStructureTest$assertEquals(SettingsDoor.Outside(SettingsOutside.KeepRunning), rows.first { it.id == SettingsRowId.Background }.door)</ID>
+    <ID>MaxLineLength:SettingsStructureTest.kt$SettingsStructureTest$val conv = SettingsStructure.rows(SettingsGroupId.Conversations, phoneFacts(), reasoning = true, timestamps = false)</ID>
+    <ID>ReturnCount:LibraryRegistry.kt$public fun libraryRegistryItem(entry: RegistryEntry): LibraryRegistryItem</ID>
+    <ID>ReturnCount:LibraryScreen.kt$@Composable private fun LibraryEmpty( empty: Boolean, query: String, loading: Boolean, failed: Boolean, tab: LibraryTab, )</ID>
+    <ID>ReturnCount:LibraryViewModel.kt$LibraryViewModel$override fun confirmLink()</ID>
+    <ID>ReturnCount:LibraryViewModel.kt$LibraryViewModel$override fun useSkillInNewConversation(skill: SkillInfo)</ID>
+    <ID>ReturnCount:LibraryViewModel.kt$LibraryViewModel$private fun requestBrowser(attempt: LibraryAttempt, cancelOnDecline: Boolean)</ID>
+    <ID>ReturnCount:PermissionSettings.kt$PermissionSettingsViewModel$public fun answer(kind: InFlowConsentKind)</ID>
+    <ID>ReturnCount:ServerSettingsScreen.kt$@Composable private fun ShellBody(state: ServerSettingsUi, actions: ServerSettingsActions)</ID>
+    <ID>ReturnCount:SettingsPresenter.kt$SettingsPresenter$override fun onConfirmDiscard()</ID>
+    <ID>ReturnCount:SettingsSearch.kt$SettingsSearch$private fun near(query: String, word: String): Boolean</ID>
+    <ID>TooManyFunctions:LibraryScreen.kt$io.github.eslamasabry.oc.feature.settings.ui.LibraryScreen.kt</ID>
+    <ID>TooManyFunctions:LibraryViewModel.kt$LibraryActions</ID>
+    <ID>TooManyFunctions:LibraryViewModel.kt$LibraryViewModel : ViewModelLibraryActions</ID>
+    <ID>TooManyFunctions:PreferencesChoices.kt$PreferenceMapping</ID>
+    <ID>TooManyFunctions:ServerIntegrationModel.kt$ServerIntegrationActions</ID>
+    <ID>TooManyFunctions:ServerIntegrationModel.kt$ServerIntegrationViewModel : ViewModelServerIntegrationActions</ID>
+    <ID>TooManyFunctions:ServerSettings.kt$ServerSettingsActions</ID>
+    <ID>TooManyFunctions:ServerSettings.kt$ServerSettingsViewModel : ViewModelServerSettingsActions</ID>
+    <ID>TooManyFunctions:ServerSettingsScreen.kt$io.github.eslamasabry.oc.feature.settings.ui.ServerSettingsScreen.kt</ID>
+    <ID>TooManyFunctions:SettingsActions.kt$SettingsActions</ID>
+    <ID>TooManyFunctions:SettingsPresenter.kt$SettingsPresenter : SettingsActions</ID>
+    <ID>TooManyFunctions:SettingsWords.kt$io.github.eslamasabry.oc.feature.settings.ui.SettingsWords.kt</ID>
+    <ID>UnusedParameter:ServerCapabilitiesPage.kt$actions: SettingsActions</ID>
+    <ID>WildcardImport:AboutPageTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:AboutPageTest.kt$import io.github.eslamasabry.oc.feature.settings.presentation.*</ID>
+    <ID>WildcardImport:AppearanceCardsTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:AppearanceCardsTest.kt$import io.github.eslamasabry.oc.feature.settings.presentation.*</ID>
+    <ID>WildcardImport:AppearanceGuide.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:AppearanceGuide.kt$import io.github.eslamasabry.oc.ui.kit.guide.*</ID>
+    <ID>WildcardImport:AppearanceGuide.kt$import io.github.eslamasabry.oc.ui.kit.row.*</ID>
+    <ID>WildcardImport:AppearanceGuide.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:AppearancePage.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:AppearancePage.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:AppearancePage.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:AppearancePageTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:AppearancePageTest.kt$import io.github.eslamasabry.oc.feature.settings.presentation.*</ID>
+    <ID>WildcardImport:Automation.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:AutomationSection.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:AutomationSection.kt$import io.github.eslamasabry.oc.ui.kit.row.*</ID>
+    <ID>WildcardImport:AutomationSection.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:ByServerTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:ByServerTest.kt$import io.github.eslamasabry.oc.feature.settings.presentation.*</ID>
+    <ID>WildcardImport:CrashBody.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:HubPage.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:HubPage.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:LibraryEntries.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:LibraryEntries.kt$import io.github.eslamasabry.oc.ui.routes.*</ID>
+    <ID>WildcardImport:LibraryPageTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:LibraryPageTest.kt$import io.github.eslamasabry.oc.core.common.ids.*</ID>
+    <ID>WildcardImport:LibraryPageTest.kt$import io.github.eslamasabry.oc.core.model.*</ID>
+    <ID>WildcardImport:LibraryPageTest.kt$import io.github.eslamasabry.oc.feature.settings.presentation.*</ID>
+    <ID>WildcardImport:LibraryPageTest.kt$import kotlinx.collections.immutable.*</ID>
+    <ID>WildcardImport:LibraryRegistrySheet.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:LibraryRegistrySheet.kt$import io.github.eslamasabry.oc.feature.settings.presentation.*</ID>
+    <ID>WildcardImport:LibraryRegistrySheet.kt$import io.github.eslamasabry.oc.ui.kit.*</ID>
+    <ID>WildcardImport:LibraryRegistrySheet.kt$import io.github.eslamasabry.oc.ui.kit.modal.*</ID>
+    <ID>WildcardImport:LibraryRegistrySheet.kt$import io.github.eslamasabry.oc.ui.kit.row.*</ID>
+    <ID>WildcardImport:LibraryRegistrySheet.kt$import io.github.eslamasabry.oc.ui.kit.state.*</ID>
+    <ID>WildcardImport:LibraryRegistrySheet.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:LibraryScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:LibraryScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:LibraryScreen.kt$import io.github.eslamasabry.oc.core.model.*</ID>
+    <ID>WildcardImport:LibraryScreen.kt$import io.github.eslamasabry.oc.engine.integrations.catalog.*</ID>
+    <ID>WildcardImport:LibraryScreen.kt$import io.github.eslamasabry.oc.feature.settings.presentation.*</ID>
+    <ID>WildcardImport:LibraryScreen.kt$import io.github.eslamasabry.oc.ui.kit.*</ID>
+    <ID>WildcardImport:LibraryScreen.kt$import io.github.eslamasabry.oc.ui.kit.choice.*</ID>
+    <ID>WildcardImport:LibraryScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:LibraryScreen.kt$import io.github.eslamasabry.oc.ui.kit.input.*</ID>
+    <ID>WildcardImport:LibraryScreen.kt$import io.github.eslamasabry.oc.ui.kit.modal.*</ID>
+    <ID>WildcardImport:LibraryScreen.kt$import io.github.eslamasabry.oc.ui.kit.nav.*</ID>
+    <ID>WildcardImport:LibraryScreen.kt$import io.github.eslamasabry.oc.ui.kit.row.*</ID>
+    <ID>WildcardImport:LibraryScreen.kt$import io.github.eslamasabry.oc.ui.kit.state.*</ID>
+    <ID>WildcardImport:LibraryScreen.kt$import io.github.eslamasabry.oc.ui.kitchat.code.*</ID>
+    <ID>WildcardImport:LibraryScreen.kt$import io.github.eslamasabry.oc.ui.kitchat.markdown.*</ID>
+    <ID>WildcardImport:LibraryScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:LibraryScreen.kt$import kotlinx.collections.immutable.*</ID>
+    <ID>WildcardImport:LibraryScreen.kt$import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:LibraryViewModel.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:LibraryViewModel.kt$import io.github.eslamasabry.oc.core.model.*</ID>
+    <ID>WildcardImport:LibraryViewModel.kt$import io.github.eslamasabry.oc.engine.integrations.catalog.*</ID>
+    <ID>WildcardImport:LibraryViewModel.kt$import io.github.eslamasabry.oc.engine.setupassist.*</ID>
+    <ID>WildcardImport:LibraryViewModel.kt$import kotlinx.coroutines.flow.*</ID>
+    <ID>WildcardImport:LocalDataPage.kt$import io.github.eslamasabry.oc.feature.settings.presentation.*</ID>
+    <ID>WildcardImport:LocalDataPage.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:ModelDefaultsScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:MonitoringSection.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:NotificationsGateTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:NotificationsGateTest.kt$import io.github.eslamasabry.oc.feature.settings.presentation.*</ID>
+    <ID>WildcardImport:PermissionSettings.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:PermissionSettings.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:PermissionSettings.kt$import kotlinx.coroutines.flow.*</ID>
+    <ID>WildcardImport:PermissionSettingsScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:PermissionSettingsScreen.kt$import io.github.eslamasabry.oc.engine.settings.consent.*</ID>
+    <ID>WildcardImport:PermissionSettingsScreen.kt$import io.github.eslamasabry.oc.feature.settings.presentation.*</ID>
+    <ID>WildcardImport:PermissionSettingsScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:PermissionSettingsScreen.kt$import io.github.eslamasabry.oc.ui.kit.modal.*</ID>
+    <ID>WildcardImport:PermissionSettingsScreen.kt$import io.github.eslamasabry.oc.ui.kit.row.*</ID>
+    <ID>WildcardImport:PermissionSettingsScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:PermissionSettingsTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:PermissionSettingsTest.kt$import io.github.eslamasabry.oc.engine.settings.consent.*</ID>
+    <ID>WildcardImport:PermissionSettingsTest.kt$import io.github.eslamasabry.oc.feature.settings.presentation.*</ID>
+    <ID>WildcardImport:PrivacyGateTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:PrivacyGateTest.kt$import io.github.eslamasabry.oc.feature.settings.presentation.*</ID>
+    <ID>WildcardImport:SecondPassPages.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:SecondPassPages.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:ServerCapabilitiesPage.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:ServerCapabilitiesPage.kt$import io.github.eslamasabry.oc.feature.settings.presentation.*</ID>
+    <ID>WildcardImport:ServerCapabilitiesPage.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:ServerIntegrationEntries.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:ServerIntegrationEntries.kt$import io.github.eslamasabry.oc.ui.routes.*</ID>
+    <ID>WildcardImport:ServerIntegrationModel.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:ServerIntegrationModel.kt$import io.github.eslamasabry.oc.ui.routes.*</ID>
+    <ID>WildcardImport:ServerIntegrationScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:ServerIntegrationScreen.kt$import io.github.eslamasabry.oc.ui.kit.*</ID>
+    <ID>WildcardImport:ServerIntegrationScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:ServerIntegrationScreen.kt$import io.github.eslamasabry.oc.ui.kit.input.*</ID>
+    <ID>WildcardImport:ServerIntegrationScreen.kt$import io.github.eslamasabry.oc.ui.kit.modal.*</ID>
+    <ID>WildcardImport:ServerIntegrationScreen.kt$import io.github.eslamasabry.oc.ui.kit.row.*</ID>
+    <ID>WildcardImport:ServerIntegrationScreen.kt$import io.github.eslamasabry.oc.ui.kit.state.*</ID>
+    <ID>WildcardImport:ServerIntegrationScreen.kt$import io.github.eslamasabry.oc.ui.kitchat.code.*</ID>
+    <ID>WildcardImport:ServerIntegrationScreen.kt$import io.github.eslamasabry.oc.ui.kitchat.markdown.*</ID>
+    <ID>WildcardImport:ServerIntegrationScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:ServerSettingsScreen.kt$import io.github.eslamasabry.oc.feature.settings.presentation.*</ID>
+    <ID>WildcardImport:ServerSettingsScreen.kt$import io.github.eslamasabry.oc.ui.kit.modal.*</ID>
+    <ID>WildcardImport:ServerSettingsScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:SettingsGroupTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:SettingsGroupTest.kt$import io.github.eslamasabry.oc.feature.settings.presentation.*</ID>
+    <ID>WildcardImport:SettingsHubGateTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:SettingsHubGateTest.kt$import io.github.eslamasabry.oc.feature.settings.presentation.*</ID>
+    <ID>WildcardImport:ThemePreviewSheet.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:ThemePreviewSheet.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:UpdatesAboutPages.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:VoiceNotificationsPages.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:VoiceNotificationsPages.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -1,0 +1,109 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:PlanSignInViewModel.kt$PlanSignInViewModel$attempt != null &amp;&amp; place != null &amp;&amp; integration != null &amp;&amp; old.step != PlanSignInStep.Complete</ID>
+    <ID>ComplexCondition:PlansViewModel.kt$PlansViewModel$value == null || !value.isFinite() || value &lt;= 0 || value &gt; 100</ID>
+    <ID>CyclomaticComplexMethod:PlanSignInScreen.kt$@Composable private fun OAuthForm( state: PlanAuthenticationUi, actions: PlanSignInActions, enabled: KitEnabled, )</ID>
+    <ID>CyclomaticComplexMethod:PlanSignInScreen.kt$@Composable public fun PlanSignInScreen(state: PlanAuthenticationUi, actions: PlanSignInActions)</ID>
+    <ID>CyclomaticComplexMethod:PlanSignInViewModel.kt$PlanSignInViewModel$override fun chooseMethod(integrationId: String, methodId: String?, type: String)</ID>
+    <ID>CyclomaticComplexMethod:PlansManagementScreen.kt$@Composable public fun PlansManagementScreen( state: PlansManagementUi, plans: PlansUi, actions: PlansManagementActions, onAdd: (String, String?) -&gt; Unit, )</ID>
+    <ID>CyclomaticComplexMethod:PlansScreen.kt$@Composable private fun PlanDetails( card: PlanCardUi, nowMs: Long, words: PlansWords, actions: PlansActions, management: PlansManagementUi?, manage: PlansManagementActions?, onAdd: ((String, String?) -&gt; Unit)?, close: () -&gt; Unit, )</ID>
+    <ID>CyclomaticComplexMethod:PlansScreen.kt$@Composable public fun PlansContent( state: PlansUi, actions: PlansActions, management: PlansManagementUi? = null, manage: PlansManagementActions? = null, onAdd: ((String, String?) -&gt; Unit)? = null, )</ID>
+    <ID>CyclomaticComplexMethod:PlansWords.kt$PlansWords$@Composable fun blockMessage(card: PlanCardUi, now: Long, several: Boolean): String?</ID>
+    <ID>CyclomaticComplexMethod:UsageReaderPage.kt$@Composable internal fun UsageReaderBody( state: PlansManagementUi, plans: PlansUi, actions: PlansManagementActions, )</ID>
+    <ID>LongMethod:PlanSignInScreen.kt$@Composable private fun OAuthForm( state: PlanAuthenticationUi, actions: PlanSignInActions, enabled: KitEnabled, )</ID>
+    <ID>LongMethod:PlanSignInScreen.kt$@Composable public fun PlanSignInScreen(state: PlanAuthenticationUi, actions: PlanSignInActions)</ID>
+    <ID>LongMethod:PlansManagementScreen.kt$@Composable private fun AlertsBody(state: PlansManagementUi, plans: PlansUi, actions: PlansManagementActions)</ID>
+    <ID>LongMethod:PlansManagementScreen.kt$@Composable private fun WidgetBody(state: PlansManagementUi, plans: PlansUi, actions: PlansManagementActions)</ID>
+    <ID>LongMethod:PlansManagementScreen.kt$@Composable public fun PlansManagementScreen( state: PlansManagementUi, plans: PlansUi, actions: PlansManagementActions, onAdd: (String, String?) -&gt; Unit, )</ID>
+    <ID>LongMethod:PlansScreen.kt$@Composable private fun PlanDetails( card: PlanCardUi, nowMs: Long, words: PlansWords, actions: PlansActions, management: PlansManagementUi?, manage: PlansManagementActions?, onAdd: ((String, String?) -&gt; Unit)?, close: () -&gt; Unit, )</ID>
+    <ID>LongMethod:PlansScreen.kt$@Composable public fun PlansContent( state: PlansUi, actions: PlansActions, management: PlansManagementUi? = null, manage: PlansManagementActions? = null, onAdd: ((String, String?) -&gt; Unit)? = null, )</ID>
+    <ID>LongMethod:PlansUi.kt$public fun plansUi(snapshot: UsageSnapshot, refreshing: Boolean, nowMs: Long): PlansUi</ID>
+    <ID>LongMethod:UsageReaderPage.kt$@Composable internal fun UsageReaderBody( state: PlansManagementUi, plans: PlansUi, actions: PlansManagementActions, )</ID>
+    <ID>LongParameterList:PlansManagementScreen.kt$( level: Int, inherit: Boolean, default: Int?, inherited: Boolean = false, enabled: KitEnabled = KitEnabled.Enabled, onSelect: (Int) -&gt; Unit, )</ID>
+    <ID>LongParameterList:PlansScreen.kt$( card: PlanCardUi, nowMs: Long, words: PlansWords, actions: PlansActions, management: PlansManagementUi?, manage: PlansManagementActions?, onAdd: ((String, String?) -&gt; Unit)?, close: () -&gt; Unit, )</ID>
+    <ID>LongParameterList:PlansScreen.kt$( card: PlanCardUi, nowMs: Long, words: PlansWords, actions: PlansActions, severalConnections: Boolean, refreshing: Boolean, open: () -&gt; Unit, )</ID>
+    <ID>LoopWithTooManyJumpStatements:PlanSignInScreen.kt$for</ID>
+    <ID>MagicNumber:PlanSignInViewModel.kt$24</ID>
+    <ID>MagicNumber:PlanSignInViewModel.kt$4</ID>
+    <ID>MagicNumber:PlansManagement.kt$PlansManagementViewModel$22</ID>
+    <ID>MagicNumber:PlansManagement.kt$PlansManagementViewModel$5000</ID>
+    <ID>MagicNumber:PlansManagement.kt$PlansManagementViewModel$60</ID>
+    <ID>MagicNumber:PlansManagement.kt$PlansManagementViewModel$8</ID>
+    <ID>MagicNumber:PlansManagementScreen.kt$100</ID>
+    <ID>MagicNumber:PlansManagementScreen.kt$1440</ID>
+    <ID>MagicNumber:PlansManagementScreen.kt$30</ID>
+    <ID>MagicNumber:PlansManagementScreen.kt$50</ID>
+    <ID>MagicNumber:PlansManagementScreen.kt$60</ID>
+    <ID>MagicNumber:PlansManagementScreen.kt$70</ID>
+    <ID>MagicNumber:PlansManagementScreen.kt$80</ID>
+    <ID>MagicNumber:PlansManagementScreen.kt$90</ID>
+    <ID>MagicNumber:PlansUi.kt$100</ID>
+    <ID>MagicNumber:PlansUi.kt$101.0</ID>
+    <ID>MagicNumber:PlansViewModel.kt$PlansViewModel$100</ID>
+    <ID>MagicNumber:PlansViewModel.kt$PlansViewModel$5_000</ID>
+    <ID>MagicNumber:PlansWords.kt$PlansWords$24</ID>
+    <ID>MagicNumber:PlansWords.kt$PlansWords$48</ID>
+    <ID>MagicNumber:PlansWords.kt$PlansWords$6</ID>
+    <ID>MagicNumber:PlansWords.kt$PlansWords$60</ID>
+    <ID>MagicNumber:PlansWords.kt$PlansWords$600_000</ID>
+    <ID>MagicNumber:PlansWords.kt$PlansWords$60_000</ID>
+    <ID>MagicNumber:PlansWords.kt$PlansWords$86_400_000L</ID>
+    <ID>MaxLineLength:PlanSignInViewModel.kt$"""(?:[Ee]nter\s+(?:the\s+|your\s+)?)?[Cc]ode\s*[:：]\s*([A-Z0-9]{3,}(?:-[A-Z0-9]{2,})*)(?![A-Za-z0-9-])"""</ID>
+    <ID>MaxLineLength:PlansScreen.kt$KitStateView(KitStateKind.Empty, words.emptyTitle, modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp), body = words.emptyBody)</ID>
+    <ID>MaxLineLength:PlansScreen.kt$PlansPhase.Loading -&gt; KitStateView(KitStateKind.Loading, words.loading, modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp))</ID>
+    <ID>MaxLineLength:PlansScreenUiTest.kt$PlansScreenUiTest$mergeUsageSubscriptions(now = now, connections = listOf(pc), readings = listOf(reading("codex", "pc", problem = UsageProblem.Broken)))</ID>
+    <ID>MaxLineLength:PlansScreenUiTest.kt$PlansScreenUiTest$readings = listOf(reading("claude", UsageConnection.PHONE_ID, five = 40.0), reading("claude", "pc", five = 90.0))</ID>
+    <ID>ReturnCount:PlanSignInViewModel.kt$PlanSignInViewModel$override fun check()</ID>
+    <ID>ReturnCount:PlanSignInViewModel.kt$PlanSignInViewModel$override fun chooseMethod(integrationId: String, methodId: String?, type: String)</ID>
+    <ID>ReturnCount:PlanSignInViewModel.kt$PlanSignInViewModel$override fun finish(code: String)</ID>
+    <ID>ReturnCount:PlanSignInViewModel.kt$PlanSignInViewModel$override fun submitForm(inputs: ImmutableMap&lt;String, String&gt;)</ID>
+    <ID>ReturnCount:PlanSignInViewModel.kt$PlanSignInViewModel$override fun submitKey(key: String)</ID>
+    <ID>ReturnCount:PlanSignInViewModel.kt$public fun planPromptVisible(prompt: JsonObject, answers: Map&lt;String, String&gt;): Boolean</ID>
+    <ID>ReturnCount:PlansViewModel.kt$PlansViewModel$override fun fix(key: String)</ID>
+    <ID>ReturnCount:PlansWords.kt$PlansWords$@Composable fun checked(card: PlanCardUi, now: Long): String?</ID>
+    <ID>ReturnCount:PlansWords.kt$PlansWords$@Composable fun summary(card: PlanCardUi, now: Long): String?</ID>
+    <ID>ReturnCount:PlansWords.kt$PlansWords$@Composable fun whenAt(at: Long, now: Long): String</ID>
+    <ID>TooManyFunctions:PlanAuthenticationUi.kt$PlanSignInPort</ID>
+    <ID>TooManyFunctions:PlanSignInViewModel.kt$PlanSignInViewModel : ViewModelPlanSignInActions</ID>
+    <ID>TooManyFunctions:PlansManagement.kt$PlansManagementActions</ID>
+    <ID>TooManyFunctions:PlansManagement.kt$PlansManagementViewModel : ViewModelPlansManagementActions</ID>
+    <ID>TooManyFunctions:PlansUi.kt$PlansActions</ID>
+    <ID>TooManyFunctions:PlansUi.kt$PlansSource</ID>
+    <ID>TooManyFunctions:PlansViewModel.kt$PlansViewModel : ViewModelPlansActions</ID>
+    <ID>TooManyFunctions:PlansWords.kt$PlansWords</ID>
+    <ID>WildcardImport:PlanBlocksTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:PlanBlocksTest.kt$import io.github.eslamasabry.oc.engine.integrations.usage.*</ID>
+    <ID>WildcardImport:PlanBlocksTest.kt$import io.github.eslamasabry.oc.feature.plans.presentation.*</ID>
+    <ID>WildcardImport:PlanSignInScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:PlansEntries.kt$import io.github.eslamasabry.oc.feature.plans.presentation.*</ID>
+    <ID>WildcardImport:PlansEntries.kt$import io.github.eslamasabry.oc.feature.plans.ui.*</ID>
+    <ID>WildcardImport:PlansManagement.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:PlansManagement.kt$import kotlinx.collections.immutable.*</ID>
+    <ID>WildcardImport:PlansManagement.kt$import kotlinx.coroutines.flow.*</ID>
+    <ID>WildcardImport:PlansManagementScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:PlansManagementScreen.kt$import io.github.eslamasabry.oc.feature.plans.presentation.*</ID>
+    <ID>WildcardImport:PlansManagementScreen.kt$import io.github.eslamasabry.oc.ui.kit.*</ID>
+    <ID>WildcardImport:PlansManagementScreen.kt$import io.github.eslamasabry.oc.ui.kit.choice.*</ID>
+    <ID>WildcardImport:PlansManagementScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:PlansManagementScreen.kt$import io.github.eslamasabry.oc.ui.kit.row.*</ID>
+    <ID>WildcardImport:PlansManagementScreen.kt$import io.github.eslamasabry.oc.ui.kit.state.*</ID>
+    <ID>WildcardImport:PlansManagementScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:PlansScreen.kt$import io.github.eslamasabry.oc.feature.plans.presentation.*</ID>
+    <ID>WildcardImport:PlansScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:PlansWords.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:UsageAlertsPickerTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:UsageAlertsPickerTest.kt$import io.github.eslamasabry.oc.feature.plans.presentation.*</ID>
+    <ID>WildcardImport:UsageReaderPage.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:UsageReaderPage.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:UsageReaderPage.kt$import io.github.eslamasabry.oc.feature.plans.presentation.*</ID>
+    <ID>WildcardImport:UsageReaderPage.kt$import io.github.eslamasabry.oc.ui.kit.state.*</ID>
+    <ID>WildcardImport:UsageReaderPage.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:UsageReaderTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:UsageReaderTest.kt$import io.github.eslamasabry.oc.feature.plans.presentation.*</ID>
+    <ID>WildcardImport:UsageWidgetSettingsTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:UsageWidgetSettingsTest.kt$import io.github.eslamasabry.oc.engine.integrations.usage.*</ID>
+    <ID>WildcardImport:UsageWidgetSettingsTest.kt$import io.github.eslamasabry.oc.feature.plans.presentation.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

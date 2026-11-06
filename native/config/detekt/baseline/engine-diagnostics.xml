@@ -1,0 +1,190 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:CrashReport.kt$CrashReportBuilder$!snapshot.available || !snapshot.enabled || snapshot.storageFailed || snapshot.consentEpoch != evidence.consentEpoch || snapshot.revision != evidence.revision</ID>
+    <ID>ComplexCondition:CrashReport.kt$CrashReportBuilder$!state.available || !state.enabled || state.storageFailed || state.consentEpoch != preview.epoch || state.revision != preview.revision</ID>
+    <ID>ComplexCondition:Diagnostics.kt$Diagnostics$previous != null &amp;&amp; previous.source == safeSource &amp;&amp; previous.message == safeMessage &amp;&amp; previous.stack == safeStack &amp;&amp; (at - previous.at).absoluteValue &lt;= dedupeWindow</ID>
+    <ID>ComplexCondition:PerfTrace.kt$PerfTrace$sink != null &amp;&amp; (clean.isMark || clean.failed || clean.durationMicros &gt;= logMinMicros)</ID>
+    <ID>ComplexCondition:TraceLabels.kt$TraceLabels$line.isEmpty() || line.startsWith("#") || line.startsWith("set ") || line.startsWith("umask ") || line.startsWith("export ")</ID>
+    <ID>CyclomaticComplexMethod:CrashStartup.kt$CrashStartup$private suspend fun openAndPublish(token: Any, ready: CompletableDeferred&lt;CrashDiagnostics?&gt;): CrashDiagnostics?</ID>
+    <ID>CyclomaticComplexMethod:Diagnostics.kt$Diagnostics.Companion$internal fun failureLabel(failure: Failure): String</ID>
+    <ID>CyclomaticComplexMethod:ExitClassifier.kt$ExitClassifier$public fun classify(reason: Int, subReason: Int, memoryLimited: Boolean = false): ExitKind</ID>
+    <ID>CyclomaticComplexMethod:KeepAliveAdvice.kt$KeepAliveStep$public fun wording(maker: PhoneMaker, batteryAllowed: Boolean = false): KeepAliveWording</ID>
+    <ID>CyclomaticComplexMethod:LaunchIntake.kt$LaunchIntake$private suspend fun signal(exit: ExitRecord?, jvmCrash: NativeCrashRecord?)</ID>
+    <ID>CyclomaticComplexMethod:ProblemReport.kt$ProblemReport.Companion$public fun build( redactor: Redactor, description: String, version: String, platform: String, error: AttachedError? = null, connection: String? = null, fallbackTitle: String? = null, events: List&lt;ProblemReportEvent&gt; = emptyList(), maxErrors: Int = 10, maxTimings: Int = 10, maxStackLines: Int = 8, ): ProblemReport</ID>
+    <ID>ExceptionRaisedInUnexpectedLocation:CrashConsentRowsTest.kt$CrashConsentRowsTest.HostileError$override fun toString(): String</ID>
+    <ID>InstanceOfCheckForException:PerfTrace.kt$PerfTrace$e !is CancellationException</ID>
+    <ID>LongMethod:ProblemReport.kt$ProblemReport.Companion$public fun build( redactor: Redactor, description: String, version: String, platform: String, error: AttachedError? = null, connection: String? = null, fallbackTitle: String? = null, events: List&lt;ProblemReportEvent&gt; = emptyList(), maxErrors: Int = 10, maxTimings: Int = 10, maxStackLines: Int = 8, ): ProblemReport</ID>
+    <ID>LongParameterList:CrashReport.kt$CrashReportPreview$( public val text: String, public val recordCount: Int, public val byteCount: Int, internal val issuer: Any, internal val controller: CrashDiagnostics, internal val epoch: Int, internal val revision: Int, )</ID>
+    <ID>LongParameterList:ExitClassifier.kt$ExitRecord$( public val reason: Int, public val timestampMs: Long, public val subReason: Int = ExitReason.SUB_UNKNOWN, public val status: Int = 0, public val importance: Int = 0, public val processName: String? = null, description: String? = null, )</ID>
+    <ID>LongParameterList:PerfTrace.kt$PerfSpanHandle$( private val trace: PerfTrace, public val id: Long, public val name: String, public val startMicros: Long, public val wallStart: Instant, public val parent: PerfSpanHandle?, private val logMinMicros: Long, attrs: Map&lt;String, String&gt;, )</ID>
+    <ID>LongParameterList:PerfTrace.kt$PerfTrace$( name: String, micros: Long, startMicros: Long, attrs: Map&lt;String, Any?&gt;, error: Boolean, logMinMs: Long, parent: PerfSpanHandle?, )</ID>
+    <ID>LongParameterList:PerfTrace.kt$PerfTrace$( name: String, startMicros: Long, attrs: Map&lt;String, Any?&gt; = emptyMap(), error: Boolean = false, logMinMs: Long = 0, parent: PerfSpanHandle? = null, )</ID>
+    <ID>LongParameterList:ProblemReport.kt$ProblemReport.Companion$( redactor: Redactor, description: String, version: String, platform: String, error: AttachedError? = null, connection: String? = null, fallbackTitle: String? = null, events: List&lt;ProblemReportEvent&gt; = emptyList(), maxErrors: Int = 10, maxTimings: Int = 10, maxStackLines: Int = 8, )</ID>
+    <ID>LongParameterList:ProblemReportTest.kt$ProblemReportTest$( description: String, version: String = "1.0.44+50", error: AttachedError? = null, connection: String? = null, fallbackTitle: String? = null, events: List&lt;ProblemReportEvent&gt; = emptyList(), maxErrors: Int = 10, maxTimings: Int = 10, maxStackLines: Int = 8, )</ID>
+    <ID>LongParameterList:ReportProblemStartup.kt$ReportProblemStartup$( private val openFiles: () -&gt; ReportFiles, private val diagnostics: Diagnostics, private val trace: PerfTrace, private val redactor: Redactor, private val clock: Clock, private val maxEntries: Int = ReportProblem.MAX_ENTRIES, private val maxBytes: Int = ReportProblem.MAX_BYTES, private val thermalReadings: ProblemThermalReadings? = null, )</ID>
+    <ID>LoopWithTooManyJumpStatements:CrashStartup.kt$CrashStartup$for</ID>
+    <ID>LoopWithTooManyJumpStatements:ProblemReport.kt$ProblemReport.Companion$for</ID>
+    <ID>LoopWithTooManyJumpStatements:ReportProblemCapture.kt$ReportProblemCapture$for</ID>
+    <ID>MagicNumber:CrashDiagnostics.kt$CrashDiagnostics$3</ID>
+    <ID>MagicNumber:DeviceDiagnostics.kt$DeviceDiagnostics.Companion$100</ID>
+    <ID>MagicNumber:FailedJobReport.kt$FailedJobReport.Companion$2048</ID>
+    <ID>MagicNumber:FailedJobReport.kt$FailedJobReport.Companion$256</ID>
+    <ID>MagicNumber:NativeCrashRecord.kt$NativeCrashRecord.Companion$3</ID>
+    <ID>MagicNumber:NativeCrashRecord.kt$NativeCrashRecord.Companion$32</ID>
+    <ID>MagicNumber:PerfTrace.kt$10</ID>
+    <ID>MagicNumber:PerfTrace.kt$PerfSpan$1000.0</ID>
+    <ID>MagicNumber:PerfTrace.kt$PerfTrace$0.5</ID>
+    <ID>MagicNumber:PerfTrace.kt$PerfTrace$0.95</ID>
+    <ID>MagicNumber:PerfTrace.kt$PerfTrace$1000</ID>
+    <ID>MagicNumber:PerfTrace.kt$PerfTrace$1000.0</ID>
+    <ID>MagicNumber:ProblemReport.kt$ProblemReport.Companion$10</ID>
+    <ID>MagicNumber:ProblemReport.kt$ProblemReport.Companion$100</ID>
+    <ID>MagicNumber:ProblemReport.kt$ProblemReport.Companion$1000</ID>
+    <ID>MagicNumber:ProblemReport.kt$ProblemReport.Companion$146_096</ID>
+    <ID>MagicNumber:ProblemReport.kt$ProblemReport.Companion$146_097L</ID>
+    <ID>MagicNumber:ProblemReport.kt$ProblemReport.Companion$153</ID>
+    <ID>MagicNumber:ProblemReport.kt$ProblemReport.Companion$1_460</ID>
+    <ID>MagicNumber:ProblemReport.kt$ProblemReport.Companion$2000</ID>
+    <ID>MagicNumber:ProblemReport.kt$ProblemReport.Companion$3</ID>
+    <ID>MagicNumber:ProblemReport.kt$ProblemReport.Companion$3600</ID>
+    <ID>MagicNumber:ProblemReport.kt$ProblemReport.Companion$365</ID>
+    <ID>MagicNumber:ProblemReport.kt$ProblemReport.Companion$36_524</ID>
+    <ID>MagicNumber:ProblemReport.kt$ProblemReport.Companion$4</ID>
+    <ID>MagicNumber:ProblemReport.kt$ProblemReport.Companion$400</ID>
+    <ID>MagicNumber:ProblemReport.kt$ProblemReport.Companion$4000</ID>
+    <ID>MagicNumber:ProblemReport.kt$ProblemReport.Companion$5</ID>
+    <ID>MagicNumber:ProblemReport.kt$ProblemReport.Companion$60</ID>
+    <ID>MagicNumber:ProblemReport.kt$ProblemReport.Companion$719_468L</ID>
+    <ID>MagicNumber:ProblemReport.kt$ProblemReport.Companion$80</ID>
+    <ID>MagicNumber:ProblemReport.kt$ProblemReport.Companion$86_400L</ID>
+    <ID>MagicNumber:ProblemReport.kt$ProblemReport.Companion$9</ID>
+    <ID>MagicNumber:ProblemReport.kt$ProblemReports$0xff</ID>
+    <ID>MagicNumber:ProblemReport.kt$ProblemReports$4</ID>
+    <ID>MagicNumber:TraceLabels.kt$TraceLabels$20</ID>
+    <ID>MagicNumber:TraceLabels.kt$TraceLabels$3</ID>
+    <ID>MagicNumber:TraceLabels.kt$TraceLabels$59</ID>
+    <ID>MagicNumber:TraceLabels.kt$TraceLabels$60</ID>
+    <ID>MaxLineLength:CrashConsentRowsTest.kt$CrashConsentRowsTest$capture.importAtStart(null, (0 until 45).map { ExitRecord(reason = ExitReason.ANR, timestampMs = now - 500 + it) })</ID>
+    <ID>MaxLineLength:CrashConsentRowsTest.kt$CrashConsentRowsTest$listOf(ExitRecord(reason = ExitReason.ANR, timestampMs = now - 2_000), ExitRecord(reason = ExitReason.ANR, timestampMs = now + 100_000))</ID>
+    <ID>MaxLineLength:CrashConsentRowsTest.kt$CrashConsentRowsTest$private suspend fun TestScope.open(store: FakeCrashStore)</ID>
+    <ID>MaxLineLength:CrashDiagnosticsTest.kt$CrashDiagnosticsTest$"[" + List(21) { """{"source":"anr","category":"Native application error","time":$now}""" }.joinToString(",") + "]"</ID>
+    <ID>MaxLineLength:CrashDiagnosticsTest.kt$CrashDiagnosticsTest$ExitRecord(reason = ExitReason.CRASH_NATIVE, timestampMs = now - 10, description = "synthetic-provider-secret")</ID>
+    <ID>MaxLineLength:CrashDiagnosticsTest.kt$CrashDiagnosticsTest$ExitRecord(reason = ExitReason.CRASH_NATIVE, timestampMs = since - 1, description = "before consent")</ID>
+    <ID>MaxLineLength:CrashDiagnosticsTest.kt$CrashDiagnosticsTest$listOf(CrashSource.Native to CrashRecordCategory.NativeApplicationError, CrashSource.Anr to CrashRecordCategory.NotResponding)</ID>
+    <ID>MaxLineLength:CrashDiagnosticsTest.kt$CrashDiagnosticsTest$private suspend fun TestScope.open(store: FakeCrashStore)</ID>
+    <ID>MaxLineLength:CrashDiagnosticsTest.kt$CrashDiagnosticsTest$val store = FakeCrashStore(CrashFile.Consent to "$since", CrashFile.Records to text, CrashFile.Pending to "half")</ID>
+    <ID>MaxLineLength:CrashDiagnosticsTest.kt$CrashDiagnosticsTest$val text = """[{"source":"flutter","category":"Invalid state","time":${now - 10}},{"source":"anr","category":"Android reported that the app stopped responding","time":$now}]"""</ID>
+    <ID>MaxLineLength:CrashReportBuilderTest.kt$CrashReportBuilderTest$for</ID>
+    <ID>MaxLineLength:CrashStartup.kt$CrashStartup$val pending = scope.async(dispatchers.io, start = CoroutineStart.LAZY) { openAndPublish(initial.token, initial.ready) }</ID>
+    <ID>MaxLineLength:CrashStartup.kt$GenerationCrashStore$private</ID>
+    <ID>MaxLineLength:CrashStartupTest.kt$CrashStartupTest$CrashStartup(source, diagnostics, clock, backgroundScope, TestDispatchers(StandardTestDispatcher(testScheduler)))</ID>
+    <ID>MaxLineLength:CrashStartupTest.kt$CrashStartupTest$ExitRecord(reason = ExitReason.CRASH_NATIVE, timestampMs = now, description = "synthetic-provider-secret")</ID>
+    <ID>MaxLineLength:CrashStartupTest.kt$CrashStartupTest$setOf("crash.platform: Permission denied", "crash.anr: Android reported that the app stopped responding", "crash.platform: Invalid state")</ID>
+    <ID>MaxLineLength:CrashStartupTest.kt$CrashStartupTest$val exits = listOf(ExitRecord(reason = ExitReason.CRASH_NATIVE, timestampMs = now), ExitRecord(reason = ExitReason.ANR, timestampMs = now))</ID>
+    <ID>MaxLineLength:CrashStartupTest.kt$CrashStartupTest$val jvm = NativeCrashRecord.from(rawCrash() + mapOf("timestamp" to now - 500, "exceptionClass" to "java.lang.SecurityException", "message" to UNSAFE))</ID>
+    <ID>MaxLineLength:CrashStartupTest.kt$CrashStartupTest$val started = startup { Outcome.Ok(CrashStartupEvidence(store, platformCrash = jvm, exits = listOf(ExitRecord(reason = ExitReason.ANR, timestampMs = now)))) }</ID>
+    <ID>MaxLineLength:CrashStore.kt$CrashStore$*</ID>
+    <ID>MaxLineLength:DeviceDiagnosticsTest.kt$DeviceDiagnosticsTest.&lt;no name provided&gt;$reason = ExitReason.ANR</ID>
+    <ID>MaxLineLength:Diagnostics.kt$Diagnostics$*</ID>
+    <ID>MaxLineLength:ExitClassifier.kt$ExitClassifier$ExitReason.CRASH, ExitReason.CRASH_NATIVE, ExitReason.ANR, ExitReason.INITIALIZATION_FAILURE -&gt; ExitKind.Crash</ID>
+    <ID>MaxLineLength:ExitClassifier.kt$ExitRecord$"ExitRecord(kind=$kind, reason=$reason, subReason=$subReason, status=$status, importance=$importance, at=$timestampMs)"</ID>
+    <ID>MaxLineLength:ExitClassifier.kt$ExitRecord$*</ID>
+    <ID>MaxLineLength:ExitClassifier.kt$ExitRecord$override fun hashCode(): Int</ID>
+    <ID>MaxLineLength:ExitClassifierTest.kt$ExitClassifierTest$// dumpsys exit-info on the owner's RedMagic: reason=10 (USER REQUESTED) subreason=21 (FORCE STOP) importance=125.</ID>
+    <ID>MaxLineLength:ExitClassifierTest.kt$ExitClassifierTest$ExitRecord(reason = reason, timestampMs = OWNER_AT, subReason = sub, importance = 125, description = description).kind</ID>
+    <ID>MaxLineLength:ExitHistory.kt$PolicyExitHistory$is Outcome.Ok -&gt; attempt(::readFailed) { LaunchReport.from(read.value) }.let { (it as? Outcome.Ok)?.value ?: LaunchReport.Empty }</ID>
+    <ID>MaxLineLength:ExitHistoryTest.kt$ExitHistoryTest$Triple(10, 21, ExitKind.ForceStop)</ID>
+    <ID>MaxLineLength:ExitHistoryTest.kt$ExitHistoryTest$exit(997, process = "other.package")</ID>
+    <ID>MaxLineLength:ExitHistoryTest.kt$ExitHistoryTest$source.launch = { Outcome.Ok(RawLaunchReport(exit = exit(1000), previousServices = listOf("aiteam", "", null))) }</ID>
+    <ID>MaxLineLength:ExitHistoryTest.kt$ExitRecord(reason = reason, timestampMs = at, subReason = sub, importance = 100, processName = process, description = SECRET)</ID>
+    <ID>MaxLineLength:FailedJobReport.kt$FailedJobReport.Companion$public</ID>
+    <ID>MaxLineLength:FakeReportFiles.kt$FakeReportFiles$if (refuseWrites) throw IllegalStateException("/data/user/0/app/files/diagnostics/report_problem.pending: no space")</ID>
+    <ID>MaxLineLength:KeepAliveAdvice.kt$KeepAliveStep$KeepAliveStepKind.Battery -&gt; if (batteryAllowed) KeepAliveWording.BatteryDone else KeepAliveWording.BatteryDetail</ID>
+    <ID>MaxLineLength:KeepAliveAdviceTest.kt$KeepAliveAdviceTest$fun wording(maker: PhoneMaker, kind: KeepAliveStepKind)</ID>
+    <ID>MaxLineLength:LaunchIntakeTest.kt$LaunchIntakeTest$exit = ExitRecord(reason = ExitReason.CRASH, timestampMs = CRASH_AT.toEpochMilliseconds() + 40, description = UNSAFE)</ID>
+    <ID>MaxLineLength:LaunchIntakeTest.kt$LaunchIntakeTest$intake(source(RawLaunchReport(exit = ExitRecord(reason = ExitReason.CRASH_NATIVE, timestampMs = at, description = UNSAFE)))).runOnce()</ID>
+    <ID>MaxLineLength:LaunchIntakeTest.kt$LaunchIntakeTest$intake(source(RawLaunchReport(exit = ExitRecord(reason = ExitReason.LOW_MEMORY, timestampMs = at + 4_000)))).runOnce()</ID>
+    <ID>MaxLineLength:LaunchIntakeTest.kt$LaunchIntakeTest$private fun intake(source: LifecycleSource)</ID>
+    <ID>MaxLineLength:LaunchIntakeTest.kt$LaunchIntakeTest$source(RawLaunchReport(exit = ExitRecord(reason = ExitReason.ANR, timestampMs = at + 2_000, importance = 100)))</ID>
+    <ID>MaxLineLength:LaunchIntakeTest.kt$LaunchIntakeTest$source(RawLaunchReport(exit = ExitRecord(reason = ExitReason.ANR, timestampMs = at + 3_000, importance = 400)))</ID>
+    <ID>MaxLineLength:NativeCrashRecord.kt$NativeCrashRecord$add("Caused by ${cause.exceptionClass.replace(".", " &gt; ")}: ${cause.message}\n${renderFrames(cause.frames)}")</ID>
+    <ID>MaxLineLength:NativeCrashRecord.kt$NativeCrashRecord.Companion$"""^(?:java\.|javax\.|android\.|kotlin\.|kotlinx\.|io\.flutter\.|io\.github\.eslamasabry\.opencode_mobile\.|io\.github\.eslamasabry\.oc\.)[A-Za-z_$][A-Za-z0-9_$.]*$"""</ID>
+    <ID>MaxLineLength:NativeCrashRecord.kt$NativeCrashRecord.Companion$"""^([A-Za-z_$][A-Za-z0-9_$.]*)\.([A-Za-z_$][A-Za-z0-9_$]*|&lt;init&gt;|&lt;clinit&gt;)\(([A-Za-z_$][A-Za-z0-9_$]*\.(?:kt|java):[0-9]{1,7}|Native Method|Unknown Source)\)$"""</ID>
+    <ID>MaxLineLength:NativeCrashRecord.kt$NativeCrashRecord.Companion$val causes = (raw["causes"] as? List&lt;*&gt;).orEmpty().take(MAX_CAUSES).mapNotNull { readDetails(it, MAX_CAUSE_FRAMES) }</ID>
+    <ID>MaxLineLength:NativeCrashRecordTest.kt$NativeCrashRecordTest$NativeCrashRecord.from(rawCrash() + mapOf("message" to mapOf("token" to "fake-secret-code"), "frames" to List(100) { FRAME }))</ID>
+    <ID>MaxLineLength:NativeCrashRecordTest.kt$NativeCrashRecordTest$mapOf("exceptionClass" to "java.lang.IllegalStateException", "message" to UNSAFE, "frames" to listOf(UNSAFE, FRAME))</ID>
+    <ID>MaxLineLength:NativeCrashRecordTest.kt$NativeCrashRecordTest$mapOf("exceptionClass" to "java.lang.NullPointerException", "message" to "Missing value", "frames" to listOf(FRAME))</ID>
+    <ID>MaxLineLength:NativeCrashRecordTest.kt$NativeCrashRecordTest$mapOf("exceptionClass" to "java.lang.SecurityException", "message" to "Permission denied", "frames" to List(20) { serviceFrame })</ID>
+    <ID>MaxLineLength:PerfTrace.kt$PerfSpan$if (isMark) append("mark $name at=${formatMs(startMicros / 1000.0)}") else append("${formatMs(durationMs)} $name")</ID>
+    <ID>MaxLineLength:PerfTrace.kt$PerfTrace$append(" ${stat.name} — ${stat.count}×, p50 ${formatMs(stat.p50Ms)}, p95 ${formatMs(stat.p95Ms)}, ")</ID>
+    <ID>MaxLineLength:PerfTrace.kt$PerfTrace.Companion$private val SECRET_KEY = Regex("auth|token|password|passwd|secret|cookie|api[-_]?key|credential", RegexOption.IGNORE_CASE)</ID>
+    <ID>MaxLineLength:PerfTraceTest.kt$PerfTraceTest$"http://127.0.0.1:4096/api/session/0b7c6c8e-1f2a-4f7e-9c1d-3a2b1c0d9e8f/permission/per_abcdef123?auth_token=secret"</ID>
+    <ID>MaxLineLength:PerfTraceTest.kt$PerfTraceTest$"set -eu\numask 077\nmkdir -p /root/.oc-builtin\nprintf '%s' '$password' &gt; ${TraceLabels.PASSWORD_FILE}.tmp\n"</ID>
+    <ID>MaxLineLength:PerfTraceTest.kt$PerfTraceTest$assertEquals("boom", assertFailsWith&lt;IllegalStateException&gt; { trace.span&lt;Unit&gt;("fails") { throw error } }.message)</ID>
+    <ID>MaxLineLength:PerfTraceTest.kt$PerfTraceTest$assertSame(error, assertFailsWith&lt;IllegalStateException&gt; { trace.measure&lt;Unit&gt;("fails.sync") { throw error } })</ID>
+    <ID>MaxLineLength:PerfTraceTest.kt$PerfTraceTest$assertTrue(Regex("""^OCTRACE \d+(\.\d)?ms connect\.health n=2$""").matches(logged.single()), logged.single())</ID>
+    <ID>MaxLineLength:PerfTraceTest.kt$PerfTraceTest$private fun trace(capacity: Int = PerfTrace.CAPACITY)</ID>
+    <ID>MaxLineLength:ProblemReport.kt$ProblemReport.Companion$return "$year-${two(month)}-${two(day)} ${two(secOfDay / 3600)}:${two(secOfDay % 3600 / 60)}:${two(secOfDay % 60)} UTC"</ID>
+    <ID>MaxLineLength:ProblemReportTest.kt$ProblemReportTest$List(12) { event("OCTRACE 2.9ms linux.setupStatus", ProblemEventKind.Timing, source = "OCTRACE", minute = it) }</ID>
+    <ID>MaxLineLength:ProblemReportTest.kt$ProblemReportTest$SetupJobState.Failed</ID>
+    <ID>MaxLineLength:ProblemReportTest.kt$ProblemReportTest$event("OCTRACE chat.open 120ms", kind = ProblemEventKind.Timing, source = "OCTRACE", minute = 4)</ID>
+    <ID>MaxLineLength:ProblemReportTest.kt$ProblemReportTest$fun</ID>
+    <ID>MaxLineLength:ProblemReportTest.kt$ProblemReportTest$redactor</ID>
+    <ID>MaxLineLength:PromptTimeline.kt$PromptSignal.Message$public data</ID>
+    <ID>MaxLineLength:PromptTimeline.kt$PromptTimeline$val base = if (current.size &gt;= MAX_TRACKED &amp;&amp; sessionId !in current) current - current.keys.first() else current</ID>
+    <ID>MaxLineLength:PromptTimelineTest.kt$PromptTimelineTest$HttpClient</ID>
+    <ID>MaxLineLength:PromptTimelineTest.kt$PromptTimelineTest$assertEquals(listOf("prompt.sent", "prompt.accepted", "prompt.first_token", "prompt.turn"), trace.spans().map { it.name })</ID>
+    <ID>MaxLineLength:PromptTimelineTest.kt$PromptTimelineTest$client.exchange({ method = HttpMethod.Get; url("http://host:4097/session/ses_abc123XYZ/message?directory=/home/me/private-project") }) { Unit }</ID>
+    <ID>MaxLineLength:PromptTimelineTest.kt$PromptTimelineTest$private val trace = PerfTrace(Redactor().apply { registerSecret("secret-password-1") }, TestClock(), TestTimeSource(), logSink = logged::add)</ID>
+    <ID>MaxLineLength:ReportFiles.kt$ReportFiles$*</ID>
+    <ID>MaxLineLength:ReportFiles.kt$SpinLock$@PublishedApi internal val held: kotlin.concurrent.atomics.AtomicBoolean = kotlin.concurrent.atomics.AtomicBoolean(false)</ID>
+    <ID>MaxLineLength:ReportProblem.kt$ReportProblem$mutableState.value = ReportProblemState(next.toImmutableList(), storageFailed = false, committed = current.committed + 1)</ID>
+    <ID>MaxLineLength:ReportProblem.kt$ReportProblem$mutableState.value = ReportProblemState(persistentListOf(), storageFailed = false, committed = current.committed + 1)</ID>
+    <ID>MaxLineLength:ReportProblem.kt$ReportProblem$private fun timing(span: PerfSpan)</ID>
+    <ID>MaxLineLength:ReportProblem.kt$ReportProblem$private val mutableState = MutableStateFlow(ReportProblemState(persistentListOf(), storageFailed = false, committed = 0))</ID>
+    <ID>MaxLineLength:ReportProblem.kt$ReportProblem$public</ID>
+    <ID>MaxLineLength:ReportProblemCaptureTest.kt$ReportProblemCaptureTest$private fun open(maxEntries: Int = 128)</ID>
+    <ID>MaxLineLength:ReportProblemStartupTest.kt$ReportProblemStartupTest$assertEquals(1, report.entries.count { it.source == ReportProblem.ANDROID_EXIT_SOURCE }, "the diagnostics copy is not stored twice")</ID>
+    <ID>MaxLineLength:ReportProblemStartupTest.kt$ReportProblemStartupTest$diagnostics.record("provider", "provider rejected $PROVIDER_KEY (Bearer $BEARER)", "#0 send (password=$PASSWORD)")</ID>
+    <ID>MaxLineLength:ReportProblemStartupTest.kt$ReportProblemStartupTest$fun</ID>
+    <ID>MaxLineLength:ReportProblemStartupTest.kt$ReportProblemStartupTest$private val crash = ExitRecord(reason = ExitReason.CRASH, timestampMs = clock.now().minus(5.minutes).toEpochMilliseconds())</ID>
+    <ID>MaxLineLength:ReportProblemTest.kt$ReportProblemTest$for</ID>
+    <ID>MaxLineLength:ReportProblemTest.kt$ReportProblemTest$for (secret in listOf(known, provider, bearer, password)) assertFalse(secret in output, "leaked into: $output")</ID>
+    <ID>MaxLineLength:ReportProblemTest.kt$ReportProblemTest$listOf(ProblemEventKind.Error, ProblemEventKind.Timing, ProblemEventKind.AndroidExit, ProblemEventKind.Thermal)</ID>
+    <ID>MaxLineLength:ReportProblemTest.kt$ReportProblemTest$service.recordAndroidExit(ExitRecord(reason = ExitReason.CRASH, timestampMs = (at + 2.seconds).toEpochMilliseconds()))</ID>
+    <ID>ReturnCount:CrashDiagnostics.kt$CrashDiagnostics$private fun parseRecords(text: String): List&lt;CrashRecord&gt;?</ID>
+    <ID>ReturnCount:CrashReport.kt$CrashReportBuilder$public suspend fun preview(): CrashReportResult</ID>
+    <ID>ReturnCount:CrashReport.kt$CrashReportBuilder$public suspend fun share(preview: CrashReportPreview): CrashReportError?</ID>
+    <ID>ReturnCount:CrashReport.kt$CrashReportBuilder$public suspend fun share(preview: CrashReportPreview): CrashShareResult</ID>
+    <ID>ReturnCount:CrashStartup.kt$CrashStartup$private suspend fun open(canOpen: () -&gt; Boolean): CrashDiagnostics?</ID>
+    <ID>ReturnCount:CrashStartup.kt$CrashStartup$private suspend fun openAndPublish(token: Any, ready: CompletableDeferred&lt;CrashDiagnostics?&gt;): CrashDiagnostics?</ID>
+    <ID>ReturnCount:CrashStartup.kt$CrashStartup$public fun start(): Deferred&lt;CrashDiagnostics?&gt;</ID>
+    <ID>ReturnCount:DeviceDiagnostics.kt$DeviceDiagnostics$public suspend fun exitHistory(limit: Int = ExitHistory.DEFAULT_LIMIT): DeviceExitHistory</ID>
+    <ID>ReturnCount:ExitHistory.kt$PolicyExitHistory$override suspend fun history(limit: Int): ExitHistoryResult</ID>
+    <ID>ReturnCount:FailedJobReport.kt$FailedJobReport.Companion$public fun setup(redactor: Redactor, progress: SetupJobSnapshot, componentId: String? = null): FailedJobReport?</ID>
+    <ID>ReturnCount:FakeCrashStore.kt$FakeCrashStore$override suspend fun read(file: CrashFile, maxBytes: Int): Outcome&lt;String?&gt;</ID>
+    <ID>ReturnCount:NativeCrashRecord.kt$NativeCrashRecord.Companion$private fun readDetails(raw: Any?, frameLimit: Int): NativeCrashCause?</ID>
+    <ID>ReturnCount:NativeCrashRecord.kt$NativeCrashRecord.Companion$public fun from(raw: Any?): NativeCrashRecord?</ID>
+    <ID>ReturnCount:PerfTrace.kt$PerfTrace$internal fun withAttr(into: Map&lt;String, String&gt;, key: String, value: Any?): Map&lt;String, String&gt;</ID>
+    <ID>ReturnCount:ProblemReport.kt$ProblemReport$public fun link(maxLength: Int = ProblemReports.MAX_LINK_LENGTH): ProblemReportLink</ID>
+    <ID>ReturnCount:ReportProblem.kt$ReportProblem$private fun restore(): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:ReportProblem.kt$ReportProblem.Companion$private fun decodeEvent(value: Any?): ProblemEvent?</ID>
+    <ID>ReturnCount:TraceLabels.kt$TraceLabels$public fun scriptLabel(script: String, passwordFile: String = PASSWORD_FILE): String</ID>
+    <ID>TooGenericExceptionCaught:Diagnostics.kt$Diagnostics$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:DiagnosticsSignals.kt$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:PerfTrace.kt$PerfTrace$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:PromptTimeline.kt$PromptTimeline$e: Throwable</ID>
+    <ID>TooManyFunctions:CrashDiagnostics.kt$CrashDiagnostics</ID>
+    <ID>TooManyFunctions:PerfTrace.kt$PerfTrace</ID>
+    <ID>TooManyFunctions:ReportProblem.kt$ReportProblem</ID>
+    <ID>UseCheckOrError:CrashConsentRowsTest.kt$CrashConsentRowsTest.HostileError$throw IllegalStateException("never read the message")</ID>
+    <ID>UseCheckOrError:CrashConsentRowsTest.kt$CrashConsentRowsTest.HostileError$throw IllegalStateException("never serialize arbitrary errors")</ID>
+    <ID>UseCheckOrError:DiagnosticsTest.kt$DiagnosticsTest.&lt;no name provided&gt;$throw IllegalStateException("adapter down")</ID>
+    <ID>UseCheckOrError:FakeReportFiles.kt$FakeReportFiles$throw IllegalStateException("/data/user/0/app/files/diagnostics unreadable")</ID>
+    <ID>UseCheckOrError:FakeReportFiles.kt$FakeReportFiles$throw IllegalStateException("/data/user/0/app/files/diagnostics/report_problem.pending: no space")</ID>
+    <ID>UseCheckOrError:FakeReportFiles.kt$FakeReportFiles$throw IllegalStateException("/data/user/0/app/files: busy")</ID>
+    <ID>UseCheckOrError:FakeReportFiles.kt$FakeReportFiles$throw IllegalStateException("unreadable")</ID>
+  </CurrentIssues>
+</SmellBaseline>

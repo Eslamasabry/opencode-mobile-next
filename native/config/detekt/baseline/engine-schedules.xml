@@ -1,0 +1,126 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:ScheduleClaims.kt$ArmedEntry.Companion$idPattern.matches(profileId) &amp;&amp; idPattern.matches(scheduleId) &amp;&amp; revision &gt;= 0 &amp;&amp; dueAtMs &gt; 0</ID>
+    <ID>ComplexCondition:ScheduleCodec.kt$ScheduleCodec$schedules.size &gt; maxSchedules || runs.size &gt; maxHistory || schedules.any { it.profileId != profileId } || schedules.map { it.id }.toSet().size != schedules.size || runs.map { it.id }.toSet().size != runs.size</ID>
+    <ID>ComplexCondition:ScheduleEngine.kt$ScheduleEngine$schedule == null || !schedule.enabled || schedule.revision != entry.revision || schedule.nextRunAtMs != entry.dueAtMs</ID>
+    <ID>ComplexCondition:ScheduleRunner.kt$ScheduleRunner.Attempt$!opened.startedPhoneServer || nowMs() &gt;= readyUntil || (health is Outcome.Failed &amp;&amp; health.failure is Failure.SignIn)</ID>
+    <ID>ComplexCondition:ScheduleRunner.kt$ScheduleRunner.Attempt$selection != null &amp;&amp; pinnedHere &amp;&amp; (model != null || schedule.agent != null)</ID>
+    <ID>ComplexCondition:ScheduleStore.kt$ScheduleStore$!current.enabled || current != expected || (last != null &amp;&amp; cutoffMs &lt;= last)</ID>
+    <ID>ComplexCondition:ScheduleStore.kt$ScheduleStore$previous.scheduleId != stored.scheduleId || previous.scheduledAtMs != stored.scheduledAtMs || previous.startedAtMs != stored.startedAtMs || (previous.status != RunStatus.Running &amp;&amp; previous != stored)</ID>
+    <ID>ComplexCondition:ScheduledOpen.kt$ScheduledOpen.Companion$schedule == null || currentFingerprint == null || schedule.profileId != profileId || schedule.profileFingerprint != currentFingerprint</ID>
+    <ID>CyclomaticComplexMethod:ScheduleEngine.kt$ScheduleEngine$private suspend fun occurrence(entry: ArmedEntry, recoveryOnly: Boolean, deadlineMs: Long): RunReport</ID>
+    <ID>CyclomaticComplexMethod:ScheduleRunner.kt$ScheduleRunner.Attempt$private suspend fun attempt(): ScheduledRun</ID>
+    <ID>LongMethod:ScheduleRunner.kt$ScheduleRunner.Attempt$private suspend fun attempt(): ScheduledRun</ID>
+    <ID>LongParameterList:ScheduleEngine.kt$ScheduleEngine$( private val backend: ScheduleBackend, private val profiles: ScheduleProfiles, private val alarms: ScheduleAlarms, private val notices: ScheduleNotices, private val nowMs: () -&gt; Long, private val zone: () -&gt; TimeZone = { TimeZone.currentSystemDefault() }, private val newId: () -&gt; String = { Random.nextBytes(12).joinToString("") { b -&gt; (b.toInt() and 0xff).toString(16).padStart(2, '0') } }, pollMs: Long = 2_000, )</ID>
+    <ID>LongParameterList:ScheduledOpen.kt$ScheduledOpen.Companion$( profileId: String, scheduleId: String, sessionId: String?, currentFingerprint: String?, schedules: List&lt;ScheduledPrompt&gt;, history: List&lt;ScheduledRun&gt;, )</ID>
+    <ID>MagicNumber:Recurrences.kt$Recurrences$7</ID>
+    <ID>MagicNumber:ScheduleCodec.kt$ScheduleCodec$1000</ID>
+    <ID>MagicNumber:ScheduleCodec.kt$ScheduleCodec$3</ID>
+    <ID>MagicNumber:ScheduleCodec.kt$ScheduleCodec$4</ID>
+    <ID>MagicNumber:ScheduleCodec.kt$ScheduleCodec$5</ID>
+    <ID>MagicNumber:ScheduleCodec.kt$ScheduleCodec$6</ID>
+    <ID>MagicNumber:ScheduleCodec.kt$ScheduleCodec$7</ID>
+    <ID>MagicNumber:ScheduleCodec.kt$ScheduleCodec$8</ID>
+    <ID>MagicNumber:ScheduleCodec.kt$ScheduleCodec$9</ID>
+    <ID>MagicNumber:ScheduleEngine.kt$ScheduleEngine$0xff</ID>
+    <ID>MagicNumber:ScheduleEngine.kt$ScheduleEngine$12</ID>
+    <ID>MagicNumber:ScheduleEngine.kt$ScheduleEngine$16</ID>
+    <ID>MagicNumber:ScheduleModels.kt$Recurrence$168</ID>
+    <ID>MagicNumber:ScheduleModels.kt$Recurrence$23</ID>
+    <ID>MagicNumber:ScheduleModels.kt$Recurrence$59</ID>
+    <ID>MagicNumber:ScheduleModels.kt$ScheduleDigest$23</ID>
+    <ID>MagicNumber:ScheduleModels.kt$ScheduleDigest$59</ID>
+    <ID>MagicNumber:ScheduleModels.kt$ScheduledPrompt$256</ID>
+    <ID>MagicNumber:ScheduleModels.kt$ScheduledPrompt$4096</ID>
+    <ID>MagicNumber:ScheduleModels.kt$ScheduledRun$512</ID>
+    <ID>MagicNumber:ScheduleRunner.kt$ScheduleRunner.Companion$100</ID>
+    <ID>MagicNumber:ScheduleRunner.kt$ScheduleRunner.Companion$99</ID>
+    <ID>MagicNumber:ScheduleTime.kt$ScheduleTime$9</ID>
+    <ID>MaxLineLength:ScheduleClaims.kt$ArmedEntry$/** Unique OS work name. Native names differ from the Flutter-era `oc.schedule.*` so a stale Flutter job never wins. */</ID>
+    <ID>MaxLineLength:ScheduleClaims.kt$ScheduleClaims$entries.map { linkedMapOf("id" to it.scheduleId, "revision" to it.revision.toLong(), "dueAtMs" to it.dueAtMs) }</ID>
+    <ID>MaxLineLength:ScheduleClaims.kt$ScheduleClaims$if (current == null || current.revision != entry.revision || current.dueAtMs != entry.dueAtMs) return Claim.Stale</ID>
+    <ID>MaxLineLength:ScheduleCodec.kt$ScheduleCodec$/** Dart `DateTime.parse` for the forms the Flutter store writes (UTC `Z`, explicit offsets); millisecond precision. */</ID>
+    <ID>MaxLineLength:ScheduleCodec.kt$ScheduleCodec$LocalDateTime(g[1].toInt(), g[2].toInt(), g[3].toInt(), g[4].toInt(), g[5].toInt(), g[6].ifEmpty { "0" }.toInt(), fraction)</ID>
+    <ID>MaxLineLength:ScheduleCodec.kt$ScheduleCodec$public</ID>
+    <ID>MaxLineLength:ScheduleCodec.kt$ScheduleCodec$val schedules = (json["schedules"] as? List&lt;*&gt; ?: throw ScheduleFormatException()).map { decodeSchedule(it.obj()) }</ID>
+    <ID>MaxLineLength:ScheduleEngine.kt$ScheduleEngine$if</ID>
+    <ID>MaxLineLength:ScheduleEngine.kt$ScheduleEngine$if (digest.enabled) ArmedEntry(profileId, ScheduleIds.DIGEST, 0, Recurrences.nextDigest(digest, nowMs(), zone())) else null</ID>
+    <ID>MaxLineLength:ScheduleEngine.kt$ScheduleEngine$if (editing != null &amp;&amp; editing.profileId != profileId) throw ScheduleStoreException(ScheduleCode.Unsupported)</ID>
+    <ID>MaxLineLength:ScheduleEngine.kt$ScheduleEngine$if (entry.digest) digestRun(entry) else occurrence(entry, recoveryOnly = claim == Claim.Recover, deadlineMs)</ID>
+    <ID>MaxLineLength:ScheduleEngine.kt$ScheduleEngine$isCurrent = { store.load(profileId).firstOrNull { it.id == schedule.id }?.revision == schedule.revision }</ID>
+    <ID>MaxLineLength:ScheduleEngine.kt$ScheduleEngine$private val newId: () -&gt; String = { Random.nextBytes(12).joinToString("") { b -&gt; (b.toInt() and 0xff).toString(16).padStart(2, '0') } }</ID>
+    <ID>MaxLineLength:ScheduleEngine.kt$ScheduleEngine$profileId</ID>
+    <ID>MaxLineLength:ScheduleEngine.kt$ScheduleEngine$public suspend</ID>
+    <ID>MaxLineLength:ScheduleEngine.kt$ScheduleEngine$safely { store.load(profileId) }?.firstOrNull { it.id == scheduleId }?.takeIf { it.revision == revision }</ID>
+    <ID>MaxLineLength:ScheduleEngine.kt$ScheduleEngine$schedules.filter { it.enabled &amp;&amp; it.nextRunAtMs != null }.map { ArmedEntry(profileId, it.id, it.revision, it.nextRunAtMs!!) }</ID>
+    <ID>MaxLineLength:ScheduleEngine.kt$ScheduleEngine$store.recordRun(profileId, result.copy(id = runId, scheduledAtMs = admittedAt, startedAtMs = admittedAt, late = false))</ID>
+    <ID>MaxLineLength:ScheduleEngine.kt$ScheduleEngine$val fingerprint = profiles.fingerprint(profileId) ?: throw ScheduleStoreException(ScheduleCode.Unsupported)</ID>
+    <ID>MaxLineLength:ScheduleEngine.kt$ScheduleEngine$val interrupted = earlier.copy(finishedAtMs = admittedAt, status = RunStatus.Failed, errorCode = "interrupted")</ID>
+    <ID>MaxLineLength:ScheduleEngine.kt$ScheduleEngine$val next = Recurrences.next(draft.recurrence, nowMs(), zone()) ?: throw ScheduleStoreException(ScheduleCode.ScheduleExpired)</ID>
+    <ID>MaxLineLength:ScheduleEngine.kt$ScheduleEngine$val running = ScheduledRun(runId, schedule.id, due.scheduledAtMs, admittedAt, RunStatus.Running, late = due.late)</ID>
+    <ID>MaxLineLength:ScheduleEngine.kt$ScheduleEngine$val schedule = store.load(profileId).firstOrNull { it.id == id } ?: throw ScheduleStoreException(ScheduleCode.ScheduleMissing)</ID>
+    <ID>MaxLineLength:ScheduleEngine.kt$ScheduleEngine.Companion$public</ID>
+    <ID>MaxLineLength:ScheduleEngineTest.kt$ScheduleEngineTest$assertEquals(listOf("started ${ArmedEntry(P, "s1", 1, T0 + HOUR).workName}", "finished ${ArmedEntry(P, "s1", 1, T0 + HOUR).workName}"), h.notices.events)</ID>
+    <ID>MaxLineLength:ScheduleEngineTest.kt$ScheduleEngineTest$fun</ID>
+    <ID>MaxLineLength:ScheduleEngineTest.kt$ScheduleEngineTest$h.backend.values["oc.scheduledPrompts.p1"] = ScheduleCodec.encodeEnvelope(ScheduleCodec.Envelope(listOf(legacy)))</ID>
+    <ID>MaxLineLength:ScheduleEngineTest.kt$ScheduleEngineTest$h.engine.store.recordRun(P, ScheduledRun(ScheduleIds.occurrence(saved, tapped), saved.id, tapped, tapped, RunStatus.Running))</ID>
+    <ID>MaxLineLength:ScheduleEngineTest.kt$ScheduleEngineTest$h.engine.store.recordRun(P, ScheduledRun(entry.occurrence, entry.scheduleId, entry.dueAtMs, entry.dueAtMs, RunStatus.Running, sessionId = "ses_9"))</ID>
+    <ID>MaxLineLength:ScheduleFakes.kt$Harness$ScheduleDraft(prompt = "Check the nightly build", projectPath = PROJECT, recurrence = recurrence, sessionId = sessionId)</ID>
+    <ID>MaxLineLength:ScheduleFakes.kt$ScriptedGateway$base.sessionList = (base.sessionList.dropLast(1) + it.value.copy(directory = directory, title = title)).toImmutableList()</ID>
+    <ID>MaxLineLength:ScheduleFakes.kt$ScriptedGateway$override suspend</ID>
+    <ID>MaxLineLength:ScheduleModelTest.kt$ScheduleModelTest$""""missedPolicy":"catchUp","enabled":true,"nextRunAt":"2026-11-02T09:00:00.000Z","createdAt":"2026-11-02T08:00:00.000Z","""</ID>
+    <ID>MaxLineLength:ScheduleModelTest.kt$ScheduleModelTest$""""modelProviderId":null,"modelId":null,"recurrence":{"kind":"daily","at":null,"hour":9,"minute":0,"hours":1},"""</ID>
+    <ID>MaxLineLength:ScheduleModelTest.kt$ScheduleModelTest$""""prompt":"Check the nightly build","projectPath":"/work/app","workspace":null,"sessionId":null,"agent":null,"""</ID>
+    <ID>MaxLineLength:ScheduleModelTest.kt$ScheduleModelTest$""""revision":1}],"runs":[{"id":"a1:1:1793610000000","scheduleId":"a1","scheduledAt":"2026-11-02T09:00:00.000Z","""</ID>
+    <ID>MaxLineLength:ScheduleModelTest.kt$ScheduleModelTest$""""sessionId":"ses_1","errorCode":null}],"digest":{"enabled":false,"hour":8,"minute":0,"lastDeliveredAt":null}}"""</ID>
+    <ID>MaxLineLength:ScheduleModelTest.kt$ScheduleModelTest$""""startedAt":"2026-11-02T09:00:01.000Z","status":"ran","late":false,"finishedAt":"2026-11-02T09:00:05.000Z","""</ID>
+    <ID>MaxLineLength:ScheduleModelTest.kt$ScheduleModelTest$"""{"schemaVersion":1,"schedules":[{"id":"a1","profileId":"p1","profileFingerprint":"${"ab".repeat(32)}","""</ID>
+    <ID>MaxLineLength:ScheduleModelTest.kt$ScheduleModelTest$assertEquals(ScheduleCodec.parseIso("2026-10-25T08:00:00.000Z"), Recurrences.next(Recurrence.daily(9, 0), saturday, berlin))</ID>
+    <ID>MaxLineLength:ScheduleModelTest.kt$ScheduleModelTest$prompt().copy(sessionId = "ses_1", workspace = "wrk", agent = "build", modelProviderId = "anthropic", modelId = "claude")</ID>
+    <ID>MaxLineLength:ScheduleModels.kt$Recurrence.Companion$public fun daily(hour: Int, minute: Int): Recurrence</ID>
+    <ID>MaxLineLength:ScheduleStore.kt$ScheduleKeys$/** The editor's typed prompt (Flutter `KitDraft` target `schedule.&lt;id|new&gt;`), swept with the profile (`oc.draft.`). */</ID>
+    <ID>MaxLineLength:ScheduleStore.kt$ScheduleKeys$listOf(STORE_PREFIX, CLAIMS_PREFIX, INDEX_PREFIX).firstOrNull { key.startsWith(it) }?.let { key.removePrefix(it) }</ID>
+    <ID>MaxLineLength:ScheduleStore.kt$ScheduleStore$if</ID>
+    <ID>MaxLineLength:ScheduleStore.kt$ScheduleStore$if (state.schedules.none { it.id == stored.scheduleId }) throw ScheduleStoreException(ScheduleCode.ScheduleMissing)</ID>
+    <ID>MaxLineLength:ScheduleStore.kt$ScheduleStore$read(profileId).runs.filter { scheduleId == null || it.scheduleId == scheduleId }.sortedByDescending { it.scheduledAtMs }</ID>
+    <ID>MaxLineLength:ScheduleStore.kt$ScheduleStore$state.copy(schedules = state.schedules.filterNot { it.id == id }, runs = state.runs.filterNot { it.scheduleId == id })</ID>
+    <ID>MaxLineLength:ScheduleStore.kt$ScheduleStore$state.copy(schedules = state.schedules.replaced(index, current.copy(nextRunAtMs = nextMs, enabled = nextMs != null)))</ID>
+    <ID>MaxLineLength:ScheduleStore.kt$ScheduleStore$state.schedules.replaced(index, current.copy(enabled = enabled, nextRunAtMs = next, revision = current.revision + 1))</ID>
+    <ID>MaxLineLength:ScheduleStoreTest.kt$ScheduleStoreTest$store.recordRun(P, ScheduledRun("a1:1:1", "a1", T0, T0, RunStatus.Ran, finishedAtMs = T0 + MIN, sessionId = "ses_1"))</ID>
+    <ID>MaxLineLength:ScheduleStoreTest.kt$ScheduleStoreTest$val drift = ScheduleCodec.encodeEnvelope(ScheduleCodec.Envelope()).replace("\"schemaVersion\":1", "\"schemaVersion\":2")</ID>
+    <ID>MaxLineLength:ScheduledOpen.kt$ScheduledOpen.Companion$val known = !sessionId.isNullOrEmpty() &amp;&amp; history.any { it.sessionId == sessionId &amp;&amp; it.scheduleId == schedule.id }</ID>
+    <ID>MaxLineLength:ScheduledOpen.kt$ScheduledOpen.Conversation$public data</ID>
+    <ID>MaxLineLength:build.gradle.kts$api(libs.kotlinx.datetime)</ID>
+    <ID>MemberNameEqualsClassName:ScheduleRunner.kt$ScheduleRunner.Attempt$private suspend fun attempt(): ScheduledRun</ID>
+    <ID>ReturnCount:ScheduleClaims.kt$ScheduleClaims$public suspend fun finished(entry: ArmedEntry): Boolean</ID>
+    <ID>ReturnCount:ScheduleClaims.kt$ScheduleClaims$public suspend fun index(profileId: String): List&lt;ArmedEntry&gt;</ID>
+    <ID>ReturnCount:ScheduleEngine.kt$ScheduleEngine$private suspend fun advanceSettled(entry: ArmedEntry)</ID>
+    <ID>ReturnCount:ScheduleEngine.kt$ScheduleEngine$private suspend fun digestRun(entry: ArmedEntry): RunReport</ID>
+    <ID>ReturnCount:ScheduleEngine.kt$ScheduleEngine$private suspend fun occurrence(entry: ArmedEntry, recoveryOnly: Boolean, deadlineMs: Long): RunReport</ID>
+    <ID>ReturnCount:ScheduleEngine.kt$ScheduleEngine$public suspend fun setPromptDraft(profileId: String, scheduleId: String?, text: String)</ID>
+    <ID>ReturnCount:ScheduleRunner.kt$ScheduleRunner.Attempt$private suspend fun attempt(): ScheduledRun</ID>
+    <ID>ReturnCount:ScheduleRunner.kt$ScheduleRunner.Attempt$private suspend fun follow( gateway: ServerGateway, target: SessionId, before: Set&lt;String&gt;, ): ScheduledRun</ID>
+    <ID>ReturnCount:ScheduleRunner.kt$ScheduleRunner.Attempt$suspend fun run(): ScheduledRun</ID>
+    <ID>ReturnCount:ScheduledOpen.kt$ScheduledOpen.Companion$public fun resolve( profileId: String, scheduleId: String, sessionId: String?, currentFingerprint: String?, schedules: List&lt;ScheduledPrompt&gt;, history: List&lt;ScheduledRun&gt;, ): ScheduledOpen?</ID>
+    <ID>SwallowedException:ScheduleCodec.kt$ScheduleCodec$e: IllegalArgumentException</ID>
+    <ID>SwallowedException:ScheduleRunner.kt$ScheduleRunner.Attempt$e: Exception</ID>
+    <ID>SwallowedException:ScheduleStore.kt$ScheduleStore$e: Exception</ID>
+    <ID>SwallowedException:ScheduleStore.kt$ScheduleStore$e: IllegalArgumentException</ID>
+    <ID>SwallowedException:ScheduleStore.kt$ScheduleStore$e: ScheduleFormatException</ID>
+    <ID>SwallowedException:ScheduleTime.kt$ScheduleTime$e: IllegalArgumentException</ID>
+    <ID>ThrowsCount:ScheduleCodec.kt$ScheduleCodec$public fun decodeEnvelope(raw: String?, profileId: String, maxSchedules: Int, maxHistory: Int, maxBytes: Int): Envelope</ID>
+    <ID>ThrowsCount:ScheduleCodec.kt$ScheduleCodec$public fun decodeRecurrence(json: Map&lt;*, *&gt;): Recurrence</ID>
+    <ID>ThrowsCount:ScheduleEngine.kt$ScheduleEngine$public suspend fun save(profileId: String, draft: ScheduleDraft, editing: ScheduledPrompt? = null): Outcome&lt;ScheduledPrompt&gt;</ID>
+    <ID>ThrowsCount:ScheduleRunner.kt$ScheduleRunner.Attempt$private suspend fun attempt(): ScheduledRun</ID>
+    <ID>ThrowsCount:ScheduleStore.kt$ScheduleStore$public suspend fun recordRun(profileId: String, run: ScheduledRun)</ID>
+    <ID>ThrowsCount:ScheduleStore.kt$ScheduleStore$public suspend fun save(schedule: ScheduledPrompt)</ID>
+    <ID>TooGenericExceptionCaught:ScheduleRunner.kt$ScheduleRunner.Attempt$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ScheduleStore.kt$ScheduleStore$e: Exception</ID>
+    <ID>TooManyFunctions:ScheduleCodec.kt$ScheduleCodec</ID>
+    <ID>TooManyFunctions:ScheduleEngine.kt$ScheduleEngine</ID>
+    <ID>TooManyFunctions:ScheduleRunner.kt$ScheduleRunner$Attempt</ID>
+    <ID>TooManyFunctions:ScheduleStore.kt$ScheduleStore</ID>
+  </CurrentIssues>
+</SmellBaseline>

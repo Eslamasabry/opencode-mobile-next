@@ -1,0 +1,20 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>MagicNumber:TestDispatchers.kt$TestClock$1_767_225_600_000</ID>
+    <ID>MatchingDeclarationName:FakePlatform.kt$FakeNetworkStatus : NetworkStatus</ID>
+    <ID>MaxLineLength:FakeGateways.kt$FakeServerGateway$answer("createSession") { Session(SessionId("s${sessionList.size + 1}"), spec.title).also { sessionList = (sessionList + it).toImmutableList() } }</ID>
+    <ID>MaxLineLength:FakeGateways.kt$FakeServerGateway$override suspend</ID>
+    <ID>MaxLineLength:FakeGateways.kt$FakeServerGateway$override suspend fun configuredProviders(): Outcome&lt;ProvidersResponse&gt;</ID>
+    <ID>MaxLineLength:FakeGateways.kt$FakeServerGateway$override suspend fun fileContent(path: String): Outcome&lt;FileContent&gt;</ID>
+    <ID>MaxLineLength:FakeGateways.kt$FakeServerGateway$override suspend fun findFile(query: String): Outcome&lt;ImmutableList&lt;String&gt;&gt;</ID>
+    <ID>MaxLineLength:FakeGateways.kt$FakeServerGateway$override suspend fun findText(pattern: String): Outcome&lt;ImmutableList&lt;FindMatch&gt;&gt;</ID>
+    <ID>MaxLineLength:FakeGateways.kt$FakeServerGateway$override suspend fun listFiles(path: String): Outcome&lt;ImmutableList&lt;FileNode&gt;&gt;</ID>
+    <ID>MaxLineLength:FakeGateways.kt$FakeServerGateway$override suspend fun pendingPermissions(): Outcome&lt;ImmutableList&lt;PermissionRequest&gt;&gt;</ID>
+    <ID>MaxLineLength:FakeGateways.kt$FakeServerGateway$override suspend fun renameSession(id: SessionId, title: String): Outcome&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:FakeGateways.kt$FakeServerGateway$override suspend fun sessionStatuses(): Outcome&lt;ImmutableMap&lt;SessionId, SessionStatus&gt;&gt;</ID>
+    <ID>MaxLineLength:FakeGateways.kt$FakeServerGateway$override suspend fun stop(session: SessionId, resume: Boolean): Outcome&lt;StopResult&gt;</ID>
+    <ID>TooManyFunctions:FakeGateways.kt$FakeServerGateway : ServerGateway</ID>
+  </CurrentIssues>
+</SmellBaseline>

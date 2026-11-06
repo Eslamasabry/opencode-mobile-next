@@ -1,0 +1,152 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:AlwaysAllowInvitation.kt$AlwaysAllowInvitation$!supportsPersistentGrants || autoApproving || requestId.isEmpty() || scope.sessionId.isEmpty() || scope.permission.isEmpty()</ID>
+    <ID>ComplexCondition:AlwaysAllowInvitation.kt$AlwaysAllowInvitation$requests.isEmpty() || requests.size &gt; OFFER_AT || requests.any { !isDigest(it) } || requests.toSet().size != requests.size || (requests.size == OFFER_AT) != (decision != OfferDecision.NotOffered)</ID>
+    <ID>ComplexCondition:FormRequests.kt$FormRequests$captured != null &amp;&amp; (sourceIdentity() != captured.source || (current != null &amp;&amp; current.spec.revision != captured.form.spec.revision))</ID>
+    <ID>ComplexCondition:PermissionAsk.kt$PermissionAsk$command != null &amp;&amp; command.isNotEmpty() &amp;&amp; '\n' !in command &amp;&amp; command.length &lt;= COMMAND_IN_TITLE</ID>
+    <ID>ComplexCondition:RequestsEngine.kt$RequestsEngine$current == null || current.request != invite.request || current.phase !== entry.phase || !consent.storageAvailable || consent.decision != OfferDecision.Offered</ID>
+    <ID>ComplexCondition:RequestsEngine.kt$RequestsEngine$entry.phase != AnswerPhase.Waiting || entry.firstShownAtMs == null || !entry.request.canAlwaysAllow || automatic(entry.sessionId)</ID>
+    <ID>ComplexCondition:RequestsEngine.kt$RequestsEngine$status.offerAlwaysAllow &amp;&amp; exact != null &amp;&amp; exact.request == entry.request &amp;&amp; exact.phase == AnswerPhase.Waiting &amp;&amp; !automatic(entry.sessionId)</ID>
+    <ID>CyclomaticComplexMethod:AlwaysAllowInvitation.kt$AlwaysAllowInvitation$@Suppress("UNCHECKED_CAST") private fun parse(raw: String): LinkedHashMap&lt;String, Entry&gt;?</ID>
+    <ID>CyclomaticComplexMethod:FormRequests.kt$FormRequests$private suspend fun send(id: FormId, reply: FormReply): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:FormRules.kt$FormRules$private fun problemOf(field: FieldSpec, raw: FormValue?, answer: FormValue?): FieldProblem?</ID>
+    <ID>CyclomaticComplexMethod:Oc2FormAdapter.kt$Oc2FormAdapter$internal fun field(raw: JsonObject): FieldSpec?</ID>
+    <ID>CyclomaticComplexMethod:PermissionAsk.kt$PermissionAsk$private fun shell(request: PermissionRequest, project: String?): AskView</ID>
+    <ID>CyclomaticComplexMethod:PermissionAsk.kt$PermissionAsk$private fun verbOf(action: String, toolName: String?): AskVerb</ID>
+    <ID>CyclomaticComplexMethod:RequestsEngine.kt$RequestsEngine$private suspend fun claimAndWrite( id: RequestId, expected: AnswerPhase, answer: RequestAnswer, expectedRequest: PendingRequest? = null, ): Outcome&lt;Unit&gt;?</ID>
+    <ID>CyclomaticComplexMethod:RequestsEngine.kt$RequestsEngine$private suspend fun readPending(epoch: Long): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:RequestsEngine.kt$RequestsEngine$private suspend fun reply(entry: PendingRequest, answer: RequestAnswer): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:RequestsEngine.kt$RequestsEngine$public suspend fun observeInvitations( owner: AlwaysAllowInvitation?, automatic: (SessionId) -&gt; Boolean, )</ID>
+    <ID>LargeClass:RequestsEngine.kt$RequestsEngine</ID>
+    <ID>LargeClass:RequestsEngineTest.kt$RequestsEngineTest</ID>
+    <ID>LongMethod:Oc2FormAdapter.kt$Oc2FormAdapter$internal fun field(raw: JsonObject): FieldSpec?</ID>
+    <ID>LongMethod:RequestsEngine.kt$RequestsEngine$private suspend fun claimAndWrite( id: RequestId, expected: AnswerPhase, answer: RequestAnswer, expectedRequest: PendingRequest? = null, ): Outcome&lt;Unit&gt;?</ID>
+    <ID>LongParameterList:FakeRequestsPort.kt$( id: String, session: SessionId = S1, permission: String = "shell", patterns: List&lt;String&gt; = listOf("npm install"), always: List&lt;String&gt; = listOf("npm install *"), metadata: Map&lt;String, String&gt; = emptyMap(), canAlwaysAllow: Boolean = true, callId: String? = null, )</ID>
+    <ID>LongParameterList:FormRevision.kt$FormRevision$( profileId: String, directory: String, workspace: String?, sessionId: String, formId: String, revision: String, )</ID>
+    <ID>LoopWithTooManyJumpStatements:FormRules.kt$FormRules$for</ID>
+    <ID>LoopWithTooManyJumpStatements:RequestsEngine.kt$RequestsEngine$for</ID>
+    <ID>MagicNumber:FormDrafts.kt$FormDrafts.Companion$16</ID>
+    <ID>MagicNumber:FormRequests.kt$FormRequests$15_000</ID>
+    <ID>MagicNumber:FormRequests.kt$FormRequests$3_000</ID>
+    <ID>MagicNumber:FormRequests.kt$FormRequests$400</ID>
+    <ID>MagicNumber:FormRequests.kt$FormRequests$512</ID>
+    <ID>MagicNumber:FormRules.kt$FormRules$9.0E15</ID>
+    <ID>MagicNumber:Requests.kt$PendingRequest.Question$140</ID>
+    <ID>MaxLineLength:AlwaysAllowInvitationTest.kt$AlwaysAllowInvitationTest$"""{"requests":["ad88d1ab8c9924dd5f4036b6f4a41cfd10b62b56a2df06a62d2f71c82b066163"],"decision":"notOffered"}}}"""</ID>
+    <ID>MaxLineLength:AlwaysAllowInvitationTest.kt$AlwaysAllowInvitationTest$assertEquals(OfferDecision.Declined, restarted.recordDecision(npm, accepted = true).decision, "only an open offer changes")</ID>
+    <ID>MaxLineLength:AlwaysAllowInvitationTest.kt$AlwaysAllowInvitationTest$assertFalse(invitation.ask(npm.copy(sessionId = "ses_2", patterns = listOf("a b", "npm install")), "per_2").offerAlwaysAllow)</ID>
+    <ID>MaxLineLength:AlwaysAllowInvitationTest.kt$AlwaysAllowInvitationTest$fun</ID>
+    <ID>MaxLineLength:AlwaysAllowInvitationTest.kt$AlwaysAllowInvitationTest$private suspend</ID>
+    <ID>MaxLineLength:AlwaysAllowInvitationTest.kt$AlwaysAllowInvitationTest$val corrupt = AlwaysAllowInvitation(MemoryStorage("""{"version":1,"entries":{"nothex":{"requests":[],"decision":"offered"}}}"""))</ID>
+    <ID>MaxLineLength:ApprovalModes.kt$ApprovalModes$return if (setting.inheritToChildren) EffectiveApproval(setting.mode, inheritedFrom = parent) else fallback(settings)</ID>
+    <ID>MaxLineLength:ApprovalModes.kt$ApprovalModes$settings[SERVER_WIDE]?.let { EffectiveApproval(it.mode, serverWide = true) } ?: EffectiveApproval(ApprovalMode.Ask)</ID>
+    <ID>MaxLineLength:ApprovalModes.kt$AutoApproved$public data</ID>
+    <ID>MaxLineLength:AutoApprovalTest.kt$AutoApprovalTest$/** Approval modes (plan 09 §5.3, plan 17 §1.10, map CHAT-GENUI-45; Dart `session_auto_approval.dart`, `permissions.dart`). */</ID>
+    <ID>MaxLineLength:AutomationPolicyTest.kt$AutomationPolicyTest$for (behavior in AutomationBehavior.entries) assertEquals(behavior !in consentOnly, policy.allows(behavior), behavior.name)</ID>
+    <ID>MaxLineLength:AutomationPolicyTest.kt$AutomationPolicyTest$fun</ID>
+    <ID>MaxLineLength:AutomationPolicyTest.kt$AutomationPolicyTest$store.values["oc.automation.profile-2"] = AutomationPolicy().withSupervision(AutomationSupervision.Balanced).toJson().toString()</ID>
+    <ID>MaxLineLength:FakeRequestsPort.kt$FakeRequestsPort$is Outcome.Ok -&gt; (here.value.filter { it.sessionId == session } + extra).distinctBy { it.id }.toImmutableList().ok()</ID>
+    <ID>MaxLineLength:FakeRequestsPort.kt$FakeRequestsPort$override suspend</ID>
+    <ID>MaxLineLength:FakeRequestsPort.kt$FakeRequestsPort$override suspend fun rejectQuestion(session: SessionId, request: RequestId): Outcome&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:FakeRequestsPort.kt$FakeRequestsPort$val</ID>
+    <ID>MaxLineLength:FakeRequestsPort.kt$internal fun answers(vararg labels: String): ImmutableList&lt;ImmutableList&lt;String&gt;&gt;</ID>
+    <ID>MaxLineLength:FormDrafts.kt$FormDrafts$*</ID>
+    <ID>MaxLineLength:FormModel.kt$FieldKind</ID>
+    <ID>MaxLineLength:FormRevision.kt$FormRevision$*</ID>
+    <ID>MaxLineLength:FormRules.kt$FormRules$FieldKind.Number, FieldKind.Integer -&gt; (d as? FormValue.Number)?.let { FormValue.Text(plain(it.value)) }</ID>
+    <ID>MaxLineLength:FormRules.kt$FormRules$n == null -&gt; if (field.kind == FieldKind.Integer) FieldProblem.NotAWholeNumber else FieldProblem.NotANumber</ID>
+    <ID>MaxLineLength:FormRules.kt$FormRules$private</ID>
+    <ID>MaxLineLength:FormRulesTest.kt$FormRulesTest$"""{"key":"m","type":"multiselect","options":[{"value":"a"},{"value":"b"},{"value":"c"}],"minItems":2,"maxItems":2}"""</ID>
+    <ID>MaxLineLength:FormRulesTest.kt$FormRulesTest$"""{"key":"region","type":"string","required":true,"maxLength":40,"when":[{"key":"kind","op":"eq","value":"cloud"}]}"""</ID>
+    <ID>MaxLineLength:FormRulesTest.kt$FormRulesTest$"""{"key":"zone","type":"string","required":true,"maxLength":40,"when":[{"key":"region","op":"neq","value":"none"}]}"""</ID>
+    <ID>MaxLineLength:FormRulesTest.kt$FormRulesTest$assertEquals(mapOf&lt;String, FormValue&gt;("note" to FormValue.Text("hi")), drafts.open("id-1", s), "a fresh sheet starts from defaults")</ID>
+    <ID>MaxLineLength:FormRulesTest.kt$FormRulesTest$val draft = mapOf("kind" to FormValue.Text("local"), "region" to FormValue.Text("eu"), "zone" to FormValue.Text("b"))</ID>
+    <ID>MaxLineLength:FormRulesTest.kt$FormRulesTest$val e = FormRules.evaluate(conditional, mapOf("kind" to FormValue.Text("cloud"), "region" to FormValue.Text(" ")))</ID>
+    <ID>MaxLineLength:FormRulesTest.kt$FormRulesTest$val hiddenFifth = spec(*Array(4) { """{"key":"f$it","type":"string"}""" }, """{"key":"h","hidden":true,"type":"string"}""")</ID>
+    <ID>MaxLineLength:FormSchemaTest.kt$FormSchemaTest$"""{"key":"k","type":"string","when":[{"key":"a","value":"x"},{"key":"b","op":"neq","value":true},{"op":"eq"}]}"""</ID>
+    <ID>MaxLineLength:FormSchemaTest.kt$FormSchemaTest$"""{"key":"many","type":"multiselect","options":[{"value":"x"},{"value":"y"}],"minItems":1,"maxItems":"2"}"""</ID>
+    <ID>MaxLineLength:FormSchemaTest.kt$FormSchemaTest$"""{"key":"server","hidden":true,"type":"string","format":"uri","default":"https://opencode.ai/console"}"""</ID>
+    <ID>MaxLineLength:FormSchemaTest.kt$FormSchemaTest$assertEquals("a", spec.fields.first { it.key == "pick" }.options.single().label, "a label defaults to its value")</ID>
+    <ID>MaxLineLength:FormSchemaTest.kt$FormSchemaTest$fields = arrayOf("""{"key":"n","type":"integer","maximum":10,"when":[{"key":"x","op":"eq","value":true}]}""")</ID>
+    <ID>MaxLineLength:FormSchemaTest.kt$FormSchemaTest$fun</ID>
+    <ID>MaxLineLength:MissedAsksTest.kt$MissedAsksTest$return RequestsEngine(port, backgroundScope, TestDispatchers(dispatcher), clock, TestPacer()).also { runCurrent() }</ID>
+    <ID>MaxLineLength:Oc2FormAdapter.kt$Oc2FormAdapter$owner = if (form.sessionId.raw == GLOBAL_SESSION) FormOwner.Connection else FormOwner.Session(form.sessionId)</ID>
+    <ID>MaxLineLength:PermissionAsk.kt$AskTarget$public data</ID>
+    <ID>MaxLineLength:PermissionAsk.kt$PermissionAsk$/** OpenCode 1's apply_patch says per file what it does (`metadata.files[]{relativePath,type,additions,deletions}`). */</ID>
+    <ID>MaxLineLength:PermissionAsk.kt$PermissionAsk$// A long command reads by the family its own "always" pattern names ("npm install *"), only when it starts with it.</ID>
+    <ID>MaxLineLength:PermissionAsk.kt$PermissionAsk$prefix.takeIf { it.isNotEmpty() &amp;&amp; '*' !in it &amp;&amp; it.length &lt;= COMMAND_IN_TITLE &amp;&amp; command.startsWith(it) }</ID>
+    <ID>MaxLineLength:PermissionAsk.kt$PermissionAsk$private fun JsonObject.firstString(keys: List&lt;String&gt;): String?</ID>
+    <ID>MaxLineLength:PermissionAsk.kt$PermissionAsk$private fun JsonObject.number(key: String): Int?</ID>
+    <ID>MaxLineLength:PermissionAsk.kt$PermissionAsk$private fun firstPattern(request: PermissionRequest): String?</ID>
+    <ID>MaxLineLength:PermissionAsk.kt$PermissionAsk$return commandPreview(request) ?: filePath(request) ?: request.patterns.takeIf { it.isNotEmpty() }?.joinToString(" · ")</ID>
+    <ID>MaxLineLength:PermissionAskTest.kt$PermissionAskTest$fun</ID>
+    <ID>MaxLineLength:PermissionAskTest.kt$PermissionAskTest$fun verb(kind: String)</ID>
+    <ID>MaxLineLength:PermissionAskTest.kt$PermissionAskTest$metadata = mapOf("filepath" to "$dir/notes.txt", "diff" to "--- notes.txt\n+++ notes.txt\n@@ -1,2 +1,3 @@\n-a\n+b\n+c\n d\n")</ID>
+    <ID>MaxLineLength:PermissionAskTest.kt$PermissionAskTest$of(permission("p", permission = "edit", patterns = listOf("$dir/src/game.js"), always = emptyList(), metadata = mapOf("filePath" to "$dir/src/game.js")))</ID>
+    <ID>MaxLineLength:PermissionAskTest.kt$PermissionAskTest$permission("p", permission = "bash", patterns = listOf(command), always = listOf("npm install *"), metadata = mapOf("command" to command))</ID>
+    <ID>MaxLineLength:PermissionAskTest.kt$PermissionAskTest$permission(id, S1, permission, patterns, always, metadata).copy(id = RequestId(id), patterns = patterns.toImmutableList())</ID>
+    <ID>MaxLineLength:PermissionAskTest.kt$PermissionAskTest$private</ID>
+    <ID>MaxLineLength:PermissionAskTest.kt$PermissionAskTest$val ask = of(permission("p", patterns = listOf("npm install"), always = listOf("npm install *")), project = "neon-breaker")</ID>
+    <ID>MaxLineLength:PermissionAskTest.kt$PermissionAskTest$val outside = permission("p", permission = "external_directory", patterns = listOf("/etc/*"), always = emptyList())</ID>
+    <ID>MaxLineLength:PermissionTitleTest.kt$PermissionTitleTest$assertEquals(known.size, known.keys.map { PermissionTitle.of(it) }.toSet().size, "known ids never share a title")</ID>
+    <ID>MaxLineLength:PermissionTitleTest.kt$PermissionTitleTest$for (id in listOf("", " ", " ", "\t", "\n")) assertEquals(PermissionTitle.Generic, PermissionTitle.of(id), "'$id'")</ID>
+    <ID>MaxLineLength:PermissionTitleWordsTest.kt$PermissionTitleWordsTest$fun</ID>
+    <ID>MaxLineLength:PermissionTrackingTest.kt$PermissionTrackingTest$RequestsEngine(port, backgroundScope, TestDispatchers(StandardTestDispatcher(testScheduler)), TestClock(), TestPacer())</ID>
+    <ID>MaxLineLength:QuestionRequests.kt$QuestionRequests$return if (lane.answer(id, QuestionReply.Answers(answers))) QuestionAnswerResult.Held else QuestionAnswerResult.Ignored</ID>
+    <ID>MaxLineLength:QuestionSheet.kt$QuestionSheet$if (prompt.multiple) draft.copy(own = text) else PromptDraft(chosen = persistentListOf(), own = text, ownOpen = true)</ID>
+    <ID>MaxLineLength:QuestionSheet.kt$QuestionSheet$return question.prompts.mapIndexed { i, p -&gt; answerOf(p, drafts.getOrNull(i) ?: PromptDraft()) }.toImmutableList()</ID>
+    <ID>MaxLineLength:QuestionsTest.kt$QuestionsTest$assertEquals(QuestionAnswerResult.Invalid, engine.answer(q.id, q.sessionId, listOf(PromptDraft(), PromptDraft())))</ID>
+    <ID>MaxLineLength:QuestionsTest.kt$QuestionsTest$assertEquals(QuestionBlock.Unanswered(0), QuestionSheet.block(noOwn, listOf(QuestionSheet.write(closed, PromptDraft(), "hi"))))</ID>
+    <ID>MaxLineLength:QuestionsTest.kt$QuestionsTest$assertEquals(QuestionPresentation.FullSheet, QuestionSheet.presentation(question(prompts = arrayOf(longOption))))</ID>
+    <ID>MaxLineLength:QuestionsTest.kt$QuestionsTest$assertEquals(QuestionPresentation.FullSheet, QuestionSheet.presentation(question(prompts = arrayOf(single, single))))</ID>
+    <ID>MaxLineLength:QuestionsTest.kt$QuestionsTest$assertEquals(QuestionPresentation.RequestSheet, QuestionSheet.presentation(question(prompts = arrayOf(pickMany))))</ID>
+    <ID>MaxLineLength:QuestionsTest.kt$QuestionsTest$assertEquals&lt;List&lt;List&lt;String&gt;&gt;?&gt;(listOf(listOf("Yes"), emptyList&lt;String&gt;(), listOf("x")), QuestionSheet.answers(q, ok))</ID>
+    <ID>MaxLineLength:QuestionsTest.kt$QuestionsTest$val drafts = listOf(PromptDraft(chosen = persistentListOf("Yes")), PromptDraft(), PromptDraft(chosen = persistentListOf("forged")))</ID>
+    <ID>MaxLineLength:QuestionsTest.kt$QuestionsTest$val drafts = listOf(PromptDraft(chosen = persistentListOf("Yes")), PromptDraft(chosen = persistentListOf("B"), own = "Z"))</ID>
+    <ID>MaxLineLength:RequestsEngineTest.kt$RequestsEngineTest$assertEquals(Outcome.Failed(failure), engine.answerNow(RequestId("p1"), RequestAnswer.Permission(PermissionReply.Once)))</ID>
+    <ID>MaxLineLength:RequestsEngineTest.kt$RequestsEngineTest$assertEquals(Outcome.Failed(failure), engine.answerNow(RequestId(id), RequestAnswer.Permission(PermissionReply.Once)))</ID>
+    <ID>MaxLineLength:RequestsEngineTest.kt$RequestsEngineTest$assertEquals(Outcome.Ok(Unit), engine.answer(RequestId("b"), RequestAnswer.Permission(PermissionReply.Once)))</ID>
+    <ID>MaxLineLength:RequestsEngineTest.kt$RequestsEngineTest$assertEquals(Outcome.Ok(Unit), engine.answer(RequestId("p1"), RequestAnswer.Permission(PermissionReply.Once)))</ID>
+    <ID>MaxLineLength:RequestsEngineTest.kt$RequestsEngineTest$assertEquals(Outcome.Ok(Unit), engine.answerNow(RequestId("p1"), RequestAnswer.Permission(PermissionReply.Once)))</ID>
+    <ID>MaxLineLength:RequestsEngineTest.kt$RequestsEngineTest$assertEquals(Outcome.Ok(Unit), engine.answerNow(RequestId("p9"), RequestAnswer.Permission(PermissionReply.Once)))</ID>
+    <ID>MaxLineLength:RequestsEngineTest.kt$RequestsEngineTest$assertEquals(SessionRequests.None, SessionRequests.of(engine.pending.value, io.github.eslamasabry.oc.core.common.ids.SessionId("other")))</ID>
+    <ID>MaxLineLength:RequestsEngineTest.kt$RequestsEngineTest$assertIs&lt;Outcome.Failed&gt;(engine.answer(RequestId("p1"), RequestAnswer.Permission(PermissionReply.Once), captured.single()))</ID>
+    <ID>MaxLineLength:RequestsEngineTest.kt$RequestsEngineTest$private fun RequestsEngine.phaseOf(id: String): AnswerPhase?</ID>
+    <ID>MaxLineLength:RequestsPort.kt$&lt;no name provided&gt;$override suspend</ID>
+    <ID>MaxLineLength:RequestsPort.kt$&lt;no name provided&gt;$override suspend fun pendingPermissions(): Outcome&lt;ImmutableList&lt;PermissionRequest&gt;&gt;</ID>
+    <ID>MaxLineLength:RequestsPort.kt$&lt;no name provided&gt;$override suspend fun rejectQuestion(session: SessionId, request: RequestId): Outcome&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:RequestsPort.kt$RequestsPort$public suspend fun answerQuestion(session: SessionId, request: RequestId, answers: ImmutableList&lt;ImmutableList&lt;String&gt;&gt;): Outcome&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:RequestsPort.kt$RequestsPort$public suspend fun replyPermission(session: SessionId, request: RequestId, reply: PermissionReply, note: String?): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:AlwaysAllowInvitation.kt$AlwaysAllowInvitation$@Suppress("UNCHECKED_CAST") private fun parse(raw: String): LinkedHashMap&lt;String, Entry&gt;?</ID>
+    <ID>ReturnCount:AlwaysAllowInvitation.kt$AlwaysAllowInvitation$private suspend fun read(): LinkedHashMap&lt;String, Entry&gt;?</ID>
+    <ID>ReturnCount:ApprovalModes.kt$ApprovalModes$public fun effective( settings: Map&lt;String, SessionApproval&gt;, session: SessionId, parentOf: (SessionId) -&gt; SessionId?, ): EffectiveApproval</ID>
+    <ID>ReturnCount:AutomationPolicy.kt$AutomationPolicy.Companion$public fun fromJson(raw: String): AutomationPolicy</ID>
+    <ID>ReturnCount:FormRequests.kt$FormRequests$private suspend fun send(id: FormId, reply: FormReply): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:FormRequests.kt$FormRequests$public fun answer(id: FormId, draft: Map&lt;String, FormValue&gt;): FormAnswerResult</ID>
+    <ID>ReturnCount:FormRequests.kt$FormRequests$public fun decline(id: FormId): FormAnswerResult</ID>
+    <ID>ReturnCount:FormRules.kt$FormRules$private fun number(raw: FormValue?): Double?</ID>
+    <ID>ReturnCount:Oc2FormAdapter.kt$Oc2FormAdapter$internal fun field(raw: JsonObject): FieldSpec?</ID>
+    <ID>ReturnCount:PermissionAsk.kt$PermissionAsk$public fun of( request: PermissionRequest, project: String? = null, directory: String? = null, toolName: String? = null, target: String? = null, ): AskView</ID>
+    <ID>ReturnCount:QuestionRequests.kt$QuestionRequests$public fun answer(id: RequestId, session: SessionId, drafts: List&lt;PromptDraft&gt;): QuestionAnswerResult</ID>
+    <ID>ReturnCount:QuestionRequests.kt$QuestionRequests$public fun dismiss(id: RequestId, session: SessionId): QuestionAnswerResult</ID>
+    <ID>ReturnCount:QuestionSheet.kt$QuestionSheet$public fun block(question: PendingQuestion, drafts: List&lt;PromptDraft&gt;): QuestionBlock?</ID>
+    <ID>ReturnCount:RequestsEngine.kt$RequestsEngine$private fun markDispatched(entry: PendingRequest): Boolean</ID>
+    <ID>ReturnCount:RequestsEngine.kt$RequestsEngine$private suspend fun claimAndWrite( id: RequestId, expected: AnswerPhase, answer: RequestAnswer, expectedRequest: PendingRequest? = null, ): Outcome&lt;Unit&gt;?</ID>
+    <ID>ReturnCount:RequestsEngine.kt$RequestsEngine$private suspend fun reply(entry: PendingRequest, answer: RequestAnswer): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:RequestsEngine.kt$RequestsEngine$private suspend fun settleWrite( entry: PendingRequest, sending: AnswerPhase.Sending, written: Outcome&lt;Unit&gt;, ): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:RequestsEngine.kt$RequestsEngine$public fun isInvited(id: RequestId): Boolean</ID>
+    <ID>ReturnCount:RequestsEngine.kt$RequestsEngine$public suspend fun answerNow( id: RequestId, answer: RequestAnswer, expectedRequest: PendingRequest? = null, ): Outcome&lt;Unit&gt;</ID>
+    <ID>SwallowedException:AutomationPolicy.kt$AutomationPolicy.Companion$e: IllegalArgumentException</ID>
+    <ID>SwallowedException:AutomationPolicy.kt$AutomationPolicyOwner$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:AutomationPolicy.kt$AutomationPolicyOwner$e: Exception</ID>
+    <ID>TooManyFunctions:AlwaysAllowInvitation.kt$AlwaysAllowInvitation</ID>
+    <ID>TooManyFunctions:AutomationPolicy.kt$AutomationPolicyOwner</ID>
+    <ID>TooManyFunctions:FormRequests.kt$FormRequests</ID>
+    <ID>TooManyFunctions:FormRules.kt$FormRules</ID>
+    <ID>TooManyFunctions:PermissionAsk.kt$PermissionAsk</ID>
+    <ID>TooManyFunctions:QuestionRequests.kt$QuestionRequests</ID>
+    <ID>TooManyFunctions:RequestsEngine.kt$RequestsEngine</ID>
+  </CurrentIssues>
+</SmellBaseline>

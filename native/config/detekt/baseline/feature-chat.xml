@@ -1,0 +1,798 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:BasicComposerHost.kt$sendReady &amp;&amp; typed &amp;&amp; !voiceActive &amp;&amp; !state.sending &amp;&amp; !waitingRequest</ID>
+    <ID>ComplexCondition:BasicComposerHost.kt$state.attachKinds.isEmpty() &amp;&amp; voice == null &amp;&amp; refreshHistory == null &amp;&amp; chrome.openCommands == null &amp;&amp; chrome.sendLater == null</ID>
+    <ID>ComplexCondition:BasicComposerViewModel.kt$BasicComposerViewModel$moment?.moment == null || moment.moment == io.github.eslamasabry.oc.engine.composer.phrases.PhraseMoment .Working || ui.sending || moment.errorShown || moment.continueShown || ui.draft.text.isNotBlank() || ui.draft.attachments.isNotEmpty()</ID>
+    <ID>ComplexCondition:BasicComposerViewModel.kt$BasicComposerViewModel$pickingFile.value || committingFiles.value || sending.value || !stillCurrent()</ID>
+    <ID>ComplexCondition:ChatCardSlot.kt$CardForms$(f.min != null &amp;&amp; d &lt; f.min!!) || (f.max != null &amp;&amp; d &gt; f.max!!)</ID>
+    <ID>ComplexCondition:ChatCards.kt$ChatCardsModel$!read(gateway) || !connectorCurrent(card, origin) || !connectorAuthorized(card) || registry.graphFor(ref) !== graph</ID>
+    <ID>ComplexCondition:ChatCards.kt$ChatCardsModel$echo != null &amp;&amp; e.message.role == io.github.eslamasabry.oc.core.model.transcript.Role.User &amp;&amp; echo.parts.all { it.sessionId == sid.raw &amp;&amp; it.messageId == e.message.id }</ID>
+    <ID>ComplexCondition:ChatPresenter.kt$ChatPresenter$seen != null &amp;&amp; (seen == CHECKING || seen == transcript.revision || transcript.run.busy)</ID>
+    <ID>ComplexCondition:ChatRequestsModel.kt$ChatRequestsModel$reviewed is PendingRequest.Permission &amp;&amp; card is RequestCardUi.Permission &amp;&amp; card.canAlwaysAllow &amp;&amp; card.state == CardState.Waiting</ID>
+    <ID>ComplexCondition:ChatRequestsModel.kt$ChatRequestsModel$reviewed is PendingRequest.Question &amp;&amp; card is RequestCardUi.Question &amp;&amp; !card.oneAnswer &amp;&amp; card.state == CardState.Waiting</ID>
+    <ID>ComplexCondition:ChatRequestsModel.kt$ChatRequestsModel$reviewed is PendingRequest.Question &amp;&amp; card is RequestCardUi.Question &amp;&amp; card.state == CardState.Waiting &amp;&amp; card.oneAnswer &amp;&amp; action.option in card.options</ID>
+    <ID>ComplexCondition:ChatRequestsModel.kt$ChatRequestsModel$reviewed is PendingRequest.Question &amp;&amp; card is RequestCardUi.Question &amp;&amp; card.state == CardState.Waiting &amp;&amp; card.oneAnswer &amp;&amp; card.custom</ID>
+    <ID>ComplexCondition:ChatRequestsModel.kt$ChatRequestsModel$reviewed.id != card.id || reviewed.sessionId != session || !engine.isCurrent(reviewed) || currentCard.id != card.id</ID>
+    <ID>ComplexCondition:ChatRules.kt$LongTable$head.kind == RowKind.Code || head.continued || !head.continues || !opensTable(head.text)</ID>
+    <ID>ComplexCondition:ChatRules.kt$MessageActions$prompt &amp;&amp; caps.undo &amp;&amp; messageId != null &amp;&amp; !busy</ID>
+    <ID>ComplexCondition:ChatScreen.kt$state.rows.isEmpty() &amp;&amp; state.pending.isEmpty() &amp;&amp; state.live == null &amp;&amp; start.emptyEligible &amp;&amp; startActions != null</ID>
+    <ID>ComplexCondition:ChatStartViewModel.kt$ChatStartViewModel$reads == null || !draft.ready || draft.text.isNotBlank() || draft.attachments.isNotEmpty() || kind !in Starters.suggestions(facts.value)</ID>
+    <ID>ComplexCondition:ChatTranscript.kt$row.failed &amp;&amp; (!row.reason.isNullOrBlank() || row.errorKind.let { it != null &amp;&amp; it != MessageErrorKind.Unknown }) &amp;&amp; listWords != null &amp;&amp; listWords.details.isNotEmpty()</ID>
+    <ID>ComplexCondition:ChatTranscriptDetails.kt$(kind == null || kind == "unknown") &amp;&amp; part.filename == null &amp;&amp; part.text.isBlank()</ID>
+    <ID>ComplexCondition:ChatWorkSheet.kt$output.text.isEmpty() &amp;&amp; !output.loading &amp;&amp; !output.failed &amp;&amp; !output.gone</ID>
+    <ID>ComplexCondition:ChatWorld.kt$DraftFacts$text.isBlank() &amp;&amp; saved.isBlank() &amp;&amp; attachments.isEmpty() &amp;&amp; savedAttachments.isEmpty()</ID>
+    <ID>ComplexCondition:GraphChatWorld.kt$GraphChatWorld$!before.connected || !before.ready || before.busy || before.requestWaiting || before.hasAttachments || mutableDraft.value.text.isNotEmpty()</ID>
+    <ID>ComplexCondition:GraphChatWorld.kt$GraphChatWorld$!captured.ready || !protectedByHistory || !mutableDraft.value.repeatAllowed || captured.editRevision != expectedRevision || captured.text != text || mutableDraft.value.failure != null || mutablePending.value.any { it.state == PendingState.Unconfirmed }</ID>
+    <ID>ComplexCondition:GraphChatWorld.kt$GraphChatWorld$!mutableModels.value.displayOnly &amp;&amp; mutableModels.value.failure == null &amp;&amp; mutableModels.value.selected == target &amp;&amp; mutableModels.value.variant == level</ID>
+    <ID>ComplexCondition:GraphChatWorld.kt$GraphChatWorld$(event is CoreEvent.MessageUpserted &amp;&amp; event.message.sessionId == sid.raw &amp;&amp; event.message.role == io.github.eslamasabry.oc.core.model.transcript.Role.User) || (event is CoreEvent.InboxChanged &amp;&amp; event.sessionId == sid)</ID>
+    <ID>ComplexCondition:GraphChatWorld.kt$GraphChatWorld$automatic &amp;&amp; (voiceProof?.messageId != id || voiceProof?.accepted != true || voiceProof?.uncertain == true)</ID>
+    <ID>ComplexCondition:GraphChatWorld.kt$GraphChatWorld$entry != null &amp;&amp; (entry.profileId != ref.profileId || entry.sessionId != sid || !entry.dispatched)</ID>
+    <ID>ComplexCondition:GraphChatWorld.kt$GraphChatWorld$protectedDraftText?.trim()?.isNotEmpty() != true &amp;&amp; current.text.trim().isEmpty() &amp;&amp; current.text == current.saved &amp;&amp; current.attachments.isNotEmpty() &amp;&amp; unconfirmedFileOnly(current.attachments)</ID>
+    <ID>ComplexCondition:GraphChatWorld.kt$GraphChatWorld$restored.isNotEmpty() &amp;&amp; current.text == current.saved &amp;&amp; (inHistory || samePending)</ID>
+    <ID>ComplexCondition:GraphChatWorld.kt$GraphChatWorld$selected.isEmpty() || selected.any { message -&gt; message.info.role != io.github.eslamasabry.oc.core.model.transcript.Role .Assistant || (automatic &amp;&amp; message.info.parentId != id) || (message.info.time?.completedMs == null &amp;&amp; message.info.errorText == null) }</ID>
+    <ID>ComplexCondition:HeaderRules.kt$HeaderRules$tokens == null || limit == null || limit &lt;= 0 || tokens &lt; 0</ID>
+    <ID>ComplexCondition:SessionNoteScreen.kt$savingHere &amp;&amp; !state.loading &amp;&amp; !state.dirty &amp;&amp; state.savedReceipt == true &amp;&amp; state.failure == null</ID>
+    <ID>ComplexCondition:SessionNoteViewModel.kt$SessionNoteViewModel$state.loading || (value != null &amp;&amp; (value.isBlank() || state.tooLarge))</ID>
+    <ID>ComplexCondition:SessionRelationsViewModel.kt$SessionRelationsViewModel$!isCurrent() || (owner.parentId ?: owner.id) != expectedParent || (next.id != expectedParent &amp;&amp; next.parentId != expectedParent)</ID>
+    <ID>ComplexCondition:SessionRelationsViewModel.kt$SessionRelationsViewModel$!isCurrent() || next.id != old.id || next.directory != old.directory || next.workspaceId != old.workspaceId || next.projectId != old.projectId || next.parentId != old.parentId</ID>
+    <ID>ComplexCondition:ToolStepBody.kt$item is JsonPrimitive &amp;&amp; item != JsonNull &amp;&amp; item.content.isNotBlank() &amp;&amp; seen.add(item.content)</ID>
+    <ID>ComplexCondition:TranscriptReading.kt$(foldedText || foldedNotice || foldedThought) &amp;&amp; hasTools</ID>
+    <ID>ComplexCondition:TranscriptReading.kt$prompt != null &amp;&amp; !command &amp;&amp; !compact &amp;&amp; !said</ID>
+    <ID>CyclomaticComplexMethod:ActiveContextSheet.kt$@Composable internal fun ActiveContextScreen(visible: Boolean, state: ActiveContextUi, onClose: () -&gt; Unit, onRefresh: () -&gt; Unit)</ID>
+    <ID>CyclomaticComplexMethod:AgentHandoffReview.kt$@Composable internal fun AgentHandoffReview( sheet: HeaderSheet.ContinueWith, working: Boolean, actions: ChatAgentHandoffActions, )</ID>
+    <ID>CyclomaticComplexMethod:BasicComposerHost.kt$@Composable public fun BasicComposer( state: BasicComposerUi, actions: BasicComposerActions, chrome: ComposerChrome, modifier: Modifier = Modifier, voice: KitComposerVoice? = null, conversationRef: ConversationRef? = null, history: ComposerHistoryUi = ComposerHistoryUi(), refreshHistory: (() -&gt; Unit)? = null, )</ID>
+    <ID>CyclomaticComplexMethod:BasicComposerViewModel.kt$BasicComposerViewModel$override fun attach(kind: AttachKind)</ID>
+    <ID>CyclomaticComplexMethod:CardsSettings.kt$@Composable internal fun cardsProblemText(problem: CardsProblem, affected: List&lt;CardAgent&gt;): String</ID>
+    <ID>CyclomaticComplexMethod:ChatCardSlot.kt$@Composable internal fun ChatCard( entry: CardEntry, busy: Boolean, host: ChatCardSlotHost, available: Boolean = true, )</ID>
+    <ID>CyclomaticComplexMethod:ChatCardSlot.kt$@Composable private fun cardBody(nodes: List&lt;CardNode&gt;): ImmutableList&lt;KitCardNode&gt;</ID>
+    <ID>CyclomaticComplexMethod:ChatCardSlot.kt$CardForms$fun answer(ask: CardAsk.Form, values: Map&lt;String, KitFormValue&gt;): CardAnswer.Form?</ID>
+    <ID>CyclomaticComplexMethod:ChatCards.kt$ChatCardsModel$private fun bind(graph: ConnectionGraph?)</ID>
+    <ID>CyclomaticComplexMethod:ChatCards.kt$ChatCardsModel$private suspend fun read(gateway: ServerGateway, explicit: Boolean = true): Boolean</ID>
+    <ID>CyclomaticComplexMethod:ChatCards.kt$ChatCardsModel$public suspend fun connector(card: AgentCard): McpChatConnect?</ID>
+    <ID>CyclomaticComplexMethod:ChatCommandEntries.kt$@Composable internal fun rememberChatCommandEntries( state: ChatUi, actions: ChatActions, work: ChatWorkModel?, serverCommands: List&lt;ComposerCommand&gt;, serverGroup: String, onFind: () -&gt; Unit, onTasks: () -&gt; Unit, onChooseModel: () -&gt; Unit, onRename: (() -&gt; Unit)?, onInsert: (String) -&gt; Unit, ): List&lt;ChatCommandEntry&gt;</ID>
+    <ID>CyclomaticComplexMethod:ChatEntries.kt$ChatEntries$override fun EntryProviderScope&lt;NavKey&gt;.install()</ID>
+    <ID>CyclomaticComplexMethod:ChatFormSlot.kt$@Composable public fun ChatFormSlot( state: ChatFormUi, model: ChatFormsModel, onOpenLink: (String) -&gt; Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>CyclomaticComplexMethod:ChatForms.kt$ChatFormsModel$public fun open(id: FormId, revision: String)</ID>
+    <ID>CyclomaticComplexMethod:ChatHeaderBar.kt$@Composable private fun ContinueBody( sheet: HeaderSheet.ContinueWith, working: Boolean, actions: ChatHeaderActions, )</ID>
+    <ID>CyclomaticComplexMethod:ChatHeaderBar.kt$@Composable private fun menuItems( state: ChatHeaderUi, actions: ChatHeaderActions, onFind: () -&gt; Unit, words: TranscriptWords, offered: List&lt;HeaderAction&gt; = state.menu, ): List&lt;KitMenuItem&gt;</ID>
+    <ID>CyclomaticComplexMethod:ChatHeaderBar.kt$@Composable private fun menuWords(action: HeaderAction): String</ID>
+    <ID>CyclomaticComplexMethod:ChatHeaderBar.kt$@Composable public fun ChatHeaderOverlays(slot: ChatHeaderSlot)</ID>
+    <ID>CyclomaticComplexMethod:ChatHeaderBar.kt$@Composable public fun ChatHeaderTopBar( slot: ChatHeaderSlot, onBack: () -&gt; Unit, onFind: () -&gt; Unit, // Other units contribute destinations to Go to; primary conversation actions stay first. extraActions: List&lt;KitLineAction&gt; = emptyList(), onProject: (() -&gt; Unit)? = null, onBranch: (() -&gt; Unit)? = null, )</ID>
+    <ID>CyclomaticComplexMethod:ChatHeaderPresenter.kt$ChatHeaderPresenter$internal fun present( serverTitle: String?, caps: ServerCapabilities, facts: HeaderFacts, transcript: TranscriptState, models: ComposerModels, l: HeaderLocal, ): ChatHeaderUi</ID>
+    <ID>CyclomaticComplexMethod:ChatHeaderPresenter.kt$ChatHeaderPresenter$override fun choose(action: HeaderAction)</ID>
+    <ID>CyclomaticComplexMethod:ChatHeaderPresenter.kt$ChatHeaderPresenter$override fun confirm()</ID>
+    <ID>CyclomaticComplexMethod:ChatInboxSlot.kt$@Composable public fun ChatInboxSlot( state: ChatInboxUi, actions: ChatInboxActions, restore: (String) -&gt; Unit, open: Boolean, onDismiss: () -&gt; Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>CyclomaticComplexMethod:ChatPresenter.kt$ChatPresenter$internal fun present(i: ChatInputs, l: ChatLocal, hits: ImmutableList&lt;FindHit&gt;): ChatUi</ID>
+    <ID>CyclomaticComplexMethod:ChatPresenter.kt$ChatPresenter$override fun checkReceipt(localId: Long)</ID>
+    <ID>CyclomaticComplexMethod:ChatPresenter.kt$ChatPresenter$override fun leaveRequested()</ID>
+    <ID>CyclomaticComplexMethod:ChatPresenter.kt$ChatPresenter$override fun messageAction(target: MessageTarget, action: MessageAction)</ID>
+    <ID>CyclomaticComplexMethod:ChatRequestSlot.kt$@Composable public fun ChatRequestSlot( state: RequestSlotUi, actions: ChatRequestActions, nowMs: Long?, modifier: Modifier = Modifier, )</ID>
+    <ID>CyclomaticComplexMethod:ChatRequestsModel.kt$ChatRequestsModel$override fun performReviewed(card: RequestCardUi, action: ReviewedRequestAction)</ID>
+    <ID>CyclomaticComplexMethod:ChatRequestsModel.kt$ChatRequestsModel$private fun slot( requests: SessionRequests, caps: ServerCapabilities, where: RequestPlace, mine: Local, ): RequestSlotUi</ID>
+    <ID>CyclomaticComplexMethod:ChatRules.kt$CodeCopy$public fun of(rows: List&lt;TranscriptRow&gt;, index: Int): String?</ID>
+    <ID>CyclomaticComplexMethod:ChatRules.kt$LongTable$public fun of(rows: List&lt;TranscriptRow&gt;): Map&lt;String, String?&gt;</ID>
+    <ID>CyclomaticComplexMethod:ChatRules.kt$MessageActions$public fun of( kind: TargetKind, caps: ChatCapabilitiesUi, busy: Boolean, messageId: String?, hasText: Boolean, feel: Boolean, ): ImmutableList&lt;MessageAction&gt;</ID>
+    <ID>CyclomaticComplexMethod:ChatScreen.kt$@Composable private fun confirmSpec(confirm: ChatConfirm?): KitConfirmSpec?</ID>
+    <ID>CyclomaticComplexMethod:ChatScreen.kt$@Composable private fun statusLine(line: ChatStatusUi, actions: ChatActions): KitStatus</ID>
+    <ID>CyclomaticComplexMethod:ChatScreen.kt$@Composable public fun ChatScreen( state: ChatUi, actions: ChatActions, composerHost: ComposerHost, modifier: Modifier = Modifier, requests: RequestSlotUi = RequestSlotUi(), requestActions: ChatRequestActions? = null, /** * Bar actions other units contribute through the chat's entry (PREVIEW-QR: "Preview a running * app"). */ extraActions: List&lt;KitLineAction&gt; = emptyList(), prompts: ChatPromptsDoor? = null, facts: TurnFactsUi = TurnFactsUi.Empty, onOpenSession: ((String) -&gt; Unit)? = null, header: ChatHeaderSlot? = null, replyReader: KitReplyReader? = null, /** * B-CHAT-001..003: the active-context inspector this conversation opens from its bar (null * where the server has none). */ activeContext: ActiveContextModel? = null, start: ChatStartUi = ChatStartUi(), startActions: ChatStartActions? = null, demoMode: Boolean = false, appStatus: KitStatus? = null, replyOffer: (@Composable () -&gt; Unit)? = null, formWaiting: Boolean = false, formSlot: (@Composable (Modifier) -&gt; Unit)? = null, monitoredForm: (@Composable () -&gt; Unit)? = null, transcriptDisplay: io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices = io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices(), /** The models the error card may suggest ("Use {model} and resend"). */ modelChoices: List&lt;io.github.eslamasabry.oc.feature.chat.world.ComposerModel&gt; = emptyList(), /** Background commands, Stop command and Run shell command (null = not offered here). */ work: io.github.eslamasabry.oc.feature.chat.work.ChatWorkUi = io.github.eslamasabry.oc.feature.chat.work.ChatWorkUi(), workModel: io.github.eslamasabry.oc.feature.chat.work.ChatWorkModel? = null, serverCommands: List&lt;io.github.eslamasabry.oc.feature.chat.world.ComposerCommand&gt; = emptyList(), onLoadServerCommands: () -&gt; Unit = {}, /** N-48: an unconfirmed bubble's Review opens the waiting sends (Send again, Discard). */ onReviewPending: (() -&gt; Unit)? = null, )</ID>
+    <ID>CyclomaticComplexMethod:ChatStartViewModel.kt$ChatStartViewModel$public fun visible(visible: Boolean)</ID>
+    <ID>CyclomaticComplexMethod:ChatTasks.kt$public fun latestChatTasks(messages: List&lt;MessageWithParts&gt;): ChatTaskList?</ID>
+    <ID>CyclomaticComplexMethod:ChatTimelineSheet.kt$@Composable internal fun ChatTimelineSheet(timeline: TimelineUi?, actions: ChatActions, nowMs: Long = 0)</ID>
+    <ID>CyclomaticComplexMethod:ChatTranscript.kt$@Composable internal fun ChatTranscriptList( rows: ImmutableList&lt;TranscriptRow&gt;, live: LiveTurnUi?, pending: ImmutableList&lt;PendingSend&gt;, words: ChatTranscriptWords, listWords: ChatListWords?, list: TranscriptListState, reveal: RevealRegistry, motion: KitMotionLevel, onOpenMenu: ((String) -&gt; Unit)?, onRetrySend: (Long) -&gt; Unit, modifier: Modifier = Modifier, facts: TurnFactsUi = TurnFactsUi.Empty, onOpenSession: ((String) -&gt; Unit)? = null, reply: ReplyActions? = null, onOpenFile: ((io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact) -&gt; Unit)? = null, reasoningExpanded: Boolean = false, onCompactAgain: (() -&gt; Unit)? = null, receiptChecks: ImmutableMap&lt;Long, ReceiptCheckUi&gt; = persistentMapOf(), onCheckReceipt: ((Long) -&gt; Unit)? = null, onReviewPending: (() -&gt; Unit)? = null, display: TranscriptDisplayChoices = TranscriptDisplayChoices(), onCopyReply: ((FooterRow) -&gt; Unit)? = null, folds: TranscriptFolds = rememberTranscriptFolds(), )</ID>
+    <ID>CyclomaticComplexMethod:ChatTranscript.kt$@Composable private fun ChatRow( row: TranscriptRow, words: ChatTranscriptWords, listWords: ChatListWords?, reveal: RevealRegistry, motion: KitMotionLevel, onOpenMenu: ((String) -&gt; Unit)?, facts: TurnFactsUi = TurnFactsUi.Empty, folds: TranscriptFolds? = null, onOpenSession: ((String) -&gt; Unit)? = null, reply: ReplyActions? = null, copyCode: (String, (String) -&gt; String) -&gt; Unit = { _, _ -&gt; }, onOpenFile: ((io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact) -&gt; Unit)? = null, reasoningExpanded: Boolean = false, onCompactAgain: (() -&gt; Unit)? = null, onCopyReply: ((FooterRow) -&gt; Unit)? = null, teachDetails: Boolean = false, )</ID>
+    <ID>CyclomaticComplexMethod:ChatTranscript.kt$internal fun pathsOf(blocks: List&lt;KitMdBlock&gt;): List&lt;String&gt;</ID>
+    <ID>CyclomaticComplexMethod:ChatTranscriptDetails.kt$@Composable internal fun TranscriptDetail( detail: TranscriptDetailUi, folds: TranscriptFolds, reasoningExpanded: Boolean, reply: ReplyActions?, onCompactAgain: (() -&gt; Unit)?, onOpenSession: ((String) -&gt; Unit)?, )</ID>
+    <ID>CyclomaticComplexMethod:ChatWorkSheet.kt$@Composable private fun ShellOutput(output: ShellOutputUi, state: ChatWorkUi, model: ChatWorkModel)</ID>
+    <ID>CyclomaticComplexMethod:ConnectionAutoApprovals.kt$ConnectionAutoApprovals$private fun sweep(graph: ConnectionGraph): Flow&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:ConnectionFormScreen.kt$@Composable public fun ConnectionFormScreen(state: ConnectionFormUi, actions: ConnectionFormActions)</ID>
+    <ID>CyclomaticComplexMethod:ConnectorCardControls.kt$@Composable internal fun ConnectorCardControls( card: AgentCard, host: ChatConnectorSlotHost, authorized: Boolean, )</ID>
+    <ID>CyclomaticComplexMethod:ErrorRecovery.kt$ErrorRecovery$public fun suggestedModel(raw: String?, models: List&lt;ComposerModel&gt;): ComposerModel?</ID>
+    <ID>CyclomaticComplexMethod:GraphChatWorld.kt$GraphChatWorld$override fun markReadIfVisible(stillVisible: () -&gt; Boolean)</ID>
+    <ID>CyclomaticComplexMethod:GraphChatWorld.kt$GraphChatWorld$override suspend fun checkReceipt(localId: Long): Outcome&lt;Boolean&gt;</ID>
+    <ID>CyclomaticComplexMethod:GraphChatWorld.kt$GraphChatWorld$override suspend fun loadModels(): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:GraphChatWorld.kt$GraphChatWorld$override suspend fun readVoiceReply(id: String, automatic: Boolean): Outcome&lt;String&gt;</ID>
+    <ID>CyclomaticComplexMethod:GraphChatWorld.kt$GraphChatWorld$private fun adoptRemoteSelection(event: CoreEvent.SessionSelection)</ID>
+    <ID>CyclomaticComplexMethod:GraphChatWorld.kt$GraphChatWorld$private fun bind(graph: ConnectionGraph?)</ID>
+    <ID>CyclomaticComplexMethod:GraphChatWorld.kt$GraphChatWorld$private fun refreshDraftProtection()</ID>
+    <ID>CyclomaticComplexMethod:GraphChatWorld.kt$GraphChatWorld$private fun settlePending(s: TranscriptState)</ID>
+    <ID>CyclomaticComplexMethod:GraphChatWorld.kt$GraphChatWorld$private fun syncDelivery(delivery: ConnectionDelivery)</ID>
+    <ID>CyclomaticComplexMethod:GraphChatWorld.kt$GraphChatWorld$private fun watchDraftAcknowledgement( localId: Long, id: LocalSendId, delivery: ConnectionDelivery, )</ID>
+    <ID>CyclomaticComplexMethod:GraphChatWorld.kt$GraphChatWorld$private suspend fun applyAgent(agent: String): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:GraphChatWorld.kt$GraphChatWorld$private suspend fun applyModel( choice: ComposerModel?, variant: String, recordRecent: Boolean = true, ): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:GraphChatWorld.kt$GraphChatWorld$private suspend fun readHistory( gateway: ServerGateway, handle: TranscriptHandle, bridge: P3Bridge, cursor: String? = null, ): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:GraphChatWorld.kt$GraphChatWorld$private suspend fun send(text: String, draftFiles: Boolean): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:HandoffSheet.kt$@Composable internal fun HandoffBody(sheet: HeaderSheet.Handoff, actions: ChatHeaderActions)</ID>
+    <ID>CyclomaticComplexMethod:HeaderRules.kt$TranscriptCopy$public fun markdown( title: String?, rows: List&lt;TranscriptRow&gt;, words: TranscriptWords, partial: Boolean, mask: (String) -&gt; String, ): String</ID>
+    <ID>CyclomaticComplexMethod:HeaderRules.kt$TranscriptCopy$public fun markdownOf( title: String?, messages: List&lt;MessageWithParts&gt;, words: TranscriptWords, partial: Boolean, mask: (String) -&gt; String, ): String</ID>
+    <ID>CyclomaticComplexMethod:MessageMenu.kt$@Composable internal fun MessageMenu( menu: MessageMenuUi?, actions: ChatActions, modifier: Modifier, reads: Boolean = false, facts: TurnFactsUi = TurnFactsUi.Empty, )</ID>
+    <ID>CyclomaticComplexMethod:ModelSheet.kt$@Composable internal fun ModelSheet( visible: Boolean, targetKey: String, models: ComposerModels, actions: BasicComposerActions, onDismiss: () -&gt; Unit, )</ID>
+    <ID>CyclomaticComplexMethod:ProductFailureWords.kt$@Composable internal fun rememberProductFailureWords(): (Failure) -&gt; String</ID>
+    <ID>CyclomaticComplexMethod:QueueMoveViewModel.kt$QueueMoveViewModel$override fun move(destination: ConversationRef)</ID>
+    <ID>CyclomaticComplexMethod:RequestWords.kt$@Composable internal fun askQuestion(ask: AskView): String</ID>
+    <ID>CyclomaticComplexMethod:SessionImportSheet.kt$@Composable internal fun SessionImportBody(state: SessionImportUi, actions: ChatHeaderActions)</ID>
+    <ID>CyclomaticComplexMethod:SessionNoteScreen.kt$@Composable public fun SessionNoteScreen(state: SessionNoteUi, actions: SessionNoteActions)</ID>
+    <ID>CyclomaticComplexMethod:SessionRelationsScreen.kt$@Composable private fun RelationRowView( row: RelationRow, state: SessionRelationsUi, actions: SessionRelationsActions, )</ID>
+    <ID>CyclomaticComplexMethod:SessionRelationsViewModel.kt$SessionRelationsViewModel$override fun refresh()</ID>
+    <ID>CyclomaticComplexMethod:SessionRelationsViewModel.kt$SessionRelationsViewModel$private suspend fun checked(id: SessionId): Outcome&lt;Session&gt;</ID>
+    <ID>CyclomaticComplexMethod:SessionTransferSheet.kt$@Composable public fun SessionTransferSheet(state: SessionTransferUi, actions: SessionTransferActions)</ID>
+    <ID>CyclomaticComplexMethod:Timeline.kt$internal fun timelineEntries( feed: TurnFeed, transcript: TranscriptState, query: String, canFork: Boolean, ): ImmutableList&lt;TimelineEntryUi&gt;</ID>
+    <ID>CyclomaticComplexMethod:ToolStepBody.kt$@Composable internal fun ToolStepBody(step: TurnStep, reply: ReplyActions?)</ID>
+    <ID>CyclomaticComplexMethod:ToolStepBody.kt$@Composable internal fun runningStepWords(f: ToolFacts): String</ID>
+    <ID>CyclomaticComplexMethod:ToolStepBody.kt$@Composable private fun ConnectorSearchBody(text: String, reply: ReplyActions?)</ID>
+    <ID>CyclomaticComplexMethod:ToolStepBody.kt$@Composable private fun TaskBody(step: TurnStep, reply: ReplyActions?)</ID>
+    <ID>CyclomaticComplexMethod:ToolStepBody.kt$private fun stepDiffs( kind: ToolKind, input: JsonObject, metadata: JsonObject, mask: (String) -&gt; String, ): List&lt;DiffFile&gt;</ID>
+    <ID>CyclomaticComplexMethod:TranscriptReading.kt$internal fun transcriptReading( snapshot: LedgerSnapshot, busy: Boolean, outcome: io.github.eslamasabry.oc.core.domain.events.RunOutcome? = null, ): TranscriptReadingUi</ID>
+    <ID>CyclomaticComplexMethod:TurnFactsRows.kt$@Composable internal fun TurnWorkLine( work: TurnWork, nowMs: Long, folds: TranscriptFolds, onOpenSession: ((String) -&gt; Unit)? = null, onOpenFile: ((ToolArtifact) -&gt; Unit)? = null, entries: List&lt;WorkEntryUi&gt; = emptyList(), reasoningExpanded: Boolean = false, reply: ReplyActions? = null, onCompactAgain: (() -&gt; Unit)? = null, )</ID>
+    <ID>CyclomaticComplexMethod:TurnFactsRows.kt$@Composable private fun StepRow( step: TurnStep, nowMs: Long, folds: TranscriptFolds, onOpenSession: ((String) -&gt; Unit)?, onOpenFile: ((ToolArtifact) -&gt; Unit)?, rail: KitToolRail? = null, reply: ReplyActions? = null, )</ID>
+    <ID>CyclomaticComplexMethod:TurnFactsWords.kt$@Composable internal fun liveNoticeWords(n: LiveNoticeUi): String</ID>
+    <ID>CyclomaticComplexMethod:TurnFactsWords.kt$@Composable internal fun stepTitle(f: ToolFacts): String</ID>
+    <ID>CyclomaticComplexMethod:TurnFeed.kt$TurnFeedKeeper$fun event(event: GatewayEvent, atMs: Long)</ID>
+    <ID>CyclomaticComplexMethod:TurnFeed.kt$TurnFeedKeeper$private fun time(event: GatewayEvent, atMs: Long)</ID>
+    <ID>EmptyFunctionBlock:ChatCardSlotTest.kt$ChatCardSlotTest.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:ChatGateTest.kt$ChatGateTest.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:ComposerFilesViewModelTest.kt$ComposerFilesViewModelTest.Worlds${}</ID>
+    <ID>EmptyFunctionBlock:ComposerSuggestionsTest.kt$ComposerSuggestionsTest.Worlds${}</ID>
+    <ID>EmptyFunctionBlock:ContinueOnComputerScreenTest.kt$ContinueOnComputerScreenTest.Actions${}</ID>
+    <ID>EmptyFunctionBlock:LooksCaptureTest.kt$LooksCaptureTest.Actions${}</ID>
+    <ID>EmptyFunctionBlock:NoteScreenTest.kt$NoteScreenTest.Actions${}</ID>
+    <ID>EmptyFunctionBlock:QaWave1ComposerTest.kt$QaWave1ComposerTest.Actions${}</ID>
+    <ID>EmptyFunctionBlock:QuestionSheetScreenTest.kt$QuestionSheetScreenTest.Actions${}</ID>
+    <ID>EmptyFunctionBlock:RelationsScreenTest.kt$RelationsScreenTest.Actions${}</ID>
+    <ID>LargeClass:ChatHeaderPresenter.kt$ChatHeaderPresenter : ChatHeaderActionsChatAgentHandoffActions</ID>
+    <ID>LargeClass:ChatPresenter.kt$ChatPresenter : ChatActions</ID>
+    <ID>LargeClass:GraphChatWorld.kt$GraphChatWorld : ChatWorldTurnFeedSourceVoiceConversationSession</ID>
+    <ID>LargeClass:WorldComposerFilesModelsTest.kt$WorldComposerFilesModelsTest</ID>
+    <ID>LongMethod:ActiveContextSheet.kt$@Composable internal fun ActiveContextScreen(visible: Boolean, state: ActiveContextUi, onClose: () -&gt; Unit, onRefresh: () -&gt; Unit)</ID>
+    <ID>LongMethod:AgentHandoffReview.kt$@Composable internal fun AgentHandoffReview( sheet: HeaderSheet.ContinueWith, working: Boolean, actions: ChatAgentHandoffActions, )</ID>
+    <ID>LongMethod:BasicComposerHost.kt$@Composable public fun BasicComposer( state: BasicComposerUi, actions: BasicComposerActions, chrome: ComposerChrome, modifier: Modifier = Modifier, voice: KitComposerVoice? = null, conversationRef: ConversationRef? = null, history: ComposerHistoryUi = ComposerHistoryUi(), refreshHistory: (() -&gt; Unit)? = null, )</ID>
+    <ID>LongMethod:ChatCardSlot.kt$@Composable internal fun ChatCard( entry: CardEntry, busy: Boolean, host: ChatCardSlotHost, available: Boolean = true, )</ID>
+    <ID>LongMethod:ChatCardSlot.kt$@Composable private fun CardAskControls( card: AgentCard, ask: CardAsk, draft: CardAnswer?, blocked: String?, onAnswer: (CardAnswer) -&gt; Unit, )</ID>
+    <ID>LongMethod:ChatCardSlot.kt$@Composable private fun cardBody(nodes: List&lt;CardNode&gt;): ImmutableList&lt;KitCardNode&gt;</ID>
+    <ID>LongMethod:ChatCards.kt$ChatCardsModel$private fun bind(graph: ConnectionGraph?)</ID>
+    <ID>LongMethod:ChatCards.kt$ChatCardsModel$private suspend fun read(gateway: ServerGateway, explicit: Boolean = true): Boolean</ID>
+    <ID>LongMethod:ChatCards.kt$ChatCardsModel$public suspend fun connector(card: AgentCard): McpChatConnect?</ID>
+    <ID>LongMethod:ChatCommandEntries.kt$@Composable internal fun rememberChatCommandEntries( state: ChatUi, actions: ChatActions, work: ChatWorkModel?, serverCommands: List&lt;ComposerCommand&gt;, serverGroup: String, onFind: () -&gt; Unit, onTasks: () -&gt; Unit, onChooseModel: () -&gt; Unit, onRename: (() -&gt; Unit)?, onInsert: (String) -&gt; Unit, ): List&lt;ChatCommandEntry&gt;</ID>
+    <ID>LongMethod:ChatContextSheet.kt$@Composable internal fun SessionContextDetailsSheet(context: ContextUi?, visible: Boolean, onDismiss: () -&gt; Unit)</ID>
+    <ID>LongMethod:ChatEntries.kt$ChatEntries$override fun EntryProviderScope&lt;NavKey&gt;.install()</ID>
+    <ID>LongMethod:ChatFormSlot.kt$@Composable public fun ChatFormSlot( state: ChatFormUi, model: ChatFormsModel, onOpenLink: (String) -&gt; Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>LongMethod:ChatHeaderBar.kt$@Composable private fun ContinueBody( sheet: HeaderSheet.ContinueWith, working: Boolean, actions: ChatHeaderActions, )</ID>
+    <ID>LongMethod:ChatHeaderBar.kt$@Composable private fun DetailsBody(facts: DetailsUi)</ID>
+    <ID>LongMethod:ChatHeaderBar.kt$@Composable private fun menuItems( state: ChatHeaderUi, actions: ChatHeaderActions, onFind: () -&gt; Unit, words: TranscriptWords, offered: List&lt;HeaderAction&gt; = state.menu, ): List&lt;KitMenuItem&gt;</ID>
+    <ID>LongMethod:ChatHeaderBar.kt$@Composable public fun ChatHeaderOverlays(slot: ChatHeaderSlot)</ID>
+    <ID>LongMethod:ChatHeaderBar.kt$@Composable public fun ChatHeaderTopBar( slot: ChatHeaderSlot, onBack: () -&gt; Unit, onFind: () -&gt; Unit, // Other units contribute destinations to Go to; primary conversation actions stay first. extraActions: List&lt;KitLineAction&gt; = emptyList(), onProject: (() -&gt; Unit)? = null, onBranch: (() -&gt; Unit)? = null, )</ID>
+    <ID>LongMethod:ChatHeaderPresenter.kt$ChatHeaderPresenter$internal fun present( serverTitle: String?, caps: ServerCapabilities, facts: HeaderFacts, transcript: TranscriptState, models: ComposerModels, l: HeaderLocal, ): ChatHeaderUi</ID>
+    <ID>LongMethod:ChatHeaderPresenter.kt$ChatHeaderPresenter$override fun choose(action: HeaderAction)</ID>
+    <ID>LongMethod:ChatInboxSlot.kt$@Composable public fun ChatInboxSlot( state: ChatInboxUi, actions: ChatInboxActions, restore: (String) -&gt; Unit, open: Boolean, onDismiss: () -&gt; Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>LongMethod:ChatPresenter.kt$ChatPresenter$internal fun present(i: ChatInputs, l: ChatLocal, hits: ImmutableList&lt;FindHit&gt;): ChatUi</ID>
+    <ID>LongMethod:ChatPresenter.kt$ChatPresenter$override fun checkReceipt(localId: Long)</ID>
+    <ID>LongMethod:ChatQuestionSheet.kt$@Composable internal fun ChatQuestionSheet(state: QuestionSheetUi, actions: ChatRequestActions)</ID>
+    <ID>LongMethod:ChatRequestSlot.kt$@Composable public fun ChatRequestSlot( state: RequestSlotUi, actions: ChatRequestActions, nowMs: Long?, modifier: Modifier = Modifier, )</ID>
+    <ID>LongMethod:ChatRequestsModel.kt$ChatRequestsModel$override fun performReviewed(card: RequestCardUi, action: ReviewedRequestAction)</ID>
+    <ID>LongMethod:ChatRequestsModel.kt$ChatRequestsModel$private fun slot( requests: SessionRequests, caps: ServerCapabilities, where: RequestPlace, mine: Local, ): RequestSlotUi</ID>
+    <ID>LongMethod:ChatScreen.kt$@Composable internal fun rememberReplyActions( actions: ChatActions, confirmedPaths: kotlinx.collections.immutable.ImmutableSet&lt;String&gt; = kotlinx.collections.immutable.persistentSetOf(), models: List&lt;io.github.eslamasabry.oc.feature.chat.world.ComposerModel&gt; = emptyList(), canCompact: Boolean = false, onChooseModel: () -&gt; Unit = {}, onOpenCode: (KitMdBlock.Code) -&gt; Unit = {}, ): ReplyActions</ID>
+    <ID>LongMethod:ChatScreen.kt$@Composable private fun confirmSpec(confirm: ChatConfirm?): KitConfirmSpec?</ID>
+    <ID>LongMethod:ChatScreen.kt$@Composable private fun statusLine(line: ChatStatusUi, actions: ChatActions): KitStatus</ID>
+    <ID>LongMethod:ChatScreen.kt$@Composable public fun ChatScreen( state: ChatUi, actions: ChatActions, composerHost: ComposerHost, modifier: Modifier = Modifier, requests: RequestSlotUi = RequestSlotUi(), requestActions: ChatRequestActions? = null, /** * Bar actions other units contribute through the chat's entry (PREVIEW-QR: "Preview a running * app"). */ extraActions: List&lt;KitLineAction&gt; = emptyList(), prompts: ChatPromptsDoor? = null, facts: TurnFactsUi = TurnFactsUi.Empty, onOpenSession: ((String) -&gt; Unit)? = null, header: ChatHeaderSlot? = null, replyReader: KitReplyReader? = null, /** * B-CHAT-001..003: the active-context inspector this conversation opens from its bar (null * where the server has none). */ activeContext: ActiveContextModel? = null, start: ChatStartUi = ChatStartUi(), startActions: ChatStartActions? = null, demoMode: Boolean = false, appStatus: KitStatus? = null, replyOffer: (@Composable () -&gt; Unit)? = null, formWaiting: Boolean = false, formSlot: (@Composable (Modifier) -&gt; Unit)? = null, monitoredForm: (@Composable () -&gt; Unit)? = null, transcriptDisplay: io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices = io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices(), /** The models the error card may suggest ("Use {model} and resend"). */ modelChoices: List&lt;io.github.eslamasabry.oc.feature.chat.world.ComposerModel&gt; = emptyList(), /** Background commands, Stop command and Run shell command (null = not offered here). */ work: io.github.eslamasabry.oc.feature.chat.work.ChatWorkUi = io.github.eslamasabry.oc.feature.chat.work.ChatWorkUi(), workModel: io.github.eslamasabry.oc.feature.chat.work.ChatWorkModel? = null, serverCommands: List&lt;io.github.eslamasabry.oc.feature.chat.world.ComposerCommand&gt; = emptyList(), onLoadServerCommands: () -&gt; Unit = {}, /** N-48: an unconfirmed bubble's Review opens the waiting sends (Send again, Discard). */ onReviewPending: (() -&gt; Unit)? = null, )</ID>
+    <ID>LongMethod:ChatStartArea.kt$@Composable public fun ChatStartArea( state: ChatStartUi, actions: ChatStartActions, modifier: Modifier = Modifier, /** The header's resolved name can arrive before the folder facts. */ projectName: String? = null, )</ID>
+    <ID>LongMethod:ChatStartViewModel.kt$ChatStartViewModel$public fun visible(visible: Boolean)</ID>
+    <ID>LongMethod:ChatTimelineSheet.kt$@Composable internal fun ChatTimelineSheet(timeline: TimelineUi?, actions: ChatActions, nowMs: Long = 0)</ID>
+    <ID>LongMethod:ChatTranscript.kt$@Composable internal fun ChatTranscriptList( rows: ImmutableList&lt;TranscriptRow&gt;, live: LiveTurnUi?, pending: ImmutableList&lt;PendingSend&gt;, words: ChatTranscriptWords, listWords: ChatListWords?, list: TranscriptListState, reveal: RevealRegistry, motion: KitMotionLevel, onOpenMenu: ((String) -&gt; Unit)?, onRetrySend: (Long) -&gt; Unit, modifier: Modifier = Modifier, facts: TurnFactsUi = TurnFactsUi.Empty, onOpenSession: ((String) -&gt; Unit)? = null, reply: ReplyActions? = null, onOpenFile: ((io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact) -&gt; Unit)? = null, reasoningExpanded: Boolean = false, onCompactAgain: (() -&gt; Unit)? = null, receiptChecks: ImmutableMap&lt;Long, ReceiptCheckUi&gt; = persistentMapOf(), onCheckReceipt: ((Long) -&gt; Unit)? = null, onReviewPending: (() -&gt; Unit)? = null, display: TranscriptDisplayChoices = TranscriptDisplayChoices(), onCopyReply: ((FooterRow) -&gt; Unit)? = null, folds: TranscriptFolds = rememberTranscriptFolds(), )</ID>
+    <ID>LongMethod:ChatTranscript.kt$@Composable private fun ChatRow( row: TranscriptRow, words: ChatTranscriptWords, listWords: ChatListWords?, reveal: RevealRegistry, motion: KitMotionLevel, onOpenMenu: ((String) -&gt; Unit)?, facts: TurnFactsUi = TurnFactsUi.Empty, folds: TranscriptFolds? = null, onOpenSession: ((String) -&gt; Unit)? = null, reply: ReplyActions? = null, copyCode: (String, (String) -&gt; String) -&gt; Unit = { _, _ -&gt; }, onOpenFile: ((io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact) -&gt; Unit)? = null, reasoningExpanded: Boolean = false, onCompactAgain: (() -&gt; Unit)? = null, onCopyReply: ((FooterRow) -&gt; Unit)? = null, teachDetails: Boolean = false, )</ID>
+    <ID>LongMethod:ChatTranscript.kt$@Composable private fun RichBlock( row: BlockRow, reveal: RevealRegistry, motion: KitMotionLevel, reply: ReplyActions, copyCode: (String, (String) -&gt; String) -&gt; Unit, )</ID>
+    <ID>LongMethod:ChatTranscriptDetails.kt$@Composable internal fun TranscriptDetail( detail: TranscriptDetailUi, folds: TranscriptFolds, reasoningExpanded: Boolean, reply: ReplyActions?, onCompactAgain: (() -&gt; Unit)?, onOpenSession: ((String) -&gt; Unit)?, )</ID>
+    <ID>LongMethod:ChatWorkSheet.kt$@Composable private fun ShellOutput(output: ShellOutputUi, state: ChatWorkUi, model: ChatWorkModel)</ID>
+    <ID>LongMethod:ConnectionAutoApprovals.kt$ConnectionAutoApprovals$private fun sweep(graph: ConnectionGraph): Flow&lt;Unit&gt;</ID>
+    <ID>LongMethod:ConnectionFormScreen.kt$@Composable public fun ConnectionFormScreen(state: ConnectionFormUi, actions: ConnectionFormActions)</ID>
+    <ID>LongMethod:ConnectorCardControls.kt$@Composable internal fun ConnectorCardControls( card: AgentCard, host: ChatConnectorSlotHost, authorized: Boolean, )</ID>
+    <ID>LongMethod:GraphChatHeaderPort.kt$GraphChatHeaderPort$private fun bind(graph: ConnectionGraph?)</ID>
+    <ID>LongMethod:GraphChatWorld.kt$GraphChatWorld$override suspend fun loadModels(): Outcome&lt;Unit&gt;</ID>
+    <ID>LongMethod:GraphChatWorld.kt$GraphChatWorld$override suspend fun readVoiceReply(id: String, automatic: Boolean): Outcome&lt;String&gt;</ID>
+    <ID>LongMethod:GraphChatWorld.kt$GraphChatWorld$private fun bind(graph: ConnectionGraph?)</ID>
+    <ID>LongMethod:GraphChatWorld.kt$GraphChatWorld$private fun syncDelivery(delivery: ConnectionDelivery)</ID>
+    <ID>LongMethod:GraphChatWorld.kt$GraphChatWorld$private suspend fun applyModel( choice: ComposerModel?, variant: String, recordRecent: Boolean = true, ): Outcome&lt;Unit&gt;</ID>
+    <ID>LongMethod:GraphChatWorld.kt$GraphChatWorld$private suspend fun readHistory( gateway: ServerGateway, handle: TranscriptHandle, bridge: P3Bridge, cursor: String? = null, ): Outcome&lt;Unit&gt;</ID>
+    <ID>LongMethod:HandoffSheet.kt$@Composable internal fun HandoffBody(sheet: HeaderSheet.Handoff, actions: ChatHeaderActions)</ID>
+    <ID>LongMethod:MessageMenu.kt$@Composable internal fun MessageMenu( menu: MessageMenuUi?, actions: ChatActions, modifier: Modifier, reads: Boolean = false, facts: TurnFactsUi = TurnFactsUi.Empty, )</ID>
+    <ID>LongMethod:ModelSheet.kt$@Composable internal fun ModelSheet( visible: Boolean, targetKey: String, models: ComposerModels, actions: BasicComposerActions, onDismiss: () -&gt; Unit, )</ID>
+    <ID>LongMethod:QueueMoveSheet.kt$@Composable public fun QueueMoveScreen(state: QueueMoveUi, actions: QueueMoveActions)</ID>
+    <ID>LongMethod:QueueMoveViewModel.kt$QueueMoveViewModel$override fun move(destination: ConversationRef)</ID>
+    <ID>LongMethod:SessionImportSheet.kt$@Composable internal fun SessionImportBody(state: SessionImportUi, actions: ChatHeaderActions)</ID>
+    <ID>LongMethod:SessionNoteScreen.kt$@Composable public fun SessionNoteScreen(state: SessionNoteUi, actions: SessionNoteActions)</ID>
+    <ID>LongMethod:SessionRelationsScreen.kt$@Composable private fun RelationRowView( row: RelationRow, state: SessionRelationsUi, actions: SessionRelationsActions, )</ID>
+    <ID>LongMethod:SessionRelationsScreen.kt$@Composable public fun SessionRelationsScreen(state: SessionRelationsUi, actions: SessionRelationsActions)</ID>
+    <ID>LongMethod:SessionTransferSheet.kt$@Composable public fun SessionTransferSheet(state: SessionTransferUi, actions: SessionTransferActions)</ID>
+    <ID>LongMethod:StateHandoffSheet.kt$@Composable public fun StateHandoffSheet(state: StateHandoffUi, actions: StateHandoffActions)</ID>
+    <ID>LongMethod:Timeline.kt$internal fun timelineEntries( feed: TurnFeed, transcript: TranscriptState, query: String, canFork: Boolean, ): ImmutableList&lt;TimelineEntryUi&gt;</ID>
+    <ID>LongMethod:ToolStepBody.kt$@Composable internal fun ToolStepBody(step: TurnStep, reply: ReplyActions?)</ID>
+    <ID>LongMethod:TranscriptFindBar.kt$@Composable internal fun TranscriptFindBar(find: FindUi, actions: ChatActions)</ID>
+    <ID>LongMethod:TranscriptReading.kt$internal fun transcriptReading( snapshot: LedgerSnapshot, busy: Boolean, outcome: io.github.eslamasabry.oc.core.domain.events.RunOutcome? = null, ): TranscriptReadingUi</ID>
+    <ID>LongMethod:TurnFactsRows.kt$@Composable internal fun TurnWorkLine( work: TurnWork, nowMs: Long, folds: TranscriptFolds, onOpenSession: ((String) -&gt; Unit)? = null, onOpenFile: ((ToolArtifact) -&gt; Unit)? = null, entries: List&lt;WorkEntryUi&gt; = emptyList(), reasoningExpanded: Boolean = false, reply: ReplyActions? = null, onCompactAgain: (() -&gt; Unit)? = null, )</ID>
+    <ID>LongMethod:TurnFactsRows.kt$@Composable private fun StepRow( step: TurnStep, nowMs: Long, folds: TranscriptFolds, onOpenSession: ((String) -&gt; Unit)?, onOpenFile: ((ToolArtifact) -&gt; Unit)?, rail: KitToolRail? = null, reply: ReplyActions? = null, )</ID>
+    <ID>LongParameterList:BasicComposerHost.kt$( state: BasicComposerUi, actions: BasicComposerActions, chrome: ComposerChrome, modifier: Modifier = Modifier, voice: KitComposerVoice? = null, conversationRef: ConversationRef? = null, history: ComposerHistoryUi = ComposerHistoryUi(), refreshHistory: (() -&gt; Unit)? = null, )</ID>
+    <ID>LongParameterList:BasicComposerViewModel.kt$BasicComposerViewModel$( @Assisted target: ComposerTarget, private val worlds: ChatWorlds, private val filePickers: Set&lt;PromptFilePicker&gt; = emptySet(), private val attachSources: Set&lt;ComposerAttachSource&gt; = emptySet(), private val appCommands: Set&lt;ComposerAppCommands&gt; = emptySet(), private val histories: Set&lt;ComposerHistory&gt; = emptySet(), private val navigator: io.github.eslamasabry.oc.ui.routes.AppNavigator? = null, private val phraseSources: Set&lt;ComposerPhrases&gt; = emptySet(), private val clock: kotlin.time.Clock? = null, )</ID>
+    <ID>LongParameterList:ChatCommandEntries.kt$( state: ChatUi, actions: ChatActions, work: ChatWorkModel?, serverCommands: List&lt;ComposerCommand&gt;, serverGroup: String, onFind: () -&gt; Unit, onTasks: () -&gt; Unit, onChooseModel: () -&gt; Unit, onRename: (() -&gt; Unit)?, onInsert: (String) -&gt; Unit, )</ID>
+    <ID>LongParameterList:ChatCommandsSheet.kt$ChatCommandEntry$( val key: String, val slash: String, val title: String, val description: String?, val group: String, val icon: ImageVector?, val aliases: List&lt;String&gt; = emptyList(), val onRun: () -&gt; Unit, )</ID>
+    <ID>LongParameterList:ChatEntries.kt$ChatEntries$( private val appNotices: AppNotices, private val composerHost: ComposerHost, private val environment: KitChatEnvironment, private val inbox: ComposerInbox, private val cards: ChatCards, private val registry: ConnectionRegistry, private val forms: ChatForms, private val navigator: AppNavigator, private val readers: Set&lt;KitReplyReader&gt;, private val photoSources: Set&lt;io.github.eslamasabry.oc.feature.chat.composer.presentation.ComposerAttachSource&gt;, private val teaching: TeachingSource, private val transcriptPreferences: Set&lt;io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayPreferences&gt; = emptySet(), )</ID>
+    <ID>LongParameterList:ChatFakes.kt$(turn: String, message: String, part: String, start: Int, text: String, live: Boolean = false)</ID>
+    <ID>LongParameterList:ChatHeaderBar.kt$( slot: ChatHeaderSlot, onBack: () -&gt; Unit, onFind: () -&gt; Unit, // Other units contribute destinations to Go to; primary conversation actions stay first. extraActions: List&lt;KitLineAction&gt; = emptyList(), onProject: (() -&gt; Unit)? = null, onBranch: (() -&gt; Unit)? = null, )</ID>
+    <ID>LongParameterList:ChatHeaderPresenter.kt$ChatHeaderPresenter$( private val world: ChatWorld, private val port: ChatHeaderPort, private val nav: AppNavigator, private val launcher: ChatLauncher, private val freeNotes: FreeNoteStore? = null, private val handoffs: io.github.eslamasabry.oc.feature.chat.header.world.ChatHandoffs? = null, /** The connected daemon's agent handoff (reviewed record, files, then a new conversation). */ private val agentHandoffs: io.github.eslamasabry.oc.feature.chat.header.world.ChatAgentHandoff? = null, )</ID>
+    <ID>LongParameterList:ChatHeaderPresenter.kt$ChatHeaderPresenter$( serverTitle: String?, caps: ServerCapabilities, facts: HeaderFacts, transcript: TranscriptState, models: ComposerModels, l: HeaderLocal, )</ID>
+    <ID>LongParameterList:ChatHeaderViewModel.kt$ChatHeaderViewModel$( @Assisted route: ChatRoute, private val worlds: ChatWorlds, ports: ChatHeaderPorts, nav: AppNavigator, approvalStores: Set&lt;ApprovalStore&gt;, freeNoteStores: Set&lt;FreeNoteStore&gt;, handoffSources: Set&lt;io.github.eslamasabry.oc.feature.chat.header.world.ChatHandoffs&gt;, clock: Clock, handoffs: Set&lt;io.github.eslamasabry.oc.feature.chat.header.world.ChatAgentHandoffs&gt; = emptySet(), )</ID>
+    <ID>LongParameterList:ChatInboxSlot.kt$( state: ChatInboxUi, actions: ChatInboxActions, restore: (String) -&gt; Unit, open: Boolean, onDismiss: () -&gt; Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>LongParameterList:ChatPresenter.kt$ChatPresenter$( private val world: ChatWorld, private val nav: AppNavigator, private val launcher: ChatLauncher, focusComposer: Boolean = false, landOnFailure: Boolean = false, private val outside: ChatOutside? = null, private val clock: Clock? = null, )</ID>
+    <ID>LongParameterList:ChatRules.kt$MessageActions$( kind: TargetKind, caps: ChatCapabilitiesUi, busy: Boolean, messageId: String?, hasText: Boolean, feel: Boolean, )</ID>
+    <ID>LongParameterList:ChatRules.kt$StatusPick$( link: ChatLink, pending: List&lt;PendingSend&gt;, run: RunFacts, rows: List&lt;TranscriptRow&gt;, actionFailure: Failure?, linkRefused: Boolean = false, )</ID>
+    <ID>LongParameterList:ChatScreen.kt$( actions: ChatActions, confirmedPaths: kotlinx.collections.immutable.ImmutableSet&lt;String&gt; = kotlinx.collections.immutable.persistentSetOf(), models: List&lt;io.github.eslamasabry.oc.feature.chat.world.ComposerModel&gt; = emptyList(), canCompact: Boolean = false, onChooseModel: () -&gt; Unit = {}, onOpenCode: (KitMdBlock.Code) -&gt; Unit = {}, )</ID>
+    <ID>LongParameterList:ChatScreen.kt$( state: ChatUi, actions: ChatActions, composerHost: ComposerHost, modifier: Modifier = Modifier, requests: RequestSlotUi = RequestSlotUi(), requestActions: ChatRequestActions? = null, /** * Bar actions other units contribute through the chat's entry (PREVIEW-QR: "Preview a running * app"). */ extraActions: List&lt;KitLineAction&gt; = emptyList(), prompts: ChatPromptsDoor? = null, facts: TurnFactsUi = TurnFactsUi.Empty, onOpenSession: ((String) -&gt; Unit)? = null, header: ChatHeaderSlot? = null, replyReader: KitReplyReader? = null, /** * B-CHAT-001..003: the active-context inspector this conversation opens from its bar (null * where the server has none). */ activeContext: ActiveContextModel? = null, start: ChatStartUi = ChatStartUi(), startActions: ChatStartActions? = null, demoMode: Boolean = false, appStatus: KitStatus? = null, replyOffer: (@Composable () -&gt; Unit)? = null, formWaiting: Boolean = false, formSlot: (@Composable (Modifier) -&gt; Unit)? = null, monitoredForm: (@Composable () -&gt; Unit)? = null, transcriptDisplay: io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices = io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices(), /** The models the error card may suggest ("Use {model} and resend"). */ modelChoices: List&lt;io.github.eslamasabry.oc.feature.chat.world.ComposerModel&gt; = emptyList(), /** Background commands, Stop command and Run shell command (null = not offered here). */ work: io.github.eslamasabry.oc.feature.chat.work.ChatWorkUi = io.github.eslamasabry.oc.feature.chat.work.ChatWorkUi(), workModel: io.github.eslamasabry.oc.feature.chat.work.ChatWorkModel? = null, serverCommands: List&lt;io.github.eslamasabry.oc.feature.chat.world.ComposerCommand&gt; = emptyList(), onLoadServerCommands: () -&gt; Unit = {}, /** N-48: an unconfirmed bubble's Review opens the waiting sends (Send again, Discard). */ onReviewPending: (() -&gt; Unit)? = null, )</ID>
+    <ID>LongParameterList:ChatTranscript.kt$( p: PendingSend, words: ChatListWords, onRetry: () -&gt; Unit, check: ReceiptCheckUi? = null, onCheck: (() -&gt; Unit)? = null, onReview: (() -&gt; Unit)? = null, )</ID>
+    <ID>LongParameterList:ChatTranscript.kt$( row: TranscriptRow, words: ChatTranscriptWords, listWords: ChatListWords?, reveal: RevealRegistry, motion: KitMotionLevel, onOpenMenu: ((String) -&gt; Unit)?, facts: TurnFactsUi = TurnFactsUi.Empty, folds: TranscriptFolds? = null, onOpenSession: ((String) -&gt; Unit)? = null, reply: ReplyActions? = null, copyCode: (String, (String) -&gt; String) -&gt; Unit = { _, _ -&gt; }, onOpenFile: ((io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact) -&gt; Unit)? = null, reasoningExpanded: Boolean = false, onCompactAgain: (() -&gt; Unit)? = null, onCopyReply: ((FooterRow) -&gt; Unit)? = null, teachDetails: Boolean = false, )</ID>
+    <ID>LongParameterList:ChatTranscript.kt$( rows: ImmutableList&lt;TranscriptRow&gt;, live: LiveTurnUi?, pending: ImmutableList&lt;PendingSend&gt;, words: ChatTranscriptWords, listWords: ChatListWords?, list: TranscriptListState, reveal: RevealRegistry, motion: KitMotionLevel, onOpenMenu: ((String) -&gt; Unit)?, onRetrySend: (Long) -&gt; Unit, modifier: Modifier = Modifier, facts: TurnFactsUi = TurnFactsUi.Empty, onOpenSession: ((String) -&gt; Unit)? = null, reply: ReplyActions? = null, onOpenFile: ((io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact) -&gt; Unit)? = null, reasoningExpanded: Boolean = false, onCompactAgain: (() -&gt; Unit)? = null, receiptChecks: ImmutableMap&lt;Long, ReceiptCheckUi&gt; = persistentMapOf(), onCheckReceipt: ((Long) -&gt; Unit)? = null, onReviewPending: (() -&gt; Unit)? = null, display: TranscriptDisplayChoices = TranscriptDisplayChoices(), onCopyReply: ((FooterRow) -&gt; Unit)? = null, folds: TranscriptFolds = rememberTranscriptFolds(), )</ID>
+    <ID>LongParameterList:ChatTranscript.kt$( state: TranscriptState, words: ChatTranscriptWords, list: TranscriptListState, reveal: RevealRegistry, motion: KitMotionLevel, modifier: Modifier = Modifier, )</ID>
+    <ID>LongParameterList:ChatTranscript.kt$ChatListWords$( val messageActions: String, val working: String, val stopping: String, val sending: String, val notSent: String, val unconfirmed: String, val tryAgain: String, /** B5: the plain reason and next step of a failed reply, by kind. */ val replyFailed: (ReplyFailureKind) -&gt; String = { "" }, val messageError: (MessageErrorKind) -&gt; String = { "" }, /** B2/B5: the label and copy label of the Details fold under a failure. */ val details: String = "", val copyDetails: String = "", /** B2: why a send did not leave, in plain words. */ val sendFailure: (Failure) -&gt; String = { "" }, )</ID>
+    <ID>LongParameterList:ChatTranscript.kt$ReplyActions$( val markdown: KitMarkdownActions, val copyLabel: String, val copy: (String) -&gt; Unit, /** QA wave 4 N9: the code block's Copy says so after a tap. */ val copiedLabel: String? = null, /** B-CHAT-064: the paths a drawn block shows, to be checked on the server. */ val checkPaths: (List&lt;String&gt;) -&gt; Unit = {}, /** * B-AGENT-024: the Continue next step of a reply that lost its provider connection (null = not * offered). */ val continueLabel: String? = null, val onContinue: (String) -&gt; Unit = {}, val signInSettingsLabel: String? = null, val onSignInSettings: () -&gt; Unit = {}, /** Error-card recovery (Flutter `assistant_error_row.dart`); a null label hides that fix. */ val models: List&lt;io.github.eslamasabry.oc.feature.chat.world.ComposerModel&gt; = emptyList(), val canCompact: Boolean = false, val onCompact: () -&gt; Unit = {}, val chooseModelLabel: String? = null, val onChooseModel: () -&gt; Unit = {}, val useModelLabel: (String) -&gt; String = { it }, val onUseModel: (turnId: String, providerId: String, modelId: String) -&gt; Unit = { _, _, _ -&gt; }, val openProvidersLabel: String? = null, val openAccountLabel: String? = null, val compactLabel: String? = null, val onOpenProviders: () -&gt; Unit = {}, )</ID>
+    <ID>LongParameterList:ChatTranscriptDetails.kt$( detail: TranscriptDetailUi, folds: TranscriptFolds, reasoningExpanded: Boolean, reply: ReplyActions?, onCompactAgain: (() -&gt; Unit)?, onOpenSession: ((String) -&gt; Unit)?, )</ID>
+    <ID>LongParameterList:ChatTranscriptDetails.kt$( key: String, header: String, body: String, initiallyOpen: Boolean, folds: TranscriptFolds, reply: ReplyActions?, )</ID>
+    <ID>LongParameterList:ComposerHost.kt$ComposerChrome$( public val busy: () -&gt; Boolean, public val requestWaiting: () -&gt; Boolean, public val onSent: () -&gt; Unit, public val pendingInsert: () -&gt; InsertRequest?, public val insertDone: (id: Long) -&gt; Unit, public val focusRequest: () -&gt; Long?, public val focusDone: (id: Long) -&gt; Unit, public val onStop: () -&gt; Unit, public val stopping: () -&gt; Boolean, /** * Chips another part folds into the composer's own row (the approval mode; P12 CHAT-HEADER). * Never a new bar. */ public val rowChips: @Composable () -&gt; Unit = {}, public val freeModel: () -&gt; Boolean = { false }, public val agentName: () -&gt; String = { "OpenCode" }, /** An error card's "Choose another model" asks the composer to open its model list once. */ public val modelPickerRequest: () -&gt; Long? = { null }, public val modelPickerDone: (id: Long) -&gt; Unit = {}, /** The commands launcher (a Commands row in the attach tray); null = not offered. */ public val openCommands: (() -&gt; Unit)? = null, /** Send later or repeat for the words given (Hold Send, and its visible tray twin). */ public val sendLater: ((words: String) -&gt; Unit)? = null, /** A new id when a Send later schedule was just saved from this chat: clear the draft and say so once. */ public val laterScheduled: () -&gt; Long? = { null }, public val laterShown: (id: Long) -&gt; Unit = {}, )</ID>
+    <ID>LongParameterList:GraphChatWorld.kt$GraphChatWorld$( override val ref: ConversationRef, private val registry: ConnectionRegistry, private val draftStore: ConversationDrafts? = null, private val recentModels: RecentModels = RecentModels(), private val history: io.github.eslamasabry.oc.feature.chat.composer.history.ComposerHistory? = null, private val phrases: io.github.eslamasabry.oc.feature.chat.composer.presentation.ComposerPhrases? = null, private val clock: kotlin.time.Clock? = null, private val readRecorder: SessionReadRecorder? = null, private val readSharing: ChatReadSharing? = null, )</ID>
+    <ID>LongParameterList:GraphChatWorld.kt$GraphChatWorlds$( private val registry: ConnectionRegistry, private val draftStores: Set&lt;ConversationDrafts&gt; = emptySet(), private val recentBackings: Set&lt;RecentModelsBacking&gt; = emptySet(), private val clock: kotlin.time.Clock? = null, private val phrases: Set&lt;io.github.eslamasabry.oc.feature.chat.composer.presentation.ComposerPhrases&gt; = emptySet(), private val histories: Set&lt;io.github.eslamasabry.oc.feature.chat.composer.history.ComposerHistory&gt; = emptySet(), private val readRecorders: Set&lt;SessionReadRecorder&gt; = emptySet(), private val readSharing: Set&lt;ChatReadSharing&gt; = emptySet(), )</ID>
+    <ID>LongParameterList:TurnFactsRows.kt$( step: TurnStep, nowMs: Long, folds: TranscriptFolds, onOpenSession: ((String) -&gt; Unit)?, onOpenFile: ((ToolArtifact) -&gt; Unit)?, rail: KitToolRail? = null, reply: ReplyActions? = null, )</ID>
+    <ID>LongParameterList:TurnFactsRows.kt$( work: TurnWork, nowMs: Long, folds: TranscriptFolds, onOpenSession: ((String) -&gt; Unit)? = null, onOpenFile: ((ToolArtifact) -&gt; Unit)? = null, entries: List&lt;WorkEntryUi&gt; = emptyList(), reasoningExpanded: Boolean = false, reply: ReplyActions? = null, onCompactAgain: (() -&gt; Unit)? = null, )</ID>
+    <ID>LongParameterList:TurnFactsTest.kt$TurnFactsTest$( id: String, mid: String, name: String, status: ToolStatus, input: Map&lt;String, String&gt; = emptyMap(), start: Long? = null, end: Long? = null, output: String? = null, metadata: JsonObject? = null, )</ID>
+    <ID>LongParameterList:TurnFactsTest.kt$TurnFactsTest$(id: String, role: Role, at: Long, done: Long? = null, tokens: Tokens = Tokens(), finish: String? = null)</ID>
+    <ID>LoopWithTooManyJumpStatements:ApprovalStore.kt$ApprovalCodec$for</ID>
+    <ID>LoopWithTooManyJumpStatements:ChatPresenter.kt$ChatPresenter$for</ID>
+    <ID>LoopWithTooManyJumpStatements:ChatPresenter.kt$ChatPresenter$while</ID>
+    <ID>LoopWithTooManyJumpStatements:ChatRules.kt$CodeCopy$while</ID>
+    <ID>LoopWithTooManyJumpStatements:ChatRules.kt$LongTable$while</ID>
+    <ID>LoopWithTooManyJumpStatements:ChatRules.kt$ReplyText$for</ID>
+    <ID>LoopWithTooManyJumpStatements:ErrorRecovery.kt$ErrorRecovery$for</ID>
+    <ID>LoopWithTooManyJumpStatements:GraphChatWorld.kt$GraphChatWorld$for</ID>
+    <ID>LoopWithTooManyJumpStatements:HeaderRules.kt$TranscriptCopy$for</ID>
+    <ID>LoopWithTooManyJumpStatements:TurnFactsRows.kt$for</ID>
+    <ID>MagicNumber:BasicComposerViewModel.kt$1024</ID>
+    <ID>MagicNumber:BasicComposerViewModel.kt$16</ID>
+    <ID>MagicNumber:BasicComposerViewModel.kt$3</ID>
+    <ID>MagicNumber:BasicComposerViewModel.kt$32</ID>
+    <ID>MagicNumber:BasicComposerViewModel.kt$4</ID>
+    <ID>MagicNumber:BasicComposerViewModel.kt$5</ID>
+    <ID>MagicNumber:ChatCardSlot.kt$100</ID>
+    <ID>MagicNumber:ChatCardSlot.kt$30</ID>
+    <ID>MagicNumber:ChatCardSlot.kt$CardCharts$100</ID>
+    <ID>MagicNumber:ChatCardSlot.kt$CardCharts$1e15</ID>
+    <ID>MagicNumber:ChatCardSlot.kt$CardForms$1e15</ID>
+    <ID>MagicNumber:ChatCardSlot.kt$CardForms$9.0e15</ID>
+    <ID>MagicNumber:ChatCards.kt$ChatCardsModel$32</ID>
+    <ID>MagicNumber:ChatRules.kt$MessageActions$8</ID>
+    <ID>MagicNumber:ChatStartArea.kt$3</ID>
+    <ID>MagicNumber:ChatStartViewModel.kt$ChatStartViewModel$3_000</ID>
+    <ID>MagicNumber:ChatStartViewModel.kt$ChatStartViewModel$5_000</ID>
+    <ID>MagicNumber:ChatTasks.kt$1024</ID>
+    <ID>MagicNumber:ChatTasks.kt$32768</ID>
+    <ID>MagicNumber:ChatTasks.kt$64</ID>
+    <ID>MagicNumber:ChatTranscriptDetails.kt$6</ID>
+    <ID>MagicNumber:ChatTranscriptDetails.kt$60</ID>
+    <ID>MagicNumber:ComposerHistory.kt$ComposerHistoryRules$50</ID>
+    <ID>MagicNumber:ConnectionAutoApprovals.kt$ConnectionAutoApprovals$8</ID>
+    <ID>MagicNumber:DemoViewModel.kt$DemoViewModel$5_000</ID>
+    <ID>MagicNumber:GraphChatWorld.kt$GraphChatWorld$2_000</ID>
+    <ID>MagicNumber:GraphChatWorld.kt$GraphChatWorld$512</ID>
+    <ID>MagicNumber:GraphChatWorld.kt$GraphChatWorld$60</ID>
+    <ID>MagicNumber:GraphChatWorld.kt$GraphChatWorld$8</ID>
+    <ID>MagicNumber:HeaderRules.kt$HeaderRules$100</ID>
+    <ID>MagicNumber:HeaderRules.kt$HeaderRules$100.0</ID>
+    <ID>MagicNumber:RequestWords.kt$1_000</ID>
+    <ID>MagicNumber:RequestWords.kt$60</ID>
+    <ID>MagicNumber:RequestWords.kt$79</ID>
+    <ID>MagicNumber:RequestWords.kt$80</ID>
+    <ID>MagicNumber:SessionNoteViewModel.kt$SessionNoteUi$8192</ID>
+    <ID>MagicNumber:SessionRelationsScreen.kt$1440</ID>
+    <ID>MagicNumber:SessionRelationsScreen.kt$60</ID>
+    <ID>MagicNumber:SessionRelationsViewModel.kt$SessionRelationsViewModel$60_000</ID>
+    <ID>MagicNumber:Timeline.kt$100</ID>
+    <ID>MagicNumber:Timeline.kt$60</ID>
+    <ID>MagicNumber:ToolStepBody.kt$10</ID>
+    <ID>MagicNumber:ToolStepBody.kt$12</ID>
+    <ID>MagicNumber:ToolStepBody.kt$200</ID>
+    <ID>MagicNumber:ToolStepBody.kt$20_000</ID>
+    <ID>MagicNumber:ToolStepBody.kt$32768</ID>
+    <ID>MagicNumber:ToolStepBody.kt$39</ID>
+    <ID>MagicNumber:ToolStepBody.kt$40</ID>
+    <ID>MagicNumber:ToolStepBody.kt$4000</ID>
+    <ID>MagicNumber:TranscriptReading.kt$200</ID>
+    <ID>MagicNumber:TranscriptReading.kt$80</ID>
+    <ID>MagicNumber:TurnFactsWords.kt$60_000</ID>
+    <ID>MatchingDeclarationName:ApprovalChip.kt$ApprovalChipSlot</ID>
+    <ID>MatchingDeclarationName:ChatCommandsSheet.kt$ChatCommandEntry</ID>
+    <ID>MatchingDeclarationName:ChatHeaderBar.kt$ChatHeaderSlot</ID>
+    <ID>MatchingDeclarationName:LooksCapture.kt$Looks</ID>
+    <ID>MatchingDeclarationName:ReplyFailure.kt$ReplyFailureKind</ID>
+    <ID>MatchingDeclarationName:TurnFactsRows.kt$TranscriptFolds</ID>
+    <ID>MaxLineLength:ActiveContextModel.kt$ActiveContextModel$!source.supported || answer.failure is Failure.Unavailable -&gt; ActiveContextUi.Unsupported</ID>
+    <ID>MaxLineLength:ActiveContextModel.kt$ActiveContextModel$private fun api(graph: ConnectionGraph): ApiRouteGateway?</ID>
+    <ID>MaxLineLength:ActiveContextModel.kt$ActiveContextUi.Ready$/** Every message the server returned. [refreshFailed] = the previous snapshot is still shown after a failed refresh. */</ID>
+    <ID>MaxLineLength:ActiveContextModel.kt$ActiveContextUi.Ready$public</ID>
+    <ID>MaxLineLength:ActiveContextScreenTest.kt$ActiveContextScreenTest$ActiveContextMessage("s", "compaction", listOf(ContextContent(ContextContentKind.Text, "Earlier changes")))</ID>
+    <ID>MaxLineLength:ActiveContextScreenTest.kt$ActiveContextScreenTest$ActiveContextMessage("u", "user", listOf(ContextContent(ContextContentKind.Text, "Profile checkout")))</ID>
+    <ID>MaxLineLength:ActiveContextScreenTest.kt$ActiveContextScreenTest$ContextContent(ContextContentKind.ToolOutput, "lib/checkout/checkout_page.dart: 412 lines, 3 rebuilds per frame", "read")</ID>
+    <ID>MaxLineLength:ActiveContextScreenTest.kt$ActiveContextScreenTest$KitTheme</ID>
+    <ID>MaxLineLength:ActiveContextSheet.kt$ActiveContextUi.Loading -&gt; KitStateView(KitStateKind.Loading, stringResource(Res.string.activeContextLoading), icon = KitIcons.layers)</ID>
+    <ID>MaxLineLength:ActiveContextSheet.kt$ActiveContextUi.Unsupported -&gt; KitStateView(KitStateKind.Missing, title, body = stringResource(Res.string.activeContextUnsupported))</ID>
+    <ID>MaxLineLength:ActiveContextSheet.kt$Column</ID>
+    <ID>MaxLineLength:ActiveContextSheet.kt$KitLineAction(stringResource(Res.string.activeContextRefresh), onRefresh, icon = KitIcons.retry)</ID>
+    <ID>MaxLineLength:ActiveContextSheet.kt$KitMenuItem(stringResource(Res.string.activeContextTypeCount, contextTypeLabel(kind), count), { type = kind }, checked = type == kind)</ID>
+    <ID>MaxLineLength:ActiveContextSheet.kt$KitStateView(KitStateKind.Missing, stringResource(Res.string.activeContextChangedTitle), body = stringResource(Res.string.activeContextChanged), icon = KitIcons.info)</ID>
+    <ID>MaxLineLength:ActiveContextSheet.kt$KitText(stringResource(Res.string.activeContextIntro), Modifier.padding(horizontal = tokens.gutter.dp, vertical = Space.S2.dp), role = TypeRole.Secondary, tone = TextTone.Secondary)</ID>
+    <ID>MaxLineLength:ActiveContextSheet.kt$actions</ID>
+    <ID>MaxLineLength:ActiveContextSheet.kt$body = if (state == ActiveContextUi.Invalid) stringResource(Res.string.activeContextInvalid) else null</ID>
+    <ID>MaxLineLength:ActiveContextSheet.kt$filters</ID>
+    <ID>MaxLineLength:ActiveContextSheet.kt$onClickLabel = stringResource(Res.string.activeContextOpenMessage, label)</ID>
+    <ID>MaxLineLength:ActiveContextSheet.kt$shown.isEmpty()</ID>
+    <ID>MaxLineLength:ActiveContextSheet.kt$state.messages.isEmpty() -&gt; KitStateView(KitStateKind.Empty, stringResource(Res.string.activeContextEmpty), body = stringResource(Res.string.activeContextEmptyDetail), icon = KitIcons.layers)</ID>
+    <ID>MaxLineLength:ActiveContextSheet.kt$stringResource(Res.string.activeContextRefreshFailed, stringResource(Res.string.activeContextFailedTitle))</ID>
+    <ID>MaxLineLength:ActiveContextSheet.kt$supporting = message.previewFor(query).ifEmpty { stringResource(Res.string.activeContextNoText) }</ID>
+    <ID>MaxLineLength:ActiveContextSheet.kt$supportingMaxLines = 3</ID>
+    <ID>MaxLineLength:ActiveContextSheet.kt$title = opened?.let { stringResource(HandWords.activeContextMessageTitle(titleRole(it.type))) } ?: title</ID>
+    <ID>MaxLineLength:ActiveContextSheet.kt$val heading = part.name?.takeIf { it.isNotEmpty() }?.let { stringResource(Res.string.activeContextPartHeading, kind, it) } ?: kind</ID>
+    <ID>MaxLineLength:ActiveContextSheet.kt$values = listOf(KitTechnicalValue(stringResource(Res.string.activeContextMessageId), LocalKitRedactor.current.details(opened.id)))</ID>
+    <ID>MaxLineLength:ApprovalChip.kt$KitMenuItem(label = label, onSelect = { actions.chooseApproval(choice) }, group = group, checked = state.choice == choice)</ID>
+    <ID>MaxLineLength:ApprovalPresenterTest.kt$ApprovalPresenterTest$fun</ID>
+    <ID>MaxLineLength:ApprovalPresenterTest.kt$ApprovalPresenterTest$val noAsks = ApprovalPresenter(Ref, store, MutableStateFlow(ServerCapabilities(permissionRequests = false)), port, Immediate, TestClock())</ID>
+    <ID>MaxLineLength:ApprovalPresenterTest.kt$MemoryApprovalStore$override fun settings(profile: ProfileId): Map&lt;String, SessionApproval&gt;</ID>
+    <ID>MaxLineLength:ApprovalPresenterTest.kt$PermissionRequest(RequestId(id), SessionId(session), "bash", persistentListOf("ls"), JsonObject(emptyMap()), persistentListOf(), null, false, null)</ID>
+    <ID>MaxLineLength:BasicComposerViewModel.kt$BasicComposerActions$public suspend</ID>
+    <ID>MaxLineLength:ChatCardSlotTest.kt$ChatCardSlotTest$"series" to listOf(mapOf("name" to "api", "values" to listOf(1L, 2L)), mapOf("name" to "web", "values" to listOf(3L, 5L)))</ID>
+    <ID>MaxLineLength:ChatCardSlotTest.kt$ChatCardSlotTest$CardsRowUi("p1", "Home", true, CardsStatus.Unavailable(CardsProblem.NotQualified, listOf(CardAgent.OpenCode2)), false, false)</ID>
+    <ID>MaxLineLength:ChatCardSlotTest.kt$ChatCardSlotTest$KitTheme</ID>
+    <ID>MaxLineLength:ChatCardSlotTest.kt$ChatCardSlotTest$answered.flow.value = answered.flow.value.copy(cards = persistentListOf(entry(card(input(choice, body)), state = CardState.PassedOver)))</ID>
+    <ID>MaxLineLength:ChatCardSlotTest.kt$ChatCardSlotTest$assertEquals("[oc-ui answer db] Postgres\nnot json", CardAnswerDisplay.text("[oc-ui answer db] Postgres\nnot json"))</ID>
+    <ID>MaxLineLength:ChatCardSlotTest.kt$ChatCardSlotTest$fun</ID>
+    <ID>MaxLineLength:ChatCardSlotTest.kt$ChatCardSlotTest$onNodeWithText("We can't tell yet whether this card was answered. It updates when the conversation does.").assertIsDisplayed()</ID>
+    <ID>MaxLineLength:ChatCardSlotTest.kt$ChatCardSlotTest$private</ID>
+    <ID>MaxLineLength:ChatCardSlotTest.kt$ChatCardSlotTest$val body = listOf(mapOf("type" to "link", "label" to "Docs", "url" to "https://example.com/docs"), mapOf("type" to "progress", "label" to "Build", "value" to 0.5))</ID>
+    <ID>MaxLineLength:ChatCardSlotTest.kt$ChatCardSlotTest$val host = Host(CardEntry("call", "m", "t1", CardParse.Unreadable(CardProblem.SecretField), CardState.Unknown, CardDelivery.Idle, null, null))</ID>
+    <ID>MaxLineLength:ChatCardSlotTest.kt$ChatCardSlotTest$var ui = CardsSettingsUi(persistentListOf(CardsRowUi("p1", "Home server", false, CardsStatus.Off, pending = false, failed = false)))</ID>
+    <ID>MaxLineLength:ChatCards.kt$RoutedCardsQualifier$internal</ID>
+    <ID>MaxLineLength:ChatCardsReviewTest.kt$ChatCardsReviewTest$MutableStateFlow&lt;ImmutableList&lt;SendOutcome&gt;&gt;(persistentListOf(SendOutcome.Unconfirmed(SendOutcomeId("o"), ref, null, null, LocalSendId("l1"))))</ID>
+    <ID>MaxLineLength:ChatCardsReviewTest.kt$ChatCardsReviewTest$SendOutcome.PutBack(SendOutcomeId("o"), ref, "answer", persistentListOf(), Failure.Network(NetworkWhy.Refused), LocalSendId("l1"))</ID>
+    <ID>MaxLineLength:ChatCardsReviewTest.kt$ChatCardsReviewTest$assertEquals(KitFormValue.Text("draft"), CardForms.initial(ask, null)["name"], "a fresh card starts at the default")</ID>
+    <ID>MaxLineLength:ChatCardsReviewTest.kt$ChatCardsReviewTest$assertFalse(t.applyRead(mark, CardTail(listOf(text("a1", "old", Role.Assistant)), true)), "an overtaken read is dropped")</ID>
+    <ID>MaxLineLength:ChatCardsReviewTest.kt$ChatCardsReviewTest$awaitCardSend(LocalSendId("l1"), none, MutableStateFlow(persistentListOf(bubble("l1", SendPhase.Accepted))))</ID>
+    <ID>MaxLineLength:ChatCardsReviewTest.kt$ChatCardsReviewTest$persistentListOf(Part(id = "p-$id", messageId = id, sessionId = "s", type = PartType.Text, rawType = "text", text = words))</ID>
+    <ID>MaxLineLength:ChatCardsReviewTest.kt$ChatCardsReviewTest$persistentListOf(SendOutcome.PutBack(SendOutcomeId("o"), ref, "x", persistentListOf(), Failure.Unknown(), LocalSendId("l2")))</ID>
+    <ID>MaxLineLength:ChatCardsReviewTest.kt$ChatCardsReviewTest$t.upsert(Part(id = "p-a1", messageId = "a1", sessionId = "s", type = PartType.Text, rawType = "text", text = "newer"))</ID>
+    <ID>MaxLineLength:ChatCardsReviewTest.kt$ChatCardsReviewTest$val card = (CardCodec.fromInput(input, CardScope("p", "opencode", "/x"), "s", "m", "c") as CardParse.Parsed).card</ID>
+    <ID>MaxLineLength:ChatCommandEntries.kt$ChatCommandEntry("new", "new", newTitle, newBody, navigate, KitIcons.add, listOf("clear"), actions::openNewConversation)</ID>
+    <ID>MaxLineLength:ChatCommandEntries.kt$add(ChatCommandEntry("compact", "compact", compactTitle, compactBody, current, KitIcons.layers, listOf("summarize"), actions::compactRequested))</ID>
+    <ID>MaxLineLength:ChatCommandEntries.kt$add(ChatCommandEntry("diff", "diff", diffTitle, diffBody, current, KitIcons.review, listOf("changes"), actions::openChanges))</ID>
+    <ID>MaxLineLength:ChatCommandEntries.kt$add(ChatCommandEntry("files", "files", filesTitle, filesBody, navigate, KitIcons.files, listOf("open"), actions::openFiles))</ID>
+    <ID>MaxLineLength:ChatCommandEntries.kt$add(ChatCommandEntry("models", "models", modelTitle, modelBody, modelGroup, KitIcons.swap, listOf("model", "mo"), onChooseModel))</ID>
+    <ID>MaxLineLength:ChatCommandEntries.kt$add(ChatCommandEntry("reload", "reload", reloadTitle, reloadBody, current, KitIcons.retry, emptyList(), actions::retryLoad))</ID>
+    <ID>MaxLineLength:ChatCommandEntries.kt$add(ChatCommandEntry("rename", "rename", renameTitle, renameBody, current, KitIcons.edit, emptyList(), onRename))</ID>
+    <ID>MaxLineLength:ChatCommandEntries.kt$add(ChatCommandEntry("retry", "retry", retryTitle, retryBody, current, KitIcons.retry, emptyList(), actions::retryLastPrompt))</ID>
+    <ID>MaxLineLength:ChatCommandEntries.kt$add(ChatCommandEntry("shell", "shell", shellTitle, shellBody, current, KitIcons.terminal, emptyList()) { work.openShellDialog() })</ID>
+    <ID>MaxLineLength:ChatCommandEntries.kt$add(ChatCommandEntry("thinking", "thinking", thinkingTitle, thinkingBody, display, KitIcons.idea, listOf("toggle-thinking"), actions::toggleReasoning))</ID>
+    <ID>MaxLineLength:ChatCommandEntries.kt$add(ChatCommandEntry("timeline", "timeline", timelineTitle, timelineBody, current, KitIcons.timeline, emptyList(), actions::openTimeline))</ID>
+    <ID>MaxLineLength:ChatCommandEntries.kt$add(ChatCommandEntry("tools", "tools", toolsTitle, null, serverGroup, KitIcons.tools, emptyList(), actions::openTools))</ID>
+    <ID>MaxLineLength:ChatCommandEntries.kt$add(ChatCommandEntry("undo", "undo", undoTitle, undoBody, current, KitIcons.undo, listOf("revert"), actions::undoLastPrompt))</ID>
+    <ID>MaxLineLength:ChatContextSheet.kt$KitRow(title = stringResource(Res.string.kitContextSheetModel), trailing = KitRowTrailing.Value(model, chevron = false))</ID>
+    <ID>MaxLineLength:ChatContextSheet.kt$KitSectionLabel(stringResource(Res.string.e7SharedEstimatedInputMakeup), Modifier.testTag("chat-context-estimated"))</ID>
+    <ID>MaxLineLength:ChatContextSheet.kt$Modifier.fillMaxWidth().padding(horizontal = Space.S4.dp, vertical = Space.S2.dp).testTag("chat-context-verdict")</ID>
+    <ID>MaxLineLength:ChatContextSheet.kt$trailing = KitRowTrailing.Value(stringResource(Res.string.sessionContextTokens, Numbers.format(tokens)), chevron = false)</ID>
+    <ID>MaxLineLength:ChatFakes.kt$fun thought(turn: String, message: String, part: String, line: String): ThoughtRow</ID>
+    <ID>MaxLineLength:ChatFakes.kt$val</ID>
+    <ID>MaxLineLength:ChatFeelPresenterTest.kt$ChatFeelPresenterTest$BlockRow("b:a1/p:$start", "u1", RowKind.Code, "p", start, text, false, false, Origin.Loaded, continued, continues)</ID>
+    <ID>MaxLineLength:ChatFeelPresenterTest.kt$ChatFeelPresenterTest$fun</ID>
+    <ID>MaxLineLength:ChatFeelPresenterTest.kt$ChatFeelPresenterTest$stateOf(prompt("u1", "Fix **the** build"), block("u1", "a1", "p", 0, "Done."), block("u1", "a1", "p", 7, "All green."), footer("u1"))</ID>
+    <ID>MaxLineLength:ChatFeelScreenTest.kt$ChatFeelScreenTest$BlockRow("b:a1/p:$start", "u1", RowKind.Prose, "p", start, text, false, false, Origin.Loaded, continued, continues)</ID>
+    <ID>MaxLineLength:ChatFeelScreenTest.kt$ChatFeelScreenTest$assertEquals(0, onAllNodesWithText("|", substring = true).fetchSemanticsNodes().size, "no row reads as pipes")</ID>
+    <ID>MaxLineLength:ChatFeelScreenTest.kt$ChatFeelScreenTest$assertEquals(setOf("lib/main.dart"), p.current().confirmedPaths, "checked on the server from the drawn reply")</ID>
+    <ID>MaxLineLength:ChatFeelScreenTest.kt$ChatFeelScreenTest$assertTrue(onAllNodesWithText("Show me the docs").fetchSemanticsNodes().size == 2, "the bubble, and the words in the composer")</ID>
+    <ID>MaxLineLength:ChatFeelScreenTest.kt$ChatFeelScreenTest$fun</ID>
+    <ID>MaxLineLength:ChatFeelScreenTest.kt$ChatFeelScreenTest$io.github.eslamasabry.oc.engine.transcript.state.FooterRow("footer:u1", "u1", failed = true, reason = "provider exploded")</ID>
+    <ID>MaxLineLength:ChatFeelScreenTest.kt$ChatFeelScreenTest$private</ID>
+    <ID>MaxLineLength:ChatFeelScreenTest.kt$ChatFeelScreenTest$val (p, _) = screen(prompt("u1", "go"), chunk(0, head, false, true), chunk(400, tail, true, false), footer("u1"))</ID>
+    <ID>MaxLineLength:ChatFeelScreenTest.kt$ChatFeelScreenTest$val (p, _) = screen(prompt("u1", "show"), block("u1", "a1", "p", 0, "See ![Screenshot](/tmp/result.png) here"), footer("u1"))</ID>
+    <ID>MaxLineLength:ChatFeelScreenTest.kt$ChatFeelScreenTest$val (p, outside) = screen(prompt("u1", "go"), code(0, "```sh\ncurl -H 'Authorization: Bearer $bearerTail' x\n```"), footer("u1"))</ID>
+    <ID>MaxLineLength:ChatFeelScreenTest.kt$ChatFeelScreenTest$world.transcript.value = stateOf(prompt("u1", "where"), block("u1", "a1", "p", 0, "See `lib/main.dart:12` and `lib/gone.dart`."), footer("u1"))</ID>
+    <ID>MaxLineLength:ChatGateTest.kt$ChatGateTest$@Test fun failed()</ID>
+    <ID>MaxLineLength:ChatGateTest.kt$ChatGateTest$facts = TurnFactsUi(reading = TranscriptReadingUi(metadata = mapOf("msg_user" to TurnMetadataUi(listOf("Sonnet 4"), 0, 0.0, true))))</ID>
+    <ID>MaxLineLength:ChatGateTest.kt$ChatGateTest$header = ChatHeaderSlot(ChatHeaderUi(title = state.title, projectName = "shopfront"), headerActions)</ID>
+    <ID>MaxLineLength:ChatGateTest.kt$ChatGateTest$private val text = "The flakiness comes from `CheckoutBloc` racing the price refresh: `applyCoupon()` awaits the network before the cart total has settled, so the assertion sometimes reads the stale total.\n\nI made the test wait on the settled state instead of a fixed delay:"</ID>
+    <ID>MaxLineLength:ChatGateTest.kt$ChatGateTest$rows = persistentListOf(footer("msg_user"), block("msg_user", "msg_assistant", "part_intro", 0, text), prompt("msg_user", "Fix the flaky checkout test"))</ID>
+    <ID>MaxLineLength:ChatGateTest.kt$ChatGateTest.&lt;no name provided&gt;$BasicComposer(BasicComposerUi(available = true, sending = false, steers = false, targetKey = "checkout"), composerActions, chrome, modifier)</ID>
+    <ID>MaxLineLength:ChatHeaderPresenterTest.kt$ChatHeaderPresenterTest$again.states(kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Unconfined), kotlinx.coroutines.flow.SharingStarted.Eagerly)</ID>
+    <ID>MaxLineLength:ChatHeaderPresenterTest.kt$ChatHeaderPresenterTest$assertEquals("oc.freeModelNoteDismissed.p1", FreeModel.key(io.github.eslamasabry.oc.core.common.ids.ProfileId("p1")))</ID>
+    <ID>MaxLineLength:ChatHeaderPresenterTest.kt$ChatHeaderPresenterTest$assertFalse(FreeModel.uses(listOf("opencode", "anthropic"), "opencode", "big-pickle", models), "a signed-in provider")</ID>
+    <ID>MaxLineLength:ChatHeaderPresenterTest.kt$ChatHeaderPresenterTest$for (percent in 0..100) assertEquals(contextLevel(percent / 100.0), HeaderRules.contextLevel(percent), "$percent %")</ID>
+    <ID>MaxLineLength:ChatHeaderPresenterTest.kt$ChatHeaderPresenterTest$id = "big-pickle"</ID>
+    <ID>MaxLineLength:ChatHeaderPresenterTest.kt$ChatHeaderPresenterTest$port.facts.value = port.facts.value.copy(contextTokens = 960, contextLimit = 1000, totalTokens = 1200, model = "gpt-5")</ID>
+    <ID>MaxLineLength:ChatHeaderPresenterTest.kt$ChatHeaderPresenterTest$presenter.states(kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Unconfined), kotlinx.coroutines.flow.SharingStarted.Eagerly)</ID>
+    <ID>MaxLineLength:ChatHeaderPresenterTest.kt$ChatHeaderPresenterTest$private val words = TranscriptWords("OpenCode conversation", "User", "Assistant", "Reasoning", "Only loaded messages")</ID>
+    <ID>MaxLineLength:ChatHeaderPresenterTest.kt$ChatHeaderPresenterTest$world.capabilities.value = ServerCapabilities(sessionShare = false, sessionFork = false, sessionArchive = false, sessionDelete = false)</ID>
+    <ID>MaxLineLength:ChatHeaderPresenterTest.kt$ChatHeaderPresenterTest.&lt;no name provided&gt;$ledger = io.github.eslamasabry.oc.engine.transcript.ledger.LedgerSnapshot(1, listOf(reply), emptyList())</ID>
+    <ID>MaxLineLength:ChatHeaderPresenterTest.kt$ChatHeaderPresenterTest.&lt;no name provided&gt;$override fun dismissed(profile: io.github.eslamasabry.oc.core.common.ids.ProfileId, session: String)</ID>
+    <ID>MaxLineLength:ChatHeaderPresenterTest.kt$ChatHeaderPresenterTest.&lt;no name provided&gt;$override suspend</ID>
+    <ID>MaxLineLength:ChatHeaderPresenterTest.kt$FakeHeaderPort$override val facts = MutableStateFlow(HeaderFacts(serverName = "Home PC", directory = "/home/me/projects/app/", connected = true))</ID>
+    <ID>MaxLineLength:ChatOutside.kt$ChatOutside$public suspend</ID>
+    <ID>MaxLineLength:ChatPresenter.kt$ChatPresenter$(if (kept != null) ChatStatusUi(KEPT_OFFLINE_STATUS, ChatStatusKind.Offline) else null) ?: StatusPick.pick(i.link, i.pending, t.run, t.rows, l.actionFailure, l.linkRefused)</ID>
+    <ID>MaxLineLength:ChatPresenterTest.kt$ChatPresenterTest$assertEquals(listOf("exists lib/main.dart", "exists lib/gone.dart"), world.calls.filter { it.startsWith("exists") })</ID>
+    <ID>MaxLineLength:ChatPresenterTest.kt$ChatPresenterTest$assertEquals(listOf&lt;io.github.eslamasabry.oc.ui.routes.AppRoute&gt;(io.github.eslamasabry.oc.ui.routes.FilesRoute.File(Ref, "lib/main.dart", 12)), nav.opened)</ID>
+    <ID>MaxLineLength:ChatPresenterTest.kt$ChatPresenterTest$fun</ID>
+    <ID>MaxLineLength:ChatPresenterTest.kt$ChatPresenterTest$listOf(MessageAction.Copy, MessageAction.SendAgain, MessageAction.Fork, MessageAction.UndoFromHere, MessageAction.Delete)</ID>
+    <ID>MaxLineLength:ChatPresenterTest.kt$ChatPresenterTest$private</ID>
+    <ID>MaxLineLength:ChatPresenterTest.kt$ChatPresenterTest$stateOf(prompt("u1", "Fix **the** build"), block("u1", "a1", "p", 0, "Done."), block("u1", "a1", "p", 7, "All green."), footer("u1"))</ID>
+    <ID>MaxLineLength:ChatPresenterTest.kt$ChatPresenterTest$val p = ChatPresenter(world, nav, { block -&gt; parked.launch { suspendCoroutine&lt;Unit&gt; { resume = it }; block() } })</ID>
+    <ID>MaxLineLength:ChatPresenterTest.kt$ChatPresenterTest$val parked = ChatLauncher { block -&gt; block.startCoroutine(Continuation(EmptyCoroutineContext) { it.getOrThrow() }) }</ID>
+    <ID>MaxLineLength:ChatPresenterTest.kt$ChatPresenterTest$world.capabilities.value = io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities(fileBrowsing = false)</ID>
+    <ID>MaxLineLength:ChatPresenterTest.kt$ChatPresenterTest$world.pending.value = persistentListOf(PendingSend(1, "first", PendingState.Unconfirmed), PendingSend(2, "second", PendingState.Failed))</ID>
+    <ID>MaxLineLength:ChatPresenterTest.kt$ChatPresenterTest$world.transcript.value = stateOf(*turn(1, answer = "red").toTypedArray(), *turn(2, answer = "red again").toTypedArray())</ID>
+    <ID>MaxLineLength:ChatPresenterTest.kt$ChatPresenterTest$world.transcript.value = stateOf(*turn(1, answer = "red").toTypedArray(), *turn(2, answer = "red again").toTypedArray(), *turn(3, answer = "red").toTypedArray())</ID>
+    <ID>MaxLineLength:ChatPromptsDoor.kt$ChatPromptsDoor$public</ID>
+    <ID>MaxLineLength:ChatQuestionSheet.kt$choices = prompt.choices.map { KitChoice(it.label, it.label, it.description.takeIf(String::isNotBlank)) }</ID>
+    <ID>MaxLineLength:ChatRequestSlot.kt$question</ID>
+    <ID>MaxLineLength:ChatRequestSlot.kt$title = if (it.invitation) stringResource(Res.string.consentAlwaysAllowTitle) else alwaysConfirmTitle(it.grant)</ID>
+    <ID>MaxLineLength:ChatRequestsModelTest.kt$ChatRequestsModelTest$QuestionPrompt("Deploy", "Ship it now?", false, custom, false, persistentListOf(QuestionChoice("Yes", ""), QuestionChoice("No", "")), false)</ID>
+    <ID>MaxLineLength:ChatRequestsModelTest.kt$ChatRequestsModelTest$assertEquals(AlwaysConfirmUi(RequestId("p1"), AlwaysGrant.Named("npm install")), model.state.value.confirmAlways)</ID>
+    <ID>MaxLineLength:ChatRequestsModelTest.kt$ChatRequestsModelTest$assertEquals(clock.now.toEpochMilliseconds(), (model.state.value.card as RequestCardUi.Permission).waitingSinceMs)</ID>
+    <ID>MaxLineLength:ChatRequestsModelTest.kt$ChatRequestsModelTest$private</ID>
+    <ID>MaxLineLength:ChatRequestsModelTest.kt$ChatRequestsModelTest$val engine = RequestsEngine(port, backgroundScope, TestDispatchers(StandardTestDispatcher(testScheduler)), clock, TestPacer())</ID>
+    <ID>MaxLineLength:ChatRequestsModelTest.kt$ChatRequestsModelTest.Port$override suspend</ID>
+    <ID>MaxLineLength:ChatRequestsModelTest.kt$ChatRequestsModelTest.Port$override suspend fun pendingPermissions(): Outcome&lt;ImmutableList&lt;PermissionRequest&gt;&gt;</ID>
+    <ID>MaxLineLength:ChatRequestsModelTest.kt$ChatRequestsModelTest.Port$override suspend fun pendingQuestions(): Outcome&lt;ImmutableList&lt;PendingQuestion&gt;&gt;</ID>
+    <ID>MaxLineLength:ChatRulesTest.kt$ChatRulesTest$fun</ID>
+    <ID>MaxLineLength:ChatScrollRestoreTest.kt$ChatScrollRestoreTest$KitTheme</ID>
+    <ID>MaxLineLength:ChatScrollRestoreTest.kt$ChatScrollRestoreTest$private val state = stateOf(*(1..60).flatMap { turn(it, answer = "Answer number $it with a few words") }.toTypedArray())</ID>
+    <ID>MaxLineLength:ChatTimelineSheet.kt$KitSearchNoMatch(timeline.query, { field.edit { replace(0, length, "") }; actions.timelineQuery("") }, Modifier.testTag("timeline-no-match"))</ID>
+    <ID>MaxLineLength:ChatTimelineSheet.kt$KitStateView(kind = KitStateKind.Empty, title = stringResource(Res.string.chatUiNoMatchingMessages), icon = KitIcons.history, modifier = Modifier.testTag("timeline-empty"))</ID>
+    <ID>MaxLineLength:ChatTimelineSheet.kt$disabledReason = if (timeline.loadingOlder) stringResource(Res.string.historyLoadedOnly) else null</ID>
+    <ID>MaxLineLength:ChatTimelineSheet.kt$subtitle = if (timeline?.entries?.any { it.forkable } == true) stringResource(Res.string.chatUiJumpAnywhereForkRestoresAPromptFor) else null</ID>
+    <ID>MaxLineLength:ChatTranscriptDetails.kt$"(?i)^\\W*(no|empty)\\s+(reasoning|thinking|thoughts?)(\\s+(available|provided|recorded|to show))?\\W*$"</ID>
+    <ID>MaxLineLength:ChatUi.kt$ChatActions$/** N-44: set (a new id each time) once a Send later schedule was saved from this chat; the composer clears its draft. */</ID>
+    <ID>MaxLineLength:ChatViewModel.kt$ChatViewModel$/** N-44: when the person comes back from the schedule editor with a new schedule, the composer says so and clears. */</ID>
+    <ID>MaxLineLength:ChatWorkModel.kt$ChatWorkModel$s.copy(output = s.output?.let { o -&gt; if (fresh != null) o.copy(shell = fresh, gone = fresh == null) else o.copy(gone = true) })</ID>
+    <ID>MaxLineLength:ComposerFilesViewModelTest.kt$ComposerFilesViewModelTest$assertEquals(listOf("replace [during.txt, picked.txt]"), world.calls.filter { it.startsWith("replace") })</ID>
+    <ID>MaxLineLength:ComposerHistory.kt$ComposerHistoryUi$"ComposerHistoryUi(count=${prompts.size}, loading=$loading, readFailed=${readFailure != null}, saveFailed=${saveFailure != null})"</ID>
+    <ID>MaxLineLength:ComposerHost.kt$InsertRequest$"InsertRequest(id=$id, textChars=${text.length}, replace=$replace, attachments=${attachments.size}, missing=${missingAttachments.size})"</ID>
+    <ID>MaxLineLength:ComposerModelsFilesTest.kt$ComposerModelsFilesTest$// QA wave 4 B13: once the server confirmed the session uses its default (before that the chip claims nothing).</ID>
+    <ID>MaxLineLength:ComposerModelsFilesTest.kt$ComposerModelsFilesTest$models = ComposerModels(failure = Failure.Network(io.github.eslamasabry.oc.core.common.NetworkWhy.Offline))</ID>
+    <ID>MaxLineLength:ComposerModelsFilesTest.kt$ComposerModelsFilesTest$state.value = ui(models = ComposerModels(choices = listOf(mini, big), selected = mini), filesAvailable = false)</ID>
+    <ID>MaxLineLength:ContextSheetTest.kt$ContextSheetTest$setContent { KitTheme(platform = DesktopKitPlatform()) { KitContextSheet(42000, 100000, "Sonnet 4", 42, KitContextLevel.Calm) } }</ID>
+    <ID>MaxLineLength:ContinueOnComputerScreenTest.kt$ContinueOnComputerScreenTest$fun</ID>
+    <ID>MaxLineLength:ContinueOnComputerTest.kt$ContinueOnComputerTest$fun</ID>
+    <ID>MaxLineLength:ContinueOnComputerTest.kt$ContinueOnComputerTest$world.capabilities.value = ServerCapabilities(cliSessionResume = true, sessionModelProviderSwitching = true, serverCatalog = true)</ID>
+    <ID>MaxLineLength:FindBarTest.kt$FindBarTest$actions = listOf(KitLineAction("Search all history", { calls++ }, enabled = false, disabledReason = "Loading earlier messages"))</ID>
+    <ID>MaxLineLength:FreeModelNote.kt$FreeModel$*</ID>
+    <ID>MaxLineLength:FreeModelNote.kt$FreeModel$/** Flutter `FreeModelNoteDismissals.dismiss`: moves [session] to the newest end and keeps the newest [MAX_DISMISSALS]. */</ID>
+    <ID>MaxLineLength:FreeModelNote.kt$FreeModel$/** Flutter `usesOpenCodeFreeModel`: the OpenCode provider, nothing else signed in, and the catalog says it is free. */</ID>
+    <ID>MaxLineLength:FreeModelNote.kt$FreeModel$public</ID>
+    <ID>MaxLineLength:HeaderRules.kt$TranscriptCopy$"&lt;details&gt;&lt;summary&gt;${words.reasoning}&lt;/summary&gt;\n\n${part.text.trim()}\n\n&lt;/details&gt;\n\n"</ID>
+    <ID>MaxLineLength:LooksCapture.kt$Looks$/** Capture-only: writes PNGs of a screen in light and dark at 412 x 915 dp, density 2.625 (1081 x 2402 px). No comparison. */</ID>
+    <ID>MaxLineLength:LooksCapture.kt$Looks$appearance = KitAppearance(mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light, motion = MotionLevel.Calm)</ID>
+    <ID>MaxLineLength:LooksCapture.kt$Looks$fun</ID>
+    <ID>MaxLineLength:LooksCaptureTest.kt$LooksCaptureTest$ComposerModel(p, id, label, true, variants = v, providerName = pn, reasoning = true, tools = true, contextLimit = 200_000)</ID>
+    <ID>MaxLineLength:LooksCaptureTest.kt$LooksCaptureTest$WorkLineRow("work:u1", "u1", calls = 3, failed = 0, state = if (running) WorkState.Running else WorkState.Done)</ID>
+    <ID>MaxLineLength:LooksCaptureTest.kt$LooksCaptureTest$block("u1", "a1", "p", 0, "I found it. `LoginRedirect.remember` stores **/login** itself as the next route, so after sign-in the app redirects to the login page again. I am guarding that case and adding a test.")</ID>
+    <ID>MaxLineLength:LooksCaptureTest.kt$LooksCaptureTest$code(200, "```kotlin\nfun remember(route: String) {\n if (route.startsWith(\"/login\")) return\n target.value = route\n}\n```")</ID>
+    <ID>MaxLineLength:LooksCaptureTest.kt$LooksCaptureTest$setup = { if (open) { onNodeWithContentDescription("Model").performClick(); waitForIdle(); mainClock.advanceTimeBy(800) } }</ID>
+    <ID>MaxLineLength:LooksCaptureTest.kt$LooksCaptureTest.&lt;no name provided&gt;$BasicComposer(BasicComposerUi(available = true, sending = false, steers = running, targetKey = "p/s", models = models), Actions, chrome, modifier)</ID>
+    <ID>MaxLineLength:ModelPicker.kt$ModelPicker$/** Server default is offered as the list's first choice once a model is known (the sheet hides it while searching). */</ID>
+    <ID>MaxLineLength:ModelPickerTest.kt$ModelPickerTest$assertFalse(ModelPicker.offersServerDefault(ComposerModels(choices = all)), "nothing known yet, nothing claimed")</ID>
+    <ID>MaxLineLength:ModelPickerTest.kt$ModelPickerTest$assertTrue(ModelPicker.offersServerDefault(ComposerModels(choices = all, selected = terra, usesDefault = true), " "))</ID>
+    <ID>MaxLineLength:ModelPickerTest.kt$ModelPickerTest$private</ID>
+    <ID>MaxLineLength:ModelSheet.kt$/** A thinking level as people read it (Flutter `presentedEffort`): "Extra high" for `xhigh`; unknown ids as they are. */</ID>
+    <ID>MaxLineLength:NoteScreenTest.kt$NoteScreenTest$SessionNoteScreen(SessionNoteUi(visible = true, ready = true, draft = "Keep my edits", saved = "Old note", discard = true), actions)</ID>
+    <ID>MaxLineLength:NoteScreenTest.kt$NoteScreenTest$setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en") { SessionNoteScreen(SessionNoteUi(), Actions()) } }</ID>
+    <ID>MaxLineLength:NoteScreenTest.kt$NoteScreenTest$setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en") { SessionNoteScreen(SessionNoteUi(visible = true, ready = true, draft = "Run the checks", saved = "Run the checks"), actions) } }</ID>
+    <ID>MaxLineLength:QaWave1ChatTest.kt$QaWave1ChatTest$assertEquals(ReplyFailureKind.NoCredit, ReplyFailureKind.of("You exceeded your current quota, please check your plan"))</ID>
+    <ID>MaxLineLength:QaWave1ChatTest.kt$QaWave1ChatTest$val rows = persistentListOf(notice("u1", "v2-0"), prompt("u1", "Hello"), notice("u1", "v2-0"), notice("u1", "v2-0"))</ID>
+    <ID>MaxLineLength:QaWave1ComposerTest.kt$QaWave1ComposerTest$BasicComposer(ui(models = ComposerModels(choices = listOf(long), selected = long)), Actions(), withChip)</ID>
+    <ID>MaxLineLength:QaWave1ComposerTest.kt$QaWave1ComposerTest$assertTrue(field &gt;= controls * 9 / 10, "the field is $field px of $controls px: Stop and steer never squeeze it")</ID>
+    <ID>MaxLineLength:QaWave1ComposerTest.kt$QaWave1ComposerTest$setContent { Theme { Box(Modifier.width(360.dp)) { BasicComposer(ui(models = models), Actions(), chrome(busy = false)) } } }</ID>
+    <ID>MaxLineLength:QaWave1ComposerTest.kt$QaWave1ComposerTest$setContent { Theme { Box(Modifier.width(360.dp)) { BasicComposer(ui(steers = false), Actions(), chrome(busy = false)) } } }</ID>
+    <ID>MaxLineLength:QaWave1ComposerTest.kt$QaWave1ComposerTest$val zai = ComposerModel("zai-coding-plan", "glm-5.3-flash", "GLM-5.3-Flash", true, providerName = "Z.AI Coding Plan")</ID>
+    <ID>MaxLineLength:QuestionSheetScreenTest.kt$QuestionSheetScreenTest$@Test</ID>
+    <ID>MaxLineLength:QuestionSheetScreenTest.kt$QuestionSheetScreenTest$KitTheme</ID>
+    <ID>MaxLineLength:QuestionSheetScreenTest.kt$QuestionSheetScreenTest$choices = listOf(KitChoice("staging", "Staging"), KitChoice("live", "Production", enabled = KitEnabled.Disabled("Unavailable")))</ID>
+    <ID>MaxLineLength:QuestionSheetScreenTest.kt$QuestionSheetScreenTest$persistentListOf(QuestionChoice("Staging", "Test environment"), QuestionChoice("Production", "Live users"))</ID>
+    <ID>MaxLineLength:RelationsScreenTest.kt$RelationsScreenTest$KitTheme</ID>
+    <ID>MaxLineLength:RelationsScreenTest.kt$RelationsScreenTest$SessionRelationsScreen(SessionRelationsUi(loading = false, parent = parent, children = persistentListOf(child)), actions)</ID>
+    <ID>MaxLineLength:RelationsScreenTest.kt$RelationsScreenTest$SessionRelationsScreen(SessionRelationsUi(loading = false, parent = parent, children = persistentListOf(child), stopping = child), actions)</ID>
+    <ID>MaxLineLength:RelationsScreenTest.kt$RelationsScreenTest$val child = RelationRow(SessionId("child"), "Review changes", false, false, RelationStatus.NeedsYou, null, false, null)</ID>
+    <ID>MaxLineLength:RelationsScreenTest.kt$RelationsScreenTest$val child = RelationRow(SessionId("child"), "Review changes", false, false, RelationStatus.Working, null, false, null)</ID>
+    <ID>MaxLineLength:RelationsScreenTest.kt$RelationsScreenTest$val parent = RelationRow(SessionId("parent"), "Main conversation", true, true, RelationStatus.Idle, null, false, null)</ID>
+    <ID>MaxLineLength:RelationsScreenTest.kt$RelationsScreenTest$var state by mutableStateOf(SessionRelationsUi(loading = false, parent = parent, children = persistentListOf(child), canPin = true))</ID>
+    <ID>MaxLineLength:ReplyFooterTest.kt$ReplyFooterTest$setContent { KitTheme(platform = DesktopKitPlatform()) { KitReplyFooter("Copy reply", "More", { copied++ }, { opened++ }) } }</ID>
+    <ID>MaxLineLength:RequestWords.kt$AskVerb.Read -&gt; if (name != null) stringResource(Res.string.chatRequestAskReadNamed, ltr(name)) else stringResource(Res.string.chatRequestAskRead)</ID>
+    <ID>MaxLineLength:RequestWords.kt$alwaysWhat(grant)?.let { stringResource(Res.string.chatRequestAlwaysConfirm, it) } ?: stringResource(Res.string.chatRequestAlwaysTitle)</ID>
+    <ID>MaxLineLength:RequestWords.kt$alwaysWhat(grant)?.let { stringResource(Res.string.chatRequestAlwaysScope, it, stringResource(Res.string.chatRequestAlwaysInProject)) }</ID>
+    <ID>MaxLineLength:RequestWords.kt$ask.count &gt; 1 -&gt; pluralStringResource(Res.plurals.chatRequestAskEditFiles, ask.count, Numbers.format(ask.count))</ID>
+    <ID>MaxLineLength:RequestWords.kt$if (added != null &amp;&amp; removed != null) "${target.text} ${stringResource(Res.string.kitRequestChangeSize, added, removed)}" else target.text</ID>
+    <ID>MaxLineLength:RequestWords.kt$is KitElapsed.Minutes -&gt; pluralStringResource(Res.plurals.kitToolTookMinutes, e.minutes, Numbers.format(e.minutes))</ID>
+    <ID>MaxLineLength:SavedRecentModelsTest.kt$SavedRecentModelsTest$assertEquals(listOf("openai" to "gpt-5", "anthropic" to "sonnet"), store.saved["p1"], "deduplicated, newest first")</ID>
+    <ID>MaxLineLength:SessionRelationsViewModel.kt$SessionRelationsViewModel$if (!isCurrent() || (owner.parentId ?: owner.id) != expectedParent || (next.id != expectedParent &amp;&amp; next.parentId != expectedParent)) return staleFailure().failed()</ID>
+    <ID>MaxLineLength:SessionRelationsViewModel.kt$SessionRelationsViewModel$if (!isCurrent() || next.id != old.id || next.directory != old.directory || next.workspaceId != old.workspaceId || next.projectId != old.projectId || next.parentId != old.parentId) return staleFailure().failed()</ID>
+    <ID>MaxLineLength:SessionRelationsViewModel.kt$SessionRelationsViewModel$if (!live.capabilities.value.subagentSessions) return Failure.Unavailable(FeatureId("subagentSessions")).failed()</ID>
+    <ID>MaxLineLength:SessionRelationsViewModel.kt$SessionRelationsViewModel$if (!live.capabilities.value.subagentSessions) return@command Failure.Unavailable(FeatureId("subagentSessions")).failed()</ID>
+    <ID>MaxLineLength:SessionRelationsViewModel.kt$SessionRelationsViewModel$if (gateway?.capabilities?.value?.cliSessionResume != true) return@act Failure.Unavailable(FeatureId("cliSessionResume")).failed()</ID>
+    <ID>MaxLineLength:SessionRelationsViewModel.kt$SessionRelationsViewModel$if (rootValue.id != parentId || listedValue.any { it.parentId != parentId }) return@command Failure.UnreadableReply().failed()</ID>
+    <ID>MaxLineLength:SessionRelationsViewModel.kt$SessionRelationsViewModel$mutable.update { it.copy(stale = true, loading = false, working = false, menu = null, stopping = null, resume = null, failure = staleFailure()) }</ID>
+    <ID>MaxLineLength:SessionRelationsViewModel.kt$SessionRelationsViewModel$needsYou = asks.filter { it.phase == AnswerPhase.Waiting || it.phase is AnswerPhase.NotAccepted }.map { it.sessionId }.toSet()</ID>
+    <ID>MaxLineLength:SessionRelationsViewModel.kt$SessionRelationsViewModel$override fun copyResume()</ID>
+    <ID>MaxLineLength:SessionRelationsViewModel.kt$SessionRelationsViewModel$private fun isCurrent(): Boolean</ID>
+    <ID>MaxLineLength:SessionRelationsViewModel.kt$SessionRelationsViewModel$running = (statuses as Outcome.Ok).value.filterValues { it == SessionStatus.Busy || it == SessionStatus.Retry }.keys</ID>
+    <ID>MaxLineLength:SessionRelationsViewModel.kt$SessionRelationsViewModel$val command = SessionResumeCommand.build(SessionResumeCli.OpenCode2, s.id.raw, s.directory, s.workspaceId?.raw)</ID>
+    <ID>MaxLineLength:SessionTransferViewModel.kt$SessionTransferViewModel$"opencode-${route.ref.sessionId.raw.filter { it.isLetterOrDigit() || it in "_-" }}.json"</ID>
+    <ID>MaxLineLength:TimelineScreenTest.kt$TimelineScreenTest$ChatTimelineSheet(TimelineUi("", persistentListOf(TimelineEntryUi("prompt", "row", true, "Fix checkout", null, true)), false, false, null), actions)</ID>
+    <ID>MaxLineLength:TimelineScreenTest.kt$TimelineScreenTest$fun</ID>
+    <ID>MaxLineLength:TimelineScreenTest.kt$TimelineScreenTest$trailing = KitRowTrailing.IconAction(KitLineAction("Fork from this prompt", { calls++ }, icon = KitIcons.branch))</ID>
+    <ID>MaxLineLength:TranscriptCopyTest.kt$TranscriptCopyTest$fun</ID>
+    <ID>MaxLineLength:TranscriptCopyTest.kt$TranscriptCopyTest$part("tl", PartType.Tool, name = "read", tool = ToolState(ToolStatus.Completed, title = "Read notes.txt", output = "hello file"))</ID>
+    <ID>MaxLineLength:TranscriptFindBar.kt$KitIconButton(KitIcons.chevronDown, stringResource(Res.string.transcriptFindNext), { navigationFocus.requestFocus(); actions.findNext() }, Modifier.testTag("transcript-find-next"), enabled = enabled)</ID>
+    <ID>MaxLineLength:TranscriptFindBar.kt$KitIconButton(KitIcons.chevronUp, stringResource(Res.string.transcriptFindPrevious), { navigationFocus.requestFocus(); actions.findPrevious() }, Modifier.testTag("transcript-find-previous"), enabled = enabled)</ID>
+    <ID>MaxLineLength:TranscriptFindBar.kt$KitText(matches, Modifier.weight(1f).semantics { liveRegion = LiveRegionMode.Polite }, role = TypeRole.Secondary, tone = TextTone.Secondary)</ID>
+    <ID>MaxLineLength:TranscriptFindBar.kt$actions = listOf(KitLineAction(stringResource(Res.string.transcriptFindStopSearchingAll), actions::cancelSearchAll, testTag = "transcript-find-cancel-all"))</ID>
+    <ID>MaxLineLength:TranscriptLayoutTest.kt$TranscriptLayoutTest$KitTranscriptList</ID>
+    <ID>MaxLineLength:TurnFactsTest.kt$TurnFactsTest$"t9"</ID>
+    <ID>MaxLineLength:TurnFactsTest.kt$TurnFactsTest$)</ID>
+    <ID>MaxLineLength:TurnFactsTest.kt$TurnFactsTest$MessageInfo(id, sid, role, providerId = "anthropic", modelId = "m", tokens = tokens, time = MsgTime(at, done), finish = finish)</ID>
+    <ID>MaxLineLength:TurnFactsTest.kt$TurnFactsTest$Outcome.Ok(CatalogSnapshot(persistentListOf(), persistentListOf(model("anthropic", "m", 100_000)), persistentListOf()))</ID>
+    <ID>MaxLineLength:TurnFactsTest.kt$TurnFactsTest$Outcome.Ok(CatalogSnapshot(persistentListOf(), persistentListOf(model("anthropic", "m", 50_000)), persistentListOf()))</ID>
+    <ID>MaxLineLength:TurnFactsTest.kt$TurnFactsTest$TurnFactsUi(live = LiveNoticeUi.Retry(io.github.eslamasabry.oc.engine.transcript.turnfacts.RetryBannerFacts(true, 2, 42)))</ID>
+    <ID>MaxLineLength:TurnFactsTest.kt$TurnFactsTest$assertEquals(WorkLineState.Stopped, TurnFactsPresenter(FixedClock).present(k.feed.value, 3_000).work["m1"]?.state)</ID>
+    <ID>MaxLineLength:TurnFactsTest.kt$TurnFactsTest$assertEquals(false, TurnFactsPresenter(FixedClock).ticking(keeper().also { it.history(finishedTurn()) }.feed.value))</ID>
+    <ID>MaxLineLength:TurnFactsTest.kt$TurnFactsTest$assertEquals(false, assertIs&lt;LiveNoticeUi.Retry&gt;(TurnFactsPresenter(FixedClock).present(k.feed.value, 1_000).live).facts.rateLimited)</ID>
+    <ID>MaxLineLength:TurnFactsTest.kt$TurnFactsTest$assertEquals(false, assertIs&lt;LiveNoticeUi.Retry&gt;(TurnFactsPresenter(FixedClock).present(k.feed.value, 2_000).live).facts.rateLimited)</ID>
+    <ID>MaxLineLength:TurnFactsTest.kt$TurnFactsTest$assertEquals(listOf&lt;io.github.eslamasabry.oc.ui.routes.AppRoute&gt;(io.github.eslamasabry.oc.ui.routes.FilesRoute.File(Ref, "/p/out/report.pdf")), nav.opened)</ID>
+    <ID>MaxLineLength:TurnFactsTest.kt$TurnFactsTest$assertTrue(TurnFactsPresenter(FixedClock).ticking(k.feed.value), "a quiet chat with background work still ticks")</ID>
+    <ID>MaxLineLength:TurnFactsTest.kt$TurnFactsTest$assertTrue(assertIs&lt;LiveNoticeUi.Retry&gt;(TurnFactsPresenter(FixedClock).present(k.feed.value, 3_000).live).facts.rateLimited)</ID>
+    <ID>MaxLineLength:TurnFactsTest.kt$TurnFactsTest$fun</ID>
+    <ID>MaxLineLength:TurnFactsTest.kt$TurnFactsTest$info("m2", Role.Assistant, 2_000, done = 9_000, tokens = Tokens(input = 30_000, output = 2_000, cacheRead = 10_000), finish = "stop")</ID>
+    <ID>MaxLineLength:TurnFactsTest.kt$TurnFactsTest$k.history(listOf(prompt, msg(info("m2", Role.Assistant, 2_000), tool("t1", "m2", "bash", ToolStatus.Running, mapOf("command" to command), 2_000))))</ID>
+    <ID>MaxLineLength:TurnFactsTest.kt$TurnFactsTest$k.history(listOf(prompt, msg(info("m2", Role.Assistant, 2_000, done = 4_000, finish = "stop"), task, text("x", "m2", "ok"))))</ID>
+    <ID>MaxLineLength:TurnFactsTest.kt$TurnFactsTest$k.history(listOf(prompt, msg(info("m2", Role.Assistant, 2_000, done = 4_000, finish = "stop"), write, text("x", "m2", "ok"))))</ID>
+    <ID>MaxLineLength:TurnFactsTest.kt$TurnFactsTest$listOf(prompt, msg(info("m2", Role.Assistant, 2_000), tool("t1", "m2", "bash", ToolStatus.Running, start = 2_000)))</ID>
+    <ID>MaxLineLength:TurnFactsTest.kt$TurnFactsTest$onAllNodes(hasClickAction() and androidx.compose.ui.test.hasAnyAncestor(androidx.compose.ui.test.hasTestTag("chat-work-line")))</ID>
+    <ID>MaxLineLength:TurnFactsTest.kt$TurnFactsTest$private</ID>
+    <ID>MaxLineLength:TurnFactsTest.kt$TurnFactsTest$setContent { Root { ChatScreen(screenState(), actions, composer, facts = facts, onOpenSession = { opened += it }) } }</ID>
+    <ID>MaxLineLength:TurnFactsTest.kt$TurnFactsTest$setContent { Root { ChatScreen(screenState(LiveTurnUi(stopping = false)), actions, composer, facts = facts) } }</ID>
+    <ID>MaxLineLength:TurnFactsTest.kt$TurnFactsTest$tool("n1", "m3", "task_notification", ToolStatus.Completed, mapOf("toolUseId" to "call-t1", "status" to "completed"), 9_000, 9_000)</ID>
+    <ID>MaxLineLength:TurnFactsTest.kt$TurnFactsTest$tool("t1", "m2", "bash", ToolStatus.Completed, mapOf("command" to "cd app &amp;&amp; ./build_tv.sh --release"), 2_000, 2_100, metadata = marker)</ID>
+    <ID>MaxLineLength:TurnFactsTest.kt$TurnFactsTest$tool("t1", "m2", "bash", ToolStatus.Completed, mapOf("command" to command), 2_000, 3_000, output = "ok")</ID>
+    <ID>MaxLineLength:TurnFactsTest.kt$TurnFactsTest$tool("t3", "m2", "bash", ToolStatus.Completed, mapOf("command" to "npm test"), 4_000, 8_200, output = " BUILD OK ")</ID>
+    <ID>MaxLineLength:TurnFactsTest.kt$TurnFactsTest$val bridged = io.github.eslamasabry.oc.feature.chat.world.P3Bridge(sid).message(msg(info("m5", Role.User, 5_000), compaction))</ID>
+    <ID>MaxLineLength:TurnFactsTest.kt$TurnFactsTest$val started = tool("t1", "m2", "bash", ToolStatus.Completed, mapOf("command" to "./serve.sh"), 0, 100, metadata = marker)</ID>
+    <ID>MaxLineLength:TurnFactsWords.kt$f.rateLimited -&gt; stringResource(Res.string.chatUiRateLimitCountdown, attempt, formatRetryCountdown(left))</ID>
+    <ID>MaxLineLength:TurnFactsWords.kt$if (r.commands.isNotEmpty()) segments += pluralStringResource(Res.plurals.kitWorkRan, r.commands.size, r.commands.size)</ID>
+    <ID>MaxLineLength:TurnFactsWords.kt$is ToolDuration.MinutesSeconds -&gt; stringResource(Res.string.chatUiDurationMinutesSeconds, Numbers.format(d.minutes), d.seconds)</ID>
+    <ID>MaxLineLength:TurnFeed.kt$TurnFeedKeeper$// B-CHAT-016: OpenCode 2 sends no tag; its reason is in the (redacted) details, and only that tells</ID>
+    <ID>MaxLineLength:TurnFeed.kt$TurnFeedKeeper$ReplyTimingEvent.PartSeen(event.part.sessionId, event.part.messageId, event.part.type, event.part.tool?.startedAtMs)</ID>
+    <ID>MaxLineLength:TurnFeed.kt$TurnFeedKeeper$for (m in catalog.models) if (m.contextLimit &gt; 0) windows[TurnFeed.windowKey(m.providerId, m.id)] = m.contextLimit.toLong()</ID>
+    <ID>MaxLineLength:TurnFeed.kt$TurnFeedKeeper$if (!s.busy) state.value = s.copy(busy = true, runStartedAtMs = atMs, lastProgressAtMs = atMs, lastOutcome = null)</ID>
+    <ID>MaxLineLength:TurnFeed.kt$TurnFeedKeeper$retry = RunRetry(event.attempt, event.nextAtMs, event.tag?.raw ?: event.details?.text, atMs)</ID>
+    <ID>MaxLineLength:WorldComposerFilesModelsTest.kt$WorldComposerFilesModelsTest$DraftFacts(text = "a", saved = "a", attachments = listOf(stored), savedAttachments = emptyList()).unsaved</ID>
+    <ID>MaxLineLength:WorldComposerFilesModelsTest.kt$WorldComposerFilesModelsTest$DraftFacts(text = "a", saved = "a", attachments = listOf(stored), savedAttachments = listOf(stored)).unsaved</ID>
+    <ID>MaxLineLength:WorldComposerFilesModelsTest.kt$WorldComposerFilesModelsTest$Outcome.Ok(persistentListOf(io.github.eslamasabry.oc.core.model.CommandInfo("review", "Review", null, false)))</ID>
+    <ID>MaxLineLength:WorldComposerFilesModelsTest.kt$WorldComposerFilesModelsTest$io.github.eslamasabry.oc.core.model.CatalogAgent("build", "primary", null, false, null, null, null)</ID>
+    <ID>MaxLineLength:WorldComposerFilesModelsTest.kt$WorldComposerFilesModelsTest$io.github.eslamasabry.oc.core.model.CatalogAgent("helper", "subagent", null, false, null, null, null)</ID>
+    <ID>MaxLineLength:WorldComposerFilesModelsTest.kt$WorldComposerFilesModelsTest$io.github.eslamasabry.oc.feature.chat.header.approval.ConnectionAutoApprovals(f.registry, store, TestClock()).start()</ID>
+    <ID>MaxLineLength:WorldComposerFilesModelsTest.kt$WorldComposerFilesModelsTest.ScriptedOperations$var</ID>
+    <ID>MaxLineLength:WorldRulesTest.kt$WorldRulesTest$assertEquals(GatewayEvent.RunEnded("s1", RunOutcome.Succeeded), bridge.event(Core.RunEnded(s1, CoreOutcome.Idle)))</ID>
+    <ID>MaxLineLength:WorldRulesTest.kt$WorldRulesTest$assertEquals(GatewayEvent.TranscriptStale("s1"), bridge.event(Core.SessionCompacted(s1)), "a compaction re-reads")</ID>
+    <ID>MaxLineLength:WorldRulesTest.kt$WorldRulesTest$assertEquals(NoticeKind.Other, (bridge.event(Core.Notice(s1, MessageId("m1"), CoreNotice("note.changed"))) as GatewayEvent.Notice).kind)</ID>
+    <ID>MaxLineLength:WorldRulesTest.kt$WorldRulesTest$assertEquals(PartType.Unknown, (bridge.event(Core.PartUpserted(snapshot)) as GatewayEvent.PartUpserted).part.type)</ID>
+    <ID>MaxLineLength:WorldRulesTest.kt$WorldRulesTest$bridge.event(Core.RunEnded(s1, CoreOutcome.Failed(io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind.ProviderAuth, null, null)))</ID>
+    <ID>MaxLineLength:WorldRulesTest.kt$WorldRulesTest$persistentListOf(CorePart("p1", "m1", "s1", CorePartType.Text, rawType = "text", text = "Hi", ended = true))</ID>
+    <ID>MaxLineLength:WorldRulesTest.kt$WorldRulesTest$val notice = bridge.event(Core.Notice(s1, MessageId("m1"), CoreNotice.InstructionsUpdated)) as GatewayEvent.Notice</ID>
+    <ID>MaxLineLength:WorldRulesTest.kt$WorldRulesTest$val tool = CorePart("p2", "m1", "s1", CorePartType.Tool, rawType = "tool", toolName = "bash", tool = ToolState(CoreTool.Error))</ID>
+    <ID>NestedBlockDepth:BasicComposerViewModel.kt$private fun embeddedAttachment(file: PromptAttachment): Boolean</ID>
+    <ID>NestedBlockDepth:ChatCardSlot.kt$CardCharts$fun facts(node: CardNode.Chart): Facts</ID>
+    <ID>NestedBlockDepth:ChatCardSlot.kt$CardForms$fun answer(ask: CardAsk.Form, values: Map&lt;String, KitFormValue&gt;): CardAnswer.Form?</ID>
+    <ID>NestedBlockDepth:ChatHeaderPresenter.kt$ChatHeaderPresenter$override fun confirm()</ID>
+    <ID>NestedBlockDepth:ChatRules.kt$TranscriptFind$public fun search( state: io.github.eslamasabry.oc.engine.transcript.state.TranscriptState, query: String, ): ImmutableList&lt;FindHit&gt;</ID>
+    <ID>NestedBlockDepth:ChatTasks.kt$public fun latestChatTasks(messages: List&lt;MessageWithParts&gt;): ChatTaskList?</ID>
+    <ID>NestedBlockDepth:GraphChatWorld.kt$GraphChatWorld$private fun syncDelivery(delivery: ConnectionDelivery)</ID>
+    <ID>NestedBlockDepth:GraphChatWorld.kt$GraphChatWorld$private suspend fun applyModel( choice: ComposerModel?, variant: String, recordRecent: Boolean = true, ): Outcome&lt;Unit&gt;</ID>
+    <ID>NestedBlockDepth:HeaderRules.kt$TranscriptCopy$public fun markdownOf( title: String?, messages: List&lt;MessageWithParts&gt;, words: TranscriptWords, partial: Boolean, mask: (String) -&gt; String, ): String</ID>
+    <ID>NestedBlockDepth:ToolStepBody.kt$@Composable internal fun ToolStepBody(step: TurnStep, reply: ReplyActions?)</ID>
+    <ID>NestedBlockDepth:ToolStepBody.kt$@Composable private fun Readable( value: JsonElement, reply: ReplyActions?, label: String? = null, shown: Set&lt;String&gt; = emptySet(), )</ID>
+    <ID>NestedBlockDepth:TranscriptReading.kt$internal fun transcriptReading( snapshot: LedgerSnapshot, busy: Boolean, outcome: io.github.eslamasabry.oc.core.domain.events.RunOutcome? = null, ): TranscriptReadingUi</ID>
+    <ID>ReturnCount:ActiveContextModel.kt$ActiveContextModel$public fun available(): Boolean</ID>
+    <ID>ReturnCount:ActiveContextModel.kt$ActiveContextModel$public fun refresh()</ID>
+    <ID>ReturnCount:ApprovalStore.kt$ApprovalCodec$public fun decode(text: String?): Map&lt;String, SessionApproval&gt;</ID>
+    <ID>ReturnCount:BasicComposerViewModel.kt$BasicComposerViewModel$override fun attach(kind: AttachKind)</ID>
+    <ID>ReturnCount:BasicComposerViewModel.kt$BasicComposerViewModel$override fun attachFile()</ID>
+    <ID>ReturnCount:BasicComposerViewModel.kt$BasicComposerViewModel$override fun removeAttachment(index: Int)</ID>
+    <ID>ReturnCount:BasicComposerViewModel.kt$BasicComposerViewModel$override suspend fun cycleModel(reverse: Boolean): Boolean</ID>
+    <ID>ReturnCount:BasicComposerViewModel.kt$BasicComposerViewModel$override suspend fun restoreAttachments(files: List&lt;PromptAttachment&gt;, stillCurrent: () -&gt; Boolean): Boolean</ID>
+    <ID>ReturnCount:BasicComposerViewModel.kt$BasicComposerViewModel$override suspend fun selectAgent(agent: String): Boolean</ID>
+    <ID>ReturnCount:BasicComposerViewModel.kt$BasicComposerViewModel$override suspend fun selectModel(choice: ComposerModel?, variant: String): Boolean</ID>
+    <ID>ReturnCount:BasicComposerViewModel.kt$BasicComposerViewModel$override suspend fun send(text: String): Boolean</ID>
+    <ID>ReturnCount:BasicComposerViewModel.kt$BasicComposerViewModel$override suspend fun sendAgain(text: String, expectedRevision: Long): Boolean</ID>
+    <ID>ReturnCount:BasicComposerViewModel.kt$ComposerQuery.Companion$public fun of(text: String): ComposerQuery?</ID>
+    <ID>ReturnCount:BasicComposerViewModel.kt$private fun embeddedAttachment(file: PromptAttachment): Boolean</ID>
+    <ID>ReturnCount:CardDispatch.kt$CardsQualification$fun verdict( servers: Outcome&lt;List&lt;McpServerInfo&gt;&gt;, here: List&lt;CardAgent&gt;, qualified: Boolean = OPEN_CODE_2_QUALIFIED, ): CardsVerdict</ID>
+    <ID>ReturnCount:ChatCardSlot.kt$CardCharts$fun plain(v: Double): String</ID>
+    <ID>ReturnCount:ChatCardSlot.kt$CardForms$fun answer(ask: CardAsk.Form, values: Map&lt;String, KitFormValue&gt;): CardAnswer.Form?</ID>
+    <ID>ReturnCount:ChatCards.kt$ChatCardsModel$private fun connectorCurrent(card: AgentCard, origin: ConnectorOrigin): Boolean</ID>
+    <ID>ReturnCount:ChatCards.kt$ChatCardsModel$private fun connectorOrigin(graph: ConnectionGraph?): ConnectorOrigin?</ID>
+    <ID>ReturnCount:ChatCards.kt$ChatCardsModel$private suspend fun read(gateway: ServerGateway, explicit: Boolean = true): Boolean</ID>
+    <ID>ReturnCount:ChatCards.kt$ChatCardsModel$public suspend fun connector(card: AgentCard): McpChatConnect?</ID>
+    <ID>ReturnCount:ChatCards.kt$GraphCardsQualifier$override suspend fun verify(profileId: String): Outcome&lt;CardsVerdict&gt;</ID>
+    <ID>ReturnCount:ChatForms.kt$ChatFormsModel$public fun edit(key: String, value: FormValue)</ID>
+    <ID>ReturnCount:ChatForms.kt$ChatFormsModel$public fun open(id: FormId, revision: String)</ID>
+    <ID>ReturnCount:ChatHeaderPresenter.kt$ChatHeaderPresenter$override fun importOpen()</ID>
+    <ID>ReturnCount:ChatHeaderPresenter.kt$ChatHeaderPresenter$private fun freeNoteDue(facts: HeaderFacts, models: ComposerModels, l: HeaderLocal): Boolean</ID>
+    <ID>ReturnCount:ChatInboxViewModel.kt$ChatInboxViewModel$private fun action(row: ChatInboxRow, command: suspend (ChatGraphAccessors) -&gt; Boolean)</ID>
+    <ID>ReturnCount:ChatPresenter.kt$ChatPresenter$override fun messageAction(target: MessageTarget, action: MessageAction)</ID>
+    <ID>ReturnCount:ChatPresenter.kt$ChatPresenter$override fun openMessageMenu(rowKey: String)</ID>
+    <ID>ReturnCount:ChatPresenter.kt$ChatPresenter$override fun timelineSelect(messageId: String, fork: Boolean)</ID>
+    <ID>ReturnCount:ChatPresenter.kt$ChatPresenter$private fun replyMessageId(t: TranscriptState, footerIndex: Int): String?</ID>
+    <ID>ReturnCount:ChatRequestsModel.kt$ChatRequestsModel$override fun confirmAlwaysReviewed(confirm: AlwaysConfirmUi)</ID>
+    <ID>ReturnCount:ChatRequestsModel.kt$ChatRequestsModel$override fun performReviewed(card: RequestCardUi, action: ReviewedRequestAction)</ID>
+    <ID>ReturnCount:ChatRequestsModel.kt$ChatRequestsModel$override fun sendSheet(id: RequestId)</ID>
+    <ID>ReturnCount:ChatRequestsModel.kt$ChatRequestsModel$private fun updateSheet( id: RequestId, prompt: Int, edit: (io.github.eslamasabry.oc.core.model.QuestionPrompt, PromptDraft) -&gt; PromptDraft, )</ID>
+    <ID>ReturnCount:ChatRules.kt$CodeCopy$public fun of(rows: List&lt;TranscriptRow&gt;, index: Int): String?</ID>
+    <ID>ReturnCount:ChatRules.kt$StatusPick$internal fun newestTurnSaysFailed(rows: List&lt;TranscriptRow&gt;): Boolean</ID>
+    <ID>ReturnCount:ChatRules.kt$StatusPick$public fun pick( link: ChatLink, pending: List&lt;PendingSend&gt;, run: RunFacts, rows: List&lt;TranscriptRow&gt;, actionFailure: Failure?, linkRefused: Boolean = false, ): ChatStatusUi?</ID>
+    <ID>ReturnCount:ChatTasks.kt$public fun latestChatTasks(messages: List&lt;MessageWithParts&gt;): ChatTaskList?</ID>
+    <ID>ReturnCount:ChatTranscriptDetails.kt$@Composable internal fun TranscriptDetail( detail: TranscriptDetailUi, folds: TranscriptFolds, reasoningExpanded: Boolean, reply: ReplyActions?, onCompactAgain: (() -&gt; Unit)?, onOpenSession: ((String) -&gt; Unit)?, )</ID>
+    <ID>ReturnCount:ChatWorkModel.kt$ChatWorkModel$public fun runShell(command: String)</ID>
+    <ID>ReturnCount:ComposerModels.kt$RecentModels$private fun listOf(profile: String, keep: Boolean): ArrayDeque&lt;Pair&lt;String, String&gt;&gt;</ID>
+    <ID>ReturnCount:ErrorRecovery.kt$ErrorRecovery$public fun suggestedModel(raw: String?, models: List&lt;ComposerModel&gt;): ComposerModel?</ID>
+    <ID>ReturnCount:FreeModelNote.kt$FreeModel$public fun uses(signedIn: Collection&lt;String&gt;, providerId: String?, modelId: String?, models: List&lt;CatalogModel&gt;): Boolean</ID>
+    <ID>ReturnCount:GraphChatHeaderPort.kt$GraphChatHeaderPort$override fun openImport(): io.github.eslamasabry.oc.engine.agents.sessionimport.SessionImportEngine?</ID>
+    <ID>ReturnCount:GraphChatHeaderPort.kt$GraphChatHeaderPort$override suspend fun freeModelFacts(): Outcome&lt;FreeModelFacts&gt;</ID>
+    <ID>ReturnCount:GraphChatHeaderPort.kt$GraphChatHeaderPort$private suspend fun &lt;T&gt; withGateway( act: suspend (ServerGateway, ServerOperationsGateway) -&gt; Outcome&lt;T&gt; ): Outcome&lt;T&gt;</ID>
+    <ID>ReturnCount:GraphChatHeaderPort.kt$GraphChatHeaderPort.&lt;no name provided&gt;$override suspend fun allowOnce(request: PermissionRequest): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:GraphChatHeaderPort.kt$GraphChatHeaderPort.&lt;no name provided&gt;$override suspend fun syncPermissions(): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:GraphChatWorld.kt$GraphChatWorld$@OptIn(kotlin.io.encoding.ExperimentalEncodingApi::class) override suspend fun readPicture(path: String): Outcome&lt;ByteArray&gt;</ID>
+    <ID>ReturnCount:GraphChatWorld.kt$GraphChatWorld$override suspend fun checkReceipt(localId: Long): Outcome&lt;Boolean&gt;</ID>
+    <ID>ReturnCount:GraphChatWorld.kt$GraphChatWorld$override suspend fun compact(): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:GraphChatWorld.kt$GraphChatWorld$override suspend fun deleteMessage(id: MessageId): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:GraphChatWorld.kt$GraphChatWorld$override suspend fun fileExists(path: String): Outcome&lt;Boolean&gt;</ID>
+    <ID>ReturnCount:GraphChatWorld.kt$GraphChatWorld$override suspend fun fork(from: MessageId): Outcome&lt;SessionId&gt;</ID>
+    <ID>ReturnCount:GraphChatWorld.kt$GraphChatWorld$override suspend fun isChildSession(id: String): Outcome&lt;Boolean&gt;</ID>
+    <ID>ReturnCount:GraphChatWorld.kt$GraphChatWorld$override suspend fun loadCommands(): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:GraphChatWorld.kt$GraphChatWorld$override suspend fun loadModels(): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:GraphChatWorld.kt$GraphChatWorld$override suspend fun loadOlder(): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:GraphChatWorld.kt$GraphChatWorld$override suspend fun mentionFile(path: String): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:GraphChatWorld.kt$GraphChatWorld$override suspend fun readVoiceReply(id: String, automatic: Boolean): Outcome&lt;String&gt;</ID>
+    <ID>ReturnCount:GraphChatWorld.kt$GraphChatWorld$override suspend fun retrySend(localId: Long): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:GraphChatWorld.kt$GraphChatWorld$override suspend fun revertFrom(from: MessageId): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:GraphChatWorld.kt$GraphChatWorld$override suspend fun runShell(command: String): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:GraphChatWorld.kt$GraphChatWorld$override suspend fun sendRepeated(text: String, expectedRevision: Long): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:GraphChatWorld.kt$GraphChatWorld$override suspend fun stopTurn(): Outcome&lt;Boolean&gt;</ID>
+    <ID>ReturnCount:GraphChatWorld.kt$GraphChatWorld$override suspend fun toggleModelFavorite(choice: ComposerModel): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:GraphChatWorld.kt$GraphChatWorld$private fun reconcilePendingReceipts()</ID>
+    <ID>ReturnCount:GraphChatWorld.kt$GraphChatWorld$private fun recordPhrase(localId: Long)</ID>
+    <ID>ReturnCount:GraphChatWorld.kt$GraphChatWorld$private fun retireSettledMarkers(queue: QueueState)</ID>
+    <ID>ReturnCount:GraphChatWorld.kt$GraphChatWorld$private suspend fun applyAgent(agent: String): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:GraphChatWorld.kt$GraphChatWorld$private suspend fun applyModel( choice: ComposerModel?, variant: String, recordRecent: Boolean = true, ): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:GraphChatWorld.kt$GraphChatWorld$private suspend fun dispatch( localId: Long, text: String, sent: SentSnapshot, expected: Attached?, ): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:GraphChatWorld.kt$GraphChatWorld$private suspend fun readHistory( gateway: ServerGateway, handle: TranscriptHandle, bridge: P3Bridge, cursor: String? = null, ): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:GraphChatWorld.kt$GraphChatWorld$private suspend fun send(text: String, draftFiles: Boolean): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:QueueMoveViewModel.kt$QueueMoveViewModel$override fun move(destination: ConversationRef)</ID>
+    <ID>ReturnCount:QueueMoveViewModel.kt$QueueMoveViewModel$private fun readPage()</ID>
+    <ID>ReturnCount:RelationTitles.kt$RelationTitles$fun present(raw: String?): String?</ID>
+    <ID>ReturnCount:SessionRelationsViewModel.kt$SessionRelationsViewModel$private suspend fun checked(id: SessionId): Outcome&lt;Session&gt;</ID>
+    <ID>ReturnCount:ToolStepBody.kt$@Composable internal fun ToolStepBody(step: TurnStep, reply: ReplyActions?)</ID>
+    <ID>ReturnCount:ToolStepBody.kt$private fun stepDiffs( kind: ToolKind, input: JsonObject, metadata: JsonObject, mask: (String) -&gt; String, ): List&lt;DiffFile&gt;</ID>
+    <ID>ReturnCount:TurnFactsPresenter.kt$TurnFactsPresenter$private fun context(feed: TurnFeed, compacting: Boolean): ContextUi?</ID>
+    <ID>ReturnCount:TurnFactsPresenter.kt$TurnFactsPresenter$private fun live( feed: TurnFeed, nowMs: Long, waiting: Boolean, work: Map&lt;String, TurnWork&gt;, compacting: Boolean, ): LiveNoticeUi?</ID>
+    <ID>ReturnCount:TurnFeed.kt$TurnFeedKeeper$private fun time(event: GatewayEvent, atMs: Long)</ID>
+    <ID>SpreadOperator:ConnectionAutoApprovals.kt$ConnectionAutoApprovals$(*graphs.values.map(::sweep).toTypedArray())</ID>
+    <ID>ThrowingExceptionsWithoutMessageOrCause:ChatCards.kt$ChatCardsModel$IllegalStateException()</ID>
+    <ID>ThrowsCount:ChatCards.kt$ChatCardsModel$public suspend fun connector(card: AgentCard): McpChatConnect?</ID>
+    <ID>TooManyFunctions:ApprovalPresenter.kt$ApprovalPresenter : ApprovalChipActions</ID>
+    <ID>TooManyFunctions:BasicComposerViewModel.kt$BasicComposerActions</ID>
+    <ID>TooManyFunctions:BasicComposerViewModel.kt$BasicComposerViewModel : ViewModelBasicComposerActions</ID>
+    <ID>TooManyFunctions:ChatCards.kt$ChatCardsModel</ID>
+    <ID>TooManyFunctions:ChatForms.kt$ChatFormsModel</ID>
+    <ID>TooManyFunctions:ChatHeaderPresenter.kt$ChatHeaderPresenter : ChatHeaderActionsChatAgentHandoffActions</ID>
+    <ID>TooManyFunctions:ChatHeaderUi.kt$ChatHeaderActions</ID>
+    <ID>TooManyFunctions:ChatHeaderViewModel.kt$ChatHeaderViewModel : ViewModelChatHeaderActionsChatAgentHandoffActionsApprovalChipActions</ID>
+    <ID>TooManyFunctions:ChatPresenter.kt$ChatPresenter : ChatActions</ID>
+    <ID>TooManyFunctions:ChatRequestActions.kt$ChatRequestActions</ID>
+    <ID>TooManyFunctions:ChatRequestsModel.kt$ChatRequestsModel : ChatRequestActions</ID>
+    <ID>TooManyFunctions:ChatScreen.kt$io.github.eslamasabry.oc.feature.chat.ui.ChatScreen.kt</ID>
+    <ID>TooManyFunctions:ChatTranscript.kt$io.github.eslamasabry.oc.feature.chat.ui.ChatTranscript.kt</ID>
+    <ID>TooManyFunctions:ChatUi.kt$ChatActions</ID>
+    <ID>TooManyFunctions:ChatViewModel.kt$ChatViewModel : ViewModelChatActions</ID>
+    <ID>TooManyFunctions:ChatWorkModel.kt$ChatWorkModel</ID>
+    <ID>TooManyFunctions:ChatWorld.kt$ChatWorld</ID>
+    <ID>TooManyFunctions:ConnectionFormModel.kt$ConnectionFormViewModel : ViewModelConnectionFormActions</ID>
+    <ID>TooManyFunctions:DemoWorld.kt$DemoWorld : ChatWorld</ID>
+    <ID>TooManyFunctions:GraphChatHeaderPort.kt$GraphChatHeaderPort : ChatHeaderPort</ID>
+    <ID>TooManyFunctions:GraphChatWorld.kt$GraphChatWorld : ChatWorldTurnFeedSourceVoiceConversationSession</ID>
+    <ID>TooManyFunctions:RequestWords.kt$io.github.eslamasabry.oc.feature.chat.requests.ui.RequestWords.kt</ID>
+    <ID>TooManyFunctions:SessionRelationsUi.kt$SessionRelationsActions</ID>
+    <ID>TooManyFunctions:SessionRelationsViewModel.kt$SessionRelationsViewModel : ViewModelSessionRelationsActions</ID>
+    <ID>TooManyFunctions:SessionTransferUi.kt$SessionTransferActions</ID>
+    <ID>TooManyFunctions:SessionTransferViewModel.kt$SessionTransferViewModel : ViewModelSessionTransferActions</ID>
+    <ID>TooManyFunctions:ToolStepBody.kt$io.github.eslamasabry.oc.feature.chat.ui.ToolStepBody.kt</ID>
+    <ID>TooManyFunctions:TurnFactsRows.kt$io.github.eslamasabry.oc.feature.chat.ui.TurnFactsRows.kt</ID>
+    <ID>UnusedParameter:GraphChatHeaderPort.kt$GraphChatHeaderPort$gateway: ServerGateway</ID>
+    <ID>UnusedPrivateMember:ChatHeaderPresenter.kt$ChatHeaderPresenter$private fun freeNoteDue(facts: HeaderFacts, models: ComposerModels, l: HeaderLocal): Boolean</ID>
+    <ID>UnusedPrivateMember:ChatRequestsModel.kt$private fun sized(drafts: MutableList&lt;PromptDraft&gt;, size: Int)</ID>
+    <ID>UnusedPrivateProperty:ChatEntries.kt$ChatEntries$private val photoSources: Set&lt;io.github.eslamasabry.oc.feature.chat.composer.presentation.ComposerAttachSource&gt;</ID>
+    <ID>UnusedPrivateProperty:ChatScreen.kt$val headerUnder by remember(list) { derivedStateOf { list.lazy.canScrollForward } }</ID>
+    <ID>UseCheckOrError:ChatCards.kt$ChatCardsModel$throw IllegalStateException()</ID>
+    <ID>WildcardImport:ActiveContextScreenTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:ActiveContextScreenTest.kt$import io.github.eslamasabry.oc.engine.agents.context.*</ID>
+    <ID>WildcardImport:ActiveContextScreenTest.kt$import io.github.eslamasabry.oc.feature.chat.context.*</ID>
+    <ID>WildcardImport:ActiveContextSheet.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:ActiveContextSheet.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:ActiveContextSheet.kt$import io.github.eslamasabry.oc.ui.kit.state.*</ID>
+    <ID>WildcardImport:ActiveContextSheet.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:AgentFailureWords.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:AgentHandoffReview.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:AskLineTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:ChatEntries.kt$import io.github.eslamasabry.oc.feature.chat.forms.*</ID>
+    <ID>WildcardImport:ChatFormSlot.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:ChatGateTest.kt$import io.github.eslamasabry.oc.feature.chat.*</ID>
+    <ID>WildcardImport:ChatGateTest.kt$import io.github.eslamasabry.oc.feature.chat.composer.*</ID>
+    <ID>WildcardImport:ChatGateTest.kt$import io.github.eslamasabry.oc.feature.chat.composer.presentation.*</ID>
+    <ID>WildcardImport:ChatGateTest.kt$import io.github.eslamasabry.oc.feature.chat.header.presentation.*</ID>
+    <ID>WildcardImport:ChatGateTest.kt$import io.github.eslamasabry.oc.feature.chat.presentation.*</ID>
+    <ID>WildcardImport:ChatGateTest.kt$import io.github.eslamasabry.oc.feature.chat.world.*</ID>
+    <ID>WildcardImport:ChatInboxSlot.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:ChatInboxSlot.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:ChatInboxViewModel.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:ChatTasksScreenTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:ChatTranscriptDetails.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:ComposerDraftRestoreTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:ComposerDraftViewModelTest.kt$import kotlin.test.*</ID>
+    <ID>WildcardImport:ComposerModelsFilesTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:ConnectionFormModel.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:ConnectionFormModel.kt$import io.github.eslamasabry.oc.engine.requests.forms.*</ID>
+    <ID>WildcardImport:ConnectionFormScreen.kt$import io.github.eslamasabry.oc.engine.requests.forms.*</ID>
+    <ID>WildcardImport:ConnectionFormScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:ConnectionFormScreen.kt$import io.github.eslamasabry.oc.ui.kit.modal.*</ID>
+    <ID>WildcardImport:ConnectionFormScreen.kt$import io.github.eslamasabry.oc.ui.kitchat.form.*</ID>
+    <ID>WildcardImport:ConnectionFormScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:ConnectorCardControls.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:ConnectorCardControls.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:ContextSheetTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:FindBarTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:GraphDraftBindingTest.kt$import kotlin.test.*</ID>
+    <ID>WildcardImport:HandoffSheet.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:MessageMenu.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:MessageMenuScreenTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:MessageMenuScreenTest.kt$import io.github.eslamasabry.oc.feature.chat.presentation.*</ID>
+    <ID>WildcardImport:NoteScreenTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:NoteScreenTest.kt$import io.github.eslamasabry.oc.feature.chat.notes.*</ID>
+    <ID>WildcardImport:ProductFailureWords.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:QaWave1ComposerTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:QuestionSheetScreenTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:RelationsScreenTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:RelationsScreenTest.kt$import io.github.eslamasabry.oc.feature.chat.relations.presentation.*</ID>
+    <ID>WildcardImport:ReplyFooterTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:SessionImportSheet.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:SessionNoteScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:SessionNoteScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:SessionNoteScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:SessionNoteScreen.kt$import io.github.eslamasabry.oc.ui.kit.modal.*</ID>
+    <ID>WildcardImport:SessionNoteScreen.kt$import io.github.eslamasabry.oc.ui.kit.state.*</ID>
+    <ID>WildcardImport:SessionNoteScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:SessionRelationsScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:SessionTransferSheet.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:SessionTransferSheet.kt$import io.github.eslamasabry.oc.feature.chat.sessiontransfer.presentation.*</ID>
+    <ID>WildcardImport:SessionTransferSheet.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:SessionTransferViewModel.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:SessionTransferViewModel.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:SessionTransferViewModel.kt$import io.github.eslamasabry.oc.core.domain.*</ID>
+    <ID>WildcardImport:SessionTransferViewModel.kt$import io.github.eslamasabry.oc.engine.agents.sessionimport.*</ID>
+    <ID>WildcardImport:SessionTransferViewModel.kt$import kotlinx.coroutines.flow.*</ID>
+    <ID>WildcardImport:StateHandoffSheet.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:StateHandoffViewModel.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:StateHandoffViewModel.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:StateHandoffViewModel.kt$import io.github.eslamasabry.oc.engine.agents.handoff.*</ID>
+    <ID>WildcardImport:TimelineScreenTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:ToolStepBody.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:TranscriptFindBar.kt$import androidx.compose.ui.input.key.*</ID>
+    <ID>WildcardImport:TranscriptFindBar.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:TranscriptLayoutTest.kt$import androidx.compose.ui.test.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

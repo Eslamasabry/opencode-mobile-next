@@ -1,0 +1,42 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:AppUpdates.kt$AppUpdates$s.phase == UpdatePhase.ReadyToInstall &amp;&amp; s.needsPermission &amp;&amp; path != null &amp;&amp; platform.canInstall()</ID>
+    <ID>CyclomaticComplexMethod:AppUpdates.kt$AppUpdates$private suspend fun fetchAndVerify(release: AppRelease): Outcome&lt;Unit&gt;</ID>
+    <ID>LongMethod:AppUpdates.kt$AppUpdates$private suspend fun fetchAndVerify(release: AppRelease): Outcome&lt;Unit&gt;</ID>
+    <ID>LoopWithTooManyJumpStatements:ReleaseCheck.kt$ReleaseChecker.Companion$for</ID>
+    <ID>MagicNumber:AppRelease.kt$SimpleUrl.Companion$3</ID>
+    <ID>MagicNumber:ReleaseCheck.kt$3</ID>
+    <ID>MagicNumber:ReleaseCheck.kt$4</ID>
+    <ID>MagicNumber:ReleaseCheck.kt$5</ID>
+    <ID>MaxLineLength:AppRelease.kt$AppRelease.Companion$private fun JsonObject.string(key: String): String?</ID>
+    <ID>MaxLineLength:AppRelease.kt$AppRelease.Companion$val size = (o["size"] as? JsonPrimitive)?.takeIf { !it.isString }?.longOrNull ?: return@mapNotNull null</ID>
+    <ID>MaxLineLength:AppRelease.kt$SimpleUrl$internal data</ID>
+    <ID>MaxLineLength:AppRelease.kt$return u.scheme == "https" &amp;&amp; u.host == "github.com" &amp;&amp; u.path.startsWith("/Eslamasabry/opencode-mobile-next/releases/")</ID>
+    <ID>MaxLineLength:AppReleaseTest.kt$AppReleaseTest$assertFalse(isTrustedReleaseFileUrl("http://localhost:9090/a.apk", feedOverride = "http://localhost:8080/feed.json"))</ID>
+    <ID>MaxLineLength:AppReleaseTest.kt$AppReleaseTest$assertFalse(isTrustedReleaseFileUrl("https://github.com.evil.example/Eslamasabry/opencode-mobile-next/releases/a"))</ID>
+    <ID>MaxLineLength:AppReleaseTest.kt$AppReleaseTest$assertTrue(isTrustedReleaseFileUrl("http://localhost:8080/a.apk", feedOverride = "http://localhost:8080/feed.json"))</ID>
+    <ID>MaxLineLength:AppUpdates.kt$AppUpdates$val expected = parseSha256Sums(sumsText)[asset.name] ?: return fail(UpdateFailure.Checksum, "no checksum for ${asset.name}")</ID>
+    <ID>MaxLineLength:AppUpdates.kt$UpdateFailure$/** Why an update stopped. The words people read come from the UI; the generated technical text is [AppUpdateState.detail]. */</ID>
+    <ID>MaxLineLength:AppUpdates.kt$UpdatePhase$/** Where the app's own update is (Flutter `AppUpdatePhase`, without the code-push patch phase: it ends at the switch). */</ID>
+    <ID>MaxLineLength:ReleaseCheck.kt$ReleaseChecker$public</ID>
+    <ID>MaxLineLength:ReleaseCheck.kt$ReleaseTags$/** `v1.0.25+26-preview.5` → 26, `v1.0.19+20` → 20; null when the tag carries none (Flutter `buildNumberFromTag`). */</ID>
+    <ID>MaxLineLength:ReleaseCheck.kt$val ok = segments.size == 3 || (segments.size == 5 &amp;&amp; segments[3].equals("tag", ignoreCase = true) &amp;&amp; segments[4].isNotEmpty())</ID>
+    <ID>MaxLineLength:ReleaseCheckTest.kt$ReleaseCheckTest$fun</ID>
+    <ID>MaxLineLength:UpdatePorts.kt$UpdateFeed$public suspend</ID>
+    <ID>MaxLineLength:UpdatePorts.kt$UpdateRecord$public data</ID>
+    <ID>ReturnCount:AppRelease.kt$AppRelease.Companion$public fun parse(json: String): AppRelease?</ID>
+    <ID>ReturnCount:AppRelease.kt$SimpleUrl.Companion$fun parse(url: String): SimpleUrl?</ID>
+    <ID>ReturnCount:AppRelease.kt$public fun isTrustedReleaseFileUrl(url: String, feedOverride: String = ""): Boolean</ID>
+    <ID>ReturnCount:AppUpdates.kt$AppUpdates$private suspend fun check(): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:AppUpdates.kt$AppUpdates$private suspend fun fetchAndVerify(release: AppRelease): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:AppUpdates.kt$AppUpdates$public suspend fun checkIfDue(): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:AppUpdates.kt$AppUpdates$public suspend fun onResumed(): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:AppUpdates.kt$AppUpdates$public suspend fun updateNow(): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:ReleaseCheck.kt$ReleaseChecker$public suspend fun fetchLatest(): Outcome&lt;ReleaseInfo?&gt;</ID>
+    <ID>ReturnCount:ReleaseCheck.kt$public fun trustedReleasePageUrl(value: String?): String?</ID>
+    <ID>TooManyFunctions:AppUpdates.kt$AppUpdates</ID>
+    <ID>TooManyFunctions:UpdatePorts.kt$UpdatePlatform</ID>
+  </CurrentIssues>
+</SmellBaseline>

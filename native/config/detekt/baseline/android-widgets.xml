@@ -1,0 +1,82 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:WidgetComposeBridge.kt$WidgetComposeBridge$!WidgetFeed.connectionActive || WidgetFeed.liveDispatcher == null || (identity["profileID"] as? String).isNullOrBlank() || (identity["scopeToken"] as? String).isNullOrBlank() || WidgetActionPolicy.identityFields.any { identity[it]?.toString().orEmpty() != current[it]?.toString().orEmpty() }</ID>
+    <ID>ComplexCondition:WidgetPanelStore.kt$WidgetPanelStore.Companion$uri.scheme != "opencode-widget" || uri.host != mode || uri.pathSegments.size != 2 || uri.pathSegments[0] != id.toString() || uri.pathSegments[1] != WidgetActionPolicy.token(launch)</ID>
+    <ID>CyclomaticComplexMethod:WidgetActionAdmission.kt$WidgetActionAdmission$private suspend fun execute(payload: Map&lt;String, Any?&gt;): WidgetActionResult</ID>
+    <ID>CyclomaticComplexMethod:WidgetComposeBridge.kt$WidgetComposeBridge$public fun inspect(): WidgetComposeInspection</ID>
+    <ID>CyclomaticComplexMethod:WidgetPanelStore.kt$WidgetPanelStore$private suspend fun save(old: WidgetPanelStyle, project: String?, edit: (JSONObject) -&gt; JSONObject): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:WidgetPanelStore.kt$WidgetPanelStore.Companion$public fun fromIntent( context: Context, intent: Intent, configureOnly: Boolean, ): WidgetPanelStore?</ID>
+    <ID>CyclomaticComplexMethod:WidgetPresentation.kt$WidgetPresentation$public fun ask( permission: String, patterns: List&lt;String&gt;, tool: String? = null, target: String? = null, ): Map&lt;String, String&gt;</ID>
+    <ID>CyclomaticComplexMethod:WidgetV2Bridge.kt$WidgetV2Bridge$internal suspend fun invalidateConnection( context: Context, persistence: io.github.eslamasabry.oc.android.widgets.WidgetPersistence? = WidgetFeed.persistence, )</ID>
+    <ID>LongMethod:WidgetPersistenceTest.kt$WidgetPersistenceTest$@Test fun `widgets-MAJOR-2 publication enters the warm store and generic profile sweep`()</ID>
+    <ID>LongMethod:WidgetPresentation.kt$WidgetPresentation$public fun ask( permission: String, patterns: List&lt;String&gt;, tool: String? = null, target: String? = null, ): Map&lt;String, String&gt;</ID>
+    <ID>LongParameterList:WidgetActionRuntime.kt$( context: Context, payload: Map&lt;String, Any?&gt;, snapshot: JSONObject, storage: WidgetPersistence, budgetMs: Long, operation: String = "execute", )</ID>
+    <ID>LongParameterList:WidgetFeed.kt$WidgetBackgroundRunner$( context: Context, payload: Map&lt;String, Any?&gt;, snapshotJson: String, deadlineEpochMs: Long, operation: String, complete: (Map&lt;*, *&gt;?) -&gt; Unit, )</ID>
+    <ID>LoopWithTooManyJumpStatements:WidgetV2Bridge.kt$WidgetV2Bridge$for</ID>
+    <ID>MagicNumber:WidgetActionBridge.kt$WidgetActionBridge$500</ID>
+    <ID>MagicNumber:WidgetActionBridge.kt$WidgetActionBridge$8000</ID>
+    <ID>MagicNumber:WidgetPanelStore.kt$WidgetPanelStore$30_000</ID>
+    <ID>MagicNumber:WidgetTextActions.kt$WidgetTextActions$6_000L</ID>
+    <ID>MagicNumber:WidgetTextActions.kt$WidgetTextActions$7_000L</ID>
+    <ID>MaxLineLength:FrozenComponents.kt$BuiltinServerService$/** E10: the second half of the old read (the server service in the foreground) is folded into [WidgetFeed.phoneServer]. */</ID>
+    <ID>MaxLineLength:TwoWidgetsRenderTest.kt$TwoWidgetsRenderTest$val openB = org.robolectric.Shadows.shadowOf(SessionWidgetIntents.chatIntent(ctx, 7, snapshot, other)).savedIntent</ID>
+    <ID>MaxLineLength:WidgetComposeBridge.kt$WidgetComposeBridge$WidgetActionPolicy.identityFields.any { identity[it]?.toString().orEmpty() != current[it]?.toString().orEmpty() }</ID>
+    <ID>MaxLineLength:WidgetComposeBridge.kt$WidgetComposeBridge$if (continuation.isActive) continuation.resumeWith(Result.success(WidgetComposeResponse(status, result["error"] as? String)))</ID>
+    <ID>MaxLineLength:WidgetComposeBridge.kt$WidgetComposeBridge$if (current["busy"] != true || (identity["expectedStartedAt"] as? Number)?.toLong()?.let { it &lt;= 0 } != false) return unavailable()</ID>
+    <ID>MaxLineLength:WidgetComposeBridge.kt$WidgetComposeBridge$if (provider.packageName != app.packageName || provider.className !in WidgetProviders.allNames) return unavailable()</ID>
+    <ID>MaxLineLength:WidgetComposeBridge.kt$WidgetComposeBridge$val row = (0 until rows.length()).mapNotNull(rows::optJSONObject).firstOrNull { it.optString("id") == identity["sessionID"] }</ID>
+    <ID>MaxLineLength:WidgetPanelStore.kt$WidgetPanelStore$?:</ID>
+    <ID>MaxLineLength:WidgetPanelStore.kt$WidgetPanelStore$AppWidgetManager.getInstance(app).getAppWidgetInfo(widgetId)?.provider?.className == SessionsWideWidgetProvider::class.java.name</ID>
+    <ID>MaxLineLength:WidgetPanelStore.kt$WidgetPanelStore$for (index in 0 until rows.length()) rows.optJSONObject(index)?.optString("project")?.takeIf(String::isNotBlank)?.let(result::add)</ID>
+    <ID>MaxLineLength:WidgetPanelStore.kt$WidgetPanelStore$mapOf(key to old.revision?.let { PrefValue.Str(it) }, WidgetPersistence.SNAPSHOT to snapshotRaw?.let { PrefValue.Str(it) })</ID>
+    <ID>MaxLineLength:WidgetPanelStore.kt$WidgetPanelStore$private fun parse(raw: String?): JSONObject?</ID>
+    <ID>MaxLineLength:WidgetPanelStore.kt$WidgetPanelStore$val lane = if (old.owner == DEVICE) persistence.lanes.app else persistence.lanes.forProfile(ProfileId(old.owner))</ID>
+    <ID>MaxLineLength:WidgetPanelStore.kt$WidgetPanelStore$val snapshot = parse(snapshotRaw) ?: if (snapshotRaw != null) return@withLock unavailable() else JSONObject()</ID>
+    <ID>MaxLineLength:WidgetPanelStore.kt$WidgetPanelStore$val styles = parse(old.revision) ?: if (old.revision != null) return@withLock unavailable() else JSONObject()</ID>
+    <ID>NestedBlockDepth:WidgetV2Bridge.kt$WidgetV2Bridge$internal suspend fun invalidateConnection( context: Context, persistence: io.github.eslamasabry.oc.android.widgets.WidgetPersistence? = WidgetFeed.persistence, )</ID>
+    <ID>ReturnCount:AndroidWidgetSurface.kt$AndroidWidgetSurface$private suspend fun publishLocked( snapshotJson: String, profileId: String, targetJson: String?, ): PublishResult</ID>
+    <ID>ReturnCount:ConversationsWidgetBinder.kt$ConversationsWidgetBinder$private fun readableApproval( views: RemoteViews, frame: SessionWidgetFrame, inTitle: Boolean, ): Boolean</ID>
+    <ID>ReturnCount:ConversationsWidgetBinder.kt$ConversationsWidgetPlan$fun commandLines(context: Context, command: String, widthDp: Float): Int</ID>
+    <ID>ReturnCount:NativeWidgetActions.kt$NativeWidgetActions$public suspend fun execute(context: Context, raw: String)</ID>
+    <ID>ReturnCount:UsageWidgetRows.kt$UsageWidgetRows$fun readRows(context: Context): List&lt;UsageWidgetRow&gt;</ID>
+    <ID>ReturnCount:WidgetActionAdmission.kt$WidgetActionAdmission$override suspend fun run(request: WidgetActionRequest): Outcome&lt;WidgetActionResult&gt;</ID>
+    <ID>ReturnCount:WidgetActionAdmission.kt$WidgetActionAdmission$private suspend fun execute(payload: Map&lt;String, Any?&gt;): WidgetActionResult</ID>
+    <ID>ReturnCount:WidgetActionAdmission.kt$WidgetActionExtras$public fun read(intent: Intent): WidgetActionRequest?</ID>
+    <ID>ReturnCount:WidgetActionBridge.kt$WidgetActionBridge$internal suspend fun publishResult( context: Context, payload: Map&lt;String, Any?&gt;, result: Map&lt;String, Any?&gt;, )</ID>
+    <ID>ReturnCount:WidgetActionBridge.kt$WidgetActionBridge$private suspend fun submitStored(context: Context, payload: Map&lt;String, Any?&gt;): Map&lt;String, Any?&gt;</ID>
+    <ID>ReturnCount:WidgetActionRuntime.kt$WidgetActionRuntime$fun start()</ID>
+    <ID>ReturnCount:WidgetActionSnapshot.kt$WidgetActionSnapshot$suspend fun apply(context: Context, payload: Map&lt;String, Any?&gt;, value: Map&lt;*, *&gt;?): Boolean</ID>
+    <ID>ReturnCount:WidgetActionSnapshot.kt$WidgetActionSnapshot$suspend fun applyIdleStatus( context: Context, ticket: Map&lt;String, Any?&gt;, preview: String? = null, ): Boolean</ID>
+    <ID>ReturnCount:WidgetComposeBridge.kt$WidgetComposeBridge$public fun inspect(): WidgetComposeInspection</ID>
+    <ID>ReturnCount:WidgetComposeBridge.kt$WidgetComposeBridge$public suspend fun submit(text: String): WidgetComposeResponse</ID>
+    <ID>ReturnCount:WidgetPanelStore.kt$WidgetPanelStore$private fun projects(): List&lt;String&gt;</ID>
+    <ID>ReturnCount:WidgetPanelStore.kt$WidgetPanelStore$private suspend fun save(edit: (JSONObject) -&gt; Unit): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:WidgetPanelStore.kt$WidgetPanelStore.Companion$public fun fromIntent( context: Context, intent: Intent, configureOnly: Boolean, ): WidgetPanelStore?</ID>
+    <ID>ReturnCount:WidgetPanels.kt$WidgetPanels$public suspend fun save( context: Context, widgetId: Int, preferences: WidgetPanelPreferences, ): Boolean</ID>
+    <ID>ReturnCount:WidgetStatusIdentity.kt$WidgetStatusIdentity$fun current(context: Context, profile: String, session: String): Map&lt;String, Any?&gt;?</ID>
+    <ID>ReturnCount:WidgetStatusTickets.kt$WidgetStatusTickets$suspend fun remove(context: Context, profile: String, session: String, token: String)</ID>
+    <ID>ReturnCount:WidgetStatusWorker.kt$WidgetStatusWorker$override suspend fun doWork(): Result</ID>
+    <ID>ReturnCount:WidgetTextActions.kt$WidgetTextActions$public fun target(intent: Intent): WidgetTextTarget?</ID>
+    <ID>ReturnCount:WidgetV2Bridge.kt$WidgetV2Bridge$internal suspend fun clearProfile( context: Context, profileID: String, persistence: io.github.eslamasabry.oc.android.widgets.WidgetPersistence? = WidgetFeed.persistence, ): Boolean</ID>
+    <ID>ReturnCount:WidgetV2Bridge.kt$WidgetV2Bridge$internal suspend fun invalidateConnection( context: Context, persistence: io.github.eslamasabry.oc.android.widgets.WidgetPersistence? = WidgetFeed.persistence, )</ID>
+    <ID>SpreadOperator:NativeStrings.kt$NativeStrings$(id, *numbered(args))</ID>
+    <ID>SpreadOperator:NativeStrings.kt$NativeStrings$(id, count, *numbered(args))</ID>
+    <ID>TooManyFunctions:ConversationsWidgetBinder.kt$ConversationsWidgetBinder</ID>
+    <ID>TooManyFunctions:WidgetPanelStore.kt$WidgetPanelStore</ID>
+    <ID>TooManyFunctions:WidgetV2Style.kt$WidgetV2Style</ID>
+    <ID>UnusedParameter:WidgetActionBridge.kt$WidgetActionBridge$context: Context</ID>
+    <ID>UnusedParameter:WidgetActionSnapshot.kt$WidgetActionSnapshot$context: Context</ID>
+    <ID>UnusedParameter:WidgetStatusTickets.kt$WidgetStatusTickets$context: Context</ID>
+    <ID>UnusedParameter:WidgetV2Bridge.kt$WidgetV2Bridge$context: Context</ID>
+    <ID>UnusedParameter:WidgetV2Style.kt$WidgetV2Style$context: Context</ID>
+    <ID>UnusedPrivateProperty:UsageWidgetRenderer.kt$UsageWidgetRenderer.Companion$private const val FLUTTER_PREFS = "FlutterSharedPreferences"</ID>
+    <ID>UnusedPrivateProperty:UsageWidgetRows.kt$UsageWidgetRows$private const val FLUTTER_PREFS = "FlutterSharedPreferences"</ID>
+    <ID>WildcardImport:WidgetActionIngressTest.kt$import io.github.eslamasabry.oc.engine.attention.*</ID>
+    <ID>WildcardImport:WidgetActionIngressTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:WidgetPersistenceTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:WidgetRuntimeLifecycleTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:WidgetSnapshotRaceTest.kt$import org.junit.Assert.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

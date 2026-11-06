@@ -1,0 +1,62 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:PhoneOwnServer.kt$SimpleUrl.Companion$!scheme.all { it.isLetterOrDigit() || it == '+' || it == '-' || it == '.' }</ID>
+    <ID>ComplexCondition:RecoveryPolicyRegistry.kt$RecoveryPolicyRegistry$owner == null &amp;&amp; ((k == null &amp;&amp; instances.isEmpty()) || (k?.size == 1 &amp;&amp; profileId in k))</ID>
+    <ID>ComplexCondition:RecoveryPolicyRegistry.kt$RecoveryPolicyRegistry.RecoveryPolicy$t == null || !SAFE.matches(t) || count == null || count !in 0..MAX_ATTEMPTS || op == null || !SAFE.matches(op) || pending == null || !SAFE.matches(pending)</ID>
+    <ID>CyclomaticComplexMethod:AppStorageFacts.kt$ProjectStorageScanner$private fun walk( path: String, prefix: String, skip: Set&lt;String&gt; = emptySet(), strict: Boolean = false, gitLinksUnder: String? = null, visit: (name: String, path: String, bytes: Long) -&gt; Unit, )</ID>
+    <ID>CyclomaticComplexMethod:LifecycleReport.kt$LifecycleReportController$public suspend fun refresh(profile: LifecycleProfile?)</ID>
+    <ID>LongParameterList:AppStorageFacts.kt$ProjectStorageScanner$( path: String, prefix: String, skip: Set&lt;String&gt; = emptySet(), strict: Boolean = false, gitLinksUnder: String? = null, visit: (name: String, path: String, bytes: Long) -&gt; Unit, )</ID>
+    <ID>LongParameterList:LifecycleReport.kt$LifecycleProfile$( public val id: String, public val baseUrl: String, public val backend: PhoneServerBackend = PhoneServerBackend.OpenCode, public val username: String = "", public val password: String = "", public val requiresPasswordReentry: Boolean = false, /** The profile's orchestration is the built-in team (BuiltinTeam.isBuiltinConfig). */ public val teamConfigured: Boolean = false, )</ID>
+    <ID>LoopWithTooManyJumpStatements:AppStorageFacts.kt$ProjectStorageScanner$for</ID>
+    <ID>LoopWithTooManyJumpStatements:RecoveryPolicyRegistry.kt$RecoveryPolicyRegistry.RecoveryPolicy$for</ID>
+    <ID>MagicNumber:AppStorageFacts.kt$ProjectStorageScanner$8</ID>
+    <ID>MagicNumber:PhoneOwnServer.kt$PhoneOwnServers$4098</ID>
+    <ID>MagicNumber:PhoneOwnServer.kt$PhoneOwnServers$80</ID>
+    <ID>MagicNumber:PhoneOwnServer.kt$SimpleUrl.Companion$3</ID>
+    <ID>MaxLineLength:AppStorageFacts.kt$// never followed; proot's link2symlink links to `.l2s.` files inside the app's folder are the one exception (Git objects).</ID>
+    <ID>MaxLineLength:AppStorageFacts.kt$ProjectExportEntry$public data</ID>
+    <ID>MaxLineLength:AppStorageFacts.kt$ProjectExportPolicy$listOf(".local/share/opencode", ".config/opencode", ".oc-opencode2/config", ".oc-opencode2/data", ".oc-migration-exports")</ID>
+    <ID>MaxLineLength:AppStorageFacts.kt$ProjectStorageScanner$/** Every file an export writes. A plain export leaves out every private file; [includePrivate] adds them and OpenCode's data. */</ID>
+    <ID>MaxLineLength:AppStorageFacts.kt$ProjectStorageScanner$val children = tree.list(folder) ?: if (strict) throw StoragePlanProblem("unreadable projects") else continue</ID>
+    <ID>MaxLineLength:AppStorageFacts.kt$ProjectStorageScanner$walk</ID>
+    <ID>MaxLineLength:AppStorageFactsTest.kt$AppStorageFactsTest$assertTrue(private.filter { it.private }.map { it.name }.containsAll(listOf("projects/app/.env", "opencode/.local/share/opencode/auth.json")))</ID>
+    <ID>MaxLineLength:AppStorageFactsTest.kt$AppStorageFactsTest$for</ID>
+    <ID>MaxLineLength:AppStorageFactsTest.kt$AppStorageFactsTest$fun</ID>
+    <ID>MaxLineLength:AppStorageFactsTest.kt$AppStorageFactsTest$private fun plan(includePrivate: Boolean = false)</ID>
+    <ID>MaxLineLength:AppStorageFactsTest.kt$AppStorageFactsTest$private val outsideDir: Path = Files.createTempDirectory("oc-export-outside-").also { Files.writeString(it.resolve("keep.txt"), "keep") }</ID>
+    <ID>MaxLineLength:AppStorageFactsTest.kt$AppStorageFactsTest$write("projects/app/.git/config", "[remote]\nurl = https://" + "me" + ":tok@x.dev/r\n")</ID>
+    <ID>MaxLineLength:BuiltinServerOwner.kt$BuiltinServerOwner$/** Closes [profileId] now, then (after any admitted write) writes the empty tombstone when it is still the owner. */</ID>
+    <ID>MaxLineLength:BuiltinServerOwner.kt$BuiltinServerOwner$/** Only the deletion transaction reopens a profile, after its abort completed. Claims still need [claim]'s predicate. */</ID>
+    <ID>MaxLineLength:DeletionDrainTest.kt$DeletionDrainTest$Disk(mapOf(RecoveryPolicyRegistry.preferenceKey("keeper") to shared, RecoveryPolicyRegistry.preferenceKey("alias") to shared))</ID>
+    <ID>MaxLineLength:DeletionDrainTest.kt$DeletionDrainTest$async { PhoneProfileDeletion(profiles, BuiltinServerOwner(disk), registry).delete("local").also { deleted = true } }</ID>
+    <ID>MaxLineLength:DeletionDrainTest.kt$DeletionDrainTest$val shared = """{"enabled":true,"token":"test-shared-permit","attempts":1,"operation":"original","pendingOperation":""}"""</ID>
+    <ID>MaxLineLength:LifecycleReport.kt$HttpPhoneTeamHealth$return ((decoded as? JsonObject)?.get("status") as? JsonPrimitive)?.let { it.isString &amp;&amp; it.content == "ok" } ?: false</ID>
+    <ID>MaxLineLength:LifecycleReportTest.kt$LifecycleReportTest$AppLaunchReport(AppExitRecord(AndroidExitReason.PACKAGE_UPDATED, stoppedAt), persistentListOf("server"))</ID>
+    <ID>MaxLineLength:LifecycleReportTest.kt$LifecycleReportTest$assertEquals(AppExitKind.LowMemory, classifyAppExit(AppExitRecord(AndroidExitReason.SIGNALED, 1, subReason = 16)))</ID>
+    <ID>MaxLineLength:LifecycleReportTest.kt$LifecycleReportTest$assertEquals(AppExitKind.Update, classifyAppExit(AppExitRecord(AndroidExitReason.USER_REQUESTED, 1, subReason = 25)))</ID>
+    <ID>MaxLineLength:LifecycleReportTest.kt$LifecycleReportTest$for</ID>
+    <ID>MaxLineLength:PhoneOwnServer.kt$PhoneOwnServers$/** True only for the phone's own servers: these lead with the phone mark; any other loopback address is a server. */</ID>
+    <ID>MaxLineLength:PhoneOwnServer.kt$PhoneOwnServers$looksLikeInAppServer(profile, support) || (support.termux &amp;&amp; (isManagedTermux(profile) || isLocalAgent(profile)))</ID>
+    <ID>MaxLineLength:PhoneOwnServer.kt$PhoneOwnServers$public fun isLoopbackHost(host: String): Boolean</ID>
+    <ID>MaxLineLength:PhoneOwnServer.kt$PhoneServerCandidate$public data</ID>
+    <ID>MaxLineLength:PhoneOwnServerTest.kt$PhoneOwnServerTest$assertFalse(PhoneOwnServers.isPhoneOwnServer(at("agents2", "ws://localhost:6768", PhoneServerBackend.Paseo), PhoneHostSupport.Android))</ID>
+    <ID>MaxLineLength:PhoneOwnServerTest.kt$PhoneOwnServerTest$assertFalse(PhoneOwnServers.isPhoneOwnServer(at("https-in-app", "https://127.0.0.1:4098"), PhoneHostSupport.Android))</ID>
+    <ID>MaxLineLength:PhoneOwnServerTest.kt$PhoneOwnServerTest$assertFalse(PhoneOwnServers.isPhoneOwnServer(at("in-app", PhoneOwnServers.IN_APP_URL), PhoneHostSupport.Elsewhere))</ID>
+    <ID>MaxLineLength:RecoveryPolicyRegistry.kt$RecoveryPolicyRegistry.Companion$private fun JsonObject.string(key: String): String?</ID>
+    <ID>MaxLineLength:RecoveryPolicyRegistry.kt$RecoveryPolicyRegistry.RecoveryPolicy$val count = prefs.get(preferenceKey(id))?.let(::decode)?.get("attempts")?.let { it as? JsonPrimitive }?.intOrNull ?: continue</ID>
+    <ID>MaxLineLength:build.gradle.kts$// :engine:lifecycle (unit P12-BUILD-RUNTIME-C): the restart lifecycle report and deletion drains (lib/state/lifecycle_report.dart, builtin owner and recovery-policy drains, manage-space measuring, the this-phone mark).</ID>
+    <ID>NestedBlockDepth:AppStorageFacts.kt$ProjectStorageScanner$private fun projectTops(layout: AppStorageLayout, strict: Boolean): List&lt;Pair&lt;String, String&gt;&gt;</ID>
+    <ID>ReturnCount:AppStorageFacts.kt$ProjectExportPolicy$public fun isPrivate(relative: String): Boolean</ID>
+    <ID>ReturnCount:AppStorageFacts.kt$ProjectStorageScanner$private fun walk( path: String, prefix: String, skip: Set&lt;String&gt; = emptySet(), strict: Boolean = false, gitLinksUnder: String? = null, visit: (name: String, path: String, bytes: Long) -&gt; Unit, )</ID>
+    <ID>ReturnCount:AppStorageFacts.kt$ProjectStorageScanner$public fun linkedObjectFile(link: String, root: String): String?</ID>
+    <ID>ReturnCount:BuiltinServerOwner.kt$BuiltinServerOwner$private suspend fun reconcile(): Boolean</ID>
+    <ID>ReturnCount:DeletionDrainTest.kt$DeletionDrainTest.Disk$override suspend fun set(key: String, value: String): Boolean</ID>
+    <ID>ReturnCount:LifecycleReport.kt$HttpPhoneTeamHealth$private suspend fun answersOk(path: String): Boolean</ID>
+    <ID>ReturnCount:LifecycleReport.kt$LifecycleReportController$public suspend fun refresh(profile: LifecycleProfile?)</ID>
+    <ID>ReturnCount:PhoneOwnServer.kt$PhoneOwnServers$public fun isLocalAgent(profile: PhoneServerCandidate): Boolean</ID>
+    <ID>ReturnCount:PhoneOwnServer.kt$SimpleUrl.Companion$fun parse(raw: String): SimpleUrl?</ID>
+    <ID>ReturnCount:RecoveryPolicyRegistry.kt$RecoveryPolicyRegistry$public suspend fun resumeAfterManualStart(profileId: String)</ID>
+  </CurrentIssues>
+</SmellBaseline>

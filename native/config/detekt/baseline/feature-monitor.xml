@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:MonitorScreen.kt$@Composable public fun MonitorScreen(state: MonitorUi, actions: MonitorActions)</ID>
+    <ID>LongMethod:MonitorScreen.kt$@Composable public fun MonitorScreen(state: MonitorUi, actions: MonitorActions)</ID>
+    <ID>MagicNumber:MonitorViewModel.kt$MonitorViewModel$5_000</ID>
+    <ID>WildcardImport:MonitorScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

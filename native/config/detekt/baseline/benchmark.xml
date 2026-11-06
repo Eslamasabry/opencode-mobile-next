@@ -1,0 +1,13 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>MagicNumber:ProofBenchmarks.kt$StreamBenchmark$120_000</ID>
+    <ID>MagicNumber:ProofBenchmarks.kt$StreamBenchmark$240_000</ID>
+    <ID>MagicNumber:ProofBenchmarks.kt$StreamBenchmark$90_000</ID>
+    <ID>MagicNumber:build.gradle.kts$28</ID>
+    <ID>MagicNumber:build.gradle.kts$36</ID>
+    <ID>MagicNumber:build.gradle.kts$37</ID>
+    <ID>MaxLineLength:ProofBenchmarks.kt$StartupBenchmark$@Test fun startupBaselineProfile()</ID>
+  </CurrentIssues>
+</SmellBaseline>

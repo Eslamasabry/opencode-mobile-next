@@ -1,0 +1,55 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:AndroidRemoteTerminalRenderer.kt$AndroidRemoteTerminalRenderer.Session.&lt;no name provided&gt;$start &gt; 0 &amp;&amp; start &lt; raw.length &amp;&amp; raw[start].isLowSurrogate() &amp;&amp; raw[start - 1].isHighSurrogate()</ID>
+    <ID>ComplexCondition:NativeTerminalManager.kt$NativeTerminalManager.NativeSession.&lt;no name provided&gt;$start &gt; 0 &amp;&amp; start &lt; safe.length &amp;&amp; safe[start].isLowSurrogate() &amp;&amp; safe[start - 1].isHighSurrogate()</ID>
+    <ID>LongParameterList:NativeTerminalManager.kt$NativeTerminalProgram$( val path: String, val directory: String, val arguments: List&lt;String&gt;, val environment: List&lt;String&gt;, val owner: String?, val confined: Boolean, val openRequest: java.io.File?, val stopTree: (pid: Int, exited: (Long) -&gt; Boolean) -&gt; Unit, )</ID>
+    <ID>MagicNumber:AndroidRemoteTerminalRenderer.kt$AndroidRemoteTerminalRenderer.Session$1024</ID>
+    <ID>MagicNumber:AndroidRemoteTerminalRenderer.kt$AndroidRemoteTerminalRenderer.Session$14</ID>
+    <ID>MagicNumber:AndroidRemoteTerminalRenderer.kt$AndroidRemoteTerminalRenderer.Session$2000</ID>
+    <ID>MagicNumber:AndroidRemoteTerminalRenderer.kt$AndroidRemoteTerminalRenderer.Session$24</ID>
+    <ID>MagicNumber:AndroidRemoteTerminalRenderer.kt$AndroidRemoteTerminalRenderer.Session$80</ID>
+    <ID>MagicNumber:AndroidRemoteTerminalRenderer.kt$AndroidRemoteTerminalRenderer.Session.&lt;no name provided&gt;$100_000</ID>
+    <ID>MagicNumber:AndroidRemoteTerminalRenderer.kt$AndroidRemoteTerminalRenderer.Session.&lt;no name provided&gt;$65_536</ID>
+    <ID>MagicNumber:NativeLocalTerminal.kt$NativeLocalTerminal$1000</ID>
+    <ID>MagicNumber:NativeLocalTerminal.kt$NativeLocalTerminal$14</ID>
+    <ID>MagicNumber:NativeLocalTerminal.kt$NativeLocalTerminal$50</ID>
+    <ID>MagicNumber:NativeLocalTerminal.kt$NativeLocalTerminal$5000</ID>
+    <ID>MagicNumber:NativeLocalTerminal.kt$NativeLocalTerminal$65_536</ID>
+    <ID>MagicNumber:NativeLocalTerminal.kt$NativeLocalTerminal.Companion$19</ID>
+    <ID>MagicNumber:NativeLocalTerminal.kt$NativeLocalTerminal.Held$1024</ID>
+    <ID>MagicNumber:NativeLocalTerminal.kt$NativeLocalTerminal.Held$512</ID>
+    <ID>MagicNumber:NativeLocalTerminal.kt$SettledTerminalHost$80</ID>
+    <ID>MagicNumber:NativeTerminalManager.kt$NativeTerminalManager$10</ID>
+    <ID>MagicNumber:NativeTerminalManager.kt$NativeTerminalManager$16</ID>
+    <ID>MagicNumber:NativeTerminalManager.kt$NativeTerminalManager.NativeSession$14</ID>
+    <ID>MagicNumber:NativeTerminalManager.kt$NativeTerminalManager.NativeSession$200</ID>
+    <ID>MagicNumber:NativeTerminalManager.kt$NativeTerminalManager.NativeSession$2000</ID>
+    <ID>MagicNumber:NativeTerminalManager.kt$NativeTerminalManager.NativeSession$300</ID>
+    <ID>MagicNumber:NativeTerminalManager.kt$NativeTerminalManager.NativeSession$32768</ID>
+    <ID>MagicNumber:NativeTerminalManager.kt$NativeTerminalManager.NativeSession$500</ID>
+    <ID>MagicNumber:NativeTerminalManager.kt$NativeTerminalManager.NativeSession$8192</ID>
+    <ID>MagicNumber:NativeTerminalManager.kt$NativeTerminalManager.NativeSession.&lt;no name provided&gt;$100_000</ID>
+    <ID>MagicNumber:NativeTerminalManager.kt$NativeTerminalManager.NativeSession.&lt;no name provided&gt;$160</ID>
+    <ID>MagicNumber:TerminalSurfaceHost.kt$65_536</ID>
+    <ID>MagicNumber:TerminalSurfaceHost.kt$TerminalSurfaceHost$16</ID>
+    <ID>MagicNumber:TerminalSurfaceHost.kt$TerminalSurfaceHost$60</ID>
+    <ID>MaxLineLength:build.gradle.kts$implementation("com.github.termux.termux-app:terminal-emulator:v0.118.3")</ID>
+    <ID>MemberNameEqualsClassName:AndroidRemoteTerminalRenderer.kt$AndroidRemoteTerminalRenderer.Session$private val session = TerminalSession( object : TerminalSession.ExternalIo { override fun write(bytes: ByteArray, offset: Int, count: Int) { if (!closed &amp;&amp; count in 1..65_536) onInput(bytes.copyOfRange(offset, offset + count).decodeToString()) } override fun resize(columns: Int, rows: Int, cellWidth: Int, cellHeight: Int) { if (!closed &amp;&amp; columns &gt; 0 &amp;&amp; rows &gt; 0) onResize(rows, columns) } override fun close() { closed = true } }, 2000, object : QuietSessionClient({ grid }) { override fun onTextChanged(session: TerminalSession) { val raw = redactor.redact(session.emulator?.screen?.transcriptText.orEmpty()) var start = (raw.length - 100_000).coerceAtLeast(0) if ( start &gt; 0 &amp;&amp; start &lt; raw.length &amp;&amp; raw[start].isLowSurrogate() &amp;&amp; raw[start - 1].isHighSurrogate() ) start++ text.value = raw.substring(start) grid.onScreenUpdated() } }, )</ID>
+    <ID>ReturnCount:NativeLocalTerminal.kt$NativeLocalTerminal$override fun enqueueKey(id: Int, key: TerminalKey): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:NativeLocalTerminal.kt$NativeLocalTerminal$override fun enqueueText(id: Int, text: String): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:NativeLocalTerminal.kt$NativeLocalTerminal$private fun startNow(rows: Int, cols: Int, facts: TerminalLaunch): Outcome&lt;Int&gt;</ID>
+    <ID>ReturnCount:NativeLocalTerminal.kt$NativeLocalTerminal$private suspend fun stopNow(id: Int): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:TerminalSurfaceHost.kt$TerminalSurfaceHost$fun openLink(event: MotionEvent): Boolean</ID>
+    <ID>SwallowedException:NativeTerminalManager.kt$NativeTerminalManager$error: Exception</ID>
+    <ID>TooGenericExceptionCaught:NativeTerminalManager.kt$NativeTerminalManager$error: Exception</ID>
+    <ID>TooManyFunctions:NativeLocalTerminal.kt$NativeLocalTerminal : LocalTerminalPortLocalTerminalInputPort</ID>
+    <ID>TooManyFunctions:NativeLocalTerminal.kt$QuietTerminalClient : TerminalSessionClientTerminalViewClient</ID>
+    <ID>TooManyFunctions:NativeTerminalManager.kt$QuietSessionClient : TerminalSessionClient</ID>
+    <ID>TooManyFunctions:NativeTerminalManager.kt$TerminalInputClient : TerminalViewClient</ID>
+    <ID>UnusedParameter:TerminalSurfaceHost.kt$session: TerminalSession</ID>
+    <ID>UseCheckOrError:NativeTerminalManager.kt$NativeTerminalManager$throw IllegalStateException("The terminal could not start.")</ID>
+    <ID>WildcardImport:AndroidRemoteTerminalRenderer.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

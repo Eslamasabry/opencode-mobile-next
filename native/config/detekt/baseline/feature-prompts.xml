@@ -1,0 +1,52 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:KeptPromptsScreen.kt$@Composable public fun KeptPromptsScreen(state: KeptPromptsUi, actions: KeptPromptsActions)</ID>
+    <ID>CyclomaticComplexMethod:SavedPromptsScreen.kt$@Composable private fun Issue(state: SavedPromptsUi, actions: SavedPromptsActions)</ID>
+    <ID>CyclomaticComplexMethod:ServerListsScreens.kt$@Composable public fun CommandsScreen(state: CommandsUi, actions: CommandsActions)</ID>
+    <ID>EmptyFunctionBlock:PromptsScreensTest.kt$PromptsScreensTest.Taps${}</ID>
+    <ID>LongMethod:KeptPromptsScreen.kt$@Composable public fun KeptPromptsScreen(state: KeptPromptsUi, actions: KeptPromptsActions)</ID>
+    <ID>LongMethod:SavedPromptsScreen.kt$@Composable private fun PromptRow( prompt: SavedPromptItem, busy: Boolean, busyReason: String, enabled: KitEnabled, actions: SavedPromptsActions, )</ID>
+    <ID>LongMethod:SavedPromptsScreen.kt$@Composable public fun SavedPromptsScreen(state: SavedPromptsUi, actions: SavedPromptsActions)</ID>
+    <ID>LongMethod:ServerListsScreens.kt$@Composable public fun CommandsScreen(state: CommandsUi, actions: CommandsActions)</ID>
+    <ID>MagicNumber:ConversationLists.kt$3</ID>
+    <ID>MagicNumber:ShelfSavedPrompts.kt$ShelfSavedPrompts$1000</ID>
+    <ID>MaxLineLength:ConversationLists.kt$RegistryConversationLists$is Outcome.Ok -&gt; ServerList.Shown(read.value.map { TaskRules.item(it.content, it.status, it.priority) }, server).ok()</ID>
+    <ID>MaxLineLength:SavedPromptsTest.kt$SavedPromptsTest$prefs.commit(io.github.eslamasabry.oc.engine.composer.store.PrefsEdit().putString("oc.promptStash.p1.x", "{not json"))</ID>
+    <ID>MaxLineLength:SavedPromptsTest.kt$SavedPromptsTest$shelf.stash("p1", io.github.eslamasabry.oc.engine.composer.stash.StashedPrompt(id = "9", text = "Look at this", createdAt = 1, attachments = listOf(file)))</ID>
+    <ID>MaxLineLength:SavedPromptsTest.kt$SavedPromptsTest$val file = io.github.eslamasabry.oc.core.model.PromptAttachment(mime = "text/plain", filename = "a.txt", url = "data:text/plain;base64,aGk=")</ID>
+    <ID>MaxLineLength:SavedPromptsTest.kt$SavedPromptsTest$val shelf = ShelfSavedPrompts(PromptShelf(dying, AttachmentVault(payloads), profiles, Redactor()), { Unit.ok() }, clock)</ID>
+    <ID>MaxLineLength:ServerListsTest.kt$ServerListsTest$val vm = CommandsViewModel(PromptsRoute.Commands(ref), Lists(commands = ServerList.NotOnServer("Home").ok()), inbox, nav)</ID>
+    <ID>MaxLineLength:ServerListsTest.kt$ServerListsTest$val vm = TasksViewModel(PromptsRoute.Tasks(ref), Lists(tasks = ServerList.Shown(tasks, "Home").ok()), StackNavigator(ChatRoute(ref)))</ID>
+    <ID>ReturnCount:ConversationLists.kt$RegistryConversationLists$override suspend fun commands(ref: ConversationRef): Outcome&lt;ServerList&lt;CommandItem&gt;&gt;</ID>
+    <ID>ReturnCount:ConversationLists.kt$RegistryConversationLists$override suspend fun tasks(ref: ConversationRef): Outcome&lt;ServerList&lt;TaskItem&gt;&gt;</ID>
+    <ID>ReturnCount:ConversationLists.kt$RegistryConversationLists$private fun accessors(ref: ConversationRef): Pair&lt;String, PromptsGraphAccessors&gt;?</ID>
+    <ID>ReturnCount:KeptQueuedPrompts.kt$KeptAwareSavedPrompts$override suspend fun list(profile: String): Outcome&lt;List&lt;SavedPromptItem&gt;&gt;</ID>
+    <ID>ReturnCount:SavedPromptsScreen.kt$@Composable private fun Issue(state: SavedPromptsUi, actions: SavedPromptsActions)</ID>
+    <ID>ReturnCount:SavedPromptsViewModel.kt$SavedPromptsViewModel$override fun editPrompt(id: String)</ID>
+    <ID>ReturnCount:SavedPromptsViewModel.kt$SavedPromptsViewModel$override fun insert(id: String)</ID>
+    <ID>ReturnCount:SavedPromptsViewModel.kt$SavedPromptsViewModel$override fun insertWordsOnly(id: String)</ID>
+    <ID>TooManyFunctions:KeptPromptsViewModel.kt$KeptPromptsActions</ID>
+    <ID>TooManyFunctions:KeptPromptsViewModel.kt$KeptPromptsViewModel : ViewModelKeptPromptsActions</ID>
+    <ID>TooManyFunctions:SavedPromptsUi.kt$SavedPromptsActions</ID>
+    <ID>TooManyFunctions:SavedPromptsViewModel.kt$SavedPromptsViewModel : ViewModelSavedPromptsActions</ID>
+    <ID>TopLevelPropertyNaming:SavedPromptsStore.kt$/** The shelf's capacity (Flutter `PromptShelfStore.capacity`); a saved prompt is never evicted. */ public const val SavedPromptsFull: Int = 50</ID>
+    <ID>WildcardImport:KeptPromptsScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:KeptPromptsScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:KeptPromptsScreen.kt$import io.github.eslamasabry.oc.feature.prompts.presentation.*</ID>
+    <ID>WildcardImport:KeptPromptsScreen.kt$import io.github.eslamasabry.oc.ui.kit.*</ID>
+    <ID>WildcardImport:KeptPromptsScreen.kt$import io.github.eslamasabry.oc.ui.kit.foundation.*</ID>
+    <ID>WildcardImport:KeptPromptsScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:KeptPromptsScreen.kt$import io.github.eslamasabry.oc.ui.kit.input.*</ID>
+    <ID>WildcardImport:KeptPromptsScreen.kt$import io.github.eslamasabry.oc.ui.kit.modal.*</ID>
+    <ID>WildcardImport:KeptPromptsScreen.kt$import io.github.eslamasabry.oc.ui.kit.row.*</ID>
+    <ID>WildcardImport:KeptPromptsScreen.kt$import io.github.eslamasabry.oc.ui.kit.state.*</ID>
+    <ID>WildcardImport:KeptPromptsScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:KeptPromptsViewModel.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:KeptPromptsViewModel.kt$import io.github.eslamasabry.oc.core.common.*</ID>
+    <ID>WildcardImport:KeptPromptsViewModel.kt$import io.github.eslamasabry.oc.ui.routes.*</ID>
+    <ID>WildcardImport:KeptPromptsViewModel.kt$import kotlinx.collections.immutable.*</ID>
+    <ID>WildcardImport:KeptPromptsViewModel.kt$import kotlinx.coroutines.flow.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

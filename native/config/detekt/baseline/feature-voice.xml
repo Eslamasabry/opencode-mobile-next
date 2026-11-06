@@ -1,0 +1,65 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:ComposerVoicePresenter.kt$ComposerVoicePresenter$!foreground || !mutable.value.conversation || (automatic &amp;&amp; !mutable.value.speakReplies)</ID>
+    <ID>ComplexCondition:ComposerVoicePresenter.kt$ComposerVoicePresenter$!mutable.value.conversation || !mayListen() || mutable.value.active || conversationSending</ID>
+    <ID>ComplexCondition:ComposerVoicePresenter.kt$ComposerVoicePresenter$!state.available || !state.conversationAvailable || state.active || state.conversation || field?.text()?.isNotBlank() != false || observed.requestWaiting || observed.busy || !foreground</ID>
+    <ID>ComplexCondition:ComposerVoicePresenter.kt$ComposerVoicePresenter$mutable.value.conversation &amp;&amp; mutable.value.speakingReply &amp;&amp; (snapshot.requestWaiting || !snapshot.connected)</ID>
+    <ID>ComplexCondition:ComposerVoiceSlot.kt$!state.available || (state.conversation &amp;&amp; !state.active &amp;&amp; !state.canListen)</ID>
+    <ID>ComplexCondition:VoiceConversationControls.kt$state.conversationAvailable &amp;&amp; state.available &amp;&amp; !state.conversation &amp;&amp; state.phase == MicPhase.Idle</ID>
+    <ID>ComplexCondition:VoiceSettingsScreen.kt$state.available &amp;&amp; !state.loading &amp;&amp; !state.busy &amp;&amp; state.selectedRow?.installed == false</ID>
+    <ID>CyclomaticComplexMethod:ComposerVoicePresenter.kt$ComposerVoicePresenter$private fun onDictation(s: VoiceState)</ID>
+    <ID>CyclomaticComplexMethod:ComposerVoicePresenter.kt$ComposerVoicePresenter$private fun readReply(id: String, automatic: Boolean, watch: VoiceReplyWatch? = null)</ID>
+    <ID>CyclomaticComplexMethod:ComposerVoiceSlot.kt$@Composable internal fun VoicePanel( state: ComposerVoiceUi, level: () -&gt; Float, presenter: ComposerVoicePresenter, modifier: Modifier = Modifier, fieldText: () -&gt; String = { "" }, )</ID>
+    <ID>CyclomaticComplexMethod:ReplyReaderPresenter.kt$SpeechProse$public fun of(markdown: String): String</ID>
+    <ID>CyclomaticComplexMethod:TeachingScreen.kt$@Composable private fun teachingWords(key: String): String</ID>
+    <ID>CyclomaticComplexMethod:VoiceConversationControls.kt$@Composable internal fun VoiceConversationControls( state: ComposerVoiceUi, presenter: ComposerVoicePresenter, modifier: Modifier, )</ID>
+    <ID>CyclomaticComplexMethod:VoiceSettingsScreen.kt$@Composable public fun VoiceSettingsScreen(state: VoiceSettingsUi, actions: VoiceSettingsPresenter)</ID>
+    <ID>CyclomaticComplexMethod:VoiceWords.kt$private fun problemResource(problem: MediaProblem)</ID>
+    <ID>EmptyFunctionBlock:TeachingScreenTest.kt$TeachingScreenTest.&lt;no name provided&gt;${}</ID>
+    <ID>LargeClass:ComposerVoicePresenter.kt$ComposerVoicePresenter</ID>
+    <ID>LongMethod:ComposerVoiceSlot.kt$@Composable internal fun VoicePanel( state: ComposerVoiceUi, level: () -&gt; Float, presenter: ComposerVoicePresenter, modifier: Modifier = Modifier, fieldText: () -&gt; String = { "" }, )</ID>
+    <ID>LongMethod:ComposerVoiceSlot.kt$@Composable private fun VoiceNoteView(note: VoiceNote?, presenter: ComposerVoicePresenter, modifier: Modifier)</ID>
+    <ID>LongMethod:TeachingScreen.kt$@Composable public fun TeachingScreen(state: TeachingUi, actions: TeachingActions)</ID>
+    <ID>LongMethod:VoiceConversationControls.kt$@Composable internal fun VoiceConversationControls( state: ComposerVoiceUi, presenter: ComposerVoicePresenter, modifier: Modifier, )</ID>
+    <ID>LongMethod:VoiceSettingsScreen.kt$@Composable public fun VoiceSettingsScreen(state: VoiceSettingsUi, actions: VoiceSettingsPresenter)</ID>
+    <ID>LongParameterList:VoiceViewModels.kt$ComposerVoiceViewModel$( @Assisted private val key: String, hub: VoiceHub, clock: Clock, nav: AppNavigator, private val app: AppCoroutineScope, private val conversations: VoiceConversations, teaching: VoiceTeachingHub, )</ID>
+    <ID>LoopWithTooManyJumpStatements:ReplyReaderPresenter.kt$SpeechProse$for</ID>
+    <ID>MagicNumber:VoiceSettingsScreen.kt$10</ID>
+    <ID>MagicNumber:VoiceWords.kt$1_000_000</ID>
+    <ID>MagicNumber:VoiceWords.kt$500_000</ID>
+    <ID>MagicNumber:VoiceWords.kt$60</ID>
+    <ID>MaxLineLength:ComposerVoicePresenterTest.kt$ComposerVoicePresenterTest$fun</ID>
+    <ID>MaxLineLength:ReplyReaderPresenter.kt$ReplyReaderPresenter$is Outcome.Failed -&gt; mutable.update { it.copy(reading = null, note = ReadNote.Failed(problemOf(read.failure))) }</ID>
+    <ID>MaxLineLength:ReplyReaderPresenterTest.kt$ReplyReaderPresenterTest$val markdown = "Here is how to quote code:\n\n````markdown\n```bash\nexport TOKEN=secret\n```\nstill inside\n````\n\nDone."</ID>
+    <ID>MaxLineLength:ReplyReaderSlot.kt$ReadNote.NaturalFallback -&gt; KitNotice(stringResource(Res.string.naturalVoiceFallbackNote), modifier, dismiss = dismiss)</ID>
+    <ID>MaxLineLength:ReplyReaderSlot.kt$listOf(stringResource(Res.string.readAloudConsentHeard), stringResource(Res.string.readAloudConsentEngine))</ID>
+    <ID>MaxLineLength:ReplyReaderSlot.kt$primary = KitLineAction(stringResource(Res.string.kitVoiceStopReading), presenter::stop, testTag = "read-aloud-stop")</ID>
+    <ID>MaxLineLength:VoiceFakes.kt$FakeReader$if (readResult is Outcome.Ok) state.value = ReadAloudState.Speaking(request.utteranceId, io.github.eslamasabry.oc.engine.voice.state.ReadEngine.System)</ID>
+    <ID>MaxLineLength:VoiceWords.kt$internal</ID>
+    <ID>MaxLineLength:VoiceWordsArabicTest.kt$VoiceWordsArabicTest$fun</ID>
+    <ID>ReturnCount:ComposerVoicePresenter.kt$ComposerVoicePresenter$private fun onDictation(s: VoiceState)</ID>
+    <ID>ReturnCount:ComposerVoicePresenter.kt$ComposerVoicePresenter$private fun sendConversation(words: String)</ID>
+    <ID>ReturnCount:ComposerVoicePresenter.kt$ComposerVoicePresenter$public fun readReply()</ID>
+    <ID>ReturnCount:ComposerVoicePresenter.kt$ComposerVoicePresenter$public fun speakReplies(enabled: Boolean)</ID>
+    <ID>ReturnCount:ComposerVoicePresenter.kt$ComposerVoicePresenter$public fun startConversation()</ID>
+    <ID>ReturnCount:ReplyReaderPresenter.kt$ReplyReaderPresenter$public fun read(rowKey: String, markdown: String)</ID>
+    <ID>ReturnCount:VoiceSettingsPresenter.kt$VoiceSettingsPresenter$public fun setNaturalVoice(on: Boolean)</ID>
+    <ID>TooManyFunctions:ComposerVoicePresenter.kt$ComposerVoicePresenter</ID>
+    <ID>TooManyFunctions:VoicePorts.kt$VoiceModels</ID>
+    <ID>TooManyFunctions:VoiceSettingsPresenter.kt$VoiceSettingsPresenter</ID>
+    <ID>UnusedParameter:ComposerVoicePresenter.kt$ComposerVoicePresenter$endedBy: VoiceEnd</ID>
+    <ID>UnusedPrivateMember:ComposerVoicePresenter.kt$ComposerVoicePresenter$private fun startCountdown(counted: AutoSendCountdown)</ID>
+    <ID>UnusedPrivateProperty:VoiceViewModels.kt$ComposerVoiceViewModel$@Assisted private val key: String</ID>
+    <ID>WildcardImport:TeachingScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:TeachingScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:TeachingScreenTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:TeachingScreenTest.kt$import io.github.eslamasabry.oc.engine.settings.teaching.*</ID>
+    <ID>WildcardImport:TeachingScreenTest.kt$import io.github.eslamasabry.oc.feature.voice.presentation.*</ID>
+    <ID>WildcardImport:VoiceConversationControls.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:VoiceSettingsScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:VoiceSettingsScreenTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:VoiceSettingsScreenTest.kt$import io.github.eslamasabry.oc.feature.voice.presentation.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

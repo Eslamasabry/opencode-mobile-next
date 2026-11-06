@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:WebSourceSelection.kt$WebSourceSelection.Companion$(':' in authority &amp;&amp; (port.isEmpty() || port.any { !it.isDigit() })) || !publicDnsHost(host)</ID>
+    <ID>CyclomaticComplexMethod:WebSourceSelection.kt$WebSourceSelection.Companion$public fun of(title: String, url: String, excerpt: String? = null): Built</ID>
+    <ID>MagicNumber:WebSourceSelection.kt$WebSourceSelection.Companion$253</ID>
+    <ID>MagicNumber:WebSourceSelection.kt$WebSourceSelection.Companion$3</ID>
+    <ID>MatchingDeclarationName:WorktreeInspection.kt$WorktreeScope</ID>
+    <ID>MaxLineLength:Catalog.kt$McpResourceInfo</ID>
+    <ID>MaxLineLength:MessageErrors.kt$"providerauth" in key || "needsauth" in key || "unauthorized" in key || "authentication" in key -&gt; MessageErrorKind.ProviderAuth</ID>
+    <ID>MaxLineLength:Requests.kt$PendingQuestion</ID>
+    <ID>MaxLineLength:Sessions.kt$NewSession$public data</ID>
+    <ID>MaxLineLength:Sessions.kt$SessionRetryState$public data</ID>
+    <ID>MaxLineLength:Stream.kt$NetworkStatus$/** Plan 04 §6.4. Android: :android:platform ports NetworkMonitor.kt (B-ANDR-037); desktop binds [UnknownNetworkStatus]. */</ID>
+    <ID>MaxLineLength:Transcript.kt$MessageErrorKind$public enum</ID>
+    <ID>MaxLineLength:Transcript.kt$PartType</ID>
+    <ID>ReturnCount:MessageErrors.kt$public fun refineMessageErrorKind(kind: MessageErrorKind, text: String?): MessageErrorKind</ID>
+    <ID>ReturnCount:WebSourceSelection.kt$WebSourceSelection.Companion$private fun publicDnsHost(host: String): Boolean</ID>
+    <ID>ReturnCount:WebSourceSelection.kt$WebSourceSelection.Companion$public fun of(title: String, url: String, excerpt: String? = null): Built</ID>
+  </CurrentIssues>
+</SmellBaseline>

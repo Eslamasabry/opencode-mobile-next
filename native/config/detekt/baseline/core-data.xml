@@ -1,0 +1,101 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$c.isLetterOrDigit() || c == '-' || c == '_' || c == '.' || c == ':'</ID>
+    <ID>CyclomaticComplexMethod:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$private fun readStartTag(): Token.Start</ID>
+    <ID>CyclomaticComplexMethod:ProfileKeyRule.kt$ProfileKeyRule$public fun scopedKeys(profileId: String, keys: Collection&lt;String&gt;, knownIds: Set&lt;String&gt;): Set&lt;String&gt;</ID>
+    <ID>LoopWithTooManyJumpStatements:PrefsKeyValueStore.kt$PrefsKeyValueStore$for</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$ByteSink$8</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec.Companion$0xFF</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec.Companion$10</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec.Companion$16</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec.Companion$3</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec.Companion$4</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec.Companion$5</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec.Companion$6</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec.Companion$8</ID>
+    <ID>MagicNumber:ProfileKeyRule.kt$ProfileKeyRule$3</ID>
+    <ID>MatchingDeclarationName:JvmSupport.kt$Fixtures</ID>
+    <ID>MaxLineLength:Access.kt$internal</ID>
+    <ID>MaxLineLength:AdoptedFixtureTest.kt$AdoptedFixtureTest$assertTrue(store.keys("oc.").all { store.get(it) !is PrefValue.Undecodable }, "the fixture has no unreadable value")</ID>
+    <ID>MaxLineLength:AdoptedFixtureTest.kt$AdoptedFixtureTest$fun</ID>
+    <ID>MaxLineLength:AdoptedFixtureTest.kt$AdoptedFixtureTest$val jsonLists = raw.filterValues { it is RawPref.Str &amp;&amp; it.value.startsWith(FlutterPrefsCodec.JSON_LIST_PREFIX) }</ID>
+    <ID>MaxLineLength:AdoptedFixtureTest.kt$AdoptedFixtureTest$val restarted = storeOver(FakeBackend(backend.persisted()), StandardTestDispatcher(testScheduler), codec = jvmCodec)</ID>
+    <ID>MaxLineLength:AeadSecretStore.kt$AeadSecretStore$withContext(io) { lock.withLock { attempt(::secretFailure) { entries.names().filterTo(LinkedHashSet()) { it.startsWith(prefix) } } } }</ID>
+    <ID>MaxLineLength:AeadSecretStoreTest.kt$AeadSecretStoreTest$fun</ID>
+    <ID>MaxLineLength:AeadSecretStoreTest.kt$AeadSecretStoreTest$val afterRestart = AeadSecretStore(entries.restarted(), FakeAead(), Redactor(), StandardTestDispatcher(testScheduler))</ID>
+    <ID>MaxLineLength:AndroidDataStores.kt$AndroidDataStores$public</ID>
+    <ID>MaxLineLength:AndroidPrefsXml.kt$AndroidPrefsXml$if (bytes.isEmpty()) return PrefsXmlRead(LinkedHashMap(), AndroidLoad.LoadsEmpty, listOf(XmlProblem.EmptyFile), 0)</ID>
+    <ID>MaxLineLength:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$if (semi &lt; 0 || semi - i &gt; 12) throw Fatal(if (semi &lt; 0) XmlProblem.Truncated else XmlProblem.UnknownEntity, start)</ID>
+    <ID>MaxLineLength:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$is Token.End -&gt; if (t.name == "string") return sb.toString() else throw Fatal(XmlProblem.Malformed, t.offset)</ID>
+    <ID>MaxLineLength:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$is Token.Text -&gt; if (t.text.isBlank()) nextStartOrFail() else throw Fatal(XmlProblem.NoMapRoot, t.offset)</ID>
+    <ID>MaxLineLength:AndroidPrefsXml.kt$AndroidPrefsXml.Token$Start : Token</ID>
+    <ID>MaxLineLength:ConcurrencyTest.kt$ConcurrencyTest$fun</ID>
+    <ID>MaxLineLength:DefaultProfileScope.kt$DefaultProfileScope$is Outcome.Ok -&gt; found.value.filterTo(names) { it == prefix + profileId.raw || it.startsWith(prefix + profileId.raw + ".") }</ID>
+    <ID>MaxLineLength:DefaultProfileScope.kt$DefaultProfileScope$require(shape.prefix.startsWith("oc.") || shape.scope == KeyScope.Other) { "keys start with oc. (plan 05 §3.1)" }</ID>
+    <ID>MaxLineLength:FlutterPrefsCodec.kt$FlutterPrefsCodec$/** Decode one raw value the way `LegacySharedPreferencesPlugin.transformPref` + the Dart side do, without writing. */</ID>
+    <ID>MaxLineLength:FlutterPrefsCodec.kt$FlutterPrefsCodec$public</ID>
+    <ID>MaxLineLength:FlutterPrefsCodec.kt$FlutterPrefsCodec$val parsed = DartJson.decodeOrNull(json) as? List&lt;*&gt; ?: return PrefValue.Undecodable(UndecodableKind.BadJsonList)</ID>
+    <ID>MaxLineLength:FlutterPrefsCodecTest.kt$FlutterPrefsCodecTest$assertEquals(PrefValue.StrList(listOf("x", "مرحبا", "🚀")), value(RawPref.Str("$JSON_LIST_PREFIX[\"x\",\"مرحبا\",\"\\ud83d\\ude80\"]")))</ID>
+    <ID>MaxLineLength:FlutterPrefsCodecTest.kt$FlutterPrefsCodecTest$assertEquals(PrefValue.Undecodable(UndecodableKind.BadBigInteger), value(RawPref.Str(BIG_INTEGER_PREFIX + "zzzzzzzzzzzzzzzz")))</ID>
+    <ID>MaxLineLength:FlutterPrefsCodecTest.kt$FlutterPrefsCodecTest$assertEquals(PrefValue.Undecodable(UndecodableKind.BadJavaList), c.decode(RawPref.Str(LIST_PREFIX + "A")).value, "a lone sextet")</ID>
+    <ID>MaxLineLength:FlutterPrefsCodecTest.kt$FlutterPrefsCodecTest$assertEquals(PrefValue.Undecodable(UndecodableKind.BadJavaList), codec.decode(RawPref.Str(LIST_PREFIX + "rO0A")).value)</ID>
+    <ID>MaxLineLength:FlutterPrefsCodecTest.kt$FlutterPrefsCodecTest$assertEquals(PrefValue.Undecodable(UndecodableKind.BadJsonList), value(RawPref.Str("$JSON_LIST_PREFIX[1,\"a\"]")))</ID>
+    <ID>MaxLineLength:FlutterPrefsCodecTest.kt$FlutterPrefsCodecTest$assertEquals(PrefValue.Undecodable(UndecodableKind.BadJsonList), value(RawPref.Str("${JSON_LIST_PREFIX}not json")))</ID>
+    <ID>MaxLineLength:FlutterPrefsCodecTest.kt$FlutterPrefsCodecTest$assertEquals(PrefValue.Undecodable(UndecodableKind.UnknownType), value(RawPref.Other("int-array", "&lt;int-array/&gt;")))</ID>
+    <ID>MaxLineLength:FlutterPrefsStoreAndroidTest.kt$FlutterPrefsStoreAndroidTest$// A new process (fresh SharedPreferences instance is not possible in one process): re-read the file as Android would.</ID>
+    <ID>MaxLineLength:FlutterPrefsStoreAndroidTest.kt$FlutterPrefsStoreAndroidTest$assertEquals("&lt;b&gt;&amp;\"quoted\"&lt;/b&gt;\tTab\nLine\u0001\u001b[0m مرحبا 🚀", store.string("oc.draft.note.ses_edge.1735000000000001"))</ID>
+    <ID>MaxLineLength:FlutterPrefsStoreAndroidTest.kt$FlutterPrefsStoreAndroidTest$assertIs&lt;PrefValue.StrList&gt;(store.get("oc.chatNoticesSeen.1735000000000002"), "legacy Java list via ObjectInputStream")</ID>
+    <ID>MaxLineLength:FlutterPrefsStoreAndroidTest.kt$FlutterPrefsStoreAndroidTest$assertTrue("name=\"flutter.oc.native.listProbe\"&gt;VGhpcyBpcyB0aGUgcHJlZml4IGZvciBhIGxpc3Qu![&amp;quot;a&amp;quot;,&amp;quot;b&amp;quot;]&lt;" in xml)</ID>
+    <ID>MaxLineLength:FlutterPrefsStoreAndroidTest.kt$FlutterPrefsStoreAndroidTest$private val fixture = File(repoRoot, "native/tools/flutter-migration-readers/src/test/resources/fixtures/synthetic-v1/shared_prefs/FlutterSharedPreferences.xml")</ID>
+    <ID>MaxLineLength:FlutterPrefsStoreAndroidTest.kt$FlutterPrefsStoreAndroidTest$val store = AeadSecretStore(entries, FakeAead(), io.github.eslamasabry.oc.core.security.Redactor(), StandardTestDispatcher(testScheduler))</ID>
+    <ID>MaxLineLength:FlutterPrefsStoreAndroidTest.kt$FlutterPrefsStoreAndroidTest$val store = AndroidDataStores.flutterPrefs(app, StateMigrationGate.alwaysOpen(), StandardTestDispatcher(testScheduler))</ID>
+    <ID>MaxLineLength:KeyValueStore.kt$KeyValueStore$*</ID>
+    <ID>MaxLineLength:KeyValueStore.kt$KeyValueStore$public suspend</ID>
+    <ID>MaxLineLength:ObjectStreamJavaListDecoder.kt$ObjectStreamJavaListDecoder.AllowListObjectInputStream$if (name != null &amp;&amp; name !in FlutterPrefsCodec.JAVA_LIST_ALLOWED_CLASSES) throw ClassNotFoundException("not allowed")</ID>
+    <ID>MaxLineLength:PrefsKeyValueStore.kt$PrefsKeyValueStore$*</ID>
+    <ID>MaxLineLength:PrefsKeyValueStore.kt$PrefsKeyValueStore$if (result is Outcome.Ok &amp;&amp; result.value &amp;&amp; ops.changes.isNotEmpty()) mutableChanges.emit(ops.changes.keys)</ID>
+    <ID>MaxLineLength:PrefsKeyValueStore.kt$PrefsKeyValueStore$override suspend</ID>
+    <ID>MaxLineLength:PrefsKeyValueStore.kt$PrefsKeyValueStore$private fun keysOf(prefix: String): Set&lt;String&gt;</ID>
+    <ID>MaxLineLength:PrefsKeyValueStore.kt$PrefsKeyValueStore$val matches = if (expected == null) current == null else (current as? PrefValue.Str)?.value == expected</ID>
+    <ID>MaxLineLength:PrefsKeyValueStore.kt$PrefsKeyValueStore.Recorder$if (FlutterPrefsCodec.clashes(value)) refusal = clash() else changes[checked(key)] = codec.encodeString(value)</ID>
+    <ID>MaxLineLength:PrefsKeyValueStoreTest.kt$PrefsKeyValueStoreTest$assertEquals(RawPref.Str("kept"), backend.persisted()["unprefixed.kotlin.key"], "untouched keys stay as they are")</ID>
+    <ID>MaxLineLength:PrefsKeyValueStoreTest.kt$PrefsKeyValueStoreTest$assertEquals(RawPref.Str(FlutterPrefsCodec.JSON_LIST_PREFIX + "[\"a\\\"b\",\"مرحبا\"]"), disk["flutter.oc.chatNoticesSeen.1"])</ID>
+    <ID>MaxLineLength:PrefsKeyValueStoreTest.kt$PrefsKeyValueStoreTest$fun</ID>
+    <ID>MaxLineLength:ProfileScopeTest.kt$ProfileScopeTest$assertEquals(emptySet(), ProfileKeyRule.scopedKeys(doomed, listOf("oc.draft.note.ses_$doomed.$keeper"), setOf(keeper)))</ID>
+    <ID>MaxLineLength:ProfileScopeTest.kt$ProfileScopeTest$assertEquals(setOf("oc.model.a"), ProfileKeyRule.scopedKeys("a", listOf("oc.model.a", "oc.model.a.agents"), setOf("a.agents")))</ID>
+    <ID>MaxLineLength:ProfileScopeTest.kt$ProfileScopeTest$assertTrue(left.none { it != "oc.phraseChips.$doomed" &amp;&amp; it in ProfileKeyRule.scopedKeys(doomed, keys, setOf(keeper)) })</ID>
+    <ID>MaxLineLength:ProfileScopeTest.kt$ProfileScopeTest$scope.register(KeyShape("oc.native.flutterReadable", KeyScope.App, PrefType.Bool, ":android:migration", "R1 guard"))</ID>
+    <ID>MaxLineLength:ProfileScopeTest.kt$ProfileScopeTest$val scope = DefaultProfileScope(storeOver(FakeBackend(), StandardTestDispatcher()), MapSecretStore(), WriterLane("app"))</ID>
+    <ID>MaxLineLength:RawPref.kt$RawPref.Companion$*</ID>
+    <ID>MaxLineLength:RawPref.kt$RawPref.Companion$if (value.all { it is String }) StrSet(value.filterIsInstance&lt;String&gt;().toCollection(LinkedHashSet())) else null</ID>
+    <ID>MaxLineLength:SoftwareAeadSecretStoreTest.kt$SoftwareAead$val c = Cipher.getInstance("AES/GCM/NoPadding").apply { init(Cipher.DECRYPT_MODE, key, GCMParameterSpec(128, iv)) }</ID>
+    <ID>MaxLineLength:SoftwareAeadSecretStoreTest.kt$SoftwareAead$val c = Cipher.getInstance("AES/GCM/NoPadding").apply { init(Cipher.ENCRYPT_MODE, key, GCMParameterSpec(128, iv)) }</ID>
+    <ID>MaxLineLength:SoftwareAeadSecretStoreTest.kt$SoftwareAeadSecretStoreTest$AeadSecretStore(entries, SoftwareAead(), Redactor(), StandardTestDispatcher(testScheduler)).write("pw.1", "fixture-pass-1")</ID>
+    <ID>MaxLineLength:SoftwareAeadSecretStoreTest.kt$SoftwareAeadSecretStoreTest$fun</ID>
+    <ID>MaxLineLength:TestSupport.kt$FakeAead$check(tag(aad, plain).contentEquals(ciphertextAndTag.copyOfRange(body.size, ciphertextAndTag.size))) { "bad tag" }</ID>
+    <ID>MaxLineLength:TestSupport.kt$MapSecretStore$override suspend fun names(prefix: String): Outcome&lt;Set&lt;String&gt;&gt;</ID>
+    <ID>NestedBlockDepth:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$private fun readStartTag(): Token.Start</ID>
+    <ID>ReturnCount:AndroidPrefsXml.kt$AndroidPrefsXml$public fun parse(bytes: ByteArray): PrefsXmlRead</ID>
+    <ID>ReturnCount:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$private fun next(): Token</ID>
+    <ID>ReturnCount:FlutterPrefsCodec.kt$FlutterPrefsCodec$private fun decodeJsonList(json: String): PrefValue</ID>
+    <ID>ReturnCount:FlutterPrefsCodec.kt$FlutterPrefsCodec$public fun decodeJavaList(base64: String): PrefValue</ID>
+    <ID>ReturnCount:FlutterPrefsCodec.kt$FlutterPrefsCodec.Companion$@Suppress("CyclomaticComplexMethod", "NestedBlockDepth") public fun decodeAndroidBase64(text: String): ByteArray?</ID>
+    <ID>ReturnCount:ProfileKeyRule.kt$ProfileKeyRule$fun owns(key: String): Boolean</ID>
+    <ID>SwallowedException:AeadSecretStore.kt$AeadSecretStore$@Suppress("TooGenericExceptionCaught") e: Exception</ID>
+    <ID>SwallowedException:AeadSecretStore.kt$AeadSecretStore$e: Exception</ID>
+    <ID>SwallowedException:AndroidPrefsXml.kt$AndroidPrefsXml$e: CharacterCodingException</ID>
+    <ID>SwallowedException:JvmSupport.kt$e: Exception</ID>
+    <ID>SwallowedException:ObjectStreamJavaListDecoder.kt$ObjectStreamJavaListDecoder$@Suppress("TooGenericExceptionCaught") e: Exception</ID>
+    <ID>ThrowsCount:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$private fun expectEnd(name: String)</ID>
+    <ID>ThrowsCount:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$private fun next(): Token</ID>
+    <ID>ThrowsCount:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$private fun readDocument()</ID>
+    <ID>ThrowsCount:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$private fun readSet(): LinkedHashSet&lt;String&gt;</ID>
+    <ID>ThrowsCount:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$private fun readStartTag(): Token.Start</ID>
+    <ID>ThrowsCount:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$private fun readStringText(): String</ID>
+    <ID>TooManyFunctions:FlutterPrefsCodec.kt$FlutterPrefsCodec</ID>
+    <ID>TooManyFunctions:PrefsKeyValueStore.kt$PrefsKeyValueStore : KeyValueStore</ID>
+    <ID>UseCheckOrError:TestSupport.kt$FakeBackend$throw IllegalStateException("disk full: secret-value-must-not-leak")</ID>
+  </CurrentIssues>
+</SmellBaseline>

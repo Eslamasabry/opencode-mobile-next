@@ -1,0 +1,602 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:DiffMarkdown.kt$!table &amp;&amp; !quote &amp;&amp; boundary.containsMatchIn(next.line.text) &amp;&amp; !(list &amp;&amp; Regex("^\\s*([-*+]|\\d{1,9}[.)])\\s") .containsMatchIn(next.line.text))</ID>
+    <ID>ComplexCondition:DiffMarkdown.kt$table &amp;&amp; !text.startsWith('|') || quote &amp;&amp; !text.startsWith('&gt;')</ID>
+    <ID>ComplexCondition:DiffModel.kt$DiffModel$!hasHunk &amp;&amp; git == null &amp;&amp; minus == null &amp;&amp; plus == null</ID>
+    <ID>ComplexCondition:KitPictureTiles.kt$confirmed &amp;&amp; path != null &amp;&amp; read != null &amp;&amp; DRAWABLE.containsMatchIn(path)</ID>
+    <ID>ComplexCondition:ReplyStreamFrameBenchmark.kt$ReplyStreamFrameBenchmark$(dirty &amp;&amp; now - lastPublish &gt;= 50) || (ended &amp;&amp; dirty)</ID>
+    <ID>CyclomaticComplexMethod:CodeText.kt$public fun codeBreakable(line: String): String</ID>
+    <ID>CyclomaticComplexMethod:CodeText.kt$public fun commandLineStarts(lines: List&lt;String&gt;): List&lt;Boolean&gt;</ID>
+    <ID>CyclomaticComplexMethod:ComposerGlow.kt$@Composable public fun KitComposerGlow( active: Boolean, modifier: Modifier = Modifier, choice: KitGlowChoice = KitGlowChoice.Classic, corner: Dp = KitComposerGlowDefaults.Corner, content: @Composable () -&gt; Unit, )</ID>
+    <ID>CyclomaticComplexMethod:DiffMarkdown.kt$internal fun diffDisplay( rows: List&lt;DiffRow&gt;, formatted: Boolean, split: Boolean, fenceState: Map&lt;DiffLine, Boolean&gt;, ): List&lt;DiffDisplay&gt;</ID>
+    <ID>CyclomaticComplexMethod:DiffModel.kt$DiffModel$private fun chunkFile(chunk: List&lt;String&gt;, defaultPath: String): DiffFile?</ID>
+    <ID>CyclomaticComplexMethod:DiffModel.kt$DiffModel$private fun lineDiff(a: List&lt;String&gt;, b: List&lt;String&gt;): List&lt;DiffLine&gt;</ID>
+    <ID>CyclomaticComplexMethod:DiffModel.kt$DiffModel$public fun displayRows(file: DiffFile, maxLines: Int? = null): DiffRows</ID>
+    <ID>CyclomaticComplexMethod:DiffModel.kt$DiffModel$public fun parseFilePatch( path: String, patch: String, status: DiffFileStatus? = null, oldPath: String? = null, ): DiffFile</ID>
+    <ID>CyclomaticComplexMethod:DiffModel.kt$DiffModel$public fun parsePatch(patch: String, defaultPath: String = ""): ImmutableList&lt;DiffFile&gt;</ID>
+    <ID>CyclomaticComplexMethod:InlineAnnotated.kt$public fun inlineAnnotated( inlines: KitInlines, style: KitMdInlineStyle, sink: KitMdLinkSink, confirmed: (String) -&gt; Boolean = { false }, ): AnnotatedString</ID>
+    <ID>CyclomaticComplexMethod:KitAgentCard.kt$@Composable public fun KitAgentCard( eyebrow: String, title: String, mode: KitAgentCardMode, modifier: Modifier = Modifier, body: ImmutableList&lt;KitCardNode&gt; = persistentListOf(), onLink: (String) -&gt; Unit = {}, ask: (@Composable () -&gt; Unit)? = null, notice: String? = null, noticeTone: StatusTone = StatusTone.Neutral, receiptLabel: String? = null, undoLabel: String? = null, onUndo: (() -&gt; Unit)? = null, passedOverLabel: String? = null, expandLabel: String? = null, details: String? = null, detailsLabel: String? = null, announcement: String? = null, )</ID>
+    <ID>CyclomaticComplexMethod:KitAgentCard.kt$@Composable public fun KitCardBody( nodes: ImmutableList&lt;KitCardNode&gt;, onLink: (String) -&gt; Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>CyclomaticComplexMethod:KitCodeBlock.kt$@Composable public fun KitCodeBlock( source: String, kind: KitCodeKind, modifier: Modifier = Modifier, language: CodeLanguage = CodeLanguage.Plain, open: Boolean = false, maxLines: Int = TRANSCRIPT_MAX_LINES, wrap: Boolean = false, copyLabel: String? = null, onCopy: ((String) -&gt; Unit)? = null, /** Shown on Copy for a moment after a tap ("Copied"); null keeps [copyLabel]. */ copiedLabel: String? = null, moreLabel: ((hiddenLines: Int) -&gt; String)? = null, onMore: (() -&gt; Unit)? = null, )</ID>
+    <ID>CyclomaticComplexMethod:KitDiffView.kt$@Composable public fun KitDiffView( file: DiffFile, maxLines: Int = 12, hunkLabel: (oldStart: Int, oldEnd: Int, newStart: Int, newEnd: Int) -&gt; String, gapLabel: (hidden: Int) -&gt; String, modifier: Modifier = Modifier, onComment: ((String) -&gt; Unit)? = null, onAddToPrompt: ((String) -&gt; Unit)? = null, )</ID>
+    <ID>CyclomaticComplexMethod:KitMarkdown.kt$@Composable private fun MdText( key: String, inlines: KitInlines, style: TextStyle, actions: KitMarkdownActions, modifier: Modifier, live: Boolean, caret: Boolean, reveal: KitMdReveal?, )</ID>
+    <ID>CyclomaticComplexMethod:KitMarkdown.kt$@Composable public fun KitMarkdownTable( block: KitMdBlock.Table, actions: KitMarkdownActions, modifier: Modifier = Modifier, )</ID>
+    <ID>CyclomaticComplexMethod:KitMdSource.kt$KitMdSource$private fun inlines(i: Inlines): KitInlines</ID>
+    <ID>CyclomaticComplexMethod:KitMicButton.kt$@Composable public fun KitMicButton( label: String, onTap: () -&gt; Unit, onHoldStart: () -&gt; Unit, onHoldEnd: (cancelled: Boolean) -&gt; Unit, onArmedChanged: (armed: Boolean) -&gt; Unit, modifier: Modifier = Modifier, active: Boolean = false, stateLabel: String? = null, holdLabel: String? = null, enabled: Boolean = true, disabledReason: String? = null, prominent: Boolean = false, )</ID>
+    <ID>CyclomaticComplexMethod:KitPictureTiles.kt$@Composable public fun KitPictureTiles( block: KitMdBlock.Pictures, actions: KitMarkdownActions, modifier: Modifier = Modifier, )</ID>
+    <ID>CyclomaticComplexMethod:KitRequestTargets.kt$@Composable public fun KitRequestTargets( targets: List&lt;KitRequestTarget&gt;, modifier: Modifier = Modifier, copyLabel: String? = null, copiedLabel: String? = null, )</ID>
+    <ID>CyclomaticComplexMethod:KitStartingConversation.kt$@Composable public fun KitStartingConversation( text: String, project: String, model: String, status: String, backLabel: String, onBack: () -&gt; Unit, phase: KitStartingPhase = KitStartingPhase.Sending, agent: String? = null, reason: String? = null, details: Redacted? = null, detailsLabel: String? = null, copyLabel: String? = null, retryLabel: String? = null, onRetry: (() -&gt; Unit)? = null, editLabel: String? = null, onEdit: (() -&gt; Unit)? = null, reviewLabel: String? = null, onReview: (() -&gt; Unit)? = null, )</ID>
+    <ID>CyclomaticComplexMethod:KitToolNode.kt$@Composable internal fun KitToolNode(view: KitToolView, size: Dp, modifier: Modifier = Modifier)</ID>
+    <ID>CyclomaticComplexMethod:KitVoicePill.kt$@Composable public fun KitVoicePill( title: String, modifier: Modifier = Modifier, words: String? = null, elapsed: String? = null, level: (() -&gt; Float)? = null, attention: Boolean = false, primary: KitLineAction? = null, secondary: KitLineAction? = null, /** A third choice between Cancel and the main one (tap dictation: "Send" = insert and send). */ extra: KitLineAction? = null, )</ID>
+    <ID>CyclomaticComplexMethod:KitWorkLine.kt$@Composable public fun KitWorkLine( label: String, stateWords: String?, state: KitWorkState, expanded: Boolean, onToggle: (Boolean) -&gt; Unit, modifier: Modifier = Modifier, earlier: KitLineAction? = null, steps: @Composable ColumnScope.() -&gt; Unit, )</ID>
+    <ID>CyclomaticComplexMethod:StreamFeed.kt$StreamFeed$fun rows(text: String, ended: Boolean = false): List&lt;FeedRow&gt;</ID>
+    <ID>CyclomaticComplexMethod:SyntaxMpCodeTokenizer.kt$SyntaxMpCodeTokenizer.Companion$fun roleOf(role: SyntaxRole): CodeRole</ID>
+    <ID>CyclomaticComplexMethod:TestMarkdown.kt$TestStreamingMarkdown.Companion$fun parseInlines(src: String): KitInlines</ID>
+    <ID>LongMethod:CodeOverflow.kt$@Composable internal fun CodeOverflow( fill: Color, ink: Color, modifier: Modifier = Modifier, content: @Composable () -&gt; Unit, )</ID>
+    <ID>LongMethod:CodeText.kt$public fun commandLineStarts(lines: List&lt;String&gt;): List&lt;Boolean&gt;</ID>
+    <ID>LongMethod:DiffMarkdown.kt$internal fun diffDisplay( rows: List&lt;DiffRow&gt;, formatted: Boolean, split: Boolean, fenceState: Map&lt;DiffLine, Boolean&gt;, ): List&lt;DiffDisplay&gt;</ID>
+    <ID>LongMethod:InlineAnnotated.kt$public fun inlineAnnotated( inlines: KitInlines, style: KitMdInlineStyle, sink: KitMdLinkSink, confirmed: (String) -&gt; Boolean = { false }, ): AnnotatedString</ID>
+    <ID>LongMethod:KitAgentCard.kt$@Composable public fun KitAgentCard( eyebrow: String, title: String, mode: KitAgentCardMode, modifier: Modifier = Modifier, body: ImmutableList&lt;KitCardNode&gt; = persistentListOf(), onLink: (String) -&gt; Unit = {}, ask: (@Composable () -&gt; Unit)? = null, notice: String? = null, noticeTone: StatusTone = StatusTone.Neutral, receiptLabel: String? = null, undoLabel: String? = null, onUndo: (() -&gt; Unit)? = null, passedOverLabel: String? = null, expandLabel: String? = null, details: String? = null, detailsLabel: String? = null, announcement: String? = null, )</ID>
+    <ID>LongMethod:KitAgentCard.kt$@Composable public fun KitCardBody( nodes: ImmutableList&lt;KitCardNode&gt;, onLink: (String) -&gt; Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>LongMethod:KitCodeBlock.kt$@Composable public fun KitCodeBlock( source: String, kind: KitCodeKind, modifier: Modifier = Modifier, language: CodeLanguage = CodeLanguage.Plain, open: Boolean = false, maxLines: Int = TRANSCRIPT_MAX_LINES, wrap: Boolean = false, copyLabel: String? = null, onCopy: ((String) -&gt; Unit)? = null, /** Shown on Copy for a moment after a tap ("Copied"); null keeps [copyLabel]. */ copiedLabel: String? = null, moreLabel: ((hiddenLines: Int) -&gt; String)? = null, onMore: (() -&gt; Unit)? = null, )</ID>
+    <ID>LongMethod:KitCommandBox.kt$@Composable public fun KitCommandBox( command: String, output: String?, maxLines: Int = KIT_COMMAND_OUTPUT_LINES, moreLabel: String, onMore: () -&gt; Unit, exitLabel: String?, modifier: Modifier = Modifier, )</ID>
+    <ID>LongMethod:KitComposerBox.kt$@Composable public fun KitComposerSend( label: String, onClick: () -&gt; Unit, modifier: Modifier = Modifier, enabled: KitEnabled = KitEnabled.Enabled, working: Boolean = false, /** Hold Send (Flutter send later / repeat). Hidden gesture: the caller gives it a visible twin. */ onLongClick: (() -&gt; Unit)? = null, onLongClickLabel: String? = null, )</ID>
+    <ID>LongMethod:KitComposerBox.kt$@OptIn(ExperimentalLayoutApi::class) @Composable public fun KitComposerBox( running: Boolean, field: @Composable () -&gt; Unit, modifier: Modifier = Modifier, wide: Boolean = false, leading: @Composable RowScope.() -&gt; Unit = {}, chips: @Composable RowScope.() -&gt; Unit = {}, trailing: @Composable RowScope.() -&gt; Unit = {}, stacked: Boolean = true, above: @Composable () -&gt; Unit = {}, hasLeading: Boolean = false, )</ID>
+    <ID>LongMethod:KitComposerStop.kt$@Composable public fun KitComposerStop( label: String, targetLabel: String, onStop: () -&gt; Unit, modifier: Modifier = Modifier, state: KitStopState = KitStopState.Running, armKey: Any? = Unit, workingReason: String? = null, stopAfterStep: KitStopAfterStep? = null, )</ID>
+    <ID>LongMethod:KitComposerTray.kt$@Composable public fun KitComposerTray(actions: List&lt;KitTrayAction&gt;, modifier: Modifier = Modifier)</ID>
+    <ID>LongMethod:KitDiffView.kt$@Composable public fun KitDiffView( file: DiffFile, maxLines: Int = 12, hunkLabel: (oldStart: Int, oldEnd: Int, newStart: Int, newEnd: Int) -&gt; String, gapLabel: (hidden: Int) -&gt; String, modifier: Modifier = Modifier, onComment: ((String) -&gt; Unit)? = null, onAddToPrompt: ((String) -&gt; Unit)? = null, )</ID>
+    <ID>LongMethod:KitInboxRequestRow.kt$@Composable public fun KitInboxRequestRow( title: String, place: String, openLabel: String, openActionLabel: String, onOpen: () -&gt; Unit, modifier: Modifier = Modifier, command: String? = null, allowLabel: String? = null, rejectLabel: String? = null, onAllow: (() -&gt; Unit)? = null, onReject: (() -&gt; Unit)? = null, primary: Boolean = false, enabled: KitEnabled = KitEnabled.Enabled, ifIgnored: String? = null, openEnabled: KitEnabled = enabled, )</ID>
+    <ID>LongMethod:KitMarkdown.kt$@Composable private fun MdText( key: String, inlines: KitInlines, style: TextStyle, actions: KitMarkdownActions, modifier: Modifier, live: Boolean, caret: Boolean, reveal: KitMdReveal?, )</ID>
+    <ID>LongMethod:KitMarkdown.kt$@Composable public fun KitMarkdownTable( block: KitMdBlock.Table, actions: KitMarkdownActions, modifier: Modifier = Modifier, )</ID>
+    <ID>LongMethod:KitMicButton.kt$@Composable public fun KitMicButton( label: String, onTap: () -&gt; Unit, onHoldStart: () -&gt; Unit, onHoldEnd: (cancelled: Boolean) -&gt; Unit, onArmedChanged: (armed: Boolean) -&gt; Unit, modifier: Modifier = Modifier, active: Boolean = false, stateLabel: String? = null, holdLabel: String? = null, enabled: Boolean = true, disabledReason: String? = null, prominent: Boolean = false, )</ID>
+    <ID>LongMethod:KitPictureTiles.kt$@Composable public fun KitPictureTiles( block: KitMdBlock.Pictures, actions: KitMarkdownActions, modifier: Modifier = Modifier, )</ID>
+    <ID>LongMethod:KitPictureView.kt$@Composable private fun ZoomableImage(bitmap: ImageBitmap, description: String, modifier: Modifier)</ID>
+    <ID>LongMethod:KitStartingConversation.kt$@Composable public fun KitStartingConversation( text: String, project: String, model: String, status: String, backLabel: String, onBack: () -&gt; Unit, phase: KitStartingPhase = KitStartingPhase.Sending, agent: String? = null, reason: String? = null, details: Redacted? = null, detailsLabel: String? = null, copyLabel: String? = null, retryLabel: String? = null, onRetry: (() -&gt; Unit)? = null, editLabel: String? = null, onEdit: (() -&gt; Unit)? = null, reviewLabel: String? = null, onReview: (() -&gt; Unit)? = null, )</ID>
+    <ID>LongMethod:KitToolNode.kt$@Composable internal fun KitToolNode(view: KitToolView, size: Dp, modifier: Modifier = Modifier)</ID>
+    <ID>LongMethod:KitToolRow.kt$@Composable private fun StepLine(view: KitToolView, opened: Boolean?)</ID>
+    <ID>LongMethod:KitWorkLine.kt$@Composable public fun KitWorkLine( label: String, stateWords: String?, state: KitWorkState, expanded: Boolean, onToggle: (Boolean) -&gt; Unit, modifier: Modifier = Modifier, earlier: KitLineAction? = null, steps: @Composable ColumnScope.() -&gt; Unit, )</ID>
+    <ID>LongMethod:ReplyStreamFrameBenchmark.kt$ReplyStreamFrameBenchmark$private fun stream(name: String, chunkLines: Int): Frames</ID>
+    <ID>LongMethod:StreamFeed.kt$StreamFeed$fun rows(text: String, ended: Boolean = false): List&lt;FeedRow&gt;</ID>
+    <ID>LongMethod:TranscriptList.kt$@Composable public fun KitTranscriptList( state: TranscriptListState, newestKey: String?, jumpLabel: String, motion: KitMotionLevel, modifier: Modifier = Modifier, contentPadding: PaddingValues = PaddingValues(vertical = Space.S4.dp), content: LazyListScope.() -&gt; Unit, )</ID>
+    <ID>LongParameterList:ChatScenes.kt$ChatSceneWords$( val reply: String, val copy: String, val more: (Int) -&gt; String, val toolRead: String, val toolRan: String, val toolEdit: String, val done: String, val stopped: String, val running: String, val seconds: (String) -&gt; String, val showAll: String, val lines: (Int, Int) -&gt; String, val unchanged: (Int) -&gt; String, val exit: String, val askTitle: String, val askSummary: String, val allowOnce: String, val always: String, val deny: String, )</ID>
+    <ID>LongParameterList:ComposerMotionGoldensTest.kt$ComposerMotionGoldensTest$( level: MotionLevel = MotionLevel.Full, dark: Boolean = true, saver: Boolean = false, stillFrame: Boolean = true, localeTag: String = "en", content: @Composable () -&gt; Unit, )</ID>
+    <ID>LongParameterList:DiffCodeText.kt$( text: String, language: CodeLanguage, enabled: Boolean, modifier: Modifier, style: TextStyle, wrap: Boolean, )</ID>
+    <ID>LongParameterList:DiffModel.kt$DiffFile$( public val path: String, /** [DiffLine] and [DiffGap] entries in file order, context already folded. */ public val segments: ImmutableList&lt;DiffSegment&gt;, public val added: Int, public val removed: Int, public val status: DiffFileStatus = DiffFileStatus.Modified, public val oldPath: String? = null, /** A binary patch: no lines, the view only says so. */ public val binary: Boolean = false, )</ID>
+    <ID>LongParameterList:KitAgentCard.kt$( confirmLabel: String, cancelLabel: String, danger: Boolean, onAnswer: (Boolean) -&gt; Unit, modifier: Modifier = Modifier, blockedReason: String? = null, )</ID>
+    <ID>LongParameterList:KitAgentCard.kt$( eyebrow: String, title: String, mode: KitAgentCardMode, modifier: Modifier = Modifier, body: ImmutableList&lt;KitCardNode&gt; = persistentListOf(), onLink: (String) -&gt; Unit = {}, ask: (@Composable () -&gt; Unit)? = null, notice: String? = null, noticeTone: StatusTone = StatusTone.Neutral, receiptLabel: String? = null, undoLabel: String? = null, onUndo: (() -&gt; Unit)? = null, passedOverLabel: String? = null, expandLabel: String? = null, details: String? = null, detailsLabel: String? = null, announcement: String? = null, )</ID>
+    <ID>LongParameterList:KitAgentCard.kt$( fields: ImmutableList&lt;KitFormField&gt;, values: ImmutableMap&lt;String, KitFormValue&gt;, onChange: (String, KitFormValue) -&gt; Unit, sendLabel: String, onSend: () -&gt; Unit, note: String, modifier: Modifier = Modifier, sendBlockedReason: String? = null, blockedReason: String? = null, )</ID>
+    <ID>LongParameterList:KitAgentCard.kt$( options: ImmutableList&lt;KitFormOption&gt;, multi: Boolean, selected: Set&lt;String&gt;, onToggle: (String) -&gt; Unit, onSend: (List&lt;String&gt;) -&gt; Unit, sendLabel: String, chooseHint: String, modifier: Modifier = Modifier, blockedReason: String? = null, )</ID>
+    <ID>LongParameterList:KitAgentCard.kt$( purpose: String, countLabel: String, modifier: Modifier = Modifier, unavailable: String? = null, chooseLabel: String? = null, onChoose: (() -&gt; Unit)? = null, sendLabel: String? = null, onSend: (() -&gt; Unit)? = null, sendBlockedReason: String? = null, blockedReason: String? = null, items: ImmutableList&lt;KitCardPhotoItem&gt; = persistentListOf(), onRemove: ((String) -&gt; Unit)? = null, takeLabel: String? = null, onTake: (() -&gt; Unit)? = null, )</ID>
+    <ID>LongParameterList:KitChatHeaderParts.kt$( label: String, expanded: Boolean, items: List&lt;KitMenuItem&gt;, onOpen: () -&gt; Unit, onDismissRequest: () -&gt; Unit, modifier: Modifier = Modifier, title: String? = null, )</ID>
+    <ID>LongParameterList:KitCodeBlock.kt$( source: String, kind: KitCodeKind, modifier: Modifier = Modifier, language: CodeLanguage = CodeLanguage.Plain, open: Boolean = false, maxLines: Int = TRANSCRIPT_MAX_LINES, wrap: Boolean = false, copyLabel: String? = null, onCopy: ((String) -&gt; Unit)? = null, /** Shown on Copy for a moment after a tap ("Copied"); null keeps [copyLabel]. */ copiedLabel: String? = null, moreLabel: ((hiddenLines: Int) -&gt; String)? = null, onMore: (() -&gt; Unit)? = null, )</ID>
+    <ID>LongParameterList:KitCodeChunk.kt$( source: String, continued: Boolean, continues: Boolean, modifier: Modifier = Modifier, copyLabel: String? = null, onCopy: (() -&gt; Unit)? = null, copiedLabel: String? = null, )</ID>
+    <ID>LongParameterList:KitCommandBox.kt$( command: String, output: String?, maxLines: Int = KIT_COMMAND_OUTPUT_LINES, moreLabel: String, onMore: () -&gt; Unit, exitLabel: String?, modifier: Modifier = Modifier, )</ID>
+    <ID>LongParameterList:KitComposerBox.kt$( label: String, onClick: () -&gt; Unit, modifier: Modifier = Modifier, enabled: KitEnabled = KitEnabled.Enabled, working: Boolean = false, /** Hold Send (Flutter send later / repeat). Hidden gesture: the caller gives it a visible twin. */ onLongClick: (() -&gt; Unit)? = null, onLongClickLabel: String? = null, )</ID>
+    <ID>LongParameterList:KitComposerBox.kt$( label: String, onClick: () -&gt; Unit, modifier: Modifier = Modifier, icon: ImageVector? = null, opensPicker: Boolean = true, semanticsLabel: String? = null, /** A choice that is on (auto-approve): the accent's soft tint and accent words, same size and shape. */ active: Boolean = false, )</ID>
+    <ID>LongParameterList:KitComposerBox.kt$( running: Boolean, field: @Composable () -&gt; Unit, modifier: Modifier = Modifier, wide: Boolean = false, leading: @Composable RowScope.() -&gt; Unit = {}, chips: @Composable RowScope.() -&gt; Unit = {}, trailing: @Composable RowScope.() -&gt; Unit = {}, stacked: Boolean = true, above: @Composable () -&gt; Unit = {}, hasLeading: Boolean = false, )</ID>
+    <ID>LongParameterList:KitComposerMic.kt$( label: String, onClick: () -&gt; Unit, modifier: Modifier = Modifier, quiet: Boolean = false, onLongClick: (() -&gt; Unit)? = null, longClickLabel: String? = null, )</ID>
+    <ID>LongParameterList:KitComposerStop.kt$( label: String, targetLabel: String, onStop: () -&gt; Unit, modifier: Modifier = Modifier, state: KitStopState = KitStopState.Running, armKey: Any? = Unit, workingReason: String? = null, stopAfterStep: KitStopAfterStep? = null, )</ID>
+    <ID>LongParameterList:KitComposerTextBox.kt$( text: String, running: Boolean, modifier: Modifier = Modifier, hasLeading: Boolean = false, wide: Boolean = false, field: @Composable (stacked: Boolean) -&gt; Unit, leading: @Composable RowScope.() -&gt; Unit = {}, trailing: @Composable RowScope.() -&gt; Unit = {}, above: @Composable () -&gt; Unit = {}, allowStacking: Boolean = true, )</ID>
+    <ID>LongParameterList:KitComposerVoiceSlot.kt$KitVoiceField$( /** * Unique per conversation composer ("profile:session"); the slot keeps one voice state per key. */ public val key: String, public val text: () -&gt; String, /** * The field's selection as UTF-16 offsets, or null when there is none (the words then land at * the end). */ public val selection: () -&gt; IntRange?, /** Replaces the whole field (the dictated words merged around the selection). */ public val replace: (String) -&gt; Unit, /** * The composer's own Send, exactly as a tap on Send. False when it was refused (nothing in the * field, busy…). */ public val send: () -&gt; Unit, /** True while the composer can send (ready, not already sending). */ public val canSend: () -&gt; Boolean, /** Exact owner for optional conversation-mode voice; never parsed from [key]. */ public val conversationRef: ConversationRef? = null, /** A draft-only surface (for example Ask for change) never auto-sends recorded words. */ public val dictationOnly: Boolean = false, )</ID>
+    <ID>LongParameterList:KitContextMessagePart.kt$( heading: String, text: String, copyLabel: String, emptyLabel: String, modifier: Modifier = Modifier, technical: Boolean = false, dropped: Boolean = false, )</ID>
+    <ID>LongParameterList:KitDiffView.kt$( file: DiffFile, maxLines: Int = 12, hunkLabel: (oldStart: Int, oldEnd: Int, newStart: Int, newEnd: Int) -&gt; String, gapLabel: (hidden: Int) -&gt; String, modifier: Modifier = Modifier, onComment: ((String) -&gt; Unit)? = null, onAddToPrompt: ((String) -&gt; Unit)? = null, )</ID>
+    <ID>LongParameterList:KitDiffView.kt$( line: DiffLine, digits: Int, mono: TextStyle, colors: KitColors, wrap: Boolean, selected: SelectedLines?, label: String, redact: (String) -&gt; String, select: (Boolean, Int, Int) -&gt; Unit, language: CodeLanguage, highlight: Boolean, )</ID>
+    <ID>LongParameterList:KitDiffView.kt$( line: DiffLine?, old: Boolean, digits: Int, mono: TextStyle, colors: KitColors, wrap: Boolean, selected: SelectedLines?, label: String, modifier: Modifier, redact: (String) -&gt; String, select: (Boolean, Int, Int) -&gt; Unit, language: CodeLanguage, highlight: Boolean, )</ID>
+    <ID>LongParameterList:KitForm.kt$( fields: ImmutableList&lt;KitFormField&gt;, values: ImmutableMap&lt;String, KitFormValue&gt;, onChange: (key: String, value: KitFormValue) -&gt; Unit, modifier: Modifier = Modifier, onOpenLink: (key: String) -&gt; Unit = {}, enabled: KitEnabled = KitEnabled.Enabled, )</ID>
+    <ID>LongParameterList:KitFormSheet.kt$( title: String, description: String?, sendLabel: String, declineLabel: String, onSend: () -&gt; Unit, onDecline: () -&gt; Unit, modifier: Modifier = Modifier, blockedReason: String? = null, error: String? = null, sending: String? = null, scrollBody: Boolean = false, content: @Composable () -&gt; Unit, )</ID>
+    <ID>LongParameterList:KitFormSheet.kt$( title: String, summary: String?, answerLabel: String, onAnswer: () -&gt; Unit, modifier: Modifier = Modifier, status: String? = null, error: String? = null, )</ID>
+    <ID>LongParameterList:KitInboxRequestRow.kt$( title: String, place: String, openLabel: String, openActionLabel: String, onOpen: () -&gt; Unit, modifier: Modifier = Modifier, command: String? = null, allowLabel: String? = null, rejectLabel: String? = null, onAllow: (() -&gt; Unit)? = null, onReject: (() -&gt; Unit)? = null, primary: Boolean = false, enabled: KitEnabled = KitEnabled.Enabled, ifIgnored: String? = null, openEnabled: KitEnabled = enabled, )</ID>
+    <ID>LongParameterList:KitMarkdown.kt$( block: KitMdBlock, actions: KitMarkdownActions, modifier: Modifier = Modifier, live: Boolean = false, caret: Boolean = false, reveal: KitMdReveal? = null, )</ID>
+    <ID>LongParameterList:KitMarkdown.kt$( block: KitMdBlock.Heading, actions: KitMarkdownActions, modifier: Modifier = Modifier, live: Boolean = false, caret: Boolean = false, reveal: KitMdReveal? = null, )</ID>
+    <ID>LongParameterList:KitMarkdown.kt$( block: KitMdBlock.ListItem, actions: KitMarkdownActions, modifier: Modifier = Modifier, live: Boolean = false, caret: Boolean = false, reveal: KitMdReveal? = null, )</ID>
+    <ID>LongParameterList:KitMarkdown.kt$( block: KitMdBlock.Prose, actions: KitMarkdownActions, modifier: Modifier = Modifier, live: Boolean = false, caret: Boolean = false, reveal: KitMdReveal? = null, )</ID>
+    <ID>LongParameterList:KitMarkdown.kt$( block: KitMdBlock.Quote, actions: KitMarkdownActions, modifier: Modifier = Modifier, live: Boolean = false, caret: Boolean = false, reveal: KitMdReveal? = null, )</ID>
+    <ID>LongParameterList:KitMarkdown.kt$( key: String, inlines: KitInlines, style: TextStyle, actions: KitMarkdownActions, modifier: Modifier, live: Boolean, caret: Boolean, reveal: KitMdReveal?, )</ID>
+    <ID>LongParameterList:KitMarkdown.kt$KitMarkdownActions$( public val onLink: (url: String) -&gt; Unit, public val onPath: (path: String, line: Int?) -&gt; Unit = { _, _ -&gt; }, public val confirmedPaths: ImmutableSet&lt;String&gt; = persistentSetOf(), public val copyCodeLabel: String? = null, public val onCopyCode: ((String) -&gt; Unit)? = null, public val moreCodeLabel: ((hiddenLines: Int) -&gt; String)? = null, public val onOpenCode: ((KitMdBlock.Code) -&gt; Unit)? = null, /** * P12-CHAT-FEEL: a picture tile was tapped; null draws tiles that do nothing but name the * picture. */ public val onPicture: ((KitPicture) -&gt; Unit)? = null, /** * The tile's words for a picture (description or name are passed through; the caller adds its * own word). */ public val pictureLabel: (KitPicture) -&gt; String = { it.label ?: it.path ?: it.url ?: "" }, /** * Whether [onPicture] can show a picture that lives on the server (a viewer is wired); web ones * always open. */ public val openFilePictures: Boolean = false, /** Only server/phone paths enter this callback. Web images are never fetched. */ public val readPicture: (suspend (path: String) -&gt; ByteArray?)? = null, )</ID>
+    <ID>LongParameterList:KitMessageDetails.kt$( key: String, title: String, text: String, live: Boolean, expanded: Boolean, onExpandedChange: (Boolean) -&gt; Unit, actions: KitMarkdownActions, modifier: Modifier = Modifier, )</ID>
+    <ID>LongParameterList:KitMicButton.kt$( label: String, onTap: () -&gt; Unit, onHoldStart: () -&gt; Unit, onHoldEnd: (cancelled: Boolean) -&gt; Unit, onArmedChanged: (armed: Boolean) -&gt; Unit, modifier: Modifier = Modifier, active: Boolean = false, stateLabel: String? = null, holdLabel: String? = null, enabled: Boolean = true, disabledReason: String? = null, prominent: Boolean = false, )</ID>
+    <ID>LongParameterList:KitPermissionCard.kt$( allowOnceLabel: String, alwaysLabel: String?, denyLabel: String, onAllowOnce: () -&gt; Unit, onAlways: (() -&gt; Unit)?, onDeny: () -&gt; Unit, enabled: Boolean, reason: String?, secondary: Boolean, )</ID>
+    <ID>LongParameterList:KitPermissionCard.kt$( allowOnceLabel: String, alwaysLabel: String?, denyLabel: String, onAllowOnce: () -&gt; Unit, onAlways: (() -&gt; Unit)?, onDeny: () -&gt; Unit, enabled: Boolean, reason: String?, secondary: Boolean, denyReply: KitDenyReply?, onDenyJustDeny: () -&gt; Unit, )</ID>
+    <ID>LongParameterList:KitPermissionCard.kt$( title: String, summary: String?, subject: String?, allowOnceLabel: String, alwaysLabel: String?, denyLabel: String, onAllowOnce: () -&gt; Unit, onAlways: (() -&gt; Unit)?, onDeny: () -&gt; Unit, enabled: Boolean = true, disabledReason: String? = null, modifier: Modifier = Modifier, targets: List&lt;KitRequestTarget&gt; = emptyList(), secondary: Boolean = false, toolLabel: String? = null, copyLabel: String? = null, copiedLabel: String? = null, denyReply: KitDenyReply? = null, )</ID>
+    <ID>LongParameterList:KitQuestionCard.kt$( title: String, question: String, summary: String, choices: List&lt;String&gt;, onChoose: (String) -&gt; Unit, answerLabel: String, onDetails: () -&gt; Unit, inPlace: Boolean, modifier: Modifier = Modifier, other: (@Composable () -&gt; Unit)? = null, )</ID>
+    <ID>LongParameterList:KitReplyFooter.kt$( copyLabel: String, moreLabel: String, onCopy: (() -&gt; Unit)?, onMore: (() -&gt; Unit)?, modifier: Modifier = Modifier, metadata: @Composable () -&gt; Unit = {}, )</ID>
+    <ID>LongParameterList:KitStartingConversation.kt$( text: String, project: String, model: String, status: String, backLabel: String, onBack: () -&gt; Unit, phase: KitStartingPhase = KitStartingPhase.Sending, agent: String? = null, reason: String? = null, details: Redacted? = null, detailsLabel: String? = null, copyLabel: String? = null, retryLabel: String? = null, onRetry: (() -&gt; Unit)? = null, editLabel: String? = null, onEdit: (() -&gt; Unit)? = null, reviewLabel: String? = null, onReview: (() -&gt; Unit)? = null, )</ID>
+    <ID>LongParameterList:KitStepLight.kt$KitStepLightLap$(out: MutableList&lt;Offset&gt;, cx: Float, cy: Float, r: Float, from: Double, sweep: Double)</ID>
+    <ID>LongParameterList:KitStepLightGateTest.kt$KitStepLightGateTest$(id: String, kind: KitToolKind, title: String, subject: String?, detail: String?, status: KitToolStatus)</ID>
+    <ID>LongParameterList:KitStepLightGateTest.kt$KitStepLightGateTest$(name: String, status: KitToolStatus, motion: MotionLevel = MotionLevel.Full, first: Boolean = false, last: Boolean = false, scale: Float? = null, act: (ComposeUiTest.() -&gt; Unit)? = null)</ID>
+    <ID>LongParameterList:KitStepTimeline.kt$( label: String, icon: ImageVector, expanded: Boolean, onPressed: () -&gt; Unit, modifier: Modifier = Modifier, spoken: String = label, steps: @Composable () -&gt; Unit = {}, )</ID>
+    <ID>LongParameterList:KitToolOutput.kt$( text: String, moreLabel: String, onMore: () -&gt; Unit, modifier: Modifier = Modifier, maxLines: Int = KIT_COMMAND_OUTPUT_LINES, errorLabel: String? = null, )</ID>
+    <ID>LongParameterList:KitToolRow.kt$( view: KitToolView, opened: Boolean, onToggle: () -&gt; Unit, modifier: Modifier = Modifier, body: (@Composable () -&gt; Unit)? = null, rail: KitToolRail? = null, )</ID>
+    <ID>LongParameterList:KitToolRowTest.kt$KitToolRowTest$( kind: KitToolKind = KitToolKind.Read, title: String = "Read file", subject: String? = "lib/main.dart", detail: String? = null, status: KitToolStatus = KitToolStatus.Done, durationLabel: String? = null, added: Int? = null, removed: Int? = null, statusLabel: String = "Done", )</ID>
+    <ID>LongParameterList:KitVoicePill.kt$( title: String, modifier: Modifier = Modifier, words: String? = null, elapsed: String? = null, level: (() -&gt; Float)? = null, attention: Boolean = false, primary: KitLineAction? = null, secondary: KitLineAction? = null, /** A third choice between Cancel and the main one (tap dictation: "Send" = insert and send). */ extra: KitLineAction? = null, )</ID>
+    <ID>LongParameterList:KitWorkLine.kt$( label: String, stateWords: String?, state: KitWorkState, expanded: Boolean, onToggle: (Boolean) -&gt; Unit, modifier: Modifier = Modifier, earlier: KitLineAction? = null, steps: @Composable ColumnScope.() -&gt; Unit, )</ID>
+    <ID>LongParameterList:MotionTestKit.kt$( level: MotionLevel = MotionLevel.Full, stillFrame: Boolean = false, saver: Boolean = false, dark: Boolean = true, platform: KitPlatform = RecordingPlatform(), localeTag: String = "en", content: @Composable () -&gt; Unit, )</ID>
+    <ID>LongParameterList:ReplyStreamFrameBenchmark.kt$ReplyStreamFrameBenchmark.Frames$( val name: String, val ns: LongArray, val layoutChars: LongArray, val layouts: IntArray, val compositions: IntArray, val tenth: IntArray, val inFence: BooleanArray, val rows: Int, )</ID>
+    <ID>LongParameterList:TranscriptList.kt$( state: TranscriptListState, newestKey: String?, jumpLabel: String, motion: KitMotionLevel, modifier: Modifier = Modifier, contentPadding: PaddingValues = PaddingValues(vertical = Space.S4.dp), content: LazyListScope.() -&gt; Unit, )</ID>
+    <ID>LongParameterList:TranscriptParts.kt$( text: String, kind: KitBlockKind, live: Boolean, streamed: Boolean, revealKey: String, revealGroup: String, registry: RevealRegistry, motion: KitMotionLevel, modifier: Modifier = Modifier, continued: Boolean = false, continues: Boolean = false, )</ID>
+    <ID>LoopWithTooManyJumpStatements:CodeText.kt$for</ID>
+    <ID>LoopWithTooManyJumpStatements:CodeText.kt$while</ID>
+    <ID>LoopWithTooManyJumpStatements:DiffMarkdown.kt$while</ID>
+    <ID>LoopWithTooManyJumpStatements:DiffModel.kt$DiffModel$for</ID>
+    <ID>LoopWithTooManyJumpStatements:FreshFade.kt$for</ID>
+    <ID>LoopWithTooManyJumpStatements:KitCodeBlock.kt$for</ID>
+    <ID>LoopWithTooManyJumpStatements:KitMdSource.kt$KitMdSource$for</ID>
+    <ID>LoopWithTooManyJumpStatements:KitMicButton.kt$while</ID>
+    <ID>MagicNumber:CodeOverflow.kt$4f</ID>
+    <ID>MagicNumber:CodeText.kt$3</ID>
+    <ID>MagicNumber:CodeText.kt$4</ID>
+    <ID>MagicNumber:CodeText.kt$8</ID>
+    <ID>MagicNumber:CodeWrapCorner.kt$11f</ID>
+    <ID>MagicNumber:CodeWrapCorner.kt$13f</ID>
+    <ID>MagicNumber:CodeWrapCorner.kt$15f</ID>
+    <ID>MagicNumber:CodeWrapCorner.kt$16f</ID>
+    <ID>MagicNumber:CodeWrapCorner.kt$17f</ID>
+    <ID>MagicNumber:CodeWrapCorner.kt$18f</ID>
+    <ID>MagicNumber:CodeWrapCorner.kt$21f</ID>
+    <ID>MagicNumber:CodeWrapCorner.kt$23f</ID>
+    <ID>MagicNumber:CodeWrapCorner.kt$24f</ID>
+    <ID>MagicNumber:CodeWrapCorner.kt$3f</ID>
+    <ID>MagicNumber:CodeWrapCorner.kt$6f</ID>
+    <ID>MagicNumber:CodeWrapCorner.kt$9f</ID>
+    <ID>MagicNumber:ComposerGlow.kt$GlowColours$0.10f</ID>
+    <ID>MagicNumber:ComposerGlow.kt$GlowColours$0.18f</ID>
+    <ID>MagicNumber:ComposerGlow.kt$GlowColours$0.26f</ID>
+    <ID>MagicNumber:ComposerGlow.kt$GlowColours$0.30f</ID>
+    <ID>MagicNumber:ComposerGlow.kt$GlowColours$0.38f</ID>
+    <ID>MagicNumber:ComposerGlow.kt$GlowColours$0.55f</ID>
+    <ID>MagicNumber:ComposerGlow.kt$GlowColours$0.80f</ID>
+    <ID>MagicNumber:DiffCodeText.kt$1000</ID>
+    <ID>MagicNumber:DiffCodeText.kt$4.5</ID>
+    <ID>MagicNumber:DiffModel.kt$DiffModel$3</ID>
+    <ID>MagicNumber:DiffModel.kt$DiffModel$4</ID>
+    <ID>MagicNumber:FreshFade.kt$0.33f</ID>
+    <ID>MagicNumber:FreshFade.kt$0.68f</ID>
+    <ID>MagicNumber:KitAgentCard.kt$0.02f</ID>
+    <ID>MagicNumber:KitAgentCard.kt$0.35f</ID>
+    <ID>MagicNumber:KitAgentCard.kt$0.4f</ID>
+    <ID>MagicNumber:KitAgentCard.kt$0.65f</ID>
+    <ID>MagicNumber:KitAgentCard.kt$0.6f</ID>
+    <ID>MagicNumber:KitChatHeaderParts.kt$1.75f</ID>
+    <ID>MagicNumber:KitChatHeaderParts.kt$12f</ID>
+    <ID>MagicNumber:KitChatHeaderParts.kt$19f</ID>
+    <ID>MagicNumber:KitChatHeaderParts.kt$24f</ID>
+    <ID>MagicNumber:KitChatHeaderParts.kt$3.5f</ID>
+    <ID>MagicNumber:KitChatHeaderParts.kt$5f</ID>
+    <ID>MagicNumber:KitCodeBlock.kt$48</ID>
+    <ID>MagicNumber:KitCodeLine.kt$1000</ID>
+    <ID>MagicNumber:KitComposerBox.kt$.5f</ID>
+    <ID>MagicNumber:KitComposerBox.kt$0.15f</ID>
+    <ID>MagicNumber:KitComposerBox.kt$1.5f</ID>
+    <ID>MagicNumber:KitComposerBox.kt$50</ID>
+    <ID>MagicNumber:KitComposerBox.kt$6</ID>
+    <ID>MagicNumber:KitComposerPrimaryAction.kt$150</ID>
+    <ID>MagicNumber:KitComposerStatusStrip.kt$.5f</ID>
+    <ID>MagicNumber:KitComposerStop.kt$16f</ID>
+    <ID>MagicNumber:KitComposerStop.kt$17f</ID>
+    <ID>MagicNumber:KitComposerStop.kt$24f</ID>
+    <ID>MagicNumber:KitComposerStop.kt$7f</ID>
+    <ID>MagicNumber:KitComposerStop.kt$8f</ID>
+    <ID>MagicNumber:KitComposerStop.kt$StopGuard$1_000_000L</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.06f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.09f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.12f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.13f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.14f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.15f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.1f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.21f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.22f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.2f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.32f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.34f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.35f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.42f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.43f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.58f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.59f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.5f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.62f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.65f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.66f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.67f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.68f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.6f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.72f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.75f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.78f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.7f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.81f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.86f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.88f</ID>
+    <ID>MagicNumber:KitComposerTray.kt$.8f</ID>
+    <ID>MagicNumber:KitContextRing.kt$100</ID>
+    <ID>MagicNumber:KitContextRing.kt$100f</ID>
+    <ID>MagicNumber:KitContextRing.kt$2.5f</ID>
+    <ID>MagicNumber:KitContextRing.kt$24f</ID>
+    <ID>MagicNumber:KitContextRing.kt$360f</ID>
+    <ID>MagicNumber:KitContextRing.kt$90f</ID>
+    <ID>MagicNumber:KitContextRing.kt$9f</ID>
+    <ID>MagicNumber:KitDiffView.kt$12</ID>
+    <ID>MagicNumber:KitDiffView.kt$20</ID>
+    <ID>MagicNumber:KitDiffView.kt$2000</ID>
+    <ID>MagicNumber:KitElapsed.kt$KitElapsed.Companion$24</ID>
+    <ID>MagicNumber:KitElapsed.kt$KitElapsed.Companion$60</ID>
+    <ID>MagicNumber:KitInboxRequestRow.kt$1.3f</ID>
+    <ID>MagicNumber:KitInboxRequestRow.kt$1.5f</ID>
+    <ID>MagicNumber:KitLevelMeterRules.kt$KitLevelMeterRules$12f</ID>
+    <ID>MagicNumber:KitLiveSweep.kt$0.5f</ID>
+    <ID>MagicNumber:KitMarkdown.kt$.92f</ID>
+    <ID>MagicNumber:KitMarkdown.kt$1.22f</ID>
+    <ID>MagicNumber:KitMarkdown.kt$48</ID>
+    <ID>MagicNumber:KitMarkdown.kt$6</ID>
+    <ID>MagicNumber:KitMicButton.kt$10.34f</ID>
+    <ID>MagicNumber:KitMicButton.kt$11.5f</ID>
+    <ID>MagicNumber:KitMicButton.kt$12f</ID>
+    <ID>MagicNumber:KitMicButton.kt$13.66f</ID>
+    <ID>MagicNumber:KitMicButton.kt$14.81f</ID>
+    <ID>MagicNumber:KitMicButton.kt$15.31f</ID>
+    <ID>MagicNumber:KitMicButton.kt$15f</ID>
+    <ID>MagicNumber:KitMicButton.kt$17.5f</ID>
+    <ID>MagicNumber:KitMicButton.kt$18f</ID>
+    <ID>MagicNumber:KitMicButton.kt$21f</ID>
+    <ID>MagicNumber:KitMicButton.kt$24f</ID>
+    <ID>MagicNumber:KitMicButton.kt$3f</ID>
+    <ID>MagicNumber:KitMicButton.kt$4.34f</ID>
+    <ID>MagicNumber:KitMicButton.kt$6f</ID>
+    <ID>MagicNumber:KitMicButton.kt$8.69f</ID>
+    <ID>MagicNumber:KitMicButton.kt$9f</ID>
+    <ID>MagicNumber:KitPictureTiles.kt$148f</ID>
+    <ID>MagicNumber:KitPictureTiles.kt$320f</ID>
+    <ID>MagicNumber:KitPictureTiles.kt$360f</ID>
+    <ID>MagicNumber:KitPictureTiles.kt$48f</ID>
+    <ID>MagicNumber:KitPictureView.kt$1.5f</ID>
+    <ID>MagicNumber:KitPromptLift.kt$.08f</ID>
+    <ID>MagicNumber:KitPromptLift.kt$.16f</ID>
+    <ID>MagicNumber:KitPromptLift.kt$.3f</ID>
+    <ID>MagicNumber:KitPromptLift.kt$.92f</ID>
+    <ID>MagicNumber:KitPromptLift.kt$250</ID>
+    <ID>MagicNumber:KitStartingConversation.kt$80</ID>
+    <ID>MagicNumber:KitStepLight.kt$.25f</ID>
+    <ID>MagicNumber:KitStepLight.kt$.66f</ID>
+    <ID>MagicNumber:KitStepLight.kt$KitStepLightLap$.26f</ID>
+    <ID>MagicNumber:KitStepLight.kt$KitStepLightLap$.28f</ID>
+    <ID>MagicNumber:KitStepLight.kt$KitStepLightLap$.3f</ID>
+    <ID>MagicNumber:KitStepLight.kt$KitStepLightLap$.5f</ID>
+    <ID>MagicNumber:KitStepLight.kt$KitStepLightLap$.64f</ID>
+    <ID>MagicNumber:KitStepLight.kt$KitStepLightLap$.66f</ID>
+    <ID>MagicNumber:KitStepLight.kt$KitStepLightLap$.68f</ID>
+    <ID>MagicNumber:KitStepLight.kt$KitStepLightLap$.75f</ID>
+    <ID>MagicNumber:KitStepLight.kt$KitStepLightLap$.7f</ID>
+    <ID>MagicNumber:KitStepLight.kt$KitStepLightLap$.95f</ID>
+    <ID>MagicNumber:KitStepLight.kt$KitStepLightLap$.97f</ID>
+    <ID>MagicNumber:KitStepLight.kt$KitStepLightLap$16</ID>
+    <ID>MagicNumber:KitStepLight.kt$KitStepLightLap$2</ID>
+    <ID>MagicNumber:KitStopAndSendPill.kt$4</ID>
+    <ID>MagicNumber:KitToolNode.kt$.1f</ID>
+    <ID>MagicNumber:KitToolNode.kt$.35f</ID>
+    <ID>MagicNumber:KitToolNode.kt$.3f</ID>
+    <ID>MagicNumber:KitToolNode.kt$.55f</ID>
+    <ID>MagicNumber:KitToolNode.kt$.5f</ID>
+    <ID>MagicNumber:KitToolNode.kt$.65f</ID>
+    <ID>MagicNumber:KitToolNode.kt$.6f</ID>
+    <ID>MagicNumber:KitToolNode.kt$.7f</ID>
+    <ID>MagicNumber:KitToolNode.kt$.85f</ID>
+    <ID>MagicNumber:KitToolNode.kt$.9f</ID>
+    <ID>MagicNumber:KitToolNode.kt$3f</ID>
+    <ID>MagicNumber:KitWorkLine.kt$.2f</ID>
+    <ID>MagicNumber:KitWorkLine.kt$.5f</ID>
+    <ID>MagicNumber:KitWorkLine.kt$.8f</ID>
+    <ID>MagicNumber:KitWorkLine.kt$1.4f</ID>
+    <ID>MagicNumber:KitWorkLine.kt$16f</ID>
+    <ID>MagicNumber:MovingPart.kt$1_000_000.0</ID>
+    <ID>MagicNumber:MovingPart.kt$1_000_000f</ID>
+    <ID>MagicNumber:MovingPart.kt$4f</ID>
+    <ID>MagicNumber:Reveal.kt$RevealState$1e9f</ID>
+    <ID>MagicNumber:TranscriptParts.kt$0.85f</ID>
+    <ID>MatchingDeclarationName:ChatScenes.kt$ChatSceneWords</ID>
+    <ID>MatchingDeclarationName:ChatTestTheme.kt$ChatFakePlatform : KitPlatform</ID>
+    <ID>MatchingDeclarationName:KitContextRing.kt$KitContextLevel</ID>
+    <ID>MatchingDeclarationName:KitPermissionCard.kt$KitDenyReply</ID>
+    <ID>MatchingDeclarationName:KitPictureView.kt$KitPictureContent</ID>
+    <ID>MatchingDeclarationName:KitProjectFileSheet.kt$KitProjectFileSheetSpec</ID>
+    <ID>MatchingDeclarationName:KitPromptLift.kt$KitPromptLiftState</ID>
+    <ID>MatchingDeclarationName:KitRequestTargets.kt$KitRequestTarget</ID>
+    <ID>MatchingDeclarationName:KitStartingConversation.kt$KitStartingPhase</ID>
+    <ID>MatchingDeclarationName:KitWorkLine.kt$KitWorkState</ID>
+    <ID>MatchingDeclarationName:MotionTestKit.kt$RecordingPlatform : KitPlatform</ID>
+    <ID>MatchingDeclarationName:TestMarkdown.kt$TestStreamingMarkdown</ID>
+    <ID>MatchingDeclarationName:TranscriptList.kt$TranscriptListState</ID>
+    <ID>MatchingDeclarationName:TranscriptParts.kt$KitBlockKind</ID>
+    <ID>MaxLineLength:ChatScenes.kt$ChatSceneWords$*</ID>
+    <ID>MaxLineLength:ChatScenes.kt$ChatSceneWords.Companion$done = "Done"</ID>
+    <ID>MaxLineLength:ChatScenes.kt$ChatSceneWords.Companion$done = "تم"</ID>
+    <ID>MaxLineLength:ChatScenes.kt$KitToolView("t1", KitToolKind.Read, words.toolRead, "lib/main.dart", null, KitToolStatus.Done, words.seconds("0.4"), null, null, words.done)</ID>
+    <ID>MaxLineLength:ChatScenes.kt$KitToolView("t2", KitToolKind.Shell, words.toolRan, "npm test", null, KitToolStatus.Failed, words.seconds("3.1"), null, null, words.exit)</ID>
+    <ID>MaxLineLength:ChatScenes.kt$KitToolView("t3", KitToolKind.Edit, words.toolEdit, "lib/list.dart", null, KitToolStatus.Stopped, null, 4, 1, words.stopped)</ID>
+    <ID>MaxLineLength:ChatScenes.kt$KitToolView("t4", KitToolKind.Edit, words.toolEdit, "lib/list.dart", null, KitToolStatus.Done, null, 1, 2, words.done)</ID>
+    <ID>MaxLineLength:ChatTestTheme.kt$appearance = KitAppearance(mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light, motion = MotionLevel.Off)</ID>
+    <ID>MaxLineLength:CodeTextTest.kt$CodeTextTest$"toml ini html xml svg css scss sql go rust rs kotlin kt java swift c h cc cpp c++ cs csharp php diff patch "</ID>
+    <ID>MaxLineLength:CodeTextTest.kt$CodeTextTest$assertEquals(CodeLanguage.Kotlin, CodeLanguage.of("kotlin {title=\"a.kt\"}"), "only the first word of an info string")</ID>
+    <ID>MaxLineLength:CodeTextTest.kt$CodeTextTest$val</ID>
+    <ID>MaxLineLength:CodeTokenizer.kt$CachedCodeTokenizer$*</ID>
+    <ID>MaxLineLength:CodeTokenizer.kt$CodeRole$public enum</ID>
+    <ID>MaxLineLength:CodeTokenizerTest.kt$CodeTokenizerTest$assertTrue(tok.start &gt;= last &amp;&amp; tok.end &gt; tok.start &amp;&amp; tok.end &lt;= code.length, "$lang $tok in ${code.length}")</ID>
+    <ID>MaxLineLength:CodeTokenizerTest.kt$CodeTokenizerTest$fun roles(code: String, lang: CodeLanguage)</ID>
+    <ID>MaxLineLength:ComposerGlow.kt$Modifier.testTag(GLOW_TAG).composerRing({ strength.floatValue }, { phase.floatValue }, plan, colours, corner)</ID>
+    <ID>MaxLineLength:ComposerGlow.kt$Shadow(radius = GlowGeometry.HALO_BLUR_DP.dp, color = color, spread = GlowGeometry.HALO_SPREAD_DP.dp, alpha = 1f)</ID>
+    <ID>MaxLineLength:ComposerGlow.kt$else -&gt; clipPath(classicBand) { rotate(phase() * FULL_TURN) { drawCircle(classicSweep, radius, alpha = s) } }</ID>
+    <ID>MaxLineLength:ComposerGlow.kt$val classicSweep = Brush.sweepGradient(*colours.classicStops, center = Offset(size.width / 2f, size.height / 2f))</ID>
+    <ID>MaxLineLength:ComposerGlow.kt$val colours = remember(colors.live, colors.text1, colors.dark) { glowColours(colors.live, colors.text1, colors.dark) }</ID>
+    <ID>MaxLineLength:ComposerGlow.kt$val pad = (GlowGeometry.SOFT_WASH_DP / 2f + GlowGeometry.SOFT_WASH_BLUR_DP * 2f).dp.roundToPx().toFloat()</ID>
+    <ID>MaxLineLength:ComposerGlowUiTest.kt$ComposerGlowUiTest$MotionTheme(level = MotionLevel.Full, platform = platform) { KitComposerGlow(active = true) { Box(pill(c)) } }</ID>
+    <ID>MaxLineLength:ComposerInbox.kt$ComposerInsert$override fun toString(): String</ID>
+    <ID>MaxLineLength:ComposerKeysUiTest.kt$ComposerKeysUiTest$*</ID>
+    <ID>MaxLineLength:ComposerKeysUiTest.kt$ComposerKeysUiTest$KitComposerStripReveal(stop = if (running) stopChip else null, modifier = Modifier.testTag("strip-host"))</ID>
+    <ID>MaxLineLength:ComposerKeysUiTest.kt$ComposerKeysUiTest$assertEquals(before.height, onNodeWithTag("strip-host").getBoundsInRoot().height, "no fold for the Stop alone")</ID>
+    <ID>MaxLineLength:ComposerMotionGoldensTest.kt$ComposerMotionGoldensTest$@Test fun glowClassicDark()</ID>
+    <ID>MaxLineLength:ComposerMotionGoldensTest.kt$ComposerMotionGoldensTest$@Test fun glowClassicLight()</ID>
+    <ID>MaxLineLength:ComposerMotionGoldensTest.kt$ComposerMotionGoldensTest$@Test fun glowSaverHairline()</ID>
+    <ID>MaxLineLength:ComposerMotionGoldensTest.kt$ComposerMotionGoldensTest$@Test fun glowSoftLight()</ID>
+    <ID>MaxLineLength:ComposerMotionGoldensTest.kt$ComposerMotionGoldensTest$@Test fun stopChipArriveCalm()</ID>
+    <ID>MaxLineLength:ComposerMotionGoldensTest.kt$ComposerMotionGoldensTest$@Test fun stopChipArriveFull()</ID>
+    <ID>MaxLineLength:ComposerMotionGoldensTest.kt$ComposerMotionGoldensTest$@Test fun stopStripReveal()</ID>
+    <ID>MaxLineLength:ComposerMotionGoldensTest.kt$ComposerMotionGoldensTest$Modifier.size(320.dp, 56.dp).background(colors.surface2, RoundedCornerShape(26.dp)).padding(horizontal = 20.dp)</ID>
+    <ID>MaxLineLength:ComposerMotionGoldensTest.kt$ComposerMotionGoldensTest$private fun capture(name: String)</ID>
+    <ID>MaxLineLength:ComposerMotionGoldensTest.kt$ComposerMotionGoldensTest$show { KitComposerStop("Stop", "Stop Claude Code", onStop = {}, state = KitStopState.Working, workingReason = "Stopping") }</ID>
+    <ID>MaxLineLength:ComposerStripReveal.kt$*</ID>
+    <ID>MaxLineLength:DiffModel.kt$DiffFile$*</ID>
+    <ID>MaxLineLength:DiffModel.kt$DiffGap$*</ID>
+    <ID>MaxLineLength:DiffModel.kt$DiffModel$((minus == NULL_PATH || minus?.startsWith("a/") == true) &amp;&amp; (plus == NULL_PATH || plus?.startsWith("b/") == true))</ID>
+    <ID>MaxLineLength:DiffModel.kt$DiffModel$*</ID>
+    <ID>MaxLineLength:DiffModel.kt$DiffModel$out += DiffGap(run.size - keepTop - keepBottom, run.subList(keepTop, run.size - keepBottom).toImmutableList())</ID>
+    <ID>MaxLineLength:DiffModel.kt$DiffModel$private</ID>
+    <ID>MaxLineLength:DiffModel.kt$DiffModel$val isChange = segment is DiffLine &amp;&amp; (segment.kind == DiffLineKind.Added || segment.kind == DiffLineKind.Removed)</ID>
+    <ID>MaxLineLength:DiffModelTest.kt$DiffModelTest$"--- a/x"</ID>
+    <ID>MaxLineLength:DiffModelTest.kt$DiffModelTest$"Binary files a and b differ"</ID>
+    <ID>MaxLineLength:DiffModelTest.kt$DiffModelTest$assertEquals(DiffFileStatus.Modified, DiffModel.fromBeforeAfter("x.txt", "", "a", DiffFileStatus.Modified).status)</ID>
+    <ID>MaxLineLength:DiffModelTest.kt$DiffModelTest$assertEquals(listOf("changes.diff"), DiffModel.parsePatch("@@ -1 +1 @@\n-a\n+b\n", "changes.diff").map { it.path })</ID>
+    <ID>MaxLineLength:DiffModelTest.kt$DiffModelTest$assertEquals(listOf("keep", "old", "new"), patch.lines().filter { it.kind != DiffLineKind.Hunk }.map { it.text })</ID>
+    <ID>MaxLineLength:DiffModelTest.kt$DiffModelTest$assertEquals(listOf(9 to DiffGapPosition.Above, 47 to DiffGapPosition.Between), gaps.map { it.hidden to it.position })</ID>
+    <ID>MaxLineLength:DiffModelTest.kt$DiffModelTest$val atTop = DiffModel.displayRows(DiffModel.parseFilePatch("a.txt", "@@ -1,3 +1,4 @@\n a\n-b\n+c\n+d\n e\n")).rows</ID>
+    <ID>MaxLineLength:DiffModelTest.kt$DiffModelTest$val small = DiffModel.fromBeforeAfter("s.txt", before.take(200).joinToString("\n"), after.take(200).joinToString("\n"))</ID>
+    <ID>MaxLineLength:FlutterCapture.kt$Layout</ID>
+    <ID>MaxLineLength:FlutterCapture.kt$val input = Constraints(up(constraints.minWidth), up(constraints.maxWidth), up(constraints.minHeight), up(constraints.maxHeight))</ID>
+    <ID>MaxLineLength:FreshFade.kt$GrowOnlyNode$!enabled || target &lt; anim.targetValue -&gt; if (anim.targetValue != target) coroutineScope.launch { anim.snapTo(target) }</ID>
+    <ID>MaxLineLength:GateProofTest.kt$GateProofTest$"The release config reads android/key.properties, which is missing here, so validateSigningRelease "</ID>
+    <ID>MaxLineLength:GateProofTest.kt$GateProofTest$Box</ID>
+    <ID>MaxLineLength:GateProofTest.kt$GateProofTest$KitRow("Fix the login bug", supporting = "Finished 5h ago", leading = KitRowLeading.Glyph(KitIcons.chat), onClick = {})</ID>
+    <ID>MaxLineLength:GateProofTest.kt$GateProofTest$KitRow("Model", leading = KitRowLeading.Glyph(KitIcons.model), trailing = KitRowTrailing.Value("Claude Sonnet 4"), onClick = {})</ID>
+    <ID>MaxLineLength:GateProofTest.kt$GateProofTest$KitRow("Project settings", leading = KitRowLeading.Glyph(KitIcons.settings), trailing = KitRowTrailing.Chevron, onClick = {})</ID>
+    <ID>MaxLineLength:GateProofTest.kt$GateProofTest$field = { KitField(rememberTextFieldState(), "Ask OpenCode…", kind = KitFieldKind.Multiline, multilineLines = 1..6, labelShown = false, framed = false) }</ID>
+    <ID>MaxLineLength:GateProofTest.kt$GateProofTest$private</ID>
+    <ID>MaxLineLength:InlineAnnotated.kt$LinkAnnotation</ID>
+    <ID>MaxLineLength:InlineAnnotated.kt$styles = TextLinkStyles(SpanStyle(color = style.link, textDecoration = TextDecoration.Underline))</ID>
+    <ID>MaxLineLength:InlineAnnotatedTest.kt$InlineAnnotatedTest$KitSpan(rnd.nextInt(-5, text.length + 5), rnd.nextInt(-5, text.length + 5), kinds[rnd.nextInt(kinds.size)])</ID>
+    <ID>MaxLineLength:InlineAnnotatedTest.kt$InlineAnnotatedTest$KitSpanKind.Bold</ID>
+    <ID>MaxLineLength:KitAgentCard.kt$Box</ID>
+    <ID>MaxLineLength:KitAgentCard.kt$Box(Modifier.fillMaxWidth(node.value.toFloat().coerceIn(0f, 1f)).height(Space.S1.dp).background(colors.accent))</ID>
+    <ID>MaxLineLength:KitAgentCardTest.kt$KitAgentCardTest$fun</ID>
+    <ID>MaxLineLength:KitChatLocals.kt$*</ID>
+    <ID>MaxLineLength:KitChatLocals.kt$public</ID>
+    <ID>MaxLineLength:KitCodeBlockTest.kt$KitCodeBlockTest$KitCodeBlock(source = source, kind = KitCodeKind.Output, moreLabel = { "Open full output ($it more)" }, onMore = { more++ })</ID>
+    <ID>MaxLineLength:KitCodeBlockTest.kt$KitCodeBlockTest$KitCodeBlock(source = text, kind = KitCodeKind.Code, language = CodeLanguage.Kotlin, open = open)</ID>
+    <ID>MaxLineLength:KitCodeChunk.kt$BasicText(display, style = mono.copy(color = colors.text1, textDirection = TextDirection.Ltr), softWrap = false)</ID>
+    <ID>MaxLineLength:KitComposerStatusStrip.kt$Modifier.fillMaxWidth().kitShadowRoom(room).kitScrollFade(scroll).horizontalScroll(scroll).padding(vertical = room).testTag("composer-status-scroll")</ID>
+    <ID>MaxLineLength:KitComposerStatusStrip.kt$Modifier.widthIn(max = chipMax).kitShadowRoom(room).kitScrollFade(scroll).horizontalScroll(scroll).padding(vertical = room).testTag("composer-status-scroll")</ID>
+    <ID>MaxLineLength:KitComposerStatusStrip.kt$else</ID>
+    <ID>MaxLineLength:KitComposerStatusStrip.kt$measurer.measure("000000…", LocalKitTypography.current.style(TypeRole.Secondary), softWrap = false, maxLines = 1).size.width.toDp()</ID>
+    <ID>MaxLineLength:KitComposerStatusStrip.kt$val chipMax = max(availableWidth.value * .5f, availableWidth.value - Space.S2 - modelMin.value).coerceAtLeast(0f).dp // F: lib/ui/kit/chat/kit_composer_status_strip.dart:212-217</ID>
+    <ID>MaxLineLength:KitComposerStatusStrip.kt$val modelMin = Space.S3.dp * 2 + glyph * 2 + Space.S2.dp + Space.S1.dp + labelWidth + 1.dp // F: lib/ui/kit/chat/kit_composer_status_strip.dart:303-308</ID>
+    <ID>MaxLineLength:KitComposerTextBox.kt$KitComposerBox(running, { field(stacked) }, wide = wide, leading = leading, trailing = trailing, stacked = stacked, above = above, hasLeading = hasLeading)</ID>
+    <ID>MaxLineLength:KitComposerTextBox.kt$val layout = measure.measure(AnnotatedString(text), style = style, maxLines = 1, constraints = Constraints(maxWidth = px))</ID>
+    <ID>MaxLineLength:KitComposerVoiceSlot.kt$KitComposerVoice$*</ID>
+    <ID>MaxLineLength:KitContextRing.kt$val radius = if (large) 24.dp.toPx() else this.size.minDimension * 9f / 24f // F: lib/ui/kit/kit_context_ring.dart:115-116</ID>
+    <ID>MaxLineLength:KitContextRing.kt$val stroke = if (large) 6.dp.toPx() else this.size.minDimension * 2.5f / 24f // F: lib/ui/kit/kit_context_ring.dart:115-116</ID>
+    <ID>MaxLineLength:KitContextSheet.kt$KitContextRing(percent, level, stringResource(Res.string.kitContextRingSemantics, Numbers.format(percent)), size = 64.dp)</ID>
+    <ID>MaxLineLength:KitContextSheet.kt$KitKeyValueRow(stringResource(Res.string.kitContextSheetMeasured), stringResource(Res.string.kitContextSheetMeasuredValue))</ID>
+    <ID>MaxLineLength:KitContextSheet.kt$KitText(stringResource(Res.string.kitContextSheetExplain), role = TypeRole.Secondary, tone = TextTone.Secondary)</ID>
+    <ID>MaxLineLength:KitContextSheet.kt$KitText(stringResource(Res.string.kitContextSheetTokens, Numbers.format(tokens), Numbers.format(limit)), Modifier.weight(1f), role = TypeRole.RowTitle)</ID>
+    <ID>MaxLineLength:KitContextSheet.kt$KitText(stringResource(Res.string.kitModelContext, Numbers.format(percent)), role = TypeRole.Label, tone = when (level) { KitContextLevel.Calm -&gt; TextTone.Secondary; KitContextLevel.Warning -&gt; TextTone.Attention; KitContextLevel.Full -&gt; TextTone.Primary })</ID>
+    <ID>MaxLineLength:KitContextSheet.kt$Row</ID>
+    <ID>MaxLineLength:KitContinuedLine.kt$Box</ID>
+    <ID>MaxLineLength:KitContinuedLineGateTest.kt$KitContinuedLineGateTest$FlutterGoldenGate.matrix("part-kit_continued_line", caps = mapOf("KitContinuedLine" to "wrapper"), content = scene)</ID>
+    <ID>MaxLineLength:KitContinuedLineGateTest.kt$KitContinuedLineGateTest$for (size in listOf("", "_1280x800")) FlutterGoldenGate.check("kit_continued_line_default$size", content = scene)</ID>
+    <ID>MaxLineLength:KitDiffViewTest.kt$KitDiffViewTest$assertEquals(12, onAllNodes(hasText("line ", substring = true), useUnmergedTree = true).fetchSemanticsNodes().size)</ID>
+    <ID>MaxLineLength:KitDiffViewTest.kt$KitDiffViewTest$assertTrue(texts.any { it.startsWith("print ") &amp;&amp; it != "print old" }, "the added line is drawn, masked: $texts")</ID>
+    <ID>MaxLineLength:KitElapsed.kt$*</ID>
+    <ID>MaxLineLength:KitElapsed.kt$if (everySecond &amp;&amp; status.phase != KitSincePhase.Idle) return 1.seconds - (status.elapsed - status.elapsed.inWholeSeconds.seconds)</ID>
+    <ID>MaxLineLength:KitElapsed.kt$val everySecond = ticks == KitSinceTicks.Seconds || (ticks == KitSinceTicks.SecondsThenMinutes &amp;&amp; status.elapsed &lt; 1.minutes)</ID>
+    <ID>MaxLineLength:KitForm.kt$Column</ID>
+    <ID>MaxLineLength:KitForm.kt$KitFormFieldKind</ID>
+    <ID>MaxLineLength:KitForm.kt$field.description?.let { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Reading) }</ID>
+    <ID>MaxLineLength:KitForm.kt$private</ID>
+    <ID>MaxLineLength:KitFormSheet.kt$description?.let { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Reading) }</ID>
+    <ID>MaxLineLength:KitFormTest.kt$KitFormTest$KitForm(fields = fields, values = values, onChange = { k, v -&gt; values = (values + (k to v)).toImmutableMap() })</ID>
+    <ID>MaxLineLength:KitInboxRequestRow.kt$Box(Modifier.size((FlutterKitTokens.NEEDS_YOU_DOT_SIZE * scale.coerceIn(1f, 1.5f)).dp).background(colors.attention, CircleShape)) // F: lib/ui/kit/kit_request_row.dart:163-164</ID>
+    <ID>MaxLineLength:KitInboxRequestRow.kt$KitButton(allowLabel!!, onAllow!!, role = if (primary) KitButtonRole.Primary else KitButtonRole.Secondary, enabled = enabled, maxLines = 1)</ID>
+    <ID>MaxLineLength:KitInboxRequestRow.kt$KitButton(openActionLabel, onOpen, Modifier.align(Alignment.End), role = KitButtonRole.Secondary, enabled = openEnabled, semanticsLabel = openLabel)</ID>
+    <ID>MaxLineLength:KitInboxRequestRow.kt$KitText(place, Modifier.weight(1f), role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = 2)</ID>
+    <ID>MaxLineLength:KitInboxRequestRow.kt$Row</ID>
+    <ID>MaxLineLength:KitInboxRequestRow.kt$if (!deciding &amp;&amp; scale &lt; 1.3f) KitButton(openActionLabel, onOpen, role = KitButtonRole.Secondary, enabled = openEnabled, semanticsLabel = openLabel)</ID>
+    <ID>MaxLineLength:KitInboxRequestRow.kt$val look = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Code, KitShapeId.Code, SurfaceLevel.Ground, ownFill = colors.ground))</ID>
+    <ID>MaxLineLength:KitLevelMeterGateTest.kt$KitLevelMeterGateTest$@Test fun kit_level_meter_listening_high()</ID>
+    <ID>MaxLineLength:KitLevelMeterGateTest.kt$KitLevelMeterGateTest$@Test fun kit_level_meter_listening_high_1280x800()</ID>
+    <ID>MaxLineLength:KitLevelMeterGateTest.kt$KitLevelMeterGateTest$@Test fun kit_level_meter_listening_high_1600x1000()</ID>
+    <ID>MaxLineLength:KitLevelMeterGateTest.kt$KitLevelMeterGateTest$@Test fun kit_level_meter_listening_high_360x800()</ID>
+    <ID>MaxLineLength:KitLevelMeterGateTest.kt$KitLevelMeterGateTest$@Test fun kit_level_meter_listening_high_800x1280()</ID>
+    <ID>MaxLineLength:KitLevelMeterGateTest.kt$KitLevelMeterGateTest$@Test fun kit_level_meter_listening_high_915x412()</ID>
+    <ID>MaxLineLength:KitLevelMeterGateTest.kt$KitLevelMeterGateTest$@Test fun kit_level_meter_listening_high_ar()</ID>
+    <ID>MaxLineLength:KitLevelMeterGateTest.kt$KitLevelMeterGateTest$@Test fun kit_level_meter_listening_high_ar_1280x800()</ID>
+    <ID>MaxLineLength:KitLevelMeterGateTest.kt$KitLevelMeterGateTest$@Test fun kit_level_meter_listening_high_text2()</ID>
+    <ID>MaxLineLength:KitLevelMeterGateTest.kt$KitLevelMeterGateTest$@Test fun kit_level_meter_listening_high_text2_1280x800()</ID>
+    <ID>MaxLineLength:KitLevelMeterGateTest.kt$KitLevelMeterGateTest$@Test fun kit_level_meter_listening_low()</ID>
+    <ID>MaxLineLength:KitLevelMeterGateTest.kt$KitLevelMeterGateTest$@Test fun kit_level_meter_paused()</ID>
+    <ID>MaxLineLength:KitLevelMeterGateTest.kt$KitLevelMeterGateTest$@Test fun kit_level_meter_quiet()</ID>
+    <ID>MaxLineLength:KitLevelMeterGateTest.kt$KitLevelMeterGateTest$@Test fun matrix()</ID>
+    <ID>MaxLineLength:KitLevelMeterGateTest.kt$KitLevelMeterGateTest$Column</ID>
+    <ID>MaxLineLength:KitLevelMeterGateTest.kt$KitLevelMeterGateTest$KitText(if (!active) "Paused · mic off" else if (ar) "يستمع · 0:07" else "Listening 0:07", role = TypeRole.Secondary)</ID>
+    <ID>MaxLineLength:KitLevelMeterRules.kt$KitLevelMeterRules$index in 0 until BARS &amp;&amp; !level.isNaN() &amp;&amp; level.coerceIn(0f, 1f) &gt;= (index + 1) / 12f</ID>
+    <ID>MaxLineLength:KitLevelMeterRulesTest.kt$KitLevelMeterRulesTest$assertEquals(KitLevelMeterRules.BARS, (0 until KitLevelMeterRules.BARS).count { KitLevelMeterRules.isLit(it, 1f) })</ID>
+    <ID>MaxLineLength:KitLiveSweep.kt$*</ID>
+    <ID>MaxLineLength:KitLiveSweep.kt$// The words take text3 everywhere, then the band lights them where it passes (srcIn keeps glyph alpha).</ID>
+    <ID>MaxLineLength:KitLooksTest.kt$KitLooksTest$Box(Modifier.padding(horizontal = 16.dp)) { KitField(rememberTextFieldState("laptop.tail1234.ts.net"), "Address", kind = KitFieldKind.Url) }</ID>
+    <ID>MaxLineLength:KitLooksTest.kt$KitLooksTest$Column(Modifier.fillMaxSize().background(LocalKitColors.current.ground).padding(top = 32.dp), content = content)</ID>
+    <ID>MaxLineLength:KitLooksTest.kt$KitLooksTest$ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(out, "$part-native-after-${if (dark) "dark" else "light"}.png"))</ID>
+    <ID>MaxLineLength:KitLooksTest.kt$KitLooksTest$KitButton("I already have a server", {}, role = KitButtonRole.Tertiary, modifier = Modifier.align(Alignment.CenterHorizontally))</ID>
+    <ID>MaxLineLength:KitLooksTest.kt$KitLooksTest$KitButton("Save &amp; connect", {}, enabled = KitEnabled.Disabled("Fill in the address first"), fullWidth = true)</ID>
+    <ID>MaxLineLength:KitLooksTest.kt$KitLooksTest$KitChoiceCard("On my computer", selected = false, onSelect = {}, supporting = "Pair with a code, or type its address", icon = KitIcons.computer)</ID>
+    <ID>MaxLineLength:KitLooksTest.kt$KitLooksTest$KitChoiceCard("On this phone", selected = true, onSelect = {}, supporting = "About 4 min · 208 MB download", icon = KitIcons.phone, tag = "Recommended")</ID>
+    <ID>MaxLineLength:KitLooksTest.kt$KitLooksTest$KitRow("Add dark mode", supporting = "notes-app · Editing lib/ui/theme.dart", state = KitRowState("Working", KitRowStateTone.Running), meta = "9 min", onClick = {})</ID>
+    <ID>MaxLineLength:KitLooksTest.kt$KitLooksTest$KitRow("Approvals", leading = KitRowLeading.Glyph(KitIcons.shield), trailing = KitRowTrailing.Value("Ask first"), onClick = {})</ID>
+    <ID>MaxLineLength:KitLooksTest.kt$KitLooksTest$KitRow("Explain the build", supporting = "shopfront", state = KitRowState("Done", KitRowStateTone.Quiet), meta = "3 h", onClick = {})</ID>
+    <ID>MaxLineLength:KitLooksTest.kt$KitLooksTest$KitRow("Fix the login bug", supporting = "shopfront · Allow running the tests?", state = KitRowState("Needs you", KitRowStateTone.NeedsYou), meta = "2 min", onClick = {})</ID>
+    <ID>MaxLineLength:KitLooksTest.kt$KitLooksTest$KitRow("Keep running", supporting = "What to allow so Android doesn't close the app", leading = KitRowLeading.Glyph(KitIcons.batteryCharging), trailing = KitRowTrailing.Chevron, onClick = {})</ID>
+    <ID>MaxLineLength:KitLooksTest.kt$KitLooksTest$KitRow("Laptop", leading = KitRowLeading.Glyph(KitIcons.computer), trailing = KitRowTrailing.Value("Connected"), onClick = {})</ID>
+    <ID>MaxLineLength:KitLooksTest.kt$KitLooksTest$KitRow("Model", leading = KitRowLeading.Glyph(KitIcons.model), trailing = KitRowTrailing.Value("Opus 5.5"), onClick = {})</ID>
+    <ID>MaxLineLength:KitLooksTest.kt$KitLooksTest$KitSearchField(label = "Search models", onSearch = {}, state = rememberTextFieldState("opus"), resultCount = 2)</ID>
+    <ID>MaxLineLength:KitLooksTest.kt$KitLooksTest$KitToolRow(KitToolView("1", KitToolKind.Read, "Read", "lib/checkout/checkout_bloc.dart", null, KitToolStatus.Done, "1 s", null, null, "Done"), opened = false, onToggle = {})</ID>
+    <ID>MaxLineLength:KitLooksTest.kt$KitLooksTest$KitToolRow(KitToolView("2", KitToolKind.Edit, "Edit", "test/checkout_test.dart", null, KitToolStatus.Done, "2 s", 6, 2, "Done"), opened = false, onToggle = {})</ID>
+    <ID>MaxLineLength:KitLooksTest.kt$KitLooksTest$KitToolRow(KitToolView("3", KitToolKind.Shell, "Shell", "flutter test test/checkout_test.dart", null, KitToolStatus.Running, "12 s", null, null, "Running"), opened = false, onToggle = {}, body = {})</ID>
+    <ID>MaxLineLength:KitLooksTest.kt$KitLooksTest$KitToolRow(KitToolView("4", KitToolKind.Shell, "Shell", "git push", null, KitToolStatus.Pending, null, null, null, "Waiting for you"), opened = false, onToggle = {})</ID>
+    <ID>MaxLineLength:KitLooksTest.kt$KitLooksTest$KitToolRow(KitToolView("5", KitToolKind.Shell, "Shell", "npm run lint", null, KitToolStatus.Failed, null, null, null, "Failed"), opened = false, onToggle = {})</ID>
+    <ID>MaxLineLength:KitLooksTest.kt$KitLooksTest$KitToolRow(KitToolView("6", KitToolKind.Search, "Search text", "applyCoupon", null, KitToolStatus.Done, null, null, null, "Done"), opened = false, onToggle = {})</ID>
+    <ID>MaxLineLength:KitLooksTest.kt$KitLooksTest$KitTopBar(title = "Servers", exit = KitTopBarExit.Back, exitLabel = "Back", onExit = {}, actions = listOf(KitLineAction("Add server", {})))</ID>
+    <ID>MaxLineLength:KitLooksTest.kt$KitLooksTest$KitWorkLine("Read 3 files · edited 1 file", "Done", KitWorkState.Done, expanded = false, onToggle = {}) {}</ID>
+    <ID>MaxLineLength:KitLooksTest.kt$KitLooksTest$KitWorkLine("Waiting for you: allow editing lib/main.dart", "Needs you", KitWorkState.WaitingForYou, expanded = false, onToggle = {}) {}</ID>
+    <ID>MaxLineLength:KitLooksTest.kt$KitLooksTest$actions = listOf(KitLineAction("Search", {}, icon = KitIcons.search), KitLineAction("Settings", {}, icon = KitIcons.settingsGear))</ID>
+    <ID>MaxLineLength:KitLooksTest.kt$KitLooksTest$appearance = KitAppearance(mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light, motion = motion)</ID>
+    <ID>MaxLineLength:KitLooksTest.kt$KitLooksTest$field = { KitField(rememberTextFieldState("Also check the refund flow"), "Ask Claude Code…", kind = KitFieldKind.Multiline, multilineLines = 1..6, labelShown = false, framed = false) }</ID>
+    <ID>MaxLineLength:KitLooksTest.kt$KitLooksTest$field = { KitField(rememberTextFieldState(), "Ask Claude Code…", kind = KitFieldKind.Multiline, multilineLines = 1..6, labelShown = false, framed = false) }</ID>
+    <ID>MaxLineLength:KitLooksTest.kt$KitLooksTest$private</ID>
+    <ID>MaxLineLength:KitMarkdown.kt$// Kept inside the reading column: a run that starts a line sat 3 dp left of the text's edge.</ID>
+    <ID>MaxLineLength:KitMarkdown.kt$// line, so a horizontal position there jumped back to the start and tinted the words before.</ID>
+    <ID>MaxLineLength:KitMdModel.kt$KitMdBlock.Code$public data</ID>
+    <ID>MaxLineLength:KitMdModel.kt$KitPicture$public</ID>
+    <ID>MaxLineLength:KitMdSourceTest.kt$KitMdSourceTest$val b = KitMdSource.blocks("b:m/p:0", "Read **this** at [docs](https://example.com) or `lib/main.dart:12`", false)</ID>
+    <ID>MaxLineLength:KitMdSourceTest.kt$KitMdSourceTest$val b = KitMdSource.blocks("r", "![chart](https://example.com/c.png) ![](out/plot.png) ![image](079f63375d36aabbccddeeff00112233.png)", false)</ID>
+    <ID>MaxLineLength:KitMicButton.kt$// The gesture was cancelled (the mic was disabled mid-hold): never leave a hold running.</ID>
+    <ID>MaxLineLength:KitMicButton.kt$if</ID>
+    <ID>MaxLineLength:KitMicButton.kt$val indication = remember(platform, ink, reduced) { if (reduced) KitFillIndication(ink) else platform.pressIndication(ink) }</ID>
+    <ID>MaxLineLength:KitPermissionCard.kt$*</ID>
+    <ID>MaxLineLength:KitPermissionCard.kt$Column</ID>
+    <ID>MaxLineLength:KitPermissionCard.kt$KitButton(alwaysLabel, onAlways, Modifier.fillMaxWidth(), role = KitButtonRole.Secondary, enabled = availability)</ID>
+    <ID>MaxLineLength:KitPermissionCard.kt$KitButton(denyLabel, onDeny, modifier.testTag("permission-card-reject"), role = KitButtonRole.Secondary, enabled = availability)</ID>
+    <ID>MaxLineLength:KitPermissionCard.kt$KitButton(reply.justDenyLabel, onJustDeny, Modifier.weight(1f).testTag("permission-card-reply-just-deny"), role = KitButtonRole.Secondary, enabled = availability)</ID>
+    <ID>MaxLineLength:KitPermissionCard.kt$horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)</ID>
+    <ID>MaxLineLength:KitPermissionCard.kt$measurer.measure(label, style, softWrap = false, maxLines = 1).size.width.toDp() + Space.S6.dp * 2 &lt;= half // F: lib/ui/kit/kit_request_card.dart:1092-1105</ID>
+    <ID>MaxLineLength:KitRequestCardGateTest.kt$KitRequestCardGateTest$/** The answered scenes of test/goldens/kit/kit_request_card_golden_test.dart: the collapsed row between its two caption lines. */</ID>
+    <ID>MaxLineLength:KitRequestCardGateTest.kt$KitRequestCardGateTest$FlutterGoldenGate.matrix("part-kit_request_card", caps = mapOf("KitRequestCard" to "wrapper"), content = answered)</ID>
+    <ID>MaxLineLength:KitRequestCardGateTest.kt$KitRequestCardGateTest$KitText("I found the failing test. Running it once more to check the fix.", role = TypeRole.Body, modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))</ID>
+    <ID>MaxLineLength:KitRequestCardGateTest.kt$KitRequestCardGateTest$KitText("The next step waits for your answer.", role = TypeRole.Secondary, tone = TextTone.Secondary, modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))</ID>
+    <ID>MaxLineLength:KitRequestCardGateTest.kt$KitRequestCardGateTest$Row</ID>
+    <ID>MaxLineLength:KitRequestFrame.kt$*</ID>
+    <ID>MaxLineLength:KitSinceGateTest.kt$KitSinceGateTest$FlutterGoldenGate.matrix("part-kit_since", caps = mapOf("KitSince" to "wrapper"), wrap = wrap, content = line(16.seconds, waiting = minutesEn))</ID>
+    <ID>MaxLineLength:KitSinceGateTest.kt$KitSinceGateTest$for (size in listOf("", "_360x800", "_800x1280", "_1280x800", "_1600x1000")) shot("kit_since_slow$size", content = line(16.seconds, waiting = minutesEn))</ID>
+    <ID>MaxLineLength:KitSinceGateTest.kt$KitSinceGateTest$private</ID>
+    <ID>MaxLineLength:KitSinceGateTest.kt$KitSinceGateTest$private val wrap: @Composable (@Composable () -&gt; Unit) -&gt; Unit = { CompositionLocalProvider(LocalKitRedactor provides Redactor()) { it() } }</ID>
+    <ID>MaxLineLength:KitStepLight.kt$KitStepLightLap$*</ID>
+    <ID>MaxLineLength:KitStepLight.kt$public</ID>
+    <ID>MaxLineLength:KitStepLight.kt$val path = Path().apply { pts.forEachIndexed { i, o -&gt; if (i == 0) moveTo(o.x, o.y) else lineTo(o.x, o.y) } }</ID>
+    <ID>MaxLineLength:KitStepLightGateTest.kt$KitStepLightGateTest$FlutterGoldenGate.check(name, frame = FlutterGoldenGate.Frame.Screen, wrap = wrap, motion = motion, textScale = scale, act = act, content = timeline(status, first, last))</ID>
+    <ID>MaxLineLength:KitStepLightGateTest.kt$KitStepLightGateTest$private</ID>
+    <ID>MaxLineLength:KitStepLightGateTest.kt$KitStepLightGateTest$private val wrap: @Composable (@Composable () -&gt; Unit) -&gt; Unit = { CompositionLocalProvider(LocalKitRedactor provides Redactor()) { it() } }</ID>
+    <ID>MaxLineLength:KitStepSignal.kt$KitStepSignal$/** The x ranges `[from, to)` of the dashes on a rule [width] dp wide, the words starting [start] in (mirrored in RTL). */</ID>
+    <ID>MaxLineLength:KitStepSignal.kt$KitStepSignal$fun</ID>
+    <ID>MaxLineLength:KitStepTimeline.kt$Box(Modifier.height(first), contentAlignment = Alignment.Center) { KitChevron(expanded) }</ID>
+    <ID>MaxLineLength:KitStepTimeline.kt$KitIcon(icon, size = KitIconSize.Small, tone = TextTone.Secondary) // F: lib/ui/kit/chat/kit_step_timeline.dart:982 text2</ID>
+    <ID>MaxLineLength:KitStepTimeline.kt$KitText(label, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = 2) // F: lib/ui/kit/chat/kit_step_timeline.dart:1015-1019</ID>
+    <ID>MaxLineLength:KitStepTimeline.kt$val pad = maxOf(Space.S1.dp, (tokens.minTarget.dp - first) / 2) // F: lib/ui/kit/chat/kit_step_timeline.dart:962 glyph centred in the 48 dp target</ID>
+    <ID>MaxLineLength:KitStepTimelineGateTest.kt$KitStepTimelineGateTest$FlutterGoldenGate.check("kit_step_timeline_collapsed", frame = FlutterGoldenGate.Frame.Screen, motion = MotionLevel.Off, content = scene(false))</ID>
+    <ID>MaxLineLength:KitStepTimelineGateTest.kt$KitStepTimelineGateTest$FlutterGoldenGate.matrix("part-kit_step_timeline", frame = FlutterGoldenGate.Frame.Screen, content = scene(false))</ID>
+    <ID>MaxLineLength:KitStopAndSendPill.kt$Box(Modifier.size(side).background(colors.onAttentionFill, RoundedCornerShape(side / 4)))</ID>
+    <ID>MaxLineLength:KitToolGlyph.kt$Image(if (opened) KitIcons.chevronUp else KitIcons.chevronDown, null, modifier.size(size), colorFilter = ColorFilter.tint(color))</ID>
+    <ID>MaxLineLength:KitToolNode.kt$else</ID>
+    <ID>MaxLineLength:KitToolOutput.kt$for (line in lines.take(maxLines)) KitMonoLtr(line, Modifier.fillMaxWidth(), TextTone.Tertiary, maxLines = 1)</ID>
+    <ID>MaxLineLength:KitToolRow.kt$KitIcon(mark, Modifier.size(16.dp), tone = if (view.status == KitToolStatus.Failed) TextTone.Primary else TextTone.Secondary)</ID>
+    <ID>MaxLineLength:KitToolRow.kt$KitText(view.title, role = TypeRole.Label, tone = TextTone.Primary, kind = KitTextKind.Frame, maxLines = 1)</ID>
+    <ID>MaxLineLength:KitToolRow.kt$KitText(view.title, role = TypeRole.Label, tone = TextTone.Primary, kind = KitTextKind.Frame, maxLines = lines)</ID>
+    <ID>MaxLineLength:KitToolRow.kt$Row</ID>
+    <ID>MaxLineLength:KitToolRowTest.kt$KitToolRowTest$KitCommandBox(command = "pwd", output = "/root\n", moreLabel = "Show all", onMore = {}, exitLabel = null)</ID>
+    <ID>MaxLineLength:KitToolView.kt$KitToolKind$public enum</ID>
+    <ID>MaxLineLength:KitVoicePill.kt$cornerRadius = CornerRadius(barWidth / 2, barWidth / 2)</ID>
+    <ID>MaxLineLength:KitVoicePill.kt$topLeft = Offset((slot * (barWidth + gap)).roundToInt().toFloat(), ((size.height - h) / 2).roundToInt().toFloat())</ID>
+    <ID>MaxLineLength:KitVoicePill.kt$val h = (shortest + (tallest - shortest) * kotlin.math.abs(i - center) / center).dp.toPx().roundToInt().toFloat()</ID>
+    <ID>MaxLineLength:KitWorkLine.kt$KitIcon(if (expanded) KitIcons.chevronUp else KitIcons.chevronDown, Modifier.size(iconSize), tone = TextTone.Secondary)</ID>
+    <ID>MaxLineLength:KitWorkLine.kt$KitWorkState.Done -&gt; KitIcon(KitIcons.fileText, Modifier.size(iconSize), tone = TextTone.Secondary)</ID>
+    <ID>MaxLineLength:KitWorkLine.kt$KitWorkState.EndedFailed -&gt; KitIcon(KitIcons.warning, Modifier.size(iconSize), tone = TextTone.Secondary)</ID>
+    <ID>MaxLineLength:KitWorkLine.kt$KitWorkState.Stopped -&gt; KitIcon(KitIcons.stopCircle, Modifier.size(iconSize), tone = TextTone.Secondary)</ID>
+    <ID>MaxLineLength:KitWorkLine.kt$KitWorkState.WaitingForYou</ID>
+    <ID>MaxLineLength:KitWorkLine.kt$val iconSize = (16f * minOf(LocalDensity.current.fontScale, 1.4f)).dp // NV: icon box follows the person's text size, capped so the line stays one row</ID>
+    <ID>MaxLineLength:KitWorkLineGateTest.kt$KitWorkLineGateTest$KitWorkLine("Read 3 files · edited 1 file · ran 2 commands", "Done", KitWorkState.Done, expanded = false, onToggle = {}) {}</ID>
+    <ID>MaxLineLength:LiveSweepTest.kt$LiveSweepTest$.</ID>
+    <ID>MaxLineLength:MarkdownStreamingTest.kt$MarkdownStreamingTest$assertEquals(0, onAllNodesWithTag(STREAM_CARET_TAG).fetchSemanticsNodes().size, "settled replies show no caret")</ID>
+    <ID>MaxLineLength:MarkdownStreamingTest.kt$MarkdownStreamingTest$assertTrue(builds &lt;= textBlocks + 2 * publishes, "inline builds $builds for $textBlocks text blocks over $publishes publishes")</ID>
+    <ID>MaxLineLength:MarkdownStreamingTest.kt$MarkdownStreamingTest$fun</ID>
+    <ID>MaxLineLength:MarkdownStreamingTest.kt$MarkdownStreamingTest$val textBlocks = md.blocks.count { it !is KitMdBlock.Code &amp;&amp; it !is KitMdBlock.Table &amp;&amp; it !is KitMdBlock.Rule }</ID>
+    <ID>MaxLineLength:MovingPartTest.kt$MovingPartTest$assertEquals(GlowDraw.None, glowPlan(KitGlowChoice.Classic, MotionLevel.Off, saver = false, stillFrame = false).draw)</ID>
+    <ID>MaxLineLength:P3Fixtures.kt$P3Fixtures$*</ID>
+    <ID>MaxLineLength:P3Fixtures.kt$P3Fixtures$fun sentence(n: Int)</ID>
+    <ID>MaxLineLength:P3Fixtures.kt$P3Fixtures$private val delta = Regex(""""type":"session\.text\.delta".*?"assistantMessageID":"([^"]+)".*?"delta":"((?:[^"\\]|\\.)*)"""")</ID>
+    <ID>MaxLineLength:P3Fixtures.kt$P3Fixtures$sb.append("- ").append(sentence(6)).append("\n- ").append(sentence(7)).append("\n- ").append(sentence(5)).append("\n\n")</ID>
+    <ID>MaxLineLength:P3Fixtures.kt$P3Fixtures$val words = "the agent reads a file then edits one line and runs the tests while the list follows the newest words".split(' ')</ID>
+    <ID>MaxLineLength:PartsMatrixGateTest.kt$PartsMatrixGateTest$Column</ID>
+    <ID>MaxLineLength:PartsMatrixGateTest.kt$PartsMatrixGateTest$KitMdBlock.Pictures("p", persistentListOf(KitPicture("Screenshot", path = "docs/a.png"), KitPicture("Diagram", path = "docs/b.png")))</ID>
+    <ID>MaxLineLength:PartsMatrixGateTest.kt$PartsMatrixGateTest$private val wrap: @Composable (@Composable () -&gt; Unit) -&gt; Unit = { androidx.compose.runtime.CompositionLocalProvider(io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor provides io.github.eslamasabry.oc.core.security.Redactor()) { it() } }</ID>
+    <ID>MaxLineLength:PartsMatrixGateTest.kt$PartsMatrixGateTest$val view = KitToolView("a", KitToolKind.Shell, "Shell", null, "flutter test", KitToolStatus.Running, null, null, null, "")</ID>
+    <ID>MaxLineLength:RevealTest.kt$RevealTest$// A 473-char backlog drains in ~250 ms and the last fade ends 250 ms later: ~30 clock frames, then it parks.</ID>
+    <ID>MaxLineLength:RevealTest.kt$RevealTest$KitReplyBlock</ID>
+    <ID>MaxLineLength:RevealTest.kt$RevealTest$modifier = Modifier.layout { m, c -&gt; measures++; val p = m.measure(c); layout(p.width, p.height) { p.place(0, 0) } }</ID>
+    <ID>MaxLineLength:StatusStripTest.kt$StatusStripTest$model = { KitChip("A long model name", Modifier.testTag("model"), kind = KitChipKind.Action, onClick = {}) }</ID>
+    <ID>MaxLineLength:StopGuardTest.kt$StopGuardTest$*</ID>
+    <ID>MaxLineLength:StopGuardTest.kt$StopGuardTest$fun</ID>
+    <ID>MaxLineLength:TestMarkdown.kt$TestStreamingMarkdown.Companion$(c == '*' || c == '_') &amp;&amp; i + 1 &lt; src.length &amp;&amp; !src[i + 1].isWhitespace() &amp;&amp; src.indexOf(c, i + 1) &gt; i + 1</ID>
+    <ID>MaxLineLength:TestMarkdown.kt$TestStreamingMarkdown.Companion$/** `code`, **bold**, *italic*, ~~strike~~ and [text](url); inline code that looks like a path becomes a path. */</ID>
+    <ID>MaxLineLength:TestMarkdown.kt$TestStreamingMarkdown.Companion$fun isRule(t: String): Boolean</ID>
+    <ID>MaxLineLength:TestMarkdown.kt$TestStreamingMarkdown.Companion$lines.drop(2).filter { it.isNotBlank() }.map { r -&gt; cells(r).map(::parseInlines).toImmutableList() }.toImmutableList()</ID>
+    <ID>MaxLineLength:TranscriptList.kt$Brush.verticalGradient(0f to ground.copy(alpha = 0f), 1f to ground, startY = 0f, endY = reach)</ID>
+    <ID>MaxLineLength:build.gradle.kts$// The golden gate writes its rows and pictures (looks-out/gate) as a side effect of the desktop tests, so Gradle must run</ID>
+    <ID>MaxLineLength:build.gradle.kts$// The golden-diff gate lives in ui/gate (desktopMain); ModuleRules has no :ui:gate edges, so it is compiled in here.</ID>
+    <ID>NestedBlockDepth:CodeText.kt$public fun commandLineStarts(lines: List&lt;String&gt;): List&lt;Boolean&gt;</ID>
+    <ID>NestedBlockDepth:DiffMarkdown.kt$internal fun diffDisplay( rows: List&lt;DiffRow&gt;, formatted: Boolean, split: Boolean, fenceState: Map&lt;DiffLine, Boolean&gt;, ): List&lt;DiffDisplay&gt;</ID>
+    <ID>NestedBlockDepth:DiffModel.kt$DiffModel$private fun lineDiff(a: List&lt;String&gt;, b: List&lt;String&gt;): List&lt;DiffLine&gt;</ID>
+    <ID>NestedBlockDepth:DiffModel.kt$DiffModel$public fun displayRows(file: DiffFile, maxLines: Int? = null): DiffRows</ID>
+    <ID>NestedBlockDepth:DiffModel.kt$DiffModel$public fun parseFilePatch( path: String, patch: String, status: DiffFileStatus? = null, oldPath: String? = null, ): DiffFile</ID>
+    <ID>NestedBlockDepth:DiffModel.kt$DiffModel$public fun parsePatch(patch: String, defaultPath: String = ""): ImmutableList&lt;DiffFile&gt;</ID>
+    <ID>NestedBlockDepth:KitDiffView.kt$@Composable public fun KitDiffView( file: DiffFile, maxLines: Int = 12, hunkLabel: (oldStart: Int, oldEnd: Int, newStart: Int, newEnd: Int) -&gt; String, gapLabel: (hidden: Int) -&gt; String, modifier: Modifier = Modifier, onComment: ((String) -&gt; Unit)? = null, onAddToPrompt: ((String) -&gt; Unit)? = null, )</ID>
+    <ID>ReturnCount:DiffModel.kt$DiffModel$private fun parseHeader(line: String): Header?</ID>
+    <ID>ReturnCount:SyntaxMpCodeTokenizer.kt$SyntaxMpCodeTokenizer$override fun tokenize(code: String, language: CodeLanguage): ImmutableList&lt;CodeToken&gt;</ID>
+    <ID>SpreadOperator:ComposerGlow.kt$( *colours.softStops(GlowGeometry.SOFT_WASH_PEAK / GlowGeometry.SOFT_LINE_PEAK), center = Offset(size.width / 2f, size.height / 2f), )</ID>
+    <ID>SpreadOperator:ComposerGlow.kt$(*colours.classicStops, center = Offset(size.width / 2f, size.height / 2f))</ID>
+    <ID>SpreadOperator:ComposerGlow.kt$(*colours.softStops(1f), center = Offset(size.width / 2f, size.height / 2f))</ID>
+    <ID>TooManyFunctions:DiffModel.kt$DiffModel</ID>
+    <ID>TooManyFunctions:KitMarkdown.kt$io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdown.kt</ID>
+    <ID>UnusedPrivateProperty:KitStopAndSendPill.kt$val tokens = LocalKitTokens.current</ID>
+    <ID>WildcardImport:CodeOverflow.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:CodeOverflow.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:DiffCodeText.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:DiffCodeText.kt$import io.github.eslamasabry.oc.ui.kitchat.code.*</ID>
+    <ID>WildcardImport:KitCodeLine.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:KitComposerStatusStrip.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:KitComposerTextBox.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:KitContextSheet.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:KitContextSheet.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:KitDiffView.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:KitDiffView.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:KitDiffView.kt$import androidx.compose.ui.semantics.*</ID>
+    <ID>WildcardImport:KitDiffView.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:KitInboxRequestRow.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:KitLevelMeterGateTest.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:KitLevelMeterGateTest.kt$import io.github.eslamasabry.oc.ui.design.tokens.*</ID>
+    <ID>WildcardImport:KitLevelMeterGateTest.kt$import io.github.eslamasabry.oc.ui.design.type.*</ID>
+    <ID>WildcardImport:KitLevelMeterGateTest.kt$import io.github.eslamasabry.oc.ui.kit.foundation.*</ID>
+    <ID>WildcardImport:KitLevelMeterGateTest.kt$import io.github.eslamasabry.oc.ui.kit.theme.*</ID>
+    <ID>WildcardImport:KitLevelMeterParityTest.kt$import kotlin.test.*</ID>
+    <ID>WildcardImport:KitReplyFooter.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:KitStartingConversation.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:KitStartingConversation.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:StatusStripTest.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:StatusStripTest.kt$import androidx.compose.ui.test.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

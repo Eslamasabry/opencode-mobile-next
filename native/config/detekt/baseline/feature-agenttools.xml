@@ -1,0 +1,43 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:AgentToolsViewModel.kt$AgentToolsViewModel$!state.value.canOptions || state.value.busy || state.value.loading || state.value.uncertain</ID>
+    <ID>ComplexCondition:AgentToolsViewModel.kt$AgentToolsViewModel$!state.value.canOptions || state.value.busy || state.value.loading || state.value.uncertain || state.value.models.none { it.id == id }</ID>
+    <ID>ComplexCondition:AgentToolsViewModel.kt$AgentToolsViewModel$usable() != null &amp;&amp; state.value.canUpdate &amp;&amp; !state.value.busy &amp;&amp; !state.value.loading &amp;&amp; !state.value.uncertain</ID>
+    <ID>CyclomaticComplexMethod:AgentTerminal.kt$AgentTerminal$override fun openTerminal(id: String)</ID>
+    <ID>CyclomaticComplexMethod:AgentToolsScreen.kt$@Composable public fun AgentToolsScreen(state: AgentToolsUi, actions: AgentToolsActions)</ID>
+    <ID>CyclomaticComplexMethod:AgentToolsViewModel.kt$AgentToolsViewModel$override fun confirmUpdate()</ID>
+    <ID>CyclomaticComplexMethod:AgentToolsViewModel.kt$AgentToolsViewModel$override fun refresh()</ID>
+    <ID>CyclomaticComplexMethod:AgentToolsViewModel.kt$AgentToolsViewModel$override fun setModel(id: String)</ID>
+    <ID>LongMethod:AgentTerminal.kt$AgentTerminal$override fun openTerminal(id: String)</ID>
+    <ID>LongMethod:AgentTerminalUi.kt$@Composable internal fun AgentTerminalRows(state: AgentTerminalUi, actions: AgentTerminalActions)</ID>
+    <ID>LongMethod:AgentTerminalUi.kt$@Composable internal fun AgentTerminalScreen(state: AgentTerminalUi, actions: AgentTerminalActions)</ID>
+    <ID>LongMethod:AgentToolsScreen.kt$@Composable public fun AgentToolsScreen(state: AgentToolsUi, actions: AgentToolsActions)</ID>
+    <ID>LongMethod:AgentToolsViewModel.kt$AgentToolsViewModel$override fun refresh()</ID>
+    <ID>MagicNumber:AgentTerminal.kt$127</ID>
+    <ID>MagicNumber:AgentTerminal.kt$256</ID>
+    <ID>MagicNumber:AgentTerminal.kt$32</ID>
+    <ID>ReturnCount:AgentTerminal.kt$AgentTerminal$override fun confirmCloseTerminal()</ID>
+    <ID>ReturnCount:AgentTerminal.kt$AgentTerminal$override fun finishTerminalName(name: String?)</ID>
+    <ID>ReturnCount:AgentTerminal.kt$AgentTerminal$override fun finishTerminalRename(name: String?)</ID>
+    <ID>ReturnCount:AgentTerminal.kt$AgentTerminal$override fun listTerminals()</ID>
+    <ID>ReturnCount:AgentTerminal.kt$AgentTerminal$override fun openTerminal(id: String)</ID>
+    <ID>ReturnCount:AgentTerminal.kt$AgentTerminal$override fun sendTerminal(value: String)</ID>
+    <ID>ReturnCount:AgentTerminal.kt$AgentTerminal$private fun live(): AgentToolsSession?</ID>
+    <ID>ReturnCount:AgentToolsViewModel.kt$AgentToolsViewModel$override fun confirmUpdate()</ID>
+    <ID>ReturnCount:AgentToolsViewModel.kt$AgentToolsViewModel$override fun importConversation(handle: String, agentId: String)</ID>
+    <ID>ReturnCount:AgentToolsViewModel.kt$AgentToolsViewModel$override fun readImports()</ID>
+    <ID>ReturnCount:AgentToolsViewModel.kt$AgentToolsViewModel$override fun refresh()</ID>
+    <ID>ReturnCount:AgentToolsViewModel.kt$AgentToolsViewModel$override fun setModel(id: String)</ID>
+    <ID>ReturnCount:AgentToolsViewModel.kt$AgentToolsViewModel$private fun change(id: String, value: JsonPrimitive)</ID>
+    <ID>ReturnCount:AgentToolsViewModel.kt$AgentToolsViewModel$private fun monitorAction(enabled: Boolean?)</ID>
+    <ID>ReturnCount:AgentToolsViewModel.kt$AgentToolsViewModel$private fun usable(): AgentToolsSession?</ID>
+    <ID>TooManyFunctions:AgentTerminal.kt$AgentTerminal : AgentTerminalActions</ID>
+    <ID>TooManyFunctions:AgentTerminal.kt$AgentTerminalActions</ID>
+    <ID>TooManyFunctions:AgentToolsUi.kt$AgentToolsActions : AgentTerminalActions</ID>
+    <ID>TooManyFunctions:AgentToolsViewModel.kt$AgentToolsViewModel : ViewModelAgentToolsActions</ID>
+    <ID>WildcardImport:AgentTerminalUi.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:AgentToolsScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

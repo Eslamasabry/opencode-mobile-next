@@ -1,0 +1,62 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:ScheduleEditScreen.kt$@Composable private fun EditorForm(state: ScheduleEditUi, draft: EditorDraft, words: ScheduleWords)</ID>
+    <ID>CyclomaticComplexMethod:ScheduleEditViewModel.kt$ScheduleEditViewModel$private suspend fun seed()</ID>
+    <ID>CyclomaticComplexMethod:ScheduleWords.kt$private fun ScheduleWord.resource(): StringResource</ID>
+    <ID>CyclomaticComplexMethod:SchedulesScreen.kt$@Composable public fun SchedulesScreen(state: SchedulesUi, actions: SchedulesActions)</ID>
+    <ID>CyclomaticComplexMethod:SchedulesViewModel.kt$SchedulesViewModel$private fun present(engineState: SchedulesState, own: Local): SchedulesUi</ID>
+    <ID>EmptyFunctionBlock:SchedulesViewModelTest.kt$SchedulesViewModelTest.Alarms${}</ID>
+    <ID>EmptyFunctionBlock:SchedulesViewModelTest.kt$SchedulesViewModelTest.Nav${}</ID>
+    <ID>EmptyFunctionBlock:SchedulesViewModelTest.kt$SchedulesViewModelTest.Quiet${}</ID>
+    <ID>LongMethod:ScheduleEditScreen.kt$@Composable private fun EditorForm(state: ScheduleEditUi, draft: EditorDraft, words: ScheduleWords)</ID>
+    <ID>LongMethod:ScheduleEditScreen.kt$@Composable private fun ScheduleWheel( state: ScheduleEditUi, draft: EditorDraft, words: ScheduleWords, enabled: KitEnabled, )</ID>
+    <ID>LongMethod:ScheduleEditViewModel.kt$ScheduleEditViewModel$private suspend fun seed()</ID>
+    <ID>LongMethod:ScheduleWords.kt$private fun ScheduleWord.resource(): StringResource</ID>
+    <ID>LongMethod:ScheduleWords.kt$private fun compatibilityTemplates(ar: Boolean): Map&lt;ScheduleWord, String&gt;</ID>
+    <ID>LongMethod:SchedulesScreen.kt$@Composable private fun ScheduleRow( row: ScheduleRowUi, state: SchedulesUi, actions: SchedulesActions, words: ScheduleWords, enabled: KitEnabled, )</ID>
+    <ID>LongMethod:SchedulesScreen.kt$@Composable public fun SchedulesScreen(state: SchedulesUi, actions: SchedulesActions)</ID>
+    <ID>MagicNumber:ScheduleEditScreen.kt$15</ID>
+    <ID>MagicNumber:ScheduleEditScreen.kt$24</ID>
+    <ID>MagicNumber:ScheduleEditScreen.kt$3</ID>
+    <ID>MagicNumber:ScheduleEditScreen.kt$60</ID>
+    <ID>MagicNumber:ScheduleEditScreen.kt$9</ID>
+    <ID>MagicNumber:ScheduleEditViewModel.kt$EditorRules$168</ID>
+    <ID>MagicNumber:ScheduleEditViewModel.kt$EditorRules$23</ID>
+    <ID>MagicNumber:ScheduleEditViewModel.kt$EditorRules$3_600_000L</ID>
+    <ID>MagicNumber:ScheduleEditViewModel.kt$EditorRules$59</ID>
+    <ID>MagicNumber:ScheduleText.kt$6L</ID>
+    <ID>MagicNumber:SchedulesViewModel.kt$SchedulesViewModel$5_000</ID>
+    <ID>MaxLineLength:ScheduleEditScreen.kt$"${(minutes / 60).toString().padStart(2, '0')}:${(minutes % 60).toString().padStart(2, '0')}"</ID>
+    <ID>MaxLineLength:ScheduleEditScreen.kt$io.github.eslamasabry.oc.engine.schedules.ScheduleTime.todayAt(nowMs, time.first, time.second)</ID>
+    <ID>MaxLineLength:ScheduleWords.kt$ScheduleWord.WhyUncertain to "It didn't finish in time. It was not sent again; check the conversation before running it again."</ID>
+    <ID>MaxLineLength:ScheduleWordsTest.kt$ScheduleWordsTest$"stale_target"</ID>
+    <ID>MaxLineLength:ScheduleWordsTest.kt$ScheduleWordsTest$assertEquals(EditIssue.DateInvalid, EditorRules.recurrence(base.copy(kind = RecurrenceKind.Once, date = "tomorrow"), t0, utc).second)</ID>
+    <ID>MaxLineLength:ScheduleWordsTest.kt$ScheduleWordsTest$assertEquals(EditIssue.HoursInvalid, EditorRules.recurrence(base.copy(kind = RecurrenceKind.Interval, hours = "0"), t0, utc).second)</ID>
+    <ID>MaxLineLength:ScheduleWordsTest.kt$ScheduleWordsTest$assertEquals(Recurrence.interval(4, t0 + 65 * 60_000L), EditorRules.recurrence(base.copy(kind = RecurrenceKind.Interval, hours = "4"), t0, utc).first)</ID>
+    <ID>MaxLineLength:ScheduleWordsTest.kt$ScheduleWordsTest$assertEquals(t0 + 24 * hour + 65 * 60_000L, EditorRules.recurrence(base.copy(kind = RecurrenceKind.Once, date = "2026-11-03"), t0, utc).first!!.atMs)</ID>
+    <ID>MaxLineLength:SchedulesScreenUiTest.kt$SchedulesScreenUiTest$private val list = SchedulesUi(phase = SchedulesPhase.List, serverName = "Home server", rows = persistentListOf(row), nowMs = t0)</ID>
+    <ID>MaxLineLength:SchedulesScreenUiTest.kt$SchedulesScreenUiTest$val state = ScheduleEditUi(phase = EditPhase.Ready, fields = EditorFields(prompt = "Summarize", project = "/work/app"), seed = 1)</ID>
+    <ID>MaxLineLength:SchedulesViewModel.kt$SchedulesViewModel$engineState.error == ScheduleCode.StorageCorrupt &amp;&amp; engineState.schedules.isEmpty() -&gt; Unavailable.Storage</ID>
+    <ID>MaxLineLength:SchedulesViewModel.kt$SchedulesViewModel$prompt = schedule.prompt.lineSequence().map { it.trim() }.firstOrNull { it.isNotEmpty() } ?: schedule.prompt.trim()</ID>
+    <ID>MaxLineLength:SchedulesViewModelTest.kt$SchedulesViewModelTest$edit.save(edit.state.value.fields.copy(kind = RecurrenceKind.Weekdays, time = "07:15", missed = MissedRunPolicy.Skip))</ID>
+    <ID>MaxLineLength:SchedulesViewModelTest.kt$SchedulesViewModelTest$io.github.eslamasabry.oc.feature.schedules.presentation.EditorFields(prompt = prompt, project = "/work/app", time = "09:00")</ID>
+    <ID>MaxLineLength:SchedulesViewModelTest.kt$SchedulesViewModelTest$private fun editor(route: SchedulesRoute.Edit = SchedulesRoute.Edit(pid))</ID>
+    <ID>MaxLineLength:SchedulesViewModelTest.kt$SchedulesViewModelTest$private fun list(route: SchedulesRoute.List = SchedulesRoute.List(pid))</ID>
+    <ID>MaxLineLength:SchedulesViewModelTest.kt$SchedulesViewModelTest.Profiles$override suspend</ID>
+    <ID>ReturnCount:ScheduleEditScreen.kt$@Composable private fun scheduleActionLabel(fields: EditorFields, nowMs: Long, words: ScheduleWords): String</ID>
+    <ID>ReturnCount:ScheduleEditViewModel.kt$EditorRules$public fun recurrence( fields: EditorFields, nowMs: Long, zoneId: String? = null, ): Pair&lt;Recurrence?, EditIssue?&gt;</ID>
+    <ID>TooManyFunctions:ScheduleWords.kt$ScheduleWords</ID>
+    <ID>TooManyFunctions:SchedulesUi.kt$SchedulesActions</ID>
+    <ID>TooManyFunctions:SchedulesViewModel.kt$SchedulesViewModel : ViewModelSchedulesActions</ID>
+    <ID>UnusedParameter:ScheduleEditScreen.kt$words: ScheduleWords</ID>
+    <ID>WildcardImport:ScheduleEditScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:ScheduleListTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:ScheduleListTest.kt$import io.github.eslamasabry.oc.feature.schedules.presentation.*</ID>
+    <ID>WildcardImport:ScheduleWheelTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:ScheduleWheelTest.kt$import io.github.eslamasabry.oc.feature.schedules.presentation.*</ID>
+    <ID>WildcardImport:SchedulesScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:SchedulesScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

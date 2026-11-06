@@ -1,0 +1,181 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:ReplyWatch.kt$ReplyWatchServiceBody$!active || !owners.isOnly(StatusOwner.Reply) || displayedRun != run || run !in source.runs.value</ID>
+    <ID>CyclomaticComplexMethod:AlertShade.kt$AndroidAlertShade$private fun privateWords(alert: CodingAlert, publicTitle: String): Pair&lt;String, String&gt;</ID>
+    <ID>CyclomaticComplexMethod:Alerts.kt$AlertPolicy$public fun route(alert: CodingAlert, facts: AlertFacts): AlertRoute</ID>
+    <ID>CyclomaticComplexMethod:StatusController.kt$StatusController$public fun input(): StatusInput</ID>
+    <ID>CyclomaticComplexMethod:StatusModel.kt$StatusModel$public fun build(input: StatusInput, words: StatusWords, now: Instant, formatTime: (Instant) -&gt; String): StatusContent</ID>
+    <ID>LongMethod:StatusModel.kt$StatusModel$public fun build(input: StatusInput, words: StatusWords, now: Instant, formatTime: (Instant) -&gt; String): StatusContent</ID>
+    <ID>LongParameterList:AlertShade.kt$AndroidAlertShade$( requestCode: Int, kind: AlertKind, session: String, profile: String, request: String, monitorToken: String, )</ID>
+    <ID>LongParameterList:Channels.kt$NotifyChannel$( public val id: String, public val importance: Int, public val nameRes: Int, public val descriptionRes: Int?, public val showBadge: Boolean, public val feature: ChannelFeature, /** Coding channels hide their words on the lock screen; the alerts carry a count-only public version. */ public val privateOnLockScreen: Boolean, )</ID>
+    <ID>LongParameterList:ReplyWatch.kt$ReplyWatchServiceBody$( private val context: Context, private val words: NotifyWords, private val renderer: StatusRenderer, private val shade: AlertShade, private val source: ReplyRunSource, private val owners: StatusOwners, private val scope: CoroutineScope, /** Monotonic milliseconds (`SystemClock::elapsedRealtime` in the app; virtual time in tests). */ private val elapsedMs: () -&gt; Long, private val tickMs: Long = 1_000L, )</ID>
+    <ID>LongParameterList:StatusRow.kt$StatusContent.Companion$( kind: StatusKind?, title: String?, text: String? = null, lines: List&lt;String?&gt; = emptyList(), subText: String? = null, progress: Int? = null, actions: List&lt;StatusAction&gt; = emptyList(), conversation: ConversationRef? = null, turnId: String = "", publicTitle: String? = null, count: Int = 1, )</ID>
+    <ID>LoopWithTooManyJumpStatements:Channels.kt$ChannelRegistry$for</ID>
+    <ID>LoopWithTooManyJumpStatements:StatusController.kt$StatusController$for</ID>
+    <ID>MagicNumber:Frozen.kt$NotificationIds$0x0fffffff</ID>
+    <ID>MagicNumber:Frozen.kt$NotificationIds$4</ID>
+    <ID>MagicNumber:StatusController.kt$StatusController.Companion$1024</ID>
+    <ID>MagicNumber:StatusController.kt$StatusController.Companion$64</ID>
+    <ID>MagicNumber:StatusModel.kt$StatusModel$100</ID>
+    <ID>MagicNumber:StatusModel.kt$StatusModel$60</ID>
+    <ID>MaxLineLength:AlertMoments.kt$AlertMoments$if (alertedStatus.remove(sessionId)) listOf(Step.Dismiss(AlertKeys.status(profileId, sessionId))) else emptyList()</ID>
+    <ID>MaxLineLength:AlertMoments.kt$AlertMoments$if (held == null || (held.kind != AlertKind.Permission &amp;&amp; p.kind == AlertKind.Permission)) front[p.sessionId] = p</ID>
+    <ID>MaxLineLength:AlertMoments.kt$AlertMoments$return if (alertedStatus.remove(sessionId)) listOf(Step.Dismiss(AlertKeys.status(profileId, sessionId))) else emptyList()</ID>
+    <ID>MaxLineLength:AlertMoments.kt$AlertMoments$return listOf(Step.Post(kind, sessionId, AlertKeys.status(profileId, sessionId), reason = reason, quiet = quiet))</ID>
+    <ID>MaxLineLength:AlertMomentsTest.kt$AlertMomentsTest$assertEquals(listOf(Step.Post(AlertKind.Question, "session-1", input, "question-1")), fresh.requests(listOf(question)))</ID>
+    <ID>MaxLineLength:AlertMomentsTest.kt$AlertMomentsTest$assertEquals(setOf&lt;Step&gt;(Step.Dismiss(status), Step.Dismiss(AlertKeys.input("p1", "session-2"))), m.appVisible(true).toSet())</ID>
+    <ID>MaxLineLength:AlertMomentsTest.kt$AlertMomentsTest$listOf(Step.Post(AlertKind.Error, "session-2", AlertKeys.status("p1", "session-2"), reason = StopReason.Auth, quiet = true))</ID>
+    <ID>MaxLineLength:AlertMomentsTest.kt$AlertMomentsTest$m.runEnded("session-2", AlertKind.Error, reason = NotificationText.stoppedReason("ProviderAuthError"), quiet = true)</ID>
+    <ID>MaxLineLength:AlertRulesTest.kt$AlertRulesTest$assertEquals(AlertCopy.Copy(AlertCopy.Title.Finished, "Add combo counter", "All tests pass."), AlertCopy.of(done))</ID>
+    <ID>MaxLineLength:AlertRulesTest.kt$AlertRulesTest$assertEquals(AlertCopy.Copy(AlertCopy.Title.FinishedAny, body = "x"), AlertCopy.of(of(AlertKind.Complete).copy(detail = "x")))</ID>
+    <ID>MaxLineLength:AlertRulesTest.kt$AlertRulesTest$assertEquals(AlertCopy.Copy(AlertCopy.Title.Literal, "Which database?", "Postgres · SQLite · None"), AlertCopy.of(q))</ID>
+    <ID>MaxLineLength:AlertRulesTest.kt$AlertRulesTest$assertEquals(AlertCopy.Copy(AlertCopy.Title.Run, "npm install", "npm install --save x"), AlertCopy.of(permission()))</ID>
+    <ID>MaxLineLength:AlertRulesTest.kt$AlertRulesTest$assertEquals(AlertRoute.Post(NotifyChannel.CodingAction, AlertGroups.NEEDS_YOU), AlertPolicy.route(permission(), facts))</ID>
+    <ID>MaxLineLength:AlertRulesTest.kt$AlertRulesTest$assertEquals(AlertRoute.Post(NotifyChannel.CodingActionQuiet, AlertGroups.NEEDS_YOU), AlertPolicy.route(permission(), quiet))</ID>
+    <ID>MaxLineLength:AlertRulesTest.kt$AlertRulesTest$assertEquals(AlertRoute.Post(NotifyChannel.CodingActionQuiet, null), AlertPolicy.route(of(AlertKind.Error), quiet))</ID>
+    <ID>MaxLineLength:AlertRulesTest.kt$AlertRulesTest$assertEquals(AlertRoute.Post(NotifyChannel.CodingStatus, AlertGroups.FINISHED), AlertPolicy.route(of(AlertKind.Complete), facts))</ID>
+    <ID>MaxLineLength:AlertRulesTest.kt$AlertRulesTest$assertEquals(AlertRoute.Skip(SkipWhy.AppVisible), AlertPolicy.route(of(AlertKind.CheckIn), facts.copy(appVisible = true)))</ID>
+    <ID>MaxLineLength:AlertRulesTest.kt$AlertRulesTest$assertEquals(AlertRoute.Skip(SkipWhy.AppVisible), AlertPolicy.route(permission(), facts.copy(appVisible = true)))</ID>
+    <ID>MaxLineLength:AlertRulesTest.kt$AlertRulesTest$assertEquals(AlertRoute.Skip(SkipWhy.Invalid), AlertPolicy.route(CodingAlert(AlertKind.Complete, "", "k"), facts))</ID>
+    <ID>MaxLineLength:AlertRulesTest.kt$AlertRulesTest$assertEquals(AlertRoute.Skip(SkipWhy.NoPermission), AlertPolicy.route(of(AlertKind.Test), off.copy(permissionGranted = false)))</ID>
+    <ID>MaxLineLength:AlertRulesTest.kt$AlertRulesTest$assertEquals(AlertRoute.Skip(SkipWhy.QuietHours), AlertPolicy.route(of(AlertKind.CheckIn), facts.copy(quietHours = true)))</ID>
+    <ID>MaxLineLength:AlertRulesTest.kt$AlertRulesTest$assertEquals(AlertRoute.Skip(SkipWhy.ServerAlertsOff), AlertPolicy.route(permission(), facts.copy(serverAlertsOn = false)))</ID>
+    <ID>MaxLineLength:AlertRulesTest.kt$AlertRulesTest$assertEquals(AlertRoute.Skip(SkipWhy.SubAgent), AlertPolicy.route(of(AlertKind.Complete), facts.copy(subAgentSession = true)))</ID>
+    <ID>MaxLineLength:AlertRulesTest.kt$AlertRulesTest$assertEquals(NotificationIds.alert(key) * 4 + 2, NotificationIds.actionRequestCode(NotificationIds.alert(key), 1))</ID>
+    <ID>MaxLineLength:AlertRulesTest.kt$AlertRulesTest$assertTrue(ShadeDecision.Allow.needsUnlock &amp;&amp; ShadeDecision.Reply.needsUnlock &amp;&amp; ShadeDecision.Option.needsUnlock)</ID>
+    <ID>MaxLineLength:AlertShadeTest.kt$AlertShadeTest$assertEquals("A conversation finished", n.publicVersion.extras.getCharSequence(Notification.EXTRA_TITLE).toString())</ID>
+    <ID>MaxLineLength:AlertShadeTest.kt$AlertShadeTest$assertEquals("The conversation is too long for the model.", n.extras.getCharSequence(Notification.EXTRA_TEXT).toString())</ID>
+    <ID>MaxLineLength:AlertShadeTest.kt$AlertShadeTest$assertEquals(NotifyWords(app) { "ar" }.text(R.string.notify_ask_run, "npm install"), n.extras.getCharSequence(Notification.EXTRA_TITLE).toString())</ID>
+    <ID>MaxLineLength:AlertShadeTest.kt$AlertShadeTest$fun</ID>
+    <ID>MaxLineLength:AlertShadeTest.kt$AlertShadeTest$val error = CodingAlert(AlertKind.Error, "ses_1", AlertKeys.status("p1", "ses_1"), chatTitle = "Deploy", reason = StopReason.Context)</ID>
+    <ID>MaxLineLength:AlertShadeTest.kt$AlertShadeTest$val first = CodingAlert(AlertKind.Complete, "ses_1", AlertKeys.status("p1", "ses_1"), profileId = "p1", chatTitle = "Add combo counter", detail = "All tests pass.")</ID>
+    <ID>MaxLineLength:AlertShadeTest.kt$AlertShadeTest$val tap = ShadeTap(AlertKind.Permission, "ses_1", AlertKeys.input("p1", "ses_1"), ShadeDecision.Allow, "per_9", "p1", null)</ID>
+    <ID>MaxLineLength:Channels.kt$ChannelRegistry$manager.getNotificationChannel(channel.id)?.importance?.let { it == NotificationManager.IMPORTANCE_NONE } ?: true</ID>
+    <ID>MaxLineLength:Channels.kt$NotifyChannel.BuiltinServer$R.string.notify_phone_server_channel</ID>
+    <ID>MaxLineLength:Channels.kt$NotifyChannel.CodingAction$R.string.notify_coding_requests_channel</ID>
+    <ID>MaxLineLength:Channels.kt$NotifyChannel.CodingStatus$R.string.notify_coding_status_channel</ID>
+    <ID>MaxLineLength:ChannelsTest.kt$ChannelsTest$assertEquals(Notification.VISIBILITY_PRIVATE, manager.getNotificationChannel("opencode_coding_action").lockscreenVisibility)</ID>
+    <ID>MaxLineLength:ChannelsTest.kt$ChannelsTest$assertEquals(NotificationManager.IMPORTANCE_LOW, manager.getNotificationChannel("opencode_coding_action").importance)</ID>
+    <ID>MaxLineLength:ChannelsTest.kt$ChannelsTest$kotlin.test.assertNotEquals(english.text(id), other.text(id), "$lang ${app.resources.getResourceEntryName(id)}")</ID>
+    <ID>MaxLineLength:ChannelsTest.kt$ChannelsTest$listOf(R.string.notify_allow_once, R.string.notify_reject, R.string.notify_answer_in_app, R.string.notify_public_needs_you)</ID>
+    <ID>MaxLineLength:ChannelsTest.kt$ChannelsTest$manager.createNotificationChannel(NotificationChannel("opencode_coding_action", "Coding requests", NotificationManager.IMPORTANCE_HIGH))</ID>
+    <ID>MaxLineLength:ChannelsTest.kt$ChannelsTest$manager.createNotificationChannel(NotificationChannel("opencode_team_progress", "AI Team progress", NotificationManager.IMPORTANCE_LOW))</ID>
+    <ID>MaxLineLength:LiveUpdateManifestParityTest.kt$LiveUpdateManifestParityTest$val content = StatusContent(StatusKind.Working, "Running the tests", conversation = ConversationRef(ProfileId("p1"), SessionId("s1")), turnId = "t1")</ID>
+    <ID>MaxLineLength:LiveUpdateManifestParityTest.kt$LiveUpdateManifestParityTest$val row = StatusRenderer(app, NotifyWords(app) { "en" }).build(content, ongoing = true, chip = LiveUpdatePolicy.chipFor(content, dismissedRun = false))</ID>
+    <ID>MaxLineLength:NotificationActionBodyTest.kt$NotificationActionBodyTest$assertEquals(listOf(ReplyRun(ConversationRef(ProfileId("p1"), SessionId("ses_7")), "turn_1")), dismissedRows)</ID>
+    <ID>MaxLineLength:NotificationActionBodyTest.kt$NotificationActionBodyTest$fun</ID>
+    <ID>MaxLineLength:NotificationActionBodyTest.kt$NotificationActionBodyTest$private</ID>
+    <ID>MaxLineLength:NotificationActionBodyTest.kt$NotificationActionBodyTest$val a = CodingAlert(AlertKind.Permission, "ses_1", "input:p1:ses_1", requestId = "per_1", profileId = "p1", detail = "npm test", ask = PermissionAsk(AskAction.Run, "npm test"))</ID>
+    <ID>MaxLineLength:NotificationActionBodyTest.kt$NotificationActionBodyTest$val blankOption = tapIntent("option1", kind = "question") { putExtra(FrozenExtras.EXTRA_CODING_ALERT_OPTION_TEXT, " ") }</ID>
+    <ID>MaxLineLength:NotificationActionBodyTest.kt$NotificationActionBodyTest$val empty = tapIntent("reply", kind = "question") { putExtra(FrozenExtras.EXTRA_CODING_ALERT_OPTION_TEXT, "") }</ID>
+    <ID>MaxLineLength:NotificationActionBodyTest.kt$NotificationActionBodyTest$val handler = NotificationActionBody(shade, { Unit.ok() }, { stopped = it; Failed(Failure.Network()) }, lock)</ID>
+    <ID>MaxLineLength:NotificationActionBodyTest.kt$NotificationActionBodyTest$val legacy = tapIntent("option0", kind = "question") { putExtra(FrozenExtras.EXTRA_CODING_ALERT_OPTION_TEXT, "Yes") }</ID>
+    <ID>MaxLineLength:NotificationActionBodyTest.kt$NotificationActionBodyTest$val option = tapIntent("option0", request = "que_1", kind = "question") { putExtra(FrozenExtras.EXTRA_CODING_ALERT_OPTION_TEXT, "Postgres") }</ID>
+    <ID>MaxLineLength:NotificationText.kt$NotificationText$"(?i)\\b((?:[A-Za-z0-9]+[_-])*(?:api[_-]?key|access[_-]?key|secret|token|passwd|password|pwd|authorization|auth)"</ID>
+    <ID>MaxLineLength:NotificationText.kt$NotificationText$// Android's ICU engine rejects the (?U) flag (the class then never loads: NoClassDefFoundError); ICU's \s is Unicode-aware already.</ID>
+    <ID>MaxLineLength:NotificationText.kt$NotificationText$val head = if (words.size &gt; 1 &amp;&amp; Regex("^[a-z][a-z0-9:_-]*$").matches(words[1])) "$program ${words[1]}" else program</ID>
+    <ID>MaxLineLength:NotificationText.kt$NotificationText$val lines = text.split('\n').map { it.replaceFirst(Regex("^[#&gt;*\\-\\s`]+"), "").trim() }.filter { it.isNotEmpty() }</ID>
+    <ID>MaxLineLength:NotificationTextParityTest.kt$NotificationTextParityTest$/** The `firstReplyLine` and `stoppedReasonToken` cases of the Flutter `test/notification_text_test.dart` (B-ANDR-048). */</ID>
+    <ID>MaxLineLength:NotificationTextParityTest.kt$NotificationTextParityTest$ReplyExcerpt.firstLine(listOf(assistant("Done. The site now follows the system theme by default:\n\n- Light and dark both work\n- The toggle stays")))</ID>
+    <ID>MaxLineLength:NotificationTextParityTest.kt$NotificationTextParityTest$ReplyExcerpt.firstLine(listOf(assistant("Old reply"), user("next"), assistant("\n## Dark theme added to Settings.\nMore")))</ID>
+    <ID>MaxLineLength:NotificationTextParityTest.kt$NotificationTextParityTest$assertEquals("Real", ReplyExcerpt.firstLine(listOf(Message(true, listOf(Part("injected", synthetic = true), Part("Real"))))))</ID>
+    <ID>MaxLineLength:NotificationTextParityTest.kt$NotificationTextParityTest$assertTrue(ReplyExcerpt.firstLine(listOf(assistant("Intro that ends with a colon:\n- ${"x".repeat(200)}")), maxLength = 60).length &lt;= 60)</ID>
+    <ID>MaxLineLength:NotificationTextTest.kt$NotificationTextTest$assertEquals("Changes made: Added a counter", NotificationText.firstReplyLine(listOf("Changes made:\n- Added a counter\n- Fixed")))</ID>
+    <ID>MaxLineLength:NotificationTextTest.kt$NotificationTextTest$assertEquals("Done. All tests pass.", NotificationText.firstReplyLine(listOf("old", "## Done. All tests pass.\nmore")))</ID>
+    <ID>MaxLineLength:NotificationTextTest.kt$NotificationTextTest$assertEquals(PermissionAsk(AskAction.Edit, "a.kt"), NotificationText.permissionAsk("edit", " ", "C:\\src\\a.kt"))</ID>
+    <ID>MaxLineLength:NotificationTextTest.kt$NotificationTextTest$assertEquals(PermissionAsk(AskAction.Folder, "outside"), NotificationText.permissionAsk("external_directory", null, "/tmp/outside/"))</ID>
+    <ID>MaxLineLength:NotificationTextTest.kt$NotificationTextTest$assertEquals(PermissionAsk(AskAction.Read, "settings.dart"), NotificationText.permissionAsk("read", null, "/lib/settings.dart"))</ID>
+    <ID>MaxLineLength:ReplyWatch.kt$ReplyWatchServiceBody$// ForegroundServiceStartNotAllowedException (API 31+) and the API 34+ type checks: a pause, not a crash.</ID>
+    <ID>MaxLineLength:ReplyWatch.kt$ReplyWatchServiceBody$ServiceCompat.stopForeground(s, if (remaining == null) ServiceCompat.STOP_FOREGROUND_REMOVE else ServiceCompat.STOP_FOREGROUND_DETACH)</ID>
+    <ID>MaxLineLength:ReplyWatch.kt$ReplyWatchSkip</ID>
+    <ID>MaxLineLength:ReplyWatchTest.kt$ReplyWatchPolicyTest$assertEquals(ReplyWatchEnd.NoProgress, ReplyWatchPolicy.end(base.copy(nowMs = 15_000, progressing = false, idleSinceMs = 5_000)))</ID>
+    <ID>MaxLineLength:ReplyWatchTest.kt$ReplyWatchPolicyTest$assertEquals(ReplyWatchEnd.ServerLeft, ReplyWatchPolicy.end(base.copy(joined = true, serverStillHoldsRow = false)))</ID>
+    <ID>MaxLineLength:ReplyWatchTest.kt$ReplyWatchPolicyTest$assertEquals(ReplyWatchStart.Skip(ReplyWatchSkip.ConfigurationChange), ReplyWatchPolicy.onStop(clean.copy(changingConfigurations = true)))</ID>
+    <ID>MaxLineLength:ReplyWatchTest.kt$ReplyWatchPolicyTest$assertEquals(ReplyWatchStart.Skip(ReplyWatchSkip.LiveModeOn), ReplyWatchPolicy.onStop(clean.copy(liveModeActive = true)))</ID>
+    <ID>MaxLineLength:ReplyWatchTest.kt$ReplyWatchPolicyTest$assertEquals(ReplyWatchStart.Skip(ReplyWatchSkip.NothingRunning), ReplyWatchPolicy.onStop(clean.copy(runProgressing = false)))</ID>
+    <ID>MaxLineLength:ReplyWatchTest.kt$ReplyWatchPolicyTest$assertEquals(ReplyWatchStart.Skip(ReplyWatchSkip.OwnRequestCovering), ReplyWatchPolicy.onStop(clean.copy(ownRequestCovering = true)))</ID>
+    <ID>MaxLineLength:ReplyWatchTest.kt$ReplyWatchPolicyTest$assertEquals(ReplyWatchStart.Skip(ReplyWatchSkip.UserPaused), ReplyWatchPolicy.onStop(clean.copy(userPaused = true)))</ID>
+    <ID>MaxLineLength:ReplyWatchTest.kt$ReplyWatchPolicyTest$assertEquals(ReplyWatchStart.Skip(ReplyWatchSkip.WouldNotAlert), ReplyWatchPolicy.onStop(clean.copy(wouldAlert = false)))</ID>
+    <ID>MaxLineLength:ReplyWatchTest.kt$ReplyWatchPolicyTest$fun</ID>
+    <ID>MaxLineLength:ReplyWatchTest.kt$ReplyWatchPolicyTest$val base = ReplyWatchState(0, 5_000, progressing = true, idleSinceMs = null, appVisible = false, joined = false, serverStillHoldsRow = false)</ID>
+    <ID>MaxLineLength:ReplyWatchTest.kt$ReplyWatchServiceTest$CodingAlert(AlertKind.Complete, "ses_1", AlertKeys.status("p1", "ses_1"), profileId = "p1", chatTitle = "Fix login", detail = "Login works again.")</ID>
+    <ID>MaxLineLength:ReplyWatchTest.kt$ReplyWatchServiceTest$assertEquals("Server ready", shadowOf(manager).getNotification(NotificationIds.STATUS).extras.getCharSequence(Notification.EXTRA_TITLE).toString())</ID>
+    <ID>MaxLineLength:ReplyWatchTest.kt$ReplyWatchServiceTest$assertEquals(owner.name, shadowOf(manager).getNotification(NotificationIds.STATUS).extras.getCharSequence(Notification.EXTRA_TITLE).toString())</ID>
+    <ID>MaxLineLength:ReplyWatchTest.kt$ReplyWatchServiceTest$assertFalse(shadowOf(again).lastForegroundNotification.extras.getBoolean(Notification.EXTRA_REQUEST_PROMOTED_ONGOING))</ID>
+    <ID>MaxLineLength:ReplyWatchTest.kt$ReplyWatchServiceTest$assertFalse(shadowOf(manager).getNotification(NotificationIds.STATUS).extras.getBoolean(Notification.EXTRA_REQUEST_PROMOTED_ONGOING))</ID>
+    <ID>MaxLineLength:ReplyWatchTest.kt$ReplyWatchServiceTest$assertTrue(shadowOf(manager).getNotification(NotificationIds.STATUS).extras.getBoolean(Notification.EXTRA_REQUEST_PROMOTED_ONGOING))</ID>
+    <ID>MaxLineLength:ReplyWatchTest.kt$ReplyWatchServiceTest$assertTrue(shadowOf(other).lastForegroundNotification.extras.getBoolean(Notification.EXTRA_REQUEST_PROMOTED_ONGOING))</ID>
+    <ID>MaxLineLength:ReplyWatchTest.kt$ReplyWatchServiceTest$fun</ID>
+    <ID>MaxLineLength:ReplyWatchTest.kt$ReplyWatchServiceTest$private fun content(run: ReplyRun)</ID>
+    <ID>MaxLineLength:ReplyWatchTest.kt$ReplyWatchServiceTest$source.emit(CodingAlert(AlertKind.Permission, "ses_1", AlertKeys.input("p1", "ses_1"), requestId = "per_1", profileId = "p1"))</ID>
+    <ID>MaxLineLength:ReplyWatchTest.kt$ReplyWatchServiceTest$source.status.value = StatusContent(StatusKind.Working, "Working on Fix login", conversation = ConversationRef(ProfileId("p1"), SessionId("ses_1")), turnId = "turn_1")</ID>
+    <ID>MaxLineLength:ReplyWatchTest.kt$ReplyWatchServiceTest$val source = Source().apply { status.value = StatusContent(StatusKind.Working, "Working", conversation = ConversationRef(ProfileId("p1"), SessionId("ses_1")), turnId = "turn_1") }</ID>
+    <ID>MaxLineLength:ReplyWatchTest.kt$ReplyWatchServiceTest.Source$liveModeActive = false</ID>
+    <ID>MaxLineLength:ShadeRepliesParityTest.kt$ShadeRepliesParityTest$assertEquals(emptyList(), QuestionShape(listOf(QuestionShape.Prompt(listOf("a")), QuestionShape.Prompt(listOf("b")))).shadeOptions)</ID>
+    <ID>MaxLineLength:ShadeRepliesParityTest.kt$ShadeRepliesParityTest$assertEquals(listOf(AlertButton(ShadeDecision.Open, AlertButton.Label.Open)), AlertButtons.plan(CodingAlert(AlertKind.Question, "session-1", "k", requestId = "question-1", profileId = "p1", detail = "Ship?")))</ID>
+    <ID>MaxLineLength:ShadeRepliesParityTest.kt$ShadeRepliesParityTest$fun</ID>
+    <ID>MaxLineLength:ShadeRepliesParityTest.kt$ShadeRepliesParityTest$shade</ID>
+    <ID>MaxLineLength:ShadeRepliesParityTest.kt$ShadeRepliesParityTest$val four = CodingAlert(AlertKind.Question, "session-1", "k", profileId = "p1", detail = "Pick", options = question(listOf("a", "b", "c", "d")).shadeOptions)</ID>
+    <ID>MaxLineLength:ShadeReplyGuard.kt$RunningOnlyStopper$if (isRunning(conversation)) delegate.stop(conversation) else Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))</ID>
+    <ID>MaxLineLength:StatusModel.kt$AndroidStatusWords$override fun reconnectingTitle(server: String): String</ID>
+    <ID>MaxLineLength:StatusModel.kt$AndroidStatusWords$override fun tasksProgress(done: Int, total: Int): String</ID>
+    <ID>MaxLineLength:StatusModel.kt$AndroidStatusWords$override fun waitingProvider(provider: String): String</ID>
+    <ID>MaxLineLength:StatusModel.kt$StatusModel$StatusContent.of(kind, title, text, lines, subText, progress, actions, ref(session), publicTitle = publicTitle, count = count)</ID>
+    <ID>MaxLineLength:StatusModel.kt$StatusModel$actions = if (input.phoneServerRunning) listOf(StatusAction.NewChat, StatusAction.StopServer) else listOf(StatusAction.NewChat)</ID>
+    <ID>MaxLineLength:StatusModel.kt$StatusModel$private fun join(parts: List&lt;String?&gt;): String</ID>
+    <ID>MaxLineLength:StatusModel.kt$StatusModel$progress = if (chat.hasTasks) (chat.tasksDone!! * 100 / chat.tasksTotal!!).coerceIn(0, 100) else null</ID>
+    <ID>MaxLineLength:StatusModel.kt$StatusModel$public</ID>
+    <ID>MaxLineLength:StatusModel.kt$StatusModel$return if (value.inWholeMinutes &gt;= 60) words.hours(value.inWholeHours) else words.minutes(value.inWholeMinutes)</ID>
+    <ID>MaxLineLength:StatusModel.kt$StatusModel$text = join(listOf(input.firstPendingTitle, input.firstPendingProject, if (working.isNotEmpty()) words.stillWorking(working.size) else null))</ID>
+    <ID>MaxLineLength:StatusModel.kt$StatusModel$title = if (several &amp;&amp; server.isNotEmpty()) words.reconnectingTitle(server) else words.reconnectingGeneric()</ID>
+    <ID>MaxLineLength:StatusModelParityTest.kt$StatusModelParityTest$StatusContent::class.java.declaredFields.filterNot { java.lang.reflect.Modifier.isStatic(it.modifiers) }.map { it.name }.toSet()</ID>
+    <ID>MaxLineLength:StatusModelParityTest.kt$StatusModelParityTest$assertEquals("IPTV_King · 4 min · on PC", build(StatusInput(working = listOf(tests), liveServerCount = 2, serverName = "PC")).subText)</ID>
+    <ID>MaxLineLength:StatusModelParityTest.kt$StatusModelParityTest$assertEquals("Tries again soon", build(StatusInput(retries = listOf(StatusRetry("s1", nextTry = at(12, 0))))).text)</ID>
+    <ID>MaxLineLength:StatusModelParityTest.kt$StatusModelParityTest$assertEquals(StatusKind.NeedsYou, build(StatusInput(pendingCount = 1, reconnecting = true, pause = pause)).kind, pause.name)</ID>
+    <ID>MaxLineLength:StatusModelParityTest.kt$StatusModelParityTest$assertEquals(StatusKind.PausedAndroid, build(StatusInput(pause = PauseReason.AndroidLimit, working = listOf(tests))).kind)</ID>
+    <ID>MaxLineLength:StatusModelParityTest.kt$StatusModelParityTest$assertEquals(listOf("UI review and feedback · Running the tests", "shopfront · Editing theme.dart", "+1 more"), s.lines)</ID>
+    <ID>MaxLineLength:StatusModelParityTest.kt$StatusModelParityTest$setOf("kind", "title", "text", "lines", "subText", "progress", "actions", "conversation", "turnId", "publicTitle", "count")</ID>
+    <ID>MaxLineLength:StatusModelParityTest.kt$StatusModelParityTest$val s = build(StatusInput(pendingCount = 1, firstPendingTitle = "docs", firstPendingProject = "site", working = listOf(tests, shop)))</ID>
+    <ID>MaxLineLength:StatusModelParityTest.kt$StatusModelParityTest$val s = build(StatusInput(reconnecting = true, serverName = "PC", reconnectingLastActivity = "Running the tests"))</ID>
+    <ID>MaxLineLength:StatusModelParityTest.kt$StatusModelParityTest$val s = build(StatusInput(retries = listOf(StatusRetry("late", provider = "B", nextTry = at(14, 0)), StatusRetry("soon", provider = "A", nextTry = at(13, 10)))))</ID>
+    <ID>MaxLineLength:StatusModelParityTest.kt$StatusModelParityTest$val s = build(StatusInput(retries = listOf(StatusRetry("s1", "UI review and feedback", "Experiential Labs", at(13, 12)))))</ID>
+    <ID>MaxLineLength:StatusModelParityTest.kt$StatusModelParityTest$val secret = build(StatusInput(pendingCount = 2, firstPendingTitle = "Secret chat title", working = listOf(StatusChat("x", "Secret chat title", liveLine = "Secret task text"))))</ID>
+    <ID>MaxLineLength:StatusRowTest.kt$PromotableStatusTest$assertEquals("Fix login\nAdd tests", build(StatusKind.SeveralWorking, listOf("Fix login", "Add tests"), 2).extras.getCharSequence(Notification.EXTRA_BIG_TEXT).toString())</ID>
+    <ID>MaxLineLength:StatusRowTest.kt$PromotableStatusTest$assertEquals(StatusRenderer.DISMISSED_ACTION, delete.savedIntent.getStringExtra(FrozenExtras.EXTRA_STATUS_ACTION))</ID>
+    <ID>MaxLineLength:StatusRowTest.kt$PromotableStatusTest$for</ID>
+    <ID>MaxLineLength:StatusRowTest.kt$PromotableStatusTest$private</ID>
+    <ID>MaxLineLength:StatusRowTest.kt$PromotableStatusTest$val content = StatusContent(kind, "Working on Fix login", lines = lines, count = count, progress = progress, conversation = ConversationRef(ProfileId("p1"), SessionId("ses_1")), turnId = "turn_1", actions = listOf(StatusAction.Open, StatusAction.StopReply))</ID>
+    <ID>MaxLineLength:StatusRowTest.kt$PromotableStatusTest$val noCustom = listOf(n.contentView, n.bigContentView, n.headsUpContentView, n.publicVersion?.contentView, n.publicVersion?.bigContentView).all { it == null }</ID>
+    <ID>MaxLineLength:StatusRowTest.kt$PromotableStatusTest$val styleOk = template == null || listOf("BigTextStyle", "CallStyle", "ProgressStyle", "MetricStyle").any { template.endsWith("\$$it") }</ID>
+    <ID>MaxLineLength:StatusRowTest.kt$StatusRowRulesTest$assertEquals(a, StatusContent.of(StatusKind.Working, " Fixing login ", lines = listOf("a", null, " ", "b", "c", "d", "e")))</ID>
+    <ID>MaxLineLength:StatusRowTest.kt$StatusRowRulesTest$for</ID>
+    <ID>MaxLineLength:StatusRowTest.kt$StatusRowRulesTest$val a = StatusContent.of(StatusKind.Working, " Fixing login ", lines = listOf("a", null, " ", "b", "c", "d", "e"))!!</ID>
+    <ID>MaxLineLength:StatusRowTest.kt$StatusRowRulesTest$val capped = StatusContent.of(StatusKind.Working, "t".repeat(400), progress = 140, actions = StatusAction.entries + StatusAction.Open)!!</ID>
+    <ID>ReturnCount:AlertMoments.kt$AlertMoments$public fun runEnded( sessionId: String, kind: AlertKind, subAgent: Boolean = false, reason: StopReason = StopReason.Other, quiet: Boolean = false, ): List&lt;Step&gt;</ID>
+    <ID>ReturnCount:AlertShade.kt$AndroidAlertShade$override fun show(alert: CodingAlert, route: AlertRoute.Post): AlertShown</ID>
+    <ID>ReturnCount:AlertShade.kt$AndroidAlertShade$override fun showOpenOnly(tap: ShadeTap): AlertShown</ID>
+    <ID>ReturnCount:AlertShade.kt$AndroidAlertShade$private fun blocked(channel: NotifyChannel): AlertShown.Blocked?</ID>
+    <ID>ReturnCount:AlertShade.kt$AndroidAlertShade$private fun privateWords(alert: CodingAlert, publicTitle: String): Pair&lt;String, String&gt;</ID>
+    <ID>ReturnCount:Alerts.kt$AlertPolicy$public fun route(alert: CodingAlert, facts: AlertFacts): AlertRoute</ID>
+    <ID>ReturnCount:NotificationActionBody.kt$NotificationActionBody$public suspend fun onCodingAction(tap: ShadeTap): ShadeOutcome</ID>
+    <ID>ReturnCount:NotificationActionBody.kt$NotificationActionBody$public suspend fun onStatusAction(intent: Intent): ShadeOutcome</ID>
+    <ID>ReturnCount:NotificationText.kt$NotificationText$public fun permissionAsk(permission: String, commandPreview: String?, filePath: String?): PermissionAsk?</ID>
+    <ID>ReturnCount:NotifyWords.kt$NotifyWords$public fun localized(): Context</ID>
+    <ID>ReturnCount:ShadeActions.kt$ShadeTap.Companion$public fun read(intent: Intent): ShadeTap?</ID>
+    <ID>ReturnCount:ShadeActions.kt$internal fun Intent.statusConversation(): ConversationRef?</ID>
+    <ID>ReturnCount:ShadeActions.kt$internal fun Intent.statusRun(): ReplyRun?</ID>
+    <ID>ReturnCount:ShadeReplyGuard.kt$GuardedShadeAnswerer$override suspend fun answer(answer: ShadeAnswer): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:StatusController.kt$StatusController.Companion$private fun planOf(todos: List&lt;Todo&gt;?): Plan?</ID>
+    <ID>ReturnCount:StatusModel.kt$StatusModel$public fun build(input: StatusInput, words: StatusWords, now: Instant, formatTime: (Instant) -&gt; String): StatusContent</ID>
+    <ID>ReturnCount:StatusRow.kt$StatusThrottle$@Synchronized public fun due(nowMs: Long): StatusContent?</ID>
+    <ID>ReturnCount:StatusRow.kt$StatusThrottle$@Synchronized public fun offer(content: StatusContent, nowMs: Long): Step</ID>
+    <ID>SpreadOperator:NotifyWords.kt$NotifyWords$(id, *numbered(args))</ID>
+    <ID>SpreadOperator:NotifyWords.kt$NotifyWords$(id, count, *numbered(args))</ID>
+    <ID>TooManyFunctions:AlertShade.kt$AndroidAlertShade : AlertShade</ID>
+    <ID>TooManyFunctions:ReplyWatch.kt$ReplyWatchServiceBody</ID>
+    <ID>TooManyFunctions:StatusModel.kt$AndroidStatusWords : StatusWords</ID>
+    <ID>TooManyFunctions:StatusModel.kt$StatusWords</ID>
+  </CurrentIssues>
+</SmellBaseline>

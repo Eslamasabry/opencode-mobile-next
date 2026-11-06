@@ -1,0 +1,27 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:KeptScreen.kt$@Composable private fun CrashSection(state: KeptUi, actions: KeptActions, gutter: Modifier)</ID>
+    <ID>CyclomaticComplexMethod:KeptScreen.kt$@Composable private fun errorTitle(source: String): String</ID>
+    <ID>LongMethod:KeptScreen.kt$@Composable private fun CrashSection(state: KeptUi, actions: KeptActions, gutter: Modifier)</ID>
+    <ID>LongMethod:KeptScreen.kt$@Composable private fun ErrorsSection(state: KeptUi, actions: KeptActions)</ID>
+    <ID>LongMethod:KeptScreen.kt$@Composable private fun ExitsSection(exits: KeptExits, actions: KeptActions, gutter: Modifier)</ID>
+    <ID>LongMethod:KeptScreen.kt$@Composable public fun KeptScreen(state: KeptUi, actions: KeptActions)</ID>
+    <ID>MagicNumber:KeptScreen.kt$12</ID>
+    <ID>MagicNumber:KeptScreen.kt$5</ID>
+    <ID>MatchingDeclarationName:KeptPorts.kt$KeptDiagnosticsHost</ID>
+    <ID>MaxLineLength:FakeKeptHost.kt$FakeKeptHost.Companion$entries = persistentListOf(ExitEntry(4, 0, 100, AT, ExitKind.Crash), ExitEntry(10, 0, 100, AT, ExitKind.Update))</ID>
+    <ID>MaxLineLength:FakeKeptHost.kt$records = List(records) { CrashRecord(CrashSource.Platform, CrashRecordCategory.InvalidState, AT) }.toImmutableList()</ID>
+    <ID>MaxLineLength:KeptScreenTest.kt$KeptScreenTest$setContent { Themed { KitSheetHost { KeptScreen(KeptUi(crashAvailable = true, exits = KeptExits.Ready(emptyList(), 0)), taps) } } }</ID>
+    <ID>MemberNameEqualsClassName:KeptScreenTest.kt$KeptScreenTest.Taps$val taps = mutableListOf&lt;String&gt;()</ID>
+    <ID>TooManyFunctions:KeptPorts.kt$KeptDiagnosticsHost</ID>
+    <ID>TooManyFunctions:KeptPresenter.kt$KeptPresenter : KeptActions</ID>
+    <ID>TooManyFunctions:KeptUi.kt$KeptActions</ID>
+    <ID>TooManyFunctions:KeptViewModel.kt$KeptViewModel : ViewModelKeptActions</ID>
+    <ID>UnusedParameter:KeptScreen.kt$gutter: Modifier</ID>
+    <ID>WildcardImport:KeptPageTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:KeptPageTest.kt$import io.github.eslamasabry.oc.feature.diagnostics.presentation.*</ID>
+    <ID>WildcardImport:KeptScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

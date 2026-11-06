@@ -1,0 +1,178 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:ComputerUsageSource.kt$(status != "ok" || !attributed) &amp;&amp; (rawWindows.isNotEmpty() || ordinary != null)</ID>
+    <ID>ComplexCondition:ComputerUsageSource.kt$ComputerUsageSource$!profileExists(id) || servers().none { it.id == id &amp;&amp; it.readable &amp;&amp; !it.inApp }</ID>
+    <ID>ComplexCondition:ComputerUsageSource.kt$ComputerUsageSource$(memory.value.epochs[server.id] ?: 0) != mine || servers().none { it.id == server.id &amp;&amp; it.readable &amp;&amp; !it.inApp &amp;&amp; profileExists(server.id) }</ID>
+    <ID>ComplexCondition:ComputerUsageSource.kt$used != null &amp;&amp; (used !is Number || !used.toDouble().isFinite() || used.toDouble() !in 0.0..100.0)</ID>
+    <ID>ComplexCondition:SubscriptionAlertDelivery.kt$SubscriptionAlertDelivery$s.notifyOnReset &amp;&amp; priorUsed != null &amp;&amp; priorUsed &gt;= s.alertThreshold &amp;&amp; w.usedPercent &lt; s.alertThreshold &amp;&amp; previous?.get("r") != reset &amp;&amp; priorTime != null &amp;&amp; now.toEpochMilliseconds() - priorTime in 0..12.hours.inWholeMilliseconds</ID>
+    <ID>ComplexCondition:SubscriptionAlertDelivery.kt$SubscriptionAlertDelivery$s.windows.isEmpty() || s.state in setOf(SubscriptionState.OfflineStale, SubscriptionState.ReaderBroken) || fetched &gt; now || now - fetched &gt; 45.minutes</ID>
+    <ID>ComplexCondition:UsageBudgets.kt$UsageBudgets$!available || _state.value.saving || (value != null &amp;&amp; !validLimit(value, unit))</ID>
+    <ID>ComplexCondition:UsageBudgets.kt$UsageBudgets.Companion$!hex64.matches(id) || rule.keys != fields || !hex64.matches(source) || (rule["project"] != null &amp;&amp; rule["project"] !is String) || rule["range"] !in ranges || (rule["from"] != null &amp;&amp; rule["from"] !is Long &amp;&amp; rule["from"] !is Int) || timezone.isBlank() || !validLimit(limit, unit)</ID>
+    <ID>ComplexCondition:UsageSubscriptions.kt$reading.hasNumbers &amp;&amp; r.connectionId in authoritativeSignIns &amp;&amp; signIns.none { it.providerId == r.providerId &amp;&amp; it.connectionId == r.connectionId &amp;&amp; it.state != SignInState.NotSignedIn }</ID>
+    <ID>ComplexCondition:UsageSubscriptionsEngine.kt$UsageSubscriptionsEngine$from == null || s.windows.isEmpty() || s.state == SubscriptionState.OfflineStale || s.state == SubscriptionState.ReaderBroken</ID>
+    <ID>ComplexCondition:UsageSubscriptionsEngine.kt$UsageSubscriptionsEngine$old != null &amp;&amp; old.hasNumbers &amp;&amp; reading.hasNumbers &amp;&amp; old.fetchedAt &gt; reading.fetchedAt</ID>
+    <ID>CyclomaticComplexMethod:ComputerUsageSource.kt$ComputerUsageSource$override suspend fun read(context: UsageReadContext): Outcome&lt;UsageSourceResult&gt;</ID>
+    <ID>CyclomaticComplexMethod:ComputerUsageSource.kt$private fun parseSnapshot(provider: String, value: Any?): ComputerPlanSnapshot?</ID>
+    <ID>CyclomaticComplexMethod:ComputerUsageSource.kt$public fun parseComputerUsageOutput(output: String): ComputerUsageResult?</ID>
+    <ID>CyclomaticComplexMethod:PaseoUsageMonitor.kt$PaseoUsageMonitor$private suspend fun read(id: String)</ID>
+    <ID>CyclomaticComplexMethod:PaseoUsageSource.kt$PaseoUsageSource$override suspend fun read(context: UsageReadContext): Outcome&lt;UsageSourceResult&gt;</ID>
+    <ID>CyclomaticComplexMethod:ProviderUsageList.kt$public fun parseProviderUsageList(payload: Any?, now: Instant, maxProviders: Int = 16, maxWindows: Int = 3): List&lt;ProviderUsageReading&gt;</ID>
+    <ID>CyclomaticComplexMethod:SubscriptionAlertDelivery.kt$SubscriptionAlertDelivery$public suspend fun evaluate( snapshot: UsageSnapshot, alertsOn: Boolean, foreground: Boolean, covered: (UsageSubscription) -&gt; Boolean, isCurrent: (UsageSubscription) -&gt; Boolean = { true }, )</ID>
+    <ID>CyclomaticComplexMethod:UsageBudgets.kt$UsageBudgets.Companion$private fun validStoredRule(id: String, value: Any?): Boolean</ID>
+    <ID>CyclomaticComplexMethod:UsageSubscriptions.kt$public fun mergeUsageSubscriptions( now: Instant, connections: List&lt;UsageConnection&gt;, readings: List&lt;UsageReading&gt;, signIns: List&lt;UsageSignIn&gt; = emptyList(), authoritativeSignIns: Set&lt;String&gt; = emptySet(), defaultThreshold: Double = 80.0, overrides: Map&lt;String, UsageAlertOverride&gt; = emptyMap(), notifyOnResetDefault: Boolean = false, refreshedAt: Instant? = null, loaded: Boolean = true, offlineConnections: Set&lt;String&gt; = emptySet(), ): UsageSnapshot</ID>
+    <ID>CyclomaticComplexMethod:UsageSubscriptionsEngine.kt$UsageSubscriptionsEngine$private suspend fun read(force: Boolean)</ID>
+    <ID>CyclomaticComplexMethod:UsageWidgetFeed.kt$UsageWidgetFeed.Companion$public fun widgetEntryFor( s: UsageSubscription, settings: UsageWidgetSettings, ): Map&lt;String, Any?&gt;?</ID>
+    <ID>LongMethod:ComputerUsageSource.kt$ComputerUsageSource$override suspend fun read(context: UsageReadContext): Outcome&lt;UsageSourceResult&gt;</ID>
+    <ID>LongMethod:ComputerUsageSource.kt$private fun parseSnapshot(provider: String, value: Any?): ComputerPlanSnapshot?</ID>
+    <ID>LongMethod:SubscriptionAlertDelivery.kt$SubscriptionAlertDelivery$public suspend fun evaluate( snapshot: UsageSnapshot, alertsOn: Boolean, foreground: Boolean, covered: (UsageSubscription) -&gt; Boolean, isCurrent: (UsageSubscription) -&gt; Boolean = { true }, )</ID>
+    <ID>LongMethod:UsageSubscriptions.kt$public fun mergeUsageSubscriptions( now: Instant, connections: List&lt;UsageConnection&gt;, readings: List&lt;UsageReading&gt;, signIns: List&lt;UsageSignIn&gt; = emptyList(), authoritativeSignIns: Set&lt;String&gt; = emptySet(), defaultThreshold: Double = 80.0, overrides: Map&lt;String, UsageAlertOverride&gt; = emptyMap(), notifyOnResetDefault: Boolean = false, refreshedAt: Instant? = null, loaded: Boolean = true, offlineConnections: Set&lt;String&gt; = emptySet(), ): UsageSnapshot</ID>
+    <ID>LongMethod:UsageSubscriptionsEngine.kt$UsageSubscriptionsEngine$private suspend fun read(force: Boolean)</ID>
+    <ID>LongMethod:UsageWidgetFeed.kt$UsageWidgetFeed.Companion$public fun widgetEntryFor( s: UsageSubscription, settings: UsageWidgetSettings, ): Map&lt;String, Any?&gt;?</ID>
+    <ID>LongParameterList:ComputerUsageSource.kt$ComputerUsageSource$( private val store: KeyValueStore, private val lane: WriterLane, private val servers: () -&gt; List&lt;ComputerUsageServer&gt;, private val createPort: (ComputerUsageServer) -&gt; ComputerTerminalPort, private val loadSource: suspend () -&gt; String, private val clock: () -&gt; Instant, private val timeout: Duration = 25.seconds, private val laneFor: (String) -&gt; WriterLane = { lane }, private val profileExists: (String) -&gt; Boolean = { true }, )</ID>
+    <ID>LongParameterList:UsageBudgets.kt$UsageBudgets$( private val store: KeyValueStore, private val lane: WriterLane, private val locks: UsageBudgetLocks, public val profileId: String, serverOrigin: String, private val isCurrent: () -&gt; Boolean, private val isProfilePresent: () -&gt; Boolean, )</ID>
+    <ID>LongParameterList:UsageSubscriptions.kt$( now: Instant, connections: List&lt;UsageConnection&gt;, readings: List&lt;UsageReading&gt;, signIns: List&lt;UsageSignIn&gt; = emptyList(), authoritativeSignIns: Set&lt;String&gt; = emptySet(), defaultThreshold: Double = 80.0, overrides: Map&lt;String, UsageAlertOverride&gt; = emptyMap(), notifyOnResetDefault: Boolean = false, refreshedAt: Instant? = null, loaded: Boolean = true, offlineConnections: Set&lt;String&gt; = emptySet(), )</ID>
+    <ID>LongParameterList:UsageSubscriptionsEngine.kt$UsageSubscriptionsEngine$( private val store: KeyValueStore, private val lane: WriterLane, public val connections: () -&gt; List&lt;UsageConnection&gt;, private val sources: List&lt;UsageSource&gt;, private val alertsOnRule: () -&gt; Boolean, private val setQuotaAlerts: suspend (Boolean) -&gt; Unit, private val alertBridge: UsageAlertBridge? = null, private val widget: UsageWidgetFeed? = null, private val clock: () -&gt; Instant, private val sourceTimeout: Duration = 25.seconds, private val subscriptionAlerts: SubscriptionAlertDelivery? = null, private val alertCovered: (UsageSubscription) -&gt; Boolean = { false }, )</ID>
+    <ID>LongParameterList:UsageSubscriptionsEngineTest.kt$( provider: String, connection: String, account: String? = null, five: Double = 20.0, week: Double = 40.0, age: Duration = 1.minutes, status: UsageReadingStatus = UsageReadingStatus.Ok, )</ID>
+    <ID>LongParameterList:UsageSubscriptionsMergeTest.kt$( provider: String, connection: String, account: String? = null, status: UsageReadingStatus = UsageReadingStatus.Ok, windows: List&lt;UsageWindow&gt;? = null, age: Duration = 1.minutes, problem: UsageProblem? = null, plan: String? = null, method: SignInMethod = SignInMethod.Plan, now: Instant = NOW, )</ID>
+    <ID>LongParameterList:UsageSubscriptionsMergeTest.kt$UsageSubscriptionsMergeTest$( readings: List&lt;UsageReading&gt;, connections: List&lt;UsageConnection&gt; = listOf(IN_APP), signIns: List&lt;UsageSignIn&gt; = emptyList(), authoritative: Set&lt;String&gt; = emptySet(), threshold: Double = 80.0, overrides: Map&lt;String, UsageAlertOverride&gt; = emptyMap(), )</ID>
+    <ID>LoopWithTooManyJumpStatements:ComputerUsageSource.kt$ComputerUsageSource$for</ID>
+    <ID>LoopWithTooManyJumpStatements:ComputerUsageSource.kt$for</ID>
+    <ID>LoopWithTooManyJumpStatements:OpenCodeSignInSource.kt$OpenCodeSignInSource$for</ID>
+    <ID>LoopWithTooManyJumpStatements:PaseoUsageSource.kt$PaseoUsageSource$for</ID>
+    <ID>LoopWithTooManyJumpStatements:ProviderUsageList.kt$for</ID>
+    <ID>LoopWithTooManyJumpStatements:SubscriptionAlertDelivery.kt$SubscriptionAlertDelivery$for</ID>
+    <ID>LoopWithTooManyJumpStatements:UsageSubscriptions.kt$for</ID>
+    <ID>LoopWithTooManyJumpStatements:UsageSubscriptionsEngine.kt$UsageSubscriptionsEngine$for</ID>
+    <ID>LoopWithTooManyJumpStatements:UsageWidgetFeed.kt$UsageWidgetFeed$for</ID>
+    <ID>MagicNumber:ComputerUsageSource.kt$100.0</ID>
+    <ID>MagicNumber:ComputerUsageSource.kt$1024</ID>
+    <ID>MagicNumber:ComputerUsageSource.kt$256</ID>
+    <ID>MagicNumber:ComputerUsageSource.kt$315_360_000L</ID>
+    <ID>MagicNumber:ComputerUsageSource.kt$404</ID>
+    <ID>MagicNumber:ComputerUsageSource.kt$405</ID>
+    <ID>MagicNumber:ComputerUsageSource.kt$501</ID>
+    <ID>MagicNumber:ComputerUsageSource.kt$64</ID>
+    <ID>MagicNumber:ComputerUsageSource.kt$8_640_000_000_000_000L</ID>
+    <ID>MagicNumber:ComputerUsageSource.kt$96</ID>
+    <ID>MagicNumber:ComputerUsageSource.kt$ComputerUsageSource$64</ID>
+    <ID>MagicNumber:OpenCodeSignInSource.kt$OpenCodeSignInSource$24</ID>
+    <ID>MagicNumber:ProviderUsageList.kt$0x20</ID>
+    <ID>MagicNumber:ProviderUsageList.kt$0x200b</ID>
+    <ID>MagicNumber:ProviderUsageList.kt$0x200f</ID>
+    <ID>MagicNumber:ProviderUsageList.kt$0x202a</ID>
+    <ID>MagicNumber:ProviderUsageList.kt$0x202e</ID>
+    <ID>MagicNumber:ProviderUsageList.kt$0x2066</ID>
+    <ID>MagicNumber:ProviderUsageList.kt$0x2069</ID>
+    <ID>MagicNumber:ProviderUsageList.kt$0x7f</ID>
+    <ID>MagicNumber:ProviderUsageList.kt$0x9f</ID>
+    <ID>MagicNumber:ProviderUsageList.kt$100</ID>
+    <ID>MagicNumber:ProviderUsageList.kt$100.0</ID>
+    <ID>MagicNumber:ProviderUsageList.kt$16</ID>
+    <ID>MagicNumber:ProviderUsageList.kt$18_000L</ID>
+    <ID>MagicNumber:ProviderUsageList.kt$24</ID>
+    <ID>MagicNumber:ProviderUsageList.kt$3600</ID>
+    <ID>MagicNumber:ProviderUsageList.kt$5L</ID>
+    <ID>MagicNumber:ProviderUsageList.kt$604_800L</ID>
+    <ID>MagicNumber:ProviderUsageList.kt$64</ID>
+    <ID>MagicNumber:ProviderUsageList.kt$7L</ID>
+    <ID>MagicNumber:ProviderUsageList.kt$86_400</ID>
+    <ID>MagicNumber:SubscriptionAlertDelivery.kt$SubscriptionAlertDelivery$16</ID>
+    <ID>MagicNumber:SubscriptionAlertDelivery.kt$SubscriptionAlertDelivery$256</ID>
+    <ID>MagicNumber:SubscriptionAlertDelivery.kt$SubscriptionAlertDelivery$262_144</ID>
+    <ID>MagicNumber:SubscriptionAlertDelivery.kt$SubscriptionAlertDelivery.Companion$16</ID>
+    <ID>MagicNumber:UsageBudgets.kt$UsageBudgets$65_536</ID>
+    <ID>MagicNumber:UsageSubscriptions.kt$100</ID>
+    <ID>MagicNumber:UsageSubscriptions.kt$101.0</ID>
+    <ID>MagicNumber:UsageSubscriptions.kt$3</ID>
+    <ID>MagicNumber:UsageSubscriptions.kt$4</ID>
+    <ID>MagicNumber:UsageSubscriptions.kt$5</ID>
+    <ID>MagicNumber:UsageSubscriptions.kt$6</ID>
+    <ID>MagicNumber:UsageSubscriptions.kt$7</ID>
+    <ID>MagicNumber:UsageSubscriptions.kt$8</ID>
+    <ID>MagicNumber:UsageSubscriptions.kt$9</ID>
+    <ID>MagicNumber:UsageSubscriptions.kt$UsageReading.Companion$128</ID>
+    <ID>MagicNumber:UsageSubscriptions.kt$UsageReading.Companion$16</ID>
+    <ID>MagicNumber:UsageSubscriptions.kt$UsageReading.Companion$40</ID>
+    <ID>MagicNumber:UsageSubscriptions.kt$UsageSubscription$100</ID>
+    <ID>MagicNumber:UsageSubscriptions.kt$UsageWindow$100</ID>
+    <ID>MagicNumber:UsageSubscriptions.kt$UsageWindow$100.0</ID>
+    <ID>MagicNumber:UsageSubscriptions.kt$UsageWindow.Companion$18_000L</ID>
+    <ID>MagicNumber:UsageSubscriptions.kt$UsageWindow.Companion$28L</ID>
+    <ID>MagicNumber:UsageSubscriptions.kt$UsageWindow.Companion$31L</ID>
+    <ID>MagicNumber:UsageSubscriptions.kt$UsageWindow.Companion$604_800L</ID>
+    <ID>MagicNumber:UsageSubscriptions.kt$UsageWindow.Companion$86_400</ID>
+    <ID>MagicNumber:UsageSubscriptionsEngine.kt$UsageSubscriptionsEngine$0.001</ID>
+    <ID>MagicNumber:UsageSubscriptionsEngine.kt$UsageSubscriptionsEngine$256</ID>
+    <ID>MagicNumber:UsageSubscriptionsEngine.kt$UsageSubscriptionsEngine$262_144</ID>
+    <ID>MagicNumber:UsageSubscriptionsEngine.kt$UsageSubscriptionsEngine$32</ID>
+    <ID>MagicNumber:UsageSubscriptionsEngine.kt$UsageSubscriptionsEngine.Companion$100</ID>
+    <ID>MagicNumber:UsageWidgetFeed.kt$UsageWidgetFeed$100</ID>
+    <ID>MagicNumber:UsageWidgetFeed.kt$UsageWidgetFeed$100.0</ID>
+    <ID>MagicNumber:UsageWidgetFeed.kt$UsageWidgetFeed.Companion$100</ID>
+    <ID>MagicNumber:UsageWidgetFeed.kt$UsageWidgetSettings.Companion$160</ID>
+    <ID>MaxLineLength:ComputerUsageSource.kt$"command -v node &gt;/dev/null 2&gt;&amp;1 || { echo \"node: command not found\"; sleep 1; exit 127; }; node --input-type=module -e \"\$1\"; s=\$?; sleep 1; exit \$s"</ID>
+    <ID>MaxLineLength:FakeKv.kt$FakeKv$/** An in-memory store whose platform commit can be refused or held, like the Dart tests' InMemorySharedPreferencesStore. */</ID>
+    <ID>MaxLineLength:FakeKv.kt$FakeKv$override suspend</ID>
+    <ID>MaxLineLength:ProviderUsageList.kt$/** Strips control and direction characters, collapses blanks and caps the length. Null when nothing printable is left. */</ID>
+    <ID>MaxLineLength:ProviderUsageList.kt$public</ID>
+    <ID>MaxLineLength:UsageBudgets.kt$UsageBudgetLocks$/** One write queue per preference key, shared by every [UsageBudgets] (a replacement screen writes through the same queue). */</ID>
+    <ID>MaxLineLength:UsageBudgets.kt$UsageBudgetScope$/** The exact Usage view a budget belongs to: project, calendar range, window start and time zone (Flutter UsageQuery). */</ID>
+    <ID>MaxLineLength:UsageBudgets.kt$UsageBudgets$*</ID>
+    <ID>MaxLineLength:UsageBudgets.kt$UsageBudgets$private fun idOf(scope: UsageBudgetScope, unit: UsageBudgetUnit): String</ID>
+    <ID>MaxLineLength:UsageBudgets.kt$UsageBudgets.Companion$value.isFinite() &amp;&amp; value &gt; 0 &amp;&amp; value &lt;= MAX_SAFE_INTEGER &amp;&amp; (unit != UsageBudgetUnit.Tokens || value == truncate(value))</ID>
+    <ID>MaxLineLength:UsageBudgetsTest.kt$UsageBudgetsTest$for (i in 0 until 64) assertTrue(budgets.save(sample(from = i.toLong()), UsageBudgetUnit.Usd, (i + 1).toDouble()))</ID>
+    <ID>MaxLineLength:UsageBudgetsTest.kt$UsageBudgetsTest$kv.values[budgets.key] = PrefValue.Str(DartJson.encode(mapOf("version" to 1, "rules" to mapOf(id to changed))))</ID>
+    <ID>MaxLineLength:UsageBudgetsTest.kt$UsageBudgetsTest$val changed = (rule as Map&lt;*, *&gt;).entries.associate { it.key.toString() to it.value } + ("timezone" to "Asia/Dubai")</ID>
+    <ID>MaxLineLength:UsageSubscriptions.kt$/** Providers whose usage the reader can read from an OpenCode sign-in. Claude's plan usage never comes through OpenCode. */</ID>
+    <ID>MaxLineLength:UsageSubscriptions.kt$// Nothing here touches the network or storage; the controller feeds it readings and [mergeUsageSubscriptions] turns them</ID>
+    <ID>MaxLineLength:UsageSubscriptions.kt$// The subscriptions model behind Usage › Plans, its alerts and the home widget (Flutter lib/domain/usage_subscriptions.dart).</ID>
+    <ID>MaxLineLength:UsageSubscriptions.kt$UsageReading$get() = (status == UsageReadingStatus.Ok || status == UsageReadingStatus.NoLimits) &amp;&amp; problem != UsageProblem.Broken</ID>
+    <ID>MaxLineLength:UsageSubscriptions.kt$answeredConnectionIds = authoritativeSignIns + effective.filter { it.problem != UsageProblem.Offline }.map { it.connectionId }</ID>
+    <ID>MaxLineLength:UsageSubscriptions.kt$for (r in effective) groups.getOrPut(usageSubscriptionKey(r.providerId, r.accountRef, r.connectionId)) { ArrayList() } += r</ID>
+    <ID>MaxLineLength:UsageSubscriptions.kt$signIns.none { it.providerId == r.providerId &amp;&amp; it.connectionId == r.connectionId &amp;&amp; it.state != SignInState.NotSignedIn }</ID>
+    <ID>MaxLineLength:UsageSubscriptions.kt$val extra = drop.flatMap { it.signedInOn }.filter { on -&gt; keeper.signedInOn.none { it.connection == on.connection } }</ID>
+    <ID>MaxLineLength:UsageSubscriptionsEngineTest.kt$UsageSubscriptionsEngineTest$val c = make(listOf(ScriptedSource(listOf(ok(r("codex", "inapp", account = "a"), r("glm", "inapp", account = "g"))))))</ID>
+    <ID>MaxLineLength:UsageSubscriptionsEngineTest.kt$UsageSubscriptionsEngineTest$val c = make(listOf(ScriptedSource(listOf(ok(r("codex", "pc", account = "a"), r("codex", "inapp", account = "b"))))))</ID>
+    <ID>MaxLineLength:UsageSubscriptionsEngineTest.kt$UsageSubscriptionsEngineTest$val source = ScriptedSource(listOf(ok(r("codex", "inapp", account = "a"), r("glm", "inapp", account = "g"))))</ID>
+    <ID>MaxLineLength:UsageSubscriptionsEngineTest.kt$UsageSubscriptionsEngineTest$val source = ScriptedSource(listOf(ok(r("codex", "inapp", account = "a"), r("glm", "inapp", account = "g"), r("codex", "pc", account = "z"))))</ID>
+    <ID>MaxLineLength:UsageSubscriptionsMergeTest.kt$// Ported from Flutter test/usage_subscriptions_test.dart (rows of docs/design/usage-subscriptions-contract-2026-10-13.md).</ID>
+    <ID>MaxLineLength:UsageSubscriptionsMergeTest.kt$UsageSubscriptionsMergeTest$assertEquals(listOf(UsageWindowKind.FiveHour, UsageWindowKind.Weekly, UsageWindowKind.Monthly), c.windows.map { it.kind })</ID>
+    <ID>MaxLineLength:UsageSubscriptionsMergeTest.kt$UsageSubscriptionsMergeTest$val s = merge(listOf(reading("codex", "inapp", account = "a", age = 20.minutes, problem = UsageProblem.RateLimited)))</ID>
+    <ID>MaxLineLength:UsageSubscriptionsMergeTest.kt$UsageSubscriptionsMergeTest$val s = merge(listOf(reading("codex", "inapp", status = UsageReadingStatus.NoLimits, problem = UsageProblem.Broken)))</ID>
+    <ID>MaxLineLength:UsageSubscriptionsMergeTest.kt$UsageSubscriptionsMergeTest$val s = merge(listOf(reading("codex", "pc", account = "a")), connections = listOf(PC), authoritative = setOf("pc"))</ID>
+    <ID>MaxLineLength:UsageSubscriptionsMergeTest.kt$UsageSubscriptionsMergeTest$windows = listOf(UsageWindow("primary", 90.0, durationSeconds = 18_000, resetsAt = NOW - 30.minutes))</ID>
+    <ID>MaxLineLength:UsageWidgetFeedTest.kt$PaseoUsageMonitorTest$private val claude = ProviderUsageReading("claude", "Claude", NOW, listOf(ProviderUsageWindowReading(18_000, "", 60, null)))</ID>
+    <ID>MaxLineLength:UsageWidgetFeedTest.kt$UsageWidgetFeedTest$listOf(ProviderUsageReading("claude", "Claude", NOW, listOf(ProviderUsageWindowReading(18_000, "", 60, null))))</ID>
+    <ID>MaxLineLength:UsageWidgetFeedTest.kt$UsageWidgetFeedTest$mapOf("providerId" to "claude", "displayName" to "Claude", "status" to "unavailable", "windows" to emptyList&lt;Any&gt;(), "error" to null)</ID>
+    <ID>MaxLineLength:UsageWidgetFeedTest.kt$UsageWidgetFeedTest$mapOf("providerId" to "codex", "displayName" to "Codex", "status" to "error", "error" to "Codex usage API returned 500")</ID>
+    <ID>MaxLineLength:UsageWidgetFeedTest.kt$UsageWidgetFeedTest$mapOf("providerId" to "kimi", "displayName" to "Kimi", "status" to "unavailable", "windows" to emptyList&lt;Any&gt;())</ID>
+    <ID>MaxLineLength:UsageWidgetFeedTest.kt$UsageWidgetFeedTest$other.recordReadings("p1", "Home", listOf(ProviderUsageReading("codex", "Codex", WIDGET_NOW, listOf(ProviderUsageWindowReading(18_000, "", 60, null)))))</ID>
+    <ID>MaxLineLength:UsageWidgetFeedTest.kt$UsageWidgetFeedTest$private fun stored(profile: String): Map&lt;*, *&gt;</ID>
+    <ID>MaxLineLength:UsageWidgetFeedTest.kt$UsageWidgetFeedTest$private val widget = UsageWidgetFeed(kv, LANE, isAndroid = true, refreshNative = { redraws++ }, clock = { WIDGET_NOW })</ID>
+    <ID>MaxLineLength:UsageWidgetFeedTest.kt$UsageWidgetFeedTest$widget.recordReadings("phone", "", listOf(ProviderUsageReading("claude", "Claude", NOW, emptyList(), needsSignIn = true)), thisPhone = true)</ID>
+    <ID>NestedBlockDepth:UsageSubscriptions.kt$public fun mergeUsageSubscriptions( now: Instant, connections: List&lt;UsageConnection&gt;, readings: List&lt;UsageReading&gt;, signIns: List&lt;UsageSignIn&gt; = emptyList(), authoritativeSignIns: Set&lt;String&gt; = emptySet(), defaultThreshold: Double = 80.0, overrides: Map&lt;String, UsageAlertOverride&gt; = emptyMap(), notifyOnResetDefault: Boolean = false, refreshedAt: Instant? = null, loaded: Boolean = true, offlineConnections: Set&lt;String&gt; = emptySet(), ): UsageSnapshot</ID>
+    <ID>NestedBlockDepth:UsageWidgetFeed.kt$UsageWidgetFeed$private suspend fun mutate( profileId: String, profileName: String, local: Boolean = false, change: (MutableMap&lt;String, MutableMap&lt;String, Any?&gt;&gt;) -&gt; Unit, )</ID>
+    <ID>ReturnCount:ComputerUsageSource.kt$private fun parseSnapshot(provider: String, value: Any?): ComputerPlanSnapshot?</ID>
+    <ID>ReturnCount:PaseoUsageMonitor.kt$PaseoUsageMonitor$private suspend fun read(id: String)</ID>
+    <ID>ReturnCount:PaseoUsageMonitor.kt$PaseoUsageMonitor$public suspend fun setEnabled(id: String, value: Boolean): Boolean</ID>
+    <ID>ReturnCount:ProviderUsageList.kt$public fun cleanUsageText(value: Any?, maxLength: Int): String?</ID>
+    <ID>ReturnCount:SubscriptionAlertDelivery.kt$SubscriptionAlertDelivery$private fun load(): MutableMap&lt;String, MutableMap&lt;String, Map&lt;String, Any?&gt;&gt;&gt;</ID>
+    <ID>ReturnCount:SubscriptionAlertDelivery.kt$SubscriptionAlertDelivery$private suspend fun post(note: UsageAlertNote, isCurrent: () -&gt; Boolean): Boolean</ID>
+    <ID>ReturnCount:UsageBudgets.kt$UsageBudgets$public fun limit(scope: UsageBudgetScope, unit: UsageBudgetUnit): Double?</ID>
+    <ID>ReturnCount:UsageBudgets.kt$UsageBudgets.Companion$private fun validStoredRule(id: String, value: Any?): Boolean</ID>
+    <ID>ReturnCount:UsageSubscriptions.kt$UsageReading.Companion$public fun fromJson(value: Any?, connectionId: String): UsageReading?</ID>
+    <ID>ReturnCount:UsageSubscriptions.kt$UsageWindow.Companion$private fun kindOf(id: String, seconds: Long?): UsageWindowKind</ID>
+    <ID>ReturnCount:UsageSubscriptions.kt$UsageWindow.Companion$public fun fromJson(value: Any?): UsageWindow?</ID>
+    <ID>ReturnCount:UsageSubscriptionsEngine.kt$UsageSubscriptionsEngine$public suspend fun removeProfile(profileId: String, deleted: Boolean = true): Boolean</ID>
+    <ID>ReturnCount:UsageWidgetFeed.kt$UsageWidgetFeed$public suspend fun clearForProfile(profileId: String): Boolean</ID>
+    <ID>ReturnCount:UsageWidgetFeed.kt$UsageWidgetFeed$public suspend fun publishSubscriptions( snapshot: UsageSnapshot, settings: UsageWidgetSettings, ): Boolean</ID>
+    <ID>ReturnCount:UsageWidgetFeed.kt$UsageWidgetFeed$public suspend fun record(profileId: String, profileName: String, snapshot: QuotaWidgetInput)</ID>
+    <ID>ReturnCount:UsageWidgetFeed.kt$UsageWidgetFeed.Companion$public fun widgetEntryFor( s: UsageSubscription, settings: UsageWidgetSettings, ): Map&lt;String, Any?&gt;?</ID>
+    <ID>ReturnCount:UsageWidgetFeed.kt$UsageWidgetSettings.Companion$public fun load(store: KeyValueStore): UsageWidgetSettings</ID>
+    <ID>SwallowedException:ProviderUsageList.kt$e: IllegalArgumentException</ID>
+    <ID>TooManyFunctions:PaseoUsageMonitor.kt$PaseoUsageMonitor</ID>
+    <ID>TooManyFunctions:UsageSubscriptionsEngine.kt$UsageSubscriptionsEngine</ID>
+  </CurrentIssues>
+</SmellBaseline>

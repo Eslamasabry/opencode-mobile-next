@@ -1,0 +1,43 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:UsageScreen.kt$@Composable private fun Budgets(state: UsageUi, actions: UsageActions)</ID>
+    <ID>CyclomaticComplexMethod:UsageScreen.kt$@Composable private fun Total(report: UsageReport, range: UsageRange, timezone: String?, state: UsageUi)</ID>
+    <ID>CyclomaticComplexMethod:UsageScreen.kt$private fun LazyListScope.breakdowns( report: UsageReport, state: UsageUi, actions: UsageActions, recordsField: TextFieldState, )</ID>
+    <ID>LongMethod:UsageScreen.kt$@Composable private fun Budgets(state: UsageUi, actions: UsageActions)</ID>
+    <ID>LongMethod:UsageScreen.kt$@Composable private fun Filters(state: UsageUi, actions: UsageActions)</ID>
+    <ID>LongMethod:UsageScreen.kt$@Composable public fun UsageContent(state: UsageUi, actions: UsageActions)</ID>
+    <ID>LongMethod:UsageScreen.kt$private fun LazyListScope.breakdowns( report: UsageReport, state: UsageUi, actions: UsageActions, recordsField: TextFieldState, )</ID>
+    <ID>LongMethod:UsageViewModel.kt$UsageViewModel$private fun read()</ID>
+    <ID>MagicNumber:UsageFigures.kt$UsageFigures$0.01</ID>
+    <ID>MagicNumber:UsageFigures.kt$UsageFigures$10</ID>
+    <ID>MagicNumber:UsageFigures.kt$UsageFigures$100</ID>
+    <ID>MagicNumber:UsageFigures.kt$UsageFigures$1_000</ID>
+    <ID>MagicNumber:UsageFigures.kt$UsageFigures$1_000_000</ID>
+    <ID>MagicNumber:UsageFigures.kt$UsageFigures$1_000_000_000</ID>
+    <ID>MagicNumber:UsageFigures.kt$UsageFigures$3</ID>
+    <ID>MagicNumber:UsageFigures.kt$UsageFigures$6</ID>
+    <ID>MagicNumber:UsageScreen.kt$5</ID>
+    <ID>MagicNumber:UsageViewModel.kt$UsageViewModel$401</ID>
+    <ID>MagicNumber:UsageViewModel.kt$UsageViewModel$403</ID>
+    <ID>MaxLineLength:UsageFigures.kt$UsageFigures$val sign = if (cost &lt; 0 &amp;&amp; amount.any { it != symbols.zeroDigit &amp;&amp; it != symbols.decimal }) symbols.minus.toString() else ""</ID>
+    <ID>MaxLineLength:UsagePorts.kt$UsageReport$*</ID>
+    <ID>MaxLineLength:UsageQuery.kt$UsageQuery.Companion$*</ID>
+    <ID>MaxLineLength:UsageQueryTest.kt$UsageQueryTest$fun</ID>
+    <ID>MaxLineLength:UsageQueryTest.kt$UsageQueryTest$val big = UsageFigures.providers(listOf(model("p", "a", cost = Double.MAX_VALUE), model("p", "b", cost = Double.MAX_VALUE)))</ID>
+    <ID>MaxLineLength:UsageViewModelTest.kt$UsageViewModelTest$UsageReport(0, 1, sessions, 0, 1, 1, 1, 1, cost, UsageTokens(input = 5), null, persistentListOf(), persistentListOf())</ID>
+    <ID>MaxLineLength:UsageViewModelTest.kt$UsageViewModelTest$fun</ID>
+    <ID>MaxLineLength:UsageViewModelTest.kt$UsageViewModelTest$private</ID>
+    <ID>ReturnCount:UsageQuery.kt$UsageQuery.Companion$public fun forRange(range: UsageRange, now: Instant, timezone: String?, projectId: String?): UsageQuery?</ID>
+    <ID>ReturnCount:UsageViewModel.kt$UsageViewModel$private fun writeBudget(unit: UsageBudgetUnit?, value: Double?, clear: Boolean)</ID>
+    <ID>TooManyFunctions:UsageUi.kt$UsageActions</ID>
+    <ID>TooManyFunctions:UsageViewModel.kt$UsageViewModel : ViewModelUsageActions</ID>
+    <ID>WildcardImport:UsageBudgetDialogTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:UsageBudgetDialogTest.kt$import io.github.eslamasabry.oc.feature.usage.presentation.*</ID>
+    <ID>WildcardImport:UsageFiltersTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:UsageFiltersTest.kt$import io.github.eslamasabry.oc.feature.usage.presentation.*</ID>
+    <ID>WildcardImport:UsageScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:UsageScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -1,0 +1,122 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:AndroidManageSpaceStorage.kt$AndroidManageSpaceStorage$override suspend fun export( includePrivate: Boolean, progress: (Long) -&gt; Unit, ): Outcome&lt;StorageExport?&gt;</ID>
+    <ID>EmptyFunctionBlock:AndroidDeviceFacts.kt$AndroidDeviceFacts.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:FieldFrameStats.kt$FieldFrameStats.&lt;no name provided&gt;${}</ID>
+    <ID>LongMethod:AndroidManageSpaceStorage.kt$AndroidManageSpaceStorage$override suspend fun export( includePrivate: Boolean, progress: (Long) -&gt; Unit, ): Outcome&lt;StorageExport?&gt;</ID>
+    <ID>LongMethod:AndroidSharedStorageAccess.kt$AndroidSharedStorageAccess$public suspend fun request(activity: ComponentActivity): Outcome&lt;Unit&gt;</ID>
+    <ID>LongParameterList:AndroidActivityResults.kt$AndroidActivityResults.Attached$( val activity: WeakReference&lt;Activity&gt;, val pickPhoto: ActivityResultLauncher&lt;PickVisualMediaRequest&gt;, val pickPhotos: ActivityResultLauncher&lt;Int&gt;, val takePhoto: ActivityResultLauncher&lt;Uri&gt;, val openDocument: ActivityResultLauncher&lt;Array&lt;String&gt;&gt;, val createDocument: ActivityResultLauncher&lt;CreateRequest&gt;, val openDocumentTree: ActivityResultLauncher&lt;Uri?&gt;, )</ID>
+    <ID>LongParameterList:StartupHistoryTest.kt$StartupHistoryTest$( kind: StartKind = StartKind.Cold, activity: Boolean = true, launchMs: Long? = 100_000, forkMs: Long? = 100_010, firstFrameMs: Long? = 100_300, fullyDrawnMs: Long? = null, )</ID>
+    <ID>LoopWithTooManyJumpStatements:FieldFrameStats.kt$FrameCounter$for</ID>
+    <ID>MagicNumber:AndroidDeviceFacts.kt$3</ID>
+    <ID>MagicNumber:AndroidDeviceFacts.kt$4</ID>
+    <ID>MagicNumber:AndroidDeviceFacts.kt$5</ID>
+    <ID>MagicNumber:AndroidDeviceFacts.kt$6</ID>
+    <ID>MagicNumber:AndroidManageSpaceStorage.kt$AndroidManageSpaceStorage$127</ID>
+    <ID>MagicNumber:AndroidManageSpaceStorage.kt$AndroidManageSpaceStorage$32</ID>
+    <ID>MagicNumber:AndroidSharedStorageAccess.kt$AndroidSharedStorageAccess$10</ID>
+    <ID>MagicNumber:AndroidSharedStorageAccess.kt$AndroidSharedStorageAccess$30</ID>
+    <ID>MagicNumber:AndroidSharedStorageAccess.kt$AndroidSharedStorageAccess$60_000L</ID>
+    <ID>MagicNumber:FieldFrameStats.kt$FieldFrameStats$1_000_000_000.0</ID>
+    <ID>MagicNumber:FieldFrameStats.kt$FrameSummary$100</ID>
+    <ID>MagicNumber:NativeCrashStore.kt$NativeCrashStore$24576</ID>
+    <ID>MagicNumber:NativeCrashStore.kt$NativeCrashStore$3</ID>
+    <ID>MagicNumber:NativeCrashStore.kt$NativeCrashStore$4</ID>
+    <ID>MaxLineLength:AndroidActivityResults.kt$AndroidActivityResults$if (activity == null) PickedFile(uri.toString(), null, null, null) else describe(activity.applicationContext, uri)</ID>
+    <ID>MaxLineLength:AndroidActivityResults.kt$AndroidActivityResults$launch&lt;Array&lt;String&gt;, Uri?&gt;(OPEN_DOCUMENT, mimeTypes.ifEmpty { listOf("*/*") }.toTypedArray()) { it.openDocument }</ID>
+    <ID>MaxLineLength:AndroidActivityResults.kt$AndroidActivityResults$launch&lt;PickVisualMediaRequest, Uri?&gt;(PICK_PHOTO, imagesOnly()) { it.pickPhoto }.mapOk { listOfNotNull(it) }</ID>
+    <ID>MaxLineLength:AndroidActivityResults.kt$AndroidActivityResults$registry.register(CREATE_DOCUMENT, owner, CreateDocument()) { uri -&gt; deliver(CREATE_DOCUMENT, uri) {} }</ID>
+    <ID>MaxLineLength:AndroidActivityResults.kt$AndroidActivityResults.Companion$if (uris.isEmpty()) LauncherOutcome.Cancelled else LauncherOutcome.Picked(uris.map { describe(context, it) })</ID>
+    <ID>MaxLineLength:AndroidActivityResults.kt$AndroidActivityResults.CreateDocument$override fun parseResult(resultCode: Int, intent: Intent?): Uri?</ID>
+    <ID>MaxLineLength:AndroidActivityResultsTest.kt$AndroidActivityResultsTest$assertIs&lt;Outcome.Failed&gt;(rig.results.takePhoto(PhotoTarget("content://${activity.packageName}.localfiles/camera/2.jpg")))</ID>
+    <ID>MaxLineLength:AndroidActivityResultsTest.kt$AndroidActivityResultsTest$fun</ID>
+    <ID>MaxLineLength:AndroidActivityResultsTest.kt$AndroidActivityResultsTest$setOf("oc.pickPhoto", "oc.pickPhotos", "oc.takePhoto", "oc.openDocument", "oc.createDocument", "oc.openDocumentTree")</ID>
+    <ID>MaxLineLength:AndroidActivityResultsTest.kt$AndroidActivityResultsTest$val dying = async { before.results.takePhoto(PhotoTarget("content://${activity.packageName}.localfiles/camera/9.jpg")) }</ID>
+    <ID>MaxLineLength:AndroidActivityResultsTest.kt$AndroidActivityResultsTest$val first = async { rig.results.takePhoto(PhotoTarget("content://${activity.packageName}.localfiles/camera/1.jpg")) }</ID>
+    <ID>MaxLineLength:AndroidActivityResultsTest.kt$AndroidActivityResultsTest$val intent = (launch.contract as AndroidActivityResults.CreateDocument).createIntent(activity, launch.input as AndroidActivityResults.CreateRequest)</ID>
+    <ID>MaxLineLength:AndroidActivityResultsTest.kt$AndroidActivityResultsTest.FakeRegistry$override</ID>
+    <ID>MaxLineLength:AndroidActivityResultsTest.kt$AndroidActivityResultsTest.Rig$private</ID>
+    <ID>MaxLineLength:AndroidActivityResultsTest.kt$AndroidActivityResultsTest.Rig$val results = AndroidActivityResults(TestDispatchers(UnconfinedTestDispatcher(scope.testScheduler))) { orphans += it }</ID>
+    <ID>MaxLineLength:AndroidPlatformRobolectricTest.kt$AndroidPlatformRobolectricTest$ThermalLevel.Critical</ID>
+    <ID>MaxLineLength:AndroidShareService.kt$AndroidShareService$/** Only `content://&lt;our package&gt;.localfiles/…`; anything else (file://, another app's provider, http) is refused. */</ID>
+    <ID>MaxLineLength:AndroidShareServiceTest.kt$AndroidShareServiceTest$for</ID>
+    <ID>MaxLineLength:AndroidShareServiceTest.kt$AndroidShareServiceTest$private fun Intent.target(): Intent</ID>
+    <ID>MaxLineLength:AndroidTailscaleApp.kt$AndroidTailscaleApp$if (info.packageName == PACKAGE &amp;&amp; info.enabled) TailscaleAppState.Installed else TailscaleAppState.Unavailable</ID>
+    <ID>MaxLineLength:EntryCapture.kt$EntryCapture$*</ID>
+    <ID>MaxLineLength:EntryCapture.kt$EntryCapture$private</ID>
+    <ID>MaxLineLength:EntryCaptureTest.kt$EntryCaptureTest$EntryCapture.onNewIntent(activity, shortcut("background_settings"), EntryOrigin.Untrusted, FixedClock, rig.router)</ID>
+    <ID>MaxLineLength:EntryCaptureTest.kt$EntryCaptureTest$assertEquals(0, EntryCapture.onCreate(activityWith(fromHistory), null, EntryOrigin.Untrusted, FixedClock, rig.router))</ID>
+    <ID>MaxLineLength:EntryCaptureTest.kt$EntryCaptureTest$assertEquals(EntryTarget.Chat(ConversationRef(P1, NEW_SESSION), focusComposer = true, opened = Opened.NewlyCreated), handoff?.target)</ID>
+    <ID>MaxLineLength:EntryCaptureTest.kt$EntryCaptureTest$assertTrue(rig.effects.gatewayCalls.isEmpty(), "no connect or create before a tap: ${rig.effects.calls}")</ID>
+    <ID>MaxLineLength:EntryCaptureTest.kt$EntryCaptureTest$for</ID>
+    <ID>MaxLineLength:EntryCaptureTest.kt$EntryCaptureTest$fun</ID>
+    <ID>MaxLineLength:EntryCaptureTest.kt$EntryCaptureTest$private fun activityWith(intent: Intent): Activity</ID>
+    <ID>MaxLineLength:EntryTestRig.kt$RecordingEffects$override suspend</ID>
+    <ID>MaxLineLength:EntryTestRig.kt$RouterRig$DefaultEntryRouter(this.world, effects, FixedClock, scope.backgroundScope, StandardTestDispatcher(scope.testScheduler))</ID>
+    <ID>MaxLineLength:FieldFrameStatsRobolectricTest.kt$FieldFrameStatsRobolectricTest$assertEquals(StartupSummary.Unsupported, StartupHistory(source, clock, StandardTestDispatcher(testScheduler)).refresh())</ID>
+    <ID>MaxLineLength:FieldFrameStatsTest.kt$FieldFrameStatsTest$for (i in 0 until n) c.record(i.toLong() * 8_000_000, deadline + (i % 7) * deadline, deadline, isStreaming = i % 2 == 0)</ID>
+    <ID>MaxLineLength:LaunchHandoffContractTest.kt$LaunchHandoffContractTest$(0 until actions.length).any { (actions.item(it) as Element).getAttributeNS(ns, "name") == "android.intent.action.VIEW" }</ID>
+    <ID>MaxLineLength:LaunchHandoffContractTest.kt$LaunchHandoffContractTest$assertEquals(1, EntryCapture.onNewIntent(activity, shortcut("new_task"), EntryOrigin.Untrusted, FixedClock, rig.router))</ID>
+    <ID>MaxLineLength:LaunchHandoffContractTest.kt$LaunchHandoffContractTest$assertEquals(ParsedLink.Session(P1, S1), EntryLinkParser.parse("OPENCODE-MOBILE://SESSION?profile=p1&amp;session=ses_1"))</ID>
+    <ID>MaxLineLength:LaunchHandoffContractTest.kt$LaunchHandoffContractTest$assertTrue(EntryIntentReader.read(Intent(Intent.ACTION_MAIN, Uri.parse("opencode-mobile://session?profile=p1&amp;session=ses_1")), EntryOrigin.Untrusted, FixedClock).none { it is io.github.eslamasabry.oc.engine.entry.EntryRequest.Link })</ID>
+    <ID>MaxLineLength:LaunchHandoffContractTest.kt$LaunchHandoffContractTest$private fun activityWith(intent: Intent): Activity</ID>
+    <ID>MaxLineLength:LaunchHandoffContractTest.kt$LaunchHandoffContractTest$val doc = DocumentBuilderFactory.newInstance().apply { isNamespaceAware = true }.newDocumentBuilder().parse(stream)</ID>
+    <ID>MaxLineLength:NativeCrashStore.kt$CrashKind$public enum</ID>
+    <ID>MaxLineLength:NativeCrashStore.kt$CrashStore$/** The last crash recorded since consent; null when there is none, consent is off or the record is invalid. Never throws. */</ID>
+    <ID>MaxLineLength:NativeCrashStore.kt$NativeCrashStore$return</ID>
+    <ID>MaxLineLength:NativeCrashStoreTest.kt$NativeCrashStoreTest$assertFalse(tmpTarget.exists(), "a dangling temporary link is removed, never written through (S1-PLAT0 fix)")</ID>
+    <ID>MaxLineLength:NativeCrashStoreTest.kt$NativeCrashStoreTest$val target = File(outside, "stolen.properties").apply { writeText("timestamp=${now - 1_000}\nexceptionClass=java.lang.Throwable\n") }</ID>
+    <ID>MaxLineLength:NetworkTrackerTest.kt$NetworkTrackerTest$assertEquals</ID>
+    <ID>MaxLineLength:NetworkTrackerTest.kt$NetworkTrackerTest$assertEquals(NetworkState(Online.No, Transport.Unknown, metered = null, defaultNetworkId = null), tracker.state.value)</ID>
+    <ID>MaxLineLength:NetworkTrackerTest.kt$NetworkTrackerTest$assertEquals(NetworkState(Online.Unknown, Transport.Unknown, metered = null, defaultNetworkId = 1), tracker.state.value)</ID>
+    <ID>MaxLineLength:NetworkTrackerTest.kt$NetworkTrackerTest$assertEquals(NetworkState(Online.Unknown, Transport.Unknown, metered = null, defaultNetworkId = 2), tracker.state.value)</ID>
+    <ID>MaxLineLength:NetworkTrackerTest.kt$NetworkTrackerTest$assertEquals(NetworkState(Online.Yes, Transport.Mobile, metered = true, defaultNetworkId = 2), tracker.state.value)</ID>
+    <ID>MaxLineLength:NetworkTrackerTest.kt$NetworkTrackerTest$assertEquals(NetworkState(Online.Yes, Transport.Mobile, metered = true, defaultNetworkId = 3), networkReading(mobile, 3))</ID>
+    <ID>MaxLineLength:NetworkTrackerTest.kt$NetworkTrackerTest$assertEquals(NetworkState(Online.Yes, Transport.Wifi, metered = false, defaultNetworkId = 3), networkReading(wifi, 3))</ID>
+    <ID>MaxLineLength:NetworkTrackerTest.kt$NetworkTrackerTest$private val mobile = NetworkCaps(wifi = false, cellular = true, vpn = false, internet = true, validated = true, notMetered = false)</ID>
+    <ID>MaxLineLength:NetworkTrackerTest.kt$NetworkTrackerTest$private val wifi = NetworkCaps(wifi = true, cellular = false, vpn = false, internet = true, validated = true, notMetered = true)</ID>
+    <ID>MaxLineLength:ProfileStatusTest.kt$ProfileStatusTest$assertEquals(SpeedUpProfile.Ready, ProfileStatus.of(r(compiled = true, code = ProfileStatus.RESULT_CODE_COMPILED_WITH_PROFILE)))</ID>
+    <ID>MaxLineLength:ProfileStatusTest.kt$ProfileStatusTest$assertEquals(SpeedUpProfile.Ready, ProfileStatus.of(r(compiled = true, code = ProfileStatus.RESULT_CODE_COMPILED_WITH_PROFILE_NON_MATCHING)))</ID>
+    <ID>MaxLineLength:ProfileStatusTest.kt$ProfileStatusTest$assertEquals(SpeedUpProfile.Unknown, ProfileStatus.of(r(enqueued = true, code = 3 shl 16)), "an error wins over a stale flag")</ID>
+    <ID>MaxLineLength:ProfileStatusTest.kt$ProfileStatusTest$assertEquals(SpeedUpProfile.Unsupported, ProfileStatus.of(r(code = ProfileStatus.RESULT_CODE_ERROR_UNSUPPORTED_API_VERSION)))</ID>
+    <ID>MaxLineLength:ProfileStatusTest.kt$ProfileStatusTest$assertEquals(SpeedUpProfile.WaitsForRest, ProfileStatus.of(r(code = ProfileStatus.RESULT_CODE_PROFILE_ENQUEUED_FOR_COMPILATION)))</ID>
+    <ID>MaxLineLength:ProfileStatusTest.kt$ProfileStatusTest$assertEquals(SpeedUpProfile.WaitsForRest, ProfileStatus.of(r(enqueued = true, code = ProfileStatus.RESULT_CODE_PROFILE_ENQUEUED_FOR_COMPILATION)))</ID>
+    <ID>MaxLineLength:ProfileStatusTest.kt$ProfileStatusTest$private fun r(compiled: Boolean = false, enqueued: Boolean = false, code: Int = 0)</ID>
+    <ID>MaxLineLength:StartupHistory.kt$AndroidStartInfoSource$if (Build.VERSION.SDK_INT &lt; Build.VERSION_CODES.VANILLA_ICE_CREAM || activityManager == null) return AutoCloseable {}</ID>
+    <ID>MaxLineLength:StartupHistory.kt$AndroidStartInfoSource$override val supported: Boolean get() = Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.VANILLA_ICE_CREAM &amp;&amp; activityManager != null</ID>
+    <ID>MaxLineLength:StartupHistory.kt$StartupHistory$if</ID>
+    <ID>MaxLineLength:StartupHistory.kt$StartupRules$public</ID>
+    <ID>MaxLineLength:StartupHistoryTest.kt$StartupHistoryTest$)</ID>
+    <ID>MaxLineLength:StartupHistoryTest.kt$StartupHistoryTest$assertEquals(300, StartupRules.summarize(records.take(2), nowEpoch).typicalFirstFrameMs, "even count: mean of middle two")</ID>
+    <ID>MaxLineLength:StartupHistoryTest.kt$StartupHistoryTest$assertNull(StartupRules.recordOf(raw(launchMs = 600_000, firstFrameMs = 600_300), nowEpoch, elapsedNow), "after now")</ID>
+    <ID>MaxLineLength:StartupHistoryTest.kt$StartupHistoryTest$val source = FakeSource(supported = true, history = listOf(raw(), raw(kind = StartKind.Warm, launchMs = 200_000, forkMs = null, firstFrameMs = 200_100)))</ID>
+    <ID>MaxLineLength:StartupHistoryTest.kt$StartupHistoryTest.FakeSource$private</ID>
+    <ID>MaxLineLength:StaticShortcuts.kt$StaticShortcuts$*</ID>
+    <ID>MaxLineLength:StaticShortcutsTest.kt$StaticShortcutsTest$"extra" -&gt; extras[parser.getAttributeValue(androidNs, "name")] = parser.getAttributeValue(androidNs, "value")</ID>
+    <ID>MaxLineLength:StaticShortcutsTest.kt$StaticShortcutsTest$Declared</ID>
+    <ID>MaxLineLength:StaticShortcutsTest.kt$StaticShortcutsTest$fun</ID>
+    <ID>MaxLineLength:StaticShortcutsTest.kt$StaticShortcutsTest$listOf(R.string.shortcut_connect_short, R.string.shortcut_connect_long, R.string.shortcut_new_task_short, R.string.shortcut_new_task_long)</ID>
+    <ID>MaxLineLength:StaticShortcutsTest.kt$StaticShortcutsTest$val doc = DocumentBuilderFactory.newInstance().apply { isNamespaceAware = true }.newDocumentBuilder().parse(stream)</ID>
+    <ID>MaxLineLength:TraceRecorder.kt$AndroidTraceSystem$ProfilingTrigger.Builder(ProfilingTrigger.TRIGGER_TYPE_ANR).setRateLimitingPeriodHours(hours).build()</ID>
+    <ID>MaxLineLength:TraceRecorder.kt$AndroidTraceSystem$ProfilingTrigger.Builder(ProfilingTrigger.TRIGGER_TYPE_APP_FULLY_DRAWN).setRateLimitingPeriodHours(hours).build()</ID>
+    <ID>MaxLineLength:TraceRecorderTest.kt$TraceRecorderTest$val recorder = TraceRecorder(FakeSystem(supported = true, traceDir = File(root, "missing")), StandardTestDispatcher(testScheduler))</ID>
+    <ID>MaxLineLength:TraceRecorderTest.kt$TraceRecorderTest$val recorder = TraceRecorder(FakeSystem(supported = true, traceDir = dir), StandardTestDispatcher(testScheduler))</ID>
+    <ID>MaxLineLength:TraceRecorderTest.kt$TraceRecorderTest.FakeSystem$private</ID>
+    <ID>NestedBlockDepth:AndroidActivityResults.kt$AndroidActivityResults.Companion$internal fun describe(context: Context, uri: Uri): PickedFile</ID>
+    <ID>NestedBlockDepth:NativeCrashStore.kt$NativeCrashStore$@Synchronized fun read(): Map&lt;String, Any?&gt;?</ID>
+    <ID>ReturnCount:AndroidLocalFileOpener.kt$AndroidLocalFileOpener$public suspend fun open( path: String, install: Boolean, beforeOpen: () -&gt; Boolean = { true }, ): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:AndroidManageSpaceStorage.kt$AndroidManageSpaceStorage$override suspend fun export( includePrivate: Boolean, progress: (Long) -&gt; Unit, ): Outcome&lt;StorageExport?&gt;</ID>
+    <ID>ReturnCount:AndroidShareService.kt$AndroidShareService$override fun shareFile(file: SharedFile): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:AndroidTailscaleApp.kt$AndroidTailscaleApp$override fun open(): Boolean</ID>
+    <ID>ReturnCount:EntryCapture.kt$EntryCapture$public fun onCreate( activity: Activity, savedInstanceState: Bundle?, origin: EntryOrigin, clock: Clock, router: EntryRouter, ): Int</ID>
+    <ID>ReturnCount:FieldFrameStats.kt$FieldFrameStats$public fun attach(activity: Activity)</ID>
+    <ID>ReturnCount:StartupHistory.kt$StartupRules$public fun recordOf(raw: RawStart, nowEpochMs: Long, elapsedNowNs: Long): StartRecord?</ID>
+    <ID>TooGenericExceptionCaught:AndroidManageSpaceStorage.kt$AndroidManageSpaceStorage$e: Exception</ID>
+    <ID>TooManyFunctions:AndroidActivityResults.kt$AndroidActivityResults : ActivityResultsCurrentActivity</ID>
+    <ID>TooManyFunctions:AndroidManageSpaceStorage.kt$AndroidManageSpaceStorage : ManageSpaceStorage</ID>
+    <ID>TooManyFunctions:FieldFrameStats.kt$FieldFrameStats : AutoCloseable</ID>
+    <ID>UseCheckOrError:AndroidTailscaleAppTest.kt$AndroidTailscaleAppTest.&lt;no name provided&gt;$throw IllegalStateException("binder died")</ID>
+  </CurrentIssues>
+</SmellBaseline>

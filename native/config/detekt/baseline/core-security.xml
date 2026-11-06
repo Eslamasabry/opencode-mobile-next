@@ -1,0 +1,100 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:Links.kt$ExternalLinkPolicy$text.isEmpty() || text.any { it.code &lt;= 0x20 || it.code == 0x7f || it == '\\' }</ID>
+    <ID>ComplexCondition:ServerUrlRules.kt$ServerUrlRules$parts.host.any { it.isWhitespace() } || '%' in parts.host || '\\' in raw || CONTROL.containsMatchIn(raw)</ID>
+    <ID>CyclomaticComplexMethod:AddressRules.kt$AddressRules$private fun parseIpv6(host: String): IntArray?</ID>
+    <ID>CyclomaticComplexMethod:AddressRules.kt$AddressRules$public fun classify(host: String): HostClass</ID>
+    <ID>CyclomaticComplexMethod:Links.kt$ExternalLinkPolicy$public fun check(raw: String, origin: LinkOrigin): LinkDecision</ID>
+    <ID>CyclomaticComplexMethod:Redactor.kt$Redactor$private fun authValue(s: String, m: MatchResult): Masked?</ID>
+    <ID>CyclomaticComplexMethod:Redactor.kt$Redactor$private fun namedValueEnd(s: String, m: MatchResult): Masked?</ID>
+    <ID>CyclomaticComplexMethod:Redactor.kt$Redactor$private fun serializedQuoted(s: String, open: Int): Masked?</ID>
+    <ID>CyclomaticComplexMethod:ServerUrlRules.kt$ServerUrlRules$public fun validate(value: String): ServerUrlProblem?</ID>
+    <ID>CyclomaticComplexMethod:UrlParts.kt$UrlParts.Companion$fun parse(raw: String): UrlParts?</ID>
+    <ID>LongParameterList:UrlParts.kt$UrlParts$( val scheme: String, val userInfo: String?, /** Lower-case, without IPv6 brackets. */ val host: String, val port: Int?, val path: String, val query: String?, val fragment: String?, )</ID>
+    <ID>LoopWithTooManyJumpStatements:Redactor.kt$Redactor$while</ID>
+    <ID>MagicNumber:AddressRules.kt$AddressRules$0x80</ID>
+    <ID>MagicNumber:AddressRules.kt$AddressRules$0xC0</ID>
+    <ID>MagicNumber:AddressRules.kt$AddressRules$0xFC</ID>
+    <ID>MagicNumber:AddressRules.kt$AddressRules$0xFE</ID>
+    <ID>MagicNumber:AddressRules.kt$AddressRules$0xFF</ID>
+    <ID>MagicNumber:AddressRules.kt$AddressRules$10</ID>
+    <ID>MagicNumber:AddressRules.kt$AddressRules$100</ID>
+    <ID>MagicNumber:AddressRules.kt$AddressRules$11</ID>
+    <ID>MagicNumber:AddressRules.kt$AddressRules$12</ID>
+    <ID>MagicNumber:AddressRules.kt$AddressRules$127</ID>
+    <ID>MagicNumber:AddressRules.kt$AddressRules$13</ID>
+    <ID>MagicNumber:AddressRules.kt$AddressRules$16</ID>
+    <ID>MagicNumber:AddressRules.kt$AddressRules$168</ID>
+    <ID>MagicNumber:AddressRules.kt$AddressRules$169</ID>
+    <ID>MagicNumber:AddressRules.kt$AddressRules$172</ID>
+    <ID>MagicNumber:AddressRules.kt$AddressRules$192</ID>
+    <ID>MagicNumber:AddressRules.kt$AddressRules$254</ID>
+    <ID>MagicNumber:AddressRules.kt$AddressRules$255</ID>
+    <ID>MagicNumber:AddressRules.kt$AddressRules$3</ID>
+    <ID>MagicNumber:AddressRules.kt$AddressRules$31</ID>
+    <ID>MagicNumber:AddressRules.kt$AddressRules$4</ID>
+    <ID>MagicNumber:AddressRules.kt$AddressRules$64</ID>
+    <ID>MagicNumber:AddressRules.kt$AddressRules$7</ID>
+    <ID>MagicNumber:AddressRules.kt$AddressRules$8</ID>
+    <ID>MagicNumber:Links.kt$ExternalLinkPolicy$0x20</ID>
+    <ID>MagicNumber:Links.kt$ExternalLinkPolicy$0x7f</ID>
+    <ID>MagicNumber:Links.kt$ExternalLinkPolicy$3</ID>
+    <ID>MagicNumber:Links.kt$ExternalLinkPolicy$8192</ID>
+    <ID>MagicNumber:ServerUrlRules.kt$ServerUrlRules$65535</ID>
+    <ID>MagicNumber:UrlParts.kt$UrlParts.Companion$5</ID>
+    <ID>MagicNumber:UrlParts.kt$UrlParts.Companion$65535</ID>
+    <ID>MaxLineLength:AddressRules.kt$AddressRules$if (origin.scheme != "https") Failure.Refused(RefusalReason.PinNeedsHttps).failed() else normalizePin(fingerprint)</ID>
+    <ID>MaxLineLength:AddressRules.kt$AddressRules$private fun privateIpv4(a: Int, b: Int): Boolean</ID>
+    <ID>MaxLineLength:AddressRules.kt$AddressRules$public</ID>
+    <ID>MaxLineLength:AddressRulesTest.kt$AddressRulesTest$assertEquals(Outcome.Ok("a".repeat(64)), AddressRules.checkPin(ServerOrigin("https", "example.com", 443), "A".repeat(64)))</ID>
+    <ID>MaxLineLength:AddressRulesTest.kt$AddressRulesTest$assertEquals(Outcome.Ok(ServerOrigin("https", "192.168.1.20", 4096)), AddressRules.normalize("192.168.1.20:4096"))</ID>
+    <ID>MaxLineLength:AddressRulesTest.kt$AddressRulesTest$assertEquals(Outcome.Ok(ServerOrigin("https", "example.com", 443)), AddressRules.origin("https://example.com:443/"))</ID>
+    <ID>MaxLineLength:AddressRulesTest.kt$AddressRulesTest$assertFalse(AddressRules.needsCleartextConsent((AddressRules.origin("http://$h:4098") as Outcome.Ok).value), h)</ID>
+    <ID>MaxLineLength:AddressRulesTest.kt$AddressRulesTest$assertTrue(AddressRules.needsCleartextConsent((AddressRules.origin("http://$h:4098") as Outcome.Ok).value), h)</ID>
+    <ID>MaxLineLength:AddressRulesTest.kt$AddressRulesTest$for</ID>
+    <ID>MaxLineLength:ExternalLinkParityTest.kt$ExternalLinkParityTest$listOf("https://user:pass${at}example.com/", "https://user${at}example.com/", "https://a%40b:c${at}example.com/")</ID>
+    <ID>MaxLineLength:LinksTest.kt$LinksTest$assertEquals(LinkDecision.Refuse(LinkRefusal.CredentialsInUrl), p.check("https://a:b@x.io", LinkOrigin.Markdown))</ID>
+    <ID>MaxLineLength:LinksTest.kt$LinksTest$assertEquals(LinkDecision.Refuse(LinkRefusal.IntentScheme), p.check("intent://x#Intent;end", LinkOrigin.Markdown))</ID>
+    <ID>MaxLineLength:Redactor.kt$Redactor$if (INVOCATION.matchAt(s, start) != null &amp;&amp; DECLARATION.containsMatchIn(s.substring(0, m.range.first))) return null</ID>
+    <ID>MaxLineLength:Redactor.kt$Redactor$public</ID>
+    <ID>MaxLineLength:Redactor.kt$Redactor$return if (run &gt; quoteAt + 1) Masked("$delimiter$MASK$delimiter", i + 1) else Masked("$delimiter$delimiter", i + 1)</ID>
+    <ID>MaxLineLength:Redactor.kt$Redactor.Companion$"""("?(?:api[-_ ]?key|token|password|passwd|secret|access[-_ ]?token|refresh[-_ ]?token)"?\s*[:=]\s*)("[^"]*"|'[^']*'|[^\s,;}]+)"""</ID>
+    <ID>MaxLineLength:Redactor.kt$Redactor.Companion$"""(?&lt;![A-Za-z0-9_\-])([A-Za-z0-9_\-]*?(?:api[_\-]?key|apikey|_key|token|secret|password|passwd))["']?\s*[:=]\s*"""</ID>
+    <ID>MaxLineLength:Redactor.kt$Redactor.Companion$"""^(?:api[_\-]?key|apikey|access_key|secret_key|private_key|x-api-key|[A-Za-z0-9_\-]*(?:token|secret|password|passwd))$"""</ID>
+    <ID>MaxLineLength:Redactor.kt$Redactor.Companion$Regex("""(?&lt;![A-Za-z0-9_\-])([A-Za-z0-9_\-]{2,})\.([A-Za-z0-9_\-]{2,})\.[A-Za-z0-9_\-]*(?![A-Za-z0-9_\-])""")</ID>
+    <ID>MaxLineLength:Redactor.kt$Redactor.Companion$Regex("""(["']?)\b(?:(?:Proxy-)?Authorization|(?:Set-)?Cookie|x-api-key)(["']?)\s*[:=]\s*""", RegexOption.IGNORE_CASE)</ID>
+    <ID>MaxLineLength:Redactor.kt$Redactor.Companion$private val HEADER_LINE = Regex("""\b(authorization|proxy-authorization)\s*[:=]\s*[^\r\n]+""", RegexOption.IGNORE_CASE)</ID>
+    <ID>MaxLineLength:ServerUrlRules.kt$ServerUrlProblem$public enum</ID>
+    <ID>MaxLineLength:ServerUrlRules.kt$ServerUrlRules$*</ID>
+    <ID>MaxLineLength:ServerUrlRulesTest.kt$ServerUrlRulesTest$assertEquals(ServerOrigin("http", "::1", 80), assertIs&lt;Outcome.Ok&lt;ServerOrigin&gt;&gt;(AddressRules.normalize("::1")).value)</ID>
+    <ID>MaxLineLength:ServerUrlRulesTest.kt$ServerUrlRulesTest$assertEquals(ServerUrlProblem.CredentialsInUrl, ServerUrlRules.validate("https://" + "user" + ":" + "pw" + "@server.example"))</ID>
+    <ID>MaxLineLength:UrlParts.kt$UrlParts.Companion$portText.all(Char::isDigit) &amp;&amp; portText.length &lt;= 5 -&gt; portText.toInt().takeIf { it in 0..65535 } ?: return null</ID>
+    <ID>MaxLineLength:VerbatimCopyReviewTest.kt$VerbatimCopyReviewTest$.</ID>
+    <ID>MaxLineLength:VerbatimCopyReviewTest.kt$VerbatimCopyReviewTest$else</ID>
+    <ID>MaxLineLength:VerbatimCopyReviewTest.kt$VerbatimCopyReviewTest$if</ID>
+    <ID>NestedBlockDepth:Redactor.kt$Redactor$public fun registerCredentialValues(value: JsonElement)</ID>
+    <ID>ReturnCount:AddressRules.kt$AddressRules$fun groups(part: String): List&lt;Int&gt;?</ID>
+    <ID>ReturnCount:AddressRules.kt$AddressRules$private fun parseIpv4(host: String): IntArray?</ID>
+    <ID>ReturnCount:AddressRules.kt$AddressRules$private fun parseIpv6(host: String): IntArray?</ID>
+    <ID>ReturnCount:AddressRules.kt$AddressRules$public fun classify(host: String): HostClass</ID>
+    <ID>ReturnCount:AddressRules.kt$AddressRules$public fun isPrivateNetwork(host: String): Boolean</ID>
+    <ID>ReturnCount:AddressRules.kt$AddressRules$public fun isTailnet(host: String): Boolean</ID>
+    <ID>ReturnCount:AddressRules.kt$AddressRules$public fun normalize(input: String): Outcome&lt;ServerOrigin&gt;</ID>
+    <ID>ReturnCount:AddressRules.kt$AddressRules$public fun origin(url: String): Outcome&lt;ServerOrigin&gt;</ID>
+    <ID>ReturnCount:Links.kt$ExternalLinkPolicy$public fun check(raw: String, origin: LinkOrigin): LinkDecision</ID>
+    <ID>ReturnCount:Links.kt$ExternalLinkPolicy$public fun checkSignInPage(raw: String): LinkDecision</ID>
+    <ID>ReturnCount:Redactor.kt$Redactor$private fun authValue(s: String, m: MatchResult): Masked?</ID>
+    <ID>ReturnCount:Redactor.kt$Redactor$private fun inPath(s: String, i: Int): Boolean</ID>
+    <ID>ReturnCount:Redactor.kt$Redactor$private fun namedValueEnd(s: String, m: MatchResult): Masked?</ID>
+    <ID>ReturnCount:Redactor.kt$Redactor$private fun serializedQuoted(s: String, open: Int): Masked?</ID>
+    <ID>ReturnCount:Redactor.kt$Redactor$public fun registerSecret(value: String)</ID>
+    <ID>ReturnCount:ServerUrlRules.kt$ServerUrlRules$private fun bareAuthority(raw: String): Pair&lt;String, String&gt;?</ID>
+    <ID>ReturnCount:ServerUrlRules.kt$ServerUrlRules$public fun normalizeText(value: String): String</ID>
+    <ID>ReturnCount:ServerUrlRules.kt$ServerUrlRules$public fun validate(value: String): ServerUrlProblem?</ID>
+    <ID>ReturnCount:UrlParts.kt$UrlParts.Companion$fun parse(raw: String): UrlParts?</ID>
+    <ID>TooManyFunctions:AddressRules.kt$AddressRules</ID>
+    <ID>TooManyFunctions:Redactor.kt$Redactor</ID>
+  </CurrentIssues>
+</SmellBaseline>

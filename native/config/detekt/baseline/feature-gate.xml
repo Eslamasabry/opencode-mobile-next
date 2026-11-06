@@ -1,0 +1,24 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>LongParameterList:GateScreen.kt$( state: GateUi.Open, onReentry: (GateReentry) -&gt; Unit, onLater: () -&gt; Unit, onSubmit: (String) -&gt; Unit, onBack: () -&gt; Unit, onOpen: () -&gt; Unit, content: @Composable () -&gt; Unit, )</ID>
+    <ID>LongParameterList:GateScreen.kt$( ui: GateUi, onRow: (GateRow) -&gt; Unit, onConfirm: () -&gt; Unit, onCancelConfirm: () -&gt; Unit, onReentry: (GateReentry) -&gt; Unit, onReentryLater: () -&gt; Unit, onReentrySubmit: (String) -&gt; Unit = {}, onReentryBack: () -&gt; Unit = {}, onReentryOpen: () -&gt; Unit = {}, content: @Composable () -&gt; Unit, )</ID>
+    <ID>MagicNumber:GatePresenter.kt$GatePresenter.Companion$10</ID>
+    <ID>MagicNumber:GatePresenter.kt$GatePresenter.Companion$1024</ID>
+    <ID>MagicNumber:GatePresenter.kt$GatePresenter.Companion$1024.0</ID>
+    <ID>MaxLineLength:GateBinding.kt$targetName = item.profileId?.let { view.names[it] } ?: GITHUB.takeIf { item.profileId == null }</ID>
+    <ID>MaxLineLength:GateBindingTest.kt$GateBindingTest$val input = gateInputOf(MigrationView(MigrationProgress.Blocked(MigrationBlock.LowSpace, "S0", neededBytes = 5L shl 20)))</ID>
+    <ID>MaxLineLength:GatePresenter.kt$GatePresenter.Companion$)</ID>
+    <ID>MaxLineLength:GatePresenterTest.kt$GatePresenterTest$fun</ID>
+    <ID>MaxLineLength:GateScreen.kt$WaitingScreen(if (state.wordless) null else stringResource(Res.string.migration_opening), state.offerRetry, onRow)</ID>
+    <ID>MaxLineLength:GateScreen.kt$if (fresh) Res.string.migration_start_fresh_confirm_action else Res.string.migration_restore_confirm_action</ID>
+    <ID>MaxLineLength:GateScreen.kt$if (fresh) Res.string.migration_start_fresh_confirm_title else Res.string.migration_restore_confirm_title</ID>
+    <ID>MaxLineLength:GateScreen.kt$if (github) KitButton(stringResource(Res.string.migration_reenter_open_chats), onClick = onOpen, modifier = Modifier.fillMaxWidth())</ID>
+    <ID>MaxLineLength:GateScreen.kt$is GateUi.Open -&gt; OpenFrame(state, onReentry, onReentryLater, onReentrySubmit, onReentryBack, onReentryOpen, content)</ID>
+    <ID>MaxLineLength:GateScreen.kt$stringResource(if (fresh) Res.string.migration_start_fresh_confirm else Res.string.migration_restore_confirm)</ID>
+    <ID>MaxLineLength:GateScreen.kt$stringResource(if (github) Res.string.migration_reenter_github_where else Res.string.migration_reenter_byo_absent, target)</ID>
+    <ID>MaxLineLength:GateScreenDesktopTest.kt$GateScreenDesktopTest$onNodeWithText("لا يمكن إعداد Laptop مجددًا في هذا الإصدار بعد. تبقى تفاصيله المحفوظة على هذا الهاتف.").assertExists()</ID>
+    <ID>TooManyFunctions:GatePresenter.kt$GatePresenter</ID>
+  </CurrentIssues>
+</SmellBaseline>

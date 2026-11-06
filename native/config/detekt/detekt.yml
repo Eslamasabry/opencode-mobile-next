@@ -1,0 +1,64 @@
+# Native detekt config (E02-S03). Same family as the Flutter app's Kotlin check
+# (android/config/detekt/detekt.yml on master): detekt 1.23.8, its active default rules
+# (--build-upon-default-config), zero new findings, warnings are errors.
+# Existing debt is explicit in baseline/<module>.xml; a baseline may only shrink
+# (tool/qa/detekt.sh checks it on every run; tool/t1.sh runs it). Fix a finding instead of
+# re-baselining it.
+#
+# Native additions, both about source shapes the Flutter app's Kotlin does not have:
+# - detekt's default test-source excludes name only the classic source sets, so the native test
+#   source sets (desktopTest, androidHostTest, secTest, testQa) are added to every default rule
+#   that skips tests;
+# - @Composable functions are named like types (the Compose convention), so FunctionNaming skips them.
+# Everything else is the default.
+build:
+  maxIssues: 0
+config:
+  validation: true
+  warningsAsErrors: true
+console-reports:
+  active: true
+  exclude:
+    - 'ProjectStatisticsReport'
+    - 'ComplexityReport'
+comments:
+  KDocReferencesNonPublicProperty:
+    excludes: &tests ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/jsTest/**', '**/iosTest/**', '**/desktopTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**', '**/secTest/**', '**/testQa/**']
+  UndocumentedPublicClass:
+    excludes: *tests
+  UndocumentedPublicFunction:
+    excludes: *tests
+  UndocumentedPublicProperty:
+    excludes: *tests
+complexity:
+  StringLiteralDuplication:
+    excludes: *tests
+  TooManyFunctions:
+    excludes: *tests
+exceptions:
+  InstanceOfCheckForException:
+    excludes: *tests
+  ThrowingExceptionsWithoutMessageOrCause:
+    excludes: *tests
+  TooGenericExceptionCaught:
+    excludes: *tests
+naming:
+  FunctionNaming:
+    excludes: *tests
+    ignoreAnnotated: ['Composable']
+  PackageNaming:
+    # The app namespace (Namespaces.APP) keeps the Flutter app's package, as in the Flutter config.
+    packagePattern: '[a-z]+(\.[a-z][A-Za-z0-9]*)*|io\.github\.eslamasabry\.opencode_mobile(\.[a-z][A-Za-z0-9]*)*'
+performance:
+  ForEachOnRange:
+    excludes: *tests
+  SpreadOperator:
+    excludes: *tests
+potential-bugs:
+  LateinitUsage:
+    excludes: *tests
+  UnsafeCallOnNullableType:
+    excludes: *tests
+style:
+  MagicNumber:
+    excludes: *tests

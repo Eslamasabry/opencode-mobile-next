@@ -1,0 +1,43 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>LongParameterList:ImageScale.kt$ImageScale$(mime: String?, bytes: Int, width: Int, height: Int, maxBytes: Int, maxEdge: Int)</ID>
+    <ID>LongParameterList:SherpaOnnx.kt$SherpaOnnx$( encoder: String, decoder: String, tokens: String, language: String, task: String, numThreads: Int, debug: Boolean, provider: String, modelType: String, )</ID>
+    <ID>LongParameterList:SherpaOnnx.kt$SherpaOnnx$( model: String, voices: String, tokens: String, lexicon: String, lang: String, numThreads: Int, provider: String, maxNumSentences: Int, )</ID>
+    <ID>MagicNumber:AndroidImageCodec.kt$AndroidImageCodec$100</ID>
+    <ID>MagicNumber:AndroidImageCodec.kt$AndroidImageCodec$1024</ID>
+    <ID>MagicNumber:AndroidImageCodec.kt$AndroidImageCodec$180</ID>
+    <ID>MagicNumber:AndroidImageCodec.kt$AndroidImageCodec$270</ID>
+    <ID>MagicNumber:AndroidImageCodec.kt$AndroidImageCodec$64</ID>
+    <ID>MagicNumber:AndroidImageCodec.kt$AndroidImageCodec$90</ID>
+    <ID>MagicNumber:ClipboardImagePolicy.kt$ClipboardImagePolicy$1024</ID>
+    <ID>MagicNumber:ClipboardImagePolicy.kt$ClipboardImagePolicy$16</ID>
+    <ID>MagicNumber:ImageScale.kt$ImageScale$4</ID>
+    <ID>MaxLineLength:AndroidClipboardImages.kt$AndroidClipboardImages$val bytes = app.contentResolver.openInputStream(uri)?.use { ClipboardImagePolicy.readLimited(it, maxBytes) }</ID>
+    <ID>MaxLineLength:AndroidImageCodec.kt$AndroidImageCodec$if</ID>
+    <ID>MaxLineLength:AndroidImageCodec.kt$AndroidImageCodec$if (png.size &lt;= rules.maxBytes) return Outcome.Ok(PreparedImage(png, "image/png", bitmap.width, bitmap.height))</ID>
+    <ID>MaxLineLength:AndroidImageCodec.kt$AndroidImageCodec$if (target.width != size.width || target.height != size.height) decoder.setTargetSize(target.width, target.height)</ID>
+    <ID>MaxLineLength:AndroidImageCodec.kt$AndroidImageCodec$override suspend</ID>
+    <ID>MaxLineLength:AndroidImageCodec.kt$AndroidImageCodec$when</ID>
+    <ID>MaxLineLength:AndroidImageCodecTest.kt$AndroidImageCodecTest$val image = ok(codec.prepare(picture(300, 200, alpha = true, Bitmap.CompressFormat.PNG), "image/png", PhotoRules.Prompt))</ID>
+    <ID>MaxLineLength:AndroidImageCodecTest.kt$AndroidImageCodecTest$val image = ok(codec.prepare(picture(4000, 1000, alpha = false, Bitmap.CompressFormat.JPEG), "image/jpeg", PhotoRules.Prompt))</ID>
+    <ID>MaxLineLength:ClipboardImagePolicy.kt$ClipboardImagePolicy$/** Reads [stream] fully, refusing more than [maxBytes]; reads one byte past the cap so oversize is refused, not cut. */</ID>
+    <ID>MaxLineLength:ClipboardImagesTest.kt$ClipboardImagesTest$assertEquals("image/webp", ClipboardImagePolicy.firstImageMime(listOf("text/uri-list", null, "image/webp", "image/png")))</ID>
+    <ID>MaxLineLength:ImageScale.kt$ImageScale$/** Largest ARGB_8888 bitmap BitmapFactory (API 26–27) decodes at once; ImageDecoder (28+) decodes at the target size. */</ID>
+    <ID>MaxLineLength:ImageScaleTest.kt$ImageScaleTest$assertEquals(2, ImageScale.sampleSize(6000, 4500, target))</ID>
+    <ID>MaxLineLength:SherpaOnnx.kt$SherpaOnnx$kokoro = OfflineTtsKokoroModelConfig(model = model, voices = voices, tokens = tokens, lexicon = lexicon, lang = lang)</ID>
+    <ID>MaxLineLength:SherpaOnnx.kt$SherpaOnnx$whisper = OfflineWhisperModelConfig(encoder = encoder, decoder = decoder, language = language, task = task)</ID>
+    <ID>MaxLineLength:build.gradle.kts$// P12-FIX-LINUX-VOICE: JNI reads sherpa's config fields by name; the AAR ships an empty proguard.txt (plan 10 §2.4).</ID>
+    <ID>MemberNameEqualsClassName:AndroidImageCodecTest.kt$AndroidImageCodecTest.Direct$private val direct = UnconfinedTestDispatcher()</ID>
+    <ID>MemberNameEqualsClassName:ClipboardImagesTest.kt$ClipboardImagesTest.Direct$private val direct = UnconfinedTestDispatcher()</ID>
+    <ID>ReturnCount:AndroidImageCodec.kt$AndroidImageCodec$internal fun prepare(bytes: ByteArray, declaredMime: String?, rules: PhotoRules): Outcome&lt;PreparedImage&gt;</ID>
+    <ID>ReturnCount:AndroidImageCodec.kt$AndroidImageCodec$private fun decode(bytes: ByteArray, width: Int, height: Int, maxEdge: Int): Bitmap?</ID>
+    <ID>ReturnCount:AndroidImageCodec.kt$AndroidImageCodec$private fun encode(bitmap: Bitmap, rules: PhotoRules): Outcome&lt;PreparedImage&gt;</ID>
+    <ID>SwallowedException:AndroidImageCodec.kt$AndroidImageCodec$e: TooLarge</ID>
+    <ID>SwallowedException:SherpaOnnx.kt$SherpaOnnx$e: SecurityException</ID>
+    <ID>SwallowedException:SherpaOnnx.kt$SherpaOnnx$e: UnsatisfiedLinkError</ID>
+    <ID>TooManyFunctions:AndroidImageCodec.kt$AndroidImageCodec : ImageCodec</ID>
+    <ID>UnusedParameter:AndroidImageCodec.kt$AndroidImageCodec$declaredMime: String?</ID>
+  </CurrentIssues>
+</SmellBaseline>

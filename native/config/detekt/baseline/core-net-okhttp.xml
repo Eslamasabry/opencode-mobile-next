@@ -1,0 +1,14 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>LongMethod:JvmWsUpgrade.kt$JvmWsUpgrade$public fun open( client: OkHttpClient, url: String, headers: List&lt;Pair&lt;String, String&gt;&gt;, subprotocol: String?, handshakeTimeoutMs: Long, complete: (Reply) -&gt; Unit, ): Handle</ID>
+    <ID>LongParameterList:JvmWsUpgrade.kt$JvmWsUpgrade$( client: OkHttpClient, url: String, headers: List&lt;Pair&lt;String, String&gt;&gt;, subprotocol: String?, handshakeTimeoutMs: Long, complete: (Reply) -&gt; Unit, )</ID>
+    <ID>MagicNumber:JvmWsUpgrade.kt$JvmWsUpgrade$127</ID>
+    <ID>MagicNumber:JvmWsUpgrade.kt$JvmWsUpgrade$16</ID>
+    <ID>MagicNumber:JvmWsUpgrade.kt$JvmWsUpgrade$32</ID>
+    <ID>MagicNumber:JvmWsUpgrade.kt$JvmWsUpgrade.&lt;no name provided&gt;$101</ID>
+    <ID>ReturnCount:JvmWsUpgrade.kt$JvmWsUpgrade.&lt;no name provided&gt;$override fun onResponse(call: Call, reply: Response)</ID>
+    <ID>TooGenericExceptionCaught:JvmWsUpgrade.kt$JvmWsUpgrade$e: Exception</ID>
+  </CurrentIssues>
+</SmellBaseline>

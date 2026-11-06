@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:ManageSpaceScreen.kt$delete &amp;&amp; !state.busy &amp;&amp; !state.loading &amp;&amp; state.facts != null</ID>
+    <ID>CyclomaticComplexMethod:ManageSpaceScreen.kt$@Composable public fun ManageSpaceScreen(state: ManageSpaceState, actions: ManageSpaceActions)</ID>
+    <ID>EmptyFunctionBlock:ManageSpaceParityTest.kt$ManageSpaceParityTest.Actions${}</ID>
+    <ID>LongMethod:ManageSpaceScreen.kt$@Composable public fun ManageSpaceScreen(state: ManageSpaceState, actions: ManageSpaceActions)</ID>
+    <ID>MagicNumber:ManageSpaceScreen.kt$10</ID>
+    <ID>MagicNumber:ManageSpaceScreen.kt$1024</ID>
+    <ID>MagicNumber:ManageSpaceScreen.kt$1024.0</ID>
+    <ID>WildcardImport:ManageSpaceParityTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:ManageSpaceParityTest.kt$import io.github.eslamasabry.oc.engine.lifecycle.*</ID>
+    <ID>WildcardImport:ManageSpaceScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:ManageSpaceScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

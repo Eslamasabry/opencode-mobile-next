@@ -1,0 +1,157 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:PhoneAgentSignIn.kt$PhoneAgentSignIn$!data.has("loggedIn") || data.opt("loggedIn") !is Boolean || data.opt("authMethod") !is String || data.opt("apiProvider") !is String</ID>
+    <ID>ComplexCondition:PhoneAgentSignIn.kt$PhoneAgentSignIn$(run.phase != "awaitingCode" &amp;&amp; run.phase != "urlReady") || !run.acceptsCode || run.codeSubmitted || run.cancelled</ID>
+    <ID>ComplexCondition:PhoneAgentSignIn.kt$PhoneAgentSignIn$code.length &gt; 4096 || parts.size != 2 || parts.any { it.isEmpty() } || code.startsWith("sk-") || Regex("[\\x00-\\x20\\x7f]").containsMatchIn(code)</ID>
+    <ID>ComplexCondition:PhoneAgentSignIn.kt$PhoneAgentSignIn$existing.profileId != profileId || existing.agentId != agentId || existing.method != method || existing.cancelled</ID>
+    <ID>ComplexCondition:PhoneAgentSignIn.kt$PhoneAgentSignIn$run != null &amp;&amp; (run.profileId != profileId || run.agentId != agentId || run.method != method)</ID>
+    <ID>ComplexCondition:PhoneAgentSignIn.kt$PhoneAgentSignIn$synchronized(lock) { !run.acceptsCode &amp;&amp; !run.cancelled &amp;&amp; run.phase == "urlReady" } &amp;&amp; System.nanoTime() &lt; deadline</ID>
+    <ID>ComplexCondition:PhoneAgentSignIn.kt$PhoneAgentSignIn$synchronized(lock) { !run.cancelled &amp;&amp; run.phase == "awaitingCode" &amp;&amp; !run.acceptsCode &amp;&amp; run.failure == null } &amp;&amp; System.nanoTime() &lt; outcome</ID>
+    <ID>ComplexCondition:PhoneAgentSignIn.kt$PhoneAgentSignIn$synchronized(lock) { !run.cancelled &amp;&amp; run.phase == "awaitingCode" &amp;&amp; !run.acceptsCode &amp;&amp; run.failure == null } &amp;&amp; System.nanoTime() &lt; pending</ID>
+    <ID>ComplexCondition:PhoneAgentSignIn.kt$PhoneAgentSignIn$value.length &lt;= 8192 &amp;&amp; !Regex("[\\x00-\\x20\\x7f\\\\]").containsMatchIn(value) &amp;&amp; uri.scheme == "https" &amp;&amp; uri.host == "claude.com" &amp;&amp; uri.port == -1 &amp;&amp; uri.rawUserInfo == null &amp;&amp; uri.rawFragment == null &amp;&amp; uri.rawPath == "/cai/oauth/authorize"</ID>
+    <ID>CyclomaticComplexMethod:PhoneAgentAuthScenarios.kt$internal fun phoneAgentAuthScenario(name: String, fixtureDir: File)</ID>
+    <ID>CyclomaticComplexMethod:PhoneAgentAuthScenarios.kt$private fun outsideTreeScenario(scenario: String)</ID>
+    <ID>CyclomaticComplexMethod:PhoneAgentAuthScenarios.kt$private fun processTreeScenario(scenario: String)</ID>
+    <ID>CyclomaticComplexMethod:PhoneAgentHostScenarios.kt$internal fun phoneAgentHostScenario(name: String)</ID>
+    <ID>CyclomaticComplexMethod:PhoneAgentSignIn.kt$PhoneAgentSignIn$fun cancel(profileId: String, agentId: String, runId: String, method: String): Map&lt;String, Any?&gt;</ID>
+    <ID>CyclomaticComplexMethod:PhoneAgentSignIn.kt$PhoneAgentSignIn$fun submit( profileId: String, agentId: String, runId: String, method: String, code: String, ): Map&lt;String, Any?&gt;</ID>
+    <ID>CyclomaticComplexMethod:PhoneAgentSignIn.kt$PhoneAgentSignIn$private fun identity( profileId: String, agentId: String, runId: String, method: String, create: Boolean, ): Run</ID>
+    <ID>CyclomaticComplexMethod:PhoneAgentSignIn.kt$PhoneAgentSignIn$private fun readLogin(run: Run, process: Process)</ID>
+    <ID>LongMethod:PhoneAgentAuthScenarios.kt$internal fun phoneAgentAuthScenario(name: String, fixtureDir: File)</ID>
+    <ID>LongMethod:PhoneAgentAuthScenarios.kt$private fun outsideTreeScenario(scenario: String)</ID>
+    <ID>LongMethod:PhoneAgentAuthScenarios.kt$private fun processTreeScenario(scenario: String)</ID>
+    <ID>LongMethod:PhoneAgentHostScenarios.kt$internal fun phoneAgentHostScenario(name: String)</ID>
+    <ID>LongMethod:PhoneAgentSignIn.kt$PhoneAgentSignIn$private fun readLogin(run: Run, process: Process)</ID>
+    <ID>LongParameterList:AgentProcesses.kt$AgentProcesses$( /** `context.filesDir`. */ private val files: File, private val installedNow: () -&gt; Boolean, private val locks: AgentLocks, private val launcher: GuestLauncher, private val registry: GuestProcessRegistry, private val services: AgentServiceTable, private val runtime: AgentRuntimeFacts, private val work: AgentWorkLeases, private val control: AgentProcessControl, privateAuth: (AgentProcesses) -&gt; PrivateAgentAuth, private val modes: FileModes = FileModes.Android, /** `Build.SUPPORTED_ABIS[0]` on a phone. */ private val abi: () -&gt; String = { Build.SUPPORTED_ABIS.firstOrNull() ?: "" }, )</ID>
+    <ID>LoopWithTooManyJumpStatements:PhoneAgentSignIn.kt$PhoneAgentSignIn$while</ID>
+    <ID>MagicNumber:AgentProcesses.kt$AgentProcesses$20</ID>
+    <ID>MagicNumber:AgentProcesses.kt$AgentProcesses$384</ID>
+    <ID>MagicNumber:AgentProcesses.kt$AgentProcesses$448</ID>
+    <ID>MagicNumber:AgentProcesses.kt$AgentProcesses$5</ID>
+    <ID>MagicNumber:AgentProcesses.kt$AgentProcesses$65536</ID>
+    <ID>MagicNumber:AndroidAgentHost.kt$AuthRequestAction$10</ID>
+    <ID>MagicNumber:AndroidAgentHost.kt$AuthRequestAction$20</ID>
+    <ID>MagicNumber:AndroidAgentHost.kt$AuthRequestAction$65</ID>
+    <ID>MagicNumber:PaseoHealth.kt$PaseoHealth$65535</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$10</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$100</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$1024</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$15</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$150</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$16</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$16384</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$2048</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$32768</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$4096</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$45</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$5</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$8192</ID>
+    <ID>MaxLineLength:AgentGuestPorts.kt$AgentLocks$*</ID>
+    <ID>MaxLineLength:AgentGuestPorts.kt$AgentRuntimeFacts$/** The recovery-side facts of `agentHostAdmissionCurrent` and `commitHostAdmission`. Called under [AgentLocks.recovery]. */</ID>
+    <ID>MaxLineLength:AgentGuestPorts.kt$AgentServiceTable$*</ID>
+    <ID>MaxLineLength:AgentLinux.kt$AgentLinux$/** Refuses (`agent_host_unowned` / `agent_host_busy`) unless [process] is [profile]'s exact helper and nothing else runs. */</ID>
+    <ID>MaxLineLength:AgentProcesses.kt$AgentProcesses.Companion$"PATH=$guestHome/.oc-bin:/home/oc/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"</ID>
+    <ID>MaxLineLength:AgentProcessesTest.kt$AgentProcessesTest$assertEquals(setOf(checkNotNull(GuestProc.pid(signIn))), ports.rootPids.getValue(ProcessOwner.AgentSignIn)().toSet())</ID>
+    <ID>MaxLineLength:AgentProcessesTest.kt$AgentProcessesTest$assertFailsWith&lt;IllegalStateException&gt; { processes.writeAgentConfig("qa", "{\"version\":1,\"x\":\"" + "a".repeat(65536) + "\"}") }</ID>
+    <ID>MaxLineLength:AgentProcessesTest.kt$AgentProcessesTest$private</ID>
+    <ID>MaxLineLength:AgentProcessesTest.kt$AgentProcessesTest$processes.startSignInProcess("qa", listOf("claude", "auth", "status"), foreground = false).also { started += it }</ID>
+    <ID>MaxLineLength:AgentProcessesTest.kt$AgentProcessesTest$val error = assertFailsWith&lt;IllegalStateException&gt; { processes.trackPrivateAgentService("agent-host.qa", child, 4099) }</ID>
+    <ID>MaxLineLength:AndroidAgentHostTest.kt$AndroidAgentHostTest$@Test</ID>
+    <ID>MaxLineLength:AndroidAgentHostTest.kt$AndroidAgentHostTest$assertEquals(Failure.Busy(BusyKind.Starting, WireTag("helper_update_required"), failed.failure.details), failed.failure)</ID>
+    <ID>MaxLineLength:FakeAgentLinux.kt$FakeAgentLinux$if (unowned || (process != null &amp;&amp; process !== trackedProcess)) throw PhoneAgentHost.Failure("agent_host_unowned")</ID>
+    <ID>MaxLineLength:FakeAgentLinux.kt$FakeAgentLinux$override</ID>
+    <ID>MaxLineLength:FakeRuntimePorts.kt$FakeRuntimePorts.RecordingModes$val attributes = Files.readAttributes(file.toPath(), BasicFileAttributes::class.java, LinkOption.NOFOLLOW_LINKS)</ID>
+    <ID>MaxLineLength:NativeIdleState.kt$NativeIdleState$*</ID>
+    <ID>MaxLineLength:PhoneAgentAuthOtherOwnersTest.kt$PhoneAgentAuthOtherOwnersTest$@Test fun `B-LINUX-115 native other-agent ownership unreadable-excluded`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthScenarios.kt$failure(PhoneAgentAuthProjection.parse("{\"state\":\"error\",\"error\":\"$code\"}".toByteArray(), 0), code)</ID>
+    <ID>MaxLineLength:PhoneAgentAuthScenarios.kt$for</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 B-LINUX-130 native private agent auth logout-timeout`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 B-LINUX-130 native private agent auth output-overflow`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 B-LINUX-130 native private agent auth private-success`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 B-LINUX-130 native private agent auth projection-rejection`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 B-LINUX-130 native private agent auth projection-valid`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 B-LINUX-130 native private agent auth timeout`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth blocked-profile`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth cold-registered-owner`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth cold-unknown-owner`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth deadline-absolute-claude-probe`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth deadline-absolute-logout`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth deadline-absolute-probe`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth deletion-during-run`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth invalid-no-launch`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth inventory-cross-uid`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth inventory-malformed`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth inventory-unreadable`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth inventory-valid`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth inventory-vanished`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth lock-empty-exact`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth lock-foreign-symlink`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth lock-nonempty-retained`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth output-overflow-timeout`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth outside-helper-after-baseline`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth outside-private-identities-win`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth outside-registry-failure`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth outside-retained-helper-child`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth outside-reused-helper-child`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth outside-reused-root-cookie`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth outside-unknown-orphan`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth outside-wrong-root-cookie`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth prepare-denied`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth private-success-helper-concurrent`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth reader-failure`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth request-admission`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth request-rejection`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth retained-dead-root`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth start-failure`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth tree-dead-root`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth tree-failed-start-unknown`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth tree-inventory-failure`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth tree-missing-identity`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth tree-new-task-from-earlier-owner`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth tree-pid-reuse`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth tree-root-only-then-orphan`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth tree-signal-reuse`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$@Test fun `B-LINUX-115 native private agent auth tree-unconfirmed-drain`()</ID>
+    <ID>MaxLineLength:PhoneAgentAuthTest.kt$PhoneAgentAuthTest$private val fixtures = File(checkNotNull(javaClass.getResource("/auth-scripts/claude-probe.txt")).toURI()).parentFile</ID>
+    <ID>MaxLineLength:PhoneAgentCheckOutput.kt$PhoneAgentCheckOutput$private val receipt = Regex("^::oc-check-(?:begin agent-[a-z0-9][a-z0-9_-]{0,79}|end agent-[a-z0-9][a-z0-9_-]{0,79} [0-9]{1,3})$")</ID>
+    <ID>MaxLineLength:PhoneAgentHostScenarios.kt$check(failure.message?.contains("stopped as soon as it started") == true) { "early exit lacks named plain reason" }</ID>
+    <ID>MaxLineLength:PhoneAgentHostScenarios.kt$check(linux.configWrites == 0 &amp;&amp; linux.launches == 0 &amp;&amp; linux.tracked == 0) { "work started before admission" }</ID>
+    <ID>MaxLineLength:PhoneAgentHostScenarios.kt$check(linux.configWrites == 1 &amp;&amp; linux.launches == 1) { "another profile touched host state during startup" }</ID>
+    <ID>MaxLineLength:PhoneAgentHostScenarios.kt$check(rejectedBeforeLaunch &amp;&amp; secondFailure.get() != null) { "second start was admitted while first pending" }</ID>
+    <ID>MaxLineLength:PhoneAgentHostScenarios.kt$check(runCatching { host.start(PhoneAgentHost.StartRequest("qa", "a".repeat(64), 4099, "{}", PhoneAgentHost.HelperPolicy("0.11.2", true))) }.isFailure)</ID>
+    <ID>MaxLineLength:PhoneAgentHostScenarios.kt$host.start(PhoneAgentHost.StartRequest("qa", "a".repeat(64), 4099, "{}", PhoneAgentHost.HelperPolicy("0.11.2", true)))</ID>
+    <ID>MaxLineLength:PhoneAgentHostScenarios.kt$host.start(PhoneAgentHost.StartRequest("qa", "a".repeat(64), 4099, "{}", PhoneAgentHost.HelperPolicy("0.9.2", true)))</ID>
+    <ID>MaxLineLength:PhoneAgentHostScenarios.kt$val failure = runCatching { host.start(PhoneAgentHost.StartRequest("other", "a".repeat(64), 4099, "{}", PhoneAgentHost.HelperPolicy("0.11.2", true))) }.exceptionOrNull()</ID>
+    <ID>MaxLineLength:PhoneAgentHostScenarios.kt$val failure = runCatching { host.start(PhoneAgentHost.StartRequest("qa", "a".repeat(64), 4099, "{}")) }.exceptionOrNull()</ID>
+    <ID>MaxLineLength:PhoneAgentHostScenarios.kt$val failure = runCatching { host.start(PhoneAgentHost.StartRequest("qa", "a".repeat(64), 4099, "{}", PhoneAgentHost.HelperPolicy("0.11.2", true))) }.exceptionOrNull()</ID>
+    <ID>MaxLineLength:PhoneAgentHostScenarios.kt$val first = Thread { try { host.start(PhoneAgentHost.StartRequest("qa", "a".repeat(64), 4099, "{}")) } catch (e: Throwable) { firstFailure.set(e) } }</ID>
+    <ID>MaxLineLength:PhoneAgentHostScenarios.kt$val second = Thread { try { host.start(PhoneAgentHost.StartRequest("other", "a".repeat(64), 4099, "{}")) } catch (e: Throwable) { secondFailure.set(e) } finally { secondDone.countDown() } }</ID>
+    <ID>MaxLineLength:PhoneAgentHostScenarios.kt$val updated = host.start(PhoneAgentHost.StartRequest("qa", "a".repeat(64), 4099, "{}", PhoneAgentHost.HelperPolicy("0.11.2", true)))</ID>
+    <ID>MaxLineLength:PhoneAgentHostTest.kt$PhoneAgentHostTest$@Test fun `B-LINUX-117 B-LINUX-129 native phone host partial-inventory`()</ID>
+    <ID>MaxLineLength:PhoneAgentHostTest.kt$PhoneAgentHostTest$@Test fun `B-LINUX-117 B-LINUX-131 native phone host helper-invalid-update`()</ID>
+    <ID>MaxLineLength:PhoneAgentHostTest.kt$PhoneAgentHostTest$@Test fun `B-LINUX-117 B-LINUX-131 native phone host helper-version-restart`()</ID>
+    <ID>MaxLineLength:PhoneAgentHostTest.kt$PhoneAgentHostTest$@Test fun `B-LINUX-117 native phone host helper-restart-failure`()</ID>
+    <ID>MaxLineLength:SetupDiskSpace.kt$SetupDiskSpace$/** Twin of `object SetupDiskSpace` in the Flutter app's `SetupRunner.kt` (verbatim; the launch guard [PhoneAgentHost] reads). */</ID>
+    <ID>MaxLineLength:build.gradle.kts$extensions.getByType&lt;VersionCatalogsExtension&gt;().named("libs").findLibrary(alias).map&lt;Any&gt; { it.get() }.orElse(fallback)</ID>
+    <ID>NestedBlockDepth:PhoneAgentHostScenarios.kt$internal fun phoneAgentHostScenario(name: String)</ID>
+    <ID>ReturnCount:AndroidAgentHost.kt$AndroidAgentHost$suspend fun ensureRunning(owner: String, start: HelperStartRequest): Outcome&lt;HelperRunning&gt;</ID>
+    <ID>ReturnCount:PaseoHealth.kt$PaseoHealth$fun answers(port: Int): Boolean</ID>
+    <ID>ReturnCount:PhoneAgentSignIn.kt$PhoneAgentSignIn$fun cancel(profileId: String, agentId: String, runId: String, method: String): Map&lt;String, Any?&gt;</ID>
+    <ID>ReturnCount:PhoneAgentSignIn.kt$PhoneAgentSignIn$fun submit( profileId: String, agentId: String, runId: String, method: String, code: String, ): Map&lt;String, Any?&gt;</ID>
+    <ID>ThrowsCount:PhoneAgentAuthScenarios.kt$internal fun phoneAgentAuthScenario(name: String, fixtureDir: File)</ID>
+    <ID>ThrowsCount:PhoneAgentSignIn.kt$PhoneAgentSignIn$fun submit( profileId: String, agentId: String, runId: String, method: String, code: String, ): Map&lt;String, Any?&gt;</ID>
+    <ID>ThrowsCount:PhoneAgentSignIn.kt$PhoneAgentSignIn$private fun inspect(run: Run): Boolean</ID>
+    <ID>ThrowsCount:PhoneAgentSignIn.kt$PhoneAgentSignIn$private fun readLogin(run: Run, process: Process)</ID>
+    <ID>TooGenericExceptionCaught:AgentProcesses.kt$AgentProcesses$error: Exception</ID>
+    <ID>TooManyFunctions:AgentLinux.kt$AgentLinux</ID>
+    <ID>TooManyFunctions:AgentProcesses.kt$AgentProcesses : AgentLinux</ID>
+    <ID>TooManyFunctions:AndroidAgentHost.kt$AndroidAgentHost</ID>
+    <ID>TooManyFunctions:PhoneAgentSignIn.kt$PhoneAgentSignIn</ID>
+    <ID>UseCheckOrError:AgentProcesses.kt$AgentProcesses$throw IllegalStateException("The agent did not stop.")</ID>
+    <ID>UseCheckOrError:AgentProcesses.kt$AgentProcesses$throw IllegalStateException("The agent host could not start.")</ID>
+    <ID>UseCheckOrError:PhoneAgentSignIn.kt$PhoneAgentSignIn$throw IllegalStateException("auth_cancellation_unconfirmed")</ID>
+    <ID>UseCheckOrError:PhoneAgentSignIn.kt$PhoneAgentSignIn$throw IllegalStateException("auth_invalid_profile")</ID>
+  </CurrentIssues>
+</SmellBaseline>

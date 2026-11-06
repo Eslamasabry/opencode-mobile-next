@@ -1,0 +1,205 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:GitHubDeviceFlow.kt$GitHubDeviceFlow$deviceCode == null || userCode == null || uri == null || !uri.startsWith("https://")</ID>
+    <ID>ComplexCondition:ServerGitShell.kt$ServerGitShell$next == null || size == null || next &lt;= cursor || next &gt;= size</ID>
+    <ID>CyclomaticComplexMethod:GitHubDeviceFlow.kt$GitHubDeviceFlow$public suspend fun pollForToken(code: GitHubDeviceCode, cancelled: () -&gt; Boolean = { false }): GitHubResult&lt;GitHubCredential&gt;</ID>
+    <ID>CyclomaticComplexMethod:GitPage.kt$GitPage$public suspend fun publish(name: String, isPrivate: Boolean): Unit</ID>
+    <ID>CyclomaticComplexMethod:GitParsers.kt$public fun parseGitStatus(output: String): GitStatus</ID>
+    <ID>CyclomaticComplexMethod:GitProblem.kt$public fun classifyGitError(stderr: String, usedGitHubToken: Boolean = false): GitProblem?</ID>
+    <ID>CyclomaticComplexMethod:GitRepository.kt$GitRepository$private suspend fun pushWithAuth(file: GitSecretFile?, secrets: List&lt;String&gt;): GitActionResult</ID>
+    <ID>CyclomaticComplexMethod:GitRepository.kt$GitRepository$private suspend fun run( script: GitScript, timeoutMs: Long, secrets: List&lt;String&gt; = emptyList(), ): Run</ID>
+    <ID>CyclomaticComplexMethod:GitRepository.kt$public fun isValidGitBranchName(name: String): Boolean</ID>
+    <ID>CyclomaticComplexMethod:GitScript.kt$GitEnvelope.Companion$public fun parse(output: String): GitEnvelope</ID>
+    <ID>CyclomaticComplexMethod:ServerGitShell.kt$ServerGitShell$override suspend fun run(script: String, timeoutMs: Long): GitShellReply</ID>
+    <ID>LargeClass:GitRepository.kt$GitRepository</ID>
+    <ID>LongMethod:GitParsers.kt$public fun parseGitStatus(output: String): GitStatus</ID>
+    <ID>LongMethod:GitRepository.kt$GitRepository$private suspend fun pushWithAuth(file: GitSecretFile?, secrets: List&lt;String&gt;): GitActionResult</ID>
+    <ID>LongMethod:GitRepository.kt$GitRepository$public suspend fun commit( paths: List&lt;String&gt;, message: String, renamedFrom: List&lt;String&gt; = emptyList(), ): GitActionResult</ID>
+    <ID>LongMethod:GitRepository.kt$GitRepository$public suspend fun snapshot(logLimit: Int = 30): GitSnapshotResult</ID>
+    <ID>LongParameterList:GitRepository.kt$GitActionResult.Companion$( action: GitAction, note: GitActionNote, commit: String? = null, count: Int? = null, target: String? = null, clonedTo: String? = null, )</ID>
+    <ID>LongParameterList:GitServices.kt$GitServices$( public val workspaces: GitWorkspaces, private val tokens: GitHubTokenStore, private val flow: GitHubDeviceFlow, private val redactor: Redactor, private val links: ExternalLinkPolicy, private val opener: ExternalLinkOpener, private val scope: CoroutineScope, private val nowMs: () -&gt; Long, )</ID>
+    <ID>LoopWithTooManyJumpStatements:GitHubDeviceFlow.kt$GitHubDeviceFlow$while</ID>
+    <ID>LoopWithTooManyJumpStatements:GitParsers.kt$for</ID>
+    <ID>LoopWithTooManyJumpStatements:GitParsers.kt$while</ID>
+    <ID>LoopWithTooManyJumpStatements:GitScript.kt$GitEnvelope.Companion$for</ID>
+    <ID>MagicNumber:GitHubDeviceFlow.kt$100</ID>
+    <ID>MagicNumber:GitHubDeviceFlow.kt$GitHubDeviceFlow$1000</ID>
+    <ID>MagicNumber:GitHubDeviceFlow.kt$GitHubDeviceFlow$200</ID>
+    <ID>MagicNumber:GitHubDeviceFlow.kt$GitHubDeviceFlow$201</ID>
+    <ID>MagicNumber:GitHubDeviceFlow.kt$GitHubDeviceFlow$401</ID>
+    <ID>MagicNumber:GitHubDeviceFlow.kt$GitHubDeviceFlow$403</ID>
+    <ID>MagicNumber:GitHubDeviceFlow.kt$GitHubDeviceFlow$422</ID>
+    <ID>MagicNumber:GitHubDeviceFlow.kt$GitHubDeviceFlow$500</ID>
+    <ID>MagicNumber:GitHubDeviceFlow.kt$GitHubDeviceFlow$599</ID>
+    <ID>MagicNumber:GitHubDeviceFlow.kt$GitHubDeviceFlow$5L</ID>
+    <ID>MagicNumber:GitHubDeviceFlow.kt$GitHubDeviceFlow$60L</ID>
+    <ID>MagicNumber:GitHubDeviceFlow.kt$GitHubDeviceFlow$900L</ID>
+    <ID>MagicNumber:GitHubDeviceFlow.kt$NetGitHubHttp$401</ID>
+    <ID>MagicNumber:GitHubDeviceFlow.kt$NetGitHubHttp$404</ID>
+    <ID>MagicNumber:GitParsers.kt$10</ID>
+    <ID>MagicNumber:GitParsers.kt$11</ID>
+    <ID>MagicNumber:GitParsers.kt$3</ID>
+    <ID>MagicNumber:GitParsers.kt$5</ID>
+    <ID>MagicNumber:GitParsers.kt$6</ID>
+    <ID>MagicNumber:GitParsers.kt$7</ID>
+    <ID>MagicNumber:GitParsers.kt$8</ID>
+    <ID>MagicNumber:GitParsers.kt$9</ID>
+    <ID>MagicNumber:GitRepository.kt$0x20</ID>
+    <ID>MagicNumber:GitRepository.kt$0x7f</ID>
+    <ID>MagicNumber:GitRepository.kt$250</ID>
+    <ID>MagicNumber:GitRepository.kt$4</ID>
+    <ID>MagicNumber:GitRepository.kt$GitRepository$200</ID>
+    <ID>MagicNumber:GitScript.kt$GitEnvelope.Companion$3</ID>
+    <ID>MagicNumber:WorktreeInspection.kt$WorktreeInspection$127</ID>
+    <ID>MagicNumber:WorktreeInspection.kt$WorktreeInspection$200</ID>
+    <ID>MagicNumber:WorktreeInspection.kt$WorktreeInspection$32</ID>
+    <ID>MagicNumber:WorktreeInspection.kt$WorktreeInspection$400</ID>
+    <ID>MagicNumber:WorktreeInspection.kt$WorktreeInspection$4096</ID>
+    <ID>MaxLineLength:GitHubAccount.kt$GitHubAccount$if (stored != null &amp;&amp; stored.login.isNotEmpty()) GitHubSignIn.SignedIn(stored.login) else GitHubSignIn.SignedOut()</ID>
+    <ID>MaxLineLength:GitHubAccount.kt$GitHubSignIn.WaitingForUser$public data</ID>
+    <ID>MaxLineLength:GitHubAccount.kt$GitHubTokenStore.Companion$credential.refreshExpiresAtMs?.let { put("refreshExpiresAt", Instant.fromEpochMilliseconds(it).toString()) }</ID>
+    <ID>MaxLineLength:GitHubDeviceFlow.kt$GitHubCredential$other.refreshToken == refreshToken</ID>
+    <ID>MaxLineLength:GitHubDeviceFlow.kt$GitHubCredential$public fun canRefreshAt(nowMs: Long): Boolean</ID>
+    <ID>MaxLineLength:GitHubDeviceFlow.kt$GitHubDeviceFlow$"device_flow_disabled" -&gt; return GitHubResult.Problem(GitHubSignInProblem.DeviceFlowDisabled, errorDetails(body))</ID>
+    <ID>MaxLineLength:GitHubDeviceFlow.kt$GitHubDeviceFlow$*</ID>
+    <ID>MaxLineLength:GitHubDeviceFlow.kt$GitHubDeviceFlow$GitHubProfile(login, reply.body?.long("id"), reply.body?.str("name")?.trim()?.takeIf { it.isNotEmpty() })</ID>
+    <ID>MaxLineLength:GitHubDeviceFlow.kt$GitHubDeviceFlow$if (error == "device_flow_disabled") GitHubSignInProblem.DeviceFlowDisabled else GitHubSignInProblem.Unexpected</ID>
+    <ID>MaxLineLength:GitHubDeviceFlow.kt$GitHubDeviceFlow$if (reply.status &gt;= 500 || reply.status == 0) GitHubSignInProblem.Network else GitHubSignInProblem.Unexpected</ID>
+    <ID>MaxLineLength:GitHubDeviceFlow.kt$GitHubDeviceFlow$mapOf("client_id" to clientId, "grant_type" to "refresh_token", "refresh_token" to refreshToken)</ID>
+    <ID>MaxLineLength:GitHubDeviceFlow.kt$GitHubDeviceFlow$private fun errorDetails(body: JsonObject): String</ID>
+    <ID>MaxLineLength:GitHubDeviceFlow.kt$GitHubDeviceFlow$public suspend</ID>
+    <ID>MaxLineLength:GitHubDeviceFlow.kt$GitHubHttp$/** `GET /user/repos?per_page=&lt;perPage&gt;&amp;sort=updated` with the bearer [token]; the list is [GitHubReply.Answer.array]. */</ID>
+    <ID>MaxLineLength:GitHubDeviceFlow.kt$NetGitHubHttp$is Outcome.Failed -&gt; statusOf(reply.failure)?.let { GitHubReply.Answer(it, null) } ?: GitHubReply.Unreachable</ID>
+    <ID>MaxLineLength:GitHubDeviceFlow.kt$NetGitHubHttp$is Outcome.Ok -&gt; GitHubReply.Answer(reply.value.first, ServerGitShell.parseJson(reply.value.second) as? JsonObject)</ID>
+    <ID>MaxLineLength:GitHubDeviceFlow.kt$public</ID>
+    <ID>MaxLineLength:GitHubDeviceFlow.kt$public const</ID>
+    <ID>MaxLineLength:GitHubTest.kt$GitHubTest$JsonArray(listOf(repoJson("o/a", private = false), JsonObject(mapOf("html_url" to JsonPrimitive("x"))), repoJson("o/b", clone = "")))</ID>
+    <ID>MaxLineLength:GitHubTest.kt$GitHubTest$assertEquals(GitHubRepositoryProblem.TokenRejected, assertIs&lt;GitHubCreateResult.Failed&gt;(acct.createRepository("x", true)).problem)</ID>
+    <ID>MaxLineLength:GitHubTest.kt$GitHubTest$assertEquals(GitHubSignInProblem.Cancelled, assertIs&lt;GitHubResult.Problem&gt;(flow.pollForToken(asked) { true }).problem)</ID>
+    <ID>MaxLineLength:GitHubTest.kt$GitHubTest$assertEquals(GitHubSignInProblem.TokenRejected, assertIs&lt;GitHubResult.Problem&gt;(flow.fetchProfile("gho_token_abcdef")).problem)</ID>
+    <ID>MaxLineLength:GitHubTest.kt$GitHubTest$assertEquals(GitHubSignInProblem.TokenRejected, assertIs&lt;GitHubResult.Problem&gt;(flow.fetchRepositories("t")).problem)</ID>
+    <ID>MaxLineLength:GitHubTest.kt$GitHubTest$for (bad in listOf("", ".", "..", "my app", "x".repeat(101), "ü")) assertFalse(isValidGitHubRepositoryName(bad), bad)</ID>
+    <ID>MaxLineLength:GitHubTest.kt$GitHubTest$fun</ID>
+    <ID>MaxLineLength:GitHubTest.kt$GitHubTest$github.answers += GitHubReply.Answer(200, obj("access_token" to "ghu_new_token_1", "refresh_token" to "ghr_new_refresh_1", "expires_in" to 28_800))</ID>
+    <ID>MaxLineLength:GitHubTest.kt$GitHubTest$listOf(JsonObject(mapOf("code" to JsonPrimitive("already_exists"), "field" to JsonPrimitive("name"))))</ID>
+    <ID>MaxLineLength:GitHubTest.kt$GitHubTest$listOf(JsonObject(mapOf("code" to JsonPrimitive("already_exists"), "field" to JsonPrimitive("other"))))</ID>
+    <ID>MaxLineLength:GitHubTest.kt$GitHubTest$private fun token()</ID>
+    <ID>MaxLineLength:GitHubTest.kt$GitHubTest$store.write(ProfileId("p1"), GitHubCredential("ghu_old_token_1", "octocat", "repo", "ghr_old_refresh", now - 1, now + 1_000_000))</ID>
+    <ID>MaxLineLength:GitHubTest.kt$GitHubTest$val asked = { GitHubDeviceCode("dc-secret-123456", "C", "https://github.com/login/device", now + 900_000, 5_000) }</ID>
+    <ID>MaxLineLength:GitHubTest.kt$MemorySecrets$override suspend fun names(prefix: String): Outcome&lt;Set&lt;String&gt;&gt;</ID>
+    <ID>MaxLineLength:GitHubTest.kt$private</ID>
+    <ID>MaxLineLength:GitModels.kt$GitConflictKind$public enum</ID>
+    <ID>MaxLineLength:GitPage.kt$GitPage$"GitHub created ${created.fullName}, but the project could not be connected as origin. "</ID>
+    <ID>MaxLineLength:GitPageTest.kt$GitPageTest$*</ID>
+    <ID>MaxLineLength:GitPageTest.kt$GitPageTest$GitPage(ref, GitWorkspaces { resolveGitWorkspace(connected = true, directory = "/p", remoteShell = true) { shell } })</ID>
+    <ID>MaxLineLength:GitPageTest.kt$GitPageTest$GitShellReply.Output(envelopeOf(*replies.filter { runs(script, it.name) }.distinctBy { it.name }.toTypedArray()))</ID>
+    <ID>MaxLineLength:GitPageTest.kt$GitPageTest$StepReply("status", 0, "# branch.oid abc$nul# branch.head main$nul# branch.upstream origin/main${nul}1 .M N... 100644 100644 100644 a b app.kt$nul")</ID>
+    <ID>MaxLineLength:GitPageTest.kt$GitPageTest$assertEquals(GitWorkspaceResolution.Unavailable(GitUnavailableReason.NoProject), resolveGitWorkspace(true, " ", true) { shell })</ID>
+    <ID>MaxLineLength:GitPageTest.kt$GitPageTest$fun</ID>
+    <ID>MaxLineLength:GitPageTest.kt$GitPageTest$if (commitOk) StepReply("commit") else StepReply("commit", 1, "", "*** Please tell me who you are.")</ID>
+    <ID>MaxLineLength:GitPageTest.kt$GitPageTest$if (pushOk) StepReply("push", 0, "", "To github.com") else StepReply("push", 128, "", "fatal: Authentication failed")</ID>
+    <ID>MaxLineLength:GitPageTest.kt$GitPageTest$val available = assertIs&lt;GitWorkspaceResolution.Available&gt;(resolveGitWorkspace(true, " /p ", true, "Home box") { shell })</ID>
+    <ID>MaxLineLength:GitPageTest.kt$GitPageTest$val off = GitPage(ref, GitWorkspaces { resolveGitWorkspace(connected = false, directory = "/p", remoteShell = true) { shell } })</ID>
+    <ID>MaxLineLength:GitPageTest.kt$GitPageTest$val replies = snapshotSteps.toList() + listOf(StepReply("work", 0, "diff --git a/app.kt b/app.kt\n+x\n"), StepReply("index"))</ID>
+    <ID>MaxLineLength:GitPageTest.kt$GitPageTest$var reply: GitShellReply = GitShellReply.Output(envelopeOf(StepReply("status", 128, "", "fatal: not a git repository")))</ID>
+    <ID>MaxLineLength:GitParsers.kt$'?' -&gt; if (record.length &gt; 2) files += GitFileChange(record.substring(2), unstaged = GitChangeKind.Untracked)</ID>
+    <ID>MaxLineLength:GitParsers.kt$GitNumstat$public data</ID>
+    <ID>MaxLineLength:GitParsers.kt$public</ID>
+    <ID>MaxLineLength:GitParsersTest.kt$GitParsersTest$"# branch.oid 1234abcd${nul}# branch.head main${nul}# branch.upstream origin/main${nul}# branch.ab +2 -1${nul}"</ID>
+    <ID>MaxLineLength:GitParsersTest.kt$GitParsersTest$"abc123${us}abc${us}Ada${us}ada\u0040example.invalid${us}1700000000${us}p1 p2${us}HEAD -&gt; main, origin/main${us}Merge it$nul"</ID>
+    <ID>MaxLineLength:GitParsersTest.kt$GitParsersTest$"remote.origin.url https://user:tok3n-secret\u0040github.com/o/r.git\nremote.fork.url git\u0040github.com:me/r.git\n"</ID>
+    <ID>MaxLineLength:GitParsersTest.kt$GitParsersTest$assertEquals(GitProblem.AuthRequired, classifyGitError("fatal: could not read Username for 'https://github.com': terminal prompts disabled"))</ID>
+    <ID>MaxLineLength:GitParsersTest.kt$GitParsersTest$assertEquals(GitProblem.GitHubTokenRejected, classifyGitError("fatal: Authentication failed for 'https://github.com/o/r'", usedGitHubToken = true))</ID>
+    <ID>MaxLineLength:GitParsersTest.kt$GitParsersTest$assertEquals(GitProblem.Network, classifyGitError("fatal: unable to access 'https://x/': Could not resolve host: x"))</ID>
+    <ID>MaxLineLength:GitParsersTest.kt$GitParsersTest$assertEquals(GitProblem.NoUpstream, classifyGitError("There is no tracking information for the current branch."))</ID>
+    <ID>MaxLineLength:GitParsersTest.kt$GitParsersTest$assertEquals(GitProblem.NotARepository, classifyGitError("fatal: not a git repository (or any of the parent directories): .git"))</ID>
+    <ID>MaxLineLength:GitParsersTest.kt$GitParsersTest$listOf("", "-x", "/x", "x/", "x.", "a..b", "a//b", "a@{b", "a b", "a~b", "a^b", "a:b", "a?b", "a*b", "a[b", ".x", "x.lock", "@")</ID>
+    <ID>MaxLineLength:GitParsersTest.kt$GitParsersTest$val s = parseGitStatus("# branch.head main${nul}u $xy N... 100644 100644 100644 100644 a b c clash file.kt${nul}")</ID>
+    <ID>MaxLineLength:GitPublishTest.kt$GitPublishTest$JsonArray(listOf(JsonObject(mapOf("code" to JsonPrimitive("already_exists"), "field" to JsonPrimitive("name")))))</ID>
+    <ID>MaxLineLength:GitPublishTest.kt$GitPublishTest$assertTrue("remote" in added &amp;&amp; "add" in added &amp;&amp; "origin" in added &amp;&amp; "https://github.com/octocat/app.git" in added, added)</ID>
+    <ID>MaxLineLength:GitPublishTest.kt$GitPublishTest$fun</ID>
+    <ID>MaxLineLength:GitPublishTest.kt$GitPublishTest$private fun shellFor(host: GitHost, shell: GitShell)</ID>
+    <ID>MaxLineLength:GitPublishTest.kt$GitPublishTest$val page = GitPage(ref, shellFor(GitHost.BuiltinLinux, FakeShell.steps(*snapshot(""), StepReply("run"))), account)</ID>
+    <ID>MaxLineLength:GitPublishTest.kt$GitPublishTest$val page = GitPage(ref, shellFor(GitHost.BuiltinLinux, FakeShell.steps(*snapshot(""), StepReply("run"))), signedIn(this, PublishGitHub(reply)))</ID>
+    <ID>MaxLineLength:GitPublishTest.kt$GitPublishTest$val page = GitPage(ref, shellFor(GitHost.BuiltinLinux, FakeShell.steps(*snapshot(""), StepReply("run"))), signedIn(this, http))</ID>
+    <ID>MaxLineLength:GitPublishTest.kt$GitPublishTest$val server = GitPage(ref, shellFor(GitHost.Server, FakeShell.steps(*snapshot(""), StepReply("run"))), signedIn(this, http))</ID>
+    <ID>MaxLineLength:GitPublishTest.kt$GitPublishTest$val signedOut = GitPage(ref, shellFor(GitHost.BuiltinLinux, FakeShell.steps(*snapshot(""), StepReply("run"))), signedIn(this, http, withToken = false))</ID>
+    <ID>MaxLineLength:GitRepositoryTest.kt$GitRepositoryTest$FakeShell.steps(StepReply("add"), StepReply("commit", 128, "", "*** Please tell me who you are.\n\nRun git config"))</ID>
+    <ID>MaxLineLength:GitRepositoryTest.kt$GitRepositoryTest$FakeShell.steps(StepReply("head", 0, "feature/x\n"), StepReply("upstream", 128, "", "fatal: no upstream"), StepReply("remotes", 0, "fork\norigin\n"), StepReply("push", 0, "", "To github.com"))</ID>
+    <ID>MaxLineLength:GitRepositoryTest.kt$GitRepositoryTest$StepReply("head", 0, "main\n")</ID>
+    <ID>MaxLineLength:GitRepositoryTest.kt$GitRepositoryTest$StepReply("pull", 128, "", "hint: Diverging branches can't be fast-forwarded\nfatal: Not possible to fast-forward, aborting.")</ID>
+    <ID>MaxLineLength:GitRepositoryTest.kt$GitRepositoryTest$StepReply("push", 1, "", " ! [rejected] main -&gt; main (fetch first)\nerror: failed to push some refs")</ID>
+    <ID>MaxLineLength:GitRepositoryTest.kt$GitRepositoryTest$assertTrue(assertIs&lt;GitDiffResult.Ready&gt;(GitRepository(binary, "/p").diff(GitFileChange("logo.png", unstaged = GitChangeKind.Modified))).binary)</ID>
+    <ID>MaxLineLength:GitRepositoryTest.kt$GitRepositoryTest$fun</ID>
+    <ID>MaxLineLength:GitRepositoryTest.kt$GitRepositoryTest$private val clean = StepReply("status", 0, "# branch.oid abc$nul# branch.head main$nul# branch.upstream origin/main$nul# branch.ab +0 -0$nul")</ID>
+    <ID>MaxLineLength:GitRepositoryTest.kt$GitRepositoryTest$val binary = FakeShell.steps(StepReply("work", 0, "Binary files a/logo.png and b/logo.png differ\n"), StepReply("index"))</ID>
+    <ID>MaxLineLength:GitRepositoryTest.kt$GitRepositoryTest$val fresh = assertIs&lt;GitDiffResult.Ready&gt;(GitRepository(untracked, "/p").diff(GitFileChange("n", unstaged = GitChangeKind.Untracked)))</ID>
+    <ID>MaxLineLength:GitRepositoryTest.kt$GitRepositoryTest$val noUpstream = FakeShell.steps(StepReply("head", 0, "main\n"), StepReply("upstream", 128, "", "fatal: no upstream configured for branch 'main'"))</ID>
+    <ID>MaxLineLength:GitRepositoryTest.kt$GitRepositoryTest$val none = FakeShell.steps(StepReply("head", 0, "main\n"), StepReply("upstream", 128), StepReply("remotes", 0, ""))</ID>
+    <ID>MaxLineLength:GitRepositoryTest.kt$GitRepositoryTest$val nothing = FakeShell.steps(StepReply("add"), StepReply("commit", 1, "nothing to commit, working tree clean\n", ""))</ID>
+    <ID>MaxLineLength:GitRepositoryTest.kt$GitRepositoryTest$val ready = assertIs&lt;GitDiffResult.Ready&gt;(GitRepository(tracked, "/p").diff(GitFileChange("a", staged = GitChangeKind.Modified, unstaged = GitChangeKind.Modified)))</ID>
+    <ID>MaxLineLength:GitRepositoryTest.kt$GitRepositoryTest$val shell = FakeShell.steps(StepReply("add"), StepReply("commit"), StepReply("id", 0, "abc1234\n"), StepReply("files", 0, "a b.kt\n"))</ID>
+    <ID>MaxLineLength:GitRepositoryTest.kt$GitRepositoryTest$val tracked = FakeShell.steps(StepReply("work", 0, "diff --git a/a b/a\n+x\n"), StepReply("index", 0, "diff --git a/a b/a\n-y\n"))</ID>
+    <ID>MaxLineLength:GitRepositoryTest.kt$GitRepositoryTest$val upToDate = FakeShell.steps(StepReply("head", 0, "main\n"), StepReply("upstream", 0, "origin/main\n"), StepReply("pull", 0, "Already up to date.\n"))</ID>
+    <ID>MaxLineLength:GitScriptTest.kt$GitScriptTest$assertFailsWith&lt;IllegalArgumentException&gt; { GitScript("/p", listOf(GitStep("bad name", listOf("git")))).render() }</ID>
+    <ID>MaxLineLength:RealGitTest.kt$RealGitTest$assertEquals(GitProblem.RemoteAddressHasPassword, repo.addRemote("origin", "https://me:" + "pw@example.invalid/r.git").problem)</ID>
+    <ID>MaxLineLength:RealGitTest.kt$RealGitTest$val</ID>
+    <ID>MaxLineLength:RealGitTest.kt$RealGitTest$val changed = assertIs&lt;GitSnapshotResult.Ready&gt;(repository.snapshot()).snapshot.status.files.single { it.path == "a.txt" }</ID>
+    <ID>MaxLineLength:RealGitTest.kt$RealGitTest$val untracked = assertIs&lt;GitDiffResult.Ready&gt;(repository.diff(GitFileChange("b.txt", unstaged = GitChangeKind.Untracked)))</ID>
+    <ID>MaxLineLength:ServerGitShell.kt$ServerGitShell$if (started.failure is Failure.NotFound) GitShellFailure.Unsupported else GitShellFailure.Unavailable</ID>
+    <ID>MaxLineLength:ServerGitShell.kt$ServerGitShell$is Outcome.Ok -&gt; started.value.data()?.string("id") ?: return GitShellReply.Failed(GitShellFailure.Unavailable)</ID>
+    <ID>MaxLineLength:ServerGitShell.kt$ServerGitShell$when</ID>
+    <ID>MaxLineLength:ServerGitShellTest.kt$ServerGitShellTest$else -&gt; json(if (++polls &lt; 3) """{"data":{"id":"sh_1","status":"running"}}""" else """{"data":{"id":"sh_1","status":"exited","exit":0}}""")</ID>
+    <ID>MaxLineLength:ServerGitShellTest.kt$ServerGitShellTest$if</ID>
+    <ID>MaxLineLength:ServerGitShellTest.kt$ServerGitShellTest$if (request.method == HttpMethod.Post) startBody = (request.body as OutgoingContent.ByteArrayContent).bytes().decodeToString()</ID>
+    <ID>MaxLineLength:ServerGitShellTest.kt$ServerGitShellTest$private</ID>
+    <ID>MaxLineLength:ServerGitShellTest.kt$ServerGitShellTest$return ServerGitShell(NetClient(client, { TransportError.Other }), origin, "Basic dGVzdDp0ZXN0", "/srv/my app", pollIntervalMs = 1)</ID>
+    <ID>NestedBlockDepth:GitHubDeviceFlow.kt$GitHubDeviceFlow$public suspend fun createRepository(token: String, name: String, isPrivate: Boolean): GitHubCreateResult</ID>
+    <ID>NestedBlockDepth:GitParsers.kt$public fun parseGitStatus(output: String): GitStatus</ID>
+    <ID>ReturnCount:GitHubAccount.kt$GitHubAccount$private suspend fun signIn(mine: Int)</ID>
+    <ID>ReturnCount:GitHubAccount.kt$GitHubAccount$public suspend fun validToken(): String?</ID>
+    <ID>ReturnCount:GitHubAccount.kt$GitHubTokenStore$public suspend fun sweep(existing: Set&lt;ProfileId&gt;): Outcome&lt;Int&gt;</ID>
+    <ID>ReturnCount:GitHubAccount.kt$GitHubTokenStore.Companion$internal fun decode(raw: String): GitHubCredential?</ID>
+    <ID>ReturnCount:GitHubDeviceFlow.kt$GitHubDeviceFlow$public suspend fun pollForToken(code: GitHubDeviceCode, cancelled: () -&gt; Boolean = { false }): GitHubResult&lt;GitHubCredential&gt;</ID>
+    <ID>ReturnCount:GitHubDeviceFlow.kt$GitHubDeviceFlow$public suspend fun refresh(current: GitHubCredential): GitHubResult&lt;GitHubCredential&gt;</ID>
+    <ID>ReturnCount:GitHubDeviceFlow.kt$GitHubDeviceFlow$public suspend fun requestCode(scope: String = GITHUB_SCOPE): GitHubResult&lt;GitHubDeviceCode&gt;</ID>
+    <ID>ReturnCount:GitPage.kt$GitPage$public suspend fun checkForUpdates()</ID>
+    <ID>ReturnCount:GitPage.kt$GitPage$public suspend fun commitAndPush( paths: List&lt;String&gt;, message: String, renamedFrom: List&lt;String&gt; = emptyList(), )</ID>
+    <ID>ReturnCount:GitPage.kt$public fun resolveGitWorkspace( connected: Boolean, directory: String?, remoteShell: Boolean?, placeName: String? = null, shell: (String) -&gt; GitShell, ): GitWorkspaceResolution</ID>
+    <ID>ReturnCount:GitParsers.kt$private fun splitFields(record: String, count: Int): List&lt;String&gt;?</ID>
+    <ID>ReturnCount:GitParsers.kt$public fun gitRemoteKind(url: String): GitRemoteKind</ID>
+    <ID>ReturnCount:GitRepository.kt$GitRepository$private suspend fun pushWithAuth(file: GitSecretFile?, secrets: List&lt;String&gt;): GitActionResult</ID>
+    <ID>ReturnCount:GitRepository.kt$GitRepository$private suspend fun run( script: GitScript, timeoutMs: Long, secrets: List&lt;String&gt; = emptyList(), ): Run</ID>
+    <ID>ReturnCount:GitRepository.kt$GitRepository$private suspend fun single( action: GitAction, argv: List&lt;String&gt;, note: GitActionNote, fallback: GitProblem = GitProblem.Unknown, ): GitActionResult</ID>
+    <ID>ReturnCount:GitRepository.kt$GitRepository$public suspend fun addRemote(name: String, url: String): GitActionResult</ID>
+    <ID>ReturnCount:GitRepository.kt$GitRepository$public suspend fun clone(url: String, folderName: String): GitActionResult</ID>
+    <ID>ReturnCount:GitRepository.kt$GitRepository$public suspend fun commit( paths: List&lt;String&gt;, message: String, renamedFrom: List&lt;String&gt; = emptyList(), ): GitActionResult</ID>
+    <ID>ReturnCount:GitRepository.kt$GitRepository$public suspend fun diff(file: GitFileChange): GitDiffResult</ID>
+    <ID>ReturnCount:GitRepository.kt$GitRepository$public suspend fun discard(file: GitFileChange): GitActionResult</ID>
+    <ID>ReturnCount:GitRepository.kt$GitRepository$public suspend fun fetch(): GitActionResult</ID>
+    <ID>ReturnCount:GitRepository.kt$GitRepository$public suspend fun pull(): GitActionResult</ID>
+    <ID>ReturnCount:GitRepository.kt$GitRepository$public suspend fun push(gitHubToken: String? = null): GitActionResult</ID>
+    <ID>ReturnCount:GitRepository.kt$GitRepository$public suspend fun setIdentity(name: String, email: String): GitActionResult</ID>
+    <ID>ReturnCount:GitRepository.kt$GitRepository$public suspend fun snapshot(logLimit: Int = 30): GitSnapshotResult</ID>
+    <ID>ReturnCount:GitRepository.kt$public fun gitRemoteAddressProblem(url: String): GitProblem?</ID>
+    <ID>ReturnCount:GitRepository.kt$public fun isValidGitBranchName(name: String): Boolean</ID>
+    <ID>ReturnCount:GitScript.kt$GitEnvelope.Companion$public fun parse(output: String): GitEnvelope</ID>
+    <ID>ReturnCount:ServerGitShell.kt$ServerGitShell$override suspend fun run(script: String, timeoutMs: Long): GitShellReply</ID>
+    <ID>ReturnCount:ServerGitShell.kt$ServerGitShell$private suspend fun readOutput(id: String, query: Map&lt;String, String&gt;): String?</ID>
+    <ID>ReturnCount:WorktreeInspection.kt$WorktreeInspection$public suspend fun conversationPage( scope: WorktreeScope, cursor: String? = null, limit: Int = 50, includeArchived: Boolean = true, ): Outcome&lt;ServerPage&lt;Session&gt;&gt;</ID>
+    <ID>ReturnCount:WorktreeInspection.kt$WorktreeInspection$public suspend fun copies(location: ServerLocation): Outcome&lt;ImmutableList&lt;WorktreeScope&gt;&gt;</ID>
+    <ID>ReturnCount:WorktreeInspection.kt$WorktreeInspection$public suspend fun loadChanges( scope: WorktreeScope ): Outcome&lt;ImmutableList&lt;VersionControlFile&gt;&gt;</ID>
+    <ID>SwallowedException:GitHubAccount.kt$GitHubTokenStore.Companion$e: IllegalArgumentException</ID>
+    <ID>SwallowedException:GitRepository.kt$GitRepository$e: IllegalArgumentException</ID>
+    <ID>SwallowedException:GitScript.kt$GitEnvelope.Companion$e: IllegalArgumentException</ID>
+    <ID>SwallowedException:ServerGitShell.kt$ServerGitShell.Companion$e: IllegalArgumentException</ID>
+    <ID>TooManyFunctions:GitHubAccount.kt$GitHubAccount : GitHubSignInControl</ID>
+    <ID>TooManyFunctions:GitHubDeviceFlow.kt$GitHubDeviceFlow</ID>
+    <ID>TooManyFunctions:GitPage.kt$GitPage</ID>
+    <ID>TooManyFunctions:GitParsers.kt$io.github.eslamasabry.oc.engine.git.GitParsers.kt</ID>
+    <ID>TooManyFunctions:GitRepository.kt$GitRepository</ID>
+    <ID>WildcardImport:WorktreeInspection.kt$import io.github.eslamasabry.oc.core.model.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

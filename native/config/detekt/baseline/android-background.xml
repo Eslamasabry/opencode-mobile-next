@@ -1,0 +1,70 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:LiveMode.kt$LiveModeController$busy || value &amp;&amp; value == enabled &amp;&amp; value == active</ID>
+    <ID>ComplexCondition:SignInForeground.kt$SignInForegroundState$!owned || controller.enabled || holdsService || !controller.support.supported()</ID>
+    <ID>ComplexCondition:SignInForeground.kt$SignInForegroundState$reply is ServiceReply.Ok &amp;&amp; stopRevision != this.stopRevision &amp;&amp; reply.value.active &amp;&amp; !controller.enabled &amp;&amp; controller.support.supported()</ID>
+    <ID>CyclomaticComplexMethod:LiveMode.kt$LiveModeController$private suspend fun run(method: Method, persist: Boolean = true): Boolean</ID>
+    <ID>CyclomaticComplexMethod:LiveMode.kt$LiveModeController$public suspend fun resume(): ResumeResult</ID>
+    <ID>CyclomaticComplexMethod:LiveMode.kt$LiveModeController$public suspend fun setEnabled(value: Boolean): Boolean</ID>
+    <ID>CyclomaticComplexMethod:PauseState.kt$PauseState.Companion$public fun fromWire(value: Map&lt;String, Any?&gt;?): PauseState</ID>
+    <ID>CyclomaticComplexMethod:SignInForeground.kt$SignInForegroundState$private suspend fun activate(generation: Int)</ID>
+    <ID>LongParameterList:AndroidLiveService.kt$AndroidLiveServicePort$( private val context: Context, private val signals: LiveServiceSignals, private val receipts: PauseReceiptStore, private val permissions: PermissionGate, private val starter: LiveServiceStarter = ComponentLiveServiceStarter(context), private val ackWait: Duration = 5.seconds, private val ackPoll: Duration = 50.milliseconds, )</ID>
+    <ID>MaxLineLength:AndroidBackgroundTest.kt$AndroidBackgroundTest$assertEquals("Notification access is required.", context.getString(BackgroundWords.error(LiveModeError.NotificationsRequired)))</ID>
+    <ID>MaxLineLength:AndroidBackgroundTest.kt$AndroidBackgroundTest$assertEquals("Resume background connection", context.getString(BackgroundWords.actionSemantics(PauseAction.Resume)))</ID>
+    <ID>MaxLineLength:AndroidBackgroundTest.kt$AndroidBackgroundTest$assertEquals("توقف الاتصال في الخلفية لسبب غير معروف.", context.getString(BackgroundWords.message(PauseMessage.Interrupted)))</ID>
+    <ID>MaxLineLength:AndroidBackgroundTest.kt$AndroidBackgroundTest$assertEquals(PauseExit(ApplicationExitInfo.REASON_USER_REQUESTED, 2000L), AndroidPauseFacts(context, fixedClock).latestExit())</ID>
+    <ID>MaxLineLength:AndroidBackgroundTest.kt$AndroidBackgroundTest$fun</ID>
+    <ID>MaxLineLength:AndroidBackgroundTest.kt$AndroidBackgroundTest$private suspend</ID>
+    <ID>MaxLineLength:AndroidBackgroundTest.kt$AndroidBackgroundTest$val physical = { context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE).all["flutter.oc.keepLiveInBackground"] }</ID>
+    <ID>MaxLineLength:AndroidBackgroundTest.kt$AndroidBackgroundTest$val prefs = AndroidDataStores.flutterPrefs(context, StateMigrationGate.alwaysOpen(), UnconfinedTestDispatcher(testScheduler))</ID>
+    <ID>MaxLineLength:AndroidBackgroundTest.kt$AndroidBackgroundTest$val receipts = PauseReceiptStore(SharedPreferencesReceiptFile(context), AndroidPauseFacts(context, fixedClock), optIn)</ID>
+    <ID>MaxLineLength:AndroidBackgroundTest.kt$AndroidBackgroundTest$val silent = AndroidLiveServicePort(context, signals, receipts, Permissions(PermissionStatus.Granted), Starter {})</ID>
+    <ID>MaxLineLength:FirstReplyNotifyOfferTest.kt$FirstReplyNotifyOfferTest$fun</ID>
+    <ID>MaxLineLength:LiveModeTest.kt$LiveModeTest$File("../../../android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BackgroundConnectionService.kt")</ID>
+    <ID>MaxLineLength:LiveModeTest.kt$LiveModeTest$all { ok(ServiceStatus(enabled = true, active = true, notificationGranted = true, batteryOptimizationIgnored = true)) }</ID>
+    <ID>MaxLineLength:LiveModeTest.kt$LiveModeTest$assertEquals(BackgroundLifecycle.Decision.Suspend, BackgroundLifecycle.onAppBackgrounded(notOptedIn.state.value))</ID>
+    <ID>MaxLineLength:LiveModeTest.kt$LiveModeTest$else</ID>
+    <ID>MaxLineLength:LiveModeTest.kt$LiveModeTest$mapOf("enabled" to "true", "active" to 1, "notificationGranted" to listOf&lt;Any&gt;(), "batteryOptimizationIgnored" to null)</ID>
+    <ID>MaxLineLength:LiveModeTest.kt$LiveModeTest$val port = FakeLivePort().apply { all { ok(ServiceStatus(enabled = true, active = true, notificationGranted = true)) } }</ID>
+    <ID>MaxLineLength:LiveModeTest.kt$LiveModeTest$val port = FakeLivePort().apply { all { ok(ServiceStatus(enabled = true, active = true, notificationGranted = true, batteryOptimizationIgnored = true)) } }</ID>
+    <ID>MaxLineLength:LiveServicePort.kt$LiveServicePort$*</ID>
+    <ID>MaxLineLength:PauseNoticeTest.kt$PauseNoticeTest$fun</ID>
+    <ID>MaxLineLength:PauseTest.kt$PauseTest$assertEquals(if (code == "permission_in_progress") ResumeError.Busy else ResumeError.ResumeFailed, result.error, code)</ID>
+    <ID>MaxLineLength:SignInForeground.kt$SignInLease$override suspend fun ready(): LeaseAdmission</ID>
+    <ID>MaxLineLength:SignInForeground.kt$SignInLease$override suspend fun release(): Outcome&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:SignInForegroundRegistry.kt$BoundForegroundLease$override suspend fun ready(): LeaseAdmission</ID>
+    <ID>MaxLineLength:SignInForegroundTest.kt$SignInForegroundTest$fun</ID>
+    <ID>MaxLineLength:SignInForegroundTest.kt$SignInForegroundTest.World$if (error != null) refused(error) else ok(status(disableAckActive)).also { nativeActive = disableAckActive }</ID>
+    <ID>MaxLineLength:SignInRegistryTest.kt$SignInRegistryTest.FakeLease$override suspend fun ready(): LeaseAdmission</ID>
+    <ID>MaxLineLength:SignInRegistryTest.kt$SignInRegistryTest.FakeLease$private</ID>
+    <ID>MaxLineLength:TestSupport.kt$internal</ID>
+    <ID>NestedBlockDepth:LiveMode.kt$LiveModeController$public suspend fun resume(): ResumeResult</ID>
+    <ID>ReturnCount:AndroidLiveService.kt$AndroidLiveServicePort$override suspend fun enable(): ServiceReply&lt;ServiceStatus&gt;</ID>
+    <ID>ReturnCount:AndroidLiveService.kt$LiveServiceBody$public suspend fun onForegroundResult(promised: Boolean): Boolean</ID>
+    <ID>ReturnCount:FirstReplyNotifyOffer.kt$FirstReplyNotifyOffer$public fun showFor(replyCompleted: Boolean): Boolean</ID>
+    <ID>ReturnCount:FirstReplyNotifyOffer.kt$FirstReplyNotifyOffer$public suspend fun accept()</ID>
+    <ID>ReturnCount:LiveMode.kt$LiveModeController$private fun disableIfUnsupported(): Boolean</ID>
+    <ID>ReturnCount:LiveMode.kt$LiveModeController$private suspend fun run(method: Method, persist: Boolean = true): Boolean</ID>
+    <ID>ReturnCount:LiveMode.kt$LiveModeController$public suspend fun refreshPause(): PauseState</ID>
+    <ID>ReturnCount:LiveMode.kt$LiveModeController$public suspend fun resume(): ResumeResult</ID>
+    <ID>ReturnCount:LiveMode.kt$LiveModeController$public suspend fun setEnabled(value: Boolean): Boolean</ID>
+    <ID>ReturnCount:PauseNotice.kt$PauseNotice$private fun compute(pause: PauseState): PauseNoticeState?</ID>
+    <ID>ReturnCount:PauseNotice.kt$PauseNotice$public suspend fun resume(): Boolean</ID>
+    <ID>ReturnCount:PauseReceipts.kt$PauseReceiptStore$private fun read(): PauseReceipt?</ID>
+    <ID>ReturnCount:PauseReceipts.kt$PauseReceiptStore$public suspend fun status(active: Boolean): PauseState</ID>
+    <ID>ReturnCount:PauseState.kt$PauseState.Companion$public fun fromWire(value: Map&lt;String, Any?&gt;?): PauseState</ID>
+    <ID>ReturnCount:SignInForeground.kt$SignInForegroundState$private fun current(generation: Int): Boolean</ID>
+    <ID>ReturnCount:SignInForeground.kt$SignInForegroundState$private suspend fun activate(generation: Int)</ID>
+    <ID>ReturnCount:SignInForeground.kt$SignInForegroundState$private suspend fun stopIfUnclaimed(): Boolean</ID>
+    <ID>ReturnCount:SignInForeground.kt$SignInForegroundState$private suspend fun stopOwned(): Boolean</ID>
+    <ID>ReturnCount:SignInForeground.kt$SignInForegroundState$suspend fun enableUserClaim(): Boolean</ID>
+    <ID>ReturnCount:SignInForegroundRegistry.kt$BoundForegroundLease$suspend fun start()</ID>
+    <ID>ReturnCount:SignInForegroundRegistry.kt$SignInForegroundBinding$private suspend fun closeBody(): Boolean</ID>
+    <ID>TooManyFunctions:LiveMode.kt$LiveModeController : ForegroundLeasePort</ID>
+    <ID>TooManyFunctions:SignInForeground.kt$SignInForegroundState</ID>
+    <ID>UseCheckOrError:LiveModeTest.kt$LiveModeTest$throw IllegalStateException("no activity")</ID>
+    <ID>UseCheckOrError:SignInRegistryTest.kt$SignInRegistryTest$throw IllegalStateException("private native text")</ID>
+  </CurrentIssues>
+</SmellBaseline>

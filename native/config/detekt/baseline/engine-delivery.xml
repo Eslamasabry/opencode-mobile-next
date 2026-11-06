@@ -1,0 +1,196 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:ConnectionDelivery.kt$ConnectionDelivery$event is GatewayEvent.MessageUpserted &amp;&amp; current != null &amp;&amp; (location?.directory == null || location.directory == current.scope.directory) &amp;&amp; (location?.workspace == null || location.workspace == current.scope.workspace)</ID>
+    <ID>ComplexCondition:ObservedPromptReceipts.kt$ObservedPromptReceipts$message.role != Role.User || message.sessionId.isEmpty() || echo.clientMessageId.raw.isEmpty() || echo.parts.isEmpty() || echo.parts.any { it.synthetic || it.sessionId != message.sessionId || it.messageId != message.id }</ID>
+    <ID>ComplexCondition:OfflineQueue.kt$OfflineQueue$existing &gt;= 0 &amp;&amp; (prompt.id !in onlineInFlight || q[existing].profileId != prompt.profileId || q[existing].sessionId != prompt.sessionId)</ID>
+    <ID>ComplexCondition:OfflineQueue.kt$OfflineQueue$expectedReceipt.tabId != expectedReceipt.sessionId || (originalEntry != null &amp;&amp; (originalEntry.profileId != origin.profileId || originalEntry.sessionId.raw != expectedReceipt.sessionId || !originalEntry.dispatched))</ID>
+    <ID>ComplexCondition:OfflineQueueStore.kt$OfflineQueueStore$encoded != null &amp;&amp; expected != null &amp;&amp; (expected !is PrefValue.Str || try { QueuedPromptCodec.decodeQueue(expected.value) false } catch (_: QueueFormatException) { true })</ID>
+    <ID>ComplexCondition:PendingCommandJournal.kt$PendingCommandJournal$!receipt.valid || index &lt; 0 || !commands[index].sameIdentity(receipt) || !validTransition(commands[index].state, receipt.state)</ID>
+    <ID>ComplexCondition:PendingCommandJournal.kt$PendingCommandJournal.Companion$envelope.size != 2 || !versionOk || list == null || list.size &gt; MAX_ENTRIES</ID>
+    <ID>ComplexCondition:PhoneChatDispatch.kt$PhoneChatDispatchTracker$turn.pending == 0 &amp;&amp; readEpoch &gt;= turn.settledEpoch &amp;&amp; turn.directory == directory &amp;&amp; (status == SessionStatus.Busy || status == SessionStatus.Retry)</ID>
+    <ID>ComplexCondition:PromptDelivery.kt$PromptDelivery$bubble.reviewId != null &amp;&amp; clientId != null &amp;&amp; link.capabilities.commandReceipts &amp;&amp; journal != null</ID>
+    <ID>CyclomaticComplexMethod:ConversationActivity.kt$LiveTurnRules$public fun derive(facts: TurnFacts, local: LocalTurn?, nowMs: Long): LiveTurn?</ID>
+    <ID>CyclomaticComplexMethod:GatewaySendLink.kt$GatewaySendLink$override suspend fun applySelection( session: SessionId, model: ModelSelection?, agent: String?, ): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:GatewaySendLink.kt$GatewaySendLink$override suspend fun lookupAdmission( session: SessionId, messageId: MessageId, ): Outcome&lt;Boolean&gt;</ID>
+    <ID>CyclomaticComplexMethod:GatewaySendLink.kt$GatewaySendLink$private suspend fun admit( session: SessionId, prompt: OutgoingPrompt, beforeSend: () -&gt; Boolean, ): Outcome&lt;PromptAdmission&gt;</ID>
+    <ID>CyclomaticComplexMethod:OfflineQueue.kt$OfflineQueue$private suspend fun checkReceiptOnLane(id: String): Boolean</ID>
+    <ID>CyclomaticComplexMethod:OfflineQueue.kt$OfflineQueue$private suspend fun dispatchWithReceipt( link: SendLink, entry: QueuedPrompt, prompt: OutgoingPrompt, allowed: () -&gt; Boolean, ): DispatchResult</ID>
+    <ID>CyclomaticComplexMethod:OfflineQueue.kt$OfflineQueue$private suspend fun flushOnLane()</ID>
+    <ID>CyclomaticComplexMethod:OfflineQueue.kt$OfflineQueue$private suspend fun sendOne( link: SendLink, entry: QueuedPrompt, explicit: Boolean, allowed: () -&gt; Boolean, ): Step</ID>
+    <ID>CyclomaticComplexMethod:OfflineQueue.kt$OfflineQueue$public suspend fun move( id: String, expectedSource: ConversationRef, destination: ConversationRef, availableModels: Set&lt;io.github.eslamasabry.oc.core.model.ModelRef&gt;, availableAgents: Set&lt;String&gt;, redactor: io.github.eslamasabry.oc.core.security.Redactor, ): Outcome&lt;Boolean&gt;</ID>
+    <ID>CyclomaticComplexMethod:PromptDelivery.kt$PromptDelivery$private suspend fun admit( link: SendLink, origin: DispatchScope, bubble: PendingSend, request: SendRequest, putBack: Boolean, )</ID>
+    <ID>CyclomaticComplexMethod:PromptDelivery.kt$PromptDelivery$private suspend fun perform(request: SendRequest, putBack: Boolean): Outcome&lt;LocalSendId&gt;</ID>
+    <ID>CyclomaticComplexMethod:QueuedPrompt.kt$QueuedPromptCodec$public fun fromJson(value: Any?): QueuedPrompt?</ID>
+    <ID>LargeClass:OfflineQueue.kt$OfflineQueue</ID>
+    <ID>LongMethod:OfflineQueue.kt$OfflineQueue$private suspend fun checkReceiptOnLane(id: String): Boolean</ID>
+    <ID>LongMethod:OfflineQueue.kt$OfflineQueue$private suspend fun sendOne( link: SendLink, entry: QueuedPrompt, explicit: Boolean, allowed: () -&gt; Boolean, ): Step</ID>
+    <ID>LongMethod:PromptDelivery.kt$PromptDelivery$private suspend fun admit( link: SendLink, origin: DispatchScope, bubble: PendingSend, request: SendRequest, putBack: Boolean, )</ID>
+    <ID>LongMethod:PromptDelivery.kt$PromptDelivery$private suspend fun perform(request: SendRequest, putBack: Boolean): Outcome&lt;LocalSendId&gt;</ID>
+    <ID>LongParameterList:ConnectionDelivery.kt$ConnectionDelivery$( gateway: ServerGateway, profile: ServerProfile, private val scope: ConnectionCoroutineScope, clock: Clock, stores: Set&lt;DeliveryStorage&gt;, dispatchers: AppDispatchers, tracers: Set&lt;PromptTracing&gt; = emptySet(), private val interactiveSendChecks: Set&lt;InteractiveSendCheck&gt; = emptySet(), )</ID>
+    <ID>LongParameterList:ConnectionDelivery.kt$ConnectionDelivery$( ref: ConversationRef, text: String, attachments: ImmutableList&lt;PromptAttachment&gt; = persistentListOf(), model: ModelSelection? = null, /** * Sub-agent `@name` mentions in [text] (Codex composer #6; OC2 sends them as the prompt's * agents). */ mentions: ImmutableList&lt;PromptAgentMention&gt; = persistentListOf(), /** Ephemeral voice turns never learn phrases or restore themselves into a later draft. */ insteadOfDraft: Boolean = false, )</ID>
+    <ID>LongParameterList:DeliveryTestSupport.kt$( id: String, text: String = "prompt $id", profile: ProfileId = P1, session: SessionId = S1, createdAt: Long = NOW_MS - 1_000, dispatchedAt: Long? = null, attachmentUrls: List&lt;String&gt; = emptyList(), )</ID>
+    <ID>LongParameterList:DeliveryTestSupport.kt$World$( val disk: Disk, val test: TestScope, val link: FakeLink = FakeLink(), val clock: TestClock = TestClock(Instant.fromEpochMilliseconds(NOW_MS)), val policy: Policy = Policy(), profiles: Set&lt;ProfileId&gt; = setOf(P1, P2), engineScope: CoroutineScope = test.backgroundScope, )</ID>
+    <ID>LongParameterList:OfflineQueue.kt$OfflineQueue$( id: String, expectedSource: ConversationRef, destination: ConversationRef, availableModels: Set&lt;io.github.eslamasabry.oc.core.model.ModelRef&gt;, availableAgents: Set&lt;String&gt;, redactor: io.github.eslamasabry.oc.core.security.Redactor, )</ID>
+    <ID>LongParameterList:OfflineQueue.kt$OfflineQueue$( private val store: OfflineQueueStore, private val journals: PendingCommandJournals, private val connection: DeliveryConnection, private val policy: AutomationPolicy, private val clock: Clock, /** * The connection scope: an explicit resend starts its flush here, so leaving a screen never * cancels it. */ private val scope: CoroutineScope, dispatchers: AppDispatchers, )</ID>
+    <ID>LongParameterList:PromptDelivery.kt$PromptDelivery$( private val connection: DeliveryConnection, private val queue: OfflineQueue, private val journals: PendingCommandJournals, private val facts: ConversationFacts, private val stopMemory: StopMemory, private val clock: Clock, private val scope: CoroutineScope, )</ID>
+    <ID>LongParameterList:QueuedPrompt.kt$QueuedPrompt$( public val id: String, public val profileId: ProfileId, public val sessionId: SessionId, public val text: String, attachments: List&lt;PromptAttachment&gt; = persistentListOf(), mentions: List&lt;PromptAgentMention&gt; = persistentListOf(), public val modelProviderId: String? = null, public val modelId: String? = null, public val agent: String? = null, public val variant: String? = null, public val createdAt: Long, public val error: String? = null, public val dispatchedAt: Long? = null, )</ID>
+    <ID>LongParameterList:SessionCreationReceipts.kt$SessionCreationReceipts$( private val profile: ProfileId, private val endpoints: ProfileEndpoints, private val transport: SessionCreationTransport, private val journals: PendingCommandJournals, private val clock: Clock, private val newSessionId: () -&gt; String, private val scope: String, )</ID>
+    <ID>LongParameterList:SessionCreationReceipts.kt$SessionCreationReceipts.Companion$( profile: ProfileId, endpoints: ProfileEndpoints, transport: SessionCreationTransport?, journals: PendingCommandJournals, clock: Clock, newSessionId: () -&gt; String, )</ID>
+    <ID>LoopWithTooManyJumpStatements:OfflineQueue.kt$OfflineQueue$for</ID>
+    <ID>LoopWithTooManyJumpStatements:PendingCommandJournal.kt$PendingCommandJournals$while</ID>
+    <ID>MagicNumber:CommandReceipt.kt$CommandReceipt.Companion$7</ID>
+    <ID>MagicNumber:ConversationActivity.kt$ConversationActivity$5_000</ID>
+    <ID>MagicNumber:ObservedPromptReceipts.kt$ObservedPromptReceipts$512</ID>
+    <ID>MagicNumber:PromptDelivery.kt$PromptDelivery$1000</ID>
+    <ID>MagicNumber:QueuedPrompt.kt$QueuedPromptCodec$1e21</ID>
+    <ID>MagicNumber:SessionCreationReceipts.kt$SessionCreationReceipts.Companion$3</ID>
+    <ID>MaxLineLength:CommandReceipt.kt$CommandReceipt.Companion$/** Dart `CommandReceipt.fromJson`: exactly seven keys, opaque ids, a SHA-256 scope, an int ≥ 0, a known state. */</ID>
+    <ID>MaxLineLength:CommandReceipt.kt$DispatchScope$*</ID>
+    <ID>MaxLineLength:CommandReceipt.kt$DispatchScope$public</ID>
+    <ID>MaxLineLength:CommandReceiptController.kt$CommandReceiptController$*</ID>
+    <ID>MaxLineLength:CommandReceiptController.kt$CommandReceiptController$public suspend</ID>
+    <ID>MaxLineLength:CommandReceiptTransportTest.kt$CommandReceiptTransportTest$for</ID>
+    <ID>MaxLineLength:CommandReceiptTransportTest.kt$CommandReceiptTransportTest.Correlated$override suspend</ID>
+    <ID>MaxLineLength:ConnectionDeliveryRichTest.kt$ConnectionDeliveryRichTest$assertEquals(Triple("anthropic", "claude-sonnet-4-6", "Think"), server.applied, "the choice reached the model API first")</ID>
+    <ID>MaxLineLength:ConnectionDeliveryRichTest.kt$ConnectionDeliveryRichTest.RichServer$Session(S1, selection = SessionSelection(model, variant, null, modelKnown = true, agentKnown = true))</ID>
+    <ID>MaxLineLength:ConversationActivity.kt$LivePhase$public enum</ID>
+    <ID>MaxLineLength:ConversationActivity.kt$LiveTurnRules$val</ID>
+    <ID>MaxLineLength:ConversationActivity.kt$LiveTurnRules$val retry = facts.retry?.let { r -&gt; if (r.nextAtMs != null &amp;&amp; r.nextAtMs &lt;= nowMs) r.copy(nextAtMs = null) else r }</ID>
+    <ID>MaxLineLength:ConversationActivityTest.kt$ConversationActivityTest$assertEquals(LivePhase.Sending, LiveTurnRules.derive(TurnFacts(idleAtMs = t0 + 50), stillSending, t0 + 60)?.phase, "an idle never ends a send in flight")</ID>
+    <ID>MaxLineLength:ConversationActivityTest.kt$ConversationActivityTest$assertEquals(LivePhase.WaitingFirstWord, LiveTurnRules.derive(TurnFacts(busy = true, busySinceMs = t0 + 300), accepted, t0 + 400)?.phase)</ID>
+    <ID>MaxLineLength:ConversationActivityTest.kt$ConversationActivityTest$assertEquals(LivePhase.WaitingServer, LiveTurnRules.derive(TurnFacts(idleAtMs = t0 - 50), local, t0 + 60)?.phase, "an older idle does not count")</ID>
+    <ID>MaxLineLength:ConversationActivityTest.kt$ConversationActivityTest$assertEquals(LivePhase.Writing, LiveTurnRules.derive(TurnFacts(busy = true, writing = true, thinking = true), null, t0)?.phase)</ID>
+    <ID>MaxLineLength:ConversationActivityTest.kt$ConversationActivityTest$assertEquals(false, LiveTurnRules.derive(TurnFacts(busy = true, runningStep = "x"), local.copy(sending = false), t0 + 60_000)?.slow, "slow is for starting phases only")</ID>
+    <ID>MaxLineLength:ConversationActivityTest.kt$ConversationActivityTest$fun</ID>
+    <ID>MaxLineLength:ConversationActivityTest.kt$ConversationActivityTest$val f = TurnFacts(busy = true, busySinceMs = t0, retry = RetryFacts(attempt = 2, nextAtMs = t0 + 5_000, rateLimit = true))</ID>
+    <ID>MaxLineLength:ConversationActivityTest.kt$ConversationActivityTest$val f = TurnFacts(busy = true, busySinceMs = t0, waitingRequest = true, thinking = true, runningStep = "Reading README.md")</ID>
+    <ID>MaxLineLength:ConversationActivityTest.kt$ConversationActivityTest$val stuck = TurnFacts(busy = true, busySinceMs = t0, stuck = StuckFacts("npm test", t0), runningStep = "Running npm test")</ID>
+    <ID>MaxLineLength:ConversationActivityTest.kt$ConversationActivityTest$val working = LiveTurnRules.derive(TurnFacts(busy = true, busySinceMs = t0, runningStep = "Reading a.kt", secondary = "line"), null, t0)!!</ID>
+    <ID>MaxLineLength:DeliveryPorts.kt$SendLink$*</ID>
+    <ID>MaxLineLength:DeliveryPorts.kt$SendLink$public suspend</ID>
+    <ID>MaxLineLength:DeliveryTestSupport.kt$Disk$fun queueBlob(): String?</ID>
+    <ID>MaxLineLength:DeliveryTestSupport.kt$Disk.Companion$fun withQueue(raw: String)</ID>
+    <ID>MaxLineLength:DeliveryTestSupport.kt$FakeLink$override suspend</ID>
+    <ID>MaxLineLength:DeliveryTestSupport.kt$PrefsKeyValueStore(disk, FlutterPrefsCodec(JavaListDecoder.Unsupported), StateMigrationGate.alwaysOpen(), StandardTestDispatcher(scope.testScheduler))</ID>
+    <ID>MaxLineLength:DeliveryTestSupport.kt$Stops$internal</ID>
+    <ID>MaxLineLength:DeliveryTestSupport.kt$World$val queue = OfflineQueue(store, journals, connection, policy, clock, engineScope, TestDispatchers(StandardTestDispatcher(test.testScheduler)))</ID>
+    <ID>MaxLineLength:DlvIdentityTest.kt$DlvIdentityTest$val w = World(Disk(), this, link = FakeLink(capabilities = ServerCapabilities(commandReceipts = true), correlated = true))</ID>
+    <ID>MaxLineLength:DlvRestartTest.kt$DlvRestartTest$for</ID>
+    <ID>MaxLineLength:DlvRestartTest.kt$DlvRestartTest$val w = World(Disk(), this, link = FakeLink().apply { hasMidTurnFacet = true; midTurn = MidTurnPrompt.RestartsTurn; stopAnswer = { result } })</ID>
+    <ID>MaxLineLength:DlvReviewIdTest.kt$DlvReviewIdTest$val w = World(Disk(), this, link = FakeLink(capabilities = ServerCapabilities(commandReceipts = true, clientPromptMessageID = true), correlated = true))</ID>
+    <ID>MaxLineLength:DlvStopTest.kt$DlvStopTest$if</ID>
+    <ID>MaxLineLength:FlutterQueueFixtureTest.kt$FlutterQueueFixtureTest$assertEquals(QueuedPromptCodec.encodeQueue(entries), writerBlob, "a queue written by native reads the same in a byte diff")</ID>
+    <ID>MaxLineLength:FlutterQueueFixtureTest.kt$FlutterQueueFixtureTest$assertEquals(QueuedPromptCodec.encodeQueue(listOf(original.getValue(entry.id))), QueuedPromptCodec.encodeQueue(listOf(entry)))</ID>
+    <ID>MaxLineLength:FlutterQueueFixtureTest.kt$FlutterQueueFixtureTest$fun</ID>
+    <ID>MaxLineLength:FlutterQueueFixtureTest.kt$FlutterQueueFixtureTest$listOf("Reply with exactly the word: pong.\nThen read \"README.md\" — شكرا 🙏", "second conversation, plain")</ID>
+    <ID>MaxLineLength:FlutterQueueFixtureTest.kt$FlutterQueueFixtureTest$return raw.replace("&amp;quot;", "\"").replace("&amp;apos;", "'").replace("&amp;lt;", "&lt;").replace("&amp;gt;", "&gt;").replace("&amp;amp;", "&amp;")</ID>
+    <ID>MaxLineLength:FlutterQueueFixtureTest.kt$FlutterQueueFixtureTest$val xml = File(repo, "native/tools/flutter-migration-readers/src/test/resources/fixtures/synthetic-v1/shared_prefs/FlutterSharedPreferences.xml").readText()</ID>
+    <ID>MaxLineLength:GatewaySendLinkSelectionTest.kt$GatewaySendLinkSelectionTest$/** The production [GatewaySendLink] selection contract: mutate once, then a strict readback (full-composer contract). */</ID>
+    <ID>MaxLineLength:GatewaySendLinkSelectionTest.kt$GatewaySendLinkSelectionTest$fun</ID>
+    <ID>MaxLineLength:GatewaySendLinkTest.kt$GatewaySendLinkTest$fun</ID>
+    <ID>MaxLineLength:InboxProjectionTest.kt$InboxProjectionTest$private</ID>
+    <ID>MaxLineLength:InboxProjectionTest.kt$InboxProjectionTest.Server$override suspend</ID>
+    <ID>MaxLineLength:OfflineQueueStoreTest.kt$OfflineQueueStoreTest$"[{\"id\":\"q1\",\"profileID\":\"p\",\"sessionID\":\"s\"},{\"id\":\"q1\",\"profileID\":\"p\",\"sessionID\":\"s\"}]"</ID>
+    <ID>MaxLineLength:OfflineQueueStoreTest.kt$OfflineQueueStoreTest$assertEquals(listOf("huge"), QueueLimits.enforce(listOf(single), NOW_MS).kept.map { it.id }, "never evicted into nothing")</ID>
+    <ID>MaxLineLength:OfflineQueueStoreTest.kt$OfflineQueueStoreTest$assertEquals(listOf("unknown"), QueueLimits.enforce(listOf(unknownAge), NOW_MS).kept.map { it.id }, "unreadable timestamps are kept")</ID>
+    <ID>MaxLineLength:OfflineQueueStoreTest.kt$OfflineQueueStoreTest$fun</ID>
+    <ID>MaxLineLength:OfflineQueueStoreTest.kt$OfflineQueueStoreTest$id = "q1"</ID>
+    <ID>MaxLineLength:OfflineQueueStoreTest.kt$OfflineQueueStoreTest$val attachments = mutableListOf(PromptAttachment("image/png", "a.png", "data:image/png;base64,AA==", mentionPath = "x"))</ID>
+    <ID>MaxLineLength:OfflineQueueStoreTest.kt$OfflineQueueStoreTest$val bytes = QueueLimits.enforce((1..3).map { prompt("b$it", createdAt = NOW_MS - 10 + it, attachmentUrls = listOf("d".repeat(third))) }, NOW_MS)</ID>
+    <ID>MaxLineLength:OfflineQueueStoreTest.kt$OfflineQueueStoreTest$val disk = Disk.withQueue(QueuedPromptCodec.encodeQueue(listOf(prompt("ancient", createdAt = NOW_MS - 20 * day), prompt("ok"))))</ID>
+    <ID>MaxLineLength:OfflineQueueStoreTest.kt$OfflineQueueStoreTest$val under = prompt("under", text = arabic, attachmentUrls = listOf("d".repeat(QueueLimits.MAX_ENTRY_BYTES.toInt() - 1000)))</ID>
+    <ID>MaxLineLength:OfflineQueueTest.kt$OfflineQueueTest$QueuedPrompt(it.id, it.profileId, it.sessionId, it.text, modelProviderId = "p", modelId = "m", createdAt = it.createdAt)</ID>
+    <ID>MaxLineLength:OfflineQueueTest.kt$OfflineQueueTest$assertNotNull(w2.restart().entry("online-3")!!.dispatchedAt, "after a restart only the marker remains: a review")</ID>
+    <ID>MaxLineLength:OfflineQueueTest.kt$OfflineQueueTest$disk.refuse = { changes -&gt; w.link.delivered.isNotEmpty() &amp;&amp; changes.keys.any { it.endsWith("oc.offlineQueue") } }</ID>
+    <ID>MaxLineLength:OfflineQueueTest.kt$OfflineQueueTest$fun</ID>
+    <ID>MaxLineLength:OfflineQueueTest.kt$OfflineQueueTest$w.link.answer = { if (it.prompt.text == "prompt a") FakeLink.Answer.DeliveredThenFailed(Failure.Server(502)) else FakeLink.Answer.Confirmed }</ID>
+    <ID>MaxLineLength:PendingCommandJournalTest.kt$PendingCommandJournalTest$CommandReceipt("${"a".repeat(240)}_$i", "b".repeat(256), "c".repeat(256), "d".repeat(256), scopeHash, 100, state)</ID>
+    <ID>MaxLineLength:PendingCommandJournalTest.kt$PendingCommandJournalTest$assertEquals(setOf("commandID", "receiptID", "sessionID", "tabID", "scope", "createdAt", "state"), entry.keys, "metadata only: no prompt body")</ID>
+    <ID>MaxLineLength:PendingCommandJournalTest.kt$PendingCommandJournalTest$private</ID>
+    <ID>MaxLineLength:PendingCommandJournalTest.kt$PendingCommandJournalTest$private fun Rig.persisted(k: String = key): String?</ID>
+    <ID>MaxLineLength:PendingCommandJournalTest.kt$PendingCommandJournalTest$val full = (0 until PendingCommandJournal.MAX_ENTRIES).map { receipt(id = "command_$it", state = CommandReceiptState.Confirmed) }</ID>
+    <ID>MaxLineLength:PendingCommandJournalTest.kt$PendingCommandJournalTest$while (DartJson.utf8(encoded(receipts + large(receipts.size))).size &lt;= PendingCommandJournal.MAX_BYTES) receipts += large(receipts.size)</ID>
+    <ID>MaxLineLength:PendingCommandJournalTest.kt$PendingCommandJournalTest.&lt;no name provided&gt;$override fun load(): Map&lt;String, RawPref&gt;</ID>
+    <ID>MaxLineLength:PendingCommandJournalTest.kt$PendingCommandJournalTest.Rig$private</ID>
+    <ID>MaxLineLength:PendingCommandJournalTest.kt$PendingCommandJournalTest.Rig$val journals = PendingCommandJournals(store, DefaultWriterLanes(), ProfileDirectory { registryReadable &amp;&amp; it in known })</ID>
+    <ID>MaxLineLength:PhoneChatDispatchTest.kt$PhoneChatDispatchTest$fun</ID>
+    <ID>MaxLineLength:PhoneChatDispatchTest.kt$PhoneChatDispatchTest$val dispatch = PhoneChatDispatch(admit = { tracker.begin(it, "/work"); Unit.ok() }, settled = { tracker.settled(it) })</ID>
+    <ID>MaxLineLength:PromptDeliverySelectionTest.kt$PromptDeliverySelectionTest$/** Online dispatch of a rich request: the model/agent choice is applied before the prompt (plan 09 §4.2, full-composer contract). */</ID>
+    <ID>MaxLineLength:PromptDeliverySelectionTest.kt$PromptDeliverySelectionTest$SendRequest(REF, text, attachments = files.toPersistentList(), model = choice, agent = "build", typedText = text)</ID>
+    <ID>MaxLineLength:PromptDeliverySelectionTest.kt$PromptDeliverySelectionTest$assertEquals&lt;List&lt;Pair&lt;ModelSelection?, String?&gt;&gt;&gt;(listOf(choice to "build"), w.link.selections, "the mutation began")</ID>
+    <ID>MaxLineLength:PromptDeliverySelectionTest.kt$PromptDeliverySelectionTest$assertTrue(w.link.attempts.isEmpty() &amp;&amp; other.attempts.isEmpty(), "a changed connection dispatches to neither server")</ID>
+    <ID>MaxLineLength:PromptDeliverySelectionTest.kt$PromptDeliverySelectionTest$fun</ID>
+    <ID>MaxLineLength:PromptDeliveryTest.kt$PromptDeliveryTest$assertEquals(Outcome.Failed(Failure.Network(NetworkWhy.Offline)), kept.await(), "draft saved: the composer keeps it")</ID>
+    <ID>MaxLineLength:PromptDeliveryTest.kt$PromptDeliveryTest$fun</ID>
+    <ID>MaxLineLength:PromptDeliveryTest.kt$PromptDeliveryTest$private fun receiptLink()</ID>
+    <ID>MaxLineLength:PromptDeliveryTest.kt$PromptDeliveryTest$val unconfirmed = assertIs&lt;SendOutcome.Unconfirmed&gt;(d.outcomes.value.single(), "never PutBack: the words would invite a duplicate")</ID>
+    <ID>MaxLineLength:PromptDeliveryTest.kt$PromptDeliveryTest$w.connection.link.value = FakeLink(connected = false, capabilities = ServerCapabilities(offlinePromptQueue = false))</ID>
+    <ID>MaxLineLength:QaWave1DeliveryTest.kt$QaWave1DeliveryTest$assertEquals(1, server.fake.calls.count { it == "stop ${S1.raw}" }, "one interrupt request: ${server.fake.calls}")</ID>
+    <ID>MaxLineLength:QaWave1DeliveryTest.kt$QaWave1DeliveryTest.FlickerServer$Session(S1, selection = SessionSelection(model, variant, null, modelKnown = true, agentKnown = true))</ID>
+    <ID>MaxLineLength:QueueLimits.kt$QueueEviction$override fun toString(): String</ID>
+    <ID>MaxLineLength:ReceiptsTest.kt$ReceiptsTest$"""{"schemaVersion":1,"commands":[{"commandID":"a b","receiptID":"m","sessionID":"s","tabID":"t","scope":"${scope.receiptScope}","createdAt":1,"state":"sent"}]}"""</ID>
+    <ID>MaxLineLength:ReceiptsTest.kt$ReceiptsTest$"""{"schemaVersion":1,"commands":[{"commandID":"queue:a","receiptID":"msg_1","sessionID":"ses_1","tabID":"ses_1","scope":"${scope.receiptScope}","createdAt":$NOW_MS,"state":"sent"}]}"""</ID>
+    <ID>MaxLineLength:SessionCreationReceiptsTest.kt$SessionCreationReceiptsTest$(disk.persisted()[FlutterPrefsCodec.physicalKey("${PendingCommandJournal.KEY_PREFIX}profile_1")] as? RawPref.Str)?.value</ID>
+    <ID>MaxLineLength:SessionCreationReceiptsTest.kt$SessionCreationReceiptsTest$SessionCreationReceipts.open(profile, endpoints, server, world.journals, world.clock) { "ses_client_${++counter}" }</ID>
+    <ID>MaxLineLength:SessionCreationReceiptsTest.kt$SessionCreationReceiptsTest$if (change == "endpoint") addresses[profile] = "http://127.0.0.1:4098" else server.directory = "/another-project"</ID>
+    <ID>MaxLineLength:SessionCreationReceiptsTest.kt$SessionCreationReceiptsTest$val command = ((DartJson.decodeOrNull(restarted.stored()!!) as Map&lt;*, *&gt;)["commands"] as List&lt;*&gt;).single() as Map&lt;*, *&gt;</ID>
+    <ID>MaxLineLength:SteerPolicy.kt$SteerPolicy$capabilities.offlinePromptQueue &amp;&amp; route != SendRoute.Steer &amp;&amp; route != SendRoute.Blocked &amp;&amp; route != SendRoute.Offline</ID>
+    <ID>MaxLineLength:SteerTest.kt$SteerTest$assertEquals(SendRoute.AfterReply, SteerPolicy.route(true, true, plain, false, null), "no steering and no inbox")</ID>
+    <ID>MaxLineLength:SteerTest.kt$SteerTest$assertEquals(SendRoute.Blocked, SteerPolicy.route(true, true, plain, true, null), "agent not loaded yet: no promise")</ID>
+    <ID>MaxLineLength:SteerTest.kt$SteerTest$assertEquals(SendRoute.JoinTurn, SteerPolicy.route(true, true, plain, hasMidTurnFacet = true, midTurnPrompt = MidTurnPrompt.JoinsTurn))</ID>
+    <ID>MaxLineLength:SteerTest.kt$SteerTest$assertTrue(unknown.link.attempts.isEmpty() &amp;&amp; unknown.link.stops.isEmpty(), "no promise of either: the text stays")</ID>
+    <ID>MaxLineLength:SteerTest.kt$SteerTest$fun</ID>
+    <ID>MaxLineLength:SteerTest.kt$SteerTest$if (running &amp;&amp; steer &amp;&amp; online) assertEquals(SendRoute.Steer, route, "where steering exists it steers")</ID>
+    <ID>MaxLineLength:SteerTest.kt$SteerTest$val join = World(Disk(), this, link = FakeLink().apply { hasMidTurnFacet = true; midTurn = MidTurnPrompt.JoinsTurn })</ID>
+    <ID>MaxLineLength:SteerTest.kt$SteerTest$val restart = World(Disk(), this, link = FakeLink().apply { hasMidTurnFacet = true; midTurn = MidTurnPrompt.RestartsTurn })</ID>
+    <ID>MaxLineLength:SteerTest.kt$SteerTest$val route = SteerPolicy.route(online, running, ServerCapabilities(promptSteering = steer, inbox = inbox), facet, mid)</ID>
+    <ID>MaxLineLength:build.gradle.kts$// The real Flutter blobs (native/tools/flutter-migration-readers fixture and this module's own fixture) are read on the JVM.</ID>
+    <ID>NestedBlockDepth:GatewaySendLink.kt$GatewaySendLink$override suspend fun applySelection( session: SessionId, model: ModelSelection?, agent: String?, ): Outcome&lt;Unit&gt;</ID>
+    <ID>NestedBlockDepth:SteerTest.kt$SteerTest$@Test fun `NoQueueChoiceTest no situation ever selects queue delivery`()</ID>
+    <ID>ReturnCount:CommandReceipt.kt$CommandReceipt.Companion$internal fun fromJson(json: Any?): CommandReceipt?</ID>
+    <ID>ReturnCount:CommandReceiptController.kt$CommandReceiptController$public suspend fun retry(commandId: String, lookup: suspend (CommandReceipt) -&gt; Boolean): Outcome&lt;CommandReceipt&gt;</ID>
+    <ID>ReturnCount:CommandReceiptController.kt$CommandReceiptController$public suspend fun send(receipt: CommandReceipt, dispatch: suspend (receiptId: String) -&gt; DispatchProof): Outcome&lt;CommandReceipt&gt;</ID>
+    <ID>ReturnCount:ConnectionDelivery.kt$ConnectionDelivery$public suspend fun send( ref: ConversationRef, text: String, attachments: ImmutableList&lt;PromptAttachment&gt; = persistentListOf(), model: ModelSelection? = null, /** * Sub-agent `@name` mentions in [text] (Codex composer #6; OC2 sends them as the prompt's * agents). */ mentions: ImmutableList&lt;PromptAgentMention&gt; = persistentListOf(), /** Ephemeral voice turns never learn phrases or restore themselves into a later draft. */ insteadOfDraft: Boolean = false, ): Outcome&lt;LocalSendId&gt;</ID>
+    <ID>ReturnCount:ConnectionDelivery.kt$private fun queueAutomationAllowed(store: KeyValueStore, profile: ProfileId): Boolean</ID>
+    <ID>ReturnCount:ConversationActivity.kt$LiveTurnRules$public fun localStands(facts: TurnFacts, local: LocalTurn?): Boolean</ID>
+    <ID>ReturnCount:ConversationActivity.kt$LiveTurnRules$public fun nextTickMs(turn: LiveTurn?, facts: TurnFacts, nowMs: Long): Long?</ID>
+    <ID>ReturnCount:GatewaySendLink.kt$GatewaySendLink$override suspend fun applySelection( session: SessionId, model: ModelSelection?, agent: String?, ): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:GatewaySendLink.kt$GatewaySendLink$override suspend fun lookupAdmission( session: SessionId, messageId: MessageId, ): Outcome&lt;Boolean&gt;</ID>
+    <ID>ReturnCount:GatewaySendLink.kt$GatewaySendLink$override suspend fun prompt( session: SessionId, prompt: OutgoingPrompt, beforeSend: () -&gt; Boolean, ): Outcome&lt;PromptAdmission&gt;</ID>
+    <ID>ReturnCount:GatewaySendLink.kt$GatewaySendLink$private suspend fun admit( session: SessionId, prompt: OutgoingPrompt, beforeSend: () -&gt; Boolean, ): Outcome&lt;PromptAdmission&gt;</ID>
+    <ID>ReturnCount:OfflineQueue.kt$OfflineQueue$private suspend fun checkReceiptOnLane(id: String): Boolean</ID>
+    <ID>ReturnCount:OfflineQueue.kt$OfflineQueue$private suspend fun dispatchWithReceipt( link: SendLink, entry: QueuedPrompt, prompt: OutgoingPrompt, allowed: () -&gt; Boolean, ): DispatchResult</ID>
+    <ID>ReturnCount:OfflineQueue.kt$OfflineQueue$private suspend fun flushOnLane()</ID>
+    <ID>ReturnCount:OfflineQueue.kt$OfflineQueue$private suspend fun resendOnLane(id: String): Outcome&lt;Boolean&gt;</ID>
+    <ID>ReturnCount:OfflineQueue.kt$OfflineQueue$private suspend fun retryOnLane(id: String): Boolean</ID>
+    <ID>ReturnCount:OfflineQueue.kt$OfflineQueue$private suspend fun sendOne( link: SendLink, entry: QueuedPrompt, explicit: Boolean, allowed: () -&gt; Boolean, ): Step</ID>
+    <ID>ReturnCount:OfflineQueueStore.kt$OfflineQueueStore$public fun load(): QueueRead</ID>
+    <ID>ReturnCount:PendingCommandJournal.kt$PendingCommandJournal$private fun storedSnapshot(): Outcome&lt;List&lt;CommandReceipt&gt;&gt;</ID>
+    <ID>ReturnCount:PendingCommandJournal.kt$PendingCommandJournal$private suspend fun write(commands: List&lt;CommandReceipt&gt;): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:PendingCommandJournal.kt$PendingCommandJournal.Companion$public fun parse(raw: String): List&lt;CommandReceipt&gt;?</ID>
+    <ID>ReturnCount:PendingCommandJournal.kt$PendingCommandJournals$public fun forProfile(profile: ProfileId): Outcome&lt;PendingCommandJournal&gt;</ID>
+    <ID>ReturnCount:PendingCommandJournal.kt$PendingCommandJournals$public suspend fun cancelDeletion(profile: ProfileId)</ID>
+    <ID>ReturnCount:PromptDelivery.kt$PromptDelivery$private suspend fun admit( link: SendLink, origin: DispatchScope, bubble: PendingSend, request: SendRequest, putBack: Boolean, )</ID>
+    <ID>ReturnCount:PromptDelivery.kt$PromptDelivery$private suspend fun perform(request: SendRequest, putBack: Boolean): Outcome&lt;LocalSendId&gt;</ID>
+    <ID>ReturnCount:PromptDelivery.kt$PromptDelivery$private suspend fun sendCommand( link: SendLink, origin: DispatchScope, request: SendRequest, kind: TypedKind, ): Outcome&lt;LocalSendId&gt;</ID>
+    <ID>ReturnCount:PromptDelivery.kt$PromptDelivery$private suspend fun stopNow(ref: ConversationRef): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:PromptDelivery.kt$PromptDelivery$private suspend fun stopOnLane( ref: ConversationRef, mode: StopMode = StopMode.Now, ): Outcome&lt;StopAnswer&gt;</ID>
+    <ID>ReturnCount:PromptDelivery.kt$TypedKind.Companion$public fun of(typed: String): TypedKind</ID>
+    <ID>ReturnCount:QueuedPrompt.kt$QueuedPromptCodec$public fun fromJson(value: Any?): QueuedPrompt?</ID>
+    <ID>ReturnCount:SessionCreationReceipts.kt$SessionCreationReceipts$public suspend fun check(commandId: String, tabId: String? = null): SessionId?</ID>
+    <ID>ReturnCount:SessionCreationReceipts.kt$SessionCreationReceipts$public suspend fun send(commandId: String, tabId: String): Outcome&lt;CommandReceipt&gt;</ID>
+    <ID>ReturnCount:SessionCreationReceipts.kt$SessionCreationReceipts.Companion$private fun scopeOf( profile: ProfileId, endpoints: ProfileEndpoints, transport: SessionCreationTransport, ): String?</ID>
+    <ID>ReturnCount:SessionCreationReceipts.kt$SessionCreationReceipts.Companion$public fun open( profile: ProfileId, endpoints: ProfileEndpoints, transport: SessionCreationTransport?, journals: PendingCommandJournals, clock: Clock, newSessionId: () -&gt; String, ): Outcome&lt;SessionCreationReceipts&gt;</ID>
+    <ID>SwallowedException:OfflineQueueStore.kt$OfflineQueueStore$e: QueueFormatException</ID>
+    <ID>SwallowedException:PendingCommandJournal.kt$PendingCommandJournal$e: IllegalStateException</ID>
+    <ID>ThrowsCount:QueuedPrompt.kt$QueuedPromptCodec$public fun decodeQueue(raw: String): List&lt;QueuedPrompt&gt;</ID>
+    <ID>TooManyFunctions:GatewaySendLink.kt$GatewaySendLink : SendLink</ID>
+    <ID>TooManyFunctions:OfflineQueue.kt$OfflineQueue</ID>
+    <ID>TooManyFunctions:PromptDelivery.kt$PromptDelivery</ID>
+    <ID>UnusedParameter:OfflineQueue.kt$OfflineQueue$explicit: Boolean</ID>
+    <ID>UseCheckOrError:PendingCommandJournalTest.kt$PendingCommandJournalTest$throw IllegalStateException("Synthetic failure")</ID>
+    <ID>UseCheckOrError:PendingCommandJournalTest.kt$PendingCommandJournalTest.&lt;no name provided&gt;$throw IllegalStateException("Synthetic failure")</ID>
+  </CurrentIssues>
+</SmellBaseline>

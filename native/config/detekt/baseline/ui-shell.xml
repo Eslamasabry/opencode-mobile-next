@@ -1,0 +1,53 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:WidgetPanelViewModel.kt$WidgetPanelViewModel$now.loading || now.saving || now.problem == WidgetPanelProblem.Stale || now.mode != WidgetPanelMode.Project</ID>
+    <ID>ComplexCondition:WidgetPanelViewModel.kt$WidgetPanelViewModel$now.loading || now.saving || now.problem == WidgetPanelProblem.Stale || now.mode != WidgetPanelMode.Style</ID>
+    <ID>CyclomaticComplexMethod:ShellNavDisplay.kt$@Composable public fun ShellNavDisplay( backStack: List&lt;NavKey&gt;, gate: RowTransformGate, level: ShellMotionLevel, onSystemBack: () -&gt; Unit, baseDecorators: List&lt;NavEntryDecorator&lt;NavKey&gt;&gt;, entryProvider: (NavKey) -&gt; NavEntry&lt;NavKey&gt;, )</ID>
+    <ID>CyclomaticComplexMethod:WidgetComposeScreen.kt$@Composable public fun WidgetComposeScreen(state: WidgetComposeUi, actions: WidgetComposeActions)</ID>
+    <ID>CyclomaticComplexMethod:WidgetPanelScreen.kt$@Composable public fun WidgetPanelScreen(state: WidgetPanelUi, actions: WidgetPanelActions)</ID>
+    <ID>LongMethod:ShellNavDisplay.kt$@Composable public fun ShellNavDisplay( backStack: List&lt;NavKey&gt;, gate: RowTransformGate, level: ShellMotionLevel, onSystemBack: () -&gt; Unit, baseDecorators: List&lt;NavEntryDecorator&lt;NavKey&gt;&gt;, entryProvider: (NavKey) -&gt; NavEntry&lt;NavKey&gt;, )</ID>
+    <ID>LongMethod:WidgetComposeScreen.kt$@Composable public fun WidgetComposeScreen(state: WidgetComposeUi, actions: WidgetComposeActions)</ID>
+    <ID>LongMethod:WidgetPanelScreen.kt$@Composable public fun WidgetPanelScreen(state: WidgetPanelUi, actions: WidgetPanelActions)</ID>
+    <ID>LongParameterList:App.kt$( deps: ShellDependencies, platform: KitPlatform, viewModels: MetroViewModelFactory, appearance: KitAppearance = KitAppearance.Default, localeTag: String? = null, windowContent: @Composable (@Composable () -&gt; Unit) -&gt; Unit = { it() }, )</ID>
+    <ID>LongParameterList:ShellNavDisplay.kt$( backStack: List&lt;NavKey&gt;, gate: RowTransformGate, level: ShellMotionLevel, onSystemBack: () -&gt; Unit, baseDecorators: List&lt;NavEntryDecorator&lt;NavKey&gt;&gt;, entryProvider: (NavKey) -&gt; NavEntry&lt;NavKey&gt;, )</ID>
+    <ID>LongParameterList:StandaloneRoot.kt$( start: AppRoute, installers: Set&lt;EntryInstaller&gt;, platform: KitPlatform, appearance: KitAppearance = KitAppearance.Default, localeTag: String? = null, onFinish: () -&gt; Unit, )</ID>
+    <ID>MagicNumber:RowTransformGate.kt$RowTransformGate$64</ID>
+    <ID>MagicNumber:ShellMotion.kt$ShellMotion$0.1f</ID>
+    <ID>MagicNumber:ShellMotion.kt$ShellMotion$0.33f</ID>
+    <ID>MagicNumber:ShellMotion.kt$ShellMotion$0.68f</ID>
+    <ID>MagicNumber:ShellMotion.kt$ShellMotion$20</ID>
+    <ID>MagicNumber:ShellMotion.kt$ShellMotion$8</ID>
+    <ID>MagicNumber:WidgetComposeViewModel.kt$WidgetComposeViewModel$700</ID>
+    <ID>MagicNumber:WidgetComposeViewModel.kt$WidgetComposeViewModel$8000</ID>
+    <ID>MaxLineLength:PredictiveBackShellTest.kt$PredictiveBackShellTest$fun</ID>
+    <ID>MaxLineLength:ShellHarness.kt$Harness$KitTheme(appearance = KitAppearance(mode = AppearanceMode.Light), platform = TestPlatform, localeTag = "en") { NavShell(start = ChatsRoute.Home, deps = deps, gate = gate) }</ID>
+    <ID>MaxLineLength:ShellNavDisplay.kt$else</ID>
+    <ID>MaxLineLength:ShellNavDisplay.kt$if (settled &amp;&amp; state != GateState.Idle &amp;&amp; state != GateState.Gesture) gate.on(GateEvent.TransitionSettled)</ID>
+    <ID>MaxLineLength:WidgetComposeScreen.kt$!state.voice &amp;&amp; state.steerMode !in setOf("steer", "afterReply") -&gt; stringResource(Res.string.widgetV2UnknownBehavior)</ID>
+    <ID>MaxLineLength:WidgetComposeScreen.kt$KitTopBar(title, exit = KitTopBarExit.Close, exitLabel = stringResource(Res.string.widgetPanelClose), onExit = actions::close)</ID>
+    <ID>MaxLineLength:WidgetComposeViewModel.kt$WidgetComposeNotice</ID>
+    <ID>MaxLineLength:WidgetComposeViewModel.kt$WidgetComposeResult</ID>
+    <ID>MaxLineLength:WidgetComposeViewModel.kt$WidgetComposeUi$public val mayHaveSent: Boolean get() = phase in setOf(WidgetComposePhase.Sending, WidgetComposePhase.Sent, WidgetComposePhase.Uncertain)</ID>
+    <ID>MaxLineLength:WidgetComposeViewModel.kt$WidgetComposeViewModel$else -&gt; mutable.update { it.copy(phase = WidgetComposePhase.Ready, notice = result.notice ?: WidgetComposeNotice.Unavailable) }</ID>
+    <ID>MaxLineLength:WidgetComposeViewModel.kt$WidgetComposeViewModel$if (mutable.value.phase != WidgetComposePhase.Sending) mutable.update { it.copy(finished = true, dictationRequested = false) }</ID>
+    <ID>MaxLineLength:WidgetComposeViewModel.kt$WidgetComposeViewModel$mutable.update { it.copy(loading = false, phase = WidgetComposePhase.Uncertain, notice = WidgetComposeNotice.Uncertain) }</ID>
+    <ID>MaxLineLength:WidgetComposeViewModel.kt$WidgetComposeViewModel$result.uncertain -&gt; mutable.update { it.copy(phase = WidgetComposePhase.Uncertain, notice = WidgetComposeNotice.Uncertain) }</ID>
+    <ID>MaxLineLength:WidgetComposeViewModel.kt$WidgetComposeViewModel$val joined = if (heard.isEmpty()) it.text else if (it.text.isBlank()) heard else "${it.text.trimEnd()} $heard"</ID>
+    <ID>MaxLineLength:WidgetPanelScreen.kt$KitButton(stringResource(Res.string.widgetV2SaveStyle), actions::saveStyle, Modifier.fillMaxWidth().testTag("widget-style-save"), enabled = enabled, working = state.saving)</ID>
+    <ID>MaxLineLength:WidgetPanelScreen.kt$KitWidgetStylePreview(palette.background, palette.text, palette.muted, palette.accent, state.widePreview, stringResource(Res.string.widgetPanelPreview))</ID>
+    <ID>MaxLineLength:WidgetPanelScreen.kt$choices</ID>
+    <ID>MaxLineLength:WidgetPanelScreen.kt$listOf(KitSegment(false, stringResource(Res.string.widgetPanelSquare)), KitSegment(true, stringResource(Res.string.widgetPanelWide)))</ID>
+    <ID>MaxLineLength:WidgetPanelScreen.kt$title = stringResource(if (state.mode == WidgetPanelMode.Project) Res.string.widgetProjectTitle else Res.string.widgetV2ConfigureTitle)</ID>
+    <ID>MaxLineLength:WidgetPanelScreen.kt$val enabled = if (state.saving || state.loading || state.problem == WidgetPanelProblem.Stale) KitEnabled.Disabled(saving) else KitEnabled.Enabled</ID>
+    <ID>MaxLineLength:WidgetPanelViewModel.kt$WidgetPanelViewModel$if (!mutable.value.saving &amp;&amp; value in ACCENTS) mutable.update { it.copy(accent = value, palette = source.palette(it.background, value)) }</ID>
+    <ID>MaxLineLength:WidgetPanelViewModel.kt$WidgetPanelViewModel$if (!mutable.value.saving &amp;&amp; value in BACKGROUNDS) mutable.update { it.copy(background = value, palette = source.palette(value, it.accent)) }</ID>
+    <ID>MaxLineLength:WidgetPanelViewModel.kt$WidgetPanelViewModel$if (now.loading || now.saving || now.problem == WidgetPanelProblem.Stale || now.mode != WidgetPanelMode.Project) return</ID>
+    <ID>MaxLineLength:WidgetPanelViewModel.kt$WidgetPanelViewModel$if (now.loading || now.saving || now.problem == WidgetPanelProblem.Stale || now.mode != WidgetPanelMode.Style) return</ID>
+    <ID>ReturnCount:WidgetPanelViewModel.kt$WidgetPanelViewModel$override fun project(value: String)</ID>
+    <ID>TooManyFunctions:ShellNavigator.kt$ShellNavigator : AppNavigator</ID>
+    <ID>WildcardImport:WidgetComposeScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:WidgetPanelScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -1,0 +1,89 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:SetupEngine.kt$SetupEngine$record.state != "running" &amp;&amp; record.startedAt &gt; 0 &amp;&amp; record.updatedAt &gt;= record.startedAt &amp;&amp; traced.add("${record.jobId}/")</ID>
+    <ID>CyclomaticComplexMethod:SetupEngine.kt$SetupEngine$private fun traceFinished(record: SetupJobRecord)</ID>
+    <ID>CyclomaticComplexMethod:SetupEngine.kt$SetupEngine$public suspend fun run(ids: Set&lt;String&gt;, params: Map&lt;String, Map&lt;String, String&gt;&gt; = emptyMap()): SetupRunRefusal?</ID>
+    <ID>CyclomaticComplexMethod:SetupFailures.kt$SetupProblemWordsEn$public fun of(problem: SetupProblem): String</ID>
+    <ID>CyclomaticComplexMethod:SetupFailures.kt$public fun describeSetupFailure( failed: SetupJobComponent, logTail: String, title: String, step: Boolean = false, ): SetupFailureText</ID>
+    <ID>CyclomaticComplexMethod:SetupFailures.kt$public fun progressFromRecord( record: SetupJobRecord, components: List&lt;SetupComponent&gt;, now: Instant, redactor: Redactor = Redactor(), floors: MutableMap&lt;String, Double&gt;? = null, ): SetupProgress</ID>
+    <ID>CyclomaticComplexMethod:SetupJobRecord.kt$SetupJobRecord.Companion$public fun parse(text: String?): SetupJobRecord?</ID>
+    <ID>LongMethod:SetupComponents.kt$public fun setupComponentRegistry( titles: SetupComponentTitles = SetupComponentTitles(), params: Map&lt;String, Map&lt;String, String&gt;&gt; = emptyMap(), host: SetupHostKind = SetupHostKind.Builtin, supportsVoice: Boolean = false, ): List&lt;SetupComponent&gt;</ID>
+    <ID>LongMethod:SetupFailures.kt$public fun progressFromRecord( record: SetupJobRecord, components: List&lt;SetupComponent&gt;, now: Instant, redactor: Redactor = Redactor(), floors: MutableMap&lt;String, Double&gt;? = null, ): SetupProgress</ID>
+    <ID>LongMethod:SetupScripts.kt$SetupScripts$public fun openCodeNativeInstall( version: String? = null, pins: OpenCodeAssets = OpenCodePins.assets, root: String = "", probeSeconds: Int = 120, ): String?</ID>
+    <ID>LongParameterList:SetupEngine.kt$SetupEngine$( private val host: SetupLinuxHost, private val clock: Clock, private val scope: CoroutineScope, private val toolsChanged: SetupToolsChanged, public val kind: SetupHostKind = SetupHostKind.Builtin, private val components: (Map&lt;String, Map&lt;String, String&gt;&gt;) -&gt; List&lt;SetupComponent&gt; = { setupComponentRegistry(params = it) }, private val trace: SetupTrace = SetupTrace.None, private val log: (() -&gt; String) -&gt; Unit = {}, private val redactor: Redactor = Redactor(), private val wrapper: SetupScriptWrapper = SetupScriptWrapper { it }, private val titles: SetupComponentTitles = SetupComponentTitles(), private val texts: SetupNotificationTexts = SetupNotificationTexts(), )</ID>
+    <ID>LongParameterList:SetupFinish.kt$FinishProfile$( public val id: String, public var name: String, public val baseUrl: String, public var password: String = "", public var username: String = "", public var requiresPasswordReentry: Boolean = false, public var requiresOpenCode2Migration: Boolean = false, public var openCode2HistoryPending: Boolean = false, public var orchestration: String? = null, public var teamEngineAuth: String = "", public var serverVersion: String? = null, public val openCode: Boolean = true, )</ID>
+    <ID>LongParameterList:SetupFinish.kt$SetupFinisher$( private val store: FinishProfiles, private val server: FinishServer, private val connect: suspend (FinishProfile) -&gt; String?, private val isConnectedTo: (FinishProfile) -&gt; Boolean, private val serverUrl: String, private val managesServerUrl: (String) -&gt; Boolean, private val newId: () -&gt; String, private val newPassword: () -&gt; String, private val profileName: String = "This phone", private val replaceNames: Set&lt;String&gt; = emptySet(), )</ID>
+    <ID>LongParameterList:SetupPlan.kt$( registry: List&lt;SetupComponent&gt;, ids: Set&lt;String&gt;, checks: Map&lt;String, SetupCheckResult&gt;, params: Map&lt;String, Map&lt;String, String&gt;&gt;, wrapper: SetupScriptWrapper, titles: SetupComponentTitles = SetupComponentTitles(), )</ID>
+    <ID>LoopWithTooManyJumpStatements:SetupChecks.kt$for</ID>
+    <ID>LoopWithTooManyJumpStatements:SetupEngine.kt$SetupEngine$for</ID>
+    <ID>LoopWithTooManyJumpStatements:SetupFinish.kt$SetupFinisher$for</ID>
+    <ID>MagicNumber:SetupContract.kt$ComponentProgress$100</ID>
+    <ID>MagicNumber:SetupFailures.kt$1024</ID>
+    <ID>MagicNumber:SetupFailures.kt$15</ID>
+    <ID>MagicNumber:SetupFailures.kt$65535</ID>
+    <ID>MagicNumber:SetupProgressMath.kt$0.5</ID>
+    <ID>MagicNumber:SetupProgressMath.kt$0.98</ID>
+    <ID>MagicNumber:SetupProgressMath.kt$1000.0</ID>
+    <ID>MatchingDeclarationName:SetupChecks.kt$SetupCheckResult</ID>
+    <ID>MaxLineLength:SetupComponents.kt$(if (builtin) SetupScripts.openCodeNativeCheck(version) else SetupScripts.openCodeCheck(version)).orEmpty()</ID>
+    <ID>MaxLineLength:SetupEngine.kt$SetupEngine$"setup.job"</ID>
+    <ID>MaxLineLength:SetupEngine.kt$SetupEngine$if</ID>
+    <ID>MaxLineLength:SetupEngine.kt$SetupEngine$if (isRuntimeOwnershipFailure(code)) SetupProblem.RuntimeOwnershipUnknown else SetupProblem.StartFailed(redactor.redact(details))</ID>
+    <ID>MaxLineLength:SetupEngine.kt$SetupEngine$private suspend</ID>
+    <ID>MaxLineLength:SetupEngine.kt$SetupEngine$private val components: (Map&lt;String, Map&lt;String, String&gt;&gt;) -&gt; List&lt;SetupComponent&gt; = { setupComponentRegistry(params = it) }</ID>
+    <ID>MaxLineLength:SetupEngine.kt$SetupEngine$trace.recordDuration("setup.component", ended - started, mapOf("id" to component.id), component.state == "failed")</ID>
+    <ID>MaxLineLength:SetupEngineTest.kt$SetupEngineTest$components: (Map&lt;String, Map&lt;String, String&gt;&gt;) -&gt; List&lt;SetupComponent&gt; = { setupComponentRegistry(params = it) }</ID>
+    <ID>MaxLineLength:SetupEngineTest.kt$SetupEngineTest$val params = effectiveJobParams(mapOf("opencode" to mapOf("runtime" to "opencode1", "version" to "1.19.0")), null)</ID>
+    <ID>MaxLineLength:SetupFailureWordsTest.kt$SetupFailureWordsTest$"java.net.UnknownHostException: Unable to resolve host \"cdimage.ubuntu.com\": No address associated with hostname"</ID>
+    <ID>MaxLineLength:SetupFailureWordsTest.kt$SetupFailureWordsTest$components = listOf(SetupJobComponent(id = "opencode", state = "failed", error = OpenCodeInstallFailure.NO_START))</ID>
+    <ID>MaxLineLength:SetupFailureWordsTest.kt$SetupFailureWordsTest$describeSetupFailure(failed("[oc] The download did not match its checksum and was deleted"), "", "Node.js").component</ID>
+    <ID>MaxLineLength:SetupFailureWordsTest.kt$SetupFailureWordsTest$describeSetupFailure(failed("tar: node/bin/node: Cannot write: No space left on device"), "", "Node.js").component</ID>
+    <ID>MaxLineLength:SetupFailures.kt$SetupProblemWordsEn$SetupProblem.NoInternet -&gt; "No internet connection. Continue when you're back online."</ID>
+    <ID>MaxLineLength:SetupFailures.kt$SetupProblemWordsEn$is SetupProblem.Offline -&gt; "Could not download ${problem.name}: no internet connection"</ID>
+    <ID>MaxLineLength:SetupFinish.kt$FinishStartProblem$public enum</ID>
+    <ID>MaxLineLength:SetupFinish.kt$SetupFinisher$if (failure != null) return if (migrating) SetupFinishFailure.SwitchFailed else SetupFinishFailure.Start(failure)</ID>
+    <ID>MaxLineLength:SetupFinishTest.kt$SetupFinishTest$finisher(aliasStore, Server(problem = FinishStartProblem.Other)).finish(SetupFinishRequest(openCodeChanged = true))</ID>
+    <ID>MaxLineLength:SetupFinishTest.kt$SetupFinishTest$finisher(store, Server(problem = FinishStartProblem.ComponentRecovery)).finish(SetupFinishRequest(openCodeChanged = true))</ID>
+    <ID>MaxLineLength:SetupFinishTest.kt$SetupFinishTest$val alias = FinishProfile(id = "alias", name = "Alias", baseUrl = url, password = "a", orchestration = "builtin-team", teamEngineAuth = "t")</ID>
+    <ID>MaxLineLength:SetupFinishTest.kt$SetupFinishTest$val alias = FinishProfile(id = "earlier-oc2", name = "Earlier OC2", baseUrl = url, password = "alias-secret")</ID>
+    <ID>MaxLineLength:SetupFinishTest.kt$SetupFinishTest$val failure = finisher(store, server, onConnect = { connected = it }).finish(SetupFinishRequest(openCodeChanged = true))</ID>
+    <ID>MaxLineLength:SetupFinishTest.kt$SetupFinishTest$val older = FinishProfile(id = "phone", name = "This phone", baseUrl = url, password = "kept", orchestration = "builtin-team")</ID>
+    <ID>MaxLineLength:SetupFinishTest.kt$SetupFinishTest.Store$private</ID>
+    <ID>MaxLineLength:SetupJobRecord.kt$SetupJobRecord.Companion$components = ids.mapNotNull { id -&gt; (componentMap[id] as? JsonObject)?.let { SetupJobComponent.fromMap(id, it) } }</ID>
+    <ID>MaxLineLength:SetupJobRecord.kt$SetupJobRecord.Companion$failureKind = if (decoded.string("errorCode") == "setup_persistence") SetupFailureKind.Persistence else null</ID>
+    <ID>MaxLineLength:SetupJobRecord.kt$is JsonPrimitive -&gt; out[key] = if (field.isString) field.content else (field.booleanOrNull?.toString() ?: field.content)</ID>
+    <ID>MaxLineLength:SetupJobRecord.kt$private fun JsonObject.primitive(key: String): JsonPrimitive?</ID>
+    <ID>MaxLineLength:SetupJobRecordTest.kt$SetupJobRecordTest$assertEquals(listOf("linux", "essentials", "python", "node", "opencode", "start"), record.components.map { it.id })</ID>
+    <ID>MaxLineLength:SetupPlan.kt$labels = mapOf("download" to titles.stageDownloadingLinux, "unpack" to titles.stageUnpackingLinux)</ID>
+    <ID>MaxLineLength:SetupPlan.kt$val openCodeChanged = job.any { it.id == SetupComponentIds.OPENCODE } &amp;&amp; checks[SetupComponentIds.OPENCODE]?.ok != true</ID>
+    <ID>MaxLineLength:SetupPlanTest.kt$SetupPlanTest$assertEquals(mapOf("retry" to "Interrupted. Trying again", "compat" to "Trying again in compatibility mode"), python.labels)</ID>
+    <ID>MaxLineLength:SetupPlanTest.kt$SetupPlanTest$fun</ID>
+    <ID>MaxLineLength:SetupPreflight.kt$SetupPreflight$if (abis.isNotEmpty() &amp;&amp; abis.none { it in supportedAbis }) return SetupPreflightResult.UnsupportedAbi(abis.first())</ID>
+    <ID>MaxLineLength:SetupPreflight.kt$SetupPreflight$public</ID>
+    <ID>MaxLineLength:SetupPreflight.kt$SetupPreflight$return if (availableBytes &lt; required) SetupPreflightResult.LowSpace(required - availableBytes) else SetupPreflightResult.Ok</ID>
+    <ID>MaxLineLength:SetupPreflightTest.kt$SetupPreflightTest$private</ID>
+    <ID>MaxLineLength:SetupProgressTest.kt$SetupProgressTest$overallFraction(components, listOf(done, ComponentProgress("b", ComponentState.Running, bytesDone = 15, bytesTotal = 30), pending))</ID>
+    <ID>MaxLineLength:SetupProgressTest.kt$SetupProgressTest$overallFraction(components, listOf(done, ComponentProgress("b", ComponentState.Running, percent = 20.0), pending))</ID>
+    <ID>MaxLineLength:SetupProgressTest.kt$SetupProgressTest$overallFraction(components, listOf(done, ComponentProgress("b", ComponentState.Running, stage = "Installing"), pending))</ID>
+    <ID>MaxLineLength:SetupProgressTest.kt$SetupProgressTest$private fun close(expected: Double, actual: Double)</ID>
+    <ID>MaxLineLength:SetupScripts.kt$OpenCodePins$url = "https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/-/cli-linux-x64-baseline-2.2.5.tgz"</ID>
+    <ID>MaxLineLength:SetupScripts.kt$SetupScripts$public const val LINUX_CHECK: String = """[ -s /etc/os-release ] &amp;&amp; . /etc/os-release &amp;&amp; echo "${'$'}{VERSION%% *}""""</ID>
+    <ID>MaxLineLength:TermuxSetupParams.kt$TermuxSetupParams$private val allowed = mapOf("opencode" to setOf("runtime", "version"), SetupJobParams.KEY to setOf("first", "adding"))</ID>
+    <ID>ReturnCount:FakeSetupHost.kt$FakeSetupHost$override suspend fun run(script: String): HostReply&lt;SetupRunResult&gt;</ID>
+    <ID>ReturnCount:SetupEngine.kt$SetupEngine$private suspend fun checkUntraced(job: List&lt;SetupComponent&gt;, requireComplete: Boolean): Map&lt;String, SetupCheckResult&gt;?</ID>
+    <ID>ReturnCount:SetupEngine.kt$SetupEngine$private suspend fun readInstalledOptional(): SetupInventory</ID>
+    <ID>ReturnCount:SetupEngine.kt$SetupEngine$public suspend fun run(ids: Set&lt;String&gt;, params: Map&lt;String, Map&lt;String, String&gt;&gt; = emptyMap()): SetupRunRefusal?</ID>
+    <ID>ReturnCount:SetupFailures.kt$public fun describeSetupFailure( failed: SetupJobComponent, logTail: String, title: String, step: Boolean = false, ): SetupFailureText</ID>
+    <ID>ReturnCount:SetupFinish.kt$SetupFinisher$public suspend fun finish(request: SetupFinishRequest): SetupFinishFailure?</ID>
+    <ID>ReturnCount:SetupJobRecord.kt$SetupJobRecord.Companion$public fun parse(text: String?): SetupJobRecord?</ID>
+    <ID>ReturnCount:SetupPreflight.kt$SetupPreflight$public fun check(device: SetupDevice, downloadBytes: Long, installedBytes: Long? = null): SetupPreflightResult</ID>
+    <ID>ReturnCount:SetupProgressMath.kt$private fun fraction(progress: ComponentProgress, floors: MutableMap&lt;String, Double&gt;?): Double</ID>
+    <ID>ReturnCount:SetupProgressMath.kt$public fun estimateEta( components: List&lt;SetupComponent&gt;, progress: List&lt;ComponentProgress&gt;, overall: Double, elapsed: Duration, minimum: Duration = 10.seconds, ): Int?</ID>
+    <ID>ReturnCount:SetupScripts.kt$SetupScripts$public fun openCodeNativeInstall( version: String? = null, pins: OpenCodeAssets = OpenCodePins.assets, root: String = "", probeSeconds: Int = 120, ): String?</ID>
+    <ID>ReturnCount:TermuxSetupParams.kt$TermuxSetupParams$public fun isValid(params: Map&lt;String, Map&lt;String, String&gt;&gt;, redactor: Redactor = Redactor()): Boolean</ID>
+    <ID>TooGenericExceptionCaught:SetupEngine.kt$SetupEngine$error: RuntimeException</ID>
+    <ID>TooManyFunctions:SetupEngine.kt$SetupEngine</ID>
+  </CurrentIssues>
+</SmellBaseline>

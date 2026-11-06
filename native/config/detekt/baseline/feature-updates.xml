@@ -1,0 +1,24 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:UpdatesScreen.kt$@Composable private fun lineWords(state: UpdatesUi): String</ID>
+    <ID>CyclomaticComplexMethod:UpdatesUi.kt$public fun updatesUi(state: AppUpdateState, now: Instant): UpdatesUi</ID>
+    <ID>LongMethod:UpdatesScreen.kt$@Composable public fun UpdatesScreen( state: UpdatesUi, actions: UpdatesActions, showArrival: Boolean = false, dismissArrival: () -&gt; Unit = {}, )</ID>
+    <ID>LongMethod:UpdatesUi.kt$public fun updatesUi(state: AppUpdateState, now: Instant): UpdatesUi</ID>
+    <ID>LongParameterList:UpdatePrompts.kt$( version: String, onUpdateNow: () -&gt; Unit, onOpenSettings: () -&gt; Unit, onDismiss: () -&gt; Unit, summary: String = "", visible: Boolean = true, onWhatsNew: (() -&gt; Unit)? = null, )</ID>
+    <ID>MagicNumber:UpdateNoticeUi.kt$100f</ID>
+    <ID>MagicNumber:UpdatesUi.kt$100f</ID>
+    <ID>MagicNumber:UpdatesViewModel.kt$UpdatesViewModel$5_000</ID>
+    <ID>MaxLineLength:UpdateFakes.kt$FakeUpdateFeed$override suspend</ID>
+    <ID>MaxLineLength:UpdateNoticeUi.kt$NoticeUi.ReadyToInstall$/** "Version 2.2.0 is downloaded and checked" · Install · Not now; the permission line when Android must allow it. */</ID>
+    <ID>MaxLineLength:UpdatePrompts.kt$action = KitLineAction(stringResource(Res.string.appUpdateCancel), actions::onCancel, testTag = "update-notice-cancel")</ID>
+    <ID>MaxLineLength:UpdatePrompts.kt$action = KitLineAction(stringResource(Res.string.appUpdateInstall), actions::onInstall, testTag = "update-notice-install")</ID>
+    <ID>MaxLineLength:UpdatePrompts.kt$action = KitLineAction(stringResource(Res.string.appUpdateUpdate), actions::onUpdate, testTag = "update-notice-update")</ID>
+    <ID>MaxLineLength:UpdatesScreenUiTest.kt$UpdatesScreenUiTest$page(available.copy(phase = UpdatePhase.Failed, failure = UpdateFailure.Signer, detail = "signer BB22, expected AA11"))</ID>
+    <ID>MaxLineLength:UpdatesUiTest.kt$UpdatesUiTest$available.copy(phase = UpdatePhase.Failed, failure = UpdateFailure.Checksum, detail = "sha256 bb, expected aa")</ID>
+    <ID>MaxLineLength:UpdatesUiTest.kt$UpdatesUiTest$for</ID>
+    <ID>MaxLineLength:UpdatesViewModelTest.kt$UpdatesViewModelTest$private</ID>
+    <ID>ReturnCount:UpdateNoticeUi.kt$public fun offerUi(state: AppUpdateState): OfferUi?</ID>
+  </CurrentIssues>
+</SmellBaseline>

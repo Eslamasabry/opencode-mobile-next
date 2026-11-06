@@ -1,0 +1,883 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:SignalSpec.kt$SignalSpec$(r.role != SurfaceRole.Control &amp;&amp; r.role != SurfaceRole.Floating) || !r.action || own == null || own.alpha &lt; 255 || r.selected || r.disabled || !r.roles.dark || own == SignalPalette.Night.key</ID>
+    <ID>ComplexCondition:SignalSpec.kt$SignalSpec$r.action &amp;&amp; opaque &amp;&amp; !r.selected &amp;&amp; !r.disabled &amp;&amp; radii.uniform</ID>
+    <ID>ComplexCondition:SignalSpec.kt$SignalSpec$r.action &amp;&amp; r.color != null &amp;&amp; r.color.alpha == 255 &amp;&amp; !r.disabled &amp;&amp; radii.uniform</ID>
+    <ID>CyclomaticComplexMethod:BrutalSpec.kt$BrutalSpec$override fun resolve(r: SurfaceRequest): SurfaceDecoration</ID>
+    <ID>CyclomaticComplexMethod:BrutalSpec.kt$BrutalSpec$private fun part(r: SurfaceRequest): SurfaceDecoration?</ID>
+    <ID>CyclomaticComplexMethod:GlassFinish.kt$GlassFinish$public fun thickened(d: SurfaceDecoration, roles: Roles, solid: Argb, spots: List&lt;Argb&gt;): SurfaceDecoration</ID>
+    <ID>CyclomaticComplexMethod:GlassSpec.kt$GlassSpec$override fun resolve(r: SurfaceRequest): SurfaceDecoration?</ID>
+    <ID>CyclomaticComplexMethod:GlassSpec.kt$GlassSpec$private fun part(r: SurfaceRequest): SurfaceDecoration?</ID>
+    <ID>CyclomaticComplexMethod:GlassSpec.kt$GlassSpec$public fun opacity(role: SurfaceRole, dark: Boolean): Float</ID>
+    <ID>CyclomaticComplexMethod:PaperSpec.kt$PaperSpec$override fun resolve(r: SurfaceRequest): SurfaceDecoration</ID>
+    <ID>CyclomaticComplexMethod:PaperSpec.kt$PaperSpec$private fun part(r: SurfaceRequest): SurfaceDecoration?</ID>
+    <ID>CyclomaticComplexMethod:SignalSpec.kt$SignalSpec$override fun resolve(r: SurfaceRequest): SurfaceDecoration</ID>
+    <ID>CyclomaticComplexMethod:SoftSpec.kt$SoftSpec$private fun part(r: SurfaceRequest): SurfaceDecoration?</ID>
+    <ID>CyclomaticComplexMethod:SoftSpec.kt$SoftSpec$private fun shaped(r: SurfaceRequest): SurfaceDecoration</ID>
+    <ID>CyclomaticComplexMethod:SurfaceFade.kt$SurfaceFade$public fun between(a: SurfaceDecoration, b: SurfaceDecoration, t: Float): SurfaceDecoration</ID>
+    <ID>LongMethod:SoftSpec.kt$SoftSpec$private fun shaped(r: SurfaceRequest): SurfaceDecoration</ID>
+    <ID>LongParameterList:Packs.kt$PackPalette$( internal val primaryD: DColor, internal val secondaryD: DColor, internal val tertiaryD: DColor, internal val onSurfaceD: DColor, internal val backgroundD: DColor, internal val navigationD: DColor, internal val successD: DColor, public val dark: Boolean, private val ownRoles: Roles? = null, )</ID>
+    <ID>LongParameterList:Packs.kt$PackPalette.Companion$( dark: Boolean, primary: Argb, secondary: Argb, tertiary: Argb, onSurface: Argb, background: Argb, navigation: Argb, success: Argb, )</ID>
+    <ID>LongParameterList:Reqs.kt$( roles: Roles, role: SurfaceRole, knobs: Knobs = Knobs(), level: SurfaceLevel = SurfaceLevel.Surface1, selected: Boolean = false, pressed: Boolean = false, color: io.github.eslamasabry.oc.ui.design.color.Argb? = null, radii: Radii = Radii.all(12f), )</ID>
+    <ID>LongParameterList:RoleDerivation.kt$RoleDerivation$( accent: Argb, ground: Argb, dark: Boolean, text: Argb? = null, attention: Argb? = null, success: Argb? = null, partners: List&lt;Argb&gt; = emptyList(), )</ID>
+    <ID>MagicNumber:Accents.kt$Accents$0xFF087F43</ID>
+    <ID>MagicNumber:Accents.kt$Accents$0xFF0D7377</ID>
+    <ID>MagicNumber:Accents.kt$Accents$0xFF1F6FEB</ID>
+    <ID>MagicNumber:Accents.kt$Accents$0xFF262B36</ID>
+    <ID>MagicNumber:Accents.kt$Accents$0xFF3CCFCF</ID>
+    <ID>MagicNumber:Accents.kt$Accents$0xFF3DDC8A</ID>
+    <ID>MagicNumber:Accents.kt$Accents$0xFF5A606C</ID>
+    <ID>MagicNumber:Accents.kt$Accents$0xFF5AB0FF</ID>
+    <ID>MagicNumber:Accents.kt$Accents$0xFF6D4AFF</ID>
+    <ID>MagicNumber:Accents.kt$Accents$0xFFAD2E99</ID>
+    <ID>MagicNumber:Accents.kt$Accents$0xFFB9BDC6</ID>
+    <ID>MagicNumber:Accents.kt$Accents$0xFFC7A6FF</ID>
+    <ID>MagicNumber:Accents.kt$Accents$0xFFF1F2F4</ID>
+    <ID>MagicNumber:Accents.kt$Accents$0xFFF2A7E6</ID>
+    <ID>MagicNumber:Argb.kt$16</ID>
+    <ID>MagicNumber:Argb.kt$24</ID>
+    <ID>MagicNumber:Argb.kt$255</ID>
+    <ID>MagicNumber:Argb.kt$255f</ID>
+    <ID>MagicNumber:Argb.kt$8</ID>
+    <ID>MagicNumber:Argb.kt$Argb$0xFF</ID>
+    <ID>MagicNumber:Argb.kt$Argb$0xFFFFFF</ID>
+    <ID>MagicNumber:Argb.kt$Argb$16</ID>
+    <ID>MagicNumber:Argb.kt$Argb$24</ID>
+    <ID>MagicNumber:Argb.kt$Argb$255f</ID>
+    <ID>MagicNumber:Argb.kt$Argb$8</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$.009</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$.013</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$.021</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$.03f</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$.072</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$.12f</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$.140</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$.143</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$.15</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$.213</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$.283</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$.285</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$.7</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$.715</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$.787</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$.928</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$0xFF</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$122</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$13</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$15</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$16</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$160</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$180</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$2.1</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$20</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$200</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$218</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$225</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$226</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$228</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$232</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$24</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$252</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$254</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$255</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$255.0</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$255f</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$3</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$360</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$360.0</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$4</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$45</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$48</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$5</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$53</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$54</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$6</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$60.0</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$76</ID>
+    <ID>MagicNumber:AuroraImage.kt$AuroraImage$8</ID>
+    <ID>MagicNumber:BrutalSpec.kt$BrutalSpec$.03f</ID>
+    <ID>MagicNumber:BrutalSpec.kt$BrutalSpec$.04f</ID>
+    <ID>MagicNumber:BrutalSpec.kt$BrutalSpec$.06f</ID>
+    <ID>MagicNumber:BrutalSpec.kt$BrutalSpec$.09f</ID>
+    <ID>MagicNumber:BrutalSpec.kt$BrutalSpec$.12f</ID>
+    <ID>MagicNumber:BrutalSpec.kt$BrutalSpec$.4f</ID>
+    <ID>MagicNumber:BrutalSpec.kt$BrutalSpec$.55f</ID>
+    <ID>MagicNumber:BrutalSpec.kt$BrutalSpec$.7f</ID>
+    <ID>MagicNumber:BrutalSpec.kt$BrutalSpec$.85f</ID>
+    <ID>MagicNumber:BrutalSpec.kt$BrutalSpec$.9f</ID>
+    <ID>MagicNumber:BrutalSpec.kt$BrutalSpec$3f</ID>
+    <ID>MagicNumber:BrutalSpec.kt$BrutalSpec$4.5</ID>
+    <ID>MagicNumber:BrutalSpec.kt$BrutalSpec$4f</ID>
+    <ID>MagicNumber:BrutalSpec.kt$BrutalSpec$6f</ID>
+    <ID>MagicNumber:ColorMath.kt$.015</ID>
+    <ID>MagicNumber:ColorMath.kt$.0193339</ID>
+    <ID>MagicNumber:ColorMath.kt$.045</ID>
+    <ID>MagicNumber:ColorMath.kt$.0721750</ID>
+    <ID>MagicNumber:ColorMath.kt$.1191920</ID>
+    <ID>MagicNumber:ColorMath.kt$.17</ID>
+    <ID>MagicNumber:ColorMath.kt$.1804375</ID>
+    <ID>MagicNumber:ColorMath.kt$.20</ID>
+    <ID>MagicNumber:ColorMath.kt$.2126729</ID>
+    <ID>MagicNumber:ColorMath.kt$.24</ID>
+    <ID>MagicNumber:ColorMath.kt$.32</ID>
+    <ID>MagicNumber:ColorMath.kt$.3575761</ID>
+    <ID>MagicNumber:ColorMath.kt$.4124564</ID>
+    <ID>MagicNumber:ColorMath.kt$.5</ID>
+    <ID>MagicNumber:ColorMath.kt$.7151522</ID>
+    <ID>MagicNumber:ColorMath.kt$.9503041</ID>
+    <ID>MagicNumber:ColorMath.kt$.95047</ID>
+    <ID>MagicNumber:ColorMath.kt$0.008856</ID>
+    <ID>MagicNumber:ColorMath.kt$0.03928</ID>
+    <ID>MagicNumber:ColorMath.kt$0.04045</ID>
+    <ID>MagicNumber:ColorMath.kt$0.05</ID>
+    <ID>MagicNumber:ColorMath.kt$0.055</ID>
+    <ID>MagicNumber:ColorMath.kt$0.0722</ID>
+    <ID>MagicNumber:ColorMath.kt$0.2126</ID>
+    <ID>MagicNumber:ColorMath.kt$0.7152</ID>
+    <ID>MagicNumber:ColorMath.kt$1.055</ID>
+    <ID>MagicNumber:ColorMath.kt$1.08883</ID>
+    <ID>MagicNumber:ColorMath.kt$116</ID>
+    <ID>MagicNumber:ColorMath.kt$12.92</ID>
+    <ID>MagicNumber:ColorMath.kt$16</ID>
+    <ID>MagicNumber:ColorMath.kt$16.0</ID>
+    <ID>MagicNumber:ColorMath.kt$180</ID>
+    <ID>MagicNumber:ColorMath.kt$2.4</ID>
+    <ID>MagicNumber:ColorMath.kt$20</ID>
+    <ID>MagicNumber:ColorMath.kt$200</ID>
+    <ID>MagicNumber:ColorMath.kt$25</ID>
+    <ID>MagicNumber:ColorMath.kt$25.0</ID>
+    <ID>MagicNumber:ColorMath.kt$255.0</ID>
+    <ID>MagicNumber:ColorMath.kt$275</ID>
+    <ID>MagicNumber:ColorMath.kt$3</ID>
+    <ID>MagicNumber:ColorMath.kt$30</ID>
+    <ID>MagicNumber:ColorMath.kt$360</ID>
+    <ID>MagicNumber:ColorMath.kt$360.0</ID>
+    <ID>MagicNumber:ColorMath.kt$4</ID>
+    <ID>MagicNumber:ColorMath.kt$50</ID>
+    <ID>MagicNumber:ColorMath.kt$500</ID>
+    <ID>MagicNumber:ColorMath.kt$6</ID>
+    <ID>MagicNumber:ColorMath.kt$6.0</ID>
+    <ID>MagicNumber:ColorMath.kt$60.0</ID>
+    <ID>MagicNumber:ColorMath.kt$63</ID>
+    <ID>MagicNumber:ColorMath.kt$7.0</ID>
+    <ID>MagicNumber:ColorMath.kt$7.787</ID>
+    <ID>MagicNumber:ColorMath.kt$DColor$16</ID>
+    <ID>MagicNumber:ColorMath.kt$DColor$24</ID>
+    <ID>MagicNumber:ColorMath.kt$DColor$255</ID>
+    <ID>MagicNumber:ColorMath.kt$DColor$255.0</ID>
+    <ID>MagicNumber:ColorMath.kt$DColor$8</ID>
+    <ID>MagicNumber:Contrast.kt$.45</ID>
+    <ID>MagicNumber:Contrast.kt$0.03928</ID>
+    <ID>MagicNumber:Contrast.kt$0.05</ID>
+    <ID>MagicNumber:Contrast.kt$0.055</ID>
+    <ID>MagicNumber:Contrast.kt$0.0722</ID>
+    <ID>MagicNumber:Contrast.kt$0.2126</ID>
+    <ID>MagicNumber:Contrast.kt$0.7152</ID>
+    <ID>MagicNumber:Contrast.kt$1.055</ID>
+    <ID>MagicNumber:Contrast.kt$12</ID>
+    <ID>MagicNumber:Contrast.kt$12.92</ID>
+    <ID>MagicNumber:Contrast.kt$2.4</ID>
+    <ID>MagicNumber:Contrast.kt$255.0</ID>
+    <ID>MagicNumber:Contrast.kt$345</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFF00212A</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFF01313E</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFF181825</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFF1B1B2B</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFF1D2021</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFF1E6FA8</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFF1F7A72</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFF232120</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFF268BD2</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFF2AA198</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFF3C3836</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFF40A02B</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFF4C4F69</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFF565FA8</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFF586E75</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFF68587A</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFF695E2F</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFF6C7E00</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFF79740E</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFF7F525B</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFF859900</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFF8839EF</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFF93A1A1</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFFA6E3A1</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFFAF3A03</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFFB4BEFE</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFFB57614</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFFB8BB26</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFFCBA6F7</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFFCBC992</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFFCDD6F4</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFFD3BFE6</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFFE6E9EF</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFFEBDBB2</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFFEEE8D5</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFFEFF1F5</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFFF2B7C0</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFFF2E5BC</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFFFABD2F</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFFFBF1C7</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFFFDF6E3</ID>
+    <ID>MagicNumber:CuratedPacks.kt$CuratedPacks$0xFFFE8019</ID>
+    <ID>MagicNumber:Dynamic.kt$DynamicSource$0xFF1E7A44</ID>
+    <ID>MagicNumber:Dynamic.kt$DynamicSource$0xFF86D8A5</ID>
+    <ID>MagicNumber:FrostPolicy.kt$FrostPolicy$0.5f</ID>
+    <ID>MagicNumber:FrostPolicy.kt$FrostStrength.Balanced$0.70f</ID>
+    <ID>MagicNumber:FrostPolicy.kt$FrostStrength.Balanced$0.80f</ID>
+    <ID>MagicNumber:FrostPolicy.kt$FrostStrength.Balanced$1.4f</ID>
+    <ID>MagicNumber:FrostPolicy.kt$FrostStrength.Balanced$10f</ID>
+    <ID>MagicNumber:FrostPolicy.kt$FrostStrength.Strong$0.76f</ID>
+    <ID>MagicNumber:FrostPolicy.kt$FrostStrength.Strong$0.85f</ID>
+    <ID>MagicNumber:FrostPolicy.kt$FrostStrength.Strong$1.6f</ID>
+    <ID>MagicNumber:FrostPolicy.kt$FrostStrength.Strong$16f</ID>
+    <ID>MagicNumber:FrostPolicy.kt$FrostStrength.Weak$0.62f</ID>
+    <ID>MagicNumber:FrostPolicy.kt$FrostStrength.Weak$0.72f</ID>
+    <ID>MagicNumber:FrostPolicy.kt$FrostStrength.Weak$1.2f</ID>
+    <ID>MagicNumber:FrostPolicy.kt$FrostStrength.Weak$6f</ID>
+    <ID>MagicNumber:GlassFinish.kt$GlassFinish$16</ID>
+    <ID>MagicNumber:GlassFinish.kt$GlassFinish$1e-6</ID>
+    <ID>MagicNumber:GlassFinish.kt$GlassFinish$24</ID>
+    <ID>MagicNumber:GlassFinish.kt$GlassFinish$255</ID>
+    <ID>MagicNumber:GlassFinish.kt$GlassFinish$255f</ID>
+    <ID>MagicNumber:GlassFinish.kt$GlassFinish$8</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$.04f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$.06f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$.07f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$.08f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$.10f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$.11f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$.12f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$.14f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$.16f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$.24f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$.28f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$.30f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$.38f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$.40f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$.42f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$.46f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$.48f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$.4f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$.50f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$.52f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$.55f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$.56f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$.58f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$.5f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$.62f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$.6f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$.72f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$.95f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$12f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$16f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$32f</ID>
+    <ID>MagicNumber:GlassSpec.kt$GlassSpec$40f</ID>
+    <ID>MagicNumber:MotionTokens.kt$CurveId.Enter$0.215f</ID>
+    <ID>MagicNumber:MotionTokens.kt$CurveId.Enter$0.355f</ID>
+    <ID>MagicNumber:MotionTokens.kt$CurveId.Enter$0.61f</ID>
+    <ID>MagicNumber:MotionTokens.kt$CurveId.Exit$0.055f</ID>
+    <ID>MagicNumber:MotionTokens.kt$CurveId.Exit$0.19f</ID>
+    <ID>MagicNumber:MotionTokens.kt$CurveId.Exit$0.55f</ID>
+    <ID>MagicNumber:MotionTokens.kt$CurveId.Exit$0.675f</ID>
+    <ID>MagicNumber:MotionTokens.kt$CurveId.Land$0.175f</ID>
+    <ID>MagicNumber:MotionTokens.kt$CurveId.Land$0.32f</ID>
+    <ID>MagicNumber:MotionTokens.kt$CurveId.Land$0.885f</ID>
+    <ID>MagicNumber:MotionTokens.kt$CurveId.Land$1.275f</ID>
+    <ID>MagicNumber:MotionTokens.kt$CurveId.PredictiveBack$0.1f</ID>
+    <ID>MagicNumber:MotionTokens.kt$CurveId.Pulse$0.42f</ID>
+    <ID>MagicNumber:MotionTokens.kt$CurveId.Pulse$0.58f</ID>
+    <ID>MagicNumber:MotionTokens.kt$CurveId.StepEase$0.03f</ID>
+    <ID>MagicNumber:MotionTokens.kt$CurveId.StepEase$0.455f</ID>
+    <ID>MagicNumber:MotionTokens.kt$CurveId.StepEase$0.515f</ID>
+    <ID>MagicNumber:MotionTokens.kt$CurveId.StepEase$0.955f</ID>
+    <ID>MagicNumber:MotionTokens.kt$CurveId.StepOut$0.25f</ID>
+    <ID>MagicNumber:MotionTokens.kt$CurveId.StepOut$0.45f</ID>
+    <ID>MagicNumber:MotionTokens.kt$CurveId.StepOut$0.46f</ID>
+    <ID>MagicNumber:MotionTokens.kt$CurveId.StepOut$0.94f</ID>
+    <ID>MagicNumber:PackRecipe.kt$PackRecipe$.025</ID>
+    <ID>MagicNumber:PackRecipe.kt$PackRecipe$.03</ID>
+    <ID>MagicNumber:PackRecipe.kt$PackRecipe$.04</ID>
+    <ID>MagicNumber:PackRecipe.kt$PackRecipe$.06</ID>
+    <ID>MagicNumber:PackRecipe.kt$PackRecipe$.07</ID>
+    <ID>MagicNumber:PackRecipe.kt$PackRecipe$.09</ID>
+    <ID>MagicNumber:PackRecipe.kt$PackRecipe$.10</ID>
+    <ID>MagicNumber:PackRecipe.kt$PackRecipe$.13</ID>
+    <ID>MagicNumber:PackRecipe.kt$PackRecipe$.6</ID>
+    <ID>MagicNumber:PackRecipe.kt$PackRecipe$0xFF1E7A44</ID>
+    <ID>MagicNumber:PackRecipe.kt$PackRecipe$0xFF86D8A5</ID>
+    <ID>MagicNumber:PackRecipe.kt$PackRecipe$3.0</ID>
+    <ID>MagicNumber:PackRecipe.kt$PackRecipe$7.0</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF000000</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF0037A6</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF00796B</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF0086B3</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF011627</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF0277BD</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF0369A1</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF0969DA</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF0A1929</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF0B0E14</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF0B63C5</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF0D1117</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF0E7490</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF0E8A8A</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF0F172A</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF0F1A14</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF0F2A43</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF0F766E</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF10201D</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF111111</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF121212</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF12332D</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF14324A</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF17301F</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF191724</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF193549</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF1A1608</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF1A1726</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF1A1B26</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF1A56DB</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF1C1612</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF1C1917</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF1F1410</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF1F1F28</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF1F2328</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF1F6FB5</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF1F7A45</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF22161C</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF241B2F</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF2563EB</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF272822</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF282A36</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF282C34</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF292D3E</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF2A1B3D</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF2A2340</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF2B7BB9</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF2D353B</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF2E3440</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF2E7DE9</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF33261C</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF33290A</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF343B58</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF36F9F6</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF383A42</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF386662</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF38BDF8</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF39BAE6</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF3A1F14</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF3A656F</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF3A94C5</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF3AD900</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF3B3F58</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF3B6EA8</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF3D1F2B</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF3FB950</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF403F53</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF4078F2</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF44403C</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF4493F8</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF47617A</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF4B7F68</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF4C7A8A</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF4D699B</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF4F46E5</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF4F5BB5</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF4FC3F7</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF506440</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF50FA7B</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF516440</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF545464</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF575279</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF57633A</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF5A6238</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF5C6166</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF5C6A72</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF5EEAD4</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF5F8A1E</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF61AFEF</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF624C83</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF646032</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF66D9EF</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF695779</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF69F0AE</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF6A00A8</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF6A4BC4</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF6A5E2F</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF6B5778</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF6C5677</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF6FCF97</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF705574</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF715574</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF72F1B8</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF735471</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF745470</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF75546F</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF78716C</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF7A5733</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF7A5C58</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF7AA2F7</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF7C3AED</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF7C4DDB</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF7C4DFF</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF7D5261</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF7DD3FC</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF7E525E</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF7E9CD8</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF7FBBB3</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF805159</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF80543E</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF80CBC4</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF80D8FF</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF81A1C1</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF8250DF</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF82AAFF</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF88C0D0</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF89DDFF</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF8AB4F8</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF8B5E34</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF8E24AA</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF8FB9A8</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF907AA9</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF957FB8</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF9854F1</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF98BB6C</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF98C379</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF994CC3</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF9A6700</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF9CCFD8</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF9ECE6A</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF9EFFFF</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFF9FA8DA</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFA0D0CA</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFA371F7</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFA3BE8C</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFA3CDDB</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFA5B4FC</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFA626A4</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFA6E22E</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFA7C080</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFA7D0B7</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFA8A29E</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFAAD94C</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFACCAE5</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFACCFAF</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFADDB67</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFAECFAC</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFB07D00</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFB2CFA7</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFB39DDB</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFB45309</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFBB9AF7</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFBD93F9</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFBFBDB6</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFBFC4EB</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFC0CAF5</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFC0CC9A</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFC2185B</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFC2189B</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFC2410C</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFC2570C</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFC2CC99</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFC4A7E7</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFC58AF9</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFC678DD</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFC77700</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFC792EA</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFC9ADA7</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFC9C2EA</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFCAC1E9</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFCE93D8</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFD0D6F0</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFD2BFE7</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFD3C6AA</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFD4A373</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFD4C78E</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFD6C7A1</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFD6DEEB</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFD7827E</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFD7DAE0</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFD7E6F5</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFDBBCE1</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFDBF1EC</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFDCD7BA</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFDCE8DD</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFDEBCDF</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFDFBBDE</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFE0DEF4</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFE1E2E7</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFE1EFFF</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFE2E8F0</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFE6B450</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFE6E1F7</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFE6EDF3</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFE8E6E3</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFEBBCBA</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFEBDDCF</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFECEFF4</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFEDEDED</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFEFBD94</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFF1B7C5</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFF1F8FD</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFF1FBF9</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFF2B7C1</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFF2B7C2</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFF2ECBC</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFF2F8FF</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFF3EBD3</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFF3F8F3</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFF48FB1</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFF4B7BA</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFF4B9A0</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFF4EEFF</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFF4F3FA</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFF6E3D7</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFF8E1EA</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFF8F6FE</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFF8F8F2</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFF8FAFC</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFFAF4ED</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFFAF5EF</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFFAF8F2</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFFAFAFA</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFFBF5FF</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFFBF9F4</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFFBFBFB</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFFCFCFC</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFFD971F</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFFDF6E3</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFFF79C6</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFFF7EDB</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFFF8A5B</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFFFAB40</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFFFC078</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFFFC600</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFFFCA28</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFFFEB3B</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFFFF5F8</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFFFF7F1</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFFFFBF0</ID>
+    <ID>MagicNumber:PacksGenerated.kt$PacksGenerated$0xFFFFFFFF</ID>
+    <ID>MagicNumber:PacksSignal.kt$SignalPalette.Companion$.07f</ID>
+    <ID>MagicNumber:PacksSignal.kt$SignalPalette.Companion$.09f</ID>
+    <ID>MagicNumber:PacksSignal.kt$SignalPalette.Companion$.4f</ID>
+    <ID>MagicNumber:PacksSignal.kt$SignalPalette.Companion$.7f</ID>
+    <ID>MagicNumber:PacksSignal.kt$SignalPalette.Companion$16</ID>
+    <ID>MagicNumber:PacksSignal.kt$SignalPalette.Companion$4.5</ID>
+    <ID>MagicNumber:PaperSpec.kt$PaperSpec$.02f</ID>
+    <ID>MagicNumber:PaperSpec.kt$PaperSpec$.04f</ID>
+    <ID>MagicNumber:PaperSpec.kt$PaperSpec$.05f</ID>
+    <ID>MagicNumber:PaperSpec.kt$PaperSpec$.07f</ID>
+    <ID>MagicNumber:PaperSpec.kt$PaperSpec$.08f</ID>
+    <ID>MagicNumber:PaperSpec.kt$PaperSpec$.10f</ID>
+    <ID>MagicNumber:PaperSpec.kt$PaperSpec$.6f</ID>
+    <ID>MagicNumber:PaperSpec.kt$PaperSpec$.9f</ID>
+    <ID>MagicNumber:RoleDerivation.kt$RoleDerivation$.035</ID>
+    <ID>MagicNumber:RoleDerivation.kt$RoleDerivation$.04</ID>
+    <ID>MagicNumber:RoleDerivation.kt$RoleDerivation$.05</ID>
+    <ID>MagicNumber:RoleDerivation.kt$RoleDerivation$.065</ID>
+    <ID>MagicNumber:RoleDerivation.kt$RoleDerivation$.11</ID>
+    <ID>MagicNumber:RoleDerivation.kt$RoleDerivation$.30</ID>
+    <ID>MagicNumber:RoleDerivation.kt$RoleDerivation$.36</ID>
+    <ID>MagicNumber:RoleDerivation.kt$RoleDerivation$.40</ID>
+    <ID>MagicNumber:RoleDerivation.kt$RoleDerivation$.46</ID>
+    <ID>MagicNumber:RoleDerivation.kt$RoleDerivation$.8</ID>
+    <ID>MagicNumber:RoleDerivation.kt$RoleDerivation$0x11</ID>
+    <ID>MagicNumber:RoleDerivation.kt$RoleDerivation$0x12</ID>
+    <ID>MagicNumber:RoleDerivation.kt$RoleDerivation$0x14</ID>
+    <ID>MagicNumber:RoleDerivation.kt$RoleDerivation$255.0</ID>
+    <ID>MagicNumber:RoleDerivation.kt$RoleDerivation$4.5</ID>
+    <ID>MagicNumber:RoleDerivation.kt$RoleDerivation$40</ID>
+    <ID>MagicNumber:RoleDerivation.kt$RoleDerivation$50</ID>
+    <ID>MagicNumber:RoleDerivation.kt$RoleDerivation$50.0</ID>
+    <ID>MagicNumber:RoleDerivation.kt$RoleDerivation$7.0</ID>
+    <ID>MagicNumber:Roles.kt$Roles$0.10f</ID>
+    <ID>MagicNumber:Roles.kt$Roles$0.3f</ID>
+    <ID>MagicNumber:Roles.kt$Roles$0xFF000000</ID>
+    <ID>MagicNumber:SignalSpec.kt$SignalSpec$.04f</ID>
+    <ID>MagicNumber:SignalSpec.kt$SignalSpec$.07f</ID>
+    <ID>MagicNumber:SignalSpec.kt$SignalSpec$.08f</ID>
+    <ID>MagicNumber:SignalSpec.kt$SignalSpec$.09f</ID>
+    <ID>MagicNumber:SignalSpec.kt$SignalSpec$.12f</ID>
+    <ID>MagicNumber:SignalSpec.kt$SignalSpec$.3f</ID>
+    <ID>MagicNumber:SignalSpec.kt$SignalSpec$.4f</ID>
+    <ID>MagicNumber:SignalSpec.kt$SignalSpec$.5f</ID>
+    <ID>MagicNumber:SignalSpec.kt$SignalSpec$.7f</ID>
+    <ID>MagicNumber:SignalSpec.kt$SignalSpec$255</ID>
+    <ID>MagicNumber:SignalSpec.kt$SignalSpec$3f</ID>
+    <ID>MagicNumber:SignalSpec.kt$SignalSpec$4.5</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$.005f</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$.01f</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$.025f</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$.035f</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$.03f</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$.045f</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$.04f</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$.06f</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$.07f</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$.10f</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$.14f</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$.16f</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$.1f</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$.26f</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$.28f</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$.34f</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$.35f</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$.45f</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$.55f</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$.7f</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$.85f</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$.9f</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$16f</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$2.5f</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$28f</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$3f</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$4.5</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$4.6</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$4f</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$6f</ID>
+    <ID>MagicNumber:SoftSpec.kt$SoftSpec$8f</ID>
+    <ID>MagicNumber:StyleResolver.kt$StyleResolver$.6f</ID>
+    <ID>MagicNumber:StyleResolver.kt$StyleResolver$999f</ID>
+    <ID>MagicNumber:StyleSpec.kt$.5f</ID>
+    <ID>MagicNumber:StyleSpec.kt$0xFF</ID>
+    <ID>MagicNumber:StyleSpec.kt$0xFFFFFF</ID>
+    <ID>MagicNumber:StyleSpec.kt$120f</ID>
+    <ID>MagicNumber:StyleSpec.kt$16</ID>
+    <ID>MagicNumber:StyleSpec.kt$16f</ID>
+    <ID>MagicNumber:StyleSpec.kt$180f</ID>
+    <ID>MagicNumber:StyleSpec.kt$24</ID>
+    <ID>MagicNumber:StyleSpec.kt$240f</ID>
+    <ID>MagicNumber:StyleSpec.kt$255</ID>
+    <ID>MagicNumber:StyleSpec.kt$255f</ID>
+    <ID>MagicNumber:StyleSpec.kt$3.1</ID>
+    <ID>MagicNumber:StyleSpec.kt$300f</ID>
+    <ID>MagicNumber:StyleSpec.kt$360f</ID>
+    <ID>MagicNumber:StyleSpec.kt$4f</ID>
+    <ID>MagicNumber:StyleSpec.kt$60f</ID>
+    <ID>MagicNumber:StyleSpec.kt$6f</ID>
+    <ID>MagicNumber:StyleSpec.kt$8</ID>
+    <ID>MagicNumber:TextScalePolicy.kt$AppTextSize.Large$1.15f</ID>
+    <ID>MagicNumber:TextScalePolicy.kt$AppTextSize.Small$0.92f</ID>
+    <ID>MagicNumber:TextScalePolicy.kt$AppTextSize.Smallest$0.85f</ID>
+    <ID>MagicNumber:TypeScale.kt$TypeScale$400</ID>
+    <ID>MagicNumber:TypeScale.kt$TypeScale$500</ID>
+    <ID>MagicNumber:TypeScale.kt$TypeScale$600</ID>
+    <ID>MagicNumber:TypeScale.kt$TypeScale$650</ID>
+    <ID>MagicNumber:TypeScale.kt$TypeScale$700</ID>
+    <ID>MagicNumber:TypeScale.kt$TypeScale$750</ID>
+    <ID>MagicNumber:TypeScale.kt$TypeScale$800</ID>
+    <ID>MatchingDeclarationName:ColorMath.kt$DColor</ID>
+    <ID>MatchingDeclarationName:Haptic.kt$KitHaptic</ID>
+    <ID>MatchingDeclarationName:PacksSignal.kt$SignalPalette</ID>
+    <ID>MaxLineLength:Argb.kt$Argb$public</ID>
+    <ID>MaxLineLength:Argb.kt$return Argb((a shl 24) or (ch(red, background.red) shl 16) or (ch(green, background.green) shl 8) or ch(blue, background.blue))</ID>
+    <ID>MaxLineLength:Argb.kt$return Argb((ch(a.alpha, b.alpha) shl 24) or (ch(a.red, b.red) shl 16) or (ch(a.green, b.green) shl 8) or ch(a.blue, b.blue))</ID>
+    <ID>MaxLineLength:AuroraImage.kt$AuroraImage$*</ID>
+    <ID>MaxLineLength:AuroraImage.kt$AuroraImage$/** Keeps [s] of a colour's chroma and sets it on [ground]: out = ground + s * (c - luma(c)) (`_tintOn`, :149-157). */</ID>
+    <ID>MaxLineLength:AuroraImage.kt$AuroraImage$/** The hue rotation (or the greying) that turns the plate to [accent]; null near the plate's hue (`_hueFor`, :202-210). */</ID>
+    <ID>MaxLineLength:AuroraImage.kt$AuroraImage$fun ch(row: Int)</ID>
+    <ID>MaxLineLength:AuroraImage.kt$AuroraImage$fun m(v: Float)</ID>
+    <ID>MaxLineLength:AuroraImage.kt$AuroraImage$if (saturation &lt; .15) return saturationMatrix(.12f)</ID>
+    <ID>MaxLineLength:AuroraImage.kt$AuroraImage$panX = (.85 * sin(t * .013 + .7)).toFloat()</ID>
+    <ID>MaxLineLength:AuroraImage.kt$AuroraImage$panY = (.85 * sin(t * .009 + 2.1)).toFloat()</ID>
+    <ID>MaxLineLength:AuroraImage.kt$AuroraImage$private</ID>
+    <ID>MaxLineLength:AuroraImage.kt$AuroraImage$private val darkPlateDarkest = Rgb(0, 13, 15) // FG: lib/ui/kit/live_background/styles/kit_live_aurora_image.dart:128</ID>
+    <ID>MaxLineLength:AuroraImage.kt$AuroraImage$private val darkPlateFrostedBrightest = Rgb(76, 232, 160) // FG: lib/ui/kit/live_background/styles/kit_live_aurora_image.dart:125</ID>
+    <ID>MaxLineLength:AuroraImage.kt$AuroraImage$private val darkPlateFrostedDarkest = Rgb(0, 15, 16) // FG: lib/ui/kit/live_background/styles/kit_live_aurora_image.dart:124</ID>
+    <ID>MaxLineLength:AuroraImage.kt$AuroraImage$private val lightPlateBrightest = Rgb(226, 254, 228) // FG: lib/ui/kit/live_background/styles/kit_live_aurora_image.dart:112</ID>
+    <ID>MaxLineLength:AuroraImage.kt$AuroraImage$private val lightPlateDarkest = Rgb(1, 45, 48) // FG: lib/ui/kit/live_background/styles/kit_live_aurora_image.dart:111</ID>
+    <ID>MaxLineLength:AuroraImage.kt$AuroraImage$private val lightPlateFrostedBrightest = Rgb(122, 252, 200) // FG: lib/ui/kit/live_background/styles/kit_live_aurora_image.dart:127</ID>
+    <ID>MaxLineLength:AuroraImage.kt$AuroraImage$private val lightPlateFrostedDarkest = Rgb(1, 53, 54) // FG: lib/ui/kit/live_background/styles/kit_live_aurora_image.dart:126</ID>
+    <ID>MaxLineLength:AuroraImage.kt$AuroraImage$public</ID>
+    <ID>MaxLineLength:AuroraImage.kt$AuroraImage$val saturation = if (lightness == 1.0 || lightness == 0.0) 0.0 else (delta / (1.0 - abs(2.0 * lightness - 1.0))).coerceIn(0.0, 1.0)</ID>
+    <ID>MaxLineLength:AuroraImage.kt$AuroraImage$zoom = (1.08 + .02 * sin(t * .021)).toFloat()</ID>
+    <ID>MaxLineLength:BrutalSpec.kt$BrutalSpec$SurfaceDecoration(fill = if (edged &amp;&amp; !r.withinGroup) ink.withAlpha(.9f) else roles.clear())</ID>
+    <ID>MaxLineLength:BrutalSpec.kt$BrutalSpec$SurfaceDecoration(radii = r.radii, circle = r.circle, fill = if (r.pressed) roles.surface3 else ink.withAlpha(.04f))</ID>
+    <ID>MaxLineLength:BrutalSpec.kt$BrutalSpec$SurfaceRole.Field -&gt; box(r.color ?: r.levelFill, ring = if (r.selected) listOf(Shadow(0f, 0f, 0f, roles.accent, spreadDp = FOCUS_RING)) else emptyList())</ID>
+    <ID>MaxLineLength:BrutalSpec.kt$BrutalSpec$if (r.level == SurfaceLevel.Ground &amp;&amp; r.color == null) return SurfaceDecoration(radii = r.radii, circle = r.circle, fill = r.roles.ground)</ID>
+    <ID>MaxLineLength:BrutalSpec.kt$BrutalSpec$type = StyleType(displayWeight = 800, displayTracking = -.03f, bodyWeight = 500, monoLabels = true, firmWeights = true)</ID>
+    <ID>MaxLineLength:BrutalSpec.kt$BrutalSpec$val next = roles.copy(ground = stir(roles.ground, w), surface1 = paper, surface2 = paper, surface3 = stir(roles.surface3, w))</ID>
+    <ID>MaxLineLength:BrutalSpec.kt$BrutalSpec$val ringed = roles.dark &amp;&amp; r.selected &amp;&amp; r.color == null &amp;&amp; (r.role == SurfaceRole.Content || r.role == SurfaceRole.Control)</ID>
+    <ID>MaxLineLength:ColorMath.kt$DColor(out, (fg.r * alpha + bg.r * ba) / out, (fg.g * alpha + bg.g * ba) / out, (fg.b * alpha + bg.b * ba) / out)</ID>
+    <ID>MaxLineLength:FlutterKit.kt$// Curves read from the Flutter SDK's curves.dart (flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/packages/flutter/lib/src/animation/curves.dart).</ID>
+    <ID>MaxLineLength:FlutterKit.kt$// GENERATED by native/tool/design/gen_tokens.py from the Flutter kit at mobile-next/master (9c50bd5ed). Do not edit by hand:</ID>
+    <ID>MaxLineLength:FlutterKit.kt$FlutterKitCurves$public val emphasized: FlutterCurve = FlutterCurve.ThreePointCubic(0.05f, 0f, 0.133333f, 0.06f, 0.166666f, 0.4f, 0.208333f, 0.82f, 0.25f, 1f)</ID>
+    <ID>MaxLineLength:FlutterKit.kt$FlutterKitCurves$public val rowReturnPath: FlutterCurve = FlutterCurve.Flipped(FlutterCurve.ThreePointCubic(0.05f, 0f, 0.133333f, 0.06f, 0.166666f, 0.4f, 0.208333f, 0.82f, 0.25f, 1f))</ID>
+    <ID>MaxLineLength:FlutterKit.kt$FlutterKitRoles$public val graphiteDark: Roles = Roles(dark = true, ground = argb(0xFF0B0C0E), surface1 = argb(0xFF141518), surface2 = argb(0xFF1B1C20), surface3 = argb(0xFF26282D), hairline = argb(0x12FFFFFF), text1 = argb(0xFFF3F3F1), text2 = argb(0xFFA3A5AB), text3 = argb(0xFF8C8F96), accent = argb(0xFF3DDC8A), onAccent = argb(0xFF03140B), partner = argb(0xFFC7A6FF), onPartner = argb(0xFF111214), attention = argb(0xFFFFB547), attentionFill = argb(0xFFFFB547), onAttentionFill = argb(0xFF1A1000), attentionSurface = argb(0x17FFB547), attentionLine = argb(0x4DFFB547), success = argb(0xFF3DDC8A), scrim = argb(0x94000000), codeKeyword = argb(0xFFC7A6FF), codeString = argb(0xFFFFB88A), codeType = argb(0xFF7FD1FF), elevationShadow = argb(0x4D000000))</ID>
+    <ID>MaxLineLength:FlutterKit.kt$FlutterKitRoles$public val graphiteLight: Roles = Roles(dark = false, ground = argb(0xFFF3F3F1), surface1 = argb(0xFFFAFAF8), surface2 = argb(0xFFFFFFFF), surface3 = argb(0xFFE9E9E6), hairline = argb(0x14000000), text1 = argb(0xFF111214), text2 = argb(0xFF50535A), text3 = argb(0xFF62656C), accent = argb(0xFF087F43), onAccent = argb(0xFFFFFFFF), partner = argb(0xFF6D4AFF), onPartner = argb(0xFFFFFFFF), attention = argb(0xFF9A5700), attentionFill = argb(0xFFFFB547), onAttentionFill = argb(0xFF1A1000), attentionSurface = argb(0x1FFFA600), attentionLine = argb(0x4DBE6E00), success = argb(0xFF087F43), scrim = argb(0x94000000), codeKeyword = argb(0xFF6D4AFF), codeString = argb(0xFFB4480B), codeType = argb(0xFF0B6BA8), elevationShadow = argb(0x4D000000))</ID>
+    <ID>MaxLineLength:FrostPolicy.kt$FrostStrength.Companion$public fun fromStorage(name: String?): FrostStrength</ID>
+    <ID>MaxLineLength:GlassFinish.kt$GlassFinish$*</ID>
+    <ID>MaxLineLength:GlassFinish.kt$GlassFinish$for (i in texts.indices) if (wcagContrast(texts[i], seen) &lt; targets[i] - 1e-6) return d.copy(innerGlow = Argb(0))</ID>
+    <ID>MaxLineLength:GlassFinish.kt$GlassFinish$private</ID>
+    <ID>MaxLineLength:GlassFinish.kt$GlassFinish$return Argb((alpha shl 24) or (ch(face.red, smoke.red) shl 16) or (ch(face.green, smoke.green) shl 8) or ch(face.blue, smoke.blue))</ID>
+    <ID>MaxLineLength:GlassSpec.kt$GlassSpec$*</ID>
+    <ID>MaxLineLength:GlassSpec.kt$GlassSpec$/** Words on a chosen control or a secondary button (hook H3): the primary ink; a part's own fill keeps its own words. */</ID>
+    <ID>MaxLineLength:GlassSpec.kt$GlassSpec$SurfaceRole.Control, SurfaceRole.Field, SurfaceRole.Toggle -&gt; .08f</ID>
+    <ID>MaxLineLength:GlassSpec.kt$GlassSpec$SurfaceRole.Control, SurfaceRole.Field, SurfaceRole.Toggle -&gt; .6f</ID>
+    <ID>MaxLineLength:GlassSpec.kt$GlassSpec$SurfaceRole.Ground, SurfaceRole.Code, SurfaceRole.Divider, SurfaceRole.StateLayer -&gt; .4f</ID>
+    <ID>MaxLineLength:GlassSpec.kt$GlassSpec$fillStart = lerp(base, white, if (dark) SHEEN else SHEEN * 2).withAlpha(minOf(1f, alpha + (if (dark) .04f else .12f)))</ID>
+    <ID>MaxLineLength:GlassSpec.kt$GlassSpec$listOf(Shadow(0f, 12f, 32f, if (dark) roles.elevationShadow else shade.withAlpha(.14f), spreadDp = -8f))</ID>
+    <ID>MaxLineLength:GlassSpec.kt$GlassSpec$roles.copy(scrim = styleShade(roles).withAlpha(if (roles.dark) .24f else .10f))</ID>
+    <ID>MaxLineLength:GlassSpec.kt$GlassSpec$shade.withAlpha(if (dark) (if (raised) .40f else .28f) else (if (raised) .16f else .11f))</ID>
+    <ID>MaxLineLength:GlassSpec.kt$GlassSpec$val lift = (if (r.selected) .12f else 0f) + (if (r.pressed) .08f else 0f) // FG: lib/ui/kit/style/kit_style_glass.dart:180</ID>
+    <ID>MaxLineLength:GlassSpec.kt$GlassSpec$val lift = if (dark) (if (r.pressed) .10f else .06f) else (if (r.pressed) .42f else .28f) // FG: lib/ui/kit/style/kit_style_glass.dart:269</ID>
+    <ID>MaxLineLength:GlassSpecParityTest.kt$GlassSpecParityTest$SurfaceRole.Content to (.42f to .50f)</ID>
+    <ID>MaxLineLength:GlassSpecParityTest.kt$GlassSpecParityTest$SurfaceRole.Floating to (.50f to .62f)</ID>
+    <ID>MaxLineLength:GlassSpecParityTest.kt$GlassSpecParityTest$assertEquals(107, GlassSpec.resolve(req(Graphite.light, SurfaceRole.StateLayer, pressed = true))!!.fill!!.alpha)</ID>
+    <ID>MaxLineLength:GlassSpecParityTest.kt$GlassSpecParityTest$assertEquals(roles.ground, GlassSpec.resolve(req(roles, SurfaceRole.Ground, level = io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel.Ground))!!.fill)</ID>
+    <ID>MaxLineLength:GlassSpecParityTest.kt$GlassSpecParityTest$assertEquals(roles.surface1.withAlpha(1f).over(roles.ground), GlassSpec.resolve(req(roles, SurfaceRole.Code))!!.fill)</ID>
+    <ID>MaxLineLength:GlassSpecParityTest.kt$GlassSpecParityTest$for (r in listOf(SurfaceRole.Content, SurfaceRole.Control, SurfaceRole.Track, SurfaceRole.Field)) assertEquals(20f, GlassSpec.frostSigma(r))</ID>
+    <ID>MaxLineLength:GlassSpecParityTest.kt$GlassSpecParityTest$for (r in listOf(SurfaceRole.Toggle, SurfaceRole.Ground, SurfaceRole.Code, SurfaceRole.Divider, SurfaceRole.StateLayer)) assertEquals(0f, GlassSpec.frostSigma(r))</ID>
+    <ID>MaxLineLength:GlassSpecParityTest.kt$GlassSpecParityTest$val flat = GlassSpec.resolve(req(Graphite.dark, SurfaceRole.Content, Knobs(depth = Depth.Flat)))!!.shadows.single()</ID>
+    <ID>MaxLineLength:GlassSpecParityTest.kt$GlassSpecParityTest$val raised = GlassSpec.resolve(req(Graphite.dark, SurfaceRole.Content, Knobs(depth = Depth.Raised)))!!.shadows.single()</ID>
+    <ID>MaxLineLength:Haptic.kt$public</ID>
+    <ID>MaxLineLength:KitEffectsParityTest.kt$KitEffectsParityTest$assertEquals(listOf("solid", "glass", "soft", "brutal", "paper", "signal"), Style.entries.map { it.storageName })</ID>
+    <ID>MaxLineLength:KitEffectsParityTest.kt$KitEffectsParityTest$val original = KitAppearance(style = Style.Soft, fineTune = FineTuneChoice(Corners.Sharp, Density.Compact), liveBackground = true)</ID>
+    <ID>MaxLineLength:KitHapticsParityTest.kt$KitHapticsParityTest$assertEquals(listOf("Send","Done","Commit","LongPress","Select","ToggleOn","ToggleOff"),KitHaptic.entries.map { it.name })</ID>
+    <ID>MaxLineLength:KitLayoutParityTest.kt$KitLayoutParityTest$assertEquals(listOf(296,700,360,340,80,400,340), listOf(Layout.PANE_LIST_WIDTH,Layout.PANE_DETAIL_MAX_WIDTH,Layout.PANE_DETAIL_MIN_WIDTH,Layout.PANE_SIDE_WIDTH,Layout.RAIL_WIDTH,Layout.SIDEBAR_MAX_WIDTH,Layout.PAIR_ROW_MIN_WIDTH))</ID>
+    <ID>MaxLineLength:KitLayoutParityTest.kt$KitLayoutParityTest$assertEquals(listOf(600,840,1200,480), listOf(Layout.MEDIUM_FROM,Layout.EXPANDED_FROM,Layout.LARGE_FROM,Layout.SHORT_HEIGHT))</ID>
+    <ID>MaxLineLength:KitLayoutParityTest.kt$KitLayoutParityTest$assertEquals(listOf(700,720,960,640,560,480,320,200,480,440,400,400,320,96), listOf(Layout.CONVERSATION_WIDTH,Layout.READING_WIDTH,Layout.LIST_WIDTH,Layout.SHEET_MAX_WIDTH,Layout.CONFIRM_WIDTH,Layout.DIALOG_WIDTH,Layout.POPOVER_MAX_WIDTH,Layout.POPOVER_MIN_WIDTH,Layout.UNDO_MAX_WIDTH,Layout.STATE_MAX_WIDTH,Layout.LANE_MAX_WIDTH,Layout.CONTROL_MAX_WIDTH,Layout.CHIP_MAX_WIDTH,Layout.GLYPH_MAX_WIDTH))</ID>
+    <ID>MaxLineLength:KitLayoutParityTest.kt$KitLayoutParityTest$for ((width, expected) in listOf(0f to WindowClass.Compact,599.99f to WindowClass.Compact,600f to WindowClass.Medium,839.99f to WindowClass.Medium,840f to WindowClass.Expanded,1199.99f to WindowClass.Expanded,1200f to WindowClass.Large)) assertEquals(expected,WindowClass.of(width))</ID>
+    <ID>MaxLineLength:KitStyleBrutalParityTest.kt$KitStyleBrutalParityTest$assertEquals(StyleType(displayWeight = 800, displayTracking = -.03f, bodyWeight = 500, monoLabels = true, firmWeights = true), t.type)</ID>
+    <ID>MaxLineLength:KitStyleBrutalParityTest.kt$KitStyleBrutalParityTest$val compact = mapOf(SurfaceRole.Content to 3f, SurfaceRole.Control to 2f, SurfaceRole.Track to 0f, SurfaceRole.Floating to 4f, SurfaceRole.Sheet to 3f, SurfaceRole.Field to 0f)</ID>
+    <ID>MaxLineLength:KitStyleBrutalParityTest.kt$KitStyleBrutalParityTest$val full = mapOf(SurfaceRole.Content to 4f, SurfaceRole.Control to 3f, SurfaceRole.Track to 0f, SurfaceRole.Floating to 6f, SurfaceRole.Sheet to 4f, SurfaceRole.Field to 0f)</ID>
+    <ID>MaxLineLength:KitStylePaperParityTest.kt$KitStylePaperParityTest$/** lib/ui/kit/style/kit_style_paper.dart: constants, tokens, ink boxes, inverted chosen controls, no content shadows. */</ID>
+    <ID>MaxLineLength:KitStylePaperParityTest.kt$KitStylePaperParityTest$assertEquals(0, PaperSpec.resolve(req(Graphite.light, SurfaceRole.Divider, Knobs(edges = Edges.None)))!!.fill!!.alpha)</ID>
+    <ID>MaxLineLength:KitStylePaperParityTest.kt$KitStylePaperParityTest$assertEquals(StyleType(displayWeight = 750, displayTracking = -.03f, largeTitleSize = 34, titleSize = 24, monoLabels = true, firmWeights = true), t.type)</ID>
+    <ID>MaxLineLength:KitStylePaperParityTest.kt$KitStylePaperParityTest$assertTrue(PaperSpec.resolve(req(Graphite.light, SurfaceRole.Floating, Knobs(depth = Depth.Flat)))!!.shadows.isEmpty())</ID>
+    <ID>MaxLineLength:KitStylePaperParityTest.kt$KitStylePaperParityTest$val section = PaperSpec.resolve(req(Graphite.light, SurfaceRole.Divider, Knobs(edges = Edges.Hairline), selected = true))!!</ID>
+    <ID>MaxLineLength:KitStyleParityTest.kt$KitStyleParityTest$assertEquals("auroraImage", StyleResolver.liveLookAfterChoosing(Style.Glass, Style.Glass, "auroraImage", "aurora"))</ID>
+    <ID>MaxLineLength:KitStyleParityTest.kt$KitStyleParityTest$assertEquals(listOf("solid", "glass", "soft", "brutal", "paper", "signal"), Style.entries.map { it.storageName })</ID>
+    <ID>MaxLineLength:KitStyleParityTest.kt$KitStyleParityTest$val d = StyleResolver.spec(s).resolve(req(roles, SurfaceRole.Ground, level = io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel.Ground))</ID>
+    <ID>MaxLineLength:KitStyleSignalParityTest.kt$KitStyleSignalParityTest$StyleType(displayWeight = 700, largeTitleSize = 32, largeTitleWeight = 760, displayTracking = -.02f, titleSize = 22, engravedLabels = true, firmWeights = true)</ID>
+    <ID>MaxLineLength:KitStyleSignalParityTest.kt$KitStyleSignalParityTest$assertEquals(0, SignalSpec.resolve(req(roles, SurfaceRole.Divider, Knobs(edges = Edges.Hairline), selected = true)).fill!!.alpha)</ID>
+    <ID>MaxLineLength:KitStyleSignalParityTest.kt$KitStyleSignalParityTest$assertEquals(roles.hairline, SignalSpec.resolve(req(roles, SurfaceRole.Divider, Knobs(edges = Edges.Hairline))).fill)</ID>
+    <ID>MaxLineLength:KitStyleSignalParityTest.kt$KitStyleSignalParityTest$val d = SignalSpec.resolve(req(Graphite.light, SurfaceRole.Track, Knobs(corners = Corners.Sharp), radii = Radii(12f, 2f, 12f, 2f)))</ID>
+    <ID>MaxLineLength:KitStyleSignalParityTest.kt$KitStyleSignalParityTest$val round = SignalSpec.resolve(req(Graphite.light, SurfaceRole.Track, Knobs(corners = Corners.Round), radii = Radii.all(12f)))</ID>
+    <ID>MaxLineLength:KitStyleSoftParityTest.kt$KitStyleSoftParityTest$SurfaceRole.Content to (6f to 16f)</ID>
+    <ID>MaxLineLength:KitStyleSoftParityTest.kt$KitStyleSoftParityTest$SurfaceRole.Floating to (6f to 16f)</ID>
+    <ID>MaxLineLength:KitStyleSoftParityTest.kt$KitStyleSoftParityTest$for</ID>
+    <ID>MaxLineLength:KitStyleSoftParityTest.kt$KitStyleSoftParityTest$for (roles in bothModes) assertEquals(1f, SoftSpec.resolve(req(roles, SurfaceRole.Control, Knobs(), selected = true))!!.paired!!.inset)</ID>
+    <ID>MaxLineLength:KitStyleSoftParityTest.kt$KitStyleSoftParityTest$val d = SoftSpec.resolve(req(Graphite.light, SurfaceRole.Content, Knobs(depth = Depth.Flat, edges = Edges.Hairline)))!!</ID>
+    <ID>MaxLineLength:KitStyleSolidParityTest.kt$KitStyleSolidParityTest$/** lib/ui/kit/style/kit_style_solid.dart: defaults, keepsNestedSurfaces, flatLists; every role keeps the part's own look. */</ID>
+    <ID>MaxLineLength:Layout.kt$Layout$/** Whether the side pane shows too (Dart `showsSide`): a large window, not short, with room for the detail after it. */</ID>
+    <ID>MaxLineLength:Layout.kt$Layout$public</ID>
+    <ID>MaxLineLength:Layout.kt$Layout$window == WindowClass.Large &amp;&amp; !short &amp;&amp; roomForDetail(bodyWidthDp, listInBody, withSide = true) &gt;= PANE_DETAIL_MIN_WIDTH</ID>
+    <ID>MaxLineLength:LayoutTokensTest.kt$LayoutTokensTest$CapRole.State to 440</ID>
+    <ID>MaxLineLength:LayoutTokensTest.kt$LayoutTokensTest$assertFalse(Layout.showsDetail(WindowClass.Expanded, short = false, bodyWidthDp = 840f - 296f))</ID>
+    <ID>MaxLineLength:LayoutTokensTest.kt$LayoutTokensTest$for (r in listOf(CapRole.Popover, CapRole.Toast, CapRole.Lane, CapRole.Chip)) assertEquals(CapAlign.Start, r.defaultAlign)</ID>
+    <ID>MaxLineLength:LayoutTokensTest.kt$LayoutTokensTest$for (r in listOf(CapRole.Reading, CapRole.List, CapRole.State, CapRole.Glyph)) assertEquals(CapAlign.Center, r.defaultAlign)</ID>
+    <ID>MaxLineLength:Packs.kt$Pack$public</ID>
+    <ID>MaxLineLength:PacksGenerated.kt$PacksGenerated$PackId.Amber to GeneratedSpec("Amber", dark = PackSource(argb(0xFF1A1608), argb(0xFFF3EBD3), argb(0xFFFFCA28), argb(0xFFFFAB40), seedTertiary = argb(0xFFAECFAC), success = null), light = PackSource(argb(0xFFFFFBF0), argb(0xFF33290A), argb(0xFF9A6700), argb(0xFFB45309), seedTertiary = argb(0xFF506440), success = null))</ID>
+    <ID>MaxLineLength:PacksGenerated.kt$PacksGenerated$PackId.Ayu to GeneratedSpec("Ayu", dark = PackSource(argb(0xFF0B0E14), argb(0xFFBFBDB6), argb(0xFFE6B450), argb(0xFF39BAE6), seedTertiary = argb(0xFFB2CFA7), success = argb(0xFFAAD94C)), light = PackSource(argb(0xFFFCFCFC), argb(0xFF5C6166), argb(0xFFC77700), argb(0xFF2B7BB9), seedTertiary = argb(0xFF57633A), success = null))</ID>
+    <ID>MaxLineLength:PacksGenerated.kt$PacksGenerated$PackId.Cobalt to GeneratedSpec("Cobalt", dark = PackSource(argb(0xFF193549), argb(0xFFE1EFFF), argb(0xFFFFC600), argb(0xFF9EFFFF), seedTertiary = argb(0xFFAECFAC), success = argb(0xFF3AD900)), light = PackSource(argb(0xFFF2F8FF), argb(0xFF14324A), argb(0xFF0B63C5), argb(0xFFB07D00), seedTertiary = argb(0xFF705574), success = null))</ID>
+    <ID>MaxLineLength:PacksGenerated.kt$PacksGenerated$PackId.Coffee to GeneratedSpec("Coffee", dark = PackSource(argb(0xFF1C1612), argb(0xFFEBDDCF), argb(0xFFD4A373), argb(0xFFC9ADA7), seedTertiary = argb(0xFFC0CC9A), success = null), light = PackSource(argb(0xFFFAF5EF), argb(0xFF33261C), argb(0xFF8B5E34), argb(0xFF7A5C58), seedTertiary = argb(0xFF5A6238), success = null))</ID>
+    <ID>MaxLineLength:PacksGenerated.kt$PacksGenerated$PackId.Dracula to GeneratedSpec("Dracula", dark = PackSource(argb(0xFF282A36), argb(0xFFF8F8F2), argb(0xFFBD93F9), argb(0xFFFF79C6), seedTertiary = argb(0xFFF2B7C2), success = argb(0xFF50FA7B)), light = PackSource(argb(0xFFF8F8F2), argb(0xFF282A36), argb(0xFF7C4DDB), argb(0xFFC2185B), seedTertiary = argb(0xFF7E525E), success = null))</ID>
+    <ID>MaxLineLength:PacksGenerated.kt$PacksGenerated$PackId.Everforest to GeneratedSpec("Everforest", dark = PackSource(argb(0xFF2D353B), argb(0xFFD3C6AA), argb(0xFFA7C080), argb(0xFF7FBBB3), seedTertiary = argb(0xFFA0D0CA), success = argb(0xFFA7C080)), light = PackSource(argb(0xFFFDF6E3), argb(0xFF5C6A72), argb(0xFF5F8A1E), argb(0xFF3A94C5), seedTertiary = argb(0xFF386662), success = null))</ID>
+    <ID>MaxLineLength:PacksGenerated.kt$PacksGenerated$PackId.Forest to GeneratedSpec("Forest", dark = PackSource(argb(0xFF0F1A14), argb(0xFFDCE8DD), argb(0xFF6FCF97), argb(0xFF8FB9A8), seedTertiary = argb(0xFFA3CDDB), success = null), light = PackSource(argb(0xFFF3F8F3), argb(0xFF17301F), argb(0xFF1F7A45), argb(0xFF4B7F68), seedTertiary = argb(0xFF3A656F), success = null))</ID>
+    <ID>MaxLineLength:PacksGenerated.kt$PacksGenerated$PackId.Github to GeneratedSpec("GitHub", dark = PackSource(argb(0xFF0D1117), argb(0xFFE6EDF3), argb(0xFF4493F8), argb(0xFFA371F7), seedTertiary = argb(0xFFDBBCE1), success = argb(0xFF3FB950)), light = PackSource(argb(0xFFFFFFFF), argb(0xFF1F2328), argb(0xFF0969DA), argb(0xFF8250DF), seedTertiary = argb(0xFF715574), success = null))</ID>
+    <ID>MaxLineLength:PacksGenerated.kt$PacksGenerated$PackId.HighContrast to GeneratedSpec("High contrast", dark = PackSource(argb(0xFF000000), argb(0xFFFFFFFF), argb(0xFFFFEB3B), argb(0xFF80D8FF), seedTertiary = argb(0xFFA7D0B7), success = argb(0xFF69F0AE)), light = PackSource(argb(0xFFFFFFFF), argb(0xFF000000), argb(0xFF0037A6), argb(0xFF6A00A8), seedTertiary = argb(0xFF75546F), success = null))</ID>
+    <ID>MaxLineLength:PacksGenerated.kt$PacksGenerated$PackId.Kanagawa to GeneratedSpec("Kanagawa", dark = PackSource(argb(0xFF1F1F28), argb(0xFFDCD7BA), argb(0xFF7E9CD8), argb(0xFF957FB8), seedTertiary = argb(0xFFDEBCDF), success = argb(0xFF98BB6C)), light = PackSource(argb(0xFFF2ECBC), argb(0xFF545464), argb(0xFF4D699B), argb(0xFF624C83), seedTertiary = argb(0xFF705574), success = null))</ID>
+    <ID>MaxLineLength:PacksGenerated.kt$PacksGenerated$PackId.Lavender to GeneratedSpec("Lavender", dark = PackSource(argb(0xFF1A1726), argb(0xFFE6E1F7), argb(0xFFB39DDB), argb(0xFF9FA8DA), seedTertiary = argb(0xFFF1B7C5), success = null), light = PackSource(argb(0xFFF8F6FE), argb(0xFF2A2340), argb(0xFF6A4BC4), argb(0xFF4F5BB5), seedTertiary = argb(0xFF7D5261), success = null))</ID>
+    <ID>MaxLineLength:PacksGenerated.kt$PacksGenerated$PackId.Midnight to GeneratedSpec("Midnight", dark = PackSource(argb(0xFF000000), argb(0xFFEDEDED), argb(0xFF8AB4F8), argb(0xFFC58AF9), seedTertiary = argb(0xFFDBBCE1), success = null), light = PackSource(argb(0xFFFFFFFF), argb(0xFF111111), argb(0xFF1A56DB), argb(0xFF7C3AED), seedTertiary = argb(0xFF745470), success = null))</ID>
+    <ID>MaxLineLength:PacksGenerated.kt$PacksGenerated$PackId.Mint to GeneratedSpec("Mint", dark = PackSource(argb(0xFF10201D), argb(0xFFDBF1EC), argb(0xFF5EEAD4), argb(0xFF7DD3FC), seedTertiary = argb(0xFFACCAE5), success = null), light = PackSource(argb(0xFFF1FBF9), argb(0xFF12332D), argb(0xFF0F766E), argb(0xFF0369A1), seedTertiary = argb(0xFF47617A), success = null))</ID>
+    <ID>MaxLineLength:PacksGenerated.kt$PacksGenerated$PackId.Monokai to GeneratedSpec("Monokai", dark = PackSource(argb(0xFF272822), argb(0xFFF8F8F2), argb(0xFFFD971F), argb(0xFF66D9EF), seedTertiary = argb(0xFFC2CC99), success = argb(0xFFA6E22E)), light = PackSource(argb(0xFFFAF8F2), argb(0xFF272822), argb(0xFFC2570C), argb(0xFF0E7490), seedTertiary = argb(0xFF646032), success = null))</ID>
+    <ID>MaxLineLength:PacksGenerated.kt$PacksGenerated$PackId.NightOwl to GeneratedSpec("Night Owl", dark = PackSource(argb(0xFF011627), argb(0xFFD6DEEB), argb(0xFF82AAFF), argb(0xFFC792EA), seedTertiary = argb(0xFFDFBBDE), success = argb(0xFFADDB67)), light = PackSource(argb(0xFFFBFBFB), argb(0xFF403F53), argb(0xFF1F6FB5), argb(0xFF994CC3), seedTertiary = argb(0xFF6B5778), success = null))</ID>
+    <ID>MaxLineLength:PacksGenerated.kt$PacksGenerated$PackId.Nord to GeneratedSpec("Nord", dark = PackSource(argb(0xFF2E3440), argb(0xFFECEFF4), argb(0xFF88C0D0), argb(0xFF81A1C1), seedTertiary = argb(0xFFBFC4EB), success = argb(0xFFA3BE8C)), light = PackSource(argb(0xFFECEFF4), argb(0xFF2E3440), argb(0xFF3B6EA8), argb(0xFF4C7A8A), seedTertiary = argb(0xFF6C5677), success = null))</ID>
+    <ID>MaxLineLength:PacksGenerated.kt$PacksGenerated$PackId.Ocean to GeneratedSpec("Ocean", dark = PackSource(argb(0xFF0A1929), argb(0xFFD7E6F5), argb(0xFF4FC3F7), argb(0xFF80CBC4), seedTertiary = argb(0xFFC9C2EA), success = null), light = PackSource(argb(0xFFF1F8FD), argb(0xFF0F2A43), argb(0xFF0277BD), argb(0xFF00796B), seedTertiary = argb(0xFF695779), success = null))</ID>
+    <ID>MaxLineLength:PacksGenerated.kt$PacksGenerated$PackId.OneDark to GeneratedSpec("One Dark", dark = PackSource(argb(0xFF282C34), argb(0xFFD7DAE0), argb(0xFF61AFEF), argb(0xFFC678DD), seedTertiary = argb(0xFFD2BFE7), success = argb(0xFF98C379)), light = PackSource(argb(0xFFFAFAFA), argb(0xFF383A42), argb(0xFF4078F2), argb(0xFFA626A4), seedTertiary = argb(0xFF735471), success = null))</ID>
+    <ID>MaxLineLength:PacksGenerated.kt$PacksGenerated$PackId.Palenight to GeneratedSpec("Palenight", dark = PackSource(argb(0xFF292D3E), argb(0xFFD0D6F0), argb(0xFFC792EA), argb(0xFF89DDFF), seedTertiary = argb(0xFFF4B7BA), success = null), light = PackSource(argb(0xFFF4F3FA), argb(0xFF3B3F58), argb(0xFF7C4DFF), argb(0xFF0086B3), seedTertiary = argb(0xFF7D5261), success = null))</ID>
+    <ID>MaxLineLength:PacksGenerated.kt$PacksGenerated$PackId.Paper to GeneratedSpec("Paper", dark = PackSource(argb(0xFF121212), argb(0xFFE8E6E3), argb(0xFFD6C7A1), argb(0xFFA8A29E), seedTertiary = argb(0xFFACCFAF), success = null), light = PackSource(argb(0xFFFBF9F4), argb(0xFF1C1917), argb(0xFF44403C), argb(0xFF78716C), seedTertiary = argb(0xFF516440), success = null))</ID>
+    <ID>MaxLineLength:PacksGenerated.kt$PacksGenerated$PackId.RosePine to GeneratedSpec("Rosé Pine", dark = PackSource(argb(0xFF191724), argb(0xFFE0DEF4), argb(0xFFC4A7E7), argb(0xFFEBBCBA), seedTertiary = argb(0xFFF2B7C1), success = argb(0xFF9CCFD8)), light = PackSource(argb(0xFFFAF4ED), argb(0xFF575279), argb(0xFF907AA9), argb(0xFFD7827E), seedTertiary = argb(0xFF805159), success = null))</ID>
+    <ID>MaxLineLength:PacksGenerated.kt$PacksGenerated$PackId.Sakura to GeneratedSpec("Sakura", dark = PackSource(argb(0xFF22161C), argb(0xFFF8E1EA), argb(0xFFF48FB1), argb(0xFFCE93D8), seedTertiary = argb(0xFFEFBD94), success = null), light = PackSource(argb(0xFFFFF5F8), argb(0xFF3D1F2B), argb(0xFFC2185B), argb(0xFF8E24AA), seedTertiary = argb(0xFF7A5733), success = null))</ID>
+    <ID>MaxLineLength:PacksGenerated.kt$PacksGenerated$PackId.Slate to GeneratedSpec("Slate", dark = PackSource(argb(0xFF0F172A), argb(0xFFE2E8F0), argb(0xFF38BDF8), argb(0xFFA5B4FC), seedTertiary = argb(0xFFCAC1E9), success = null), light = PackSource(argb(0xFFF8FAFC), argb(0xFF0F172A), argb(0xFF2563EB), argb(0xFF4F46E5), seedTertiary = argb(0xFF745470), success = null))</ID>
+    <ID>MaxLineLength:PacksGenerated.kt$PacksGenerated$PackId.Sunset to GeneratedSpec("Sunset", dark = PackSource(argb(0xFF1F1410), argb(0xFFF6E3D7), argb(0xFFFF8A5B), argb(0xFFFFC078), seedTertiary = argb(0xFFD4C78E), success = null), light = PackSource(argb(0xFFFFF7F1), argb(0xFF3A1F14), argb(0xFFC2410C), argb(0xFFB45309), seedTertiary = argb(0xFF6A5E2F), success = null))</ID>
+    <ID>MaxLineLength:PacksGenerated.kt$PacksGenerated$PackId.Synthwave to GeneratedSpec("Synthwave", dark = PackSource(argb(0xFF241B2F), argb(0xFFF4EEFF), argb(0xFFFF7EDB), argb(0xFF36F9F6), seedTertiary = argb(0xFFF4B9A0), success = argb(0xFF72F1B8)), light = PackSource(argb(0xFFFBF5FF), argb(0xFF2A1B3D), argb(0xFFC2189B), argb(0xFF0E8A8A), seedTertiary = argb(0xFF80543E), success = null))</ID>
+    <ID>MaxLineLength:PacksGenerated.kt$PacksGenerated$PackId.TokyoNight to GeneratedSpec("Tokyo Night", dark = PackSource(argb(0xFF1A1B26), argb(0xFFC0CAF5), argb(0xFF7AA2F7), argb(0xFFBB9AF7), seedTertiary = argb(0xFFDFBBDE), success = argb(0xFF9ECE6A)), light = PackSource(argb(0xFFE1E2E7), argb(0xFF343B58), argb(0xFF2E7DE9), argb(0xFF9854F1), seedTertiary = argb(0xFF705574), success = null))</ID>
+    <ID>MaxLineLength:PacksTest.kt$PacksTest$assertEquals(2.0425, deltaE2000Lab(doubleArrayOf(50.0, 2.6772, -79.7751), doubleArrayOf(50.0, 0.0, -82.7485)), 1e-4)</ID>
+    <ID>MaxLineLength:PacksTest.kt$PacksTest$assertTrue(floors("dynamic dark", pack.dark.roles).isEmpty(), floors("dynamic dark", pack.dark.roles).joinToString())</ID>
+    <ID>MaxLineLength:PacksTest.kt$PacksTest$assertTrue(floors("dynamic light", pack.light.roles).isEmpty(), floors("dynamic light", pack.light.roles).joinToString())</ID>
+    <ID>MaxLineLength:PacksTest.kt$PacksTest$else</ID>
+    <ID>MaxLineLength:PacksTest.kt$PacksTest$for</ID>
+    <ID>MaxLineLength:PacksTest.kt$PacksTest$for (t in listOf(r.text1, r.text2, r.text3, r.accent, r.attention)) if (t.alpha != 255) out += "$tag translucent text"</ID>
+    <ID>MaxLineLength:PacksTest.kt$PacksTest$if</ID>
+    <ID>MaxLineLength:PacksTest.kt$PacksTest$listOf(true, false).flatMap { d -&gt; floors("${id.storageName}/${if (d) "dark" else "light"}", Packs.of(id).palette(d).roles) }</ID>
+    <ID>MaxLineLength:PacksTest.kt$PacksTest$val accents = listOf(0xFF3DDC8A, 0xFF5AB0FF, 0xFFFF8A4C, 0xFFC7A6FF, 0xFFFFEB3B, 0xFF1A237E, 0xFF808080, 0xFFE91E63)</ID>
+    <ID>MaxLineLength:PacksTest.kt$PacksTest$val surfaces = mapOf("ground" to r.ground, "surface1" to r.surface1, "surface2" to r.surface2, "surface3" to r.surface3)</ID>
+    <ID>MaxLineLength:PaperSpec.kt$PaperSpec$fill = if (r.role == SurfaceRole.Field) roles.ground.withAlpha(0f) else (if (r.selected) r.color else null) ?: r.levelFill</ID>
+    <ID>MaxLineLength:PaperSpec.kt$PaperSpec$fill = r.color ?: if (down || (step &amp;&amp; !edges)) roles.surface3 else if (step) roles.ground else roles.ground.withAlpha(0f)</ID>
+    <ID>MaxLineLength:PaperSpec.kt$PaperSpec$if (r.knobs.depth == Depth.Raised &amp;&amp; r.role == SurfaceRole.Floating) listOf(floatingLift(roles)) else emptyList()</ID>
+    <ID>MaxLineLength:PaperSpec.kt$PaperSpec$if (r.selected &amp;&amp; edged) SurfaceDecoration(fill = ink.withAlpha(SECTION_ALPHA), edgeWidthDp = 1f) else SurfaceDecoration(fill = rule)</ID>
+    <ID>MaxLineLength:PaperSpec.kt$PaperSpec$type = StyleType(displayWeight = 750, displayTracking = -.03f, largeTitleSize = 34, titleSize = 24, monoLabels = true, firmWeights = true)</ID>
+    <ID>MaxLineLength:Reqs.kt$)</ID>
+    <ID>MaxLineLength:Roles.kt$Graphite$/** Graphite, the default pack (stored as `opencode`). Values copied from `lib/ui/theme_roles.dart` (graphiteDark/Light). */</ID>
+    <ID>MaxLineLength:SignalSpec.kt$SignalPalette.Companion$argb(0xFF000000)</ID>
+    <ID>MaxLineLength:SignalSpec.kt$SignalPalette.Companion$argb(0xFF15140F)</ID>
+    <ID>MaxLineLength:SignalSpec.kt$SignalPalette.Companion$argb(0xFFB3261E)</ID>
+    <ID>MaxLineLength:SignalSpec.kt$SignalPalette.Companion$argb(0xFFC0332A)</ID>
+    <ID>MaxLineLength:SignalSpec.kt$SignalPalette.Companion$false</ID>
+    <ID>MaxLineLength:SignalSpec.kt$SignalPalette.Companion$true</ID>
+    <ID>MaxLineLength:SignalSpec.kt$SignalSpec$box(r.color ?: r.levelFill, if (edges) roles.hairline else null, 1f, if (radii.uniform) lift else emptyList())</ID>
+    <ID>MaxLineLength:SignalSpec.kt$SignalSpec$if</ID>
+    <ID>MaxLineLength:SignalSpec.kt$SignalSpec$if (r.knobs.corners != Corners.Sharp) r.radii else r.radii.map { if (it &gt; tokens.sharpRadius) tokens.sharpRadius else it }</ID>
+    <ID>MaxLineLength:SignalSpec.kt$SignalSpec$private fun inverted(r: SurfaceRequest)</ID>
+    <ID>MaxLineLength:SignalSpec.kt$SignalSpec$type = StyleType(displayWeight = 700, largeTitleSize = 32, largeTitleWeight = 760, displayTracking = -.02f, titleSize = 22, engravedLabels = true, firmWeights = true)</ID>
+    <ID>MaxLineLength:SoftSpec.kt$SoftSpec$SurfaceRole.Track, SurfaceRole.Field, SurfaceRole.Toggle, SurfaceRole.Code, SurfaceRole.StateLayer -&gt; true</ID>
+    <ID>MaxLineLength:SoftSpec.kt$SoftSpec$if (filledChoice) lerp(r.color!!, roles.text1, .55f).withAlpha(.34f) else roles.text1.withAlpha(.26f)</ID>
+    <ID>MaxLineLength:SoftSpec.kt$SoftSpec$if (r.knobs.edges == Edges.Hairline) SurfaceDecoration(fill = roles.hairline) else SurfaceDecoration(fill = roles.clear())</ID>
+    <ID>MaxLineLength:SoftSpec.kt$SoftSpec$if (r.knobs.edges == Edges.Hairline) withEdge(well, roles.text3.withAlpha(.45f), r.edgeWidthDp) else well</ID>
+    <ID>MaxLineLength:SoftSpec.kt$SoftSpec$paired = PairedShadow(white.withAlpha(if (r.color != null) .07f else .10f), black.withAlpha(.85f), distance, blur, if (pressedIn) 1f else 0f)</ID>
+    <ID>MaxLineLength:SoftSpec.kt$SoftSpec$tinted(ground, white, most = if (dark) .10f else .6f, least = if (dark) LIFT + .01f else 0f, inks = listOf(roles.text1, roles.text2))</ID>
+    <ID>MaxLineLength:SoftSpec.kt$SoftSpec$val inks = listOf(roles.text1, roles.text2, roles.codeKeyword, roles.codeString, roles.codeType, roles.codeAdded)</ID>
+    <ID>MaxLineLength:Style.kt$FineTuneChoice$public</ID>
+    <ID>MaxLineLength:Style.kt$NeedsYouLook$Decision</ID>
+    <ID>MaxLineLength:Style.kt$Style$public enum</ID>
+    <ID>MaxLineLength:Style.kt$StyleTokens$/** What a style fixes for every part: its Fine-tune defaults and the tokens the resolver reads (Dart `KitStyleTokens`). */</ID>
+    <ID>MaxLineLength:Style.kt$StyleType$get</ID>
+    <ID>MaxLineLength:Style.kt$StyleType$titleSize == null</ID>
+    <ID>MaxLineLength:StyleResolver.kt$StyleResolver$/** [radiusDp] under Corners [corners]: Round keeps it, Soft takes about 60 %, Sharp takes [sharp]. Stadiums stay stadiums. */</ID>
+    <ID>MaxLineLength:StyleResolver.kt$StyleResolver$public</ID>
+    <ID>MaxLineLength:StyleSpec.kt$StyleSpec$/** The theme's roles under this style (hook H6): only ground, surface1-3, hairline, scrim, elevationShadow may change. */</ID>
+    <ID>MaxLineLength:StyleSpec.kt$val grounds = listOf(roles.ground, roles.surface1, roles.surface2, roles.surface3, styleLight(roles)).map { it.over(base) }</ID>
+    <ID>MaxLineLength:Surface.kt$PairedShadow$public data</ID>
+    <ID>MaxLineLength:Surface.kt$SurfaceRequest$/** One surface to resolve: the part's request, no look of its own (Dart `KitSurfaceRequest` without the `solid` decoration). */</ID>
+    <ID>MaxLineLength:Surface.kt$SurfaceRole$public enum</ID>
+    <ID>MaxLineLength:SurfaceFade.kt$SurfaceFade$if (x.distanceDp == 0f) y.distanceDp else if (y.distanceDp == 0f) x.distanceDp else x.distanceDp + (y.distanceDp - x.distanceDp) * t</ID>
+    <ID>MaxLineLength:SurfaceFade.kt$SurfaceFade$radii = Radii(d(a.radii.topStart, b.radii.topStart), d(a.radii.topEnd, b.radii.topEnd), d(a.radii.bottomStart, b.radii.bottomStart), d(a.radii.bottomEnd, b.radii.bottomEnd))</ID>
+    <ID>MaxLineLength:TextScalePolicy.kt$TextScalePolicy$*</ID>
+    <ID>MaxLineLength:TextScalePolicy.kt$TextScalePolicy$/** Frame text never renders larger than this times its spec size (Dart `kKitChromeMaxTextScale`; owner 2026-10-31). */</ID>
+    <ID>MaxLineLength:ThemeResolver.kt$ThemeResolver$*</ID>
+    <ID>ReturnCount:Argb.kt$public fun Argb.over(background: Argb): Argb</ID>
+    <ID>ReturnCount:AuroraImage.kt$AuroraImage$private fun hueFor(accent: Argb): FloatArray?</ID>
+    <ID>ReturnCount:BrutalSpec.kt$BrutalSpec$override fun adjustRoles(roles: Roles): Roles</ID>
+    <ID>ReturnCount:BrutalSpec.kt$BrutalSpec$override fun resolve(r: SurfaceRequest): SurfaceDecoration</ID>
+    <ID>ReturnCount:BrutalSpec.kt$BrutalSpec$public fun mintOf(roles: Roles): Argb</ID>
+    <ID>ReturnCount:GlassFinish.kt$GlassFinish$fun at(face: Argb, a: Float): Argb</ID>
+    <ID>ReturnCount:GlassFinish.kt$GlassFinish$fun thinnest(faces: List&lt;Argb&gt;): Float?</ID>
+    <ID>ReturnCount:GlassFinish.kt$GlassFinish$private fun withoutCostlyGlow(d: SurfaceDecoration, texts: List&lt;Argb&gt;, targets: List&lt;Double&gt;, spots: List&lt;Argb&gt;): SurfaceDecoration</ID>
+    <ID>ReturnCount:GlassFinish.kt$GlassFinish$public fun thickened(d: SurfaceDecoration, roles: Roles, solid: Argb, spots: List&lt;Argb&gt;): SurfaceDecoration</ID>
+    <ID>ReturnCount:PaperSpec.kt$PaperSpec$override fun resolve(r: SurfaceRequest): SurfaceDecoration</ID>
+    <ID>ReturnCount:SignalSpec.kt$SignalSpec$override fun onColor(r: SurfaceRequest): Argb?</ID>
+    <ID>ReturnCount:SoftSpec.kt$SoftSpec$override fun resolve(r: SurfaceRequest): SurfaceDecoration?</ID>
+    <ID>ReturnCount:SoftSpec.kt$SoftSpec$private fun shaped(r: SurfaceRequest): SurfaceDecoration</ID>
+    <ID>ReturnCount:StyleResolver.kt$StyleResolver$public fun liveLookAfterChoosing(previous: Style, style: Style, currentLook: String, defaultLook: String): String</ID>
+    <ID>ReturnCount:SurfaceFade.kt$SurfaceFade$public fun between(a: SurfaceDecoration, b: SurfaceDecoration, t: Float): SurfaceDecoration</ID>
+    <ID>TooManyFunctions:AuroraImage.kt$AuroraImage</ID>
+    <ID>TooManyFunctions:BrutalSpec.kt$BrutalSpec : StyleSpec</ID>
+    <ID>TooManyFunctions:ColorMath.kt$io.github.eslamasabry.oc.ui.design.color.ColorMath.kt</ID>
+    <ID>TooManyFunctions:GlassSpec.kt$GlassSpec : StyleSpec</ID>
+    <ID>TooManyFunctions:StyleSpec.kt$io.github.eslamasabry.oc.ui.design.style.StyleSpec.kt</ID>
+    <ID>WildcardImport:KitEffectsParityTest.kt$import io.github.eslamasabry.oc.ui.design.effects.*</ID>
+    <ID>WildcardImport:KitEffectsParityTest.kt$import io.github.eslamasabry.oc.ui.design.style.*</ID>
+    <ID>WildcardImport:KitEffectsParityTest.kt$import kotlin.test.*</ID>
+    <ID>WildcardImport:KitHapticsParityTest.kt$import io.github.eslamasabry.oc.ui.design.motion.*</ID>
+    <ID>WildcardImport:KitHapticsParityTest.kt$import kotlin.test.*</ID>
+    <ID>WildcardImport:KitLayoutParityTest.kt$import io.github.eslamasabry.oc.ui.design.layout.*</ID>
+    <ID>WildcardImport:KitLayoutParityTest.kt$import kotlin.test.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

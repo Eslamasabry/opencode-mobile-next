@@ -1,0 +1,215 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:ConversationDrafts.kt$DraftSession$!before.closed || before.clearPending || before.fileCommitPending || before.submissions.isNotEmpty() || !before.public.ready || before.public.text.isNotEmpty() || before.public.saved.isNotEmpty() || before.public.failure != null || before.public.attachments.isNotEmpty() || before.public.savedAttachments.isNotEmpty()</ID>
+    <ID>ComplexCondition:ConversationDrafts.kt$DraftSession$!before.public.ready || before.public.failure != null || before.closed || before.fenced || before.privacyRevision != null || owner.clearingPrivacy || before.clearPending || !owner.active(ref.profileId, generation) || (before.public.text.isEmpty() &amp;&amp; before.public.attachments.isEmpty())</ID>
+    <ID>ComplexCondition:ConversationDrafts.kt$DraftSession$!current.fenced &amp;&amp; current.privacyRevision == null &amp;&amp; !owner.clearingPrivacy &amp;&amp; !current.closed &amp;&amp; current.public.ready &amp;&amp; owner.active(ref.profileId, generation) &amp;&amp; !(current.clearPending &amp;&amp; current.public.text.isEmpty())</ID>
+    <ID>ComplexCondition:ConversationDrafts.kt$DraftSession$before.fenced || !owner.active(ref.profileId, generation) || before.public.ready || before.clearPending || before.privacyRevision != null</ID>
+    <ID>ComplexCondition:ConversationDrafts.kt$DraftSession$before.fenced || (expectedEditRevision != null &amp;&amp; before.public.editRevision != expectedEditRevision) || before.closed || before.retired || !owner.active(ref.profileId, generation) || !before.public.ready || text == before.public.text</ID>
+    <ID>ComplexCondition:ConversationDrafts.kt$DraftSession$before.fenced || before.privacyRevision != null || !owner.active(ref.profileId, generation) || revision &gt; before.revision</ID>
+    <ID>ComplexCondition:ConversationDrafts.kt$DraftSession$before.public.attachments == requested &amp;&amp; before.public.savedAttachments == requested &amp;&amp; !before.fileCommitPending &amp;&amp; before.public.failure == null</ID>
+    <ID>ComplexCondition:ConversationDrafts.kt$DraftSession$current.public.text == current.public.saved &amp;&amp; current.public.attachments == current.public.savedAttachments &amp;&amp; current.public.failure == null &amp;&amp; !current.fileCommitPending</ID>
+    <ID>ComplexCondition:DirectoryReferences.kt$DirectoryReferences$path.isBlank() || path.any { it.code &lt; 0x20 || it.code in 0x7f..0x9f } || (!path.startsWith('/') &amp;&amp; !windows &amp;&amp; !unc)</ID>
+    <ID>ComplexCondition:Drafts.kt$Drafts$cached.raw == raw &amp;&amp; (raw != null || (cached.readable &amp;&amp; cached.drafts.isEmpty()))</ID>
+    <ID>ComplexCondition:Drafts.kt$Drafts$files == null &amp;&amp; refs.isNotEmpty() &amp;&amp; previous != null &amp;&amp; previous.profileId != owner</ID>
+    <ID>ComplexCondition:FilePayloadStore.kt$FilePayloadStore$!meta.isDirectory || !HASH_ID.matches(owner) || (ownerKey != null &amp;&amp; owner != ownerKey)</ID>
+    <ID>ComplexCondition:PhraseMomentRules.kt$PhraseMomentRules$cutByLength || kind != null || stoppedByPerson || interrupted</ID>
+    <ID>ComplexCondition:PromptHistory.kt$PromptHistoryKeys$suggestionsOpen || modifier || !value.selectionValid || !value.collapsed || value.composing</ID>
+    <ID>ComplexCondition:StashedPrompt.kt$("attachmentRefs" in value || "attachmentFormat" in value) &amp;&amp; ((value["attachmentFormat"] as? JsonPrimitive)?.content != "1" || refs !is JsonArray)</ID>
+    <ID>ComplexCondition:WebSourcesReview.kt$WebSourcesReview$!canEdit() || !supportsSearch || discovering || searching || query.isBlank() || query.length &gt; MAX_QUERY || chosen == null || providers.none { it.id == chosen }</ID>
+    <ID>CyclomaticComplexMethod:ComposerInput.kt$SendDecision$public fun decide(input: SendInputs): SendAction</ID>
+    <ID>CyclomaticComplexMethod:ConversationDrafts.kt$DraftSession$private fun changeText(text: String, expectedEditRevision: Long? = null): Boolean</ID>
+    <ID>CyclomaticComplexMethod:ConversationDrafts.kt$DraftSession$private suspend fun commitAttachments(requested: List&lt;PromptAttachment&gt;): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:ConversationDrafts.kt$DraftSession$private suspend fun restore(): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:ConversationDrafts.kt$DraftSession$public fun captureSubmission(): DraftSubmission?</ID>
+    <ID>CyclomaticComplexMethod:ConversationDrafts.kt$DraftSession$public suspend fun flush(): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:DirectoryReferences.kt$DirectoryReferences$public fun reference(path: String): Outcome&lt;PromptAttachment&gt;</ID>
+    <ID>CyclomaticComplexMethod:Drafts.kt$Drafts$private fun load(): Snapshot</ID>
+    <ID>CyclomaticComplexMethod:Drafts.kt$Drafts$private suspend fun saveLocked( owner: String, sessionId: String, text: String, files: List&lt;PromptAttachment&gt;?, location: DraftLocation?, exactness: Exactness = Exactness.Plain, ): Outcome&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:FilePayloadStore.kt$FilePayloadStore$override suspend fun list(ownerKey: String?): List&lt;PayloadEntry&gt;</ID>
+    <ID>CyclomaticComplexMethod:PhotoRecovery.kt$DraftPhotoRecovery$private suspend fun recoverLocked(): PhotoRecoveryResult</ID>
+    <ID>CyclomaticComplexMethod:PhraseChips.kt$PhraseChipStore$public fun chipsFor( moment: PhraseMoment, starters: List&lt;String&gt; = emptyList(), exclude: Set&lt;String&gt; = emptySet(), limit: Int = PhraseRules.MAX_CHIPS, ): List&lt;PhraseChip&gt;</ID>
+    <ID>CyclomaticComplexMethod:PhraseMomentRules.kt$PhraseMomentRules$public fun derive( messages: List&lt;MessageWithParts&gt;, busy: Boolean, nowMs: Long, stoppedByPerson: Boolean = false, offline: Boolean = false, interruptedAfter: Duration = 30.seconds, ): PhraseMomentState</ID>
+    <ID>CyclomaticComplexMethod:PromptShelf.kt$PromptShelf$public suspend fun migrateAttachments(profile: String): List&lt;String&gt;</ID>
+    <ID>CyclomaticComplexMethod:SavedPromptMigration.kt$SavedPromptMigration$private suspend fun migrate(profile: String, current: () -&gt; Boolean): DraftMigrationResult</ID>
+    <ID>CyclomaticComplexMethod:WebSourcesReview.kt$WebSourcesReview$public suspend fun search(query: String)</ID>
+    <ID>LongMethod:ConversationDrafts.kt$DraftSession$private suspend fun restore(): Outcome&lt;Unit&gt;</ID>
+    <ID>LongMethod:Drafts.kt$Drafts$private suspend fun saveLocked( owner: String, sessionId: String, text: String, files: List&lt;PromptAttachment&gt;?, location: DraftLocation?, exactness: Exactness = Exactness.Plain, ): Outcome&lt;Unit&gt;</ID>
+    <ID>LongMethod:PhotoRecovery.kt$DraftPhotoRecovery$private suspend fun recoverLocked(): PhotoRecoveryResult</ID>
+    <ID>LongMethod:SavedPromptMigration.kt$SavedPromptMigration$private suspend fun migrate(profile: String, current: () -&gt; Boolean): DraftMigrationResult</ID>
+    <ID>LongMethod:StashTest.kt$StashTest$@Test fun `B-SEC-151 saved copy metadata and decoded text payloads are sanitized before publication`()</ID>
+    <ID>LongParameterList:Drafts.kt$Drafts$( owner: String, sessionId: String, text: String, files: List&lt;PromptAttachment&gt;?, location: DraftLocation?, exactness: Exactness = Exactness.Plain, )</ID>
+    <ID>LongParameterList:Drafts.kt$Drafts$( profileId: String, sessionId: String, text: String, attachments: List&lt;PromptAttachment&gt;, location: DraftLocation? = null, permit: () -&gt; Boolean = { true }, )</ID>
+    <ID>LongParameterList:PhotoRecovery.kt$DraftPhotoRecovery$( private val photos: PhotoRecoveryStore, private val drafts: Drafts, private val draftVault: AttachmentVault, private val prefs: ComposerPrefs, private val profiles: ComposerProfiles, private val redactor: Redactor, private val clock: Clock, )</ID>
+    <ID>LongParameterList:PhraseMomentRules.kt$PhraseMomentRules$( messages: List&lt;MessageWithParts&gt;, busy: Boolean, nowMs: Long, stoppedByPerson: Boolean = false, offline: Boolean = false, interruptedAfter: Duration = 30.seconds, )</ID>
+    <ID>LongParameterList:PhraseMomentTest.kt$PhraseMomentTest$( id: String, error: String? = null, kind: MessageErrorKind? = null, finish: String? = null, done: Boolean = true, created: Long = 1000, tools: List&lt;Pair&lt;String, ToolStatus&gt;&gt; = emptyList(), )</ID>
+    <ID>LongParameterList:ReviewReferencesTest.kt$ReviewReferencesTest$( id: String, kind: ReviewReferenceKind = ReviewReferenceKind.Selection, path: String = "lib/client.dart", lineLabel: String? = null, snippet: String? = null, comment: String? = null, scope: ReviewReferenceScope = ReviewReferenceScope.None, )</ID>
+    <ID>LoopWithTooManyJumpStatements:FilePayloadStore.kt$FilePayloadStore$for</ID>
+    <ID>LoopWithTooManyJumpStatements:Mentions.kt$Mentions$while</ID>
+    <ID>LoopWithTooManyJumpStatements:PhraseChips.kt$PhraseChipStore$for</ID>
+    <ID>LoopWithTooManyJumpStatements:PromptShelf.kt$PromptShelf$for</ID>
+    <ID>MagicNumber:ConversationDrafts.kt$DraftSession$5_000</ID>
+    <ID>MagicNumber:DirectoryReferences.kt$DirectoryReferences$0x20</ID>
+    <ID>MagicNumber:DirectoryReferences.kt$DirectoryReferences$0x7f</ID>
+    <ID>MagicNumber:DirectoryReferences.kt$DirectoryReferences$0x9f</ID>
+    <ID>MagicNumber:DirectoryReferences.kt$DirectoryReferences$0xff</ID>
+    <ID>MagicNumber:DirectoryReferences.kt$DirectoryReferences$128</ID>
+    <ID>MagicNumber:DirectoryReferences.kt$DirectoryReferences$15</ID>
+    <ID>MagicNumber:DirectoryReferences.kt$DirectoryReferences$3</ID>
+    <ID>MagicNumber:DirectoryReferences.kt$DirectoryReferences$4</ID>
+    <ID>MagicNumber:FilePayloadStore.kt$FilePayloadStore$64</ID>
+    <ID>MagicNumber:Mentions.kt$Mentions$0x80</ID>
+    <ID>MagicNumber:Mentions.kt$Mentions$0xff</ID>
+    <ID>MagicNumber:Mentions.kt$Mentions$15</ID>
+    <ID>MagicNumber:Mentions.kt$Mentions$4</ID>
+    <ID>MagicNumber:PhotoRecovery.kt$PhotoRecoveryStore$1000</ID>
+    <ID>MagicNumber:PhotoRecovery.kt$PhotoSniff$0xff</ID>
+    <ID>MagicNumber:PhotoRecovery.kt$PhotoSniff$10</ID>
+    <ID>MagicNumber:PhotoRecovery.kt$PhotoSniff$13</ID>
+    <ID>MagicNumber:PhotoRecovery.kt$PhotoSniff$137</ID>
+    <ID>MagicNumber:PhotoRecovery.kt$PhotoSniff$216</ID>
+    <ID>MagicNumber:PhotoRecovery.kt$PhotoSniff$255</ID>
+    <ID>MagicNumber:PhotoRecovery.kt$PhotoSniff$26</ID>
+    <ID>MagicNumber:PhotoRecovery.kt$PhotoSniff$71</ID>
+    <ID>MagicNumber:PhotoRecovery.kt$PhotoSniff$78</ID>
+    <ID>MagicNumber:PhotoRecovery.kt$PhotoSniff$8</ID>
+    <ID>MagicNumber:PhotoRecovery.kt$PhotoSniff$80</ID>
+    <ID>MagicNumber:ReviewReferences.kt$ReviewReference.Companion$3</ID>
+    <ID>MagicNumber:SavedPromptSafety.kt$SavedPromptSafety$16</ID>
+    <ID>MagicNumber:SavedPromptSafety.kt$SavedPromptSafety$3</ID>
+    <ID>MagicNumber:SavedPromptSafety.kt$SavedPromptSafety$4</ID>
+    <ID>MagicNumber:SavedPromptSafety.kt$SavedPromptSafety$5</ID>
+    <ID>MagicNumber:WebSourcesReview.kt$WebSourcesReview$100</ID>
+    <ID>MatchingDeclarationName:JsonRead.kt$StoredFormatException : Exception</ID>
+    <ID>MaxLineLength:AttachmentVaultTest.kt$AttachmentVaultTest$store.tamper(AttachmentVault.ownerKey("alpha"), refs[0].blob!!, "data:text/plain;base64,AAAA".encodeToByteArray().copyOf(refs[0].bytes.toInt()))</ID>
+    <ID>MaxLineLength:AttachmentVaultTest.kt$AttachmentVaultTest$val refs = stored("alpha", fileAttachment("a.dart"), PromptAttachment("image/png", "b.png", "https://x.test/b.png"))</ID>
+    <ID>MaxLineLength:ComposerInput.kt$ComposerInput$/** The word the caret ends starts with `/` ("/", "/rev", "fix this /"); without a caret, the text's start counts. */</ID>
+    <ID>MaxLineLength:ComposerInput.kt$SendBlock</ID>
+    <ID>MaxLineLength:ComposerInputTest.kt$ComposerInputTest$assertEquals(SendAction.Blocked(SendBlock.ReadOnly), SendDecision.decide(SendInputs(text = "hi", readOnly = true)))</ID>
+    <ID>MaxLineLength:ComposerInputTest.kt$ComposerInputTest$assertEquals(SendAction.Blocked(SendBlock.Sending), SendDecision.decide(SendInputs(text = "hi", sending = true)))</ID>
+    <ID>MaxLineLength:ComposerInputTest.kt$ComposerInputTest$assertEquals(SendAction.Command(TypedCommand("compact", "")), SendDecision.decide(SendInputs(text = "/compact", commands = setOf("compact"))))</ID>
+    <ID>MaxLineLength:ComposerInputTest.kt$ComposerInputTest$assertEquals(SendAction.Send, SendDecision.decide(SendInputs(text = "/compact", attachments = 1)), "a command is not a prompt; with files it is")</ID>
+    <ID>MaxLineLength:ComposerInputTest.kt$ComposerInputTest$assertEquals(SendAction.SendMidTurn(MidTurnPrompt.RestartsTurn), SendDecision.decide(base.copy(midTurn = MidTurnPrompt.RestartsTurn)))</ID>
+    <ID>MaxLineLength:ComposerInputTest.kt$ComposerInputTest$assertEquals(SendAction.SendWhenOnline, SendDecision.decide(SendInputs(text = "hi", offline = true, busy = true)))</ID>
+    <ID>MaxLineLength:ComposerInputTest.kt$ComposerInputTest$assertEquals(TypedCommand("review", "the diff\nplease"), ComposerInput.typedCommand(" /review the diff\nplease "))</ID>
+    <ID>MaxLineLength:ComposerInputTest.kt$ComposerInputTest$assertEquals(emptyList(), Mentions.resolveFileMentions("mail a@lib/server.dart", listOf(file("lib/server.dart"))))</ID>
+    <ID>MaxLineLength:ComposerInputTest.kt$ComposerInputTest$assertEquals(emptyList(), Mentions.resolveFileMentions("see @lib/server.dartx", listOf(file("lib/server.dart"))))</ID>
+    <ID>MaxLineLength:ComposerInputTest.kt$ComposerInputTest$assertEquals(start, navigation.move(false, start, emptyList()), "walking back past the newest restores the draft")</ID>
+    <ID>MaxLineLength:ComposerInputTest.kt$ComposerInputTest$assertFalse(PromptHistoryKeys.isHistoryKey(HistoryKey.Up, start.copy(composingStart = 0, composingEnd = 2), false, false))</ID>
+    <ID>MaxLineLength:ComposerInputTest.kt$ComposerInputTest$assertFalse(PromptHistoryKeys.isHistoryKey(HistoryKey.Up, start.copy(selectionStart = 7, selectionEnd = 7), false, false))</ID>
+    <ID>MaxLineLength:DraftAttachmentVaultRowsTest.kt$DraftAttachmentVaultRowsTest$fun</ID>
+    <ID>MaxLineLength:DraftAttachmentVaultRowsTest.kt$DraftAttachmentVaultRowsTest$val temporary = vault.store("a", listOf(PromptAttachment("text/plain", "temporary", "content://temporary/file")))</ID>
+    <ID>MaxLineLength:Drafts.kt$DraftRestore$"DraftRestore(text=${text?.length}, attachments=${attachments.size}, recover=$recoverSavedAttachments, tracks=$tracksDraft)"</ID>
+    <ID>MaxLineLength:FilePayloadStoreTest.kt$FilePayloadStoreTest$""""mime":"text/plain","blob":"${Sha256.hex(url)}","bytes":${url.toByteArray().size}}],"directory":"/srv","workspace":null}]"""</ID>
+    <ID>MaxLineLength:JsonRead.kt$internal fun JsonObject.boolOrNull(key: String): Boolean?</ID>
+    <ID>MaxLineLength:Mentions.kt$Mentions$private fun boundaryAfter(text: String, end: Int): Boolean</ID>
+    <ID>MaxLineLength:Mentions.kt$Mentions$private fun boundaryBefore(text: String, start: Int): Boolean</ID>
+    <ID>MaxLineLength:PhotoRecoveryTest.kt$PhotoRecoveryTest$"""{"id":"1730000000000000","profileID":"alpha","sessionID":"s1","directory":"/srv/app","workspace":null,"""</ID>
+    <ID>MaxLineLength:PhraseChipsTest.kt$PhraseChipsTest$assertEquals(listOf("Run the tests"), PhraseChipStore(prefs, "alpha", clock, redactor).chipsFor(PhraseMoment.Idle).map { it.text })</ID>
+    <ID>MaxLineLength:PhraseChipsTest.kt$PhraseChipsTest$assertEquals(listOf(PhraseChip("Continue", starter = true)), store.chipsFor(PhraseMoment.Idle, listOf("Continue")))</ID>
+    <ID>MaxLineLength:PhraseChipsTest.kt$PhraseChipsTest$assertTrue(stores.forProfile("alpha").record("Run the tests", PhraseMoment.Idle), "a re-added server learns again")</ID>
+    <ID>MaxLineLength:PhraseMomentRules.kt$PhraseMomentRules$kind != null &amp;&amp; kind != MessageErrorKind.OutputLength &amp;&amp; kind != MessageErrorKind.Aborted &amp;&amp; !stoppedByPerson</ID>
+    <ID>MaxLineLength:PhraseMomentTest.kt$PhraseMomentTest$Part(id = "t-$name", messageId = id, sessionId = "s", type = PartType.Tool, rawType = "tool", toolName = name, tool = ToolState(status))</ID>
+    <ID>MaxLineLength:PhraseMomentTest.kt$PhraseMomentTest$assertEquals(PhraseMoment.FinishedWithChanges, derive(user("u1"), assistant("a1", tools = listOf(tool to ToolStatus.Completed))).moment, tool)</ID>
+    <ID>MaxLineLength:PhraseMomentTest.kt$PhraseMomentTest$assertEquals(PhraseMoment.Idle, derive(user("u1"), assistant("a1", tools = listOf("edit" to ToolStatus.Error))).moment)</ID>
+    <ID>MaxLineLength:PhraseMomentTest.kt$PhraseMomentTest$assertEquals(PhraseMoment.Idle, derive(user("u1"), assistant("a1", tools = listOf("read" to ToolStatus.Completed))).moment)</ID>
+    <ID>MaxLineLength:PhraseMomentTest.kt$PhraseMomentTest$assertEquals(PhraseMoment.StoppedPartway, derive(user("u1"), assistant("a1", error = "Provider failed", kind = MessageErrorKind.Unknown)).moment)</ID>
+    <ID>MaxLineLength:PhraseMomentTest.kt$PhraseMomentTest$assertFalse(derive(user("u1"), assistant("a1", error = "x", kind = MessageErrorKind.OutputLength), offline = true).continueShown)</ID>
+    <ID>MaxLineLength:PhraseMomentTest.kt$PhraseMomentTest$assertTrue(derive(user("u1"), assistant("a1", error = "This model's usage limit reached", kind = MessageErrorKind.Unknown)).errorShown)</ID>
+    <ID>MaxLineLength:PhraseMomentTest.kt$PhraseMomentTest$derive(user("u1"), assistant("a1", tools = listOf("edit" to ToolStatus.Completed)), user("u2"), assistant("a2", tools = listOf("read" to ToolStatus.Completed))).moment</ID>
+    <ID>MaxLineLength:PhraseMomentTest.kt$PhraseMomentTest$private</ID>
+    <ID>MaxLineLength:PhraseMomentTest.kt$PhraseMomentTest$private fun user(id: String)</ID>
+    <ID>MaxLineLength:PhraseMomentTest.kt$PhraseMomentTest$val cut = derive(user("u1"), assistant("a1", error = "Output length limit reached", kind = MessageErrorKind.OutputLength))</ID>
+    <ID>MaxLineLength:PhraseMomentTest.kt$PhraseMomentTest$val state = derive(user("u1"), assistant("a1", error = "MessageOutputLengthError: too long", kind = MessageErrorKind.Unknown))</ID>
+    <ID>MaxLineLength:PromptHistory.kt$PromptHistoryKeys$public</ID>
+    <ID>MaxLineLength:ReviewReferences.kt$ReviewReference$"\n[Snippet truncated to fit the prompt: showing $shown of $lines lines; $omitted characters omitted. "</ID>
+    <ID>MaxLineLength:ReviewReferences.kt$ReviewReference$if (text.isNotEmpty()) out.append("\n\n").append(fence).append("diff\n").append(text).append('\n').append(fence)</ID>
+    <ID>MaxLineLength:ReviewReferences.kt$ReviewReference$val</ID>
+    <ID>MaxLineLength:ReviewReferences.kt$ReviewReference.Companion$*</ID>
+    <ID>MaxLineLength:ReviewReferencesTest.kt$ReviewReferencesTest$ReviewReference.format(listOf(ref("1", path = "lib/small.dart", snippet = "+tiny change"), ref("2", path = "lib/huge.dart", snippet = huge)), budget = 400)</ID>
+    <ID>MaxLineLength:ReviewReferencesTest.kt$ReviewReferencesTest$ref("1", ReviewReferenceKind.Comment, lineLabel = "new line 8", snippet = "+new request", comment = "Keep the retry behavior explicit.", scope = ReviewReferenceScope.Session)</ID>
+    <ID>MaxLineLength:ReviewReferencesTest.kt$ReviewReferencesTest$repeat(ReviewReferences.MAX_PER_SESSION) { assertEquals(ReviewStageOutcome.Staged, store.stage("a", ref("$it", lineLabel = "line $it"))) }</ID>
+    <ID>MaxLineLength:ReviewReferencesTest.kt$ReviewReferencesTest$store.stage("a", ref(store.nextId("c"), ReviewReferenceKind.Comment, lineLabel = "new line 8", comment = note))</ID>
+    <ID>MaxLineLength:ReviewReferencesTest.kt$ReviewReferencesTest$val block = ReviewReference.format((0 until ReviewReferences.MAX_PER_SESSION).map { ref("$it", path = "lib/file$it.dart", snippet = page) })</ID>
+    <ID>MaxLineLength:SavedPromptMigrationTest.kt$SavedPromptMigrationTest$assertEquals(1, (kotlinx.serialization.json.Json.parseToJsonElement(prefs.string(SavedPromptMigration.backupKey("a"))!!) as JsonArray).size)</ID>
+    <ID>MaxLineLength:SavedPromptMigrationTest.kt$SavedPromptMigrationTest$assertEquals(emptyList(), draftVault.restore("", refs, sameLocation = true).attachments, "older draft's file collected")</ID>
+    <ID>MaxLineLength:SavedPromptMigrationTest.kt$SavedPromptMigrationTest$assertTrue(SavedPromptMigration.markerKey("a").endsWith(".a") &amp;&amp; SavedPromptMigration.backupKey("a").endsWith(".a"))</ID>
+    <ID>MaxLineLength:SavedPromptMigrationTest.kt$SavedPromptMigrationTest$fun</ID>
+    <ID>MaxLineLength:SavedPromptMigrationTest.kt$SavedPromptMigrationTest$repeat(PromptShelf.CAPACITY) { shelf.stash("a", StashedPrompt(id = "kept-$it", text = "kept $it", createdAt = it.toLong())) }</ID>
+    <ID>MaxLineLength:SessionDraft.kt$SessionDraft.Companion$/** Flutter `SessionDraft.keyFor`: the session id alone for an older draft, else `jsonEncode([profile, session])`. */</ID>
+    <ID>MaxLineLength:SessionDraft.kt$SessionDraft.Companion$if (profileId.isEmpty()) sessionId else JsonArray(listOf(JsonPrimitive(profileId), JsonPrimitive(sessionId))).toString()</ID>
+    <ID>MaxLineLength:StartersTest.kt$StartersTest$assertEquals(BuildWebPage, Starters.suggestions(ChatStartFacts("/root/projects/FinanceHub3", entries = 0)).first())</ID>
+    <ID>MaxLineLength:StartersTest.kt$StartersTest$assertEquals(listOf(ExplainProject, FindBug, AddTests), Starters.suggestions(ChatStartFacts("/work/oc_app", entries = 12)))</ID>
+    <ID>MaxLineLength:StartersTest.kt$StartersTest$assertEquals(listOf(ListFolder, FindBug), Starters.suggestions(ChatStartFacts(directory, entries = 4)), directory)</ID>
+    <ID>MaxLineLength:StartersTest.kt$StartersTest$assertEquals(listOf(StartFact.EmptyFolder, StartFact.Git), Starters.factsLine(ChatStartFacts("/a", entries = 0, git = true)))</ID>
+    <ID>MaxLineLength:StashRowsTest.kt$StashRowsTest$// False: the deletion coordinator keeps the profile and its secret (B-SEC-172 "never deletes the secret early").</ID>
+    <ID>MaxLineLength:StashRowsTest.kt$StashRowsTest$fun</ID>
+    <ID>MaxLineLength:StashRowsTest.kt$StashRowsTest$payloads.inner.tamper(AttachmentVault.ownerKey("a"), ref.blob!!, data.url.replace("aGVsbG8=", "aGVsbG9=").encodeToByteArray())</ID>
+    <ID>MaxLineLength:StashRowsTest.kt$StashRowsTest$references = listOf(ReviewReference(id = "r1", kind = ReviewReferenceKind.Comment, path = "a.dart", comment = "Review this"))</ID>
+    <ID>MaxLineLength:StashTest.kt$StashTest$""""attachmentRefs":[{"filename":"e","mime":"text/plain","blob":"../x","bytes":1}],"references":[]}"""</ID>
+    <ID>MaxLineLength:StashTest.kt$StashTest$""""attachments":[{"type":"file","mime":"text/plain","filename":"n.txt","url":"data:text/plain;base64,aGk="}],"references":[]}"""</ID>
+    <ID>MaxLineLength:StashTest.kt$StashTest$"""{"id":"v2","text":"t","createdAt":1,"attachments":[],"attachmentFormat":2,"attachmentRefs":[],"references":[]}"""</ID>
+    <ID>MaxLineLength:StashTest.kt$StashTest$fun</ID>
+    <ID>MaxLineLength:StashedPrompt.kt$StashedPrompt$override fun toString(): String</ID>
+    <ID>MaxLineLength:StashedPrompt.kt$if (refs != null &amp;&amp; refs != JsonNull &amp;&amp; inline.isNotEmpty()) throw StoredFormatException("Ambiguous stash attachments")</ID>
+    <ID>NestedBlockDepth:AttachmentVault.kt$AttachmentVault$public suspend fun collect( retained: Map&lt;String, List&lt;AttachmentRef&gt;&gt;, owner: String? = null, ): Boolean</ID>
+    <ID>NestedBlockDepth:Drafts.kt$Drafts$private fun load(): Snapshot</ID>
+    <ID>NestedBlockDepth:WebSourcesReview.kt$WebSourcesReview$public suspend fun search(query: String)</ID>
+    <ID>ReturnCount:AttachmentVault.kt$AttachmentVault$private suspend fun restoreOne( ownerId: String, ref: AttachmentRef, sameLocation: Boolean, count: Int, restoredBytes: Long, ): PromptAttachment?</ID>
+    <ID>ReturnCount:ComposerInput.kt$ComposerInput$public fun slashWordAtCaret(text: String, caret: Int?): Boolean</ID>
+    <ID>ReturnCount:ComposerInput.kt$SendDecision$public fun decide(input: SendInputs): SendAction</ID>
+    <ID>ReturnCount:ConversationDrafts.kt$DraftSession$internal fun retireIfEmpty(): Boolean</ID>
+    <ID>ReturnCount:ConversationDrafts.kt$DraftSession$private suspend fun restore(): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:ConversationDrafts.kt$DraftSession$public fun captureSubmission(): DraftSubmission?</ID>
+    <ID>ReturnCount:Drafts.kt$Drafts$private fun load(): Snapshot</ID>
+    <ID>ReturnCount:Drafts.kt$Drafts$private suspend fun collectLocked(owner: String? = null): Boolean</ID>
+    <ID>ReturnCount:Drafts.kt$Drafts$private suspend fun saveLocked( owner: String, sessionId: String, text: String, files: List&lt;PromptAttachment&gt;?, location: DraftLocation?, exactness: Exactness = Exactness.Plain, ): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:Drafts.kt$Drafts$public fun restoreFor( profileId: String, sessionId: String, unconfirmedTexts: Collection&lt;String&gt;, opening: DraftOpening = DraftOpening(), ): DraftRestore</ID>
+    <ID>ReturnCount:PhotoRecovery.kt$DraftPhotoRecovery$private suspend fun recoverLocked(): PhotoRecoveryResult</ID>
+    <ID>ReturnCount:PhotoRecovery.kt$DraftPhotoRecovery$private suspend fun removed(photo: PendingPhoto): PhotoRecoveryResult</ID>
+    <ID>ReturnCount:PhotoRecovery.kt$PhotoRecoveryStore$private suspend fun discardLocked(id: String): PhotoResult&lt;Unit&gt;</ID>
+    <ID>ReturnCount:PhotoRecovery.kt$PhotoSniff$public fun attachment(name: String, bytes: ByteArray): PhotoResult&lt;PromptAttachment&gt;</ID>
+    <ID>ReturnCount:PhraseChips.kt$PhraseChipStore$private fun num(e: Any?): Long</ID>
+    <ID>ReturnCount:PhraseChips.kt$PhraseChipStore$private fun read(): Blob</ID>
+    <ID>ReturnCount:PhraseChips.kt$PhraseRules$public fun isRecordable( text: String, redactor: Redactor, hasAttachments: Boolean = false, ): Boolean</ID>
+    <ID>ReturnCount:PhraseMomentRules.kt$PhraseMomentRules$internal fun refineFromText(kind: MessageErrorKind, text: String?): MessageErrorKind</ID>
+    <ID>ReturnCount:PhraseMomentRules.kt$PhraseMomentRules$public fun derive( messages: List&lt;MessageWithParts&gt;, busy: Boolean, nowMs: Long, stoppedByPerson: Boolean = false, offline: Boolean = false, interruptedAfter: Duration = 30.seconds, ): PhraseMomentState</ID>
+    <ID>ReturnCount:PromptHistory.kt$PromptHistoryNavigation$public fun move(older: Boolean, current: ComposerValue, prompts: List&lt;String&gt;): ComposerValue?</ID>
+    <ID>ReturnCount:PromptShelf.kt$PromptShelf$private fun retained(profile: String): List&lt;AttachmentRef&gt;?</ID>
+    <ID>ReturnCount:PromptShelf.kt$PromptShelf$private suspend fun collect(profile: String): Boolean</ID>
+    <ID>ReturnCount:PromptShelf.kt$PromptShelf$private suspend fun externalize( profile: String, prompt: StashedPrompt, ): Outcome&lt;StashedPrompt&gt;</ID>
+    <ID>ReturnCount:PromptShelf.kt$PromptShelf$public suspend fun deleteWithUndo(profile: String, id: String): Outcome&lt;SavedPromptUndo&gt;</ID>
+    <ID>ReturnCount:ReviewReferences.kt$ReviewReference.Companion$private fun truncate(body: String, budget: Int?): Pair&lt;String, Int&gt;</ID>
+    <ID>ReturnCount:SavedPromptMigration.kt$SavedPromptMigration$private suspend fun migrate(profile: String, current: () -&gt; Boolean): DraftMigrationResult</ID>
+    <ID>ReturnCount:SavedPromptSafety.kt$SavedPromptSafety$private fun safeUrl(url: String): String</ID>
+    <ID>ReturnCount:SessionDraft.kt$internal fun sessionDraftFromJson(value: JsonElement): SessionDraft?</ID>
+    <ID>ReturnCount:WebSourcesReview.kt$WebSourcesReview$public fun add(source: WebSourceSelection): AddProblem?</ID>
+    <ID>SwallowedException:AttachmentVault.kt$AttachmentVault$e: Exception</ID>
+    <ID>SwallowedException:AttachmentVault.kt$AttachmentVault$e: PayloadFormatException</ID>
+    <ID>SwallowedException:Drafts.kt$Drafts$e: StoredFormatException</ID>
+    <ID>SwallowedException:JsonRead.kt$e: IllegalArgumentException</ID>
+    <ID>SwallowedException:PhotoRecovery.kt$PhotoRecoveryStore$e: StoredFormatException</ID>
+    <ID>SwallowedException:PhraseChips.kt$PhraseChipStore$e: IllegalArgumentException</ID>
+    <ID>SwallowedException:PhraseChips.kt$PhraseChipStore$e: StoredFormatException</ID>
+    <ID>SwallowedException:PromptShelf.kt$PromptShelf$e: StoredFormatException</ID>
+    <ID>SwallowedException:SavedPromptSafety.kt$SavedPromptSafety$e: CharacterCodingException</ID>
+    <ID>SwallowedException:SavedPromptSafety.kt$SavedPromptSafety$e: IllegalArgumentException</ID>
+    <ID>ThrowsCount:AttachmentVault.kt$AttachmentVault$internal suspend fun storeOrThrow( owner: String, attachments: List&lt;PromptAttachment&gt;, ): List&lt;AttachmentRef&gt;</ID>
+    <ID>ThrowsCount:Drafts.kt$Drafts$private fun load(): Snapshot</ID>
+    <ID>ThrowsCount:SavedPromptMigration.kt$SavedPromptMigration$private suspend fun migrate(profile: String, current: () -&gt; Boolean): DraftMigrationResult</ID>
+    <ID>ThrowsCount:SavedPromptSafety.kt$SavedPromptSafety$private fun percentBytes(value: String): ByteArray</ID>
+    <ID>ThrowsCount:SavedPromptSafety.kt$SavedPromptSafety$private fun safeUrl(url: String): String</ID>
+    <ID>ThrowsCount:StashedPrompt.kt$internal fun stashedPromptFromJson(value: JsonObject): StashedPrompt</ID>
+    <ID>TooGenericExceptionCaught:AttachmentVault.kt$AttachmentVault$e: Exception</ID>
+    <ID>TooManyFunctions:ConversationDrafts.kt$DraftSession</ID>
+    <ID>TooManyFunctions:Drafts.kt$Drafts</ID>
+    <ID>TooManyFunctions:PromptShelf.kt$PromptShelf</ID>
+    <ID>TooManyFunctions:WebSourcesReview.kt$WebSourcesReview</ID>
+    <ID>UseCheckOrError:ConversationDraftsTest.kt$ConversationDraftsTest.&lt;no name provided&gt;$throw IllegalStateException("storage unavailable")</ID>
+    <ID>UseCheckOrError:DraftsTest.kt$DraftsTest.&lt;no name provided&gt;$throw IllegalStateException("read refused")</ID>
+    <ID>UseCheckOrError:StashRowsSupport.kt$CountingPayloadStore$throw IllegalStateException("synthetic list failure")</ID>
+    <ID>UseRequire:SavedPromptSafety.kt$SavedPromptSafety$throw IllegalArgumentException("Invalid percent escape")</ID>
+    <ID>WildcardImport:ConversationDraftsTest.kt$import kotlin.test.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

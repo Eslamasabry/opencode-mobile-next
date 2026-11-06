@@ -1,0 +1,345 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$c.isLetterOrDigit() || c == '-' || c == '_' || c == '.' || c == ':'</ID>
+    <ID>ComplexCondition:M1Census.kt$M1Census$backupCopy != null &amp;&amp; backupCopy.length() &gt; 0 &amp;&amp; ownKeys &gt; 0 &amp;&amp; liveKeys == 0</ID>
+    <ID>ComplexCondition:M3LegacyTransforms.kt$M3LegacyTransforms$j == null || j["version"] != 1L || j["complete"] !is Boolean || jIds == null || jIds.any { it !is String } || j["legacy"] !is Boolean</ID>
+    <ID>ComplexCondition:M4RestoreAuthority.kt$M4RestoreAuthority$pkg != null &amp;&amp; pkg &lt;= nativeVersionCode &amp;&amp; gen != null &amp;&amp; gen == rootfsGeneration</ID>
+    <ID>ComplexCondition:MigrationRunner.kt$MigrationRunner$j.v1Complete || j.blocked != null || j.pendingSwap != null || j.schema &gt; MigrationJournal.SCHEMA</ID>
+    <ID>ComplexCondition:MiniJson.kt$MiniJson.P$i &lt; s.length &amp;&amp; (s[i] == ' ' || s[i] == '\t' || s[i] == '\n' || s[i] == '\r')</ID>
+    <ID>CyclomaticComplexMethod:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$private fun readStartTag(): Token.Start</ID>
+    <ID>CyclomaticComplexMethod:FlutterPrefsCodec.kt$FlutterPrefsCodec$fun decodeAndroidBase64(text: String): ByteArray</ID>
+    <ID>CyclomaticComplexMethod:FlutterSecureStorageReader.kt$FlutterSecureStorageReader$fun read(stores: FssStores): FssReadResult</ID>
+    <ID>CyclomaticComplexMethod:M1Census.kt$M1Census$fun run(live: Map&lt;String, RawPref&gt;, backupCopy: File?): Result</ID>
+    <ID>CyclomaticComplexMethod:M2Secrets.kt$M2Secrets$suspend fun run(): Result</ID>
+    <ID>CyclomaticComplexMethod:M3LegacyTransforms.kt$M3LegacyTransforms$internal fun pickerPhoto(p: LogicalPrefs): Pair&lt;String, PrefsEdit&gt;</ID>
+    <ID>CyclomaticComplexMethod:M3LegacyTransforms.kt$M3LegacyTransforms$internal fun readStateConsent(p: LogicalPrefs): Pair&lt;String, PrefsEdit&gt;</ID>
+    <ID>CyclomaticComplexMethod:M4RestoreAuthority.kt$M4RestoreAuthority$fun run(live: Map&lt;String, RawPref&gt;, baseline: PrefsBaseline?): Result</ID>
+    <ID>CyclomaticComplexMethod:M5Audit.kt$M5Audit$fun run( live: Map&lt;String, RawPref&gt;, baseline: PrefsBaseline?, m1: Map&lt;String, Any?&gt;, m2: Map&lt;String, Any?&gt;, m3: Map&lt;String, Any?&gt;, m4: Map&lt;String, Any?&gt;, ): Result</ID>
+    <ID>CyclomaticComplexMethod:MigrationRunner.kt$MigrationRunner$private suspend fun open(j: MigrationJournal, write: Boolean): RunnerState.Open</ID>
+    <ID>CyclomaticComplexMethod:MigrationRunner.kt$MigrationRunner$private suspend fun runV1(j: MigrationJournal): RunnerState.Blocked?</ID>
+    <ID>CyclomaticComplexMethod:MiniJson.kt$MiniJson$fun writeString(sb: StringBuilder, s: String)</ID>
+    <ID>CyclomaticComplexMethod:MiniJson.kt$MiniJson.P$fun num(): Any</ID>
+    <ID>CyclomaticComplexMethod:MiniJson.kt$MiniJson.P$fun str(): String</ID>
+    <ID>EmptyElseBlock:SecretsMigrationTest.kt$SecretsMigrationTest$if (name == "pw.$REMOTE") reads++</ID>
+    <ID>InstanceOfCheckForException:MigrationRunner.kt$MigrationRunner$e is io.github.eslamasabry.oc.android.migration.readers.migration.SimulatedCrash</ID>
+    <ID>LongMethod:M5Audit.kt$M5Audit$fun run( live: Map&lt;String, RawPref&gt;, baseline: PrefsBaseline?, m1: Map&lt;String, Any?&gt;, m2: Map&lt;String, Any?&gt;, m3: Map&lt;String, Any?&gt;, m4: Map&lt;String, Any?&gt;, ): Result</ID>
+    <ID>LongParameterList:AndroidMigration.kt$AndroidMigration$( context: Context, secrets: MigrationSecretSink, redactor: Redactor, signals: MigrationSignals, nativeVersionCode: Long, clock: Clock, io: CoroutineDispatcher, )</ID>
+    <ID>LongParameterList:ImagePickerCache.kt$ImagePickerCache.LostResult$( val type: String?, val paths: List&lt;String&gt;, val hasError: Boolean, val pendingCameraUri: String?, val maxWidth: Double?, val maxHeight: Double?, val imageQuality: Int?, )</ID>
+    <ID>LongParameterList:M2Secrets.kt$M2Secrets$( private val paths: MigrationPaths, private val prefs: FlutterPrefsFile, private val unwrapper: FssKeyUnwrapper, private val sink: MigrationSecretSink, private val redactor: Redactor, private val ledger: CredentialLedger, private val interrupter: StepInterrupter, private val now: () -&gt; Long, )</ID>
+    <ID>LongParameterList:M5Audit.kt$M5Audit$( live: Map&lt;String, RawPref&gt;, baseline: PrefsBaseline?, m1: Map&lt;String, Any?&gt;, m2: Map&lt;String, Any?&gt;, m3: Map&lt;String, Any?&gt;, m4: Map&lt;String, Any?&gt;, )</ID>
+    <ID>LongParameterList:MigrationRunner.kt$MigrationRunner$( private val paths: MigrationPaths, private val prefs: FlutterPrefsFile, private val kotlinPrefs: KotlinPrefsSource, private val unwrapper: FssKeyUnwrapper, private val sink: MigrationSecretSink, private val redactor: Redactor, private val signals: MigrationSignals, private val interrupter: StepInterrupter, private val freeBytes: () -&gt; Long, private val packageName: String, private val nativeVersionCode: Long, private val now: () -&gt; Long, private val io: CoroutineDispatcher, )</ID>
+    <ID>LoopWithTooManyJumpStatements:M2Secrets.kt$M2Secrets$for</ID>
+    <ID>LoopWithTooManyJumpStatements:M3LegacyTransforms.kt$M3LegacyTransforms$for</ID>
+    <ID>LoopWithTooManyJumpStatements:M3LegacyTransforms.kt$NotifyMerge$for</ID>
+    <ID>MagicNumber:AndroidPrefsXml.kt$AndroidPrefsXml$0x41</ID>
+    <ID>MagicNumber:AndroidPrefsXml.kt$AndroidPrefsXml$0x42</ID>
+    <ID>MagicNumber:AndroidPrefsXml.kt$AndroidPrefsXml$0x58</ID>
+    <ID>MagicNumber:AndroidPrefsXml.kt$AndroidPrefsXml$4</ID>
+    <ID>MagicNumber:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$0x10FFFF</ID>
+    <ID>MagicNumber:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$10</ID>
+    <ID>MagicNumber:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$12</ID>
+    <ID>MagicNumber:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$16</ID>
+    <ID>MagicNumber:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$3</ID>
+    <ID>MagicNumber:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$4</ID>
+    <ID>MagicNumber:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$9</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec$0xFF</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec$10</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec$16</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec$256</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec$3</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec$4</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec$5</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec$6</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec$63</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec$76</ID>
+    <ID>MagicNumber:FlutterPrefsCodec.kt$FlutterPrefsCodec$8</ID>
+    <ID>MagicNumber:FlutterSecureStorageReader.kt$FlutterSecureStorageReader$8</ID>
+    <ID>MagicNumber:Fs.kt$Fs$1024</ID>
+    <ID>MagicNumber:Fs.kt$Fs$64</ID>
+    <ID>MagicNumber:M2Secrets.kt$M2Secrets$8</ID>
+    <ID>MagicNumber:M3LegacyTransforms.kt$NotifyMerge$1440</ID>
+    <ID>MagicNumber:M3LegacyTransforms.kt$NotifyMerge$24</ID>
+    <ID>MagicNumber:M3LegacyTransforms.kt$NotifyMerge$60</ID>
+    <ID>MagicNumber:M3LegacyTransforms.kt$NotifyMerge$65536</ID>
+    <ID>MagicNumber:MiniJson.kt$MiniJson$0x20</ID>
+    <ID>MagicNumber:MiniJson.kt$MiniJson$16</ID>
+    <ID>MagicNumber:MiniJson.kt$MiniJson$1e-6</ID>
+    <ID>MagicNumber:MiniJson.kt$MiniJson$1e21</ID>
+    <ID>MagicNumber:MiniJson.kt$MiniJson$4</ID>
+    <ID>MagicNumber:MiniJson.kt$MiniJson.P$0x20</ID>
+    <ID>MagicNumber:MiniJson.kt$MiniJson.P$16</ID>
+    <ID>MagicNumber:MiniJson.kt$MiniJson.P$4</ID>
+    <ID>MagicNumber:MiniJson.kt$MiniJson.P$512</ID>
+    <ID>MagicNumber:Ports.kt$CountBucket.Companion$20</ID>
+    <ID>MagicNumber:Ports.kt$CountBucket.Companion$5</ID>
+    <ID>MagicNumber:Ports.kt$DurationBucket.Companion$1_000</ID>
+    <ID>MagicNumber:Ports.kt$DurationBucket.Companion$300_000</ID>
+    <ID>MagicNumber:Ports.kt$DurationBucket.Companion$30_000</ID>
+    <ID>MagicNumber:Ports.kt$DurationBucket.Companion$5_000</ID>
+    <ID>MagicNumber:S0Backup.kt$S0Backup$1024</ID>
+    <ID>MagicNumber:S0Backup.kt$S0Backup$16L</ID>
+    <ID>MaxLineLength:AndroidKeystoreUnwrapper.kt$AndroidKeystoreUnwrapper$init(Cipher.UNWRAP_MODE, priv, OAEPParameterSpec("SHA-256", "MGF1", MGF1ParameterSpec.SHA1, PSource.PSpecified.DEFAULT))</ID>
+    <ID>MaxLineLength:AndroidKeystoreUnwrapper.kt$AndroidKeystoreUnwrapper$val priv = ks.getKey(FssFormat.keystoreAlias(packageName), null) as? PrivateKey ?: throw KeystoreAliasMissingException()</ID>
+    <ID>MaxLineLength:AndroidPrefsMigrationTest.kt$AndroidPrefsMigrationTest$File(World.readersFixture(), "shared_prefs").listFiles()!!.forEach { it.copyTo(File(sharedPrefs, it.name), overwrite = true) }</ID>
+    <ID>MaxLineLength:AndroidPrefsMigrationTest.kt$AndroidPrefsMigrationTest$assertTrue(File(dataDir, "files/migration/flutter-v57/FlutterSharedPreferences.xml").isFile, "S0 kept the bytes")</ID>
+    <ID>MaxLineLength:AndroidPrefsMigrationTest.kt$AndroidPrefsMigrationTest$freeBytes = { 1L shl 40 }</ID>
+    <ID>MaxLineLength:AndroidPrefsMigrationTest.kt$AndroidPrefsMigrationTest$fun</ID>
+    <ID>MaxLineLength:AndroidPrefsXml.kt$AndroidPrefsXml$if (bytes.isEmpty()) return PrefsXmlRead(LinkedHashMap(), AndroidLoad.LoadsEmpty, listOf(XmlProblem.EmptyFile), 0)</ID>
+    <ID>MaxLineLength:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$if (semi &lt; 0 || semi - i &gt; 12) throw Fatal(if (semi &lt; 0) XmlProblem.Truncated else XmlProblem.UnknownEntity, start)</ID>
+    <ID>MaxLineLength:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$is Token.End -&gt; if (t.name == "string") return sb.toString() else throw Fatal(XmlProblem.Malformed, t.offset)</ID>
+    <ID>MaxLineLength:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$is Token.Text -&gt; if (t.text.isBlank()) nextStartOrFail() else throw Fatal(XmlProblem.NoMapRoot, t.offset)</ID>
+    <ID>MaxLineLength:AndroidPrefsXml.kt$AndroidPrefsXml.Token$Start : Token</ID>
+    <ID>MaxLineLength:AndroidPrefsXmlWriter.kt$AndroidPrefsXmlWriter$is RawPref.Bool -&gt; sb.append("&lt;boolean name=\"").append(n).append("\" value=\"").append(value.value).append("\" /&gt;")</ID>
+    <ID>MaxLineLength:AndroidPrefsXmlWriter.kt$AndroidPrefsXmlWriter$is RawPref.F32 -&gt; sb.append("&lt;float name=\"").append(n).append("\" value=\"").append(value.value.toString()).append("\" /&gt;")</ID>
+    <ID>MaxLineLength:AndroidPrefsXmlWriter.kt$AndroidPrefsXmlWriter$is RawPref.F64 -&gt; sb.append("&lt;double name=\"").append(n).append("\" value=\"").append(value.value.toString()).append("\" /&gt;")</ID>
+    <ID>MaxLineLength:AndroidPrefsXmlWriter.kt$AndroidPrefsXmlWriter$is RawPref.Int32 -&gt; sb.append("&lt;int name=\"").append(n).append("\" value=\"").append(value.value).append("\" /&gt;")</ID>
+    <ID>MaxLineLength:AndroidPrefsXmlWriter.kt$AndroidPrefsXmlWriter$is RawPref.Int64 -&gt; sb.append("&lt;long name=\"").append(n).append("\" value=\"").append(value.value).append("\" /&gt;")</ID>
+    <ID>MaxLineLength:AndroidPrefsXmlWriter.kt$AndroidPrefsXmlWriter$is RawPref.Str -&gt; sb.append("&lt;string name=\"").append(n).append("\"&gt;").append(escape(value.value)).append("&lt;/string&gt;")</ID>
+    <ID>MaxLineLength:CredentialLedger.kt$CredentialLedger$*</ID>
+    <ID>MaxLineLength:CredentialLedger.kt$CredentialLedger$/** M2: the native value now equals the FSS copy with ciphertext digest [legacyDigest]. Never overwrites a record. */</ID>
+    <ID>MaxLineLength:CredentialLedger.kt$CredentialLedger$Fs.writeAtomically(file, MiniJson.encode(linkedMapOf("v" to 1L, "names" to names)).toByteArray(Charsets.UTF_8), faults, "ledger")</ID>
+    <ID>MaxLineLength:CredentialLedger.kt$CredentialLedger.Companion$/** Digest of the FSS ciphertext as stored (never of a decrypted value: a hash of a short password can be guessed). */</ID>
+    <ID>MaxLineLength:CredentialLedger.kt$CredentialLedger.Companion$fun</ID>
+    <ID>MaxLineLength:DayOneFilesKeptTest.kt$DayOneFilesKeptTest$!path.startsWith("files/native/") &amp;&amp; !path.startsWith("files/migration/") &amp;&amp; !path.startsWith("shared_prefs/")</ID>
+    <ID>MaxLineLength:DayOneFilesKeptTest.kt$DayOneFilesKeptTest$for</ID>
+    <ID>MaxLineLength:DayOneFilesKeptTest.kt$DayOneFilesKeptTest$for ((path, text) in appFlutterFiles) assertEquals(text, File(w.paths.dataDir, "app_flutter/$path").readText(), path)</ID>
+    <ID>MaxLineLength:DayOneFilesKeptTest.kt$DayOneFilesKeptTest$fun</ID>
+    <ID>MaxLineLength:FlutterPrefsCodec.kt$FlutterPrefsCodec$2 -&gt; if (d &gt;= 0) { value = (value shl 6) or d; state = 3 } else if (d == EQUALS) { out.write(value shr 4); state = 4 } else if (d != SKIP) bad()</ID>
+    <ID>MaxLineLength:FlutterPrefsCodec.kt$FlutterPrefsCodec$if (big.bitLength() &lt;= 63) PrefValue.Int64(big.toLong()) else PrefValue.Undecodable(UndecodableKind.BadBigInteger)</ID>
+    <ID>MaxLineLength:FlutterSecureStorageReader.kt$FlutterSecureStorageReader$if (bytes.size &lt; FssFormat.IV_BYTES + FssFormat.TAG_BITS / 8) return FlutterSecret.Failed(name, SecretFailure.TooShort)</ID>
+    <ID>MaxLineLength:FlutterSecureStorageReader.kt$FlutterSecureStorageReader$if (keyAlg == FssFormat.REMOVED_KEY_ALGORITHM || storageAlg == FssFormat.REMOVED_STORAGE_ALGORITHM) return MarkerState.Removed</ID>
+    <ID>MaxLineLength:FlutterSecureStorageReader.kt$FssFormat$/** `DEFAULT_KEY_PREFIX`; entry names are `prefix + "_" + name`. Base64 of "This is the prefix for a secure storage\n". */</ID>
+    <ID>MaxLineLength:Fs.kt$Fs$fun</ID>
+    <ID>MaxLineLength:Harness.kt$CrashAt$internal</ID>
+    <ID>MaxLineLength:Harness.kt$FakeFlutterPrefs$Files.move(tmp.toPath(), xml.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE)</ID>
+    <ID>MaxLineLength:Harness.kt$World$File(fixture, "shared_prefs").listFiles()!!.forEach { it.copyTo(File(paths.sharedPrefs, it.name), overwrite = true) }</ID>
+    <ID>MaxLineLength:Harness.kt$World$fun</ID>
+    <ID>MaxLineLength:Harness.kt$World$val bytes = FlutterPrefsCodec.decodeAndroidBase64(good).also { it[it.size - 1] = (it[it.size - 1].toInt() xor 1).toByte() }</ID>
+    <ID>MaxLineLength:Harness.kt$World$val paths = MigrationPaths(File(root, "data"), externalFilesDir = File(root, "external/files"), externalCacheDir = File(root, "external/cache"))</ID>
+    <ID>MaxLineLength:Harness.kt$World.Companion$fun fixturePrivateKey(pk8: ByteArray): PrivateKey</ID>
+    <ID>MaxLineLength:Harness.kt$World.Companion$fun readersFixture(): File</ID>
+    <ID>MaxLineLength:Harness.kt$World.Companion$val m = io.github.eslamasabry.oc.android.migration.readers.json.MiniJson.parse(File(readersFixture(), "seed-manifest.json").readText()) as Map&lt;String, Any?&gt;</ID>
+    <ID>MaxLineLength:ImagePickerCache.kt$ImagePickerCache.LostResult$"LostResult(type=$type, paths=${paths.size}, hasError=$hasError, pendingCameraUri=${pendingCameraUri != null})"</ID>
+    <ID>MaxLineLength:LedgeredSecretWriter.kt$LedgeredSecretWriter$suspend fun write(name: String, value: String): Boolean</ID>
+    <ID>MaxLineLength:LegacyStateParityTest.kt$LegacyStateParityTest$""""quietStart":${if (quiet) 1320 else "null"},"quietEnd":${if (quiet) 480 else "null"},"alerted":{},"threshold":90}}}"""</ID>
+    <ID>MaxLineLength:LegacyStateParityTest.kt$LegacyStateParityTest$"""{"version":1,"rules":{"codex":{"source":"${"a".repeat(64)}","notifications":$notifications,"wifiOnly":$wifiOnly,"""</ID>
+    <ID>MaxLineLength:LegacyStateParityTest.kt$LegacyStateParityTest$assertFalse(NotifyMerge.merge(listOf(ProfileRules(false, null, null, null)), listOf(QuotaRules(false, false, false))).wifiOnly)</ID>
+    <ID>MaxLineLength:LegacyStateParityTest.kt$LegacyStateParityTest$assertTrue(FakeFlutterPrefs(paths.sharedPrefs).commit(mapOf("oc.notify.quietStart" to null, "oc.notify.quietEnd" to null, "oc.notify.wifiOnly" to b(true)).mapKeys { FlutterPrefsCodec.physicalKey(it.key) }))</ID>
+    <ID>MaxLineLength:LegacyStateParityTest.kt$LegacyStateParityTest$assertTrue(FakeFlutterPrefs(paths.sharedPrefs).commit(mapOf(FlutterPrefsCodec.physicalKey("oc.profiles") to s(profiles("old", "new")))))</ID>
+    <ID>MaxLineLength:LegacyStateParityTest.kt$LegacyStateParityTest$assertTrue(FakeFlutterPrefs(paths.sharedPrefs).commit(mapOf(FlutterPrefsCodec.physicalKey("oc.shareSessionViews.old") to b(false))))</ID>
+    <ID>MaxLineLength:LegacyStateParityTest.kt$LegacyStateParityTest$assertTrue(M1Census.requiresOpenCode2Migration(mapOf("id" to "phone", "flavor" to "v2", "requiresOpenCode2Migration" to true)))</ID>
+    <ID>MaxLineLength:LegacyStateParityTest.kt$LegacyStateParityTest$fun</ID>
+    <ID>MaxLineLength:LegacyStateParityTest.kt$LegacyStateParityTest$ids.joinToString(",", "[", "]") { """{"id":"$it","name":"$it","baseUrl":"https://$it.example.test","backend":"openCode","flavor":"v2"}""" }</ID>
+    <ID>MaxLineLength:LegacyStateParityTest.kt$LegacyStateParityTest$listOf(ProfileRules(false, null, null, null), ProfileRules(false, 60, 120, null), ProfileRules(false, 200, 300, null))</ID>
+    <ID>MaxLineLength:LegacyStateParityTest.kt$LegacyStateParityTest$val after = m3(dir(mapOf("oc.profiles" to s(profiles("a")), "oc.quotaMonitor.a" to s(quota(quiet = true, wifiOnly = true)))))</ID>
+    <ID>MaxLineLength:LegacyStateParityTest.kt$LegacyStateParityTest$val merged = NotifyMerge.merge(listOf(ProfileRules(false, null, null, null)), listOf(QuotaRules(true, false, false)))</ID>
+    <ID>MaxLineLength:LegacyStateParityTest.kt$LegacyStateParityTest$val native = snapshotFiles(w.paths.nativeDir).keys.map { File(w.paths.nativeDir, it).readText(Charsets.ISO_8859_1) }</ID>
+    <ID>MaxLineLength:LegacyStateParityTest.kt$LegacyStateParityTest$val paths = dir(mapOf("oc.profiles" to s(profiles("a")), "oc.notifyRules.a" to s("""{"quietStart":60,"quietEnd":120}""")))</ID>
+    <ID>MaxLineLength:LegacyTransformsTest.kt$LegacyTransformsTest$"""{"id":"ph1","profileID":"a","sessionID":"ses_9","directory":"/work","workspace":null,"ref":${ref ?: "null"},"""</ID>
+    <ID>MaxLineLength:LegacyTransformsTest.kt$LegacyTransformsTest$"oc.glassLiquidStrikes" to l(1)</ID>
+    <ID>MaxLineLength:LegacyTransformsTest.kt$LegacyTransformsTest$File(paths.sharedPrefs, "FlutterSharedPreferences.xml").writeBytes(AndroidPrefsXmlWriter.write(logical.mapKeys { FlutterPrefsCodec.physicalKey(it.key) }))</ID>
+    <ID>MaxLineLength:LegacyTransformsTest.kt$LegacyTransformsTest$assertEquals(60L, NotifyMerge.merge(listOf(ProfileRules(false, 60, 120, null)), listOf(QuotaRules(false, false, true))).quietStart)</ID>
+    <ID>MaxLineLength:LegacyTransformsTest.kt$LegacyTransformsTest$assertEquals(s("""{"version":1,"complete":true,"ids":[],"legacy":true}"""), after["oc.readStateConsentMigration.v1"])</ID>
+    <ID>MaxLineLength:LegacyTransformsTest.kt$LegacyTransformsTest$assertEquals(setOf("oc.consumptionBudgets.a", "oc.glass", "oc.notify.version", "oc.readStateConsentMigration.v1"), after.keys)</ID>
+    <ID>MaxLineLength:LegacyTransformsTest.kt$LegacyTransformsTest$assertFalse(NotifyMerge.merge(listOf(ProfileRules(false, 60, null, null)), emptyList()).quietEnabled, "half a pair is not a pair")</ID>
+    <ID>MaxLineLength:LegacyTransformsTest.kt$LegacyTransformsTest$fun</ID>
+    <ID>MaxLineLength:LegacyTransformsTest.kt$LegacyTransformsTest$if (picker != null) File(paths.sharedPrefs, "flutter_image_picker_shared_preference.xml").writeBytes(AndroidPrefsXmlWriter.write(picker))</ID>
+    <ID>MaxLineLength:LegacyTransformsTest.kt$LegacyTransformsTest$listOf(ProfileRules(false, null, null, null), ProfileRules(false, null, null, 60), ProfileRules(false, null, null, 30))</ID>
+    <ID>MaxLineLength:LegacyTransformsTest.kt$LegacyTransformsTest$private</ID>
+    <ID>MaxLineLength:LegacyTransformsTest.kt$LegacyTransformsTest$val (_, after) = m3(mapOf("oc.profiles" to s(profiles), "oc.notifyRules.a" to s("{not json"), "oc.quotaMonitor.a" to s("[1]")))</ID>
+    <ID>MaxLineLength:LegacyTransformsTest.kt$LegacyTransformsTest$val (_, off) = m3(mapOf("oc.profiles" to s(profiles), "oc.shareSessionViews" to b(false), "oc.shareSessionViews.b" to b(true)))</ID>
+    <ID>MaxLineLength:LegacyTransformsTest.kt$LegacyTransformsTest$val (_, unchanged) = m3(mapOf("oc.notify.version" to l(1), "oc.pendingPromptPhoto" to s(photoRecord())), missing)</ID>
+    <ID>MaxLineLength:LegacyTransformsTest.kt$LegacyTransformsTest$val (result, after) = m3(mapOf("oc.profiles" to s(profiles), "oc.readStateConsentMigration.v1" to s("""{"version":2}""")))</ID>
+    <ID>MaxLineLength:LegacyTransformsTest.kt$LegacyTransformsTest$val missing = mapOf&lt;String, RawPref&gt;("flutter_image_picker_image_path" to RawPref.StrSet(linkedSetOf("/nowhere/x.jpg")))</ID>
+    <ID>MaxLineLength:LegacyTransformsTest.kt$LegacyTransformsTest$val picker = mapOf&lt;String, RawPref&gt;("flutter_image_picker_image_path" to RawPref.StrSet(linkedSetOf(photo.path)))</ID>
+    <ID>MaxLineLength:M1Census.kt$M1Census$Fs.writeAtomically(paths.inventory, MiniJson.encode(linkedMapOf("v" to 1L, "dirs" to inventory)).toByteArray(Charsets.UTF_8))</ID>
+    <ID>MaxLineLength:M1Census.kt$M1Census$counts["a2aPrefsKeys"] = prefs.map.keys.count { it.startsWith("oc.a2aTasks.") || it == "oc.externalAgents" }.toLong()</ID>
+    <ID>MaxLineLength:M1Census.kt$M1Census$counts["pendingWrites"] = PENDING_WRITES.associateWith { p -&gt; File(paths.files, p).takeIf { it.isFile }?.length() }</ID>
+    <ID>MaxLineLength:M1Census.kt$M1Census$counts["strayDefaultPrefsKeys"] = SharedPrefsFile(paths.sharedPrefs, "${packageName}_preferences").read()?.androidMap?.size?.toLong()</ID>
+    <ID>MaxLineLength:M1Census.kt$M1Census$for (grand in child.listFiles().orEmpty().sortedBy { it.name }) entry("files/${child.name}", grand, deep = true)</ID>
+    <ID>MaxLineLength:M1Census.kt$M1Census$if (decoded.value is io.github.eslamasabry.oc.android.migration.readers.prefs.PrefValue.Undecodable) undecodable++</ID>
+    <ID>MaxLineLength:M1Census.kt$M1Census$if (teamFiles || prefs.map.keys.any { it.startsWith("oc.orchestration.") || it.startsWith("oc.team") }) out += DeferredFeature.AiTeam</ID>
+    <ID>MaxLineLength:M1Census.kt$M1Census$out += linkedMapOf("dir" to dir, "name" to f.name, "isDir" to f.isDirectory, "files" to count, "bytes" to bytes, "truncated" to truncated)</ID>
+    <ID>MaxLineLength:M1Census.kt$M1Census$paths.externalCacheDir?.listFiles().orEmpty().sortedBy { it.name }.forEach { entry("external/cache", it, deep = true) }</ID>
+    <ID>MaxLineLength:M1Census.kt$M1Census$paths.externalFilesDir?.listFiles().orEmpty().sortedBy { it.name }.forEach { entry("external/files", it, deep = true) }</ID>
+    <ID>MaxLineLength:M1Census.kt$M1Census$val (count, bytes, truncated) = if (deep) measure(f) else Triple(f.list()?.size?.toLong() ?: 1L, if (f.isFile) f.length() else 0L, false)</ID>
+    <ID>MaxLineLength:M1Census.kt$M1Census$val picker = SharedPrefsFile(paths.sharedPrefs, ImagePickerCache.FILE_NAME).read()?.androidMap?.let(ImagePickerCache::read)</ID>
+    <ID>MaxLineLength:M1Census.kt$M1Census.Companion$/** Dotted segments of app-wide keys a generated id must never equal (plan 05 §3.2; ledger-derived set pending). */</ID>
+    <ID>MaxLineLength:M1Census.kt$M1Census.Companion$p["requiresOpenCode2Migration"] == true || (p["backend"] != "codex" &amp;&amp; p["backend"] != "paseo" &amp;&amp; p["flavor"] != "v2")</ID>
+    <ID>MaxLineLength:M1Census.kt$M1Census.Companion$val</ID>
+    <ID>MaxLineLength:M1Census.kt$M1Census.Companion$val INVENTORY_DIRS: List&lt;String&gt; = listOf("files", "app_flutter", "cache", "code_cache", "no_backup", "databases", "app_webview")</ID>
+    <ID>MaxLineLength:M1Census.kt$M1Census.Result.PrefsUnreadable$/** Android loaded a non-empty file as an empty map: the first commit would overwrite it. No write may happen. */</ID>
+    <ID>MaxLineLength:M2Secrets.kt$M2Secrets$val records = logical.keys(LogicalPrefs.SECRET_REENTRY).associateWith { ReentryRecord.parse(logical.string(it)) }</ID>
+    <ID>MaxLineLength:M2Secrets.kt$M2Secrets$val stored = try { sink.read(name) } catch (@Suppress("TooGenericExceptionCaught") e: Exception) { return@filter true }</ID>
+    <ID>MaxLineLength:M2Secrets.kt$M2Secrets.Companion$ReentryRecord.parse(prefs.string(key))?.names.orEmpty().mapNotNull { f -&gt; SecretKind.kindOfFlag(f)?.let { ReentryNotice(id, it) } }</ID>
+    <ID>MaxLineLength:M2Secrets.kt$M2Secrets.Companion$fun</ID>
+    <ID>MaxLineLength:M2Secrets.kt$SecretKind.Companion$/** [builtinIds]: profile ids of the built-in phone server (`oc.builtinServerOwner` and `oc.builtinRecovery.&lt;id&gt;`). */</ID>
+    <ID>MaxLineLength:M2Secrets.kt$SecretKind.Companion$name.startsWith("pw.") -&gt; (if (idAfter("pw.") in builtinIds) AppMade else TypedPassword) to idAfter("pw.")</ID>
+    <ID>MaxLineLength:M3LegacyTransforms.kt$M3LegacyTransforms$MiniJson.encode(linkedMapOf("version" to 1L, "complete" to true, "ids" to emptyList&lt;String&gt;(), "legacy" to legacy))</ID>
+    <ID>MaxLineLength:M3LegacyTransforms.kt$M3LegacyTransforms$if</ID>
+    <ID>MaxLineLength:M3LegacyTransforms.kt$M3LegacyTransforms$if (record["id"] !is String || record["profileID"] !is String || record["sessionID"] !is String) return "unreadable" to edit</ID>
+    <ID>MaxLineLength:M3LegacyTransforms.kt$M3LegacyTransforms$val</ID>
+    <ID>MaxLineLength:M3LegacyTransforms.kt$NotifyMerge$ProfileRules</ID>
+    <ID>MaxLineLength:M3LegacyTransforms.kt$NotifyMerge$p.string("oc.notifyRules.$id")?.let { MiniJson.parseOrNull(it) as? Map&lt;*, *&gt; }?.let { profiles += profileRules(it) }</ID>
+    <ID>MaxLineLength:M4RestoreAuthority.kt$M4RestoreAuthority$*</ID>
+    <ID>MaxLineLength:M4RestoreAuthority.kt$M4RestoreAuthority$val checked = ids.flatMap { id -&gt; listOf(RECOVERY + id, AUTOMATION + id, PHONE_AGENT_OWNER + id) } + LogicalPrefs.BUILTIN_OWNER</ID>
+    <ID>MaxLineLength:M4RestoreAuthority.kt$M4RestoreAuthority$val recipe = (recovery?.get("oc.builtinRuntimeRecipe.$id") as? String)?.let { MiniJson.parseOrNull(it) } as? Map&lt;*, *&gt; ?: continue</ID>
+    <ID>MaxLineLength:M4RestoreAuthority.kt$RestoreAuthority$fun</ID>
+    <ID>MaxLineLength:M4RestoreAuthority.kt$RestoreAuthority$if (policy == null || !isOne(policy["version"]) || policy["supervision"] !in listOf("high", "balanced", "autonomous")) return false</ID>
+    <ID>MaxLineLength:M5Audit.kt$M5Audit$"count" to m1["profiles"]</ID>
+    <ID>MaxLineLength:M5Audit.kt$M5Audit$"keptQueued" to (MiniJson.parseOrNull(p.string("oc.keptQueuedPrompts") ?: "[]") as? List&lt;*&gt;)?.size?.toLong()</ID>
+    <ID>MaxLineLength:M5Audit.kt$M5Audit$private fun bytes(dir: File): Long</ID>
+    <ID>MaxLineLength:M5Audit.kt$M5Audit$val line = "Update moved your data: $servers servers, $stored saved sign-ins ($flagged need the password again)."</ID>
+    <ID>MaxLineLength:MigrationAuditPrivacyTest.kt$MigrationAuditPrivacyTest$(w.logical()["oc.native.staleLegacySecrets"]?.let { FlutterPrefsCodec.decode(it).value } as? PrefValue.StrList)?.value</ID>
+    <ID>MaxLineLength:MigrationAuditPrivacyTest.kt$MigrationAuditPrivacyTest$assertEquals("Update moved your data: 3 servers, 7 saved sign-ins (2 need the password again).", w.signals.lines.single())</ID>
+    <ID>MaxLineLength:MigrationAuditPrivacyTest.kt$MigrationAuditPrivacyTest$for (p in listOf(Seed.PROMPT_TEXT, Seed.SERVER_URL, "oc.offlineQueue", "oc.profiles", REMOTE)) assertFalse(baseline.contains(p), p)</ID>
+    <ID>MaxLineLength:MigrationAuditPrivacyTest.kt$MigrationAuditPrivacyTest$fun</ID>
+    <ID>MaxLineLength:MigrationAuditPrivacyTest.kt$MigrationAuditPrivacyTest$listOf("gho_fixtureAccessToken", "dev-fixture-token", Seed.PROMPT_TEXT, Seed.SERVER_URL, "server.example.test", "keystore said")</ID>
+    <ID>MaxLineLength:MigrationAuditPrivacyTest.kt$MigrationAuditPrivacyTest$val events = (w.signals.done.map { it.toString() } + w.signals.lines + w.signals.updated.map { it.toString() }).joinToString("\n")</ID>
+    <ID>MaxLineLength:MigrationAuditPrivacyTest.kt$MigrationAuditPrivacyTest$val fields = MigrationDoneEvent::class.java.declaredFields.filter { !java.lang.reflect.Modifier.isStatic(it.modifiers) }</ID>
+    <ID>MaxLineLength:MigrationAuditPrivacyTest.kt$MigrationAuditPrivacyTest$val written = listOf(w.paths.journal, w.paths.audit, w.paths.inventory, w.paths.credentialLedger, w.paths.fssSnapshot)</ID>
+    <ID>MaxLineLength:MigrationJournal.kt$MigrationJournal$JournalBlock(it["reason"] as? String ?: BlockReason.StepCrashed.name, it["step"] as? String, it["neededBytes"] as? Long)</ID>
+    <ID>MaxLineLength:MigrationJournal.kt$MigrationJournal$root["blocked"] = value?.let { linkedMapOf&lt;String, Any?&gt;("reason" to it.reason, "step" to it.step, "neededBytes" to it.neededBytes) }</ID>
+    <ID>MaxLineLength:MigrationJournal.kt$MigrationJournal$root["pendingSwap"] = value?.let { linkedMapOf&lt;String, Any?&gt;("kind" to it.kind, "at" to it.at, "phase" to it.phase) }</ID>
+    <ID>MaxLineLength:MigrationJournal.kt$MigrationJournal.Companion$"rollback" to linkedMapOf&lt;String, Any?&gt;("flutterReadable" to null, "lastReturnHandledAt" to null, "returnsHandled" to 0L)</ID>
+    <ID>MaxLineLength:MigrationRunner.kt$MigrationRunner$.</ID>
+    <ID>MaxLineLength:MigrationRunner.kt$MigrationRunner$Fs.writeAtomically(paths.fssSnapshot, MiniJson.encode(linkedMapOf("v" to 1L, "names" to snapshot)).toByteArray(Charsets.UTF_8))</ID>
+    <ID>MaxLineLength:MigrationRunner.kt$MigrationRunner$JournalStore.Loaded.Unreadable -&gt; return publish(blockedState(null, BlockReason.StepCrashed, "journal", null))</ID>
+    <ID>MaxLineLength:MigrationRunner.kt$MigrationRunner$if (e is io.github.eslamasabry.oc.android.migration.readers.migration.SimulatedCrash) throw e</ID>
+    <ID>MaxLineLength:MigrationRunner.kt$MigrationRunner$inFlight?.let { it to false } ?: CompletableDeferred&lt;RunnerState&gt;().also { inFlight = it }.let { it to true }</ID>
+    <ID>MaxLineLength:MigrationRunner.kt$MigrationRunner$j.putSource("secureEntries", SharedPrefsFile(paths.sharedPrefs, FssFormat.DATA_FILE).read()?.androidMap?.size?.toLong() ?: 0L)</ID>
+    <ID>MaxLineLength:MigrationRunner.kt$MigrationRunner$private</ID>
+    <ID>MaxLineLength:MigrationRunner.kt$MigrationRunner$return publish(blockedState(j, if (full) BlockReason.LowSpace else BlockReason.WriteRefused, FRESH_STEP, null))</ID>
+    <ID>MaxLineLength:MigrationRunner.kt$MigrationRunner$return publish(if (j.v1Complete) open(j, write = false) else blockedState(j, BlockReason.StepCrashed, "journal", null))</ID>
+    <ID>MaxLineLength:MigrationRunner.kt$MigrationRunner$val copy = S0Backup(paths, interrupter, freeBytes, nativeVersionCode, now).authoritativeCopy(FLUTTER_PREFS, backupFiles)</ID>
+    <ID>MaxLineLength:MigrationRunner.kt$MigrationRunner$when</ID>
+    <ID>MaxLineLength:MigrationRunner.kt$MigrationRunner.&lt;no name provided&gt;$override suspend fun write(name: String, value: String): Boolean</ID>
+    <ID>MaxLineLength:MigrationRunnerTest.kt$MigrationRunnerTest$/** Plan 05 §10.2 `MigrationRunnerTest` rows on plain JVM files (the Robolectric twin is `AndroidPrefsMigrationTest`). */</ID>
+    <ID>MaxLineLength:MigrationRunnerTest.kt$MigrationRunnerTest$assertEquals(setOf(DeferredFeature.AiTeam, DeferredFeature.Memory, DeferredFeature.Gemma), open.notices.deferredFeatures)</ID>
+    <ID>MaxLineLength:MigrationRunnerTest.kt$MigrationRunnerTest$assertTrue(points.containsAll(listOf("S0:partialCreated", "S0:renamed", "S0", "M1", "M2:1", "M2:all", "M3", "M4", "M5", "M6")), "$points")</ID>
+    <ID>MaxLineLength:MigrationRunnerTest.kt$MigrationRunnerTest$fun</ID>
+    <ID>MaxLineLength:MiniJson.kt$MiniJson.P$if (s[i] == '0') i++ else if (s[i] in '1'..'9') while (i &lt; s.length &amp;&amp; s[i].isDigit()) i++ else throw ParseException("bad number", start)</ID>
+    <ID>MaxLineLength:MiniJson.kt$MiniJson.P$val code = s.substring(i, i + 4).toIntOrNull(16) ?: throw ParseException("bad unicode escape", i)</ID>
+    <ID>MaxLineLength:Ports.kt$DurationBucket$UnderOneSecond : DurationBucket</ID>
+    <ID>MaxLineLength:Ports.kt$MigrationOutcome</ID>
+    <ID>MaxLineLength:Prefs.kt$DeclaredWrites$fun isDeclaredPhysical(physicalKey: String): Boolean</ID>
+    <ID>MaxLineLength:Prefs.kt$DeclaredWrites$logicalKey == PENDING_PHOTO</ID>
+    <ID>MaxLineLength:Prefs.kt$DeclaredWrites$val READ_STATE_PREFIXES: List&lt;String&gt; = listOf("oc.shareSessionViews.", "oc.shareSessionViewsOrigin.", "oc.shareSessionViewsDefault.")</ID>
+    <ID>MaxLineLength:Prefs.kt$DeclaredWrites$val RETIRED: Set&lt;String&gt; = setOf("oc.glassLiquidActive", "oc.glassLiquidStrikes", "oc.glassLiquidOffUntil", "oc.effectsLiveBackground")</ID>
+    <ID>MaxLineLength:Prefs.kt$LogicalPrefs$/** `oc.profiles` read leniently: every element with a String `id`, in stored order (Dart `ServerProfile.fromJson`). */</ID>
+    <ID>MaxLineLength:Prefs.kt$LogicalPrefs$return list.mapNotNull { e -&gt; @Suppress("UNCHECKED_CAST") (e as? Map&lt;String, Any?&gt;)?.takeIf { it["id"] is String } }</ID>
+    <ID>MaxLineLength:Prefs.kt$LogicalPrefs$string(key)?.let { MiniJson.parseOrNull(it) }?.let { m -&gt; @Suppress("UNCHECKED_CAST") (m as? Map&lt;String, Any?&gt;) }</ID>
+    <ID>MaxLineLength:Prefs.kt$PrefsBaseline$*</ID>
+    <ID>MaxLineLength:Prefs.kt$PrefsBaseline$Fs.writeAtomically(file, MiniJson.encode(linkedMapOf("v" to 1L, "keys" to keys)).toByteArray(Charsets.UTF_8), faults, "baseline")</ID>
+    <ID>MaxLineLength:Prefs.kt$PrefsBaseline.Companion$val keys = (MiniJson.parseOrNull(file.readText(Charsets.UTF_8)) as? Map&lt;*, *&gt;)?.get("keys") as? Map&lt;*, *&gt; ?: return null</ID>
+    <ID>MaxLineLength:Prefs.kt$PrefsBaseline.Companion$val lines = entries.filterValues { !it.declared }.toSortedMap().entries.joinToString("\n") { "${it.key} ${it.value.valueHash}" }</ID>
+    <ID>MaxLineLength:Prefs.kt$PrefsEdit$fun putString(key: String, value: String)</ID>
+    <ID>MaxLineLength:Prefs.kt$PrefsEdit$fun putStringList(key: String, value: List&lt;String&gt;)</ID>
+    <ID>MaxLineLength:RawPref.kt$RawPref.Companion$is Set&lt;*&gt; -&gt; if (value.all { it is String }) StrSet(value.filterIsInstance&lt;String&gt;().toCollection(LinkedHashSet())) else null</ID>
+    <ID>MaxLineLength:RestoreAuthorityCheckTest.kt$RestoreAuthorityCheckTest$assertEquals("owner", RestoreAuthority.disarmReason(json("""{"version":2,"nativeAuthority":true}"""), json(policy), "../x", PHONE))</ID>
+    <ID>MaxLineLength:RestoreAuthorityCheckTest.kt$RestoreAuthorityCheckTest$assertEquals("owner", RestoreAuthority.disarmReason(json("""{"version":2,"nativeAuthority":true}"""), json(policy), "other", PHONE))</ID>
+    <ID>MaxLineLength:RestoreAuthorityCheckTest.kt$RestoreAuthorityCheckTest$assertFalse(RestoreAuthority.policyAllows(json(policy.replace("\"pollRestartHealth\":true", "\"pollRestartHealth\":false"))))</ID>
+    <ID>MaxLineLength:RestoreAuthorityCheckTest.kt$RestoreAuthorityCheckTest$assertNull(RestoreAuthority.disarmReason(json("""{"version":2,"nativeAuthority":true}"""), json(policy), PHONE, PHONE))</ID>
+    <ID>MaxLineLength:RestoreAuthorityCheckTest.kt$RestoreAuthorityCheckTest$private val policy = """{"version":1,"supervision":"balanced","behaviors":{"restartPhoneServer":true,"pollRestartHealth":true}}"""</ID>
+    <ID>MaxLineLength:RestoreAuthorityCheckTest.kt$RestoreAuthorityCheckTest$w.kotlinPrefs = mapOf("builtin_server_recovery" to mapOf("oc.builtinRuntimeRecipe.$PHONE" to """{"packageVersion":10001,"rootfsGeneration":7}"""))</ID>
+    <ID>MaxLineLength:RestoreAuthorityCheckTest.kt$RestoreAuthorityCheckTest.&lt;no name provided&gt;$if (point == "M3") w.prefs.commit(mapOf("flutter.oc.automation.$PHONE" to RawPref.Str("""{"version":1}""")))</ID>
+    <ID>MaxLineLength:RunnerState.kt$RunnerState.Blocked$/** Start fresh (keeps a copy) can be requested now: the journal is readable and the gate never opened (§9.4). */</ID>
+    <ID>MaxLineLength:S0Backup.kt$S0Backup$CANDIDATES.flatMap { n -&gt; listOf("$n.xml", "$n.xml.bak") }.map { File(paths.sharedPrefs, it) }.filter { it.isFile }</ID>
+    <ID>MaxLineLength:S0Backup.kt$S0Backup$Fs.writeAtomically(File(partialDir, MANIFEST), manifestJson(copied).toByteArray(Charsets.UTF_8), interrupter, "S0:manifest")</ID>
+    <ID>MaxLineLength:SecretsMigrationTest.kt$SecretsMigrationTest$"flutter.oc.secretReentry.$CODEX" to RawPref.Str("""{"v":1,"names":["codexToken"],"reason":"AuthFailed","at":1}""")</ID>
+    <ID>MaxLineLength:SecretsMigrationTest.kt$SecretsMigrationTest$"flutter.oc.secretReentry.$REMOTE" to RawPref.Str("""{"v":1,"names":["pw"],"reason":"AuthFailed","at":1}""")</ID>
+    <ID>MaxLineLength:SecretsMigrationTest.kt$SecretsMigrationTest$assertEquals("fixture-factsbook-token", w.secrets.values["oc.factsbook.$REMOTE"])</ID>
+    <ID>MaxLineLength:SecretsMigrationTest.kt$SecretsMigrationTest$assertEquals(CredentialLedger.State.Deleted, CredentialLedger(w.paths.credentialLedger).all().getValue(name).state)</ID>
+    <ID>MaxLineLength:SecretsMigrationTest.kt$SecretsMigrationTest$assertTrue(open.notices.reenter.none { it.kind == ReentryKind.GitHubSignIn }, "answered natively: not asked again")</ID>
+    <ID>MaxLineLength:SecretsMigrationTest.kt$SecretsMigrationTest$data.writeText(data.readText().replace("&lt;/map&gt;", " &lt;string name=\"x${FssFormat.ENTRY_PREFIX}_pw.$REMOTE\"&gt;junk&lt;/string&gt;\n&lt;/map&gt;"))</ID>
+    <ID>MaxLineLength:SecretsMigrationTest.kt$SecretsMigrationTest$for</ID>
+    <ID>MaxLineLength:SecretsMigrationTest.kt$SecretsMigrationTest$fun</ID>
+    <ID>MaxLineLength:SecretsMigrationTest.kt$SecretsMigrationTest$val appMade = setOf("pw.$PHONE", "oc.agentHostSecret.$PHONE", "oc.quotaToken.$REMOTE", "oc.teamEngineAuth.$REMOTE")</ID>
+    <ID>MaxLineLength:SecretsMigrationTest.kt$SecretsMigrationTest$val files = FssFixtureWriter(World.KEYS.public, SecureRandom()).write(mapOf("pw.$REMOTE" to Seed.PASSWORD), backupCopies = true)</ID>
+    <ID>MaxLineLength:Seed.kt$Seed$"codexDirectory" to "/work"</ID>
+    <ID>MaxLineLength:Seed.kt$Seed$"oc.automation.$PHONE" to s("""{"version":1,"supervision":"balanced","behaviors":{"restartPhoneServer":true,"pollRestartHealth":true}}""")</ID>
+    <ID>MaxLineLength:Seed.kt$Seed$"oc.byoHostSecrets.$CODEX" to """{"schema":2,"keyAlias":"oc.byoHostSsh.$CODEX","publicKey":"ssh-ed25519 AAAAfixture","deviceToken":"dev-fixture-token"}"""</ID>
+    <ID>MaxLineLength:Seed.kt$Seed$"oc.notifyRules.$REMOTE" to s("""{"enabled":true,"notifications":true,"wifiOnly":true,"quietStart":1320,"quietEnd":420}""")</ID>
+    <ID>MaxLineLength:Seed.kt$Seed$linkedMapOf</ID>
+    <ID>MaxLineLength:Seed.kt$Seed$linkedMapOf("id" to "q1", "profileID" to REMOTE, "sessionID" to "ses_1", "text" to PROMPT_TEXT, "createdAt" to 1730457000000L)</ID>
+    <ID>MaxLineLength:SharedPreferencesFlutterPrefs.kt$AndroidKotlinPrefs$if (!java.io.File(dir, "$fileName.xml").exists() &amp;&amp; !java.io.File(dir, "$fileName.xml.bak").exists()) return null</ID>
+    <ID>MaxLineLength:SoftwareFss.kt$FssFixtureWriter$if (backupCopies) data[FssFormat.entryName(name) + FssFormat.BACKUP_SUFFIX] = RawPref.Str(encryptValue("backup-$value"))</ID>
+    <ID>MaxLineLength:SoftwareFss.kt$FssFixtureWriter.Files$/** File name (without `.xml`) → XML bytes, for writing into a fixture `shared_prefs/` dir. Empty stores are omitted. */</ID>
+    <ID>MaxLineLength:SoftwareFss.kt$FssFixtureWriter.Files$if (configNamespaced.isNotEmpty()) put(FssFormat.CONFIG_FILE_NAMESPACED, AndroidPrefsXmlWriter.write(configNamespaced))</ID>
+    <ID>MaxLineLength:StartFreshTest.kt$StartFreshTest$assertEquals(StartFreshTransaction.Recovery.Failed, StartFreshTransaction(w.paths, { w.nowMs }, full).recoverSafely())</ID>
+    <ID>MaxLineLength:StartFreshTest.kt$StartFreshTest$assertEquals(StartFreshTransaction.Recovery.Finished, StartFreshTransaction(w.paths, { w.nowMs }).recoverSafely())</ID>
+    <ID>MaxLineLength:StartFreshTest.kt$StartFreshTest$assertFailsWith&lt;SimulatedCrash&gt;(point) { StartFreshTransaction(w.paths, { w.nowMs }, crash).recoverBeforeOpen() }</ID>
+    <ID>MaxLineLength:StartFreshTest.kt$StartFreshTest$fun</ID>
+    <ID>MaxLineLength:StartFreshTest.kt$StartFreshTest$private fun bytesOf(dir: File, names: List&lt;String&gt;)</ID>
+    <ID>MaxLineLength:StartFreshTest.kt$StartFreshTest$val full = FaultPoints { if (it == "fresh:move:oc_secrets_v1.xml") throw java.io.IOException("No space left on device") }</ID>
+    <ID>MaxLineLength:StartFreshTransaction.kt$StartFreshTransaction.Companion$/** The adopted prefs file and the native secret file, each with its `.bak` twin (a `.bak` left behind would load). */</ID>
+    <ID>MaxLineLength:StepInterrupters.kt$StepInterrupters$public fun forBuild(paths: MigrationPaths): StepInterrupter</ID>
+    <ID>MaxLineLength:build.gradle.kts$rootProject.layout.projectDirectory.dir("tools/flutter-migration-readers/src/test/resources/fixtures/synthetic-v1").asFile.path</ID>
+    <ID>NestedBlockDepth:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$private fun readStartTag(): Token.Start</ID>
+    <ID>NestedBlockDepth:Fs.kt$Fs$fun copyDurably(from: File, to: File): String</ID>
+    <ID>NestedBlockDepth:M1Census.kt$M1Census$private fun inventory(): List&lt;Map&lt;String, Any?&gt;&gt;</ID>
+    <ID>NestedBlockDepth:MiniJson.kt$MiniJson.P$fun str(): String</ID>
+    <ID>ReturnCount:AndroidPrefsXml.kt$AndroidPrefsXml$fun parse(bytes: ByteArray): PrefsXmlRead</ID>
+    <ID>ReturnCount:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$private fun next(): Token</ID>
+    <ID>ReturnCount:CredentialLedger.kt$CredentialLedger$fun all(): Map&lt;String, Record&gt;</ID>
+    <ID>ReturnCount:FlutterPrefsCodec.kt$FlutterPrefsCodec$fun decodeJavaList(base64: String): PrefValue</ID>
+    <ID>ReturnCount:FlutterPrefsCodec.kt$FlutterPrefsCodec$private fun decodeJsonList(json: String): PrefValue</ID>
+    <ID>ReturnCount:FlutterSecureStorageReader.kt$FlutterSecureStorageReader$fun read(stores: FssStores): FssReadResult</ID>
+    <ID>ReturnCount:FlutterSecureStorageReader.kt$FlutterSecureStorageReader$private fun decryptOne(name: String, raw: RawPref?, key: SecretKey): FlutterSecret</ID>
+    <ID>ReturnCount:FlutterSecureStorageReader.kt$FlutterSecureStorageReader$private fun marker(stores: FssStores, key: String): Pair&lt;String?, String?&gt;</ID>
+    <ID>ReturnCount:FlutterSecureStorageReader.kt$FlutterSecureStorageReader$private fun markerState(keyAlg: String?, storageAlg: String?): MarkerState</ID>
+    <ID>ReturnCount:M1Census.kt$M1Census$private fun measure(f: File): Triple&lt;Long, Long, Boolean&gt;</ID>
+    <ID>ReturnCount:M2Secrets.kt$M2Secrets$private suspend fun copy(name: String, value: String, cipher: RawPref?): M2Failure?</ID>
+    <ID>ReturnCount:M2Secrets.kt$ReentryRecord.Companion$fun parse(text: String?): ReentryRecord?</ID>
+    <ID>ReturnCount:M3LegacyTransforms.kt$M3LegacyTransforms$internal fun pickerPhoto(p: LogicalPrefs): Pair&lt;String, PrefsEdit&gt;</ID>
+    <ID>ReturnCount:M3LegacyTransforms.kt$M3LegacyTransforms$internal fun readStateConsent(p: LogicalPrefs): Pair&lt;String, PrefsEdit&gt;</ID>
+    <ID>ReturnCount:M4RestoreAuthority.kt$M4RestoreAuthority$fun run(live: Map&lt;String, RawPref&gt;, baseline: PrefsBaseline?): Result</ID>
+    <ID>ReturnCount:M4RestoreAuthority.kt$RestoreAuthority$fun policyAllows(policy: Map&lt;*, *&gt;?): Boolean</ID>
+    <ID>ReturnCount:M5Audit.kt$M5Audit$fun run( live: Map&lt;String, RawPref&gt;, baseline: PrefsBaseline?, m1: Map&lt;String, Any?&gt;, m2: Map&lt;String, Any?&gt;, m3: Map&lt;String, Any?&gt;, m4: Map&lt;String, Any?&gt;, ): Result</ID>
+    <ID>ReturnCount:MigrationJournal.kt$JournalStore$fun load(): Loaded</ID>
+    <ID>ReturnCount:MigrationRunner.kt$MigrationRunner$private inline fun step(j: MigrationJournal, id: String, body: () -&gt; StepOutcome): RunnerState.Blocked?</ID>
+    <ID>ReturnCount:MigrationRunner.kt$MigrationRunner$private suspend fun execute(): RunnerState</ID>
+    <ID>ReturnCount:MigrationRunner.kt$MigrationRunner$private suspend fun runV1(j: MigrationJournal): RunnerState.Blocked?</ID>
+    <ID>ReturnCount:MiniJson.kt$MiniJson$fun dartDouble(d: Double): String</ID>
+    <ID>ReturnCount:Prefs.kt$LogicalPrefs$fun profiles(): List&lt;Map&lt;String, Any?&gt;&gt;</ID>
+    <ID>ReturnCount:Prefs.kt$PrefsBaseline.Companion$fun load(file: File): PrefsBaseline?</ID>
+    <ID>ReturnCount:S0Backup.kt$S0Backup$fun run(): Result</ID>
+    <ID>ReturnCount:S0Backup.kt$S0Backup$fun verifyPublished(): List&lt;BackupFile&gt;?</ID>
+    <ID>ReturnCount:S0Backup.kt$S0Backup.Companion$fun parseManifest(text: String): List&lt;BackupFile&gt;?</ID>
+    <ID>ReturnCount:SharedPreferencesFlutterPrefs.kt$AndroidKotlinPrefs$override fun read(fileName: String): Map&lt;String, Any?&gt;?</ID>
+    <ID>ReturnCount:StartFreshTransaction.kt$StartFreshTransaction$fun recoverBeforeOpen(): Boolean</ID>
+    <ID>ReturnCount:StartFreshTransaction.kt$StartFreshTransaction$fun request(): Boolean</ID>
+    <ID>SwallowedException:AndroidPrefsXml.kt$AndroidPrefsXml$e: CharacterCodingException</ID>
+    <ID>SwallowedException:FlutterPrefsCodec.kt$FlutterPrefsCodec$e: Exception</ID>
+    <ID>SwallowedException:FlutterPrefsCodec.kt$FlutterPrefsCodec$e: IllegalArgumentException</ID>
+    <ID>SwallowedException:FlutterSecureStorageReader.kt$FlutterSecureStorageReader$e: CharacterCodingException</ID>
+    <ID>SwallowedException:FlutterSecureStorageReader.kt$FlutterSecureStorageReader$e: Exception</ID>
+    <ID>SwallowedException:FlutterSecureStorageReader.kt$FlutterSecureStorageReader$e: IllegalArgumentException</ID>
+    <ID>SwallowedException:FlutterSecureStorageReader.kt$FlutterSecureStorageReader$e: KeystoreAliasMissingException</ID>
+    <ID>SwallowedException:Fs.kt$Fs$e: AtomicMoveNotSupportedException</ID>
+    <ID>SwallowedException:Fs.kt$Fs$e: Exception</ID>
+    <ID>SwallowedException:M2Secrets.kt$M2Secrets$@Suppress("TooGenericExceptionCaught") e: Exception</ID>
+    <ID>SwallowedException:StartFreshTransaction.kt$StartFreshTransaction$@Suppress("TooGenericExceptionCaught") e: Exception</ID>
+    <ID>ThrowsCount:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$private fun expectEnd(name: String)</ID>
+    <ID>ThrowsCount:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$private fun next(): Token</ID>
+    <ID>ThrowsCount:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$private fun readDocument()</ID>
+    <ID>ThrowsCount:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$private fun readSet(): LinkedHashSet&lt;String&gt;</ID>
+    <ID>ThrowsCount:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$private fun readStartTag(): Token.Start</ID>
+    <ID>ThrowsCount:AndroidPrefsXml.kt$AndroidPrefsXml.Parser$private fun readStringText(): String</ID>
+    <ID>ThrowsCount:MiniJson.kt$MiniJson.P$fun num(): Any</ID>
+    <ID>ThrowsCount:MiniJson.kt$MiniJson.P$fun obj(depth: Int): LinkedHashMap&lt;String, Any?&gt;</ID>
+    <ID>ThrowsCount:MiniJson.kt$MiniJson.P$fun str(): String</ID>
+    <ID>ThrowsCount:MiniJson.kt$MiniJson.P$fun value(depth: Int): Any?</ID>
+    <ID>TooGenericExceptionCaught:FlutterPrefsCodec.kt$FlutterPrefsCodec$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:FlutterSecureStorageReader.kt$FlutterSecureStorageReader$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:Fs.kt$Fs$e: Exception</ID>
+    <ID>TooManyFunctions:AndroidPrefsXml.kt$AndroidPrefsXml$Parser</ID>
+    <ID>TooManyFunctions:FlutterPrefsCodec.kt$FlutterPrefsCodec</ID>
+    <ID>TooManyFunctions:MigrationJournal.kt$MigrationJournal</ID>
+    <ID>TooManyFunctions:MigrationRunner.kt$MigrationRunner</ID>
+    <ID>UseCheckOrError:Harness.kt$MemorySecrets$throw IllegalStateException("keystore said: $name")</ID>
+    <ID>UseCheckOrError:Harness.kt$MemorySecrets$throw IllegalStateException("keystore said: $value")</ID>
+  </CurrentIssues>
+</SmellBaseline>

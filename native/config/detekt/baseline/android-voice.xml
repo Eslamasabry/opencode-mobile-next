@@ -1,0 +1,62 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:AndroidSystemTts.kt$AndroidSystemTts$override suspend fun speak(text: String, voiceId: String?): Outcome&lt;Unit&gt;</ID>
+    <ID>LongMethod:AndroidAudioCapture.kt$AndroidAudioCapture$@SuppressLint("MissingPermission") // VoiceController requests RECORD_AUDIO before collecting override fun frames(): Flow&lt;CaptureEvent&gt;</ID>
+    <ID>LongParameterList:AndroidVoiceComponents.kt$AndroidVoiceComponents$( context: Context, dispatchers: AppDispatchers, clock: Clock, scope: CoroutineScope, prefs: VoicePrefs, permission: MicPermission, sherpa: SherpaRuntime, appLanguage: () -&gt; String?, voiceAvailable: Boolean = true, readAloudAvailable: Boolean = true, )</ID>
+    <ID>LongParameterList:RulesTest.kt$RulesTest$( manager: Boolean = true, network: Boolean = true, internet: Boolean = true, validated: Boolean = true, cellular: Boolean = false, vpn: Boolean = false, metered: Boolean = false, )</ID>
+    <ID>MagicNumber:AndroidAudioCapture.kt$AndroidAudioCapture$16_384</ID>
+    <ID>MagicNumber:AndroidPcmPlayer.kt$AndroidPcmPlayer$0xffffffffL</ID>
+    <ID>MagicNumber:AndroidPcmPlayer.kt$AndroidPcmPlayer$100</ID>
+    <ID>MagicNumber:AndroidPcmPlayer.kt$AndroidPcmPlayer$15</ID>
+    <ID>MagicNumber:AndroidPcmPlayer.kt$AndroidPcmPlayer$4</ID>
+    <ID>MagicNumber:AndroidSystemTts.kt$AndroidSystemTts$3000</ID>
+    <ID>MagicNumber:HttpsModelFetcher.kt$HttpsModelFetcher$200</ID>
+    <ID>MagicNumber:HttpsModelFetcher.kt$HttpsModelFetcher$299</ID>
+    <ID>MaxLineLength:AndroidAudioCapture.kt$AndroidAudioCapture$AudioRecord.getMinBufferSize(VOICE_SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)</ID>
+    <ID>MaxLineLength:AndroidAudioCapture.kt$AndroidAudioCapture$val silenced = session.watchOwnRecording(record.audioSessionId) { trySend(CaptureEvent.Silenced) } // A7, before start</ID>
+    <ID>MaxLineLength:AndroidAudioSession.kt$AndroidAudioSession$*</ID>
+    <ID>MaxLineLength:AndroidAudioSession.kt$AndroidAudioSession$AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build()</ID>
+    <ID>MaxLineLength:AndroidAudioSession.kt$AndroidAudioSession$AudioManager.AUDIOFOCUS_LOSS</ID>
+    <ID>MaxLineLength:AndroidAudioSession.kt$AndroidAudioSession$if (config.isClientSilenced) silencedWatchers.filter { it.first == config.clientAudioSessionId }.forEach { it.second() }</ID>
+    <ID>MaxLineLength:AndroidAudioSession.kt$AndroidAudioSession$if (playbackFocus != null &amp;&amp; removed.any { it.isSink }) events.tryEmit(AudioInterruption.OutputDeviceRemoved)</ID>
+    <ID>MaxLineLength:AndroidAudioSession.kt$AndroidAudioSession.&lt;no name provided&gt;$override fun onAudioDevicesRemoved(removedDevices: Array&lt;out AudioDeviceInfo&gt;)</ID>
+    <ID>MaxLineLength:AndroidAudioSession.kt$AndroidAudioSession.&lt;no name provided&gt;$override fun onRecordingConfigChanged(configs: MutableList&lt;AudioRecordingConfiguration&gt;)</ID>
+    <ID>MaxLineLength:AndroidModelFiles.kt$AndroidModelFiles.&lt;no name provided&gt;$override fun write(bytes: ByteArray, offset: Int, length: Int)</ID>
+    <ID>MaxLineLength:AndroidPcmPlayer.kt$AndroidPcmPlayer$val minBuffer = AudioTrack.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_FLOAT)</ID>
+    <ID>MaxLineLength:AndroidPlatformTest.kt$AndroidPlatformTest$shadowOf(activityManager).setMemoryInfo(ActivityManager.MemoryInfo().apply { totalMem = 3_400L * 1024 * 1024; availMem = 900L * 1024 * 1024; threshold = 200L * 1024 * 1024 })</ID>
+    <ID>MaxLineLength:AndroidSetupNetwork.kt$AndroidSetupNetwork$override suspend fun current(): SetupNetwork</ID>
+    <ID>MaxLineLength:AndroidSetupNetwork.kt$AndroidSetupNetwork$private val manager: ConnectivityManager? get() = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager</ID>
+    <ID>MaxLineLength:AndroidSystemTts.kt$AndroidSystemTts$val pick = offline.firstOrNull { it.id == voiceId } ?: SystemTtsRules.defaultVoice(offline, tts.defaultVoice?.name, Locale.getDefault().toLanguageTag())</ID>
+    <ID>MaxLineLength:AndroidSystemTts.kt$AndroidSystemTts$val result = withTimeoutOrNull(300.seconds) { done.await() } ?: media(MediaProblem.SpeechEngineUnavailable)</ID>
+    <ID>MaxLineLength:AndroidSystemTts.kt$SystemTtsRules$offline.firstOrNull { it.localeTag.lowercase().replace('_', '-').substringBefore('-') == language }?.let { return it }</ID>
+    <ID>MaxLineLength:AndroidSystemTts.kt$SystemTtsRules$voices.filter { !it.needsNetwork &amp;&amp; !it.notInstalled }.sortedBy { it.name }.map { TtsVoice(it.name, it.name, it.localeTag) }</ID>
+    <ID>MaxLineLength:AndroidSystemTts.kt$VoiceInfo$public data</ID>
+    <ID>MaxLineLength:AndroidSystemTtsTest.kt$AndroidSystemTtsTest$if (result is Outcome.Failed) assertNotEquals(MediaProblem.ReadAloudBusy, (result.failure as? Failure.Media)?.problem)</ID>
+    <ID>MaxLineLength:HttpsModelFetcherTest.kt$HttpsModelFetcherTest$answer = { "HTTP/1.1 206 Partial Content\r\nContent-Range: bytes 2-4/5\r\nConnection: close\r\n\r\nllo".toByteArray() }</ID>
+    <ID>MaxLineLength:HttpsModelFetcherTest.kt$HttpsModelFetcherTest$answer = { "HTTP/1.1 302 Found\r\nLocation: https://cdn.example/x\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".toByteArray() }</ID>
+    <ID>MaxLineLength:HttpsModelFetcherTest.kt$HttpsModelFetcherTest$connect = { url -&gt; URL("http", server.inetAddress.hostAddress, server.localPort, URL(url).path).openConnection() as HttpURLConnection }</ID>
+    <ID>MaxLineLength:HttpsModelFetcherTest.kt$HttpsModelFetcherTest$val failure = fetcher.open(FetchRequest("https://huggingface.co/a?token=x", null)).failureOrNull() as Failure.Media</ID>
+    <ID>MaxLineLength:HttpsModelFetcherTest.kt$HttpsModelFetcherTest$val head = generateSequence { input.readLine() }.takeWhile { line -&gt; line.isNotEmpty() }.joinToString("\n")</ID>
+    <ID>MaxLineLength:HttpsModelFetcherTest.kt$HttpsModelFetcherTest$val partial = assertIs&lt;Outcome.Ok&lt;FetchResponse&gt;&gt;(fetcher.open(FetchRequest("https://huggingface.co/a", 2))).value</ID>
+    <ID>MaxLineLength:HttpsModelFetcherTest.kt$HttpsModelFetcherTest$val redirect = assertIs&lt;Outcome.Ok&lt;FetchResponse&gt;&gt;(fetcher.open(FetchRequest("https://huggingface.co/a", null))).value</ID>
+    <ID>MaxLineLength:HttpsModelFetcherTest.kt$HttpsModelFetcherTest$val response = assertIs&lt;Outcome.Ok&lt;FetchResponse&gt;&gt;(fetcher.open(FetchRequest("https://huggingface.co/r/resolve/v/f", rangeStart = 7))).value</ID>
+    <ID>MaxLineLength:KokoroSink.kt$KokoroSink$*</ID>
+    <ID>MaxLineLength:RulesTest.kt$RulesTest$assertEquals(SetupNetwork.Metered, SetupNetworkRules.classify(facts(cellular = true)))</ID>
+    <ID>MaxLineLength:SherpaSpeechTest.kt$SherpaSpeechTest$assertEquals(MediaProblem.SpeechEngineUnavailable, (synth.open(kokoro, 2).failureOrNull() as Failure.Media).problem)</ID>
+    <ID>MaxLineLength:SherpaSpeechTest.kt$SherpaSpeechTest$assertEquals(MediaProblem.SpeechModelBroken, (recognizer.open(base, "en", 1).failureOrNull() as Failure.Media).problem)</ID>
+    <ID>MaxLineLength:SherpaSpeechTest.kt$SherpaSpeechTest$val config = SherpaConfigs.recognizer(base, VoiceLanguage.Arabic.recognizerCode("en"), conservativeThreadCount(8))</ID>
+    <ID>MaxLineLength:SherpaSpeechTest.kt$SherpaSpeechTest$val session = assertIs&lt;Outcome.Ok&lt;*&gt;&gt;(recognizer.open(base, "en", 1)).value as io.github.eslamasabry.oc.engine.voice.dictation.RecognizerSession</ID>
+    <ID>NestedBlockDepth:AndroidAudioSession.kt$AndroidAudioSession$internal fun onRecordingConfigs(configs: List&lt;AudioRecordingConfiguration&gt;)</ID>
+    <ID>ReturnCount:AndroidAudioSession.kt$AndroidAudioSession$override suspend fun acquirePlayback(): Outcome&lt;PlaybackLease&gt;</ID>
+    <ID>ReturnCount:AndroidSetupNetwork.kt$SetupNetworkRules$public fun classify(facts: NetworkFacts?): SetupNetwork</ID>
+    <ID>ReturnCount:AndroidSystemTts.kt$AndroidSystemTts$override suspend fun speak(text: String, voiceId: String?): Outcome&lt;Unit&gt;</ID>
+    <ID>ReturnCount:AndroidSystemTts.kt$AndroidSystemTts$private suspend fun engine(): Outcome&lt;TextToSpeech&gt;</ID>
+    <ID>ReturnCount:AndroidSystemTts.kt$SystemTtsRules$public fun defaultVoice(offline: List&lt;TtsVoice&gt;, engineDefault: String?, deviceLocaleTag: String): TtsVoice?</ID>
+    <ID>ReturnCount:SherpaSpeech.kt$SherpaSpeechSynthesizer$override suspend fun open(pack: InstalledPack, threads: Int): Outcome&lt;SynthesisSession&gt;</ID>
+    <ID>TooManyFunctions:AndroidAudioSession.kt$AndroidAudioSession : AudioSession</ID>
+    <ID>TooManyFunctions:AndroidModelFiles.kt$AndroidModelFiles : ModelFiles</ID>
+    <ID>UseRequire:SherpaSpeechTest.kt$SherpaSpeechTest.FakeRuntime$throw IllegalArgumentException("encoder missing")</ID>
+  </CurrentIssues>
+</SmellBaseline>

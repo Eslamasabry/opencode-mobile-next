@@ -1,0 +1,73 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:Identity.kt$InstallIdPolicy$record == null || age == null || age &lt; 0 || age &gt;= rotationDays * DAY_MS</ID>
+    <ID>CyclomaticComplexMethod:EventSamples.kt$EventSamples$fun specOf(event: AnalyticsEvent): EventSpec</ID>
+    <ID>CyclomaticComplexMethod:PrivacyScrubber.kt$LeakDetector$public fun detect(value: String): LeakKind?</ID>
+    <ID>CyclomaticComplexMethod:PrivacyScrubber.kt$PrivacyScrubber$public fun check(event: WireEvent): ScrubVerdict</ID>
+    <ID>CyclomaticComplexMethod:Vocabulary.kt$ErrorCategory.Companion$public fun of(failure: Failure): ErrorCategory</ID>
+    <ID>LongParameterList:AnalyticsEngine.kt$AnalyticsEngine$( private val scope: CoroutineScope, dispatchers: AppDispatchers, private val clock: Clock, private val store: AnalyticsStore, private val sink: AnalyticsSink, private val system: SystemProps, private val ids: IdSource = SecureIdSource, private val config: AnalyticsConfig = AnalyticsConfig(), )</ID>
+    <ID>LongParameterList:Fixtures.kt$( name: String = "app_start", props: Map&lt;String, String&gt; = mapOf("kind" to "Cold", "duration" to "Under1S"), hourUtc: Long = 1_793_527_200_000L, install: String = "0123456789abcdef0123456789abcdef", session: String = "fedcba9876543210fedcba9876543210", system: SystemProps = TestSystem, )</ID>
+    <ID>LongParameterList:UploadPolicy.kt$UploadPolicy$( conditions: DeviceConditions, sink: SinkKind, gateOpen: Boolean, queued: Int, backoff: Backoff, nowMs: Long, )</ID>
+    <ID>LongParameterList:UploadPolicyTest.kt$UploadPolicyTest$( conditions: DeviceConditions, sink: SinkKind = SinkKind.Remote, gateOpen: Boolean = true, queued: Int = 3, backoff: Backoff = Backoff(), now: Long = 0, )</ID>
+    <ID>LoopWithTooManyJumpStatements:AnalyticsEngine.kt$AnalyticsEngine$while</ID>
+    <ID>MagicNumber:AnalyticsEngine.kt$AnalyticsConfig$30</ID>
+    <ID>MagicNumber:AnalyticsEngine.kt$AnalyticsConfig$60_000L</ID>
+    <ID>MagicNumber:Buckets.kt$CountBucket.Companion$20</ID>
+    <ID>MagicNumber:Buckets.kt$CountBucket.Companion$5</ID>
+    <ID>MagicNumber:Buckets.kt$DurationBucket.Companion$100</ID>
+    <ID>MagicNumber:Buckets.kt$DurationBucket.Companion$10_000</ID>
+    <ID>MagicNumber:Buckets.kt$DurationBucket.Companion$1_000</ID>
+    <ID>MagicNumber:Buckets.kt$DurationBucket.Companion$300</ID>
+    <ID>MagicNumber:Buckets.kt$DurationBucket.Companion$3_000</ID>
+    <ID>MagicNumber:Buckets.kt$DurationBucket.Companion$60_000</ID>
+    <ID>MagicNumber:PrivacyScrubber.kt$LeakDetector$0x20</ID>
+    <ID>MagicNumber:PrivacyScrubber.kt$LeakDetector$0x7e</ID>
+    <ID>MagicNumber:PrivacyScrubber.kt$LeakDetector$0x7f</ID>
+    <ID>MagicNumber:PrivacyScrubber.kt$LeakDetector$20</ID>
+    <ID>MagicNumber:PrivacyScrubber.kt$LeakDetector$3</ID>
+    <ID>MagicNumber:PrivacyScrubber.kt$PrivacyScrubber$999</ID>
+    <ID>MagicNumber:UploadPolicy.kt$Backoff.Companion$30</ID>
+    <ID>MaxLineLength:AnalyticsEngine.kt$AnalyticsEngine$val decoded = attempt(::unexpected) { WireCodec.json.decodeFromString(PersistedState.serializer(), raw) }</ID>
+    <ID>MaxLineLength:AnalyticsEngine.kt$AnalyticsEngine.Companion$fun</ID>
+    <ID>MaxLineLength:AnalyticsEngineTest.kt$AnalyticsEngineTest$assertEquals(listOf(ErrorCategory.Refused, ErrorCategory.Folder, ErrorCategory.Server, ErrorCategory.Network), categories)</ID>
+    <ID>MaxLineLength:AnalyticsEngineTest.kt$AnalyticsEngineTest$assertEquals(mapOf("opencode2" to "TwoToFive", "paseo" to "Zero", "codex" to "MoreThanTwenty"), events[1].props)</ID>
+    <ID>MaxLineLength:AnalyticsEngineTest.kt$AnalyticsEngineTest$assertEquals(mapOf("opens" to "TwoToFive", "chats_started" to "One", "messages_sent" to "Zero"), events[0].props)</ID>
+    <ID>MaxLineLength:AnalyticsEngineTest.kt$AnalyticsEngineTest$backgroundScope</ID>
+    <ID>MaxLineLength:AnalyticsEngineTest.kt$AnalyticsEngineTest$r.engine.noteInventory(mapOf(ServerKind.OpenCode2 to 2, ServerKind.Codex to 30), mapOf(AgentKind.ClaudeCode to 1))</ID>
+    <ID>MaxLineLength:AnalyticsEngineTest.kt$AnalyticsEngineTest.Rig$private</ID>
+    <ID>MaxLineLength:AnalyticsFieldTypesTest.kt$AnalyticsFieldTypesTest$private val allowed = setOf(java.lang.Boolean.TYPE, CountBucket::class.java, DurationBucket::class.java, VersionCode::class.java)</ID>
+    <ID>MaxLineLength:AnalyticsPrivacyTest.kt$AnalyticsPrivacyTest$assertIs&lt;ScrubVerdict.Rejected&gt;(PrivacyScrubber.check(wire(props = mapOf("kind" to "Hot", "duration" to "Under1S"))))</ID>
+    <ID>MaxLineLength:AnalyticsPrivacyTest.kt$AnalyticsPrivacyTest$contentCanaries.forEach { (canary, kind) -&gt; assertEquals(kind, LeakDetector.detect(canary), "canary &lt;$canary&gt;") }</ID>
+    <ID>MaxLineLength:AnalyticsPrivacyTest.kt$AnalyticsPrivacyTest$fun</ID>
+    <ID>MaxLineLength:AnalyticsSchema.kt$AgentKinds.Companion$listOf(count("opencode"), count("claude_code"), count("codex"), count("gemini"), count("acp"), count("other"))</ID>
+    <ID>MaxLineLength:AnalyticsSchema.kt$AppUpdated.Companion$EventSpec("app_updated", AnalyticsTier.Basic, EventTrigger.FirstLaunchAfterUpdate, listOf(version("from_code")))</ID>
+    <ID>MaxLineLength:AnalyticsSchema.kt$FreezeSeen$public data</ID>
+    <ID>MaxLineLength:AnalyticsSchema.kt$ServerKinds$public data</ID>
+    <ID>MaxLineLength:AnalyticsSchemaTest.kt$AnalyticsSchemaTest$assertEquals(AnalyticsSchema.events.size, EventSamples.all.size, "a registered spec has no sample, or a sample no spec")</ID>
+    <ID>MaxLineLength:AnalyticsSchemaTest.kt$AnalyticsSchemaTest$if (prop.kind != PropKind.Version) assertTrue(prop.allowed.isNotEmpty(), "${spec.name}.${prop.key} has no values")</ID>
+    <ID>MaxLineLength:AnalyticsStore.kt$AnalyticsStore$*</ID>
+    <ID>MaxLineLength:Identity.kt$InstallIdPolicy$fun</ID>
+    <ID>MaxLineLength:Identity.kt$InstallIdRecord$/** The stored install id. Random, unrelated to any device or account id, replaced every [InstallIdPolicy.ROTATION_DAYS]. */</ID>
+    <ID>MaxLineLength:PrivacyScrubber.kt$LeakDetector$Regex("""(?i)\.(local|lan|home|internal|localdomain|arpa|com|net|org|io|dev|app|ai|cloud|co|me|sh|xyz|tech|edu|gov)$""")</ID>
+    <ID>MaxLineLength:PrivacyScrubber.kt$PrivacyScrubber$!APP_VERSION.matches(system.appVersion) -&gt; leakOr(system.appVersion, ScrubField.AppVersion, RejectReason.BadFormat)</ID>
+    <ID>MaxLineLength:PrivacyScrubber.kt$PrivacyScrubber$if (props.keys.any { spec.prop(it) == null }) return ScrubVerdict.Rejected(RejectReason.UnexpectedProp, ScrubField.PropKey)</ID>
+    <ID>MaxLineLength:PrivacyScrubber.kt$PrivacyScrubber$val spec = AnalyticsSchema.spec(event.name) ?: return ScrubVerdict.Rejected(RejectReason.UnknownEvent, ScrubField.EventName)</ID>
+    <ID>MaxLineLength:PrivacyScrubber.kt$PrivacyScrubber$val value = event.props[prop.key] ?: return ScrubVerdict.Rejected(RejectReason.MissingProp, ScrubField.PropKey)</ID>
+    <ID>MaxLineLength:PrivacyScrubber.kt$RejectReason</ID>
+    <ID>MaxLineLength:PrivacyScrubber.kt$ScrubVerdict.Rejected$public data</ID>
+    <ID>MaxLineLength:UploadPolicy.kt$UploadPolicy$!conditions.foreground &amp;&amp; conditions.network == NetworkKind.Metered -&gt; hold(HoldReason.MobileDataInBackground)</ID>
+    <ID>MaxLineLength:Vocabulary.kt$ErrorCategory$ComputerDidNotAnswer</ID>
+    <ID>MaxLineLength:Vocabulary.kt$ErrorCategory$Refused</ID>
+    <ID>MaxLineLength:Vocabulary.kt$ErrorCategory.Companion$is Failure.SecretUnavailable -&gt; KeystoreUnavailable</ID>
+    <ID>MaxLineLength:WhatWeCollect.kt$WhatWeCollectSource$props = spec.props.map { CollectedProp(it.key, it.kind, it.allowed.toImmutableList()) }.toImmutableList()</ID>
+    <ID>MaxLineLength:WhatWeCollectTest.kt$WhatWeCollectTest$val off = WhatWeCollectSource.build(ConsentState(DetailedConsent.Declined), RecordingRemoteSink("collector.example"))</ID>
+    <ID>MaxLineLength:build.gradle.kts$// every engine may emit into it once ModuleRules.engineOrder lists it (catalog request in docs/native/units/S1-ANALYTICS.md).</ID>
+    <ID>ReturnCount:AnalyticsEngine.kt$AnalyticsEngine$private suspend fun accept(event: AnalyticsEvent, atMs: Long)</ID>
+    <ID>ReturnCount:PrivacyScrubber.kt$LeakDetector$public fun detect(value: String): LeakKind?</ID>
+    <ID>ReturnCount:PrivacyScrubber.kt$PrivacyScrubber$public fun check(event: WireEvent): ScrubVerdict</ID>
+    <ID>ReturnCount:PrivacyScrubber.kt$PrivacyScrubber$public fun checkTyped(event: AnalyticsEvent): ScrubVerdict</ID>
+    <ID>TooManyFunctions:AnalyticsEngine.kt$AnalyticsEngine : Analytics</ID>
+  </CurrentIssues>
+</SmellBaseline>

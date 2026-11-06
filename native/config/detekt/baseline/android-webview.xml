@@ -1,0 +1,28 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:KitWebPreview.kt$KitWebPreview$private fun document(start: String, requestHeaders: Map&lt;String, String&gt;, gesture: Boolean): WebResourceResponse</ID>
+    <ID>LongMethod:KitWebPreview.kt$KitWebPreview$private fun document(start: String, requestHeaders: Map&lt;String, String&gt;, gesture: Boolean): WebResourceResponse</ID>
+    <ID>MagicNumber:KitWebPreview.kt$KitWebPreview$200</ID>
+    <ID>MagicNumber:KitWebPreview.kt$KitWebPreview$204</ID>
+    <ID>MagicNumber:KitWebPreview.kt$KitWebPreview$300</ID>
+    <ID>MagicNumber:KitWebPreview.kt$KitWebPreview$399</ID>
+    <ID>MagicNumber:KitWebPreview.kt$KitWebPreview$400</ID>
+    <ID>MagicNumber:KitWebPreview.kt$KitWebPreview$403</ID>
+    <ID>MagicNumber:KitWebPreview.kt$KitWebPreview$502</ID>
+    <ID>MagicNumber:KitWebPreview.kt$KitWebPreview$508</ID>
+    <ID>MagicNumber:KitWebPreview.kt$KitWebPreview$599</ID>
+    <ID>MagicNumber:KitWebPreview.kt$KitWebPreview.Client$403</ID>
+    <ID>MagicNumber:KitWebPreview.kt$KitWebPreview.Client$405</ID>
+    <ID>MaxLineLength:KitWebPreview.kt$KitWebPreview$if</ID>
+    <ID>MaxLineLength:KitWebPreview.kt$KitWebPreview$runCatchingPlatform { CookieManager.getInstance().getCookie(url) }?.let { connection.setRequestProperty("Cookie", it) }</ID>
+    <ID>MaxLineLength:KitWebPreview.kt$KitWebPreview$val next = connection.getHeaderField("Location")?.let { runCatchingPlatform { URL(URL(url), it).toString() } }</ID>
+    <ID>MaxLineLength:PreviewNavigationTest.kt$PreviewNavigationTest$assertEquals("http://127.0.0.1:5173/app/", PreviewNavigation.reloadAt("http://127.0.0.1:5173/", "http://127.0.0.1:5173/app/"))</ID>
+    <ID>MaxLineLength:PreviewNavigationTest.kt$PreviewNavigationTest$assertEquals(Navigate.AskToLeave, PreviewNavigation.navigate(sameOrigin = false, mainFrame = true, gesture = true))</ID>
+    <ID>MaxLineLength:PreviewNavigationTest.kt$PreviewNavigationTest$assertEquals(Navigate.LoadHere, PreviewNavigation.navigate(sameOrigin = true, mainFrame = true, gesture = false))</ID>
+    <ID>MaxLineLength:PreviewNavigationTest.kt$PreviewNavigationTest$fun</ID>
+    <ID>ReturnCount:KitWebPreview.kt$KitWebPreview$private fun document(start: String, requestHeaders: Map&lt;String, String&gt;, gesture: Boolean): WebResourceResponse</ID>
+    <ID>ReturnCount:KitWebPreview.kt$KitWebPreview.Client$override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse?</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -1,0 +1,32 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:AndroidUpdates.kt$AndroidUpdateFeed$override suspend fun download(url: String, dest: String, onProgress: (Long, Long) -&gt; Unit): Outcome&lt;Unit&gt;</ID>
+    <ID>LoopWithTooManyJumpStatements:TilesComponents.kt$TilesComponents$for</ID>
+    <ID>MagicNumber:AndroidUpdates.kt$AndroidUpdateFeed$15_000</ID>
+    <ID>MagicNumber:AndroidUpdates.kt$AndroidUpdateFeed$416</ID>
+    <ID>MagicNumber:AndroidUpdates.kt$AndroidUpdatePlatform$1024</ID>
+    <ID>MagicNumber:AndroidUpdates.kt$AndroidUpdatePlatform$64</ID>
+    <ID>MagicNumber:LaunchActions.kt$LaunchActions$3</ID>
+    <ID>MaxLineLength:AndroidUpdates.kt$AndroidUpdateFeed$if (code != HttpURLConnection.HTTP_OK &amp;&amp; code != HttpURLConnection.HTTP_PARTIAL) throw HttpStatus(code)</ID>
+    <ID>MaxLineLength:AndroidUpdates.kt$UpdateSigners$public</ID>
+    <ID>MaxLineLength:AppUpdateStatusReceiver.kt$AppUpdateStatusReceiver$val message = if (state == InstallState.Failure) intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE) else null</ID>
+    <ID>MaxLineLength:LaunchSurfacesNativeContractTest.kt$LaunchSurfacesNativeContractTest$val gradle = sequenceOf(File("build.gradle.kts"), File("android/tiles/build.gradle.kts")).first { it.isFile }.readText()</ID>
+    <ID>MaxLineLength:LaunchSurfacesTest.kt$LaunchSurfacesTest$fun</ID>
+    <ID>MaxLineLength:PinnedShortcutsLauncherTest.kt$PinnedShortcutsLauncherTest$fun</ID>
+    <ID>MaxLineLength:SetupNotificationTapTest.kt$SetupNotificationTapTest$/** SetupService's extra (`AppComponents.EXTRA_LAUNCH_ACTION`, :android:linux) is this module's [LaunchActions.EXTRA]. */</ID>
+    <ID>MaxLineLength:TilesManifestTest.kt$TilesManifestTest$assertEquals("@string/pause_tile_label", declared.getValue(TilesComponents.PAUSE_TILE).getAttributeNS(ns, "label"))</ID>
+    <ID>MaxLineLength:TilesManifestTest.kt$TilesManifestTest$assertEquals("@string/tile_label", declared.getValue(TilesComponents.ATTENTION_TILE).getAttributeNS(ns, "label"))</ID>
+    <ID>NestedBlockDepth:AndroidUpdates.kt$AndroidUpdatePlatform$private fun commit(file: File)</ID>
+    <ID>ReturnCount:AttentionTileCache.kt$AttentionTileCache$fun clearOwner(context: Context, owner: String): Boolean</ID>
+    <ID>ReturnCount:LaunchActions.kt$LaunchActions$fun consumeSessionShortcut(intent: Intent?): SessionShortcutTap?</ID>
+    <ID>ReturnCount:LaunchActions.kt$LaunchActions$fun parse(action: String?): LaunchAction?</ID>
+    <ID>ReturnCount:LaunchSurfaces.kt$LaunchSurfaces$fun onState(state: LaunchSurfaceState): Boolean</ID>
+    <ID>ReturnCount:PinnedShortcuts.kt$PinnedShortcuts$fun publish(context: Context, profileId: String, pins: List&lt;PinnedSession&gt;): Boolean</ID>
+    <ID>ReturnCount:PinnedShortcuts.kt$PinnedShortcuts$fun withdrawProfile(context: Context, profileId: String): ShortcutClear</ID>
+    <ID>ReturnCount:SharedTextIntake.kt$SharedTextIntake$fun consume(intent: Intent?): SharedText?</ID>
+    <ID>TooManyFunctions:AndroidUpdates.kt$AndroidUpdatePlatform : UpdatePlatform</ID>
+    <ID>TooManyFunctions:PinnedShortcuts.kt$PinnedShortcuts</ID>
+  </CurrentIssues>
+</SmellBaseline>

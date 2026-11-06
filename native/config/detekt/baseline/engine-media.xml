@@ -1,0 +1,295 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:OfficeText.kt$value.any { it == '"' || it == ',' || it == '\n' || it == '\r' }</ID>
+    <ID>ComplexCondition:StaticSvg.kt$StaticSvg.Companion$numbers.size != 4 || numbers.any { it == null || !it.isFinite() || kotlin.math.abs(it) &gt; MAX_NUMBER }</ID>
+    <ID>ComplexCondition:StaticSvg.kt$StaticSvg.Companion$width == null || height == null || !width.isFinite() || !height.isFinite() || width &lt;= 0 || height &lt;= 0 || width &gt; MAX_EDGE || height &gt; MAX_EDGE</ID>
+    <ID>ComplexCondition:XmlPull.kt$XmlPull$c.isXmlSpace() || c == '&gt;' || c == '/' || c == '=' || c == '&lt;' || c == '"' || c == '\''</ID>
+    <ID>ComplexCondition:XmlPull.kt$XmlPull$code == null || code &lt;= 0 || code &gt; 0x10FFFF || code in 0xD800..0xDFFF</ID>
+    <ID>ComplexCondition:XmlPull.kt$XmlPull$first.isDigit() || first == '-' || first == '.' || name.count { it == ':' } &gt; 1 || name.endsWith(':')</ID>
+    <ID>CyclomaticComplexMethod:AttachmentIntake.kt$AttachmentIntake$private suspend fun addPictures(current: List&lt;PromptAttachment&gt;, inputs: List&lt;PictureInput&gt;): IntakeResult</ID>
+    <ID>CyclomaticComplexMethod:DelimitedText.kt$DelimitedText.Companion$public fun parse(source: String, separator: Char): DelimitedText</ID>
+    <ID>CyclomaticComplexMethod:MimeMap.kt$MimeMap$public fun fromName(name: String): String?</ID>
+    <ID>CyclomaticComplexMethod:OfficeText.kt$private fun document(files: Map&lt;String, ByteArray&gt;): Outcome&lt;OfficeText&gt;?</ID>
+    <ID>CyclomaticComplexMethod:OfficeText.kt$private fun sharedStrings(bytes: ByteArray?): List&lt;String&gt;</ID>
+    <ID>CyclomaticComplexMethod:OfficeText.kt$private fun sheetRows(bytes: ByteArray, shared: List&lt;String&gt;, out: StringBuilder, onRow: () -&gt; Unit): Boolean</ID>
+    <ID>CyclomaticComplexMethod:OfficeText.kt$private fun workbook(files: Map&lt;String, ByteArray&gt;): Outcome&lt;OfficeText&gt;?</ID>
+    <ID>CyclomaticComplexMethod:PendingPhotoRecovery.kt$PendingPhotoRecovery$private suspend fun recoverLocked(outcome: LauncherOutcome?, settled: Boolean): RecoveryResult</ID>
+    <ID>CyclomaticComplexMethod:StaticSvg.kt$StaticSvg.Companion$private fun check(source: String): StaticSvg?</ID>
+    <ID>CyclomaticComplexMethod:StrictUtf8.kt$StrictUtf8$public fun isValid(bytes: ByteArray): Boolean</ID>
+    <ID>CyclomaticComplexMethod:XmlPull.kt$XmlPull$private fun decode(raw: String): String</ID>
+    <ID>CyclomaticComplexMethod:XmlPull.kt$XmlPull$private fun name(): String</ID>
+    <ID>CyclomaticComplexMethod:XmlPull.kt$XmlPull$private fun startTag(): XmlEvent.Start</ID>
+    <ID>CyclomaticComplexMethod:ZipCentralDirectory.kt$ZipCentralDirectory$fun read(bytes: ByteArray, wanted: (String) -&gt; Boolean = ::isXmlPart): Result</ID>
+    <ID>LongMethod:OfficeText.kt$private fun sheetRows(bytes: ByteArray, shared: List&lt;String&gt;, out: StringBuilder, onRow: () -&gt; Unit): Boolean</ID>
+    <ID>LongMethod:StaticSvg.kt$StaticSvg.Companion$private fun check(source: String): StaticSvg?</ID>
+    <ID>LongMethod:XmlPull.kt$XmlPull$private fun startTag(): XmlEvent.Start</ID>
+    <ID>LongParameterList:AttachmentIntake.kt$AttachmentIntake$( private val activity: ActivityResults, private val permissions: PermissionGate, private val reader: PickedFileReader, private val codec: ImageCodec, private val clipboard: ClipboardImages, private val captures: CaptureFiles, private val photos: PhotoRecord, private val words: AttachmentWords, private val dispatchers: AppDispatchers, private val clock: Clock, )</ID>
+    <ID>LoopWithTooManyJumpStatements:AttachmentIntake.kt$AttachmentIntake$for</ID>
+    <ID>LoopWithTooManyJumpStatements:BoundedRead.kt$BoundedRead$while</ID>
+    <ID>LoopWithTooManyJumpStatements:OfficeText.kt$for</ID>
+    <ID>LoopWithTooManyJumpStatements:OfficeText.kt$while</ID>
+    <ID>LoopWithTooManyJumpStatements:XmlPull.kt$XmlPull$while</ID>
+    <ID>MagicNumber:DataUrl.kt$DataUrl$16</ID>
+    <ID>MagicNumber:DataUrl.kt$DataUrl$3</ID>
+    <ID>MagicNumber:DataUrl.kt$DataUrl$4</ID>
+    <ID>MagicNumber:DataUrl.kt$DataUrl$5</ID>
+    <ID>MagicNumber:MagicBytes.kt$MagicBytes$0x0A</ID>
+    <ID>MagicNumber:MagicBytes.kt$MagicBytes$0x1A</ID>
+    <ID>MagicNumber:MagicBytes.kt$MagicBytes$0x47</ID>
+    <ID>MagicNumber:MagicBytes.kt$MagicBytes$0x4E</ID>
+    <ID>MagicNumber:MagicBytes.kt$MagicBytes$0x50</ID>
+    <ID>MagicNumber:MagicBytes.kt$MagicBytes$0x89</ID>
+    <ID>MagicNumber:MagicBytes.kt$MagicBytes$0xD8</ID>
+    <ID>MagicNumber:MagicBytes.kt$MagicBytes$0xFF</ID>
+    <ID>MagicNumber:MagicBytes.kt$MagicBytes$8</ID>
+    <ID>MagicNumber:OfficeText.kt$26</ID>
+    <ID>MagicNumber:OfficeText.kt$3</ID>
+    <ID>MagicNumber:PromptAttachmentMime.kt$AttachmentName$0x20</ID>
+    <ID>MagicNumber:PromptAttachmentMime.kt$AttachmentName$0x7F</ID>
+    <ID>MagicNumber:PromptAttachmentMime.kt$PromptAttachmentMime$0x09</ID>
+    <ID>MagicNumber:PromptAttachmentMime.kt$PromptAttachmentMime$0x0E</ID>
+    <ID>MagicNumber:PromptAttachmentMime.kt$PromptAttachmentMime$0x20</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$10</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$1025</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$11</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$115</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$12</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$12289</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$129</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$13</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$131</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$14</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$144</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$15</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$1537</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$16</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$163</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$16385</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$17</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$18</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$19</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$193</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$195</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$2049</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$227</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$23</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$24577</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$25</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$256</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$257</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$258</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$27</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$280</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$288</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$3</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$30</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$3073</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$31</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$320</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$33</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$35</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$385</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$4</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$4097</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$43</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$49</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$5</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$51</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$513</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$59</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$6</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$6145</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$65</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$67</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$7</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$769</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$8</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$8193</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$83</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$9</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$97</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate$99</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate.Huffman$15</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate.Huffman$16</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate.Inflater$0xFF</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate.Inflater$0xFFFF</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate.Inflater$1024</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate.Inflater$11</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate.Inflater$15</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate.Inflater$16</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate.Inflater$17</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate.Inflater$19</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate.Inflater$256</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate.Inflater$257</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate.Inflater$286</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate.Inflater$29</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate.Inflater$3</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate.Inflater$30</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate.Inflater$320</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate.Inflater$4</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate.Inflater$5</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate.Inflater$7</ID>
+    <ID>MagicNumber:RawInflate.kt$RawInflate.Inflater$8</ID>
+    <ID>MagicNumber:StaticSvg.kt$StaticSvg.Companion$3</ID>
+    <ID>MagicNumber:StaticSvg.kt$StaticSvg.Companion$4</ID>
+    <ID>MagicNumber:StrictUtf8.kt$StrictUtf8$0x80</ID>
+    <ID>MagicNumber:StrictUtf8.kt$StrictUtf8$0x800</ID>
+    <ID>MagicNumber:StrictUtf8.kt$StrictUtf8$0x8F</ID>
+    <ID>MagicNumber:StrictUtf8.kt$StrictUtf8$0x90</ID>
+    <ID>MagicNumber:StrictUtf8.kt$StrictUtf8$0x9F</ID>
+    <ID>MagicNumber:StrictUtf8.kt$StrictUtf8$0xA0</ID>
+    <ID>MagicNumber:StrictUtf8.kt$StrictUtf8$0xBF</ID>
+    <ID>MagicNumber:StrictUtf8.kt$StrictUtf8$0xC0</ID>
+    <ID>MagicNumber:StrictUtf8.kt$StrictUtf8$0xC2</ID>
+    <ID>MagicNumber:StrictUtf8.kt$StrictUtf8$0xDF</ID>
+    <ID>MagicNumber:StrictUtf8.kt$StrictUtf8$0xE0</ID>
+    <ID>MagicNumber:StrictUtf8.kt$StrictUtf8$0xED</ID>
+    <ID>MagicNumber:StrictUtf8.kt$StrictUtf8$0xEF</ID>
+    <ID>MagicNumber:StrictUtf8.kt$StrictUtf8$0xF0</ID>
+    <ID>MagicNumber:StrictUtf8.kt$StrictUtf8$0xF4</ID>
+    <ID>MagicNumber:StrictUtf8.kt$StrictUtf8$0xFF</ID>
+    <ID>MagicNumber:StrictUtf8.kt$StrictUtf8$3</ID>
+    <ID>MagicNumber:StrictUtf8.kt$StrictUtf8$4</ID>
+    <ID>MagicNumber:XmlPull.kt$XmlPull$0x10000</ID>
+    <ID>MagicNumber:XmlPull.kt$XmlPull$0x10FFFF</ID>
+    <ID>MagicNumber:XmlPull.kt$XmlPull$0x3FF</ID>
+    <ID>MagicNumber:XmlPull.kt$XmlPull$0xD800</ID>
+    <ID>MagicNumber:XmlPull.kt$XmlPull$0xDC00</ID>
+    <ID>MagicNumber:XmlPull.kt$XmlPull$0xDFFF</ID>
+    <ID>MagicNumber:XmlPull.kt$XmlPull$10</ID>
+    <ID>MagicNumber:XmlPull.kt$XmlPull$12</ID>
+    <ID>MagicNumber:XmlPull.kt$XmlPull$16</ID>
+    <ID>MagicNumber:XmlPull.kt$XmlPull$3</ID>
+    <ID>MagicNumber:XmlPull.kt$XmlPull$4</ID>
+    <ID>MagicNumber:XmlPull.kt$XmlPull$6</ID>
+    <ID>MagicNumber:XmlPull.kt$XmlPull$9</ID>
+    <ID>MagicNumber:ZipCentralDirectory.kt$ZipCentralDirectory$0x02014b50L</ID>
+    <ID>MagicNumber:ZipCentralDirectory.kt$ZipCentralDirectory$0x04034b50L</ID>
+    <ID>MagicNumber:ZipCentralDirectory.kt$ZipCentralDirectory$0x06054b50L</ID>
+    <ID>MagicNumber:ZipCentralDirectory.kt$ZipCentralDirectory$0xFF</ID>
+    <ID>MagicNumber:ZipCentralDirectory.kt$ZipCentralDirectory$10</ID>
+    <ID>MagicNumber:ZipCentralDirectory.kt$ZipCentralDirectory$1024</ID>
+    <ID>MagicNumber:ZipCentralDirectory.kt$ZipCentralDirectory$16</ID>
+    <ID>MagicNumber:ZipCentralDirectory.kt$ZipCentralDirectory$20</ID>
+    <ID>MagicNumber:ZipCentralDirectory.kt$ZipCentralDirectory$22</ID>
+    <ID>MagicNumber:ZipCentralDirectory.kt$ZipCentralDirectory$24</ID>
+    <ID>MagicNumber:ZipCentralDirectory.kt$ZipCentralDirectory$26</ID>
+    <ID>MagicNumber:ZipCentralDirectory.kt$ZipCentralDirectory$28</ID>
+    <ID>MagicNumber:ZipCentralDirectory.kt$ZipCentralDirectory$3</ID>
+    <ID>MagicNumber:ZipCentralDirectory.kt$ZipCentralDirectory$30</ID>
+    <ID>MagicNumber:ZipCentralDirectory.kt$ZipCentralDirectory$32</ID>
+    <ID>MagicNumber:ZipCentralDirectory.kt$ZipCentralDirectory$4</ID>
+    <ID>MagicNumber:ZipCentralDirectory.kt$ZipCentralDirectory$42</ID>
+    <ID>MagicNumber:ZipCentralDirectory.kt$ZipCentralDirectory$46</ID>
+    <ID>MagicNumber:ZipCentralDirectory.kt$ZipCentralDirectory$46L</ID>
+    <ID>MagicNumber:ZipCentralDirectory.kt$ZipCentralDirectory$64</ID>
+    <ID>MagicNumber:ZipCentralDirectory.kt$ZipCentralDirectory$8</ID>
+    <ID>MaxLineLength:AttachmentIntake.kt$AttachTarget$public data</ID>
+    <ID>MaxLineLength:AttachmentIntake.kt$AttachmentIntake$if (bytes.size &gt; AttachmentLimits.CLIPBOARD_MAX_BYTES) return Outcome.Failed(Failure.Media(MediaProblem.ClipboardImageTooLarge))</ID>
+    <ID>MaxLineLength:AttachmentIntake.kt$AttachmentIntake$if (bytes.size &gt; AttachmentLimits.MAX_BYTES) return Outcome.Failed(Failure.Media(MediaProblem.AttachmentTooLarge))</ID>
+    <ID>MaxLineLength:AttachmentIntake.kt$AttachmentIntake$is Outcome.Ok -&gt; read.value ?: return Outcome.Ok(IntakeResult(persistentListOf(), IntakeNote.ClipboardEmpty))</ID>
+    <ID>MaxLineLength:AttachmentIntake.kt$AttachmentIntake$photos.begin(target.conversation.profileId.raw, target.conversation.sessionId.raw, target.directory, target.workspace)</ID>
+    <ID>MaxLineLength:AttachmentIntake.kt$AttachmentIntake$private suspend</ID>
+    <ID>MaxLineLength:AttachmentIntake.kt$AttachmentIntake$public suspend</ID>
+    <ID>MaxLineLength:AttachmentIntake.kt$AttachmentIntake$val note = if (spreadsheet) IntakeNote.SheetAttached(name, office.sections, office.lines) else IntakeNote.DocumentAttached(name)</ID>
+    <ID>MaxLineLength:AttachmentIntakeTest.kt$AttachmentIntakeTest$List(n) { PromptAttachment("text/plain", "f$it.txt", DataUrl.encode("text/plain", ByteArray(bytesEach) { 65 })) }</ID>
+    <ID>MaxLineLength:AttachmentIntakeTest.kt$AttachmentIntakeTest$activity.document = Outcome.Ok(files.file("content://big", ByteArray(4), "big.txt", size = 11L * 1024 * 1024))</ID>
+    <ID>MaxLineLength:AttachmentIntakeTest.kt$AttachmentIntakeTest$activity.document = Outcome.Ok(files.file("content://bin", byteArrayOf(0, 1, 2), "a.bin", "application/octet-stream"))</ID>
+    <ID>MaxLineLength:AttachmentIntakeTest.kt$AttachmentIntakeTest$activity.document = Outcome.Ok(files.file("content://exact", ByteArray(10 * 1024 * 1024) { 65 }, "exact.txt"))</ID>
+    <ID>MaxLineLength:AttachmentIntakeTest.kt$AttachmentIntakeTest$activity.document = Outcome.Ok(files.file("content://grew", ByteArray(6 * 1024 * 1024) { 65 }, "grew.txt", size = 3))</ID>
+    <ID>MaxLineLength:AttachmentIntakeTest.kt$AttachmentIntakeTest$activity.document = Outcome.Ok(files.file("content://md", "# hi".encodeToByteArray(), "notes.md", "text/markdown"))</ID>
+    <ID>MaxLineLength:AttachmentIntakeTest.kt$AttachmentIntakeTest$assertEquals(MediaProblem.AttachmentsTotalTooLarge, problem(intake().pickFile(attachments(2, 10 * 1024 * 1024))))</ID>
+    <ID>MaxLineLength:AttachmentIntakeTest.kt$AttachmentIntakeTest$assertEquals(MediaProblem.PhotoUnsupported, problem(intake().fromInserted(emptyList(), null, "gif?".encodeToByteArray())))</ID>
+    <ID>MaxLineLength:AttachmentIntakeTest.kt$AttachmentIntakeTest$assertNotNull(ok(intake().fromInserted(emptyList(), null, png(6))).added.singleOrNull()?.takeIf { it.filename.endsWith(".png") })</ID>
+    <ID>MaxLineLength:AttachmentIntakeTest.kt$AttachmentIntakeTest$storedZip("word/document.xml" to "&lt;w:document xmlns:w=\"urn:w\"&gt;&lt;w:body&gt;&lt;w:p&gt;&lt;w:r&gt;&lt;w:t&gt;$text&lt;/w:t&gt;&lt;/w:r&gt;&lt;/w:p&gt;&lt;/w:body&gt;&lt;/w:document&gt;")</ID>
+    <ID>MaxLineLength:AttachmentLimits.kt$AttachmentLimits$if (size &gt; 0 &amp;&amp; totalBytes(current) + size &gt; MAX_TOTAL_BYTES) return Failure.Media(MediaProblem.AttachmentsTotalTooLarge)</ID>
+    <ID>MaxLineLength:AttachmentLimits.kt$AttachmentLimits$public</ID>
+    <ID>MaxLineLength:DelimitedText.kt$DelimitedText.Companion$/** The separator for [name] and its declared [mime], or null. An explicit incompatible MIME wins over the name. */</ID>
+    <ID>MaxLineLength:DelimitedText.kt$DelimitedText.Companion$if (rows.size == MAX_ROWS) return DelimitedText(rows.toImmutableList(), i + 1 &lt; source.length, null)</ID>
+    <ID>MaxLineLength:DelimitedTextTest.kt$DelimitedTextTest$assertEquals(listOf(listOf("=SUM(A1)", "&lt;script&gt;"), listOf("# Heading"), listOf("a\tb", "")), data.rows.map { it.toList() })</ID>
+    <ID>MaxLineLength:Fakes.kt$FakeActivity$override suspend fun createDocument(suggestedName: String, mime: String): Outcome&lt;DocumentTarget?&gt;</ID>
+    <ID>MaxLineLength:Fakes.kt$FakeCodec$override suspend fun prepareBytes(bytes: ByteArray, declaredMime: String?, rules: PhotoRules): Outcome&lt;PreparedImage&gt;</ID>
+    <ID>MaxLineLength:Fakes.kt$FakeFiles$fun</ID>
+    <ID>MaxLineLength:Fakes.kt$FakePhotoStore$override suspend</ID>
+    <ID>MaxLineLength:Fakes.kt$FakeReader$return if (data.size &gt; limit) Outcome.Failed(Failure.Media(MediaProblem.AttachmentTooLarge)) else Outcome.Ok(data)</ID>
+    <ID>MaxLineLength:FilePreview.kt$PreviewData.Companion$if (!url.startsWith("data:")) return PreviewData(name, normalized, problem = MediaProblem.RemoteAttachmentPreview)</ID>
+    <ID>MaxLineLength:FilePreview.kt$PreviewData.Companion$if (url.isNullOrBlank()) return PreviewData(name, normalized, problem = MediaProblem.AttachmentContentMissing)</ID>
+    <ID>MaxLineLength:FilePreview.kt$PreviewData.Companion$val decoded = DataUrl.decode(url) ?: return PreviewData(name, normalized, problem = MediaProblem.FileNotShowable)</ID>
+    <ID>MaxLineLength:FilePreviewTest.kt$FilePreviewTest$assertEquals(MediaProblem.FileNotShowable, PreviewData.fromDataUrl("a.txt", null, "data:text/plain;base64,%%%").problem)</ID>
+    <ID>MaxLineLength:FilePreviewTest.kt$FilePreviewTest$assertEquals(MediaProblem.RemoteAttachmentPreview, PreviewData.fromDataUrl("a.txt", null, "https://example.org/a").problem)</ID>
+    <ID>MaxLineLength:MagicBytes.kt$MagicBytes$fun ascii(at: Int, s: String)</ID>
+    <ID>MaxLineLength:MimeMap.kt$MimeMap$mime == "image/png" || mime == "image/jpeg" || mime == "image/gif" || mime == "image/webp" || mime == "image/bmp"</ID>
+    <ID>MaxLineLength:OfficeText.kt$if (id != null &amp;&amp; target != null) targets[id] = if (target.startsWith("/")) target.substring(1) else "xl/$target"</ID>
+    <ID>MaxLineLength:OfficeText.kt$if (value.any { it == '"' || it == ',' || it == '\n' || it == '\r' }) "\"" + value.replace("\"", "\"\"") + "\"" else value</ID>
+    <ID>MaxLineLength:OfficeTextTest.kt$OfficeTextTest$"&lt;worksheet&gt;&lt;sheetData&gt;&lt;row&gt;&lt;c r=\"A1\" t=\"s\"&gt;&lt;v&gt;0&lt;/v&gt;&lt;/c&gt;&lt;c r=\"C1\" t=\"inlineStr\"&gt;&lt;is&gt;&lt;t&gt;in &amp;amp; line&lt;/t&gt;&lt;/is&gt;&lt;/c&gt;"</ID>
+    <ID>MaxLineLength:OfficeTextTest.kt$OfficeTextTest$bytes[it] == 0x50.toByte() &amp;&amp; bytes[it + 1] == 0x4B.toByte() &amp;&amp; bytes[it + 2] == 1.toByte() &amp;&amp; bytes[it + 3] == 2.toByte()</ID>
+    <ID>MaxLineLength:OfficeTextTest.kt$OfficeTextTest$private fun problem(result: Outcome&lt;OfficeText&gt;): MediaProblem?</ID>
+    <ID>MaxLineLength:OfficeTextTest.kt$OfficeTextTest$val doctype = zip("xl/workbook.xml" to "&lt;!DOCTYPE x [&lt;!ENTITY a SYSTEM \"file:///etc/passwd\"&gt;]&gt;&lt;workbook&gt;&amp;a;&lt;/workbook&gt;")</ID>
+    <ID>MaxLineLength:OfficeTextTest.kt$OfficeTextTest$val encrypted = zip("xl/workbook.xml" to "&lt;workbook/&gt;").also { it[6 + centralOffset(it)] = 1 } // central flag bit 0</ID>
+    <ID>MaxLineLength:OfficeTextTest.kt$OfficeTextTest$zip("xl/workbook.xml" to workbook, "xl/_rels/workbook.xml.rels" to rels, "xl/sharedStrings.xml" to shared, "xl/worksheets/a.xml" to sheet)</ID>
+    <ID>MaxLineLength:PendingPhotoRecovery.kt$PendingPhotoRecovery$val name = AttachmentName.clean(file.displayName ?: photo.name ?: "photo.${MagicBytes.extensionFor(prepared.mime)}")</ID>
+    <ID>MaxLineLength:PendingPhotoRecoveryTest.kt$PendingPhotoRecoveryTest$assertEquals(RecoveryResult.Attached, recovery.recover(LauncherOutcome.Picked(persistentListOf(first, second))))</ID>
+    <ID>MaxLineLength:PendingPhotoRecoveryTest.kt$PendingPhotoRecoveryTest$val results = listOf(async { recovery.recover(LauncherOutcome.Captured) }, async { recovery.recover() }).awaitAll()</ID>
+    <ID>MaxLineLength:PhotoRecord.kt$PhotoRecord$public suspend</ID>
+    <ID>MaxLineLength:PromptAttachmentMime.kt$AttachmentName$/** File names for attachments (plan 10 §10.6 step 5): base name only; control characters and `"` → `_`; empty → `file`. */</ID>
+    <ID>MaxLineLength:PromptAttachmentMime.kt$AttachmentName$val cleaned = base.map { if (it.code &lt; 0x20 || it.code == 0x7F || it == '"') '_' else it }.joinToString("").trim()</ID>
+    <ID>MaxLineLength:PromptAttachmentMime.kt$PromptAttachmentMime$"application/json"</ID>
+    <ID>MaxLineLength:PromptAttachmentMime.kt$PromptAttachmentMime$mapOf("png" to "image/png", "jpg" to "image/jpeg", "jpeg" to "image/jpeg", "gif" to "image/gif", "webp" to "image/webp", "pdf" to "application/pdf")</ID>
+    <ID>MaxLineLength:PromptAttachmentMimeTest.kt$PromptAttachmentMimeTest$assertEquals("text/plain", PromptAttachmentMime.of(null, "ff.txt", byteArrayOf(0x41, 0x09, 0x0A, 0x0B, 0x0C, 0x0D)))</ID>
+    <ID>MaxLineLength:RawInflate.kt$RawInflate$*</ID>
+    <ID>MaxLineLength:RawInflate.kt$RawInflate$intArrayOf(3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258)</ID>
+    <ID>MaxLineLength:RawInflate.kt$RawInflate$private val DEXT = intArrayOf(0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13)</ID>
+    <ID>MaxLineLength:Seams.kt$PreparedImage</ID>
+    <ID>MaxLineLength:StaticSvg.kt$StaticSvg.Companion$if</ID>
+    <ID>MaxLineLength:StaticSvg.kt$StaticSvg.Companion$is XmlEvent.End -&gt; if (gradientDepths.lastOrNull() == parser.depth + 1) gradientDepths.removeAt(gradientDepths.lastIndex)</ID>
+    <ID>MaxLineLength:StaticSvgTest.kt$StaticSvgTest$"&lt;rect width=\"300\" height=\"180\" fill=\"url(#paint)\"/&gt;&lt;text x=\"10\" y=\"40\"&gt;Local result&lt;/text&gt;&lt;/svg&gt;"</ID>
+    <ID>MaxLineLength:StaticSvgTest.kt$StaticSvgTest$"&lt;stop offset=\"0\" stop-color=\"#fff\"/&gt;&lt;stop offset=\"1\" stop-color=\"#123456\"/&gt;&lt;/linearGradient&gt;&lt;/defs&gt;"</ID>
+    <ID>MaxLineLength:StaticSvgTest.kt$StaticSvgTest$"&lt;svg viewBox=\"0 0 10 10\"&gt;&lt;path d=\"M0 0 L10 0\" fill=\"none\" stroke=\"#000\" $attributes/&gt;&lt;/svg&gt;"</ID>
+    <ID>MaxLineLength:XmlPull.kt$XmlEvent.Start$public data</ID>
+    <ID>MaxLineLength:XmlPull.kt$XmlPull$val ns = if (prefix == null || prefix == "xmlns") null else scope[prefix] ?: refuse(XmlProblem.Malformed)</ID>
+    <ID>MaxLineLength:XmlPullTest.kt$XmlPullTest$assertEquals(listOf("b", "b"), e.subList(2, 4).map { (it as? XmlEvent.Start)?.name?.local ?: (it as XmlEvent.End).name.local })</ID>
+    <ID>MaxLineLength:XmlPullTest.kt$XmlPullTest$val e = events("&lt;?xml version=\"1.0\"?&gt;&lt;a x='1' y=\"&amp;lt;&amp;amp;&amp;#65;&amp;#x42;\"&gt;&lt;!-- c --&gt;&lt;b/&gt;t&amp;gt;&lt;![CDATA[&lt;raw&gt;]]&gt;&lt;/a&gt;")</ID>
+    <ID>NestedBlockDepth:DelimitedText.kt$DelimitedText.Companion$public fun parse(source: String, separator: Char): DelimitedText</ID>
+    <ID>NestedBlockDepth:OfficeText.kt$private fun document(files: Map&lt;String, ByteArray&gt;): Outcome&lt;OfficeText&gt;?</ID>
+    <ID>NestedBlockDepth:OfficeText.kt$private fun sheetRows(bytes: ByteArray, shared: List&lt;String&gt;, out: StringBuilder, onRow: () -&gt; Unit): Boolean</ID>
+    <ID>NestedBlockDepth:RawInflate.kt$RawInflate.Inflater$fun dynamic()</ID>
+    <ID>NestedBlockDepth:StaticSvg.kt$StaticSvg.Companion$private fun check(source: String): StaticSvg?</ID>
+    <ID>ReturnCount:AttachmentIntake.kt$AttachmentIntake$private suspend fun office(name: String, bytes: ByteArray): Outcome&lt;Pair&lt;PromptAttachment, IntakeNote&gt;&gt;</ID>
+    <ID>ReturnCount:AttachmentIntake.kt$AttachmentIntake$public suspend fun fromBytes(current: List&lt;PromptAttachment&gt;, name: String?, mime: String?, bytes: ByteArray): Outcome&lt;IntakeResult&gt;</ID>
+    <ID>ReturnCount:AttachmentIntake.kt$AttachmentIntake$public suspend fun fromClipboard(current: List&lt;PromptAttachment&gt;): Outcome&lt;IntakeResult&gt;</ID>
+    <ID>ReturnCount:AttachmentIntake.kt$AttachmentIntake$public suspend fun fromInserted(current: List&lt;PromptAttachment&gt;, mime: String?, bytes: ByteArray): Outcome&lt;IntakeResult&gt;</ID>
+    <ID>ReturnCount:AttachmentIntake.kt$AttachmentIntake$public suspend fun pickFile(current: List&lt;PromptAttachment&gt;): Outcome&lt;IntakeResult&gt;</ID>
+    <ID>ReturnCount:AttachmentIntake.kt$AttachmentIntake$public suspend fun pickPhotos(target: AttachTarget, current: List&lt;PromptAttachment&gt;): Outcome&lt;IntakeResult&gt;</ID>
+    <ID>ReturnCount:AttachmentIntake.kt$AttachmentIntake$public suspend fun takePhoto(target: AttachTarget, current: List&lt;PromptAttachment&gt;): Outcome&lt;IntakeResult&gt;</ID>
+    <ID>ReturnCount:AttachmentLimits.kt$AttachmentLimits$public fun checkReportedSize(current: List&lt;PromptAttachment&gt;, size: Long?): Failure.Media?</ID>
+    <ID>ReturnCount:BoundedRead.kt$BoundedRead$public suspend fun read(source: ByteSource, limit: Long): ByteArray?</ID>
+    <ID>ReturnCount:DataUrl.kt$DataUrl$private fun percentDecode(text: String): ByteArray?</ID>
+    <ID>ReturnCount:DataUrl.kt$DataUrl$public fun decode(url: String): Decoded?</ID>
+    <ID>ReturnCount:DataUrl.kt$DataUrl$public fun decodedLength(url: String): Long</ID>
+    <ID>ReturnCount:DelimitedText.kt$DelimitedText.Companion$public fun parse(source: String, separator: Char): DelimitedText</ID>
+    <ID>ReturnCount:DelimitedText.kt$DelimitedText.Companion$public fun separator(name: String, mime: String?): Char?</ID>
+    <ID>ReturnCount:Fakes.kt$FakeCaptures$override suspend fun existing(captureId: String): PickedFile?</ID>
+    <ID>ReturnCount:Fakes.kt$FakePhotoStore$override suspend fun begin(profileId: String, sessionId: String, directory: String?, workspace: String?): Outcome&lt;String&gt;</ID>
+    <ID>ReturnCount:Fakes.kt$FakePhotoStore$override suspend fun complete(id: String, name: String, bytes: ByteArray): Outcome&lt;Boolean&gt;</ID>
+    <ID>ReturnCount:Fakes.kt$FakePhotoStore$override suspend fun join(): RecoveryResult</ID>
+    <ID>ReturnCount:FilePreview.kt$PreviewData$public fun table(): DelimitedText?</ID>
+    <ID>ReturnCount:FilePreview.kt$PreviewData.Companion$private fun decodeText(bytes: ByteArray?, mime: String?, name: String): String?</ID>
+    <ID>ReturnCount:FilePreview.kt$PreviewData.Companion$public fun fromDataUrl(name: String, mime: String?, url: String?): PreviewData</ID>
+    <ID>ReturnCount:OfficeText.kt$private fun column(reference: String?): Int?</ID>
+    <ID>ReturnCount:OfficeText.kt$private fun workbook(files: Map&lt;String, ByteArray&gt;): Outcome&lt;OfficeText&gt;?</ID>
+    <ID>ReturnCount:PendingPhotoRecovery.kt$PendingPhotoRecovery$private suspend fun recoverLocked(outcome: LauncherOutcome?, settled: Boolean): RecoveryResult</ID>
+    <ID>ReturnCount:PromptAttachmentMime.kt$PromptAttachmentMime$public fun looksLikeText(bytes: ByteArray): Boolean</ID>
+    <ID>ReturnCount:PromptAttachmentMime.kt$PromptAttachmentMime$public fun of(declaredMime: String?, name: String, bytes: ByteArray): String?</ID>
+    <ID>ReturnCount:StaticSvg.kt$StaticSvg.Companion$private fun check(source: String): StaticSvg?</ID>
+    <ID>ReturnCount:StaticSvg.kt$StaticSvg.Companion$private fun safeValue(name: String, value: String, references: MutableList&lt;String&gt;): Boolean</ID>
+    <ID>ReturnCount:StrictUtf8.kt$StrictUtf8$public fun isValid(bytes: ByteArray): Boolean</ID>
+    <ID>ReturnCount:XmlPull.kt$XmlPull$private fun markup(): XmlEvent?</ID>
+    <ID>ReturnCount:XmlPull.kt$XmlPull$public fun next(): XmlEvent?</ID>
+    <ID>ReturnCount:ZipCentralDirectory.kt$ZipCentralDirectory$fun read(bytes: ByteArray, wanted: (String) -&gt; Boolean = ::isXmlPart): Result</ID>
+    <ID>ThrowsCount:RawInflate.kt$RawInflate.Inflater$fun codes(lencode: Huffman, distcode: Huffman)</ID>
+    <ID>ThrowsCount:RawInflate.kt$RawInflate.Inflater$fun dynamic()</ID>
+    <ID>ThrowsCount:RawInflate.kt$RawInflate.Inflater$fun stored()</ID>
+  </CurrentIssues>
+</SmellBaseline>

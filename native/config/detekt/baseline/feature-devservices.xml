@@ -1,0 +1,39 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:DevServicesModel.kt$DevServicesModel$!visible || context?.isCurrent() != true || ui.value.log?.id != shown.id || ui.value.log?.found != shown.found</ID>
+    <ID>ComplexCondition:DevServicesScreen.kt$row.canSave &amp;&amp; state.readable &amp;&amp; mask(row.command) == row.command &amp;&amp; state.services.none { it.command.trim() == row.command.trim() }</ID>
+    <ID>ComplexCondition:DevServicesScreen.kt$state.found.isNotEmpty() || state.foundFailed || (!state.scansPhone &amp;&amp; state.supported)</ID>
+    <ID>CyclomaticComplexMethod:DevServicesModel.kt$DevServicesModel$private suspend fun readOpenLogs()</ID>
+    <ID>CyclomaticComplexMethod:DevServicesScreen.kt$@Composable private fun ServiceBlock( row: ServiceRowUi, state: DevServicesUi, actions: DevServicesActions, copy: (String) -&gt; Unit, )</ID>
+    <ID>CyclomaticComplexMethod:DevServicesScreen.kt$@Composable public fun DevServicesScreen(state: DevServicesUi, actions: DevServicesActions)</ID>
+    <ID>LongMethod:DevServicesScreen.kt$@Composable private fun Editor(editor: EditorUi?, state: DevServicesUi, actions: DevServicesActions)</ID>
+    <ID>LongMethod:DevServicesScreen.kt$@Composable private fun FoundRow( row: FoundRowUi, state: DevServicesUi, actions: DevServicesActions, copy: (String) -&gt; Unit, )</ID>
+    <ID>LongMethod:DevServicesScreen.kt$@Composable private fun ServiceBlock( row: ServiceRowUi, state: DevServicesUi, actions: DevServicesActions, copy: (String) -&gt; Unit, )</ID>
+    <ID>LongMethod:DevServicesScreen.kt$@Composable public fun DevServicesScreen(state: DevServicesUi, actions: DevServicesActions)</ID>
+    <ID>LongParameterList:DevServicesPorts.kt$DevServicesContext$( /** Where `oc.developmentServices.&lt;profileId&gt;` lives (the Flutter key, so migrated services read as-is). */ public val settings: DevelopmentServiceSettings, /** False once the profile is being deleted: nothing more is written for it. */ public val canWrite: () -&gt; Boolean, public val workspace: String?, /** The server can start and track commands (ServerCapabilities.developmentServices). */ public val supported: () -&gt; Boolean, /** The live server's managed shells, or null when it cannot be reached now. */ public val shells: suspend () -&gt; ManagedShellPort?, /** Set only when the server is this phone's own and the in-app Linux exists (B-LINUX-059). */ public val phone: PhoneScriptRunner?, /** The page's server and folder are still the ones it opened for. */ public val isCurrent: () -&gt; Boolean, /** A fresh unguessable id (24 secure random bytes as hex, as Flutter). */ public val newId: () -&gt; String, /** Opens a saved preview address through the external link policy; false when it was not opened. */ public val openLink: (String) -&gt; Boolean, public val clock: Clock, )</ID>
+    <ID>MagicNumber:DevServicesModel.kt$DevServicesRules$2048</ID>
+    <ID>MaxLineLength:DevServicesModel.kt$DevServicesModel$outputObserver = scope.launch { viewer.state.collect { state -&gt; if (output === viewer) ui.update { it.copy(output = state) } } }</ID>
+    <ID>MaxLineLength:DevServicesModelTest.kt$DevServicesModelTest$shells.shells["sh_9"] = ManagedShell("sh_9", "npx vite --port 5173", ManagedShellStatus.Running, 1_000, directory = folder)</ID>
+    <ID>MaxLineLength:DevServicesModelTest.kt$DevServicesModelTest.Shells$override suspend fun running(): Outcome&lt;ManagedShellList&gt;</ID>
+    <ID>MaxLineLength:DevServicesModelTest.kt$DevServicesModelTest.Shells$val shell = ManagedShell("sh_${shells.size + 1}", command, ManagedShellStatus.Running, 1_000, directory = directory, ownerToken = ownerToken)</ID>
+    <ID>MaxLineLength:DevServicesScreenTest.kt$DevServicesScreenTest$ServiceRowUi("s1", "web", "npm run dev", "", DevelopmentServiceStatus.NotStarted, null, canStart = true, canStop = false)</ID>
+    <ID>MaxLineLength:DevServicesScreenTest.kt$DevServicesScreenTest$Themed { DevServicesScreen(DevServicesUi(directory = "/work/shopfront", supported = true, loading = false, services = persistentListOf(web)), calls) }</ID>
+    <ID>MaxLineLength:DevServicesScreenTest.kt$DevServicesScreenTest$Themed { DevServicesScreen(DevServicesUi(supported = true, loading = false, scansPhone = true, found = persistentListOf(found)), calls) }</ID>
+    <ID>MaxLineLength:DevServicesScreenTest.kt$DevServicesScreenTest$private</ID>
+    <ID>MaxLineLength:DevServicesScreenTest.kt$DevServicesScreenTest$setContent { Themed { DevServicesScreen(DevServicesUi(supported = false, loading = false, services = persistentListOf(web)), Calls()) } }</ID>
+    <ID>MaxLineLength:DevServicesScreenTest.kt$DevServicesScreenTest$val found = FoundRowUi("p:42", "vite", "node vite --port 5173", persistentListOf(5173), canStop = true, hasLogs = true, canSave = true)</ID>
+    <ID>MemberNameEqualsClassName:DevServicesModelTest.kt$DevServicesModelTest.Shells$val shells = mutableMapOf&lt;String, ManagedShell&gt;()</ID>
+    <ID>ReturnCount:DevServicesModel.kt$DevServicesModel$override fun logs(id: String)</ID>
+    <ID>ReturnCount:DevServicesModel.kt$DevServicesModel$override fun save()</ID>
+    <ID>ReturnCount:DevServicesModel.kt$DevServicesModel$private suspend fun readOpenLogs()</ID>
+    <ID>ReturnCount:DevServicesModel.kt$DevServicesRules$public fun safePreviewUrl(url: String): Boolean</ID>
+    <ID>TooManyFunctions:DevServicesModel.kt$DevServicesModel : DevServicesActions</ID>
+    <ID>TooManyFunctions:DevServicesUi.kt$DevServicesActions</ID>
+    <ID>TooManyFunctions:DevServicesViewModel.kt$DevServicesViewModel : ViewModelDevServicesActions</ID>
+    <ID>WildcardImport:DevServicesPageTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:DevServicesPageTest.kt$import io.github.eslamasabry.oc.feature.devservices.presentation.*</ID>
+    <ID>WildcardImport:DevServicesScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

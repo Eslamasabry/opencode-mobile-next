@@ -1,0 +1,19 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:HostPanel.kt$@Composable internal fun HostPanel(state: HostPanelUi, actions: HostPanelActions)</ID>
+    <ID>CyclomaticComplexMethod:IntegrationsScreen.kt$@Composable public fun IntegrationsScreen( state: IntegrationsUi, actions: IntegrationsActions, hostPanel: @Composable () -&gt; Unit = {}, )</ID>
+    <ID>LongMethod:HostPanel.kt$@Composable internal fun HostPanel(state: HostPanelUi, actions: HostPanelActions)</ID>
+    <ID>LongMethod:IntegrationsScreen.kt$@Composable public fun IntegrationsScreen( state: IntegrationsUi, actions: IntegrationsActions, hostPanel: @Composable () -&gt; Unit = {}, )</ID>
+    <ID>ReturnCount:IntegrationsViewModel.kt$IntegrationsViewModel$override fun startOAuth(method: String)</ID>
+    <ID>TooManyFunctions:IntegrationsUi.kt$IntegrationsActions</ID>
+    <ID>TooManyFunctions:IntegrationsViewModel.kt$IntegrationsViewModel : ViewModelIntegrationsActions</ID>
+    <ID>WildcardImport:HostPanel.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:HostPanel.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:IntegrationsScreen.kt$import io.github.eslamasabry.oc.feature.integrations.presentation.*</ID>
+    <ID>WildcardImport:IntegrationsScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:IntegrationsScreen.kt$import io.github.eslamasabry.oc.ui.kit.row.*</ID>
+    <ID>WildcardImport:IntegrationsScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

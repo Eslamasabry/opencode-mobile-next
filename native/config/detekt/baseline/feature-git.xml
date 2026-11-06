@@ -1,0 +1,79 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:GitServerTools.kt$GitServerToolsViewModel$value.isEmpty() || value.length &gt; 120 || value.any { it.code &lt; 32 || it.code == 127 }</ID>
+    <ID>CyclomaticComplexMethod:GitScreen.kt$@Composable private fun BranchSheet(state: GitUi, actions: GitActions)</ID>
+    <ID>CyclomaticComplexMethod:GitScreen.kt$@Composable private fun CloneSheet(state: GitUi, actions: GitActions)</ID>
+    <ID>CyclomaticComplexMethod:GitScreen.kt$@Composable private fun Ready( snapshot: GitSnapshot, state: GitUi, actions: GitActions, enabled: KitEnabled, message: TextFieldState, onMessageEdited: () -&gt; Unit, )</ID>
+    <ID>CyclomaticComplexMethod:GitScreen.kt$@Composable private fun RemotesSheet(state: GitUi, actions: GitActions)</ID>
+    <ID>CyclomaticComplexMethod:GitScreen.kt$@Composable public fun GitScreen(state: GitUi, actions: GitActions, serverTools: @Composable () -&gt; Unit = {})</ID>
+    <ID>CyclomaticComplexMethod:GitServerToolsPanel.kt$@Composable public fun GitServerToolsPanel(state: GitServerToolsUi, actions: GitServerToolsActions)</ID>
+    <ID>CyclomaticComplexMethod:GitWords.kt$@Composable internal fun gitDoneText(result: GitActionResult): String</ID>
+    <ID>CyclomaticComplexMethod:GitWords.kt$@Composable internal fun gitProblemText(problem: GitProblem, offersGitHubSignIn: Boolean = false): String</ID>
+    <ID>EmptyFunctionBlock:GitScreenTest.kt$GitScreenTest.&lt;no name provided&gt;${}</ID>
+    <ID>LongMethod:GitScreen.kt$@Composable private fun BranchSheet(state: GitUi, actions: GitActions)</ID>
+    <ID>LongMethod:GitScreen.kt$@Composable private fun CloneSheet(state: GitUi, actions: GitActions)</ID>
+    <ID>LongMethod:GitScreen.kt$@Composable private fun GitHubSection(state: GitUi, actions: GitActions)</ID>
+    <ID>LongMethod:GitScreen.kt$@Composable private fun PublishSheet(state: GitUi, actions: GitActions)</ID>
+    <ID>LongMethod:GitScreen.kt$@Composable private fun Ready( snapshot: GitSnapshot, state: GitUi, actions: GitActions, enabled: KitEnabled, message: TextFieldState, onMessageEdited: () -&gt; Unit, )</ID>
+    <ID>LongMethod:GitScreen.kt$@Composable private fun RemotesSheet(state: GitUi, actions: GitActions)</ID>
+    <ID>LongMethod:GitScreen.kt$@Composable public fun GitScreen(state: GitUi, actions: GitActions, serverTools: @Composable () -&gt; Unit = {})</ID>
+    <ID>LongMethod:GitServerToolsPanel.kt$@Composable public fun GitServerToolsPanel(state: GitServerToolsUi, actions: GitServerToolsActions)</ID>
+    <ID>LongParameterList:GitScreen.kt$( snapshot: GitSnapshot, state: GitUi, actions: GitActions, enabled: KitEnabled, message: TextFieldState, onMessageEdited: () -&gt; Unit, )</ID>
+    <ID>MagicNumber:GitRepairPanel.kt$20</ID>
+    <ID>MagicNumber:GitServerTools.kt$GitServerToolsViewModel$120</ID>
+    <ID>MagicNumber:GitServerTools.kt$GitServerToolsViewModel$127</ID>
+    <ID>MagicNumber:GitServerTools.kt$GitServerToolsViewModel$32</ID>
+    <ID>MaxLineLength:GitPresenter.kt$GitPresenter$/** Creates the repository; on success the sheet closes and the status line says it worked and that nothing was sent. */</ID>
+    <ID>MaxLineLength:GitPresenter.kt$GitPresenter$local.update { if (path in it.unticked) it.copy(unticked = it.unticked - path) else it.copy(unticked = it.unticked + path) }</ID>
+    <ID>MaxLineLength:GitPresenter.kt$GitPresenter$public</ID>
+    <ID>MaxLineLength:GitPresenterTest.kt$GitPresenterTest$fun</ID>
+    <ID>MaxLineLength:GitPresenterTest.kt$GitPresenterTest$val page = GitPage(ref, GitWorkspaces { resolveGitWorkspace(connected = true, directory = null, remoteShell = true) { repo } })</ID>
+    <ID>MaxLineLength:GitPresenterTest.kt$Repo$"1 .M N... 100644 100644 100644 a b app.kt\u0000? notes.md\u0000u UU N... 100644 100644 100644 100644 a b c clash.kt\u0000"</ID>
+    <ID>MaxLineLength:GitPresenterTest.kt$Repo$append("@@OCG out $name ${b64(reply.second)}\n@@OCG err $name ${b64(err)}\n@@OCG exit $name ${reply.first}\n")</ID>
+    <ID>MaxLineLength:GitScreenTest.kt$GitScreenTest$"The remote and this branch both have new commits, so they can’t be combined automatically. Merge or rebase on that device."</ID>
+    <ID>MaxLineLength:GitScreenTest.kt$GitScreenTest$Box(Modifier.width(412.dp)) { GitScreen(GitUi(view = GitPageView.NotRepository, signIn = GitHubSignIn.SignedOut()), actions) }</ID>
+    <ID>MaxLineLength:GitScreenTest.kt$GitScreenTest$GitHubRepository("octocat/app", "https://github.com/octocat/app", "https://github.com/octocat/app.git", "main", true)</ID>
+    <ID>MaxLineLength:GitScreenTest.kt$GitScreenTest$GitHubRepository("octocat/site", "https://github.com/octocat/site", "https://github.com/octocat/site.git", "main", false)</ID>
+    <ID>MaxLineLength:GitScreenTest.kt$GitScreenTest$GitUi(view = GitPageView.Ready(bare), signIn = GitHubSignIn.SignedIn("octocat"), offersGitHubSignIn = true, sheet = GitSheet.Publish, directory = "/p/app")</ID>
+    <ID>MaxLineLength:GitScreenTest.kt$GitScreenTest$GitUi(view = GitPageView.Ready(snapshot), signIn = GitHubSignIn.SignedIn("octocat"), sheet = GitSheet.Remotes, repoPicker = GitRepoPicker(none = true))</ID>
+    <ID>MaxLineLength:GitScreenTest.kt$GitScreenTest$KitTheme</ID>
+    <ID>MaxLineLength:GitScreenTest.kt$GitScreenTest$assertTrue(onAllNodesWithText("Enter this code on GitHub to finish signing in.").fetchSemanticsNodes().isNotEmpty())</ID>
+    <ID>MaxLineLength:GitScreenTest.kt$GitScreenTest$assertTrue(onAllNodesWithText("Use a repository name with up to 100 letters, numbers, dots, dashes or underscores.").fetchSemanticsNodes().isNotEmpty())</ID>
+    <ID>MaxLineLength:GitScreenTest.kt$GitScreenTest$fun</ID>
+    <ID>MaxLineLength:GitScreenTest.kt$GitScreenTest$onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("git-remote-url"))).performTextInput("https://me:" + "pw@example.invalid/r.git")</ID>
+    <ID>MaxLineLength:GitScreenTest.kt$GitScreenTest$persistentListOf(GitFileChange("src/app.kt", unstaged = GitChangeKind.Modified, addedLines = 3, deletedLines = 1))</ID>
+    <ID>MaxLineLength:GitScreenTest.kt$GitScreenTest$setContent { Screen(GitUi(view = GitPageView.Ready(bare), signIn = GitHubSignIn.SignedIn("octocat"), offersGitHubSignIn = false)) }</ID>
+    <ID>MaxLineLength:GitScreenTest.kt$GitScreenTest$setContent { Screen(GitUi(view = GitPageView.Ready(bare), signIn = GitHubSignIn.SignedOut(), offersGitHubSignIn = true)) }</ID>
+    <ID>MaxLineLength:GitScreenTest.kt$GitScreenTest$setContent { Screen(GitUi(view = GitPageView.Ready(snapshot), selected = persistentSetOf("src/app.kt"), signIn = GitHubSignIn.SignedOut())) }</ID>
+    <ID>MaxLineLength:GitScreenTest.kt$GitScreenTest$setContent { Screen(GitUi(view = GitPageView.Ready(snapshot), signIn = GitHubSignIn.SignedIn("octocat"), offersGitHubSignIn = true)) }</ID>
+    <ID>MaxLineLength:GitScreenTest.kt$GitScreenTest$setContent { Screen(GitUi(view = GitPageView.Ready(snapshot), signIn = GitHubSignIn.SignedIn("octocat"), sheet = GitSheet.Remotes)) }</ID>
+    <ID>MaxLineLength:GitScreenTest.kt$GitScreenTest$setContent { Screen(GitUi(view = GitPageView.Ready(snapshot), signIn = GitHubSignIn.SignedOut(), offersGitHubSignIn = true)) }</ID>
+    <ID>MaxLineLength:GitScreenTest.kt$GitScreenTest$setContent { Screen(GitUi(view = GitPageView.Ready(snapshot), signIn = GitHubSignIn.SignedOut(), placeName = "Home box")) }</ID>
+    <ID>MaxLineLength:GitScreenTest.kt$GitScreenTest$setContent { Screen(GitUi(view = GitPageView.Ready(snapshot), signIn = GitHubSignIn.SignedOut(), sheet = GitSheet.Remotes)) }</ID>
+    <ID>MaxLineLength:GitScreenTest.kt$GitScreenTest$setContent { Screen(GitUi(view = GitPageView.Unavailable(GitUnavailableReason.ServerCannotRunCommands), signIn = GitHubSignIn.SignedOut())) }</ID>
+    <ID>MaxLineLength:GitUi.kt$GitActions$/** Creates [name] in the signed-in GitHub account, private unless [isPrivate] is false, and connects it as origin. */</ID>
+    <ID>MaxLineLength:GitWords.kt$if (count == null) stringResource(Res.string.gitDonePulled) else pluralStringResource(Res.plurals.gitDoneGotN, count, count)</ID>
+    <ID>MaxLineLength:GitWords.kt$if (count == null) stringResource(Res.string.gitDoneSavedPlain) else pluralStringResource(Res.plurals.gitDoneSaved, count, count)</ID>
+    <ID>ReturnCount:GitScreen.kt$@Composable private fun placeOf(state: GitUi, snapshot: GitSnapshot): String</ID>
+    <ID>ReturnCount:GitScreen.kt$@Composable private fun statusLine(state: GitUi, actions: GitActions): KitStatus?</ID>
+    <ID>ReturnCount:GitServerTools.kt$GitServerToolsViewModel$override fun createWorktree(name: String)</ID>
+    <ID>ReturnCount:GitServerTools.kt$GitServerToolsViewModel$override fun readShells()</ID>
+    <ID>ReturnCount:GitServerTools.kt$GitServerToolsViewModel$override fun selectShell(path: String)</ID>
+    <ID>ReturnCount:GitServerTools.kt$GitServerToolsViewModel$private fun command(block: suspend (ServerOperationsGateway) -&gt; Outcome&lt;ToolReply&gt;)</ID>
+    <ID>TooManyFunctions:GitPresenter.kt$GitPresenter</ID>
+    <ID>TooManyFunctions:GitScreen.kt$io.github.eslamasabry.oc.feature.git.ui.GitScreen.kt</ID>
+    <ID>TooManyFunctions:GitUi.kt$GitActions</ID>
+    <ID>TooManyFunctions:GitViewModel.kt$GitViewModel : ViewModelGitActions</ID>
+    <ID>WildcardImport:GitScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:GitServerToolsPanel.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:GitSignInStateTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:GitSignInStateTest.kt$import io.github.eslamasabry.oc.engine.git.*</ID>
+    <ID>WildcardImport:GitSignInStateTest.kt$import io.github.eslamasabry.oc.feature.git.presentation.*</ID>
+    <ID>WildcardImport:GitStepsTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:GitStepsTest.kt$import io.github.eslamasabry.oc.engine.git.*</ID>
+    <ID>WildcardImport:GitStepsTest.kt$import io.github.eslamasabry.oc.feature.git.presentation.*</ID>
+    <ID>WildcardImport:GitWords.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -1,0 +1,14 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>LongMethod:ComputerScreen.kt$@Composable private fun ImportPart(state: ComputerUi, actions: ComputerActions, gutter: Modifier)</ID>
+    <ID>MaxLineLength:ComputerPresenterTest.kt$ComputerPresenterTest$ComputerPresenter(this, COMPUTER, tools, onBack = { backs++ }, openChat = { opened += it }).also { advanceUntilIdle() }</ID>
+    <ID>MaxLineLength:ComputerPresenterTest.kt$ComputerPresenterTest$assertEquals(listOf(ConversationRef(COMPUTER, io.github.eslamasabry.oc.core.common.ids.SessionId("agent-9"))), opened)</ID>
+    <ID>MaxLineLength:ComputerPresenterTest.kt$ComputerPresenterTest$fun</ID>
+    <ID>MaxLineLength:ComputerScreenUiTest.kt$ComputerScreenUiTest$onAllNodesWithText("Update agents")[onAllNodesWithText("Update agents").fetchSemanticsNodes().size - 1].performClick()</ID>
+    <ID>MaxLineLength:FakeComputerTools.kt$FakeComputerTools$override suspend fun importable(profile: ProfileId): Outcome&lt;ImportList&gt;</ID>
+    <ID>MaxLineLength:FakeComputerTools.kt$FakeComputerTools$var importableAnswer: Outcome&lt;ImportList&gt; = Outcome.Ok(ImportList("/work/acme", persistentListOf(NEWER, OLDER), alreadyHere = 2))</ID>
+    <ID>MaxLineLength:FakeComputerTools.kt$FakeComputerTools$var steps: List&lt;UpdateStep&gt; = listOf(UpdateStep.Starting, UpdateStep.Downloading, UpdateStep.Installing, UpdateStep.Finishing)</ID>
+  </CurrentIssues>
+</SmellBaseline>

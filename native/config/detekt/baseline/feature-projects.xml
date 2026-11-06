@@ -1,0 +1,146 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:IsolatedTaskLaunch.kt$IsolatedTaskLaunch$before.phase != IsolatedPhase.Ready &amp;&amp; !(before.phase == IsolatedPhase.Unconfirmed &amp;&amp; acceptUnconfirmed) &amp;&amp; !(before.phase == IsolatedPhase.Failed &amp;&amp; acceptFailedSetup)</ID>
+    <ID>ComplexCondition:ProjectWorkspace.kt$ProjectWorkspace$!state.visible || !state.canInspect || state.busy || state.inspectionBusy</ID>
+    <ID>ComplexCondition:ProjectWorkspace.kt$ProjectWorkspace$!state.visible || state.busy || !state.canCreate || !live.gateway.capabilities.value.worktreeCreate</ID>
+    <ID>ComplexCondition:ProjectWorkspace.kt$ProjectWorkspace$!state.visible || state.inspectionBusy || state.busy || !current(generation, live)</ID>
+    <ID>ComplexCondition:ProjectWorkspace.kt$ProjectWorkspace$state.busy || !state.visible || !state.canReset || !live.gateway.capabilities.value.worktreeReset</ID>
+    <ID>ComplexCondition:ProjectsPickerViewModel.kt$ProjectsPickerViewModel$path == (if (state.value.browsingBuiltin) "/" else PHONE_ROOT) || state.value.phoneLoading || state.value.phoneFailure != null || current()?.phoneFolders != true</ID>
+    <ID>ComplexCondition:TerminalViewModel.kt$TerminalViewModel$(envelope.event is GatewayEvent.TerminalChanged || envelope.event == GatewayEvent.Connected) &amp;&amp; visible &amp;&amp; current(next)</ID>
+    <ID>ComplexCondition:TerminalViewModel.kt$TerminalViewModel$version != generation || !visible || channel == null || mutable.value.phase != TerminalPhase.Connected</ID>
+    <ID>CyclomaticComplexMethod:IsolatedTaskLaunch.kt$IsolatedTaskLaunch$fun start()</ID>
+    <ID>CyclomaticComplexMethod:IsolatedTaskSheet.kt$@Composable internal fun IsolatedTaskSheet(state: ProjectPageUi, actions: ProjectPageActions)</ID>
+    <ID>CyclomaticComplexMethod:ProjectPageScreen.kt$@Composable public fun ProjectPageScreen( state: ProjectPageUi, actions: ProjectPageActions, onDevServices: (() -&gt; Unit)? = null, onTerminal: (() -&gt; Unit)? = null, )</ID>
+    <ID>CyclomaticComplexMethod:ProjectPageViewModel.kt$ProjectPageViewModel$override fun startIsolatedTask()</ID>
+    <ID>CyclomaticComplexMethod:ProjectWorkspace.kt$ProjectWorkspace$override fun confirmWorktreeRemoval()</ID>
+    <ID>CyclomaticComplexMethod:ProjectWorkspace.kt$ProjectWorkspace$override fun confirmWorktreeReset()</ID>
+    <ID>CyclomaticComplexMethod:ProjectWorkspace.kt$ProjectWorkspace$override fun retryWorkspace()</ID>
+    <ID>CyclomaticComplexMethod:ProjectWorkspaceSheet.kt$@Composable internal fun ProjectWorkspaceSheet(state: ProjectWorkspaceUi, actions: ProjectWorkspaceActions)</ID>
+    <ID>CyclomaticComplexMethod:ProjectsPickerScreen.kt$@Composable private fun PhoneFolderSheet(state: ProjectsPickerUi, actions: ProjectsPickerActions)</ID>
+    <ID>CyclomaticComplexMethod:ProjectsPickerScreen.kt$@Composable private fun ProjectRow( project: FolderRowUi, actions: ProjectsPickerActions, canRename: Boolean = false, /** Where this folder sits, shown first when another project has the same name (N-42). */ tail: String? = null, )</ID>
+    <ID>CyclomaticComplexMethod:ProjectsPickerScreen.kt$@Composable public fun ProjectsPickerScreen(state: ProjectsPickerUi, actions: ProjectsPickerActions)</ID>
+    <ID>CyclomaticComplexMethod:ProjectsPickerViewModel.kt$ProjectsPickerViewModel$override fun enterPhoneFolder(path: String)</ID>
+    <ID>CyclomaticComplexMethod:TerminalScreen.kt$@Composable public fun TerminalScreen(state: TerminalUi, actions: TerminalActions)</ID>
+    <ID>CyclomaticComplexMethod:TerminalViewModel.kt$TerminalViewModel$override fun key(key: String)</ID>
+    <ID>CyclomaticComplexMethod:TerminalViewModel.kt$TerminalViewModel$override fun refresh()</ID>
+    <ID>CyclomaticComplexMethod:TerminalViewModel.kt$TerminalViewModel$override fun remove()</ID>
+    <ID>CyclomaticComplexMethod:TerminalViewModel.kt$TerminalViewModel$private fun adopt(next: ProjectServer?)</ID>
+    <ID>CyclomaticComplexMethod:TerminalViewModel.kt$TerminalViewModel$private fun connect(id: String)</ID>
+    <ID>CyclomaticComplexMethod:WorktreeInspectionPane.kt$@Composable internal fun WorktreeInspectionPane(state: ProjectWorkspaceUi, actions: ProjectWorkspaceActions)</ID>
+    <ID>EmptyFunctionBlock:ProjectsFixtures.kt$TestKitPlatform${}</ID>
+    <ID>EmptyFunctionBlock:ProjectsViewModelTest.kt$ProjectsViewModelTest.Nav${}</ID>
+    <ID>LongMethod:IsolatedTaskLaunch.kt$IsolatedTaskLaunch$fun start()</ID>
+    <ID>LongMethod:IsolatedTaskSheet.kt$@Composable internal fun IsolatedTaskSheet(state: ProjectPageUi, actions: ProjectPageActions)</ID>
+    <ID>LongMethod:ProjectPageScreen.kt$@Composable public fun ProjectPageScreen( state: ProjectPageUi, actions: ProjectPageActions, onDevServices: (() -&gt; Unit)? = null, onTerminal: (() -&gt; Unit)? = null, )</ID>
+    <ID>LongMethod:ProjectPageViewModel.kt$ProjectPageViewModel$override fun startIsolatedTask()</ID>
+    <ID>LongMethod:ProjectPageViewModel.kt$ProjectPageViewModel$private fun load()</ID>
+    <ID>LongMethod:ProjectStorageScreen.kt$@Composable public fun ProjectStorageScreen(state: ProjectStorageUi, actions: ProjectStorageActions)</ID>
+    <ID>LongMethod:ProjectWorkspace.kt$ProjectWorkspace$override fun confirmWorktreeRemoval()</ID>
+    <ID>LongMethod:ProjectWorkspaceSheet.kt$@Composable internal fun ProjectWorkspaceSheet(state: ProjectWorkspaceUi, actions: ProjectWorkspaceActions)</ID>
+    <ID>LongMethod:ProjectWorkspaceSheet.kt$@Composable private fun WorktreeRow( tree: WorktreeInfo, state: ProjectWorkspaceUi, actions: ProjectWorkspaceActions, )</ID>
+    <ID>LongMethod:ProjectsPickerScreen.kt$@Composable private fun PathDialog(state: ProjectsPickerUi, actions: ProjectsPickerActions)</ID>
+    <ID>LongMethod:ProjectsPickerScreen.kt$@Composable private fun PhoneFolderSheet(state: ProjectsPickerUi, actions: ProjectsPickerActions)</ID>
+    <ID>LongMethod:ProjectsPickerScreen.kt$@Composable private fun ProjectRow( project: FolderRowUi, actions: ProjectsPickerActions, canRename: Boolean = false, /** Where this folder sits, shown first when another project has the same name (N-42). */ tail: String? = null, )</ID>
+    <ID>LongMethod:ProjectsPickerScreen.kt$@Composable public fun ProjectsPickerScreen(state: ProjectsPickerUi, actions: ProjectsPickerActions)</ID>
+    <ID>LongMethod:TerminalScreen.kt$@Composable public fun TerminalScreen(state: TerminalUi, actions: TerminalActions)</ID>
+    <ID>LongMethod:TerminalViewModel.kt$TerminalViewModel$private fun adopt(next: ProjectServer?)</ID>
+    <ID>LongMethod:TerminalViewModel.kt$TerminalViewModel$private fun connect(id: String)</ID>
+    <ID>LongMethod:WorktreeInspectionPane.kt$@Composable internal fun WorktreeInspectionPane(state: ProjectWorkspaceUi, actions: ProjectWorkspaceActions)</ID>
+    <ID>LongParameterList:IsolatedTaskLaunch.kt$IsolatedTaskLaunch$( private val projectId: String?, private val events: Flow&lt;GatewayEnvelope&gt;, private val scope: CoroutineScope, private val current: () -&gt; Boolean, private val create: suspend () -&gt; Outcome&lt;WorktreeInfo&gt;, private val open: suspend (String) -&gt; Outcome&lt;Session&gt;, private val opened: (Session) -&gt; Unit, )</ID>
+    <ID>LongParameterList:ProjectPageViewModel.kt$ProjectPageViewModel$( @Assisted private val route: ProjectsRoute.Project, private val nav: AppNavigator, private val connections: ProjectServers, private val opened: OpenedFolders, private val isolatedHosts: Set&lt;IsolatedTaskHost&gt; = emptySet(), private val signals: ProjectSignalsHost = NoProjectSignalsHost(), private val storageAccess: Set&lt;SharedStorageAccess&gt; = emptySet(), )</ID>
+    <ID>LongParameterList:ProjectsPickerViewModel.kt$ProjectsPickerViewModel$( @Assisted private val route: ProjectsRoute.Picker, private val nav: AppNavigator, private val connections: ProjectServers, private val opened: OpenedFolders, private val discovery: PhoneProjectDiscovery, private val creator: ProjectCreation = NoProjectCreation(), private val phoneFolders: PhoneFolders = NoPhoneFolders(), )</ID>
+    <ID>LongParameterList:TerminalViewModel.kt$TerminalViewModel$( @Assisted private val route: TerminalRoute.Home, private val servers: ProjectServers, private val clipboard: TerminalClipboard, grids: TerminalGrids, private val privacy: TerminalPrivacy, teaching: TerminalTeaching, private val nav: AppNavigator, )</ID>
+    <ID>LoopWithTooManyJumpStatements:TerminalViewModel.kt$TerminalViewModel$for</ID>
+    <ID>MagicNumber:IsolatedTaskLaunch.kt$IsolatedTaskLaunch$64</ID>
+    <ID>MagicNumber:IsolatedTaskSheet.kt$3</ID>
+    <ID>MagicNumber:ProjectWorkspace.kt$ProjectWorkspace$200</ID>
+    <ID>MagicNumber:ProjectWorkspaceSheet.kt$200</ID>
+    <ID>MagicNumber:TerminalScreen.kt$8</ID>
+    <ID>MagicNumber:TerminalViewModel.kt$TerminalViewModel$0x20</ID>
+    <ID>MagicNumber:TerminalViewModel.kt$TerminalViewModel$0x3f</ID>
+    <ID>MagicNumber:TerminalViewModel.kt$TerminalViewModel$0x40</ID>
+    <ID>MagicNumber:TerminalViewModel.kt$TerminalViewModel$0x5f</ID>
+    <ID>MagicNumber:TerminalViewModel.kt$TerminalViewModel$0x60</ID>
+    <ID>MagicNumber:TerminalViewModel.kt$TerminalViewModel$0x61</ID>
+    <ID>MagicNumber:TerminalViewModel.kt$TerminalViewModel$0x7a</ID>
+    <ID>MagicNumber:TerminalViewModel.kt$TerminalViewModel$0x7f</ID>
+    <ID>MagicNumber:TerminalViewModel.kt$TerminalViewModel$10_000</ID>
+    <ID>MagicNumber:TerminalViewModel.kt$TerminalViewModel$2_000</ID>
+    <ID>MatchingDeclarationName:ProjectsFixtures.kt$TestKitPlatform : KitPlatform</ID>
+    <ID>MaxLineLength:ProjectRules.kt$ProjectRules$*</ID>
+    <ID>MaxLineLength:ProjectRules.kt$ProjectRules$/** B-NAV-011: newest first, ties keep the server's order, unknown dates (zero or below) last in the server's order. */</ID>
+    <ID>MaxLineLength:ProjectsPickerScreen.kt$ProjectRow(it, actions, state.canRename, tail = pathTail(it.directory).takeIf { _ -&gt; it.name.lowercase() in twins })</ID>
+    <ID>MaxLineLength:ProjectsScreenTest.kt$ProjectsScreenTest$fun</ID>
+    <ID>MaxLineLength:ProjectsScreenTest.kt$ProjectsScreenTest$onNodeWithText("This server can’t make folders from the phone. Make the folder on that computer, then open it here.")</ID>
+    <ID>MaxLineLength:ProjectsScreenTest.kt$ProjectsScreenTest$persistentListOf(ProjectChatUi(ConversationRef(ProfileId("p1"), SessionId("a")), ChatTitle.Text("Fix login"), "app", running = true))</ID>
+    <ID>MaxLineLength:ProjectsScreenTest.kt$ProjectsScreenTest$persistentListOf(ProjectChatUi(ConversationRef(ProfileId("p1"), SessionId("b")), ChatTitle.Text("Theme packs"), "site", running = false))</ID>
+    <ID>MaxLineLength:ProjectsViewModelTest.kt$ProjectsViewModelTest$FakeServerGateway(listOf(session("a", "/work/api", 30), session("b", "/work/web", 20), session("c", "/work/api", 10)))</ID>
+    <ID>MaxLineLength:ProjectsViewModelTest.kt$ProjectsViewModelTest$fun</ID>
+    <ID>MaxLineLength:ProjectsViewModelTest.kt$ProjectsViewModelTest$val gateway = Creating(FakeServerGateway(listOf(session("old", "/work/app", 5), session("there", "/work/site", 9))))</ID>
+    <ID>MaxLineLength:ProjectsViewModelTest.kt$ProjectsViewModelTest$val servers = Servers(listOf(ProjectServer(p1, "one", one, null), ProjectServer(p2, "two", two, null)), active = p2)</ID>
+    <ID>MaxLineLength:ProjectsViewModelTest.kt$ProjectsViewModelTest$val vm = ProjectPageViewModel(ProjectsRoute.Project(p1, "/work/app"), Nav(), Servers(emptyList()), SessionOpenedFolders())</ID>
+    <ID>MaxLineLength:ProjectsViewModelTest.kt$ProjectsViewModelTest$val vm = ProjectPageViewModel(ProjectsRoute.Project(p1, "/work/app"), nav, Servers(listOf(ProjectServer(p1, "srv", gateway, null))), SessionOpenedFolders())</ID>
+    <ID>MaxLineLength:ProjectsViewModelTest.kt$ProjectsViewModelTest$val vm = ProjectPageViewModel(ProjectsRoute.Project(p1, "/work/app"), nav, Servers(listOf(ProjectServer(p1, "srv", gateway, null))), folders)</ID>
+    <ID>MaxLineLength:ProjectsViewModelTest.kt$ProjectsViewModelTest$val vm = ProjectsPickerViewModel(ProjectsRoute.Picker(), Nav(), Servers(listOf(ProjectServer(p1, "laptop", gateway, null))), SessionOpenedFolders())</ID>
+    <ID>MaxLineLength:ProjectsViewModelTest.kt$ProjectsViewModelTest$val vm = ProjectsPickerViewModel(ProjectsRoute.Picker(), Nav(), Servers(listOf(ProjectServer(p1, "srv", gateway, null))), SessionOpenedFolders())</ID>
+    <ID>MaxLineLength:ProjectsViewModelTest.kt$ProjectsViewModelTest$val vm = ProjectsPickerViewModel(ProjectsRoute.Picker(), Nav(), Servers(listOf(ProjectServer(p1, "srv", gateway, ops))), SessionOpenedFolders())</ID>
+    <ID>ReturnCount:IsolatedTaskLaunch.kt$IsolatedTaskLaunch$fun open(acceptUnconfirmed: Boolean = false, acceptFailedSetup: Boolean = false)</ID>
+    <ID>ReturnCount:ProjectPageScreen.kt$@Composable private fun SharedStorageNotice(state: ProjectPageUi, actions: ProjectPageActions)</ID>
+    <ID>ReturnCount:ProjectPageViewModel.kt$ProjectPageViewModel$override fun closeIsolatedTask()</ID>
+    <ID>ReturnCount:ProjectPageViewModel.kt$ProjectPageViewModel$override fun loadMore()</ID>
+    <ID>ReturnCount:ProjectPageViewModel.kt$ProjectPageViewModel$override fun refreshCopies()</ID>
+    <ID>ReturnCount:ProjectPageViewModel.kt$ProjectPageViewModel$override fun requestStorage()</ID>
+    <ID>ReturnCount:ProjectRules.kt$ChatTitles$public fun present(raw: String?): ChatTitle</ID>
+    <ID>ReturnCount:ProjectRules.kt$ProjectRules$public fun isTeamFolder(directory: String?): Boolean</ID>
+    <ID>ReturnCount:ProjectRules.kt$ProjectRules$public fun pathProblem(raw: String): PathProblem?</ID>
+    <ID>ReturnCount:ProjectWorkspace.kt$ProjectWorkspace$override fun confirmWorktreeRemoval()</ID>
+    <ID>ReturnCount:ProjectWorkspace.kt$ProjectWorkspace$override fun confirmWorktreeReset()</ID>
+    <ID>ReturnCount:ProjectWorkspace.kt$ProjectWorkspace$override fun inspectCopy(directory: String)</ID>
+    <ID>ReturnCount:ProjectWorkspace.kt$ProjectWorkspace$override fun inspectWorktreeRemoval(directory: String)</ID>
+    <ID>ReturnCount:ProjectWorkspace.kt$ProjectWorkspace$override fun inspectWorktreeReset(directory: String)</ID>
+    <ID>ReturnCount:ProjectWorkspace.kt$ProjectWorkspace$override fun loadMoreCopyConversations()</ID>
+    <ID>ReturnCount:ProjectWorkspace.kt$ProjectWorkspace$override fun openCopyConversation(sessionId: String)</ID>
+    <ID>ReturnCount:ProjectWorkspace.kt$ProjectWorkspace$private fun create(name: String?)</ID>
+    <ID>ReturnCount:ProjectWorkspace.kt$ProjectWorkspace$private suspend fun readInspection( live: ProjectServer, run: Int, target: WorktreeScope, cursor: String?, append: Boolean, )</ID>
+    <ID>ReturnCount:ProjectsPickerViewModel.kt$ProjectsPickerViewModel$override fun createMissing()</ID>
+    <ID>ReturnCount:ProjectsPickerViewModel.kt$ProjectsPickerViewModel$override fun enterPhoneFolder(path: String)</ID>
+    <ID>ReturnCount:ProjectsPickerViewModel.kt$ProjectsPickerViewModel$override fun renameProject(name: String)</ID>
+    <ID>ReturnCount:ProjectsPickerViewModel.kt$ProjectsPickerViewModel$private suspend fun readProjects(server: ProjectServer): Outcome&lt;List&lt;FolderRowUi&gt;&gt;</ID>
+    <ID>ReturnCount:TerminalViewModel.kt$TerminalViewModel$override fun create()</ID>
+    <ID>ReturnCount:TerminalViewModel.kt$TerminalViewModel$override fun key(key: String)</ID>
+    <ID>ReturnCount:TerminalViewModel.kt$TerminalViewModel$override fun refresh()</ID>
+    <ID>ReturnCount:TerminalViewModel.kt$TerminalViewModel$override fun remove()</ID>
+    <ID>ReturnCount:TerminalViewModel.kt$TerminalViewModel$override fun rename(title: String?)</ID>
+    <ID>ReturnCount:TerminalViewModel.kt$TerminalViewModel$private fun connect(id: String)</ID>
+    <ID>TooManyFunctions:ProjectPageViewModel.kt$ProjectPageViewModel : ViewModelProjectPageActions</ID>
+    <ID>TooManyFunctions:ProjectRules.kt$ProjectRules</ID>
+    <ID>TooManyFunctions:ProjectWorkspace.kt$ProjectWorkspace : ProjectWorkspaceActions</ID>
+    <ID>TooManyFunctions:ProjectWorkspace.kt$ProjectWorkspaceActions</ID>
+    <ID>TooManyFunctions:ProjectsPickerScreen.kt$io.github.eslamasabry.oc.feature.projects.ui.ProjectsPickerScreen.kt</ID>
+    <ID>TooManyFunctions:ProjectsPickerViewModel.kt$ProjectsPickerViewModel : ViewModelProjectsPickerActions</ID>
+    <ID>TooManyFunctions:ProjectsUi.kt$ProjectPageActions : ProjectWorkspaceActions</ID>
+    <ID>TooManyFunctions:ProjectsUi.kt$ProjectsPickerActions</ID>
+    <ID>TooManyFunctions:TerminalUi.kt$TerminalActions</ID>
+    <ID>TooManyFunctions:TerminalViewModel.kt$TerminalViewModel : ViewModelTerminalActions</ID>
+    <ID>WildcardImport:IsolatedTaskSheet.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:PhoneFolderSheetTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:PhoneFolderSheetTest.kt$import io.github.eslamasabry.oc.feature.projects.presentation.*</ID>
+    <ID>WildcardImport:ProjectStorageAccess.kt$import dev.zacsweers.metro.*</ID>
+    <ID>WildcardImport:ProjectStorageScreen.kt$import io.github.eslamasabry.oc.feature.projects.presentation.*</ID>
+    <ID>WildcardImport:ProjectStorageScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
+    <ID>WildcardImport:ProjectStorageScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:ProjectWorkspaceSheet.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:ProjectsPickerScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:ProjectsPickerScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:RemoteFolderSheetTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:RemoteFolderSheetTest.kt$import io.github.eslamasabry.oc.feature.projects.presentation.*</ID>
+    <ID>WildcardImport:TerminalScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:TerminalScreenTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:TerminalScreenTest.kt$import io.github.eslamasabry.oc.feature.projects.terminal.*</ID>
+    <ID>WildcardImport:WorktreeInspectionPane.kt$import io.github.eslamasabry.oc.ui.kit.chip.*</ID>
+    <ID>WildcardImport:WorktreeInspectionPane.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
+    <ID>WildcardImport:WorktreeRemovalTest.kt$import androidx.compose.ui.test.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

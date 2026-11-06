@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:ScanSessionTest.kt$internal fun reachableStrings(root: Any): List&lt;String&gt;</ID>
+    <ID>LongParameterList:CameraXScanner.kt$CameraXScanner$( context: Context, owner: LifecycleOwner, clock: Clock, parse: (String) -&gt; T?, onLatched: (T) -&gt; Unit, onRejected: () -&gt; Unit, private val onFailure: (Failure) -&gt; Unit, @Volatile public var windowFraction: Float = 0.6f, decoder: QrFrameDecoder&lt;ImageProxy&gt; = ZxingCppQrDecoder(), )</ID>
+    <ID>LongParameterList:ScanSession.kt$ScanSession$( private val decoder: QrFrameDecoder&lt;F&gt;, private val parse: (String) -&gt; T?, private val clock: Clock, private val releaseCamera: () -&gt; Unit, private val onLatched: (T) -&gt; Unit, private val onRejected: () -&gt; Unit = {}, private val quiet: Duration = 2.seconds, )</ID>
+    <ID>MagicNumber:CameraXScanner.kt$CameraXScanner$1280</ID>
+    <ID>MagicNumber:CameraXScanner.kt$CameraXScanner$720</ID>
+    <ID>MagicNumber:CaptureFiles.kt$CaptureFiles$1_000</ID>
+    <ID>MagicNumber:CaptureFiles.kt$CaptureFiles$1_000_000L</ID>
+    <ID>MagicNumber:CaptureFiles.kt$CaptureFiles$20</ID>
+    <ID>MaxLineLength:CameraAccessFlowTest.kt$CameraAccessFlowTest$assertEquals(ScannerStage.PermanentlyDenied, CameraFailures.stageFor(Failure.Media(MediaProblem.CameraDeniedForever)))</ID>
+    <ID>MaxLineLength:QrFixtures.kt$LumaFrame$class</ID>
+    <ID>MaxLineLength:QrFixtures.kt$QrFixtures$"""{"urls":["http://127.0.0.1:4097","http://192.0.2.20:4097"],"username":"opencode","password":"fixture-not-a-live-serve-password-000000000"}"""</ID>
+    <ID>MaxLineLength:QrFixtures.kt$QrFixtures$"""{"urls":["http://127.0.0.1:49374"],"username":"opencode","password":"fixture-not-a-live-serve-password-000000000"}"""</ID>
+    <ID>MaxLineLength:QrFixtures.kt$ZxingCoreDecoder$val source = PlanarYUVLuminanceSource(frame.luma, frame.width, frame.height, c.left, c.top, c.width, c.height, false)</ID>
+    <ID>ReturnCount:ScanSession.kt$ScanSession$public fun analyze(attempt: ScanAttempt, frame: F): FrameVerdict</ID>
+    <ID>SpreadOperator:CameraXBinding.kt$CameraXBinding$(owner, CameraSelector.DEFAULT_BACK_CAMERA, preview, *useCases.toTypedArray())</ID>
+    <ID>TooGenericExceptionCaught:CameraXBinding.kt$CameraXBinding$e: Exception</ID>
+    <ID>UseCheckOrError:CameraAccessFlowTest.kt$FakeGate$throw IllegalStateException("no activity")</ID>
+  </CurrentIssues>
+</SmellBaseline>
