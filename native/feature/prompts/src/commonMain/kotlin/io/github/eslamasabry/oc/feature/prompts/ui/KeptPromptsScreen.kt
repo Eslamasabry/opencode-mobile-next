@@ -143,7 +143,6 @@ public fun KeptPromptsScreen(state: KeptPromptsUi, actions: KeptPromptsActions) 
             height = KitSheetHeight.Half,
         ) {
             Column(
-                Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
             ) {
                 KitText(stringResource(Res.string.keptPromptsChooseBody))

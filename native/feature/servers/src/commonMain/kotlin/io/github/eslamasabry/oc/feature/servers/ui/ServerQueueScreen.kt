@@ -1,8 +1,6 @@
 package io.github.eslamasabry.oc.feature.servers.ui
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -98,7 +96,7 @@ public fun ServerQueueScreen(state: ServerQueueUi, actions: ServerQueueActions) 
                     ),
         ) {
             Column(
-                Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+                Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
             ) {
                 state.failure?.let {

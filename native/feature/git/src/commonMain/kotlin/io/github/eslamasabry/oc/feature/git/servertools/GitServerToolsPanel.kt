@@ -2,11 +2,8 @@ package io.github.eslamasabry.oc.feature.git.servertools
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
@@ -41,7 +38,6 @@ public fun GitServerToolsPanel(state: GitServerToolsUi, actions: GitServerToolsA
             if (state.busy) KitEnabled.Disabled(stringResource(Res.string.protoWorking))
             else KitEnabled.Enabled
         Column(
-            Modifier.verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
         ) {
             state.directory?.let { KitText(it) }

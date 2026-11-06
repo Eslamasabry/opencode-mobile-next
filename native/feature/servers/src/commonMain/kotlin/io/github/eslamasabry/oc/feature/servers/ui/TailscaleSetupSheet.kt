@@ -6,9 +6,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -90,7 +88,7 @@ internal fun TailscaleSetupSheet(
             icon = KitIcons.forward,
             enabled = KitEnabled.of(address.text.isNotBlank(), stringResource(Res.string.tailscaleSetupContinueReason))),
     ) {
-        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+        Column(Modifier.fillMaxWidth()) {
             KitText(stringResource(Res.string.tailscaleIntro), tone = TextTone.Secondary)
             TailscalePhoneContent(
                 appState = when (presence) {

@@ -1,7 +1,9 @@
 package io.github.eslamasabry.oc.feature.projects.ui
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.runtime.key
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.model.VcsDiffMode
@@ -48,10 +50,10 @@ internal fun ProjectWorkspaceSheet(state: ProjectWorkspaceUi, actions: ProjectWo
         onDismissRequest = actions::closeWorkspace,
         height = KitSheetHeight.Full,
     ) {
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
-            if (state.busy) item(key = "loading") { KitSkeletonRows(count = 2) }
+        Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+            if (state.busy) WorkspaceSection("loading") { KitSkeletonRows(count = 2) }
             state.failure?.let { failure ->
-                item(key = "failure") {
+                WorkspaceSection("failure") {
                     KitErrorNotice(
                         message = stringResource(Res.string.agentProjectReadFailed),
                         failure = failure,
@@ -66,9 +68,9 @@ internal fun ProjectWorkspaceSheet(state: ProjectWorkspaceUi, actions: ProjectWo
                 }
             }
             if (state.canInspect)
-                item(key = "copy-inspection") { WorktreeInspectionPane(state, actions) }
+                WorkspaceSection("copy-inspection") { WorktreeInspectionPane(state, actions) }
             state.health?.let { health ->
-                item(key = "checkout-health") {
+                WorkspaceSection("checkout-health") {
                     if (health.setupState == VersionControlSetupState.Absent)
                         KitNotice(stringResource(Res.string.agentProjectNoGit))
                     else {
@@ -87,7 +89,7 @@ internal fun ProjectWorkspaceSheet(state: ProjectWorkspaceUi, actions: ProjectWo
                 }
             }
             if (state.canReadChanges) {
-                item(key = "comparison") {
+                WorkspaceSection("comparison") {
                     KitChipWrap {
                         for (mode in VcsDiffMode.entries) KitChip(
                             label =
@@ -106,7 +108,7 @@ internal fun ProjectWorkspaceSheet(state: ProjectWorkspaceUi, actions: ProjectWo
                 }
                 val selected = state.changes.firstOrNull { it.file == state.selectedDiff }
                 if (selected != null) {
-                    item(key = "diff-back") {
+                    WorkspaceSection("diff-back") {
                         KitButton(
                             stringResource(Res.string.agentProjectAllFiles),
                             actions::closeWorkspaceDiff,
@@ -114,7 +116,7 @@ internal fun ProjectWorkspaceSheet(state: ProjectWorkspaceUi, actions: ProjectWo
                         )
                         KitText(selected.file)
                     }
-                    item(key = "diff") {
+                    WorkspaceSection("diff") {
                         val text = selected.patch.orEmpty()
                         if (text.isEmpty())
                             KitNotice(stringResource(Res.string.agentProjectNoPatch))
@@ -130,7 +132,7 @@ internal fun ProjectWorkspaceSheet(state: ProjectWorkspaceUi, actions: ProjectWo
                                 maxLines = 200,
                             )
                     }
-                    item(key = "diff-pages") {
+                    WorkspaceSection("diff-pages") {
                         if (state.diffPage > 0)
                             KitButton(
                                 stringResource(Res.string.agentProjectPreviousLines),
@@ -152,7 +154,7 @@ internal fun ProjectWorkspaceSheet(state: ProjectWorkspaceUi, actions: ProjectWo
                             )
                     }
                 } else {
-                    item(key = "changed-files") {
+                    WorkspaceSection("changed-files") {
                         KitRowGroup(label = stringResource(Res.string.agentProjectChangedFiles)) {
                             if (!state.busy && state.failure == null && state.changes.isEmpty())
                                 KitText(stringResource(Res.string.agentProjectNoChanges))
@@ -173,7 +175,7 @@ internal fun ProjectWorkspaceSheet(state: ProjectWorkspaceUi, actions: ProjectWo
                 }
             }
             if (state.canReadWorktrees) {
-                item(key = "worktrees") {
+                WorkspaceSection("worktrees") {
                     KitRowGroup(label = stringResource(Res.string.agentProjectWorktrees)) {
                         if (!state.busy && state.failure == null && state.worktrees.isEmpty())
                             KitText(stringResource(Res.string.agentProjectNoWorktrees))
@@ -206,7 +208,7 @@ internal fun ProjectWorkspaceSheet(state: ProjectWorkspaceUi, actions: ProjectWo
                     }
                 }
                 if (state.canCreate)
-                    item(key = "create-worktree") {
+                    WorkspaceSection("create-worktree") {
                         val enabled =
                             if (state.busy)
                                 KitEnabled.Disabled(stringResource(Res.string.agentProjectWorking))
@@ -224,7 +226,7 @@ internal fun ProjectWorkspaceSheet(state: ProjectWorkspaceUi, actions: ProjectWo
                         )
                     }
             }
-            item(key = "refresh") {
+            WorkspaceSection("refresh") {
                 KitButton(
                     stringResource(Res.string.agentProjectRefresh),
                     actions::retryWorkspace,
@@ -267,4 +269,10 @@ internal fun ProjectWorkspaceSheet(state: ProjectWorkspaceUi, actions: ProjectWo
         onCancel = actions::cancelWorktreeRemoval,
         working = state.busy,
     )
+}
+
+/** Retains each sheet section's composition identity without adding another scrolling container. */
+@Composable
+private fun WorkspaceSection(id: String, content: @Composable ColumnScope.() -> Unit) {
+    key(id) { Column(content = content) }
 }
