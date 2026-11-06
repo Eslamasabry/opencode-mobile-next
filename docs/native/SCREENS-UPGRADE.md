@@ -35,3 +35,7 @@ Model switches, token/model metadata and reply timing moved into message Details
 ## U7 — one gutter
 
 16 dp inset for list/group seams, status lines, empty states and Tools controls. Server editor accordions share the form edge. Chat bottom controls reuse the frame gutter; creation chips keep their fixed gutter while scrolling. Source/formatter parsing and diff checks only; no compile/tests.
+
+## U8 — framework row/chat motion
+
+The real conversation feed row and chat now share their ConversationRef key and KitGrowPage, using Compose SharedTransitionLayout and Nav3's predictive back. Open/return settle at 250/200 ms; content fades take 150 ms. Effective reduced-motion policy also controls navigation and predictive corners. Source/diff checks only; coordinator must compile and qualify gesture cancel/commit, RTL and reduced motion on device.

@@ -50,6 +50,7 @@ import io.github.eslamasabry.oc.feature.chat.ui.MessageTeachingScope
 import io.github.eslamasabry.oc.engine.settings.teaching.TeachingSource
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.motion.KitGrowPage
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
@@ -291,7 +292,7 @@ public class ChatEntries(
             CompositionLocalProvider(LocalChatCards provides cardSlot) {
                 environment.Provide {
                     KitSheetHost {
-
+                        KitGrowPage(growKey = route.ref) {
                             ChatScreen(
                                 state,
                                 vm,
@@ -381,7 +382,7 @@ public class ChatEntries(
                                         )
                                 },
                             )
-
+                        }
                         ChatInboxSlot(
                             pendingSends,
                             pendingVm,

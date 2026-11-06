@@ -57,7 +57,7 @@ public class RowTransformGate(initial: GateState = GateState.Idle) {
     public var state: GateState by mutableStateOf(initial)
         private set
 
-    /** Direction of the last navigation: true after a push, false after a pop (picks 360 ms vs 300 ms bounds). */
+    /** Direction of the last navigation: true after a push, false after a pop (picks 250 ms vs 200 ms bounds). */
     public var opening: Boolean by mutableStateOf(true)
         private set
 

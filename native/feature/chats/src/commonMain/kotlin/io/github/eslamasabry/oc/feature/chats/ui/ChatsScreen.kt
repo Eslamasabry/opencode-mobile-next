@@ -359,6 +359,7 @@ private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, state
         time = row.updatedAtMs?.takeIf { state != null && state.nowMs > 0 }?.let { kitRelativeAge(it, state!!.nowMs) }
             ?: row.ago?.takeUnless { signal && row.running != null }?.let { agoText(it) },
         done = row.status == RowStatus.Done,
+        growKey = row.ref,
         onClick = if (row.canOpen) ({ actions.openConversation(row.ref) }) else null,
     )
 
