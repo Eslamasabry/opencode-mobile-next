@@ -37,6 +37,10 @@ public enum class SignInStep {
 public data class SignInTerminalUi(
     val agentName: String = "",
     val usesClaudeAccount: Boolean = false,
+    /** Antigravity: the terminal shows a Google link and the person pastes the browser's code back. */
+    val pastesBrowserCode: Boolean = false,
+    /** Gemini CLI: its own sign-in may tell people to move to Antigravity; the screen says what to do. */
+    val offersAntigravityNote: Boolean = false,
     val step: SignInStep = SignInStep.Preparing,
     /** The live grid while the terminal exists. */
     val terminal: PlatformViewHandle? = null,

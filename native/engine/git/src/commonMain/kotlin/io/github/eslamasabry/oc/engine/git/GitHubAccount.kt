@@ -132,6 +132,12 @@ public interface GitHubSignInControl {
     public fun cancel()
 
     public suspend fun signOut(): Outcome<Unit>
+
+    /**
+     * The signed-in account's repositories for the remote picker (`GET /user/repos`), most recently updated first.
+     * Empty when signed out or when GitHub could not be asked; a refused token asks for a new sign-in.
+     */
+    public suspend fun repositories(): List<GitHubRepository>
 }
 
 /**
@@ -227,6 +233,27 @@ public class GitHubAccount(
         job?.cancelAndJoin()
         job = null
         mutableState.value = GitHubSignIn.SignedOut()
+    }
+
+    override suspend fun repositories(): List<GitHubRepository> {
+        val token = validToken() ?: return emptyList()
+        return when (val listed = flow.fetchRepositories(token)) {
+            is GitHubResult.Ok -> listed.value
+            is GitHubResult.Problem -> {
+                // A rejected token asks for a new sign-in, as a rejected push does.
+                if (listed.problem == GitHubSignInProblem.TokenRejected) tokenRejected()
+                emptyList()
+            }
+        }
+    }
+
+    /**
+     * Creates an empty repository in this signed-in account. With no usable token (signed out, or a refresh GitHub
+     * refused) the way forward is signing in again, not checking the network.
+     */
+    public suspend fun createRepository(name: String, isPrivate: Boolean): GitHubCreateResult {
+        val token = validToken() ?: return GitHubCreateResult.Failed(GitHubRepositoryProblem.TokenRejected)
+        return flow.createRepository(token, name, isPrivate)
     }
 
     /** GitHub refused the stored token: forget it and say so. */

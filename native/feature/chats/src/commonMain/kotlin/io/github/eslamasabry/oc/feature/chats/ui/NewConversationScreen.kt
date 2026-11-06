@@ -467,13 +467,27 @@ private fun AgentModelSheet(state: NewConversationUi, actions: NewConversationAc
     NewConversationModelSheet(state, actions)
 }
 
+@Composable
+private fun AddAgentRow(actions: NewConversationActions) {
+    KitRow(
+        title = stringResource(Res.string.chatsNewAddAgent),
+        leading = KitRowLeading.Glyph(KitIcons.add),
+        onClick = actions::agents,
+        modifier = Modifier.testTag("chats-new-add-agent"),
+    )
+}
+
 /** Half height: the agents a person can start, then Build/Plan, then the model row that grows. */
 @Composable
 private fun NewConversationAgentStep(state: NewConversationUi, actions: NewConversationActions) {
     val defaultName = state.setup?.defaultRuntime ?: "OpenCode"
     val modes = state.setup?.modes.orEmpty()
     val namedAgent = state.agent != null && state.agent !in modes
+    val named = state.setup?.agents.orEmpty().filter(::isStartableAgent).distinct()
     KitRowGroup(label = stringResource(Res.string.upgNewChatAgents)) {
+        // "Add an agent" leads the empty state, and otherwise sits right after the default, in the first
+        // rows (Flutter chatsNewAddAgent). It opens agent setup; Back returns to this same unsent draft.
+        if (named.isEmpty()) AddAgentRow(actions)
         KitRow(
             title = defaultName,
             leading = KitRowLeading.Logo("opencode", defaultName, agent = true),
@@ -483,7 +497,8 @@ private fun NewConversationAgentStep(state: NewConversationUi, actions: NewConve
             // Already the default: a tap keeps the chosen Build or Plan.
             onClick = { if (namedAgent) actions.chooseAgent(null) },
         )
-        state.setup?.agents.orEmpty().filter(::isStartableAgent).distinct().forEach { agent ->
+        if (named.isNotEmpty()) AddAgentRow(actions)
+        named.forEach { agent ->
             KitRow(
                 title = agent,
                 leading = KitRowLeading.Logo(agent.lowercase(), agent, agent = true),
@@ -493,11 +508,6 @@ private fun NewConversationAgentStep(state: NewConversationUi, actions: NewConve
                 onClick = { actions.chooseAgent(agent) },
             )
         }
-        KitRow(
-            title = stringResource(Res.string.kitCapAgentA2aEnable),
-            leading = KitRowLeading.Glyph(KitIcons.add),
-            onClick = actions::agents,
-        )
     }
     // The server's own Build/Plan: a stepped control inside this sheet, never a chip of its own.
     if (modes.size in 2..4) {

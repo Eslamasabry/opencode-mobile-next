@@ -55,6 +55,8 @@ internal fun gitProblemText(problem: GitProblem, offersGitHubSignIn: Boolean = f
             GitProblem.InvalidRemoteUrl -> Res.string.gitProblemInvalidRemoteUrl
             GitProblem.RemoteAddressHasPassword -> Res.string.gitProblemRemoteAddressHasPassword
             GitProblem.RemoteExists -> Res.string.gitProblemRemoteExists
+            GitProblem.InvalidGitHubRepositoryName -> Res.string.gitProblemInvalidGitHubRepositoryName
+            GitProblem.GitHubRepositoryNameUnavailable -> Res.string.gitProblemGitHubRepositoryNameUnavailable
             GitProblem.InvalidFolderName -> Res.string.gitProblemInvalidFolderName
             GitProblem.FolderExists -> Res.string.gitProblemFolderExists
             GitProblem.Conflicts -> Res.string.gitProblemConflicts
@@ -80,6 +82,7 @@ internal fun gitBusyText(busy: GitBusy): String =
     stringResource(
         when (busy) {
             GitBusy.Refresh -> Res.string.gitBusyRefresh
+            GitBusy.Initialize -> Res.string.gitBusyInitialize
             GitBusy.Pull -> Res.string.gitBusyPull
             GitBusy.Push, GitBusy.SaveThenSend -> Res.string.gitBusyPush
             GitBusy.Commit -> Res.string.gitBusyCommit
@@ -89,6 +92,7 @@ internal fun gitBusyText(busy: GitBusy): String =
             GitBusy.SetIdentity -> Res.string.gitBusySaveIdentity
             GitBusy.AddRemote -> Res.string.gitBusyAddRemote
             GitBusy.Clone -> Res.string.gitBusyClone
+            GitBusy.Publish -> Res.string.gitBusyPublish
         },
     )
 
@@ -109,6 +113,8 @@ internal fun gitDoneText(result: GitActionResult): String {
         GitActionNote.IdentitySaved -> stringResource(Res.string.gitDoneIdentitySaved)
         GitActionNote.RemoteAdded -> stringResource(Res.string.gitDoneRemoteAdded)
         GitActionNote.Cloned -> stringResource(Res.string.gitDoneCloned, result.clonedTo.orEmpty())
+        GitActionNote.Initialized -> stringResource(Res.string.gitDoneInitialized)
+        GitActionNote.GitHubRepositoryCreated -> stringResource(Res.string.gitDoneGitHubRepositoryCreated)
         null -> ""
     }
 }

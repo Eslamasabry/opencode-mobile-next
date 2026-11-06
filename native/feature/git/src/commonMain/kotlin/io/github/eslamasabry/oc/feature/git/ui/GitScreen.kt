@@ -27,6 +27,7 @@ import io.github.eslamasabry.oc.engine.git.GitChangeKind
 import io.github.eslamasabry.oc.engine.git.GitCheck
 import io.github.eslamasabry.oc.engine.git.GitDiffView
 import io.github.eslamasabry.oc.engine.git.GitFileChange
+import io.github.eslamasabry.oc.engine.git.GitHubRepository
 import io.github.eslamasabry.oc.engine.git.GitHubSignIn
 import io.github.eslamasabry.oc.engine.git.GitOperation
 import io.github.eslamasabry.oc.engine.git.GitPageView
@@ -35,6 +36,8 @@ import io.github.eslamasabry.oc.engine.git.GitRemoteKind
 import io.github.eslamasabry.oc.engine.git.GitSnapshot
 import io.github.eslamasabry.oc.engine.git.gitCloneTarget
 import io.github.eslamasabry.oc.engine.git.gitRemoteAddressProblem
+import io.github.eslamasabry.oc.engine.git.isValidGitHubRepositoryName
+import io.github.eslamasabry.oc.engine.git.suggestGitHubRepositoryName
 import io.github.eslamasabry.oc.engine.git.isValidGitBranchName
 import io.github.eslamasabry.oc.engine.git.isValidGitFolderName
 import io.github.eslamasabry.oc.engine.git.isValidGitRemoteName
@@ -52,6 +55,8 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextRole
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoice
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceList
+import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
+import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
@@ -62,6 +67,8 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.input.KitOneTimeCode
+import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
+import io.github.eslamasabry.oc.ui.kit.motion.KitSwap
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
@@ -79,6 +86,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
+import io.github.eslamasabry.oc.ui.kit.text.KitBidi
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kitchat.diff.DiffModel
@@ -170,6 +178,16 @@ public fun GitScreen(state: GitUi, actions: GitActions, serverTools: @Composable
                         body = stringResource(Res.string.gitNotRepositoryBody),
                     )
                     KitRowGroup {
+                        // Acts in place (no page opens), so no chevron.
+                        KitRow(
+                            title = stringResource(Res.string.gitInitializeProject),
+                            leading = KitRowLeading.Glyph(KitIcons.branch),
+                            supporting = stringResource(Res.string.gitInitializeProjectHint),
+                            enabled = enabled.isEnabled,
+                            disabledReason = (enabled as? KitEnabled.Disabled)?.reason,
+                            onClick = actions::initialize,
+                            modifier = Modifier.testTag("git-row-initialize"),
+                        )
                         KitRow(
                             title = stringResource(Res.string.gitCloneRow),
                             leading = KitRowLeading.Glyph(KitIcons.cloud),
@@ -214,6 +232,7 @@ public fun GitScreen(state: GitUi, actions: GitActions, serverTools: @Composable
         }
         BranchSheet(state, actions)
         RemotesSheet(state, actions)
+        PublishSheet(state, actions)
         CloneSheet(state, actions)
         DiffSheet(state, actions, enabled)
         KitConfirm(
@@ -381,6 +400,21 @@ private fun Ready(
             onClick = if (!snapshot.hasRemote) actions::openRemotes else actions::push,
             modifier = Modifier.testTag("git-push-row"),
         )
+    }
+    // Create a GitHub repository: only while signed in to the app's GitHub and nothing is connected yet.
+    if (!snapshot.hasRemote && state.offersGitHubSignIn && state.signIn is GitHubSignIn.SignedIn) {
+        KitRowGroup {
+            KitRow(
+                title = stringResource(Res.string.gitPublishToGitHub),
+                leading = KitRowLeading.Glyph(KitIcons.github),
+                supporting = stringResource(Res.string.gitPublishToGitHubHint),
+                trailing = KitRowTrailing.Chevron,
+                enabled = enabled.isEnabled,
+                disabledReason = (enabled as? KitEnabled.Disabled)?.reason,
+                onClick = actions::openPublish,
+                modifier = Modifier.testTag("git-row-publish-github"),
+            )
+        }
     }
     // Remotes and Clone: visible rows, so a project without a remote can get one (B-BUILD-014).
     KitRowGroup {
@@ -819,6 +853,34 @@ private fun RemotesSheet(state: GitUi, actions: GitActions) {
                 modifier = Modifier.padding(top = Space.S2.dp),
                 role = KitTextRole.Supporting,
             )
+        // Fill the address from the signed-in account's repositories, so nobody types or pastes the URL.
+        // It unfolds (and folds) quietly when the sign-in changes; reduced motion shows it at once.
+        KitReveal(state.signIn is GitHubSignIn.SignedIn) {
+            Column(
+                Modifier.padding(top = Space.S3.dp),
+                verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
+            ) {
+                KitButton(
+                    label = stringResource(Res.string.gitRemotePickGitHub),
+                    onClick = actions::pickGitHubRepository,
+                    role = KitButtonRole.Tertiary,
+                    icon = KitIcons.github,
+                    enabled =
+                        if (state.repoPicker.loading)
+                            KitEnabled.Disabled(stringResource(Res.string.gitRemotePickGitHub))
+                        else hold,
+                    working = state.repoPicker.loading,
+                    modifier = Modifier.testTag("git-remote-pick-github"),
+                )
+                KitReveal(state.repoPicker.none) {
+                    KitText(
+                        stringResource(Res.string.gitRemotePickGitHubNone),
+                        role = KitTextRole.Supporting,
+                        modifier = Modifier.testTag("git-remote-pick-none"),
+                    )
+                }
+            }
+        }
         Column(
             Modifier.padding(top = Space.S4.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
@@ -841,6 +903,122 @@ private fun RemotesSheet(state: GitUi, actions: GitActions) {
                 error = urlProblem?.let { gitProblemText(it) },
                 modifier = Modifier.testTag("git-remote-url"),
             )
+        }
+    }
+    RepositoryChoiceSheet(state, actions) { picked ->
+        if (name.text.toString().trim().isEmpty()) name.edit { replace(0, length, "origin") }
+        url.edit { replace(0, length, picked.remoteUrl) }
+    }
+}
+
+/** The GitHub repositories to pick a remote from; picking fills the Remotes sheet's fields and closes this list. */
+@Composable
+private fun RepositoryChoiceSheet(
+    state: GitUi,
+    actions: GitActions,
+    onPick: (GitHubRepository) -> Unit,
+) {
+    val repos = state.repoPicker.choices.orEmpty()
+    val privateWord = stringResource(Res.string.gitRemoteRepoPrivate)
+    KitSheet(
+        visible = state.repoPicker.choices != null && state.sheet == GitSheet.Remotes,
+        onDismissRequest = actions::closeRepositoryChoices,
+        title = stringResource(Res.string.gitRemotePickGitHubTitle),
+        closeLabel = stringResource(Res.string.kitSheetClose),
+    ) {
+        KitChoiceList(
+            repos.map {
+                KitChoice(
+                    it.fullName,
+                    KitBidi.ltr(it.fullName),
+                    supporting = if (it.isPrivate) privateWord else null,
+                )
+            },
+            null,
+            stringResource(Res.string.gitRemotePickGitHubTitle),
+            modifier = Modifier.testTag("git-remote-github-repos"),
+            empty = {},
+            onSelect = { fullName ->
+                repos.firstOrNull { it.fullName == fullName }?.let(onPick)
+                actions.closeRepositoryChoices()
+            },
+        )
+    }
+}
+
+/** Create a repository on GitHub for this project and connect it as the remote; nothing is sent yet. */
+@Composable
+private fun PublishSheet(state: GitUi, actions: GitActions) {
+    val visible = state.sheet == GitSheet.Publish && state.snapshot != null
+    val name = remember { TextFieldState() }
+    var isPrivate by remember { mutableStateOf(true) }
+    // A fresh sheet starts from the folder's name, private (the safe choice).
+    LaunchedEffect(visible) {
+        if (visible) {
+            val suggestion = suggestGitHubRepositoryName(state.directory)
+            name.edit { replace(0, length, suggestion) }
+            isPrivate = true
+        }
+    }
+    val typed = name.text.toString().trim()
+    val invalid = typed.isNotEmpty() && !isValidGitHubRepositoryName(typed)
+    val busyReason = state.busy?.let { gitBusyText(it) }
+    val hold = busyReason?.let { KitEnabled.Disabled(it) } ?: KitEnabled.Enabled
+    val invalidWords = stringResource(Res.string.gitProblemInvalidGitHubRepositoryName)
+    val hint = stringResource(Res.string.gitPublishNameHint)
+    KitSheet(
+        visible = visible,
+        onDismissRequest = actions::closeSheet,
+        title = stringResource(Res.string.gitPublishTitle),
+        closeLabel = stringResource(Res.string.kitSheetClose),
+        loading = state.working,
+        primary =
+            KitAction(
+                stringResource(Res.string.gitPublishButton),
+                { actions.publish(typed, isPrivate) },
+                icon = KitIcons.github,
+                working = state.busy == GitBusy.Publish,
+                enabled =
+                    when {
+                        busyReason != null -> KitEnabled.Disabled(busyReason)
+                        typed.isEmpty() -> KitEnabled.Disabled(hint)
+                        invalid -> KitEnabled.Disabled(invalidWords)
+                        else -> KitEnabled.Enabled
+                    },
+            ),
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+            SheetResult(state, actions, GitAction.Publish)
+            KitField(
+                name,
+                enabled = hold,
+                label = stringResource(Res.string.gitPublishName),
+                error = if (invalid) invalidWords else null,
+                modifier = Modifier.testTag("git-publish-name"),
+            )
+            KitSectionLabel(stringResource(Res.string.gitPublishVisibility))
+            KitSegmented(
+                listOf(
+                    KitSegment(true, stringResource(Res.string.gitPublishPrivate)),
+                    KitSegment(false, stringResource(Res.string.gitPublishPublic)),
+                ),
+                isPrivate,
+                stringResource(Res.string.gitPublishVisibility),
+                modifier = Modifier.testTag("git-publish-visibility"),
+                enabled = hold,
+                onChange = { isPrivate = it },
+            )
+            // The explanation follows the choice with a quick cross-fade (instant under reduced motion).
+            KitSwap(isPrivate) { shownPrivate ->
+                KitText(
+                    stringResource(
+                        if (shownPrivate) Res.string.gitPublishPrivateHint
+                        else Res.string.gitPublishPublicHint
+                    ),
+                    role = KitTextRole.Supporting,
+                    modifier = Modifier.testTag("git-publish-visibility-hint"),
+                )
+            }
         }
     }
 }

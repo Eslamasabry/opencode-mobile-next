@@ -7,9 +7,11 @@ import io.github.eslamasabry.oc.engine.git.GitCheck
 import io.github.eslamasabry.oc.engine.git.GitDiffView
 import io.github.eslamasabry.oc.engine.git.GitFailure
 import io.github.eslamasabry.oc.engine.git.GitFileChange
+import io.github.eslamasabry.oc.engine.git.GitHubRepository
 import io.github.eslamasabry.oc.engine.git.GitHubSignIn
 import io.github.eslamasabry.oc.engine.git.GitPageView
 import io.github.eslamasabry.oc.engine.git.GitSnapshot
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentSetOf
 
@@ -18,7 +20,20 @@ public enum class GitSheet {
     Branches,
     Remotes,
     Clone,
+
+    /** Create a repository on GitHub for this project and connect it as the remote. */
+    Publish,
 }
+
+/**
+ * The "Choose from GitHub" step of the Remotes sheet: asking GitHub, an account with nothing to list, or the
+ * repositories to choose from. [choices] is non-null exactly while the list is open.
+ */
+public data class GitRepoPicker(
+    val loading: Boolean = false,
+    val none: Boolean = false,
+    val choices: ImmutableList<GitHubRepository>? = null,
+)
 
 /** A question the page asks before an act that cannot be undone. */
 public sealed interface GitConfirm {
@@ -69,6 +84,7 @@ public data class GitUi(
     /** The project folder, for "Clones into …". */
     val directory: String? = null,
     val sheet: GitSheet? = null,
+    val repoPicker: GitRepoPicker = GitRepoPicker(),
     val confirm: GitConfirm? = null,
     /** Bumped when a write finished: the screen clears its message field once. */
     val generation: Int = 0,
@@ -115,6 +131,21 @@ public interface GitActions {
     public fun openClone()
 
     public fun addRemote(name: String, url: String)
+
+    /** Starts Git in this folder (`git init -b main`); it acts at once, no page opens. */
+    public fun initialize()
+
+    /** The Create-a-GitHub-repository sheet (only offered while signed in and the project has no remote). */
+    public fun openPublish()
+
+    /** Creates [name] in the signed-in GitHub account, private unless [isPrivate] is false, and connects it as origin. */
+    public fun publish(name: String, isPrivate: Boolean)
+
+    /** Asks GitHub for the signed-in account's repositories to choose a remote from. */
+    public fun pickGitHubRepository()
+
+    /** The repository list was closed (a choice was made, or it was dismissed). */
+    public fun closeRepositoryChoices()
 
     /**
      * Clones [url] into [folder] beside the project; a blank folder takes the name from the

@@ -101,7 +101,7 @@ class AgentAuthScriptsTest {
                 )
                 val digest = MessageDigest.getInstance("SHA-256").digest(normalized.toByteArray())
                     .joinToString("") { "%02x".format(it) }
-                assertEquals("d06e0af7b4992e58d93ad4869e4e1b96a39117b06197a6675f3ecfa4c002399c", digest, fixture.name)
+                assertEquals("38aca7d7d372858e43d2633b68ca0f6237d525a1e7d56ccbf38145f4f3f5d422", digest, fixture.name)
             }
         }
         assertTrue(AgentAuthScripts.supportsSignOut(AgentId.CLAUDE))
@@ -185,6 +185,72 @@ class AgentAuthScriptsTest {
         for (id in listOf("gemini", "qwen", "goose", "omp-acp")) {
             assertEquals(AuthProbeError.ProbeUnsupported, run(id).error, id)
         }
+    }
+
+    /** A fake `agy` that speaks just enough ACP: initialize, then one reply to session/list, then waits to be stopped. */
+    private fun agy(reply: String, advertiseList: Boolean = true) {
+        File("$home/agy-fixture.py").writeText(
+            """
+            import json, sys
+            assert sys.argv[1:] == ['acp', '--disable-telemetry']
+            request = json.loads(sys.stdin.readline())
+            assert request['method'] == 'initialize'
+            print(json.dumps({'jsonrpc':'2.0', 'id':1, 'result':{
+                'protocolVersion':1,
+                'agentCapabilities':{'sessionCapabilities':${if (advertiseList) "{'list':{}}" else "{}"}}
+            }}), flush=True)
+            request = json.loads(sys.stdin.readline())
+            assert request['method'] == 'session/list' and request['params'] == {}
+            print($reply, flush=True)
+            # Wait for the probe to terminate its owned process; no conversation or prompt.
+            assert not sys.stdin.readline()
+            """.trimIndent() + "\n",
+        )
+        cli("agy", "exec python3 \"${'$'}HOME/agy-fixture.py\" \"${'$'}@\"")
+    }
+
+    @Test
+    fun `B-AGENT-005 Antigravity checks cached sign-in with a read-only ACP listing`() {
+        agy("json.dumps({'jsonrpc':'2.0','id':2,'error':{'code':-32000,'message':'Authentication required','data':'synthetic-secret'}})")
+        assertEquals(AuthState.SignedOut, run("antigravity").state)
+        agy("json.dumps({'jsonrpc':'2.0','id':2,'result':{'sessions':[{'sessionId':'synthetic-secret','title':'synthetic-secret'}]}})")
+        val result = run("antigravity")
+        assertEquals(AuthState.SignedIn, result.state)
+        assertNull(result.account)
+    }
+
+    @Test
+    fun `B-AGENT-005 Antigravity rejects unsupported, malformed and unrelated replies`() {
+        for (reply in listOf(
+            "json.dumps({'jsonrpc':'2.0','id':2,'error':{'code':-32000,'message':'synthetic-secret'}})",
+            "json.dumps({'jsonrpc':'2.0','id':2,'result':{}})",
+            "json.dumps({'jsonrpc':'2.0','id':2,'result':{'sessions':{} }})",
+            "json.dumps({'jsonrpc':'2.0','id':1,'result':{'sessions':[]}})",
+            "json.dumps({'jsonrpc':'2.0','id':True,'result':{'sessions':[]}})",
+            "json.dumps({'jsonrpc':'2.0','id':2,'result':{'sessions':[]},'error':{}})",
+            "json.dumps({'jsonrpc':'2.0','id':7,'method':'session/request_permission','params':{}})",
+            "'synthetic-secret'",
+            "'x'*65537",
+        )) {
+            agy(reply)
+            assertEquals(AuthProbeError.InvalidResponse, run("antigravity").error, reply)
+        }
+        agy("'{}'", advertiseList = false)
+        assertEquals(AuthProbeError.InvalidResponse, run("antigravity").error)
+    }
+
+    @Test
+    fun `B-AGENT-005 Antigravity sign-in check has a bounded deadline`() {
+        cli("agy", "sleep 60")
+        val started = System.nanoTime()
+        assertEquals(AuthProbeError.TimedOut, run("antigravity").error)
+        // The probe gives up after 8 s; the fake would sleep 60. Slack covers a loaded build machine.
+        assertTrue((System.nanoTime() - started) / 1_000_000_000 < 30)
+    }
+
+    @Test
+    fun `B-AGENT-005 Antigravity cannot be signed out by the app`() {
+        assertFalse(AgentAuthScripts.supportsSignOut(AgentId("antigravity")))
     }
 
     @Test

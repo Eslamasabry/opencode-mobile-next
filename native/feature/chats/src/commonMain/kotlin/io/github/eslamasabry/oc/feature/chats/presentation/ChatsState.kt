@@ -131,6 +131,7 @@ public object ChatsState {
             AgentPersonaId.ClaudeCode -> "Claude Code"
             AgentPersonaId.Codex -> "Codex"
             AgentPersonaId.Gemini -> "Gemini"
+            AgentPersonaId.Antigravity -> "Antigravity"
             AgentPersonaId.Kilo -> "Kilo Code"
             AgentPersonaId.Cline -> "Cline"
             AgentPersonaId.OpenCode -> "OpenCode"

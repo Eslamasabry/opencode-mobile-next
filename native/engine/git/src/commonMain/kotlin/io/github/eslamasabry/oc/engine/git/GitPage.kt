@@ -132,6 +132,7 @@ public sealed interface GitDiffView {
 /** Save-and-send's two halves, so the busy line names each one (B-NAV-021). */
 public enum class GitBusy {
     Refresh,
+    Initialize,
     Pull,
     Push,
     Commit,
@@ -142,6 +143,7 @@ public enum class GitBusy {
     SetIdentity,
     AddRemote,
     Clone,
+    Publish,
 }
 
 /**
@@ -248,6 +250,65 @@ public class GitPage(
             end()
         }
     }
+
+    /** Starts Git in a folder that is not a repository yet (`git init -b main`); the page then reads it again. */
+    public suspend fun initialize(): Unit = write(GitBusy.Initialize) { it.initialize() }
+
+    /**
+     * Creates a repository in the signed-in GitHub account and connects it as `origin`. It deliberately does not commit
+     * or push project files: the first Send does that, and sets the upstream. Only built-in Linux offers the app's
+     * GitHub sign-in (B-SEC-082); a project that already has a remote is refused.
+     */
+    public suspend fun publish(name: String, isPrivate: Boolean): Unit =
+        write(GitBusy.Publish) { repo ->
+            val signedIn = account
+            val host = state.value.host
+            if (signedIn == null || host == null || GitWorkspace.usesOwnGitSignIn(host)) {
+                return@write GitActionResult.failure(GitAction.Publish, GitFailure(GitProblem.AuthRequired))
+            }
+            if (state.value.snapshot?.hasRemote == true) {
+                return@write GitActionResult.failure(GitAction.Publish, GitFailure(GitProblem.RemoteExists))
+            }
+            when (val made = signedIn.createRepository(name, isPrivate)) {
+                is GitHubCreateResult.Failed -> {
+                    if (made.problem == GitHubRepositoryProblem.TokenRejected) signedIn.tokenRejected()
+                    GitActionResult.failure(
+                        GitAction.Publish,
+                        GitFailure(
+                            when (made.problem) {
+                                GitHubRepositoryProblem.InvalidName -> GitProblem.InvalidGitHubRepositoryName
+                                GitHubRepositoryProblem.NameUnavailable -> GitProblem.GitHubRepositoryNameUnavailable
+                                GitHubRepositoryProblem.TokenRejected -> GitProblem.GitHubTokenRejected
+                                GitHubRepositoryProblem.PermissionDenied -> GitProblem.NoPermission
+                                GitHubRepositoryProblem.Network -> GitProblem.Network
+                                GitHubRepositoryProblem.Unexpected -> GitProblem.Unknown
+                            },
+                            made.details,
+                        ),
+                    )
+                }
+                is GitHubCreateResult.Created -> {
+                    val created = made.repository
+                    val added = repo.addRemote("origin", created.remoteUrl)
+                    if (!added.ok) {
+                        GitActionResult.failure(
+                            GitAction.Publish,
+                            GitFailure(
+                                added.problem ?: GitProblem.Unknown,
+                                "GitHub created ${created.fullName}, but the project could not be connected as origin. " +
+                                    added.failure?.details.orEmpty(),
+                            ),
+                        )
+                    } else {
+                        GitActionResult.success(
+                            GitAction.Publish,
+                            GitActionNote.GitHubRepositoryCreated,
+                            target = created.fullName,
+                        )
+                    }
+                }
+            }
+        }
 
     public suspend fun addRemote(name: String, url: String): Unit =
         write(GitBusy.AddRemote) { it.addRemote(name, url) }

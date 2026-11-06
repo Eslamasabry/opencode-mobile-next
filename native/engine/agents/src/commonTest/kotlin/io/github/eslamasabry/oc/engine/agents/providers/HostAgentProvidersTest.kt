@@ -142,6 +142,8 @@ class HostAgentProvidersTest {
     @Test
     fun `B-AGENT-113 sign-in uses only fixed app commands`() {
         assertEquals("gemini", provider().hostSignInCommand)
+        assertEquals("agy acp --login", provider(id = "antigravity").hostSignInCommand)
+        assertEquals(HostAgentSignInMessageKey.HostAgentSignInAntigravity, provider(id = "antigravity").signInMessage)
         assertEquals("omp", provider(id = "omp").hostSignInCommand)
         assertEquals("omp", provider(id = "omp-acp").hostSignInCommand)
         assertEquals("fx login", provider(id = "fx").hostSignInCommand)

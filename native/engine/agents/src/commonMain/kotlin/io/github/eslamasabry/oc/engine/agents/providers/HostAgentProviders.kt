@@ -48,6 +48,9 @@ public enum class HostAgentSignInMessageKey {
     /** "Sign in on your computer: run gemini there, then check again." */
     HostAgentSignInGemini,
 
+    /** "Run agy acp --login on your computer, finish Google sign-in in your browser, then check again." */
+    HostAgentSignInAntigravity,
+
     /** "Run omp on your computer, use /login to sign in, then check again." */
     HostAgentSignInOmp,
 
@@ -115,6 +118,7 @@ public class HostAgentProvider(
     public val hostSignInCommand: String?
         get() = when (id) {
             "gemini" -> "gemini"
+            "antigravity" -> "agy acp --login"
             "omp", "omp-acp" -> "omp"
             "fx" -> "fx login"
             else -> null
@@ -123,6 +127,7 @@ public class HostAgentProvider(
     public val signInMessage: HostAgentSignInMessageKey
         get() = when (id) {
             "gemini" -> HostAgentSignInMessageKey.HostAgentSignInGemini
+            "antigravity" -> HostAgentSignInMessageKey.HostAgentSignInAntigravity
             "omp", "omp-acp" -> HostAgentSignInMessageKey.HostAgentSignInOmp
             else -> HostAgentSignInMessageKey.HostAgentSignInGeneric
         }

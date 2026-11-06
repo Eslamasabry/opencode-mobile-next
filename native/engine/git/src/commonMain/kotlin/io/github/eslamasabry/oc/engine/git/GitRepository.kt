@@ -9,6 +9,7 @@ import kotlinx.coroutines.withContext
 /** Every action the page offers; also the page's busy state. */
 public enum class GitAction {
     Refresh,
+    Initialize,
     Pull,
     Push,
     Commit,
@@ -19,6 +20,7 @@ public enum class GitAction {
     Diff,
     AddRemote,
     Clone,
+    Publish,
 }
 
 /** Something worth saying about an action that worked. */
@@ -34,6 +36,8 @@ public enum class GitActionNote {
     IdentitySaved,
     RemoteAdded,
     Cloned,
+    Initialized,
+    GitHubRepositoryCreated,
 }
 
 public data class GitActionResult(
@@ -815,6 +819,13 @@ public class GitRepository(
         if (!step.ok) return fail(GitAction.Refresh, null, step)
         return GitActionResult.success(GitAction.Refresh, GitActionNote.UpToDate)
     }
+
+    /**
+     * Starts Git in the project without changing its files. The first branch is `main`, as on a new GitHub repository,
+     * whatever the server's own git defaults to (Flutter `GitRepository.initialize`).
+     */
+    public suspend fun initialize(): GitActionResult =
+        single(GitAction.Initialize, GIT + listOf("init", "-b", "main"), GitActionNote.Initialized)
 
     /**
      * `git remote add <name> <url>`, both checked first; an address with a password is refused

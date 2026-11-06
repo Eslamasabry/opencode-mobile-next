@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Git page: GitHub repository picker, Initialize and Publish to GitHub. Words are the Flutter ARB copy (eabb3e940, 70c877432). -->
+<resources>
+    <string name="gitRemotePickGitHub">اختر من GitHub</string>
+    <string name="gitRemotePickGitHubTitle">اختر مستودعًا</string>
+    <string name="gitRemotePickGitHubNone">لا توجد مستودعات في حساب GitHub هذا بعد.</string>
+    <string name="gitRemoteRepoPrivate">خاص</string>
+    <string name="gitProblemInvalidGitHubRepositoryName">استخدم اسمًا لا يتجاوز 100 حرف أو رقم أو نقطة أو شرطة.</string>
+    <string name="gitProblemGitHubRepositoryNameUnavailable">هذا الاسم مستخدم أو غير متاح في حسابك على GitHub. جرّب اسمًا آخر.</string>
+    <string name="gitActionInitialize">بدء التتبّع</string>
+    <string name="gitActionPublish">إنشاء على GitHub</string>
+    <string name="gitBusyInitialize">جارٍ إعداد Git في هذا المشروع…</string>
+    <string name="gitBusyPublish">جارٍ إنشاء المستودع على GitHub…</string>
+    <string name="gitDoneInitialized">أصبح Git جاهزًا في هذا المشروع.</string>
+    <string name="gitDoneGitHubRepositoryCreated">تم إنشاء المستودع على GitHub وربطه. لم يتم إرسال ملفات مشروعك بعد.</string>
+    <string name="gitInitializeProject">بدء تتبّع هذا المشروع</string>
+    <string name="gitInitializeProjectHint">احتفظ بهذه الملفات هنا وابدأ باستخدام Git.</string>
+    <string name="gitPublishToGitHub">إنشاء مستودع على GitHub</string>
+    <string name="gitPublishToGitHubHint">اختر اسمًا ومن يمكنه رؤيته.</string>
+    <string name="gitPublishTitle">إنشاء مستودع</string>
+    <string name="gitPublishName">اسم المستودع</string>
+    <string name="gitPublishNameHint">استخدم أحرفًا أو أرقامًا أو نقاطًا أو شرطات.</string>
+    <string name="gitPublishVisibility">من يمكنه رؤيته؟</string>
+    <string name="gitPublishPrivate">خاص</string>
+    <string name="gitPublishPublic">عام</string>
+    <string name="gitPublishPrivateHint">يمكنك أنت والأشخاص الذين تختارهم فقط رؤية هذا المستودع.</string>
+    <string name="gitPublishPublicHint">يمكن لأي شخص رؤية هذا المستودع.</string>
+    <string name="gitPublishButton">إنشاء المستودع</string>
+</resources>

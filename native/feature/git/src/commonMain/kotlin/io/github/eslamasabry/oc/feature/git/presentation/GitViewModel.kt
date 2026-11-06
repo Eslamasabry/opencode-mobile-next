@@ -105,6 +105,20 @@ public class GitViewModel(
         if (!repairUi.value.running) presenter.addRemote(name, url)
     }
 
+    override fun initialize(): Unit {
+        if (!repairUi.value.running) presenter.initialize()
+    }
+
+    override fun openPublish(): Unit = presenter.openPublish()
+
+    override fun publish(name: String, isPrivate: Boolean): Unit {
+        if (!repairUi.value.running) presenter.publish(name, isPrivate)
+    }
+
+    override fun pickGitHubRepository(): Unit = presenter.pickGitHubRepository()
+
+    override fun closeRepositoryChoices(): Unit = presenter.closeRepositoryChoices()
+
     override fun clone(url: String, folder: String): Unit {
         if (!repairUi.value.running) presenter.clone(url, folder)
     }

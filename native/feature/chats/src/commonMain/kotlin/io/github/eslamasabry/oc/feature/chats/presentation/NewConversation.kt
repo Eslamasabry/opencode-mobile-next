@@ -387,7 +387,21 @@ public class NewConversationViewModel(
 
     // This entry owns its draft in memory while pickers or other pages cover it. A new entry
     // starts empty; resuming must never import another conversation's old project draft.
-    override fun shown() {}
+    /** Agent setup was opened from here: the agents may have changed when this screen is shown again. */
+    private var refreshOnShown = false
+
+    override fun shown() {
+        if (!refreshOnShown) return
+        val profile = mutable.value.profile ?: return
+        refreshOnShown = false
+        viewModelScope.launch {
+            // Only the offered agents are reread: the draft, project, model and agent stay as they are.
+            val loaded = host.setup(profile) as? Outcome.Ok ?: return@launch
+            mutable.update {
+                if (it.profile == profile && it.setup != null) it.copy(setup = loaded.value) else it
+            }
+        }
+    }
 
     override fun back() {
         val shown = mutable.value
@@ -401,7 +415,10 @@ public class NewConversationViewModel(
         }
     }
 
-    override fun agents(): Unit = nav.open(AgentsRoute.Home)
+    override fun agents() {
+        refreshOnShown = true
+        nav.open(AgentsRoute.Home)
+    }
 
     override fun addServer(): Unit = nav.open(ServersRoute.Home)
 

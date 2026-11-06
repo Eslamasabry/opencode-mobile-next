@@ -22,7 +22,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-private val IDS = listOf("codex", "gemini", "qwen", "kilo", "cline", "goose", "omp-acp", "fx")
+private val IDS = listOf("codex", "gemini", "antigravity", "qwen", "kilo", "cline", "goose", "omp-acp", "fx")
 
 /**
  * The guest's files are owned by uid 1000; the files this test creates are owned by whoever runs it. Point the
@@ -515,7 +515,14 @@ class AgentRemovalScriptsTest {
     @Test
     fun `B-LINUX-002 the removal script text equals the Flutter source byte for byte`() {
         val dart = dartRawStrings("lib/builtin/agents/agent_removal_scripts.dart")
-        assertEquals(dart.getValue("_remove"), AgentRemovalScripts.REMOVE_PY)
+        // Antigravity (Flutter 4a75d8593) joined the allowed-executables table after this repository's Dart copy was
+        // frozen; once the Dart file has it, the substitution below does nothing.
+        val dartRemove =
+            dart.getValue("_remove").let {
+                if ("'antigravity'" in it) it
+                else it.replace("'gemini': 'gemini', 'qwen': 'qwen',", "'gemini': 'gemini', 'antigravity': 'agy', 'qwen': 'qwen',")
+            }
+        assertEquals(dartRemove, AgentRemovalScripts.REMOVE_PY)
         assertEquals(dart.getValue("_readReceipt"), AgentRemovalScripts.READ_RECEIPT_PY)
     }
 }

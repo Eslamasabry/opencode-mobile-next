@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Antigravity CLI (Flutter 4a75d8593). -->
+<resources>
+    <string name="agentPersonaAntigravityStrength">Antigravity in your terminal</string>
+    <string name="agentPersonaAntigravityAbout">Google’s terminal-first way to work with Antigravity agents.</string>
+    <string name="agentPersonaAntigravityNeeds">A Google account; sign in in your browser</string>
+    <string name="agentsAntigravitySignInIntro">Antigravity gives you a sign-in link in the terminal. Open it in your browser and sign in with Google, then paste the browser’s code into the terminal.</string>
+    <string name="agentsGeminiMigrationNote">If Gemini CLI asks you to use Antigravity, go back to Agents and install Antigravity (agy). Your Gemini conversations stay here.</string>
+</resources>

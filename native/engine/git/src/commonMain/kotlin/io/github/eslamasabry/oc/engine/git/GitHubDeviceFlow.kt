@@ -10,12 +10,17 @@ import io.ktor.client.request.setBody
 import io.ktor.client.request.url
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
+import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
+import io.ktor.http.contentType
 import io.ktor.http.Parameters
 import kotlinx.coroutines.delay
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.longOrNull
+import kotlinx.serialization.json.put
 
 // GitHub sign-in by device flow (RFC 8628 as GitHub runs it; port of lib/domain/git/github_device_flow.dart). The app
 // asks GitHub for a short code, the person opens github.com/login/device and types it, and the app polls until
@@ -30,6 +35,7 @@ public const val GITHUB_SCOPE: String = "repo"
 public const val GITHUB_DEVICE_CODE_URL: String = "https://github.com/login/device/code"
 public const val GITHUB_ACCESS_TOKEN_URL: String = "https://github.com/login/oauth/access_token"
 public const val GITHUB_USER_URL: String = "https://api.github.com/user"
+public const val GITHUB_USER_REPOS_URL: String = "https://api.github.com/user/repos"
 
 /** Where people review or revoke the app's access. */
 public const val GITHUB_AUTHORIZED_APPS_URL: String = "https://github.com/settings/connections/applications/$GITHUB_CLIENT_ID"
@@ -100,6 +106,66 @@ public enum class GitHubSignInProblem {
     Cancelled,
 }
 
+/** One repository of the signed-in account (`GET /user/repos`; port of GitHubRepository in github_device_flow.dart). */
+public data class GitHubRepository(
+    val fullName: String,
+    val htmlUrl: String,
+    val cloneUrl: String,
+    val defaultBranch: String,
+    val isPrivate: Boolean,
+) {
+    /** The address to add as a remote: GitHub's clone URL, else the page address with `.git`. */
+    val remoteUrl: String
+        get() =
+            when {
+                cloneUrl.isNotEmpty() -> cloneUrl
+                htmlUrl.endsWith(".git") -> htmlUrl
+                else -> "$htmlUrl.git"
+            }
+}
+
+/** Why creating a repository on GitHub did not work. */
+public enum class GitHubRepositoryProblem {
+    /** The name does not meet GitHub's rules (or GitHub refused another field). */
+    InvalidName,
+
+    /** The account already has a repository with that name. */
+    NameUnavailable,
+
+    /** There is no usable token, or GitHub refused it: sign in again. */
+    TokenRejected,
+
+    /** The token may not create repositories. */
+    PermissionDenied,
+    Network,
+    Unexpected,
+}
+
+/** The outcome of creating a repository: the repository, or a typed problem (details never hold a token). */
+public sealed interface GitHubCreateResult {
+    public data class Created(val repository: GitHubRepository) : GitHubCreateResult
+
+    public data class Failed(val problem: GitHubRepositoryProblem, val details: String = "") : GitHubCreateResult
+}
+
+private val GITHUB_REPOSITORY_NAME = Regex("^[A-Za-z0-9._-]{1,100}$")
+
+/** GitHub's rule for a repository name: 1 to 100 letters, digits, dots, dashes or underscores; not `.` or `..`. */
+public fun isValidGitHubRepositoryName(name: String): Boolean = GITHUB_REPOSITORY_NAME.matches(name) && name != "." && name != ".."
+
+/**
+ * A repository name suggested for the project folder [directory]: its last part with anything GitHub would refuse
+ * turned into a dash, leading and trailing dots and dashes dropped, at most 100 characters; `project` when nothing
+ * is left (port of `_suggestRepositoryName` in git_sheet_steps.dart).
+ */
+public fun suggestGitHubRepositoryName(directory: String?): String {
+    val folder = (directory ?: "project").split('/').filter { it.isNotEmpty() }.lastOrNull() ?: "project"
+    val normalized =
+        folder.replace(Regex("[^A-Za-z0-9._-]+"), "-").replace(Regex("^[.-]+|[.-]+$"), "")
+    val name = normalized.ifEmpty { "project" }
+    return if (name.length > 100) name.substring(0, 100) else name
+}
+
 /** A finished device-flow step: a value, or a typed problem with GitHub's `error` words for Details (never a token). */
 public sealed interface GitHubResult<out T> {
     public data class Ok<out T>(val value: T) : GitHubResult<T>
@@ -114,10 +180,16 @@ public interface GitHubHttp {
 
     /** `GET /user` with the bearer [token]. */
     public suspend fun getUser(token: String): GitHubReply
+
+    /** `GET /user/repos?per_page=<perPage>&sort=updated` with the bearer [token]; the list is [GitHubReply.Answer.array]. */
+    public suspend fun listRepositories(token: String, perPage: Int): GitHubReply
+
+    /** `POST /user/repos` with `{name, private}` and the bearer [token]. */
+    public suspend fun createRepository(token: String, name: String, isPrivate: Boolean): GitHubReply
 }
 
 public sealed interface GitHubReply {
-    public data class Answer(val status: Int, val body: JsonObject?) : GitHubReply {
+    public data class Answer(val status: Int, val body: JsonObject?, val array: JsonArray? = null) : GitHubReply {
         override fun toString(): String = "Answer($status)"
     }
 
@@ -254,6 +326,72 @@ public class GitHubDeviceFlow(
             }
         }
 
+    /**
+     * The signed-in account's visible repositories, most recently updated first (`GET /user/repos`). A 401 is
+     * [GitHubSignInProblem.TokenRejected]; broken entries (no `full_name`) are skipped.
+     */
+    public suspend fun fetchRepositories(token: String, perPage: Int = 100): GitHubResult<List<GitHubRepository>> =
+        when (val reply = http.listRepositories(token, perPage)) {
+            GitHubReply.Unreachable -> GitHubResult.Problem(GitHubSignInProblem.Network)
+            is GitHubReply.Answer -> {
+                val list = reply.array
+                when {
+                    reply.status == 401 -> GitHubResult.Problem(GitHubSignInProblem.TokenRejected)
+                    reply.status != 200 || list == null ->
+                        GitHubResult.Problem(GitHubSignInProblem.Unexpected, "GET /user/repos answered ${reply.status}")
+                    else -> GitHubResult.Ok(list.mapNotNull { (it as? JsonObject)?.let(::repository) })
+                }
+            }
+        }
+
+    /**
+     * Creates an empty repository in the signed-in user's account (`POST /user/repos`). A 422 reads "name already
+     * taken" only when GitHub's error has code `already_exists` on field `name`; any other 422 is an invalid name.
+     */
+    public suspend fun createRepository(token: String, name: String, isPrivate: Boolean): GitHubCreateResult {
+        if (!isValidGitHubRepositoryName(name)) return GitHubCreateResult.Failed(GitHubRepositoryProblem.InvalidName)
+        return when (val reply = http.createRepository(token, name, isPrivate)) {
+            GitHubReply.Unreachable -> GitHubCreateResult.Failed(GitHubRepositoryProblem.Network)
+            is GitHubReply.Answer -> {
+                if (reply.status != 201) {
+                    val problem =
+                        when (reply.status) {
+                            401 -> GitHubRepositoryProblem.TokenRejected
+                            403 -> GitHubRepositoryProblem.PermissionDenied
+                            422 ->
+                                if (nameTaken(reply.body)) GitHubRepositoryProblem.NameUnavailable
+                                else GitHubRepositoryProblem.InvalidName
+                            0 -> GitHubRepositoryProblem.Network
+                            in 500..599 -> GitHubRepositoryProblem.Network
+                            else -> GitHubRepositoryProblem.Unexpected
+                        }
+                    GitHubCreateResult.Failed(problem, "POST /user/repos answered ${reply.status}")
+                } else {
+                    val made = reply.body?.let(::repository)
+                    if (made == null) GitHubCreateResult.Failed(GitHubRepositoryProblem.Unexpected)
+                    else GitHubCreateResult.Created(made)
+                }
+            }
+        }
+    }
+
+    private fun repository(o: JsonObject): GitHubRepository? {
+        val fullName = o.str("full_name")?.takeIf { it.isNotBlank() } ?: return null
+        return GitHubRepository(
+            fullName = fullName,
+            htmlUrl = o.str("html_url").orEmpty(),
+            cloneUrl = o.str("clone_url").orEmpty(),
+            defaultBranch = o.str("default_branch") ?: "main",
+            isPrivate = (o["private"] as? JsonPrimitive)?.takeIf { !it.isString }?.content == "true",
+        )
+    }
+
+    private fun nameTaken(body: JsonObject?): Boolean =
+        (body?.get("errors") as? JsonArray)?.any {
+            val e = it as? JsonObject
+            e?.str("code") == "already_exists" && e.str("field") == "name"
+        } == true
+
     private fun credential(body: JsonObject): GitHubResult<GitHubCredential> {
         val token = body.str("access_token")
         if (token.isNullOrEmpty()) return GitHubResult.Problem(GitHubSignInProblem.Unexpected)
@@ -342,6 +480,42 @@ public class NetGitHubHttp(private val github: NetClient, private val api: NetCl
             is Outcome.Failed -> statusOf(reply.failure)?.let { GitHubReply.Answer(it, null) } ?: GitHubReply.Unreachable
         }
     }
+
+    override suspend fun listRepositories(token: String, perPage: Int): GitHubReply =
+        api.exchangeAnswer({
+            method = HttpMethod.Get
+            url("$GITHUB_USER_REPOS_URL?per_page=$perPage&sort=updated")
+            header(HttpHeaders.Accept, "application/vnd.github+json")
+            header(HttpHeaders.Authorization, "Bearer $token")
+            header("X-GitHub-Api-Version", "2022-11-28")
+        }) { response -> answer(response.status.value, response.bodyAsText()) }.asReply()
+
+    override suspend fun createRepository(token: String, name: String, isPrivate: Boolean): GitHubReply =
+        api.exchangeAnswer({
+            method = HttpMethod.Post
+            url(GITHUB_USER_REPOS_URL)
+            header(HttpHeaders.Accept, "application/vnd.github+json")
+            header(HttpHeaders.Authorization, "Bearer $token")
+            header("X-GitHub-Api-Version", "2022-11-28")
+            contentType(ContentType.Application.Json)
+            setBody(
+                buildJsonObject {
+                    put("name", name)
+                    put("private", isPrivate)
+                }.toString(),
+            )
+        }) { response -> answer(response.status.value, response.bodyAsText()) }.asReply()
+
+    private fun answer(status: Int, text: String): GitHubReply {
+        val parsed = ServerGitShell.parseJson(text)
+        return GitHubReply.Answer(status, parsed as? JsonObject, parsed as? JsonArray)
+    }
+
+    private fun Outcome<GitHubReply>.asReply(): GitHubReply =
+        when (this) {
+            is Outcome.Ok -> value
+            is Outcome.Failed -> GitHubReply.Unreachable
+        }
 
     /** The status a failed exchange stands for, when it was an answer and not a transport failure. */
     private fun statusOf(failure: Failure): Int? =

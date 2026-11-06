@@ -81,7 +81,13 @@ class AgentInstallerTest {
         for (agent in AgentCatalog.builtIn.agents.filter { it.runsOnPhoneHost }) {
             for (arch in AgentArchitecture.entries) {
                 val artifact = agent.artifactFor(arch)!!
-                assertEquals(artifact.downloadBytes!! + artifact.installedBytes!!, installer.requiredBytes(agent.id, arch), agent.id.raw)
+                // The retained archive and the extracted payload coexist, plus 64 MiB of scratch (Dart
+                // requiredSetupFreeBytes); never less than the legacy 300 MB / 2x policy.
+                // The guard reserves for the largest download of the agent, whichever architecture installs.
+                val download = agent.recipe!!.artifacts.values.maxOf { it.downloadBytes!! }
+                val peak = download + artifact.installedBytes!! + 64L * 1024 * 1024
+                val expected = maxOf(maxOf(download * 2, 300L * 1000 * 1000), peak)
+                assertEquals(expected, installer.requiredBytes(agent.id, arch), agent.id.raw)
             }
         }
         val need = installer.requiredBytes(codex, AgentArchitecture.Arm64)!!

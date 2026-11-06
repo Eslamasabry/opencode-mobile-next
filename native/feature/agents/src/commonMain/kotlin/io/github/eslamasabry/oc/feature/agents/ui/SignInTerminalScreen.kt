@@ -29,10 +29,13 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.state.KitInlineState
 import io.github.eslamasabry.oc.ui.kit.state.KitPageState
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.agentAccountApiKey
 import io.github.eslamasabry.oc.ui.words.res.agentsSignInChecking
+import io.github.eslamasabry.oc.ui.words.res.agentsAntigravitySignInIntro
+import io.github.eslamasabry.oc.ui.words.res.agentsGeminiMigrationNote
 import io.github.eslamasabry.oc.ui.words.res.agentsSignInCopyCode
 import io.github.eslamasabry.oc.ui.words.res.agentsSignInDone
 import io.github.eslamasabry.oc.ui.words.res.agentsSignInOpenPage
@@ -106,20 +109,35 @@ public fun SignInTerminalScreen(
                 else Res.string.localTerminalStarting
             ),
         header = {
-            KitText(
-                stringResource(
-                    if (state.usesClaudeAccount) Res.string.agentsSignInTerminalIntro
-                    else Res.string.agentsSignInTerminalIntroOther,
-                    state.agentName,
-                ),
-                Modifier.padding(
-                    start = LocalKitTokens.current.gutter.dp,
-                    top = Space.S1.dp,
-                    end = LocalKitTokens.current.gutter.dp,
-                    bottom = Space.S2.dp,
-                ),
-                tone = TextTone.Secondary,
-            )
+            Column {
+                KitText(
+                    if (state.pastesBrowserCode)
+                        stringResource(Res.string.agentsAntigravitySignInIntro)
+                    else
+                        stringResource(
+                            if (state.usesClaudeAccount) Res.string.agentsSignInTerminalIntro
+                            else Res.string.agentsSignInTerminalIntroOther,
+                            state.agentName,
+                        ),
+                    Modifier.padding(
+                        start = LocalKitTokens.current.gutter.dp,
+                        top = Space.S1.dp,
+                        end = LocalKitTokens.current.gutter.dp,
+                        bottom = Space.S2.dp,
+                    ),
+                    tone = TextTone.Secondary,
+                )
+                // Gemini CLI's own sign-in may ask people to move to Antigravity: say what to do here.
+                if (state.offersAntigravityNote && state.step != SignInStep.SignedIn)
+                    KitNotice(
+                        stringResource(Res.string.agentsGeminiMigrationNote),
+                        Modifier.padding(
+                            start = LocalKitTokens.current.gutter.dp,
+                            end = LocalKitTokens.current.gutter.dp,
+                            bottom = Space.S2.dp,
+                        ),
+                    )
+            }
         },
     ) {
         KitBackGuard(state.linkPrompt == null, actions::leave)

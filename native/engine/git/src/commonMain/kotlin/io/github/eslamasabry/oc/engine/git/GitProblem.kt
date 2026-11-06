@@ -50,6 +50,12 @@ public enum class GitProblem {
     InvalidRemoteUrl,
     RemoteAddressHasPassword,
     RemoteExists,
+
+    /** The GitHub repository name does not meet GitHub's naming rules. */
+    InvalidGitHubRepositoryName,
+
+    /** The signed-in account already has a repository with this name. */
+    GitHubRepositoryNameUnavailable,
     InvalidFolderName,
     FolderExists,
 
