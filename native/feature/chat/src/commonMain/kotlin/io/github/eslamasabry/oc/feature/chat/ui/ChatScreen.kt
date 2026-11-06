@@ -2,11 +2,9 @@ package io.github.eslamasabry.oc.feature.chat.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -43,7 +41,6 @@ import io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatStatusKind
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatStatusUi
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatUi
-import io.github.eslamasabry.oc.feature.chat.presentation.FindUi
 import io.github.eslamasabry.oc.feature.chat.presentation.MessageAction
 import io.github.eslamasabry.oc.feature.chat.presentation.MessageMenuUi
 import io.github.eslamasabry.oc.feature.chat.presentation.MessageOrder
@@ -64,10 +61,9 @@ import io.github.eslamasabry.oc.feature.chat.tasks.ui.ChatTasksSheet
 import io.github.eslamasabry.oc.ui.design.effects.FrostRole
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.tokens.Space
-import io.github.eslamasabry.oc.ui.kit.KitButton
-import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFrost
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFrostSource
@@ -77,7 +73,6 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.frame.kitScreenChromePadding
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
-import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
@@ -94,6 +89,7 @@ import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitReadRequest
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitReplyReader
+import io.github.eslamasabry.oc.ui.kitchat.header.KitChatMoreMenu
 import io.github.eslamasabry.oc.ui.kitchat.image.KitPictureContent
 import io.github.eslamasabry.oc.ui.kitchat.image.KitPictureView
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownActions
@@ -101,7 +97,6 @@ import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownSelection
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitPromptLiftHost
 import io.github.eslamasabry.oc.ui.kitchat.stream.rememberRevealRegistry
-import io.github.eslamasabry.oc.ui.kitchat.transcript.KitFindExcerpt
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.kitchat.transcript.rememberTranscriptListState
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -124,7 +119,6 @@ import io.github.eslamasabry.oc.ui.words.res.chatFeelPictureLoading
 import io.github.eslamasabry.oc.ui.words.res.chatFeelPictureOnServer
 import io.github.eslamasabry.oc.ui.words.res.chatFeelPictureOnWeb
 import io.github.eslamasabry.oc.ui.words.res.chatFeelSelectText
-import io.github.eslamasabry.oc.ui.words.res.chatUiCopyMessageText
 import io.github.eslamasabry.oc.ui.words.res.chatFeelShare
 import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoAction
 import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoBody
@@ -145,18 +139,19 @@ import io.github.eslamasabry.oc.ui.words.res.chatSendFailedChanged
 import io.github.eslamasabry.oc.ui.words.res.chatUiChanges
 import io.github.eslamasabry.oc.ui.words.res.chatUiCollapseReasoning
 import io.github.eslamasabry.oc.ui.words.res.chatUiContextCompacted
+import io.github.eslamasabry.oc.ui.words.res.chatUiCopyMessageText
 import io.github.eslamasabry.oc.ui.words.res.chatUiDeleteMessage
 import io.github.eslamasabry.oc.ui.words.res.chatUiDeleteThisMessage
 import io.github.eslamasabry.oc.ui.words.res.chatUiEarlierMessageCount
 import io.github.eslamasabry.oc.ui.words.res.chatUiExpandReasoning
 import io.github.eslamasabry.oc.ui.words.res.chatUiFiles
-import io.github.eslamasabry.oc.ui.words.res.chatUiTimeline
 import io.github.eslamasabry.oc.ui.words.res.chatUiForkFromThisPrompt
 import io.github.eslamasabry.oc.ui.words.res.chatUiNotConnectedToTheServerRightNow
 import io.github.eslamasabry.oc.ui.words.res.chatUiOpenCodeIsReconnectingTryAgainShortly
 import io.github.eslamasabry.oc.ui.words.res.chatUiPromptNotAnswered
 import io.github.eslamasabry.oc.ui.words.res.chatUiSendPromptAgain
 import io.github.eslamasabry.oc.ui.words.res.chatUiTheMessageAndAllOfItsParts
+import io.github.eslamasabry.oc.ui.words.res.chatUiTimeline
 import io.github.eslamasabry.oc.ui.words.res.commandUntitledChat
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.draftLeaveAction
@@ -176,6 +171,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitMessageActions
 import io.github.eslamasabry.oc.ui.words.res.kitMessageThought
 import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
+import io.github.eslamasabry.oc.ui.words.res.kitTopBarMore
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarSearch
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveSending
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWorking
@@ -208,15 +204,6 @@ import io.github.eslamasabry.oc.ui.words.res.schedulePhoneCheckFailed
 import io.github.eslamasabry.oc.ui.words.res.sessionInstructionsUpdated
 import io.github.eslamasabry.oc.ui.words.res.skillApplied
 import io.github.eslamasabry.oc.ui.words.res.stateDemoDisclosure
-import io.github.eslamasabry.oc.ui.words.res.transcriptFindAll
-import io.github.eslamasabry.oc.ui.words.res.transcriptFindClose
-import io.github.eslamasabry.oc.ui.words.res.transcriptFindCount
-import io.github.eslamasabry.oc.ui.words.res.transcriptFindHint
-import io.github.eslamasabry.oc.ui.words.res.transcriptFindNext
-import io.github.eslamasabry.oc.ui.words.res.transcriptFindNone
-import io.github.eslamasabry.oc.ui.words.res.transcriptFindPartial
-import io.github.eslamasabry.oc.ui.words.res.transcriptFindPrevious
-import io.github.eslamasabry.oc.ui.words.res.transcriptFindStopSearchingAll
 import io.github.eslamasabry.oc.ui.words.res.voiceNativeReadAloud
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -258,10 +245,12 @@ public fun ChatScreen(
     formWaiting: Boolean = false,
     formSlot: (@Composable (Modifier) -> Unit)? = null,
     monitoredForm: (@Composable () -> Unit)? = null,
-    transcriptDisplay: io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices = io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices(),
+    transcriptDisplay: io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices =
+        io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices(),
 ) {
     var contextOpen by remember { mutableStateOf(false) }
     var tasksOpen by remember(state.ref) { mutableStateOf(false) }
+    var barMenuOpen by remember(state.ref) { mutableStateOf(false) }
     val startState by rememberUpdatedState(start)
     val currentStartActions by rememberUpdatedState(startActions)
     KitBackGuard(enabled = state.guardBack, onBack = actions::leaveRequested)
@@ -385,7 +374,7 @@ public fun ChatScreen(
                                         ),
                                         { contextOpen = true },
                                         testTag = "chat-context-open",
-                                                icon = KitIcons.usageRing,
+                                        icon = KitIcons.usageRing,
                                     )
                                 }
                             val unitActions =
@@ -393,12 +382,13 @@ public fun ChatScreen(
                                 (if (demoMode) emptyList()
                                 else
                                     listOfNotNull(
-                                        // Project navigation is in the scope line; these actions stay in the session menu.
+                                        // Project navigation is in the scope line; these actions
+                                        // stay in the session menu.
                                         KitLineAction(
                                             stringResource(Res.string.chatUiFiles),
                                             actions::openFiles,
                                             testTag = "chat-files-open",
-                                                icon = KitIcons.files,
+                                            icon = KitIcons.files,
                                         ),
                                         KitLineAction(
                                             stringResource(Res.string.chatUiTimeline),
@@ -422,13 +412,13 @@ public fun ChatScreen(
                                             stringResource(Res.string.gitSheetTitle),
                                             actions::openGit,
                                             testTag = "chat-git-chip",
-                                                icon = KitIcons.branch,
+                                            icon = KitIcons.branch,
                                         ),
                                         KitLineAction(
                                             stringResource(Res.string.chatUiChanges),
                                             actions::openChanges,
                                             testTag = "chat-changes-open",
-                                                icon = KitIcons.review,
+                                            icon = KitIcons.review,
                                         ),
                                         prompts?.let {
                                             KitLineAction(
@@ -446,13 +436,13 @@ public fun ChatScreen(
                                             ),
                                             actions::toggleReasoning,
                                             testTag = "chat-reasoning-toggle",
-                                                icon = KitIcons.idea,
+                                            icon = KitIcons.idea,
                                         ),
                                         KitLineAction(
                                             stringResource(Res.string.nlibTitle),
                                             actions::openTools,
                                             testTag = "chat-tools-open",
-                                                icon = KitIcons.tools,
+                                            icon = KitIcons.tools,
                                         ),
                                     )) + extraActions
                             if (header != null) {
@@ -485,6 +475,31 @@ public fun ChatScreen(
                                                 icon = KitIcons.search,
                                             ),
                                         ) + unitActions,
+                                    more = { hidden ->
+                                        KitChatMoreMenu(
+                                            label = stringResource(Res.string.kitTopBarMore),
+                                            expanded = barMenuOpen,
+                                            items =
+                                                hidden.map { extra ->
+                                                    KitMenuItem(
+                                                        label = extra.label,
+                                                        onSelect = {
+                                                            barMenuOpen = false
+                                                            extra.onClick()
+                                                        },
+                                                        icon = extra.icon,
+                                                        enabled =
+                                                            if (extra.enabled) KitEnabled.Enabled
+                                                            else
+                                                                KitEnabled.Disabled(
+                                                                    extra.disabledReason.orEmpty()
+                                                                ),
+                                                    )
+                                                },
+                                            onOpen = { barMenuOpen = true },
+                                            onDismissRequest = { barMenuOpen = false },
+                                        )
+                                    },
                                 )
                         }
                     },
@@ -576,10 +591,16 @@ public fun ChatScreen(
                                         onOpenMenu = actions::openMessageMenu,
                                         onCopyReply = { footer ->
                                             actions.messageAction(
-                                                io.github.eslamasabry.oc.feature.chat.presentation.MessageTarget(
-                                                    footer.turnId, footer.key,
-                                                    io.github.eslamasabry.oc.feature.chat.presentation.TargetKind.Reply, null,
-                                                ),
+                                                io.github.eslamasabry.oc.feature.chat.presentation
+                                                    .MessageTarget(
+                                                        footer.turnId,
+                                                        footer.key,
+                                                        io.github.eslamasabry.oc.feature.chat
+                                                            .presentation
+                                                            .TargetKind
+                                                            .Reply,
+                                                        null,
+                                                    ),
                                                 MessageAction.Copy,
                                             )
                                         },
@@ -623,7 +644,12 @@ public fun ChatScreen(
                     reads = replyReader != null,
                 )
                 ChatContextSheet(facts.context, contextOpen) { contextOpen = false }
-                ChatTasksSheet(facts.tasks, tasksOpen, onDismiss = { tasksOpen = false }, running = state.live != null)
+                ChatTasksSheet(
+                    facts.tasks,
+                    tasksOpen,
+                    onDismiss = { tasksOpen = false },
+                    running = state.live != null,
+                )
                 if (activeContext != null) ActiveContextSheet(activeContext)
                 SelectTextSheet(state.select, actions)
                 PictureSheet(state.picture, actions)
@@ -636,8 +662,8 @@ public fun ChatScreen(
                             ChatConfirm.LeaveUnsaved -> actions.confirmLeave()
                             is ChatConfirm.UndoFrom -> actions.confirmUndo()
                             is ChatConfirm.OpenLink -> actions.confirmOpenLink()
-                            is ChatConfirm.PhoneFile, is ChatConfirm.PhoneFileAccess ->
-                                actions.confirmPhoneFile()
+                            is ChatConfirm.PhoneFile,
+                            is ChatConfirm.PhoneFileAccess -> actions.confirmPhoneFile()
                             null -> Unit
                         }
                     },
@@ -736,18 +762,19 @@ internal fun MessageMenu(
                             MessageAction.Delete -> stringResource(Res.string.chatUiDeleteMessage)
                         },
                     onSelect = { menu?.let { actions.messageAction(it.target, action) } },
-                    icon = when (action) {
-                        MessageAction.Copy -> KitIcons.copy
-                        MessageAction.Share -> KitIcons.externalLink
-                        MessageAction.SelectText -> KitIcons.text
-                        MessageAction.EditAndResend -> KitIcons.edit
-                        MessageAction.ReadAloud -> KitIcons.volume
-                        MessageAction.SendAgain -> KitIcons.send
-                        MessageAction.Fork -> KitIcons.fork
-                        MessageAction.Changes -> KitIcons.review
-                        MessageAction.UndoFromHere -> KitIcons.history
-                        MessageAction.Delete -> KitIcons.delete
-                    },
+                    icon =
+                        when (action) {
+                            MessageAction.Copy -> KitIcons.copy
+                            MessageAction.Share -> KitIcons.externalLink
+                            MessageAction.SelectText -> KitIcons.text
+                            MessageAction.EditAndResend -> KitIcons.edit
+                            MessageAction.ReadAloud -> KitIcons.volume
+                            MessageAction.SendAgain -> KitIcons.send
+                            MessageAction.Fork -> KitIcons.fork
+                            MessageAction.Changes -> KitIcons.review
+                            MessageAction.UndoFromHere -> KitIcons.history
+                            MessageAction.Delete -> KitIcons.delete
+                        },
                     destructive = action == MessageAction.Delete,
                 )
             }
@@ -1100,7 +1127,8 @@ internal fun rememberChatWords(): ChatTranscriptWords {
 
             // QA wave 4 B15: the thinking line says what it is ("Thought · …"), not unlabeled grey
             // text.
-            override fun thought(firstLine: String): String = if (firstLine.isBlank()) thoughtWord else thoughtWord + separator + firstLine
+            override fun thought(firstLine: String): String =
+                if (firstLine.isBlank()) thoughtWord else thoughtWord + separator + firstLine
         }
     }
 }
@@ -1191,7 +1219,8 @@ private fun rememberMessageErrorWords(): (MessageErrorKind) -> String {
                 MessageErrorKind.ProviderAuth -> auth
                 MessageErrorKind.OutputLength -> length
                 MessageErrorKind.ContentFilter -> filter
-                MessageErrorKind.Aborted, MessageErrorKind.Unknown -> unknown
+                MessageErrorKind.Aborted,
+                MessageErrorKind.Unknown -> unknown
             }
         }
     }
