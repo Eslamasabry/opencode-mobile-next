@@ -8,6 +8,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -145,7 +146,8 @@ class ChatFeelScreenTest {
             }
             onNodeWithText("Show me the docs").performTouchInput { longClick() }
             waitForIdle()
-            for (label in listOf("Copy", "Share", "Select text", "Edit and resend", "Undo from here")) {
+            // Flutter app_en.arb:3959 `chatUiCopyMessageText`: the menu's copy reads "Copy message text".
+            for (label in listOf("Copy message text", "Share", "Select text", "Edit and resend", "Undo from here")) {
                 assertTrue(onAllNodesWithText(label).fetchSemanticsNodes().isNotEmpty(), "menu shows $label")
             }
             onNodeWithText("Edit and resend").performClick()
@@ -169,7 +171,8 @@ class ChatFeelScreenTest {
             onNodeWithText("Select text").performClick()
             waitForIdle()
             onNodeWithTag("chat-select-text").assertIsDisplayed()
-            onNodeWithText("Done").performClick()
+            // The sheet's Done is its close glyph; its words are what a screen reader says.
+            onNodeWithContentDescription("Done").performClick()
             waitForIdle()
             assertEquals(null, p.current().select)
         }
@@ -235,7 +238,7 @@ class ChatFeelScreenTest {
             onNodeWithTag("chat-reply-failed").assertExists()
             onNodeWithTag("chat-turn-footer").performClick()
             waitForIdle()
-            for (label in listOf("Copy", "Share", "Select text")) {
+            for (label in listOf("Copy message text", "Share", "Select text")) {
                 assertTrue(onAllNodesWithText(label).fetchSemanticsNodes().isNotEmpty(), "menu shows $label")
             }
         }
@@ -286,7 +289,8 @@ class ChatFeelScreenTest {
                 val state by states.collectAsState()
                 Root { ChatScreen(state, p, composer) }
             }
-            onNodeWithText("The connection to the model's provider was lost", substring = true).assertExists()
+            // Flutter app_en.arb:11507 `agentErrorConnectionDropped` (agentFailureWords).
+            onNodeWithText("The connection to the model dropped.", substring = true).assertExists()
             onNodeWithText("Continue").performClick()
             waitForIdle()
             assertEquals(listOf("sendAgain Continue"), world.calls.filter { it.startsWith("send") })
@@ -309,7 +313,8 @@ class ChatFeelScreenTest {
                 val state by states.collectAsState()
                 Root { ChatScreen(state, p, composer) }
             }
-            onNodeWithText("has no credit for this model", substring = true).assertExists()
+            // Flutter app_en.arb:11555 `agentErrorOutOfCredit` (agentFailureWords).
+            onNodeWithText("out of credit or quota", substring = true).assertExists()
             onAllNodesWithText("busy", substring = true).assertCountEquals(0)
             onAllNodesWithText("Continue").assertCountEquals(0)
         }

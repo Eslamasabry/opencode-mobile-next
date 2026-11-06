@@ -229,8 +229,8 @@ class ChatPresenterTest {
         val p = presenter()
         p.openMessageMenu("prompt:u1")
         assertEquals(listOf(MessageAction.Copy, MessageAction.SendAgain), p.current().menu!!.actions)
-        p.openMessageMenu("b:a1/p1:0") // a block is not a way into the menu
-        assertEquals(TargetKind.Prompt, p.current().menu!!.target.kind)
+        p.openMessageMenu("b:a1/p1:0") // b5c13ca67 (U6): a tap or hold on a reply's block opens that reply's menu
+        assertEquals(TargetKind.Reply, p.current().menu!!.target.kind)
         assertEquals(false, p.current().capabilities.fork)
     }
 
@@ -263,10 +263,12 @@ class ChatPresenterTest {
     }
 
     @Test
-    fun `09-7_3 the earlier-messages pill opens find while the timeline sheet is not built`() {
+    fun `09-7_3 the earlier-messages pill opens the timeline sheet`() {
+        // Flutter chat_transcript.dart:210: the pill opens the timeline sheet (now built), not find.
         val p = presenter()
         p.openTimeline()
-        assertEquals("", p.current().find?.query)
+        assertEquals("", p.current().timeline?.query)
+        assertNull(p.current().find)
     }
 
     // ---- The live line, stop and sends ----
@@ -364,6 +366,12 @@ class ChatPresenterTest {
         val p = presenter()
         p.syncRead()
         assertEquals(0, world.reads, "never while loading")
+        world.load.value = ChatLoad.Live
+        p.syncRead()
+        assertEquals(0, world.reads, "a reply still running is not read yet (the read check requires an idle run)")
+        world.load.value = ChatLoad.Loading
+        p.syncRead()
+        world.transcript.value = stateOf(*turn(1).toTypedArray())
         world.load.value = ChatLoad.Live
         p.syncRead()
         assertEquals(1, world.reads, "loaded at the live edge")

@@ -52,4 +52,9 @@ class SelectivePrefs(val inner: MemoryComposerPrefs = MemoryComposerPrefs()) : C
         if (edit.entries.keys.any { it in refused }) return false
         return inner.commit(edit)
     }
+
+    override suspend fun compareAndCommit(expected: Map<String, String?>, edit: PrefsEdit): Boolean {
+        if (edit.entries.keys.any { it in refused }) return false
+        return inner.compareAndCommit(expected, edit)
+    }
 }

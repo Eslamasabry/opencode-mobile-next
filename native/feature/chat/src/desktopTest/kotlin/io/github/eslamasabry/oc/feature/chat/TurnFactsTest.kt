@@ -366,8 +366,10 @@ class TurnFactsTest {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(screenState(), actions, composer, facts = screenFacts()) } }
             onNodeWithTag("chat-context-open").assertIsDisplayed().performClick()
-            onNodeWithText("Conversation context").assertIsDisplayed()
-            onNodeWithText("Cache read").assertIsDisplayed()
+            // The bar opens the small context-window summary (ChatContextSheet); the session metrics,
+            // cache activity among them, are a separate page now.
+            assertTrue(onAllNodesWithText("Context window").fetchSemanticsNodes().isNotEmpty())
+            onNodeWithText("Model").assertIsDisplayed()
         }
 
     @Test

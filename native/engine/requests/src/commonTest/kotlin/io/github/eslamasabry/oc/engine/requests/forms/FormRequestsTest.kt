@@ -47,7 +47,7 @@ class FormRequestsTest {
 
     @Test
     fun `B-PROTO-044 an answer is held 3 s, then posted once and the form settles`() = runTest {
-        val gateway = ScriptedForms()
+        val gateway = ScriptedForms(listed = listOf(form1))
         val forms = engine(gateway)
         forms.onEvent(GatewayEvent.FormCreated(form1))
         assertEquals(FormAnswerResult.Held, forms.answer(FormId("frm_1"), named))
@@ -64,7 +64,7 @@ class FormRequestsTest {
 
     @Test
     fun `B-CHAT-074 a second answer while one is held or sending is ignored, first decision wins`() = runTest {
-        val gateway = ScriptedForms()
+        val gateway = ScriptedForms(listed = listOf(form1))
         val forms = engine(gateway)
         forms.onEvent(GatewayEvent.FormCreated(form1))
         forms.answer(FormId("frm_1"), named)
@@ -102,7 +102,7 @@ class FormRequestsTest {
 
     @Test
     fun `B-PROTO-044 a 400 invalid answer keeps the form pending with the reason`() = runTest {
-        val gateway = ScriptedForms().apply { next = Failure.Rejected(400, WireTag("FormInvalidAnswerError")).failed() }
+        val gateway = ScriptedForms(listed = listOf(form1)).apply { next = Failure.Rejected(400, WireTag("FormInvalidAnswerError")).failed() }
         val forms = engine(gateway)
         forms.onEvent(GatewayEvent.FormCreated(form1))
         forms.answer(FormId("frm_1"), named)
@@ -115,7 +115,7 @@ class FormRequestsTest {
 
     @Test
     fun `B-PROTO-044 an already-settled reply resolves locally and says once it was answered elsewhere`() = runTest {
-        val gateway = ScriptedForms().apply { next = Failure.Conflict(WireTag("FormAlreadySettledError")).failed() }
+        val gateway = ScriptedForms(listed = listOf(form1)).apply { next = Failure.Conflict(WireTag("FormAlreadySettledError")).failed() }
         val forms = engine(gateway)
         forms.onEvent(GatewayEvent.FormCreated(form1))
         forms.answer(FormId("frm_1"), named)
@@ -130,7 +130,7 @@ class FormRequestsTest {
     @Test
     fun `B-PROTO-048 a late failure after the server settled the form shows no error`() = runTest {
         val gate = CompletableDeferred<Unit>()
-        val gateway = ScriptedForms().apply {
+        val gateway = ScriptedForms(listed = listOf(form1)).apply {
             this.gate = gate
             next = Failure.Network().failed()
         }
@@ -149,7 +149,7 @@ class FormRequestsTest {
     @Test
     fun `STATE-10 a send that takes over 8 s says Not confirmed yet`() = runTest {
         val gate = CompletableDeferred<Unit>()
-        val gateway = ScriptedForms().apply { this.gate = gate }
+        val gateway = ScriptedForms(listed = listOf(form1)).apply { this.gate = gate }
         val forms = engine(gateway)
         forms.onEvent(GatewayEvent.FormCreated(form1))
         forms.answer(FormId("frm_1"), named)
@@ -198,7 +198,7 @@ class FormRequestsTest {
 
     @Test
     fun `CHAT-GENUI-43 leaving one chat sends only its held answers`() = runTest {
-        val gateway = ScriptedForms()
+        val gateway = ScriptedForms(listed = listOf(form1, form2))
         val forms = engine(gateway)
         forms.onEvent(GatewayEvent.FormCreated(form1))
         forms.onEvent(GatewayEvent.FormCreated(form2))

@@ -68,7 +68,8 @@ public fun SessionRelationsScreen(state: SessionRelationsUi, actions: SessionRel
                     else
                         listOf(
                             KitLineAction(
-                                stringResource(Res.string.r40RelationsRefresh),
+                                // Flutter session_relations_screen.dart:284.
+                                stringResource(Res.string.e7SharedRefreshSubagentSessions),
                                 actions::refresh,
                                 icon = KitIcons.retry,
                             )

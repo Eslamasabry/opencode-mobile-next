@@ -5,6 +5,7 @@ import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.feature.chat.FakeChatWorld
 import io.github.eslamasabry.oc.feature.chat.RecordingNavigator
 import io.github.eslamasabry.oc.feature.chat.Immediate
+import io.github.eslamasabry.oc.feature.chat.onControl
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatActions
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPresenter
 import io.github.eslamasabry.oc.feature.chat.presentation.FindUi
@@ -77,8 +78,8 @@ class FindBarTest {
                 TranscriptFindBar(FindUi("absent", 0, -1, null, -1, false), presenter)
             }
         }
-        onNodeWithTag("transcript-find-next").assertIsNotEnabled()
-        onNodeWithTag("transcript-find-previous").assertIsNotEnabled()
+        onControl("transcript-find-next").assertIsNotEnabled()
+        onControl("transcript-find-previous").assertIsNotEnabled()
         onNodeWithText("No matches").assertIsDisplayed()
     }
 }

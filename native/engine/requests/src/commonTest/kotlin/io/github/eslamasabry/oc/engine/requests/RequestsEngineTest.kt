@@ -54,6 +54,11 @@ class RequestsEngineTest {
         runCurrent()
     }
 
+    /** The port starts with no confirmed capability (ServerCapabilities.Unknown); these servers list their asks. */
+    private fun serverListsAsks() {
+        port.capabilities.value = ServerCapabilities.Unknown.copy(permissionRequests = true, legacyQuestionRequests = true)
+    }
+
     private fun RequestsEngine.phaseOf(id: String): AnswerPhase? = pending.value.firstOrNull { it.id == RequestId(id) }?.phase
 
     @Test
@@ -283,6 +288,7 @@ class RequestsEngineTest {
     @Test
     fun `B-CHAT-075 a request no longer listed after a reconnect refetch leaves the count`() =
         runTest {
+            serverListsAsks()
             val engine = engine()
             ask(permission("p1"), permission("p2"))
             port.permissions = listOf(permission("p2"), permission("p3"))
@@ -296,6 +302,7 @@ class RequestsEngineTest {
     @Test
     fun `B-PROTO-034 asks are never replayed - a reconnect refetches them, and a failed refetch keeps what is known`() =
         runTest {
+            serverListsAsks()
             val engine = engine()
             port.permissions = listOf(permission("p1"))
             port.events.connect()
@@ -373,6 +380,7 @@ class RequestsEngineTest {
     @Test
     fun `B-PROTO-048 a refetch that started before a settle never brings the request back`() =
         runTest {
+            serverListsAsks()
             val engine = engine()
             ask(permission("p1"))
             port.permissions = listOf(permission("p1"))
@@ -391,6 +399,7 @@ class RequestsEngineTest {
     @Test
     fun `B-CHAT-072 a one-answer question sends the exact chosen label after the hold`() =
         runTest {
+            serverListsAsks()
             val engine = engine()
             port.questions = listOf(question("q1"))
             engine.refresh()
@@ -407,6 +416,7 @@ class RequestsEngineTest {
     @Test
     fun `B-CHAT-072 a dismissed question is rejected, never approved, and several prompts are not one-answer`() =
         runTest {
+            serverListsAsks()
             val engine = engine()
             port.questions = listOf(question("q1"), question("q2", prompts = 2), question("q3", multiple = true))
             engine.refresh()
@@ -423,6 +433,7 @@ class RequestsEngineTest {
     @Test
     fun `B-PROTO-048 QuestionNotFound resolves the question locally`() =
         runTest {
+            serverListsAsks()
             val engine = engine()
             port.questions = listOf(question("q1"))
             engine.refresh()
@@ -583,6 +594,7 @@ class RequestsEngineTest {
     @Test
     fun `B-PROTO-048 req-3 project snapshots never admit or tombstone another projects asks`() =
         runTest {
+            serverListsAsks()
             val engine = engine()
             port.events.currentDirectory = "/project-a"
             port.permissions = listOf(permission("a"))
@@ -637,6 +649,7 @@ class RequestsEngineTest {
     @Test
     fun `B-CHAT-072 req-5 direct engine commands reject invalid question payloads without writes`() =
         runTest {
+            serverListsAsks()
             val engine = engine()
             val q =
                 question("q1").let {
@@ -678,6 +691,7 @@ class RequestsEngineTest {
     @Test
     fun `B-CHAT-072 req-5 valid optional custom multiple and multi-prompt answers still send`() =
         runTest {
+            serverListsAsks()
             val engine = engine()
             val optional =
                 question("optional").let {
@@ -722,6 +736,7 @@ class RequestsEngineTest {
     @Test
     fun `B-CHAT-072 req-5 held answers are checked against updated prompts before claiming`() =
         runTest {
+            serverListsAsks()
             val engine = engine()
             val original = question("q1")
             port.questions = listOf(original)

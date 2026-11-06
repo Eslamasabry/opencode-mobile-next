@@ -23,12 +23,23 @@ class ActiveContextScreenTest {
             ContextContent(ContextContentKind.ToolOutput, "lib/checkout/checkout_page.dart: 412 lines, 3 rebuilds per frame", "read"),
             ContextContent(ContextContentKind.Text, "The cart total rebuilds the whole page on every keystroke."),
         ))
-        lateinit var clipboard: ClipboardManager
+        // A recording clipboard: a headless test JVM's system clipboard reads back nothing.
+        val clipboard =
+            object : ClipboardManager {
+                var copied: androidx.compose.ui.text.AnnotatedString? = null
+
+                override fun getText(): androidx.compose.ui.text.AnnotatedString? = copied
+
+                override fun setText(annotatedString: androidx.compose.ui.text.AnnotatedString) {
+                    copied = annotatedString
+                }
+            }
         setContent {
             KitTheme(platform = DesktopKitPlatform(), localeTag = "en", appearance = KitAppearance(motion = MotionLevel.Off)) {
-                clipboard = LocalClipboardManager.current
-                KitStandaloneRedaction {
-                    ActiveContextScreen(true, ActiveContextUi.Ready(persistentListOf(message)), {}, {})
+                androidx.compose.runtime.CompositionLocalProvider(LocalClipboardManager provides clipboard) {
+                    KitStandaloneRedaction {
+                        ActiveContextScreen(true, ActiveContextUi.Ready(persistentListOf(message)), {}, {})
+                    }
                 }
             }
         }
@@ -57,6 +68,8 @@ class ActiveContextScreenTest {
         onNodeWithText("Compaction").assertExists()
         mainClock.autoAdvance = false
         onNodeWithTag("kit-search-field").performTextInput("checkout")
+        // One frame, far short of the search's settle delay: the list filters on the edit itself.
+        mainClock.advanceTimeByFrame()
         waitForIdle()
         onNodeWithText("User prompt").assertExists()
         onNodeWithText("Compaction").assertDoesNotExist()
