@@ -127,7 +127,7 @@ class ClaudeInstallScriptTest {
             releasedDartRawStrings("lib/builtin/setup/component_updates.dart").getValue("componentUpdatePrelude"),
             SetupPrelude.COMPONENT_UPDATE_PRELUDE,
         )
-        val dart = releasedSource("lib/builtin/setup/claude_scripts.dart")
+        val dart = releasedDartSource("lib/builtin/setup/claude_scripts.dart")
         val body = Regex("static const install =\\s*'''\\n(.*?)''';", RegexOption.DOT_MATCHES_ALL).find(dart)!!.groupValues[1]
         val evaluated = body.replace("\\$", "\u0001").replace("\\\\", "\\")
             .replace("\$version", ClaudeScripts.VERSION)

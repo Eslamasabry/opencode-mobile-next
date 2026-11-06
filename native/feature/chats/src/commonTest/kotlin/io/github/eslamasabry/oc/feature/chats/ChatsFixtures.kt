@@ -135,18 +135,6 @@ internal class RecordingChatsActions : ChatsActions {
     override fun dismissArchiveFailure() {
         calls += "dismissArchiveFailure"
     }
-
-    override fun openSearch() {
-        calls += "openSearch"
-    }
-
-    override fun showProjectChoices() {
-        calls += "projectChoices"
-    }
-
-    override fun showInbox() {
-        calls += "inbox"
-    }
 }
 
 /** Plan 06 §6's fake platform (kit's own copy is test-internal there). */

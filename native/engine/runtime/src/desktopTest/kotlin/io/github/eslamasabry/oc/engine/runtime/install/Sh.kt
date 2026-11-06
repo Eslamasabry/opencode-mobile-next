@@ -47,20 +47,6 @@ object Sh {
         while (dir != null && !File(dir, "scripts/host/ubuntu-opencode.sh").isFile) dir = dir.parentFile
         checkNotNull(dir) { "repository root not found" }
     }
-
-    /**
-     * The released Flutter app (2.1.4+62, tag v2.1.4+62): the source of truth the ports follow. This branch's own
-     * lib/ is an older snapshot, so a port of a 2.1.4 change is checked against the release, read from git.
-     */
-    const val FLUTTER_RELEASE: String = "2dec68a250fec08909593fd3b1a8125de908f0c2"
-
-    /** [path] as the released Flutter app has it; fails plainly when the release commit is not in this clone. */
-    fun released(path: String): String {
-        val run = run(listOf("git", "-C", repo.path, "show", "$FLUTTER_RELEASE:$path"), mapOf("PATH" to "/usr/local/bin:/usr/bin:/bin"))
-        check(run.exitCode == 0) { "Flutter release $FLUTTER_RELEASE is not in this clone: git fetch origin master (${run.stderr.trim()})" }
-        return run.stdout
-    }
-
     /** A Dart raw string constant's text, as Dart reads it (a first whitespace-only line is dropped). */
     fun dartRaw(path: String, name: String): String = dartRawIn(File(repo, path).readText(), path, name)
 
