@@ -136,14 +136,17 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                     KitLineAction(
                         stringResource(Res.string.p12SelectCancel),
                         actions::stopSelecting,
+                        icon = KitIcons.close,
                     )
                 )
             state.phase == AllPhase.List ->
                 listOf(
-                    KitLineAction(stringResource(Res.string.sessionsReload), actions::retry),
+                    // Glyphs on the bar (the words are what TalkBack says): as words they were cut to "Ref…" and "Sel…".
+                    KitLineAction(stringResource(Res.string.sessionsReload), actions::retry, icon = KitIcons.retry),
                     KitLineAction(
                         stringResource(Res.string.p12Select),
                         { actions.startSelecting(null) },
+                        icon = KitIcons.checkboxChecked,
                     ),
                 )
             else -> emptyList()
@@ -485,9 +488,10 @@ private fun AllRow(row: AllRowUi, selecting: Boolean, actions: ChatsAllActions) 
             leading = if (row.running) null else KitRowLeading.Glyph(if (row.archived) KitIcons.archive else KitIcons.chat),
             state = if (row.running) KitRowState(null, KitRowStateTone.Running) else null,
             supporting = supporting,
+            // The ⋯ glyph, its words for TalkBack only: as words "More for <title>" pushed the title out of the row.
             trailing =
-                KitRowTrailing.Action(
-                    KitLineAction(stringResource(Res.string.p12MoreFor, title), { menu = true })
+                KitRowTrailing.IconAction(
+                    KitLineAction(stringResource(Res.string.p12MoreFor, title), { menu = true }, icon = KitIcons.more)
                 ),
             growKey = row.ref,
             onLongClick = { menu = true },
