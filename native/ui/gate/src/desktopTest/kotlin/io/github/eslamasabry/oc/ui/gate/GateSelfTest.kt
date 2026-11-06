@@ -1,6 +1,5 @@
-package io.github.eslamasabry.oc.ui.kit.rb.o01
+package io.github.eslamasabry.oc.ui.gate
 
-import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate
 import java.awt.image.BufferedImage
 import kotlin.test.Test
 import kotlin.test.assertEquals
