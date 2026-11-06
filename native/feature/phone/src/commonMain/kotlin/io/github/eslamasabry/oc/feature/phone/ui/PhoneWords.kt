@@ -33,16 +33,17 @@ import io.github.eslamasabry.oc.ui.words.res.keepRunningLockOther
 import io.github.eslamasabry.oc.ui.words.res.keepRunningLockSamsung
 import io.github.eslamasabry.oc.ui.words.res.keepRunningLockTitle
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardShowProgress
+import io.github.eslamasabry.oc.ui.words.res.phoneServerPortBusy
 import io.github.eslamasabry.oc.ui.words.res.phoneServerRestartFailed
 import io.github.eslamasabry.oc.ui.words.res.phoneServerRowNotAnswering
 import io.github.eslamasabry.oc.ui.words.res.phoneServerStartFailed
 import io.github.eslamasabry.oc.ui.words.res.phoneServerStopFailed
-import io.github.eslamasabry.oc.ui.words.res.sharedFoldersTitle
 import io.github.eslamasabry.oc.ui.words.res.r40PhoneConnectFailed
 import io.github.eslamasabry.oc.ui.words.res.r40PhoneHistoryCount
 import io.github.eslamasabry.oc.ui.words.res.r40PhoneHistoryFailed
 import io.github.eslamasabry.oc.ui.words.res.r40PhoneHistoryMoving
 import io.github.eslamasabry.oc.ui.words.res.r40PhoneMemory
+import io.github.eslamasabry.oc.ui.words.res.sharedFoldersTitle
 import io.github.eslamasabry.oc.ui.words.res.termuxProcsKindAiTeam
 import io.github.eslamasabry.oc.ui.words.res.termuxProcsKindClaudeCode
 import io.github.eslamasabry.oc.ui.words.res.termuxProcsKindDevService
@@ -128,6 +129,7 @@ internal fun AnswerLine.words(): String =
         is AnswerLine.RestartsIn ->
             stringResource(Res.string.thisPhoneAnswerRestartsIn, wait.words())
         AnswerLine.GaveUp -> stringResource(Res.string.thisPhoneAnswerGaveUp)
+        is AnswerLine.PortBusy -> stringResource(Res.string.phoneServerPortBusy, port.toString())
         AnswerLine.StartFailedLine -> stringResource(Res.string.thisPhoneAnswerStartFailedLine)
         AnswerLine.RecoveryBody -> stringResource(Res.string.inAppServerOwnershipRecoveryBody)
         is AnswerLine.Storage ->

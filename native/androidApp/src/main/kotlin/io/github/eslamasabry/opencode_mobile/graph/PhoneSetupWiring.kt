@@ -213,6 +213,9 @@ object PhoneSetupWiring {
             }
 
             override suspend fun finishStep(jobId: String, openCodeChanged: Boolean) {
+                withContext(dispatchers.io) {
+                    io.github.eslamasabry.opencode_mobile.BuiltinLinux.get(app).beginServerStart()
+                }
                 val finisher =
                     finisher(stores, server, linux, getString(Res.string.phoneSetupProfileName))
                 val failure =

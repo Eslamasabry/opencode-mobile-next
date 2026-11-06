@@ -183,6 +183,14 @@ class PhoneServerStateTest {
     }
 
     @Test
+    fun `B-LINUX-015 a failed bind names its port until the server answers`() {
+        val failed = PhoneServerFacts(status = installed, startProblem = StartProblem.Refused, startBusyPort = 4100)
+        assertEquals(AnswerLine.PortBusy(4100), ThisPhoneAnswers.of(derive(failed), failed).line)
+        val answered = failed.copy(status = running, probe = ProbeAnswer.Answered)
+        assertEquals(AnswerHeadline.Running, ThisPhoneAnswers.of(derive(answered), answered).headline)
+    }
+
+    @Test
     fun `this_phone_answer thisPhoneWait rounds up so the promise is never early`() {
         assertEquals(AboutWait.Seconds(5), AboutWait.of(1.seconds))
         assertEquals(AboutWait.Seconds(5), AboutWait.of(5.seconds))

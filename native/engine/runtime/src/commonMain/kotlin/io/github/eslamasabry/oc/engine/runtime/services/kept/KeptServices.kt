@@ -91,7 +91,9 @@ public data class KeptServiceDef(
     }
 
     public companion object {
-        public val reservedPorts: Set<Int> = setOf(4096, 4097, 6767, 8372, 8472)
+        public val reservedPorts: Set<Int>
+            get() = setOf(4096, 4097, 6767, 8372, 8472,
+                io.github.eslamasabry.oc.engine.runtime.switching.ManagedLocalServer.BUILTIN_PORT)
 
         public fun oneLine(text: String): Boolean = text.none {
             it == '\n' || it == '\r' || it == '\u0000'

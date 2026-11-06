@@ -41,6 +41,8 @@ public data class PhoneServerFacts(
     val starting: Boolean = false,
     /** The last start that failed, until the next start answered. */
     val startProblem: StartProblem? = null,
+    /** A bind conflict from this start invocation, never arbitrary failure text. */
+    val startBusyPort: Int? = null,
     /** The native crash recovery for this phone's profile (plan 11 §6.3). */
     val recovery: RecoveryFacts = RecoveryFacts.None,
     /** OpenCode's version inside Ubuntu, or null when unknown. A leading `v` is allowed. */

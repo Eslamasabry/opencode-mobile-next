@@ -5245,6 +5245,14 @@ class BuiltinLinux(private val context: Context) {
     }
 
     @Volatile private var selectedPortBusy = false
+    @Volatile private var serverStartLogOffset: Long? = null
+
+    /** A new invocation cannot reuse an earlier run's bind error. */
+    @Synchronized
+    fun beginServerStart() {
+        selectedPortBusy = false
+        serverStartLogOffset = null
+    }
 
     /** Native packages keep their own loopback address; Flutter continues to own 4097. */
     val selectedServerPort: Int
@@ -5262,6 +5270,7 @@ class BuiltinLinux(private val context: Context) {
         port?.let {
             return it
         }
+        beginServerStart()
         val chosen =
             (listOf(selectedServerPort) + (4100..4199)).distinct().firstOrNull { candidate ->
                 try {
@@ -5289,9 +5298,11 @@ class BuiltinLinux(private val context: Context) {
     fun serverPortBusy(): Boolean =
         selectedPortBusy ||
             try {
-                serverLog.isFile &&
+                val offset = serverStartLogOffset
+                offset != null &&
+                    serverLog.isFile &&
                     java.io.RandomAccessFile(serverLog, "r").use { log ->
-                        val size = minOf(log.length(), 8192L).toInt()
+                        val size = minOf((log.length() - offset).coerceAtLeast(0), 8192L).toInt()
                         log.seek(log.length() - size)
                         val bytes = ByteArray(size)
                         log.readFully(bytes)
@@ -5631,6 +5642,7 @@ exec gc supervisor run
         val log = serviceLogFile(name)
         // One log per run; the previous one stays for a look after a crash.
         if (log.isFile) log.renameTo(File(home, "$name.previous.log"))
+        if (name == SERVER) serverStartLogOffset = log.length()
         val storageRoots = if (name == SERVER) sharedStorageRootsForLaunch() else emptyList()
         val storageBroad = name == SERVER && sharedStorageBroadAccess()
         val process = launchServiceProcess(name, script, log, launch)

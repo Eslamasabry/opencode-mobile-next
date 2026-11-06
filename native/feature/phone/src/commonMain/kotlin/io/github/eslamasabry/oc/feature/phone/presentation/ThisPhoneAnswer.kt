@@ -160,6 +160,8 @@ public sealed interface AnswerLine {
 
     public data object StartFailedLine : AnswerLine
 
+    public data class PortBusy(val port: Int) : AnswerLine
+
     public data object RecoveryBody : AnswerLine
 
     public data class Storage(val bytes: Long) : AnswerLine
@@ -227,6 +229,14 @@ public object ThisPhoneAnswers {
         if (stopping) return ThisPhoneAnswer(AnswerTone.Working, AnswerHeadline.Stopping)
         val failedStart = facts.startProblem
         if (failedStart == StartProblem.ComponentRecovery) return recovery()
+        val busyPort = facts.startBusyPort
+        if (busyPort != null && !facts.starting && facts.status?.serverRunning != true)
+            return ThisPhoneAnswer(
+                AnswerTone.NeedsYou,
+                AnswerHeadline.StartFailed,
+                AnswerLine.PortBusy(busyPort),
+                PhoneAct.StartAgain,
+            )
         return when (state) {
             PhoneServerState.Checking ->
                 ThisPhoneAnswer(AnswerTone.Working, AnswerHeadline.Checking)

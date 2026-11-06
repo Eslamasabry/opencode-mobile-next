@@ -529,7 +529,11 @@ internal constructor(
 
             override suspend fun writePassword(password: String): Outcome<Unit> =
                 when (
-                    val ran = blocking { linux.run(PhoneServerScripts.writePassword(password), 60) }
+                    val ran = blocking {
+                        facts.update { it.copy(startBusyPort = null) }
+                        linux.beginServerStart()
+                        linux.run(PhoneServerScripts.writePassword(password), 60)
+                    }
                 ) {
                     is Outcome.Failed -> ran
                     is Outcome.Ok ->
@@ -542,7 +546,11 @@ internal constructor(
                     return Outcome.Failed(Failure.Runtime(RuntimeProblem.InvalidProfile))
                 try {
                     val selected = blocking { linux.chooseServerPort() }
-                    if (selected is Outcome.Failed) return selected
+                    if (selected is Outcome.Failed) {
+                        if ((blocking { linux.serverPortBusy() } as? Outcome.Ok)?.value == true)
+                            facts.update { it.copy(startBusyPort = PhoneServerScripts.PORT) }
+                        return selected
+                    }
                     val loaded =
                         profiles.profile(profile)
                             ?: return Outcome.Failed(Failure.Runtime(RuntimeProblem.InvalidProfile))
@@ -603,7 +611,8 @@ internal constructor(
                 val status = runtimeStatus()
                 if (status is Outcome.Ok && !status.value.serverRunning) {
                     val busy = blocking { linux.serverPortBusy() }
-                    if (busy is Outcome.Ok && busy.value)
+                    if (busy is Outcome.Ok && busy.value) {
+                        facts.update { it.copy(startBusyPort = PhoneServerScripts.PORT) }
                         return Outcome.Failed(
                             classifyRuntime(
                                 io.github.eslamasabry.opencode_mobile.ServerPortBusy(
@@ -611,6 +620,7 @@ internal constructor(
                                 )
                             )
                         )
+                    }
                 }
                 return status
             }
@@ -795,6 +805,7 @@ internal constructor(
     }
 
     private suspend fun startNow(expectedOwner: ProfileId? = null): Outcome<Unit> = lane.withLock {
+        blocking { linux.beginServerStart() }
         if (expectedOwner != null && ownerId() != expectedOwner)
             return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.InvalidProfile))
         if (withContext(io) { BuiltinDiscovery.presence(filesDir) } != LinuxPresence.Ready) {
@@ -815,7 +826,7 @@ internal constructor(
         if (admission is Outcome.Failed) return@withLock admission
         if (epoch != actionEpoch || healingOwner() != target.profile || !readable(target.profile))
             return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.InvalidProfile))
-        facts.update { it.copy(starting = true, startProblem = null) }
+        facts.update { it.copy(starting = true, startProblem = null, startBusyPort = null) }
         try {
             val failure =
                 starter.start(
@@ -858,6 +869,7 @@ internal constructor(
      * local keys stay.
      */
     suspend fun finishSetup(request: SetupFinishRequest): Outcome<ProfileId> = lane.withLock {
+        blocking { linux.beginServerStart() }
         if (request.host != SetupHostKind.Builtin || request.runtime != "opencode2") {
             return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.InvalidProfile))
         }
