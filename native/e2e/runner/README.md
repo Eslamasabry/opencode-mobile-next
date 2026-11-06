@@ -9,6 +9,8 @@ native app. Python 3 standard library only; always run with `python3 -I`.
 |---|---|
 | `run.py` | the runner (below) |
 | `hooks.py` | the allowlist of `[adb]` hooks a flow may call |
+| `upgrade.py` | the upgrade gate behind `native/tool/qa/upgrade_e2e.sh` (E00-S09): Flutter APK, seed, `adb install -r` native, Part C, evidence record |
+| `device_state.py` | reads and compares the app's OS-held state (grants, channels, shortcuts, widgets, tiles, alarms, rootfs inodes, voice files) |
 | `gen_strings.py` | ARB + Android `strings.xml` + `flows/_strings/extra*.json` → `out/strings.js` (`output.s/c/re/rc/t/fx`) |
 | `lint_flows.py` | plan 14 §4.2 rules + catalog rows; `--report` lists fixtures, fx actions, hooks and string keys used |
 | `find_key.py` | finds the string key for a visible text |
@@ -32,6 +34,10 @@ python3 -I native/e2e/runner/run.py --app flutter --apk R-4600.apk --expect-avd 
 # The same files against the native release build
 python3 -I native/e2e/runner/run.py --app native --apk app-stable-release.apk --expect-avd OCN_A \
     --expect-signer 1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C --flows E2E-01,E2E-05
+
+# The upgrade gate (E00-S09): one command, headless, exit 0 only when every assertion passed
+native/tool/qa/upgrade_e2e.sh --flutter-apk R-62.apk --native-apk native-switch.apk \
+    --expect-signer 1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C --avd OCN_A
 
 # Arabic repeat (AVD-AR)
 python3 -I native/e2e/runner/run.py --app flutter --flows E2E-22,E2E-23 --lang ar
@@ -62,3 +68,23 @@ python3 -I native/e2e/runner/run.py --app flutter --flows E2E-22,E2E-23 --lang a
    `summary.txt`. A canary secret or a per-run password in logcat fails the run.
 
 Exit codes: `0` all passed, `1` a flow failed or a secret leaked, `2` could not run.
+
+## Upgrade gate (E00-S09)
+
+`native/tool/qa/upgrade_e2e.sh` (`upgrade.py`) wraps `run.py --flows E2E-39`:
+
+1. Refuses (exit 2) unless both APKs are signed by `--expect-signer` only, share the package and the native
+   versionCode is higher (`aapt2`, `apksigner` from PATH or `$ANDROID_HOME/build-tools`).
+2. Holds the emulator lock for the whole run and hands its descriptor to `run.py` (`OC_EMULATOR_LOCK_FD`), boots
+   `--avd` on port 5584 headless: from snapshot `flutter-2.1.4-seeded` when the AVD has it **and** its fixture state
+   is under `--seed-home` (default `~/.cache/oc-e2e/seeds/<snapshot>/fx`, with that snapshot's fixture passwords in
+   `secrets.env`, mode 0600, never in the repository), else wiped. `adb root` happens before Maestro connects.
+3. Fresh: Part A seeds the Flutter app and the `install-native` hook saves the snapshot right before the install.
+   Restored: `--seeded` makes the flow skip Part A. Either way `install-native` writes `state/before.json`
+   and the `upgrade-capture` hook writes `state/after-migration.json` after the first native launch.
+4. Verdicts: Part C's labelled steps (`S4`…`S12`, `UC-*`) from Maestro's `commands-*.json`, and the host-side
+   comparison of the two state files. One `PASS`/`FAIL` line each; `VERDICT: PASS|FAIL` last.
+5. The evidence record goes to `docs/qa/native-switch-<date>/README.md` (a `-2` suffix rather than overwrite) with
+   `screens/native-<screen>.png` from Part C's screenshots.
+
+Exit: 0 every assertion passed, 1 one failed, 2 could not run.
