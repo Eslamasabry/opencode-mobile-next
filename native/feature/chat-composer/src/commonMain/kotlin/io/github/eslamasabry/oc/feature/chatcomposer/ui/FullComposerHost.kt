@@ -26,7 +26,6 @@ class ComposerChromeInputs(
     val keepFocusOnSend: Boolean = false,
     val agentName: () -> String = { "OpenCode" },
     val freeModel: () -> Boolean = { false },
-    val startVoiceConversation: (() -> Unit)? = null,
 )
 
 /**
@@ -61,7 +60,6 @@ object FullComposerHost {
             mic = mic,
             agentName = chrome.agentName(),
             freeModel = chrome.freeModel(),
-            startVoiceConversation = chrome.startVoiceConversation,
         )
     }
 }
