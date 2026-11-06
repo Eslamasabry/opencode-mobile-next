@@ -127,20 +127,27 @@ private fun PillFace(label: String, onClick: () -> Unit, modifier: Modifier, edg
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val shape = KitShapeId.Pill.shape()
-    Row(
+    // A small floating pill (36 dp face) inside its 48 dp target: it points the way without covering the reading
+    // column (owner 2026-11-06: the full-size button sat on the words).
+    Box(
         modifier
             .testTag("kit-jump-pill")
             .heightIn(min = tokens.minTarget.dp)
             .kitTappable(onClick = onClick, shape = KitShapeId.Pill)
-            .semantics(mergeDescendants = true) { contentDescription = label }
-            .background(colors.surface3, shape)
-            .border(1.dp, colors.hairline, shape)
-            .padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+            .semantics(mergeDescendants = true) { contentDescription = label },
+        contentAlignment = Alignment.Center,
     ) {
-        KitGlyph(if (edge == KitJumpEdge.Bottom) KitPartGlyphs.ChevronDown else KitPartGlyphs.ChevronUp, colors.text1, tokens.smallIcon.dp)
-        KitText(label, role = TypeRole.Button, tone = TextTone.Primary, kind = KitTextKind.Frame, maxLines = 2)
+        Row(
+            Modifier.heightIn(min = 36.dp)
+                .background(colors.surface3, shape)
+                .border(1.dp, colors.hairline, shape)
+                .padding(horizontal = Space.S3.dp, vertical = Space.S1.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
+        ) {
+            KitGlyph(if (edge == KitJumpEdge.Bottom) KitPartGlyphs.ChevronDown else KitPartGlyphs.ChevronUp, colors.text1, 16.dp)
+            KitText(label, role = TypeRole.Secondary, tone = TextTone.Primary, kind = KitTextKind.Frame, maxLines = 1)
+        }
     }
 }
 

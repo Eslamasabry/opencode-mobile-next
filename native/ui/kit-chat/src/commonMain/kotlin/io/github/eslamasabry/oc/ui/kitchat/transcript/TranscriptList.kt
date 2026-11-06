@@ -31,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import io.github.eslamasabry.oc.ui.kit.frame.KitJumpPill
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Density
@@ -147,8 +148,9 @@ public fun KitTranscriptList(
             state,
             jumpLabel,
             motion,
-            Modifier.align(Alignment.BottomCenter)
-                .padding(bottom = Space.S4.dp + chrome.calculateBottomPadding()),
+            // Above the composer, at the end of the line: clear of the reading column's start.
+            Modifier.align(Alignment.BottomEnd)
+                .padding(end = Space.S4.dp, bottom = Space.S2.dp + chrome.calculateBottomPadding()),
         )
     }
 }
@@ -165,21 +167,12 @@ private fun KitJumpToLatest(
     modifier: Modifier,
 ) {
     val scope = rememberCoroutineScope()
-    val full = motion == KitMotionLevel.Full
-    AnimatedVisibility(
+    // The kit's own jump pill (small, chevron and words), shown while away from the newest end.
+    KitJumpPill(
+        label = label,
         visible = state.awayFromLatest,
-        enter =
-            fadeIn(tween(MotionTokens.STANDARD)) +
-                (if (full) slideInVertically(tween(MotionTokens.STANDARD)) { it / 4 }
-                else fadeIn()),
-        exit =
-            fadeOut(tween(MotionTokens.QUICK)) +
-                (if (full) slideOutVertically(tween(MotionTokens.QUICK)) { it / 4 } else fadeOut()),
-        modifier = modifier,
-    ) {
-        KitButton(
-            label = label,
-            onClick = {
+        modifier = modifier.testTag("jump-to-latest"),
+        onClick = {
                 state.following = true
                 scope.launch {
                     val lazy = state.lazy
@@ -196,8 +189,5 @@ private fun KitJumpToLatest(
                     }
                 }
             },
-            role = KitButtonRole.Secondary,
-            modifier = Modifier.testTag("jump-to-latest"),
-        )
-    }
+    )
 }
