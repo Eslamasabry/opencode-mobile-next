@@ -8,6 +8,7 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.runtime.host.RestorePhase
 import io.github.eslamasabry.oc.engine.runtime.host.RestoreReason
 import io.github.eslamasabry.oc.engine.runtime.host.RuntimePhase
+import io.github.eslamasabry.oc.engine.runtime.switching.ManagedLocalServer
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -113,11 +114,29 @@ class BuiltinLinuxBridgeTest {
         assertEquals(
             mapOf(
                 "script" to "serve",
-                "port" to 4097,
+                // The native phone server's default is 4098, not Flutter's 4097 (BuiltinLinux.serverPort), so the
+                // Flutter app's server and this one never share a port (abf07acb1, androidApp PHONE_SERVER_PORT).
+                "port" to 4098,
                 "restoreRecipe" to mapOf("version" to 1, "profileId" to "phone-profile", "runtime" to "openCode2"),
             ),
             channel.calls.single().arguments,
         )
+    }
+
+    @Test
+    fun `B-LINUX-021 a start without a port uses the port the app selected for its flavor`() = runTest {
+        // The preview flavor builds with PHONE_SERVER_PORT 4100 and the app may pick another free port; the wiring
+        // passes it through ManagedLocalServer.configureNativePort, and every default start must follow it.
+        ManagedLocalServer.configureNativePort { 4100 }
+        try {
+            linux.startServer("serve")
+            assertEquals(4100, channel.calls.single().arguments?.get("port"))
+            assertEquals("http://127.0.0.1:4100", BuiltinLinuxBridge.SERVER_URL)
+            assertTrue(BuiltinLinuxBridge.managesServerUrl("http://127.0.0.1:4100"))
+            assertFalse(BuiltinLinuxBridge.managesServerUrl("http://127.0.0.1:4098"))
+        } finally {
+            ManagedLocalServer.configureNativePort { 4098 }
+        }
     }
 
     @Test

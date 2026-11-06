@@ -108,6 +108,15 @@ class BuiltinScriptsShellTest {
             "59638cb254ca73432b54cbb5fb8d559c05a681760bb4e7f0a042269fa850aeba",
             sha256(BuiltinScripts.installOpenCodeScript().getOrNull()!!),
         )
-        assertEquals("deac5091b852089a39d1a3ae9c115acb0a40436ad416012435b9fa7d86592fda", sha256(BuiltinScripts.serverScript().getOrNull()!!))
+        // Hashed at Flutter's port (BuiltinLinux.serverPort = 4097) so the script stays the Flutter script byte for
+        // byte; only the port differs on native, whose default is 4098 (abf07acb1) and follows the flavor's choice.
+        assertEquals(
+            "deac5091b852089a39d1a3ae9c115acb0a40436ad416012435b9fa7d86592fda",
+            sha256(BuiltinScripts.serverScript(port = 4097).getOrNull()!!),
+        )
+        assertEquals(
+            BuiltinScripts.serverScript(port = 4097).getOrNull()!!.replace("--port 4097\n", "--port 4098\n"),
+            BuiltinScripts.serverScript().getOrNull()!!,
+        )
     }
 }
